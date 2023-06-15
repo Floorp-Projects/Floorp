@@ -5,10 +5,19 @@
 package org.mozilla.fenix.home
 
 import android.content.Context
+import android.view.ViewGroup
+import androidx.lifecycle.LifecycleCoroutineScope
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.spyk
+import io.mockk.unmockkStatic
 import io.mockk.verify
+import kotlinx.coroutines.CoroutineScope
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SearchState
@@ -22,12 +31,15 @@ import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Core
 import org.mozilla.fenix.ext.application
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.home.HomeFragment.Companion.AMAZON_SPONSORED_TITLE
 import org.mozilla.fenix.home.HomeFragment.Companion.EBAY_SPONSORED_TITLE
+import org.mozilla.fenix.home.HomeFragment.Companion.TOAST_ELEVATION
 import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.utils.allowUndo
 
 class HomeFragmentTest {
 
@@ -126,5 +138,55 @@ class HomeFragmentTest {
         every { homeFragment.activity } returns activity
 
         assertFalse(homeFragment.shouldEnableWallpaper())
+    }
+
+    @Test
+    fun `WHEN a pinned top is removed THEN show the undo snackbar`() {
+        try {
+            val topSite = TopSite.Default(
+                id = 1L,
+                title = "Mozilla",
+                url = "https://mozilla.org",
+                null,
+            )
+            mockkStatic("org.mozilla.fenix.utils.UndoKt")
+            mockkStatic("androidx.lifecycle.LifecycleOwnerKt")
+            val view: ViewGroup = mockk(relaxed = true)
+            val lifecycleScope: LifecycleCoroutineScope = mockk(relaxed = true)
+            every { any<LifecycleOwner>().lifecycleScope } returns lifecycleScope
+            every { homeFragment.getString(R.string.snackbar_top_site_removed) } returns "Mocked Removed Top Site"
+            every { homeFragment.getString(R.string.snackbar_deleted_undo) } returns "Mocked Undo Removal"
+            every {
+                any<CoroutineScope>().allowUndo(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } just Runs
+            every { homeFragment.requireView() } returns view
+
+            homeFragment.showUndoSnackbarForTopSite(topSite)
+
+            verify {
+                lifecycleScope.allowUndo(
+                    view,
+                    "Mocked Removed Top Site",
+                    "Mocked Undo Removal",
+                    any(),
+                    any(),
+                    any(),
+                    TOAST_ELEVATION,
+                    true,
+                )
+            }
+        } finally {
+            unmockkStatic("org.mozilla.fenix.utils.UndoKt")
+            unmockkStatic("androidx.lifecycle.LifecycleOwnerKt")
+        }
     }
 }

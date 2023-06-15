@@ -868,6 +868,28 @@ class DefaultSessionControlControllerTest {
     }
 
     @Test
+    fun `WHEN top site is removed THEN the undo snackbar is called`() {
+        val mozillaTopSite = TopSite.Default(
+            id = 1L,
+            title = "Mozilla",
+            url = "https://mozilla.org",
+            null,
+        )
+        var undoSnackbarCalled = false
+        var undoSnackbarShownFor = "TopSiteName"
+
+        createController(
+            showUndoSnackbarForTopSite = { topSite ->
+                undoSnackbarCalled = true
+                undoSnackbarShownFor = topSite.title.toString()
+            },
+        ).handleRemoveTopSiteClicked(mozillaTopSite)
+
+        assertEquals(true, undoSnackbarCalled)
+        assertEquals("Mozilla", undoSnackbarShownFor)
+    }
+
+    @Test
     fun `GIVEN exactly the required amount of downloaded thumbnails with no errors WHEN handling wallpaper dialog THEN dialog is shown`() {
         val wallpaperState = WallpaperState.default.copy(
             availableWallpapers = makeFakeRemoteWallpapers(
@@ -1142,6 +1164,7 @@ class DefaultSessionControlControllerTest {
         registerCollectionStorageObserver: () -> Unit = { },
         showTabTray: () -> Unit = { },
         removeCollectionWithUndo: (tabCollection: TabCollection) -> Unit = { },
+        showUndoSnackbarForTopSite: (topSite: TopSite) -> Unit = { },
     ): DefaultSessionControlController {
         return DefaultSessionControlController(
             activity = activity,
@@ -1159,6 +1182,7 @@ class DefaultSessionControlControllerTest {
             viewLifecycleScope = scope,
             registerCollectionStorageObserver = registerCollectionStorageObserver,
             removeCollectionWithUndo = removeCollectionWithUndo,
+            showUndoSnackbarForTopSite = showUndoSnackbarForTopSite,
             showTabTray = showTabTray,
         )
     }

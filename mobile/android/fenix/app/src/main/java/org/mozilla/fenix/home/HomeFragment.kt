@@ -52,6 +52,7 @@ import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.feature.tab.collections.TabCollection
+import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.feature.top.sites.TopSitesConfig
 import mozilla.components.feature.top.sites.TopSitesFeature
 import mozilla.components.feature.top.sites.TopSitesFrecencyConfig
@@ -351,6 +352,7 @@ class HomeFragment : Fragment() {
                 viewLifecycleScope = viewLifecycleOwner.lifecycleScope,
                 registerCollectionStorageObserver = ::registerCollectionStorageObserver,
                 removeCollectionWithUndo = ::removeCollectionWithUndo,
+                showUndoSnackbarForTopSite = ::showUndoSnackbarForTopSite,
                 showTabTray = ::openTabsTray,
             ),
             recentTabController = DefaultRecentTabsController(
@@ -458,6 +460,24 @@ class HomeFragment : Fragment() {
                     }
                 },
             ),
+        )
+    }
+
+    @VisibleForTesting
+    internal fun showUndoSnackbarForTopSite(topSite: TopSite) {
+        lifecycleScope.allowUndo(
+            view = requireView(),
+            message = getString(R.string.snackbar_top_site_removed),
+            undoActionTitle = getString(R.string.snackbar_deleted_undo),
+            onCancel = {
+                requireComponents.useCases.topSitesUseCase.addPinnedSites(
+                    topSite.title.toString(),
+                    topSite.url,
+                )
+            },
+            operation = { },
+            elevation = TOAST_ELEVATION,
+            paddedForBottomToolbar = true,
         )
     }
 

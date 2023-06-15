@@ -193,6 +193,7 @@ class DefaultSessionControlController(
     private val viewLifecycleScope: CoroutineScope,
     private val registerCollectionStorageObserver: () -> Unit,
     private val removeCollectionWithUndo: (tabCollection: TabCollection) -> Unit,
+    private val showUndoSnackbarForTopSite: (topSite: TopSite) -> Unit,
     private val showTabTray: () -> Unit,
 ) : SessionControlController {
 
@@ -332,6 +333,8 @@ class DefaultSessionControlController(
                 removeTopSites(topSite)
             }
         }
+
+        showUndoSnackbarForTopSite(topSite)
     }
 
     override fun handleRenameCollectionTapped(collection: TabCollection) {
