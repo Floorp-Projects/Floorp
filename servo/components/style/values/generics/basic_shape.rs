@@ -8,7 +8,7 @@
 use crate::values::animated::{lists, Animate, Procedure, ToAnimatedZero};
 use crate::values::distance::{ComputeSquaredDistance, SquaredDistance};
 use crate::values::generics::border::GenericBorderRadius;
-use crate::values::generics::position::GenericPosition;
+use crate::values::generics::position::GenericPositionOrAuto;
 use crate::values::generics::rect::Rect;
 use crate::values::specified::SVGPathData;
 use crate::Zero;
@@ -170,7 +170,7 @@ pub use self::GenericShapeOutside as ShapeOutside;
     ToShmem,
 )]
 #[repr(C, u8)]
-pub enum GenericBasicShape<H, V, LengthPercentage, NonNegativeLengthPercentage> {
+pub enum GenericBasicShape<Position, LengthPercentage, NonNegativeLengthPercentage> {
     /// Defines an inset rectangle via insets from each edge of the reference box.
     Inset(
         #[css(field_bound)]
@@ -181,13 +181,13 @@ pub enum GenericBasicShape<H, V, LengthPercentage, NonNegativeLengthPercentage> 
     Circle(
         #[css(field_bound)]
         #[shmem(field_bound)]
-        Circle<H, V, NonNegativeLengthPercentage>,
+        Circle<Position, NonNegativeLengthPercentage>,
     ),
     /// Defines an ellipse with a center and x-axis/y-axis radii.
     Ellipse(
         #[css(field_bound)]
         #[shmem(field_bound)]
-        Ellipse<H, V, NonNegativeLengthPercentage>,
+        Ellipse<Position, NonNegativeLengthPercentage>,
     ),
     /// Defines a polygon with pair arguments.
     Polygon(GenericPolygon<LengthPercentage>),
@@ -242,8 +242,8 @@ pub struct InsetRect<LengthPercentage, NonNegativeLengthPercentage> {
 )]
 #[css(function)]
 #[repr(C)]
-pub struct Circle<H, V, NonNegativeLengthPercentage> {
-    pub position: GenericPosition<H, V>,
+pub struct Circle<Position, NonNegativeLengthPercentage> {
+    pub position: GenericPositionOrAuto<Position>,
     pub radius: GenericShapeRadius<NonNegativeLengthPercentage>,
 }
 
@@ -265,8 +265,8 @@ pub struct Circle<H, V, NonNegativeLengthPercentage> {
 )]
 #[css(function)]
 #[repr(C)]
-pub struct Ellipse<H, V, NonNegativeLengthPercentage> {
-    pub position: GenericPosition<H, V>,
+pub struct Ellipse<Position, NonNegativeLengthPercentage> {
+    pub position: GenericPositionOrAuto<Position>,
     pub semiaxis_x: GenericShapeRadius<NonNegativeLengthPercentage>,
     pub semiaxis_y: GenericShapeRadius<NonNegativeLengthPercentage>,
 }
@@ -432,44 +432,63 @@ where
     }
 }
 
-impl<H, V, NonNegativeLengthPercentage> ToCss for Circle<H, V, NonNegativeLengthPercentage>
+impl<Position, NonNegativeLengthPercentage> ToCss for Circle<Position, NonNegativeLengthPercentage>
 where
-    GenericPosition<H, V>: ToCss,
+    Position: ToCss,
     NonNegativeLengthPercentage: ToCss + PartialEq,
 {
     fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
     where
         W: Write,
     {
+        let has_radius = self.radius != Default::default();
+
         dest.write_str("circle(")?;
-        if self.radius != Default::default() {
+        if has_radius {
             self.radius.to_css(dest)?;
-            dest.write_char(' ')?;
         }
-        dest.write_str("at ")?;
-        self.position.to_css(dest)?;
+
+        // Preserve the `at <position>` even if it specified the default value.
+        // https://github.com/w3c/csswg-drafts/issues/8695
+        if !matches!(self.position, GenericPositionOrAuto::Auto) {
+            if has_radius {
+                dest.write_char(' ')?;
+            }
+            dest.write_str("at ")?;
+            self.position.to_css(dest)?;
+        }
         dest.write_char(')')
     }
 }
 
-impl<H, V, NonNegativeLengthPercentage> ToCss for Ellipse<H, V, NonNegativeLengthPercentage>
+impl<Position, NonNegativeLengthPercentage> ToCss for Ellipse<Position, NonNegativeLengthPercentage>
 where
-    GenericPosition<H, V>: ToCss,
+    Position: ToCss,
     NonNegativeLengthPercentage: ToCss + PartialEq,
 {
     fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
     where
         W: Write,
     {
+        let has_radii =
+            self.semiaxis_x != Default::default() || self.semiaxis_y != Default::default();
+
         dest.write_str("ellipse(")?;
-        if self.semiaxis_x != Default::default() || self.semiaxis_y != Default::default() {
+        if has_radii {
             self.semiaxis_x.to_css(dest)?;
             dest.write_char(' ')?;
             self.semiaxis_y.to_css(dest)?;
-            dest.write_char(' ')?;
         }
-        dest.write_str("at ")?;
-        self.position.to_css(dest)?;
+
+        // Preserve the `at <position>` even if it specified the default value.
+        // https://github.com/w3c/csswg-drafts/issues/8695
+        if !matches!(self.position, GenericPositionOrAuto::Auto) {
+            if has_radii {
+                dest.write_char(' ')?;
+            }
+            dest.write_str("at ")?;
+            self.position.to_css(dest)?;
+        }
         dest.write_char(')')
     }
 }

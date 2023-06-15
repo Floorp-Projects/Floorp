@@ -80,6 +80,7 @@ pub trait PositionComponent {
     Serialize,
     SpecifiedValueInfo,
     ToAnimatedZero,
+    ToAnimatedValue,
     ToComputedValue,
     ToCss,
     ToResolvedValue,
