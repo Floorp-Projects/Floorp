@@ -2017,7 +2017,7 @@ var gBrowserInit = {
           );
           managedBookmarksPopup.setAttribute("placespopup", "true");
           managedBookmarksPopup.setAttribute("is", "places-popup");
-          managedBookmarksPopup.setAttribute("type", "arrow");
+          managedBookmarksPopup.classList.add("toolbar-menupopup");
           managedBookmarksButton.appendChild(managedBookmarksPopup);
 
           gNavToolbox.palette.appendChild(managedBookmarksButton);

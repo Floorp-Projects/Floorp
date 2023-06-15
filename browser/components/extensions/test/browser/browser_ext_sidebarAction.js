@@ -207,14 +207,14 @@ add_task(async function testShortcuts() {
   function verifyShortcut(id, commandKey) {
     // We're just testing the command key since the modifiers have different
     // icons on different platforms.
-    let button = document.getElementById(
-      `button_${makeWidgetId(id)}-sidebar-action`
+    let menuitem = document.getElementById(
+      `sidebarswitcher_menu_${makeWidgetId(id)}-sidebar-action`
     );
-    ok(button.hasAttribute("key"), "The menu item has a key specified");
-    let key = document.getElementById(button.getAttribute("key"));
+    ok(menuitem.hasAttribute("key"), "The menu item has a key specified");
+    let key = document.getElementById(menuitem.getAttribute("key"));
     ok(key, "The key attribute finds the related key element");
     ok(
-      button.getAttribute("shortcut").endsWith(commandKey),
+      menuitem.getAttribute("acceltext").endsWith(commandKey),
       "The shortcut has the right key"
     );
   }

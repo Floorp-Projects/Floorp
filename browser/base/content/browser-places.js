@@ -1226,12 +1226,8 @@ var PlacesToolbarHelper = {
           document.l10n.setAttributes(submenu, "managed-bookmarks-subfolder");
         }
         submenu.setAttribute("container", "true");
-        submenu.setAttribute(
-          "class",
-          "menu-iconic bookmark-item subviewbutton"
-        );
+        submenu.classList.add("menu-iconic", "bookmark-item");
         let submenupopup = document.createXULElement("menupopup");
-        submenupopup.setAttribute("placespopup", "true");
         submenu.appendChild(submenupopup);
         menu.appendChild(submenu);
         this.addManagedBookmarks(submenupopup, entry.children);
@@ -1241,9 +1237,10 @@ var PlacesToolbarHelper = {
         let menuitem = document.createXULElement("menuitem");
         menuitem.setAttribute("label", entry.name);
         menuitem.setAttribute("image", "page-icon:" + preferredURI.spec);
-        menuitem.setAttribute(
-          "class",
-          "menuitem-iconic bookmark-item menuitem-with-favicon subviewbutton"
+        menuitem.classList.add(
+          "menuitem-iconic",
+          "menuitem-with-favicon",
+          "bookmark-item"
         );
         menuitem.link = preferredURI.spec;
         menu.appendChild(menuitem);
@@ -2226,8 +2223,8 @@ var BookmarkingUI = {
       is: "places-popup",
     });
     otherBookmarksPopup.setAttribute("placespopup", "true");
-    otherBookmarksPopup.setAttribute("type", "arrow");
     otherBookmarksPopup.setAttribute("context", "placesContext");
+    otherBookmarksPopup.classList.add("toolbar-menupopup");
     otherBookmarksPopup.id = "OtherBookmarksPopup";
 
     otherBookmarksPopup._placesNode = PlacesUtils.asContainer(node);

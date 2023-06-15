@@ -264,46 +264,31 @@
     </stack>
   </html:template>
 
-  <panel id="sidebarMenu-popup"
-         class="panel-no-padding cui-widget-panel"
-         role="group"
-         type="arrow"
-         hidden="true"
-         flip="slide"
-         orient="vertical"
-         aria-labelledby="sidebar-switcher-target"
-         position="bottomleft topleft">
-  <panelmultiview id="sidebarMenu-popup-multiView" mainViewId="sidebarMenu-popup-mainView" >
-    <panelview id="sidebarMenu-popup-mainView" class="PanelUI-subView" showheader="true">
-      <vbox class="panel-subview-body">
-         <toolbarbutton id="sidebar-switcher-bookmarks"
-                        data-l10n-id="sidebar-menu-bookmarks"
-                        class="subviewbutton"
-                        key="viewBookmarksSidebarKb"
-                        oncommand="SidebarUI.show('viewBookmarksSidebar');"/>
-         <toolbarbutton id="sidebar-switcher-history"
-                        data-l10n-id="sidebar-menu-history"
-                        class="subviewbutton"
-                        key="key_gotoHistory"
-                        oncommand="SidebarUI.show('viewHistorySidebar');"/>
-         <toolbarbutton id="sidebar-switcher-tabs"
-                        data-l10n-id="sidebar-menu-synced-tabs"
-                        class="subviewbutton sync-ui-item"
-                        oncommand="SidebarUI.show('viewTabsSidebar');"/>
-         <toolbarseparator/>
-         <!-- Extension toolbarbuttons go here. -->
-         <toolbarseparator id="sidebar-extensions-separator"/>
-         <toolbarbutton id="sidebar-reverse-position"
-                        class="subviewbutton"
-                        oncommand="SidebarUI.reversePosition()"/>
-         <toolbarseparator/>
-         <toolbarbutton data-l10n-id="sidebar-menu-close"
-                        class="subviewbutton"
-                        oncommand="SidebarUI.hide()"/>
-        </vbox>
-      </panelview>
-    </panelmultiview>
-  </panel>
+  <menupopup id="sidebarMenu-popup"
+             class="toolbar-menupopup"
+             hidden="true"
+             position="bottomleft topleft">
+    <menuitem id="sidebar-switcher-bookmarks"
+              data-l10n-id="sidebar-menu-bookmarks"
+              key="viewBookmarksSidebarKb"
+              oncommand="SidebarUI.show('viewBookmarksSidebar');"/>
+    <menuitem id="sidebar-switcher-history"
+              data-l10n-id="sidebar-menu-history"
+              key="key_gotoHistory"
+              oncommand="SidebarUI.show('viewHistorySidebar');"/>
+    <menuitem id="sidebar-switcher-tabs"
+              data-l10n-id="sidebar-menu-synced-tabs"
+              class="sync-ui-item"
+              oncommand="SidebarUI.show('viewTabsSidebar');"/>
+    <menuseparator/>
+    <!-- Extension toolbarbuttons go here. -->
+    <menuseparator id="sidebar-extensions-separator"/>
+    <menuitem id="sidebar-reverse-position"
+              oncommand="SidebarUI.reversePosition()"/>
+    <menuseparator/>
+    <menuitem data-l10n-id="sidebar-menu-close"
+              oncommand="SidebarUI.hide()"/>
+  </menupopup>
 
   <menupopup id="toolbar-context-menu"
              onpopupshowing="onViewToolbarsPopupShowing(event, document.getElementById('viewToolbarsMenuSeparator')); ToolbarContextMenu.updateDownloadsAutoHide(this); ToolbarContextMenu.updateDownloadsAlwaysOpenPanel(this); ToolbarContextMenu.updateExtension(this, event)">

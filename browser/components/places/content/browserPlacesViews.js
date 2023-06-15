@@ -20,10 +20,6 @@ class PlacesViewBase {
   constructor(placesUrl, rootElt, viewElt) {
     this._rootElt = rootElt;
     this._viewElt = viewElt;
-    let appendClass = this._rootElt.getAttribute("appendclasstochildren");
-    if (appendClass) {
-      this._appendClassToChildren = appendClass;
-    }
     // Do initialization in subclass now that `this` exists.
     this._init?.();
     this._controller = new PlacesController(this);
@@ -358,9 +354,6 @@ class PlacesViewBase {
         aPopup._emptyMenuitem,
         "places-empty-bookmarks-folder"
       );
-      if (this._appendClassToChildren) {
-        aPopup._emptyMenuitem.classList.add(this._appendClassToChildren);
-      }
     }
 
     if (aEmpty) {
@@ -422,9 +415,6 @@ class PlacesViewBase {
 
         element.appendChild(popup);
         element.className = "menu-iconic bookmark-item";
-        if (this._appendClassToChildren) {
-          element.classList.add(this._appendClassToChildren);
-        }
 
         this._domNodes.set(aPlacesNode, popup);
       } else {
@@ -449,12 +439,6 @@ class PlacesViewBase {
 
   _insertNewItemToPopup(aNewChild, aInsertionNode, aBefore = null) {
     let element = this._createDOMNodeForPlacesNode(aNewChild);
-
-    if (element.localName == "menuitem" || element.localName == "menu") {
-      if (this._appendClassToChildren) {
-        element.classList.add(this._appendClassToChildren);
-      }
-    }
 
     aInsertionNode.insertBefore(element, aBefore);
     return element;
@@ -742,10 +726,6 @@ class PlacesViewBase {
       // Add the "Open All in Tabs" menuitem.
       aPopup._endOptOpenAllInTabs = document.createXULElement("menuitem");
       aPopup._endOptOpenAllInTabs.className = "openintabs-menuitem";
-
-      if (this._appendClassToChildren) {
-        aPopup._endOptOpenAllInTabs.classList.add(this._appendClassToChildren);
-      }
 
       aPopup._endOptOpenAllInTabs.setAttribute(
         "oncommand",
@@ -1090,6 +1070,7 @@ class PlacesToolbar extends PlacesViewBase {
           is: "places-popup",
         });
         popup.setAttribute("placespopup", "true");
+        popup.classList.add("toolbar-menupopup");
         button.appendChild(popup);
         popup._placesNode = PlacesUtils.asContainer(aChild);
         popup.setAttribute("context", "placesContext");
@@ -2215,9 +2196,6 @@ this.PlacesPanelview = class PlacesPanelview extends PlacesViewBase {
         panelview._emptyMenuitem,
         "places-empty-bookmarks-folder"
       );
-      if (this._appendClassToChildren) {
-        panelview._emptyMenuitem.classList.add(this._appendClassToChildren);
-      }
     }
 
     if (empty) {

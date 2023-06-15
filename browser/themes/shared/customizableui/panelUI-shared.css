@@ -226,9 +226,10 @@ toolbarseparator + .panel-subview-body {
   margin: var(--arrowpanel-menuitem-margin);
 }
 
-/* Bookmark-related menupopup tweaks to make them feel like standard panels */
+/* Tweaks for menupopups hanging off toolbar buttons to make them feel like panels */
 
-toolbarbutton menupopup[placespopup] {
+.toolbar-menupopup,
+.toolbar-menupopup menupopup {
   appearance: none;
   border: none;
   font: menu;
@@ -240,27 +241,27 @@ toolbarbutton menupopup[placespopup] {
   --panel-padding: var(--panel-subview-body-padding);
 }
 
-toolbarbutton menupopup[placespopup] menupopup[placespopup] {
+.toolbar-menupopup menupopup {
   /* Align non top-level menupopup's first menuitem with the menuitem that opened it.
    * The 1px is for the menupopup's border. */
   margin-top: calc(-1 * (var(--panel-subview-body-padding-block) + var(--panel-shadow-margin) + 1px));
 }
 
-toolbarbutton menupopup[placespopup] > :is(menu, menuitem)[disabled] {
+.toolbar-menupopup :is(menu, menuitem)[disabled] {
   color: var(--panel-disabled-color);
 }
 
-toolbarbutton menupopup[placespopup] > :is(menu, menuitem):not([disabled])[_moz-menuactive] {
+.toolbar-menupopup :is(menu, menuitem):not([disabled])[_moz-menuactive] {
   color: inherit;
   background-color: var(--panel-item-hover-bgcolor);
 }
 
-toolbarbutton menupopup[placespopup] > :is(menu, menuitem):not([disabled])[_moz-menuactive]:active {
+.toolbar-menupopup :is(menu, menuitem):not([disabled])[_moz-menuactive]:active {
   color: inherit;
   background-color: var(--panel-item-active-bgcolor);
 }
 
-toolbarbutton menupopup[placespopup] > :is(menu, menuitem) :is(
+.toolbar-menupopup :is(
   .menu-text,
   .menu-iconic-text,
   .menu-iconic-icon,
@@ -277,20 +278,16 @@ toolbarbutton menupopup[placespopup] > :is(menu, menuitem) :is(
   appearance: none !important;
 }
 
-toolbarbutton menupopup[placespopup] > :is(.menu-iconic, .menuitem-iconic) > .menu-iconic-left {
+.toolbar-menupopup :is(.menu-iconic, .menuitem-iconic) > .menu-iconic-left {
   margin-inline-end: 8px !important;
 }
 
-toolbarbutton menupopup[placespopup] > :is(menu, menuitem) > .menu-accel-container > :is(.menu-accel, .menu-iconic-accel) {
+.toolbar-menupopup .menu-accel-container > :is(.menu-accel, .menu-iconic-accel) {
   margin-inline-start: 16px !important;
   color: var(--panel-shortcut-color);
 }
 
-toolbarbutton menupopup[placespopup][emptyplacesresult] > menuitem > .menu-accel-container > .menu-accel {
-  margin: 0 !important;
-}
-
-toolbarbutton menupopup[placespopup] > menu > .menu-right {
+.toolbar-menupopup menu > .menu-right {
   list-style-image: url(chrome://global/skin/icons/arrow-right.svg);
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
@@ -299,13 +296,13 @@ toolbarbutton menupopup[placespopup] > menu > .menu-right {
   height: unset;
 }
 
-toolbarbutton menupopup[placespopup] > menu > .menu-right:-moz-locale-dir(rtl) {
+.toolbar-menupopup menu > .menu-right:-moz-locale-dir(rtl) {
   list-style-image: url(chrome://global/skin/icons/arrow-left.svg);
 }
 
 /* menuseparators in bookmark-related menupopups are styled differently
  * to allow for user interaction with them (e.g. drag, right click ...) */
-toolbarbutton menupopup[placespopup] menuseparator {
+.toolbar-menupopup menuseparator {
   position: relative;
   appearance: none;
   border: none;
@@ -316,7 +313,7 @@ toolbarbutton menupopup[placespopup] menuseparator {
   padding-bottom: calc(var(--panel-separator-margin-vertical) + 1px);
 }
 
-toolbarbutton menupopup[placespopup] menuseparator::before {
+.toolbar-menupopup menuseparator::before {
   content: '';
   position: absolute;
   width: 100%;
@@ -326,6 +323,10 @@ toolbarbutton menupopup[placespopup] menuseparator::before {
 
 #BMB_bookmarksPopup {
   max-width: 30em;
+}
+
+:is(.toolbar-menupopup, .toolbar-menupopup menupopup)[emptyplacesresult] > menuitem > .menu-accel-container > .menu-accel {
+  margin: 0 !important;
 }
 
 #confirmation-hint {
@@ -971,7 +972,7 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
   display: none;
 }
 
-toolbarbutton menupopup[placespopup] > :is(menu, menuitem),
+.toolbar-menupopup :is(menu, menuitem),
 .subview-subheader,
 panelview .toolbarbutton-1,
 .subviewbutton,
