@@ -11,6 +11,7 @@
 #include "HTMLEditHelpers.h"  // for SplitNodeResult
 #include "WSRunObject.h"      // for WSRunScanner
 
+#include "mozilla/IntegerRange.h"       // for IntegerRange
 #include "mozilla/OwningNonNull.h"      // for OwningNonNull
 #include "mozilla/dom/Document.h"       // for dom::Document
 #include "mozilla/dom/HTMLBRElement.h"  // for dom HTMLBRElement
@@ -126,10 +127,10 @@ bool AutoRangeArray::IsEditableRange(const dom::AbstractRange& aRange,
 }
 
 void AutoRangeArray::EnsureOnlyEditableRanges(const Element& aEditingHost) {
-  for (size_t i = mRanges.Length(); i > 0; i--) {
-    const OwningNonNull<nsRange>& range = mRanges[i - 1];
+  for (const size_t index : Reversed(IntegerRange(mRanges.Length()))) {
+    const OwningNonNull<nsRange>& range = mRanges[index];
     if (!AutoRangeArray::IsEditableRange(range, aEditingHost)) {
-      mRanges.RemoveElementAt(i - 1);
+      mRanges.RemoveElementAt(index);
       continue;
     }
     // Special handling for `inert` attribute. If anchor node is inert, the
@@ -139,7 +140,7 @@ void AutoRangeArray::EnsureOnlyEditableRanges(const Element& aEditingHost) {
             ? nsIContent::FromNode(range->GetStartContainer())
             : nsIContent::FromNode(range->GetEndContainer());
     if (anchorContent && HTMLEditUtils::ContentIsInert(*anchorContent)) {
-      mRanges.RemoveElementAt(i - 1);
+      mRanges.RemoveElementAt(index);
       continue;
     }
     // Additionally, if focus node is inert, the range should be collapsed to
@@ -174,8 +175,7 @@ void AutoRangeArray::EnsureRangesInTextNode(const Text& aTextNode) {
     // Point after the text node so that use end of the text.
     return aTextNode.TextDataLength();
   };
-  for (uint32_t i : IntegerRange(mRanges.Length())) {
-    const OwningNonNull<nsRange>& range = mRanges[i];
+  for (const OwningNonNull<nsRange>& range : mRanges) {
     if (MOZ_LIKELY(range->GetStartContainer() == &aTextNode &&
                    range->GetEndContainer() == &aTextNode)) {
       continue;
@@ -192,7 +192,7 @@ void AutoRangeArray::EnsureRangesInTextNode(const Text& aTextNode) {
     // merge unnecessary ranges.  Note that the ranges never overlap
     // because selection ranges are not allowed it so that we need to check only
     // end offset vs start offset of next one.
-    for (uint32_t i : Reversed(IntegerRange(mRanges.Length() - 1u))) {
+    for (const size_t i : Reversed(IntegerRange(mRanges.Length() - 1u))) {
       MOZ_ASSERT(mRanges[i]->EndOffset() < mRanges[i + 1]->StartOffset());
       // XXX Should we delete collapsed range unless the index is 0?  Without
       //     Selection API, such situation cannot happen so that `TextEditor`
@@ -431,7 +431,7 @@ AutoRangeArray::ShrinkRangesIfStartFromOrEndAfterAtomicContent(
   }
 
   bool changed = false;
-  for (auto& range : mRanges) {
+  for (const OwningNonNull<nsRange>& range : mRanges) {
     MOZ_ASSERT(!range->IsInAnySelection(),
                "Changing range in selection may cause running script");
     Result<bool, nsresult> result =
@@ -805,7 +805,7 @@ void AutoRangeArray::ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
   // https://searchfox.org/mozilla-central/rev/1739f1301d658c9bff544a0a095ab11fca2e549d/editor/libeditor/HTMLEditSubActionHandler.cpp#6712
 
   bool removeSomeRanges = false;
-  for (OwningNonNull<nsRange>& range : mRanges) {
+  for (const OwningNonNull<nsRange>& range : mRanges) {
     // Remove non-positioned ranges.
     if (MOZ_UNLIKELY(!range->IsPositioned())) {
       removeSomeRanges = true;
@@ -841,7 +841,7 @@ void AutoRangeArray::ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
     }
   }
   if (removeSomeRanges) {
-    for (size_t i : Reversed(IntegerRange(mRanges.Length()))) {
+    for (const size_t i : Reversed(IntegerRange(mRanges.Length()))) {
       if (!mRanges[i]->IsPositioned()) {
         mRanges.RemoveElementAt(i);
       }
@@ -966,7 +966,7 @@ AutoRangeArray::SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries(
 
   // First register ranges for special editor gravity
   Maybe<size_t> anchorFocusRangeIndex;
-  for (size_t index : IntegerRange(rangeItemArray.Length())) {
+  for (const size_t index : IntegerRange(rangeItemArray.Length())) {
     rangeItemArray[index] = new RangeItem();
     rangeItemArray[index]->StoreRange(*mRanges[index]);
     aHTMLEditor.RangeUpdaterRef().RegisterRangeItem(*rangeItemArray[index]);
@@ -979,7 +979,7 @@ AutoRangeArray::SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries(
   mAnchorFocusRange = nullptr;
   // Now bust up inlines.
   nsresult rv = NS_OK;
-  for (OwningNonNull<RangeItem>& item : Reversed(rangeItemArray)) {
+  for (const OwningNonNull<RangeItem>& item : Reversed(rangeItemArray)) {
     // MOZ_KnownLive because 'rangeItemArray' is guaranteed to keep it alive.
     Result<EditorDOMPoint, nsresult> splitParentsResult =
         aHTMLEditor.SplitParentInlineElementsAtRangeBoundaries(
@@ -995,7 +995,7 @@ AutoRangeArray::SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries(
     }
   }
   // Then unregister the ranges
-  for (size_t index : IntegerRange(rangeItemArray.Length())) {
+  for (const size_t index : IntegerRange(rangeItemArray.Length())) {
     aHTMLEditor.RangeUpdaterRef().DropRangeItem(rangeItemArray[index]);
     RefPtr<nsRange> range = rangeItemArray[index]->GetRange();
     if (range && range->IsPositioned()) {
@@ -1048,7 +1048,8 @@ nsresult AutoRangeArray::CollectEditTargetNodes(
       aOutArrayOfContents.AppendElements(std::move(arrayOfTopChildren));
     }
     if (aCollectNonEditableNodes == CollectNonEditableNodes::No) {
-      for (size_t i : Reversed(IntegerRange(aOutArrayOfContents.Length()))) {
+      for (const size_t i :
+           Reversed(IntegerRange(aOutArrayOfContents.Length()))) {
         if (!EditorUtils::IsEditableContent(aOutArrayOfContents[i],
                                             EditorUtils::EditorType::HTML)) {
           aOutArrayOfContents.RemoveElementAt(i);
@@ -1067,20 +1068,22 @@ nsresult AutoRangeArray::CollectEditTargetNodes(
       if (aCollectNonEditableNodes == CollectNonEditableNodes::No) {
         options += CollectChildrenOption::IgnoreNonEditableChildren;
       }
-      for (int32_t i = aOutArrayOfContents.Length() - 1; i >= 0; i--) {
-        OwningNonNull<nsIContent> content = aOutArrayOfContents[i];
+      for (const size_t index :
+           Reversed(IntegerRange(aOutArrayOfContents.Length()))) {
+        OwningNonNull<nsIContent> content = aOutArrayOfContents[index];
         if (HTMLEditUtils::IsListItem(content)) {
-          aOutArrayOfContents.RemoveElementAt(i);
-          HTMLEditUtils::CollectChildren(*content, aOutArrayOfContents, i,
+          aOutArrayOfContents.RemoveElementAt(index);
+          HTMLEditUtils::CollectChildren(*content, aOutArrayOfContents, index,
                                          options);
         }
       }
       // Empty text node shouldn't be selected if unnecessary
-      for (int32_t i = aOutArrayOfContents.Length() - 1; i >= 0; i--) {
-        if (Text* text = aOutArrayOfContents[i]->GetAsText()) {
+      for (const size_t index :
+           Reversed(IntegerRange(aOutArrayOfContents.Length()))) {
+        if (const Text* text = aOutArrayOfContents[index]->GetAsText()) {
           // Don't select empty text except to empty block
           if (!HTMLEditUtils::IsVisibleTextNode(*text)) {
-            aOutArrayOfContents.RemoveElementAt(i);
+            aOutArrayOfContents.RemoveElementAt(index);
           }
         }
       }
@@ -1090,16 +1093,17 @@ nsresult AutoRangeArray::CollectEditTargetNodes(
       // XXX aCollectNonEditableNodes is ignored here.  Maybe a bug.
       CollectChildrenOptions options = {
           CollectChildrenOption::CollectTableChildren};
-      for (size_t i = aOutArrayOfContents.Length(); i > 0; i--) {
+      for (const size_t index :
+           Reversed(IntegerRange(aOutArrayOfContents.Length()))) {
         // Scan for table elements.  If we find table elements other than
         // table, replace it with a list of any editable non-table content
         // because if a selection range starts from end in a table-cell and
         // ends at or starts from outside the `<table>`, we need to make
         // lists in each selected table-cells.
-        OwningNonNull<nsIContent> content = aOutArrayOfContents[i - 1];
+        OwningNonNull<nsIContent> content = aOutArrayOfContents[index];
         if (HTMLEditUtils::IsAnyTableElementButNotTable(content)) {
-          aOutArrayOfContents.RemoveElementAt(i - 1);
-          HTMLEditUtils::CollectChildren(content, aOutArrayOfContents, i - 1,
+          aOutArrayOfContents.RemoveElementAt(index);
+          HTMLEditUtils::CollectChildren(content, aOutArrayOfContents, index,
                                          options);
         }
       }
@@ -1142,11 +1146,12 @@ nsresult AutoRangeArray::CollectEditTargetNodes(
       if (aCollectNonEditableNodes == CollectNonEditableNodes::No) {
         options += CollectChildrenOption::IgnoreNonEditableChildren;
       }
-      for (int32_t i = aOutArrayOfContents.Length() - 1; i >= 0; i--) {
-        OwningNonNull<nsIContent> content = aOutArrayOfContents[i];
+      for (const size_t index :
+           Reversed(IntegerRange(aOutArrayOfContents.Length()))) {
+        OwningNonNull<nsIContent> content = aOutArrayOfContents[index];
         if (HTMLEditUtils::IsAnyTableElementButNotTable(content)) {
-          aOutArrayOfContents.RemoveElementAt(i);
-          HTMLEditUtils::CollectChildren(*content, aOutArrayOfContents, i,
+          aOutArrayOfContents.RemoveElementAt(index);
+          HTMLEditUtils::CollectChildren(*content, aOutArrayOfContents, index,
                                          options);
         }
       }
@@ -1163,11 +1168,12 @@ nsresult AutoRangeArray::CollectEditTargetNodes(
     if (aCollectNonEditableNodes == CollectNonEditableNodes::No) {
       options += CollectChildrenOption::IgnoreNonEditableChildren;
     }
-    for (int32_t i = aOutArrayOfContents.Length() - 1; i >= 0; i--) {
-      OwningNonNull<nsIContent> content = aOutArrayOfContents[i];
+    for (const size_t index :
+         Reversed(IntegerRange(aOutArrayOfContents.Length()))) {
+      OwningNonNull<nsIContent> content = aOutArrayOfContents[index];
       if (content->IsHTMLElement(nsGkAtoms::div)) {
-        aOutArrayOfContents.RemoveElementAt(i);
-        HTMLEditUtils::CollectChildren(*content, aOutArrayOfContents, i,
+        aOutArrayOfContents.RemoveElementAt(index);
+        HTMLEditUtils::CollectChildren(*content, aOutArrayOfContents, index,
                                        options);
       }
     }
@@ -1182,7 +1188,7 @@ Element* AutoRangeArray::GetClosestAncestorAnyListElementOfRange() const {
     if (MOZ_UNLIKELY(!commonAncestorNode)) {
       continue;
     }
-    for (Element* element :
+    for (Element* const element :
          commonAncestorNode->InclusiveAncestorsOfType<Element>()) {
       if (HTMLEditUtils::IsAnyListElement(element)) {
         return element;
