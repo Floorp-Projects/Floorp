@@ -48,7 +48,8 @@ nsPoint ShapeUtils::ComputeCircleOrEllipseCenter(
   const auto& position = aBasicShape.IsCircle()
                              ? aBasicShape.AsCircle().position
                              : aBasicShape.AsEllipse().position;
-  return ComputePosition(position, aRefBox);
+  MOZ_ASSERT(position.IsPosition(), "A default position should be given");
+  return ComputePosition(position.AsPosition(), aRefBox);
 }
 
 nscoord ShapeUtils::ComputeCircleRadius(const StyleBasicShape& aBasicShape,
