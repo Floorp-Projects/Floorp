@@ -9366,16 +9366,20 @@ exports.CSS_PROPERTIES = {
     "supports": [],
     "values": [
       "auto",
+      "border-box",
       "bottom",
       "center",
       "circle",
+      "content-box",
       "ellipse",
+      "fill-box",
       "inherit",
       "initial",
       "inset",
       "left",
       "none",
       "normal",
+      "padding-box",
       "path",
       "polygon",
       "ray",
@@ -9383,8 +9387,10 @@ exports.CSS_PROPERTIES = {
       "revert",
       "revert-layer",
       "right",
+      "stroke-box",
       "top",
-      "unset"
+      "unset",
+      "view-box"
     ]
   },
   "offset-anchor": {
@@ -9428,18 +9434,24 @@ exports.CSS_PROPERTIES = {
     ],
     "supports": [],
     "values": [
+      "border-box",
       "circle",
+      "content-box",
       "ellipse",
+      "fill-box",
       "inherit",
       "initial",
       "inset",
       "none",
+      "padding-box",
       "path",
       "polygon",
       "ray",
       "revert",
       "revert-layer",
-      "unset"
+      "stroke-box",
+      "unset",
+      "view-box"
     ]
   },
   "offset-position": {

@@ -379,6 +379,11 @@ static OffsetPathData GenerateOffsetPathData(const nsIFrame* aFrame) {
     return OffsetPathData::None();
   }
 
+  // FIXME: Bug 1598156. Handle IsCoordBox().
+  if (offsetPath.IsCoordBox()) {
+    return OffsetPathData::None();
+  }
+
   const auto& function = offsetPath.AsOffsetPath().path;
   if (function->IsRay()) {
     return OffsetPathData::Ray(function->AsRay(), RayReferenceData(aFrame));
@@ -422,6 +427,11 @@ static OffsetPathData GenerateOffsetPathData(
     const StyleOffsetPath& aOffsetPath,
     const RayReferenceData& aRayReferenceData, gfx::Path* aCachedMotionPath) {
   if (aOffsetPath.IsNone()) {
+    return OffsetPathData::None();
+  }
+
+  // FIXME: Bug 1598156. Handle IsCoordBox().
+  if (aOffsetPath.IsCoordBox()) {
     return OffsetPathData::None();
   }
 

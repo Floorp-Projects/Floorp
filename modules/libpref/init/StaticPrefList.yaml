@@ -8640,6 +8640,14 @@
   mirror: always
   rust: true
 
+# Is support for motion-path <coord-box> enabled?
+# https://drafts.fxtf.org/motion-1/#valdef-offset-path-coord-box
+- name: layout.css.motion-path-coord-box.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+  rust: true
+
 # Is support for motion-path ray() enabled?
 - name: layout.css.motion-path-ray.enabled
   type: RelaxedAtomicBool

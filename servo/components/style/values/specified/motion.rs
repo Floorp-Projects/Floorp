@@ -27,6 +27,47 @@ pub type OffsetPath = generics::GenericOffsetPath<OffsetPathFunction>;
 /// The specified value of `offset-position`.
 pub type OffsetPosition = generics::GenericOffsetPosition<HorizontalPosition, VerticalPosition>;
 
+/// The <coord-box> value, which defines the box that the <offset-path> sizes into.
+/// https://drafts.fxtf.org/motion-1/#valdef-offset-path-coord-box
+///
+/// <coord-box> = content-box | padding-box | border-box | fill-box | stroke-box | view-box
+/// https://drafts.csswg.org/css-box-4/#typedef-coord-box
+#[allow(missing_docs)]
+#[derive(
+    Animate,
+    Clone,
+    ComputeSquaredDistance,
+    Copy,
+    Debug,
+    Deserialize,
+    MallocSizeOf,
+    Parse,
+    PartialEq,
+    Serialize,
+    SpecifiedValueInfo,
+    ToComputedValue,
+    ToCss,
+    ToResolvedValue,
+    ToShmem,
+)]
+#[repr(u8)]
+pub enum CoordBox {
+    ContentBox,
+    PaddingBox,
+    BorderBox,
+    FillBox,
+    StrokeBox,
+    ViewBox,
+}
+
+impl CoordBox {
+    /// Returns true if it is default value, border-box.
+    #[inline]
+    pub fn is_default(&self) -> bool {
+        matches!(*self, Self::BorderBox)
+    }
+}
+
 impl Parse for RayFunction {
     fn parse<'i, 't>(
         context: &ParserContext,
@@ -146,9 +187,37 @@ impl Parse for OffsetPath {
             return Ok(OffsetPath::none());
         }
 
-        Ok(OffsetPath::OffsetPath {
-            path: Box::new(OffsetPathFunction::parse(context, input)?),
-        })
+        let mut path = None;
+        let mut coord_box = None;
+        loop {
+            if path.is_none() {
+                path = input
+                    .try_parse(|i| OffsetPathFunction::parse(context, i))
+                    .ok();
+            }
+
+            if static_prefs::pref!("layout.css.motion-path-coord-box.enabled")
+                && coord_box.is_none()
+            {
+                coord_box = input.try_parse(CoordBox::parse).ok();
+                if coord_box.is_some() {
+                    continue;
+                }
+            }
+            break;
+        }
+
+        if let Some(p) = path {
+            return Ok(OffsetPath::OffsetPath {
+                path: Box::new(p),
+                coord_box: coord_box.unwrap_or(CoordBox::BorderBox),
+            });
+        }
+
+        match coord_box {
+            Some(c) => Ok(OffsetPath::CoordBox(c)),
+            None => Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError)),
+        }
     }
 }
 
