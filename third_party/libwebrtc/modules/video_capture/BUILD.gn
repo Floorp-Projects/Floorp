@@ -82,6 +82,8 @@ if (!build_with_chromium || is_linux || is_chromeos) {
 
       if (rtc_use_pipewire) {
         sources += [
+          "linux/camera_portal.cc",
+          "linux/camera_portal.h",
           "linux/device_info_pipewire.cc",
           "linux/device_info_pipewire.h",
           "linux/pipewire_session.cc",
