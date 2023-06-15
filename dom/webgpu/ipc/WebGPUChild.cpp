@@ -212,6 +212,12 @@ static ffi::WGPUTextureFormat ConvertTextureFormat(
     case dom::GPUTextureFormat::Bc7_rgba_unorm_srgb:
       result.tag = ffi::WGPUTextureFormat_Bc7RgbaUnormSrgb;
       break;
+    case dom::GPUTextureFormat::Stencil8:
+      result.tag = ffi::WGPUTextureFormat_Stencil8;
+      break;
+    case dom::GPUTextureFormat::Depth16unorm:
+      result.tag = ffi::WGPUTextureFormat_Depth16Unorm;
+      break;
     case dom::GPUTextureFormat::Depth24plus:
       result.tag = ffi::WGPUTextureFormat_Depth24Plus;
       break;
