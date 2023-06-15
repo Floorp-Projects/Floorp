@@ -120,6 +120,12 @@ interface WebExtensionPolicy {
   attribute boolean active;
 
   /**
+   * True if this extension is exemmpt from quarantine.
+   */
+  [Cached, Pure]
+  attribute boolean ignoreQuarantine;
+
+  /**
    * True if both e10s and webextensions.remote are enabled.  This must be
    * used instead of checking the remote pref directly since remote extensions
    * require both to be enabled.

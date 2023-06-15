@@ -125,14 +125,41 @@ add_task(async function test_QuarantinedDomains() {
     "test.example.com",
   ]);
 
-  expectAccess(plain, plainCS, {
+  const EXPECT_DEFAULTS = {
     "addons-dev.allizom.org": false,
     "mixed.badssl.com": false,
     "careers.mozilla.com": true,
     "developer.mozilla.org": true,
     "test.example.com": false,
-  });
+  };
 
+  expectAccess(plain, plainCS, EXPECT_DEFAULTS);
+  expectAccess(system, systemCS, CAN_ACCESS_ALL);
+  expectAccess(exempt, exemptCS, CAN_ACCESS_ALL);
+
+  info("Test changing policy.ignoreQuarantine after creation.");
+
+  ok(!plain.ignoreQuarantine, "plain policy does not ignore quarantine.");
+  ok(system.ignoreQuarantine, "system policy does ignore quarantine.");
+  ok(exempt.ignoreQuarantine, "exempt policy does ignore quarantine.");
+
+  plain.ignoreQuarantine = true;
+  system.ignoreQuarantine = false;
+  exempt.ignoreQuarantine = false;
+
+  ok(plain.ignoreQuarantine, "expect plain.ignoreQuarantine to be true.");
+  ok(!system.ignoreQuarantine, "expect system.ignoreQuarantine to be false.");
+  ok(!exempt.ignoreQuarantine, "expect exempt.ignoreQuarantine to be false.");
+
+  expectAccess(plain, plainCS, CAN_ACCESS_ALL);
+  expectAccess(system, systemCS, EXPECT_DEFAULTS);
+  expectAccess(exempt, exemptCS, EXPECT_DEFAULTS);
+
+  plain.ignoreQuarantine = false;
+  system.ignoreQuarantine = true;
+  exempt.ignoreQuarantine = true;
+
+  expectAccess(plain, plainCS, EXPECT_DEFAULTS);
   expectAccess(system, systemCS, CAN_ACCESS_ALL);
   expectAccess(exempt, exemptCS, CAN_ACCESS_ALL);
 
