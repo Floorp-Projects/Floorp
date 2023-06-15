@@ -27,6 +27,12 @@ add_heuristic_tests(
           ],
         },
         {
+          invalid: true,
+          fields: [
+            { fieldName: "address-line1", reason:"regex-heuristic" },
+          ],
+        },
+        {
           default: {
             reason: "regex-heuristic",
           },
@@ -43,6 +49,12 @@ add_heuristic_tests(
             { fieldName: "postal-code" },
             { fieldName: "tel" },
             { fieldName: "email" },
+          ],
+        },
+        {
+          invalid: true,
+          fields: [
+            { fieldName: "address-line1", reason:"regex-heuristic" },
           ],
         },
         {
@@ -95,6 +107,12 @@ add_heuristic_tests(
           ],
         },
         {
+          invalid: true,
+          fields: [
+            { fieldName: "address-line1", reason:"regex-heuristic" },
+          ],
+        },
+        {
           default: {
             reason: "regex-heuristic",
           },
@@ -111,6 +129,12 @@ add_heuristic_tests(
             { fieldName: "postal-code" },
             { fieldName: "tel" },
             { fieldName: "email" },
+          ],
+        },
+        {
+          invalid: true,
+          fields: [
+            { fieldName: "address-line1", reason:"regex-heuristic" },
           ],
         },
         {
