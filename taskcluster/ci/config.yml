@@ -183,6 +183,7 @@ treeherder:
         'langpack': 'Langpack sigatures and uploads'
         'TPS': 'Sync tests'
         'UV': 'Update verify'
+        'UVnext': 'Update verify for esr-next'
         'pydep': 'python dependency update'
         'WR': 'WebRender standalone'
         'Wgpu': 'WebGPU standalone'
