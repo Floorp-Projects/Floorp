@@ -1074,7 +1074,8 @@ int XRE_XPCShellMain(int argc, char** argv, char** envp,
 
   // This guard ensures that all threads that attempt to register themselves
   // with the IOInterposer will be properly tracked.
-  mozilla::IOInterposerInit ioInterposerGuard;
+  mozilla::AutoIOInterposer ioInterposerGuard;
+  ioInterposerGuard.Init();
 
   XRE_InitCommandLine(argc, argv);
 
