@@ -49,7 +49,9 @@ add_task(async function () {
 
 function copy(srcChromeURL, destFileName) {
   return new Promise(resolve => {
-    const destFile = FileUtils.getFile("ProfD", [destFileName]);
+    const destFile = new FileUtils.File(
+      PathUtils.join(PathUtils.profileDir, destFileName)
+    );
     write(read(srcChromeURL), destFile, resolve);
   });
 }

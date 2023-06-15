@@ -27,7 +27,7 @@ function doFileActivity()
   info("doFileActivity");
   const fileContent = "<p>hello world from bug 798764";
 
-  gTmpFile = FileUtils.getFile("TmpD", ["bug798764.html"]);
+  gTmpFile = new FileUtils.File(PathUtils.join(PathUtils.tempDir, "bug798764.html"));
   gTmpFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
 
   const fout = FileUtils.openSafeFileOutputStream(gTmpFile,

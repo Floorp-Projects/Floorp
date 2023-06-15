@@ -46,7 +46,9 @@ add_task(async function () {
   info("Change the input content");
   await setInputValue(hud, LOCAL_FILE_NEW_CONTENT);
 
-  const nsiFile = FileUtils.getFile("TmpD", [`console_input_${Date.now()}.js`]);
+  const nsiFile = new FileUtils.File(
+    PathUtils.join(PathUtils.tempDir, `console_input_${Date.now()}.js`)
+  );
   MockFilePicker.setFiles([nsiFile]);
 
   info("Save the input content");
@@ -66,7 +68,9 @@ add_task(async function () {
 });
 
 async function createLocalFile() {
-  const file = FileUtils.getFile("TmpD", [LOCAL_FILE_NAME]);
+  const file = new FileUtils.File(
+    PathUtils.join(PathUtils.tempDir, LOCAL_FILE_NAME)
+  );
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("666", 8));
   await writeInFile(LOCAL_FILE_ORIGINAL_CONTENT, file);
   return file;

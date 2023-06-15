@@ -33,7 +33,9 @@ add_task(async function () {
 
 function importSheet(ui, panelWindow) {
   // create file to import first
-  const file = FileUtils.getFile("ProfD", [FILENAME]);
+  const file = new FileUtils.File(
+    PathUtils.join(PathUtils.profileDir, FILENAME)
+  );
   const ostream = FileUtils.openSafeFileOutputStream(file);
   const istream = getInputStream(SOURCE);
 

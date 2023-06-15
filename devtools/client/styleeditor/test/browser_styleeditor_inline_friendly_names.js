@@ -51,7 +51,9 @@ function testIndentifierGeneration(ui) {
 function saveFirstInlineStyleSheet(ui) {
   return new Promise(resolve => {
     const editor = ui.editors[0];
-    const destFile = FileUtils.getFile("ProfD", [SAVE_PATH]);
+    const destFile = new FileUtils.File(
+      PathUtils.join(PathUtils.profileDir, SAVE_PATH)
+    );
 
     editor.saveToFile(destFile, function (file) {
       ok(file, "File was correctly saved.");

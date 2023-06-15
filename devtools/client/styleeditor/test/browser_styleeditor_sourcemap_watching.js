@@ -113,7 +113,9 @@ function getStylesheetNameFor(editor) {
 }
 
 function copy(srcChromeURL, destFilePath) {
-  const destFile = FileUtils.getFile("ProfD", destFilePath);
+  const destFile = new FileUtils.File(
+    PathUtils.join(PathUtils.profileDir, ...destFilePath)
+  );
   return write(read(srcChromeURL), destFile);
 }
 

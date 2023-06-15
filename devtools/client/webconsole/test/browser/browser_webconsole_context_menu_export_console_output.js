@@ -161,9 +161,9 @@ async function exportAllToFile(hud, message) {
   const exportFile = menuPopup.querySelector("#console-menu-export-file");
   ok(exportFile, "copy menu item is enabled");
 
-  const nsiFile = FileUtils.getFile("TmpD", [
-    `export_console_${Date.now()}.log`,
-  ]);
+  const nsiFile = new FileUtils.File(
+    PathUtils.join(PathUtils.tempDir, `export_console_${Date.now()}.log`)
+  );
   MockFilePicker.setFiles([nsiFile]);
   exportFile.click();
   info("Exporting to file");

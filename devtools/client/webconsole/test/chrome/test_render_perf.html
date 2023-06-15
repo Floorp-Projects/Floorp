@@ -212,7 +212,7 @@ window.onload = async function() {
 
   ok(true, "Tests finished");
 
-  const file = FileUtils.getFile("TmpD", [`test_render_perf_${Date.now()}.json`]);
+  const file = new FileUtils.File(PathUtils.join(PathUtils.tempDir, `test_render_perf_${Date.now()}.json`));
   Services.profiler.dumpProfileToFile(file.path);
   Services.profiler.StopProfiler();
 
