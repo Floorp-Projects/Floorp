@@ -344,6 +344,10 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "URLSearchParams", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "VideoColorSpace", insecureContext: true , nightly: true},
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "VideoFrame", insecureContext: true , nightly: true},
+  // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "WebGL2RenderingContext", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "WebGLActiveInfo", insecureContext: true },
