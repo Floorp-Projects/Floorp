@@ -142,115 +142,126 @@ RuleEditor.prototype = {
     this.updateSourceLink();
 
     if (this.rule.domRule.ancestorData.length) {
-      const parts = this.rule.domRule.ancestorData.map(
-        (ancestorData, index) => {
-          if (ancestorData.type == "container") {
-            const container = this.doc.createElement("li");
-            container.classList.add("container-query");
-            container.setAttribute("data-ancestor-index", index);
-
-            createChild(container, "span", {
-              class: "container-query-declaration",
-              textContent: `@container${
-                ancestorData.containerName
-                  ? " " + ancestorData.containerName
-                  : ""
-              }`,
-            });
-
-            container.classList.add("has-tooltip");
-
-            const jumpToNodeButton = createChild(container, "button", {
-              class: "open-inspector",
-              title: l10n("rule.containerQuery.selectContainerButton.tooltip"),
-            });
-
-            let containerNodeFront;
-            const getNodeFront = async () => {
-              if (!containerNodeFront) {
-                const res = await this.rule.domRule.getQueryContainerForNode(
-                  index,
-                  this.rule.inherited ||
-                    this.ruleView.inspector.selection.nodeFront
-                );
-                containerNodeFront = res.node;
-              }
-              return containerNodeFront;
-            };
-
-            jumpToNodeButton.addEventListener("click", async () => {
-              const front = await getNodeFront();
-              if (!front) {
-                return;
-              }
-              this.ruleView.inspector.selection.setNodeFront(front);
-              await this.ruleView.inspector.highlighters.hideHighlighterType(
-                this.ruleView.inspector.highlighters.TYPES.BOXMODEL
-              );
-            });
-            container.append(jumpToNodeButton);
-
-            container.addEventListener("mouseenter", async () => {
-              const front = await getNodeFront();
-              if (!front) {
-                return;
-              }
-
-              await this.ruleView.inspector.highlighters.showHighlighterTypeForNode(
-                this.ruleView.inspector.highlighters.TYPES.BOXMODEL,
-                front
-              );
-            });
-            container.addEventListener("mouseleave", async () => {
-              await this.ruleView.inspector.highlighters.hideHighlighterType(
-                this.ruleView.inspector.highlighters.TYPES.BOXMODEL
-              );
-            });
-
-            createChild(container, "span", {
-              // Add a space between the container name (or @container if there's no name)
-              // and the query so the title, which is computed from the DOM, displays correctly.
-              textContent: " " + ancestorData.containerQuery,
-            });
-            return container;
-          }
-          if (ancestorData.type == "layer") {
-            return `@layer${
-              ancestorData.value ? " " + ancestorData.value : ""
-            }`;
-          }
-          if (ancestorData.type == "media") {
-            return `@media ${ancestorData.value}`;
-          }
-
-          if (ancestorData.type == "supports") {
-            return `@supports ${ancestorData.conditionText}`;
-          }
-
-          if (ancestorData.type == "import") {
-            return `@import ${ancestorData.value}`;
-          }
-
-          // We shouldn't get here as `type` should only match to what can be set in
-          // the StyleRuleActor form, but just in case, let's return an empty string.
-          console.warn("Unknown ancestor data type:", ancestorData.type);
-          return ``;
+      const ancestorsFrag = this.doc.createDocumentFragment();
+      this.rule.domRule.ancestorData.forEach((ancestorData, index) => {
+        const ancestorLi = this.doc.createElement("li");
+        ancestorsFrag.append(ancestorLi);
+        ancestorLi.setAttribute("data-ancestor-index", index);
+        ancestorLi.classList.add("ruleview-rule-ancestor");
+        if (ancestorData.type) {
+          ancestorLi.classList.add(ancestorData.type);
         }
-      );
 
-      this.ancestorDataEl = createChild(this.element, "ul", {
-        class: "ruleview-rule-ancestor-data theme-link",
+        if (ancestorData.type == "container") {
+          ancestorLi.classList.add("container-query");
+
+          createChild(ancestorLi, "span", {
+            class: "container-query-declaration",
+            textContent: `@container${
+              ancestorData.containerName ? " " + ancestorData.containerName : ""
+            }`,
+          });
+
+          ancestorLi.classList.add("has-tooltip");
+
+          const jumpToNodeButton = createChild(ancestorLi, "button", {
+            class: "open-inspector",
+            title: l10n("rule.containerQuery.selectContainerButton.tooltip"),
+          });
+
+          let containerNodeFront;
+          const getNodeFront = async () => {
+            if (!containerNodeFront) {
+              const res = await this.rule.domRule.getQueryContainerForNode(
+                index,
+                this.rule.inherited ||
+                  this.ruleView.inspector.selection.nodeFront
+              );
+              containerNodeFront = res.node;
+            }
+            return containerNodeFront;
+          };
+
+          jumpToNodeButton.addEventListener("click", async () => {
+            const front = await getNodeFront();
+            if (!front) {
+              return;
+            }
+            this.ruleView.inspector.selection.setNodeFront(front);
+            await this.ruleView.inspector.highlighters.hideHighlighterType(
+              this.ruleView.inspector.highlighters.TYPES.BOXMODEL
+            );
+          });
+          ancestorLi.append(jumpToNodeButton);
+
+          ancestorLi.addEventListener("mouseenter", async () => {
+            const front = await getNodeFront();
+            if (!front) {
+              return;
+            }
+
+            await this.ruleView.inspector.highlighters.showHighlighterTypeForNode(
+              this.ruleView.inspector.highlighters.TYPES.BOXMODEL,
+              front
+            );
+          });
+          ancestorLi.addEventListener("mouseleave", async () => {
+            await this.ruleView.inspector.highlighters.hideHighlighterType(
+              this.ruleView.inspector.highlighters.TYPES.BOXMODEL
+            );
+          });
+
+          createChild(ancestorLi, "span", {
+            // Add a space between the container name (or @container if there's no name)
+            // and the query so the title, which is computed from the DOM, displays correctly.
+            textContent: " " + ancestorData.containerQuery,
+          });
+          return;
+        }
+
+        if (ancestorData.type == "layer") {
+          ancestorLi.append(
+            this.doc.createTextNode(
+              `@layer${ancestorData.value ? " " + ancestorData.value : ""}`
+            )
+          );
+          return;
+        }
+        if (ancestorData.type == "media") {
+          ancestorLi.append(
+            this.doc.createTextNode(`@media ${ancestorData.value}`)
+          );
+          return;
+        }
+
+        if (ancestorData.type == "supports") {
+          ancestorLi.append(
+            this.doc.createTextNode(`@supports ${ancestorData.conditionText}`)
+          );
+          return;
+        }
+
+        if (ancestorData.type == "import") {
+          ancestorLi.append(
+            this.doc.createTextNode(`@import ${ancestorData.value}`)
+          );
+          return;
+        }
+
+        if (ancestorData.selectorText) {
+          ancestorLi.append(this.doc.createTextNode(ancestorData.selectorText));
+          return;
+        }
+
+        // We shouldn't get here as `type` should only match to what can be set in
+        // the StyleRuleActor form, but just in case, let's return an empty string.
+        console.warn("Unknown ancestor data type:", ancestorData.type);
       });
 
-      for (const part of parts) {
-        if (typeof part == "string") {
-          createChild(this.ancestorDataEl, "li", {
-            textContent: part,
-          });
-        } else {
-          this.ancestorDataEl.append(part);
-        }
-      }
+      this.ancestorDataEl = createChild(this.element, "ol", {
+        class: "ruleview-rule-ancestor-data theme-link",
+      });
+      this.ancestorDataEl.append(ancestorsFrag);
     }
 
     const code = createChild(this.element, "div", {

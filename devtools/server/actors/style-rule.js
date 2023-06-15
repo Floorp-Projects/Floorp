@@ -274,33 +274,40 @@ class StyleRuleActor extends Actor {
     // Go through all ancestor so we can build an array of all the media queries and
     // layers this rule is in.
     for (const ancestorRule of this.ancestorRules) {
-      const ruleClassName = ChromeUtils.getClassName(ancestorRule.rawRule);
+      const rawRule = ancestorRule.rawRule;
+      const ruleClassName = ChromeUtils.getClassName(rawRule);
       const type = SharedCssLogic.CSSAtRuleClassNameType[ruleClassName];
-      if (
-        ruleClassName === "CSSMediaRule" &&
-        ancestorRule.rawRule.media?.length
-      ) {
+
+      if (ruleClassName === "CSSMediaRule" && rawRule.media?.length) {
         form.ancestorData.push({
           type,
-          value: Array.from(ancestorRule.rawRule.media).join(", "),
+          value: Array.from(rawRule.media).join(", "),
         });
       } else if (ruleClassName === "CSSLayerBlockRule") {
         form.ancestorData.push({
           type,
-          value: ancestorRule.rawRule.name,
+          value: rawRule.name,
         });
       } else if (ruleClassName === "CSSContainerRule") {
         form.ancestorData.push({
           type,
           // Send containerName and containerQuery separately (instead of conditionText)
           // so the client has more flexibility to display the information.
-          containerName: ancestorRule.rawRule.containerName,
-          containerQuery: ancestorRule.rawRule.containerQuery,
+          containerName: rawRule.containerName,
+          containerQuery: rawRule.containerQuery,
         });
       } else if (ruleClassName === "CSSSupportsRule") {
         form.ancestorData.push({
           type,
-          conditionText: ancestorRule.rawRule.conditionText,
+          conditionText: rawRule.conditionText,
+        });
+      } else if (rawRule.selectorText) {
+        // All the previous cases where about at-rules; this one is for regular rule
+        // that are ancestors because CSS nesting was used.
+        // In such case, we want to return the selectorText so it can be displayed in the UI.
+        form.ancestorData.push({
+          type,
+          selectorText: rawRule.selectorText,
         });
       }
     }
