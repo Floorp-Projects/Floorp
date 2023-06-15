@@ -439,9 +439,6 @@ class FennecInstance(GeckoInstance):
         "browser.sessionstore.resume_from_crash": False,
         # Disable e10s by default
         "browser.tabs.remote.autostart": False,
-        # Do not allow background tabs to be zombified, otherwise for tests that
-        # open additional tabs, the test harness tab itself might get unloaded
-        "browser.tabs.disableBackgroundZombification": True,
     }
 
     def __init__(
