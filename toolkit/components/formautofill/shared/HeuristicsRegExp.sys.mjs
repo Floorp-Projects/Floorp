@@ -49,15 +49,18 @@ export const HeuristicsRegExp = {
         "(cc|kk)nr",    // de-DE
       "cc-exp":
         "ważna.*do" +        // pl-PL
-        "|data.*ważności",   // pl-PL
+        "|data.*ważności" +  // pl-PL
+        "|mm\s*[\-\/]\s*aa",  // es-ES
       "cc-exp-month":
         "month" +
         "|(cc|kk)month" +    // de-DE
-        "|miesiąc",          // pl-PL
+        "|miesiąc" +         // pl-PL
+        "|mes",              // es-ES
       "cc-exp-year":
         "year" +
         "|(cc|kk)year" +     // de-DE
-        "|rok",              // pl-PL
+        "|rok" +             // pl-PL
+        "|(anno|año)",       // es-ES
       "cc-type":
         "type" +
         "|kartenmarke" +     // de-DE
