@@ -206,7 +206,7 @@ export class AboutTranslationsChild extends JSWindowActorChild {
     }
     return this.#convertToContentPromise(
       this.#getTranslationsChild()
-        .createLanguageIdEngine()
+        .getOrCreateLanguageIdEngine()
         .then(engine => {
           this.languageIdEngine = engine;
         })
