@@ -244,6 +244,7 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
     ]
 
     UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/modules/video_capture/linux/camera_portal.cc",
         "/third_party/libwebrtc/modules/video_capture/linux/device_info_pipewire.cc",
         "/third_party/libwebrtc/modules/video_capture/linux/pipewire_session.cc",
         "/third_party/libwebrtc/modules/video_capture/linux/video_capture_pipewire.cc"
@@ -266,6 +267,7 @@ if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Linux":
     ]
 
     UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/modules/video_capture/linux/camera_portal.cc",
         "/third_party/libwebrtc/modules/video_capture/linux/device_info_pipewire.cc",
         "/third_party/libwebrtc/modules/video_capture/linux/pipewire_session.cc",
         "/third_party/libwebrtc/modules/video_capture/linux/video_capture_pipewire.cc"
@@ -292,6 +294,7 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
     ]
 
     UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/modules/video_capture/linux/camera_portal.cc",
         "/third_party/libwebrtc/modules/video_capture/linux/device_info_pipewire.cc",
         "/third_party/libwebrtc/modules/video_capture/linux/pipewire_session.cc",
         "/third_party/libwebrtc/modules/video_capture/linux/video_capture_pipewire.cc"
@@ -314,6 +317,7 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
     ]
 
     UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/modules/video_capture/linux/camera_portal.cc",
         "/third_party/libwebrtc/modules/video_capture/linux/device_info_pipewire.cc",
         "/third_party/libwebrtc/modules/video_capture/linux/pipewire_session.cc",
         "/third_party/libwebrtc/modules/video_capture/linux/video_capture_pipewire.cc"
