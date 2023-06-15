@@ -705,8 +705,10 @@ static bool GC(JSContext* cx, unsigned argc, Value* vp) {
 static bool MinorGC(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (args.get(0) == BooleanValue(true)) {
-    cx->runtime()->gc.storeBuffer().setAboutToOverflow(
-        JS::GCReason::FULL_GENERIC_BUFFER);
+    gc::GCRuntime& gc = cx->runtime()->gc;
+    if (gc.nursery().isEnabled()) {
+      gc.storeBuffer().setAboutToOverflow(JS::GCReason::FULL_GENERIC_BUFFER);
+    }
   }
 
   cx->minorGC(JS::GCReason::API);
