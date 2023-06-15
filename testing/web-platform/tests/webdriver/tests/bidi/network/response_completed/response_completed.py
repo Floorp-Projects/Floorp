@@ -1,5 +1,6 @@
 import asyncio
 import json
+from urllib.parse import quote
 
 import pytest
 
@@ -262,3 +263,68 @@ async def test_redirect(bidi_session, wait_for_event, url, fetch, setup_network_
 
     # Check that both requests share the same requestId
     assert events[0]["request"]["request"] == events[1]["request"]["request"]
+
+
+@pytest.mark.parametrize(
+    "protocol,parameters",
+    [
+        ("http", ""),
+        ("https", ""),
+        ("https", {"pipe": "header(Cross-Origin-Opener-Policy,same-origin)"}),
+    ],
+    ids=["http", "https", "https coop"],
+)
+@pytest.mark.asyncio
+async def test_redirect_document(
+    bidi_session, new_tab, url, setup_network_test, inline, protocol, parameters
+):
+    network_events = await setup_network_test(events=[RESPONSE_COMPLETED_EVENT])
+    events = network_events[RESPONSE_COMPLETED_EVENT]
+
+    # The test starts on a url on the alternate domain, potentially with https
+    # and coop headers.
+    initial_url = inline(
+        "<div>bar</div>",
+        domain="alt",
+        protocol=protocol,
+        parameters=parameters,
+    )
+    await bidi_session.browsing_context.navigate(
+        context=new_tab["context"],
+        url=initial_url,
+        wait="complete",
+    )
+
+    # Then navigate to a cross domain page, which will redirect back to the
+    # initial url.
+    redirect_url = url(
+        f"/webdriver/tests/support/http_handlers/redirect.py?location={quote(initial_url)}"
+    )
+    await bidi_session.browsing_context.navigate(
+        context=new_tab["context"],
+        url=redirect_url,
+        wait="complete",
+    )
+
+    # Wait until we receive three events:
+    # - one for the initial request
+    # - two for the second navigation and its redirect
+    wait = AsyncPoll(bidi_session, timeout=2)
+    await wait.until(lambda _: len(events) >= 3)
+    assert len(events) == 3
+
+    expected_request = {"method": "GET", "url": initial_url}
+    assert_response_event(
+        events[0], expected_request=expected_request, redirect_count=0
+    )
+    expected_request = {"method": "GET", "url": redirect_url}
+    assert_response_event(
+        events[1], expected_request=expected_request, redirect_count=0
+    )
+    expected_request = {"method": "GET", "url": initial_url}
+    assert_response_event(
+        events[2], expected_request=expected_request, redirect_count=1
+    )
+
+    # Check that the last 2 requests share the same request id
+    assert events[1]["request"]["request"] == events[2]["request"]["request"]
