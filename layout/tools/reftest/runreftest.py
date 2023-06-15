@@ -546,8 +546,6 @@ class RefTest(object):
             xrePath=options.xrePath, debugger=options.debugger
         )
         browserEnv["XPCOM_DEBUG_BREAK"] = "stack"
-        if options.topsrcdir:
-            browserEnv["MOZ_DEVELOPER_REPO_DIR"] = options.topsrcdir
         if hasattr(options, "topobjdir"):
             browserEnv["MOZ_DEVELOPER_OBJ_DIR"] = options.topobjdir
 
