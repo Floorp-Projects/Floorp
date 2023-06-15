@@ -1282,7 +1282,7 @@ class CGIncludeGuard(CGWrapper):
 
     def __init__(self, prefix, child):
         """|prefix| is the filename without the extension."""
-        define = "mozilla_dom_%s_h" % prefix
+        define = "DOM_%s_H_" % prefix.upper()
         CGWrapper.__init__(
             self,
             child,
