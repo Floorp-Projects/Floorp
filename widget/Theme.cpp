@@ -23,6 +23,7 @@
 #include "nsCSSColorUtils.h"
 #include "nsCSSRendering.h"
 #include "nsScrollbarFrame.h"
+#include "nsIScrollableFrame.h"
 #include "nsIScrollbarMediator.h"
 #include "nsDeviceContext.h"
 #include "nsLayoutUtils.h"
@@ -1114,6 +1115,17 @@ static ScrollbarDrawing::ScrollbarKind ComputeScrollbarKind(
              : ScrollbarDrawing::ScrollbarKind::VerticalLeft;
 }
 
+static ScrollbarDrawing::ScrollbarKind ComputeScrollbarKindForScrollCorner(
+    nsIFrame* aFrame) {
+  nsIScrollableFrame* sf = do_QueryFrame(aFrame->GetParent());
+  if (!sf) {
+    return ScrollbarDrawing::ScrollbarKind::VerticalRight;
+  }
+  return sf->IsScrollbarOnRight()
+             ? ScrollbarDrawing::ScrollbarKind::VerticalRight
+             : ScrollbarDrawing::ScrollbarKind::VerticalLeft;
+}
+
 template <typename PaintBackendData>
 bool Theme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
                                    nsIFrame* aFrame,
@@ -1281,7 +1293,7 @@ bool Theme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
           colors, dpiRatio);
     }
     case StyleAppearance::Scrollcorner: {
-      auto kind = ComputeScrollbarKind(aFrame, false);
+      auto kind = ComputeScrollbarKindForScrollCorner(aFrame);
       return GetScrollbarDrawing().PaintScrollCorner(
           aPaintData, devPxRect, kind, aFrame,
           *nsLayoutUtils::StyleForScrollbar(aFrame), docState, colors,
