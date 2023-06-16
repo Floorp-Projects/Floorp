@@ -30,6 +30,9 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/LSValue.h"
+#include "mozilla/dom/quota/QuotaCommon.h"
+#include "mozilla/dom/quota/ResultExtensions.h"
+#include "mozilla/dom/quota/ScopedLogExtraInfo.h"
 #include "mozilla/dom/PBackgroundLSDatabase.h"
 #include "mozilla/dom/PBackgroundLSSharedTypes.h"
 #include "mozilla/dom/PBackgroundLSSnapshot.h"
@@ -373,9 +376,17 @@ nsresult LSSnapshot::SetItem(const nsAString& aKey, const nsAString& aValue,
       delta += static_cast<int64_t>(aKey.Length());
     }
 
-    rv = UpdateUsage(delta);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    {
+      quota::ScopedLogExtraInfo scope{
+          quota::ScopedLogExtraInfo::kTagContext,
+          "dom::localstorage::LSSnapshot::SetItem::UpdateUsage"_ns};
+      QM_TRY(MOZ_TO_RESULT(UpdateUsage(delta)), QM_PROPAGATE, QM_NO_CLEANUP,
+             ([]() {
+               static uint32_t counter = 0u;
+               const bool result = 0u != (counter & (1u + counter));
+               ++counter;
+               return result;
+             }));
     }
 
     if (oldValue.IsVoid() && mLoadState == LoadState::Partial) {
