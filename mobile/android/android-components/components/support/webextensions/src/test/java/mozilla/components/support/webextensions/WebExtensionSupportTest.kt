@@ -385,6 +385,7 @@ class WebExtensionSupportTest {
         whenever(ext.id).thenReturn("extensionId")
         whenever(ext.url).thenReturn("url")
         whenever(ext.supportActions).thenReturn(true)
+        whenever(ext.isBuiltIn()).thenReturn(false)
 
         val delegateCaptor = argumentCaptor<WebExtensionDelegate>()
         WebExtensionSupport.initialize(engine, store)
@@ -395,6 +396,11 @@ class WebExtensionSupportTest {
         verify(store).dispatch(
             WebExtensionAction.InstallWebExtensionAction(
                 WebExtensionState(ext.id, ext.url, ext.getMetadata()?.name, ext.isEnabled()),
+            ),
+        )
+        verify(store).dispatch(
+            WebExtensionAction.UpdatePromptRequestWebExtensionAction(
+                WebExtensionPromptRequest.PostInstallation(ext),
             ),
         )
         assertEquals(ext, WebExtensionSupport.installedExtensions[ext.id])
@@ -414,7 +420,7 @@ class WebExtensionSupportTest {
         whenever(ext.hasTabHandler(engineSession)).thenReturn(true)
 
         actionHandlerCaptor.value.onBrowserAction(ext, engineSession, mock())
-        verify(store, times(2)).dispatch(webExtensionActionCaptor.capture())
+        verify(store, times(3)).dispatch(webExtensionActionCaptor.capture())
         assertEquals(ext.id, (webExtensionActionCaptor.allValues.last() as WebExtensionAction.UpdateTabBrowserAction).extensionId)
 
         store.dispatch(ContentAction.UpdateUrlAction(sessionId = "1", url = "https://www.firefox.com")).joinBlocking()
@@ -477,6 +483,29 @@ class WebExtensionSupportTest {
         delegateCaptor.value.onUninstalled(ext)
         verify(store).dispatch(WebExtensionAction.UninstallWebExtensionAction(ext.id))
         assertNull(WebExtensionSupport.installedExtensions[ext.id])
+    }
+
+    @Test
+    fun `GIVEN BuiltIn extension WHEN calling onInstalled THEN do not show the PostInstallation prompt`() {
+        val store = spy(BrowserStore())
+
+        val engine: Engine = mock()
+        val ext: WebExtension = mock()
+        whenever(ext.id).thenReturn("extensionId")
+        whenever(ext.url).thenReturn("url")
+        whenever(ext.supportActions).thenReturn(true)
+        whenever(ext.isBuiltIn()).thenReturn(true)
+
+        val delegateCaptor = argumentCaptor<WebExtensionDelegate>()
+        WebExtensionSupport.initialize(engine, store)
+        verify(engine).registerWebExtensionDelegate(delegateCaptor.capture())
+
+        delegateCaptor.value.onInstalled(ext)
+        verify(store, times(0)).dispatch(
+            WebExtensionAction.UpdatePromptRequestWebExtensionAction(
+                WebExtensionPromptRequest.PostInstallation(ext),
+            ),
+        )
     }
 
     @Test

@@ -367,7 +367,10 @@ class AddonManager(
  */
 class AddonManagerException(throwable: Throwable) : Exception(throwable)
 
-private fun WebExtension.toInstalledState() =
+/**
+ * Converts a [WebExtension] to [Addon.InstalledState].
+ */
+fun WebExtension.toInstalledState() =
     Addon.InstalledState(
         id = id,
         version = getMetadata()?.version ?: "",

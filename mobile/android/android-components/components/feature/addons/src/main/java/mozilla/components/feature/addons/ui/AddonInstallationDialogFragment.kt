@@ -6,6 +6,7 @@ package mozilla.components.feature.addons.ui
 
 import android.annotation.SuppressLint
 import android.app.Dialog
+import android.content.DialogInterface
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
@@ -68,6 +69,11 @@ class AddonInstallationDialogFragment : AppCompatDialogFragment() {
     var onConfirmButtonClicked: ((Addon, Boolean) -> Unit)? = null
 
     /**
+     * A lambda called when the dialog is dismissed.
+     */
+    var onDismissed: (() -> Unit)? = null
+
+    /**
      * Reference to the application's [AddonCollectionProvider] to fetch add-on icons.
      */
     var addonCollectionProvider: AddonCollectionProvider? = null
@@ -108,6 +114,11 @@ class AddonInstallationDialogFragment : AppCompatDialogFragment() {
     override fun onStop() {
         super.onStop()
         iconJob?.cancel()
+    }
+
+    override fun onCancel(dialog: DialogInterface) {
+        super.onCancel(dialog)
+        onDismissed?.invoke()
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -257,6 +268,7 @@ class AddonInstallationDialogFragment : AppCompatDialogFragment() {
          * Returns a new instance of [AddonInstallationDialogFragment].
          * @param addon The addon to show in the dialog.
          * @param promptsStyling Styling properties for the dialog.
+         * @param onDismissed A lambda called when the dialog is dismissed.
          * @param onConfirmButtonClicked A lambda called when the confirm button is clicked.
          */
         fun newInstance(
@@ -266,6 +278,7 @@ class AddonInstallationDialogFragment : AppCompatDialogFragment() {
                 gravity = Gravity.BOTTOM,
                 shouldWidthMatchParent = true,
             ),
+            onDismissed: (() -> Unit)? = null,
             onConfirmButtonClicked: ((Addon, Boolean) -> Unit)? = null,
         ): AddonInstallationDialogFragment {
             val fragment = AddonInstallationDialogFragment()
@@ -289,6 +302,7 @@ class AddonInstallationDialogFragment : AppCompatDialogFragment() {
                 }
             }
             fragment.onConfirmButtonClicked = onConfirmButtonClicked
+            fragment.onDismissed = onDismissed
             fragment.arguments = arguments
             fragment.addonCollectionProvider = addonCollectionProvider
             return fragment

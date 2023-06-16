@@ -17,13 +17,17 @@ import mozilla.components.browser.state.action.WebExtensionAction
 import mozilla.components.browser.state.state.extension.WebExtensionPromptRequest
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.addons.Addon
+import mozilla.components.feature.addons.toInstalledState
+import mozilla.components.feature.addons.ui.AddonInstallationDialogFragment
 import mozilla.components.feature.addons.ui.PermissionsDialogFragment
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import org.mozilla.fenix.R
 import org.mozilla.fenix.addons.showSnackBar
 import org.mozilla.fenix.components.FenixSnackbar
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.theme.ThemeManager
+import java.lang.ref.WeakReference
 
 /**
  * Feature implementation for handling [WebExtensionPromptRequest] and showing the respective UI.
@@ -34,6 +38,7 @@ class WebExtensionPromptFeature(
     private val context: Context,
     private val view: View,
     private val fragmentManager: FragmentManager,
+    private val onAddonChanged: (Addon) -> Unit = {},
 ) : LifecycleAwareFeature {
 
     /**
@@ -51,32 +56,57 @@ class WebExtensionPromptFeature(
             flow.mapNotNull { state ->
                 state.webExtensionPromptRequest
             }.distinctUntilChanged().collect { promptRequest ->
-                if (promptRequest is WebExtensionPromptRequest.Permissions && !hasExistingPermissionDialogFragment()) {
-                    val addon = provideAddons().find { addon ->
-                        addon.id == promptRequest.extension.id
-                    }
+                val addon = provideAddons().find { addon ->
+                    addon.id == promptRequest.extension.id
+                }
+                when (promptRequest) {
+                    is WebExtensionPromptRequest.Permissions -> handlePermissionRequest(
+                        addon,
+                        promptRequest,
+                    )
 
-                    // If the add-on is not found, it is already installed because the install process can only
-                    // be triggered for add-ons "known" by Fenix (the add-on is either part of the official list
-                    // of supported extensions OR part of the user custom AMO collection).
-                    if (addon == null) {
-                        promptRequest.onConfirm(false)
-                        consumePromptRequest()
-                        showSnackBar(
-                            view,
-                            context.getString(R.string.addon_already_installed),
-                            FenixSnackbar.LENGTH_LONG,
-                        )
-                    } else {
-                        showPermissionDialog(
-                            addon,
-                            promptRequest,
-                        )
-                    }
+                    is WebExtensionPromptRequest.PostInstallation -> handlePostInstallationRequest(
+                        addon?.copy(installedState = promptRequest.extension.toInstalledState()),
+                    )
                 }
             }
         }
         tryToReAttachButtonHandlersToPreviousDialog()
+    }
+
+    private fun handlePostInstallationRequest(
+        addon: Addon?,
+    ) {
+        if (addon == null) {
+            consumePromptRequest()
+            return
+        }
+        showPostInstallationDialog(addon)
+    }
+
+    private fun handlePermissionRequest(
+        addon: Addon?,
+        promptRequest: WebExtensionPromptRequest.Permissions,
+    ) {
+        if (hasExistingPermissionDialogFragment()) return
+
+        // If the add-on is not found, it is already installed because the install process can only
+        // be triggered for add-ons "known" by Fenix (the add-on is either part of the official list
+        // of supported extensions OR part of the user custom AMO collection).
+        if (addon == null) {
+            promptRequest.onConfirm(false)
+            consumePromptRequest()
+            showSnackBar(
+                view,
+                context.getString(R.string.addon_already_installed),
+                FenixSnackbar.LENGTH_LONG,
+            )
+        } else {
+            showPermissionDialog(
+                addon,
+                promptRequest,
+            )
+        }
     }
 
     /**
@@ -123,7 +153,7 @@ class WebExtensionPromptFeature(
     }
 
     private fun tryToReAttachButtonHandlersToPreviousDialog() {
-        findPreviousDialogFragment()?.let { dialog ->
+        findPreviousPermissionDialogFragment()?.let { dialog ->
             dialog.onPositiveButtonClicked = { addon ->
                 store.state.webExtensionPromptRequest?.let { promptRequest ->
                     if (addon.id == promptRequest.extension.id &&
@@ -138,6 +168,27 @@ class WebExtensionPromptFeature(
                     if (promptRequest is WebExtensionPromptRequest.Permissions) {
                         handleDeniedPermissions(promptRequest)
                     }
+                }
+            }
+        }
+
+        findPreviousPostInstallationDialogFragment()?.let { dialog ->
+            dialog.onConfirmButtonClicked = { addon, allowInPrivateBrowsing ->
+                store.state.webExtensionPromptRequest?.let { promptRequest ->
+                    if (addon.id == promptRequest.extension.id &&
+                        promptRequest is WebExtensionPromptRequest.PostInstallation
+                    ) {
+                        handlePostInstallationButtonClicked(
+                            allowInPrivateBrowsing = allowInPrivateBrowsing,
+                            context = WeakReference(context),
+                            addon = addon,
+                        )
+                    }
+                }
+            }
+            dialog.onDismissed = {
+                store.state.webExtensionPromptRequest?.let { _ ->
+                    consumePromptRequest()
                 }
             }
         }
@@ -158,14 +209,87 @@ class WebExtensionPromptFeature(
     }
 
     private fun hasExistingPermissionDialogFragment(): Boolean {
-        return findPreviousDialogFragment() != null
+        return findPreviousPermissionDialogFragment() != null
     }
 
-    private fun findPreviousDialogFragment(): PermissionsDialogFragment? {
+    private fun hasExistingAddonPostInstallationDialogFragment(): Boolean {
+        return fragmentManager.findFragmentByTag(POST_INSTALLATION_DIALOG_FRAGMENT_TAG)
+            as? AddonInstallationDialogFragment != null
+    }
+
+    private fun findPreviousPermissionDialogFragment(): PermissionsDialogFragment? {
         return fragmentManager.findFragmentByTag(PERMISSIONS_DIALOG_FRAGMENT_TAG) as? PermissionsDialogFragment
+    }
+
+    private fun findPreviousPostInstallationDialogFragment(): AddonInstallationDialogFragment? {
+        return fragmentManager.findFragmentByTag(
+            POST_INSTALLATION_DIALOG_FRAGMENT_TAG,
+        ) as? AddonInstallationDialogFragment
+    }
+
+    private fun showPostInstallationDialog(addon: Addon) {
+        if (!isInstallationInProgress && !hasExistingAddonPostInstallationDialogFragment()) {
+            val addonCollectionProvider = context.components.addonCollectionProvider
+
+            // Fragment may not be attached to the context anymore during onConfirmButtonClicked handling,
+            // but we still want to be able to process user selection of the 'allowInPrivateBrowsing' pref.
+            // This is a best-effort attempt to do so - retain a weak reference to the application context
+            // (to avoid a leak), which we attempt to use to access addonManager.
+            // See https://github.com/mozilla-mobile/fenix/issues/15816
+            val weakApplicationContext: WeakReference<Context> = WeakReference(context)
+
+            val dialog = AddonInstallationDialogFragment.newInstance(
+                addon = addon,
+                addonCollectionProvider = addonCollectionProvider,
+                promptsStyling = AddonInstallationDialogFragment.PromptsStyling(
+                    gravity = Gravity.BOTTOM,
+                    shouldWidthMatchParent = true,
+                    confirmButtonBackgroundColor = ThemeManager.resolveAttribute(
+                        R.attr.accent,
+                        context,
+                    ),
+                    confirmButtonTextColor = ThemeManager.resolveAttribute(
+                        R.attr.textOnColorPrimary,
+                        context,
+                    ),
+                    confirmButtonRadius =
+                    (context.resources.getDimensionPixelSize(R.dimen.tab_corner_radius)).toFloat(),
+                ),
+                onDismissed = {
+                    consumePromptRequest()
+                },
+                onConfirmButtonClicked = { _, allowInPrivateBrowsing ->
+                    handlePostInstallationButtonClicked(
+                        addon = addon,
+                        context = weakApplicationContext,
+                        allowInPrivateBrowsing = allowInPrivateBrowsing,
+                    )
+                },
+            )
+            dialog.show(fragmentManager, POST_INSTALLATION_DIALOG_FRAGMENT_TAG)
+        }
+    }
+
+    private fun handlePostInstallationButtonClicked(
+        context: WeakReference<Context>,
+        allowInPrivateBrowsing: Boolean,
+        addon: Addon,
+    ) {
+        if (allowInPrivateBrowsing) {
+            context.get()?.components?.addonManager?.setAddonAllowedInPrivateBrowsing(
+                addon = addon,
+                allowed = true,
+                onSuccess = { updatedAddon ->
+                    onAddonChanged(updatedAddon)
+                },
+            )
+        }
+        consumePromptRequest()
     }
 
     companion object {
         private const val PERMISSIONS_DIALOG_FRAGMENT_TAG = "ADDONS_PERMISSIONS_DIALOG_FRAGMENT"
+        private const val POST_INSTALLATION_DIALOG_FRAGMENT_TAG =
+            "ADDONS_INSTALLATION_DIALOG_FRAGMENT"
     }
 }

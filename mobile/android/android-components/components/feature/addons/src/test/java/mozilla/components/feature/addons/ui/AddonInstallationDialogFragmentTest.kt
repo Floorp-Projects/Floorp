@@ -124,6 +124,26 @@ class AddonInstallationDialogFragmentTest {
     }
 
     @Test
+    fun `WHEN calling onCancel THEN notifies onDismiss`() {
+        val addon = Addon("id", translatableName = mapOf(Addon.DEFAULT_LOCALE to "my_addon"))
+        val fragment = createAddonInstallationDialogFragment(addon, mock())
+        var onDismissedWasExecuted = false
+
+        fragment.onDismissed = {
+            onDismissedWasExecuted = true
+        }
+
+        doReturn(testContext).`when`(fragment).requireContext()
+
+        doReturn(mockFragmentManager()).`when`(fragment).parentFragmentManager
+
+        val dialog = fragment.onCreateDialog(null)
+        dialog.show()
+        fragment.onCancel(mock())
+        assertTrue(onDismissedWasExecuted)
+    }
+
+    @Test
     fun `dialog must have all the styles of the feature promptsStyling object`() {
         val addon = Addon("id", translatableName = mapOf(Addon.DEFAULT_LOCALE to "my_addon"))
         val styling = AddonInstallationDialogFragment.PromptsStyling(Gravity.TOP, true)

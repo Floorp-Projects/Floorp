@@ -228,6 +228,15 @@ object WebExtensionSupport {
 
                 override fun onInstalled(extension: WebExtension) {
                     registerInstalledExtension(store, extension)
+                    // Built-in extensions are not installed by users, they are not aware of them
+                    // for this reason we don't show any UI related to built-in extensions.
+                    if (!extension.isBuiltIn()) {
+                        store.dispatch(
+                            WebExtensionAction.UpdatePromptRequestWebExtensionAction(
+                                WebExtensionPromptRequest.PostInstallation(extension),
+                            ),
+                        )
+                    }
                 }
 
                 override fun onUninstalled(extension: WebExtension) {

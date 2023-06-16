@@ -17,12 +17,20 @@ sealed class WebExtensionPromptRequest(
 
     /**
      * Value type that represents a request for a permission prompt.
-     * @property choices All the possible options.
-     * @property onConfirm A callback indicating which option was selected.
-     * @property onDismiss A callback executed when dismissed.
+     * @property extension The [WebExtension] that requested the dialog to be shown.
+     * @property onConfirm A callback indicating whether the permissions were granted or not.
      */
     data class Permissions(
         override val extension: WebExtension,
         val onConfirm: (Boolean) -> Unit,
+    ) : WebExtensionPromptRequest(extension)
+
+    /**
+     * Value type that represents a request for showing post-installation prompt.
+     * Normally used to give users an opportunity to enable the [extension] in private browsing mode.
+     * @property extension The installed extension.
+     */
+    data class PostInstallation(
+        override val extension: WebExtension,
     ) : WebExtensionPromptRequest(extension)
 }
