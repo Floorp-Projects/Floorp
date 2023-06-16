@@ -6,6 +6,8 @@
 
 BROWSER_CHROME_MANIFESTS += [
     "browser.ini",
+    "browser_audio_fallback.ini",
+    "browser_audio_fallback_content.ini",
     "browser_audio_shutdown.ini",
     "browser_child_hang.ini",
 ]
