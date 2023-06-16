@@ -1413,7 +1413,11 @@ void MacroAssembler::cmpPtrMovePtr(Condition cond, Register lhs,
                                    Register dest) {
   MOZ_CRASH("NYI");
 }
-void MacroAssembler::ctz32(Register, Register, bool) { MOZ_CRASH(); }
+
+void MacroAssembler::ctz32(Register rd, Register rs, bool knownNotZero) {
+  Ctz32(rd, rs);
+}
+
 void MacroAssembler::decBranchPtr(Condition cond, Register lhs, Imm32 rhs,
                                   Label* label) {
   subPtr(rhs, lhs);
@@ -1706,7 +1710,33 @@ void MacroAssembler::orPtr(Register src, Register dest) {
 
 void MacroAssembler::orPtr(Imm32 imm, Register dest) { ma_or(dest, dest, imm); }
 
-void MacroAssembler::patchSub32FromStackPtr(CodeOffset, Imm32) { MOZ_CRASH(); }
+void MacroAssembler::patchSub32FromStackPtr(CodeOffset offset, Imm32 imm) {
+  DEBUG_PRINTF("patchSub32FromStackPtr at offset %lu with immediate %d\n",
+               offset.offset(), imm.value);
+  Instruction* inst0 =
+      (Instruction*)m_buffer.getInst(BufferOffset(offset.offset()));
+  Instruction* inst1 = (Instruction*)(inst0 + 4);
+  MOZ_ASSERT(IsLui(*reinterpret_cast<Instr*>(inst0)));
+  MOZ_ASSERT(IsAddi(*reinterpret_cast<Instr*>(inst1)));
+
+  int64_t value = imm.value;
+  int64_t high_20 = ((value + 0x800) >> 12);
+  int64_t low_12 = value << 52 >> 52;
+
+  uint32_t* p = reinterpret_cast<uint32_t*>(inst0);
+
+  (*p) = (*p) & 0xfff;
+  (*p) = (*p) | ((int32_t)high_20 << 12);
+
+  *(p + 1) = *(p + 1) & 0xfffff;
+  *(p + 1) = *(p + 1) | ((int32_t)low_12 << 20);
+  disassembleInstr(inst0->InstructionBits());
+  disassembleInstr(inst1->InstructionBits());
+  MOZ_ASSERT((int32_t)(inst0->Imm20UValue() << kImm20Shift) +
+                 (int32_t)(inst1->Imm12Value()) ==
+             imm.value);
+}
+
 void MacroAssembler::popcnt32(Register input, Register output, Register tmp) {
   Popcnt32(output, input, tmp);
 }

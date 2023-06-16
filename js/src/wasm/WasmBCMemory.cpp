@@ -550,7 +550,12 @@ void BaseCompiler::executeLoad(MemoryAccessDesc* access, AccessCheck* check,
     masm.wasmLoad(*access, HeapReg, ptr, ptr, dest.any());
   }
 #elif defined(JS_CODEGEN_RISCV64)
-  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
+  MOZ_ASSERT(temp.isInvalid());
+  if (dest.tag == AnyReg::I64) {
+    masm.wasmLoadI64(*access, HeapReg, ptr, ptr, dest.i64());
+  } else {
+    masm.wasmLoad(*access, HeapReg, ptr, ptr, dest.any());
+  }
 #else
   MOZ_CRASH("BaseCompiler platform hook: load");
 #endif
@@ -582,6 +587,12 @@ void BaseCompiler::load(MemoryAccessDesc* access, AccessCheck* check,
                      maybeFromI64(temp));
 #  elif defined(JS_CODEGEN_MIPS64) || defined(JS_CODEGEN_LOONG64)
   // On mips64 and loongarch64, the 'prepareMemoryAccess' function will make
+  // sure that ptr holds a valid 64-bit index value. Thus the code generated in
+  // 'executeLoad' is the same for the 64-bit and the 32-bit case.
+  return executeLoad(access, check, instance, RegI32(ptr.reg), dest,
+                     maybeFromI64(temp));
+#  elif defined(JS_CODEGEN_MIPS64) || defined(JS_CODEGEN_RISCV64)
+  // RISCV the 'prepareMemoryAccess' function will make
   // sure that ptr holds a valid 64-bit index value. Thus the code generated in
   // 'executeLoad' is the same for the 64-bit and the 32-bit case.
   return executeLoad(access, check, instance, RegI32(ptr.reg), dest,
@@ -675,6 +686,13 @@ void BaseCompiler::executeStore(MemoryAccessDesc* access, AccessCheck* check,
   } else {
     masm.wasmStore(*access, src.any(), HeapReg, ptr, ptr);
   }
+#elif defined(JS_CODEGEN_RISCV64)
+  MOZ_ASSERT(temp.isInvalid());
+  if (access->type() == Scalar::Int64) {
+    masm.wasmStoreI64(*access, src.i64(), HeapReg, ptr, ptr);
+  } else {
+    masm.wasmStore(*access, src.any(), HeapReg, ptr, ptr);
+  }
 #else
   MOZ_CRASH("BaseCompiler platform hook: store");
 #endif
@@ -696,8 +714,9 @@ void BaseCompiler::store(MemoryAccessDesc* access, AccessCheck* check,
 #  if !defined(JS_64BIT)
   return executeStore(access, check, instance, RegI32(ptr.low), src,
                       maybeFromI64(temp));
-#  elif defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM64) || \
-      defined(JS_CODEGEN_MIPS64) || defined(JS_CODEGEN_LOONG64)
+#  elif defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM64) ||    \
+      defined(JS_CODEGEN_MIPS64) || defined(JS_CODEGEN_LOONG64) || \
+      defined(JS_CODEGEN_RISCV64)
   return executeStore(access, check, instance, RegI32(ptr.reg), src,
                       maybeFromI64(temp));
 #  else
@@ -1219,20 +1238,34 @@ static void Deallocate(BaseCompiler* bc, RegI32 rv, const Temps& temps) {
 
 #elif defined(JS_CODEGEN_RISCV64)
 
-using Temps = Nothing;
+struct Temps {
+  RegI32 t0, t1, t2;
+};
 
-static void PopAndAllocate(BaseCompiler*, ValType, Scalar::Type, AtomicOp,
-                           RegI32*, RegI32*, Temps*) {
-  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
+static void PopAndAllocate(BaseCompiler* bc, ValType type,
+                           Scalar::Type viewType, AtomicOp op, RegI32* rd,
+                           RegI32* rv, Temps* temps) {
+  *rv = type == ValType::I64 ? bc->popI64ToI32() : bc->popI32();
+  if (Scalar::byteSize(viewType) < 4) {
+    temps->t0 = bc->needI32();
+    temps->t1 = bc->needI32();
+    temps->t2 = bc->needI32();
+  }
+  *rd = bc->needI32();
 }
 
-static void Perform(BaseCompiler*, const MemoryAccessDesc&, BaseIndex, AtomicOp,
-                    RegI32, RegI32, const Temps&) {
-  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
+static void Perform(BaseCompiler* bc, const MemoryAccessDesc& access,
+                    BaseIndex srcAddr, AtomicOp op, RegI32 rv, RegI32 rd,
+                    const Temps& temps) {
+  bc->masm.wasmAtomicFetchOp(access, op, rv, srcAddr, temps.t0, temps.t1,
+                             temps.t2, rd);
 }
 
-static void Deallocate(BaseCompiler*, RegI32, const Temps&) {
-  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
+static void Deallocate(BaseCompiler* bc, RegI32 rv, const Temps& temps) {
+  bc->freeI32(rv);
+  bc->maybeFree(temps.t0);
+  bc->maybeFree(temps.t1);
+  bc->maybeFree(temps.t2);
 }
 
 #elif defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_WASM32)
@@ -1397,17 +1430,22 @@ static void Deallocate(BaseCompiler* bc, AtomicOp op, RegI64 rv, RegI64 temp) {
 }
 #elif defined(JS_CODEGEN_RISCV64)
 
-static void PopAndAllocate(BaseCompiler*, AtomicOp, RegI64*, RegI64*, RegI64*) {
-  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
+static void PopAndAllocate(BaseCompiler* bc, AtomicOp op, RegI64* rd,
+                           RegI64* rv, RegI64* temp) {
+  *rv = bc->popI64();
+  *temp = bc->needI64();
+  *rd = bc->needI64();
 }
 
-static void Perform(BaseCompiler*, const MemoryAccessDesc&, BaseIndex,
-                    AtomicOp op, RegI64, RegI64, RegI64) {
-  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
+static void Perform(BaseCompiler* bc, const MemoryAccessDesc& access,
+                    BaseIndex srcAddr, AtomicOp op, RegI64 rv, RegI64 temp,
+                    RegI64 rd) {
+  bc->masm.wasmAtomicFetchOp64(access, op, rv, srcAddr, temp, rd);
 }
 
-static void Deallocate(BaseCompiler*, AtomicOp, RegI64, RegI64) {
-  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
+static void Deallocate(BaseCompiler* bc, AtomicOp op, RegI64 rv, RegI64 temp) {
+  bc->freeI64(rv);
+  bc->freeI64(temp);
 }
 
 #elif defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_WASM32)
@@ -1587,18 +1625,34 @@ static void Deallocate(BaseCompiler* bc, RegI32 rv, const Temps& temps) {
 
 #elif defined(JS_CODEGEN_RISCV64)
 
-using Temps = Nothing;
+struct Temps {
+  RegI32 t0, t1, t2;
+};
 
-static void PopAndAllocate(BaseCompiler*, ValType, Scalar::Type, RegI32*,
-                           RegI32*, Temps*) {
-  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
+static void PopAndAllocate(BaseCompiler* bc, ValType type,
+                           Scalar::Type viewType, RegI32* rd, RegI32* rv,
+                           Temps* temps) {
+  *rv = (type == ValType::I64) ? bc->popI64ToI32() : bc->popI32();
+  if (Scalar::byteSize(viewType) < 4) {
+    temps->t0 = bc->needI32();
+    temps->t1 = bc->needI32();
+    temps->t2 = bc->needI32();
+  }
+  *rd = bc->needI32();
 }
-static void Perform(BaseCompiler*, const MemoryAccessDesc&, BaseIndex, RegI32,
-                    RegI32, const Temps&) {
-  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
+
+static void Perform(BaseCompiler* bc, const MemoryAccessDesc& access,
+                    BaseIndex srcAddr, RegI32 rv, RegI32 rd,
+                    const Temps& temps) {
+  bc->masm.wasmAtomicExchange(access, srcAddr, rv, temps.t0, temps.t1, temps.t2,
+                              rd);
 }
-static void Deallocate(BaseCompiler*, RegI32, const Temps&) {
-  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
+
+static void Deallocate(BaseCompiler* bc, RegI32 rv, const Temps& temps) {
+  bc->freeI32(rv);
+  bc->maybeFree(temps.t0);
+  bc->maybeFree(temps.t1);
+  bc->maybeFree(temps.t2);
 }
 
 #elif defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_WASM32)
@@ -1728,13 +1782,15 @@ static void Deallocate(BaseCompiler* bc, RegI64 rd, RegI64 rv) {
 
 #elif defined(JS_CODEGEN_RISCV64)
 
-static void PopAndAllocate(BaseCompiler*, RegI64*, RegI64*) {
-  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
-}
-static void Deallocate(BaseCompiler*, RegI64, RegI64) {
-  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
+static void PopAndAllocate(BaseCompiler* bc, RegI64* rd, RegI64* rv) {
+  *rv = bc->popI64();
+  *rd = bc->needI64();
 }
 
+static void Deallocate(BaseCompiler* bc, RegI64 rd, RegI64 rv) {
+  bc->freeI64(rv);
+  bc->maybeFree(rd);
+}
 #elif defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_WASM32)
 
 static void PopAndAllocate(BaseCompiler*, RegI64*, RegI64*) {}
@@ -1922,20 +1978,42 @@ static void Deallocate(BaseCompiler* bc, RegI32 rexpect, RegI32 rnew,
 
 #elif defined(JS_CODEGEN_RISCV64)
 
-using Temps = Nothing;
+struct Temps {
+  RegI32 t0, t1, t2;
+};
 
-static void PopAndAllocate(BaseCompiler*, ValType, Scalar::Type, RegI32*,
-                           RegI32*, RegI32*, Temps*) {
-  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
+static void PopAndAllocate(BaseCompiler* bc, ValType type,
+                           Scalar::Type viewType, RegI32* rexpect, RegI32* rnew,
+                           RegI32* rd, Temps* temps) {
+  if (type == ValType::I64) {
+    *rnew = bc->popI64ToI32();
+    *rexpect = bc->popI64ToI32();
+  } else {
+    *rnew = bc->popI32();
+    *rexpect = bc->popI32();
+  }
+  if (Scalar::byteSize(viewType) < 4) {
+    temps->t0 = bc->needI32();
+    temps->t1 = bc->needI32();
+    temps->t2 = bc->needI32();
+  }
+  *rd = bc->needI32();
 }
 
-static void Perform(BaseCompiler*, const MemoryAccessDesc&, BaseIndex, RegI32,
-                    RegI32, RegI32, const Temps& temps) {
-  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
+static void Perform(BaseCompiler* bc, const MemoryAccessDesc& access,
+                    BaseIndex srcAddr, RegI32 rexpect, RegI32 rnew, RegI32 rd,
+                    const Temps& temps) {
+  bc->masm.wasmCompareExchange(access, srcAddr, rexpect, rnew, temps.t0,
+                               temps.t1, temps.t2, rd);
 }
 
-static void Deallocate(BaseCompiler*, RegI32, RegI32, const Temps&) {
-  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
+static void Deallocate(BaseCompiler* bc, RegI32 rexpect, RegI32 rnew,
+                       const Temps& temps) {
+  bc->freeI32(rnew);
+  bc->freeI32(rexpect);
+  bc->maybeFree(temps.t0);
+  bc->maybeFree(temps.t1);
+  bc->maybeFree(temps.t2);
 }
 
 #elif defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_WASM32)
@@ -2154,15 +2232,20 @@ static void Deallocate(BaseCompiler* bc, RegI64 rexpect, RegI64 rnew) {
 template <typename RegIndexType>
 static void PopAndAllocate(BaseCompiler* bc, RegI64* rexpect, RegI64* rnew,
                            RegI64* rd) {
-  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
+  *rnew = bc->popI64();
+  *rexpect = bc->popI64();
+  *rd = bc->needI64();
 }
+
 static void Perform(BaseCompiler* bc, const MemoryAccessDesc& access,
                     BaseIndex srcAddr, RegI64 rexpect, RegI64 rnew, RegI64 rd) {
-  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
+  bc->masm.wasmCompareExchange64(access, srcAddr, rexpect, rnew, rd);
 }
+
 template <typename RegIndexType>
 static void Deallocate(BaseCompiler* bc, RegI64 rexpect, RegI64 rnew) {
-  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
+  bc->freeI64(rexpect);
+  bc->freeI64(rnew);
 }
 
 #elif defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_WASM32)

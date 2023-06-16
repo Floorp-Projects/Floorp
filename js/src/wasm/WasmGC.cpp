@@ -307,6 +307,7 @@ bool wasm::IsValidStackMapKey(bool debugEnabled, const uint8_t* nextPC) {
   return (((uintptr_t(insn) & 3) == 0) &&
           ((insn[-1] == 0x00006037 && insn[-2] == 0x00100073) ||  // break;
            ((insn[-1] & kBaseOpcodeMask) == JALR) ||
+           ((insn[-1] & kBaseOpcodeMask) == JAL) ||
            (insn[-1] == 0x00100073 &&
             (insn[-2] & kITypeMask) == RO_CSRRWI)));  // wasm trap
 #  else
