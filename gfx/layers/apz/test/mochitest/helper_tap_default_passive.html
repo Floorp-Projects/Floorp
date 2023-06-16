@@ -41,14 +41,20 @@ function recordEvent(e) {
   e.preventDefault();
 
   setTimeout(async () => {
+    // On Windows below TOUCH_REMOVE event triggers opening a context menu, we
+    // need to prevent it.
+    const contextmenuPromise = promiseOneEvent(window, "contextmenu", event => {
+      event.preventDefault();
+      return true;
+    });
+
     await synthesizeNativeTouch(document.getElementById("b"), 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, function() {
       dump("Finished synthesizing touch-end to clear state; finishing test...\n");
     });
 
-    // On Windows above TOUCH_REMOVE event triggers opening a context menu, we
-    // need to make sure the context menu has been closed before starting the
-    // next test.
-    await ensureContextMenuClosed();
+    if (getPlatform() == "windows") {
+      await contextmenuPromise;
+    }
     subtestDone();
   }, 0);
 }
