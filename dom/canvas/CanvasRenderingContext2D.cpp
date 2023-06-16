@@ -2459,7 +2459,12 @@ static already_AddRefed<const ComputedStyle> GetFontStyleForServo(
 
   // The font getter is required to be reserialized based on what we
   // parsed (including having line-height removed).
+  // If we failed to reserialize, ignore this attempt to set the value.
   Servo_SerializeFontValueForCanvas(declarations, &aOutUsedFont);
+  if (aOutUsedFont.IsEmpty()) {
+    return nullptr;
+  }
+
   return sc.forget();
 }
 
