@@ -3693,6 +3693,11 @@ void CanvasRenderingContext2D::SetFont(const nsACString& aFont,
   UpdateSpacing();
 }
 
+static float QuantizeFontSize(float aSize) {
+  // Round to nearest 0.25px
+  return NS_round(4.0 * aSize) * 0.25;
+}
+
 bool CanvasRenderingContext2D::SetFontInternal(const nsACString& aFont,
                                                ErrorResult& aError) {
   RefPtr<PresShell> presShell = GetPresShell();
@@ -3734,6 +3739,11 @@ bool CanvasRenderingContext2D::SetFontInternal(const nsACString& aFont,
   // other nsFontMetrics clients.
   resizedFont.size =
       fontStyle->mSize.ScaledBy(1.0f / c->CSSToDevPixelScale().scale);
+
+  // Quantize font size to avoid filling caches with thousands of fonts that
+  // differ by imperceptibly-tiny size deltas.
+  resizedFont.size = StyleCSSPixelLength::FromPixels(
+      QuantizeFontSize(resizedFont.size.ToCSSPixels()));
 
   // Our FontKerning constants (see the enum definition) are the same as the
   // NS_FONT_KERNING_* values so we can simply assign here.
@@ -3843,7 +3853,7 @@ bool CanvasRenderingContext2D::SetFontInternalDisconnected(
     return false;
   }
 
-  fontStyle.size = size;
+  fontStyle.size = QuantizeFontSize(size);
   fontStyle.variantCaps =
       smallCaps ? NS_FONT_VARIANT_CAPS_SMALLCAPS : NS_FONT_VARIANT_CAPS_NORMAL;
 
