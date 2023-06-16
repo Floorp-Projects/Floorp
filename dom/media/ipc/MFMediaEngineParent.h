@@ -124,10 +124,6 @@ class MFMediaEngineParent final : public PMFMediaEngineParent {
   DWORD mDisplayWidth = 0;
   DWORD mDisplayHeight = 0;
 
-  // When it's true, the media engine will output decoded video frames to a
-  // shareable dcomp surface.
-  bool mIsEnableDcompMode = false;
-
   float mPlaybackRate = 1.0;
 
   // When flush happens inside the media engine, it will reset the statistic
