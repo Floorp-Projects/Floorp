@@ -74,7 +74,7 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
             binding.noSuggestionsContainer.isVisible = false
 
             when (state) {
-                is State.ReadyForSuggestions -> { /* Handled by Jetpack Compose implementation */
+                is State.ReadyForSuggestions -> { // Handled by Jetpack Compose implementation
                 }
                 is State.NoSuggestionsAPI ->
                     binding.noSuggestionsContainer.isVisible = state.givePrompt

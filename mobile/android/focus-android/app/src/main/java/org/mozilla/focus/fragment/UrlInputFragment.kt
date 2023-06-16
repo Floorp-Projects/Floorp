@@ -492,29 +492,6 @@ class UrlInputFragment :
                 },
             )
 
-        // We only need to animate the toolbar if we are an overlay.
-        /*
-        if (isOverlay) {
-            val screenLocation = IntArray(2)
-            //urlView?.getLocationOnScreen(screenLocation)
-
-            val leftDelta = requireArguments().getInt(ARGUMENT_X) - screenLocation[0] - urlView.paddingLeft
-
-            if (!reverse) {
-                //urlView?.pivotX = 0f
-                //urlView?.pivotY = 0f
-                //urlView?.translationX = leftDelta.toFloat()
-            }
-
-            if (urlView != null) {
-                // The URL moves from the right (at least if the lock is visible) to it's actual position
-                urlView.animate()
-                    .setDuration(ANIMATION_DURATION.toLong())
-                    .translationX((if (reverse) leftDelta else 0).toFloat())
-            }
-        }
-        */
-
         if (reverse) {
             binding.toolbarBottomBorder.isVisible = true
 

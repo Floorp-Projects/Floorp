@@ -51,7 +51,7 @@ class FocusSnackbar private constructor(
     companion object {
         const val LENGTH_LONG = Snackbar.LENGTH_LONG
         const val LENGTH_SHORT = Snackbar.LENGTH_SHORT
-        private const val LENGTH_ACCESSIBLE = 15000 /* 15 seconds in ms */
+        private const val LENGTH_ACCESSIBLE = 15000 // 15 seconds in ms
 
         /**
          * Display a custom Focus Snackbar in the given view with duration and proper styling.
