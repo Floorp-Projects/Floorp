@@ -6,15 +6,22 @@
 
 #include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject
 #include "js/JSON.h"
+#include "js/Object.h"
 #include "js/PropertyAndElement.h"  // JS_GetElement
 #include "js/TypeDecls.h"
 #include "jsapi.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/AutocompleteInfoBinding.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "mozilla/dom/CustomElementTypes.h"
+#include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
+#include "mozilla/dom/FormData.h"
+#include "mozilla/dom/FragmentOrElement.h"
+#include "mozilla/dom/HTMLElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLSelectElement.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
@@ -24,6 +31,10 @@
 #include "mozilla/dom/SessionStoreChangeListener.h"
 #include "mozilla/dom/SessionStoreChild.h"
 #include "mozilla/dom/SessionStoreUtils.h"
+#include "mozilla/dom/SessionStoreUtilsBinding.h"
+#include "mozilla/dom/ToJSValue.h"
+#include "mozilla/dom/UnionTypes.h"
+#include "mozilla/dom/sessionstore/SessionStoreTypes.h"
 #include "mozilla/dom/txIXPathContext.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/WindowProxyHolder.h"
@@ -493,6 +504,27 @@ static void AppendValueToCollectedData(nsINode* aNode, const nsAString& aId,
   entry->mValue.SetAsObject() = &jsval.toObject();
 }
 
+/* For form-associated custom element state */
+static void AppendValueToCollectedData(
+    nsINode* aNode, const nsAString& aId,
+    const Nullable<OwningFileOrUSVStringOrFormData>& aValue,
+    const Nullable<OwningFileOrUSVStringOrFormData>& aState,
+    uint16_t& aGeneratedCount, JSContext* aCx,
+    Nullable<CollectedData>& aRetVal) {
+  Record<nsString, OwningStringOrBooleanOrObject>::EntryType* entry =
+      AppendEntryToCollectedData(aNode, aId, aGeneratedCount, aRetVal);
+
+  CollectedCustomElementValue val;
+  val.mValue = aValue;
+  val.mState = aState;
+  JS::Rooted<JS::Value> jsval(aCx);
+  if (!ToJSValue(aCx, val, &jsval)) {
+    JS_ClearPendingException(aCx);
+    return;
+  }
+  entry->mValue.SetAsObject() = &jsval.toObject();
+}
+
 // This isn't size as in binary size, just a heuristic to not store too large
 // fields in session store. See StaticPrefs::browser_sessionstore_dom_form_limit
 static uint32_t SizeOfFormEntry(const FormEntryValue& aValue) {
@@ -517,6 +549,43 @@ static uint32_t SizeOfFormEntry(const FormEntryValue& aValue) {
       for (const auto& value : aValue.get_MultipleSelect().valueList()) {
         size += value.Length();
       }
+      break;
+    }
+    case FormEntryValue::TCustomElementTuple: {
+      auto customElementTupleSize =
+          [](const CustomElementFormValue& value) -> uint32_t {
+        switch (value.type()) {
+          case CustomElementFormValue::TBlobImpl:
+            return value.get_BlobImpl()->GetAllocationSize();
+          case CustomElementFormValue::TnsString:
+            return value.get_nsString().Length();
+          case CustomElementFormValue::TArrayOfFormDataTuple: {
+            uint32_t formDataSize = 0;
+            for (const auto& entry : value.get_ArrayOfFormDataTuple()) {
+              formDataSize += entry.name().Length();
+              const auto& entryValue = entry.value();
+              switch (entryValue.type()) {
+                case FormDataValue::TBlobImpl:
+                  formDataSize +=
+                      entryValue.get_BlobImpl()->GetAllocationSize();
+                  break;
+                case FormDataValue::TnsString:
+                  formDataSize += entryValue.get_nsString().Length();
+                  break;
+                default:
+                  break;
+              }
+            }
+            return formDataSize;
+          }
+          default:
+            return 0;
+        }
+      };
+
+      auto ceTuple = aValue.get_CustomElementTuple();
+      size += customElementTupleSize(ceTuple.value());
+      size += customElementTupleSize(ceTuple.state());
       break;
     }
     default:
@@ -740,6 +809,51 @@ static uint32_t CollectSelectElement(Document* aDocument,
   return size;
 }
 
+static already_AddRefed<nsContentList> GetFormAssociatedCustomElements(
+    nsINode* aRootNode) {
+  MOZ_ASSERT(aRootNode, "Content list has to have a root");
+
+  auto matchFunc = [](Element* aElement, int32_t aNamespace, nsAtom* aAtom,
+                      void* aData) -> bool {
+    return aElement->HasCustomElementData() &&
+           aElement->GetCustomElementData()->IsFormAssociated();
+  };
+  RefPtr<nsContentList> list =
+      new nsContentList(aRootNode, matchFunc, nullptr, nullptr);
+  return list.forget();
+}
+
+static uint32_t CollectFormAssociatedCustomElement(
+    Document* aDocument, sessionstore::FormData& aFormData) {
+  uint32_t size = 0;
+  RefPtr<nsContentList> faceList = GetFormAssociatedCustomElements(aDocument);
+  uint32_t length = faceList->Length();
+  for (uint32_t i = 0; i < length; ++i) {
+    MOZ_ASSERT(faceList->Item(i), "null item in node list!");
+    RefPtr<Element> element = Element::FromNode(faceList->Item(i));
+
+    nsAutoString id;
+    element->GetId(id);
+    if (id.IsEmpty() && (aFormData.xpath().Length() > kMaxTraversedXPaths)) {
+      continue;
+    }
+
+    const auto* internals =
+        element->GetCustomElementData()->GetElementInternals();
+    auto formState = internals->GetFormState();
+    auto formValue = internals->GetFormSubmissionValue();
+    if (formState.IsNull() && formValue.IsNull()) {
+      continue;
+    }
+
+    CustomElementTuple entry;
+    entry.value() = nsContentUtils::ConvertToCustomElementFormValue(formValue);
+    entry.state() = nsContentUtils::ConvertToCustomElementFormValue(formState);
+    size += AppendEntry(element, id, entry, aFormData);
+  }
+  return size;
+}
+
 /* static */
 uint32_t SessionStoreUtils::CollectFormData(Document* aDocument,
                                             sessionstore::FormData& aFormData) {
@@ -748,6 +862,7 @@ uint32_t SessionStoreUtils::CollectFormData(Document* aDocument,
   size += CollectTextAreaElement(aDocument, aFormData);
   size += CollectInputElement(aDocument, aFormData);
   size += CollectSelectElement(aDocument, aFormData);
+  size += CollectFormAssociatedCustomElement(aDocument, aFormData);
 
   aFormData.hasData() =
       !aFormData.id().IsEmpty() || !aFormData.xpath().IsEmpty();
@@ -936,6 +1051,34 @@ void SessionStoreUtils::CollectFromSelectElement(Document& aDocument,
   }
 }
 
+/* static */
+template <typename... ArgsT>
+void SessionStoreUtils::CollectFromFormAssociatedCustomElement(
+    Document& aDocument, uint16_t& aGeneratedCount, ArgsT&&... args) {
+  RefPtr<nsContentList> faceList = GetFormAssociatedCustomElements(&aDocument);
+  uint32_t length = faceList->Length(true);
+  for (uint32_t i = 0; i < length; ++i) {
+    MOZ_ASSERT(faceList->Item(i), "null item in node list!");
+    RefPtr<Element> element = Element::FromNode(faceList->Item(i));
+
+    nsAutoString id;
+    element->GetId(id);
+    if (id.IsEmpty() && (aGeneratedCount > kMaxTraversedXPaths)) {
+      continue;
+    }
+
+    auto* internals = element->GetCustomElementData()->GetElementInternals();
+    const auto& state = internals->GetFormState();
+    const auto& value = internals->GetFormSubmissionValue();
+    if (state.IsNull() && value.IsNull()) {
+      continue;
+    }
+
+    AppendValueToCollectedData(element, id, value, state, aGeneratedCount,
+                               std::forward<ArgsT>(args)...);
+  }
+}
+
 static void CollectCurrentFormData(JSContext* aCx, Document& aDocument,
                                    Nullable<CollectedData>& aRetVal) {
   uint16_t generatedCount = 0;
@@ -948,6 +1091,9 @@ static void CollectCurrentFormData(JSContext* aCx, Document& aDocument,
   /* select element */
   SessionStoreUtils::CollectFromSelectElement(aDocument, generatedCount, aCx,
                                               aRetVal);
+  /* form-associated custom element */
+  SessionStoreUtils::CollectFromFormAssociatedCustomElement(
+      aDocument, generatedCount, aCx, aRetVal);
 
   Element* bodyElement = aDocument.GetBody();
   if (bodyElement && bodyElement->IsInDesignMode()) {
@@ -1123,6 +1269,25 @@ static void SetElementAsObject(JSContext* aCx, Element* aElement,
     }
     SetElementAsMultiSelect(select, array);
   }
+
+  // For Form-Associated Custom Element:
+  if (!aObject.isObject()) {
+    // Don't restore null values.
+    return;
+  }
+
+  auto* data = aElement->GetCustomElementData();
+  if (!data || !data->IsFormAssociated()) {
+    return;
+  }
+  auto* internals = data->GetElementInternals();
+
+  CollectedCustomElementValue value;
+  if (!value.Init(aCx, aObject)) {
+    JS_ClearPendingException(aCx);
+    return;
+  }
+  internals->RestoreFormValue(std::move(value.mValue), std::move(value.mState));
 }
 
 MOZ_CAN_RUN_SCRIPT
@@ -1305,6 +1470,20 @@ void RestoreFormEntry(Element* aNode, const FormEntryValue& aValue) {
         SetElementAsMultiSelect(select,
                                 aValue.get_MultipleSelect().valueList());
       }
+      break;
+    }
+    case Type::TCustomElementTuple: {
+      const auto* data = aNode->GetCustomElementData();
+      if (!data || !data->IsFormAssociated()) {
+        return;
+      }
+      auto* internals = data->GetElementInternals();
+      nsCOMPtr<nsIGlobalObject> global = aNode->GetOwnerGlobal();
+      internals->RestoreFormValue(
+          nsContentUtils::ExtractFormAssociatedCustomElementValue(
+              global, aValue.get_CustomElementTuple().value()),
+          nsContentUtils::ExtractFormAssociatedCustomElementValue(
+              global, aValue.get_CustomElementTuple().state()));
       break;
     }
     default:
@@ -1648,6 +1827,36 @@ nsresult SessionStoreUtils::ConstructFormDataValues(
         if (!ToJSValue(aCx, value.value().get_MultipleSelect().valueList(),
                        &jsval) ||
             !jsval.isObject()) {
+          return NS_ERROR_FAILURE;
+        }
+        entry->mValue.SetAsObject() = &jsval.toObject();
+        break;
+      }
+      case Type::TCustomElementTuple: {
+        nsCOMPtr<nsIGlobalObject> global;
+        JS::Rooted<JSObject*> globalObject(aCx, JS::CurrentGlobalOrNull(aCx));
+        if (NS_WARN_IF(!globalObject)) {
+          break;
+        }
+        global = xpc::NativeGlobal(globalObject);
+        if (NS_WARN_IF(!global)) {
+          break;
+        }
+
+        auto formState =
+            nsContentUtils::ExtractFormAssociatedCustomElementValue(
+                global, value.value().get_CustomElementTuple().state());
+        auto formValue =
+            nsContentUtils::ExtractFormAssociatedCustomElementValue(
+                global, value.value().get_CustomElementTuple().value());
+        MOZ_ASSERT(!formValue.IsNull() || !formState.IsNull(),
+                   "Shouldn't be storing null values!");
+
+        CollectedCustomElementValue val;
+        val.mValue = formValue;
+        val.mState = formState;
+        JS::Rooted<JS::Value> jsval(aCx);
+        if (!ToJSValue(aCx, val, &jsval)) {
           return NS_ERROR_FAILURE;
         }
         entry->mValue.SetAsObject() = &jsval.toObject();
