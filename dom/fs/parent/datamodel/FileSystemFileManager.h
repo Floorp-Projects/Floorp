@@ -8,6 +8,7 @@
 #define DOM_FS_PARENT_DATAMODEL_FILESYSTEMFILEMANAGER_H_
 
 #include "ErrorList.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/FileSystemTypes.h"
 #include "mozilla/dom/QMResult.h"
 #include "nsIFile.h"
@@ -102,8 +103,8 @@ class FileSystemFileManager {
    * @param aOrigin
    * @return Result<FileSystemFileManager, QMResult>
    */
-  static Result<FileSystemFileManager, QMResult> CreateFileSystemFileManager(
-      const quota::OriginMetadata& aOriginMetadata);
+  static Result<UniquePtr<FileSystemFileManager>, QMResult>
+  CreateFileSystemFileManager(const quota::OriginMetadata& aOriginMetadata);
 
   /**
    * @brief Create a File System File Manager object which keeps file entries

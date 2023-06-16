@@ -111,8 +111,7 @@ static void MakeDatabaseManagerVersion001(
       WrapMovingNotNull(ioTaskQueue));
 
   aDatabaseManager = new FileSystemDatabaseManagerVersion001(
-      aDataManager, std::move(connection),
-      MakeUnique<FileSystemFileManager>(fmRes.unwrap()), rootId);
+      aDataManager, std::move(connection), fmRes.unwrap(), rootId);
 
   aDataManager->SetDatabaseManager(aDatabaseManager);
 }

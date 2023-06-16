@@ -497,71 +497,67 @@ RefPtr<BoolPromise> FileSystemDataManager::BeginOpen() {
 
                return BoolPromise::CreateAndResolve(true, __func__);
              })
-      ->Then(MutableIOTaskQueuePtr(), __func__,
-             [self = RefPtr<FileSystemDataManager>(this)](
-                 const BoolPromise::ResolveOrRejectValue& value) {
-               if (value.IsReject()) {
-                 return BoolPromise::CreateAndReject(value.RejectValue(),
-                                                     __func__);
-               }
+      ->Then(
+          MutableIOTaskQueuePtr(), __func__,
+          [self = RefPtr<FileSystemDataManager>(this)](
+              const BoolPromise::ResolveOrRejectValue& value) {
+            if (value.IsReject()) {
+              return BoolPromise::CreateAndReject(value.RejectValue(),
+                                                  __func__);
+            }
 
-               QM_TRY_UNWRAP(
-                   auto connection,
-                   fs::data::GetStorageConnection(self->mOriginMetadata,
-                                                  self->mDirectoryLock->Id()),
-                   CreateAndRejectBoolPromiseFromQMResult);
+            QM_TRY_UNWRAP(
+                auto connection,
+                fs::data::GetStorageConnection(self->mOriginMetadata,
+                                               self->mDirectoryLock->Id()),
+                CreateAndRejectBoolPromiseFromQMResult);
 
-               QM_TRY_UNWRAP(
-                   DatabaseVersion version,
-                   QM_OR_ELSE_WARN_IF(
-                       // Expression.
-                       SchemaVersion002::InitializeConnection(
-                           connection, self->mOriginMetadata.mOrigin),
-                       // Predicate.
-                       ([](const auto&) { return true; }),
-                       // Fallback.
-                       ([&self, &connection](const auto&) {
-                         QM_TRY_RETURN(SchemaVersion001::InitializeConnection(
-                             connection, self->mOriginMetadata.mOrigin));
-                       })),
-                   CreateAndRejectBoolPromiseFromQMResult);
+            QM_TRY_UNWRAP(
+                DatabaseVersion version,
+                QM_OR_ELSE_WARN_IF(
+                    // Expression.
+                    SchemaVersion002::InitializeConnection(
+                        connection, self->mOriginMetadata.mOrigin),
+                    // Predicate.
+                    ([](const auto&) { return true; }),
+                    // Fallback.
+                    ([&self, &connection](const auto&) {
+                      QM_TRY_RETURN(SchemaVersion001::InitializeConnection(
+                          connection, self->mOriginMetadata.mOrigin));
+                    })),
+                CreateAndRejectBoolPromiseFromQMResult);
 
-               // TODO: Make CreateFileSystemFileManager return UniquePtr
-               QM_TRY_UNWRAP(FileSystemFileManager fmRes,
-                             FileSystemFileManager::CreateFileSystemFileManager(
-                                 self->mOriginMetadata),
-                             CreateAndRejectBoolPromiseFromQMResult);
+            QM_TRY_UNWRAP(UniquePtr<FileSystemFileManager> fmPtr,
+                          FileSystemFileManager::CreateFileSystemFileManager(
+                              self->mOriginMetadata),
+                          CreateAndRejectBoolPromiseFromQMResult);
 
-               QM_TRY_UNWRAP(
-                   EntryId rootId,
-                   fs::data::GetRootHandle(self->mOriginMetadata.mOrigin),
-                   CreateAndRejectBoolPromiseFromQMResult);
+            QM_TRY_UNWRAP(
+                EntryId rootId,
+                fs::data::GetRootHandle(self->mOriginMetadata.mOrigin),
+                CreateAndRejectBoolPromiseFromQMResult);
 
-               switch (version) {
-                 case 1: {
-                   self->mDatabaseManager =
-                       MakeUnique<FileSystemDatabaseManagerVersion001>(
-                           self, std::move(connection),
-                           MakeUnique<FileSystemFileManager>(std::move(fmRes)),
-                           rootId);
-                   break;
-                 }
+            switch (version) {
+              case 1: {
+                self->mDatabaseManager =
+                    MakeUnique<FileSystemDatabaseManagerVersion001>(
+                        self, std::move(connection), std::move(fmPtr), rootId);
+                break;
+              }
 
-                 case 2: {
-                   self->mDatabaseManager =
-                       MakeUnique<FileSystemDatabaseManagerVersion002>(
-                           self, std::move(connection),
-                           MakeUnique<FileSystemFileManager>(std::move(fmRes)),
-                           rootId);
-                   break;
-                 }
+              case 2: {
+                self->mDatabaseManager =
+                    MakeUnique<FileSystemDatabaseManagerVersion002>(
+                        self, std::move(connection), std::move(fmPtr), rootId);
+                break;
+              }
 
-                 default:
-                   break;
-               }
+              default:
+                break;
+            }
 
-               return BoolPromise::CreateAndResolve(true, __func__);
-             })
+            return BoolPromise::CreateAndResolve(true, __func__);
+          })
       ->Then(GetCurrentSerialEventTarget(), __func__,
              [self = RefPtr<FileSystemDataManager>(this)](
                  const BoolPromise::ResolveOrRejectValue& value) {
