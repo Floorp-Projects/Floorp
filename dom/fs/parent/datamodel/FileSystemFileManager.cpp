@@ -264,13 +264,14 @@ FileSystemFileManager::CreateFileSystemFileManager(
 }
 
 /* static */
-Result<FileSystemFileManager, QMResult>
+Result<UniquePtr<FileSystemFileManager>, QMResult>
 FileSystemFileManager::CreateFileSystemFileManager(
     const quota::OriginMetadata& aOriginMetadata) {
   QM_TRY_UNWRAP(nsCOMPtr<nsIFile> topDirectory,
                 GetFileSystemDirectory(aOriginMetadata));
 
-  return FileSystemFileManager(std::move(topDirectory));
+  return MakeUnique<FileSystemFileManager>(
+      FileSystemFileManager(std::move(topDirectory)));
 }
 
 FileSystemFileManager::FileSystemFileManager(nsCOMPtr<nsIFile>&& aTopDirectory)
