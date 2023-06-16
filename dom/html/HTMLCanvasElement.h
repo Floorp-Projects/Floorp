@@ -317,6 +317,10 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
   virtual already_AddRefed<nsICanvasRenderingContextInternal> CreateContext(
       CanvasContextType aContextType) override;
 
+  nsresult UpdateContext(JSContext* aCx,
+                         JS::Handle<JS::Value> aNewContextOptions,
+                         ErrorResult& aRvForDictionaryInit) override;
+
   nsresult ExtractData(JSContext* aCx, nsIPrincipal& aSubjectPrincipal,
                        nsAString& aType, const nsAString& aOptions,
                        nsIInputStream** aStream);

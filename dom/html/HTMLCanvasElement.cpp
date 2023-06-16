@@ -69,6 +69,7 @@ class RequestedFrameRefreshObserver : public nsARefreshObserver {
                                 nsRefreshDriver* aRefreshDriver,
                                 bool aReturnPlaceholderData)
       : mRegistered(false),
+        mWatching(false),
         mReturnPlaceholderData(aReturnPlaceholderData),
         mOwningElement(aOwningElement),
         mRefreshDriver(aRefreshDriver),
@@ -285,16 +286,20 @@ class RequestedFrameRefreshObserver : public nsARefreshObserver {
     mWatchManager.Shutdown();
   }
 
+  bool IsRegisteredAndWatching() { return mRegistered && mWatching; }
+
   void Register() {
-    if (mRegistered) {
-      return;
+    if (!mRegistered) {
+      MOZ_ASSERT(mRefreshDriver);
+      if (mRefreshDriver) {
+        mRefreshDriver->AddRefreshObserver(this, FlushType::Display,
+                                           "Canvas frame capture listeners");
+        mRegistered = true;
+      }
     }
 
-    MOZ_ASSERT(mRefreshDriver);
-    if (mRefreshDriver) {
-      mRefreshDriver->AddRefreshObserver(this, FlushType::Display,
-                                         "Canvas frame capture listeners");
-      mRegistered = true;
+    if (mWatching) {
+      return;
     }
 
     if (!mOwningElement) {
@@ -306,18 +311,21 @@ class RequestedFrameRefreshObserver : public nsARefreshObserver {
       mWatchManager.Watch(
           *captureState,
           &RequestedFrameRefreshObserver::NotifyCaptureStateChange);
+      mWatching = true;
     }
   }
 
   void Unregister() {
-    if (!mRegistered) {
-      return;
+    if (mRegistered) {
+      MOZ_ASSERT(mRefreshDriver);
+      if (mRefreshDriver) {
+        mRefreshDriver->RemoveRefreshObserver(this, FlushType::Display);
+        mRegistered = false;
+      }
     }
 
-    MOZ_ASSERT(mRefreshDriver);
-    if (mRefreshDriver) {
-      mRefreshDriver->RemoveRefreshObserver(this, FlushType::Display);
-      mRegistered = false;
+    if (!mWatching) {
+      return;
     }
 
     if (!mOwningElement) {
@@ -329,6 +337,7 @@ class RequestedFrameRefreshObserver : public nsARefreshObserver {
       mWatchManager.Unwatch(
           *captureState,
           &RequestedFrameRefreshObserver::NotifyCaptureStateChange);
+      mWatching = false;
     }
   }
 
@@ -336,9 +345,11 @@ class RequestedFrameRefreshObserver : public nsARefreshObserver {
   virtual ~RequestedFrameRefreshObserver() {
     MOZ_ASSERT(!mRefreshDriver);
     MOZ_ASSERT(!mRegistered);
+    MOZ_ASSERT(!mWatching);
   }
 
   bool mRegistered;
+  bool mWatching;
   bool mReturnPlaceholderData;
   const WeakPtr<HTMLCanvasElement> mOwningElement;
   RefPtr<nsRefreshDriver> mRefreshDriver;
@@ -535,6 +546,26 @@ HTMLCanvasElement::CreateContext(CanvasContextType aContextType) {
 
   ret->SetCanvasElement(this);
   return ret.forget();
+}
+
+nsresult HTMLCanvasElement::UpdateContext(
+    JSContext* aCx, JS::Handle<JS::Value> aNewContextOptions,
+    ErrorResult& aRvForDictionaryInit) {
+  nsresult rv = CanvasRenderingContextHelper::UpdateContext(
+      aCx, aNewContextOptions, aRvForDictionaryInit);
+
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // If we have a mRequestedFrameRefreshObserver that wasn't fully registered,
+  // retry that now.
+  if (mRequestedFrameRefreshObserver.get() &&
+      !mRequestedFrameRefreshObserver->IsRegisteredAndWatching()) {
+    mRequestedFrameRefreshObserver->Register();
+  }
+
+  return NS_OK;
 }
 
 nsIntSize HTMLCanvasElement::GetWidthHeight() {
