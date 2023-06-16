@@ -11,6 +11,8 @@ using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
 using struct nsPoint from "nsPoint.h";
 [RefCounted] using class mozilla::dom::BlobImpl from "mozilla/dom/BlobImpl.h";
 
+include CustomElementTypes;
+
 namespace mozilla {
 
 struct SelectContentData {
@@ -40,6 +42,7 @@ union PresContentData {
   // We can need to serialize blobs in order to transmit this type, so we need
   // to handle that in a custom handler.
   FileContentData[];
+  CustomElementTuple;
 };
 
 struct PresState {
