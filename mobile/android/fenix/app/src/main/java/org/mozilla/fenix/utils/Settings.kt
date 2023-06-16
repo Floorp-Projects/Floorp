@@ -876,9 +876,10 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = true,
     )
 
-    var shouldUseBottomToolbar by booleanPreference(
+    var shouldUseBottomToolbar by lazyFeatureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_toolbar_bottom),
-        default = shouldDefaultToBottomToolbar(),
+        featureFlag = true,
+        default = { shouldDefaultToBottomToolbar() },
     )
 
     val toolbarPosition: ToolbarPosition
