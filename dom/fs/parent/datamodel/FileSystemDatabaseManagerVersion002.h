@@ -30,6 +30,33 @@ class FileSystemDatabaseManagerVersion002
   /* Static to allow use by quota client without instantiation */
   static Result<Usage, QMResult> GetFileUsage(
       const FileSystemConnection& aConnection);
+
+  virtual Result<EntryId, QMResult> GetEntryId(
+      const FileSystemChildMetadata& aHandle) const override;
+
+  virtual nsresult EnsureFileId(const EntryId& aEntryId) override;
+
+  virtual Result<FileId, QMResult> GetFileId(
+      const EntryId& aEntryId) const override;
+
+  virtual Result<EntryId, QMResult> MoveEntry(
+      const FileSystemEntryMetadata& aHandle,
+      const FileSystemChildMetadata& aNewDesignation) override;
+
+  virtual Result<EntryId, QMResult> RenameEntry(
+      const FileSystemEntryMetadata& aHandle, const Name& aNewName) override;
+
+ protected:
+  virtual Result<Usage, QMResult> GetUsagesOfDescendants(
+      const EntryId& aEntryId) const override;
+
+  virtual Result<nsTArray<FileId>, QMResult> FindDescendants(
+      const EntryId& aEntryId) const override;
+
+  virtual Result<bool, QMResult> DoesFileIdExist(
+      const FileId& aFileId) const override;
+
+  virtual nsresult RemoveFileId(const FileId& aFileId) override;
 };
 
 }  // namespace mozilla::dom::fs::data
