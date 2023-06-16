@@ -21,7 +21,7 @@ static const TimeDuration kTimeout = TimeDuration::FromMilliseconds(100);
 static const int32_t kTimeoutRetryCount = 50;
 
 static const uint32_t kCacheLineSize = 64;
-static const uint32_t kStreamSize = 64 * 1024;
+static const uint32_t kStreamSize = 512 * 1024;
 static const uint32_t kShmemSize = kStreamSize + (2 * kCacheLineSize);
 
 static_assert((static_cast<uint64_t>(UINT32_MAX) + 1) % kStreamSize == 0,
