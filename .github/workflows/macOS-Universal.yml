@@ -725,9 +725,9 @@ jobs:
         echo "****************************************************************************************************"
 
     - name: Integration 🗃 & Package 📦
-      run: |
-        ./mach python ./toolkit/mozapps/installer/unify.py ./obj-x86_64-apple-darwin/dist/floorp/Nightly.app ./obj-aarch64-apple-darwin/dist/floorp/Nightly.app
-        ./mach python -m mozbuild.action.make_dmg ./obj-x86_64-apple-darwin/dist/floorp floorp-macOS-universal-temp.dmg
+      run: |       
+        ./mach python ./toolkit/mozapps/installer/unify.py ./obj-x86_64-apple-darwin/dist/Floorp/Floorp.app ./obj-aarch64-apple-darwin/dist/Floorp/Floorp.app
+        ./mach python -m mozbuild.action.make_dmg ./obj-x86_64-apple-darwin/dist/Floorp floorp-macOS-universal-temp.dmg
         unzip ./.github/base.zip
         hdiutil attach ./floorp-macOS-universal-temp.dmg
         hdiutil attach ./base.dmg
