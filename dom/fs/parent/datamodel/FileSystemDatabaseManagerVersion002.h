@@ -1,0 +1,37 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#ifndef DOM_FS_PARENT_DATAMODEL_FILESYSTEMDATABASEMANAGERVERSION002_H_
+#define DOM_FS_PARENT_DATAMODEL_FILESYSTEMDATABASEMANAGERVERSION002_H_
+
+#include "FileSystemDatabaseManagerVersion001.h"
+
+namespace mozilla::dom::fs::data {
+
+class FileSystemDatabaseManagerVersion002
+    : public FileSystemDatabaseManagerVersion001 {
+ public:
+  FileSystemDatabaseManagerVersion002(
+      FileSystemDataManager* aDataManager, FileSystemConnection&& aConnection,
+      UniquePtr<FileSystemFileManager>&& aFileManager,
+      const EntryId& aRootEntry)
+      : FileSystemDatabaseManagerVersion001(
+            aDataManager, std::move(aConnection), std::move(aFileManager),
+            aRootEntry) {}
+
+  /* Static to allow use by quota client without instantiation */
+  static nsresult RescanTrackedUsages(
+      const FileSystemConnection& aConnection,
+      const quota::OriginMetadata& aOriginMetadata);
+
+  /* Static to allow use by quota client without instantiation */
+  static Result<Usage, QMResult> GetFileUsage(
+      const FileSystemConnection& aConnection);
+};
+
+}  // namespace mozilla::dom::fs::data
+
+#endif  // DOM_FS_PARENT_DATAMODEL_FILESYSTEMDATABASEMANAGERVERSION002_H_
