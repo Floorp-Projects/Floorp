@@ -47,9 +47,8 @@ quota::OriginMetadata GetTestQuotaOriginMetadata() {
 class TestFileSystemQuotaClient
     : public quota::test::QuotaManagerDependencyFixture {
  public:
-  static const int sPage = 64 * 512;
   // ExceedsPreallocation value may depend on platform and sqlite version!
-  static const int sExceedsPreallocation = sPage;
+  static const int sExceedsPreallocation = 32 * 1024;
 
  protected:
   void SetUp() override { ASSERT_NO_FATAL_FAILURE(InitializeFixture()); }
@@ -114,29 +113,29 @@ class TestFileSystemQuotaClient
 
   static void CreateNewEmptyFile(
       data::FileSystemDatabaseManager* const aDatabaseManager,
-      const FileSystemChildMetadata& aFileSlot, EntryId& aEntryId) {
+      const FileSystemChildMetadata& aFileSlot, EntryId& aFileId) {
     // The file should not exist yet
     Result<EntryId, QMResult> existingTestFile =
-        aDatabaseManager->GetOrCreateFile(aFileSlot, /* create */ false);
+        aDatabaseManager->GetOrCreateFile(aFileSlot, sContentType,
+                                          /* create */ false);
     ASSERT_TRUE(existingTestFile.isErr());
     ASSERT_NSEQ(NS_ERROR_DOM_NOT_FOUND_ERR,
                 ToNSResult(existingTestFile.unwrapErr()));
 
     // Create a new file
-    TEST_TRY_UNWRAP(aEntryId, aDatabaseManager->GetOrCreateFile(
-                                  aFileSlot, /* create */ true));
+    TEST_TRY_UNWRAP(aFileId, aDatabaseManager->GetOrCreateFile(
+                                 aFileSlot, sContentType, /* create */ true));
   }
 
   static void WriteDataToFile(
       data::FileSystemDatabaseManager* const aDatabaseManager,
-      const EntryId& aEntryId, const nsCString& aData) {
-    ASSERT_NSEQ(NS_OK, aDatabaseManager->EnsureFileId(aEntryId));
-
+      const EntryId& aFileId, const nsCString& aData) {
     ContentType type;
     TimeStamp lastModMilliS = 0;
     Path path;
     nsCOMPtr<nsIFile> fileObj;
-    ASSERT_NSEQ(NS_OK, aDatabaseManager->GetFile(aEntryId, type, lastModMilliS,
+
+    ASSERT_NSEQ(NS_OK, aDatabaseManager->GetFile(aFileId, type, lastModMilliS,
                                                  path, fileObj));
 
     uint32_t written = 0;
@@ -204,7 +203,11 @@ class TestFileSystemQuotaClient
     const auto actual = dbUsage.value();
     ASSERT_GT(actual, expected);
   }
+
+  static ContentType sContentType;
 };
+
+ContentType TestFileSystemQuotaClient::sContentType;
 
 TEST_F(TestFileSystemQuotaClient, CheckUsageBeforeAnyFilesOnDisk) {
   auto backgroundTask = []() {
@@ -240,7 +243,7 @@ TEST_F(TestFileSystemQuotaClient, CheckUsageBeforeAnyFilesOnDisk) {
       // After a new file has been created (only in the database),
       // * database size has increased
       // * GetUsageForOrigin and InitOrigin should agree
-      const auto expectedUse = initialDbUsage + 2 * sPage;
+      const auto expectedUse = initialDbUsage + BytesOfName(GetTestFileName());
 
       TEST_TRY_UNWRAP(usageNow, quotaClient->GetUsageForOrigin(
                                     quota::PERSISTENCE_TYPE_DEFAULT,
@@ -314,6 +317,7 @@ TEST_F(TestFileSystemQuotaClient, WritesToFilesShouldIncreaseUsage) {
 
       // Fill the file with some content
       const nsCString& testData = GetTestData();
+      const auto expectedTotalUsage = testFileDbUsage + testData.Length();
 
       ASSERT_NO_FATAL_FAILURE(WriteDataToFile(dbm, testFileId, testData));
 
@@ -327,8 +331,6 @@ TEST_F(TestFileSystemQuotaClient, WritesToFilesShouldIncreaseUsage) {
       // When data manager unlocks the file, it should call update
       // but in this test we call it directly
       ASSERT_NSEQ(NS_OK, dbm->UpdateUsage(FileId(testFileId)));
-
-      const auto expectedTotalUsage = testFileDbUsage + testData.Length();
 
       // Disk usage should have increased after writing
       TEST_TRY_UNWRAP(usageNow,
@@ -425,9 +427,6 @@ TEST_F(TestFileSystemQuotaClient, TrackedFilesOnInitOriginShouldCauseRescan) {
 
     PerformOnIOThread(std::move(fileCreation),
                       rdm->MutableDatabaseManagerPtr());
-
-    ASSERT_NSEQ(NS_OK,
-                rdm->MutableDatabaseManagerPtr()->EnsureFileId(*testFileId));
 
     // This should force a rescan
     ASSERT_NSEQ(NS_OK, rdm->LockExclusive(*testFileId));

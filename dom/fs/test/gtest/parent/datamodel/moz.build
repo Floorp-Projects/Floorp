@@ -6,7 +6,7 @@
 
 UNIFIED_SOURCES = [
     "TestFileSystemDataManager.cpp",
-    "TestFileSystemDataManagerVersions.cpp",
+    "TestFileSystemDataManagerVersion001.cpp",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")

@@ -9,12 +9,10 @@
 #include "ErrorList.h"
 #include "FileSystemDataManager.h"
 #include "FileSystemDatabaseManagerVersion001.h"
-#include "FileSystemDatabaseManagerVersion002.h"
 #include "FileSystemFileManager.h"
 #include "FileSystemHashSource.h"
 #include "ResultStatement.h"
 #include "SchemaVersion001.h"
-#include "SchemaVersion002.h"
 #include "TestHelpers.h"
 #include "gtest/gtest.h"
 #include "mozIStorageService.h"
@@ -40,64 +38,7 @@
 namespace mozilla::dom::fs::test {
 
 using data::FileSystemDatabaseManagerVersion001;
-using data::FileSystemDatabaseManagerVersion002;
 using data::FileSystemFileManager;
-
-class TestFileSystemDatabaseManagerVersionsBase
-    : public quota::test::QuotaManagerDependencyFixture {
- public:
-  void SetUp() override { ASSERT_NO_FATAL_FAILURE(InitializeFixture()); }
-
-  void TearDown() override {
-    ASSERT_NO_FATAL_FAILURE(ClearStoragesForOrigin(GetTestOriginMetadata()));
-    ASSERT_NO_FATAL_FAILURE(ShutdownFixture());
-  }
-};
-
-class TestFileSystemDatabaseManagerVersions
-    : public TestFileSystemDatabaseManagerVersionsBase,
-      public ::testing::WithParamInterface<DatabaseVersion> {
- public:
-  static void AssertEntryIdMoved(const EntryId& aOriginal,
-                                 const EntryId& aMoved) {
-    switch (sVersion) {
-      case 1: {
-        ASSERT_EQ(aOriginal, aMoved);
-        break;
-      }
-      case 2: {
-        ASSERT_NE(aOriginal, aMoved);
-        break;
-      }
-      default: {
-        ASSERT_FALSE(false)
-        << "Unknown database version";
-      }
-    }
-  }
-
-  static void AssertEntryIdCollision(const EntryId& aOriginal,
-                                     const EntryId& aMoved) {
-    switch (sVersion) {
-      case 1: {
-        // We generated a new entryId
-        ASSERT_NE(aOriginal, aMoved);
-        break;
-      }
-      case 2: {
-        // We get the same entryId for the same input
-        ASSERT_EQ(aOriginal, aMoved);
-        break;
-      }
-      default: {
-        ASSERT_FALSE(false)
-        << "Unknown database version";
-      }
-    }
-  }
-
-  static DatabaseVersion sVersion;
-};
 
 // This is a minimal mock  to allow us to safely call the lock methods
 // while avoiding assertions
@@ -123,8 +64,7 @@ class MockFileSystemDataManager final : public data::FileSystemDataManager {
   }
 };
 
-static void MakeDatabaseManagerVersions(
-    const DatabaseVersion aVersion,
+static void MakeDatabaseManagerVersion001(
     RefPtr<MockFileSystemDataManager>& aDataManager,
     FileSystemDatabaseManagerVersion001*& aDatabaseManager) {
   TEST_TRY_UNWRAP(auto storageService,
@@ -142,18 +82,10 @@ static void MakeDatabaseManagerVersions(
 
   const Origin& testOrigin = GetTestOrigin();
 
-  if (1 == aVersion) {
-    TEST_TRY_UNWRAP(
-        TestFileSystemDatabaseManagerVersions::sVersion,
-        SchemaVersion001::InitializeConnection(connection, testOrigin));
-  } else {
-    ASSERT_EQ(2, aVersion);
-
-    TEST_TRY_UNWRAP(
-        TestFileSystemDatabaseManagerVersions::sVersion,
-        SchemaVersion002::InitializeConnection(connection, testOrigin));
-  }
-  ASSERT_NE(0, TestFileSystemDatabaseManagerVersions::sVersion);
+  TEST_TRY_UNWRAP(
+      DatabaseVersion version,
+      SchemaVersion001::InitializeConnection(connection, testOrigin));
+  ASSERT_EQ(1, version);
 
   TEST_TRY_UNWRAP(EntryId rootId, data::GetRootHandle(GetTestOrigin()));
 
@@ -178,32 +110,36 @@ static void MakeDatabaseManagerVersions(
       originMetadata, WrapMovingNotNull(streamTransportService),
       WrapMovingNotNull(ioTaskQueue));
 
-  if (1 == aVersion) {
-    aDatabaseManager = new FileSystemDatabaseManagerVersion001(
-        aDataManager, std::move(connection), fmRes.unwrap(), rootId);
-  } else {
-    ASSERT_EQ(2, aVersion);
-
-    aDatabaseManager = new FileSystemDatabaseManagerVersion002(
-        aDataManager, std::move(connection), fmRes.unwrap(), rootId);
-  }
+  aDatabaseManager = new FileSystemDatabaseManagerVersion001(
+      aDataManager, std::move(connection),
+      MakeUnique<FileSystemFileManager>(fmRes.unwrap()), rootId);
 
   aDataManager->SetDatabaseManager(aDatabaseManager);
 }
 
-DatabaseVersion TestFileSystemDatabaseManagerVersions::sVersion = 0;
+class TestFileSystemDatabaseManagerVersion001
+    : public quota::test::QuotaManagerDependencyFixture {
+ public:
+  void SetUp() override { ASSERT_NO_FATAL_FAILURE(InitializeFixture()); }
 
-TEST_P(TestFileSystemDatabaseManagerVersions,
+  void TearDown() override {
+    ASSERT_NO_FATAL_FAILURE(ClearStoragesForOrigin(GetTestOriginMetadata()));
+    ASSERT_NO_FATAL_FAILURE(ShutdownFixture());
+  }
+
+  static ContentType sContentType;
+};
+
+ContentType TestFileSystemDatabaseManagerVersion001::sContentType = "psid"_ns;
+
+TEST_F(TestFileSystemDatabaseManagerVersion001,
        smokeTestCreateRemoveDirectories) {
-  const DatabaseVersion version = GetParam();
-
-  auto ioTask = [version]() {
+  auto ioTask = []() {
     nsresult rv = NS_OK;
     // Ensure that FileSystemDataManager lives for the lifetime of the test
     RefPtr<MockFileSystemDataManager> dataManager;
     FileSystemDatabaseManagerVersion001* dm = nullptr;
-    ASSERT_NO_FATAL_FAILURE(
-        MakeDatabaseManagerVersions(version, dataManager, dm));
+    ASSERT_NO_FATAL_FAILURE(MakeDatabaseManagerVersion001(dataManager, dm));
     ASSERT_TRUE(dm);
     // if any of these exit early, we have to close
     auto autoClose = MakeScopeExit([dm] { dm->Close(); });
@@ -284,32 +220,31 @@ TEST_P(TestFileSystemDatabaseManagerVersions,
   PerformOnIOThread(std::move(ioTask));
 }
 
-TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateRemoveFiles) {
-  const DatabaseVersion version = GetParam();
-
-  auto ioTask = [version]() {
+TEST_F(TestFileSystemDatabaseManagerVersion001, smokeTestCreateRemoveFiles) {
+  auto ioTask = []() {
     nsresult rv = NS_OK;
     // Ensure that FileSystemDataManager lives for the lifetime of the test
     RefPtr<MockFileSystemDataManager> datamanager;
     FileSystemDatabaseManagerVersion001* dm = nullptr;
-    ASSERT_NO_FATAL_FAILURE(
-        MakeDatabaseManagerVersions(version, datamanager, dm));
+    ASSERT_NO_FATAL_FAILURE(MakeDatabaseManagerVersion001(datamanager, dm));
 
     TEST_TRY_UNWRAP(EntryId rootId, data::GetRootHandle(GetTestOrigin()));
 
     FileSystemChildMetadata firstChildMeta(rootId, u"First"_ns);
     // If creating is not allowed, getting a file from empty root fails
-    TEST_TRY_UNWRAP_ERR(
-        rv, dm->GetOrCreateFile(firstChildMeta, /* create */ false));
+    TEST_TRY_UNWRAP_ERR(rv, dm->GetOrCreateFile(firstChildMeta, sContentType,
+                                                /* create */ false));
     ASSERT_NSEQ(NS_ERROR_DOM_NOT_FOUND_ERR, rv);
 
     // Creating a file under empty root succeeds
-    TEST_TRY_UNWRAP(EntryId firstChild,
-                    dm->GetOrCreateFile(firstChildMeta, /* create */ true));
+    TEST_TRY_UNWRAP(
+        EntryId firstChild,
+        dm->GetOrCreateFile(firstChildMeta, sContentType, /* create */ true));
 
     // Second time, the same file is returned
-    TEST_TRY_UNWRAP(EntryId firstChildClone,
-                    dm->GetOrCreateFile(firstChildMeta, /* create */ true));
+    TEST_TRY_UNWRAP(
+        EntryId firstChildClone,
+        dm->GetOrCreateFile(firstChildMeta, sContentType, /* create */ true));
     ASSERT_EQ(firstChild, firstChildClone);
 
     // Directory listing returns the created file
@@ -331,6 +266,8 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateRemoveFiles) {
     rv = dm->GetFile(firstItemRef.entryId(), type, lastModifiedMilliSeconds,
                      path, file);
     ASSERT_NSEQ(NS_OK, rv);
+
+    ASSERT_STREQ(sContentType, type);
 
     const int64_t nowMilliSeconds = PR_Now() / 1000;
     ASSERT_GE(nowMilliSeconds, lastModifiedMilliSeconds);
@@ -357,8 +294,8 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateRemoveFiles) {
 
     EntryId notAChildHash = "0123456789abcdef0123456789abcdef"_ns;
     FileSystemChildMetadata notAChildMeta(notAChildHash, u"Dummy"_ns);
-    TEST_TRY_UNWRAP_ERR(rv,
-                        dm->GetOrCreateFile(notAChildMeta, /* create */ true));
+    TEST_TRY_UNWRAP_ERR(rv, dm->GetOrCreateFile(notAChildMeta, sContentType,
+                                                /* create */ true));
     ASSERT_NSEQ(NS_ERROR_STORAGE_CONSTRAINT, rv);  // Is this a good error?
 
     // We create a directory under root
@@ -380,8 +317,9 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateRemoveFiles) {
 
     // Create a file under the new directory
     FileSystemChildMetadata thirdChildMeta(secondChild, u"Third"_ns);
-    TEST_TRY_UNWRAP(EntryId thirdChild,
-                    dm->GetOrCreateFile(thirdChildMeta, /* create */ true));
+    TEST_TRY_UNWRAP(
+        EntryId thirdChild,
+        dm->GetOrCreateFile(thirdChildMeta, sContentType, /* create */ true));
 
     FileSystemEntryPair entryPair(rootId, thirdChild);
     TEST_TRY_UNWRAP(Path entryPath, dm->Resolve(entryPair));
@@ -401,8 +339,8 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateRemoveFiles) {
     ASSERT_TRUE(isDeleted);
 
     // The file under the removed directory is no longer accessible.
-    TEST_TRY_UNWRAP_ERR(rv,
-                        dm->GetOrCreateFile(thirdChildMeta, /* create */ true));
+    TEST_TRY_UNWRAP_ERR(rv, dm->GetOrCreateFile(thirdChildMeta, sContentType,
+                                                /* create */ true));
     ASSERT_NSEQ(NS_ERROR_STORAGE_CONSTRAINT, rv);  // Is this a good error?
 
     // The deletion is reflected by the root directory listing
@@ -422,15 +360,13 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateRemoveFiles) {
   PerformOnIOThread(std::move(ioTask));
 }
 
-TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateMoveDirectories) {
-  const DatabaseVersion version = GetParam();
-
-  auto ioTask = [version]() {
+TEST_F(TestFileSystemDatabaseManagerVersion001,
+       smokeTestCreateMoveDirectories) {
+  auto ioTask = []() {
     // Ensure that FileSystemDataManager lives for the lifetime of the test
     RefPtr<MockFileSystemDataManager> datamanager;
     FileSystemDatabaseManagerVersion001* dm = nullptr;
-    ASSERT_NO_FATAL_FAILURE(
-        MakeDatabaseManagerVersions(version, datamanager, dm));
+    ASSERT_NO_FATAL_FAILURE(MakeDatabaseManagerVersion001(datamanager, dm));
     auto closeAtExit = MakeScopeExit([&dm]() { dm->Close(); });
 
     TEST_TRY_UNWRAP(EntryId rootId, data::GetRootHandle(GetTestOrigin()));
@@ -469,7 +405,6 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateMoveDirectories) {
       FileSystemChildMetadata dest{rootId, src.entryName()};
       TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, dest));
       ASSERT_FALSE(moved.IsEmpty());
-      firstChildDir = moved;
     }
 
     {
@@ -521,7 +456,6 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateMoveDirectories) {
       FileSystemChildMetadata dest{firstChildDir, src.entryName()};
       TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, dest));
       ASSERT_FALSE(moved.IsEmpty());
-      firstChildDescendant = moved;
     }
 
     {
@@ -554,8 +488,9 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateMoveDirectories) {
 
     // Create file in the subdirectory with already existing subsubdirectory
     FileSystemChildMetadata testFileMeta(firstChildDir, u"Subfile"_ns);
-    TEST_TRY_UNWRAP(EntryId testFile,
-                    dm->GetOrCreateFile(testFileMeta, /* create */ true));
+    TEST_TRY_UNWRAP(
+        EntryId testFile,
+        dm->GetOrCreateFile(testFileMeta, sContentType, /* create */ true));
 
     // Get handles to the original locations of the entries
     FileSystemEntryMetadata subSubDir;
@@ -590,7 +525,6 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateMoveDirectories) {
       FileSystemChildMetadata dest{firstChildDir, src.entryName()};
       TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, dest));
       ASSERT_FALSE(moved.IsEmpty());
-      testFile = moved;
     }
 
     {
@@ -611,7 +545,6 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateMoveDirectories) {
       const FileSystemChildMetadata& dest = firstChildDescendantMeta;
       TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, dest));
       ASSERT_FALSE(moved.IsEmpty());
-      testFile = moved;
     }
 
     {
@@ -622,7 +555,6 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateMoveDirectories) {
 
       TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, testFileMeta));
       ASSERT_FALSE(moved.IsEmpty());
-      testFile = moved;
 
       TEST_TRY_UNWRAP(EntryId firstChildDescendantCheck,
                       dm->GetOrCreateDirectory(firstChildDescendantMeta,
@@ -638,7 +570,6 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateMoveDirectories) {
       const FileSystemChildMetadata& dest = testFileMeta;
       TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, dest));
       ASSERT_FALSE(moved.IsEmpty());
-      firstChildDescendant = moved;
     }
 
     {
@@ -652,10 +583,10 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateMoveDirectories) {
 
       TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, dest));
       ASSERT_FALSE(moved.IsEmpty());
-      firstChildDescendant = moved;
 
-      TEST_TRY_UNWRAP(EntryId testFileCheck,
-                      dm->GetOrCreateFile(testFileMeta, /* create */ true));
+      TEST_TRY_UNWRAP(
+          EntryId testFileCheck,
+          dm->GetOrCreateFile(testFileMeta, sContentType, /* create */ true));
       ASSERT_EQ(testFile, testFileCheck);
     }
 
@@ -666,7 +597,6 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateMoveDirectories) {
       FileSystemChildMetadata dest{rootId, src.entryName()};
       TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, dest));
       ASSERT_FALSE(moved.IsEmpty());
-      testFile = moved;
     }
 
     {
@@ -683,31 +613,22 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateMoveDirectories) {
       TEST_TRY_UNWRAP(FileSystemDirectoryListing contents,
                       dm->GetDirectoryEntries(rootId, 0u));
       ASSERT_EQ(1u, contents.files().Length());
-      ASSERT_EQ(1u, contents.directories().Length());
+      ASSERT_EQ(1u, contents.files().Length());
       ASSERT_STREQ(testFileMeta.childName(), contents.files()[0].entryName());
-      ASSERT_STREQ(firstChildMeta.childName(),
-                   contents.directories()[0].entryName());
     }
 
     {
-      ASSERT_NO_FATAL_FAILURE(
-          AssertEntryIdMoved(subSubFile.entryId(), testFile));
       TEST_TRY_UNWRAP(Path entryPath,
                       dm->Resolve({rootId, subSubFile.entryId()}));
-      if (1 == sVersion) {
-        ASSERT_EQ(1u, entryPath.Length());
-        ASSERT_STREQ(testFileMeta.childName(), entryPath[0]);
-      } else {
-        ASSERT_EQ(2, sVersion);
-        // Per spec, path result is empty when no path exists.
-        ASSERT_TRUE(entryPath.IsEmpty());
-      }
+      ASSERT_EQ(1u, entryPath.Length());
+      ASSERT_STREQ(testFileMeta.childName(), entryPath[0]);
     }
 
     {
       // Try to get a handle to the old item
       TEST_TRY_UNWRAP_ERR(
-          nsresult rv, dm->GetOrCreateFile(testFileMeta, /* create */ false));
+          nsresult rv,
+          dm->GetOrCreateFile(testFileMeta, sContentType, /* create */ false));
       ASSERT_NSEQ(NS_ERROR_DOM_NOT_FOUND_ERR, rv);
     }
 
@@ -720,7 +641,6 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateMoveDirectories) {
                                    firstChildDescendantMeta.childName()};
       TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, dest));
       ASSERT_FALSE(moved.IsEmpty());
-      testFile = moved;
     }
 
     {
@@ -732,14 +652,14 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateMoveDirectories) {
       FileSystemChildMetadata dest{rootId, testFileMeta.childName()};
       TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, dest));
       ASSERT_FALSE(moved.IsEmpty());
-      testFile = moved;
 
       FileSystemChildMetadata oldLocation{firstChildDir,
                                           firstChildDescendantMeta.childName()};
 
       // Is there still something out there?
-      TEST_TRY_UNWRAP_ERR(nsresult rv,
-                          dm->GetOrCreateFile(oldLocation, /* create */ false));
+      TEST_TRY_UNWRAP_ERR(
+          nsresult rv,
+          dm->GetOrCreateFile(oldLocation, sContentType, /* create */ false));
       ASSERT_NSEQ(NS_ERROR_DOM_NOT_FOUND_ERR, rv);
 
       TEST_TRY_UNWRAP(EntryId firstChildDescendantCheck,
@@ -757,7 +677,6 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateMoveDirectories) {
                                    firstChildDescendantMeta.childName()};
       TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, dest));
       ASSERT_FALSE(moved.IsEmpty());
-      testFile = moved;
     }
 
     {
@@ -769,7 +688,6 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateMoveDirectories) {
                                    firstChildDescendantMeta.childName()};
       TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, dest));
       ASSERT_FALSE(moved.IsEmpty());
-      testFile = moved;
     }
 
     {
@@ -781,14 +699,14 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateMoveDirectories) {
                                    firstChildDescendantMeta.childName()};
       TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, dest));
       ASSERT_FALSE(moved.IsEmpty());
-      testFile = moved;
 
       FileSystemChildMetadata oldLocation{firstChildDir,
                                           firstChildDescendantMeta.childName()};
 
       // Is there still something out there?
-      TEST_TRY_UNWRAP_ERR(nsresult rv,
-                          dm->GetOrCreateFile(oldLocation, /* create */ false));
+      TEST_TRY_UNWRAP_ERR(
+          nsresult rv,
+          dm->GetOrCreateFile(oldLocation, sContentType, /* create */ false));
       ASSERT_NSEQ(NS_ERROR_DOM_NOT_FOUND_ERR, rv);
 
       TEST_TRY_UNWRAP(EntryId firstChildDescendantCheck,
@@ -805,7 +723,6 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateMoveDirectories) {
                                    firstChildDescendantMeta.childName()};
       TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, dest));
       ASSERT_FALSE(moved.IsEmpty());
-      firstChildDescendant = moved;
     }
 
     {
@@ -817,7 +734,6 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateMoveDirectories) {
                                    firstChildDescendantMeta.childName()};
       TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, dest));
       ASSERT_FALSE(moved.IsEmpty());
-      firstChildDescendant = moved;
 
       FileSystemChildMetadata oldLocation{rootId,
                                           firstChildDescendantMeta.childName()};
@@ -827,19 +743,19 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateMoveDirectories) {
                                            oldLocation, /* create */ false));
       ASSERT_NSEQ(NS_ERROR_DOM_NOT_FOUND_ERR, rv);
 
-      TEST_TRY_UNWRAP(EntryId testFileCheck,
-                      dm->GetOrCreateFile(oldLocation, /* create */ true));
-      ASSERT_NO_FATAL_FAILURE(AssertEntryIdCollision(testFile, testFileCheck));
+      TEST_TRY_UNWRAP(
+          EntryId testFileCheck,
+          dm->GetOrCreateFile(oldLocation, sContentType, /* create */ true));
+      ASSERT_NE(testFile, testFileCheck);
       testFile = testFileCheck;
     }
 
     // Create a new file in the subsubdirectory
     FileSystemChildMetadata newFileMeta{firstChildDescendant,
                                         testFileMeta.childName()};
-    EntryId oldFirstChildDescendant = firstChildDescendant;
-
-    TEST_TRY_UNWRAP(EntryId newFile,
-                    dm->GetOrCreateFile(newFileMeta, /* create */ true));
+    TEST_TRY_UNWRAP(
+        EntryId newFile,
+        dm->GetOrCreateFile(newFileMeta, sContentType, /* create */ true));
 
     {
       TEST_TRY_UNWRAP(Path entryPath, dm->Resolve({rootId, newFile}));
@@ -857,7 +773,6 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateMoveDirectories) {
       FileSystemChildMetadata dest{rootId, testFileMeta.childName()};
       TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, dest));
       ASSERT_FALSE(moved.IsEmpty());
-      firstChildDescendant = moved;
     }
 
     {
@@ -867,41 +782,20 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateMoveDirectories) {
                                                    /* create */ false));
       ASSERT_NSEQ(NS_ERROR_DOM_NOT_FOUND_ERR, rv);
 
-      //  Still under the same parent which was moved
-      if (1 == sVersion) {
-        TEST_TRY_UNWRAP(EntryId handle,
-                        dm->GetOrCreateFile(newFileMeta, /* create */ false));
-        ASSERT_EQ(handle, newFile);
+      // Still under the same parent
+      TEST_TRY_UNWRAP(
+          EntryId handle,
+          dm->GetOrCreateFile(newFileMeta, sContentType, /* create */ false));
+      ASSERT_EQ(handle, newFile);
 
-        TEST_TRY_UNWRAP(
-            handle, dm->GetOrCreateDirectory({rootId, testFileMeta.childName()},
-                                             /* create */ false));
-        ASSERT_EQ(handle, firstChildDescendant);
-      } else if (2 == sVersion) {
-        TEST_TRY_UNWRAP_ERR(
-            rv, dm->GetOrCreateFile(newFileMeta, /* create */ false));
-        ASSERT_NSEQ(NS_ERROR_DOM_NOT_FOUND_ERR, rv);
-
-        TEST_TRY_UNWRAP(
-            EntryId newFileCheck,
-            dm->GetOrCreateFile({firstChildDescendant, newFileMeta.childName()},
-                                /* create */ false));
-        ASSERT_FALSE(newFileCheck.IsEmpty());
-      } else {
-        ASSERT_FALSE(false)
-        << "Unknown database version";
-      }
+      TEST_TRY_UNWRAP(
+          handle, dm->GetOrCreateDirectory({rootId, testFileMeta.childName()},
+                                           /* create */ false));
+      ASSERT_EQ(handle, firstChildDescendant);
     }
 
     {
       // Check that new file path is as expected
-      TEST_TRY_UNWRAP(
-          EntryId newFileCheck,
-          dm->GetOrCreateFile({firstChildDescendant, newFileMeta.childName()},
-                              /* create */ false));
-      ASSERT_NO_FATAL_FAILURE(AssertEntryIdMoved(newFileCheck, newFile));
-      newFile = newFileCheck;
-
       TEST_TRY_UNWRAP(Path entryPath, dm->Resolve({rootId, newFile}));
       ASSERT_EQ(2u, entryPath.Length());
       ASSERT_STREQ(testFileMeta.childName(), entryPath[0]);
@@ -919,7 +813,6 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateMoveDirectories) {
       // Flag is ignored
       TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, dest));
       ASSERT_FALSE(moved.IsEmpty());
-      testFile = moved;
     }
 
     {
@@ -932,7 +825,6 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateMoveDirectories) {
       // Flag is ignored
       TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, dest));
       ASSERT_FALSE(moved.IsEmpty());
-      firstChildDescendant = moved;
     }
 
     // Check that listings are as expected
@@ -974,7 +866,7 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateMoveDirectories) {
 
     {
       TEST_TRY_UNWRAP(Path entryPath,
-                      dm->Resolve({rootId, firstChildDescendant}));
+                      dm->Resolve({rootId, subSubDir.entryId()}));
       ASSERT_EQ(2u, entryPath.Length());
       ASSERT_STREQ(firstChildMeta.childName(), entryPath[0]);
       ASSERT_STREQ(testFileMeta.childName(), entryPath[1]);
@@ -982,13 +874,6 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateMoveDirectories) {
 
     {
       // Check that new file path is also as expected
-      TEST_TRY_UNWRAP(
-          EntryId newFileCheck,
-          dm->GetOrCreateFile({firstChildDescendant, newFileMeta.childName()},
-                              /* create */ false));
-      ASSERT_NO_FATAL_FAILURE(AssertEntryIdMoved(newFileCheck, newFile));
-      newFile = newFileCheck;
-
       TEST_TRY_UNWRAP(Path entryPath, dm->Resolve({rootId, newFile}));
       ASSERT_EQ(3u, entryPath.Length());
       ASSERT_STREQ(firstChildMeta.childName(), entryPath[0]);
@@ -1000,13 +885,13 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateMoveDirectories) {
       // Try to get handles to the old items
       TEST_TRY_UNWRAP_ERR(
           nsresult rv, dm->GetOrCreateFile({rootId, testFileMeta.childName()},
-                                           /* create */ false));
+                                           sContentType, /* create */ false));
       ASSERT_NSEQ(NS_ERROR_DOM_NOT_FOUND_ERR, rv);
 
       TEST_TRY_UNWRAP_ERR(
           rv,
           dm->GetOrCreateFile({rootId, firstChildDescendantMeta.childName()},
-                              /* create */ false));
+                              sContentType, /* create */ false));
       ASSERT_NSEQ(NS_ERROR_DOM_NOT_FOUND_ERR, rv);
 
       TEST_TRY_UNWRAP_ERR(
@@ -1022,7 +907,7 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateMoveDirectories) {
 
       TEST_TRY_UNWRAP_ERR(
           rv, dm->GetOrCreateFile({firstChildDir, testFileMeta.childName()},
-                                  /* create */ false));
+                                  sContentType, /* create */ false));
       ASSERT_NSEQ(NS_ERROR_DOM_TYPE_MISMATCH_ERR, rv);
 
       TEST_TRY_UNWRAP_ERR(
@@ -1033,16 +918,12 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateMoveDirectories) {
 
       TEST_TRY_UNWRAP_ERR(
           rv, dm->GetOrCreateFile({testFile, newFileMeta.childName()},
-                                  /* create */ false));
+                                  sContentType, /* create */ false));
       ASSERT_NSEQ(NS_ERROR_DOM_NOT_FOUND_ERR, rv);
     }
   };
 
   PerformOnIOThread(std::move(ioTask));
 }
-
-INSTANTIATE_TEST_SUITE_P(TestDatabaseManagerVersions,
-                         TestFileSystemDatabaseManagerVersions,
-                         testing::Values(1, 2));
 
 }  // namespace mozilla::dom::fs::test

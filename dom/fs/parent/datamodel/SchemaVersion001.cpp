@@ -17,6 +17,10 @@ namespace mozilla::dom::fs {
 
 namespace {
 
+nsresult SetEncoding(ResultConnection& aConn) {
+  return aConn->ExecuteSimpleSQL(R"(PRAGMA encoding = "UTF-16";)"_ns);
+}
+
 nsresult CreateEntries(ResultConnection& aConn) {
   return aConn->ExecuteSimpleSQL(
       "CREATE TABLE IF NOT EXISTS Entries ( "
@@ -131,12 +135,6 @@ nsresult CreateRootEntry(ResultConnection& aConn, const Origin& aOrigin) {
   return transaction.Commit();
 }
 
-}  // namespace
-
-nsresult SetEncoding(ResultConnection& aConn) {
-  return aConn->ExecuteSimpleSQL(R"(PRAGMA encoding = "UTF-16";)"_ns);
-}
-
 Result<bool, QMResult> CheckIfEmpty(ResultConnection& aConn) {
   const nsLiteralCString areThereTablesQuery =
       "SELECT EXISTS ("
@@ -149,16 +147,7 @@ Result<bool, QMResult> CheckIfEmpty(ResultConnection& aConn) {
   return stmt.YesOrNoQuery();
 };
 
-nsresult SchemaVersion001::CreateTables(ResultConnection& aConn,
-                                        const Origin& aOrigin) {
-  QM_TRY(MOZ_TO_RESULT(CreateEntries(aConn)));
-  QM_TRY(MOZ_TO_RESULT(CreateDirectories(aConn)));
-  QM_TRY(MOZ_TO_RESULT(CreateFiles(aConn)));
-  QM_TRY(MOZ_TO_RESULT(CreateUsages(aConn)));
-  QM_TRY(MOZ_TO_RESULT(CreateRootEntry(aConn, aOrigin)));
-
-  return NS_OK;
-}
+}  // namespace
 
 Result<DatabaseVersion, QMResult> SchemaVersion001::InitializeConnection(
     ResultConnection& aConn, const Origin& aOrigin) {
@@ -178,7 +167,11 @@ Result<DatabaseVersion, QMResult> SchemaVersion001::InitializeConnection(
         /* commit on complete */ false,
         mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
-    QM_TRY(QM_TO_RESULT(SchemaVersion001::CreateTables(aConn, aOrigin)));
+    QM_TRY(QM_TO_RESULT(CreateEntries(aConn)));
+    QM_TRY(QM_TO_RESULT(CreateDirectories(aConn)));
+    QM_TRY(QM_TO_RESULT(CreateFiles(aConn)));
+    QM_TRY(QM_TO_RESULT(CreateUsages(aConn)));
+    QM_TRY(QM_TO_RESULT(CreateRootEntry(aConn, aOrigin)));
     QM_TRY(QM_TO_RESULT(aConn->SetSchemaVersion(sVersion)));
 
     QM_TRY(QM_TO_RESULT(transaction.Commit()));

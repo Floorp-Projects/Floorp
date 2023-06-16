@@ -102,9 +102,10 @@ IPCResult FileSystemManagerParent::RecvGetFileHandle(
     aResolver(response);
   };
 
+  const ContentType& type = VoidCString();  // Currently cannot be set by user
   QM_TRY_UNWRAP(fs::EntryId entryId,
                 mDataManager->MutableDatabaseManagerPtr()->GetOrCreateFile(
-                    aRequest.handle(), aRequest.create()),
+                    aRequest.handle(), type, aRequest.create()),
                 IPC_OK(), reportError);
   MOZ_ASSERT(!entryId.IsEmpty());
 
