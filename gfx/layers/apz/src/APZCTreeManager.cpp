@@ -1545,6 +1545,8 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(
         return state.Finish(*this, std::move(aCallback));
       }
 
+      mOvershootDetector.Update(wheelInput);
+
       if (state.mHit.mTargetApzc) {
         MOZ_ASSERT(state.mHit.mHitResult != CompositorHitTestInvisibleToHit);
 
