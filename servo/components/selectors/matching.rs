@@ -3,8 +3,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 use crate::attr::{
-    AttrSelectorOperation, CaseSensitivity, NamespaceConstraint, ParsedAttrSelectorOperation,
-    ParsedCaseSensitivity,
+    AttrSelectorOperation, AttrSelectorWithOptionalNamespace, CaseSensitivity, NamespaceConstraint,
+    ParsedAttrSelectorOperation, ParsedCaseSensitivity,
 };
 use crate::bloom::{BloomFilter, BLOOM_HASH_MASK};
 use crate::parser::{
@@ -343,8 +343,7 @@ where
 }
 
 /// Matches each selector of a list as a complex selector
-#[inline(always)]
-pub fn list_matches_complex_selector<E: Element>(
+fn matches_complex_selector_list<E: Element>(
     list: &[Selector<E::Impl>],
     element: &E,
     context: &mut MatchingContext<E::Impl>,
@@ -652,6 +651,120 @@ where
     element.has_local_name(name)
 }
 
+fn matches_part<E>(
+    element: &E,
+    parts: &[<E::Impl as SelectorImpl>::Identifier],
+    context: &mut MatchingContext<E::Impl>,
+) -> bool
+where
+    E: Element,
+{
+    let mut hosts = SmallVec::<[E; 4]>::new();
+
+    let mut host = match element.containing_shadow_host() {
+        Some(h) => h,
+        None => return false,
+    };
+
+    let current_host = context.current_host;
+    if current_host != Some(host.opaque()) {
+        loop {
+            let outer_host = host.containing_shadow_host();
+            if outer_host.as_ref().map(|h| h.opaque()) == current_host {
+                break;
+            }
+            let outer_host = match outer_host {
+                Some(h) => h,
+                None => return false,
+            };
+            // TODO(emilio): if worth it, we could early return if
+            // host doesn't have the exportparts attribute.
+            hosts.push(host);
+            host = outer_host;
+        }
+    }
+
+    // Translate the part into the right scope.
+    parts.iter().all(|part| {
+        let mut part = part.clone();
+        for host in hosts.iter().rev() {
+            part = match host.imported_part(&part) {
+                Some(p) => p,
+                None => return false,
+            };
+        }
+        element.is_part(&part)
+    })
+}
+
+fn matches_host<E>(
+    element: &E,
+    selector: Option<&Selector<E::Impl>>,
+    context: &mut MatchingContext<E::Impl>,
+) -> bool
+where
+    E: Element,
+{
+    let host = match context.shadow_host() {
+        Some(h) => h,
+        None => return false,
+    };
+    if host != element.opaque() {
+        return false;
+    }
+    selector.map_or(true, |selector| {
+        context.nest(|context| matches_complex_selector(selector.iter(), element, context))
+    })
+}
+
+fn matches_slotted<E>(
+    element: &E,
+    selector: &Selector<E::Impl>,
+    context: &mut MatchingContext<E::Impl>,
+) -> bool
+where
+    E: Element,
+{
+    // <slots> are never flattened tree slottables.
+    if element.is_html_slot_element() {
+        return false;
+    }
+    context.nest(|context| matches_complex_selector(selector.iter(), element, context))
+}
+
+fn matches_rare_attribute_selector<E>(
+    element: &E,
+    attr_sel: &AttrSelectorWithOptionalNamespace<E::Impl>,
+) -> bool
+where
+    E: Element,
+{
+    let empty_string;
+    let namespace = match attr_sel.namespace() {
+        Some(ns) => ns,
+        None => {
+            empty_string = crate::parser::namespace_empty_string::<E::Impl>();
+            NamespaceConstraint::Specific(&empty_string)
+        },
+    };
+    element.attr_matches(
+        &namespace,
+        select_name(element, &attr_sel.local_name, &attr_sel.local_name_lower),
+        &match attr_sel.operation {
+            ParsedAttrSelectorOperation::Exists => AttrSelectorOperation::Exists,
+            ParsedAttrSelectorOperation::WithValue {
+                operator,
+                case_sensitivity,
+                ref value,
+            } => AttrSelectorOperation::WithValue {
+                operator,
+                case_sensitivity: to_unconditional_case_sensitivity(case_sensitivity, element),
+                value,
+            },
+        },
+    )
+}
+
 /// Determines whether the given element matches the given compound selector.
 #[inline]
 fn matches_compound_selector<E>(
@@ -716,7 +829,6 @@ where
     E: Element,
 {
     debug_assert!(context.shared.is_nested() || !context.shared.in_negation());
-
     match *selector {
         Component::ID(ref id) => {
             element.has_id(id, context.shared.classes_and_ids_case_sensitivity())
@@ -734,91 +846,20 @@ where
             ref value,
             operator,
             case_sensitivity,
-        } => {
-            element.attr_matches(
-                &NamespaceConstraint::Specific(&crate::parser::namespace_empty_string::<E::Impl>()),
-                local_name,
-                &AttrSelectorOperation::WithValue {
-                    operator,
-                    case_sensitivity: to_unconditional_case_sensitivity(case_sensitivity, element),
-                    value,
-                },
-            )
-        },
+        } => element.attr_matches(
+            &NamespaceConstraint::Specific(&crate::parser::namespace_empty_string::<E::Impl>()),
+            local_name,
+            &AttrSelectorOperation::WithValue {
+                operator,
+                case_sensitivity: to_unconditional_case_sensitivity(case_sensitivity, element),
+                value,
+            },
+        ),
         Component::AttributeOther(ref attr_sel) => {
-            let empty_string;
-            let namespace = match attr_sel.namespace() {
-                Some(ns) => ns,
-                None => {
-                    empty_string = crate::parser::namespace_empty_string::<E::Impl>();
-                    NamespaceConstraint::Specific(&empty_string)
-                },
-            };
-            element.attr_matches(
-                &namespace,
-                select_name(element, &attr_sel.local_name, &attr_sel.local_name_lower),
-                &match attr_sel.operation {
-                    ParsedAttrSelectorOperation::Exists => AttrSelectorOperation::Exists,
-                    ParsedAttrSelectorOperation::WithValue {
-                        operator,
-                        case_sensitivity,
-                        ref value,
-                    } => AttrSelectorOperation::WithValue {
-                        operator,
-                        case_sensitivity: to_unconditional_case_sensitivity(
-                            case_sensitivity,
-                            element,
-                        ),
-                        value,
-                    },
-                },
-            )
+            matches_rare_attribute_selector(element, attr_sel)
         },
-        Component::Part(ref parts) => {
-            let mut hosts = SmallVec::<[E; 4]>::new();
-
-            let mut host = match element.containing_shadow_host() {
-                Some(h) => h,
-                None => return false,
-            };
-
-            let current_host = context.shared.current_host;
-            if current_host != Some(host.opaque()) {
-                loop {
-                    let outer_host = host.containing_shadow_host();
-                    if outer_host.as_ref().map(|h| h.opaque()) == current_host {
-                        break;
-                    }
-                    let outer_host = match outer_host {
-                        Some(h) => h,
-                        None => return false,
-                    };
-                    // TODO(emilio): if worth it, we could early return if
-                    // host doesn't have the exportparts attribute.
-                    hosts.push(host);
-                    host = outer_host;
-                }
-            }
-
-            // Translate the part into the right scope.
-            parts.iter().all(|part| {
-                let mut part = part.clone();
-                for host in hosts.iter().rev() {
-                    part = match host.imported_part(&part) {
-                        Some(p) => p,
-                        None => return false,
-                    };
-                }
-                element.is_part(&part)
-            })
-        },
-        Component::Slotted(ref selector) => {
-            // <slots> are never flattened tree slottables.
-            !element.is_html_slot_element() &&
-                context
-                    .shared
-                    .nest(|context| matches_complex_selector(selector.iter(), element, context))
-        },
+        Component::Part(ref parts) => matches_part(element, parts, &mut context.shared),
+        Component::Slotted(ref selector) => matches_slotted(element, selector, &mut context.shared),
         Component::PseudoElement(ref pseudo) => {
             element.match_pseudo_element(pseudo, context.shared)
         },
@@ -849,15 +890,7 @@ where
             element.is_empty()
         },
         Component::Host(ref selector) => {
-            context
-                .shared
-                .shadow_host()
-                .map_or(false, |host| host == element.opaque()) &&
-                selector.as_ref().map_or(true, |selector| {
-                    context
-                        .shared
-                        .nest(|context| matches_complex_selector(selector.iter(), element, context))
-                })
+            matches_host(element, selector.as_ref(), &mut context.shared)
         },
         Component::ParentSelector |
         Component::Scope => match context.shared.scope_element {
@@ -877,10 +910,10 @@ where
         }),
         Component::Is(ref list) | Component::Where(ref list) => context
             .shared
-            .nest(|context| list_matches_complex_selector(list, element, context)),
+            .nest(|context| matches_complex_selector_list(list, element, context)),
         Component::Negation(ref list) => context
             .shared
-            .nest_for_negation(|context| !list_matches_complex_selector(list, element, context)),
+            .nest_for_negation(|context| !matches_complex_selector_list(list, element, context)),
         Component::Has(ref relative_selectors) => context
             .shared
             .nest_for_relative_selector(element.opaque(), |context| {
@@ -945,9 +978,10 @@ where
     if element.ignores_nth_child_selectors() {
         return false;
     }
+    let has_selectors = !selectors.is_empty();
+    let selectors_match =
+        !has_selectors || matches_complex_selector_list(selectors, element, context);
     if context.ignores_nth_child_selectors_for_invalidation() {
-        let selectors_match =
-            selectors.is_empty() || list_matches_complex_selector(selectors, element, context);
         return selectors_match && !context.in_negation();
     }
 
@@ -955,7 +989,7 @@ where
     let is_of_type = ty.is_of_type();
     if ty.is_only() {
         debug_assert!(
-            selectors.is_empty(),
+            !has_selectors,
             ":only-child and :only-of-type cannot have a selector list!"
         );
         return matches_generic_nth_child(
@@ -975,7 +1009,7 @@ where
 
     // It's useful to know whether this can only select the first/last element
     // child for optimization purposes, see the `HAS_EDGE_CHILD_SELECTOR` flag.
-    let is_edge_child_selector = a == 0 && b == 1 && !is_of_type && selectors.is_empty();
+    let is_edge_child_selector = a == 0 && b == 1 && !is_of_type && !has_selectors;
 
     if context.needs_selector_flags() {
         let mut flags = if is_edge_child_selector {
@@ -985,13 +1019,13 @@ where
         } else {
             ElementSelectorFlags::HAS_SLOW_SELECTOR_LATER_SIBLINGS
         };
-        if !selectors.is_empty() {
+        if has_selectors {
             flags |= ElementSelectorFlags::HAS_SLOW_SELECTOR_NTH_OF;
         }
         element.apply_selector_flags(flags);
     }
 
-    if !selectors.is_empty() && !list_matches_complex_selector(selectors, element, context) {
+    if !selectors_match {
         return false;
     }
 
@@ -1080,7 +1114,7 @@ where
             let matches = if is_of_type {
                 element.is_same_type(&curr)
             } else if !selectors.is_empty() {
-                list_matches_complex_selector(selectors, &curr, context)
+                matches_complex_selector_list(selectors, &curr, context)
             } else {
                 true
             };
@@ -1111,7 +1145,7 @@ where
         let matches = if is_of_type {
             element.is_same_type(&curr)
         } else if !selectors.is_empty() {
-            list_matches_complex_selector(selectors, &curr, context)
+            matches_complex_selector_list(selectors, &curr, context)
         } else {
             true
         };
