@@ -57,6 +57,7 @@ class CookieBannerReductionTest {
         exitMenu()
 
         browserScreen {
+            waitForPageToLoad()
         }.openThreeDotMenu {
         }.refreshPage {
             verifyCookieBannerExists(exists = false)
@@ -107,6 +108,7 @@ class CookieBannerReductionTest {
             exitMenu()
         }
         browserScreen {
+            waitForPageToLoad()
         }.openThreeDotMenu {
         }.refreshPage {
             verifyCookieBannerExists(exists = false)
