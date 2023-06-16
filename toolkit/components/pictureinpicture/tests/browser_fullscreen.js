@@ -17,12 +17,15 @@ add_task(async () => {
     },
     async browser => {
       for (let videoID of VIDEOS) {
-        await promiseFullscreenEntered(window, async () => {
-          await SpecialPowers.spawn(browser, [videoID], async videoID => {
+        info(`Start test of video fullscreen for video ${videoID}.`);
+        await promiseFullscreenEntered(window, () => {
+          return SpecialPowers.spawn(browser, [videoID], videoID => {
             let video = this.content.document.getElementById(videoID);
-            video.requestFullscreen();
+            return video.requestFullscreen();
           });
         });
+
+        info(`Entered video fullscreen, about to mouseover the video.`);
 
         await BrowserTestUtils.synthesizeMouseAtCenter(
           `#${videoID}`,
@@ -32,20 +35,24 @@ add_task(async () => {
           browser
         );
 
+        info(`Mouseover complete.`);
+
         let args = { videoID, toggleID: DEFAULT_TOGGLE_STYLES.rootID };
 
-        await promiseFullscreenExited(window, async () => {
-          await SpecialPowers.spawn(browser, [args], async args => {
+        await promiseFullscreenExited(window, () => {
+          return SpecialPowers.spawn(browser, [args], args => {
             let { videoID, toggleID } = args;
             let video = this.content.document.getElementById(videoID);
             let toggle = video.openOrClosedShadowRoot.getElementById(toggleID);
             ok(
               ContentTaskUtils.is_hidden(toggle),
-              "Toggle should be hidden in fullscreen mode."
+              `Toggle should be hidden in video fullscreen mode for video ${videoID}.`
             );
-            this.content.document.exitFullscreen();
+            return this.content.document.exitFullscreen();
           });
         });
+
+        info(`Exited video fullscreen.`);
       }
     }
   );
@@ -63,13 +70,18 @@ add_task(async () => {
       url: TEST_PAGE,
     },
     async browser => {
-      await promiseFullscreenEntered(window, async () => {
-        await SpecialPowers.spawn(browser, [], async () => {
-          this.content.document.body.requestFullscreen();
+      info(`Start test of browser fullscreen.`);
+      await promiseFullscreenEntered(window, () => {
+        return SpecialPowers.spawn(browser, [], () => {
+          return this.content.document.body.requestFullscreen();
         });
       });
 
+      info(`Entered browser fullscreen.`);
+
       for (let videoID of VIDEOS) {
+        info(`About to mouseover for video ${videoID}.`);
+
         await BrowserTestUtils.synthesizeMouseAtCenter(
           `#${videoID}`,
           {
@@ -77,6 +89,8 @@ add_task(async () => {
           },
           browser
         );
+
+        info(`Mouseover complete.`);
 
         let args = { videoID, toggleID: DEFAULT_TOGGLE_STYLES.rootID };
 
@@ -86,16 +100,18 @@ add_task(async () => {
           let toggle = video.openOrClosedShadowRoot.getElementById(toggleID);
           ok(
             ContentTaskUtils.is_hidden(toggle),
-            "Toggle should be hidden in fullscreen mode."
+            `Toggle should be hidden in body fullscreen mode for video ${videoID}.`
           );
         });
       }
 
-      await promiseFullscreenExited(window, async () => {
-        await SpecialPowers.spawn(browser, [], async () => {
-          this.content.document.exitFullscreen();
+      await promiseFullscreenExited(window, () => {
+        return SpecialPowers.spawn(browser, [], () => {
+          return this.content.document.exitFullscreen();
         });
       });
+
+      info(`Exited browser fullscreen.`);
     }
   );
 });
@@ -113,27 +129,30 @@ add_task(async () => {
     async browser => {
       await ensureVideosReady(browser);
 
-      for (let videoId of VIDEOS) {
-        let pipWin = await triggerPictureInPicture(browser, videoId);
-        ok(pipWin, "Got Picture-In-Picture window.");
+      for (let videoID of VIDEOS) {
+        let pipWin = await triggerPictureInPicture(browser, videoID);
+        ok(pipWin, `Got Picture-In-Picture window for video ${videoID}.`);
 
         let pipClosed = BrowserTestUtils.domWindowClosed(pipWin);
 
         // need to focus first, since fullscreen request will be blocked otherwise
         await SimpleTest.promiseFocus(window);
 
-        await promiseFullscreenEntered(window, async () => {
-          await SpecialPowers.spawn(browser, [], async () => {
-            this.content.document.body.requestFullscreen();
+        await promiseFullscreenEntered(window, () => {
+          return SpecialPowers.spawn(browser, [], () => {
+            return this.content.document.body.requestFullscreen();
           });
         });
 
         await pipClosed;
-        ok(pipWin.closed, "Picture-In-Picture successfully closed.");
+        ok(
+          pipWin.closed,
+          `Picture-In-Picture successfully closed for video ${videoID}.`
+        );
 
-        await promiseFullscreenExited(window, async () => {
-          await SpecialPowers.spawn(browser, [], async () => {
-            this.content.document.exitFullscreen();
+        await promiseFullscreenExited(window, () => {
+          return SpecialPowers.spawn(browser, [], () => {
+            return this.content.document.exitFullscreen();
           });
         });
       }
