@@ -117,15 +117,14 @@ class TestFileSystemQuotaClient
       const FileSystemChildMetadata& aFileSlot, EntryId& aEntryId) {
     // The file should not exist yet
     Result<EntryId, QMResult> existingTestFile =
-        aDatabaseManager->GetOrCreateFile(aFileSlot, sContentType,
-                                          /* create */ false);
+        aDatabaseManager->GetOrCreateFile(aFileSlot, /* create */ false);
     ASSERT_TRUE(existingTestFile.isErr());
     ASSERT_NSEQ(NS_ERROR_DOM_NOT_FOUND_ERR,
                 ToNSResult(existingTestFile.unwrapErr()));
 
     // Create a new file
     TEST_TRY_UNWRAP(aEntryId, aDatabaseManager->GetOrCreateFile(
-                                  aFileSlot, sContentType, /* create */ true));
+                                  aFileSlot, /* create */ true));
   }
 
   static void WriteDataToFile(
@@ -137,7 +136,6 @@ class TestFileSystemQuotaClient
     TimeStamp lastModMilliS = 0;
     Path path;
     nsCOMPtr<nsIFile> fileObj;
-
     ASSERT_NSEQ(NS_OK, aDatabaseManager->GetFile(aEntryId, type, lastModMilliS,
                                                  path, fileObj));
 
@@ -206,11 +204,7 @@ class TestFileSystemQuotaClient
     const auto actual = dbUsage.value();
     ASSERT_GT(actual, expected);
   }
-
-  static ContentType sContentType;
 };
-
-ContentType TestFileSystemQuotaClient::sContentType;
 
 TEST_F(TestFileSystemQuotaClient, CheckUsageBeforeAnyFilesOnDisk) {
   auto backgroundTask = []() {
