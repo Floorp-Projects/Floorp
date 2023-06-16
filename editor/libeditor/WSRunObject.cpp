@@ -2386,11 +2386,15 @@ Result<CaretPoint, nsresult> WhiteSpaceVisibilityKeeper::
                   replaceRangeDataAtEnd.StartRef().EqualsOrIsBefore(
                       rangeToDelete.EndRef()));
     // If the deleting range end is end of a text node, the replacing range
-    // starts with another node if the following text node starts with white-
-    // spaces.
+    // should:
+    // - start with another node if the following text node starts with
+    // white-spaces.
+    // - start from prior point because end of the range may be in collapsible
+    // white-spaces.
     MOZ_ASSERT_IF(rangeToDelete.EndRef().IsInTextNode() &&
                       rangeToDelete.EndRef().IsEndOfContainer(),
-                  rangeToDelete.EndRef() == replaceRangeDataAtEnd.StartRef() ||
+                  replaceRangeDataAtEnd.StartRef().EqualsOrIsBefore(
+                      rangeToDelete.EndRef()) ||
                       replaceRangeDataAtEnd.StartRef().IsStartOfContainer());
     MOZ_ASSERT(rangeToDelete.StartRef().EqualsOrIsBefore(
         replaceRangeDataAtEnd.StartRef()));
