@@ -11,7 +11,7 @@ use crate::values::serialize_atom_identifier;
 use crate::Atom;
 use cssparser::{Parser as CssParser, ParserInput};
 use dom::ElementState;
-use selectors::parser::SelectorList;
+use selectors::parser::{SelectorList, ParseRelative};
 use std::fmt::{self, Debug, Write};
 use style_traits::{CssWriter, ParseError, ToCss};
 
@@ -68,7 +68,7 @@ impl<'a> SelectorParser<'a> {
             for_supports_rule: false,
         };
         let mut input = ParserInput::new(input);
-        SelectorList::parse(&parser, &mut CssParser::new(&mut input))
+        SelectorList::parse(&parser, &mut CssParser::new(&mut input), ParseRelative::No)
     }
 
     /// Whether we're parsing selectors in a user-agent stylesheet.

@@ -2537,6 +2537,7 @@ pub extern "C" fn Servo_StyleRule_SetSelectorText(
 
     write_locked_arc(rule, |rule: &mut StyleRule| {
         use style::selector_parser::SelectorParser;
+        use selectors::parser::ParseRelative;
 
         let namespaces = contents.namespaces.read();
         let url_data = contents.url_data.read();
@@ -2547,8 +2548,10 @@ pub extern "C" fn Servo_StyleRule_SetSelectorText(
             for_supports_rule: false,
         };
 
+        // TODO: Maybe allow setting relative selectors from the OM, if we're in a nested style
+        // rule?
         let mut parser_input = ParserInput::new(&value_str);
-        match SelectorList::parse(&parser, &mut Parser::new(&mut parser_input)) {
+        match SelectorList::parse(&parser, &mut Parser::new(&mut parser_input), ParseRelative::No) {
             Ok(selectors) => {
                 rule.selectors = selectors;
                 true

@@ -371,9 +371,12 @@ enum ForgivingParsing {
 
 /// Flag indicating if we're parsing relative selectors.
 #[derive(Copy, Clone, PartialEq)]
-enum ParseRelative {
+pub enum ParseRelative {
     /// Expect selectors to start with a combinator, assuming descendant combinator if not present.
-    Yes,
+    ForHas,
+    /// Allow selectors to start with a combinator, prepending a parent selector if so. Do nothing
+    /// otherwise
+    ForNesting,
     /// Treat as parse error if any selector begins with a combinator.
     No,
 }
@@ -391,6 +394,7 @@ impl<Impl: SelectorImpl> SelectorList<Impl> {
     pub fn parse<'i, 't, P>(
         parser: &P,
         input: &mut CssParser<'i, 't>,
+        parse_relative: ParseRelative,
     ) -> Result<Self, ParseError<'i, P::Error>>
     where
         P: Parser<'i, Impl = Impl>,
@@ -400,7 +404,7 @@ impl<Impl: SelectorImpl> SelectorList<Impl> {
             input,
             SelectorParsingState::empty(),
             ForgivingParsing::No,
-            ParseRelative::No,
+            parse_relative,
         )
     }
 
@@ -444,6 +448,11 @@ impl<Impl: SelectorImpl> SelectorList<Impl> {
                 }
             }
         }
+    }
+
+    /// Replaces the parent selector in all the items of the selector list.
+    pub fn replace_parent_selector(&self, parent: &[Selector<Impl>]) -> Self {
+        Self(self.0.iter().map(|selector| selector.replace_parent_selector(parent)).collect())
     }
 
     /// Creates a SelectorList from a Vec of selectors. Used in tests.
@@ -2312,11 +2321,27 @@ where
     Impl: SelectorImpl,
 {
     let mut builder = SelectorBuilder::default();
-    if parse_relative == ParseRelative::Yes {
-        builder.push_simple_selector(Component::RelativeSelectorAnchor);
-        // Do we see a combinator? If so, push that. Otherwise, push a descendant combinator.
-        builder
-            .push_combinator(parse_combinator::<P, Impl>(input).unwrap_or(Combinator::Descendant));
+
+    // Helps rewind less, but also simplifies dealing with relative combinators below.
+    input.skip_whitespace();
+
+    if parse_relative != ParseRelative::No {
+        let combinator = try_parse_combinator::<P, Impl>(input);
+        match parse_relative {
+            ParseRelative::ForHas => {
+                builder.push_simple_selector(Component::RelativeSelectorAnchor);
+                // Do we see a combinator? If so, push that. Otherwise, push a descendant
+                // combinator.
+                builder.push_combinator(combinator.unwrap_or(Combinator::Descendant));
+            },
+            ParseRelative::ForNesting => {
+                if let Ok(combinator) = combinator {
+                    builder.push_simple_selector(Component::ParentSelector);
+                    builder.push_combinator(combinator);
+                }
+            },
+            ParseRelative::No => unreachable!(),
+        }
     }
     'outer_loop: loop {
         // Parse a sequence of simple selectors.
@@ -2338,7 +2363,7 @@ where
             break;
         }
 
-        let combinator = if let Ok(c) = parse_combinator::<P, Impl>(input) {
+        let combinator = if let Ok(c) = try_parse_combinator::<P, Impl>(input) {
             c
         } else {
             break 'outer_loop;
@@ -2353,7 +2378,7 @@ where
     return Ok(Selector(builder.build()));
 }
 
-fn parse_combinator<'i, 't, P, Impl>(input: &mut CssParser<'i, 't>) -> Result<Combinator, ()> {
+fn try_parse_combinator<'i, 't, P, Impl>(input: &mut CssParser<'i, 't>) -> Result<Combinator, ()> {
     let mut any_whitespace = false;
     loop {
         let before_this_token = input.state();
@@ -2950,7 +2975,7 @@ where
             SelectorParsingState::DISALLOW_PSEUDOS |
             SelectorParsingState::DISALLOW_RELATIVE_SELECTOR,
         ForgivingParsing::No,
-        ParseRelative::Yes,
+        ParseRelative::ForHas,
     )?;
     Ok(Component::Has(RelativeSelector::from_selector_list(inner)))
 }
@@ -3493,7 +3518,14 @@ pub mod tests {
     fn parse<'i>(
         input: &'i str,
     ) -> Result<SelectorList<DummySelectorImpl>, SelectorParseError<'i>> {
-        parse_ns(input, &DummyParser::default())
+        parse_relative(input, ParseRelative::No)
+    }
+
+    fn parse_relative<'i>(
+        input: &'i str,
+        parse_relative: ParseRelative,
+    ) -> Result<SelectorList<DummySelectorImpl>, SelectorParseError<'i>> {
+        parse_ns_relative(input, &DummyParser::default(), parse_relative)
     }
 
     fn parse_expected<'i, 'a>(
@@ -3503,11 +3535,27 @@ pub mod tests {
         parse_ns_expected(input, &DummyParser::default(), expected)
     }
 
+    fn parse_relative_expected<'i, 'a>(
+        input: &'i str,
+        parse_relative: ParseRelative,
+        expected: Option<&'a str>,
+    ) -> Result<SelectorList<DummySelectorImpl>, SelectorParseError<'i>> {
+        parse_ns_relative_expected(input, &DummyParser::default(), parse_relative, expected)
+    }
+
     fn parse_ns<'i>(
         input: &'i str,
         parser: &DummyParser,
     ) -> Result<SelectorList<DummySelectorImpl>, SelectorParseError<'i>> {
-        parse_ns_expected(input, parser, None)
+        parse_ns_relative(input, parser, ParseRelative::No)
+    }
+
+    fn parse_ns_relative<'i>(
+        input: &'i str,
+        parser: &DummyParser,
+        parse_relative: ParseRelative,
+    ) -> Result<SelectorList<DummySelectorImpl>, SelectorParseError<'i>> {
+        parse_ns_relative_expected(input, parser, parse_relative, None)
     }
 
     fn parse_ns_expected<'i, 'a>(
@@ -3515,8 +3563,17 @@ pub mod tests {
         parser: &DummyParser,
         expected: Option<&'a str>,
     ) -> Result<SelectorList<DummySelectorImpl>, SelectorParseError<'i>> {
+        parse_ns_relative_expected(input, parser, ParseRelative::No, expected)
+    }
+
+    fn parse_ns_relative_expected<'i, 'a>(
+        input: &'i str,
+        parser: &DummyParser,
+        parse_relative: ParseRelative,
+        expected: Option<&'a str>,
+    ) -> Result<SelectorList<DummySelectorImpl>, SelectorParseError<'i>> {
         let mut parser_input = ParserInput::new(input);
-        let result = SelectorList::parse(parser, &mut CssParser::new(&mut parser_input));
+        let result = SelectorList::parse(parser, &mut CssParser::new(&mut parser_input), parse_relative);
         if let Ok(ref selectors) = result {
             // We can't assume that the serialized parsed selector will equal
             // the input; for example, if there is no default namespace, '*|foo'
@@ -3539,7 +3596,7 @@ pub mod tests {
     #[test]
     fn test_empty() {
         let mut input = ParserInput::new(":empty");
-        let list = SelectorList::parse(&DummyParser::default(), &mut CssParser::new(&mut input));
+        let list = SelectorList::parse(&DummyParser::default(), &mut CssParser::new(&mut input), ParseRelative::No);
         assert!(list.is_ok());
     }
 
@@ -4053,21 +4110,24 @@ pub mod tests {
         let parent = parse(".bar, div .baz").unwrap();
         let child = parse("#foo &.bar").unwrap();
         assert_eq!(
-            SelectorList::from_vec(vec![child.0[0].replace_parent_selector(&parent.0)]),
+            child.replace_parent_selector(&parent.0),
             parse("#foo :is(.bar, div .baz).bar").unwrap()
         );
 
         let has_child = parse("#foo:has(&.bar)").unwrap();
         assert_eq!(
-            SelectorList::from_vec(vec![has_child.0[0].replace_parent_selector(&parent.0)]),
+            has_child.replace_parent_selector(&parent.0),
             parse("#foo:has(:is(.bar, div .baz).bar)").unwrap()
         );
 
         let child = parse("#foo").unwrap();
         assert_eq!(
-            SelectorList::from_vec(vec![child.0[0].replace_parent_selector(&parent.0)]),
+            child.replace_parent_selector(&parent.0),
             parse(":is(.bar, div .baz) #foo").unwrap()
         );
+
+        let child = parse_relative_expected("+ #foo", ParseRelative::ForNesting, Some("& + #foo")).unwrap();
+        assert_eq!(child, parse("& + #foo").unwrap());
     }
 
     #[test]
