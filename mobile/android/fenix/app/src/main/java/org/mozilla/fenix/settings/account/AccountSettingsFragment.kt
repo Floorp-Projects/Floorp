@@ -33,6 +33,7 @@ import mozilla.components.service.fxa.manager.SyncEnginesStorage
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.service.fxa.sync.SyncStatusObserver
 import mozilla.components.service.fxa.sync.getLastSynced
+import mozilla.components.service.fxa.sync.setLastSynced
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.Config
@@ -436,8 +437,11 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
                 pref.title = getString(R.string.preferences_sync_now)
                 pref.isEnabled = true
 
-                val time = getLastSynced(requireContext())
-                accountSettingsStore.dispatch(AccountSettingsFragmentAction.SyncEnded(time))
+                accountSettingsStore.dispatch(
+                    AccountSettingsFragmentAction.SyncEnded(
+                        lastSavedSyncTime(),
+                    ),
+                )
                 // Make sure out sync engine checkboxes are up-to-date.
                 updateSyncEngineStates()
                 setDisabledWhileSyncing(false)
@@ -451,12 +455,25 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
                 // We want to only enable the sync button, and not the checkboxes here
                 pref.isEnabled = true
 
-                val failedTime = getLastSynced(requireContext())
                 accountSettingsStore.dispatch(
                     AccountSettingsFragmentAction.SyncFailed(
-                        failedTime,
+                        lastSavedSyncTime(),
                     ),
                 )
+            }
+        }
+
+        // Returns the last saved sync time (in millis)
+        // If the corresponding shared preference doesn't have a value yet,
+        // it is initialized with the current time (in millis)
+        private fun lastSavedSyncTime(): Long {
+            val lastSyncedTime = getLastSynced(requireContext())
+            return if (lastSyncedTime != 0L) {
+                lastSyncedTime
+            } else {
+                val current = System.currentTimeMillis()
+                setLastSynced(requireContext(), current)
+                current
             }
         }
     }

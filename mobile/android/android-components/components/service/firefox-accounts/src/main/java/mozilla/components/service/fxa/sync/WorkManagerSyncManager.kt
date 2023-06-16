@@ -562,11 +562,17 @@ internal fun getSyncState(context: Context): String? {
         .getString(SYNC_STATE_KEY, null)
 }
 
-internal fun setLastSynced(context: Context, ts: Long) {
+/**
+ * Saves the lastSyncedTime to the shared preferences
+ *
+ * @param context the context
+ * @param lastSyncedTime - the last synced time in milliseconds
+ */
+fun setLastSynced(context: Context, lastSyncedTime: Long) {
     context
         .getSharedPreferences(SYNC_STATE_PREFS_KEY, Context.MODE_PRIVATE)
         .edit()
-        .putLong(SYNC_LAST_SYNCED_KEY, ts)
+        .putLong(SYNC_LAST_SYNCED_KEY, lastSyncedTime)
         .apply()
 }
 
