@@ -94,10 +94,6 @@ class SessionStoreUtils {
   static void CollectFromSelectElement(Document& aDocument,
                                        uint16_t& aGeneratedCount,
                                        ArgsT&&... args);
-  template <typename... ArgsT>
-  static void CollectFromFormAssociatedCustomElement(Document& aDocument,
-                                                     uint16_t& aGeneratedCount,
-                                                     ArgsT&&... args);
 
   static void CollectFormData(const GlobalObject& aGlobal,
                               WindowProxyHolder& aWindow,

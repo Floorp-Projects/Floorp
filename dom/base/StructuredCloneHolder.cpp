@@ -896,36 +896,52 @@ bool WriteFormData(JSStructuredCloneWriter* aWriter, FormData* aFormData,
     return false;
   }
 
-  auto write = [aWriter, aHolder](
-                   const nsString& aName,
-                   const OwningBlobOrDirectoryOrUSVString& aValue) {
-    if (!StructuredCloneHolder::WriteString(aWriter, aName)) {
-      return false;
-    }
+  class MOZ_STACK_CLASS Closure final {
+    JSStructuredCloneWriter* mWriter;
+    StructuredCloneHolder* mHolder;
 
-    if (aValue.IsBlob()) {
-      if (!JS_WriteUint32Pair(aWriter, SCTAG_DOM_BLOB,
-                              aHolder->BlobImpls().Length())) {
+   public:
+    Closure(JSStructuredCloneWriter* aWriter, StructuredCloneHolder* aHolder)
+        : mWriter(aWriter), mHolder(aHolder) {}
+
+    static bool Write(const nsString& aName,
+                      const OwningBlobOrDirectoryOrUSVString& aValue,
+                      void* aClosure) {
+      Closure* closure = static_cast<Closure*>(aClosure);
+      if (!StructuredCloneHolder::WriteString(closure->mWriter, aName)) {
         return false;
       }
 
-      RefPtr<BlobImpl> blobImpl = aValue.GetAsBlob()->Impl();
+      if (aValue.IsBlob()) {
+        if (!JS_WriteUint32Pair(closure->mWriter, SCTAG_DOM_BLOB,
+                                closure->mHolder->BlobImpls().Length())) {
+          return false;
+        }
 
-      aHolder->BlobImpls().AppendElement(blobImpl);
+        RefPtr<BlobImpl> blobImpl = aValue.GetAsBlob()->Impl();
+
+        closure->mHolder->BlobImpls().AppendElement(blobImpl);
+        return true;
+      }
+
+      if (aValue.IsDirectory()) {
+        Directory* directory = aValue.GetAsDirectory();
+        return WriteDirectory(closure->mWriter, directory);
+      }
+
+      size_t charSize = sizeof(nsString::char_type);
+      if (!JS_WriteUint32Pair(closure->mWriter, 0,
+                              aValue.GetAsUSVString().Length()) ||
+          !JS_WriteBytes(closure->mWriter, aValue.GetAsUSVString().get(),
+                         aValue.GetAsUSVString().Length() * charSize)) {
+        return false;
+      }
+
       return true;
     }
-
-    if (aValue.IsDirectory()) {
-      Directory* directory = aValue.GetAsDirectory();
-      return WriteDirectory(aWriter, directory);
-    }
-
-    const size_t charSize = sizeof(nsString::char_type);
-    return JS_WriteUint32Pair(aWriter, 0, aValue.GetAsUSVString().Length()) &&
-           JS_WriteBytes(aWriter, aValue.GetAsUSVString().get(),
-                         aValue.GetAsUSVString().Length() * charSize);
   };
-  return aFormData->ForEach(write);
+  Closure closure(aWriter, aHolder);
+  return aFormData->ForEach(Closure::Write, &closure);
 }
 
 JSObject* ReadWasmModule(JSContext* aCx, uint32_t aIndex,

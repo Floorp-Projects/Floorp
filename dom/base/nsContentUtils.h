@@ -174,7 +174,6 @@ class ContentChild;
 class ContentFrameMessageManager;
 class ContentParent;
 struct CustomElementDefinition;
-class CustomElementFormValue;
 class CustomElementRegistry;
 class DataTransfer;
 class Document;
@@ -183,7 +182,6 @@ class DOMArena;
 class Element;
 class Event;
 class EventTarget;
-class HTMLElement;
 class HTMLInputElement;
 class IPCTransferable;
 class IPCTransferableData;
@@ -192,7 +190,6 @@ class IPCTransferableDataItem;
 struct LifecycleCallbackArgs;
 class MessageBroadcaster;
 class NodeInfo;
-class OwningFileOrUSVStringOrFormData;
 class Selection;
 struct StructuredSerializeOptions;
 class WorkerPrivate;
@@ -3051,15 +3048,6 @@ class nsContentUtils {
       mozilla::dom::ElementCallbackType aType, Element* aCustomElement,
       const mozilla::dom::LifecycleCallbackArgs& aArgs,
       mozilla::dom::CustomElementDefinition* aDefinition = nullptr);
-
-  static mozilla::dom::CustomElementFormValue ConvertToCustomElementFormValue(
-      const mozilla::dom::Nullable<
-          mozilla::dom::OwningFileOrUSVStringOrFormData>& aState);
-
-  static mozilla::dom::Nullable<mozilla::dom::OwningFileOrUSVStringOrFormData>
-  ExtractFormAssociatedCustomElementValue(
-      nsIGlobalObject* aGlobal,
-      const mozilla::dom::CustomElementFormValue& aCEValue);
 
   /**
    * Appends all "document level" native anonymous content subtree roots for

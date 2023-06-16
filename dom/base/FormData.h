@@ -21,7 +21,6 @@ class ErrorResult;
 
 namespace dom {
 
-class CustomElementFormValue;
 class HTMLFormElement;
 class GlobalObject;
 
@@ -128,17 +127,18 @@ class FormData final : public nsISupports,
   virtual nsresult AddNameDirectoryPair(const nsAString& aName,
                                         Directory* aDirectory) override;
 
+  using FormDataEntryCallback =
+      bool (*)(const nsString& aName,
+               const OwningBlobOrDirectoryOrUSVString& aValue, void* aClosure);
+
   uint32_t Length() const { return mFormData.Length(); }
 
   // Stops iteration and returns false if any invocation of callback returns
   // false. Returns true otherwise.
-  // Accepts callbacks of the form `bool(const nsString&, const
-  // OwningBlobOrDirectoryOrUSVString&)`.
-  template <typename F>
-  bool ForEach(F&& aCallback) {
+  bool ForEach(FormDataEntryCallback aFunc, void* aClosure) {
     for (uint32_t i = 0; i < mFormData.Length(); ++i) {
       FormDataTuple& tuple = mFormData[i];
-      if (!aCallback(tuple.name, tuple.value)) {
+      if (!aFunc(tuple.name, tuple.value, aClosure)) {
         return false;
       }
     }
@@ -153,8 +153,6 @@ class FormData final : public nsISupports,
   nsresult CopySubmissionDataTo(HTMLFormSubmission* aFormSubmission) const;
 
   Element* GetSubmitterElement() const { return mSubmitter.get(); }
-
-  CustomElementFormValue ConvertToCustomElementFormValue();
 
  private:
   nsCOMPtr<nsISupports> mOwner;
