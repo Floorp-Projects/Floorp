@@ -47,7 +47,8 @@
       "proposedEnrollment": 60,
       "referenceBranch": "control",
       "featureValidationOptOut": false,
-      "localizations": null
+      "localizations": null,
+      "locales": null
     },
     {
       "schemaVersion": "1.12.0",
@@ -125,7 +126,8 @@
       "proposedEnrollment": 14,
       "referenceBranch": "control",
       "featureValidationOptOut": false,
-      "localizations": null
+      "localizations": null,
+      "locales": null
     },
     {
       "schemaVersion": "1.12.0",
@@ -189,7 +191,8 @@
       "proposedEnrollment": 7,
       "referenceBranch": "control",
       "featureValidationOptOut": false,
-      "localizations": null
+      "localizations": null,
+      "locales": null
     }
   ]
 }
