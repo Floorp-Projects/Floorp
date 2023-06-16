@@ -5184,10 +5184,12 @@ Result<SplitNodeResult, nsresult> HTMLEditor::DoSplitNode(
     if (!firstChildOfRightNode) {
       // XXX Why do we ignore an error while moving nodes from the right
       //     node to the left node?
-      IgnoredErrorResult error;
-      MoveAllChildren(*aStartOfRightNode.GetContainer(),
-                      EditorRawDOMPoint(&aNewNode, 0u), error);
-      NS_WARNING_ASSERTION(!error.Failed(),
+      nsresult rv = MoveAllChildren(*aStartOfRightNode.GetContainer(),
+                                    EditorRawDOMPoint(&aNewNode, 0u));
+      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+        return Err(NS_ERROR_EDITOR_DESTROYED);
+      }
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                            "HTMLEditor::MoveAllChildren() failed, but ignored");
     }
     // If the left node is new one and splitting middle of it, we need to
@@ -5195,11 +5197,13 @@ Result<SplitNodeResult, nsresult> HTMLEditor::DoSplitNode(
     else if (firstChildOfRightNode->GetPreviousSibling()) {
       // XXX Why do we ignore an error while moving nodes from the right node
       //     to the left node?
-      IgnoredErrorResult error;
-      MovePreviousSiblings(*firstChildOfRightNode,
-                           EditorRawDOMPoint(&aNewNode, 0u), error);
+      nsresult rv = MovePreviousSiblings(*firstChildOfRightNode,
+                                         EditorRawDOMPoint(&aNewNode, 0u));
+      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+        return Err(NS_ERROR_EDITOR_DESTROYED);
+      }
       NS_WARNING_ASSERTION(
-          !error.Failed(),
+          NS_SUCCEEDED(rv),
           "HTMLEditor::MovePreviousSiblings() failed, but ignored");
     }
   } else {
@@ -5214,10 +5218,12 @@ Result<SplitNodeResult, nsresult> HTMLEditor::DoSplitNode(
     else if (!firstChildOfRightNode->GetPreviousSibling()) {
       // XXX Why do we ignore an error while moving nodes from the right
       //     node to the left node?
-      IgnoredErrorResult error;
-      MoveAllChildren(*aStartOfRightNode.GetContainer(),
-                      EditorRawDOMPoint(&aNewNode, 0u), error);
-      NS_WARNING_ASSERTION(!error.Failed(),
+      nsresult rv = MoveAllChildren(*aStartOfRightNode.GetContainer(),
+                                    EditorRawDOMPoint(&aNewNode, 0u));
+      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+        return Err(NS_ERROR_EDITOR_DESTROYED);
+      }
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                            "HTMLEditor::MoveAllChildren() failed, but ignored");
     }
     // If the right node is new one and splitting at middle of the node, we need
@@ -5225,11 +5231,13 @@ Result<SplitNodeResult, nsresult> HTMLEditor::DoSplitNode(
     else {
       // XXX Why do we ignore an error while moving nodes from the right node
       //     to the left node?
-      IgnoredErrorResult error;
-      MoveInclusiveNextSiblings(*firstChildOfRightNode,
-                                EditorRawDOMPoint(&aNewNode, 0u), error);
+      nsresult rv = MoveInclusiveNextSiblings(*firstChildOfRightNode,
+                                              EditorRawDOMPoint(&aNewNode, 0u));
+      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+        return Err(NS_ERROR_EDITOR_DESTROYED);
+      }
       NS_WARNING_ASSERTION(
-          !error.Failed(),
+          NS_SUCCEEDED(rv),
           "HTMLEditor::MoveInclusiveNextSiblings() failed, but ignored");
     }
   }
