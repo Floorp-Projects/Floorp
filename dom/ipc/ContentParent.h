@@ -862,6 +862,9 @@ class ContentParent final : public PContentParent,
   // manager and null out mMessageManager.
   void ShutDownMessageManager();
 
+  // Start the send shutdown timer on shutdown.
+  void StartSendShutdownTimer();
+
   // Start the force-kill timer on shutdown.
   void StartForceKillTimer();
 
@@ -873,6 +876,7 @@ class ContentParent final : public PContentParent,
   void EnsurePermissionsByKey(const nsACString& aKey,
                               const nsACString& aOrigin);
 
+  static void SendShutdownTimerCallback(nsITimer* aTimer, void* aClosure);
   static void ForceKillTimerCallback(nsITimer* aTimer, void* aClosure);
 
   bool CanOpenBrowser(const IPCTabContext& aContext);
@@ -1492,6 +1496,12 @@ class ContentParent final : public PContentParent,
   // this is not a ContentParent for a JS plugin then it contains the value
   // nsFakePluginTag::NOT_JSPLUGIN.
   int32_t mJSPluginID;
+
+  // After we destroy the last Browser, we also start a timer to ensure
+  // that even content processes that are not responding will get a
+  // second chance and a shutdown message.
+  nsCOMPtr<nsITimer> mSendShutdownTimer;
+  bool mSentShutdownMessage = false;
 
   // After we initiate shutdown, we also start a timer to ensure
   // that even content processes that are 100% blocked (say from
