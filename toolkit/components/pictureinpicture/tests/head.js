@@ -843,6 +843,17 @@ async function promiseFullscreenEntered(window, asyncFn) {
   await BrowserTestUtils.waitForCondition(() => {
     return !TelemetryStopwatch.running("FULLSCREEN_CHANGE_MS");
   });
+
+  if (AppConstants.platform == "macosx") {
+    // On macOS, the fullscreen transition takes some extra time
+    // to complete, and we don't receive events for it. We need to
+    // wait for it to complete or else input events in the next test
+    // might get eaten up. This is the best we can currently do.
+    //
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+    dump(`BJW promiseFullscreenEntered: waiting for 2 second timeout.\n`);
+    await new Promise(resolve => setTimeout(resolve, 2000));
+  }
 }
 
 /**
