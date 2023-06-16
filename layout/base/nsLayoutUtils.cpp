@@ -9572,6 +9572,26 @@ nsRect nsLayoutUtils::ComputeHTMLReferenceRect(const nsIFrame* aFrame,
   return r;
 }
 
+/* static */
+StyleGeometryBox nsLayoutUtils::CoordBoxToGeometryBox(StyleCoordBox aCoordBox) {
+  switch (aCoordBox) {
+    case StyleCoordBox::ContentBox:
+      return StyleGeometryBox::ContentBox;
+    case StyleCoordBox::PaddingBox:
+      return StyleGeometryBox::PaddingBox;
+    case StyleCoordBox::BorderBox:
+      return StyleGeometryBox::BorderBox;
+    case StyleCoordBox::FillBox:
+      return StyleGeometryBox::FillBox;
+    case StyleCoordBox::StrokeBox:
+      return StyleGeometryBox::StrokeBox;
+    case StyleCoordBox::ViewBox:
+      return StyleGeometryBox::ViewBox;
+  }
+  MOZ_ASSERT_UNREACHABLE("Unknown coord-box type");
+  return StyleGeometryBox::BorderBox;
+}
+
 static StyleGeometryBox ShapeBoxToGeometryBox(const StyleShapeBox& aBox) {
   switch (aBox) {
     case StyleShapeBox::BorderBox:
