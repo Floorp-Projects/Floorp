@@ -18,7 +18,6 @@
 #include "Buffer.h"
 #include "ComputePipeline.h"
 #include "DeviceLostInfo.h"
-#include "OutOfMemoryError.h"
 #include "PipelineLayout.h"
 #include "Queue.h"
 #include "RenderBundleEncoder.h"
@@ -377,7 +376,7 @@ already_AddRefed<dom::Promise> Device::PopErrorScope(ErrorResult& aRv) {
             return;
 
           case PopErrorScopeResultType::OutOfMemory:
-            error.SetAsGPUOutOfMemoryError() = new OutOfMemoryError(self);
+            error.SetAsGPUOutOfMemoryError();
             break;
 
           case PopErrorScopeResultType::ValidationError:
