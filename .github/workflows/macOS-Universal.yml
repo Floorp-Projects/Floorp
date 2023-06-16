@@ -195,7 +195,7 @@ jobs:
         run: |
           export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
 
-          LLVM_PROFDATA=/Users/surapunoyousei/.mozbuild/clang/bin/llvm-profdata JARLOG_FILE=en-US.log ./mach python build/pgo/profileserver.py --binary ./obj-aarch64-apple-darwin/dist/floorp/Nightly.app/Contents/MacOS/floorp
+          LLVM_PROFDATA=/Users/surapunoyousei/.mozbuild/clang/bin/llvm-profdata JARLOG_FILE=en-US.log ./mach python build/pgo/profileserver.py --binary ./obj-aarch64-apple-darwin/dist/floorp/Floorp.app/Contents/MacOS/floorp
 
       - name: Publish 🎁
         uses: actions/upload-artifact@master
@@ -515,7 +515,7 @@ jobs:
         run: |
          export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
 
-         LLVM_PROFDATA=$RUNNER_USERDIR/.mozbuild/clang/bin/llvm-profdata JARLOG_FILE=en-US.log ./mach python build/pgo/profileserver.py --binary ./obj-x86_64-apple-darwin/dist/floorp/Nightly.app/Contents/MacOS/floorp
+         LLVM_PROFDATA=$RUNNER_USERDIR/.mozbuild/clang/bin/llvm-profdata JARLOG_FILE=en-US.log ./mach python build/pgo/profileserver.py --binary ./obj-x86_64-apple-darwin/dist/floorp/Floorp.app/Contents/MacOS/floorp
 
       - name: Publish 🎁
         uses: actions/upload-artifact@master
