@@ -862,7 +862,7 @@ def add_css_property_counters(histograms, property_name):
 def from_ServoCSSPropList(filename, strict_type_checks):
     histograms = collections.OrderedDict()
     properties = runpy.run_path(filename)["data"]
-    for prop in properties:
+    for prop in properties.values():
         add_css_property_counters(histograms, prop.name)
     return histograms
 

@@ -20,9 +20,9 @@ def generateLine(propName, extendedAttrs):
 
 
 def generate(output, idlFilename, dataFile):
-    propList = runpy.run_path(dataFile)["data"]
+    propsData = runpy.run_path(dataFile)["data"]
     props = ""
-    for p in propList:
+    for p in propsData.values():
         if "Internal" in p.flags:
             continue
 

@@ -53,7 +53,7 @@ def generate(output, dataFile):
     indices = []
     asserts = []
     index_map = {}
-    non_aliases = list(filter(lambda p: p.type() != "alias", properties))
+    non_aliases = list(filter(lambda p: p.type() != "alias", properties.values()))
     for i, p in enumerate(sorted(non_aliases, key=order_key)):
         can_be_exposed = "true" if "ExposedOnGetCS" in p.flags else "false"
         entries.append(

@@ -81,7 +81,7 @@ def generate_header(output, data):
         "shorthand": "CSS_PROP_SHORTHAND",
         "alias": "CSS_PROP_ALIAS",
     }
-    for prop in data:
+    for prop in data.values():
         is_internal = "Internal" in prop.flags
         flags = " | ".join(
             "CSSPropFlags::{}".format(flag)
