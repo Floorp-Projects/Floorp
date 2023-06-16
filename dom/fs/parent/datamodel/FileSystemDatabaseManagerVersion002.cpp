@@ -6,6 +6,7 @@
 
 #include "FileSystemDatabaseManagerVersion002.h"
 
+#include "ErrorList.h"
 #include "FileSystemContentTypeGuess.h"
 #include "FileSystemDataManager.h"
 #include "FileSystemFileManager.h"
@@ -20,6 +21,7 @@
 #include "mozilla/dom/FileSystemLog.h"
 #include "mozilla/dom/FileSystemTypes.h"
 #include "mozilla/dom/PFileSystemManager.h"
+#include "mozilla/dom/QMResult.h"
 #include "mozilla/dom/quota/Client.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/QuotaManager.h"
@@ -48,23 +50,6 @@ Result<FileId, QMResult> GetFileId002(const FileSystemConnection& aConnection,
   QM_TRY_UNWRAP(EntryId fileId, stmt.GetEntryIdByColumn(/* Column */ 0u));
 
   return FileId(fileId);
-}
-
-nsresult AddNewFileId(const FileSystemConnection& aConnection,
-                      const EntryId& aEntryId) {
-  const nsLiteralCString insertFileIdQuery =
-      "INSERT INTO FileIds ( fileId, handle ) "
-      "VALUES ( :entryId, :entryId ) ;"_ns;
-
-  QM_TRY_UNWRAP(ResultStatement stmt,
-                ResultStatement::Create(aConnection, insertFileIdQuery)
-                    .mapErr(toNSResult));
-
-  QM_TRY(MOZ_TO_RESULT(stmt.BindEntryIdByName("entryId"_ns, aEntryId)));
-
-  QM_TRY(MOZ_TO_RESULT(stmt.Execute()));
-
-  return NS_OK;
 }
 
 Result<bool, QMResult> DoesFileIdExist(const FileSystemConnection& aConnection,
@@ -306,6 +291,88 @@ nsresult RehashDirectory(const FileSystemConnection& aConnection,
   return NS_OK;
 }
 
+/**
+ * @brief Each entryId is interpreted as a large integer, which is increased
+ * until an unused value is found. This process is in principle infallible.
+ * The files associated with a given path will form a cluster next to the
+ * entryId which could be used for recovery because our hash function is
+ * expected to distribute all clusters far from each other.
+ */
+Result<FileId, QMResult> GetNextFreeFileId(
+    const FileSystemConnection& aConnection,
+    const FileSystemFileManager& aFileManager, const EntryId& aEntryId) {
+  MOZ_ASSERT(32u == aEntryId.Length());
+
+  auto DoesExist = [&aConnection, &aFileManager](
+                       const FileId& aId) -> Result<bool, QMResult> {
+    QM_TRY_INSPECT(const nsCOMPtr<nsIFile>& diskFile,
+                   aFileManager.GetFile(aId));
+
+    bool result = true;
+    QM_TRY(QM_TO_RESULT(diskFile->Exists(&result)));
+    if (result) {
+      return true;
+    }
+
+    QM_TRY_RETURN(DoesFileIdExist(aConnection, aId));
+  };
+
+  auto Next = [](FileId& aId) {
+    // Using a larger integer would make fileIds depend on platform endianness.
+    using IntegerType = uint8_t;
+    constexpr int32_t bufferSize = 32 / sizeof(IntegerType);
+    using IdBuffer = std::array<IntegerType, bufferSize>;
+
+    auto Increase = [](IdBuffer& aIn) {
+      for (int i = 0; i < bufferSize; ++i) {
+        if (1u + aIn[i] != 0u) {
+          ++aIn[i];
+          return;
+        }
+        aIn[i] = 0u;
+      }
+    };
+
+    DebugOnly<nsCString> original = aId.Value();
+    Increase(*reinterpret_cast<IdBuffer*>(aId.mValue.BeginWriting()));
+    MOZ_ASSERT(!aId.Value().Equals(original));
+  };
+
+  FileId id = FileId(aEntryId);
+
+  while (true) {
+    QM_WARNONLY_TRY_UNWRAP(Maybe<bool> maybeExists, DoesExist(id));
+    if (maybeExists.isSome() && !maybeExists.value()) {
+      return id;
+    }
+
+    Next(id);
+  }
+}
+
+nsresult AddNewFileId(const FileSystemConnection& aConnection,
+                      const FileSystemFileManager& aFileManager,
+                      const EntryId& aEntryId) {
+  QM_TRY_INSPECT(const FileId& nextFreeId,
+                 GetNextFreeFileId(aConnection, aFileManager, aEntryId)
+                     .mapErr(toNSResult));
+
+  const nsLiteralCString insertNewFileIdQuery =
+      "INSERT INTO FileIds ( fileId, handle ) "
+      "VALUES ( :fileId, :entryId ) "
+      "; "_ns;
+
+  QM_TRY_UNWRAP(ResultStatement stmt,
+                ResultStatement::Create(aConnection, insertNewFileIdQuery)
+                    .mapErr(toNSResult));
+  QM_TRY(MOZ_TO_RESULT(stmt.BindFileIdByName("fileId"_ns, nextFreeId)));
+  QM_TRY(MOZ_TO_RESULT(stmt.BindEntryIdByName("entryId"_ns, aEntryId)));
+
+  QM_TRY(MOZ_TO_RESULT(stmt.Execute()));
+
+  return NS_OK;
+}
+
 }  // namespace
 
 /* static */
@@ -329,6 +396,12 @@ Result<EntryId, QMResult> FileSystemDatabaseManagerVersion002::GetEntryId(
 
 nsresult FileSystemDatabaseManagerVersion002::EnsureFileId(
     const EntryId& aEntryId) {
+  QM_TRY_UNWRAP(bool exists,
+                DoesFileExist(mConnection, aEntryId).mapErr(toNSResult));
+  if (!exists) {
+    return NS_ERROR_DOM_NOT_FOUND_ERR;
+  }
+
   const nsLiteralCString doesEntryAlreadyHaveFile =
       "SELECT EXISTS ( SELECT 1 FROM FileIds WHERE handle = :entryId );"_ns;
 
@@ -341,7 +414,8 @@ nsresult FileSystemDatabaseManagerVersion002::EnsureFileId(
     return NS_OK;
   }
 
-  QM_TRY(MOZ_TO_RESULT(AddNewFileId(mConnection, aEntryId)));
+  // The query fails if and only if no path exists: already ruled out
+  QM_TRY(MOZ_TO_RESULT(AddNewFileId(mConnection, *mFileManager, aEntryId)));
 
   return NS_OK;
 }
