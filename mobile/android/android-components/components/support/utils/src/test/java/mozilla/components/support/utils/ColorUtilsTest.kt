@@ -41,9 +41,9 @@ class ColorUtilsTest {
         assertTrue(ColorUtils.isDark(Color.BLACK))
         assertFalse(ColorUtils.isDark(Color.WHITE))
         assertFalse(ColorUtils.isDark(Color.TRANSPARENT))
-        assertFalse(ColorUtils.isDark(50 shl 24 /* Alpha 50 */))
-        assertFalse(ColorUtils.isDark(127 shl 24 /* Alpha 127 */))
-        assertTrue(ColorUtils.isDark(128 shl 24 /* Alpha 128 */))
-        assertTrue(ColorUtils.isDark(255 shl 24 /* Alpha 255 */))
+        assertFalse(ColorUtils.isDark(50 shl 24)) // Alpha 50
+        assertFalse(ColorUtils.isDark(127 shl 24)) // Alpha 127
+        assertTrue(ColorUtils.isDark(128 shl 24)) // Alpha 128
+        assertTrue(ColorUtils.isDark(255 shl 24)) // Alpha 255
     }
 }

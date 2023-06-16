@@ -122,7 +122,7 @@ class SyncedTabsStorageTest {
         // Run the flow.
         store.dispatch(TabListAction.RemoveAllPrivateTabsAction).joinBlocking()
 
-        verify(tabsStorage, never()).store(listOf() /* any() is not working so we send garbage */)
+        verify(tabsStorage, never()).store(listOf()) // any() is not working so we send garbage
     }
 
     @Test

@@ -34,7 +34,7 @@ import java.util.UUID
 @RunWith(AndroidJUnit4::class)
 class BookmarksStorageSuggestionProviderTest {
 
-    private val bookmarks = testableBookmarksStorage()
+    private val bookmarks = TestableBookmarksStorage()
 
     private val newItem = BookmarkNode(
         BookmarkNodeType.ITEM,
@@ -211,7 +211,7 @@ class BookmarksStorageSuggestionProviderTest {
     }
 
     @SuppressWarnings
-    class testableBookmarksStorage : BookmarksStorage {
+    class TestableBookmarksStorage : BookmarksStorage {
         val bookmarkMap: HashMap<String, BookmarkNode> = hashMapOf()
 
         override suspend fun warmUp() {

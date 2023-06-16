@@ -358,7 +358,7 @@ class ContextMenuFeatureTest {
             id = "test-id",
             label = "Test Item",
             showFor = { _, _ -> true },
-            action = { _, _ -> /* noop */ },
+            action = { _, _ -> }, // noop
         )
 
         val feature = ContextMenuFeature(

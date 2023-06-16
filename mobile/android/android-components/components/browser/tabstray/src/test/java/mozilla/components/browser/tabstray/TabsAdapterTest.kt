@@ -29,10 +29,10 @@ private class TestTabViewHolder(view: View) : TabViewHolder(view) {
         isSelected: Boolean,
         styling: TabsTrayStyling,
         delegate: TabsTray.Delegate,
-    ) { /* noop */
+    ) { // noop
     }
 
-    override fun updateSelectedTabIndicator(showAsSelected: Boolean) { /* noop */
+    override fun updateSelectedTabIndicator(showAsSelected: Boolean) { // noop
     }
 }
 

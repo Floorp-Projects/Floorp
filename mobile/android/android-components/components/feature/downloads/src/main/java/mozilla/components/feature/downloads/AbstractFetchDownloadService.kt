@@ -331,11 +331,11 @@ abstract class AbstractFetchDownloadService : Service() {
         for (download in downloadJobs.values) {
             if (!download.canUpdateNotification()) { continue }
             /*
-            * We want to keep a consistent state in the UI, download.status can be changed from
-            * another thread while we are posting updates to the UI, causing inconsistent UIs.
-            * For this reason, we ONLY use the latest status during an UI update, new changes
-            * will be posted in subsequent updates.
-            */
+             * We want to keep a consistent state in the UI, download.status can be changed from
+             * another thread while we are posting updates to the UI, causing inconsistent UIs.
+             * For this reason, we ONLY use the latest status during an UI update, new changes
+             * will be posted in subsequent updates.
+             */
             val uiStatus = getDownloadJobStatus(download)
 
             updateForegroundNotificationIfNeeded(download)
@@ -770,7 +770,6 @@ abstract class AbstractFetchDownloadService : Service() {
     }
 
     @VisibleForTesting
-    @Suppress("MaxLineLength")
     internal fun copyInChunks(
         downloadJobState: DownloadJobState,
         inStream: InputStream,

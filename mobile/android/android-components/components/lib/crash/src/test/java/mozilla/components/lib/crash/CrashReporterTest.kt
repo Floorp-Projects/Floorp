@@ -813,7 +813,7 @@ class CrashReporterTest {
             crashReporter.recordCrashBreadcrumb(
                 Breadcrumb(testMessage, testData, testCategory, Breadcrumb.Level.CRITICAL, testType),
             )
-            sleep(10) /* make sure time elapsed */
+            sleep(10) // make sure time elapsed
         }
         advanceUntilIdle()
 
@@ -833,7 +833,7 @@ class CrashReporterTest {
             crashReporter.recordCrashBreadcrumb(
                 Breadcrumb(testMessage, testData, testCategory, Breadcrumb.Level.DEBUG, testType),
             )
-            sleep(10) /* make sure time elapsed */
+            sleep(10) // make sure time elapsed
         }
         advanceUntilIdle()
 
@@ -870,7 +870,7 @@ class CrashReporterTest {
             crashReporter.recordCrashBreadcrumb(
                 Breadcrumb(testMessage, testData, testCategory, Breadcrumb.Level.DEBUG, testType),
             )
-            sleep(10) /* make sure time elapsed */
+            sleep(10) // make sure time elapsed
         }
         advanceUntilIdle()
 
@@ -886,7 +886,7 @@ class CrashReporterTest {
             crashReporter.recordCrashBreadcrumb(
                 Breadcrumb(testMessage, testData, testCategory, Breadcrumb.Level.INFO, testType),
             )
-            sleep(10) /* make sure time elapsed */
+            sleep(10) // make sure time elapsed
         }
         advanceUntilIdle()
 

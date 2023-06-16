@@ -111,7 +111,7 @@ internal class SupportedAddonsWorker(
 ) : CoroutineWorker(context, params) {
     private val logger = Logger("SupportedAddonsWorker")
 
-    @Suppress("TooGenericExceptionCaught", "MaxLineLength")
+    @Suppress("TooGenericExceptionCaught")
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         try {
             logger.info("Trying to check for new supported add-ons")

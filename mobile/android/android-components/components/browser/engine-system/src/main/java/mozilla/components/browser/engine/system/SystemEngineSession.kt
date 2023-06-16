@@ -55,6 +55,7 @@ class SystemEngineSession(
     @Volatile internal var currentUrl = ""
 
     @Volatile internal var useWideViewPort: Boolean? = null // See [toggleDesktopMode]
+
     @Volatile internal var fullScreenCallback: WebChromeClient.CustomViewCallback? = null
 
     // This is public for FFTV which needs access to the WebView instance. We can mark it internal once

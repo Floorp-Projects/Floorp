@@ -49,13 +49,13 @@ class GeckoSitePermissionsStorage(
     private val mainScope = CoroutineScope(Dispatchers.Main)
 
     /*
-    * Temporary permissions are created when users doesn't
-    * check the 'Remember my decision checkbox'.  At the moment,
-    *  gecko view doesn't handle temporary permission,
-    * we have to store them in memory, and clear them manually,
-    * until we have an API for it see:
-    * https://bugzilla.mozilla.org/show_bug.cgi?id=1710447
-    * */
+     * Temporary permissions are created when users doesn't
+     * check the 'Remember my decision checkbox'.  At the moment,
+     *  gecko view doesn't handle temporary permission,
+     * we have to store them in memory, and clear them manually,
+     * until we have an API for it see:
+     * https://bugzilla.mozilla.org/show_bug.cgi?id=1710447
+     */
     @VisibleForTesting
     internal val geckoTemporaryPermissions = mutableListOf<ContentPermission>()
 
@@ -167,9 +167,9 @@ class GeckoSitePermissionsStorage(
             val geckoInAudible = geckoPermissionsByType[PERMISSION_AUTOPLAY_INAUDIBLE]?.firstOrNull()
 
             /*
-            * To avoid GeckoView caching previous request, we need to clear, previous data
-            * before updating. See: https://github.com/mozilla-mobile/android-components/issues/6322
-            * */
+             * To avoid GeckoView caching previous request, we need to clear, previous data
+             * before updating. See: https://github.com/mozilla-mobile/android-components/issues/6322
+             */
             clearGeckoCacheFor(updatedPermission.origin)
 
             if (geckoNotification != null) {

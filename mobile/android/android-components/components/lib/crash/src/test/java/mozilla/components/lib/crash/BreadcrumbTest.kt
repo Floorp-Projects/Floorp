@@ -132,7 +132,7 @@ class BreadcrumbTest {
         )
 
         val beginDate = Date()
-        sleep(100) /* make sure time elapsed */
+        sleep(100) // make sure time elapsed
         reporter.recordCrashBreadcrumb(
             Breadcrumb(
                 testMessage,
@@ -142,7 +142,7 @@ class BreadcrumbTest {
                 testType,
             ),
         )
-        sleep(100) /* make sure time elapsed */
+        sleep(100) // make sure time elapsed
         val afterDate = Date()
 
         reporter.crashBreadcrumbsCopy().elementAt(0).let {

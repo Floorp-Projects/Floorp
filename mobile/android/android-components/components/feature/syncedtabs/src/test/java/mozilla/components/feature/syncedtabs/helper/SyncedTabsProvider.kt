@@ -28,7 +28,7 @@ internal fun getDevice1Tabs() = SyncedDeviceTabs(
     listOf(
         Tab(
             listOf(
-                TabEntry("Foo", "https://foo.bar", null), /* active tab */
+                TabEntry("Foo", "https://foo.bar", null), // active tab
                 TabEntry("Bobo", "https://foo.bar", null),
                 TabEntry("Foo", "https://bobo.bar", null),
             ),
@@ -37,14 +37,14 @@ internal fun getDevice1Tabs() = SyncedDeviceTabs(
         ),
         Tab(
             listOf(
-                TabEntry("Hello Bobo", "https://foo.bar", null), /* active tab */
+                TabEntry("Hello Bobo", "https://foo.bar", null), // active tab
             ),
             0,
             5,
         ),
         Tab(
             listOf(
-                TabEntry("In URL", "https://bobo.bar", null), /* active tab */
+                TabEntry("In URL", "https://bobo.bar", null), // active tab
             ),
             0,
             2,
@@ -70,7 +70,7 @@ internal fun getDevice2Tabs() = SyncedDeviceTabs(
         Tab(
             listOf(
                 TabEntry("Bar", "https://bar.bar", null),
-                TabEntry("BOBO in CAPS", "https://obob.bar", null), /* active tab */
+                TabEntry("BOBO in CAPS", "https://obob.bar", null), // active tab
             ),
             1,
             1,

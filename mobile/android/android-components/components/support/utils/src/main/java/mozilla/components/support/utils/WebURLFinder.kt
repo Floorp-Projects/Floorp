@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@file:SuppressWarnings("MaxLineLength")
-
 package mozilla.components.support.utils
 
 import android.webkit.URLUtil
@@ -30,14 +28,16 @@ class WebURLFinder {
         this.candidates = candidateWebURLs(string)
     }
 
-    /* package-private */ internal constructor(string: String?, explicitUnicode: Boolean) {
+    // package-private
+    internal constructor(string: String?, explicitUnicode: Boolean) {
         if (string == null) {
             throw IllegalArgumentException("strings must not be null")
         }
         this.candidates = candidateWebURLs(string, explicitUnicode)
     }
 
-    /* package-private */ internal constructor(strings: List<String>?, explicitUnicode: Boolean) {
+    // package-private
+    internal constructor(strings: List<String>?, explicitUnicode: Boolean) {
         if (strings == null) {
             throw IllegalArgumentException("strings must not be null")
         }
@@ -113,7 +113,10 @@ class WebURLFinder {
                 return false
             }
 
-            return !(URLUtil.isFileUrl(string.lowercase(Locale.ROOT)) || URLUtil.isJavaScriptUrl(string.lowercase(Locale.ROOT)))
+            return !(
+                URLUtil.isFileUrl(string.lowercase(Locale.ROOT)) ||
+                    URLUtil.isJavaScriptUrl(string.lowercase(Locale.ROOT))
+                )
         }
 
         private fun candidateWebURLs(strings: Collection<String?>, explicitUnicode: Boolean = false): List<String> {

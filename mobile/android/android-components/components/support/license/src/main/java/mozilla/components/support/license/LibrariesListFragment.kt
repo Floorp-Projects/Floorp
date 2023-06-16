@@ -85,7 +85,7 @@ abstract class LibrariesListFragment : Fragment(R.layout.fragment_libraries_list
                  [name]             : either the name of the library, or its artifact name.
 
             See https://github.com/google/play-services-plugins/tree/master/oss-licenses-plugin
-        */
+         */
 
         val licensesData = resources
             .openRawResource(licenseData.licenses)

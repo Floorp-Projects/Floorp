@@ -44,8 +44,9 @@ class OnDeviceAndroidImageDecoderTest {
         )
 
         assertNotNull(bitmap!!)
-        assertEquals(83 /* 250 / 3 */, bitmap.width)
-        assertEquals(83 /* 250 / 3 */, bitmap.height)
+        // 250 / 3 = 83
+        assertEquals(83, bitmap.width)
+        assertEquals(83, bitmap.height)
     }
 
     @Test
@@ -101,8 +102,9 @@ class OnDeviceAndroidImageDecoderTest {
         )
 
         assertNotNull(bitmap!!)
-        assertEquals(64 /* 192 / 3 */, bitmap.width)
-        assertEquals(64 /* 192 / 3 */, bitmap.height)
+        // 192 / 3 = 64
+        assertEquals(64, bitmap.width)
+        assertEquals(64, bitmap.height)
     }
 
     private fun loadImage(fileName: String): ByteArray =
