@@ -359,6 +359,48 @@ TEST(QuotaCommon_Try, Failure_WithCleanup_UnwrapErr)
   EXPECT_EQ(rv, NS_ERROR_FAILURE);
 }
 
+TEST(QuotaCommon_Try, Failure_WithCleanupAndPredicate)
+{
+  auto predicate = []() {
+    static bool calledOnce = false;
+    const bool result = !calledOnce;
+    calledOnce = true;
+    return result;
+  };
+
+  {
+    bool tryDidNotReturn = false;
+
+    nsresult rv = [&predicate, &tryDidNotReturn]() -> nsresult {
+      QM_TRY(MOZ_TO_RESULT(NS_ERROR_FAILURE), QM_PROPAGATE, QM_NO_CLEANUP,
+             predicate);
+
+      tryDidNotReturn = true;
+
+      return NS_OK;
+    }();
+
+    EXPECT_FALSE(tryDidNotReturn);
+    EXPECT_EQ(rv, NS_ERROR_FAILURE);
+  }
+
+  {
+    bool tryDidNotReturn = false;
+
+    nsresult rv = [&predicate, &tryDidNotReturn]() -> nsresult {
+      QM_TRY(MOZ_TO_RESULT(NS_ERROR_FAILURE), QM_PROPAGATE, QM_NO_CLEANUP,
+             predicate);
+
+      tryDidNotReturn = true;
+
+      return NS_OK;
+    }();
+
+    EXPECT_FALSE(tryDidNotReturn);
+    EXPECT_EQ(rv, NS_ERROR_FAILURE);
+  }
+}
+
 TEST(QuotaCommon_Try, SameLine)
 {
   // clang-format off
