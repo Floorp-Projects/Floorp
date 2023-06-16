@@ -24,7 +24,9 @@ let shouldEnterFullscreen = false;
 button.addEventListener("click", function(e) {
   clickCount++;
   if (shouldEnterFullscreen) {
-    lastFullscreenPromise = document.getElementById("fullscreen").requestFullscreen();
+    const fullscreenElement = document.getElementById("fullscreen");
+    fullscreenElement.focus();
+    lastFullscreenPromise = fullscreenElement.requestFullscreen();
   }
 });
 
