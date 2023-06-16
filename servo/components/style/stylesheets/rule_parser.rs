@@ -37,7 +37,7 @@ use cssparser::{
     ParserState, QualifiedRuleParser, RuleBodyItemParser, RuleBodyParser, SourceLocation,
     SourcePosition,
 };
-use selectors::SelectorList;
+use selectors::parser::{SelectorList, ParseRelative};
 use servo_arc::Arc;
 use style_traits::{ParseError, StyleParseErrorKind};
 
@@ -449,10 +449,15 @@ impl<'a, 'b, 'i> NestedRuleParser<'a, 'b, 'i> {
     /// When nesting is disabled, we prevent parsing at rules and qualified rules inside style
     /// rules.
     fn allow_at_and_qualified_rules(&self) -> bool {
-        if !self.context.rule_types.contains(CssRuleType::Style) {
+        if !self.in_style_rule() {
             return true;
         }
         static_prefs::pref!("layout.css.nesting.enabled")
+    }
+
+    #[inline]
+    fn in_style_rule(&self) -> bool {
+        self.context.rule_types.contains(CssRuleType::Style)
     }
 
     fn nest_for_rule<R>(&mut self, rule_type: CssRuleType, cb: impl FnOnce(&mut Self) -> R) -> R {
@@ -809,7 +814,12 @@ impl<'a, 'b, 'i> QualifiedRuleParser<'i> for NestedRuleParser<'a, 'b, 'i> {
             url_data: self.context.url_data,
             for_supports_rule: false,
         };
-        let selectors = SelectorList::parse(&selector_parser, input)?;
+        let parse_relative = if self.in_style_rule() {
+            ParseRelative::ForNesting
+        } else {
+            ParseRelative::No
+        };
+        let selectors = SelectorList::parse(&selector_parser, input, parse_relative)?;
         if self.context.error_reporting_enabled() {
             check_for_useless_selector(input, &self.context, &selectors);
         }
@@ -862,6 +872,6 @@ impl<'a, 'b, 'i> RuleBodyItemParser<'i, (), StyleParseErrorKind<'i>>
     /// If nesting is disabled, we can't get there for a non-style-rule. If it's enabled, we parse
     /// raw declarations there.
     fn parse_declarations(&self) -> bool {
-        self.context.rule_types.contains(CssRuleType::Style)
+        self.in_style_rule()
     }
 }
