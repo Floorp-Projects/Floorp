@@ -679,17 +679,28 @@ add_task(async function test_clean_errors() {
     "resource://services-sync/telemetry.sys.mjs"
   );
 
-  for (let [original, expected] of [
+  for (let [message, name, expected] of [
     [
-      "Win error 112 during operation write on file [profileDir]\\weave\\addonsreconciler.json (Espacio en disco insuficiente. )",
-      "OS error [No space left on device] during operation write on file [profileDir]/weave/addonsreconciler.json",
+      `Could not open the file at ${PathUtils.join(
+        PathUtils.profileDir,
+        "weave",
+        "addonsreconciler.json"
+      )} for writing`,
+      "NotFoundError",
+      "OS error [File/Path not found] Could not open the file at [profileDir]/weave/addonsreconciler.json for writing",
     ],
     [
-      "Unix error 28 during operation write on file [profileDir]/weave/addonsreconciler.json (No space left on device)",
-      "OS error [No space left on device] during operation write on file [profileDir]/weave/addonsreconciler.json",
+      `Could not get info for the file at ${PathUtils.join(
+        PathUtils.profileDir,
+        "weave",
+        "addonsreconciler.json"
+      )}`,
+      "NotAllowedError",
+      "OS error [Permission denied] Could not get info for the file at [profileDir]/weave/addonsreconciler.json",
     ],
   ]) {
-    const sanitized = ErrorSanitizer.cleanErrorMessage(original);
+    const error = new DOMException(message, name);
+    const sanitized = ErrorSanitizer.cleanErrorMessage(message, error);
     Assert.equal(sanitized, expected);
   }
 });
