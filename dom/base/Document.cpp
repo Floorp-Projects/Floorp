@@ -7847,7 +7847,7 @@ void Document::SetScriptGlobalObject(
   }
 
   // Tell the script loader about the new global object.
-  if (mScriptLoader) {
+  if (mScriptLoader && !IsTemplateContentsOwner()) {
     mScriptLoader->SetGlobalObject(mScriptGlobalObject);
   }
 
@@ -12783,6 +12783,7 @@ Document* Document::GetTemplateContentsOwner() {
     mTemplateContentsOwner->mTemplateContentsOwner = mTemplateContentsOwner;
   }
 
+  MOZ_ASSERT(mTemplateContentsOwner->IsTemplateContentsOwner());
   return mTemplateContentsOwner;
 }
 
