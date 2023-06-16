@@ -23,6 +23,25 @@
 #  define gettid() static_cast<pid_t>(syscall(__NR_gettid))
 #endif
 
+#if defined(JS_ION_PERF) && (defined(ANDROID) || defined(XP_MACOSX))
+#  include <limits.h>
+#  include <stdlib.h>
+#  include <unistd.h>
+char* get_current_dir_name() {
+  char* buffer = (char*)malloc(PATH_MAX * sizeof(char));
+  if (buffer == nullptr) {
+    return nullptr;
+  }
+
+  if (getcwd(buffer, PATH_MAX) == nullptr) {
+    free(buffer);
+    return nullptr;
+  }
+
+  return buffer;
+}
+#endif
+
 #if defined(JS_ION_PERF) && defined(XP_MACOSX)
 #  include <pthread.h>
 #  include <unistd.h>
@@ -38,16 +57,6 @@ pid_t gettid_pthread() {
   return pid_t(tid);
 }
 #  define gettid() gettid_pthread()
-
-const char* get_current_dir_name_cwd() {
-  constexpr size_t CWD_MAX = 256;
-  char* buffer = (char*)malloc(CWD_MAX);
-  if (getcwd(buffer, CWD_MAX) == nullptr) {
-    buffer[0] = 0;
-  }
-  return buffer;
-}
-#  define get_current_dir_name() get_current_dir_name_cwd()
 #endif
 
 #include "jit/PerfSpewer.h"
@@ -193,6 +202,10 @@ static bool openJitDump() {
       spew_dir = JS_smprintf("%s", env_dir);
     } else {
       const char* dir = get_current_dir_name();
+      if (!dir) {
+        fprintf(stderr, "couldn't get current dir name\n");
+        return false;
+      }
       spew_dir = JS_smprintf("%s/%s", dir, env_dir);
       free((void*)dir);
     }
