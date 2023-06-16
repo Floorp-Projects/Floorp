@@ -11,9 +11,11 @@ EXPORTS.mozilla.dom += [
 UNIFIED_SOURCES += [
     "FileSystemDatabaseManager.cpp",
     "FileSystemDatabaseManagerVersion001.cpp",
+    "FileSystemDatabaseManagerVersion002.cpp",
     "FileSystemDataManager.cpp",
     "FileSystemFileManager.cpp",
     "SchemaVersion001.cpp",
+    "SchemaVersion002.cpp",
 ]
 
 LOCAL_INCLUDES += [

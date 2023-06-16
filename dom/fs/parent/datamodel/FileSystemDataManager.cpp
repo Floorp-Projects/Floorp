@@ -8,11 +8,13 @@
 
 #include "FileSystemDatabaseManager.h"
 #include "FileSystemDatabaseManagerVersion001.h"
+#include "FileSystemDatabaseManagerVersion002.h"
 #include "FileSystemFileManager.h"
 #include "FileSystemHashSource.h"
 #include "FileSystemParentTypes.h"
 #include "ResultStatement.h"
 #include "SchemaVersion001.h"
+#include "SchemaVersion002.h"
 #include "fs/FileSystemConstants.h"
 #include "mozIStorageService.h"
 #include "mozStorageCID.h"
@@ -509,28 +511,53 @@ RefPtr<BoolPromise> FileSystemDataManager::BeginOpen() {
                                                   self->mDirectoryLock->Id()),
                    CreateAndRejectBoolPromiseFromQMResult);
 
-               QM_TRY_UNWRAP(DatabaseVersion version,
-                             SchemaVersion001::InitializeConnection(
-                                 connection, self->mOriginMetadata.mOrigin),
+               QM_TRY_UNWRAP(
+                   DatabaseVersion version,
+                   QM_OR_ELSE_WARN_IF(
+                       // Expression.
+                       SchemaVersion002::InitializeConnection(
+                           connection, self->mOriginMetadata.mOrigin),
+                       // Predicate.
+                       ([](const auto&) { return true; }),
+                       // Fallback.
+                       ([&self, &connection](const auto&) {
+                         QM_TRY_RETURN(SchemaVersion001::InitializeConnection(
+                             connection, self->mOriginMetadata.mOrigin));
+                       })),
+                   CreateAndRejectBoolPromiseFromQMResult);
+
+               // TODO: Make CreateFileSystemFileManager return UniquePtr
+               QM_TRY_UNWRAP(FileSystemFileManager fmRes,
+                             FileSystemFileManager::CreateFileSystemFileManager(
+                                 self->mOriginMetadata),
                              CreateAndRejectBoolPromiseFromQMResult);
 
-               if (1 == version) {
-                 QM_TRY_UNWRAP(
-                     FileSystemFileManager fmRes,
-                     FileSystemFileManager::CreateFileSystemFileManager(
-                         self->mOriginMetadata),
-                     CreateAndRejectBoolPromiseFromQMResult);
+               QM_TRY_UNWRAP(
+                   EntryId rootId,
+                   fs::data::GetRootHandle(self->mOriginMetadata.mOrigin),
+                   CreateAndRejectBoolPromiseFromQMResult);
 
-                 QM_TRY_UNWRAP(
-                     EntryId rootId,
-                     fs::data::GetRootHandle(self->mOriginMetadata.mOrigin),
-                     CreateAndRejectBoolPromiseFromQMResult);
+               switch (version) {
+                 case 1: {
+                   self->mDatabaseManager =
+                       MakeUnique<FileSystemDatabaseManagerVersion001>(
+                           self, std::move(connection),
+                           MakeUnique<FileSystemFileManager>(std::move(fmRes)),
+                           rootId);
+                   break;
+                 }
 
-                 self->mDatabaseManager =
-                     MakeUnique<FileSystemDatabaseManagerVersion001>(
-                         self, std::move(connection),
-                         MakeUnique<FileSystemFileManager>(std::move(fmRes)),
-                         rootId);
+                 case 2: {
+                   self->mDatabaseManager =
+                       MakeUnique<FileSystemDatabaseManagerVersion002>(
+                           self, std::move(connection),
+                           MakeUnique<FileSystemFileManager>(std::move(fmRes)),
+                           rootId);
+                   break;
+                 }
+
+                 default:
+                   break;
                }
 
                return BoolPromise::CreateAndResolve(true, __func__);
