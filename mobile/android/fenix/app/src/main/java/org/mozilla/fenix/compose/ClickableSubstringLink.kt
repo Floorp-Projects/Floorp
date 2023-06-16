@@ -83,8 +83,8 @@ fun ClickableSubstringLink(
             annotatedText
                 .getStringAnnotations("link", it, it)
                 .firstOrNull()?.let {
-                onClick()
-            }
+                    onClick()
+                }
         },
     )
 }

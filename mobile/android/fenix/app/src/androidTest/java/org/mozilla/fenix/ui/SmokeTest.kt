@@ -93,7 +93,7 @@ class SmokeTest {
      - editing the url bar
      - the tab drawer button
      - opening a new search and dismissing the nav bar
-    */
+     */
     @Test
     fun verifyBasicNavigationToolbarFunctionality() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)

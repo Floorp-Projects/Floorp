@@ -31,7 +31,7 @@ class NimbusSystemTest {
 
     // By default this comes from the generated Nimbus features.
     val config = NimbusSystem(
-        refreshIntervalForeground = 60, /* minutes */
+        refreshIntervalForeground = 60, // minutes
     )
 
     class NimbusUnderTest(override val context: Context) : NimbusInterface {

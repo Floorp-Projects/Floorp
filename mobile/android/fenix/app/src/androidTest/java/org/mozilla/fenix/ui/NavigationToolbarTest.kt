@@ -37,7 +37,6 @@ class NavigationToolbarTest {
     private lateinit var mDevice: UiDevice
     private lateinit var mockWebServer: MockWebServer
 
-    /* ktlint-disable no-blank-line-before-rbrace */ // This imposes unreadable grouping.
     @get:Rule
     val activityTestRule = HomeActivityTestRule.withDefaultSettingsOverrides()
 

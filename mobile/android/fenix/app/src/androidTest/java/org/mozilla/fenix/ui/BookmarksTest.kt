@@ -39,8 +39,6 @@ import org.mozilla.fenix.ui.robots.searchScreen
  *  Tests for verifying basic functionality of bookmarks
  */
 class BookmarksTest {
-    /* ktlint-disable no-blank-line-before-rbrace */ // This imposes unreadable grouping.
-
     private lateinit var mockWebServer: MockWebServer
     private lateinit var mDevice: UiDevice
     private val bookmarksFolderName = "New Folder"

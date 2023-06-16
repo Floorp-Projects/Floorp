@@ -107,6 +107,6 @@ class CookieBannerReEngagementDialog : DialogFragment() {
     }
 
     companion object {
-        private const val LENGTH_SNACKBAR_DURATION = 4000 /* 4 seconds in ms */
+        private const val LENGTH_SNACKBAR_DURATION = 4000 // 4 seconds in ms
     }
 }

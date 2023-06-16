@@ -33,8 +33,6 @@ import org.mozilla.fenix.ui.robots.notificationShade
  *  Note: this test only verifies media notifications, not media itself
  */
 class MediaNotificationTest {
-    /* ktlint-disable no-blank-line-before-rbrace */ // This imposes unreadable grouping.
-
     private lateinit var mockWebServer: MockWebServer
     private lateinit var mDevice: UiDevice
 

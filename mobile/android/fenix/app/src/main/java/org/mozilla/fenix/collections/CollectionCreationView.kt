@@ -72,7 +72,7 @@ class CollectionCreationView(
                         interactor.onNewCollectionNameSaved(selectedTabs.toList(), text)
                     SaveCollectionStep.RenameCollection ->
                         selectedCollection?.let { interactor.onCollectionRenamed(it, text) }
-                    else -> { /* noop */
+                    else -> { // noop
                     }
                 }
             }
@@ -243,7 +243,7 @@ class CollectionCreationView(
         }
         transition.addListener(
             object : Transition.TransitionListener {
-                override fun onTransitionStart(transition: Transition) { /* noop */
+                override fun onTransitionStart(transition: Transition) { // noop
                 }
 
                 override fun onTransitionEnd(transition: Transition) {
@@ -251,13 +251,13 @@ class CollectionCreationView(
                     transition.removeListener(this)
                 }
 
-                override fun onTransitionCancel(transition: Transition) { /* noop */
+                override fun onTransitionCancel(transition: Transition) { // noop
                 }
 
-                override fun onTransitionPause(transition: Transition) { /* noop */
+                override fun onTransitionPause(transition: Transition) { // noop
                 }
 
-                override fun onTransitionResume(transition: Transition) { /* noop */
+                override fun onTransitionResume(transition: Transition) { // noop
                 }
             },
         )

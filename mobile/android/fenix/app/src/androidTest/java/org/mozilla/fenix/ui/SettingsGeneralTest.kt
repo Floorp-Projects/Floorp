@@ -35,7 +35,6 @@ import java.util.Locale
  *
  */
 class SettingsGeneralTest {
-    /* ktlint-disable no-blank-line-before-rbrace */ // This imposes unreadable grouping.
     private lateinit var mockWebServer: MockWebServer
 
     @get:Rule

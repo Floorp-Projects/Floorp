@@ -38,7 +38,6 @@ import org.mozilla.fenix.ui.robots.searchScreen
  *
  */
 class HistoryTest {
-    /* ktlint-disable no-blank-line-before-rbrace */ // This imposes unreadable grouping.
     private lateinit var mockWebServer: MockWebServer
     private lateinit var mDevice: UiDevice
 
@@ -159,7 +158,6 @@ class HistoryTest {
                 RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list), 1),
             ) {
                 clickDeleteAllHistoryButton()
-
             }
             verifyDeleteConfirmationMessage()
             selectEverythingOption()

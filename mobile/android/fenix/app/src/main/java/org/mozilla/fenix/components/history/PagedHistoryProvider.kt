@@ -15,7 +15,7 @@ import org.mozilla.fenix.library.history.History
 import org.mozilla.fenix.library.history.HistoryItemTimeGroup
 import org.mozilla.fenix.utils.Settings.Companion.SEARCH_GROUP_MINIMUM_SITES
 
-private const val BUFFER_TIME = 15000 /* 15 seconds in ms */
+private const val BUFFER_TIME = 15000 // 15 seconds in ms
 
 /**
  * Class representing a history entry.

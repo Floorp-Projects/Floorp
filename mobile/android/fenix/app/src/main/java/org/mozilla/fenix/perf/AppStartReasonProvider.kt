@@ -69,7 +69,7 @@ class AppStartReasonProvider {
                 // this Runnable should execute before the first Activity is created.
                 reason = when (reason) {
                     StartReason.TO_BE_DETERMINED -> StartReason.NON_ACTIVITY
-                    StartReason.ACTIVITY -> reason /* the start reason is already known: do nothing. */
+                    StartReason.ACTIVITY -> reason // the start reason is already known: do nothing.
                     StartReason.NON_ACTIVITY -> {
                         Metrics.startReasonProcessError.set(true)
                         logger.error("AppStartReasonProvider.Process...onCreate unexpectedly called twice")
@@ -87,7 +87,7 @@ class AppStartReasonProvider {
             // See ProcessLifecycleObserver.onCreate for details.
             reason = when (reason) {
                 StartReason.TO_BE_DETERMINED -> StartReason.ACTIVITY
-                StartReason.NON_ACTIVITY -> reason /* the start reason is already known: do nothing. */
+                StartReason.NON_ACTIVITY -> reason // the start reason is already known: do nothing.
                 StartReason.ACTIVITY -> {
                     Metrics.startReasonActivityError.set(true)
                     logger.error("AppStartReasonProvider.Activity...onCreate unexpectedly called twice")

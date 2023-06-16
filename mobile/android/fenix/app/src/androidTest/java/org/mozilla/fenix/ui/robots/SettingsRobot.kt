@@ -217,15 +217,13 @@ class SettingsRobot {
             return BrowserRobot.Transition()
         }
 
-        fun openAboutFirefoxPreview(interact: SettingsSubMenuAboutRobot.() -> Unit):
-            SettingsSubMenuAboutRobot.Transition {
+        fun openAboutFirefoxPreview(interact: SettingsSubMenuAboutRobot.() -> Unit): SettingsSubMenuAboutRobot.Transition {
             aboutFirefoxHeading().click()
             SettingsSubMenuAboutRobot().interact()
             return SettingsSubMenuAboutRobot.Transition()
         }
 
-        fun openSearchSubMenu(interact: SettingsSubMenuSearchRobot.() -> Unit):
-            SettingsSubMenuSearchRobot.Transition {
+        fun openSearchSubMenu(interact: SettingsSubMenuSearchRobot.() -> Unit): SettingsSubMenuSearchRobot.Transition {
             itemWithText(getStringResource(R.string.preferences_search))
                 .also {
                     it.waitForExists(waitingTimeShort)

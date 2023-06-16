@@ -78,7 +78,7 @@ class SaveToPDFMiddleware(
      * @param exception - A given exception that will be properly labeled for telemetry posting.
      * @return processed failure reason to send in telemetry.
      */
-    /* package */ @VisibleForTesting
+    @VisibleForTesting // package
     fun telemetryErrorReason(exception: Exception): String {
         var failureMsg = "unknown"
         // Requiring information from GeckoView isn't a good practice,
@@ -105,7 +105,7 @@ class SaveToPDFMiddleware(
      * @param isPdfViewer - If the page has a PDF viewer or not.
      * @return processed page source type to send in telemetry.
      */
-    /* package */ @VisibleForTesting
+    @VisibleForTesting // package
     fun telemetrySource(isPdfViewer: Boolean?): String {
         val source = when (isPdfViewer) {
             null -> "unknown"

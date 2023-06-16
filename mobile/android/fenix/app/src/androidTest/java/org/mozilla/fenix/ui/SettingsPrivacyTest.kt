@@ -24,8 +24,6 @@ import org.mozilla.fenix.ui.robots.notificationShade
  */
 
 class SettingsPrivacyTest {
-    /* ktlint-disable no-blank-line-before-rbrace */ // This imposes unreadable grouping.
-
     private lateinit var mDevice: UiDevice
     private lateinit var mockWebServer: MockWebServer
 

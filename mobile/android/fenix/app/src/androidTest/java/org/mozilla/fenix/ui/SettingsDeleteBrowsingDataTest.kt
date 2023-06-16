@@ -33,7 +33,6 @@ import org.mozilla.fenix.ui.robots.settingsScreen
  */
 
 class SettingsDeleteBrowsingDataTest {
-    /* ktlint-disable no-blank-line-before-rbrace */ // This imposes unreadable grouping.
     private lateinit var mockWebServer: MockWebServer
 
     @get:Rule

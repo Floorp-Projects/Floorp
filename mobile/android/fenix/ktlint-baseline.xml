@@ -4,7 +4,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <baseline version="1.0">
-    <file name="app/src/main/java/org/mozilla/fenix/home/topsites/TopSiteItemViewHolder.kt">
-        <error line="65" column="35" source="annotation" />
+    <file name="app/src/test/java/org/mozilla/fenix/home/recentvisits/view/RecentBookmarksViewHolderTest.kt">
+        <error line="36" column="6" source="standard:block-comment-initial-star-alignment" />
     </file>
 </baseline>

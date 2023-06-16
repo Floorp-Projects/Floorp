@@ -21,8 +21,6 @@ import org.mozilla.fenix.helpers.HomeActivityTestRule
  */
 
 class SettingsSyncTest {
-    /* ktlint-disable no-blank-line-before-rbrace */ // This imposes unreadable grouping.
-
     private lateinit var mDevice: UiDevice
     private lateinit var mockWebServer: MockWebServer
 

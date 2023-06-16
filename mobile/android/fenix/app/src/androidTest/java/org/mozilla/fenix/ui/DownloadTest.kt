@@ -154,7 +154,7 @@ class DownloadTest {
     /* Verifies downloads in the Downloads Menu:
           - downloads appear in the list
           - deleting a download from device storage, removes it from the Downloads Menu too
-    */
+     */
     @SmokeTest
     @Test
     fun manageDownloadsInDownloadsMenuTest() {

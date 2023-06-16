@@ -77,7 +77,7 @@ class AboutLibrariesFragment : Fragment(R.layout.fragment_about_libraries) {
                  [name]             : either the name of the library, or its artifact name.
 
             See https://github.com/google/play-services-plugins/tree/master/oss-licenses-plugin
-        */
+         */
         val licensesData = resources
             .openRawResource(R.raw.third_party_licenses)
             .readBytes()

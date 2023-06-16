@@ -26,8 +26,6 @@ import org.mozilla.fenix.ui.robots.longClickPageObject
  */
 
 class ThreeDotMenuMainTest {
-    /* ktlint-disable no-blank-line-before-rbrace */ // This imposes unreadable grouping.
-
     private lateinit var mockWebServer: MockWebServer
 
     @get:Rule

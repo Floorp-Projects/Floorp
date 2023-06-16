@@ -60,11 +60,11 @@ data class Wallpaper(
         const val defaultName = "default"
 
         /*
-        Note: this collection could get out of sync with the version of it generated when fetching
-        remote metadata. It is included mostly for convenience, but use with utmost care until
-        we find a better way of handling the edge cases around this collection. It is generally
-        safer to do comparison directly with the collection name.
-        */
+         * Note: this collection could get out of sync with the version of it generated when fetching
+         * remote metadata. It is included mostly for convenience, but use with utmost care until
+         * we find a better way of handling the edge cases around this collection. It is generally
+         * safer to do comparison directly with the collection name.
+         */
         const val classicFirefoxCollectionName = "classic-firefox"
         val ClassicFirefoxCollection = Collection(
             name = classicFirefoxCollectionName,
