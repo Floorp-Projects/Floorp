@@ -9,10 +9,12 @@
 #include "ErrorList.h"
 #include "FileSystemDataManager.h"
 #include "FileSystemDatabaseManagerVersion001.h"
+#include "FileSystemDatabaseManagerVersion002.h"
 #include "FileSystemFileManager.h"
 #include "FileSystemHashSource.h"
 #include "ResultStatement.h"
 #include "SchemaVersion001.h"
+#include "SchemaVersion002.h"
 #include "TestHelpers.h"
 #include "gtest/gtest.h"
 #include "mozIStorageService.h"
@@ -38,6 +40,7 @@
 namespace mozilla::dom::fs::test {
 
 using data::FileSystemDatabaseManagerVersion001;
+using data::FileSystemDatabaseManagerVersion002;
 using data::FileSystemFileManager;
 
 class TestFileSystemDatabaseManagerVersionsBase
@@ -62,6 +65,10 @@ class TestFileSystemDatabaseManagerVersions
         ASSERT_EQ(aOriginal, aMoved);
         break;
       }
+      case 2: {
+        ASSERT_NE(aOriginal, aMoved);
+        break;
+      }
       default: {
         ASSERT_FALSE(false)
         << "Unknown database version";
@@ -75,6 +82,11 @@ class TestFileSystemDatabaseManagerVersions
       case 1: {
         // We generated a new entryId
         ASSERT_NE(aOriginal, aMoved);
+        break;
+      }
+      case 2: {
+        // We get the same entryId for the same input
+        ASSERT_EQ(aOriginal, aMoved);
         break;
       }
       default: {
@@ -134,6 +146,12 @@ static void MakeDatabaseManagerVersions(
     TEST_TRY_UNWRAP(
         TestFileSystemDatabaseManagerVersions::sVersion,
         SchemaVersion001::InitializeConnection(connection, testOrigin));
+  } else {
+    ASSERT_EQ(2, aVersion);
+
+    TEST_TRY_UNWRAP(
+        TestFileSystemDatabaseManagerVersions::sVersion,
+        SchemaVersion002::InitializeConnection(connection, testOrigin));
   }
   ASSERT_NE(0, TestFileSystemDatabaseManagerVersions::sVersion);
 
@@ -162,6 +180,11 @@ static void MakeDatabaseManagerVersions(
 
   if (1 == aVersion) {
     aDatabaseManager = new FileSystemDatabaseManagerVersion001(
+        aDataManager, std::move(connection), fmRes.unwrap(), rootId);
+  } else {
+    ASSERT_EQ(2, aVersion);
+
+    aDatabaseManager = new FileSystemDatabaseManagerVersion002(
         aDataManager, std::move(connection), fmRes.unwrap(), rootId);
   }
 
@@ -667,15 +690,17 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateMoveDirectories) {
     }
 
     {
+      ASSERT_NO_FATAL_FAILURE(
+          AssertEntryIdMoved(subSubFile.entryId(), testFile));
+      TEST_TRY_UNWRAP(Path entryPath,
+                      dm->Resolve({rootId, subSubFile.entryId()}));
       if (1 == sVersion) {
-        ASSERT_EQ(testFile, subSubFile.entryId());
-        TEST_TRY_UNWRAP(Path entryPath,
-                        dm->Resolve({rootId, subSubFile.entryId()}));
         ASSERT_EQ(1u, entryPath.Length());
         ASSERT_STREQ(testFileMeta.childName(), entryPath[0]);
       } else {
-        ASSERT_FALSE(true)
-        << "Unknown database version";
+        ASSERT_EQ(2, sVersion);
+        // Per spec, path result is empty when no path exists.
+        ASSERT_TRUE(entryPath.IsEmpty());
       }
     }
 
@@ -852,6 +877,16 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateMoveDirectories) {
             handle, dm->GetOrCreateDirectory({rootId, testFileMeta.childName()},
                                              /* create */ false));
         ASSERT_EQ(handle, firstChildDescendant);
+      } else if (2 == sVersion) {
+        TEST_TRY_UNWRAP_ERR(
+            rv, dm->GetOrCreateFile(newFileMeta, /* create */ false));
+        ASSERT_NSEQ(NS_ERROR_DOM_NOT_FOUND_ERR, rv);
+
+        TEST_TRY_UNWRAP(
+            EntryId newFileCheck,
+            dm->GetOrCreateFile({firstChildDescendant, newFileMeta.childName()},
+                                /* create */ false));
+        ASSERT_FALSE(newFileCheck.IsEmpty());
       } else {
         ASSERT_FALSE(false)
         << "Unknown database version";
@@ -1008,6 +1043,6 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateMoveDirectories) {
 
 INSTANTIATE_TEST_SUITE_P(TestDatabaseManagerVersions,
                          TestFileSystemDatabaseManagerVersions,
-                         testing::Values(1));
+                         testing::Values(1, 2));
 
 }  // namespace mozilla::dom::fs::test
