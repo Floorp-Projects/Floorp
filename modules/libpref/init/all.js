@@ -3247,7 +3247,11 @@ pref("alerts.showFavicons", false);
 // DOM full-screen API.
 #ifdef XP_MACOSX
   // Whether to use macOS native full screen for Fullscreen API
-  pref("full-screen-api.macos-native-full-screen", false);
+  #ifdef NIGHTLY_BUILD
+    pref("full-screen-api.macos-native-full-screen", true);
+  #else
+    pref("full-screen-api.macos-native-full-screen", false);
+  #endif
 #endif
 // transition duration of fade-to-black and fade-from-black, unit: ms
 #ifndef MOZ_WIDGET_GTK
