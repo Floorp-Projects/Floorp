@@ -25,6 +25,10 @@ object BrowsersCache {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal var cachedBrowsers: Browsers? = null
 
+    /**
+     * Return installed browsers if cache exist.  If not, Collect information about all installed
+     * browsers and return a [Browsers] object containing that data.
+     */
     @Synchronized
     fun all(context: Context): Browsers {
         run {
@@ -38,6 +42,9 @@ object BrowsersCache {
         }
     }
 
+    /**
+     * Remove installed browsers cache
+     */
     @Synchronized
     fun resetAll() {
         cachedBrowsers = null

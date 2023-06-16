@@ -557,8 +557,6 @@
     <ID>UndocumentedPublicFunction:BrowserToolbarView.kt$BrowserToolbarView$fun collapse()</ID>
     <ID>UndocumentedPublicFunction:BrowserToolbarView.kt$BrowserToolbarView$fun dismissMenu()</ID>
     <ID>UndocumentedPublicFunction:BrowserToolbarView.kt$BrowserToolbarView$fun expand()</ID>
-    <ID>UndocumentedPublicFunction:BrowsersCache.kt$BrowsersCache$@Synchronized fun all(context: Context): Browsers</ID>
-    <ID>UndocumentedPublicFunction:BrowsersCache.kt$BrowsersCache$@Synchronized fun resetAll()</ID>
     <ID>UndocumentedPublicFunction:ClearSiteDataView.kt$ClearSiteDataView$fun update(webInfoState: WebsiteInfoState)</ID>
     <ID>UndocumentedPublicFunction:ClearableEditText.kt$ClearableEditText$fun onTextChanged(text: CharSequence?)</ID>
     <ID>UndocumentedPublicFunction:ColdStartupDurationTelemetry.kt$ColdStartupDurationTelemetry$fun onHomeActivityOnCreate( visualCompletenessQueue: VisualCompletenessQueue, startupStateProvider: StartupStateProvider, safeIntent: SafeIntent, rootContainer: View, )</ID>
