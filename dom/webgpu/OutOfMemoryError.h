@@ -20,13 +20,13 @@ class OutOfMemoryError final : public nsWrapperCache, public ChildOf<Device> {
  public:
   GPU_DECL_CYCLE_COLLECTION(OutOfMemoryError)
   GPU_DECL_JS_WRAP(OutOfMemoryError)
-  OutOfMemoryError() = delete;
+
+  explicit OutOfMemoryError(const RefPtr<Device>& aParent)
+      : ChildOf<Device>(aParent) {}
 
  private:
   virtual ~OutOfMemoryError();
   void Cleanup() {}
-
- public:
 };
 
 }  // namespace webgpu
