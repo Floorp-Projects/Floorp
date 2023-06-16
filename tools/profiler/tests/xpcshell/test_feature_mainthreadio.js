@@ -85,7 +85,7 @@ async function runProfilerWithFileIO(features, filename) {
   await Services.profiler.StartProfiler(entries, interval, features, threads);
 
   info("Get the file");
-  const file = FileUtils.getFile("TmpD", [filename]);
+  const file = await IOUtils.getFile(PathUtils.tempDir, filename);
   if (file.exists()) {
     console.warn(
       "This test is triggering FileIO by writing to a file. However, the test found an " +

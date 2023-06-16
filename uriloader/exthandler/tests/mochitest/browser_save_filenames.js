@@ -158,9 +158,9 @@ add_setup(async function () {
 
   // Need to load the page from localhost:8000 as the download attribute
   // only applies to links from the same domain.
-  let saveFilenamesPage = FileUtils.getFile(
-    "CurWorkD",
-    "/browser/uriloader/exthandler/tests/mochitest/save_filenames.html".split(
+  let saveFilenamesPage = await IOUtils.getFile(
+    Services.dirsvc.get("CurWorkD", Ci.nsIFile).path,
+    ..."browser/uriloader/exthandler/tests/mochitest/save_filenames.html".split(
       "/"
     )
   );
