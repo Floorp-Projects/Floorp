@@ -6,10 +6,12 @@
 
 #include "mozilla/dom/UIDirectionManager.h"
 #include "mozilla/Preferences.h"
+#include "nsIObserverService.h"
 #include "nsIWindowMediator.h"
 #include "nsDocShell.h"
 #include "nsServiceManagerUtils.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/Services.h"
 #include "mozilla/SimpleEnumerator.h"
 
 namespace mozilla::dom {

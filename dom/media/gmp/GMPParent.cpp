@@ -540,7 +540,7 @@ void GMPParent::DeleteProcess() {
 
 #if defined(MOZ_WIDGET_ANDROID)
   if (mState != GMPStateNotLoaded) {
-    nsCOMPtr<nsIEventTarget> launcherThread(GetIPCLauncher());
+    nsCOMPtr<nsIEventTarget> launcherThread(ipc::GetIPCLauncher());
     MOZ_ASSERT(launcherThread);
 
     auto procType = java::GeckoProcessType::GMPLUGIN();

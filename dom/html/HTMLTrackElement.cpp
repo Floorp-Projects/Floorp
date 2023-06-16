@@ -23,6 +23,7 @@
 #include "mozilla/dom/Document.h"
 #include "nsILoadGroup.h"
 #include "nsIObserver.h"
+#include "nsIObserverService.h"
 #include "nsIScriptError.h"
 #include "nsISupportsImpl.h"
 #include "nsISupportsPrimitives.h"

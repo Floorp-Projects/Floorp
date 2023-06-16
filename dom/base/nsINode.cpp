@@ -63,6 +63,7 @@
 #include "nsDOMCID.h"
 #include "nsDOMCSSAttrDeclaration.h"
 #include "nsError.h"
+#include "nsExpirationTracker.h"
 #include "nsDOMMutationObserver.h"
 #include "nsDOMString.h"
 #include "nsDOMTokenList.h"
@@ -2984,22 +2985,92 @@ uint32_t nsINode::Length() const {
   }
 }
 
+namespace {
+class SelectorCacheKey {
+ public:
+  explicit SelectorCacheKey(const nsACString& aString) : mKey(aString) {
+    MOZ_COUNT_CTOR(SelectorCacheKey);
+  }
+
+  nsCString mKey;
+  nsExpirationState mState;
+
+  nsExpirationState* GetExpirationState() { return &mState; }
+
+  MOZ_COUNTED_DTOR(SelectorCacheKey)
+};
+
+class SelectorCache final : public nsExpirationTracker<SelectorCacheKey, 4> {
+ public:
+  using SelectorList = UniquePtr<StyleSelectorList>;
+  using Table = nsTHashMap<nsCStringHashKey, SelectorList>;
+
+  SelectorCache()
+      : nsExpirationTracker<SelectorCacheKey, 4>(
+            1000, "SelectorCache", GetMainThreadSerialEventTarget()) {}
+
+  void NotifyExpired(SelectorCacheKey* aSelector) final {
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(aSelector);
+
+    // There is no guarantee that this method won't be re-entered when selector
+    // matching is ongoing because "memory-pressure" could be notified
+    // immediately when OOM happens according to the design of
+    // nsExpirationTracker. The perfect solution is to delete the |aSelector|
+    // and its StyleSelectorList in mTable asynchronously. We remove these
+    // objects synchronously for now because NotifyExpired() will never be
+    // triggered by "memory-pressure" which is not implemented yet in the stage
+    // 2 of mozalloc_handle_oom(). Once these objects are removed
+    // asynchronously, we should update the warning added in
+    // mozalloc_handle_oom() as well.
+    RemoveObject(aSelector);
+    mTable.Remove(aSelector->mKey);
+    delete aSelector;
+  }
+
+  // We do not call MarkUsed because it would just slow down lookups and
+  // because we're OK expiring things after a few seconds even if they're
+  // being used.  Returns whether we actually had an entry for aSelector.
+  //
+  // If we have an entry and the selector list returned has a null
+  // StyleSelectorList*, that indicates that aSelector has already been
+  // parsed and is not a syntactically valid selector.
+  template <typename F>
+  StyleSelectorList* GetListOrInsertFrom(const nsACString& aSelector,
+                                         F&& aFrom) {
+    MOZ_ASSERT(NS_IsMainThread());
+    return mTable.LookupOrInsertWith(aSelector, std::forward<F>(aFrom)).get();
+  }
+
+  ~SelectorCache() { AgeAllGenerations(); }
+
+ private:
+  Table mTable;
+};
+
+SelectorCache& GetSelectorCache(bool aChromeRulesEnabled) {
+  static StaticAutoPtr<SelectorCache> sSelectorCache;
+  static StaticAutoPtr<SelectorCache> sChromeSelectorCache;
+  auto& cache = aChromeRulesEnabled ? sChromeSelectorCache : sSelectorCache;
+  if (!cache) {
+    cache = new SelectorCache();
+    ClearOnShutdown(&cache);
+  }
+  return *cache;
+}
+}  // namespace
+
 const StyleSelectorList* nsINode::ParseSelectorList(
     const nsACString& aSelectorString, ErrorResult& aRv) {
   Document* doc = OwnerDoc();
+  const bool chromeRulesEnabled = doc->ChromeRulesEnabled();
 
-  Document::SelectorCache& cache = doc->GetSelectorCache();
+  SelectorCache& cache = GetSelectorCache(chromeRulesEnabled);
   StyleSelectorList* list = cache.GetListOrInsertFrom(aSelectorString, [&] {
     // Note that we want to cache even if null was returned, because we
     // want to cache the "This is not a valid selector" result.
-    //
-    // NOTE(emilio): Off-hand, getting a CallerType here might seem like a
-    // better idea than using ChromeRulesEnabled(), but that would mean
-    // that we'd need to key the selector cache by that.
-    // ChromeRulesEnabled() gives us the same semantics as any inline
-    // style associated to a document, which seems reasonable.
     return WrapUnique(
-        Servo_SelectorList_Parse(&aSelectorString, doc->ChromeRulesEnabled()));
+        Servo_SelectorList_Parse(&aSelectorString, chromeRulesEnabled));
   });
 
   if (!list) {

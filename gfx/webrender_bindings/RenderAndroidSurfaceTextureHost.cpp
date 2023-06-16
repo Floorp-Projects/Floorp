@@ -227,7 +227,7 @@ gfx::SurfaceFormat RenderAndroidSurfaceTextureHost::GetFormat() const {
   return gfx::SurfaceFormat::UNKNOWN;
 }
 
-already_AddRefed<DataSourceSurface>
+already_AddRefed<gfx::DataSourceSurface>
 RenderAndroidSurfaceTextureHost::ReadTexImage() {
   if (!mGL) {
     mGL = RenderThread::Get()->SingletonGL();
@@ -238,8 +238,9 @@ RenderAndroidSurfaceTextureHost::ReadTexImage() {
 
   /* Allocate resulting image surface */
   int32_t stride = mSize.width * BytesPerPixel(GetFormat());
-  RefPtr<DataSourceSurface> surf =
-      Factory::CreateDataSourceSurfaceWithStride(mSize, GetFormat(), stride);
+  RefPtr<gfx::DataSourceSurface> surf =
+      gfx::Factory::CreateDataSourceSurfaceWithStride(mSize, GetFormat(),
+                                                      stride);
   if (!surf) {
     return nullptr;
   }
@@ -268,8 +269,8 @@ bool RenderAndroidSurfaceTextureHost::MapPlane(RenderCompositor* aCompositor,
     return false;
   }
 
-  DataSourceSurface::MappedSurface map;
-  if (!readback->Map(DataSourceSurface::MapType::READ, &map)) {
+  gfx::DataSourceSurface::MappedSurface map;
+  if (!readback->Map(gfx::DataSourceSurface::MapType::READ, &map)) {
     return false;
   }
 
