@@ -401,6 +401,15 @@ mozilla::ipc::IPCResult MFMediaEngineParent::RecvNotifyMediaInfo(
       isEncryted);
   LOG("%s", message.get());
 
+  if (aInfo.videoInfo()) {
+    ComPtr<IMFMediaEngineEx> mediaEngineEx;
+    RETURN_PARAM_IF_FAILED(mMediaEngine.As(&mediaEngineEx), IPC_OK());
+    RETURN_PARAM_IF_FAILED(mediaEngineEx->EnableWindowlessSwapchainMode(true),
+                           IPC_OK());
+    LOG("Enabled dcomp swap chain mode");
+    ENGINE_MARKER("MFMediaEngineParent,EnabledSwapChain");
+  }
+
   mRequestSampleListener = mMediaSource->RequestSampleEvent().Connect(
       mManagerThread, this, &MFMediaEngineParent::HandleRequestSample);
   errorExit.release();
@@ -629,13 +638,6 @@ void MFMediaEngineParent::EnsureDcompSurfaceHandle() {
     ENGINE_MARKER_TEXT(
         "MFMediaEngineParent,UpdateVideoSize",
         nsPrintfCString("%lux%lu", mDisplayWidth, mDisplayHeight));
-  }
-
-  if (!mIsEnableDcompMode) {
-    RETURN_VOID_IF_FAILED(mediaEngineEx->EnableWindowlessSwapchainMode(true));
-    LOG("Enabled dcomp swap chain mode");
-    mIsEnableDcompMode = true;
-    ENGINE_MARKER("MFMediaEngineParent,EnabledSwapChain");
   }
 
   HANDLE surfaceHandle = INVALID_HANDLE_VALUE;
