@@ -80,8 +80,10 @@ class PopoverData {
   void SetToggleEventTask(PopoverToggleEventTask* aTask) { mTask = aTask; }
   void ClearToggleEventTask() { mTask = nullptr; }
 
-  bool IsHiding() const { return mIsHiding; }
-  void SetIsHiding(bool aIsHiding) { mIsHiding = aIsHiding; }
+  bool IsShowingOrHiding() const { return mIsShowingOrHiding; }
+  void SetIsShowingOrHiding(bool aIsShowingOrHiding) {
+    mIsShowingOrHiding = aIsShowingOrHiding;
+  }
 
  private:
   PopoverVisibilityState mVisibilityState = PopoverVisibilityState::Hidden;
@@ -97,7 +99,7 @@ class PopoverData {
   // this a weak reference, as if the element goes away it's necessarily not
   // connected to our document.
   nsWeakPtr mInvokerElement;
-  bool mIsHiding = false;
+  bool mIsShowingOrHiding = false;
   RefPtr<PopoverToggleEventTask> mTask;
 };
 }  // namespace mozilla::dom
