@@ -692,17 +692,17 @@ FileSystemDatabaseManagerVersion001::FileSystemDatabaseManagerVersion001(
 nsresult FileSystemDatabaseManagerVersion001::RescanTrackedUsages(
     const FileSystemConnection& aConnection,
     const quota::OriginMetadata& aOriginMetadata) {
-  QM_TRY_UNWRAP(FileSystemFileManager fileManager,
+  QM_TRY_UNWRAP(UniquePtr<FileSystemFileManager> fileManager,
                 data::FileSystemFileManager::CreateFileSystemFileManager(
                     aOriginMetadata));
 
-  QM_TRY_UNWRAP(bool ok, ScanTrackedFiles(aConnection, fileManager));
+  QM_TRY_UNWRAP(bool ok, ScanTrackedFiles(aConnection, *fileManager));
   if (ok) {
     return NS_OK;
   }
 
   // Retry once without explicit delay
-  QM_TRY_UNWRAP(ok, ScanTrackedFiles(aConnection, fileManager));
+  QM_TRY_UNWRAP(ok, ScanTrackedFiles(aConnection, *fileManager));
   if (!ok) {
     return NS_ERROR_UNEXPECTED;
   }
