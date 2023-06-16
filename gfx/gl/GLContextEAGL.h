@@ -54,7 +54,7 @@ class GLContextEAGL : public GLContext {
 
   virtual GLuint GetDefaultFramebuffer() override { return mBackbufferFB; }
 
-  virtual bool RenewSurface(nsIWidget* aWidget) override {
+  virtual bool RenewSurface(widget::CompositorWidget*) override {
     // FIXME: should use the passed widget instead of the existing one.
     return RecreateRB();
   }
