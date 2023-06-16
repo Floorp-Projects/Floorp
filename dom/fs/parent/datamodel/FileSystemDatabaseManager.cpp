@@ -7,48 +7,16 @@
 #include "FileSystemDatabaseManager.h"
 
 #include "FileSystemDatabaseManagerVersion001.h"
-#include "FileSystemDatabaseManagerVersion002.h"
 #include "FileSystemFileManager.h"
 #include "ResultConnection.h"
 #include "ResultStatement.h"
 #include "SchemaVersion001.h"
-#include "SchemaVersion002.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
 #include "nsCOMPtr.h"
 #include "nsIFile.h"
 
 namespace mozilla::dom::fs::data {
-
-namespace {
-
-Result<Usage, QMResult> GetFileUsage(const ResultConnection& aConnection) {
-  DatabaseVersion version = 0;
-  QM_TRY(QM_TO_RESULT(aConnection->GetSchemaVersion(&version)));
-
-  switch (version) {
-    case 0: {
-      return 0;
-    }
-
-    case 1: {
-      QM_TRY_RETURN(
-          FileSystemDatabaseManagerVersion001::GetFileUsage(aConnection));
-    }
-
-    case 2: {
-      QM_TRY_RETURN(
-          FileSystemDatabaseManagerVersion002::GetFileUsage(aConnection));
-    }
-
-    default:
-      break;
-  }
-
-  return Err(QMResult(NS_ERROR_NOT_IMPLEMENTED));
-}
-
-}  // namespace
 
 /* static */
 nsresult FileSystemDatabaseManager::RescanUsages(
@@ -62,12 +30,8 @@ nsresult FileSystemDatabaseManager::RescanUsages(
       return NS_OK;
     }
 
-    case 1:
+    case 1: {
       return FileSystemDatabaseManagerVersion001::RescanTrackedUsages(
-          aConnection, aOriginMetadata);
-
-    case 2: {
-      return FileSystemDatabaseManagerVersion002::RescanTrackedUsages(
           aConnection, aOriginMetadata);
     }
 
@@ -90,12 +54,30 @@ Result<quota::UsageInfo, QMResult> FileSystemDatabaseManager::GetUsage(
 
   quota::UsageInfo result(quota::DatabaseUsageType(Some(dbSize)));
 
-  QM_TRY_INSPECT(const Usage& fileUsage, GetFileUsage(aConnection));
+  DatabaseVersion version = 0;
+  QM_TRY(QM_TO_RESULT(aConnection->GetSchemaVersion(&version)));
 
-  // XXX: DatabaseUsage is currently total usage for most forms of storage
-  result += quota::DatabaseUsageType(Some(fileUsage));
+  switch (version) {
+    case 0: {
+      return result;
+    }
 
-  return result;
+    case 1: {
+      QM_TRY_INSPECT(
+          const Usage& fileUsage,
+          FileSystemDatabaseManagerVersion001::GetFileUsage(aConnection));
+
+      // XXX: DatabaseUsage is currently total usage for most forms of storage
+      result += quota::DatabaseUsageType(Some(fileUsage));
+
+      return result;
+    }
+
+    default:
+      break;
+  }
+
+  return Err(QMResult(NS_ERROR_NOT_IMPLEMENTED));
 }
 
 }  // namespace mozilla::dom::fs::data

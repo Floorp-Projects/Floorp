@@ -15,11 +15,6 @@ ContentType FileSystemContentTypeGuess::FromPath(const Name& aPath) {
   NS_ConvertUTF16toUTF8 path(aPath);
   ContentType contentType;
   mimeGuessFromPath(&path, &contentType);
-
-  if (contentType.IsEmpty()) {
-    return VoidCString();
-  }
-
   return contentType;
 }
 
