@@ -37,11 +37,11 @@ struct BasePoint {
   MOZ_ALWAYS_INLINE Coord X() const { return x; }
   MOZ_ALWAYS_INLINE Coord Y() const { return y; }
 
-  void MoveTo(T aX, T aY) {
+  void MoveTo(Coord aX, Coord aY) {
     x = aX;
     y = aY;
   }
-  void MoveBy(T aDx, T aDy) {
+  void MoveBy(Coord aDx, Coord aDy) {
     x += aDx;
     y += aDy;
   }
@@ -103,7 +103,7 @@ struct BasePoint {
     return true;
   }
 
-  void Clamp(T aMaxAbsValue) {
+  void Clamp(Coord aMaxAbsValue) {
     x = std::max(std::min(x, aMaxAbsValue), -aMaxAbsValue);
     y = std::max(std::min(y, aMaxAbsValue), -aMaxAbsValue);
   }
