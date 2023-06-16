@@ -3,12 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const lazy = {};
-
-ChromeUtils.defineESModuleGetters(lazy, {
-  Deprecated: "resource://gre/modules/Deprecated.sys.mjs",
-});
-
 export var FileUtils = {
   MODE_RDONLY: 0x01,
   MODE_WRONLY: 0x02,
@@ -28,33 +22,13 @@ export var FileUtils = {
    * @param   pathArray
    *          An array of path components to locate beneath the directory
    *          specified by |key|
-   * @param   shouldCreate
-   *          true if the directory hierarchy specified in |pathArray|
-   *          should be created if it does not exist, false otherwise.
    * @return  nsIFile object for the location specified.
    */
-  getDir: function FileUtils_getDir(key, pathArray, shouldCreate) {
+  getDir: function FileUtils_getDir(key, pathArray) {
     var dir = Services.dirsvc.get(key, Ci.nsIFile);
     for (var i = 0; i < pathArray.length; ++i) {
       dir.append(pathArray[i]);
     }
-
-    if (shouldCreate) {
-      lazy.Deprecated.warning(
-        "Calling FileUtils.getDir(..., ..., true) causes main thread I/O and should be avoided especially during startup/shutdown",
-        "https://bugzilla.mozilla.org/show_bug.cgi?id=921157"
-      );
-
-      try {
-        dir.create(Ci.nsIFile.DIRECTORY_TYPE, this.PERMS_DIRECTORY);
-      } catch (ex) {
-        if (ex.result != Cr.NS_ERROR_FILE_ALREADY_EXISTS) {
-          throw ex;
-        }
-        // Ignore the exception due to a directory that already exists.
-      }
-    }
-
     return dir;
   },
 
