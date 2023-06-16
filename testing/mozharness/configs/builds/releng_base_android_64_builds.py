@@ -12,6 +12,7 @@ config = {
         "build",
         "multi-l10n",
     ],
+    "max_build_output_timeout": 0,
     "secret_files": [
         {
             "filename": "/builds/gls-gapi.data",
