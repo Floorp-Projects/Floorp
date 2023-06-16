@@ -1,0 +1,26 @@
+{
+  "name": "1&1 Suche",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "1und1@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "web_accessible_resources": [
+    "favicon.ico"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "1&1 Suche",
+      "search_url": "https://go.1und1.de/br/moz_search_web/",
+      "search_url_get_params": "q={searchTerms}&enc=UTF-8",
+      "suggest_url": "https://suggestplugin.ui-portal.de/s",
+      "suggest_url_get_params": "q={searchTerms}&brand=1und1&origin=br_splugin_ff_sg"
+    }
+  }
+}

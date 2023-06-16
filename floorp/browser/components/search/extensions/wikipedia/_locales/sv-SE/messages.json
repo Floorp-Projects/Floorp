@@ -1,0 +1,20 @@
+{
+  "extensionName": {
+    "message": "Wikipedia (sv)"
+  },
+  "extensionDescription": {
+    "message": "Wikipedia, den fria encyklopedin"
+  },
+  "searchUrl": {
+    "message": "https://sv.wikipedia.org/wiki/Special:Sök"
+  },
+  "searchForm": {
+    "message": "https://sv.wikipedia.org/wiki/Special:Sök?search={searchTerms}&sourceid=Mozilla-search"
+  },
+  "suggestUrl": {
+    "message": "https://sv.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"
+  },
+  "searchUrlGetParams": {
+    "message": "search={searchTerms}&sourceid=Mozilla-search"
+  }
+}

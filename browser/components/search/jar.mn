@@ -8,6 +8,6 @@ browser.jar:
         content/browser/contentSearchUI.js                          (content/contentSearchUI.js)
         content/browser/contentSearchHandoffUI.js                   (content/contentSearchHandoffUI.js)
         content/browser/contentSearchUI.css                         (content/contentSearchUI.css)
-        search-extensions/                                          (extensions/**)
+#       search-extensions/                                          (extensions/**)
 
 % resource search-extensions %search-extensions/ contentaccessible=yes

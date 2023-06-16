@@ -1,0 +1,174 @@
+    /* Source file https://github.com/MrOtherGuy/firefox-csshacks/tree/master/chrome/tabs_on_bottom.css made available under Mozilla Public License v. 2.0
+See the above repository for updates as well as full license text. */
+
+
+:root{ --uc-titlebar-padding: 0px; }
+@media  (-moz-platform: windows),
+        (-moz-platform: windows-win7),
+        (-moz-platform: windows-win10){
+  :root[sizemode="maximized"][tabsintitlebar]{
+    --uc-titlebar-padding: 8px;
+  }
+}
+#toolbar-menubar[autohide="true"] > .titlebar-buttonbox-container,
+#TabsToolbar > .titlebar-buttonbox-container{
+  position: fixed;
+  display: block;
+  top: 0;
+  right:0;
+  height: 40px;
+}
+/* Mac specific. You should set that font-smoothing pref to true if you are on any platform where window controls are on left */
+@supports -moz-bool-pref("layout.css.osx-font-smoothing.enabled"){
+  :root{ --uc-titlebar-padding: 0px !important }
+  .titlebar-buttonbox-container{ left:0; right: unset !important; }
+}
+
+:root[uidensity="compact"] #TabsToolbar > .titlebar-buttonbox-container{ height: 32px }
+
+#toolbar-menubar[inactive] > .titlebar-buttonbox-container{ opacity: 0 }
+
+#navigator-toolbox{ padding-top: var(--uc-titlebar-padding,0px) !important; }
+
+.titlebar-buttonbox-container > .titlebar-buttonbox{ height: 100%; }
+
+#titlebar{
+  order: 2;
+  -moz-appearance: none !important;
+  --tabs-navbar-shadow-size: 0px;
+}
+/* Re-order window and tab notification boxes */
+#navigator-toolbox > div{ display: contents }
+.global-notificationbox,
+#tab-notification-deck{ order: 2 }
+
+#TabsToolbar .titlebar-spacer{ display: none; }
+/* Also hide the toolbox bottom border which isn't at bottom with this setup */
+#navigator-toolbox::after{ display: none !important; }
+
+@media (-moz-gtk-csd-close-button){ .titlebar-button{ -moz-box-orient: vertical } }
+
+/* At Activated Menubar */
+:root:not([chromehidden~="menubar"], [sizemode="fullscreen"]) #toolbar-menubar:not([autohide="true"]) + #TabsToolbar > .titlebar-buttonbox-container {
+  display: block !important;
+}
+#toolbar-menubar:not([autohide="true"]) > .titlebar-buttonbox-container {
+  visibility: hidden;
+}
+
+/* These exist only for compatibility with autohide-tabstoolbar.css */
+toolbox#navigator-toolbox > toolbar#nav-bar.browser-toolbar{ animation: none; }
+#navigator-toolbox:hover #TabsToolbar{ animation: slidein ease-out 48ms 1 }
+#TabsToolbar > .titlebar-buttonbox-container{ visibility: visible }
+#navigator-toolbox:not(:-moz-lwtheme){ background-color: -moz-dialog }
+
+/* Uncomment the following if you want bookmarks toolbar to be below tabs */
+/*
+#PersonalToolbar{ order: 2 }
+*/
+
+/* Source file https://github.com/MrOtherGuy/firefox-csshacks/tree/master/chrome/window_control_placeholder_support.css made available under Mozilla Public License v. 2.0
+See the above repository for updates as well as full license text. */
+
+/* Creates placeholders for window controls */
+/* This is a supporting file used by other stylesheets */
+
+/* This stylesheet is pretty much unnecessary if window titlebar is enabled */
+
+/* This file should preferably be imported before other stylesheets */
+
+/* Defaults for window controls on RIGHT side of the window */
+/* Modify these values to match your preferences */
+:root:is([tabsintitlebar], [sizemode="fullscreen"]) {
+    --uc-window-control-width: 138px; /* Space reserved for window controls (Win10) */
+    /* Extra space reserved on both sides of the nav-bar to be able to drag the window */
+    --uc-window-drag-space-pre: 30px; /* left side*/
+    --uc-window-drag-space-post: 30px; /* right side*/
+  }
+  
+  :root:is([tabsintitlebar][sizemode="maximized"], [sizemode="fullscreen"]) {
+    --uc-window-drag-space-pre: 0px; /* Remove pre space */
+  }
+  
+  @media  (-moz-platform: windows-win7),
+          (-moz-platform: windows-win8),
+          (-moz-os-version: windows-win7),
+          (-moz-os-version: windows-win8){
+    :root:is([tabsintitlebar], [sizemode="fullscreen"]) {
+      --uc-window-control-width: 105px;
+    }
+  }
+  
+  @media (-moz-gtk-csd-available) {
+    :root:is([tabsintitlebar],[sizemode="fullscreen"]) {
+      --uc-window-control-width: 84px;
+    }
+  }
+  
+  /* macOS settings are further below */
+  .titlebar-buttonbox, #window-controls{ color: var(--toolbar-color) }
+  :root[sizemode="fullscreen"] .titlebar-buttonbox-container{ display: none }
+  :root[sizemode="fullscreen"] #navigator-toolbox { position: relative; }
+  
+  :root[sizemode="fullscreen"] #TabsToolbar > .titlebar-buttonbox-container:last-child,
+  :root[sizemode="fullscreen"] #window-controls{
+    position: absolute;
+    display: flex;
+    top: 0;
+    right:0;
+    height: 40px;
+    visibility: hidden !important;
+  }
+  
+  :root[sizemode="fullscreen"] #TabsToolbar > .titlebar-buttonbox-container:last-child,
+  :root[uidensity="compact"][sizemode="fullscreen"] #window-controls{ height: 32px }
+  
+  #nav-bar{
+    border-inline: var(--uc-window-drag-space-pre,0px) solid var(--toolbar-bgcolor);
+    border-inline-style: solid !important;
+    border-right-width: calc(var(--uc-window-control-width,0px) + var(--uc-window-drag-space-post,0px));
+  }
+  
+  /* Use this pref to check Mac OS where window controls are on left */
+  /* This pref defaults to true on Mac and doesn't actually do anything on other platforms. So if your system has window controls on LEFT side you can set the pref to true */
+  @supports -moz-bool-pref("layout.css.osx-font-smoothing.enabled"){
+    :root:is([tabsintitlebar], [sizemode="fullscreen"]) {
+      --uc-window-control-width: 72px;
+    }
+    :root[tabsintitlebar="true"]:not([inFullscreen]) #nav-bar{
+      border-inline-width: calc(var(--uc-window-control-width,0px) + var(--uc-window-drag-space-post,0px)) var(--uc-window-drag-space-pre,0px)
+    }
+    :root[sizemode="fullscreen"] #TabsToolbar > .titlebar-buttonbox-container:last-child,
+    :root[sizemode="fullscreen"] #window-controls{ right: unset }
+    
+    .titlebar-buttonbox-container{
+      position: fixed;
+      top: 10px !important;
+    }
+  }
+
+  #navigator-toolbox{
+    padding: 0 !important;
+  }
+  .titlebar-buttonbox-container{
+    position: fixed;
+    top: 0px;
+  }
+
+
+  #titlebar{
+    height: 0px !important;
+    min-height: 0px !important;
+    max-height: 0px !important;
+  }
+
+  .private-browsing-indicator{
+    display: none !important;
+  }
+
+  .tabbrowser-tab{
+    display: none;
+  }
+  #tabs-newtab-button, #new-tab-button, #alltabs-button {
+    display: none;
+  }

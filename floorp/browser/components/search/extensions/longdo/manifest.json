@@ -1,0 +1,28 @@
+{
+  "name": "พจนานุกรม ลองดู",
+  "description": "พจนานุกรม ลองดู",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "longdo@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "web_accessible_resources": [
+    "favicon.ico"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "พจนานุกรม ลองดู",
+      "search_url": "https://dict.longdo.org/",
+      "search_form": "https://dict.longdo.org/",
+      "search_url_get_params": "search={searchTerms}&src=moz",
+      "suggest_url": "https://search.longdo.com/Suggest/HeadSearch",
+      "suggest_url_get_params": "ds=head&fxjson=1&key={searchTerms}"
+    }
+  }
+}

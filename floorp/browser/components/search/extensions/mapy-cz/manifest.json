@@ -1,0 +1,26 @@
+{
+  "name": "Mapy.cz",
+  "description": "Vyhledávání na Mapy.cz",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "mapy-cz@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "web_accessible_resources": [
+    "favicon.ico"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "Mapy.cz",
+      "search_url": "https://www.mapy.cz/",
+      "search_form": "https://www.mapy.cz/",
+      "search_url_get_params": "q={searchTerms}&sourceid=Searchmodule_3"
+    }
+  }
+}

@@ -168,8 +168,8 @@ def build(
         print("--priority not supported on this platform.")
 
     if doing_pgo:
-        if what:
-            raise Exception("Cannot specify targets (%s) in MOZ_PGO=1 builds" % what)
+##      if what:
+##          raise Exception("Cannot specify targets (%s) in MOZ_PGO=1 builds" % what)
         instr = command_context._spawn(BuildDriver)
         orig_topobjdir = instr._topobjdir
         instr._topobjdir = mozpath.join(instr._topobjdir, "instrumented")

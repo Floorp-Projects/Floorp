@@ -36,13 +36,13 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
 
     .wordmark {
       background: url('chrome://branding/content/firefox-wordmark.svg') no-repeat center center;
-      background-size: $wordmark-size;
+      background-size: 300px;
       -moz-context-properties: fill;
       display: inline-block;
       fill: var(--newtab-wordmark-color);
-      height: $logo-size;
-      margin-inline-start: 16px;
-      width: $wordmark-size;
+      height: 100px;
+      margin-inline-start: 25px;
+      width: 300px;
     }
 
     @media (max-width: $break-point-medium - 1) {
@@ -408,5 +408,14 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
   .contentSearchSuggestionRow > td > .historyIcon {
     margin-inline-start: 7px;
     margin-inline-end: 15px;
+  }
+}
+
+@supports -moz-bool-pref("browser.disable.nt.image.gb") {
+  @media (prefers-color-scheme: light) {
+    .search-wrapper .logo-and-wordmark .wordmark {
+      background: url("chrome://branding/content/firefox-wordmark-white.svg") no-repeat center center !important;
+      width: 306px !important;
+    }  
   }
 }

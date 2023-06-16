@@ -1,0 +1,1 @@
+document.body.appendChild(document.getElementById("titlebar"));
