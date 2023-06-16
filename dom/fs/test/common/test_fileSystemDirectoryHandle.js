@@ -100,10 +100,18 @@ exported_symbols.quotaTest = async function () {
     const fileHandle = await root.getFileHandle("test.txt", allowCreate);
     Assert.ok(!!fileHandle, "Can we get file handle?");
 
-    const cachedOriginUsage = await Utils.getCachedOriginUsage();
+    const usageAtStart = await Utils.getCachedOriginUsage();
+    Assert.ok(true, "usageAtStart: " + usageAtStart);
 
     const writable = await fileHandle.createWritable();
     Assert.ok(!!writable, "Can we create writable file stream?");
+
+    const usageAtWritableCreated = await Utils.getCachedOriginUsage();
+    Assert.equal(
+      usageAtWritableCreated - usageAtStart,
+      0,
+      "Did usage increase when writable was created?"
+    );
 
     const buffer = new ArrayBuffer(42);
     Assert.ok(!!buffer, "Can we create array buffer?");
@@ -111,24 +119,32 @@ exported_symbols.quotaTest = async function () {
     const result = await writable.write(buffer);
     Assert.equal(result, undefined, "Can we write entire buffer?");
 
+    const usageAtWriteDone = await Utils.getCachedOriginUsage();
+    // Note: Usage should change only on close after 1824305
+    Assert.equal(
+      usageAtWriteDone - usageAtWritableCreated,
+      buffer.byteLength,
+      "Is write immediately reflected in usage?"
+    );
+
     await writable.close();
 
-    const cachedOriginUsage2 = await Utils.getCachedOriginUsage();
+    const usageAtWritableClosed = await Utils.getCachedOriginUsage();
 
     Assert.equal(
-      cachedOriginUsage2 - cachedOriginUsage,
+      usageAtWritableClosed - usageAtWritableCreated,
       buffer.byteLength,
-      "Is cached origin usage correct after writing?"
+      "Did usage increase by the amount of bytes written?"
     );
 
     await root.removeEntry("test.txt");
 
-    const cachedOriginUsage3 = await Utils.getCachedOriginUsage();
+    const usageAtFileDeleted = await Utils.getCachedOriginUsage();
 
     Assert.equal(
-      cachedOriginUsage3,
-      cachedOriginUsage,
-      "Is cached origin usage correct after removing file?"
+      usageAtFileDeleted,
+      usageAtWritableCreated,
+      "Is usage back to the value before any writing when the file is removed?"
     );
   }
 };
