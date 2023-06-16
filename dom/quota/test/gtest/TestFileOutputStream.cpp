@@ -15,6 +15,15 @@
 
 namespace mozilla::dom::quota::test {
 
+quota::OriginMetadata GetOutputStreamTestOriginMetadata() {
+  return quota::OriginMetadata{""_ns,
+                               "example.com"_ns,
+                               "http://example.com"_ns,
+                               "http://example.com"_ns,
+                               /* aIsPrivate */ false,
+                               quota::PERSISTENCE_TYPE_DEFAULT};
+}
+
 class TestFileOutputStream : public QuotaManagerDependencyFixture {
  public:
   static void SetUpTestCase() {
@@ -31,6 +40,9 @@ class TestFileOutputStream : public QuotaManagerDependencyFixture {
 
     prefs->ClearUserPref("dom.quotaManager.temporaryStorage.fixedLimit");
 
+    EXPECT_NO_FATAL_FAILURE(
+        ClearStoragesForOrigin(GetOutputStreamTestOriginMetadata()));
+
     ASSERT_NO_FATAL_FAILURE(ShutdownFixture());
   }
 
@@ -41,13 +53,7 @@ TEST_F(TestFileOutputStream, extendFileStreamWithSetEOF) {
   auto ioTask = []() {
     quota::QuotaManager* quotaManager = quota::QuotaManager::Get();
 
-    auto originMetadata =
-        quota::OriginMetadata{""_ns,
-                              "example.com"_ns,
-                              "http://example.com"_ns,
-                              "http://example.com"_ns,
-                              /* aIsPrivate */ false,
-                              quota::PERSISTENCE_TYPE_DEFAULT};
+    auto originMetadata = GetOutputStreamTestOriginMetadata();
 
     {
       ASSERT_NS_SUCCEEDED(quotaManager->EnsureStorageIsInitialized());
