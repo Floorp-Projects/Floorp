@@ -196,9 +196,9 @@ void nsRFPService::UpdateFPPOverrideList() {
   nsAutoString targetOverrides;
   nsresult rv = Preferences::GetString(
       RESIST_FINGERPRINTINGPROTECTION_OVERRIDE_PREF, targetOverrides);
-  if (!NS_SUCCEEDED(rv) || targetOverrides.IsEmpty()) {
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     MOZ_LOG(gResistFingerprintingLog, LogLevel::Warning,
-            ("Could not map any values"));
+            ("Could not get fingerprinting override pref value"));
     return;
   }
 
