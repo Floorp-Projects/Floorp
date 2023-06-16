@@ -8,7 +8,7 @@ const { JSONHandler } = ChromeUtils.importESModule(
 );
 
 // Get list of supported routes from JSONHandler
-const routes = Object.keys(new JSONHandler().routes);
+const routes = new JSONHandler().routes;
 
 add_task(async function json_version() {
   const { userAgent } = Cc[
@@ -33,13 +33,34 @@ add_task(async function json_version() {
 });
 
 add_task(async function check_routes() {
-  for (const route of routes) {
+  for (const route in routes) {
+    const { parameter, method } = routes[route];
+    // Skip routes expecting parameter
+    if (parameter) {
+      continue;
+    }
+
     // Check request succeeded (200) and responded with valid JSON
     info(`Checking ${route}`);
-    await requestJSON(route);
+    await requestJSON(route, { method });
 
+    // Check with trailing slash
     info(`Checking ${route + "/"}`);
-    await requestJSON(route + "/");
+    await requestJSON(route + "/", { method });
+
+    // Test routes expecting a certain method
+    if (method) {
+      const responseText = await requestJSON(route, {
+        method: "DELETE",
+        status: 405,
+        json: false,
+      });
+      is(
+        responseText,
+        `Using unsafe HTTP verb DELETE to invoke ${route}. This action supports only ${method} verb.`,
+        "/json/new fails with 405 when using GET"
+      );
+    }
   }
 });
 
@@ -95,6 +116,124 @@ add_task(async function json_list({ client }) {
   }
 });
 
+add_task(async function json_new_target({ client }) {
+  const newUrl = "https://example.com";
+
+  let getError = await requestJSON("/json/new?" + newUrl, {
+    status: 405,
+    json: false,
+  });
+  is(
+    getError,
+    "Using unsafe HTTP verb GET to invoke /json/new. This action supports only PUT verb.",
+    "/json/new fails with 405 when using GET"
+  );
+
+  const newTarget = await requestJSON("/json/new?" + newUrl, { method: "PUT" });
+
+  is(newTarget.type, "page", "Returned target type is 'page'");
+  is(newTarget.url, newUrl, "Returned target URL matches");
+  ok(!!newTarget.id, "Returned target has id");
+  ok(
+    !!newTarget.webSocketDebuggerUrl,
+    "Returned target has webSocketDebuggerUrl"
+  );
+
+  const { Target } = client;
+  const targets = await getDiscoveredTargets(Target);
+  const foundTarget = targets.find(target => target.targetId === newTarget.id);
+
+  ok(!!foundTarget, "Returned target id was found");
+});
+
+add_task(async function json_activate_target({ client, tab }) {
+  const { Target, target } = client;
+
+  const currentTargetId = target.id;
+  const targets = await getDiscoveredTargets(Target);
+  const initialTarget = targets.find(
+    target => target.targetId === currentTargetId
+  );
+  ok(!!initialTarget, "The current target has been found");
+
+  // open some more tabs in the initial window
+  await openTab(Target);
+  await openTab(Target);
+
+  const lastTabFirstWindow = await openTab(Target);
+  is(
+    gBrowser.selectedTab,
+    lastTabFirstWindow.newTab,
+    "Selected tab has changed to a new tab"
+  );
+
+  const activateResponse = await requestJSON(
+    "/json/activate/" + initialTarget.targetId,
+    { json: false }
+  );
+
+  is(
+    activateResponse,
+    "Target activated",
+    "Activate endpoint returned expected string"
+  );
+
+  is(gBrowser.selectedTab, tab, "Selected tab is the initial tab again");
+
+  const invalidResponse = await requestJSON("/json/activate/does-not-exist", {
+    status: 404,
+    json: false,
+  });
+
+  is(invalidResponse, "No such target id: does-not-exist");
+});
+
+add_task(async function json_close_target({ CDP, client, tab }) {
+  const { Target } = client;
+
+  const { targetInfo, newTab } = await openTab(Target);
+
+  const targetListBefore = await CDP.List();
+  const beforeTarget = targetListBefore.find(
+    target => target.id === targetInfo.targetId
+  );
+
+  ok(!!beforeTarget, "New target has been found");
+
+  const tabClosed = BrowserTestUtils.waitForEvent(newTab, "TabClose");
+  const targetDestroyed = Target.targetDestroyed();
+
+  const activateResponse = await requestJSON(
+    "/json/close/" + targetInfo.targetId,
+    { json: false }
+  );
+  is(
+    activateResponse,
+    "Target is closing",
+    "Close endpoint returned expected string"
+  );
+
+  await tabClosed;
+  info("Tab was closed");
+
+  await targetDestroyed;
+  info("Received the Target.targetDestroyed event");
+
+  const targetListAfter = await CDP.List();
+  const afterTarget = targetListAfter.find(
+    target => target.id === targetInfo.targetId
+  );
+
+  ok(afterTarget == null, "New target is gone");
+
+  const invalidResponse = await requestJSON("/json/close/does-not-exist", {
+    status: 404,
+    json: false,
+  });
+
+  is(invalidResponse, "No such target id: does-not-exist");
+});
+
 add_task(async function json_prevent_load_in_iframe({ client }) {
   const { Page } = client;
 
@@ -130,9 +269,20 @@ add_task(async function json_prevent_load_in_iframe({ client }) {
   );
 });
 
-async function requestJSON(path) {
-  const response = await fetch(`http://${RemoteAgent.debuggerAddress}${path}`);
-  is(response.status, 200, "JSON response is 200");
+async function requestJSON(path, options = {}) {
+  const { method = "GET", status = 200, json = true } = options;
 
-  return response.json();
+  info(`${method} http://${RemoteAgent.debuggerAddress}${path}`);
+
+  const response = await fetch(`http://${RemoteAgent.debuggerAddress}${path}`, {
+    method,
+  });
+
+  is(response.status, status, `JSON response is ${status}`);
+
+  if (json) {
+    return response.json();
+  }
+
+  return response.text();
 }
