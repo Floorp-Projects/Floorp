@@ -224,7 +224,6 @@ export class PictureInPictureLauncherChild extends JSWindowActorChild {
       webVTTSubtitles: !!video.textTracks?.length,
       scrubberPosition,
       timestamp,
-      volume: PictureInPictureChild.videoWrapper.getVolume(video),
     });
 
     let args = {
@@ -1940,9 +1939,6 @@ export class PictureInPictureChild extends JSWindowActorChild {
         } else {
           this.sendAsyncMessage("PictureInPicture:Unmuting");
         }
-        this.sendAsyncMessage("PictureInPicture:VolumeChange", {
-          volume: this.videoWrapper.getVolume(video),
-        });
         break;
       }
       case "resize": {
@@ -2145,12 +2141,6 @@ export class PictureInPictureChild extends JSWindowActorChild {
       case "PictureInPicture:SetVideoTime": {
         const { scrubberPosition, wasPlaying } = message.data;
         this.setVideoTime(scrubberPosition, wasPlaying);
-        break;
-      }
-      case "PictureInPicture:SetVolume": {
-        const { volume } = message.data;
-        let video = this.getWeakVideo();
-        this.videoWrapper.setVolume(video, volume);
         break;
       }
     }
@@ -2575,16 +2565,12 @@ export class PictureInPictureChild extends JSWindowActorChild {
           this.closePictureInPicture({ reason: "closePlayerShortcut" });
           break;
         case "downArrow" /* Volume decrease */:
-          if (
-            this.isKeyDisabled(lazy.KEYBOARD_CONTROLS.VOLUME) ||
-            this.videoWrapper.isMuted(video)
-          ) {
+          if (this.isKeyDisabled(lazy.KEYBOARD_CONTROLS.VOLUME)) {
             return;
           }
           oldval = this.videoWrapper.getVolume(video);
-          newval = oldval < 0.1 ? 0 : oldval - 0.1;
-          this.videoWrapper.setVolume(video, newval);
-          this.videoWrapper.setMuted(video, newval === 0);
+          this.videoWrapper.setVolume(video, oldval < 0.1 ? 0 : oldval - 0.1);
+          this.videoWrapper.setMuted(video, false);
           break;
         case "upArrow" /* Volume increase */:
           if (this.isKeyDisabled(lazy.KEYBOARD_CONTROLS.VOLUME)) {
