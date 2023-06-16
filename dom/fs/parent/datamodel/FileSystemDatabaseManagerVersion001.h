@@ -166,6 +166,9 @@ Result<bool, QMResult> ApplyEntryExistsQuery(
     const FileSystemConnection& aConnection, const nsACString& aQuery,
     const EntryId& aEntry);
 
+Result<bool, QMResult> DoesFileExist(const FileSystemConnection& aConnection,
+                                     const EntryId& aEntryId);
+
 Result<bool, QMResult> IsFile(const FileSystemConnection& aConnection,
                               const EntryId& aEntryId);
 
