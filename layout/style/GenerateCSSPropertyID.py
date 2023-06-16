@@ -15,7 +15,7 @@ def generate(output, template, dataFile):
     shorthand_count = 0
     alias_count = 0
     property_ids = []
-    for prop in data:
+    for prop in data.values():
         if prop.type() != "alias":
             if prop.type() == "longhand":
                 assert shorthand_count == 0

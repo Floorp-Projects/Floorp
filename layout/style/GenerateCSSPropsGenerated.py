@@ -39,7 +39,7 @@ def generate(output, dataFile):
     raw_properties = runpy.run_path(dataFile)["data"]
     properties = [
         PropertyWrapper(i, p)
-        for i, p in enumerate(raw_properties)
+        for i, p in enumerate(raw_properties.values())
         if p.type() != "alias"
     ]
 
@@ -70,7 +70,7 @@ def generate(output, dataFile):
     output.write(
         "const nsCSSProps::PropertyPref " "nsCSSProps::kPropertyPrefTable[] = {\n"
     )
-    for p in raw_properties:
+    for p in raw_properties.values():
         if not p.pref:
             continue
         if p.type() != "alias":
