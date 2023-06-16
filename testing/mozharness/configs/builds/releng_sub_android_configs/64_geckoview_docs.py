@@ -22,4 +22,5 @@ config = {
             "Update {project} documentation to rev {revision}",
         ],
     ],
+    "max_build_output_timeout": 0,
 }
