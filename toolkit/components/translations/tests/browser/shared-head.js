@@ -838,6 +838,16 @@ function click(button, message) {
   button.click();
 }
 
+function hitEnterKey(button, message) {
+  info(message);
+  button.dispatchEvent(
+    new KeyboardEvent("keypress", {
+      key: "Enter",
+      keyCode: KeyboardEvent.DOM_VK_RETURN,
+    })
+  );
+}
+
 /**
  * @param {Object} options
  * @param {string} options.message
