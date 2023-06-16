@@ -983,7 +983,9 @@ add_task(async function test_programmatic_binding_implicit_transaction() {
 // Test that direct binding of params and execution through mozStorage doesn't
 // error when we manually create a transaction. See Bug 856925.
 add_task(async function test_direct() {
-  let file = FileUtils.getFile("TmpD", ["test_direct.sqlite"]);
+  let file = new FileUtils.File(
+    PathUtils.join(PathUtils.tempDir, "test_direct.sqlite")
+  );
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
   print("Opening " + file.path);
 

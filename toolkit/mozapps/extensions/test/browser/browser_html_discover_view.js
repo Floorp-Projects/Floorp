@@ -31,9 +31,11 @@ const amoServer = AddonTestUtils.createHttpServer({ hosts: [AMO_TEST_HOST] });
 
 amoServer.registerFile(
   "/png",
-  FileUtils.getFile(
-    "CurWorkD",
-    `${RELATIVE_DIR}discovery/small-1x1.png`.split("/")
+  new FileUtils.File(
+    PathUtils.join(
+      Services.dirsvc.get("CurWorkD", Ci.nsIFile).path,
+      ...`${RELATIVE_DIR}discovery/small-1x1.png`.split("/")
+    )
   )
 );
 amoServer.registerPathHandler("/dummy", (request, response) => {

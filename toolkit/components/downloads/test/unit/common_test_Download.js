@@ -302,15 +302,17 @@ add_task(async function test_windows_zoneInformation() {
     return;
   }
 
-  let normalTargetFile = FileUtils.getFile("LocalAppData", [
-    "xpcshell-download-test.txt",
-  ]);
+  let normalTargetFile = await IOUtils.getFile(
+    Services.dirsvc.get("LocalAppData", Ci.nsIFile).path,
+    "xpcshell-download-test.txt"
+  );
 
   // The template file name lenght is more than MAX_PATH characters. The final
   // full path will be shortened to MAX_PATH length by the createUnique call.
-  let longTargetFile = FileUtils.getFile("LocalAppData", [
-    "T".repeat(256) + ".txt",
-  ]);
+  let longTargetFile = await IOUtils.getFile(
+    Services.dirsvc.get("LocalAppData", Ci.nsIFile).path,
+    "T".repeat(256) + ".txt"
+  );
   longTargetFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
 
   const httpSourceUrl = httpUrl("source.txt");

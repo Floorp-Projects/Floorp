@@ -1415,7 +1415,7 @@ function createNewZipFile(zipName, data) {
   let zipWriter = Cc["@mozilla.org/zipwriter;1"].createInstance(
     Ci.nsIZipWriter
   );
-  let zipFile = FileUtils.getFile("TmpD", [zipName]);
+  let zipFile = new FileUtils.File(PathUtils.join(PathUtils.tempDir, zipName));
   if (zipFile.exists()) {
     zipFile.remove(false);
   }
