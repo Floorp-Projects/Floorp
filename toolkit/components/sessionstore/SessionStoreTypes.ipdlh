@@ -7,6 +7,7 @@
 using struct CollectedInputDataValue from "mozilla/dom/SessionStoreMessageUtils.h";
 using struct nsPoint from "nsPoint.h";
 
+include CustomElementTypes;
 include DOMTypes;
 
 namespace mozilla {
@@ -40,6 +41,7 @@ union FormEntryValue {
   FileList;
   SingleSelect;
   MultipleSelect;
+  CustomElementTuple;
 };
 
 struct FormEntry {

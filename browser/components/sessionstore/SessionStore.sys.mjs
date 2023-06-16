@@ -3425,8 +3425,16 @@ var SessionStoreInternal = {
   },
 
   getClosedTabDataForWindow: function ssi_getClosedTabDataForWindow(aWindow) {
+    // We need to enable wrapping reflectors in order to allow the cloning of
+    // objects containing FormDatas, which could be stored by
+    // form-associated custom elements.
+    let options = { wrapReflectors: true };
     if ("__SSi" in aWindow) {
-      return Cu.cloneInto(this._windows[aWindow.__SSi]._closedTabs, {});
+      return Cu.cloneInto(
+        this._windows[aWindow.__SSi]._closedTabs,
+        {},
+        options
+      );
     }
 
     if (!DyingWindowCache.has(aWindow)) {
@@ -3437,7 +3445,7 @@ var SessionStoreInternal = {
     }
 
     let data = DyingWindowCache.get(aWindow);
-    return Cu.cloneInto(data._closedTabs, {});
+    return Cu.cloneInto(data._closedTabs, {}, options);
   },
 
   undoCloseTab: function ssi_undoCloseTab(aWindow, aIndex) {
@@ -6289,6 +6297,13 @@ var SessionStoreInternal = {
                 value.selectedIndex,
                 value.value
               );
+              break;
+            }
+            if (
+              value.hasOwnProperty("value") &&
+              value.hasOwnProperty("state")
+            ) {
+              root.addCustomElement(isXpath, key, value.value, value.state);
               break;
             }
             if (
