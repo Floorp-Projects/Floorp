@@ -980,11 +980,10 @@ class HTMLFieldSetElement;
 enum {
   // Used to handle keyboard activation.
   HTML_ELEMENT_ACTIVE_FOR_KEYBOARD = HTML_ELEMENT_FLAG_BIT(0),
-  HTML_ELEMENT_FROM_PARSER_NETWORK = HTML_ELEMENT_FLAG_BIT(1),
 
   // Remaining bits are type specific.
   HTML_ELEMENT_TYPE_SPECIFIC_BITS_OFFSET =
-      ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 2,
+      ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 1,
 };
 
 ASSERT_NODE_FLAGS_SPACE(HTML_ELEMENT_TYPE_SPECIFIC_BITS_OFFSET);
@@ -1028,7 +1027,6 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement {
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
   // nsIContent
-  void SaveSubtreeState() override;
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
   void UnbindFromTree(bool aNullParent = true) override;
 
@@ -1055,15 +1053,6 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement {
   void ForgetFieldSet(nsIContent* aFieldset);
 
   void ClearForm(bool aRemoveFromForm, bool aUnbindOrDelete);
-
-  /**
-   * Get the layout history object for a particular piece of content.
-   *
-   * @param aRead if true, won't return a layout history state if the
-   *              layout history state is empty.
-   * @return the history state object
-   */
-  already_AddRefed<nsILayoutHistoryState> GetLayoutHistory(bool aRead);
 
  protected:
   virtual ~nsGenericHTMLFormElement() = default;
@@ -1158,13 +1147,6 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement {
    *  See https://html.spec.whatwg.org/#form-associated-element.
    */
   virtual bool IsFormAssociatedElement() const { return false; }
-
-  /**
-   * Save to presentation state.  The form element will determine whether it
-   * has anything to save and if so, create an entry in the layout history for
-   * its pres context.
-   */
-  virtual void SaveState() {}
 };
 
 class nsGenericHTMLFormControlElement : public nsGenericHTMLFormElement,
@@ -1183,7 +1165,9 @@ class nsGenericHTMLFormControlElement : public nsGenericHTMLFormElement,
   bool IsHTMLFormControlElement() const final { return true; }
 
   // nsIContent
+  void SaveSubtreeState() override;
   IMEState GetDesiredIMEState() override;
+  void UnbindFromTree(bool aNullParent = true) override;
 
   // nsGenericHTMLElement
   // autocapitalize attribute support
@@ -1226,6 +1210,13 @@ class nsGenericHTMLFormControlElement : public nsGenericHTMLFormElement,
   void UpdateRequiredState(bool aIsRequired, bool aNotify);
 
   bool IsAutocapitalizeInheriting() const;
+
+  /**
+   * Save to presentation state.  The form control will determine whether it
+   * has anything to save and if so, create an entry in the layout history for
+   * its pres context.
+   */
+  virtual void SaveState() {}
 
   nsresult SubmitDirnameDir(mozilla::dom::FormData* aFormData);
 
@@ -1279,6 +1270,15 @@ class nsGenericHTMLFormControlElementWithState
    * not exist.  Generally used by SaveState().
    */
   mozilla::PresState* GetPrimaryPresState();
+
+  /**
+   * Get the layout history object for a particular piece of content.
+   *
+   * @param aRead if true, won't return a layout history state if the
+   *              layout history state is empty.
+   * @return the history state object
+   */
+  already_AddRefed<nsILayoutHistoryState> GetLayoutHistory(bool aRead);
 
   /**
    * Called when we have been cloned and adopted, and the information of the
