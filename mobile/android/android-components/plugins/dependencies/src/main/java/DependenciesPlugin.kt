@@ -35,7 +35,7 @@ object Versions {
     // http://googlesamples.github.io/android-custom-lint-rules/api-guide/example.md.html#example:samplelintcheckgithubproject/lintversion?
     const val lint = "30.4.2"
     const val detekt = "1.23.0"
-    const val ktlint = "0.48.2"
+    const val ktlint = "0.49.1"
 
     const val sentry_latest = "6.21.0"
 
