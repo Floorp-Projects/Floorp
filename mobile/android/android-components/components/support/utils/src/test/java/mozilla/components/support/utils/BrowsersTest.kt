@@ -105,6 +105,18 @@ class BrowsersTest {
         assertFalse(browsers.isInstalled(Browsers.KnownBrowser.FIREFOX_BETA))
         assertFalse(browsers.isInstalled(Browsers.KnownBrowser.ANDROID_STOCK_BROWSER))
         assertFalse(browsers.isInstalled(Browsers.KnownBrowser.UC_BROWSER))
+
+        assertTrue(browsers.isInstalled(Browsers.KnownBrowser.REFERENCE_BROWSER.packageName))
+        assertTrue(browsers.isInstalled(Browsers.KnownBrowser.FIREFOX_NIGHTLY.packageName))
+        assertTrue(browsers.isInstalled(Browsers.KnownBrowser.FIREFOX.packageName))
+        assertTrue(browsers.isInstalled(Browsers.KnownBrowser.CHROME.packageName))
+        assertTrue(browsers.isInstalled(Browsers.KnownBrowser.REFERENCE_BROWSER.packageName))
+        assertTrue(browsers.isInstalled(Browsers.KnownBrowser.DUCKDUCKGO.packageName))
+
+        assertFalse(browsers.isInstalled(Browsers.KnownBrowser.CHROME_BETA.packageName))
+        assertFalse(browsers.isInstalled(Browsers.KnownBrowser.FIREFOX_BETA.packageName))
+        assertFalse(browsers.isInstalled(Browsers.KnownBrowser.ANDROID_STOCK_BROWSER.packageName))
+        assertFalse(browsers.isInstalled(Browsers.KnownBrowser.UC_BROWSER.packageName))
     }
 
     @Test

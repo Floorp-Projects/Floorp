@@ -16,6 +16,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.whenever
 import mozilla.components.support.utils.Browsers
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -237,7 +238,9 @@ class AppLinksUseCasesTest {
     @Test
     fun `WHEN A URL that matches a browser AND the scheme is not supported THEN is an app link`() {
         val context = createContext(Triple(browserSchemeUrl, browserPackage, ""))
-        val subject = AppLinksUseCases(context, { true })
+        val browsers: Browsers = mock()
+        whenever(browsers.isInstalled(browserPackage)).thenReturn(true)
+        val subject = AppLinksUseCases(context = context, launchInApp = { true }, installedBrowsers = browsers)
 
         val redirect = subject.interceptedAppLinkRedirect(browserSchemeUrl)
         assertTrue(redirect.isRedirect())
@@ -249,7 +252,9 @@ class AppLinksUseCasesTest {
     @Test
     fun `WHEN A URL that matches a browser AND the scheme is supported THEN is not an app link`() {
         val context = createContext(Triple(appUrl, browserPackage, ""))
-        val subject = AppLinksUseCases(context, { true })
+        val browsers: Browsers = mock()
+        whenever(browsers.isInstalled(browserPackage)).thenReturn(true)
+        val subject = AppLinksUseCases(context = context, launchInApp = { true }, installedBrowsers = browsers)
 
         val redirect = subject.interceptedAppLinkRedirect(appUrl)
         assertFalse(redirect.isRedirect())

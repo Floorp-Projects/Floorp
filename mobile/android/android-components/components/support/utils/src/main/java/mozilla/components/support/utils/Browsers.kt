@@ -195,6 +195,13 @@ class Browsers private constructor(
     }
 
     /**
+     * Does this device have browser with [packageName] installed?
+     */
+    fun isInstalled(packageName: String): Boolean {
+        return browsers.containsKey(packageName)
+    }
+
+    /**
      * Is **this** application the default browser?
      */
     val isDefaultBrowser: Boolean = defaultBrowser != null && packageName == defaultBrowser.packageName
