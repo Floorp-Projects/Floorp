@@ -458,6 +458,8 @@ class NotNull;
     [](const char*, const char*) { MOZ_CRASH("Should never be reached."); }
 #endif
 
+#define QM_NO_CLEANUP [](const auto&) {}
+
 // QM_MISSING_ARGS and QM_HANDLE_ERROR macros are implementation details of
 // QM_TRY/QM_TRY_UNWRAP/QM_TRY_INSPECT/QM_FAIL and shouldn't be used directly.
 
@@ -551,6 +553,21 @@ class NotNull;
     return QM_HANDLE_CUSTOM_RET_VAL(func, expr, tryTempError, customRetVal); \
   }
 
+#define QM_TRY_CUSTOM_RET_VAL_WITH_CLEANUP_AND_PREDICATE(                    \
+    tryResult, expr, customRetVal, cleanup, predicate)                       \
+  auto tryResult = (expr);                                                   \
+  static_assert(std::is_empty_v<typename decltype(tryResult)::ok_type>);     \
+  if (MOZ_UNLIKELY(tryResult.isErr())) {                                     \
+    auto tryTempError = tryResult.unwrapErr();                               \
+    if (predicate()) {                                                       \
+      mozilla::dom::quota::QM_HANDLE_ERROR(                                  \
+          expr, tryTempError, mozilla::dom::quota::Severity::Error);         \
+    }                                                                        \
+    cleanup(tryTempError);                                                   \
+    constexpr const auto& func MOZ_MAYBE_UNUSED = __func__;                  \
+    return QM_HANDLE_CUSTOM_RET_VAL(func, expr, tryTempError, customRetVal); \
+  }
+
 // Chooses the final implementation macro for given argument count.
 // This could use MOZ_PASTE_PREFIX_AND_ARG_COUNT, but explicit named suffxes
 // read slightly better than plain numbers.
@@ -558,10 +575,12 @@ class NotNull;
 // https://stackoverflow.com/questions/3046889/optional-parameters-with-c-macros
 #define QM_TRY_META(...)                                                       \
   {                                                                            \
-    MOZ_ARG_6(                                                                 \
-        , ##__VA_ARGS__, QM_TRY_CUSTOM_RET_VAL_WITH_CLEANUP(__VA_ARGS__),      \
-        QM_TRY_CUSTOM_RET_VAL(__VA_ARGS__), QM_TRY_PROPAGATE_ERR(__VA_ARGS__), \
-        QM_MISSING_ARGS(__VA_ARGS__), QM_MISSING_ARGS(__VA_ARGS__))            \
+    MOZ_ARG_7(, ##__VA_ARGS__,                                                 \
+              QM_TRY_CUSTOM_RET_VAL_WITH_CLEANUP_AND_PREDICATE(__VA_ARGS__),   \
+              QM_TRY_CUSTOM_RET_VAL_WITH_CLEANUP(__VA_ARGS__),                 \
+              QM_TRY_CUSTOM_RET_VAL(__VA_ARGS__),                              \
+              QM_TRY_PROPAGATE_ERR(__VA_ARGS__), QM_MISSING_ARGS(__VA_ARGS__), \
+              QM_MISSING_ARGS(__VA_ARGS__))                                    \
   }
 
 // Generates unique variable name. This extra internal macro (along with
@@ -569,12 +588,13 @@ class NotNull;
 #define QM_TRY_GLUE(...) QM_TRY_META(MOZ_UNIQUE_VAR(tryResult), ##__VA_ARGS__)
 
 /**
- * QM_TRY(expr[, customRetVal, cleanup]) is the C++ equivalent of Rust's
- * `try!(expr);`. First, it evaluates expr, which must produce a Result value
- * with empty ok_type. On Success, it does nothing else. On error, it calls
- * HandleError and an additional cleanup function (if the third argument was
- * passed) and finally returns an error Result from the enclosing function or a
- * custom return value (if the second argument was passed).
+ * QM_TRY(expr[, customRetVal, cleanup, predicate]) is the C++ equivalent of
+ * Rust's `try!(expr);`. First, it evaluates expr, which must produce a Result
+ * value with empty ok_type. On Success, it does nothing else. On error, it
+ * calls HandleError (conditionally if the fourth argument was passed) and an
+ * additional cleanup function (if the third argument was passed) and finally
+ * returns an error Result from the enclosing function or a custom return value
+ * (if the second argument was passed).
  */
 #define QM_TRY(...) QM_TRY_GLUE(__VA_ARGS__)
 
