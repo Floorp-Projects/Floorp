@@ -5844,39 +5844,33 @@ Result<MoveNodeResult, nsresult> HTMLEditor::MoveChildrenWithTransaction(
   return moveChildrenResult;
 }
 
-void HTMLEditor::MoveAllChildren(nsINode& aContainer,
-                                 const EditorRawDOMPoint& aPointToInsert,
-                                 ErrorResult& aError) {
-  MOZ_ASSERT(!aError.Failed());
-
+nsresult HTMLEditor::MoveAllChildren(nsINode& aContainer,
+                                     const EditorRawDOMPoint& aPointToInsert) {
   if (!aContainer.HasChildren()) {
-    return;
+    return NS_OK;
   }
   nsIContent* firstChild = aContainer.GetFirstChild();
   if (NS_WARN_IF(!firstChild)) {
-    aError.Throw(NS_ERROR_FAILURE);
-    return;
+    return NS_ERROR_FAILURE;
   }
   nsIContent* lastChild = aContainer.GetLastChild();
   if (NS_WARN_IF(!lastChild)) {
-    aError.Throw(NS_ERROR_FAILURE);
-    return;
+    return NS_ERROR_FAILURE;
   }
-  MoveChildrenBetween(*firstChild, *lastChild, aPointToInsert, aError);
-  NS_WARNING_ASSERTION(!aError.Failed(),
+  nsresult rv = MoveChildrenBetween(*firstChild, *lastChild, aPointToInsert);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::MoveChildrenBetween() failed");
+  return rv;
 }
 
-void HTMLEditor::MoveChildrenBetween(nsIContent& aFirstChild,
-                                     nsIContent& aLastChild,
-                                     const EditorRawDOMPoint& aPointToInsert,
-                                     ErrorResult& aError) {
+nsresult HTMLEditor::MoveChildrenBetween(
+    nsIContent& aFirstChild, nsIContent& aLastChild,
+    const EditorRawDOMPoint& aPointToInsert) {
   nsCOMPtr<nsINode> oldContainer = aFirstChild.GetParentNode();
   if (NS_WARN_IF(oldContainer != aLastChild.GetParentNode()) ||
       NS_WARN_IF(!aPointToInsert.IsInContentNode()) ||
       NS_WARN_IF(!aPointToInsert.CanContainerHaveChildren())) {
-    aError.Throw(NS_ERROR_INVALID_ARG);
-    return;
+    return NS_ERROR_INVALID_ARG;
   }
 
   // First, store all children which should be moved to the new container.
@@ -5890,12 +5884,12 @@ void HTMLEditor::MoveChildrenBetween(nsIContent& aFirstChild,
   }
 
   if (NS_WARN_IF(children.LastElement() != &aLastChild)) {
-    aError.Throw(NS_ERROR_INVALID_ARG);
-    return;
+    return NS_ERROR_INVALID_ARG;
   }
 
   nsCOMPtr<nsIContent> newContainer = aPointToInsert.ContainerAs<nsIContent>();
   nsCOMPtr<nsIContent> nextNode = aPointToInsert.GetChild();
+  IgnoredErrorResult error;
   for (size_t i = children.Length(); i > 0; --i) {
     nsCOMPtr<nsIContent>& child = children[i - 1];
     if (child->GetParentNode() != oldContainer) {
@@ -5904,17 +5898,15 @@ void HTMLEditor::MoveChildrenBetween(nsIContent& aFirstChild,
       continue;
     }
     if (NS_WARN_IF(!HTMLEditUtils::IsRemovableNode(*child))) {
-      aError.Throw(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
-      return;
+      return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
     }
-    oldContainer->RemoveChild(*child, aError);
+    oldContainer->RemoveChild(*child, error);
     if (NS_WARN_IF(Destroyed())) {
-      aError.Throw(NS_ERROR_EDITOR_DESTROYED);
-      return;
+      return NS_ERROR_EDITOR_DESTROYED;
     }
-    if (aError.Failed()) {
+    if (error.Failed()) {
       NS_WARNING("nsINode::RemoveChild() failed");
-      return;
+      return error.StealNSResult();
     }
     if (nextNode) {
       // If we're not appending the children to the new container, we should
@@ -5926,23 +5918,20 @@ void HTMLEditor::MoveChildrenBetween(nsIContent& aFirstChild,
         // The next node of insertion point has been moved by mutation observer.
         // Let's stop moving the remaining nodes.
         // XXX Or should we move remaining children after the last moved child?
-        aError.Throw(NS_ERROR_FAILURE);
-        return;
+        return NS_ERROR_FAILURE;
       }
     }
     if (NS_WARN_IF(
             !EditorUtils::IsEditableContent(*newContainer, EditorType::HTML))) {
-      aError.Throw(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
-      return;
+      return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
     }
-    newContainer->InsertBefore(*child, nextNode, aError);
+    newContainer->InsertBefore(*child, nextNode, error);
     if (NS_WARN_IF(Destroyed())) {
-      aError.Throw(NS_ERROR_EDITOR_DESTROYED);
-      return;
+      return NS_ERROR_EDITOR_DESTROYED;
     }
-    if (aError.Failed()) {
+    if (error.Failed()) {
       NS_WARNING("nsINode::InsertBefore() failed");
-      return;
+      return error.StealNSResult();
     }
     // If the child was inserted or appended properly, the following children
     // should be inserted before it.  Otherwise, keep using current position.
@@ -5950,50 +5939,42 @@ void HTMLEditor::MoveChildrenBetween(nsIContent& aFirstChild,
       nextNode = child;
     }
   }
+  return NS_OK;
 }
 
-void HTMLEditor::MovePreviousSiblings(nsIContent& aChild,
-                                      const EditorRawDOMPoint& aPointToInsert,
-                                      ErrorResult& aError) {
-  MOZ_ASSERT(!aError.Failed());
-
+nsresult HTMLEditor::MovePreviousSiblings(
+    nsIContent& aChild, const EditorRawDOMPoint& aPointToInsert) {
   if (NS_WARN_IF(!aChild.GetParentNode())) {
-    aError.Throw(NS_ERROR_INVALID_ARG);
-    return;
+    return NS_ERROR_INVALID_ARG;
   }
   nsIContent* firstChild = aChild.GetParentNode()->GetFirstChild();
   if (NS_WARN_IF(!firstChild)) {
-    aError.Throw(NS_ERROR_FAILURE);
-    return;
+    return NS_ERROR_FAILURE;
   }
   nsIContent* lastChild =
       &aChild == firstChild ? firstChild : aChild.GetPreviousSibling();
   if (NS_WARN_IF(!lastChild)) {
-    aError.Throw(NS_ERROR_FAILURE);
-    return;
+    return NS_ERROR_FAILURE;
   }
-  MoveChildrenBetween(*firstChild, *lastChild, aPointToInsert, aError);
-  NS_WARNING_ASSERTION(!aError.Failed(),
+  nsresult rv = MoveChildrenBetween(*firstChild, *lastChild, aPointToInsert);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::MoveChildrenBetween() failed");
+  return rv;
 }
 
-void HTMLEditor::MoveInclusiveNextSiblings(
-    nsIContent& aChild, const EditorRawDOMPoint& aPointToInsert,
-    ErrorResult& aError) {
-  MOZ_ASSERT(!aError.Failed());
-
+nsresult HTMLEditor::MoveInclusiveNextSiblings(
+    nsIContent& aChild, const EditorRawDOMPoint& aPointToInsert) {
   if (NS_WARN_IF(!aChild.GetParentNode())) {
-    aError.Throw(NS_ERROR_INVALID_ARG);
-    return;
+    return NS_ERROR_INVALID_ARG;
   }
   nsIContent* lastChild = aChild.GetParentNode()->GetLastChild();
   if (NS_WARN_IF(!lastChild)) {
-    aError.Throw(NS_ERROR_FAILURE);
-    return;
+    return NS_ERROR_FAILURE;
   }
-  MoveChildrenBetween(aChild, *lastChild, aPointToInsert, aError);
-  NS_WARNING_ASSERTION(!aError.Failed(),
+  nsresult rv = MoveChildrenBetween(aChild, *lastChild, aPointToInsert);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::MoveChildrenBetween() failed");
+  return rv;
 }
 
 nsresult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::

@@ -1934,12 +1934,9 @@ class HTMLEditor final : public EditorBase,
    *                            be moved.
    * @param aPointToInsert      The insertion point.  The container must not
    *                            be a data node like a text node.
-   * @param aError              The result.  If this succeeds to move children,
-   *                            returns NS_OK.  Otherwise, an error.
    */
-  void MoveAllChildren(nsINode& aContainer,
-                       const EditorRawDOMPoint& aPointToInsert,
-                       ErrorResult& aError);
+  [[nodiscard]] nsresult MoveAllChildren(
+      nsINode& aContainer, const EditorRawDOMPoint& aPointToInsert);
 
   /**
    * MoveChildrenBetween() moves all children between aFirstChild and aLastChild
@@ -1956,12 +1953,10 @@ class HTMLEditor final : public EditorBase,
    *                            order.
    * @param aPointToInsert      The insertion point.  The container must not
    *                            be a data node like a text node.
-   * @param aError              The result.  If this succeeds to move children,
-   *                            returns NS_OK.  Otherwise, an error.
    */
-  void MoveChildrenBetween(nsIContent& aFirstChild, nsIContent& aLastChild,
-                           const EditorRawDOMPoint& aPointToInsert,
-                           ErrorResult& aError);
+  [[nodiscard]] nsresult MoveChildrenBetween(
+      nsIContent& aFirstChild, nsIContent& aLastChild,
+      const EditorRawDOMPoint& aPointToInsert);
 
   /**
    * MovePreviousSiblings() moves all siblings before aChild (i.e., aChild
@@ -1972,12 +1967,9 @@ class HTMLEditor final : public EditorBase,
    *                            node to be moved.
    * @param aPointToInsert      The insertion point.  The container must not
    *                            be a data node like a text node.
-   * @param aError              The result.  If this succeeds to move children,
-   *                            returns NS_OK.  Otherwise, an error.
    */
-  void MovePreviousSiblings(nsIContent& aChild,
-                            const EditorRawDOMPoint& aPointToInsert,
-                            ErrorResult& aError);
+  [[nodiscard]] nsresult MovePreviousSiblings(
+      nsIContent& aChild, const EditorRawDOMPoint& aPointToInsert);
 
   /**
    * MoveInclusiveNextSiblings() moves aChild and all siblings after it to
@@ -1987,12 +1979,9 @@ class HTMLEditor final : public EditorBase,
    * @param aChild              The node which is first node to be moved.
    * @param aPointToInsert      The insertion point.  The container must not
    *                            be a data node like a text node.
-   * @param aError              The result.  If this succeeds to move children,
-   *                            returns NS_OK.  Otherwise, an error.
    */
-  void MoveInclusiveNextSiblings(nsIContent& aChild,
-                                 const EditorRawDOMPoint& aPointToInsert,
-                                 ErrorResult& aError);
+  [[nodiscard]] nsresult MoveInclusiveNextSiblings(
+      nsIContent& aChild, const EditorRawDOMPoint& aPointToInsert);
 
   /**
    * SplitNodeWithTransaction() creates a transaction to create a new node
