@@ -329,7 +329,7 @@ class StyleSheetsManager extends EventEmitter {
       this._notifyPropertyChanged(
         resourceId,
         "ruleCount",
-        styleSheet.cssRules.length
+        await this.getStyleSheetRuleCount(styleSheet)
       );
     }
 
@@ -828,6 +828,29 @@ class StyleSheetsManager extends EventEmitter {
     }
 
     return true;
+  }
+
+  /**
+   * Returns the number of cssRules in the stylesheet, including nested rules.
+   *
+   * @param {StyleSheet} styleSheet
+   * @returns {Int}
+   */
+  async getStyleSheetRuleCount(styleSheet) {
+    const styleSheetRules = await this._getCSSRules(styleSheet);
+
+    // We need to go through nested rules to count all the rules
+    let ruleCount = 0;
+    const traverseRules = ruleList => {
+      for (const rule of ruleList) {
+        ruleCount++;
+        if (rule.cssRules) {
+          traverseRules(rule.cssRules);
+        }
+      }
+    };
+    traverseRules(styleSheetRules);
+    return ruleCount;
   }
 
   /**
