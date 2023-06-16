@@ -13,7 +13,9 @@ use crate::invalidation::element::invalidator::{InvalidationProcessor, Invalidat
 use crate::selector_parser::SelectorImpl;
 use crate::values::AtomIdent;
 use selectors::attr::CaseSensitivity;
-use selectors::matching::{self, MatchingContext, MatchingMode, NeedsSelectorFlags};
+use selectors::matching::{
+    self, IgnoreNthChildForInvalidation, MatchingContext, MatchingMode, NeedsSelectorFlags,
+};
 use selectors::parser::{Combinator, Component, LocalName};
 use selectors::{Element, SelectorList};
 use smallvec::SmallVec;
@@ -35,6 +37,7 @@ where
         &mut nth_index_cache,
         quirks_mode,
         NeedsSelectorFlags::No,
+        IgnoreNthChildForInvalidation::No,
     );
     context.scope_element = Some(element.opaque());
     context.current_host = element.containing_shadow_host().map(|e| e.opaque());
@@ -58,6 +61,7 @@ where
         &mut nth_index_cache,
         quirks_mode,
         NeedsSelectorFlags::No,
+        IgnoreNthChildForInvalidation::No,
     );
     context.scope_element = Some(element.opaque());
     context.current_host = element.containing_shadow_host().map(|e| e.opaque());
@@ -713,6 +717,7 @@ pub fn query_selector<E, Q>(
         &mut nth_index_cache,
         quirks_mode,
         NeedsSelectorFlags::No,
+        IgnoreNthChildForInvalidation::No,
     );
     let root_element = root.as_element();
     matching_context.scope_element = root_element.map(|e| e.opaque());

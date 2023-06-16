@@ -12,7 +12,8 @@ use crate::invalidation::element::state_and_attributes;
 use crate::stylist::CascadeData;
 use dom::DocumentState;
 use selectors::matching::{
-    MatchingContext, MatchingMode, NeedsSelectorFlags, QuirksMode, VisitedHandlingMode,
+    IgnoreNthChildForInvalidation, MatchingContext, MatchingMode, NeedsSelectorFlags, QuirksMode,
+    VisitedHandlingMode,
 };
 use selectors::NthIndexCache;
 
@@ -57,6 +58,7 @@ impl<'a, E: TElement, I> DocumentStateInvalidationProcessor<'a, E, I> {
             VisitedHandlingMode::AllLinksVisitedAndUnvisited,
             quirks_mode,
             NeedsSelectorFlags::No,
+            IgnoreNthChildForInvalidation::No,
         );
 
         matching_context.extra_data.invalidation_data.document_state = document_states_changed;

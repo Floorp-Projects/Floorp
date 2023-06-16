@@ -947,6 +947,11 @@ where
     if element.ignores_nth_child_selectors() {
         return false;
     }
+    if context.ignores_nth_child_selectors_for_invalidation() {
+        let selectors_match =
+            selectors.is_empty() || list_matches_complex_selector(selectors, element, context);
+        return selectors_match && !context.in_negation();
+    }
 
     let NthSelectorData { ty, a, b, .. } = *nth_data;
     let is_of_type = ty.is_of_type();
