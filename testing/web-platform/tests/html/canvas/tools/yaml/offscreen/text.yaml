@@ -16,7 +16,13 @@
 - name: 2d.text.font.parse.complex
   code: |
     ctx.font = 'small-caps italic 400 12px/2 Unknown Font, sans-serif';
-    @assert ctx.font === 'italic small-caps 12px "Unknown Font", sans-serif'; @moz-todo
+    @assert ['italic small-caps 12px "Unknown Font", sans-serif', 'italic small-caps 12px Unknown Font, sans-serif'].includes(ctx.font);
+    t.done();
+
+- name: 2d.text.font.parse.complex2
+  code: |
+    ctx.font = 'small-caps italic 400 12px/2 "Unknown Font #2", sans-serif';
+    @assert ctx.font === 'italic small-caps 12px "Unknown Font #2", sans-serif';
     t.done();
 
 - name: 2d.text.font.parse.family
