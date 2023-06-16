@@ -53,11 +53,12 @@
 
       <vbox class="translations-panel-content">
         <vbox id="translations-panel-lang-selection">
-          <label data-l10n-id="translations-panel-from-label"></label>
+          <label data-l10n-id="translations-panel-from-label" id="translations-panel-from-label"></label>
           <menulist id="translations-panel-from"
                     flex="1"
                     value="detect"
                     size="large"
+                    aria-labelledby="translations-panel-from-label"
                     oncommand="TranslationsPanel.onChangeLanguages(event)">
             <menupopup id="translations-panel-from-menupopup"
                       class="translations-panel-language-menupopup-from">
@@ -66,11 +67,12 @@
             </menupopup>
           </menulist>
 
-          <label data-l10n-id="translations-panel-to-label"></label>
+          <label data-l10n-id="translations-panel-to-label" id="translations-panel-to-label"></label>
           <menulist id="translations-panel-to"
                     flex="1"
                     value="detect"
                     size="large"
+                    aria-labelledby="translations-panel-to-label"
                     oncommand="TranslationsPanel.onChangeLanguages(event)">
             <menupopup id="translations-panel-to-menupopup"
                       class="translations-panel-language-menupopup-to">
