@@ -3762,7 +3762,7 @@ bool CanvasRenderingContext2D::SetFontInternal(const nsACString& aFont,
 
 static nsAutoCString FamilyListToString(
     const StyleFontFamilyList& aFamilyList) {
-  return StringJoin(","_ns, aFamilyList.list.AsSpan(),
+  return StringJoin(", "_ns, aFamilyList.list.AsSpan(),
                     [](nsACString& dst, const StyleSingleFontFamily& name) {
                       name.AppendToString(dst);
                     });
@@ -3789,6 +3789,10 @@ static void SerializeFontForCanvas(const StyleFontFamilyList& aList,
   if (!aStyle.stretch.IsNormal() &&
       Servo_FontStretch_SerializeKeyword(&aStyle.stretch, &aUsedFont)) {
     aUsedFont.Append(" ");
+  }
+
+  if (aStyle.variantCaps == NS_FONT_VARIANT_CAPS_SMALLCAPS) {
+    aUsedFont.Append("small-caps ");
   }
 
   // Serialize the computed (not specified) size, and the family name(s).
@@ -3832,13 +3836,16 @@ bool CanvasRenderingContext2D::SetFontInternalDisconnected(
   StyleFontFamilyList list;
   gfxFontStyle fontStyle;
   float size = 0.0f;
+  bool smallCaps = false;
   if (!ServoCSSParser::ParseFontShorthandForMatching(
           aFont, urlExtraData, list, fontStyle.style, fontStyle.stretch,
-          fontStyle.weight, &size)) {
+          fontStyle.weight, &size, &smallCaps)) {
     return false;
   }
 
   fontStyle.size = size;
+  fontStyle.variantCaps =
+      smallCaps ? NS_FONT_VARIANT_CAPS_SMALLCAPS : NS_FONT_VARIANT_CAPS_NORMAL;
 
   // Set the kerning feature, if required by the fontKerning attribute.
   gfxFontFeature setting{TRUETYPE_TAG('k', 'e', 'r', 'n'), 0};
