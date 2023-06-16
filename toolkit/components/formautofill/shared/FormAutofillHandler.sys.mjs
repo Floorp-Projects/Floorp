@@ -259,7 +259,12 @@ export class FormAutofillHandler {
         );
       }
 
-      if (ignoreInvalid && !autofillableSection.isValidSection()) {
+      // Do not include section that is either disabled or invalid.
+      // We only include invalid section for testing purpose.
+      if (
+        !autofillableSection.isEnabled() ||
+        (ignoreInvalid && !autofillableSection.isValidSection())
+      ) {
         continue;
       }
 
