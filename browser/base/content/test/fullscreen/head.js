@@ -1,7 +1,7 @@
 const TEST_URL =
   "https://example.com/browser/browser/base/content/test/fullscreen/open_and_focus_helper.html";
 
-function waitForFullScreenState(browser, state) {
+function waitForFullScreenState(browser, state, actionAfterFSEvent) {
   return new Promise(resolve => {
     let eventReceived = false;
 
@@ -18,6 +18,9 @@ function waitForFullScreenState(browser, state) {
       `MozDOMFullscreen:${state ? "Entered" : "Exited"}`,
       () => {
         eventReceived = true;
+        if (actionAfterFSEvent) {
+          actionAfterFSEvent();
+        }
       },
       { once: true }
     );
@@ -50,8 +53,13 @@ async function changeFullscreen(browser, fullScreenState) {
   return fullScreenChange;
 }
 
-async function testExpectFullScreenExit(browser, leaveFS, action) {
-  let fsPromise = waitForFullScreenState(browser, false);
+async function testExpectFullScreenExit(
+  browser,
+  leaveFS,
+  action,
+  actionAfterFSEvent
+) {
+  let fsPromise = waitForFullScreenState(browser, false, actionAfterFSEvent);
   if (leaveFS) {
     if (action) {
       await action();
