@@ -20,7 +20,7 @@ void MessagePumpForAndroidUI::ScheduleWork() {
 }
 
 void MessagePumpForAndroidUI::ScheduleDelayedWork(
-    const TimeTicks& delayed_work_time) {
+    const base::TimeTicks& delayed_work_time) {
   MOZ_CRASH("MessagePumpForAndroidUI should never ScheduleDelayedWork");
 }
 }  // namespace mozilla::ipc

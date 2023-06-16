@@ -14,6 +14,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/Services.h"
 #include "nsContentUtils.h"
 #include "nsGkAtoms.h"
 #include "nsIObserverService.h"

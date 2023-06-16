@@ -9,6 +9,7 @@
 #include "VPXDecoder.h"
 
 #include "mozilla/Logging.h"
+#include "mozilla/java/HardwareCodecCapabilityUtilsWrappers.h"
 
 namespace mozilla {
 extern LazyLogModule sPEMLog;

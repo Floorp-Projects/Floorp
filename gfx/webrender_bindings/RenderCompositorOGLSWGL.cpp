@@ -19,7 +19,9 @@
 
 #ifdef MOZ_WIDGET_ANDROID
 #  include "mozilla/java/GeckoSurfaceTextureWrappers.h"
+#  include "mozilla/layers/AndroidHardwareBuffer.h"
 #  include "mozilla/webrender/RenderAndroidHardwareBufferTextureHost.h"
+#  include "mozilla/webrender/RenderAndroidSurfaceTextureHost.h"
 #  include "mozilla/widget/AndroidCompositorWidget.h"
 #  include <android/native_window.h>
 #  include <android/native_window_jni.h>

@@ -17,6 +17,8 @@
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
+#  include "mozilla/MozPromise.h"
+#  include "mozilla/java/GeckoResultNatives.h"
 #  include "mozilla/java/WebAuthnTokenManagerWrappers.h"
 #endif
 

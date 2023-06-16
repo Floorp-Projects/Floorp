@@ -11,6 +11,8 @@
 #include "MediaDecoder.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/Services.h"
+#include "nsIObserverService.h"
 
 namespace mozilla {
 

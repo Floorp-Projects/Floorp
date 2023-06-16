@@ -8,6 +8,7 @@
 
 #include "mozilla/layers/AndroidHardwareBuffer.h"
 #include "mozilla/webrender/RenderThread.h"
+#include "mozilla/gfx/2D.h"
 #include "GLContextEGL.h"
 #include "GLLibraryEGL.h"
 #include "GLReadTexImageHelper.h"
@@ -180,7 +181,7 @@ gfx::SurfaceFormat RenderAndroidHardwareBufferTextureHost::GetFormat() const {
   return gfx::SurfaceFormat::UNKNOWN;
 }
 
-already_AddRefed<DataSourceSurface>
+already_AddRefed<gfx::DataSourceSurface>
 RenderAndroidHardwareBufferTextureHost::ReadTexImage() {
   if (!mGL) {
     mGL = RenderThread::Get()->SingletonGL();
@@ -195,8 +196,9 @@ RenderAndroidHardwareBufferTextureHost::ReadTexImage() {
 
   /* Allocate resulting image surface */
   int32_t stride = GetSize().width * BytesPerPixel(GetFormat());
-  RefPtr<DataSourceSurface> surf = Factory::CreateDataSourceSurfaceWithStride(
-      GetSize(), GetFormat(), stride);
+  RefPtr<gfx::DataSourceSurface> surf =
+      gfx::Factory::CreateDataSourceSurfaceWithStride(GetSize(), GetFormat(),
+                                                      stride);
   if (!surf) {
     return nullptr;
   }
@@ -223,8 +225,8 @@ bool RenderAndroidHardwareBufferTextureHost::MapPlane(
     return false;
   }
 
-  DataSourceSurface::MappedSurface map;
-  if (!readback->Map(DataSourceSurface::MapType::READ, &map)) {
+  gfx::DataSourceSurface::MappedSurface map;
+  if (!readback->Map(gfx::DataSourceSurface::MapType::READ, &map)) {
     return false;
   }
 

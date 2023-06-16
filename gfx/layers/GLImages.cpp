@@ -14,11 +14,14 @@
 #include "GLLibraryEGL.h"
 #include "mozilla/gfx/Logging.h"
 
+#ifdef MOZ_WIDGET_ANDROID
+#  include "mozilla/layers/LayersSurfaces.h"
+#endif
+
 using namespace mozilla;
 using namespace mozilla::gl;
 
-namespace mozilla {
-namespace layers {
+namespace mozilla::layers {
 
 static RefPtr<GLContext> sSnapshotContext;
 
@@ -95,5 +98,4 @@ Maybe<SurfaceDescriptor> SurfaceTextureImage::GetDesc() {
 }
 #endif
 
-}  // namespace layers
-}  // namespace mozilla
+}  // namespace mozilla::layers

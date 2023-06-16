@@ -32,6 +32,9 @@
 #ifdef XP_WIN
 #  include "WMFDecoderModule.h"
 #endif
+#ifdef MOZ_WIDGET_ANDROID
+#  include "mozilla/java/MediaDrmProxyWrappers.h"
+#endif
 
 namespace mozilla::dom {
 
