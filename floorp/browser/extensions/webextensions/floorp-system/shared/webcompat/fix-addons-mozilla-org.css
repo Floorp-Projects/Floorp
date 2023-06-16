@@ -305,7 +305,8 @@ div[role="combobox"] {
 .Addon-overall-rating > .Card-contents,
 .Addon-screenshots > .Card-contents,
 .ShowMoreCard > .Card-contents,
-.Card-footer {
+.Card-footer,
+.AddAddonToCollection > .Card-contents {
   background-color: var(--card-background) !important;
   box-shadow: var(--card-shadow) !important;
   border: 0 !important;
@@ -313,8 +314,28 @@ div[role="combobox"] {
 
 .AddonTitle .AddonTitle-author a:link,
 .AddonDescription-contents > a:link,
-.Addon-summary > a:link
-{
+.Addon-summary > a:link,
+.Addon-header-info-card,
+.PermissionsCard-learn-more,
+.AddonMoreInfo-links,
+.AddonMoreInfo-license,
+.AddonMoreInfo-version-history
+.AddonMoreInfo-related-categories,
+.AddonMoreInfo-links-contents-list > * ,
+.Addon-all-reviews-link,
+.AddonMoreInfo-support-link,
+.AddonMoreInfo-related-categories,
+.AddonMoreInfo-version-history-link,
+.AddonMoreInfo-license-link,
+.AddonMoreInfo-related-category-link,
+.AddonMoreInfo-homepage-link,
+.AddonMoreInfo-privacy-policy-link,
+.AddonMoreInfo-tag-link,
+.nofollow,
+a[rel="nofollow"],
+.ShowMoreCard-expand-link,
+.SectionLinks-dropdownlink,
+.SectionLinks-clientApp-android {
   color: var(--in-content-link-color) !important;
 }
 
@@ -323,6 +344,10 @@ div[role="combobox"] {
   color: var(--in-content-button-text-color) !important;
   border: 1px solid var(--in-content-button-border-color) !important;
   color: #2b2b2b !important;
+}
+
+.ShowMoreCard-contents::after {
+  background: linear-gradient(hsla(0,0%,100%,0),#646464) !important;
 }
 
 .Addon-summary, .Notice-text, .AddonDescription-contents {
@@ -335,7 +360,8 @@ div[role="combobox"] {
   border: 0 !important;
 }
 
-.Notice-genericWarning .Notice-icon {
+.Notice-genericWarning .Notice-icon, .Icon-external-dark,
+.Permission > .Icon {
   filter: invert(90%);
 }
 
@@ -345,16 +371,26 @@ div[role="combobox"] {
   color: var(--in-content-text-color) !important;
 }
 
-.AddonMeta-overallRating {
+.AddonMeta-overallRating, .AMInstallButton .AMInstallButton-loading-button {
   background-color: var(--in-content-box-info-background) !important;
   box-shadow: var(--card-shadow) !important;
   border: 0 !important;
 }
 
+.AMInstallButton-loader-container {
+  filter: invert(100%)
+}
+
 .AddonMeta-reviews-content-link, .MetadataCard-content,
 .MetadataCard-title, .AddonMeta-reviews-title-link,
 .AddonMeta-rating-title, .RatingManager-legend,
-.ReportAbuseButton-show-more, .RatingsByStar-graph > * {
+.ReportAbuseButton-show-more, .RatingsByStar-graph > *,
+.ContributeCard > .Card-contents,
+.Permission-description,
+.PermissionsCard-subhead--required,
+.Definition-dt,
+.Definition-dd,
+.ShowMoreCard-contents > div {
   color: var(--in-content-text-color) !important;
 }
 
@@ -362,4 +398,24 @@ div[role="combobox"] {
   background-color: var(--in-content-item-selected) !important;
   color: var(--in-content-button-text-color) !important;
   color: #2b2b2b !important;
+}
+
+.Card-footer-link {
+  border-top: solid 1px gray !important;
+}
+
+.ContributeCard > .Card-contents, .AddonMoreInfo > .Card-contents {
+  background-color: var(--card-background) !important;
+  box-shadow: var(--card-shadow) !important;
+  border: 0 !important;
+}
+
+.AddonsCard-list {
+  background-color: var(--card-background) !important;
+}
+
+.AddAddonToCollection-select {
+  background-color: var(--search-bgcolor) !important;
+  border: 2px solid var(--input-border-color) !important;
+  color: var(--in-content-text-color) !important;
 }
