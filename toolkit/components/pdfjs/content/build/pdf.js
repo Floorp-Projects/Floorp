@@ -428,14 +428,14 @@ function createValidAbsoluteUrl(url, baseUrl = null, options = null) {
       if (options.tryConvertEncoding) {
         try {
           url = stringToUTF8String(url);
-        } catch (ex) {}
+        } catch {}
       }
     }
     const absoluteUrl = baseUrl ? new URL(url, baseUrl) : new URL(url);
     if (_isValidProtocol(absoluteUrl)) {
       return absoluteUrl;
     }
-  } catch (ex) {}
+  } catch {}
   return null;
 }
 function shadow(obj, prop, value, nonSerializable = false) {
@@ -556,7 +556,7 @@ function isEvalSupported() {
   try {
     new Function("");
     return true;
-  } catch (e) {
+  } catch {
     return false;
   }
 }
@@ -941,7 +941,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: '3.8.58',
+    apiVersion: '3.8.83',
     data,
     password,
     disableAutoFetch,
@@ -1362,7 +1362,7 @@ class PDFPageProxy {
     (intentState.renderTasks ||= new Set()).add(internalRenderTask);
     const renderTask = internalRenderTask.task;
     Promise.all([intentState.displayReadyCapability.promise, optionalContentConfigPromise]).then(([transparency, optionalContentConfig]) => {
-      if (this.#pendingCleanup) {
+      if (this.destroyed) {
         complete();
         return;
       }
@@ -1380,34 +1380,7 @@ class PDFPageProxy {
     annotationMode = _util.AnnotationMode.ENABLE,
     printAnnotationStorage = null
   } = {}) {
-    function operatorListChanged() {
-      if (intentState.operatorList.lastChunk) {
-        intentState.opListReadCapability.resolve(intentState.operatorList);
-        intentState.renderTasks.delete(opListTask);
-      }
-    }
-    const intentArgs = this._transport.getRenderingIntent(intent, annotationMode, printAnnotationStorage, true);
-    let intentState = this._intentStates.get(intentArgs.cacheKey);
-    if (!intentState) {
-      intentState = Object.create(null);
-      this._intentStates.set(intentArgs.cacheKey, intentState);
-    }
-    let opListTask;
-    if (!intentState.opListReadCapability) {
-      opListTask = Object.create(null);
-      opListTask.operatorListChanged = operatorListChanged;
-      intentState.opListReadCapability = new _util.PromiseCapability();
-      (intentState.renderTasks ||= new Set()).add(opListTask);
-      intentState.operatorList = {
-        fnArray: [],
-        argsArray: [],
-        lastChunk: false,
-        separateAnnots: null
-      };
-      this._stats?.time("Page Request");
-      this._pumpOperatorList(intentArgs);
-    }
-    return intentState.opListReadCapability.promise;
+    throw new Error("Not implemented: getOperatorList");
   }
   streamTextContent({
     includeMarkedContent = false,
@@ -1490,7 +1463,7 @@ class PDFPageProxy {
   }
   #tryCleanup(delayed = false) {
     this.#abortDelayedCleanup();
-    if (!this.#pendingCleanup) {
+    if (!this.#pendingCleanup || this.destroyed) {
       return false;
     }
     if (delayed) {
@@ -1769,7 +1742,7 @@ class PDFWorker {
           }
           try {
             sendTest();
-          } catch (e) {
+          } catch {
             this._setupFakeWorker();
           }
         });
@@ -1779,7 +1752,7 @@ class PDFWorker {
         };
         sendTest();
         return;
-      } catch (e) {
+      } catch {
         (0, _util.info)("The worker has been disabled.");
       }
     }
@@ -1841,7 +1814,7 @@ class PDFWorker {
   static get _mainThreadWorkerMessageHandler() {
     try {
       return globalThis.pdfjsWorker?.WorkerMessageHandler || null;
-    } catch (ex) {
+    } catch {
       return null;
     }
   }
@@ -2563,7 +2536,7 @@ class InternalRenderTask {
     if (this._canvas) {
       InternalRenderTask.#canvasInUse.delete(this._canvas);
     }
-    this.callback(error || new _display_utils.RenderingCancelledException(`Rendering cancelled, page ${this._pageIndex + 1}`, "canvas", extraDelay));
+    this.callback(error || new _display_utils.RenderingCancelledException(`Rendering cancelled, page ${this._pageIndex + 1}`, extraDelay));
   }
   operatorListChanged() {
     if (!this.graphicsReady) {
@@ -2613,9 +2586,9 @@ class InternalRenderTask {
     }
   }
 }
-const version = '3.8.58';
+const version = '3.8.83';
 exports.version = version;
-const build = '9af50dc35';
+const build = '46b8f9e2f';
 exports.build = build;
 
 /***/ }),
@@ -2790,7 +2763,7 @@ class AnnotationEditor {
     this.name = parameters.name;
     this.div = null;
     this._uiManager = parameters.uiManager;
-    this.annotationElement = null;
+    this.annotationElementId = null;
     const {
       rotation,
       rawDims: {
@@ -2808,9 +2781,20 @@ class AnnotationEditor {
     this.x = parameters.x / width;
     this.y = parameters.y / height;
     this.isAttachedToDOM = false;
+    this.deleted = false;
   }
   static get _defaultLineColor() {
     return (0, _util.shadow)(this, "_defaultLineColor", this._colorManager.getHexCode("CanvasText"));
+  }
+  static deleteAnnotationElement(editor) {
+    const fakeEditor = new FakeEditor({
+      id: editor.parent.getNextId(),
+      parent: editor.parent,
+      uiManager: editor._uiManager
+    });
+    fakeEditor.annotationElementId = editor.annotationElementId;
+    fakeEditor.deleted = true;
+    fakeEditor._uiManager.addToAnnotationStorage(fakeEditor);
   }
   addCommands(params) {
     this._uiManager.addCommands(params);
@@ -3033,7 +3017,7 @@ class AnnotationEditor {
     this.div?.addEventListener("focusin", this.#boundFocusin);
     this.div?.addEventListener("focusout", this.#boundFocusout);
   }
-  serialize() {
+  serialize(_isForCopying = false) {
     (0, _util.unreachable)("An editor must be serializable");
   }
   static deserialize(data, parent, uiManager) {
@@ -3086,11 +3070,22 @@ class AnnotationEditor {
       this.parent.setActiveEditor(null);
     }
   }
-  hasElementChanged(serialized = null) {
-    return false;
-  }
 }
 exports.AnnotationEditor = AnnotationEditor;
+class FakeEditor extends AnnotationEditor {
+  constructor(params) {
+    super(params);
+    this.annotationElementId = params.annotationElementId;
+    this.deleted = true;
+  }
+  serialize() {
+    return {
+      id: this.annotationElementId,
+      deleted: true,
+      pageIndex: this.pageIndex
+    };
+  }
+}
 
 /***/ }),
 /* 5 */
@@ -3301,6 +3296,7 @@ class AnnotationEditorUIManager {
   #annotationStorage = null;
   #commandManager = new CommandManager();
   #currentPageIndex = 0;
+  #deletedAnnotationsElementIds = new Set();
   #editorTypes = null;
   #editorsToRescale = new Set();
   #eventBus = null;
@@ -3416,8 +3412,9 @@ class AnnotationEditorUIManager {
     }
     const editors = [];
     for (const editor of this.#selectedEditors) {
-      if (!editor.isEmpty()) {
-        editors.push(editor.serialize());
+      const serialized = editor.serialize(true);
+      if (serialized) {
+        editors.push(serialized);
       }
     }
     if (editors.length === 0) {
@@ -3616,7 +3613,20 @@ class AnnotationEditorUIManager {
   removeEditor(editor) {
     this.#allEditors.delete(editor.id);
     this.unselect(editor);
-    this.#annotationStorage?.remove(editor.id);
+    if (!editor.annotationElementId || !this.#deletedAnnotationsElementIds.has(editor.annotationElementId)) {
+      this.#annotationStorage?.remove(editor.id);
+    }
+  }
+  addDeletedAnnotationElement(editor) {
+    this.#deletedAnnotationsElementIds.add(editor.annotationElementId);
+    editor.deleted = true;
+  }
+  isDeletedAnnotationElement(annotationElementId) {
+    return this.#deletedAnnotationsElementIds.has(annotationElementId);
+  }
+  removeDeletedAnnotationElement(editor) {
+    this.#deletedAnnotationsElementIds.delete(editor.annotationElementId);
+    editor.deleted = false;
   }
   #addEditorToLayer(editor) {
     const layer = this.#allLayers.get(editor.pageIndex);
@@ -4150,9 +4160,8 @@ class PageViewport {
 }
 exports.PageViewport = PageViewport;
 class RenderingCancelledException extends _util.BaseException {
-  constructor(msg, type, extraDelay = 0) {
+  constructor(msg, extraDelay = 0) {
     super(msg, "RenderingCancelledException");
-    this.type = type;
     this.extraDelay = extraDelay;
   }
 }
@@ -4191,7 +4200,7 @@ function getPdfFilenameFromUrl(url, defaultFilename = "document.pdf") {
     if (suggestedFilename.includes("%")) {
       try {
         suggestedFilename = reFilename.exec(decodeURIComponent(suggestedFilename))[0];
-      } catch (ex) {}
+      } catch {}
     }
   }
   return suggestedFilename || defaultFilename;
@@ -4241,7 +4250,7 @@ function isValidFetchUrl(url, baseUrl) {
       protocol
     } = baseUrl ? new URL(url, baseUrl) : new URL(url);
     return protocol === "http:" || protocol === "https:";
-  } catch (ex) {
+  } catch {
     return false;
   }
 }
@@ -9029,6 +9038,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.AnnotationEditorLayer = void 0;
 var _util = __w_pdfjs_require__(1);
+var _editor = __w_pdfjs_require__(4);
 var _tools = __w_pdfjs_require__(5);
 var _freetext = __w_pdfjs_require__(22);
 var _ink = __w_pdfjs_require__(26);
@@ -9042,6 +9052,7 @@ class AnnotationEditorLayer {
   #editors = new Map();
   #hadPointerDown = false;
   #isCleaningUp = false;
+  #isDisabling = false;
   #uiManager;
   static _initialized = false;
   constructor(options) {
@@ -9056,6 +9067,7 @@ class AnnotationEditorLayer {
     this.div = options.div;
     this.#accessibilityManager = options.accessibilityManager;
     this.#annotationLayer = options.annotationLayer;
+    this.viewport = options.viewport;
     this.#uiManager.addLayer(this);
   }
   get isEmpty() {
@@ -9105,34 +9117,52 @@ class AnnotationEditorLayer {
   }
   enable() {
     this.div.style.pointerEvents = "auto";
-    if (this.#annotationLayer) {
-      const editables = this.#annotationLayer.getEditableAnnotations();
-      for (const editable of editables) {
-        const editor = this.deserialize(editable);
-        if (!editor) {
-          continue;
-        }
-        editable.hide();
-        this.addOrRebuild(editor);
+    const annotationElementIds = new Set();
+    for (const editor of this.#editors.values()) {
+      editor.enableEditing();
+      if (editor.annotationElementId) {
+        annotationElementIds.add(editor.annotationElementId);
       }
     }
-    for (const editor of this.#editors.values()) {
+    if (!this.#annotationLayer) {
+      return;
+    }
+    const editables = this.#annotationLayer.getEditableAnnotations();
+    for (const editable of editables) {
+      editable.hide();
+      if (this.#uiManager.isDeletedAnnotationElement(editable.data.id)) {
+        continue;
+      }
+      if (annotationElementIds.has(editable.data.id)) {
+        continue;
+      }
+      const editor = this.deserialize(editable);
+      if (!editor) {
+        continue;
+      }
+      this.addOrRebuild(editor);
       editor.enableEditing();
     }
   }
   disable() {
+    this.#isDisabling = true;
     this.div.style.pointerEvents = "none";
     for (const editor of this.#editors.values()) {
       editor.disableEditing();
-      if (!editor.hasElementChanged()) {
-        editor.annotationElement.show();
-        editor.remove();
+      if (!editor.annotationElementId || editor.serialize() !== null) {
+        continue;
       }
+      this.getEditableAnnotation(editor.annotationElementId)?.show();
+      editor.remove();
     }
     this.#cleanup();
     if (this.isEmpty) {
       this.div.hidden = true;
     }
+    this.#isDisabling = false;
+  }
+  getEditableAnnotation(id) {
+    return this.#annotationLayer?.getEditableAnnotation(id) || null;
   }
   setActiveEditor(editor) {
     const currentActive = this.#uiManager.getActive();
@@ -9151,14 +9181,23 @@ class AnnotationEditorLayer {
   }
   attach(editor) {
     this.#editors.set(editor.id, editor);
+    const {
+      annotationElementId
+    } = editor;
+    if (annotationElementId && this.#uiManager.isDeletedAnnotationElement(annotationElementId)) {
+      this.#uiManager.removeDeletedAnnotationElement(editor);
+    }
   }
   detach(editor) {
     this.#editors.delete(editor.id);
     this.#accessibilityManager?.removePointerInTextLayer(editor.contentDiv);
+    if (!this.#isDisabling && editor.annotationElementId) {
+      this.#uiManager.addDeletedAnnotationElement(editor);
+    }
   }
   remove(editor) {
-    this.#uiManager.removeEditor(editor);
     this.detach(editor);
+    this.#uiManager.removeEditor(editor);
     editor.div.style.display = "none";
     setTimeout(() => {
       editor.div.style.display = "";
@@ -9175,6 +9214,11 @@ class AnnotationEditorLayer {
   #changeParent(editor) {
     if (editor.parent === this) {
       return;
+    }
+    if (editor.annotationElementId) {
+      this.#uiManager.addDeletedAnnotationElement(editor.annotationElementId);
+      _editor.AnnotationEditor.deleteAnnotationElement(editor);
+      editor.annotationElementId = null;
     }
     this.attach(editor);
     editor.parent?.detach(editor);
@@ -9384,6 +9428,7 @@ class FreeTextEditor extends _editor.AnnotationEditor {
   #content = "";
   #editorDivId = `${this.id}-editor`;
   #fontSize;
+  #initialData = null;
   static _freeTextDefaultContent = "";
   static _l10nPromise;
   static _internalPadding = 0;
@@ -9525,6 +9570,7 @@ class FreeTextEditor extends _editor.AnnotationEditor {
   }
   onceAdded() {
     if (this.width) {
+      this.#cheatInitialRect();
       return;
     }
     this.enableEditMode();
@@ -9664,7 +9710,12 @@ class FreeTextEditor extends _editor.AnnotationEditor {
     (0, _tools.bindEvents)(this, this.div, ["dblclick", "keydown"]);
     if (this.width) {
       const [parentWidth, parentHeight] = this.parentDimensions;
-      this.setAt(baseX * parentWidth, baseY * parentHeight, this.width * parentWidth, this.height * parentHeight);
+      if (this.annotationElementId) {
+        const [tx] = this.getInitialTranslation();
+        this.setAt(baseX * parentWidth, baseY * parentHeight, tx, tx);
+      } else {
+        this.setAt(baseX * parentWidth, baseY * parentHeight, this.width * parentWidth, this.height * parentHeight);
+      }
       this.#setContent();
       this.div.draggable = true;
       this.editorDiv.contentEditable = false;
@@ -9689,23 +9740,61 @@ class FreeTextEditor extends _editor.AnnotationEditor {
     return this.editorDiv;
   }
   static deserialize(data, parent, uiManager) {
+    let initialData = null;
     if (data instanceof _annotation_layer.FreeTextAnnotationElement) {
-      return null;
+      const {
+        data: {
+          defaultAppearanceData: {
+            fontSize,
+            fontColor
+          },
+          rect,
+          rotation,
+          id
+        },
+        textContent,
+        page: {
+          pageNumber
+        }
+      } = data;
+      if (!textContent || textContent.length === 0) {
+        return null;
+      }
+      initialData = data = {
+        annotationType: _util.AnnotationEditorType.FREETEXT,
+        color: Array.from(fontColor),
+        fontSize,
+        value: textContent.join("\n"),
+        pageIndex: pageNumber - 1,
+        rect,
+        rotation,
+        id,
+        deleted: false
+      };
     }
     const editor = super.deserialize(data, parent, uiManager);
     editor.#fontSize = data.fontSize;
     editor.#color = _util.Util.makeHexColor(...data.color);
     editor.#content = data.value;
+    editor.annotationElementId = data.id || null;
+    editor.#initialData = initialData;
     return editor;
   }
-  serialize() {
+  serialize(isForCopying = false) {
     if (this.isEmpty()) {
       return null;
+    }
+    if (this.deleted) {
+      return {
+        pageIndex: this.pageIndex,
+        id: this.annotationElementId,
+        deleted: true
+      };
     }
     const padding = FreeTextEditor._internalPadding * this.parentScale;
     const rect = this.getRect(padding, padding);
     const color = _editor.AnnotationEditor._colorManager.convert(this.isAttachedToDOM ? getComputedStyle(this.editorDiv).color : this.#color);
-    return {
+    const serialized = {
       annotationType: _util.AnnotationEditorType.FREETEXT,
       color,
       fontSize: this.#fontSize,
@@ -9714,6 +9803,36 @@ class FreeTextEditor extends _editor.AnnotationEditor {
       rect,
       rotation: this.rotation
     };
+    if (isForCopying) {
+      return serialized;
+    }
+    if (this.annotationElementId && !this.#hasElementChanged(serialized)) {
+      return null;
+    }
+    serialized.id = this.annotationElementId;
+    return serialized;
+  }
+  #hasElementChanged(serialized) {
+    const {
+      value,
+      fontSize,
+      color,
+      rect,
+      pageIndex
+    } = this.#initialData;
+    return serialized.value !== value || serialized.fontSize !== fontSize || serialized.rect.some((x, i) => Math.abs(x - rect[i]) >= 1) || serialized.color.some((c, i) => c !== color[i]) || serialized.pageIndex !== pageIndex;
+  }
+  #cheatInitialRect(delayed = false) {
+    if (!this.annotationElementId) {
+      return;
+    }
+    this.#setEditorDimensions();
+    if (!delayed && (this.width === 0 || this.height === 0)) {
+      setTimeout(() => this.#cheatInitialRect(true), 0);
+      return;
+    }
+    const padding = FreeTextEditor._internalPadding * this.parentScale;
+    this.#initialData.rect = this.getRect(padding, padding);
   }
 }
 exports.FreeTextEditor = FreeTextEditor;
@@ -9764,6 +9883,8 @@ class AnnotationElementFactory {
             return new PushButtonWidgetAnnotationElement(parameters);
           case "Ch":
             return new ChoiceWidgetAnnotationElement(parameters);
+          case "Sig":
+            return new SignatureWidgetAnnotationElement(parameters);
         }
         return new WidgetAnnotationElement(parameters);
       case _util.AnnotationType.POPUP:
@@ -10775,6 +10896,13 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
     return this.container;
   }
 }
+class SignatureWidgetAnnotationElement extends WidgetAnnotationElement {
+  constructor(parameters) {
+    super(parameters, {
+      isRenderable: !!parameters.data.hasOwnCanvas
+    });
+  }
+}
 class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement {
   constructor(parameters) {
     super(parameters, {
@@ -11679,7 +11807,7 @@ class AnnotationLayer {
   #accessibilityManager = null;
   #annotationCanvasMap = null;
   #div = null;
-  #editableAnnotations = new Set();
+  #editableAnnotations = new Map();
   constructor({
     div,
     accessibilityManager,
@@ -11737,7 +11865,7 @@ class AnnotationLayer {
         continue;
       }
       if (element.annotationEditorType > 0) {
-        this.#editableAnnotations.add(element);
+        this.#editableAnnotations.set(element.data.id, element);
       }
       const rendered = element.render();
       if (data.hidden) {
@@ -11793,7 +11921,10 @@ class AnnotationLayer {
     this.#annotationCanvasMap.clear();
   }
   getEditableAnnotations() {
-    return this.#editableAnnotations;
+    return Array.from(this.#editableAnnotations.values());
+  }
+  getEditableAnnotation(id) {
+    return this.#editableAnnotations.get(id);
   }
 }
 exports.AnnotationLayer = AnnotationLayer;
@@ -12868,27 +12999,6 @@ class InkEditor extends _editor.AnnotationEditor {
 }
 exports.InkEditor = InkEditor;
 
-/***/ }),
-/* 27 */
-/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.SVGGraphics = void 0;
-var _display_utils = __w_pdfjs_require__(6);
-var _util = __w_pdfjs_require__(1);
-var _is_node = __w_pdfjs_require__(10);
-let SVGGraphics = class {
-  constructor() {
-    (0, _util.unreachable)("Not implemented: SVGGraphics");
-  }
-};
-exports.SVGGraphics = SVGGraphics;
-;
-
 /***/ })
 /******/ 	]);
 /************************************************************************/
@@ -13058,12 +13168,7 @@ Object.defineProperty(exports, "RenderingCancelledException", ({
     return _display_utils.RenderingCancelledException;
   }
 }));
-Object.defineProperty(exports, "SVGGraphics", ({
-  enumerable: true,
-  get: function () {
-    return _svg.SVGGraphics;
-  }
-}));
+exports.SVGGraphics = void 0;
 Object.defineProperty(exports, "UnexpectedResponseException", ({
   enumerable: true,
   get: function () {
@@ -13186,10 +13291,11 @@ var _annotation_editor_layer = __w_pdfjs_require__(21);
 var _tools = __w_pdfjs_require__(5);
 var _annotation_layer = __w_pdfjs_require__(23);
 var _worker_options = __w_pdfjs_require__(14);
-var _svg = __w_pdfjs_require__(27);
 var _xfa_layer = __w_pdfjs_require__(25);
-const pdfjsVersion = '3.8.58';
-const pdfjsBuild = '9af50dc35';
+const pdfjsVersion = '3.8.83';
+const pdfjsBuild = '46b8f9e2f';
+const SVGGraphics = null;
+exports.SVGGraphics = SVGGraphics;
 })();
 
 /******/ 	return __webpack_exports__;

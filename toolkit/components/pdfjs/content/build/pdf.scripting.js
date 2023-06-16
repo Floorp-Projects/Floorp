@@ -1297,7 +1297,7 @@ class AForm {
     let date = null;
     try {
       date = this._util.scand(cFormat, cDate);
-    } catch (error) {}
+    } catch {}
     if (!date) {
       date = Date.parse(cDate);
       if (isNaN(date)) {
@@ -4252,8 +4252,8 @@ Object.defineProperty(exports, "initSandbox", ({
   }
 }));
 var _initialization = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.8.58';
-const pdfjsBuild = '9af50dc35';
+const pdfjsVersion = '3.8.83';
+const pdfjsBuild = '46b8f9e2f';
 })();
 
 /******/ 	return __webpack_exports__;

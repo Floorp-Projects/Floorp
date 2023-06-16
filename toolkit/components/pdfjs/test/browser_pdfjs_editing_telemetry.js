@@ -57,11 +57,11 @@ add_task(async function test() {
       await BrowserTestUtils.waitForCondition(
         async () => (await countElements(browser, ".freeTextEditor")) !== 0
       );
-      Assert.equal(await countElements(browser, ".freeTextEditor"), 1);
+      Assert.equal(await countElements(browser, ".freeTextEditor"), 2);
 
       await Services.fog.testFlushAllChildren();
 
-      Assert.equal(Glean.pdfjs.editing.freetext.testGetValue(), 1);
+      Assert.equal(Glean.pdfjs.editing.freetext.testGetValue(), 2);
 
       spanBox = await getSpanBox(browser, "forums and ask questions");
       await addFreeText(browser, "world", spanBox);
@@ -69,11 +69,11 @@ add_task(async function test() {
       await BrowserTestUtils.waitForCondition(
         async () => (await countElements(browser, ".freeTextEditor")) !== 1
       );
-      Assert.equal(await countElements(browser, ".freeTextEditor"), 2);
+      Assert.equal(await countElements(browser, ".freeTextEditor"), 3);
 
       await Services.fog.testFlushAllChildren();
 
-      Assert.equal(Glean.pdfjs.editing.freetext.testGetValue(), 2);
+      Assert.equal(Glean.pdfjs.editing.freetext.testGetValue(), 3);
 
       Assert.equal(Glean.pdfjs.editing.print.testGetValue() || 0, 0);
       document.getElementById("cmd_print").doCommand();
