@@ -15,6 +15,7 @@ ac_add_options --enable-rust-simd
 ac_add_options --enable-release
 ac_add_options --enable-bootstrap
 ac_add_options --enable-lto
+ac_add_options --disable-updater
 
 ac_add_options RUSTC_OPT_LEVEL=3
 
