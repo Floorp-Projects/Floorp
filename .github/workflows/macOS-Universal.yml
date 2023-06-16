@@ -752,5 +752,5 @@ jobs:
         name: |
          x86_64-apple-darwin
          aarch64-apple-darwin
-         floorp-aarch64-apple-darwin-profdata-and-jarlog
-         floorp-x86_64-apple-darwin-profdata-and-jarlog
+         floorp-aarch64-apple-darwin-with-pgo
+         floorp-x86_64-apple-darwin-with-pgo
