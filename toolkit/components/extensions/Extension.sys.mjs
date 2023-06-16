@@ -1477,6 +1477,16 @@ export class ExtensionData {
       const { strict_min_version, strict_max_version } =
         manifest.browser_specific_settings.gecko_android;
 
+      // When the manifest doesn't define `browser_specific_settings.gecko`, it
+      // is still possible to reach this block but `manifest.applications`
+      // won't be defined yet.
+      if (!manifest?.applications) {
+        manifest.applications = {
+          // All properties should be optional in `gecko` so we omit them here.
+          gecko: {},
+        };
+      }
+
       if (strict_min_version?.length) {
         manifest.applications.gecko.strict_min_version = strict_min_version;
       }
