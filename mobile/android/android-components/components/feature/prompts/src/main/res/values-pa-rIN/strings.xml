@@ -43,6 +43,8 @@
     <string name="mozac_feature_prompts_content_description_input_label">ਲਿਖਣ ਵਾਲੇ ਖਾਨੇ ਵਿੱਚ ਜਾਣ ਲਈ ਲੇਬਲ</string>
     <!-- Title of a color picker dialog, this text is shown above a color picker. -->
     <string name="mozac_feature_prompts_choose_a_color">ਰੰਗ ਚੁਣੋ</string>
+    <!-- Title of the Identity Credential provider dialog choose. -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_provider">ਲਾਗਇਨ ਪੂਰਕ ਚੁਣੋ</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_allow">ਆਗਿਆ ਦਿਓ</string>
     <!-- Text of a negative button in dialog requesting to open a new window. -->
@@ -118,8 +120,6 @@
     <string name="mozac_feature_prompts_save_credit_card_prompt_body">ਕਾਰਡ ਨੰਬਰ ਨੂੰ ਇੰਕ੍ਰਿਪਟ ਕੀਤਾ ਜਾਵੇਗਾ। ਸੁਰੱਖਿਆ ਕੋਡ ਸੰਭਾਲਿਆ ਨਹੀਂ ਜਾਵੇਗਾ।</string>
 
     <!-- Address Autofill -->
-    <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
-    <string moz:removedIn="104" name="mozac_feature_prompts_select_address" tools:ignore="UnusedResources">ਸਿਰਨਾਵੇਂ ਚੁਣੋ</string>
     <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
     <string name="mozac_feature_prompts_select_address_2">ਸਿਰਨਾਵਾਂ ਚੁਣੋ</string>
     <!-- Content description for expanding the select addresses options in the select address prompt. -->
