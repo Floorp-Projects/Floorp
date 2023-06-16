@@ -74,7 +74,9 @@ class StyleSheetWatcher {
       isNew: isCreatedByDevTools,
       atRules: await this._styleSheetsManager.getAtRules(styleSheet),
       nodeHref: this._styleSheetsManager._getNodeHref(styleSheet),
-      ruleCount: styleSheet.cssRules.length,
+      ruleCount: await this._styleSheetsManager.getStyleSheetRuleCount(
+        styleSheet
+      ),
       sourceMapBaseURL:
         this._styleSheetsManager._getSourcemapBaseURL(styleSheet),
       sourceMapURL: styleSheet.sourceMapURL,
