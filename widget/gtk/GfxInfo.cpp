@@ -376,6 +376,10 @@ void GfxInfo::GetData() {
       CopyUTF16toUTF8(GfxDriverInfo::GetDriverVendor(DriverVendor::MesaSWRast),
                       mDriverVendor);
       mIsAccelerated = false;
+    } else if (strcasestr(driDriver.get(), "vmwgfx")) {
+      CopyUTF16toUTF8(GfxDriverInfo::GetDriverVendor(DriverVendor::MesaVM),
+                      mDriverVendor);
+      mIsAccelerated = false;
     } else if (!mIsAccelerated) {
       CopyUTF16toUTF8(
           GfxDriverInfo::GetDriverVendor(DriverVendor::MesaSWUnknown),
@@ -844,6 +848,14 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_LESS_THAN,
         V(21, 0, 0, 0), "FEATURE_FAILURE_WEBRENDER_BUG_1635186",
         "Mesa 21.0.0.0");
+
+    // Bug 1815481 - Disable mesa drivers in virtual machines.
+    APPEND_TO_DRIVER_BLOCKLIST_EXT(
+        OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
+        WindowProtocol::All, DriverVendor::MesaVM, DeviceFamily::All,
+        nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
+        DRIVER_COMPARISON_IGNORED, V(0, 0, 0, 0),
+        "FEATURE_FAILURE_WEBRENDER_MESA_VM", "");
 
     ////////////////////////////////////
     // FEATURE_WEBRENDER_COMPOSITOR
