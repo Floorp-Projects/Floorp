@@ -398,31 +398,33 @@ class HomeScreenRobot {
         )
     }
 
-    fun verifyPocketRecommendedStoriesItems(vararg positions: Int) {
-        positions.forEach {
+    fun verifyPocketRecommendedStoriesItems() {
+        for (position in 0..8) {
             pocketStoriesList
-                .scrollIntoView(UiSelector().resourceId("pocket.recommended.story").index(it - 1))
+                .scrollIntoView(UiSelector().index(position))
 
             assertTrue(
-                "Pocket story item at position $it not found.",
-                mDevice.findObject(UiSelector().index(it - 1).resourceId("pocket.recommended.story"))
+                "Pocket story item at position $position not found.",
+                mDevice.findObject(UiSelector().index(position))
                     .waitForExists(waitingTimeShort),
             )
         }
     }
 
-    fun verifyPocketSponsoredStoriesItems(vararg positions: Int) {
-        positions.forEach {
-            pocketStoriesList
-                .scrollIntoView(UiSelector().resourceId("pocket.sponsored.story").index(it - 1))
-
-            assertTrue(
-                "Pocket story item at position $it not found.",
-                mDevice.findObject(UiSelector().index(it - 1).resourceId("pocket.sponsored.story"))
-                    .waitForExists(waitingTimeShort),
-            )
-        }
-    }
+    // Temporarily not in use because Sponsored Pocket stories are only advertised for a limited time.
+    // See also known issue https://bugzilla.mozilla.org/show_bug.cgi?id=1828629
+//    fun verifyPocketSponsoredStoriesItems(vararg positions: Int) {
+//        positions.forEach {
+//            pocketStoriesList
+//                .scrollIntoView(UiSelector().resourceId("pocket.sponsored.story").index(it - 1))
+//
+//            assertTrue(
+//                "Pocket story item at position $it not found.",
+//                mDevice.findObject(UiSelector().index(it - 1).resourceId("pocket.sponsored.story"))
+//                    .waitForExists(waitingTimeShort),
+//            )
+//        }
+//    }
 
     fun verifyDiscoverMoreStoriesButton() {
         pocketStoriesList
