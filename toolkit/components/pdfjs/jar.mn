@@ -31,6 +31,6 @@ pdfjs.jar:
  content/web/images/	(content/web/images/toolbarButton*.svg)
  content/web/images/	(content/web/images/treeitem*.svg)
  content/web/images/	(content/web/images/cursor*.svg)
- content/web/images/	(content/web/images/findBar*.svg)
+ content/web/images/	(content/web/images/findbar*.svg)
  content/web/images/	(content/web/images/loading*.svg)
 #endif
