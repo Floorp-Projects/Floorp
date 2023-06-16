@@ -15049,16 +15049,18 @@ void Document::HidePopover(Element& aPopover, bool aFocusPreviousElement,
     return;
   }
 
-  bool wasHiding = popoverHTMLEl->GetPopoverData()->IsHiding();
-  popoverHTMLEl->GetPopoverData()->SetIsHiding(true);
-  auto restoreIsHiding = MakeScopeExit([&]() {
+  bool wasShowingOrHiding =
+      popoverHTMLEl->GetPopoverData()->IsShowingOrHiding();
+  popoverHTMLEl->GetPopoverData()->SetIsShowingOrHiding(true);
+  const bool fireEvents = aFireEvents && !wasShowingOrHiding;
+  auto cleanupHidingFlag = MakeScopeExit([&]() {
     if (auto* popoverData = popoverHTMLEl->GetPopoverData()) {
-      popoverData->SetIsHiding(wasHiding);
+      popoverData->SetIsShowingOrHiding(wasShowingOrHiding);
     }
   });
 
   if (popoverHTMLEl->IsAutoPopover()) {
-    HideAllPopoversUntil(*popoverHTMLEl, aFocusPreviousElement, aFireEvents);
+    HideAllPopoversUntil(*popoverHTMLEl, aFocusPreviousElement, fireEvents);
     if (!popoverHTMLEl->CheckPopoverValidity(PopoverVisibilityState::Showing,
                                              nullptr, aRv)) {
       return;
@@ -15084,7 +15086,7 @@ void Document::HidePopover(Element& aPopover, bool aFocusPreviousElement,
   data->SetInvoker(nullptr);
 
   // Fire beforetoggle event and re-check popover validity.
-  if (aFireEvents && !wasHiding) {
+  if (fireEvents) {
     // Intentionally ignore the return value here as only on open event for
     // beforetoggle the cancelable attribute is initialized to true.
     popoverHTMLEl->FireToggleEvent(PopoverVisibilityState::Showing,
@@ -15103,7 +15105,7 @@ void Document::HidePopover(Element& aPopover, bool aFocusPreviousElement,
       PopoverVisibilityState::Hidden);
 
   // Queue popover toggle event task.
-  if (aFireEvents) {
+  if (fireEvents) {
     popoverHTMLEl->QueuePopoverEventTask(PopoverVisibilityState::Showing);
   }
 
