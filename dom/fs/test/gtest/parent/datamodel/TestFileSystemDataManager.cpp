@@ -18,7 +18,10 @@ class TestFileSystemDataManager
  public:
   static void SetUpTestCase() { ASSERT_NO_FATAL_FAILURE(InitializeFixture()); }
 
-  static void TearDownTestCase() { ASSERT_NO_FATAL_FAILURE(ShutdownFixture()); }
+  static void TearDownTestCase() {
+    EXPECT_NO_FATAL_FAILURE(ClearStoragesForOrigin(GetTestOriginMetadata()));
+    ASSERT_NO_FATAL_FAILURE(ShutdownFixture());
+  }
 };
 
 TEST_F(TestFileSystemDataManager, GetOrCreateFileSystemDataManager) {
