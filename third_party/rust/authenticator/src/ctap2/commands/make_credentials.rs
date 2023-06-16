@@ -18,11 +18,14 @@ use crate::ctap2::server::{
     PublicKeyCredentialDescriptor, PublicKeyCredentialParameters, RelyingParty,
     RelyingPartyWrapper, RpIdHash, User, UserVerificationRequirement,
 };
-use crate::ctap2::utils::{read_byte, serde_parse_err};
 use crate::errors::AuthenticatorError;
 use crate::transport::errors::{ApduErrorStatus, HIDError};
-use crate::transport::{FidoDevice, VirtualFidoDevice};
-use crate::u2ftypes::CTAP1RequestAPDU;
+use crate::u2ftypes::{CTAP1RequestAPDU, U2FDevice};
+use nom::{
+    bytes::complete::{tag, take},
+    error::VerboseError,
+    number::complete::be_u8,
+};
 #[cfg(test)]
 use serde::Deserialize;
 use serde::{
@@ -31,7 +34,8 @@ use serde::{
     Serialize, Serializer,
 };
 use serde_cbor::{self, de::from_slice, ser, Value};
-use std::io::{Cursor, Read};
+use std::fmt;
+use std::io;
 
 #[derive(Debug)]
 pub struct MakeCredentialsResult(pub AttestationObject);
@@ -41,35 +45,30 @@ impl MakeCredentialsResult {
         input: &[u8],
         rp_id_hash: &RpIdHash,
     ) -> Result<MakeCredentialsResult, CommandError> {
-        let mut data = Cursor::new(input);
-        let magic_num = read_byte(&mut data).map_err(CommandError::Deserializing)?;
-        if magic_num != 0x05 {
-            error!("error while parsing registration: magic header not 0x05, but {magic_num}");
-            return Err(CommandError::Deserializing(DesError::invalid_value(
-                serde::de::Unexpected::Unsigned(magic_num as u64),
-                &"0x05",
-            )));
-        }
-        let mut public_key = [0u8; 65];
-        data.read_exact(&mut public_key)
-            .map_err(|_| CommandError::Deserializing(serde_parse_err("PublicKey")))?;
+        let parse_register = |input| {
+            let (rest, _) = tag(&[0x05])(input)?;
+            let (rest, public_key) = take(65u8)(rest)?;
+            let (rest, key_handle_len) = be_u8(rest)?;
+            let (rest, key_handle) = take(key_handle_len)(rest)?;
+            Ok((rest, public_key, key_handle))
+        };
 
-        let credential_id_len = read_byte(&mut data).map_err(CommandError::Deserializing)?;
-        let mut credential_id = vec![0u8; credential_id_len as usize];
-        data.read_exact(&mut credential_id)
-            .map_err(|_| CommandError::Deserializing(serde_parse_err("CredentialId")))?;
+        let (rest, public_key, key_handle) =
+            parse_register(input).map_err(|e: nom::Err<VerboseError<_>>| {
+                error!("error while parsing registration: {:?}", e);
+                CommandError::Deserializing(DesError::custom("unable to parse registration"))
+            })?;
 
-        let cert_and_sig = parse_u2f_der_certificate(&data.get_ref()[data.position() as usize..])
-            .map_err(|err| {
-            CommandError::Deserializing(serde_parse_err(&format!(
-                "Certificate and Signature: {err:?}",
-            )))
+        let cert_and_sig = parse_u2f_der_certificate(rest).map_err(|e| {
+            error!("error while parsing registration: {:?}", e);
+            CommandError::Deserializing(DesError::custom("unable to parse registration"))
         })?;
 
-        let credential_ec2_key = COSEEC2Key::from_sec1_uncompressed(Curve::SECP256R1, &public_key)
-            .map_err(|err| {
-                CommandError::Deserializing(serde_parse_err(&format!("EC2 Key: {err:?}",)))
-            })?;
+        let credential_ec2_key = COSEEC2Key::from_sec1_uncompressed(Curve::SECP256R1, public_key)
+            .map_err(|e| {
+            error!("error while parsing registration: {:?}", e);
+            CommandError::Deserializing(DesError::custom("unable to parse registration"))
+        })?;
 
         let credential_public_key = COSEKey {
             alg: COSEAlgorithm::ES256,
@@ -86,7 +85,7 @@ impl MakeCredentialsResult {
             counter: 0,
             credential_data: Some(AttestedCredentialData {
                 aaguid: AAGuid::default(),
-                credential_id,
+                credential_id: Vec::from(key_handle),
                 credential_public_key,
             }),
             extensions: Default::default(),
@@ -153,12 +152,12 @@ impl MakeCredentialsExtensions {
 
 #[derive(Debug, Clone)]
 pub struct MakeCredentials {
-    pub client_data_hash: ClientDataHash,
-    pub rp: RelyingPartyWrapper,
+    pub(crate) client_data_hash: ClientDataHash,
+    pub(crate) rp: RelyingPartyWrapper,
     // Note(baloo): If none -> ctap1
-    pub user: Option<User>,
-    pub pub_cred_params: Vec<PublicKeyCredentialParameters>,
-    pub exclude_list: Vec<PublicKeyCredentialDescriptor>,
+    pub(crate) user: Option<User>,
+    pub(crate) pub_cred_params: Vec<PublicKeyCredentialParameters>,
+    pub(crate) exclude_list: Vec<PublicKeyCredentialDescriptor>,
 
     // https://www.w3.org/TR/webauthn/#client-extension-input
     // The client extension input, which is a value that can be encoded in JSON,
@@ -166,11 +165,11 @@ pub struct MakeCredentials {
     // create() call, while the CBOR authenticator extension input is passed
     // from the client to the authenticator for authenticator extensions during
     // the processing of these calls.
-    pub extensions: MakeCredentialsExtensions,
-    pub options: MakeCredentialsOptions,
-    pub pin: Option<Pin>,
-    pub pin_uv_auth_param: Option<PinUvAuthParam>,
-    pub enterprise_attestation: Option<u64>,
+    pub(crate) extensions: MakeCredentialsExtensions,
+    pub(crate) options: MakeCredentialsOptions,
+    pub(crate) pin: Option<Pin>,
+    pub(crate) pin_uv_auth_param: Option<PinUvAuthParam>,
+    pub(crate) enterprise_attestation: Option<u64>,
 }
 
 impl MakeCredentials {
@@ -362,13 +361,6 @@ impl RequestCtap1 for MakeCredentials {
             .map_err(HIDError::Command)
             .map_err(Retryable::Error)
     }
-
-    fn send_to_virtual_device<Dev: VirtualFidoDevice>(
-        &self,
-        dev: &mut Dev,
-    ) -> Result<Self::Output, HIDError> {
-        dev.make_credentials(self)
-    }
 }
 
 impl RequestCtap2 for MakeCredentials {
@@ -382,11 +374,14 @@ impl RequestCtap2 for MakeCredentials {
         Ok(ser::to_vec(&self).map_err(CommandError::Serializing)?)
     }
 
-    fn handle_response_ctap2<Dev: FidoDevice>(
+    fn handle_response_ctap2<Dev>(
         &self,
         _dev: &mut Dev,
         input: &[u8],
-    ) -> Result<Self::Output, HIDError> {
+    ) -> Result<Self::Output, HIDError>
+    where
+        Dev: U2FDevice + io::Read + io::Write + fmt::Debug,
+    {
         if input.is_empty() {
             return Err(HIDError::Command(CommandError::InputTooSmall));
         }
@@ -409,13 +404,6 @@ impl RequestCtap2 for MakeCredentials {
         } else {
             Err(HIDError::Command(CommandError::StatusCode(status, None)))
         }
-    }
-
-    fn send_to_virtual_device<Dev: VirtualFidoDevice>(
-        &self,
-        dev: &mut Dev,
-    ) -> Result<Self::Output, HIDError> {
-        dev.make_credentials(self)
     }
 }
 
@@ -443,7 +431,7 @@ pub(crate) fn dummy_make_credentials_cmd() -> MakeCredentials {
             ..Default::default()
         }),
         vec![PublicKeyCredentialParameters {
-            alg: COSEAlgorithm::ES256,
+            alg: crate::COSEAlgorithm::ES256,
         }],
         vec![],
         MakeCredentialsOptions::default(),
@@ -474,7 +462,6 @@ pub mod test {
     };
     use crate::transport::device_selector::Device;
     use crate::transport::hid::HIDDevice;
-    use crate::transport::{FidoDevice, FidoProtocol};
     use serde_bytes::ByteBuf;
 
     fn create_attestation_obj() -> AttestationObject {
@@ -610,7 +597,6 @@ pub mod test {
         );
 
         let mut device = Device::new("commands/make_credentials").unwrap(); // not really used (all functions ignore it)
-        assert_eq!(device.get_protocol(), FidoProtocol::CTAP2);
         let req_serialized = req
             .wire_format()
             .expect("Failed to serialize MakeCredentials request");

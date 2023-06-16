@@ -4,12 +4,12 @@
 
 extern crate log;
 
-use crate::consts::{Capability, CID_BROADCAST, MAX_HID_RPT_SIZE};
+use crate::consts::{CID_BROADCAST, MAX_HID_RPT_SIZE};
 use crate::ctap2::commands::get_info::AuthenticatorInfo;
 use crate::transport::hid::HIDDevice;
 use crate::transport::platform::iokit::*;
-use crate::transport::{FidoDevice, FidoProtocol, HIDError, SharedSecret};
-use crate::u2ftypes::U2FDeviceInfo;
+use crate::transport::{FidoDevice, HIDError, SharedSecret};
+use crate::u2ftypes::{U2FDevice, U2FDeviceInfo};
 use core_foundation::base::*;
 use core_foundation::string::*;
 use std::convert::TryInto;
@@ -29,7 +29,6 @@ pub struct Device {
     dev_info: Option<U2FDeviceInfo>,
     secret: Option<SharedSecret>,
     authenticator_info: Option<AuthenticatorInfo>,
-    protocol: FidoProtocol,
 }
 
 impl Device {
@@ -131,27 +130,7 @@ impl Write for Device {
     }
 }
 
-impl HIDDevice for Device {
-    type BuildParameters = (IOHIDDeviceRef, Receiver<Vec<u8>>);
-    type Id = IOHIDDeviceRef;
-
-    fn new(dev_ids: Self::BuildParameters) -> Result<Self, (HIDError, Self::Id)> {
-        let (device_ref, report_rx) = dev_ids;
-        Ok(Self {
-            device_ref,
-            cid: CID_BROADCAST,
-            report_rx: Some(report_rx),
-            dev_info: None,
-            secret: None,
-            authenticator_info: None,
-            protocol: FidoProtocol::CTAP2,
-        })
-    }
-
-    fn id(&self) -> Self::Id {
-        self.device_ref
-    }
-
+impl U2FDevice for Device {
     fn get_cid(&self) -> &[u8; 4] {
         &self.cid
     }
@@ -183,20 +162,30 @@ impl HIDDevice for Device {
     }
 }
 
-impl FidoDevice for Device {
-    fn pre_init(&mut self) -> Result<(), HIDError> {
-        HIDDevice::pre_init(self)
-    }
+impl HIDDevice for Device {
+    type BuildParameters = (IOHIDDeviceRef, Receiver<Vec<u8>>);
+    type Id = IOHIDDeviceRef;
 
-    fn should_try_ctap2(&self) -> bool {
-        HIDDevice::get_device_info(self)
-            .cap_flags
-            .contains(Capability::CBOR)
+    fn new(dev_ids: Self::BuildParameters) -> Result<Self, (HIDError, Self::Id)> {
+        let (device_ref, report_rx) = dev_ids;
+        Ok(Self {
+            device_ref,
+            cid: CID_BROADCAST,
+            report_rx: Some(report_rx),
+            dev_info: None,
+            secret: None,
+            authenticator_info: None,
+        })
     }
 
     fn initialized(&self) -> bool {
         self.cid != CID_BROADCAST
     }
+
+    fn id(&self) -> Self::Id {
+        self.device_ref
+    }
+
     fn is_u2f(&mut self) -> bool {
         true
     }
@@ -215,12 +204,6 @@ impl FidoDevice for Device {
     fn set_authenticator_info(&mut self, authenticator_info: AuthenticatorInfo) {
         self.authenticator_info = Some(authenticator_info);
     }
-
-    fn get_protocol(&self) -> FidoProtocol {
-        self.protocol
-    }
-
-    fn downgrade_to_ctap1(&mut self) {
-        self.protocol = FidoProtocol::CTAP1;
-    }
 }
+
+impl FidoDevice for Device {}

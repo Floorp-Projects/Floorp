@@ -4,13 +4,12 @@
 
 use authenticator::{
     authenticatorservice::{AuthenticatorService, RegisterArgs, SignArgs},
-    crypto::COSEAlgorithm,
     ctap2::server::{
         PublicKeyCredentialDescriptor, PublicKeyCredentialParameters, RelyingParty,
         ResidentKeyRequirement, Transport, User, UserVerificationRequirement,
     },
     statecallback::StateCallback,
-    Pin, RegisterResult, SignResult, StatusPinUv, StatusUpdate,
+    COSEAlgorithm, Pin, RegisterResult, SignResult, StatusPinUv, StatusUpdate,
 };
 use getopts::Options;
 use sha2::{Digest, Sha256};
@@ -51,8 +50,20 @@ fn register_user(manager: &mut AuthenticatorService, username: &str, timeout_ms:
             Ok(StatusUpdate::InteractiveManagement(..)) => {
                 panic!("STATUS: This can't happen when doing non-interactive usage");
             }
+            Ok(StatusUpdate::DeviceAvailable { dev_info }) => {
+                println!("STATUS: device available: {dev_info}")
+            }
+            Ok(StatusUpdate::DeviceUnavailable { dev_info }) => {
+                println!("STATUS: device unavailable: {dev_info}")
+            }
+            Ok(StatusUpdate::Success { dev_info }) => {
+                println!("STATUS: success using device: {dev_info}");
+            }
             Ok(StatusUpdate::SelectDeviceNotice) => {
                 println!("STATUS: Please select a device by touching one of them.");
+            }
+            Ok(StatusUpdate::DeviceSelected(dev_info)) => {
+                println!("STATUS: Continuing with device: {dev_info}");
             }
             Ok(StatusUpdate::PresenceRequired) => {
                 println!("STATUS: waiting for user presence");
@@ -235,8 +246,20 @@ fn main() {
             Ok(StatusUpdate::InteractiveManagement(..)) => {
                 panic!("STATUS: This can't happen when doing non-interactive usage");
             }
+            Ok(StatusUpdate::DeviceAvailable { dev_info }) => {
+                println!("STATUS: device available: {dev_info}")
+            }
+            Ok(StatusUpdate::DeviceUnavailable { dev_info }) => {
+                println!("STATUS: device unavailable: {dev_info}")
+            }
+            Ok(StatusUpdate::Success { dev_info }) => {
+                println!("STATUS: success using device: {dev_info}");
+            }
             Ok(StatusUpdate::SelectDeviceNotice) => {
                 println!("STATUS: Please select a device by touching one of them.");
+            }
+            Ok(StatusUpdate::DeviceSelected(dev_info)) => {
+                println!("STATUS: Continuing with device: {dev_info}");
             }
             Ok(StatusUpdate::PresenceRequired) => {
                 println!("STATUS: waiting for user presence");

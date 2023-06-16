@@ -1,26 +1,25 @@
 use super::server::RelyingPartyWrapper;
 use crate::crypto::{CryptoError, PinUvAuthParam, PinUvAuthToken};
-use crate::ctap2::commands::client_pin::{
-    ClientPinResponse, GetPinRetries, GetUvRetries, Pin, PinError,
-};
+use crate::ctap2::commands::client_pin::{GetPinRetries, GetUvRetries, Pin, PinError};
 use crate::ctap2::commands::get_info::AuthenticatorInfo;
 use crate::ctap2::server::UserVerificationRequirement;
 use crate::errors::AuthenticatorError;
 use crate::transport::errors::{ApduErrorStatus, HIDError};
-use crate::transport::{FidoDevice, VirtualFidoDevice};
+use crate::transport::FidoDevice;
 use serde_cbor::{error::Error as CborError, Value};
 use serde_json as json;
 use std::error::Error as StdErrorT;
 use std::fmt;
+use std::io::{Read, Write};
 
-pub mod client_pin;
-pub mod get_assertion;
-pub mod get_info;
-pub mod get_next_assertion;
-pub mod get_version;
-pub mod make_credentials;
-pub mod reset;
-pub mod selection;
+pub(crate) mod client_pin;
+pub(crate) mod get_assertion;
+pub(crate) mod get_info;
+pub(crate) mod get_next_assertion;
+pub(crate) mod get_version;
+pub(crate) mod make_credentials;
+pub(crate) mod reset;
+pub(crate) mod selection;
 
 pub trait Request<T>
 where
@@ -72,11 +71,6 @@ pub trait RequestCtap1: fmt::Debug {
         input: &[u8],
         add_info: &Self::AdditionalInfo,
     ) -> Result<Self::Output, Retryable<HIDError>>;
-
-    fn send_to_virtual_device<Dev: VirtualFidoDevice>(
-        &self,
-        dev: &mut Dev,
-    ) -> Result<Self::Output, HIDError>;
 }
 
 pub trait RequestCtap2: fmt::Debug {
@@ -86,16 +80,13 @@ pub trait RequestCtap2: fmt::Debug {
 
     fn wire_format(&self) -> Result<Vec<u8>, HIDError>;
 
-    fn handle_response_ctap2<Dev: FidoDevice>(
+    fn handle_response_ctap2<Dev>(
         &self,
         dev: &mut Dev,
         input: &[u8],
-    ) -> Result<Self::Output, HIDError>;
-
-    fn send_to_virtual_device<Dev: VirtualFidoDevice>(
-        &self,
-        dev: &mut Dev,
-    ) -> Result<Self::Output, HIDError>;
+    ) -> Result<Self::Output, HIDError>
+    where
+        Dev: FidoDevice + Read + Write + fmt::Debug;
 }
 
 #[derive(Debug, Clone)]
@@ -164,10 +155,8 @@ pub(crate) fn repackage_pin_errors<D: FidoDevice>(
         HIDError::Command(CommandError::StatusCode(StatusCode::PinInvalid, _)) => {
             // If the given PIN was wrong, determine no. of left retries
             let cmd = GetPinRetries::new();
-            // Treat any error as if the device returned a valid response without a pinRetries
-            // field.
-            let resp = dev.send_cbor(&cmd).unwrap_or(ClientPinResponse::default());
-            AuthenticatorError::PinError(PinError::InvalidPin(resp.pin_retries))
+            let retries = dev.send_cbor(&cmd).ok(); // If we got retries, wrap it in Some, otherwise ignore err
+            AuthenticatorError::PinError(PinError::InvalidPin(retries))
         }
         HIDError::Command(CommandError::StatusCode(StatusCode::PinAuthBlocked, _)) => {
             AuthenticatorError::PinError(PinError::PinAuthBlocked)
@@ -187,10 +176,8 @@ pub(crate) fn repackage_pin_errors<D: FidoDevice>(
         HIDError::Command(CommandError::StatusCode(StatusCode::UvInvalid, _)) => {
             // If the internal UV failed, determine no. of left retries
             let cmd = GetUvRetries::new();
-            // Treat any error as if the device returned a valid response without a uvRetries
-            // field.
-            let resp = dev.send_cbor(&cmd).unwrap_or(ClientPinResponse::default());
-            AuthenticatorError::PinError(PinError::InvalidUv(resp.uv_retries))
+            let retries = dev.send_cbor(&cmd).ok(); // If we got retries, wrap it in Some, otherwise ignore err
+            AuthenticatorError::PinError(PinError::InvalidUv(retries))
         }
         HIDError::Command(CommandError::StatusCode(StatusCode::UvBlocked, _)) => {
             AuthenticatorError::PinError(PinError::UvBlocked)

@@ -2,7 +2,7 @@ use super::{Command, CommandError, RequestCtap2, StatusCode};
 use crate::ctap2::attestation::AAGuid;
 use crate::ctap2::server::PublicKeyCredentialParameters;
 use crate::transport::errors::HIDError;
-use crate::transport::{FidoDevice, VirtualFidoDevice};
+use crate::u2ftypes::U2FDevice;
 use serde::{
     de::{Error as SError, IgnoredAny, MapAccess, Visitor},
     Deserialize, Deserializer, Serialize,
@@ -25,11 +25,14 @@ impl RequestCtap2 for GetInfo {
         Ok(Vec::new())
     }
 
-    fn handle_response_ctap2<Dev: FidoDevice>(
+    fn handle_response_ctap2<Dev>(
         &self,
         _dev: &mut Dev,
         input: &[u8],
-    ) -> Result<Self::Output, HIDError> {
+    ) -> Result<Self::Output, HIDError>
+    where
+        Dev: U2FDevice,
+    {
         if input.is_empty() {
             return Err(CommandError::InputTooSmall.into());
         }
@@ -49,13 +52,6 @@ impl RequestCtap2 for GetInfo {
         } else {
             Err(CommandError::InputTooSmall.into())
         }
-    }
-
-    fn send_to_virtual_device<Dev: VirtualFidoDevice>(
-        &self,
-        dev: &mut Dev,
-    ) -> Result<Self::Output, HIDError> {
-        dev.get_info()
     }
 }
 
@@ -320,7 +316,7 @@ pub struct AuthenticatorInfo {
     pub aaguid: AAGuid,
     pub options: AuthenticatorOptions,
     pub max_msg_size: Option<usize>,
-    pub pin_protocols: Option<Vec<u64>>,
+    pub pin_protocols: Vec<u64>,
     // CTAP 2.1
     pub max_credential_count_in_list: Option<usize>,
     pub max_credential_id_length: Option<usize>,
@@ -392,7 +388,7 @@ impl<'de> Deserialize<'de> for AuthenticatorInfo {
                 let mut aaguid = None;
                 let mut options = AuthenticatorOptions::default();
                 let mut max_msg_size = None;
-                let mut pin_protocols: Option<Vec<_>> = None;
+                let mut pin_protocols = Vec::new();
                 let mut max_credential_count_in_list = None;
                 let mut max_credential_id_length = None;
                 let mut transports = None;
@@ -432,7 +428,10 @@ impl<'de> Deserialize<'de> for AuthenticatorInfo {
                             parse_next_optional_value!(max_msg_size, map);
                         }
                         0x06 => {
-                            parse_next_optional_value!(pin_protocols, map);
+                            if !pin_protocols.is_empty() {
+                                return Err(serde::de::Error::duplicate_field("pin_protocols"));
+                            }
+                            pin_protocols = map.next_value()?;
                         }
                         0x07 => {
                             parse_next_optional_value!(max_credential_count_in_list, map);
@@ -493,15 +492,6 @@ impl<'de> Deserialize<'de> for AuthenticatorInfo {
                     ));
                 }
 
-                if let Some(protocols) = &pin_protocols {
-                    if protocols.is_empty() {
-                        return Err(M::Error::custom(
-                            "Token returned empty PIN protocol list, which is not allowed"
-                                .to_string(),
-                        ));
-                    }
-                }
-
                 if let Some(aaguid) = aaguid {
                     Ok(AuthenticatorInfo {
                         versions,
@@ -543,7 +533,8 @@ pub mod tests {
     use crate::crypto::COSEAlgorithm;
     use crate::transport::device_selector::Device;
     use crate::transport::platform::device::IN_HID_RPT_SIZE;
-    use crate::transport::{hid::HIDDevice, FidoDevice, FidoProtocol};
+    use crate::transport::{hid::HIDDevice, FidoDevice, Nonce};
+    use crate::u2ftypes::U2FDevice;
     use rand::{thread_rng, RngCore};
     use serde_cbor::de::from_slice;
 
@@ -750,7 +741,7 @@ pub mod tests {
                 ..Default::default()
             },
             max_msg_size: Some(1200),
-            pin_protocols: Some(vec![1]),
+            pin_protocols: vec![1],
             max_credential_count_in_list: None,
             max_credential_id_length: None,
             transports: None,
@@ -830,7 +821,7 @@ pub mod tests {
                 always_uv: Some(true),
             },
             max_msg_size: Some(1200),
-            pin_protocols: Some(vec![2, 1]),
+            pin_protocols: vec![2, 1],
             max_credential_count_in_list: Some(8),
             max_credential_id_length: Some(128),
             transports: Some(vec!["usb".to_string()]),
@@ -861,7 +852,6 @@ pub mod tests {
     #[test]
     fn test_get_info_ctap2_only() {
         let mut device = Device::new("commands/get_info").unwrap();
-        assert_eq!(device.get_protocol(), FidoProtocol::CTAP2);
         let nonce = [0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01];
 
         // channel id
@@ -904,7 +894,9 @@ pub mod tests {
         msg.extend(vec![0x00]); // SEQ
         msg.extend(&AUTHENTICATOR_INFO_PAYLOAD[(IN_HID_RPT_SIZE - 8)..]);
         device.add_read(&msg, 0);
-        device.init().expect("Failed to init device");
+        device
+            .init(Nonce::Use(nonce))
+            .expect("Failed to init device");
 
         assert_eq!(device.get_cid(), &cid);
 
@@ -930,7 +922,7 @@ pub mod tests {
                 ..Default::default()
             },
             max_msg_size: Some(1200),
-            pin_protocols: Some(vec![1]),
+            pin_protocols: vec![1],
             max_credential_count_in_list: None,
             max_credential_id_length: None,
             transports: None,
@@ -987,58 +979,5 @@ pub mod tests {
             fido2_1.max_supported_version(),
             AuthenticatorVersion::FIDO_2_1
         );
-    }
-
-    #[test]
-    fn parse_authenticator_info_protocol_versions() {
-        let mut expected = AuthenticatorInfo {
-            versions: vec![AuthenticatorVersion::U2F_V2, AuthenticatorVersion::FIDO_2_0],
-            extensions: vec!["uvm".to_string(), "hmac-secret".to_string()],
-            aaguid: AAGuid(AAGUID_RAW),
-            options: AuthenticatorOptions {
-                platform_device: false,
-                resident_key: true,
-                client_pin: Some(false),
-                user_presence: true,
-                ..Default::default()
-            },
-            max_msg_size: Some(1200),
-            pin_protocols: None,
-            ..Default::default()
-        };
-
-        let raw_data = AUTHENTICATOR_INFO_PAYLOAD.to_vec();
-        // pin protocol entry (last 3 bytes in payload):
-        // 0x06, //  unsigned(6)
-        // 0x81, //  array(1)
-        // 0x01, //    unsigned(1)
-
-        let mut raw_empty_list = raw_data.clone();
-        raw_empty_list.pop();
-        let raw_list_len = raw_empty_list.len();
-        raw_empty_list[raw_list_len - 1] = 0x80; // array(0) instead of array(1)
-
-        // Empty protocols-array, that should produce an error
-        from_slice::<AuthenticatorInfo>(&raw_empty_list).unwrap_err();
-
-        // No protocols specified
-        let mut raw_no_list = raw_data.clone();
-        raw_no_list.pop();
-        raw_no_list.pop();
-        raw_no_list.pop();
-        raw_no_list[0] = 0xa5; // map(5) instead of map(6)
-
-        let authenticator_info: AuthenticatorInfo = from_slice(&raw_no_list).unwrap();
-        assert_eq!(authenticator_info, expected);
-
-        // Both 1 and 2
-        let mut raw_list = raw_data.clone();
-        let raw_list_len = raw_list.len();
-        raw_list[raw_list_len - 2] = 0x82; // array(2) instead of array(1)
-        raw_list.push(0x02);
-
-        expected.pin_protocols = Some(vec![1, 2]);
-        let authenticator_info: AuthenticatorInfo = from_slice(&raw_list).unwrap();
-        assert_eq!(authenticator_info, expected);
     }
 }

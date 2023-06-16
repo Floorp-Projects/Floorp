@@ -73,8 +73,20 @@ fn main() {
             Ok(StatusUpdate::InteractiveManagement(..)) => {
                 panic!("STATUS: This can't happen when doing non-interactive usage");
             }
+            Ok(StatusUpdate::DeviceAvailable { dev_info }) => {
+                println!("STATUS: device available: {dev_info}")
+            }
+            Ok(StatusUpdate::DeviceUnavailable { dev_info }) => {
+                println!("STATUS: device unavailable: {dev_info}")
+            }
+            Ok(StatusUpdate::Success { dev_info }) => {
+                println!("STATUS: success using device: {dev_info}");
+            }
             Ok(StatusUpdate::SelectDeviceNotice) => {
                 println!("STATUS: Please select a device by touching one of them.");
+            }
+            Ok(StatusUpdate::DeviceSelected(dev_info)) => {
+                println!("STATUS: Continuing with device: {dev_info}");
             }
             Ok(StatusUpdate::PresenceRequired) => {
                 println!("STATUS: waiting for user presence");
