@@ -32,19 +32,23 @@ async function testLastClosedActionsEntries() {
   );
 }
 
-/**
- * Tests that if the user invokes restoreLastClosedTabOrWindowOrSession it will result in either the last session will be restored, if possible,
- * the last tab (or multiple selected tabs) that was closed is reopened, or the last window that is closed is reopened.
- */
-add_task(async function test_undo_last_action() {
-  // forgetClosedTabs(window);
-  // needed for verify tests so that forgetting tabs isn't recorded
-  SessionStore.resetLastClosedActions();
-
+add_setup(() => {
+  forgetClosedTabs(window);
   registerCleanupFunction(() => {
     forgetClosedTabs(window);
   });
 
+  // needed for verify tests so that forgetting tabs isn't recorded
+  SessionStore.resetLastClosedActions();
+});
+
+/**
+ * Tests that if the user invokes restoreLastClosedTabOrWindowOrSession it will
+ * result in either the last session will be restored, if possible, the last
+ * tab (or multiple selected tabs) that was closed is reopened, or the last
+ * window that is closed is reopened.
+ */
+add_task(async function test_undo_last_action() {
   const state = {
     windows: [
       {
@@ -178,4 +182,89 @@ add_task(async function test_user_clears_history() {
     !SessionStore.lastClosedActions.length,
     `0 closed actions have been recorded`
   );
+});
+
+/**
+ * It the browser has restarted and the closed actions list is empty, we
+ * should fallback to re-opening the last closed tab if one exists.
+ */
+add_task(async function test_reopen_last_tab_if_no_closed_actions() {
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:blank",
+    },
+    async browser => {
+      const TEST_URL = "https://example.com/";
+      let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
+      let update = BrowserTestUtils.waitForSessionStoreUpdate(tab);
+      BrowserTestUtils.removeTab(tab);
+      await update;
+
+      SessionStore.resetLastClosedActions();
+
+      let promiseTab = BrowserTestUtils.waitForNewTab(gBrowser, TEST_URL);
+      restoreLastClosedTabOrWindowOrSession();
+      let newTab = await promiseTab;
+      Assert.equal(newTab.linkedBrowser.currentURI.spec, TEST_URL);
+    }
+  );
+});
+
+/**
+ * It the browser has restarted and the closed actions list is empty, and
+ * no closed tabs exist for the window, we should fallback to re-opening
+ * the last session if one exists.
+ */
+add_task(async function test_reopen_last_session_if_no_closed_actions() {
+  gBrowser.removeAllTabsBut(gBrowser.tabs[0]);
+  await TabStateFlusher.flushWindow(window);
+
+  forgetClosedTabs(window);
+
+  const state = {
+    windows: [
+      {
+        tabs: [
+          {
+            entries: [
+              {
+                title: "example.org",
+                url: "https://example.org/",
+                triggeringPrincipal_base64,
+              },
+            ],
+          },
+          {
+            entries: [
+              {
+                title: "example.com",
+                url: "https://example.com/",
+                triggeringPrincipal_base64,
+              },
+            ],
+          },
+          {
+            entries: [
+              {
+                title: "mozilla",
+                url: "https://www.mozilla.org/",
+                triggeringPrincipal_base64,
+              },
+            ],
+          },
+        ],
+        selected: 3,
+      },
+    ],
+  };
+
+  _LastSession.setState(state);
+  SessionStore.resetLastClosedActions();
+
+  let sessionRestored = promiseSessionStoreLoads(3 /* total restored tabs */);
+  restoreLastClosedTabOrWindowOrSession();
+  await sessionRestored;
+  Assert.equal(gBrowser.tabs.length, 4, "Got the expected number of tabs");
+  gBrowser.removeAllTabsBut(gBrowser.tabs[0]);
 });
