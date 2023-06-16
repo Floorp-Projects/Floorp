@@ -413,7 +413,6 @@ struct FloatRegister {
   template <RegTypeName Name = DefaultType>
   static SetType AllocatableAsIndexableSet(SetType s) {
     static_assert(Name != RegTypeName::Any, "Allocatable set are not iterable");
-    printf("AllocatableAsIndexableSet\n");
     return LiveAsIndexableSet<Name>(s);
   }
 
@@ -462,7 +461,9 @@ struct FloatRegister {
 
   bool isSingle() const {
     MOZ_ASSERT(!invalid_);
-    return kind_ == FloatRegisters::Single;
+    // On riscv64 arch, float register and double register using the same
+    // register file.
+    return kind_ == FloatRegisters::Single || kind_ == FloatRegisters::Double;
   }
   bool isDouble() const {
     MOZ_ASSERT(!invalid_);

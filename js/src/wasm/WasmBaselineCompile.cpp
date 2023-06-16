@@ -1817,6 +1817,8 @@ void BaseCompiler::popAndAllocateForMulI64(RegI64* r0, RegI64* r1,
   pop2xI64(r0, r1);
 #elif defined(JS_CODEGEN_LOONG64)
   pop2xI64(r0, r1);
+#elif defined(JS_CODEGEN_RISCV64)
+  pop2xI64(r0, r1);
 #else
   MOZ_CRASH("BaseCompiler porting interface: popAndAllocateForMulI64");
 #endif
@@ -1879,6 +1881,12 @@ static void QuotientI64(MacroAssembler& masm, RegI64 rhs, RegI64 srcDest,
   } else {
     masm.as_div_d(srcDest.reg, srcDest.reg, rhs.reg);
   }
+#  elif defined(JS_CODEGEN_RISCV64)
+  if (isUnsigned) {
+    masm.divu(srcDest.reg, srcDest.reg, rhs.reg);
+  } else {
+    masm.div(srcDest.reg, srcDest.reg, rhs.reg);
+  }
 #  else
   MOZ_CRASH("BaseCompiler platform hook: quotientI64");
 #  endif
@@ -1923,6 +1931,12 @@ static void RemainderI64(MacroAssembler& masm, RegI64 rhs, RegI64 srcDest,
     masm.as_mod_du(srcDest.reg, srcDest.reg, rhs.reg);
   } else {
     masm.as_mod_d(srcDest.reg, srcDest.reg, rhs.reg);
+  }
+#  elif defined(JS_CODEGEN_RISCV64)
+  if (isUnsigned) {
+    masm.remu(srcDest.reg, srcDest.reg, rhs.reg);
+  } else {
+    masm.rem(srcDest.reg, srcDest.reg, rhs.reg);
   }
 #  else
   MOZ_CRASH("BaseCompiler platform hook: remainderI64");
@@ -2288,8 +2302,9 @@ static void CtzI32(MacroAssembler& masm, RegI32 rsd) {
 static RegI32 PopcntTemp(BaseCompiler& bc) {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
   return AssemblerX86Shared::HasPOPCNT() ? RegI32::Invalid() : bc.needI32();
-#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
-    defined(JS_CODEGEN_MIPS64) || defined(JS_CODEGEN_LOONG64)
+#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) ||    \
+    defined(JS_CODEGEN_MIPS64) || defined(JS_CODEGEN_LOONG64) || \
+    defined(JS_CODEGEN_RISCV64)
   return bc.needI32();
 #else
   MOZ_CRASH("BaseCompiler platform hook: PopcntTemp");
@@ -10926,9 +10941,10 @@ bool js::wasm::BaselinePlatformSupport() {
     return false;
   }
 #endif
-#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86) ||   \
-    defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
-    defined(JS_CODEGEN_MIPS64) || defined(JS_CODEGEN_LOONG64)
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86) ||        \
+    defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) ||      \
+    defined(JS_CODEGEN_MIPS64) || defined(JS_CODEGEN_LOONG64) || \
+    defined(JS_CODEGEN_RISCV64)
   return true;
 #else
   return false;
