@@ -15118,7 +15118,7 @@ nsTArray<Element*> Document::AutoPopoverList() const {
   nsTArray<Element*> elements;
   for (const nsWeakPtr& ptr : mTopLayer) {
     if (nsCOMPtr<Element> element = do_QueryReferent(ptr)) {
-      if (element && element->IsAutoPopover()) {
+      if (element && element->IsAutoPopover() && element->IsPopoverOpen()) {
         elements.AppendElement(element);
       }
     }
@@ -15129,17 +15129,8 @@ nsTArray<Element*> Document::AutoPopoverList() const {
 Element* Document::GetTopmostAutoPopover() const {
   for (const nsWeakPtr& weakPtr : Reversed(mTopLayer)) {
     nsCOMPtr<Element> element(do_QueryReferent(weakPtr));
-    if (!element) {
-      continue;
-    }
-    if (element->State().HasState(ElementState::FULLSCREEN)) {
-      continue;
-    }
-    if (element->IsAutoPopover()) {
-      auto* dialog = HTMLDialogElement::FromNode(element);
-      if (!dialog || !dialog->IsInTopLayer()) {
-        return element;
-      }
+    if (element && element->IsAutoPopover() && element->IsPopoverOpen()) {
+      return element;
     }
   }
   return nullptr;
