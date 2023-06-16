@@ -164,18 +164,6 @@ Result<bool, QMResult> DoesFileExist(const FileSystemConnection& aConnection,
   QM_TRY_RETURN(ApplyEntryExistsQuery(aConnection, existsQuery, aHandle));
 }
 
-Result<bool, QMResult> DoesFileExist(const FileSystemConnection& aConnection,
-                                     const EntryId& aEntry) {
-  MOZ_ASSERT(!aEntry.IsEmpty());
-
-  const nsCString existsQuery =
-      "SELECT EXISTS "
-      "(SELECT 1 FROM Files WHERE handle = :handle ) "
-      ";"_ns;
-
-  QM_TRY_RETURN(ApplyEntryExistsQuery(aConnection, existsQuery, aEntry));
-}
-
 nsresult GetFileAttributes(const FileSystemConnection& aConnection,
                            const EntryId& aEntryId, ContentType& aType) {
   const nsLiteralCString getFileLocation =
@@ -583,6 +571,18 @@ Result<bool, QMResult> ApplyEntryExistsQuery(
   QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("handle"_ns, aEntry)));
 
   return stmt.YesOrNoQuery();
+}
+
+Result<bool, QMResult> DoesFileExist(const FileSystemConnection& aConnection,
+                                     const EntryId& aEntryId) {
+  MOZ_ASSERT(!aEntryId.IsEmpty());
+
+  const nsCString existsQuery =
+      "SELECT EXISTS "
+      "(SELECT 1 FROM Files WHERE handle = :handle ) "
+      ";"_ns;
+
+  QM_TRY_RETURN(ApplyEntryExistsQuery(aConnection, existsQuery, aEntryId));
 }
 
 Result<bool, QMResult> IsFile(const FileSystemConnection& aConnection,
