@@ -341,15 +341,9 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
     }
   } else if (!strcmp(aProperty, NS_APP_USER_PROFILE_50_DIR) ||
              !strcmp(aProperty, NS_APP_PROFILE_DIR_STARTUP)) {
-    if (mProfileDir) {
-      rv = mProfileDir->Clone(getter_AddRefs(file));
-    } else {
-      // Profile directories are only set up in the parent process.
-      // We don't expect every caller to check if they are in the right process,
-      // so fail immediately to avoid warning spam.
-      NS_WARNING_ASSERTION(!XRE_IsParentProcess(),
-                           "tried to get profile in parent too early");
-      return NS_ERROR_FAILURE;
+    rv = GetProfileStartupDir(getter_AddRefs(file));
+    if (NS_FAILED(rv)) {
+      return rv;
     }
   } else if (!strcmp(aProperty, NS_GRE_DIR)) {
     // On Android, internal files are inside the APK, a zip file, so this
@@ -461,20 +455,32 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
   }
 #endif  // defined(MOZ_CONTENT_TEMP_DIR)
   else if (!strcmp(aProperty, NS_APP_USER_CHROME_DIR)) {
-    // We need to allow component, xpt, and chrome registration to
-    // occur prior to the profile-after-change notification.
+    // It isn't clear why this uses GetProfileStartupDir instead of
+    // GetProfileDir. It could theoretically matter in a non-main
+    // process where some other directory provider has defined
+    // NS_APP_USER_PROFILE_50_DIR. In that scenario, using
+    // GetProfileStartupDir means this will fail instead of succeed.
     rv = GetProfileStartupDir(getter_AddRefs(file));
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
     rv = file->AppendNative("chrome"_ns);
   } else if (!strcmp(aProperty, NS_APP_PREFS_50_DIR)) {
     rv = GetProfileDir(getter_AddRefs(file));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   } else if (!strcmp(aProperty, NS_APP_PREFS_50_FILE)) {
     rv = GetProfileDir(getter_AddRefs(file));
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
     rv = file->AppendNative("prefs.js"_ns);
   } else if (!strcmp(aProperty, NS_APP_PREFS_OVERRIDE_DIR)) {
     rv = GetProfileDir(getter_AddRefs(file));
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
     rv = file->AppendNative(nsLiteralCString(PREF_OVERRIDE_DIRNAME));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = EnsureDirectoryExists(file);
@@ -1159,18 +1165,32 @@ nsresult nsXREDirProvider::GetUpdateRootDir(nsIFile** aResult,
 }
 
 nsresult nsXREDirProvider::GetProfileStartupDir(nsIFile** aResult) {
-  NS_ENSURE_TRUE(mProfileDir, NS_ERROR_FAILURE);
-  return mProfileDir->Clone(aResult);
+  if (mProfileDir) {
+    return mProfileDir->Clone(aResult);
+  }
+
+  // Profile directories are only set up in the parent process.
+  // We don't expect every caller to check if they are in the right process,
+  // so fail immediately to avoid warning spam.
+  NS_WARNING_ASSERTION(!XRE_IsParentProcess(),
+                       "tried to get profile in parent too early");
+  return NS_ERROR_FAILURE;
 }
 
 nsresult nsXREDirProvider::GetProfileDir(nsIFile** aResult) {
   if (!mProfileDir) {
     nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                                          getter_AddRefs(mProfileDir));
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_TRUE(mProfileDir, NS_ERROR_FAILURE);
+    // Guard against potential buggy directory providers that fail while also
+    // returning something.
+    if (NS_FAILED(rv)) {
+      MOZ_ASSERT(!mProfileDir,
+                 "Directory provider failed but returned a value");
+      mProfileDir = nullptr;
+    }
   }
-  return mProfileDir->Clone(aResult);
+  // If we failed to get mProfileDir, this will warn for us if appropriate.
+  return GetProfileStartupDir(aResult);
 }
 
 NS_IMETHODIMP
