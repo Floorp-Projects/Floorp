@@ -10,7 +10,11 @@ const PromoInfo = {
 };
 
 async function resetState() {
-  await Promise.all([ASRouter.resetMessageState(), ASRouter.unblockAll()]);
+  await Promise.all([
+    ASRouter.resetMessageState(),
+    ASRouter.resetGroupsState(),
+    ASRouter.unblockAll(),
+  ]);
 }
 
 add_setup(async function () {
@@ -98,42 +102,47 @@ add_task(async function test_default_promo() {
   await BrowserTestUtils.closeWindow(win4);
 });
 
+// Verify that promos are correctly removed if blocked in another tab.
+// See handlePromoOnPreload() in aboutPrivateBrowsing.js
 add_task(async function test_remove_promo_from_prerendered_tab_if_blocked() {
   await resetState();
 
   const { win, tab: tab1 } = await openTabAndWaitForRender();
 
   await SpecialPowers.spawn(tab1, [], async function () {
-    const promoContainer = content.document.querySelector(".promo"); // container which is present if promo message is not blocked
-    ok(promoContainer, "Focus promo is shown in a new tab");
+    // container which is present if promo message is not blocked
+    const promoContainer = content.document.querySelector(".promo");
+    ok(promoContainer, "Focus promo is shown in tab 1");
+  });
+
+  // Open a new background tab (tab 2) while the promo message is unblocked
+  win.openTrustedLinkIn(win.BROWSER_NEW_TAB_URL, "tabshifted");
+
+  // Block the promo in tab 1
+  await SpecialPowers.spawn(tab1, [], async function () {
     content.document.getElementById("dismiss-btn").click();
     await ContentTaskUtils.waitForCondition(() => {
       return !content.document.querySelector(".promo");
     }, "The promo container is removed.");
   });
 
-  let newTabStartPromise = new Promise(resolve => {
-    async function observer(subject) {
-      Services.obs.removeObserver(observer, "browser-open-newtab-start");
-      resolve(subject.wrappedJSObject);
-    }
-    Services.obs.addObserver(observer, "browser-open-newtab-start");
-  });
-  let newtabShown = BrowserTestUtils.waitForCondition(
-    () => win.gBrowser.currentURI.spec == "about:privatebrowsing",
-    `Should open correct url about:privatebrowsing.`
-  );
-  win.BrowserOpenTab();
-  const tab2 = await newTabStartPromise;
-  await newtabShown;
-  await BrowserTestUtils.switchTab(win.gBrowser, tab2);
+  // Switch to tab 2, invoking the `visibilitychange` handler in
+  // handlePromoOnPreload()
+  await BrowserTestUtils.switchTab(win.gBrowser, win.gBrowser.tabs[1]);
 
-  await SpecialPowers.spawn(tab2, [], async function () {
-    await ContentTaskUtils.waitForCondition(
-      () => !content.document.querySelector(".promo"),
-      "Focus promo is not shown in a new tab after being dismissed in another tab"
-    );
-  });
+  // Verify that the promo has now been removed from tab 2
+  await SpecialPowers.spawn(
+    win.gBrowser.tabs[1].linkedBrowser,
+    [],
+    // The timing may be weird in Chaos Mode, so wait for it to be removed
+    // instead of a single assertion.
+    async function () {
+      await ContentTaskUtils.waitForCondition(
+        () => !content.document.querySelector(".promo"),
+        "Focus promo is not shown in a new tab after being dismissed in another tab"
+      );
+    }
+  );
 
   await BrowserTestUtils.closeWindow(win);
 });
