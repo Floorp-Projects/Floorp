@@ -129,12 +129,14 @@ class ServoCSSParser {
    * @param aStretch The parsed FontStretch. (output)
    * @param aWeight The parsed FontWeight. (output)
    * @param aSize If non-null, returns the parsed font size. (output)
+   * @param aSmallCaps If non-null, whether small-caps was specified (output)
    * @return Whether the value was successfully parsed.
    */
   static bool ParseFontShorthandForMatching(
       const nsACString& aValue, URLExtraData* aUrl, StyleFontFamilyList& aList,
       StyleFontStyle& aStyle, StyleFontStretch& aStretch,
-      StyleFontWeight& aWeight, float* aSize = nullptr);
+      StyleFontWeight& aWeight, float* aSize = nullptr,
+      bool* aSmallCaps = nullptr);
 
   /**
    * Get a URLExtraData from a document.

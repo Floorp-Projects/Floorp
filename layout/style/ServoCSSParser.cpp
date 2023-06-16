@@ -60,9 +60,9 @@ bool ServoCSSParser::ParseTransformIntoMatrix(const nsACString& aValue,
 bool ServoCSSParser::ParseFontShorthandForMatching(
     const nsACString& aValue, URLExtraData* aUrl, StyleFontFamilyList& aList,
     StyleFontStyle& aStyle, StyleFontStretch& aStretch,
-    StyleFontWeight& aWeight, float* aSize) {
-  return Servo_ParseFontShorthandForMatching(&aValue, aUrl, &aList, &aStyle,
-                                             &aStretch, &aWeight, aSize);
+    StyleFontWeight& aWeight, float* aSize, bool* aSmallCaps) {
+  return Servo_ParseFontShorthandForMatching(
+      &aValue, aUrl, &aList, &aStyle, &aStretch, &aWeight, aSize, aSmallCaps);
 }
 
 /* static */
