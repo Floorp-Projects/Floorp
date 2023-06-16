@@ -272,7 +272,7 @@ function recordTRREventTelemetry(
   const netErrorButtonDiv = document.getElementById("netErrorButtonContainer");
   const buttons = netErrorButtonDiv.querySelectorAll("button");
   for (let b of buttons) {
-    b.addEventListener("click", function(e) {
+    b.addEventListener("click", function (e) {
       let target = e.originalTarget;
       let telemetryId = target.dataset.telemetryId;
       RPMRecordTelemetryEvent(
@@ -874,7 +874,7 @@ function setupBlockingReportingUI() {
   );
   checkbox.checked = !!reportingAutomatic;
 
-  checkbox.addEventListener("change", function({ target: { checked } }) {
+  checkbox.addEventListener("change", function ({ target: { checked } }) {
     RPMSetBoolPref("security.xfocsp.errorReporting.automatic", checked);
 
     // If we're enabling reports, send a report for this failure.
@@ -1067,15 +1067,12 @@ async function getFailedCertificatesAsPEMString() {
   let errorMessage = failedCertInfo.errorMessage;
   let hasHSTS = failedCertInfo.hasHSTS.toString();
   let hasHPKP = failedCertInfo.hasHPKP.toString();
-  let [
-    hstsLabel,
-    hpkpLabel,
-    failedChainLabel,
-  ] = await document.l10n.formatValues([
-    { id: "cert-error-details-hsts-label", args: { hasHSTS } },
-    { id: "cert-error-details-key-pinning-label", args: { hasHPKP } },
-    { id: "cert-error-details-cert-chain-label" },
-  ]);
+  let [hstsLabel, hpkpLabel, failedChainLabel] =
+    await document.l10n.formatValues([
+      { id: "cert-error-details-hsts-label", args: { hasHSTS } },
+      { id: "cert-error-details-key-pinning-label", args: { hasHPKP } },
+      { id: "cert-error-details-cert-chain-label" },
+    ]);
 
   let certStrings = failedCertInfo.certChainStrings;
   let failedChainCertificates = "";
@@ -1548,7 +1545,7 @@ function setFocus(selector, position = "afterbegin") {
 }
 
 for (let button of document.querySelectorAll(".try-again")) {
-  button.addEventListener("click", function() {
+  button.addEventListener("click", function () {
     retryThis(this);
   });
 }

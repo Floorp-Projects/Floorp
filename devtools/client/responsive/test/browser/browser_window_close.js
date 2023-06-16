@@ -5,7 +5,7 @@
 
 addRDMTask(
   null,
-  async function() {
+  async function () {
     const NEW_WINDOW_URL =
       "data:text/html;charset=utf-8,New window opened via window.open";
     const newWindowPromise = BrowserTestUtils.waitForNewWindow({

@@ -47,6 +47,7 @@ crashtest:
         - no-fission
         - webrender-sw+no-fission
         - webrender-sw
+        - editor-legacy-direction
     run-on-projects:
         by-variant:
             webrender-sw+no-fission:
@@ -69,6 +70,10 @@ crashtest:
                     linux1804-64-qr/debug: ['trunk']
                     linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     android.*: built-projects
+                    default: []
+            editor-legacy-direction:
+                by-test-platform:
+                    linux1804-64-qr/debug: ['mozilla-central']
                     default: []
             default:
                 by-test-platform:
@@ -165,6 +170,7 @@ reftest:
         - webrender-dcomp-compositing  # Should match default
         - webrender-sw+no-fission
         - webrender-sw
+        - editor-legacy-direction
     run-on-projects:
         by-variant:
             webrender-sw+no-fission:
@@ -187,6 +193,10 @@ reftest:
                     linux1804-64-qr/debug: ['trunk']
                     linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     android.*: built-projects
+                    default: []
+            editor-legacy-direction:
+                by-test-platform:
+                    linux1804-64-qr/debug: ['mozilla-central']
                     default: []
             default:
                 by-test-platform:

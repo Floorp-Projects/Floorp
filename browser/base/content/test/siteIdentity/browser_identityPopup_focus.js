@@ -17,7 +17,7 @@ async function focusIdentityBox() {
 // Access the identity popup via mouseclick. Focus should not be moved inside.
 add_task(async function testIdentityPopupFocusClick() {
   await SpecialPowers.pushPrefEnv({ set: [["accessibility.tabfocus", 7]] });
-  await BrowserTestUtils.withNewTab("https://example.com", async function() {
+  await BrowserTestUtils.withNewTab("https://example.com", async function () {
     let shown = BrowserTestUtils.waitForEvent(
       window,
       "popupshown",
@@ -36,7 +36,7 @@ add_task(async function testIdentityPopupFocusClick() {
 // Access the identity popup via keyboard. Focus should be moved inside.
 add_task(async function testIdentityPopupFocusKeyboard() {
   await SpecialPowers.pushPrefEnv({ set: [["accessibility.tabfocus", 7]] });
-  await BrowserTestUtils.withNewTab("https://example.com", async function() {
+  await BrowserTestUtils.withNewTab("https://example.com", async function () {
     await focusIdentityBox();
     let shown = BrowserTestUtils.waitForEvent(
       window,
@@ -57,7 +57,7 @@ add_task(async function testIdentityPopupFocusKeyboard() {
 // Tabbing should be able to reach the More Information button.
 add_task(async function testSiteSecurityTabOrder() {
   await SpecialPowers.pushPrefEnv({ set: [["accessibility.tabfocus", 7]] });
-  await BrowserTestUtils.withNewTab("https://example.com", async function() {
+  await BrowserTestUtils.withNewTab("https://example.com", async function () {
     // 1. Access the identity popup.
     await focusIdentityBox();
     let shown = BrowserTestUtils.waitForEvent(

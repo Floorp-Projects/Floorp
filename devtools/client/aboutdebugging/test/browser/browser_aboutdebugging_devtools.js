@@ -13,7 +13,7 @@ Services.scriptloader.loadSubScript(
  * Check that DevTools are not closed when leaving This Firefox runtime page.
  */
 
-add_task(async function() {
+add_task(async function () {
   info("Force all debug target panes to be expanded");
   prepareCollapsibilitiesTest();
 

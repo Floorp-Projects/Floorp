@@ -140,8 +140,7 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext, nsIFrame* aFrame,
   if (!aFlags.contains(InitFlag::CallerWillInit)) {
     Init(aPresContext);
   }
-  // If we encounter a PageContent frame, this will be flipped on and the pref
-  // layout.css.named-pages.enabled will be checked.
+  // When we encounter a PageContent frame this will be set to true.
   mFlags.mCanHaveClassABreakpoints = false;
 }
 
@@ -207,9 +206,6 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
   if (aParentReflowInput.mFlags.mCanHaveClassABreakpoints) {
     MOZ_ASSERT(aPresContext->IsPaginated(),
                "mCanHaveClassABreakpoints set during non-paginated reflow.");
-    MOZ_ASSERT(StaticPrefs::layout_css_named_pages_enabled(),
-               "mCanHaveClassABreakpoints should not be set when "
-               "layout.css.named_pages.enabled is false");
   }
 
   {
@@ -222,8 +218,7 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
         MOZ_ASSERT(!mFlags.mCanHaveClassABreakpoints,
                    "mFlags.mCanHaveClassABreakpoints should have been "
                    "initalized to false before we found nsPageContentFrame");
-        mFlags.mCanHaveClassABreakpoints =
-            StaticPrefs::layout_css_named_pages_enabled();
+        mFlags.mCanHaveClassABreakpoints = true;
         break;
       case LayoutFrameType::Block:          // FALLTHROUGH
       case LayoutFrameType::Canvas:         // FALLTHROUGH
@@ -463,6 +458,17 @@ void ReflowInput::Init(nsPresContext* aPresContext,
                        "intrinsic inline-size calculation");
 }
 
+static bool MightBeContainingBlockFor(nsIFrame* aMaybeContainingBlock,
+                                      nsIFrame* aFrame,
+                                      const nsStyleDisplay* aStyleDisplay) {
+  // Keep this in sync with nsIFrame::GetContainingBlock.
+  if (aFrame->IsAbsolutelyPositioned(aStyleDisplay) &&
+      aMaybeContainingBlock == aFrame->GetParent()) {
+    return true;
+  }
+  return aMaybeContainingBlock->IsBlockContainer();
+}
+
 void ReflowInput::InitCBReflowInput() {
   if (!mParentReflowInput) {
     mCBReflowInput = nullptr;
@@ -473,8 +479,12 @@ void ReflowInput::InitCBReflowInput() {
     return;
   }
 
-  if (mParentReflowInput->mFrame ==
-      mFrame->GetContainingBlock(0, mStyleDisplay)) {
+  // To avoid a long walk up the frame tree check if the parent frame can be a
+  // containing block for mFrame.
+  if (MightBeContainingBlockFor(mParentReflowInput->mFrame, mFrame,
+                                mStyleDisplay) &&
+      mParentReflowInput->mFrame ==
+          mFrame->GetContainingBlock(0, mStyleDisplay)) {
     // Inner table frames need to use the containing block of the outer
     // table frame.
     if (mFrame->IsTableFrame()) {

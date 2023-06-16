@@ -20,4 +20,6 @@ ULONGLONG SecondsPassedSince(ULONGLONG initialTime, ULONGLONG currentTime = 0);
 using FilePathResult = mozilla::WindowsErrorResult<std::wstring>;
 FilePathResult GenerateUUIDStr();
 
+FilePathResult GetRelativeBinaryPath(const wchar_t* suffix);
+
 #endif  // __DEFAULT_BROWSER_AGENT_COMMON_H__

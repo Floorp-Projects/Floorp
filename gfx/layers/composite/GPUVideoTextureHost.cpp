@@ -199,11 +199,11 @@ void GPUVideoTextureHost::NotifyNotUsed() {
   TextureHost::NotifyNotUsed();
 }
 
-bool GPUVideoTextureHost::IsWrappingBufferTextureHost() {
+BufferTextureHost* GPUVideoTextureHost::AsBufferTextureHost() {
   if (EnsureWrappedTextureHost()) {
-    return EnsureWrappedTextureHost()->IsWrappingBufferTextureHost();
+    return EnsureWrappedTextureHost()->AsBufferTextureHost();
   }
-  return false;
+  return nullptr;
 }
 
 bool GPUVideoTextureHost::IsWrappingSurfaceTextureHost() {

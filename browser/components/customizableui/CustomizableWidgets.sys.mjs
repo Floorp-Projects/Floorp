@@ -2,9 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { CustomizableUI } = ChromeUtils.import(
-  "resource:///modules/CustomizableUI.jsm"
-);
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 import { PrivateBrowsingUtils } from "resource://gre/modules/PrivateBrowsingUtils.sys.mjs";
@@ -12,22 +9,15 @@ import { PrivateBrowsingUtils } from "resource://gre/modules/PrivateBrowsingUtil
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
+  LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
+  PanelMultiView: "resource:///modules/PanelMultiView.sys.mjs",
   RecentlyClosedTabsAndWindowsMenuUtils:
     "resource:///modules/sessionstore/RecentlyClosedTabsAndWindowsMenuUtils.sys.mjs",
+  Sanitizer: "resource:///modules/Sanitizer.sys.mjs",
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.sys.mjs",
-  LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
 });
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Sanitizer: "resource:///modules/Sanitizer.jsm",
-});
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PanelMultiView",
-  "resource:///modules/PanelMultiView.jsm"
-);
 
 const kPrefCustomizationDebug = "browser.uiCustomization.debug";
 const kPrefScreenshots = "extensions.screenshots.disabled";
@@ -78,7 +68,7 @@ function setAttributes(aNode, aAttrs) {
             additionalArgs.push(lazy.ShortcutUtils.prettifyShortcut(shortcut));
           }
         }
-        value = CustomizableUI.getLocalizedProperty(
+        value = lazy.CustomizableUI.getLocalizedProperty(
           { id: aAttrs.id },
           stringId,
           additionalArgs
@@ -125,7 +115,7 @@ export const CustomizableWidgets = [
       lazy.PanelMultiView.getViewNode(
         document,
         "appMenuRecentlyClosedTabs"
-      ).disabled = lazy.SessionStore.getClosedTabCount(window) == 0;
+      ).disabled = lazy.SessionStore.getClosedTabCountForWindow(window) == 0;
       lazy.PanelMultiView.getViewNode(
         document,
         "appMenuRecentlyClosedWindows"
@@ -196,12 +186,11 @@ export const CustomizableWidgets = [
 
       this._panelMenuView.clearAllContents(panelview);
 
-      let getFragment =
+      const utils = lazy.RecentlyClosedTabsAndWindowsMenuUtils;
+      const fragment =
         panelview.id == this.recentlyClosedTabsPanel
-          ? lazy.RecentlyClosedTabsAndWindowsMenuUtils.getTabsFragment
-          : lazy.RecentlyClosedTabsAndWindowsMenuUtils.getWindowsFragment;
-
-      let fragment = getFragment(window, "toolbarbutton", true);
+          ? utils.getTabsFragment(window, "toolbarbutton", true)
+          : utils.getWindowsFragment(window, "toolbarbutton", true);
       let elementCount = fragment.childElementCount;
       this._panelMenuView._setEmptyPopupStatus(panelview, !elementCount);
       if (!elementCount) {
@@ -215,7 +204,7 @@ export const CustomizableWidgets = [
       let footer;
       while (--elementCount >= 0) {
         let element = body.children[elementCount];
-        CustomizableUI.addShortcut(element);
+        lazy.CustomizableUI.addShortcut(element);
         element.classList.add("subviewbutton");
         if (element.classList.contains("restoreallitem")) {
           footer = element;
@@ -326,18 +315,18 @@ export const CustomizableWidgets = [
       node.setAttribute("id", "zoom-controls");
       node.setAttribute(
         "label",
-        CustomizableUI.getLocalizedProperty(this, "label")
+        lazy.CustomizableUI.getLocalizedProperty(this, "label")
       );
       node.setAttribute(
         "title",
-        CustomizableUI.getLocalizedProperty(this, "tooltiptext")
+        lazy.CustomizableUI.getLocalizedProperty(this, "tooltiptext")
       );
       // Set this as an attribute in addition to the property to make sure we can style correctly.
       node.setAttribute("removable", "true");
       node.classList.add("chromeclass-toolbar-additional");
       node.classList.add("toolbaritem-combined-buttons");
 
-      buttons.forEach(function(aButton, aIndex) {
+      buttons.forEach(function (aButton, aIndex) {
         if (aIndex != 0) {
           node.appendChild(aDocument.createXULElement("separator"));
         }
@@ -384,18 +373,18 @@ export const CustomizableWidgets = [
       node.setAttribute("id", "edit-controls");
       node.setAttribute(
         "label",
-        CustomizableUI.getLocalizedProperty(this, "label")
+        lazy.CustomizableUI.getLocalizedProperty(this, "label")
       );
       node.setAttribute(
         "title",
-        CustomizableUI.getLocalizedProperty(this, "tooltiptext")
+        lazy.CustomizableUI.getLocalizedProperty(this, "tooltiptext")
       );
       // Set this as an attribute in addition to the property to make sure we can style correctly.
       node.setAttribute("removable", "true");
       node.classList.add("chromeclass-toolbar-additional");
       node.classList.add("toolbaritem-combined-buttons");
 
-      buttons.forEach(function(aButton, aIndex) {
+      buttons.forEach(function (aButton, aIndex) {
         if (aIndex != 0) {
           node.appendChild(aDocument.createXULElement("separator"));
         }
@@ -409,7 +398,7 @@ export const CustomizableWidgets = [
           if (aWidgetId != this.id || aDoc != aDocument) {
             return;
           }
-          CustomizableUI.removeListener(listener);
+          lazy.CustomizableUI.removeListener(listener);
         },
         onWidgetOverflow(aWidgetNode) {
           if (aWidgetNode == node) {
@@ -422,7 +411,7 @@ export const CustomizableWidgets = [
           }
         },
       };
-      CustomizableUI.addListener(listener);
+      lazy.CustomizableUI.addListener(listener);
 
       return node;
     },
@@ -569,7 +558,7 @@ if (Services.prefs.getBoolPref("privacy.panicButton.enabled")) {
         range: lazy.Sanitizer.getClearRange(+group.value),
         privateStateForNewWindow: newWindowPrivateState,
       });
-      promise.then(function() {
+      promise.then(function () {
         let otherWindow = Services.wm.getMostRecentWindow("navigator:browser");
         if (otherWindow.closed) {
           console.error("Got a closed window!");

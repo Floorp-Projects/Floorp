@@ -1,9 +1,9 @@
-WebGLUtil = (function() {
+WebGLUtil = (function () {
   // ---------------------------------------------------------------------------
   // WebGL helpers
 
   function withWebGL2(canvasId, callback, onFinished) {
-    var run = function() {
+    var run = function () {
       var canvas = document.getElementById(canvasId);
 
       var gl = null;

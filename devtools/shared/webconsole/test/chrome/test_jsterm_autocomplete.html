@@ -91,6 +91,8 @@
       }));
 
       window.varify = true;
+
+      var Cu_Sandbox = Cu ? Cu.Sandbox : null;
     `;
     await evaluateExpression(state.webConsoleFront, script);
 
@@ -203,8 +205,8 @@
     info("test autocomplete for 'window.proxy1.'");
     const response = await webConsoleFront.autocomplete("window.proxy1.");
     ok(!response.matchProp, "matchProp");
-    is(response.matches.length, 1, "matches.length");
-    checkObject(response.matches, ["foo"]);
+    is(response.matches.length, 14, "matches.length");
+    ok(response.matches.includes("foo"), "matches has own property for proxy with throwing getPrototypeOf trap");
   }
 
   async function doAutocompleteProxyThrowsOwnKeys(webConsoleFront) {
@@ -218,8 +220,8 @@
 
   async function doAutocompleteSandbox(webConsoleFront) {
     // Check that completion provides inherited properties even if [[OwnPropertyKeys]] throws.
-    info("test autocomplete for 'Cu.Sandbox.'");
-    const response = await webConsoleFront.autocomplete("Cu.Sandbox.");
+    info("test autocomplete for 'Cu_Sandbox.'");
+    const response = await webConsoleFront.autocomplete("Cu_Sandbox.");
     ok(!response.matchProp, "matchProp");
     const keys = Object.getOwnPropertyNames(Object.prototype).sort();
     is(response.matches.length, keys.length, "matches.length");

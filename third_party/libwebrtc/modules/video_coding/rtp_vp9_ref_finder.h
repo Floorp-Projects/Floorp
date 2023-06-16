@@ -19,7 +19,7 @@
 #include "absl/container/inlined_vector.h"
 #include "modules/video_coding/frame_object.h"
 #include "modules/video_coding/rtp_frame_reference_finder.h"
-#include "rtc_base/numerics/sequence_number_util.h"
+#include "rtc_base/numerics/sequence_number_unwrapper.h"
 
 namespace webrtc {
 

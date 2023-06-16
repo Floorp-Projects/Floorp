@@ -25,11 +25,16 @@ JSObject* DOMSVGAngle::WrapObject(JSContext* aCx,
 }
 
 uint16_t DOMSVGAngle::UnitType() const {
+  uint16_t unitType;
   if (mType == AngleType::AnimValue) {
     mSVGElement->FlushAnimations();
-    return mVal->mAnimValUnit;
+    unitType = mVal->mAnimValUnit;
+  } else {
+    unitType = mVal->mBaseValUnit;
   }
-  return mVal->mBaseValUnit;
+  return SVGAnimatedOrient::IsValidUnitType(unitType)
+             ? unitType
+             : SVGAngle_Binding::SVG_ANGLETYPE_UNKNOWN;
 }
 
 float DOMSVGAngle::Value() const {

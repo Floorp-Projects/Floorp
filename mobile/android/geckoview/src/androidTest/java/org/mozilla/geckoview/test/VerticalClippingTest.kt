@@ -43,7 +43,7 @@ class VerticalClippingTest : BaseSessionTest() {
             SCREEN_HEIGHT - BANNER_HEIGHT - bottomOffset,
             SCREEN_WIDTH.toFloat(),
             (SCREEN_HEIGHT - bottomOffset).toFloat(),
-            paint
+            paint,
         )
 
         return screenshotFile
@@ -54,7 +54,7 @@ class VerticalClippingTest : BaseSessionTest() {
             assertThat(
                 "Screenshot is not null",
                 it,
-                notNullValue()
+                notNullValue(),
             )
             assertThat("Widths are the same", comparisonImage.width, equalTo(it.width))
             assertThat("Heights are the same", comparisonImage.height, equalTo(it.height))
@@ -63,7 +63,7 @@ class VerticalClippingTest : BaseSessionTest() {
             assertThat(
                 "Images are almost identical",
                 ScreenshotTest.Companion.imageElementDifference(comparisonImage, it),
-                Matchers.lessThanOrEqualTo(1)
+                Matchers.lessThanOrEqualTo(1),
             )
         }
     }

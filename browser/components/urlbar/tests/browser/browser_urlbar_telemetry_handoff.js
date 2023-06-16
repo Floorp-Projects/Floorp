@@ -10,7 +10,8 @@ const { SearchSERPTelemetry } = ChromeUtils.importESModule(
 const TEST_PROVIDER_INFO = [
   {
     telemetryId: "example",
-    searchPageRegexp: /^https:\/\/example.com\/browser\/browser\/components\/search\/test\/browser\/searchTelemetry(?:Ad)?.html/,
+    searchPageRegexp:
+      /^https:\/\/example.com\/browser\/browser\/components\/search\/test\/browser\/searchTelemetry(?:Ad)?.html/,
     queryParamName: "s",
     codeParamName: "abc",
     taggedCodes: ["ff"],
@@ -33,7 +34,7 @@ async function waitForIdle() {
   }
 }
 
-add_setup(async function() {
+add_setup(async function () {
   SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
   await waitForIdle();
 
@@ -61,7 +62,7 @@ add_setup(async function() {
   Services.telemetry.canRecordExtended = true;
   Services.telemetry.setEventRecordingEnabled("navigation", true);
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.history.clear();
 
     Services.telemetry.canRecordExtended = oldCanRecord;
@@ -78,9 +79,8 @@ add_task(async function test_search() {
   Services.telemetry.clearScalars();
   Services.telemetry.clearEvents();
 
-  const histogram = TelemetryTestUtils.getAndClearKeyedHistogram(
-    "SEARCH_COUNTS"
-  );
+  const histogram =
+    TelemetryTestUtils.getAndClearKeyedHistogram("SEARCH_COUNTS");
 
   info("Load about:newtab in new window");
   const newtab = "about:newtab";
@@ -89,7 +89,7 @@ add_task(async function test_search() {
   await BrowserTestUtils.browserStopped(tab.linkedBrowser, newtab);
 
   info("Focus on search input in newtab content");
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     const searchInput = content.document.querySelector(".fake-editable");
     searchInput.click();
   });
@@ -110,9 +110,8 @@ add_task(async function test_search_private_mode() {
   Services.telemetry.clearScalars();
   Services.telemetry.clearEvents();
 
-  const histogram = TelemetryTestUtils.getAndClearKeyedHistogram(
-    "SEARCH_COUNTS"
-  );
+  const histogram =
+    TelemetryTestUtils.getAndClearKeyedHistogram("SEARCH_COUNTS");
 
   info("Open private window");
   let privateWindow = await BrowserTestUtils.openNewBrowserWindow({
@@ -121,7 +120,7 @@ add_task(async function test_search_private_mode() {
   let tab = privateWindow.gBrowser.selectedTab;
 
   info("Focus on search input in newtab content");
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     const searchInput = content.document.querySelector(".fake-editable");
     searchInput.click();
   });

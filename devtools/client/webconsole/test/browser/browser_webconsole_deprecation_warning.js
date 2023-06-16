@@ -7,12 +7,12 @@
 const TEST_URI =
   "data:text/html;charset=utf8,<!DOCTYPE html><h1>Deprecation warning";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const deprecatedWarningMessageText = "mozPressure is deprecated";
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.testMouseEvent = new content.MouseEvent("click");
     content.wrappedJSObject.console.log("oi-test", content.testMouseEvent);
   });
@@ -31,7 +31,7 @@ add_task(async function() {
   );
 
   info("Access the deprecated getter to trigger a warning message");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.testMouseEvent.mozPressure;
   });
 
@@ -45,7 +45,7 @@ add_task(async function() {
 
   info("Clear the console and access the deprecated getter again");
   await clearOutput(hud);
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.testMouseEvent.mozPressure;
   });
   info("Wait for a bit so any warning message could be displayed");

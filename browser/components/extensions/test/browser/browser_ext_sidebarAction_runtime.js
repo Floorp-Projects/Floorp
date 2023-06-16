@@ -37,7 +37,7 @@ let extensionData = {
       </body></html>
     `,
 
-    "sidebar.js": function() {
+    "sidebar.js": function () {
       window.onload = () => {
         browser.runtime.connect({ name: "ernie" });
       };

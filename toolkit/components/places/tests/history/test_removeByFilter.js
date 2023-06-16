@@ -35,7 +35,7 @@ add_task(async function test_removeByFilter() {
     "Witness URI is in database"
   );
 
-  let removeByFilterTester = async function(
+  let removeByFilterTester = async function (
     visits,
     filter,
     checkBeforeRemove,
@@ -58,9 +58,8 @@ add_task(async function test_removeByFilter() {
     await checkBeforeRemove();
 
     // Take care of any observers (due to bookmarks)
-    let { placesEventListener, promiseObserved } = getObserverPromise(
-      bookmarkedUri
-    );
+    let { placesEventListener, promiseObserved } =
+      getObserverPromise(bookmarkedUri);
     if (placesEventListener) {
       PlacesObservers.addListener(
         ["page-title-changed", "history-cleared", "page-removed"],
@@ -166,10 +165,10 @@ add_task(async function test_removeByFilter() {
       title,
     },
   ];
-  let assertInDB = async function(aUri) {
+  let assertInDB = async function (aUri) {
     Assert.ok(await PlacesTestUtils.isPageInDB(aUri));
   };
-  let assertNotInDB = async function(aUri) {
+  let assertNotInDB = async function (aUri) {
     Assert.ok(!(await PlacesTestUtils.isPageInDB(aUri)));
   };
   for (let callbackUse of [true, false]) {
@@ -181,7 +180,7 @@ add_task(async function test_removeByFilter() {
       if (bookmarkUse) {
         bookmarkedUri = arr => arr[0];
         checkableArray = arr => arr.slice(1);
-        checkClosure = function(aUri) {};
+        checkClosure = function (aUri) {};
       }
       // Case A 1: Dates
       await removeByFilterTester(

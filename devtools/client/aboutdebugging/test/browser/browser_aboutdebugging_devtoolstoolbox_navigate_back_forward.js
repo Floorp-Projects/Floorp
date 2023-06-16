@@ -7,9 +7,8 @@ const ORIGINAL_URL = "https://example.com/document-builder.sjs?html=page1";
 const OTHER_URL = "https://example.org/document-builder.sjs?html=page2";
 
 async function waitForUrl(url, toolbox, browserTab, win) {
-  const {
-    onDomCompleteResource,
-  } = await waitForNextTopLevelDomCompleteResource(toolbox.commands);
+  const { onDomCompleteResource } =
+    await waitForNextTopLevelDomCompleteResource(toolbox.commands);
 
   return Promise.all([
     waitUntil(
@@ -24,7 +23,7 @@ async function waitForUrl(url, toolbox, browserTab, win) {
 }
 
 // Test that ensures the remote page can go forward and back via UI buttons
-add_task(async function() {
+add_task(async function () {
   const browserTab = await addTab(ORIGINAL_URL);
 
   const { document, tab, window } = await openAboutDebugging();

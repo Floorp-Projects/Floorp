@@ -8,7 +8,7 @@ let msgId = 1;
  * @static
  */
 function workerTask(worker, method) {
-  return function(...args) {
+  return function (...args) {
     return new Promise((resolve, reject) => {
       const id = msgId++;
       worker.postMessage({ id, method, args });

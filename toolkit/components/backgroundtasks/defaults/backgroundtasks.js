@@ -11,7 +11,6 @@
 pref("browser.dom.window.dump.enabled", true);
 pref("devtools.console.stdout.chrome", true);
 
-pref("browser.cache.offline.enable", false);
 pref("browser.cache.disk.enable", false);
 pref("permissions.memory_only", true);
 
@@ -43,3 +42,6 @@ pref("gfx.font-list-omt.enabled", false);
 
 // Prevent key#.db and cert#.db from being created in the ephemeral profile.
 pref("security.nocertdb", true);
+
+// Prevent asynchronous preference writes.
+pref("preferences.allow.omt-write", false);

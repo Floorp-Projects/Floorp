@@ -10,7 +10,7 @@ function wasInitialDocumentObserver(subject) {
   subject._test_wasInitialDocument = subject.isInitialDocument;
 }
 Services.obs.addObserver(wasInitialDocumentObserver, "window-global-created");
-SimpleTest.registerCleanupFunction(function() {
+SimpleTest.registerCleanupFunction(function () {
   Services.obs.removeObserver(
     wasInitialDocumentObserver,
     "window-global-created"
@@ -244,20 +244,14 @@ add_task(async function document_open() {
           false,
           "Is no longer an initial document after calling document.open"
         );
-        let [
-          afterIsInitial,
-          afterWasInitial,
-          afterID,
-        ] = await SpecialPowers.spawnChrome([browsingContext], bc => [
-          bc.currentWindowGlobal.isInitialDocument,
-          bc.currentWindowGlobal._test_wasInitialDocument,
-          bc.currentWindowGlobal.innerWindowId,
-        ]);
-        let [
-          beforeIsInitial,
-          beforeWasInitial,
-          beforeID,
-        ] = await beforeOpenParentPromise;
+        let [afterIsInitial, afterWasInitial, afterID] =
+          await SpecialPowers.spawnChrome([browsingContext], bc => [
+            bc.currentWindowGlobal.isInitialDocument,
+            bc.currentWindowGlobal._test_wasInitialDocument,
+            bc.currentWindowGlobal.innerWindowId,
+          ]);
+        let [beforeIsInitial, beforeWasInitial, beforeID] =
+          await beforeOpenParentPromise;
         is(beforeIsInitial, true, "Should be initial before in the parent");
         is(beforeWasInitial, true, "Was initial before in the parent");
         is(afterIsInitial, false, "Should not be initial after in the parent");

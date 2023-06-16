@@ -9,7 +9,7 @@
  */
 
 // Loading a toplevel frameset
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.navigation.requireUserInteraction", false]],
   });
@@ -22,9 +22,8 @@ add_task(async function() {
   info("Opening a page with three frames, 4 loads should take place");
   await waitForLoadsInBrowser(tab.linkedBrowser, 4);
 
-  let browser_b = tab.linkedBrowser.contentDocument.getElementsByTagName(
-    "frame"
-  )[1];
+  let browser_b =
+    tab.linkedBrowser.contentDocument.getElementsByTagName("frame")[1];
   let document_b = browser_b.contentDocument;
   let links = document_b.getElementsByTagName("a");
 
@@ -57,9 +56,8 @@ add_task(async function() {
   await waitForLoadsInBrowser(newTab.linkedBrowser, 1);
 
   let expectedURLEnds = ["a.html", "b.html", "c1.html"];
-  let frames = newTab.linkedBrowser.contentDocument.getElementsByTagName(
-    "frame"
-  );
+  let frames =
+    newTab.linkedBrowser.contentDocument.getElementsByTagName("frame");
   for (let i = 0; i < frames.length; i++) {
     is(
       frames[i].contentDocument.location.href,
@@ -73,7 +71,7 @@ add_task(async function() {
 });
 
 // Loading the frameset inside an iframe
-add_task(async function() {
+add_task(async function () {
   let testURL =
     getRootDirectory(gTestPath) + "browser_frame_history_index2.html";
   let tab = BrowserTestUtils.addTab(gBrowser, testURL);
@@ -135,7 +133,7 @@ add_task(async function() {
 });
 
 // Now, test that we don't record history if the iframe is added dynamically
-add_task(async function() {
+add_task(async function () {
   // Start with an empty history
   let blankState = JSON.stringify({
     windows: [

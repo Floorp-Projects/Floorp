@@ -9568,7 +9568,9 @@ nscoord nsGridContainerFrame::SynthesizeBaseline(
       baseline = isOrthogonal ? grid->GetIBaseline(aGroup)
                               : grid->GetBBaseline(aGroup);
     } else if (!isOrthogonal && aGridOrderItem.mIsInEdgeTrack) {
-      baseline = child->GetNaturalBaselineBOffset(childWM, aGroup)
+      baseline = child
+                     ->GetNaturalBaselineBOffset(childWM, aGroup,
+                                                 BaselineExportContext::Other)
                      .valueOrFrom([aGroup, child, childWM]() {
                        return Baseline::SynthesizeBOffsetFromBorderBox(
                            child, childWM, aGroup);

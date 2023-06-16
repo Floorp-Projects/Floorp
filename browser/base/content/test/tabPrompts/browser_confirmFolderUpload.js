@@ -36,7 +36,7 @@ function getTestDirectory() {
   return tmpDir.path;
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       // Allow using our MockFilePicker in the content process.

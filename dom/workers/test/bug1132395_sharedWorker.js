@@ -1,7 +1,7 @@
 dump("SW created\n");
-onconnect = function(evt) {
+onconnect = function (evt) {
   dump("SW onconnect\n");
-  evt.ports[0].onmessage = function(e) {
+  evt.ports[0].onmessage = function (e) {
     dump("SW onmessage\n");
     var blob = new Blob(["123"], { type: "text/plain" });
     dump("SW blob created\n");

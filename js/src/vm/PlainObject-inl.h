@@ -12,7 +12,7 @@
 #include "mozilla/Assertions.h"  // MOZ_ASSERT, MOZ_ASSERT_IF
 #include "mozilla/Attributes.h"  // MOZ_ALWAYS_INLINE
 
-#include "gc/AllocKind.h"     // js::gc::InitialHeap
+#include "gc/AllocKind.h"     // js::gc::Heap
 #include "js/RootingAPI.h"    // JS::Handle, JS::Rooted, JS::MutableHandle
 #include "js/Value.h"         // JS::Value, JS_IS_CONSTRUCTING
 #include "vm/JSFunction.h"    // JSFunction
@@ -28,7 +28,7 @@
     JSContext* cx, JS::Handle<SharedShape*> shape, gc::AllocKind kind,
     NewObjectKind newKind) {
   MOZ_ASSERT(shape->getObjectClass() == &PlainObject::class_);
-  gc::InitialHeap heap = GetInitialHeap(newKind, &PlainObject::class_);
+  gc::Heap heap = GetInitialHeap(newKind, &PlainObject::class_);
 
   MOZ_ASSERT(gc::CanChangeToBackgroundAllocKind(kind, &PlainObject::class_));
   kind = gc::ForegroundToBackgroundAllocKind(kind);

@@ -14,7 +14,7 @@ const kWebExtensionButtonID1 = "fake-webextension-button-1";
 const kWebExtensionButtonID2 = "fake-webextension-button-2";
 let gWin = null;
 
-add_setup(async function() {
+add_setup(async function () {
   gWin = await BrowserTestUtils.openNewBrowserWindow();
 
   // To make it easier to write a test where we can control overflowing
@@ -59,9 +59,8 @@ add_setup(async function() {
   });
 
   // Now hide the button with hidden=true so that it has no dimensions.
-  let hiddenButtonNode = CustomizableUI.getWidget(kHiddenButtonID).forWindow(
-    gWin
-  ).node;
+  let hiddenButtonNode =
+    CustomizableUI.getWidget(kHiddenButtonID).forWindow(gWin).node;
   hiddenButtonNode.hidden = true;
 
   CustomizableUI.createWidget({
@@ -71,9 +70,8 @@ add_setup(async function() {
   });
 
   // Now hide the button with display: none so that it has no dimensions.
-  let displayNoneButtonNode = CustomizableUI.getWidget(
-    kDisplayNoneButtonID
-  ).forWindow(gWin).node;
+  let displayNoneButtonNode =
+    CustomizableUI.getWidget(kDisplayNoneButtonID).forWindow(gWin).node;
   displayNoneButtonNode.style.display = "none";
 
   registerCleanupFunction(async () => {
@@ -101,9 +99,8 @@ add_task(async function test_hidden_widget_overflow() {
     }
   );
 
-  let hiddenButtonNode = CustomizableUI.getWidget(kHiddenButtonID).forWindow(
-    gWin
-  ).node;
+  let hiddenButtonNode =
+    CustomizableUI.getWidget(kHiddenButtonID).forWindow(gWin).node;
   Assert.ok(
     hiddenButtonNode.hasAttribute("overflowedItem"),
     "Hidden button should be overflowed."

@@ -299,6 +299,9 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator {
 
   AttachDecision tryAttachNativeSetSlot(HandleObject obj, ObjOperandId objId,
                                         HandleId id, ValOperandId rhsId);
+  AttachDecision tryAttachMegamorphicSetSlot(HandleObject obj,
+                                             ObjOperandId objId, HandleId id,
+                                             ValOperandId rhsId);
   AttachDecision tryAttachSetter(HandleObject obj, ObjOperandId objId,
                                  HandleId id, ValOperandId rhsId);
   AttachDecision tryAttachSetArrayLength(HandleObject obj, ObjOperandId objId,
@@ -610,9 +613,11 @@ class MOZ_RAII InlinableNativeIRGenerator {
   AttachDecision tryAttachGuardToClass(InlinableNative native);
   AttachDecision tryAttachHasClass(const JSClass* clasp,
                                    bool isPossiblyWrapped);
-  AttachDecision tryAttachRegExpMatcherSearcherTester(InlinableNative native);
+  AttachDecision tryAttachRegExpMatcherSearcher(InlinableNative native);
   AttachDecision tryAttachRegExpPrototypeOptimizable();
   AttachDecision tryAttachRegExpInstanceOptimizable();
+  AttachDecision tryAttachIntrinsicRegExpBuiltinExec(InlinableNative native);
+  AttachDecision tryAttachIntrinsicRegExpExec(InlinableNative native);
   AttachDecision tryAttachGetFirstDollarIndex();
   AttachDecision tryAttachSubstringKernel();
   AttachDecision tryAttachObjectHasPrototype();

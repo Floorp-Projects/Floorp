@@ -8,9 +8,10 @@ add_task(async function test_iframe() {
       "<iframe src=\"data:text/html,<iframe name='t'></iframe><form target='t' action='data:text/html,'><input required id='i'><input id='s' type='submit'></form>\" height=\"600\"></iframe>"
     );
 
-  var gInvalidFormPopup = gBrowser.selectedBrowser.browsingContext.currentWindowGlobal
-    .getActor("FormValidation")
-    ._getAndMaybeCreatePanel(document);
+  var gInvalidFormPopup =
+    gBrowser.selectedBrowser.browsingContext.currentWindowGlobal
+      .getActor("FormValidation")
+      ._getAndMaybeCreatePanel(document);
   ok(
     gInvalidFormPopup,
     "The browser should have a popup to show when a form is invalid"
@@ -22,7 +23,7 @@ add_task(async function test_iframe() {
       "popupshown"
     );
 
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       content.document
         .getElementsByTagName("iframe")[0]
         .contentDocument.getElementById("s")
@@ -30,19 +31,23 @@ add_task(async function test_iframe() {
     });
     await popupShownPromise;
 
-    let anchorBottom = await SpecialPowers.spawn(browser, [], async function() {
-      let childdoc = content.document.getElementsByTagName("iframe")[0]
-        .contentDocument;
-      Assert.equal(
-        childdoc.activeElement,
-        childdoc.getElementById("i"),
-        "First invalid element should be focused"
-      );
-      return (
-        childdoc.defaultView.mozInnerScreenY +
-        childdoc.getElementById("i").getBoundingClientRect().bottom
-      );
-    });
+    let anchorBottom = await SpecialPowers.spawn(
+      browser,
+      [],
+      async function () {
+        let childdoc =
+          content.document.getElementsByTagName("iframe")[0].contentDocument;
+        Assert.equal(
+          childdoc.activeElement,
+          childdoc.getElementById("i"),
+          "First invalid element should be focused"
+        );
+        return (
+          childdoc.defaultView.mozInnerScreenY +
+          childdoc.getElementById("i").getBoundingClientRect().bottom
+        );
+      }
+    );
 
     function isWithinHalfPixel(a, b) {
       return Math.abs(a - b) <= 0.5;

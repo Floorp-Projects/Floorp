@@ -118,6 +118,7 @@ class GfxInfo final : public GfxInfoBase {
   bool mHasMultipleGPUs;
   bool mGlxTestError;
   mozilla::Maybe<bool> mIsVAAPISupported;
+  int mVAAPISupportedCodecs = 0;
 
   static int sGLXTestPipe;
   static pid_t sGLXTestPID;

@@ -104,7 +104,6 @@ static const uint32_t gWinEventMap[] = {
   kEVENT_WIN_UNKNOWN,                                // nsIAccessibleEvent::EVENT_ANNOUNCEMENT
   kEVENT_WIN_UNKNOWN,                                // nsIAccessibleEvent::EVENT_LIVE_REGION_ADDED
   kEVENT_WIN_UNKNOWN,                                // nsIAccessibleEvent::EVENT_LIVE_REGION_REMOVED
-  kEVENT_WIN_UNKNOWN,                                // nsIAccessibleEvent::EVENT_TABLE_STYLING_CHANGED
   kEVENT_WIN_UNKNOWN,                                // nsIAccessibleEvent::EVENT_INNER_REORDER
     // clang-format on
 };

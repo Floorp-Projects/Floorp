@@ -1,7 +1,7 @@
 // Tests third party cookie blocking using a favicon loaded from a different
 // domain. The cookie should be considered third party.
 "use strict";
-add_task(async function() {
+add_task(async function () {
   const iconUrl =
     "http://example.org/browser/netwerk/test/browser/damonbowling.jpg";
   const pageUrl =
@@ -17,7 +17,7 @@ add_task(async function() {
 
   // Kick off a page load that will load the favicon.
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     BrowserTestUtils.removeTab(tab);
   });
 

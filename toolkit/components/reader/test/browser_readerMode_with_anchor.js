@@ -12,7 +12,7 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
 add_task(async function test_loading_withHash() {
   await BrowserTestUtils.withNewTab(
     TEST_PATH + "readerModeArticle.html#foo",
-    async function(browser) {
+    async function (browser) {
       let pageShownPromise = BrowserTestUtils.waitForContentEvent(
         browser,
         "AboutReaderContentReady"
@@ -20,7 +20,7 @@ add_task(async function test_loading_withHash() {
       let readerButton = document.getElementById("reader-mode-button");
       readerButton.click();
       await pageShownPromise;
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         let foo = content.document.getElementById("foo");
         ok(foo, "foo element should be in document");
         let { scrollTop } = content.document.documentElement;
@@ -42,7 +42,7 @@ add_task(async function test_loading_withHash() {
 add_task(async function test_loading_withoutHash() {
   await BrowserTestUtils.withNewTab(
     TEST_PATH + "readerModeArticle.html",
-    async function(browser) {
+    async function (browser) {
       let pageShownPromise = BrowserTestUtils.waitForContentEvent(
         browser,
         "AboutReaderContentReady"
@@ -73,7 +73,7 @@ add_task(async function test_loading_withoutHash() {
         browser
       );
       await scrollEventPromise;
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         let foo = content.document.getElementById("foo");
         ok(foo, "foo element should be in document");
         let { scrollTop } = content.document.documentElement;

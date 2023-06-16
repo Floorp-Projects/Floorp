@@ -7,11 +7,11 @@ var simplePath = "/simple";
 var normalPath = "/normal";
 var httpbody = "<html></html>";
 
-XPCOMUtils.defineLazyGetter(this, "uri1", function() {
+XPCOMUtils.defineLazyGetter(this, "uri1", function () {
   return "http://localhost:" + httpserver.identity.primaryPort + simplePath;
 });
 
-XPCOMUtils.defineLazyGetter(this, "uri2", function() {
+XPCOMUtils.defineLazyGetter(this, "uri2", function () {
   return "http://localhost:" + httpserver.identity.primaryPort + normalPath;
 });
 
@@ -57,7 +57,7 @@ function run_test() {
 
   var channel = make_channel(uri1);
   channel.asyncOpen(
-    new listener("text/plain", function() {
+    new listener("text/plain", function () {
       run_test2();
     })
   );
@@ -68,7 +68,7 @@ function run_test() {
 function run_test2() {
   var channel = make_channel(uri2);
   channel.asyncOpen(
-    new listener("text/html", function() {
+    new listener("text/html", function () {
       httpserver.stop(do_test_finished);
     })
   );

@@ -3,7 +3,7 @@
 add_task(async function test_save_doorhanger_shown_no_profile() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
-    async function(browser) {
+    async function (browser) {
       let onPopupShown = waitForPopupShown();
 
       await focusUpdateSubmitForm(browser, {
@@ -29,7 +29,7 @@ add_task(async function test_save_doorhanger_shown_different_card_number() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
-    async function(browser) {
+    async function (browser) {
       let onPopupShown = waitForPopupShown();
       await focusUpdateSubmitForm(browser, {
         focusSelector: "#cc-name",
@@ -51,7 +51,7 @@ add_task(async function test_update_doorhanger_shown_different_card_name() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
-    async function(browser) {
+    async function (browser) {
       let onPopupShown = waitForPopupShown();
       await focusUpdateSubmitForm(browser, {
         focusSelector: "#cc-name",
@@ -76,7 +76,7 @@ add_task(async function test_update_doorhanger_shown_different_card_expiry() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
-    async function(browser) {
+    async function (browser) {
       let onPopupShown = waitForPopupShown();
       await focusUpdateSubmitForm(browser, {
         focusSelector: "#cc-name",
@@ -110,17 +110,16 @@ add_task(async function test_doorhanger_not_shown_when_autofill_untouched() {
   let onUsed = waitForStorageChangedEvents("notifyUsed");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
-    async function(browser) {
-      let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(
-        true
-      );
+    async function (browser) {
+      let osKeyStoreLoginShown =
+        OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
       await openPopupOn(browser, "form #cc-name");
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
       await osKeyStoreLoginShown;
       await waitForAutofill(browser, "#cc-name", "John Doe");
 
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         let form = content.document.getElementById("form");
         form.querySelector("input[type=submit]").click();
       });
@@ -145,7 +144,7 @@ add_task(async function test_doorhanger_not_shown_when_fill_duplicate() {
   let onUsed = waitForStorageChangedEvents("notifyUsed");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
-    async function(browser) {
+    async function (browser) {
       await focusUpdateSubmitForm(browser, {
         focusSelector: "#cc-name",
         newValues: {
@@ -190,10 +189,9 @@ add_task(
     let onUsed = waitForStorageChangedEvents("notifyUsed");
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: CREDITCARD_FORM_URL },
-      async function(browser) {
-        let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(
-          true
-        );
+      async function (browser) {
+        let osKeyStoreLoginShown =
+          OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
         await openPopupOn(browser, "form #cc-number");
         await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
         await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
@@ -247,10 +245,9 @@ add_task(
     let onUsed = waitForStorageChangedEvents("notifyUsed");
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: CREDITCARD_FORM_URL },
-      async function(browser) {
-        let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(
-          true
-        );
+      async function (browser) {
+        let osKeyStoreLoginShown =
+          OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
         await openPopupOn(browser, "form #cc-number");
         await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
         await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
@@ -289,7 +286,7 @@ add_task(async function test_update_doorhanger_shown_when_fill_mergeable() {
   let onChanged = waitForStorageChangedEvents("update", "notifyUsed");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
-    async function(browser) {
+    async function (browser) {
       let onPopupShown = waitForPopupShown();
       await focusUpdateSubmitForm(browser, {
         focusSelector: "#cc-name",

@@ -23,7 +23,10 @@ namespace jpegli {
 //   * JPEG_SUSPENDED, if the input buffer ends before the end of an iMCU row;
 //   * JPEG_ROW_COMPLETED, if the next iMCU row (but not the scan) is reached;
 //   * JPEG_SCAN_COMPLETED, if the end of the scan is reached.
-int ProcessScan(j_decompress_ptr cinfo);
+int ProcessScan(j_decompress_ptr cinfo, const uint8_t* const data,
+                const size_t len, size_t* pos, size_t* bit_pos);
+
+void PrepareForiMCURow(j_decompress_ptr cinfo);
 
 }  // namespace jpegli
 

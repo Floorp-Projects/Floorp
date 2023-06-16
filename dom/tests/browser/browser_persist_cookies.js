@@ -15,7 +15,7 @@ const TEST_PATH2 = getRootDirectory(gTestPath).replace(
 var MockFilePicker = SpecialPowers.MockFilePicker;
 MockFilePicker.init(window);
 
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   info("Running the cleanup code");
   MockFilePicker.cleanup();
   Services.obs.removeObserver(checkRequest, "http-on-modify-request");
@@ -68,7 +68,7 @@ function createTemporarySaveDirectory() {
   return saveDir;
 }
 
-add_task(async function() {
+add_task(async function () {
   // Use nsICookieService.BEHAVIOR_REJECT_TRACKER to avoid cookie partitioning.
   // In this test case, if the cookie is partitioned, there will be no cookie
   // nsICookieServicebeing sent to compare.
@@ -80,7 +80,7 @@ add_task(async function() {
     ],
   });
 
-  await BrowserTestUtils.withNewTab("about:blank", async function(browser) {
+  await BrowserTestUtils.withNewTab("about:blank", async function (browser) {
     Services.obs.addObserver(checkRequest, "http-on-modify-request");
     BrowserTestUtils.loadURIString(
       browser,
@@ -99,7 +99,7 @@ add_task(async function() {
 
     MockFilePicker.displayDirectory = gTestDir;
     let fileName;
-    MockFilePicker.showCallback = function(fp) {
+    MockFilePicker.showCallback = function (fp) {
       info("showCallback");
       fileName = fp.defaultString;
       info("fileName: " + fileName);

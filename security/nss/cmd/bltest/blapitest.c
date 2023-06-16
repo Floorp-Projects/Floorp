@@ -3009,7 +3009,7 @@ get_params(PLArenaPool *arena, bltestParams *params,
     switch (mode) {
         case bltestAES_GCM:
         case bltestCHACHA20:
-            sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "aad", j);
+            snprintf(filename, sizeof(filename), "%s/tests/%s/%s%d", testdir, modestr, "aad", j);
             load_file_data(arena, &params->ask.aad, filename, bltestBinary);
         case bltestDES_CBC:
         case bltestDES_EDE_CBC:
@@ -3023,7 +3023,7 @@ get_params(PLArenaPool *arena, bltestParams *params,
 #ifndef NSS_DISABLE_DEPRECATED_SEED
         case bltestSEED_CBC:
 #endif
-            sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "iv", j);
+            snprintf(filename, sizeof(filename), "%s/tests/%s/%s%d", testdir, modestr, "iv", j);
             load_file_data(arena, &params->sk.iv, filename, bltestBinary);
         case bltestDES_ECB:
         case bltestDES_EDE_ECB:
@@ -3036,18 +3036,18 @@ get_params(PLArenaPool *arena, bltestParams *params,
 #ifndef NSS_DISABLE_DEPRECATED_SEED
         case bltestSEED_ECB:
 #endif
-            sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "key", j);
+            snprintf(filename, sizeof(filename), "%s/tests/%s/%s%d", testdir, modestr, "key", j);
             load_file_data(arena, &params->sk.key, filename, bltestBinary);
             break;
 #ifdef NSS_SOFTOKEN_DOES_RC5
         case bltestRC5_ECB:
         case bltestRC5_CBC:
-            sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "iv", j);
+            snprintf(filename, sizeof(filename), "%s/tests/%s/%s%d", testdir, modestr, "iv", j);
             load_file_data(arena, &params->sk.iv, filename, bltestBinary);
-            sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "key", j);
+            snprintf(filename, sizeof(filename), "%s/tests/%s/%s%d", testdir, modestr, "key", j);
             load_file_data(arena, &params->sk.key, filename, bltestBinary);
-            sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr,
-                    "params", j);
+            snprintf(filename, sizeof(filename), "%s/tests/%s/%s%d", testdir, modestr,
+                     "params", j);
             file = fopen(filename, "r");
             if (!file)
                 return;
@@ -3070,59 +3070,59 @@ get_params(PLArenaPool *arena, bltestParams *params,
             break;
 #endif
         case bltestRSA_PSS:
-            sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "ciphertext", j);
+            snprintf(filename, sizeof(filename), "%s/tests/%s/%s%d", testdir, modestr, "ciphertext", j);
             load_file_data(arena, &params->asymk.sig, filename, bltestBase64Encoded);
         /* fall through */
         case bltestRSA_OAEP:
-            sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "seed", j);
+            snprintf(filename, sizeof(filename), "%s/tests/%s/%s%d", testdir, modestr, "seed", j);
             load_file_data(arena, &params->asymk.cipherParams.rsa.seed,
                            filename, bltestBase64Encoded);
 
-            sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "hash", j);
+            snprintf(filename, sizeof(filename), "%s/tests/%s/%s%d", testdir, modestr, "hash", j);
             load_file_data(arena, &tempIO, filename, bltestBinary);
             params->asymk.cipherParams.rsa.hashAlg =
                 mode_str_to_hash_alg(&tempIO.buf);
 
-            sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "maskhash", j);
+            snprintf(filename, sizeof(filename), "%s/tests/%s/%s%d", testdir, modestr, "maskhash", j);
             load_file_data(arena, &tempIO, filename, bltestBinary);
             params->asymk.cipherParams.rsa.maskHashAlg =
                 mode_str_to_hash_alg(&tempIO.buf);
         /* fall through */
         case bltestRSA:
-            sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "key", j);
+            snprintf(filename, sizeof(filename), "%s/tests/%s/%s%d", testdir, modestr, "key", j);
             load_file_data(arena, &params->asymk.key, filename,
                            bltestBase64Encoded);
             params->asymk.privKey =
                 (void *)rsakey_from_filedata(arena, &params->asymk.key.buf);
             break;
         case bltestDSA:
-            sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "key", j);
+            snprintf(filename, sizeof(filename), "%s/tests/%s/%s%d", testdir, modestr, "key", j);
             load_file_data(arena, &params->asymk.key, filename, bltestBase64Encoded);
             params->asymk.privKey =
                 (void *)dsakey_from_filedata(arena, &params->asymk.key.buf);
-            sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "pqg", j);
+            snprintf(filename, sizeof(filename), "%s/tests/%s/%s%d", testdir, modestr, "pqg", j);
             load_file_data(arena, &params->asymk.cipherParams.dsa.pqgdata, filename,
                            bltestBase64Encoded);
             params->asymk.cipherParams.dsa.pqg =
                 pqg_from_filedata(arena, &params->asymk.cipherParams.dsa.pqgdata.buf);
-            sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "keyseed", j);
+            snprintf(filename, sizeof(filename), "%s/tests/%s/%s%d", testdir, modestr, "keyseed", j);
             load_file_data(arena, &params->asymk.cipherParams.dsa.keyseed, filename,
                            bltestBase64Encoded);
-            sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "sigseed", j);
+            snprintf(filename, sizeof(filename), "%s/tests/%s/%s%d", testdir, modestr, "sigseed", j);
             load_file_data(arena, &params->asymk.cipherParams.dsa.sigseed, filename,
                            bltestBase64Encoded);
-            sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "ciphertext", j);
+            snprintf(filename, sizeof(filename), "%s/tests/%s/%s%d", testdir, modestr, "ciphertext", j);
             load_file_data(arena, &params->asymk.sig, filename, bltestBase64Encoded);
             break;
         case bltestECDSA:
-            sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "key", j);
+            snprintf(filename, sizeof(filename), "%s/tests/%s/%s%d", testdir, modestr, "key", j);
             load_file_data(arena, &params->asymk.key, filename, bltestBase64Encoded);
             params->asymk.privKey =
                 (void *)eckey_from_filedata(arena, &params->asymk.key.buf);
-            sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "sigseed", j);
+            snprintf(filename, sizeof(filename), "%s/tests/%s/%s%d", testdir, modestr, "sigseed", j);
             load_file_data(arena, &params->asymk.cipherParams.ecdsa.sigseed,
                            filename, bltestBase64Encoded);
-            sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "ciphertext", j);
+            snprintf(filename, sizeof(filename), "%s/tests/%s/%s%d", testdir, modestr, "ciphertext", j);
             load_file_data(arena, &params->asymk.sig, filename, bltestBase64Encoded);
             break;
         case bltestMD2:
@@ -3238,7 +3238,7 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
         cipherInfo.mode = mode;
         params = &cipherInfo.params;
         /* get the number of tests in the directory */
-        sprintf(filename, "%s/tests/%s/%s", testdir, modestr, "numtests");
+        snprintf(filename, sizeof(filename), "%s/tests/%s/%s", testdir, modestr, "numtests");
         if (ReadFileToItem(arena, &item, filename) != SECSuccess) {
             fprintf(stderr, "%s: Cannot read file %s.\n", progName, filename);
             rv = SECFailure;
@@ -3254,13 +3254,13 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
             numtests += (int)(item.data[j] - '0');
         }
         for (j = 0; j < numtests; j++) {
-            sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr,
-                    "plaintext", j);
+            snprintf(filename, sizeof(filename), "%s/tests/%s/%s%d", testdir, modestr,
+                     "plaintext", j);
             load_file_data(arena, &pt, filename,
                            is_sigCipher(mode) ? bltestBase64Encoded
                                               : bltestBinary);
-            sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr,
-                    "ciphertext", j);
+            snprintf(filename, sizeof(filename), "%s/tests/%s/%s%d", testdir, modestr,
+                     "ciphertext", j);
             load_file_data(arena, &ct, filename, bltestBase64Encoded);
 
             get_params(arena, params, mode, j);
@@ -3871,12 +3871,19 @@ main(int argc, char **argv)
 
     /* Do FIPS self-test */
     if (bltest.commands[cmd_FIPS].activated) {
-        CK_RV ckrv = sftk_FIPSEntryOK();
-        fprintf(stdout, "CK_RV: %ld.\n", ckrv);
         PORT_Free(cipherInfo);
-        if (ckrv == CKR_OK)
-            return SECSuccess;
+#ifdef NSS_FIPS_DISABLED
+        fprintf(stdout, "FIPS self-test failed with: NSS_FIPS_DISABLED\n");
         return SECFailure;
+#else
+        CK_RV ckrv = sftk_FIPSEntryOK(PR_FALSE);
+        if (ckrv == CKR_OK) {
+            fprintf(stdout, "FIPS self-test was successful.\n");
+            return SECSuccess;
+        }
+        fprintf(stdout, "FIPS self-test failed with the CK_RV: %ld.\n", ckrv);
+        return SECFailure;
+#endif
     }
 
     /*

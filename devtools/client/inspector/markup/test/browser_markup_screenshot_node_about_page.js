@@ -17,7 +17,7 @@ function hexToCSS(hex) {
   return `rgb(${rgba.r}, ${rgba.g}, ${rgba.b})`;
 }
 
-add_task(async function() {
+add_task(async function () {
   const { inspector, toolbox } = await openInspectorForURL(TEST_URL);
 
   info("Select the main content node");

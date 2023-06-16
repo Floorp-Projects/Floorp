@@ -20,8 +20,7 @@ function* testSteps() {
     },
 
     {
-      path:
-        "storage/default/https+++developer.cdn.mozilla.net^appId=1007&inBrowser=1",
+      path: "storage/default/https+++developer.cdn.mozilla.net^appId=1007&inBrowser=1",
       obsolete: true,
     },
   ];

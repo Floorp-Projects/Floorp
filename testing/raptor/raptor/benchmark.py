@@ -24,6 +24,16 @@ class Benchmark(object):
         self.config = config
         self.test = test
 
+        # Note that we can only change the repository, revision, and branch through here.
+        # The path to the test should remain constant. If it needs to be changed, make a
+        # patch that changes it for the new test.
+        if self.config.get("benchmark_repository", None):
+            self.test["repository"] = self.config["benchmark_repository"]
+            self.test["repository_revision"] = self.config["benchmark_revision"]
+
+            if self.config.get("benchmark_branch", None):
+                self.test["branch"] = self.config["benchmark_branch"]
+
         self.setup_benchmarks(
             os.getenv("MOZ_DEVELOPER_REPO_DIR"),
             os.getenv("MOZ_MOZBUILD_DIR"),

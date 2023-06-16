@@ -26,7 +26,7 @@ add_task(async function test_bc_id_overflow() {
 
   await BrowserTestUtils.withNewTab(
     `data:text/html,` + encodeURIComponent(OPEN_NOOPENER_WINDOW),
-    async function(browser) {
+    async function (browser) {
       let tabOpenedPromise = BrowserTestUtils.waitForNewTab(
         gBrowser,
         OPENED_URI,

@@ -15,7 +15,7 @@ const { enableEventsActor, disableEventsActor } = ChromeUtils.importESModule(
   "chrome://remote/content/marionette/actors/MarionetteEventsParent.sys.mjs"
 );
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   unregisterCommandsActor();
   disableEventsActor();
 });

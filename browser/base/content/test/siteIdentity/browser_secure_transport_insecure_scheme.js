@@ -38,7 +38,7 @@ async function testPageInfoNotEncrypted(uri) {
 
 // But first, a quick test that we don't incorrectly treat a
 // blob:https://example.com URI as secure.
-add_task(async function() {
+add_task(async function () {
   let uri =
     getRootDirectory(gTestPath).replace(
       "chrome://mochitests/content",
@@ -121,7 +121,7 @@ function startServer(cert) {
   return tlsServer;
 }
 
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     // This test fails on some platforms if we leave IPv6 enabled.
     set: [["network.dns.disableIPv6", true]],

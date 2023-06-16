@@ -99,12 +99,12 @@ class MIRGenerator final {
     return !compilingWasm() && instrumentedProfiling();
   }
 
-  gc::InitialHeap initialStringHeap() const {
-    return stringsCanBeInNursery_ ? gc::DefaultHeap : gc::TenuredHeap;
+  gc::Heap initialStringHeap() const {
+    return stringsCanBeInNursery_ ? gc::Heap::Default : gc::Heap::Tenured;
   }
 
-  gc::InitialHeap initialBigIntHeap() const {
-    return bigIntsCanBeInNursery_ ? gc::DefaultHeap : gc::TenuredHeap;
+  gc::Heap initialBigIntHeap() const {
+    return bigIntsCanBeInNursery_ ? gc::Heap::Default : gc::Heap::Tenured;
   }
 
   // Whether the main thread is trying to cancel this build.
@@ -153,6 +153,13 @@ class MIRGenerator final {
   bool stringsCanBeInNursery_;
   bool bigIntsCanBeInNursery_;
 
+  bool disableLICM_ = false;
+
+ public:
+  void disableLICM() { disableLICM_ = true; }
+  bool licmEnabled() const;
+
+ private:
   uint64_t minWasmHeapLength_;
 
   IonPerfSpewer wasmPerfSpewer_;

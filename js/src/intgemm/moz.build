@@ -38,6 +38,13 @@ if CONFIG["INTEL_ARCHITECTURE"]:
             "/third_party/gemmology/kernels/GemmologyEngineAVX2.cpp"
         ].flags += CONFIG["AVX2_FLAGS"]
 
+if CONFIG["CPU_ARCH"] == "aarch64":
+    DEFINES["USE_NEON"] = True
+    SOURCES += ["/third_party/gemmology/kernels/GemmologyEngineNeon64.cpp"]
+    SOURCES["/third_party/gemmology/kernels/GemmologyEngineNeon64.cpp"].flags += CONFIG[
+        "NEON_FLAGS"
+    ]
+
 SOURCES += [
     "IntegerGemmIntrinsic.cpp",
 ]

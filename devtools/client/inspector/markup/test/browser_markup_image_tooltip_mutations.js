@@ -14,7 +14,7 @@ const UPDATED_SRC = URL_ROOT + "doc_markup_tooltip.png";
 const INITIAL_SRC_SIZE = "64" + " \u00D7 " + "64";
 const UPDATED_SRC_SIZE = "22" + " \u00D7 " + "23";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(
     "data:text/html,<p>markup view tooltip test</p><img>"
   );

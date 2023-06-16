@@ -76,11 +76,6 @@ using namespace mozilla::a11y;
   }
 
   mGeckoAccessible->SetSelected([selected boolValue]);
-
-  // We need to invalidate the state because the accessibility service
-  // may check the selected attribute synchornously and not wait for
-  // selection events.
-  [self invalidateState];
 }
 
 @end
@@ -315,7 +310,6 @@ using namespace mozilla::a11y;
 - (void)handleAccessibleEvent:(uint32_t)eventType {
   switch (eventType) {
     case nsIAccessibleEvent::EVENT_FOCUS:
-      [self invalidateState];
       // Our focused state is equivelent to native selected states for menus.
       mozAccessible* parent = (mozAccessible*)[self moxUnignoredParent];
       [parent moxPostNotification:

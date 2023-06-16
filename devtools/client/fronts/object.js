@@ -102,9 +102,8 @@ class ObjectFront extends FrontClassWithSpec(objectSpec) {
         if (descriptor) {
           for (const gripKey of gripKeys) {
             if (descriptor.hasOwnProperty(gripKey)) {
-              result.safeGetterValues[key][
-                gripKey
-              ] = getAdHocFrontOrPrimitiveGrip(descriptor[gripKey], this);
+              result.safeGetterValues[key][gripKey] =
+                getAdHocFrontOrPrimitiveGrip(descriptor[gripKey], this);
             }
           }
         }

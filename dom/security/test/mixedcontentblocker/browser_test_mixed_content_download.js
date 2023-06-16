@@ -206,10 +206,7 @@ add_setup(async () => {
 add_task(async function test_blocking() {
   for (let prefVal of [true, false]) {
     await SpecialPowers.pushPrefEnv({
-      set: [
-        ["browser.download.always_ask_before_handling_new_types", prefVal],
-        ["browser.download.improvements_to_download_panel", !prefVal],
-      ],
+      set: [["browser.download.always_ask_before_handling_new_types", prefVal]],
     });
     await runTest(
       INSECURE_BASE_URL,
@@ -248,10 +245,7 @@ add_task(async function test_blocking() {
 add_task(async function test_manual_unblocking() {
   for (let prefVal of [true, false]) {
     await SpecialPowers.pushPrefEnv({
-      set: [
-        ["browser.download.always_ask_before_handling_new_types", prefVal],
-        ["browser.download.improvements_to_download_panel", !prefVal],
-      ],
+      set: [["browser.download.always_ask_before_handling_new_types", prefVal]],
     });
     await runTest(
       SECURE_BASE_URL,
@@ -274,10 +268,7 @@ add_task(async function test_manual_unblocking() {
 add_task(async function test_unblock_download_visible() {
   for (let prefVal of [true, false]) {
     await SpecialPowers.pushPrefEnv({
-      set: [
-        ["browser.download.always_ask_before_handling_new_types", prefVal],
-        ["browser.download.improvements_to_download_panel", !prefVal],
-      ],
+      set: [["browser.download.always_ask_before_handling_new_types", prefVal]],
     });
     // Focus, open and close the panel once
     // to make sure the panel is loaded and ready
@@ -308,10 +299,7 @@ add_task(async function download_open_insecure_SVG() {
   HandlerService.store(mimeInfo);
 
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.download.always_ask_before_handling_new_types", false],
-      ["browser.download.improvements_to_download_panel", true],
-    ],
+    set: [["browser.download.always_ask_before_handling_new_types", false]],
   });
   await promiseFocus();
   await runTest(

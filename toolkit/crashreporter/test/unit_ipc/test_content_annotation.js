@@ -17,12 +17,12 @@ add_task(async function run_test() {
 
   // Try crashing with a runtime abort
   await do_content_crash(
-    function() {
+    function () {
       crashType = CrashTestUtils.CRASH_MOZ_CRASH;
       crashReporter.annotateCrashReport("TestKey", "TestValue");
       crashReporter.appendAppNotesToCrashReport("!!!foo!!!");
     },
-    function(mdump, extra) {
+    function (mdump, extra) {
       Assert.equal(extra.TestKey, "TestValue");
       Assert.ok("ProcessType" in extra);
       Assert.ok("StartupTime" in extra);

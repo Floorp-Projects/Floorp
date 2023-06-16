@@ -10,7 +10,7 @@ const TEST_URI =
   "test/browser/test-console.html?" +
   Date.now();
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.browsertoolbox.scope", "everything");
   await addTab(TEST_URI);
 
@@ -33,8 +33,8 @@ async function testWebExtensionMessages(
   // TODO: Re-enable this (See Bug 1699050).
   /*
   // Trigger the messages logged when opening the popup.
-  const { AppUiTestDelegate } = ChromeUtils.import(
-    "resource://testing-common/AppUiTestDelegate.jsm"
+  const { AppUiTestDelegate } = ChromeUtils.importESModule(
+    "resource://testing-common/AppUiTestDelegate.sys.mjs"
   );
   const onPopupReady = extension.awaitMessage(`popup-ready`);
   await AppUiTestDelegate.clickBrowserAction(window, extension.id);
@@ -91,7 +91,7 @@ async function loadExtension() {
     useAddonManager: "temporary",
 
     files: {
-      "background.js": function() {
+      "background.js": function () {
         console.log("background console API message");
         throw new Error("background error");
       },
@@ -106,7 +106,7 @@ async function loadExtension() {
           <script src="popup.js"></script>
         </html>`,
 
-      "popup.js": function() {
+      "popup.js": function () {
         console.log("popup console API message");
         // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
         setTimeout(() => {
@@ -120,7 +120,7 @@ async function loadExtension() {
         }, 10);
       },
 
-      "content-script.js": function() {
+      "content-script.js": function () {
         console.log("content console API message");
         throw new Error("content error");
       },

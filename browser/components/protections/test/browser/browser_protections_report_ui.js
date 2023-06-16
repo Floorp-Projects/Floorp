@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsITrackingDBService"
 );
 
-XPCOMUtils.defineLazyGetter(this, "DB_PATH", function() {
+XPCOMUtils.defineLazyGetter(this, "DB_PATH", function () {
   return PathUtils.join(PathUtils.profileDir, "protections.sqlite");
 });
 
@@ -30,7 +30,7 @@ const SQL = {
   selectAll: "SELECT * FROM events",
 };
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.contentblocking.database.enabled", true],
@@ -185,7 +185,7 @@ add_task(async function test_graph_display() {
     url: "about:protections",
     gBrowser,
   });
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     const DATA_TYPES = [
       "cryptominer",
       "fingerprinter",
@@ -475,9 +475,8 @@ add_task(async function test_graph_display() {
       "aria-describedby attribute is trackerContent"
     );
 
-    const fingerprinterTab = content.document.getElementById(
-      "tab-fingerprinter"
-    );
+    const fingerprinterTab =
+      content.document.getElementById("tab-fingerprinter");
     Assert.equal(
       fingerprinterTab.getAttribute("aria-labelledby"),
       "fingerprinterLabel fingerprinterTitle",
@@ -526,7 +525,7 @@ add_task(async function test_etp_custom_settings() {
     gBrowser,
   });
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     await ContentTaskUtils.waitForCondition(() => {
       let legend = content.document.getElementById("legend");
       return ContentTaskUtils.is_visible(legend);
@@ -558,7 +557,7 @@ add_task(async function test_etp_custom_settings() {
     url: "about:protections",
     gBrowser,
   });
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     await ContentTaskUtils.waitForCondition(() => {
       let legend = content.document.getElementById("legend");
       return ContentTaskUtils.is_visible(legend);
@@ -585,7 +584,7 @@ add_task(async function test_etp_custom_settings() {
     url: "about:protections",
     gBrowser,
   });
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     await ContentTaskUtils.waitForCondition(() => {
       let legend = content.document.getElementById("legend");
       return ContentTaskUtils.is_visible(legend);
@@ -605,7 +604,7 @@ add_task(async function test_etp_custom_settings() {
     url: "about:protections",
     gBrowser,
   });
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     await ContentTaskUtils.waitForCondition(() => {
       let legend = content.document.getElementById("legend");
       return ContentTaskUtils.is_visible(legend);
@@ -633,7 +632,7 @@ add_task(async function test_etp_custom_settings() {
     url: "about:protections",
     gBrowser,
   });
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     await ContentTaskUtils.waitForCondition(() => {
       let legend = content.document.getElementById("legend");
       return ContentTaskUtils.is_visible(legend);
@@ -680,15 +679,14 @@ add_task(async function test_etp_custom_protections_off() {
     "about:preferences#privacy"
   );
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     await ContentTaskUtils.waitForCondition(() => {
       let etpCard = content.document.querySelector(".etp-card");
       return etpCard.classList.contains("custom-not-blocking");
     }, "The custom protections warning card is showing");
 
-    let manageProtectionsButton = content.document.getElementById(
-      "manage-protections"
-    );
+    let manageProtectionsButton =
+      content.document.getElementById("manage-protections");
     Assert.ok(
       ContentTaskUtils.is_visible(manageProtectionsButton),
       "Button to manage protections is displayed"
@@ -704,15 +702,14 @@ add_task(async function test_etp_custom_protections_off() {
     timestamp: date,
   });
   await BrowserTestUtils.reloadTab(tab);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     await ContentTaskUtils.waitForCondition(() => {
       let etpCard = content.document.querySelector(".etp-card");
       return etpCard.classList.contains("custom-not-blocking");
     }, "The custom protections warning card is showing");
 
-    let manageProtectionsButton = content.document.getElementById(
-      "manage-protections"
-    );
+    let manageProtectionsButton =
+      content.document.getElementById("manage-protections");
     Assert.ok(
       ContentTaskUtils.is_visible(manageProtectionsButton),
       "Button to manage protections is displayed"
@@ -746,7 +743,7 @@ add_task(async function test_etp_mobile_promotion_pref_on() {
     url: "about:protections",
     gBrowser,
   });
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     let mobilePromotion = content.document.getElementById("mobile-hanger");
     Assert.ok(
       ContentTaskUtils.is_visible(mobilePromotion),
@@ -770,7 +767,7 @@ add_task(async function test_etp_mobile_promotion_pref_on() {
     url: "about:protections",
     gBrowser,
   });
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     let mobilePromotion = content.document.getElementById("mobile-hanger");
     Assert.ok(
       ContentTaskUtils.is_hidden(mobilePromotion),
@@ -794,7 +791,7 @@ add_task(async function test_etp_mobile_promotion_pref_on() {
     url: "about:protections",
     gBrowser,
   });
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     let mobilePromotion = content.document.getElementById("mobile-hanger");
     Assert.ok(
       ContentTaskUtils.is_hidden(mobilePromotion),
@@ -812,7 +809,7 @@ add_task(async function test_etp_mobile_promotion_pref_on() {
     gBrowser,
   });
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     let mobilePromotion = content.document.getElementById("mobile-hanger");
     Assert.ok(
       ContentTaskUtils.is_hidden(mobilePromotion),
@@ -834,7 +831,7 @@ add_task(async function test_settings_links() {
     "about:preferences#privacy"
   );
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     const protectionSettings = await ContentTaskUtils.waitForCondition(() => {
       return content.document.getElementById("protection-settings");
     }, "protection-settings link exists");

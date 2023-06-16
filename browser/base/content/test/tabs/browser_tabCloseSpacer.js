@@ -7,7 +7,7 @@
  * Tests that while clicking to close tabs, the close button remains under the mouse
  * even when an underflow happens.
  */
-add_task(async function() {
+add_task(async function () {
   // Disable tab animations
   gReduceMotionOverride = true;
 

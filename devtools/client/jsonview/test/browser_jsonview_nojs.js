@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   info("Test JSON without JavaScript started.");
 
   const oldPref = Services.prefs.getBoolPref("javascript.enabled");

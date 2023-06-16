@@ -7,7 +7,7 @@
 // - n_chars
 // - n_words
 
-add_setup(async function() {
+add_setup(async function () {
   await initNCharsAndNWordsTest();
 });
 

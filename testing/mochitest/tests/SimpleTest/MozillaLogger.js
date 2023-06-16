@@ -23,9 +23,8 @@ let haveComponents =
   typeof Components === "object" &&
   typeof Components.Constructor === "function";
 
-let CC = (haveComponents
-  ? Components
-  : SpecialPowers.wrap(SpecialPowers.Components)
+let CC = (
+  haveComponents ? Components : SpecialPowers.wrap(SpecialPowers.Components)
 ).Constructor;
 
 let ConverterOutputStream = CC(

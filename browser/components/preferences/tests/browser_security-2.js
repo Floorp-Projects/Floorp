@@ -12,7 +12,7 @@ let originals = PREFS.map(pref => [pref, Services.prefs.getBoolPref(pref)]);
 let originalMalwareTable = Services.prefs.getCharPref(
   "urlclassifier.malwareTable"
 );
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   originals.forEach(([pref, val]) => Services.prefs.setBoolPref(pref, val));
   Services.prefs.setCharPref(
     "urlclassifier.malwareTable",
@@ -24,15 +24,15 @@ registerCleanupFunction(function() {
 // each time that it wants to test various preference combinations. We
 // only use one tab (instead of opening/closing for each test) for all
 // to help improve test times on debug builds.
-add_setup(async function() {
+add_setup(async function () {
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   });
 });
 
 // test the download protection preference
-add_task(async function() {
+add_task(async function () {
   async function checkPrefSwitch(val) {
     Services.prefs.setBoolPref("browser.safebrowsing.downloads.enabled", val);
 
@@ -81,7 +81,7 @@ add_task(async function() {
 
 requestLongerTimeout(2);
 // test the unwanted/uncommon software warning preference
-add_task(async function() {
+add_task(async function () {
   async function checkPrefSwitch(val1, val2, isV2) {
     Services.prefs.setBoolPref(
       "browser.safebrowsing.downloads.remote.block_potentially_unwanted",

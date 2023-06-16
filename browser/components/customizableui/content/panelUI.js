@@ -5,12 +5,8 @@
 ChromeUtils.defineESModuleGetters(this, {
   AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
+  PanelMultiView: "resource:///modules/PanelMultiView.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  this,
-  "PanelMultiView",
-  "resource:///modules/PanelMultiView.jsm"
-);
 ChromeUtils.defineModuleGetter(
   this,
   "ToolbarPanelHub",
@@ -117,7 +113,7 @@ const PanelUI = {
       // Need to do fresh let-bindings per iteration
       let getKey = k;
       let id = v;
-      this.__defineGetter__(getKey, function() {
+      this.__defineGetter__(getKey, function () {
         delete this[getKey];
         return (this[getKey] = document.getElementById(id));
       });

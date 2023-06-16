@@ -218,7 +218,7 @@ export class BrowserTestUtilsChild extends JSWindowActorChild {
           "resource://gre/modules/ctypes.sys.mjs"
         );
 
-        let dies = function() {
+        let dies = function () {
           dump("\nEt tu, Brute?\n");
           ChromeUtils.privateNoteIntentionalCrash();
 

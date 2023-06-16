@@ -7,10 +7,14 @@ exports[`Breakpoints Component should render breakpoints with columns 1`] = `
       Object {
         "location": Object {
           "column": 2,
-          "sourceId": "server1.conn1.child1/source1",
+          "source": Object {
+            "id": "server1.conn1.child1/source1",
+          },
         },
       }
     }
+    breakpointActions={Object {}}
+    cx={Object {}}
     editor={
       Object {
         "codeMirror": Object {
@@ -18,7 +22,8 @@ exports[`Breakpoints Component should render breakpoints with columns 1`] = `
         },
       }
     }
-    key="server1.conn1.child1/source1:undefined:2"
+    editorActions={Object {}}
+    key="undefined:undefined:2"
     selectedSource={
       Object {
         "get": [Function],

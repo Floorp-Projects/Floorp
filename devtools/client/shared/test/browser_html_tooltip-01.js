@@ -26,7 +26,7 @@ function getTooltipContent(doc) {
   return div;
 }
 
-add_task(async function() {
+add_task(async function () {
   const { doc } = await createHost("bottom", TEST_URI);
 
   info("Run tests for a Tooltip without using a XUL panel");

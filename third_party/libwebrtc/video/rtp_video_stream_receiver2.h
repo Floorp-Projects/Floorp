@@ -26,9 +26,9 @@
 #include "call/syncable.h"
 #include "call/video_receive_stream.h"
 #include "modules/rtp_rtcp/include/receive_statistics.h"
+#include "modules/rtp_rtcp/include/recovered_packet_receiver.h"
 #include "modules/rtp_rtcp/include/remote_ntp_time_estimator.h"
 #include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
-#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/rtp_rtcp/source/absolute_capture_time_interpolator.h"
 #include "modules/rtp_rtcp/source/capture_clock_offset_updater.h"
 #include "modules/rtp_rtcp/source/rtp_dependency_descriptor_extension.h"
@@ -43,7 +43,7 @@
 #include "modules/video_coding/packet_buffer.h"
 #include "modules/video_coding/rtp_frame_reference_finder.h"
 #include "rtc_base/experiments/field_trial_parser.h"
-#include "rtc_base/numerics/sequence_number_util.h"
+#include "rtc_base/numerics/sequence_number_unwrapper.h"
 #include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/thread_annotations.h"
 #include "video/buffered_frame_decryptor.h"
@@ -139,7 +139,7 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
                              const RTPVideoHeader& video);
 
   // Implements RecoveredPacketReceiver.
-  void OnRecoveredPacket(const uint8_t* packet, size_t packet_length) override;
+  void OnRecoveredPacket(const RtpPacketReceived& packet) override;
 
   // Send an RTCP keyframe request.
   void RequestKeyFrame() override;
@@ -386,6 +386,8 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
   // absl::nullopt when `video_structure_ == nullptr`;
   absl::optional<int64_t> video_structure_frame_id_
       RTC_GUARDED_BY(packet_sequence_checker_);
+  Timestamp last_logged_failed_to_parse_dd_
+      RTC_GUARDED_BY(packet_sequence_checker_) = Timestamp::MinusInfinity();
 
   std::unique_ptr<RtpFrameReferenceFinder> reference_finder_
       RTC_GUARDED_BY(packet_sequence_checker_);

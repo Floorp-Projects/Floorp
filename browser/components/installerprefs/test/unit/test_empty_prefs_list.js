@@ -7,7 +7,7 @@
  * Test passing an empty list of pref names to the module.
  */
 
-add_task(function() {
+add_task(function () {
   const PREFS_LIST = [];
 
   startModule(PREFS_LIST);

@@ -21,7 +21,7 @@ function onLoad() {
       new Date(reports[i].timestamp).toString();
     let link = document.createElement("a");
     link.href = "#";
-    link.addEventListener("click", function() {
+    link.addEventListener("click", function () {
       showReport(i);
       return false;
     });
@@ -275,7 +275,7 @@ function togglePlay() {
   if (playing) {
     pause();
   } else {
-    timerId = setInterval(function() {
+    timerId = setInterval(function () {
       currentFrame++;
       if (!renderFrame()) {
         currentFrame--;
@@ -307,16 +307,18 @@ document
   .addEventListener("click", loadData);
 document
   .getElementById("stepForwardButton")
-  .addEventListener("click", function() {
+  .addEventListener("click", function () {
     step(false);
   });
-document.getElementById("forwardButton").addEventListener("click", function() {
+document.getElementById("forwardButton").addEventListener("click", function () {
   reset(false);
 });
-document.getElementById("rewindButton").addEventListener("click", function() {
+document.getElementById("rewindButton").addEventListener("click", function () {
   reset(true);
 });
-document.getElementById("stepBackButton").addEventListener("click", function() {
-  step(true);
-});
+document
+  .getElementById("stepBackButton")
+  .addEventListener("click", function () {
+    step(true);
+  });
 window.addEventListener("load", onLoad);

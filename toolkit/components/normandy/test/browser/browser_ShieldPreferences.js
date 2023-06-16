@@ -12,10 +12,8 @@ const OPT_OUT_STUDIES_ENABLED_PREF = "app.shield.optoutstudies.enabled";
 const { NormandyTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/NormandyTestUtils.sys.mjs"
 );
-const {
-  addonStudyFactory,
-  preferenceStudyFactory,
-} = NormandyTestUtils.factories;
+const { addonStudyFactory, preferenceStudyFactory } =
+  NormandyTestUtils.factories;
 
 ShieldPreferences.init();
 
@@ -62,7 +60,7 @@ decorate_task(
     let stopArgs = [];
     let stoppedBoth = new Promise(resolve => {
       let calls = 0;
-      stopStub.callsFake(function() {
+      stopStub.callsFake(function () {
         stopArgs.push(Array.from(arguments));
         calls++;
         if (calls == 2) {

@@ -1,5 +1,5 @@
-const { AppConstants } = SpecialPowers.ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 
 // In each list of tests below, test file types that are not supported should
@@ -2126,6 +2126,19 @@ var gEMENonMSEFailTests = [
   },
 ];
 
+// Test files that are supposed to loop seamlessly when played back.
+var gSeamlessLoopingTests = [
+  // MP4 files dont't loop seamlessly yet, the seeking logic seeks to 0, not the
+  // actual first packet, resulting in incorrect decoding.
+  // See bug 1817989
+  // { name: "sin-441-1s-44100-fdk_aac.mp4", type: "audio/mp4" },
+  // { name: "sin-441-1s-44100-afconvert.mp4", type: "audio/mp4" },
+  // { name: "sin-441-1s-44100.ogg", type: "audio/vorbis" },
+  // { name: "sin-441-1s-44100.opus", type: "audio/opus" },
+  { name: "sin-441-1s-44100-lame.mp3", type: "audio/mpeg" },
+  { name: "sin-441-1s-44100.flac", type: "audio/flac" },
+];
+
 // These are files that are used for video decode suspend in
 // background tabs tests.
 var gDecodeSuspendTests = [
@@ -2179,14 +2192,14 @@ function getPlayableVideo(candidates) {
 
 function getPlayableVideos(candidates) {
   var v = manifestVideo();
-  return candidates.filter(function(x) {
+  return candidates.filter(function (x) {
     return /^video/.test(x.type) && v.canPlayType(x.type);
   });
 }
 
 function getPlayableAudio(candidates) {
   var v = manifestVideo();
-  var resources = candidates.filter(function(x) {
+  var resources = candidates.filter(function (x) {
     return /^audio/.test(x.type) && v.canPlayType(x.type);
   });
   if (resources.length) {
@@ -2216,10 +2229,10 @@ function removeNodeAndSource(n) {
 }
 
 function once(target, name, cb) {
-  var p = new Promise(function(resolve, reject) {
+  var p = new Promise(function (resolve, reject) {
     target.addEventListener(
       name,
-      function() {
+      function () {
         resolve();
       },
       { once: true }
@@ -2237,8 +2250,8 @@ function once(target, name, cb) {
  * @returns {Promise} A promise that is resolved when event happens.
  */
 function nextEvent(video, eventName) {
-  return new Promise(function(resolve, reject) {
-    let f = function(event) {
+  return new Promise(function (resolve, reject) {
+    let f = function (event) {
       video.removeEventListener(eventName, f);
       resolve(event);
     };
@@ -2319,7 +2332,7 @@ function MediaTestManager() {
   // and MediaTestManager.finished(token) when the test finishes. You don't have
   // to start every test, but if you call started() you *must* call finish()
   // else you'll timeout.
-  this.runTests = function(tests, startTest) {
+  this.runTests = function (tests, startTest) {
     this.startTime = new Date();
     SimpleTest.info(
       "Started " +
@@ -2358,7 +2371,7 @@ function MediaTestManager() {
 
   // Registers that the test corresponding to 'token' has been started.
   // Don't call more than once per token.
-  this.started = function(token, handler) {
+  this.started = function (token, handler) {
     this.tokens.push(token);
     this.numTestsRunning++;
     this.handlers[token] = handler;
@@ -2392,7 +2405,7 @@ function MediaTestManager() {
   // you've finished your test. If all tests are complete this will finish the
   // run, otherwise it may start up the next run. It's ok to call multiple times
   // per token.
-  this.finished = function(token) {
+  this.finished = function (token) {
     var i = this.tokens.indexOf(token);
     if (i != -1) {
       // Remove the element from the list of running tests.
@@ -2423,7 +2436,7 @@ function MediaTestManager() {
 
   // Starts the next batch of tests, or finishes if they're all done.
   // Don't call this directly, call finished(token) when you're done.
-  this.nextTest = function() {
+  this.nextTest = function () {
     while (
       this.testNum < this.tests.length &&
       this.tokens.length < PARALLEL_TESTS
@@ -2509,7 +2522,7 @@ if ("SimpleTest" in window) {
   SimpleTest.requestFlakyTimeout("untriaged");
 
   // Register timeout function to dump debugging logs.
-  SimpleTest.registerTimeoutFunction(async function() {
+  SimpleTest.registerTimeoutFunction(async function () {
     for (const v of document.getElementsByTagName("video")) {
       SimpleTest.info(
         JSON.stringify(await SpecialPowers.wrap(v).mozRequestDebugInfo())

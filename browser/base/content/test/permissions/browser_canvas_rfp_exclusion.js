@@ -123,7 +123,7 @@ async function populatePlacedData() {
       gBrowser: win.gBrowser,
       url: kUrl,
     },
-    async function() {
+    async function () {
       let browser = win.gBrowser.selectedBrowser;
       gPlacedData = await SpecialPowers.spawn(
         browser,

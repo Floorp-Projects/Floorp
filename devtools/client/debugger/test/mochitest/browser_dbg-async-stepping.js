@@ -7,7 +7,6 @@
 "use strict";
 
 add_task(async function test() {
-  await pushPref("devtools.debugger.features.async-stepping", true);
   const dbg = await initDebugger("doc-async.html", "async.js");
 
   await selectSource(dbg, "async.js");

@@ -4,10 +4,7 @@
  */
 
 const interpretChar = (chars, index) => {
-  return chars
-    .charCodeAt(index)
-    .toString(16)
-    .padStart(4, "0");
+  return chars.charCodeAt(index).toString(16).padStart(4, "0");
 };
 
 const hexEncode = str => {

@@ -10,7 +10,6 @@
 
 <%namespace name="helpers" file="/helpers.mako.rs" />
 
-#[cfg(feature = "servo")]
 use app_units::Au;
 use arrayvec::{ArrayVec, Drain as ArrayVecDrain};
 use servo_arc::{Arc, UniqueArc};
@@ -37,20 +36,15 @@ use crate::selector_parser::PseudoElement;
 use style_traits::{CssWriter, KeywordsCollectFn, ParseError, ParsingMode};
 use style_traits::{SpecifiedValueInfo, StyleParseErrorKind, ToCss};
 use to_shmem::impl_trivial_to_shmem;
-use crate::stylesheets::{CssRuleType, Origin, UrlExtraData};
+use crate::stylesheets::{CssRuleType, CssRuleTypes, Origin, UrlExtraData};
 use crate::use_counters::UseCounters;
 use crate::values::generics::text::LineHeight;
-use crate::values::{computed, resolved};
-use crate::values::computed::NonNegativeLength;
-use crate::values::serialize_atom_name;
+use crate::values::{computed, resolved, serialize_atom_name};
 use crate::values::specified::font::SystemFont;
 use crate::rule_tree::StrongRuleNode;
-use crate::Zero;
 use crate::str::{CssString, CssStringWriter};
 use std::cell::Cell;
-
-pub use self::declaration_block::*;
-pub use self::cascade::*;
+use super::declaration_block::AppendableValue;
 
 <%!
     from collections import defaultdict
@@ -58,11 +52,6 @@ pub use self::cascade::*;
                      to_camel_case, RULE_VALUES, SYSTEM_FONT_LONGHANDS
     import os.path
 %>
-
-#[path="${repr(os.path.join(os.path.dirname(__file__), 'declaration_block.rs'))[1:-1]}"]
-pub mod declaration_block;
-#[path="${repr(os.path.join(os.path.dirname(__file__), 'cascade.rs'))[1:-1]}"]
-pub mod cascade;
 
 /// Conversion with fewer impls than From/Into
 pub trait MaybeBoxed<Out> {
@@ -428,7 +417,7 @@ impl PropertyDeclaration {
 
     /// Returns the color value of a given property, for high-contrast-mode
     /// tweaks.
-    pub(crate) fn color_value(&self) -> Option<<&crate::values::specified::Color> {
+    pub(super) fn color_value(&self) -> Option<<&crate::values::specified::Color> {
         ${static_longhand_id_set("COLOR_PROPERTIES", lambda p: p.predefined_type == "Color")}
         <%
             # sanity check
@@ -580,30 +569,29 @@ impl NonCustomPropertyId {
 
     /// Returns whether a given rule allows a given property.
     #[inline]
-    pub fn allowed_in_rule(self, rule_type: CssRuleType) -> bool {
+    pub fn allowed_in_rule(self, rule_types: CssRuleTypes) -> bool {
         debug_assert!(
-            matches!(
-                rule_type,
-                CssRuleType::Keyframe | CssRuleType::Page | CssRuleType::Style
-            ),
+            rule_types.contains(CssRuleType::Keyframe) ||
+            rule_types.contains(CssRuleType::Page) ||
+            rule_types.contains(CssRuleType::Style),
             "Declarations are only expected inside a keyframe, page, or style rule."
         );
 
-        static MAP: [u8; NON_CUSTOM_PROPERTY_ID_COUNT] = [
+        static MAP: [u32; NON_CUSTOM_PROPERTY_ID_COUNT] = [
             % for property in data.longhands + data.shorthands + data.all_aliases():
-            ${property.rule_types_allowed},
+            % for name in RULE_VALUES:
+            % if property.rule_types_allowed & RULE_VALUES[name] != 0:
+            CssRuleType::${name}.bit() |
+            % endif
+            % endfor
+            0,
             % endfor
         ];
-        match rule_type {
-            % for name in RULE_VALUES:
-                CssRuleType::${name} => MAP[self.0] & ${RULE_VALUES[name]} != 0,
-            % endfor
-            _ => true
-        }
+        MAP[self.0] & rule_types.bits() != 0
     }
 
     fn allowed_in(self, context: &ParserContext) -> bool {
-        if !self.allowed_in_rule(context.rule_type()) {
+        if !self.allowed_in_rule(context.rule_types()) {
             return false;
         }
 
@@ -736,7 +724,7 @@ impl From<AliasId> for NonCustomPropertyId {
 }
 
 /// A set of all properties
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Default)]
 pub struct NonCustomPropertyIdSet {
     storage: [u32; (NON_CUSTOM_PROPERTY_ID_COUNT - 1 + 32) / 32]
 }
@@ -1004,7 +992,7 @@ impl LonghandIdSet {
     /// Only a few properties are allowed to depend on the visited state of
     /// links. When cascading visited styles, we can save time by only
     /// processing these properties.
-    fn visited_dependent() -> &'static Self {
+    pub(super) fn visited_dependent() -> &'static Self {
         ${static_longhand_id_set(
             "VISITED_DEPENDENT",
             lambda p: is_visited_dependent(p)
@@ -1014,7 +1002,7 @@ impl LonghandIdSet {
     }
 
     #[inline]
-    fn writing_mode_group() -> &'static Self {
+    pub(super) fn writing_mode_group() -> &'static Self {
         ${static_longhand_id_set(
             "WRITING_MODE_GROUP",
             lambda p: p.name in CASCADE_GROUPS["writing_mode"]
@@ -1023,7 +1011,7 @@ impl LonghandIdSet {
     }
 
     #[inline]
-    fn fonts_and_color_group() -> &'static Self {
+    pub(super) fn fonts_and_color_group() -> &'static Self {
         ${static_longhand_id_set(
             "FONTS_AND_COLOR_GROUP",
             lambda p: p.name in CASCADE_GROUPS["fonts_and_color"]
@@ -1032,13 +1020,13 @@ impl LonghandIdSet {
     }
 
     #[inline]
-    fn late_group_only_inherited() -> &'static Self {
+    pub(super) fn late_group_only_inherited() -> &'static Self {
         ${static_longhand_id_set("LATE_GROUP_ONLY_INHERITED", lambda p: p.style_struct.inherited and in_late_group(p))}
         &LATE_GROUP_ONLY_INHERITED
     }
 
     #[inline]
-    fn late_group() -> &'static Self {
+    pub(super) fn late_group() -> &'static Self {
         ${static_longhand_id_set("LATE_GROUP", lambda p: in_late_group(p))}
         &LATE_GROUP
     }
@@ -1206,6 +1194,7 @@ impl CSSWideKeyword {
 
 bitflags! {
     /// A set of flags for properties.
+    #[derive(Clone, Copy)]
     pub struct PropertyFlags: u16 {
         /// This longhand property applies to ::first-letter.
         const APPLIES_TO_FIRST_LETTER = 1 << 1;
@@ -1271,7 +1260,8 @@ impl LonghandId {
         !LonghandIdSet::reset().contains(self)
     }
 
-    fn shorthands(&self) -> NonCustomPropertyIterator<ShorthandId> {
+    /// Returns an iterator over all the shorthands that include this longhand.
+    pub fn shorthands(&self) -> NonCustomPropertyIterator<ShorthandId> {
         // first generate longhand to shorthands lookup map
         //
         // NOTE(emilio): This currently doesn't exclude the "all" shorthand. It
@@ -1434,13 +1424,13 @@ impl LonghandId {
                 0,
             % endfor
         ];
-        PropertyFlags::from_bits_truncate(FLAGS[self as usize])
+        PropertyFlags::from_bits_retain(FLAGS[self as usize])
     }
 
     /// Returns true if the property is one that is ignored when document
     /// colors are disabled.
     #[inline]
-    fn ignored_when_document_colors_disabled(self) -> bool {
+    pub fn ignored_when_document_colors_disabled(self) -> bool {
         LonghandIdSet::ignored_when_colors_disabled().contains(self)
     }
 }
@@ -1609,7 +1599,7 @@ impl ShorthandId {
                 0,
             % endfor
         ];
-        PropertyFlags::from_bits_truncate(FLAGS[self as usize])
+        PropertyFlags::from_bits_retain(FLAGS[self as usize])
     }
 
     /// Returns whether this property is a legacy shorthand.
@@ -1709,7 +1699,7 @@ pub type ShorthandsWithPropertyReferencesCache =
     FxHashMap<(ShorthandId, LonghandId), PropertyDeclaration>;
 
 impl UnparsedValue {
-    fn substitute_variables<'cache>(
+    pub(super) fn substitute_variables<'cache>(
         &self,
         longhand_id: LonghandId,
         writing_mode: WritingMode,
@@ -1764,6 +1754,7 @@ impl UnparsedValue {
             None,
             ParsingMode::DEFAULT,
             quirks_mode,
+            /* namespaces = */ Default::default(),
             None,
             None,
         );
@@ -1786,7 +1777,7 @@ impl UnparsedValue {
             Some(shorthand) => shorthand,
         };
 
-        let mut decls = SourcePropertyDeclaration::new();
+        let mut decls = SourcePropertyDeclaration::default();
         // parse_into takes care of doing `parse_entirely` for us.
         if shorthand.parse_into(&mut decls, &context, &mut input).is_err() {
             return invalid_at_computed_value_time();
@@ -2231,10 +2222,12 @@ pub struct WideKeywordDeclaration {
 #[cfg_attr(feature = "gecko", derive(MallocSizeOf))]
 #[derive(Clone, PartialEq, ToCss, ToShmem)]
 pub struct VariableDeclaration {
+    /// The id of the property this declaration represents.
     #[css(skip)]
-    id: LonghandId,
+    pub id: LonghandId,
+    /// The unparsed value of the variable.
     #[cfg_attr(feature = "gecko", ignore_malloc_size_of = "XXX: how to handle this?")]
-    value: Arc<UnparsedValue>,
+    pub value: Arc<UnparsedValue>,
 }
 
 /// A custom property declaration value is either an unparsed value or a CSS
@@ -2592,16 +2585,18 @@ const SUB_PROPERTIES_ARRAY_CAP: usize =
     ${max(len(s.sub_properties) for s in data.shorthands_except_all()) \
           if data.shorthands_except_all() else 0};
 
-type SubpropertiesVec<T> = ArrayVec<T, SUB_PROPERTIES_ARRAY_CAP>;
+/// An ArrayVec of subproperties, contains space for the longest shorthand except all.
+pub type SubpropertiesVec<T> = ArrayVec<T, SUB_PROPERTIES_ARRAY_CAP>;
 
 /// A stack-allocated vector of `PropertyDeclaration`
 /// large enough to parse one CSS `key: value` declaration.
 /// (Shorthands expand to multiple `PropertyDeclaration`s.)
+#[derive(Default)]
 pub struct SourcePropertyDeclaration {
-    declarations: SubpropertiesVec<PropertyDeclaration>,
-
+    /// The storage for the actual declarations (except for all).
+    pub declarations: SubpropertiesVec<PropertyDeclaration>,
     /// Stored separately to keep SubpropertiesVec smaller.
-    all_shorthand: AllShorthand,
+    pub all_shorthand: AllShorthand,
 }
 
 // This is huge, but we allocate it on the stack and then never move it,
@@ -2609,19 +2604,10 @@ pub struct SourcePropertyDeclaration {
 size_of_test!(SourcePropertyDeclaration, 632);
 
 impl SourcePropertyDeclaration {
-    /// Create one. It’s big, try not to move it around.
-    #[inline]
-    pub fn new() -> Self {
-        SourcePropertyDeclaration {
-            declarations: ::arrayvec::ArrayVec::new(),
-            all_shorthand: AllShorthand::NotSet,
-        }
-    }
-
     /// Create one with a single PropertyDeclaration.
     #[inline]
     pub fn with_one(decl: PropertyDeclaration) -> Self {
-        let mut result = Self::new();
+        let mut result = Self::default();
         result.declarations.push(decl);
         result
     }
@@ -2652,20 +2638,32 @@ impl SourcePropertyDeclaration {
 
 /// Return type of SourcePropertyDeclaration::drain
 pub struct SourcePropertyDeclarationDrain<'a> {
-    declarations: ArrayVecDrain<'a, PropertyDeclaration, SUB_PROPERTIES_ARRAY_CAP>,
-    all_shorthand: AllShorthand,
+    /// A drain over the non-all declarations.
+    pub declarations: ArrayVecDrain<'a, PropertyDeclaration, SUB_PROPERTIES_ARRAY_CAP>,
+    /// The all shorthand that was set.
+    pub all_shorthand: AllShorthand,
 }
 
-enum AllShorthand {
+/// A parsed all-shorthand value.
+pub enum AllShorthand {
+    /// Not present.
     NotSet,
+    /// A CSS-wide keyword.
     CSSWideKeyword(CSSWideKeyword),
+    /// An all shorthand with var() references that we can't resolve right now.
     WithVariables(Arc<UnparsedValue>)
+}
+
+impl Default for AllShorthand {
+    fn default() -> Self {
+        Self::NotSet
+    }
 }
 
 impl AllShorthand {
     /// Iterates property declarations from the given all shorthand value.
     #[inline]
-    fn declarations(&self) -> AllShorthandDeclarationIterator {
+    pub fn declarations(&self) -> AllShorthandDeclarationIterator {
         AllShorthandDeclarationIterator {
             all_shorthand: self,
             longhands: ShorthandId::All.longhands(),
@@ -2673,7 +2671,8 @@ impl AllShorthand {
     }
 }
 
-struct AllShorthandDeclarationIterator<'a> {
+/// An iterator over the all shorthand's shorthand declarations.
+pub struct AllShorthandDeclarationIterator<'a> {
     all_shorthand: &'a AllShorthand,
     longhands: NonCustomPropertyIterator<LonghandId>,
 }
@@ -2701,7 +2700,7 @@ impl<'a> Iterator for AllShorthandDeclarationIterator<'a> {
 }
 
 #[cfg(feature = "gecko")]
-pub use crate::gecko_properties::style_structs;
+pub use super::gecko::style_structs;
 
 /// The module where all the style structs are defined.
 #[cfg(feature = "servo")]
@@ -3013,7 +3012,7 @@ pub mod style_structs {
 
 
 #[cfg(feature = "gecko")]
-pub use crate::gecko_properties::{ComputedValues, ComputedValuesInner};
+pub use super::gecko::{ComputedValues, ComputedValuesInner};
 
 #[cfg(feature = "servo")]
 #[cfg_attr(feature = "servo", derive(Clone, Debug))]
@@ -3085,14 +3084,9 @@ impl ComputedValues {
         self.rules.as_ref().unwrap()
     }
 
-    /// Returns the visited style, if any.
-    pub fn visited_style(&self) -> Option<<&ComputedValues> {
-        self.visited_style.as_deref()
-    }
-
     /// Returns the visited rules, if applicable.
     pub fn visited_rules(&self) -> Option<<&StrongRuleNode> {
-        self.visited_style.as_ref().and_then(|s| s.rules.as_ref())
+        self.visited_style().and_then(|s| s.rules.as_ref())
     }
 
     /// Gets a reference to the custom properties map (if one exists).
@@ -3226,7 +3220,7 @@ impl ComputedValues {
     #[inline]
     pub fn resolve_color(&self, color: computed::Color) -> crate::color::AbsoluteColor {
         let current_color = self.get_inherited_text().clone_color();
-        color.resolve_into_absolute(&current_color)
+        color.resolve_to_absolute(&current_color)
     }
 
     /// Returns which longhand properties have different values in the two
@@ -3320,6 +3314,11 @@ impl ops::DerefMut for ComputedValues {
 
 #[cfg(feature = "servo")]
 impl ComputedValuesInner {
+    /// Returns the visited style, if any.
+    pub fn visited_style(&self) -> Option<<&ComputedValues> {
+        self.visited_style.as_deref()
+    }
+
     % for style_struct in data.active_style_structs():
         /// Clone the ${style_struct.name} struct.
         #[inline]
@@ -3330,12 +3329,6 @@ impl ComputedValuesInner {
         /// Get a immutable reference to the ${style_struct.name} struct.
         #[inline]
         pub fn get_${style_struct.name_lower}(&self) -> &style_structs::${style_struct.name} {
-            &self.${style_struct.ident}
-        }
-
-        /// Gets an immutable reference to the refcounted value that wraps
-        /// `${style_struct.name}`.
-        pub fn ${style_struct.name_lower}_arc(&self) -> &Arc<style_structs::${style_struct.name}> {
             &self.${style_struct.ident}
         }
 
@@ -3537,24 +3530,10 @@ impl ComputedValuesInner {
     }
 }
 
-% if engine == "gecko":
-    pub use crate::servo_arc::RawOffsetArc as BuilderArc;
-    /// Clone an arc, returning a regular arc
-    fn clone_arc<T: 'static>(x: &BuilderArc<T>) -> Arc<T> {
-        Arc::from_raw_offset(x.clone())
-    }
-% else:
-    pub use crate::servo_arc::Arc as BuilderArc;
-    /// Clone an arc, returning a regular arc
-    fn clone_arc<T: 'static>(x: &BuilderArc<T>) -> Arc<T> {
-        x.clone()
-    }
-% endif
-
 /// A reference to a style struct of the parent, or our own style struct.
 pub enum StyleStructRef<'a, T: 'static> {
     /// A borrowed struct from the parent, for example, for inheriting style.
-    Borrowed(&'a BuilderArc<T>),
+    Borrowed(&'a T),
     /// An owned struct, that we've already mutated.
     Owned(UniqueArc<T>),
     /// Temporarily vacated, will panic if accessed
@@ -3569,7 +3548,7 @@ where
     /// borrowed value, or returning the owned one.
     pub fn mutate(&mut self) -> &mut T {
         if let StyleStructRef::Borrowed(v) = *self {
-            *self = StyleStructRef::Owned(UniqueArc::new((**v).clone()));
+            *self = StyleStructRef::Owned(UniqueArc::new(v.clone()));
         }
 
         match *self {
@@ -3588,8 +3567,8 @@ where
     pub fn ptr_eq(&self, struct_to_copy_from: &T) -> bool {
         match *self {
             StyleStructRef::Owned(..) => false,
-            StyleStructRef::Borrowed(arc) => {
-                &**arc as *const T == struct_to_copy_from as *const T
+            StyleStructRef::Borrowed(s) => {
+                s as *const T == struct_to_copy_from as *const T
             }
             StyleStructRef::Vacated => panic!("Accessed vacated style struct")
         }
@@ -3606,7 +3585,7 @@ where
 
         match inner {
             StyleStructRef::Owned(arc) => arc,
-            StyleStructRef::Borrowed(arc) => UniqueArc::new((**arc).clone()),
+            StyleStructRef::Borrowed(s) => UniqueArc::new(s.clone()),
             StyleStructRef::Vacated => panic!("Accessed vacated style struct"),
         }
     }
@@ -3632,7 +3611,8 @@ where
     pub fn build(self) -> Arc<T> {
         match self {
             StyleStructRef::Owned(v) => v.shareable(),
-            StyleStructRef::Borrowed(v) => clone_arc(v),
+            // SAFETY: We know all style structs are arc-allocated.
+            StyleStructRef::Borrowed(v) => unsafe { Arc::from_raw_addrefed(v) },
             StyleStructRef::Vacated => panic!("Accessed vacated style struct")
         }
     }
@@ -3644,7 +3624,7 @@ impl<'a, T: 'a> ops::Deref for StyleStructRef<'a, T> {
     fn deref(&self) -> &T {
         match *self {
             StyleStructRef::Owned(ref v) => &**v,
-            StyleStructRef::Borrowed(v) => &**v,
+            StyleStructRef::Borrowed(v) => v,
             StyleStructRef::Vacated => panic!("Accessed vacated style struct")
         }
     }
@@ -3703,7 +3683,7 @@ pub struct StyleBuilder<'a> {
     /// The element's style if visited, only computed if there's a relevant link
     /// for this element.  A element's "relevant link" is the element being
     /// matched if it is a link or the nearest ancestor link.
-    visited_style: Option<Arc<ComputedValues>>,
+    pub visited_style: Option<Arc<ComputedValues>>,
     % for style_struct in data.active_style_structs():
         ${style_struct.ident}: StyleStructRef<'a, style_structs::${style_struct.name}>,
     % endfor
@@ -3711,7 +3691,7 @@ pub struct StyleBuilder<'a> {
 
 impl<'a> StyleBuilder<'a> {
     /// Trivially construct a `StyleBuilder`.
-    fn new(
+    pub(super) fn new(
         device: &'a Device,
         parent_style: Option<<&'a ComputedValues>,
         parent_style_ignoring_first_line: Option<<&'a ComputedValues>,
@@ -3747,9 +3727,9 @@ impl<'a> StyleBuilder<'a> {
             visited_style: None,
             % for style_struct in data.active_style_structs():
             % if style_struct.inherited:
-            ${style_struct.ident}: StyleStructRef::Borrowed(inherited_style.${style_struct.name_lower}_arc()),
+            ${style_struct.ident}: StyleStructRef::Borrowed(inherited_style.get_${style_struct.name_lower}()),
             % else:
-            ${style_struct.ident}: StyleStructRef::Borrowed(reset_style.${style_struct.name_lower}_arc()),
+            ${style_struct.ident}: StyleStructRef::Borrowed(reset_style.get_${style_struct.name_lower}()),
             % endif
             % endfor
         }
@@ -3787,7 +3767,7 @@ impl<'a> StyleBuilder<'a> {
             visited_style: None,
             % for style_struct in data.active_style_structs():
             ${style_struct.ident}: StyleStructRef::Borrowed(
-                style_to_derive_from.${style_struct.name_lower}_arc()
+                style_to_derive_from.get_${style_struct.name_lower}()
             ),
             % endfor
         }
@@ -3798,7 +3778,7 @@ impl<'a> StyleBuilder<'a> {
         % for style_struct in data.active_style_structs():
         % if not style_struct.inherited:
         self.${style_struct.ident} =
-            StyleStructRef::Borrowed(style.${style_struct.name_lower}_arc());
+            StyleStructRef::Borrowed(style.get_${style_struct.name_lower}());
         % endif
         % endfor
     }
@@ -3965,7 +3945,7 @@ impl<'a> StyleBuilder<'a> {
         /// Reset the current `${style_struct.name}` style to its default value.
         pub fn reset_${style_struct.name_lower}_struct(&mut self) {
             self.${style_struct.ident} =
-                StyleStructRef::Borrowed(self.reset_style.${style_struct.name_lower}_arc());
+                StyleStructRef::Borrowed(self.reset_style.get_${style_struct.name_lower}());
         }
     % endfor
     <% del style_struct %>
@@ -3996,13 +3976,13 @@ impl<'a> StyleBuilder<'a> {
     }
 
     /// Clears the "have any reset structs been modified" flag.
-    fn clear_modified_reset(&mut self) {
+    pub fn clear_modified_reset(&mut self) {
         self.modified_reset = false;
     }
 
     /// Returns whether we have mutated any reset structs since the the last
     /// time `clear_modified_reset` was called.
-    fn modified_reset(&self) -> bool {
+    pub fn modified_reset(&self) -> bool {
         self.modified_reset
     }
 
@@ -4042,10 +4022,7 @@ impl<'a> StyleBuilder<'a> {
     }
 
     /// Get the custom properties map if necessary.
-    ///
-    /// Cloning the Arc here is fine because it only happens in the case where
-    /// we have custom properties, and those are both rare and expensive.
-    fn custom_properties(&self) -> Option<<&Arc<crate::custom_properties::CustomPropertiesMap>> {
+    pub fn custom_properties(&self) -> Option<<&Arc<crate::custom_properties::CustomPropertiesMap>> {
         self.custom_properties.as_ref()
     }
 
@@ -4150,7 +4127,7 @@ pub fn adjust_border_width(style: &mut StyleBuilder) {
         // Like calling to_computed_value, which wouldn't type check.
         if style.get_border().clone_border_${side}_style().none_or_hidden() &&
            style.get_border().border_${side}_has_nonzero_width() {
-            style.set_border_${side}_width(NonNegativeLength::zero());
+            style.set_border_${side}_width(Au(0));
         }
     % endfor
 }

@@ -5,14 +5,14 @@
 
 // Test for preference telemetry.
 
-add_setup(async function() {
+add_setup(async function () {
   await Services.fog.testFlushAllChildren();
   Services.fog.testResetFOG();
 
   // Create a new window in order to initialize TelemetryEvent of
   // UrlbarController.
   const win = await BrowserTestUtils.openNewBrowserWindow();
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await BrowserTestUtils.closeWindow(win);
   });
 });

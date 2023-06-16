@@ -1014,7 +1014,7 @@ class Window extends WindowBase {
   async setState(state) {
     let { window } = this;
 
-    const expectedState = (function() {
+    const expectedState = (function () {
       switch (state) {
         case "maximized":
           return window.STATE_MAXIMIZED;
@@ -1080,7 +1080,7 @@ class Window extends WindowBase {
 
       let onSizeModeChange;
       const promiseExpectedSizeMode = new Promise(resolve => {
-        onSizeModeChange = function() {
+        onSizeModeChange = function () {
           if (window.windowState == expectedState) {
             resolve();
           }

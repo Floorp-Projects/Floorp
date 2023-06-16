@@ -28,7 +28,7 @@ add_task(async function test_show_form() {
       gBrowser,
       url: PAGE,
     },
-    async function(browser) {
+    async function (browser) {
       // Make sure we've flushed the browser messages so that
       // we can restore it.
       await TabStateFlusher.flush(browser);
@@ -84,7 +84,7 @@ add_task(async function test_show_form() {
       gBrowser,
       url: PAGE,
     },
-    async function(browser) {
+    async function (browser) {
       await TabStateFlusher.flush(browser);
       // Now crash the browser.
       await BrowserTestUtils.crashFrame(browser);
@@ -131,7 +131,7 @@ add_task(async function test_no_offer() {
       gBrowser,
       url: PAGE,
     },
-    async function(browser) {
+    async function (browser) {
       await TabStateFlusher.flush(browser);
 
       // Make it so that it seems like no dump is available for the next crash.

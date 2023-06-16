@@ -14,14 +14,14 @@ const PAGE = `<?xml version="1.0"?>
 </html>
 `;
 
-add_task(async function() {
+add_task(async function () {
   const url = "data:application/xhtml+xml," + encodeURI(PAGE);
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
       url,
     },
-    async function(browser) {
+    async function (browser) {
       let popup = await openSelectPopup("click");
       let menuitems = popup.querySelectorAll("menuitem");
       is(menuitems.length, 2, "Should've properly detected two menu items");

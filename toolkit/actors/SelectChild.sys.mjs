@@ -41,7 +41,7 @@ const SUPPORTED_SELECT_PROPERTIES = [
 // via SelectContentHelper.open.
 var gOpen = false;
 
-export var SelectContentHelper = function(aElement, aOptions, aActor) {
+export var SelectContentHelper = function (aElement, aOptions, aActor) {
   this.element = aElement;
   this.initialSelection = aElement[aElement.selectedIndex] || null;
   this.actor = aActor;
@@ -137,9 +137,8 @@ SelectContentHelper.prototype = {
     // any styles.
     this._pseudoStylesSetup = true;
     InspectorUtils.addPseudoClassLock(this.element, ":focus");
-    let lockedDescendants = (this._lockedDescendants = this.element.querySelectorAll(
-      ":checked"
-    ));
+    let lockedDescendants = (this._lockedDescendants =
+      this.element.querySelectorAll(":checked"));
     for (let child of lockedDescendants) {
       // Selected options have the :checked pseudo-class, which
       // we want to disable before calculating the computed

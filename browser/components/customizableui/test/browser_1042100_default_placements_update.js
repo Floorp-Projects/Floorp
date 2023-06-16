@@ -21,9 +21,8 @@ function test() {
     CustomizableUI.setTestOnlyInternalProp("gSavedState", oldState)
   );
 
-  let gFuturePlacements = CustomizableUI.getTestOnlyInternalProp(
-    "gFuturePlacements"
-  );
+  let gFuturePlacements =
+    CustomizableUI.getTestOnlyInternalProp("gFuturePlacements");
   is(
     gFuturePlacements.size,
     0,

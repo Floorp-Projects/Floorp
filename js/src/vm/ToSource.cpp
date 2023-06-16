@@ -19,6 +19,7 @@
 #include "js/Class.h"               // ESClass
 #include "js/friend/StackLimits.h"  // js::AutoCheckRecursionLimit
 #include "js/Object.h"              // JS::GetBuiltinClass
+#include "js/Printer.h"             // QuoteString
 #include "js/Symbol.h"              // SymbolCode, JS::WellKnownSymbolLimit
 #include "js/TypeDecls.h"  // Rooted{Function, Object, String, Value}, HandleValue, Latin1Char
 #include "js/Utility.h"         // UniqueChars
@@ -28,7 +29,6 @@
 #include "vm/Interpreter.h"     // Call
 #include "vm/JSContext.h"       // JSContext
 #include "vm/JSFunction.h"      // JSFunction, fun_toStringHelper
-#include "vm/Printer.h"         // QuoteString
 #include "vm/SelfHosting.h"     // CallSelfHostedFunction
 #include "vm/Stack.h"           // FixedInvokeArgs
 #include "vm/StaticStrings.h"   // StaticStrings

@@ -84,7 +84,7 @@ html|h2 {
 
 description.indent,
 .indent:not(#browserPrivateEngineSelection) > description {
-  color: var(--in-content-deemphasized-text);
+  color: var(--text-color-deemphasized);
 }
 
 button,
@@ -111,7 +111,7 @@ label {
 
 .tip-caption {
   font-size: .9em;
-  color: var(--in-content-deemphasized-text);
+  color: var(--text-color-deemphasized);
 }
 
 menulist::part(label),

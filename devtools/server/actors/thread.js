@@ -91,7 +91,7 @@ function cacheReactionsForFrame(frame) {
 }
 
 function createStepForReactionTracking(onStep) {
-  return function() {
+  return function () {
     cacheReactionsForFrame(this);
     return onStep ? onStep.apply(this, arguments) : undefined;
   };
@@ -469,7 +469,6 @@ class ThreadActor extends Actor {
 
   async showOverlay() {
     if (
-      this._options.shouldShowOverlay &&
       this.isPaused() &&
       this._canShowOverlay() &&
       this._parent.on &&
@@ -835,9 +834,8 @@ class ThreadActor extends Actor {
     if (notification.phase === "pre" && !this._activeEventPause) {
       this._activeEventPause = this._captureDebuggerHooks();
 
-      this.dbg.onEnterFrame = this._makeEventBreakpointEnterFrame(
-        eventBreakpoint
-      );
+      this.dbg.onEnterFrame =
+        this._makeEventBreakpointEnterFrame(eventBreakpoint);
     } else if (notification.phase === "post" && this._activeEventPause) {
       this._restoreDebuggerHooks(this._activeEventPause);
       this._activeEventPause = null;
@@ -921,11 +919,8 @@ class ThreadActor extends Actor {
         return undefined;
       }
 
-      const {
-        sourceActor,
-        line,
-        column,
-      } = this.sourcesManager.getFrameLocation(frame);
+      const { sourceActor, line, column } =
+        this.sourcesManager.getFrameLocation(frame);
 
       packet.why = reason;
 
@@ -993,7 +988,7 @@ class ThreadActor extends Actor {
 
   _makeOnPop({ pauseAndRespond, steppingType }) {
     const thread = this;
-    return function(completion) {
+    return function (completion) {
       if (thread._requestedFrameRestart === this) {
         return thread.restartFrame(this);
       }
@@ -1076,7 +1071,7 @@ class ThreadActor extends Actor {
 
   _makeOnStep({ pauseAndRespond, startFrame, steppingType, completion }) {
     const thread = this;
-    return function() {
+    return function () {
       if (thread._validFrameStepOffset(this, startFrame, this.offset)) {
         return pauseAndRespond(this, packet =>
           thread.createCompletionGrip(packet, completion)
@@ -2062,14 +2057,14 @@ class ThreadActor extends Actor {
    *        True, if we want to create a source actor.
    */
   _acceptSource(source) {
-    // We have some spurious source created by ExtensionContent.jsm when debugging tabs.
+    // We have some spurious source created by ExtensionContent.sys.mjs when debugging tabs.
     // These sources are internal stuff injected by WebExt codebase to implement content
     // scripts. We can't easily ignore them from Debugger API, so ignore them
     // when debugging a tab (i.e. browser-element). As we still want to debug them
     // from the browser toolbox.
     if (
       this._parent.sessionContext.type == "browser-element" &&
-      source.url.endsWith("ExtensionContent.jsm")
+      source.url.endsWith("ExtensionContent.sys.mjs")
     ) {
       return false;
     }
@@ -2142,15 +2137,12 @@ class ThreadActor extends Actor {
    *                              url content type is text/html).
    */
   async _resurrectSource(url, existingInlineSources) {
-    let {
-      content,
-      contentType,
-      sourceMapURL,
-    } = await this.sourcesManager.urlContents(
-      url,
-      /* partial */ false,
-      /* canUseCache */ true
-    );
+    let { content, contentType, sourceMapURL } =
+      await this.sourcesManager.urlContents(
+        url,
+        /* partial */ false,
+        /* canUseCache */ true
+      );
 
     // Newlines in all sources should be normalized. Do this with HTML content
     // to simplify the comparisons below.

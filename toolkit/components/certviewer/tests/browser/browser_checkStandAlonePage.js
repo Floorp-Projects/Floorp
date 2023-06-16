@@ -52,7 +52,7 @@ add_task(async function test_dbItemDisplayed() {
     await SpecialPowers.spawn(
       gBrowser.selectedBrowser,
       [cert.displayName, category],
-      async function(displayName, category) {
+      async function (displayName, category) {
         let aboutCertificateSection = await ContentTaskUtils.waitForCondition(
           () => {
             return content.document.querySelector("about-certificate-section");
@@ -70,9 +70,8 @@ add_task(async function test_dbItemDisplayed() {
           `.info-groups #certificate-viewer-tab-${category.id}`
         );
 
-        let listItems = certificateItems.shadowRoot.querySelectorAll(
-          "list-item"
-        );
+        let listItems =
+          certificateItems.shadowRoot.querySelectorAll("list-item");
 
         let item = Array.from(listItems).find(
           i =>

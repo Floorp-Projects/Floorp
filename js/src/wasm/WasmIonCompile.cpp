@@ -4208,16 +4208,17 @@ class FunctionCompiler {
   }
 
   [[nodiscard]] MDefinition* isGcObjectSubtypeOf(MDefinition* object,
-                                                 const RefType& type) {
+                                                 RefType sourceType,
+                                                 RefType destType) {
     MInstruction* isSubTypeOf = nullptr;
-    if (type.isTypeRef()) {
-      uint32_t typeIndex = moduleEnv_.types->indexOf(*type.typeDef());
+    if (destType.isTypeRef()) {
+      uint32_t typeIndex = moduleEnv_.types->indexOf(*destType.typeDef());
       MDefinition* superSuperTypeVector = loadSuperTypeVector(typeIndex);
       isSubTypeOf = MWasmGcObjectIsSubtypeOfConcrete::New(
-          alloc(), object, superSuperTypeVector, type);
+          alloc(), object, superSuperTypeVector, sourceType, destType);
     } else {
-      isSubTypeOf =
-          MWasmGcObjectIsSubtypeOfAbstract::New(alloc(), object, type);
+      isSubTypeOf = MWasmGcObjectIsSubtypeOfAbstract::New(alloc(), object,
+                                                          sourceType, destType);
     }
     MOZ_ASSERT(isSubTypeOf);
 
@@ -4229,8 +4230,9 @@ class FunctionCompiler {
   // downcast fails, we trap.  If it succeeds, then `ref` can be assumed to
   // have a type that is a subtype of (or the same as) `castToTypeDef` after
   // this point.
-  [[nodiscard]] bool refCast(MDefinition* ref, const RefType& castType) {
-    MDefinition* success = isGcObjectSubtypeOf(ref, castType);
+  [[nodiscard]] bool refCast(MDefinition* ref, RefType sourceType,
+                             RefType destType) {
+    MDefinition* success = isGcObjectSubtypeOf(ref, sourceType, destType);
     if (!success) {
       return false;
     }
@@ -4241,15 +4243,15 @@ class FunctionCompiler {
   }
 
   // Generate MIR that computes a boolean value indicating whether or not it
-  // is possible to downcast `ref` to `castToTypeDef`.
-  [[nodiscard]] MDefinition* refTest(MDefinition* ref,
-                                     const RefType& castType) {
-    return isGcObjectSubtypeOf(ref, castType);
+  // is possible to downcast `ref` to `destType`.
+  [[nodiscard]] MDefinition* refTest(MDefinition* ref, RefType sourceType,
+                                     RefType destType) {
+    return isGcObjectSubtypeOf(ref, sourceType, destType);
   }
 
   // Generates MIR for br_on_cast and br_on_cast_fail.
   [[nodiscard]] bool brOnCastCommon(bool onSuccess, uint32_t labelRelativeDepth,
-                                    const RefType& type,
+                                    RefType sourceType, RefType destType,
                                     const ResultType& labelType,
                                     const DefVector& values) {
     if (inDeadCode()) {
@@ -4273,7 +4275,7 @@ class FunctionCompiler {
     MDefinition* ref = values.back();
     MOZ_ASSERT(ref->type() == MIRType::RefOrNull);
 
-    MDefinition* success = isGcObjectSubtypeOf(ref, type);
+    MDefinition* success = isGcObjectSubtypeOf(ref, sourceType, destType);
     if (!success) {
       return false;
     }
@@ -7028,8 +7030,9 @@ static bool EmitArrayCopy(FunctionCompiler& f) {
 
 static bool EmitRefTestV5(FunctionCompiler& f) {
   MDefinition* ref;
+  RefType sourceType;
   uint32_t typeIndex;
-  if (!f.iter().readRefTestV5(&typeIndex, &ref)) {
+  if (!f.iter().readRefTestV5(&sourceType, &typeIndex, &ref)) {
     return false;
   }
 
@@ -7038,8 +7041,8 @@ static bool EmitRefTestV5(FunctionCompiler& f) {
   }
 
   const TypeDef& typeDef = f.moduleEnv().types->type(typeIndex);
-  const RefType& type = RefType::fromTypeDef(&typeDef, false);
-  MDefinition* success = f.refTest(ref, type);
+  RefType destType = RefType::fromTypeDef(&typeDef, false);
+  MDefinition* success = f.refTest(ref, sourceType, destType);
   if (!success) {
     return false;
   }
@@ -7050,8 +7053,9 @@ static bool EmitRefTestV5(FunctionCompiler& f) {
 
 static bool EmitRefCastV5(FunctionCompiler& f) {
   MDefinition* ref;
+  RefType sourceType;
   uint32_t typeIndex;
-  if (!f.iter().readRefCastV5(&typeIndex, &ref)) {
+  if (!f.iter().readRefCastV5(&sourceType, &typeIndex, &ref)) {
     return false;
   }
 
@@ -7060,8 +7064,8 @@ static bool EmitRefCastV5(FunctionCompiler& f) {
   }
 
   const TypeDef& typeDef = f.moduleEnv().types->type(typeIndex);
-  const RefType& type = RefType::fromTypeDef(&typeDef, /*nullable=*/true);
-  if (!f.refCast(ref, type)) {
+  RefType destType = RefType::fromTypeDef(&typeDef, /*nullable=*/true);
+  if (!f.refCast(ref, sourceType, destType)) {
     return false;
   }
 
@@ -7071,8 +7075,9 @@ static bool EmitRefCastV5(FunctionCompiler& f) {
 
 static bool EmitRefTest(FunctionCompiler& f, bool nullable) {
   MDefinition* ref;
-  RefType type;
-  if (!f.iter().readRefTest(nullable, &type, &ref)) {
+  RefType sourceType;
+  RefType destType;
+  if (!f.iter().readRefTest(nullable, &sourceType, &destType, &ref)) {
     return false;
   }
 
@@ -7080,7 +7085,7 @@ static bool EmitRefTest(FunctionCompiler& f, bool nullable) {
     return true;
   }
 
-  MDefinition* success = f.refTest(ref, type);
+  MDefinition* success = f.refTest(ref, sourceType, destType);
   if (!success) {
     return false;
   }
@@ -7091,8 +7096,9 @@ static bool EmitRefTest(FunctionCompiler& f, bool nullable) {
 
 static bool EmitRefCast(FunctionCompiler& f, bool nullable) {
   MDefinition* ref;
-  RefType type;
-  if (!f.iter().readRefCast(nullable, &type, &ref)) {
+  RefType sourceType;
+  RefType destType;
+  if (!f.iter().readRefCast(nullable, &sourceType, &destType, &ref)) {
     return false;
   }
 
@@ -7100,7 +7106,7 @@ static bool EmitRefCast(FunctionCompiler& f, bool nullable) {
     return true;
   }
 
-  if (!f.refCast(ref, type)) {
+  if (!f.refCast(ref, sourceType, destType)) {
     return false;
   }
 
@@ -7111,53 +7117,57 @@ static bool EmitRefCast(FunctionCompiler& f, bool nullable) {
 static bool EmitBrOnCast(FunctionCompiler& f) {
   bool onSuccess;
   uint32_t labelRelativeDepth;
+  RefType sourceType;
   RefType destType;
   ResultType labelType;
   DefVector values;
-  if (!f.iter().readBrOnCast(&onSuccess, &labelRelativeDepth, &destType,
-                             &labelType, &values)) {
+  if (!f.iter().readBrOnCast(&onSuccess, &labelRelativeDepth, &sourceType,
+                             &destType, &labelType, &values)) {
     return false;
   }
 
-  return f.brOnCastCommon(onSuccess, labelRelativeDepth, destType, labelType,
-                          values);
+  return f.brOnCastCommon(onSuccess, labelRelativeDepth, sourceType, destType,
+                          labelType, values);
 }
 
 static bool EmitBrOnCastCommonV5(FunctionCompiler& f, bool onSuccess) {
   uint32_t labelRelativeDepth;
+  RefType sourceType;
   uint32_t castTypeIndex;
   ResultType labelType;
   DefVector values;
   if (onSuccess
-          ? !f.iter().readBrOnCastV5(&labelRelativeDepth, &castTypeIndex,
-                                     &labelType, &values)
-          : !f.iter().readBrOnCastFailV5(&labelRelativeDepth, &castTypeIndex,
-                                         &labelType, &values)) {
+          ? !f.iter().readBrOnCastV5(&labelRelativeDepth, &sourceType,
+                                     &castTypeIndex, &labelType, &values)
+          : !f.iter().readBrOnCastFailV5(&labelRelativeDepth, &sourceType,
+                                         &castTypeIndex, &labelType, &values)) {
     return false;
   }
 
   const TypeDef& typeDef = f.moduleEnv().types->type(castTypeIndex);
-  const RefType& type = RefType::fromTypeDef(&typeDef, false);
-  return f.brOnCastCommon(onSuccess, labelRelativeDepth, type, labelType,
-                          values);
+  RefType type = RefType::fromTypeDef(&typeDef, false);
+  return f.brOnCastCommon(onSuccess, labelRelativeDepth, sourceType, type,
+                          labelType, values);
 }
 
 static bool EmitBrOnCastHeapV5(FunctionCompiler& f, bool onSuccess,
                                bool nullable) {
   uint32_t labelRelativeDepth;
+  RefType sourceType;
   RefType destType;
   ResultType labelType;
   DefVector values;
-  if (onSuccess
-          ? !f.iter().readBrOnCastHeapV5(nullable, &labelRelativeDepth,
-                                         &destType, &labelType, &values)
-          : !f.iter().readBrOnCastFailHeapV5(nullable, &labelRelativeDepth,
-                                             &destType, &labelType, &values)) {
+  if (onSuccess ? !f.iter().readBrOnCastHeapV5(nullable, &labelRelativeDepth,
+                                               &sourceType, &destType,
+                                               &labelType, &values)
+                : !f.iter().readBrOnCastFailHeapV5(
+                      nullable, &labelRelativeDepth, &sourceType, &destType,
+                      &labelType, &values)) {
     return false;
   }
 
-  return f.brOnCastCommon(onSuccess, labelRelativeDepth, destType, labelType,
-                          values);
+  return f.brOnCastCommon(onSuccess, labelRelativeDepth, sourceType, destType,
+                          labelType, values);
 }
 
 static bool EmitRefAsStructV5(FunctionCompiler& f) {

@@ -3,8 +3,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 package org.mozilla.geckoview.test
 
+import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.* // ktlint-disable no-wildcard-imports
-import org.junit.Assert.assertThat
 import org.junit.Test
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.test.util.Environment

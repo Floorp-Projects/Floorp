@@ -40,7 +40,7 @@ class NumberFormatObject : public NativeObject {
 
   // Estimated memory use for UNumberRangeFormatter and UFormattedNumberRange
   // (see IcuMemoryUsage).
-  static constexpr size_t EstimatedRangeFormatterMemoryUse = 14143;
+  static constexpr size_t EstimatedRangeFormatterMemoryUse = 19894;
 
   mozilla::intl::NumberFormat* getNumberFormatter() const {
     const auto& slot = getFixedSlot(UNUMBER_FORMATTER_SLOT);

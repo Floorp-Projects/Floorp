@@ -50,7 +50,7 @@ add_task(async function test_popup_styling(browser, accDoc) {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "https://example.com" },
-    async function(browser) {
+    async function (browser) {
       await extension.startup();
 
       // Open the information arrow panel

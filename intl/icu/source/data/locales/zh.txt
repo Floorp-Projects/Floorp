@@ -3,19 +3,45 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 zh{
     AuxExemplarCharacters{
-        "[乒 乓 乳 仂 仓 伞 伪 侣 傈 傣 僳 僵 冥 冻 净 凉 凸 刨 刮 剃 剽 劈 勺 匕 匠 匮 卑 卜 卞 卦 厕 厘 厦 厨 叮 吕 吴 呕"
-        " 呣 咒 哨 哺 唇 啤 啮 喱 嗅 嘘 嘟 噘 噜 噢 嚏 坏 坝 垫 堤 堵 墅 墓 墙 墟 壳 壶 奎 奸 妆 姜 娥 婴 媚 孪 宅 宠 宫 寺"
-        " 尬 尴 尸 屈 屎 屑 屡 履 屿 岩 巽 巾 帆 帚 帜 帧 庇 庵 弓 彗 御 徽 怜 恒 恤 恳 悬 悯 惊 惫 愤 戟 扔 扰 扳 抖 抛 拄"
-        " 拇 拐 挂 挎 捂 捏 掘 掠 揭 搏 携 摇 撅 撕 撤 攀 敞 斑 斧 昙 晕 朔 杆 杖 杠 枯 柄 柑 柜 柠 柩 柱 柿 栓 栗 栽 桔 桶"
-        " 梨 棍 棕 棺 椒 楔 楠 榄 榈 槌 槟 槿 横 橄 橇 橘 橙 橡 檬 汁 沐 沫 泪 泵 洁 洒 浆 浣 涂 涌 涎 涕 涩 淇 渗 湘 滕 滚"
-        " 滩 澡 灾 炽 烘 烙 烛 烟 烹 焊 焙 焰 煎 熏 燥 犀 犄 犬 犸 狡 狸 猎 猕 猩 猫 猬 猾 猿 獭 獾 瑚 瓢 瓮 甫 畜 疟 皂 皱"
-        " 皿 盆 盐 盔 盗 盥 盲 眨 眩 眯 睿 瞌 瞒 瞪 矿 砖 砸 碑 祈 祭 祷 禄 禽 秃 稻 稽 窃 窄 窥 竖 竿 笆 笺 笼 筐 筒 筝 筷"
-        " 箸 篓 篱 篷 粑 粟 粥 粮 粽 絮 纠 纫 纬 纱 纹 绒 绣 绳 绷 缄 缆 缎 缝 罩 羹 翱 耸 聋 肌 肢 肺 脏 脚 腋 腕 腮 膀 膏"
-        " 舔 舵 艇 艮 艳 芙 芽 苜 苞 苣 苹 茄 莓 莴 菇 菌 菠 菱 萎 萝 葩 葫 葬 葱 葵 蒜 蒲 蒸 蓄 蓿 蔬 蔽 蕉 蕾 薯 蘑 蚂 蚊"
-        " 蚓 蚝 蚯 蛆 蛎 蛐 蛛 蛰 蛾 蜗 蜘 蜡 蜥 蜴 蝇 蝎 蝙 蝠 蝴 螂 螃 螺 蟀 蟋 蟑 蠕 衫 衬 袜 裙 裹 褂 讶 讽 诊 诱 谍 谎"
-        " 谚 谬 豚 豹 账 贷 赣 趾 跆 跛 跤 跨 跪 踪 蹄 蹈 蹦 蹬 躬 躺 轴 轿 辐 辣 迹 郁 鄙 酢 酥 酪 酱 醺 钉 钞 钥 钩 钮 钯"
-        " 钳 铂 铅 铛 铰 锄 锑 锚 锤 锯 镐 镑 镖 闺 闽 阱 隧 雀 雌 雕 霜 霾 靴 靶 鞠 颈 颜 颠 颤 飓 饪 饵 饺 馍 馏 驰 驼 骂"
-        " 骄 骆 骰 骷 骼 髅 髦 鬈 魁 鱿 鲤 鲨 鲸 鳄 鸢 鸵 鸽 鹉 鹦 黏 黛 鼬 龇]"
+        "[丐 丛 丫 乒 乓 乞 乳 亢 亩 亭 仂 仆 仑 仓 仗 伞 伪 伶 伺 佃 佣 侄 侈 侍 侣 侥 侮 俏 俐 俘 俭 俯 俺 倔 倘 倡 债 偎"
+        " 偿 傅 傈 傍 傣 僚 僳 僵 僻 兜 兢 冀 冉 冗 冤 冥 冯 冶 冻 净 凄 凉 凑 凛 凳 凶 凸 凹 凿 刁 刃 删 刨 刮 刹 剃 削 剔"
+        " 剖 剥 剽 剿 劈 勃 勘 募 勺 匀 匕 匠 匣 匪 匮 匾 匿 卉 卑 卜 卞 卤 卦 卧 卵 卸 卿 厕 厘 厢 厦 厨 叁 叛 叠 叨 叩 叮"
+        " 叼 叽 吁 吆 吏 吕 吞 吠 吨 吩 吭 吮 吱 吴 吼 呕 呛 呣 呻 咄 咋 咏 咐 咒 咕 咙 咳 咸 咽 哄 哆 哑 哗 哨 哮 哺 哼 唁"
+        " 唆 唇 唠 唧 唾 啃 啄 啤 啮 啰 啸 啼 喉 喘 喧 喱 喳 嗅 嗓 嗜 嗡 嗦 嗽 嘀 嘘 嘟 嘱 嘲 嘶 嘹 噘 噜 噢 噩 噪 嚎 嚏 嚣"
+        " 嚷 嚼 囊 囚 囤 囱 圃 坊 坏 坝 坟 坠 坯 坷 垄 垛 垢 垦 垫 垮 埂 埠 堤 堰 堵 塌 塘 墅 墓 墙 墟 墩 壳 壶 壹 夭 夯 奎"
+        " 奠 奢 奸 妃 妄 妆 妒 妓 姚 姜 姥 姨 姻 娇 娥 娶 婉 婪 婴 婶 婿 媚 媳 嫂 嫉 孪 孵 孽 宅 宠 宦 宫 宰 宵 寓 寥 寺 尉"
+        " 尧 尬 尴 尸 尿 屈-届 屎 屑 屡 履 屯 屹 屿 岔 岖 岩 岭 峦 峨 峭 峻 崎 崔 崖 崛 崭 嵌 巅 巍 巢 巩 巽 巾 帆 帘 帚 帜"
+        " 帧 帷 幌 幢 庄 庇 庐 庵 庶 廊 廓 弓 弛 弧 彗 彤 彪 徊 徘 徙 御 徽 忱 忿 怔 怜 怠 怯 恃 恍 恒 恕 恤 恬 恳 悍 悖 悦"
+        " 悬 悯 悴 悼 惊 惋 惕 惟 惦 惩 惫 惭 惰 惶 愕 愣 愤 愿 慌 慨 慷 憋 憎 憔 憨 懈 懊 懦 戎 戚 戟 戳 扒 扔 扛 扰 扳 扶"
+        " 扼 抒 抖 抚 抛 抠 抡 押 拂 拄 拇 拌 拎 拐 拓 拗 拙 拢 拣 拧 拭 拯 拱 拴 拽 挂 挎 挚 挟 挠 挣 挨 挫 挽 捂 捅 捆 捌"
+        "-捏 捞 捣 捧 捶 捺 捻 掀 掂 掏 掐 掘 掠 掰 掷 掺 揉 揍 揣 揩 揪 揭 揽 搀-搂 搅 搏 搓 搔 携 摇 摧 摹 撅 撇 撑 撕 撤"
+        " 撩 撬 撮 撰 撵 撼 擂 擅 擒 攀 敛 敞 敷 斌 斑 斟 斤 斧 斩 旬 旱 旷 昔 昙 昧 昼 晌 晕 晦 晰 晾 暇 曙 曝 朔 朦 朴 朽"
+        " 杆 杏 杖 杠 杭 枉 枕 枚 枣 枯 柄 柑 柒 柜 柠 柩 柱 柿 栅 栈 栓 栖 栗 株 栽 桂 桐 桔 桦 桨 桩 桶 梆 梗 梢 梧 梨 梭"
+        " 梳 棍 棕 棘 棠 棱 棵 棺 椎 椒 椭 椿 楔 楠 楷 榄 榆 榈 榔 榕 榨 榴 槌 槐 槛 槟 槽 槿 樟 横 橄 橇 橘 橙 橡 橱 檐 檬"
+        " 歇 歧 歹 歼 殃 殉 殖 殴 殷 殿 毁 毙 毡 毯 氓 氢 氧 氨 氮 氯 汁 汛 汞 汰 汹 沁 沐 沛 沥 沦 沪 沫 沮 沸 沼-沾 泄 泌"
+        " 泞 泪 泵 泻 泼 洁 洒 洼 浆 浇 浊 浣 浸 涂 涌 涎 涕 涝 涡 涣 涤 润 涧 涩 涮 淀 淆 淇 淌 淤 淫 淮 淳 淹 渊 渔 渗 渝"
+        " 渠 渤 渲 渺 湃 湘 湿 溃 溅 溉 溢 溯 溶 溺 滇 滔 滕 滚 滞 滤 滩 漆 漓 漱 漾 潇 潭 澄 澈 澜 澡 濒 瀑 灶 灸 灼 灾 炊"
+        " 炒 炕 炫-炭 炼 炽 烁 烘 烙 烛 烟 烫 烹 焉 焊 焕 焙 焚 焰 煎 煤 煽 熄 熏 熔 熙 熬 燥 爹 犀 犁 犄 犬 犸 狈 狞 狡 狭"
+        " 狰 狸 猎 猕 猖 猩 猫 猬 猾 猿 獭 獾 玖 玷 琅 琉 琐 琢 瑚 璧 瓢-瓤 瓮 瓷 甥 甩 甫 畏 畔 畜 畴 畸 疙 疚 疟 疤 疫 疮"
+        " 疹 症 痊 痒 痘 痢 痪 痰 痹 瘟 瘤 瘦 瘩-瘫 瘸 瘾 癌 癣 皂 皓 皖 皱 皿 盆 盏 盐 盔 盗 盥 盯 盲 盹 眨 眩 眯 眶 眷 睁"
+        " 睐 睦 睫 睬 睹 睿 瞄 瞅 瞌 瞎 瞒 瞩 瞪 瞬 瞭 瞳 瞻 矗 矢 矩 矫 矮 矾 矿 砌 砖 砚 砰 砸 砾 硅 硝 硫 碌 碑 碘 碱 碳"
+        " 碾 磊 磕 磷 礁 祀 祈 祟 祠 祭 祷 禀 禄 禹 禽 禾 秃 秆 秉 秧 秸 秽 稚 稠 稻-稽 穗 穴 窃 窄 窍 窑 窒 窖 窘 窜 窟 窥"
+        " 窿 竖 竣 竭 竿 笆 笋 笙 笺 笼 筏 筐 筒 筛 筝 筷 箕 箩 箫 箸 篓 篡 篱 篷 簇 簧 簸 籽 粑 粘 粟 粥 粪 粮 粱 粽 糙 糠"
+        " 糯 紊 絮 纠 纤 纫 纬 纱 纹 纺 绅 绊 绎 绑 绒 绚 绞 绢 绣 绰 绳 绷 绸 绽 缀 缄 缆 缉 缎 缔 缕 缚 缝 缤 缭 缰 罩 羔"
+        " 羚 羡 羹 翩 翱 耕 耘 耙 耸 耻 耽 耿 聂 聆 聋 肃 肆 肇 肋 肌 肘 肛 肝 肠 肢 肪 肮 肴 肺 肾-胀 胃 胚 胧 胰 胳 脂 脉"
+        " 脊 脏 脐 脓 脖 脚 脯 脾 腋 腔 腕 腥 腮 腺 腻 膀 膊 膏 膛-膝 膨 臀 臊 臼 舀 舅 舆 舔 舱 舵 舶 艇 艘 艮 艰 艳 芋 芙"
+        " 芜 芥 芯 芹 芽 苇 苑 苔 苛 苜 苞 苟 苣 苹 茁 茄 茅 茉 茎 茧 茬 茵 茸 荆 荔 荡 荤 荧 荫 莓 莴 莹 莺 莽 菇 菊 菌 菠"
+        " 菱 萌 萎 萝 董 葩 葫 葬 葱 葵 蒜 蒲 蒸 蓄 蓿 蔓 蔗 蔚 蔬 蔼 蔽 蕉 蕊 蕴 蕾 薇 薛 薯 藐 藕 藻 蘑 虏 虐 虚 蚀 蚂 蚊"
+        " 蚌 蚓 蚕 蚝 蚣 蚤 蚪 蚯 蛀 蛆 蛎 蛐 蛛 蛤 蛰 蛾 蜀 蜈 蜒 蜓 蜕 蜗 蜘 蜡 蜥 蜴 蜻 蝇 蝉 蝌 蝎 蝗 蝙 蝠 蝴 螂 螃 螺"
+        " 蟀 蟆 蟋 蟑 蠕 衅 衍 衔 衙 衫 衬 衰 衷 袁 袄 袍 袖 袜 袱 裙 裳 裸 裹 褂 褐 褒 褥 褪 襟 觅 触 誊 譬 讥 讳 讶 讹 讼"
+        " 讽 诀 诈 诊 诡 诫 诬 诱 诲 诵 诽 谆 谍 谎 谐 谚 谣 谤 谦 谬 谭 谴 豁 豌 豚 豫 豹 豺 账 贫 贬 贮 贰 贷 贻 贿 赁-赃"
+        " 赎 赘 赡 赣 赦 赴 赶 趟 趴 趾 跆 跋 跛 跤 跨 跪 践 跷 跺 踊 踪 踱 蹂 蹄 蹈 蹋 蹦 蹬 蹭 蹲 躁 躏 躬 躯 躺 轧 轴 轿"
+        " 辐 辖 辗 辙 辜 辟 辣 辫 辽 迂 迄 迢 迭 迹 逗 逞 逮 逾 遂 遏 遣 遥 邑 郁 郊 鄙 酌 酗 酝 酢 酣 酥 酪 酬 酱 酵 酿 醇"
+        " 醋 醺 鉴 钉 钙 钝 钞 钠 钥 钧 钩 钮 钯 钳 钾 铂 铅 铐 铛 铝 铰 铲 铸 锄 锈 锌 锐 锑 锚 锣-锥 锯 锰 锹 锻 镀 镐 镑"
+        " 镖 镰 镶 闯 闸 闺 闽 阀 阎 阱 陋 陌 陕 陡 陨 隅 隋 隘 隙 隧 隶 雀 雁 雇 雌 雏 雕 雹 霄 霉 霎 霜 霞 霾 靡 靴 靶 鞍"
+        " 鞠 鞭 韧 韭 韵 顷 颁 颂 颅 颈 颊 颓 颖 颜 颠 颤 飓 饥 饪 饲 饵 饶 饺 饿 馁 馅 馈 馋 馍 馏 馒 驮-驰 驳 驴 驹 驼 骂"
+        " 骄 骆 骇 骏 骡 骰 骷 骼 髅 髓 髦 鬈 鬓 魁 魄 魏 鱿 鲍 鲤 鲨 鲫 鲸 鳄 鳍 鳖 鳞 鸢 鸥 鸦 鸯 鸳 鸵 鸽 鹃 鹉 鹊 鹏 鹦"
+        " 黏 黔 黛 黯 鼎 鼬 龇]"
     }
     Ellipsis{
         final{"{0}…"}
@@ -253,16 +279,19 @@ zh{
                 scientificFormat{"#E0"}
             }
             symbols{
+                approximatelySign{"~"}
                 decimal{"."}
                 exponential{"E"}
                 group{","}
                 infinity{"∞"}
+                list{";"}
                 minusSign{"-"}
                 nan{"NaN"}
                 perMille{"‰"}
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         java{
@@ -744,6 +773,7 @@ zh{
                 "GyMd",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"d日E"}
                 Gy{"Gy年"}
                 GyMMM{"Gy年MM月"}
@@ -752,6 +782,7 @@ zh{
                 GyMd{"Gy-M-d"}
                 M{"M月"}
                 MEd{"M-dE"}
+                MMM{"LL"}
                 MMMEd{"M月d日E"}
                 MMMMd{"M月d日"}
                 MMMd{"M月d日"}
@@ -790,9 +821,57 @@ zh{
                     h{"Bh:mm至h:mm"}
                     m{"Bh:mm至h:mm"}
                 }
+                Gy{
+                    G{"Gy年 – Gy年"}
+                    y{"Gy年–y年"}
+                }
+                GyM{
+                    G{"GGGGGy-MM – GGGGGy-MM"}
+                    M{"GGGGGy-MM – y-MM"}
+                    y{"GGGGGy-MM – y-MM"}
+                }
+                GyMEd{
+                    G{"GGGGGy-MM-ddE – GGGGGy-MM-ddE"}
+                    M{"GGGGGy-MM-ddE – y-MM-ddE"}
+                    d{"GGGGGy-MM-ddE – y-MM-ddE"}
+                    y{"GGGGGy-MM-ddE – y-MM-ddE"}
+                }
+                GyMMM{
+                    G{"Gy年MMM – Gy年MMM"}
+                    M{"Gy年MMM–MMM"}
+                    y{"Gy年MMM – y年MMM"}
+                }
+                GyMMMEd{
+                    G{"Gy年MMMd日E – Gy年MMMd日E"}
+                    M{"Gy年MMMd日E – MMMd日E"}
+                    d{"Gy年MMMd日E – MMMd日E"}
+                    y{"Gy年MMMd日E – y年MMMd日E"}
+                }
+                GyMMMd{
+                    G{"Gy年MMMd日 – Gy年MMMd日"}
+                    M{"Gy年MMMd日 – MMMd日"}
+                    d{"Gy年MMMd日–d日"}
+                    y{"Gy年MMMd日 – y年MMMd日"}
+                }
+                GyMd{
+                    G{"GGGGGy-MM-dd – GGGGGy-MM-dd"}
+                    M{"GGGGGy-MM-dd – y-MM-dd"}
+                    d{"GGGGGy-MM-dd – y-MM-dd"}
+                    y{"GGGGGy-MM-dd – y-MM-dd"}
+                }
+                H{
+                    H{"HH–HH"}
+                }
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
+                }
                 Hmv{
                     H{"v HH:mm – HH:mm"}
                     m{"v HH:mm – HH:mm"}
+                }
+                Hv{
+                    H{"HH–HH v"}
                 }
                 M{
                     M{"M–M月"}
@@ -819,6 +898,7 @@ zh{
                 d{
                     d{"d至d日"}
                 }
+                fallback{"{0} – {1}"}
                 h{
                     a{"ah时至ah时"}
                     h{"ah时至h时"}
@@ -983,6 +1063,162 @@ zh{
                             "酉",
                             "戌",
                             "亥",
+                        }
+                        narrow{
+                            "子",
+                            "丑",
+                            "寅",
+                            "卯",
+                            "辰",
+                            "巳",
+                            "午",
+                            "未",
+                            "申",
+                            "酉",
+                            "戌",
+                            "亥",
+                        }
+                        wide{
+                            "子",
+                            "丑",
+                            "寅",
+                            "卯",
+                            "辰",
+                            "巳",
+                            "午",
+                            "未",
+                            "申",
+                            "酉",
+                            "戌",
+                            "亥",
+                        }
+                    }
+                }
+                days{
+                    format{
+                        abbreviated{
+                            "甲子",
+                            "乙丑",
+                            "丙寅",
+                            "丁卯",
+                            "戊辰",
+                            "己巳",
+                            "庚午",
+                            "辛未",
+                            "壬申",
+                            "癸酉",
+                            "甲戌",
+                            "乙亥",
+                            "丙子",
+                            "丁丑",
+                            "戊寅",
+                            "己卯",
+                            "庚辰",
+                            "辛巳",
+                            "壬午",
+                            "癸未",
+                            "甲申",
+                            "乙酉",
+                            "丙戌",
+                            "丁亥",
+                            "戊子",
+                            "己丑",
+                            "庚寅",
+                            "辛卯",
+                            "壬辰",
+                            "癸巳",
+                            "甲午",
+                            "乙未",
+                            "丙申",
+                            "丁酉",
+                            "戊戌",
+                            "己亥",
+                            "庚子",
+                            "辛丑",
+                            "壬寅",
+                            "癸卯",
+                            "甲辰",
+                            "乙巳",
+                            "丙午",
+                            "丁未",
+                            "戊申",
+                            "己酉",
+                            "庚戌",
+                            "辛亥",
+                            "壬子",
+                            "癸丑",
+                            "甲寅",
+                            "乙卯",
+                            "丙辰",
+                            "丁巳",
+                            "戊午",
+                            "己未",
+                            "庚申",
+                            "辛酉",
+                            "壬戌",
+                            "癸亥",
+                        }
+                        narrow{
+                            "甲子",
+                            "乙丑",
+                            "丙寅",
+                            "丁卯",
+                            "戊辰",
+                            "己巳",
+                            "庚午",
+                            "辛未",
+                            "壬申",
+                            "癸酉",
+                            "甲戌",
+                            "乙亥",
+                            "丙子",
+                            "丁丑",
+                            "戊寅",
+                            "己卯",
+                            "庚辰",
+                            "辛巳",
+                            "壬午",
+                            "癸未",
+                            "甲申",
+                            "乙酉",
+                            "丙戌",
+                            "丁亥",
+                            "戊子",
+                            "己丑",
+                            "庚寅",
+                            "辛卯",
+                            "壬辰",
+                            "癸巳",
+                            "甲午",
+                            "乙未",
+                            "丙申",
+                            "丁酉",
+                            "戊戌",
+                            "己亥",
+                            "庚子",
+                            "辛丑",
+                            "壬寅",
+                            "癸卯",
+                            "甲辰",
+                            "乙巳",
+                            "丙午",
+                            "丁未",
+                            "戊申",
+                            "己酉",
+                            "庚戌",
+                            "辛亥",
+                            "壬子",
+                            "癸丑",
+                            "甲寅",
+                            "乙卯",
+                            "丙辰",
+                            "丁巳",
+                            "戊午",
+                            "己未",
+                            "庚申",
+                            "辛酉",
+                            "壬戌",
+                            "癸亥",
                         }
                     }
                 }
@@ -1353,6 +1589,55 @@ zh{
                     "科普特历",
                 }
             }
+            intervalFormats{
+                Bh{
+                    B{"Bh时至Bh时"}
+                    h{"Bh时至h时"}
+                }
+                Bhm{
+                    B{"Bh:mm至Bh:mm"}
+                    h{"Bh:mm至h:mm"}
+                    m{"Bh:mm至h:mm"}
+                }
+                Gy{
+                    G{"Gy年 – Gy年"}
+                    y{"Gy年–y年"}
+                }
+                GyM{
+                    G{"GGGGGy-MM – GGGGGy-MM"}
+                    M{"GGGGGy-MM – y-MM"}
+                    y{"GGGGGy-MM – y-MM"}
+                }
+                GyMEd{
+                    G{"GGGGGy-MM-ddE – GGGGGy-MM-ddE"}
+                    M{"GGGGGy-MM-ddE – y-MM-ddE"}
+                    d{"GGGGGy-MM-ddE – y-MM-ddE"}
+                    y{"GGGGGy-MM-ddE – y-MM-ddE"}
+                }
+                GyMMM{
+                    G{"Gy年MMM – Gy年MMM"}
+                    M{"Gy年MMM–MMM"}
+                    y{"Gy年MMM – y年MMM"}
+                }
+                GyMMMEd{
+                    G{"Gy年MMMd日E – Gy年MMMd日E"}
+                    M{"Gy年MMMd日E – MMMd日E"}
+                    d{"Gy年MMMd日E – MMMd日E"}
+                    y{"Gy年MMMd日E – y年MMMd日E"}
+                }
+                GyMMMd{
+                    G{"Gy年MMMd日 – Gy年MMMd日"}
+                    M{"Gy年MMMd日 – MMMd日"}
+                    d{"Gy年MMMd日–d日"}
+                    y{"Gy年MMMd日 – y年MMMd日"}
+                }
+                GyMd{
+                    G{"GGGGGy-MM-dd – GGGGGy-MM-dd"}
+                    M{"GGGGGy-MM-dd – y-MM-dd"}
+                    d{"GGGGGy-MM-dd – y-MM-dd"}
+                    y{"GGGGGy-MM-dd – y-MM-dd"}
+                }
+            }
             monthNames{
                 format{
                     abbreviated{
@@ -1451,6 +1736,30 @@ zh{
             }
         }
         dangi{
+            DateTimePatterns{
+                "zzzz HH:mm:ss",
+                "z HH:mm:ss",
+                "HH:mm:ss",
+                "HH:mm",
+                {
+                    "rU年MMMdEEEE",
+                    "d=hanidays",
+                }
+                {
+                    "rU年MMMd",
+                    "d=hanidays",
+                }
+                {
+                    "r年MMMd",
+                    "d=hanidays",
+                }
+                "r/M/d",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
             cyclicNameSets{
                 dayParts{
                     format{
@@ -1689,6 +1998,17 @@ zh{
                     }
                 }
             }
+            intervalFormats{
+                Bh{
+                    B{"Bh至Bh时"}
+                    h{"Bh至h时"}
+                }
+                Bhm{
+                    B{"Bh:mm至Bh:mm"}
+                    h{"Bh:mm至h:mm"}
+                    m{"Bh:mm至h:mm"}
+                }
+            }
         }
         ethiopic{
             DateTimePatterns{
@@ -1845,6 +2165,12 @@ zh{
                 "Gy年M月d日",
                 "Gy/M/d",
                 "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            DateTimePatterns%atTime{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -2061,6 +2387,12 @@ zh{
                 "y年M月d日",
                 "y/M/d",
                 "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            DateTimePatterns%atTime{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -2287,7 +2619,15 @@ zh{
                     "公元前",
                     "公元",
                 }
+                narrow%variant{
+                    "公元前",
+                    "公元",
+                }
                 wide{
+                    "公元前",
+                    "公元",
+                }
+                wide%variant{
                     "公元前",
                     "公元",
                 }
@@ -3069,6 +3409,9 @@ zh{
                 abbreviated{
                     "伊斯兰历",
                 }
+                wide{
+                    "伊斯兰历",
+                }
             }
             monthNames{
                 format{
@@ -3177,6 +3520,12 @@ zh{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimePatterns%atTime{
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
             DateTimeSkeletons{
                 "HHmmsszzzz",
                 "HHmmssz",
@@ -3188,8 +3537,10 @@ zh{
                 "GyMMdd",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"d日E"}
                 Gy{"Gy年"}
+                GyMEEEEd{"Gy年M月d日EEEE"}
                 GyMMM{"Gy年M月"}
                 GyMMMEd{"Gy年M月d日E"}
                 GyMMMd{"Gy年M月d日"}
@@ -3940,6 +4291,55 @@ zh{
                     "令和",
                 }
             }
+            intervalFormats{
+                Bh{
+                    B{"Bh时至Bh时"}
+                    h{"Bh时至h时"}
+                }
+                Bhm{
+                    B{"Bh:mm至Bh:mm"}
+                    h{"Bh:mm至h:mm"}
+                    m{"Bh:mm至h:mm"}
+                }
+                Gy{
+                    G{"Gy年 – Gy年"}
+                    y{"Gy年–y年"}
+                }
+                GyM{
+                    G{"GGGGGy-MM – GGGGGy-MM"}
+                    M{"GGGGGy-MM – y-MM"}
+                    y{"GGGGGy-MM – y-MM"}
+                }
+                GyMEd{
+                    G{"GGGGGy-MM-ddE – GGGGGy-MM-ddE"}
+                    M{"GGGGGy-MM-ddE – y-MM-ddE"}
+                    d{"GGGGGy-MM-ddE – y-MM-ddE"}
+                    y{"GGGGGy-MM-ddE – y-MM-ddE"}
+                }
+                GyMMM{
+                    G{"Gy年MMM – Gy年MMM"}
+                    M{"Gy年MMM–MMM"}
+                    y{"Gy年MMM – y年MMM"}
+                }
+                GyMMMEd{
+                    G{"Gy年MMMd日E – Gy年MMMd日E"}
+                    M{"Gy年MMMd日E – MMMd日E"}
+                    d{"Gy年MMMd日E – MMMd日E"}
+                    y{"Gy年MMMd日E – y年MMMd日E"}
+                }
+                GyMMMd{
+                    G{"Gy年MMMd日 – Gy年MMMd日"}
+                    M{"Gy年MMMd日 – MMMd日"}
+                    d{"Gy年MMMd日–d日"}
+                    y{"Gy年MMMd日 – y年MMMd日"}
+                }
+                GyMd{
+                    G{"GGGGGy-MM-dd – GGGGGy-MM-dd"}
+                    M{"GGGGGy-MM-dd – y-MM-dd"}
+                    d{"GGGGGy-MM-dd – y-MM-dd"}
+                    y{"GGGGGy-MM-dd – y-MM-dd"}
+                }
+            }
         }
         persian{
             eras{
@@ -3951,6 +4351,48 @@ zh{
                 }
                 wide{
                     "波斯历",
+                }
+            }
+            intervalFormats{
+                Bh{
+                    B{"Bh时至Bh时"}
+                    h{"Bh时至h时"}
+                }
+                Bhm{
+                    B{"Bh:mm至Bh:mm"}
+                    h{"Bh:mm至h:mm"}
+                    m{"Bh:mm至h:mm"}
+                }
+                Gy{
+                    G{"Gy年 – Gy年"}
+                    y{"Gy年–y年"}
+                }
+                GyM{
+                    G{"GGGGGy-MM – GGGGGy-MM"}
+                    M{"GGGGGy-MM – y-MM"}
+                    y{"GGGGGy-MM – y-MM"}
+                }
+                GyMEd{
+                    G{"GGGGGy-MM-ddE – GGGGGy-MM-ddE"}
+                    M{"GGGGGy-MM-ddE – y-MM-ddE"}
+                    d{"GGGGGy-MM-ddE – y-MM-ddE"}
+                    y{"GGGGGy-MM-ddE – y-MM-ddE"}
+                }
+                GyMMM{
+                    G{"Gy年MMM – Gy年MMM"}
+                    M{"Gy年MMM–MMM"}
+                    y{"Gy年MMM – y年MMM"}
+                }
+                GyMMMd{
+                    G{"Gy年MMMd日 – Gy年MMMd日"}
+                    M{"Gy年MMMd日 – MMMd日"}
+                    d{"Gy年MMMd日–d日"}
+                }
+                GyMd{
+                    G{"GGGGGy-MM-dd – GGGGGy-MM-dd"}
+                    M{"GGGGGy-MM-dd – y-MM-dd"}
+                    d{"GGGGGy-MM-dd – y-MM-dd"}
+                    y{"GGGGGy-MM-dd – y-MM-dd"}
                 }
             }
             monthNames{
@@ -4074,6 +4516,7 @@ zh{
                 E{"ccc"}
                 Ed{"d日E"}
                 Gy{"Gy年"}
+                GyMEEEEd{"Gy年M月d日EEEE"}
                 GyMMM{"Gy年M月"}
                 GyMMMEd{"Gy年M月d日E"}
                 GyMMMd{"Gy年M月d日"}
@@ -5063,6 +5506,18 @@ zh{
             middle{"{0}、{1}"}
             start{"{0}、{1}"}
         }
+        or-narrow{
+            2{"{0}或{1}"}
+            end{"{0}或{1}"}
+            middle{"{0}、{1}"}
+            start{"{0}、{1}"}
+        }
+        or-short{
+            2{"{0}或{1}"}
+            end{"{0}或{1}"}
+            middle{"{0}、{1}"}
+            start{"{0}、{1}"}
+        }
         standard{
             2{"{0}和{1}"}
             end{"{0}和{1}"}
@@ -5072,6 +5527,8 @@ zh{
         standard-narrow{
             2{"{0}、{1}"}
             end{"{0}、{1}"}
+            middle{"{0}、{1}"}
+            start{"{0}、{1}"}
         }
         standard-short{
             2{"{0}和{1}"}
@@ -5141,64 +5598,56 @@ zh{
             initial{"{0}"}
         }
         nameOrderLocales{
-            surnameFirst{
-                "hu",
-                "ja",
-                "ko",
-                "vi",
-                "yue",
-                "zh",
+            givenFirst{
+                "und",
+                "en",
             }
         }
         namePattern{
-            givenFirst-long-addressing-formal{"{surname} {suffix}"}
+            givenFirst-long-addressing-formal{"{surname}{title}"}
             givenFirst-long-addressing-informal{"{given-informal}"}
             givenFirst-long-monogram-formal{
-                "{given-monogram-allCaps} {given2-monogram-allCaps} {surname-monogram"
-                "-allCaps}"
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
             }
-            givenFirst-long-monogram-informal{"{given-informal-monogram-allCaps} {surname-monogram-allCaps}"}
-            givenFirst-long-referring-formal{"{given} {given2} {surname} {suffix}"}
+            givenFirst-long-monogram-informal{"{given-informal-monogram-allCaps}{surname-monogram-allCaps}"}
+            givenFirst-long-referring-formal{"{given} {given2} {surname}{credentials}"}
             givenFirst-long-referring-informal{"{given-informal} {surname}"}
-            givenFirst-medium-addressing-formal{"{surname} {suffix}"}
+            givenFirst-medium-addressing-formal{"{surname}{title}"}
             givenFirst-medium-addressing-informal{"{given-informal}"}
             givenFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             givenFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname} {suffix}"}
+            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname}{credentials}"}
             givenFirst-medium-referring-informal{"{given-informal} {surname}"}
-            givenFirst-short-addressing-formal{"{surname} {suffix}"}
+            givenFirst-short-addressing-formal{"{surname}{title}"}
             givenFirst-short-addressing-informal{"{given-informal}"}
             givenFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             givenFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
             givenFirst-short-referring-formal{"{given-initial} {given2-initial} {surname}"}
             givenFirst-short-referring-informal{"{given-informal} {surname-initial}"}
-            sorting-long-referring-formal{"{surname-core}{given}{given2}{surname-prefix}"}
-            sorting-long-referring-informal{"{surname}{given-informal}"}
-            sorting-medium-referring-formal{"{surname-core}{given}{given2}{surname-prefix}"}
-            sorting-medium-referring-informal{"{surname}{given-informal}"}
-            sorting-short-referring-formal{"{surname-core}{given}{given2}{surname-prefix}"}
-            sorting-short-referring-informal{"{surname}{given-informal}"}
-            surnameFirst-long-addressing-formal{"{surname}{suffix}"}
+            sorting-long-referring-formal{"{surname-core} {given} {given2} {surname-prefix}"}
+            sorting-long-referring-informal{"{surname} {given-informal}"}
+            sorting-medium-referring-formal{"{surname-core} {given} {given2-initial} {surname-prefix}"}
+            sorting-medium-referring-informal{"{surname} {given-informal}"}
+            sorting-short-referring-formal{"{surname-core} {given-initial} {given2-initial} {surname-prefix}"}
+            sorting-short-referring-informal{"{surname} {given-informal}"}
+            surnameFirst-long-addressing-formal{"{surname}{title}"}
             surnameFirst-long-addressing-informal{"{given-informal}"}
-            surnameFirst-long-monogram-formal{
-                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
-                "llCaps}"
-            }
             surnameFirst-long-monogram-informal{"{surname-monogram-allCaps}{given-informal-monogram-allCaps}"}
-            surnameFirst-long-referring-formal{"{surname}{given}{given2}{suffix}"}
-            surnameFirst-long-referring-informal{"{surname}{given-informal}"}
-            surnameFirst-medium-addressing-formal{"{surname}{suffix}"}
+            surnameFirst-long-referring-formal{"{surname} {given} {given2} {credentials}{title}"}
+            surnameFirst-long-referring-informal{"{surname} {given-informal}"}
+            surnameFirst-medium-addressing-formal{"{surname}{title}"}
             surnameFirst-medium-addressing-informal{"{given-informal}"}
             surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            surnameFirst-medium-referring-formal{"{surname}{given}{given2}{suffix}"}
-            surnameFirst-medium-referring-informal{"{surname}{given-informal}"}
-            surnameFirst-short-addressing-formal{"{surname}{suffix}"}
+            surnameFirst-medium-referring-formal{"{surname} {given} {given2} {credentials}{title}"}
+            surnameFirst-medium-referring-informal{"{surname} {given-informal}"}
+            surnameFirst-short-addressing-formal{"{surname}{title}"}
             surnameFirst-short-addressing-informal{"{given-informal}"}
             surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
-            surnameFirst-short-referring-formal{"{surname}{given}{given2}"}
-            surnameFirst-short-referring-informal{"{surname}{given}"}
+            surnameFirst-short-referring-formal{"{surname} {given} {given2}"}
+            surnameFirst-short-referring-informal{"{surname} {given}"}
         }
     }
 }

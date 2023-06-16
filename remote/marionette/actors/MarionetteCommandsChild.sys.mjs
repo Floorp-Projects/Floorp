@@ -308,7 +308,8 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
 
     const accessible = await lazy.accessibility.getAccessible(elem);
     if (!accessible) {
-      return null;
+      // If it's not in the a11y tree, it's probably presentational.
+      return "none";
     }
 
     return accessible.computedARIARole;
@@ -506,14 +507,16 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
     const { actions, capabilities } = options;
     if (this.actionState === null) {
       this.actionState = new lazy.action.State({
-        specCompatPointerOrigin: !capabilities[
-          "moz:useNonSpecCompliantPointerOrigin"
-        ],
+        specCompatPointerOrigin:
+          !capabilities["moz:useNonSpecCompliantPointerOrigin"],
       });
     }
     let actionChain = lazy.action.Chain.fromJSON(this.actionState, actions);
 
     await actionChain.dispatch(this.actionState, this.document.defaultView);
+    // Terminate the current wheel transaction if there is one. Wheel
+    // transactions should not live longer than a single action chain.
+    ChromeUtils.endWheelTransaction();
   }
 
   /**

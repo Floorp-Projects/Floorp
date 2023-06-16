@@ -8,7 +8,7 @@ const TEST_URI =
   "https://example.com/browser/devtools/client/webconsole/" +
   "test/browser/test-console-custom-formatters.html";
 
-add_task(async function() {
+add_task(async function () {
   // ToDo: This preference can be removed once the custom formatters feature is stable enough
   await pushPref("devtools.custom-formatters", true);
   await pushPref("devtools.custom-formatters.enabled", true);
@@ -82,13 +82,8 @@ async function testCustomFormatterWithObjectTag(hud) {
     "color: purple;",
     "The custom formatting of the header is correct"
   );
-  const [
-    buttonEl,
-    child1,
-    child2,
-    child3,
-    child4,
-  ] = headerJsonMlNode.childNodes;
+  const [buttonEl, child1, child2, child3, child4] =
+    headerJsonMlNode.childNodes;
   is(child1.textContent, "object tag", "Got expected first item");
   is(
     child2.textContent,
@@ -117,12 +112,8 @@ async function testCustomFormatterWithObjectTag(hud) {
   const bodyCustomFormattedChild = await waitFor(() =>
     bodyChild2.querySelector(".objectBox-jsonml")
   );
-  const [
-    subButtonEl,
-    subChild1,
-    subChild2,
-    subChild3,
-  ] = bodyCustomFormattedChild.childNodes;
+  const [subButtonEl, subChild1, subChild2, subChild3] =
+    bodyCustomFormattedChild.childNodes;
   ok(!!subButtonEl, "The body child can also be expanded");
   is(subChild1.textContent, "object tag", "Got expected first item");
   is(

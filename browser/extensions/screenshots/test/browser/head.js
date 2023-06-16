@@ -43,7 +43,7 @@ class ScreenshotsHelper {
     await SpecialPowers.spawn(
       this.browser,
       [iframeSel, elemSel],
-      async function(iframeSelector, elemSelector) {
+      async function (iframeSelector, elemSelector) {
         info(
           `in waitForUIContent content function, iframeSelector: ${iframeSelector}, elemSelector: ${elemSelector}`
         );
@@ -71,7 +71,7 @@ class ScreenshotsHelper {
     await SpecialPowers.spawn(
       this.browser,
       [iframeSel, elemSel],
-      async function(iframeSelector, elemSelector) {
+      async function (iframeSelector, elemSelector) {
         info(
           `in clickScreenshotsUIElement content function, iframeSelector: ${iframeSelector}, elemSelector: ${elemSelector}`
         );
@@ -93,7 +93,7 @@ class ScreenshotsHelper {
   }
 
   getContentDimensions() {
-    return SpecialPowers.spawn(this.browser, [], async function() {
+    return SpecialPowers.spawn(this.browser, [], async function () {
       let doc = content.document;
       let rect = doc.documentElement.getBoundingClientRect();
       return {
@@ -180,7 +180,7 @@ async function getImageSizeFromClipboard(browser) {
   // We are going to load the image in the content page to measure its size.
   // We don't want to insert the image directly in the browser's document
   // which could mess all sorts of things up
-  return SpecialPowers.spawn(browser, [buffer], async function(_buffer) {
+  return SpecialPowers.spawn(browser, [buffer], async function (_buffer) {
     const img = content.document.createElement("img");
     const loaded = new Promise(r => {
       img.addEventListener("load", r, { once: true });

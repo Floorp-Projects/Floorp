@@ -11,7 +11,7 @@ export const UtilsChild = {
       op: "getCachedOriginUsage",
     });
 
-    return new Promise(function(resolve) {
+    return new Promise(function (resolve) {
       addEventListener("message", async function onMessage(event) {
         removeEventListener("message", onMessage);
         const data = event.data;

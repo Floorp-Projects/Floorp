@@ -1,19 +1,15 @@
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 import { MockRegistrar } from "resource://testing-common/MockRegistrar.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+  AddonTestUtils: "resource://testing-common/AddonTestUtils.sys.mjs",
+  ExtensionTestUtils:
+    "resource://testing-common/ExtensionXPCShellUtils.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AddonManager: "resource://gre/modules/AddonManager.jsm",
-  AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
-  ExtensionTestUtils: "resource://testing-common/ExtensionXPCShellUtils.jsm",
 });
 
 var gTestScope;
@@ -497,9 +493,8 @@ export var SearchTestUtils = {
       let settings = lazy.RemoteSettings(lazy.SearchUtils.SETTINGS_KEY);
       config = await settings.get();
     }
-    const reloadObserved = SearchTestUtils.promiseSearchNotification(
-      "engines-reloaded"
-    );
+    const reloadObserved =
+      SearchTestUtils.promiseSearchNotification("engines-reloaded");
     await lazy.RemoteSettings(lazy.SearchUtils.SETTINGS_KEY).emit("sync", {
       data: { current: config },
     });

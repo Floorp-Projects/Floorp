@@ -6,7 +6,7 @@
 // Test for the following data of impression telemetry.
 // - interaction
 
-add_setup(async function() {
+add_setup(async function () {
   await initInteractionTest();
 });
 

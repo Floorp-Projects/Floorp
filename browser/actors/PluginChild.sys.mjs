@@ -72,8 +72,8 @@ export class PluginChild extends JSWindowActorChild {
     }
 
     let { target, gmpPlugin, pluginID } = aEvent;
-    let fullScreenElement = this.contentWindow.top.document
-      .mozFullScreenElement;
+    let fullScreenElement =
+      this.contentWindow.top.document.mozFullScreenElement;
     if (fullScreenElement) {
       if (this.isWithinFullScreenElement(fullScreenElement, target)) {
         this.contentWindow.top.document.mozCancelFullScreen();

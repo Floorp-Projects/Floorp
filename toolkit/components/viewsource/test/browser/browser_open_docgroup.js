@@ -6,7 +6,7 @@
  * bug 1340719.
  */
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.throw_on_docgroup_mismatch.enabled", true]],
   });
@@ -21,11 +21,11 @@ add_task(async function test_view_source_in_tab() {
       gBrowser,
       url: "http://example.com",
     },
-    async function(browser) {
+    async function (browser) {
       let sourceTab = await openViewSourceForBrowser(browser);
       let sourceBrowser = sourceTab.linkedBrowser;
 
-      await SpecialPowers.spawn(sourceBrowser, [], async function() {
+      await SpecialPowers.spawn(sourceBrowser, [], async function () {
         Assert.equal(
           content.document.body.id,
           "viewsource",

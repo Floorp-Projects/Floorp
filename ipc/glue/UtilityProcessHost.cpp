@@ -93,34 +93,6 @@ bool UtilityProcessHost::Launch(StringVector aExtraOpts) {
 
   mLaunchPhase = LaunchPhase::Waiting;
 
-  int32_t timeoutMs = StaticPrefs::general_utility_process_startup_timeout_ms();
-
-  // If one of the following environment variables are set we can
-  // effectively ignore the timeout - as we can guarantee the Utility
-  // process will be terminated
-  if (PR_GetEnv("MOZ_DEBUG_CHILD_PROCESS") ||
-      PR_GetEnv("MOZ_DEBUG_CHILD_PAUSE")) {
-    timeoutMs = 0;
-  }
-  if (timeoutMs) {
-    // We queue a delayed task. If that task runs before the
-    // WhenProcessHandleReady promise gets resolved, we will abort the launch.
-    GetMainThreadSerialEventTarget()->DelayedDispatch(
-        NS_NewRunnableFunction(
-            "UtilityProcessHost::Launchtimeout",
-            [this, liveToken = mLiveToken]() {
-              if (!*liveToken || mTimerChecked) {
-                // We have been deleted or the runnable has already started, we
-                // can abort.
-                return;
-              }
-              InitAfterConnect(false, "UtilityProcessHost::LaunchTimeout");
-              MOZ_ASSERT(mTimerChecked,
-                         "InitAfterConnect must have acted on the promise");
-            }),
-        timeoutMs);
-  }
-
   if (!GeckoChildProcessHost::AsyncLaunch(aExtraOpts)) {
     NS_WARNING("UtilityProcess AsyncLaunch failed, aborting.");
     mLaunchPhase = LaunchPhase::Complete;
@@ -147,25 +119,12 @@ RefPtr<GenericNonExclusivePromise> UtilityProcessHost::LaunchPromise() {
           // already been rejected.
           return;
         }
-        if (mTimerChecked) {
-          // We hit the timeout earlier, abort.
+        if (mLaunchCompleted) {
           return;
         }
-        mTimerChecked = true;
+        mLaunchCompleted = true;
         if (aResult.IsReject()) {
-#if defined(DEBUG)
-          ipc::LaunchError aError = aResult.RejectValue();
-          NS_WARNING(nsPrintfCString("UtilityProcessHost::LaunchPromise() will "
-                                     "reject with '%s' returning "
-#  if defined(XP_WIN)
-                                     "'%lx'",
-#  else
-                                     "'%d'",
-#  endif  // defined(XP_WIN)
-                                     aError.FunctionName(), aError.ErrorCode())
-                         .get());
-#endif  // defined(DEBUG)
-          RejectPromise("UtilityProcessHost::LaunchPromise()");
+          RejectPromise();
         }
         // If aResult.IsResolve() then we have succeeded in launching the
         // Utility process. The promise will be resolved once the channel has
@@ -200,13 +159,12 @@ void UtilityProcessHost::OnChannelError() {
   NS_DispatchToMainThread(NS_NewRunnableFunction(
       "UtilityProcessHost::OnChannelError", [this, liveToken = mLiveToken]() {
         if (*liveToken && mLaunchPhase == LaunchPhase::Waiting) {
-          InitAfterConnect(false, "UtilityProcessHost::OnChannelError");
+          InitAfterConnect(false);
         }
       }));
 }
 
-void UtilityProcessHost::InitAfterConnect(bool aSucceeded,
-                                          const char* aCallSite) {
+void UtilityProcessHost::InitAfterConnect(bool aSucceeded) {
   MOZ_ASSERT(NS_IsMainThread());
 
   MOZ_ASSERT(mLaunchPhase == LaunchPhase::Waiting);
@@ -215,7 +173,7 @@ void UtilityProcessHost::InitAfterConnect(bool aSucceeded,
   mLaunchPhase = LaunchPhase::Complete;
 
   if (!aSucceeded) {
-    RejectPromise(aCallSite);
+    RejectPromise();
     return;
   }
 
@@ -277,7 +235,7 @@ void UtilityProcessHost::Shutdown() {
   MOZ_ASSERT(!mShutdownRequested);
   LOGD("[%p] UtilityProcessHost::Shutdown", this);
 
-  RejectPromise("UtilityProcessHost::Shutdown");
+  RejectPromise();
 
   if (mUtilityProcessParent) {
     LOGD("[%p] UtilityProcessHost::Shutdown not destroying utility process.",
@@ -314,7 +272,7 @@ void UtilityProcessHost::OnChannelClosed() {
   MOZ_ASSERT(NS_IsMainThread());
   LOGD("[%p] UtilityProcessHost::OnChannelClosed", this);
 
-  RejectPromise("UtilityProcessHost::OnChannelClosed");
+  RejectPromise();
 
   if (!mShutdownRequested && mListener) {
     // This is an unclean shutdown. Notify our listener that we're going away.
@@ -343,7 +301,7 @@ void UtilityProcessHost::DestroyProcess() {
   MOZ_ASSERT(NS_IsMainThread());
   LOGD("[%p] UtilityProcessHost::DestroyProcess", this);
 
-  RejectPromise("UtilityProcessHost::DestroyProcess");
+  RejectPromise();
 
   // Any pending tasks will be cancelled from now on.
   *mLiveToken = false;
@@ -360,27 +318,21 @@ void UtilityProcessHost::ResolvePromise() {
     mLaunchPromise->Resolve(true, __func__);
     mLaunchPromiseSettled = true;
   }
-  // We have already acted on the promise; the timeout runnable no longer needs
-  // to interrupt anything.
-  mTimerChecked = true;
+
+  mLaunchCompleted = true;
 }
 
-void UtilityProcessHost::RejectPromise(const char* aCallSite) {
+void UtilityProcessHost::RejectPromise() {
   MOZ_ASSERT(NS_IsMainThread());
   LOGD("[%p] UtilityProcessHost connection failed - rejecting launch promise",
        this);
 
   if (!mLaunchPromiseSettled) {
-    NS_WARNING(
-        nsPrintfCString("Rejecting UtilityProcess launch promise due to %s",
-                        aCallSite)
-            .get());
     mLaunchPromise->Reject(NS_ERROR_FAILURE, __func__);
     mLaunchPromiseSettled = true;
   }
-  // We have already acted on the promise; the timeout runnable no longer needs
-  // to interrupt anything.
-  mTimerChecked = true;
+
+  mLaunchCompleted = true;
 }
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)

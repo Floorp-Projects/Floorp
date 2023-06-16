@@ -10,7 +10,7 @@ const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html>Test input focused
     console.log("console message 1");
   </script>`;
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Focus after console is opened");
@@ -29,7 +29,7 @@ add_task(async function() {
   ok(isInputFocused(hud), "input node is focused after output is cleared");
 
   info("Focus during message logging");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.wrappedJSObject.console.log("console message 2");
   });
   const msg = await waitFor(() =>

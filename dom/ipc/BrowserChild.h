@@ -397,9 +397,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   mozilla::ipc::IPCResult RecvNormalPrioritySelectionEvent(
       const mozilla::WidgetSelectionEvent& aEvent);
 
-  mozilla::ipc::IPCResult RecvSetIsUnderHiddenEmbedderElement(
-      const bool& aIsUnderHiddenEmbedderElement);
-
   mozilla::ipc::IPCResult RecvInsertText(const nsAString& aStringToInsert);
 
   mozilla::ipc::IPCResult RecvUpdateRemoteStyle(
@@ -410,7 +407,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   mozilla::ipc::IPCResult RecvPasteTransferable(
-      const IPCDataTransfer& aDataTransfer, const bool& aIsPrivateData,
+      const IPCTransferableData& aTransferableData, const bool& aIsPrivateData,
       nsIPrincipal* aRequestingPrincipal,
       const nsContentPolicyType& aContentPolicyType);
 
@@ -428,8 +425,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 #ifdef ACCESSIBILITY
   PDocAccessibleChild* AllocPDocAccessibleChild(
       PDocAccessibleChild*, const uint64_t&,
-      const MaybeDiscardedBrowsingContext&, const uint32_t&,
-      const IAccessibleHolder&);
+      const MaybeDiscardedBrowsingContext&);
   bool DeallocPDocAccessibleChild(PDocAccessibleChild*);
 #endif
 

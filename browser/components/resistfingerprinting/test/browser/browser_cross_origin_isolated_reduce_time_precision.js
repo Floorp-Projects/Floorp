@@ -86,7 +86,7 @@ let processResultsGlobal = (data, successes, failures) => {
 // verifies DOM API has more precsion when it's in cross-origin-isolated and
 // cross-origin-isolated doesn't affect RFP.
 add_task(async function runRTPTestDOM() {
-  let runTests = async function(data) {
+  let runTests = async function (data) {
     let expectedPrecision = data.precision;
     // eslint beleives that isrounded is available in this scope, but if you
     // remove the assignment, you will see it is not
@@ -112,7 +112,7 @@ add_task(async function runRTPTestDOM() {
     ]);
 
     // If we are not rounding values, this function will invert the return value
-    let resultSwitchisRounded = function(timeStamp) {
+    let resultSwitchisRounded = function (timeStamp) {
       if (timeStamp == 0) {
         return true;
       }
@@ -200,6 +200,8 @@ add_task(async function runRTPTestDOM() {
     13,
     runTests
   );
+  /*
+  Disabled because it causes too many intermittents
   await setupAndRunCrossOriginIsolatedTest(
     {
       resistFingerprintingPBMOnly: true,
@@ -211,7 +213,7 @@ add_task(async function runRTPTestDOM() {
     13,
     runTests
   );
-
+  */
   await setupAndRunCrossOriginIsolatedTest(
     {
       resistFingerprintingPBMOnly: true,
@@ -237,6 +239,8 @@ add_task(async function runRTPTestDOM() {
     7.97,
     runTests
   );
+  /*
+  Disabled because it causes too many intermittents
   await setupAndRunCrossOriginIsolatedTest(
     {
       resistFingerprintingPBMOnly: true,
@@ -248,6 +252,7 @@ add_task(async function runRTPTestDOM() {
     7.97,
     runTests
   );
+  */
   await setupAndRunCrossOriginIsolatedTest(
     {
       resistFingerprintingPBMOnly: true,
@@ -288,7 +293,7 @@ add_task(async function runRTPTestDOM() {
 // test_reduce_time_precision.html. The main difference is this test case
 // verifies DOM API has more precsion when it's in cross-origin-isolated and
 // cross-origin-isolated doesn't affect RFP.
-let runWorkerTest = async function(data) {
+let runWorkerTest = async function (data) {
   let expectedPrecision = data.precision;
   await new Promise(resolve => {
     // eslint beleives that isrounded is available in this scope, but if you
@@ -321,9 +326,9 @@ let runWorkerTest = async function(data) {
             cmd: timeStampCode,
           });
 
-          worker.addEventListener("message", function(e) {
+          worker.addEventListener("message", function (e) {
             // If we are not rounding values, this function will invert the return value
-            let resultSwitchisRounded = function(timeStamp) {
+            let resultSwitchisRounded = function (timeStamp) {
               if (timeStamp == 0) {
                 return true;
               }
@@ -409,6 +414,8 @@ add_task(async function runRTPTestsForWorker() {
     13,
     runWorkerTest
   );
+  /*
+  Disabled because it causes too many intermittents
   await setupAndRunCrossOriginIsolatedTest(
     {
       resistFingerprintingPBMOnly: true,
@@ -420,6 +427,7 @@ add_task(async function runRTPTestsForWorker() {
     13,
     runWorkerTest
   );
+  */
   await setupAndRunCrossOriginIsolatedTest(
     {
       resistFingerprintingPBMOnly: true,
@@ -441,6 +449,7 @@ add_task(async function runRTPTestsForWorker() {
     7.97,
     runWorkerTest
   );
+  /* Disabled because it causes too many intermittents
   await setupAndRunCrossOriginIsolatedTest(
     {
       resistFingerprintingPBMOnly: true,
@@ -452,6 +461,7 @@ add_task(async function runRTPTestsForWorker() {
     7.97,
     runWorkerTest
   );
+  */
   await setupAndRunCrossOriginIsolatedTest(
     {
       resistFingerprintingPBMOnly: true,

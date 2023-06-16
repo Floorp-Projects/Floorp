@@ -12,15 +12,11 @@ import panelMessaging from "../../messages";
 function Saved(props) {
   const { locale, pockethost, utmSource, utmCampaign, utmContent } = props;
   // savedStatus can be success, loading, or error.
-  const [
-    { savedStatus, savedErrorId, itemId, itemUrl },
-    setSavedStatusState,
-  ] = useState({ savedStatus: "loading" });
+  const [{ savedStatus, savedErrorId, itemId, itemUrl }, setSavedStatusState] =
+    useState({ savedStatus: "loading" });
   // removedStatus can be removed, removing, or error.
-  const [
-    { removedStatus, removedErrorMessage },
-    setRemovedStatusState,
-  ] = useState({});
+  const [{ removedStatus, removedErrorMessage }, setRemovedStatusState] =
+    useState({});
   const [savedStory, setSavedStoryState] = useState();
   const [articleInfoAttempted, setArticleInfoAttempted] = useState();
   const [{ similarRecs, similarRecsModel }, setSimilarRecsState] = useState({});
@@ -38,7 +34,7 @@ function Saved(props) {
       {
         itemId,
       },
-      function(resp) {
+      function (resp) {
         const { data } = resp;
         if (data.status == "success") {
           setRemovedStatusState({ removedStatus: "removed" });
@@ -60,7 +56,7 @@ function Saved(props) {
 
   useEffect(() => {
     // Wait confirmation of save before flipping to final saved state
-    panelMessaging.addMessageListener("PKT_saveLink", function(resp) {
+    panelMessaging.addMessageListener("PKT_saveLink", function (resp) {
       const { data } = resp;
       if (data.status == "error") {
         // Use localizedKey or fallback to a generic catch all error.
@@ -81,17 +77,21 @@ function Saved(props) {
       });
     });
 
-    panelMessaging.addMessageListener("PKT_articleInfoFetched", function(resp) {
-      setSavedStoryState(resp?.data?.item_preview);
-    });
+    panelMessaging.addMessageListener(
+      "PKT_articleInfoFetched",
+      function (resp) {
+        setSavedStoryState(resp?.data?.item_preview);
+      }
+    );
 
-    panelMessaging.addMessageListener("PKT_getArticleInfoAttempted", function(
-      resp
-    ) {
-      setArticleInfoAttempted(true);
-    });
+    panelMessaging.addMessageListener(
+      "PKT_getArticleInfoAttempted",
+      function (resp) {
+        setArticleInfoAttempted(true);
+      }
+    );
 
-    panelMessaging.addMessageListener("PKT_renderItemRecs", function(resp) {
+    panelMessaging.addMessageListener("PKT_renderItemRecs", function (resp) {
       const { data } = resp;
 
       // This is the ML model used to recommend the story.

@@ -71,7 +71,9 @@ add_task(async function test_file_replaced() {
   equal(install.state, AddonManager.STATE_DOWNLOADED);
 
   await IOUtils.copy(
-    (await createXPIWithID("replace@me", "2")).path,
+    (
+      await createXPIWithID("replace@me", "2")
+    ).path,
     xpiFile.path
   );
 
@@ -140,11 +142,13 @@ async function do_test_update_with_file_replaced(wantPostponeTest) {
 
   let promptCount = 0;
   let didReplaceFile = false;
-  install.promptHandler = async function() {
+  install.promptHandler = async function () {
     ++promptCount;
     equal(install.state, AddonManager.STATE_DOWNLOADED);
     await IOUtils.copy(
-      (await createXPIWithID(ADDON_ID, "3")).path,
+      (
+        await createXPIWithID(ADDON_ID, "3")
+      ).path,
       install.file.path
     );
     didReplaceFile = true;

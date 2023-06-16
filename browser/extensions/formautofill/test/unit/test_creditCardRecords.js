@@ -200,7 +200,7 @@ const MERGE_TESTCASES = [
   },
 ];
 
-let prepareTestCreditCards = async function(path) {
+let prepareTestCreditCards = async function (path) {
   let profileStorage = new FormAutofillStorage(path);
   await profileStorage.initialize();
 
@@ -396,7 +396,7 @@ add_task(async function test_update() {
   let timerPrecision = Preferences.get("privacy.reduceTimerPrecision");
   Preferences.set("privacy.reduceTimerPrecision", false);
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Preferences.set("privacy.reduceTimerPrecision", timerPrecision);
   });
 
@@ -759,16 +759,14 @@ add_task(async function test_getDuplicateRecords() {
   let guid = profileStorage.creditCards._data[0].guid;
 
   // Absolutely a duplicate.
-  let getDuplicateRecords = profileStorage.creditCards.getDuplicateRecords(
-    TEST_CREDIT_CARD_3
-  );
+  let getDuplicateRecords =
+    profileStorage.creditCards.getDuplicateRecords(TEST_CREDIT_CARD_3);
   let dupe = (await getDuplicateRecords.next()).value;
   Assert.equal(dupe.guid, guid);
 
   // Absolutely not a duplicate.
-  getDuplicateRecords = profileStorage.creditCards.getDuplicateRecords(
-    TEST_CREDIT_CARD_1
-  );
+  getDuplicateRecords =
+    profileStorage.creditCards.getDuplicateRecords(TEST_CREDIT_CARD_1);
   dupe = (await getDuplicateRecords.next()).value;
   Assert.equal(dupe, null);
 
@@ -812,16 +810,14 @@ add_task(async function test_getDuplicateRecordsMatch() {
   let guid = profileStorage.creditCards._data[0].guid;
 
   // Absolutely a duplicate.
-  let getDuplicateRecords = profileStorage.creditCards.getDuplicateRecords(
-    TEST_CREDIT_CARD_2
-  );
+  let getDuplicateRecords =
+    profileStorage.creditCards.getDuplicateRecords(TEST_CREDIT_CARD_2);
   let dupe = (await getDuplicateRecords.next()).value;
   Assert.equal(dupe.guid, guid);
 
   // Absolutely not a duplicate.
-  getDuplicateRecords = profileStorage.creditCards.getDuplicateRecords(
-    TEST_CREDIT_CARD_1
-  );
+  getDuplicateRecords =
+    profileStorage.creditCards.getDuplicateRecords(TEST_CREDIT_CARD_1);
   dupe = (await getDuplicateRecords.next()).value;
   Assert.equal(dupe, null);
 
@@ -861,9 +857,8 @@ add_task(async function test_getMatchRecord() {
   };
 
   // Absolutely a match.
-  let getMatchRecords = profileStorage.creditCards.getMatchRecords(
-    TEST_CREDIT_CARD_2
-  );
+  let getMatchRecords =
+    profileStorage.creditCards.getMatchRecords(TEST_CREDIT_CARD_2);
   let match = (await getMatchRecords.next()).value;
   Assert.equal(match.guid, guid);
 

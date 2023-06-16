@@ -15,6 +15,12 @@
 urlbar-group-best-match =
   .label = Top pick
 
+# Label shown above an extension suggestion in the urlbar results (an
+# alternative phrasing is "Extension for Firefox"). It's singular since only one
+# suggested extension is displayed.
+urlbar-group-addon =
+  .label = { -brand-product-name } extension
+
 # Tooltip text for the block button shown in top pick rows.
 firefox-suggest-urlbar-block =
   .title = Dismiss this suggestion
@@ -74,16 +80,28 @@ firefox-suggest-weather-high-low = High: { $high }°{ $unit } · Low: { $low }°
 #   $provider (String) - The name of the weather provider
 firefox-suggest-weather-sponsored = { $provider } · Sponsored
 
+firefox-suggest-command-show-less-frequently =
+  .label = Show less frequently
+firefox-suggest-command-dont-show-this =
+  .label = Don’t show this
+firefox-suggest-command-not-relevant =
+  .label = Not relevant
+firefox-suggest-command-not-interested =
+  .label = Not interested
 firefox-suggest-weather-command-inaccurate-location =
   .label = Report inaccurate location
-firefox-suggest-weather-command-show-less-frequently =
-  .label = Show less frequently
-firefox-suggest-weather-command-dont-show-this =
-  .label = Don’t show this
-firefox-suggest-weather-command-not-relevant =
-  .label = Not relevant
-firefox-suggest-weather-command-not-interested =
-  .label = Not interested
+
+# This string displays the number of reviews in the add-ons suggestion
+# Variables:
+#   $quantity (number) - The number of reviews for the add-on.
+firefox-suggest-addons-reviews =
+  { $quantity ->
+      [one] { $quantity } review
+     *[other] { $quantity } reviews
+  }
+
+# This string explaining that the add-on suggestion is a recommendation.
+firefox-suggest-addons-recommended = Recommended
 
 ## These strings are used in the preferences UI (about:preferences). Their names
 ## follow the naming conventions of other strings used in the preferences UI.

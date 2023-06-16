@@ -14,17 +14,14 @@ const PRIVATE_BROWSING_PERMISSION = {
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   EventDispatcher: "resource://gre/modules/Messaging.sys.mjs",
+  Extension: "resource://gre/modules/Extension.sys.mjs",
+  ExtensionData: "resource://gre/modules/Extension.sys.mjs",
+  ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.sys.mjs",
   GeckoViewTabBridge: "resource://gre/modules/GeckoViewTab.sys.mjs",
+  Management: "resource://gre/modules/Extension.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AddonManager: "resource://gre/modules/AddonManager.jsm",
-  Extension: "resource://gre/modules/Extension.jsm",
-  ExtensionData: "resource://gre/modules/Extension.jsm",
-  ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.jsm",
-  Management: "resource://gre/modules/Extension.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -171,7 +168,11 @@ class EmbedderPort {
 
     switch (aEvent) {
       case "GeckoView:WebExtension:PortMessageFromApp": {
-        const holder = new StructuredCloneHolder(aData.message);
+        const holder = new StructuredCloneHolder(
+          "GeckoView:WebExtension:PortMessageFromApp",
+          null,
+          aData.message
+        );
         this.messenger.sendPortMessage(this.id, holder);
         break;
       }

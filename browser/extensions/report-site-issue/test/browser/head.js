@@ -1,13 +1,11 @@
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "AddonManager",
-  "resource://gre/modules/AddonManager.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+});
 
-const { Management } = ChromeUtils.import(
-  "resource://gre/modules/Extension.jsm"
+const { Management } = ChromeUtils.importESModule(
+  "resource://gre/modules/Extension.sys.mjs"
 );
 
 const PREF_WC_REPORTER_ENABLED = "extensions.webcompat-reporter.enabled";
@@ -110,7 +108,7 @@ async function startIssueServer() {
     await new Promise(resolve => server.stop(resolve));
   });
 
-  server.registerPathHandler("/new", function(request, response) {
+  server.registerPathHandler("/new", function (request, response) {
     response.setHeader("Content-Type", "text/html", false);
     response.setStatusLine(request.httpVersion, 200, "OK");
     response.write(landingTemplate);

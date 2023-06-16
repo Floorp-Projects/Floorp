@@ -19,22 +19,24 @@ function loadSelectors(walker, selectors) {
 }
 
 function doMoves(movesArg) {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [movesArg], function(
-    moves
-  ) {
-    function setParent(nodeSelector, newParentSelector) {
-      const node = content.document.querySelector(nodeSelector);
-      if (newParentSelector) {
-        const newParent = content.document.querySelector(newParentSelector);
-        newParent.appendChild(node);
-      } else {
-        node.remove();
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [movesArg],
+    function (moves) {
+      function setParent(nodeSelector, newParentSelector) {
+        const node = content.document.querySelector(nodeSelector);
+        if (newParentSelector) {
+          const newParent = content.document.querySelector(newParentSelector);
+          newParent.appendChild(node);
+        } else {
+          node.remove();
+        }
+      }
+      for (const move of moves) {
+        setParent(move[0], move[1]);
       }
     }
-    for (const move of moves) {
-      setParent(move[0], move[1]);
-    }
-  });
+  );
 }
 
 /**
@@ -44,7 +46,7 @@ function doMoves(movesArg) {
 var gDummySerial = 0;
 
 function mutationTest(testSpec) {
-  return async function() {
+  return async function () {
     const { walker } = await initInspectorFront(
       MAIN_DOMAIN + "inspector-traversal-data.html"
     );
@@ -63,7 +65,7 @@ function mutationTest(testSpec) {
     await SpecialPowers.spawn(
       gBrowser.selectedBrowser,
       [[gDummySerial++]],
-      function(serial) {
+      function (serial) {
         content.document.documentElement.setAttribute("data-dummy", serial);
       }
     );

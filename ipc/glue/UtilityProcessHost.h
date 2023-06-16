@@ -96,7 +96,7 @@ class UtilityProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
 
   // Called on the main thread with true after a connection has been established
   // or false if it failed (including if it failed before the timeout kicked in)
-  void InitAfterConnect(bool aSucceeded, const char* aCallSite = "");
+  void InitAfterConnect(bool aSucceeded);
 
   // Called on the main thread when the mUtilityProcessParent actor is shutting
   // down.
@@ -131,7 +131,7 @@ class UtilityProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
 
   bool mShutdownRequested = false;
 
-  void RejectPromise(const char* aCallSite);
+  void RejectPromise();
   void ResolvePromise();
 
   // Set to true on construction and to false just prior deletion.
@@ -145,10 +145,8 @@ class UtilityProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
   RefPtr<GenericNonExclusivePromise::Private> mLaunchPromise{};
   bool mLaunchPromiseSettled = false;
   bool mLaunchPromiseLaunched = false;
-  // Will be set to true if we've exceeded the allowed startup time or if the
-  // Utility process as successfully started. This is used to determine if the
-  // timeout runnable needs to execute code or not.
-  bool mTimerChecked = false;
+  // Will be set to true if the Utility process as successfully started.
+  bool mLaunchCompleted = false;
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
   UniquePtr<SandboxBroker> mSandboxBroker{};

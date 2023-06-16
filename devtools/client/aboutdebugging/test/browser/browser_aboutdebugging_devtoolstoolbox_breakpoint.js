@@ -22,7 +22,7 @@ Services.scriptloader.loadSubScript(
 /**
  * Test breakpoints in about:devtools-toolbox tabs (ie non localTab tab target).
  */
-add_task(async function() {
+add_task(async function () {
   const testTab = await addTab(TAB_URL);
 
   info("Force all debug target panes to be expanded");
@@ -49,7 +49,7 @@ add_task(async function() {
   const onContentTaskDone = ContentTask.spawn(
     testTab.linkedBrowser,
     {},
-    function() {
+    function () {
       content.wrappedJSObject.testMethod();
     }
   );

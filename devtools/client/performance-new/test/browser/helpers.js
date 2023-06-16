@@ -768,8 +768,7 @@ function withWebChannelTestDocument(callback) {
   return BrowserTestUtils.withNewTab(
     {
       gBrowser,
-      url:
-        "http://example.com/browser/devtools/client/performance-new/test/browser/webchannel.html",
+      url: "http://example.com/browser/devtools/client/performance-new/test/browser/webchannel.html",
     },
     callback
   );

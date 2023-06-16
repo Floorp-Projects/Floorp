@@ -15,6 +15,8 @@
   <script type="application/javascript" src="outoflinexulscript.js"></script>
   <script type="application/javascript"><![CDATA[
 const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+let base = /.*\//.exec(window.location.href)[0];
+const {checkFromJSM} = ChromeUtils.import(base + "file_expandosharing.jsm");
 
 function inlinefunction() {
          return 42;
@@ -27,21 +29,22 @@ is(src.charAt(src.length - 1), "}", "inline XUL source should end with '}'");
 src = outoflinefunction.toSource();
 isnot(src.indexOf("return 42"), -1, "out of line XUL script should have source")
 is(src.charAt(src.length - 1), "}", "out of line XUL source should end with '}'");
-src = NetUtil.asyncFetch.toSource();
-isnot(src.indexOf("return"), -1, "JSM should have source");
+src = checkFromJSM.toSource();
+isnot(src.indexOf("catch"), -1, "JSM should have source");
 var ns = {};
-Services.scriptloader.loadSubScript("resource://gre/modules/NetUtil.jsm", ns);
-src = ns.NetUtil.asyncFetch.toSource();
-isnot(src.indexOf("return"), -1, "subscript should have source");
+Services.scriptloader.loadSubScript(base + "file_expandosharing.jsm", ns);
+src = ns.checkFromJSM.toSource();
+isnot(src.indexOf("catch"), -1, "subscript should have source");
 
-var base = /.*\//.exec(window.location.href)[0];
 var reg = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIChromeRegistry);
 var resolvedBase = reg.convertChromeURL(NetUtil.newURI(base)).spec;
 
-ns = {};
+ns = {
+  base,
+};
 Services.scriptloader.loadSubScript(resolvedBase + "subscript.js", ns);
-src = ns.NetUtil.asyncFetch.toSource();
-isnot(src.indexOf("return"), -1, "subscript of a subscript should have source");
+src = ns.checkFromJSM.toSource();
+isnot(src.indexOf("catch"), -1, "subscript of a subscript should have source");
 
 ns = {};
 Services.scriptloader.loadSubScript(resolvedBase + "utf8_subscript.js", ns);

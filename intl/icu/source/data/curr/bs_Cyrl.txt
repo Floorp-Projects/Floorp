@@ -1133,6 +1133,9 @@ bs_Cyrl{
             "Зимбабвеански долар (2008)",
         }
     }
+    Currencies%narrow{
+        BYN{"BYN"}
+    }
     CurrencyPlurals{
         ADP{
             few{"андорске пезете"}

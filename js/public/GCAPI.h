@@ -325,15 +325,6 @@ typedef enum JSGCParamKey {
   JSGC_PRETENURE_THRESHOLD = 28,
 
   /**
-   * If the above condition is met, then any object group that tenures more than
-   * this number of objects will be pretenured (if it can be).
-   *
-   * Default: PretenureGroupThreshold
-   * Pref: None
-   */
-  JSGC_PRETENURE_GROUP_THRESHOLD = 29,
-
-  /**
    * Attempt to run a minor GC in the idle time if the free space falls
    * below this percentage (from 0 to 99).
    *

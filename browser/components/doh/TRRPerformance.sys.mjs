@@ -74,10 +74,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 
 function getRandomSubdomain() {
-  let uuid = Services.uuid
-    .generateUUID()
-    .toString()
-    .slice(1, -1); // Discard surrounding braces
+  let uuid = Services.uuid.generateUUID().toString().slice(1, -1); // Discard surrounding braces
   return `${uuid}.${lazy.kCanonicalDomain}`;
 }
 

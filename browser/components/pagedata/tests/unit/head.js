@@ -54,7 +54,7 @@ function parseDocument(str, path = DEFAULT_PATH) {
     request.addEventListener("error", reject);
     request.addEventListener("abort", reject);
 
-    request.addEventListener("load", function() {
+    request.addEventListener("load", function () {
       resolve(request.responseXML);
     });
 

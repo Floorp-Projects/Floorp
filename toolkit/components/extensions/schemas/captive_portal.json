@@ -4,12 +4,12 @@
     "types": [
       {
         "$extend": "PermissionNoPrompt",
-        "choices": [{
-          "type": "string",
-          "enum": [
-            "captivePortal"
-          ]
-        }]
+        "choices": [
+          {
+            "type": "string",
+            "enum": ["captivePortal"]
+          }
+        ]
       }
     ]
   },
@@ -51,7 +51,12 @@
             "properties": {
               "state": {
                 "type": "string",
-                "enum": ["unknown", "not_captive", "unlocked_portal", "locked_portal"],
+                "enum": [
+                  "unknown",
+                  "not_captive",
+                  "unlocked_portal",
+                  "locked_portal"
+                ],
                 "description": "The current captive portal state."
               }
             }

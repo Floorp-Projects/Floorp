@@ -4,7 +4,7 @@
  * Tests that we get sent to the right page when the user clicks
  * the "Close" button in about:sessionrestore
  */
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.startup.page", 0]],
   });

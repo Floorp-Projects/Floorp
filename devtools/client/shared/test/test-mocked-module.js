@@ -3,7 +3,7 @@
 
 "use strict";
 
-const methodToMock = function() {
+const methodToMock = function () {
   return "Original value";
 };
 

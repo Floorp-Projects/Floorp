@@ -47,9 +47,8 @@ function testBoundsWithOffset(browser, iframeDocAcc, id, domElmBounds, offset) {
   // getContentBoundsForDOMElm's result doesn't include iframe translation
   // for in-process iframes, but does for out-of-process iframes. To account
   // for that here, manually add in the translation offset when examining an
-  // in-process iframe. This manual adjustment isn't necessary without the cache
-  // since, without it, accessible bounds don't include the translation offset either.
-  const addTranslationOffset = !gIsRemoteIframe && isCacheEnabled;
+  // in-process iframe.
+  const addTranslationOffset = !gIsRemoteIframe;
   const expectedX = addTranslationOffset
     ? domElmBounds[0] + offset
     : domElmBounds[0];
@@ -69,7 +68,7 @@ function testBoundsWithOffset(browser, iframeDocAcc, id, domElmBounds, offset) {
 
 addAccessibleTask(
   `<div id='${ELEM_ID}'>hello world</div>`,
-  async function(browser, iframeDocAcc, contentDocAcc) {
+  async function (browser, iframeDocAcc, contentDocAcc) {
     ok(iframeDocAcc, "IFRAME document accessible is present");
 
     await testBoundsWithContent(iframeDocAcc, ELEM_ID, browser);
@@ -144,7 +143,7 @@ addAccessibleTask(
  */
 addAccessibleTask(
   `<div id="div" style="width: 30px; height: 30px"></div>`,
-  async function(browser, accDoc, foo) {
+  async function (browser, accDoc, foo) {
     const docWidth = () => {
       let width = {};
       accDoc.getBounds({}, {}, width, {});
@@ -158,8 +157,8 @@ addAccessibleTask(
   {
     chrome: false,
     topLevel: false,
-    iframe: isCacheEnabled /* works, but timing is tricky with no cache */,
-    remoteIframe: isCacheEnabled /* works, but timing is tricky with no cache */,
+    iframe: true,
+    remoteIframe: true,
     iframeAttrs: { style: "width: 0;" },
   }
 );
@@ -173,7 +172,7 @@ addAccessibleTask(
   <iframe id="iframe" src="data:text/html,"></iframe>
 </ol>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     let iframeDoc = findAccessibleChildByID(docAcc, "iframe").firstChild;
     ok(iframeDoc, "Got the iframe document");
     const origX = {};

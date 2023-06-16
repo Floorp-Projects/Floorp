@@ -22,7 +22,7 @@ function open_preferences(aCallback) {
   let newTabBrowser = gBrowser.getBrowserForTab(gBrowser.selectedTab);
   newTabBrowser.addEventListener(
     "Initialized",
-    function() {
+    function () {
       aCallback(gBrowser.contentWindow);
     },
     { capture: true, once: true }
@@ -69,9 +69,8 @@ function promiseLoadSubDialog(aURL) {
         is_element_visible(aEvent.detail.dialog._overlay, "Overlay is visible");
 
         // Check that stylesheets were injected
-        let expectedStyleSheetURLs = aEvent.detail.dialog._injectedStyleSheets.slice(
-          0
-        );
+        let expectedStyleSheetURLs =
+          aEvent.detail.dialog._injectedStyleSheets.slice(0);
         for (let styleSheet of aEvent.detail.dialog._frame.contentDocument
           .styleSheets) {
           let i = expectedStyleSheetURLs.indexOf(styleSheet.href);

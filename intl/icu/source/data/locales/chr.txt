@@ -534,8 +534,8 @@ chr{
                 MMM{"LLL"}
                 MMMEd{"E, MMM d"}
                 MMMMW{
-                    one{"’ᏒᎾᏙᏓᏆᏍᏗ’ W ’ᎾᎿ’ MMMM"}
-                    other{"’ᏒᎾᏙᏓᏆᏍᏗ’ W ’ᎾᎿ’ MMMM"}
+                    one{"ᏒᎾᏙᏓᏆᏍᏗ W ᎾᎿ MMMM"}
+                    other{"ᏒᎾᏙᏓᏆᏍᏗ W ᎾᎿ MMMM"}
                 }
                 MMMMd{"MMMM d"}
                 MMMd{"MMM d"}
@@ -1091,6 +1091,11 @@ chr{
         }
         day-narrow{
             dn{"ᎢᎦ"}
+            relative{
+                "-1"{"ᏒᎯ"}
+                "0"{"ᎪᎯ ᎢᎦ"}
+                "1"{"ᏌᎾᎴᎢ"}
+            }
             relativeTime{
                 future{
                     one{"ᎾᎿ {0} ᎢᎦ"}
@@ -1104,6 +1109,11 @@ chr{
         }
         day-short{
             dn{"ᎢᎦ"}
+            relative{
+                "-1"{"ᏒᎯ"}
+                "0"{"ᎪᎯ ᎢᎦ"}
+                "1"{"ᏌᎾᎴᎢ"}
+            }
             relativeTime{
                 future{
                     one{"ᎾᎿ {0} ᎢᎦ"}
@@ -1878,6 +1888,18 @@ chr{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        or-narrow{
+            2{"{0} ᎠᎴᏱᎩ {1}"}
+            end{"{0}, ᎠᎴᏱᎩ {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        or-short{
+            2{"{0} ᎠᎴᏱᎩ {1}"}
+            end{"{0}, ᎠᎴᏱᎩ {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} ᎠᎴ {1}"}
             end{"{0}, ᎠᎴ {1}"}
@@ -1886,10 +1908,15 @@ chr{
         }
         standard-narrow{
             2{"{0}, {1}"}
+            end{"{0}, & {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         standard-short{
             2{"{0} & {1}"}
             end{"{0}, & {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         unit{
             2{"{0}, {1}"}

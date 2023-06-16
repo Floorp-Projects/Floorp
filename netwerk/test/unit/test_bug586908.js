@@ -7,7 +7,7 @@ const { MockRegistrar } = ChromeUtils.importESModule(
 
 var httpserv = null;
 
-XPCOMUtils.defineLazyGetter(this, "systemSettings", function() {
+XPCOMUtils.defineLazyGetter(this, "systemSettings", function () {
   return {
     QueryInterface: ChromeUtils.generateQI(["nsISystemProxySettings"]),
 

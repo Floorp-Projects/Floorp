@@ -6,12 +6,12 @@
 #ifndef LIB_JXL_DEC_CACHE_H_
 #define LIB_JXL_DEC_CACHE_H_
 
+#include <jxl/decode.h>
 #include <stdint.h>
 
 #include <atomic>
 #include <hwy/base.h>  // HWY_ALIGN_MAX
 
-#include "jxl/decode.h"
 #include "lib/jxl/ac_strategy.h"
 #include "lib/jxl/base/profiler.h"
 #include "lib/jxl/coeff_order.h"

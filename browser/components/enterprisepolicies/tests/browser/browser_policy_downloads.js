@@ -87,7 +87,7 @@ async function setDownloadDir() {
   );
   // Create this dir if it doesn't exist (ignores existing dirs)
   await IOUtils.makeDirectory(tmpDir);
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     try {
       await IOUtils.remove(tmpDir, { recursive: true });
     } catch (e) {
@@ -128,12 +128,11 @@ add_task(async function test_tmpdir_download() {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
-      url:
-        "https://example.com/browser/browser/components/downloads/test/browser/foo.txt",
+      url: "https://example.com/browser/browser/components/downloads/test/browser/foo.txt",
       waitForLoad: false,
       waitForStop: true,
     },
-    async function() {
+    async function () {
       let dialogWin = await dialogPromise;
       let tempFile = dialogWin.dialog.mLauncher.targetFile;
       isnot(

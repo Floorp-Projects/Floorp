@@ -5,7 +5,7 @@
 
 const TEST_URI = URL_ROOT_SSL + "browser_toolbox_options_disable_js.html";
 
-add_task(async function() {
+add_task(async function () {
   const tab = await addTab(TEST_URI);
 
   // Start on the options panel from where we will toggle the disabling javascript
@@ -45,7 +45,7 @@ async function testJSEnabled() {
   // to true takes a while to become live.
   await waitForTick();
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     const doc = content.document;
     const output = doc.getElementById("output");
     doc.querySelector("#logJSEnabled").click();
@@ -60,7 +60,7 @@ async function testJSEnabled() {
 async function testJSEnabledIframe() {
   info("Testing that JS is enabled in the iframe");
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     const doc = content.document;
     const iframe = doc.querySelector("iframe");
     const iframeDoc = iframe.contentDocument;
@@ -84,7 +84,8 @@ async function toggleJS(toolbox) {
     info("Checking checkbox to disable JS");
   }
 
-  let javascriptEnabled = await toolbox.commands.targetConfigurationCommand.isJavascriptEnabled();
+  let javascriptEnabled =
+    await toolbox.commands.targetConfigurationCommand.isJavascriptEnabled();
   is(
     javascriptEnabled,
     !cbx.checked,
@@ -97,7 +98,8 @@ async function toggleJS(toolbox) {
   cbx.click();
   await browserLoaded;
 
-  javascriptEnabled = await toolbox.commands.targetConfigurationCommand.isJavascriptEnabled();
+  javascriptEnabled =
+    await toolbox.commands.targetConfigurationCommand.isJavascriptEnabled();
   is(
     javascriptEnabled,
     !cbx.checked,
@@ -108,7 +110,7 @@ async function toggleJS(toolbox) {
 async function testJSDisabled() {
   info("Testing that JS is disabled");
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     const doc = content.document;
     const output = doc.getElementById("output");
     doc.querySelector("#logJSDisabled").click();
@@ -123,7 +125,7 @@ async function testJSDisabled() {
 async function testJSDisabledIframe() {
   info("Testing that JS is disabled in the iframe");
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     const doc = content.document;
     const iframe = doc.querySelector("iframe");
     const iframeDoc = iframe.contentDocument;

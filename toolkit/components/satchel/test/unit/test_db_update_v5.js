@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * https://creativecommons.org/publicdomain/zero/1.0/ */
 
-add_task(async function() {
+add_task(async function () {
   let destPath = await copyToProfile(
     "formhistory_v3.sqlite",
     "formhistory.sqlite"

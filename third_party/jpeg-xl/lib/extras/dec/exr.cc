@@ -62,8 +62,8 @@ class InMemoryIStream : public OpenEXR::IStream {
 }  // namespace
 
 Status DecodeImageEXR(Span<const uint8_t> bytes, const ColorHints& color_hints,
-                      const SizeConstraints& constraints,
-                      PackedPixelFile* ppf) {
+                      PackedPixelFile* ppf,
+                      const SizeConstraints* constraints) {
   InMemoryIStream is(bytes);
 
 #ifdef __EXCEPTIONS

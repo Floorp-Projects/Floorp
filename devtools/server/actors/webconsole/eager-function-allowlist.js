@@ -8,20 +8,11 @@ const idlPureAllowlist = require("resource://devtools/server/actors/webconsole/w
 
 const natives = [];
 if (Components.Constructor && Cu) {
-  // Exclude interfaces only with "instance" property, such as Location,
-  // which is not available in sandbox.
-  const props = [];
-  for (const [iface, ifaceData] of Object.entries(idlPureAllowlist)) {
-    if ("static" in ifaceData || "prototype" in ifaceData) {
-      props.push(iface);
-    }
-  }
-
   const sandbox = Cu.Sandbox(
     Components.Constructor("@mozilla.org/systemprincipal;1", "nsIPrincipal")(),
     {
       invisibleToDebugger: true,
-      wantGlobalProperties: props,
+      wantGlobalProperties: Object.keys(idlPureAllowlist),
     }
   );
 
@@ -31,16 +22,9 @@ if (Components.Constructor && Cu) {
     }
   }
 
-  function collectMethodsAndGetters(obj, methodsAndGetters) {
-    if ("methods" in methodsAndGetters) {
-      for (const name of methodsAndGetters.methods) {
-        maybePush(obj[name]);
-      }
-    }
-    if ("getters" in methodsAndGetters) {
-      for (const name of methodsAndGetters.getters) {
-        maybePush(Object.getOwnPropertyDescriptor(obj, name)?.get);
-      }
+  function collectMethods(obj, methods) {
+    for (const name of methods) {
+      maybePush(obj[name]);
     }
   }
 
@@ -51,7 +35,7 @@ if (Components.Constructor && Cu) {
     }
 
     if ("static" in ifaceData) {
-      collectMethodsAndGetters(ctor, ifaceData.static);
+      collectMethods(ctor, ifaceData.static);
     }
 
     if ("prototype" in ifaceData) {
@@ -60,9 +44,9 @@ if (Components.Constructor && Cu) {
         continue;
       }
 
-      collectMethodsAndGetters(proto, ifaceData.prototype);
+      collectMethods(proto, ifaceData.prototype);
     }
   }
 }
 
-module.exports = { natives, idlPureAllowlist };
+module.exports = { natives };

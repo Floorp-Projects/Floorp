@@ -17,7 +17,7 @@ add_task(async function switch_print_preview_browsers() {
       let [headerText, headingText] = await SpecialPowers.spawn(
         sourcePreviewBrowser,
         [],
-        async function() {
+        async function () {
           return [
             content.document.querySelector("header").textContent,
             content.document.querySelector("h1").textContent,
@@ -57,7 +57,7 @@ add_task(async function switch_print_preview_browsers() {
       let [hasHeader, headingText] = await SpecialPowers.spawn(
         simplifiedPreviewBrowser,
         [],
-        async function() {
+        async function () {
           return [
             !!content.document.querySelector("header"),
             content.document.querySelector("h1").textContent,
@@ -98,7 +98,7 @@ add_task(async function switch_print_preview_browsers() {
       let headerText = await SpecialPowers.spawn(
         sourcePreviewBrowser,
         [],
-        async function() {
+        async function () {
           return content.document.querySelector("header").textContent;
         }
       );

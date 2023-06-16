@@ -45,7 +45,7 @@ add_task(async function smokeTest() {
   is(remap1.sources[1], "/the/root/two.js");
 
   const expectedEntries = testMap1Entries.slice(0);
-  remap1.eachMapping(function(entry) {
+  remap1.eachMapping(function (entry) {
     const expected = expectedEntries.shift();
     is(entry.generatedLine, expected.offset);
     is(entry.generatedColumn, 0);

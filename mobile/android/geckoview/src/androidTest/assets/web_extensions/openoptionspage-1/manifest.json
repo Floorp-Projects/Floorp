@@ -11,9 +11,7 @@
   "background": {
     "scripts": ["background.js"]
   },
-  "permissions": [
-    "tabs"
-  ],
+  "permissions": ["tabs"],
   "options_ui": {
     "page": "options.html",
     "browser_style": true,

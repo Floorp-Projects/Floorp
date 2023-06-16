@@ -21,7 +21,7 @@ const EXPECTED_REFLOWS = [
  * This test ensures that there are no unexpected
  * uninterruptible reflows when opening new tabs.
  */
-add_task(async function() {
+add_task(async function () {
   // Force-enable tab animations
   gReduceMotionOverride = false;
 
@@ -44,7 +44,8 @@ add_task(async function() {
   // tab opening operation.
   gURLBar.focus();
 
-  let tabStripRect = gBrowser.tabContainer.arrowScrollbox.getBoundingClientRect();
+  let tabStripRect =
+    gBrowser.tabContainer.arrowScrollbox.getBoundingClientRect();
 
   let firstTabRect = gBrowser.selectedTab.getBoundingClientRect();
   let tabPaddingStart = parseFloat(
@@ -52,7 +53,8 @@ add_task(async function() {
   );
   let minTabWidth = firstTabRect.width - 2 * tabPaddingStart;
   let maxTabWidth = firstTabRect.width;
-  let firstTabLabelRect = gBrowser.selectedTab.textLabel.getBoundingClientRect();
+  let firstTabLabelRect =
+    gBrowser.selectedTab.textLabel.getBoundingClientRect();
   let newTabButtonRect = document
     .getElementById("tabs-newtab-button")
     .getBoundingClientRect();
@@ -69,7 +71,7 @@ add_task(async function() {
   info(`newTabButtonRect=${JSON.stringify(newTabButtonRect)}`);
   info(`textBoxRect=${JSON.stringify(textBoxRect)}`);
 
-  let inTabStrip = function(r) {
+  let inTabStrip = function (r) {
     return (
       r.y1 >= tabStripRect.top &&
       r.y2 <= tabStripRect.bottom &&
@@ -80,7 +82,7 @@ add_task(async function() {
 
   const kTabCloseIconWidth = 13;
 
-  let isExpectedChange = function(r) {
+  let isExpectedChange = function (r) {
     // We expect all changes to be within the tab strip.
     if (!inTabStrip(r)) {
       return false;
@@ -140,7 +142,7 @@ add_task(async function() {
 
   // Add a reflow observer and open a new tab.
   await withPerfObserver(
-    async function() {
+    async function () {
       let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
       BrowserOpenTab();
       await BrowserTestUtils.waitForEvent(
@@ -180,8 +182,7 @@ add_task(async function() {
               r.y2 <= textBoxRect.bottom,
           },
           {
-            name:
-              "bug 1477966 - the name of a deselected tab should appear immediately",
+            name: "bug 1477966 - the name of a deselected tab should appear immediately",
             condition: r =>
               AppConstants.platform == "macosx" &&
               r.x1 >= firstTabLabelRect.x &&

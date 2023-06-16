@@ -24,6 +24,7 @@
 #include "jit/CacheIRWriter.h"
 #include "jit/InlinableNatives.h"
 #include "jit/JitContext.h"
+#include "jit/JitRealm.h"
 #include "js/experimental/JitInfo.h"  // JSJitInfo
 #include "js/friend/DOMProxy.h"       // JS::ExpandoAndGeneration
 #include "js/friend/WindowProxy.h"  // js::IsWindow, js::IsWindowProxy, js::ToWindowIfWindowProxy
@@ -204,14 +205,14 @@ JSString* CacheIRCloner::getStringField(uint32_t stubOffset) {
 JSAtom* CacheIRCloner::getAtomField(uint32_t stubOffset) {
   return reinterpret_cast<JSAtom*>(readStubWord(stubOffset));
 }
-PropertyName* CacheIRCloner::getPropertyNameField(uint32_t stubOffset) {
-  return reinterpret_cast<PropertyName*>(readStubWord(stubOffset));
-}
 JS::Symbol* CacheIRCloner::getSymbolField(uint32_t stubOffset) {
   return reinterpret_cast<JS::Symbol*>(readStubWord(stubOffset));
 }
 BaseScript* CacheIRCloner::getBaseScriptField(uint32_t stubOffset) {
   return reinterpret_cast<BaseScript*>(readStubWord(stubOffset));
+}
+JitCode* CacheIRCloner::getJitCodeField(uint32_t stubOffset) {
+  return reinterpret_cast<JitCode*>(readStubWord(stubOffset));
 }
 uint32_t CacheIRCloner::getRawInt32Field(uint32_t stubOffset) {
   return uint32_t(reinterpret_cast<uintptr_t>(readStubWord(stubOffset)));
@@ -1058,7 +1059,7 @@ void GetPropIRGenerator::attachMegamorphicNativeSlot(ObjOperandId objId,
 
   if (cacheKind_ == CacheKind::GetProp ||
       cacheKind_ == CacheKind::GetPropSuper) {
-    writer.megamorphicLoadSlotResult(objId, id.toAtom()->asPropertyName());
+    writer.megamorphicLoadSlotResult(objId, id);
   } else {
     MOZ_ASSERT(cacheKind_ == CacheKind::GetElem ||
                cacheKind_ == CacheKind::GetElemSuper);
@@ -1066,7 +1067,7 @@ void GetPropIRGenerator::attachMegamorphicNativeSlot(ObjOperandId objId,
   }
   writer.returnFromIC();
 
-  trackAttached("GetMegamorphicNativeSlot");
+  trackAttached("GetProp.MegamorphicNativeSlot");
 }
 
 AttachDecision GetPropIRGenerator::tryAttachNative(HandleObject obj,
@@ -1095,11 +1096,11 @@ AttachDecision GetPropIRGenerator::tryAttachNative(HandleObject obj,
       if (kind == NativeGetPropKind::Slot) {
         EmitReadSlotResult(writer, nobj, holder, *prop, objId);
         writer.returnFromIC();
-        trackAttached("GetNativeSlot");
+        trackAttached("GetProp.NativeSlot");
       } else {
         EmitMissingPropResult(writer, nobj, objId);
         writer.returnFromIC();
-        trackAttached("Missing");
+        trackAttached("GetProp.Missing");
       }
       return AttachDecision::Attach;
     }
@@ -1113,14 +1114,14 @@ AttachDecision GetPropIRGenerator::tryAttachNative(HandleObject obj,
                                                  holder, *prop, mode_)) {
         EmitCallDOMGetterResult(cx_, writer, nobj, holder, id, *prop, objId);
 
-        trackAttached("DOMGetter");
+        trackAttached("GetProp.DOMGetter");
         return AttachDecision::Attach;
       }
 
       EmitCallGetterResult(cx_, writer, kind, nobj, holder, id, *prop, objId,
                            receiverId, mode_);
 
-      trackAttached("NativeGetter");
+      trackAttached("GetProp.NativeGetter");
       return AttachDecision::Attach;
     }
   }
@@ -1213,7 +1214,7 @@ AttachDecision GetPropIRGenerator::tryAttachWindowProxy(HandleObject obj,
       EmitReadSlotResult(writer, windowObj, holder, *prop, windowObjId);
       writer.returnFromIC();
 
-      trackAttached("GetWindowProxySlot");
+      trackAttached("GetProp.WindowProxySlot");
       return AttachDecision::Attach;
     }
 
@@ -1224,7 +1225,7 @@ AttachDecision GetPropIRGenerator::tryAttachWindowProxy(HandleObject obj,
       EmitMissingPropResult(writer, windowObj, windowObjId);
       writer.returnFromIC();
 
-      trackAttached("WindowProxyMissing");
+      trackAttached("GetProp.WindowProxyMissing");
       return AttachDecision::Attach;
     }
 
@@ -1248,13 +1249,13 @@ AttachDecision GetPropIRGenerator::tryAttachWindowProxy(HandleObject obj,
         MOZ_ASSERT(!needsWindowProxy);
         EmitCallDOMGetterResult(cx_, writer, windowObj, holder, id, *prop,
                                 windowObjId);
-        trackAttached("WindowProxyDOMGetter");
+        trackAttached("GetProp.WindowProxyDOMGetter");
       } else {
         ValOperandId receiverId =
             writer.boxObject(needsWindowProxy ? objId : windowObjId);
         EmitCallGetterResult(cx_, writer, kind, windowObj, holder, id, *prop,
                              windowObjId, receiverId, mode_);
-        trackAttached("WindowProxyGetter");
+        trackAttached("GetProp.WindowProxyGetter");
       }
 
       return AttachDecision::Attach;
@@ -1331,12 +1332,12 @@ AttachDecision GetPropIRGenerator::tryAttachCrossCompartmentWrapper(
                                                 *prop, unwrappedId);
     writer.wrapResult();
     writer.returnFromIC();
-    trackAttached("CCWSlot");
+    trackAttached("GetProp.CCWSlot");
   } else {
     EmitMissingPropResult<IsCrossCompartment::Yes>(writer, unwrappedNative,
                                                    unwrappedId);
     writer.returnFromIC();
-    trackAttached("CCWMissing");
+    trackAttached("GetProp.CCWMissing");
   }
   return AttachDecision::Attach;
 }
@@ -1466,7 +1467,7 @@ AttachDecision GetPropIRGenerator::tryAttachXrayCrossCompartmentWrapper(
                                 sameRealm);
   writer.returnFromIC();
 
-  trackAttached("XrayGetter");
+  trackAttached("GetProp.XrayCCW");
   return AttachDecision::Attach;
 }
 
@@ -1495,7 +1496,7 @@ AttachDecision GetPropIRGenerator::tryAttachGenericProxy(
 
   writer.returnFromIC();
 
-  trackAttached("GetGenericProxy");
+  trackAttached("GetProp.GenericProxy");
   return AttachDecision::Attach;
 }
 
@@ -1605,7 +1606,7 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyExpando(
                                  nativeExpandoObj, *prop, receiverId);
   }
 
-  trackAttached("DOMProxyExpando");
+  trackAttached("GetProp.DOMProxyExpando");
   return AttachDecision::Attach;
 }
 
@@ -1619,7 +1620,7 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyShadowed(
   writer.proxyGetResult(objId, id);
   writer.returnFromIC();
 
-  trackAttached("GetDOMProxyShadowed");
+  trackAttached("GetProp.DOMProxyShadowed");
   return AttachDecision::Attach;
 }
 
@@ -1717,7 +1718,7 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyUnshadowed(
     writer.returnFromIC();
   }
 
-  trackAttached("GetDOMProxyUnshadowed");
+  trackAttached("GetProp.DOMProxyUnshadowed");
   return AttachDecision::Attach;
 }
 
@@ -1808,6 +1809,17 @@ void IRGenerator::emitOptimisticClassGuard(ObjOperandId objId, JSObject* obj,
   }
 }
 
+static void AssertArgumentsCustomDataProp(ArgumentsObject* obj,
+                                          PropertyKey key) {
+#ifdef DEBUG
+  // The property must still be a custom data property if it has been resolved.
+  // If this assertion fails, we're probably missing a call to mark this
+  // property overridden.
+  Maybe<PropertyInfo> prop = obj->lookupPure(key);
+  MOZ_ASSERT_IF(prop, prop->isCustomDataProperty());
+#endif
+}
+
 AttachDecision GetPropIRGenerator::tryAttachObjectLength(HandleObject obj,
                                                          ObjOperandId objId,
                                                          HandleId id) {
@@ -1825,12 +1837,13 @@ AttachDecision GetPropIRGenerator::tryAttachObjectLength(HandleObject obj,
     writer.loadInt32ArrayLengthResult(objId);
     writer.returnFromIC();
 
-    trackAttached("ArrayLength");
+    trackAttached("GetProp.ArrayLength");
     return AttachDecision::Attach;
   }
 
   if (obj->is<ArgumentsObject>() &&
       !obj->as<ArgumentsObject>().hasOverriddenLength()) {
+    AssertArgumentsCustomDataProp(&obj->as<ArgumentsObject>(), id);
     maybeEmitIdGuard(id);
     if (obj->is<MappedArgumentsObject>()) {
       writer.guardClass(objId, GuardClassKind::MappedArguments);
@@ -1841,7 +1854,7 @@ AttachDecision GetPropIRGenerator::tryAttachObjectLength(HandleObject obj,
     writer.loadArgumentsObjectLengthResult(objId);
     writer.returnFromIC();
 
-    trackAttached("ArgumentsObjectLength");
+    trackAttached("GetProp.ArgumentsObjectLength");
     return AttachDecision::Attach;
   }
 
@@ -1905,21 +1918,21 @@ AttachDecision GetPropIRGenerator::tryAttachTypedArray(HandleObject obj,
     } else {
       writer.loadArrayBufferViewLengthDoubleResult(objId);
     }
-    trackAttached("TypedArrayLength");
+    trackAttached("GetProp.TypedArrayLength");
   } else if (isByteOffset) {
     if (tarr->byteOffset() <= INT32_MAX) {
       writer.arrayBufferViewByteOffsetInt32Result(objId);
     } else {
       writer.arrayBufferViewByteOffsetDoubleResult(objId);
     }
-    trackAttached("TypedArrayByteOffset");
+    trackAttached("GetProp.TypedArrayByteOffset");
   } else {
     if (tarr->byteLength() <= INT32_MAX) {
       writer.typedArrayByteLengthInt32Result(objId);
     } else {
       writer.typedArrayByteLengthDoubleResult(objId);
     }
-    trackAttached("TypedArrayByteLength");
+    trackAttached("GetProp.TypedArrayByteLength");
   }
   writer.returnFromIC();
 
@@ -1983,14 +1996,14 @@ AttachDecision GetPropIRGenerator::tryAttachDataView(HandleObject obj,
     } else {
       writer.arrayBufferViewByteOffsetDoubleResult(objId);
     }
-    trackAttached("DataViewByteOffset");
+    trackAttached("GetProp.DataViewByteOffset");
   } else {
     if (dv->byteLength() <= INT32_MAX) {
       writer.loadArrayBufferViewLengthInt32Result(objId);
     } else {
       writer.loadArrayBufferViewLengthDoubleResult(objId);
     }
-    trackAttached("DataViewByteLength");
+    trackAttached("GetProp.DataViewByteLength");
   }
   writer.returnFromIC();
 
@@ -2047,7 +2060,7 @@ AttachDecision GetPropIRGenerator::tryAttachArrayBufferMaybeShared(
   }
   writer.returnFromIC();
 
-  trackAttached("ArrayBufferMaybeSharedByteLength");
+  trackAttached("GetProp.ArrayBufferMaybeSharedByteLength");
   return AttachDecision::Attach;
 }
 
@@ -2090,7 +2103,7 @@ AttachDecision GetPropIRGenerator::tryAttachRegExp(HandleObject obj,
   writer.regExpFlagResult(objId, flags.value());
   writer.returnFromIC();
 
-  trackAttached("RegExpFlag");
+  trackAttached("GetProp.RegExpFlag");
   return AttachDecision::Attach;
 }
 
@@ -2137,7 +2150,7 @@ AttachDecision GetPropIRGenerator::tryAttachMap(HandleObject obj,
   writer.mapSizeResult(objId);
   writer.returnFromIC();
 
-  trackAttached("MapSize");
+  trackAttached("GetProp.MapSize");
   return AttachDecision::Attach;
 }
 
@@ -2184,7 +2197,7 @@ AttachDecision GetPropIRGenerator::tryAttachSet(HandleObject obj,
   writer.setSizeResult(objId);
   writer.returnFromIC();
 
-  trackAttached("SetSize");
+  trackAttached("GetProp.SetSize");
   return AttachDecision::Attach;
 }
 
@@ -2234,11 +2247,11 @@ AttachDecision GetPropIRGenerator::tryAttachFunction(HandleObject obj,
   if (isLength) {
     writer.loadFunctionLengthResult(objId);
     writer.returnFromIC();
-    trackAttached("FunctionLength");
+    trackAttached("GetProp.FunctionLength");
   } else {
     writer.loadFunctionNameResult(objId);
     writer.returnFromIC();
-    trackAttached("FunctionName");
+    trackAttached("GetProp.FunctionName");
   }
   return AttachDecision::Attach;
 }
@@ -2257,6 +2270,8 @@ AttachDecision GetPropIRGenerator::tryAttachArgumentsObjectIterator(
   if (args->hasOverriddenIterator()) {
     return AttachDecision::NoAction;
   }
+
+  AssertArgumentsCustomDataProp(args, id);
 
   RootedValue iterator(cx_);
   if (!ArgumentsObject::getArgumentsIterator(cx_, &iterator)) {
@@ -2279,7 +2294,7 @@ AttachDecision GetPropIRGenerator::tryAttachArgumentsObjectIterator(
   writer.loadObjectResult(iterId);
   writer.returnFromIC();
 
-  trackAttached("ArgumentsObjectIterator");
+  trackAttached("GetProp.ArgumentsObjectIterator");
   return AttachDecision::Attach;
 }
 
@@ -2310,7 +2325,7 @@ AttachDecision GetPropIRGenerator::tryAttachModuleNamespace(HandleObject obj,
   EmitLoadSlotResult(writer, envId, env, *prop);
   writer.returnFromIC();
 
-  trackAttached("ModuleNamespace");
+  trackAttached("GetProp.ModuleNamespace");
   return AttachDecision::Attach;
 }
 
@@ -2379,11 +2394,11 @@ AttachDecision GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId,
       if (kind == NativeGetPropKind::Slot) {
         EmitReadSlotResult(writer, nproto, holder, *prop, protoId);
         writer.returnFromIC();
-        trackAttached("PrimitiveSlot");
+        trackAttached("GetProp.PrimitiveSlot");
       } else {
         EmitMissingPropResult(writer, nproto, protoId);
         writer.returnFromIC();
-        trackAttached("PrimitiveMissing");
+        trackAttached("GetProp.PrimitiveMissing");
       }
       return AttachDecision::Attach;
     }
@@ -2402,7 +2417,7 @@ AttachDecision GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId,
       EmitCallGetterResult(cx_, writer, kind, nproto, holder, id, *prop,
                            protoId, valId, mode_);
 
-      trackAttached("PrimitiveGetter");
+      trackAttached("GetProp.PrimitiveGetter");
       return AttachDecision::Attach;
     }
   }
@@ -2421,7 +2436,7 @@ AttachDecision GetPropIRGenerator::tryAttachStringLength(ValOperandId valId,
   writer.loadStringLengthResult(strId);
   writer.returnFromIC();
 
-  trackAttached("StringLength");
+  trackAttached("GetProp.StringLength");
   return AttachDecision::Attach;
 }
 
@@ -2483,7 +2498,7 @@ AttachDecision GetPropIRGenerator::tryAttachStringChar(ValOperandId valId,
   writer.loadStringCharResult(strId, int32IndexId, /* handleOOB = */ false);
   writer.returnFromIC();
 
-  trackAttached("StringChar");
+  trackAttached("GetProp.StringChar");
   return AttachDecision::Attach;
 }
 
@@ -2561,6 +2576,8 @@ AttachDecision GetPropIRGenerator::tryAttachArgumentsObjectArg(
     return AttachDecision::NoAction;
   }
 
+  AssertArgumentsCustomDataProp(args, PropertyKey::Int(index));
+
   // And finally also check that the argument isn't forwarded.
   if (args->argIsForwarded(index)) {
     return AttachDecision::NoAction;
@@ -2576,7 +2593,7 @@ AttachDecision GetPropIRGenerator::tryAttachArgumentsObjectArg(
   writer.loadArgumentsObjectArgResult(objId, indexId);
   writer.returnFromIC();
 
-  trackAttached("GetArgumentsObjectArg");
+  trackAttached("GetProp.ArgumentsObjectArg");
   return AttachDecision::Attach;
 }
 
@@ -2623,7 +2640,7 @@ AttachDecision GetPropIRGenerator::tryAttachArgumentsObjectArgHole(
   writer.loadArgumentsObjectArgHoleResult(objId, indexId);
   writer.returnFromIC();
 
-  trackAttached("ArgumentsObjectArgHole");
+  trackAttached("GetProp.ArgumentsObjectArgHole");
   return AttachDecision::Attach;
 }
 
@@ -2639,9 +2656,12 @@ AttachDecision GetPropIRGenerator::tryAttachArgumentsObjectCallee(
   }
 
   // The callee must not have been overridden or deleted.
-  if (obj->as<MappedArgumentsObject>().hasOverriddenCallee()) {
+  MappedArgumentsObject* args = &obj->as<MappedArgumentsObject>();
+  if (args->hasOverriddenCallee()) {
     return AttachDecision::NoAction;
   }
+
+  AssertArgumentsCustomDataProp(args, id);
 
   maybeEmitIdGuard(id);
   writer.guardClass(objId, GuardClassKind::MappedArguments);
@@ -2653,7 +2673,7 @@ AttachDecision GetPropIRGenerator::tryAttachArgumentsObjectCallee(
                              MappedArgumentsObject::getCalleeSlotOffset());
   writer.returnFromIC();
 
-  trackAttached("ArgumentsObjectCallee");
+  trackAttached("GetProp.ArgumentsObjectCallee");
   return AttachDecision::Attach;
 }
 
@@ -2677,7 +2697,7 @@ AttachDecision GetPropIRGenerator::tryAttachDenseElement(
   writer.loadDenseElementResult(objId, indexId);
   writer.returnFromIC();
 
-  trackAttached("DenseElement");
+  trackAttached("GetProp.DenseElement");
   return AttachDecision::Attach;
 }
 
@@ -2703,7 +2723,7 @@ AttachDecision GetPropIRGenerator::tryAttachDenseElementHole(
   writer.loadDenseElementHoleResult(objId, indexId);
   writer.returnFromIC();
 
-  trackAttached("DenseElementHole");
+  trackAttached("GetProp.DenseElementHole");
   return AttachDecision::Attach;
 }
 
@@ -2781,7 +2801,7 @@ AttachDecision GetPropIRGenerator::tryAttachSparseElement(
   writer.callGetSparseElementResult(objId, indexId);
   writer.returnFromIC();
 
-  trackAttached("GetSparseElement");
+  trackAttached("GetProp.SparseElement");
   return AttachDecision::Attach;
 }
 
@@ -2837,7 +2857,7 @@ AttachDecision GetPropIRGenerator::tryAttachTypedArrayElement(
                                      handleOOB, forceDoubleForUint32);
   writer.returnFromIC();
 
-  trackAttached("TypedElement");
+  trackAttached("GetProp.TypedElement");
   return AttachDecision::Attach;
 }
 
@@ -2901,7 +2921,7 @@ AttachDecision GetPropIRGenerator::tryAttachProxyElement(HandleObject obj,
   writer.proxyGetByValueResult(objId, getElemKeyValueId());
   writer.returnFromIC();
 
-  trackAttached("GetProxyElement");
+  trackAttached("GetProp.ProxyElement");
   return AttachDecision::Attach;
 }
 
@@ -3055,8 +3075,7 @@ AttachDecision GetNameIRGenerator::tryAttachGlobalNameValue(ObjOperandId objId,
         globalLexical->global().addressOfGenerationCount());
     ObjOperandId holderId = writer.loadObject(holder);
 #ifdef DEBUG
-    writer.assertPropertyLookup(holderId, id.toAtom()->asPropertyName(),
-                                prop->slot());
+    writer.assertPropertyLookup(holderId, id, prop->slot());
 #endif
     EmitLoadSlotResult(writer, holderId, holder, *prop);
   } else {
@@ -3084,7 +3103,7 @@ AttachDecision GetNameIRGenerator::tryAttachGlobalNameValue(ObjOperandId objId,
 
   writer.returnFromIC();
 
-  trackAttached("GlobalNameValue");
+  trackAttached("GetName.GlobalNameValue");
   return AttachDecision::Attach;
 }
 
@@ -3145,7 +3164,7 @@ AttachDecision GetNameIRGenerator::tryAttachGlobalNameGetter(ObjOperandId objId,
     // The global shape guard above ensures the instance JSClass is correct.
     MOZ_ASSERT(!needsWindowProxy);
     EmitCallDOMGetterResultNoGuards(writer, holder, *prop, globalId);
-    trackAttached("GlobalNameDOMGetter");
+    trackAttached("GetName.GlobalNameDOMGetter");
   } else {
     ObjOperandId receiverObjId;
     if (needsWindowProxy) {
@@ -3157,7 +3176,7 @@ AttachDecision GetNameIRGenerator::tryAttachGlobalNameGetter(ObjOperandId objId,
     ValOperandId receiverId = writer.boxObject(receiverObjId);
     EmitCallGetterResultNoGuards(cx_, writer, kind, global, holder, *prop,
                                  receiverId);
-    trackAttached("GlobalNameGetter");
+    trackAttached("GetName.GlobalNameGetter");
   }
 
   return AttachDecision::Attach;
@@ -3260,7 +3279,7 @@ AttachDecision GetNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId,
   writer.loadOperandResult(resId);
   writer.returnFromIC();
 
-  trackAttached("GetEnvironmentName");
+  trackAttached("GetName.EnvironmentName");
   return AttachDecision::Attach;
 }
 
@@ -3337,7 +3356,7 @@ AttachDecision BindNameIRGenerator::tryAttachGlobalName(ObjOperandId objId,
   }
   writer.returnFromIC();
 
-  trackAttached("GlobalName");
+  trackAttached("BindName.GlobalName");
   return AttachDecision::Attach;
 }
 
@@ -3406,7 +3425,7 @@ AttachDecision BindNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId,
   writer.loadObjectResult(lastObjId);
   writer.returnFromIC();
 
-  trackAttached("SetEnvironmentName");
+  trackAttached("BindName.EnvironmentName");
   return AttachDecision::Attach;
 }
 
@@ -3448,7 +3467,7 @@ AttachDecision HasPropIRGenerator::tryAttachDense(HandleObject obj,
   writer.loadDenseElementExistsResult(objId, indexId);
   writer.returnFromIC();
 
-  trackAttached("DenseHasProp");
+  trackAttached("HasProp.Dense");
   return AttachDecision::Attach;
 }
 
@@ -3486,7 +3505,7 @@ AttachDecision HasPropIRGenerator::tryAttachDenseHole(HandleObject obj,
   writer.loadDenseElementHoleExistsResult(objId, indexId);
   writer.returnFromIC();
 
-  trackAttached("DenseHasPropHole");
+  trackAttached("HasProp.DenseHole");
   return AttachDecision::Attach;
 }
 
@@ -3523,7 +3542,7 @@ AttachDecision HasPropIRGenerator::tryAttachSparse(HandleObject obj,
   writer.callObjectHasSparseElementResult(objId, indexId);
   writer.returnFromIC();
 
-  trackAttached("Sparse");
+  trackAttached("HasProp.Sparse");
   return AttachDecision::Attach;
 }
 
@@ -3562,7 +3581,7 @@ AttachDecision HasPropIRGenerator::tryAttachArgumentsObjectArg(
   writer.loadArgumentsObjectArgExistsResult(objId, indexId);
   writer.returnFromIC();
 
-  trackAttached("HasArgumentsObjectArg");
+  trackAttached("HasProp.ArgumentsObjectArg");
   return AttachDecision::Attach;
 }
 
@@ -3607,7 +3626,7 @@ AttachDecision HasPropIRGenerator::tryAttachMegamorphic(ObjOperandId objId,
 
   writer.megamorphicHasPropResult(objId, keyId, hasOwn);
   writer.returnFromIC();
-  trackAttached("MegamorphicHasProp");
+  trackAttached("HasProp.Megamorphic");
   return AttachDecision::Attach;
 }
 
@@ -3627,7 +3646,7 @@ AttachDecision HasPropIRGenerator::tryAttachNative(NativeObject* obj,
   writer.loadBooleanResult(true);
   writer.returnFromIC();
 
-  trackAttached("NativeHasProp");
+  trackAttached("HasProp.Native");
   return AttachDecision::Attach;
 }
 
@@ -3649,7 +3668,7 @@ AttachDecision HasPropIRGenerator::tryAttachTypedArray(HandleObject obj,
   writer.loadTypedArrayElementExistsResult(objId, intPtrIndexId);
   writer.returnFromIC();
 
-  trackAttached("TypedArrayObject");
+  trackAttached("HasProp.TypedArrayObject");
   return AttachDecision::Attach;
 }
 
@@ -3666,7 +3685,7 @@ AttachDecision HasPropIRGenerator::tryAttachSlotDoesNotExist(
   writer.loadBooleanResult(false);
   writer.returnFromIC();
 
-  trackAttached("DoesNotExist");
+  trackAttached("HasProp.DoesNotExist");
   return AttachDecision::Attach;
 }
 
@@ -3709,7 +3728,7 @@ AttachDecision HasPropIRGenerator::tryAttachProxyElement(HandleObject obj,
   writer.proxyHasPropResult(objId, keyId, hasOwn);
   writer.returnFromIC();
 
-  trackAttached("ProxyHasProp");
+  trackAttached("HasProp.ProxyElement");
   return AttachDecision::Attach;
 }
 
@@ -3827,7 +3846,7 @@ AttachDecision CheckPrivateFieldIRGenerator::tryAttachNative(
   writer.loadBooleanResult(prop.isFound());
   writer.returnFromIC();
 
-  trackAttached("NativeCheckPrivateField");
+  trackAttached("CheckPrivateField.Native");
   return AttachDecision::Attach;
 }
 
@@ -3923,6 +3942,7 @@ AttachDecision SetPropIRGenerator::tryAttachStub() {
         TRY_ATTACH(tryAttachSetter(obj, objId, id, rhsValId));
         TRY_ATTACH(tryAttachWindowProxy(obj, objId, id, rhsValId));
         TRY_ATTACH(tryAttachProxy(obj, objId, id, rhsValId));
+        TRY_ATTACH(tryAttachMegamorphicSetSlot(obj, objId, id, rhsValId));
       }
       if (canAttachAddSlotStub(obj, id)) {
         deferType_ = DeferType::AddSlot;
@@ -4035,13 +4055,9 @@ AttachDecision SetPropIRGenerator::tryAttachNativeSetSlot(HandleObject obj,
     return AttachDecision::NoAction;
   }
 
-  // Don't attach a megamorphic store slot stub for ops like JSOp::InitElem.
   if (mode_ == ICState::Mode::Megamorphic && cacheKind_ == CacheKind::SetProp &&
       IsPropertySetOp(JSOp(*pc_))) {
-    writer.megamorphicStoreSlot(objId, id.toAtom()->asPropertyName(), rhsId);
-    writer.returnFromIC();
-    trackAttached("SetMegamorphicNativeSlot");
-    return AttachDecision::Attach;
+    return AttachDecision::NoAction;
   }
 
   maybeEmitIdGuard(id);
@@ -4050,10 +4066,9 @@ AttachDecision SetPropIRGenerator::tryAttachNativeSetSlot(HandleObject obj,
   if (!IsGlobalLexicalSetGName(JSOp(*pc_), nobj, *prop)) {
     TestMatchingNativeReceiver(writer, nobj, objId);
   }
-
   EmitStoreSlotAndReturn(writer, objId, nobj, *prop, rhsId);
 
-  trackAttached("SetNativeSlot");
+  trackAttached("SetProp.NativeSlot");
   return AttachDecision::Attach;
 }
 
@@ -4255,7 +4270,7 @@ AttachDecision SetPropIRGenerator::tryAttachSetter(HandleObject obj,
     MOZ_ASSERT(!needsWindowProxy);
     EmitCallDOMSetterNoGuards(cx_, writer, holder, *prop, objId, rhsId);
 
-    trackAttached("DOMSetter");
+    trackAttached("SetProp.DOMSetter");
     return AttachDecision::Attach;
   }
 
@@ -4268,7 +4283,7 @@ AttachDecision SetPropIRGenerator::tryAttachSetter(HandleObject obj,
   }
   EmitCallSetterNoGuards(cx_, writer, nobj, holder, *prop, receiverId, rhsId);
 
-  trackAttached("Setter");
+  trackAttached("SetProp.Setter");
   return AttachDecision::Attach;
 }
 
@@ -4289,7 +4304,7 @@ AttachDecision SetPropIRGenerator::tryAttachSetArrayLength(HandleObject obj,
   writer.callSetArrayLength(objId, IsStrictSetPC(pc_), rhsId);
   writer.returnFromIC();
 
-  trackAttached("SetArrayLength");
+  trackAttached("SetProp.ArrayLength");
   return AttachDecision::Attach;
 }
 
@@ -4329,7 +4344,7 @@ AttachDecision SetPropIRGenerator::tryAttachSetDenseElement(
   writer.storeDenseElement(objId, indexId, rhsId);
   writer.returnFromIC();
 
-  trackAttached("SetDenseElement");
+  trackAttached("SetProp.DenseElement");
   return AttachDecision::Attach;
 }
 
@@ -4556,7 +4571,7 @@ AttachDecision SetPropIRGenerator::tryAttachAddOrUpdateSparseElement(
       /* strict = */ op == JSOp::StrictSetElem);
   writer.returnFromIC();
 
-  trackAttached("AddOrUpdateSparseElement");
+  trackAttached("SetProp.AddOrUpdateSparseElement");
   return AttachDecision::Attach;
 }
 
@@ -4638,7 +4653,7 @@ AttachDecision SetPropIRGenerator::tryAttachGenericProxy(
 
   writer.returnFromIC();
 
-  trackAttached("SetGenericProxy");
+  trackAttached("SetProp.GenericProxy");
   return AttachDecision::Attach;
 }
 
@@ -4655,7 +4670,7 @@ AttachDecision SetPropIRGenerator::tryAttachDOMProxyShadowed(
   writer.proxySet(objId, id, rhsId, IsStrictSetPC(pc_));
   writer.returnFromIC();
 
-  trackAttached("SetDOMProxyShadowed");
+  trackAttached("SetProp.DOMProxyShadowed");
   return AttachDecision::Attach;
 }
 
@@ -4699,7 +4714,7 @@ AttachDecision SetPropIRGenerator::tryAttachDOMProxyUnshadowed(
   // guards will be generated, we can just pass that instead.
   EmitCallSetterNoGuards(cx_, writer, nproto, holder, *prop, objId, rhsId);
 
-  trackAttached("SetDOMProxyUnshadowed");
+  trackAttached("SetProp.DOMProxyUnshadowed");
   return AttachDecision::Attach;
 }
 
@@ -4734,7 +4749,7 @@ AttachDecision SetPropIRGenerator::tryAttachDOMProxyExpando(
 
     EmitStoreSlotAndReturn(writer, expandoObjId, nativeExpandoObj, *prop,
                            rhsId);
-    trackAttached("DOMProxyExpandoSlot");
+    trackAttached("SetProp.DOMProxyExpandoSlot");
     return AttachDecision::Attach;
   }
 
@@ -4752,7 +4767,7 @@ AttachDecision SetPropIRGenerator::tryAttachDOMProxyExpando(
     EmitGuardGetterSetterSlot(writer, nativeExpandoObj, *prop, expandoObjId);
     EmitCallSetterNoGuards(cx_, writer, nativeExpandoObj, nativeExpandoObj,
                            *prop, objId, rhsId);
-    trackAttached("DOMProxyExpandoSetter");
+    trackAttached("SetProp.DOMProxyExpandoSetter");
     return AttachDecision::Attach;
   }
 
@@ -4815,7 +4830,7 @@ AttachDecision SetPropIRGenerator::tryAttachProxyElement(HandleObject obj,
   writer.proxySetByValue(objId, setElemKeyValueId(), rhsId, IsStrictSetPC(pc_));
   writer.returnFromIC();
 
-  trackAttached("SetProxyElement");
+  trackAttached("SetProp.ProxyElement");
   return AttachDecision::Attach;
 }
 
@@ -4836,7 +4851,19 @@ AttachDecision SetPropIRGenerator::tryAttachMegamorphicSetElement(
                                IsStrictSetPC(pc_));
   writer.returnFromIC();
 
-  trackAttached("MegamorphicSetElement");
+  trackAttached("SetProp.MegamorphicSetElement");
+  return AttachDecision::Attach;
+}
+
+AttachDecision SetPropIRGenerator::tryAttachMegamorphicSetSlot(
+    HandleObject obj, ObjOperandId objId, HandleId id, ValOperandId rhsId) {
+  if (mode_ != ICState::Mode::Megamorphic || cacheKind_ != CacheKind::SetProp) {
+    return AttachDecision::NoAction;
+  }
+
+  writer.megamorphicStoreSlot(objId, id, rhsId, IsStrictSetPC(pc_));
+  writer.returnFromIC();
+  trackAttached("SetProp.MegamorphicNativeSlot");
   return AttachDecision::Attach;
 }
 
@@ -4876,7 +4903,7 @@ AttachDecision SetPropIRGenerator::tryAttachWindowProxy(HandleObject obj,
 
   EmitStoreSlotAndReturn(writer, windowObjId, windowObj, *prop, rhsId);
 
-  trackAttached("SetWindowProxySlot");
+  trackAttached("SetProp.WindowProxySlot");
   return AttachDecision::Attach;
 }
 
@@ -5104,23 +5131,23 @@ AttachDecision SetPropIRGenerator::tryAttachAddSlotStub(
 
   if (mustCallAddPropertyHook) {
     writer.addSlotAndCallAddPropHook(objId, rhsValId, newShape);
-    trackAttached("AddSlotWithAddPropertyHook");
+    trackAttached("SetProp.AddSlotWithAddPropertyHook");
   } else if (holder->isFixedSlot(propInfo.slot())) {
     size_t offset = NativeObject::getFixedSlotOffset(propInfo.slot());
     writer.addAndStoreFixedSlot(objId, offset, rhsValId, newShape);
-    trackAttached("AddSlotFixed");
+    trackAttached("SetProp.AddSlotFixed");
   } else {
     size_t offset = holder->dynamicSlotIndex(propInfo.slot()) * sizeof(Value);
     uint32_t numOldSlots = NativeObject::calculateDynamicSlots(oldSharedShape);
     uint32_t numNewSlots = holder->numDynamicSlots();
     if (numOldSlots == numNewSlots) {
       writer.addAndStoreDynamicSlot(objId, offset, rhsValId, newShape);
-      trackAttached("AddSlotDynamic");
+      trackAttached("SetProp.AddSlotDynamic");
     } else {
       MOZ_ASSERT(numNewSlots > numOldSlots);
       writer.allocateAndStoreDynamicSlot(objId, offset, rhsValId, newShape,
                                          numNewSlots);
-      trackAttached("AllocateSlot");
+      trackAttached("SetProp.AllocateSlot");
     }
   }
   writer.returnFromIC();
@@ -5328,7 +5355,7 @@ AttachDecision GetIteratorIRGenerator::tryAttachObject(ValOperandId valId) {
   writer.objectToIteratorResult(objId, cx_->compartment()->enumeratorsAddr());
   writer.returnFromIC();
 
-  trackAttached("Object");
+  trackAttached("GetIterator.Object");
   return AttachDecision::Attach;
 }
 
@@ -5354,7 +5381,7 @@ AttachDecision GetIteratorIRGenerator::tryAttachNullOrUndefined(
   writer.loadObjectResult(iterId);
   writer.returnFromIC();
 
-  trackAttached("NullOrUndefined");
+  trackAttached("GetIterator.NullOrUndefined");
   return AttachDecision::Attach;
 }
 
@@ -5362,7 +5389,7 @@ AttachDecision GetIteratorIRGenerator::tryAttachGeneric(ValOperandId valId) {
   writer.valueToIteratorResult(valId);
   writer.returnFromIC();
 
-  trackAttached("Generic");
+  trackAttached("GetIterator.Generic");
   return AttachDecision::Attach;
 }
 
@@ -5513,7 +5540,7 @@ AttachDecision OptimizeSpreadCallIRGenerator::tryAttachArray() {
   writer.loadObjectResult(objId);
   writer.returnFromIC();
 
-  trackAttached("Array");
+  trackAttached("OptimizeSpreadCall.Array");
   return AttachDecision::Attach;
 }
 
@@ -5576,7 +5603,7 @@ AttachDecision OptimizeSpreadCallIRGenerator::tryAttachArguments() {
   writer.arrayFromArgumentsObjectResult(objId, shape);
   writer.returnFromIC();
 
-  trackAttached("Arguments");
+  trackAttached("OptimizeSpreadCall.Arguments");
   return AttachDecision::Attach;
 }
 
@@ -5586,7 +5613,7 @@ AttachDecision OptimizeSpreadCallIRGenerator::tryAttachNotOptimizable() {
   writer.loadUndefinedResult();
   writer.returnFromIC();
 
-  trackAttached("NotOptimizable");
+  trackAttached("OptimizeSpreadCall.NotOptimizable");
   return AttachDecision::Attach;
 }
 
@@ -6544,7 +6571,181 @@ AttachDecision InlinableNativeIRGenerator::tryAttachHasClass(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachRegExpMatcherSearcherTester(
+// Returns whether the .lastIndex property is a non-negative int32 value and is
+// still writable.
+static bool HasOptimizableLastIndexSlot(RegExpObject* regexp, JSContext* cx) {
+  auto lastIndexProp = regexp->lookupPure(cx->names().lastIndex);
+  MOZ_ASSERT(lastIndexProp->isDataProperty());
+  if (!lastIndexProp->writable()) {
+    return false;
+  }
+  Value lastIndex = regexp->getLastIndex();
+  if (!lastIndex.isInt32() || lastIndex.toInt32() < 0) {
+    return false;
+  }
+  return true;
+}
+
+// Returns the RegExp stub used by the optimized code path for this intrinsic.
+// We store a pointer to this in the IC stub to ensure GC doesn't discard it.
+static JitCode* GetOrCreateRegExpStub(JSContext* cx, InlinableNative native) {
+  JitCode* code;
+  switch (native) {
+    case InlinableNative::IntrinsicRegExpBuiltinExecForTest:
+    case InlinableNative::IntrinsicRegExpExecForTest:
+      code = cx->realm()->jitRealm()->ensureRegExpExecTestStubExists(cx);
+      break;
+    case InlinableNative::IntrinsicRegExpBuiltinExec:
+    case InlinableNative::IntrinsicRegExpExec:
+      code = cx->realm()->jitRealm()->ensureRegExpExecMatchStubExists(cx);
+      break;
+    case InlinableNative::RegExpMatcher:
+      code = cx->realm()->jitRealm()->ensureRegExpMatcherStubExists(cx);
+      break;
+    case InlinableNative::RegExpSearcher:
+      code = cx->realm()->jitRealm()->ensureRegExpSearcherStubExists(cx);
+      break;
+    default:
+      MOZ_CRASH("Unexpected native");
+  }
+  if (!code) {
+    cx->recoverFromOutOfMemory();
+    return nullptr;
+  }
+  return code;
+}
+
+static void EmitGuardLastIndexIsNonNegativeInt32(CacheIRWriter& writer,
+                                                 ObjOperandId regExpId) {
+  size_t offset =
+      NativeObject::getFixedSlotOffset(RegExpObject::lastIndexSlot());
+  ValOperandId lastIndexValId = writer.loadFixedSlot(regExpId, offset);
+  Int32OperandId lastIndexId = writer.guardToInt32(lastIndexValId);
+  writer.guardInt32IsNonNegative(lastIndexId);
+}
+
+AttachDecision InlinableNativeIRGenerator::tryAttachIntrinsicRegExpBuiltinExec(
+    InlinableNative native) {
+  // Self-hosted code calls this with (regexp, string) arguments.
+  MOZ_ASSERT(argc_ == 2);
+  MOZ_ASSERT(args_[0].isObject());
+  MOZ_ASSERT(args_[1].isString());
+
+  JitCode* stub = GetOrCreateRegExpStub(cx_, native);
+  if (!stub) {
+    return AttachDecision::NoAction;
+  }
+
+  RegExpObject* re = &args_[0].toObject().as<RegExpObject>();
+  if (!HasOptimizableLastIndexSlot(re, cx_)) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  initializeInputOperand();
+
+  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
+
+  ValOperandId arg0Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  ObjOperandId regExpId = writer.guardToObject(arg0Id);
+  writer.guardShape(regExpId, re->shape());
+  EmitGuardLastIndexIsNonNegativeInt32(writer, regExpId);
+
+  ValOperandId arg1Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
+  StringOperandId inputId = writer.guardToString(arg1Id);
+
+  if (native == InlinableNative::IntrinsicRegExpBuiltinExecForTest) {
+    writer.regExpBuiltinExecTestResult(regExpId, inputId, stub);
+  } else {
+    writer.regExpBuiltinExecMatchResult(regExpId, inputId, stub);
+  }
+  writer.returnFromIC();
+
+  trackAttached("IntrinsicRegExpBuiltinExec");
+  return AttachDecision::Attach;
+}
+
+AttachDecision InlinableNativeIRGenerator::tryAttachIntrinsicRegExpExec(
+    InlinableNative native) {
+  // Self-hosted code calls this with (object, string) arguments.
+  MOZ_ASSERT(argc_ == 2);
+  MOZ_ASSERT(args_[0].isObject());
+  MOZ_ASSERT(args_[1].isString());
+
+  if (!args_[0].toObject().is<RegExpObject>()) {
+    return AttachDecision::NoAction;
+  }
+
+  JitCode* stub = GetOrCreateRegExpStub(cx_, native);
+  if (!stub) {
+    return AttachDecision::NoAction;
+  }
+
+  RegExpObject* re = &args_[0].toObject().as<RegExpObject>();
+  if (!HasOptimizableLastIndexSlot(re, cx_)) {
+    return AttachDecision::NoAction;
+  }
+
+  // Ensure regexp.exec is the original RegExp.prototype.exec function on the
+  // prototype.
+  if (re->containsPure(cx_->names().exec)) {
+    return AttachDecision::NoAction;
+  }
+  MOZ_ASSERT(cx_->global()->maybeGetRegExpPrototype());
+  auto* regExpProto =
+      &cx_->global()->maybeGetRegExpPrototype()->as<NativeObject>();
+  if (re->staticPrototype() != regExpProto) {
+    return AttachDecision::NoAction;
+  }
+  auto execProp = regExpProto->as<NativeObject>().lookupPure(cx_->names().exec);
+  if (!execProp || !execProp->isDataProperty()) {
+    return AttachDecision::NoAction;
+  }
+  // It should be stored in a dynamic slot. We assert this in
+  // FinishRegExpClassInit.
+  if (regExpProto->isFixedSlot(execProp->slot())) {
+    return AttachDecision::NoAction;
+  }
+  Value execVal = regExpProto->getSlot(execProp->slot());
+  PropertyName* execName = cx_->names().RegExp_prototype_Exec;
+  if (!IsSelfHostedFunctionWithName(execVal, execName)) {
+    return AttachDecision::NoAction;
+  }
+  JSFunction* execFunction = &execVal.toObject().as<JSFunction>();
+
+  // Initialize the input operand.
+  initializeInputOperand();
+
+  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
+
+  ValOperandId arg0Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  ObjOperandId regExpId = writer.guardToObject(arg0Id);
+  writer.guardShape(regExpId, re->shape());
+  EmitGuardLastIndexIsNonNegativeInt32(writer, regExpId);
+
+  // Emit guards for the RegExp.prototype.exec property.
+  ObjOperandId regExpProtoId = writer.loadObject(regExpProto);
+  writer.guardShape(regExpProtoId, regExpProto->shape());
+  size_t offset =
+      regExpProto->dynamicSlotIndex(execProp->slot()) * sizeof(Value);
+  writer.guardDynamicSlotValue(regExpProtoId, offset,
+                               ObjectValue(*execFunction));
+
+  ValOperandId arg1Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
+  StringOperandId inputId = writer.guardToString(arg1Id);
+
+  if (native == InlinableNative::IntrinsicRegExpExecForTest) {
+    writer.regExpBuiltinExecTestResult(regExpId, inputId, stub);
+  } else {
+    writer.regExpBuiltinExecMatchResult(regExpId, inputId, stub);
+  }
+  writer.returnFromIC();
+
+  trackAttached("IntrinsicRegExpExec");
+  return AttachDecision::Attach;
+}
+
+AttachDecision InlinableNativeIRGenerator::tryAttachRegExpMatcherSearcher(
     InlinableNative native) {
   // Self-hosted code calls this with (object, string, number) arguments.
   MOZ_ASSERT(argc_ == 3);
@@ -6554,6 +6755,11 @@ AttachDecision InlinableNativeIRGenerator::tryAttachRegExpMatcherSearcherTester(
 
   // It's not guaranteed that the JITs have typed |lastIndex| as an Int32.
   if (!args_[2].isInt32()) {
+    return AttachDecision::NoAction;
+  }
+
+  JitCode* stub = GetOrCreateRegExpStub(cx_, native);
+  if (!stub) {
     return AttachDecision::NoAction;
   }
 
@@ -6574,21 +6780,15 @@ AttachDecision InlinableNativeIRGenerator::tryAttachRegExpMatcherSearcherTester(
 
   switch (native) {
     case InlinableNative::RegExpMatcher:
-      writer.callRegExpMatcherResult(reId, inputId, lastIndexId);
+      writer.callRegExpMatcherResult(reId, inputId, lastIndexId, stub);
       writer.returnFromIC();
       trackAttached("RegExpMatcher");
       break;
 
     case InlinableNative::RegExpSearcher:
-      writer.callRegExpSearcherResult(reId, inputId, lastIndexId);
+      writer.callRegExpSearcherResult(reId, inputId, lastIndexId, stub);
       writer.returnFromIC();
       trackAttached("RegExpSearcher");
-      break;
-
-    case InlinableNative::RegExpTester:
-      writer.callRegExpTesterResult(reId, inputId, lastIndexId);
-      writer.returnFromIC();
-      trackAttached("RegExpTester");
       break;
 
     default:
@@ -10076,9 +10276,9 @@ AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
   writer.returnFromIC();
 
   if (isScripted) {
-    trackAttached("Scripted fun_apply");
+    trackAttached("Call.ScriptedFunApply");
   } else {
-    trackAttached("Native fun_apply");
+    trackAttached("Call.NativeFunApply");
   }
 
   return AttachDecision::Attach;
@@ -10212,7 +10412,7 @@ AttachDecision CallIRGenerator::tryAttachWasmCall(HandleFunction calleeFunc) {
                           &funcExport, inst.object());
   writer.returnFromIC();
 
-  trackAttached("WasmCall");
+  trackAttached("Call.WasmCall");
 
   return AttachDecision::Attach;
 }
@@ -10447,14 +10647,19 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
                                /* isPossiblyWrapped = */ true);
     case InlinableNative::RegExpMatcher:
     case InlinableNative::RegExpSearcher:
-    case InlinableNative::RegExpTester:
-      return tryAttachRegExpMatcherSearcherTester(native);
+      return tryAttachRegExpMatcherSearcher(native);
     case InlinableNative::RegExpPrototypeOptimizable:
       return tryAttachRegExpPrototypeOptimizable();
     case InlinableNative::RegExpInstanceOptimizable:
       return tryAttachRegExpInstanceOptimizable();
     case InlinableNative::GetFirstDollarIndex:
       return tryAttachGetFirstDollarIndex();
+    case InlinableNative::IntrinsicRegExpBuiltinExec:
+    case InlinableNative::IntrinsicRegExpBuiltinExecForTest:
+      return tryAttachIntrinsicRegExpBuiltinExec(native);
+    case InlinableNative::IntrinsicRegExpExec:
+    case InlinableNative::IntrinsicRegExpExecForTest:
+      return tryAttachIntrinsicRegExpExec(native);
 
     // String natives.
     case InlinableNative::String:
@@ -10868,9 +11073,9 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
   writer.returnFromIC();
 
   if (isSpecialized) {
-    trackAttached("Call scripted func");
+    trackAttached("Call.CallScripted");
   } else {
-    trackAttached("Call any scripted func");
+    trackAttached("Call.CallAnyScripted");
   }
 
   return AttachDecision::Attach;
@@ -10920,7 +11125,8 @@ AttachDecision CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
         writer.loadArgumentDynamicSlot(ArgumentKind::This, argcId, flags);
     ObjOperandId thisObjId = writer.guardToObject(thisValId);
 
-    // Guard on the |this| shape to make sure it's the right instance.
+    // Guard on the |this| shape to make sure it's the right instance. This also
+    // ensures DOM_OBJECT_SLOT is stored in a fixed slot. See CanAttachDOMCall.
     writer.guardShape(thisObjId, thisval_.toObject().shape());
 
     // Ensure callee matches this stub's callee
@@ -10928,14 +11134,14 @@ AttachDecision CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
     writer.callDOMFunction(calleeObjId, argcId, thisObjId, calleeFunc, flags,
                            ClampFixedArgc(argc_));
 
-    trackAttached("CallDOM");
+    trackAttached("Call.CallDOM");
   } else if (isSpecialized) {
     // Ensure callee matches this stub's callee
     writer.guardSpecificFunction(calleeObjId, calleeFunc);
     writer.callNativeFunction(calleeObjId, argcId, op_, calleeFunc, flags,
                               ClampFixedArgc(argc_));
 
-    trackAttached("CallNative");
+    trackAttached("Call.CallNative");
   } else {
     // Guard that object is a native function
     writer.guardClass(calleeObjId, GuardClassKind::JSFunction);
@@ -10951,7 +11157,7 @@ AttachDecision CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
     writer.callAnyNativeFunction(calleeObjId, argcId, flags,
                                  ClampFixedArgc(argc_));
 
-    trackAttached("CallAnyNative");
+    trackAttached("Call.CallAnyNative");
   }
 
   writer.returnFromIC();
@@ -11005,7 +11211,7 @@ AttachDecision CallIRGenerator::tryAttachCallHook(HandleObject calleeObj) {
   writer.callClassHook(calleeObjId, argcId, hook, flags, ClampFixedArgc(argc_));
   writer.returnFromIC();
 
-  trackAttached("Call native func");
+  trackAttached("Call.CallHook");
 
   return AttachDecision::Attach;
 }
@@ -11104,7 +11310,7 @@ AttachDecision CallIRGenerator::tryAttachBoundFunction(
                                    numBoundArgs);
   writer.returnFromIC();
 
-  trackAttached("Call bound scripted");
+  trackAttached("Call.BoundFunction");
   return AttachDecision::Attach;
 }
 
@@ -11778,7 +11984,7 @@ AttachDecision ToBoolIRGenerator::tryAttachBool() {
   writer.guardNonDoubleType(valId, ValueType::Boolean);
   writer.loadOperandResult(valId);
   writer.returnFromIC();
-  trackAttached("ToBoolBool");
+  trackAttached("ToBool.Bool");
   return AttachDecision::Attach;
 }
 
@@ -11791,7 +11997,7 @@ AttachDecision ToBoolIRGenerator::tryAttachInt32() {
   writer.guardNonDoubleType(valId, ValueType::Int32);
   writer.loadInt32TruthyResult(valId);
   writer.returnFromIC();
-  trackAttached("ToBoolInt32");
+  trackAttached("ToBool.Int32");
   return AttachDecision::Attach;
 }
 
@@ -11804,7 +12010,7 @@ AttachDecision ToBoolIRGenerator::tryAttachNumber() {
   NumberOperandId numId = writer.guardIsNumber(valId);
   writer.loadDoubleTruthyResult(numId);
   writer.returnFromIC();
-  trackAttached("ToBoolNumber");
+  trackAttached("ToBool.Number");
   return AttachDecision::Attach;
 }
 
@@ -11817,7 +12023,7 @@ AttachDecision ToBoolIRGenerator::tryAttachSymbol() {
   writer.guardNonDoubleType(valId, ValueType::Symbol);
   writer.loadBooleanResult(true);
   writer.returnFromIC();
-  trackAttached("ToBoolSymbol");
+  trackAttached("ToBool.Symbol");
   return AttachDecision::Attach;
 }
 
@@ -11830,7 +12036,7 @@ AttachDecision ToBoolIRGenerator::tryAttachString() {
   StringOperandId strId = writer.guardToString(valId);
   writer.loadStringTruthyResult(strId);
   writer.returnFromIC();
-  trackAttached("ToBoolString");
+  trackAttached("ToBool.String");
   return AttachDecision::Attach;
 }
 
@@ -11843,7 +12049,7 @@ AttachDecision ToBoolIRGenerator::tryAttachNullOrUndefined() {
   writer.guardIsNullOrUndefined(valId);
   writer.loadBooleanResult(false);
   writer.returnFromIC();
-  trackAttached("ToBoolNullOrUndefined");
+  trackAttached("ToBool.NullOrUndefined");
   return AttachDecision::Attach;
 }
 
@@ -11856,7 +12062,7 @@ AttachDecision ToBoolIRGenerator::tryAttachObject() {
   ObjOperandId objId = writer.guardToObject(valId);
   writer.loadObjectTruthyResult(objId);
   writer.returnFromIC();
-  trackAttached("ToBoolObject");
+  trackAttached("ToBool.Object");
   return AttachDecision::Attach;
 }
 
@@ -11869,7 +12075,7 @@ AttachDecision ToBoolIRGenerator::tryAttachBigInt() {
   BigIntOperandId bigIntId = writer.guardToBigInt(valId);
   writer.loadBigIntTruthyResult(bigIntId);
   writer.returnFromIC();
-  trackAttached("ToBoolBigInt");
+  trackAttached("ToBool.BigInt");
   return AttachDecision::Attach;
 }
 
@@ -12057,7 +12263,7 @@ AttachDecision UnaryArithIRGenerator::tryAttachBitwise() {
   ValOperandId valId(writer.setInputOperandId(0));
   Int32OperandId intId = EmitTruncateToInt32Guard(writer, valId, val_);
   writer.int32NotResult(intId);
-  trackAttached("BinaryArith.Bitwise.BitNot");
+  trackAttached("UnaryArith.BitwiseBitNot");
 
   writer.returnFromIC();
   return AttachDecision::Attach;
@@ -12361,27 +12567,27 @@ AttachDecision BinaryArithIRGenerator::tryAttachBitwise() {
   switch (op_) {
     case JSOp::BitOr:
       writer.int32BitOrResult(lhsIntId, rhsIntId);
-      trackAttached("BinaryArith.Bitwise.BitOr");
+      trackAttached("BinaryArith.BitwiseBitOr");
       break;
     case JSOp::BitXor:
       writer.int32BitXorResult(lhsIntId, rhsIntId);
-      trackAttached("BinaryArith.Bitwise.BitXor");
+      trackAttached("BinaryArith.BitwiseBitXor");
       break;
     case JSOp::BitAnd:
       writer.int32BitAndResult(lhsIntId, rhsIntId);
-      trackAttached("BinaryArith.Bitwise.BitAnd");
+      trackAttached("BinaryArith.BitwiseBitAnd");
       break;
     case JSOp::Lsh:
       writer.int32LeftShiftResult(lhsIntId, rhsIntId);
-      trackAttached("BinaryArith.Bitwise.LeftShift");
+      trackAttached("BinaryArith.BitwiseLeftShift");
       break;
     case JSOp::Rsh:
       writer.int32RightShiftResult(lhsIntId, rhsIntId);
-      trackAttached("BinaryArith.Bitwise.RightShift");
+      trackAttached("BinaryArith.BitwiseRightShift");
       break;
     case JSOp::Ursh:
       writer.int32URightShiftResult(lhsIntId, rhsIntId, res_.isDouble());
-      trackAttached("BinaryArith.Bitwise.UnsignedRightShift");
+      trackAttached("BinaryArith.BitwiseUnsignedRightShift");
       break;
     default:
       MOZ_CRASH("Unhandled op in tryAttachBitwise");
@@ -12413,27 +12619,27 @@ AttachDecision BinaryArithIRGenerator::tryAttachDouble() {
   switch (op_) {
     case JSOp::Add:
       writer.doubleAddResult(lhs, rhs);
-      trackAttached("BinaryArith.Double.Add");
+      trackAttached("BinaryArith.DoubleAdd");
       break;
     case JSOp::Sub:
       writer.doubleSubResult(lhs, rhs);
-      trackAttached("BinaryArith.Double.Sub");
+      trackAttached("BinaryArith.DoubleSub");
       break;
     case JSOp::Mul:
       writer.doubleMulResult(lhs, rhs);
-      trackAttached("BinaryArith.Double.Mul");
+      trackAttached("BinaryArith.DoubleMul");
       break;
     case JSOp::Div:
       writer.doubleDivResult(lhs, rhs);
-      trackAttached("BinaryArith.Double.Div");
+      trackAttached("BinaryArith.DoubleDiv");
       break;
     case JSOp::Mod:
       writer.doubleModResult(lhs, rhs);
-      trackAttached("BinaryArith.Double.Mod");
+      trackAttached("BinaryArith.DoubleMod");
       break;
     case JSOp::Pow:
       writer.doublePowResult(lhs, rhs);
-      trackAttached("BinaryArith.Double.Pow");
+      trackAttached("BinaryArith.DoublePow");
       break;
     default:
       MOZ_CRASH("Unhandled Op");
@@ -12473,27 +12679,27 @@ AttachDecision BinaryArithIRGenerator::tryAttachInt32() {
   switch (op_) {
     case JSOp::Add:
       writer.int32AddResult(lhsIntId, rhsIntId);
-      trackAttached("BinaryArith.Int32.Add");
+      trackAttached("BinaryArith.Int32Add");
       break;
     case JSOp::Sub:
       writer.int32SubResult(lhsIntId, rhsIntId);
-      trackAttached("BinaryArith.Int32.Sub");
+      trackAttached("BinaryArith.Int32Sub");
       break;
     case JSOp::Mul:
       writer.int32MulResult(lhsIntId, rhsIntId);
-      trackAttached("BinaryArith.Int32.Mul");
+      trackAttached("BinaryArith.Int32Mul");
       break;
     case JSOp::Div:
       writer.int32DivResult(lhsIntId, rhsIntId);
-      trackAttached("BinaryArith.Int32.Div");
+      trackAttached("BinaryArith.Int32Div");
       break;
     case JSOp::Mod:
       writer.int32ModResult(lhsIntId, rhsIntId);
-      trackAttached("BinaryArith.Int32.Mod");
+      trackAttached("BinaryArith.Int32Mod");
       break;
     case JSOp::Pow:
       writer.int32PowResult(lhsIntId, rhsIntId);
-      trackAttached("BinaryArith.Int32.Pow");
+      trackAttached("BinaryArith.Int32Pow");
       break;
     default:
       MOZ_CRASH("Unhandled op in tryAttachInt32");
@@ -12598,47 +12804,47 @@ AttachDecision BinaryArithIRGenerator::tryAttachBigInt() {
   switch (op_) {
     case JSOp::Add:
       writer.bigIntAddResult(lhsBigIntId, rhsBigIntId);
-      trackAttached("BinaryArith.BigInt.Add");
+      trackAttached("BinaryArith.BigIntAdd");
       break;
     case JSOp::Sub:
       writer.bigIntSubResult(lhsBigIntId, rhsBigIntId);
-      trackAttached("BinaryArith.BigInt.Sub");
+      trackAttached("BinaryArith.BigIntSub");
       break;
     case JSOp::Mul:
       writer.bigIntMulResult(lhsBigIntId, rhsBigIntId);
-      trackAttached("BinaryArith.BigInt.Mul");
+      trackAttached("BinaryArith.BigIntMul");
       break;
     case JSOp::Div:
       writer.bigIntDivResult(lhsBigIntId, rhsBigIntId);
-      trackAttached("BinaryArith.BigInt.Div");
+      trackAttached("BinaryArith.BigIntDiv");
       break;
     case JSOp::Mod:
       writer.bigIntModResult(lhsBigIntId, rhsBigIntId);
-      trackAttached("BinaryArith.BigInt.Mod");
+      trackAttached("BinaryArith.BigIntMod");
       break;
     case JSOp::Pow:
       writer.bigIntPowResult(lhsBigIntId, rhsBigIntId);
-      trackAttached("BinaryArith.BigInt.Pow");
+      trackAttached("BinaryArith.BigIntPow");
       break;
     case JSOp::BitOr:
       writer.bigIntBitOrResult(lhsBigIntId, rhsBigIntId);
-      trackAttached("BinaryArith.BigInt.BitOr");
+      trackAttached("BinaryArith.BigIntBitOr");
       break;
     case JSOp::BitXor:
       writer.bigIntBitXorResult(lhsBigIntId, rhsBigIntId);
-      trackAttached("BinaryArith.BigInt.BitXor");
+      trackAttached("BinaryArith.BigIntBitXor");
       break;
     case JSOp::BitAnd:
       writer.bigIntBitAndResult(lhsBigIntId, rhsBigIntId);
-      trackAttached("BinaryArith.BigInt.BitAnd");
+      trackAttached("BinaryArith.BigIntBitAnd");
       break;
     case JSOp::Lsh:
       writer.bigIntLeftShiftResult(lhsBigIntId, rhsBigIntId);
-      trackAttached("BinaryArith.BigInt.LeftShift");
+      trackAttached("BinaryArith.BigIntLeftShift");
       break;
     case JSOp::Rsh:
       writer.bigIntRightShiftResult(lhsBigIntId, rhsBigIntId);
-      trackAttached("BinaryArith.BigInt.RightShift");
+      trackAttached("BinaryArith.BigIntRightShift");
       break;
     default:
       MOZ_CRASH("Unhandled op in tryAttachBigInt");
@@ -12688,19 +12894,19 @@ AttachDecision BinaryArithIRGenerator::tryAttachStringInt32Arith() {
   switch (op_) {
     case JSOp::Sub:
       writer.int32SubResult(lhsIntId, rhsIntId);
-      trackAttached("BinaryArith.StringInt32.Sub");
+      trackAttached("BinaryArith.StringInt32Sub");
       break;
     case JSOp::Mul:
       writer.int32MulResult(lhsIntId, rhsIntId);
-      trackAttached("BinaryArith.StringInt32.Mul");
+      trackAttached("BinaryArith.StringInt32Mul");
       break;
     case JSOp::Div:
       writer.int32DivResult(lhsIntId, rhsIntId);
-      trackAttached("BinaryArith.StringInt32.Div");
+      trackAttached("BinaryArith.StringInt32Div");
       break;
     case JSOp::Mod:
       writer.int32ModResult(lhsIntId, rhsIntId);
-      trackAttached("BinaryArith.StringInt32.Mod");
+      trackAttached("BinaryArith.StringInt32Mod");
       break;
     default:
       MOZ_CRASH("Unhandled op in tryAttachStringInt32Arith");
@@ -12782,7 +12988,7 @@ AttachDecision NewArrayIRGenerator::tryAttachArrayObject() {
 
   writer.returnFromIC();
 
-  trackAttached("NewArrayObject");
+  trackAttached("NewArray.Object");
   return AttachDecision::Attach;
 }
 
@@ -12854,7 +13060,7 @@ AttachDecision NewObjectIRGenerator::tryAttachPlainObject() {
 
   writer.returnFromIC();
 
-  trackAttached("NewPlainObject");
+  trackAttached("NewObject.PlainObject");
   return AttachDecision::Attach;
 }
 

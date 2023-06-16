@@ -42,7 +42,7 @@ async function test() {
 
   browser.addEventListener(
     "load",
-    function() {
+    function () {
       is(
         browser.contentWindow.location,
         "http://mochi.test:8888/",

@@ -7,9 +7,9 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+ChromeUtils.defineESModuleGetters(this, {
   CONTEXTUAL_SERVICES_PING_TYPES:
-    "resource:///modules/PartnerLinkAttribution.jsm",
+    "resource:///modules/PartnerLinkAttribution.sys.mjs",
 });
 
 const { TELEMETRY_SCALARS } = UrlbarProviderQuickSuggest;
@@ -30,13 +30,13 @@ const match_type = "firefox-suggest";
 const index = 1;
 const position = index + 1;
 
-add_setup(async function() {
+add_setup(async function () {
   await setUpTelemetryTest({
     merinoSuggestions: [MERINO_SUGGESTION],
   });
 });
 
-add_task(async function() {
+add_task(async function () {
   await doTelemetryTest({
     index,
     suggestion: MERINO_SUGGESTION,

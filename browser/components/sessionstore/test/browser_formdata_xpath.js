@@ -8,7 +8,7 @@ const URL = ROOT + "browser_formdata_xpath_sample.html";
 /**
  * Bug 346337 - Generic form data restoration tests.
  */
-add_setup(function() {
+add_setup(function () {
   // make sure we don't save form data at all (except for tab duplication)
   Services.prefs.setIntPref("browser.sessionstore.privacy_level", 2);
 
@@ -99,8 +99,13 @@ function getPropertyOfXPath(browserContext, path, propName) {
     (pathChild, propNameChild) => {
       let doc = content.document;
       let xptype = doc.defaultView.XPathResult.FIRST_ORDERED_NODE_TYPE;
-      let node = doc.evaluate(pathChild, doc, null, xptype, null)
-        .singleNodeValue;
+      let node = doc.evaluate(
+        pathChild,
+        doc,
+        null,
+        xptype,
+        null
+      ).singleNodeValue;
       return node[propNameChild];
     }
   );
@@ -113,8 +118,13 @@ function setPropertyOfXPath(browserContext, path, propName, newValue) {
     (pathChild, propNameChild, newValueChild) => {
       let doc = content.document;
       let xptype = doc.defaultView.XPathResult.FIRST_ORDERED_NODE_TYPE;
-      let node = doc.evaluate(pathChild, doc, null, xptype, null)
-        .singleNodeValue;
+      let node = doc.evaluate(
+        pathChild,
+        doc,
+        null,
+        xptype,
+        null
+      ).singleNodeValue;
       node[propNameChild] = newValueChild;
 
       let event = node.ownerDocument.createEvent("UIEvents");
@@ -131,8 +141,13 @@ function execUsingXPath(browserContext, path, fnName, arg) {
     (pathChild, fnNameChild, argChild) => {
       let doc = content.document;
       let xptype = doc.defaultView.XPathResult.FIRST_ORDERED_NODE_TYPE;
-      let node = doc.evaluate(pathChild, doc, null, xptype, null)
-        .singleNodeValue;
+      let node = doc.evaluate(
+        pathChild,
+        doc,
+        null,
+        xptype,
+        null
+      ).singleNodeValue;
 
       switch (fnNameChild) {
         case "getMultipleSelected":

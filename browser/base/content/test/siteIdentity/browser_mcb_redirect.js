@@ -75,7 +75,7 @@ var gTestBrowser = null;
 
 // ------------------------ Helper Functions ---------------------
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   // Set preferences back to their original values
   Services.prefs.setBoolPref(PREF_ACTIVE, origBlockActive);
   Services.prefs.setBoolPref(PREF_DISPLAY, origBlockDisplay);
@@ -121,7 +121,7 @@ async function checkUIForTest1() {
     passiveLoaded: false,
   });
 
-  SpecialPowers.spawn(gTestBrowser, [], async function() {
+  SpecialPowers.spawn(gTestBrowser, [], async function () {
     var expected = "script blocked";
     await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("mctestdiv").innerHTML == expected,
@@ -147,7 +147,7 @@ async function checkUIForTest2() {
     passiveLoaded: false,
   });
 
-  SpecialPowers.spawn(gTestBrowser, [], async function() {
+  SpecialPowers.spawn(gTestBrowser, [], async function () {
     var expected = "script executed";
     await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("mctestdiv").innerHTML == expected,
@@ -168,7 +168,7 @@ function test3() {
 }
 
 function checkLoadEventForTest3() {
-  SpecialPowers.spawn(gTestBrowser, [], async function() {
+  SpecialPowers.spawn(gTestBrowser, [], async function () {
     var expected = "image blocked";
     await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("mctestdiv").innerHTML == expected,
@@ -189,7 +189,7 @@ function test4() {
 }
 
 function checkLoadEventForTest4() {
-  SpecialPowers.spawn(gTestBrowser, [], async function() {
+  SpecialPowers.spawn(gTestBrowser, [], async function () {
     var expected = "image loaded";
     await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("mctestdiv").innerHTML == expected,
@@ -215,7 +215,7 @@ function test5() {
 }
 
 function checkLoadEventForTest5() {
-  SpecialPowers.spawn(gTestBrowser, [], async function() {
+  SpecialPowers.spawn(gTestBrowser, [], async function () {
     var expected = "image loaded";
     await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("mctestdiv").innerHTML == expected,
@@ -245,7 +245,7 @@ function test6() {
 }
 
 function checkLoadEventForTest6() {
-  SpecialPowers.spawn(gTestBrowser, [], async function() {
+  SpecialPowers.spawn(gTestBrowser, [], async function () {
     var expected = "image blocked";
     await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("mctestdiv").innerHTML == expected,
@@ -269,7 +269,7 @@ function test7() {
 }
 
 function checkLoadEventForTest7() {
-  SpecialPowers.spawn(gTestBrowser, [], async function() {
+  SpecialPowers.spawn(gTestBrowser, [], async function () {
     var expected = "image loaded";
     await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("mctestdiv").innerHTML == expected,
@@ -294,7 +294,7 @@ function test8() {
 }
 
 function checkLoadEventForTest8() {
-  SpecialPowers.spawn(gTestBrowser, [], async function() {
+  SpecialPowers.spawn(gTestBrowser, [], async function () {
     var expected = "image loaded";
     await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("mctestdiv").innerHTML == expected,
@@ -323,7 +323,7 @@ function test9() {
 }
 
 function checkLoadEventForTest9() {
-  SpecialPowers.spawn(gTestBrowser, [], async function() {
+  SpecialPowers.spawn(gTestBrowser, [], async function () {
     var expected = "image blocked";
     await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("mctestdiv").innerHTML == expected,

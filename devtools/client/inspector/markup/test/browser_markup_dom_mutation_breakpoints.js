@@ -19,7 +19,7 @@ function toggleMutationBreakpoint(inspector) {
 
 // Test inspector markup view handling DOM mutation breakpoints icons
 // The icon should display when a breakpoint exists for a given node
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(
     "data:text/html;charset=utf-8,<h1>foo</h1><span>bar</span>"
   );
@@ -45,7 +45,7 @@ add_task(async function() {
 
 // Test that the inspector markup view dom mutation breakpoint icon behaves
 // correctly when disabled
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.debugger.dom-mutation-breakpoints-visible", true);
   const { inspector, toolbox } = await openInspectorForURL(
     "data:text/html;charset=utf-8,<h1>foo</h1><span>bar</span>"
@@ -141,7 +141,7 @@ add_task(async function() {
 });
 
 // Test icon behavior with multiple breakpoints on the same node.
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.debugger.dom-mutation-breakpoints-visible", true);
   const { inspector, toolbox } = await openInspectorForURL(
     "data:text/html;charset=utf-8,<h1>foo</h1><span>bar</span>"

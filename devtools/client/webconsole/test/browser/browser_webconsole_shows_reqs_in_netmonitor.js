@@ -25,7 +25,7 @@ registerCleanupFunction(async () => {
   });
 });
 
-add_task(async function() {
+add_task(async function () {
   const toolbox = await openNewTabAndToolbox(TEST_URI, "netmonitor");
   info("Network panel is open.");
 

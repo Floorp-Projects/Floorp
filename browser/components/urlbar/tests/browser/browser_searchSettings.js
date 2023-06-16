@@ -3,10 +3,10 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function() {
+    async function () {
       await UrlbarTestUtils.promiseAutocompleteResultPopup({
         window,
         value: "a",

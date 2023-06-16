@@ -75,7 +75,7 @@ add_task(async function test_importMaps_not_supported() {
     },
 
     files: {
-      "main.js": async function() {
+      "main.js": async function () {
         // Content scripts shouldn't be able to use the bare specifier from
         // the import map.
         await browser.test.assertRejects(
@@ -87,7 +87,7 @@ add_task(async function test_importMaps_not_supported() {
         browser.test.sendMessage("done");
       },
       "page.html": pageHtml,
-      "page.js": async function() {
+      "page.js": async function () {
         await browser.test.assertRejects(
           import("simple"),
           /The specifier “simple” was a bare specifier/,
@@ -105,7 +105,7 @@ add_task(async function test_importMaps_not_supported() {
   );
   await extension.awaitMessage("done");
 
-  await contentPage.spawn(null, async () => {
+  await contentPage.spawn([], async () => {
     // Import maps should work for documents.
     let promise = content.eval(`import("simple2")`);
     let mod = (await promise.wrappedJSObject).wrappedJSObject;

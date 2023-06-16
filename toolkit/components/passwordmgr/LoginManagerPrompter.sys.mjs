@@ -893,9 +893,8 @@ export class LoginManagerPrompter {
     var usernames = logins.map(
       l => l.username || LoginManagerPrompter._getLocalizedString("noUsername")
     );
-    var dialogText = LoginManagerPrompter._getLocalizedString(
-      "userSelectText2"
-    );
+    var dialogText =
+      LoginManagerPrompter._getLocalizedString("userSelectText2");
     var dialogTitle = LoginManagerPrompter._getLocalizedString(
       "passwordChangeTitle"
     );

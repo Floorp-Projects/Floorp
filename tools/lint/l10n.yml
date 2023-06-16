@@ -15,7 +15,6 @@ l10n:
         - mobile/android/locales/en-US
         - netwerk/locales/en-US
         - security/manager/locales/en-US
-        - services/sync/locales/en-US
         - toolkit/locales/en-US
         - tools/lint/l10n.yml
     # files not supported by compare-locales,

@@ -55,10 +55,8 @@ function watchLoadFlags(flags, url) {
 
           this.requestCount = 0;
 
-          const {
-            NOTIFY_STATE_DOCUMENT,
-            NOTIFY_STATE_REQUEST,
-          } = Ci.nsIWebProgress;
+          const { NOTIFY_STATE_DOCUMENT, NOTIFY_STATE_REQUEST } =
+            Ci.nsIWebProgress;
 
           this.docShell
             .QueryInterface(Ci.nsIInterfaceRequestor)

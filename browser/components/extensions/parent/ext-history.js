@@ -199,7 +199,7 @@ this.history = class extends ExtensionAPIPersistent {
   getAPI(context) {
     return {
       history: {
-        addUrl: function(details) {
+        addUrl: function (details) {
           let transition, date;
           try {
             transition = getTransitionType(details.transition);
@@ -226,11 +226,11 @@ this.history = class extends ExtensionAPIPersistent {
           }
         },
 
-        deleteAll: function() {
+        deleteAll: function () {
           return PlacesUtils.history.clear();
         },
 
-        deleteRange: function(filter) {
+        deleteRange: function (filter) {
           let newFilter = {
             beginDate: normalizeTime(filter.startTime),
             endDate: normalizeTime(filter.endTime),
@@ -241,13 +241,13 @@ this.history = class extends ExtensionAPIPersistent {
             .then(() => undefined);
         },
 
-        deleteUrl: function(details) {
+        deleteUrl: function (details) {
           let url = details.url;
           // History.remove returns a boolean, but our API should return nothing
           return PlacesUtils.history.remove(url).then(() => undefined);
         },
 
-        search: function(query) {
+        search: function (query) {
           let beginTime =
             query.startTime == null
               ? PlacesUtils.toPRTime(Date.now() - 24 * 60 * 60 * 1000)
@@ -278,7 +278,7 @@ this.history = class extends ExtensionAPIPersistent {
           );
         },
 
-        getVisits: function(details) {
+        getVisits: function (details) {
           let url = details.url;
           if (!url) {
             return Promise.reject({

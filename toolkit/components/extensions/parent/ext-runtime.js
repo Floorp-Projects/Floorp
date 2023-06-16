@@ -4,17 +4,14 @@
 
 "use strict";
 
-var { ExtensionParent } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionParent.jsm"
+var { ExtensionParent } = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionParent.sys.mjs"
 );
 
 ChromeUtils.defineESModuleGetters(this, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+  AddonManagerPrivate: "resource://gre/modules/AddonManager.sys.mjs",
   DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  AddonManager: "resource://gre/modules/AddonManager.jsm",
-  AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -184,17 +181,17 @@ this.runtime = class extends ExtensionAPIPersistent {
           return context.lastError;
         },
 
-        getBrowserInfo: function() {
+        getBrowserInfo: function () {
           const { name, vendor, version, appBuildID } = Services.appinfo;
           const info = { name, vendor, version, buildID: appBuildID };
           return Promise.resolve(info);
         },
 
-        getPlatformInfo: function() {
+        getPlatformInfo: function () {
           return Promise.resolve(ExtensionParent.PlatformInfo);
         },
 
-        openOptionsPage: function() {
+        openOptionsPage: function () {
           if (!extension.manifest.options_ui) {
             return Promise.reject({ message: "No `options_ui` declared" });
           }
@@ -205,7 +202,7 @@ this.runtime = class extends ExtensionAPIPersistent {
           return openOptionsPage(extension).then(() => {});
         },
 
-        setUninstallURL: function(url) {
+        setUninstallURL: function (url) {
           if (url === null || url.length === 0) {
             extension.uninstallURL = null;
             return Promise.resolve();

@@ -112,7 +112,7 @@ async function openAndCheckCustomizationUIMenu(target) {
 }
 
 // Ensure that we can run touch events properly for windows [10]
-add_setup(async function() {
+add_setup(async function () {
   let isWindows = AppConstants.isPlatformAndVersionAtLeast("win", "10.0");
   await SpecialPowers.pushPrefEnv({
     set: [["apz.test.fails_with_native_injection", isWindows]],
@@ -129,7 +129,7 @@ add_task(async function test_main_menu_touch() {
 // Test the page action menu.
 add_task(async function test_page_action_panel_touch() {
   // The page action menu only appears on a web page.
-  await BrowserTestUtils.withNewTab("https://example.com", async function() {
+  await BrowserTestUtils.withNewTab("https://example.com", async function () {
     // The page actions button is not normally visible, so we must
     // unhide it.
     BrowserPageActions.mainButtonNode.style.visibility = "visible";

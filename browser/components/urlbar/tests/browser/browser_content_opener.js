@@ -3,12 +3,12 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.withNewTab(
     TEST_BASE_URL + "dummy_page.html",
-    async function(browser) {
+    async function (browser) {
       let windowOpenedPromise = BrowserTestUtils.waitForNewWindow();
-      await SpecialPowers.spawn(browser, [], function() {
+      await SpecialPowers.spawn(browser, [], function () {
         content.window.open("", "_BLANK", "toolbar=no,height=300,width=500");
       });
       let newWin = await windowOpenedPromise;

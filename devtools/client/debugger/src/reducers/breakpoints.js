@@ -13,7 +13,6 @@ export function initialBreakpointsState(xhrBreakpoints = []) {
   return {
     breakpoints: {},
     xhrBreakpoints,
-    breakpointsDisabled: false,
   };
 }
 
@@ -37,12 +36,8 @@ function update(state = initialBreakpointsState(), action) {
       return { ...state, breakpoints: {} };
     }
 
-    case "NAVIGATE": {
-      return initialBreakpointsState(state.xhrBreakpoints);
-    }
-
     case "REMOVE_THREAD": {
-      return removeBreakpointsForThread(state, action.threadActorID);
+      return removeBreakpointsForSources(state, action.sources);
     }
 
     case "SET_XHR_BREAKPOINT": {
@@ -141,10 +136,10 @@ function removeBreakpoint(state, { breakpoint }) {
   return { ...state, breakpoints };
 }
 
-function removeBreakpointsForThread(state, threadActorID) {
+function removeBreakpointsForSources(state, sources) {
   const remainingBreakpoints = {};
   for (const [id, breakpoint] of Object.entries(state.breakpoints)) {
-    if (breakpoint.thread !== threadActorID) {
+    if (!sources.includes(breakpoint.location.source)) {
       remainingBreakpoints[id] = breakpoint;
     }
   }

@@ -8,7 +8,9 @@ Services.prefs.setBoolPref("webextensions.storage.sync.kinto", true);
 
 const {
   KintoStorageTestUtils: { EncryptionRemoteTransformer },
-} = ChromeUtils.import("resource://gre/modules/ExtensionStorageSyncKinto.jsm");
+} = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionStorageSyncKinto.sys.mjs"
+);
 const { CryptoUtils } = ChromeUtils.importESModule(
   "resource://services-crypto/utils.sys.mjs"
 );
@@ -107,14 +109,14 @@ add_task(async function test_refuses_to_decrypt_tampered() {
   const tamperedHMAC = Object.assign({}, encryptedRecord, {
     hmac: "0000000000000000000000000000000000000000000000000000000000000001",
   });
-  await throwsGen(Utils.isHMACMismatch, async function() {
+  await throwsGen(Utils.isHMACMismatch, async function () {
     await transformer.decode(tamperedHMAC);
   });
 
   const tamperedIV = Object.assign({}, encryptedRecord, {
     IV: "aaaaaaaaaaaaaaaaaaaaaa==",
   });
-  await throwsGen(Utils.isHMACMismatch, async function() {
+  await throwsGen(Utils.isHMACMismatch, async function () {
     await transformer.decode(tamperedIV);
   });
 });

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* import-globals-from instantEditBookmark.js */
+/* import-globals-from editBookmark.js */
 /* import-globals-from /toolkit/content/contentAreaUtils.js */
 /* import-globals-from /browser/components/downloads/content/allDownloadsView.js */
 
@@ -119,8 +119,8 @@ var PlacesOrganizer = {
       throw new Error("Containers hierarchy not specified");
     }
     let hierarchy = [].concat(aHierarchy);
-    let selectWasSuppressed = this._places.view.selection
-      .selectEventsSuppressed;
+    let selectWasSuppressed =
+      this._places.view.selection.selectEventsSuppressed;
     if (!selectWasSuppressed) {
       this._places.view.selection.selectEventsSuppressed = true;
     }
@@ -204,7 +204,7 @@ var PlacesOrganizer = {
     window.addEventListener("AppCommand", this, true);
 
     let placeContentElement = document.getElementById("placeContent");
-    placeContentElement.addEventListener("onOpenFlatContainer", function(e) {
+    placeContentElement.addEventListener("onOpenFlatContainer", function (e) {
       PlacesOrganizer.openFlatContainer(e.detail);
     });
 
@@ -547,7 +547,7 @@ var PlacesOrganizer = {
       restorePopup.firstChild.remove();
     }
 
-    (async function() {
+    (async function () {
       let backupFiles = await PlacesBackups.getBackupFiles();
       if (!backupFiles.length) {
         return;
@@ -568,8 +568,9 @@ var PlacesOrganizer = {
           const [msg] = await document.l10n.formatMessages([
             { id: "places-details-pane-items-count", args: { count } },
           ]);
-          countString = msg.attributes.find(attr => attr.name === "value")
-            ?.value;
+          countString = msg.attributes.find(
+            attr => attr.name === "value"
+          )?.value;
         }
 
         const backupDate = PlacesBackups.getDateForFile(file);
@@ -627,13 +628,11 @@ var PlacesOrganizer = {
       }
     };
 
-    const [
-      title,
-      filterName,
-    ] = PlacesUIUtils.promptLocalization.formatValuesSync([
-      "places-bookmarks-restore-title",
-      "places-bookmarks-restore-filter-name",
-    ]);
+    const [title, filterName] =
+      PlacesUIUtils.promptLocalization.formatValuesSync([
+        "places-bookmarks-restore-title",
+        "places-bookmarks-restore-filter-name",
+      ]);
     fp.init(window, title, Ci.nsIFilePicker.modeOpen);
     fp.appendFilter(filterName, RESTORE_FILEPICKER_FILTER_EXT);
     fp.appendFilters(Ci.nsIFilePicker.filterAll);
@@ -666,7 +665,7 @@ var PlacesOrganizer = {
       return;
     }
 
-    (async function() {
+    (async function () {
       try {
         await BookmarkJSONUtils.importFromFile(aFilePath, {
           replace: true,
@@ -702,13 +701,11 @@ var PlacesOrganizer = {
       }
     };
 
-    const [
-      title,
-      filterName,
-    ] = PlacesUIUtils.promptLocalization.formatValuesSync([
-      "places-bookmarks-backup-title",
-      "places-bookmarks-restore-filter-name",
-    ]);
+    const [title, filterName] =
+      PlacesUIUtils.promptLocalization.formatValuesSync([
+        "places-bookmarks-backup-title",
+        "places-bookmarks-restore-filter-name",
+      ]);
     fp.init(window, title, Ci.nsIFilePicker.modeSave);
     fp.appendFilter(filterName, RESTORE_FILEPICKER_FILTER_EXT);
     fp.defaultString = PlacesBackups.getFilenameForDate();

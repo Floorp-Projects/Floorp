@@ -1226,16 +1226,6 @@ int32_t FaviconHelper::GetICOCacheSecondsTimeout() {
 }
 
 /* static */
-bool WinUtils::GetShellItemPath(IShellItem* aItem, nsString& aResultString) {
-  NS_ENSURE_TRUE(aItem, false);
-  LPWSTR str = nullptr;
-  if (FAILED(aItem->GetDisplayName(SIGDN_FILESYSPATH, &str))) return false;
-  aResultString.Assign(str);
-  CoTaskMemFree(str);
-  return !aResultString.IsEmpty();
-}
-
-/* static */
 LayoutDeviceIntRegion WinUtils::ConvertHRGNToRegion(HRGN aRgn) {
   NS_ASSERTION(aRgn, "Don't pass NULL region here");
 
@@ -2095,5 +2085,39 @@ const char* WinUtils::WinEventToEventName(UINT msg) {
              ? eventMsgInfo->second.mStr
              : nullptr;
 }
+
+// Note to testers and/or test-authors: on Windows 10, and possibly on other
+// versions as well, supplying the `WS_EX_LAYOUTRTL` flag here has no effect
+// whatsoever on child common-dialogs **unless the system UI locale is also set
+// to an RTL language**.
+//
+// If it is, the flag is still required; otherwise, the picker dialog will be
+// presented in English (or possibly some other LTR language) as a fallback.
+ScopedRtlShimWindow::ScopedRtlShimWindow(nsIWidget* aParent) : mWnd(nullptr) {
+  NS_ENSURE_TRUE_VOID(aParent);
+
+  // Headless windows don't have HWNDs, but also probably shouldn't be launching
+  // print dialogs.
+  HWND const hwnd = (HWND)aParent->GetNativeData(NS_NATIVE_WINDOW);
+  NS_ENSURE_TRUE_VOID(hwnd);
+
+  nsWindow* const win = WinUtils::GetNSWindowPtr(hwnd);
+  NS_ENSURE_TRUE_VOID(win);
+
+  ATOM const wclass = ::GetClassWord(hwnd, GCW_ATOM);
+  mWnd = ::CreateWindowExW(
+      win->IsRTL() ? WS_EX_LAYOUTRTL : 0, (LPCWSTR)(uintptr_t)wclass, L"",
+      WS_CHILD, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+      hwnd, nullptr, nsToolkit::mDllInstance, nullptr);
+
+  MOZ_ASSERT(mWnd);
+}
+
+ScopedRtlShimWindow::~ScopedRtlShimWindow() {
+  if (mWnd) {
+    ::DestroyWindow(mWnd);
+  }
+}
+
 }  // namespace widget
 }  // namespace mozilla

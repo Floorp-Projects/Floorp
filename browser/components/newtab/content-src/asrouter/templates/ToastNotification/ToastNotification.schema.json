@@ -3,9 +3,7 @@
   "$id": "file:///ToastNotification.schema.json",
   "title": "ToastNotification",
   "description": "A template for toast notifications displayed by the Alert service.",
-  "allOf": [
-    { "$ref": "file:///FxMSCommon.schema.json#/$defs/Message" }
-  ],
+  "allOf": [{ "$ref": "file:///FxMSCommon.schema.json#/$defs/Message" }],
   "type": "object",
   "properties": {
     "content": {
@@ -75,21 +73,13 @@
         }
       },
       "additionalProperties": true,
-      "required": [
-        "title",
-        "body"
-      ]
+      "required": ["title", "body"]
     },
     "template": {
       "type": "string",
       "const": "toast_notification"
     }
   },
-  "required": [
-    "content",
-    "targeting",
-    "template",
-    "trigger"
-  ],
+  "required": ["content", "targeting", "template", "trigger"],
   "additionalProperties": true
 }

@@ -151,7 +151,7 @@
 
 #bookmarkpropertiesdialog .caption-label {
   margin: 4px;
-  color: var(--in-content-deemphasized-text);
+  color: var(--text-color-deemphasized);
 }
 
 .caption-label {

@@ -9,13 +9,13 @@
  * uninstalling them when the recipe no longer applies.
  */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { BaseStudyAction } from "resource://normandy/actions/BaseStudyAction.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   ActionSchemas: "resource://normandy/actions/schemas/index.sys.mjs",
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   AddonStudies: "resource://normandy/lib/AddonStudies.sys.mjs",
   BaseAction: "resource://normandy/actions/BaseAction.sys.mjs",
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.sys.mjs",
@@ -25,10 +25,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Sampling: "resource://gre/modules/components-utils/Sampling.sys.mjs",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
   TelemetryEvents: "resource://normandy/lib/TelemetryEvents.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AddonManager: "resource://gre/modules/AddonManager.jsm",
 });
 
 class AddonStudyEnrollError extends Error {

@@ -38,7 +38,7 @@ function checkAnimationState() {
   tab.addEventListener(
     "TabAnimationEnd",
     function listener() {
-      executeSoon(function() {
+      executeSoon(function () {
         ok(!tab.parentNode, "tab removed asynchronously");
         finish();
       });

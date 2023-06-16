@@ -17,7 +17,7 @@ let originalEngine, defaultTestEngine;
 // The main search keyword used in tests
 const SEARCH_STRING = "chocolate cake";
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.showSearchTerms.featureGate", true]],
   });
@@ -35,7 +35,7 @@ add_setup(async function() {
     Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await Services.search.setDefault(
       originalEngine,
       Ci.nsISearchService.CHANGE_REASON_UNKNOWN

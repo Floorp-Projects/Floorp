@@ -5,7 +5,7 @@
 /* eslint-disable no-unused-vars */
 declTest("test observer triggering actor creation", {
   async test(browser) {
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       const TOPIC = "test-js-content-actor-child-observer";
       Services.obs.notifyObservers(content.window, TOPIC, "dataString");
 
@@ -25,7 +25,7 @@ declTest("test observer triggering actor creation", {
 
 declTest("test observers with null data", {
   async test(browser) {
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       const TOPIC = "test-js-content-actor-child-observer";
       Services.obs.notifyObservers(content.window, TOPIC);
 

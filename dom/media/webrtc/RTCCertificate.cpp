@@ -160,47 +160,53 @@ class GenerateRTCCertificateTask : public GenerateAsymmetricKeyTask {
       return NS_ERROR_DOM_UNKNOWN_ERR;
     }
 
-    CERTCertificate* cert = CERT_CreateCertificate(
-        serial, subjectName.get(), validity.get(), certreq.get());
-    if (!cert) {
+    // NB: CERTCertificates created with CERT_CreateCertificate are not safe to
+    // use with other NSS functions like CERT_DupCertificate.  The strategy
+    // here is to create a tbsCertificate ("to-be-signed certificate"), encode
+    // it, and sign it, resulting in a signed DER certificate that can be
+    // decoded into a CERTCertificate.
+    UniqueCERTCertificate tbsCertificate(CERT_CreateCertificate(
+        serial, subjectName.get(), validity.get(), certreq.get()));
+    if (!tbsCertificate) {
       return NS_ERROR_DOM_UNKNOWN_ERR;
     }
-    mCertificate.reset(cert);
-    return NS_OK;
-  }
 
-  nsresult SignCertificate() {
     MOZ_ASSERT(mSignatureAlg != SEC_OID_UNKNOWN);
-    PLArenaPool* arena = mCertificate->arena;
+    PLArenaPool* arena = tbsCertificate->arena;
 
-    SECStatus rv = SECOID_SetAlgorithmID(arena, &mCertificate->signature,
-                                         mSignatureAlg, nullptr);
+    rv = SECOID_SetAlgorithmID(arena, &tbsCertificate->signature, mSignatureAlg,
+                               nullptr);
     if (rv != SECSuccess) {
       return NS_ERROR_DOM_UNKNOWN_ERR;
     }
 
     // Set version to X509v3.
-    *(mCertificate->version.data) = SEC_CERTIFICATE_VERSION_3;
-    mCertificate->version.len = 1;
+    *(tbsCertificate->version.data) = SEC_CERTIFICATE_VERSION_3;
+    tbsCertificate->version.len = 1;
 
     SECItem innerDER = {siBuffer, nullptr, 0};
-    if (!SEC_ASN1EncodeItem(arena, &innerDER, mCertificate.get(),
+    if (!SEC_ASN1EncodeItem(arena, &innerDER, tbsCertificate.get(),
                             SEC_ASN1_GET(CERT_CertificateTemplate))) {
       return NS_ERROR_DOM_UNKNOWN_ERR;
     }
 
-    SECItem* signedCert = PORT_ArenaZNew(arena, SECItem);
-    if (!signedCert) {
+    SECItem* certDer = PORT_ArenaZNew(arena, SECItem);
+    if (!certDer) {
       return NS_ERROR_DOM_UNKNOWN_ERR;
     }
 
     UniqueSECKEYPrivateKey privateKey(mKeyPair->mPrivateKey->GetPrivateKey());
-    rv = SEC_DerSignData(arena, signedCert, innerDER.data, innerDER.len,
+    rv = SEC_DerSignData(arena, certDer, innerDER.data, innerDER.len,
                          privateKey.get(), mSignatureAlg);
     if (rv != SECSuccess) {
       return NS_ERROR_DOM_UNKNOWN_ERR;
     }
-    mCertificate->derCert = *signedCert;
+
+    mCertificate.reset(CERT_NewTempCertificate(CERT_GetDefaultCertDB(), certDer,
+                                               nullptr, false, true));
+    if (!mCertificate) {
+      return NS_ERROR_DOM_UNKNOWN_ERR;
+    }
     return NS_OK;
   }
 
@@ -238,9 +244,6 @@ class GenerateRTCCertificateTask : public GenerateAsymmetricKeyTask {
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = GenerateCertificate();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = SignCertificate();
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;

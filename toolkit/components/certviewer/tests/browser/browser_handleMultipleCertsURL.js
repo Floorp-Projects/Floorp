@@ -16,54 +16,61 @@ async function checkSubjectName(inputPage, subjectsNameInfo) {
       gBrowser,
       url: inputPage,
     },
-    async function(browser) {
-      await SpecialPowers.spawn(browser, [subjectsNameInfo], async function(
-        subjectsNameInfoExpected
-      ) {
-        let certificateSection = await ContentTaskUtils.waitForCondition(() => {
-          return content.document.querySelector("certificate-section");
-        }, "Certificate section found");
-
-        async function selectTab(tabName, index) {
-          let tabs = certificateSection.shadowRoot.querySelector(
-            ".certificate-tabs"
+    async function (browser) {
+      await SpecialPowers.spawn(
+        browser,
+        [subjectsNameInfo],
+        async function (subjectsNameInfoExpected) {
+          let certificateSection = await ContentTaskUtils.waitForCondition(
+            () => {
+              return content.document.querySelector("certificate-section");
+            },
+            "Certificate section found"
           );
 
-          let tab = tabs.querySelector(`.tab[idnumber="${index}"]`);
-          Assert.ok(tab, `Tab at index ${index} found`);
-          Assert.equal(tab.innerText, tabName, `Tab name should be ${tabName}`);
+          async function selectTab(tabName, index) {
+            let tabs =
+              certificateSection.shadowRoot.querySelector(".certificate-tabs");
 
-          tab.click();
+            let tab = tabs.querySelector(`.tab[idnumber="${index}"]`);
+            Assert.ok(tab, `Tab at index ${index} found`);
+            Assert.equal(
+              tab.innerText,
+              tabName,
+              `Tab name should be ${tabName}`
+            );
+
+            tab.click();
+          }
+
+          function checkSelectedTab(sectionItemsExpected, index) {
+            let infoGroup = certificateSection.shadowRoot.querySelector(
+              `#panel${index} info-group`
+            );
+            Assert.ok(infoGroup, "infoGroup found");
+
+            let sectionTitle =
+              infoGroup.shadowRoot.querySelector(".info-group-title").innerText;
+            Assert.equal(
+              sectionTitle,
+              "Subject Name",
+              "Subject Name must be the selected item"
+            );
+
+            let infoItems = infoGroup.shadowRoot.querySelectorAll("info-item");
+            Assert.equal(
+              infoItems.length,
+              sectionItemsExpected.length,
+              "sectionItems must be the same length"
+            );
+          }
+
+          for (let i = 0; i < subjectsNameInfoExpected.length; i++) {
+            await selectTab(subjectsNameInfoExpected[i].tabName, i);
+            checkSelectedTab(subjectsNameInfoExpected[i].sectionItems, i);
+          }
         }
-
-        function checkSelectedTab(sectionItemsExpected, index) {
-          let infoGroup = certificateSection.shadowRoot.querySelector(
-            `#panel${index} info-group`
-          );
-          Assert.ok(infoGroup, "infoGroup found");
-
-          let sectionTitle = infoGroup.shadowRoot.querySelector(
-            ".info-group-title"
-          ).innerText;
-          Assert.equal(
-            sectionTitle,
-            "Subject Name",
-            "Subject Name must be the selected item"
-          );
-
-          let infoItems = infoGroup.shadowRoot.querySelectorAll("info-item");
-          Assert.equal(
-            infoItems.length,
-            sectionItemsExpected.length,
-            "sectionItems must be the same length"
-          );
-        }
-
-        for (let i = 0; i < subjectsNameInfoExpected.length; i++) {
-          await selectTab(subjectsNameInfoExpected[i].tabName, i);
-          checkSelectedTab(subjectsNameInfoExpected[i].sectionItems, i);
-        }
-      });
+      );
     }
   );
 }
@@ -74,46 +81,50 @@ async function checkTabsName(inputPage, tabsNames) {
       gBrowser,
       url: inputPage,
     },
-    async function(browser) {
-      await SpecialPowers.spawn(browser, [tabsNames], async function(
-        expectedTabsNames
-      ) {
-        let certificateSection = await ContentTaskUtils.waitForCondition(() => {
-          return content.document.querySelector("certificate-section");
-        }, "Certificate section found");
-
-        let tabsSection = certificateSection.shadowRoot.querySelector(
-          ".certificate-tabs"
-        );
-        Assert.ok(tabsSection, "Tabs section found");
-
-        let tabs = tabsSection.children;
-        Assert.equal(
-          tabs.length,
-          expectedTabsNames.length,
-          `There must be ${expectedTabsNames.length} tabs`
-        );
-
-        for (let i = 0; i < expectedTabsNames.length; i++) {
-          Assert.equal(
-            tabs[i].innerText,
-            expectedTabsNames[i],
-            "Tab name must be equal to expected tab name"
+    async function (browser) {
+      await SpecialPowers.spawn(
+        browser,
+        [tabsNames],
+        async function (expectedTabsNames) {
+          let certificateSection = await ContentTaskUtils.waitForCondition(
+            () => {
+              return content.document.querySelector("certificate-section");
+            },
+            "Certificate section found"
           );
-          if (i === 0) {
-            Assert.ok(
-              tabs[i].className.includes("selected"),
-              "First tab must be selected"
-            );
-          } else {
+
+          let tabsSection =
+            certificateSection.shadowRoot.querySelector(".certificate-tabs");
+          Assert.ok(tabsSection, "Tabs section found");
+
+          let tabs = tabsSection.children;
+          Assert.equal(
+            tabs.length,
+            expectedTabsNames.length,
+            `There must be ${expectedTabsNames.length} tabs`
+          );
+
+          for (let i = 0; i < expectedTabsNames.length; i++) {
             Assert.equal(
-              tabs[i].className.includes("selected"),
-              false,
-              "Just the first tab must be selected"
+              tabs[i].innerText,
+              expectedTabsNames[i],
+              "Tab name must be equal to expected tab name"
             );
+            if (i === 0) {
+              Assert.ok(
+                tabs[i].className.includes("selected"),
+                "First tab must be selected"
+              );
+            } else {
+              Assert.equal(
+                tabs[i].className.includes("selected"),
+                false,
+                "Just the first tab must be selected"
+              );
+            }
           }
         }
-      });
+      );
     }
   );
 }
@@ -124,26 +135,30 @@ async function checkDOM(inputPage, errorExpected) {
       gBrowser,
       url: inputPage,
     },
-    async function(browser) {
-      await SpecialPowers.spawn(browser, [errorExpected], async function(
-        errorExpected
-      ) {
-        let certificateSection = await ContentTaskUtils.waitForCondition(() => {
-          return content.document.querySelector("certificate-section");
-        }, "Certificate section found");
+    async function (browser) {
+      await SpecialPowers.spawn(
+        browser,
+        [errorExpected],
+        async function (errorExpected) {
+          let certificateSection = await ContentTaskUtils.waitForCondition(
+            () => {
+              return content.document.querySelector("certificate-section");
+            },
+            "Certificate section found"
+          );
 
-        let errorSection = certificateSection.shadowRoot.querySelector(
-          "error-section"
-        );
+          let errorSection =
+            certificateSection.shadowRoot.querySelector("error-section");
 
-        if (errorExpected) {
-          // should render error page
-          Assert.ok(errorSection, "Error section found");
-        } else {
-          // should render page with certificate info
-          Assert.equal(errorSection, null, "Error section was not found");
+          if (errorExpected) {
+            // should render error page
+            Assert.ok(errorSection, "Error section found");
+          } else {
+            // should render page with certificate info
+            Assert.equal(errorSection, null, "Error section was not found");
+          }
         }
-      });
+      );
     }
   );
 }

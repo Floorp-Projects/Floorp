@@ -121,7 +121,8 @@ function connectRuntime(id) {
       await setDefaultPreferencesIfNeeded(clientWrapper, DEFAULT_PREFERENCES);
 
       const deviceDescription = await clientWrapper.getDeviceDescription();
-      const compatibilityReport = await clientWrapper.checkVersionCompatibility();
+      const compatibilityReport =
+        await clientWrapper.checkVersionCompatibility();
       const icon = await getRuntimeIcon(runtime, deviceDescription.channel);
 
       const {

@@ -73,10 +73,7 @@ impl fmt::Debug for Device {
 
         let mut doc_uri = nsCString::new();
         unsafe {
-            bindings::Gecko_nsIURI_Debug(
-                (*self.document()).mDocumentURI.raw::<structs::nsIURI>(),
-                &mut doc_uri,
-            )
+            bindings::Gecko_nsIURI_Debug((*self.document()).mDocumentURI.raw(), &mut doc_uri)
         };
 
         f.debug_struct("Device")
@@ -131,13 +128,12 @@ impl Device {
                 line_height,
                 pres_context.map_or(std::ptr::null(), |pc| pc),
                 vertical,
-                font.gecko(),
-                element.map_or(std::ptr::null(), |e| e.0)
+                &**font,
+                element.map_or(std::ptr::null(), |e| e.0),
             )
         });
         NonNegativeLength::new(au.to_f32_px())
     }
-
 
     /// Tells the device that a new viewport rule has been found, and stores the
     /// relevant viewport constraints.
@@ -208,9 +204,7 @@ impl Device {
             // XXX: we could have a more reasonable default perhaps.
             None => return Length::new(0.0),
         };
-        Length::new(unsafe {
-            bindings::Gecko_GetScrollbarInlineSize(pc)
-        })
+        Length::new(unsafe { bindings::Gecko_GetScrollbarInlineSize(pc) })
     }
 
     /// Queries font metrics
@@ -231,7 +225,7 @@ impl Device {
             bindings::Gecko_GetFontMetrics(
                 pc,
                 vertical,
-                font.gecko(),
+                &**font,
                 base_size,
                 // we don't use the user font set in a media query
                 !in_media_query,
@@ -457,6 +451,14 @@ impl Device {
         unsafe { bindings::Gecko_VisitedStylesEnabled(self.document()) }
     }
 
+    /// Returns the number of app units per device pixel we're using currently.
+    pub fn app_units_per_device_pixel(&self) -> i32 {
+        match self.pres_context() {
+            Some(pc) => pc.mCurAppUnitsPerDevPixel,
+            None => AU_PER_PX,
+        }
+    }
+
     /// Returns the device pixel ratio.
     pub fn device_pixel_ratio(&self) -> Scale<f32, CSSPixel, DevicePixel> {
         let pc = match self.pres_context() {
@@ -511,24 +513,24 @@ impl Device {
 
     /// Returns the current effective text zoom.
     #[inline]
-    fn effective_text_zoom(&self) -> f32 {
+    fn text_zoom(&self) -> f32 {
         let pc = match self.pres_context() {
             Some(pc) => pc,
             None => return 1.,
         };
-        pc.mEffectiveTextZoom
+        pc.mTextZoom
     }
 
     /// Applies text zoom to a font-size or line-height value (see nsStyleFont::ZoomText).
     #[inline]
     pub fn zoom_text(&self, size: Length) -> Length {
-        size.scale_by(self.effective_text_zoom())
+        size.scale_by(self.text_zoom())
     }
 
     /// Un-apply text zoom.
     #[inline]
     pub fn unzoom_text(&self, size: Length) -> Length {
-        size.scale_by(1. / self.effective_text_zoom())
+        size.scale_by(1. / self.text_zoom())
     }
 
     /// Returns safe area insets

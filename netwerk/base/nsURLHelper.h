@@ -318,10 +318,14 @@ class URLParams final {
 
   bool Has(const nsAString& aName);
 
+  bool Has(const nsAString& aName, const nsAString& aValue);
+
   /**
    * \brief Deletes all parameters with the given name.
    */
   void Delete(const nsAString& aName);
+
+  void Delete(const nsAString& aName, const nsAString& aValue);
 
   void DeleteAll() { mParams.Clear(); }
 

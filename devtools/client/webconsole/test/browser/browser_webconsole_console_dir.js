@@ -7,13 +7,13 @@
 const TEST_URI =
   "data:text/html;charset=utf8,<!DOCTYPE html><h1>test console.dir</h1>";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   logAllStoreChanges(hud);
 
   info("console.dir on an array");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.wrappedJSObject.console.dir([1, 2, { a: "a", b: "b" }]);
   });
   let dirMessageNode = await waitFor(() =>
@@ -53,7 +53,7 @@ add_task(async function() {
     res["item-" + (i + 1).toString().padStart(3, "0")] = i + 1;
     return res;
   }, {});
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [obj], function(data) {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [obj], function (data) {
     content.wrappedJSObject.console.dir(data);
   });
   dirMessageNode = await waitFor(() => findConsoleDir(hud.ui.outputNode, 1));
@@ -90,7 +90,7 @@ add_task(async function() {
   is(JSON.stringify(propertiesNodes), JSON.stringify(objectPropertiesNames));
 
   info("console.dir on an error object");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     const err = new Error("myErrorMessage");
     err.myCustomProperty = "myCustomPropertyValue";
     content.wrappedJSObject.console.dir(err);

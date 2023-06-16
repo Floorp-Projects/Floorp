@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   let tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   await promiseBrowserLoaded(tab.linkedBrowser);
 
@@ -17,6 +17,6 @@ add_task(async function() {
   ss.setCustomTabValue(tab, "foobar", r);
 
   await promiseRemoveTabAndSessionState(tab);
-  let closedTabData = ss.getClosedTabData(window);
+  let closedTabData = ss.getClosedTabDataForWindow(window);
   ok(!closedTabData.includes(r), "tab not stored in _closedTabs");
 });

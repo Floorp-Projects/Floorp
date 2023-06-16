@@ -4,7 +4,7 @@
 var testPath = "http://mochi.test:8888/browser/docshell/test/navigation/";
 var ctx = {};
 
-add_task(async function() {
+add_task(async function () {
   // Step 1.
 
   // Get a handle on the initial tab
@@ -59,7 +59,7 @@ add_task(async function() {
   // Tab 2's window _and_ its iframes should be inactive
   ok(!ctx.tab2Browser.docShellIsActive, "Tab 2 should be inactive");
 
-  await SpecialPowers.spawn(ctx.tab2Browser, [], async function() {
+  await SpecialPowers.spawn(ctx.tab2Browser, [], async function () {
     Assert.equal(content.frames.length, 2, "Tab 2 should have 2 iframes");
     for (var i = 0; i < content.frames.length; i++) {
       info("step 3, frame " + i + " info: " + content.frames[i].location);
@@ -79,41 +79,43 @@ add_task(async function() {
   // Step 4.
 
   async function checkTab2Active(outerExpected) {
-    await SpecialPowers.spawn(ctx.tab2Browser, [outerExpected], async function(
-      expected
-    ) {
-      function isActive(aWindow) {
-        var docshell = aWindow.docShell;
-        info(`checking ${docshell.browsingContext.id}`);
-        return docshell.browsingContext.isActive;
-      }
+    await SpecialPowers.spawn(
+      ctx.tab2Browser,
+      [outerExpected],
+      async function (expected) {
+        function isActive(aWindow) {
+          var docshell = aWindow.docShell;
+          info(`checking ${docshell.browsingContext.id}`);
+          return docshell.browsingContext.isActive;
+        }
 
-      let active = expected ? "active" : "inactive";
-      Assert.equal(content.frames.length, 2, "Tab 2 should have 2 iframes");
-      for (var i = 0; i < content.frames.length; i++) {
-        info("step 4, frame " + i + " info: " + content.frames[i].location);
+        let active = expected ? "active" : "inactive";
+        Assert.equal(content.frames.length, 2, "Tab 2 should have 2 iframes");
+        for (var i = 0; i < content.frames.length; i++) {
+          info("step 4, frame " + i + " info: " + content.frames[i].location);
+        }
+        Assert.equal(
+          content.frames[0].frames.length,
+          1,
+          "Tab 2 iframe 0 should have 1 iframes"
+        );
+        Assert.equal(
+          isActive(content.frames[0]),
+          expected,
+          `Tab2 iframe 0 should be ${active}`
+        );
+        Assert.equal(
+          isActive(content.frames[0].frames[0]),
+          expected,
+          `Tab2 iframe 0 subiframe 0 should be ${active}`
+        );
+        Assert.equal(
+          isActive(content.frames[1]),
+          expected,
+          `Tab2 iframe 1 should be ${active}`
+        );
       }
-      Assert.equal(
-        content.frames[0].frames.length,
-        1,
-        "Tab 2 iframe 0 should have 1 iframes"
-      );
-      Assert.equal(
-        isActive(content.frames[0]),
-        expected,
-        `Tab2 iframe 0 should be ${active}`
-      );
-      Assert.equal(
-        isActive(content.frames[0].frames[0]),
-        expected,
-        `Tab2 iframe 0 subiframe 0 should be ${active}`
-      );
-      Assert.equal(
-        isActive(content.frames[1]),
-        expected,
-        `Tab2 iframe 1 should be ${active}`
-      );
-    });
+    );
   }
 
   is(
@@ -159,7 +161,7 @@ add_task(async function() {
     "Got expected tab 2 url in step 5"
   );
 
-  await SpecialPowers.spawn(ctx.tab2Browser, [], async function() {
+  await SpecialPowers.spawn(ctx.tab2Browser, [], async function () {
     for (var i = 0; i < content.frames.length; i++) {
       let bc = content.frames[i].browsingContext;
       Assert.ok(bc.isActive, `Tab2 iframe ${i} should be active`);
@@ -188,7 +190,7 @@ add_task(async function() {
     "Got expected tab 1 url in step 6"
   );
 
-  await SpecialPowers.spawn(ctx.tab1Browser, [], async function() {
+  await SpecialPowers.spawn(ctx.tab1Browser, [], async function () {
     function isActive(aWindow) {
       var docshell = aWindow.docShell;
       info(`checking ${docshell.browsingContext.id}`);
@@ -205,7 +207,7 @@ add_task(async function() {
 
   ok(!ctx.tab2Browser.docShellIsActive, "Tab 2 should be inactive");
 
-  await SpecialPowers.spawn(ctx.tab2Browser, [], async function() {
+  await SpecialPowers.spawn(ctx.tab2Browser, [], async function () {
     for (var i = 0; i < content.frames.length; i++) {
       let bc = content.frames[i].browsingContext;
       Assert.ok(!bc.isActive, `Tab2 iframe ${i} should be inactive`);
@@ -224,33 +226,34 @@ add_task(async function() {
 
   async function checkBrowser(browser, outerTabNum, outerActive) {
     let data = { tabNum: outerTabNum, active: outerActive };
-    await SpecialPowers.spawn(browser, [data], async function({
-      tabNum,
-      active,
-    }) {
-      function isActive(aWindow) {
-        var docshell = aWindow.docShell;
-        info(`checking ${docshell.browsingContext.id}`);
-        return docshell.browsingContext.isActive;
-      }
+    await SpecialPowers.spawn(
+      browser,
+      [data],
+      async function ({ tabNum, active }) {
+        function isActive(aWindow) {
+          var docshell = aWindow.docShell;
+          info(`checking ${docshell.browsingContext.id}`);
+          return docshell.browsingContext.isActive;
+        }
 
-      let activestr = active ? "active" : "inactive";
-      Assert.equal(
-        isActive(content.frames[0]),
-        active,
-        `Tab${tabNum} iframe 0 should be ${activestr}`
-      );
-      Assert.equal(
-        isActive(content.frames[0].frames[0]),
-        active,
-        `Tab${tabNum} iframe 0 subiframe 0 should be ${activestr}`
-      );
-      Assert.equal(
-        isActive(content.frames[1]),
-        active,
-        `Tab${tabNum} iframe 1 should be ${activestr}`
-      );
-    });
+        let activestr = active ? "active" : "inactive";
+        Assert.equal(
+          isActive(content.frames[0]),
+          active,
+          `Tab${tabNum} iframe 0 should be ${activestr}`
+        );
+        Assert.equal(
+          isActive(content.frames[0].frames[0]),
+          active,
+          `Tab${tabNum} iframe 0 subiframe 0 should be ${activestr}`
+        );
+        Assert.equal(
+          isActive(content.frames[1]),
+          active,
+          `Tab${tabNum} iframe 1 should be ${activestr}`
+        );
+      }
+    );
   }
 
   // Check everything

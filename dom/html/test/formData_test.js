@@ -218,7 +218,7 @@ function testIterable() {
 function testSend(doneCb) {
   var xhr = new XMLHttpRequest();
   xhr.open("POST", "form_submit_server.sjs");
-  xhr.onload = function() {
+  xhr.onload = function () {
     var response = xhr.response;
 
     for (var entry of response) {

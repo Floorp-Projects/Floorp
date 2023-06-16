@@ -18,7 +18,7 @@ function test() {
   // Wait for tab load, the code checks for currentURI.
   testTab2.linkedBrowser.addEventListener(
     "load",
-    function() {
+    function () {
       // Hide the original tab
       gBrowser.selectedTab = testTab2;
       gBrowser.showOnlyTheseTabs([testTab2]);

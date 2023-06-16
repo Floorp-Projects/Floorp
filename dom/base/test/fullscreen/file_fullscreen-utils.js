@@ -3,7 +3,7 @@
 // to 0 when we load a test.
 var fullscreenChangeEnters = 0;
 
-addLoadEvent(function() {
+addLoadEvent(function () {
   info(`Resetting fullscreen enter count.`);
   fullscreenChangeEnters = 0;
 });
@@ -58,7 +58,7 @@ function addFullscreenChangeContinuation(type, callback, inDoc) {
 // Calls |callback| when the next fullscreenerror is dispatched to inDoc||document.
 function addFullscreenErrorContinuation(callback, inDoc) {
   let doc = inDoc || document;
-  let listener = function(event) {
+  let listener = function (event) {
     doc.removeEventListener("fullscreenerror", listener);
     // Delay invocation so other listeners have a chance to respond before
     // we continue.
@@ -72,7 +72,7 @@ function addFullscreenErrorContinuation(callback, inDoc) {
 function waitForLoadAndPaint(win, callback) {
   win.addEventListener(
     "MozAfterPaint",
-    function() {
+    function () {
       // The load event may have fired before the MozAfterPaint, in which case
       // listening for it now will hang. Instead we check the readyState to see if
       // it already fired, and if so, invoke the callback right away.

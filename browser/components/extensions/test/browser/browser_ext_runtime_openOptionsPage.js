@@ -22,7 +22,7 @@ async function loadExtension(options) {
           </head>
         </html>`,
 
-      "options.js": function() {
+      "options.js": function () {
         window.iAmOption = true;
         browser.runtime.sendMessage("options.html");
         browser.runtime.onMessage.addListener((msg, sender, respond) => {
@@ -78,7 +78,7 @@ add_task(async function run_test_inline_options() {
       },
     },
 
-    background: async function() {
+    background: async function () {
       let _optionsPromise;
       let awaitOptions = () => {
         browser.test.assertFalse(
@@ -279,7 +279,7 @@ add_task(async function test_tab_options() {
       },
     },
 
-    background: async function() {
+    background: async function () {
       let _optionsPromise;
       let awaitOptions = () => {
         browser.test.assertFalse(

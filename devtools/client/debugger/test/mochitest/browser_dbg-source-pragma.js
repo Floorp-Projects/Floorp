@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   // Disable handling of //# source(Mapping)URL= comments.
   await SpecialPowers.pushPrefEnv({
     set: [["javascript.options.source_pragmas", false]],

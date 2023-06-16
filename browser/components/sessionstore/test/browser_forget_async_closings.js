@@ -15,7 +15,7 @@ const PAGE = "http://example.com/";
  *        to be forgotten.
  * @returns Promise
  */
-let forgetTabHelper = async function(forgetFn) {
+let forgetTabHelper = async function (forgetFn) {
   // We want to suppress all non-final updates from the browser tabs
   // so as to eliminate any racy-ness with this test.
   await pushPrefs(["browser.sessionstore.debug.no_auto_updates", true]);
@@ -25,7 +25,7 @@ let forgetTabHelper = async function(forgetFn) {
   Services.obs.notifyObservers(null, "browser:purge-session-history");
 
   is(
-    ss.getClosedTabCount(window),
+    ss.getClosedTabCountForWindow(window),
     0,
     "We should have 0 closed tabs being stored."
   );
@@ -44,13 +44,17 @@ let forgetTabHelper = async function(forgetFn) {
   // should cause us to forget the tab.
   forgetFn();
 
-  is(ss.getClosedTabCount(window), 0, "Should have forgotten the closed tab");
+  is(
+    ss.getClosedTabCountForWindow(window),
+    0,
+    "Should have forgotten the closed tab"
+  );
 
   // Now wait for the final update to come up.
   await promise;
 
   is(
-    ss.getClosedTabCount(window),
+    ss.getClosedTabCountForWindow(window),
     0,
     "Should not have stored the forgotten closed tab"
   );
@@ -68,7 +72,7 @@ let forgetTabHelper = async function(forgetFn) {
  *        to be forgotten.
  * @returns Promise
  */
-let forgetWinHelper = async function(forgetFn) {
+let forgetWinHelper = async function (forgetFn) {
   // We want to suppress all non-final updates from the browser tabs
   // so as to eliminate any racy-ness with this test.
   await pushPrefs(["browser.sessionstore.debug.no_auto_updates", true]);

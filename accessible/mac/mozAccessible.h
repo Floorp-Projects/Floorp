@@ -65,11 +65,6 @@ enum CheckedState {
    */
   mozilla::a11y::role mRole;
 
-  /**
-   * A cache of a subset of our states.
-   */
-  uint64_t mCachedState;
-
   nsStaticAtom* mARIARole;
 
   bool mIsLiveRegion;
@@ -80,8 +75,6 @@ enum CheckedState {
 
 // allows for gecko accessible access outside of the class
 - (mozilla::a11y::Accessible*)geckoAccessible;
-
-- (mozilla::a11y::Accessible*)geckoDocument;
 
 // override
 - (void)dealloc;
@@ -109,11 +102,8 @@ enum CheckedState {
 // Get gecko accessible's state filtered through given mask.
 - (uint64_t)stateWithMask:(uint64_t)mask;
 
-// Notify of a state change, so the cache can be altered.
+// Notify of a state change, so notifications can be fired.
 - (void)stateChanged:(uint64_t)state isEnabled:(BOOL)enabled;
-
-// Invalidate cached state.
-- (void)invalidateState;
 
 // Get top level (tab) web area.
 - (mozAccessible*)topWebArea;

@@ -19,8 +19,8 @@ import {TLSSocket} from 'tls';
 import expect from 'expect';
 import {Browser} from 'puppeteer-core/internal/api/Browser.js';
 import {BrowserContext} from 'puppeteer-core/internal/api/BrowserContext.js';
+import {HTTPResponse} from 'puppeteer-core/internal/api/HTTPResponse.js';
 import {Page} from 'puppeteer-core/internal/api/Page.js';
-import {HTTPResponse} from 'puppeteer-core/internal/common/HTTPResponse.js';
 
 import {getTestState} from './mocha-utils.js';
 
@@ -95,7 +95,7 @@ describe('ignoreHTTPSErrors', function () {
         httpsServer.waitForRequest('/plzredirect'),
         page.goto(httpsServer.PREFIX + '/plzredirect'),
       ]);
-      expect(responses.length).toBe(2);
+      expect(responses).toHaveLength(2);
       expect(responses[0]!.status()).toBe(302);
       const securityDetails = responses[0]!.securityDetails()!;
       const protocol = (serverRequest.socket as TLSSocket)
@@ -134,7 +134,7 @@ describe('ignoreHTTPSErrors', function () {
     await page.goto(httpsServer.PREFIX + '/mixedcontent.html', {
       waitUntil: 'load',
     });
-    expect(page.frames().length).toBe(2);
+    expect(page.frames()).toHaveLength(2);
     // Make sure blocked iframe has functional execution context
     // @see https://github.com/puppeteer/puppeteer/issues/2709
     expect(await page.frames()[0]!.evaluate('1 + 2')).toBe(3);

@@ -37,10 +37,7 @@ describe("CollapsibleSection", () => {
 
   it("should render an ErrorBoundary with class section-body-fallback", () => {
     assert.equal(
-      wrapper
-        .find(ErrorBoundary)
-        .first()
-        .prop("className"),
+      wrapper.find(ErrorBoundary).first().prop("className"),
       "section-body-fallback"
     );
   });
@@ -53,10 +50,7 @@ describe("CollapsibleSection", () => {
     });
     it("should render the section uncollapsed", () => {
       assert.isFalse(
-        wrapper
-          .find(".collapsible-section")
-          .first()
-          .hasClass("collapsed")
+        wrapper.find(".collapsible-section").first().hasClass("collapsed")
       );
     });
 

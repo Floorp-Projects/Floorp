@@ -5,7 +5,7 @@
 
 requestLongerTimeout(2);
 
-add_task(async function() {
+add_task(async function () {
   let initialTabsLength = gBrowser.tabs.length;
 
   let arrowScrollbox = gBrowser.tabContainer.arrowScrollbox;
@@ -39,7 +39,7 @@ add_task(async function() {
     overflowAtStart: false,
   });
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     while (gBrowser.tabs.length > initialTabsLength) {
       gBrowser.removeTab(
         gBrowser.tabContainer.getItemAtIndex(initialTabsLength)

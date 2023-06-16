@@ -1,1 +1,102 @@
-[["warning", "implicit conversion bool -> 'char'", "readability-implicit-bool-conversion"], ["warning", "implicit conversion bool -> 'short'", "readability-implicit-bool-conversion"], ["warning", "implicit conversion bool -> 'int'", "readability-implicit-bool-conversion"], ["warning", "implicit conversion bool -> 'long'", "readability-implicit-bool-conversion"], ["warning", "implicit conversion bool -> 'unsigned char'", "readability-implicit-bool-conversion"], ["warning", "implicit conversion bool -> 'unsigned short'", "readability-implicit-bool-conversion"], ["warning", "implicit conversion bool -> 'unsigned int'", "readability-implicit-bool-conversion"], ["warning", "implicit conversion bool -> 'unsigned long'", "readability-implicit-bool-conversion"], ["warning", "implicit conversion bool -> 'char'", "readability-implicit-bool-conversion"], ["warning", "implicit conversion bool -> 'short'", "readability-implicit-bool-conversion"], ["warning", "implicit conversion bool -> 'int'", "readability-implicit-bool-conversion"], ["warning", "implicit conversion bool -> 'long'", "readability-implicit-bool-conversion"], ["warning", "implicit conversion bool -> 'unsigned char'", "readability-implicit-bool-conversion"], ["warning", "implicit conversion bool -> 'unsigned short'", "readability-implicit-bool-conversion"], ["warning", "implicit conversion bool -> 'unsigned int'", "readability-implicit-bool-conversion"], ["warning", "implicit conversion bool -> 'unsigned long'", "readability-implicit-bool-conversion"], ["warning", "implicit conversion bool -> 'int'", "readability-implicit-bool-conversion"], ["warning", "implicit conversion bool -> 'int'", "readability-implicit-bool-conversion"], ["warning", "implicit conversion bool -> 'int'", "readability-implicit-bool-conversion"], ["warning", "implicit conversion bool -> 'int'", "readability-implicit-bool-conversion"]]
+[
+  [
+    "warning",
+    "implicit conversion bool -> 'char'",
+    "readability-implicit-bool-conversion"
+  ],
+  [
+    "warning",
+    "implicit conversion bool -> 'short'",
+    "readability-implicit-bool-conversion"
+  ],
+  [
+    "warning",
+    "implicit conversion bool -> 'int'",
+    "readability-implicit-bool-conversion"
+  ],
+  [
+    "warning",
+    "implicit conversion bool -> 'long'",
+    "readability-implicit-bool-conversion"
+  ],
+  [
+    "warning",
+    "implicit conversion bool -> 'unsigned char'",
+    "readability-implicit-bool-conversion"
+  ],
+  [
+    "warning",
+    "implicit conversion bool -> 'unsigned short'",
+    "readability-implicit-bool-conversion"
+  ],
+  [
+    "warning",
+    "implicit conversion bool -> 'unsigned int'",
+    "readability-implicit-bool-conversion"
+  ],
+  [
+    "warning",
+    "implicit conversion bool -> 'unsigned long'",
+    "readability-implicit-bool-conversion"
+  ],
+  [
+    "warning",
+    "implicit conversion bool -> 'char'",
+    "readability-implicit-bool-conversion"
+  ],
+  [
+    "warning",
+    "implicit conversion bool -> 'short'",
+    "readability-implicit-bool-conversion"
+  ],
+  [
+    "warning",
+    "implicit conversion bool -> 'int'",
+    "readability-implicit-bool-conversion"
+  ],
+  [
+    "warning",
+    "implicit conversion bool -> 'long'",
+    "readability-implicit-bool-conversion"
+  ],
+  [
+    "warning",
+    "implicit conversion bool -> 'unsigned char'",
+    "readability-implicit-bool-conversion"
+  ],
+  [
+    "warning",
+    "implicit conversion bool -> 'unsigned short'",
+    "readability-implicit-bool-conversion"
+  ],
+  [
+    "warning",
+    "implicit conversion bool -> 'unsigned int'",
+    "readability-implicit-bool-conversion"
+  ],
+  [
+    "warning",
+    "implicit conversion bool -> 'unsigned long'",
+    "readability-implicit-bool-conversion"
+  ],
+  [
+    "warning",
+    "implicit conversion bool -> 'int'",
+    "readability-implicit-bool-conversion"
+  ],
+  [
+    "warning",
+    "implicit conversion bool -> 'int'",
+    "readability-implicit-bool-conversion"
+  ],
+  [
+    "warning",
+    "implicit conversion bool -> 'int'",
+    "readability-implicit-bool-conversion"
+  ],
+  [
+    "warning",
+    "implicit conversion bool -> 'int'",
+    "readability-implicit-bool-conversion"
+  ]
+]

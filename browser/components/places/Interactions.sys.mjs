@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "logConsole", function() {
+XPCOMUtils.defineLazyGetter(lazy, "logConsole", function () {
   return console.createInstance({
     prefix: "InteractionsManager",
     maxLogLevel: Services.prefs.getBoolPref(
@@ -398,23 +398,24 @@ class _Interactions {
     }
 
     // Collect the scrolling data and add the interaction to the store on completion
-    _Interactions.interactionUpdatePromise = _Interactions.interactionUpdatePromise
-      .then(async () => ChromeUtils.collectScrollingData())
-      .then(
-        result => {
-          interaction.scrollingTime += result.interactionTimeInMilliseconds;
-          interaction.scrollingDistance += result.scrollingDistanceInPixels;
-        },
-        reason => {
-          console.error(reason);
-        }
-      )
-      .then(() => {
-        interaction.updated_at = monotonicNow();
+    _Interactions.interactionUpdatePromise =
+      _Interactions.interactionUpdatePromise
+        .then(async () => ChromeUtils.collectScrollingData())
+        .then(
+          result => {
+            interaction.scrollingTime += result.interactionTimeInMilliseconds;
+            interaction.scrollingDistance += result.scrollingDistanceInPixels;
+          },
+          reason => {
+            console.error(reason);
+          }
+        )
+        .then(() => {
+          interaction.updated_at = monotonicNow();
 
-        lazy.logConsole.debug("Add to store: ", interaction);
-        store.add(interaction);
-      });
+          lazy.logConsole.debug("Add to store: ", interaction);
+          store.add(interaction);
+        });
   }
 
   /**
@@ -668,9 +669,7 @@ class InteractionsStore {
       let promise = new Promise(resolve => {
         this.#timerResolve = resolve;
         this.#timer = lazy.setTimeout(() => {
-          this.#updateDatabase()
-            .catch(console.error)
-            .then(resolve);
+          this.#updateDatabase().catch(console.error).then(resolve);
         }, lazy.saveInterval);
       });
       this.pendingPromise = this.pendingPromise.then(() => promise);

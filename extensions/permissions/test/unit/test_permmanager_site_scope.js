@@ -12,15 +12,11 @@ add_task(async function do_test() {
     {}
   );
 
-  let subdomain1Principal = Services.scriptSecurityManager.createContentPrincipal(
-    TEST_FQDN_1_URI,
-    {}
-  );
+  let subdomain1Principal =
+    Services.scriptSecurityManager.createContentPrincipal(TEST_FQDN_1_URI, {});
 
-  let subdomain2Principal = Services.scriptSecurityManager.createContentPrincipal(
-    TEST_FQDN_2_URI,
-    {}
-  );
+  let subdomain2Principal =
+    Services.scriptSecurityManager.createContentPrincipal(TEST_FQDN_2_URI, {});
 
   let otherPrincipal = Services.scriptSecurityManager.createContentPrincipal(
     TEST_OTHER_URI,

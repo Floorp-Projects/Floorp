@@ -35,7 +35,7 @@ function synthesizeKeyAndWaitForFocus(element, keyCode, options) {
 // the urlbar to be focused if there are no active notification anchors.
 add_task(async function testWithoutNotifications() {
   await SpecialPowers.pushPrefEnv({ set: [["accessibility.tabfocus", 7]] });
-  await BrowserTestUtils.withNewTab("https://example.com", async function() {
+  await BrowserTestUtils.withNewTab("https://example.com", async function () {
     await synthesizeKeyAndWaitForFocus(gURLBar, "l", { accelKey: true });
     is(document.activeElement, gURLBar.inputField, "urlbar should be focused");
     await synthesizeKeyAndWaitForFocus(
@@ -55,7 +55,7 @@ add_task(async function testWithoutNotifications() {
 // focus before the identity block.
 add_task(async function testWithNotifications() {
   await SpecialPowers.pushPrefEnv({ set: [["accessibility.tabfocus", 7]] });
-  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function(browser) {
+  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function (browser) {
     let popupshown = BrowserTestUtils.waitForEvent(
       PopupNotifications.panel,
       "popupshown"
@@ -98,7 +98,7 @@ add_task(async function testWithNotifications() {
 // Checks that with invalid pageproxystate the identity block is ignored.
 add_task(async function testInvalidPageProxyState() {
   await SpecialPowers.pushPrefEnv({ set: [["accessibility.tabfocus", 7]] });
-  await BrowserTestUtils.withNewTab("about:blank", async function(browser) {
+  await BrowserTestUtils.withNewTab("about:blank", async function (browser) {
     // Loading about:blank will automatically focus the urlbar, which, however, can
     // race with the test code. So we only send the shortcut if the urlbar isn't focused yet.
     if (document.activeElement != gURLBar.inputField) {

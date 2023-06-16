@@ -130,7 +130,7 @@ class ChildActor extends protocol.Actor {
 
   getIntArray(inputArray) {
     // Test that protocol.js converts an iterator to an array.
-    const f = function*() {
+    const f = function* () {
       for (const i of inputArray) {
         yield 2 * i;
       }
@@ -307,7 +307,7 @@ class RootActor extends protocol.Actor {
   }
 
   getChildren2(ids) {
-    const f = function*() {
+    const f = function* () {
       for (const c of ids) {
         yield c;
       }
@@ -371,7 +371,7 @@ function childrenOfType(pool, type) {
   return children.filter(child => child instanceof type);
 }
 
-add_task(async function() {
+add_task(async function () {
   DevToolsServer.createRootActor = conn => {
     return new RootActor(conn);
   };
@@ -529,7 +529,7 @@ async function testEvents(trace) {
     set.delete("array-object-event");
   });
 
-  const fail = function() {
+  const fail = function () {
     do_throw("Unexpected event");
   };
   ret[1].on("event1", fail);
@@ -598,7 +598,7 @@ async function testManyChildren(trace) {
 
 async function testGenerator(trace) {
   // Test accepting a generator.
-  const f = function*() {
+  const f = function* () {
     for (const i of [1, 2, 3, 4, 5]) {
       yield i;
     }
@@ -611,7 +611,7 @@ async function testGenerator(trace) {
   }
 
   const ids = await rootFront.getChildren(["child1", "child2"]);
-  const f2 = function*() {
+  const f2 = function* () {
     for (const id of ids) {
       yield id;
     }

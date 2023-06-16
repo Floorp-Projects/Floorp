@@ -6,7 +6,7 @@
 
 Services.prefs.setBoolPref("network.early-hints.enabled", true);
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   Services.prefs.clearUserPref("network.early-hints.enabled");
 });
 
@@ -155,7 +155,7 @@ async function test_hint_redirect(
       url,
       waitForLoad: true,
     },
-    async function() {}
+    async function () {}
   );
 
   // wait until all requests are stopped, especially the cancelled ones
@@ -192,8 +192,9 @@ async function test_hint_redirect(
       got.hinted <= expected.hinted + expected.cancelled,
     `${name}: unexpected amount of hinted request made got ${
       got.hinted
-    }, expected between ${expected.hinted} and ${expected.hinted +
-      expected.cancelled}`
+    }, expected between ${expected.hinted} and ${
+      expected.hinted + expected.cancelled
+    }`
   );
   Assert.ok(
     got.normal == expected.normal,
@@ -207,13 +208,11 @@ add_task(async function double_redirect_cross_origin() {
     "double_redirect_cross_origin_both_hints",
     [
       {
-        link:
-          "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image",
+        link: "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image",
         host: "https://example.com/",
       },
       {
-        link:
-          "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image",
+        link: "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image",
         host: "https://example.net",
       },
     ],
@@ -229,8 +228,7 @@ add_task(async function double_redirect_cross_origin() {
         host: "https://example.com/",
       },
       {
-        link:
-          "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image",
+        link: "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image",
         host: "https://example.net",
       },
     ],
@@ -242,13 +240,11 @@ add_task(async function double_redirect_cross_origin() {
     "double_redirect_first_hint",
     [
       {
-        link:
-          "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image",
+        link: "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image",
         host: "https://example.com/",
       },
       {
-        link:
-          "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image",
+        link: "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image",
         host: "https://example.net",
       },
     ],
@@ -263,8 +259,7 @@ add_task(async function redirect_cross_origin() {
     "redirect_cross_origin_start_second_preload",
     [
       {
-        link:
-          "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image",
+        link: "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image",
         host: "https://example.net",
       },
     ],
@@ -276,8 +271,7 @@ add_task(async function redirect_cross_origin() {
     "redirect_cross_origin_dont_use_first_preload",
     [
       {
-        link:
-          "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image&a",
+        link: "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image&a",
         host: "https://example.net",
       },
     ],
@@ -292,8 +286,7 @@ add_task(async function redirect_same_origin() {
     "hint_before_redirect_same_origin",
     [
       {
-        link:
-          "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image",
+        link: "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image",
         host: "https://example.org",
       },
     ],
@@ -305,8 +298,7 @@ add_task(async function redirect_same_origin() {
     "hint_after_redirect_same_origin",
     [
       {
-        link:
-          "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image",
+        link: "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image",
         host: "https://example.org",
       },
     ],

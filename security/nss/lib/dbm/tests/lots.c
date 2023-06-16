@@ -139,7 +139,7 @@ MakeSmallKey(int32 num)
 
     rv.data = data_string;
 
-    sprintf(data_string, "%ld", (long)num);
+    snprintf(data_string, sizeof(data_string), "%ld", (long)num);
     rv.size = strlen(data_string);
 
     return (&rv);
@@ -192,7 +192,7 @@ VerifyData(DBT *data, int32 num, key_type_enum key_type)
     size_t size;
     int32 *int32_array;
 
-    /* The first int32 is count 
+    /* The first int32 is count
 	 * The other n entries should
 	 * all equal num
 	 */
@@ -357,7 +357,7 @@ AddOrDelRange(int32 low, int32 high, int action, key_type_enum key_type)
 #endif
 
 #if 0 /* only do this if your really analy checking the puts */
-	 
+
 			/* make sure we can still get it
 			 */
 			status = (*database->get)(database, key, &tmp_data, 0);

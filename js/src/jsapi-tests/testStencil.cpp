@@ -11,6 +11,7 @@
 
 #include "frontend/CompilationStencil.h"
 #include "js/CompilationAndEvaluation.h"
+#include "js/experimental/CompileScript.h"
 #include "js/experimental/JSStencil.h"
 #include "js/Modules.h"
 #include "js/OffThreadScriptCompilation.h"
@@ -246,6 +247,16 @@ BEGIN_TEST(testStencil_Transcode) {
       JS::TranscodeResult res =
           JS::DecodeStencil(cx, decodeOptions, range, getter_AddRefs(stencil));
       CHECK(res == JS::TranscodeResult::Ok);
+    }
+
+    {
+      JS::FrontendContext* fc = JS::NewFrontendContext();
+      JS::DecodeOptions decodeOptions;
+      JS::TranscodeRange range(buffer.begin(), buffer.length());
+      JS::TranscodeResult res =
+          JS::DecodeStencil(fc, decodeOptions, range, getter_AddRefs(stencil));
+      CHECK(res == JS::TranscodeResult::Ok);
+      JS::DestroyFrontendContext(fc);
     }
 
     // Delete the buffer to verify that the decoded stencil has no dependency

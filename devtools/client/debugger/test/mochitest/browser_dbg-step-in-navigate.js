@@ -6,7 +6,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger("doc-scripts.html", "simple3.js", "long.js");
 
   // With the debugger stopped at a breakpoint, blackbox the current source and step in

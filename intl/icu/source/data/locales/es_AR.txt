@@ -33,19 +33,6 @@ es_AR{
                 yMEd{"E, d/M/y"}
                 yMMMd{"d 'de' MMM 'de' y"}
             }
-            dayNames{
-                format{
-                    narrow{
-                        "D",
-                        "L",
-                        "M",
-                        "M",
-                        "J",
-                        "V",
-                        "S",
-                    }
-                }
-            }
             dayPeriod{
                 format{
                     abbreviated{

@@ -10,7 +10,7 @@ let defaultTestEngine;
 // The main search keyword used in tests
 const SEARCH_STRING = "chocolate cake";
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.showSearchTerms.featureGate", true]],
   });
@@ -25,7 +25,7 @@ add_setup(async function() {
   );
   defaultTestEngine = Services.search.getEngineByName("MozSearch");
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.history.clear();
   });
 });

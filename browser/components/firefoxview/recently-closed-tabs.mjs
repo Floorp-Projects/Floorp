@@ -133,7 +133,9 @@ class RecentlyClosedTabsList extends MozLitElement {
   }
 
   dismissTabAndUpdateForElement(item) {
-    let recentlyClosedList = lazy.SessionStore.getClosedTabData(getWindow());
+    let recentlyClosedList = lazy.SessionStore.getClosedTabDataForWindow(
+      getWindow()
+    );
     let closedTabIndex = recentlyClosedList.findIndex(closedTab => {
       return closedTab.closedId === parseInt(item.dataset.tabid, 10);
     });
@@ -162,7 +164,7 @@ class RecentlyClosedTabsList extends MozLitElement {
   }
 
   updateRecentlyClosedTabs() {
-    let recentlyClosedTabsData = lazy.SessionStore.getClosedTabData(
+    let recentlyClosedTabsData = lazy.SessionStore.getClosedTabDataForWindow(
       getWindow()
     );
     this.recentlyClosedTabs = recentlyClosedTabsData.slice(
@@ -181,9 +183,7 @@ class RecentlyClosedTabsList extends MozLitElement {
     if (!recentlyClosedTabs.length) {
       // Show empty message if no recently closed tabs
       closedTabsContainer.toggleContainerStyleForEmptyMsg(true);
-      return html`
-        ${this.emptyMessageTemplate()}
-      `;
+      return html` ${this.emptyMessageTemplate()} `;
     }
 
     closedTabsContainer.toggleContainerStyleForEmptyMsg(false);
@@ -237,7 +237,7 @@ class RecentlyClosedTabsList extends MozLitElement {
       >
         <img
           id="recently-closed-empty-image"
-          src="chrome://browser/content/recently-closed-empty.svg"
+          src="chrome://browser/content/firefoxview/recently-closed-empty.svg"
           role="presentation"
           alt=""
         />
@@ -448,7 +448,7 @@ class RecentlyClosedTabsContainer extends HTMLDetailsElement {
 
   getClosedTabCount = () => {
     try {
-      return lazy.SessionStore.getClosedTabCount(getWindow());
+      return lazy.SessionStore.getClosedTabCountForWindow(getWindow());
     } catch (ex) {
       return 0;
     }

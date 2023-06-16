@@ -25,7 +25,7 @@ add_task(async function testWindowGetAll() {
   );
 
   let extension = ExtensionTestUtils.loadExtension({
-    background: async function() {
+    background: async function () {
       let wins = await browser.windows.getAll();
       browser.test.assertEq(2, wins.length, "Expect two windows");
 
@@ -127,7 +127,7 @@ add_task(async function testWindowTitle() {
     Management: {
       global: { windowTracker },
     },
-  } = ChromeUtils.import("resource://gre/modules/Extension.jsm");
+  } = ChromeUtils.importESModule("resource://gre/modules/Extension.sys.mjs");
 
   async function createApiWin(options) {
     let promiseLoaded = BrowserTestUtils.waitForNewWindow({ url: START_URL });

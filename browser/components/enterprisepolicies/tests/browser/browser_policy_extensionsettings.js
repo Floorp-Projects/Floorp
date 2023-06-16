@@ -152,7 +152,7 @@ add_task(async function test_install_source_blocked_direct() {
   await SpecialPowers.spawn(
     tab.linkedBrowser,
     [{ baseUrl: BASE_URL }],
-    async function({ baseUrl }) {
+    async function ({ baseUrl }) {
       content.document.location.href = baseUrl + "policytest_v0.1.xpi";
     }
   );
@@ -252,7 +252,7 @@ add_task(async function test_install_source_allowed_direct() {
   await SpecialPowers.spawn(
     tab.linkedBrowser,
     [{ baseUrl: BASE_URL }],
-    async function({ baseUrl }) {
+    async function ({ baseUrl }) {
       content.document.location.href = baseUrl + "policytest_v0.1.xpi";
     }
   );

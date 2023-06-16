@@ -113,7 +113,6 @@ def browser_kwargs(logger, test_type, run_info_data, config, **kwargs):
                                                          **kwargs),
             "leak_check": run_info_data["debug"] and (kwargs["leak_check"] is not False),
             "asan": run_info_data.get("asan"),
-            "stylo_threads": kwargs["stylo_threads"],
             "chaos_mode_flags": kwargs["chaos_mode_flags"],
             "config": config,
             "browser_channel": kwargs["browser_channel"],
@@ -140,13 +139,16 @@ def executor_kwargs(logger, test_type, test_environment, run_info_data,
     if test_type == "wdspec":
         options = {"args": []}
         if kwargs["binary"]:
-            options["binary"] = kwargs["binary"]
+            if not "webdriver_args" in executor_kwargs:
+                executor_kwargs["webdriver_args"] = []
+            executor_kwargs["webdriver_args"].extend(["--binary", kwargs["binary"]])
         if kwargs["binary_args"]:
             options["args"] = kwargs["binary_args"]
 
         if not kwargs["binary"] and kwargs["headless"] and "--headless" not in options["args"]:
             options["args"].append("--headless")
 
+        executor_kwargs["binary_args"] = options["args"]
         capabilities["moz:firefoxOptions"] = options
 
     if kwargs["certutil_binary"] is None:
@@ -195,7 +197,8 @@ def run_info_extras(**kwargs):
           "fission": not kwargs.get("disable_fission"),
           "sessionHistoryInParent": (not kwargs.get("disable_fission") or
                                      not get_bool_pref("fission.disableSessionHistoryInParent")),
-          "swgl": get_bool_pref("gfx.webrender.software")}
+          "swgl": get_bool_pref("gfx.webrender.software"),
+          "editorLegacyDirectionMode": get_bool_pref_if_exists("editor.join_split_direction.compatible_with_the_other_browsers") is False}
 
     rv.update(run_info_browser_version(**kwargs))
 
@@ -217,7 +220,7 @@ def run_info_browser_version(**kwargs):
 
 
 def update_properties():
-    return (["os", "debug", "fission", "processor", "swgl", "domstreams"],
+    return (["os", "debug", "fission", "processor", "swgl", "domstreams", "editorLegacyDirectionMode"],
             {"os": ["version"], "processor": ["bits"]})
 
 
@@ -236,14 +239,11 @@ def log_gecko_crashes(logger, process, test, profile_dir, symbols_path, stackwal
         return False
 
 
-def get_environ(logger, binary, debug_info, stylo_threads, headless,
-                chaos_mode_flags=None):
+def get_environ(logger, binary, debug_info, headless, chaos_mode_flags=None):
     env = test_environment(xrePath=os.path.abspath(os.path.dirname(binary)),
                            debugger=debug_info is not None,
                            useLSan=True,
                            log=logger)
-
-    env["STYLO_THREADS"] = str(stylo_threads)
     # Disable window occlusion. Bug 1733955
     env["MOZ_WINDOW_OCCLUSION"] = "0"
     if chaos_mode_flags is not None:
@@ -272,7 +272,7 @@ class FirefoxInstanceManager:
     __metaclass__ = ABCMeta
 
     def __init__(self, logger, binary, binary_args, profile_creator, debug_info,
-                 chaos_mode_flags, headless, stylo_threads,
+                 chaos_mode_flags, headless,
                  leak_check, stackfix_dir, symbols_path, asan):
         """Object that manages starting and stopping instances of Firefox."""
         self.logger = logger
@@ -282,7 +282,6 @@ class FirefoxInstanceManager:
         self.debug_info = debug_info
         self.chaos_mode_flags = chaos_mode_flags
         self.headless = headless
-        self.stylo_threads = stylo_threads
         self.leak_check = leak_check
         self.stackfix_dir = stackfix_dir
         self.symbols_path = symbols_path
@@ -322,7 +321,7 @@ class FirefoxInstanceManager:
         marionette_port = get_free_port()
         profile.set_preferences({"marionette.port": marionette_port})
 
-        env = get_environ(self.logger, self.binary, self.debug_info, self.stylo_threads,
+        env = get_environ(self.logger, self.binary, self.debug_info,
                           self.headless, self.chaos_mode_flags)
 
         args = self.binary_args[:] if self.binary_args else []
@@ -734,7 +733,7 @@ class FirefoxBrowser(Browser):
                  symbols_path=None, stackwalk_binary=None, certutil_binary=None,
                  ca_certificate_path=None, e10s=False, disable_fission=False,
                  stackfix_dir=None, binary_args=None, timeout_multiplier=None, leak_check=False,
-                 asan=False, stylo_threads=1, chaos_mode_flags=None, config=None,
+                 asan=False, chaos_mode_flags=None, config=None,
                  browser_channel="nightly", headless=None, preload_browser=False,
                  specialpowers_path=None, debug_test=False, **kwargs):
         Browser.__init__(self, logger)
@@ -780,7 +779,6 @@ class FirefoxBrowser(Browser):
                                                      debug_info,
                                                      chaos_mode_flags,
                                                      headless,
-                                                     stylo_threads,
                                                      leak_check,
                                                      stackfix_dir,
                                                      symbols_path,
@@ -837,7 +835,7 @@ class FirefoxWdSpecBrowser(WebDriverBrowser):
                  extra_prefs=None, debug_info=None, symbols_path=None, stackwalk_binary=None,
                  certutil_binary=None, ca_certificate_path=None, e10s=False,
                  disable_fission=False, stackfix_dir=None, leak_check=False,
-                 asan=False, stylo_threads=1, chaos_mode_flags=None, config=None,
+                 asan=False, chaos_mode_flags=None, config=None,
                  browser_channel="nightly", headless=None, debug_test=False, **kwargs):
 
         super().__init__(logger, binary, webdriver_binary, webdriver_args)
@@ -852,7 +850,7 @@ class FirefoxWdSpecBrowser(WebDriverBrowser):
         self.leak_check = leak_check
         self.leak_report_file = None
 
-        self.env = self.get_env(binary, debug_info, stylo_threads, headless, chaos_mode_flags)
+        self.env = self.get_env(binary, debug_info, headless, chaos_mode_flags)
 
         profile_creator = ProfileCreator(logger,
                                          prefs_root,
@@ -870,11 +868,10 @@ class FirefoxWdSpecBrowser(WebDriverBrowser):
         self.profile = profile_creator.create()
         self.marionette_port = None
 
-    def get_env(self, binary, debug_info, stylo_threads, headless, chaos_mode_flags):
+    def get_env(self, binary, debug_info, headless, chaos_mode_flags):
         env = get_environ(self.logger,
                           binary,
                           debug_info,
-                          stylo_threads,
                           headless,
                           chaos_mode_flags)
         env["RUST_BACKTRACE"] = "1"

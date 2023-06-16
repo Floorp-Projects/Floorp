@@ -17,7 +17,6 @@ import hashlib
 import io
 import itertools
 import os
-import pprint
 import re
 import stat
 import sys
@@ -1341,76 +1340,6 @@ def _escape_char(c):
     if c == "'":
         return "\\'"
     return six.text_type(c.encode("unicode_escape"))
-
-
-if six.PY2:  # Delete when we get rid of Python 2.
-    # Mapping table between raw characters below \x80 and their escaped
-    # counterpart, when they differ
-    _INDENTED_REPR_TABLE = {
-        c: e
-        for c, e in map(lambda x: (x, _escape_char(x)), map(unichr, range(128)))
-        if c != e
-    }
-    # Regexp matching all characters to escape.
-    _INDENTED_REPR_RE = re.compile(
-        "([" + "".join(_INDENTED_REPR_TABLE.values()) + "]+)"
-    )
-
-
-def write_indented_repr(f, o, indent=4):
-    """Write an indented representation (similar to repr()) of the object to the
-    given file `f`.
-
-    One notable difference with repr is that the returned representation
-    assumes `from __future__ import unicode_literals`.
-    """
-    if six.PY3:
-        pprint.pprint(o, stream=f, indent=indent)
-        return
-    # Delete everything below when we get rid of Python 2.
-    one_indent = " " * indent
-
-    def recurse_indented_repr(o, level):
-        if isinstance(o, dict):
-            yield "{\n"
-            for k, v in sorted(o.items()):
-                yield one_indent * (level + 1)
-                for d in recurse_indented_repr(k, level + 1):
-                    yield d
-                yield ": "
-                for d in recurse_indented_repr(v, level + 1):
-                    yield d
-                yield ",\n"
-            yield one_indent * level
-            yield "}"
-        elif isinstance(o, bytes):
-            yield "b"
-            yield repr(o)
-        elif isinstance(o, six.text_type):
-            yield "'"
-            # We want a readable string (non escaped unicode), but some
-            # special characters need escaping (e.g. \n, \t, etc.)
-            for i, s in enumerate(_INDENTED_REPR_RE.split(o)):
-                if i % 2:
-                    for c in s:
-                        yield _INDENTED_REPR_TABLE[c]
-                else:
-                    yield s
-            yield "'"
-        elif hasattr(o, "__iter__"):
-            yield "[\n"
-            for i in o:
-                yield one_indent * (level + 1)
-                for d in recurse_indented_repr(i, level + 1):
-                    yield d
-                yield ",\n"
-            yield one_indent * level
-            yield "]"
-        else:
-            yield repr(o)
-
-    result = "".join(recurse_indented_repr(o, 0)) + "\n"
-    f.write(result)
 
 
 def ensure_bytes(value, encoding="utf-8"):

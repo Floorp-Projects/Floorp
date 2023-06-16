@@ -12,12 +12,10 @@
 #include "nsIMIMEInfo.h"
 #include "nsMIMEInfoWin.h"
 #include "nsMimeTypes.h"
-#include "plstr.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsLocalFile.h"
 #include "nsIWindowsRegKey.h"
 #include "nsXULAppAPI.h"
-#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/WindowsVersion.h"
 
@@ -372,9 +370,7 @@ already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(
       NS_ConvertUTF16toUTF8(Substring(aFileExt, dotlessIndex));
   ToLowerCase(lowerFileExt);
   mimeInfo->AppendExtension(lowerFileExt);
-  mozilla::StaticPrefs::browser_download_improvements_to_download_panel()
-      ? mimeInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk)
-      : mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
+  mimeInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk);
 
   if (NS_FAILED(InternalSetDefaultsOnMIME(mimeInfo))) {
     return nullptr;

@@ -28,17 +28,17 @@ const personalityProviderWorker = new PersonalityProviderWorker();
 
 // This is boiler plate worker stuff that connects it to the main thread PromiseWorker.
 const worker = new PromiseWorker.AbstractWorker();
-worker.dispatch = function(method, args = []) {
+worker.dispatch = function (method, args = []) {
   return personalityProviderWorker[method](...args);
 };
-worker.postMessage = function(message, ...transfers) {
+worker.postMessage = function (message, ...transfers) {
   self.postMessage(message, ...transfers);
 };
-worker.close = function() {
+worker.close = function () {
   self.close();
 };
 
 self.addEventListener("message", msg => worker.handleMessage(msg));
-self.addEventListener("unhandledrejection", function(error) {
+self.addEventListener("unhandledrejection", function (error) {
   throw error.reason;
 });

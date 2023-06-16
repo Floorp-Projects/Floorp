@@ -3,6 +3,11 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebrtcGlobalInformation.h"
+#include "WebrtcGlobalStatsHistory.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/StaticPtr.h"
+#include "mozilla/dom/PWebrtcGlobal.h"
+#include "mozilla/dom/PWebrtcGlobalChild.h"
 #include "mozilla/media/webrtc/WebrtcGlobal.h"
 #include "WebrtcGlobalChild.h"
 #include "WebrtcGlobalParent.h"
@@ -15,6 +20,9 @@
 #include "mozilla/dom/RTCStatsReportBinding.h"  // for RTCStatsReportInternal
 #include "mozilla/dom/ContentChild.h"
 
+#include "nsISupports.h"
+#include "nsITimer.h"
+#include "nsLiteralString.h"
 #include "nsNetCID.h"               // NS_SOCKETTRANSPORTSERVICE_CONTRACTID
 #include "nsServiceManagerUtils.h"  // do_GetService
 #include "mozilla/ErrorResult.h"
@@ -25,6 +33,7 @@
 #include "mozilla/ClearOnShutdown.h"
 
 #include "common/browser_logging/WebRtcLog.h"
+#include "nsString.h"
 #include "transport/runnable_utils.h"
 #include "MediaTransportHandler.h"
 #include "PeerConnectionCtx.h"
@@ -159,7 +168,13 @@ static std::map<int32_t, dom::Sequence<nsString>>& GetWebrtcGlobalLogStash() {
 }
 
 static void ClearLongTermStats() {
+  if (!NS_IsMainThread()) {
+    MOZ_ASSERT(NS_IsMainThread());
+    return;
+  }
+
   GetWebrtcGlobalStatsStash().Clear();
+  WebrtcGlobalStatsHistory::Clear();
   if (auto* ctx = GetPeerConnectionCtx()) {
     ctx->ClearClosedStats();
   }
@@ -184,9 +199,10 @@ void WebrtcGlobalInformation::ClearAllStats(const GlobalObject& aGlobal) {
   ClearLongTermStats();
 }
 
-void WebrtcGlobalInformation::GetAllStats(
-    const GlobalObject& aGlobal, WebrtcGlobalStatisticsCallback& aStatsCallback,
-    const Optional<nsAString>& pcIdFilter, ErrorResult& aRv) {
+void WebrtcGlobalInformation::GetStatsHistoryPcIds(
+    const GlobalObject& aGlobal,
+    WebrtcGlobalStatisticsHistoryPcIdsCallback& aPcIdsCallback,
+    ErrorResult& aRv) {
   if (!NS_IsMainThread()) {
     aRv.Throw(NS_ERROR_NOT_SAME_THREAD);
     return;
@@ -194,11 +210,89 @@ void WebrtcGlobalInformation::GetAllStats(
 
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  nsTArray<RefPtr<PWebrtcGlobalParent::GetStatsPromise>> statsPromises;
+  IgnoredErrorResult rv;
+  aPcIdsCallback.Call(WebrtcGlobalStatsHistory::PcIds(), rv);
+  aRv = NS_OK;
+}
+
+void WebrtcGlobalInformation::GetStatsHistorySince(
+    const GlobalObject& aGlobal,
+    WebrtcGlobalStatisticsHistoryCallback& aStatsCallback,
+    const nsAString& pcIdFilter, const Optional<DOMHighResTimeStamp>& aAfter,
+    const Optional<DOMHighResTimeStamp>& aSdpAfter, ErrorResult& aRv) {
+  if (!NS_IsMainThread()) {
+    aRv.Throw(NS_ERROR_NOT_SAME_THREAD);
+    return;
+  }
+
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  WebrtcGlobalStatisticsReport history;
+
+  auto statsAfter = aAfter.WasPassed() ? Some(aAfter.Value()) : Nothing();
+  auto sdpAfter = aSdpAfter.WasPassed() ? Some(aSdpAfter.Value()) : Nothing();
+
+  WebrtcGlobalStatsHistory::GetHistory(pcIdFilter).apply([&](auto& hist) {
+    if (!history.mReports.AppendElements(hist->Since(statsAfter), fallible)) {
+      mozalloc_handle_oom(0);
+    }
+    if (!history.mSdpHistories.AppendElement(hist->SdpSince(sdpAfter),
+                                             fallible)) {
+      mozalloc_handle_oom(0);
+    }
+  });
+
+  IgnoredErrorResult rv;
+  aStatsCallback.Call(history, rv);
+  aRv = NS_OK;
+}
+
+using StatsPromiseArray =
+    nsTArray<RefPtr<PWebrtcGlobalParent::GetStatsPromise>>;
+
+void WebrtcGlobalInformation::GatherHistory() {
+  const nsString emptyFilter;
+  if (!NS_IsMainThread()) {
+    MOZ_ASSERT(NS_IsMainThread());
+    return;
+  }
+
+  MOZ_ASSERT(XRE_IsParentProcess());
+  using StatsPromise = PWebrtcGlobalParent::GetStatsPromise;
+  auto resolveThenAppendStatsHistory = [](RefPtr<StatsPromise>&& promise) {
+    auto AppendStatsHistory = [](StatsPromise::ResolveOrRejectValue&& result) {
+      if (result.IsReject()) {
+        return;
+      }
+      for (const auto& report : result.ResolveValue()) {
+        WebrtcGlobalStatsHistory::Record(
+            MakeUnique<RTCStatsReportInternal>(report));
+      }
+    };
+    promise->Then(GetMainThreadSerialEventTarget(), __func__,
+                  std::move(AppendStatsHistory));
+  };
+  for (const auto& cp : WebrtcContentParents::GetAll()) {
+    resolveThenAppendStatsHistory(cp->SendGetStats(emptyFilter));
+  }
+  resolveThenAppendStatsHistory(GetStatsPromiseForThisProcess(emptyFilter));
+}
+
+void WebrtcGlobalInformation::GetAllStats(
+    const GlobalObject& aGlobal, WebrtcGlobalStatisticsCallback& aStatsCallback,
+    const Optional<nsAString>& aPcIdFilter, ErrorResult& aRv) {
+  if (!NS_IsMainThread()) {
+    aRv.Throw(NS_ERROR_NOT_SAME_THREAD);
+    return;
+  }
+
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  StatsPromiseArray statsPromises;
 
   nsString filter;
-  if (pcIdFilter.WasPassed()) {
-    filter = pcIdFilter.Value();
+  if (aPcIdFilter.WasPassed()) {
+    filter = aPcIdFilter.Value();
   }
 
   for (const auto& cp : WebrtcContentParents::GetAll()) {
@@ -490,8 +584,75 @@ void WebrtcGlobalInformation::StashStats(
     }
     ++i;
   }
-
+  // Stash final stats
   GetWebrtcGlobalStatsStash().AppendElement(aReport);
+}
+
+void WebrtcGlobalInformation::AdjustTimerReferences(
+    PcTrackingUpdate&& aUpdate) {
+  static StaticRefPtr<nsITimer> sHistoryTimer;
+  static StaticAutoPtr<nsTHashSet<nsString>> sPcids;
+
+  MOZ_ASSERT(NS_IsMainThread());
+
+  auto HandleAdd = [&](nsString&& aPcid, bool aIsLongTermStatsDisabled) {
+    if (!sPcids) {
+      sPcids = new nsTHashSet<nsString>();
+      ClearOnShutdown(&sPcids);
+    }
+    sPcids->EnsureInserted(aPcid);
+    // Reserve a stats history
+    WebrtcGlobalStatsHistory::InitHistory(nsString(aPcid),
+                                          aIsLongTermStatsDisabled);
+    if (!sHistoryTimer) {
+      sHistoryTimer = NS_NewTimer(GetMainThreadSerialEventTarget());
+      if (sHistoryTimer) {
+        sHistoryTimer->InitWithNamedFuncCallback(
+            [](nsITimer* aTimer, void* aClosure) {
+              if (WebrtcGlobalStatsHistory::Pref::Enabled()) {
+                WebrtcGlobalInformation::GatherHistory();
+              }
+            },
+            nullptr, WebrtcGlobalStatsHistory::Pref::PollIntervalMs(),
+            nsITimer::TYPE_REPEATING_SLACK,
+            "WebrtcGlobalInformation::GatherHistory");
+      }
+      ClearOnShutdown(&sHistoryTimer);
+    }
+  };
+
+  auto HandleRemove = [&](const nsString& aRemoved) {
+    WebrtcGlobalStatsHistory::CloseHistory(nsString(aRemoved));
+    if (!sPcids || !sPcids->Count()) {
+      return;
+    }
+    if (!sPcids->Contains(aRemoved)) {
+      return;
+    }
+    sPcids->Remove(aRemoved);
+    if (!sPcids->Count() && sHistoryTimer) {
+      sHistoryTimer->Cancel();
+      sHistoryTimer = nullptr;
+    }
+  };
+
+  switch (aUpdate.Type()) {
+    case PcTrackingUpdate::Type::Add: {
+      HandleAdd(std::move(aUpdate.mPcid),
+                aUpdate.mLongTermStatsDisabled.valueOrFrom([&]() {
+                  MOZ_ASSERT(aUpdate.mLongTermStatsDisabled.isNothing());
+                  return true;
+                }));
+      return;
+    }
+    case PcTrackingUpdate::Type::Remove: {
+      HandleRemove(aUpdate.mPcid);
+      return;
+    }
+    default: {
+      MOZ_ASSERT(false, "Invalid PcCount operation");
+    }
+  }
 }
 
 WebrtcGlobalParent* WebrtcGlobalParent::Alloc() {
@@ -505,9 +666,44 @@ bool WebrtcGlobalParent::Dealloc(WebrtcGlobalParent* aActor) {
 
 void WebrtcGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
   mShutdown = true;
+  for (const auto& pcId : mPcids) {
+    using Update = WebrtcGlobalInformation::PcTrackingUpdate;
+    auto update = Update::Remove(nsString(pcId));
+    WebrtcGlobalInformation::PeerConnectionTracking(update);
+  }
 }
 
 mozilla::ipc::IPCResult WebrtcGlobalParent::Recv__delete__() {
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult WebrtcGlobalParent::RecvPeerConnectionCreated(
+    const nsAString& aPcId, const bool& aIsLongTermStatsDisabled) {
+  if (mShutdown) {
+    return IPC_OK();
+  }
+  mPcids.EnsureInserted(aPcId);
+  using Update = WebrtcGlobalInformation::PcTrackingUpdate;
+  auto update = Update::Add(nsString(aPcId), aIsLongTermStatsDisabled);
+  WebrtcGlobalInformation::PeerConnectionTracking(update);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult WebrtcGlobalParent::RecvPeerConnectionDestroyed(
+    const nsAString& aPcId) {
+  mPcids.EnsureRemoved(aPcId);
+  using Update = WebrtcGlobalInformation::PcTrackingUpdate;
+  auto update = Update::Remove(nsString(aPcId));
+  WebrtcGlobalStatsHistory::CloseHistory(aPcId);
+  WebrtcGlobalInformation::PeerConnectionTracking(update);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult WebrtcGlobalParent::RecvPeerConnectionFinalStats(
+    const RTCStatsReportInternal& aFinalStats) {
+  auto finalStats = MakeUnique<RTCStatsReportInternal>(aFinalStats);
+  WebrtcGlobalStatsHistory::Record(std::move(finalStats));
+  WebrtcGlobalStatsHistory::CloseHistory(aFinalStats.mPcid);
   return IPC_OK();
 }
 
@@ -543,6 +739,7 @@ mozilla::ipc::IPCResult WebrtcGlobalChild::RecvClearStats() {
   }
 
   ClearLongTermStats();
+  WebrtcGlobalStatsHistory::Clear();
   return IPC_OK();
 }
 
@@ -599,11 +796,20 @@ mozilla::ipc::IPCResult WebrtcGlobalChild::RecvSetDebugMode(const int& aLevel) {
   return IPC_OK();
 }
 
-WebrtcGlobalChild* WebrtcGlobalChild::Create() {
-  WebrtcGlobalChild* child = static_cast<WebrtcGlobalChild*>(
-      ContentChild::GetSingleton()->SendPWebrtcGlobalConstructor());
-  return child;
+WebrtcGlobalChild* WebrtcGlobalChild::GetOrSet(
+    const Maybe<WebrtcGlobalChild*>& aChild) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(XRE_IsContentProcess());
+  static WebrtcGlobalChild* sChild;
+  if (!sChild && !aChild) {
+    sChild = static_cast<WebrtcGlobalChild*>(
+        ContentChild::GetSingleton()->SendPWebrtcGlobalConstructor());
+  }
+  aChild.apply([](auto* child) { sChild = child; });
+  return sChild;
 }
+
+WebrtcGlobalChild* WebrtcGlobalChild::Get() { return GetOrSet(Nothing()); }
 
 void WebrtcGlobalChild::ActorDestroy(ActorDestroyReason aWhy) {
   mShutdown = true;
@@ -615,6 +821,7 @@ MOZ_IMPLICIT WebrtcGlobalChild::WebrtcGlobalChild() : mShutdown(false) {
 
 MOZ_IMPLICIT WebrtcGlobalChild::~WebrtcGlobalChild() {
   MOZ_COUNT_DTOR(WebrtcGlobalChild);
+  GetOrSet(Some(nullptr));
 }
 
 }  // namespace mozilla::dom

@@ -321,7 +321,8 @@ void MediaStreamTrack::GetSettings(dom::MediaTrackSettings& aResult,
 
   // Spoof values when privacy.resistFingerprinting is true.
   nsIGlobalObject* global = mWindow ? mWindow->AsGlobal() : nullptr;
-  if (!nsContentUtils::ShouldResistFingerprinting(aCallerType, global)) {
+  if (!nsContentUtils::ShouldResistFingerprinting(
+          aCallerType, global, RFPTarget::StreamVideoFacingMode)) {
     return;
   }
   if (aResult.mFacingMode.WasPassed()) {

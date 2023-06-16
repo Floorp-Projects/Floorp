@@ -106,39 +106,6 @@ class DNSPacket {
   Maybe<nsCString> mOriginHost;
 };
 
-class ODoHDNSPacket final : public DNSPacket {
- public:
-  ODoHDNSPacket() = default;
-  virtual ~ODoHDNSPacket();
-
-  static bool ParseODoHConfigs(Span<const uint8_t> aData,
-                               nsTArray<ObliviousDoHConfig>& aOut);
-
-  virtual nsresult EncodeRequest(nsCString& aBody, const nsACString& aHost,
-                                 uint16_t aType, bool aDisableECS) override;
-
-  virtual nsresult Decode(
-      nsCString& aHost, enum TrrType aType, nsCString& aCname,
-      bool aAllowRFC1918, DOHresp& aResp, TypeRecordResultType& aTypeResult,
-      nsClassHashtable<nsCStringHashKey, DOHresp>& aAdditionalRecords,
-      uint32_t& aTTL) override;
-
- protected:
-  bool EncryptDNSQuery(const nsACString& aQuery, uint16_t aPaddingLen,
-                       const ObliviousDoHConfig& aConfig,
-                       ObliviousDoHMessage& aOut);
-  bool DecryptDNSResponse();
-
-  HpkeContext* mContext = nullptr;
-  UniqueSECItem mPlainQuery;
-  // This struct indicates the range of decrypted responses stored in mResponse.
-  struct DecryptedResponseRange {
-    uint16_t mStart = 0;
-    uint16_t mLength = 0;
-  };
-  Maybe<DecryptedResponseRange> mDecryptedResponseRange;
-};
-
 }  // namespace net
 }  // namespace mozilla
 

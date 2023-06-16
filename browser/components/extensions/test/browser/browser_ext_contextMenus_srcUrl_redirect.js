@@ -45,8 +45,7 @@ add_task(async function test_srcUrl_of_redirected_image() {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
-      url:
-        "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context_with_redirect.html",
+      url: "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context_with_redirect.html",
     },
     async browser => {
       // Verify that the image has been loaded, which implies that the redirect has

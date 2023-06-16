@@ -5,7 +5,7 @@ lo{
     collations{
         standard{
             Sequence{"[reorder Laoo]"}
-            Version{"42"}
+            Version{"43"}
         }
     }
 }

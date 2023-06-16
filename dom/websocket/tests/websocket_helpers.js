@@ -37,7 +37,7 @@ function CreateTestWS(ws_location, ws_protocol) {
   ws._testNumber = current_test;
   ok(true, "Created websocket for test " + ws._testNumber + "\n");
 
-  ws.onerror = function(e) {
+  ws.onerror = function (e) {
     ok(false, "onerror called on test " + e.target._testNumber + "!");
   };
 

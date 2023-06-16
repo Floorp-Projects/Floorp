@@ -3,7 +3,7 @@
   Any copyright is dedicated to the Public Domain.
   http://creativecommons.org/publicdomain/zero/1.0/
 -->
-<window title="Console + JSM"
+<window title="Console + MJS"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="test();">
 
@@ -14,7 +14,7 @@
   <script type="application/javascript">
   <![CDATA[
 
-const JSM = "chrome://mochitests/content/chrome/dom/console/tests/console.jsm";
+const MJS = "chrome://mochitests/content/chrome/dom/console/tests/console.sys.mjs";
 
 let dumpCalled = 0;
 function dumpFunction(msg) {
@@ -30,9 +30,9 @@ function promiseConsoleListenerCalled() {
 
       observe: function(aSubject) {
         var obj = aSubject.wrappedJSObject;
-        ok(obj.chromeContext, "JSM is always a chrome context");
+        ok(obj.chromeContext, "MJS is always a chrome context");
 
-        if (obj.innerID == JSM) {
+        if (obj.innerID == MJS) {
           is(obj.ID, "jsm", "ID and InnerID are correctly set.");
           is(obj.arguments[0], "Hello world!", "Message matches");
           is(obj.consoleID, "", "No consoleID for console API");
@@ -79,7 +79,7 @@ async function test() {
   SimpleTest.waitForExplicitFinish();
 
   let consolePromise = promiseConsoleListenerCalled();
-  let { ConsoleTest } = ChromeUtils.import(JSM);
+  let { ConsoleTest } = ChromeUtils.importESModule(MJS);
   await SpecialPowers.pushPrefEnv({set: [["pref.test.console", "log"]]})
   ConsoleTest.go(dumpFunction);
 

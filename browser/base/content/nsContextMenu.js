@@ -274,9 +274,10 @@ class nsContextMenu {
 
       this.browser = this.ownerDoc.defaultView.docShell.chromeEventHandler;
       this.selectionInfo = SelectionUtils.getSelectionDetails(window);
-      this.actor = this.browser.browsingContext.currentWindowGlobal.getActor(
-        "ContextMenu"
-      );
+      this.actor =
+        this.browser.browsingContext.currentWindowGlobal.getActor(
+          "ContextMenu"
+        );
     }
 
     this.remoteType = this.actor?.domProcess?.remoteType;
@@ -351,7 +352,6 @@ class nsContextMenu {
     this.initClipboardItems();
     this.initMediaPlayerItems();
     this.initLeaveDOMFullScreenItems();
-    this.initClickToPlayItems();
     this.initPasswordManagerItems();
     this.initViewSourceItems();
     this.initScreenshotItem();
@@ -711,9 +711,8 @@ class nsContextMenu {
     );
 
     if (haveSetDesktopBackground && this.onLoadedImage) {
-      document.getElementById(
-        "context-setDesktopBackground"
-      ).disabled = this.contentData.disableSetDesktopBackground;
+      document.getElementById("context-setDesktopBackground").disabled =
+        this.contentData.disableSetDesktopBackground;
     }
   }
 
@@ -803,8 +802,8 @@ class nsContextMenu {
     if (this.inFrame) {
       // To make it easier to debug the browser running with out-of-process iframes, we
       // display the process PID of the iframe in the context menu for the subframe.
-      let frameOsPid = this.actor.manager.browsingContext.currentWindowGlobal
-        .osPid;
+      let frameOsPid =
+        this.actor.manager.browsingContext.currentWindowGlobal.osPid;
       this.setItemAttr("context-frameOsPid", "label", "PID: " + frameOsPid);
 
       // We need to check if "Take Screenshot" should be displayed in the "This Frame"
@@ -986,8 +985,20 @@ class nsContextMenu {
       this.onLink && !this.onMailtoLink && !this.onTelLink
     );
 
+    // Showing "Copy Clean link" depends on whether the strip-on-share feature is enabled
+    // and whether we can strip anything.
+    this.showItem(
+      "context-stripOnShareLink",
+      STRIP_ON_SHARE_ENABLED &&
+        this.onLink &&
+        !this.onMailtoLink &&
+        !this.onTelLink &&
+        !this.onMozExtLink &&
+        this.getStrippedLink()
+    );
+
     let copyLinkSeparator = document.getElementById("context-sep-copylink");
-    // Show "Copy Link" and "Copy" with no divider, and "copy link" and "Send link to Device" with no divider between.
+    // Show "Copy Link", "Copy" and "Copy Clean Link" with no divider, and "copy link" and "Send link to Device" with no divider between.
     // Other cases will show a divider.
     copyLinkSeparator.toggleAttribute(
       "ensureHidden",
@@ -1112,11 +1123,6 @@ class nsContextMenu {
         );
       }
     }
-  }
-
-  initClickToPlayItems() {
-    this.showItem("context-ctp-play", false);
-    this.showItem("context-ctp-hide", false);
   }
 
   initPasswordManagerItems() {
@@ -1540,7 +1546,7 @@ class nsContextMenu {
   // View Partial Source
   viewPartialSource() {
     let { browser } = this;
-    let openSelectionFn = function() {
+    let openSelectionFn = function () {
       let tabBrowser = gBrowser;
       const inNewWindow = !Services.prefs.getBoolPref("view_source.tab");
       // In the case of popups, we need to find a non-popup browser window.
@@ -1557,7 +1563,8 @@ class nsContextMenu {
         relatedToCurrent,
         inBackground: inNewWindow,
         skipAnimation: inNewWindow,
-        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+        triggeringPrincipal:
+          Services.scriptSecurityManager.getSystemPrincipal(),
       });
       const viewSourceBrowser = tabBrowser.getBrowserForTab(tab);
       if (inNewWindow) {
@@ -1648,7 +1655,7 @@ class nsContextMenu {
     let referrerInfo = this.contentData.referrerInfo;
     let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
     if (this.onCanvas) {
-      this._canvasToBlobURL(this.targetIdentifier).then(function(blobURL) {
+      this._canvasToBlobURL(this.targetIdentifier).then(function (blobURL) {
         openLinkIn(blobURL, where, {
           referrerInfo,
           triggeringPrincipal: systemPrincipal,
@@ -2032,7 +2039,7 @@ class nsContextMenu {
     let cookieJarSettings = this.contentData.cookieJarSettings;
     if (this.onCanvas) {
       // Bypass cache, since it's a data: URL.
-      this._canvasToBlobURL(this.targetIdentifier).then(function(blobURL) {
+      this._canvasToBlobURL(this.targetIdentifier).then(function (blobURL) {
         internalSave(
           blobURL,
           null, // originalURL
@@ -2108,14 +2115,6 @@ class nsContextMenu {
     MailIntegration.sendMessage(this.mediaURL, "");
   }
 
-  playPlugin() {
-    /* no-op.  TODO: Remove me. */
-  }
-
-  hidePlugin() {
-    /* no-op.  TODO: Remove me. */
-  }
-
   // Generate email address and put it on clipboard.
   copyEmail() {
     // Copy the comma-separated list of email addresses only.
@@ -2169,6 +2168,23 @@ class nsContextMenu {
       Ci.nsIClipboardHelper
     );
     clipboard.copyString(linkURL);
+  }
+
+  /**
+   * Copies a stripped version of this.linkURI to the clipboard.
+   * 'Stripped' means that query parameters for tracking/ link decoration
+   * that are known to us will be removed from the URI.
+   */
+  copyStrippedLink() {
+    let strippedLinkURI = this.getStrippedLink();
+    let strippedLinkURL =
+      Services.io.createExposableURI(strippedLinkURI)?.displaySpec;
+    if (strippedLinkURL) {
+      let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(
+        Ci.nsIClipboardHelper
+      );
+      clipboard.copyString(strippedLinkURL);
+    }
   }
 
   addKeywordForSearchField() {
@@ -2255,6 +2271,26 @@ class nsContextMenu {
     }
 
     return null;
+  }
+
+  /**
+   * Strips any known query params from the link URI.
+   * @returns {nsIURI|null} - the stripped version of the URI,
+   * or null if we could not strip any query parameter.
+   *
+   */
+  getStrippedLink() {
+    if (!this.linkURI) {
+      return null;
+    }
+    let strippedLinkURI = null;
+    try {
+      strippedLinkURI = QueryStringStripper.stripForCopyOrShare(this.linkURI);
+    } catch (e) {
+      console.warn(`isLinkURIStrippable: ${e.message}`);
+      return null;
+    }
+    return strippedLinkURI;
   }
 
   // Kept for addon compat
@@ -2504,10 +2540,7 @@ ChromeUtils.defineESModuleGetters(nsContextMenu, {
   DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.sys.mjs",
   LoginManagerContextMenu:
     "resource://gre/modules/LoginManagerContextMenu.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(nsContextMenu, {
-  WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
+  WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.sys.mjs",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -2536,4 +2569,18 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "TEXT_RECOGNITION_ENABLED",
   "dom.text-recognition.enabled",
   false
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "STRIP_ON_SHARE_ENABLED",
+  "privacy.query_stripping.strip_on_share.enabled",
+  false
+);
+
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "QueryStringStripper",
+  "@mozilla.org/url-query-string-stripper;1",
+  "nsIURLQueryStringStripper"
 );

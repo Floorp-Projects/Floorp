@@ -27,7 +27,7 @@ function test_cert_for_usages(certChainNicks, expected_usages) {
   return asyncTestCertificateUsages(certdb, cert, expected_usages);
 }
 
-add_task(async function() {
+add_task(async function () {
   let ee_usages = [
     certificateUsageSSLClient,
     certificateUsageSSLServer,

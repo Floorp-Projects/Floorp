@@ -467,16 +467,6 @@ class WinUtils {
   static bool GetIsMouseFromTouch(EventMessage aEventType);
 
   /**
-   * GetShellItemPath return the file or directory path of a shell item.
-   * Internally calls IShellItem's GetDisplayName.
-   *
-   * aItem  the shell item containing the path.
-   * aResultString  the resulting string path.
-   * returns  true if a path was retreived.
-   */
-  static bool GetShellItemPath(IShellItem* aItem, nsString& aResultString);
-
-  /**
    * ConvertHRGNToRegion converts a Windows HRGN to an LayoutDeviceIntRegion.
    *
    * aRgn the HRGN to convert.
@@ -724,6 +714,22 @@ class FaviconHelper {
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(WinUtils::PathTransformFlags);
+
+// RTL shim windows are temporary child windows of our nsWindows created to
+// address RTL issues in picker dialogs. (See bug 588735.)
+class MOZ_STACK_CLASS ScopedRtlShimWindow {
+ public:
+  explicit ScopedRtlShimWindow(nsIWidget* aParent);
+  ~ScopedRtlShimWindow();
+
+  ScopedRtlShimWindow(const ScopedRtlShimWindow&) = delete;
+  ScopedRtlShimWindow(ScopedRtlShimWindow&&) = delete;
+
+  HWND get() const { return mWnd; }
+
+ private:
+  HWND mWnd;
+};
 
 }  // namespace widget
 }  // namespace mozilla

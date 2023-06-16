@@ -38,9 +38,8 @@ decorate_task(
       }),
     };
 
-    const webExtStartupPromise = AddonTestUtils.promiseWebExtensionStartup(
-      FIXTURE_ADDON_ID
-    );
+    const webExtStartupPromise =
+      AddonTestUtils.promiseWebExtensionStartup(FIXTURE_ADDON_ID);
 
     const action = new AddonRolloutAction();
     await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
@@ -119,9 +118,8 @@ decorate_task(
       }),
     };
 
-    let webExtStartupPromise = AddonTestUtils.promiseWebExtensionStartup(
-      FIXTURE_ADDON_ID
-    );
+    let webExtStartupPromise =
+      AddonTestUtils.promiseWebExtensionStartup(FIXTURE_ADDON_ID);
 
     let action = new AddonRolloutAction();
     await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
@@ -136,9 +134,8 @@ decorate_task(
 
     // update existing enrollment
     recipe.arguments.extensionApiId = 2;
-    webExtStartupPromise = AddonTestUtils.promiseWebExtensionStartup(
-      FIXTURE_ADDON_ID
-    );
+    webExtStartupPromise =
+      AddonTestUtils.promiseWebExtensionStartup(FIXTURE_ADDON_ID);
     action = new AddonRolloutAction();
     await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     is(action.lastError, null, "lastError should be null");
@@ -204,9 +201,8 @@ decorate_task(
       }),
     };
 
-    const webExtStartupPromise = AddonTestUtils.promiseWebExtensionStartup(
-      FIXTURE_ADDON_ID
-    );
+    const webExtStartupPromise =
+      AddonTestUtils.promiseWebExtensionStartup(FIXTURE_ADDON_ID);
 
     let action = new AddonRolloutAction();
     await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
@@ -280,9 +276,8 @@ decorate_task(
       }),
     };
 
-    const webExtStartupPromise = AddonTestUtils.promiseWebExtensionStartup(
-      FIXTURE_ADDON_ID
-    );
+    const webExtStartupPromise =
+      AddonTestUtils.promiseWebExtensionStartup(FIXTURE_ADDON_ID);
 
     let action = new AddonRolloutAction();
     await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
@@ -386,9 +381,8 @@ decorate_task(
       }),
     };
 
-    const webExtStartupPromise = AddonTestUtils.promiseWebExtensionStartup(
-      FIXTURE_ADDON_ID
-    );
+    const webExtStartupPromise =
+      AddonTestUtils.promiseWebExtensionStartup(FIXTURE_ADDON_ID);
 
     let action = new AddonRolloutAction();
     await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
@@ -480,9 +474,8 @@ decorate_task(
       }),
     };
 
-    const webExtStartupPromise = AddonTestUtils.promiseWebExtensionStartup(
-      FIXTURE_ADDON_ID
-    );
+    const webExtStartupPromise =
+      AddonTestUtils.promiseWebExtensionStartup(FIXTURE_ADDON_ID);
 
     let action = new AddonRolloutAction();
     await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);

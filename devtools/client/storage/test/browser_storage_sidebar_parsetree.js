@@ -98,7 +98,7 @@ const testCases = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   await openTabAndSetupStorage(
     MAIN_DOMAIN_SECURED + "storage-sidebar-parsetree.html"
   );

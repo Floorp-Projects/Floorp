@@ -239,8 +239,9 @@ fn eval_prefers_reduced_transparency(
     context: &Context,
     query_value: Option<PrefersReducedTransparency>,
 ) -> bool {
-    let prefers_reduced =
-        unsafe { bindings::Gecko_MediaFeatures_PrefersReducedTransparency(context.device().document()) };
+    let prefers_reduced = unsafe {
+        bindings::Gecko_MediaFeatures_PrefersReducedTransparency(context.device().document())
+    };
     let query_value = match query_value {
         Some(v) => v,
         None => return prefers_reduced,
@@ -309,10 +310,7 @@ enum InvertedColors {
 }
 
 /// https://drafts.csswg.org/mediaqueries-5/#inverted
-fn eval_inverted_colors(
-    context: &Context,
-    query_value: Option<InvertedColors>,
-) -> bool {
+fn eval_inverted_colors(context: &Context, query_value: Option<InvertedColors>) -> bool {
     let inverted_colors =
         unsafe { bindings::Gecko_MediaFeatures_InvertedColors(context.device().document()) };
     let query_value = match query_value {
@@ -331,7 +329,6 @@ fn eval_inverted_colors(
 enum OverflowBlock {
     None,
     Scroll,
-    OptionalPaged,
     Paged,
 }
 
@@ -351,7 +348,7 @@ fn eval_overflow_block(context: &Context, query_value: Option<OverflowBlock>) ->
     };
 
     match query_value {
-        OverflowBlock::None | OverflowBlock::OptionalPaged => false,
+        OverflowBlock::None => false,
         OverflowBlock::Scroll => scrolling,
         OverflowBlock::Paged => !scrolling,
     }
@@ -605,13 +602,12 @@ pub enum Scripting {
     /// See: https://github.com/w3c/csswg-drafts/issues/8621
     InitialOnly,
     /// Scripting is supported and enabled
-    Enabled
+    Enabled,
 }
 
 /// https://drafts.csswg.org/mediaqueries-5/#scripting
 fn eval_scripting(context: &Context, query_value: Option<Scripting>) -> bool {
-    let scripting =
-        unsafe { bindings::Gecko_MediaFeatures_Scripting(context.device().document()) };
+    let scripting = unsafe { bindings::Gecko_MediaFeatures_Scripting(context.device().document()) };
     match query_value {
         Some(v) => v == scripting,
         None => scripting != Scripting::None,
@@ -698,30 +694,30 @@ macro_rules! bool_pref_feature {
 /// to support new types in these entries and (2) ensuring that either
 /// nsPresContext::MediaFeatureValuesChanged is called when the value that
 /// would be returned by the evaluator function could change.
-pub static MEDIA_FEATURES: [QueryFeatureDescription; 68] = [
+pub static MEDIA_FEATURES: [QueryFeatureDescription; 67] = [
     feature!(
         atom!("width"),
         AllowsRanges::Yes,
         Evaluator::Length(eval_width),
-        FeatureFlags::empty(),
+        FeatureFlags::VIEWPORT_DEPENDENT,
     ),
     feature!(
         atom!("height"),
         AllowsRanges::Yes,
         Evaluator::Length(eval_height),
-        FeatureFlags::empty(),
+        FeatureFlags::VIEWPORT_DEPENDENT,
     ),
     feature!(
         atom!("aspect-ratio"),
         AllowsRanges::Yes,
         Evaluator::NumberRatio(eval_aspect_ratio),
-        FeatureFlags::empty(),
+        FeatureFlags::VIEWPORT_DEPENDENT,
     ),
     feature!(
         atom!("orientation"),
         AllowsRanges::No,
         keyword_evaluator!(eval_orientation, Orientation),
-        FeatureFlags::empty(),
+        FeatureFlags::VIEWPORT_DEPENDENT,
     ),
     feature!(
         atom!("device-width"),
@@ -825,7 +821,10 @@ pub static MEDIA_FEATURES: [QueryFeatureDescription; 68] = [
     feature!(
         atom!("prefers-reduced-transparency"),
         AllowsRanges::No,
-        keyword_evaluator!(eval_prefers_reduced_transparency, PrefersReducedTransparency),
+        keyword_evaluator!(
+            eval_prefers_reduced_transparency,
+            PrefersReducedTransparency
+        ),
         FeatureFlags::empty(),
     ),
     feature!(
@@ -1014,7 +1013,6 @@ pub static MEDIA_FEATURES: [QueryFeatureDescription; 68] = [
     ),
     lnf_int_feature!(atom!("-moz-system-dark-theme"), SystemUsesDarkTheme),
     lnf_int_feature!(atom!("-moz-panel-animations"), PanelAnimations),
-    bool_pref_feature!(atom!("-moz-gtk-non-native-menus"), "widget.gtk.non-native-menu-styling"),
     // media query for MathML Core's implementation of maction/semantics
     bool_pref_feature!(
         atom!("-moz-mathml-core-maction-and-semantics"),

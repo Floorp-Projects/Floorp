@@ -22,7 +22,7 @@ requestLongerTimeout(4);
  * Pass --enable-fission to ./mach test to enable fission when running this
  * test locally.
  */
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.browsertoolbox.scope", "everything");
   const ToolboxTask = await initBrowserToolboxTask();
   await ToolboxTask.importFunctions({

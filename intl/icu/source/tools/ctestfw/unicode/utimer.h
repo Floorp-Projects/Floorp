@@ -33,9 +33,9 @@
  *    <code>
  *      typedef Params Params;
  *      struct Params{
- *          UChar* target;
+ *          char16_t* target;
  *          int32_t targetLen;
- *          const UChar* source;
+ *          const char16_t* source;
  *          int32_t sourceLen;
  *          UNormalizationMode mode;
  *      }
@@ -68,13 +68,13 @@
  *          int  line;
  *          int  loops;
  *          UErrorCode error = U_ZERO_ERROR;
- *          UChar* dest=NULL;
+ *          char16_t* dest=nullptr;
  *          int32_t destCapacity=0;
  *          int len =-1;
  *          double elapsedTime = 0; 
  *          int retVal=0;
  *
- *          UChar arr[5000];
+ *          char16_t arr[5000];
  *          dest=arr;
  *          destCapacity = 5000;
  *          UTimer start;
@@ -125,7 +125,7 @@
  * iii) Let a higher level function do the calculation of confidence levels etc.
  *     Example:
  *     <code>
- *       void perf(UTimer* timer, UChar* source, int32_t sourceLen, UChar* target, int32_t targetLen, int32_t loopCount,UNormalizationMode mode, UErrorCode* error){
+ *       void perf(UTimer* timer, char16_t* source, int32_t sourceLen, char16_t* target, int32_t targetLen, int32_t loopCount,UNormalizationMode mode, UErrorCode* error){
  *              int32_t loops;
  *              for (loops=0; loops<loopCount; loops++) {
  *                  unorm_normalize(source,sourceLen,target, targetLen,mode,error);

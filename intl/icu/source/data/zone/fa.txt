@@ -258,6 +258,9 @@ fa{
         "America:Chihuahua"{
             ec{"چیواوا"}
         }
+        "America:Ciudad_Juarez"{
+            ec{"سیوداد خوارز"}
+        }
         "America:Coral_Harbour"{
             ec{"اتکوکان"}
         }

@@ -100,9 +100,7 @@ function addTestTabs() {
 }
 
 function cleanup() {
-  Object.values(originToTabs)
-    .flat()
-    .forEach(BrowserTestUtils.removeTab);
+  Object.values(originToTabs).flat().forEach(BrowserTestUtils.removeTab);
   originToTabs = {};
   let imageCache = Cc["@mozilla.org/image/tools;1"]
     .getService(Ci.imgITools)
@@ -111,7 +109,7 @@ function cleanup() {
   imageCache.clearCache(true);
 }
 
-add_setup(function() {
+add_setup(function () {
   cleanup();
 });
 

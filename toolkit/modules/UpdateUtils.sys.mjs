@@ -49,7 +49,7 @@ export var UpdateUtils = {
         let partners = Services.prefs.getChildList("app.partner.").sort();
         if (partners.length) {
           channel += "-cck";
-          partners.forEach(function(prefName) {
+          partners.forEach(function (prefName) {
             channel += "-" + Services.prefs.getCharPref(prefName);
           });
         }
@@ -1049,7 +1049,7 @@ XPCOMUtils.defineLazyGetter(lazy, "gWinCPUArch", function aus_gWinCPUArch() {
   return arch;
 });
 
-XPCOMUtils.defineLazyGetter(UpdateUtils, "ABI", function() {
+XPCOMUtils.defineLazyGetter(UpdateUtils, "ABI", function () {
   let abi = null;
   try {
     abi = Services.appinfo.XPCOMABI;
@@ -1070,7 +1070,7 @@ XPCOMUtils.defineLazyGetter(UpdateUtils, "ABI", function() {
   return abi;
 });
 
-XPCOMUtils.defineLazyGetter(UpdateUtils, "OSVersion", function() {
+XPCOMUtils.defineLazyGetter(UpdateUtils, "OSVersion", function () {
   let osVersion;
   try {
     osVersion =
@@ -1085,11 +1085,8 @@ XPCOMUtils.defineLazyGetter(UpdateUtils, "OSVersion", function() {
     if (AppConstants.platform == "win") {
       // Add service pack and build number
       try {
-        const {
-          servicePackMajor,
-          servicePackMinor,
-          buildNumber,
-        } = lazy.WindowsVersionInfo.get();
+        const { servicePackMajor, servicePackMinor, buildNumber } =
+          lazy.WindowsVersionInfo.get();
         osVersion += `.${servicePackMajor}.${servicePackMinor}.${buildNumber}`;
       } catch (err) {
         console.error("Unable to retrieve windows version information: ", err);

@@ -38,7 +38,7 @@ const StatusBar = createFactory(
   require("resource://devtools/client/netmonitor/src/components/messages/StatusBar.js")
 );
 
-loader.lazyGetter(this, "MessagePayload", function() {
+loader.lazyGetter(this, "MessagePayload", function () {
   return createFactory(
     require("resource://devtools/client/netmonitor/src/components/messages/MessagePayload.js")
   );
@@ -72,11 +72,8 @@ class MessagesView extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    const {
-      channelId,
-      openMessageDetailsTab,
-      selectedMessageVisible,
-    } = this.props;
+    const { channelId, openMessageDetailsTab, selectedMessageVisible } =
+      this.props;
 
     // If a new connection is selected, clear the filter text
     if (channelId !== prevProps.channelId) {
@@ -120,12 +117,8 @@ class MessagesView extends Component {
   }
 
   render() {
-    const {
-      messageDetailsOpen,
-      connector,
-      selectedMessage,
-      channelId,
-    } = this.props;
+    const { messageDetailsOpen, connector, selectedMessage, channelId } =
+      this.props;
 
     const { searchboxRef } = this;
     const { startPanelContainer } = this.state;

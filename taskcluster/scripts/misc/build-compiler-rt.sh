@@ -21,6 +21,11 @@ case "$target" in
     -DCOMPILER_RT_ENABLE_TVOS=OFF
   "
   ;;
+*-windows-msvc)
+  EXTRA_CMAKE_FLAGS="
+    -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded
+  "
+  ;;
 esac
 
 EXTRA_CMAKE_FLAGS="

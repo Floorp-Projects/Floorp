@@ -5,6 +5,7 @@ ChromeUtils.defineESModuleGetters(this, {
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
   ExperimentFakes: "resource://testing-common/NimbusTestUtils.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+  PanelTestProvider: "resource://activity-stream/lib/PanelTestProvider.sys.mjs",
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
@@ -12,7 +13,6 @@ ChromeUtils.defineESModuleGetters(this, {
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ASRouter: "resource://activity-stream/lib/ASRouter.jsm",
-  PanelTestProvider: "resource://activity-stream/lib/PanelTestProvider.jsm",
 });
 
 function whenNewWindowLoaded(aOptions, aCallback) {
@@ -54,7 +54,7 @@ async function openAboutPrivateBrowsing() {
  */
 async function openTabAndWaitForRender() {
   let { win, tab } = await openAboutPrivateBrowsing();
-  await SpecialPowers.spawn(tab, [], async function() {
+  await SpecialPowers.spawn(tab, [], async function () {
     // Wait for render to complete
     await ContentTaskUtils.waitForCondition(() =>
       content.document.documentElement.hasAttribute(

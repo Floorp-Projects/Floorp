@@ -8,13 +8,13 @@ function run_test() {
   Assert.ok(!!entry);
 
   // Fill the entry, and when done, check it's content
-  new OpenCallback(NEW, "meta", "data", function() {
+  new OpenCallback(NEW, "meta", "data", function () {
     asyncOpenCacheEntry(
       "http://new1/",
       "disk",
       Ci.nsICacheStorage.OPEN_NORMALLY,
       null,
-      new OpenCallback(NORMAL, "meta", "data", function() {
+      new OpenCallback(NORMAL, "meta", "data", function () {
         finish_cache2_test();
       })
     );

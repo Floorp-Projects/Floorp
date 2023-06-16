@@ -13,7 +13,7 @@ XPCOMUtils.defineLazyGetter(lazy, "DevToolsStartup", () => {
 
 // We don't want to spend time initializing the full loader here so we create
 // our own lazy require.
-XPCOMUtils.defineLazyGetter(lazy, "Telemetry", function() {
+XPCOMUtils.defineLazyGetter(lazy, "Telemetry", function () {
   const { require } = ChromeUtils.importESModule(
     "resource://devtools/shared/loader/Loader.sys.mjs"
   );
@@ -201,9 +201,6 @@ export const DevToolsShim = {
    */
   inspectA11Y(tab, domReference) {
     if (!this.isEnabled()) {
-      if (!this.isDisabledByPolicy()) {
-        lazy.DevToolsStartup.openInstallPage("ContextMenu");
-      }
       return Promise.resolve();
     }
 
@@ -231,9 +228,6 @@ export const DevToolsShim = {
    */
   inspectNode(tab, domReference) {
     if (!this.isEnabled()) {
-      if (!this.isDisabledByPolicy()) {
-        lazy.DevToolsStartup.openInstallPage("ContextMenu");
-      }
       return Promise.resolve();
     }
 
@@ -258,8 +252,7 @@ export const DevToolsShim = {
 
   /**
    * Initialize DevTools via DevToolsStartup if needed. This method throws if DevTools are
-   * not enabled.. If the entry point is supposed to trigger the onboarding, call it
-   * explicitly via DevToolsStartup.openInstallPage().
+   * not enabled.
    *
    * @param {String} reason
    *        optional, if provided should be a valid entry point for DEVTOOLS_ENTRY_POINT
@@ -324,7 +317,7 @@ const otherToolMethods = [
 ];
 
 for (const method of [...webExtensionsMethods, ...otherToolMethods]) {
-  DevToolsShim[method] = function() {
+  DevToolsShim[method] = function () {
     if (!this.isEnabled()) {
       throw new Error(
         "Could not call a DevToolsShim webextension method ('" +

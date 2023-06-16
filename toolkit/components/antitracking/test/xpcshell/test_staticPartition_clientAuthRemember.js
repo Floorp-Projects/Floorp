@@ -27,11 +27,11 @@ function getOAWithPartitionKey(
 
 // These are not actual server and client certs. The ClientAuthRememberService
 // does not care which certs we store decisions for, as long as they're valid.
-let [serverCert, clientCert] = certDB.getCerts();
+let [clientCert] = certDB.getCerts();
 
 function addSecurityInfo({ host, topLevelBaseDomain, originAttributes = {} }) {
   let attrs = getOAWithPartitionKey({ topLevelBaseDomain }, originAttributes);
-  cars.rememberDecisionScriptable(host, attrs, serverCert, clientCert);
+  cars.rememberDecisionScriptable(host, attrs, clientCert);
 }
 
 function testSecurityInfo({
@@ -47,12 +47,7 @@ function testSecurityInfo({
     messageSuffix += ` partitioned under ${topLevelBaseDomain}`;
   }
 
-  let hasRemembered = cars.hasRememberedDecisionScriptable(
-    host,
-    attrs,
-    serverCert,
-    {}
-  );
+  let hasRemembered = cars.hasRememberedDecisionScriptable(host, attrs, {});
 
   Assert.equal(
     hasRemembered,

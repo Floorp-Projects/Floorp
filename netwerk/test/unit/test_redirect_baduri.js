@@ -9,7 +9,7 @@ const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 var httpServer = null;
 
 var BadRedirectPath = "/BadRedirect";
-XPCOMUtils.defineLazyGetter(this, "BadRedirectURI", function() {
+XPCOMUtils.defineLazyGetter(this, "BadRedirectURI", function () {
   return (
     "http://localhost:" + httpServer.identity.primaryPort + BadRedirectPath
   );

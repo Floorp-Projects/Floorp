@@ -10,7 +10,7 @@ requestLongerTimeout(3);
 
 // Tests that a breakpoint set is correctly synced after reload
 // and gets hit correctly.
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger("doc-scripts.html", "simple1.js", "long.js");
 
   await selectSource(dbg, "simple1.js");
@@ -74,7 +74,7 @@ add_task(async function() {
 
 // Test that pending breakpoints are installed in inline scripts as they are
 // sent to the client.
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger("doc-scripts.html", "doc-scripts.html");
 
   await selectSource(dbg, "doc-scripts.html");

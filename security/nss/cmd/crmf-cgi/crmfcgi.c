@@ -1007,7 +1007,7 @@ processChallengeResponse(CGIVarTable *varTable, const char *certRepContent)
             rv = ERROR_RETRIEVING_CLIENT_RESPONSE_TO_CHALLENGE;
             goto loser;
         }
-        sprintf(cgiChalVar, "chal%d", i + 1);
+        snprintf(cgiChalVar, sizeof(cgiChalVar), "chal%d", i + 1);
         formChalValue = CGITableFindValue(varTable, cgiChalVar);
         if (formChalValue == NULL) {
             rv = REQ_CGI_VAR_NOT_PRESENT;

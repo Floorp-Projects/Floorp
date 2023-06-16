@@ -11,7 +11,7 @@ const {
 
 const NEW_PIXEL_RATIO = 5.5;
 
-add_task(async function() {
+add_task(async function () {
   const store = Store();
   const { getState, dispatch } = store;
 

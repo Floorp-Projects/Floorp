@@ -6,7 +6,7 @@
 
 "use strict";
 
-this.main = (function() {
+this.main = (function () {
   const exports = {};
 
   const { incrementCount } = analytics;
@@ -14,12 +14,12 @@ this.main = (function() {
   const manifest = browser.runtime.getManifest();
   let backend;
 
-  exports.setBackend = function(newBackend) {
+  exports.setBackend = function (newBackend) {
     backend = newBackend;
     backend = backend.replace(/\/*$/, "");
   };
 
-  exports.getBackend = function() {
+  exports.getBackend = function () {
     return backend;
   };
 
@@ -178,7 +178,7 @@ this.main = (function() {
     const blob = blobConverters.dataUrlToBlob(info.url);
     const url = URL.createObjectURL(blob);
     let downloadId;
-    const onChangedCallback = catcher.watchFunction(function(change) {
+    const onChangedCallback = catcher.watchFunction(function (change) {
       if (!downloadId || downloadId !== change.id) {
         return;
       }

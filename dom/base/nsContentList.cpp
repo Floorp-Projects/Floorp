@@ -398,6 +398,7 @@ nsContentList::nsContentList(nsINode* aRootNode, int32_t aMatchNameSpaceId,
   }
   // This is aLiveList instead of mIsLiveList to avoid Valgrind errors.
   if (aLiveList) {
+    SetEnabledCallbacks(nsIMutationObserver::kNodeWillBeDestroyed);
     mRootNode->AddMutationObserver(this);
   }
 
@@ -434,6 +435,7 @@ nsContentList::nsContentList(nsINode* aRootNode, nsContentListMatchFunc aFunc,
   NS_ASSERTION(mRootNode, "Must have root");
   // This is aLiveList instead of mIsLiveList to avoid Valgrind errors.
   if (aLiveList) {
+    SetEnabledCallbacks(nsIMutationObserver::kNodeWillBeDestroyed);
     mRootNode->AddMutationObserver(this);
   }
 
@@ -723,6 +725,7 @@ void nsContentList::ContentAppended(nsIContent* aFirstNewContent) {
       !MayContainRelevantNodes(container) ||
       (!aFirstNewContent->HasChildren() &&
        !aFirstNewContent->GetNextSibling() && !MatchSelf(aFirstNewContent))) {
+    MaybeMarkDirty();
     return;
   }
 
@@ -933,6 +936,8 @@ void nsContentList::PopulateSelf(uint32_t aNeededLength,
     mState = State::Lazy;
   }
 
+  SetEnabledCallbacks(nsIMutationObserver::kAll);
+
   ASSERT_IN_SYNC;
 }
 
@@ -974,6 +979,8 @@ void nsContentList::BringSelfUpToDate(bool aDoFlush) {
   if (mState != State::UpToDate) {
     PopulateSelf(uint32_t(-1));
   }
+
+  mMissedUpdates = 0;
 
   ASSERT_IN_SYNC;
   NS_ASSERTION(!mRootNode || mState == State::UpToDate,

@@ -50,16 +50,17 @@ function waitForCondition(condition, nextTest, errorMsg) {
  * @param {String} fieldName
  *        The name of the field to write to.
  */
-let typeInSearchField = async function(browser, text, fieldName) {
-  await SpecialPowers.spawn(browser, [[fieldName, text]], async function([
-    contentFieldName,
-    contentText,
-  ]) {
-    // Put the focus on the search box.
-    let searchInput = content.document.getElementById(contentFieldName);
-    searchInput.focus();
-    searchInput.value = contentText;
-  });
+let typeInSearchField = async function (browser, text, fieldName) {
+  await SpecialPowers.spawn(
+    browser,
+    [[fieldName, text]],
+    async function ([contentFieldName, contentText]) {
+      // Put the focus on the search box.
+      let searchInput = content.document.getElementById(contentFieldName);
+      searchInput.focus();
+      searchInput.value = contentText;
+    }
+  );
 };
 
 /**
@@ -153,7 +154,7 @@ function clickSecondaryAction(actionIndex) {
     return removePromise;
   }
 
-  return (async function() {
+  return (async function () {
     // Click the dropmarker arrow and wait for the menu to show up.
     let dropdownPromise = BrowserTestUtils.waitForEvent(
       popupNotification.menupopup,
@@ -166,9 +167,8 @@ function clickSecondaryAction(actionIndex) {
     // because they are injected into a <children> node in the XBL binding.
     // The target action is the menuitem at index actionIndex - 1, because the first
     // secondary action (index 0) is the button shown directly in the panel.
-    let actionMenuItem = popupNotification.querySelectorAll("menuitem")[
-      actionIndex - 1
-    ];
+    let actionMenuItem =
+      popupNotification.querySelectorAll("menuitem")[actionIndex - 1];
     await EventUtils.synthesizeMouseAtCenter(actionMenuItem, {});
     await removePromise;
   })();

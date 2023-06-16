@@ -24,59 +24,60 @@ decorate_task(withMockApiServer(), async function test_get({ serverUrl }) {
   );
 });
 
-decorate_task(withMockApiServer(), async function test_getApiUrl({
-  serverUrl,
-}) {
-  const apiBase = `${serverUrl}/api/v1`;
-  // Test that NormandyApi can use the self-describing API's index
-  const recipeListUrl = await NormandyApi.getApiUrl("extension-list");
-  equal(
-    recipeListUrl,
-    `${apiBase}/extension/`,
-    "Can retrieve extension-list URL from API"
-  );
-});
-
-decorate_task(withMockApiServer(), async function test_getApiUrlSlashes({
-  serverUrl,
-  mockPreferences,
-}) {
-  const fakeResponse = new MockResponse(
-    JSON.stringify({ "test-endpoint": `${serverUrl}/test/` })
-  );
-  const mockGet = sinon
-    .stub(NormandyApi, "get")
-    .callsFake(async () => fakeResponse);
-
-  // without slash
-  {
-    NormandyApi.clearIndexCache();
-    mockPreferences.set("app.normandy.api_url", `${serverUrl}/api/v1`);
-    const endpoint = await NormandyApi.getApiUrl("test-endpoint");
-    equal(endpoint, `${serverUrl}/test/`);
-    ok(
-      mockGet.calledWithExactly(`${serverUrl}/api/v1/`),
-      "trailing slash was added"
+decorate_task(
+  withMockApiServer(),
+  async function test_getApiUrl({ serverUrl }) {
+    const apiBase = `${serverUrl}/api/v1`;
+    // Test that NormandyApi can use the self-describing API's index
+    const recipeListUrl = await NormandyApi.getApiUrl("extension-list");
+    equal(
+      recipeListUrl,
+      `${apiBase}/extension/`,
+      "Can retrieve extension-list URL from API"
     );
-    mockGet.resetHistory();
   }
+);
 
-  // with slash
-  {
-    NormandyApi.clearIndexCache();
-    mockPreferences.set("app.normandy.api_url", `${serverUrl}/api/v1/`);
-    const endpoint = await NormandyApi.getApiUrl("test-endpoint");
-    equal(endpoint, `${serverUrl}/test/`);
-    ok(
-      mockGet.calledWithExactly(`${serverUrl}/api/v1/`),
-      "existing trailing slash was preserved"
+decorate_task(
+  withMockApiServer(),
+  async function test_getApiUrlSlashes({ serverUrl, mockPreferences }) {
+    const fakeResponse = new MockResponse(
+      JSON.stringify({ "test-endpoint": `${serverUrl}/test/` })
     );
-    mockGet.resetHistory();
-  }
+    const mockGet = sinon
+      .stub(NormandyApi, "get")
+      .callsFake(async () => fakeResponse);
 
-  NormandyApi.clearIndexCache();
-  mockGet.restore();
-});
+    // without slash
+    {
+      NormandyApi.clearIndexCache();
+      mockPreferences.set("app.normandy.api_url", `${serverUrl}/api/v1`);
+      const endpoint = await NormandyApi.getApiUrl("test-endpoint");
+      equal(endpoint, `${serverUrl}/test/`);
+      ok(
+        mockGet.calledWithExactly(`${serverUrl}/api/v1/`),
+        "trailing slash was added"
+      );
+      mockGet.resetHistory();
+    }
+
+    // with slash
+    {
+      NormandyApi.clearIndexCache();
+      mockPreferences.set("app.normandy.api_url", `${serverUrl}/api/v1/`);
+      const endpoint = await NormandyApi.getApiUrl("test-endpoint");
+      equal(endpoint, `${serverUrl}/test/`);
+      ok(
+        mockGet.calledWithExactly(`${serverUrl}/api/v1/`),
+        "existing trailing slash was preserved"
+      );
+      mockGet.resetHistory();
+    }
+
+    NormandyApi.clearIndexCache();
+    mockGet.restore();
+  }
+);
 
 // Test validation errors due to validation throwing an exception (e.g. when
 // parameters passed to validation are malformed).
@@ -153,8 +154,7 @@ decorate_task(withMockApiServer(), async function test_fetchExtensionDetails() {
   deepEqual(extensionDetails, {
     id: 1,
     name: "Normandy Fixture",
-    xpi:
-      "http://example.com/browser/toolkit/components/normandy/test/browser/fixtures/normandy.xpi",
+    xpi: "http://example.com/browser/toolkit/components/normandy/test/browser/fixtures/normandy.xpi",
     extension_id: "normandydriver@example.com",
     version: "1.0",
     hash: "ade1c14196ec4fe0aa0a6ba40ac433d7c8d1ec985581a8a94d43dc58991b5171",

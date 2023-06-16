@@ -1586,13 +1586,14 @@ static void test_decode(struct stream_state *stream,
   /* Get the internal reference frame */
   if (strcmp(codec->name, "vp8") == 0) {
     struct vpx_ref_frame ref_enc, ref_dec;
-    int width, height;
+    int aligned_width = (stream->config.cfg.g_w + 15) & ~15;
+    int aligned_height = (stream->config.cfg.g_h + 15) & ~15;
 
-    width = (stream->config.cfg.g_w + 15) & ~15;
-    height = (stream->config.cfg.g_h + 15) & ~15;
-    vpx_img_alloc(&ref_enc.img, VPX_IMG_FMT_I420, width, height, 1);
+    vpx_img_alloc(&ref_enc.img, VPX_IMG_FMT_I420, aligned_width, aligned_height,
+                  1);
     enc_img = ref_enc.img;
-    vpx_img_alloc(&ref_dec.img, VPX_IMG_FMT_I420, width, height, 1);
+    vpx_img_alloc(&ref_dec.img, VPX_IMG_FMT_I420, aligned_width, aligned_height,
+                  1);
     dec_img = ref_dec.img;
 
     ref_enc.frame_type = VP8_LAST_FRAME;
@@ -1969,10 +1970,9 @@ int main(int argc, const char **argv_) {
           } else {
             const int64_t input_pos = ftello(input.file);
             const int64_t input_pos_lagged = input_pos - lagged_count;
-            const int64_t limit = input.length;
 
             rate = cx_time ? input_pos_lagged * (int64_t)1000000 / cx_time : 0;
-            remaining = limit - input_pos + lagged_count;
+            remaining = input.length - input_pos + lagged_count;
           }
 
           average_rate =

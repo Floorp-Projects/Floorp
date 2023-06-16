@@ -151,6 +151,7 @@ class RTCRtpSender : public nsISupports,
   void UpdateDtmfSender();
 
   void WarnAboutBadSetParameters(const nsCString& aError);
+  nsCString GetEffectiveTLDPlus1() const;
 
   WatchManager<RTCRtpSender> mWatchManager;
   nsCOMPtr<nsPIDOMWindowInner> mWindow;

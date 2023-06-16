@@ -3,12 +3,12 @@ function $(str) {
   return document.getElementById(str);
 }
 function hookLoad(str) {
-  $(str).onload = function() {
+  $(str).onload = function () {
     window.parent.parent.postMessage("end", "*");
   };
   window.parent.parent.postMessage("start", "*");
 }
-window.onload = function() {
+window.onload = function () {
   hookLoad("w");
   $("w").contentWindow.location.href = "test1.example.org.png";
   hookLoad("x");

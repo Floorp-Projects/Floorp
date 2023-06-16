@@ -11,6 +11,7 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
   MigrationUtils: "resource:///modules/MigrationUtils.sys.mjs",
   PlacesTransactions: "resource://gre/modules/PlacesTransactions.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
@@ -21,7 +22,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  CustomizableUI: "resource:///modules/CustomizableUI.jsm",
   OpenInTabsUtils: "resource:///modules/OpenInTabsUtils.jsm",
 });
 
@@ -567,49 +567,6 @@ export var PlacesUIUtils = {
     let features = "centerscreen,chrome,modal,resizable=no";
     let bookmarkGuid;
 
-    if (
-      !Services.prefs.getBoolPref(
-        "browser.bookmarks.editDialog.delayedApply.enabled",
-        false
-      )
-    ) {
-      // Set the transaction manager into batching mode.
-      let topUndoEntry = lazy.PlacesTransactions.topUndoEntry;
-      let batchBlockingDeferred = lazy.PromiseUtils.defer();
-      let batchCompletePromise = lazy.PlacesTransactions.batch(async () => {
-        await batchBlockingDeferred.promise;
-      });
-
-      if (!aParentWindow) {
-        aParentWindow = Services.wm.getMostRecentWindow(null);
-      }
-
-      if (aParentWindow.gDialogBox) {
-        await aParentWindow.gDialogBox.open(dialogURL, aInfo);
-      } else {
-        aParentWindow.openDialog(dialogURL, "", features, aInfo);
-      }
-
-      bookmarkGuid =
-        ("bookmarkGuid" in aInfo && aInfo.bookmarkGuid) || undefined;
-
-      batchBlockingDeferred.resolve();
-
-      // Ensure the batch has completed before we start the undo/resolve
-      // the deferred promise.
-      await batchCompletePromise.catch(console.error);
-
-      if (
-        !bookmarkGuid &&
-        topUndoEntry != lazy.PlacesTransactions.topUndoEntry
-      ) {
-        await lazy.PlacesTransactions.undo().catch(console.error);
-      }
-
-      this.lastBookmarkDialogDeferred.resolve(bookmarkGuid);
-      return bookmarkGuid;
-    }
-
     if (!aParentWindow) {
       aParentWindow = Services.wm.getMostRecentWindow(null);
     }
@@ -765,9 +722,8 @@ export var PlacesUIUtils = {
 
     // When we're not building a context menu, only focusable views
     // are possible.  Thus, we can safely use the command dispatcher.
-    let controller = win.top.document.commandDispatcher.getControllerForCommand(
-      command
-    );
+    let controller =
+      win.top.document.commandDispatcher.getControllerForCommand(command);
     return controller || null;
   },
 
@@ -908,13 +864,11 @@ export var PlacesUIUtils = {
 
     var uri = Services.io.newURI(aURINode.uri);
     if (uri.schemeIs("javascript") || uri.schemeIs("data")) {
-      const [
-        title,
-        errorStr,
-      ] = PlacesUIUtils.promptLocalization.formatValuesSync([
-        "places-error-title",
-        "places-load-js-data-url-error",
-      ]);
+      const [title, errorStr] =
+        PlacesUIUtils.promptLocalization.formatValuesSync([
+          "places-error-title",
+          "places-load-js-data-url-error",
+        ]);
       Services.prompt.alert(aWindow, title, errorStr);
       return false;
     }
@@ -1533,7 +1487,7 @@ export var PlacesUIUtils = {
    * previously collapsed the toolbar manually.
    */
   NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE: 3,
-  maybeToggleBookmarkToolbarVisibility(aForceVisible = false) {
+  async maybeToggleBookmarkToolbarVisibility(aForceVisible = false) {
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
     let xulStore = Services.xulStore;
 
@@ -1541,26 +1495,33 @@ export var PlacesUIUtils = {
       aForceVisible ||
       !xulStore.hasValue(BROWSER_DOCURL, "PersonalToolbar", "collapsed")
     ) {
-      // We consider the toolbar customized if it has more than NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE
-      // children, or if it has a persisted currentset value.
-      let toolbarIsCustomized = xulStore.hasValue(
-        BROWSER_DOCURL,
-        "PersonalToolbar",
-        "currentset"
-      );
-
-      if (
-        aForceVisible ||
-        toolbarIsCustomized ||
-        lazy.PlacesUtils.getChildCountForFolder(
-          lazy.PlacesUtils.bookmarks.toolbarGuid
-        ) > this.NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE
-      ) {
+      function uncollapseToolbar() {
         Services.obs.notifyObservers(
           null,
           "browser-set-toolbar-visibility",
           JSON.stringify([lazy.CustomizableUI.AREA_BOOKMARKS, "true"])
         );
+      }
+      // We consider the toolbar customized if it has more than
+      // NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE children, or if it has a persisted
+      // currentset value.
+      let toolbarIsCustomized = xulStore.hasValue(
+        BROWSER_DOCURL,
+        "PersonalToolbar",
+        "currentset"
+      );
+      if (aForceVisible || toolbarIsCustomized) {
+        uncollapseToolbar();
+        return;
+      }
+
+      let numBookmarksOnToolbar = (
+        await lazy.PlacesUtils.bookmarks.fetch(
+          lazy.PlacesUtils.bookmarks.toolbarGuid
+        )
+      ).childCount;
+      if (numBookmarksOnToolbar > this.NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE) {
+        uncollapseToolbar();
       }
     }
   },
@@ -1586,7 +1547,7 @@ export var PlacesUIUtils = {
       "placesContext_copy",
     ];
     // Hide everything. We'll unhide the things we need.
-    Array.from(menupopup.children).forEach(function(child) {
+    Array.from(menupopup.children).forEach(function (child) {
       child.hidden = true;
     });
     // Store triggerNode in controller for checking if commands are enabled
@@ -1610,12 +1571,8 @@ export var PlacesUIUtils = {
       document.getElementById("placesContext_open:newprivatewindow").hidden =
         lazy.PrivateBrowsingUtils.isWindowPrivate(window) ||
         !lazy.PrivateBrowsingUtils.enabled;
-      document.getElementById(
-        "placesContext_open:newcontainertab"
-      ).hidden = !Services.prefs.getBoolPref(
-        "privacy.userContext.enabled",
-        false
-      );
+      document.getElementById("placesContext_open:newcontainertab").hidden =
+        !Services.prefs.getBoolPref("privacy.userContext.enabled", false);
     }
 
     event.target.ownerGlobal.updateCommands("places");
@@ -1701,9 +1658,8 @@ export var PlacesUIUtils = {
   },
 
   openSelectionInTabs(event) {
-    let isManaged = !!event.target.parentNode.triggerNode.closest(
-      "#managed-bookmarks"
-    );
+    let isManaged =
+      !!event.target.parentNode.triggerNode.closest("#managed-bookmarks");
     let controller;
     if (isManaged) {
       controller = this.managedBookmarksController;
@@ -1766,7 +1722,7 @@ export var PlacesUIUtils = {
             { type: lazy.PlacesUtils.TYPE_PLAINTEXT, entries: [] },
           ];
 
-          contents.forEach(function(content) {
+          contents.forEach(function (content) {
             content.entries.push(lazy.PlacesUtils.wrapNode(node, content.type));
           });
 
@@ -1783,7 +1739,7 @@ export var PlacesUIUtils = {
             );
           }
 
-          contents.forEach(function(content) {
+          contents.forEach(function (content) {
             addData(content.type, content.entries.join(lazy.PlacesUtils.endl));
           });
 
@@ -1893,7 +1849,8 @@ export var PlacesUIUtils = {
       Services.io.speculativeConnect(
         uri,
         window.gBrowser.contentPrincipal,
-        null
+        null,
+        false
       );
     } catch (ex) {
       // Can't setup speculative connection for this url, just ignore it.
@@ -2007,7 +1964,7 @@ XPCOMUtils.defineLazyGetter(PlacesUIUtils, "SUPPORTED_FLAVORS", () => {
   return [...PlacesUIUtils.PLACES_FLAVORS, ...PlacesUIUtils.URI_FLAVORS];
 });
 
-XPCOMUtils.defineLazyGetter(PlacesUIUtils, "ellipsis", function() {
+XPCOMUtils.defineLazyGetter(PlacesUIUtils, "ellipsis", function () {
   return Services.prefs.getComplexValue(
     "intl.ellipsis",
     Ci.nsIPrefLocalizedString

@@ -188,7 +188,7 @@ XPCOMUtils.defineLazyGetter(lazy, "Barriers", () => {
    * The observer is passed the connection identifier of the database
    * connection that is being finalized.
    */
-  let finalizationObserver = function(subject, topic, identifier) {
+  let finalizationObserver = function (subject, topic, identifier) {
     let connectionData = ConnectionData.byId.get(identifier);
 
     if (connectionData === undefined) {
@@ -218,7 +218,7 @@ XPCOMUtils.defineLazyGetter(lazy, "Barriers", () => {
    */
   lazy.AsyncShutdown.profileBeforeChange.addBlocker(
     "Sqlite.sys.mjs shutdown blocker",
-    async function() {
+    async function () {
       await Barriers.shutdown.wait();
       // At this stage, all clients have had a chance to open (and close)
       // their databases. Some previous close operations may still be pending,

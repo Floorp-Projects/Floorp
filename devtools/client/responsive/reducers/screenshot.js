@@ -29,7 +29,7 @@ const reducers = {
   },
 };
 
-module.exports = function(screenshot = INITIAL_SCREENSHOT, action) {
+module.exports = function (screenshot = INITIAL_SCREENSHOT, action) {
   const reducer = reducers[action.type];
   if (!reducer) {
     return screenshot;

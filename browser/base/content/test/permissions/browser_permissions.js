@@ -23,7 +23,7 @@ function testPermListHasEntries(expectEntries) {
 }
 
 add_task(async function testMainViewVisible() {
-  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function() {
+  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function () {
     await openPermissionPopup();
 
     let permissionsList = document.getElementById(
@@ -69,7 +69,7 @@ add_task(async function testMainViewVisible() {
 });
 
 add_task(async function testIdentityIcon() {
-  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, function() {
+  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, function () {
     PermissionTestUtils.add(
       gBrowser.currentURI,
       "geo",
@@ -141,7 +141,7 @@ add_task(async function testIdentityIcon() {
 });
 
 add_task(async function testCancelPermission() {
-  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function() {
+  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function () {
     let permissionsList = document.getElementById(
       "permission-popup-permission-list"
     );
@@ -188,7 +188,7 @@ add_task(async function testCancelPermission() {
 });
 
 add_task(async function testPermissionHints() {
-  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function(browser) {
+  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function (browser) {
     let permissionsList = document.getElementById(
       "permission-popup-permission-list"
     );
@@ -244,7 +244,7 @@ add_task(async function testPermissionHints() {
 });
 
 add_task(async function testPermissionIcons() {
-  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, function() {
+  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, function () {
     PermissionTestUtils.add(
       gBrowser.currentURI,
       "camera",
@@ -281,7 +281,7 @@ add_task(async function testPermissionIcons() {
 });
 
 add_task(async function testPermissionShortcuts() {
-  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function(browser) {
+  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function (browser) {
     browser.focus();
 
     await new Promise(r => {
@@ -293,7 +293,7 @@ add_task(async function testPermissionShortcuts() {
 
     async function tryKey(desc, expectedValue) {
       await EventUtils.synthesizeAndWaitKey("c", { accelKey: true });
-      let result = await SpecialPowers.spawn(browser, [], function() {
+      let result = await SpecialPowers.spawn(browser, [], function () {
         return {
           keydowns: content.wrappedJSObject.gKeyDowns,
           keypresses: content.wrappedJSObject.gKeyPresses,
@@ -356,7 +356,7 @@ add_task(async function testPermissionShortcuts() {
 
 // Test the control center UI when policy permissions are set.
 add_task(async function testPolicyPermission() {
-  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function() {
+  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function () {
     await SpecialPowers.pushPrefEnv({
       set: [["dom.disable_open_during_load", true]],
     });
@@ -414,7 +414,7 @@ add_task(async function testPolicyPermission() {
 });
 
 add_task(async function testHiddenAfterRefresh() {
-  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function(browser) {
+  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function (browser) {
     ok(
       BrowserTestUtils.is_hidden(gPermissionPanel._permissionPopup),
       "Popup is hidden"
@@ -448,7 +448,7 @@ add_task(async function test3rdPartyStoragePermission() {
   // anchor when relevant, and other permission items are added to the default
   // anchor, and adding/removing permissions preserves this behavior correctly.
 
-  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function(browser) {
+  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function (browser) {
     await openPermissionPopup();
 
     let permissionsList = document.getElementById(

@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+const { AddonTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
 );
 
 const { TelemetryTestUtils } = ChromeUtils.importESModule(
@@ -78,7 +78,7 @@ async function testClientSideRedirect({
   );
 }
 
-add_setup(async function() {
+add_setup(async function () {
   const searchEngineName = "test search engine";
 
   let searchEngine;

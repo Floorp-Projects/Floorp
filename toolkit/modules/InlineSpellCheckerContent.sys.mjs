@@ -68,7 +68,8 @@ export var InlineSpellCheckerContent = {
       overMisspelling: spellChecker.overMisspelling,
       misspelling: spellChecker.mMisspelling,
       spellSuggestions,
-      currentDictionaries: spellChecker.mInlineSpellChecker.spellChecker.getCurrentDictionaries(),
+      currentDictionaries:
+        spellChecker.mInlineSpellChecker.spellChecker.getCurrentDictionaries(),
       dictionaryList,
     };
   },

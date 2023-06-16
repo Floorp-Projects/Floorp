@@ -92,7 +92,7 @@ add_task(async function test() {
   let state;
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function(browser) {
+    async function (browser) {
       BrowserTestUtils.loadURIString(browser, "http://example.com");
       await BrowserTestUtils.browserLoaded(browser);
 
@@ -118,7 +118,7 @@ add_task(async function test() {
   // restore into the old tab, but that's not a real use case anyway.
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function(browser) {
+    async function (browser) {
       let tab2 = gBrowser.getTabForBrowser(browser);
 
       let tabRestoredPromise = promiseTabRestored(tab2);

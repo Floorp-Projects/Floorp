@@ -18,20 +18,14 @@ const kDownloadAutohideCheckboxId = "downloads-button-autohide-checkbox";
 const kDownloadAutohidePanelId = "downloads-button-autohide-panel";
 const kDownloadAutoHidePref = "browser.download.autohideButton";
 
-const { CustomizableUI } = ChromeUtils.import(
-  "resource:///modules/CustomizableUI.jsm"
-);
+import { CustomizableUI } from "resource:///modules/CustomizableUI.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AddonManager",
-  "resource://gre/modules/AddonManager.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   DragPositionManager: "resource:///modules/DragPositionManager.sys.mjs",
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
   URILoadingHelper: "resource:///modules/URILoadingHelper.sys.mjs",
@@ -41,7 +35,7 @@ ChromeUtils.defineModuleGetter(
   "BrowserUsageTelemetry",
   "resource:///modules/BrowserUsageTelemetry.jsm"
 );
-XPCOMUtils.defineLazyGetter(lazy, "gWidgetsBundle", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gWidgetsBundle", function () {
   const kUrl =
     "chrome://browser/locale/customizableui/customizableWidgets.properties";
   return Services.strings.createBundle(kUrl);
@@ -294,7 +288,8 @@ CustomizeMode.prototype = {
           inBackground: false,
           forceNotRemote: true,
           skipAnimation: true,
-          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+          triggeringPrincipal:
+            Services.scriptSecurityManager.getSystemPrincipal(),
         })
       );
       return;
@@ -555,9 +550,8 @@ CustomizeMode.prototype = {
    * to the customize mode markup in which the arrow and panel are placed.
    */
   async _updateOverflowPanelArrowOffset() {
-    let currentDensity = this.document.documentElement.getAttribute(
-      "uidensity"
-    );
+    let currentDensity =
+      this.document.documentElement.getAttribute("uidensity");
     let offset = await this.window.promiseDocumentFlushed(() => {
       let overflowButton = this.$("nav-bar-overflow-button");
       let buttonRect = overflowButton.getBoundingClientRect();
@@ -748,14 +742,15 @@ CustomizeMode.prototype = {
     if (!this.window.gReduceMotion) {
       let overflowButton = this.$("nav-bar-overflow-button");
       overflowButton.setAttribute("animate", "true");
-      overflowButton.addEventListener("animationend", function onAnimationEnd(
-        event
-      ) {
-        if (event.animationName.startsWith("overflow-animation")) {
-          this.removeEventListener("animationend", onAnimationEnd);
-          this.removeAttribute("animate");
+      overflowButton.addEventListener(
+        "animationend",
+        function onAnimationEnd(event) {
+          if (event.animationName.startsWith("overflow-animation")) {
+            this.removeEventListener("animationend", onAnimationEnd);
+            this.removeAttribute("animate");
+          }
         }
-      });
+      );
     }
   },
 
@@ -1525,9 +1520,8 @@ CustomizeMode.prototype = {
   },
 
   _updateEmptyPaletteNotice() {
-    let paletteItems = this.visiblePalette.getElementsByTagName(
-      "toolbarpaletteitem"
-    );
+    let paletteItems =
+      this.visiblePalette.getElementsByTagName("toolbarpaletteitem");
     let whimsyButton = this.$("whimsy-button");
 
     if (
@@ -2056,9 +2050,8 @@ CustomizeMode.prototype = {
     }
 
     // Skipintoolbarset items won't really be moved:
-    let areaCustomizationTarget = CustomizableUI.getCustomizationTarget(
-      aTargetArea
-    );
+    let areaCustomizationTarget =
+      CustomizableUI.getCustomizationTarget(aTargetArea);
     if (draggedItem.getAttribute("skipintoolbarset") == "true") {
       // These items should never leave their area:
       if (aTargetArea != aOriginArea) {
@@ -2335,9 +2328,8 @@ CustomizeMode.prototype = {
         }
       }
       // Otherwise, clear everything out:
-      let positionManager = lazy.DragPositionManager.getManagerForArea(
-        currentArea
-      );
+      let positionManager =
+        lazy.DragPositionManager.getManagerForArea(currentArea);
       positionManager.clearPlaceholders(currentArea, aNoTransition);
     }
   },
@@ -2346,9 +2338,8 @@ CustomizeMode.prototype = {
     let targetArea = this._getCustomizableParent(aDragOverNode);
     let draggedWrapper = this.$("wrapper-" + aDraggedItem.id);
     let originArea = this._getCustomizableParent(draggedWrapper);
-    let positionManager = lazy.DragPositionManager.getManagerForArea(
-      targetArea
-    );
+    let positionManager =
+      lazy.DragPositionManager.getManagerForArea(targetArea);
     let draggedSize = this._getDragItemSize(aDragOverNode, aDraggedItem);
     positionManager.insertPlaceholder(
       targetArea,
@@ -2466,9 +2457,8 @@ CustomizeMode.prototype = {
         targetNode = targetNode.parentNode;
       }
     } else {
-      let positionManager = lazy.DragPositionManager.getManagerForArea(
-        aAreaElement
-      );
+      let positionManager =
+        lazy.DragPositionManager.getManagerForArea(aAreaElement);
       // Make it relative to the container:
       dragX -= bounds.left;
       dragY -= bounds.top;
@@ -2529,9 +2519,8 @@ CustomizeMode.prototype = {
     let isFlexibleSpace = event.target.triggerNode.id.includes(
       "wrapper-customizableui-special-spring"
     );
-    event.target.querySelector(
-      ".customize-context-addToPanel"
-    ).disabled = isFlexibleSpace;
+    event.target.querySelector(".customize-context-addToPanel").disabled =
+      isFlexibleSpace;
   },
 
   onPanelContextMenuShowing(event) {
@@ -2539,12 +2528,10 @@ CustomizeMode.prototype = {
       "#widget-overflow-fixed-list"
     );
     let doc = event.target.ownerDocument;
-    doc.getElementById(
-      "customizationPanelItemContextMenuUnpin"
-    ).hidden = !inPermanentArea;
-    doc.getElementById(
-      "customizationPanelItemContextMenuPin"
-    ).hidden = inPermanentArea;
+    doc.getElementById("customizationPanelItemContextMenuUnpin").hidden =
+      !inPermanentArea;
+    doc.getElementById("customizationPanelItemContextMenuPin").hidden =
+      inPermanentArea;
 
     doc.ownerGlobal.MozXULElement.insertFTLIfNeeded(
       "browser/toolbarContextMenu.ftl"
@@ -2810,9 +2797,9 @@ CustomizeMode.prototype = {
       if (score >= winScore) {
         let arena = elements.arena;
         let image = "url(chrome://browser/skin/customizableui/whimsy.png)";
-        let position = `${(window.RTL_UI ? gameSide : 0) +
-          xAdj * ball[0] -
-          10}px ${ball[1] - 10}px`;
+        let position = `${
+          (window.RTL_UI ? gameSide : 0) + xAdj * ball[0] - 10
+        }px ${ball[1] - 10}px`;
         let repeat = "no-repeat";
         let size = "20px";
         if (arena.style.backgroundImage) {

@@ -20,7 +20,7 @@ ChromeUtils.defineESModuleGetters(this, {
 });
 
 add_task(async function test_reader_button() {
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     // Reset test prefs.
     TEST_PREFS.forEach(([name, value]) => {
       Services.prefs.clearUserPref(name);
@@ -93,7 +93,7 @@ add_task(async function test_reader_button() {
   await new Promise((resolve, reject) => {
     waitForClipboard(
       url,
-      function() {
+      function () {
         gURLBar.focus();
         gURLBar.select();
         goDoCommand("cmd_copy");
@@ -214,7 +214,7 @@ add_task(async function test_getOriginalUrl() {
 });
 
 add_task(async function test_reader_view_element_attribute_transform() {
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     while (gBrowser.tabs.length > 1) {
       gBrowser.removeCurrentTab();
     }

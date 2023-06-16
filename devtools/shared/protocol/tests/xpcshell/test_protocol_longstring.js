@@ -17,7 +17,10 @@ var {
 // The test implicitly relies on this.
 require("resource://devtools/client/fronts/string.js");
 
-DevToolsServer.LONG_STRING_LENGTH = DevToolsServer.LONG_STRING_INITIAL_LENGTH = DevToolsServer.LONG_STRING_READ_LENGTH = 5;
+DevToolsServer.LONG_STRING_LENGTH =
+  DevToolsServer.LONG_STRING_INITIAL_LENGTH =
+  DevToolsServer.LONG_STRING_READ_LENGTH =
+    5;
 
 var SHORT_STR = "abc";
 var LONG_STR = "abcdefghijklmnop";
@@ -116,7 +119,7 @@ function run_test() {
 
   let strfront = null;
 
-  const expectRootChildren = function(size) {
+  const expectRootChildren = function (size) {
     Assert.equal(rootActor.__poolMap.size, size + 1);
     Assert.equal(rootFront.__poolMap.size, size + 1);
   };

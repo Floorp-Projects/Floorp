@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
 /**
@@ -17,9 +21,9 @@ console.info(
 );
 
 Object.defineProperty(window.navigator.wrappedJSObject, "userAgent", {
-  get: exportFunction(function() {
+  get: exportFunction(function () {
     return "Mozilla/5.0 (Linux; Android 11; Pixel 4a) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Mobile Safari/537.36";
   }, window),
 
-  set: exportFunction(function() {}, window),
+  set: exportFunction(function () {}, window),
 });

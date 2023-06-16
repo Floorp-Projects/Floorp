@@ -271,9 +271,9 @@ describe("Message reducer:", () => {
         type,
         warningMessage
       );
-      const secondMessageId = `${
-        warningMessage.type
-      }-${warningMessage.innerWindowID + 10}`;
+      const secondMessageId = `${warningMessage.type}-${
+        warningMessage.innerWindowID + 10
+      }`;
       const message2 = createWarningGroupMessage(
         secondMessageId,
         type,

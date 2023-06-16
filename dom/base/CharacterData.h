@@ -91,9 +91,9 @@ class CharacterData : public nsIContent {
 
   NS_IMPL_FROMNODE_HELPER(CharacterData, IsCharacterData())
 
-  virtual void GetNodeValueInternal(nsAString& aNodeValue) override;
-  virtual void SetNodeValueInternal(const nsAString& aNodeValue,
-                                    ErrorResult& aError) override;
+  void GetNodeValueInternal(nsAString& aNodeValue) override;
+  void SetNodeValueInternal(const nsAString& aNodeValue,
+                            ErrorResult& aError) override;
 
   void GetTextContentInternal(nsAString& aTextContent, OOMReporter&) final {
     GetNodeValue(aTextContent);

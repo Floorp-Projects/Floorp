@@ -121,6 +121,14 @@ def set_test_manifests(config, tasks):
             input_paths = mh_test_paths[task["attributes"]["unittest_suite"]]
             remaining_manifests = []
 
+            # if we have web-platform tests incoming, just yield task
+            for m in input_paths:
+                if m.startswith("testing/web-platform/tests/"):
+                    if not isinstance(loader, DefaultLoader):
+                        task["chunks"] = "dynamic"
+                    yield task
+                    break
+
             # input paths can exist in other directories (i.e. [../../dir/test.js])
             # we need to look for all [active] manifests that include tests in the path
             for m in input_paths:
@@ -129,11 +137,12 @@ def set_test_manifests(config, tasks):
 
             # look in the 'other' manifests
             for m in input_paths:
+                man = m
                 for tm in task["test-manifests"]["other_dirs"]:
                     matched_dirs = [
                         dp
                         for dp in task["test-manifests"]["other_dirs"].get(tm)
-                        if dp.startswith(m)
+                        if dp.startswith(man)
                     ]
                     if matched_dirs:
                         if tm not in task["test-manifests"]["active"]:

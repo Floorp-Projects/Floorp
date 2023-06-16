@@ -9,8 +9,8 @@ function startNewTabTestCase(aTestNumber) {
     "browser_referrer_open_link_in_container_tab: " +
       getReferrerTestDescription(aTestNumber)
   );
-  contextMenuOpened(gTestWindow, "testlink").then(function(aContextMenu) {
-    someTabLoaded(gTestWindow).then(function(aNewTab) {
+  contextMenuOpened(gTestWindow, "testlink").then(function (aContextMenu) {
+    someTabLoaded(gTestWindow).then(function (aNewTab) {
       gTestWindow.gBrowser.selectedTab = aNewTab;
 
       checkReferrerAndStartNextTest(
@@ -35,7 +35,7 @@ function test() {
 
   SpecialPowers.pushPrefEnv(
     { set: [["privacy.userContext.enabled", true]] },
-    function() {
+    function () {
       requestLongerTimeout(10); // slowwww shutdown on e10s
       startReferrerTest(startNewTabTestCase, { userContextId: 1 });
     }

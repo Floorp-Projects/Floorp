@@ -128,7 +128,7 @@ impl ColorSpace {
 
 bitflags! {
     /// Flags used when serializing colors.
-    #[derive(Default, MallocSizeOf, ToShmem)]
+    #[derive(Clone, Copy, Default, MallocSizeOf, PartialEq, ToShmem)]
     #[repr(C)]
     pub struct ColorFlags : u8 {
         /// If set, serializes sRGB colors into `color(srgb ...)` instead of

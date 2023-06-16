@@ -218,13 +218,13 @@ function run_test() {
   var input = new AutoCompleteInput([emptySearch.name, regularSearch.name]);
   var numSearchesStarted = 0;
 
-  input.onSearchBegin = function() {
+  input.onSearchBegin = function () {
     numSearchesStarted++;
     Assert.equal(numSearchesStarted, 1);
     Assert.equal(input.searchCount, 2);
   };
 
-  input.onSearchComplete = function() {
+  input.onSearchComplete = function () {
     Assert.equal(numSearchesStarted, 1);
 
     Assert.equal(

@@ -317,6 +317,9 @@ class StructuredCloneHolder : public StructuredCloneHolderBase {
   static bool ReadString(JSStructuredCloneReader* aReader, nsString& aString);
   static bool WriteString(JSStructuredCloneWriter* aWriter,
                           const nsAString& aString);
+  static bool ReadCString(JSStructuredCloneReader* aReader, nsCString& aString);
+  static bool WriteCString(JSStructuredCloneWriter* aWriter,
+                           const nsACString& aString);
 
   static const JSStructuredCloneCallbacks sCallbacks;
 

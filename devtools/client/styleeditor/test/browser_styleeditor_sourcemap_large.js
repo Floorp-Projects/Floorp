@@ -10,7 +10,7 @@
 
 const TESTCASE_URI = TEST_BASE_HTTPS + "sourcemaps-large.html";
 
-add_task(async function() {
+add_task(async function () {
   const { ui } = await openStyleEditorForURL(TESTCASE_URI);
 
   await openEditor(ui.editors[0]);

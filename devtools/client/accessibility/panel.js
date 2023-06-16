@@ -51,15 +51,12 @@ function AccessibilityPanel(iframeWindow, toolbox, commands) {
   this._commands = commands;
 
   this.onPanelVisibilityChange = this.onPanelVisibilityChange.bind(this);
-  this.onNewAccessibleFrontSelected = this.onNewAccessibleFrontSelected.bind(
-    this
-  );
-  this.onAccessibilityInspectorUpdated = this.onAccessibilityInspectorUpdated.bind(
-    this
-  );
-  this.updateA11YServiceDurationTimer = this.updateA11YServiceDurationTimer.bind(
-    this
-  );
+  this.onNewAccessibleFrontSelected =
+    this.onNewAccessibleFrontSelected.bind(this);
+  this.onAccessibilityInspectorUpdated =
+    this.onAccessibilityInspectorUpdated.bind(this);
+  this.updateA11YServiceDurationTimer =
+    this.updateA11YServiceDurationTimer.bind(this);
   this.forceUpdatePickerButton = this.forceUpdatePickerButton.bind(this);
   this.onLifecycleEvent = this.onLifecycleEvent.bind(this);
 

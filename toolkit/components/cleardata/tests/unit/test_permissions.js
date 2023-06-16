@@ -46,10 +46,8 @@ add_task(async function test_principal_permissions() {
   );
 
   const anotherUri = Services.io.newURI("https://example.com");
-  const anotherPrincipal = Services.scriptSecurityManager.createContentPrincipal(
-    anotherUri,
-    {}
-  );
+  const anotherPrincipal =
+    Services.scriptSecurityManager.createContentPrincipal(anotherUri, {});
 
   Services.perms.addFromPrincipal(
     principal,
@@ -349,10 +347,8 @@ add_task(async function test_3rdpartystorage_permissions() {
   );
 
   const anotherUri = Services.io.newURI("https://example.com");
-  const anotherPrincipal = Services.scriptSecurityManager.createContentPrincipal(
-    anotherUri,
-    {}
-  );
+  const anotherPrincipal =
+    Services.scriptSecurityManager.createContentPrincipal(anotherUri, {});
   Services.perms.addFromPrincipal(
     anotherPrincipal,
     "cookie",
@@ -365,10 +361,8 @@ add_task(async function test_3rdpartystorage_permissions() {
   );
 
   const oneMoreUri = Services.io.newURI("https://example.org");
-  const oneMorePrincipal = Services.scriptSecurityManager.createContentPrincipal(
-    oneMoreUri,
-    {}
-  );
+  const oneMorePrincipal =
+    Services.scriptSecurityManager.createContentPrincipal(oneMoreUri, {});
   Services.perms.addFromPrincipal(
     oneMorePrincipal,
     "cookie",

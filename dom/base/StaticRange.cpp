@@ -90,14 +90,25 @@ already_AddRefed<StaticRange> StaticRange::Create(
   return staticRange.forget();
 }
 
+StaticRange::~StaticRange() {
+  DoSetRange(RawRangeBoundary(), RawRangeBoundary(), nullptr);
+}
+
 template <typename SPT, typename SRT, typename EPT, typename ERT>
 void StaticRange::DoSetRange(const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
                              const RangeBoundaryBase<EPT, ERT>& aEndBoundary,
                              nsINode* aRootNode) {
-  mStart = aStartBoundary;
-  mEnd = aEndBoundary;
+  bool checkCommonAncestor =
+      IsInAnySelection() && (mStart.Container() != aStartBoundary.Container() ||
+                             mEnd.Container() != aEndBoundary.Container());
+  mStart.CopyFrom(aStartBoundary, RangeBoundaryIsMutationObserved::No);
+  mEnd.CopyFrom(aEndBoundary, RangeBoundaryIsMutationObserved::No);
   MOZ_ASSERT(mStart.IsSet() == mEnd.IsSet());
   mIsPositioned = mStart.IsSet() && mEnd.IsSet();
+
+  if (checkCommonAncestor) {
+    UpdateCommonAncestorIfNecessary();
+  }
 }
 
 /* static */

@@ -9,7 +9,7 @@
 const URL =
   "http://mochi.test:8888/browser/toolkit/components/reader/test/readerModeRandom.sjs";
 
-add_task(async function() {
+add_task(async function () {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URL);
 
   let randomNumber = await SpecialPowers.spawn(tab.linkedBrowser, [], () => {

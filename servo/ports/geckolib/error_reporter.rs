@@ -18,7 +18,7 @@ use style::gecko_bindings::structs::URLExtraData as RawUrlExtraData;
 use style::gecko_bindings::structs::{nsIURI, Loader, StyleSheet as DomStyleSheet};
 use style::selector_parser::SelectorImpl;
 use style::stylesheets::UrlExtraData;
-use style_traits::{StyleParseErrorKind, ValueParseErrorKind};
+use style_traits::{PropertySyntaxParseError, StyleParseErrorKind, ValueParseErrorKind};
 
 pub type ErrorKind<'i> = ParseErrorKind<'i, StyleParseErrorKind<'i>>;
 
@@ -48,7 +48,7 @@ impl ErrorReporter {
         let uri = unsafe {
             extra_data
                 .as_ref()
-                .map(|d| d.mBaseURI.raw::<nsIURI>())
+                .map(|d| d.mBaseURI.raw())
                 .unwrap_or(ptr::null_mut())
         };
 
@@ -96,8 +96,7 @@ fn extract_error_param<'a>(err: ErrorKind<'a>) -> Option<ErrorString<'a>> {
             ErrorString::UnexpectedToken(t)
         },
 
-        ParseErrorKind::Basic(BasicParseErrorKind::AtRuleInvalid(i)) |
-        ParseErrorKind::Custom(StyleParseErrorKind::UnsupportedAtRule(i)) => {
+        ParseErrorKind::Basic(BasicParseErrorKind::AtRuleInvalid(i)) => {
             let mut s = String::from("@");
             serialize_identifier(&i, &mut s).unwrap();
             ErrorString::Snippet(s.into())
@@ -191,6 +190,7 @@ impl<'a> ErrorHelpers<'a> for ContextualParseError<'a> {
     fn error_data(self) -> (CowRcStr<'a>, ErrorKind<'a>) {
         match self {
             ContextualParseError::UnsupportedPropertyDeclaration(s, err, _) |
+            ContextualParseError::UnsupportedPropertyDescriptor(s, err) |
             ContextualParseError::UnsupportedFontFaceDescriptor(s, err) |
             ContextualParseError::UnsupportedFontFeatureValuesDescriptor(s, err) |
             ContextualParseError::UnsupportedFontPaletteValuesDescriptor(s, err) |
@@ -311,13 +311,6 @@ impl<'a> ErrorHelpers<'a> for ContextualParseError<'a> {
                     kind: ParseErrorKind::Basic(BasicParseErrorKind::AtRuleInvalid(_)),
                     ..
                 },
-            ) |
-            ContextualParseError::InvalidRule(
-                _,
-                ParseError {
-                    kind: ParseErrorKind::Custom(StyleParseErrorKind::UnsupportedAtRule(_)),
-                    ..
-                },
             ) => (cstr!("PEUnknownAtRule"), Action::Nothing),
             ContextualParseError::InvalidRule(_, ref err) => {
                 let prefix = match err.kind {
@@ -401,6 +394,7 @@ impl<'a> ErrorHelpers<'a> for ContextualParseError<'a> {
             ContextualParseError::InvalidCounterStyleWithoutAdditiveSymbols |
             ContextualParseError::InvalidCounterStyleExtendsWithSymbols |
             ContextualParseError::InvalidCounterStyleExtendsWithAdditiveSymbols |
+            ContextualParseError::UnsupportedPropertyDescriptor(..) |
             ContextualParseError::UnsupportedFontFeatureValuesDescriptor(..) |
             ContextualParseError::UnsupportedFontPaletteValuesDescriptor(..) |
             ContextualParseError::InvalidFontFeatureValuesRule(..) => {
@@ -411,6 +405,32 @@ impl<'a> ErrorHelpers<'a> for ContextualParseError<'a> {
                     ParseErrorKind::Custom(StyleParseErrorKind::ValueError(
                         ValueParseErrorKind::InvalidColor(..),
                     )) => (cstr!("PEColorNotColor"), Action::Nothing),
+                    ParseErrorKind::Custom(StyleParseErrorKind::PropertySyntaxField(ref kind)) => {
+                        let name = match kind {
+                            PropertySyntaxParseError::EmptyInput => {
+                                cstr!("PEPRSyntaxFieldEmptyInput")
+                            },
+                            PropertySyntaxParseError::ExpectedPipeBetweenComponents => {
+                                cstr!("PEPRSyntaxFieldExpectedPipe")
+                            },
+                            PropertySyntaxParseError::InvalidNameStart => {
+                                cstr!("PEPRSyntaxFieldInvalidNameStart")
+                            },
+                            PropertySyntaxParseError::InvalidName => {
+                                cstr!("PEPRSyntaxFieldInvalidName")
+                            },
+                            PropertySyntaxParseError::UnclosedDataTypeName => {
+                                cstr!("PEPRSyntaxFieldUnclosedDataTypeName")
+                            },
+                            PropertySyntaxParseError::UnexpectedEOF => {
+                                cstr!("PEPRSyntaxFieldUnexpectedEOF")
+                            },
+                            PropertySyntaxParseError::UnknownDataTypeName => {
+                                cstr!("PEPRSyntaxFieldUnknownDataTypeName")
+                            },
+                        };
+                        (name, Action::Nothing)
+                    },
                     _ => {
                         // Not the best error message, since we weren't parsing
                         // a declaration, just a value. But we don't produce

@@ -9,7 +9,7 @@
 #include "LocalAccessible-inl.h"
 #include "nsMai.h"
 #include "mozilla/Likely.h"
-#include "mozilla/StaticPrefs_accessibility.h"
+#include "nsAccessibilityService.h"
 #include "RemoteAccessible.h"
 #include "nsString.h"
 
@@ -65,11 +65,7 @@ static const gchar* getKeyBindingCB(AtkAction* aAction, gint aActionIndex) {
     return nullptr;
   }
   nsAutoString keyBindingsStr;
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() || acc->IsLocal()) {
-    AccessibleWrap::GetKeyBinding(acc, keyBindingsStr);
-  } else {
-    acc->AsRemote()->AtkKeyBinding(keyBindingsStr);
-  }
+  AccessibleWrap::GetKeyBinding(acc, keyBindingsStr);
 
   return AccessibleWrap::ReturnString(keyBindingsStr);
 }

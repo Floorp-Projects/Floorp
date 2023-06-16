@@ -253,10 +253,10 @@ static VPX_FORCE_INLINE __m256i quantize_b_32x32_16(
 }
 
 void vpx_quantize_b_32x32_avx2(const tran_low_t *coeff_ptr,
-                               const struct macroblock_plane *const mb_plane,
+                               const struct macroblock_plane *mb_plane,
                                tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr,
                                const int16_t *dequant_ptr, uint16_t *eob_ptr,
-                               const struct ScanOrder *const scan_order) {
+                               const struct ScanOrder *scan_order) {
   __m256i v_zbin, v_round, v_quant, v_dequant, v_quant_shift;
   __m256i v_eobmax = _mm256_setzero_si256();
   intptr_t count;

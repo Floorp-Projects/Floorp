@@ -49,10 +49,7 @@
                     "maximum": 100
                   }
                 },
-                "required": [
-                  "period",
-                  "cap"
-                ]
+                "required": ["period", "cap"]
               }
             }
           }
@@ -92,9 +89,7 @@
               }
             }
           },
-          "required": [
-            "id"
-          ]
+          "required": ["id"]
         },
         "provider": {
           "description": "An identifier for the provider of this message, such as \"cfr\" or \"preview\".",
@@ -115,9 +110,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "string_id"
-      ]
+      "required": ["string_id"]
     },
     "localizableText": {
       "description": "Either a raw string or an object containing the string_id of the localized text",

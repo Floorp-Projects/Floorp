@@ -17,9 +17,10 @@ XPCOMUtils.defineLazyServiceGetter(
 const { debug, warn } = GeckoViewUtils.initLogging("GeckoViewPushController");
 
 function createScopeAndPrincipal(scopeAndAttrs) {
-  const principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    scopeAndAttrs
-  );
+  const principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      scopeAndAttrs
+    );
   const scope = principal.URI.spec;
 
   return [scope, principal];

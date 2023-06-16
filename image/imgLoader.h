@@ -10,6 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/EnumSet.h"
 #include "mozilla/UniquePtr.h"
 
 #include "imgILoader.h"
@@ -289,9 +290,13 @@ class imgLoader final : public imgILoader,
   static void Shutdown();    // for use by the factory
   static void ShutdownMemoryReporter();
 
-  nsresult ClearChromeImageCache();
-  nsresult ClearImageCache();
-  void MinimizeCaches();
+  enum class ClearOption {
+    ChromeOnly,
+    UnusedOnly,
+  };
+  using ClearOptions = mozilla::EnumSet<ClearOption>;
+  nsresult ClearImageCache(ClearOptions = {});
+  void MinimizeCache() { ClearImageCache({ClearOption::UnusedOnly}); }
 
   nsresult InitCache();
 
@@ -394,15 +399,10 @@ class imgLoader final : public imgILoader,
                                     nsLoadFlags aLoadFlags,
                                     imgRequestProxy** _retval);
 
-  nsresult EvictEntries(imgCacheTable& aCacheToClear);
-  nsresult EvictEntries(imgCacheQueue& aQueueToClear);
+  nsresult EvictEntries(bool aChromeOnly);
 
-  imgCacheTable& GetCache(bool aForChrome);
-  imgCacheTable& GetCache(const ImageCacheKey& aKey);
-  imgCacheQueue& GetCacheQueue(bool aForChrome);
-  imgCacheQueue& GetCacheQueue(const ImageCacheKey& aKey);
-  void CacheEntriesChanged(bool aForChrome, int32_t aSizeDiff = 0);
-  void CheckCacheLimits(imgCacheTable& cache, imgCacheQueue& queue);
+  void CacheEntriesChanged(int32_t aSizeDiff);
+  void CheckCacheLimits();
 
  private:  // data
   friend class imgCacheEntry;
@@ -410,9 +410,6 @@ class imgLoader final : public imgILoader,
 
   imgCacheTable mCache;
   imgCacheQueue mCacheQueue;
-
-  imgCacheTable mChromeCache;
-  imgCacheQueue mChromeCacheQueue;
 
   // Hash set of every imgRequest for this loader that isn't in mCache or
   // mChromeCache. The union over all imgLoader's of mCache, mChromeCache, and

@@ -47,7 +47,7 @@ const REMOTE_SETTINGS_RESULTS = [
 // Spy for the custom impression/click sender
 let spy;
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.urlbar.bestMatch.blockingEnabled", true],
@@ -68,7 +68,12 @@ add_setup(async function() {
   Services.telemetry.clearEvents();
 
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
-    remoteSettingsResults: REMOTE_SETTINGS_RESULTS,
+    remoteSettingsResults: [
+      {
+        type: "data",
+        attachment: REMOTE_SETTINGS_RESULTS,
+      },
+    ],
     config: QuickSuggestTestUtils.BEST_MATCH_CONFIG,
   });
 });

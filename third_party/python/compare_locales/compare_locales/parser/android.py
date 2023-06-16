@@ -10,8 +10,6 @@ As we're using a built-in XML parser underneath, errors on that level
 break the full parsing, and result in a single Junk entry.
 """
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
 
 import re
 from xml.dom import minidom
@@ -31,7 +29,7 @@ class AndroidEntity(Entity):
     ):
         # fill out superclass as good as we can right now
         # most span can get modified at endElement
-        super(AndroidEntity, self).__init__(
+        super().__init__(
             ctx, pre_comment, white_space,
             (None, None),
             (None, None),
@@ -85,7 +83,7 @@ class AndroidEntity(Entity):
         return LiteralEntity(self.key, raw_val, ''.join(all))
 
 
-class NodeMixin(object):
+class NodeMixin:
     def __init__(self, all, value):
         self._all_literal = all
         self._val_literal = value
@@ -138,7 +136,7 @@ class DocumentWrapper(NodeMixin, StickyEntry):
 
 class XMLJunk(Junk):
     def __init__(self, all):
-        super(XMLJunk, self).__init__(None, (0, 0))
+        super().__init__(None, (0, 0))
         self._all_literal = all
 
     @property
@@ -179,7 +177,7 @@ class AndroidParser(Parser):
     capabilities = CAN_SKIP
 
     def __init__(self):
-        super(AndroidParser, self).__init__()
+        super().__init__()
         self.last_comment = None
 
     def walk(self, only_localizable=False):
@@ -206,7 +204,7 @@ class AndroidParser(Parser):
             for attr_name, attr_value in docElement.attributes.items():
                 yield DocumentWrapper(
                     attr_name,
-                    ' {}="{}"'.format(attr_name, attr_value)
+                    f' {attr_name}="{attr_value}"'
                 )
             yield DocumentWrapper('>', '>')
         child_num = 0

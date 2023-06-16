@@ -29,15 +29,12 @@ class GridDisplaySettings extends PureComponent {
   constructor(props) {
     super(props);
 
-    this.onShowGridAreasCheckboxClick = this.onShowGridAreasCheckboxClick.bind(
-      this
-    );
-    this.onShowGridLineNumbersCheckboxClick = this.onShowGridLineNumbersCheckboxClick.bind(
-      this
-    );
-    this.onShowInfiniteLinesCheckboxClick = this.onShowInfiniteLinesCheckboxClick.bind(
-      this
-    );
+    this.onShowGridAreasCheckboxClick =
+      this.onShowGridAreasCheckboxClick.bind(this);
+    this.onShowGridLineNumbersCheckboxClick =
+      this.onShowGridLineNumbersCheckboxClick.bind(this);
+    this.onShowInfiniteLinesCheckboxClick =
+      this.onShowInfiniteLinesCheckboxClick.bind(this);
   }
 
   onShowGridAreasCheckboxClick() {

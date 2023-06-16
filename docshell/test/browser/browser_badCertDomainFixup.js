@@ -27,7 +27,7 @@ async function verifyErrorPage(errorPageURL) {
   BrowserTestUtils.loadURIString(gBrowser, errorPageURL);
   await certErrorLoaded;
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     let ec;
     await ContentTaskUtils.waitForCondition(() => {
       ec = content.document.getElementById("errorCode");

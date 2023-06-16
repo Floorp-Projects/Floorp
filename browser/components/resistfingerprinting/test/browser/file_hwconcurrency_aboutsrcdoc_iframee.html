@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<meta charset="utf8">
+<script>
+window.onload = async () => {
+  parent.postMessage("ready", "*");
+}
+
+window.addEventListener("message", async function listener(event) {
+  if (event.data[0] == "gimme") {
+    var s = `<html><script>
+      let result = {
+        hardwareConcurrency : navigator.hardwareConcurrency
+      };
+      window.parent.document.querySelector('#result').textContent = JSON.stringify(result);
+      window.parent.postMessage(["frame_response"], "*");`;
+    // eslint-disable-next-line
+    s += `</` + `script></html>`;
+
+  	var iframe = document.createElement("iframe");
+    iframe.srcdoc = s;
+    document.body.append(iframe);
+
+  } else if (event.data[0] == "frame_response") {
+    let result = document.querySelector("#result").textContent;
+    parent.postMessage(JSON.parse(result), "*");
+  }
+});
+</script>
+<output id="result"></output>

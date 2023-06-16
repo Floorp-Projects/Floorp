@@ -24,8 +24,8 @@ add_task(async () => {
 
   await BrowserTestUtils.withNewTab(
     GetTestWebBasedURL("empty_file.html"),
-    async function(browser) {
-      await SpecialPowers.spawn(browser, [], async function() {
+    async function (browser) {
+      await SpecialPowers.spawn(browser, [], async function () {
         try {
           let config = [
             {

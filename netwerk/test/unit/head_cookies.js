@@ -43,7 +43,7 @@ function do_run_generator(generator) {
 
 // Helper to finish a generator function test.
 function do_finish_generator_test(generator) {
-  executeSoon(function() {
+  executeSoon(function () {
     generator.return();
     do_test_finished();
   });
@@ -154,10 +154,12 @@ async function do_set_cookies(uri, channel, session, expected) {
   const thirdPartyUrl = "http://third.com/";
   const contentPage = await CookieXPCShellUtils.loadContentPage(thirdPartyUrl);
   await contentPage.spawn(
-    {
-      cookie: "can=has" + suffix,
-      url: uri.spec,
-    },
+    [
+      {
+        cookie: "can=has" + suffix,
+        url: uri.spec,
+      },
+    ],
     async obj => {
       // eslint-disable-next-line no-undef
       await new content.Promise(resolve => {

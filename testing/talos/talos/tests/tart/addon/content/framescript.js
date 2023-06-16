@@ -1,11 +1,11 @@
 /* eslint-env mozilla/frame-script */
 
-(function() {
+(function () {
   const TART_PREFIX = "tart@mozilla.org:";
 
   addEventListener(
     TART_PREFIX + "chrome-exec-event",
-    function(e) {
+    function (e) {
       if (!content.location.pathname.endsWith("tart.html")) {
         console.error(
           `Ignore chrome-exec-event on non-tart page ${content.location.href}`
@@ -37,14 +37,15 @@
         content.window.performance.now() +
         Math.random();
 
-      addMessageListener(TART_PREFIX + "chrome-exec-reply", function done(
-        reply
-      ) {
-        if (reply.data.id == uniqueMessageId) {
-          removeMessageListener(TART_PREFIX + "chrome-exec-reply", done);
-          dispatchReply(reply.data.result);
+      addMessageListener(
+        TART_PREFIX + "chrome-exec-reply",
+        function done(reply) {
+          if (reply.data.id == uniqueMessageId) {
+            removeMessageListener(TART_PREFIX + "chrome-exec-reply", done);
+            dispatchReply(reply.data.result);
+          }
         }
-      });
+      );
 
       sendAsyncMessage(TART_PREFIX + "chrome-exec-message", {
         command: e.detail.command,

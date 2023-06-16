@@ -183,6 +183,7 @@ TEST_CATEGORIES = {
                         "!profil",
                         "!chrom",
                         "!safari",
+                        "!custom-car",
                     ]
                 },
                 "Pageload macosx": {
@@ -194,6 +195,7 @@ TEST_CATEGORIES = {
                         "!profil",
                         "!chrom",
                         "!safari",
+                        "!custom-car",
                     ]
                 },
                 "Resource Usage desktop": {
@@ -206,6 +208,7 @@ TEST_CATEGORIES = {
                         "!profil",
                         "!chrom",
                         "!safari",
+                        "!custom-car",
                     ],
                     "talos": [
                         "'talos 'xperf | 'tp5",
@@ -232,6 +235,7 @@ TEST_CATEGORIES = {
                         "!profil",
                         "!chrom",
                         "!safari",
+                        "!custom-car",
                     ]
                 },
                 "Pageload macosx": {
@@ -242,6 +246,7 @@ TEST_CATEGORIES = {
                         "!profil",
                         "!chrom",
                         "!safari",
+                        "!custom-car",
                     ]
                 },
                 "Pageload macosx live-sites": {
@@ -253,6 +258,7 @@ TEST_CATEGORIES = {
                         "!profil",
                         "!chrom",
                         "!safari",
+                        "!custom-car",
                     ],
                 },
             },
@@ -277,6 +283,7 @@ TEST_CATEGORIES = {
                         "!bytecode",
                         "!profil",
                         "!chrom",
+                        "!custom-car",
                     ]
                 },
                 "Pageload macosx safari": {
@@ -315,6 +322,7 @@ TEST_CATEGORIES = {
                         "!bytecode",
                         "!profil",
                         "!safari",
+                        "!custom-car",
                     ]
                 },
                 "Pageload macosx live-sites": {
@@ -325,6 +333,7 @@ TEST_CATEGORIES = {
                         "!bytecode",
                         "!profil",
                         "!safari",
+                        "!custom-car",
                     ],
                 },
                 "Benchmarks desktop chromium": {
@@ -356,6 +365,7 @@ TEST_CATEGORIES = {
                         "!profil",
                         "!chrom",
                         "!safari",
+                        "!custom-car",
                     ],
                 },
                 "Responsiveness android-a51 geckoview": {
@@ -386,6 +396,7 @@ TEST_CATEGORIES = {
                         "!live",
                         "!profil",
                         "!safari",
+                        "!custom-car",
                     ],
                 },
                 "Responsiveness android-a51 chrome-m": {
@@ -412,6 +423,7 @@ TEST_CATEGORIES = {
                         "!bytecode",
                         "!live",
                         "!safari",
+                        "!custom-car",
                     ]
                 },
                 "Talos PerfTests desktop profiling": {
@@ -440,7 +452,7 @@ TEST_CATEGORIES = {
                     "raptor": [
                         "'browsertime 'benchmark",
                         "!-32 'windows 'shippable",
-                        "!chrom !geckoview !fenix !safari",
+                        "!chrom !geckoview !fenix !safari !custom-car",
                         "!bytecode",
                         "!live",
                         "!profil",
@@ -650,7 +662,7 @@ TEST_CATEGORIES = {
                     "raptor": [
                         "'browsertime 'responsive",
                         "!-32 'windows 'shippable",
-                        "!chrom !geckoview !fenix !safari",
+                        "!chrom !geckoview !fenix !safari !custom-car",
                         "!bytecode",
                         "!live",
                         "!profil",
@@ -672,7 +684,7 @@ TEST_CATEGORIES = {
                     "raptor": [
                         "'browsertime 'responsive",
                         "!-32 'windows 'shippable",
-                        "!chrom !geckoview !fenix !safari",
+                        "!chrom !geckoview !fenix !safari !custom-car",
                         "!bytecode",
                         "!profil",
                     ],
@@ -686,6 +698,7 @@ TEST_CATEGORIES = {
                         "!profil",
                         "!chrom",
                         "!safari",
+                        "!custom-car",
                     ],
                 },
                 "Graphics, & Media Playback windows": {
@@ -696,6 +709,7 @@ TEST_CATEGORIES = {
                         "!profil",
                         "!chrom",
                         "!safari",
+                        "!custom-car",
                     ],
                     "talos": [
                         "'talos 'svgr | 'bcv | 'webgl",
@@ -745,7 +759,7 @@ def test_category_expansion(
     [
         (
             {},
-            [8, 2, 2, 10, 2, 1],
+            [9, 2, 2, 10, 2, 1],
             2,
             (
                 "\n!!!NOTE!!!\n You'll be able to find a performance comparison "
@@ -756,7 +770,7 @@ def test_category_expansion(
         ),
         (
             {"query": "'Pageload 'linux 'firefox"},
-            [8, 2, 2, 10, 2, 1],
+            [9, 2, 2, 10, 2, 1],
             2,
             (
                 "\n!!!NOTE!!!\n You'll be able to find a performance comparison "
@@ -767,7 +781,7 @@ def test_category_expansion(
         ),
         (
             {"cached_revision": "cached_base_revision"},
-            [8, 1, 1, 10, 2, 0],
+            [9, 1, 1, 10, 2, 0],
             2,
             (
                 "\n!!!NOTE!!!\n You'll be able to find a performance comparison "
@@ -778,7 +792,7 @@ def test_category_expansion(
         ),
         (
             {"dry_run": True},
-            [8, 1, 1, 10, 2, 0],
+            [9, 1, 1, 10, 2, 0],
             2,
             (
                 "\n!!!NOTE!!!\n You'll be able to find a performance comparison "
@@ -811,7 +825,7 @@ def test_category_expansion(
         ),
         (
             {"single_run": True},
-            [8, 1, 1, 4, 2, 0],
+            [9, 1, 1, 4, 2, 0],
             2,
             (
                 "If you need any help, you can find us in the #perf-help Matrix channel:\n"
@@ -820,7 +834,7 @@ def test_category_expansion(
         ),
         (
             {"detect_changes": True},
-            [9, 2, 2, 10, 2, 1],
+            [10, 2, 2, 10, 2, 1],
             2,
             (
                 "\n!!!NOTE!!!\n You'll be able to find a performance comparison "
@@ -857,6 +871,7 @@ def test_full_run(options, call_counts, log_ind, expected_log_message):
             ["", TASKS],
             ["", TASKS],
             ["", TASKS],
+            ["", TASKS],
             ["", ["Perftest Change Detector"]],
         ]
         ccr.return_value = options.get("cached_revision", "")
@@ -877,11 +892,11 @@ def test_full_run(options, call_counts, log_ind, expected_log_message):
     [
         (
             {"detect_changes": True},
-            [9, 0, 0, 2, 1],
+            [10, 0, 0, 2, 1],
             1,
             (
                 "Executing raptor queries: 'browsertime 'benchmark, !clang 'linux "
-                "'shippable, !bytecode, !live, !profil, !chrom, !safari"
+                "'shippable, !bytecode, !live, !profil, !chrom, !safari, !custom-car"
             ),
             InvalidRegressionDetectorQuery,
         ),
@@ -910,6 +925,7 @@ def test_change_detection_task_injection_failure(
     ) as perf_print:
         fzf.side_effect = [
             ["", ["Benchmarks linux"]],
+            ["", TASKS],
             ["", TASKS],
             ["", TASKS],
             ["", TASKS],
@@ -1011,38 +1027,83 @@ def test_apk_upload(apk_name, apk_content, should_fail, failure_message):
     "args, load_data, return_value, call_counts, exists_cache_file",
     [
         (
-            "base_commit",
+            (
+                [],
+                "base_commit",
+            ),
             {
-                "base_commit": {
-                    "base_revision_treeherder": "2b04563b5",
-                    "date": "2023-03-31",
-                }
+                "base_commit": [
+                    {
+                        "base_revision_treeherder": "2b04563b5",
+                        "date": "2023-03-31",
+                        "tasks": [],
+                    },
+                ],
             },
             "2b04563b5",
             [1, 0],
             True,
         ),
         (
-            "not_exist_cached_base_commit",
+            (
+                ["task-a"],
+                "subset_base_commit",
+            ),
             {
-                "base_commit": {
-                    "base_revision_treeherder": "2b04563b5",
-                    "date": "2023-03-31",
-                }
+                "subset_base_commit": [
+                    {
+                        "base_revision_treeherder": "2b04563b5",
+                        "date": "2023-03-31",
+                        "tasks": ["task-a", "task-b"],
+                    },
+                ],
+            },
+            "2b04563b5",
+            [1, 0],
+            True,
+        ),
+        (
+            ([], "not_exist_cached_base_commit"),
+            {
+                "base_commit": [
+                    {
+                        "base_revision_treeherder": "2b04563b5",
+                        "date": "2023-03-31",
+                        "tasks": [],
+                    },
+                ],
             },
             None,
             [1, 0],
             True,
         ),
         (
+            (
+                ["task-a", "task-b"],
+                "superset_base_commit",
+            ),
+            {
+                "superset_base_commit": [
+                    {
+                        "base_revision_treeherder": "2b04563b5",
+                        "date": "2023-03-31",
+                        "tasks": ["task-a"],
+                    },
+                ],
+            },
             None,
+            [1, 0],
+            True,
+        ),
+        (
+            ([], None),
             {},
             None,
             [1, 1],
             True,
         ),
         (
-            None,
+            ([], None),
             {},
             None,
             [0, 0],
@@ -1062,7 +1123,7 @@ def test_check_cached_revision(
     ):
         load.return_value = load_data
         is_file.return_value = exists_cache_file
-        result = PerfParser.check_cached_revision(args)
+        result = PerfParser.check_cached_revision(*args)
 
         assert load.call_count == call_counts[0]
         assert dump.call_count == call_counts[1]
@@ -1093,7 +1154,7 @@ def test_save_revision_treeherder(args, call_counts, exists_cache_file):
         "tryselect.selectors.perf.pathlib.Path.open"
     ):
         is_file.return_value = exists_cache_file
-        PerfParser.save_revision_treeherder(args[0], args[1])
+        PerfParser.save_revision_treeherder(TASKS, args[0], args[1])
 
         assert load.call_count == call_counts[0]
         assert dump.call_count == call_counts[1]

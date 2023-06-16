@@ -36,7 +36,7 @@ function awaitSavedFileContents(name, ext) {
         destFile.append(fileName);
         MockFilePicker.setFiles([destFile]);
         MockFilePicker.showCallback = null;
-        mockTransferCallback = async function(downloadSuccess) {
+        mockTransferCallback = async function (downloadSuccess) {
           try {
             ok(
               downloadSuccess,
@@ -76,14 +76,14 @@ function createTemporarySaveDirectory() {
 const destDir = createTemporarySaveDirectory();
 mockTransferRegisterer.register();
 MockFilePicker.displayDirectory = destDir;
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   mockTransferRegisterer.unregister();
   MockFilePicker.cleanup();
   destDir.remove(true);
   ok(!destDir.exists(), "Destination dir should be removed");
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test 1 save JSON started");
 
   const JSON_FILE = "simple_json.json";
@@ -132,7 +132,7 @@ add_task(async function() {
   is(await data, rawJSON, "Original JSON contents should have been saved.");
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test 2 save JSON started");
 
   const TEST_JSON_URL = "data:application/json,2";
@@ -145,7 +145,7 @@ add_task(async function() {
   is(await data, "2", "JSON contents should have been saved.");
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test 3 save JSON started");
 
   const TEST_JSON_URL = "data:application/manifest+json,3";

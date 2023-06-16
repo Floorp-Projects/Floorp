@@ -10,7 +10,7 @@
 requestLongerTimeout(2);
 
 // This source map does not have source contents, so it's fetched separately
-add_task(async function() {
+add_task(async function () {
   // NOTE: the CORS call makes the test run times inconsistent
   const dbg = await initDebugger(
     "doc-sourcemaps2.html",
@@ -30,7 +30,7 @@ add_task(async function() {
   await addBreakpoint(dbg, mainSrc, 4, 2);
   is(getBreakpointCount(), 1, "One breakpoint exists");
   ok(
-    getBreakpoint({ sourceId: mainSrc.id, line: 4, column: 2 }),
+    getBreakpoint(createLocation({ source: mainSrc, line: 4, column: 2 })),
     "Breakpoint has correct line"
   );
 

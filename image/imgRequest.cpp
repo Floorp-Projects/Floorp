@@ -33,7 +33,6 @@
 #include "nsContentUtils.h"
 #include "nsEscape.h"
 
-#include "plstr.h"   // PL_strcasestr(...)
 #include "prtime.h"  // for PR_Now
 #include "nsNetUtil.h"
 #include "nsIProtocolHandler.h"
@@ -712,7 +711,7 @@ imgRequest::OnStartRequest(nsIRequest* aRequest) {
     nsresult rv = channel->GetContentType(mimeType);
     if (NS_SUCCEEDED(rv) && !mimeType.EqualsLiteral(IMAGE_SVG_XML)) {
       // Retarget OnDataAvailable to the DecodePool's IO thread.
-      nsCOMPtr<nsIEventTarget> target =
+      nsCOMPtr<nsISerialEventTarget> target =
           DecodePool::Singleton()->GetIOEventTarget();
       rv = retargetable->RetargetDeliveryTo(target);
     }
@@ -1220,17 +1219,8 @@ imgRequest::OnRedirectVerifyCallback(nsresult result) {
 
   // Make sure we have a protocol that returns data rather than opens an
   // external application, e.g. 'mailto:'.
-  bool doesNotReturnData = false;
-  nsresult rv = NS_URIChainHasFlags(
-      mFinalURI, nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,
-      &doesNotReturnData);
-
-  if (NS_SUCCEEDED(rv) && doesNotReturnData) {
-    rv = NS_ERROR_ABORT;
-  }
-
-  if (NS_FAILED(rv)) {
-    mRedirectCallback->OnRedirectVerifyCallback(rv);
+  if (nsContentUtils::IsExternalProtocol(mFinalURI)) {
+    mRedirectCallback->OnRedirectVerifyCallback(NS_ERROR_ABORT);
     mRedirectCallback = nullptr;
     return NS_OK;
   }

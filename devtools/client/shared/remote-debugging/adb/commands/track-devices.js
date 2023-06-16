@@ -104,7 +104,7 @@ class TrackDevicesCommand extends EventEmitter {
       // One line per device, each line being $DEVICE\t(offline|device)
       const lines = packet.data.split("\n");
       const newDevices = new Map();
-      lines.forEach(function(line) {
+      lines.forEach(function (line) {
         if (!line.length) {
           return;
         }

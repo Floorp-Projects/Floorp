@@ -8,7 +8,7 @@
 
 const ITEMS_PER_PAGE = 50;
 
-add_task(async function() {
+add_task(async function () {
   await openTabAndSetupStorage(MAIN_DOMAIN_SECURED + "storage-overflow.html");
 
   info("Run the tests with short DevTools");
@@ -87,7 +87,7 @@ function checkCellValues(order) {
   const cells = [
     ...gPanelWindow.document.querySelectorAll("#name .table-widget-cell"),
   ];
-  cells.forEach(function(cell, index, arr) {
+  cells.forEach(function (cell, index, arr) {
     const i = order === "ASC" ? index + 1 : arr.length - index;
     is(cell.value, `item-${i}`, `Cell value is "item-${i}" (${order}).`);
   });

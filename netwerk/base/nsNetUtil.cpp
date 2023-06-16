@@ -70,7 +70,6 @@
 #include "nsIURIWithSpecialOrigin.h"
 #include "nsIViewSourceChannel.h"
 #include "nsInterfaceRequestorAgg.h"
-#include "plstr.h"
 #include "nsINestedURI.h"
 #include "mozilla/dom/nsCSPUtils.h"
 #include "mozilla/dom/nsHTTPSOnlyUtils.h"
@@ -858,7 +857,7 @@ nsresult NS_NewInputStreamPump(
     nsIInputStreamPump** aResult, already_AddRefed<nsIInputStream> aStream,
     uint32_t aSegsize /* = 0 */, uint32_t aSegcount /* = 0 */,
     bool aCloseWhenDone /* = false */,
-    nsIEventTarget* aMainThreadTarget /* = nullptr */) {
+    nsISerialEventTarget* aMainThreadTarget /* = nullptr */) {
   nsCOMPtr<nsIInputStream> stream = std::move(aStream);
 
   nsresult rv;
@@ -3754,6 +3753,24 @@ nsContentPolicyType AsValueToContentPolicy(const nsAttrValue& aValue) {
       return nsIContentPolicy::TYPE_INTERNAL_FETCH_PRELOAD;
   }
   return nsIContentPolicy::TYPE_INVALID;
+}
+
+// TODO: implement this using nsAttrValue's destination enums when support for
+// the new destinations is added; see this diff for a possible start:
+// https://phabricator.services.mozilla.com/D172368?vs=705114&id=708720
+bool IsScriptLikeOrInvalid(const nsAString& aAs) {
+  return !(
+      aAs.LowerCaseEqualsASCII("fetch") || aAs.LowerCaseEqualsASCII("audio") ||
+      aAs.LowerCaseEqualsASCII("document") ||
+      aAs.LowerCaseEqualsASCII("embed") || aAs.LowerCaseEqualsASCII("font") ||
+      aAs.LowerCaseEqualsASCII("frame") || aAs.LowerCaseEqualsASCII("iframe") ||
+      aAs.LowerCaseEqualsASCII("image") ||
+      aAs.LowerCaseEqualsASCII("manifest") ||
+      aAs.LowerCaseEqualsASCII("object") ||
+      aAs.LowerCaseEqualsASCII("report") || aAs.LowerCaseEqualsASCII("style") ||
+      aAs.LowerCaseEqualsASCII("track") || aAs.LowerCaseEqualsASCII("video") ||
+      aAs.LowerCaseEqualsASCII("webidentity") ||
+      aAs.LowerCaseEqualsASCII("xslt"));
 }
 
 bool CheckPreloadAttrs(const nsAttrValue& aAs, const nsAString& aType,

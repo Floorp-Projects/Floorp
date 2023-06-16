@@ -103,7 +103,7 @@ function runNext() {
     return;
   }
   var channel = setupChannel(PATH, tests[testRan].flags);
-  httpserver.registerPathHandler(PATH, function(request, response) {
+  httpserver.registerPathHandler(PATH, function (request, response) {
     response.setHeader("Content-Type", tests[testRan].contentType, false);
     response.bodyOutputStream.write(data, data.length);
   });

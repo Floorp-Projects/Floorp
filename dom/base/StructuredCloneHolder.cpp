@@ -510,9 +510,9 @@ bool StructuredCloneHolder::WriteFullySerializableObjects(
   return false;
 }
 
-/* static */
-bool StructuredCloneHolder::ReadString(JSStructuredCloneReader* aReader,
-                                       nsString& aString) {
+template <typename char_type>
+static bool ReadTString(JSStructuredCloneReader* aReader,
+                        nsTString<char_type>& aString) {
   uint32_t length, zero;
   if (!JS_ReadUint32Pair(aReader, &length, &zero)) {
     return false;
@@ -521,18 +521,42 @@ bool StructuredCloneHolder::ReadString(JSStructuredCloneReader* aReader,
   if (NS_WARN_IF(!aString.SetLength(length, fallible))) {
     return false;
   }
-  size_t charSize = sizeof(nsString::char_type);
+  size_t charSize = sizeof(char_type);
   return JS_ReadBytes(aReader, (void*)aString.BeginWriting(),
                       length * charSize);
+}
+
+template <typename char_type>
+static bool WriteTString(JSStructuredCloneWriter* aWriter,
+                         const nsTSubstring<char_type>& aString) {
+  size_t charSize = sizeof(char_type);
+  return JS_WriteUint32Pair(aWriter, aString.Length(), 0) &&
+         JS_WriteBytes(aWriter, aString.BeginReading(),
+                       aString.Length() * charSize);
+}
+
+/* static */
+bool StructuredCloneHolder::ReadString(JSStructuredCloneReader* aReader,
+                                       nsString& aString) {
+  return ReadTString(aReader, aString);
 }
 
 /* static */
 bool StructuredCloneHolder::WriteString(JSStructuredCloneWriter* aWriter,
                                         const nsAString& aString) {
-  size_t charSize = sizeof(nsString::char_type);
-  return JS_WriteUint32Pair(aWriter, aString.Length(), 0) &&
-         JS_WriteBytes(aWriter, aString.BeginReading(),
-                       aString.Length() * charSize);
+  return WriteTString(aWriter, aString);
+}
+
+/* static */
+bool StructuredCloneHolder::ReadCString(JSStructuredCloneReader* aReader,
+                                        nsCString& aString) {
+  return ReadTString(aReader, aString);
+}
+
+/* static */
+bool StructuredCloneHolder::WriteCString(JSStructuredCloneWriter* aWriter,
+                                         const nsACString& aString) {
+  return WriteTString(aWriter, aString);
 }
 
 namespace {
@@ -1340,8 +1364,8 @@ StructuredCloneHolder::CustomWriteTransferHandler(
       mPortIdentifiers.AppendElement(identifier.release());
 
       *aTag = SCTAG_DOM_MAP_MESSAGEPORT;
-      *aOwnership = JS::SCTAG_TMO_CUSTOM;
       *aContent = nullptr;
+      *aOwnership = JS::SCTAG_TMO_CUSTOM;
 
       return true;
     }
@@ -1358,9 +1382,9 @@ StructuredCloneHolder::CustomWriteTransferHandler(
 
         *aExtraData = 0;
         *aTag = SCTAG_DOM_CANVAS;
-        *aOwnership = JS::SCTAG_TMO_CUSTOM;
         *aContent = canvas->ToCloneData();
         MOZ_ASSERT(*aContent);
+        *aOwnership = JS::SCTAG_TMO_CUSTOM;
         canvas->SetNeutered();
 
         return true;
@@ -1374,7 +1398,6 @@ StructuredCloneHolder::CustomWriteTransferHandler(
 
         *aExtraData = 0;
         *aTag = SCTAG_DOM_IMAGEBITMAP;
-        *aOwnership = JS::SCTAG_TMO_CUSTOM;
 
         UniquePtr<ImageBitmapCloneData> clonedBitmap = bitmap->ToCloneData();
         if (!clonedBitmap) {
@@ -1383,6 +1406,8 @@ StructuredCloneHolder::CustomWriteTransferHandler(
 
         *aContent = clonedBitmap.release();
         MOZ_ASSERT(*aContent);
+        *aOwnership = JS::SCTAG_TMO_CUSTOM;
+
         bitmap->Close();
 
         return true;
@@ -1396,7 +1421,6 @@ StructuredCloneHolder::CustomWriteTransferHandler(
 
           *aExtraData = 0;
           *aTag = SCTAG_DOM_VIDEOFRAME;
-          *aOwnership = JS::SCTAG_TMO_CUSTOM;
           *aContent = nullptr;
 
           UniquePtr<VideoFrame::TransferredData> data = videoFrame->Transfer();
@@ -1405,6 +1429,7 @@ StructuredCloneHolder::CustomWriteTransferHandler(
           }
           *aContent = data.release();
           MOZ_ASSERT(*aContent);
+          *aOwnership = JS::SCTAG_TMO_CUSTOM;
           return true;
         }
       }
@@ -1417,7 +1442,6 @@ StructuredCloneHolder::CustomWriteTransferHandler(
         MOZ_ASSERT(stream);
 
         *aTag = SCTAG_DOM_READABLESTREAM;
-        *aOwnership = JS::SCTAG_TMO_CUSTOM;
         *aContent = nullptr;
 
         UniqueMessagePortId id;
@@ -1426,6 +1450,7 @@ StructuredCloneHolder::CustomWriteTransferHandler(
         }
         *aExtraData = mPortIdentifiers.Length();
         mPortIdentifiers.AppendElement(id.release());
+        *aOwnership = JS::SCTAG_TMO_CUSTOM;
         return true;
       }
     }
@@ -1437,7 +1462,6 @@ StructuredCloneHolder::CustomWriteTransferHandler(
         MOZ_ASSERT(stream);
 
         *aTag = SCTAG_DOM_WRITABLESTREAM;
-        *aOwnership = JS::SCTAG_TMO_CUSTOM;
         *aContent = nullptr;
 
         UniqueMessagePortId id;
@@ -1446,6 +1470,7 @@ StructuredCloneHolder::CustomWriteTransferHandler(
         }
         *aExtraData = mPortIdentifiers.Length();
         mPortIdentifiers.AppendElement(id.release());
+        *aOwnership = JS::SCTAG_TMO_CUSTOM;
         return true;
       }
     }
@@ -1457,7 +1482,6 @@ StructuredCloneHolder::CustomWriteTransferHandler(
         MOZ_ASSERT(stream);
 
         *aTag = SCTAG_DOM_TRANSFORMSTREAM;
-        *aOwnership = JS::SCTAG_TMO_CUSTOM;
         *aContent = nullptr;
 
         UniqueMessagePortId id1;
@@ -1468,6 +1492,7 @@ StructuredCloneHolder::CustomWriteTransferHandler(
         *aExtraData = mPortIdentifiers.Length();
         mPortIdentifiers.AppendElement(id1.release());
         mPortIdentifiers.AppendElement(id2.release());
+        *aOwnership = JS::SCTAG_TMO_CUSTOM;
         return true;
       }
     }

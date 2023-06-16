@@ -71,7 +71,7 @@ add_task(async function test_edit_password() {
 
     // Create the pre-existing logins when needed.
     if (testCase.usernameInPageExists) {
-      Services.logins.addLogin(
+      await Services.logins.addLoginAsync(
         LoginTestUtils.testData.formLogin({
           origin: "https://example.com",
           formActionOrigin: "https://example.com",
@@ -82,7 +82,7 @@ add_task(async function test_edit_password() {
     }
 
     if (testCase.usernameChangedToExists) {
-      Services.logins.addLogin(
+      await Services.logins.addLoginAsync(
         LoginTestUtils.testData.formLogin({
           origin: "https://example.com",
           formActionOrigin: "https://example.com",
@@ -101,7 +101,7 @@ add_task(async function test_edit_password() {
           "https://example.com/browser/toolkit/components/" +
           "passwordmgr/test/browser/form_basic.html",
       },
-      async function(browser) {
+      async function (browser) {
         await formFilledPromise;
 
         // Set the form to a known state so we can expect a single PasswordEditedOrGenerated message
@@ -135,7 +135,7 @@ add_task(async function test_edit_password() {
           "popupshown",
           event => event.target == PopupNotifications.panel
         );
-        await SpecialPowers.spawn(browser, [], function() {
+        await SpecialPowers.spawn(browser, [], function () {
           content.document.getElementById("form-basic").submit();
         });
         await formSubmittedPromise;
@@ -208,11 +208,13 @@ add_task(async function test_edit_password() {
 });
 
 async function initForm(browser, formDefaults = {}) {
-  await ContentTask.spawn(browser, formDefaults, async function(
-    selectorValues
-  ) {
-    for (let [sel, value] of Object.entries(selectorValues)) {
-      content.document.querySelector(sel).value = value;
+  await ContentTask.spawn(
+    browser,
+    formDefaults,
+    async function (selectorValues) {
+      for (let [sel, value] of Object.entries(selectorValues)) {
+        content.document.querySelector(sel).value = value;
+      }
     }
-  });
+  );
 }

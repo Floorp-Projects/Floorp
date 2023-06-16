@@ -48,7 +48,7 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIExternalProtocolService"
 );
 
-XPCOMUtils.defineLazyGetter(lazy, "gParentalControlsService", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gParentalControlsService", function () {
   if ("@mozilla.org/parental-controls-service;1" in Cc) {
     return Cc["@mozilla.org/parental-controls-service;1"].createInstance(
       Ci.nsIParentalControlsService
@@ -485,10 +485,7 @@ export var DownloadIntegration = {
       let url;
       const uri = lazy.NetUtil.newURI(aUrl);
       if (["http", "https", "ftp"].includes(uri.scheme)) {
-        url = uri
-          .mutate()
-          .setUserPass("")
-          .finalize().spec;
+        url = uri.mutate().setUserPass("").finalize().spec;
       } else if (aFallback) {
         url = aFallback;
       } else {
@@ -562,19 +559,8 @@ export var DownloadIntegration = {
     // this is a permanently downloaded file or a temporary download to be
     // opened read-only with an external application.
     try {
-      // The following logic to determine whether this is a temporary download
-      // is due to the fact that "deleteTempFileOnExit" is false on Mac, where
-      // downloads to be opened with external applications are preserved in
-      // the "Downloads" folder like normal downloads.
       let isTemporaryDownload =
-        aDownload.launchWhenSucceeded &&
-        (aDownload.source.isPrivate ||
-          (Services.prefs.getBoolPref(
-            "browser.helperApps.deleteTempFileOnExit"
-          ) &&
-            !Services.prefs.getBoolPref(
-              "browser.download.improvements_to_download_panel"
-            )));
+        aDownload.launchWhenSucceeded && aDownload.source.isPrivate;
       // Permanently downloaded files are made accessible by other users on
       // this system, while temporary downloads are marked as read-only.
       let unixMode;
@@ -667,10 +653,11 @@ export var DownloadIntegration = {
       fileExtension &&
       fileExtension.toLowerCase() == "exe";
 
-    let isExemptExecutableExtension = Services.policies.isExemptExecutableExtension(
-      aDownload.source.url,
-      fileExtension
-    );
+    let isExemptExecutableExtension =
+      Services.policies.isExemptExecutableExtension(
+        aDownload.source.url,
+        fileExtension
+      );
 
     // Ask for confirmation if the file is executable, except for .exe on
     // Windows where the operating system will show the prompt based on the
@@ -1099,7 +1086,7 @@ var DownloadObserver = {
         );
         break;
       case "last-pb-context-exited":
-        let promise = (async function() {
+        let promise = (async function () {
           let list = await Downloads.getList(Downloads.PRIVATE);
           let downloads = await list.getAll();
 
@@ -1195,7 +1182,7 @@ var DownloadObserver = {
  * @param aList
  *        DownloadList object linked to this observer.
  */
-var DownloadHistoryObserver = function(aList) {
+var DownloadHistoryObserver = function (aList) {
   this._list = aList;
 
   const placesObserver = new PlacesWeakCallbackWrapper(
@@ -1247,7 +1234,7 @@ DownloadHistoryObserver.prototype = {
  * @param aStore
  *        The DownloadStore object used for saving.
  */
-var DownloadAutoSaveView = function(aList, aStore) {
+var DownloadAutoSaveView = function (aList, aStore) {
   this._list = aList;
   this._store = aStore;
   this._downloadsMap = new Map();

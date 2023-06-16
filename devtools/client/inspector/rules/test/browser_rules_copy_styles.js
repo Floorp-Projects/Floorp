@@ -12,7 +12,7 @@ const osString = Services.appinfo.OS;
 
 const TEST_URI = URL_ROOT_SSL + "doc_copystyles.html";
 
-add_task(async function() {
+add_task(async function () {
   await addTab(TEST_URI);
   const { inspector, view } = await openRuleView();
   await selectNode("#testid", inspector);

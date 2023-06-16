@@ -5,14 +5,11 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
-  LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
-  setTimeout: "resource://gre/modules/Timer.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.jsm",
   // This helper contains the platform-specific bits of browsingData.
-  BrowsingDataDelegate: "resource:///modules/ExtensionBrowsingData.jsm",
+  BrowsingDataDelegate: "resource:///modules/ExtensionBrowsingData.sys.mjs",
+  LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
+  ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.sys.mjs",
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 /**
@@ -81,7 +78,7 @@ const clearCache = options => {
   return clearData(options, Ci.nsIClearDataService.CLEAR_ALL_CACHES);
 };
 
-const clearCookies = async function(options) {
+const clearCookies = async function (options) {
   let cookieMgr = Services.cookies;
   // This code has been borrowed from Sanitizer.jsm.
   let yieldCounter = 0;
@@ -148,9 +145,10 @@ async function clearQuotaManager(options, dataType) {
       }
 
       for (let item of request.result) {
-        let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-          item.origin
-        );
+        let principal =
+          Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+            item.origin
+          );
 
         // Consistently to removeIndexedDB and the API documentation for
         // removeLocalStorage, we should only clear the data stored by
@@ -203,11 +201,11 @@ async function clearQuotaManager(options, dataType) {
   return Promise.all(promises);
 }
 
-const clearIndexedDB = async function(options) {
+const clearIndexedDB = async function (options) {
   return clearQuotaManager(options, "indexedDB");
 };
 
-const clearLocalStorage = async function(options) {
+const clearLocalStorage = async function (options) {
   if (options.since) {
     return Promise.reject({
       message: "Firefox does not support clearing localStorage with 'since'.",
@@ -235,7 +233,7 @@ const clearLocalStorage = async function(options) {
   }
 };
 
-const clearPasswords = async function(options) {
+const clearPasswords = async function (options) {
   let yieldCounter = 0;
 
   // Iterate through the logins and delete any updated after our cutoff.

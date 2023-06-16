@@ -32,7 +32,7 @@ const EXPECTED_MESSAGES = [
   },
 ];
 
-module.exports = async function() {
+module.exports = async function () {
   await testSetup(COMPLICATED_URL);
 
   // Disabling all filters but Errors, as they are more likely to be stable (unlike

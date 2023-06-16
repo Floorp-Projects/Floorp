@@ -2,29 +2,30 @@
 "use strict";
 
 async function runTest(desc, url, expectedURI) {
-  await BrowserTestUtils.withNewTab("about:blank", async function(browser) {
+  await BrowserTestUtils.withNewTab("about:blank", async function (browser) {
     let loaded = BrowserTestUtils.browserLoaded(browser, false, null, true);
     BrowserTestUtils.loadURIString(browser, url);
     await loaded;
 
-    await SpecialPowers.spawn(browser, [desc, expectedURI], async function(
-      desc,
-      expectedURI
-    ) {
-      // XXX ckerschb: generally we use the documentURI, but our test infra
-      // can not handle .onion, hence we use the URI of the failed channel
-      // stored on the docshell to see if the scheme was upgraded to https.
-      let loadedURI = content.document.documentURI;
-      if (loadedURI.startsWith("about:neterror")) {
-        loadedURI = content.docShell.failedChannel.URI.spec;
+    await SpecialPowers.spawn(
+      browser,
+      [desc, expectedURI],
+      async function (desc, expectedURI) {
+        // XXX ckerschb: generally we use the documentURI, but our test infra
+        // can not handle .onion, hence we use the URI of the failed channel
+        // stored on the docshell to see if the scheme was upgraded to https.
+        let loadedURI = content.document.documentURI;
+        if (loadedURI.startsWith("about:neterror")) {
+          loadedURI = content.docShell.failedChannel.URI.spec;
+        }
+        is(loadedURI, expectedURI, desc);
       }
-      is(loadedURI, expectedURI, desc);
-    });
+    );
   });
 }
 
 // by default local addresses and .onion should *not* get upgraded
-add_task(async function() {
+add_task(async function () {
   requestLongerTimeout(2);
 
   await SpecialPowers.pushPrefEnv({

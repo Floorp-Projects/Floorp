@@ -66,17 +66,14 @@ var gTabsPanel = {
       let containersEnabled =
         Services.prefs.getBoolPref("privacy.userContext.enabled") &&
         !PrivateBrowsingUtils.isWindowPrivate(window);
-      document.getElementById(
-        "allTabsMenu-containerTabsButton"
-      ).hidden = !containersEnabled;
+      document.getElementById("allTabsMenu-containerTabsButton").hidden =
+        !containersEnabled;
 
       let hasHiddenTabs = gBrowser.visibleTabs.length < gBrowser.tabs.length;
-      document.getElementById(
-        "allTabsMenu-hiddenTabsButton"
-      ).hidden = !hasHiddenTabs;
-      document.getElementById(
-        "allTabsMenu-hiddenTabsSeparator"
-      ).hidden = !hasHiddenTabs;
+      document.getElementById("allTabsMenu-hiddenTabsButton").hidden =
+        !hasHiddenTabs;
+      document.getElementById("allTabsMenu-hiddenTabsSeparator").hidden =
+        !hasHiddenTabs;
     });
 
     this.allTabsView.addEventListener("ViewShown", e =>
@@ -85,9 +82,8 @@ var gTabsPanel = {
         ?.scrollIntoView({ block: "center" })
     );
 
-    let containerTabsMenuSeparator = this.containerTabsView.querySelector(
-      "toolbarseparator"
-    );
+    let containerTabsMenuSeparator =
+      this.containerTabsView.querySelector("toolbarseparator");
     this.containerTabsView.addEventListener("ViewShowing", e => {
       let elements = [];
       let frag = document.createDocumentFragment();

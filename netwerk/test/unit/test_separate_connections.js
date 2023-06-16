@@ -2,7 +2,7 @@
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
-XPCOMUtils.defineLazyGetter(this, "URL", function() {
+XPCOMUtils.defineLazyGetter(this, "URL", function () {
   return "http://localhost:" + httpserv.identity.primaryPort;
 });
 

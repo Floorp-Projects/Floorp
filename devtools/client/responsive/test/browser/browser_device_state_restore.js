@@ -36,7 +36,7 @@ const Types = require("resource://devtools/client/responsive/types.js");
 
 addRDMTask(
   TEST_URL,
-  async function({ ui }) {
+  async function ({ ui }) {
     const { store } = ui.toolWindow;
 
     reloadOnUAChange(true);
@@ -78,7 +78,7 @@ addRDMTaskWithPreAndPost(
   function rdmPreTask({ browser }) {
     reloadOnUAChange(true);
   },
-  async function({ ui }) {
+  async function ({ ui }) {
     // Note: This code might be racy. Call watchForDevToolsReload as early as
     // possible to catch the reload that will happen on RDM startup.
     // We cannot easily call watchForDevToolsReload in the preTask because it
@@ -121,7 +121,7 @@ addRDMTaskWithPreAndPost(
 
 addRDMTask(
   TEST_URL,
-  async function({ ui }) {
+  async function ({ ui }) {
     const { store } = ui.toolWindow;
 
     reloadOnUAChange(true);

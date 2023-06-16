@@ -11,12 +11,8 @@ import {
   makeOriginalSource,
   waitForState,
 } from "../../../utils/test-head";
-const {
-  getSource,
-  getSourceCount,
-  getSelectedSource,
-  getSourceByURL,
-} = selectors;
+const { getSource, getSourceCount, getSelectedSource, getSourceByURL } =
+  selectors;
 import sourceQueue from "../../../utils/source-queue";
 import { generatedToOriginalId } from "devtools/client/shared/source-map-loader/index";
 
@@ -83,6 +79,7 @@ describe("sources - new sources", () => {
           },
         ],
         getOriginalLocations: async items => items,
+        getOriginalLocation: location => location,
       }
     );
 
@@ -104,6 +101,7 @@ describe("sources - new sources", () => {
       {
         getOriginalURLs,
         getOriginalLocations: async items => items,
+        getOriginalLocation: location => location,
       }
     );
 
@@ -119,6 +117,7 @@ describe("sources - new sources", () => {
       {
         getOriginalURLs: async () => new Promise(_ => {}),
         getOriginalLocations: async items => items,
+        getOriginalLocation: location => location,
       }
     );
     await dispatch(

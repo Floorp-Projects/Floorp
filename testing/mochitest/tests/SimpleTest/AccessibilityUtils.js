@@ -13,16 +13,12 @@
  * these statically.
  */
 
-this.AccessibilityUtils = (function() {
+this.AccessibilityUtils = (function () {
   const FORCE_DISABLE_ACCESSIBILITY_PREF = "accessibility.force_disabled";
 
   // Accessible states.
-  const {
-    STATE_FOCUSABLE,
-    STATE_INVISIBLE,
-    STATE_LINKED,
-    STATE_UNAVAILABLE,
-  } = Ci.nsIAccessibleStates;
+  const { STATE_FOCUSABLE, STATE_INVISIBLE, STATE_LINKED, STATE_UNAVAILABLE } =
+    Ci.nsIAccessibleStates;
 
   // Accessible action for showing long description.
   const CLICK_ACTION = "click";

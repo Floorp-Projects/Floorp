@@ -16,7 +16,7 @@ const REPLACE_KEY = L10N.getStr(
   isMacOS ? "replaceAllMac.key" : "replaceAll.key"
 );
 
-add_task(async function() {
+add_task(async function () {
   const { ed, win } = await setup({
     disableSearchAddon: true,
   });

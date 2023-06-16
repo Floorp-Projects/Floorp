@@ -7,14 +7,14 @@
  * Test deleting the start of urls works correctly.
  */
 
-add_task(async function() {
+add_task(async function () {
   let bm = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: "http://bug1105244.example.com/",
     title: "test",
   });
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.bookmarks.remove(bm);
   });
 

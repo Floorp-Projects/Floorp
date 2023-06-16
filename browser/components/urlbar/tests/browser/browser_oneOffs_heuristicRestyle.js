@@ -239,7 +239,7 @@ async function assertState(
   }
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SearchTestUtils.installSearchExtension(
     {
       name: TEST_DEFAULT_ENGINE_NAME,
@@ -259,7 +259,7 @@ add_setup(async function() {
     url: KEYWORD_URL,
   });
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.history.clear();
     await PlacesUtils.keywords.remove(KEYWORD);
   });

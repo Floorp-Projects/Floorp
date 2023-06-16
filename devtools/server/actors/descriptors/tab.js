@@ -21,11 +21,9 @@ const {
   connectToFrame,
 } = require("resource://devtools/server/connectors/frame-connector.js");
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PlacesUtils",
-  "resource://gre/modules/PlacesUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+});
 
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"

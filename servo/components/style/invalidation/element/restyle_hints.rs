@@ -9,6 +9,7 @@ use crate::traversal_flags::TraversalFlags;
 bitflags! {
     /// The kind of restyle we need to do for a given element.
     #[repr(C)]
+    #[derive(Clone, Copy, Debug)]
     pub struct RestyleHint: u16 {
         /// Do a selector match of the element.
         const RESTYLE_SELF = 1 << 0;
@@ -143,7 +144,11 @@ impl RestyleHint {
     /// be replaced.
     #[inline]
     pub fn has_animation_hint_or_recascade(&self) -> bool {
-        self.intersects(Self::for_animations() | Self::RECASCADE_SELF | Self::RECASCADE_SELF_IF_INHERIT_RESET_STYLE)
+        self.intersects(
+            Self::for_animations() |
+                Self::RECASCADE_SELF |
+                Self::RECASCADE_SELF_IF_INHERIT_RESET_STYLE,
+        )
     }
 
     /// Returns whether the hint specifies some restyle work other than an

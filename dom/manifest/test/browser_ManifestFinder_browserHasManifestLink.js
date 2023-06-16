@@ -1,6 +1,6 @@
 "use strict";
-const { ManifestFinder } = ChromeUtils.import(
-  "resource://gre/modules/ManifestFinder.jsm"
+const { ManifestFinder } = ChromeUtils.importESModule(
+  "resource://gre/modules/ManifestFinder.sys.mjs"
 );
 const defaultURL = new URL(
   "http://example.org/browser/dom/manifest/test/resource.sjs"
@@ -54,7 +54,7 @@ function makeTestURL({ body }) {
 /**
  * Test basic API error conditions
  */
-add_task(async function() {
+add_task(async function () {
   const expected = "Invalid types should throw a TypeError.";
   for (let invalidValue of [undefined, null, 1, {}, "test"]) {
     try {
@@ -72,7 +72,7 @@ add_task(async function() {
   }
 });
 
-add_task(async function() {
+add_task(async function () {
   const runningTests = tests
     .map(test => ({
       gBrowser,
@@ -80,7 +80,7 @@ add_task(async function() {
       url: makeTestURL(test),
     }))
     .map(tabOptions =>
-      BrowserTestUtils.withNewTab(tabOptions, async function(browser) {
+      BrowserTestUtils.withNewTab(tabOptions, async function (browser) {
         const result = await ManifestFinder.browserHasManifestLink(browser);
         tabOptions.test.run(result);
       })

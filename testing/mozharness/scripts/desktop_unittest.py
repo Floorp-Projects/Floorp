@@ -50,7 +50,7 @@ SUITE_CATEGORIES = [
 ]
 SUITE_DEFAULT_E10S = ["mochitest", "reftest"]
 SUITE_NO_E10S = ["xpcshell"]
-SUITE_REPEATABLE = ["mochitest", "reftest"]
+SUITE_REPEATABLE = ["mochitest", "reftest", "xpcshell"]
 
 
 # DesktopUnittest {{{1
@@ -666,6 +666,11 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
             if c["enable_xorigin_tests"]:
                 base_cmd.append("--enable-xorigin-tests")
 
+            if suite_category not in ["cppunittest", "gtest", "jittest"]:
+                # Enable stylo threads everywhere we can. Some tests don't
+                # support --setpref, so ignore those.
+                base_cmd.append("--setpref=layout.css.stylo-threads=4")
+
             if c["extra_prefs"]:
                 base_cmd.extend(["--setpref={}".format(p) for p in c["extra_prefs"]])
 
@@ -1182,8 +1187,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
 
                 if self.config["allow_software_gl_layers"]:
                     env["MOZ_LAYERS_ALLOW_SOFTWARE_GL"] = "1"
-
-                env["STYLO_THREADS"] = "4"
 
                 env = self.query_env(partial_env=env, log_level=INFO)
                 cmd_timeout = self.get_timeout_for_category(suite_category)

@@ -4,7 +4,7 @@
 
 // This is testing the fix in bug 1729847, specifically
 // clicking enter while the pocket panel is open should not close the panel.
-add_task(async function() {
+add_task(async function () {
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "https://example.com/browser/browser/components/pocket/test/test.html"

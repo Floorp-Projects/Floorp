@@ -35,11 +35,8 @@ class MsaaAccessible : public ia2Accessible,
 
   uint32_t GetExistingID() const { return mID; }
   static const uint32_t kNoID = 0;
-  void SetID(uint32_t aID);
 
   static int32_t GetChildIDFor(Accessible* aAccessible);
-  static uint32_t GetContentProcessIdFor(dom::ContentParentId aIPCContentId);
-  static void ReleaseContentProcessIdFor(dom::ContentParentId aIPCContentId);
   static void AssignChildIDTo(NotNull<sdnAccessible*> aSdnAcc);
   static void ReleaseChildID(NotNull<sdnAccessible*> aSdnAcc);
   static HWND GetHWNDFor(Accessible* aAccessible);
@@ -51,25 +48,16 @@ class MsaaAccessible : public ia2Accessible,
   [[nodiscard]] already_AddRefed<IAccessible> GetIAccessibleFor(
       const VARIANT& aVarChild, bool* aIsDefunct);
 
-  /**
-   * Associate a COM object with this MsaaAccessible so it will be disconnected
-   * from remote clients when this MsaaAccessible shuts down.
-   * This should only be called with separate COM objects with a different
-   * IUnknown to this MsaaAccessible; e.g. IAccessibleRelation.
-   */
-  void AssociateCOMObjectForDisconnection(IUnknown* aObject) {
-    // We only need to track these for content processes because COM garbage
-    // collection is disabled there.
-    if (XRE_IsContentProcess()) {
-      mAssociatedCOMObjectsForDisconnection.AppendElement(aObject);
-    }
-  }
-
   void MsaaShutdown();
 
   static IDispatch* NativeAccessible(Accessible* aAccessible);
 
   static MsaaAccessible* GetFrom(Accessible* aAcc);
+
+  /**
+   * Creates ITypeInfo for LIBID_Accessibility if it's needed and returns it.
+   */
+  static ITypeInfo* GetTI(LCID lcid);
 
   DECL_IUNKNOWN
 
@@ -197,18 +185,6 @@ class MsaaAccessible : public ia2Accessible,
   };
 
  private:
-  /**
-   * Find a remote accessible by the given child ID.
-   */
-  [[nodiscard]] already_AddRefed<IAccessible> GetRemoteIAccessibleFor(
-      const VARIANT& aVarChild);
-
-  nsTArray<RefPtr<IUnknown>> mAssociatedCOMObjectsForDisconnection;
-
-  /**
-   * Creates ITypeInfo for LIBID_Accessibility if it's needed and returns it.
-   */
-  static ITypeInfo* GetTI(LCID lcid);
   static ITypeInfo* gTypeInfo;
 };
 

@@ -36,11 +36,7 @@ describe("<SearchShortcutsForm>", () => {
       2
     );
     assert.equal(
-      wrapper
-        .find(".search-shortcuts-container div")
-        .children()
-        .at(0)
-        .type(),
+      wrapper.find(".search-shortcuts-container div").children().at(0).type(),
       SelectableSearchShortcut
     );
   });

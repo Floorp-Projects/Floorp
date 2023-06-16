@@ -8,7 +8,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebuggerWithAbsoluteURL(
     "data:text/html,Test keyboard shortcuts modal"
   );

@@ -25,7 +25,7 @@ function generateDefaults(overrides) {
     flashLineRange: jest.fn(),
     isHidden: false,
     symbols: {},
-    selectedLocation: { sourceId },
+    selectedLocation: { id: sourceId },
     onAlphabetizeClick: jest.fn(),
     ...overrides,
   };

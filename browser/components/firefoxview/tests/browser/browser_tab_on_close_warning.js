@@ -15,10 +15,7 @@ class DialogObserver {
     if (topic == "common-dialog-loaded") {
       this.wasOpened = true;
       // Close dialog.
-      win.document
-        .querySelector("dialog")
-        .getButton("cancel")
-        .click();
+      win.document.querySelector("dialog").getButton("cancel").click();
     }
   }
 }

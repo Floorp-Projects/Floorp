@@ -36,6 +36,7 @@ struct WebMTimeDataOffset {
   int64_t mInitOffset;
   int64_t mSyncOffset;
   int64_t mClusterEndOffset;
+  // In nanoseconds
   uint64_t mTimecode;
 };
 

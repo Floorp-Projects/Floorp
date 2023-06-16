@@ -253,7 +253,6 @@ bool nsSocketTransportService::UpdatePortRemapPreference(
 nsSocketTransportService::~nsSocketTransportService() {
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");
   NS_ASSERTION(!mInitialized, "not shutdown properly");
-  MOZ_ASSERT(mSocketThreadShutDown);
 
   gSocketTransportService = nullptr;
 }
@@ -414,7 +413,7 @@ bool nsSocketTransportService::CanAttachSocket() {
     reported900FDLimit = true;
     Telemetry::Accumulate(Telemetry::NETWORK_SESSION_AT_900FD, true);
   }
-  MOZ_ASSERT(!mSocketThreadShutDown);
+  MOZ_ASSERT(mInitialized);
   return rv;
 }
 
@@ -753,8 +752,6 @@ nsSocketTransportService::Init() {
     nsresult rv = NS_NewNamedThread("Socket Thread", getter_AddRefs(thread),
                                     this, {.stackSize = GetThreadStackSize()});
     NS_ENSURE_SUCCESS(rv, rv);
-    // Since ::Run() will assume it can access this->*, hold a ref for it
-    mSelf = this;
   } else {
     // In the child process, we just want a regular nsThread with no socket
     // polling. So we don't want to run the nsSocketTransportService runnable on
@@ -775,11 +772,10 @@ nsSocketTransportService::Init() {
     // Install our mThread, protecting against concurrent readers
     thread.swap(mThread);
     mDirectTaskDispatcher = do_QueryInterface(mThread);
+    MOZ_DIAGNOSTIC_ASSERT(
+        mDirectTaskDispatcher,
+        "Underlying thread must support direct task dispatching");
   }
-
-  MOZ_DIAGNOSTIC_ASSERT(
-      mDirectTaskDispatcher,
-      "Underlying thread must support direct task dispatching");
 
   Preferences::RegisterCallbacks(UpdatePrefs, gCallbackPrefs, this);
   UpdatePrefs();
@@ -820,23 +816,22 @@ nsSocketTransportService::Shutdown(bool aXpcomShutdown) {
       observer->Observe();
     }
   }
-  if (!XRE_IsContentProcess() ||
-      StaticPrefs::network_allow_raw_sockets_in_content_processes_AtStartup()) {
-    // signal the socket thread to shutdown, it will do a runnable
-    // back to MainThread to call ShutdownThread()
-    mShuttingDown = true;
 
-    {
-      MutexAutoLock lock(mLock);
+  mShuttingDown = true;
 
-      if (mPollableEvent) {
-        mPollableEvent->Signal();
-      }
+  {
+    MutexAutoLock lock(mLock);
+
+    if (mPollableEvent) {
+      mPollableEvent->Signal();
     }
-  } else {
-    // Not running the 'real' socket thread, just shut it down.
+  }
+
+  // If we're shutting down due to going offline (rather than due to XPCOM
+  // shutdown), also tear down the thread. The thread will be shutdown during
+  // xpcom-shutdown-threads if during xpcom-shutdown proper.
+  if (!aXpcomShutdown) {
     ShutdownThread();
-    mSocketThreadShutDown = true;
   }
 
   return NS_OK;
@@ -852,7 +847,8 @@ nsresult nsSocketTransportService::ShutdownThread() {
   }
 
   // join with thread
-  mThread->Shutdown();
+  nsCOMPtr<nsIThread> thread = GetThreadSafely();
+  thread->Shutdown();
   {
     MutexAutoLock lock(mLock);
     // Drop our reference to mThread and make sure that any concurrent readers
@@ -888,6 +884,7 @@ nsresult nsSocketTransportService::ShutdownThread() {
 
 NS_IMETHODIMP
 nsSocketTransportService::GetOffline(bool* offline) {
+  MutexAutoLock lock(mLock);
   *offline = mOffline;
   return NS_OK;
 }
@@ -1256,10 +1253,6 @@ nsSocketTransportService::Run() {
   MOZ_ASSERT(mPollList.Length() == 1);
   MOZ_ASSERT(mActiveList.IsEmpty());
   MOZ_ASSERT(mIdleList.IsEmpty());
-  mSocketThreadShutDown = true;
-  NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "nsSocketTransportService::mSelf",
-      [self = RefPtr{mSelf.forget()}]() { self->ShutdownThread(); }));
 
   return NS_OK;
 }
@@ -1624,7 +1617,7 @@ nsSocketTransportService::Observe(nsISupports* subject, const char* topic,
                               nsITimer::TYPE_ONE_SHOT);
     }
   } else if (!strcmp(topic, "xpcom-shutdown-threads")) {
-    Shutdown(true);
+    ShutdownThread();
   } else if (!strcmp(topic, NS_NETWORK_LINK_TOPIC)) {
     mLastNetworkLinkChangeTime = PR_IntervalNow();
   }

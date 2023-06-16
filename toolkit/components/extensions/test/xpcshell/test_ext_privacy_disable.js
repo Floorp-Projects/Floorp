@@ -2,30 +2,16 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "AddonManager",
-  "resource://gre/modules/AddonManager.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "ExtensionPreferencesManager",
-  "resource://gre/modules/ExtensionPreferencesManager.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "Management",
-  "resource://gre/modules/Extension.jsm"
-);
 ChromeUtils.defineESModuleGetters(this, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+  ExtensionPreferencesManager:
+    "resource://gre/modules/ExtensionPreferencesManager.sys.mjs",
+  Management: "resource://gre/modules/Extension.sys.mjs",
   Preferences: "resource://gre/modules/Preferences.sys.mjs",
 });
 
-const {
-  createAppInfo,
-  promiseShutdownManager,
-  promiseStartupManager,
-} = AddonTestUtils;
+const { createAppInfo, promiseShutdownManager, promiseStartupManager } =
+  AddonTestUtils;
 
 AddonTestUtils.init(this);
 
@@ -97,9 +83,8 @@ add_task(async function test_disable() {
   async function background() {
     browser.test.onMessage.addListener(async (msg, data) => {
       await browser.privacy.network.networkPredictionEnabled.set(data);
-      let settingData = await browser.privacy.network.networkPredictionEnabled.get(
-        {}
-      );
+      let settingData =
+        await browser.privacy.network.networkPredictionEnabled.get({});
       browser.test.sendMessage("privacyData", settingData);
     });
   }

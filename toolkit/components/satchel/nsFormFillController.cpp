@@ -869,8 +869,9 @@ nsFormFillController::HandleEvent(Event* aEvent) {
 
   mInvalidatePreviousResult = false;
 
-  nsCOMPtr<nsPIDOMWindowInner> inner =
-      do_QueryInterface(target->GetOwnerGlobal());
+  nsIGlobalObject* global = target->GetOwnerGlobal();
+  NS_ENSURE_STATE(global);
+  nsPIDOMWindowInner* inner = global->AsInnerWindow();
   NS_ENSURE_STATE(inner);
 
   if (!inner->GetBrowsingContext()->IsContent()) {

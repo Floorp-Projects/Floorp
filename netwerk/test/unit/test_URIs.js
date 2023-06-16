@@ -459,12 +459,7 @@ function do_test_uri_basic(aTest) {
   // Sanity-check
   do_info("testing " + aTest.spec + " equals a clone of itself");
   do_check_uri_eq(URI, URI.mutate().finalize());
-  do_check_uri_eqExceptRef(
-    URI,
-    URI.mutate()
-      .setRef("")
-      .finalize()
-  );
+  do_check_uri_eqExceptRef(URI, URI.mutate().setRef("").finalize());
   do_info("testing " + aTest.spec + " instanceof nsIURL");
   Assert.equal(URI instanceof Ci.nsIURL, aTest.nsIURL);
   do_info("testing " + aTest.spec + " instanceof nsINestedURI");
@@ -583,10 +578,7 @@ function do_test_uri_with_hash_suffix(aTest, aSuffix) {
         testURI.spec +
         " is equal to no-ref version but not equal to ref version"
     );
-    var cloneNoRef = testURI
-      .mutate()
-      .setRef("")
-      .finalize(); // we used to clone here.
+    var cloneNoRef = testURI.mutate().setRef("").finalize(); // we used to clone here.
     do_info("cloneNoRef: " + cloneNoRef.spec + " hasRef: " + cloneNoRef.hasRef);
     do_info("testURI: " + testURI.spec + " hasRef: " + testURI.hasRef);
     do_check_uri_eq(cloneNoRef, origURI);
@@ -597,10 +589,7 @@ function do_test_uri_with_hash_suffix(aTest, aSuffix) {
         testURI.spec +
         " with an empty ref is equal to no-ref version but not equal to ref version"
     );
-    var cloneNewRef = testURI
-      .mutate()
-      .setRef("")
-      .finalize();
+    var cloneNewRef = testURI.mutate().setRef("").finalize();
     do_check_uri_eq(cloneNewRef, origURI);
     do_check_uri_eq(cloneNewRef, cloneNoRef);
     Assert.ok(!cloneNewRef.equals(testURI));
@@ -610,10 +599,7 @@ function do_test_uri_with_hash_suffix(aTest, aSuffix) {
         origURI.spec +
         " with the same new ref is equal to ref version and not equal to no-ref version"
     );
-    cloneNewRef = origURI
-      .mutate()
-      .setRef(aSuffix)
-      .finalize();
+    cloneNewRef = origURI.mutate().setRef(aSuffix).finalize();
     do_check_uri_eq(cloneNewRef, testURI);
     Assert.ok(cloneNewRef.equals(testURI));
   }
@@ -622,10 +608,10 @@ function do_test_uri_with_hash_suffix(aTest, aSuffix) {
   do_check_property(aTest, testURI, "prePath");
   if (!origURI.ref) {
     // These don't work if it's a ref already because '+' doesn't give the right result
-    do_check_property(aTest, testURI, "pathQueryRef", function(aStr) {
+    do_check_property(aTest, testURI, "pathQueryRef", function (aStr) {
       return aStr + aSuffix;
     });
-    do_check_property(aTest, testURI, "ref", function(aStr) {
+    do_check_property(aTest, testURI, "ref", function (aStr) {
       return aSuffix.substr(1);
     });
   }
@@ -649,10 +635,7 @@ function do_test_mutate_ref(aTest, aSuffix) {
       aSuffix +
       "' does what we expect"
   );
-  testURI = testURI
-    .mutate()
-    .setRef(aSuffix)
-    .finalize();
+  testURI = testURI.mutate().setRef(aSuffix).finalize();
   do_check_uri_eq(testURI, refURIWithSuffix);
   do_check_uri_eqExceptRef(testURI, refURIWithoutSuffix);
 
@@ -667,10 +650,7 @@ function do_test_mutate_ref(aTest, aSuffix) {
         suffixLackingHash +
         "' does what we expect"
     );
-    testURI = testURI
-      .mutate()
-      .setRef(suffixLackingHash)
-      .finalize();
+    testURI = testURI.mutate().setRef(suffixLackingHash).finalize();
     do_check_uri_eq(testURI, refURIWithSuffix);
     do_check_uri_eqExceptRef(testURI, refURIWithoutSuffix);
   }
@@ -679,10 +659,7 @@ function do_test_mutate_ref(aTest, aSuffix) {
   do_info(
     "testing that clearing .ref on " + testURI.spec + " does what we expect"
   );
-  testURI = testURI
-    .mutate()
-    .setRef("")
-    .finalize();
+  testURI = testURI.mutate().setRef("").finalize();
   do_check_uri_eq(testURI, refURIWithoutSuffix);
   do_check_uri_eqExceptRef(testURI, refURIWithSuffix);
 
@@ -697,11 +674,7 @@ function do_test_mutate_ref(aTest, aSuffix) {
         " and then clearing ref does what we expect"
     );
 
-    testURI = testURI
-      .mutate()
-      .setSpec(specWithSuffix)
-      .setRef("")
-      .finalize();
+    testURI = testURI.mutate().setSpec(specWithSuffix).setRef("").finalize();
     do_check_uri_eq(testURI, refURIWithoutSuffix);
     do_check_uri_eqExceptRef(testURI, refURIWithSuffix);
 
@@ -726,19 +699,13 @@ function do_test_mutate_ref(aTest, aSuffix) {
       do_check_uri_eqExceptRef(testURI, refURIWithSuffix);
 
       // Also: make sure that clearing .pathQueryRef also clears .ref
-      testURI = testURI
-        .mutate()
-        .setPathQueryRef(pathWithSuffix)
-        .finalize();
+      testURI = testURI.mutate().setPathQueryRef(pathWithSuffix).finalize();
       do_info(
         "testing that clearing path from " +
           pathWithSuffix +
           " also clears .ref"
       );
-      testURI = testURI
-        .mutate()
-        .setPathQueryRef("")
-        .finalize();
+      testURI = testURI.mutate().setPathQueryRef("").finalize();
       Assert.equal(testURI.ref, "");
     }
   }
@@ -749,120 +716,66 @@ add_task(function check_nested_mutations() {
   // nsNestedAboutURI
   let uri1 = Services.io.newURI("about:blank#");
   let uri2 = Services.io.newURI("about:blank");
-  let uri3 = uri1
-    .mutate()
-    .setRef("")
-    .finalize();
+  let uri3 = uri1.mutate().setRef("").finalize();
   do_check_uri_eq(uri3, uri2);
-  uri3 = uri2
-    .mutate()
-    .setRef("#")
-    .finalize();
+  uri3 = uri2.mutate().setRef("#").finalize();
   do_check_uri_eq(uri3, uri1);
 
   uri1 = Services.io.newURI("about:blank?something");
   uri2 = Services.io.newURI("about:blank");
-  uri3 = uri1
-    .mutate()
-    .setQuery("")
-    .finalize();
+  uri3 = uri1.mutate().setQuery("").finalize();
   do_check_uri_eq(uri3, uri2);
-  uri3 = uri2
-    .mutate()
-    .setQuery("something")
-    .finalize();
+  uri3 = uri2.mutate().setQuery("something").finalize();
   do_check_uri_eq(uri3, uri1);
 
   uri1 = Services.io.newURI("about:blank?query#ref");
   uri2 = Services.io.newURI("about:blank");
-  uri3 = uri1
-    .mutate()
-    .setPathQueryRef("blank")
-    .finalize();
+  uri3 = uri1.mutate().setPathQueryRef("blank").finalize();
   do_check_uri_eq(uri3, uri2);
-  uri3 = uri2
-    .mutate()
-    .setPathQueryRef("blank?query#ref")
-    .finalize();
+  uri3 = uri2.mutate().setPathQueryRef("blank?query#ref").finalize();
   do_check_uri_eq(uri3, uri1);
 
   // nsSimpleNestedURI
   uri1 = Services.io.newURI("view-source:http://example.com/path#");
   uri2 = Services.io.newURI("view-source:http://example.com/path");
-  uri3 = uri1
-    .mutate()
-    .setRef("")
-    .finalize();
+  uri3 = uri1.mutate().setRef("").finalize();
   do_check_uri_eq(uri3, uri2);
-  uri3 = uri2
-    .mutate()
-    .setRef("#")
-    .finalize();
+  uri3 = uri2.mutate().setRef("#").finalize();
   do_check_uri_eq(uri3, uri1);
 
   uri1 = Services.io.newURI("view-source:http://example.com/path?something");
   uri2 = Services.io.newURI("view-source:http://example.com/path");
-  uri3 = uri1
-    .mutate()
-    .setQuery("")
-    .finalize();
+  uri3 = uri1.mutate().setQuery("").finalize();
   do_check_uri_eq(uri3, uri2);
-  uri3 = uri2
-    .mutate()
-    .setQuery("something")
-    .finalize();
+  uri3 = uri2.mutate().setQuery("something").finalize();
   do_check_uri_eq(uri3, uri1);
 
   uri1 = Services.io.newURI("view-source:http://example.com/path?query#ref");
   uri2 = Services.io.newURI("view-source:http://example.com/path");
-  uri3 = uri1
-    .mutate()
-    .setPathQueryRef("path")
-    .finalize();
+  uri3 = uri1.mutate().setPathQueryRef("path").finalize();
   do_check_uri_eq(uri3, uri2);
-  uri3 = uri2
-    .mutate()
-    .setPathQueryRef("path?query#ref")
-    .finalize();
+  uri3 = uri2.mutate().setPathQueryRef("path?query#ref").finalize();
   do_check_uri_eq(uri3, uri1);
 
   uri1 = Services.io.newURI("view-source:about:blank#");
   uri2 = Services.io.newURI("view-source:about:blank");
-  uri3 = uri1
-    .mutate()
-    .setRef("")
-    .finalize();
+  uri3 = uri1.mutate().setRef("").finalize();
   do_check_uri_eq(uri3, uri2);
-  uri3 = uri2
-    .mutate()
-    .setRef("#")
-    .finalize();
+  uri3 = uri2.mutate().setRef("#").finalize();
   do_check_uri_eq(uri3, uri1);
 
   uri1 = Services.io.newURI("view-source:about:blank?something");
   uri2 = Services.io.newURI("view-source:about:blank");
-  uri3 = uri1
-    .mutate()
-    .setQuery("")
-    .finalize();
+  uri3 = uri1.mutate().setQuery("").finalize();
   do_check_uri_eq(uri3, uri2);
-  uri3 = uri2
-    .mutate()
-    .setQuery("something")
-    .finalize();
+  uri3 = uri2.mutate().setQuery("something").finalize();
   do_check_uri_eq(uri3, uri1);
 
   uri1 = Services.io.newURI("view-source:about:blank?query#ref");
   uri2 = Services.io.newURI("view-source:about:blank");
-  uri3 = uri1
-    .mutate()
-    .setPathQueryRef("blank")
-    .finalize();
+  uri3 = uri1.mutate().setPathQueryRef("blank").finalize();
   do_check_uri_eq(uri3, uri2);
-  uri3 = uri2
-    .mutate()
-    .setPathQueryRef("blank?query#ref")
-    .finalize();
+  uri3 = uri2.mutate().setPathQueryRef("blank?query#ref").finalize();
   do_check_uri_eq(uri3, uri1);
 });
 
@@ -989,13 +902,13 @@ add_task(function mainTest() {
   );
   Assert.ok(resolved.equals(expected));
 
-  gTests.forEach(function(aTest) {
+  gTests.forEach(function (aTest) {
     // Check basic URI functionality
     do_test_uri_basic(aTest);
 
     if (!aTest.fail) {
       // Try adding various #-prefixed strings to the ends of the URIs
-      gHashSuffixes.forEach(function(aSuffix) {
+      gHashSuffixes.forEach(function (aSuffix) {
         do_test_uri_with_hash_suffix(aTest, aSuffix);
         if (!aTest.immutable) {
           do_test_mutate_ref(aTest, aSuffix);

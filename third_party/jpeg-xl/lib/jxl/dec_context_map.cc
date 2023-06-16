@@ -12,30 +12,11 @@
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/dec_ans.h"
 #include "lib/jxl/entropy_coder.h"
+#include "lib/jxl/inverse_mtf-inl.h"
 
 namespace jxl {
 
 namespace {
-
-void MoveToFront(uint8_t* v, uint8_t index) {
-  uint8_t value = v[index];
-  uint8_t i = index;
-  for (; i; --i) v[i] = v[i - 1];
-  v[0] = value;
-}
-
-void InverseMoveToFrontTransform(uint8_t* v, int v_len) {
-  uint8_t mtf[256];
-  int i;
-  for (i = 0; i < 256; ++i) {
-    mtf[i] = static_cast<uint8_t>(i);
-  }
-  for (i = 0; i < v_len; ++i) {
-    uint8_t index = v[i];
-    v[i] = mtf[index];
-    if (index) MoveToFront(mtf, index);
-  }
-}
 
 Status VerifyContextMap(const std::vector<uint8_t>& context_map,
                         const size_t num_htrees) {

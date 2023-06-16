@@ -22,10 +22,10 @@ interface VideoColorSpace {
 };
 
 dictionary VideoColorSpaceInit {
-  VideoColorPrimaries primaries;
-  VideoTransferCharacteristics transfer;
-  VideoMatrixCoefficients matrix;
-  boolean fullRange;
+  VideoColorPrimaries? primaries = null;
+  VideoTransferCharacteristics? transfer = null;
+  VideoMatrixCoefficients? matrix = null;
+  boolean? fullRange = null;
 };
 
 enum VideoColorPrimaries {

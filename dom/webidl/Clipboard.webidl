@@ -34,14 +34,13 @@ partial interface Clipboard {
 };
 
 typedef (DOMString or Blob) ClipboardItemDataType;
-// typedef Promise<ClipboardItemDataType> ClipboardItemData;
+typedef Promise<ClipboardItemDataType> ClipboardItemData;
 // callback ClipboardItemDelayedCallback = ClipboardItemData ();
 
 [SecureContext, Exposed=Window, Pref="dom.events.asyncClipboard.clipboardItem"]
 interface ClipboardItem {
-  // Note: The spec uses Promise<ClipboardItemDataType>.
   [Throws]
-  constructor(record<DOMString, ClipboardItemDataType> items,
+  constructor(record<DOMString, ClipboardItemData> items,
               optional ClipboardItemOptions options = {});
 
   // static ClipboardItem createDelayed(

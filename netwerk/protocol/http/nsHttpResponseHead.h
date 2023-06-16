@@ -155,6 +155,10 @@ class nsHttpResponseHead {
   void ParseVersion(const char*) MOZ_REQUIRES(mRecursiveMutex);
   void ParseCacheControl(const char*) MOZ_REQUIRES(mRecursiveMutex);
   void ParsePragma(const char*) MOZ_REQUIRES(mRecursiveMutex);
+  // Parses a content-length header-value as described in
+  // https://fetch.spec.whatwg.org/#content-length-header
+  nsresult ParseResponseContentLength(const nsACString& aHeaderStr)
+      MOZ_REQUIRES(mRecursiveMutex);
 
   void ParseStatusLine_locked(const nsACString& line)
       MOZ_REQUIRES(mRecursiveMutex);

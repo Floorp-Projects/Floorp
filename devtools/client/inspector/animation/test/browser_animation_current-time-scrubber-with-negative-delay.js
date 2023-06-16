@@ -5,17 +5,14 @@
 
 // Test whether the most left position means negative current time.
 
-add_task(async function() {
+add_task(async function () {
   await addTab(URL_ROOT + "doc_multi_timings.html");
   await removeAnimatedElementsExcept([
     ".cssanimation-normal",
     ".delay-negative",
   ]);
-  const {
-    animationInspector,
-    panel,
-    inspector,
-  } = await openAnimationInspector();
+  const { animationInspector, panel, inspector } =
+    await openAnimationInspector();
 
   info("Checking scrubber controller existence");
   const controllerEl = panel.querySelector(".current-time-scrubber-area");

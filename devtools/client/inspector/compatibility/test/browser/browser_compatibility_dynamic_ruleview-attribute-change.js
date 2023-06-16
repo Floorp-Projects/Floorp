@@ -15,8 +15,8 @@ const {
 
 const ISSUE_OUTLINE_RADIUS = {
   type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY,
-  property: "-moz-outline-radius",
-  url: "https://developer.mozilla.org/docs/Web/CSS/-moz-outline-radius",
+  property: "-moz-user-input",
+  url: "https://developer.mozilla.org/docs/Web/CSS/-moz-user-input",
   deprecated: true,
   experimental: false,
 };
@@ -33,7 +33,7 @@ const ISSUE_HYPHENS = {
 const TEST_URI = `
   <style>
     .issue {
-      -moz-outline-radius: 25px;
+      -moz-user-input: none;
     }
   </style>
   <body>
@@ -41,17 +41,14 @@ const TEST_URI = `
   </body>
 `;
 
-add_task(async function() {
+add_task(async function () {
   info("Testing dynamic style change via the devtools inspector's rule view");
   const tab = await addTab(
     "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI)
   );
 
-  const {
-    allElementsPane,
-    inspector,
-    selectedElementPane,
-  } = await openCompatibilityView();
+  const { allElementsPane, inspector, selectedElementPane } =
+    await openCompatibilityView();
 
   info("Select the div to undergo mutation");
   const waitForCompatibilityListUpdate = waitForUpdateSelectedNodeAction(

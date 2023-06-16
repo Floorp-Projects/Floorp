@@ -10,7 +10,7 @@ const TEST_COM_PAGE = "https://example.com/document-builder.sjs?html=com";
 const TEST_NET_PAGE = "https://example.net/document-builder.sjs?html=net";
 
 // Test helpers from BrowsingContextUtils in various processes.
-add_task(async function() {
+add_task(async function () {
   const tab1 = BrowserTestUtils.addTab(gBrowser, TEST_COM_PAGE);
   const contentBrowser1 = tab1.linkedBrowser;
   await BrowserTestUtils.browserLoaded(contentBrowser1);

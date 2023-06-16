@@ -9,23 +9,20 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/PageActions.jsm"
 );
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+const { AddonTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
 );
 
-const {
-  createAppInfo,
-  promiseShutdownManager,
-  promiseStartupManager,
-} = AddonTestUtils;
+const { createAppInfo, promiseShutdownManager, promiseStartupManager } =
+  AddonTestUtils;
 
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "58");
 
-// This is copied and pasted from ExtensionPopups.jsm.  It's used as the
-// PageActions action ID.  See ext-pageAction.js.
+// This is copied and pasted from ext-browser.js and used in ext-pageAction.js.
+// It's used as the PageActions action ID.
 function makeWidgetId(id) {
   id = id.toLowerCase();
   // FIXME: This allows for collisions.

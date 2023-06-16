@@ -1346,6 +1346,10 @@ xh{
             one{"I-franc yaseCFP"}
             other{"Ii-franc zaseCFP"}
         }
+        XXX{
+            one{"Ikharensi Engaziwayo"}
+            other{"Ikharensi Engaziwayo"}
+        }
         YER{
             one{"I-rial yaseYemen"}
             other{"Ii-rial zaseYemen"}

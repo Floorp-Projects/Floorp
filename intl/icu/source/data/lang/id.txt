@@ -318,6 +318,7 @@ id{
         lij{"Liguria"}
         lil{"Lillooet"}
         lkt{"Lakota"}
+        lmo{"Lombard"}
         ln{"Lingala"}
         lo{"Lao"}
         lol{"Mongo"}
@@ -613,6 +614,7 @@ id{
     Languages%short{
         az{"Azeri"}
         en_GB{"Inggris (UK)"}
+        en_US{"Inggris (AS)"}
     }
     Languages%variant{
         hi_Latn{"Hinglish"}

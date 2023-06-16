@@ -111,7 +111,6 @@ jobs:
         fetches:
             toolchain:
                 - linux64-rust-macos
-                - linux64-cctools-port
                 - linux64-clang-14
                 - macosx64-sdk
                 - wrench-deps
@@ -171,7 +170,6 @@ jobs:
         fetches:
             toolchain:
                 - linux64-rust-macos
-                - linux64-cctools-port
                 - linux64-clang
                 - macosx64-sdk
                 - wrench-deps
@@ -215,7 +213,7 @@ jobs:
 
     windows:
         description: Runs WebRender CI tests on a Windows worker
-        worker-type: win10-64-2004-ssd
+        worker-type: win11-64-2009-source
         worker:
             max-run-time: 5400
             env:
@@ -223,18 +221,18 @@ jobs:
         fetches:
             toolchain:
                 - win64-rust
-                - win64-vs2017
+                - vs
                 - wrench-deps
         run:
             using: run-task
             use-caches: false
             command: '$GECKO_PATH/taskcluster/scripts/misc/wrench-windows-tests.sh'
         treeherder:
-            platform: windows10-64-2004-qr/release
+            platform: windows11-64-2009-qr/release
             symbol: WR(wrench)
         when:
             files-changed:
-                - 'build/win64/mozconfig.vs2017'
+                - 'build/win64/mozconfig.vs2019'
                 - 'gfx/wr/**'
                 - 'taskcluster/scripts/misc/wrench-windows-tests.sh'
 

@@ -194,7 +194,9 @@ bool OpenTypeCPAL::Serialize(OTSStream *out) {
   uint16_t numPalettes = this->colorRecordIndices.size();
   uint16_t numColorRecords = this->colorRecords.size();
 
+#ifndef NDEBUG
   off_t start = out->Tell();
+#endif
 
   size_t colorRecordsArrayOffset = 4 * sizeof(uint16_t) + sizeof(uint32_t) +
       numPalettes * sizeof(uint16_t);

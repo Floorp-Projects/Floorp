@@ -35,7 +35,6 @@ Since Firefox 70, when your code is paused on a breakpoint an overlay appears on
 
 This lets you know what kind of breakpoint the code is paused on (breakpoint, event breakpoint, etc.), and also provides a step button and a play button. The thinking here is that if you've got your DevTools open in a separate window, as many people do, it can be easier to have the buttons available right there to move the code forward while you are looking at the result.
 
-If you want to turn this feature off, since Firefox 71 you can do so by going to ``about:config`` in a new tab, setting the ``devtools.debugger.features.overlay`` pref to ``false``, and restarting the browser.
 
 Inline variable preview
 ***********************

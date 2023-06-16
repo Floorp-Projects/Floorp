@@ -20,7 +20,7 @@ const TEST_ORIGINAL_URI =
   "https://example.com/browser/devtools/client/webconsole/test/browser/" +
   TEST_ORIGINAL_FILENAME;
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Print a stacktrace");
@@ -29,7 +29,7 @@ add_task(async function() {
     "console.trace",
     ".console-api"
   );
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.wrappedJSObject.logTrace();
   });
   const { node } = await onLoggedStacktrace;

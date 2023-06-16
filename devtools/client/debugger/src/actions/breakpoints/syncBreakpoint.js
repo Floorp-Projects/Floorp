@@ -4,9 +4,8 @@
 
 import { setBreakpointPositions } from "./breakpointPositions";
 import {
-  assertPendingBreakpoint,
   findPosition,
-  makeBreakpointLocation,
+  makeBreakpointServerLocation,
 } from "../../utils/breakpoint";
 
 import { comparePosition, createLocation } from "../../utils/location";
@@ -19,10 +18,7 @@ import { getSource } from "../../selectors";
 import { addBreakpoint, removeBreakpointAtGeneratedLocation } from ".";
 
 async function findBreakpointPosition(cx, { getState, dispatch }, location) {
-  const { sourceId, line } = location;
-  const positions = await dispatch(
-    setBreakpointPositions({ cx, sourceId, line })
-  );
+  const positions = await dispatch(setBreakpointPositions({ cx, location }));
 
   const position = findPosition(positions, location);
   return position;
@@ -45,10 +41,9 @@ async function findBreakpointPosition(cx, { getState, dispatch }, location) {
 //   has changed, we need to make sure that only a single breakpoint is added
 //   to the reducer for the new location corresponding to the original location
 //   in the pending breakpoint.
-export function syncBreakpoint(cx, sourceId, pendingBreakpoint) {
+export function syncPendingBreakpoint(cx, sourceId, pendingBreakpoint) {
   return async thunkArgs => {
     const { getState, client, dispatch } = thunkArgs;
-    assertPendingBreakpoint(pendingBreakpoint);
 
     const source = getSource(getState(), sourceId);
 
@@ -62,21 +57,22 @@ export function syncBreakpoint(cx, sourceId, pendingBreakpoint) {
       return null;
     }
 
+    // /!\ Pending breakpoint locations come only with sourceUrl, line and column attributes.
+    // We have to map it to a specific source object and avoid trying to query its non-existent 'source' attribute.
     const { location, generatedLocation } = pendingBreakpoint;
+    const isPendingBreakpointWithSourceMap =
+      location.sourceUrl != generatedLocation.sourceUrl;
     const sourceGeneratedLocation = createLocation({
       ...generatedLocation,
       source: generatedSource,
     });
 
-    if (
-      source == generatedSource &&
-      location.sourceUrl != generatedLocation.sourceUrl
-    ) {
+    if (source == generatedSource && isPendingBreakpointWithSourceMap) {
       // We are handling the generated source and the pending breakpoint has a
       // source mapping. Supply a cancellation callback that will abort the
       // breakpoint if the original source was synced to a different location,
       // in which case the client breakpoint has been removed.
-      const breakpointLocation = makeBreakpointLocation(
+      const breakpointServerLocation = makeBreakpointServerLocation(
         getState(),
         sourceGeneratedLocation
       );
@@ -86,7 +82,7 @@ export function syncBreakpoint(cx, sourceId, pendingBreakpoint) {
           sourceGeneratedLocation,
           pendingBreakpoint.options,
           pendingBreakpoint.disabled,
-          () => !client.hasBreakpoint(breakpointLocation)
+          () => !client.hasBreakpoint(breakpointServerLocation)
         )
       );
     }
@@ -108,7 +104,7 @@ export function syncBreakpoint(cx, sourceId, pendingBreakpoint) {
       // mapping, remove any breakpoints for the generated location, as if the
       // breakpoint moved. If the old generated location still maps to an
       // original location then we don't want to add a breakpoint for it.
-      if (location.sourceUrl != generatedLocation.sourceUrl) {
+      if (isPendingBreakpointWithSourceMap) {
         dispatch(
           removeBreakpointAtGeneratedLocation(cx, sourceGeneratedLocation)
         );

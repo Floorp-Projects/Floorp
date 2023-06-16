@@ -11,12 +11,8 @@ let gHandlerSvc = Cc["@mozilla.org/uriloader/handler-service;1"].getService(
 let gDownloadDir;
 const TestFiles = {};
 let downloads = [];
-const {
-  handleInternally,
-  saveToDisk,
-  useSystemDefault,
-  alwaysAsk,
-} = Ci.nsIHandlerInfo;
+const { handleInternally, saveToDisk, useSystemDefault, alwaysAsk } =
+  Ci.nsIHandlerInfo;
 
 function ensureMIMEState({ preferredAction, alwaysAskBeforeHandling = false }) {
   const mimeInfo = gMimeSvc.getFromTypeAndExtension("text/plain", "txt");
@@ -57,12 +53,9 @@ async function prepareDownloadFiles(downloadList) {
   info("Download target exists? " + download.target.exists);
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.download.improvements_to_download_panel", true],
-      ["browser.download.always_ask_before_handling_new_types", false],
-    ],
+    set: [["browser.download.always_ask_before_handling_new_types", false]],
   });
   const originalOpenDownload = DownloadsCommon.openDownload;
   // overwrite DownloadsCommon.openDownload to prevent file from opening during tests

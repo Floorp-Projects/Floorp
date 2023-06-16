@@ -43,7 +43,7 @@ const DOCUMENT_WITH_LONG_SHEET =
     ].join("\n")
   );
 
-add_task(async function() {
+add_task(async function () {
   info("Test that inline stylesheets are numbered correctly");
   const { ui } = await openStyleEditorForURL(DOCUMENT_WITH_LONG_SHEET);
 
@@ -80,7 +80,7 @@ add_task(async function() {
   is(secondEditor.styleSheet.ruleCount, 2, "2nd inline stylesheet has 2 rules");
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test that user-created stylesheets are numbered correctly");
   const { panel, ui } = await openStyleEditorForURL(DOCUMENT_WITH_LONG_SHEET);
   await createNewStyleSheet(ui, panel.panelWindow);

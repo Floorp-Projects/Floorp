@@ -28,13 +28,13 @@ function add_ocsp_test(
   add_connection_test(
     aHost,
     aExpectedResult,
-    function() {
+    function () {
       clearOCSPCache();
       clearSessionCache();
       gCurrentOCSPResponse = aOCSPResponseToServe;
       gOCSPRequestCount = 0;
     },
-    function() {
+    function () {
       equal(
         gOCSPRequestCount,
         aExpectedRequestCount,
@@ -84,7 +84,7 @@ var willRetry = 2;
 
 function run_test() {
   let ocspResponder = new HttpServer();
-  ocspResponder.registerPrefixHandler("/", function(request, response) {
+  ocspResponder.registerPrefixHandler("/", function (request, response) {
     if (gCurrentOCSPResponse) {
       response.setStatusLine(request.httpVersion, 200, "OK");
       response.setHeader("Content-Type", "application/ocsp-response");
@@ -277,7 +277,7 @@ function run_test() {
     willNotRetry
   );
 
-  add_test(function() {
+  add_test(function () {
     ocspResponder.stop(run_next_test);
   });
   add_test(check_ocsp_stapling_telemetry);

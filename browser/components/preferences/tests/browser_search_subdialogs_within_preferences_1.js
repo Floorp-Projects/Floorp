@@ -3,7 +3,7 @@
  */
 
 // Enabling Searching functionatily. Will display search bar form this testcase forward.
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.preferences.search", true]],
   });
@@ -12,7 +12,7 @@ add_task(async function() {
 /**
  * Test for searching for the "Set Home Page" subdialog.
  */
-add_task(async function() {
+add_task(async function () {
   // Set custom URL so bookmark button will be shown on the page (otherwise it is hidden)
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -39,7 +39,7 @@ add_task(async function() {
 /**
  * Test for searching for the "Languages" subdialog.
  */
-add_task(async function() {
+add_task(async function () {
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
     leaveOpen: true,
   });

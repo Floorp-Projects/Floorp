@@ -5,7 +5,7 @@
 "use strict";
 
 // Make this available to both AMD and CJS environments
-define(function(require, exports, module) {
+define(function (require, exports, module) {
   module.exports = {
     ELEMENT_NODE: 1,
     ATTRIBUTE_NODE: 2,

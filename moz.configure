@@ -206,10 +206,6 @@ check_prog("WGET", ("wget",), allow_missing=True)
 include("build/moz.configure/toolchain.configure", when="--enable-compile-environment")
 
 include("build/moz.configure/pkg.configure")
-# Make this assignment here rather than in pkg.configure to avoid
-# requiring this file in unit tests.
-add_old_configure_assignment("PKG_CONFIG", pkg_config)
-
 include("build/moz.configure/memory.configure", when="--enable-compile-environment")
 include("build/moz.configure/headers.configure", when="--enable-compile-environment")
 include("build/moz.configure/warnings.configure", when="--enable-compile-environment")
@@ -498,59 +494,6 @@ def awk_for_old_configure(value):
 add_old_configure_assignment("AWK", awk_for_old_configure)
 
 
-# Perl detection
-# ==============================================================
-perl = check_prog("PERL", ("perl5", "perl"))
-
-# Until the PERL variable is not necessary in old-configure
-
-
-@depends(perl)
-def perl_for_old_configure(value):
-    return value
-
-
-add_old_configure_assignment("PERL", perl_for_old_configure)
-
-
-@template
-def perl_version_check(min_version):
-    @depends(perl)
-    @checking("for minimum required perl version >= %s" % min_version)
-    def get_perl_version(perl):
-        return Version(
-            check_cmd_output(
-                perl,
-                "-e",
-                "print $]",
-                onerror=lambda: die("Failed to get perl version."),
-            )
-        )
-
-    @depends(get_perl_version)
-    def check_perl_version(version):
-        if version < min_version:
-            die("Perl %s or higher is required.", min_version)
-
-    @depends(perl)
-    @checking("for full perl installation")
-    @imports("subprocess")
-    def has_full_perl_installation(perl):
-        ret = subprocess.call([perl, "-e", "use Config; exit(!-d $Config{archlib})"])
-        return ret == 0
-
-    @depends(has_full_perl_installation)
-    def require_full_perl_installation(has_full_perl_installation):
-        if not has_full_perl_installation:
-            die(
-                "Cannot find Config.pm or $Config{archlib}. "
-                "A full perl installation is required."
-            )
-
-
-perl_version_check("5.006")
-
-
 # GNU make detection
 # ==============================================================
 option(env="MAKE", nargs=1, help="Path to GNU make")
@@ -642,7 +585,6 @@ check_prog("XARGS", ("xargs",))
 def extra_programs(target):
     if target.kernel == "Darwin":
         return namespace(
-            DSYMUTIL=("dsymutil", "llvm-dsymutil"),
             MKFSHFS=("newfs_hfs", "mkfs.hfsplus"),
             HFS_TOOL=("hfsplus",),
         )
@@ -650,7 +592,6 @@ def extra_programs(target):
         return namespace(RPMBUILD=("rpmbuild",))
 
 
-check_prog("DSYMUTIL", extra_programs.DSYMUTIL, allow_missing=True)
 check_prog("MKFSHFS", extra_programs.MKFSHFS, allow_missing=True)
 check_prog("HFS_TOOL", extra_programs.HFS_TOOL, allow_missing=True)
 check_prog("RPMBUILD", extra_programs.RPMBUILD, allow_missing=True)
@@ -747,6 +688,41 @@ def llvm_tool(name):
     return llvm_tool
 
 
+check_prog(
+    "DSYMUTIL",
+    llvm_tool("dsymutil"),
+    when=compile_environment & target_is_darwin,
+    paths=clang_search_path,
+)
+
+
+@template
+def plain_llvm_or_prefixed(name):
+    @depends(llvm_tool(f"llvm-{name}"), toolchain_prefix)
+    def plain_llvm_or_prefixed(llvm_tool, toolchain_prefix):
+        commands = [llvm_tool[0], name]
+        for prefix in toolchain_prefix or ():
+            commands.insert(1, f"{prefix}{name}")
+        return tuple(commands)
+
+    return plain_llvm_or_prefixed
+
+
+check_prog(
+    "OTOOL",
+    plain_llvm_or_prefixed("otool"),
+    when=compile_environment & target_is_darwin,
+    paths=clang_search_path,
+)
+
+check_prog(
+    "INSTALL_NAME_TOOL",
+    plain_llvm_or_prefixed("install-name-tool"),
+    when=compile_environment & target_is_darwin & js_standalone,
+    paths=clang_search_path,
+)
+
+
 llvm_objdump = check_prog(
     "LLVM_OBJDUMP",
     llvm_tool("llvm-objdump"),
@@ -756,14 +732,6 @@ llvm_objdump = check_prog(
 )
 
 add_old_configure_assignment("LLVM_OBJDUMP", llvm_objdump)
-
-
-@depends(llvm_tool("llvm-readelf"), toolchain_prefix)
-def readelf(llvm_readelf, toolchain_prefix):
-    commands = [llvm_readelf[0], "readelf"]
-    for prefix in toolchain_prefix or ():
-        commands.insert(1, "%sreadelf" % prefix)
-    return tuple(commands)
 
 
 def validate_readelf(path):
@@ -786,19 +754,11 @@ def readelf_when(compile_env, target, host):
 
 check_prog(
     "READELF",
-    readelf,
+    plain_llvm_or_prefixed("readelf"),
     when=readelf_when,
     paths=clang_search_path,
     validate=validate_readelf,
 )
-
-
-@depends(llvm_tool("llvm-objcopy"), toolchain_prefix)
-def objcopy(llvm_objcopy, toolchain_prefix):
-    commands = [llvm_objcopy[0], "objcopy"]
-    for prefix in toolchain_prefix or ():
-        commands.insert(1, "%sreadelf" % prefix)
-    return tuple(commands)
 
 
 def validate_objcopy(path):
@@ -813,7 +773,7 @@ def validate_objcopy(path):
 
 check_prog(
     "OBJCOPY",
-    objcopy,
+    plain_llvm_or_prefixed("objcopy"),
     when=readelf_when,
     paths=clang_search_path,
     validate=validate_objcopy,
@@ -907,19 +867,6 @@ def strip_flags(flags, profiling, target):
 set_config("STRIP_FLAGS", strip_flags)
 
 
-@depends(llvm_tool("llvm-strip"), toolchain_prefix, target)
-def strip(llvm_strip, toolchain_prefix, target):
-    commands = ["strip"]
-    for prefix in toolchain_prefix or ():
-        commands.insert(0, "%sstrip" % prefix)
-    # llvm-strip causes some problems on macos targets.
-    if target.kernel == "Darwin":
-        commands.append(llvm_strip[0])
-    else:
-        commands.insert(0, llvm_strip[0])
-    return tuple(commands)
-
-
 def validate_strip(path):
     if "llvm-strip" not in path:
         return True
@@ -935,7 +882,7 @@ def strip_when(compile_env, target, host):
 
 check_prog(
     "STRIP",
-    strip,
+    plain_llvm_or_prefixed("strip"),
     when=strip_when,
     paths=clang_search_path,
     validate=validate_strip,

@@ -259,9 +259,10 @@ export function URIFixup() {
   // not work well and returns always true due to flatpak. In this case, in order to
   // fallback to nsIHandlerService.exits(), we test whether can trust
   // nsIExternalProtocolService here.
-  this._trustExternalProtocolService = !lazy.externalProtocolService.externalProtocolHandlerExists(
-    `__dummy${Date.now()}__`
-  );
+  this._trustExternalProtocolService =
+    !lazy.externalProtocolService.externalProtocolHandlerExists(
+      `__dummy${Date.now()}__`
+    );
 }
 
 URIFixup.prototype = {
@@ -300,11 +301,8 @@ URIFixup.prototype = {
 
     let info = new URIFixupInfo(uriString);
 
-    const {
-      scheme,
-      fixedSchemeUriString,
-      fixupChangedProtocol,
-    } = extractScheme(uriString, fixupFlags);
+    const { scheme, fixedSchemeUriString, fixupChangedProtocol } =
+      extractScheme(uriString, fixupFlags);
     uriString = fixedSchemeUriString;
     info.fixupChangedProtocol = fixupChangedProtocol;
 
@@ -469,8 +467,8 @@ URIFixup.prototype = {
     try {
       Services.io.newURI(href);
       // Remove LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP for valid uris.
-      navigationFlags &= ~Ci.nsIWebNavigation
-        .LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
+      navigationFlags &=
+        ~Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
     } catch (ex) {}
 
     let fixupFlags = FIXUP_FLAG_NONE;
@@ -502,6 +500,10 @@ URIFixup.prototype = {
       keyword = keyword.substring(1);
     }
     keyword = keyword.trim();
+
+    if (!Services.search.hasSuccessfullyInitialized) {
+      return info;
+    }
 
     // Try falling back to the search service's default search engine
     // We must use an appropriate search engine depending on the private
@@ -836,10 +838,7 @@ function checkAndFixPublicSuffix(info) {
     if (suffix == typo) {
       let host = uri.host.substring(0, uri.host.length - typo.length) + fixed;
       let updatePreferredURI = info.preferredURI == info.fixedURI;
-      info.fixedURI = uri
-        .mutate()
-        .setHost(host)
-        .finalize();
+      info.fixedURI = uri.mutate().setHost(host).finalize();
       if (updatePreferredURI) {
         info.preferredURI = info.fixedURI;
       }
@@ -915,11 +914,16 @@ function maybeSetAlternateFixedURI(info, fixupFlags) {
  */
 function fileURIFixup(uriString) {
   let attemptFixup = false;
+  let path = uriString;
   if (AppConstants.platform == "win") {
-    // Check for "\"" in the url-string or just a drive (e.g. C:).
+    // Check for "\"" in the url-string, just a drive (e.g. C:),
+    // or 'A:/...' where the "protocol" is also a single letter.
     attemptFixup =
       uriString.includes("\\") ||
-      (uriString.length == 2 && uriString.endsWith(":"));
+      (uriString[1] == ":" && (uriString.length == 2 || uriString[2] == "/"));
+    if (uriString[1] == ":" && uriString[2] == "/") {
+      path = uriString.replace(/\//g, "\\");
+    }
   } else {
     // UNIX: Check if it starts with "/".
     attemptFixup = uriString.startsWith("/");
@@ -929,7 +933,7 @@ function fileURIFixup(uriString) {
       // Test if this is a valid path by trying to create a local file
       // object. The URL of that is returned if successful.
       let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-      file.initWithPath(uriString);
+      file.initWithPath(path);
       return Services.io.newURI(
         lazy.fileProtocolHandler.getURLSpecFromActualFile(file)
       );

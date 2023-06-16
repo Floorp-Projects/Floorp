@@ -5,23 +5,23 @@
 const frameSource = `<a href="about:mozilla">good</a>`;
 const source = `<html><iframe srcdoc='${frameSource}' id="f"></iframe></html>`;
 
-add_task(async function() {
+add_task(async function () {
   let url = `data:text/html,${source}`;
   await BrowserTestUtils.withNewTab({ gBrowser, url }, checkFrameSource);
 });
 
 async function checkFrameSource() {
   let sourceTab = await openViewFrameSourceTab("#f");
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     gBrowser.removeTab(sourceTab);
   });
 
   let browser = gBrowser.selectedBrowser;
-  let textContent = await SpecialPowers.spawn(browser, [], async function() {
+  let textContent = await SpecialPowers.spawn(browser, [], async function () {
     return content.document.body.textContent;
   });
   is(textContent, frameSource, "Correct content loaded");
-  let id = await SpecialPowers.spawn(browser, [], async function() {
+  let id = await SpecialPowers.spawn(browser, [], async function () {
     return content.document.body.id;
   });
   is(id, "viewsource", "View source mode enabled");

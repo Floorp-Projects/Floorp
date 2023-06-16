@@ -35,7 +35,7 @@ UNIFIED_SOURCES += [
 ]
 
 EXTRA_JS_MODULES += [
-    "ConsoleAPIStorage.jsm",
+    "ConsoleAPIStorage.sys.mjs",
 ]
 
 XPCOM_MANIFESTS += [

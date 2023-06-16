@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   Services.prefs.clearUserPref(TAB_PICKUP_STATE_PREF);
 });
 
@@ -38,7 +38,7 @@ add_task(async function test_tab_pickup_visibility() {
   /* Confirm the correct number of tab-pickup views are registered as visible */
   const sandbox = await setup();
 
-  await withFirefoxView({ win: window }, async function(browser) {
+  await withFirefoxView({ win: window }, async function (browser) {
     const { document } = browser.contentWindow;
     let tabPickupContainer = document.querySelector("#tab-pickup-container");
 
@@ -113,7 +113,7 @@ add_task(async function test_tab_pickup_visibility() {
 add_task(async function test_instance_closed() {
   /* Confirm tab-pickup views are correctly accounted for when toggled closed */
   const sandbox = await setup({ open: false });
-  await withFirefoxView({ win: window }, async function(browser) {
+  await withFirefoxView({ win: window }, async function (browser) {
     const { document } = browser.contentWindow;
     info(
       "tab-pickup.open pref: " +

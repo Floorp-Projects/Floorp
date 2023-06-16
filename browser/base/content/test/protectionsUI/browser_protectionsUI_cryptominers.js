@@ -9,7 +9,7 @@ const TRACKING_PAGE =
 const CM_PROTECTION_PREF = "privacy.trackingprotection.cryptomining.enabled";
 let cmHistogram;
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       [
@@ -66,7 +66,7 @@ async function testIdentityState(hasException) {
 
   promise = waitForContentBlockingEvent();
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function () {
     content.postMessage("cryptomining", "*");
   });
 
@@ -121,7 +121,7 @@ async function testSubview(hasException) {
   }
 
   promise = waitForContentBlockingEvent();
-  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function () {
     content.postMessage("cryptomining", "*");
   });
   await promise;
@@ -240,7 +240,7 @@ async function testCategoryItem() {
 
   promise = waitForContentBlockingEvent();
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function () {
     content.postMessage("cryptomining", "*");
   });
 

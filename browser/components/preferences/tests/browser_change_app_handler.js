@@ -25,7 +25,7 @@ function setupFakeHandler() {
   gHandlerSvc.store(infoToModify);
 }
 
-add_task(async function() {
+add_task(async function () {
   setupFakeHandler();
 
   let prefs = await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
@@ -146,7 +146,7 @@ add_task(async function() {
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   let infoToModify = gMimeSvc.getFromTypeAndExtension(
     "text/x-test-handler",
     null

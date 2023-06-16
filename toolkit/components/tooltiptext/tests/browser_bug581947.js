@@ -2,7 +2,7 @@ function check(aBrowser, aElementName, aBarred, aType) {
   return SpecialPowers.spawn(
     aBrowser,
     [[aElementName, aBarred, aType]],
-    async function([aElementName, aBarred, aType]) {
+    async function ([aElementName, aBarred, aType]) {
       let e = content.document.createElement(aElementName);
       let contentElement = content.document.getElementById("content");
       contentElement.appendChild(e);
@@ -55,7 +55,7 @@ function todo_check(aBrowser, aElementName, aBarred) {
   return SpecialPowers.spawn(
     aBrowser,
     [[aElementName, aBarred]],
-    async function([aElementName, aBarred]) {
+    async function ([aElementName, aBarred]) {
       let e = content.document.createElement(aElementName);
       let contentElement = content.document.getElementById("content");
       contentElement.appendChild(e);
@@ -74,14 +74,13 @@ function todo_check(aBrowser, aElementName, aBarred) {
   );
 }
 
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
-      url:
-        "data:text/html,<!DOCTYPE html><html><body><form id='content'></form></body></html>",
+      url: "data:text/html,<!DOCTYPE html><html><body><form id='content'></form></body></html>",
     },
-    async function(browser) {
+    async function (browser) {
       let testData = [
         /* element name, barred */
         ["input", false, null],

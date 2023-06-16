@@ -9,7 +9,7 @@
 const TEST_URL =
   "data:text/html,<style>body{background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWNgYGD4DwABBAEAfbLI3wAAAABJRU5ErkJggg==) no-repeat}";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL, "window");
   const view = selectRuleView(inspector);
 

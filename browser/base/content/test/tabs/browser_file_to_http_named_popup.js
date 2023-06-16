@@ -5,8 +5,8 @@ const TEST_FILE = fileURL("dummy_page.html");
 const TEST_HTTP = httpURL("dummy_page.html");
 
 // Test for Bug 1634252
-add_task(async function() {
-  await BrowserTestUtils.withNewTab(TEST_FILE, async function(fileBrowser) {
+add_task(async function () {
+  await BrowserTestUtils.withNewTab(TEST_FILE, async function (fileBrowser) {
     info("Tab ready");
 
     async function summonPopup(firstRun) {

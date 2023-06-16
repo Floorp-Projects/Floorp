@@ -566,23 +566,26 @@ static void model_rd_for_sb_y_large(VP9_COMP *cpi, BLOCK_SIZE bsize,
 
     // Transform skipping test in UV planes.
     for (i = 1; i <= 2; i++) {
-      struct macroblock_plane *const p = &x->plane[i];
-      struct macroblockd_plane *const pd = &xd->plane[i];
-      const TX_SIZE uv_tx_size = get_uv_tx_size(xd->mi[0], pd);
+      struct macroblock_plane *const p_uv = &x->plane[i];
+      struct macroblockd_plane *const pd_uv = &xd->plane[i];
+      const TX_SIZE uv_tx_size = get_uv_tx_size(xd->mi[0], pd_uv);
       const BLOCK_SIZE unit_size = txsize_to_bsize[uv_tx_size];
-      const BLOCK_SIZE uv_bsize = get_plane_block_size(bsize, pd);
+      const BLOCK_SIZE uv_bsize = get_plane_block_size(bsize, pd_uv);
       const int uv_bw = b_width_log2_lookup[uv_bsize];
       const int uv_bh = b_height_log2_lookup[uv_bsize];
       const int sf = (uv_bw - b_width_log2_lookup[unit_size]) +
                      (uv_bh - b_height_log2_lookup[unit_size]);
-      const uint32_t uv_dc_thr = pd->dequant[0] * pd->dequant[0] >> (6 - sf);
-      const uint32_t uv_ac_thr = pd->dequant[1] * pd->dequant[1] >> (6 - sf);
+      const uint32_t uv_dc_thr =
+          pd_uv->dequant[0] * pd_uv->dequant[0] >> (6 - sf);
+      const uint32_t uv_ac_thr =
+          pd_uv->dequant[1] * pd_uv->dequant[1] >> (6 - sf);
       int j = i - 1;
 
       vp9_build_inter_predictors_sbp(xd, mi_row, mi_col, bsize, i);
       flag_preduv_computed[i - 1] = 1;
-      var_uv[j] = cpi->fn_ptr[uv_bsize].vf(
-          p->src.buf, p->src.stride, pd->dst.buf, pd->dst.stride, &sse_uv[j]);
+      var_uv[j] = cpi->fn_ptr[uv_bsize].vf(p_uv->src.buf, p_uv->src.stride,
+                                           pd_uv->dst.buf, pd_uv->dst.stride,
+                                           &sse_uv[j]);
 
       if ((var_uv[j] < uv_ac_thr || var_uv[j] == 0) &&
           (sse_uv[j] - var_uv[j] < uv_dc_thr || sse_uv[j] == var_uv[j]))
@@ -1933,15 +1936,15 @@ void vp9_pick_inter_mode(VP9_COMP *cpi, MACROBLOCK *x, TileDataEnc *tile_data,
   if (cpi->use_svc && svc->force_zero_mode_spatial_ref &&
       svc->spatial_layer_id > 0 && !gf_temporal_ref) {
     if (cpi->ref_frame_flags & VP9_LAST_FLAG) {
-      struct scale_factors *const sf = &cm->frame_refs[LAST_FRAME - 1].sf;
-      if (vp9_is_scaled(sf)) {
+      struct scale_factors *const ref_sf = &cm->frame_refs[LAST_FRAME - 1].sf;
+      if (vp9_is_scaled(ref_sf)) {
         svc_force_zero_mode[LAST_FRAME - 1] = 1;
         inter_layer_ref = LAST_FRAME;
       }
     }
     if (cpi->ref_frame_flags & VP9_GOLD_FLAG) {
-      struct scale_factors *const sf = &cm->frame_refs[GOLDEN_FRAME - 1].sf;
-      if (vp9_is_scaled(sf)) {
+      struct scale_factors *const ref_sf = &cm->frame_refs[GOLDEN_FRAME - 1].sf;
+      if (vp9_is_scaled(ref_sf)) {
         svc_force_zero_mode[GOLDEN_FRAME - 1] = 1;
         inter_layer_ref = GOLDEN_FRAME;
       }
@@ -2772,9 +2775,10 @@ void vp9_pick_inter_mode_sub8x8(VP9_COMP *cpi, MACROBLOCK *x, int mi_row,
     if ((cpi->ref_frame_flags & ref_frame_to_flag(ref_frame)) &&
         (yv12 != NULL)) {
       int_mv *const candidates = mbmi_ext->ref_mvs[ref_frame];
-      const struct scale_factors *const sf = &cm->frame_refs[ref_frame - 1].sf;
-      vp9_setup_pred_block(xd, yv12_mb[ref_frame], yv12, mi_row, mi_col, sf,
-                           sf);
+      const struct scale_factors *const ref_sf =
+          &cm->frame_refs[ref_frame - 1].sf;
+      vp9_setup_pred_block(xd, yv12_mb[ref_frame], yv12, mi_row, mi_col, ref_sf,
+                           ref_sf);
       vp9_find_mv_refs(cm, xd, xd->mi[0], ref_frame, candidates, mi_row, mi_col,
                        mbmi_ext->mode_context);
 

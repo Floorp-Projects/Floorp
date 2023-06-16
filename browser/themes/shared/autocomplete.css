@@ -17,6 +17,29 @@
   margin-inline: 4px 0;
 }
 
+#PopupAutoComplete > richlistbox > richlistitem > .ac-login-item {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+#PopupAutoComplete > richlistbox > richlistitem > .ac-login-item > .ac-settings-button {
+  visibility: hidden;
+  height: 16px;
+  width: 16px;
+  border: 0;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  margin-inline: 8px;
+  cursor: pointer;
+  background: url("chrome://global/skin/icons/settings.svg") center no-repeat;
+}
+
+#PopupAutoComplete > richlistbox > richlistitem:is(:hover, [selected]) > .ac-login-item > .ac-settings-button {
+  visibility: visible;
+}
+
 #PopupAutoComplete > richlistbox > richlistitem > .ac-title {
   font: icon;
   margin-inline-start: 4px;
@@ -48,6 +71,7 @@
   box-sizing: border-box;
   display: flex;
   flex-direction: row;
+  gap: 8px;
   margin: 0;
   min-width: 0;
 }

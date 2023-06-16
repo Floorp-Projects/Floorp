@@ -27,10 +27,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-});
-
 XPCOMUtils.defineLazyGetter(lazy, "updateManager", () => {
   return (
     Cc["@mozilla.org/updates/update-manager;1"] &&
@@ -72,7 +68,8 @@ const SUPPORTED_ENGINES = new Map([
   [
     "Google",
     {
-      domainPath: /^www\.google\.(com|ac|ad|ae|com\.af|com\.ag|com\.ai|al|am|co\.ao|com\.ar|as|at|com\.au|az|ba|com\.bd|be|bf|bg|com\.bh|bi|bj|com\.bn|com\.bo|com\.br|bs|bt|co\.bw|by|com\.bz|ca|com\.kh|cc|cd|cf|cat|cg|ch|ci|co\.ck|cl|cm|cn|com\.co|co\.cr|com\.cu|cv|com\.cy|cz|de|dj|dk|dm|com\.do|dz|com\.ec|ee|com\.eg|es|com\.et|fi|com\.fj|fm|fr|ga|ge|gf|gg|com\.gh|com\.gi|gl|gm|gp|gr|com\.gt|gy|com\.hk|hn|hr|ht|hu|co\.id|iq|ie|co\.il|im|co\.in|io|is|it|je|com\.jm|jo|co\.jp|co\.ke|ki|kg|co\.kr|com\.kw|kz|la|com\.lb|com\.lc|li|lk|co\.ls|lt|lu|lv|com\.ly|co\.ma|md|me|mg|mk|ml|com\.mm|mn|ms|com\.mt|mu|mv|mw|com\.mx|com\.my|co\.mz|com\.na|ne|com\.nf|com\.ng|com\.ni|nl|no|com\.np|nr|nu|co\.nz|com\.om|com\.pk|com\.pa|com\.pe|com\.ph|pl|com\.pg|pn|com\.pr|ps|pt|com\.py|com\.qa|ro|rs|ru|rw|com\.sa|com\.sb|sc|se|com\.sg|sh|si|sk|com\.sl|sn|sm|so|st|sr|com\.sv|td|tg|co\.th|com\.tj|tk|tl|tm|to|tn|com\.tr|tt|com\.tw|co\.tz|com\.ua|co\.ug|co\.uk|com\.uy|co\.uz|com\.vc|co\.ve|vg|co\.vi|com\.vn|vu|ws|co\.za|co\.zm|co\.zw)\/(webhp)?$/,
+      domainPath:
+        /^www\.google\.(com|ac|ad|ae|com\.af|com\.ag|com\.ai|al|am|co\.ao|com\.ar|as|at|com\.au|az|ba|com\.bd|be|bf|bg|com\.bh|bi|bj|com\.bn|com\.bo|com\.br|bs|bt|co\.bw|by|com\.bz|ca|com\.kh|cc|cd|cf|cat|cg|ch|ci|co\.ck|cl|cm|cn|com\.co|co\.cr|com\.cu|cv|com\.cy|cz|de|dj|dk|dm|com\.do|dz|com\.ec|ee|com\.eg|es|com\.et|fi|com\.fj|fm|fr|ga|ge|gf|gg|com\.gh|com\.gi|gl|gm|gp|gr|com\.gt|gy|com\.hk|hn|hr|ht|hu|co\.id|iq|ie|co\.il|im|co\.in|io|is|it|je|com\.jm|jo|co\.jp|co\.ke|ki|kg|co\.kr|com\.kw|kz|la|com\.lb|com\.lc|li|lk|co\.ls|lt|lu|lv|com\.ly|co\.ma|md|me|mg|mk|ml|com\.mm|mn|ms|com\.mt|mu|mv|mw|com\.mx|com\.my|co\.mz|com\.na|ne|com\.nf|com\.ng|com\.ni|nl|no|com\.np|nr|nu|co\.nz|com\.om|com\.pk|com\.pa|com\.pe|com\.ph|pl|com\.pg|pn|com\.pr|ps|pt|com\.py|com\.qa|ro|rs|ru|rw|com\.sa|com\.sb|sc|se|com\.sg|sh|si|sk|com\.sl|sn|sm|so|st|sr|com\.sv|td|tg|co\.th|com\.tj|tk|tl|tm|to|tn|com\.tr|tt|com\.tw|co\.tz|com\.ua|co\.ug|co\.uk|com\.uy|co\.uz|com\.vc|co\.ve|vg|co\.vi|com\.vn|vu|ws|co\.za|co\.zm|co\.zw)\/(webhp)?$/,
     },
   ],
 ]);
@@ -252,10 +249,11 @@ class ProviderSearchTips extends UrlbarProvider {
    *
    * @param {UrlbarResult} result
    *   The result that was picked.
+   * @param {window} window
+   *   The browser window in which the tip is being displayed.
    */
-  #pickResult(result) {
+  #pickResult(result, window) {
     let tip = result.payload.type;
-    let window = lazy.BrowserWindowTracker.getTopWindow();
     switch (tip) {
       case TIPS.PERSIST:
         window.gURLBar.removeAttribute("suppress-focus-border");
@@ -292,8 +290,10 @@ class ProviderSearchTips extends UrlbarProvider {
    * @param {object} details
    *   This is defined only when `state` is "engagement" or "abandonment", and
    *   it describes the search string and picked result.
+   * @param {window} window
+   *   The browser window where the engagement event took place.
    */
-  onEngagement(isPrivate, state, queryContext, details) {
+  onEngagement(isPrivate, state, queryContext, details, window) {
     // Ignore engagements on other results that didn't end the session.
     let { result } = details;
     if (result?.providerName != this.name && details.isSessionOngoing) {
@@ -301,7 +301,7 @@ class ProviderSearchTips extends UrlbarProvider {
     }
 
     if (result?.providerName == this.name) {
-      this.#pickResult(result);
+      this.#pickResult(result, window);
     }
 
     this.showedTipTypeInCurrentEngagement = TIPS.NONE;
@@ -373,7 +373,7 @@ class ProviderSearchTips extends UrlbarProvider {
       return;
     }
 
-    this._maybeShowTipForUrl(uri.spec, originalUri).catch(ex =>
+    this._maybeShowTipForUrl(uri.spec, originalUri, window).catch(ex =>
       this.logger.error(ex)
     );
   }
@@ -386,8 +386,10 @@ class ProviderSearchTips extends UrlbarProvider {
    *   The URL of the page being loaded, in string form.
    * @param {nsIURI | null} originalUri
    *   The original URI of the page being loaded.
+   * @param {window} window
+   *   The browser window in which the tip is being displayed.
    */
-  async _maybeShowTipForUrl(urlStr, originalUri) {
+  async _maybeShowTipForUrl(urlStr, originalUri, window) {
     let instance = {};
     this._maybeShowTipForUrlInstance = instance;
 
@@ -455,7 +457,6 @@ class ProviderSearchTips extends UrlbarProvider {
         return;
       }
 
-      let window = lazy.BrowserWindowTracker.getTopWindow();
       // We don't want to interrupt a user's typed query with a Search Tip.
       // See bugs 1613662 and 1619547. The persist search tip is an
       // exception because the query is not erased.
@@ -476,7 +477,7 @@ class ProviderSearchTips extends UrlbarProvider {
       // Don't show a tip if the browser is already showing some other
       // notification.
       if (
-        (!ignoreShowLimits && (await isBrowserShowingNotification())) ||
+        (!ignoreShowLimits && (await isBrowserShowingNotification(window))) ||
         this._maybeShowTipForUrlInstance != instance
       ) {
         return;
@@ -513,9 +514,7 @@ class ProviderSearchTips extends UrlbarProvider {
   }
 }
 
-async function isBrowserShowingNotification() {
-  let window = lazy.BrowserWindowTracker.getTopWindow();
-
+async function isBrowserShowingNotification(window) {
   // urlbar view and notification box (info bar)
   if (
     window.gURLBar.view.isOpen ||

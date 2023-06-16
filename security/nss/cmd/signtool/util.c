@@ -137,7 +137,7 @@ rm_dash_r(char *path)
 
         /* Recursively delete all entries in the directory */
         while ((entry = PR_ReadDir(dir, PR_SKIP_BOTH)) != NULL) {
-            sprintf(filename, "%s/%s", path, entry->name);
+            snprintf(filename, sizeof(filename), "%s/%s", path, entry->name);
             if (rm_dash_r(filename)) {
                 PR_CloseDir(dir);
                 return -1;
@@ -648,7 +648,7 @@ secErrorString(long code)
             c = "untrusted issuer";
             break;
         default:
-            sprintf(errstring, "security error %ld", code);
+            snprintf(errstring, sizeof(errstring), "security error %ld", code);
             c = errstring;
             break;
     }
@@ -932,7 +932,7 @@ get_default_cert_dir(void)
     home = PR_GetEnvSecure("HOME");
 
     if (home && *home) {
-        sprintf(db, "%s/.netscape", home);
+        snprintf(db, sizeof(db), "%s/.netscape", home);
         cd = db;
     }
 #endif
@@ -945,7 +945,7 @@ get_default_cert_dir(void)
     home = PR_GetEnvSecure("JAR_HOME");
 
     if (home && *home) {
-        sprintf(db, "%s/cert7.db", home);
+        snprintf(db, sizeof(db), "%s/cert7.db", home);
 
         if ((fp = fopen(db, "r")) != NULL) {
             fclose(fp);
@@ -958,7 +958,7 @@ get_default_cert_dir(void)
     if (cd == NULL) {
         home = "c:/Program Files/Netscape/Navigator";
 
-        sprintf(db, "%s/cert7.db", home);
+        snprintf(db, sizeof(db), "%s/cert7.db", home);
 
         if ((fp = fopen(db, "r")) != NULL) {
             fclose(fp);
@@ -972,7 +972,7 @@ get_default_cert_dir(void)
     if (cd == NULL) {
         home = ".";
 
-        sprintf(db, "%s/cert7.db", home);
+        snprintf(db, sizeof(db), "%s/cert7.db", home);
 
         if ((fp = fopen(db, "r")) != NULL) {
             fclose(fp);

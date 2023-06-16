@@ -16,7 +16,7 @@ add_task(async function tabsSendMessageReply() {
       ],
     },
 
-    background: async function() {
+    background: async function () {
       let firstTab;
       let promiseResponse = new Promise(resolve => {
         browser.runtime.onMessage.addListener((msg, sender, respond) => {
@@ -192,7 +192,7 @@ add_task(async function tabsSendMessageReply() {
     },
 
     files: {
-      "content-script.js": async function() {
+      "content-script.js": async function () {
         browser.runtime.onMessage.addListener((msg, sender, respond) => {
           if (msg == "respond-now") {
             respond(msg);
@@ -263,7 +263,7 @@ add_task(async function tabsSendHidden() {
       ],
     },
 
-    background: async function() {
+    background: async function () {
       let resolveContent;
       browser.runtime.onMessage.addListener((msg, sender) => {
         if (msg[0] == "content-ready") {
@@ -322,7 +322,7 @@ add_task(async function tabsSendHidden() {
     },
 
     files: {
-      "content-script.js": function() {
+      "content-script.js": function () {
         // Store this in a local variable to make sure we don't touch any
         // properties of the possibly-hidden content window.
         let href = window.location.href;

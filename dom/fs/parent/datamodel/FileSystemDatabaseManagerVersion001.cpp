@@ -6,8 +6,7 @@
 
 #include "FileSystemDatabaseManagerVersion001.h"
 
-#include <stdint.h>
-
+#include "FileSystemContentTypeGuess.h"
 #include "FileSystemDataManager.h"
 #include "FileSystemFileManager.h"
 #include "ResultStatement.h"
@@ -366,7 +365,7 @@ Result<bool, QMResult> IsFile(const FileSystemConnection& aConnection,
 
 nsresult PerformRename(const FileSystemConnection& aConnection,
                        const FileSystemEntryMetadata& aHandle,
-                       const Name& aNewName,
+                       const Name& aNewName, const ContentType& aNewType,
                        const nsLiteralCString& aNameUpdateQuery) {
   MOZ_ASSERT(!aHandle.entryId().IsEmpty());
   MOZ_ASSERT(IsValidName(aHandle.entryName()));
@@ -381,6 +380,13 @@ nsresult PerformRename(const FileSystemConnection& aConnection,
   QM_TRY_UNWRAP(ResultStatement stmt,
                 ResultStatement::Create(aConnection, aNameUpdateQuery)
                     .mapErr(toNSResult));
+  QM_TRY(QM_OR_ELSE_WARN_IF(
+      // Expression
+      MOZ_TO_RESULT(stmt.BindContentTypeByName("type"_ns, aNewType)),
+      // Predicate
+      IsSpecificError<NS_ERROR_ILLEGAL_VALUE>,
+      // Fallback
+      ErrToDefaultOk<>));
   QM_TRY(MOZ_TO_RESULT(stmt.BindNameByName("name"_ns, aNewName)));
   QM_TRY(MOZ_TO_RESULT(stmt.BindEntryIdByName("handle"_ns, aHandle.entryId())));
   QM_TRY(MOZ_TO_RESULT(stmt.Execute()));
@@ -397,20 +403,21 @@ nsresult PerformRenameDirectory(const FileSystemConnection& aConnection,
       "WHERE handle = :handle "
       ";"_ns;
 
-  return PerformRename(aConnection, aHandle, aNewName,
+  return PerformRename(aConnection, aHandle, aNewName, /* dummy type */ ""_ns,
                        updateDirectoryNameQuery);
 }
 
 nsresult PerformRenameFile(const FileSystemConnection& aConnection,
                            const FileSystemEntryMetadata& aHandle,
-                           const Name& aNewName) {
+                           const Name& aNewName, const ContentType& aNewType) {
   const nsLiteralCString updateFileNameQuery =
       "UPDATE Files "
-      "SET name = :name "
+      "SET type = :type, name = :name "
       "WHERE handle = :handle "
       ";"_ns;
 
-  return PerformRename(aConnection, aHandle, aNewName, updateFileNameQuery);
+  return PerformRename(aConnection, aHandle, aNewName, aNewType,
+                       updateFileNameQuery);
 }
 
 Result<nsTArray<EntryId>, QMResult> FindDescendants(
@@ -903,6 +910,9 @@ Result<EntryId, QMResult> FileSystemDatabaseManagerVersion001::GetOrCreateFile(
   QM_TRY_UNWRAP(EntryId entryId, GetUniqueEntryId(mConnection, aHandle));
   MOZ_ASSERT(!entryId.IsEmpty());
 
+  const ContentType& type =
+      aType.IsVoid() ? FileSystemContentTypeGuess::FromPath(name) : aType;
+
   mozStorageTransaction transaction(
       mConnection.get(), false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
   {
@@ -918,7 +928,7 @@ Result<EntryId, QMResult> FileSystemDatabaseManagerVersion001::GetOrCreateFile(
     QM_TRY_UNWRAP(ResultStatement stmt,
                   ResultStatement::Create(mConnection, insertFileQuery));
     QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("handle"_ns, entryId)));
-    QM_TRY(QM_TO_RESULT(stmt.BindContentTypeByName("type"_ns, aType)));
+    QM_TRY(QM_TO_RESULT(stmt.BindContentTypeByName("type"_ns, type)));
     QM_TRY(QM_TO_RESULT(stmt.BindNameByName("name"_ns, name)));
     QM_TRY(QM_TO_RESULT(stmt.Execute()));
   }
@@ -1322,7 +1332,9 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::RenameEntry(
       mConnection.get(), false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
   if (isFile) {
-    QM_TRY(QM_TO_RESULT(PerformRenameFile(mConnection, aHandle, aNewName)));
+    const ContentType type = FileSystemContentTypeGuess::FromPath(aNewName);
+    QM_TRY(
+        QM_TO_RESULT(PerformRenameFile(mConnection, aHandle, aNewName, type)));
   } else {
     QM_TRY(
         QM_TO_RESULT(PerformRenameDirectory(mConnection, aHandle, aNewName)));
@@ -1388,7 +1400,9 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::MoveEntry(
   }
 
   if (isFile) {
-    QM_TRY(QM_TO_RESULT(PerformRenameFile(mConnection, aHandle, newName)));
+    const ContentType type = FileSystemContentTypeGuess::FromPath(newName);
+    QM_TRY(
+        QM_TO_RESULT(PerformRenameFile(mConnection, aHandle, newName, type)));
   } else {
     QM_TRY(QM_TO_RESULT(PerformRenameDirectory(mConnection, aHandle, newName)));
   }

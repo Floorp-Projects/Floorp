@@ -93,7 +93,7 @@ var GET_RESULTS = [
     description: "Test Summary 1",
     fullDescription: "Test Description 1",
     iconURL: BASE_URL + "/icon1.png",
-    icons: { "32": BASE_URL + "/icon1.png" },
+    icons: { 32: BASE_URL + "/icon1.png" },
     screenshots: [
       {
         url: BASE_URL + "/full1-1.png",
@@ -219,7 +219,7 @@ add_task(async function setup() {
 // Tests homepageURL and getSearchURL()
 add_task(async function test_1() {
   function check_urls(aPreference, aGetURL, aTests) {
-    aTests.forEach(function(aTest) {
+    aTests.forEach(function (aTest) {
       Services.prefs.setCharPref(aPreference, aTest.preferenceValue);
       Assert.equal(aGetURL(aTest), aTest.expectedURL);
     });

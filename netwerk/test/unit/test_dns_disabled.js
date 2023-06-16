@@ -54,7 +54,7 @@ function do_test({ dnsDisabled, mustBlock, testDomain, expectedAnswer }) {
 
 function setup() {
   override.addIPOverride("foo.bar", "127.0.0.1");
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     override.clearOverrides();
     Services.prefs.clearUserPref("network.dns.disabled");
   });

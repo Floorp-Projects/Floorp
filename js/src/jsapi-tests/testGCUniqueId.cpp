@@ -9,7 +9,9 @@
 
 #include "jsapi-tests/tests.h"
 
-#include "gc/Zone-inl.h"
+#include "gc/StableCellHasher-inl.h"
+
+using namespace js;
 
 static void MinimizeHeap(JSContext* cx) {
   // The second collection is to force us to wait for the background
@@ -31,29 +33,29 @@ BEGIN_TEST(testGCUID) {
   JS::RootedObject obj(cx, JS_NewPlainObject(cx));
   uintptr_t nurseryAddr = uintptr_t(obj.get());
   CHECK(obj);
-  CHECK(js::gc::IsInsideNursery(obj));
+  CHECK(gc::IsInsideNursery(obj));
 
   // Do not start with an ID.
-  CHECK(!obj->zone()->hasUniqueId(obj));
+  CHECK(!gc::HasUniqueId(obj));
 
   // Ensure we can get a new UID.
-  CHECK(obj->zone()->getOrCreateUniqueId(obj, &uid));
-  CHECK(uid > js::gc::LargestTaggedNullCellPointer);
+  CHECK(gc::GetOrCreateUniqueId(obj, &uid));
+  CHECK(uid > gc::LargestTaggedNullCellPointer);
 
   // We should now have an id.
-  CHECK(obj->zone()->hasUniqueId(obj));
+  CHECK(gc::HasUniqueId(obj));
 
   // Calling again should get us the same thing.
-  CHECK(obj->zone()->getOrCreateUniqueId(obj, &tmp));
+  CHECK(gc::GetOrCreateUniqueId(obj, &tmp));
   CHECK(uid == tmp);
 
   // Tenure the thing and check that the UID moved with it.
   MinimizeHeap(cx);
   uintptr_t tenuredAddr = uintptr_t(obj.get());
   CHECK(tenuredAddr != nurseryAddr);
-  CHECK(!js::gc::IsInsideNursery(obj));
-  CHECK(obj->zone()->hasUniqueId(obj));
-  CHECK(obj->zone()->getOrCreateUniqueId(obj, &tmp));
+  CHECK(!gc::IsInsideNursery(obj));
+  CHECK(gc::HasUniqueId(obj));
+  CHECK(gc::GetOrCreateUniqueId(obj, &tmp));
   CHECK(uid == tmp);
 
   // Allocate a new nursery thing in the same location and check that we
@@ -61,7 +63,7 @@ BEGIN_TEST(testGCUID) {
   obj = JS_NewPlainObject(cx);
   CHECK(obj);
   CHECK(uintptr_t(obj.get()) == nurseryAddr);
-  CHECK(!obj->zone()->hasUniqueId(obj));
+  CHECK(!gc::HasUniqueId(obj));
 
   // Try to get another tenured object in the same location and check that
   // the uid was removed correctly.
@@ -70,8 +72,8 @@ BEGIN_TEST(testGCUID) {
   obj = JS_NewPlainObject(cx);
   MinimizeHeap(cx);
   CHECK(uintptr_t(obj.get()) == tenuredAddr);
-  CHECK(!obj->zone()->hasUniqueId(obj));
-  CHECK(obj->zone()->getOrCreateUniqueId(obj, &tmp));
+  CHECK(!gc::HasUniqueId(obj));
+  CHECK(gc::GetOrCreateUniqueId(obj, &tmp));
   CHECK(uid != tmp);
   uid = tmp;
 
@@ -100,9 +102,9 @@ BEGIN_TEST(testGCUID) {
   // Grab the last object in the vector as our object of interest.
   obj = vec2.back();
   CHECK(obj);
-  CHECK(!js::gc::IsInsideNursery(obj));
+  CHECK(!gc::IsInsideNursery(obj));
   tenuredAddr = uintptr_t(obj.get());
-  CHECK(obj->zone()->getOrCreateUniqueId(obj, &uid));
+  CHECK(gc::GetOrCreateUniqueId(obj, &uid));
 
   // Force a compaction to move the object and check that the uid moved to
   // the new tenured heap location.
@@ -114,8 +116,8 @@ BEGIN_TEST(testGCUID) {
   // this test more robust by recording IDs of many objects and then checking
   // that some have moved.
   CHECK(uintptr_t(obj.get()) != tenuredAddr);
-  CHECK(obj->zone()->hasUniqueId(obj));
-  CHECK(obj->zone()->getOrCreateUniqueId(obj, &tmp));
+  CHECK(gc::HasUniqueId(obj));
+  CHECK(gc::GetOrCreateUniqueId(obj, &tmp));
   CHECK(uid == tmp);
 
   return true;

@@ -1653,14 +1653,12 @@ bool IonCacheIRCompiler::emitMegamorphicSetElement(ObjOperandId objId,
   enterStubFrame(masm, save);
 
   masm.Push(Imm32(strict));
-  masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(obj)));
   masm.Push(val);
   masm.Push(idVal);
   masm.Push(obj);
 
-  using Fn = bool (*)(JSContext*, HandleObject, HandleValue, HandleValue,
-                      HandleValue, bool);
-  callVM<Fn, SetElementMegamorphic>(masm);
+  using Fn = bool (*)(JSContext*, HandleObject, HandleValue, HandleValue, bool);
+  callVM<Fn, SetElementMegamorphic<false>>(masm);
   return true;
 }
 
@@ -2116,4 +2114,27 @@ bool IonCacheIRCompiler::emitNewPlainObjectResult(uint32_t numFixedSlots,
                                                   uint32_t shapeOffset,
                                                   uint32_t siteOffset) {
   MOZ_CRASH("NewObject ICs not used in ion");
+}
+
+bool IonCacheIRCompiler::emitCallRegExpMatcherResult(ObjOperandId regexpId,
+                                                     StringOperandId inputId,
+                                                     Int32OperandId lastIndexId,
+                                                     uint32_t stubOffset) {
+  MOZ_CRASH("Call ICs not used in ion");
+}
+
+bool IonCacheIRCompiler::emitCallRegExpSearcherResult(
+    ObjOperandId regexpId, StringOperandId inputId, Int32OperandId lastIndexId,
+    uint32_t stubOffset) {
+  MOZ_CRASH("Call ICs not used in ion");
+}
+
+bool IonCacheIRCompiler::emitRegExpBuiltinExecMatchResult(
+    ObjOperandId regexpId, StringOperandId inputId, uint32_t stubOffset) {
+  MOZ_CRASH("Call ICs not used in ion");
+}
+
+bool IonCacheIRCompiler::emitRegExpBuiltinExecTestResult(
+    ObjOperandId regexpId, StringOperandId inputId, uint32_t stubOffset) {
+  MOZ_CRASH("Call ICs not used in ion");
 }

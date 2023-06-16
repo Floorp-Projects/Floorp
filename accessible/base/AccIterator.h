@@ -312,20 +312,11 @@ class RemoteAccIterator : public AccIterable {
   RemoteAccIterator(const nsTArray<uint64_t>& aIds, DocAccessibleParent* aDoc)
       : mIds(aIds), mDoc(aDoc), mIndex(0) {}
 
-  /**
-   * Construct with an array moved from somewhere else. In this case, this
-   * RemoteAccIterator takes ownership of the array. This should be used, for
-   * example, when using sync IPC to retrieve relations.
-   */
-  RemoteAccIterator(nsTArray<uint64_t>&& aIds, DocAccessibleParent* aDoc);
-
   virtual ~RemoteAccIterator() = default;
 
   virtual Accessible* Next() override;
 
  private:
-  // Used when ownership of the array is transferred to this instance.
-  nsTArray<uint64_t> mOwnedIds;
   const nsTArray<uint64_t>& mIds;
   DocAccessibleParent* mDoc;
   uint32_t mIndex;

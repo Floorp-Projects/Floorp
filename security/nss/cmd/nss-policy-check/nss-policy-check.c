@@ -220,13 +220,13 @@ breakout:
         PORT_Strcat(flags, ",policyCheckValue");
     }
 
-    sprintf(moduleSpec,
-            "name=\"Policy File\" "
-            "parameters=\"configdir='sql:%s' "
-            "secmod='%s' "
-            "flags=readOnly,noCertDB,forceSecmodChoice,forceOpen\" "
-            "NSS=\"flags=%s\"",
-            path, filename, flags);
+    snprintf(moduleSpec, sizeof(moduleSpec),
+             "name=\"Policy File\" "
+             "parameters=\"configdir='sql:%s' "
+             "secmod='%s' "
+             "flags=readOnly,noCertDB,forceSecmodChoice,forceOpen\" "
+             "NSS=\"flags=%s\"",
+             path, filename, flags);
 
     module = SECMOD_LoadModule(moduleSpec, NULL, PR_TRUE);
     if (!module || !module->loaded || atoi(PR_GetEnvSecure("NSS_POLICY_LOADED")) != 1) {

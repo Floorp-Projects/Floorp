@@ -924,7 +924,7 @@ function CustomPipe(name) {
       var bytes = str
         .substring(0, actualWritten)
         .split("")
-        .map(function(v) {
+        .map(function (v) {
           return v.charCodeAt(0);
         });
 
@@ -998,7 +998,7 @@ function CustomPipe(name) {
 
       Assert.greater(increments.length, 0, "bad increments");
       Assert.ok(
-        increments.every(function(v) {
+        increments.every(function (v) {
           return v > 0;
         }),
         "zero increment?"
@@ -1187,7 +1187,7 @@ CopyTest.prototype = {
 
     Assert.equal(
       bytes,
-      dataQuantums.reduce(function(partial, current) {
+      dataQuantums.reduce(function (partial, current) {
         return partial + current.length;
       }, 0),
       "bytes/quantums mismatch"
@@ -1216,28 +1216,26 @@ CopyTest.prototype = {
    * @param dataQuantums : [[uint]]
    *   array of byte arrays to expect to be written in sequence to the sink
    */
-  makeSinkWritableByIncrementsAndWaitFor: function makeSinkWritableByIncrementsAndWaitFor(
-    bytes,
-    dataQuantums
-  ) {
-    var self = this;
+  makeSinkWritableByIncrementsAndWaitFor:
+    function makeSinkWritableByIncrementsAndWaitFor(bytes, dataQuantums) {
+      var self = this;
 
-    var desiredAmounts = dataQuantums.map(function(v) {
-      return v.length;
-    });
-    Assert.equal(bytes, sum(desiredAmounts), "bytes/quantums mismatch");
+      var desiredAmounts = dataQuantums.map(function (v) {
+        return v.length;
+      });
+      Assert.equal(bytes, sum(desiredAmounts), "bytes/quantums mismatch");
 
-    function increaseSinkSpaceByIncrementsTask() {
-      /* Now do the actual work to trigger the interceptor incrementally. */
-      self._sink.makeWritableByIncrements(desiredAmounts);
-    }
+      function increaseSinkSpaceByIncrementsTask() {
+        /* Now do the actual work to trigger the interceptor incrementally. */
+        self._sink.makeWritableByIncrements(desiredAmounts);
+      }
 
-    this._waitForHelper(
-      "increaseSinkSpaceByIncrementsTask",
-      dataQuantums,
-      increaseSinkSpaceByIncrementsTask
-    );
-  },
+      this._waitForHelper(
+        "increaseSinkSpaceByIncrementsTask",
+        dataQuantums,
+        increaseSinkSpaceByIncrementsTask
+      );
+    },
 
   /**
    * Close the copier's source stream, then asynchronously continue to the next
@@ -1279,7 +1277,7 @@ CopyTest.prototype = {
     Assert.equal(
       bytes,
       sum(
-        dataQuantums.map(function(v) {
+        dataQuantums.map(function (v) {
           return v.length;
         })
       ),

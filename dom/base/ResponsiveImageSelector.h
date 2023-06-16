@@ -125,7 +125,7 @@ class ResponsiveImageSelector {
   nsCOMPtr<nsIURI> mSelectedCandidateURL;
 
   // Servo bits.
-  UniquePtr<RawServoSourceSizeList> mServoSourceSizeList;
+  UniquePtr<StyleSourceSizeList> mServoSourceSizeList;
 };
 
 class ResponsiveImageCandidate {

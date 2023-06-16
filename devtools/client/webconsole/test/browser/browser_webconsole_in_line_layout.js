@@ -10,7 +10,7 @@ const TEST_URI =
 
 const MINIMUM_MESSAGE_HEIGHT = 20;
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { ui } = hud;
   const { document } = ui;

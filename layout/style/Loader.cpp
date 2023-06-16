@@ -63,6 +63,7 @@
 #include "mozilla/ServoUtils.h"
 #include "mozilla/css/StreamLoader.h"
 #include "mozilla/SharedStyleSheetCache.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "ReferrerInfo.h"
 
@@ -1687,18 +1688,25 @@ void Loader::MarkLoadTreeFailed(SheetLoadData& aLoadData,
   } while (data);
 }
 
-RefPtr<StyleSheet> Loader::LookupInlineSheetInCache(const nsAString& aBuffer) {
+RefPtr<StyleSheet> Loader::LookupInlineSheetInCache(
+    const nsAString& aBuffer, nsIPrincipal* aSheetPrincipal) {
   auto result = mInlineSheets.Lookup(aBuffer);
   if (!result) {
     return nullptr;
   }
-  if (result.Data()->HasModifiedRules()) {
+  StyleSheet* sheet = result.Data();
+  if (NS_WARN_IF(sheet->HasModifiedRules())) {
     // Remove it now that we know that we're never going to use this stylesheet
     // again.
     result.Remove();
     return nullptr;
   }
-  return result.Data()->Clone(nullptr, nullptr);
+  if (NS_WARN_IF(!sheet->Principal()->Equals(aSheetPrincipal))) {
+    // If the sheet is going to have different access rights, don't return it
+    // from the cache.
+    return nullptr;
+  }
+  return sheet->Clone(nullptr, nullptr);
 }
 
 void Loader::MaybeNotifyPreloadUsed(SheetLoadData& aData) {
@@ -1747,18 +1755,32 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadInlineStyle(
   nsIURI* originalURI = nullptr;
 
   MOZ_ASSERT(aInfo.mIntegrity.IsEmpty());
-
   nsIPrincipal* loadingPrincipal = LoaderPrincipal();
   nsIPrincipal* principal = aInfo.mTriggeringPrincipal
                                 ? aInfo.mTriggeringPrincipal.get()
                                 : loadingPrincipal;
+  nsIPrincipal* sheetPrincipal = [&] {
+    // The triggering principal may be an expanded principal, which is safe to
+    // use for URL security checks, but not as the loader principal for a
+    // stylesheet. So treat this as principal inheritance, and downgrade if
+    // necessary.
+    //
+    // FIXME(emilio): Why doing this for inline sheets but not for links?
+    if (aInfo.mTriggeringPrincipal) {
+      return BasePrincipal::Cast(aInfo.mTriggeringPrincipal)
+          ->PrincipalToInherit();
+    }
+    return LoaderPrincipal();
+  }();
 
   // We only cache sheets if in shadow trees, since regular document sheets are
   // likely to be unique.
-  const bool isWorthCaching = aInfo.mContent->IsInShadowTree();
+  const bool isWorthCaching =
+      StaticPrefs::layout_css_inline_style_caching_always_enabled() ||
+      aInfo.mContent->IsInShadowTree();
   RefPtr<StyleSheet> sheet;
   if (isWorthCaching) {
-    sheet = LookupInlineSheetInCache(aBuffer);
+    sheet = LookupInlineSheetInCache(aBuffer, sheetPrincipal);
   }
   const bool sheetFromCache = !!sheet;
   if (!sheet) {
@@ -1768,18 +1790,7 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadInlineStyle(
     nsIReferrerInfo* referrerInfo =
         aInfo.mContent->OwnerDoc()->ReferrerInfoForInternalCSSAndSVGResources();
     sheet->SetReferrerInfo(referrerInfo);
-
-    nsIPrincipal* sheetPrincipal = principal;
-    if (aInfo.mTriggeringPrincipal) {
-      // The triggering principal may be an expanded principal, which is safe to
-      // use for URL security checks, but not as the loader principal for a
-      // stylesheet. So treat this as principal inheritance, and downgrade if
-      // necessary.
-      sheetPrincipal =
-          BasePrincipal::Cast(aInfo.mTriggeringPrincipal)->PrincipalToInherit();
-    }
-
-    // We never actually load this, so just set its principal directly
+    // We never actually load this, so just set its principal directly.
     sheet->SetPrincipal(sheetPrincipal);
   }
 
@@ -1798,6 +1809,11 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadInlineStyle(
   if (sheetFromCache) {
     MOZ_ASSERT(sheet->IsComplete());
     completed = Completed::Yes;
+    if (dom::Document* doc = GetDocument()) {
+      // We post these events for devtools, even though the applicable state has
+      // not actually changed, to make the cache not observable.
+      doc->PostStyleSheetApplicableStateChangeEvent(*sheet);
+    }
   } else {
     auto data = MakeRefPtr<SheetLoadData>(
         this, aInfo.mTitle, nullptr, sheet, false, aInfo.mContent, isAlternate,
@@ -1814,8 +1830,9 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadInlineStyle(
     NS_ConvertUTF16toUTF8 utf8(aBuffer);
     completed = ParseSheet(utf8, *data, AllowAsyncParse::No);
     if (completed == Completed::Yes) {
-      // TODO(emilio): Try to cache sheets with @import rules, maybe?
-      if (isWorthCaching) {
+      // TODO(emilio): Try to cache sheets with @import rules, maybe? Should be
+      // a matter of scheduling the load event appropriately...
+      if (isWorthCaching && sheet->ChildSheets().IsEmpty()) {
         mInlineSheets.InsertOrUpdate(aBuffer, std::move(sheet));
       }
     } else {

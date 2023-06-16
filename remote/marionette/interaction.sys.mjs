@@ -9,6 +9,8 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
+
   accessibility: "chrome://remote/content/marionette/accessibility.sys.mjs",
   atom: "chrome://remote/content/marionette/atom.sys.mjs",
   element: "chrome://remote/content/marionette/element.sys.mjs",
@@ -107,7 +109,7 @@ export const interaction = {};
  * @throws {InvalidElementStateError}
  *     If <var>el</var> is not enabled.
  */
-interaction.clickElement = async function(
+interaction.clickElement = async function (
   el,
   strict = false,
   specCompat = false
@@ -157,7 +159,12 @@ async function webdriverClickElement(el, a11y) {
   let clickPoint = lazy.element.getInViewCentrePoint(rects[0], win);
 
   if (lazy.element.isObscured(containerEl)) {
-    throw new lazy.error.ElementClickInterceptedError(containerEl, clickPoint);
+    throw new lazy.error.ElementClickInterceptedError(
+      null,
+      {},
+      containerEl,
+      clickPoint
+    );
   }
 
   let acc = await a11y.assertAccessible(el, true);
@@ -261,7 +268,7 @@ async function seleniumClickElement(el, a11y) {
  *     If unable to find <var>el</var>'s parent <tt>&lt;select&gt;</tt>
  *     element.
  */
-interaction.selectOption = function(el) {
+interaction.selectOption = function (el) {
   if (lazy.element.isXULElement(el)) {
     throw new TypeError("XUL dropdowns not supported");
   }
@@ -314,7 +321,7 @@ interaction.selectOption = function(el) {
  *     If element is disabled, read-only, non-editable, not a submittable
  *     element or not an editing host, or cannot be scrolled into view.
  */
-interaction.clearElement = function(el) {
+interaction.clearElement = function (el) {
   if (lazy.element.isDisabled(el)) {
     throw new lazy.error.InvalidElementStateError(
       lazy.pprint`Element is disabled: ${el}`
@@ -397,7 +404,7 @@ function clearResettableElement(el) {
  *     (its <code>click</code> event fires), the document is unloaded,
  *     or a 500 ms timeout is reached.
  */
-interaction.flushEventLoop = async function(el) {
+interaction.flushEventLoop = async function (el) {
   const win = el.ownerGlobal;
   let unloadEv, clickEv;
 
@@ -408,7 +415,7 @@ interaction.flushEventLoop = async function(el) {
       if (win.closed) {
         resolve();
       } else {
-        win.setTimeout(resolve, 0);
+        lazy.setTimeout(resolve, 0);
       }
     };
 
@@ -439,7 +446,7 @@ interaction.flushEventLoop = async function(el) {
  * @param {Element} el
  *     Element to potential move the caret in.
  */
-interaction.moveCaretToEnd = function(el) {
+interaction.moveCaretToEnd = function (el) {
   if (!lazy.element.isDOMElement(el)) {
     return;
   }
@@ -472,7 +479,7 @@ interaction.moveCaretToEnd = function(el) {
  * @returns {boolean}
  *     True if element is keyboard-interactable, false otherwise.
  */
-interaction.isKeyboardInteractable = function(el) {
+interaction.isKeyboardInteractable = function (el) {
   const win = getWindow(el);
 
   // body and document element are always keyboard-interactable
@@ -515,7 +522,7 @@ interaction.isKeyboardInteractable = function(el) {
  * @throws {InvalidArgumentError}
  *     If `path` doesn't exist.
  */
-interaction.uploadFiles = async function(el, paths) {
+interaction.uploadFiles = async function (el, paths) {
   let files = [];
 
   if (el.hasAttribute("multiple")) {
@@ -553,7 +560,7 @@ interaction.uploadFiles = async function(el, paths) {
  * @throws {TypeError}
  *     If <var>el</var> is not an supported form element.
  */
-interaction.setFormControlValue = function(el, value) {
+interaction.setFormControlValue = function (el, value) {
   if (!COMMON_FORM_CONTROLS.has(el.localName)) {
     throw new TypeError("This function is for form elements only");
   }
@@ -583,7 +590,7 @@ interaction.setFormControlValue = function(el, value) {
  * @param {boolean=} options.webdriverClick
  *     Use WebDriver specification compatible interactability definition.
  */
-interaction.sendKeysToElement = async function(
+interaction.sendKeysToElement = async function (
   el,
   value,
   {
@@ -692,7 +699,7 @@ async function legacySendKeysToElement(el, value, a11y) {
  * @returns {boolean}
  *     True if element is displayed, false otherwise.
  */
-interaction.isElementDisplayed = function(el, strict = false) {
+interaction.isElementDisplayed = function (el, strict = false) {
   let win = getWindow(el);
   let displayed = lazy.atom.isElementDisplayed(el, win);
 
@@ -712,7 +719,7 @@ interaction.isElementDisplayed = function(el, strict = false) {
  * @returns {boolean}
  *     True if enabled, false otherwise.
  */
-interaction.isElementEnabled = function(el, strict = false) {
+interaction.isElementEnabled = function (el, strict = false) {
   let enabled = true;
   let win = getWindow(el);
 
@@ -759,7 +766,7 @@ interaction.isElementEnabled = function(el, strict = false) {
  * @throws {ElementNotAccessibleError}
  *     If <var>el</var> is not accessible when <var>strict</var> is true.
  */
-interaction.isElementSelected = function(el, strict = false) {
+interaction.isElementSelected = function (el, strict = false) {
   let selected = lazy.element.isSelected(el);
 
   let a11y = lazy.accessibility.get(strict);

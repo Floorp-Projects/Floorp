@@ -59,7 +59,7 @@ async function expectNoTooltip() {
   await synthesizeMouseOut(element);
 }
 
-add_task(async function() {
+add_task(async function () {
   window.windowUtils.disableNonTestMouseEvents(true);
   registerCleanupFunction(() => {
     window.windowUtils.disableNonTestMouseEvents(false);

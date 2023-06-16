@@ -6,7 +6,7 @@
  * expected URL for the engine.
  */
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.search.separatePrivateDefault.ui.enabled", true],
@@ -23,7 +23,7 @@ add_setup(async function() {
     search_url: "https://example.com/private",
   });
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.history.clear();
     await UrlbarTestUtils.formHistory.clear();
   });
@@ -78,7 +78,7 @@ add_task(async function test_search_normal_window() {
     "about:mozilla"
   );
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     try {
       BrowserTestUtils.removeTab(tab);
     } catch (ex) {
@@ -92,7 +92,7 @@ add_task(async function test_search_normal_window() {
 add_task(async function test_search_private_window_no_separate_default() {
   const win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await BrowserTestUtils.closeWindow(win);
   });
 

@@ -8,12 +8,10 @@
 
 #include "MainThreadUtils.h"
 #include "mozilla/a11y/LocalAccessible.h"
-#include "mozilla/a11y/AccessibleHandler.h"
 #include "mozilla/a11y/Compatibility.h"
 #include "mozilla/a11y/Platform.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/mscom/ProcessRuntime.h"
-#include "mozilla/mscom/Registration.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 #include "MsaaRootAccessible.h"
@@ -450,25 +448,16 @@ LazyInstantiator::ResolveDispatch() {
     return S_OK;
   }
 
-  // The IAccessible typelib is embedded in oleacc.dll's resources.
-  auto typelib = mscom::RegisterTypelib(
-      L"oleacc.dll", mscom::RegistrationFlags::eUseSystemDirectory);
-  if (!typelib) {
+  // Extract IAccessible's type info
+  RefPtr<ITypeInfo> accTypeInfo = MsaaAccessible::GetTI(LOCALE_USER_DEFAULT);
+  if (!accTypeInfo) {
     return E_UNEXPECTED;
   }
 
-  // Extract IAccessible's type info
-  RefPtr<ITypeInfo> accTypeInfo;
-  HRESULT hr =
-      typelib->GetTypeInfoForGuid(IID_IAccessible, getter_AddRefs(accTypeInfo));
-  if (FAILED(hr)) {
-    return hr;
-  }
-
   // Now create the standard IDispatch for IAccessible
-  hr = ::CreateStdDispatch(static_cast<IAccessible*>(this),
-                           static_cast<IAccessible*>(this), accTypeInfo,
-                           getter_AddRefs(mStdDispatch));
+  HRESULT hr = ::CreateStdDispatch(static_cast<IAccessible*>(this),
+                                   static_cast<IAccessible*>(this), accTypeInfo,
+                                   getter_AddRefs(mStdDispatch));
   if (FAILED(hr)) {
     return hr;
   }
@@ -723,6 +712,26 @@ HRESULT
 LazyInstantiator::put_accValue(VARIANT varChild, BSTR szValue) {
   return E_NOTIMPL;
 }
+
+static const GUID kUnsupportedServices[] = {
+    // clang-format off
+  // Unknown, queried by Windows on devices with touch screens or similar devices
+  // connected.
+  {0x33f139ee, 0xe509, 0x47f7, {0xbf, 0x39, 0x83, 0x76, 0x44, 0xf7, 0x45, 0x76}},
+  // Unknown, queried by Windows
+  {0xFDA075CF, 0x7C8B, 0x498C, { 0xB5, 0x14, 0xA9, 0xCB, 0x52, 0x1B, 0xBF, 0xB4 }},
+  // Unknown, queried by Windows
+  {0x8EDAA462, 0x21F4, 0x4C87, { 0xA0, 0x12, 0xB3, 0xCD, 0xA3, 0xAB, 0x01, 0xFC }},
+  // Unknown, queried by Windows
+  {0xacd46652, 0x829d, 0x41cb, { 0xa5, 0xfc, 0x17, 0xac, 0xf4, 0x36, 0x61, 0xac }},
+  // SID_IsUIAutomationObject (undocumented), queried by Windows
+  {0xb96fdb85, 0x7204, 0x4724, { 0x84, 0x2b, 0xc7, 0x05, 0x9d, 0xed, 0xb9, 0xd0 }},
+  // IIS_IsOleaccProxy (undocumented), queried by Windows
+  {0x902697FA, 0x80E4, 0x4560, {0x80, 0x2A, 0xA1, 0x3F, 0x22, 0xA6, 0x47, 0x09}},
+  // IID_IHTMLElement, queried by JAWS
+  {0x3050F1FF, 0x98B5, 0x11CF, {0xBB, 0x82, 0x00, 0xAA, 0x00, 0xBD, 0xCE, 0x0B}}
+    // clang-format on
+};
 
 HRESULT
 LazyInstantiator::QueryService(REFGUID aServiceId, REFIID aServiceIid,

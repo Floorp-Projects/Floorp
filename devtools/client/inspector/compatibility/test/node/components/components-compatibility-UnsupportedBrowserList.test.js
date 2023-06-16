@@ -29,4 +29,28 @@ describe("UnsupportedBrowserList component", () => {
     );
     expect(list).toMatchSnapshot();
   });
+
+  it("does not show ESR version if newer version is not supported", () => {
+    const list = shallow(
+      UnsupportedBrowserList({
+        browsers: [
+          { id: "firefox", name: "Firefox", version: "102", status: "esr" },
+          { id: "firefox", name: "Firefox", version: "112", status: "current" },
+        ],
+      })
+    );
+    expect(list).toMatchSnapshot();
+  });
+
+  it("shows ESR version if newer version is supported", () => {
+    const list = shallow(
+      UnsupportedBrowserList({
+        browsers: [
+          { id: "firefox", name: "Firefox", version: "102", status: "esr" },
+          { id: "test-browser", name: "Test Browser", version: "1" },
+        ],
+      })
+    );
+    expect(list).toMatchSnapshot();
+  });
 });

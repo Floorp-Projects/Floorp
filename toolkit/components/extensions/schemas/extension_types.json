@@ -35,10 +35,10 @@
             "optional": true,
             "description": "The area of the document to capture, in CSS pixels, relative to the page.  If omitted, capture the visible viewport.",
             "properties": {
-              "x": {"type": "number"},
-              "y": {"type": "number"},
-              "width": {"type": "number"},
-              "height": {"type": "number"}
+              "x": { "type": "number" },
+              "y": { "type": "number" },
+              "width": { "type": "number" },
+              "height": { "type": "number" }
             }
           },
           "scale": {
@@ -70,10 +70,26 @@
         "type": "object",
         "description": "Details of the script or CSS to inject. Either the code or the file property must be set, but both may not be set at the same time.",
         "properties": {
-          "code": {"type": "string", "optional": true, "description": "JavaScript or CSS code to inject.<br><br><b>Warning:</b><br>Be careful using the <code>code</code> parameter. Incorrect use of it may open your extension to <a href=\"https://en.wikipedia.org/wiki/Cross-site_scripting\">cross site scripting</a> attacks."},
-          "file": {"type": "string", "optional": true, "description": "JavaScript or CSS file to inject."},
-          "allFrames": {"type": "boolean", "optional": true, "description": "If allFrames is <code>true</code>, implies that the JavaScript or CSS should be injected into all frames of current page. By default, it's <code>false</code> and is only injected into the top frame."},
-          "matchAboutBlank": {"type": "boolean", "optional": true, "description": "If matchAboutBlank is true, then the code is also injected in about:blank and about:srcdoc frames if your extension has access to its parent document. Code cannot be inserted in top-level about:-frames. By default it is <code>false</code>."},
+          "code": {
+            "type": "string",
+            "optional": true,
+            "description": "JavaScript or CSS code to inject.<br><br><b>Warning:</b><br>Be careful using the <code>code</code> parameter. Incorrect use of it may open your extension to <a href=\"https://en.wikipedia.org/wiki/Cross-site_scripting\">cross site scripting</a> attacks."
+          },
+          "file": {
+            "type": "string",
+            "optional": true,
+            "description": "JavaScript or CSS file to inject."
+          },
+          "allFrames": {
+            "type": "boolean",
+            "optional": true,
+            "description": "If allFrames is <code>true</code>, implies that the JavaScript or CSS should be injected into all frames of current page. By default, it's <code>false</code> and is only injected into the top frame."
+          },
+          "matchAboutBlank": {
+            "type": "boolean",
+            "optional": true,
+            "description": "If matchAboutBlank is true, then the code is also injected in about:blank and about:srcdoc frames if your extension has access to its parent document. Code cannot be inserted in top-level about:-frames. By default it is <code>false</code>."
+          },
           "frameId": {
             "type": "integer",
             "minimum": 0,
@@ -140,8 +156,11 @@
           { "type": "number" },
           { "type": "string" },
           { "type": "boolean" },
-          { "type": "array", "items": {"$ref": "PlainJSONValue"} },
-          { "type": "object", "additionalProperties": { "$ref": "PlainJSONValue" } }
+          { "type": "array", "items": { "$ref": "PlainJSONValue" } },
+          {
+            "type": "object",
+            "additionalProperties": { "$ref": "PlainJSONValue" }
+          }
         ]
       }
     ]

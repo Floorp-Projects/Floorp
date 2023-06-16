@@ -185,8 +185,6 @@ class nsTextNode;
 class nsViewManager;
 class nsXULPrototypeDocument;
 struct JSContext;
-struct RawServoSelectorList;
-struct StyleUseCounters;
 struct nsFont;
 
 namespace mozilla {
@@ -212,6 +210,8 @@ enum class StyleCursorKind : uint8_t;
 class SVGContextPaint;
 enum class ColorScheme : uint8_t;
 enum class StyleRuleChangeKind : uint32_t;
+struct StyleSelectorList;
+struct StyleUseCounters;
 template <typename>
 class OwningNonNull;
 struct URLExtraData;
@@ -574,7 +574,11 @@ class Document : public nsINode,
 
 #define NS_DOCUMENT_NOTIFY_OBSERVERS(func_, params_)                          \
   do {                                                                        \
-    NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(mObservers, func_, params_);     \
+    for (RefPtr obs : mObservers.ForwardRange()) {                            \
+      if (obs->IsCallbackEnabled(nsIMutationObserver::k##func_)) {            \
+        obs->func_ params_;                                                   \
+      }                                                                       \
+    }                                                                         \
     /* FIXME(emilio): Apparently we can keep observing from the BFCache? That \
        looks bogus. */                                                        \
     if (PresShell* presShell = GetObservingPresShell()) {                     \
@@ -1224,6 +1228,7 @@ class Document : public nsINode,
   void SetParentDocument(Document* aParent) {
     mParentDocument = aParent;
     if (aParent) {
+      RecomputeResistFingerprinting();
       mIgnoreDocGroupMismatches = aParent->mIgnoreDocGroupMismatches;
       if (!mIsDevToolsDocument) {
         mIsDevToolsDocument = mParentDocument->IsDevToolsDocument();
@@ -1548,6 +1553,8 @@ class Document : public nsINode,
   void InitFeaturePolicy();
   nsresult InitFeaturePolicy(nsIChannel* aChannel);
 
+  void EnsureNotEnteringAndExitFullscreen();
+
  protected:
   friend class nsUnblockOnloadEvent;
 
@@ -1640,7 +1647,7 @@ class Document : public nsINode,
  public:
   class SelectorCache final : public nsExpirationTracker<SelectorCacheKey, 4> {
    public:
-    using SelectorList = UniquePtr<RawServoSelectorList>;
+    using SelectorList = UniquePtr<StyleSelectorList>;
     using Table = nsTHashMap<nsCStringHashKey, SelectorList>;
 
     explicit SelectorCache(nsIEventTarget* aEventTarget);
@@ -1651,11 +1658,11 @@ class Document : public nsINode,
     // being used.  Returns whether we actually had an entry for aSelector.
     //
     // If we have an entry and the selector list returned has a null
-    // RawServoSelectorList*, that indicates that aSelector has already been
+    // StyleSelectorList*, that indicates that aSelector has already been
     // parsed and is not a syntactically valid selector.
     template <typename F>
-    RawServoSelectorList* GetListOrInsertFrom(const nsACString& aSelector,
-                                              F&& aFrom) {
+    StyleSelectorList* GetListOrInsertFrom(const nsACString& aSelector,
+                                           F&& aFrom) {
       MOZ_ASSERT(NS_IsMainThread());
       return mTable.LookupOrInsertWith(aSelector, std::forward<F>(aFrom)).get();
     }
@@ -2324,12 +2331,6 @@ class Document : public nsINode,
    */
   void GetFailedCertSecurityInfo(mozilla::dom::FailedCertSecurityInfo& aInfo,
                                  ErrorResult& aRv);
-
-  /**
-   * Controls whether or not we allow TLS 1.0/1.1. Only exposed to error pages.
-   */
-  bool AllowDeprecatedTls();
-  void SetAllowDeprecatedTls(bool aResult);
 
   /**
    * Set the channel that failed to load and resulted in an error page.
@@ -3468,6 +3469,7 @@ class Document : public nsINode,
                                                bool aFocusPreviousElement,
                                                bool aFireEvents);
 
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void HideAllPopoversWithoutRunningScript();
   // Hides the given popover element, see
   // https://html.spec.whatwg.org/multipage/popover.html#hide-popover-algorithm
   MOZ_CAN_RUN_SCRIPT void HidePopover(Element& popover,
@@ -4175,9 +4177,11 @@ class Document : public nsINode,
    */
   class HighlightRegistry& HighlightRegistry();
 
-  bool ShouldResistFingerprinting(RFPTarget aTarget = RFPTarget::Unknown) const;
+  bool ShouldResistFingerprinting(RFPTarget aTarget) const;
 
-  void RecomputeResistFingerprinting();
+  // Recompute the current resist fingerprinting state. Returns true when
+  // the state was changed.
+  bool RecomputeResistFingerprinting();
 
  protected:
   // Returns the WindowContext for the document that we will contribute

@@ -54,8 +54,8 @@ class nsIConsoleListenerWatcher {
     // were already retrieved in the cache.
     const cachedMessages = Services.console.getMessageArray() || [];
     if (cachedMessages.length) {
-      latestRetrievedCachedMessageTimestamp = cachedMessages.at(-1)
-        .microSecondTimeStamp;
+      latestRetrievedCachedMessageTimestamp =
+        cachedMessages.at(-1).microSecondTimeStamp;
     }
 
     Services.console.registerListener(listener);

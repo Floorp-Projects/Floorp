@@ -9,8 +9,8 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
  * Stream Redux store into an HTML document and script.
  */
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+const { AddonTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
 );
 const { SearchTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/SearchTestUtils.sys.mjs"
@@ -35,11 +35,9 @@ const { PREFS_CONFIG } = ChromeUtils.import(
   "resource://activity-stream/lib/ActivityStream.jsm"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "BasePromiseWorker",
-  "resource://gre/modules/PromiseWorker.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  BasePromiseWorker: "resource://gre/modules/PromiseWorker.sys.mjs",
+});
 
 const CACHE_WORKER_URL = "resource://activity-stream/lib/cache-worker.js";
 const NEWTAB_RENDER_URL =
@@ -53,7 +51,7 @@ const NEWTAB_RENDER_URL =
  * a dynamic layout, and then have that layout point to a local feed rather
  * than one from the Pocket CDN.
  */
-add_setup(async function() {
+add_setup(async function () {
   do_get_profile();
   // The SearchService is also needed in order to construct the initial state,
   // which means that the AddonManager needs to be available.
@@ -231,8 +229,9 @@ add_task(async function test_cache_worker() {
     3,
     "There are 3 DSCards"
   );
-  let cardHostname = doc.querySelector("[data-section-id='topstories'] .source")
-    .innerText;
+  let cardHostname = doc.querySelector(
+    "[data-section-id='topstories'] .source"
+  ).innerText;
   equal(cardHostname, "bbc.com", "Card hostname is bbc.com");
 
   let placeholders = doc.querySelectorAll(".ds-card.placeholder");

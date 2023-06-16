@@ -20,8 +20,8 @@ const TEST_DATA = [
         gBrowser.selectedBrowser,
         [],
         () => {
-          const node = content.document.querySelector("#badMarkup1")
-            .nextSibling;
+          const node =
+            content.document.querySelector("#badMarkup1").nextSibling;
           return [node.nodeName, node.data];
         }
       );
@@ -42,8 +42,8 @@ const TEST_DATA = [
         gBrowser.selectedBrowser,
         [],
         () => {
-          const node = content.document.querySelector("#badMarkup2")
-            .nextSibling;
+          const node =
+            content.document.querySelector("#badMarkup2").nextSibling;
           return [node.nodeName, node.data];
         }
       );
@@ -150,7 +150,7 @@ const TEST_URL =
   "</body>" +
   "</html>";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
   inspector.markup._frame.focus();
   await runEditOuterHTMLTests(TEST_DATA, inspector);

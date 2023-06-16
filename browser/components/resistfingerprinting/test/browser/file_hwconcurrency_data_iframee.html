@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<meta charset="utf8">
+<script type="text/javascript">
+window.onload = async () => {
+  parent.postMessage("ready", "*");
+}
+
+window.addEventListener("message", async function listener(event) {
+  if (event.data[0] == "gimme") {
+    var s = `<html><script>
+      window.addEventListener("load", async function listener(event) {
+        parent.postMessage(["frame_ready"], "*");
+      });
+      window.addEventListener('message', async function listener(event) {
+        if (event.data[0] == 'frame_request') {
+          let result = {
+            hardwareConcurrency : navigator.hardwareConcurrency
+          };
+          parent.postMessage(['frame_response', result], '*');
+        }
+      });`;
+    // eslint-disable-next-line
+    s += `</` + `script></html>`;
+
+    let iframe = document.createElement("iframe");
+    iframe.src = "data:text/html;charset=utf-8," + s;
+    document.body.append(iframe);
+  } else if (event.data[0] == "frame_ready") {
+    let iframe = document.getElementsByTagName("iframe")[0];
+    iframe.contentWindow.postMessage(["frame_request"], "*");
+  } else if (event.data[0] == "frame_response") {
+    parent.postMessage(event.data[1], "*")
+  }
+});
+</script>
+<body>
+<output id="result"></output>
+</body>

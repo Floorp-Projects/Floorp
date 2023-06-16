@@ -3,7 +3,7 @@ function handleRequest(request, response) {
 
   let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   timer.init(
-    function() {
+    function () {
       response.write("Here the content. But slowly.");
       response.finish();
     },

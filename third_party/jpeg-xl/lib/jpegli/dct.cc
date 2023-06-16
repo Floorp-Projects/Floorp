@@ -12,90 +12,52 @@
 #include <hwy/foreach_target.h>
 #include <hwy/highway.h>
 
-#include "lib/jxl/enc_transforms.h"
+#include "lib/jpegli/dct-inl.h"
+#include "lib/jpegli/encode_internal.h"
+#include "lib/jpegli/memory_manager.h"
 
 HWY_BEFORE_NAMESPACE();
 namespace jpegli {
 namespace HWY_NAMESPACE {
+namespace {
 
-constexpr float kZeroBiasMulXYB[] = {0.5f, 0.5f, 0.5f};
-constexpr float kZeroBiasMulYCbCr[] = {0.7f, 1.0f, 0.8f};
-
-void QuantizeBlock(const float* dct, const float* qmc, const float zero_bias,
-                   coeff_t* block) {
-  for (size_t iy = 0, i = 0; iy < 8; iy++) {
-    for (size_t ix = 0; ix < 8; ix++, i++) {
-      float coeff = 2040 * dct[ix * 8 + iy] * qmc[i];
-      int cc = std::abs(coeff) < zero_bias ? 0 : std::round(coeff);
-      block[i] = cc;
-    }
-  }
-  // Center DC values around zero.
-  block[0] = std::round((2040 * dct[0] - 1024) * qmc[0]);
-}
-
-void QuantizeBlockNoAQ(const float* dct, const float* qmc, coeff_t* block) {
-  for (size_t iy = 0, i = 0; iy < 8; iy++) {
-    for (size_t ix = 0; ix < 8; ix++, i++) {
-      block[i] = std::round(2040 * dct[ix * 8 + iy] * qmc[i]);
-    }
-  }
-  // Center DC values around zero.
-  block[0] = std::round((2040 * dct[0] - 1024) * qmc[0]);
-}
-
-void ComputeDCTCoefficients(
-    j_compress_ptr cinfo,
-    std::vector<std::vector<jpegli::coeff_t> >* all_coeffs) {
+void ComputeDCTCoefficients(j_compress_ptr cinfo) {
   jpeg_comp_master* m = cinfo->master;
-  std::vector<float> zero_bias_mul(cinfo->num_components, 0.5f);
-  const bool xyb = m->xyb_mode && cinfo->jpeg_color_space == JCS_RGB;
-  if (m->distance <= 1.0f) {
-    for (int c = 0; c < 3 && c < cinfo->num_components; ++c) {
-      zero_bias_mul[c] = xyb ? kZeroBiasMulXYB[c] : kZeroBiasMulYCbCr[c];
-    }
-  }
-  HWY_ALIGN float scratch_space[2 * kDCTBlockSize];
-  jxl::ImageF tmp;
+  float* tmp = m->dct_buffer;
   for (int c = 0; c < cinfo->num_components; c++) {
     jpeg_component_info* comp = &cinfo->comp_info[c];
-    const size_t xsize_blocks = comp->width_in_blocks;
-    const size_t ysize_blocks = comp->height_in_blocks;
-    JXL_DASSERT(cinfo->max_h_samp_factor % comp->h_samp_factor == 0);
-    JXL_DASSERT(cinfo->max_v_samp_factor % comp->v_samp_factor == 0);
-    const int h_factor = cinfo->max_h_samp_factor / comp->h_samp_factor;
-    const int v_factor = cinfo->max_v_samp_factor / comp->v_samp_factor;
-    std::vector<coeff_t> coeffs(xsize_blocks * ysize_blocks * kDCTBlockSize);
-    JQUANT_TBL* quant_table = cinfo->quant_tbl_ptrs[comp->quant_tbl_no];
-    std::vector<float> qmc(kDCTBlockSize);
-    for (size_t k = 0; k < kDCTBlockSize; k++) {
-      qmc[k] = 1.0f / quant_table->quantval[k];
-    }
-    RowBuffer<float>* plane = &m->input_buffer[c];
-    for (size_t by = 0, bix = 0; by < ysize_blocks; by++) {
+    int by0 = m->next_iMCU_row * comp->v_samp_factor;
+    int block_rows_left = comp->height_in_blocks - by0;
+    int max_block_rows = std::min(comp->v_samp_factor, block_rows_left);
+    JBLOCKARRAY ba = (*cinfo->mem->access_virt_barray)(
+        reinterpret_cast<j_common_ptr>(cinfo), m->coeff_buffers[c], by0,
+        max_block_rows, true);
+    float* qmc = m->quant_mul[c];
+    RowBuffer<float>* plane = m->raw_data[c];
+    const int h_factor = m->h_factor[c];
+    const int v_factor = m->v_factor[c];
+    const float* zero_bias_offset = m->zero_bias_offset[c];
+    const float* zero_bias_mul = m->zero_bias_mul[c];
+    float aq_strength = 0.0f;
+    for (int iy = 0; iy < comp->v_samp_factor; iy++) {
+      size_t by = by0 + iy;
+      if (by >= comp->height_in_blocks) continue;
+      JBLOCKROW brow = ba[iy];
       const float* row = plane->Row(8 * by);
-      for (size_t bx = 0; bx < xsize_blocks; bx++, bix++) {
-        coeff_t* block = &coeffs[bix * kDCTBlockSize];
-        HWY_ALIGN float dct[kDCTBlockSize];
-        TransformFromPixels(jxl::AcStrategy::Type::DCT, row + 8 * bx,
-                            plane->stride(), dct, scratch_space);
+      for (size_t bx = 0; bx < comp->width_in_blocks; bx++) {
+        JCOEF* block = &brow[bx][0];
         if (m->use_adaptive_quantization) {
-          // Create more zeros in areas where jpeg xl would have used a lower
-          // quantization multiplier.
-          float relq = m->quant_field.Row(by * v_factor)[bx * h_factor];
-          float zero_bias = 0.5f + zero_bias_mul[c] * relq;
-          zero_bias = std::min(1.5f, zero_bias);
-          QuantizeBlock(dct, &qmc[0], zero_bias, block);
-        } else {
-          QuantizeBlockNoAQ(dct, &qmc[0], block);
+          aq_strength = m->quant_field.Row(by * v_factor)[bx * h_factor];
         }
+        ComputeCoefficientBlock(row + 8 * bx, plane->stride(), qmc, aq_strength,
+                                zero_bias_offset, zero_bias_mul, tmp, block);
       }
     }
-    all_coeffs->emplace_back(std::move(coeffs));
   }
 }
 
 // NOLINTNEXTLINE(google-readability-namespace-comments)
+}  // namespace
 }  // namespace HWY_NAMESPACE
 }  // namespace jpegli
 HWY_AFTER_NAMESPACE();
@@ -105,9 +67,8 @@ namespace jpegli {
 
 HWY_EXPORT(ComputeDCTCoefficients);
 
-void ComputeDCTCoefficients(
-    j_compress_ptr cinfo, std::vector<std::vector<jpegli::coeff_t> >* coeffs) {
-  HWY_DYNAMIC_DISPATCH(ComputeDCTCoefficients)(cinfo, coeffs);
+void ComputeDCTCoefficients(j_compress_ptr cinfo) {
+  HWY_DYNAMIC_DISPATCH(ComputeDCTCoefficients)(cinfo);
 }
 
 }  // namespace jpegli

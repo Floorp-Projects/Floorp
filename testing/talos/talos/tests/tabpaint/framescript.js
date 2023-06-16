@@ -1,6 +1,6 @@
 /* eslint-env mozilla/frame-script */
 
-(function() {
+(function () {
   addEventListener(
     "load",
     loadevt => {

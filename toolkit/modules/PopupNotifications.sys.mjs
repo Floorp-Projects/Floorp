@@ -5,6 +5,7 @@
 import { PrivateBrowsingUtils } from "resource://gre/modules/PrivateBrowsingUtils.sys.mjs";
 
 import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const NOTIFICATION_EVENT_DISMISSED = "dismissed";
 const NOTIFICATION_EVENT_REMOVED = "removed";
@@ -31,6 +32,9 @@ const TELEMETRY_STAT_OPEN_SUBMENU = 10;
 const TELEMETRY_STAT_LEARN_MORE = 11;
 
 const TELEMETRY_STAT_REOPENED_OFFSET = 20;
+const lazy = {};
+
+XPCOMUtils.defineLazyPreferenceGetter(lazy, "buttonDelay", PREF_SECURITY_DELAY);
 
 var popupNotificationsMap = new WeakMap();
 var gNotificationParents = new WeakMap();
@@ -154,7 +158,7 @@ Notification.prototype = {
    * Adds a value to the specified histogram, that must be keyed by ID.
    */
   _recordTelemetry(histogramId, value) {
-    if (this.isPrivate) {
+    if (this.isPrivate && !this.options.recordTelemetryInPrivateBrowsing) {
       // The reason why we don't record telemetry in private windows is because
       // the available actions can be different from regular mode. The main
       // difference is that all of the persistent permission options like
@@ -238,7 +242,6 @@ export function PopupNotifications(tabbrowser, panel, iconBox, options = {}) {
   this.panel = panel;
   this.tabbrowser = tabbrowser;
   this.iconBox = iconBox;
-  this.buttonDelay = Services.prefs.getIntPref(PREF_SECURITY_DELAY);
 
   this.panel.addEventListener("popuphidden", this, true);
   this.panel.classList.add("popup-notification-panel", "panel-no-padding");
@@ -532,6 +535,15 @@ PopupNotifications.prototype = {
    *        popupOptions:
    *                     An optional object containing popup options passed to
    *                     `openPopup()` when defined.
+   *        recordTelemetryInPrivateBrowsing:
+   *                     An optional boolean indicating whether popup telemetry
+   *                     should be recorded in private browsing windows. By default,
+   *                     telemetry is NOT recorded in PBM, because the available
+   *                     options for persistent permission notifications are
+   *                     different between normal and PBM windows, potentially
+   *                     skewing the data. But for notifications that do not differ
+   *                     in PBM, this option can be used to ensure that popups in
+   *                     both PBM and normal windows record the same interactions.
    * @returns the Notification object corresponding to the added notification.
    */
   show: function PopupNotifications_show(
@@ -669,7 +681,7 @@ PopupNotifications.prototype = {
 
     this.nextRemovalReason = TELEMETRY_STAT_REMOVAL_LEAVE_PAGE;
 
-    notifications = notifications.filter(function(notification) {
+    notifications = notifications.filter(function (notification) {
       // The persistWhileVisible option allows an open notification to persist
       // across location changes
       if (notification.options.persistWhileVisible && this.isPanelOpen) {
@@ -770,9 +782,8 @@ PopupNotifications.prototype = {
     });
 
     if (activeBrowser) {
-      let browserNotifications = this._getNotificationsForBrowser(
-        activeBrowser
-      );
+      let browserNotifications =
+        this._getNotificationsForBrowser(activeBrowser);
       this._update(browserNotifications);
     }
   },
@@ -965,7 +976,7 @@ PopupNotifications.prototype = {
   _refreshPanel: function PopupNotifications_refreshPanel(notificationsToShow) {
     this._clearPanel();
 
-    notificationsToShow.forEach(function(n) {
+    notificationsToShow.forEach(function (n) {
       let doc = this.window.document;
 
       // Append "-notification" to the ID to try to avoid ID conflicts with other stuff
@@ -1250,7 +1261,7 @@ PopupNotifications.prototype = {
     );
 
     if (this.isPanelOpen && this._currentAnchorElement == anchorElement) {
-      notificationsToShow.forEach(function(n) {
+      notificationsToShow.forEach(function (n) {
         this._fireCallback(n, NOTIFICATION_EVENT_SHOWN);
       }, this);
 
@@ -1283,7 +1294,7 @@ PopupNotifications.prototype = {
         this.panel.removeAttribute("noautohide");
       }
 
-      notificationsToShow.forEach(function(n) {
+      notificationsToShow.forEach(function (n) {
         // Record that the notification was actually displayed on screen.
         // Notifications that were opened a second time or that were originally
         // shown with "options.dismissed" will be recorded in a separate bucket.
@@ -1308,7 +1319,7 @@ PopupNotifications.prototype = {
           true
         );
       }
-      this._popupshownListener = function(e) {
+      this._popupshownListener = function (e) {
         target.removeEventListener(
           "popupshown",
           this._popupshownListener,
@@ -1316,7 +1327,7 @@ PopupNotifications.prototype = {
         );
         this._popupshownListener = null;
 
-        notificationsToShow.forEach(function(n) {
+        notificationsToShow.forEach(function (n) {
           this._fireCallback(n, NOTIFICATION_EVENT_SHOWN);
         }, this);
         // These notifications are used by tests to know when all the processing
@@ -1399,7 +1410,7 @@ PopupNotifications.prototype = {
 
     if (haveNotifications) {
       // Also filter out notifications that are for a different anchor.
-      notificationsToShow = notificationsToShow.filter(function(n) {
+      notificationsToShow = notificationsToShow.filter(function (n) {
         return anchors.has(n.anchorElement);
       });
 
@@ -1513,21 +1524,22 @@ PopupNotifications.prototype = {
     return notifications;
   },
 
-  _getAnchorsForNotifications: function PopupNotifications_getAnchorsForNotifications(
-    notifications,
-    defaultAnchor
-  ) {
-    let anchors = new Set();
-    for (let notification of notifications) {
-      if (notification.anchorElement) {
-        anchors.add(notification.anchorElement);
+  _getAnchorsForNotifications:
+    function PopupNotifications_getAnchorsForNotifications(
+      notifications,
+      defaultAnchor
+    ) {
+      let anchors = new Set();
+      for (let notification of notifications) {
+        if (notification.anchorElement) {
+          anchors.add(notification.anchorElement);
+        }
       }
-    }
-    if (defaultAnchor && !anchors.size) {
-      anchors.add(defaultAnchor);
-    }
-    return anchors;
-  },
+      if (defaultAnchor && !anchors.size) {
+        anchors.add(defaultAnchor);
+      }
+      return anchors;
+    },
 
   _isActiveBrowser(browser) {
     // We compare on frameLoader instead of just comparing the
@@ -1615,7 +1627,7 @@ PopupNotifications.prototype = {
     // Mark notifications anchored to this anchor as un-dismissed
     browser = browser || this.tabbrowser.selectedBrowser;
     let notifications = this._getNotificationsForBrowser(browser);
-    notifications.forEach(function(n) {
+    notifications.forEach(function (n) {
       if (n.anchorElement == anchor) {
         n.dismissed = false;
       }
@@ -1627,63 +1639,68 @@ PopupNotifications.prototype = {
     }
   },
 
-  _swapBrowserNotifications: function PopupNotifications_swapBrowserNoficications(
-    ourBrowser,
-    otherBrowser
-  ) {
-    // When swaping browser docshells (e.g. dragging tab to new window) we need
-    // to update our notification map.
+  _swapBrowserNotifications:
+    function PopupNotifications_swapBrowserNoficications(
+      ourBrowser,
+      otherBrowser
+    ) {
+      // When swaping browser docshells (e.g. dragging tab to new window) we need
+      // to update our notification map.
 
-    let ourNotifications = this._getNotificationsForBrowser(ourBrowser);
-    let other = otherBrowser.ownerGlobal.PopupNotifications;
-    if (!other) {
-      if (ourNotifications.length) {
-        console.error(
-          "unable to swap notifications: otherBrowser doesn't support notifications"
+      let ourNotifications = this._getNotificationsForBrowser(ourBrowser);
+      let other = otherBrowser.ownerGlobal.PopupNotifications;
+      if (!other) {
+        if (ourNotifications.length) {
+          console.error(
+            "unable to swap notifications: otherBrowser doesn't support notifications"
+          );
+        }
+        return;
+      }
+      let otherNotifications = other._getNotificationsForBrowser(otherBrowser);
+      if (ourNotifications.length < 1 && otherNotifications.length < 1) {
+        // No notification to swap.
+        return;
+      }
+
+      otherNotifications = otherNotifications.filter(n => {
+        if (this._fireCallback(n, NOTIFICATION_EVENT_SWAPPING, ourBrowser)) {
+          n.browser = ourBrowser;
+          n.owner = this;
+          return true;
+        }
+        other._fireCallback(
+          n,
+          NOTIFICATION_EVENT_REMOVED,
+          this.nextRemovalReason
         );
+        return false;
+      });
+
+      ourNotifications = ourNotifications.filter(n => {
+        if (this._fireCallback(n, NOTIFICATION_EVENT_SWAPPING, otherBrowser)) {
+          n.browser = otherBrowser;
+          n.owner = other;
+          return true;
+        }
+        this._fireCallback(
+          n,
+          NOTIFICATION_EVENT_REMOVED,
+          this.nextRemovalReason
+        );
+        return false;
+      });
+
+      this._setNotificationsForBrowser(otherBrowser, ourNotifications);
+      other._setNotificationsForBrowser(ourBrowser, otherNotifications);
+
+      if (otherNotifications.length) {
+        this._update(otherNotifications);
       }
-      return;
-    }
-    let otherNotifications = other._getNotificationsForBrowser(otherBrowser);
-    if (ourNotifications.length < 1 && otherNotifications.length < 1) {
-      // No notification to swap.
-      return;
-    }
-
-    otherNotifications = otherNotifications.filter(n => {
-      if (this._fireCallback(n, NOTIFICATION_EVENT_SWAPPING, ourBrowser)) {
-        n.browser = ourBrowser;
-        n.owner = this;
-        return true;
+      if (ourNotifications.length) {
+        other._update(ourNotifications);
       }
-      other._fireCallback(
-        n,
-        NOTIFICATION_EVENT_REMOVED,
-        this.nextRemovalReason
-      );
-      return false;
-    });
-
-    ourNotifications = ourNotifications.filter(n => {
-      if (this._fireCallback(n, NOTIFICATION_EVENT_SWAPPING, otherBrowser)) {
-        n.browser = otherBrowser;
-        n.owner = other;
-        return true;
-      }
-      this._fireCallback(n, NOTIFICATION_EVENT_REMOVED, this.nextRemovalReason);
-      return false;
-    });
-
-    this._setNotificationsForBrowser(otherBrowser, ourNotifications);
-    other._setNotificationsForBrowser(ourBrowser, otherNotifications);
-
-    if (otherNotifications.length) {
-      this._update(otherNotifications);
-    }
-    if (ourNotifications.length) {
-      other._update(ourNotifications);
-    }
-  },
+    },
 
   _fireCallback: function PopupNotifications_fireCallback(n, event, ...args) {
     try {
@@ -1883,7 +1900,7 @@ PopupNotifications.prototype = {
 
       let timeSinceShown =
         this.window.performance.now() - notification.timeShown;
-      if (timeSinceShown < this.buttonDelay) {
+      if (timeSinceShown < lazy.buttonDelay) {
         Services.console.logStringMessage(
           "PopupNotifications._onButtonEvent: " +
             "Button click happened before the security delay: " +

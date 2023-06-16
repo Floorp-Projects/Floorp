@@ -14,7 +14,7 @@ var permRemoved = false;
 function test() {
   waitForExplicitFinish();
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     gBrowser.removeTab(tab);
     window.restore();
   });

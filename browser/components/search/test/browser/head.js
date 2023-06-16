@@ -4,6 +4,9 @@
 ChromeUtils.defineESModuleGetters(this, {
   ADLINK_CHECK_TIMEOUT_MS:
     "resource:///actors/SearchSERPTelemetryChild.sys.mjs",
+  AddonTestUtils: "resource://testing-common/AddonTestUtils.sys.mjs",
+  CustomizableUITestUtils:
+    "resource://testing-common/CustomizableUITestUtils.sys.mjs",
   FormHistory: "resource://gre/modules/FormHistory.sys.mjs",
   FormHistoryTestUtils:
     "resource://testing-common/FormHistoryTestUtils.sys.mjs",
@@ -14,10 +17,12 @@ ChromeUtils.defineESModuleGetters(this, {
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
 });
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
-  CustomizableUITestUtils:
-    "resource://testing-common/CustomizableUITestUtils.jsm",
+ChromeUtils.defineLazyGetter(this, "UrlbarTestUtils", () => {
+  const { UrlbarTestUtils: module } = ChromeUtils.importESModule(
+    "resource://testing-common/UrlbarTestUtils.sys.mjs"
+  );
+  module.init(this);
+  return module;
 });
 
 let gCUITestUtils = new CustomizableUITestUtils(window);
@@ -25,7 +30,8 @@ let gCUITestUtils = new CustomizableUITestUtils(window);
 AddonTestUtils.initMochitest(this);
 SearchTestUtils.init(this);
 
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Recursively compare two objects and check that every property of expectedObj has the same value
@@ -91,15 +97,16 @@ function getOneOffs() {
 }
 
 async function typeInSearchField(browser, text, fieldName) {
-  await SpecialPowers.spawn(browser, [[fieldName, text]], async function([
-    contentFieldName,
-    contentText,
-  ]) {
-    // Put the focus on the search box.
-    let searchInput = content.document.getElementById(contentFieldName);
-    searchInput.focus();
-    searchInput.value = contentText;
-  });
+  await SpecialPowers.spawn(
+    browser,
+    [[fieldName, text]],
+    async function ([contentFieldName, contentText]) {
+      // Put the focus on the search box.
+      let searchInput = content.document.getElementById(contentFieldName);
+      searchInput.focus();
+      searchInput.value = contentText;
+    }
+  );
 }
 
 XPCOMUtils.defineLazyGetter(this, "searchCounts", () => {
@@ -362,7 +369,7 @@ async function promiseAdImpressionReceived(num) {
     return TestUtils.waitForCondition(() => {
       let adImpressions = Glean.serp.adImpression.testGetValue() ?? [];
       return adImpressions.length == num;
-    }, `Should have received an ${num} ad impressions.`);
+    }, `Should have received ${num} ad impressions.`);
   }
   return TestUtils.waitForCondition(() => {
     let adImpressions = Glean.serp.adImpression.testGetValue() ?? [];
@@ -382,3 +389,7 @@ async function waitForPageWithAdImpressions() {
     Services.obs.addObserver(listener, "reported-page-with-ad-impressions");
   });
 }
+
+registerCleanupFunction(async () => {
+  await PlacesUtils.history.clear();
+});

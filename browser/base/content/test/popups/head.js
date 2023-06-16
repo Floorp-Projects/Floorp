@@ -309,7 +309,8 @@ class ResizeMoveTest {
 
     add_task(async () => {
       let tab = await ResizeMoveTest.GetOrCreateTab();
-      let browsingContext = await ResizeMoveTest.GetOrCreatePopupBrowsingContext();
+      let browsingContext =
+        await ResizeMoveTest.GetOrCreatePopupBrowsingContext();
       if (!browsingContext) {
         return;
       }

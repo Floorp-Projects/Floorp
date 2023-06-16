@@ -37,8 +37,7 @@ function checkMixed(loadedModules, context, node, type, resourceURI) {
 module.exports = {
   meta: {
     docs: {
-      url:
-        "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/tools/lint/eslint/eslint-plugin-mozilla/lib/rules/reject-mixed-eager-and-lazy.html",
+      url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/tools/lint/eslint/eslint-plugin-mozilla/lib/rules/reject-mixed-eager-and-lazy.html",
     },
     messages: {
       mixedEagerAndLazy:

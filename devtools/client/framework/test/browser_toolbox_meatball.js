@@ -13,7 +13,7 @@ const {
 } = require("resource://devtools/client/shared/focus.js");
 const { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
 
-add_task(async function() {
+add_task(async function () {
   const tab = await addTab("about:blank");
   const toolbox = await openToolboxForTab(
     tab,

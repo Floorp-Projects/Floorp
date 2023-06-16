@@ -27,13 +27,13 @@ export function TokenServerClientError(message) {
 
 TokenServerClientError.prototype = new Error();
 TokenServerClientError.prototype.constructor = TokenServerClientError;
-TokenServerClientError.prototype._toStringFields = function() {
+TokenServerClientError.prototype._toStringFields = function () {
   return { message: this.message };
 };
-TokenServerClientError.prototype.toString = function() {
+TokenServerClientError.prototype.toString = function () {
   return this.name + "(" + JSON.stringify(this._toStringFields()) + ")";
 };
-TokenServerClientError.prototype.toJSON = function() {
+TokenServerClientError.prototype.toJSON = function () {
   let result = this._toStringFields();
   result.name = this.name;
   return result;
@@ -52,8 +52,9 @@ export function TokenServerClientNetworkError(error) {
 }
 
 TokenServerClientNetworkError.prototype = new TokenServerClientError();
-TokenServerClientNetworkError.prototype.constructor = TokenServerClientNetworkError;
-TokenServerClientNetworkError.prototype._toStringFields = function() {
+TokenServerClientNetworkError.prototype.constructor =
+  TokenServerClientNetworkError;
+TokenServerClientNetworkError.prototype._toStringFields = function () {
   return { error: this.error };
 };
 
@@ -90,9 +91,10 @@ export function TokenServerClientServerError(message, cause = "general") {
 }
 
 TokenServerClientServerError.prototype = new TokenServerClientError();
-TokenServerClientServerError.prototype.constructor = TokenServerClientServerError;
+TokenServerClientServerError.prototype.constructor =
+  TokenServerClientServerError;
 
-TokenServerClientServerError.prototype._toStringFields = function() {
+TokenServerClientServerError.prototype._toStringFields = function () {
   let fields = {
     now: this.now,
     message: this.message,

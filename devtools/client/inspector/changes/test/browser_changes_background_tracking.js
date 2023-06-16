@@ -14,7 +14,7 @@ const TEST_URI = `
   <div></div>
 `;
 
-add_task(async function() {
+add_task(async function () {
   info("Ensure Changes panel is NOT the default panel; use Computed panel");
   await pushPref("devtools.inspector.activeSidebar", "computedview");
 

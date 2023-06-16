@@ -23,7 +23,7 @@ const sleepMs = (ms = 0) => new Promise(resolve => setTimeout(resolve, ms)); // 
 
 const inChaosMode = !!parseInt(Services.env.get("MOZ_CHAOSMODE"), 16);
 
-add_setup(async function() {
+add_setup(async function () {
   // Runtime increases in chaos mode on Mac.
   if (inChaosMode && AppConstants.platform === "macosx") {
     requestLongerTimeout(2);
@@ -92,9 +92,8 @@ add_task(async function test_openURL_visit_counter_withPattern() {
 
 add_task(async function test_captivePortalLogin() {
   const stub = sinon.stub();
-  const captivePortalTrigger = ASRouterTriggerListeners.get(
-    "captivePortalLogin"
-  );
+  const captivePortalTrigger =
+    ASRouterTriggerListeners.get("captivePortalLogin");
 
   captivePortalTrigger.init(stub);
 

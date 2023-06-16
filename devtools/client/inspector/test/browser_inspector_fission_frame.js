@@ -8,7 +8,7 @@
  */
 const TEST_URI = `data:text/html,<div id="root"><iframe src="https://example.com/document-builder.sjs?html=<div id=com>com"><br></iframe></div>`;
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URI);
   const tree = `
     id="root"
@@ -24,7 +24,7 @@ add_task(async function() {
 // Test regular remote frames
 const FRAME_URL = `https://example.com/document-builder.sjs?html=<div>com`;
 const TEST_REMOTE_FRAME = `https://example.org/document-builder.sjs?html=<div id="org-root"><iframe src="${FRAME_URL}"></iframe></div>`;
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_REMOTE_FRAME);
   const tree = `
     id="org-root"

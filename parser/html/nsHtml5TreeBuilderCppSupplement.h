@@ -6,6 +6,7 @@
 
 #include "ErrorList.h"
 #include "nsError.h"
+#include "nsNetUtil.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Likely.h"
 #include "mozilla/StaticPrefs_dom.h"
@@ -335,6 +336,35 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                       url, crossOrigin, media, referrerPolicy);
                 }
                 // Other "as" values will be supported later.
+              }
+            } else if (mozilla::StaticPrefs::network_modulepreload() &&
+                       rel.LowerCaseEqualsASCII("modulepreload")) {
+              nsHtml5String url =
+                  aAttributes->getValue(nsHtml5AttributeName::ATTR_HREF);
+              if (url && url.Length() != 0) {
+                nsHtml5String as =
+                    aAttributes->getValue(nsHtml5AttributeName::ATTR_AS);
+                nsAutoString asString;
+                as.ToString(asString);
+                if (mozilla::net::IsScriptLikeOrInvalid(asString)) {
+                  nsHtml5String charset =
+                      aAttributes->getValue(nsHtml5AttributeName::ATTR_CHARSET);
+                  RefPtr<nsAtom> moduleType = nsGkAtoms::_module;
+                  nsHtml5String type =
+                      nsHtml5String::FromAtom(moduleType.forget());
+                  nsHtml5String crossOrigin = aAttributes->getValue(
+                      nsHtml5AttributeName::ATTR_CROSSORIGIN);
+                  nsHtml5String media =
+                      aAttributes->getValue(nsHtml5AttributeName::ATTR_MEDIA);
+                  nsHtml5String integrity = aAttributes->getValue(
+                      nsHtml5AttributeName::ATTR_INTEGRITY);
+                  nsHtml5String referrerPolicy = aAttributes->getValue(
+                      nsHtml5AttributeName::ATTR_REFERRERPOLICY);
+                  mSpeculativeLoadQueue.AppendElement()->InitScript(
+                      url, charset, type, crossOrigin, media, integrity,
+                      referrerPolicy, mode == nsHtml5TreeBuilder::IN_HEAD,
+                      false, false, false, true);
+                }
               }
             }
           }

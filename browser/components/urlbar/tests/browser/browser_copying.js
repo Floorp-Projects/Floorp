@@ -10,10 +10,10 @@ function getUrl(hostname, file) {
   );
 }
 
-add_task(async function() {
+add_task(async function () {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     gBrowser.removeTab(tab);
     gURLBar.setURI();
   });
@@ -399,7 +399,7 @@ function testCopy(copyVal, targetValue) {
       let r0 = sel.getRangeAt(0);
       let node0 = r0.startContainer;
       sel.removeAllRanges();
-      offsets.map(function(startEnd) {
+      offsets.map(function (startEnd) {
         let range = r0.cloneRange();
         range.setStart(node0, startEnd[0]);
         range.setEnd(node0, startEnd[1]);

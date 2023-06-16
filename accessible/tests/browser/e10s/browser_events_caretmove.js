@@ -10,7 +10,7 @@
  */
 addAccessibleTask(
   '<input id="textbox" value="hello"/>',
-  async function(browser) {
+  async function (browser) {
     let onCaretMoved = waitForEvent(EVENT_TEXT_CARET_MOVED, "textbox");
     await invokeFocus(browser, "textbox");
     let event = await onCaretMoved;

@@ -86,11 +86,9 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
   void SetDir(const nsAString& aDir, mozilla::ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::dir, aDir, aError);
   }
-  void GetPopover(nsString& aPopover) {
-    GetHTMLEnumAttr(nsGkAtoms::popover, aPopover);
-  }
+  void GetPopover(nsString& aPopover) const;
   void SetPopover(const nsAString& aPopover, mozilla::ErrorResult& aError) {
-    SetHTMLAttr(nsGkAtoms::popover, aPopover, aError);
+    SetOrRemoveNullableStringAttr(nsGkAtoms::popover, aPopover, aError);
   }
   bool Hidden() const { return GetBoolAttr(nsGkAtoms::hidden); }
   void SetHidden(bool aHidden, mozilla::ErrorResult& aError) {
@@ -151,7 +149,7 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
     return false;
   }
 
-  mozilla::dom::PopoverState GetPopoverState() const;
+  mozilla::dom::PopoverAttributeState GetPopoverAttributeState() const;
   void PopoverPseudoStateUpdate(bool aOpen, bool aNotify);
   bool PopoverOpen() const;
   bool CheckPopoverValidity(mozilla::dom::PopoverVisibilityState aExpectedState,
@@ -171,7 +169,8 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
                                               bool aFireEvents,
                                               ErrorResult& aRv);
   MOZ_CAN_RUN_SCRIPT void HidePopover(ErrorResult& aRv);
-  MOZ_CAN_RUN_SCRIPT void TogglePopover(bool force, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void TogglePopover(
+      const mozilla::dom::Optional<bool>& aForce, ErrorResult& aRv);
   MOZ_CAN_RUN_SCRIPT void FocusPopover();
   void ForgetPreviouslyFocusedElementAfterHidingPopover();
   MOZ_CAN_RUN_SCRIPT void FocusPreviousElementAfterHidingPopover();
@@ -180,7 +179,7 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
 
   void SetNonce(const nsAString& aNonce) {
     SetProperty(nsGkAtoms::nonce, new nsString(aNonce),
-                nsINode::DeleteProperty<nsString>);
+                nsINode::DeleteProperty<nsString>, /* aTransfer = */ true);
   }
   void RemoveNonce() { RemoveProperty(nsGkAtoms::nonce); }
   void GetNonce(nsAString& aNonce) const {
@@ -758,6 +757,8 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
       int32_t aNamespaceID, nsAtom* aName, const nsAttrValue* aValue,
       const nsAttrValue* aOldValue, nsIPrincipal* aMaybeScriptedPrincipal,
       bool aNotify) override;
+
+  MOZ_CAN_RUN_SCRIPT void AfterSetPopoverAttr();
 
   mozilla::EventListenerManager* GetEventListenerManagerForAttr(
       nsAtom* aAttrName, bool* aDefer) override;

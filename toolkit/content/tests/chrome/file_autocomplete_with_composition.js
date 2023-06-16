@@ -3,13 +3,13 @@
 
 function waitForCondition(condition, nextTest) {
   var tries = 0;
-  var interval = setInterval(function() {
+  var interval = setInterval(function () {
     if (condition() || tries >= 30) {
       moveOn();
     }
     tries++;
   }, 100);
-  var moveOn = function() {
+  var moveOn = function () {
     clearInterval(interval);
     nextTest();
   };
@@ -35,7 +35,8 @@ function nsDoTestsForAutoCompleteWithComposition(
 
   this._target.focus();
 
-  this._DefaultCompleteDefaultIndex = this._controller.input.completeDefaultIndex;
+  this._DefaultCompleteDefaultIndex =
+    this._controller.input.completeDefaultIndex;
 
   this._doTests();
 }
@@ -55,7 +56,8 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
 
   _doTests() {
     if (++this._testingIndex == this._tests.length) {
-      this._controller.input.completeDefaultIndex = this._DefaultCompleteDefaultIndex;
+      this._controller.input.completeDefaultIndex =
+        this._DefaultCompleteDefaultIndex;
       this._onFinish();
       return;
     }

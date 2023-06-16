@@ -3,7 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 var seenScopeError;
-onerror = function(message, filename, lineno) {
+onerror = function (message, filename, lineno) {
   if (!seenScopeError) {
     seenScopeError = true;
     postMessage({
@@ -14,18 +14,18 @@ onerror = function(message, filename, lineno) {
   }
 };
 
-onmessage = function(event) {
+onmessage = function (event) {
   var workerId = parseInt(event.data);
 
   if (workerId > 1) {
     var worker = new Worker("errorPropagation_worker.js");
 
-    worker.onmessage = function(msg) {
+    worker.onmessage = function (msg) {
       postMessage(msg.data);
     };
 
     var seenWorkerError;
-    worker.onerror = function(error) {
+    worker.onerror = function (error) {
       if (!seenWorkerError) {
         seenWorkerError = true;
         postMessage({
@@ -44,7 +44,7 @@ onmessage = function(event) {
     return;
   }
 
-  var interval = setInterval(function() {
+  var interval = setInterval(function () {
     throw new Error("expectedError");
   }, 100);
 };

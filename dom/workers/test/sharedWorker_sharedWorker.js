@@ -35,7 +35,7 @@ for (var index = 0; index < propsToCheck.length; index++) {
   }
 }
 
-onconnect = function(event) {
+onconnect = function (event) {
   if (!("SharedWorkerGlobalScope" in self)) {
     throw new Error("SharedWorkerGlobalScope should be visible!");
   }
@@ -78,12 +78,12 @@ onconnect = function(event) {
 
   // Statement after return should trigger a warning, but NOT fire error events
   // at us.
-  (function() {
+  (function () {
     return;
     1;
   });
 
-  event.ports[0].onmessage = function(msg) {
+  event.ports[0].onmessage = function (msg) {
     if (!(msg instanceof MessageEvent)) {
       throw new Error("'message' event is not a MessageEvent!");
     }

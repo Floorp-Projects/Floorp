@@ -47,8 +47,7 @@ const AVAILABLE_INJECTIONS = [
       matches: ["https://ib.absa.co.za/*"],
       js: [
         {
-          file:
-            "injections/js/bug1452707-window.controllers-shim-ib.absa.co.za.js",
+          file: "injections/js/bug1452707-window.controllers-shim-ib.absa.co.za.js",
         },
       ],
     },
@@ -122,8 +121,7 @@ const AVAILABLE_INJECTIONS = [
       matches: ["*://developer.apple.com/*"],
       css: [
         {
-          file:
-            "injections/css/bug1570328-developer-apple.com-transform-scale.css",
+          file: "injections/css/bug1570328-developer-apple.com-transform-scale.css",
         },
       ],
     },
@@ -137,8 +135,7 @@ const AVAILABLE_INJECTIONS = [
       matches: ["*://apply.lloydsbank.co.uk/*"],
       css: [
         {
-          file:
-            "injections/css/bug1575000-apply.lloydsbank.co.uk-radio-buttons-fix.css",
+          file: "injections/css/bug1575000-apply.lloydsbank.co.uk-radio-buttons-fix.css",
         },
       ],
     },
@@ -177,8 +174,7 @@ const AVAILABLE_INJECTIONS = [
       ],
       css: [
         {
-          file:
-            "injections/css/bug1610344-directv.com.co-hide-unsupported-message.css",
+          file: "injections/css/bug1610344-directv.com.co-hide-unsupported-message.css",
         },
       ],
     },
@@ -192,8 +188,7 @@ const AVAILABLE_INJECTIONS = [
       matches: ["https://*.usps.com/*"],
       css: [
         {
-          file:
-            "injections/css/bug1644830-missingmail.usps.com-checkboxes-not-visible.css",
+          file: "injections/css/bug1644830-missingmail.usps.com-checkboxes-not-visible.css",
         },
       ],
     },
@@ -207,8 +202,7 @@ const AVAILABLE_INJECTIONS = [
       matches: ["*://*.teletrader.com/*"],
       css: [
         {
-          file:
-            "injections/css/bug1651917-teletrader.com.body-transform-origin.css",
+          file: "injections/css/bug1651917-teletrader.com.body-transform-origin.css",
         },
       ],
     },
@@ -298,8 +292,7 @@ const AVAILABLE_INJECTIONS = [
       ],
       js: [
         {
-          file:
-            "injections/js/bug1731825-office365-email-handling-prompt-autohide.js",
+          file: "injections/js/bug1731825-office365-email-handling-prompt-autohide.js",
         },
       ],
       allFrames: true,
@@ -318,8 +311,7 @@ const AVAILABLE_INJECTIONS = [
       ],
       css: [
         {
-          file:
-            "injections/css/bug1707795-office365-sheets-overscroll-disable.css",
+          file: "injections/css/bug1707795-office365-sheets-overscroll-disable.css",
         },
       ],
       allFrames: true,
@@ -334,8 +326,7 @@ const AVAILABLE_INJECTIONS = [
       matches: ["*://buskocchi.desuca.co.jp/*"],
       css: [
         {
-          file:
-            "injections/css/bug1712833-buskocchi.desuca.co.jp-fix-map-height.css",
+          file: "injections/css/bug1712833-buskocchi.desuca.co.jp-fix-map-height.css",
         },
       ],
     },
@@ -365,7 +356,6 @@ const AVAILABLE_INJECTIONS = [
     bug: "1724764",
     contentScripts: {
       matches: [
-        "*://*.amextravel.com/*", // 1724764
         "*://*.edupage.org/*", // 1804477 and 1800118
       ],
       js: [
@@ -461,8 +451,7 @@ const AVAILABLE_INJECTIONS = [
       matches: ["*://*.coldwellbankerhomes.com/*"],
       css: [
         {
-          file:
-            "injections/css/bug1770962-coldwellbankerhomes.com-image-height.css",
+          file: "injections/css/bug1770962-coldwellbankerhomes.com-image-height.css",
         },
       ],
     },
@@ -600,8 +589,7 @@ const AVAILABLE_INJECTIONS = [
       ],
       css: [
         {
-          file:
-            "injections/css/bug1784141-aveeno.com-acuvue.com-unsupported.css",
+          file: "injections/css/bug1784141-aveeno.com-acuvue.com-unsupported.css",
         },
       ],
     },
@@ -641,8 +629,7 @@ const AVAILABLE_INJECTIONS = [
       matches: ["*://www.china-airlines.com/*"],
       js: [
         {
-          file:
-            "injections/js/bug1795490-www.china-airlines.com-undisable-date-fields-on-mobile.js",
+          file: "injections/js/bug1795490-www.china-airlines.com-undisable-date-fields-on-mobile.js",
         },
       ],
     },
@@ -656,8 +643,7 @@ const AVAILABLE_INJECTIONS = [
       matches: ["*://www.samsung.com/*/watches/*/*"],
       js: [
         {
-          file:
-            "injections/js/bug1799968-www.samsung.com-appVersion-linux-fix.js",
+          file: "injections/js/bug1799968-www.samsung.com-appVersion-linux-fix.js",
         },
       ],
     },
@@ -685,8 +671,7 @@ const AVAILABLE_INJECTIONS = [
       matches: ["*://www.vivobarefoot.com/*"],
       css: [
         {
-          file:
-            "injections/css/bug1799994-www.vivobarefoot.com-product-filters-fix.css",
+          file: "injections/css/bug1799994-www.vivobarefoot.com-product-filters-fix.css",
         },
       ],
     },
@@ -700,23 +685,7 @@ const AVAILABLE_INJECTIONS = [
       matches: ["*://www.honda.co.uk/cars/book-a-service.html*"],
       css: [
         {
-          file:
-            "injections/css/bug1800000-www.honda.co.uk-choose-dealer-button-fix.css",
-        },
-      ],
-    },
-  },
-  {
-    id: "bug1803976",
-    platform: "desktop",
-    domain: "www.youtube.com",
-    bug: "1803976",
-    contentScripts: {
-      matches: ["*://www.youtube.com/*"],
-      js: [
-        {
-          file:
-            "injections/js/bug1803976-www.youtube.com-performance-now-precision.js",
+          file: "injections/css/bug1800000-www.honda.co.uk-choose-dealer-button-fix.css",
         },
       ],
     },
@@ -737,7 +706,6 @@ const AVAILABLE_INJECTIONS = [
         "*://bathpublishing.com/*", // 100145
         "*://dylantalkstone.com/*", // 101356
         "*://renewd.com.au/*", // 104998
-        "*://gofreeconcepts.de/*", // 105534
         "*://*.lamudi.co.id/*", // 106767
         "*://*.thehawksmoor.com/*", // 107549
         "*://weaversofireland.com/*", // 116816
@@ -762,7 +730,6 @@ const AVAILABLE_INJECTIONS = [
     contentScripts: {
       matches: [
         "*://*.chatiw.com/*", // 5544
-        "*://*.marksandspencer.com/*", // 101811
         "*://*.wellcare.com/*", // 116595
       ],
       js: [
@@ -781,8 +748,7 @@ const AVAILABLE_INJECTIONS = [
       matches: ["*://*.axisbank.com/*"],
       js: [
         {
-          file:
-            "injections/js/bug1819476-axisbank.com-webkitSpeechRecognition-shim.js",
+          file: "injections/js/bug1819476-axisbank.com-webkitSpeechRecognition-shim.js",
         },
       ],
     },
@@ -830,20 +796,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1827678-85474",
-    platform: "desktop",
-    domain: "elal.com",
-    bug: "1827678",
-    contentScripts: {
-      matches: ["*://*.elal.com/*"],
-      css: [
-        {
-          file: "injections/css/bug1819678-elal.com-unsupported-banner.css",
-        },
-      ],
-    },
-  },
-  {
     id: "bug1827678-webc119017",
     platform: "desktop",
     domain: "nppes.cms.hhs.gov",
@@ -852,8 +804,7 @@ const AVAILABLE_INJECTIONS = [
       matches: ["*://nppes.cms.hhs.gov/*"],
       css: [
         {
-          file:
-            "injections/css/bug1819678-nppes.cms.hhs.gov-unsupported-banner.css",
+          file: "injections/css/bug1819678-nppes.cms.hhs.gov-unsupported-banner.css",
         },
       ],
     },
@@ -881,8 +832,7 @@ const AVAILABLE_INJECTIONS = [
       matches: ["*://*.tomshardware.com/*"],
       css: [
         {
-          file:
-            "injections/css/bug1829949-tomshardware.com-scrollbar-width.css",
+          file: "injections/css/bug1829949-tomshardware.com-scrollbar-width.css",
         },
       ],
     },
@@ -967,8 +917,7 @@ const AVAILABLE_INJECTIONS = [
       matches: ["*://interceramic.com/*"],
       css: [
         {
-          file:
-            "injections/css/bug1830810-interceramic.com-hide-unsupported.css",
+          file: "injections/css/bug1830810-interceramic.com-hide-unsupported.css",
         },
       ],
     },
@@ -982,8 +931,7 @@ const AVAILABLE_INJECTIONS = [
       matches: ["*://*.onstove.com/*"],
       css: [
         {
-          file:
-            "injections/css/bug1830813-page.onstove.com-hide-unsupported.css",
+          file: "injections/css/bug1830813-page.onstove.com-hide-unsupported.css",
         },
       ],
     },
@@ -1028,10 +976,68 @@ const AVAILABLE_INJECTIONS = [
       ],
       js: [
         {
-          file:
-            "injections/js/bug1831007-nintendo-window-OnetrustActiveGroups.js",
+          file: "injections/js/bug1831007-nintendo-window-OnetrustActiveGroups.js",
         },
       ],
+    },
+  },
+  {
+    id: "bug1836157",
+    platform: "android",
+    domain: "thai-masszazs.net",
+    bug: "1836157",
+    contentScripts: {
+      matches: ["*://www.thai-masszazs.net/en/*"],
+      js: [
+        {
+          file: "injections/js/bug1836157-thai-masszazs-niceScroll-disable.js",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1836103",
+    platform: "all",
+    domain: "autostar-novoross.ru",
+    bug: "1836103",
+    contentScripts: {
+      matches: ["*://autostar-novoross.ru/*"],
+      css: [
+        {
+          file: "injections/css/bug1836103-autostar-novoross.ru-make-map-taller.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1836105",
+    platform: "all",
+    domain: "cnn.com",
+    bug: "1836105",
+    contentScripts: {
+      matches: ["*://*.cnn.com/*"],
+      css: [
+        {
+          file: "injections/css/bug1836105-cnn.com-fix-blank-pages-when-printing.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1836177",
+    platform: "desktop",
+    domain: "clalit.co.il",
+    bug: "1836177",
+    contentScripts: {
+      matches: [
+        "*://e-services.clalit.co.il/OnlineWeb/General/InfoFullLogin.aspx*",
+      ],
+      css: [
+        {
+          file: "injections/css/bug1836177-clalit.co.il-hide-number-input-spinners.css",
+        },
+      ],
+      allFrames: true,
     },
   },
 ];

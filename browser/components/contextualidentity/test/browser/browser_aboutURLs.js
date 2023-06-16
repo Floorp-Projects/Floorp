@@ -4,7 +4,7 @@
 // See Bug 1270998.
 requestLongerTimeout(2);
 
-add_task(async function() {
+add_task(async function () {
   let aboutURLs = [];
 
   // List of about: URLs that may cause problem, so we skip them in this test.

@@ -4,7 +4,7 @@
 "use strict";
 
 async function checkLoginDisplayed(browser, testGuid) {
-  await SpecialPowers.spawn(browser, [testGuid], async function(guid) {
+  await SpecialPowers.spawn(browser, [testGuid], async function (guid) {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
     let loginFound = await ContentTaskUtils.waitForCondition(() => {
       return (
@@ -16,7 +16,7 @@ async function checkLoginDisplayed(browser, testGuid) {
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   TEST_LOGIN1 = await addLogin(TEST_LOGIN1);
   registerCleanupFunction(() => {
     Services.logins.removeAllUserFacingLogins();

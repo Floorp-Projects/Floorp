@@ -350,6 +350,9 @@ nsresult DragDataProducer::GetAnchorURL(nsIContent* aContent, nsAString& aURL) {
   nsAutoCString spec;
   nsresult rv = linkURI->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
+  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+  rv = secMan->CheckLoadURIStrWithPrincipal(aContent->NodePrincipal(), spec, 0);
+  NS_ENSURE_SUCCESS(rv, rv);
   CopyUTF8toUTF16(spec, aURL);
   return NS_OK;
 }
@@ -557,12 +560,12 @@ nsresult DragDataProducer::Produce(DataTransfer* aDataTransfer, bool* aCanDrag,
           areaElem->GetAttr(nsGkAtoms::href, mTitleString);
         }
 
-        // we'll generate HTML like <a href="absurl">alt text</a>
-        mIsAnchor = true;
-
         // gives an absolute link
         nsresult rv = GetAnchorURL(draggedNode, mUrlString);
         NS_ENSURE_SUCCESS(rv, rv);
+
+        // we'll generate HTML like <a href="absurl">alt text</a>
+        mIsAnchor = true;
 
         mHtmlString.AssignLiteral("<a href=\"");
         mHtmlString.Append(mUrlString);
@@ -572,20 +575,25 @@ nsresult DragDataProducer::Produce(DataTransfer* aDataTransfer, bool* aCanDrag,
 
         dragNode = draggedNode;
       } else if (image) {
-        mIsAnchor = true;
         // grab the href as the url, use alt text as the title of the
         // area if it's there.  the drag data is the image tag and src
         // attribute.
         nsCOMPtr<nsIURI> imageURI;
         image->GetCurrentURI(getter_AddRefs(imageURI));
+        nsCOMPtr<Element> imageElement(do_QueryInterface(image));
         if (imageURI) {
           nsAutoCString spec;
           rv = imageURI->GetSpec(spec);
           NS_ENSURE_SUCCESS(rv, rv);
+          nsIScriptSecurityManager* secMan =
+              nsContentUtils::GetSecurityManager();
+          rv = secMan->CheckLoadURIStrWithPrincipal(
+              imageElement->NodePrincipal(), spec, 0);
+          NS_ENSURE_SUCCESS(rv, rv);
+          mIsAnchor = true;
           CopyUTF8toUTF16(spec, mUrlString);
         }
 
-        nsCOMPtr<Element> imageElement(do_QueryInterface(image));
         // XXXbz Shouldn't we use the "title" attr for title?  Using
         // "alt" seems very wrong....
         // XXXbz Also, what if this is an nsIImageLoadingContent
@@ -627,9 +635,9 @@ nsresult DragDataProducer::Produce(DataTransfer* aDataTransfer, bool* aCanDrag,
       }
 
       if (linkNode) {
-        mIsAnchor = true;
         rv = GetAnchorURL(linkNode, mUrlString);
         NS_ENSURE_SUCCESS(rv, rv);
+        mIsAnchor = true;
         dragNode = linkNode;
       }
     }

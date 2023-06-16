@@ -17,6 +17,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/types/optional.h"
 #include "api/field_trials_view.h"
 #include "api/sctp_transport_interface.h"
 #include "pc/peer_connection_internal.h"
@@ -272,6 +273,10 @@ class FakePeerConnectionBase : public PeerConnectionInternal {
   }
 
   Call::Stats GetCallStats() override { return Call::Stats(); }
+
+  absl::optional<AudioDeviceModule::Stats> GetAudioDeviceStats() override {
+    return absl::nullopt;
+  }
 
   bool GetLocalCertificate(
       const std::string& transport_name,

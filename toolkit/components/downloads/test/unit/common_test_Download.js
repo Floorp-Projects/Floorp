@@ -22,11 +22,6 @@ ChromeUtils.defineESModuleGetters(this, {
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
 });
 
-/* global OS */
-Cc["@mozilla.org/net/osfileconstantsservice;1"]
-  .getService(Ci.nsIOSFileConstantsService)
-  .init();
-
 /**
  * Creates and starts a new download, using either DownloadCopySaver or
  * DownloadLegacySaver based on the current test run.
@@ -61,7 +56,7 @@ function promiseStartDownload(aSourceUrl) {
  * @resolves When the properties have been verified.
  * @rejects JavaScript exception.
  */
-var promiseVerifyTarget = async function(downloadTarget, expectedContents) {
+var promiseVerifyTarget = async function (downloadTarget, expectedContents) {
   Assert.ok(downloadTarget.exists);
   Assert.equal(
     await expectNonZeroDownloadTargetSize(downloadTarget),
@@ -269,12 +264,7 @@ add_task(async function test_unix_permissions() {
           await promiseDownloadStopped(download);
         }
 
-        let prefEnabled = Services.prefs.getBoolPref(
-          "browser.download.improvements_to_download_panel"
-        );
-
-        let isTemporary =
-          launchWhenSucceeded && (isPrivate || (autoDelete && !prefEnabled));
+        let isTemporary = launchWhenSucceeded && isPrivate;
         let stat = await IOUtils.stat(download.target.path);
         if (Services.appinfo.OS == "WINNT") {
           // On Windows
@@ -287,7 +277,7 @@ add_task(async function test_unix_permissions() {
           // writable as specified by the system umask.
           Assert.equal(
             stat.permissions,
-            isTemporary ? 0o400 : 0o666 & ~OS.Constants.Sys.umask
+            isTemporary ? 0o400 : 0o666 & ~Services.sysinfo.getProperty("umask")
           );
         }
       }
@@ -439,7 +429,7 @@ add_task(async function test_referrer() {
   }
   registerCleanupFunction(cleanup);
 
-  gHttpServer.registerPathHandler(sourcePath, function(aRequest, aResponse) {
+  gHttpServer.registerPathHandler(sourcePath, function (aRequest, aResponse) {
     aResponse.setHeader("Content-Type", "text/plain", false);
 
     Assert.ok(aRequest.hasHeader("Referer"));
@@ -605,7 +595,7 @@ add_task(async function test_final_state_notified() {
   let onchangeNotified = false;
   let lastNotifiedStopped;
   let lastNotifiedProgress;
-  download.onchange = function() {
+  download.onchange = function () {
     onchangeNotified = true;
     lastNotifiedStopped = download.stopped;
     lastNotifiedProgress = download.progress;
@@ -736,7 +726,7 @@ add_task(async function test_empty_noprogress() {
     // download starts.
     download = await promiseNewDownload(sourceUrl);
 
-    download.onchange = function() {
+    download.onchange = function () {
       if (!download.stopped) {
         Assert.ok(!download.hasProgress);
         Assert.equal(download.currentBytes, 0);
@@ -840,7 +830,7 @@ add_task(async function test_cancel_midway() {
 
   // Cancel the download after receiving the first part of the response.
   let deferCancel = PromiseUtils.defer();
-  let onchange = function() {
+  let onchange = function () {
     if (!download.stopped && !download.canceled && download.progress == 50) {
       // Cancel the download immediately during the notification.
       deferCancel.resolve(download.cancel());
@@ -1025,7 +1015,7 @@ add_task(async function test_cancel_midway_restart_tryToKeepPartialData() {
   // The second time, we'll request and obtain the second part of the response,
   // but we still stop when half of the remaining progress is reached.
   let deferMidway = PromiseUtils.defer();
-  download.onchange = function() {
+  download.onchange = function () {
     if (
       !download.stopped &&
       !download.canceled &&
@@ -1717,7 +1707,7 @@ add_task(async function test_public_and_private() {
   }
   registerCleanupFunction(cleanup);
 
-  gHttpServer.registerPathHandler(sourcePath, function(aRequest, aResponse) {
+  gHttpServer.registerPathHandler(sourcePath, function (aRequest, aResponse) {
     aResponse.setHeader("Content-Type", "text/plain", false);
 
     if (testCount == 0) {
@@ -1787,7 +1777,7 @@ add_task(async function test_with_content_encoding() {
   }
   registerCleanupFunction(cleanup);
 
-  gHttpServer.registerPathHandler(sourcePath, function(aRequest, aResponse) {
+  gHttpServer.registerPathHandler(sourcePath, function (aRequest, aResponse) {
     aResponse.setHeader("Content-Type", "text/plain", false);
     aResponse.setHeader("Content-Encoding", "gzip", false);
     aResponse.setHeader(
@@ -1824,7 +1814,7 @@ add_task(async function test_with_content_encoding_ignore_extension() {
   }
   registerCleanupFunction(cleanup);
 
-  gHttpServer.registerPathHandler(sourcePath, function(aRequest, aResponse) {
+  gHttpServer.registerPathHandler(sourcePath, function (aRequest, aResponse) {
     aResponse.setHeader("Content-Type", "text/plain", false);
     aResponse.setHeader("Content-Encoding", "gzip", false);
     aResponse.setHeader(
@@ -1867,7 +1857,7 @@ add_task(async function test_cancel_midway_restart_with_content_encoding() {
 
   // The first time, cancel the download midway.
   await new Promise(resolve => {
-    let onchange = function() {
+    let onchange = function () {
       if (
         !download.stopped &&
         !download.canceled &&
@@ -2677,15 +2667,9 @@ add_task(async function test_launchWhenSucceeded_deleteTempFileOnExit() {
     "@mozilla.org/uriloader/external-helper-app-service;1"
   ].getService(Ci.nsIObserver);
   expire.observe(null, "profile-before-change", null);
-  // Whether the temp file should have been deleted or not depends on the value
-  // of the improvements pref; if the pref is true, then the file should still
-  // exist following the simulated shutdown.
-  Assert.equal(
-    Services.prefs.getBoolPref(
-      "browser.download.improvements_to_download_panel"
-    ),
-    await IOUtils.exists(autoDeleteTargetPathTwo)
-  );
+
+  // The file should still exist following the simulated shutdown.
+  Assert.ok(await IOUtils.exists(autoDeleteTargetPathTwo));
   Assert.ok(await IOUtils.exists(noAutoDeleteTargetPath));
 });
 

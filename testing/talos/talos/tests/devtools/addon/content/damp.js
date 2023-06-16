@@ -163,10 +163,8 @@ Damp.prototype = {
   async addTab(url) {
     // Disable opening animation to avoid intermittents and prevent having to wait for
     // animation's end. (See bug 1480953)
-    let tab = (this._win.gBrowser.selectedTab = this._win.gBrowser.addTrustedTab(
-      url,
-      { skipAnimation: true }
-    ));
+    let tab = (this._win.gBrowser.selectedTab =
+      this._win.gBrowser.addTrustedTab(url, { skipAnimation: true }));
     let browser = tab.linkedBrowser;
     await this._awaitBrowserLoaded(browser);
     return tab;
@@ -308,7 +306,7 @@ Damp.prototype = {
       const res = this._results[i];
       const disp = []
         .concat(res.value)
-        .map(function(a) {
+        .map(function (a) {
           return isNaN(a) ? -1 : a.toFixed(1);
         })
         .join(" ");
@@ -392,8 +390,9 @@ Damp.prototype = {
   },
 
   exception(e) {
-    this.error(e);
-    dump(e.stack + "\n");
+    const str =
+      "Exception: " + (e?.message || e) + "\n" + (e?.stack || "No stack");
+    this.error(str);
   },
 
   // Waits for any pending operations that may execute on Firefox startup and that

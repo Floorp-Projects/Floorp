@@ -28,7 +28,7 @@ const newDevice = {
 
 addRDMTask(
   TEST_URL,
-  async function({ ui }) {
+  async function ({ ui }) {
     const { toolWindow } = ui;
     const { document } = toolWindow;
 

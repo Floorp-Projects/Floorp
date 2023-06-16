@@ -71,6 +71,7 @@ es_MX{
     unitsNarrow{
         concentr{
             karat{
+                dnam{"kt"}
                 one{"{0}kt"}
                 other{"{0}ct"}
             }
@@ -95,6 +96,26 @@ es_MX{
                 dnam{"a"}
                 one{"{0}a"}
                 other{"{0}a"}
+            }
+        }
+        length{
+            nautical-mile{
+                dnam{"M"}
+            }
+        }
+        power{
+            horsepower{
+                dnam{"CV"}
+            }
+        }
+        torque{
+            newton-meter{
+                dnam{"N⋅m"}
+            }
+        }
+        volume{
+            cup{
+                dnam{"tza."}
             }
         }
     }

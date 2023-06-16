@@ -434,7 +434,10 @@ impl<T> MallocShallowSizeOf for thin_vec::ThinVec<T> {
             return 0;
         }
 
-        assert_eq!(std::mem::size_of::<Self>(), std::mem::size_of::<*const ()>());
+        assert_eq!(
+            std::mem::size_of::<Self>(),
+            std::mem::size_of::<*const ()>()
+        );
         unsafe { ops.malloc_size_of(*(self as *const Self as *const *const ())) }
     }
 }
@@ -746,8 +749,7 @@ where
             Component::Slotted(ref selector) | Component::Host(Some(ref selector)) => {
                 selector.size_of(ops)
             },
-            Component::Is(ref list) |
-            Component::Where(ref list) => list.size_of(ops),
+            Component::Is(ref list) | Component::Where(ref list) => list.size_of(ops),
             Component::Has(ref relative_selectors) => relative_selectors.size_of(ops),
             Component::NthOf(ref nth_of_data) => nth_of_data.size_of(ops),
             Component::PseudoElement(ref pseudo) => (*pseudo).size_of(ops),

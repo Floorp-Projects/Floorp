@@ -26,7 +26,7 @@ add_task(async () => {
   );
 
   await Promise.all([
-    SpecialPowers.spawn(linkedBrowser, [], function() {
+    SpecialPowers.spawn(linkedBrowser, [], function () {
       content.document.title = "Title";
     }),
     untilPageTitleChanged(),

@@ -41,7 +41,7 @@ class WebNotificationTest : BaseSessionTest() {
         assertThat(
             "Permission should be granted",
             result as String,
-            equalTo("granted")
+            equalTo("granted"),
         )
     }
 
@@ -63,7 +63,7 @@ class WebNotificationTest : BaseSessionTest() {
         mainSession.evaluateJS(
             """
             new Notification('The Title', { body: 'The Text', silent: true });
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         sessionRule.waitForResult(notificationResult)
@@ -79,7 +79,7 @@ class WebNotificationTest : BaseSessionTest() {
         assertThat(
             "Require Interaction should match",
             notification.requireInteraction,
-            equalTo(requireInteraction)
+            equalTo(requireInteraction),
         )
         assertThat("Vibrate should match", notification.vibrate, equalTo(intArrayOf(1, 2, 3, 4)))
         assertThat("Silent should match", notification.silent, equalTo(false))
@@ -89,8 +89,8 @@ class WebNotificationTest : BaseSessionTest() {
     @GeckoSessionTestRule.Setting.List(
         GeckoSessionTestRule.Setting(
             key = GeckoSessionTestRule.Setting.Key.USE_PRIVATE_MODE,
-            value = "true"
-        )
+            value = "true",
+        ),
     )
     @Test
     fun onShowNotification() {
@@ -113,7 +113,7 @@ class WebNotificationTest : BaseSessionTest() {
             new Notification('The Title', { body: 'The Text', cookie: 'Cookie',
                 icon: 'icon.png', tag: 'Tag', dir: 'ltr', lang: 'en-US',
                 requireInteraction: true, vibrate: [1,2,3,4] });
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         sessionRule.waitForResult(notificationResult)
@@ -133,7 +133,7 @@ class WebNotificationTest : BaseSessionTest() {
             """
             const notification = new Notification('The Title', { body: 'The Text'});
             notification.close();
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         sessionRule.waitForResult(closeCalled)
@@ -169,7 +169,7 @@ class WebNotificationTest : BaseSessionTest() {
                     resolve(1);
                 }
             });
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val notification = sessionRule.waitForResult(notificationResult)
@@ -192,8 +192,8 @@ class WebNotificationTest : BaseSessionTest() {
     @GeckoSessionTestRule.Setting.List(
         GeckoSessionTestRule.Setting(
             key = GeckoSessionTestRule.Setting.Key.USE_PRIVATE_MODE,
-            value = "true"
-        )
+            value = "true",
+        ),
     )
     @Test
     fun clickPrivateNotificationParceled() {
@@ -226,7 +226,7 @@ class WebNotificationTest : BaseSessionTest() {
                     resolve(1);
                 }
             });
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val notification = sessionRule.waitForResult(notificationResult)
@@ -266,7 +266,7 @@ class WebNotificationTest : BaseSessionTest() {
                     resolve(1);
                 }
             });
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         sessionRule.waitForResult(notificationResult)
@@ -295,7 +295,7 @@ class WebNotificationTest : BaseSessionTest() {
                     resolve(1);
                 }
             });
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         sessionRule.waitForResult(notificationResult)
@@ -322,7 +322,7 @@ class WebNotificationTest : BaseSessionTest() {
                     resolve(1);
                 }
             });
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val notification = sessionRule.waitForResult(notificationResult)
@@ -360,7 +360,7 @@ class WebNotificationTest : BaseSessionTest() {
                     resolve(1);
                 }
             });
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         val notification = sessionRule.waitForResult(notificationResult)

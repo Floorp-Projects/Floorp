@@ -75,7 +75,6 @@
 #include "Telemetry.h"
 #include "WebExecutorSupport.h"
 #include "Base64UtilsSupport.h"
-#include "SurfaceViewWrapperSupport.h"
 
 #ifdef DEBUG_ANDROID_EVENTS
 #  define EVLOG(args...) ALOG(args)
@@ -142,7 +141,7 @@ class GeckoThreadSupport final
     OriginAttributes attrs;
     nsCOMPtr<nsIPrincipal> principal =
         BasePrincipal::CreateContentPrincipal(uri, attrs);
-    specConn->SpeculativeConnect(uri, principal, nullptr);
+    specConn->SpeculativeConnect(uri, principal, nullptr, false);
   }
 
   static void OnPause() {
@@ -440,7 +439,6 @@ nsAppShell::nsAppShell()
     mozilla::widget::ImageDecoderSupport::Init();
     mozilla::widget::WebExecutorSupport::Init();
     mozilla::widget::Base64UtilsSupport::Init();
-    mozilla::widget::SurfaceViewWrapperSupport::Init();
     nsWindow::InitNatives();
     mozilla::gl::AndroidSurfaceTexture::Init();
     mozilla::widget::GeckoTelemetryDelegate::Init();

@@ -100,7 +100,7 @@ async function runTest(privilegedLoad) {
 // a new site from user interaction with privileged UI, e.g. through the
 // URL bar.
 add_task(async function test_urlBar() {
-  await runTest(async function(url) {
+  await runTest(async function (url) {
     info(`Loading ${url} via the URL bar.`);
     let browser = gBrowser.selectedBrowser;
     let loaded = BrowserTestUtils.browserLoaded(browser, false, url);

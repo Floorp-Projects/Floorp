@@ -174,11 +174,11 @@ exports.Actor = Actor;
  *         We expect them to return a promise that reserves with the response object
  *         to send back to the client (JSON-serializable object).
  */
-var generateRequestTypes = function(actorSpec) {
+var generateRequestTypes = function (actorSpec) {
   // Generate request handlers for each method definition
   const requestTypes = Object.create(null);
   actorSpec.methods.forEach(spec => {
-    const handler = function(packet, conn) {
+    const handler = function (packet, conn) {
       try {
         const startTime = isWorker ? null : Cu.now();
         let args;

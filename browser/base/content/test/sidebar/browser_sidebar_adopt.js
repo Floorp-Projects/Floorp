@@ -12,7 +12,7 @@ function failIfSidebarFocusedFires() {
   ok(false, "This event shouldn't have fired");
 }
 
-add_setup(function() {
+add_setup(function () {
   CustomizableUI.addWidgetToArea("sidebar-button", "nav-bar");
   registerCleanupFunction(() =>
     CustomizableUI.removeWidgetFromArea("sidebar-button")
@@ -63,7 +63,7 @@ add_task(async function testEventReceivedInNewWindow() {
 
   let adoptedShown = BrowserTestUtils.waitForEvent(win, "SidebarShown");
   win.addEventListener("SidebarFocused", failIfSidebarFocusedFires);
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     win.removeEventListener("SidebarFocused", failIfSidebarFocusedFires);
     await BrowserTestUtils.closeWindow(win);
   });

@@ -6,7 +6,7 @@
 /**
  * Test the requests that are blocked by extenstions show correctly.
  */
-add_task(async function() {
+add_task(async function () {
   const extensionName = "Test Blocker";
   info(`Start loading the ${extensionName} extension...`);
   const extension = ExtensionTestUtils.loadExtension({

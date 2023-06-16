@@ -451,9 +451,19 @@ ToastNotification::ShowAlert(nsIAlertNotification* aAlert,
 
   nsAutoString title;
   MOZ_TRY(aAlert->GetTitle(title));
+  if (!EnsureUTF16Validity(title)) {
+    MOZ_LOG(sWASLog, LogLevel::Warning,
+            ("Notification title was invalid UTF16, unpaired surrogates have "
+             "been replaced."));
+  }
 
   nsAutoString text;
   MOZ_TRY(aAlert->GetText(text));
+  if (!EnsureUTF16Validity(text)) {
+    MOZ_LOG(sWASLog, LogLevel::Warning,
+            ("Notification text was invalid UTF16, unpaired surrogates have "
+             "been replaced."));
+  }
 
   bool textClickable;
   MOZ_TRY(aAlert->GetTextClickable(&textClickable));

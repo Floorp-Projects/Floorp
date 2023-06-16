@@ -58,7 +58,7 @@ export var PromptUtils = {
  *                       is to be disabled.
  * @param focusTarget    The window used to watch focus/blur events.
  */
-export var EnableDelayHelper = function({
+export var EnableDelayHelper = function ({
   enableDialog,
   disableDialog,
   focusTarget,
@@ -176,7 +176,7 @@ EnableDelayHelper.prototype = {
 };
 
 function makeSafe(fn) {
-  return function() {
+  return function () {
     // The dialog could be gone by now (if the user closed it),
     // which makes it likely that the given fn might throw.
     try {

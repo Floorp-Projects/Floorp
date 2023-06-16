@@ -11,7 +11,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
-const IS_CONTENT_PROCESS = (function() {
+const IS_CONTENT_PROCESS = (function () {
   // We cannot use Services.appinfo here because in telemetry xpcshell tests,
   // appinfo is initially unavailable, and becomes available only later on.
   // eslint-disable-next-line mozilla/use-services

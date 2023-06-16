@@ -33,7 +33,7 @@ add_task(async function test() {
   );
   await BrowserTestUtils.openNewForegroundTab(win.gBrowser, TEST_URL);
   await promiseTitleChanged;
-  await BrowserTestUtils.waitForCondition(async function() {
+  await BrowserTestUtils.waitForCondition(async function () {
     let entry = await PlacesUtils.history.fetch(TEST_URL);
     return entry && entry.title == "No Cookie";
   }, "The page should be loaded without any cookie for the first time");
@@ -44,7 +44,7 @@ add_task(async function test() {
   );
   await BrowserTestUtils.openNewForegroundTab(win.gBrowser, TEST_URL);
   await promiseTitleChanged;
-  await BrowserTestUtils.waitForCondition(async function() {
+  await BrowserTestUtils.waitForCondition(async function () {
     let entry = await PlacesUtils.history.fetch(TEST_URL);
     return entry && entry.title == "Cookie";
   }, "The page should be loaded with a cookie for the second time");
@@ -57,7 +57,7 @@ add_task(async function test() {
   );
   await BrowserTestUtils.openNewForegroundTab(win.gBrowser, TEST_URL);
   await promiseTitleChanged;
-  await BrowserTestUtils.waitForCondition(async function() {
+  await BrowserTestUtils.waitForCondition(async function () {
     let entry = await PlacesUtils.history.fetch(TEST_URL);
     return entry && entry.title == "No Cookie";
   }, "The page should be loaded without any cookie again");

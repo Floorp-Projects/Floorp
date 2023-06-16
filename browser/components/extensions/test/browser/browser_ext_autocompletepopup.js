@@ -14,7 +14,7 @@ add_task(async function testAutocompletePopup() {
         browser_style: false,
       },
     },
-    background: async function() {
+    background: async function () {
       let [tab] = await browser.tabs.query({
         active: true,
         currentWindow: true,

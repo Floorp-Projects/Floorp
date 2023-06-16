@@ -94,14 +94,14 @@ class AccessibilityTest : BaseSessionTest() {
                 if (Build.VERSION.SDK_INT >= 21) {
                     AccessibilityNodeInfo::class.java.getMethod(
                         "getChildId",
-                        Int::class.java
+                        Int::class.java,
                     ).invoke(this, index) as Long
                 } else {
                     (
                         AccessibilityNodeInfo::class.java.getMethod("getChildNodeIds")
                             .invoke(this) as SparseLongArray
                         ).get(index)
-                }
+                },
             )
         }
     }
@@ -160,7 +160,7 @@ class AccessibilityTest : BaseSessionTest() {
                 })
             },
             { (view.parent as View).setAccessibilityDelegate(null) },
-            object : EventDelegate { }
+            object : EventDelegate { },
         )
     }
 
@@ -179,7 +179,7 @@ class AccessibilityTest : BaseSessionTest() {
         sessionRule.waitUntilCalled(object : GeckoSession.NavigationDelegate {
             override fun onLoadRequest(
                 session: GeckoSession,
-                request: GeckoSession.NavigationDelegate.LoadRequest
+                request: GeckoSession.NavigationDelegate.LoadRequest,
             ): GeckoResult<AllowOrDeny>? {
                 return GeckoResult.allow()
             }
@@ -201,7 +201,7 @@ class AccessibilityTest : BaseSessionTest() {
             provider.performAction(
                 View.NO_ID,
                 AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT,
-                null
+                null,
             )
         }
     }
@@ -212,7 +212,7 @@ class AccessibilityTest : BaseSessionTest() {
         assertThat(
             "Root node should have WebView class name",
             node.className.toString(),
-            equalTo("android.webkit.WebView")
+            equalTo("android.webkit.WebView"),
         )
     }
 
@@ -232,7 +232,7 @@ class AccessibilityTest : BaseSessionTest() {
         sessionRule.waitUntilCalled(object : GeckoSession.NavigationDelegate {
             override fun onLoadRequest(
                 session: GeckoSession,
-                request: GeckoSession.NavigationDelegate.LoadRequest
+                request: GeckoSession.NavigationDelegate.LoadRequest,
             ): GeckoResult<AllowOrDeny>? {
                 return GeckoResult.allow()
             }
@@ -250,7 +250,7 @@ class AccessibilityTest : BaseSessionTest() {
         provider.performAction(
             View.NO_ID,
             AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT,
-            null
+            null,
         )
 
         sessionRule.waitUntilCalled(object : EventDelegate {
@@ -261,7 +261,7 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat(
                     "Header is a11y focused",
                     node.contentDescription.toString(),
-                    equalTo("Licenses")
+                    equalTo("Licenses"),
                 )
             }
         })
@@ -269,7 +269,7 @@ class AccessibilityTest : BaseSessionTest() {
         provider.performAction(
             nodeId,
             AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT,
-            null
+            null,
         )
 
         sessionRule.waitUntilCalled(object : EventDelegate {
@@ -280,7 +280,7 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat(
                     "Next text leaf is focused",
                     node.text.toString(),
-                    equalTo("All of the ")
+                    equalTo("All of the "),
                 )
             }
         })
@@ -297,7 +297,7 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat(
                     "Accessibility focus on a with href",
                     node.contentDescription as String,
-                    equalTo("free")
+                    equalTo("free"),
                 )
             }
         })
@@ -316,7 +316,7 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat(
                     "Label accessibility focused",
                     node.className.toString(),
-                    equalTo("android.view.View")
+                    equalTo("android.view.View"),
                 )
                 assertThat("Text node should not be focusable", node.isFocusable, equalTo(false))
                 assertThat("Text node should be a11y focused", node.isAccessibilityFocused, equalTo(true))
@@ -327,7 +327,7 @@ class AccessibilityTest : BaseSessionTest() {
         provider.performAction(
             nodeId,
             AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT,
-            null
+            null,
         )
 
         sessionRule.waitUntilCalled(object : EventDelegate {
@@ -338,7 +338,7 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat(
                     "Editbox accessibility focused",
                     node.className.toString(),
-                    equalTo("android.widget.EditText")
+                    equalTo("android.widget.EditText"),
                 )
                 assertThat("Entry node should be focusable", node.isFocusable, equalTo(true))
                 assertThat("Entry node should be a11y focused", node.isAccessibilityFocused, equalTo(true))
@@ -349,7 +349,7 @@ class AccessibilityTest : BaseSessionTest() {
         provider.performAction(
             nodeId,
             AccessibilityNodeInfo.ACTION_CLEAR_ACCESSIBILITY_FOCUS,
-            null
+            null,
         )
 
         sessionRule.waitUntilCalled(object : EventDelegate {
@@ -380,13 +380,13 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat(
                     "Focused EditBox",
                     node.className.toString(),
-                    equalTo("android.widget.EditText")
+                    equalTo("android.widget.EditText"),
                 )
                 if (Build.VERSION.SDK_INT >= 19) {
                     assertThat(
                         "Hint has field name",
                         node.extras.getString("AccessibilityNodeInfo.hint"),
-                        equalTo("Name description")
+                        equalTo("Name description"),
                     )
                 }
             }
@@ -402,13 +402,13 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat(
                     "Focused EditBox",
                     node.className.toString(),
-                    equalTo("android.widget.EditText")
+                    equalTo("android.widget.EditText"),
                 )
                 if (Build.VERSION.SDK_INT >= 19) {
                     assertThat(
                         "Hint has field name",
                         node.extras.getString("AccessibilityNodeInfo.hint"),
-                        equalTo("Last, required")
+                        equalTo("Last, required"),
                     )
                 }
             }
@@ -430,7 +430,7 @@ class AccessibilityTest : BaseSessionTest() {
                 s.addRange(r);
             };
             this.select(document.querySelector('p').childNodes[2], 2, 6);
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         sessionRule.waitUntilCalled(object : EventDelegate {
@@ -444,7 +444,7 @@ class AccessibilityTest : BaseSessionTest() {
         mainSession.evaluateJS(
             """
             this.select(document.querySelector('p').lastElementChild.firstChild, 1, 2);
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         sessionRule.waitUntilCalled(object : EventDelegate {
@@ -472,7 +472,7 @@ class AccessibilityTest : BaseSessionTest() {
             // Changing DOM selection doesn't focus the document! Force focus
             // here so we can use that to determine when this is done.
             document.activeElement.blur();
-            """.trimIndent()
+            """.trimIndent(),
         )
         sessionRule.waitUntilCalled(object : EventDelegate {
             @AssertCalled(count = 1)
@@ -489,23 +489,26 @@ class AccessibilityTest : BaseSessionTest() {
         })
     }
 
-    private fun waitUntilTextSelectionChanged(fromIndex: Int, toIndex: Int) {
-        var eventFromIndex = 0
-        var eventToIndex = 0
+    private fun waitUntilTextSelectionChanged(fromIndex: Int, toIndex: Int, text: String) {
+        var eventFromIndex = -1
+        var eventToIndex = -1
+        var eventText = ""
         do {
             sessionRule.waitUntilCalled(object : EventDelegate {
                 override fun onTextSelectionChanged(event: AccessibilityEvent) {
                     eventFromIndex = event.fromIndex
                     eventToIndex = event.toIndex
+                    eventText = event.text[0].toString()
                 }
             })
         } while (fromIndex != eventFromIndex || toIndex != eventToIndex)
+        assertThat("text selection event text matches", eventText, equalTo(text))
     }
 
     private fun waitUntilTextTraversed(
         fromIndex: Int,
         toIndex: Int,
-        expectedNode: Int? = null
+        expectedNode: Int? = null,
     ): Int {
         var nodeId: Int = AccessibilityNodeProvider.HOST_VIEW_ID
         sessionRule.waitUntilCalled(object : EventDelegate {
@@ -581,7 +584,7 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat(
                     "Focused EditBox",
                     node.className.toString(),
-                    equalTo("android.widget.EditText")
+                    equalTo("android.widget.EditText"),
                 )
             }
 
@@ -593,47 +596,53 @@ class AccessibilityTest : BaseSessionTest() {
         })
 
         provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_SET_SELECTION, setSelectionArguments(5, 11))
-        waitUntilTextSelectionChanged(5, 11)
+        waitUntilTextSelectionChanged(5, 11, "hello cruel world")
 
         provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_COPY, null)
 
         provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_SET_SELECTION, setSelectionArguments(11, 11))
-        waitUntilTextSelectionChanged(11, 11)
+        waitUntilTextSelectionChanged(11, 11, "hello cruel world")
 
         provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_PASTE, null)
         sessionRule.waitUntilCalled(object : EventDelegate {
             @AssertCalled(count = 1)
             override fun onTextChanged(event: AccessibilityEvent) {
                 assertThat("text should be pasted", event.text[0].toString(), equalTo("hello cruel cruel world"))
+                assertThat("fromIndex is correct", event.fromIndex, equalTo(12))
+                assertThat("addedCount is correct", event.addedCount, equalTo(6))
             }
         })
 
         provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_SET_SELECTION, setSelectionArguments(17, 23))
-        waitUntilTextSelectionChanged(17, 23)
+        waitUntilTextSelectionChanged(17, 23, "hello cruel cruel world")
 
         provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_PASTE, null)
         sessionRule.waitUntilCalled(object : EventDelegate {
             @AssertCalled
             override fun onTextChanged(event: AccessibilityEvent) {
                 assertThat("text should be pasted", event.text[0].toString(), equalTo("hello cruel cruel cruel"))
+                assertThat("fromIndex is correct", event.fromIndex, equalTo(18))
+                assertThat("removedCount is correct", event.removedCount, equalTo(5))
             }
         })
 
         provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_SET_SELECTION, setSelectionArguments(0, 0))
-        waitUntilTextSelectionChanged(0, 0)
+        waitUntilTextSelectionChanged(0, 0, "hello cruel cruel cruel")
 
         provider.performAction(
             nodeId,
             AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
-            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD, true)
+            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD, true),
         )
-        waitUntilTextSelectionChanged(0, 5)
+        waitUntilTextSelectionChanged(0, 5, "hello cruel cruel cruel")
 
         provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_CUT, null)
         sessionRule.waitUntilCalled(object : EventDelegate {
             @AssertCalled
             override fun onTextChanged(event: AccessibilityEvent) {
                 assertThat("text should be cut", event.text[0].toString(), equalTo(" cruel cruel cruel"))
+                assertThat("fromIndex is correct", event.fromIndex, equalTo(0))
+                assertThat("removedCount is correct", event.removedCount, equalTo(5))
             }
         })
     }
@@ -655,21 +664,21 @@ class AccessibilityTest : BaseSessionTest() {
         provider.performAction(
             nodeId,
             AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
-            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER)
+            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER),
         )
         waitUntilTextTraversed(0, 1, nodeId) // "L"
 
         provider.performAction(
             nodeId,
             AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
-            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER)
+            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER),
         )
         waitUntilTextTraversed(1, 2, nodeId) // "o"
 
         provider.performAction(
             nodeId,
             AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY,
-            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER)
+            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER),
         )
         waitUntilTextTraversed(0, 1, nodeId) // "L"
     }
@@ -691,21 +700,21 @@ class AccessibilityTest : BaseSessionTest() {
         provider.performAction(
             nodeId,
             AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
-            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD)
+            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD),
         )
         waitUntilTextTraversed(0, 5, nodeId) // "Lorem"
 
         provider.performAction(
             nodeId,
             AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
-            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD)
+            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD),
         )
         waitUntilTextTraversed(6, 11, nodeId) // "ipsum"
 
         provider.performAction(
             nodeId,
             AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY,
-            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD)
+            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD),
         )
         waitUntilTextTraversed(0, 5, nodeId) // "Lorem"
     }
@@ -727,21 +736,21 @@ class AccessibilityTest : BaseSessionTest() {
         provider.performAction(
             nodeId,
             AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
-            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_LINE)
+            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_LINE),
         )
         waitUntilTextTraversed(0, 18, nodeId) // "Lorem ipsum dolor "
 
         provider.performAction(
             nodeId,
             AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
-            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_LINE)
+            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_LINE),
         )
         waitUntilTextTraversed(18, 28, nodeId) // "sit amet, "
 
         provider.performAction(
             nodeId,
             AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY,
-            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_LINE)
+            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_LINE),
         )
         waitUntilTextTraversed(0, 18, nodeId) // "Lorem ipsum dolor "
     }
@@ -770,7 +779,7 @@ class AccessibilityTest : BaseSessionTest() {
             success = provider.performAction(
                 nodeId,
                 AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
-                moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER)
+                moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER),
             )
             assertThat("Next char should succeed", success, equalTo(true))
             waitUntilTextTraversed(start, start + 1, nodeId)
@@ -780,7 +789,7 @@ class AccessibilityTest : BaseSessionTest() {
         success = provider.performAction(
             nodeId,
             AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
-            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER)
+            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER),
         )
         assertThat("Next char should fail at end", success, equalTo(false))
 
@@ -789,7 +798,7 @@ class AccessibilityTest : BaseSessionTest() {
             success = provider.performAction(
                 nodeId,
                 AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY,
-                moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER)
+                moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER),
             )
             assertThat("Prev char should succeed", success, equalTo(true))
             waitUntilTextTraversed(start, start + 1, nodeId)
@@ -799,7 +808,7 @@ class AccessibilityTest : BaseSessionTest() {
         success = provider.performAction(
             nodeId,
             AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY,
-            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER)
+            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER),
         )
         assertThat("Prev char should fail at start", success, equalTo(false))
     }
@@ -826,7 +835,7 @@ class AccessibilityTest : BaseSessionTest() {
         success = provider.performAction(
             nodeId,
             AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
-            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD)
+            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD),
         )
         assertThat("Next word should succeed", success, equalTo(true))
         waitUntilTextTraversed(0, 4, nodeId) // "anim"
@@ -834,7 +843,7 @@ class AccessibilityTest : BaseSessionTest() {
         success = provider.performAction(
             nodeId,
             AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
-            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD)
+            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD),
         )
         assertThat("Next word should succeed", success, equalTo(true))
         waitUntilTextTraversed(5, 7, nodeId) // "id"
@@ -843,14 +852,14 @@ class AccessibilityTest : BaseSessionTest() {
         success = provider.performAction(
             nodeId,
             AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
-            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD)
+            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD),
         )
         assertThat("Next word should fail at end", success, equalTo(false))
 
         success = provider.performAction(
             nodeId,
             AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY,
-            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD)
+            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD),
         )
         assertThat("Prev word should succeed", success, equalTo(true))
         waitUntilTextTraversed(0, 4, nodeId) // "anim"
@@ -859,7 +868,7 @@ class AccessibilityTest : BaseSessionTest() {
         success = provider.performAction(
             nodeId,
             AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY,
-            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD)
+            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD),
         )
         assertThat("Prev word should fail at start", success, equalTo(false))
     }
@@ -882,7 +891,7 @@ class AccessibilityTest : BaseSessionTest() {
         var success = provider.performAction(
             nodeId,
             AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY,
-            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD)
+            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD),
         )
         assertThat("Prev word should succeed", success, equalTo(true))
         waitUntilTextTraversed(418, 424, nodeId) // "mollit"
@@ -891,7 +900,7 @@ class AccessibilityTest : BaseSessionTest() {
         success = provider.performAction(
             nodeId,
             AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
-            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD)
+            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD),
         )
         assertThat("Next word should fail at last word", success, equalTo(false))
 
@@ -899,7 +908,7 @@ class AccessibilityTest : BaseSessionTest() {
         success = provider.performAction(
             nodeId,
             AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
-            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER)
+            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER),
         )
         assertThat("Next char should succeed", success, equalTo(true))
         waitUntilTextTraversed(424, 425, nodeId) // " "
@@ -908,7 +917,7 @@ class AccessibilityTest : BaseSessionTest() {
         success = provider.performAction(
             nodeId,
             AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
-            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER)
+            moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER),
         )
         assertThat("Next char should fail at last char", success, equalTo(false))
     }
@@ -932,7 +941,7 @@ class AccessibilityTest : BaseSessionTest() {
                     assertThat(
                         "First heading is level 1",
                         node.extras.getCharSequence("AccessibilityNodeInfo.roleDescription")!!.toString(),
-                        equalTo("heading level 1")
+                        equalTo("heading level 1"),
                     )
                 }
             }
@@ -949,7 +958,7 @@ class AccessibilityTest : BaseSessionTest() {
                     assertThat(
                         "Second heading is level 2",
                         node.extras.getCharSequence("AccessibilityNodeInfo.roleDescription")!!.toString(),
-                        equalTo("heading level 2")
+                        equalTo("heading level 2"),
                     )
                 }
             }
@@ -966,7 +975,7 @@ class AccessibilityTest : BaseSessionTest() {
                     assertThat(
                         "Third heading is level 3",
                         node.extras.getCharSequence("AccessibilityNodeInfo.roleDescription")!!.toString(),
-                        equalTo("heading level 3")
+                        equalTo("heading level 3"),
                     )
                 }
             }
@@ -992,7 +1001,7 @@ class AccessibilityTest : BaseSessionTest() {
                     assertThat(
                         "Hint has description",
                         node.extras.getString("AccessibilityNodeInfo.hint"),
-                        equalTo("description")
+                        equalTo("description"),
                     )
                 }
             }
@@ -1100,7 +1109,7 @@ class AccessibilityTest : BaseSessionTest() {
         assertThat(
             "Section has 1 child",
             createNodeInfo(rootNode.getChildId(0)).childCount,
-            equalTo(1)
+            equalTo(1),
         )
         mainSession.evaluateJS("document.querySelector('#to_show').style.display = 'none';")
         sessionRule.waitUntilCalled(object : EventDelegate {
@@ -1114,7 +1123,7 @@ class AccessibilityTest : BaseSessionTest() {
         assertThat(
             "Section has no children",
             createNodeInfo(rootNode.getChildId(0)).childCount,
-            equalTo(0)
+            equalTo(0),
         )
     }
 
@@ -1176,7 +1185,7 @@ class AccessibilityTest : BaseSessionTest() {
 
         mainSession.evaluateJS(
             "document.querySelector('#container').removeAttribute('aria-atomic');" +
-                "document.querySelector('p').textContent = '5pm';"
+                "document.querySelector('p').textContent = '5pm';",
         )
         sessionRule.waitUntilCalled(object : EventDelegate {
             @AssertCalled(count = 1)
@@ -1322,19 +1331,19 @@ class AccessibilityTest : BaseSessionTest() {
             "#user1" to "bar",
             "#pass1" to "baz",
             "#user2" to "bar",
-            "#pass2" to "baz"
+            "#pass2" to "baz",
         ) +
             if (Build.VERSION.SDK_INT >= 19) {
                 mapOf(
                     "#email1" to "a@b.c",
                     "#number1" to "24",
-                    "#tel1" to "42"
+                    "#tel1" to "42",
                 )
             } else {
                 mapOf(
                     "#email1" to "bar",
                     "#number1" to "",
-                    "#tel1" to "bar"
+                    "#tel1" to "bar",
                 )
             }
 
@@ -1351,7 +1360,7 @@ class AccessibilityTest : BaseSessionTest() {
                             event instanceof $doc.defaultView.UIEvent ? "UIEvent" :
                             event instanceof $doc.defaultView.Event ? "Event" : "Unknown";
                           resolve([event.target.value, '${entry.value}', eventInterface]);
-                        }, { once: true }))"""
+                        }, { once: true }))""",
                 )
             }
         }
@@ -1375,8 +1384,8 @@ class AccessibilityTest : BaseSessionTest() {
                         child.isPassword,
                         equalTo(
                             child.inputType == InputType.TYPE_CLASS_TEXT or
-                                InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD
-                        )
+                                InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD,
+                        ),
                     )
                 }
 
@@ -1389,7 +1398,8 @@ class AccessibilityTest : BaseSessionTest() {
                     } else {
                         when (child.inputType) {
                             InputType.TYPE_CLASS_TEXT or
-                                InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS -> "a@b.c"
+                                InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS,
+                            -> "a@b.c"
                             InputType.TYPE_CLASS_NUMBER -> "24"
                             InputType.TYPE_CLASS_PHONE -> "42"
                             else -> "bar"
@@ -1412,7 +1422,7 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat(
                     "Can perform auto-fill",
                     provider.performAction(id, ACTION_SET_TEXT, args),
-                    equalTo(true)
+                    equalTo(true),
                 )
             }
         }
@@ -1432,13 +1442,13 @@ class AccessibilityTest : BaseSessionTest() {
         // https://bugzilla.mozilla.org/show_bug.cgi?id=1715480
         sessionRule.setPrefsUntilTestEnd(
             mapOf(
-                "fission.bfcacheInParent" to false
-            )
+                "fission.bfcacheInParent" to false,
+            ),
         )
         fun countAutoFillNodes(
             cond: (AccessibilityNodeInfo) -> Boolean =
                 { it.className == "android.widget.EditText" },
-            id: Int = View.NO_ID
+            id: Int = View.NO_ID,
         ): Int {
             val info = createNodeInfo(id)
             return (
@@ -1483,12 +1493,12 @@ class AccessibilityTest : BaseSessionTest() {
         assertThat(
             "Initial auto-fill count should match",
             countAutoFillNodes(),
-            equalTo(18)
+            equalTo(18),
         )
         assertThat(
             "Password auto-fill count should match",
             countAutoFillNodes({ it.isPassword }),
-            equalTo(4)
+            equalTo(4),
         )
 
         // Now wait for the nodes to clear.
@@ -1497,7 +1507,7 @@ class AccessibilityTest : BaseSessionTest() {
         assertThat(
             "Should not have auto-fill fields",
             countAutoFillNodes(),
-            equalTo(0)
+            equalTo(0),
         )
 
         // Now wait for the nodes to reappear.
@@ -1507,12 +1517,12 @@ class AccessibilityTest : BaseSessionTest() {
         assertThat(
             "Should have auto-fill fields again",
             countAutoFillNodes(),
-            equalTo(18)
+            equalTo(18),
         )
         assertThat(
             "Should not have focused field",
             countAutoFillNodes({ it.isFocused }),
-            equalTo(0)
+            equalTo(0),
         )
 
         mainSession.evaluateJS("document.querySelector('#pass1').focus()")
@@ -1524,7 +1534,7 @@ class AccessibilityTest : BaseSessionTest() {
         assertThat(
             "Should have one focused field",
             countAutoFillNodes({ it.isFocused }),
-            equalTo(1)
+            equalTo(1),
         )
 
         mainSession.evaluateJS("document.querySelector('#pass1').blur()")
@@ -1536,7 +1546,7 @@ class AccessibilityTest : BaseSessionTest() {
         assertThat(
             "Should not have focused field",
             countAutoFillNodes({ it.isFocused }),
-            equalTo(0)
+            equalTo(0),
         )
     }
 
@@ -1570,12 +1580,12 @@ class AccessibilityTest : BaseSessionTest() {
             assertThat(
                 "Entry hint is label",
                 entryNode.extras.getString("AccessibilityNodeInfo.hint"),
-                equalTo("Name:")
+                equalTo("Name:"),
             )
             assertThat(
                 "Entry input type is correct",
                 entryNode.inputType,
-                equalTo(InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT)
+                equalTo(InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT),
             )
         }
 
@@ -1624,7 +1634,7 @@ class AccessibilityTest : BaseSessionTest() {
         provider.performAction(
             nodeId,
             AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT,
-            null
+            null,
         )
 
         sessionRule.waitUntilCalled(object : EventDelegate {
@@ -1639,7 +1649,7 @@ class AccessibilityTest : BaseSessionTest() {
         provider.performAction(
             nodeId,
             AccessibilityNodeInfo.ACTION_PREVIOUS_HTML_ELEMENT,
-            null
+            null,
         )
 
         sessionRule.waitUntilCalled(object : EventDelegate {
@@ -1746,7 +1756,7 @@ class AccessibilityTest : BaseSessionTest() {
         provider.performAction(
             nodeId,
             AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT,
-            null
+            null,
         )
         sessionRule.waitUntilCalled(object : EventDelegate {
             @AssertCalled(count = 1)
@@ -1756,13 +1766,13 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat(
                     "Accessibility focus on text leaf",
                     node.text as String,
-                    startsWith("One")
+                    startsWith("One"),
                 )
                 if (Build.VERSION.SDK_INT >= 19) {
                     assertThat(
                         "first item is a text leaf",
                         node.extras.getCharSequence("AccessibilityNodeInfo.geckoRole")!!.toString(),
-                        equalTo("text leaf")
+                        equalTo("text leaf"),
                     )
                 }
             }
@@ -1771,7 +1781,7 @@ class AccessibilityTest : BaseSessionTest() {
         provider.performAction(
             nodeId,
             AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT,
-            null
+            null,
         )
         sessionRule.waitUntilCalled(object : EventDelegate {
             @AssertCalled(count = 1)
@@ -1781,13 +1791,13 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat(
                     "Accessibility focus on link",
                     node.contentDescription as String,
-                    startsWith("Two")
+                    startsWith("Two"),
                 )
                 if (Build.VERSION.SDK_INT >= 19) {
                     assertThat(
                         "second item is a link",
                         node.extras.getCharSequence("AccessibilityNodeInfo.geckoRole")!!.toString(),
-                        equalTo("link")
+                        equalTo("link"),
                     )
                 }
             }
@@ -1848,13 +1858,13 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat(
                     "Accessibility focus on a with href",
                     node.contentDescription as String,
-                    startsWith("a with href")
+                    startsWith("a with href"),
                 )
                 if (Build.VERSION.SDK_INT >= 19) {
                     assertThat(
                         "a with href is a link",
                         node.extras.getCharSequence("AccessibilityNodeInfo.roleDescription")!!.toString(),
-                        equalTo("link")
+                        equalTo("link"),
                     )
                 }
             }
@@ -1869,13 +1879,13 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat(
                     "Accessibility focus on a with no attributes",
                     node.text as String,
-                    startsWith("a with no attributes")
+                    startsWith("a with no attributes"),
                 )
                 if (Build.VERSION.SDK_INT >= 19) {
                     assertThat(
                         "a with no attributes is not a link",
                         node.extras.getCharSequence("AccessibilityNodeInfo.roleDescription")!!.toString(),
-                        equalTo("")
+                        equalTo(""),
                     )
                 }
             }
@@ -1890,13 +1900,13 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat(
                     "Accessibility focus on a with name",
                     node.text as String,
-                    startsWith("a with name")
+                    startsWith("a with name"),
                 )
                 if (Build.VERSION.SDK_INT >= 19) {
                     assertThat(
                         "a with name is not a link",
                         node.extras.getCharSequence("AccessibilityNodeInfo.roleDescription")!!.toString(),
-                        equalTo("")
+                        equalTo(""),
                     )
                 }
             }
@@ -1911,13 +1921,13 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat(
                     "Accessibility focus on a with onclick",
                     node.contentDescription as String,
-                    startsWith("a with onclick")
+                    startsWith("a with onclick"),
                 )
                 if (Build.VERSION.SDK_INT >= 19) {
                     assertThat(
                         "a with onclick is a link",
                         node.extras.getCharSequence("AccessibilityNodeInfo.roleDescription")!!.toString(),
-                        equalTo("link")
+                        equalTo("link"),
                     )
                 }
             }
@@ -1932,13 +1942,13 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat(
                     "Accessibility focus on span with role link",
                     node.contentDescription as String,
-                    startsWith("span with role link")
+                    startsWith("span with role link"),
                 )
                 if (Build.VERSION.SDK_INT >= 19) {
                     assertThat(
                         "span with role link is a link",
                         node.extras.getCharSequence("AccessibilityNodeInfo.roleDescription")!!.toString(),
-                        equalTo("link")
+                        equalTo("link"),
                     )
                 }
             }
@@ -1962,7 +1972,7 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat(
                     "Accessibility focus on a with href",
                     node.contentDescription as String,
-                    startsWith("a with href")
+                    startsWith("a with href"),
                 )
             }
         })
@@ -1976,7 +1986,7 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat(
                     "Accessibility focus on a with onclick",
                     node.contentDescription as String,
-                    startsWith("a with onclick")
+                    startsWith("a with onclick"),
                 )
             }
         })
@@ -1990,7 +2000,7 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat(
                     "Accessibility focus on span with role link",
                     node.contentDescription as String,
-                    startsWith("span with role link")
+                    startsWith("span with role link"),
                 )
             }
         })
@@ -2010,13 +2020,13 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat(
                     "Accessibility focus is EditBox",
                     node.className.toString(),
-                    equalTo("android.widget.EditText")
+                    equalTo("android.widget.EditText"),
                 )
                 if (Build.VERSION.SDK_INT >= 19) {
                     assertThat(
                         "Accessibility focus on ARIA 1.0 combobox",
                         node.extras.getString("AccessibilityNodeInfo.hint"),
-                        equalTo("ARIA 1.0 combobox")
+                        equalTo("ARIA 1.0 combobox"),
                     )
                 }
             }
@@ -2031,13 +2041,13 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat(
                     "Accessibility focus is EditBox",
                     node.className.toString(),
-                    equalTo("android.widget.EditText")
+                    equalTo("android.widget.EditText"),
                 )
                 if (Build.VERSION.SDK_INT >= 19) {
                     assertThat(
                         "Accessibility focus on ARIA 1.1 combobox",
                         node.extras.getString("AccessibilityNodeInfo.hint"),
-                        equalTo("ARIA 1.1 combobox")
+                        equalTo("ARIA 1.1 combobox"),
                     )
                 }
             }
@@ -2061,13 +2071,13 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat(
                     "Accessibility focus is EditBox",
                     node.className.toString(),
-                    equalTo("android.widget.EditText")
+                    equalTo("android.widget.EditText"),
                 )
                 if (Build.VERSION.SDK_INT >= 19) {
                     assertThat(
                         "Accessibility focus on ARIA 1.0 combobox",
                         node.extras.getString("AccessibilityNodeInfo.hint"),
-                        equalTo("ARIA 1.0 combobox")
+                        equalTo("ARIA 1.0 combobox"),
                     )
                 }
             }
@@ -2082,13 +2092,13 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat(
                     "Accessibility focus is EditBox",
                     node.className.toString(),
-                    equalTo("android.widget.EditText")
+                    equalTo("android.widget.EditText"),
                 )
                 if (Build.VERSION.SDK_INT >= 19) {
                     assertThat(
                         "Accessibility focus on ARIA 1.1 combobox",
                         node.extras.getString("AccessibilityNodeInfo.hint"),
-                        equalTo("ARIA 1.1 combobox")
+                        equalTo("ARIA 1.1 combobox"),
                     )
                 }
             }
@@ -2111,7 +2121,7 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat(
                     "Accessibility focus on a with href",
                     node.contentDescription as String,
-                    startsWith("a with href")
+                    startsWith("a with href"),
                 )
             }
         })
@@ -2135,7 +2145,7 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat(
                     "Accessibility focus on a with no attributes",
                     node.text as String,
-                    startsWith("a with no attributes")
+                    startsWith("a with no attributes"),
                 )
             }
         })
@@ -2165,13 +2175,13 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat(
                     "Accessibility focus on a with name",
                     node.text as String,
-                    startsWith("a with name")
+                    startsWith("a with name"),
                 )
                 if (Build.VERSION.SDK_INT >= 19) {
                     assertThat(
                         "a with name is not a link",
                         node.extras.getCharSequence("AccessibilityNodeInfo.roleDescription")!!.toString(),
-                        equalTo("")
+                        equalTo(""),
                     )
                 }
             }
@@ -2186,13 +2196,13 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat(
                     "Accessibility focus on a with onclick",
                     node.contentDescription as String,
-                    startsWith("a with onclick")
+                    startsWith("a with onclick"),
                 )
                 if (Build.VERSION.SDK_INT >= 19) {
                     assertThat(
                         "a with onclick is a link",
                         node.extras.getCharSequence("AccessibilityNodeInfo.roleDescription")!!.toString(),
-                        equalTo("link")
+                        equalTo("link"),
                     )
                 }
             }
@@ -2217,13 +2227,13 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat(
                     "Accessibility focus on span with role link",
                     node.contentDescription as String,
-                    startsWith("span with role link")
+                    startsWith("span with role link"),
                 )
                 if (Build.VERSION.SDK_INT >= 19) {
                     assertThat(
                         "span with role link is a link",
                         node.extras.getCharSequence("AccessibilityNodeInfo.roleDescription")!!.toString(),
-                        equalTo("link")
+                        equalTo("link"),
                     )
                 }
             }

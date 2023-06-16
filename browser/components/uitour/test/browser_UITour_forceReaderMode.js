@@ -5,7 +5,7 @@ var gContentAPI;
 
 add_task(setup_UITourTest);
 
-add_UITour_task(async function() {
+add_UITour_task(async function () {
   ok(
     !gBrowser.selectedBrowser.isArticle,
     "Should not be an article when we start"

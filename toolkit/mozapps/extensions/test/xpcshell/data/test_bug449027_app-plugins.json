@@ -7,9 +7,7 @@
   {
     "_comment": "Always blocked",
     "matchName": "^test_bug449027_3$",
-    "versionRange": [
-      {}
-    ]
+    "versionRange": [{}]
   },
   {
     "_comment": "Not blocked since neither version range matches",
@@ -120,9 +118,7 @@
     "matchName": "^test_bug449027_13$",
     "versionRange": [
       {
-        "targetApplication": [
-          {}
-        ]
+        "targetApplication": [{}]
       }
     ]
   },

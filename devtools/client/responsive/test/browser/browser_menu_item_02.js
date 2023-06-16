@@ -14,13 +14,13 @@ const isMenuCheckedFor = ({ document }) => {
 
 addRDMTask(
   null,
-  async function() {
+  async function () {
     const window1 = await BrowserTestUtils.openNewBrowserWindow();
     const { gBrowser } = window1;
 
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: TEST_URL },
-      async function(browser) {
+      async function (browser) {
         const tab = gBrowser.getTabForBrowser(browser);
 
         is(

@@ -147,8 +147,7 @@ class nsWindow final : public nsBaseWidget {
   virtual double GetDefaultScaleInternal() override;
   virtual void Show(bool aState) override;
   virtual bool IsVisible() const override;
-  virtual void ConstrainPosition(bool aAllowSlop, int32_t* aX,
-                                 int32_t* aY) override;
+  virtual void ConstrainPosition(DesktopIntPoint&) override;
   virtual void Move(double aX, double aY) override;
   virtual void Resize(double aWidth, double aHeight, bool aRepaint) override;
   virtual void Resize(double aX, double aY, double aWidth, double aHeight,
@@ -168,7 +167,6 @@ class nsWindow final : public nsBaseWidget {
   virtual nsresult MakeFullScreen(bool aFullScreen) override;
   void SetCursor(const Cursor& aDefaultCursor) override;
   void* GetNativeData(uint32_t aDataType) override;
-  void SetNativeData(uint32_t aDataType, uintptr_t aVal) override;
   virtual nsresult SetTitle(const nsAString& aTitle) override { return NS_OK; }
   [[nodiscard]] virtual nsresult GetAttention(int32_t aCycleCount) override {
     return NS_ERROR_NOT_IMPLEMENTED;

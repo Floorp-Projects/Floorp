@@ -33,7 +33,7 @@ function test_dimensions({ width, height }) {
       gBrowser,
       url: SCRIPT_PAGE,
     },
-    async function(browser) {
+    async function (browser) {
       let win = await newWinPromise;
       let rect = win.gBrowser.selectedBrowser.getBoundingClientRect();
 

@@ -188,7 +188,7 @@ win32-compiler-rt-16:
             - clang-16
         toolchain:
             - linux64-clang-16-stage1
-            - win64-vs2019
+            - vs-toolchain
 
 win64-compiler-rt-16:
     description: "win64 x64 Compiler-rt for Clang 16 toolchain build"
@@ -206,7 +206,7 @@ win64-compiler-rt-16:
             - clang-16
         toolchain:
             - linux64-clang-16-stage1
-            - win64-vs2019
+            - vs-toolchain
 
 wasm32-wasi-compiler-rt-16:
     description: "wasm32-wasi Compiler-rt for Clang 16 toolchain build"
@@ -422,7 +422,7 @@ win32-compiler-rt-trunk:
             - clang-trunk
         toolchain:
             - linux64-clang-trunk-stage1
-            - win64-vs2019
+            - vs-toolchain
 
 win64-compiler-rt-trunk:
     description: "win64 x64 Compiler-rt for Clang trunk toolchain build"
@@ -442,7 +442,7 @@ win64-compiler-rt-trunk:
             - clang-trunk
         toolchain:
             - linux64-clang-trunk-stage1
-            - win64-vs2019
+            - vs-toolchain
 
 wasm32-wasi-compiler-rt-trunk:
     description: "wasm32-wasi Compiler-rt for Clang trunk toolchain build"

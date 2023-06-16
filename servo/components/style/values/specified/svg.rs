@@ -249,7 +249,7 @@ impl ToCss for SVGPaintOrder {
 
 bitflags! {
     /// The context properties we understand.
-    #[derive(Default, MallocSizeOf, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem)]
+    #[derive(Clone, Copy, Eq, Default, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem)]
     #[repr(C)]
     pub struct ContextPropertyBits: u8 {
         /// `fill`
@@ -385,7 +385,7 @@ impl Parse for DProperty {
 
         // Parse possible functions.
         input.expect_function_matching("path")?;
-        let path_data = input.parse_nested_block(|i| SVGPathData::parse(context, i))?;
+        let path_data = input.parse_nested_block(|i| Parse::parse(context, i))?;
         Ok(DProperty::Path(path_data))
     }
 }

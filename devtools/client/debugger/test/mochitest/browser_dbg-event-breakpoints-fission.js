@@ -6,12 +6,7 @@
 
 "use strict";
 
-add_task(async function() {
-  await pushPref(
-    "devtools.debugger.features.event-listeners-breakpoints",
-    true
-  );
-
+add_task(async function () {
   const dbg = await initDebugger(
     "doc-event-breakpoints-fission.html",
     "event-breakpoints.js"
@@ -72,14 +67,15 @@ async function invokeAndAssertBreakpoints(dbg) {
 
 async function invokeInTabRemoteFrame(fnc, ...args) {
   info(`Invoking in tab remote frame: ${fnc}(${args.map(uneval).join(",")})`);
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [fnc, args], function(
-    _fnc,
-    _args
-  ) {
-    return SpecialPowers.spawn(
-      content.document.querySelector("iframe"),
-      [_fnc, _args],
-      (__fnc, __args) => content.wrappedJSObject[__fnc](...__args)
-    );
-  });
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [fnc, args],
+    function (_fnc, _args) {
+      return SpecialPowers.spawn(
+        content.document.querySelector("iframe"),
+        [_fnc, _args],
+        (__fnc, __args) => content.wrappedJSObject[__fnc](...__args)
+      );
+    }
+  );
 }

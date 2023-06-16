@@ -36,7 +36,8 @@ class AddonsSearchDetection {
 
   async getMatchPatterns() {
     try {
-      this.matchPatterns = await browser.addonsSearchDetection.getMatchPatterns();
+      this.matchPatterns =
+        await browser.addonsSearchDetection.getMatchPatterns();
     } catch (err) {
       console.error(`failed to retrieve the list of URL patterns: ${err}`);
       this.matchPatterns = {};

@@ -61,9 +61,9 @@ xpcAccessibleDocument::GetTitle(nsAString& aTitle) {
 
 NS_IMETHODIMP
 xpcAccessibleDocument::GetMimeType(nsAString& aType) {
-  if (!Intl()) return NS_ERROR_FAILURE;
+  if (!mIntl) return NS_ERROR_FAILURE;
 
-  Intl()->MimeType(aType);
+  nsAccUtils::DocumentMimeType(mIntl, aType);
   return NS_OK;
 }
 

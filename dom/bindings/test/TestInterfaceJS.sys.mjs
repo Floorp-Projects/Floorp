@@ -140,7 +140,7 @@ TestInterfaceJS.prototype = {
   },
 
   testPromiseWithThrowingChromePromiseInit() {
-    return new this._win.Promise(function() {
+    return new this._win.Promise(function () {
       noSuchMethodExistsYo1();
     });
   },
@@ -159,7 +159,7 @@ TestInterfaceJS.prototype = {
   },
 
   testPromiseWithThrowingChromeThenFunction() {
-    return this._win.Promise.resolve(5).then(function() {
+    return this._win.Promise.resolve(5).then(function () {
       noSuchMethodExistsYo2();
     });
   },
@@ -183,7 +183,7 @@ TestInterfaceJS.prototype = {
         noSuchMethodExistsYo3();
       },
     };
-    return new this._win.Promise(function(resolve) {
+    return new this._win.Promise(function (resolve) {
       resolve(thenable);
     });
   },
@@ -205,7 +205,7 @@ TestInterfaceJS.prototype = {
         );
       },
     };
-    return new this._win.Promise(function(resolve) {
+    return new this._win.Promise(function (resolve) {
       resolve(thenable);
     });
   },

@@ -9,7 +9,9 @@
 #include "mozilla/webgpu/ffi/wgpu.h"
 #include "mozilla/webgpu/CanvasContext.h"
 #include "mozilla/dom/WebGPUBinding.h"
+#include "mozilla/webgpu/WebGPUTypes.h"
 #include "TextureView.h"
+#include "Utility.h"
 
 namespace mozilla::webgpu {
 
@@ -44,6 +46,7 @@ static Maybe<uint8_t> GetBytesPerBlock(dom::GPUTextureFormat format) {
     case dom::GPUTextureFormat::Rgba8sint:
     case dom::GPUTextureFormat::Bgra8unorm:
     case dom::GPUTextureFormat::Bgra8unorm_srgb:
+    case dom::GPUTextureFormat::Rgb9e5ufloat:
     case dom::GPUTextureFormat::Rgb10a2unorm:
     case dom::GPUTextureFormat::Rg11b10float:
       return Some<uint8_t>(4u);
@@ -78,6 +81,7 @@ static Maybe<uint8_t> GetBytesPerBlock(dom::GPUTextureFormat format) {
       return Some<uint8_t>(16u);
     case dom::GPUTextureFormat::Depth24plus:
     case dom::GPUTextureFormat::Depth24plus_stencil8:
+    case dom::GPUTextureFormat::Depth32float_stencil8:
     case dom::GPUTextureFormat::EndGuard_:
       return Nothing();
   }
@@ -89,7 +93,12 @@ Texture::Texture(Device* const aParent, RawId aId,
     : ChildOf(aParent),
       mId(aId),
       mFormat(aDesc.mFormat),
-      mBytesPerBlock(GetBytesPerBlock(aDesc.mFormat)) {}
+      mBytesPerBlock(GetBytesPerBlock(aDesc.mFormat)),
+      mSize(ConvertExtent(aDesc.mSize)),
+      mMipLevelCount(aDesc.mMipLevelCount),
+      mSampleCount(aDesc.mSampleCount),
+      mDimension(aDesc.mDimension),
+      mUsage(aDesc.mUsage) {}
 
 Texture::~Texture() { Cleanup(); }
 

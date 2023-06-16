@@ -16,12 +16,11 @@ const DMB_TEST_URL =
   "https://example.com/browser/devtools/client/debugger/test/mochitest/examples/doc-dom-mutation.html";
 
 async function enableMutationBreakpoints() {
-  await pushPref("devtools.debugger.features.dom-mutation-breakpoints", true);
   await pushPref("devtools.markup.mutationBreakpoints.enabled", true);
   await pushPref("devtools.debugger.dom-mutation-breakpoints-visible", true);
 }
 
-add_task(async function() {
+add_task(async function () {
   // Enable features
   await enableMutationBreakpoints();
   info("Switches over to the inspector pane");
@@ -87,7 +86,7 @@ add_task(async function() {
   await waitFor(() => checkbox.checked);
 
   info("Changing attribute to trigger debugger pause");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.document.querySelector("#attribute").click();
   });
   await waitForPaused(dbg);
@@ -102,21 +101,21 @@ add_task(async function() {
   await resume(dbg);
 
   info("Changing style to trigger debugger pause");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.document.querySelector("#style-attribute").click();
   });
   await waitForPaused(dbg);
   await resume(dbg);
 
   info("Changing attribute in shadow dom to trigger debugger pause");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.document.querySelector("#shadow-attribute").click();
   });
   await waitForPaused(dbg);
   await resume(dbg);
 
   info("Adding element in subtree to trigger debugger pause");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.document.querySelector("#add-in-subtree").click();
   });
   await waitForPaused(dbg);
@@ -131,7 +130,7 @@ add_task(async function() {
   await resume(dbg);
 
   info("Removing element in subtree to trigger debugger pause");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.document.querySelector("#remove-in-subtree").click();
   });
   await waitForPaused(dbg);
@@ -154,7 +153,7 @@ add_task(async function() {
   await clickElement(dbg, "blackbox");
   await waitForDispatch(dbg.store, "BLACKBOX_WHOLE_SOURCES");
 
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.document.querySelector("#blackbox").click();
   });
 

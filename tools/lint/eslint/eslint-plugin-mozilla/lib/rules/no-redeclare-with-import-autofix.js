@@ -29,7 +29,7 @@ const gIgnoredImports = new Set(["loader", "require"]);
  * @return {function}
  */
 function trapReport(context) {
-  return function(obj) {
+  return function (obj) {
     let declarator = obj.node.parent;
     while (
       declarator &&
@@ -114,8 +114,7 @@ function trapReport(context) {
 module.exports = {
   meta: {
     docs: {
-      url:
-        "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/no-redeclare-with-import-autofix.html",
+      url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/no-redeclare-with-import-autofix.html",
     },
     messages: {
       ...baseRule.meta.messages,

@@ -350,7 +350,7 @@ MockWebSocket.prototype = {
   },
 };
 
-var setUpServiceInParent = async function(service, db) {
+var setUpServiceInParent = async function (service, db) {
   if (!isParent) {
     return;
   }
@@ -458,7 +458,7 @@ var setUpServiceInParent = async function(service, db) {
   });
 };
 
-var tearDownServiceInParent = async function(db) {
+var tearDownServiceInParent = async function (db) {
   if (!isParent) {
     return;
   }

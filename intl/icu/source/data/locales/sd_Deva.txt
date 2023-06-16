@@ -349,9 +349,19 @@ sd_Deva{
         }
         day-narrow{
             dn{"दीं॒हुं"}
+            relative{
+                "-1"{"कल"}
+                "0"{"अॼु"}
+                "1"{"सुभाणे"}
+            }
         }
         day-short{
             dn{"दीं॒हुं"}
+            relative{
+                "-1"{"कल"}
+                "0"{"अॼु"}
+                "1"{"सुभाणे"}
+            }
         }
         dayperiod{
             dn{"दीं॒हुं/ रातु"}
@@ -360,6 +370,12 @@ sd_Deva{
             dn{"दौर"}
         }
         hour{
+            dn{"कलाक"}
+        }
+        hour-narrow{
+            dn{"कलाक"}
+        }
+        hour-short{
             dn{"कलाक"}
         }
         minute{
@@ -392,13 +408,28 @@ sd_Deva{
         second{
             dn{"सेकिंडु"}
         }
+        second-narrow{
+            dn{"सेकिंडु"}
+        }
+        second-short{
+            dn{"सेकिंडु"}
+        }
         week{
+            dn{"हफ्तो"}
+        }
+        week-narrow{
+            dn{"हफ्तो"}
+        }
+        week-short{
             dn{"हफ्तो"}
         }
         weekday{
             dn{"हफ्ते जो दीं॒हुं"}
         }
         year{
+            dn{"साल"}
+        }
+        year-narrow{
             dn{"साल"}
         }
         year-short{

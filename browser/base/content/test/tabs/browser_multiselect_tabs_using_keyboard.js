@@ -15,7 +15,7 @@ function synthesizeKeyAndWaitForTabToGetKeyboardFocus(tab, keyCode, options) {
   return focused;
 }
 
-add_setup(async function() {
+add_setup(async function () {
   // The DevEdition has the DevTools button in the toolbar by default. Remove it
   // to prevent branch-specific rules what button should be focused.
   CustomizableUI.removeWidgetFromArea("developer-button");

@@ -283,9 +283,8 @@ add_test(function test_unsubscribe_error() {
 
 add_test(function test_subscribe_origin_principal() {
   let scope = "https://example.net/origin-principal";
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    scope
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(scope);
 
   do_test_pending();
   PushServiceComponent.subscribe(scope, principal, (result, subscription) => {

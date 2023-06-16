@@ -564,9 +564,10 @@ export class FormAutoComplete {
     // the datalist suggestions because the datalist is user-provided.
     const finalItems = dedupedHistoryResults.concat(items);
 
-    historyResult.wrappedJSObject.entries = historyResult.wrappedJSObject.entries.filter(
-      entry => !isInArray(entry.text, items, "value")
-    );
+    historyResult.wrappedJSObject.entries =
+      historyResult.wrappedJSObject.entries.filter(
+        entry => !isInArray(entry.text, items, "value")
+      );
 
     // This is ugly: there are two FormAutoCompleteResult classes in the
     // tree, one in a module and one in this file. Datalist results need to

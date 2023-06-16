@@ -9,7 +9,7 @@ const {
   addDevice,
 } = require("resource://devtools/client/shared/devices.js");
 
-add_task(async function() {
+add_task(async function () {
   let devices = await getDevices();
 
   let types = [...devices.keys()];

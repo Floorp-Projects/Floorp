@@ -24,7 +24,7 @@ function test() {
       ],
     };
 
-    waitForBrowserState(state, function() {
+    waitForBrowserState(state, function () {
       let browser = gBrowser.selectedBrowser;
       is(
         browser.currentURI.spec,
@@ -98,7 +98,7 @@ function test() {
       ],
     };
 
-    waitForBrowserState(state, function() {
+    waitForBrowserState(state, function () {
       let browser = gBrowser.getBrowserAtIndex(1);
       is(
         browser.currentURI.spec,
@@ -181,7 +181,7 @@ function test() {
       ],
     };
 
-    waitForBrowserState(state, function() {
+    waitForBrowserState(state, function () {
       let browser = gBrowser.selectedBrowser;
       is(
         browser.currentURI.spec,
@@ -228,7 +228,7 @@ function test() {
       ],
     };
 
-    waitForBrowserState(state, function() {
+    waitForBrowserState(state, function () {
       let browser = gBrowser.selectedBrowser;
       is(
         browser.currentURI.spec,
@@ -277,7 +277,7 @@ function test() {
 
     function firstLocationChange() {
       let state = JSON.parse(ss.getBrowserState());
-      let hasUTV = state.windows[0].tabs.some(function(aTab) {
+      let hasUTV = state.windows[0].tabs.some(function (aTab) {
         return (
           aTab.userTypedValue && aTab.userTypedClear && !aTab.entries.length
         );
@@ -318,7 +318,7 @@ function test() {
       ],
     };
 
-    waitForBrowserState(state, function() {
+    waitForBrowserState(state, function () {
       let browser = gBrowser.selectedBrowser;
       // Make sure this tab isn't loading and state is clear before we test.
       is(browser.userTypedValue, null, "userTypedValue is empty to start");
@@ -332,7 +332,7 @@ function test() {
       gURLBar.value = inputText.slice(0, -1);
       EventUtils.sendString(inputText.slice(-1));
 
-      executeSoon(function() {
+      executeSoon(function () {
         is(
           browser.userTypedValue,
           "example.org",
@@ -378,7 +378,7 @@ function test() {
       ],
     };
 
-    waitForBrowserState(state, function() {
+    waitForBrowserState(state, function () {
       let browser = gBrowser.selectedBrowser;
       is(
         browser.currentURI.spec,
@@ -424,13 +424,13 @@ function test() {
   };
   function runNextTest() {
     if (tests.length) {
-      waitForBrowserState(state, function() {
+      waitForBrowserState(state, function () {
         gBrowser.selectedBrowser.userTypedValue = null;
         gURLBar.setURI();
         tests.shift()();
       });
     } else {
-      waitForBrowserState(originalState, function() {
+      waitForBrowserState(originalState, function () {
         gBrowser.selectedBrowser.userTypedValue = null;
         gURLBar.setURI();
         finish();

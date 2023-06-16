@@ -3,14 +3,8 @@
 const { ctypes } = ChromeUtils.importESModule(
   "resource://gre/modules/ctypes.sys.mjs"
 );
-const {
-  ESE,
-  KERNEL,
-  gLibs,
-  COLUMN_TYPES,
-  declareESEFunction,
-  loadLibraries,
-} = ChromeUtils.importESModule("resource:///modules/ESEDBReader.sys.mjs");
+const { ESE, KERNEL, gLibs, COLUMN_TYPES, declareESEFunction, loadLibraries } =
+  ChromeUtils.importESModule("resource:///modules/ESEDBReader.sys.mjs");
 const { EdgeProfileMigrator } = ChromeUtils.importESModule(
   "resource:///modules/EdgeProfileMigrator.sys.mjs"
 );
@@ -396,7 +390,7 @@ let eseDBWritingHelpers = {
   },
 };
 
-add_task(async function() {
+add_task(async function () {
   let tempFile = Services.dirsvc.get("TmpD", Ci.nsIFile);
   tempFile.append("fx-xpcshell-edge-db");
   tempFile.createUnique(tempFile.DIRECTORY_TYPE, 0o600);

@@ -112,6 +112,8 @@ class CommandBar extends Component {
       toggleTracing: PropTypes.func.isRequired,
       logMethod: PropTypes.string.isRequired,
       setJavascriptTracingLogMethod: PropTypes.func.isRequired,
+      setHideOrShowIgnoredSources: PropTypes.func.isRequired,
+      toggleSourceMapIgnoreList: PropTypes.func.isRequired,
     };
   }
 
@@ -174,7 +176,7 @@ class CommandBar extends Component {
         "stepIn",
         className,
         L10N.getFormatStr("stepInTooltip", formatKey("stepIn")),
-        isDisabled || (features.frameStep && !topFrameSelected)
+        isDisabled || !topFrameSelected
       ),
       debugBtn(
         () => this.props.stepOut(),
@@ -352,6 +354,29 @@ class CommandBar extends Component {
             this.props.toggleSourceMapsEnabled(!prefs.clientSourceMapsEnabled)
           }
         />
+        <MenuItem
+          key="debugger-settings-menu-item-hide-ignored-sources"
+          className="menu-item debugger-settings-menu-item-hide-ignored-sources"
+          checked={prefs.hideIgnoredSources}
+          label={L10N.getStr("settings.hideIgnoredSources.label")}
+          tooltip={L10N.getStr("settings.hideIgnoredSources.tooltip")}
+          onClick={() =>
+            this.props.setHideOrShowIgnoredSources(!prefs.hideIgnoredSources)
+          }
+        />
+        <MenuItem
+          key="debugger-settings-menu-item-enable-sourcemap-ignore-list"
+          className="menu-item debugger-settings-menu-item-enable-sourcemap-ignore-list"
+          checked={prefs.sourceMapIgnoreListEnabled}
+          label={L10N.getStr("settings.enableSourceMapIgnoreList.label")}
+          tooltip={L10N.getStr("settings.enableSourceMapIgnoreList.tooltip")}
+          onClick={() =>
+            this.props.toggleSourceMapIgnoreList(
+              this.props.cx,
+              !prefs.sourceMapIgnoreListEnabled
+            )
+          }
+        />
       </MenuList>
     );
   }
@@ -403,4 +428,6 @@ export default connect(mapStateToProps, {
   toggleEditorWrapping: actions.toggleEditorWrapping,
   toggleSourceMapsEnabled: actions.toggleSourceMapsEnabled,
   toggleJavaScriptEnabled: actions.toggleJavaScriptEnabled,
+  setHideOrShowIgnoredSources: actions.setHideOrShowIgnoredSources,
+  toggleSourceMapIgnoreList: actions.toggleSourceMapIgnoreList,
 })(CommandBar);

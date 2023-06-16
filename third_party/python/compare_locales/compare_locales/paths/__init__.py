@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
 from compare_locales import mozpath
 from .files import ProjectFiles, REFERENCE_LOCALE
 from .ini import (
@@ -24,7 +23,7 @@ __all__ = [
 ]
 
 
-class File(object):
+class File:
 
     def __init__(self, fullpath, file, module=None, locale=None):
         self.fullpath = fullpath

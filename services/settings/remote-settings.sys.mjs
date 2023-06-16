@@ -108,7 +108,7 @@ function remoteSettingsFunction() {
    * @param {Object} options Advanced options
    * @returns {RemoteSettingsClient} An instance of a Remote Settings client.
    */
-  const remoteSettings = function(collectionName, options) {
+  const remoteSettings = function (collectionName, options) {
     // Get or instantiate a remote settings client.
     if (!_clients.has(collectionName)) {
       // Register a new client!
@@ -491,12 +491,10 @@ function remoteSettingsFunction() {
   remoteSettings.inspect = async () => {
     // Make sure we fetch the latest server info, use a random cache bust value.
     const randomCacheBust = 99990000 + Math.floor(Math.random() * 9999);
-    const {
-      changes,
-      currentEtag: serverTimestamp,
-    } = await lazy.Utils.fetchLatestChanges(lazy.Utils.SERVER_URL, {
-      expected: randomCacheBust,
-    });
+    const { changes, currentEtag: serverTimestamp } =
+      await lazy.Utils.fetchLatestChanges(lazy.Utils.SERVER_URL, {
+        expected: randomCacheBust,
+      });
 
     const collections = await Promise.all(
       changes.map(async change => {

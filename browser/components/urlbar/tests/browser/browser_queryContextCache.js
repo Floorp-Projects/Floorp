@@ -22,7 +22,7 @@ if (AppConstants.platform == "macosx") {
   requestLongerTimeout(3);
 }
 
-add_setup(async function() {
+add_setup(async function () {
   // Clear history and bookmarks to make sure the URLs we add below are truly
   // the top sites. If any existing history or bookmarks were the top sites,
   // which is likely but not guaranteed, one or more "newtab-top-sites-changed"
@@ -468,9 +468,9 @@ async function openViewAndAssertCached({
  */
 async function updateTopSitesAndAwaitChanged(expectedCount) {
   info("Updating top sites and awaiting newtab-top-sites-changed");
-  let changedPromise = TestUtils.topicObserved(
-    "newtab-top-sites-changed"
-  ).then(() => info("Observed newtab-top-sites-changed"));
+  let changedPromise = TestUtils.topicObserved("newtab-top-sites-changed").then(
+    () => info("Observed newtab-top-sites-changed")
+  );
   await updateTopSites(sites => sites?.length == expectedCount);
   await changedPromise;
 }

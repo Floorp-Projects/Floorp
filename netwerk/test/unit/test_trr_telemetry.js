@@ -9,13 +9,12 @@ Services.prefs.setBoolPref(
   true
 );
 
-const { TelemetryTestUtils } = ChromeUtils.import(
-  "resource://testing-common/TelemetryTestUtils.jsm"
+const { TelemetryTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
 
 function setup() {
   h2Port = trr_test_setup();
-  runningODoHTests = false;
 }
 
 let TRR_OK = 1;

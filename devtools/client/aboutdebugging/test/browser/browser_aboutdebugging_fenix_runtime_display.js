@@ -18,7 +18,7 @@ const FENIX_NIGHTLY_ICON_SRC =
 /**
  * Check that Fenix runtime information is correctly displayed in about:debugging.
  */
-add_task(async function() {
+add_task(async function () {
   const mocks = new Mocks();
   mocks.createUSBRuntime(RUNTIME_ID, {
     deviceName: DEVICE_NAME,
@@ -72,7 +72,7 @@ add_task(async function() {
 /**
  * Check that Fenix runtime information is correctly displayed in about:devtools-toolbox.
  */
-add_task(async function() {
+add_task(async function () {
   // We use a real local client combined with a mocked USB runtime to be able to open
   // about:devtools-toolbox on a real target.
   const clientWrapper = await createLocalClientWrapper();

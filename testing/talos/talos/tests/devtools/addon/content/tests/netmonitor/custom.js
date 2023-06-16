@@ -40,7 +40,7 @@ const expectedRequests =
 
 const CUSTOM_URL = PAGES_BASE_URL + "custom/netmonitor/index.html";
 
-module.exports = async function() {
+module.exports = async function () {
   const url =
     CUSTOM_URL +
     `?bigFileRequests=${bigFileRequests}&postDataRequests=${postDataRequests}&xhrRequests=${xhrRequests}`;

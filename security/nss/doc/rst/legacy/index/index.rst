@@ -1168,7 +1168,7 @@ Index
    |                                |                                | A/Getting_Started_with_IRC>`__ |
    |                                |                                | in channel                     |
    |                                |                                | `#nss <                        |
-   |                                |                                | irc://irc.mozilla.org/#nss>`__ |
+   |                                |                                | https://chat.mozilla.org/#/room/#nss:mozilla.org>`__ |
    |                                |                                | or you could ask your          |
    |                                |                                | questions on the               |
    |                                |                                | `mozilla.dev.tech.cry          |

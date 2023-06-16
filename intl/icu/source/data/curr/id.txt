@@ -1619,6 +1619,9 @@ id{
         LRD{
             other{"Dolar Liberia"}
         }
+        LSL{
+            other{"Loti Lesotho"}
+        }
         LTL{
             other{"Litas Lituania"}
         }

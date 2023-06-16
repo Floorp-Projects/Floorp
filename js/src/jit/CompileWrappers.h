@@ -107,12 +107,10 @@ class CompileZone {
   const uint32_t* addressOfNeedsIncrementalBarrier();
   uint32_t* addressOfTenuredAllocCount();
   gc::FreeSpan** addressOfFreeList(gc::AllocKind allocKind);
+  bool allocNurseryObjects();
+  bool allocNurseryStrings();
+  bool allocNurseryBigInts();
   void* addressOfNurseryPosition();
-  void* addressOfStringNurseryPosition();
-  void* addressOfBigIntNurseryPosition();
-  const void* addressOfNurseryCurrentEnd();
-  const void* addressOfStringNurseryCurrentEnd();
-  const void* addressOfBigIntNurseryCurrentEnd();
 
   void* addressOfNurseryAllocatedSites();
 

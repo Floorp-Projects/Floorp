@@ -15,8 +15,9 @@ var gMockFxaDevices = null;
 var gUIStateStatus;
 
 function promiseSyncReady() {
-  let service = Cc["@mozilla.org/weave/service;1"].getService(Ci.nsISupports)
-    .wrappedJSObject;
+  let service = Cc["@mozilla.org/weave/service;1"].getService(
+    Ci.nsISupports
+  ).wrappedJSObject;
   return service.whenLoaded();
 }
 
@@ -45,7 +46,7 @@ async function setupWithDesktopDevices() {
   });
   return sandbox;
 }
-add_setup(async function() {
+add_setup(async function () {
   registerCleanupFunction(() => {
     // reset internal state so it doesn't affect the next tests
     TabsSetupFlowManager.resetInternalState();
@@ -54,7 +55,7 @@ add_setup(async function() {
   // gSync.init() is called in a requestIdleCallback. Force its initialization.
   gSync.init();
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     Services.prefs.clearUserPref("services.sync.engine.tabs");
     await tearDown(gSandbox);
   });

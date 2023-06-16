@@ -8,6 +8,7 @@
 
 #include "Compatibility.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Document.h"
 #include "DocAccessibleChild.h"
 #include "nsWinUtils.h"
@@ -52,14 +53,7 @@ void DocAccessibleWrap::Shutdown() {
 // DocAccessible public
 
 void* DocAccessibleWrap::GetNativeWindow() const {
-  if (XRE_IsContentProcess()) {
-    DocAccessibleChild* ipcDoc = IPCDoc();
-    if (!ipcDoc) {
-      return nullptr;
-    }
-
-    return ipcDoc->GetNativeWindowHandle();
-  } else if (mHWND) {
+  if (mHWND) {
     return mHWND;
   }
   return DocAccessible::GetNativeWindow();

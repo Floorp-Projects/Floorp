@@ -9,8 +9,8 @@
 var httpserver = new HttpServer();
 
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const { UrlClassifierTestUtils } = ChromeUtils.import(
-  "resource://testing-common/UrlClassifierTestUtils.jsm"
+const { UrlClassifierTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
 );
 
 const FEATURE_STP_PREF = "privacy.trackingprotection.socialtracking.enabled";
@@ -39,7 +39,7 @@ function setupChannel(uri, topUri = TOP_LEVEL_DOMAIN) {
 }
 
 function waitForBeforeBlockEvent(expected, callback) {
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve) {
     let observer = function observe(aSubject, aTopic, aData) {
       switch (aTopic) {
         case "urlclassifier-before-block-channel":

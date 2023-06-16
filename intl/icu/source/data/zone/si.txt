@@ -258,6 +258,9 @@ si{
         "America:Chihuahua"{
             ec{"චිහුආහුආ"}
         }
+        "America:Ciudad_Juarez"{
+            ec{"සියුඩාඩ් ජුවාරෙස්"}
+        }
         "America:Coral_Harbour"{
             ec{"ඇටිකොකන්"}
         }

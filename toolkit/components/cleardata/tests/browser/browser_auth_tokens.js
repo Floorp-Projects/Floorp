@@ -8,9 +8,10 @@
  */
 
 const TEST_SECRET = "secret";
-const TEST_PRINCIPAL = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-  "https://example.com"
-);
+const TEST_PRINCIPAL =
+  Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+    "https://example.com"
+  );
 const TEST_CLEAR_DATA_FLAGS = Services.clearData.CLEAR_AUTH_TOKENS;
 
 const pk11db = Cc["@mozilla.org/security/pk11tokendb;1"].getService(

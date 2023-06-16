@@ -132,9 +132,8 @@ add_task(async function testHomeButtonPlacement() {
     is(homePlacement.area, "nav-bar", "Home button is in the nav-bar");
     is(homePlacement.position, 3, "Home button is after stop/refresh");
 
-    let addressBarPlacement = CustomizableUI.getPlacementOfWidget(
-      kUrlbarWidgetId
-    );
+    let addressBarPlacement =
+      CustomizableUI.getPlacementOfWidget(kUrlbarWidgetId);
     is(
       addressBarPlacement.position,
       5,

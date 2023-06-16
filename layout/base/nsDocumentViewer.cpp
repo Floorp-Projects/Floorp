@@ -2512,7 +2512,7 @@ NS_IMETHODIMP nsDocumentViewer::GetContents(const char* mimeType,
     sel = nsCopySupport::GetSelectionForCopy(mDocument);
     NS_ENSURE_TRUE(sel, NS_ERROR_FAILURE);
 
-    if (sel->IsCollapsed()) {
+    if (NS_WARN_IF(sel->IsCollapsed())) {
       return NS_OK;
     }
   }
@@ -2654,7 +2654,8 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP nsDocumentViewer::GetContentSize(
     } else {
       prefISize = root->GetPrefISize(rcx.get());
     }
-    prefISize = std::max(minISize, std::min(prefISize, maxISize));
+    prefISize = nsPresContext::RoundUpAppUnitsToCSSPixel(
+        std::max(minISize, std::min(prefISize, maxISize)));
   }
 
   // We should never intentionally get here with this sentinel value, but it's
@@ -2871,6 +2872,19 @@ nsresult nsDocViewerFocusListener::HandleEvent(Event* aEvent) {
         selectionStatus == nsISelectionController::SELECTION_HIDDEN) {
       selection->SetDisplaySelection(nsISelectionController::SELECTION_ON);
       selection->RepaintSelection(SelectionType::eNormal);
+    }
+    // See EditorBase::FinalizeSelection. This fixes up the case where focus
+    // left the editor's selection but returned to something else.
+    if (selection != presShell->ConstFrameSelection()) {
+      RefPtr<Document> doc = presShell->GetDocument();
+      const bool selectionMatchesFocus =
+          selection->GetLimiter() &&
+          selection->GetLimiter()->GetChromeOnlyAccessSubtreeRootParent() ==
+              doc->GetUnretargetedFocusedContent();
+      if (NS_WARN_IF(!selectionMatchesFocus)) {
+        presShell->FrameSelectionWillLoseFocus(*selection);
+        presShell->SelectionWillTakeFocus();
+      }
     }
   } else {
     MOZ_ASSERT(eventType.EqualsLiteral("blur"), "Unexpected event type");

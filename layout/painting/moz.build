@@ -13,7 +13,6 @@ EXPORTS += [
     "DisplayItemClipChain.h",
     "DisplayListClipState.h",
     "HitTestInfo.h",
-    "LayerState.h",
     "MatrixStack.h",
     "nsCSSRendering.h",
     "nsCSSRenderingBorders.h",

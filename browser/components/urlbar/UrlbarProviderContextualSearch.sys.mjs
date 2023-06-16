@@ -2,9 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 import {
   UrlbarProvider,
@@ -14,6 +12,7 @@ import {
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  OpenSearchEngine: "resource://gre/modules/OpenSearchEngine.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
@@ -22,7 +21,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  OpenSearchEngine: "resource://gre/modules/OpenSearchEngine.jsm",
 });
 
 const DYNAMIC_RESULT_TYPE = "contextualSearch";
@@ -151,7 +149,7 @@ class ProviderContextualSearch extends UrlbarProvider {
       // The default engine will often be used to populate the heuristic result,
       // and we want to avoid ending up with two nearly identical search results.
       let defaultEngine = lazy.UrlbarSearchUtils.getDefaultEngine();
-      if (engine.name === defaultEngine.name) {
+      if (engine.name === defaultEngine?.name) {
         return;
       }
       const [url] = UrlbarUtils.getSearchQueryUrl(
@@ -249,14 +247,14 @@ class ProviderContextualSearch extends UrlbarProvider {
     };
   }
 
-  onEngagement(isPrivate, state, queryContext, details) {
+  onEngagement(isPrivate, state, queryContext, details, window) {
     let { result } = details;
     if (result?.providerName == this.name) {
-      this.#pickResult(result);
+      this.#pickResult(result, window);
     }
   }
 
-  async #pickResult(result) {
+  async #pickResult(result, window) {
     // If we have an engine to add, first create a new OpenSearchEngine, then
     // get and open a url to execute a search for the term in the url bar.
     // In cases where we don't have to create a new engine, navigation is
@@ -274,9 +272,9 @@ class ProviderContextualSearch extends UrlbarProvider {
         newEngine,
         result.payload.input
       );
-      let window = lazy.BrowserWindowTracker.getTopWindow();
       window.gBrowser.fixupAndLoadURIString(url, {
-        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+        triggeringPrincipal:
+          Services.scriptSecurityManager.getSystemPrincipal(),
       });
     }
   }

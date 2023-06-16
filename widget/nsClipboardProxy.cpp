@@ -2,15 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsClipboardProxy.h"
+
 #if defined(ACCESSIBILITY) && defined(XP_WIN)
 #  include "mozilla/a11y/Compatibility.h"
 #endif
+#include "mozilla/ClipboardWriteRequestChild.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Unused.h"
 #include "nsArrayUtils.h"
-#include "nsClipboardProxy.h"
 #include "nsISupportsPrimitives.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
@@ -33,27 +35,21 @@ nsClipboardProxy::SetData(nsITransferable* aTransferable,
 #endif
 
   ContentChild* child = ContentChild::GetSingleton();
-
-  IPCDataTransfer ipcDataTransfer;
-  nsContentUtils::TransferableToIPCTransferable(aTransferable, &ipcDataTransfer,
+  IPCTransferable ipcTransferable;
+  nsContentUtils::TransferableToIPCTransferable(aTransferable, &ipcTransferable,
                                                 false, nullptr);
+  child->SendSetClipboard(std::move(ipcTransferable), aWhichClipboard);
+  return NS_OK;
+}
 
-  Maybe<mozilla::net::CookieJarSettingsArgs> cookieJarSettingsArgs;
-  if (nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
-          aTransferable->GetCookieJarSettings()) {
-    mozilla::net::CookieJarSettingsArgs args;
-    mozilla::net::CookieJarSettings::Cast(cookieJarSettings)->Serialize(args);
-    cookieJarSettingsArgs = Some(args);
-  }
-  bool isPrivateData = aTransferable->GetIsPrivateData();
-  nsCOMPtr<nsIPrincipal> requestingPrincipal =
-      aTransferable->GetRequestingPrincipal();
-  nsContentPolicyType contentPolicyType = aTransferable->GetContentPolicyType();
-  nsCOMPtr<nsIReferrerInfo> referrerInfo = aTransferable->GetReferrerInfo();
-  child->SendSetClipboard(std::move(ipcDataTransfer), isPrivateData,
-                          requestingPrincipal, cookieJarSettingsArgs,
-                          contentPolicyType, referrerInfo, aWhichClipboard);
-
+NS_IMETHODIMP nsClipboardProxy::AsyncSetData(
+    int32_t aWhichClipboard, nsIAsyncSetClipboardDataCallback* aCallback,
+    nsIAsyncSetClipboardData** _retval) {
+  RefPtr<ClipboardWriteRequestChild> request =
+      MakeRefPtr<ClipboardWriteRequestChild>(aCallback);
+  ContentChild::GetSingleton()->SendPClipboardWriteRequestConstructor(
+      request, aWhichClipboard);
+  request.forget(_retval);
   return NS_OK;
 }
 
@@ -63,11 +59,11 @@ nsClipboardProxy::GetData(nsITransferable* aTransferable,
   nsTArray<nsCString> types;
   aTransferable->FlavorsTransferableCanImport(types);
 
-  IPCDataTransfer dataTransfer;
+  IPCTransferableData transferable;
   ContentChild::GetSingleton()->SendGetClipboard(types, aWhichClipboard,
-                                                 &dataTransfer);
-  return nsContentUtils::IPCTransferableToTransferable(
-      dataTransfer, false /* aAddDataFlavor */, aTransferable,
+                                                 &transferable);
+  return nsContentUtils::IPCTransferableDataToTransferable(
+      transferable, false /* aAddDataFlavor */, aTransferable,
       false /* aFilterUnknownFlavors */);
 }
 
@@ -156,16 +152,17 @@ RefPtr<GenericPromise> nsClipboardProxy::AsyncGetData(
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
           /* resolve */
-          [promise,
-           transferable](const IPCDataTransferOrError& ipcDataTransferOrError) {
-            if (ipcDataTransferOrError.type() ==
-                IPCDataTransferOrError::Tnsresult) {
-              promise->Reject(ipcDataTransferOrError.get_nsresult(), __func__);
+          [promise, transferable](
+              const IPCTransferableDataOrError& ipcTransferableDataOrError) {
+            if (ipcTransferableDataOrError.type() ==
+                IPCTransferableDataOrError::Tnsresult) {
+              promise->Reject(ipcTransferableDataOrError.get_nsresult(),
+                              __func__);
               return;
             }
 
-            nsresult rv = nsContentUtils::IPCTransferableToTransferable(
-                ipcDataTransferOrError.get_IPCDataTransfer(),
+            nsresult rv = nsContentUtils::IPCTransferableDataToTransferable(
+                ipcTransferableDataOrError.get_IPCTransferableData(),
                 false /* aAddDataFlavor */, transferable,
                 false /* aFilterUnknownFlavors */);
             if (NS_FAILED(rv)) {

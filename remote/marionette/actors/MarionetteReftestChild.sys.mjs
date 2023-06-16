@@ -7,6 +7,8 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
+
   Log: "chrome://remote/content/shared/Log.sys.mjs",
 });
 
@@ -92,9 +94,7 @@ export class MarionetteReftestChild extends JSWindowActorChild {
     const hasReftestWait = documentElement.classList.contains("reftest-wait");
 
     lazy.logger.debug("Waiting for event loop to spin");
-    await new Promise(resolve =>
-      this.document.defaultView.setTimeout(resolve, 0)
-    );
+    await new Promise(resolve => lazy.setTimeout(resolve, 0));
 
     await this.paintComplete({ useRemote, ignoreThrottledAnimations: true });
 
@@ -159,13 +159,13 @@ export class MarionetteReftestChild extends JSWindowActorChild {
         if (!documentElement.classList.contains("reftest-wait")) {
           observer.disconnect();
           lazy.logger.debug("reftest-wait removed");
-          this.document.defaultView.setTimeout(resolve, 0);
+          lazy.setTimeout(resolve, 0);
         }
       });
       if (documentElement.classList.contains("reftest-wait")) {
         observer.observe(documentElement, { attributes: true });
       } else {
-        this.document.defaultView.setTimeout(resolve, 0);
+        lazy.setTimeout(resolve, 0);
       }
     });
   }

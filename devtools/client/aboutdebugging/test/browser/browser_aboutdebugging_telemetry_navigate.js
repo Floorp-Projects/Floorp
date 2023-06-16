@@ -12,7 +12,7 @@ Services.scriptloader.loadSubScript(
  * Check that telemetry events are recorded when navigating between different
  * about:debugging pages.
  */
-add_task(async function() {
+add_task(async function () {
   // enable USB devices mocks
   const mocks = new Mocks();
 

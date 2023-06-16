@@ -42,7 +42,7 @@ add_task(async function test_initialize() {
 /**
  * Tests that sorting date query by none will sort by title asc.
  */
-add_task(function() {
+add_task(function () {
   var options = hs.getNewQueryOptions();
   options.resultType = options.RESULTS_AS_DATE_QUERY;
   // This should sort by title asc.
@@ -70,7 +70,7 @@ add_task(function() {
 /**
  * Tests that sorting date query by date will sort accordingly.
  */
-add_task(function() {
+add_task(function () {
   var options = hs.getNewQueryOptions();
   options.resultType = options.RESULTS_AS_DATE_QUERY;
   // This should sort by title asc.
@@ -98,7 +98,7 @@ add_task(function() {
 /**
  * Tests that sorting date site query by date will still sort by title asc.
  */
-add_task(function() {
+add_task(function () {
   var options = hs.getNewQueryOptions();
   options.resultType = options.RESULTS_AS_DATE_SITE_QUERY;
   // This should sort by title asc.

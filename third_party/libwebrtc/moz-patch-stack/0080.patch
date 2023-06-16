@@ -1,30 +1,28 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Thu, 6 Jan 2022 00:16:00 +0000
-Subject: Bug 1748458 - Add TRACE_EVENT for keyframe requests. r=bwc
+Date: Wed, 8 Feb 2023 08:01:00 +0000
+Subject: Bug 1814692 - Don't attempt realtime scheduling rtc::PlatformThreads.
+ r=webrtc-reviewers,bwc
 
-Differential Revision: https://phabricator.services.mozilla.com/D135113
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/5b2a7894ef1cf096d0e8977754507c0820e757fc
+Differential Revision: https://phabricator.services.mozilla.com/D169036
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/9e64a965e26c8379261466e5273c3b383164b2c7
 ---
- video/rtp_video_stream_receiver2.cc | 6 ++++++
- 1 file changed, 6 insertions(+)
+ rtc_base/platform_thread.cc | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index a66169e841..ab03890964 100644
---- a/video/rtp_video_stream_receiver2.cc
-+++ b/video/rtp_video_stream_receiver2.cc
-@@ -746,6 +746,12 @@ void RtpVideoStreamReceiver2::OnRtpPacket(const RtpPacketReceived& packet) {
- 
- void RtpVideoStreamReceiver2::RequestKeyFrame() {
-   RTC_DCHECK_RUN_ON(&worker_task_checker_);
-+  TRACE_EVENT2("webrtc", "RtpVideoStreamReceiver2::RequestKeyFrame",
-+               "remote_ssrc", config_.rtp.remote_ssrc, "method",
-+               keyframe_request_method_ == KeyFrameReqMethod::kPliRtcp   ? "PLI"
-+               : keyframe_request_method_ == KeyFrameReqMethod::kFirRtcp ? "FIR"
-+               : keyframe_request_method_ == KeyFrameReqMethod::kNone ? "None"
-+                                                                      : "Other");
-   // TODO(bugs.webrtc.org/10336): Allow the sender to ignore key frame requests
-   // issued by anything other than the LossNotificationController if it (the
-   // sender) is relying on LNTF alone.
+diff --git a/rtc_base/platform_thread.cc b/rtc_base/platform_thread.cc
+index 71a9f1b224..bcbb784b97 100644
+--- a/rtc_base/platform_thread.cc
++++ b/rtc_base/platform_thread.cc
+@@ -50,6 +50,9 @@ bool SetPriority(ThreadPriority priority) {
+   // TODO(tommi): Switch to the same mechanism as Chromium uses for changing
+   // thread priorities.
+   return true;
++#elif defined(WEBRTC_MOZILLA_BUILD) && defined(WEBRTC_LINUX)
++  // Only realtime audio uses realtime scheduling in Firefox.
++  return true;
+ #else
+   const int policy = SCHED_FIFO;
+   const int min_prio = sched_get_priority_min(policy);
 -- 
 2.34.1
 

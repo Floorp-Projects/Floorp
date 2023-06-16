@@ -58,7 +58,7 @@ add_test(
   },
   function test_get_system_notification() {
     const requestID = nextRequestID++;
-    const msgHandler = function(message) {
+    const msgHandler = function (message) {
       Assert.equal(requestID, message.data.requestID);
       Assert.equal(0, message.data.notifications.length);
     };
@@ -76,7 +76,7 @@ add_test(
   },
   function test_get_foo_notification() {
     const requestID = nextRequestID++;
-    const msgHandler = function(message) {
+    const msgHandler = function (message) {
       Assert.equal(requestID, message.data.requestID);
       Assert.equal(1, message.data.notifications.length);
       Assert.deepEqual(
@@ -99,7 +99,7 @@ add_test(
   },
   function test_get_bar_notification() {
     const requestID = nextRequestID++;
-    const msgHandler = function(message) {
+    const msgHandler = function (message) {
       Assert.equal(requestID, message.data.requestID);
       Assert.equal(1, message.data.notifications.length);
       Assert.deepEqual(

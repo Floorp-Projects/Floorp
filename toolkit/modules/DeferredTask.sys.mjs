@@ -110,7 +110,7 @@ const Timer = Components.Constructor(
  *        aDelayMs have elapsed. If omitted, waits indefinitely for an idle
  *        callback.
  */
-export var DeferredTask = function(aTaskFn, aDelayMs, aIdleTimeoutMs) {
+export var DeferredTask = function (aTaskFn, aDelayMs, aIdleTimeoutMs) {
   this._taskFn = aTaskFn;
   this._delayMs = aDelayMs;
   this._timeoutMs = aIdleTimeoutMs;

@@ -13,7 +13,7 @@ const { TelemetryArchive } = ChromeUtils.importESModule(
   "resource://gre/modules/TelemetryArchive.sys.mjs"
 );
 
-XPCOMUtils.defineLazyGetter(this, "gPingsArchivePath", function() {
+XPCOMUtils.defineLazyGetter(this, "gPingsArchivePath", function () {
   return PathUtils.join(PathUtils.profileDir, "datareporting", "archived");
 });
 
@@ -37,7 +37,7 @@ function fakeStorageQuota(aArchiveQuota) {
  *                    type: <string>,
  *                    size: <integer> }
  */
-var getArchivedPingsInfo = async function() {
+var getArchivedPingsInfo = async function () {
   let archivedPings = [];
 
   // Iterate through the subdirs of |gPingsArchivePath|.
@@ -118,7 +118,7 @@ add_task(async function test_archivedPings() {
   }
 
   // Check loading the archived pings.
-  let checkLoadingPings = async function() {
+  let checkLoadingPings = async function () {
     for (let data of PINGS) {
       let ping = await TelemetryArchive.promiseArchivedPingById(data.id);
       Assert.equal(ping.id, data.id, "Archived ping should have matching id");
@@ -149,7 +149,7 @@ add_task(async function test_archivedPings() {
   await checkLoadingPings();
 
   // Write invalid pings into the archive with both valid and invalid names.
-  let writeToArchivedDir = async function(
+  let writeToArchivedDir = async function (
     dirname,
     filename,
     content,
@@ -279,7 +279,7 @@ add_task(async function test_archiveCleanup() {
   let expectedPrunedInfo = [];
   let expectedNotPrunedInfo = [];
 
-  let checkArchive = async function() {
+  let checkArchive = async function () {
     // Check that the pruned pings are not on disk anymore.
     for (let prunedInfo of expectedPrunedInfo) {
       await Assert.rejects(

@@ -20,7 +20,7 @@ New NSS Samples
 
    How to download the samples:
 
-   .. code:: bz_comment_text
+   .. code:: sh
 
       hg clone https://hg.mozilla.org/projects/nss; cd nss; hg update SAMPLES_BRANCH
 

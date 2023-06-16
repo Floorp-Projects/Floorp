@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function({ CDP }) {
+add_task(async function ({ CDP }) {
   const { webSocketDebuggerUrl } = await CDP.Version();
   const client = await CDP({ target: webSocketDebuggerUrl });
 

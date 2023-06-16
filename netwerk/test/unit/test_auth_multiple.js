@@ -16,7 +16,7 @@ function URL(domain, path = "") {
   return `http://${domain}:${httpserv.identity.primaryPort}/${path}`;
 }
 
-XPCOMUtils.defineLazyGetter(this, "PORT", function() {
+XPCOMUtils.defineLazyGetter(this, "PORT", function () {
   return httpserv.identity.primaryPort;
 });
 

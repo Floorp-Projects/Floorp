@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     // Ensure we can wait for about:newtab to load.
     set: [["browser.newtab.preload", false]],

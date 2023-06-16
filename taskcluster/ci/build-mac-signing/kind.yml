@@ -14,11 +14,13 @@ kind-dependencies:
     - build
 
 only-for-attributes:
-    - shippable
+    - enable-build-signing
 
 only-for-build-platforms:
     - macosx64-shippable/opt
     - macosx64-devedition/opt
+    - macosx64/opt
+    - macosx64/debug
 
 job-template:
     treeherder:

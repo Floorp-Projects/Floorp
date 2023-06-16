@@ -10,13 +10,14 @@
 
 // Macros and functions useful for tests.
 
+#include <jxl/codestream_header.h>
+#include <jxl/thread_parallel_runner_cxx.h>
 #include <stddef.h>
 #include <stdint.h>
 
 #include <ostream>
 #include <vector>
 
-#include "jxl/codestream_header.h"
 #include "lib/extras/dec/jxl.h"
 #include "lib/extras/enc/jxl.h"
 #include "lib/extras/packed_image.h"
@@ -130,6 +131,10 @@ float ButteraugliDistance(const extras::PackedPixelFile& a,
                           const extras::PackedPixelFile& b,
                           ThreadPool* pool = nullptr);
 
+float Butteraugli3Norm(const extras::PackedPixelFile& a,
+                       const extras::PackedPixelFile& b,
+                       ThreadPool* pool = nullptr);
+
 float ComputeDistance2(const extras::PackedPixelFile& a,
                        const extras::PackedPixelFile& b);
 
@@ -140,6 +145,23 @@ bool SamePixels(const extras::PackedImage& a, const extras::PackedImage& b);
 
 bool SamePixels(const extras::PackedPixelFile& a,
                 const extras::PackedPixelFile& b);
+
+class ThreadPoolForTests {
+ public:
+  explicit ThreadPoolForTests(int num_threads) {
+    runner_ =
+        JxlThreadParallelRunnerMake(/* memory_manager */ nullptr, num_threads);
+    pool_ =
+        jxl::make_unique<ThreadPool>(JxlThreadParallelRunner, runner_.get());
+  }
+  ThreadPoolForTests(const ThreadPoolForTests&) = delete;
+  ThreadPoolForTests& operator&(const ThreadPoolForTests&) = delete;
+  ThreadPool* operator&() { return pool_.get(); }
+
+ private:
+  JxlThreadParallelRunnerPtr runner_;
+  std::unique_ptr<ThreadPool> pool_;
+};
 
 }  // namespace test
 

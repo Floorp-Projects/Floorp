@@ -5,7 +5,7 @@
 
 const { actions } = require("resource://devtools/client/memory/constants.js");
 
-exports.resizeShortestPaths = function(newSize) {
+exports.resizeShortestPaths = function (newSize) {
   return {
     type: actions.RESIZE_SHORTEST_PATHS,
     size: newSize,

@@ -8,7 +8,7 @@ The compatibility panel consists of the following files:
 * Shared:
   * MDN compatibility dataset: `devtools/shared/compatibility/dataset/`
   * MDN compatibility library: `devtools/server/actors/compatibility/lib/MDNCompatibility.js`
-  * User setting file - `devtools/client/inspector/shared/compatibility-user-settings.js`
+  * User setting file - `devtools/shared/compatibility/compatibility-user-settings.js`
 * Server:
   * Actor: `devtools/server/actors/compatibility.js`
   * Front: `devtools/client/fronts/compatibility.js`

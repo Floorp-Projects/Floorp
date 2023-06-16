@@ -113,7 +113,7 @@ function do_test() {
       startCopier(test_source_closed, test_sink_closed);
       pipe1.outputStream.write(test_content, test_content.length);
       pipe1.outputStream.flush();
-      do_timeout(20, function() {
+      do_timeout(20, function () {
         copier.cancel(test_result);
         pipe1.outputStream.write("a", 1);
       });
@@ -151,7 +151,7 @@ function do_test() {
       pipe1.outputStream.flush();
       // we will close the sink
       test_sink_closed = true;
-      do_timeout(20, function() {
+      do_timeout(20, function () {
         pipe2.outputStream
           .QueryInterface(Ci.nsIAsyncOutputStream)
           .closeWithStatus(test_result);

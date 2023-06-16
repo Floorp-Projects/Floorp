@@ -25,7 +25,7 @@ const device2 = Object.assign({}, device, {
 
 addRDMTask(
   TEST_URL,
-  async function({ ui }) {
+  async function ({ ui }) {
     const { toolWindow } = ui;
     const { store, document } = toolWindow;
 
@@ -102,7 +102,7 @@ addRDMTask(
 
 addRDMTask(
   TEST_URL,
-  async function({ ui }) {
+  async function ({ ui }) {
     const { toolWindow } = ui;
     const { document } = toolWindow;
 

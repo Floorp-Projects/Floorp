@@ -5,7 +5,7 @@
 
 const {
   formatCommand,
-} = require("resource://devtools/server/actors/webconsole/commands.js");
+} = require("resource://devtools/server/actors/webconsole/commands/parser.js");
 
 const testcases = [
   { input: ":help", expectedOutput: "help()" },
@@ -72,7 +72,8 @@ const edgecases = [
   { input: ":screenshot --", expectedError: /invalid flag/ },
   {
     input: ':screenshot "fo"o bar',
-    expectedError: /String has unescaped `"` in \["fo"o\.\.\.\], may miss a space between arguments/,
+    expectedError:
+      /String has unescaped `"` in \["fo"o\.\.\.\], may miss a space between arguments/,
   },
   {
     input: ':screenshot "foo b"ar',

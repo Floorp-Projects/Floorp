@@ -617,10 +617,7 @@ where
         Command::ClientPin
     }
 
-    fn wire_format<Dev>(&self, _dev: &mut Dev) -> Result<Vec<u8>, HIDError>
-    where
-        Dev: U2FDevice,
-    {
+    fn wire_format(&self) -> Result<Vec<u8>, HIDError> {
         let client_pin = self.as_client_pin()?;
         let output = to_vec(&client_pin).map_err(CommandError::Serializing)?;
         trace!("client subcommmand: {:04X?}", &output);

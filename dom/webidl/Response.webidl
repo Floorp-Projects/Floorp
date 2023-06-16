@@ -19,6 +19,8 @@ interface Response {
   [NewObject] static Response error();
   [Throws,
    NewObject] static Response redirect(USVString url, optional unsigned short status = 302);
+  [BinaryName=CreateFromJson, Throws,
+   NewObject] static Response json(any data, optional ResponseInit init = {});
 
   readonly attribute ResponseType type;
 

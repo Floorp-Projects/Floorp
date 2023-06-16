@@ -42,6 +42,9 @@ class VP8RateControlRTC {
   bool UpdateRateControl(const VP8RateControlRtcConfig &rc_cfg);
   // GetQP() needs to be called after ComputeQP() to get the latest QP
   int GetQP() const;
+  // GetLoopfilterLevel() needs to be called after ComputeQP() since loopfilter
+  // level is calculated from frame qp.
+  int GetLoopfilterLevel() const;
   // int GetLoopfilterLevel() const;
   void ComputeQP(const VP8FrameParamsQpRTC &frame_params);
   // Feedback to rate control with the size of current encoded frame

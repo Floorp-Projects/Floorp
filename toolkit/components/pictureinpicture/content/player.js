@@ -171,13 +171,6 @@ let Player = {
   deferredResize: null,
 
   /**
-   * Stores the previous events for seek forward/backward to correctly
-   * record the sequence if 3 clicks happen within a 1 second interval
-   */
-  backwardSequence: [],
-  forwardSequence: [],
-
-  /**
    * Initializes the player browser, and sets up the initial state.
    *
    * @param {Number} id
@@ -200,11 +193,11 @@ let Player = {
 
     browser.setAttribute("nodefaultsrc", "true");
 
-    let closeButton = document.getElementById("close");
-    let closeShortcut = document.getElementById("closeShortcut");
-    document.l10n.setAttributes(closeButton, "pictureinpicture-close-btn", {
-      shortcut: ShortcutUtils.prettifyShortcut(closeShortcut),
-    });
+    this.setupTooltip("close", "pictureinpicture-close-btn", "closeShortcut");
+    let strId = this.isFullscreen
+      ? `pictureinpicture-exit-fullscreen-btn2`
+      : `pictureinpicture-fullscreen-btn2`;
+    this.setupTooltip("fullscreen", strId, "fullscreenToggleShortcut");
 
     // Set the specific remoteType and browsingContextGroupID to use for the
     // initial about:blank load. The combination of these two properties will
@@ -217,9 +210,8 @@ let Player = {
     );
     holder.appendChild(browser);
 
-    this.actor = browser.browsingContext.currentWindowGlobal.getActor(
-      "PictureInPicture"
-    );
+    this.actor =
+      browser.browsingContext.currentWindowGlobal.getActor("PictureInPicture");
     this.actor.sendAsyncMessage("PictureInPicture:SetupPlayer", {
       videoRef,
     });
@@ -242,9 +234,6 @@ let Player = {
     });
     this.scrubber.addEventListener("change", event => {
       this.handleScrubbingDone(event);
-    });
-    this.scrubber.addEventListener("pointerdown", event => {
-      this.recordEvent("seek", {});
     });
 
     for (let radio of document.querySelectorAll(
@@ -332,6 +321,15 @@ let Player = {
     PictureInPicture.unload(window, this.actor);
   },
 
+  setupTooltip(elId, l10nId, shortcutId) {
+    const el = document.getElementById(elId);
+    const shortcut = document.getElementById(shortcutId);
+    let l10nObj = shortcut
+      ? { shortcut: ShortcutUtils.prettifyShortcut(shortcut) }
+      : {};
+    document.l10n.setAttributes(el, l10nId, l10nObj);
+  },
+
   handleEvent(event) {
     switch (event.type) {
       case "click": {
@@ -377,8 +375,6 @@ let Player = {
             // We handle the ESC key, as an intent to leave the picture-in-picture modus
             this.onClose();
           }
-        } else if (event.keyCode == KeyEvent.DOM_VK_F) {
-          this.fullscreenModeToggle();
         } else if (
           Services.prefs.getBoolPref(KEYBOARD_CONTROLS_ENABLED_PREF, false) &&
           (event.keyCode != KeyEvent.DOM_VK_SPACE || !event.target.id)
@@ -430,11 +426,10 @@ let Player = {
         }
 
         // Sets the title for fullscreen button when PIP is in Enter Fullscreen mode and Exit Fullscreen mode
-        const fullscreenButton = document.getElementById("fullscreen");
         let strId = this.isFullscreen
-          ? `pictureinpicture-exit-fullscreen-btn`
-          : `pictureinpicture-fullscreen-btn`;
-        document.l10n.setAttributes(fullscreenButton, strId);
+          ? `pictureinpicture-exit-fullscreen-btn2`
+          : `pictureinpicture-fullscreen-btn2`;
+        this.setupTooltip("fullscreen", strId, "fullscreenToggleShortcut");
 
         window.focus();
 
@@ -450,7 +445,8 @@ let Player = {
             isVideoControlsShowing:
               !!this.controls.getAttribute("showing") ||
               !!this.controls.getAttribute("keying"),
-            playerBottomControlsDOMRect: this.controlsBottom.getBoundingClientRect(),
+            playerBottomControlsDOMRect:
+              this.controlsBottom.getBoundingClientRect(),
           });
         }
         // The subtitles settings panel gets selected when entering/exiting fullscreen even though
@@ -608,35 +604,11 @@ let Player = {
 
       case "seekBackward": {
         this.actor.sendAsyncMessage("PictureInPicture:SeekBackward");
-        this.recordEvent("backward", {});
-
-        let secondPreviousEvent = this.backwardSequence.at(-2);
-        if (
-          secondPreviousEvent &&
-          event.timeStamp - secondPreviousEvent < 2000
-        ) {
-          this.recordEvent("backward_sequence", {});
-          this.backwardSequence = [];
-        } else {
-          this.backwardSequence.push(event.timeStamp);
-        }
         break;
       }
 
       case "seekForward": {
         this.actor.sendAsyncMessage("PictureInPicture:SeekForward");
-        this.recordEvent("forward", {});
-
-        let secondPreviousEvent = this.forwardSequence.at(-2);
-        if (
-          secondPreviousEvent &&
-          event.timeStamp - secondPreviousEvent < 2000
-        ) {
-          this.recordEvent("forward_sequence", {});
-          this.forwardSequence = [];
-        } else {
-          this.forwardSequence.push(event.timeStamp);
-        }
         break;
       }
 
@@ -1090,7 +1062,7 @@ let Player = {
    *  Event context data object
    */
   onCommand(event) {
-    this.closePipWindow({ reason: "player-shortcut" });
+    this.closePipWindow({ reason: "shortcut" });
   },
 
   get controls() {
@@ -1125,9 +1097,8 @@ let Player = {
 
   get closedCaptionButton() {
     delete this.closedCaptionButton;
-    return (this.closedCaptionButton = document.getElementById(
-      "closed-caption"
-    ));
+    return (this.closedCaptionButton =
+      document.getElementById("closed-caption"));
   },
 
   get settingsPanel() {
@@ -1151,11 +1122,10 @@ let Player = {
   set isPlaying(isPlaying) {
     this._isPlaying = isPlaying;
     this.controls.classList.toggle("playing", isPlaying);
-    const playButton = document.getElementById("playpause");
     let strId = isPlaying
       ? `pictureinpicture-pause-btn`
       : `pictureinpicture-play-btn`;
-    document.l10n.setAttributes(playButton, strId);
+    this.setupTooltip("playpause", strId);
   },
 
   _isMuted: false,
@@ -1174,15 +1144,11 @@ let Player = {
   set isMuted(isMuted) {
     this._isMuted = isMuted;
     this.controls.classList.toggle("muted", isMuted);
-    const audioButton = document.getElementById("audio");
     let strId = isMuted
       ? `pictureinpicture-unmute-btn`
       : `pictureinpicture-mute-btn`;
     let shortcutId = isMuted ? "unMuteShortcut" : "muteShortcut";
-    let shortcut = document.getElementById(shortcutId);
-    document.l10n.setAttributes(audioButton, strId, {
-      shortcut: ShortcutUtils.prettifyShortcut(shortcut),
-    });
+    this.setupTooltip("audio", strId, shortcutId);
   },
 
   /**

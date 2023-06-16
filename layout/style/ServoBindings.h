@@ -34,44 +34,69 @@ namespace mozilla {
 
 extern "C" {
 
-#define BASIC_RULE_FUNCS_WITHOUT_GETTER(type_)                            \
-  void Servo_##type_##_Debug(const RawServo##type_*, nsACString* result); \
-  void Servo_##type_##_GetCssText(const RawServo##type_*, nsACString* result);
+#define BASIC_RULE_FUNCS_WITHOUT_GETTER_WITH_PREFIX(type_, prefix_)      \
+  void Servo_##type_##_Debug(const mozilla::Style##prefix_##type_*,      \
+                             nsACString* result);                        \
+  void Servo_##type_##_GetCssText(const mozilla::Style##prefix_##type_*, \
+                                  nsACString* result);
 
-#define BASIC_RULE_FUNCS(type_)                                         \
-  StyleStrong<RawServo##type_##Rule> Servo_CssRules_Get##type_##RuleAt( \
-      const ServoCssRules* rules, uint32_t index, uint32_t* line,       \
-      uint32_t* column);                                                \
-  void Servo_StyleSet_##type_##RuleChanged(                             \
-      const RawServoStyleSet*, const RawServo##type_##Rule*,            \
-      const StyleDomStyleSheet*, StyleRuleChangeKind);                  \
-  BASIC_RULE_FUNCS_WITHOUT_GETTER(type_##Rule)
+#define BASIC_RULE_FUNCS_WITHOUT_GETTER_LOCKED(type_) \
+  BASIC_RULE_FUNCS_WITHOUT_GETTER_WITH_PREFIX(type_, Locked)
+#define BASIC_RULE_FUNCS_WITHOUT_GETTER_UNLOCKED(type_) \
+  BASIC_RULE_FUNCS_WITHOUT_GETTER_WITH_PREFIX(type_, )
 
-#define GROUP_RULE_FUNCS(type_)                            \
-  BASIC_RULE_FUNCS(type_)                                  \
-  StyleStrong<ServoCssRules> Servo_##type_##Rule_GetRules( \
-      const RawServo##type_##Rule* rule);
+#define BASIC_RULE_FUNCS_WITH_PREFIX(type_, prefix_)                        \
+  StyleStrong<mozilla::Style##prefix_##type_##Rule>                         \
+      Servo_CssRules_Get##type_##RuleAt(const StyleLockedCssRules* rules,   \
+                                        uint32_t index, uint32_t* line,     \
+                                        uint32_t* column);                  \
+  void Servo_StyleSet_##type_##RuleChanged(                                 \
+      const StylePerDocumentStyleData*, const Style##prefix_##type_##Rule*, \
+      const StyleDomStyleSheet*, StyleRuleChangeKind);                      \
+  BASIC_RULE_FUNCS_WITHOUT_GETTER_WITH_PREFIX(type_##Rule, prefix_)
 
-BASIC_RULE_FUNCS(Style)
-BASIC_RULE_FUNCS(Import)
-BASIC_RULE_FUNCS_WITHOUT_GETTER(Keyframe)
-BASIC_RULE_FUNCS(Keyframes)
-GROUP_RULE_FUNCS(Media)
-GROUP_RULE_FUNCS(MozDocument)
-BASIC_RULE_FUNCS(Namespace)
-BASIC_RULE_FUNCS(Page)
-GROUP_RULE_FUNCS(Supports)
-GROUP_RULE_FUNCS(LayerBlock)
-BASIC_RULE_FUNCS(LayerStatement)
-BASIC_RULE_FUNCS(FontFeatureValues)
-BASIC_RULE_FUNCS(FontPaletteValues)
-BASIC_RULE_FUNCS(FontFace)
-BASIC_RULE_FUNCS(CounterStyle)
-GROUP_RULE_FUNCS(Container)
+#define BASIC_RULE_FUNCS_LOCKED(type_) \
+  BASIC_RULE_FUNCS_WITH_PREFIX(type_, Locked)
 
-#undef GROUP_RULE_FUNCS
-#undef BASIC_RULE_FUNCS
-#undef BASIC_RULE_FUNCS_WITHOUT_GETTER
+#define BASIC_RULE_FUNCS_UNLOCKED(type_) BASIC_RULE_FUNCS_WITH_PREFIX(type_, )
+
+#define GROUP_RULE_FUNCS_WITH_PREFIX(type_, prefix_)                      \
+  BASIC_RULE_FUNCS_WITH_PREFIX(type_, prefix_)                            \
+  StyleStrong<mozilla::StyleLockedCssRules> Servo_##type_##Rule_GetRules( \
+      const mozilla::Style##prefix_##type_##Rule* rule);
+
+#define GROUP_RULE_FUNCS_LOCKED(type_) \
+  GROUP_RULE_FUNCS_WITH_PREFIX(type_, Locked)
+
+#define GROUP_RULE_FUNCS_UNLOCKED(type_) GROUP_RULE_FUNCS_WITH_PREFIX(type_, )
+
+BASIC_RULE_FUNCS_LOCKED(Style)
+BASIC_RULE_FUNCS_LOCKED(Import)
+BASIC_RULE_FUNCS_WITHOUT_GETTER_LOCKED(Keyframe)
+BASIC_RULE_FUNCS_LOCKED(Keyframes)
+GROUP_RULE_FUNCS_UNLOCKED(Media)
+GROUP_RULE_FUNCS_UNLOCKED(Document)
+BASIC_RULE_FUNCS_UNLOCKED(Namespace)
+BASIC_RULE_FUNCS_LOCKED(Page)
+BASIC_RULE_FUNCS_UNLOCKED(Property)
+GROUP_RULE_FUNCS_UNLOCKED(Supports)
+GROUP_RULE_FUNCS_UNLOCKED(LayerBlock)
+BASIC_RULE_FUNCS_UNLOCKED(LayerStatement)
+BASIC_RULE_FUNCS_UNLOCKED(FontFeatureValues)
+BASIC_RULE_FUNCS_UNLOCKED(FontPaletteValues)
+BASIC_RULE_FUNCS_LOCKED(FontFace)
+BASIC_RULE_FUNCS_LOCKED(CounterStyle)
+GROUP_RULE_FUNCS_UNLOCKED(Container)
+
+#undef GROUP_RULE_FUNCS_LOCKED
+#undef GROUP_RULE_FUNCS_UNLOCKED
+#undef GROUP_RULE_FUNCS_WITH_PREFIX
+#undef BASIC_RULE_FUNCS_LOCKED
+#undef BASIC_RULE_FUNCS_UNLOCKED
+#undef BASIC_RULE_FUNCS_WITH_PREFIX
+#undef BASIC_RULE_FUNCS_WITHOUT_GETTER_LOCKED
+#undef BASIC_RULE_FUNCS_WITHOUT_GETTER_UNLOCKED
+#undef BASIC_RULE_FUNCS_WITHOUT_GETTER_WITH_PREFIX
 
 #define BASIC_SERDE_FUNCS(type_)                                            \
   bool Servo_##type_##_Deserialize(mozilla::ipc::ByteBuf* input, type_* v); \
@@ -91,12 +116,12 @@ BASIC_SERDE_FUNCS(StyleComputedTimingFunction)
 #undef BASIC_SERDE_FUNCS
 
 void Servo_CounterStyleRule_GetDescriptorCssText(
-    const RawServoCounterStyleRule* rule, nsCSSCounterDesc desc,
+    const StyleLockedCounterStyleRule* rule, nsCSSCounterDesc desc,
     nsACString* result);
 
-bool Servo_CounterStyleRule_SetDescriptor(const RawServoCounterStyleRule* rule,
-                                          nsCSSCounterDesc desc,
-                                          const nsACString* value);
+bool Servo_CounterStyleRule_SetDescriptor(
+    const StyleLockedCounterStyleRule* rule, nsCSSCounterDesc desc,
+    const nsACString* value);
 
 }  // extern "C"
 

@@ -18,9 +18,9 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIProtocolProxyService"
 );
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
+ChromeUtils.defineESModuleGetters(lazy, {
   ExtensionPreferencesManager:
-    "resource://gre/modules/ExtensionPreferencesManager.jsm",
+    "resource://gre/modules/ExtensionPreferencesManager.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetter(

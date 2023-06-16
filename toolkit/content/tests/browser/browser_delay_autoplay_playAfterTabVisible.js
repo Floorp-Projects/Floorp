@@ -18,7 +18,7 @@ function play_audio() {
 
   audio.play();
   return new Promise(resolve => {
-    audio.onplay = function() {
+    audio.onplay = function () {
       audio.onplay = null;
       ok(true, "Audio starts playing.");
       resolve();

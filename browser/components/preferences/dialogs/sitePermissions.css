@@ -59,7 +59,7 @@ menulist.website-status {
 }
 
 #permissionsDisableDescription {
-  color: var(--in-content-deemphasized-text);
+  color: var(--text-color-deemphasized);
   line-height: 110%;
 }
 

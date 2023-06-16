@@ -13,32 +13,33 @@ add_task(async function test_first_time_save() {
   });
 
   let onAdded = waitForStorageChangedEvents("add");
-  await BrowserTestUtils.withNewTab({ gBrowser, url: FORM_URL }, async function(
-    browser
-  ) {
-    let onPopupShown = waitForPopupShown();
-    let tabPromise = BrowserTestUtils.waitForNewTab(
-      gBrowser,
-      "about:preferences#privacy"
-    );
-    await focusUpdateSubmitForm(browser, {
-      focusSelector: "#organization",
-      newValues: {
-        "#organization": "Sesame Street",
-        "#street-address": "123 Sesame Street",
-        "#tel": "1-345-345-3456",
-      },
-    });
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: FORM_URL },
+    async function (browser) {
+      let onPopupShown = waitForPopupShown();
+      let tabPromise = BrowserTestUtils.waitForNewTab(
+        gBrowser,
+        "about:preferences#privacy"
+      );
+      await focusUpdateSubmitForm(browser, {
+        focusSelector: "#organization",
+        newValues: {
+          "#organization": "Sesame Street",
+          "#street-address": "123 Sesame Street",
+          "#tel": "1-345-345-3456",
+        },
+      });
 
-    await onPopupShown;
-    let cb = getDoorhangerCheckbox();
-    ok(cb.hidden, "Sync checkbox should be hidden");
-    // Open the panel via main button
-    await clickDoorhangerButton(MAIN_BUTTON);
-    let tab = await tabPromise;
-    ok(tab, "Privacy panel opened");
-    BrowserTestUtils.removeTab(tab);
-  });
+      await onPopupShown;
+      let cb = getDoorhangerCheckbox();
+      ok(cb.hidden, "Sync checkbox should be hidden");
+      // Open the panel via main button
+      await clickDoorhangerButton(MAIN_BUTTON);
+      let tab = await tabPromise;
+      ok(tab, "Privacy panel opened");
+      BrowserTestUtils.removeTab(tab);
+    }
+  );
   await onAdded;
 
   addresses = await getAddresses();
@@ -61,21 +62,22 @@ add_task(async function test_non_first_time_save() {
   is(addresses.length, 1, "1 address in storage");
 
   let onAdded = waitForStorageChangedEvents("add");
-  await BrowserTestUtils.withNewTab({ gBrowser, url: FORM_URL }, async function(
-    browser
-  ) {
-    await focusUpdateSubmitForm(browser, {
-      focusSelector: "#organization",
-      newValues: {
-        "#organization": "Mozilla",
-        "#street-address": "331 E. Evelyn Avenue",
-        "#tel": "1-650-903-0800",
-      },
-    });
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: FORM_URL },
+    async function (browser) {
+      await focusUpdateSubmitForm(browser, {
+        focusSelector: "#organization",
+        newValues: {
+          "#organization": "Mozilla",
+          "#street-address": "331 E. Evelyn Avenue",
+          "#tel": "1-650-903-0800",
+        },
+      });
 
-    await sleep(1000);
-    is(PopupNotifications.panel.state, "closed", "Doorhanger is hidden");
-  });
+      await sleep(1000);
+      is(PopupNotifications.panel.state, "closed", "Doorhanger is hidden");
+    }
+  );
   await onAdded;
 
   addresses = await getAddresses();
@@ -96,40 +98,41 @@ add_task(async function test_first_time_save_with_sync_account() {
   });
 
   let onAdded = waitForStorageChangedEvents("add");
-  await BrowserTestUtils.withNewTab({ gBrowser, url: FORM_URL }, async function(
-    browser
-  ) {
-    let onPopupShown = waitForPopupShown();
-    let tabPromise = BrowserTestUtils.waitForNewTab(
-      gBrowser,
-      "about:preferences#privacy-address-autofill"
-    );
-    await focusUpdateSubmitForm(browser, {
-      focusSelector: "#organization",
-      newValues: {
-        "#organization": "Foobar",
-        "#email": "foo@bar.com",
-        "#tel": "1-234-567-8900",
-      },
-    });
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: FORM_URL },
+    async function (browser) {
+      let onPopupShown = waitForPopupShown();
+      let tabPromise = BrowserTestUtils.waitForNewTab(
+        gBrowser,
+        "about:preferences#privacy-address-autofill"
+      );
+      await focusUpdateSubmitForm(browser, {
+        focusSelector: "#organization",
+        newValues: {
+          "#organization": "Foobar",
+          "#email": "foo@bar.com",
+          "#tel": "1-234-567-8900",
+        },
+      });
 
-    await onPopupShown;
-    let cb = getDoorhangerCheckbox();
-    ok(!cb.hidden, "Sync checkbox should be visible");
+      await onPopupShown;
+      let cb = getDoorhangerCheckbox();
+      ok(!cb.hidden, "Sync checkbox should be visible");
 
-    is(cb.checked, false, "Checkbox state should match addresses sync state");
-    cb.click();
-    is(
-      SpecialPowers.getBoolPref(SYNC_ADDRESSES_PREF),
-      true,
-      "addresses sync should be enabled after checked"
-    );
-    // Open the panel via main button
-    await clickDoorhangerButton(MAIN_BUTTON);
-    let tab = await tabPromise;
-    ok(tab, "Privacy panel opened");
-    BrowserTestUtils.removeTab(tab);
-  });
+      is(cb.checked, false, "Checkbox state should match addresses sync state");
+      cb.click();
+      is(
+        SpecialPowers.getBoolPref(SYNC_ADDRESSES_PREF),
+        true,
+        "addresses sync should be enabled after checked"
+      );
+      // Open the panel via main button
+      await clickDoorhangerButton(MAIN_BUTTON);
+      let tab = await tabPromise;
+      ok(tab, "Privacy panel opened");
+      BrowserTestUtils.removeTab(tab);
+    }
+  );
   await onAdded;
 
   let ftuPref = SpecialPowers.getBoolPref(FTU_PREF);

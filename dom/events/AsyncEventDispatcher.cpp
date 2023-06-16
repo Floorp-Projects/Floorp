@@ -7,6 +7,7 @@
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/EventTarget.h"
 #include "nsContentUtils.h"
@@ -53,21 +54,39 @@ AsyncEventDispatcher::Run() {
         node->OwnerDoc(), mTarget, mEventMessage, mCanBubble, Cancelable::eNo,
         nullptr /* aDefaultAction */, mOnlyChromeDispatch);
   }
-  RefPtr<Event> event = mEvent;
-  if (!event) {
-    event = NS_NewDOMEvent(mTarget, nullptr, nullptr);
-    event->InitEvent(mEventType, mCanBubble, Cancelable::eNo);
-    event->SetTrusted(true);
+  // MOZ_KnownLives because this instance shouldn't be touched while running.
+  if (mEvent) {
+    DispatchEventOnTarget(MOZ_KnownLive(mTarget), MOZ_KnownLive(mEvent),
+                          mOnlyChromeDispatch, mComposed);
+  } else {
+    DispatchEventOnTarget(MOZ_KnownLive(mTarget), mEventType, mCanBubble,
+                          mOnlyChromeDispatch, mComposed);
   }
-  if (mComposed != Composed::eDefault) {
-    event->WidgetEventPtr()->mFlags.mComposed = mComposed == Composed::eYes;
-  }
-  if (mOnlyChromeDispatch == ChromeOnlyDispatch::eYes) {
-    MOZ_ASSERT(event->IsTrusted());
-    event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
-  }
-  mTarget->DispatchEvent(*event);
   return NS_OK;
+}
+
+// static
+void AsyncEventDispatcher::DispatchEventOnTarget(
+    EventTarget* aTarget, const nsAString& aEventType, CanBubble aCanBubble,
+    ChromeOnlyDispatch aOnlyChromeDispatch, Composed aComposed) {
+  RefPtr<Event> event = NS_NewDOMEvent(aTarget, nullptr, nullptr);
+  event->InitEvent(aEventType, aCanBubble, Cancelable::eNo);
+  event->SetTrusted(true);
+  DispatchEventOnTarget(aTarget, event, aOnlyChromeDispatch, aComposed);
+}
+
+// static
+void AsyncEventDispatcher::DispatchEventOnTarget(
+    EventTarget* aTarget, Event* aEvent, ChromeOnlyDispatch aOnlyChromeDispatch,
+    Composed aComposed) {
+  if (aComposed != Composed::eDefault) {
+    aEvent->WidgetEventPtr()->mFlags.mComposed = aComposed == Composed::eYes;
+  }
+  if (aOnlyChromeDispatch == ChromeOnlyDispatch::eYes) {
+    MOZ_ASSERT(aEvent->IsTrusted());
+    aEvent->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
+  }
+  aTarget->DispatchEvent(*aEvent);
 }
 
 nsresult AsyncEventDispatcher::Cancel() {
@@ -97,6 +116,49 @@ nsresult AsyncEventDispatcher::PostDOMEvent() {
 void AsyncEventDispatcher::RunDOMEventWhenSafe() {
   RefPtr<AsyncEventDispatcher> ensureDeletionWhenFailing = this;
   nsContentUtils::AddScriptRunner(this);
+}
+
+// static
+void AsyncEventDispatcher::RunDOMEventWhenSafe(
+    EventTarget& aTarget, const nsAString& aEventType, CanBubble aCanBubble,
+    ChromeOnlyDispatch aOnlyChromeDispatch /* = ChromeOnlyDispatch::eNo */,
+    Composed aComposed /* = Composed::eDefault */) {
+  if (nsContentUtils::IsSafeToRunScript()) {
+    OwningNonNull<EventTarget> target = aTarget;
+    DispatchEventOnTarget(target, aEventType, aCanBubble, aOnlyChromeDispatch,
+                          aComposed);
+    return;
+  }
+  (new AsyncEventDispatcher(&aTarget, aEventType, aCanBubble,
+                            aOnlyChromeDispatch, aComposed))
+      ->RunDOMEventWhenSafe();
+}
+
+void AsyncEventDispatcher::RunDOMEventWhenSafe(
+    EventTarget& aTarget, Event& aEvent,
+    ChromeOnlyDispatch aOnlyChromeDispatch /* = ChromeOnlyDispatch::eNo */) {
+  if (nsContentUtils::IsSafeToRunScript()) {
+    DispatchEventOnTarget(&aTarget, &aEvent, aOnlyChromeDispatch,
+                          Composed::eDefault);
+    return;
+  }
+  (new AsyncEventDispatcher(&aTarget, &aEvent, aOnlyChromeDispatch))
+      ->RunDOMEventWhenSafe();
+}
+
+// static
+nsresult AsyncEventDispatcher::RunDOMEventWhenSafe(
+    nsINode& aTarget, WidgetEvent& aEvent,
+    nsEventStatus* aEventStatus /* = nullptr */) {
+  if (nsContentUtils::IsSafeToRunScript()) {
+    // MOZ_KnownLive due to bug 1832202
+    nsPresContext* presContext = aTarget.OwnerDoc()->GetPresContext();
+    return EventDispatcher::Dispatch(MOZ_KnownLive(&aTarget),
+                                     MOZ_KnownLive(presContext), &aEvent,
+                                     nullptr, aEventStatus);
+  }
+  (new AsyncEventDispatcher(&aTarget, aEvent))->RunDOMEventWhenSafe();
+  return NS_OK;
 }
 
 void AsyncEventDispatcher::RequireNodeInDocument() {

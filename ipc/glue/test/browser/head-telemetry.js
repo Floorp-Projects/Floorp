@@ -18,6 +18,35 @@ const { ContentTaskUtils } = ChromeUtils.importESModule(
 
 const MEDIA_AUDIO_PROCESS = "media.audio_process_per_codec_name";
 
+const utilityPerCodecs = {
+  Linux: [
+    {
+      process: "utility+audioDecoder_Generic",
+      codecs: ["vorbis", "mp3", "aac", "flac"],
+    },
+  ],
+  WINNT: [
+    {
+      process: "utility+audioDecoder_Generic",
+      codecs: ["vorbis", "mp3", "flac"],
+    },
+    {
+      process: "utility+audioDecoder_WMF",
+      codecs: ["aac"],
+    },
+  ],
+  Darwin: [
+    {
+      process: "utility+audioDecoder_Generic",
+      codecs: ["vorbis", "mp3", "flac"],
+    },
+    {
+      process: "utility+audioDecoder_AppleMedia",
+      codecs: ["aac"],
+    },
+  ],
+};
+
 const kInterval = 300; /* ms */
 const kRetries = 5;
 
@@ -40,8 +69,10 @@ async function waitForKeyedScalars(process) {
 async function waitForValue(process, codecNames, extra = "") {
   await ContentTaskUtils.waitForCondition(
     () => {
-      const telemetry = Telemetry.getSnapshotForKeyedScalars("main", false)
-        .content;
+      const telemetry = Telemetry.getSnapshotForKeyedScalars(
+        "main",
+        false
+      ).content;
       if (telemetry && MEDIA_AUDIO_PROCESS in telemetry) {
         const keyProcMimeTypes = Object.keys(telemetry[MEDIA_AUDIO_PROCESS]);
         const found = codecNames.every(item =>

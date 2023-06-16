@@ -216,17 +216,18 @@ add_task(async function test_dynamic_rules_count_limits() {
         "Verify rules count limits with multiple async API calls"
       );
 
-      const [
-        updateDynamicRulesSingle,
-        updateDynamicRulesTooMany,
-      ] = await Promise.allSettled([
-        dnr.updateDynamicRules({
-          addRules: [
-            { ...DUMMY_RULE, id: MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES + 1 },
-          ],
-        }),
-        dnr.updateDynamicRules({ addRules: rules }),
-      ]);
+      const [updateDynamicRulesSingle, updateDynamicRulesTooMany] =
+        await Promise.allSettled([
+          dnr.updateDynamicRules({
+            addRules: [
+              {
+                ...DUMMY_RULE,
+                id: MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES + 1,
+              },
+            ],
+          }),
+          dnr.updateDynamicRules({ addRules: rules }),
+        ]);
 
       browser.test.assertDeepEq(
         updateDynamicRulesSingle,
@@ -252,13 +253,11 @@ add_task(async function test_dynamic_rules_count_limits() {
         removeRuleIds: [MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES + 1],
       });
 
-      const [
-        updateSessionResult,
-        updateDynamicResult,
-      ] = await Promise.allSettled([
-        dnr.updateSessionRules({ addRules: rules }),
-        dnr.updateDynamicRules({ addRules: rules }),
-      ]);
+      const [updateSessionResult, updateDynamicResult] =
+        await Promise.allSettled([
+          dnr.updateSessionRules({ addRules: rules }),
+          dnr.updateDynamicRules({ addRules: rules }),
+        ]);
 
       browser.test.assertDeepEq(
         updateDynamicResult,
@@ -450,9 +449,8 @@ add_task(async function test_save_and_load_dynamic_rules() {
             break;
           }
           case "testInvalidDynamicAddRule": {
-            const [
-              { rule, expectedError, isSchemaError, isErrorRegExp },
-            ] = args;
+            const [{ rule, expectedError, isSchemaError, isErrorRegExp }] =
+              args;
             await dnrTestUtils.testInvalidRule(
               rule,
               expectedError,
@@ -528,7 +526,8 @@ add_task(async function test_save_and_load_dynamic_rules() {
 
   await callTestMessageHandler(extension, "testInvalidDynamicAddRule", {
     rule: getDNRRule({ action: { type: "invalid-action" } }),
-    expectedError: /addRules.0.action.type: Invalid enumeration value "invalid-action"/,
+    expectedError:
+      /addRules.0.action.type: Invalid enumeration value "invalid-action"/,
     isSchemaError: true,
   });
 

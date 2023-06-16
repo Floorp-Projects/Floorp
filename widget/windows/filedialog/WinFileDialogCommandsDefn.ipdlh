@@ -1,0 +1,49 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et ft=ipdl : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+namespace mozilla {
+namespace widget {
+namespace filedialog {
+
+// Commands corresponding to the various functions in IFileDialog (or at least
+// the ones we actually make use of).
+//
+// All commands' semantics are direct parallels of their equivalently-named
+// functions on IFileDialog, with the only changes being those necessary to use
+// IPDLable representation-datatypes. (Thus, e.g., `SetOptions` effectively
+// takes a `FILEOPENDIALOGOPTIONS`, and `SetFileTypeIndex` is 1-based.)
+struct SetOptions          { uint32_t options; };
+struct SetTitle            { nsString title; };
+struct SetOkButtonLabel    { nsString label; };
+struct SetFolder           { nsString path; };
+struct SetFileName         { nsString filename; };
+struct SetDefaultExtension { nsString extension; };
+struct ComDlgFilterSpec    { nsString name; nsString spec; };
+struct SetFileTypes        { ComDlgFilterSpec[] filterList; };
+struct SetFileTypeIndex    { uint32_t index; };
+
+// Union of the above.
+union Command {
+  SetOptions;
+  SetTitle;
+  SetOkButtonLabel;
+  SetFolder;
+  SetFileName;
+  SetDefaultExtension;
+  SetFileTypes;
+  SetFileTypeIndex;
+};
+
+// The results from opening a file dialog. (Note that folder selection only
+// returns an nsString.)
+struct Results {
+  nsString[] paths;
+  uint32_t selectedFileTypeIndex;
+};
+
+} // namespace filedialog
+} // namespace widget
+} // namespace mozilla

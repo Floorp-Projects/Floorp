@@ -6,7 +6,7 @@ import Button from "../components/Button/Button";
 import PopularTopics from "../components/PopularTopics/PopularTopics";
 import TagPicker from "../components/TagPicker/TagPicker";
 
-var StyleGuideOverlay = function(options) {};
+var StyleGuideOverlay = function (options) {};
 
 StyleGuideOverlay.prototype = {
   create() {

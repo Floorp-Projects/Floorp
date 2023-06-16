@@ -158,8 +158,8 @@ const char* ExternalEngineStateMachine::GetStateStr() const {
 }
 
 void ExternalEngineStateMachine::ChangeStateTo(State aNextState) {
-  LOG("Change state : '%s' -> '%s'", StateToStr(mState.mName),
-      StateToStr(aNextState));
+  LOG("Change state : '%s' -> '%s' (play-state=%d)", StateToStr(mState.mName),
+      StateToStr(aNextState), mPlayState.Ref());
   // Assert the possible state transitions.
   MOZ_ASSERT_IF(mState.IsInitEngine(), aNextState == State::ReadingMetadata ||
                                            aNextState == State::ShutdownEngine);
@@ -238,10 +238,6 @@ void ExternalEngineStateMachine::OnEngineInitSuccess() {
   mEngine->SetMediaInfo(*mInfo);
   SeekTarget target(mCurrentPosition.Ref(), SeekTarget::Type::Accurate);
   Seek(target);
-  // If the engine was playing before, ask the new engine to play as well.
-  if (mPlayState == MediaDecoder::PLAY_STATE_PLAYING) {
-    mEngine->Play();
-  }
 }
 
 void ExternalEngineStateMachine::OnEngineInitFailure() {
@@ -285,6 +281,17 @@ void ExternalEngineStateMachine::OnMetadataRead(MetadataHolder&& aMetadata) {
         MediaResult(NS_ERROR_DOM_MEDIA_EXTERNAL_ENGINE_NOT_SUPPORTED_ERR));
     return;
   }
+
+#ifdef MOZ_WMF_MEDIA_ENGINE
+  // Only support encrypted playback.
+  if (!mInfo->IsEncrypted() &&
+      StaticPrefs::media_wmf_media_engine_enabled() == 2) {
+    LOG("External engine only supports encrypted playback by the pref");
+    DecodeError(
+        MediaResult(NS_ERROR_DOM_MEDIA_EXTERNAL_ENGINE_NOT_SUPPORTED_ERR));
+    return;
+  }
+#endif
 
   mEngine->SetMediaInfo(*mInfo);
 
@@ -728,6 +735,11 @@ void ExternalEngineStateMachine::MaybeFinishWaitForData() {
 
 void ExternalEngineStateMachine::StartRunningEngine() {
   ChangeStateTo(State::RunningEngine);
+  // Manually check the play state because the engine might be recovered from
+  // crash or just get recreated, so PlayStateChanged() won't be triggered.
+  if (mPlayState == MediaDecoder::PLAY_STATE_PLAYING) {
+    mEngine->Play();
+  }
   if (HasAudio()) {
     RunningEngineUpdate(MediaData::Type::AUDIO_DATA);
   }
@@ -1156,6 +1168,23 @@ RefPtr<SetCDMPromise> ExternalEngineStateMachine::SetCDMProxy(
     return SetCDMPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_CDM_ERR, __func__);
   }
   return MediaDecoderStateMachineBase::SetCDMProxy(aProxy);
+}
+
+bool ExternalEngineStateMachine::IsCDMProxySupported(CDMProxy* aProxy) {
+#ifdef MOZ_WMF_CDM
+  MOZ_ASSERT(aProxy);
+  // 1=enabled encrypted and clear, 2=enabled encrytped
+  if (StaticPrefs::media_wmf_media_engine_enabled() != 1 &&
+      StaticPrefs::media_wmf_media_engine_enabled() != 2) {
+    return false;
+  }
+
+  // The CDM needs to be hosted in the same process of the external engine, and
+  // only WMFCDM meets this requirement.
+  return aProxy->AsWMFCDMProxy();
+#else
+  return false;
+#endif
 }
 
 #undef FMT

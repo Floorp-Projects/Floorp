@@ -227,20 +227,18 @@ add_task(async function contextsForFramesetNavigation({ client }) {
   const { frameTree } = await Page.getFrameTree();
   const subFrame = frameTree.childFrames[0].frame;
 
-  const {
-    executionContextId: contextIdParent,
-  } = await Page.createIsolatedWorld({
-    frameId: frameIdTo,
-    worldName: WORLD_NAME_1,
-    grantUniversalAccess: true,
-  });
-  const {
-    executionContextId: contextIdSubFrame,
-  } = await Page.createIsolatedWorld({
-    frameId: subFrame.id,
-    worldName: WORLD_NAME_2,
-    grantUniversalAccess: true,
-  });
+  const { executionContextId: contextIdParent } =
+    await Page.createIsolatedWorld({
+      frameId: frameIdTo,
+      worldName: WORLD_NAME_1,
+      grantUniversalAccess: true,
+    });
+  const { executionContextId: contextIdSubFrame } =
+    await Page.createIsolatedWorld({
+      frameId: subFrame.id,
+      worldName: WORLD_NAME_2,
+      grantUniversalAccess: true,
+    });
 
   await assertEvents({
     history: historyTo,

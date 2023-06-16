@@ -8,7 +8,7 @@
 
 const TEST_URI = `<style>body{background:red}</style>`;
 
-add_task(async function() {
+add_task(async function () {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
   const { toolbox, view } = await openRuleView();

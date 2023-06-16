@@ -4,108 +4,131 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-  <title data-l10n-id="autofill-add-new-address-title"></title>
-  <link rel="localization" href="browser/preferences/formAutofill.ftl"/>
-  <link rel="stylesheet" href="chrome://formautofill/content/skin/editDialog-shared.css"/>
-  <link rel="stylesheet" href="chrome://formautofill/content/skin/editAddress.css"/>
-  <link rel="stylesheet" href="chrome://formautofill/content/skin/editDialog.css"/>
-  <script src="chrome://formautofill/content/editDialog.js"></script>
-  <script src="chrome://formautofill/content/autofillEditForms.js"></script>
-  <script type="module" src="chrome://global/content/elements/moz-button-group.mjs"></script>
-</head>
-<body>
-  <form id="form" class="editAddressForm" autocomplete="off">
-    <!--
+  <head>
+    <title data-l10n-id="autofill-add-new-address-title"></title>
+    <link rel="localization" href="browser/preferences/formAutofill.ftl" />
+    <link
+      rel="stylesheet"
+      href="chrome://formautofill/content/skin/editDialog-shared.css"
+    />
+    <link
+      rel="stylesheet"
+      href="chrome://formautofill/content/skin/editAddress.css"
+    />
+    <link
+      rel="stylesheet"
+      href="chrome://formautofill/content/skin/editDialog.css"
+    />
+    <script src="chrome://formautofill/content/editDialog.js"></script>
+    <script src="chrome://formautofill/content/autofillEditForms.js"></script>
+    <script
+      type="module"
+      src="chrome://global/content/elements/moz-button-group.mjs"
+    ></script>
+  </head>
+  <body>
+    <form id="form" class="editAddressForm" autocomplete="off">
+      <!--
         The <span class="label-text" …/> needs to be after the form field in the same element in
         order to get proper label styling with :focus and :moz-ui-invalid.
       -->
-    <div id="name-container" class="container">
-      <label id="given-name-container">
-        <input id="given-name" type="text" required="required"/>
-        <span data-l10n-id="autofill-address-given-name" class="label-text"/>
+      <div id="name-container" class="container">
+        <label id="given-name-container">
+          <input id="given-name" type="text" required="required" />
+          <span data-l10n-id="autofill-address-given-name" class="label-text" />
+        </label>
+        <label id="additional-name-container">
+          <input id="additional-name" type="text" />
+          <span
+            data-l10n-id="autofill-address-additional-name"
+            class="label-text"
+          />
+        </label>
+        <label id="family-name-container">
+          <input id="family-name" type="text" required="required" />
+          <span
+            data-l10n-id="autofill-address-family-name"
+            class="label-text"
+          />
+        </label>
+      </div>
+      <label id="organization-container" class="container">
+        <input id="organization" type="text" />
+        <span data-l10n-id="autofill-address-organization" class="label-text" />
       </label>
-      <label id="additional-name-container">
-        <input id="additional-name" type="text"/>
-        <span data-l10n-id="autofill-address-additional-name" class="label-text"/>
+      <label id="street-address-container" class="container">
+        <textarea id="street-address" rows="3" />
+        <span data-l10n-id="autofill-address-street" class="label-text" />
       </label>
-      <label id="family-name-container">
-        <input id="family-name" type="text" required="required"/>
-        <span data-l10n-id="autofill-address-family-name" class="label-text"/>
+      <label id="address-level3-container" class="container">
+        <input id="address-level3" type="text" />
+        <span class="label-text" />
       </label>
-    </div>
-    <label id="organization-container" class="container">
-      <input id="organization" type="text"/>
-      <span data-l10n-id="autofill-address-organization" class="label-text"/>
-    </label>
-    <label id="street-address-container" class="container">
-      <textarea id="street-address" rows="3"/>
-      <span data-l10n-id="autofill-address-street" class="label-text"/>
-    </label>
-    <label id="address-level3-container" class="container">
-      <input id="address-level3" type="text"/>
-      <span class="label-text"/>
-    </label>
-    <label id="address-level2-container" class="container">
-      <input id="address-level2" type="text"/>
-      <span class="label-text"/>
-    </label>
-    <label id="address-level1-container" class="container">
-      <!-- The address-level1 input will get replaced by a select dropdown
+      <label id="address-level2-container" class="container">
+        <input id="address-level2" type="text" />
+        <span class="label-text" />
+      </label>
+      <label id="address-level1-container" class="container">
+        <!-- The address-level1 input will get replaced by a select dropdown
            by autofillEditForms.js when the selected country has provided
            specific options. -->
-      <input id="address-level1" type="text"/>
-      <span class="label-text"/>
-    </label>
-    <label id="postal-code-container" class="container">
-      <input id="postal-code" type="text"/>
-      <span class="label-text"/>
-    </label>
-    <label id="country-container" class="container">
-      <select id="country" required="required">
-        <option/>
-      </select>
-      <span data-l10n-id="autofill-address-country" class="label-text"/>
-    </label>
-    <label id="tel-container" class="container">
-      <input id="tel" type="tel" dir="auto"/>
-      <span data-l10n-id="autofill-address-tel" class="label-text"/>
-    </label>
-    <label id="email-container" class="container">
-      <input id="email" type="email" required="required"/>
-      <span data-l10n-id="autofill-address-email" class="label-text"/>
-    </label>
-  </form>
-  <div id="controls-container">
-    <span id="country-warning-message" data-l10n-id="autofill-country-warning-message"/>
-    <moz-button-group>
-     <button id="cancel" data-l10n-id="autofill-cancel-button"/>
-     <button id="save" class="primary" data-l10n-id="autofill-save-button"/>
-    </moz-button-group>
-  </div>
-  <script><![CDATA[
-    "use strict";
+        <input id="address-level1" type="text" />
+        <span class="label-text" />
+      </label>
+      <label id="postal-code-container" class="container">
+        <input id="postal-code" type="text" />
+        <span class="label-text" />
+      </label>
+      <label id="country-container" class="container">
+        <select id="country" required="required">
+          <option />
+        </select>
+        <span data-l10n-id="autofill-address-country" class="label-text" />
+      </label>
+      <label id="tel-container" class="container">
+        <input id="tel" type="tel" dir="auto" />
+        <span data-l10n-id="autofill-address-tel" class="label-text" />
+      </label>
+      <label id="email-container" class="container">
+        <input id="email" type="email" required="required" />
+        <span data-l10n-id="autofill-address-email" class="label-text" />
+      </label>
+    </form>
+    <div id="controls-container">
+      <span
+        id="country-warning-message"
+        data-l10n-id="autofill-country-warning-message"
+      />
+      <moz-button-group>
+        <button id="cancel" data-l10n-id="autofill-cancel-button" />
+        <button id="save" class="primary" data-l10n-id="autofill-save-button" />
+      </moz-button-group>
+    </div>
+    <script>
+      <![CDATA[
+          "use strict";
 
-    const {
-      record,
-      noValidate,
-    } = window.arguments?.[0] ?? {};
+          const {
+            record,
+            noValidate,
+          } = window.arguments?.[0] ?? {};
 
-    /* import-globals-from autofillEditForms.js */
-    const fieldContainer = new EditAddress({
-      form: document.getElementById("form"),
-    }, record, {
-      noValidate,
-    });
+          /* import-globals-from autofillEditForms.js */
+          const fieldContainer = new EditAddress({
+            form: document.getElementById("form"),
+          }, record, {
+            noValidate,
+          });
 
-    /* import-globals-from editDialog.js */
-    new EditAddressDialog({
-      title: document.querySelector("title"),
-      fieldContainer,
-      controlsContainer: document.getElementById("controls-container"),
-      cancel: document.getElementById("cancel"),
-      save: document.getElementById("save"),
-    }, record);
-  ]]></script>
-</body>
+          /* import-globals-from editDialog.js */
+          new EditAddressDialog({
+            title: document.querySelector("title"),
+            fieldContainer,
+            controlsContainer: document.getElementById("controls-container"),
+            cancel: document.getElementById("cancel"),
+            save: document.getElementById("save"),
+          }, record);
+        ]]>
+    </script>
+  </body>
 </html>

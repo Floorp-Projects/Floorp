@@ -6,7 +6,7 @@
   "scripts": {
     "build": "wireit",
     "build:packages": "wireit",
-    "clean": "tsc -b --clean && rimraf build",
+    "clean": "tsc -b --clean && rm -rf build",
     "test": "mocha"
   },
   "wireit": {
@@ -26,10 +26,11 @@
       ]
     },
     "build:packages": {
-      "command": "npm pack --workspace puppeteer --workspace puppeteer-core",
+      "command": "npm pack --quiet --workspace puppeteer --workspace puppeteer-core --workspace @puppeteer/browsers",
       "dependencies": [
         "../../packages/puppeteer:build",
-        "../../packages/puppeteer-core:build"
+        "../../packages/puppeteer-core:build",
+        "../../packages/browsers:build"
       ],
       "files": [],
       "output": [
@@ -45,6 +46,9 @@
   ],
   "dependencies": {
     "glob": "8.1.0",
-    "mocha": "10.0.0"
+    "mocha": "10.2.0"
+  },
+  "devDependencies": {
+    "@types/glob": "8.1.0"
   }
 }

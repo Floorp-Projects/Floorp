@@ -23,29 +23,31 @@ const PREF = "accessibility.blockautorefresh";
  * @returns Promise
  */
 async function attemptFakeRefresh(browser, expectRefresh) {
-  await SpecialPowers.spawn(browser, [expectRefresh], async function(
-    contentExpectRefresh
-  ) {
-    let URI = docShell.QueryInterface(Ci.nsIWebNavigation).currentURI;
-    let refresher = docShell.QueryInterface(Ci.nsIRefreshURI);
-    refresher.refreshURI(URI, null, 0);
+  await SpecialPowers.spawn(
+    browser,
+    [expectRefresh],
+    async function (contentExpectRefresh) {
+      let URI = docShell.QueryInterface(Ci.nsIWebNavigation).currentURI;
+      let refresher = docShell.QueryInterface(Ci.nsIRefreshURI);
+      refresher.refreshURI(URI, null, 0);
 
-    Assert.equal(
-      refresher.refreshPending,
-      contentExpectRefresh,
-      "Got the right refreshPending state"
-    );
+      Assert.equal(
+        refresher.refreshPending,
+        contentExpectRefresh,
+        "Got the right refreshPending state"
+      );
 
-    if (refresher.refreshPending) {
-      // Cancel the pending refresh
-      refresher.cancelRefreshURITimers();
+      if (refresher.refreshPending) {
+        // Cancel the pending refresh
+        refresher.cancelRefreshURITimers();
+      }
+
+      // The RefreshBlocker will wait until onLocationChange has
+      // been fired before it will show any notifications (see bug
+      // 1246291), so we cause this to occur manually here.
+      content.location = URI.spec + "#foo";
     }
-
-    // The RefreshBlocker will wait until onLocationChange has
-    // been fired before it will show any notifications (see bug
-    // 1246291), so we cause this to occur manually here.
-    content.location = URI.spec + "#foo";
-  });
+  );
 }
 
 /**
@@ -59,7 +61,7 @@ add_task(async function test_can_enable_and_block() {
       gBrowser,
       url: TARGET_PAGE,
     },
-    async function(browser) {
+    async function (browser) {
       // By default, we should be able to reload the page.
       await attemptFakeRefresh(browser, true);
 
@@ -106,7 +108,7 @@ async function testRealRefresh(refreshPage, delay) {
       gBrowser,
       url: "about:blank",
     },
-    async function(browser) {
+    async function (browser) {
       await pushPrefs(["accessibility.blockautorefresh", true]);
 
       BrowserTestUtils.loadURIString(
@@ -171,7 +173,7 @@ add_task(async function test_can_update_notification() {
       gBrowser,
       url: "about:blank",
     },
-    async function(browser) {
+    async function (browser) {
       await pushPrefs(["accessibility.blockautorefresh", true]);
 
       // First, attempt a redirect

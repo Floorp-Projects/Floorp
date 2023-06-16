@@ -41,7 +41,7 @@ pub use ctap2::client_data::CollectedClientData;
 pub use ctap2::commands::client_pin::{Pin, PinError};
 pub use ctap2::commands::get_assertion::Assertion;
 pub use ctap2::commands::get_info::AuthenticatorInfo;
-pub use ctap2::AssertionObject;
+pub use ctap2::GetAssertionResult;
 
 pub mod errors;
 pub mod statecallback;
@@ -92,7 +92,7 @@ pub enum RegisterResult {
 #[derive(Debug)]
 pub enum SignResult {
     CTAP1(AppId, Vec<u8>, Vec<u8>, u2ftypes::U2FDeviceInfo),
-    CTAP2(AssertionObject),
+    CTAP2(GetAssertionResult),
 }
 
 pub type ResetResult = ();

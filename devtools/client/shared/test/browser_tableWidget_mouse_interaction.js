@@ -20,8 +20,8 @@ function test() {
 
   win.addEventListener(
     "load",
-    function() {
-      waitForFocus(function() {
+    function () {
+      waitForFocus(function () {
         doc = win.document;
         table = new TableWidget(doc.querySelector("box"), {
           initialColumns: {
@@ -53,7 +53,7 @@ function endTests() {
   finish();
 }
 
-var startTests = async function() {
+var startTests = async function () {
   populateTable();
   await testMouseInteraction();
   endTests();
@@ -183,7 +183,7 @@ async function hideCol(id) {
 /**
  * Tests if clicking the table items does the expected behavior
  */
-var testMouseInteraction = async function() {
+var testMouseInteraction = async function () {
   info("Testing mouse interaction with the table");
   ok(!table.selectedRow, "Nothing should be selected beforehand");
 
@@ -230,9 +230,8 @@ var testMouseInteraction = async function() {
   info("clicking on the third row cell content to select third row");
   event = table.once(TableWidget.EVENTS.ROW_SELECTED);
   const firstColumnThirdRowCell = table.tbody.firstChild.children[3];
-  const firstColumnThirdRowCellInnerNode = firstColumnThirdRowCell.querySelector(
-    "span"
-  );
+  const firstColumnThirdRowCellInnerNode =
+    firstColumnThirdRowCell.querySelector("span");
   // node should not have selected class
   ok(
     !firstColumnThirdRowCell.classList.contains("theme-selected"),

@@ -97,7 +97,7 @@ add_task(async function test_background() {
 
 add_task(async function test_extensionTypes() {
   let extensionData = {
-    background: function() {
+    background: function () {
       browser.test.assertEq(
         typeof browser.extensionTypes,
         "object",

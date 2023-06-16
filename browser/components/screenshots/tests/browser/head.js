@@ -35,7 +35,7 @@ const MouseEvents = {
     {},
     {
       get: (target, name) =>
-        async function(x, y, selector = ":root") {
+        async function (x, y, selector = ":root") {
           if (name === "click") {
             this.down(x, y);
             this.up(x, y);
@@ -173,10 +173,12 @@ class ScreenshotsHelper {
           "ScreenshotsComponent"
         );
 
-        let dimensions = screenshotsChild._overlay.screenshotsContainer.getSelectionLayerDimensions();
+        let dimensions =
+          screenshotsChild._overlay.screenshotsContainer.getSelectionLayerDimensions();
         // return dimensions.boxWidth;
         await ContentTaskUtils.waitForCondition(() => {
-          dimensions = screenshotsChild._overlay.screenshotsContainer.getSelectionLayerDimensions();
+          dimensions =
+            screenshotsChild._overlay.screenshotsContainer.getSelectionLayerDimensions();
           return dimensions.boxWidth !== currWidth;
         }, "Wait for selection box width change");
       }
@@ -314,8 +316,8 @@ class ScreenshotsHelper {
 
   async zoomBrowser(zoom) {
     await SpecialPowers.spawn(this.browser, [zoom], zoomLevel => {
-      const { Layout } = ChromeUtils.import(
-        "chrome://mochitests/content/browser/accessible/tests/browser/Layout.jsm"
+      const { Layout } = ChromeUtils.importESModule(
+        "chrome://mochitests/content/browser/accessible/tests/browser/Layout.sys.mjs"
       );
       Layout.zoomDocument(content.document, zoomLevel);
     });
@@ -383,7 +385,7 @@ class ScreenshotsHelper {
    *   scrollWidth The scrollable width
    */
   getContentDimensions() {
-    return SpecialPowers.spawn(this.browser, [], async function() {
+    return SpecialPowers.spawn(this.browser, [], async function () {
       let { innerWidth, innerHeight, scrollMaxX, scrollMaxY } = content.window;
       let width = innerWidth + scrollMaxX;
       let height = innerHeight + scrollMaxY;
@@ -430,7 +432,8 @@ class ScreenshotsHelper {
         );
 
         await ContentTaskUtils.waitForCondition(() => {
-          let dimensions = screenshotsChild._overlay.screenshotsContainer.getSelectionLayerDimensions();
+          let dimensions =
+            screenshotsChild._overlay.screenshotsContainer.getSelectionLayerDimensions();
           info(
             `old height: ${prevHeight}. new height: ${dimensions.scrollHeight}.\nold width: ${prevWidth}. new width: ${dimensions.scrollWidth}`
           );
@@ -459,20 +462,22 @@ class ScreenshotsHelper {
    * @param eleSel The selector for the element to click
    */
   async clickUIElement(eleSel) {
-    await SpecialPowers.spawn(this.browser, [eleSel], async function(
-      eleSelector
-    ) {
-      info(
-        `in clickScreenshotsUIElement content function, eleSelector: ${eleSelector}`
-      );
-      const EventUtils = ContentTaskUtils.getEventUtils(content);
-      let ele = content.document.querySelector(eleSelector);
-      info(`Found the thing to click: ${eleSelector}: ${!!ele}`);
+    await SpecialPowers.spawn(
+      this.browser,
+      [eleSel],
+      async function (eleSelector) {
+        info(
+          `in clickScreenshotsUIElement content function, eleSelector: ${eleSelector}`
+        );
+        const EventUtils = ContentTaskUtils.getEventUtils(content);
+        let ele = content.document.querySelector(eleSelector);
+        info(`Found the thing to click: ${eleSelector}: ${!!ele}`);
 
-      EventUtils.synthesizeMouseAtCenter(ele, {});
-      // wait a frame for the screenshots UI to finish any init
-      await new content.Promise(res => content.requestAnimationFrame(res));
-    });
+        EventUtils.synthesizeMouseAtCenter(ele, {});
+        // wait a frame for the screenshots UI to finish any init
+        await new content.Promise(res => content.requestAnimationFrame(res));
+      }
+    );
   }
 
   /**
@@ -516,53 +521,57 @@ class ScreenshotsHelper {
     // We are going to load the image in the content page to measure its size.
     // We don't want to insert the image directly in the browser's document
     // which could mess all sorts of things up
-    return SpecialPowers.spawn(this.browser, [buffer], async function(_buffer) {
-      const img = content.document.createElement("img");
-      const loaded = new Promise(r => {
-        img.addEventListener("load", r, { once: true });
-      });
-      const url = content.URL.createObjectURL(
-        new Blob([_buffer], { type: "image/png" })
-      );
+    return SpecialPowers.spawn(
+      this.browser,
+      [buffer],
+      async function (_buffer) {
+        const img = content.document.createElement("img");
+        const loaded = new Promise(r => {
+          img.addEventListener("load", r, { once: true });
+        });
+        const url = content.URL.createObjectURL(
+          new Blob([_buffer], { type: "image/png" })
+        );
 
-      img.src = url;
-      content.document.documentElement.appendChild(img);
+        img.src = url;
+        content.document.documentElement.appendChild(img);
 
-      info("Waiting for the clipboard image to load in the content page");
-      await loaded;
+        info("Waiting for the clipboard image to load in the content page");
+        await loaded;
 
-      let canvas = content.document.createElementNS(
-        "http://www.w3.org/1999/xhtml",
-        "html:canvas"
-      );
-      let context = canvas.getContext("2d");
-      canvas.width = img.width;
-      canvas.height = img.height;
-      context.drawImage(img, 0, 0);
-      let topLeft = context.getImageData(0, 0, 1, 1);
-      let topRight = context.getImageData(img.width - 1, 0, 1, 1);
-      let bottomLeft = context.getImageData(0, img.height - 1, 1, 1);
-      let bottomRight = context.getImageData(
-        img.width - 1,
-        img.height - 1,
-        1,
-        1
-      );
+        let canvas = content.document.createElementNS(
+          "http://www.w3.org/1999/xhtml",
+          "html:canvas"
+        );
+        let context = canvas.getContext("2d");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        context.drawImage(img, 0, 0);
+        let topLeft = context.getImageData(0, 0, 1, 1);
+        let topRight = context.getImageData(img.width - 1, 0, 1, 1);
+        let bottomLeft = context.getImageData(0, img.height - 1, 1, 1);
+        let bottomRight = context.getImageData(
+          img.width - 1,
+          img.height - 1,
+          1,
+          1
+        );
 
-      img.remove();
-      content.URL.revokeObjectURL(url);
+        img.remove();
+        content.URL.revokeObjectURL(url);
 
-      return {
-        width: img.width,
-        height: img.height,
-        color: {
-          topLeft: topLeft.data,
-          topRight: topRight.data,
-          bottomLeft: bottomLeft.data,
-          bottomRight: bottomRight.data,
-        },
-      };
-    });
+        return {
+          width: img.width,
+          height: img.height,
+          color: {
+            topLeft: topLeft.data,
+            topRight: topRight.data,
+            bottomLeft: bottomLeft.data,
+            bottomRight: bottomRight.data,
+          },
+        };
+      }
+    );
   }
 }
 
@@ -620,7 +629,7 @@ add_setup(async () => {
 });
 
 function getContentDevicePixelRatio(browser) {
-  return SpecialPowers.spawn(browser, [], async function() {
+  return SpecialPowers.spawn(browser, [], async function () {
     return content.window.devicePixelRatio;
   });
 }

@@ -9,7 +9,7 @@
 const TEST_URL = URL_ROOT_COM_SSL + "doc_console.html";
 const TEST_IFRAME_URL = URL_ROOT_ORG_SSL + "doc_console_iframe.html";
 const TEST_DOMAIN = "https://example.org";
-add_task(async function() {
+add_task(async function () {
   const START_URL = "data:text/html;charset=utf-8,foo";
   const tab = await addTab(START_URL);
 
@@ -121,7 +121,7 @@ async function testCrossProcessIframeNavigation(browser, resourceCommand) {
   });
 
   // Navigate the iframe to another origin/process
-  await SpecialPowers.spawn(browser, [TEST_IFRAME_URL], function(iframeUrl) {
+  await SpecialPowers.spawn(browser, [TEST_IFRAME_URL], function (iframeUrl) {
     const iframe = content.document.querySelector("iframe");
     iframe.src = iframeUrl;
   });

@@ -75,8 +75,7 @@ class nsFilePicker : public nsBaseWinFilePicker {
   nsCOMPtr<nsIWidget> mParentWidget;
   nsString mTitle;
   nsCString mFile;
-  nsString mFilterList;
-  int16_t mSelectedType;
+  int32_t mSelectedType;
   nsCOMArray<nsIFile> mFiles;
   nsString mUnicodeFile;
 
@@ -85,25 +84,11 @@ class nsFilePicker : public nsBaseWinFilePicker {
   };
   static mozilla::UniquePtr<char16_t[], FreeDeleter> sLastUsedUnicodeDirectory;
 
-  class ComDlgFilterSpec {
-   public:
-    ComDlgFilterSpec() {}
-    ~ComDlgFilterSpec() {}
-
-    uint32_t Length() { return mSpecList.Length(); }
-
-    bool IsEmpty() { return (mSpecList.Length() == 0); }
-
-    const COMDLG_FILTERSPEC* get() { return mSpecList.Elements(); }
-
-    void Append(const nsAString& aTitle, const nsAString& aFilter);
-
-   private:
-    AutoTArray<COMDLG_FILTERSPEC, 1> mSpecList;
-    AutoTArray<nsString, 2> mStrings;
+  struct Filter {
+    nsString title;
+    nsString filter;
   };
-
-  ComDlgFilterSpec mComFilterList;
+  AutoTArray<Filter, 1> mFilterList;
 };
 
 #endif  // nsFilePicker_h__

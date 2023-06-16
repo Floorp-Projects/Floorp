@@ -71,7 +71,7 @@ function assertTelemetryResults(histograms, type, index, method) {
   );
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       // Disable search suggestions in the urlbar.
@@ -143,7 +143,7 @@ add_setup(async function() {
     .callsFake(() => Promise.resolve(Cu.cloneInto([REMOTE_TAB], {})));
 
   // Make sure to restore the engine once we're done.
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     sandbox.restore();
     weaveXPCService.ready = oldWeaveServiceReady;
     SyncedTabs._internal = originalSyncedTabsInternal;

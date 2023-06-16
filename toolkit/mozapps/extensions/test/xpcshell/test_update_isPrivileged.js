@@ -2,11 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "ExtensionParent",
-  "resource://gre/modules/ExtensionParent.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  ExtensionParent: "resource://gre/modules/ExtensionParent.sys.mjs",
+});
 
 AddonTestUtils.usePrivilegedSignatures = id => id === "privileged@ext";
 
@@ -149,7 +147,8 @@ add_task(async function test_install_and_update_regular_ext() {
       },
     });
   });
-  let errPattern = /Loading extension 'regular@ext': Reading manifest: Invalid extension permission: mozillaAddons/;
+  let errPattern =
+    /Loading extension 'regular@ext': Reading manifest: Invalid extension permission: mozillaAddons/;
   let permissionWarnings = messages.filter(msg => errPattern.test(msg.message));
   // Expected number of warnings after triggering the update:
   // 1. Generated when the loaded by the Addons manager (ExtensionData).

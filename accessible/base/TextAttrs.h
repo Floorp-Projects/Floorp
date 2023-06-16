@@ -378,11 +378,13 @@ class TextAttrsMgr {
       return bool(mLine & mozilla::StyleTextDecorationLine::LINE_THROUGH);
     }
 
-    bool operator==(const TextDecorValue& aValue) {
+    bool operator==(const TextDecorValue& aValue) const {
       return mColor == aValue.mColor && mLine == aValue.mLine &&
              mStyle == aValue.mStyle;
     }
-    bool operator!=(const TextDecorValue& aValue) { return !(*this == aValue); }
+    bool operator!=(const TextDecorValue& aValue) const {
+      return !(*this == aValue);
+    }
 
    private:
     nscolor mColor;

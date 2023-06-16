@@ -245,7 +245,7 @@ To run a specific test:
 
 .. code-block:: shell
 
-    ./mach python-test --subsuite mozlint tools/lint/test/test_clippy.py
+    ./mach python-test --subsuite mozlint tools/lint/test/test_black.py
 
 More tests can be `found in-tree <https://searchfox.org/mozilla-central/source/tools/lint/test>`_.
 

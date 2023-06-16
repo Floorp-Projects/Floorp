@@ -17,22 +17,19 @@ let testCases = [
     expectedKeypresses: ["Backspace"],
   },
   {
-    name:
-      "input value that adds to original string should only add the difference",
+    name: "input value that adds to original string should only add the difference",
     originalValue: "start text",
     inputEvent: "start text!!!",
     expectedKeypresses: ["!", "!", "!"],
   },
   {
-    name:
-      "input value that is a subset of original string should only delete the difference",
+    name: "input value that is a subset of original string should only delete the difference",
     originalValue: "start text",
     inputEvent: "start",
     expectedKeypresses: ["Backspace"],
   },
   {
-    name:
-      "input value that is unrelated to the original string should replace it",
+    name: "input value that is unrelated to the original string should replace it",
     originalValue: "start text",
     inputEvent: "wut?",
     expectedKeypresses: ["w", "u", "t", "?"],
@@ -71,7 +68,7 @@ async function testStringChange({
       gBrowser,
       url,
     },
-    async function(browser) {
+    async function (browser) {
       info(`Opened tab with url: ${url}, waiting for focus`);
       await SimpleTest.promiseFocus(browser.ownerGlobal);
       info("Waiting for form-processed message");
@@ -82,7 +79,7 @@ async function testStringChange({
       await ContentTask.spawn(
         browser,
         { USERNAME_INPUT_SELECTOR, expectedKeypresses },
-        async function({ USERNAME_INPUT_SELECTOR, expectedKeypresses }) {
+        async function ({ USERNAME_INPUT_SELECTOR, expectedKeypresses }) {
           let input = content.document.querySelector(USERNAME_INPUT_SELECTOR);
 
           let verifyKeyListener = event => {

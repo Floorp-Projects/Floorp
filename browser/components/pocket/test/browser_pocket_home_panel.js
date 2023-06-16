@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   // The recent saves feature makes an external call to api.getpocket.com.
   // External calls are not permitted in tests.
   // however, we're not testing the content of the panel,

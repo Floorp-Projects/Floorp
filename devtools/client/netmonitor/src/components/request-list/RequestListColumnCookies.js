@@ -33,12 +33,10 @@ class RequestListColumnCookies extends Component {
   }
 
   shouldComponentUpdate(nextProps) {
-    let {
-      requestCookies: currRequestCookies = { cookies: [] },
-    } = this.props.item;
-    let {
-      requestCookies: nextRequestCookies = { cookies: [] },
-    } = nextProps.item;
+    let { requestCookies: currRequestCookies = { cookies: [] } } =
+      this.props.item;
+    let { requestCookies: nextRequestCookies = { cookies: [] } } =
+      nextProps.item;
     currRequestCookies = currRequestCookies.cookies || currRequestCookies;
     nextRequestCookies = nextRequestCookies.cookies || nextRequestCookies;
     return currRequestCookies !== nextRequestCookies;

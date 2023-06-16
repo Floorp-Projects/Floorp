@@ -13,7 +13,7 @@ import {
 import { getDefaultOptions } from "lib/ActivityStreamStorage.jsm";
 import injector from "inject!lib/TopSitesFeed.jsm";
 import { Screenshots } from "lib/Screenshots.jsm";
-import { LinksCache } from "lib/LinksCache.jsm";
+import { LinksCache } from "lib/LinksCache.sys.mjs";
 
 const FAKE_FAVICON = "data987";
 const FAKE_FAVICON_SIZE = 128;
@@ -34,6 +34,9 @@ const SHOWN_ON_NEWTAB_PREF = "feeds.topsites";
 const SHOW_SPONSORED_PREF = "showSponsoredTopSites";
 const TOP_SITES_BLOCKED_SPONSORS_PREF = "browser.topsites.blockedSponsors";
 const REMOTE_SETTING_DEFAULTS_PREF = "browser.topsites.useRemoteSetting";
+const CONTILE_CACHE_PREF = "browser.topsites.contile.cachedTiles";
+const CONTILE_CACHE_VALID_FOR_PREF = "browser.topsites.contile.cacheValidFor";
+const CONTILE_CACHE_LAST_FETCH_PREF = "browser.topsites.contile.lastFetch";
 
 function FakeTippyTopProvider() {}
 FakeTippyTopProvider.prototype = {
@@ -59,6 +62,7 @@ describe("Top Sites Feed", () => {
   let fakePageThumbs;
   let fetchStub;
   let fakeNimbusFeatures;
+  let fakeSampling;
 
   beforeEach(() => {
     globals = new GlobalOverrider();
@@ -104,7 +108,7 @@ describe("Top Sites Feed", () => {
       .callsFake(site =>
         site.url.replace(/(.com|.ca)/, "").replace("https://", "")
       );
-    const fakeDedupe = function() {};
+    const fakeDedupe = function () {};
     fakePageThumbs = {
       addExpirationFilter: sinon.stub(),
       removeExpirationFilter: sinon.stub(),
@@ -119,6 +123,9 @@ describe("Top Sites Feed", () => {
         getVariable: sinon.stub(),
       },
     };
+    fakeSampling = {
+      ratioSample: sinon.stub(),
+    };
     globals.set({
       PageThumbs: fakePageThumbs,
       NewTabUtils: fakeNewTabUtils,
@@ -127,6 +134,7 @@ describe("Top Sites Feed", () => {
       LinksCache,
       FilterAdult: filterAdultStub,
       Screenshots: fakeScreenshot,
+      Sampling: fakeSampling,
     });
     sandbox.spy(global.XPCOMUtils, "defineLazyGetter");
     FAKE_GLOBAL_PREFS.set("default.sites", "https://foo.com/");
@@ -140,7 +148,9 @@ describe("Top Sites Feed", () => {
       },
       "lib/FilterAdult.jsm": { FilterAdult: filterAdultStub },
       "lib/Screenshots.jsm": { Screenshots: fakeScreenshot },
-      "lib/TippyTopProvider.jsm": { TippyTopProvider: FakeTippyTopProvider },
+      "lib/TippyTopProvider.sys.mjs": {
+        TippyTopProvider: FakeTippyTopProvider,
+      },
       "lib/ShortURL.jsm": { shortURL: shortURLStub },
       "lib/ActivityStreamStorage.jsm": {
         ActivityStreamStorage: function Fake() {},
@@ -183,13 +193,18 @@ describe("Top Sites Feed", () => {
   }
 
   describe("#constructor", () => {
-    it("should defineLazyGetter for log and _currentSearchHostname", () => {
-      assert.calledTwice(global.XPCOMUtils.defineLazyGetter);
+    it("should defineLazyGetter for log, contextId, and _currentSearchHostname", () => {
+      assert.calledThrice(global.XPCOMUtils.defineLazyGetter);
 
       let spyCall = global.XPCOMUtils.defineLazyGetter.getCall(0);
       assert.ok(spyCall.calledWith(sinon.match.any, "log", sinon.match.func));
 
       spyCall = global.XPCOMUtils.defineLazyGetter.getCall(1);
+      assert.ok(
+        spyCall.calledWith(sinon.match.any, "contextId", sinon.match.func)
+      );
+
+      spyCall = global.XPCOMUtils.defineLazyGetter.getCall(2);
       assert.ok(
         spyCall.calledWith(feed, "_currentSearchHostname", sinon.match.func)
       );
@@ -413,9 +428,8 @@ describe("Top Sites Feed", () => {
       it("should migrate pinned favicon data without getting favicons again", async () => {
         fakeNewTabUtils.pinnedLinks.links = [{ url: "https://foo.com/" }];
         await feed.getLinksWithDefaults();
-        const {
-          callCount,
-        } = fakeNewTabUtils.activityStreamProvider._addFavicons;
+        const { callCount } =
+          fakeNewTabUtils.activityStreamProvider._addFavicons;
         feed.pinnedCache.expire();
 
         const result = await feed.getLinksWithDefaults();
@@ -1174,6 +1188,30 @@ describe("Top Sites Feed", () => {
       feed.onAction(prefChangeAction);
 
       assert.notCalled(feed._contile.refresh);
+    });
+    it("should reset Contile cache prefs when SHOW_SPONSORED_PREF is false", () => {
+      Services.prefs.setStringPref(CONTILE_CACHE_PREF, "[]");
+      Services.prefs.setIntPref(CONTILE_CACHE_LAST_FETCH_PREF, 15 * 60 * 1000);
+      Services.prefs.setIntPref(CONTILE_CACHE_VALID_FOR_PREF, Date.now());
+
+      sandbox.spy(feed._contile, "refresh");
+      const prefChangeAction = {
+        type: at.PREF_CHANGED,
+        data: { name: SHOW_SPONSORED_PREF, value: false },
+      };
+      fakeNimbusFeatures.newtab.getVariable.returns(true);
+      feed.onAction(prefChangeAction);
+
+      assert.calledOnce(feed._contile.refresh);
+
+      // cached pref values should have reset
+      assert.isUndefined(Services.prefs.getStringPref(CONTILE_CACHE_PREF));
+      assert.isUndefined(
+        Services.prefs.getIntPref(CONTILE_CACHE_LAST_FETCH_PREF)
+      );
+      assert.isUndefined(
+        Services.prefs.getIntPref(CONTILE_CACHE_VALID_FOR_PREF)
+      );
     });
   });
   describe("#add", () => {
@@ -2104,16 +2142,24 @@ describe("Top Sites Feed", () => {
   });
 
   describe("#ContileIntegration", () => {
+    let getStringPrefStub;
+    let getIntPrefStub;
     beforeEach(() => {
       // Turn on sponsored TopSites for testing
       feed.store.state.Prefs.values[SHOW_SPONSORED_PREF] = true;
       fetchStub = sandbox.stub();
       globals.set("fetch", fetchStub);
-      sandbox
-        .stub(global.Services.prefs, "getStringPref")
+
+      getStringPrefStub = sandbox.stub(global.Services.prefs, "getStringPref");
+      getStringPrefStub
         .withArgs(TOP_SITES_BLOCKED_SPONSORS_PREF)
         .returns(`["foo","bar"]`);
+
+      getIntPrefStub = sandbox.stub(global.Services.prefs, "getIntPref");
+
       fakeNimbusFeatures.newtab.getVariable.returns(true);
+      sandbox.spy(global.Services.prefs, "setStringPref");
+      sandbox.spy(global.Services.prefs, "setIntPref");
     });
     afterEach(() => {
       sandbox.restore();
@@ -2123,6 +2169,9 @@ describe("Top Sites Feed", () => {
       fetchStub.resolves({
         ok: true,
         status: 200,
+        headers: new Map([
+          ["cache-control", "private, max-age=859, stale-if-error=10463"],
+        ]),
         json: () =>
           Promise.resolve({
             tiles: [
@@ -2150,6 +2199,73 @@ describe("Top Sites Feed", () => {
       assert.equal(feed._contile.sites.length, 2);
     });
 
+    it("should fetch SOV (Share-of-Voice) settings from Contile", async () => {
+      const sov = {
+        name: "SOV-20230518215316",
+        allocations: [
+          {
+            position: 1,
+            allocation: [
+              {
+                partner: "foo",
+                percentage: 100,
+              },
+              {
+                partner: "bar",
+                percentage: 0,
+              },
+            ],
+          },
+          {
+            position: 2,
+            allocation: [
+              {
+                partner: "foo",
+                percentage: 80,
+              },
+              {
+                partner: "bar",
+                percentage: 20,
+              },
+            ],
+          },
+        ],
+      };
+      fetchStub.resolves({
+        ok: true,
+        status: 200,
+        headers: new Map([
+          ["cache-control", "private, max-age=859, stale-if-error=10463"],
+        ]),
+        json: () =>
+          Promise.resolve({
+            sov: btoa(JSON.stringify(sov)),
+            tiles: [
+              {
+                url: "https://www.test.com",
+                image_url: "images/test-com.png",
+                click_url: "https://www.test-click.com",
+                impression_url: "https://www.test-impression.com",
+                name: "test",
+              },
+              {
+                url: "https://www.test1.com",
+                image_url: "images/test1-com.png",
+                click_url: "https://www.test1-click.com",
+                impression_url: "https://www.test1-impression.com",
+                name: "test1",
+              },
+            ],
+          }),
+      });
+
+      const fetched = await feed._contile._fetchSites();
+
+      assert.ok(fetched);
+      assert.deepEqual(feed._contile.sov, sov);
+      assert.equal(feed._contile.sites.length, 2);
+    });
+
     it("should not fetch from Contile if it's not enabled", async () => {
       fakeNimbusFeatures.newtab.getVariable.reset();
       fakeNimbusFeatures.newtab.getVariable.returns(false);
@@ -2168,6 +2284,9 @@ describe("Top Sites Feed", () => {
       fetchStub.resolves({
         ok: true,
         status: 200,
+        headers: new Map([
+          ["cache-control", "private, max-age=859, stale-if-error=10463"],
+        ]),
         json: () =>
           Promise.resolve({
             tiles: [
@@ -2226,6 +2345,9 @@ describe("Top Sites Feed", () => {
       fetchStub.resolves({
         ok: true,
         status: 200,
+        headers: new Map([
+          ["cache-control", "private, max-age=859, stale-if-error=10463"],
+        ]),
         json: () =>
           Promise.resolve({
             tiles: [
@@ -2266,6 +2388,9 @@ describe("Top Sites Feed", () => {
       fetchStub.resolves({
         ok: true,
         status: 200,
+        headers: new Map([
+          ["cache-control", "private, max-age=859, stale-if-error=10463"],
+        ]),
         json: () =>
           Promise.resolve({
             tiles: [
@@ -2302,7 +2427,26 @@ describe("Top Sites Feed", () => {
       assert.equal(feed._contile.sites[0].url, "https://www.test.com");
     });
 
-    it("should handle errors properly from Contile", async () => {
+    it("should return false when Contile returns with error status and no values are stored in cache prefs", async () => {
+      fetchStub.resolves({
+        ok: false,
+        status: 500,
+      });
+
+      const fetched = await feed._contile._fetchSites();
+
+      assert.ok(!fetched);
+      assert.ok(!feed._contile.sites.length);
+    });
+
+    it("should return false when Contile returns with error status and cached tiles are expried", async () => {
+      getIntPrefStub
+        .withArgs(CONTILE_CACHE_VALID_FOR_PREF)
+        .returns(1000 * 60 * 15);
+      getIntPrefStub
+        .withArgs(CONTILE_CACHE_LAST_FETCH_PREF)
+        .returns(Date.now() - 1000 * 60 * 30);
+
       fetchStub.resolves({
         ok: false,
         status: 500,
@@ -2334,6 +2478,9 @@ describe("Top Sites Feed", () => {
       fetchStub.resolves({
         ok: true,
         status: 200,
+        headers: new Map([
+          ["cache-control", "private, max-age=859, stale-if-error=10463"],
+        ]),
         json: () =>
           Promise.resolve({
             tiles: [],
@@ -2353,6 +2500,280 @@ describe("Top Sites Feed", () => {
 
       assert.ok(!fetched);
       assert.ok(!feed._contile.sites.length);
+    });
+
+    it("should set Caching Prefs after a sucessful request", async () => {
+      const tiles = [
+        {
+          url: "https://www.test.com",
+          image_url: "images/test-com.png",
+          click_url: "https://www.test-click.com",
+          impression_url: "https://www.test-impression.com",
+          name: "test",
+        },
+        {
+          url: "https://www.test1.com",
+          image_url: "images/test1-com.png",
+          click_url: "https://www.test1-click.com",
+          impression_url: "https://www.test1-impression.com",
+          name: "test1",
+        },
+      ];
+      fetchStub.resolves({
+        ok: true,
+        status: 200,
+        headers: new Map([
+          ["cache-control", "private, max-age=859, stale-if-error=10463"],
+        ]),
+        json: () =>
+          Promise.resolve({
+            tiles,
+          }),
+      });
+
+      const fetched = await feed._contile._fetchSites();
+      assert.ok(fetched);
+      assert.calledOnce(Services.prefs.setStringPref);
+      assert.calledTwice(Services.prefs.setIntPref);
+
+      assert.calledWith(
+        Services.prefs.setStringPref,
+        CONTILE_CACHE_PREF,
+        JSON.stringify(tiles)
+      );
+      assert.calledWith(
+        Services.prefs.setIntPref,
+        CONTILE_CACHE_VALID_FOR_PREF,
+        11322
+      );
+    });
+
+    it("should return cached valid tiles when Contile returns error status", async () => {
+      const tiles = [
+        {
+          url: "https://www.test-cached.com",
+          image_url: "images/test-com.png",
+          click_url: "https://www.test-click.com",
+          impression_url: "https://www.test-impression.com",
+          name: "test",
+        },
+        {
+          url: "https://www.test1-cached.com",
+          image_url: "images/test1-com.png",
+          click_url: "https://www.test1-click.com",
+          impression_url: "https://www.test1-impression.com",
+          name: "test1",
+        },
+      ];
+
+      getStringPrefStub
+        .withArgs(CONTILE_CACHE_PREF)
+        .returns(JSON.stringify(tiles));
+
+      // valid for 15 mins
+      getIntPrefStub
+        .withArgs(CONTILE_CACHE_VALID_FOR_PREF)
+        .returns(1000 * 60 * 15);
+      getIntPrefStub
+        .withArgs(CONTILE_CACHE_LAST_FETCH_PREF)
+        .returns(Date.now());
+
+      fetchStub.resolves({
+        status: 304,
+      });
+
+      const fetched = await feed._contile._fetchSites();
+      assert.ok(fetched);
+      assert.equal(feed._contile.sites.length, 2);
+      assert.equal(feed._contile.sites[0].url, "https://www.test-cached.com");
+      assert.equal(feed._contile.sites[1].url, "https://www.test1-cached.com");
+    });
+
+    it("should not be successful when contile returns an error and no valid tiles are cached", async () => {
+      getStringPrefStub.withArgs(CONTILE_CACHE_PREF).returns("[]");
+
+      getIntPrefStub.withArgs(CONTILE_CACHE_VALID_FOR_PREF).returns(0);
+      getIntPrefStub.withArgs(CONTILE_CACHE_LAST_FETCH_PREF).returns(0);
+
+      fetchStub.resolves({
+        status: 500,
+      });
+
+      const fetched = await feed._contile._fetchSites();
+      assert.ok(!fetched);
+    });
+
+    it("should return cached valid tiles filtering blocked tiles when Contile returns error status", async () => {
+      const tiles = [
+        {
+          url: "https://foo.com",
+          image_url: "images/foo-com.png",
+          click_url: "https://www.foo-click.com",
+          impression_url: "https://www.foo-impression.com",
+          name: "foo",
+        },
+        {
+          url: "https://www.test1-cached.com",
+          image_url: "images/test1-com.png",
+          click_url: "https://www.test1-click.com",
+          impression_url: "https://www.test1-impression.com",
+          name: "test1",
+        },
+      ];
+      getStringPrefStub
+        .withArgs(CONTILE_CACHE_PREF)
+        .returns(JSON.stringify(tiles));
+
+      // valid for 15 mins
+      getIntPrefStub
+        .withArgs(CONTILE_CACHE_VALID_FOR_PREF)
+        .returns(1000 * 60 * 15);
+      getIntPrefStub
+        .withArgs(CONTILE_CACHE_LAST_FETCH_PREF)
+        .returns(Date.now());
+
+      fetchStub.resolves({
+        status: 304,
+      });
+
+      const fetched = await feed._contile._fetchSites();
+      assert.ok(fetched);
+      assert.equal(feed._contile.sites.length, 1);
+      assert.equal(feed._contile.sites[0].url, "https://www.test1-cached.com");
+    });
+  });
+
+  describe("#_mergeSponsoredLinks", () => {
+    let fakeSponsoredLinks;
+    let sov;
+    beforeEach(() => {
+      fakeSponsoredLinks = {
+        amp: [
+          {
+            url: "https://www.test.com",
+            image_url: "images/test-com.png",
+            click_url: "https://www.test-click.com",
+            impression_url: "https://www.test-impression.com",
+            name: "test",
+            partner: "amp",
+            sponsored_position: 1,
+          },
+          {
+            url: "https://www.test1.com",
+            image_url: "images/test1-com.png",
+            click_url: "https://www.test1-click.com",
+            impression_url: "https://www.test1-impression.com",
+            name: "test1",
+            partner: "amp",
+            sponsored_position: 2,
+          },
+        ],
+        "moz-sales": [
+          {
+            url: "https://foo.com",
+            image_url: "images/foo-com.png",
+            click_url: "https://www.foo-click.com",
+            impression_url: "https://www.foo-impression.com",
+            name: "foo",
+            partner: "moz-sales",
+            pos: 2,
+          },
+        ],
+      };
+
+      sov = {
+        name: "SOV-20230518215316",
+        allocations: [
+          {
+            position: 1,
+            allocation: [
+              {
+                partner: "amp",
+                percentage: 100,
+              },
+              {
+                partner: "moz-sales",
+                percentage: 0,
+              },
+            ],
+          },
+          {
+            position: 2,
+            allocation: [
+              {
+                partner: "amp",
+                percentage: 80,
+              },
+              {
+                partner: "moz-sales",
+                percentage: 20,
+              },
+            ],
+          },
+        ],
+      };
+    });
+    afterEach(() => {
+      sandbox.restore();
+    });
+
+    it("should join sponsored links if the sov object is absent", async () => {
+      sandbox.stub(feed._contile, "sov").get(() => null);
+
+      const sponsored = await feed._mergeSponsoredLinks(fakeSponsoredLinks);
+
+      assert.deepEqual(sponsored, Object.values(fakeSponsoredLinks).flat());
+    });
+
+    it("should join sponosred links if the SOV Nimbus variable is disabled", async () => {
+      fakeNimbusFeatures.pocketNewtab.getVariable.returns(false);
+      const sponsored = await feed._mergeSponsoredLinks(fakeSponsoredLinks);
+
+      assert.deepEqual(sponsored, Object.values(fakeSponsoredLinks).flat());
+    });
+
+    it("should pick sponsored links based on sov configurations", async () => {
+      sandbox.stub(feed._contile, "sov").get(() => sov);
+      fakeNimbusFeatures.pocketNewtab.getVariable.returns(true);
+      global.Sampling.ratioSample.onCall(0).resolves(0);
+      global.Sampling.ratioSample.onCall(1).resolves(1);
+
+      const sponsored = await feed._mergeSponsoredLinks(fakeSponsoredLinks);
+
+      assert.equal(sponsored.length, 2);
+      assert.equal(sponsored[0].partner, "amp");
+      assert.equal(sponsored[0].sponsored_position, 1);
+      assert.equal(sponsored[1].partner, "moz-sales");
+      assert.equal(sponsored[1].sponsored_position, 2);
+      assert.equal(sponsored[1].pos, 1);
+    });
+
+    it("should fall back to other partners if the chosen partner does not have any links", async () => {
+      sandbox.stub(feed._contile, "sov").get(() => sov);
+      fakeNimbusFeatures.pocketNewtab.getVariable.returns(true);
+      global.Sampling.ratioSample.onCall(0).resolves(0);
+      global.Sampling.ratioSample.onCall(1).resolves(0);
+
+      fakeSponsoredLinks.amp = [];
+      const sponsored = await feed._mergeSponsoredLinks(fakeSponsoredLinks);
+
+      assert.equal(sponsored.length, 1);
+      assert.equal(sponsored[0].partner, "moz-sales");
+      assert.equal(sponsored[0].sponsored_position, 1);
+      assert.equal(sponsored[0].pos, 0);
+    });
+
+    it("should return an empty array if none of the partners have links", async () => {
+      sandbox.stub(feed._contile, "sov").get(() => sov);
+      fakeNimbusFeatures.pocketNewtab.getVariable.returns(true);
+      global.Sampling.ratioSample.onCall(0).resolves(0);
+      global.Sampling.ratioSample.onCall(1).resolves(0);
+
+      fakeSponsoredLinks.amp = [];
+      fakeSponsoredLinks["moz-sales"] = [];
+      const sponsored = await feed._mergeSponsoredLinks(fakeSponsoredLinks);
+
+      assert.equal(sponsored.length, 0);
     });
   });
 

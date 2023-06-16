@@ -54,6 +54,7 @@
 #include "rtc_base/socket_address.h"
 #include "rtc_base/thread.h"
 #include "test/gtest.h"
+#include "test/scoped_key_value_config.h"
 #ifdef WEBRTC_ANDROID
 #include "pc/test/android_test_initializer.h"
 #endif
@@ -1425,7 +1426,8 @@ class PeerConnectionIceConfigTest : public ::testing::Test {
         new rtc::BasicPacketSocketFactory(socket_server_.get()));
     std::unique_ptr<cricket::FakePortAllocator> port_allocator(
         new cricket::FakePortAllocator(rtc::Thread::Current(),
-                                       packet_socket_factory_.get()));
+                                       packet_socket_factory_.get(),
+                                       &field_trials_));
     port_allocator_ = port_allocator.get();
     port_allocator_->SetIceTiebreaker(kTiebreakerDefault);
     PeerConnectionDependencies pc_dependencies(&observer_);
@@ -1436,6 +1438,7 @@ class PeerConnectionIceConfigTest : public ::testing::Test {
     pc_ = result.MoveValue();
   }
 
+  webrtc::test::ScopedKeyValueConfig field_trials_;
   std::unique_ptr<rtc::SocketServer> socket_server_;
   rtc::AutoSocketServerThread main_thread_;
   rtc::scoped_refptr<PeerConnectionFactoryInterface> pc_factory_ = nullptr;

@@ -218,10 +218,11 @@ class ScriptSourceObject;
 ScriptSourceObject* SelfHostingScriptSourceObject(JSContext* cx);
 
 /*
- * Check whether the given JSFunction is a self-hosted function whose
+ * Check whether the given JSFunction or Value is a self-hosted function whose
  * self-hosted name is the given name.
  */
 bool IsSelfHostedFunctionWithName(JSFunction* fun, JSAtom* name);
+bool IsSelfHostedFunctionWithName(const Value& v, JSAtom* name);
 
 /*
  * Returns the name of the cloned function's binding in the self-hosted global.
@@ -244,7 +245,7 @@ void SetUnclonedSelfHostedCanonicalName(JSFunction* fun, JSAtom* name);
 
 bool IsCallSelfHostedNonGenericMethod(NativeImpl impl);
 
-bool ReportIncompatibleSelfHostedMethod(JSContext* cx, const CallArgs& args);
+bool ReportIncompatibleSelfHostedMethod(JSContext* cx, Handle<Value> thisValue);
 
 /* Get the compile options used when compiling self hosted code. */
 void FillSelfHostingCompileOptions(JS::CompileOptions& options);

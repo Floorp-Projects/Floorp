@@ -17,7 +17,7 @@ const TEST_SHORTCUTS = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   for (const shortcut of TEST_SHORTCUTS) {
     info(
       "Start to test for the shortcut " +

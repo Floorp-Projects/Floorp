@@ -23,7 +23,7 @@ function test() {
     let win = OpenBrowserWindow(aOptions);
     win.addEventListener(
       "load",
-      function() {
+      function () {
         aCallback(win);
       },
       { once: true }
@@ -41,7 +41,7 @@ function test() {
             "storage should" + (storageShouldOccur ? "" : " not") + " occur"
           );
 
-          executeSoon(function() {
+          executeSoon(function () {
             ConsoleAPIStorage.removeLogEventListener(observe);
             aCallback();
           });
@@ -65,7 +65,7 @@ function test() {
   }
 
   function testOnWindow(aOptions, aCallback) {
-    whenNewWindowLoaded(aOptions, function(aWin) {
+    whenNewWindowLoaded(aOptions, function (aWin) {
       windowsToClose.push(aWin);
       // execute should only be called when need, like when you are opening
       // web pages on the test. If calling executeSoon() is not necesary, then
@@ -75,17 +75,17 @@ function test() {
   }
 
   // this function is called after calling finish() on the test.
-  registerCleanupFunction(function() {
-    windowsToClose.forEach(function(aWin) {
+  registerCleanupFunction(function () {
+    windowsToClose.forEach(function (aWin) {
       aWin.close();
     });
   });
 
   // test first when not on private mode
-  testOnWindow({}, function(aWin) {
-    doTest(false, aWin, function() {
+  testOnWindow({}, function (aWin) {
+    doTest(false, aWin, function () {
       // then test when on private mode
-      testOnWindow({ private: true }, function(aWin) {
+      testOnWindow({ private: true }, function (aWin) {
         doTest(true, aWin, finish);
       });
     });

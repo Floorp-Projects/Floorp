@@ -1,10 +1,10 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 
 let tempFile;
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({ set: [["ui.tooltipDelay", 0]] });
   tempFile = createTempFile();
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     tempFile.remove(true);
   });
 });
@@ -42,7 +42,7 @@ async function do_test(test) {
   );
 
   info("creating input field");
-  await SpecialPowers.spawn(tab.linkedBrowser, [test], async function(test) {
+  await SpecialPowers.spawn(tab.linkedBrowser, [test], async function (test) {
     let doc = content.document;
     let input = doc.createElement("input");
     doc.body.appendChild(input);
@@ -78,7 +78,7 @@ async function do_test(test) {
         tab.linkedBrowser
       );
       info("Waiting for the input to have the requisite files");
-      await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+      await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
         let input = content.document.querySelector("#test_input");
         await ContentTaskUtils.waitForCondition(
           () => input.files.length,
@@ -98,7 +98,7 @@ async function do_test(test) {
     let tooltip = document.getElementById(tooltipId);
     tooltip.addEventListener(
       "popupshown",
-      function(event) {
+      function (event) {
         resolve(event.target);
       },
       { once: true }

@@ -18,7 +18,7 @@ const TEST_URI = `<style>
     <div class=test></div>
   </div>`;
 
-add_task(async function() {
+add_task(async function () {
   const tab = await addTab("data:text/html," + encodeURIComponent(TEST_URI));
   const { inspector, boxmodel } = await openLayoutView();
   const browser = tab.linkedBrowser;

@@ -217,17 +217,6 @@ class nsBaseChannel
   void SetStreamListener(nsIStreamListener* listener) { mListener = listener; }
   nsIStreamListener* StreamListener() { return mListener; }
 
-  // Pushes a new stream converter in front of the channel's stream listener.
-  // The fromType and toType values are passed to nsIStreamConverterService's
-  // AsyncConvertData method.  If invalidatesContentLength is true, then the
-  // channel's content-length property will be assigned a value of -1.  This is
-  // necessary when the converter changes the length of the resulting data
-  // stream, which is almost always the case for a "stream converter" ;-)
-  // This function optionally returns a reference to the new converter.
-  nsresult PushStreamConverter(const char* fromType, const char* toType,
-                               bool invalidatesContentLength = true,
-                               nsIStreamListener** result = nullptr);
-
  protected:
   void DisallowThreadRetargeting() { mAllowThreadRetargeting = false; }
 

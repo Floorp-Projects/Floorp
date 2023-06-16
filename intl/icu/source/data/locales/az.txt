@@ -961,6 +961,59 @@ az{
             }
         }
         islamic{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "G d MMMM y, EEEE",
+                "G d MMMM, y",
+                "G d MMM y",
+                "GGGGG dd.MM.y",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyMMdd",
+            }
+            availableFormats{
+                E{"ccc"}
+                Ed{"d, E"}
+                Gy{"G y"}
+                GyMMM{"G MMM y"}
+                GyMMMEd{"G d MMM y, E"}
+                GyMMMd{"G d MMM y"}
+                GyMd{"GGGGG d M y"}
+                M{"L"}
+                MEd{"dd.MM, E"}
+                MMM{"LLL"}
+                MMMEd{"d MMM, E"}
+                MMMMd{"MMMM d"}
+                MMMd{"d MMM"}
+                Md{"dd.MM"}
+                d{"d"}
+                y{"G y"}
+                yyyy{"G y"}
+                yyyyM{"GGGGG MM y"}
+                yyyyMEd{"GGGGG dd.MM.y, E"}
+                yyyyMMM{"G MMM y"}
+                yyyyMMMEd{"G d MMM y, E"}
+                yyyyMMMM{"G MMMM y"}
+                yyyyMMMd{"G d MMM y"}
+                yyyyMd{"GGGGG dd.MM.y"}
+                yyyyQQQ{"G y QQQ"}
+                yyyyQQQQ{"G y QQQQ"}
+            }
             monthNames{
                 format{
                     abbreviated{
@@ -976,6 +1029,20 @@ az{
                         "Şəv.",
                         "Zilq.",
                         "Zilh.",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
                     }
                     wide{
                         "Məhərrəm",
@@ -1020,6 +1087,84 @@ az{
                         "Şəvval",
                         "Zilqədə",
                         "Zilhiccə",
+                    }
+                }
+            }
+        }
+        persian{
+            monthNames{
+                format{
+                    abbreviated{
+                        "fərvərdin",
+                        "ordibeheşt",
+                        "xordəd",
+                        "tir",
+                        "mordəd",
+                        "şəhrivar",
+                        "mehr",
+                        "abən",
+                        "azər",
+                        "dey",
+                        "bəhmən",
+                        "isfənd",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
+                    wide{
+                        "fərvərdin",
+                        "ordibeheşt",
+                        "xordəd",
+                        "tir",
+                        "mordəd",
+                        "şəhrivar",
+                        "mehr",
+                        "abən",
+                        "azər",
+                        "dey",
+                        "bəhmən",
+                        "isfənd",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "fərvərdin",
+                        "ordibeheşt",
+                        "xordəd",
+                        "tir",
+                        "mordəd",
+                        "şəhrivar",
+                        "mehr",
+                        "abən",
+                        "azər",
+                        "dey",
+                        "bəhmən",
+                        "isfənd",
+                    }
+                    wide{
+                        "fərvərdin",
+                        "ordibeheşt",
+                        "xordəd",
+                        "tir",
+                        "mordəd",
+                        "şəhrivar",
+                        "mehr",
+                        "abən",
+                        "azər",
+                        "dey",
+                        "bəhmən",
+                        "isfənd",
                     }
                 }
             }
@@ -1138,10 +1283,58 @@ az{
                 }
             }
         }
+        day-narrow{
+            dn{"Gün"}
+            relative{
+                "-1"{"dünən"}
+                "0"{"bu gün"}
+                "1"{"sabah"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} gün ərzində"}
+                    other{"{0} gün ərzində"}
+                }
+                past{
+                    one{"{0} gün öncə"}
+                    other{"{0} gün öncə"}
+                }
+            }
+        }
+        day-short{
+            dn{"Gün"}
+            relative{
+                "-1"{"dünən"}
+                "0"{"bu gün"}
+                "1"{"sabah"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} gün ərzində"}
+                    other{"{0} gün ərzində"}
+                }
+                past{
+                    one{"{0} gün öncə"}
+                    other{"{0} gün öncə"}
+                }
+            }
+        }
         dayOfYear{
             dn{"ilin günü"}
         }
+        dayOfYear-narrow{
+            dn{"ilin günü"}
+        }
+        dayOfYear-short{
+            dn{"ilin günü"}
+        }
         dayperiod{
+            dn{"AM/PM"}
+        }
+        dayperiod-narrow{
+            dn{"AM/PM"}
+        }
+        dayperiod-short{
             dn{"AM/PM"}
         }
         era{
@@ -1220,8 +1413,31 @@ az{
                 }
             }
         }
+        hour-narrow{
+            dn{"saat"}
+            relativeTime{
+                future{
+                    one{"{0} saat ərzində"}
+                    other{"{0} saat ərzində"}
+                }
+                past{
+                    one{"{0} saat öncə"}
+                    other{"{0} saat öncə"}
+                }
+            }
+        }
         hour-short{
             dn{"saat"}
+            relativeTime{
+                future{
+                    one{"{0} saat ərzində"}
+                    other{"{0} saat ərzində"}
+                }
+                past{
+                    one{"{0} saat öncə"}
+                    other{"{0} saat öncə"}
+                }
+            }
         }
         minute{
             dn{"Dəqiqə"}
@@ -1239,8 +1455,31 @@ az{
                 }
             }
         }
+        minute-narrow{
+            dn{"dəq."}
+            relativeTime{
+                future{
+                    one{"{0} dəqiqə ərzində"}
+                    other{"{0} dəqiqə ərzində"}
+                }
+                past{
+                    one{"{0} dəqiqə öncə"}
+                    other{"{0} dəqiqə öncə"}
+                }
+            }
+        }
         minute-short{
             dn{"dəq."}
+            relativeTime{
+                future{
+                    one{"{0} dəqiqə ərzində"}
+                    other{"{0} dəqiqə ərzində"}
+                }
+                past{
+                    one{"{0} dəqiqə öncə"}
+                    other{"{0} dəqiqə öncə"}
+                }
+            }
         }
         mon{
             relative{
@@ -1277,10 +1516,19 @@ az{
             }
         }
         mon-short{
+            relative{
+                "-1"{"keçən bazar ertəsi"}
+                "0"{"bu bazar ertəsi"}
+                "1"{"gələn bazar ertəsi"}
+            }
             relativeTime{
                 future{
                     one{"{0} bazar ertəsi ərzində"}
                     other{"{0} bazar ertəsi ərzində"}
+                }
+                past{
+                    one{"{0} bazar ertəsi öncə"}
+                    other{"{0} bazar ertəsi öncə"}
                 }
             }
         }
@@ -1304,7 +1552,16 @@ az{
         }
         month-narrow{
             dn{"ay"}
+            relative{
+                "-1"{"keçən ay"}
+                "0"{"bu ay"}
+                "1"{"gələn ay"}
+            }
             relativeTime{
+                future{
+                    one{"{0} ay ərzində"}
+                    other{"{0} ay ərzində"}
+                }
                 past{
                     one{"{0} ay öncə"}
                     other{"{0} ay öncə"}
@@ -1313,6 +1570,21 @@ az{
         }
         month-short{
             dn{"ay"}
+            relative{
+                "-1"{"keçən ay"}
+                "0"{"bu ay"}
+                "1"{"gələn ay"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} ay ərzində"}
+                    other{"{0} ay ərzində"}
+                }
+                past{
+                    one{"{0} ay öncə"}
+                    other{"{0} ay öncə"}
+                }
+            }
         }
         quarter{
             dn{"Rüb"}
@@ -1339,6 +1611,16 @@ az{
                 "0"{"bu rüb"}
                 "1"{"gələn rüb"}
             }
+            relativeTime{
+                future{
+                    one{"{0} rüb ərzində"}
+                    other{"{0} rüb ərzində"}
+                }
+                past{
+                    one{"{0} rüb öncə"}
+                    other{"{0} rüb öncə"}
+                }
+            }
         }
         quarter-short{
             dn{"rüb"}
@@ -1346,6 +1628,16 @@ az{
                 "-1"{"keçən rüb"}
                 "0"{"bu rüb"}
                 "1"{"gələn rüb"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} rüb ərzində"}
+                    other{"{0} rüb ərzində"}
+                }
+                past{
+                    one{"{0} rüb öncə"}
+                    other{"{0} rüb öncə"}
+                }
             }
         }
         sat{
@@ -1415,10 +1707,67 @@ az{
                 }
             }
         }
+        second-narrow{
+            dn{"san."}
+            relativeTime{
+                future{
+                    one{"{0} saniyə ərzində"}
+                    other{"{0} saniyə ərzində"}
+                }
+                past{
+                    one{"{0} saniyə öncə"}
+                    other{"{0} saniyə öncə"}
+                }
+            }
+        }
         second-short{
             dn{"san."}
+            relativeTime{
+                future{
+                    one{"{0} saniyə ərzində"}
+                    other{"{0} saniyə ərzində"}
+                }
+                past{
+                    one{"{0} saniyə öncə"}
+                    other{"{0} saniyə öncə"}
+                }
+            }
         }
         sun{
+            relative{
+                "-1"{"keçən bazar"}
+                "0"{"bu bazar"}
+                "1"{"gələn bazar"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} bazar ərzində"}
+                    other{"{0} bazar ərzində"}
+                }
+                past{
+                    one{"{0} bazar öncə"}
+                    other{"{0} bazar öncə"}
+                }
+            }
+        }
+        sun-narrow{
+            relative{
+                "-1"{"keçən bazar"}
+                "0"{"bu bazar"}
+                "1"{"gələn bazar"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} bazar ərzində"}
+                    other{"{0} bazar ərzində"}
+                }
+                past{
+                    one{"{0} bazar öncə"}
+                    other{"{0} bazar öncə"}
+                }
+            }
+        }
+        sun-short{
             relative{
                 "-1"{"keçən bazar"}
                 "0"{"bu bazar"}
@@ -1565,13 +1914,26 @@ az{
                     one{"{0} çərşənbə ərzində"}
                     other{"{0} çərşənbə ərzində"}
                 }
+                past{
+                    one{"{0} çərşənbə öncə"}
+                    other{"{0} çərşənbə öncə"}
+                }
             }
         }
         wed-short{
+            relative{
+                "-1"{"keçən çərşənbə"}
+                "0"{"bu çərşənbə"}
+                "1"{"gələn çərşənbə"}
+            }
             relativeTime{
                 future{
                     one{"{0} çərşənbə ərzində"}
                     other{"{0} çərşənbə ərzində"}
+                }
+                past{
+                    one{"{0} çərşənbə öncə"}
+                    other{"{0} çərşənbə öncə"}
                 }
             }
         }
@@ -1594,18 +1956,58 @@ az{
                 }
             }
         }
+        week-narrow{
+            dn{"həftə"}
+            relative{
+                "-1"{"keçən həftə"}
+                "0"{"bu həftə"}
+                "1"{"gələn həftə"}
+            }
+            relativePeriod{"{0} həftəsi"}
+            relativeTime{
+                future{
+                    one{"{0} həftə ərzində"}
+                    other{"{0} həftə ərzində"}
+                }
+                past{
+                    one{"{0} həftə öncə"}
+                    other{"{0} həftə öncə"}
+                }
+            }
+        }
         week-short{
             dn{"həftə"}
+            relative{
+                "-1"{"keçən həftə"}
+                "0"{"bu həftə"}
+                "1"{"gələn həftə"}
+            }
             relativePeriod{"{0} həftəsi"}
+            relativeTime{
+                future{
+                    one{"{0} həftə ərzində"}
+                    other{"{0} həftə ərzində"}
+                }
+                past{
+                    one{"{0} həftə öncə"}
+                    other{"{0} həftə öncə"}
+                }
+            }
         }
         weekOfMonth{
             dn{"Ayın həftəsi"}
+        }
+        weekOfMonth-narrow{
+            dn{"ay hft."}
         }
         weekOfMonth-short{
             dn{"ay hft."}
         }
         weekday{
             dn{"Həftənin Günü"}
+        }
+        weekday-narrow{
+            dn{"hft. günü"}
         }
         weekday-short{
             dn{"hft. günü"}
@@ -1639,12 +2041,45 @@ az{
         }
         year-narrow{
             dn{"il"}
+            relative{
+                "-1"{"keçən il"}
+                "0"{"bu il"}
+                "1"{"gələn il"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} il ərzində"}
+                    other{"{0} il ərzində"}
+                }
+                past{
+                    one{"{0} il öncə"}
+                    other{"{0} il öncə"}
+                }
+            }
         }
         year-short{
             dn{"il"}
+            relative{
+                "-1"{"keçən il"}
+                "0"{"bu il"}
+                "1"{"gələn il"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} il ərzində"}
+                    other{"{0} il ərzində"}
+                }
+                past{
+                    one{"{0} il öncə"}
+                    other{"{0} il öncə"}
+                }
+            }
         }
         zone{
             dn{"Saat Qurşağı"}
+        }
+        zone-narrow{
+            dn{"qurşaq"}
         }
         zone-short{
             dn{"qurşaq"}
@@ -1659,9 +2094,15 @@ az{
         }
         or-narrow{
             2{"{0}, yaxud {1}"}
+            end{"{0}, yaxud {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         or-short{
             2{"{0}, yaxud {1}"}
+            end{"{0}, yaxud {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         standard{
             2{"{0} və {1}"}
@@ -1672,6 +2113,8 @@ az{
         standard-narrow{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         standard-short{
             2{"{0} və {1}"}
@@ -1749,39 +2192,60 @@ az{
             }
         }
         namePattern{
-            givenFirst-long-addressing-formal{"{prefix} {surname}"}
+            givenFirst-long-addressing-formal{"{title} {surname}"}
             givenFirst-long-addressing-informal{"{given-informal}"}
-            givenFirst-long-monogram-formal{
-                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
-                "llCaps}"
-            }
             givenFirst-long-monogram-informal{"{given-informal-monogram-allCaps}{surname-monogram-allCaps}"}
             givenFirst-long-referring-informal{"{given-informal} {surname}"}
-            givenFirst-medium-addressing-formal{"{prefix} {surname}"}
+            givenFirst-medium-addressing-formal{"{title} {surname}"}
             givenFirst-medium-addressing-informal{"{given-informal}"}
             givenFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             givenFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname} {suffix}"}
+            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname} {credentials}"}
             givenFirst-medium-referring-informal{"{given-informal} {surname}"}
-            givenFirst-short-addressing-formal{"{prefix} {surname}"}
+            givenFirst-short-addressing-formal{"{title} {surname}"}
             givenFirst-short-addressing-informal{"{given-informal}"}
             givenFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             givenFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
             givenFirst-short-referring-formal{"{given-initial} {given2-initial} {surname}"}
             givenFirst-short-referring-informal{"{given-informal} {surname-initial}"}
-            surnameFirst-long-addressing-formal{"{prefix} {surname}"}
+            sorting-long-referring-informal{"{surname} {surname2}, {title} {given} {given2} {credentials}"}
+            sorting-medium-referring-formal{"{surname} {surname2}, {title} {given} {given2} {credentials}"}
+            sorting-medium-referring-informal{"{surname} {surname2}, {title} {given} {given2} {credentials}"}
+            sorting-short-referring-formal{"{surname} {surname2}, {title} {given} {given2} {credentials}"}
+            sorting-short-referring-informal{"{surname} {surname2}, {title} {given} {given2} {credentials}"}
+            surnameFirst-long-addressing-formal{"{title} {surname}"}
             surnameFirst-long-addressing-informal{"{given-informal}"}
             surnameFirst-long-monogram-formal{
                 "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
                 "llCaps}"
             }
             surnameFirst-long-monogram-informal{"{surname-monogram-allCaps}{given-informal-monogram-allCaps}"}
-            surnameFirst-long-referring-formal{"{surname} {given} {given2} {suffix}"}
+            surnameFirst-long-referring-formal{"{surname} {given} {given2} {credentials}"}
             surnameFirst-long-referring-informal{"{surname} {given-informal}"}
-            surnameFirst-medium-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-medium-addressing-formal{"{title} {surname}"}
             surnameFirst-medium-addressing-informal{"{given-informal}"}
-            surnameFirst-medium-referring-formal{"{surname} {given} {given2-initial} {suffix}"}
+            surnameFirst-medium-monogram-formal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-medium-monogram-informal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-medium-referring-formal{"{surname} {given} {given2-initial} {credentials}"}
             surnameFirst-medium-referring-informal{"{surname} {given-informal}"}
+            surnameFirst-short-addressing-formal{"{surname} {given} {given2} {credentials}"}
+            surnameFirst-short-addressing-informal{"{surname} {given} {given2} {credentials}"}
+            surnameFirst-short-monogram-formal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-short-monogram-informal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-short-referring-formal{"{surname} {given} {given2} {credentials}"}
+            surnameFirst-short-referring-informal{"{surname} {given} {given2} {credentials}"}
         }
     }
 }

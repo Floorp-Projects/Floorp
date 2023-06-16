@@ -18,7 +18,6 @@
 #include "nsStringFwd.h"
 
 struct nsCSSRect;
-struct RawServoDeclarationBlock;
 template <class T>
 class RefPtr;
 
@@ -30,6 +29,7 @@ struct StyleFontFamilyList;
 struct StyleFontStretch;
 struct StyleFontWeight;
 struct StyleFontStyle;
+struct StyleLockedDeclarationBlock;
 union StyleComputedFontStyleDescriptor;
 
 template <typename Integer, typename Number, typename LinearStops>
@@ -80,17 +80,17 @@ class ServoCSSParser {
 
   /**
    * Parse a string representing a CSS property value into a
-   * RawServoDeclarationBlock.
+   * StyleLockedDeclarationBlock.
    *
    * @param aProperty The property to be parsed.
    * @param aValue The specified value.
    * @param aParsingEnvironment All the parsing environment data we need.
    * @param aParsingMode The paring mode we apply.
-   * @return The parsed value as a RawServoDeclarationBlock. We put the value
+   * @return The parsed value as a StyleLockedDeclarationBlock. We put the value
    *   in a declaration block since that is how we represent specified values
    *   in Servo.
    */
-  static already_AddRefed<RawServoDeclarationBlock> ParseProperty(
+  static already_AddRefed<StyleLockedDeclarationBlock> ParseProperty(
       nsCSSPropertyID aProperty, const nsACString& aValue,
       const ParsingEnvironment& aParsingEnvironment,
       ParsingMode aParsingMode = ParsingMode::Default);

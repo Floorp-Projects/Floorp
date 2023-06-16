@@ -30,7 +30,7 @@ struct BaseShapeHasher {
   };
 
   static HashNumber hash(const Lookup& lookup) {
-    HashNumber hash = MovableCellHasher<TaggedProto>::hash(lookup.proto);
+    HashNumber hash = StableCellHasher<TaggedProto>::hash(lookup.proto);
     return mozilla::AddToHash(hash, lookup.clasp, lookup.realm);
   }
   static bool match(const WeakHeapPtr<BaseShape*>& key, const Lookup& lookup) {
@@ -79,7 +79,7 @@ struct ShapeBaseHasher {
   };
 
   static HashNumber hash(const Lookup& lookup) {
-    HashNumber hash = MovableCellHasher<TaggedProto>::hash(lookup.proto);
+    HashNumber hash = StableCellHasher<TaggedProto>::hash(lookup.proto);
     return mozilla::AddToHash(hash, lookup.clasp, lookup.realm,
                               lookup.objectFlags.toRaw());
   }

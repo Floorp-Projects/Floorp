@@ -11,7 +11,7 @@ Services.scriptloader.loadSubScript(
 
 // Test that USB runtimes appear from the sidebar.
 // Documentation for real usb tests in /documentation/TESTS_REAL_DEVICES.md
-add_task(async function() {
+add_task(async function () {
   if (!isAvailable()) {
     ok(true, "Real usb runtime test is not available");
     return;

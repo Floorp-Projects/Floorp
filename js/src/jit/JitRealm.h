@@ -47,19 +47,21 @@ class JitRealm {
     StringConcat = 0,
     RegExpMatcher,
     RegExpSearcher,
-    RegExpTester,
+    RegExpExecMatch,
+    RegExpExecTest,
     Count
   };
 
   mozilla::EnumeratedArray<StubIndex, StubIndex::Count, WeakHeapPtr<JitCode*>>
       stubs_;
 
-  gc::InitialHeap initialStringHeap;
+  gc::Heap initialStringHeap;
 
   JitCode* generateStringConcatStub(JSContext* cx);
   JitCode* generateRegExpMatcherStub(JSContext* cx);
   JitCode* generateRegExpSearcherStub(JSContext* cx);
-  JitCode* generateRegExpTesterStub(JSContext* cx);
+  JitCode* generateRegExpExecMatchStub(JSContext* cx);
+  JitCode* generateRegExpExecTestStub(JSContext* cx);
 
   JitCode* getStubNoBarrier(StubIndex stub,
                             uint32_t* requiredBarriersOut) const {
@@ -101,7 +103,7 @@ class JitRealm {
 
   void setStringsCanBeInNursery(bool allow) {
     MOZ_ASSERT(!hasStubs());
-    initialStringHeap = allow ? gc::DefaultHeap : gc::TenuredHeap;
+    initialStringHeap = allow ? gc::Heap::Default : gc::Heap::Tenured;
   }
 
   JitCode* stringConcatStubNoBarrier(uint32_t* requiredBarriersOut) const {
@@ -112,9 +114,9 @@ class JitRealm {
     return getStubNoBarrier(RegExpMatcher, requiredBarriersOut);
   }
 
-  [[nodiscard]] bool ensureRegExpMatcherStubExists(JSContext* cx) {
-    if (stubs_[RegExpMatcher]) {
-      return true;
+  [[nodiscard]] JitCode* ensureRegExpMatcherStubExists(JSContext* cx) {
+    if (JitCode* code = stubs_[RegExpMatcher]) {
+      return code;
     }
     stubs_[RegExpMatcher] = generateRegExpMatcherStub(cx);
     return stubs_[RegExpMatcher];
@@ -124,24 +126,36 @@ class JitRealm {
     return getStubNoBarrier(RegExpSearcher, requiredBarriersOut);
   }
 
-  [[nodiscard]] bool ensureRegExpSearcherStubExists(JSContext* cx) {
-    if (stubs_[RegExpSearcher]) {
-      return true;
+  [[nodiscard]] JitCode* ensureRegExpSearcherStubExists(JSContext* cx) {
+    if (JitCode* code = stubs_[RegExpSearcher]) {
+      return code;
     }
     stubs_[RegExpSearcher] = generateRegExpSearcherStub(cx);
     return stubs_[RegExpSearcher];
   }
 
-  JitCode* regExpTesterStubNoBarrier(uint32_t* requiredBarriersOut) const {
-    return getStubNoBarrier(RegExpTester, requiredBarriersOut);
+  JitCode* regExpExecMatchStubNoBarrier(uint32_t* requiredBarriersOut) const {
+    return getStubNoBarrier(RegExpExecMatch, requiredBarriersOut);
   }
 
-  [[nodiscard]] bool ensureRegExpTesterStubExists(JSContext* cx) {
-    if (stubs_[RegExpTester]) {
-      return true;
+  [[nodiscard]] JitCode* ensureRegExpExecMatchStubExists(JSContext* cx) {
+    if (JitCode* code = stubs_[RegExpExecMatch]) {
+      return code;
     }
-    stubs_[RegExpTester] = generateRegExpTesterStub(cx);
-    return stubs_[RegExpTester];
+    stubs_[RegExpExecMatch] = generateRegExpExecMatchStub(cx);
+    return stubs_[RegExpExecMatch];
+  }
+
+  JitCode* regExpExecTestStubNoBarrier(uint32_t* requiredBarriersOut) const {
+    return getStubNoBarrier(RegExpExecTest, requiredBarriersOut);
+  }
+
+  [[nodiscard]] JitCode* ensureRegExpExecTestStubExists(JSContext* cx) {
+    if (JitCode* code = stubs_[RegExpExecTest]) {
+      return code;
+    }
+    stubs_[RegExpExecTest] = generateRegExpExecTestStub(cx);
+    return stubs_[RegExpExecTest];
   }
 
   // Perform the necessary read barriers on stubs described by the bitmasks
@@ -153,6 +167,19 @@ class JitRealm {
   void performStubReadBarriers(uint32_t stubsToBarrier) const;
 
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+
+  static constexpr size_t offsetOfRegExpMatcherStub() {
+    return offsetof(JitRealm, stubs_) + RegExpMatcher * sizeof(uintptr_t);
+  }
+  static constexpr size_t offsetOfRegExpSearcherStub() {
+    return offsetof(JitRealm, stubs_) + RegExpSearcher * sizeof(uintptr_t);
+  }
+  static constexpr size_t offsetOfRegExpExecMatchStub() {
+    return offsetof(JitRealm, stubs_) + RegExpExecMatch * sizeof(uintptr_t);
+  }
+  static constexpr size_t offsetOfRegExpExecTestStub() {
+    return offsetof(JitRealm, stubs_) + RegExpExecTest * sizeof(uintptr_t);
+  }
 };
 
 }  // namespace jit

@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: ["tabs"],
@@ -125,7 +125,7 @@ add_task(async function() {
 add_task(async function test_currentWindowAfterTabMoved() {
   const files = {
     "current.html": "<meta charset=utf-8><script src=current.js></script>",
-    "current.js": function() {
+    "current.js": function () {
       browser.test.onMessage.addListener(msg => {
         if (msg === "current") {
           browser.windows.getCurrent(win => {

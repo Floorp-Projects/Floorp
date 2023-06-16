@@ -189,7 +189,6 @@ static const char sIntPrefs[][45] = {
     "ui.systemScrollbarSize",
     "ui.touchDeviceSupportPresent",
     "ui.titlebarRadius",
-    "ui.GtkMenuRadius",
     "ui.dynamicRange",
     "ui.videoDynamicRange",
     "ui.panelAnimations",

@@ -10,7 +10,7 @@
  */
 function makeTimelineTest(frameScriptName, url) {
   info("in timelineTest");
-  return async function() {
+  return async function () {
     info("in in timelineTest");
     waitForExplicitFinish();
 
@@ -24,13 +24,13 @@ function makeTimelineTest(frameScriptName, url) {
 
     // Set up some listeners so that timeline tests running in the
     // content process can forward their results to the main process.
-    mm.addMessageListener("browser:test:ok", function(message) {
+    mm.addMessageListener("browser:test:ok", function (message) {
       ok(message.data.value, message.data.message);
     });
-    mm.addMessageListener("browser:test:info", function(message) {
+    mm.addMessageListener("browser:test:info", function (message) {
       info(message.data.message);
     });
-    mm.addMessageListener("browser:test:finish", function(ignore) {
+    mm.addMessageListener("browser:test:finish", function (ignore) {
       gBrowser.removeCurrentTab();
       finish();
     });
@@ -44,14 +44,14 @@ function timelineTestOpenUrl(url) {
   let tabSwitchPromise = new Promise((resolve, reject) => {
     window.gBrowser.addEventListener(
       "TabSwitchDone",
-      function() {
+      function () {
         resolve();
       },
       { once: true }
     );
   });
 
-  let loadPromise = new Promise(function(resolve, reject) {
+  let loadPromise = new Promise(function (resolve, reject) {
     let browser = window.gBrowser;
     let tab = (browser.selectedTab = BrowserTestUtils.addTab(browser, url));
     let linkedBrowser = tab.linkedBrowser;
@@ -115,12 +115,12 @@ async function pushState(url, frameId) {
   let browser = gBrowser.selectedBrowser;
   let bc = browser.browsingContext;
   if (frameId) {
-    bc = await SpecialPowers.spawn(bc, [frameId], function(id) {
+    bc = await SpecialPowers.spawn(bc, [frameId], function (id) {
       return content.document.getElementById(id).browsingContext;
     });
   }
   let loaded = BrowserTestUtils.waitForLocationChange(gBrowser, url);
-  await SpecialPowers.spawn(bc, [url], function(url) {
+  await SpecialPowers.spawn(bc, [url], function (url) {
     content.history.pushState({}, "", url);
   });
   await loaded;
@@ -143,12 +143,12 @@ async function followLink(url, frameId) {
   let browser = gBrowser.selectedBrowser;
   let bc = browser.browsingContext;
   if (frameId) {
-    bc = await SpecialPowers.spawn(bc, [frameId], function(id) {
+    bc = await SpecialPowers.spawn(bc, [frameId], function (id) {
       return content.document.getElementById(id).browsingContext;
     });
   }
   let loaded = BrowserTestUtils.browserLoaded(browser, !!frameId, url);
-  await SpecialPowers.spawn(bc, [url], function(url) {
+  await SpecialPowers.spawn(bc, [url], function (url) {
     let a = content.document.createElement("a");
     a.href = url;
     content.document.body.appendChild(a);

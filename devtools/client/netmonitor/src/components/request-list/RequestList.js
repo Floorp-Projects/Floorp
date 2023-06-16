@@ -16,12 +16,12 @@ const StatusBar = createFactory(
   require("resource://devtools/client/netmonitor/src/components/StatusBar.js")
 );
 
-loader.lazyGetter(this, "RequestListContent", function() {
+loader.lazyGetter(this, "RequestListContent", function () {
   return createFactory(
     require("resource://devtools/client/netmonitor/src/components/request-list/RequestListContent.js")
   );
 });
-loader.lazyGetter(this, "RequestListEmptyNotice", function() {
+loader.lazyGetter(this, "RequestListEmptyNotice", function () {
   return createFactory(
     require("resource://devtools/client/netmonitor/src/components/request-list/RequestListEmptyNotice.js")
   );

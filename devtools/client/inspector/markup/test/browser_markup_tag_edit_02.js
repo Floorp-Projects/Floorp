@@ -8,7 +8,7 @@
 const TEST_URL = `data:text/html,
                   <div id='test-div'>Test modifying my ID attribute</div>`;
 
-add_task(async function() {
+add_task(async function () {
   info("Opening the inspector on the test page");
   const { inspector } = await openInspectorForURL(TEST_URL);
 

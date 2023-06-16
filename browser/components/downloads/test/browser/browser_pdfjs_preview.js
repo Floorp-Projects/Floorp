@@ -347,7 +347,7 @@ function contentTriggerDblclickOn(selector, eventModifiers = {}, browser) {
   return SpecialPowers.spawn(
     browser,
     [selector, eventModifiers],
-    async function(itemSelector, modifiers) {
+    async function (itemSelector, modifiers) {
       const EventUtils = ContentTaskUtils.getEventUtils(content);
       let itemTarget = content.document.querySelector(itemSelector);
       ok(itemTarget, "Download item target exists");

@@ -34,7 +34,7 @@ const displayContentText =
   "\u201chttp://example.com/tests/image/test/mochitest/blue.png\u201d on a " +
   "secure page";
 
-add_task(async function() {
+add_task(async function () {
   await pushPrefEnv();
 
   const hud = await openNewTabAndConsole(TEST_URI);
@@ -52,9 +52,8 @@ add_task(async function() {
   ok(true, "Blocked mixed active content error message is visible");
 
   info("Clicking on the Learn More link");
-  let learnMoreLink = blockedMixedActiveContentMessage.querySelector(
-    ".learn-more-link"
-  );
+  let learnMoreLink =
+    blockedMixedActiveContentMessage.querySelector(".learn-more-link");
   let response = await simulateLinkClick(learnMoreLink);
   is(
     response.link,

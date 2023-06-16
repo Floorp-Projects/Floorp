@@ -100,13 +100,13 @@ const MenuButton = createFactory(
   require("resource://devtools/client/shared/components/menu/MenuButton.js")
 );
 
-loader.lazyGetter(this, "MenuItem", function() {
+loader.lazyGetter(this, "MenuItem", function () {
   return createFactory(
     require("resource://devtools/client/shared/components/menu/MenuItem.js")
   );
 });
 
-loader.lazyGetter(this, "MenuList", function() {
+loader.lazyGetter(this, "MenuList", function () {
   return createFactory(
     require("resource://devtools/client/shared/components/menu/MenuList.js")
   );
@@ -181,17 +181,14 @@ class Toolbar extends Component {
     super(props);
 
     this.autocompleteProvider = this.autocompleteProvider.bind(this);
-    this.onSearchBoxFocusKeyboardShortcut = this.onSearchBoxFocusKeyboardShortcut.bind(
-      this
-    );
+    this.onSearchBoxFocusKeyboardShortcut =
+      this.onSearchBoxFocusKeyboardShortcut.bind(this);
     this.onSearchBoxFocus = this.onSearchBoxFocus.bind(this);
     this.toggleRequestFilterType = this.toggleRequestFilterType.bind(this);
-    this.updatePersistentLogsEnabled = this.updatePersistentLogsEnabled.bind(
-      this
-    );
-    this.updateBrowserCacheDisabled = this.updateBrowserCacheDisabled.bind(
-      this
-    );
+    this.updatePersistentLogsEnabled =
+      this.updatePersistentLogsEnabled.bind(this);
+    this.updateBrowserCacheDisabled =
+      this.updateBrowserCacheDisabled.bind(this);
   }
 
   componentDidMount() {

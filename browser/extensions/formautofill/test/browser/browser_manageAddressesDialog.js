@@ -12,7 +12,7 @@ const DIALOG_SIZE = "width=600,height=400";
 add_task(async function test_manageAddressesInitialState() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: MANAGE_ADDRESSES_DIALOG_URL },
-    async function(browser) {
+    async function (browser) {
       await SpecialPowers.spawn(browser, [TEST_SELECTORS], args => {
         let selRecords = content.document.querySelector(args.selRecords);
         let btnRemove = content.document.querySelector(args.btnRemove);

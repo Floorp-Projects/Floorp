@@ -148,7 +148,7 @@ const reducers = {
   },
 };
 
-module.exports = function(state = INITIAL_STATE, action) {
+module.exports = function (state = INITIAL_STATE, action) {
   const reducer = reducers[action.type];
   if (!reducer) {
     return state;

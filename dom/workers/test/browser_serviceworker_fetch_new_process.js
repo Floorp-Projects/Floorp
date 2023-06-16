@@ -9,7 +9,7 @@ const DIRPATH = getRootDirectory(gTestPath).replace(
  */
 const TEST_BLOB_CONTENTS = `I'm a disk-backed test blob! Hooray!`;
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       // Set preferences so that opening a page with the origin "example.org"
@@ -301,8 +301,10 @@ function getSWTelemetrySums() {
   let telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(
     Ci.nsITelemetry
   );
-  let keyedhistograms = telemetry.getSnapshotForKeyedHistograms("main", false)
-    .parent;
+  let keyedhistograms = telemetry.getSnapshotForKeyedHistograms(
+    "main",
+    false
+  ).parent;
   let keyedscalars = telemetry.getSnapshotForKeyedScalars("main", false).parent;
   // We're not looking at the distribution of the histograms, just that they changed
   return {

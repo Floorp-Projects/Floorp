@@ -49,12 +49,8 @@ class FontList extends PureComponent {
   }
 
   render() {
-    const {
-      fonts,
-      fontOptions,
-      onPreviewTextChange,
-      onToggleFontHighlight,
-    } = this.props;
+    const { fonts, fontOptions, onPreviewTextChange, onToggleFontHighlight } =
+      this.props;
 
     const { previewText } = fontOptions;
     const { onPreviewClick } = this;

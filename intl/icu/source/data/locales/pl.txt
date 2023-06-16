@@ -459,6 +459,12 @@ pl{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimePatterns%atTime{
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
             DateTimeSkeletons{
                 "HHmmsszzzz",
                 "HHmmssz",
@@ -651,6 +657,12 @@ pl{
                 "d MMM y",
                 "d.MM.y",
                 "{1}, {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            DateTimePatterns%atTime{
                 "{1} {0}",
                 "{1} {0}",
                 "{1}, {0}",
@@ -1709,7 +1721,10 @@ pl{
         day-short{
             dn{"dz."}
             relative{
+                "-1"{"wczoraj"}
                 "-2"{"przedwczoraj"}
+                "0"{"dzisiaj"}
+                "1"{"jutro"}
                 "2"{"pojutrze"}
             }
             relativeTime{
@@ -2666,6 +2681,18 @@ pl{
             2{"{0} lub {1}"}
             end{"{0} lub {1}"}
         }
+        or-narrow{
+            2{"{0} lub {1}"}
+            end{"{0} lub {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        or-short{
+            2{"{0} lub {1}"}
+            end{"{0} lub {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} i {1}"}
             end{"{0} i {1}"}
@@ -2685,14 +2712,20 @@ pl{
         unit{
             2{"{0} i {1}"}
             end{"{0} i {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         unit-narrow{
             2{"{0} i {1}"}
             end{"{0} i {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         unit-short{
             2{"{0} i {1}"}
             end{"{0} i {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
     }
     measurementSystemNames{
@@ -2742,25 +2775,25 @@ pl{
             }
         }
         namePattern{
-            givenFirst-long-addressing-formal{"{prefix} {surname}"}
+            givenFirst-long-addressing-formal{"{title} {surname}"}
             givenFirst-long-addressing-informal{"{given-informal}"}
             givenFirst-long-monogram-formal{
-                "{given-monogram-allCaps}.{given2-monogram-allCaps}.{surname-monogram"
-                "-allCaps}."
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
             }
-            givenFirst-long-monogram-informal{"{given-monogram-allCaps}.{surname-monogram-allCaps}."}
-            givenFirst-long-referring-formal{"{prefix} {given} {surname}"}
+            givenFirst-long-monogram-informal{"{given-monogram-allCaps}{surname-monogram-allCaps}"}
+            givenFirst-long-referring-formal{"{title} {given} {surname}"}
             givenFirst-long-referring-informal{"{given-informal} {surname}"}
-            givenFirst-medium-addressing-formal{"{prefix} {surname}"}
+            givenFirst-medium-addressing-formal{"{title} {surname}"}
             givenFirst-medium-addressing-informal{"{given-informal}"}
-            givenFirst-medium-monogram-formal{"{surname-monogram-allCaps}."}
-            givenFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}."}
-            givenFirst-medium-referring-formal{"{prefix} {given} {given2-initial} {surname}"}
+            givenFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
+            givenFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
+            givenFirst-medium-referring-formal{"{title} {given} {given2-initial} {surname}"}
             givenFirst-medium-referring-informal{"{given-informal} {surname}"}
-            givenFirst-short-addressing-formal{"{prefix} {surname}"}
+            givenFirst-short-addressing-formal{"{title} {surname}"}
             givenFirst-short-addressing-informal{"{given-informal}"}
-            givenFirst-short-monogram-formal{"{surname-monogram-allCaps}."}
-            givenFirst-short-monogram-informal{"{given-informal-monogram-allCaps}."}
+            givenFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
+            givenFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
             givenFirst-short-referring-formal{"{given-initial} {given2-initial} {surname}"}
             givenFirst-short-referring-informal{"{given-informal} {surname-initial}"}
             sorting-long-referring-formal{"{surname-prefix} {surname-core} {given} {given2}"}
@@ -2769,25 +2802,25 @@ pl{
             sorting-medium-referring-informal{"{surname} {given-informal}"}
             sorting-short-referring-formal{"{surname-prefix} {surname-core} {given-initial} {given2-initial}"}
             sorting-short-referring-informal{"{surname} {given-informal}"}
-            surnameFirst-long-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-long-addressing-formal{"{title} {surname}"}
             surnameFirst-long-addressing-informal{"{given-informal}"}
             surnameFirst-long-monogram-formal{
-                "{surname-monogram-allCaps}.{given-monogram-allCaps}.{given2-monogram"
-                "-allCaps}."
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
             }
-            surnameFirst-long-monogram-informal{"{surname-monogram-allCaps}.{given-informal-monogram-allCaps}."}
-            surnameFirst-long-referring-formal{"{prefix} {surname} {given} {given2}"}
+            surnameFirst-long-monogram-informal{"{surname-monogram-allCaps}{given-informal-monogram-allCaps}"}
+            surnameFirst-long-referring-formal{"{title} {surname} {given} {given2}"}
             surnameFirst-long-referring-informal{"{surname} {given-informal}"}
-            surnameFirst-medium-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-medium-addressing-formal{"{title} {surname}"}
             surnameFirst-medium-addressing-informal{"{given-informal}"}
-            surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}."}
-            surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}."}
-            surnameFirst-medium-referring-formal{"{prefix} {surname} {given} {given2-initial}"}
+            surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
+            surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
+            surnameFirst-medium-referring-formal{"{title} {surname} {given} {given2-initial}"}
             surnameFirst-medium-referring-informal{"{surname} {given-informal}"}
-            surnameFirst-short-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-short-addressing-formal{"{title} {surname}"}
             surnameFirst-short-addressing-informal{"{given-informal}"}
-            surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}."}
-            surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}."}
+            surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
+            surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
             surnameFirst-short-referring-formal{"{surname} {given-initial} {given2-initial}"}
             surnameFirst-short-referring-informal{"{surname} {given-initial}"}
         }

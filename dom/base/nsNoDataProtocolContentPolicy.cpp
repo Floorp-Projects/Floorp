@@ -46,11 +46,7 @@ nsNoDataProtocolContentPolicy::ShouldLoad(nsIURI* aContentLocation,
       return NS_OK;
     }
 
-    bool shouldBlock;
-    nsresult rv = NS_URIChainHasFlags(
-        aContentLocation, nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,
-        &shouldBlock);
-    if (NS_SUCCEEDED(rv) && shouldBlock) {
+    if (nsContentUtils::IsExternalProtocol(aContentLocation)) {
       NS_SetRequestBlockingReason(
           aLoadInfo,
           nsILoadInfo::BLOCKING_REASON_CONTENT_POLICY_NO_DATA_PROTOCOL);

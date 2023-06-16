@@ -4,6 +4,7 @@
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
   await SearchTestUtils.useTestEngines("simple-engines");
+  Services.fog.initializeFOG();
 });
 
 add_task(async function test_async() {
@@ -29,4 +30,11 @@ add_task(async function test_async() {
   // Check the hidden engine is not loaded.
   engine = Services.search.getEngineByName("hidden");
   Assert.equal(engine, null);
+
+  // Check if there is a value for startup_time
+  Assert.notEqual(
+    await Glean.searchService.startupTime.testGetValue(),
+    undefined,
+    "Should have a value stored in startup_time"
+  );
 });

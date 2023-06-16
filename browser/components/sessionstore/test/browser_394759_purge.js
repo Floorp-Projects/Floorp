@@ -24,7 +24,7 @@ function promiseClearHistory() {
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   // utility functions
   function countClosedTabsByTitle(aClosedTabList, aTitle) {
     return aClosedTabList.filter(aData => aData.title == aTitle).length;

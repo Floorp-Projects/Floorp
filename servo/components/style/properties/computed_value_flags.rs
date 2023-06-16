@@ -12,6 +12,7 @@ bitflags! {
     /// If we ever want to add some flags that shouldn't inherit for them,
     /// we might want to add a function to handle this.
     #[repr(C)]
+    #[derive(Clone, Copy, Eq, PartialEq)]
     pub struct ComputedValueFlags: u32 {
         /// Whether the style or any of the ancestors has a text-decoration-line
         /// property that should get propagated to descendants.
@@ -118,6 +119,9 @@ bitflags! {
         /// A flag used to mark styles which have `container-type` of `size` or
         /// `inline-size`, or under one.
         const SELF_OR_ANCESTOR_HAS_SIZE_CONTAINER_TYPE = 1 << 23;
+
+        /// Whether the style evaluated any relative selector.
+        const CONSIDERED_RELATIVE_SELECTOR = 1 << 24;
     }
 }
 
@@ -150,7 +154,7 @@ impl ComputedValueFlags {
     /// Flags that are an input to the cascade.
     #[inline]
     fn cascade_input_flags() -> Self {
-        Self::USES_VIEWPORT_UNITS_ON_CONTAINER_QUERIES
+        Self::USES_VIEWPORT_UNITS_ON_CONTAINER_QUERIES | Self::CONSIDERED_RELATIVE_SELECTOR
     }
 
     /// Returns the flags that are always propagated to descendants.

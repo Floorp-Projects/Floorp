@@ -3,13 +3,14 @@
  */
 
 // restartManager() mucks with XPIProvider.jsm importing, so we hack around.
-this.__defineGetter__("XPIProvider", function() {
+this.__defineGetter__("XPIProvider", function () {
   return ChromeUtils.import(
     "resource://gre/modules/addons/XPIProvider.jsm"
   ).XPIProvider;
 });
 
-const UUID_PATTERN = /^\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}$/i;
+const UUID_PATTERN =
+  /^\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}$/i;
 
 const ADDONS = [
   {

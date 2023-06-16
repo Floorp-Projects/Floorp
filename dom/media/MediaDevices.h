@@ -11,6 +11,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/UseCounter.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/MediaDeviceInfoBinding.h"
 #include "nsCOMPtr.h"
 #include "nsID.h"
 #include "nsISupports.h"
@@ -23,6 +24,7 @@ namespace mozilla {
 class LocalMediaDevice;
 class MediaDevice;
 class MediaMgrError;
+class DOMMediaStream;
 template <typename ResolveValueT, typename RejectValueT, bool IsExclusive>
 class MozPromise;
 
@@ -41,6 +43,8 @@ struct AudioOutputOptions;
 
 class MediaDevices final : public DOMEventTargetHelper {
  public:
+  using StreamPromise =
+      MozPromise<RefPtr<DOMMediaStream>, RefPtr<MediaMgrError>, true>;
   using SinkInfoPromise = MozPromise<RefPtr<AudioDeviceInfo>, nsresult, true>;
 
   explicit MediaDevices(nsPIDOMWindowInner* aWindow);
@@ -57,6 +61,10 @@ class MediaDevices final : public DOMEventTargetHelper {
   already_AddRefed<Promise> GetUserMedia(
       const MediaStreamConstraints& aConstraints, CallerType aCallerType,
       ErrorResult& aRv);
+
+  RefPtr<StreamPromise> GetUserMedia(nsPIDOMWindowInner* aWindow,
+                                     const MediaStreamConstraints& aConstraints,
+                                     CallerType aCallerType);
 
   already_AddRefed<Promise> EnumerateDevices(ErrorResult& aRv);
 
@@ -103,6 +111,7 @@ class MediaDevices final : public DOMEventTargetHelper {
       RefPtr<const MediaDeviceSetRefCnt> aExposedDevices) const;
   RefPtr<MediaDeviceSetRefCnt> FilterExposedDevices(
       const MediaDeviceSet& aDevices) const;
+  bool CanExposeInfo(MediaDeviceKind aKind) const;
   bool ShouldQueueDeviceChange(const MediaDeviceSet& aExposedDevices) const;
   void ResolveEnumerateDevicesPromise(
       Promise* aPromise, const LocalMediaDeviceSet& aDevices) const;

@@ -5,6 +5,7 @@
 
 #include "lib/jxl/dec_frame.h"
 
+#include <jxl/types.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -15,7 +16,6 @@
 #include <utility>
 #include <vector>
 
-#include "jxl/types.h"
 #include "lib/jxl/ac_context.h"
 #include "lib/jxl/ac_strategy.h"
 #include "lib/jxl/ans_params.h"
@@ -85,8 +85,9 @@ Status DecodeFrame(PassesDecoderState* dec_state, ThreadPool* JXL_RESTRICT pool,
 
   BitReader reader(Span<const uint8_t>(next_in, avail_in));
   JXL_RETURN_IF_ERROR(frame_decoder.InitFrame(&reader, decoded,
-                                              /*is_preview=*/false,
-                                              /*output_needed=*/true));
+                                              /*is_preview=*/false));
+  JXL_RETURN_IF_ERROR(frame_decoder.InitFrameOutput());
+
   JXL_RETURN_IF_ERROR(reader.AllReadsWithinBounds());
   size_t header_bytes = reader.TotalBitsConsumed() / kBitsPerByte;
   JXL_RETURN_IF_ERROR(reader.Close());
@@ -99,12 +100,13 @@ Status DecodeFrame(PassesDecoderState* dec_state, ThreadPool* JXL_RESTRICT pool,
     std::vector<FrameDecoder::SectionInfo> section_info;
     std::vector<FrameDecoder::SectionStatus> section_status;
     size_t pos = header_bytes;
+    size_t index = 0;
     for (auto toc_entry : frame_decoder.Toc()) {
       JXL_RETURN_IF_ERROR(pos + toc_entry.size <= avail_in);
       auto br = make_unique<BitReader>(
           Span<const uint8_t>(next_in + pos, toc_entry.size));
       section_info.emplace_back(
-          FrameDecoder::SectionInfo{br.get(), toc_entry.id});
+          FrameDecoder::SectionInfo{br.get(), toc_entry.id, index++});
       section_closers.emplace_back(
           make_unique<BitReaderScopedCloser>(br.get(), &close_ok));
       section_readers.emplace_back(std::move(br));
@@ -125,7 +127,7 @@ Status DecodeFrame(PassesDecoderState* dec_state, ThreadPool* JXL_RESTRICT pool,
 }
 
 Status FrameDecoder::InitFrame(BitReader* JXL_RESTRICT br, ImageBundle* decoded,
-                               bool is_preview, bool output_needed) {
+                               bool is_preview) {
   PROFILER_FUNC;
   decoded_ = decoded;
   JXL_ASSERT(is_finalized_);
@@ -195,18 +197,20 @@ Status FrameDecoder::InitFrame(BitReader* JXL_RESTRICT br, ImageBundle* decoded,
         "Non-444 chroma subsampling is not allowed when adaptive DC "
         "smoothing is enabled");
   }
+  return true;
+}
 
-  if (!output_needed) return true;
+Status FrameDecoder::InitFrameOutput() {
   JXL_RETURN_IF_ERROR(
       InitializePassesSharedState(frame_header_, &dec_state_->shared_storage));
   JXL_RETURN_IF_ERROR(dec_state_->Init());
   modular_frame_decoder_.Init(frame_dim_);
 
-  if (decoded->IsJPEG()) {
+  if (decoded_->IsJPEG()) {
     if (frame_header_.encoding == FrameEncoding::kModular) {
       return JXL_FAILURE("Cannot output JPEG from Modular");
     }
-    jpeg::JPEGData* jpeg_data = decoded->jpeg_data.get();
+    jpeg::JPEGData* jpeg_data = decoded_->jpeg_data.get();
     size_t num_components = jpeg_data->components.size();
     if (num_components != 1 && num_components != 3) {
       return JXL_FAILURE("Invalid number of components");
@@ -215,8 +219,8 @@ Status FrameDecoder::InitFrame(BitReader* JXL_RESTRICT br, ImageBundle* decoded,
       return JXL_FAILURE("Cannot decode to JPEG an XYB image");
     }
     auto jpeg_c_map = JpegOrder(ColorTransform::kYCbCr, num_components == 1);
-    decoded->jpeg_data->width = frame_dim_.xsize;
-    decoded->jpeg_data->height = frame_dim_.ysize;
+    decoded_->jpeg_data->width = frame_dim_.xsize;
+    decoded_->jpeg_data->height = frame_dim_.ysize;
     for (size_t c = 0; c < num_components; c++) {
       auto& component = jpeg_data->components[jpeg_c_map[c]];
       component.width_in_blocks =

@@ -393,7 +393,7 @@ async function loadDialog() {
 
   // Give initial focus to the orientation radio group.
   // Done on a timeout due to to bug 103197.
-  setTimeout(function() {
+  setTimeout(function () {
     gDialog.orientation.focus();
   }, 0);
 }

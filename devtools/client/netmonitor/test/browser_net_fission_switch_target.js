@@ -10,7 +10,7 @@ const EXAMPLE_NET_URL = "https://example.net/document-builder.sjs?html=testnet";
 const REQUEST_URL = HTTPS_SEARCH_SJS + "?value=test";
 const PARENT_PROCESS_URL = "about:blank";
 
-add_task(async function() {
+add_task(async function () {
   info("Open a page that runs on the content process and the netmonitor");
   const { monitor } = await initNetMonitor(EXAMPLE_COM_URL, {
     requestCount: 1,

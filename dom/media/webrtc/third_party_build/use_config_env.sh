@@ -58,7 +58,7 @@ fi
 
 if [ ! -f $MOZ_CONFIG_PATH ]; then
   echo "Creating default config file at $MOZ_CONFIG_PATH"
-  cp $SCRIPT_DIR/example_config_env $MOZ_CONFIG_PATH
+  cp $SCRIPT_DIR/default_config_env $MOZ_CONFIG_PATH
 fi
 source $MOZ_CONFIG_PATH
 

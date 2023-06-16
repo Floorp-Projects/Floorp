@@ -81,7 +81,7 @@ async function testViewSource(viewSourceUrl) {
   }
   info("Awaiting completion of StreamFilter on request");
   await extension.awaitFinish("filter_end");
-  let contentText = await contentPage.spawn(null, () => {
+  let contentText = await contentPage.spawn([], () => {
     return this.content.document.body.textContent;
   });
   equal(contentText, "PREFIX_ok_SUFFIX", "view-source response body");
@@ -135,7 +135,7 @@ add_task(async function test_StreamFilter_viewsource_cancel() {
     `${BASE_URL}/dummy`
   );
   await extension.awaitFinish("filter_end");
-  let contentText = await contentPage.spawn(null, () => {
+  let contentText = await contentPage.spawn([], () => {
     return this.content.document.body.textContent;
   });
   equal(contentText, "", "view-source request should have been canceled");

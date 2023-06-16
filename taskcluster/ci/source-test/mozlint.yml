@@ -34,7 +34,7 @@ codespell:
         # good enough
         tier: 2
     run:
-        mach: lint -v -l codespell -f treeherder -f json:/builds/worker/mozlint.json *
+        mach: lint -v -l codespell -f treeherder -f json:/builds/worker/mozlint.json .
     when:
         files-changed:
             - '**/*.js'
@@ -63,7 +63,7 @@ rejected-words:
         # good enough
         tier: 2
     run:
-        mach: lint -v -l rejected-words -f treeherder -f json:/builds/worker/mozlint.json *
+        mach: lint -v -l rejected-words -f treeherder -f json:/builds/worker/mozlint.json .
     when:
         files-changed:
             - '**/*.js'
@@ -99,14 +99,16 @@ eslint:
             cp -r /build/node_modules_eslint-plugin-mozilla/ tools/lint/eslint/eslint-plugin-mozilla/node_modules &&
             ln -s ../tools/lint/eslint/eslint-plugin-mozilla node_modules &&
             ln -s ../tools/lint/eslint/eslint-plugin-spidermonkey-js node_modules &&
-            ./mach lint -v -l eslint -f treeherder -f json:/builds/worker/mozlint.json *
+            ./mach lint -v -l eslint -f treeherder -f json:/builds/worker/mozlint.json .
     when:
         files-changed:
             # Files that are likely audited.
             - '**/*.js'
             - '**/*.jsm'
+            - '**/*.json'
             - '**/*.jsx'
             - '**/*.mjs'
+            - '**/*.sjs'
             - '**/*.html'
             - '**/*.xhtml'
             - '**/*.xml'
@@ -139,7 +141,7 @@ eslint-build:
             cp -r /build/node_modules_eslint-plugin-mozilla/ tools/lint/eslint/eslint-plugin-mozilla/node_modules &&
             ln -s ../tools/lint/eslint/eslint-plugin-mozilla node_modules &&
             ln -s ../tools/lint/eslint/eslint-plugin-spidermonkey-js node_modules &&
-            ./mach lint -v -l eslint -f treeherder --quiet -f json:/builds/worker/mozlint.json * --rule "mozilla/valid-services-property: error" --rule "mozilla/valid-ci-uses: error"
+            ./mach lint -v -l eslint -f treeherder --quiet -f json:/builds/worker/mozlint.json . --rule "mozilla/valid-services-property: error" --rule "mozilla/valid-ci-uses: error"
     worker:
         env:
             MOZ_XPT_ARTIFACTS_DIRNAME: xpt_artifacts
@@ -150,12 +152,31 @@ eslint-build:
             - artifact: target.xpt_artifacts.zip
               dest: xpt_artifacts
 
+stylelint:
+    description: CSS lint check
+    treeherder:
+        symbol: stylelint
+    run:
+        using: run-task
+        cwd: '{checkout}'
+        command: >
+            cp -r /build/node_modules_eslint node_modules &&
+            ./mach lint -v -l stylelint -f treeherder -f json:/builds/worker/mozlint.json .
+    when:
+        files-changed:
+            # Files that are likely audited.
+            - '**/*.css'
+            - 'tools/lint/styleint.yml'
+            # Run when stylelint policies change.
+            - '**/.stylelintignore'
+            - '**/*stylelintrc*'
+
 license:
     description: Check for license blocks in source files.
     treeherder:
         symbol: pedantic(license)
     run:
-        mach: lint -v -l license -f treeherder -f json:/builds/worker/mozlint.json *
+        mach: lint -v -l license -f treeherder -f json:/builds/worker/mozlint.json .
     when:
         files-changed:
             - '**/*.c'
@@ -186,7 +207,7 @@ lintpref:
     treeherder:
         symbol: misc(pref)
     run:
-        mach: lint -v -l lintpref -f treeherder -f json:/builds/worker/mozlint.json *
+        mach: lint -v -l lintpref -f treeherder -f json:/builds/worker/mozlint.json .
     when:
         files-changed:
             - 'modules/libpref/init/all.js'
@@ -209,7 +230,7 @@ mingw-cap:
     treeherder:
         symbol: misc(mingw)
     run:
-        mach: lint -v -l mingw-capitalization -f treeherder -f json:/builds/worker/mozlint.json *
+        mach: lint -v -l mingw-capitalization -f treeherder -f json:/builds/worker/mozlint.json .
     when:
         files-changed:
             - '**/*.cpp'
@@ -223,7 +244,7 @@ updatebot:
     treeherder:
         symbol: misc(mozyaml)
     run:
-        mach: lint -v -l updatebot -f treeherder -f json:/builds/worker/mozlint.json *
+        mach: lint -v -l updatebot -f treeherder -f json:/builds/worker/mozlint.json .
     when:
         files-changed:
             - '**/moz.yaml'
@@ -233,7 +254,7 @@ mscom-init:
     treeherder:
         symbol: misc(mscom)
     run:
-        mach: lint -v -l mscom-init -f treeherder -f json:/builds/worker/mozlint.json *
+        mach: lint -v -l mscom-init -f treeherder -f json:/builds/worker/mozlint.json .
     when:
         files-changed:
             - '**/*.cpp'
@@ -247,7 +268,7 @@ py-black:
     treeherder:
         symbol: py(black)
     run:
-        mach: lint -v -l black -f treeherder -f json:/builds/worker/mozlint.json *
+        mach: lint -v -l black -f treeherder -f json:/builds/worker/mozlint.json .
     when:
         files-changed:
             # The list of extensions should match tools/lint/black.yml
@@ -263,7 +284,7 @@ py-ruff:
     treeherder:
         symbol: py(ruff)
     run:
-        mach: lint -v -l ruff -f treeherder -f json:/builds/worker/mozlint.json *
+        mach: lint -v -l ruff -f treeherder -f json:/builds/worker/mozlint.json .
     when:
         files-changed:
             - '**/*.py'
@@ -279,7 +300,7 @@ test-manifest:
     treeherder:
         symbol: misc(tm)
     run:
-        mach: lint -v -l test-manifest-alpha -l test-manifest-disable -l test-manifest-skip-if -f treeherder -f json:/builds/worker/mozlint.json *
+        mach: lint -v -l test-manifest-alpha -l test-manifest-disable -l test-manifest-skip-if -f treeherder -f json:/builds/worker/mozlint.json .
     when:
         files-changed:
             - '**/*.ini'
@@ -292,7 +313,7 @@ wptlint-gecko:
     treeherder:
         symbol: misc(W)
     run:
-        mach: lint -v -l wpt -f treeherder -f json:/builds/worker/mozlint.json *
+        mach: lint -v -l wpt -f treeherder -f json:/builds/worker/mozlint.json .
     when:
         files-changed:
             - 'testing/web-platform/tests/**'
@@ -304,7 +325,7 @@ yaml:
     treeherder:
         symbol: pedantic(yaml)
     run:
-        mach: lint -v -l yaml -f treeherder -f json:/builds/worker/mozlint.json *
+        mach: lint -v -l yaml -f treeherder -f json:/builds/worker/mozlint.json .
     when:
         files-changed:
             - '**/*.yml'
@@ -316,7 +337,7 @@ rst:
     treeherder:
         symbol: text(rst)
     run:
-        mach: lint -v -l rst -f treeherder -f json:/builds/worker/mozlint.json *
+        mach: lint -v -l rst -f treeherder -f json:/builds/worker/mozlint.json .
     when:
         files-changed:
             - '**/*.rst'
@@ -327,7 +348,7 @@ shellcheck:
     treeherder:
         symbol: misc(shell)
     run:
-        mach: lint -v -l shellcheck -f treeherder -f json:/builds/worker/mozlint.json *
+        mach: lint -v -l shellcheck -f treeherder -f json:/builds/worker/mozlint.json .
     when:
         files-changed:
             - '**/*.sh'
@@ -358,7 +379,7 @@ l10n-conflicts:
     always-target: false
     run-on-projects: []
     run:
-        mach: lint -W -l l10n -f treeherder -f json:/builds/worker/mozlint.json *
+        mach: lint -W -l l10n -f treeherder -f json:/builds/worker/mozlint.json .
     when:
         files-changed:
             - '**/locales/en-US/**'
@@ -373,7 +394,7 @@ clang-format:
     treeherder:
         symbol: cpp(clang-format)
     run:
-        mach: lint -v -l clang-format -f treeherder -f json:/builds/worker/mozlint.json *
+        mach: lint -v -l clang-format -f treeherder -f json:/builds/worker/mozlint.json .
     when:
         files-changed:
             - '**/*.cpp'
@@ -396,7 +417,7 @@ rustfmt:
     treeherder:
         symbol: rust(rustfmt)
     run:
-        mach: lint -v -l rustfmt -f treeherder -f json:/builds/worker/mozlint.json *
+        mach: lint -v -l rustfmt -f treeherder -f json:/builds/worker/mozlint.json .
     when:
         files-changed:
             - '**/*.rs'
@@ -411,7 +432,7 @@ clippy:
     treeherder:
         symbol: rust(clippy)
     run:
-        mach: lint -v -l clippy -f treeherder -f json:/builds/worker/mozlint.json -j 1 *
+        mach: lint -v -l clippy -f treeherder -f json:/builds/worker/mozlint.json -j 1 .
     when:
         files-changed:
             - '**/*.rs'
@@ -431,7 +452,7 @@ file-whitespace:
         # good enough
         tier: 2
     run:
-        mach: lint -v -l file-whitespace -f treeherder -f json:/builds/worker/mozlint.json *
+        mach: lint -v -l file-whitespace -f treeherder -f json:/builds/worker/mozlint.json .
     when:
         files-changed:
             - '**/*.c'
@@ -462,7 +483,7 @@ file-perm:
         # good enough
         tier: 2
     run:
-        mach: lint -v -l file-perm -f treeherder -f json:/builds/worker/mozlint.json *
+        mach: lint -v -l file-perm -f treeherder -f json:/builds/worker/mozlint.json .
     when:
         files-changed:
             - '**/*.build'
@@ -502,7 +523,7 @@ perfdocs-verify:
     treeherder:
         symbol: text(perfdocs)
     run:
-        mach: lint -v -l perfdocs -f treeherder -f json:/builds/worker/mozlint.json *
+        mach: lint -v -l perfdocs -f treeherder -f json:/builds/worker/mozlint.json .
     worker:
         env:
             WORKSPACE: /builds/worker/checkouts/gecko/
@@ -528,7 +549,7 @@ fluent-lint:
     treeherder:
         symbol: l10n(fluent)
     run:
-        mach: lint --linter fluent-lint -f treeherder -f json:/builds/worker/mozlint.json *
+        mach: lint --linter fluent-lint -f treeherder -f json:/builds/worker/mozlint.json .
     when:
         files-changed:
             - '**/*.ftl'
@@ -541,7 +562,7 @@ trojan-source:
     treeherder:
         symbol: misc(trojan-source)
     run:
-        mach: lint -v -l trojan-source --include-third-party -f treeherder -f json:/builds/worker/mozlint.json *
+        mach: lint -v -l trojan-source --include-third-party -f treeherder -f json:/builds/worker/mozlint.json .
     when:
         files-changed:
             - '**/*.c'

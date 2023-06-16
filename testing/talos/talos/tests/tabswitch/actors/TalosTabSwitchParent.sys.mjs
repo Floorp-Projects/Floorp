@@ -49,7 +49,8 @@ export class TalosTabSwitchParent extends JSWindowActorParent {
     return new Promise(resolve => {
       gBrowser.loadTabs(urls, {
         inBackground: true,
-        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+        triggeringPrincipal:
+          Services.scriptSecurityManager.getSystemPrincipal(),
       });
 
       let waitingToLoad = new Set(urls);
@@ -285,7 +286,8 @@ export class TalosTabSwitchParent extends JSWindowActorParent {
     let resultsTab = win.gBrowser.addTab(
       "data:text/html;charset=utf-8," + encodeURIComponent(output),
       {
-        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+        triggeringPrincipal:
+          Services.scriptSecurityManager.getSystemPrincipal(),
       }
     );
 
@@ -322,7 +324,7 @@ function handleFile(win, file) {
   if (maxurls && maxurls > 0) {
     lines.splice(maxurls, lines.length);
   }
-  lines.forEach(function(a) {
+  lines.forEach(function (a) {
     let url = a.split('"')[0];
     if (url != "") {
       let domain = url.split("/")[0];

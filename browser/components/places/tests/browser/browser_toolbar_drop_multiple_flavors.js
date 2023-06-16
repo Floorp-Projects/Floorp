@@ -55,7 +55,7 @@ add_task(async function test() {
   let toolbar = document.getElementById("PersonalToolbar");
   if (toolbar.collapsed) {
     await promiseSetToolbarVisibility(toolbar, true);
-    registerCleanupFunction(function() {
+    registerCleanupFunction(function () {
       return promiseSetToolbarVisibility(toolbar, false);
     });
   }

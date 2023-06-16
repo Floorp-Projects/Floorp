@@ -1,5 +1,5 @@
-const { CustomizableUITestUtils } = ChromeUtils.import(
-  "resource://testing-common/CustomizableUITestUtils.jsm"
+const { CustomizableUITestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/CustomizableUITestUtils.sys.mjs"
 );
 let gCUITestUtils = new CustomizableUITestUtils(window);
 
@@ -10,7 +10,7 @@ add_task(async function test_setup() {
   });
 });
 
-add_task(async function() {
+add_task(async function () {
   const promiseFocusInSearchBar = BrowserTestUtils.waitForEvent(
     BrowserSearch.searchBar.textbox,
     "focus"

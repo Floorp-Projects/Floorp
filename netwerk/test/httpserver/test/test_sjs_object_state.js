@@ -8,7 +8,7 @@
  * Tests that the object-state-preservation mechanism works correctly.
  */
 
-XPCOMUtils.defineLazyGetter(this, "PATH", function() {
+XPCOMUtils.defineLazyGetter(this, "PATH", function () {
   return "http://localhost:" + srv.identity.primaryPort + "/object-state.sjs";
 });
 
@@ -78,7 +78,7 @@ function initialStop(ch, status, data) {
 
   Assert.equal(
     data
-      .map(function(v) {
+      .map(function (v) {
         return String.fromCharCode(v);
       })
       .join(""),
@@ -127,7 +127,7 @@ function intermediateStop(ch, status, data) {
 
   Assert.equal(
     data
-      .map(function(v) {
+      .map(function (v) {
         return String.fromCharCode(v);
       })
       .join(""),
@@ -177,7 +177,7 @@ function triggerStop(ch, status, data) {
 
   Assert.equal(
     data
-      .map(function(v) {
+      .map(function (v) {
         return String.fromCharCode(v);
       })
       .join(""),

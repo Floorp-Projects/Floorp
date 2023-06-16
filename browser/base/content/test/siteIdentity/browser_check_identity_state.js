@@ -540,11 +540,11 @@ async function noCertErrorFromNavigationTest(secureCheck) {
   let newTab = await loadNewTab("http://example.com/" + DUMMY);
 
   let promise = BrowserTestUtils.waitForErrorPage(gBrowser.selectedBrowser);
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.document.getElementById("no-cert").click();
   });
   await promise;
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     is(
       content.window.location.href,
       "https://nocert.example.com/",
@@ -602,7 +602,7 @@ add_task(async function tlsErrorPageTest() {
   info("Loading and waiting for the net error");
   await pageLoaded;
 
-  await SpecialPowers.spawn(browser, [], function() {
+  await SpecialPowers.spawn(browser, [], function () {
     const doc = content.document;
     ok(
       doc.documentURI.startsWith("about:neterror"),
@@ -647,7 +647,7 @@ add_task(async function netErrorPageTest() {
   info("Loading and waiting for the net error");
   await pageLoaded;
 
-  await SpecialPowers.spawn(browser, [], function() {
+  await SpecialPowers.spawn(browser, [], function () {
     const doc = content.document;
     ok(
       doc.documentURI.startsWith("about:neterror"),

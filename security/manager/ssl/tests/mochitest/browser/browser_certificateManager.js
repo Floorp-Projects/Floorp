@@ -27,9 +27,7 @@ async function checkServerCertificates(win, expectedValues = []) {
 
   expectedValues.forEach((item, i) => {
     let hostPort = labels[i * 3].value;
-    let certString = labels[i * 3 + 1].value || labels[i * 3 + 1].textContent;
-    let isTemporaryString =
-      labels[i * 3 + 2].value || labels[i * 3 + 2].textContent;
+    let fingerprint = labels[i * 3 + 1].value || labels[i * 3 + 1].textContent;
 
     Assert.equal(
       hostPort,
@@ -38,15 +36,9 @@ async function checkServerCertificates(win, expectedValues = []) {
     );
 
     Assert.equal(
-      certString,
-      item.certName,
-      `Expected override to have field ${item.certName}`
-    );
-
-    Assert.equal(
-      isTemporaryString,
-      item.isTemporary ? "Temporary" : "Permanent",
-      `Expected override to be ${item.isTemporary ? "Temporary" : "Permanent"}`
+      fingerprint,
+      item.fingerprint,
+      `Expected override to have field ${item.fingerprint}`
     );
   });
 }
@@ -71,34 +63,6 @@ async function deleteOverride(win, expectedLength) {
     0,
     "After deletion we expect the selectedItem to be reset."
   );
-}
-
-async function testViewButton(win) {
-  win.document.getElementById("serverList").selectedIndex = 0;
-
-  Assert.ok(
-    !win.document.getElementById("websites_viewButton").disabled,
-    "View button should be enabled for override with cert"
-  );
-
-  let loaded = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
-
-  win.document.getElementById("websites_viewButton").click();
-
-  let newTab = await loaded;
-  let spec = newTab.linkedBrowser.documentURI.spec;
-
-  Assert.ok(
-    spec.startsWith("about:certificate"),
-    "about:certificate should habe been opened"
-  );
-
-  let newUrl = new URL(spec);
-  let certEncoded = newUrl.searchParams.get("cert");
-  let certDecoded = decodeURIComponent(certEncoded);
-  Assert.ok(certDecoded, "should have some certificate as cert url param");
-
-  gBrowser.removeCurrentTab();
 }
 
 add_task(async function test_cert_manager_server_tab() {
@@ -126,12 +90,9 @@ add_task(async function test_cert_manager_server_tab() {
   await checkServerCertificates(win, [
     {
       hostPort: "example.com:443",
-      certName: "md5-ee",
-      isTemporary: false,
+      fingerprint: cert.sha256Fingerprint,
     },
   ]);
-
-  await testViewButton(win);
 
   await deleteOverride(win, 1);
 

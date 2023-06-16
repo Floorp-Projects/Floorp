@@ -86,14 +86,9 @@ nsClipboardHelper::CopyStringToClipboard(const nsAString& aString,
   rv = data->SetData(aString);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // qi the data object an |nsISupports| so that when the transferable holds
+  // Pass the data object as |nsISupports| so that when the transferable holds
   // onto it, it will addref the correct interface.
-  nsCOMPtr<nsISupports> genericData(do_QueryInterface(data, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(genericData, NS_ERROR_FAILURE);
-
-  // set the transfer data
-  rv = trans->SetTransferData(kTextMime, genericData);
+  rv = trans->SetTransferData(kTextMime, ToSupports(data));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // put the transferable on the clipboard

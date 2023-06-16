@@ -279,10 +279,10 @@ export const ExperimentFakes = {
       ],
       isRollout,
     });
-    let {
-      enrollmentPromise,
-      doExperimentCleanup,
-    } = this.enrollmentHelper(recipe, { manager });
+    let { enrollmentPromise, doExperimentCleanup } = this.enrollmentHelper(
+      recipe,
+      { manager }
+    );
 
     await enrollmentPromise;
 

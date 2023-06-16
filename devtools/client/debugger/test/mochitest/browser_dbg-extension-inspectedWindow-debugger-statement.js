@@ -7,7 +7,7 @@
 "use strict";
 
 // Test debugger statement in page, with devtools opened to debugger panel
-add_task(async function() {
+add_task(async function () {
   const extension = await installAndStartExtension();
 
   const dbg = await initDebugger("doc-scripts.html");
@@ -31,7 +31,7 @@ add_task(async function() {
 });
 
 // Test debugger statement in webconsole
-add_task(async function() {
+add_task(async function () {
   const extension = await installAndStartExtension();
 
   // Test again with debugger panel closed

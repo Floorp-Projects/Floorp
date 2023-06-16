@@ -17,6 +17,7 @@
 #include "rtc_base/thread.h"
 #include "rtc_base/virtual_socket_server.h"
 #include "test/gtest.h"
+#include "test/scoped_key_value_config.h"
 
 static const char kContentName[] = "test content";
 // Based on ICE_UFRAG_LENGTH
@@ -36,7 +37,8 @@ class PortAllocatorTest : public ::testing::Test, public sigslot::has_slots<> {
             std::make_unique<rtc::BasicPacketSocketFactory>(vss_.get())),
         allocator_(std::make_unique<cricket::FakePortAllocator>(
             rtc::Thread::Current(),
-            packet_socket_factory_.get())) {
+            packet_socket_factory_.get(),
+            &field_trials_)) {
     allocator_->SetIceTiebreaker(kTiebreakerDefault);
   }
 
@@ -85,6 +87,7 @@ class PortAllocatorTest : public ::testing::Test, public sigslot::has_slots<> {
     return count;
   }
 
+  webrtc::test::ScopedKeyValueConfig field_trials_;
   std::unique_ptr<rtc::VirtualSocketServer> vss_;
   rtc::AutoSocketServerThread main_;
   std::unique_ptr<rtc::PacketSocketFactory> packet_socket_factory_;

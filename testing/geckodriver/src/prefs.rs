@@ -52,6 +52,10 @@ lazy_static! {
         // Start with a blank page (about:blank)
         ("browser.startup.page", Pref::new(0)),
 
+        // Disable page translations, causing timeouts for wdspec tests in early
+        // beta. See Bug 1836093.
+        ("browser.translations.enable", Pref::new(false)),
+
         // Disable the UI tour
         ("browser.uitour.enabled", Pref::new(false)),
 
@@ -117,11 +121,6 @@ lazy_static! {
 
         // Make sure SNTP requests do not hit the network
         ("network.sntp.pools", Pref::new("%(server)s")),
-
-        // Disable Flash.  The plugin container it is run in is
-        // causing problems when quitting Firefox from geckodriver,
-        // c.f. https://github.com/mozilla/geckodriver/issues/225.
-        ("plugin.state.flash", Pref::new(0)),
 
         // Don't do network connections for mitm priming
         ("security.certerrors.mitm.priming.enabled", Pref::new(false)),

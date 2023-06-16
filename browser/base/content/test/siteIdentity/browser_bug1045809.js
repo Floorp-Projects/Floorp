@@ -10,8 +10,8 @@ const TEST_URL =
 
 var origBlockActive;
 
-add_task(async function() {
-  registerCleanupFunction(function() {
+add_task(async function () {
+  registerCleanupFunction(function () {
     Services.prefs.setBoolPref(PREF_ACTIVE, origBlockActive);
     gBrowser.removeCurrentTab();
   });
@@ -54,7 +54,7 @@ async function test1(gTestBrowser) {
     passiveLoaded: false,
   });
 
-  await SpecialPowers.spawn(gTestBrowser, [], function() {
+  await SpecialPowers.spawn(gTestBrowser, [], function () {
     let iframe = content.document.getElementsByTagName("iframe")[0];
 
     SpecialPowers.spawn(iframe, [], () => {
@@ -74,7 +74,7 @@ async function test2(gTestBrowser) {
     passiveLoaded: false,
   });
 
-  await SpecialPowers.spawn(gTestBrowser, [], function() {
+  await SpecialPowers.spawn(gTestBrowser, [], function () {
     let iframe = content.document.getElementsByTagName("iframe")[0];
 
     SpecialPowers.spawn(iframe, [], () => {
@@ -94,7 +94,7 @@ async function test3(gTestBrowser) {
     passiveLoaded: false,
   });
 
-  await SpecialPowers.spawn(gTestBrowser, [], function() {
+  await SpecialPowers.spawn(gTestBrowser, [], function () {
     let iframe = content.document.getElementsByTagName("iframe")[0];
 
     SpecialPowers.spawn(iframe, [], () => {

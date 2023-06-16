@@ -32,7 +32,7 @@ this.devtools_network = class extends ExtensionAPI {
             },
           }).api(),
 
-          getHAR: function() {
+          getHAR: function () {
             return context.devToolsToolbox.getHARFromNetMonitor();
           },
 

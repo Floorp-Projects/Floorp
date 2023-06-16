@@ -1,0 +1,135 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:host {
+  --fxviewtabrow-element-background-hover: color-mix(in srgb, currentColor 14%, transparent);
+  --fxviewtabrow-element-background-active: color-mix(in srgb, currentColor 21%, transparent);
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: span 6;
+  align-items: stretch;
+  border-radius: 4px;
+}
+
+@media (prefers-contrast) {
+  :host {
+    --fxviewtabrow-element-background-hover: ButtonText;
+    --fxviewtabrow-element-background-active: ButtonText;
+    --fxviewtabrow-text-color-hover: ButtonFace;
+  }
+}
+
+.fxview-tab-row-main {
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: span 5;
+  gap: 16px;
+  border-radius: 4px;
+  align-items: center;
+  padding: 4px 8px;
+  user-select: none;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.fxview-tab-row-main,
+.fxview-tab-row-main:visited,
+.fxview-tab-row-main:hover:active,
+.fxview-tab-row-button {
+  color: inherit;
+}
+
+.fxview-tab-row-main:hover,
+.fxview-tab-row-button.ghost-button.icon-button:enabled:hover {
+  background-color: var(--fxviewtabrow-element-background-hover);
+  color: var(--fxviewtabrow-text-color-hover);
+}
+
+.fxview-tab-row-main:hover:active,
+.fxview-tab-row-button.ghost-button.icon-button:enabled:hover:active {
+  background-color: var(--fxviewtabrow-element-background-active);
+}
+
+@media (prefers-contrast) {
+  .fxview-tab-row-main,
+  .fxview-tab-row-main:hover,
+  .fxview-tab-row-main:active {
+    background-color: transparent;
+    border: 1px solid LinkText;
+    color: LinkText;
+  }
+
+  .fxview-tab-row-main:visited .fxview-tab-row-main:visited:hover {
+    border: 1px solid VisitedText;
+    color: VisitedText;
+  }
+}
+
+.fxview-tab-row-favicon {
+  background-size: cover;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  display: inline-block;
+  min-height: 16px;
+  min-width: 16px;
+  position: relative;
+}
+
+.fxview-tab-row-title {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fxview-tab-row-main:hover .fxview-tab-row-title {
+  text-decoration-line: underline;
+}
+
+.fxview-tab-row-url {
+  color: var(--text-color-deemphasized);
+  word-break: break-word;
+  text-decoration-line: underline;
+}
+
+.fxview-tab-row-title,
+.fxview-tab-row-url {
+  overflow: hidden;
+}
+
+.fxview-tab-row-date,
+.fxview-tab-row-time {
+  color: var(--text-color-deemphasized);
+  white-space: nowrap;
+}
+
+.fxview-tab-row-url,
+.fxview-tab-row-time {
+  font-weight: 400;
+}
+
+.fxview-tab-row-button {
+  margin: 0;
+  cursor: pointer;
+}
+
+@media (prefers-contrast) {
+  .fxview-tab-row-button {
+    border: 1px solid ButtonText;
+    color: ButtonText;
+  }
+
+  .fxview-tab-row-button.ghost-button.icon-button:enabled:hover {
+    border: 1px solid SelectedItem;
+    color: SelectedItem;
+  }
+
+  .fxview-tab-row-button.ghost-button.icon-button:enabled:active {
+    color: SelectedItem;
+  }
+
+  .fxview-tab-row-button.ghost-button.icon-button:enabled,
+  .fxview-tab-row-button.ghost-button.icon-button:enabled:hover,
+  .fxview-tab-row-button.ghost-button.icon-button:enabled:active {
+    background-color: ButtonFace;
+  }
+}

@@ -319,7 +319,7 @@ struct Font {
   Table* GetTypedTable(uint32_t tag) const;
 
   // Insert a new table. Asserts if a table with the same tag already exists.
-  void AddTable(Table* table);
+  void AddTable(TableEntry entry, Table* table);
 
   // Drop all Graphite tables and don't parse new ones.
   void DropGraphite();

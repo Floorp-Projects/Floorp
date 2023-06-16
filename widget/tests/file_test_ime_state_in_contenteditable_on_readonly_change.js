@@ -273,10 +273,11 @@ class IMEStateOfTextControlInContentEditableOnReadonlyChangeTester {
       IMEStateOfTextControlInContentEditableOnReadonlyChangeTester.#sTextControls[
         aIndex
       ];
-    this.#mTextControlElement = IMEStateOfTextControlInContentEditableOnReadonlyChangeTester.#createElement(
-      this.#mEditingHost.ownerDocument,
-      this.#mTextControl
-    );
+    this.#mTextControlElement =
+      IMEStateOfTextControlInContentEditableOnReadonlyChangeTester.#createElement(
+        this.#mEditingHost.ownerDocument,
+        this.#mTextControl
+      );
     this.#mEditingHost.appendChild(this.#mTextControlElement);
     this.#mTextControlElement.focus();
     await this.#flushPendingIMENotifications();
@@ -496,10 +497,11 @@ class IMEStateOutsideContentEditableOnReadonlyChangeTester {
       IMEStateOutsideContentEditableOnReadonlyChangeTester.#sFocusTargets[
         aIndex
       ];
-    this.#mFocusTargetElement = IMEStateOutsideContentEditableOnReadonlyChangeTester.#maybeCreateElement(
-      this.#mBody.ownerDocument,
-      this.#mFocusTarget
-    );
+    this.#mFocusTargetElement =
+      IMEStateOutsideContentEditableOnReadonlyChangeTester.#maybeCreateElement(
+        this.#mBody.ownerDocument,
+        this.#mFocusTarget
+      );
     if (this.#mFocusTargetElement) {
       this.#mBody.appendChild(this.#mFocusTargetElement);
       this.#mFocusTargetElement.focus();

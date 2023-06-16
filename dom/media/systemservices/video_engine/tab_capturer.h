@@ -27,28 +27,28 @@ class TabCapturedHandler;
 class TaskQueue;
 
 class TabCapturerWebrtc : public webrtc::DesktopCapturer {
- private:
+ protected:
+  TabCapturerWebrtc(SourceId aSourceId,
+                    nsCOMPtr<nsISerialEventTarget> aCaptureThread);
   ~TabCapturerWebrtc();
 
  public:
   friend class CaptureFrameRequest;
   friend class TabCapturedHandler;
 
-  explicit TabCapturerWebrtc(const webrtc::DesktopCaptureOptions& options);
-
-  static std::unique_ptr<webrtc::DesktopCapturer> CreateRawWindowCapturer(
-      const webrtc::DesktopCaptureOptions& options);
+  static std::unique_ptr<webrtc::DesktopCapturer> Create(
+      SourceId aSourceId, nsCOMPtr<nsISerialEventTarget> aCaptureThread);
 
   TabCapturerWebrtc(const TabCapturerWebrtc&) = delete;
   TabCapturerWebrtc& operator=(const TabCapturerWebrtc&) = delete;
 
   // DesktopCapturer interface.
-  void Start(Callback* callback) override;
+  void Start(Callback* aCallback) override;
   void CaptureFrame() override;
-  bool GetSourceList(SourceList* sources) override;
-  bool SelectSource(SourceId id) override;
+  bool GetSourceList(SourceList* aSources) override;
+  bool SelectSource(SourceId) override;
   bool FocusOnSelectedSource() override;
-  bool IsOccluded(const webrtc::DesktopVector& pos) override;
+  bool IsOccluded(const webrtc::DesktopVector& aPos) override;
 
  private:
   // Capture code
@@ -70,22 +70,17 @@ class TabCapturerWebrtc : public webrtc::DesktopCapturer {
   void OnCaptureFrameSuccess(UniquePtr<dom::ImageBitmapCloneData> aData);
   void OnCaptureFrameFailure();
 
+  const uint64_t mBrowserId;
   const RefPtr<TaskQueue> mMainThreadWorker;
+  const RefPtr<TaskQueue> mCallbackWorker;
   webrtc::SequenceChecker mControlChecker;
   webrtc::SequenceChecker mCallbackChecker;
-  // Set at most once in Start() to the current thread. Can then be used on
-  // other threads as part of the async chain of runnables originating from
-  // CaptureFrame(), since the first CaptureFrame() is guaranteed to happen
-  // after setting this.
-  RefPtr<TaskQueue> mCallbackWorker;
   // Set in Start() and guaranteed by the owner of this class to outlive us.
   webrtc::DesktopCapturer::Callback* mCallback
       RTC_GUARDED_BY(mCallbackChecker) = nullptr;
-  // Set before Start() and not changed again.
-  uint64_t mBrowserId = 0;
 
-  // mMainThreadWorker only
-  nsRefPtrDeque<CaptureFrameRequest> mRequests;
+  // mCallbackWorker only
+  nsRefPtrDeque<CaptureFrameRequest> mRequests RTC_GUARDED_BY(mCallbackChecker);
 };
 
 }  // namespace mozilla

@@ -8,12 +8,12 @@
 
 // The main image or frame consists of a bundle of associated images.
 
+#include <jxl/cms_interface.h>
 #include <stddef.h>
 #include <stdint.h>
 
 #include <vector>
 
-#include "jxl/cms_interface.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/status.h"

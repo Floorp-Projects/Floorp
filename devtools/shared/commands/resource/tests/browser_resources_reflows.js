@@ -9,7 +9,7 @@ const {
   TYPES,
 } = require("resource://devtools/shared/commands/resource/resource-command.js");
 
-add_task(async function() {
+add_task(async function () {
   const tab = await addTab(
     "https://example.com/document-builder.sjs?html=<h1>Test reflow resources</h1>"
   );

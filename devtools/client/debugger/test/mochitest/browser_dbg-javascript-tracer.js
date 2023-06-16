@@ -6,7 +6,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   // This is preffed off for now, so ensure turning it on
   await pushPref("devtools.debugger.features.javascript-tracing", true);
 
@@ -43,6 +43,38 @@ add_task(async function() {
   await waitForSelectedSource(dbg, "simple1.js");
   await waitForSelectedLocation(dbg, 1, 16);
 
+  // Test Blackboxing
+  info("Clear the console from previous traces");
+  const { hud } = await dbg.toolbox.getPanel("webconsole");
+  hud.ui.clearOutput();
+  await waitFor(
+    async () => !(await findConsoleMessages(dbg.toolbox, "λ main")).length,
+    "Wait for console to be cleared"
+  );
+
+  info(
+    "Now blackbox only the source where main function is (simple1.js), but foo and bar are in another module"
+  );
+  await clickElement(dbg, "blackbox");
+  await waitForDispatch(dbg.store, "BLACKBOX_WHOLE_SOURCES");
+
+  info("Trigger some code from simple1 and simple2");
+  invokeInTab("main");
+
+  info("Only methods from simple2 are logged");
+  await hasConsoleMessage(dbg, "λ foo");
+  await hasConsoleMessage(dbg, "λ bar");
+  is(
+    (await findConsoleMessages(dbg.toolbox, "λ main")).length,
+    0,
+    "Traces from simple1.js, related to main function are not logged"
+  );
+
+  info("Revert blackboxing");
+  await clickElement(dbg, "blackbox");
+  await waitForDispatch(dbg.store, "UNBLACKBOX_WHOLE_SOURCES");
+
+  // Test Disabling tracing
   info("Disable the tracing");
   await clickElement(dbg, "trace");
   info("Wait for tracing to be disabled");
@@ -62,6 +94,7 @@ add_task(async function() {
     "We stopped recording traces, an the function call isn't logged in the console"
   );
 
+  // Test Navigations
   await navigate(dbg, "doc-sourcemaps2.html", "main.js", "main.min.js");
 
   info("Re-enable the tracing after navigation");
@@ -145,7 +178,7 @@ add_task(async function testPageKeyShortcut() {
   info(
     "Focus the page in order to assert that the page keeps the focus when enabling the tracer"
   );
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     content.focus();
   });
   await waitFor(
@@ -158,7 +191,7 @@ add_task(async function testPageKeyShortcut() {
   );
 
   info("Toggle ON the tracing via the key shortcut from the web page");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     EventUtils.synthesizeKey(
       "VK_5",
       { ctrlKey: true, shiftKey: true },
@@ -178,7 +211,7 @@ add_task(async function testPageKeyShortcut() {
   );
 
   info("Toggle it back off, wit the same shortcut");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     EventUtils.synthesizeKey(
       "VK_5",
       { ctrlKey: true, shiftKey: true },

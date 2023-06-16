@@ -11,7 +11,7 @@ CookieXPCShellUtils.init(this);
 let gCookieHits = 0;
 let gLoadingHits = 0;
 
-add_task(async function() {
+add_task(async function () {
   do_get_profile();
 
   info("Disable predictor and accept all");

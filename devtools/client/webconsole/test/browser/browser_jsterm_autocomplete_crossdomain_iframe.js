@@ -10,7 +10,7 @@ const TEST_URI =
   "https://example.com/browser/devtools/client/webconsole/" +
   "test/browser/test-iframe-parent.html";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   await executeAndWaitForResultMessage(hud, "document.title", "iframe parent");

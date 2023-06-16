@@ -48,15 +48,12 @@ static nsIThread* gBackgroundThread;
 }  // namespace
 
 // Data for WebAuthn UI prompt notifications.
-static const char16_t kRegisterPromptNotificationU2F[] =
-    u"{\"is_ctap2\":false,\"action\":\"register\",\"tid\":%llu,"
-    u"\"origin\":\"%s\",\"browsingContextId\":%llu,\"device_selected\":%s}";
+static const char16_t kPresencePromptNotificationU2F[] =
+    u"{\"is_ctap2\":false,\"action\":\"presence\",\"tid\":%llu,"
+    u"\"origin\":\"%s\",\"browsingContextId\":%llu}";
 static const char16_t kRegisterDirectPromptNotificationU2F[] =
     u"{\"is_ctap2\":false,\"action\":\"register-direct\",\"tid\":%llu,"
     u"\"origin\":\"%s\",\"browsingContextId\":%llu}";
-static const char16_t kSignPromptNotificationU2F[] =
-    u"{\"is_ctap2\":false,\"action\":\"sign\",\"tid\":%llu,\"origin\":\"%s\","
-    u"\"browsingContextId\":%llu,\"device_selected\":%s}";
 static const char16_t kCancelPromptNotificationU2F[] =
     u"{\"is_ctap2\":false,\"action\":\"cancel\",\"tid\":%llu}";
 
@@ -281,23 +278,20 @@ void U2FTokenManager::Register(
 // On Android, let's always reject direct attestations until we have a
 // mechanism to solicit user consent, from Bug 1550164
 #ifndef MOZ_WIDGET_ANDROID
-  if (aTransactionInfo.Extra().isSome()) {
-    const auto& extra = aTransactionInfo.Extra().ref();
-
-    // The default attestation type is "none", so set
-    // noneAttestationRequested=false only if the RP's preference matches one of
-    // the other known types. This needs to be reviewed if values are added to
-    // the AttestationConveyancePreference enum.
-    const nsString& attestation = extra.attestationConveyancePreference();
-    static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 2);
-    if (attestation.EqualsLiteral(
-            MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_DIRECT) ||
-        attestation.EqualsLiteral(
-            MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_INDIRECT) ||
-        attestation.EqualsLiteral(
-            MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_ENTERPRISE)) {
-      noneAttestationRequested = false;
-    }
+  // The default attestation type is "none", so set
+  // noneAttestationRequested=false only if the RP's preference matches one of
+  // the other known types. This needs to be reviewed if values are added to
+  // the AttestationConveyancePreference enum.
+  const nsString& attestation =
+      aTransactionInfo.attestationConveyancePreference();
+  static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 2);
+  if (attestation.EqualsLiteral(
+          MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_DIRECT) ||
+      attestation.EqualsLiteral(
+          MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_INDIRECT) ||
+      attestation.EqualsLiteral(
+          MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_ENTERPRISE)) {
+    noneAttestationRequested = false;
   }
 #endif  // not MOZ_WIDGET_ANDROID
 
@@ -328,7 +322,7 @@ void U2FTokenManager::DoRegister(const WebAuthnMakeCredentialInfo& aInfo,
 
   // Show a prompt that lets the user cancel the ongoing transaction.
   NS_ConvertUTF16toUTF8 origin(aInfo.Origin());
-  SendPromptNotification(kRegisterPromptNotificationU2F, mLastTransactionId,
+  SendPromptNotification(kPresencePromptNotificationU2F, mLastTransactionId,
                          origin.get(), aInfo.BrowsingContextId(), "false");
 
   uint64_t tid = mLastTransactionId;
@@ -403,7 +397,7 @@ void U2FTokenManager::DoSign(const WebAuthnGetAssertionInfo& aTransactionInfo) {
   uint64_t browserCtxId = aTransactionInfo.BrowsingContextId();
 
   // Show a prompt that lets the user cancel the ongoing transaction.
-  SendPromptNotification(kSignPromptNotificationU2F, tid, origin.get(),
+  SendPromptNotification(kPresencePromptNotificationU2F, tid, origin.get(),
                          browserCtxId, "false");
 
   mTokenManagerImpl->Sign(aTransactionInfo)

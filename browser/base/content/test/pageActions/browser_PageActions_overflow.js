@@ -34,13 +34,11 @@ add_task(async function test() {
   await promiseAnimationFrame(win);
 
   info("Check page action buttons are visible, the meatball button is not");
-  let addonButton = win.BrowserPageActions.urlbarButtonNodeForActionID(
-    actionId
-  );
+  let addonButton =
+    win.BrowserPageActions.urlbarButtonNodeForActionID(actionId);
   Assert.ok(BrowserTestUtils.is_visible(addonButton));
-  let starButton = win.BrowserPageActions.urlbarButtonNodeForActionID(
-    "bookmark"
-  );
+  let starButton =
+    win.BrowserPageActions.urlbarButtonNodeForActionID("bookmark");
   Assert.ok(BrowserTestUtils.is_visible(starButton));
   let meatballButton = win.document.getElementById("pageActionButton");
   Assert.ok(!BrowserTestUtils.is_visible(meatballButton));
@@ -226,9 +224,8 @@ add_task(async function test_disabledPageAction_hidden_in_protonOverflowMenu() {
     extension.sendMessage("show-pageAction");
     await extension.awaitMessage("show-pageAction:done");
     await promisePageActionPanelOpen(win);
-    let pageActionNode = win.BrowserPageActions.panelButtonNodeForActionID(
-      widgetId
-    );
+    let pageActionNode =
+      win.BrowserPageActions.panelButtonNodeForActionID(widgetId);
     ok(
       pageActionNode && BrowserTestUtils.is_visible(pageActionNode),
       "enabled pageAction should be visible in the urlbar overflow menu"

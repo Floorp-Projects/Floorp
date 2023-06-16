@@ -62,21 +62,21 @@ window.addEventListener(
     let editMenuCommandSetAll = fragment.querySelector(
       "#editMenuCommandSetAll"
     );
-    editMenuCommandSetAll.addEventListener("commandupdate", function() {
+    editMenuCommandSetAll.addEventListener("commandupdate", function () {
       goUpdateGlobalEditMenuItems();
     });
 
     let editMenuCommandSetUndo = fragment.querySelector(
       "#editMenuCommandSetUndo"
     );
-    editMenuCommandSetUndo.addEventListener("commandupdate", function() {
+    editMenuCommandSetUndo.addEventListener("commandupdate", function () {
       goUpdateUndoEditMenuItems();
     });
 
     let editMenuCommandSetPaste = fragment.querySelector(
       "#editMenuCommandSetPaste"
     );
-    editMenuCommandSetPaste.addEventListener("commandupdate", function() {
+    editMenuCommandSetPaste.addEventListener("commandupdate", function () {
       goUpdatePasteMenuItems();
     });
 

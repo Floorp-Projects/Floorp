@@ -141,8 +141,8 @@ void URLWorker::RevokeObjectURL(const GlobalObject& aGlobal,
 }
 
 /* static */
-bool URLWorker::IsValidURL(const GlobalObject& aGlobal, const nsAString& aUrl,
-                           ErrorResult& aRv) {
+bool URLWorker::IsValidObjectURL(const GlobalObject& aGlobal,
+                                 const nsAString& aUrl, ErrorResult& aRv) {
   JSContext* cx = aGlobal.Context();
   WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
 

@@ -7,7 +7,7 @@
 const TEST_INPUT = "h1";
 const TEST_URI = "<h1>test filter context menu</h1>";
 
-add_task(async function() {
+add_task(async function () {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { toolbox, inspector } = await openInspector();
   const { searchBox } = inspector;
@@ -54,9 +54,8 @@ add_task(async function() {
   await onContextMenuClose;
 
   info("Copy text in search field using the context menu");
-  const onSearchProcessingDone = inspector.searchSuggestions.once(
-    "processing-done"
-  );
+  const onSearchProcessingDone =
+    inspector.searchSuggestions.once("processing-done");
   searchBox.setUserInput(TEST_INPUT);
   searchBox.select();
   searchBox.focus();

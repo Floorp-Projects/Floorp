@@ -244,7 +244,7 @@ ArgumentsObject* ArgumentsObject::createTemplateObject(JSContext* cx,
 
   AutoSetNewObjectMetadata metadata(cx);
   JSObject* base =
-      NativeObject::create(cx, FINALIZE_KIND, gc::TenuredHeap, shape);
+      NativeObject::create(cx, FINALIZE_KIND, gc::Heap::Tenured, shape);
   if (!base) {
     return nullptr;
   }
@@ -303,7 +303,7 @@ ArgumentsObject* ArgumentsObject::create(JSContext* cx, HandleFunction callee,
 
   AutoSetNewObjectMetadata metadata(cx);
   JSObject* base =
-      NativeObject::create(cx, FINALIZE_KIND, gc::DefaultHeap, shape);
+      NativeObject::create(cx, FINALIZE_KIND, gc::Heap::Default, shape);
   if (!base) {
     return nullptr;
   }
@@ -631,6 +631,23 @@ bool ArgumentsObject::reifyIterator(JSContext* cx,
   }
 
   obj->markIteratorOverridden();
+  return true;
+}
+
+/* static */
+bool MappedArgumentsObject::reifyCallee(JSContext* cx,
+                                        Handle<MappedArgumentsObject*> obj) {
+  if (obj->hasOverriddenCallee()) {
+    return true;
+  }
+
+  Rooted<PropertyKey> key(cx, NameToId(cx->names().callee));
+  Rooted<Value> val(cx, ObjectValue(obj->callee()));
+  if (!NativeDefineDataProperty(cx, obj, key, val, JSPROP_RESOLVING)) {
+    return false;
+  }
+
+  obj->markCalleeOverridden();
   return true;
 }
 

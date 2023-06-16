@@ -9,11 +9,11 @@ const FOREIGN_PAGE = "https://example.net";
 const FOREIGN_PAGE2 = "https://example.net^partitionKey=(https,example.com)";
 const FOREIGN_PAGE3 = "https://example.net^partitionKey=(https,example.org)";
 
-const { UrlClassifierTestUtils } = ChromeUtils.import(
-  "resource://testing-common/UrlClassifierTestUtils.jsm"
+const { UrlClassifierTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
 );
-const { SiteDataTestUtils } = ChromeUtils.import(
-  "resource://testing-common/SiteDataTestUtils.jsm"
+const { SiteDataTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/SiteDataTestUtils.sys.mjs"
 );
 const { PermissionTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/PermissionTestUtils.sys.mjs"
@@ -500,7 +500,7 @@ async function testExpiredInteractionPermission() {
   UrlClassifierTestUtils.cleanupTestTrackers();
 }
 
-add_task(async function() {
+add_task(async function () {
   const cookieBehaviors = [
     Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN,
     Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN,

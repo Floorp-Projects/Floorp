@@ -356,6 +356,7 @@ fi{
                     }
                 }
             }
+            times{"{0}⋅{1}"}
         }
         concentr{
             item{
@@ -1384,6 +1385,11 @@ fi{
                 one{"{0} kilowattitunti"}
                 other{"{0} kilowattituntia"}
             }
+            therm-us{
+                dnam{"US therm"}
+                one{"{0} US therm"}
+                other{"{0} US therm"}
+            }
         }
         force{
             kilowatt-hour-per-100-kilometer{
@@ -1538,6 +1544,11 @@ fi{
                 one{"{0} piste"}
                 other{"{0} pistettä"}
             }
+            dot-per-centimeter{
+                dnam{"ppcm"}
+                one{"{0} ppcm"}
+                other{"{0} ppcm"}
+            }
             dot-per-inch{
                 dnam{"dpi"}
                 one{"{0} dpi"}
@@ -1634,6 +1645,11 @@ fi{
                 dnam{"pikselit/senttimetri"}
                 one{"{0} pikseli / senttimetri"}
                 other{"{0} pikseliä / senttimetri"}
+            }
+            pixel-per-inch{
+                dnam{"ppi"}
+                one{"{0} ppi"}
+                other{"{0} ppi"}
             }
         }
         length{
@@ -3067,6 +3083,7 @@ fi{
                 other{"{0}ac"}
             }
             dunam{
+                dnam{"dunamit"}
                 one{"{0}dunam"}
                 other{"{0}dunam"}
             }
@@ -3117,6 +3134,34 @@ fi{
             }
         }
         compound{
+            1024p1{"Ki{0}"}
+            1024p2{"Mi{0}"}
+            1024p3{"Gi{0}"}
+            1024p4{"Ti{0}"}
+            1024p5{"Pi{0}"}
+            1024p6{"Ei{0}"}
+            1024p7{"Zi{0}"}
+            1024p8{"Yi{0}"}
+            10p-1{"d{0}"}
+            10p-12{"p{0}"}
+            10p-15{"f{0}"}
+            10p-18{"a{0}"}
+            10p-2{"c{0}"}
+            10p-21{"z{0}"}
+            10p-24{"y{0}"}
+            10p-3{"m{0}"}
+            10p-6{"μ{0}"}
+            10p-9{"n{0}"}
+            10p1{"da{0}"}
+            10p12{"T{0}"}
+            10p15{"P{0}"}
+            10p18{"E{0}"}
+            10p2{"h{0}"}
+            10p21{"Z{0}"}
+            10p24{"Y{0}"}
+            10p3{"k{0}"}
+            10p6{"M{0}"}
+            10p9{"G{0}"}
             per{"{0}/{1}"}
             power2{
                 one{
@@ -3142,6 +3187,7 @@ fi{
                     }
                 }
             }
+            times{"{0}⋅{1}"}
         }
         concentr{
             item{
@@ -3170,10 +3216,12 @@ fi{
                 other{"{0}mol"}
             }
             percent{
+                dnam{"%"}
                 one{"{0} %"}
                 other{"{0} %"}
             }
             permille{
+                dnam{"‰"}
                 one{"{0}‰"}
                 other{"{0}‰"}
             }
@@ -3286,6 +3334,11 @@ fi{
                 other{"{0}pv"}
                 per{"{0}/pv"}
             }
+            decade{
+                dnam{"dec"}
+                one{"{0} dec"}
+                other{"{0} dec"}
+            }
             hour{
                 dnam{"t"}
                 one{"{0}t"}
@@ -3321,6 +3374,9 @@ fi{
             }
             quarter{
                 dnam{"q"}
+                one{"{0} q"}
+                other{"{0} q"}
+                per{"{0}/q"}
             }
             second{
                 dnam{"s"}
@@ -3365,6 +3421,7 @@ fi{
         }
         energy{
             british-thermal-unit{
+                dnam{"BTU"}
                 one{"{0}Btu"}
                 other{"{0}Btu"}
             }
@@ -3404,6 +3461,7 @@ fi{
                 other{"{0}kWh"}
             }
             therm-us{
+                dnam{"US therm"}
                 one{"{0}US therm"}
                 other{"{0}US therm"}
             }
@@ -3449,34 +3507,42 @@ fi{
         }
         graphics{
             dot{
+                dnam{"piste"}
                 one{"{0}piste"}
                 other{"{0}pistettä"}
             }
             dot-per-centimeter{
+                dnam{"ppcm"}
                 one{"{0}dpcm"}
                 other{"{0}dpcm"}
             }
             dot-per-inch{
+                dnam{"ppi"}
                 one{"{0}dpi"}
                 other{"{0}dpi"}
             }
             em{
+                dnam{"em"}
                 one{"{0}em"}
                 other{"{0}em"}
             }
             megapixel{
+                dnam{"MP"}
                 one{"{0}MP"}
                 other{"{0}MP"}
             }
             pixel{
+                dnam{"px"}
                 one{"{0}px"}
                 other{"{0}px"}
             }
             pixel-per-centimeter{
+                dnam{"ppcm"}
                 one{"{0}ppcm"}
                 other{"{0}ppcm"}
             }
             pixel-per-inch{
+                dnam{"ppi"}
                 one{"{0}ppi"}
                 other{"{0}ppi"}
             }
@@ -3499,6 +3565,7 @@ fi{
                 other{"{0}dm"}
             }
             earth-radius{
+                dnam{"R⊕"}
                 one{"{0}R⊕"}
                 other{"{0}R⊕"}
             }
@@ -3582,6 +3649,7 @@ fi{
                 other{"{0}pm"}
             }
             point{
+                dnam{"pt"}
                 one{"{0}pt"}
                 other{"{0}pt"}
             }
@@ -3598,10 +3666,12 @@ fi{
         }
         light{
             candela{
+                dnam{"cd"}
                 one{"{0}cd"}
                 other{"{0}cd"}
             }
             lumen{
+                dnam{"lm"}
                 one{"{0}lm"}
                 other{"{0}lm"}
             }
@@ -3633,6 +3703,7 @@ fi{
                 other{"{0}M⊕"}
             }
             grain{
+                dnam{"graanit"}
                 one{"{0}graani"}
                 other{"{0}graania"}
             }
@@ -3730,6 +3801,7 @@ fi{
         }
         pressure{
             atmosphere{
+                dnam{"atm"}
                 one{"{0}atm"}
                 other{"{0}atm"}
             }
@@ -3749,10 +3821,12 @@ fi{
                 other{"{0}″ Hg"}
             }
             kilopascal{
+                dnam{"kPa"}
                 one{"{0}kPa"}
                 other{"{0}kPa"}
             }
             megapascal{
+                dnam{"MPa"}
                 one{"{0}MPa"}
                 other{"{0}MPa"}
             }
@@ -3767,6 +3841,7 @@ fi{
                 other{"{0}mmHg"}
             }
             pascal{
+                dnam{"Pa"}
                 one{"{0}Pa"}
                 other{"{0}Pa"}
             }
@@ -3822,10 +3897,12 @@ fi{
         }
         torque{
             newton-meter{
+                dnam{"Nm"}
                 one{"{0}Nm"}
                 other{"{0}Nm"}
             }
             pound-force-foot{
+                dnam{"lbf⋅ft"}
                 one{"{0}lbf⋅ft"}
                 other{"{0}lbf⋅ft"}
             }
@@ -3904,6 +3981,7 @@ fi{
                 other{"{0}dl"}
             }
             dessert-spoon{
+                dnam{"jrkl"}
                 one{"{0}jrkl"}
                 other{"{0}jrkl"}
             }
@@ -3913,6 +3991,7 @@ fi{
                 other{"{0} br. jrkl"}
             }
             dram{
+                dnam{"dramit"}
                 one{"{0}dram"}
                 other{"{0}dramia"}
             }
@@ -3949,6 +4028,7 @@ fi{
                 other{"{0}hl"}
             }
             jigger{
+                dnam{"jiggerit"}
                 one{"{0}jigger"}
                 other{"{0}jiggeriä"}
             }
@@ -3969,6 +4049,7 @@ fi{
                 other{"{0}ml"}
             }
             pinch{
+                dnam{"ripaus"}
                 one{"{0}ripaus"}
                 other{"{0}ripausta"}
             }
@@ -4271,6 +4352,10 @@ fi{
                 other{"{0} pv"}
                 per{"{0}/pv"}
             }
+            decade{
+                one{"{0} dec"}
+                other{"{0} dec"}
+            }
             hour{
                 dnam{"t"}
                 one{"{0} t"}
@@ -4306,6 +4391,8 @@ fi{
             }
             quarter{
                 dnam{"q"}
+                one{"{0} q"}
+                other{"{0} q"}
             }
             second{
                 dnam{"sek"}
@@ -4389,6 +4476,10 @@ fi{
                 one{"{0} kWh"}
                 other{"{0} kWh"}
             }
+            therm-us{
+                one{"{0} US therm"}
+                other{"{0} US therm"}
+            }
         }
         force{
             kilowatt-hour-per-100-kilometer{
@@ -4398,6 +4489,8 @@ fi{
             }
             newton{
                 dnam{"newton"}
+                one{"{0} N"}
+                other{"{0} N"}
             }
             pound-force{
                 dnam{"pauna-voima"}
@@ -4433,6 +4526,36 @@ fi{
                 one{"{0} piste"}
                 other{"{0} pistettä"}
             }
+            dot-per-centimeter{
+                dnam{"ppcm"}
+                one{"{0} ppcm"}
+                other{"{0} ppcm"}
+            }
+            dot-per-inch{
+                dnam{"ppi"}
+                one{"{0} ppi"}
+                other{"{0} ppi"}
+            }
+            em{
+                one{"{0} em"}
+                other{"{0} em"}
+            }
+            megapixel{
+                one{"{0} MP"}
+                other{"{0} MP"}
+            }
+            pixel{
+                one{"{0} px"}
+                other{"{0} px"}
+            }
+            pixel-per-centimeter{
+                one{"{0} ppcm"}
+                other{"{0} ppcm"}
+            }
+            pixel-per-inch{
+                one{"{0} ppi"}
+                other{"{0} ppi"}
+            }
         }
         length{
             astronomical-unit{
@@ -4450,6 +4573,10 @@ fi{
                 dnam{"dm"}
                 one{"{0} dm"}
                 other{"{0} dm"}
+            }
+            earth-radius{
+                one{"{0} R⊕"}
+                other{"{0} R⊕"}
             }
             fathom{
                 dnam{"fm"}
@@ -4537,6 +4664,8 @@ fi{
             }
             solar-radius{
                 dnam{"auringon säteet"}
+                one{"{0} R☉"}
+                other{"{0} R☉"}
             }
             yard{
                 dnam{"yd"}
@@ -4545,6 +4674,14 @@ fi{
             }
         }
         light{
+            candela{
+                one{"{0} cd"}
+                other{"{0} cd"}
+            }
+            lumen{
+                one{"{0} lm"}
+                other{"{0} lm"}
+            }
             lux{
                 dnam{"lx"}
                 one{"{0} lx"}
@@ -4564,9 +4701,13 @@ fi{
             }
             dalton{
                 dnam{"atomimassayksiköt"}
+                one{"{0} Da"}
+                other{"{0} Da"}
             }
             earth-mass{
                 dnam{"Maan massat"}
+                one{"{0} M⊕"}
+                other{"{0} M⊕"}
             }
             grain{
                 dnam{"graanit"}
@@ -4666,6 +4807,14 @@ fi{
             }
         }
         pressure{
+            atmosphere{
+                one{"{0} atm"}
+                other{"{0} atm"}
+            }
+            bar{
+                one{"{0} bar"}
+                other{"{0} bar"}
+            }
             hectopascal{
                 dnam{"hPa"}
                 one{"{0} hPa"}
@@ -4676,6 +4825,14 @@ fi{
                 one{"{0} inHg"}
                 other{"{0} inHg"}
             }
+            kilopascal{
+                one{"{0} kPa"}
+                other{"{0} kPa"}
+            }
+            megapascal{
+                one{"{0} MPa"}
+                other{"{0} MPa"}
+            }
             millibar{
                 dnam{"mbar"}
                 one{"{0} mbar"}
@@ -4685,6 +4842,10 @@ fi{
                 dnam{"mmHg"}
                 one{"{0} mmHg"}
                 other{"{0} mmHg"}
+            }
+            pascal{
+                one{"{0} Pa"}
+                other{"{0} Pa"}
             }
             pound-force-per-square-inch{
                 dnam{"psi"}
@@ -4756,6 +4917,8 @@ fi{
             }
             barrel{
                 dnam{"barrelit"}
+                one{"{0} bbl"}
+                other{"{0} bbl"}
             }
             bushel{
                 dnam{"bu"}

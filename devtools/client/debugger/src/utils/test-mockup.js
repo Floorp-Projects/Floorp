@@ -137,8 +137,8 @@ function mockScopeAddVariable(scope, name) {
 
 function makeMockBreakpoint(source = makeMockSource(), line = 1, column) {
   const location = column
-    ? { sourceId: source.id, line, column }
-    : { sourceId: source.id, line };
+    ? { sourceId: source.id, source: { id: source.id }, line, column }
+    : { sourceId: source.id, source: { id: source.id }, line };
   return {
     id: "breakpoint",
     location,

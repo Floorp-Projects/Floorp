@@ -89,7 +89,7 @@ function do_check_throws_message(aFunc, aResult) {
  * @usage _("Hello World") -> prints "Hello World"
  * @usage _(1, 2, 3) -> prints "1 2 3"
  */
-var _ = function(some, debug, text, to) {
+var _ = function (some, debug, text, to) {
   print(Array.from(arguments).join(" "));
 };
 
@@ -167,7 +167,7 @@ function writeBytesToOutputStream(outputStream, string) {
  * Ensure exceptions from inside callbacks leads to test failures.
  */
 function ensureThrows(func) {
-  return function() {
+  return function () {
     try {
       func.apply(this, arguments);
     } catch (ex) {

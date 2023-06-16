@@ -22,8 +22,6 @@ const SUPPORTED_OPTIONS = {
   pauseOnExceptions: true,
   // Disable pausing on caught exceptions.
   ignoreCaughtExceptions: true,
-  // Shows the pause overlay.
-  shouldShowOverlay: true,
   // Include previously saved stack frames when paused.
   shouldIncludeSavedFrames: true,
   // Include async stack frames when paused.

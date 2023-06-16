@@ -14,6 +14,8 @@
 
 namespace mozilla {
 
+using TimeUnit = media::TimeUnit;
+
 FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(FFmpegLibWrapper* aLib,
                                                   const AudioInfo& aConfig)
     : FFmpegDataDecoder(aLib, GetCodecId(aConfig.mMimeType)) {
@@ -27,6 +29,12 @@ FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(FFmpegLibWrapper* aLib,
     // Ffmpeg expects the DecoderConfigDescriptor blob.
     mExtraData->AppendElements(
         *aacCodecSpecificData.mDecoderConfigDescriptorBinaryBlob);
+    mEncoderDelay = aacCodecSpecificData.mEncoderDelayFrames;
+    mEncoderPaddingOrTotalFrames = aacCodecSpecificData.mMediaFrameCount;
+    FFMPEG_LOG("FFmpegAudioDecoder (aac), found encoder delay (%" PRIu32
+               ") and total frame count (%" PRIu64
+               ") in codec-specific side data",
+               mEncoderDelay, TotalFrames());
     return;
   }
 
@@ -40,10 +48,11 @@ FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(FFmpegLibWrapper* aLib,
       const Mp3CodecSpecificData& mp3CodecSpecificData =
           aConfig.mCodecSpecificConfig.as<Mp3CodecSpecificData>();
       mEncoderDelay = mp3CodecSpecificData.mEncoderDelayFrames;
-      mEncoderPadding = mp3CodecSpecificData.mEncoderPaddingFrames;
-      FFMPEG_LOG("FFmpegAudioDecoder, found encoder delay (%" PRIu32
-                 ") and padding values (%" PRIu32 ") in extra data",
-                 mEncoderDelay, mEncoderPadding);
+      mEncoderPaddingOrTotalFrames = mp3CodecSpecificData.mEncoderPaddingFrames;
+      FFMPEG_LOG("FFmpegAudioDecoder (mp3), found encoder delay (%" PRIu32
+                 ")"
+                 "and padding values (%" PRIu64 ") in codec-specific side-data",
+                 mEncoderDelay, Padding());
       return;
     }
   }
@@ -230,7 +239,16 @@ static AlignedAudioBuffer CopyAndPackAudio(AVFrame* aFrame,
   return audio;
 }
 
-typedef AudioConfig::ChannelLayout ChannelLayout;
+using ChannelLayout = AudioConfig::ChannelLayout;
+
+uint64_t FFmpegAudioDecoder<LIBAV_VER>::Padding() const {
+  MOZ_ASSERT(mCodecID == AV_CODEC_ID_MP3);
+  return mEncoderPaddingOrTotalFrames;
+}
+uint64_t FFmpegAudioDecoder<LIBAV_VER>::TotalFrames() const {
+  MOZ_ASSERT(mCodecID == AV_CODEC_ID_AAC);
+  return mEncoderPaddingOrTotalFrames;
+}
 
 MediaResult FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
                                                     uint8_t* aData, int aSize,
@@ -249,13 +267,13 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
   }
 
   if (!PrepareFrame()) {
+    FFMPEG_LOG("FFmpegAudioDecoder: OOM in PrepareFrame");
     return MediaResult(
         NS_ERROR_OUT_OF_MEMORY,
         RESULT_DETAIL("FFmpeg audio decoder failed to allocate frame"));
   }
 
   int64_t samplePosition = aSample->mOffset;
-  media::TimeUnit pts = aSample->mTime;
 
   while (packet.size > 0) {
     int decoded = false;
@@ -320,36 +338,26 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
       AlignedAudioBuffer audio =
           CopyAndPackAudio(mFrame, numChannels, mFrame->nb_samples);
       if (!audio) {
+        FFMPEG_LOG("FFmpegAudioDecoder: OOM");
         return MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
       }
 
-      DebugOnly<bool> trimmed = false;
-      if (mEncoderDelay) {
-        trimmed = true;
-        uint32_t toPop = std::min((uint32_t)mFrame->nb_samples, mEncoderDelay);
-        audio.PopFront(toPop * numChannels);
-        mFrame->nb_samples -= toPop;
-        mEncoderDelay -= toPop;
-      }
+      FFMPEG_LOG("Packet decoded: [%s, %s] (%" PRId64 "us, %d frames)",
+                 aSample->mTime.ToString().get(),
+                 aSample->GetEndTime().ToString().get(),
+                 aSample->mDuration.ToMicroseconds(), mFrame->nb_samples);
 
-      if (aSample->mEOS && mEncoderPadding) {
-        trimmed = true;
-        uint32_t toTrim =
-            std::min((uint32_t)mFrame->nb_samples, mEncoderPadding);
-        mEncoderPadding -= toTrim;
-        audio.PopBack(toTrim * numChannels);
-        mFrame->nb_samples = audio.Length() / numChannels;
-      }
-
-      media::TimeUnit duration =
-          FramesToTimeUnit(mFrame->nb_samples, samplingRate);
+      media::TimeUnit duration = TimeUnit(mFrame->nb_samples, samplingRate);
       if (!duration.IsValid()) {
+        FFMPEG_LOG("FFmpegAudioDecoder: invalid duration");
         return MediaResult(NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
                            RESULT_DETAIL("Invalid sample duration"));
       }
 
+      media::TimeUnit pts = aSample->mTime;
       media::TimeUnit newpts = pts + duration;
       if (!newpts.IsValid()) {
+        FFMPEG_LOG("FFmpegAudioDecoder: invalid PTS.");
         return MediaResult(
             NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
             RESULT_DETAIL("Invalid count of accumulated audio samples"));
@@ -358,7 +366,7 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
       RefPtr<AudioData> data =
           new AudioData(samplePosition, pts, std::move(audio), numChannels,
                         samplingRate, mCodecContext->channel_layout);
-      MOZ_ASSERT(duration == data->mDuration || trimmed, "must be equal");
+      MOZ_ASSERT(duration == data->mDuration, "must be equal");
       aResults.AppendElement(std::move(data));
 
       pts = newpts;

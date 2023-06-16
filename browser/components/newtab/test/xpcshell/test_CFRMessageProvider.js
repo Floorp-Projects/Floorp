@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { CFRMessageProvider } = ChromeUtils.import(
-  "resource://activity-stream/lib/CFRMessageProvider.jsm"
+const { CFRMessageProvider } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/CFRMessageProvider.sys.mjs"
 );
 
 add_task(async function test_cfrMessages() {

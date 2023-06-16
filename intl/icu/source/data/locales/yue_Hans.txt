@@ -90,6 +90,7 @@ yue_Hans{
                 scientificFormat{"#E0"}
             }
             symbols{
+                approximatelySign{"~"}
                 decimal{"."}
                 exponential{"E"}
                 group{","}
@@ -2871,6 +2872,11 @@ yue_Hans{
         }
         day-narrow{
             dn{"日"}
+            relative{
+                "-1"{"寻日"}
+                "0"{"今日"}
+                "1"{"听日"}
+            }
             relativeTime{
                 future{
                     other{"{0} 日后"}
@@ -2882,6 +2888,11 @@ yue_Hans{
         }
         day-short{
             dn{"日"}
+            relative{
+                "-1"{"寻日"}
+                "0"{"今日"}
+                "1"{"听日"}
+            }
             relativeTime{
                 future{
                     other{"{0} 日后"}
@@ -3098,6 +3109,11 @@ yue_Hans{
         }
         month-narrow{
             dn{"月"}
+            relative{
+                "-1"{"上个月"}
+                "0"{"今个月"}
+                "1"{"下个月"}
+            }
             relativeTime{
                 future{
                     other{"{0} 个月后"}
@@ -3109,6 +3125,11 @@ yue_Hans{
         }
         month-short{
             dn{"月"}
+            relative{
+                "-1"{"上个月"}
+                "0"{"今个月"}
+                "1"{"下个月"}
+            }
             relativeTime{
                 future{
                     other{"{0} 个月后"}
@@ -3446,6 +3467,11 @@ yue_Hans{
         }
         week-narrow{
             dn{"周"}
+            relative{
+                "-1"{"上星期"}
+                "0"{"今个星期"}
+                "1"{"下星期"}
+            }
             relativePeriod{"{0}嘅星期"}
             relativeTime{
                 future{
@@ -3458,6 +3484,11 @@ yue_Hans{
         }
         week-short{
             dn{"周"}
+            relative{
+                "-1"{"上星期"}
+                "0"{"今个星期"}
+                "1"{"下星期"}
+            }
             relativePeriod{"{0}嘅星期"}
             relativeTime{
                 future{
@@ -3513,6 +3544,11 @@ yue_Hans{
         }
         year-narrow{
             dn{"年"}
+            relative{
+                "-1"{"旧年"}
+                "0"{"今年"}
+                "1"{"下年"}
+            }
             relativeTime{
                 future{
                     other{"{0} 年后"}
@@ -3524,6 +3560,11 @@ yue_Hans{
         }
         year-short{
             dn{"年"}
+            relative{
+                "-1"{"旧年"}
+                "0"{"今年"}
+                "1"{"下年"}
+            }
             relativeTime{
                 future{
                     other{"{0} 年后"}
@@ -3550,7 +3591,25 @@ yue_Hans{
             middle{"{0}、{1}"}
             start{"{0}、{1}"}
         }
+        or-narrow{
+            2{"{0} 或 {1}"}
+            end{"{0} 或 {1}"}
+            middle{"{0}、{1}"}
+            start{"{0}、{1}"}
+        }
+        or-short{
+            2{"{0} 或 {1}"}
+            end{"{0} 或 {1}"}
+            middle{"{0}、{1}"}
+            start{"{0}、{1}"}
+        }
         standard{
+            2{"{0}同{1}"}
+            end{"{0}同{1}"}
+            middle{"{0}、{1}"}
+            start{"{0}、{1}"}
+        }
+        standard-narrow{
             2{"{0}同{1}"}
             end{"{0}同{1}"}
             middle{"{0}、{1}"}
@@ -3591,30 +3650,55 @@ yue_Hans{
             initial{"{0}"}
         }
         namePattern{
-            givenFirst-long-addressing-formal{"{surname}{prefix}"}
+            givenFirst-long-addressing-formal{"{surname}{title}"}
             givenFirst-long-addressing-informal{"{given-informal}"}
-            givenFirst-medium-addressing-formal{"{surname}{prefix}"}
+            givenFirst-long-monogram-informal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-long-referring-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-medium-addressing-formal{"{surname}{title}"}
             givenFirst-medium-addressing-informal{"{given-informal}"}
-            givenFirst-short-addressing-formal{"{surname}{prefix}"}
+            givenFirst-medium-monogram-formal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-medium-monogram-informal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-medium-referring-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-medium-referring-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-short-addressing-formal{"{surname}{title}"}
             givenFirst-short-addressing-informal{"{given-informal}"}
-            sorting-long-referring-formal{"{surname}{given}{suffix} {given2}"}
+            givenFirst-short-monogram-formal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-short-monogram-informal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-short-referring-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-short-referring-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            sorting-long-referring-formal{"{surname}{given}{credentials} {given2}"}
             sorting-long-referring-informal{"{surname}{given-informal}"}
-            sorting-medium-referring-formal{"{surname}{given}{suffix} {given2-initial}"}
+            sorting-medium-referring-formal{"{surname}{given}{credentials} {given2-initial}"}
             sorting-medium-referring-informal{"{surname}{given-informal}"}
             sorting-short-referring-formal{"{surname}{given} {given2-initial}"}
             sorting-short-referring-informal{"{surname}{given-informal}"}
-            surnameFirst-long-addressing-formal{"{surname}{prefix}"}
+            surnameFirst-long-addressing-formal{"{surname}{title}"}
             surnameFirst-long-addressing-informal{"{given-informal}"}
             surnameFirst-long-monogram-informal{"{surname-monogram-allCaps}{given-monogram-allCaps}"}
-            surnameFirst-long-referring-formal{"{surname}{given}{suffix} {given2}"}
+            surnameFirst-long-referring-formal{"{surname}{given}{credentials} {given2}"}
             surnameFirst-long-referring-informal{"{surname}{given-informal}"}
-            surnameFirst-medium-addressing-formal{"{surname}{prefix}"}
+            surnameFirst-medium-addressing-formal{"{surname}{title}"}
             surnameFirst-medium-addressing-informal{"{given-informal}"}
             surnameFirst-medium-monogram-formal{"{surname-monogram}"}
             surnameFirst-medium-monogram-informal{"{given-informal-monogram}"}
-            surnameFirst-medium-referring-formal{"{surname}{given}{suffix} {given2-initial}"}
+            surnameFirst-medium-referring-formal{"{surname}{given}{credentials} {given2-initial}"}
             surnameFirst-medium-referring-informal{"{surname}{given-informal}"}
-            surnameFirst-short-addressing-formal{"{surname}{prefix}"}
+            surnameFirst-short-addressing-formal{"{surname}{title}"}
             surnameFirst-short-addressing-informal{"{given-informal}"}
             surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}

@@ -139,8 +139,9 @@ export class TargetingContext {
             logUndesiredEvent(ERROR_TYPES.TIMEOUT, key, prop);
             reject(
               new Error(
-                `${prop} targeting getter timed out after ${timeoutDuration ||
-                  DEFAULT_TIMEOUT}ms`
+                `${prop} targeting getter timed out after ${
+                  timeoutDuration || DEFAULT_TIMEOUT
+                }ms`
               )
             );
           }, timeoutDuration || DEFAULT_TIMEOUT);

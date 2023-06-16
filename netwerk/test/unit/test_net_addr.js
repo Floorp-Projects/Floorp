@@ -139,9 +139,9 @@ function testIpv4() {
     ouput: null,
   };
 
-  serv.acceptCallback = function() {
+  serv.acceptCallback = function () {
     // disable the timeoutCallback
-    serv.timeoutCallback = function() {};
+    serv.timeoutCallback = function () {};
 
     var selfAddr = testDataStore.transport.getScriptableSelfAddr();
     var peerAddr = testDataStore.transport.getScriptablePeerAddr();
@@ -204,7 +204,7 @@ function run_test() {
   );
   serv = new TestServer();
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     serv.stop();
   });
 

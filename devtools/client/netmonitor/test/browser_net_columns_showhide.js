@@ -6,7 +6,7 @@
 /**
  * Test showing/hiding columns.
  */
-add_task(async function() {
+add_task(async function () {
   const { monitor } = await initNetMonitor(HTTPS_SIMPLE_URL, {
     requestCount: 1,
   });

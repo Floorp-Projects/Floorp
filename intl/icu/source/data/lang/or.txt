@@ -199,6 +199,7 @@ or{
         hax{"ସାଉଥ୍ ହାଇଡା"}
         he{"ହେବ୍ର୍ୟୁ"}
         hi{"ହିନ୍ଦୀ"}
+        hi_Latn{"ହିନ୍ଦୀ (ଲାଟିନ୍)"}
         hil{"ହିଲିଗୈନନ୍"}
         hit{"ହିତୀତେ"}
         hmn{"ହଁଙ୍ଗ"}
@@ -816,6 +817,10 @@ or{
     }
     characterLabelPattern{
         other{"{0} — ଅନ୍ୟ"}
+        strokes{
+            one{"{0} strokes"}
+            other{"{0} strokes"}
+        }
         subscript{"ସବସ୍କ୍ରିପ୍ଟ {0}"}
         superscript{"ସୁପରସ୍କ୍ରିପ୍ଟ {0}"}
     }

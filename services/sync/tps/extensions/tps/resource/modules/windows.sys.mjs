@@ -22,7 +22,7 @@ export var BrowserWindows = {
       let win = mainWindow.OpenBrowserWindow({ private: aPrivate });
       win.addEventListener(
         "load",
-        function() {
+        function () {
           resolve(win);
         },
         { once: true }

@@ -37,42 +37,32 @@ class AccessibilityProxy {
     this.enableAccessibility = this.enableAccessibility.bind(this);
     this.getAccessibilityTreeRoot = this.getAccessibilityTreeRoot.bind(this);
     this.resetAccessiblity = this.resetAccessiblity.bind(this);
-    this.startListeningForAccessibilityEvents = this.startListeningForAccessibilityEvents.bind(
-      this
-    );
-    this.startListeningForLifecycleEvents = this.startListeningForLifecycleEvents.bind(
-      this
-    );
-    this.startListeningForParentLifecycleEvents = this.startListeningForParentLifecycleEvents.bind(
-      this
-    );
-    this.stopListeningForAccessibilityEvents = this.stopListeningForAccessibilityEvents.bind(
-      this
-    );
-    this.stopListeningForLifecycleEvents = this.stopListeningForLifecycleEvents.bind(
-      this
-    );
-    this.stopListeningForParentLifecycleEvents = this.stopListeningForParentLifecycleEvents.bind(
-      this
-    );
+    this.startListeningForAccessibilityEvents =
+      this.startListeningForAccessibilityEvents.bind(this);
+    this.startListeningForLifecycleEvents =
+      this.startListeningForLifecycleEvents.bind(this);
+    this.startListeningForParentLifecycleEvents =
+      this.startListeningForParentLifecycleEvents.bind(this);
+    this.stopListeningForAccessibilityEvents =
+      this.stopListeningForAccessibilityEvents.bind(this);
+    this.stopListeningForLifecycleEvents =
+      this.stopListeningForLifecycleEvents.bind(this);
+    this.stopListeningForParentLifecycleEvents =
+      this.stopListeningForParentLifecycleEvents.bind(this);
     this.highlightAccessible = this.highlightAccessible.bind(this);
     this.unhighlightAccessible = this.unhighlightAccessible.bind(this);
     this.onTargetAvailable = this.onTargetAvailable.bind(this);
     this.onTargetDestroyed = this.onTargetDestroyed.bind(this);
     this.onTargetSelected = this.onTargetSelected.bind(this);
     this.onResourceAvailable = this.onResourceAvailable.bind(this);
-    this.onAccessibilityFrontAvailable = this.onAccessibilityFrontAvailable.bind(
-      this
-    );
-    this.onAccessibilityFrontDestroyed = this.onAccessibilityFrontDestroyed.bind(
-      this
-    );
-    this.onAccessibleWalkerFrontAvailable = this.onAccessibleWalkerFrontAvailable.bind(
-      this
-    );
-    this.onAccessibleWalkerFrontDestroyed = this.onAccessibleWalkerFrontDestroyed.bind(
-      this
-    );
+    this.onAccessibilityFrontAvailable =
+      this.onAccessibilityFrontAvailable.bind(this);
+    this.onAccessibilityFrontDestroyed =
+      this.onAccessibilityFrontDestroyed.bind(this);
+    this.onAccessibleWalkerFrontAvailable =
+      this.onAccessibleWalkerFrontAvailable.bind(this);
+    this.onAccessibleWalkerFrontDestroyed =
+      this.onAccessibleWalkerFrontDestroyed.bind(this);
     this.unhighlightBeforeCalling = this.unhighlightBeforeCalling.bind(this);
     this.toggleDisplayTabbingOrder = this.toggleDisplayTabbingOrder.bind(this);
   }
@@ -108,9 +98,10 @@ class AccessibilityProxy {
     const types = filter === FILTERS.ALL ? Object.values(AUDIT_TYPE) : [filter];
 
     const targetTypes = [this.commands.targetCommand.TYPES.FRAME];
-    const targets = await this.commands.targetCommand.getAllTargetsInSelectedTargetTree(
-      targetTypes
-    );
+    const targets =
+      await this.commands.targetCommand.getAllTargetsInSelectedTargetTree(
+        targetTypes
+      );
 
     const progress = new CombinedProgress({
       onProgress,
@@ -126,7 +117,8 @@ class AccessibilityProxy {
           ),
           // If a frame was selected in the iframe picker, we don't want to retrieve the
           // ancestries at it would mess with the tree structure and would make it misbehave.
-          retrieveAncestries: this.commands.targetCommand.isTopLevelTargetSelected(),
+          retrieveAncestries:
+            this.commands.targetCommand.isTopLevelTargetSelected(),
         })
     );
 
@@ -156,10 +148,11 @@ class AccessibilityProxy {
     } else {
       // we don't want to use withAllAccessibilityWalkerFronts as it only acts on selected
       // target tree, and we want to hide _all_ highlighters.
-      const accessibilityFronts = await this.commands.targetCommand.getAllFronts(
-        [this.commands.targetCommand.TYPES.FRAME],
-        "accessibility"
-      );
+      const accessibilityFronts =
+        await this.commands.targetCommand.getAllFronts(
+          [this.commands.targetCommand.TYPES.FRAME],
+          "accessibility"
+        );
       await Promise.all(
         accessibilityFronts.map(accessibilityFront =>
           accessibilityFront.accessibleWalkerFront.hideTabbingOrder()
@@ -258,16 +251,13 @@ class AccessibilityProxy {
       async accessibleWalkerFront => {
         this.startListening(accessibleWalkerFront, {
           events: {
-            "picker-accessible-hovered": this.unhighlightBeforeCalling(
-              onHovered
-            ),
+            "picker-accessible-hovered":
+              this.unhighlightBeforeCalling(onHovered),
             "picker-accessible-picked": this.unhighlightBeforeCalling(onPicked),
-            "picker-accessible-previewed": this.unhighlightBeforeCalling(
-              onPreviewed
-            ),
-            "picker-accessible-canceled": this.unhighlightBeforeCalling(
-              onCanceled
-            ),
+            "picker-accessible-previewed":
+              this.unhighlightBeforeCalling(onPreviewed),
+            "picker-accessible-canceled":
+              this.unhighlightBeforeCalling(onCanceled),
           },
           // Only register listeners once (for top level), no need to register
           // them for all walkers again and again.
@@ -425,9 +415,10 @@ class AccessibilityProxy {
         onAvailable: this.onResourceAvailable,
       }
     );
-    this.parentAccessibilityFront = await this.commands.targetCommand.rootFront.getFront(
-      "parentaccessibility"
-    );
+    this.parentAccessibilityFront =
+      await this.commands.targetCommand.rootFront.getFront(
+        "parentaccessibility"
+      );
   }
 
   destroy() {

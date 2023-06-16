@@ -140,9 +140,8 @@ class CreditCards extends CreditCardsBase {
       if ("cc-number" in creditCard) {
         let ccNumber = creditCard["cc-number"];
         if (lazy.CreditCard.isValidNumber(ccNumber)) {
-          creditCard["cc-number"] = lazy.CreditCard.getLongMaskedNumber(
-            ccNumber
-          );
+          creditCard["cc-number"] =
+            lazy.CreditCard.getLongMaskedNumber(ccNumber);
         } else {
           // Credit card numbers can be entered on versions of Firefox that don't validate
           // the number and then synced to this version of Firefox. Therefore, mask the

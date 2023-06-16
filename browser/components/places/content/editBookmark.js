@@ -14,14 +14,11 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
 );
 
 ChromeUtils.defineESModuleGetters(this, {
+  CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
   PlacesTransactions: "resource://gre/modules/PlacesTransactions.sys.mjs",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  CustomizableUI: "resource:///modules/CustomizableUI.jsm",
 });
 
 var gEditItemOverlay = {
@@ -780,8 +777,9 @@ var gEditItemOverlay = {
 
     let newURI;
     try {
-      newURI = Services.uriFixup.getFixupURIInfo(this._locationField.value)
-        .preferredURI;
+      newURI = Services.uriFixup.getFixupURIInfo(
+        this._locationField.value
+      ).preferredURI;
     } catch (ex) {
       // TODO: Bug 1089141 - Provide some feedback about the invalid url.
       return;
@@ -1201,16 +1199,6 @@ var gEditItemOverlay = {
         }
       }
     }
-  },
-
-  /**
-   * Flag which signals to consumers that this script is loaded, thus delayed
-   * apply logic should be used.
-   *
-   * @returns {boolean} Always true.
-   */
-  get delayedApplyEnabled() {
-    return true;
   },
 
   /**

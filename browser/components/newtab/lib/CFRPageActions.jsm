@@ -10,12 +10,9 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  RemoteL10n: "resource://activity-stream/lib/RemoteL10n.jsm",
-  CustomizableUI: "resource:///modules/CustomizableUI.jsm",
+  RemoteL10n: "resource://activity-stream/lib/RemoteL10n.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -285,9 +282,13 @@ class PageAction {
   }
 
   _sendTelemetry(ping) {
+    const data = { action: "cfr_user_event", source: "CFR", ...ping };
+    if (lazy.PrivateBrowsingUtils.isWindowPrivate(this.window)) {
+      data.is_private = true;
+    }
     this._dispatchCFRAction({
       type: "DOORHANGER_TELEMETRY",
-      data: { action: "cfr_user_event", source: "CFR", ...ping },
+      data,
     });
   }
 
@@ -507,6 +508,7 @@ class PageAction {
       {
         hideClose: true,
         persistWhileVisible: true,
+        recordTelemetryInPrivateBrowsing: content.show_in_private_browsing,
       }
     );
     Services.prefs.setIntPref(
@@ -543,7 +545,11 @@ class PageAction {
     const { primary, secondary } = content.buttons;
     let primaryActionCallback;
     let persistent = !!content.persistent_doorhanger;
-    let options = { persistent, persistWhileVisible: persistent };
+    let options = {
+      persistent,
+      persistWhileVisible: persistent,
+      recordTelemetryInPrivateBrowsing: content.show_in_private_browsing,
+    };
     let panelTitle;
 
     headerLabel.value = await this.getStrings(content.heading_text);
@@ -657,10 +663,9 @@ class PageAction {
         };
 
         primaryActionCallback = async () => {
-          // eslint-disable-next-line no-use-before-define
-          primary.action.data.url = await CFRPageActions._fetchLatestAddonVersion(
-            content.addon.id
-          );
+          primary.action.data.url =
+            // eslint-disable-next-line no-use-before-define
+            await CFRPageActions._fetchLatestAddonVersion(content.addon.id);
           this._blockMessage(id);
           this.dispatchUserAction(primary.action);
           this.hideAddressBarNotifier();
@@ -957,8 +962,8 @@ const CFRPageActions = {
    * Add a recommendation specific to the given browser and host.
    * @param browser                 The browser for the recommendation
    * @param host                    The host for the recommendation
-   * @param recommendation  The recommendation to show
-   * @param dispatchCFRAction      A function to dispatch resulting actions to
+   * @param recommendation          The recommendation to show
+   * @param dispatchCFRAction       A function to dispatch resulting actions to
    * @return                        Did adding the recommendation succeed?
    */
   async addRecommendation(browser, host, recommendation, dispatchCFRAction) {
@@ -966,9 +971,6 @@ const CFRPageActions = {
       return false;
     }
     const win = browser.ownerGlobal;
-    if (lazy.PrivateBrowsingUtils.isWindowPrivate(win)) {
-      return false;
-    }
     if (
       browser !== win.gBrowser.selectedBrowser ||
       // We can have recommendations without URL restrictions
@@ -981,6 +983,12 @@ const CFRPageActions = {
       return false;
     }
     const { id, content } = recommendation;
+    if (
+      !content.show_in_private_browsing &&
+      lazy.PrivateBrowsingUtils.isWindowPrivate(win)
+    ) {
+      return false;
+    }
     RecommendationMap.set(browser, {
       id,
       host,

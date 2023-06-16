@@ -10,7 +10,7 @@
  * so it's kept alive).
  */
 
-var test_no_skip_breakpoint = async function(source, location, debuggee) {
+var test_no_skip_breakpoint = async function (source, location, debuggee) {
   const [response, bpClient] = await source.setBreakpoint(
     Object.assign({}, location, { noSliding: true })
   );
@@ -23,7 +23,7 @@ var test_no_skip_breakpoint = async function(source, location, debuggee) {
 add_task(
   threadFrontTest(({ threadFront, debuggee }) => {
     return new Promise(resolve => {
-      threadFront.once("paused", async function(packet) {
+      threadFront.once("paused", async function (packet) {
         const location = { line: debuggee.line0 + 3 };
         const source = await getSourceById(
           threadFront,
@@ -39,7 +39,7 @@ add_task(
         Assert.equal(response.actualLocation.source.actor, source.actor);
         Assert.equal(response.actualLocation.line, location.line + 1);
 
-        threadFront.once("paused", function(packet) {
+        threadFront.once("paused", function (packet) {
           // Check the return value.
           Assert.equal(packet.frame.where.actor, source.actor);
           Assert.equal(packet.frame.where.line, location.line + 1);
@@ -50,7 +50,7 @@ add_task(
           Assert.equal(debuggee.b, undefined);
 
           // Remove the breakpoint.
-          bpClient.remove(function(response) {
+          bpClient.remove(function (response) {
             threadFront.resume().then(resolve);
           });
         });

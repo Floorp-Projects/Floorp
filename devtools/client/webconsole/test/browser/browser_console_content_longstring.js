@@ -13,7 +13,7 @@ const LONGSTRING = `foobar${"a".repeat(
   9000
 )}foobaz${"abbababazomglolztest".repeat(100)}boom!`;
 
-add_task(async function() {
+add_task(async function () {
   // Show the content messages
   await pushPref("devtools.browsertoolbox.scope", "everything");
 

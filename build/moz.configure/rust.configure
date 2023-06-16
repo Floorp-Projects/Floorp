@@ -704,7 +704,7 @@ option("--disable-cargo-incremental", help="Disable incremental rust compilation
 
 
 @depends(
-    rustc_opt_level,
+    developer_options,
     debug_rust,
     "MOZ_AUTOMATION",
     code_coverage,

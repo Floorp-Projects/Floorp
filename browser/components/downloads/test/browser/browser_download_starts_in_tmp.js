@@ -15,7 +15,7 @@ let gExternalHelperAppService = Cc[
 ].getService(Ci.nsIExternalHelperAppService);
 gExternalHelperAppService.QueryInterface(Ci.nsIObserver);
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.download.start_downloads_in_tmp_dir", true],
@@ -58,7 +58,7 @@ add_task(async function test_download_asking_starts_in_tmp() {
       waitForLoad: false,
       waitForStop: true,
     },
-    async function() {
+    async function () {
       let dialogWin = await dialogPromise;
       let tempFile = dialogWin.dialog.mLauncher.targetFile;
       ok(
@@ -124,7 +124,7 @@ add_task(async function test_download_asking_and_opening_opens_from_tmp() {
       waitForLoad: false,
       waitForStop: true,
     },
-    async function() {
+    async function () {
       let dialogWin = await dialogPromise;
       let tempFile = dialogWin.dialog.mLauncher.targetFile;
       ok(
@@ -223,7 +223,7 @@ add_task(async function test_download_automatically_opened_from_tmp() {
       waitForLoad: false,
       waitForStop: true,
     },
-    async function() {
+    async function () {
       let download = await downloadStarted;
       isnot(
         PathUtils.parent(download.target.partFilePath),

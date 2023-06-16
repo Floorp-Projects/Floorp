@@ -8,12 +8,12 @@
  * @typedef {import("../../translations").TranslationModelRecord} TranslationModelRecord
  */
 
-const { RemoteSettings } = ChromeUtils.import(
-  "resource://services-settings/remote-settings.js"
+const { RemoteSettings } = ChromeUtils.importESModule(
+  "resource://services-settings/remote-settings.sys.mjs"
 );
 
 // The full Firefox version string.
-const firefoxFullVersion = AppConstants.MOZ_APP_VERSION;
+const firefoxFullVersion = AppConstants.MOZ_APP_VERSION_DISPLAY;
 
 // The Firefox major version string (i.e. the first set of digits).
 const firefoxMajorVersion = firefoxFullVersion.match(/\d+/);
@@ -77,8 +77,8 @@ add_task(async function test_filter_current_firefox_version() {
       filter_expression: ``,
     },
     {
-      name: `env.version <= ${firefoxMajorVersion}`,
-      filter_expression: `env.version|versionCompare('${firefoxMajorVersion}') <= 0`,
+      name: `env.version == ${firefoxFullVersion}`,
+      filter_expression: `env.version|versionCompare('${firefoxFullVersion}') == 0`,
     },
     {
       name: `env.version > ${firefoxAlphaZeroVersion}`,
@@ -265,7 +265,10 @@ add_task(async function test_get_records_with_multiple_versions() {
     client.db.create(record);
   }
 
-  TranslationsParent.mockRemoteSettingsClient(client);
+  TranslationsParent.mockTranslationsEngine(
+    client,
+    await createTranslationsWasmRemoteClient()
+  );
 
   const retrievedRecords = await TranslationsParent.getMaxVersionRecords(
     client,
@@ -296,5 +299,5 @@ add_task(async function test_get_records_with_multiple_versions() {
     ), but found ${retrievedRecords.length}\n`
   );
 
-  TranslationsParent.mockRemoteSettingsClient(null);
+  TranslationsParent.unmockTranslationsEngine();
 });

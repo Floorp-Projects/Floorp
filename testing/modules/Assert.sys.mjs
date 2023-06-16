@@ -118,7 +118,7 @@ function getMessage(error, prefix = "") {
  * });
  *
  */
-Assert.AssertionError = function(options) {
+Assert.AssertionError = function (options) {
   this.name = "AssertionError";
   this.actual = options.actual;
   this.expected = options.expected;
@@ -176,7 +176,7 @@ Assert.prototype._reporter = null;
  * @param {reporterFunc} reporterFunc
  *        Report handler function.
  */
-Assert.prototype.setReporter = function(reporterFunc) {
+Assert.prototype.setReporter = function (reporterFunc) {
   this._reporter = reporterFunc;
 };
 
@@ -208,7 +208,7 @@ Assert.prototype.setReporter = function(reporterFunc) {
  * @param {boolean} [truncate=true]
  *        Whether or not ``actual`` and ``expected`` should be truncated when printing.
  */
-Assert.prototype.report = function(
+Assert.prototype.report = function (
   failed,
   actual,
   expected,
@@ -253,7 +253,7 @@ Assert.prototype.report = function(
  * @param {String} [message]
  *        Short explanation of the expected result.
  */
-Assert.prototype.ok = function(value, message) {
+Assert.prototype.ok = function (value, message) {
   if (arguments.length > 2) {
     this.report(
       true,
@@ -450,7 +450,7 @@ function expectedException(actual, expected) {
  * @param {String} [message]
  *        Short explanation of the expected result.
  */
-Assert.prototype.throws = function(block, expected, message) {
+Assert.prototype.throws = function (block, expected, message) {
   checkExpectedArgument(this, "throws", expected);
 
   // `true` if we realize that we have added an
@@ -513,7 +513,7 @@ Assert.prototype.throws = function(block, expected, message) {
  * @param {String} [message]
  *        Short explanation of the expected result.
  */
-Assert.prototype.rejects = function(promise, expected, message) {
+Assert.prototype.rejects = function (promise, expected, message) {
   checkExpectedArgument(this, "rejects", expected);
   return new Promise((resolve, reject) => {
     return promise

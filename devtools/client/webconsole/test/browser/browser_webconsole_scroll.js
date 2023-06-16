@@ -22,7 +22,7 @@ const {
   MESSAGE_SOURCE,
 } = require("resource://devtools/client/webconsole/constants.js");
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { ui } = hud;
   const outputContainer = ui.outputNode.querySelector(".webconsole-output");
@@ -76,7 +76,7 @@ add_task(async function() {
 
   info("Add a console.trace message to check that the scroll isn't impacted");
   let onMessage = waitForMessageByType(hud, "trace in C", ".console-api");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.wrappedJSObject.c();
   });
   let message = await onMessage;
@@ -104,7 +104,7 @@ add_task(async function() {
   info(
     "Trigger a network request so the last message in the console store won't be visible"
   );
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     await content.fetch(
       "http://mochi.test:8888/browser/devtools/client/webconsole/test/browser/sjs_cors-test-server.sjs",
       { mode: "cors" }
@@ -140,7 +140,7 @@ add_task(async function() {
     "Add a message to check that the console do scroll since we're at the bottom"
   );
   onMessage = waitForMessageByType(hud, "scroll", ".console-api");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.wrappedJSObject.console.log("scroll");
   });
   await onMessage;
@@ -236,7 +236,7 @@ add_task(async function() {
     "Add a console.trace message to check that the console stays scrolled to bottom"
   );
   onMessage = waitForMessageByType(hud, "trace in C", ".console-api");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.wrappedJSObject.c();
   });
   message = await onMessage;
@@ -256,7 +256,7 @@ add_task(async function() {
   info("Check that repeated messages don't prevent scroll to bottom");
   // We log a first message.
   onMessage = waitForMessageByType(hud, "repeat", ".console-api");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.wrappedJSObject.console.log("repeat");
   });
   message = await onMessage;
@@ -264,7 +264,7 @@ add_task(async function() {
   // And a second one. We can't log them at the same time since we batch redux actions,
   // and the message would already appear with the repeat badge, and the bug is
   // only triggered when the badge is rendered after the initial message rendering.
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.wrappedJSObject.console.log("repeat");
   });
   await waitFor(() => message.node.querySelector(".message-repeats"));
@@ -277,7 +277,7 @@ add_task(async function() {
     "Check that adding a message after a repeated message scrolls to bottom"
   );
   onMessage = waitForMessageByType(hud, "after repeat", ".console-api");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.wrappedJSObject.console.log("after repeat");
   });
   message = await onMessage;
@@ -343,14 +343,14 @@ add_task(async function() {
   await clearOutput(hud);
   // Log a big object that will be much larger than the output container
   onMessage = waitForMessageByType(hud, "WE ALL LIVE IN A", ".warn");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     const win = content.wrappedJSObject;
     for (let i = 1; i < 100; i++) {
-      win["a" + i] = function(j) {
+      win["a" + i] = function (j) {
         win["a" + j]();
       }.bind(null, i + 1);
     }
-    win.a100 = function() {
+    win.a100 = function () {
       win.console.warn(new Error("WE ALL LIVE IN A"));
     };
     win.a1();
@@ -366,7 +366,7 @@ add_task(async function() {
   );
   // Then log something else to make sure we haven't lost our scroll pinning
   onMessage = waitForMessageByType(hud, "YELLOW SUBMARINE", ".console-api");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.wrappedJSObject.console.log("YELLOW SUBMARINE");
   });
   message = await onMessage;

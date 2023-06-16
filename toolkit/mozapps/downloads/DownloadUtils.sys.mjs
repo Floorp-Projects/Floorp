@@ -95,12 +95,8 @@ export var DownloadUtils = {
     aSpeed,
     aLastSec
   ) {
-    let [
-      transfer,
-      timeLeft,
-      newLast,
-      normalizedSpeed,
-    ] = this._deriveTransferRate(aCurrBytes, aMaxBytes, aSpeed, aLastSec);
+    let [transfer, timeLeft, newLast, normalizedSpeed] =
+      this._deriveTransferRate(aCurrBytes, aMaxBytes, aSpeed, aLastSec);
 
     let [rate, unit] = DownloadUtils.convertByteUnits(normalizedSpeed);
 
@@ -292,9 +288,8 @@ export var DownloadUtils = {
       timeLeft = l10n.formatValueSync("download-utils-time-few-seconds");
     } else {
       // Convert the seconds into its two largest units to display
-      let [time1, unit1, time2, unit2] = DownloadUtils.convertTimeUnits(
-        aSeconds
-      );
+      let [time1, unit1, time2, unit2] =
+        DownloadUtils.convertTimeUnits(aSeconds);
 
       const pair1 = l10n.formatValueSync("download-utils-time-pair", {
         time: nf.format(time1),

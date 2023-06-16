@@ -16,7 +16,7 @@ const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html>
   </div>
 </body>`;
 
-add_task(async function() {
+add_task(async function () {
   const toolbox = await openNewTabAndToolbox(TEST_URI, "inspector");
   await selectNodeWithPicker(toolbox, "h1");
 

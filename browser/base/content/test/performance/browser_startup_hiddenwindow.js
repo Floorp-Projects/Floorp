@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   if (
     !AppConstants.NIGHTLY_BUILD &&
     !AppConstants.MOZ_DEV_EDITION &&
@@ -17,8 +17,8 @@ add_task(async function() {
     return;
   }
 
-  let startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"].getService()
-    .wrappedJSObject;
+  let startupRecorder =
+    Cc["@mozilla.org/test/startuprecorder;1"].getService().wrappedJSObject;
   await startupRecorder.done;
 
   let extras = Cu.cloneInto(startupRecorder.data.extras, {});

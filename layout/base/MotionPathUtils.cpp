@@ -23,13 +23,7 @@ namespace mozilla {
 using nsStyleTransformMatrix::TransformReferenceBox;
 
 RayReferenceData::RayReferenceData(const nsIFrame* aFrame) {
-  // We use GetContainingBlock() for now. TYLin said this function is buggy in
-  // modern CSS layout, but is ok for most cases.
-  // FIXME: Bug 1581237: This is still not clear that which box we should use
-  // for calculating the path length. We may need to update this.
-  // https://github.com/w3c/fxtf-drafts/issues/369
-  // FIXME: Bug 1579294: SVG layout may get a |container| with empty mRect
-  // (e.g. SVGOuterSVGAnonChildFrame), which makes the path length zero.
+  // FIXME: Bug 1581237: Should use view-box for the SVG context.
   const nsIFrame* container = aFrame->GetContainingBlock();
   if (!container) {
     // If there is no parent frame, it's impossible to calculate the path
@@ -40,14 +34,28 @@ RayReferenceData::RayReferenceData(const nsIFrame* aFrame) {
   // The initial position is (0, 0) in |aFrame|, and we have to transform it
   // into the space of |container|, so use GetOffsetsTo() to get the delta
   // value.
-  // FIXME: Bug 1559232: The initial position will be adjusted after
-  // supporting `offset-position`.
+  // FIXME: Bug 1559232: The initial position will be adjusted by offset
+  // starting position.
+  // https://drafts.fxtf.org/motion-1/#offset-position-property
   mInitialPosition = CSSPoint::FromAppUnits(aFrame->GetOffsetTo(container));
-  // FIXME: We need a better definition for containing box in the spec. For now,
-  // we use border box for calculation.
-  // https://github.com/w3c/fxtf-drafts/issues/369
+  // FIXME: Bug 1581237: We should use <coord-box> as the box of its containing
+  // block. https://drafts.fxtf.org/motion-1/#valdef-offset-path-coord-box
   mContainingBlockRect =
       CSSRect::FromAppUnits(container->GetRectRelativeToSelf());
+  // We use the border-box size to calculate the reduced path length when using
+  // "contain" keyword.
+  // https://drafts.fxtf.org/motion-1/#valdef-ray-contain
+  //
+  // Note: Per the spec, border-box is treated as stroke-box in the SVG context,
+  // Also, SVGUtils::GetBBox() may cache the box via the frame property, so we
+  // have to do const-casting.
+  // https://drafts.csswg.org/css-box-4/#valdef-box-border-box
+  mBorderBoxSize = CSSSize::FromAppUnits(
+      nsLayoutUtils::ComputeGeometryBox(const_cast<nsIFrame*>(aFrame),
+                                        // StrokeBox and BorderBox are in the
+                                        // same switch case for CSS context.
+                                        StyleGeometryBox::StrokeBox)
+          .Size());
 }
 
 // The distance is measured between the initial position and the intersection of
@@ -158,180 +166,24 @@ static CSSCoord ComputeRayPathLength(const StyleRaySize aRaySizeType,
   return 0.0;
 }
 
-static void ApplyRotationAndMoveRayToXAxis(
-    const StyleOffsetRotate& aOffsetRotate, const StyleAngle& aRayAngle,
-    AutoTArray<gfx::Point, 4>& aVertices) {
-  const StyleAngle directionAngle = aRayAngle - StyleAngle{90.0f};
-  // Get the final rotation which includes the direction angle and
-  // offset-rotate.
-  const StyleAngle rotateAngle =
-      (aOffsetRotate.auto_ ? directionAngle : StyleAngle{0.0f}) +
-      aOffsetRotate.angle;
-  // This is the rotation to rotate ray to positive x-axis (i.e. 90deg).
-  const StyleAngle rayToXAxis = StyleAngle{90.0} - aRayAngle;
-
-  gfx::Matrix m;
-  m.PreRotate((rotateAngle + rayToXAxis).ToRadians());
-  for (gfx::Point& p : aVertices) {
-    p = m.TransformPoint(p);
-  }
-}
-
-class RayPointComparator {
- public:
-  bool Equals(const gfx::Point& a, const gfx::Point& b) const {
-    return std::fabs(a.y) == std::fabs(b.y);
-  }
-
-  bool LessThan(const gfx::Point& a, const gfx::Point& b) const {
-    return std::fabs(a.y) > std::fabs(b.y);
-  }
-};
-// Note: the calculation of contain doesn't take other transform-like properties
-// into account. The spec doesn't mention the co-operation for this, so for now,
-// we assume we only need to take motion-path into account.
 static CSSCoord ComputeRayUsedDistance(const RayFunction& aRay,
                                        const LengthPercentage& aDistance,
-                                       const StyleOffsetRotate& aRotate,
-                                       const StylePositionOrAuto& aAnchor,
-                                       const CSSPoint& aTransformOrigin,
-                                       TransformReferenceBox& aRefBox,
-                                       const CSSCoord& aPathLength) {
+                                       const CSSCoord& aPathLength,
+                                       const CSSSize& aBorderBoxSize) {
   CSSCoord usedDistance = aDistance.ResolveToCSSPixels(aPathLength);
   if (!aRay.contain) {
     return usedDistance;
   }
 
-  // We have to simulate the 4 vertices to check if any of them is outside the
-  // path circle. Here, we create a 2D Cartesian coordinate system and its
-  // origin is at the anchor point of the box. And then apply the rotation on
-  // these 4 vertices, calculate the range of |usedDistance| which makes the box
-  // entirely contained within the path.
-  // Note:
-  // "Contained within the path" means the rectangle is inside a circle whose
-  // radius is |aPathLength|.
-  CSSPoint usedAnchor = aTransformOrigin;
-  CSSSize size =
-      CSSPixel::FromAppUnits(nsSize(aRefBox.Width(), aRefBox.Height()));
-  if (!aAnchor.IsAuto()) {
-    const StylePosition& anchor = aAnchor.AsPosition();
-    usedAnchor.x = anchor.horizontal.ResolveToCSSPixels(size.width);
-    usedAnchor.y = anchor.vertical.ResolveToCSSPixels(size.height);
-  }
-  AutoTArray<gfx::Point, 4> vertices = {
-      {-usedAnchor.x, -usedAnchor.y},
-      {size.width - usedAnchor.x, -usedAnchor.y},
-      {size.width - usedAnchor.x, size.height - usedAnchor.y},
-      {-usedAnchor.x, size.height - usedAnchor.y}};
-
-  ApplyRotationAndMoveRayToXAxis(aRotate, aRay.angle, vertices);
-
-  // We have to check if all 4 vertices are inside the circle with radius |r|.
-  // Assume the position of the vertex is (x, y), and the box is moved by
-  // |usedDistance| along the path:
-  //
-  //       (usedDistance + x)^2 + y^2 <= r^2
-  //   ==> (usedDistance + x)^2 <= r^2 - y^2 = d
-  //   ==> -x - sqrt(d) <= used distance <= -x + sqrt(d)
-  //
-  // Note: |usedDistance| is added into |x| because we convert the ray function
-  // to 90deg, x-axis):
-  float upperMin = std::numeric_limits<float>::max();
-  float lowerMax = std::numeric_limits<float>::min();
-  bool shouldIncreasePathLength = false;
-  for (const gfx::Point& p : vertices) {
-    float d = aPathLength.value * aPathLength.value - p.y.value * p.y.value;
-    if (d < 0) {
-      // Impossible to make the box inside the path circle. Need to increase
-      // the path length.
-      shouldIncreasePathLength = true;
-      break;
-    }
-    float sqrtD = sqrt(d);
-    upperMin = std::min(upperMin, -p.x + sqrtD);
-    lowerMax = std::max(lowerMax, -p.x - sqrtD);
-  }
-
-  if (!shouldIncreasePathLength) {
-    return std::max(lowerMax, std::min(upperMin, (float)usedDistance));
-  }
-
-  // Sort by the absolute value of y, so the first vertex of the each pair of
-  // vertices we check has a larger y value. (i.e. |yi| is always larger than or
-  // equal to |yj|.)
-  vertices.Sort(RayPointComparator());
-
-  // Assume we set |usedDistance| to |-vertices[0].x|, so the current radius is
-  // fabs(vertices[0].y). This is a possible solution.
-  double radius = std::fabs(vertices[0].y);
-  usedDistance = -vertices[0].x.value;
-  const double epsilon = 1e-5;
-
-  for (size_t i = 0; i < 3; ++i) {
-    for (size_t j = i + 1; j < 4; ++j) {
-      double xi = vertices[i].x;
-      double yi = vertices[i].y;
-      double xj = vertices[j].x;
-      double yj = vertices[j].y;
-      double dx = xi - xj;
-
-      // Check if any path that enclosed vertices[i] would also enclose
-      // vertices[j].
-      //
-      // For example, the initial setup:
-      //                 * (0, yi)
-      //                 |
-      //                 r
-      //                 |          * (xj - xi, yj)
-      //           xi    |     dx
-      // ----*-----------*----------*---
-      // (anchor point)  | (0, 0)
-      //
-      // Assuming (0, yi) is on the path and (xj - xi, yj) is inside the path
-      // circle, we should use the inequality to check this:
-      //   (xj - xi)^2 + yj^2 <= yi^2
-      //
-      // After the first iterations, the updated inequality is:
-      //       (dx + d)^2 + yj^2 <= yi^2 + d^2
-      //   ==> dx^2 + 2dx*d + yj^2 <= yi^2
-      //   ==> dx^2 + yj^2 <= yi^2 - 2dx*d <= yi^2
-      // , |d| is the difference (or offset) between the old |usedDistance| and
-      // new |usedDistance|.
-      //
-      // Note: `2dx * d` must be positive because
-      // 1. if |xj| is larger than |xi|, only negative |d| could be used to get
-      //    a new path length which encloses both vertices.
-      // 2. if |xj| is smaller than |xi|, only positive |d| could be used to get
-      //    a new path length which encloses both vertices.
-      if (dx * dx + yj * yj <= yi * yi + epsilon) {
-        continue;
-      }
-
-      // We have to find a new usedDistance which let both vertices[i] and
-      // vertices[j] be on the path.
-      //       (usedDistance + xi)^2 + yi^2 = (usedDistance + xj)^2 + yj^2
-      //                                    = radius^2
-      //   ==> usedDistance = (xj^2 + yj^2 - xi^2 - yi^2) / 2(xi-xj)
-      //
-      // Note: it's impossible to have a "divide by zero" problem here.
-      // If |dx| is zero, the if-condition above should always be true and so
-      // we skip the calculation.
-      double newUsedDistance =
-          (xj * xj + yj * yj - xi * xi - yi * yi) / dx / 2.0;
-      // Then, move vertices[i] and vertices[j] by |newUsedDistance|.
-      xi += newUsedDistance;  // or xj += newUsedDistance; if we use |xj| to get
-                              // |newRadius|.
-      double newRadius = sqrt(xi * xi + yi * yi);
-      if (newRadius > radius) {
-        // We have to increase the path length to make sure both vertices[i] and
-        // vertices[j] are contained by this new path length.
-        radius = newRadius;
-        usedDistance = (float)newUsedDistance;
-      }
-    }
-  }
-
-  return usedDistance;
+  // The length of the offset path is reduced so that the element stays within
+  // the containing block even at offset-distance: 100%. Specifically, the
+  // path’s length is reduced by half the width or half the height of the
+  // element’s border box, whichever is larger, and floored at zero.
+  // https://drafts.fxtf.org/motion-1/#valdef-ray-contain
+  return std::max(
+      usedDistance -
+          std::max(aBorderBoxSize.width, aBorderBoxSize.height) / 2.0f,
+      0.0f);
 }
 
 /* static */
@@ -406,9 +258,8 @@ Maybe<ResolvedMotionPathData> MotionPathUtils::ResolveMotionPath(
 
     CSSCoord pathLength =
         ComputeRayPathLength(ray.mRay->size, ray.mRay->angle, ray.mData);
-    CSSCoord usedDistance =
-        ComputeRayUsedDistance(*ray.mRay, aDistance, aRotate, aAnchor,
-                               aTransformOrigin, aRefBox, pathLength);
+    CSSCoord usedDistance = ComputeRayUsedDistance(
+        *ray.mRay, aDistance, pathLength, ray.mData.mBorderBoxSize);
 
     // 0deg pointing up and positive angles representing clockwise rotation.
     directionAngle =

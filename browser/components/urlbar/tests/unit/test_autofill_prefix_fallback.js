@@ -7,7 +7,7 @@
 // We should prefer https, or in case of other prefixes just sort by descending
 // id.
 
-add_task(async function() {
+add_task(async function () {
   registerCleanupFunction(async () => {
     Services.prefs.clearUserPref("browser.urlbar.suggest.searches");
     Services.prefs.clearUserPref("browser.urlbar.suggest.quickactions");

@@ -6,7 +6,7 @@
 
 const TESTCASE_URI = TEST_BASE_HTTPS + "simple.html";
 
-add_task(async function() {
+add_task(async function () {
   const { ui } = await openStyleEditorForURL(TESTCASE_URI);
 
   is(ui.editors.length, 2, "Two sheets present after load.");

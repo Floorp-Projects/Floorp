@@ -1,4 +1,4 @@
-add_task(async function() {
+add_task(async function () {
   const url =
     "data:text/html,<html><head></head><body>" +
     '<a id="target" href="about:blank" title="This is tooltip text" ' +

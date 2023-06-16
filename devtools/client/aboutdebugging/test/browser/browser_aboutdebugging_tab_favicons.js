@@ -21,7 +21,7 @@ const EXPECTED_FAVICON =
   "BADwf7/04elBAtrVlSduGnSTDJ7cuT1PQJwwO+Hl7sAGAA07gjAAfgIBeAAoH" +
   "FHAA7ARygABwCNOwJwAD5CATRgAYXh+kypw86nAAAAAElFTkSuQmCC";
 
-add_task(async function() {
+add_task(async function () {
   const faviconTab = await addTab(TAB_URL, { background: true });
   const { document, tab, window } = await openAboutDebugging();
   await selectThisFirefoxPage(document, window.AboutDebugging.store);

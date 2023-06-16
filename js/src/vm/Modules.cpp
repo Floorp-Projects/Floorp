@@ -113,8 +113,7 @@ static JSObject* CompileModuleHelper(JSContext* cx,
   JS::Rooted<JSObject*> mod(cx);
   {
     AutoReportFrontendContext fc(cx);
-    mod = frontend::CompileModule(cx, &fc, cx->stackLimitForCurrentPrincipal(),
-                                  options, srcBuf);
+    mod = frontend::CompileModule(cx, &fc, options, srcBuf);
   }
   return mod;
 }
@@ -885,7 +884,12 @@ static void ThrowResolutionError(JSContext* cx, Handle<ModuleObject*> module,
   }
 
   RootedString filename(cx);
-  filename = JS_NewStringCopyZ(cx, module->script()->filename());
+  if (const char* chars = module->script()->filename()) {
+    filename =
+        JS_NewStringCopyUTF8Z(cx, JS::ConstUTF8CharsZ(chars, strlen(chars)));
+  } else {
+    filename = cx->names().empty;
+  }
   if (!filename) {
     return;
   }

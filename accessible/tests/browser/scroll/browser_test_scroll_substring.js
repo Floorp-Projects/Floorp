@@ -37,7 +37,7 @@ It's a jetpack, Michael. What could possibly go wrong?
 
 The only thing I found in the fridge was a dead dove in a bag.
 </pre>`,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     let text = findAccessibleChildByID(docAcc, "text", [nsIAccessibleText]);
     let [, containerY, , containerHeight] = getBounds(text);
     let getCharY = () => {
@@ -59,9 +59,9 @@ The only thing I found in the fridge was a dead dove in a bag.
     );
   },
   {
-    topLevel: !isWinNoCache,
-    iframe: !isWinNoCache,
-    remoteIframe: !isWinNoCache,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
     chrome: true,
   }
 );

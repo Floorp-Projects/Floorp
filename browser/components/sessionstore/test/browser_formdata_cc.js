@@ -11,7 +11,7 @@ requestLongerTimeout(3);
  * collected, while numbers that don't look like credit card numbers will
  * still be collected.
  */
-add_task(async function() {
+add_task(async function () {
   const validCCNumbers = [
     // 15 digits
     "930771457288760",
@@ -80,7 +80,7 @@ add_task(async function() {
   // Test that valid CC numbers are not collected.
   for (let number of validCCNumbers) {
     await createAndRemoveTab(number);
-    let [{ state }] = ss.getClosedTabData(window);
+    let [{ state }] = ss.getClosedTabDataForWindow(window);
     ok(!("formdata" in state), "valid CC numbers are not collected");
   }
 
@@ -91,7 +91,7 @@ add_task(async function() {
       {
         state: { formdata },
       },
-    ] = ss.getClosedTabData(window);
+    ] = ss.getClosedTabDataForWindow(window);
     is(
       formdata.id.txt,
       number,
@@ -101,7 +101,7 @@ add_task(async function() {
 });
 
 function setInputValue(browser, formValue) {
-  return SpecialPowers.spawn(browser, [formValue], async function(newValue) {
+  return SpecialPowers.spawn(browser, [formValue], async function (newValue) {
     content.document.getElementById("txt").setUserInput(newValue);
   });
 }

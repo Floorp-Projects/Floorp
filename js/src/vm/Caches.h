@@ -12,6 +12,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MruCache.h"
 #include "mozilla/TemplateLib.h"
+#include "mozilla/UniquePtr.h"
 
 #include "frontend/ScopeBindingCache.h"
 #include "gc/Tracer.h"
@@ -315,7 +316,7 @@ class MegamorphicSetPropCache {
   // We can get more hits if we increase this, but this seems to be around
   // the sweet spot where we are getting most of the hits we would get with
   // an infinitely sized cache
-  static constexpr size_t NumEntries = 256;
+  static constexpr size_t NumEntries = 1024;
   static constexpr uint8_t ShapeHashShift1 =
       mozilla::tl::FloorLog2<alignof(Shape)>::value;
   static constexpr uint8_t ShapeHashShift2 =
@@ -514,7 +515,7 @@ class StringToAtomCache {
 class RuntimeCaches {
  public:
   MegamorphicCache megamorphicCache;
-  MegamorphicSetPropCache megamorphicSetPropCache;
+  UniquePtr<MegamorphicSetPropCache> megamorphicSetPropCache;
   GSNCache gsnCache;
   UncompressedSourceCache uncompressedSourceCache;
   EvalCache evalCache;
@@ -543,7 +544,12 @@ class RuntimeCaches {
     evalCache.clear();
     stringToAtomCache.purge();
     megamorphicCache.bumpGeneration();
-    megamorphicSetPropCache.bumpGeneration();
+    if (megamorphicSetPropCache) {
+      // MegamorphicSetPropCache can be null if we failed out of
+      // JSRuntime::init. We will then try to destroy the runtime which will
+      // do a GC and land us here.
+      megamorphicSetPropCache->bumpGeneration();
+    }
     scopeCache.purge();
   }
 

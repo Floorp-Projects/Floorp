@@ -2,9 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
@@ -783,7 +782,9 @@ class TelemetryEvent {
     this._controller.manager.notifyEngagementChange(
       this._isPrivate,
       "start",
-      queryContext
+      queryContext,
+      {},
+      this._controller.browserWindow
     );
   }
 
@@ -891,7 +892,9 @@ class TelemetryEvent {
         this._controller.manager.notifyEngagementChange(
           this._isPrivate,
           "discard",
-          queryContext
+          queryContext,
+          {},
+          this._controller.browserWindow
         );
       }
       return;
@@ -982,7 +985,8 @@ class TelemetryEvent {
         this._isPrivate,
         method,
         queryContext,
-        details
+        details,
+        this._controller.browserWindow
       );
       return;
     }
@@ -1051,7 +1055,8 @@ class TelemetryEvent {
       this._isPrivate,
       method,
       queryContext,
-      details
+      details,
+      this._controller.browserWindow
     );
   }
 
@@ -1111,10 +1116,11 @@ class TelemetryEvent {
         currentResults[selIndex],
         selType
       );
-      const selected_result_subtype = lazy.UrlbarUtils.searchEngagementTelemetrySubtype(
-        currentResults[selIndex],
-        selectedElement
-      );
+      const selected_result_subtype =
+        lazy.UrlbarUtils.searchEngagementTelemetrySubtype(
+          currentResults[selIndex],
+          selectedElement
+        );
 
       if (selected_result === "input_field" && !queryContext?.view?.isOpen) {
         numResults = 0;

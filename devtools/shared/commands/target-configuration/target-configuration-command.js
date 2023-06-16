@@ -115,9 +115,8 @@ class TargetConfigurationCommand {
       return;
     }
 
-    const responsiveFront = await this._commands.targetCommand.targetFront.getFront(
-      "responsive"
-    );
+    const responsiveFront =
+      await this._commands.targetCommand.targetFront.getFront("responsive");
     await responsiveFront.dispatchOrientationChangeEvent();
   }
 }

@@ -1,14 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {
-  Bookmark,
-  BookmarkFolder,
-  BookmarkQuery,
-  PlacesItem,
-} = ChromeUtils.importESModule(
-  "resource://services-sync/engines/bookmarks.sys.mjs"
-);
+const { Bookmark, BookmarkFolder, BookmarkQuery, PlacesItem } =
+  ChromeUtils.importESModule(
+    "resource://services-sync/engines/bookmarks.sys.mjs"
+  );
 // `Service` is used as a global in head_helpers.js.
 // eslint-disable-next-line no-unused-vars
 const { Service } = ChromeUtils.importESModule(

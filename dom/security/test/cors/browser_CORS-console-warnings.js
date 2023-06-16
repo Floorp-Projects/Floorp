@@ -57,7 +57,7 @@ function unsetCookiePref() {
 }
 
 //jscs:disable
-add_task(async function() {
+add_task(async function () {
   //jscs:enable
   // A longer timeout is necessary for this test than the plain mochitests
   // due to opening a new tab with the web console.

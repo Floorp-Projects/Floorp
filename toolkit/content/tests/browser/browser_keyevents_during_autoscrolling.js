@@ -1,4 +1,4 @@
-add_task(async function() {
+add_task(async function () {
   const kPrefName_AutoScroll = "general.autoScroll";
   Services.prefs.setBoolPref(kPrefName_AutoScroll, true);
   registerCleanupFunction(() =>
@@ -70,7 +70,7 @@ add_task(async function() {
 
   var dataUri = 'data:text/html,<body style="height:10000px;"></body>';
 
-  await BrowserTestUtils.withNewTab(dataUri, async function(browser) {
+  await BrowserTestUtils.withNewTab(dataUri, async function (browser) {
     info("Loaded data URI in new tab");
     await SimpleTest.promiseFocus(browser);
     info("Focused selected browser");

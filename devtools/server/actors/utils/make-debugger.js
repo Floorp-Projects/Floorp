@@ -73,25 +73,25 @@ module.exports = function makeDebugger({
 
   dbg.uncaughtExceptionHook = reportDebuggerHookException;
 
-  const onNewGlobalObject = function(global) {
+  const onNewGlobalObject = function (global) {
     if (shouldAddNewGlobalAsDebuggee(global)) {
       safeAddDebuggee(this, global);
     }
   };
 
   dbg.onNewGlobalObject = onNewGlobalObject;
-  dbg.addDebuggees = function() {
+  dbg.addDebuggees = function () {
     for (const global of findDebuggees(this)) {
       safeAddDebuggee(this, global);
     }
   };
 
-  dbg.disable = function() {
+  dbg.disable = function () {
     dbg.removeAllDebuggees();
     dbg.onNewGlobalObject = undefined;
   };
 
-  dbg.enable = function() {
+  dbg.enable = function () {
     dbg.addDebuggees();
     dbg.onNewGlobalObject = onNewGlobalObject;
   };

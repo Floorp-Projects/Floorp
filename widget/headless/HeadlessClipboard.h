@@ -6,6 +6,7 @@
 #ifndef mozilla_widget_HeadlessClipboard_h
 #define mozilla_widget_HeadlessClipboard_h
 
+#include "nsBaseClipboard.h"
 #include "nsIClipboard.h"
 #include "mozilla/UniquePtr.h"
 #include "HeadlessClipboardData.h"
@@ -13,15 +14,33 @@
 namespace mozilla {
 namespace widget {
 
-class HeadlessClipboard final : public nsIClipboard {
+class HeadlessClipboard final : public ClipboardSetDataHelper {
  public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSICLIPBOARD
-
   HeadlessClipboard();
+
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // nsIClipboard
+  NS_IMETHOD GetData(nsITransferable* aTransferable,
+                     int32_t aWhichClipboard) override;
+  NS_IMETHOD EmptyClipboard(int32_t aWhichClipboard) override;
+  NS_IMETHOD HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
+                                    int32_t aWhichClipboard,
+                                    bool* _retval) override;
+  NS_IMETHOD IsClipboardTypeSupported(int32_t aWhichClipboard,
+                                      bool* _retval) override;
+  RefPtr<mozilla::GenericPromise> AsyncGetData(
+      nsITransferable* aTransferable, int32_t aWhichClipboard) override;
+  RefPtr<DataFlavorsPromise> AsyncHasDataMatchingFlavors(
+      const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard) override;
 
  protected:
   ~HeadlessClipboard() = default;
+
+  // Implement the native clipboard behavior.
+  NS_IMETHOD SetNativeClipboardData(nsITransferable* aTransferable,
+                                    nsIClipboardOwner* aOwner,
+                                    int32_t aWhichClipboard) override;
 
  private:
   UniquePtr<HeadlessClipboardData> mClipboard;

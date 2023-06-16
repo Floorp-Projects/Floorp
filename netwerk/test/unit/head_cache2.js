@@ -188,7 +188,7 @@ OpenCallback.prototype = {
       }
 
       let self = this;
-      executeSoon(function() {
+      executeSoon(function () {
         // emulate network latency
         entry.setMetaDataElement("meto", self.workingMetadata);
         entry.metaDataReady();
@@ -205,7 +205,7 @@ OpenCallback.prototype = {
 
           return;
         }
-        executeSoon(function() {
+        executeSoon(function () {
           // emulate more network latency
           if (self.behavior & DOOMED) {
             LOG_C2(self, "checking doom state");
@@ -250,7 +250,7 @@ OpenCallback.prototype = {
       }
 
       let self = this;
-      pumpReadStream(entry.openInputStream(0), function(data) {
+      pumpReadStream(entry.openInputStream(0), function (data) {
         Assert.equal(data, self.workingData);
         self.onDataCheckPassed = true;
         LOG_C2(self, "entry read done");
@@ -269,7 +269,7 @@ OpenCallback.prototype = {
   throwAndNotify(entry) {
     LOG_C2(this, "Throwing");
     var self = this;
-    executeSoon(function() {
+    executeSoon(function () {
       LOG_C2(self, "Notifying");
       self.goon(entry);
     });
@@ -388,7 +388,7 @@ MultipleCallbacks.prototype = {
     if (--this.pending == 0) {
       var self = this;
       if (this.delayed) {
-        executeSoon(function() {
+        executeSoon(function () {
           self.goon();
         });
       } else {
@@ -422,7 +422,7 @@ function wait_for_cache_index(continue_func) {
 }
 
 function finish_cache2_test() {
-  callbacks.forEach(function(callback, index) {
+  callbacks.forEach(function (callback, index) {
     callback.selfCheck();
   });
   do_test_finished();

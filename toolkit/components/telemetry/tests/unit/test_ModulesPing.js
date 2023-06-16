@@ -179,7 +179,7 @@ add_task(async function setup() {
   );
 });
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   if (libModulesHandle) {
     libModulesHandle.close();
   }
@@ -221,7 +221,7 @@ add_task(
     let nameComparator;
     if (AppConstants.platform === "win") {
       // Do case-insensitive checking of file/module names on Windows
-      nameComparator = function(a, b) {
+      nameComparator = function (a, b) {
         if (typeof a === "string" && typeof b === "string") {
           return a.toLowerCase() === b.toLowerCase();
         }
@@ -229,7 +229,7 @@ add_task(
         return a === b;
       };
     } else {
-      nameComparator = function(a, b) {
+      nameComparator = function (a, b) {
         return a === b;
       };
     }

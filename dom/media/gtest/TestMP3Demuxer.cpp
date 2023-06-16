@@ -54,31 +54,33 @@ struct MP3Resource {
 
     Duration(int64_t aMicroseconds, float aTolerableRate)
         : mMicroseconds(aMicroseconds), mTolerableRate(aTolerableRate) {}
-    int64_t Tolerance() const { return mTolerableRate * mMicroseconds; }
+    int64_t Tolerance() const {
+      return AssertedCast<int64_t>(mTolerableRate *
+                                   static_cast<float>(mMicroseconds));
+    }
   };
 
-  const char* mFilePath;
-  bool mIsVBR;
-  HeaderType mHeaderType;
-  int64_t mFileSize;
-  uint32_t mMPEGLayer;
-  uint32_t mMPEGVersion;
-  uint8_t mID3MajorVersion;
-  uint8_t mID3MinorVersion;
-  uint8_t mID3Flags;
-  uint32_t mID3Size;
+  const char* mFilePath{};
+  bool mIsVBR{};
+  HeaderType mHeaderType{HeaderType::NONE};
+  int64_t mFileSize{};
+  uint32_t mMPEGLayer{};
+  uint32_t mMPEGVersion{};
+  uint8_t mID3MajorVersion{};
+  uint8_t mID3MinorVersion{};
+  uint8_t mID3Flags{};
+  uint32_t mID3Size{};
 
   Maybe<Duration> mDuration;
-  float mSeekError;
-  uint32_t mSampleRate;
-  uint32_t mSamplesPerFrame;
-  uint32_t mNumSamples;
-  // TODO: temp solution, we could parse them instead or account for them
-  // otherwise.
-  int32_t mNumTrailingFrames;
-  uint32_t mBitrate;
-  uint32_t mSlotSize;
-  int32_t mPrivate;
+  float mSeekError{};
+  uint32_t mSampleRate{};
+  uint32_t mSamplesPerFrame{};
+  uint32_t mNumSamples{};
+  uint32_t mPadding{};
+  uint32_t mEncoderDelay{};
+  uint32_t mBitrate{};
+  uint32_t mSlotSize{};
+  int32_t mPrivate{};
 
   // The first n frame offsets.
   std::vector<int32_t> mSyncOffsets;
@@ -101,12 +103,16 @@ class MP3DemuxerTest : public ::testing::Test {
       res.mID3MinorVersion = 0;
       res.mID3Flags = 0;
       res.mID3Size = 2141;
-      res.mDuration = Some(MP3Resource::Duration{30067000, 0.001f});
+      // The tolerance comes from the fact that this file has ID3v1 information
+      // at the end, this trips our CBR duration calculation. The file has
+      // however the correct duration when decoded / demuxed completely.
+      res.mDuration = Some(MP3Resource::Duration{30093062, 0.00015f});
       res.mSeekError = 0.02f;
       res.mSampleRate = 44100;
       res.mSamplesPerFrame = 1152;
-      res.mNumSamples = 1325952;
-      res.mNumTrailingFrames = 2;
+      res.mNumSamples = 1327104;
+      res.mPadding = 0;
+      res.mEncoderDelay = 0;
       res.mBitrate = 256000;
       res.mSlotSize = 1;
       res.mPrivate = 0;
@@ -144,12 +150,16 @@ class MP3DemuxerTest : public ::testing::Test {
       res.mID3MinorVersion = 0;
       res.mID3Flags = 0;
       res.mID3Size = 115304;
-      res.mDuration = Some(MP3Resource::Duration{3166167, 0.001f});
+      // The tolerance comes from the fact that this file has ID3v1 information
+      // at the end, this trips our CBR duration calculation. The file has
+      // however the correct duration when decoded / demuxed completely.
+      res.mDuration = Some(MP3Resource::Duration{3160833, 0.0017f});
       res.mSeekError = 0.02f;
       res.mSampleRate = 44100;
       res.mSamplesPerFrame = 1152;
       res.mNumSamples = 139392;
-      res.mNumTrailingFrames = 0;
+      res.mPadding = 0;
+      res.mEncoderDelay = 0;
       res.mBitrate = 192000;
       res.mSlotSize = 1;
       res.mPrivate = 1;
@@ -182,12 +192,13 @@ class MP3DemuxerTest : public ::testing::Test {
       res.mID3MinorVersion = 0;
       res.mID3Flags = 0;
       res.mID3Size = 2221;
-      res.mDuration = Some(MP3Resource::Duration{30081000, 0.005f});
+      res.mDuration = Some(MP3Resource::Duration{30081065, 0.f});
       res.mSeekError = 0.02f;
       res.mSampleRate = 44100;
       res.mSamplesPerFrame = 1152;
       res.mNumSamples = 1326575;
-      res.mNumTrailingFrames = 3;
+      res.mPadding = 576;
+      res.mEncoderDelay = 2257;
       res.mBitrate = 154000;
       res.mSlotSize = 1;
       res.mPrivate = 0;
@@ -220,12 +231,13 @@ class MP3DemuxerTest : public ::testing::Test {
       res.mID3MinorVersion = 0;
       res.mID3Flags = 0;
       res.mID3Size = 24;
-      res.mDuration = Some(MP3Resource::Duration{336686, 0.01f});
+      res.mDuration = Some(MP3Resource::Duration{301473, 0.f});
       res.mSeekError = 0.2f;
       res.mSampleRate = 44100;
       res.mSamplesPerFrame = 1152;
       res.mNumSamples = 12;
-      res.mNumTrailingFrames = 0;
+      res.mPadding = 0;
+      res.mEncoderDelay = 1152 + 529;
       res.mBitrate = 256000;
       res.mSlotSize = 1;
       res.mPrivate = 0;
@@ -260,12 +272,13 @@ class MP3DemuxerTest : public ::testing::Test {
       res.mID3MinorVersion = 0;
       res.mID3Flags = 0;
       res.mID3Size = 24;
-      res.mDuration = Some(MP3Resource::Duration{336686, 0.01f});
+      res.mDuration = Some(MP3Resource::Duration{301473, 0.f});
       res.mSeekError = 0.2f;
       res.mSampleRate = 44100;
       res.mSamplesPerFrame = 1152;
       res.mNumSamples = 12;
-      res.mNumTrailingFrames = 0;
+      res.mPadding = 0;
+      res.mEncoderDelay = 1681;
       res.mBitrate = 256000;
       res.mSlotSize = 1;
       res.mPrivate = 0;
@@ -298,12 +311,13 @@ class MP3DemuxerTest : public ::testing::Test {
       res.mID3MinorVersion = 0;
       res.mID3Flags = 0;
       res.mID3Size = 24;
-      res.mDuration = Some(MP3Resource::Duration{336686, 0.01f});
+      res.mDuration = Some(MP3Resource::Duration{301473, 0.f});
       res.mSeekError = 0.2f;
       res.mSampleRate = 44100;
       res.mSamplesPerFrame = 1152;
       res.mNumSamples = 12;
-      res.mNumTrailingFrames = 0;
+      res.mPadding = 0;
+      res.mEncoderDelay = 1681;
       res.mBitrate = 256000;
       res.mSlotSize = 1;
       res.mPrivate = 0;
@@ -336,12 +350,13 @@ class MP3DemuxerTest : public ::testing::Test {
       res.mID3MinorVersion = 0;
       res.mID3Flags = 0;
       res.mID3Size = 4202;
-      res.mDuration = Some(MP3Resource::Duration{783660, 0.01f});
+      res.mDuration = Some(MP3Resource::Duration{731428, 0.f});
       res.mSeekError = 0.02f;
       res.mSampleRate = 44100;
       res.mSamplesPerFrame = 1152;
       res.mNumSamples = 29;
-      res.mNumTrailingFrames = 0;
+      res.mPadding = 0;
+      res.mEncoderDelay = 1152;
       res.mBitrate = 0;
       res.mSlotSize = 1;
       res.mPrivate = 0;
@@ -395,9 +410,6 @@ TEST_F(MP3DemuxerTest, VBRHeader) {
 
     if (target.mHeaderType == MP3Resource::HeaderType::XING) {
       EXPECT_EQ(FrameParser::VBRHeader::XING, vbr.Type());
-      // TODO: find reference number which accounts for trailing headers.
-      // EXPECT_EQ(target.mNumSamples / target.mSamplesPerFrame,
-      // vbr.NumAudioFrames().value());
     } else if (target.mHeaderType == MP3Resource::HeaderType::VBRI) {
       EXPECT_TRUE(target.mIsVBR);
       EXPECT_EQ(FrameParser::VBRHeader::VBRI, vbr.Type());
@@ -410,6 +422,7 @@ TEST_F(MP3DemuxerTest, VBRHeader) {
 
 TEST_F(MP3DemuxerTest, FrameParsing) {
   for (const auto& target : mTargets) {
+    printf("Testing: %s\n", target.mFilePath);
     RefPtr<MediaRawData> frameData(target.mDemuxer->DemuxSample());
     ASSERT_TRUE(frameData);
     EXPECT_EQ(target.mFileSize, target.mDemuxer->StreamLength());
@@ -429,7 +442,7 @@ TEST_F(MP3DemuxerTest, FrameParsing) {
       }
 
       ++numFrames;
-      parsedLength += frameData->Size();
+      parsedLength += AssertedCast<int64_t>(frameData->Size());
 
       const auto& frame = target.mDemuxer->LastFrame();
       const auto& header = frame.Header();
@@ -453,9 +466,8 @@ TEST_F(MP3DemuxerTest, FrameParsing) {
       frameData = target.mDemuxer->DemuxSample();
     }
 
-    // TODO: find reference number which accounts for trailing headers.
-    // EXPECT_EQ(target.mNumSamples / target.mSamplesPerFrame, numFrames);
-    // EXPECT_EQ(target.mNumSamples, numSamples);
+    EXPECT_EQ(target.mPadding, target.mDemuxer->PaddingFrames());
+    EXPECT_EQ(target.mEncoderDelay, target.mDemuxer->EncoderDelayFrames());
     EXPECT_GE(numSamples, 0u);
 
     // There may be trailing headers which we don't parse, so the stream length
@@ -473,6 +485,7 @@ TEST_F(MP3DemuxerTest, FrameParsing) {
 
 TEST_F(MP3DemuxerTest, Duration) {
   for (const auto& target : mTargets) {
+    printf("Testing: %s\n", target.mFilePath);
     RefPtr<MediaRawData> frameData(target.mDemuxer->DemuxSample());
     ASSERT_TRUE(frameData);
     EXPECT_EQ(target.mFileSize, target.mDemuxer->StreamLength());
@@ -488,10 +501,16 @@ TEST_F(MP3DemuxerTest, Duration) {
       }
       frameData = target.mDemuxer->DemuxSample();
     }
+    if (target.mDuration) {
+      // At the end, the durations should always be exact.
+      EXPECT_EQ(target.mDuration->mMicroseconds,
+                target.mDemuxer->Duration()->ToMicroseconds());
+    }
   }
 
   // Seek out of range tests.
   for (const auto& target : mTargets) {
+    printf("Testing %s\n", target.mFilePath);
     // Skip tests for stream media resources because of lacking duration.
     if (target.mFileSize <= 0) {
       continue;

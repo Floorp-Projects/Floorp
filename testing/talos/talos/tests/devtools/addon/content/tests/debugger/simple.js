@@ -22,7 +22,7 @@ const EXPECTED = {
   text: "This is a simple page",
 };
 
-module.exports = async function() {
+module.exports = async function () {
   await testSetup(SIMPLE_URL);
 
   let toolbox = await openDebuggerAndLog("simple", EXPECTED);

@@ -108,6 +108,10 @@ HttpChannelChild::~HttpChannelChild() {
   LOG(("Destroying HttpChannelChild @%p\n", this));
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  // See HttpChannelChild::Release, HttpChannelChild should be always destroyed
+  // on the main thread.
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
+
   if (mDoDiagnosticAssertWhenOnStopNotCalledOnDestroy && mAsyncOpenSucceeded &&
       !mSuccesfullyRedirected && !LoadOnStopRequestCalled()) {
     bool emptyBgChildQueue, nullBgChild;
@@ -2809,7 +2813,7 @@ HttpChannelChild::GetIsLastPart(bool* aIsLastPart) {
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-HttpChannelChild::RetargetDeliveryTo(nsIEventTarget* aNewTarget) {
+HttpChannelChild::RetargetDeliveryTo(nsISerialEventTarget* aNewTarget) {
   LOG(("HttpChannelChild::RetargetDeliveryTo [this=%p, aNewTarget=%p]", this,
        aNewTarget));
 
@@ -2860,10 +2864,10 @@ HttpChannelChild::RetargetDeliveryTo(nsIEventTarget* aNewTarget) {
 }
 
 NS_IMETHODIMP
-HttpChannelChild::GetDeliveryTarget(nsIEventTarget** aEventTarget) {
+HttpChannelChild::GetDeliveryTarget(nsISerialEventTarget** aEventTarget) {
   MutexAutoLock lock(mEventTargetMutex);
 
-  nsCOMPtr<nsIEventTarget> target = mODATarget;
+  nsCOMPtr<nsISerialEventTarget> target = mODATarget;
   if (!mODATarget) {
     target = GetCurrentSerialEventTarget();
   }
@@ -3049,20 +3053,23 @@ void HttpChannelChild::ActorDestroy(ActorDestroyReason aWhy) {
 }
 
 mozilla::ipc::IPCResult HttpChannelChild::RecvLogBlockedCORSRequest(
-    const nsAString& aMessage, const nsACString& aCategory) {
-  Unused << LogBlockedCORSRequest(aMessage, aCategory);
+    const nsAString& aMessage, const nsACString& aCategory,
+    const bool& aIsWarning) {
+  Unused << LogBlockedCORSRequest(aMessage, aCategory, aIsWarning);
   return IPC_OK();
 }
 
 NS_IMETHODIMP
 HttpChannelChild::LogBlockedCORSRequest(const nsAString& aMessage,
-                                        const nsACString& aCategory) {
+                                        const nsACString& aCategory,
+                                        bool aIsWarning) {
   uint64_t innerWindowID = mLoadInfo->GetInnerWindowID();
   bool privateBrowsing = !!mLoadInfo->GetOriginAttributes().mPrivateBrowsingId;
   bool fromChromeContext =
       mLoadInfo->TriggeringPrincipal()->IsSystemPrincipal();
-  nsCORSListenerProxy::LogBlockedCORSRequest(
-      innerWindowID, privateBrowsing, fromChromeContext, aMessage, aCategory);
+  nsCORSListenerProxy::LogBlockedCORSRequest(innerWindowID, privateBrowsing,
+                                             fromChromeContext, aMessage,
+                                             aCategory, aIsWarning);
   return NS_OK;
 }
 

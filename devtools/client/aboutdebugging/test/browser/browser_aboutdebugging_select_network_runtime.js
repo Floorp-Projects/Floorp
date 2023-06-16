@@ -9,7 +9,7 @@ const NETWORK_RUNTIME_CHANNEL = "SomeChannel";
 const NETWORK_RUNTIME_VERSION = "12.3";
 
 // Test that network runtimes can be selected.
-add_task(async function() {
+add_task(async function () {
   const mocks = new Mocks();
 
   const { document, tab, window } = await openAboutDebugging();

@@ -258,6 +258,9 @@ ml{
         "America:Chihuahua"{
             ec{"ചിഹ്വാഹ"}
         }
+        "America:Ciudad_Juarez"{
+            ec{"സിയുഡാഡ് ഹുവാരസ്"}
+        }
         "America:Coral_Harbour"{
             ec{"ഏറ്റികോക്കൺ"}
         }

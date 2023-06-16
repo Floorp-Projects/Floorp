@@ -1229,6 +1229,7 @@ hu{
         PYG{"₲"}
         RON{"lei"}
         RUB{"₽"}
+        RUR{"RUR"}
         RWF{"RF"}
         SBD{"$"}
         SEK{"kr"}
@@ -1556,6 +1557,10 @@ hu{
             one{"spanyol peseta (A–kontó)"}
             other{"spanyol peseta (A–kontó)"}
         }
+        ESB{
+            one{"spanyol peseta (konvertibilis kontó)"}
+            other{"spanyol peseta (konvertibilis kontó)"}
+        }
         ESP{
             one{"spanyol peseta"}
             other{"spanyol peseta"}
@@ -1740,6 +1745,14 @@ hu{
             one{"litvániai litas"}
             other{"litvániai litas"}
         }
+        LUC{
+            one{"luxemburgi konvertibilis frank"}
+            other{"luxemburgi konvertibilis frank"}
+        }
+        LUL{
+            one{"luxemburgi pénzügyi frank"}
+            other{"luxemburgi pénzügyi frank"}
+        }
         LVL{
             one{"lett lats"}
             other{"lett lats"}
@@ -1868,9 +1881,17 @@ hu{
             one{"panamai balboa"}
             other{"panamai balboa"}
         }
+        PEI{
+            one{"perui inti"}
+            other{"perui inti"}
+        }
         PEN{
             one{"perui sol"}
             other{"perui sol"}
+        }
+        PES{
+            one{"perui sol (1863–1965)"}
+            other{"perui sol (1863–1965)"}
         }
         PGK{
             one{"pápua új-guineai kina"}

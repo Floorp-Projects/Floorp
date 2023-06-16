@@ -29,6 +29,7 @@ namespace mozilla {
 
 class AutoTextControlHandlingState;
 class ErrorResult;
+class IMEContentObserver;
 class TextEditor;
 class TextInputListener;
 class TextInputSelectionController;
@@ -294,7 +295,6 @@ class TextControlState final : public SupportsWeakPtr {
    * nsContentUtils::PlatformToDOMLineBreaks().
    */
   bool ValueEquals(const nsAString& aValue) const;
-  bool HasNonEmptyValue();
   // The following methods are for textarea element to use whether default
   // value or not.
   // XXX We might have to add assertion when it is into editable,
@@ -487,24 +487,26 @@ class TextControlState final : public SupportsWeakPtr {
    * itself.  Must be called when both mTextEditor and mBoundFrame are not
    * nullptr.
    *
-   * @param aHandlingState      Must be inner-most handling state for SetValue.
+   * @param aHandlingSetValue   Must be inner-most handling state for SetValue.
    * @return                    false if fallible allocation failed.  Otherwise,
    *                            true.
    */
   MOZ_CAN_RUN_SCRIPT bool SetValueWithTextEditor(
-      AutoTextControlHandlingState& aHandlingState);
+      AutoTextControlHandlingState& aHandlingSetValue);
 
   /**
    * SetValueWithoutTextEditor() modifies the value without editor.  I.e.,
    * modifying the value in this instance and mBoundFrame.  Must be called
    * when at least mTextEditor or mBoundFrame is nullptr.
    *
-   * @param aHandlingState      Must be inner-most handling state for SetValue.
+   * @param aHandlingSetValue   Must be inner-most handling state for SetValue.
    * @return                    false if fallible allocation failed.  Otherwise,
    *                            true.
    */
   MOZ_CAN_RUN_SCRIPT bool SetValueWithoutTextEditor(
-      AutoTextControlHandlingState& aHandlingState);
+      AutoTextControlHandlingState& aHandlingSetValue);
+
+  IMEContentObserver* GetIMEContentObserver() const;
 
   // When this class handles something which may run script, this should be
   // set to non-nullptr.  If so, this class claims that it's busy and that

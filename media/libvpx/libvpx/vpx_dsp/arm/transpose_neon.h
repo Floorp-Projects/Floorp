@@ -23,7 +23,7 @@
 // b0.val[1]: 04 05 06 07 20 21 22 23
 static INLINE int16x8x2_t vpx_vtrnq_s64_to_s16(int32x4_t a0, int32x4_t a1) {
   int16x8x2_t b0;
-#if defined(__aarch64__)
+#if VPX_ARCH_AARCH64
   b0.val[0] = vreinterpretq_s16_s64(
       vtrn1q_s64(vreinterpretq_s64_s32(a0), vreinterpretq_s64_s32(a1)));
   b0.val[1] = vreinterpretq_s16_s64(
@@ -39,7 +39,7 @@ static INLINE int16x8x2_t vpx_vtrnq_s64_to_s16(int32x4_t a0, int32x4_t a1) {
 
 static INLINE int32x4x2_t vpx_vtrnq_s64_to_s32(int32x4_t a0, int32x4_t a1) {
   int32x4x2_t b0;
-#if defined(__aarch64__)
+#if VPX_ARCH_AARCH64
   b0.val[0] = vreinterpretq_s32_s64(
       vtrn1q_s64(vreinterpretq_s64_s32(a0), vreinterpretq_s64_s32(a1)));
   b0.val[1] = vreinterpretq_s32_s64(
@@ -53,7 +53,7 @@ static INLINE int32x4x2_t vpx_vtrnq_s64_to_s32(int32x4_t a0, int32x4_t a1) {
 
 static INLINE int64x2x2_t vpx_vtrnq_s64(int32x4_t a0, int32x4_t a1) {
   int64x2x2_t b0;
-#if defined(__aarch64__)
+#if VPX_ARCH_AARCH64
   b0.val[0] = vtrn1q_s64(vreinterpretq_s64_s32(a0), vreinterpretq_s64_s32(a1));
   b0.val[1] = vtrn2q_s64(vreinterpretq_s64_s32(a0), vreinterpretq_s64_s32(a1));
 #else
@@ -67,7 +67,7 @@ static INLINE int64x2x2_t vpx_vtrnq_s64(int32x4_t a0, int32x4_t a1) {
 
 static INLINE uint8x16x2_t vpx_vtrnq_u64_to_u8(uint32x4_t a0, uint32x4_t a1) {
   uint8x16x2_t b0;
-#if defined(__aarch64__)
+#if VPX_ARCH_AARCH64
   b0.val[0] = vreinterpretq_u8_u64(
       vtrn1q_u64(vreinterpretq_u64_u32(a0), vreinterpretq_u64_u32(a1)));
   b0.val[1] = vreinterpretq_u8_u64(
@@ -83,7 +83,7 @@ static INLINE uint8x16x2_t vpx_vtrnq_u64_to_u8(uint32x4_t a0, uint32x4_t a1) {
 
 static INLINE uint16x8x2_t vpx_vtrnq_u64_to_u16(uint32x4_t a0, uint32x4_t a1) {
   uint16x8x2_t b0;
-#if defined(__aarch64__)
+#if VPX_ARCH_AARCH64
   b0.val[0] = vreinterpretq_u16_u64(
       vtrn1q_u64(vreinterpretq_u64_u32(a0), vreinterpretq_u64_u32(a1)));
   b0.val[1] = vreinterpretq_u16_u64(

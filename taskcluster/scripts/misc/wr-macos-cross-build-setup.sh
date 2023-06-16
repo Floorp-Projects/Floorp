@@ -3,7 +3,7 @@ set -x -e -v
 
 export TARGET_TRIPLE="x86_64-apple-darwin"
 
-MACOS_SYSROOT="${MOZ_FETCHES_DIR}/MacOSX13.0.sdk"
+MACOS_SYSROOT="${MOZ_FETCHES_DIR}/MacOSX13.3.sdk"
 CLANGDIR="${MOZ_FETCHES_DIR}/clang"
 
 # Deploy the wrench dependencies
@@ -13,7 +13,7 @@ mv ${MOZ_FETCHES_DIR}/wrench-deps/{vendor,.cargo} "${GECKO_PATH}/gfx/wr/"
 # which includes building C++ code. We have to do a bunch of shenanigans
 # to make this cross-compile properly.
 
-pushd "${MOZ_FETCHES_DIR}/cctools/bin"
+pushd "${MOZ_FETCHES_DIR}/clang/bin"
 
 # Add a pkg-config cross-compile wrapper. Without this, the configure script
 # will use pkg-config from the host, which will find host libraries that are
@@ -24,16 +24,17 @@ cat > ${TARGET_TRIPLE}-pkg-config <<END_PKGCONFIG_WRAPPER
 export PKG_CONFIG_DIR=
 export PKG_CONFIG_LIBDIR=${MACOS_SYSROOT}/usr/lib/pkgconfig:${MACOS_SYSROOT}/usr/share/pkgconfig
 export PKG_CONFIG_SYSROOT_DIR=${MACOS_SYSROOT}
-exec pkg-config "$@"
+exec pkg-config "\$@"
 END_PKGCONFIG_WRAPPER
 chmod +x "${TARGET_TRIPLE}-pkg-config"
 popd
 
-export PATH="${MOZ_FETCHES_DIR}/rustc/bin:${MOZ_FETCHES_DIR}/cctools/bin:${MOZ_FETCHES_DIR}/clang/bin:${MOZ_FETCHES_DIR}/wrench-deps/meson:${PATH}"
+[ -d "${MOZ_FETCHES_DIR}/clang-mac/clang" ] && cat > ${MOZ_FETCHES_DIR}/clang-mac/clang/bin/llvm-config <<EOF_LLVM_CONFIG
+#!/bin/sh
+${MOZ_FETCHES_DIR}/clang/bin/llvm-config "\$@" | sed 's,${MOZ_FETCHES_DIR}/clang,${MOZ_FETCHES_DIR}/clang-mac/clang,g;s,-lLLVM-[0-9]\+,-lLLVM,g'
+EOF_LLVM_CONFIG
 
-# The x86_64-darwin11-ld linker from cctools requires libraries provided
-# by clang, so we need to set LD_LIBRARY_PATH for that to work.
-export LD_LIBRARY_PATH="${CLANGDIR}/lib:${LD_LIBRARY_PATH}"
+export PATH="${MOZ_FETCHES_DIR}/rustc/bin:${MOZ_FETCHES_DIR}/clang/bin:${MOZ_FETCHES_DIR}/wrench-deps/meson:${PATH}"
 
 # Tell the configure script where to find zlib, because otherwise it tries
 # to use pkg-config to find it, which fails (no .pc file in the macos SDK).
@@ -42,12 +43,11 @@ export ZLIB_LIBS="-L${MACOS_SYSROOT}/usr/lib -lz"
 
 # Set up compiler and flags for cross-compile. Careful to only export the
 # target-specific CFLAGS/CXXFLAGS variables, to not break any host builds.
-LDPATH="${MOZ_FETCHES_DIR}/cctools/bin/${TARGET_TRIPLE}-ld"
 export CC="${CLANGDIR}/bin/clang"
-TARGET_CFLAGS="-fuse-ld=${LDPATH} -target ${TARGET_TRIPLE} -mmacosx-version-min=10.7 --rtlib=compiler-rt --sysroot ${MACOS_SYSROOT}"
+TARGET_CFLAGS="-fuse-ld=lld -target ${TARGET_TRIPLE} -mmacosx-version-min=10.12 --rtlib=compiler-rt --sysroot ${MACOS_SYSROOT} -Qunused-arguments"
 export CFLAGS_${TARGET_TRIPLE//-/_}="${TARGET_CFLAGS}"
 export CXX="${CLANGDIR}/bin/clang++"
-TARGET_CXXFLAGS="-fuse-ld=${LDPATH} -target ${TARGET_TRIPLE} -mmacosx-version-min=10.7 --rtlib=compiler-rt --sysroot ${MACOS_SYSROOT} -stdlib=libc++"
+TARGET_CXXFLAGS="-fuse-ld=lld -target ${TARGET_TRIPLE} -mmacosx-version-min=10.12 --rtlib=compiler-rt --sysroot ${MACOS_SYSROOT} -stdlib=libc++ -Qunused-arguments"
 export CXXFLAGS_${TARGET_TRIPLE//-/_}="${TARGET_CXXFLAGS}"
 export AR="${CLANGDIR}/bin/llvm-ar"
 

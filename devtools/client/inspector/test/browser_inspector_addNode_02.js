@@ -8,7 +8,7 @@
 
 const TEST_URL = URL_ROOT + "doc_inspector_add_node.html";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
 
   info("Select the DOCTYPE element");

@@ -27,13 +27,13 @@ add_task(async function test() {
 
   is(
     newTab.previousElementSibling,
-    tab2,
-    "New tab should be opened after tab2 when tab1 and tab2 are multiselected"
+    tab1,
+    "New tab should be opened after the selected tab (tab1)"
   );
   is(
     newTab.nextElementSibling,
-    tab3,
-    "New tab should be opened before tab3 when tab1 and tab2 are multiselected"
+    tab2,
+    "New tab should be opened after the selected tab (tab1) and before tab2"
   );
   BrowserTestUtils.removeTab(newTab);
 
@@ -75,16 +75,12 @@ add_task(async function test() {
   openEvent = await promiseTabOpened;
   newTab = openEvent.target;
   let previous = gBrowser.tabContainer.findNextTab(newTab, { direction: -1 });
-  is(
-    previous,
-    tab3,
-    "New tab should be opened after tab3 when tab1 and tab3 are selected"
-  );
+  is(previous, tab1, "New tab should be opened after the selected tab (tab1)");
   let next = gBrowser.tabContainer.findNextTab(newTab, { direction: 1 });
   is(
     next,
-    null,
-    "New tab should be opened at the end of the tabstrip when tab1 and tab3 are selected"
+    tab2,
+    "New tab should be opened after the selected tab (tab1) and before tab2"
   );
   BrowserTestUtils.removeTab(newTab);
 

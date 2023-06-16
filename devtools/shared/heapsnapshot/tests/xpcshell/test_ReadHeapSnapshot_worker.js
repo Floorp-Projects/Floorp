@@ -4,7 +4,7 @@
 "use strict";
 
 // Test that we can read core dumps into HeapSnapshot instances in a worker.
-add_task(async function() {
+add_task(async function () {
   const worker = new ChromeWorker("resource://test/heap-snapshot-worker.js");
   worker.postMessage({});
 

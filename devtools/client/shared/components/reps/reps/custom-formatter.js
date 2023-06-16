@@ -5,7 +5,7 @@
 "use strict";
 
 // Make this available to both AMD and CJS environments
-define(function(require, exports, module) {
+define(function (require, exports, module) {
   // ReactJS
   const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
   // Dependencies
@@ -17,6 +17,7 @@ define(function(require, exports, module) {
   const {
     cleanupStyle,
   } = require("devtools/client/shared/components/reps/reps/rep-utils");
+  const flags = require("resource://devtools/shared/flags.js");
 
   const ALLOWED_TAGS = new Set([
     "span",
@@ -32,7 +33,10 @@ define(function(require, exports, module) {
   class CustomFormatter extends Component {
     static get propTypes() {
       return {
+        autoExpandDepth: PropTypes.number,
+        client: PropTypes.object,
         createElement: PropTypes.func,
+        frame: PropTypes.object,
         front: PropTypes.object,
         object: PropTypes.object.isRequired,
       };
@@ -54,10 +58,27 @@ define(function(require, exports, module) {
 
       const open = !this.state.open;
       if (open && !this.state.bodyJsonMl) {
-        const response = await this.props.front.customFormatterBody();
+        let front = this.props.front;
+        if (!front && this.props.client?.createObjectFront) {
+          if (flags.testing && !this.props.frame) {
+            throw new Error("props.frame is mandatory");
+          }
+          front = this.props.client.createObjectFront(
+            this.props.object,
+            this.props.frame
+          );
+        }
+        if (!front) {
+          return;
+        }
+
+        const response = await front.customFormatterBody();
 
         const bodyJsonMl = renderJsonMl(response.customFormatterBody, {
           ...this.props,
+          autoExpandDepth: this.props.autoExpandDepth
+            ? this.props.autoExpandDepth - 1
+            : 0,
           object: null,
         });
 
@@ -176,7 +197,7 @@ define(function(require, exports, module) {
             childElement = createElement(CustomFormatter, {
               ...props,
               object: gripOrPrimitive,
-              front: child,
+              front: child && !!child.typeName ? child : null,
             });
           } else {
             // Here we have a non custom-formatted grip, so we let the ObjectInspector
@@ -190,12 +211,12 @@ define(function(require, exports, module) {
               mode: props.mode == MODE.LONG ? MODE.SHORT : MODE.TINY,
               roots: [
                 {
-                  path: `${gripOrPrimitive?.actorID ??
-                    gripOrPrimitive?.actor ??
-                    null}`,
+                  path: `${
+                    gripOrPrimitive?.actorID ?? gripOrPrimitive?.actor ?? null
+                  }`,
                   contents: {
                     value: gripOrPrimitive,
-                    front: child,
+                    front: child && !!child.typeName ? child : null,
                   },
                 },
               ],

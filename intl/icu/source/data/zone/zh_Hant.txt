@@ -259,6 +259,9 @@ zh_Hant{
         "America:Chihuahua"{
             ec{"奇華華"}
         }
+        "America:Ciudad_Juarez"{
+            ec{"華雷斯"}
+        }
         "America:Coral_Harbour"{
             ec{"阿蒂科肯"}
         }

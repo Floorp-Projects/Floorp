@@ -8,17 +8,17 @@
  * For normal loads, this happens automatically because a non-same-document state
  * change takes place.
  */
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.withNewTab(
     TEST_BASE_URL + "dummy_page.html",
-    async function(browser) {
+    async function (browser) {
       gURLBar.value = "";
 
       let locationChangePromise = BrowserTestUtils.waitForLocationChange(
         gBrowser,
         TEST_BASE_URL + "dummy_page2.html"
       );
-      await SpecialPowers.spawn(browser, [], function() {
+      await SpecialPowers.spawn(browser, [], function () {
         content.history.pushState({}, "Page 2", "dummy_page2.html");
       });
       await locationChangePromise;

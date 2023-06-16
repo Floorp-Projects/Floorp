@@ -9,11 +9,11 @@
 
 const MAX_RESULTS = UrlbarPrefs.get("maxRichResults");
 
-add_setup(async function() {
+add_setup(async function () {
   for (let i = 0; i < MAX_RESULTS; i++) {
     await PlacesTestUtils.addVisits("http://example.com/" + i);
   }
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.history.clear();
   });
 });

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-add_task(async function() {
+add_task(async function () {
   is(gBrowser.tabs.length, 1, "one tab is open initially");
 
   // Add several new tabs in sequence, interrupted by selecting a

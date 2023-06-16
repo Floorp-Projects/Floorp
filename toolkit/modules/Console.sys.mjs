@@ -225,7 +225,7 @@ function log(aThing) {
       let keys = Object.getOwnPropertyNames(aThing);
       if (keys.length) {
         reply += type + "\n";
-        keys.forEach(function(aProp) {
+        keys.forEach(function (aProp) {
           reply += logProperty(aProp, aThing[aProp]);
         });
       } else {
@@ -235,7 +235,7 @@ function log(aThing) {
         while (root != null) {
           let properties = Object.keys(root);
           properties.sort();
-          properties.forEach(function(property) {
+          properties.forEach(function (property) {
             if (!(property in logged)) {
               logged[property] = property;
               reply += logProperty(property, aThing[property]);
@@ -328,7 +328,7 @@ function shouldLog(aLevel, aMaxLevel) {
  */
 function parseStack(aStack) {
   let trace = [];
-  aStack.split("\n").forEach(function(line) {
+  aStack.split("\n").forEach(function (line) {
     if (!line) {
       return;
     }
@@ -386,7 +386,7 @@ function getStack(aFrame, aMaxDepth = 0) {
  */
 function formatTrace(aTrace) {
   let reply = "";
-  aTrace.forEach(function(frame) {
+  aTrace.forEach(function (frame) {
     reply +=
       fmt(frame.filename, 20, 20, { truncate: "start" }) +
       " " +
@@ -471,14 +471,14 @@ function dumpMessage(aConsole, aLevel, aMessage) {
  * @see createMultiLineDumper()
  */
 function createDumper(aLevel) {
-  return function() {
+  return function () {
     if (!shouldLog(aLevel, this.maxLogLevel)) {
       return;
     }
     let args = Array.prototype.slice.call(arguments, 0);
     let frame = getStack(Components.stack.caller, 1)[0];
     sendConsoleAPIMessage(this, aLevel, frame, args);
-    let data = args.map(function(arg) {
+    let data = args.map(function (arg) {
       return stringify(arg, true);
     });
     dumpMessage(this, aLevel, data.join(" "));
@@ -497,7 +497,7 @@ function createDumper(aLevel) {
  * @see createDumper()
  */
 function createMultiLineDumper(aLevel) {
-  return function() {
+  return function () {
     if (!shouldLog(aLevel, this.maxLogLevel)) {
       return;
     }
@@ -505,7 +505,7 @@ function createMultiLineDumper(aLevel) {
     let args = Array.prototype.slice.call(arguments, 0);
     let frame = getStack(Components.stack.caller, 1)[0];
     sendConsoleAPIMessage(this, aLevel, frame, args);
-    args.forEach(function(arg) {
+    args.forEach(function (arg) {
       this.dump(log(arg));
     }, this);
   };

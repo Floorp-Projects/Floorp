@@ -7,14 +7,14 @@
 
 const TEST_URL = "http://example.com/";
 
-const checkToolbox = async function(tab, location) {
+const checkToolbox = async function (tab, location) {
   const toolbox = await gDevTools.getToolboxForTab(tab);
   ok(!!toolbox, `Toolbox exists ${location}`);
 };
 
 addRDMTask(
   "",
-  async function() {
+  async function () {
     const tab = await addTab(TEST_URL);
 
     info("Open toolbox outside RDM");

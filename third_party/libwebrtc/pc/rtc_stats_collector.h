@@ -29,6 +29,7 @@
 #include "api/stats/rtcstats_objects.h"
 #include "call/call.h"
 #include "media/base/media_channel.h"
+#include "modules/audio_device/include/audio_device.h"
 #include "pc/data_channel_utils.h"
 #include "pc/peer_connection_internal.h"
 #include "pc/rtp_receiver.h"
@@ -104,10 +105,10 @@ class RTCStatsCollector : public rtc::RefCountInterface,
 
   // Stats gathering on a particular thread. Virtual for the sake of testing.
   virtual void ProducePartialResultsOnSignalingThreadImpl(
-      int64_t timestamp_us,
+      Timestamp timestamp,
       RTCStatsReport* partial_report);
   virtual void ProducePartialResultsOnNetworkThreadImpl(
-      int64_t timestamp_us,
+      Timestamp timestamp,
       const std::map<std::string, cricket::TransportStats>&
           transport_stats_by_name,
       const std::map<std::string, CertificateStatsPair>& transport_cert_stats,
@@ -170,6 +171,7 @@ class RTCStatsCollector : public rtc::RefCountInterface,
     absl::optional<std::string> mid;
     absl::optional<std::string> transport_name;
     TrackMediaInfoMap track_media_info_map;
+    absl::optional<RtpTransceiverDirection> current_direction;
   };
 
   void DeliverCachedReport(
@@ -178,50 +180,53 @@ class RTCStatsCollector : public rtc::RefCountInterface,
 
   // Produces `RTCCertificateStats`.
   void ProduceCertificateStats_n(
-      int64_t timestamp_us,
+      Timestamp timestamp,
       const std::map<std::string, CertificateStatsPair>& transport_cert_stats,
       RTCStatsReport* report) const;
   // Produces `RTCDataChannelStats`.
-  void ProduceDataChannelStats_s(int64_t timestamp_us,
+  void ProduceDataChannelStats_s(Timestamp timestamp,
                                  RTCStatsReport* report) const;
   // Produces `RTCIceCandidatePairStats` and `RTCIceCandidateStats`.
   void ProduceIceCandidateAndPairStats_n(
-      int64_t timestamp_us,
+      Timestamp timestamp,
       const std::map<std::string, cricket::TransportStats>&
           transport_stats_by_name,
       const Call::Stats& call_stats,
       RTCStatsReport* report) const;
   // Produces `RTCMediaStreamStats`.
-  void ProduceMediaStreamStats_s(int64_t timestamp_us,
+  void ProduceMediaStreamStats_s(Timestamp timestamp,
                                  RTCStatsReport* report) const;
   // Produces `RTCMediaStreamTrackStats`.
-  void ProduceMediaStreamTrackStats_s(int64_t timestamp_us,
+  void ProduceMediaStreamTrackStats_s(Timestamp timestamp,
                                       RTCStatsReport* report) const;
   // Produces RTCMediaSourceStats, including RTCAudioSourceStats and
   // RTCVideoSourceStats.
-  void ProduceMediaSourceStats_s(int64_t timestamp_us,
+  void ProduceMediaSourceStats_s(Timestamp timestamp,
                                  RTCStatsReport* report) const;
   // Produces `RTCPeerConnectionStats`.
-  void ProducePeerConnectionStats_s(int64_t timestamp_us,
+  void ProducePeerConnectionStats_s(Timestamp timestamp,
                                     RTCStatsReport* report) const;
+  // Produces `RTCAudioPlayoutStats`.
+  void ProduceAudioPlayoutStats_s(Timestamp timestamp,
+                                  RTCStatsReport* report) const;
   // Produces `RTCInboundRTPStreamStats`, `RTCOutboundRTPStreamStats`,
   // `RTCRemoteInboundRtpStreamStats`, `RTCRemoteOutboundRtpStreamStats` and any
   // referenced `RTCCodecStats`. This has to be invoked after transport stats
   // have been created because some metrics are calculated through lookup of
   // other metrics.
   void ProduceRTPStreamStats_n(
-      int64_t timestamp_us,
+      Timestamp timestamp,
       const std::vector<RtpTransceiverStatsInfo>& transceiver_stats_infos,
       RTCStatsReport* report) const;
-  void ProduceAudioRTPStreamStats_n(int64_t timestamp_us,
+  void ProduceAudioRTPStreamStats_n(Timestamp timestamp,
                                     const RtpTransceiverStatsInfo& stats,
                                     RTCStatsReport* report) const;
-  void ProduceVideoRTPStreamStats_n(int64_t timestamp_us,
+  void ProduceVideoRTPStreamStats_n(Timestamp timestamp,
                                     const RtpTransceiverStatsInfo& stats,
                                     RTCStatsReport* report) const;
   // Produces `RTCTransportStats`.
   void ProduceTransportStats_n(
-      int64_t timestamp_us,
+      Timestamp timestamp,
       const std::map<std::string, cricket::TransportStats>&
           transport_stats_by_name,
       const std::map<std::string, CertificateStatsPair>& transport_cert_stats,
@@ -236,13 +241,19 @@ class RTCStatsCollector : public rtc::RefCountInterface,
   void PrepareTransceiverStatsInfosAndCallStats_s_w_n();
 
   // Stats gathering on a particular thread.
-  void ProducePartialResultsOnSignalingThread(int64_t timestamp_us);
+  void ProducePartialResultsOnSignalingThread(Timestamp timestamp);
   void ProducePartialResultsOnNetworkThread(
-      int64_t timestamp_us,
+      Timestamp timestamp,
       absl::optional<std::string> sctp_transport_name);
   // Merges `network_report_` into `partial_report_` and completes the request.
   // This is a NO-OP if `network_report_` is null.
   void MergeNetworkReport_s();
+
+  rtc::scoped_refptr<RTCStatsReport> CreateReportFilteredBySelector(
+      bool filter_by_sender_selector,
+      rtc::scoped_refptr<const RTCStatsReport> report,
+      rtc::scoped_refptr<RtpSenderInternal> sender_selector,
+      rtc::scoped_refptr<RtpReceiverInternal> receiver_selector);
 
   // Slots for signals (sigslot) that are wired up to `pc_`.
   void OnSctpDataChannelCreated(SctpDataChannel* channel);
@@ -291,6 +302,8 @@ class RTCStatsCollector : public rtc::RefCountInterface,
       RTC_GUARDED_BY(cached_certificates_mutex_);
 
   Call::Stats call_stats_;
+
+  absl::optional<AudioDeviceModule::Stats> audio_device_stats_;
 
   // A timestamp, in microseconds, that is based on a timer that is
   // monotonically increasing. That is, even if the system clock is modified the

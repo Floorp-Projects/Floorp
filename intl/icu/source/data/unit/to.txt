@@ -131,6 +131,7 @@ to{
                     }
                 }
             }
+            times{"{0}⋅{1}"}
         }
         concentr{
             item{
@@ -362,6 +363,7 @@ to{
         force{
             kilowatt-hour-per-100-kilometer{
                 dnam{"kilouate-houa he kilomita ʻe 100"}
+                other{"{0} kWh/100km"}
             }
             newton{
                 dnam{"Niutoni"}
@@ -943,11 +945,49 @@ to{
         }
         compound{
             1024p1{"ki{0}"}
+            1024p2{"Mi{0}"}
             1024p3{"Ki{0}"}
+            1024p4{"Ti{0}"}
+            1024p5{"Pi{0}"}
+            1024p6{"Ei{0}"}
+            1024p7{"Zi{0}"}
+            1024p8{"Yi{0}"}
             10p-1{"t{0}"}
+            10p-12{"p{0}"}
+            10p-15{"f{0}"}
+            10p-18{"a{0}"}
             10p-2{"s{0}"}
+            10p-21{"z{0}"}
+            10p-24{"y{0}"}
+            10p-3{"m{0}"}
+            10p-6{"μ{0}"}
+            10p-9{"n{0}"}
             10p1{"ta{0}"}
+            10p12{"T{0}"}
+            10p15{"P{0}"}
+            10p18{"E{0}"}
+            10p2{"h{0}"}
+            10p21{"Z{0}"}
+            10p24{"Y{0}"}
+            10p3{"k{0}"}
+            10p6{"M{0}"}
+            10p9{"G{0}"}
             per{"{0}/{1}"}
+            power2{
+                other{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+            }
+            power3{
+                other{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+            }
+            times{"{0}⋅{1}"}
         }
         concentr{
             item{
@@ -983,6 +1023,7 @@ to{
                 other{"{0} khm"}
             }
             permyriad{
+                dnam{"‱"}
                 other{"{0}‱"}
             }
         }
@@ -1147,6 +1188,7 @@ to{
                 other{"{0} kal"}
             }
             electronvolt{
+                dnam{"eV"}
                 other{"{0} eV"}
             }
             foodcalorie{
@@ -1175,7 +1217,11 @@ to{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kWh/100km"}
+            }
             newton{
+                dnam{"N"}
                 other{"{0} N"}
             }
             pound-force{
@@ -1250,6 +1296,7 @@ to{
                 other{"{0} tm"}
             }
             earth-radius{
+                dnam{"L⊕"}
                 other{"{0} L⊕"}
             }
             fathom{
@@ -1334,6 +1381,10 @@ to{
                 dnam{"ktl"}
                 other{"{0} ktl"}
             }
+            lumen{
+                dnam{"lm"}
+                other{"lm ʻe {0}"}
+            }
             lux{
                 dnam{"lx"}
                 other{"{0} lx"}
@@ -1357,6 +1408,7 @@ to{
                 other{"{0} M⊕"}
             }
             grain{
+                dnam{"tenga"}
                 other{"{0} tenga"}
             }
             gram{
@@ -1452,9 +1504,11 @@ to{
                 other{"{0} in-Hg"}
             }
             kilopascal{
+                dnam{"kPa"}
                 other{"{0} kPa"}
             }
             megapascal{
+                dnam{"MPa"}
                 other{"{0} MPa"}
             }
             millibar{
@@ -1466,6 +1520,7 @@ to{
                 other{"{0} mm-Hg"}
             }
             pascal{
+                dnam{"Pa"}
                 other{"{0} Pa"}
             }
             pound-force-per-square-inch{
@@ -1511,6 +1566,7 @@ to{
         }
         torque{
             newton-meter{
+                dnam{"N⋅m"}
                 other{"{0} N⋅m"}
             }
             pound-force-foot{

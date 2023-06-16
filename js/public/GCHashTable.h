@@ -109,7 +109,7 @@ namespace js {
 // HashMap that supports rekeying.
 //
 // If your keys are pointers to something like JSObject that can be tenured or
-// compacted, prefer to use GCHashMap with MovableCellHasher, which takes
+// compacted, prefer to use GCHashMap with StableCellHasher, which takes
 // advantage of the Zone's stable id table to make rekeying unnecessary.
 template <typename Key, typename Value,
           typename HashPolicy = DefaultHasher<Key>,

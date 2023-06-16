@@ -21,12 +21,9 @@ add_task(
     );
 
     const [f, s, ne, e] = packet.frame.arguments;
-    const [
-      fClient,
-      sClient,
-      neClient,
-      eClient,
-    ] = packet.frame.arguments.map(a => threadFront.pauseGrip(a));
+    const [fClient, sClient, neClient, eClient] = packet.frame.arguments.map(
+      a => threadFront.pauseGrip(a)
+    );
 
     Assert.ok(!f.extensible);
     Assert.ok(!fClient.isExtensible);
@@ -53,7 +50,7 @@ function evalCode(debuggee) {
   /* eslint-disable no-undef */
   debuggee.eval(
     "(" +
-      function() {
+      function () {
         const f = {};
         Object.freeze(f);
         const s = {};

@@ -140,9 +140,10 @@ function closingPopupEndsDrag(popup) {
             // Timer to close a submenu that's been dragged off of.
             // Only close the submenu if the mouse isn't being dragged over any
             // of its child menus.
-            var draggingOverChild = PlacesControllerDragHelper.draggingOverChildNode(
-              this._folder.elt
-            );
+            var draggingOverChild =
+              PlacesControllerDragHelper.draggingOverChildNode(
+                this._folder.elt
+              );
             if (draggingOverChild) {
               this._folder.elt = null;
             }

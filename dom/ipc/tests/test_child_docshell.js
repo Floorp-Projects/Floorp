@@ -13,7 +13,7 @@ add_task(async function test() {
 
   await new Promise(resolve => {
     let mm = page.browser.messageManager;
-    mm.addMessageListener("chromeEventHandler", function(msg) {
+    mm.addMessageListener("chromeEventHandler", function (msg) {
       var result = msg.json;
       equal(
         result.processType,
@@ -26,7 +26,7 @@ add_task(async function test() {
       );
     });
 
-    mm.addMessageListener("DOMWindowCreatedReceived", function(msg) {
+    mm.addMessageListener("DOMWindowCreatedReceived", function (msg) {
       ok(true, "the chrome event handler looks functional");
       var result = msg.json;
       ok(
@@ -42,7 +42,7 @@ add_task(async function test() {
     });
 
     // Inject a frame script in the child process:
-    page.loadFrameScript(async function() {
+    page.loadFrameScript(async function () {
       /* eslint-env mozilla/frame-script */
       var chromeEventHandler = docShell.chromeEventHandler;
       sendAsyncMessage("chromeEventHandler", {
@@ -55,23 +55,24 @@ add_task(async function test() {
         Ensure that this chromeEventHandler actually works,
         by creating a new window and listening for its DOMWindowCreated event
       */
-      chromeEventHandler.addEventListener("DOMWindowCreated", function listener(
-        evt
-      ) {
-        if (evt.target == content.document) {
-          return;
+      chromeEventHandler.addEventListener(
+        "DOMWindowCreated",
+        function listener(evt) {
+          if (evt.target == content.document) {
+            return;
+          }
+          chromeEventHandler.removeEventListener("DOMWindowCreated", listener);
+          let new_win = evt.target.defaultView;
+          let new_docShell = new_win.docShell;
+          sendAsyncMessage("DOMWindowCreatedReceived", {
+            stableChromeEventHandler:
+              chromeEventHandler === docShell.chromeEventHandler,
+            iframeHasNewDocShell: new_docShell !== docShell,
+            iframeHasSameChromeEventHandler:
+              new_docShell.chromeEventHandler === chromeEventHandler,
+          });
         }
-        chromeEventHandler.removeEventListener("DOMWindowCreated", listener);
-        let new_win = evt.target.defaultView;
-        let new_docShell = new_win.docShell;
-        sendAsyncMessage("DOMWindowCreatedReceived", {
-          stableChromeEventHandler:
-            chromeEventHandler === docShell.chromeEventHandler,
-          iframeHasNewDocShell: new_docShell !== docShell,
-          iframeHasSameChromeEventHandler:
-            new_docShell.chromeEventHandler === chromeEventHandler,
-        });
-      });
+      );
 
       if (content.document.readyState != "complete") {
         await new Promise(res =>

@@ -335,9 +335,8 @@ var DownloadsPanel = {
     DownloadsView.richListBox.removeAttribute("force-focus-visible");
 
     // Since at most one popup is open at any given time, we can set globally.
-    DownloadsCommon.getIndicatorData(
-      window
-    ).attentionSuppressed &= ~DownloadsCommon.SUPPRESS_PANEL_OPEN;
+    DownloadsCommon.getIndicatorData(window).attentionSuppressed &=
+      ~DownloadsCommon.SUPPRESS_PANEL_OPEN;
 
     // Allow the anchor to be hidden.
     DownloadsButton.releaseAnchor();
@@ -729,9 +728,8 @@ var DownloadsView = {
    */
   get downloadsHistory() {
     delete this.downloadsHistory;
-    return (this.downloadsHistory = document.getElementById(
-      "downloadsHistory"
-    ));
+    return (this.downloadsHistory =
+      document.getElementById("downloadsHistory"));
   },
 
   // Callback functions from DownloadsData
@@ -903,13 +901,7 @@ var DownloadsView = {
         }
       }
       // Toggle opening the file after the download has completed
-      if (
-        !download.stopped &&
-        command.startsWith("downloadsCmd_open") &&
-        Services.prefs.getBoolPref(
-          "browser.download.improvements_to_download_panel"
-        )
-      ) {
+      if (!download.stopped && command.startsWith("downloadsCmd_open")) {
         download.launchWhenSucceeded = !download.launchWhenSucceeded;
         download._launchedFromPanel = download.launchWhenSucceeded;
       }
@@ -1032,9 +1024,8 @@ var DownloadsView = {
     // this here instead of in DownloadsViewUI because DownloadsPlacesView
     // allows selecting multiple downloads, so in that view the menuitem will be
     // shown according to whether at least one of the selected items has a URL.
-    this.contextMenu.querySelector(
-      ".downloadCopyLocationMenuItem"
-    ).hidden = !element._shell.download.source?.url;
+    this.contextMenu.querySelector(".downloadCopyLocationMenuItem").hidden =
+      !element._shell.download.source?.url;
   },
 
   onDownloadDragStart(aEvent) {

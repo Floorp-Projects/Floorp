@@ -60,7 +60,7 @@ add_task(async function testPopupSelectPopup() {
 
     const selectPopup = await popupPromise;
 
-    let elemRect = await SpecialPowers.spawn(browser, [], async function() {
+    let elemRect = await SpecialPowers.spawn(browser, [], async function () {
       let elem = content.document.getElementById("select");
       let r = elem.getBoundingClientRect();
 

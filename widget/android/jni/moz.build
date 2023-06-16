@@ -13,6 +13,7 @@ EXPORTS.mozilla.jni += [
     "GeckoBundleUtils.h",
     "GeckoResultUtils.h",
     "Natives.h",
+    "NativesInlines.h",
     "Refs.h",
     "TypeAdapter.h",
     "Types.h",

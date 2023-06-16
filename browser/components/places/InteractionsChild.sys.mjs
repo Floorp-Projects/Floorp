@@ -17,9 +17,8 @@ export class InteractionsChild extends JSWindowActorChild {
   #currentURL;
 
   actorCreated() {
-    this.isContentWindowPrivate = lazy.PrivateBrowsingUtils.isContentWindowPrivate(
-      this.contentWindow
-    );
+    this.isContentWindowPrivate =
+      lazy.PrivateBrowsingUtils.isContentWindowPrivate(this.contentWindow);
 
     if (this.isContentWindowPrivate) {
       return;

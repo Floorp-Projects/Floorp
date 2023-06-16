@@ -11,12 +11,12 @@ const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-t
 const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const { hr } = dom;
 
-loader.lazyGetter(this, "MenuItem", function() {
+loader.lazyGetter(this, "MenuItem", function () {
   return createFactory(
     require("resource://devtools/client/shared/components/menu/MenuItem.js")
   );
 });
-loader.lazyGetter(this, "MenuList", function() {
+loader.lazyGetter(this, "MenuList", function () {
   return createFactory(
     require("resource://devtools/client/shared/components/menu/MenuList.js")
   );

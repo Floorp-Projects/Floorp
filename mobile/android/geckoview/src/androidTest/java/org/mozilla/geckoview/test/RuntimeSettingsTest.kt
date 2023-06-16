@@ -34,13 +34,13 @@ class RuntimeSettingsTest : BaseSessionTest() {
         assertThat(
             "initial font scale $initialFontSize set",
             settings.fontSizeFactor.toDouble(),
-            closeTo(initialFontSize.toDouble(), 0.05)
+            closeTo(initialFontSize.toDouble(), 0.05),
         )
         settings.fontInflationEnabled = initialFontInflation
         assertThat(
             "font inflation initially set to $initialFontInflation",
             settings.fontInflationEnabled,
-            `is`(initialFontInflation)
+            `is`(initialFontInflation),
         )
 
         settings.automaticFontSizeAdjustment = true
@@ -48,29 +48,29 @@ class RuntimeSettingsTest : BaseSessionTest() {
         val expectedFontSizeFactor = Settings.System.getFloat(
             contentResolver,
             Settings.System.FONT_SCALE,
-            1.0f
+            1.0f,
         )
         assertThat(
             "Gecko font scale should match system font scale",
             settings.fontSizeFactor.toDouble(),
-            closeTo(expectedFontSizeFactor.toDouble(), 0.05)
+            closeTo(expectedFontSizeFactor.toDouble(), 0.05),
         )
         assertThat(
             "font inflation enabled",
             settings.fontInflationEnabled,
-            `is`(initialFontInflation)
+            `is`(initialFontInflation),
         )
 
         settings.automaticFontSizeAdjustment = false
         assertThat(
             "Gecko font scale restored to previous value",
             settings.fontSizeFactor.toDouble(),
-            closeTo(initialFontSize.toDouble(), 0.05)
+            closeTo(initialFontSize.toDouble(), 0.05),
         )
         assertThat(
             "font inflation restored to previous value",
             settings.fontInflationEnabled,
-            `is`(initialFontInflation)
+            `is`(initialFontInflation),
         )
 
         // Now check with that with font inflation initially off, the initial state is still
@@ -82,37 +82,37 @@ class RuntimeSettingsTest : BaseSessionTest() {
         assertThat(
             "initial font scale $initialFontSize set",
             settings.fontSizeFactor.toDouble(),
-            closeTo(initialFontSize.toDouble(), 0.05)
+            closeTo(initialFontSize.toDouble(), 0.05),
         )
         settings.fontInflationEnabled = initialFontInflation
         assertThat(
             "font inflation initially set to $initialFontInflation",
             settings.fontInflationEnabled,
-            `is`(initialFontInflation)
+            `is`(initialFontInflation),
         )
 
         settings.automaticFontSizeAdjustment = true
         assertThat(
             "Gecko font scale should match system font scale",
             settings.fontSizeFactor.toDouble(),
-            closeTo(expectedFontSizeFactor.toDouble(), 0.05)
+            closeTo(expectedFontSizeFactor.toDouble(), 0.05),
         )
         assertThat(
             "font inflation enabled",
             settings.fontInflationEnabled,
-            `is`(initialFontInflation)
+            `is`(initialFontInflation),
         )
 
         settings.automaticFontSizeAdjustment = false
         assertThat(
             "Gecko font scale restored to previous value",
             settings.fontSizeFactor.toDouble(),
-            closeTo(initialFontSize.toDouble(), 0.05)
+            closeTo(initialFontSize.toDouble(), 0.05),
         )
         assertThat(
             "font inflation restored to previous value",
             settings.fontInflationEnabled,
-            `is`(initialFontInflation)
+            `is`(initialFontInflation),
         )
     }
 
@@ -136,7 +136,7 @@ class RuntimeSettingsTest : BaseSessionTest() {
         assertThat(
             "old text size ${initialFontSize}px, new size should be ${expectedFontSize}px",
             fontSize,
-            closeTo(expectedFontSize, 0.1)
+            closeTo(expectedFontSize, 0.1),
         )
 
         settings.fontSizeFactor = 1.0f
@@ -146,7 +146,7 @@ class RuntimeSettingsTest : BaseSessionTest() {
         assertThat(
             "text size should be ${initialFontSize}px again",
             fontSize,
-            closeTo(initialFontSize, 0.1)
+            closeTo(initialFontSize, 0.1),
         )
     }
 
@@ -162,7 +162,7 @@ class RuntimeSettingsTest : BaseSessionTest() {
         assertThat(
             "Gecko font inflation pref should be turned off",
             prefValue,
-            `is`(0)
+            `is`(0),
         )
 
         settings.fontInflationEnabled = true
@@ -170,7 +170,7 @@ class RuntimeSettingsTest : BaseSessionTest() {
         assertThat(
             "Gecko font inflation pref should be turned on",
             prefValue,
-            `is`(baseFontInflationMinTwips)
+            `is`(baseFontInflationMinTwips),
         )
 
         settings.fontSizeFactor = 2.0f
@@ -178,7 +178,7 @@ class RuntimeSettingsTest : BaseSessionTest() {
         assertThat(
             "Gecko font inflation pref should scale with increased font size factor",
             prefValue,
-            greaterThan(baseFontInflationMinTwips)
+            greaterThan(baseFontInflationMinTwips),
         )
 
         settings.fontSizeFactor = 0.5f
@@ -186,7 +186,7 @@ class RuntimeSettingsTest : BaseSessionTest() {
         assertThat(
             "Gecko font inflation pref should scale with decreased font size factor",
             prefValue,
-            lessThan(baseFontInflationMinTwips)
+            lessThan(baseFontInflationMinTwips),
         )
 
         settings.fontSizeFactor = 0.0f
@@ -194,12 +194,12 @@ class RuntimeSettingsTest : BaseSessionTest() {
         assertThat(
             "setting font size factor to 0 turns off font inflation",
             prefValue,
-            `is`(0)
+            `is`(0),
         )
         assertThat(
             "GeckoRuntimeSettings returns new font inflation state, too",
             settings.fontInflationEnabled,
-            `is`(false)
+            `is`(false),
         )
 
         settings.fontSizeFactor = 1.0f
@@ -207,12 +207,12 @@ class RuntimeSettingsTest : BaseSessionTest() {
         assertThat(
             "Gecko font inflation pref remains turned off",
             prefValue,
-            `is`(0)
+            `is`(0),
         )
         assertThat(
             "GeckoRuntimeSettings remains turned off",
             settings.fontInflationEnabled,
-            `is`(false)
+            `is`(false),
         )
     }
 
@@ -225,7 +225,7 @@ class RuntimeSettingsTest : BaseSessionTest() {
         assertThat(
             "about:config should be disabled by default",
             settings.aboutConfigEnabled,
-            equalTo(false)
+            equalTo(false),
         )
 
         mainSession.loadUri("about:config")

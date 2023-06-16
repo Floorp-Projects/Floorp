@@ -1,20 +1,20 @@
 const TEST_URL_PATH = "https://example.org" + DIRECTORY_PATH;
 
-add_setup(async function() {
+add_setup(async function () {
   let login = LoginTestUtils.testData.formLogin({
     origin: "https://example.org",
     formActionOrigin: "https://example.org",
     username: "username1",
     password: "password1",
   });
-  Services.logins.addLogin(login);
+  await Services.logins.addLoginAsync(login);
   login = LoginTestUtils.testData.formLogin({
     origin: "https://example.org",
     formActionOrigin: "https://example.org",
     username: "username2",
     password: "password2",
   });
-  Services.logins.addLogin(login);
+  await Services.logins.addLoginAsync(login);
 });
 
 // Verify that the autocomplete popup opens when the username field in autofocused.

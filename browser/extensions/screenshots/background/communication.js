@@ -6,7 +6,7 @@
 
 "use strict";
 
-this.communication = (function() {
+this.communication = (function () {
   const exports = {};
 
   const registeredFunctions = {};
@@ -61,7 +61,7 @@ this.communication = (function() {
     sendResponse({ type: "success", value: result });
   });
 
-  exports.register = function(name, func) {
+  exports.register = function (name, func) {
     registeredFunctions[name] = func;
   };
 

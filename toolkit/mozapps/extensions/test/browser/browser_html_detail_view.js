@@ -2,12 +2,12 @@
 
 "use strict";
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+const { AddonTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
 );
 
-const { ExtensionPermissions } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionPermissions.jsm"
+const { ExtensionPermissions } = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionPermissions.sys.mjs"
 );
 
 const SUPPORT_URL = Services.urlFormatter.formatURL(
@@ -1053,9 +1053,7 @@ add_task(async function testGoBackButton() {
 
   let loadDetailView = () => {
     let loaded = waitForViewLoad(win);
-    getAddonCard(win, id)
-      .querySelector("[action=expand]")
-      .click();
+    getAddonCard(win, id).querySelector("[action=expand]").click();
     return loaded;
   };
 

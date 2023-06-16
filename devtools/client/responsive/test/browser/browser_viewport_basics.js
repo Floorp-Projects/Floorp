@@ -6,7 +6,7 @@
 // Test viewports basics after opening, like size and location
 
 const TEST_URL = "https://example.org/";
-addRDMTask(TEST_URL, async function({ ui }) {
+addRDMTask(TEST_URL, async function ({ ui }) {
   const browser = ui.getViewportBrowser();
 
   is(
@@ -23,7 +23,7 @@ addRDMTask(TEST_URL, async function({ ui }) {
   // Browser's location should match original tab
   await navigateTo(TEST_URL, { browser });
 
-  const location = await spawnViewportTask(ui, {}, function() {
+  const location = await spawnViewportTask(ui, {}, function () {
     return content.location.href; // eslint-disable-line
   });
   is(location, TEST_URL, "Viewport location matches");

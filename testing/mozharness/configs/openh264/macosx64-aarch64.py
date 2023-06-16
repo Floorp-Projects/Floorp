@@ -22,14 +22,14 @@ config = {
     "partial_env": {
         "CFLAGS": (
             "-target aarch64-apple-darwin -mcpu=apple-a12 "
-            "-isysroot {MOZ_FETCHES_DIR}/MacOSX13.0.sdk "
+            "-isysroot {MOZ_FETCHES_DIR}/MacOSX13.3.sdk "
             "-mmacosx-version-min=11.0".format(
                 MOZ_FETCHES_DIR=os.environ["MOZ_FETCHES_DIR"]
             )
         ),
         "LDFLAGS": (
             "-target aarch64-apple-darwin -mcpu=apple-a12 "
-            "-isysroot {MOZ_FETCHES_DIR}/MacOSX13.0.sdk "
+            "-isysroot {MOZ_FETCHES_DIR}/MacOSX13.3.sdk "
             "-mmacosx-version-min=11.0".format(
                 MOZ_FETCHES_DIR=os.environ["MOZ_FETCHES_DIR"]
             )

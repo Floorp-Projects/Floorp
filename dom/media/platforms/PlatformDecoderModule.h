@@ -22,6 +22,7 @@
 #  include "mozilla/TaskQueue.h"
 #  include "mozilla/layers/KnowsCompositor.h"
 #  include "mozilla/layers/LayersTypes.h"
+#  include "mozilla/ipc/UtilityAudioDecoder.h"
 #  include "nsTArray.h"
 #  include "PerformanceRecorder.h"
 
@@ -524,7 +525,11 @@ class MediaDataDecoder : public DecoderDoctorLifeLogger<MediaDataDecoder> {
   virtual nsCString GetDescriptionName() const = 0;
 
   virtual nsCString GetProcessName() const {
-    return nsCString(XRE_GetProcessTypeString());
+    nsCString rv = nsCString(XRE_GetProcessTypeString());
+    if (XRE_IsUtilityProcess()) {
+      rv += "+"_ns + mozilla::ipc::GetChildAudioActorName();
+    }
+    return rv;
   };
   virtual nsCString GetCodecName() const = 0;
 

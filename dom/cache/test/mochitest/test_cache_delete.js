@@ -3,18 +3,18 @@
 var name = "delete" + context;
 
 function setupTest(reqs) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     var cache;
     caches
       .open(name)
-      .then(function(c) {
+      .then(function (c) {
         cache = c;
         return c.addAll(reqs);
       })
-      .then(function() {
+      .then(function () {
         resolve(cache);
       })
-      .catch(function(err) {
+      .catch(function (err) {
         reject(err);
       });
   });
@@ -27,23 +27,23 @@ function testBasics() {
   ];
   var cache;
   return setupTest(tests)
-    .then(function(c) {
+    .then(function (c) {
       cache = c;
       return cache.delete("//mochi.test:8888/?baz");
     })
-    .then(function(deleted) {
+    .then(function (deleted) {
       ok(!deleted, "Deleting a non-existing entry should fail");
       return cache.keys();
     })
-    .then(function(keys) {
+    .then(function (keys) {
       is(keys.length, 2, "No entries from the cache should be deleted");
       return cache.delete(tests[0]);
     })
-    .then(function(deleted) {
+    .then(function (deleted) {
       ok(deleted, "Deleting an existing entry should succeed");
       return cache.keys();
     })
-    .then(function(keys) {
+    .then(function (keys) {
       is(keys.length, 1, "Only one entry should exist now");
       ok(keys[0].url.includes(tests[1]), "The correct entry must be deleted");
     });
@@ -57,15 +57,15 @@ function testFragment() {
   ];
   var cache;
   return setupTest(tests)
-    .then(function(c) {
+    .then(function (c) {
       cache = c;
       return cache.delete(tests[0] + "#fragment");
     })
-    .then(function(deleted) {
+    .then(function (deleted) {
       ok(deleted, "Deleting an existing entry should succeed");
       return cache.keys();
     })
-    .then(function(keys) {
+    .then(function (keys) {
       is(keys.length, 2, "Only one entry should exist now");
       ok(keys[0].url.includes(tests[1]), "The correct entry must be deleted");
       ok(
@@ -75,11 +75,11 @@ function testFragment() {
       // Now, delete a request that was added with a fragment
       return cache.delete("//mochi.test:8888/?baz" + context);
     })
-    .then(function(deleted) {
+    .then(function (deleted) {
       ok(deleted, "Deleting an existing entry should succeed");
       return cache.keys();
     })
-    .then(function(keys) {
+    .then(function (keys) {
       is(keys.length, 1, "Only one entry should exist now");
       ok(keys[0].url.includes(tests[1]), "3The correct entry must be deleted");
     });
@@ -93,16 +93,16 @@ function testInterleaved() {
   var newURL = "//mochi.test:8888/?baz" + context;
   var cache;
   return setupTest(tests)
-    .then(function(c) {
+    .then(function (c) {
       cache = c;
       // Simultaneously add and delete a request
       return Promise.all([cache.delete(newURL), cache.add(newURL)]);
     })
-    .then(function(result) {
+    .then(function (result) {
       ok(!result[1], "deletion should fail");
       return cache.keys();
     })
-    .then(function(keys) {
+    .then(function (keys) {
       is(keys.length, 3, "Tree entries should still exist");
       ok(keys[0].url.includes(tests[0]), "The correct entry must be deleted");
       ok(keys[1].url.includes(tests[1]), "The correct entry must be deleted");
@@ -115,18 +115,18 @@ function testInterleaved() {
 
 // Make sure to clean up after each test step.
 function step(testPromise) {
-  return testPromise.then(function() {
+  return testPromise.then(function () {
     caches.delete(name);
   });
 }
 
 step(testBasics())
-  .then(function() {
+  .then(function () {
     return step(testFragment());
   })
-  .then(function() {
+  .then(function () {
     return step(testInterleaved());
   })
-  .then(function() {
+  .then(function () {
     testDone();
   });

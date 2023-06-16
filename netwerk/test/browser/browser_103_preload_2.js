@@ -130,7 +130,7 @@ add_task(async function test_103_iframe() {
       url: iframeUri,
       waitForLoad: true,
     },
-    async function() {}
+    async function () {}
   );
 
   let gotRequestCount = await fetch(
@@ -166,7 +166,7 @@ add_task(async function test_103_anchor() {
       url: anchorUri,
       waitForLoad: true,
     },
-    async function() {}
+    async function () {}
   );
 
   let gotRequestCount = await fetch(

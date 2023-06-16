@@ -28,7 +28,7 @@ add_task(async function test_offscreen_text() {
       gBrowser,
       url: "data:text/html;charset=utf-8," + encodeURIComponent(URI),
     },
-    async function(browser) {
+    async function (browser) {
       let finder = browser.finder;
       let listener = {
         onFindResult() {

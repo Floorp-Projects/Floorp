@@ -1,6 +1,6 @@
 import { UTSessionPing, UTUserEventPing } from "test/schemas/pings";
 import { GlobalOverrider } from "test/unit/utils";
-import { UTEventReporting } from "lib/UTEventReporting.jsm";
+import { UTEventReporting } from "lib/UTEventReporting.sys.mjs";
 
 const FAKE_EVENT_PING_PC = {
   event: "CLICK",

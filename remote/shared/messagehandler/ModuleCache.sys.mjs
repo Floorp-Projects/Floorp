@@ -186,7 +186,7 @@ export class ModuleCache {
    * @returns {boolean}
    *     True if the module exists.
    */
-  hasModule(moduleName, destination) {
+  hasModuleClass(moduleName, destination) {
     const classes = this.getAllModuleClasses(moduleName, destination);
     return !!classes.length;
   }
@@ -210,7 +210,7 @@ export class ModuleCache {
    * @throws {Error}
    *     If the provided module folder is unexpected.
    */
-  #getModuleClass = function(moduleName, originType, destinationType) {
+  #getModuleClass = function (moduleName, originType, destinationType) {
     if (
       destinationType === lazy.RootMessageHandler.type &&
       originType !== destinationType
@@ -258,8 +258,8 @@ export class ModuleCache {
 
     // If the command is targeting another type, the module is expected to
     // be in a composed folder eg "windowglobal-in-root/${moduleName}.jsm".
-    const destinationPath = lazy.getMessageHandlerClass(destinationType)
-      .modulePath;
+    const destinationPath =
+      lazy.getMessageHandlerClass(destinationType).modulePath;
     return `${destinationPath}-in-${originPath}`;
   }
 }

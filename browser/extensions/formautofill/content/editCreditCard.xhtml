@@ -4,87 +4,119 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-  <title data-l10n-id="autofill-add-new-card-title"></title>
-  <link rel="localization" href="browser/preferences/formAutofill.ftl"/>
-  <link rel="stylesheet" href="chrome://formautofill/content/skin/editDialog-shared.css"/>
-  <link rel="stylesheet" href="chrome://formautofill/content/skin/editCreditCard.css"/>
-  <link rel="stylesheet" href="chrome://formautofill/content/skin/editDialog.css"/>
-  <script src="chrome://formautofill/content/editDialog.js"></script>
-  <script src="chrome://formautofill/content/autofillEditForms.js"></script>
-</head>
-<body>
-  <form id="form" class="editCreditCardForm contentPane" autocomplete="off">
-    <!--
+  <head>
+    <title data-l10n-id="autofill-add-new-card-title"></title>
+    <link rel="localization" href="browser/preferences/formAutofill.ftl" />
+    <link
+      rel="stylesheet"
+      href="chrome://formautofill/content/skin/editDialog-shared.css"
+    />
+    <link
+      rel="stylesheet"
+      href="chrome://formautofill/content/skin/editCreditCard.css"
+    />
+    <link
+      rel="stylesheet"
+      href="chrome://formautofill/content/skin/editDialog.css"
+    />
+    <script src="chrome://formautofill/content/editDialog.js"></script>
+    <script src="chrome://formautofill/content/autofillEditForms.js"></script>
+  </head>
+  <body>
+    <form id="form" class="editCreditCardForm contentPane" autocomplete="off">
+      <!--
         The <span class="label-text" …/> needs to be after the form field in the same element in
         order to get proper label styling with :focus and :moz-ui-invalid.
       -->
-    <label id="cc-number-container" class="container" role="none">
-      <span id="invalidCardNumberString" hidden="hidden" data-l10n-id="autofill-card-invalid-number"></span>
-      <!-- Because there is text both before and after the input, a11y will
+      <label id="cc-number-container" class="container" role="none">
+        <span
+          id="invalidCardNumberString"
+          hidden="hidden"
+          data-l10n-id="autofill-card-invalid-number"
+        ></span>
+        <!-- Because there is text both before and after the input, a11y will
           include the value of the input in the label. Therefore, we override
           with aria-labelledby.
         -->
-      <input id="cc-number" type="text" required="required" minlength="14" pattern="[- 0-9]+" aria-labelledby="cc-number-label"/>
-      <span id="cc-number-label" data-l10n-id="autofill-card-number" class="label-text"/>
-    </label>
-    <label id="cc-exp-month-container" class="container">
-      <select id="cc-exp-month" required="required">
-        <option/>
-      </select>
-      <span data-l10n-id="autofill-card-expires-month" class="label-text"/>
-    </label>
-    <label id="cc-exp-year-container" class="container">
-      <select id="cc-exp-year" required="required">
-        <option/>
-      </select>
-      <span data-l10n-id="autofill-card-expires-year" class="label-text"/>
-    </label>
-    <label id="cc-name-container" class="container">
-      <input id="cc-name" type="text" required="required"/>
-      <span data-l10n-id="autofill-card-name-on-card" class="label-text"/>
-    </label>
-    <label id="cc-csc-container" class="container" hidden="hidden">
-      <!-- The CSC container will get filled in by forms that need a CSC (using csc-input.js) -->
-    </label>
-    <div id="billingAddressGUID-container" class="billingAddressRow container rich-picker">
-      <select id="billingAddressGUID" required="required">
-      </select>
-      <label for="billingAddressGUID" data-l10n-id="autofill-card-billing-address" class="label-text"/>
+        <input
+          id="cc-number"
+          type="text"
+          required="required"
+          minlength="14"
+          pattern="[- 0-9]+"
+          aria-labelledby="cc-number-label"
+        />
+        <span
+          id="cc-number-label"
+          data-l10n-id="autofill-card-number"
+          class="label-text"
+        />
+      </label>
+      <label id="cc-exp-month-container" class="container">
+        <select id="cc-exp-month" required="required">
+          <option />
+        </select>
+        <span data-l10n-id="autofill-card-expires-month" class="label-text" />
+      </label>
+      <label id="cc-exp-year-container" class="container">
+        <select id="cc-exp-year" required="required">
+          <option />
+        </select>
+        <span data-l10n-id="autofill-card-expires-year" class="label-text" />
+      </label>
+      <label id="cc-name-container" class="container">
+        <input id="cc-name" type="text" required="required" />
+        <span data-l10n-id="autofill-card-name-on-card" class="label-text" />
+      </label>
+      <label id="cc-csc-container" class="container" hidden="hidden">
+        <!-- The CSC container will get filled in by forms that need a CSC (using csc-input.js) -->
+      </label>
+      <div
+        id="billingAddressGUID-container"
+        class="billingAddressRow container rich-picker"
+      >
+        <select id="billingAddressGUID" required="required"></select>
+        <label
+          for="billingAddressGUID"
+          data-l10n-id="autofill-card-billing-address"
+          class="label-text"
+        />
+      </div>
+    </form>
+    <div id="controls-container">
+      <button id="cancel" data-l10n-id="autofill-cancel-button" />
+      <button id="save" class="primary" data-l10n-id="autofill-save-button" />
     </div>
-  </form>
-  <div id="controls-container">
-    <button id="cancel" data-l10n-id="autofill-cancel-button"/>
-    <button id="save" class="primary" data-l10n-id="autofill-save-button"/>
-  </div>
-  <script><![CDATA[
-    "use strict";
+    <script>
+      <![CDATA[
+          "use strict";
 
-    /* import-globals-from editDialog.js */
+          /* import-globals-from editDialog.js */
 
-    (async () => {
-      const {
-        record,
-      } = window.arguments?.[0] ?? {};
+          (async () => {
+            const {
+              record,
+            } = window.arguments?.[0] ?? {};
 
-      const addresses = {};
-      for (let address of await formAutofillStorage.addresses.getAll()) {
-        addresses[address.guid] = address;
-      }
+            const addresses = {};
+            for (let address of await formAutofillStorage.addresses.getAll()) {
+              addresses[address.guid] = address;
+            }
 
-      /* import-globals-from autofillEditForms.js */
-      const fieldContainer = new EditCreditCard({
-        form: document.getElementById("form"),
-      }, record, addresses);
+            /* import-globals-from autofillEditForms.js */
+            const fieldContainer = new EditCreditCard({
+              form: document.getElementById("form"),
+            }, record, addresses);
 
-      new EditCreditCardDialog({
-        title: document.querySelector("title"),
-        fieldContainer,
-        controlsContainer: document.getElementById("controls-container"),
-        cancel: document.getElementById("cancel"),
-        save: document.getElementById("save"),
-      }, record);
-    })();
-  ]]></script>
-</body>
+            new EditCreditCardDialog({
+              title: document.querySelector("title"),
+              fieldContainer,
+              controlsContainer: document.getElementById("controls-container"),
+              cancel: document.getElementById("cancel"),
+              save: document.getElementById("save"),
+            }, record);
+          })();
+        ]]>
+    </script>
+  </body>
 </html>

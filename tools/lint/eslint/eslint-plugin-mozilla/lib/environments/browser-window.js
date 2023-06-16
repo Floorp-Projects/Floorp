@@ -57,7 +57,8 @@ const MAPPINGS = {
     "browser/components/places/content/places-menupopup.js",
 };
 
-const globalScriptsRegExp = /^\s*Services.scriptloader.loadSubScript\(\"(.*?)\", this\);$/;
+const globalScriptsRegExp =
+  /^\s*Services.scriptloader.loadSubScript\(\"(.*?)\", this\);$/;
 
 function getGlobalScriptIncludes(scriptPath) {
   let fileData;

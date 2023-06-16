@@ -8,7 +8,7 @@
 const TEST_URI =
   "data:text/html;charset=utf-8,<!DOCTYPE html>Web Console test top-level await";
 
-add_task(async function() {
+add_task(async function () {
   // Enable await mapping.
   await pushPref("devtools.debugger.features.map-await-expression", true);
 
@@ -30,10 +30,9 @@ add_task(async function() {
   );
 
   // Check that the timestamp of the result is accurate
-  const {
-    visibleMessages,
-    mutableMessagesById,
-  } = hud.ui.wrapper.getStore().getState().messages;
+  const { visibleMessages, mutableMessagesById } = hud.ui.wrapper
+    .getStore()
+    .getState().messages;
   const [commandId, resultId] = visibleMessages;
   const delta =
     mutableMessagesById.get(resultId).timeStamp -

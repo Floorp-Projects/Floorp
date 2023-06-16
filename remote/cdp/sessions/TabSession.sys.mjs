@@ -113,7 +113,7 @@ export class TabSession extends Session {
   }
 
   // Event handler
-  handleEvent = function({ target, type }) {
+  handleEvent = function ({ target, type }) {
     switch (type) {
       case "XULFrameLoaderCreated":
         if (target === this.target.browser) {

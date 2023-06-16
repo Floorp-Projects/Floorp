@@ -79,7 +79,9 @@ window.bar = function bar() {
 };
 
 window.foo = async function foo() {
-  await bar();
+  // This will call a function from script.js, itself calling a function
+  // from original-with-query.js
+  await nonSourceMappedFunction();
   console.log("YO");
 };
 

@@ -50,6 +50,16 @@ es_AR{
                 other{"{0}a."}
             }
         }
+        electric{
+            volt{
+                dnam{"voltios"}
+            }
+        }
+        power{
+            watt{
+                dnam{"vatios"}
+            }
+        }
     }
     unitsShort{
         duration{

@@ -6,7 +6,7 @@ ChromeUtils.defineESModuleGetters(this, {
 });
 
 // Basic JEXL tests
-add_task(async function() {
+add_task(async function () {
   let val;
   // Test that basic expressions work
   val = await FilterExpressions.eval("2+2");
@@ -29,7 +29,7 @@ add_task(async function() {
 });
 
 // Date tests
-add_task(async function() {
+add_task(async function () {
   let val;
   // Test has a date transform
   val = await FilterExpressions.eval('"2016-04-22"|date');
@@ -45,7 +45,7 @@ add_task(async function() {
 });
 
 // Sampling tests
-add_task(async function() {
+add_task(async function () {
   let val;
   // Test stable sample returns true for matching samples
   val = await FilterExpressions.eval('["test"]|stableSample(1)');
@@ -69,7 +69,7 @@ add_task(async function() {
 });
 
 // Preference tests
-add_task(async function() {
+add_task(async function () {
   let val;
   // Compare the value of the preference
   Services.prefs.setIntPref("normandy.test.value", 3);

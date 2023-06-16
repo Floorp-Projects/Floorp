@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_setup(async function() {
+add_setup(async function () {
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("cookiebanners.service.mode");
     Services.prefs.clearUserPref("cookiebanners.service.mode.privateBrowsing");

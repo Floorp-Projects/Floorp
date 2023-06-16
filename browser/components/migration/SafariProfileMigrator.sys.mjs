@@ -15,6 +15,23 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PropertyListUtils: "resource://gre/modules/PropertyListUtils.sys.mjs",
 });
 
+// NSDate epoch is Jan 1, 2001 UTC
+const NS_DATE_EPOCH_MS = new Date("2001-01-01T00:00:00-00:00").getTime();
+
+// Convert NSDate timestamp to UNIX timestamp.
+function parseNSDate(cocoaDateStr) {
+  let asDouble = parseFloat(cocoaDateStr);
+  if (!isNaN(asDouble)) {
+    return new Date(NS_DATE_EPOCH_MS + asDouble * 1000);
+  }
+  return new Date();
+}
+
+// Convert UNIX timestamp to NSDate timestamp.
+function msToNSDate(ms) {
+  return parseFloat(ms - NS_DATE_EPOCH_MS) / 1000;
+}
+
 function Bookmarks(aBookmarksFile) {
   this._file = aBookmarksFile;
 }
@@ -262,38 +279,6 @@ Bookmarks.prototype = {
     ).path;
 
     for (const entry of entries) {
-      try {
-        // Try to get the favicon data for each bookmark we have.
-        // We use uri.spec as our unique identifier since bookmark links
-        // don't completely match up in the Safari data.
-        let uri = Services.io.newURI(entry.get("URLString"));
-        let uriSpec = uri.spec;
-
-        // Safari's favicon database doesn't include forward slashes for
-        // the page URLs, despite adding them in the Bookmarks.plist file.
-        // We'll strip any off here for our favicon lookup.
-        if (uriSpec.endsWith("/")) {
-          uriSpec = uriSpec.replace(/\/+$/, "");
-        }
-
-        let uuid = bookmarkURLToUUIDMap.get(uriSpec);
-        if (uuid) {
-          // Hash the UUID with md5 to give us the favicon file name
-          let hashedUUID = lazy.PlacesUtils.md5(uuid, {
-            format: "hex",
-          }).toUpperCase();
-          let faviconFile = PathUtils.join(
-            faviconFolder,
-            "favicons",
-            hashedUUID
-          );
-          let faviconData = await IOUtils.read(faviconFile);
-          favicons.push({ faviconData, uri });
-        }
-      } catch (error) {
-        console.error(error);
-      }
-
       let type = entry.get("WebBookmarkType");
       if (type == "WebBookmarkTypeList" && entry.has("Children")) {
         let convertedChildren = await this._convertEntries(
@@ -322,6 +307,40 @@ Bookmarks.prototype = {
           title = entry.get("URIDictionary").get("title");
         }
         convertedEntries.push({ url, title });
+
+        try {
+          // Try to get the favicon data for each bookmark we have.
+          // We use uri.spec as our unique identifier since bookmark links
+          // don't completely match up in the Safari data.
+          let uri = Services.io.newURI(url);
+          let uriSpec = uri.spec;
+
+          // Safari's favicon database doesn't include forward slashes for
+          // the page URLs, despite adding them in the Bookmarks.plist file.
+          // We'll strip any off here for our favicon lookup.
+          if (uriSpec.endsWith("/")) {
+            uriSpec = uriSpec.replace(/\/+$/, "");
+          }
+
+          let uuid = bookmarkURLToUUIDMap.get(uriSpec);
+          if (uuid) {
+            // Hash the UUID with md5 to give us the favicon file name.
+            let hashedUUID = lazy.PlacesUtils.md5(uuid, {
+              format: "hex",
+            }).toUpperCase();
+            let faviconFile = PathUtils.join(
+              faviconFolder,
+              "favicons",
+              hashedUUID
+            );
+            let faviconData = await IOUtils.read(faviconFile);
+            favicons.push({ faviconData, uri });
+          }
+        } catch (error) {
+          // Even if we fail, still continue the import process
+          // since favicons aren't as essential as the bookmarks themselves.
+          console.error(error);
+        }
       }
     }
 
@@ -329,82 +348,86 @@ Bookmarks.prototype = {
   },
 };
 
-function History(aHistoryFile) {
-  this._file = aHistoryFile;
-}
-History.prototype = {
-  type: MigrationUtils.resourceTypes.HISTORY,
+async function GetHistoryResource() {
+  let dbPath = FileUtils.getDir(
+    "ULibDir",
+    ["Safari", "History.db"],
+    false
+  ).path;
+  let maxAge = msToNSDate(
+    Date.now() - MigrationUtils.HISTORY_MAX_AGE_IN_MILLISECONDS
+  );
 
-  // Helper method for converting the visit date property to a PRTime value.
-  // The visit date is stored as a string, so it's not read as a Date
-  // object by PropertyListUtils.
-  _parseCocoaDate: function H___parseCocoaDate(aCocoaDateStr) {
-    let asDouble = parseFloat(aCocoaDateStr);
-    if (!isNaN(asDouble)) {
-      // reference date of NSDate.
-      let date = new Date("1 January 2001, GMT");
-      date.setMilliseconds(asDouble * 1000);
-      return date;
-    }
-    return new Date();
-  },
+  let countQuery = `
+    SELECT COUNT(*)
+    FROM history_items LEFT JOIN history_visits
+    ON history_items.id = history_visits.history_item
+    WHERE history_visits.visit_time > ${maxAge}
+    LIMIT 1;`;
+  let selectQuery = `
+    SELECT
+      history_items.url as history_url,
+      history_visits.title as history_title,
+      history_visits.visit_time as history_time
+    FROM history_items LEFT JOIN history_visits
+    ON history_items.id = history_visits.history_item
+    WHERE history_visits.visit_time > ${maxAge};`;
 
-  migrate: function H_migrate(aCallback) {
-    lazy.PropertyListUtils.read(this._file, aDict => {
+  let countResult = await MigrationUtils.getRowsFromDBWithoutLocks(
+    dbPath,
+    "Safari history",
+    countQuery
+  );
+
+  if (!countResult[0].getResultByName("COUNT(*)")) {
+    return null;
+  }
+
+  return {
+    type: MigrationUtils.resourceTypes.HISTORY,
+
+    async migrate(callback) {
+      callback(await this._migrate());
+    },
+
+    async _migrate() {
+      let historyRows;
+
       try {
-        if (!aDict) {
-          throw new Error("Could not read history property list");
-        }
-        if (!aDict.has("WebHistoryDates")) {
-          throw new Error("Unexpected history-property list format");
-        }
-
-        let pageInfos = [];
-        let entries = aDict.get("WebHistoryDates");
-        let failedOnce = false;
-        for (let entry of entries) {
-          if (entry.has("lastVisitedDate")) {
-            let date = this._parseCocoaDate(entry.get("lastVisitedDate"));
-            try {
-              pageInfos.push({
-                url: new URL(entry.get("")),
-                title: entry.get("title"),
-                visits: [
-                  {
-                    // Safari's History file contains only top-level urls.  It does not
-                    // distinguish between typed urls and linked urls.
-                    transition: lazy.PlacesUtils.history.TRANSITIONS.LINK,
-                    date,
-                  },
-                ],
-              });
-            } catch (ex) {
-              // Safari's History file may contain malformed URIs which
-              // will be ignored.
-              console.error(ex);
-              failedOnce = true;
-            }
-          }
-        }
-        if (!pageInfos.length) {
-          // If we failed at least once, then we didn't succeed in importing,
-          // otherwise we didn't actually have anything to import, so we'll
-          // report it as a success.
-          aCallback(!failedOnce);
-          return;
-        }
-
-        MigrationUtils.insertVisitsWrapper(pageInfos).then(
-          () => aCallback(true),
-          () => aCallback(false)
+        historyRows = await MigrationUtils.getRowsFromDBWithoutLocks(
+          dbPath,
+          "Safari history",
+          selectQuery
         );
+
+        if (!historyRows.length) {
+          console.log("No history found");
+          return false;
+        }
       } catch (ex) {
         console.error(ex);
-        aCallback(false);
+        return false;
       }
-    });
-  },
-};
+
+      let pageInfos = [];
+      for (let row of historyRows) {
+        pageInfos.push({
+          title: row.getResultByName("history_title"),
+          url: new URL(row.getResultByName("history_url")),
+          visits: [
+            {
+              transition: lazy.PlacesUtils.history.TRANSITIONS.TYPED,
+              date: parseNSDate(row.getResultByName("history_time")),
+            },
+          ],
+        });
+      }
+      await MigrationUtils.insertVisitsWrapper(pageInfos);
+
+      return true;
+    },
+  };
+}
 
 /**
  * Safari's preferences property list is independently used for three purposes:
@@ -497,14 +520,14 @@ export class SafariProfileMigrator extends MigratorBase {
     return "chrome://browser/content/migration/brands/safari.png";
   }
 
-  getResources() {
+  async getResources() {
     let profileDir = FileUtils.getDir("ULibDir", ["Safari"], false);
     if (!profileDir.exists()) {
       return null;
     }
 
     let resources = [];
-    let pushProfileFileResource = function(aFileName, aConstructor) {
+    let pushProfileFileResource = function (aFileName, aConstructor) {
       let file = profileDir.clone();
       file.append(aFileName);
       if (file.exists()) {
@@ -512,7 +535,6 @@ export class SafariProfileMigrator extends MigratorBase {
       }
     };
 
-    pushProfileFileResource("History.plist", History);
     pushProfileFileResource("Bookmarks.plist", Bookmarks);
 
     // The Reading List feature was introduced at the same time in Windows and
@@ -527,7 +549,11 @@ export class SafariProfileMigrator extends MigratorBase {
       resources.push(new SearchStrings(prefs));
     }
 
-    return resources;
+    resources.push(GetHistoryResource());
+
+    resources = await Promise.all(resources);
+
+    return resources.filter(r => r != null);
   }
 
   async getLastUsedDate() {

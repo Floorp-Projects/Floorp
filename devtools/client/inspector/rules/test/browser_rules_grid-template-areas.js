@@ -63,7 +63,7 @@ const multiLinesInnerText = '\n"a   a   bb" \n\'a   a   bb\' \n"ccc ccc bb"';
 const typedAndCopiedMultiLinesString = '"a a bb ccc" "a a bb ccc"';
 const typedAndCopiedMultiLinesInnerText = '\n"a a bb ccc" \n"a a bb ccc"';
 
-add_task(async function() {
+add_task(async function () {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, view } = await openRuleView();
 

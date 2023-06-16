@@ -64,7 +64,7 @@ public:
    *  Usual fields are "Description", "LongDescription", "Settings". Also, if containing a   
    *  field "Headers" these will be used as the default headers, so that you don't have to   
    *  to specify per test headers.                                                           
-   *  @param info pass in a const DataMap pointer. If no info, it will be set to NULL
+   *  @param info pass in a const DataMap pointer. If no info, it will be set to nullptr
    */
   virtual UBool getInfo(const DataMap *& info, UErrorCode &status) const = 0;
 

@@ -11,7 +11,7 @@
  * The test also checks that raw headers are displayed in the original
  * order and not sorted.
  */
-add_task(async function() {
+add_task(async function () {
   const { monitor } = await initNetMonitor(HTTPS_SIMPLE_SJS, {
     requestCount: 1,
   });

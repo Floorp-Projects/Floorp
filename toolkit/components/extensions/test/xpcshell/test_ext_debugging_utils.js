@@ -2,8 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const { ExtensionParent } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionParent.jsm"
+const { ExtensionParent } = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionParent.sys.mjs"
 );
 
 add_task(async function testExtensionDebuggingUtilsCleanup() {
@@ -45,12 +45,10 @@ add_task(async function testExtensionDebuggingUtilsCleanup() {
     addonId: extension.id,
   };
 
-  const waitFirstBrowser = ExtensionParent.DebugUtils.getExtensionProcessBrowser(
-    fakeAddonActor
-  );
-  const waitSecondBrowser = ExtensionParent.DebugUtils.getExtensionProcessBrowser(
-    anotherAddonActor
-  );
+  const waitFirstBrowser =
+    ExtensionParent.DebugUtils.getExtensionProcessBrowser(fakeAddonActor);
+  const waitSecondBrowser =
+    ExtensionParent.DebugUtils.getExtensionProcessBrowser(anotherAddonActor);
 
   const addonDebugBrowser = await waitFirstBrowser;
   equal(
@@ -137,9 +135,8 @@ add_task(async function testExtensionDebuggingUtilsAddonReloaded() {
     addonId: extension.id,
   };
 
-  const addonDebugBrowser = await ExtensionParent.DebugUtils.getExtensionProcessBrowser(
-    fakeAddonActor
-  );
+  const addonDebugBrowser =
+    await ExtensionParent.DebugUtils.getExtensionProcessBrowser(fakeAddonActor);
   equal(
     addonDebugBrowser.isRemoteBrowser,
     extension.extension.remote,
@@ -184,9 +181,8 @@ add_task(async function testExtensionDebuggingUtilsAddonReloaded() {
     "Got the expected number of requested debug browsers"
   );
 
-  const newAddonDebugBrowser = await ExtensionParent.DebugUtils.getExtensionProcessBrowser(
-    fakeAddonActor
-  );
+  const newAddonDebugBrowser =
+    await ExtensionParent.DebugUtils.getExtensionProcessBrowser(fakeAddonActor);
 
   equal(
     addonDebugBrowser,

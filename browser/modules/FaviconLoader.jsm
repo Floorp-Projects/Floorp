@@ -408,10 +408,7 @@ function getLinkIconURI(aLink) {
   let targetDoc = aLink.ownerDocument;
   let uri = Services.io.newURI(aLink.href, targetDoc.characterSet);
   try {
-    uri = uri
-      .mutate()
-      .setUserPass("")
-      .finalize();
+    uri = uri.mutate().setUserPass("").finalize();
   } catch (e) {
     // some URIs are immutable
   }
@@ -665,10 +662,7 @@ class FaviconLoader {
     // 403651 for discussion.
     this.iconInfos.push({
       pageUri,
-      iconUri: pageUri
-        .mutate()
-        .setPathQueryRef("/favicon.ico")
-        .finalize(),
+      iconUri: pageUri.mutate().setPathQueryRef("/favicon.ico").finalize(),
       width: -1,
       isRichIcon: false,
       type: TYPE_ICO,

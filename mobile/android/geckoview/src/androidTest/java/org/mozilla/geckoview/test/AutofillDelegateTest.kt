@@ -28,7 +28,7 @@ class AutofillDelegateTest : BaseSessionTest() {
         @JvmStatic
         val parameters: List<Array<out Any>> = listOf(
             arrayOf("#inProcess"),
-            arrayOf("#oop")
+            arrayOf("#oop"),
         )
     }
 
@@ -50,8 +50,8 @@ class AutofillDelegateTest : BaseSessionTest() {
         sessionRule.setPrefsUntilTestEnd(
             mapOf(
                 "signon.rememberSignons" to true,
-                "signon.userInputRequiredToCapture.enabled" to false
-            )
+                "signon.userInputRequiredToCapture.enabled" to false,
+            ),
         )
 
         mainSession.loadUri(pageUrl)
@@ -66,7 +66,7 @@ class AutofillDelegateTest : BaseSessionTest() {
             override fun onNodeAdd(
                 session: GeckoSession,
                 node: Autofill.Node,
-                data: Autofill.NodeData
+                data: Autofill.NodeData,
             ) {}
 
             @AssertCalled(count = 1)
@@ -87,7 +87,7 @@ class AutofillDelegateTest : BaseSessionTest() {
             override fun onNodeUpdate(
                 session: GeckoSession,
                 node: Autofill.Node,
-                data: Autofill.NodeData
+                data: Autofill.NodeData,
             ) {
             }
 
@@ -95,7 +95,7 @@ class AutofillDelegateTest : BaseSessionTest() {
             override fun onSessionCommit(
                 session: GeckoSession,
                 node: Autofill.Node,
-                data: Autofill.NodeData
+                data: Autofill.NodeData,
             ) {
                 val autofillSession = mainSession.autofillSession
                 assertThat(
@@ -103,28 +103,28 @@ class AutofillDelegateTest : BaseSessionTest() {
                     countAutofillNodes({
                         autofillSession.dataFor(it).value == "user1x"
                     }),
-                    equalTo(1)
+                    equalTo(1),
                 )
                 assertThat(
                     "Values should match",
                     countAutofillNodes({
                         autofillSession.dataFor(it).value == "pass1x"
                     }),
-                    equalTo(1)
+                    equalTo(1),
                 )
                 assertThat(
                     "Values should match",
                     countAutofillNodes({
                         autofillSession.dataFor(it).value == "e@mail.com"
                     }),
-                    equalTo(1)
+                    equalTo(1),
                 )
                 assertThat(
                     "Values should match",
                     countAutofillNodes({
                         autofillSession.dataFor(it).value == "1"
                     }),
-                    equalTo(1)
+                    equalTo(1),
                 )
             }
         })
@@ -134,8 +134,8 @@ class AutofillDelegateTest : BaseSessionTest() {
         sessionRule.setPrefsUntilTestEnd(
             mapOf(
                 "signon.rememberSignons" to true,
-                "signon.userInputRequiredToCapture.enabled" to false
-            )
+                "signon.userInputRequiredToCapture.enabled" to false,
+            ),
         )
 
         mainSession.loadTestPath(FORMS_ID_VALUE_HTML_PATH)
@@ -148,7 +148,7 @@ class AutofillDelegateTest : BaseSessionTest() {
             override fun onNodeAdd(
                 session: GeckoSession,
                 node: Autofill.Node,
-                data: Autofill.NodeData
+                data: Autofill.NodeData,
             ) {}
 
             @AssertCalled(count = 1)
@@ -166,7 +166,7 @@ class AutofillDelegateTest : BaseSessionTest() {
             override fun onNodeUpdate(
                 session: GeckoSession,
                 node: Autofill.Node,
-                data: Autofill.NodeData
+                data: Autofill.NodeData,
             ) {
             }
 
@@ -174,14 +174,14 @@ class AutofillDelegateTest : BaseSessionTest() {
             override fun onSessionCommit(
                 session: GeckoSession,
                 node: Autofill.Node,
-                data: Autofill.NodeData
+                data: Autofill.NodeData,
             ) {
                 assertThat(
                     "Values should match",
                     countAutofillNodes({
                         mainSession.autofillSession.dataFor(it).value == "pass1x"
                     }),
-                    equalTo(1)
+                    equalTo(1),
                 )
             }
         })
@@ -198,7 +198,7 @@ class AutofillDelegateTest : BaseSessionTest() {
             override fun onNodeAdd(
                 session: GeckoSession,
                 node: Autofill.Node,
-                data: Autofill.NodeData
+                data: Autofill.NodeData,
             ) {}
 
             @AssertCalled(count = 1)
@@ -212,7 +212,7 @@ class AutofillDelegateTest : BaseSessionTest() {
             "#pass2" to "baz",
             "#email1" to "a@b.c",
             "#number1" to "24",
-            "#tel1" to "42"
+            "#tel1" to "42",
         )
 
         // Set up promises to monitor the values changing.
@@ -221,7 +221,7 @@ class AutofillDelegateTest : BaseSessionTest() {
             mainSession.evaluatePromiseJS(
                 """
                 window.getDataForAllFrames('${entry.key}', '${entry.value}')
-                """
+                """,
             )
         }
 
@@ -243,13 +243,13 @@ class AutofillDelegateTest : BaseSessionTest() {
             assertThat(
                 "Should have HTML tag",
                 child.tag,
-                not(isEmptyOrNullString())
+                not(isEmptyOrNullString()),
             )
             if (domain != "") {
                 assertThat(
                     "Web domain should match its parent.",
                     child.domain,
-                    equalTo(domain)
+                    equalTo(domain),
                 )
             }
 
@@ -258,7 +258,7 @@ class AutofillDelegateTest : BaseSessionTest() {
                 assertThat(
                     "Input should be focusable",
                     child.focusable,
-                    equalTo(true)
+                    equalTo(true),
                 )
 
                 assertThat("Should have HTML tag", child.tag, equalTo("input"))
@@ -277,7 +277,7 @@ class AutofillDelegateTest : BaseSessionTest() {
                         else -> "bar"
                     }
                     else -> "bar"
-                }
+                },
             )
         }
 
@@ -295,7 +295,7 @@ class AutofillDelegateTest : BaseSessionTest() {
                 assertThat(
                     "input event should be dispatched with InputEvent interface",
                     eventInterface,
-                    equalTo("InputEvent")
+                    equalTo("InputEvent"),
                 )
             }
         }
@@ -311,7 +311,7 @@ class AutofillDelegateTest : BaseSessionTest() {
             override fun onNodeAdd(
                 session: GeckoSession,
                 node: Autofill.Node,
-                data: Autofill.NodeData
+                data: Autofill.NodeData,
             ) {}
 
             @AssertCalled(count = 1)
@@ -326,7 +326,7 @@ class AutofillDelegateTest : BaseSessionTest() {
     private fun countAutofillNodes(
         cond: (Autofill.Node) -> Boolean =
             { it.inputType != Autofill.InputType.NONE },
-        root: Autofill.Node? = null
+        root: Autofill.Node? = null,
     ): Int {
         val node = if (root !== null) root else mainSession.autofillSession.root
         return (if (cond(node)) 1 else 0) +
@@ -342,35 +342,35 @@ class AutofillDelegateTest : BaseSessionTest() {
         mainSession.loadUri(pageUrl)
 
         sessionRule.waitUntilCalled(object :
-                Autofill.Delegate,
-                ShouldContinue,
-                GeckoSession.ProgressDelegate {
-                var nodeCount = 0
+            Autofill.Delegate,
+            ShouldContinue,
+            GeckoSession.ProgressDelegate {
+            var nodeCount = 0
 
-                // Continue waiting util we get all 16 nodes
-                override fun shouldContinue(): Boolean = nodeCount < 16
+            // Continue waiting util we get all 16 nodes
+            override fun shouldContinue(): Boolean = nodeCount < 16
 
-                @AssertCalled(count = 1)
-                override fun onSessionStart(session: GeckoSession) {}
+            @AssertCalled(count = 1)
+            override fun onSessionStart(session: GeckoSession) {}
 
-                @AssertCalled(count = -1)
-                override fun onNodeAdd(
-                    session: GeckoSession,
-                    node: Autofill.Node,
-                    data: Autofill.NodeData
-                ) {
-                    assertThat("Node should be valid", node, notNullValue())
-                    nodeCount = countAutofillNodes()
-                }
+            @AssertCalled(count = -1)
+            override fun onNodeAdd(
+                session: GeckoSession,
+                node: Autofill.Node,
+                data: Autofill.NodeData,
+            ) {
+                assertThat("Node should be valid", node, notNullValue())
+                nodeCount = countAutofillNodes()
+            }
 
-                @AssertCalled(count = 1)
-                override fun onPageStop(session: GeckoSession, success: Boolean) {}
-            })
+            @AssertCalled(count = 1)
+            override fun onPageStop(session: GeckoSession, success: Boolean) {}
+        })
 
         assertThat(
             "Initial auto-fill count should match",
             countAutofillNodes(),
-            equalTo(16)
+            equalTo(16),
         )
 
         // Now wait for the nodes to clear.
@@ -386,45 +386,45 @@ class AutofillDelegateTest : BaseSessionTest() {
         assertThat(
             "Should not have auto-fill fields",
             countAutofillNodes(),
-            equalTo(0)
+            equalTo(0),
         )
 
         mainSession.goBack()
         sessionRule.waitUntilCalled(object :
-                Autofill.Delegate,
-                GeckoSession.ProgressDelegate,
-                ShouldContinue {
-                var nodeCount = 0
-                override fun shouldContinue(): Boolean = nodeCount < 16
+            Autofill.Delegate,
+            GeckoSession.ProgressDelegate,
+            ShouldContinue {
+            var nodeCount = 0
+            override fun shouldContinue(): Boolean = nodeCount < 16
 
-                @AssertCalled(count = 1)
-                override fun onSessionStart(session: GeckoSession) {}
+            @AssertCalled(count = 1)
+            override fun onSessionStart(session: GeckoSession) {}
 
-                @AssertCalled(count = -1)
-                override fun onNodeAdd(
-                    session: GeckoSession,
-                    node: Autofill.Node,
-                    data: Autofill.NodeData
-                ) {
-                    assertThat("Node should be valid", node, notNullValue())
-                    nodeCount = countAutofillNodes()
-                }
+            @AssertCalled(count = -1)
+            override fun onNodeAdd(
+                session: GeckoSession,
+                node: Autofill.Node,
+                data: Autofill.NodeData,
+            ) {
+                assertThat("Node should be valid", node, notNullValue())
+                nodeCount = countAutofillNodes()
+            }
 
-                @AssertCalled(count = 1)
-                override fun onPageStop(session: GeckoSession, success: Boolean) {}
-            })
+            @AssertCalled(count = 1)
+            override fun onPageStop(session: GeckoSession, success: Boolean) {}
+        })
 
         assertThat(
             "Should have auto-fill fields again",
             countAutofillNodes(),
-            equalTo(16)
+            equalTo(16),
         )
 
         var focused = mainSession.autofillSession.focused
         assertThat(
             "Should not have focused field",
             countAutofillNodes({ it == focused }),
-            equalTo(0)
+            equalTo(0),
         )
 
         mainSession.evaluateJS("document.querySelector('#pass2').focus()")
@@ -434,7 +434,7 @@ class AutofillDelegateTest : BaseSessionTest() {
             override fun onNodeFocus(
                 session: GeckoSession,
                 node: Autofill.Node,
-                data: Autofill.NodeData
+                data: Autofill.NodeData,
             ) {
                 assertThat("ID should be valid", node, notNullValue())
             }
@@ -444,7 +444,7 @@ class AutofillDelegateTest : BaseSessionTest() {
         assertThat(
             "Should have one focused field",
             countAutofillNodes({ it == focused }),
-            equalTo(1)
+            equalTo(1),
         )
         // The focused field, its siblings, its parent, and the root node should
         // be visible.
@@ -454,7 +454,7 @@ class AutofillDelegateTest : BaseSessionTest() {
         assertThat(
             "Should have nine visible nodes",
             countAutofillNodes({ node -> mainSession.autofillSession.isVisible(node) }),
-            equalTo(8)
+            equalTo(8),
         )
 
         mainSession.evaluateJS("document.querySelector('#pass2').blur()")
@@ -463,7 +463,7 @@ class AutofillDelegateTest : BaseSessionTest() {
             override fun onNodeBlur(
                 session: GeckoSession,
                 node: Autofill.Node,
-                data: Autofill.NodeData
+                data: Autofill.NodeData,
             ) {
                 assertThat("ID should be valid", node, notNullValue())
             }
@@ -473,7 +473,7 @@ class AutofillDelegateTest : BaseSessionTest() {
         assertThat(
             "Should not have focused field",
             countAutofillNodes({ it == focused }),
-            equalTo(0)
+            equalTo(0),
         )
     }
 
@@ -490,14 +490,14 @@ class AutofillDelegateTest : BaseSessionTest() {
             override fun onNodeFocus(
                 session: GeckoSession,
                 node: Autofill.Node,
-                data: Autofill.NodeData
+                data: Autofill.NodeData,
             ) {}
 
             @AssertCalled(count = -1)
             override fun onNodeAdd(
                 session: GeckoSession,
                 node: Autofill.Node,
-                data: Autofill.NodeData
+                data: Autofill.NodeData,
             ) {}
 
             @AssertCalled(count = 1)
@@ -529,7 +529,7 @@ class AutofillDelegateTest : BaseSessionTest() {
         assertThat(
             "autofill hint count",
             checkAutofillChild(root),
-            equalTo(4)
+            equalTo(4),
         )
     }
 
@@ -550,7 +550,7 @@ class AutofillDelegateTest : BaseSessionTest() {
             override fun onNodeAdd(
                 session: GeckoSession,
                 node: Autofill.Node,
-                data: Autofill.NodeData
+                data: Autofill.NodeData,
             ) {}
 
             @AssertCalled(count = 1)
@@ -563,7 +563,7 @@ class AutofillDelegateTest : BaseSessionTest() {
             override fun onNodeFocus(
                 session: GeckoSession,
                 node: Autofill.Node,
-                data: Autofill.NodeData
+                data: Autofill.NodeData,
             ) {
                 assertThat("ID should be valid", node, notNullValue())
             }
@@ -573,7 +573,7 @@ class AutofillDelegateTest : BaseSessionTest() {
         assertThat(
             "Should have one focused field",
             countAutofillNodes({ it == focused }),
-            equalTo(1)
+            equalTo(1),
         )
 
         // Make sure we get NODE_BLURRED when inactive
@@ -583,7 +583,7 @@ class AutofillDelegateTest : BaseSessionTest() {
             override fun onNodeBlur(
                 session: GeckoSession,
                 node: Autofill.Node,
-                data: Autofill.NodeData
+                data: Autofill.NodeData,
             ) {
                 assertThat("ID should be valid", node, notNullValue())
             }
@@ -596,7 +596,7 @@ class AutofillDelegateTest : BaseSessionTest() {
             override fun onNodeFocus(
                 session: GeckoSession,
                 node: Autofill.Node,
-                data: Autofill.NodeData
+                data: Autofill.NodeData,
             ) {
                 assertThat("ID should be valid", node, notNullValue())
             }
@@ -606,7 +606,7 @@ class AutofillDelegateTest : BaseSessionTest() {
         assertThat(
             "Should have one focused field",
             countAutofillNodes({ focused == it }),
-            equalTo(1)
+            equalTo(1),
         )
     }
 
@@ -619,7 +619,7 @@ class AutofillDelegateTest : BaseSessionTest() {
             override fun onNodeAdd(
                 session: GeckoSession,
                 node: Autofill.Node,
-                data: Autofill.NodeData
+                data: Autofill.NodeData,
             ) {}
 
             @AssertCalled(count = 1)
@@ -643,7 +643,7 @@ class AutofillDelegateTest : BaseSessionTest() {
         assertThat(
             "autofill hint count",
             checkAutofillChild(root),
-            equalTo(6)
+            equalTo(6),
         )
     }
 
@@ -662,7 +662,7 @@ class AutofillDelegateTest : BaseSessionTest() {
             override fun onNodeFocus(
                 session: GeckoSession,
                 node: Autofill.Node,
-                data: Autofill.NodeData
+                data: Autofill.NodeData,
             ) {
                 assertThat("ID should be valid", node, notNullValue())
             }
@@ -691,7 +691,7 @@ class AutofillDelegateTest : BaseSessionTest() {
             override fun onNodeFocus(
                 session: GeckoSession,
                 node: Autofill.Node,
-                data: Autofill.NodeData
+                data: Autofill.NodeData,
             ) {
                 screenRect = node.screenRect
             }
@@ -704,7 +704,7 @@ class AutofillDelegateTest : BaseSessionTest() {
             override fun onNodeFocus(
                 session: GeckoSession,
                 node: Autofill.Node,
-                data: Autofill.NodeData
+                data: Autofill.NodeData,
             ) {
                 assertThat("ID should be valid", node, notNullValue())
                 // iframe's input element should consider iframe's offset. 200 is enough offset.

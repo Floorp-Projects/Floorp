@@ -62,11 +62,6 @@ const LOG_PARTIAL_SUCCESS = "partial_log_success" + COMPARE_LOG_SUFFIX;
 const LOG_PARTIAL_FAILURE = "partial_log_failure" + COMPARE_LOG_SUFFIX;
 const LOG_REPLACE_SUCCESS = "replace_log_success";
 
-// xpcshell tests need this preference set to true for Cu.isInAutomation to be
-// true.
-const PREF_IS_IN_AUTOMATION =
-  "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer";
-
 const USE_EXECV = AppConstants.platform == "linux";
 
 const URL_HOST = "http://localhost";
@@ -848,11 +843,7 @@ function setupTestCommon(aAppUpdateAutoEnabled = false, aAllowBits = false) {
   );
 
   let caller = Components.stack.caller;
-  gTestID = caller.filename
-    .toString()
-    .split("/")
-    .pop()
-    .split(".")[0];
+  gTestID = caller.filename.toString().split("/").pop().split(".")[0];
 
   if (gDebugTestLog && !gIsServiceTest) {
     if (!gTestsToLog.length || gTestsToLog.includes(gTestID)) {
@@ -1171,7 +1162,6 @@ function doTestFinish() {
  * Sets the most commonly used preferences used by tests
  */
 function setDefaultPrefs() {
-  Services.prefs.setBoolPref(PREF_IS_IN_AUTOMATION, true);
   Services.prefs.setBoolPref(PREF_APP_UPDATE_DISABLEDFORTESTING, false);
   if (gDebugTest) {
     // Enable Update logging
@@ -1206,11 +1196,11 @@ function setTestFilesAndDirsForFailure() {
  * directory files from being created.
  */
 function preventDistributionFiles() {
-  gTestFiles = gTestFiles.filter(function(aTestFile) {
+  gTestFiles = gTestFiles.filter(function (aTestFile) {
     return !aTestFile.relPathDir.includes("distribution/");
   });
 
-  gTestDirs = gTestDirs.filter(function(aTestDir) {
+  gTestDirs = gTestDirs.filter(function (aTestDir) {
     return !aTestDir.relPathDir.includes("distribution/");
   });
 }
@@ -1778,8 +1768,10 @@ function getMockUpdRootDWin(aGetOldLocation) {
 function createWorldWritableAppUpdateDir() {
   // This function is only necessary in Windows
   if (AppConstants.platform == "win") {
-    let installDir = Services.dirsvc.get(XRE_EXECUTABLE_FILE, Ci.nsIFile)
-      .parent;
+    let installDir = Services.dirsvc.get(
+      XRE_EXECUTABLE_FILE,
+      Ci.nsIFile
+    ).parent;
     let exitValue = runTestHelperSync(["create-update-dir", installDir.path]);
     Assert.equal(exitValue, 0, "The helper process exit value should be 0");
   }
@@ -4625,7 +4617,7 @@ IncrementalDownload.prototype = {
           status = Cr.NS_ERROR_OFFLINE;
           // After we report offline, we want to eventually show offline
           // status being changed to online.
-          Services.tm.dispatchToMainThread(function() {
+          Services.tm.dispatchToMainThread(function () {
             Services.obs.notifyObservers(
               gAUS,
               "network:offline-status-changed",

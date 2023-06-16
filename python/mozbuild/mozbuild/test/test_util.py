@@ -5,12 +5,10 @@
 
 import copy
 import hashlib
-import io
 import itertools
 import os
 import string
 import sys
-import textwrap
 import unittest
 
 import pytest
@@ -38,7 +36,6 @@ from mozbuild.util import (
     memoized_property,
     pair,
     resolve_target_to_make,
-    write_indented_repr,
 )
 
 if sys.version_info[0] == 3:
@@ -847,64 +844,6 @@ class TestEnumString(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             type = CompilerType("foo")
-
-
-class TestIndentedRepr(unittest.TestCase):
-    @unittest.skipUnless(six.PY2, "requires Python 2")
-    def test_write_indented_repr_py2(self):
-        data = textwrap.dedent(
-            r"""
-        {
-            'a': 1,
-            'b': b'abc',
-            b'c': 'xyz',
-            'd': False,
-            'e': {
-                'a': 1,
-                'b': b'2',
-                'c': '3',
-            },
-            'f': [
-                1,
-                b'2',
-                '3',
-            ],
-            'pile_of_bytes': b'\xf0\x9f\x92\xa9',
-            'pile_of_poo': '💩',
-            'special_chars': '\\\'"\x08\n\t',
-            'with_accents': 'éàñ',
-        }
-        """
-        ).lstrip()
-
-        obj = eval(data)
-        buf = io.StringIO()
-        write_indented_repr(buf, obj)
-
-        self.assertEqual(buf.getvalue(), data)
-
-    @unittest.skipUnless(six.PY3, "requires Python 3")
-    def test_write_indented_repr(self):
-        data = textwrap.dedent(
-            r"""
-        {   b'c': 'xyz',
-            'a': 1,
-            'b': b'abc',
-            'd': False,
-            'e': {'a': 1, 'b': b'2', 'c': '3'},
-            'f': [1, b'2', '3'],
-            'pile_of_bytes': b'\xf0\x9f\x92\xa9',
-            'pile_of_poo': '💩',
-            'special_chars': '\\\'"\x08\n\t',
-            'with_accents': 'éàñ'}
-        """
-        ).lstrip()
-
-        obj = eval(data)
-        buf = six.StringIO()
-        write_indented_repr(buf, obj)
-
-        self.assertEqual(buf.getvalue(), data)
 
 
 class TestHexDump(unittest.TestCase):

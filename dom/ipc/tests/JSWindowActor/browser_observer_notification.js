@@ -7,7 +7,7 @@ declTest("test observer triggering actor creation", {
   observers: ["test-js-window-actor-child-observer"],
 
   async test(browser) {
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       const TOPIC = "test-js-window-actor-child-observer";
       Services.obs.notifyObservers(content.window, TOPIC, "dataString");
 
@@ -31,7 +31,7 @@ declTest("test observers with null data", {
   observers: ["test-js-window-actor-child-observer"],
 
   async test(browser) {
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       const TOPIC = "test-js-window-actor-child-observer";
       Services.obs.notifyObservers(content.window, TOPIC);
 
@@ -55,7 +55,8 @@ declTest("observers don't notify with wrong window", {
   observers: ["test-js-window-actor-child-observer"],
 
   async test(browser) {
-    const MSG_RE = /JSWindowActor TestWindow: expected window subject for topic 'test-js-window-actor-child-observer'/;
+    const MSG_RE =
+      /JSWindowActor TestWindow: expected window subject for topic 'test-js-window-actor-child-observer'/;
     let expectMessage = new Promise(resolve => {
       Services.console.registerListener(function consoleListener(msg) {
         // Run everything async in order to avoid logging messages from the
@@ -74,7 +75,7 @@ declTest("observers don't notify with wrong window", {
       });
     });
 
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       const TOPIC = "test-js-window-actor-child-observer";
       Services.obs.notifyObservers(null, TOPIC);
       let child = content.windowGlobalChild;
@@ -93,11 +94,10 @@ declTest("observers don't notify with wrong window", {
 
 declTest("observers notify with audio-playback", {
   observers: ["audio-playback"],
-  url:
-    "http://example.com/browser/dom/ipc/tests/JSWindowActor/file_mediaPlayback.html",
+  url: "http://example.com/browser/dom/ipc/tests/JSWindowActor/file_mediaPlayback.html",
 
   async test(browser) {
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       let audio = content.document.querySelector("audio");
       audio.play();
 

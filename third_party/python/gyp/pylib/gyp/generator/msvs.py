@@ -4,7 +4,6 @@
 
 from __future__ import print_function
 
-import collections
 import copy
 import ntpath
 import os
@@ -12,6 +11,7 @@ import posixpath
 import re
 import subprocess
 import sys
+import collections
 
 import gyp.common
 import gyp.easy_xml as easy_xml
@@ -2740,6 +2740,10 @@ def _GetMSBuildConfigurationDetails(spec, build_file):
     config_type = msbuild_attributes.get('ConfigurationType')
     _AddConditionalProperty(properties, condition, 'ConfigurationType',
                             config_type)
+    spectre_mitigation = msbuild_attributes.get('SpectreMitigation')
+    if spectre_mitigation:
+      _AddConditionalProperty(properties, condition, 'SpectreMitigation',
+                              spectre_mitigation)
     if config_type == 'Driver':
       _AddConditionalProperty(properties, condition, 'DriverType', 'WDM')
       _AddConditionalProperty(properties, condition, 'TargetVersion',
@@ -2821,6 +2825,8 @@ def _ConvertMSVSBuildAttributes(spec, config, build_file):
       msbuild_attributes[a] = _ConvertMSVSCharacterSet(msvs_attributes[a])
     elif a == 'ConfigurationType':
       msbuild_attributes[a] = _ConvertMSVSConfigurationType(msvs_attributes[a])
+    elif a == 'SpectreMitigation':
+      msbuild_attributes[a] = msvs_attributes[a]
     else:
       print('Warning: Do not know how to convert MSVS attribute ' + a)
   return msbuild_attributes

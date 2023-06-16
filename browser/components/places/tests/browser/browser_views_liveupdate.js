@@ -114,9 +114,8 @@ add_task(async function test() {
   // Open bookmarks sidebar.
   await withSidebarTree("bookmarks", async () => {
     // Add observers.
-    bookmarksObserver.handlePlacesEvents = bookmarksObserver.handlePlacesEvents.bind(
-      bookmarksObserver
-    );
+    bookmarksObserver.handlePlacesEvents =
+      bookmarksObserver.handlePlacesEvents.bind(bookmarksObserver);
     PlacesUtils.observers.addListener(
       ["bookmark-added", "bookmark-removed"],
       bookmarksObserver.handlePlacesEvents
@@ -239,7 +238,7 @@ var bookmarksObserver = {
   },
 
   async assertItemChanged(views, guid, newValue) {
-    let validator = function(aElementOrTreeIndex) {
+    let validator = function (aElementOrTreeIndex) {
       if (typeof aElementOrTreeIndex == "number") {
         let sidebar = document.getElementById("sidebar");
         let tree = sidebar.contentDocument.getElementById("bookmarks-view");

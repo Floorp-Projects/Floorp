@@ -9,7 +9,7 @@ const URL = EXAMPLE_URL.replace("http:", "https:");
 const TEST_URL = URL + "service-workers/status-codes.html";
 
 // Test that request blocking works for service worker requests.
-add_task(async function() {
+add_task(async function () {
   const { tab, monitor } = await initNetMonitor(TEST_URL, {
     enableCache: true,
     requestCount: 1,
@@ -22,7 +22,7 @@ add_task(async function() {
   store.dispatch(Actions.batchEnable(false));
 
   info("Registering the service worker...");
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     await content.wrappedJSObject.registerServiceWorker();
   });
 
@@ -50,7 +50,7 @@ add_task(async function() {
   );
 
   info("Unregistering the service worker...");
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     await content.wrappedJSObject.unregisterServiceWorker();
   });
 

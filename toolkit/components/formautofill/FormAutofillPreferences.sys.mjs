@@ -96,9 +96,8 @@ FormAutofillPreferences.prototype = {
       return;
     }
 
-    formAutofillGroupBoxLabelHeading.textContent = this.bundle.GetStringFromName(
-      "autofillHeader"
-    );
+    formAutofillGroupBoxLabelHeading.textContent =
+      this.bundle.GetStringFromName("autofillHeader");
 
     if (showAddressUI) {
       let savedAddressesBtnWrapper = document.createXULElement("hbox");

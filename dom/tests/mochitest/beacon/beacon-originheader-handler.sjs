@@ -34,7 +34,7 @@ function handleRequest(request, response) {
   setState("originHeader", header);
 
   // if there is an xhr-request waiting, return the header now.
-  getObjectState("xhr-response", function(xhrResponse) {
+  getObjectState("xhr-response", function (xhrResponse) {
     if (!xhrResponse) {
       return;
     }

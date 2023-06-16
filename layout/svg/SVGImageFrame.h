@@ -116,7 +116,7 @@ class SVGImageFrame final : public nsIFrame,
   bool IsInvisible() const;
 
  private:
-  uint16_t GetHitTestFlags();
+  bool IgnoreHitTest() const;
 
   gfx::Matrix GetRasterImageTransform(int32_t aNativeWidth,
                                       int32_t aNativeHeight);

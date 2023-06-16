@@ -11,7 +11,7 @@ const RUNTIME_SHORT_NAME = "test short name";
 // Test that USB runtimes appear and disappear from the sidebar,
 // as well as their connect button.
 // Also checks whether the label of item is updated after connecting.
-add_task(async function() {
+add_task(async function () {
   const mocks = new Mocks();
 
   const { document, tab } = await openAboutDebugging();
@@ -29,9 +29,8 @@ add_task(async function() {
     RUNTIME_DEVICE_NAME,
     document
   );
-  const connectButton = usbRuntimeSidebarItem.querySelector(
-    ".qa-connect-button"
-  );
+  const connectButton =
+    usbRuntimeSidebarItem.querySelector(".qa-connect-button");
   ok(connectButton, "Connect button is displayed for the USB runtime");
 
   info("Click on the connect button and wait until it disappears");

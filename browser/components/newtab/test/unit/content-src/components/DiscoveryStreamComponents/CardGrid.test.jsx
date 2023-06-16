@@ -48,14 +48,7 @@ describe("<CardGrid>", () => {
     wrapper.setProps({ items: 2, data: { recommendations: [{}, {}] } });
 
     assert.lengthOf(wrapper.find(".ds-card-grid").children(), 2);
-    assert.equal(
-      wrapper
-        .find(".ds-card-grid")
-        .children()
-        .at(0)
-        .type(),
-      DSCard
-    );
+    assert.equal(wrapper.find(".ds-card-grid").children().at(0).type(), DSCard);
   });
 
   it("should add 4 card classname to card grid", () => {
@@ -169,13 +162,7 @@ describe("<IntersectionObserver>", () => {
 
   it("should render an empty div", () => {
     assert.ok(wrapper.exists());
-    assert.equal(
-      wrapper
-        .children()
-        .at(0)
-        .type(),
-      "div"
-    );
+    assert.equal(wrapper.children().at(0).type(), "div");
   });
 
   it("should fire onIntersecting", () => {
@@ -269,19 +256,13 @@ describe("<RecentSavesContainer>", () => {
 
   it("should render a my list link with proper utm params", () => {
     assert.equal(
-      wrapper
-        .find(".section-sub-link")
-        .at(0)
-        .prop("url"),
+      wrapper.find(".section-sub-link").at(0).prop("url"),
       "https://getpocket.com/a?utm_source=utmSource&utm_content=utmContent&utm_campaign=utmCampaign"
     );
   });
 
   it("should fire a UserEvent for my list clicks", () => {
-    wrapper
-      .find(".section-sub-link")
-      .at(0)
-      .simulate("click");
+    wrapper.find(".section-sub-link").at(0).simulate("click");
     assert.calledWith(
       dispatch,
       ac.DiscoveryStreamUserEvent({

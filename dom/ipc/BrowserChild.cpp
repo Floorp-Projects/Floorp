@@ -1221,14 +1221,6 @@ mozilla::ipc::IPCResult BrowserChild::RecvChildToParentMatrix(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult BrowserChild::RecvSetIsUnderHiddenEmbedderElement(
-    const bool& aIsUnderHiddenEmbedderElement) {
-  if (RefPtr<PresShell> presShell = GetTopLevelPresShell()) {
-    presShell->SetIsUnderHiddenEmbedderElement(aIsUnderHiddenEmbedderElement);
-  }
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult BrowserChild::RecvUpdateRemoteStyle(
     const StyleImageRendering& aImageRendering) {
   BrowsingContext* context = GetBrowsingContext();
@@ -2135,7 +2127,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvNormalPriorityInsertText(
 }
 
 mozilla::ipc::IPCResult BrowserChild::RecvPasteTransferable(
-    const IPCDataTransfer& aDataTransfer, const bool& aIsPrivateData,
+    const IPCTransferableData& aTransferableData, const bool& aIsPrivateData,
     nsIPrincipal* aRequestingPrincipal,
     const nsContentPolicyType& aContentPolicyType) {
   nsresult rv;
@@ -2144,9 +2136,10 @@ mozilla::ipc::IPCResult BrowserChild::RecvPasteTransferable(
   NS_ENSURE_SUCCESS(rv, IPC_OK());
   trans->Init(nullptr);
 
-  rv = nsContentUtils::IPCTransferableToTransferable(
-      aDataTransfer, aIsPrivateData, aRequestingPrincipal, aContentPolicyType,
-      true /* aAddDataFlavor */, trans, false /* aFilterUnknownFlavors */);
+  rv = nsContentUtils::IPCTransferableDataToTransferable(
+      aTransferableData, aIsPrivateData, aRequestingPrincipal,
+      aContentPolicyType, true /* aAddDataFlavor */, trans,
+      false /* aFilterUnknownFlavors */);
   NS_ENSURE_SUCCESS(rv, IPC_OK());
 
   nsCOMPtr<nsIDocShell> ourDocShell = do_GetInterface(WebNavigation());
@@ -2164,8 +2157,8 @@ mozilla::ipc::IPCResult BrowserChild::RecvPasteTransferable(
 
 #ifdef ACCESSIBILITY
 a11y::PDocAccessibleChild* BrowserChild::AllocPDocAccessibleChild(
-    PDocAccessibleChild*, const uint64_t&, const MaybeDiscardedBrowsingContext&,
-    const uint32_t&, const IAccessibleHolder&) {
+    PDocAccessibleChild*, const uint64_t&,
+    const MaybeDiscardedBrowsingContext&) {
   MOZ_ASSERT(false, "should never call this!");
   return nullptr;
 }

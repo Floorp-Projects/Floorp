@@ -99,7 +99,7 @@ export class RemoteWebNavigation {
             attrs
           );
         }
-        Services.io.speculativeConnect(uri, principal, null);
+        Services.io.speculativeConnect(uri, principal, null, false);
       }
     } catch (ex) {
       // Can't setup speculative connection for this uri for some
@@ -133,8 +133,10 @@ export class RemoteWebNavigation {
         fixupFlags |= Services.uriFixup.FIXUP_FLAG_PRIVATE_CONTEXT;
       }
 
-      uri = Services.uriFixup.getFixupURIInfo(uriString, fixupFlags)
-        .preferredURI;
+      uri = Services.uriFixup.getFixupURIInfo(
+        uriString,
+        fixupFlags
+      ).preferredURI;
     } catch (ex) {
       // In rare cases `uriFixup` can throw. We ignore this here, but it's
       // likely that the fixupAndLoadURIString call below will still throw,

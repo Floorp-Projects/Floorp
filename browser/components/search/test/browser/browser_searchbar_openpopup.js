@@ -34,7 +34,7 @@ let searchIcon;
 let goButton;
 let engine;
 
-add_setup(async function() {
+add_setup(async function () {
   searchbar = await gCUITestUtils.addSearchBar();
   textbox = searchbar.textbox;
   searchIcon = searchbar.querySelector(".searchbar-search-button");
@@ -61,7 +61,7 @@ add_setup(async function() {
 
 // Adds a task that shouldn't show the search suggestions popup.
 function add_no_popup_task(task) {
-  add_task(async function() {
+  add_task(async function () {
     let sawPopup = false;
     function listener() {
       sawPopup = true;

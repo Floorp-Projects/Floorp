@@ -1,6 +1,6 @@
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const store1 = new Storage("prefix1");
   const store2 = new Storage("prefix2");
 

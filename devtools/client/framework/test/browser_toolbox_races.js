@@ -13,7 +13,7 @@ const {
   gDevToolsBrowser,
 } = require("resource://devtools/client/framework/devtools-browser.js");
 
-add_task(async function() {
+add_task(async function () {
   // Make sure this test starts with the selectedTool pref cleared. Previous
   // tests select various tools, and that sets this pref.
   Services.prefs.clearUserPref("devtools.toolbox.selectedTool");

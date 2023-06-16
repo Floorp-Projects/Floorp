@@ -8,11 +8,11 @@ function run_test() {
 
   let testBuffer = [];
 
-  let appendBuffer = function(msg) {
+  let appendBuffer = function (msg) {
     testBuffer.push(JSON.stringify(msg));
   };
 
-  let assertLastMsg = function(refData) {
+  let assertLastMsg = function (refData) {
     // Check all fields in refData agree with those in the
     // last message logged, and pop that message.
     let lastMsg = JSON.parse(testBuffer.pop());

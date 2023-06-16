@@ -28,7 +28,7 @@ const TEST_DATA = [
   { node: "circle", expected: "circle" },
 ];
 
-add_task(async function() {
+add_task(async function () {
   await addTab(TEST_URI);
   const { inspector, view } = await openRuleView();
 

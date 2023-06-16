@@ -1315,7 +1315,7 @@ static ArrayBufferObject* NewArrayBufferObject(JSContext* cx,
   // Array buffers can't be nursery allocated but can be background-finalized.
   MOZ_ASSERT(IsBackgroundFinalized(allocKind));
   MOZ_ASSERT(!CanNurseryAllocateFinalizedClass(clasp));
-  constexpr gc::InitialHeap heap = gc::TenuredHeap;
+  constexpr gc::Heap heap = gc::Heap::Tenured;
 
   NativeObject* obj = NativeObject::create(cx, allocKind, heap, shape);
   if (!obj) {

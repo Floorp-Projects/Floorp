@@ -691,8 +691,8 @@ static VideoColorSpaceInit PickColorSpace(
     colorSpace = *aInitColorSpace;
     // By spec, we MAY replace null members of aInitColorSpace with guessed
     // values so we can always use these in CreateYUVImageFromBuffer.
-    if (IsYUVFormat(aFormat) && !colorSpace.mMatrix.WasPassed()) {
-      colorSpace.mMatrix.Construct(VideoMatrixCoefficients::Bt709);
+    if (IsYUVFormat(aFormat) && colorSpace.mMatrix.IsNull()) {
+      colorSpace.mMatrix.SetValue(VideoMatrixCoefficients::Bt709);
     }
     return colorSpace;
   }
@@ -704,21 +704,20 @@ static VideoColorSpaceInit PickColorSpace(
     case VideoPixelFormat::I444:
     case VideoPixelFormat::NV12:
       // https://w3c.github.io/webcodecs/#rec709-color-space
-      colorSpace.mFullRange.Construct(false);
-      colorSpace.mMatrix.Construct(VideoMatrixCoefficients::Bt709);
-      colorSpace.mPrimaries.Construct(VideoColorPrimaries::Bt709);
-      colorSpace.mTransfer.Construct(VideoTransferCharacteristics::Bt709);
+      colorSpace.mFullRange.SetValue(false);
+      colorSpace.mMatrix.SetValue(VideoMatrixCoefficients::Bt709);
+      colorSpace.mPrimaries.SetValue(VideoColorPrimaries::Bt709);
+      colorSpace.mTransfer.SetValue(VideoTransferCharacteristics::Bt709);
       break;
     case VideoPixelFormat::RGBA:
     case VideoPixelFormat::RGBX:
     case VideoPixelFormat::BGRA:
     case VideoPixelFormat::BGRX:
       // https://w3c.github.io/webcodecs/#srgb-color-space
-      colorSpace.mFullRange.Construct(true);
-      colorSpace.mMatrix.Construct(VideoMatrixCoefficients::Rgb);
-      colorSpace.mPrimaries.Construct(VideoColorPrimaries::Bt709);
-      colorSpace.mTransfer.Construct(
-          VideoTransferCharacteristics::Iec61966_2_1);
+      colorSpace.mFullRange.SetValue(true);
+      colorSpace.mMatrix.SetValue(VideoMatrixCoefficients::Rgb);
+      colorSpace.mPrimaries.SetValue(VideoColorPrimaries::Bt709);
+      colorSpace.mTransfer.SetValue(VideoTransferCharacteristics::Iec61966_2_1);
       break;
     case VideoPixelFormat::EndGuard_:
       MOZ_ASSERT_UNREACHABLE("unsupported format");
@@ -875,16 +874,16 @@ static Result<RefPtr<layers::Image>, nsCString> CreateYUVImageFromBuffer(
     data.mCbCrStride = reader->mStrideU;
     data.mChromaSubsampling = gfx::ChromaSubsampling::HALF_WIDTH_AND_HEIGHT;
     // Color settings.
-    if (aColorSpace.mFullRange.WasPassed() && aColorSpace.mFullRange.Value()) {
+    if (!aColorSpace.mFullRange.IsNull() && aColorSpace.mFullRange.Value()) {
       data.mColorRange = gfx::ColorRange::FULL;
     }
-    MOZ_RELEASE_ASSERT(aColorSpace.mMatrix.WasPassed());
+    MOZ_RELEASE_ASSERT(!aColorSpace.mMatrix.IsNull());
     data.mYUVColorSpace = ToColorSpace(aColorSpace.mMatrix.Value());
-    if (aColorSpace.mTransfer.WasPassed()) {
+    if (!aColorSpace.mTransfer.IsNull()) {
       data.mTransferFunction =
           ToTransferFunction(aColorSpace.mTransfer.Value());
     }
-    if (aColorSpace.mPrimaries.WasPassed()) {
+    if (!aColorSpace.mPrimaries.IsNull()) {
       data.mColorPrimaries = ToPrimaries(aColorSpace.mPrimaries.Value());
     }
 
@@ -919,16 +918,16 @@ static Result<RefPtr<layers::Image>, nsCString> CreateYUVImageFromBuffer(
     data.mCbCrStride = reader.mStrideUV;
     data.mChromaSubsampling = gfx::ChromaSubsampling::HALF_WIDTH_AND_HEIGHT;
     // Color settings.
-    if (aColorSpace.mFullRange.WasPassed() && aColorSpace.mFullRange.Value()) {
+    if (!aColorSpace.mFullRange.IsNull() && aColorSpace.mFullRange.Value()) {
       data.mColorRange = gfx::ColorRange::FULL;
     }
-    MOZ_RELEASE_ASSERT(aColorSpace.mMatrix.WasPassed());
+    MOZ_RELEASE_ASSERT(!aColorSpace.mMatrix.IsNull());
     data.mYUVColorSpace = ToColorSpace(aColorSpace.mMatrix.Value());
-    if (aColorSpace.mTransfer.WasPassed()) {
+    if (!aColorSpace.mTransfer.IsNull()) {
       data.mTransferFunction =
           ToTransferFunction(aColorSpace.mTransfer.Value());
     }
-    if (aColorSpace.mPrimaries.WasPassed()) {
+    if (!aColorSpace.mPrimaries.IsNull()) {
       data.mColorPrimaries = ToPrimaries(aColorSpace.mPrimaries.Value());
     }
 
@@ -972,7 +971,7 @@ static Result<RefPtr<VideoFrame>, nsCString> CreateVideoFrameFromBuffer(
     nsIGlobalObject* aGlobal, const T& aBuffer,
     const VideoFrameBufferInit& aInit) {
   if (aInit.mColorSpace.WasPassed() &&
-      aInit.mColorSpace.Value().mTransfer.WasPassed() &&
+      !aInit.mColorSpace.Value().mTransfer.IsNull() &&
       aInit.mColorSpace.Value().mTransfer.Value() ==
           VideoTransferCharacteristics::Linear) {
     return Err(nsCString("linear RGB is not supported"));

@@ -21,7 +21,7 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.browsertoolbox.scope", "everything");
   await pushPref("devtools.styleeditor.transitions", false);
   await addTab(TEST_URI);
@@ -54,9 +54,8 @@ add_task(async function() {
     ok(true, "Found simple.css tab stylesheet");
 
     info("Select the stylesheet and update its content");
-    const contentStylesheetSummaryEl = getStyleEditorItems().find(
-      isTabStyleSheet
-    );
+    const contentStylesheetSummaryEl =
+      getStyleEditorItems().find(isTabStyleSheet);
 
     let tabStyleSheetEditor;
     if (panel.UI.selectedEditor.friendlyName === "simple.css") {

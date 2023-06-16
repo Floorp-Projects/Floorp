@@ -1471,10 +1471,7 @@ JS_GetExternalStringCallbacks(JSString* str) {
 static void SetNativeStackSize(JSContext* cx, JS::StackKind kind,
                                JS::NativeStackSize stackSize) {
 #ifdef __wasi__
-  // WASI makes this easy: we build with the "stack-first" wasm-ld option, so
-  // the stack grows downward toward zero. Let's set a limit just a bit above
-  // this so that we catch an overflow before a Wasm trap occurs.
-  cx->nativeStackLimit[kind] = 1024;
+  cx->nativeStackLimit[kind] = JS::WASINativeStackLimit;
 #else   // __wasi__
   if (stackSize == 0) {
     cx->nativeStackLimit[kind] = JS::NativeStackLimitMax;
@@ -4364,7 +4361,7 @@ JS_PUBLIC_API void JS::DisableSpectreMitigationsAfterInit() {
 /************************************************************************/
 
 #if !defined(STATIC_EXPORTABLE_JS_API) && !defined(STATIC_JS_API) && \
-    defined(XP_WIN)
+    defined(XP_WIN) && (defined(MOZ_MEMORY) || !defined(JS_STANDALONE))
 
 #  include "util/WindowsWrapper.h"
 

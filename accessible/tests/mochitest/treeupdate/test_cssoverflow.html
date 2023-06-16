@@ -61,7 +61,7 @@
     }
 
     /**
-     * Change scrollbar styles from hidden to auto to make the scroll area focusable.
+     * Change scrollbar styles from visible to auto to make the scroll area focusable.
      * That causes us to create an accessible for it.
      * Make sure the tree stays intact.
      * The scroll area has no ID on purpose to make it inaccessible initially.
@@ -120,7 +120,7 @@
       gQueue = new eventQueue();
 
       gQueue.push(new changeScrollRange("container", "scrollarea"));
-      gQueue.push(new makeFocusableByScrollbarStyles("container3"));
+      gQueue.push(new makeFocusableByScrollbarStyles("container2"));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -144,7 +144,6 @@
   <div id="eventdump"></div>
 
   <div id="container"><div id="scrollarea" style="overflow:auto;"><input></div></div>
-  <div id="container2"><div id="scrollarea2" style="overflow:hidden;"></div></div>
-  <div id="container3"><div style="overflow: hidden; height: 1px;"><p>foo</p></div></div>
+  <div id="container2"><div style="height: 1px;"><p>foo</p></div></div>
 </body>
 </html>

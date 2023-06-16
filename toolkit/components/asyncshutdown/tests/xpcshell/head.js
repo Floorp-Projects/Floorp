@@ -80,7 +80,7 @@ function makeLock(kind) {
             name: blockerName,
             state,
             blockShutdown(aBarrierClient) {
-              return (async function() {
+              return (async function () {
                 try {
                   if (typeof condition == "function") {
                     await Promise.resolve(condition());
@@ -154,7 +154,7 @@ function longRunningAsyncTask(resolution = undefined, outResult = {}) {
     outResult.countFinished = 0;
   }
   return new Promise(resolve => {
-    do_timeout(100, function() {
+    do_timeout(100, function () {
       ++outResult.countFinished;
       outResult.isFinished = true;
       resolve(resolution);

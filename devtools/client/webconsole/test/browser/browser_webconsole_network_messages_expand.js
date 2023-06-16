@@ -11,7 +11,7 @@ const XHR_URL = TEST_PATH + "sjs_slow-response-test-server.sjs";
 
 requestLongerTimeout(2);
 
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   await new Promise(resolve => {
     Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
       resolve()
@@ -86,7 +86,7 @@ async function doXhrAndExpand(hud) {
   const onPayloadReady = waitForPayloadReady(hud);
 
   // Fire an XHR POST request.
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.wrappedJSObject.testXhrPostSlowResponse();
   });
 

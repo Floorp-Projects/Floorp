@@ -1,8 +1,9 @@
 function log(test) {
   if ("iteration" in test) {
     info(
-      `Running test with prefValue: ${test.prefValue} (Test #${test.iteration +
-        1})`
+      `Running test with prefValue: ${test.prefValue} (Test #${
+        test.iteration + 1
+      })`
     );
     test.iteration++;
   } else {

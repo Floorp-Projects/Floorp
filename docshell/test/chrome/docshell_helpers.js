@@ -307,10 +307,10 @@ function doPageNavigation(params) {
   // wait for all events to occur, and then call doPageNavigation_complete().
   if (eventsToListenFor.length && params.onNavComplete) {
     waitForTrue(
-      function() {
+      function () {
         return gFinalEvent;
       },
-      function() {
+      function () {
         doPageNavigation_complete(
           eventsToListenFor,
           params.onNavComplete,
@@ -340,9 +340,10 @@ function doPageNavigation_complete(
 ) {
   if (useActor) {
     if (preventBFCache) {
-      let actor = TestWindow.getBrowser().browsingContext.currentWindowGlobal.getActor(
-        "DocShellHelpers"
-      );
+      let actor =
+        TestWindow.getBrowser().browsingContext.currentWindowGlobal.getActor(
+          "DocShellHelpers"
+        );
       actor.sendAsyncMessage("docshell_helpers:preventBFCache");
     }
   } else {
@@ -378,7 +379,7 @@ function doPageNavigation_complete(
   } else if (gNavType == NAV_URI) {
     // If we're navigating to a uri and .preventBFCache was not
     // specified, splice it out of gUrisNotInBFCache if it's there.
-    gUrisNotInBFCache.forEach(function(element, index, array) {
+    gUrisNotInBFCache.forEach(function (element, index, array) {
       if (element == uri) {
         array.splice(index, 1);
       }
@@ -477,7 +478,7 @@ function pageEventListener(
   // triggered when a pageshow event is fired; this will allow
   // doPageNavigation() to return.
   if (typeof gExpectedEvents == "undefined" && event.type == "pageshow") {
-    waitForNextPaint(function() {
+    waitForNextPaint(function () {
       gFinalEvent = true;
     });
     return;
@@ -555,7 +556,7 @@ function pageEventListener(
 
   // If we're out of expected events, let doPageNavigation() return.
   if (!gExpectedEvents.length) {
-    waitForNextPaint(function() {
+    waitForNextPaint(function () {
       gFinalEvent = true;
     });
   }
@@ -747,12 +748,12 @@ function getHttpUrl(filename) {
  * browser, and document.
  */
 var TestWindow = {};
-TestWindow.getWindow = function() {
+TestWindow.getWindow = function () {
   return document.getElementById("content").contentWindow;
 };
-TestWindow.getBrowser = function() {
+TestWindow.getBrowser = function () {
   return document.getElementById("content");
 };
-TestWindow.getDocument = function() {
+TestWindow.getDocument = function () {
   return document.getElementById("content").contentDocument;
 };

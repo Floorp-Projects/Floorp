@@ -57,16 +57,16 @@ function runTest() {
     events.push(str);
   }
 
-  xhr.onerror = function(event) {
+  xhr.onerror = function (event) {
     throw new Error("Error: " + xhr.statusText);
   };
 
-  xhr.onload = function(event) {
+  xhr.onload = function (event) {
     throw new Error("Shouldn't have gotten load event!");
   };
 
   var seenAbort;
-  xhr.onabort = function(event) {
+  xhr.onabort = function (event) {
     if (seenAbort) {
       throw new Error("Already seen the abort event!");
     }
@@ -76,7 +76,7 @@ function runTest() {
     postMessage(events);
   };
 
-  xhr.onreadystatechange = function(event) {
+  xhr.onreadystatechange = function (event) {
     pushEvent(event);
     if (xhr.readyState == xhr.HEADERS_RECEIVED) {
       xhr.abort();

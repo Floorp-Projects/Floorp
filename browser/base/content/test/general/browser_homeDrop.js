@@ -14,7 +14,7 @@ add_task(async function setupHomeButton() {
   });
 });
 
-add_task(async function() {
+add_task(async function () {
   let HOMEPAGE_PREF = "browser.startup.homepage";
 
   await pushPrefs([HOMEPAGE_PREF, "about:mozilla"]);
@@ -33,9 +33,8 @@ add_task(async function() {
   ok(homeButton, "home button present");
 
   async function drop(dragData, homepage) {
-    let setHomepageDialogPromise = BrowserTestUtils.promiseAlertDialogOpen(
-      "accept"
-    );
+    let setHomepageDialogPromise =
+      BrowserTestUtils.promiseAlertDialogOpen("accept");
     let setHomepagePromise = TestUtils.waitForPrefChange(
       HOMEPAGE_PREF,
       newVal => newVal == homepage
@@ -73,11 +72,11 @@ add_task(async function() {
         },
       };
       Services.console.registerListener(consoleListener);
-      registerCleanupFunction(function() {
+      registerCleanupFunction(function () {
         Services.console.unregisterListener(consoleListener);
       });
 
-      executeSoon(function() {
+      executeSoon(function () {
         info("Attempting second drop, of a javascript: URI");
         // The drop handler throws an exception when dragging URIs that inherit
         // principal, e.g. javascript:
@@ -108,8 +107,7 @@ add_task(async function() {
       [
         {
           type: "text/plain",
-          data:
-            "http://mochi.test:8888/\nhttp://mochi.test:8888/b\nhttp://mochi.test:8888/c",
+          data: "http://mochi.test:8888/\nhttp://mochi.test:8888/b\nhttp://mochi.test:8888/c",
         },
       ],
     ],

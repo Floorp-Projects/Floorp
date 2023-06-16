@@ -35,39 +35,41 @@ add_task(async function test() {
       "Failed to move focus away from search bar: button=" + button
     );
 
-    await SpecialPowers.spawn(tab.linkedBrowser, [button], async function(
-      button
-    ) {
-      let fm = Services.focus;
+    await SpecialPowers.spawn(
+      tab.linkedBrowser,
+      [button],
+      async function (button) {
+        let fm = Services.focus;
 
-      let attempts = 10;
-      await new Promise(resolve => {
-        function check() {
-          if (
-            attempts > 0 &&
-            content.document.activeElement.id != "willBeFocused"
-          ) {
-            attempts--;
-            content.window.setTimeout(check, 100);
-            return;
+        let attempts = 10;
+        await new Promise(resolve => {
+          function check() {
+            if (
+              attempts > 0 &&
+              content.document.activeElement.id != "willBeFocused"
+            ) {
+              attempts--;
+              content.window.setTimeout(check, 100);
+              return;
+            }
+
+            Assert.equal(
+              content.document.activeElement.id,
+              "willBeFocused",
+              "The input element isn't active element: button=" + button
+            );
+            Assert.equal(
+              fm.focusedElement,
+              content.document.activeElement,
+              "The active element isn't focused element in App level: button=" +
+                button
+            );
+            resolve();
           }
-
-          Assert.equal(
-            content.document.activeElement.id,
-            "willBeFocused",
-            "The input element isn't active element: button=" + button
-          );
-          Assert.equal(
-            fm.focusedElement,
-            content.document.activeElement,
-            "The active element isn't focused element in App level: button=" +
-              button
-          );
-          resolve();
-        }
-        check();
-      });
-    });
+          check();
+        });
+      }
+    );
   }
 
   gBrowser.removeTab(tab);

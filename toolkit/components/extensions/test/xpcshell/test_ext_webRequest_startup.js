@@ -1,11 +1,9 @@
 "use strict";
 
 // Delay loading until createAppInfo is called and setup.
-ChromeUtils.defineModuleGetter(
-  this,
-  "AddonManager",
-  "resource://gre/modules/AddonManager.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+});
 
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
@@ -19,11 +17,8 @@ AddonTestUtils.createAppInfo(
   "42"
 );
 
-let {
-  promiseShutdownManager,
-  promiseStartupManager,
-  promiseRestartManager,
-} = AddonTestUtils;
+let { promiseShutdownManager, promiseStartupManager, promiseRestartManager } =
+  AddonTestUtils;
 
 const server = createHttpServer({ hosts: ["example.com"] });
 server.registerDirectory("/data/", do_get_file("data"));
@@ -543,7 +538,7 @@ add_task(async function test_persistent_listener_after_staged_upgrade() {
     "http://example.com/",
   ];
   delete extensionData.manifest.optional_permissions;
-  extensionData.background = function() {
+  extensionData.background = function () {
     browser.webRequest.onBeforeRequest.addListener(
       details => {
         browser.test.sendMessage("got-request");

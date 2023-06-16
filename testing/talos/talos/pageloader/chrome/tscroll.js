@@ -44,7 +44,7 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps) {
       if (callback) {
         win.addEventListener(
           replyEvent,
-          function(e) {
+          function (e) {
             callback(e.detail);
           },
           { once: true }
@@ -77,10 +77,10 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps) {
    * @returns Promise
    */
   function P_setupReportFn() {
-    return new Promise(function(resolve) {
+    return new Promise(function (resolve) {
       report = opt_reportFunc || win.tpRecordTime;
       if (report == "PageLoader:RecordTime") {
-        report = function(duration, start, name) {
+        report = function (duration, start, name) {
           var msg = { time: duration, startTime: start, testName: name };
           sendAsyncMessage("PageLoader:RecordTime", msg);
         };
@@ -92,7 +92,7 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps) {
       // Provides an alternative tpRecordTime (with some stats display) if running in a browser.
       if (!report && document.head) {
         var imported = document.createElement("script");
-        imported.addEventListener("load", function() {
+        imported.addEventListener("load", function () {
           report = tpRecordTime;
           resolve();
         });
@@ -108,8 +108,8 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps) {
   }
 
   function FP_wait(ms) {
-    return function() {
-      return new Promise(function(resolve) {
+    return function () {
+      return new Promise(function (resolve) {
         win.setTimeout(resolve, ms);
       });
     };
@@ -120,13 +120,13 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps) {
   }
 
   function P_rAF() {
-    return new Promise(function(resolve) {
+    return new Promise(function (resolve) {
       rAF(resolve);
     });
   }
 
   function P_MozAfterPaint() {
-    return new Promise(function(resolve) {
+    return new Promise(function (resolve) {
       win.addEventListener("MozAfterPaint", () => resolve(), { once: true });
     });
   }
@@ -134,46 +134,46 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps) {
   var isWindow = target.self === target;
 
   var getPos = isWindow
-    ? function() {
+    ? function () {
         return target.pageYOffset;
       }
-    : function() {
+    : function () {
         return target.scrollTop;
       };
 
   var gotoTop = isWindow
-    ? function() {
+    ? function () {
         target.scroll(0, 0);
         ensureScroll();
       }
-    : function() {
+    : function () {
         target.scrollTop = 0;
         ensureScroll();
       };
 
   var doScrollTick = isWindow
-    ? function() {
+    ? function () {
         target.scrollBy(0, stepSize);
         ensureScroll();
       }
-    : function() {
+    : function () {
         target.scrollTop += stepSize;
         ensureScroll();
       };
 
   var setSmooth = isWindow
-    ? function() {
+    ? function () {
         target.document.scrollingElement.style.scrollBehavior = "smooth";
       }
-    : function() {
+    : function () {
         target.style.scrollBehavior = "smooth";
       };
 
   var gotoBottom = isWindow
-    ? function() {
+    ? function () {
         target.scrollTo(0, target.scrollMaxY);
       }
-    : function() {
+    : function () {
         target.scrollTop = target.scrollHeight;
       };
 
@@ -189,7 +189,7 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps) {
   // Instead, it uses 1000/layout.frame_rate
   // (with 60 as default value when layout.frame_rate == -1).
   function P_syncScrollTest() {
-    return new Promise(function(resolve) {
+    return new Promise(function (resolve) {
       // We should be at the top of the page now.
       var start = win.performance.now();
       var lastScrollPos = getPos();
@@ -264,17 +264,17 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps) {
       TalosPowersParent.exec("stopFrameTimeRecording", handle, cb, win);
     }
 
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
       setSmooth();
 
       var handle = -1;
-      startFrameTimeRecording(function(rv) {
+      startFrameTimeRecording(function (rv) {
         handle = rv;
       });
 
       // Get the measurements after APZ_MEASURE_MS of scrolling
-      win.setTimeout(function() {
-        stopFrameTimeRecording(handle, function(intervals) {
+      win.setTimeout(function () {
+        stopFrameTimeRecording(handle, function (intervals) {
           function average(arr) {
             var sum = 0;
             for (var i = 0; i < arr.length; i++) {
@@ -303,7 +303,7 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps) {
     .then(gotoTop)
     .then(FP_wait(260))
     .then(P_testAPZScroll)
-    .then(function() {
+    .then(function () {
       report(result.values.join(","), 0, result.names.join(","));
     });
 }

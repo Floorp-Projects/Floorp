@@ -27,8 +27,8 @@
 #include "gc/Heap-inl.h"
 #include "gc/Marking-inl.h"
 #include "gc/PrivateIterators-inl.h"
+#include "gc/StableCellHasher-inl.h"
 #include "gc/TraceMethods-inl.h"
-#include "gc/Zone-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 
 using namespace js;
@@ -221,7 +221,7 @@ static void RelocateCell(Zone* zone, TenuredCell* src, AllocKind thingKind,
   memcpy(dst, src, thingSize);
 
   // Move any uid attached to the object.
-  src->zone()->transferUniqueId(dst, src);
+  gc::TransferUniqueId(dst, src);
 
   if (IsObjectAllocKind(thingKind)) {
     auto* srcObj = static_cast<JSObject*>(static_cast<Cell*>(src));

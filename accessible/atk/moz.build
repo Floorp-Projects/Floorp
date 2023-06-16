@@ -12,7 +12,6 @@ EXPORTS.mozilla.a11y += [
 SOURCES += [
     "AccessibleWrap.cpp",
     "ApplicationAccessibleWrap.cpp",
-    "AtkSocketAccessible.cpp",
     "DocAccessibleWrap.cpp",
     "DOMtoATK.cpp",
     "nsMaiHyperlink.cpp",

@@ -320,9 +320,8 @@ function addMessage(newMessage, state, filtersState, prefsState, uiState) {
 
       // We loop backward through the warning group's messages to get the latest visible
       // messages in it.
-      const messagesInWarningGroup = state.warningGroupsById.get(
-        warningGroupId
-      );
+      const messagesInWarningGroup =
+        state.warningGroupsById.get(warningGroupId);
       for (let i = messagesInWarningGroup.length - 1; i >= 0; i--) {
         const idx = state.visibleMessages.indexOf(messagesInWarningGroup[i]);
         if (idx > -1) {

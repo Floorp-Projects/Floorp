@@ -1,6 +1,6 @@
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
-add_task(async function() {
+add_task(async function () {
   equal(AddonManager.isReady, false, "isReady should be false before startup");
 
   let gotStartupEvent = false;

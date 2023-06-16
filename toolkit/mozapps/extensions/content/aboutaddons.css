@@ -361,7 +361,6 @@ addon-card[expanded] .update-postponed-bar + .addon-card-message {
 
 .theme-enable-button {
   min-width: auto;
-  height: auto;
   font-size: 13px;
   min-height: auto;
   height: 24px;
@@ -373,7 +372,7 @@ addon-card[expanded] .update-postponed-bar + .addon-card-message {
 .addon-description {
   font-size: 14px;
   line-height: 20px;
-  color: var(--in-content-deemphasized-text);
+  color: var(--text-color-deemphasized);
   font-weight: 400;
 }
 
@@ -483,7 +482,7 @@ recommended-addon-card .addon-description:not(:empty) {
 }
 
 addon-details {
-  color: var(--in-content-deemphasized-text);
+  color: var(--text-color-deemphasized);
 }
 
 .addon-detail-description-wrapper {
@@ -562,7 +561,7 @@ button.addon-detail-description-toggle {
 
 .addon-detail-row.addon-detail-help-row {
   display: block;
-  color: var(--in-content-deemphasized-text);
+  color: var(--text-color-deemphasized);
   padding-top: 4px;
   padding-bottom: var(--card-padding);
   border: none;

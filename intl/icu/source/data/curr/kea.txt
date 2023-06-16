@@ -619,6 +619,9 @@ kea{
         GBP{
             other{"Libra britániku"}
         }
+        GHC{
+            other{"Sedi di Gana (1979–2007)"}
+        }
         GMD{
             other{"Dalasi"}
         }
@@ -711,6 +714,9 @@ kea{
         }
         STD{
             other{"Dobra di San Tume i Prínsipi (1977–2017)"}
+        }
+        STN{
+            other{"Dobra di San Tume i Prínsipi"}
         }
         SZL{
             other{"Lilanjeni"}

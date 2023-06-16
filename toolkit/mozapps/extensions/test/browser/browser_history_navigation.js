@@ -12,8 +12,8 @@
 // (once on XUL views and once on the HTML views).
 requestLongerTimeout(4);
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+const { AddonTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
 );
 
 AddonTestUtils.initMochitest(this);
@@ -361,7 +361,7 @@ add_task(async function test_navigate_back_from_website() {
   info("Part 2");
 
   await new Promise(resolve =>
-    executeSoon(function() {
+    executeSoon(function () {
       ok(gBrowser.canGoBack, "Should be able to go back");
       ok(!gBrowser.canGoForward, "Should not be able to go forward");
 
@@ -383,27 +383,28 @@ add_task(async function test_navigate_back_from_website() {
         wait_for_page_load(gBrowser.selectedBrowser).then(() => {
           info("Part 4");
 
-          executeSoon(function() {
+          executeSoon(function () {
             ok(gBrowser.canGoBack, "Should be able to go back");
             ok(!gBrowser.canGoForward, "Should not be able to go forward");
 
             go_back();
 
-            gBrowser.addEventListener("pageshow", async function listener(
-              event
-            ) {
-              if (event.target.location != "about:addons") {
-                return;
-              }
-              gBrowser.removeEventListener("pageshow", listener);
-              aManager = await wait_for_view_load(
-                gBrowser.contentWindow.wrappedJSObject
-              );
-              info("Part 5");
-              is_in_list(aManager, "addons://list/plugin", false, true);
+            gBrowser.addEventListener(
+              "pageshow",
+              async function listener(event) {
+                if (event.target.location != "about:addons") {
+                  return;
+                }
+                gBrowser.removeEventListener("pageshow", listener);
+                aManager = await wait_for_view_load(
+                  gBrowser.contentWindow.wrappedJSObject
+                );
+                info("Part 5");
+                is_in_list(aManager, "addons://list/plugin", false, true);
 
-              resolve();
-            });
+                resolve();
+              }
+            );
           });
         });
       });

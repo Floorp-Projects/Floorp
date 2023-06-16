@@ -41,7 +41,7 @@ add_task(async function test_slow_content_script() {
     },
 
     files: {
-      "content.js": function() {
+      "content.js": function () {
         while (true) {
           // Busy wait.
         }

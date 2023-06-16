@@ -48,6 +48,7 @@
 #include "mozilla/dom/WindowProxyHolder.h"
 #include "mozilla/dom/SyncedContextInlines.h"
 #include "mozilla/dom/XULFrameElement.h"
+#include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/net/DocumentLoadListener.h"
 #include "mozilla/net/RequestContextService.h"
 #include "mozilla/Assertions.h"
@@ -72,6 +73,7 @@
 #include "nsDocShellLoadState.h"
 #include "nsFocusManager.h"
 #include "nsGlobalWindowOuter.h"
+#include "PresShell.h"
 #include "nsIObserverService.h"
 #include "nsISHistory.h"
 #include "nsContentUtils.h"
@@ -519,9 +521,9 @@ void BrowsingContext::EnsureAttached() {
 }
 
 /* static */
-void BrowsingContext::CreateFromIPC(BrowsingContext::IPCInitializer&& aInit,
-                                    BrowsingContextGroup* aGroup,
-                                    ContentParent* aOriginProcess) {
+mozilla::ipc::IPCResult BrowsingContext::CreateFromIPC(
+    BrowsingContext::IPCInitializer&& aInit, BrowsingContextGroup* aGroup,
+    ContentParent* aOriginProcess) {
   MOZ_DIAGNOSTIC_ASSERT(aOriginProcess || XRE_IsContentProcess());
   MOZ_DIAGNOSTIC_ASSERT(aGroup);
 
@@ -572,7 +574,7 @@ void BrowsingContext::CreateFromIPC(BrowsingContext::IPCInitializer&& aInit,
 
   Register(context);
 
-  context->Attach(/* aFromIPC */ true, aOriginProcess);
+  return context->Attach(/* aFromIPC */ true, aOriginProcess);
 }
 
 BrowsingContext::BrowsingContext(WindowContext* aParentWindow,
@@ -784,7 +786,8 @@ void BrowsingContext::Embed() {
   }
 }
 
-void BrowsingContext::Attach(bool aFromIPC, ContentParent* aOriginProcess) {
+mozilla::ipc::IPCResult BrowsingContext::Attach(bool aFromIPC,
+                                                ContentParent* aOriginProcess) {
   MOZ_DIAGNOSTIC_ASSERT(!mEverAttached);
   MOZ_DIAGNOSTIC_ASSERT_IF(aFromIPC, aOriginProcess || XRE_IsContentProcess());
   mEverAttached = true;
@@ -803,14 +806,29 @@ void BrowsingContext::Attach(bool aFromIPC, ContentParent* aOriginProcess) {
   MOZ_DIAGNOSTIC_ASSERT(mGroup);
   MOZ_DIAGNOSTIC_ASSERT(!mIsDiscarded);
 
-  MOZ_DIAGNOSTIC_ASSERT(
-      mGroup->IsPotentiallyCrossOriginIsolated() ==
+  if (mGroup->IsPotentiallyCrossOriginIsolated() !=
       (Top()->GetOpenerPolicy() ==
-       nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP));
+       nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP)) {
+    MOZ_DIAGNOSTIC_ASSERT(aFromIPC);
+    if (aFromIPC) {
+      auto* actor = aOriginProcess
+                        ? static_cast<mozilla::ipc::IProtocol*>(aOriginProcess)
+                        : static_cast<mozilla::ipc::IProtocol*>(
+                              ContentChild::GetSingleton());
+      return IPC_FAIL(
+          actor,
+          "Invalid CrossOriginIsolated state in BrowsingContext::Attach call");
+    } else {
+      MOZ_CRASH(
+          "Invalid CrossOriginIsolated state in BrowsingContext::Attach call");
+    }
+  }
 
   AssertCoherentLoadContext();
 
   // Add ourselves either to our parent or BrowsingContextGroup's child list.
+  // Important: We shouldn't return IPC_FAIL after this point, since the
+  // BrowsingContext will have already been added to the tree.
   if (mParentWindow) {
     if (!aFromIPC) {
       MOZ_DIAGNOSTIC_ASSERT(!mParentWindow->IsDiscarded(),
@@ -888,6 +906,7 @@ void BrowsingContext::Attach(bool aFromIPC, ContentParent* aOriginProcess) {
   if (XRE_IsParentProcess()) {
     Canonical()->CanonicalAttach();
   }
+  return IPC_OK();
 }
 
 void BrowsingContext::Detach(bool aFromIPC) {
@@ -3312,10 +3331,9 @@ void BrowsingContext::DidSet(FieldIndex<IDX_TextZoom>, float aOldValue) {
 
   if (IsTop() && XRE_IsParentProcess()) {
     if (Element* element = GetEmbedderElement()) {
-      auto dispatcher = MakeRefPtr<AsyncEventDispatcher>(
-          element, u"TextZoomChange"_ns, CanBubble::eYes,
-          ChromeOnlyDispatch::eYes);
-      dispatcher->RunDOMEventWhenSafe();
+      AsyncEventDispatcher::RunDOMEventWhenSafe(*element, u"TextZoomChange"_ns,
+                                                CanBubble::eYes,
+                                                ChromeOnlyDispatch::eYes);
     }
   }
 }
@@ -3343,10 +3361,9 @@ void BrowsingContext::DidSet(FieldIndex<IDX_FullZoom>, float aOldValue) {
 
   if (IsTop() && XRE_IsParentProcess()) {
     if (Element* element = GetEmbedderElement()) {
-      auto dispatcher = MakeRefPtr<AsyncEventDispatcher>(
-          element, u"FullZoomChange"_ns, CanBubble::eYes,
-          ChromeOnlyDispatch::eYes);
-      dispatcher->RunDOMEventWhenSafe();
+      AsyncEventDispatcher::RunDOMEventWhenSafe(*element, u"FullZoomChange"_ns,
+                                                CanBubble::eYes,
+                                                ChromeOnlyDispatch::eYes);
     }
   }
 }
@@ -3469,6 +3486,52 @@ bool BrowsingContext::CanSet(FieldIndex<IDX_PendingInitialization>,
 bool BrowsingContext::CanSet(FieldIndex<IDX_HasRestoreData>, bool aNewValue,
                              ContentParent* aSource) {
   return IsTop();
+}
+
+bool BrowsingContext::CanSet(FieldIndex<IDX_IsUnderHiddenEmbedderElement>,
+                             const bool& aIsUnderHiddenEmbedderElement,
+                             ContentParent* aSource) {
+  return true;
+}
+
+void BrowsingContext::DidSet(FieldIndex<IDX_IsUnderHiddenEmbedderElement>,
+                             bool aOldValue) {
+  nsIDocShell* shell = GetDocShell();
+  if (!shell) {
+    return;
+  }
+
+  const bool newValue = IsUnderHiddenEmbedderElement();
+  if (NS_WARN_IF(aOldValue == newValue)) {
+    return;
+  }
+  if (PresShell* presShell = shell->GetPresShell()) {
+    presShell->SetIsUnderHiddenEmbedderElement(newValue);
+  }
+
+  // Propagate to children.
+  for (BrowsingContext* child : Children()) {
+    Element* embedderElement = child->GetEmbedderElement();
+    if (!embedderElement) {
+      // TODO: We shouldn't need to null check here since `child` and the
+      // element returned by `child->GetEmbedderElement()` are in our
+      // process (the actual browsing context represented by `child` may not
+      // be, but that doesn't matter).  However, there are currently a very
+      // small number of crashes due to `embedderElement` being null, somehow
+      // - see bug 1551241.  For now we wallpaper the crash.
+      continue;
+    }
+
+    bool embedderFrameIsHidden = true;
+    if (auto embedderFrame = embedderElement->GetPrimaryFrame()) {
+      embedderFrameIsHidden = !embedderFrame->StyleVisibility()->IsVisible();
+    }
+
+    bool hidden = IsUnderHiddenEmbedderElement() || embedderFrameIsHidden;
+    if (child->IsUnderHiddenEmbedderElement() != hidden) {
+      Unused << child->SetIsUnderHiddenEmbedderElement(hidden);
+    }
+  }
 }
 
 bool BrowsingContext::IsPopupAllowed() {

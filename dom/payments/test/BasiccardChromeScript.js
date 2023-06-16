@@ -215,31 +215,31 @@ paymentSrv.setTestingUIService(
   DummyUIService.QueryInterface(Ci.nsIPaymentUIService)
 );
 
-addMessageListener("set-detailed-ui-service", function(testName) {
+addMessageListener("set-detailed-ui-service", function (testName) {
   DummyUIService.testName = testName;
   DummyUIService.showAction = "detailBasicCardResponse";
   sendAsyncMessage("set-detailed-ui-service-complete");
 });
 
-addMessageListener("set-simple-ui-service", function(testName) {
+addMessageListener("set-simple-ui-service", function (testName) {
   DummyUIService.testName = testName;
   DummyUIService.showAction = "simpleBasicCardResponse";
   sendAsyncMessage("set-simple-ui-service-complete");
 });
 
-addMessageListener("set-special-address-ui-service", function(testName) {
+addMessageListener("set-special-address-ui-service", function (testName) {
   DummyUIService.testName = testName;
   DummyUIService.showAction = "specialAddressResponse";
   sendAsyncMessage("set-special-address-ui-service-complete");
 });
 
-addMessageListener("method-change-to-basic-card", function(testName) {
+addMessageListener("method-change-to-basic-card", function (testName) {
   DummyUIService.testName = testName;
   DummyUIService.showAction = "payment-method-change";
   sendAsyncMessage("method-change-to-basic-card-complete");
 });
 
-addMessageListener("error-response-test", function(testName) {
+addMessageListener("error-response-test", function (testName) {
   // test empty cardNumber
   try {
     basiccardResponseData.initData("", "", "", "", "", null);
@@ -366,7 +366,7 @@ addMessageListener("error-response-test", function(testName) {
   sendAsyncMessage("error-response-test-complete");
 });
 
-addMessageListener("teardown", function() {
+addMessageListener("teardown", function () {
   paymentSrv.setTestingUIService(null);
   sendAsyncMessage("teardown-complete");
 });

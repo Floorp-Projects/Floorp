@@ -13,7 +13,7 @@ function addWindowListener(aURL, aCallback) {
         info("window opened, waiting for focus");
         Services.wm.removeListener(this);
         var domwindow = aXULWindow.docShell.domWindow;
-        waitForFocus(function() {
+        waitForFocus(function () {
           is(
             domwindow.document.location.href,
             aURL,
@@ -39,7 +39,6 @@ add_task(async function test_with_pref_enabled() {
     set: [
       ["security.data_uri.block_toplevel_data_uri_navigations", true],
       ["browser.download.always_ask_before_handling_new_types", true],
-      ["browser.download.improvements_to_download_panel", false],
     ],
   });
 
@@ -65,7 +64,6 @@ add_task(async function test_with_pref_disabled() {
     set: [
       ["security.data_uri.block_toplevel_data_uri_navigations", true],
       ["browser.download.always_ask_before_handling_new_types", false],
-      ["browser.download.improvements_to_download_panel", true],
     ],
   });
   let downloadsPanelPromise = promisePanelOpened();

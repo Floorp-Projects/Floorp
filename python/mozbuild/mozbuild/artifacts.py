@@ -101,6 +101,7 @@ class ArtifactJob(object):
     # The list below list should be updated when we have new ESRs.
     esr_candidate_trees = [
         "releases/mozilla-esr102",
+        "releases/mozilla-esr115",
     ]
     try_tree = "try"
 

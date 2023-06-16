@@ -4,10 +4,27 @@
 
 "use strict";
 
+loader.lazyRequireGetter(
+  this,
+  "getTargetBrowsers",
+  "resource://devtools/shared/compatibility/compatibility-user-settings.js",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "TARGET_BROWSER_PREF",
+  "resource://devtools/shared/compatibility/constants.js",
+  true
+);
+
 class InspectorCommand {
   constructor({ commands }) {
     this.commands = commands;
   }
+
+  #cssDeclarationBlockIssuesQueuedDomRulesDeclarations = [];
+  #cssDeclarationBlockIssuesPendingTimeoutPromise;
+  #cssDeclarationBlockIssuesTargetBrowsersPromise;
 
   /**
    * Return the list of all current target's inspector fronts
@@ -258,20 +275,20 @@ class InspectorCommand {
       domLoadingPromises.push(nodeFront.waitForFrameLoad());
     }
 
-    const {
-      onResource: onDomInteractiveResource,
-    } = await this.commands.resourceCommand.waitForNextResource(
-      this.commands.resourceCommand.TYPES.DOCUMENT_EVENT,
-      {
-        // We might be in a case where the children document is already loaded (i.e. we
-        // would already have received the dom-interactive resource), so it's important
-        // to _not_ ignore existing resource.
-        predicate: resource =>
-          resource.name == "dom-interactive" &&
-          resource.targetFront !== nodeFront.targetFront &&
-          resource.targetFront.browsingContextID == nodeFront.browsingContextID,
-      }
-    );
+    const { onResource: onDomInteractiveResource } =
+      await this.commands.resourceCommand.waitForNextResource(
+        this.commands.resourceCommand.TYPES.DOCUMENT_EVENT,
+        {
+          // We might be in a case where the children document is already loaded (i.e. we
+          // would already have received the dom-interactive resource), so it's important
+          // to _not_ ignore existing resource.
+          predicate: resource =>
+            resource.name == "dom-interactive" &&
+            resource.targetFront !== nodeFront.targetFront &&
+            resource.targetFront.browsingContextID ==
+              nodeFront.browsingContextID,
+        }
+      );
     const newTargetResolveValue = Symbol();
     domLoadingPromises.push(
       onDomInteractiveResource.then(() => newTargetResolveValue)
@@ -333,6 +350,102 @@ class InspectorCommand {
     }
 
     return selectors;
+  }
+
+  #updateTargetBrowsersCache = async () => {
+    this.#cssDeclarationBlockIssuesTargetBrowsersPromise = getTargetBrowsers();
+  };
+
+  /**
+   *  Get compatibility issues for given domRule declarations
+   *
+   * @param {Array<Object>} domRuleDeclarations
+   * @param {string} domRuleDeclarations[].name: Declaration name
+   * @param {string} domRuleDeclarations[].value: Declaration value
+   * @returns {Promise<Array<Object>>}
+   */
+  async getCSSDeclarationBlockIssues(domRuleDeclarations) {
+    const resultIndex =
+      this.#cssDeclarationBlockIssuesQueuedDomRulesDeclarations.length;
+    this.#cssDeclarationBlockIssuesQueuedDomRulesDeclarations.push(
+      domRuleDeclarations
+    );
+
+    // We're getting the target browsers from RemoteSettings, which can take some time.
+    // We cache the target browsers to avoid bad performance.
+    if (!this.#cssDeclarationBlockIssuesTargetBrowsersPromise) {
+      this.#updateTargetBrowsersCache();
+      // Update the target browsers cache when the pref in which we store the compat
+      // panel settings is updated.
+      Services.prefs.addObserver(
+        TARGET_BROWSER_PREF,
+        this.#updateTargetBrowsersCache
+      );
+    }
+
+    // This can be a hot path if the rules view has a lot of rules displayed.
+    // Here we wait before sending the RDP request so we can collect all the domRule declarations
+    // of "concurrent" calls, and only send a single RDP request.
+    if (!this.#cssDeclarationBlockIssuesPendingTimeoutPromise) {
+      // Wait before sending the RDP request so all "concurrent" calls can be handle
+      // in a single RDP request.
+      this.#cssDeclarationBlockIssuesPendingTimeoutPromise = new Promise(
+        resolve => {
+          setTimeout(() => {
+            this.#cssDeclarationBlockIssuesPendingTimeoutPromise = null;
+            this.#batchedGetCSSDeclarationBlockIssues().then(data =>
+              resolve(data)
+            );
+          }, 50);
+        }
+      );
+    }
+
+    const results = await this.#cssDeclarationBlockIssuesPendingTimeoutPromise;
+    return results?.[resultIndex] || [];
+  }
+
+  /**
+   * Get compatibility issues for all queued domRules declarations
+   * @returns {Promise<Array<Array<Object>>>}
+   */
+  #batchedGetCSSDeclarationBlockIssues = async () => {
+    const declarations = Array.from(
+      this.#cssDeclarationBlockIssuesQueuedDomRulesDeclarations
+    );
+    this.#cssDeclarationBlockIssuesQueuedDomRulesDeclarations = [];
+
+    const { targetFront } = this.commands.targetCommand;
+    try {
+      // The server method isn't dependent on the target (it computes the values from the
+      // declarations we send, which are just property names and values), so we can always
+      // use the top-level target front.
+      const inspectorFront = await targetFront.getFront("inspector");
+
+      const [compatibilityFront, targetBrowsers] = await Promise.all([
+        inspectorFront.getCompatibilityFront(),
+        this.#cssDeclarationBlockIssuesTargetBrowsersPromise,
+      ]);
+
+      const data = await compatibilityFront.getCSSDeclarationBlockIssues(
+        declarations,
+        targetBrowsers
+      );
+      return data;
+    } catch (e) {
+      if (this.destroyed || targetFront.isDestroyed()) {
+        return [];
+      }
+      throw e;
+    }
+  };
+
+  destroy() {
+    Services.prefs.removeObserver(
+      TARGET_BROWSER_PREF,
+      this.#updateTargetBrowsersCache
+    );
+    this.destroyed = true;
   }
 }
 

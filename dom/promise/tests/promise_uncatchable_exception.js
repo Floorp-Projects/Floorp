@@ -2,10 +2,10 @@
 
 postMessage("Done", "*");
 
-var p = new Promise(function(resolve, reject) {
+var p = new Promise(function (resolve, reject) {
   TestFunctions.throwUncatchableException();
   ok(false, "Shouldn't get here!");
-}).catch(function(exception) {
+}).catch(function (exception) {
   ok(false, "Shouldn't get here!");
 });
 ok(false, "Shouldn't get here!");

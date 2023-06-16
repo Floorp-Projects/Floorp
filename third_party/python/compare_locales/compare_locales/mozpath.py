@@ -8,7 +8,6 @@ path separators (always use forward slashes).
 Also contains a few additional utilities not found in :py:mod:`os.path`.
 '''
 
-from __future__ import absolute_import
 
 import posixpath
 import os

@@ -54,6 +54,21 @@ In this document, we try to list these all tools.
      - :ref:`Formatting C++ Code With clang-format`
      - https://clang.llvm.org/docs/ClangFormat.html
 
+.. list-table:: CSS
+   :widths: 20 20 20 20 20
+   :header-rows: 1
+
+   * - Tools
+     - Has autofixes
+     - Meta bug
+     - More info
+     - Upstream
+   * - Stylelint
+     - Yes
+     - `bug 1762027 <https://bugzilla.mozilla.org/show_bug.cgi?id=1762027>`__
+     - :ref:`Stylelint`
+     - https://stylelint.io/
+
 .. list-table:: JavaScript
    :widths: 20 20 20 20 20
    :header-rows: 1
@@ -78,8 +93,6 @@ In this document, we try to list these all tools.
      - `bug 1558517 <https://bugzilla.mozilla.org/show_bug.cgi?id=1558517>`__
      - :ref:`JavaScript Coding style`
      - https://prettier.io/
-
-
 
 .. list-table:: Python
    :widths: 20 20 20 20 20

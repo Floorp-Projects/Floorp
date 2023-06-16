@@ -20,7 +20,7 @@ add_task(async function tabsAttention() {
       permissions: ["tabs", "http://example.com/*"],
     },
 
-    background: async function() {
+    background: async function () {
       function onActive(tabId, changeInfo, tab) {
         browser.test.assertFalse(
           changeInfo.attention,

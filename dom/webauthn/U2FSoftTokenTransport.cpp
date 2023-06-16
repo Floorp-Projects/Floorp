@@ -293,17 +293,22 @@ static nsresult GetAttestationCertificate(
   // which also wouldn't be valid).
   serialBytes[0] |= 0x01;
 
-  aAttestCert = UniqueCERTCertificate(CERT_CreateCertificate(
+  // NB: CERTCertificates created with CERT_CreateCertificate are not safe to
+  // use with other NSS functions like CERT_DupCertificate.
+  // The strategy here is to create a tbsCertificate ("to-be-signed
+  // certificate"), encode it, and sign it, resulting in a signed DER
+  // certificate that can be decoded into a CERTCertificate.
+  UniqueCERTCertificate tbsCertificate(CERT_CreateCertificate(
       serial, subjectName.get(), validity.get(), certreq.get()));
-  if (NS_WARN_IF(!aAttestCert)) {
+  if (NS_WARN_IF(!tbsCertificate)) {
     MOZ_LOG(gNSSTokenLog, LogLevel::Warning,
             ("Failed to gen certificate, NSS error #%d", PORT_GetError()));
     return NS_ERROR_FAILURE;
   }
 
-  PLArenaPool* arena = aAttestCert->arena;
+  PLArenaPool* arena = tbsCertificate->arena;
 
-  srv = SECOID_SetAlgorithmID(arena, &aAttestCert->signature,
+  srv = SECOID_SetAlgorithmID(arena, &tbsCertificate->signature,
                               SEC_OID_ANSIX962_ECDSA_SHA256_SIGNATURE,
                               /* wincx */ nullptr);
   if (NS_WARN_IF(srv != SECSuccess)) {
@@ -311,27 +316,31 @@ static nsresult GetAttestationCertificate(
   }
 
   // Set version to X509v3.
-  *(aAttestCert->version.data) = SEC_CERTIFICATE_VERSION_3;
-  aAttestCert->version.len = 1;
+  *(tbsCertificate->version.data) = SEC_CERTIFICATE_VERSION_3;
+  tbsCertificate->version.len = 1;
 
   SECItem innerDER = {siBuffer, nullptr, 0};
-  if (NS_WARN_IF(!SEC_ASN1EncodeItem(arena, &innerDER, aAttestCert.get(),
+  if (NS_WARN_IF(!SEC_ASN1EncodeItem(arena, &innerDER, tbsCertificate.get(),
                                      SEC_ASN1_GET(CERT_CertificateTemplate)))) {
     return NS_ERROR_FAILURE;
   }
 
-  SECItem* signedCert = PORT_ArenaZNew(arena, SECItem);
-  if (NS_WARN_IF(!signedCert)) {
+  SECItem* certDer = PORT_ArenaZNew(arena, SECItem);
+  if (NS_WARN_IF(!certDer)) {
     return NS_ERROR_FAILURE;
   }
 
-  srv = SEC_DerSignData(arena, signedCert, innerDER.data, innerDER.len,
+  srv = SEC_DerSignData(arena, certDer, innerDER.data, innerDER.len,
                         aAttestPrivKey.get(),
                         SEC_OID_ANSIX962_ECDSA_SHA256_SIGNATURE);
   if (NS_WARN_IF(srv != SECSuccess)) {
     return NS_ERROR_FAILURE;
   }
-  aAttestCert->derCert = *signedCert;
+  aAttestCert = UniqueCERTCertificate(CERT_NewTempCertificate(
+      CERT_GetDefaultCertDB(), certDer, nullptr, false, true));
+  if (NS_WARN_IF(!aAttestCert)) {
+    return NS_ERROR_FAILURE;
+  }
 
   MOZ_LOG(gNSSTokenLog, LogLevel::Debug,
           ("U2F Soft Token attestation certificate generated."));

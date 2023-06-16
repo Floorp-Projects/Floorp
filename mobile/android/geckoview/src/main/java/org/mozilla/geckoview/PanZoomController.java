@@ -47,6 +47,7 @@ public class PanZoomController {
 
   /** Specifies smooth scrolling which animates content to the desired scroll position. */
   public static final int SCROLL_BEHAVIOR_SMOOTH = 0;
+
   /** Specifies auto scrolling which jumps content to the desired scroll position. */
   public static final int SCROLL_BEHAVIOR_AUTO = 1;
 
@@ -94,6 +95,7 @@ public class PanZoomController {
         SCROLLABLE_FLAG_LEFT
       })
   public @interface ScrollableDirections {}
+
   /**
    * Represents which directions can be scrolled in the scroll container where an input event was
    * handled. This value is only useful in the case of {@link
@@ -101,6 +103,7 @@ public class PanZoomController {
    */
   /* The container cannot be scrolled. */
   @WrapForJNI public static final int SCROLLABLE_FLAG_NONE = 0;
+
   /* The container cannot be scrolled to top */
   @WrapForJNI public static final int SCROLLABLE_FLAG_TOP = 1 << 0;
   /* The container cannot be scrolled to right */
@@ -115,6 +118,7 @@ public class PanZoomController {
       flag = true,
       value = {OVERSCROLL_FLAG_NONE, OVERSCROLL_FLAG_HORIZONTAL, OVERSCROLL_FLAG_VERTICAL})
   public @interface OverscrollDirections {}
+
   /**
    * Represents which directions can be over-scrolled in the scroll container where an input event
    * was handled. This value is only useful in the case of {@link
@@ -122,6 +126,7 @@ public class PanZoomController {
    */
   /* the container cannot be over-scrolled. */
   @WrapForJNI public static final int OVERSCROLL_FLAG_NONE = 0;
+
   /* the container can be over-scrolled horizontally. */
   @WrapForJNI public static final int OVERSCROLL_FLAG_HORIZONTAL = 1 << 0;
   /* the container can be over-scrolled vertically. */
@@ -159,6 +164,7 @@ public class PanZoomController {
     public @InputResult int handledResult() {
       return mHandledResult;
     }
+
     /**
      * @return an OR-ed value of {@link #SCROLLABLE_FLAG_NONE SCROLLABLE_FLAG_*} indicating which
      *     directions can be scrollable.
@@ -167,6 +173,7 @@ public class PanZoomController {
     public @ScrollableDirections int scrollableDirections() {
       return mScrollableDirections;
     }
+
     /**
      * @return an OR-ed value of {@link #OVERSCROLL_FLAG_NONE OVERSCROLL_FLAG_*} indicating which
      *     directions can be over-scrollable.

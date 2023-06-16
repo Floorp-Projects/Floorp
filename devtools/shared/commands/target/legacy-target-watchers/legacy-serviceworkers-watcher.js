@@ -43,9 +43,8 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
     // about registrations. And if we need to also update the
     // "debuggerServiceWorkerStatus" from here, then we would have to
     // also listen to "registration-changed" one each registration.
-    this._onRegistrationListChanged = this._onRegistrationListChanged.bind(
-      this
-    );
+    this._onRegistrationListChanged =
+      this._onRegistrationListChanged.bind(this);
     this._onDocumentEvent = this._onDocumentEvent.bind(this);
 
     // Flag used from the parent class to listen to process targets.
@@ -187,9 +186,8 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
         const shouldDestroy = this._shouldDestroyTargetsOnNavigation();
 
         for (const target of allServiceWorkerTargets) {
-          const isRegisteredBefore = this.targetCommand.isTargetRegistered(
-            target
-          );
+          const isRegisteredBefore =
+            this.targetCommand.isTargetRegistered(target);
           if (shouldDestroy && isRegisteredBefore) {
             // Instruct the target command to notify about the worker target destruction
             // but do not destroy the front as we want to keep using it.
@@ -199,9 +197,8 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
 
           // Note: we call isTargetRegistered again because calls to
           // onTargetDestroyed might have modified the list of registered targets.
-          const isRegisteredAfter = this.targetCommand.isTargetRegistered(
-            target
-          );
+          const isRegisteredAfter =
+            this.targetCommand.isTargetRegistered(target);
           const isValidTarget = this._supportWorkerTarget(target);
           if (isValidTarget && !isRegisteredAfter) {
             // If the target is still valid for the current top target, call
@@ -255,9 +252,8 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
   }
 
   async _updateRegistrations() {
-    const {
-      registrations,
-    } = await this.rootFront.listServiceWorkerRegistrations();
+    const { registrations } =
+      await this.rootFront.listServiceWorkerRegistrations();
 
     this._registrations = registrations;
   }

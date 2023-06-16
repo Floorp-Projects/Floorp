@@ -6,7 +6,7 @@
 /**
  * Tests for exporting POST data into HAR format.
  */
-add_task(async function() {
+add_task(async function () {
   const { tab, monitor } = await initNetMonitor(
     HAR_EXAMPLE_URL + "html_har_post-data-test-page.html",
     { requestCount: 1 }
@@ -14,30 +14,20 @@ add_task(async function() {
 
   info("Starting test... ");
 
-  const { connector, store, windowRequire } = monitor.panelWin;
+  const { store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  const { HarMenuUtils } = windowRequire(
-    "devtools/client/netmonitor/src/har/har-menu-utils"
-  );
-  const { getSortedRequests } = windowRequire(
-    "devtools/client/netmonitor/src/selectors/index"
-  );
 
   store.dispatch(Actions.batchEnable(false));
 
   // Execute one GET request on the page and wait till its done.
   const wait = waitForNetworkEvents(monitor, 1);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     content.wrappedJSObject.executeTest3();
   });
   await wait;
 
   // Copy HAR into the clipboard (asynchronous).
-  const jsonString = await HarMenuUtils.copyAllAsHar(
-    getSortedRequests(store.getState()),
-    connector
-  );
-  const har = JSON.parse(jsonString);
+  const har = await copyAllAsHARWithContextMenu(monitor);
 
   // Check out the HAR log.
   isnot(har.log, null, "The HAR log must exist");

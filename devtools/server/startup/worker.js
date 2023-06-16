@@ -18,7 +18,7 @@
 // worker loader. To make sure the worker loader can access it, it needs to be
 // defined before loading the worker loader script below.
 let nextId = 0;
-this.rpc = function(method, ...params) {
+this.rpc = function (method, ...params) {
   return new Promise((resolve, reject) => {
     const id = nextId++;
     this.addEventListener("message", function onMessageForRpc(event) {
@@ -54,7 +54,7 @@ const { DevToolsServer } = worker.require(
   "resource://devtools/server/devtools-server.js"
 );
 
-DevToolsServer.createRootActor = function() {
+DevToolsServer.createRootActor = function () {
   throw new Error("Should never get here!");
 };
 
@@ -63,7 +63,7 @@ DevToolsServer.createRootActor = function() {
 // that, we handle a Map of the different connections, keyed by forwarding prefix.
 const connections = new Map();
 
-this.addEventListener("message", async function(event) {
+this.addEventListener("message", async function (event) {
   const packet = JSON.parse(event.data);
   switch (packet.type) {
     case "connect":

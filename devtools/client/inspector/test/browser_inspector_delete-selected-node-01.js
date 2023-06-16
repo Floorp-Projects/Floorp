@@ -6,7 +6,7 @@
 
 const TEST_URL = URL_ROOT + "doc_inspector_delete-selected-node-01.html";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
 
   const spanNodeFront = await getNodeFrontInFrames(

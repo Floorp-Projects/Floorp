@@ -11,7 +11,7 @@ if (!window.testPromise) {
 
   const shimId = "MochitestShim2";
 
-  const sendMessageToAddon = (function() {
+  const sendMessageToAddon = (function () {
     const pendingMessages = new Map();
     const channel = new MessageChannel();
     channel.port1.onerror = console.error;
@@ -33,11 +33,9 @@ if (!window.testPromise) {
     }
     window.addEventListener("ShimHelperReady", reconnect);
     reconnect();
-    return function(message) {
+    return function (message) {
       const messageId =
-        Math.random()
-          .toString(36)
-          .substring(2) + Date.now().toString(36);
+        Math.random().toString(36).substring(2) + Date.now().toString(36);
       return new Promise(resolve => {
         const payload = {
           message,

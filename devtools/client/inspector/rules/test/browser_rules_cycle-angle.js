@@ -17,7 +17,7 @@ const TEST_URI = `
   <body><div class=turn>Test turn</div><div class=deg>Test deg</div>cycling angle units in the rule view!</body>
 `;
 
-add_task(async function() {
+add_task(async function () {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, view } = await openRuleView();
   await checkAngleCycling(inspector, view);

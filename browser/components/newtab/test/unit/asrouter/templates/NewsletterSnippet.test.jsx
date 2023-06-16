@@ -4,7 +4,7 @@ import React from "react";
 import { FluentBundle, FluentResource } from "@fluent/bundle";
 import { LocalizationProvider, ReactLocalization } from "@fluent/react";
 import schema from "content-src/asrouter/templates/NewsletterSnippet/NewsletterSnippet.schema.json";
-import { SnippetsTestMessageProvider } from "lib/SnippetsTestMessageProvider.jsm";
+import { SnippetsTestMessageProvider } from "lib/SnippetsTestMessageProvider.sys.mjs";
 
 describe("NewsletterSnippet", () => {
   let sandbox;

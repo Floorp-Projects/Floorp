@@ -2,25 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   DownloadLastDir: "resource://gre/modules/DownloadLastDir.sys.mjs",
+  DownloadPaths: "resource://gre/modules/DownloadPaths.sys.mjs",
+  Downloads: "resource://gre/modules/Downloads.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   ScreenshotsUtils: "resource:///modules/ScreenshotsUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Downloads: "resource://gre/modules/Downloads.jsm",
-  DownloadPaths: "resource://gre/modules/DownloadPaths.jsm",
 });
 
 /**
@@ -220,7 +213,7 @@ function appendFiltersForContentType(
  *          is accepted.
  */
 function promiseTargetFile(aFpP, win) {
-  return (async function() {
+  return (async function () {
     let downloadLastDir = new lazy.DownloadLastDir(win);
 
     // Default to the user's default downloads directory configured
@@ -256,7 +249,7 @@ function promiseTargetFile(aFpP, win) {
     appendFiltersForContentType(fp, aFpP.contentType, aFpP.fileInfo.fileExt);
 
     let result = await new Promise(resolve => {
-      fp.open(function(aResult) {
+      fp.open(function (aResult) {
         resolve(aResult);
       });
     });

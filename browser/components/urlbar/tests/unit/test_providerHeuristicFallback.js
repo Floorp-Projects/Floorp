@@ -30,7 +30,7 @@ add_task(async function setup() {
   Services.prefs.setBoolPref(PRIVATE_SEARCH_PREF, false);
 });
 
-add_task(async function() {
+add_task(async function () {
   info("visit url, no protocol");
   let query = "mozilla.org";
   let context = createContext(query, { isPrivate: false });

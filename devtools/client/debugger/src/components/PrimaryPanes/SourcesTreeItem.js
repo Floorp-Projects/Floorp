@@ -15,13 +15,16 @@ import {
   getContext,
   getFirstSourceActorForGeneratedSource,
   isSourceOverridden,
+  getHideIgnoredSources,
+  isSourceMapIgnoreListEnabled,
+  isSourceOnSourceMapIgnoreList,
 } from "../../selectors";
 import actions from "../../actions";
 
 import { shouldBlackbox, sourceTypes } from "../../utils/source";
 import { copyToTheClipboard } from "../../utils/clipboard";
-import { features } from "../../utils/prefs";
 import { saveAsLocalFile } from "../../utils/utils";
+import { createLocation } from "../../utils/location";
 
 const classnames = require("devtools/client/shared/classnames.js");
 
@@ -50,6 +53,8 @@ class SourceTreeItem extends Component {
       setOverrideSource: PropTypes.func.isRequired,
       removeOverrideSource: PropTypes.func.isRequired,
       isOverridden: PropTypes.bool,
+      hideIgnoredSources: PropTypes.bool,
+      isSourceOnIgnoreList: PropTypes.bool,
     };
   }
 
@@ -81,7 +86,7 @@ class SourceTreeItem extends Component {
 
     const menuOptions = [];
 
-    const { item, isOverridden } = this.props;
+    const { item, isOverridden, cx, isSourceOnIgnoreList } = this.props;
     if (item.type == "source") {
       const { source } = item;
       const copySourceUri2 = {
@@ -92,13 +97,12 @@ class SourceTreeItem extends Component {
         click: () => copyToTheClipboard(source.url),
       };
 
-      const { cx } = this.props;
       const ignoreStr = item.isBlackBoxed ? "unignore" : "ignore";
       const blackBoxMenuItem = {
         id: "node-menu-blackbox",
         label: L10N.getStr(`ignoreContextItem.${ignoreStr}`),
         accesskey: L10N.getStr(`ignoreContextItem.${ignoreStr}.accesskey`),
-        disabled: !shouldBlackbox(source),
+        disabled: isSourceOnIgnoreList || !shouldBlackbox(source),
         click: () => this.props.toggleBlackBox(cx, source),
       };
       const downloadFileItem = {
@@ -108,8 +112,8 @@ class SourceTreeItem extends Component {
         disabled: false,
         click: () => this.saveLocalFile(cx, source),
       };
-      const overrideStr = !isOverridden ? "override" : "removeOverride";
 
+      const overrideStr = !isOverridden ? "override" : "removeOverride";
       const overridesItem = {
         id: "node-menu-overrides",
         label: L10N.getStr(`overridesContextItem.${overrideStr}`),
@@ -130,30 +134,28 @@ class SourceTreeItem extends Component {
     if (item.type != "source") {
       this.addCollapseExpandAllOptions(menuOptions, item);
 
-      if (features.root) {
-        const { cx, depth, projectRoot } = this.props;
+      const { depth, projectRoot } = this.props;
 
-        if (projectRoot == item.uniquePath) {
-          menuOptions.push({
-            id: "node-remove-directory-root",
-            label: removeDirectoryRootLabel,
-            disabled: false,
-            click: () => this.props.clearProjectDirectoryRoot(cx),
-          });
-        } else {
-          menuOptions.push({
-            id: "node-set-directory-root",
-            label: setDirectoryRootLabel,
-            accesskey: setDirectoryRootKey,
-            disabled: false,
-            click: () =>
-              this.props.setProjectDirectoryRoot(
-                cx,
-                item.uniquePath,
-                this.renderItemName(depth)
-              ),
-          });
-        }
+      if (projectRoot == item.uniquePath) {
+        menuOptions.push({
+          id: "node-remove-directory-root",
+          label: removeDirectoryRootLabel,
+          disabled: false,
+          click: () => this.props.clearProjectDirectoryRoot(cx),
+        });
+      } else {
+        menuOptions.push({
+          id: "node-set-directory-root",
+          label: setDirectoryRootLabel,
+          accesskey: setDirectoryRootKey,
+          disabled: false,
+          click: () =>
+            this.props.setProjectDirectoryRoot(
+              cx,
+              item.uniquePath,
+              this.renderItemName(depth)
+            ),
+        });
       }
 
       this.addBlackboxAllOption(menuOptions, item);
@@ -304,10 +306,10 @@ class SourceTreeItem extends Component {
       return <AccessibleImage className="folder" />;
     }
     if (item.type == "source") {
-      const { source } = item;
+      const { source, sourceActor } = item;
       return (
         <SourceIcon
-          source={source}
+          location={createLocation({ source, sourceActor })}
           modifier={icon => {
             // In the SourceTree, extension files should use the file-extension based icon,
             // whereas we use the extension icon in other Components (eg. source tabs and breakpoints pane).
@@ -374,8 +376,17 @@ class SourceTreeItem extends Component {
   }
 
   render() {
-    const { item, depth, focused, hasMatchingGeneratedSource } = this.props;
+    const {
+      item,
+      depth,
+      focused,
+      hasMatchingGeneratedSource,
+      hideIgnoredSources,
+    } = this.props;
 
+    if (hideIgnoredSources && item.isBlackBoxed) {
+      return null;
+    }
     const suffix = hasMatchingGeneratedSource ? (
       <span className="suffix">{L10N.getStr("sourceFooter.mappedSuffix")}</span>
     ) : null;
@@ -420,6 +431,10 @@ const mapStateToProps = (state, props) => {
       getFirstSourceActorForGeneratedSource: (sourceId, threadId) =>
         getFirstSourceActorForGeneratedSource(state, sourceId, threadId),
       isOverridden: isSourceOverridden(state, source),
+      hideIgnoredSources: getHideIgnoredSources(state),
+      isSourceOnIgnoreList:
+        isSourceMapIgnoreListEnabled(state) &&
+        isSourceOnSourceMapIgnoreList(state, source),
     };
   }
   return {

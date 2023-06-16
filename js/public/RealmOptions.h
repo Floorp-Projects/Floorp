@@ -210,6 +210,14 @@ class JS_PUBLIC_API RealmCreationOptions {
     arrayGrouping_ = flag;
     return *this;
   }
+
+  bool getWellFormedUnicodeStringsEnabled() const {
+    return wellFormedUnicodeStrings_;
+  }
+  RealmCreationOptions& setWellFormedUnicodeStringsEnabled(bool flag) {
+    wellFormedUnicodeStrings_ = flag;
+    return *this;
+  }
 #endif
 
   bool getArrayFromAsyncEnabled() const { return arrayFromAsync_; }
@@ -218,13 +226,11 @@ class JS_PUBLIC_API RealmCreationOptions {
     return *this;
   }
 
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
   bool getChangeArrayByCopyEnabled() const { return changeArrayByCopy_; }
   RealmCreationOptions& setChangeArrayByCopyEnabled(bool flag) {
     changeArrayByCopy_ = flag;
     return *this;
   }
-#endif
 
 #ifdef ENABLE_NEW_SET_METHODS
   bool getNewSetMethodsEnabled() const { return newSetMethods_; }
@@ -279,11 +285,11 @@ class JS_PUBLIC_API RealmCreationOptions {
   bool shadowRealms_ = false;
 #ifdef NIGHTLY_BUILD
   bool arrayGrouping_ = false;
+  // Pref for String.prototype.{is,to}WellFormed() methods.
+  bool wellFormedUnicodeStrings_ = false;
 #endif
-  bool arrayFromAsync_ = false;
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
+  bool arrayFromAsync_ = true;
   bool changeArrayByCopy_ = false;
-#endif
 #ifdef ENABLE_NEW_SET_METHODS
   bool newSetMethods_ = false;
 #endif

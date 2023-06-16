@@ -14,7 +14,6 @@
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/override.h"
 #include "lib/jxl/base/padded_bytes.h"
-#include "lib/jxl/base/thread_pool_internal.h"
 #include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/common.h"
 #include "lib/jxl/enc_aux_out.h"
@@ -29,8 +28,11 @@
 #include "lib/jxl/testing.h"
 
 namespace jxl {
-namespace {
+
 using test::Roundtrip;
+using test::ThreadPoolForTests;
+
+namespace {
 
 TEST(PassesTest, RoundtripSmallPasses) {
   const PaddedBytes orig = jxl::test::ReadTestData(
@@ -74,13 +76,13 @@ TEST(PassesTest, RoundtripMultiGroupPasses) {
   const PaddedBytes orig = jxl::test::ReadTestData("jxl/flower/flower.png");
   CodecInOut io;
   {
-    ThreadPoolInternal pool(4);
+    ThreadPoolForTests pool(4);
     ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io, &pool));
   }
   io.ShrinkTo(600, 1024);  // partial X, full Y group
 
   auto test = [&](float target_distance, float threshold) {
-    ThreadPoolInternal pool(4);
+    ThreadPoolForTests pool(4);
     CompressParams cparams;
     cparams.butteraugli_distance = target_distance;
     cparams.progressive_mode = true;
@@ -98,7 +100,7 @@ TEST(PassesTest, RoundtripMultiGroupPasses) {
 }
 
 TEST(PassesTest, RoundtripLargeFastPasses) {
-  ThreadPoolInternal pool(8);
+  ThreadPoolForTests pool(8);
   const PaddedBytes orig = jxl::test::ReadTestData("jxl/flower/flower.png");
   CodecInOut io;
   ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io, &pool));
@@ -116,7 +118,7 @@ TEST(PassesTest, RoundtripLargeFastPasses) {
 // which involves additional processing including adaptive reconstruction.
 // Failing this may be a sign of race conditions or invalid memory accesses.
 TEST(PassesTest, RoundtripProgressiveConsistent) {
-  ThreadPoolInternal pool(8);
+  ThreadPoolForTests pool(8);
   const PaddedBytes orig = jxl::test::ReadTestData("jxl/flower/flower.png");
   CodecInOut io;
   ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io, &pool));
@@ -153,7 +155,7 @@ TEST(PassesTest, RoundtripProgressiveConsistent) {
 }
 
 TEST(PassesTest, AllDownsampleFeasible) {
-  ThreadPoolInternal pool(8);
+  ThreadPoolForTests pool(8);
   const PaddedBytes orig = jxl::test::ReadTestData(
       "external/wesaturate/500px/u76c0g_bliznaca_srgb8.png");
   CodecInOut io;
@@ -202,7 +204,7 @@ TEST(PassesTest, AllDownsampleFeasible) {
 }
 
 TEST(PassesTest, AllDownsampleFeasibleQProgressive) {
-  ThreadPoolInternal pool(8);
+  ThreadPoolForTests pool(8);
   const PaddedBytes orig = jxl::test::ReadTestData(
       "external/wesaturate/500px/u76c0g_bliznaca_srgb8.png");
   CodecInOut io;
@@ -251,7 +253,7 @@ TEST(PassesTest, AllDownsampleFeasibleQProgressive) {
 }
 
 TEST(PassesTest, ProgressiveDownsample2DegradesCorrectlyGrayscale) {
-  ThreadPoolInternal pool(8);
+  ThreadPoolForTests pool(8);
   const PaddedBytes orig = jxl::test::ReadTestData(
       "external/wesaturate/500px/cvo9xd_keong_macan_grayscale.png");
   CodecInOut io_orig;
@@ -301,7 +303,7 @@ TEST(PassesTest, ProgressiveDownsample2DegradesCorrectlyGrayscale) {
 }
 
 TEST(PassesTest, ProgressiveDownsample2DegradesCorrectly) {
-  ThreadPoolInternal pool(8);
+  ThreadPoolForTests pool(8);
   const PaddedBytes orig = jxl::test::ReadTestData("jxl/flower/flower.png");
   CodecInOut io_orig;
   ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io_orig, &pool));
@@ -349,7 +351,7 @@ TEST(PassesTest, ProgressiveDownsample2DegradesCorrectly) {
 }
 
 TEST(PassesTest, NonProgressiveDCImage) {
-  ThreadPoolInternal pool(8);
+  ThreadPoolForTests pool(8);
   const PaddedBytes orig = jxl::test::ReadTestData("jxl/flower/flower.png");
   CodecInOut io;
   ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io, &pool));

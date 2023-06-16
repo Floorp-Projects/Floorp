@@ -15,7 +15,7 @@ function butLast(list) {
 }
 
 async function runTest() {
-  await BrowserTestUtils.withNewTab({ gBrowser }, async function(aBrowser) {
+  await BrowserTestUtils.withNewTab({ gBrowser }, async function (aBrowser) {
     // Perform initial load of each URL in the history.
     let count = 0;
     let index = -1;
@@ -33,7 +33,7 @@ async function runTest() {
       await SpecialPowers.spawn(
         aBrowser,
         [{ count, index, url }],
-        async function({ count, index, url }) {
+        async function ({ count, index, url }) {
           docShell.QueryInterface(Ci.nsIWebNavigation);
 
           is(
@@ -69,7 +69,7 @@ async function runTest() {
       await SpecialPowers.spawn(
         aBrowser,
         [{ count, index, url }],
-        async function({ count, index, url }) {
+        async function ({ count, index, url }) {
           docShell.QueryInterface(Ci.nsIWebNavigation);
 
           is(docShell.sessionHistory.count, count, "Go Back Count Match");
@@ -97,7 +97,7 @@ async function runTest() {
       await SpecialPowers.spawn(
         aBrowser,
         [{ count, index, url }],
-        async function({ count, index, url }) {
+        async function ({ count, index, url }) {
           docShell.QueryInterface(Ci.nsIWebNavigation);
 
           is(docShell.sessionHistory.count, count, "Go Forward Count Match");

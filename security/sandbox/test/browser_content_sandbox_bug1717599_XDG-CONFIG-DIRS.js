@@ -6,6 +6,6 @@
 //
 // Just test that browser does not die on empty env var
 //
-add_task(async function() {
+add_task(async function () {
   ok(true, "Process can run");
 });

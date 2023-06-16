@@ -79,7 +79,7 @@ async function stepOutAfterTimer(dbg, func, frameIndex, expectedLocation) {
 }
 
 function run_test() {
-  return (async function() {
+  return (async function () {
     const dbg = await setupTestFromUrl("stepping-async.js");
 
     info(`Test stepping out before timer;`);

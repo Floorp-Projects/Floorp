@@ -1067,20 +1067,40 @@ void LIRGenerator::visitTest(MTest* test) {
     return;
   }
 
+  if (opd->isWasmGcObjectIsSubtypeOfAbstract() && opd->isEmittedAtUses()) {
+    MWasmGcObjectIsSubtypeOfAbstract* isSubTypeOf =
+        opd->toWasmGcObjectIsSubtypeOfAbstract();
+    LAllocation object = useRegister(isSubTypeOf->object());
+    // As in visitWasmGcObjectIsSubtypeOfAbstract, we know we do not need
+    // scratch2 and superSuperTypeVector because we know this is not a concrete
+    // type.
+    LDefinition scratch1 = MacroAssembler::needScratch1ForBranchWasmGcRefType(
+                               isSubTypeOf->destType())
+                               ? temp()
+                               : LDefinition();
+    add(new (alloc()) LWasmGcObjectIsSubtypeOfAbstractAndBranch(
+            ifTrue, ifFalse, isSubTypeOf->sourceType(), isSubTypeOf->destType(),
+            object, scratch1),
+        test);
+    return;
+  }
+
   if (opd->isWasmGcObjectIsSubtypeOfConcrete() && opd->isEmittedAtUses()) {
     MWasmGcObjectIsSubtypeOfConcrete* isSubTypeOf =
         opd->toWasmGcObjectIsSubtypeOfConcrete();
     LAllocation object = useRegister(isSubTypeOf->object());
+    // As in visitWasmGcObjectIsSubtypeOfConcrete, we know we need scratch1 and
+    // superSuperTypeVector because we know this is a concrete type.
     LAllocation superSuperTypeVector =
         useRegister(isSubTypeOf->superSuperTypeVector());
-    uint32_t subTypingDepth = isSubTypeOf->type().typeDef()->subTypingDepth();
-    LDefinition subTypeDepth = temp();
-    LDefinition scratch = subTypingDepth >= wasm::MinSuperTypeVectorLength
-                              ? temp()
-                              : LDefinition();
-    add(new (alloc()) LWasmGcObjectIsSubtypeOfAndBranch(
-            ifTrue, ifFalse, object, superSuperTypeVector, subTypingDepth,
-            isSubTypeOf->type().isNullable(), subTypeDepth, scratch),
+    LDefinition scratch1 = temp();
+    LDefinition scratch2 = MacroAssembler::needScratch2ForBranchWasmGcRefType(
+                               isSubTypeOf->destType())
+                               ? temp()
+                               : LDefinition();
+    add(new (alloc()) LWasmGcObjectIsSubtypeOfConcreteAndBranch(
+            ifTrue, ifFalse, isSubTypeOf->sourceType(), isSubTypeOf->destType(),
+            object, superSuperTypeVector, scratch1, scratch2),
         test);
     return;
   }
@@ -2824,7 +2844,6 @@ void LIRGenerator::visitInt32ToIntPtr(MInt32ToIntPtr* ins) {
   // If the result is only used by instructions that expect a bounds-checked
   // index, we must have eliminated or hoisted a bounds check and we can assume
   // the index is non-negative. This lets us generate more efficient code.
-  // In debug builds we verify this non-negative assumption at runtime.
   if (ins->canBeNegative()) {
     bool canBeNegative = false;
     for (MUseDefIterator iter(ins); iter; iter++) {
@@ -2846,13 +2865,7 @@ void LIRGenerator::visitInt32ToIntPtr(MInt32ToIntPtr* ins) {
     auto* lir = new (alloc()) LInt32ToIntPtr(useAnyAtStart(input));
     define(lir, ins);
   } else {
-#  ifdef DEBUG
-    auto* lir = new (alloc()) LInt32ToIntPtr(useRegisterAtStart(input));
-    defineReuseInput(lir, ins, 0);
-#  else
-    // In non-debug mode this is a no-op.
     redefine(ins, input);
-#  endif
   }
 #else
   // On 32-bit platforms this is a no-op.
@@ -3133,22 +3146,31 @@ void LIRGenerator::visitRegExpSearcher(MRegExpSearcher* ins) {
   MOZ_ASSERT(ins->lastIndex()->type() == MIRType::Int32);
 
   LRegExpSearcher* lir = new (alloc()) LRegExpSearcher(
-      useFixedAtStart(ins->regexp(), RegExpTesterRegExpReg),
-      useFixedAtStart(ins->string(), RegExpTesterStringReg),
-      useFixedAtStart(ins->lastIndex(), RegExpTesterLastIndexReg));
+      useFixedAtStart(ins->regexp(), RegExpSearcherRegExpReg),
+      useFixedAtStart(ins->string(), RegExpSearcherStringReg),
+      useFixedAtStart(ins->lastIndex(), RegExpSearcherLastIndexReg));
   defineReturn(lir, ins);
   assignSafepoint(lir, ins);
 }
 
-void LIRGenerator::visitRegExpTester(MRegExpTester* ins) {
+void LIRGenerator::visitRegExpExecMatch(MRegExpExecMatch* ins) {
   MOZ_ASSERT(ins->regexp()->type() == MIRType::Object);
   MOZ_ASSERT(ins->string()->type() == MIRType::String);
-  MOZ_ASSERT(ins->lastIndex()->type() == MIRType::Int32);
 
-  LRegExpTester* lir = new (alloc()) LRegExpTester(
-      useFixedAtStart(ins->regexp(), RegExpTesterRegExpReg),
-      useFixedAtStart(ins->string(), RegExpTesterStringReg),
-      useFixedAtStart(ins->lastIndex(), RegExpTesterLastIndexReg));
+  auto* lir = new (alloc())
+      LRegExpExecMatch(useFixedAtStart(ins->regexp(), RegExpMatcherRegExpReg),
+                       useFixedAtStart(ins->string(), RegExpMatcherStringReg));
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
+void LIRGenerator::visitRegExpExecTest(MRegExpExecTest* ins) {
+  MOZ_ASSERT(ins->regexp()->type() == MIRType::Object);
+  MOZ_ASSERT(ins->string()->type() == MIRType::String);
+
+  auto* lir = new (alloc())
+      LRegExpExecTest(useFixedAtStart(ins->regexp(), RegExpExecTestRegExpReg),
+                      useFixedAtStart(ins->string(), RegExpExecTestStringReg));
   defineReturn(lir, ins);
   assignSafepoint(lir, ins);
 }
@@ -4778,12 +4800,21 @@ void LIRGenerator::visitMegamorphicLoadSlotByValue(
 void LIRGenerator::visitMegamorphicStoreSlot(MMegamorphicStoreSlot* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
   MOZ_ASSERT(ins->rhs()->type() == MIRType::Value);
+
+#ifdef JS_CODEGEN_X86
+  auto* lir = new (alloc()) LMegamorphicStoreSlot(
+      useFixedAtStart(ins->object(), CallTempReg0),
+      useBoxFixedAtStart(ins->rhs(), CallTempReg1, CallTempReg2),
+      tempFixed(CallTempReg5));
+#else
   auto* lir = new (alloc())
       LMegamorphicStoreSlot(useRegisterAtStart(ins->object()),
                             useBoxAtStart(ins->rhs()), tempFixed(CallTempReg0),
                             tempFixed(CallTempReg1), tempFixed(CallTempReg2));
-  assignSnapshot(lir, ins->bailoutKind());
+#endif
+
   add(lir, ins);
+  assignSafepoint(lir, ins);
 }
 
 void LIRGenerator::visitMegamorphicHasProp(MMegamorphicHasProp* ins) {
@@ -7047,16 +7078,22 @@ void LIRGenerator::visitWasmStoreFieldRefKA(MWasmStoreFieldRefKA* ins) {
 
 void LIRGenerator::visitWasmGcObjectIsSubtypeOfAbstract(
     MWasmGcObjectIsSubtypeOfAbstract* ins) {
+  if (CanEmitAtUseForSingleTest(ins)) {
+    emitAtUses(ins);
+    return;
+  }
+
   // See comment on MacroAssembler::branchWasmGcObjectIsRefType.
   // We know we do not need scratch2 and superSuperTypeVector because we know
   // this is not a concrete type.
-  MOZ_ASSERT(!MacroAssembler::needScratch2ForBranchWasmGcRefType(ins->type()));
+  MOZ_ASSERT(
+      !MacroAssembler::needScratch2ForBranchWasmGcRefType(ins->destType()));
   MOZ_ASSERT(!MacroAssembler::needSuperSuperTypeVectorForBranchWasmGcRefType(
-      ins->type()));
+      ins->destType()));
 
   LAllocation object = useRegister(ins->object());
   LDefinition scratch1 =
-      MacroAssembler::needScratch1ForBranchWasmGcRefType(ins->type())
+      MacroAssembler::needScratch1ForBranchWasmGcRefType(ins->destType())
           ? temp()
           : LDefinition();
   define(new (alloc()) LWasmGcObjectIsSubtypeOfAbstract(object, scratch1), ins);
@@ -7072,17 +7109,18 @@ void LIRGenerator::visitWasmGcObjectIsSubtypeOfConcrete(
   // See comment on MacroAssembler::branchWasmGcObjectIsRefType.
   // We know we need scratch1 and superSuperTypeVector because we know this is a
   // concrete type.
-  MOZ_ASSERT(MacroAssembler::needScratch1ForBranchWasmGcRefType(ins->type()));
   MOZ_ASSERT(MacroAssembler::needSuperSuperTypeVectorForBranchWasmGcRefType(
-      ins->type()));
+      ins->destType()));
+  MOZ_ASSERT(
+      MacroAssembler::needScratch1ForBranchWasmGcRefType(ins->destType()));
 
   LAllocation object = useRegister(ins->object());
+  LAllocation superSuperTypeVector = useRegister(ins->superSuperTypeVector());
   LDefinition scratch1 = temp();
   LDefinition scratch2 =
-      MacroAssembler::needScratch2ForBranchWasmGcRefType(ins->type())
+      MacroAssembler::needScratch2ForBranchWasmGcRefType(ins->destType())
           ? temp()
           : LDefinition();
-  LAllocation superSuperTypeVector = useRegister(ins->superSuperTypeVector());
   define(new (alloc()) LWasmGcObjectIsSubtypeOfConcrete(
              object, superSuperTypeVector, scratch1, scratch2),
          ins);

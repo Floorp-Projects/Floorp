@@ -21,14 +21,12 @@ const MOCK_ACCOUNT_KEYS = {
   scopedKeys: {
     [SCOPE_OLD_SYNC]: {
       kid: "1234567890123-u7u7u7u7u7u7u7u7u7u7uw",
-      k:
-        "qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqg",
+      k: "qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqg",
       kty: "oct",
     },
     [LEGACY_SCOPE_WEBEXT_SYNC]: {
       kid: "1234567890123-3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d0",
-      k:
-        "zMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzA",
+      k: "zMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzA",
       kty: "oct",
     },
   },
@@ -49,4 +47,4 @@ const MOCK_ACCOUNT_KEYS = {
   );
 
   initTestLogging("Trace");
-}.call(this));
+}).call(this);

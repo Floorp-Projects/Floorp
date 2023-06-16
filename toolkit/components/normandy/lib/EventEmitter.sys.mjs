@@ -6,7 +6,7 @@ import { LogManager } from "resource://normandy/lib/LogManager.sys.mjs";
 
 const log = LogManager.getLogger("event-emitter");
 
-export var EventEmitter = function() {
+export var EventEmitter = function () {
   const listeners = {};
 
   return {

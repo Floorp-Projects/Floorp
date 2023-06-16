@@ -2,10 +2,10 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   function promiseWaitForFocus(window) {
     return new Promise(resolve => {
-      waitForFocus(function() {
+      waitForFocus(function () {
         ok(Services.focus.activeWindow === window, "correct window focused");
         resolve();
       }, window);
@@ -19,12 +19,12 @@ add_task(async function() {
   await promiseWaitForFocus(window2);
 
   let extension = ExtensionTestUtils.loadExtension({
-    background: function() {
-      browser.windows.getAll(undefined, function(wins) {
+    background: function () {
+      browser.windows.getAll(undefined, function (wins) {
         browser.test.assertEq(wins.length, 2, "should have two windows");
 
         // Sort the unfocused window to the lower index.
-        wins.sort(function(win1, win2) {
+        wins.sort(function (win1, win2) {
           if (win1.focused === win2.focused) {
             return 0;
           }
@@ -32,7 +32,7 @@ add_task(async function() {
           return win1.focused ? 1 : -1;
         });
 
-        browser.windows.update(wins[0].id, { focused: true }, function() {
+        browser.windows.update(wins[0].id, { focused: true }, function () {
           browser.test.sendMessage("check");
         });
       });
@@ -172,19 +172,19 @@ add_task(async function testWindowUpdate() {
   await extension.unload();
 });
 
-add_task(async function() {
+add_task(async function () {
   let window2 = await BrowserTestUtils.openNewBrowserWindow();
 
   let extension = ExtensionTestUtils.loadExtension({
-    background: function() {
-      browser.windows.getAll(undefined, function(wins) {
+    background: function () {
+      browser.windows.getAll(undefined, function (wins) {
         browser.test.assertEq(wins.length, 2, "should have two windows");
 
         let unfocused = wins.find(win => !win.focused);
         browser.windows.update(
           unfocused.id,
           { drawAttention: true },
-          function() {
+          function () {
             browser.test.sendMessage("check");
           }
         );

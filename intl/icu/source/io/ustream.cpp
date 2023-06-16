@@ -47,8 +47,8 @@ operator<<(STD_OSTREAM& stream, const UnicodeString& str)
         // use the default converter to convert chunks of text
         converter = u_getDefaultConverter(&errorCode);
         if(U_SUCCESS(errorCode)) {
-            const UChar *us = str.getBuffer();
-            const UChar *uLimit = us + str.length();
+            const char16_t *us = str.getBuffer();
+            const char16_t *uLimit = us + str.length();
             char *s, *sLimit = buffer + (sizeof(buffer) - 1);
             do {
                 errorCode = U_ZERO_ERROR;
@@ -78,7 +78,7 @@ operator>>(STD_ISTREAM& stream, UnicodeString& str)
     }
 
     /* ipfx should eat whitespace when ios::skipws is set */
-    UChar uBuffer[16];
+    char16_t uBuffer[16];
     char buffer[16];
     int32_t idx = 0;
     UConverter *converter;
@@ -87,11 +87,11 @@ operator>>(STD_ISTREAM& stream, UnicodeString& str)
     // use the default converter to convert chunks of text
     converter = u_getDefaultConverter(&errorCode);
     if(U_SUCCESS(errorCode)) {
-        UChar *us = uBuffer;
-        const UChar *uLimit = uBuffer + UPRV_LENGTHOF(uBuffer);
+        char16_t *us = uBuffer;
+        const char16_t *uLimit = uBuffer + UPRV_LENGTHOF(uBuffer);
         const char *s, *sLimit;
         char ch;
-        UChar ch32;
+        char16_t ch32;
         UBool initialWhitespace = true;
         UBool continueReading = true;
 

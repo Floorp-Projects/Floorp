@@ -26,7 +26,7 @@ const testDevice = {
 // Add the new device to the list
 addDeviceForTest(testDevice);
 
-addRDMTask(TEST_COM_URL, async function({ ui }) {
+addRDMTask(TEST_COM_URL, async function ({ ui }) {
   await pushPref("devtools.responsive.viewport.angle", 0);
 
   info("Check the original orientation values before the orientationchange");

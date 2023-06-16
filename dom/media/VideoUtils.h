@@ -9,7 +9,6 @@
 
 #include "AudioSampleFormat.h"
 #include "MediaInfo.h"
-#include "TimeUnits.h"
 #include "VideoLimits.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Attributes.h"
@@ -109,6 +108,7 @@ class MediaResource;
 media::TimeIntervals GetEstimatedBufferedTimeRanges(
     mozilla::MediaResource* aStream, int64_t aDurationUsecs);
 
+double ToMicrosecondResolution(double aSeconds);
 // Converts from number of audio frames (aFrames) to microseconds, given
 // the specified audio rate (aRate).
 CheckedInt64 FramesToUsecs(int64_t aFrames, uint32_t aRate);

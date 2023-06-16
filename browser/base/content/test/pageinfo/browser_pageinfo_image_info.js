@@ -12,7 +12,7 @@ const URI =
   "<img src='about:logo?b' height=200 width=250 alt=1>" +
   "<img src='about:logo?b' height=100 width=150 alt=2 id='test-image'>";
 
-add_task(async function() {
+add_task(async function () {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URI);
   let browser = tab.linkedBrowser;
 

@@ -18,7 +18,7 @@ function createTemporarySaveDirectory() {
 
 // Create the folder the certificates will be saved into.
 var destDir = createTemporarySaveDirectory();
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   destDir.remove(true);
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
@@ -52,9 +52,8 @@ async function setupTest() {
   certButton.click();
   dialogWin = await certDialogLoaded;
   let doc = dialogWin.document;
-  doc.getElementById("certmanagertabs").selectedTab = doc.getElementById(
-    "ca_tab"
-  );
+  doc.getElementById("certmanagertabs").selectedTab =
+    doc.getElementById("ca_tab");
   let treeView = doc.getElementById("ca-tree").view;
   // Select any which cert. Ignore parent rows (ie rows without certs):
   for (let i = 0; i < treeView.rowCount; i++) {
@@ -81,7 +80,7 @@ async function checkCertExportWorks(
   var destFile = destDir.clone();
   MockFilePicker.init(window);
   MockFilePicker.filterIndex = exportType;
-  MockFilePicker.showCallback = function(fp) {
+  MockFilePicker.showCallback = function (fp) {
     info("showCallback");
     let fileName = fp.defaultString;
     info("fileName: " + fileName);

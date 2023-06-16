@@ -28,14 +28,14 @@
 function workerTestExec(script) {
   SimpleTest.waitForExplicitFinish();
   var worker = new Worker("worker_wrapper.js");
-  worker.onmessage = function(event) {
+  worker.onmessage = function (event) {
     if (event.data.type == "finish") {
       SimpleTest.finish();
     } else if (event.data.type == "status") {
       ok(event.data.status, event.data.msg);
     } else if (event.data.type == "getHelperData") {
-      const { AppConstants } = SpecialPowers.ChromeUtils.import(
-        "resource://gre/modules/AppConstants.jsm"
+      const { AppConstants } = SpecialPowers.ChromeUtils.importESModule(
+        "resource://gre/modules/AppConstants.sys.mjs"
       );
       const isNightly = AppConstants.NIGHTLY_BUILD;
       const isEarlyBetaOrEarlier = AppConstants.EARLY_BETA_OR_EARLIER;
@@ -75,7 +75,7 @@ function workerTestExec(script) {
     }
   };
 
-  worker.onerror = function(event) {
+  worker.onerror = function (event) {
     ok(false, "Worker had an error: " + event.data);
     SimpleTest.finish();
   };

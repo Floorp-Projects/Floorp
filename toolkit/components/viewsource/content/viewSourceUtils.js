@@ -264,7 +264,8 @@ var gViewSourceUtils = {
             "@mozilla.org/embedding/browser/nsWebBrowserPersist;1"
           ].createInstance(this.mnsIWebBrowserPersist);
           // the default setting is to not decode. we need to decode.
-          webBrowserPersist.persistFlags = this.mnsIWebBrowserPersist.PERSIST_FLAGS_REPLACE_EXISTING_FILES;
+          webBrowserPersist.persistFlags =
+            this.mnsIWebBrowserPersist.PERSIST_FLAGS_REPLACE_EXISTING_FILES;
           webBrowserPersist.progressListener = this.viewSourceProgressListener;
           let ssm = Services.scriptSecurityManager;
           let principal = ssm.createContentPrincipal(

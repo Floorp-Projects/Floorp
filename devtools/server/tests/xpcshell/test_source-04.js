@@ -39,7 +39,7 @@ add_task(
       // in the first global.
       let pausedOne = false;
       let onResumed = null;
-      threadFront.once("paused", function(packet) {
+      threadFront.once("paused", function (packet) {
         pausedOne = true;
         onResumed = resume(threadFront);
       });
@@ -61,7 +61,7 @@ add_task(
       // Ensure that the breakpoint was properly applied to the JSScipt loaded
       // in the second global.
       let pausedTwo = false;
-      threadFront.once("paused", function(packet) {
+      threadFront.once("paused", function (packet) {
         pausedTwo = true;
         onResumed = resume(threadFront);
       });

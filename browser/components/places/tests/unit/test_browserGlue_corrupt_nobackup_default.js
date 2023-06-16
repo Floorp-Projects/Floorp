@@ -19,7 +19,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(async function() {
+add_task(async function () {
   // Create a corrupt database.
   await createCorruptDB();
 

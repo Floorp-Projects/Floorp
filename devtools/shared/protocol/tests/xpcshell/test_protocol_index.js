@@ -3,8 +3,8 @@
 
 "use strict";
 const { lazyLoadFront } = require("resource://devtools/shared/specs/index.js");
-const Types = require("resource://devtools/shared/specs/index.js")
-  .__TypesForTests;
+const Types =
+  require("resource://devtools/shared/specs/index.js").__TypesForTests;
 const { getType } = require("resource://devtools/shared/protocol.js").types;
 
 function run_test() {

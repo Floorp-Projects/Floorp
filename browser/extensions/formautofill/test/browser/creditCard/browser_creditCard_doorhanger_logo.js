@@ -15,7 +15,7 @@ add_task(async function test_submit_third_party_creditCard_logo() {
   };
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
-    async function(browser) {
+    async function (browser) {
       let onPopupShown = waitForPopupShown();
       await focusUpdateSubmitForm(browser, {
         focusSelector: "#cc-name",
@@ -55,7 +55,7 @@ add_task(async function test_update_third_party_creditCard_logo() {
   let onChanged = waitForStorageChangedEvents("update");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
-    async function(browser) {
+    async function (browser) {
       let onPopupShown = waitForPopupShown();
       await focusUpdateSubmitForm(browser, {
         focusSelector: "#cc-name",
@@ -91,7 +91,7 @@ add_task(async function test_submit_generic_creditCard_logo() {
   };
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
-    async function(browser) {
+    async function (browser) {
       let onPopupShown = waitForPopupShown();
       await focusUpdateSubmitForm(browser, {
         focusSelector: "#cc-name",
@@ -131,7 +131,7 @@ add_task(async function test_update_generic_creditCard_logo() {
   let onChanged = waitForStorageChangedEvents("update");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
-    async function(browser) {
+    async function (browser) {
       let onPopupShown = waitForPopupShown();
       await focusUpdateSubmitForm(browser, {
         focusSelector: "#cc-name",
@@ -168,7 +168,7 @@ add_task(async function test_save_panel_spaces_in_cc_number_logo() {
   };
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
-    async function(browser) {
+    async function (browser) {
       let onPopupShown = waitForPopupShown();
       await focusUpdateSubmitForm(browser, {
         focusSelector: "#cc-name",
@@ -206,7 +206,7 @@ add_task(async function test_update_panel_with_spaces_in_cc_number_logo() {
   let onChanged = waitForStorageChangedEvents("update", "notifyUsed");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
-    async function(browser) {
+    async function (browser) {
       let onPopupShown = waitForPopupShown();
       await focusUpdateSubmitForm(browser, {
         focusSelector: "#cc-name",

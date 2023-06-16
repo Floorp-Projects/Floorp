@@ -433,7 +433,7 @@ let json = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   let wrapper = getContextWrapper();
   let url = "data:," + JSON.stringify(json);
   Schemas._rootSchema = null;
@@ -1882,7 +1882,7 @@ add_task(async function testDefaults() {
   await Schemas.load(url);
 
   let testingApiObj = {
-    defaultFoo: function(arg) {
+    defaultFoo: function (arg) {
       if (Object.keys(arg) != "prop1") {
         throw new Error(
           `Received the expected default object, default: ${JSON.stringify(

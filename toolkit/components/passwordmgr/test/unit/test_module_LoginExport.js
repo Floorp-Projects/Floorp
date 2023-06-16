@@ -101,6 +101,7 @@ add_task(async function test_no_new_properties_to_export() {
       "usernameField",
       "password",
       "passwordField",
+      "unknownFields",
       "init",
       "equals",
       "matches",

@@ -376,9 +376,30 @@ class ChromeActions {
     return AppConstants.platform === "android";
   }
 
+  getNimbusExperimentData(_data, sendResponse) {
+    if (!this.isMobile()) {
+      sendResponse(null);
+      return;
+    }
+    const actor = getActor(this.domWindow);
+    actor.sendAsyncMessage("PDFJS:Parent:getNimbus");
+    Services.obs.addObserver(
+      {
+        observe(aSubject, aTopic, aData) {
+          if (aTopic === "pdfjs-getNimbus") {
+            Services.obs.removeObserver(this, aTopic);
+            sendResponse(aSubject && JSON.stringify(aSubject.wrappedJSObject));
+          }
+        },
+      },
+      "pdfjs-getNimbus"
+    );
+  }
+
   reportTelemetry(data) {
-    var probeInfo = JSON.parse(data);
-    switch (probeInfo.type) {
+    const probeInfo = JSON.parse(data);
+    const { type } = probeInfo;
+    switch (type) {
       case "pageInfo":
         lazy.PdfJsTelemetry.onTimeToView(probeInfo.timestamp);
         break;
@@ -386,11 +407,16 @@ class ChromeActions {
         lazy.PdfJsTelemetry.onEditing(probeInfo.data.type);
         break;
       case "buttons":
+      case "gv-buttons":
         const id = probeInfo.data.id.replace(
           /([A-Z])/g,
           c => `_${c.toLowerCase()}`
         );
-        lazy.PdfJsTelemetry.onButtons(id);
+        if (type === "buttons") {
+          lazy.PdfJsTelemetry.onButtons(id);
+        } else {
+          lazy.PdfJsTelemetry.onGeckoview(id);
+        }
         break;
     }
   }
@@ -990,10 +1016,8 @@ PdfStreamConverter.prototype = {
       // fall through, this appears to be a pdf.
     }
 
-    let {
-      alwaysAskBeforeHandling,
-      shouldOpen,
-    } = this._validateAndMaybeUpdatePDFPrefs();
+    let { alwaysAskBeforeHandling, shouldOpen } =
+      this._validateAndMaybeUpdatePDFPrefs();
 
     if (shouldOpen) {
       return HTML;
@@ -1170,7 +1194,7 @@ PdfStreamConverter.prototype = {
         var requestListener = new RequestListener(actions);
         domWindow.document.addEventListener(
           PDFJS_EVENT_ID,
-          function(event) {
+          function (event) {
             requestListener.receive(event);
           },
           false,
@@ -1193,14 +1217,14 @@ PdfStreamConverter.prototype = {
     // e.g. useful for NoScript. Make make sure we reuse the origin attributes
     // from the request channel to keep isolation consistent.
     var uri = lazy.NetUtil.newURI(PDF_VIEWER_WEB_PAGE);
-    var resourcePrincipal = Services.scriptSecurityManager.createContentPrincipal(
-      uri,
-      aRequest.loadInfo.originAttributes
-    );
+    var resourcePrincipal =
+      Services.scriptSecurityManager.createContentPrincipal(
+        uri,
+        aRequest.loadInfo.originAttributes
+      );
     // Remember the principal we would have had before we mess with it.
-    let originalPrincipal = Services.scriptSecurityManager.getChannelResultPrincipal(
-      aRequest
-    );
+    let originalPrincipal =
+      Services.scriptSecurityManager.getChannelResultPrincipal(aRequest);
     aRequest.owner = resourcePrincipal;
     aRequest.setProperty("noPDFJSPrincipal", originalPrincipal);
 

@@ -7,7 +7,7 @@ function test() {
 
   BrowserOpenTab();
   let tab = gBrowser.selectedTab;
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     gBrowser.removeTab(tab);
   });
 

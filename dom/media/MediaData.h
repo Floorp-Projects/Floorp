@@ -241,9 +241,9 @@ class AlignedBuffer {
     return true;
   }
   Type* mData;
-  size_t mLength;  // number of elements
+  size_t mLength{};  // number of elements
   UniquePtr<uint8_t[]> mBuffer;
-  size_t mCapacity;  // in bytes
+  size_t mCapacity{};  // in bytes
 };
 
 typedef AlignedBuffer<uint8_t> AlignedByteBuffer;
@@ -670,6 +670,13 @@ class MediaRawData final : public MediaData {
   // actually start on mTime and go for mDuration. If this interval is set, then
   // the decoder should crop the content accordingly.
   Maybe<media::TimeInterval> mOriginalPresentationWindow;
+
+  // If it's true, the `mCrypto` should be copied into the remote data as well.
+  // Currently this is only used for the media engine DRM playback.
+  bool mShouldCopyCryptoToRemoteRawData = false;
+
+  // It's only used when the remote decoder reconstructs the media raw data.
+  CryptoSample& GetWritableCrypto() { return mCryptoInternal; }
 
   // Return a deep copy or nullptr if out of memory.
   already_AddRefed<MediaRawData> Clone() const;

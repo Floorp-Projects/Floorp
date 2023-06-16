@@ -193,7 +193,7 @@ class Observable {
  * @param {DOMNode} syncReflowNode The node to use to force a sync reflow
  */
 var gIgnoreLayoutChanges = false;
-exports.setIgnoreLayoutChanges = function(ignore, syncReflowNode) {
+exports.setIgnoreLayoutChanges = function (ignore, syncReflowNode) {
   if (syncReflowNode) {
     let forceSyncReflow = syncReflowNode.offsetWidth; // eslint-disable-line
   }

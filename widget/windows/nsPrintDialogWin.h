@@ -30,8 +30,6 @@ class nsPrintDialogServiceWin final : public nsIPrintDialogService {
                     nsIDialogParamBlock* aParamBlock, nsIPrintSettings* aPS,
                     const char* aChromeURL);
 
-  HWND GetHWNDForDOMWindow(mozIDOMWindowProxy* aWindow);
-
   nsCOMPtr<nsIWindowWatcher> mWatcher;
 };
 

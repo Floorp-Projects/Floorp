@@ -39,11 +39,11 @@ add_task(async function testDetailsObjects() {
       {
         details: { path: "a.png" },
         resolutions: {
-          "1": {
+          1: {
             browserActionImageURL: browser.runtime.getURL("data/a.png"),
             pageActionImageURL: browser.runtime.getURL("data/a.png"),
           },
-          "2": {
+          2: {
             browserActionImageURL: browser.runtime.getURL("data/a.png"),
             pageActionImageURL: browser.runtime.getURL("data/a.png"),
           },
@@ -52,50 +52,50 @@ add_task(async function testDetailsObjects() {
       {
         details: { path: "/a.png" },
         resolutions: {
-          "1": {
+          1: {
             browserActionImageURL: browser.runtime.getURL("a.png"),
             pageActionImageURL: browser.runtime.getURL("a.png"),
           },
-          "2": {
+          2: {
             browserActionImageURL: browser.runtime.getURL("a.png"),
             pageActionImageURL: browser.runtime.getURL("a.png"),
           },
         },
       },
       {
-        details: { path: { "19": "a.png" } },
+        details: { path: { 19: "a.png" } },
         resolutions: {
-          "1": {
+          1: {
             browserActionImageURL: browser.runtime.getURL("data/a.png"),
             pageActionImageURL: browser.runtime.getURL("data/a.png"),
           },
-          "2": {
+          2: {
             browserActionImageURL: browser.runtime.getURL("data/a.png"),
             pageActionImageURL: browser.runtime.getURL("data/a.png"),
           },
         },
       },
       {
-        details: { path: { "38": "a.png" } },
+        details: { path: { 38: "a.png" } },
         resolutions: {
-          "1": {
+          1: {
             browserActionImageURL: browser.runtime.getURL("data/a.png"),
             pageActionImageURL: browser.runtime.getURL("data/a.png"),
           },
-          "2": {
+          2: {
             browserActionImageURL: browser.runtime.getURL("data/a.png"),
             pageActionImageURL: browser.runtime.getURL("data/a.png"),
           },
         },
       },
       {
-        details: { path: { "19": "a.png", "38": "a-x2.png" } },
+        details: { path: { 19: "a.png", 38: "a-x2.png" } },
         resolutions: {
-          "1": {
+          1: {
             browserActionImageURL: browser.runtime.getURL("data/a.png"),
             pageActionImageURL: browser.runtime.getURL("data/a.png"),
           },
-          "2": {
+          2: {
             browserActionImageURL: browser.runtime.getURL("data/a-x2.png"),
             pageActionImageURL: browser.runtime.getURL("data/a-x2.png"),
           },
@@ -103,14 +103,14 @@ add_task(async function testDetailsObjects() {
       },
       {
         details: {
-          path: { "16": "a-16.png", "32": "a-32.png", "64": "a-64.png" },
+          path: { 16: "a-16.png", 32: "a-32.png", 64: "a-64.png" },
         },
         resolutions: {
-          "1": {
+          1: {
             browserActionImageURL: browser.runtime.getURL("data/a-16.png"),
             pageActionImageURL: browser.runtime.getURL("data/a-16.png"),
           },
-          "2": {
+          2: {
             browserActionImageURL: browser.runtime.getURL("data/a-32.png"),
             pageActionImageURL: browser.runtime.getURL("data/a-32.png"),
           },
@@ -121,13 +121,13 @@ add_task(async function testDetailsObjects() {
       {
         details: { path: 'a.png#" \\' },
         resolutions: {
-          "1": {
+          1: {
             browserActionImageURL: browser.runtime.getURL(
               "data/a.png#%22%20%5C"
             ),
             pageActionImageURL: browser.runtime.getURL("data/a.png#%22%20%5C"),
           },
-          "2": {
+          2: {
             browserActionImageURL: browser.runtime.getURL(
               "data/a.png#%22%20%5C"
             ),
@@ -140,37 +140,37 @@ add_task(async function testDetailsObjects() {
       {
         details: { imageData: imageData.red.imageData },
         resolutions: {
-          "1": {
+          1: {
             browserActionImageURL: imageData.red.url,
             pageActionImageURL: imageData.red.url,
           },
-          "2": {
-            browserActionImageURL: imageData.red.url,
-            pageActionImageURL: imageData.red.url,
-          },
-        },
-      },
-      {
-        details: { imageData: { "19": imageData.red.imageData } },
-        resolutions: {
-          "1": {
-            browserActionImageURL: imageData.red.url,
-            pageActionImageURL: imageData.red.url,
-          },
-          "2": {
+          2: {
             browserActionImageURL: imageData.red.url,
             pageActionImageURL: imageData.red.url,
           },
         },
       },
       {
-        details: { imageData: { "38": imageData.red.imageData } },
+        details: { imageData: { 19: imageData.red.imageData } },
         resolutions: {
-          "1": {
+          1: {
             browserActionImageURL: imageData.red.url,
             pageActionImageURL: imageData.red.url,
           },
-          "2": {
+          2: {
+            browserActionImageURL: imageData.red.url,
+            pageActionImageURL: imageData.red.url,
+          },
+        },
+      },
+      {
+        details: { imageData: { 38: imageData.red.imageData } },
+        resolutions: {
+          1: {
+            browserActionImageURL: imageData.red.url,
+            pageActionImageURL: imageData.red.url,
+          },
+          2: {
             browserActionImageURL: imageData.red.url,
             pageActionImageURL: imageData.red.url,
           },
@@ -179,16 +179,16 @@ add_task(async function testDetailsObjects() {
       {
         details: {
           imageData: {
-            "19": imageData.red.imageData,
-            "38": imageData.green.imageData,
+            19: imageData.red.imageData,
+            38: imageData.green.imageData,
           },
         },
         resolutions: {
-          "1": {
+          1: {
             browserActionImageURL: imageData.red.url,
             pageActionImageURL: imageData.red.url,
           },
-          "2": {
+          2: {
             browserActionImageURL: imageData.green.url,
             pageActionImageURL: imageData.green.url,
           },
@@ -201,15 +201,15 @@ add_task(async function testDetailsObjects() {
       // |imageData| specify icons of the same size.
       {
         details: {
-          path: { "19": "a.png" },
-          imageData: { "38": imageData.red.imageData },
+          path: { 19: "a.png" },
+          imageData: { 38: imageData.red.imageData },
         },
         resolutions: {
-          "1": {
+          1: {
             browserActionImageURL: browser.runtime.getURL("data/a.png"),
             pageActionImageURL: browser.runtime.getURL("data/a.png"),
           },
-          "2": {
+          2: {
             browserActionImageURL: imageData.red.url,
             pageActionImageURL: imageData.red.url,
           },
@@ -217,15 +217,15 @@ add_task(async function testDetailsObjects() {
       },
       {
         details: {
-          path: { "38": "a.png" },
-          imageData: { "19": imageData.red.imageData },
+          path: { 38: "a.png" },
+          imageData: { 19: imageData.red.imageData },
         },
         resolutions: {
-          "1": {
+          1: {
             browserActionImageURL: imageData.red.url,
             pageActionImageURL: imageData.red.url,
           },
-          "2": {
+          2: {
             browserActionImageURL: browser.runtime.getURL("data/a.png"),
             pageActionImageURL: browser.runtime.getURL("data/a.png"),
           },
@@ -236,14 +236,14 @@ add_task(async function testDetailsObjects() {
       {
         details: {
           path: "a.png",
-          imageData: { "38": imageData.red.imageData },
+          imageData: { 38: imageData.red.imageData },
         },
         resolutions: {
-          "1": {
+          1: {
             browserActionImageURL: browser.runtime.getURL("data/a.png"),
             pageActionImageURL: browser.runtime.getURL("data/a.png"),
           },
-          "2": {
+          2: {
             browserActionImageURL: imageData.red.url,
             pageActionImageURL: imageData.red.url,
           },
@@ -251,15 +251,15 @@ add_task(async function testDetailsObjects() {
       },
       {
         details: {
-          path: { "38": "a.png" },
+          path: { 38: "a.png" },
           imageData: imageData.red.imageData,
         },
         resolutions: {
-          "1": {
+          1: {
             browserActionImageURL: imageData.red.url,
             pageActionImageURL: imageData.red.url,
           },
-          "2": {
+          2: {
             browserActionImageURL: browser.runtime.getURL("data/a.png"),
             pageActionImageURL: browser.runtime.getURL("data/a.png"),
           },
@@ -268,52 +268,52 @@ add_task(async function testDetailsObjects() {
 
       // Various resolutions
       {
-        details: { path: { "18": "a.png", "36": "a-x2.png" } },
+        details: { path: { 18: "a.png", 36: "a-x2.png" } },
         resolutions: {
-          "1": {
+          1: {
             browserActionImageURL: browser.runtime.getURL("data/a.png"),
             pageActionImageURL: browser.runtime.getURL("data/a.png"),
           },
-          "2": {
+          2: {
             browserActionImageURL: browser.runtime.getURL("data/a-x2.png"),
             pageActionImageURL: browser.runtime.getURL("data/a-x2.png"),
           },
         },
       },
       {
-        details: { path: { "16": "a.png", "30": "a-x2.png" } },
+        details: { path: { 16: "a.png", 30: "a-x2.png" } },
         resolutions: {
-          "1": {
+          1: {
             browserActionImageURL: browser.runtime.getURL("data/a.png"),
             pageActionImageURL: browser.runtime.getURL("data/a.png"),
           },
-          "2": {
+          2: {
             browserActionImageURL: browser.runtime.getURL("data/a-x2.png"),
             pageActionImageURL: browser.runtime.getURL("data/a-x2.png"),
           },
         },
       },
       {
-        details: { path: { "16": "16.png", "100": "100.png" } },
+        details: { path: { 16: "16.png", 100: "100.png" } },
         resolutions: {
-          "1": {
+          1: {
             browserActionImageURL: browser.runtime.getURL("data/16.png"),
             pageActionImageURL: browser.runtime.getURL("data/16.png"),
           },
-          "2": {
+          2: {
             browserActionImageURL: browser.runtime.getURL("data/100.png"),
             pageActionImageURL: browser.runtime.getURL("data/100.png"),
           },
         },
       },
       {
-        details: { path: { "2": "2.png" } },
+        details: { path: { 2: "2.png" } },
         resolutions: {
-          "1": {
+          1: {
             browserActionImageURL: browser.runtime.getURL("data/2.png"),
             pageActionImageURL: browser.runtime.getURL("data/2.png"),
           },
-          "2": {
+          2: {
             browserActionImageURL: browser.runtime.getURL("data/2.png"),
             pageActionImageURL: browser.runtime.getURL("data/2.png"),
           },
@@ -322,16 +322,16 @@ add_task(async function testDetailsObjects() {
       {
         details: {
           path: {
-            "16": "16.svg",
-            "18": "18.svg",
+            16: "16.svg",
+            18: "18.svg",
           },
         },
         resolutions: {
-          "1": {
+          1: {
             browserActionImageURL: browser.runtime.getURL("data/16.svg"),
             pageActionImageURL: browser.runtime.getURL("data/16.svg"),
           },
-          "2": {
+          2: {
             browserActionImageURL: browser.runtime.getURL("data/18.svg"),
             pageActionImageURL: browser.runtime.getURL("data/18.svg"),
           },
@@ -340,69 +340,69 @@ add_task(async function testDetailsObjects() {
       {
         details: {
           path: {
-            "6": "6.png",
-            "18": "18.png",
-            "36": "36.png",
-            "48": "48.png",
-            "128": "128.png",
+            6: "6.png",
+            18: "18.png",
+            36: "36.png",
+            48: "48.png",
+            128: "128.png",
           },
         },
         resolutions: {
-          "1": {
+          1: {
             browserActionImageURL: browser.runtime.getURL("data/18.png"),
             pageActionImageURL: browser.runtime.getURL("data/18.png"),
           },
-          "2": {
+          2: {
             browserActionImageURL: browser.runtime.getURL("data/36.png"),
             pageActionImageURL: browser.runtime.getURL("data/36.png"),
           },
         },
         menuResolutions: {
-          "1": browser.runtime.getURL("data/36.png"),
-          "2": browser.runtime.getURL("data/128.png"),
+          1: browser.runtime.getURL("data/36.png"),
+          2: browser.runtime.getURL("data/128.png"),
         },
       },
       {
         details: {
           path: {
-            "16": "16.png",
-            "18": "18.png",
-            "32": "32.png",
-            "48": "48.png",
-            "64": "64.png",
-            "128": "128.png",
+            16: "16.png",
+            18: "18.png",
+            32: "32.png",
+            48: "48.png",
+            64: "64.png",
+            128: "128.png",
           },
         },
         resolutions: {
-          "1": {
+          1: {
             browserActionImageURL: browser.runtime.getURL("data/16.png"),
             pageActionImageURL: browser.runtime.getURL("data/16.png"),
           },
-          "2": {
+          2: {
             browserActionImageURL: browser.runtime.getURL("data/32.png"),
             pageActionImageURL: browser.runtime.getURL("data/32.png"),
           },
         },
         menuResolutions: {
-          "1": browser.runtime.getURL("data/32.png"),
-          "2": browser.runtime.getURL("data/64.png"),
+          1: browser.runtime.getURL("data/32.png"),
+          2: browser.runtime.getURL("data/64.png"),
         },
       },
       {
         details: {
           path: {
-            "18": "18.png",
-            "32": "32.png",
-            "48": "48.png",
-            "128": "128.png",
+            18: "18.png",
+            32: "32.png",
+            48: "48.png",
+            128: "128.png",
           },
         },
         resolutions: {
-          "1": {
+          1: {
             browserActionImageURL: browser.runtime.getURL("data/32.png"),
             pageActionImageURL: browser.runtime.getURL("data/32.png"),
           },
-          "2": {
+          2: {
             browserActionImageURL: browser.runtime.getURL("data/32.png"),
             pageActionImageURL: browser.runtime.getURL("data/32.png"),
           },
@@ -519,8 +519,8 @@ add_task(async function testDetailsObjects() {
 
   // The initial icon should be the default icon since no icon is in the manifest.
   const DEFAULT_ICON = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
-  let browserActionButton = browserActionWidget.forWindow(window).node
-    .firstElementChild;
+  let browserActionButton =
+    browserActionWidget.forWindow(window).node.firstElementChild;
   let pageActionImage = document.getElementById(pageActionId);
   is(
     getListStyleImage(browserActionButton),
@@ -549,9 +549,8 @@ add_task(async function testDetailsObjects() {
         "window has the required resolution"
       );
 
-      let { browserActionImageURL, pageActionImageURL } = test.resolutions[
-        resolution
-      ];
+      let { browserActionImageURL, pageActionImageURL } =
+        test.resolutions[resolution];
       is(
         getListStyleImage(browserActionButton),
         browserActionImageURL,

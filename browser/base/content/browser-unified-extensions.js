@@ -6,11 +6,9 @@
 // This file is loaded into the browser window scope.
 /* eslint-env mozilla/browser-window */
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "OriginControls",
-  "resource://gre/modules/ExtensionPermissions.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  OriginControls: "resource://gre/modules/ExtensionPermissions.sys.mjs",
+});
 
 /**
  * The `unified-extensions-item` custom element is used to manage an extension
@@ -80,8 +78,10 @@ customElements.define(
             const popup = target.ownerDocument.getElementById(
               "unified-extensions-context-menu"
             );
+            // Anchor to the visible part of the button.
+            const anchor = target.firstElementChild;
             popup.openPopup(
-              target,
+              anchor,
               "after_end",
               0,
               0,
@@ -175,9 +175,8 @@ customElements.define(
         OriginControls.getAttention(this.extension.policy, this.ownerGlobal)
       );
 
-      this.querySelector(
-        ".unified-extensions-item-name"
-      ).textContent = this.extension.name;
+      this.querySelector(".unified-extensions-item-name").textContent =
+        this.extension.name;
 
       AddonManager.getAddonByID(this.extension.id).then(addon => {
         const iconURL = AddonManager.getPreferredIconURL(addon, 32, window);

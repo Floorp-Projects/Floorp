@@ -8,11 +8,11 @@
 
 // Interleaved image for color transforms and Codec.
 
+#include <jxl/decode.h>
+#include <jxl/types.h>
 #include <stddef.h>
 #include <stdint.h>
 
-#include "jxl/decode.h"
-#include "jxl/types.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/dec_cache.h"

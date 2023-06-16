@@ -1,6 +1,6 @@
 AC_PREREQ([2.64])
 AC_INIT([HarfBuzz],
-        [7.1.0],
+        [7.3.0],
         [https://github.com/harfbuzz/harfbuzz/issues/new],
         [harfbuzz],
         [http://harfbuzz.org/])
@@ -68,7 +68,7 @@ GTK_DOC_CHECK([1.15],[--flavour no-tmpl])
 ])
 
 # Functions and headers
-AC_CHECK_FUNCS(atexit mprotect sysconf getpagesize mmap isatty newlocale uselocale)
+AC_CHECK_FUNCS(atexit mprotect sysconf getpagesize mmap isatty newlocale uselocale sincosf)
 AC_CHECK_HEADERS(unistd.h sys/mman.h stdbool.h xlocale.h)
 
 # Compiler flags

@@ -93,7 +93,7 @@ add_task(async function test_cache_api_from_ext_shared_worker() {
     Services.obs.notifyObservers(null, "profile-after-change");
   }
 
-  const background = async function() {
+  const background = async function () {
     const BASE_URL_OK = `http://example.com/dummy`;
     const BASE_URL_KO = `http://anotherdomain.com/dummy`;
     const worker = new SharedWorker("worker.js");
@@ -142,7 +142,7 @@ add_task(async function test_cache_api_from_ext_shared_worker() {
     background,
     manifest: { permissions: ["http://example.com/*"] },
     files: {
-      "worker.js": function() {
+      "worker.js": function () {
         self.onconnect = evt => {
           const port = evt.ports[0];
           port.onmessage = async evt => {
@@ -267,7 +267,7 @@ add_task(
         ],
       },
       files: {
-        "content.js": async function() {
+        "content.js": async function () {
           const cache = await caches.open("test-cachestorage");
           const request = "http://example.com";
           const response = await fetch(request);

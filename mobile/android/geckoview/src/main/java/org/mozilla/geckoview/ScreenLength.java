@@ -21,6 +21,7 @@ public class ScreenLength {
 
   /** Pixel units. */
   public static final int PIXEL = 0;
+
   /**
    * Units are in visual viewport width. If the visual viewport is 100 pixels wide, then a value of
    * 2.0 would represent a length of 200 pixels.
@@ -29,6 +30,7 @@ public class ScreenLength {
    *     Viewport</a>
    */
   public static final int VISUAL_VIEWPORT_WIDTH = 1;
+
   /**
    * Units are in visual viewport height. If the visual viewport is 100 pixels high, then a value of
    * 2.0 would represent a length of 200 pixels.
@@ -37,11 +39,13 @@ public class ScreenLength {
    *     Viewport</a>
    */
   public static final int VISUAL_VIEWPORT_HEIGHT = 2;
+
   /**
    * Units represent the entire scrollable documents width. If the document is 1000 pixels wide then
    * a value of 1.0 would represent 1000 pixels.
    */
   public static final int DOCUMENT_WIDTH = 3;
+
   /**
    * Units represent the entire scrollable documents height. If the document is 1000 pixels tall
    * then a value of 1.0 would represent 1000 pixels.

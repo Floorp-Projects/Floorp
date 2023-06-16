@@ -472,7 +472,7 @@ void ShadowRoot::InsertSheetIntoAuthorData(
   MOZ_ASSERT(&aList == &mAdoptedStyleSheets || &aList == &mStyleSheets);
 
   if (!mServoStyles) {
-    mServoStyles = Servo_AuthorStyles_Create().Consume();
+    mServoStyles.reset(Servo_AuthorStyles_Create());
   }
 
   if (mStyleRuleMap) {

@@ -31,7 +31,8 @@ class NativeMenu {
   // This call assumes that the popupshowing event for the root popup has
   // already been sent and "approved", i.e. preventDefault() was not called.
   virtual void ShowAsContextMenu(nsIFrame* aClickedFrame,
-                                 const CSSIntPoint& aPosition) = 0;
+                                 const CSSIntPoint& aPosition,
+                                 bool aIsContextMenu) = 0;
 
   // Close the menu and synchronously fire popuphiding / popuphidden events.
   // Returns false if the menu wasn't open.

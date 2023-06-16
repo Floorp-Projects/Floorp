@@ -19,7 +19,7 @@ const { Async } = ChromeUtils.importESModule(
  *
  * @param document  The document to be translated
  */
-var TranslationDocument = function(document) {
+var TranslationDocument = function (document) {
   this.itemsMap = new Map();
   this.roots = [];
   this._init(document);

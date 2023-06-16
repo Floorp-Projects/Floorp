@@ -26,6 +26,12 @@ function triggerClickOn(target, options) {
   return promise;
 }
 
+function triggerMiddleClickOn(target) {
+  let promise = BrowserTestUtils.waitForEvent(target, "click");
+  EventUtils.synthesizeMouseAtCenter(target, { button: 1 });
+  return promise;
+}
+
 async function addTab(url = "http://mochi.test:8888/", params) {
   return addTabTo(gBrowser, url, params);
 }
@@ -129,7 +135,7 @@ async function wait_for_tab_media_blocked_event(tab, expectMediaBlocked) {
 
 async function is_audio_playing(tab) {
   let browser = tab.linkedBrowser;
-  let isPlaying = await SpecialPowers.spawn(browser, [], async function() {
+  let isPlaying = await SpecialPowers.spawn(browser, [], async function () {
     let audio = content.document.querySelector("audio");
     return !audio.paused;
   });
@@ -138,7 +144,7 @@ async function is_audio_playing(tab) {
 
 async function play(tab, expectPlaying = true) {
   let browser = tab.linkedBrowser;
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     let audio = content.document.querySelector("audio");
     audio.play();
   });

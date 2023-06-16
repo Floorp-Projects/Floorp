@@ -7,7 +7,7 @@ let testURL =
   "https://example.com/browser/" +
   "uriloader/exthandler/tests/mochitest/FTPprotocolHandler.html";
 
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["security.external_protocol_requires_permission", false]],
   });

@@ -15,8 +15,8 @@ const { shortURL } = ChromeUtils.import(
 const { SectionsManager } = ChromeUtils.import(
   "resource://activity-stream/lib/SectionsManager.jsm"
 );
-const { PersistentCache } = ChromeUtils.import(
-  "resource://activity-stream/lib/PersistentCache.jsm"
+const { PersistentCache } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/PersistentCache.sys.mjs"
 );
 
 const lazy = {};

@@ -7,24 +7,23 @@
 const URL_1 = URL_ROOT_SSL + "doc_markup_update-on-navigtion_1.html";
 const URL_2 = URL_ROOT_SSL + "doc_markup_update-on-navigtion_2.html";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector, toolbox } = await openInspectorForURL(URL_1);
 
   assertMarkupViewIsLoaded();
   await selectNode("#one", inspector);
 
   const { resourceCommand } = toolbox.commands;
-  const {
-    onResource: willNavigate,
-  } = await resourceCommand.waitForNextResource(
-    resourceCommand.TYPES.DOCUMENT_EVENT,
-    {
-      ignoreExistingResources: true,
-      predicate(resource) {
-        return resource.name == "will-navigate";
-      },
-    }
-  );
+  const { onResource: willNavigate } =
+    await resourceCommand.waitForNextResource(
+      resourceCommand.TYPES.DOCUMENT_EVENT,
+      {
+        ignoreExistingResources: true,
+        predicate(resource) {
+          return resource.name == "will-navigate";
+        },
+      }
+    );
 
   // We should not await on navigateTo here, because the test will assert the
   // various phases of the inspector during the navigation.
@@ -51,9 +50,8 @@ add_task(async function() {
   }
 
   function assertMarkupViewIsEmpty() {
-    const markupViewFrame = inspector._markupFrame.contentDocument.getElementById(
-      "root"
-    );
+    const markupViewFrame =
+      inspector._markupFrame.contentDocument.getElementById("root");
     is(markupViewFrame.childNodes.length, 0, "The markup-view is unloaded");
   }
 });

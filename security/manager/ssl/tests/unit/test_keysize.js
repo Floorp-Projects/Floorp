@@ -197,7 +197,7 @@ async function checkCombinationChains() {
   );
 }
 
-add_task(async function() {
+add_task(async function () {
   await checkRSAChains(1016, 1024);
   await checkECCChains();
   await checkCombinationChains();

@@ -13,7 +13,7 @@ function Test(name, test) {
   this.result = null;
   this.row = null;
 
-  this.run = function() {
+  this.run = function () {
     // Note the start time
     this.startTime = new Date();
     // Run the test
@@ -26,7 +26,7 @@ function Test(name, test) {
     }
   };
 
-  this.memcmp_complete = function(x, y) {
+  this.memcmp_complete = function (x, y) {
     var passfail = util.memcmp(x, y);
     if (!passfail) {
       console.log("expected: " + util.abv2hex(x));
@@ -35,7 +35,7 @@ function Test(name, test) {
     this.complete(passfail);
   };
 
-  this.complete = function(result) {
+  this.complete = function (result) {
     if (MOCHITEST) {
       ok(result, this.name);
     }
@@ -49,17 +49,17 @@ function Test(name, test) {
     this.next();
   };
 
-  this.next = function() {
+  this.next = function () {
     if (this.oncomplete) {
       this.oncomplete();
     }
   };
 
-  this.setRow = function(id) {
+  this.setRow = function (id) {
     this.row = document.getElementById(id).getElementsByTagName("td");
   };
 
-  this.draw = function() {
+  this.draw = function () {
     if (!this.row) {
       return;
     }
@@ -68,7 +68,7 @@ function Test(name, test) {
     if (this.name) {
       this.row[0].textContent = this.name;
       var that = this;
-      this.row[0].onclick = function() {
+      this.row[0].onclick = function () {
         that.run();
       };
     } else {
@@ -103,7 +103,7 @@ function WorkerTest(worker, name, test) {
   this.result = null;
   this.row = null;
 
-  this.run = function() {
+  this.run = function () {
     // Note the start time
     this.startTime = new Date();
 
@@ -203,7 +203,7 @@ var TestArray = {
     }
 
     var self = this;
-    this.tests[i].oncomplete = function() {
+    this.tests[i].oncomplete = function () {
       self.runNextTest();
     };
     this.tests[i].run();
@@ -211,11 +211,11 @@ var TestArray = {
 };
 
 if (window.addEventListener) {
-  window.addEventListener("load", function() {
+  window.addEventListener("load", function () {
     TestArray.load();
   });
 } else {
-  window.attachEvent("onload", function() {
+  window.attachEvent("onload", function () {
     TestArray.load();
   });
 }
@@ -228,13 +228,13 @@ MOCHITEST = "SimpleTest" in window;
 if (MOCHITEST) {
   SimpleTest.waitForExplicitFinish();
   SimpleTest.requestLongerTimeout(2);
-  window.addEventListener("load", function() {
+  window.addEventListener("load", function () {
     SimpleTest.waitForFocus(start);
   });
 }
 
 function error(test) {
-  return function(x) {
+  return function (x) {
     console.log("ERROR :: " + x);
     test.complete(false);
     throw x;
@@ -242,7 +242,7 @@ function error(test) {
 }
 
 function complete(test, valid) {
-  return function(x) {
+  return function (x) {
     console.log("COMPLETE");
     console.log(x);
     if (valid) {
@@ -254,7 +254,7 @@ function complete(test, valid) {
 }
 
 function memcmp_complete(test, value) {
-  return function(x) {
+  return function (x) {
     console.log("COMPLETE");
     console.log(x);
     test.memcmp_complete(value, x);

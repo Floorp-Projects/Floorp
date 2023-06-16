@@ -1,7 +1,7 @@
 import { _ToolbarPanelHub } from "lib/ToolbarPanelHub.jsm";
 import { GlobalOverrider } from "test/unit/utils";
 import { OnboardingMessageProvider } from "lib/OnboardingMessageProvider.jsm";
-import { PanelTestProvider } from "lib/PanelTestProvider.jsm";
+import { PanelTestProvider } from "lib/PanelTestProvider.sys.mjs";
 
 describe("ToolbarPanelHub", () => {
   let globals;
@@ -88,7 +88,7 @@ describe("ToolbarPanelHub", () => {
     };
     fakeWindow = {
       // eslint-disable-next-line object-shorthand
-      DocumentFragment: function() {
+      DocumentFragment: function () {
         return fakeElementById;
       },
       document: fakeDocument,
@@ -773,7 +773,8 @@ describe("ToolbarPanelHub", () => {
       });
     let getMessagesStub;
     beforeEach(async () => {
-      const onboardingMsgs = await OnboardingMessageProvider.getUntranslatedMessages();
+      const onboardingMsgs =
+        await OnboardingMessageProvider.getUntranslatedMessages();
       getMessagesStub = sandbox
         .stub()
         .resolves(
@@ -812,7 +813,8 @@ describe("ToolbarPanelHub", () => {
         instance,
         "sendUserEventTelemetry"
       );
-      const onboardingMsgs = await OnboardingMessageProvider.getUntranslatedMessages();
+      const onboardingMsgs =
+        await OnboardingMessageProvider.getUntranslatedMessages();
       const msg = onboardingMsgs.find(m => m.template === "protections_panel");
 
       await fakeInsert();
@@ -844,7 +846,8 @@ describe("ToolbarPanelHub", () => {
       const stub = sandbox
         .stub(global.Services.urlFormatter, "formatURL")
         .returns("formattedURL");
-      const onboardingMsgs = await OnboardingMessageProvider.getUntranslatedMessages();
+      const onboardingMsgs =
+        await OnboardingMessageProvider.getUntranslatedMessages();
       const msg = onboardingMsgs.find(m => m.template === "protections_panel");
 
       await fakeInsert();
@@ -870,7 +873,8 @@ describe("ToolbarPanelHub", () => {
       const stub = sandbox
         .stub(global.Services.urlFormatter, "formatURL")
         .throws();
-      const onboardingMsgs = await OnboardingMessageProvider.getUntranslatedMessages();
+      const onboardingMsgs =
+        await OnboardingMessageProvider.getUntranslatedMessages();
       const msg = onboardingMsgs.find(m => m.template === "protections_panel");
       sandbox.spy(global.console, "error");
 
@@ -894,7 +898,8 @@ describe("ToolbarPanelHub", () => {
       );
     });
     it("should open link on click (directly attached to the message)", async () => {
-      const onboardingMsgs = await OnboardingMessageProvider.getUntranslatedMessages();
+      const onboardingMsgs =
+        await OnboardingMessageProvider.getUntranslatedMessages();
       const msg = onboardingMsgs.find(m => m.template === "protections_panel");
       getMessagesStub.resolves({
         ...msg,

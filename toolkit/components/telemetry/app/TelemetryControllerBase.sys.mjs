@@ -125,7 +125,8 @@ export var TelemetryControllerBase = Object.freeze({
     } else {
       // We're not on unified Telemetry, stick to the old behaviour for
       // supporting Fennec.
-      Services.telemetry.canRecordBase = Services.telemetry.canRecordExtended = this.isTelemetryEnabled;
+      Services.telemetry.canRecordBase = Services.telemetry.canRecordExtended =
+        this.isTelemetryEnabled;
     }
 
     this.log.config(

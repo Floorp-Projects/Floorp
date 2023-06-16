@@ -7,7 +7,7 @@
 // Ignore strange errors when shutting down.
 PromiseTestUtils.allowMatchingRejectionsGlobally(/No such actor/);
 
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger("doc-script-switching.html");
 
   const found = findElement(dbg, "callStackBody");
@@ -21,7 +21,7 @@ add_task(async function() {
   ok(!button, "toggle button shouldn't be there");
 });
 
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger("doc-frames.html");
 
   invokeInTab("startRecursion");
@@ -43,7 +43,7 @@ add_task(async function() {
   await waitForSelectedSource(dbg, "frames.js");
 });
 
-add_task(async function() {
+add_task(async function () {
   const url = createMockAngularPage();
   const tab = await addTab(url);
   info("Open debugger");
@@ -53,7 +53,7 @@ add_task(async function() {
   const found = findElement(dbg, "callStackBody");
   is(found, null, "Call stack is hidden");
 
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.document.querySelector("button.pause").click();
   });
 
@@ -85,21 +85,21 @@ function createMockAngularPage() {
   httpServer.registerContentType("js", "application/javascript");
 
   const htmlFilename = "angular-mock.html";
-  httpServer.registerPathHandler(`/${htmlFilename}`, function(
-    request,
-    response
-  ) {
-    response.setStatusLine(request.httpVersion, 200, "OK");
-    response.write(`
+  httpServer.registerPathHandler(
+    `/${htmlFilename}`,
+    function (request, response) {
+      response.setStatusLine(request.httpVersion, 200, "OK");
+      response.write(`
         <html>
             <button class="pause">Click me</button>
             <script type="text/javascript" src="angular.js"></script>
         </html>`);
-  });
+    }
+  );
 
   // Register an angular.js file in order to create a Group with anonymous functions in
   // the callstack panel.
-  httpServer.registerPathHandler("/angular.js", function(request, response) {
+  httpServer.registerPathHandler("/angular.js", function (request, response) {
     response.setHeader("Content-Type", "application/javascript");
     response.write(`
       document.querySelector("button.pause").addEventListener("click", () => {

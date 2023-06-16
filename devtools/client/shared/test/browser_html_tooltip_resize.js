@@ -17,7 +17,7 @@ loadHelperScript("helper_html_tooltip.js");
 
 const TOOLBOX_WIDTH = 500;
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.toolbox.sidebar.width", TOOLBOX_WIDTH);
 
   // Open the host on the right so that the doorhangers hang right.

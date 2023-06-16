@@ -1,0 +1,64 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:host {
+  --fxviewcategorynav-button-padding: 8px;
+  margin-inline-start: 42px;
+  border-inline-end: 1px solid transparent;
+  position: sticky;
+}
+
+nav {
+  height: 100%;
+  display: grid;
+  grid-template-rows: min-content 1fr auto;
+  gap: 25px;
+}
+
+.category-nav-header {
+  /* Align the header text/icon with the category button icons */
+  margin-inline-start: var(--fxviewcategorynav-button-padding);
+}
+
+::slotted(h2) {
+  font-size: 1.6em;
+  margin: 0;
+}
+
+.category-nav-buttons,
+::slotted(.category-nav-footer) {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-auto-rows: min-content;
+  gap: 4px;
+}
+
+@media (prefers-contrast) {
+  .category-nav-buttons {
+    gap: 8px;
+  }
+}
+
+@media (prefers-reduced-motion) {
+  /* Setting border-inline-end to add clear differentiation between side navigation and main content area */
+  :host {
+    border-inline-end-color: var(--in-content-border-color);
+  }
+}
+
+@media (max-width: 52rem) {
+  :host {
+    grid-template-rows: 1fr auto;
+  }
+
+  .category-nav-header {
+    display: none;
+  }
+
+  .category-nav-buttons,
+  ::slotted(.category-nav-footer) {
+    justify-content: center;
+    grid-template-columns: min-content;
+  }
+}

@@ -3,5 +3,5 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 TESTING_JS_MODULES += [
-    "AppUiTestDelegate.jsm",
+    "AppUiTestDelegate.sys.mjs",
 ]

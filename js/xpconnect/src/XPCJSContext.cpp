@@ -780,11 +780,10 @@ static mozilla::Atomic<bool> sIteratorHelpersEnabled(false);
 static mozilla::Atomic<bool> sShadowRealmsEnabled(false);
 #ifdef NIGHTLY_BUILD
 static mozilla::Atomic<bool> sArrayGroupingEnabled(false);
+static mozilla::Atomic<bool> sWellFormedUnicodeStringsEnabled(false);
 #endif
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
 static mozilla::Atomic<bool> sChangeArrayByCopyEnabled(false);
-#endif
-static mozilla::Atomic<bool> sArrayFromAsyncEnabled(false);
+static mozilla::Atomic<bool> sArrayFromAsyncEnabled(true);
 #ifdef ENABLE_NEW_SET_METHODS
 static mozilla::Atomic<bool> sEnableNewSetMethods(false);
 #endif
@@ -813,10 +812,9 @@ void xpc::SetPrefableRealmOptions(JS::RealmOptions& options) {
       .setShadowRealmsEnabled(sShadowRealmsEnabled)
 #ifdef NIGHTLY_BUILD
       .setArrayGroupingEnabled(sArrayGroupingEnabled)
+      .setWellFormedUnicodeStringsEnabled(sWellFormedUnicodeStringsEnabled)
 #endif
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
       .setChangeArrayByCopyEnabled(sChangeArrayByCopyEnabled)
-#endif
       .setArrayFromAsyncEnabled(sArrayFromAsyncEnabled)
 #ifdef ENABLE_NEW_SET_METHODS
       .setNewSetMethodsEnabled(sEnableNewSetMethods)
@@ -950,7 +948,7 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
 #endif
 
 #if !defined(JS_CODEGEN_MIPS32) && !defined(JS_CODEGEN_MIPS64) && \
-    !defined(JS_CODEGEN_RISCV64)
+    !defined(JS_CODEGEN_RISCV64) && !defined(JS_CODEGEN_LOONG64)
   JS_SetGlobalJitCompilerOption(
       cx, JSJITCOMPILER_SPECTRE_INDEX_MASKING,
       StaticPrefs::javascript_options_spectre_index_masking_DoNotUseDirectly());
@@ -1009,12 +1007,11 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.iterator_helpers");
   sArrayGroupingEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.array_grouping");
+  sWellFormedUnicodeStringsEnabled = Preferences::GetBool(
+      JS_OPTIONS_DOT_STR "experimental.well_formed_unicode_strings");
 #endif
-
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
   sChangeArrayByCopyEnabled = Preferences::GetBool(
       JS_OPTIONS_DOT_STR "experimental.enable_change_array_by_copy");
-#endif
   sArrayFromAsyncEnabled = Preferences::GetBool(
       JS_OPTIONS_DOT_STR "experimental.enable_array_from_async");
 #ifdef ENABLE_NEW_SET_METHODS

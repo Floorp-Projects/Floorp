@@ -175,6 +175,7 @@ class DecisionLogic : public NetEqController {
     int reinit_after_expands = 100;
     int deceleration_target_level_offset_ms = 85;
     int packet_history_size_ms = 2000;
+    absl::optional<int> cng_timeout_ms;
   };
   Config config_;
   std::unique_ptr<DelayManager> delay_manager_;

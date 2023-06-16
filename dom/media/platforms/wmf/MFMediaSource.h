@@ -122,7 +122,7 @@ class MFMediaSource : public Microsoft::WRL::RuntimeClass<
   };
   State GetState() const;
 
-  void SetDCompSurfaceHandle(HANDLE aDCompSurfaceHandle);
+  void SetDCompSurfaceHandle(HANDLE aDCompSurfaceHandle, gfx::IntSize aDisplay);
 
   void ShutdownTaskQueue();
 

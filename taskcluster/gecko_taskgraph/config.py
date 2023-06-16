@@ -105,17 +105,6 @@ graph_config_schema = Schema(
             },
         },
         Required("mac-notarization"): {
-            Required("mac-behavior"): optionally_keyed_by(
-                "project",
-                "shippable",
-                Any(
-                    "mac_notarize",
-                    "mac_geckodriver",
-                    "mac_sign",
-                    "mac_sign_and_pkg",
-                    "apple_notarization",
-                ),
-            ),
             Required("mac-entitlements"): optionally_keyed_by(
                 "platform", "release-level", str
             ),

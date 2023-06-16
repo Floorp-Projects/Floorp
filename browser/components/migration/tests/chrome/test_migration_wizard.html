@@ -1027,6 +1027,61 @@
 
         gWiz.toggleAttribute("dialog-mode", true);
       });
+
+      /**
+       * Tests that if a progress update comes down which puts a resource from
+       * being done to being back "inProgress", that the status message is
+       * cleared.
+       */
+      add_task(async function test_clear_status_message_when_in_progress() {
+        const STRING_TO_CLEAR = "This string should get cleared";
+        gWiz.toggleAttribute("dialog-mode", false);
+        gWiz.setState({
+          page: MigrationWizardConstants.PAGES.PROGRESS,
+          key: "chrome",
+          progress: {
+            [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS]: {
+              inProgress: false,
+              message: STRING_TO_CLEAR,
+            },
+          },
+        });
+
+        let bookmarksGroup = getResourceGroup(
+          MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS
+        );
+        ok(!isHidden(bookmarksGroup), "Bookmarks group should be visible");
+        let progressIcon = bookmarksGroup.querySelector(".progress-icon");
+        ok(
+          progressIcon.classList.contains("completed"),
+          "Progress should be completed"
+        );
+        is(
+          bookmarksGroup.querySelector(".success-text").textContent,
+          STRING_TO_CLEAR
+        );
+
+        gWiz.setState({
+          page: MigrationWizardConstants.PAGES.PROGRESS,
+          key: "chrome",
+          progress: {
+            [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS]: {
+              inProgress: true,
+              message: "",
+            },
+          },
+        });
+
+        ok(!isHidden(bookmarksGroup), "Bookmarks group should be visible");
+        ok(
+          !progressIcon.classList.contains("completed"),
+          "Progress should still be underway"
+        );
+        is(
+          bookmarksGroup.querySelector(".success-text").textContent.trim(),
+          ""
+        );
+      });
     </script>
   </head>
   <body>

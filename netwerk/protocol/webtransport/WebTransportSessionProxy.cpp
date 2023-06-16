@@ -379,6 +379,37 @@ void WebTransportSessionProxy::DoCreateStream(
   }
 
   LOG(("WebTransportSessionProxy::DoCreateStream %p bidi=%d", this, aBidi));
+
+  RefPtr<Http3WebTransportSession> session = aSession;
+  // Having no session here means that this is called by dispatching tasks.
+  // The mState may be already changed, so we need to check it again.
+  if (!aSession) {
+    MutexAutoLock lock(mMutex);
+    switch (mState) {
+      case WebTransportSessionProxyState::INIT:
+      case WebTransportSessionProxyState::NEGOTIATING:
+      case WebTransportSessionProxyState::NEGOTIATING_SUCCEEDED:
+        MOZ_ASSERT(false, "DoCreateStream called with invalid state");
+        aCallback->CallOnError(NS_ERROR_UNEXPECTED);
+        return;
+      case WebTransportSessionProxyState::ACTIVE: {
+        session = mWebTransportSession;
+      } break;
+      case WebTransportSessionProxyState::SESSION_CLOSE_PENDING:
+      case WebTransportSessionProxyState::CLOSE_CALLBACK_PENDING:
+      case WebTransportSessionProxyState::DONE:
+        // Session is going to be closed.
+        aCallback->CallOnError(NS_ERROR_NOT_AVAILABLE);
+        return;
+    }
+  }
+
+  if (!session) {
+    MOZ_ASSERT_UNREACHABLE("This should not happen");
+    aCallback->CallOnError(NS_ERROR_UNEXPECTED);
+    return;
+  }
+
   RefPtr<WebTransportStreamCallbackWrapper> wrapper(aCallback);
   auto callback =
       [wrapper{std::move(wrapper)}](
@@ -393,18 +424,6 @@ void WebTransportSessionProxy::DoCreateStream(
             new WebTransportStreamProxy(stream);
         wrapper->CallOnStreamReady(streamProxy);
       };
-
-  RefPtr<Http3WebTransportSession> session = aSession;
-  if (!aSession) {
-    MutexAutoLock lock(mMutex);
-    session = mWebTransportSession;
-  }
-
-  if (!session) {
-    MOZ_ASSERT(false, "This should not happen");
-    callback(Err(NS_ERROR_UNEXPECTED));
-    return;
-  }
 
   if (aBidi) {
     session->CreateOutgoingBidirectionalStream(std::move(callback));
@@ -624,6 +643,7 @@ WebTransportSessionProxy::OnStopRequest(nsIRequest* aRequest,
     if (!pendingCreateStreamEvents.IsEmpty()) {
       if (NS_SUCCEEDED(aStatus) &&
           (mState == WebTransportSessionProxyState::DONE ||
+           mState == WebTransportSessionProxyState::CLOSE_CALLBACK_PENDING ||
            mState == WebTransportSessionProxyState::SESSION_CLOSE_PENDING)) {
         aStatus = NS_ERROR_FAILURE;
       }

@@ -18,7 +18,7 @@ const ADDON1_PATH = "addons/test-addon-1/";
 const ADDON2_ID = "test-addon-2@mozilla.org";
 const ADDON2_PATH = "addons/test-addon-2/";
 
-add_task(async function() {
+add_task(async function () {
   DevToolsServer.init();
   DevToolsServer.registerAllActors();
 

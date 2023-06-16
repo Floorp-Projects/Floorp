@@ -32,7 +32,6 @@ splitter[state="collapsed"][substate="before"]:-moz-locale-dir(rtl) {
 
 splitter[orient="vertical"] {
   cursor: ns-resize;
-  min-width: 0px;
   min-height: 9px;
   min-width: 9px;
 }

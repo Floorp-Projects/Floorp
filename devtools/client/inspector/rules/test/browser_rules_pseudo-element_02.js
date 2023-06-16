@@ -7,7 +7,7 @@
 
 const TEST_URI = URL_ROOT + "doc_pseudoelement.html";
 
-add_task(async function() {
+add_task(async function () {
   await addTab(TEST_URI);
   const { inspector } = await openRuleView();
 

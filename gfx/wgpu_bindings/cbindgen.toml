@@ -53,14 +53,15 @@ include = ["BufferUsages"]
 "nsCString" = "nsCString"
 "nsAString" = "nsAString"
 "nsACString" = "nsACString"
+"nsStringRepr" = "nsString"
 "BufferDescriptor______nsACString" = "WGPUBufferDescriptor"
 "CommandBufferDescriptor______nsACString" = "WGPUCommandBufferDescriptor"
 "CommandEncoderDescriptor______nsACString" = "WGPUCommandEncoderDescriptor"
 "RenderBundleDescriptor______nsACString" = "WGPURenderBundleDescriptor"
 "DeviceDescriptor______nsACString" = "WGPUDeviceDescriptor"
-# This one does not work for some reason.
-"WGPUTextureDescriptor______nsACString__FfiSlice_TextureFormat" = "WGPUTextureDescriptor"
+"TextureDescriptor______nsACString__FfiSlice_TextureFormat" = "WGPUTextureDescriptor"
 "SamplerDescriptor______nsACString" = "WGPUSamplerDescriptor"
+"AdapterInformation_nsString" = "WGPUAdapterInformation"
 
 [parse]
 parse_deps = true

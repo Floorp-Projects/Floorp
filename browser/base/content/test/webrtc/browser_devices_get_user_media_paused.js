@@ -18,7 +18,7 @@ function sendObserverNotification(topic) {
   return SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [{ topic, windowId }],
-    function(args) {
+    function (args) {
       Services.obs.notifyObservers(
         content.window,
         args.topic,
@@ -32,7 +32,7 @@ function setTrackEnabled(audio, video) {
   return SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [{ audio, video }],
-    function(args) {
+    function (args) {
       let stream = content.wrappedJSObject.gStreams[0];
       if (args.audio != null) {
         stream.getAudioTracks()[0].enabled = args.audio;
@@ -80,7 +80,7 @@ function cloneTracks(audio, video) {
   return SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [{ audio, video }],
-    function(args) {
+    function (args) {
       if (!content.wrappedJSObject.gClones) {
         content.wrappedJSObject.gClones = [];
       }
@@ -100,7 +100,7 @@ function stopClonedTracks(audio, video) {
   return SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [{ audio, video }],
-    function(args) {
+    function (args) {
       let clones = content.wrappedJSObject.gClones || [];
       if (args.audio != null) {
         clones.filter(t => t.kind == "audio").forEach(t => t.stop());
@@ -120,8 +120,7 @@ function stopClonedTracks(audio, video) {
 
 var gTests = [
   {
-    desc:
-      "getUserMedia audio+video: disabling the stream shows the paused indicator",
+    desc: "getUserMedia audio+video: disabling the stream shows the paused indicator",
     run: async function checkDisabled() {
       let observerPromise = expectObserverCalled("getUserMedia:request");
       let promise = promisePopupNotificationShown("webRTC-shareDevices");
@@ -213,8 +212,7 @@ var gTests = [
   },
 
   {
-    desc:
-      "getUserMedia audio+video: disabling the original tracks and stopping enabled clones shows the paused indicator",
+    desc: "getUserMedia audio+video: disabling the original tracks and stopping enabled clones shows the paused indicator",
     run: async function checkDisabledAfterCloneStop() {
       let observerPromise = expectObserverCalled("getUserMedia:request");
       let promise = promisePopupNotificationShown("webRTC-shareDevices");
@@ -315,8 +313,7 @@ var gTests = [
   },
 
   {
-    desc:
-      "getUserMedia screen: disabling the stream shows the paused indicator",
+    desc: "getUserMedia screen: disabling the stream shows the paused indicator",
     run: async function checkScreenDisabled() {
       let observerPromise = expectObserverCalled("getUserMedia:request");
       let promise = promisePopupNotificationShown("webRTC-shareDevices");
@@ -381,8 +378,7 @@ var gTests = [
   },
 
   {
-    desc:
-      "getUserMedia audio+video: muting the camera shows the muted indicator",
+    desc: "getUserMedia audio+video: muting the camera shows the muted indicator",
     run: async function checkCameraMuted() {
       let observerPromise = expectObserverCalled("getUserMedia:request");
       let promise = promisePopupNotificationShown("webRTC-shareDevices");
@@ -469,8 +465,7 @@ var gTests = [
   },
 
   {
-    desc:
-      "getUserMedia audio+video: muting the microphone shows the muted indicator",
+    desc: "getUserMedia audio+video: muting the microphone shows the muted indicator",
     run: async function checkMicrophoneMuted() {
       let observerPromise = expectObserverCalled("getUserMedia:request");
       let promise = promisePopupNotificationShown("webRTC-shareDevices");
@@ -774,8 +769,7 @@ var gTests = [
   },
 
   {
-    desc:
-      "getUserMedia audio+video: disabling & muting microphone in combination",
+    desc: "getUserMedia audio+video: disabling & muting microphone in combination",
     // Test the following combinations of disabling and muting microphone:
     // 1. Disable audio track only.
     // 2. Mute microphone & disable video (to have a condition to wait for)

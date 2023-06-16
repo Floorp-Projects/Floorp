@@ -21,7 +21,7 @@ struct macroblockd;
 
 /* Encoder forward decls */
 struct macroblock;
-struct vp9_variance_vtable;
+struct vp9_sad_table;
 struct search_site_config;
 struct mv;
 union int_mv;
@@ -39,8 +39,8 @@ int64_t vp9_block_error_fp_c(const tran_low_t *coeff, const tran_low_t *dqcoeff,
 int64_t vp9_block_error_fp_neon(const tran_low_t *coeff, const tran_low_t *dqcoeff, int block_size);
 #define vp9_block_error_fp vp9_block_error_fp_neon
 
-int vp9_diamond_search_sad_c(const struct macroblock *x, const struct search_site_config *cfg,  struct mv *ref_mv, struct mv *best_mv, int search_param, int sad_per_bit, int *num00, const struct vp9_variance_vtable *fn_ptr, const struct mv *center_mv);
-int vp9_diamond_search_sad_neon(const struct macroblock *x, const struct search_site_config *cfg,  struct mv *ref_mv, struct mv *best_mv, int search_param, int sad_per_bit, int *num00, const struct vp9_variance_vtable *fn_ptr, const struct mv *center_mv);
+int vp9_diamond_search_sad_c(const struct macroblock *x, const struct search_site_config *cfg,  struct mv *ref_mv, uint32_t start_mv_sad, struct mv *best_mv, int search_param, int sad_per_bit, int *num00, const struct vp9_sad_table *sad_fn_ptr, const struct mv *center_mv);
+int vp9_diamond_search_sad_neon(const struct macroblock *x, const struct search_site_config *cfg,  struct mv *ref_mv, uint32_t start_mv_sad, struct mv *best_mv, int search_param, int sad_per_bit, int *num00, const struct vp9_sad_table *sad_fn_ptr, const struct mv *center_mv);
 #define vp9_diamond_search_sad vp9_diamond_search_sad_neon
 
 void vp9_fht16x16_c(const int16_t *input, tran_low_t *output, int stride, int tx_type);

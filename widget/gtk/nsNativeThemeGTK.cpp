@@ -222,30 +222,9 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
       // menus which are children of a menu bar are only marked as prelight
       // if they are open, not on normal hover.
 
-      if (aAppearance == StyleAppearance::Menuitem ||
-          aAppearance == StyleAppearance::Checkmenuitem ||
-          aAppearance == StyleAppearance::Radiomenuitem ||
-          aAppearance == StyleAppearance::Menuseparator ||
-          aAppearance == StyleAppearance::Menuarrow) {
-        auto* item = dom::XULButtonElement::FromNode(aFrame->GetContent());
-        if (item && item->IsOnMenuBar()) {
-          aState->inHover = CheckBooleanAttr(aFrame, nsGkAtoms::open);
-        } else {
-          aState->inHover = CheckBooleanAttr(aFrame, nsGkAtoms::menuactive);
-        }
-
+      if (aAppearance == StyleAppearance::Menuarrow) {
+        aState->inHover = CheckBooleanAttr(aFrame, nsGkAtoms::menuactive);
         aState->active = FALSE;
-
-        if (aAppearance == StyleAppearance::Checkmenuitem ||
-            aAppearance == StyleAppearance::Radiomenuitem) {
-          *aWidgetFlags = 0;
-          if (aFrame && aFrame->GetContent() &&
-              aFrame->GetContent()->IsElement()) {
-            *aWidgetFlags = aFrame->GetContent()->AsElement()->AttrValueIs(
-                kNameSpaceID_None, nsGkAtoms::checked, nsGkAtoms::_true,
-                eIgnoreCase);
-          }
-        }
       }
 
       // A button with drop down menu open or an activated toggle button
@@ -335,9 +314,6 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
       break;
     case StyleAppearance::Toolbargripper:
       aGtkWidgetType = MOZ_GTK_GRIPPER;
-      break;
-    case StyleAppearance::Resizer:
-      aGtkWidgetType = MOZ_GTK_RESIZER;
       break;
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
@@ -436,10 +412,6 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
     case StyleAppearance::Tooltip:
       aGtkWidgetType = MOZ_GTK_TOOLTIP;
       break;
-    case StyleAppearance::Statusbarpanel:
-    case StyleAppearance::Resizerpanel:
-      aGtkWidgetType = MOZ_GTK_FRAME;
-      break;
     case StyleAppearance::ProgressBar:
       aGtkWidgetType = MOZ_GTK_PROGRESSBAR;
       break;
@@ -488,29 +460,8 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
       else
         aGtkWidgetType = MOZ_GTK_SPLITTER_HORIZONTAL;
       break;
-    case StyleAppearance::Menubar:
-      aGtkWidgetType = MOZ_GTK_MENUBAR;
-      break;
-    case StyleAppearance::Menuitem: {
-      auto* item = dom::XULButtonElement::FromNode(aFrame->GetContent());
-      if (item && item->IsOnMenuBar()) {
-        aGtkWidgetType = MOZ_GTK_MENUBARITEM;
-        break;
-      }
-    }
-      aGtkWidgetType = MOZ_GTK_MENUITEM;
-      break;
-    case StyleAppearance::Menuseparator:
-      aGtkWidgetType = MOZ_GTK_MENUSEPARATOR;
-      break;
     case StyleAppearance::Menuarrow:
       aGtkWidgetType = MOZ_GTK_MENUARROW;
-      break;
-    case StyleAppearance::Checkmenuitem:
-      aGtkWidgetType = MOZ_GTK_CHECKMENUITEM;
-      break;
-    case StyleAppearance::Radiomenuitem:
-      aGtkWidgetType = MOZ_GTK_RADIOMENUITEM;
       break;
     case StyleAppearance::MozWindowTitlebar:
       aGtkWidgetType = MOZ_GTK_HEADER_BAR;
@@ -1019,11 +970,6 @@ LayoutDeviceIntMargin nsNativeThemeGTK::GetWidgetBorder(
       // gtk's 'toolbar' for purposes of painting the widget background,
       // we don't use the toolbar border for toolbox.
       break;
-    case StyleAppearance::Menuitem:
-    case StyleAppearance::Checkmenuitem:
-    case StyleAppearance::Radiomenuitem:
-      // We use GetWidgetPadding for these.
-      break;
     case StyleAppearance::Dualbutton:
       // TOOLBAR_DUAL_BUTTON is an interesting case.  We want a border to draw
       // around the entire button + dropdown, and also an inner border if you're
@@ -1081,24 +1027,6 @@ bool nsNativeThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
     case StyleAppearance::Radio:
       aResult->SizeTo(0, 0, 0, 0);
       return true;
-    case StyleAppearance::Menuitem:
-    case StyleAppearance::Checkmenuitem:
-    case StyleAppearance::Radiomenuitem: {
-      auto result =
-          GetCachedWidgetBorder(aFrame, aAppearance, GetTextDirection(aFrame));
-
-      gint horizontal_padding = 0;
-      if (aAppearance == StyleAppearance::Menuitem)
-        moz_gtk_menuitem_get_horizontal_padding(&horizontal_padding);
-      else
-        moz_gtk_checkmenuitem_get_horizontal_padding(&horizontal_padding);
-
-      result.left += horizontal_padding;
-      result.right += horizontal_padding;
-
-      *aResult = (CSSMargin(result) * GetWidgetScaleFactor(aFrame)).Rounded();
-      return true;
-    }
     default:
       break;
   }
@@ -1192,9 +1120,6 @@ LayoutDeviceIntSize nsNativeThemeGTK::GetMinimumWidgetSize(
     } break;
     case StyleAppearance::MozMenulistArrowButton: {
       moz_gtk_get_combo_box_entry_button_size(&result.width, &result.height);
-    } break;
-    case StyleAppearance::Menuseparator: {
-      moz_gtk_get_menu_separator_height(&result.height);
     } break;
     case StyleAppearance::Checkbox:
     case StyleAppearance::Radio: {
@@ -1306,10 +1231,6 @@ LayoutDeviceIntSize nsNativeThemeGTK::GetMinimumWidgetSize(
       result.width = 14;
       result.height = 13;
       break;
-    case StyleAppearance::Resizer:
-      // same as Windows to make our lives easier
-      result.width = result.height = 15;
-      break;
     case StyleAppearance::Treetwisty:
     case StyleAppearance::Treetwistyopen: {
       gint expander_size;
@@ -1339,14 +1260,10 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame,
   // Some widget types just never change state.
   if (aAppearance == StyleAppearance::Toolbox ||
       aAppearance == StyleAppearance::Toolbar ||
-      aAppearance == StyleAppearance::Statusbar ||
-      aAppearance == StyleAppearance::Statusbarpanel ||
-      aAppearance == StyleAppearance::Resizerpanel ||
       aAppearance == StyleAppearance::Progresschunk ||
       aAppearance == StyleAppearance::ProgressBar ||
       aAppearance == StyleAppearance::Menubar ||
-      aAppearance == StyleAppearance::Tooltip ||
-      aAppearance == StyleAppearance::Menuseparator) {
+      aAppearance == StyleAppearance::Tooltip) {
     return NS_OK;
   }
 
@@ -1429,10 +1346,6 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     case StyleAppearance::ButtonArrowPrevious:
     case StyleAppearance::Separator:
     case StyleAppearance::Toolbargripper:
-    case StyleAppearance::Statusbar:
-    case StyleAppearance::Statusbarpanel:
-    case StyleAppearance::Resizerpanel:
-    case StyleAppearance::Resizer:
     case StyleAppearance::Listbox:
     case StyleAppearance::Treeview:
       // case StyleAppearance::Treeitem:
@@ -1463,11 +1376,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     case StyleAppearance::RadioContainer:
     case StyleAppearance::CheckboxLabel:
     case StyleAppearance::RadioLabel:
-    case StyleAppearance::Menubar:
-    case StyleAppearance::Menuitem:
     case StyleAppearance::Menuarrow:
-    case StyleAppearance::Menuseparator:
-    case StyleAppearance::Checkmenuitem:
     case StyleAppearance::Radiomenuitem:
     case StyleAppearance::Splitter:
     case StyleAppearance::MozWindowButtonBox:

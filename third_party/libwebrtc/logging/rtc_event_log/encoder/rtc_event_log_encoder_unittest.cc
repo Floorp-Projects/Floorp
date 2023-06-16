@@ -441,6 +441,64 @@ TEST_P(RtcEventLogEncoderTest, RtcEventAudioPlayout) {
   }
 }
 
+TEST_P(RtcEventLogEncoderTest, RtcEventNetEqSetMinimumDelayDecoded) {
+  // SSRCs will be randomly assigned out of this small pool, significant only
+  // in that it also covers such edge cases as SSRC = 0 and SSRC = 0xffffffff.
+  // The pool is intentionally small, so as to produce collisions.
+  const std::vector<uint32_t> kSsrcPool = {0x00000000, 0x12345678, 0xabcdef01,
+                                           0xffffffff, 0x20171024, 0x19840730,
+                                           0x19831230};
+  std::map<uint32_t, std::vector<std::unique_ptr<RtcEventNetEqSetMinimumDelay>>>
+      original_events_by_ssrc;
+  for (size_t i = 0; i < event_count_; ++i) {
+    const uint32_t ssrc = kSsrcPool[prng_.Rand(kSsrcPool.size() - 1)];
+    std::unique_ptr<RtcEventNetEqSetMinimumDelay> event =
+        (original_events_by_ssrc[ssrc].empty() || !force_repeated_fields_)
+            ? gen_.NewNetEqSetMinimumDelay(ssrc)
+            : original_events_by_ssrc[ssrc][0]->Copy();
+    history_.push_back(event->Copy());
+    original_events_by_ssrc[ssrc].push_back(std::move(event));
+  }
+
+  encoded_ += encoder_->EncodeBatch(history_.begin(), history_.end());
+  ASSERT_TRUE(parsed_log_.ParseString(encoded_).ok());
+
+  const auto& parsed_neteq_set_minimum_delay_events_by_ssrc =
+      parsed_log_.neteq_set_minimum_delay_events();
+
+  if (encoding_type_ == RtcEventLog::EncodingType::Legacy) {
+    ASSERT_EQ(parsed_neteq_set_minimum_delay_events_by_ssrc.size(), 0u);
+    return;
+  }
+
+  // Same number of distinct SSRCs.
+  ASSERT_EQ(parsed_neteq_set_minimum_delay_events_by_ssrc.size(),
+            original_events_by_ssrc.size());
+
+  for (auto& original_event_it : original_events_by_ssrc) {
+    const uint32_t ssrc = original_event_it.first;
+    const auto& original_neteq_set_minimum_delay_events =
+        original_event_it.second;
+
+    const auto& parsed_event_it =
+        parsed_neteq_set_minimum_delay_events_by_ssrc.find(ssrc);
+    ASSERT_TRUE(parsed_event_it !=
+                parsed_neteq_set_minimum_delay_events_by_ssrc.end());
+    const auto& parsed_neteq_set_minimum_delay_events = parsed_event_it->second;
+
+    // Same number playout events for the SSRC under examination.
+    ASSERT_EQ(original_neteq_set_minimum_delay_events.size(),
+              parsed_neteq_set_minimum_delay_events.size());
+
+    for (size_t i = 0; i < original_neteq_set_minimum_delay_events.size();
+         ++i) {
+      verifier_.VerifyLoggedNetEqSetMinimumDelay(
+          *original_neteq_set_minimum_delay_events[i],
+          parsed_neteq_set_minimum_delay_events[i]);
+    }
+  }
+}
+
 // TODO(eladalon/terelius): Test with multiple events in the batch.
 TEST_P(RtcEventLogEncoderTest, RtcEventAudioReceiveStreamConfig) {
   uint32_t ssrc = prng_.Rand<uint32_t>();

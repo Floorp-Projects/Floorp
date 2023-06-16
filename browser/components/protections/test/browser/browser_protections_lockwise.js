@@ -12,11 +12,11 @@ const { AboutProtectionsParent } = ChromeUtils.importESModule(
 const ABOUT_LOGINS_URL = "about:logins";
 
 add_task(async function testNoLoginsLockwiseCardUI() {
-  let tab = await BrowserTestUtils.openNewForegroundTab({
+  const tab = await BrowserTestUtils.openNewForegroundTab({
     url: "about:protections",
     gBrowser,
   });
-  let aboutLoginsPromise = BrowserTestUtils.waitForNewTab(
+  const aboutLoginsPromise = BrowserTestUtils.waitForNewTab(
     gBrowser,
     ABOUT_LOGINS_URL
   );
@@ -24,7 +24,7 @@ add_task(async function testNoLoginsLockwiseCardUI() {
   info(
     "Check that the correct lockwise card content is displayed for non-logged in users."
   );
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     await ContentTaskUtils.waitForCondition(() => {
       const lockwiseCard = content.document.querySelector(".lockwise-card");
       return ContentTaskUtils.is_visible(lockwiseCard);
@@ -76,18 +76,18 @@ add_task(async function testNoLoginsLockwiseCardUI() {
     );
     savePasswordsButton.click();
   });
-  let loginsTab = await aboutLoginsPromise;
+  const loginsTab = await aboutLoginsPromise;
   info("about:logins was successfully opened in a new tab");
   gBrowser.removeTab(loginsTab);
   gBrowser.removeTab(tab);
 });
 
 add_task(async function testLockwiseCardUIWithLogins() {
-  let tab = await BrowserTestUtils.openNewForegroundTab({
+  const tab = await BrowserTestUtils.openNewForegroundTab({
     url: "about:protections",
     gBrowser,
   });
-  let aboutLoginsPromise = BrowserTestUtils.waitForNewTab(
+  const aboutLoginsPromise = BrowserTestUtils.waitForNewTab(
     gBrowser,
     ABOUT_LOGINS_URL
   );
@@ -95,10 +95,10 @@ add_task(async function testLockwiseCardUIWithLogins() {
   info(
     "Add a login and check that lockwise card content for a logged in user is displayed correctly"
   );
-  Services.logins.addLogin(TEST_LOGIN1);
+  await Services.logins.addLoginAsync(TEST_LOGIN1);
   await BrowserTestUtils.reloadTab(tab);
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     await ContentTaskUtils.waitForCondition(() => {
       const hasLogins = content.document.querySelector(".lockwise-card");
       return ContentTaskUtils.is_visible(hasLogins);
@@ -172,17 +172,17 @@ add_task(async function testLockwiseCardUIWithLogins() {
     );
     managePasswordsButton.click();
   });
-  let loginsTab = await aboutLoginsPromise;
+  const loginsTab = await aboutLoginsPromise;
   info("about:logins was successfully opened in a new tab");
   gBrowser.removeTab(loginsTab);
 
   info(
     "Add another login and check that the scanned text about stored logins is updated after reload."
   );
-  Services.logins.addLogin(TEST_LOGIN2);
+  await Services.logins.addLoginAsync(TEST_LOGIN2);
   await BrowserTestUtils.reloadTab(tab);
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     const lockwiseScannedText = content.document.querySelector(
       "#lockwise-scanned-text"
     ).textContent;
@@ -204,11 +204,11 @@ add_task(async function testLockwiseCardUIWithBreachedLogins() {
   info(
     "Add a breached login and test that the lockwise scanned text is displayed correctly"
   );
-  let tab = await BrowserTestUtils.openNewForegroundTab({
+  const tab = await BrowserTestUtils.openNewForegroundTab({
     url: "about:protections",
     gBrowser,
   });
-  Services.logins.addLogin(TEST_LOGIN1);
+  await Services.logins.addLoginAsync(TEST_LOGIN1);
 
   info("Mock monitor data with a breached login to test the Lockwise UI");
   AboutProtectionsParent.setTestOverride(
@@ -216,7 +216,7 @@ add_task(async function testLockwiseCardUIWithBreachedLogins() {
   );
   await BrowserTestUtils.reloadTab(tab);
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     const lockwiseScannedText = content.document.querySelector(
       "#lockwise-scanned-text"
     );
@@ -239,7 +239,7 @@ add_task(async function testLockwiseCardUIWithBreachedLogins() {
     mockGetLoginDataWithSyncedDevices(false, 2)
   );
   await BrowserTestUtils.reloadTab(tab);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     const lockwiseScannedText = content.document.querySelector(
       "#lockwise-scanned-text"
     );
@@ -261,7 +261,7 @@ add_task(async function testLockwiseCardUIWithBreachedLogins() {
 });
 
 add_task(async function testLockwiseCardPref() {
-  let tab = await BrowserTestUtils.openNewForegroundTab({
+  const tab = await BrowserTestUtils.openNewForegroundTab({
     url: "about:protections",
     gBrowser,
   });
@@ -272,7 +272,7 @@ add_task(async function testLockwiseCardPref() {
     false
   );
   await BrowserTestUtils.reloadTab(tab);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     const lockwiseCard = content.document.querySelector(".lockwise-card");
     await ContentTaskUtils.waitForCondition(() => {
       return !lockwiseCard["data-enabled"];

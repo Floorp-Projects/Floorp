@@ -5,14 +5,14 @@
 // These tests check the behavior of the Urlbar when a user enables
 // the search bar and showSearchTerms is true.
 
-const { CustomizableUITestUtils } = ChromeUtils.import(
-  "resource://testing-common/CustomizableUITestUtils.jsm"
+const { CustomizableUITestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/CustomizableUITestUtils.sys.mjs"
 );
 
 const gCUITestUtils = new CustomizableUITestUtils(window);
 const SEARCH_STRING = "example_string";
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.search.widget.inNavBar", true],
@@ -29,7 +29,7 @@ add_setup(async function() {
     { setAsDefault: true }
   );
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.history.clear();
     gCUITestUtils.removeSearchBar();
   });

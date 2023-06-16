@@ -6,14 +6,14 @@
 
 // Checks for the NodeTabbingOrderHighlighter.
 
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
       url: MAIN_DOMAIN + "doc_accessibility_infobar.html",
     },
-    async function(browser) {
-      await SpecialPowers.spawn(browser, [], async function() {
+    async function (browser) {
+      await SpecialPowers.spawn(browser, [], async function () {
         const { require } = ChromeUtils.importESModule(
           "resource://devtools/shared/loader/Loader.sys.mjs"
         );

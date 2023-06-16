@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
 /**
@@ -17,9 +21,9 @@ console.info(
 const MODIFIED_UA = navigator.userAgent + " SAMSUNG";
 
 Object.defineProperty(window.navigator.wrappedJSObject, "userAgent", {
-  get: exportFunction(function() {
+  get: exportFunction(function () {
     return MODIFIED_UA;
   }, window),
 
-  set: exportFunction(function() {}, window),
+  set: exportFunction(function () {}, window),
 });

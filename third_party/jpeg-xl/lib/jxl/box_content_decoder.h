@@ -7,13 +7,12 @@
 #define LIB_JXL_BOX_CONTENT_DECODER_H_
 
 #include <brotli/decode.h>
+#include <jxl/decode.h>
 #include <stdint.h>
 #include <stdlib.h>
 
 #include <memory>
 #include <vector>
-
-#include "jxl/decode.h"
 
 namespace jxl {
 

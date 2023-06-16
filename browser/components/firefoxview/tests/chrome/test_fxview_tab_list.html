@@ -1,0 +1,465 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>FxviewTabList Tests</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="localization" href="browser/places.ftl">
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
+  <script type="module" src="chrome://browser/content/firefoxview/fxview-tab-list.mjs"></script>
+</head>
+<body>
+  <style>
+    fxview-tab-list.history::part(secondary-button) {
+      background-image: url("chrome://global/skin/icons/more.svg");
+    }
+  </style>
+<p id="display"></p>
+<div id="content" style="max-width: 750px">
+  <fxview-tab-list class="history" .dateTimeFormat="relative" .hasPopup="menu">
+    <panel-list slot="menu">
+      <panel-item data-l10n-id="fxviewtabrow-delete"></panel-item>
+      <panel-item data-l10n-id="fxviewtabrow-forget-about-this-site"></panel-item>
+      <hr />
+      <panel-item data-l10n-id="fxviewtabrow-open-in-window"></panel-item>
+      <panel-item data-l10n-id="fxviewtabrow-open-in-private-window"></panel-item>
+      <hr />
+      <panel-item data-l10n-id="fxviewtabrow-add-bookmark"></panel-item>
+      <panel-item data-l10n-id="fxviewtabrow-save-to-pocket"></panel-item>
+      <panel-item data-l10n-id="fxviewtabrow-copy-link"></panel-item>
+    </panel-list>
+  </fxview-tab-list>
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript">
+  Services.scriptloader.loadSubScript(
+    "chrome://browser/content/utilityOverlay.js",
+    this
+  );
+
+  const { BrowserTestUtils } = ChromeUtils.import(
+    "resource://testing-common/BrowserTestUtils.jsm"
+  );
+  const { PlacesQuery } = ChromeUtils.importESModule(
+    "resource://gre/modules/PlacesQuery.sys.mjs"
+  );
+  const { PromiseUtils } = ChromeUtils.importESModule(
+    "resource://gre/modules/PromiseUtils.sys.mjs"
+  );
+  const { PlacesUtils } = ChromeUtils.importESModule(
+    "resource://gre/modules/PlacesUtils.sys.mjs"
+  );
+  const { PlacesUIUtils } = ChromeUtils.importESModule(
+    "resource:///modules/PlacesUIUtils.sys.mjs"
+  );
+  const { PlacesTestUtils } = ChromeUtils.importESModule(
+    "resource://testing-common/PlacesTestUtils.sys.mjs"
+  );
+  const { TestUtils } = ChromeUtils.import(
+    "resource://testing-common/TestUtils.jsm"
+  );
+
+  const fxviewTabList = document.querySelector("fxview-tab-list");
+  let tabItems = [];
+  const placesQuery = new PlacesQuery();
+
+  const URLs = [
+    "http://mochi.test:8888/browser/",
+    "https://www.example.com/",
+    "https://example.net/",
+    "https://example.org/",
+    "https://www.mozilla.org/"
+  ];
+
+  async function addHistoryItems() {
+    await PlacesUtils.history.clear();
+    let history = await placesQuery.getHistory();
+
+    const now = new Date();
+    await PlacesUtils.history.insert({
+      url: URLs[0],
+      title: "Example Domain 1",
+      visits: [{ date: now }],
+    });
+    let historyUpdated = PromiseUtils.defer();
+    placesQuery.observeHistory(newHistory => {
+      history = newHistory;
+      historyUpdated.resolve();
+    });
+    await PlacesUtils.history.insert({
+      url: URLs[1],
+      title: "Example Domain 2",
+      visits: [{ date: now }],
+    });
+    await historyUpdated.promise;
+    historyUpdated = PromiseUtils.defer();
+    placesQuery.observeHistory(newHistory => {
+      history = newHistory;
+      historyUpdated.resolve();
+    });
+    await PlacesUtils.history.insert({
+      url: URLs[2],
+      title: "Example Domain 3",
+      visits: [{ date: now }],
+    });
+    await historyUpdated.promise;
+    historyUpdated = PromiseUtils.defer();
+    placesQuery.observeHistory(newHistory => {
+      history = newHistory;
+      historyUpdated.resolve();
+    });
+    await PlacesUtils.history.insert({
+      url: URLs[3],
+      title: "Example Domain 4",
+      visits: [{ date: now }],
+    });
+    await historyUpdated.promise;
+
+    let normalized = normalizeHistoryData(history);
+    fxviewTabList.tabItems = normalized;
+
+    await fxviewTabList.getUpdateComplete();
+    tabItems = Array.from(fxviewTabList.rowEls);
+  }
+
+  function normalizeHistoryData(history) {
+    history.forEach(historyItem => {
+      historyItem.time = historyItem.date.getTime();
+      historyItem.icon = `page-icon:${historyItem.url}`;
+      historyItem.primaryL10nId = "fxviewtabrow-tabs-list-tab";
+      historyItem.primaryL10nArgs = JSON.stringify({ targetURI: historyItem.url });
+      historyItem.secondaryL10nId = "fxviewtabrow-open-menu-button";
+    });
+    return history;
+  }
+
+  function getCurrentDisplayDate() {
+    let lastItemMainEl = tabItems[tabItems.length - 1].mainEl;
+    return lastItemMainEl.querySelector("#fxview-tab-row-date span:not([hidden])")?.textContent.trim() ?? "";
+  }
+
+  function getCurrentDisplayTime() {
+    let lastItemMainEl = tabItems[tabItems.length - 1].mainEl;
+    return lastItemMainEl.querySelector("#fxview-tab-row-time")?.textContent.trim() ?? "";
+  }
+
+  function isActiveElement(expectedLinkEl) {
+    return expectedLinkEl.getRootNode().activeElement == expectedLinkEl;
+  }
+
+  function onPrimaryAction(e) {
+    let gBrowser = BrowserWindowTracker.getTopWindow().top.gBrowser;
+    gBrowser.addTrustedTab(e.originalTarget.url);
+  }
+
+  function onSecondaryAction(e) {
+    e.target.querySelector("panel-list").toggle(e.detail.originalEvent);
+  }
+
+  add_setup(function setup() {
+    fxviewTabList.addEventListener("fxview-tab-list-primary-action", onPrimaryAction);
+    fxviewTabList.addEventListener("fxview-tab-list-secondary-action", onSecondaryAction);
+  });
+
+  /**
+  * Tests that history items are loaded in the expected order
+  */
+  add_task(async function test_list_ordering() {
+    await addHistoryItems();
+    is(
+      tabItems.length,
+      4,
+      "Four history items are shown in the list."
+    );
+
+    // Check ordering
+    ok(
+      tabItems[0].title === "Example Domain 4",
+      "First history item in fxview-tab-list is in the correct order."
+    )
+
+    ok(
+      tabItems[3].title === "Example Domain 1",
+      "Last history item in fxview-tab-list is in the correct order."
+    )
+  });
+
+  /**
+  * Tests the primary action function is triggered when selecting the main row element
+  */
+  add_task(async function test_primary_action(){
+    await addHistoryItems();
+    let gBrowser = BrowserWindowTracker.getTopWindow().top.gBrowser;
+    let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, tabItems[0].url);
+    tabItems[0].mainEl.click();
+    await newTabPromise;
+
+    is(
+      tabItems.length,
+      4,
+      "Four history items are still shown in the list."
+    );
+
+    await BrowserTestUtils.removeTab(gBrowser.tabs[gBrowser.tabs.length - 1]);
+  });
+
+  /**
+  * Tests that a max tabs length value can be given to fxview-tab-list
+  */
+  add_task(async function test_max_list_items() {
+    const mockMaxTabsLength = 3;
+
+    // override this value for testing purposes
+    fxviewTabList.maxTabsLength = mockMaxTabsLength;
+    await addHistoryItems();
+
+    is(
+      tabItems.length,
+      mockMaxTabsLength,
+      `fxview-tabs-list should have ${mockMaxTabsLength} list items`
+    );
+
+    // Add new history items
+    let history = await placesQuery.getHistory();
+
+    const now = new Date();
+    await PlacesUtils.history.insert({
+      url: URLs[4],
+      title: "Internet for people, not profits - Mozilla",
+      visits: [{ date: now }],
+    });
+    let historyUpdated = PromiseUtils.defer();
+    placesQuery.observeHistory(newHistory => {
+      history = newHistory;
+      historyUpdated.resolve();
+    });
+    await historyUpdated.promise;
+
+    ok(
+      history.length === 5,
+      "Five total history items after inserting another node"
+    );
+
+    // Update fxview-tab-list component with latest history data
+    let normalized = normalizeHistoryData(history);
+    fxviewTabList.tabItems = normalized;
+    await fxviewTabList.getUpdateComplete();
+    tabItems = Array.from(fxviewTabList.rowEls);
+
+    is(
+      tabItems.length,
+      mockMaxTabsLength,
+      `fxview-tabs-list should have ${mockMaxTabsLength} list items`
+    );
+
+    ok(
+      tabItems[0].title === "Internet for people, not profits - Mozilla",
+      "History list has been updated with the expected maxTabsLength."
+    )
+    fxviewTabList.maxTabsLength = 25;
+  });
+
+    /**
+   * Tests keyboard navigation of the fxview-tab-list component
+   */
+  add_task(async function test_keyboard_navigation() {
+    const arrowDown = async () => {
+      info("Arrow down");
+      synthesizeKey("KEY_ArrowDown", {});
+      await fxviewTabList.getUpdateComplete();
+    };
+    const arrowUp = async () => {
+      info("Arrow up");
+      synthesizeKey("KEY_ArrowUp", {});
+      await fxviewTabList.getUpdateComplete();
+    };
+    const arrowRight = async () => {
+      info("Arrow right");
+      synthesizeKey("KEY_ArrowRight", {});
+      await fxviewTabList.getUpdateComplete();
+    };
+    const arrowLeft = async () => {
+      info("Arrow left");
+      synthesizeKey("KEY_ArrowLeft", {});
+      await fxviewTabList.getUpdateComplete();
+    };
+
+    await addHistoryItems();
+    tabItems[0].mainEl.focus();
+    ok(
+      isActiveElement(tabItems[0].mainEl),
+      "Focus should be on the first main element of the list"
+    );
+
+    // Arrow down/up the list
+    await arrowDown();
+    ok(
+      isActiveElement(tabItems[1].mainEl),
+      "Focus should be on the second main element of the list"
+    );
+    await arrowDown();
+    ok(
+      isActiveElement(tabItems[2].mainEl),
+      "Focus should be on the third main element of the list"
+    );
+    await arrowDown();
+    ok(
+      isActiveElement(tabItems[3].mainEl),
+      "Focus should be on the fourth main element of the list"
+    );
+    await arrowUp();
+    ok(
+      isActiveElement(tabItems[2].mainEl),
+      "Focus should be on the third main element of the list"
+    );
+    await arrowUp();
+    ok(
+      isActiveElement(tabItems[1].mainEl),
+      "Focus should be on the second main element of the list"
+    );
+    await arrowUp();
+    ok(
+      isActiveElement(tabItems[0].mainEl),
+      "Focus should be on the first main element of the list"
+    );
+    await arrowRight();
+    ok(
+      isActiveElement(tabItems[0].buttonEl),
+      "Focus should be on the first row's context menu button element of the list"
+    );
+    await arrowDown();
+    ok(
+      isActiveElement(tabItems[1].buttonEl),
+      "Focus should be on the second row's context menu button element of the list"
+    );
+    await arrowLeft();
+    ok(
+      isActiveElement(tabItems[1].mainEl),
+      "Focus should be on the second main element of the list"
+    );
+    await arrowUp();
+    ok(
+      isActiveElement(tabItems[0].mainEl),
+      "Focus should be on the first main element of the list"
+    );
+  });
+
+  /**
+  * Tests relative time format for the fxview-tab-list component
+  */
+  add_task(async function test_relative_format() {
+    await addHistoryItems();
+    ok(
+      getCurrentDisplayDate().includes("Just now"),
+      "Current dateTime format is 'relative' and date displays 'Just now' initially"
+    );
+    ok(
+      !getCurrentDisplayTime().length,
+      "Current dateTime format is 'relative' and time displays an empty string"
+    );
+  });
+
+  /**
+  * Tests date only format for the fxview-tab-list component
+  */
+  add_task(async function test_date_only_format() {
+    await addHistoryItems();
+
+    // Check date only format
+    fxviewTabList.dateTimeFormat = "date";
+    await fxviewTabList.getUpdateComplete();
+    await BrowserTestUtils.waitForCondition(() => {
+      return getCurrentDisplayDate().includes("/");
+    });
+    ok(
+      getCurrentDisplayDate().includes("/"),
+      "Current dateTime format is 'date' and displays the current date"
+    );
+    ok(
+      !getCurrentDisplayTime().length,
+      "Current dateTime format is 'date' and time displays an empty string"
+    );
+  });
+
+  /**
+  * Tests time only format for the fxview-tab-list component
+  */
+  add_task(async function test_time_only_format() {
+    await addHistoryItems();
+
+    // Check time only format
+    fxviewTabList.dateTimeFormat = "time";
+    await fxviewTabList.getUpdateComplete();
+    await BrowserTestUtils.waitForCondition(() => {
+      return getCurrentDisplayTime().includes("AM") || getCurrentDisplayTime().includes("PM");
+    });
+    ok(
+      !getCurrentDisplayDate().length,
+      "Current dateTime format is 'time' and date displays an empty string"
+    );
+    ok(
+      getCurrentDisplayTime().includes("AM") || getCurrentDisplayTime().includes("PM"),
+      "Current dateTime format is 'time' and displays the current time"
+    );
+  });
+
+  /**
+  * Tests date and time format for the fxview-tab-list component
+  */
+  add_task(async function test_date_and_time_format() {
+    await addHistoryItems();
+
+    // Check date and time format
+    fxviewTabList.dateTimeFormat = "dateTime";
+    await fxviewTabList.getUpdateComplete();
+    await BrowserTestUtils.waitForCondition(() => {
+      return getCurrentDisplayDate().includes("/") &&
+      (getCurrentDisplayTime().includes("AM") || getCurrentDisplayTime().includes("PM"));
+    });
+    ok(
+      getCurrentDisplayDate().includes("/"),
+      "Current dateTime format is 'dateTime' and date displays the current date"
+    );
+    ok(
+      getCurrentDisplayTime().includes("AM") || getCurrentDisplayTime().includes("PM"),
+      "Current dateTime format is 'dateTime' and displays the current time"
+    );
+
+    // Reset dateTimeFormat to relative before next test
+    fxviewTabList.dateTimeFormat = "relative";
+    await fxviewTabList.getUpdateComplete();
+  });
+
+  /**
+  * Tests that relative time updates properly for the fxview-tab-list component
+  */
+  add_task(async function test_relative_time_updates() {
+    await addHistoryItems();
+
+    await BrowserTestUtils.waitForCondition(() => {
+      return getCurrentDisplayDate().includes("Just now");
+    });
+
+    ok(
+      getCurrentDisplayDate().includes("Just now"),
+      "Current date element displays 'Just now' initially"
+    );
+
+    // Set the updateTimeMs pref to something low to check that relative time updates properly
+    const TAB_UPDATE_TIME_MS = 500;
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.tabs.firefox-view.updateTimeMs", TAB_UPDATE_TIME_MS]],
+    });
+    await BrowserTestUtils.waitForCondition(() => {
+      return !getCurrentDisplayDate().includes("now");
+    });
+    info("Currently displayed date is something other than 'Just now'");
+
+    await SpecialPowers.popPrefEnv();
+  });
+</script>
+</pre>
+</body>
+</html>

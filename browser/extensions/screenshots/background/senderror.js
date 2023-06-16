@@ -6,7 +6,7 @@
 
 "use strict";
 
-this.senderror = (function() {
+this.senderror = (function () {
   const exports = {};
 
   // Do not show an error more than every ERROR_TIME_LIMIT milliseconds:
@@ -53,7 +53,7 @@ this.senderror = (function() {
 
   let lastErrorTime;
 
-  exports.showError = async function(error) {
+  exports.showError = async function (error) {
     if (lastErrorTime && Date.now() - lastErrorTime < ERROR_TIME_LIMIT) {
       return;
     }
@@ -94,7 +94,7 @@ this.senderror = (function() {
     }
   };
 
-  exports.reportError = function(e) {
+  exports.reportError = function (e) {
     if (!analytics.isTelemetryEnabled()) {
       log.error("Telemetry disabled. Not sending critical error:", e);
       return;

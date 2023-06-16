@@ -39,7 +39,7 @@ function* testSteps() {
   let db1, db2, db3;
 
   db1 = event.target.result;
-  db1.addEventListener("versionchange", function(event) {
+  db1.addEventListener("versionchange", function (event) {
     ok(true, "Got version change event");
     ok(event instanceof IDBVersionChangeEvent, "Event is of the right type");
     is("source" in event.target, false, "Correct source");
@@ -73,7 +73,7 @@ function* testSteps() {
   request.onsuccess = grabEventAndContinueHandler;
   event = yield undefined;
 
-  db2.addEventListener("versionchange", function(event) {
+  db2.addEventListener("versionchange", function (event) {
     ok(true, "Got version change event");
     ok(event instanceof IDBVersionChangeEvent, "Event is of the right type");
     is("source" in event.target, false, "Correct source");

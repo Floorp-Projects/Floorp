@@ -19,6 +19,7 @@ import {
   getContext,
   getGeneratedSourceByURL,
   getBlackBoxRanges,
+  getHideIgnoredSources,
 } from "../../selectors";
 
 // Actions
@@ -27,13 +28,13 @@ import actions from "../../actions";
 // Components
 import SourcesTreeItem from "./SourcesTreeItem";
 import AccessibleImage from "../shared/AccessibleImage";
-import ManagedTree from "../shared/ManagedTree";
 
 // Utils
 import { getRawSourceURL } from "../../utils/source";
 import { createLocation } from "../../utils/location";
 
 const classnames = require("devtools/client/shared/classnames.js");
+const Tree = require("devtools/client/shared/components/Tree");
 
 function shouldAutoExpand(item, mainThreadHost) {
   // There is only one case where we want to force auto expand,
@@ -42,17 +43,18 @@ function shouldAutoExpand(item, mainThreadHost) {
 }
 
 /**
- * Get the one directory item where the given source is meant to be displayed in the SourceTree.
+ * Get the SourceItem displayed in the SourceTree for a given "tree location".
  *
  * @param {Object} treeLocation
  *        An object containing  the Source coming from the sources.js reducer and the source actor
+ *        See getTreeLocation().
  * @param {object} rootItems
  *        Result of getSourcesTreeSources selector, containing all sources sorted in a tree structure.
  *        items to be displayed in the source tree.
  * @return {SourceItem}
  *        The directory source item where the given source is displayed.
  */
-function getDirectoryForSource(treeLocation, rootItems) {
+function getSourceItemForTreeLocation(treeLocation, rootItems) {
   // Sources without URLs are not visible in the SourceTree
   const { source, sourceActor } = treeLocation;
 
@@ -120,6 +122,8 @@ class SourcesTree extends Component {
       rootItems: PropTypes.object.isRequired,
       clearProjectDirectoryRoot: PropTypes.func.isRequired,
       projectRootName: PropTypes.string.isRequired,
+      setHideOrShowIgnoredSources: PropTypes.func.isRequired,
+      hideIgnoredSources: PropTypes.bool.isRequired,
     };
   }
 
@@ -128,7 +132,7 @@ class SourcesTree extends Component {
     const { selectedTreeLocation } = this.props;
 
     // We might fail to find the source if its thread is registered late,
-    // so that we should re-search the selected source if highlightItems is empty.
+    // so that we should re-search the selected source if state.focused is null.
     if (
       nextProps.selectedTreeLocation?.source &&
       (nextProps.selectedTreeLocation.source != selectedTreeLocation?.source ||
@@ -136,20 +140,23 @@ class SourcesTree extends Component {
           selectedTreeLocation?.source &&
           nextProps.selectedTreeLocation.sourceActor !=
             selectedTreeLocation?.sourceActor) ||
-        !this.state.highlightItems?.length)
+        !this.props.focused)
     ) {
-      let parentDirectory = getDirectoryForSource(
+      const sourceItem = getSourceItemForTreeLocation(
         nextProps.selectedTreeLocation,
         this.props.rootItems
       );
-      // As highlightItems has to contains *all* the expanded items,
-      // walk up the tree to put all ancestor items up to the root of the tree.
-      const highlightItems = [];
-      while (parentDirectory) {
-        highlightItems.push(parentDirectory);
-        parentDirectory = this.getParent(parentDirectory);
+      if (sourceItem) {
+        // Walk up the tree to expand all ancestor items up to the root of the tree.
+        const expanded = new Set(this.props.expanded);
+        let parentDirectory = sourceItem;
+        while (parentDirectory) {
+          expanded.add(this.getKey(parentDirectory));
+          parentDirectory = this.getParent(parentDirectory);
+        }
+        this.props.setExpandedState(expanded);
+        this.onFocus(sourceItem);
       }
-      this.setState({ highlightItems });
     }
   }
 
@@ -167,12 +174,45 @@ class SourcesTree extends Component {
     }
   };
 
-  onExpand = (item, expandedState) => {
-    this.props.setExpandedState(expandedState);
+  onExpand = (item, shouldIncludeChildren) => {
+    this.setExpanded(item, true, shouldIncludeChildren);
   };
 
-  onCollapse = (item, expandedState) => {
-    this.props.setExpandedState(expandedState);
+  onCollapse = (item, shouldIncludeChildren) => {
+    this.setExpanded(item, false, shouldIncludeChildren);
+  };
+
+  setExpanded = (item, isExpanded, shouldIncludeChildren) => {
+    const { expanded } = this.props;
+    let changed = false;
+    const expandItem = i => {
+      const key = this.getKey(i);
+      if (isExpanded) {
+        changed |= !expanded.has(key);
+        expanded.add(key);
+      } else {
+        changed |= expanded.has(key);
+        expanded.delete(key);
+      }
+    };
+    expandItem(item);
+
+    if (shouldIncludeChildren) {
+      let parents = [item];
+      while (parents.length) {
+        const children = [];
+        for (const parent of parents) {
+          for (const child of this.getChildren(parent)) {
+            expandItem(child);
+            children.push(child);
+          }
+        }
+        parents = children;
+      }
+    }
+    if (changed) {
+      this.props.setExpandedState(expanded);
+    }
   };
 
   isEmpty() {
@@ -191,7 +231,7 @@ class SourcesTree extends Component {
     return this.props.rootItems;
   };
 
-  getPath = item => {
+  getKey = item => {
     // As this is used as React key in Tree component,
     // we need to update the key when switching to a new project root
     // otherwise these items won't be updated and will have a buggy padding start.
@@ -320,7 +360,7 @@ class SourcesTree extends Component {
     );
   }
 
-  renderItem = (item, depth, focused, _, expanded, { setExpanded }) => {
+  renderItem = (item, depth, focused, _, expanded) => {
     const { mainThreadHost, projectRoot } = this.props;
     return (
       <SourcesTreeItem
@@ -332,7 +372,7 @@ class SourcesTree extends Component {
         focusItem={this.onFocus}
         selectSourceItem={this.selectSourceItem}
         projectRoot={projectRoot}
-        setExpanded={setExpanded}
+        setExpanded={this.setExpanded}
         getBlackBoxSourcesGroups={this.getBlackBoxSourcesGroups}
         getParent={this.getParent}
       />
@@ -342,8 +382,6 @@ class SourcesTree extends Component {
   renderTree() {
     const { expanded, focused } = this.props;
 
-    const { highlightItems } = this.state;
-
     const treeProps = {
       autoExpandAll: false,
       autoExpandDepth: 1,
@@ -351,20 +389,22 @@ class SourcesTree extends Component {
       focused,
       getChildren: this.getChildren,
       getParent: this.getParent,
-      getPath: this.getPath,
+      getKey: this.getKey,
       getRoots: this.getRoots,
-      highlightItems,
       itemHeight: 21,
       key: this.isEmpty() ? "empty" : "full",
       onCollapse: this.onCollapse,
       onExpand: this.onExpand,
       onFocus: this.onFocus,
+      isExpanded: item => {
+        return this.props.expanded.has(this.getKey(item));
+      },
       onActivate: this.onActivate,
       renderItem: this.renderItem,
       preventBlur: true,
     };
 
-    return <ManagedTree {...treeProps} />;
+    return <Tree {...treeProps} />;
   }
 
   renderPane(child) {
@@ -382,6 +422,24 @@ class SourcesTree extends Component {
     );
   }
 
+  renderFooter() {
+    if (this.props.hideIgnoredSources) {
+      return (
+        <footer className="source-list-footer">
+          {L10N.getStr("ignoredSourcesHidden")}
+          <button
+            className="devtools-togglebutton"
+            onClick={() => this.props.setHideOrShowIgnoredSources(false)}
+            title={L10N.getStr("showIgnoredSources.tooltip.label")}
+          >
+            {L10N.getStr("showIgnoredSources")}
+          </button>
+        </footer>
+      );
+    }
+    return null;
+  }
+
   render() {
     const { projectRoot } = this.props;
     return (
@@ -397,6 +455,7 @@ class SourcesTree extends Component {
           <>
             {this.renderProjectRootHeader()}
             {this.renderTree()}
+            {this.renderFooter()}
           </>
         )}
       </div>
@@ -416,7 +475,7 @@ function getTreeLocation(state, location) {
     if (source) {
       return createLocation({
         source,
-        // A source actor is required by getDirectoryForSource
+        // A source actor is required by getSourceItemForTreeLocation
         // in order to know in which thread this source relates to.
         sourceActor: location.sourceActor,
       });
@@ -438,6 +497,7 @@ const mapStateToProps = state => {
     rootItems,
     blackBoxRanges: getBlackBoxRanges(state),
     projectRootName: getProjectDirectoryRootName(state),
+    hideIgnoredSources: getHideIgnoredSources(state),
   };
 };
 
@@ -446,4 +506,5 @@ export default connect(mapStateToProps, {
   setExpandedState: actions.setExpandedState,
   focusItem: actions.focusItem,
   clearProjectDirectoryRoot: actions.clearProjectDirectoryRoot,
+  setHideOrShowIgnoredSources: actions.setHideOrShowIgnoredSources,
 })(SourcesTree);

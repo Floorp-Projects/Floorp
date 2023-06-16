@@ -1545,7 +1545,7 @@ static int choose_partitioning(VP9_COMP *cpi, const TileInfo *const tile,
   }
 
   if (low_res && threshold_4x4avg < INT64_MAX)
-    CHECK_MEM_ERROR(cm, vt2, vpx_calloc(16, sizeof(*vt2)));
+    CHECK_MEM_ERROR(&cm->error, vt2, vpx_calloc(16, sizeof(*vt2)));
   // Fill in the entire tree of 8x8 (or 4x4 under some conditions) variances
   // for splits.
   for (i = 0; i < 4; i++) {
@@ -3710,7 +3710,6 @@ static int get_rdmult_delta(VP9_COMP *cpi, BLOCK_SIZE bsize, int mi_row,
   int row, col;
 
   int dr = 0;
-  int count = 0;
   double r0, rk, beta;
 
   TplDepFrame *tpl_frame;
@@ -3734,8 +3733,6 @@ static int get_rdmult_delta(VP9_COMP *cpi, BLOCK_SIZE bsize, int mi_row,
 
       intra_cost += this_stats->intra_cost;
       mc_dep_cost += this_stats->mc_dep_cost;
-
-      ++count;
     }
   }
 
@@ -5786,7 +5783,7 @@ static void source_var_based_partition_search_method(VP9_COMP *cpi) {
     if (cm->last_width != cm->width || cm->last_height != cm->height) {
       if (cpi->source_diff_var) vpx_free(cpi->source_diff_var);
 
-      CHECK_MEM_ERROR(cm, cpi->source_diff_var,
+      CHECK_MEM_ERROR(&cm->error, cpi->source_diff_var,
                       vpx_calloc(cm->MBs, sizeof(cpi->source_diff_var)));
     }
 
@@ -5826,7 +5823,7 @@ void vp9_init_tile_data(VP9_COMP *cpi) {
   if (cpi->tile_data == NULL || cpi->allocated_tiles < tile_cols * tile_rows) {
     if (cpi->tile_data != NULL) vpx_free(cpi->tile_data);
     CHECK_MEM_ERROR(
-        cm, cpi->tile_data,
+        &cm->error, cpi->tile_data,
         vpx_malloc(tile_cols * tile_rows * sizeof(*cpi->tile_data)));
     cpi->allocated_tiles = tile_cols * tile_rows;
 
@@ -6185,7 +6182,6 @@ static int compute_frame_aq_offset(struct VP9_COMP *cpi) {
 
   int mi_row, mi_col;
   int sum_delta = 0;
-  int map_index = 0;
   int qdelta_index;
   int segment_id;
 
@@ -6195,7 +6191,6 @@ static int compute_frame_aq_offset(struct VP9_COMP *cpi) {
       segment_id = mi_8x8[0]->segment_id;
       qdelta_index = get_segdata(seg, segment_id, SEG_LVL_ALT_Q);
       sum_delta += qdelta_index;
-      map_index++;
     }
     mi_8x8_ptr += cm->mi_stride;
   }

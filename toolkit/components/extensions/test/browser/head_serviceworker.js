@@ -29,12 +29,8 @@ function getServiceWorkerState(workerInfo) {
 }
 
 function getServiceWorkerInfo(swRegInfo) {
-  const {
-    evaluatingWorker,
-    installingWorker,
-    waitingWorker,
-    activeWorker,
-  } = swRegInfo;
+  const { evaluatingWorker, installingWorker, waitingWorker, activeWorker } =
+    swRegInfo;
   return evaluatingWorker || installingWorker || waitingWorker || activeWorker;
 }
 

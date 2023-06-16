@@ -19,7 +19,7 @@ registerCleanupFunction(() => {
   setTheme(originalTheme);
 });
 
-add_task(async function() {
+add_task(async function () {
   const { inspector, view } = await openFontInspectorForURL(TEST_URI);
   const viewDoc = view.document;
 

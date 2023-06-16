@@ -37,9 +37,10 @@ class ThreadConfigurationCommand {
       );
 
       const threadConfigurationFront = await this.getThreadConfigurationFront();
-      const updatedConfiguration = await threadConfigurationFront.updateConfiguration(
-        filteredConfiguration
-      );
+      const updatedConfiguration =
+        await threadConfigurationFront.updateConfiguration(
+          filteredConfiguration
+        );
       this._configuration = updatedConfiguration;
     }
 

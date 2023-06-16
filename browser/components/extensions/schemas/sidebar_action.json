@@ -71,10 +71,7 @@
             "type": "object",
             "properties": {
               "title": {
-                "choices": [
-                  {"type": "string"},
-                  {"type": "null"}
-                ],
+                "choices": [{ "type": "string" }, { "type": "null" }],
                 "description": "The string the sidebar action should display when moused over."
               },
               "tabId": {
@@ -146,7 +143,7 @@
                   { "type": "string" },
                   {
                     "type": "object",
-                    "additionalProperties": {"type": "string"}
+                    "additionalProperties": { "type": "string" }
                   }
                 ],
                 "optional": true,
@@ -190,10 +187,7 @@
                 "description": "Sets the sidebar url for the window specified by windowId."
               },
               "panel": {
-                "choices": [
-                  {"type": "string"},
-                  {"type": "null"}
-                ],
+                "choices": [{ "type": "string" }, { "type": "null" }],
                 "description": "The url to the html file to show in a sidebar.  If set to the empty string (''), no sidebar is shown."
               }
             }

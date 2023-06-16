@@ -1,4 +1,5 @@
 browser/components/newtab/vendor/
+browser/components/pocket/content/panels/css/normalize.scss
 browser/components/pocket/content/panels/js/vendor/
 browser/components/storybook/node_modules/
 browser/extensions/formautofill/content/third-party/
@@ -14,6 +15,7 @@ devtools/client/shared/sourceeditor/test/codemirror/
 devtools/client/shared/vendor/
 devtools/client/inspector/markup/test/helper_diff.js
 devtools/shared/acorn/
+devtools/shared/compatibility/dataset/css-properties.json
 devtools/shared/heapsnapshot/CoreDump.pb.cc
 devtools/shared/heapsnapshot/CoreDump.pb.h
 devtools/shared/jsbeautify/
@@ -148,6 +150,7 @@ other-licenses/
 parser/expat/
 remote/cdp/test/browser/chrome-remote-interface.js
 remote/test/puppeteer/
+security/manager/tools/log_list.json
 security/nss/
 security/sandbox/chromium/
 security/sandbox/chromium-shim/
@@ -168,7 +171,6 @@ testing/xpcshell/dns-packet/
 testing/xpcshell/node_ip/
 testing/xpcshell/node-http2/
 testing/xpcshell/node-ws/
-testing/xpcshell/odoh-wasm/
 third_party/
 toolkit/components/certviewer/content/vendor/
 toolkit/components/jsoncpp/

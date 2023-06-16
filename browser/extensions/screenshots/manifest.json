@@ -12,11 +12,9 @@
       "strict_min_version": "57.0a1"
     }
   },
-  "l10n_resources": [ "browser/screenshots.ftl" ],
+  "l10n_resources": ["browser/screenshots.ftl"],
   "background": {
-    "scripts": [
-      "background/startBackground.js"
-    ]
+    "scripts": ["background/startBackground.js"]
   },
   "content_scripts": [
     {
@@ -29,9 +27,7 @@
       ]
     }
   ],
-  "web_accessible_resources": [
-    "blank.html"
-  ],
+  "web_accessible_resources": ["blank.html"],
   "permissions": [
     "activeTab",
     "downloads",

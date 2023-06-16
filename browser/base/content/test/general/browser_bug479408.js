@@ -10,7 +10,7 @@ function test() {
     "DOMLinkAdded",
     true
   ).then(() => {
-    executeSoon(function() {
+    executeSoon(function () {
       ok(
         !tab.linkedBrowser.engines,
         "the subframe's search engine wasn't detected"

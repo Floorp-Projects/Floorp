@@ -1053,6 +1053,11 @@ fo{
         }
         day-narrow{
             dn{"d."}
+            relative{
+                "-1"{"í gjár"}
+                "0"{"í dag"}
+                "1"{"í morgin"}
+            }
             relativeTime{
                 future{
                     one{"um {0} d."}
@@ -1066,6 +1071,11 @@ fo{
         }
         day-short{
             dn{"da."}
+            relative{
+                "-1"{"í gjár"}
+                "0"{"í dag"}
+                "1"{"í morgin"}
+            }
             relativeTime{
                 future{
                     one{"um {0} da."}
@@ -1789,6 +1799,11 @@ fo{
         }
         year-narrow{
             dn{"ár"}
+            relative{
+                "-1"{"í fjør"}
+                "0"{"í ár"}
+                "1"{"næsta ár"}
+            }
             relativeTime{
                 future{
                     one{"um {0} ár"}
@@ -1802,6 +1817,11 @@ fo{
         }
         year-short{
             dn{"ár"}
+            relative{
+                "-1"{"í fjør"}
+                "0"{"í ár"}
+                "1"{"næsta ár"}
+            }
             relativeTime{
                 future{
                     one{"um {0} ár"}
@@ -1830,7 +1850,25 @@ fo{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        or-narrow{
+            2{"{0} ella {1}"}
+            end{"{0}, ella {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        or-short{
+            2{"{0} ella {1}"}
+            end{"{0}, ella {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
+            2{"{0} og {1}"}
+            end{"{0} og {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-narrow{
             2{"{0} og {1}"}
             end{"{0} og {1}"}
             middle{"{0}, {1}"}
@@ -1903,12 +1941,6 @@ fo{
             givenFirst{
                 "und",
                 "fo",
-            }
-            surnameFirst{
-                "ko",
-                "vi",
-                "yue",
-                "zh",
             }
         }
     }

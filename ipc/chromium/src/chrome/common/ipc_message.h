@@ -306,7 +306,7 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
   // IPC::Message.
   void SetAttachedFileHandles(nsTArray<mozilla::UniqueFileHandle> handles);
 
-#if defined(OS_MACOSX)
+#if defined(OS_MACOSX) || defined(OS_IOS)
   void set_fd_cookie(uint32_t cookie) { header()->cookie = cookie; }
   uint32_t fd_cookie() const { return header()->cookie; }
 #endif
@@ -325,7 +325,7 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
   // IPC. Must only be called when there are no ports on this IPC::Message.
   void SetAttachedPorts(nsTArray<mozilla::ipc::ScopedPort> ports);
 
-#if defined(OS_MACOSX)
+#if defined(OS_MACOSX) || defined(OS_IOS)
   bool WriteMachSendRight(mozilla::UniqueMachSendRight port);
 
   // WARNING: This method is marked as `const` so it can be called when
@@ -339,7 +339,7 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
   uint32_t num_relayed_attachments() const {
 #if defined(OS_WIN)
     return num_handles();
-#elif defined(OS_MACOSX)
+#elif defined(OS_MACOSX) || defined(OS_IOS)
     return num_send_rights();
 #else
     return 0;
@@ -356,7 +356,7 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
   friend class SyncMessage;
   friend class mozilla::ipc::MiniTransceiver;
 
-#if !defined(OS_MACOSX) && !defined(FUZZING_SNAPSHOT)
+#if !defined(OS_MACOSX) && !defined(OS_IOS) && !defined(FUZZING_SNAPSHOT)
  protected:
 #endif
 
@@ -365,7 +365,7 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
     msgid_t type;          // specifies the user-defined message type
     HeaderFlags flags;     // specifies control flags for the message
     uint32_t num_handles;  // the number of handles included with this message
-#if defined(OS_MACOSX)
+#if defined(OS_MACOSX) || defined(OS_IOS)
     uint32_t cookie;  // cookie to ACK that the descriptors have been read.
     uint32_t num_send_rights;  // the number of mach send rights included with
                                // this message
@@ -393,7 +393,7 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
   // deserializing a message.
   mutable nsTArray<mozilla::ipc::ScopedPort> attached_ports_;
 
-#if defined(OS_MACOSX)
+#if defined(OS_MACOSX) || defined(OS_IOS)
   // The set of mach send rights which are attached to this message.
   //
   // Mutable, as this array can be mutated during `ConsumeMachSendRight` when

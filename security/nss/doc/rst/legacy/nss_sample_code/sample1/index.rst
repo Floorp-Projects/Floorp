@@ -7,7 +7,7 @@ sample1
 
    1. A program to compute the hash of a file and save it to another file.
 
-   .. code:: brush:
+   .. code:: c
 
        /* NSPR Headers */
        #include <prprf.h>

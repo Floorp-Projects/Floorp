@@ -13,7 +13,7 @@ const SCREENSHOTS_EVENTS = [
 
 const MockFilePicker = SpecialPowers.MockFilePicker;
 
-add_setup(async function() {
+add_setup(async function () {
   let tmpDir = PathUtils.join(
     PathUtils.tempDir,
     "testsavedir" + Math.floor(Math.random() * 2 ** 32)
@@ -116,9 +116,8 @@ add_task(async function test_download_without_filepicker() {
 
       await screenshotReady;
 
-      let downloadButton = dialog._frame.contentDocument.getElementById(
-        "download"
-      );
+      let downloadButton =
+        dialog._frame.contentDocument.getElementById("download");
       ok(downloadButton, "Got the download button");
 
       // click download button on dialog box

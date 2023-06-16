@@ -12,8 +12,8 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/AboutNewTab.jsm"
 );
 
-var { ExtensionPreferencesManager } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionPreferencesManager.jsm"
+var { ExtensionPreferencesManager } = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionPreferencesManager.sys.mjs"
 );
 
 var { ExtensionError } = ExtensionUtils;

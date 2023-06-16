@@ -30,10 +30,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
 });
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-});
-
 export var UrlbarUtils = {
   // Results are categorized into groups to help the muxer compose them.  See
   // UrlbarUtils.getResultGroup.  Since result groups are stored in result
@@ -705,7 +701,7 @@ export var UrlbarUtils = {
     if (token == lazy.UrlbarTokenizer.RESTRICT.SEARCH) {
       return {
         engineName: lazy.UrlbarSearchUtils.getDefaultEngine(this.isPrivate)
-          .name,
+          ?.name,
       };
     }
 
@@ -756,7 +752,8 @@ export var UrlbarUtils = {
       Services.io.speculativeConnect(
         uri,
         window.gBrowser.contentPrincipal,
-        null
+        null,
+        false
       );
     } catch (ex) {
       // Can't setup speculative connection for this url, just ignore it.
@@ -989,10 +986,7 @@ export var UrlbarUtils = {
    * @param {nsIDOMWindow} window The window requesting it.
    * @returns {UrlbarResult} an heuristic result.
    */
-  async getHeuristicResultFor(
-    searchString,
-    window = lazy.BrowserWindowTracker.getTopWindow()
-  ) {
+  async getHeuristicResultFor(searchString, window) {
     if (!searchString) {
       throw new Error("Must pass a non-null search string");
     }
@@ -1002,9 +996,8 @@ export var UrlbarUtils = {
       isPrivate: lazy.PrivateBrowsingUtils.isWindowPrivate(window),
       maxResults: 1,
       searchString,
-      userContextId: window.gBrowser.selectedBrowser.getAttribute(
-        "usercontextid"
-      ),
+      userContextId:
+        window.gBrowser.selectedBrowser.getAttribute("usercontextid"),
       prohibitRemoteResults: true,
       providers: ["AliasEngines", "BookmarkKeywords", "HeuristicFallback"],
     };
@@ -1193,7 +1186,11 @@ export var UrlbarUtils = {
           return "tabtosearch";
         }
         if (result.payload.suggestion) {
-          return result.payload.trending ? "trending" : "searchsuggestion";
+          let type = result.payload.trending ? "trending" : "searchsuggestion";
+          if (result.payload.isRichSuggestion) {
+            type += "_rich";
+          }
+          return type;
         }
         return "searchengine";
       case UrlbarUtils.RESULT_TYPE.URL:
@@ -1291,7 +1288,13 @@ export var UrlbarUtils = {
       }
       case UrlbarUtils.RESULT_GROUP.TAIL_SUGGESTION:
       case UrlbarUtils.RESULT_GROUP.REMOTE_SUGGESTION: {
-        return result.payload.trending ? "trending_search" : "search_suggest";
+        let group = result.payload.trending
+          ? "trending_search"
+          : "search_suggest";
+        if (result.payload.isRichSuggestion) {
+          group += "_rich";
+        }
+        return group;
       }
       case UrlbarUtils.RESULT_GROUP.REMOTE_TAB: {
         return "remote_tab";
@@ -1351,6 +1354,8 @@ export var UrlbarUtils = {
             return "unit";
           case "UrlbarProviderContextualSearch":
             return "site_specific_contextual_search";
+          case "UrlbarProviderQuickSuggest":
+            return this._getQuickSuggestTelemetryType(result);
           case "Weather":
             return "weather";
         }
@@ -1369,7 +1374,13 @@ export var UrlbarUtils = {
           return "search_history";
         }
         if (result.payload.suggestion) {
-          return result.payload.trending ? "trending_search" : "search_suggest";
+          let type = result.payload.trending
+            ? "trending_search"
+            : "search_suggest";
+          if (result.payload.isRichSuggestion) {
+            type += "_rich";
+          }
+          return type;
         }
         return "search_engine";
       case UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
@@ -1415,11 +1426,7 @@ export var UrlbarUtils = {
           return `autofill_${result.autofill.type ?? "unknown"}`;
         }
         if (result.providerName === "UrlbarProviderQuickSuggest") {
-          let source = result.payload.source;
-          if (source == "remote-settings") {
-            source = "rs";
-          }
-          return `${source}_${result.payload.telemetryType}`;
+          return this._getQuickSuggestTelemetryType(result);
         }
         if (result.providerName === "UrlbarProviderTopSites") {
           return "top_site";
@@ -1452,6 +1459,14 @@ export var UrlbarUtils = {
     }
 
     return "";
+  },
+
+  _getQuickSuggestTelemetryType(result) {
+    let source = result.payload.source;
+    if (source == "remote-settings") {
+      source = "rs";
+    }
+    return `${source}_${result.payload.telemetryType}`;
   },
 };
 
@@ -1494,6 +1509,9 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
   [UrlbarUtils.RESULT_TYPE.SEARCH]: {
     type: "object",
     properties: {
+      description: {
+        type: "string",
+      },
       displayUrl: {
         type: "string",
       },
@@ -1513,6 +1531,9 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
         type: "boolean",
       },
       isGeneralPurposeEngine: {
+        type: "boolean",
+      },
+      isRichSuggestion: {
         type: "boolean",
       },
       keyword: {

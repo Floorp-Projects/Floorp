@@ -21,7 +21,14 @@ add_task(async function test_backgroundtask_no_output() {
   });
   Assert.equal(0, exitCode);
 
-  Assert.deepEqual([], outputLines);
+  if (AppConstants.platform !== "win") {
+    // Check specific logs because there can still be some logs in certain conditions,
+    // e.g. in code coverage (see bug 1831778 and bug 1804833)
+    ok(
+      outputLines.every(l => !l.includes("*** You are running in")),
+      "Should not have logs by default"
+    );
+  }
 });
 
 // Run a background task which itself waits for a launched background task,

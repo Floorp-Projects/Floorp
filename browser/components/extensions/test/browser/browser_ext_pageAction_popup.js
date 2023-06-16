@@ -34,10 +34,11 @@ add_task(async function testPageActionPopup() {
 
     files: {
       "popup-a.html": scriptPage("popup-a.js"),
-      "popup-a.js": function() {
+      "popup-a.js": function () {
         window.onload = () => {
-          let background = window.getComputedStyle(document.body)
-            .backgroundColor;
+          let background = window.getComputedStyle(
+            document.body
+          ).backgroundColor;
           browser.test.assertEq("rgba(0, 0, 0, 0)", background);
           browser.runtime.sendMessage("from-popup-a");
         };
@@ -49,13 +50,13 @@ add_task(async function testPageActionPopup() {
       },
 
       "data/popup-b.html": scriptPage("popup-b.js"),
-      "data/popup-b.js": function() {
+      "data/popup-b.js": function () {
         browser.runtime.sendMessage("from-popup-b");
       },
 
       "data/background.html": scriptPage("background.js"),
 
-      "data/background.js": async function() {
+      "data/background.js": async function () {
         let tabId;
 
         let sendClick;
@@ -207,7 +208,7 @@ add_task(async function testPageActionPopup() {
   });
 
   let pageActionId, panelId;
-  extension.onMessage("next-test", async function(expecting = {}) {
+  extension.onMessage("next-test", async function (expecting = {}) {
     pageActionId = `${makeWidgetId(extension.id)}-page-action`;
     panelId = `${makeWidgetId(extension.id)}-panel`;
     let panel = document.getElementById(panelId);

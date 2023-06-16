@@ -17,6 +17,7 @@ import { GeckoViewActorParent } from "resource://gre/modules/GeckoViewActorParen
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
+  PdfJsTelemetry: "resource://pdf.js/PdfJsTelemetry.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
@@ -186,6 +187,8 @@ class FileSaver {
       return;
     }
 
+    lazy.PdfJsTelemetry.onGeckoview("save_as_pdf_tapped");
+
     this.#callback = aCallback;
     this.#browser.sendMessageToActor(
       "PDFJS:Child:handleEvent",
@@ -206,14 +209,11 @@ class FileSaver {
       const isPrivate = lazy.PrivateBrowsingUtils.isBrowserPrivate(
         this.#browser
       );
-      const response = await fetch(blobUrl);
-      const buffer = await response.arrayBuffer();
-      const bytes = new Uint8Array(buffer);
 
       if (this.#callback) {
         // "Save as PDF" from the share menu.
         this.#callback.onSuccess({
-          bytes,
+          url: blobUrl,
           filename,
           originalUrl,
           isPrivate,
@@ -222,7 +222,7 @@ class FileSaver {
         // "Download" or "Open in app" from the pdf.js toolbar.
         this.#eventDispatcher.sendRequest({
           type: "GeckoView:SavePdf",
-          bytes,
+          url: blobUrl,
           filename,
           originalUrl,
           isPrivate,
@@ -230,8 +230,9 @@ class FileSaver {
           requestExternalApp: !!openInExternalApp,
         });
       }
-      debug`Save a PDF: ${bytes.length} bytes sent.`;
+      lazy.PdfJsTelemetry.onGeckoview("download_succeeded");
     } catch (e) {
+      lazy.PdfJsTelemetry.onGeckoview("download_failed");
       if (this.#callback) {
         this.#callback?.onError(`Cannot save the pdf: ${e}.`);
       } else {
@@ -260,6 +261,8 @@ export class GeckoViewPdfjsParent extends GeckoViewActorParent {
         return this.#addEventListener();
       case "PDFJS:Parent:saveURL":
         return this.#save(aMsg);
+      case "PDFJS:Parent:getNimbus":
+        return this.#getNimbus();
       default:
         break;
     }
@@ -274,17 +277,20 @@ export class GeckoViewPdfjsParent extends GeckoViewActorParent {
       return;
     }
 
-    this.eventDispatcher.unregisterListener(this.#findHandler, [
-      "GeckoView:ClearMatches",
-      "GeckoView:DisplayMatches",
-      "GeckoView:FindInPage",
-    ]);
+    // The eventDispatcher is null when the tab is destroyed.
+    if (this.eventDispatcher) {
+      this.eventDispatcher.unregisterListener(this.#findHandler, [
+        "GeckoView:ClearMatches",
+        "GeckoView:DisplayMatches",
+        "GeckoView:FindInPage",
+      ]);
+      this.eventDispatcher.unregisterListener(this.#fileSaver, [
+        "GeckoView:PDFSave",
+      ]);
+    }
+
     this.#findHandler.cleanup();
     this.#findHandler = null;
-
-    this.eventDispatcher.unregisterListener(this.#fileSaver, [
-      "GeckoView:PDFSave",
-    ]);
     this.#fileSaver.cleanup();
     this.#fileSaver = null;
   }
@@ -318,6 +324,23 @@ export class GeckoViewPdfjsParent extends GeckoViewActorParent {
 
   #save({ data }) {
     this.#fileSaver.save(data);
+  }
+
+  async #getNimbus() {
+    let result = null;
+    try {
+      result = await this.eventDispatcher.sendRequestForResult({
+        type: "GeckoView:GetNimbusFeature",
+        featureId: "pdfjs",
+      });
+    } catch (e) {
+      warn`Cannot get Nimbus: ${e}`;
+    }
+    this.browser.sendMessageToActor(
+      "PDFJS:Child:getNimbus",
+      result,
+      "GeckoViewPdfjs"
+    );
   }
 }
 

@@ -202,9 +202,8 @@ class RootResourceCommand {
     for (const resource of resources) {
       const { resourceType } = resource;
 
-      resource.isAlreadyExistingResource = this._processingExistingResources.has(
-        resourceType
-      );
+      resource.isAlreadyExistingResource =
+        this._processingExistingResources.has(resourceType);
 
       this._queueResourceEvent("available", resourceType, resource);
 
@@ -344,7 +343,6 @@ class RootResourceCommand {
 RootResourceCommand.TYPES = RootResourceCommand.prototype.TYPES = {
   EXTENSIONS_BGSCRIPT_STATUS: "extensions-backgroundscript-status",
 };
-RootResourceCommand.ALL_TYPES = RootResourceCommand.prototype.ALL_TYPES = Object.values(
-  RootResourceCommand.TYPES
-);
+RootResourceCommand.ALL_TYPES = RootResourceCommand.prototype.ALL_TYPES =
+  Object.values(RootResourceCommand.TYPES);
 module.exports = RootResourceCommand;

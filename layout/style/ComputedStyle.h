@@ -14,7 +14,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/PseudoStyleType.h"
 #include "mozilla/ServoComputedData.h"
-#include "mozilla/ServoComputedDataInlines.h"
 #include "mozilla/ServoStyleConsts.h"
 #include "nsCSSPseudoElements.h"
 #include "nsColor.h"
@@ -33,6 +32,9 @@ void Gecko_ComputedStyle_Destroy(mozilla::ComputedStyle*);
 }
 
 namespace mozilla {
+
+enum class StylePointerEvents : uint8_t;
+enum class StyleUserSelect : uint8_t;
 
 namespace dom {
 class Document;
@@ -83,8 +85,8 @@ class ComputedStyle {
   // examining the corresponding struct on |this|.  Doing so will likely
   // both (1) lead to a privacy leak and (2) lead to dynamic change bugs
   // related to the Peek code in ComputedStyle::CalcStyleDifference.
-  ComputedStyle* GetStyleIfVisited() const {
-    return mSource.visited_style.mPtr;
+  const ComputedStyle* GetStyleIfVisited() const {
+    return mSource.visited_style;
   }
 
   bool IsLazilyCascadedPseudoElement() const {
@@ -221,7 +223,7 @@ class ComputedStyle {
 
 #define STYLE_STRUCT(name_)                                              \
   inline const nsStyle##name_* Style##name_() const MOZ_NONNULL_RETURN { \
-    return mSource.GetStyle##name_();                                    \
+    return mSource.Style##name_();                                       \
   }
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT

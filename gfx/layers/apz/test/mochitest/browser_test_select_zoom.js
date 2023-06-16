@@ -26,7 +26,7 @@ add_task(async function setup_pref() {
 });
 
 // This test opens a select popup after pinch (apz) zooming has happened.
-add_task(async function() {
+add_task(async function () {
   function httpURL(filename) {
     let chromeURL = getRootDirectory(gTestPath) + filename;
     //return chromeURL;

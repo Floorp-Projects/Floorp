@@ -7,7 +7,7 @@ import {
   SendToDeviceSnippet,
   SendToDeviceScene2Snippet,
 } from "content-src/asrouter/templates/SendToDeviceSnippet/SendToDeviceSnippet";
-import { SnippetsTestMessageProvider } from "lib/SnippetsTestMessageProvider.jsm";
+import { SnippetsTestMessageProvider } from "lib/SnippetsTestMessageProvider.sys.mjs";
 
 async function testBodyContains(body, key, value) {
   const regex = new RegExp(

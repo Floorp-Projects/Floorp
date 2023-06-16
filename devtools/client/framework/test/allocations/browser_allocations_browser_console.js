@@ -42,7 +42,7 @@ async function testScript() {
   await new Promise(resolve => setTimeout(resolve, 500));
 }
 
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["devtools.browsertoolbox.scope", "everything"]],
   });

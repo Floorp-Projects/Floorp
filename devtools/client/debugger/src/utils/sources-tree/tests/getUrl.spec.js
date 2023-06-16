@@ -5,7 +5,7 @@
 import { getDisplayURL } from "../getURL";
 
 describe("getUrl", () => {
-  it("handles normal url with http and https for filename", function() {
+  it("handles normal url with http and https for filename", function () {
     const urlObject = getDisplayURL("https://a/b.js");
     expect(urlObject.filename).toBe("b.js");
 
@@ -13,22 +13,22 @@ describe("getUrl", () => {
     expect(urlObject2.filename).toBe("b.js");
   });
 
-  it("handles url with querystring for filename", function() {
+  it("handles url with querystring for filename", function () {
     const urlObject = getDisplayURL("https://a/b.js?key=randomKey");
     expect(urlObject.filename).toBe("b.js");
   });
 
-  it("handles url with '#' for filename", function() {
+  it("handles url with '#' for filename", function () {
     const urlObject = getDisplayURL("https://a/b.js#specialSection");
     expect(urlObject.filename).toBe("b.js");
   });
 
-  it("handles url with no file extension for filename", function() {
+  it("handles url with no file extension for filename", function () {
     const urlObject = getDisplayURL("https://a/c");
     expect(urlObject.filename).toBe("c");
   });
 
-  it("handles url with no name for filename", function() {
+  it("handles url with no name for filename", function () {
     const urlObject = getDisplayURL("https://a/");
     expect(urlObject.filename).toBe("(index)");
   });

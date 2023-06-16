@@ -500,7 +500,7 @@ async function loadURLWithElement(options = {}) {
 }
 
 async function getDevicePixelRatio() {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     return content.browsingContext.overrideDPPX || content.devicePixelRatio;
   });
 }
@@ -515,7 +515,7 @@ async function getImageDetails(image) {
   return SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [{ mimeType, image }],
-    async function({ mimeType, image }) {
+    async function ({ mimeType, image }) {
       return new Promise(resolve => {
         const img = new content.Image();
         img.addEventListener(
@@ -542,10 +542,7 @@ function getMimeType(image) {
   const raw = atob(image).slice(0, 4);
   let magicBytes = "";
   for (let i = 0; i < raw.length; i++) {
-    magicBytes += raw
-      .charCodeAt(i)
-      .toString(16)
-      .toUpperCase();
+    magicBytes += raw.charCodeAt(i).toString(16).toUpperCase();
   }
 
   switch (magicBytes) {

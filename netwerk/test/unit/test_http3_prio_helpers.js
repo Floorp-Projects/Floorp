@@ -10,7 +10,7 @@ function inChildProcess() {
   return Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 }
 
-let Http3Listener = function(
+let Http3Listener = function (
   closure,
   expected_priority,
   expected_incremental,

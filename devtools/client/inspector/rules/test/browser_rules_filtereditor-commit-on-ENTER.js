@@ -7,7 +7,7 @@
 
 const TEST_URL = URL_ROOT + "doc_filter.html";
 
-add_task(async function() {
+add_task(async function () {
   await addTab(TEST_URL);
   const { view } = await openRuleView();
 

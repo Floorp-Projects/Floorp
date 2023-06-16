@@ -34,7 +34,7 @@ function handleEventLocal(aEvent) {
   }
 }
 const NUM_PAGES_OPEN_FOR_EACH_TEST_CASE = 5;
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.userContext.enabled", true],
@@ -50,9 +50,9 @@ add_setup(async function() {
 function setupRemoteTypes() {
   remoteTypes = {
     regular: { "about:preferences": null, "about:config": null },
-    "1": { "about:preferences": null, "about:config": null },
-    "2": { "about:preferences": null, "about:config": null },
-    "3": { "about:preferences": null, "about:config": null },
+    1: { "about:preferences": null, "about:config": null },
+    2: { "about:preferences": null, "about:config": null },
+    3: { "about:preferences": null, "about:config": null },
   };
   if (gFissionBrowser) {
     remoteTypes.regular[URI_EXAMPLECOM] = "webIsolated=https://example.com";

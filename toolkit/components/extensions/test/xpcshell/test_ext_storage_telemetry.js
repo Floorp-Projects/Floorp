@@ -2,11 +2,11 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const { ExtensionStorageIDB } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionStorageIDB.jsm"
+const { ExtensionStorageIDB } = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionStorageIDB.sys.mjs"
 );
-const { getTrimmedString } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionTelemetry.jsm"
+const { getTrimmedString } = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionTelemetry.sys.mjs"
 );
 const { TelemetryController } = ChromeUtils.importESModule(
   "resource://gre/modules/TelemetryController.sys.mjs"
@@ -314,9 +314,7 @@ add_task(async function test_telemetry_storage_local_unexpected_error() {
   Services.telemetry.clearEvents();
 
   const methods = ["clear", "get", "remove", "set"];
-  const veryLongErrorName = `VeryLongErrorName${Array(200)
-    .fill(0)
-    .join("")}`;
+  const veryLongErrorName = `VeryLongErrorName${Array(200).fill(0).join("")}`;
   const otherError = new Error("an error recorded as OtherError");
 
   const recordedErrors = [

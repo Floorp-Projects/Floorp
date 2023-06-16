@@ -174,6 +174,11 @@ class nsFontMetrics final {
   nscoord AveCharWidth() const;
 
   /**
+   * Returns width of the zero character, or AveCharWidth if no zero present.
+   */
+  nscoord ZeroOrAveCharWidth() const;
+
+  /**
    * Returns the often needed width of the space character
    */
   nscoord SpaceWidth() const;

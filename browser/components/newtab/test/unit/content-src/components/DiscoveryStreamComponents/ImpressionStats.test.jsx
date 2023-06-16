@@ -177,7 +177,7 @@ describe("<ImpressionStats>", () => {
       tile_id: 1,
       source: "newtab",
       advertiser: "test advertiser",
-      position: 2,
+      position: 1,
     });
   });
   it("should send an impression when the wrapped item transiting from invisible to visible", () => {
@@ -237,9 +237,8 @@ describe("<ImpressionStats>", () => {
     );
   });
   it("should unobserve the intersection observer when the wrapper is removed", () => {
-    const IntersectionObserver = buildIntersectionObserver(
-      ZeroIntersectEntries
-    );
+    const IntersectionObserver =
+      buildIntersectionObserver(ZeroIntersectEntries);
     const spy = sinon.spy(IntersectionObserver.prototype, "unobserve");
     const props = { dispatch: sinon.spy(), IntersectionObserver };
 

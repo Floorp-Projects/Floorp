@@ -223,6 +223,7 @@
 #include "jit/JitRuntime.h"
 #include "jit/ProcessExecutableMemory.h"
 #include "js/HeapAPI.h"  // JS::GCCellPtr
+#include "js/Printer.h"
 #include "js/SliceBudget.h"
 #include "util/DifferentialTesting.h"
 #include "vm/BigIntType.h"
@@ -232,7 +233,6 @@
 #include "vm/JitActivation.h"
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"
-#include "vm/Printer.h"
 #include "vm/PropMap.h"
 #include "vm/Realm.h"
 #include "vm/Shape.h"
@@ -589,7 +589,6 @@ const char gc::ZealModeHelpText[] =
     "    14: (Compact) Perform a shrinking collection every N allocations\n"
     "    15: (CheckHeapAfterGC) Walk the heap to check its integrity after "
     "every GC\n"
-    "    16: (CheckNursery) Check nursery integrity on minor GC\n"
     "    17: (YieldBeforeSweepingAtoms) Incremental GC in two slices that "
     "yields\n"
     "        before sweeping the atoms table\n"
@@ -1188,14 +1187,6 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key) {
 
 uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
   switch (key) {
-    case JSGC_MAX_BYTES:
-      return uint32_t(tunables.gcMaxBytes());
-    case JSGC_MIN_NURSERY_BYTES:
-      MOZ_ASSERT(tunables.gcMinNurseryBytes() < UINT32_MAX);
-      return uint32_t(tunables.gcMinNurseryBytes());
-    case JSGC_MAX_NURSERY_BYTES:
-      MOZ_ASSERT(tunables.gcMaxNurseryBytes() < UINT32_MAX);
-      return uint32_t(tunables.gcMaxNurseryBytes());
     case JSGC_BYTES:
       return uint32_t(heapSize.bytes());
     case JSGC_NURSERY_BYTES:
@@ -1219,28 +1210,6 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
       MOZ_RELEASE_ASSERT(defaultTimeBudgetMS_ >= 0);
       MOZ_RELEASE_ASSERT(defaultTimeBudgetMS_ <= UINT32_MAX);
       return uint32_t(defaultTimeBudgetMS_);
-    case JSGC_HIGH_FREQUENCY_TIME_LIMIT:
-      return tunables.highFrequencyThreshold().ToMilliseconds();
-    case JSGC_SMALL_HEAP_SIZE_MAX:
-      return tunables.smallHeapSizeMaxBytes() / 1024 / 1024;
-    case JSGC_LARGE_HEAP_SIZE_MIN:
-      return tunables.largeHeapSizeMinBytes() / 1024 / 1024;
-    case JSGC_HIGH_FREQUENCY_SMALL_HEAP_GROWTH:
-      return uint32_t(tunables.highFrequencySmallHeapGrowth() * 100);
-    case JSGC_HIGH_FREQUENCY_LARGE_HEAP_GROWTH:
-      return uint32_t(tunables.highFrequencyLargeHeapGrowth() * 100);
-    case JSGC_LOW_FREQUENCY_HEAP_GROWTH:
-      return uint32_t(tunables.lowFrequencyHeapGrowth() * 100);
-    case JSGC_BALANCED_HEAP_LIMITS_ENABLED:
-      return uint32_t(tunables.balancedHeapLimitsEnabled());
-    case JSGC_HEAP_GROWTH_FACTOR:
-      return uint32_t(tunables.heapGrowthFactor());
-    case JSGC_ALLOCATION_THRESHOLD:
-      return tunables.gcZoneAllocThresholdBase() / 1024 / 1024;
-    case JSGC_SMALL_HEAP_INCREMENTAL_LIMIT:
-      return uint32_t(tunables.smallHeapIncrementalLimit() * 100);
-    case JSGC_LARGE_HEAP_INCREMENTAL_LIMIT:
-      return uint32_t(tunables.largeHeapIncrementalLimit() * 100);
     case JSGC_MIN_EMPTY_CHUNK_COUNT:
       return minEmptyChunkCount(lock);
     case JSGC_MAX_EMPTY_CHUNK_COUNT:
@@ -1251,31 +1220,6 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
       return parallelMarkingEnabled;
     case JSGC_INCREMENTAL_WEAKMAP_ENABLED:
       return marker().incrementalWeakMapMarkingEnabled;
-    case JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION:
-      return tunables.nurseryFreeThresholdForIdleCollection();
-    case JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION_PERCENT:
-      return uint32_t(tunables.nurseryFreeThresholdForIdleCollectionFraction() *
-                      100.0f);
-    case JSGC_NURSERY_TIMEOUT_FOR_IDLE_COLLECTION_MS:
-      return tunables.nurseryTimeoutForIdleCollection().ToMilliseconds();
-    case JSGC_PRETENURE_THRESHOLD:
-      return uint32_t(tunables.pretenureThreshold() * 100);
-    case JSGC_PRETENURE_GROUP_THRESHOLD:
-      return tunables.pretenureGroupThreshold();
-    case JSGC_PRETENURE_STRING_THRESHOLD:
-      return uint32_t(tunables.pretenureStringThreshold() * 100);
-    case JSGC_STOP_PRETENURE_STRING_THRESHOLD:
-      return uint32_t(tunables.stopPretenureStringThreshold() * 100);
-    case JSGC_MIN_LAST_DITCH_GC_PERIOD:
-      return tunables.minLastDitchGCPeriod().ToSeconds();
-    case JSGC_ZONE_ALLOC_DELAY_KB:
-      return tunables.zoneAllocDelayBytes() / 1024;
-    case JSGC_MALLOC_THRESHOLD_BASE:
-      return tunables.mallocThresholdBase() / 1024 / 1024;
-    case JSGC_URGENT_THRESHOLD_MB:
-      return tunables.urgentThresholdBytes() / 1024 / 1024;
-    case JSGC_PARALLEL_MARKING_THRESHOLD_KB:
-      return tunables.parallelMarkingThresholdBytes() / 1024;
     case JSGC_CHUNK_BYTES:
       return ChunkSize;
     case JSGC_HELPER_THREAD_RATIO:
@@ -1291,7 +1235,7 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
     case JSGC_SYSTEM_PAGE_SIZE_KB:
       return SystemPageSize() / 1024;
     default:
-      MOZ_CRASH("Unknown parameter key");
+      return tunables.getParameter(key);
   }
 }
 

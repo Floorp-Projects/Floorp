@@ -20,11 +20,8 @@ class EndDelaySign extends PureComponent {
 
   render() {
     const { animation, timeScale } = this.props;
-    const {
-      endDelay,
-      endTime,
-      isEndDelayFilled,
-    } = animation.state.absoluteValues;
+    const { endDelay, endTime, isEndDelayFilled } =
+      animation.state.absoluteValues;
 
     const toPercentage = v => (v / timeScale.getDuration()) * 100;
     const absEndDelay = Math.abs(endDelay);

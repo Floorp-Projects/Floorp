@@ -6,7 +6,7 @@
 // Test for the following data of engagement telemetry.
 // - engagement_type
 
-add_setup(async function() {
+add_setup(async function () {
   await setup();
 });
 

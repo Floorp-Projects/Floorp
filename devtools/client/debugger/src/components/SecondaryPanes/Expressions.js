@@ -92,12 +92,8 @@ class Expressions extends Component {
 
   shouldComponentUpdate(nextProps, nextState) {
     const { editing, inputValue, focused } = this.state;
-    const {
-      expressions,
-      expressionError,
-      showInput,
-      autocompleteMatches,
-    } = this.props;
+    const { expressions, expressionError, showInput, autocompleteMatches } =
+      this.props;
 
     return (
       autocompleteMatches !== nextProps.autocompleteMatches ||
@@ -224,10 +220,8 @@ class Expressions extends Component {
       return null;
     }
 
-    const {
-      expressionResultGrip,
-      expressionResultFront,
-    } = getExpressionResultGripAndFront(expression);
+    const { expressionResultGrip, expressionResultFront } =
+      getExpressionResultGripAndFront(expression);
 
     const root = {
       name: expression.input,

@@ -9,7 +9,7 @@ loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
 
 addAccessibleTask(
   '<select id="select"></select>',
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let select = findAccessibleChildByID(accDoc, "select");
 
     let onEvent = waitForEvent(EVENT_REORDER, "select");

@@ -48,7 +48,7 @@
                 <menuitem id="menu_savePage"
                           key="key_savePage"
                           command="Browser:SavePage" data-l10n-id="menu-file-save-page"/>
-#ifndef XP_MACOSX
+#if !defined(XP_MACOSX) || defined(MOZ_PROXY_BYPASS_PROTECTION)
                 <menuitem id="menu_sendLink"
                           command="Browser:SendLink" data-l10n-id="menu-file-email-link"/>
 #endif
@@ -194,17 +194,17 @@
                 <menuseparator/>
 #ifdef XP_MACOSX
                 <menuitem id="enterFullScreenItem"
-                          key="key_fullScreen" data-l10n-id="menu-view-enter-full-screen">
+                          key="key_enterFullScreen" data-l10n-id="menu-view-enter-full-screen">
                   <observes element="View:FullScreen" attribute="oncommand"/>
                 </menuitem>
                 <menuitem id="exitFullScreenItem"
-                          key="key_fullScreen"
+                          key="key_exitFullScreen"
                           hidden="true" data-l10n-id="menu-view-exit-full-screen">
                   <observes element="View:FullScreen" attribute="oncommand"/>
                 </menuitem>
 #else
                 <menuitem id="fullScreenItem"
-                          key="key_fullScreen"
+                          key="key_enterFullScreen"
                           type="checkbox"
                           observes="View:FullScreen" data-l10n-id="menu-view-full-screen"/>
 #endif

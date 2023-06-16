@@ -2,8 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const { UrlClassifierTestUtils } = ChromeUtils.import(
-  "resource://testing-common/UrlClassifierTestUtils.jsm"
+const { UrlClassifierTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
 );
 Services.cookies.QueryInterface(Ci.nsICookieService);
 
@@ -128,7 +128,7 @@ async function test_cookie_settings({
     );
     let browser = gBrowser.getBrowserForTab(tab);
     await BrowserTestUtils.browserLoaded(browser);
-    await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
       // Load the script twice
       {
         let src = content.document.createElement("script");

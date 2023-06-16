@@ -35,31 +35,32 @@ function connectToContentProcess(connection, mm, onDestroy) {
     const prefix = connection.allocID("content-process");
     let actor, childTransport;
 
-    mm.addMessageListener("debug:content-process-actor", function listener(
-      msg
-    ) {
-      // Ignore actors being created by a Watcher actor,
-      // they will be handled by devtools/server/watcher/target-helpers/process.js
-      if (msg.watcherActorID) {
-        return;
+    mm.addMessageListener(
+      "debug:content-process-actor",
+      function listener(msg) {
+        // Ignore actors being created by a Watcher actor,
+        // they will be handled by devtools/server/watcher/target-helpers/process.js
+        if (msg.watcherActorID) {
+          return;
+        }
+        mm.removeMessageListener("debug:content-process-actor", listener);
+
+        // Pipe Debugger message from/to parent/child via the message manager
+        childTransport = new ChildDebuggerTransport(mm, prefix);
+        childTransport.hooks = {
+          onPacket: connection.send.bind(connection),
+        };
+        childTransport.ready();
+
+        connection.setForwarding(prefix, childTransport);
+
+        dumpn(`Start forwarding for process with prefix ${prefix}`);
+
+        actor = msg.json.actor;
+
+        resolve(actor);
       }
-      mm.removeMessageListener("debug:content-process-actor", listener);
-
-      // Pipe Debugger message from/to parent/child via the message manager
-      childTransport = new ChildDebuggerTransport(mm, prefix);
-      childTransport.hooks = {
-        onPacket: connection.send.bind(connection),
-      };
-      childTransport.ready();
-
-      connection.setForwarding(prefix, childTransport);
-
-      dumpn(`Start forwarding for process with prefix ${prefix}`);
-
-      actor = msg.json.actor;
-
-      resolve(actor);
-    });
+    );
 
     // Load the content process server startup script only once.
     const isContentProcessServerStartupScripLoaded = Services.ppmm

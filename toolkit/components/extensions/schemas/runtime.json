@@ -8,12 +8,12 @@
     "types": [
       {
         "$extend": "OptionalPermission",
-        "choices": [{
-          "type": "string",
-          "enum": [
-            "nativeMessaging"
-          ]
-        }]
+        "choices": [
+          {
+            "type": "string",
+            "enum": ["nativeMessaging"]
+          }
+        ]
       }
     ]
   },
@@ -28,18 +28,18 @@
         "allowedContexts": ["content", "devtools"],
         "description": "An object which allows two way communication with other pages.",
         "properties": {
-          "name": {"type": "string"},
+          "name": { "type": "string" },
           "disconnect": { "type": "function" },
           "onDisconnect": { "$ref": "events.Event" },
           "onMessage": { "$ref": "events.Event" },
-          "postMessage": {"type": "function"},
+          "postMessage": { "type": "function" },
           "sender": {
             "$ref": "MessageSender",
             "optional": true,
             "description": "This property will <b>only</b> be present on ports passed to onConnect/onConnectExternal listeners."
           }
         },
-        "additionalProperties": { "type": "any"}
+        "additionalProperties": { "type": "any" }
       },
       {
         "id": "MessageSender",
@@ -47,11 +47,32 @@
         "allowedContexts": ["content", "devtools"],
         "description": "An object containing information about the script context that sent a message or request.",
         "properties": {
-          "tab": {"$ref": "tabs.Tab", "optional": true, "description": "The $(ref:tabs.Tab) which opened the connection, if any. This property will <strong>only</strong> be present when the connection was opened from a tab (including content scripts), and <strong>only</strong> if the receiver is an extension, not an app."},
-          "frameId": {"type": "integer", "optional": true, "description": "The $(topic:frame_ids)[frame] that opened the connection. 0 for top-level frames, positive for child frames. This will only be set when <code>tab</code> is set."},
-          "id": {"type": "string", "optional": true, "description": "The ID of the extension or app that opened the connection, if any."},
-          "url": {"type": "string", "optional": true, "description": "The URL of the page or frame that opened the connection. If the sender is in an iframe, it will be iframe's URL not the URL of the page which hosts it."},
-          "tlsChannelId": {"unsupported": true, "type": "string", "optional": true, "description": "The TLS channel ID of the page or frame that opened the connection, if requested by the extension or app, and if available."}
+          "tab": {
+            "$ref": "tabs.Tab",
+            "optional": true,
+            "description": "The $(ref:tabs.Tab) which opened the connection, if any. This property will <strong>only</strong> be present when the connection was opened from a tab (including content scripts), and <strong>only</strong> if the receiver is an extension, not an app."
+          },
+          "frameId": {
+            "type": "integer",
+            "optional": true,
+            "description": "The $(topic:frame_ids)[frame] that opened the connection. 0 for top-level frames, positive for child frames. This will only be set when <code>tab</code> is set."
+          },
+          "id": {
+            "type": "string",
+            "optional": true,
+            "description": "The ID of the extension or app that opened the connection, if any."
+          },
+          "url": {
+            "type": "string",
+            "optional": true,
+            "description": "The URL of the page or frame that opened the connection. If the sender is in an iframe, it will be iframe's URL not the URL of the page which hosts it."
+          },
+          "tlsChannelId": {
+            "unsupported": true,
+            "type": "string",
+            "optional": true,
+            "description": "The TLS channel ID of the page or frame that opened the connection, if requested by the extension or app, and if available."
+          }
         }
       },
       {
@@ -64,7 +85,16 @@
       {
         "id": "PlatformArch",
         "type": "string",
-        "enum": ["aarch64", "arm", "ppc64", "s390x", "sparc64", "x86-32", "x86-64", "noarch"],
+        "enum": [
+          "aarch64",
+          "arm",
+          "ppc64",
+          "s390x",
+          "sparc64",
+          "x86-32",
+          "x86-64",
+          "noarch"
+        ],
         "allowedContexts": ["content", "devtools"],
         "description": "The machine's processor architecture."
       },
@@ -82,7 +112,7 @@
             "$ref": "PlatformArch",
             "description": "The machine's processor architecture."
           },
-          "nacl_arch" : {
+          "nacl_arch": {
             "unsupported": true,
             "description": "The native client architecture. This may be different from arch on some platforms.",
             "$ref": "PlatformNaclArch"
@@ -185,12 +215,14 @@
         "type": "function",
         "description": "<p>Open your Extension's options page, if possible.</p><p>The precise behavior may depend on your manifest's <code>$(topic:optionsV2)[options_ui]</code> or <code>$(topic:options)[options_page]</code> key, or what the browser happens to support at the time.</p><p>If your Extension does not declare an options page, or the browser failed to create one for some other reason, the callback will set $(ref:lastError).</p>",
         "async": "callback",
-        "parameters": [{
-          "type": "function",
-          "name": "callback",
-          "parameters": [],
-          "optional": true
-        }]
+        "parameters": [
+          {
+            "type": "function",
+            "name": "callback",
+            "parameters": [],
+            "optional": true
+          }
+        ]
       },
       {
         "name": "getManifest",
@@ -313,13 +345,26 @@
         "allowedContexts": ["content", "devtools"],
         "description": "Attempts to connect to connect listeners within an extension/app (such as the background page), or other extensions/apps. This is useful for content scripts connecting to their extension processes, inter-app/extension communication, and $(topic:manifest/externally_connectable)[web messaging]. Note that this does not connect to any listeners in a content script. Extensions may connect to content scripts embedded in tabs via $(ref:tabs.connect).",
         "parameters": [
-          {"type": "string", "name": "extensionId", "optional": true, "description": "The ID of the extension or app to connect to. If omitted, a connection will be attempted with your own extension. Required if sending messages from a web page for $(topic:manifest/externally_connectable)[web messaging]."},
+          {
+            "type": "string",
+            "name": "extensionId",
+            "optional": true,
+            "description": "The ID of the extension or app to connect to. If omitted, a connection will be attempted with your own extension. Required if sending messages from a web page for $(topic:manifest/externally_connectable)[web messaging]."
+          },
           {
             "type": "object",
             "name": "connectInfo",
             "properties": {
-              "name": { "type": "string", "optional": true, "description": "Will be passed into onConnect for processes that are listening for the connection event." },
-              "includeTlsChannelId": { "type": "boolean", "optional": true, "description": "Whether the TLS channel ID will be passed into onConnectExternal for processes that are listening for the connection event." }
+              "name": {
+                "type": "string",
+                "optional": true,
+                "description": "Will be passed into onConnect for processes that are listening for the connection event."
+              },
+              "includeTlsChannelId": {
+                "type": "boolean",
+                "optional": true,
+                "description": "Whether the TLS channel ID will be passed into onConnectExternal for processes that are listening for the connection event."
+              }
             },
             "optional": true
           }
@@ -356,13 +401,23 @@
         "description": "Sends a single message to event listeners within your extension/app or a different extension/app. Similar to $(ref:runtime.connect) but only sends a single message, with an optional response. If sending to your extension, the $(ref:runtime.onMessage) event will be fired in each page, or $(ref:runtime.onMessageExternal), if a different extension. Note that extensions cannot send messages to content scripts using this method. To send messages to content scripts, use $(ref:tabs.sendMessage).",
         "async": "responseCallback",
         "parameters": [
-          {"type": "string", "name": "extensionId", "optional": true, "description": "The ID of the extension/app to send the message to. If omitted, the message will be sent to your own extension/app. Required if sending messages from a web page for $(topic:manifest/externally_connectable)[web messaging]."},
+          {
+            "type": "string",
+            "name": "extensionId",
+            "optional": true,
+            "description": "The ID of the extension/app to send the message to. If omitted, the message will be sent to your own extension/app. Required if sending messages from a web page for $(topic:manifest/externally_connectable)[web messaging]."
+          },
           { "type": "any", "name": "message" },
           {
             "type": "object",
             "name": "options",
             "properties": {
-              "includeTlsChannelId": { "type": "boolean", "optional": true, "unsupported": true, "description": "Whether the TLS channel ID will be passed into onMessageExternal for processes that are listening for the connection event." }
+              "includeTlsChannelId": {
+                "type": "boolean",
+                "optional": true,
+                "unsupported": true,
+                "description": "Whether the TLS channel ID will be passed into onMessageExternal for processes that are listening for the connection event."
+              }
             },
             "optional": true
           },
@@ -553,17 +608,13 @@
         "type": "function",
         "allowedContexts": ["content", "devtools"],
         "description": "Fired when a connection is made from either an extension process or a content script.",
-        "parameters": [
-          {"$ref": "Port", "name": "port"}
-        ]
+        "parameters": [{ "$ref": "Port", "name": "port" }]
       },
       {
         "name": "onConnectExternal",
         "type": "function",
         "description": "Fired when a connection is made from another extension.",
-        "parameters": [
-          {"$ref": "Port", "name": "port"}
-        ]
+        "parameters": [{ "$ref": "Port", "name": "port" }]
       },
       {
         "name": "onMessage",
@@ -571,9 +622,18 @@
         "allowedContexts": ["content", "devtools"],
         "description": "Fired when a message is sent from either an extension process or a content script.",
         "parameters": [
-          {"name": "message", "type": "any", "optional": true, "description": "The message sent by the calling script."},
-          {"name": "sender", "$ref": "MessageSender" },
-          {"name": "sendResponse", "type": "function", "description": "Function to call (at most once) when you have a response. The argument should be any JSON-ifiable object. If you have more than one <code>onMessage</code> listener in the same document, then only one may send a response. This function becomes invalid when the event listener returns, unless you return true from the event listener to indicate you wish to send a response asynchronously (this will keep the message channel open to the other end until <code>sendResponse</code> is called)." }
+          {
+            "name": "message",
+            "type": "any",
+            "optional": true,
+            "description": "The message sent by the calling script."
+          },
+          { "name": "sender", "$ref": "MessageSender" },
+          {
+            "name": "sendResponse",
+            "type": "function",
+            "description": "Function to call (at most once) when you have a response. The argument should be any JSON-ifiable object. If you have more than one <code>onMessage</code> listener in the same document, then only one may send a response. This function becomes invalid when the event listener returns, unless you return true from the event listener to indicate you wish to send a response asynchronously (this will keep the message channel open to the other end until <code>sendResponse</code> is called)."
+          }
         ],
         "returns": {
           "type": "boolean",
@@ -586,9 +646,18 @@
         "type": "function",
         "description": "Fired when a message is sent from another extension/app. Cannot be used in a content script.",
         "parameters": [
-          {"name": "message", "type": "any", "optional": true, "description": "The message sent by the calling script."},
-          {"name": "sender", "$ref": "MessageSender" },
-          {"name": "sendResponse", "type": "function", "description": "Function to call (at most once) when you have a response. The argument should be any JSON-ifiable object. If you have more than one <code>onMessage</code> listener in the same document, then only one may send a response. This function becomes invalid when the event listener returns, unless you return true from the event listener to indicate you wish to send a response asynchronously (this will keep the message channel open to the other end until <code>sendResponse</code> is called)." }
+          {
+            "name": "message",
+            "type": "any",
+            "optional": true,
+            "description": "The message sent by the calling script."
+          },
+          { "name": "sender", "$ref": "MessageSender" },
+          {
+            "name": "sendResponse",
+            "type": "function",
+            "description": "Function to call (at most once) when you have a response. The argument should be any JSON-ifiable object. If you have more than one <code>onMessage</code> listener in the same document, then only one may send a response. This function becomes invalid when the event listener returns, unless you return true from the event listener to indicate you wish to send a response asynchronously (this will keep the message channel open to the other end until <code>sendResponse</code> is called)."
+          }
         ],
         "returns": {
           "type": "boolean",

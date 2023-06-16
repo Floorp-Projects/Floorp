@@ -7,8 +7,8 @@
  */
 /*globals Cu, is, ok*/
 "use strict";
-const { ManifestObtainer } = ChromeUtils.import(
-  "resource://gre/modules/ManifestObtainer.jsm"
+const { ManifestObtainer } = ChromeUtils.importESModule(
+  "resource://gre/modules/ManifestObtainer.sys.mjs"
 );
 const path = "/tests/dom/security/test/csp/";
 const testFile = `${path}file_web_manifest.html`;
@@ -185,7 +185,7 @@ const tests = [
 ];
 
 //jscs:disable
-add_task(async function() {
+add_task(async function () {
   //jscs:enable
   const testPromises = tests.map(test => {
     const tabOptions = {

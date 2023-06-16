@@ -6,12 +6,12 @@
 const { ASRouter, MessageLoaderUtils } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouter.jsm"
 );
-const { PanelTestProvider } = ChromeUtils.import(
-  "resource://activity-stream/lib/PanelTestProvider.jsm"
+const { PanelTestProvider } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/PanelTestProvider.sys.mjs"
 );
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
-const { RemoteL10n } = ChromeUtils.import(
-  "resource://activity-stream/lib/RemoteL10n.jsm"
+const { RemoteL10n } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/RemoteL10n.sys.mjs"
 );
 const { RemoteSettings } = ChromeUtils.importESModule(
   "resource://services-settings/remote-settings.sys.mjs"
@@ -59,8 +59,7 @@ async function serveRemoteSettings() {
           permissions: {},
           data: {
             attachment: {
-              hash:
-                "f9aead2693c4ff95c2764df72b43fdf5b3490ed06414588843848f991136040b",
+              hash: "f9aead2693c4ff95c2764df72b43fdf5b3490ed06414588843848f991136040b",
               size: attachment.buffer.byteLength,
               filename: "asrouter.ftl",
               location: `main-workspace/ms-language-packs/${attachmentUuid}`,

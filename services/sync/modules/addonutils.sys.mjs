@@ -8,16 +8,10 @@ import { Svc } from "resource://services-sync/util.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AddonManager",
-  "resource://gre/modules/AddonManager.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AddonRepository",
-  "resource://gre/modules/addons/AddonRepository.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+  AddonRepository: "resource://gre/modules/addons/AddonRepository.sys.mjs",
+});
 
 function AddonUtilsInternal() {
   this._log = Log.repository.getLogger("Sync.AddonUtils");

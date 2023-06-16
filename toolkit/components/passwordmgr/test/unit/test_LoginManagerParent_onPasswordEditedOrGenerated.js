@@ -77,9 +77,10 @@ async function stubGeneratedPasswordForBrowsingContextId(id) {
     .callsFake(() => {
       return {
         currentWindowGlobal: {
-          documentPrincipal: Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-            "https://www.example.com^userContextId=6"
-          ),
+          documentPrincipal:
+            Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+              "https://www.example.com^userContextId=6"
+            ),
           documentURI: Services.io.newURI("https://www.example.com"),
         },
         get embedderElement() {
@@ -280,9 +281,10 @@ add_task(async function test_onPasswordEditedOrGenerated_generatedPassword() {
       triggeredByFillingGenerated: true,
     }
   );
-  let generatedPW = LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().get(
-    "https://www.example.com^userContextId=6"
-  );
+  let generatedPW =
+    LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().get(
+      "https://www.example.com^userContextId=6"
+    );
   Assert.ok(generatedPW.edited, "Cached edited boolean should be true");
   equal(generatedPW.value, newPassword, "Cached password should be updated");
   // login metadata should be updated
@@ -408,9 +410,10 @@ add_task(
         triggeredByFillingGenerated: true,
       }
     );
-    let generatedPW = LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().get(
-      "https://www.example.com^userContextId=6"
-    );
+    let generatedPW =
+      LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().get(
+        "https://www.example.com^userContextId=6"
+      );
     Assert.ok(!generatedPW.edited, "Cached edited boolean should be false");
     equal(
       generatedPW.value,
@@ -433,11 +436,8 @@ add_task(async function test_addUsernameBeforeAutoSaveEdit() {
   let { generatedPassword } = await stubGeneratedPasswordForBrowsingContextId(
     99
   );
-  let {
-    fakePromptToChangePassword,
-    restorePrompter,
-    resetPrompterHistory,
-  } = stubPrompter();
+  let { fakePromptToChangePassword, restorePrompter, resetPrompterHistory } =
+    stubPrompter();
   let rootBrowser = LMP.getRootBrowser();
   let fakePopupNotifications = {
     getNotification: sinon.stub().returns({ dismissed: true }),
@@ -527,9 +527,10 @@ add_task(async function test_addUsernameBeforeAutoSaveEdit() {
       triggeredByFillingGenerated: true,
     }
   );
-  let generatedPW = LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().get(
-    "https://www.example.com^userContextId=6"
-  );
+  let generatedPW =
+    LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().get(
+      "https://www.example.com^userContextId=6"
+    );
   Assert.ok(generatedPW.edited, "Cached edited boolean should be true");
   equal(generatedPW.value, newPassword, "Cached password should be updated");
   let [dataArray] = await storageChangedPromised;
@@ -816,9 +817,8 @@ add_task(
         JSON.stringify(Services.logins.getAllLogins()[0])
     );
 
-    let {
-      generatedPassword: password1,
-    } = await stubGeneratedPasswordForBrowsingContextId(99);
+    let { generatedPassword: password1 } =
+      await stubGeneratedPasswordForBrowsingContextId(99);
     let { restorePrompter, fakePromptToChangePassword } = stubPrompter();
     let rootBrowser = LMP.getRootBrowser();
 
@@ -866,9 +866,10 @@ add_task(
         triggeredByFillingGenerated: true,
       }
     );
-    let generatedPW = LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().get(
-      "https://www.example.com^userContextId=6"
-    );
+    let generatedPW =
+      LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().get(
+        "https://www.example.com^userContextId=6"
+      );
     Assert.ok(generatedPW.edited, "Cached edited boolean should be true");
     equal(generatedPW.storageGUID, null, "Should have no storageGUID");
     equal(generatedPW.value, newPassword, "Cached password should be updated");
@@ -909,9 +910,8 @@ add_task(
         JSON.stringify(Services.logins.getAllLogins()[0])
     );
 
-    let {
-      generatedPassword: password1,
-    } = await stubGeneratedPasswordForBrowsingContextId(99);
+    let { generatedPassword: password1 } =
+      await stubGeneratedPasswordForBrowsingContextId(99);
     let {
       restorePrompter,
       fakePromptToChangePassword,
@@ -985,9 +985,10 @@ add_task(
       "promptToSavePassword had a falsey 'notifySaved' argument"
     );
 
-    let generatedPW = LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().get(
-      "https://www.example.com^userContextId=6"
-    );
+    let generatedPW =
+      LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().get(
+        "https://www.example.com^userContextId=6"
+      );
     Assert.ok(generatedPW.edited, "Cached edited boolean should be true");
     equal(generatedPW.storageGUID, null, "Should have no storageGUID");
     equal(generatedPW.value, newPassword, "Cached password should be updated");
@@ -1024,9 +1025,8 @@ add_task(
     });
     await LoginTestUtils.addLogin(login0Props);
 
-    let {
-      generatedPassword: password1,
-    } = await stubGeneratedPasswordForBrowsingContextId(99);
+    let { generatedPassword: password1 } =
+      await stubGeneratedPasswordForBrowsingContextId(99);
     let { restorePrompter, fakePromptToChangePassword } = stubPrompter();
     let rootBrowser = LMP.getRootBrowser();
 
@@ -1088,9 +1088,8 @@ add_task(
     });
     await LoginTestUtils.addLogin(login0Props);
 
-    let {
-      generatedPassword: password1,
-    } = await stubGeneratedPasswordForBrowsingContextId(99);
+    let { generatedPassword: password1 } =
+      await stubGeneratedPasswordForBrowsingContextId(99);
     let { restorePrompter, fakePromptToChangePassword } = stubPrompter();
     let rootBrowser = LMP.getRootBrowser();
 

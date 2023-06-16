@@ -23,6 +23,11 @@ function receiveExpectedKeyEvents(aBrowser, aKeyCode, aTrusted) {
         let events = trusted
           ? ["keydown", "keyup"]
           : ["keydown", "keypress", "keyup"];
+        if (trusted && keyCode == content.wrappedJSObject.KeyEvent.DOM_VK_F11) {
+          // trusted `F11` key shouldn't be fired because of reserved when it's
+          // a shortcut key for exiting from the full screen mode.
+          events.shift();
+        }
         function listener(event) {
           let expected = events.shift();
           Assert.equal(
@@ -55,7 +60,7 @@ const kPage =
   "https://example.org/browser/" +
   "dom/base/test/fullscreen/file_fullscreen-api-keys.html";
 
-add_task(async function() {
+add_task(async function () {
   await pushPrefs(
     ["full-screen-api.transition-duration.enter", "0 0"],
     ["full-screen-api.transition-duration.leave", "0 0"]
@@ -197,7 +202,7 @@ add_task(async function() {
       "correct number of fullscreen events occurred"
     );
     if (!suppressed) {
-      expectedKeyEventsCount += keyCode == "VK_F11" ? 2 : 3;
+      expectedKeyEventsCount += keyCode == "VK_F11" ? 1 : 3;
     }
     is(
       keyEventsCount,

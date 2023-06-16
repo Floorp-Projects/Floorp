@@ -9,7 +9,7 @@
 const TEST_URI = `data:text/html,<!DOCTYPE html><meta charset=utf8>Test reverse search toggle`;
 const isMacOS = AppConstants.platform === "macosx";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Close the reverse search UI with ESC");

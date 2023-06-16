@@ -14,7 +14,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource://autofill/phonenumberutils/PhoneNumberNormalizer.sys.mjs",
 });
 
-export var PhoneNumber = (function(dataBase) {
+export var PhoneNumber = (function (dataBase) {
   const MAX_PHONE_NUMBER_LENGTH = 50;
   const NON_ALPHA_CHARS = /[^a-zA-Z]/g;
   const NON_DIALABLE_CHARS = /[^,#+\*\d]/g;
@@ -416,7 +416,6 @@ export var PhoneNumber = (function(dataBase) {
 
     // Lookup the meta data for the given region.
     let md = FindMetaDataForRegion(defaultRegion.toUpperCase());
-
     if (!md) {
       dump("Couldn't find Meta Data for region: " + defaultRegion + "\n");
       return null;
@@ -468,6 +467,8 @@ export var PhoneNumber = (function(dataBase) {
 
   return {
     IsPlain: IsPlainPhoneNumber,
+    IsValid: IsValidNumber,
     Parse: ParseNumber,
+    FindMetaDataForRegion,
   };
 })(PHONE_NUMBER_META_DATA);

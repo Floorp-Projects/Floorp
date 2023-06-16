@@ -26,7 +26,7 @@ function basic() {
   ok(port2, "MessageChannel.port1 exists");
   is(port2, a.port2, "MessageChannel.port2 is port2");
 
-  ["postMessage", "start", "close"].forEach(function(e) {
+  ["postMessage", "start", "close"].forEach(function (e) {
     ok(e in port1, "MessagePort1." + e + " exists");
     ok(e in port2, "MessagePort2." + e + " exists");
   });
@@ -39,12 +39,12 @@ function sendMessages() {
   ok(a, "MessageChannel created");
 
   a.port1.postMessage("Hello world!");
-  a.port1.onmessage = function(e) {
+  a.port1.onmessage = function (e) {
     is(e.data, "Hello world!", "The message is back!");
     runTests();
   };
 
-  a.port2.onmessage = function(e) {
+  a.port2.onmessage = function (e) {
     a.port2.postMessage(e.data);
   };
 }
@@ -54,7 +54,7 @@ function transferPort() {
   ok(a, "MessageChannel created");
 
   a.port1.postMessage("Hello world!");
-  a.port1.onmessage = function(e) {
+  a.port1.onmessage = function (e) {
     is(e.data, "Hello world!", "The message is back!");
     runTests();
   };
@@ -63,9 +63,9 @@ function transferPort() {
 }
 
 function transferPort2() {
-  onmessage = function(evt) {
+  onmessage = function (evt) {
     is(evt.ports.length, 1, "A port has been received by the worker");
-    evt.ports[0].onmessage = function(e) {
+    evt.ports[0].onmessage = function (e) {
       is(e.data, 42, "Data is 42!");
       runTests();
     };
@@ -87,7 +87,7 @@ function runTests() {
 }
 
 var subworker;
-onmessage = function(evt) {
+onmessage = function (evt) {
   if (evt.data == 0) {
     runTests();
     return;
@@ -96,7 +96,7 @@ onmessage = function(evt) {
   if (!subworker) {
     info("Create a subworkers. ID: " + evt.data);
     subworker = new Worker("worker_messageChannel.js");
-    subworker.onmessage = function(e) {
+    subworker.onmessage = function (e) {
       info("Proxy a message to the parent.");
       postMessage(e.data, e.ports);
     };

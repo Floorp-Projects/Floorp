@@ -110,3 +110,28 @@ Background tasks that are launched at shutdown (and that are not updating) do no
 Background tasks are usually scheduled in situations where their output is not user-visible: by the Windows Task Scheduler, at shutdown, etc.  Therefore, it's usually safe to always produce console output.  But some tasks, especially shutdown tasks executed during developer builds, can "pollute" the console even after the Firefox main process has exited.  To avoid this, background tasks can opt-in to producing no output; the predicate that determines whether a particular background task *does* produce output is [`BackgroundTasks::IsNoOutputTaskName`](https://searchfox.org/mozilla-central/source/toolkit/components/backgroundtasks/BackgroundTasks.h).  This predicate can be overridden by providing the `--attach-console` command line flag or by setting the `MOZ_BACKGROUNDTASKS_IGNORE_NO_OUTPUT` environment variable to a non-empty value.
 
 The `pingsender` background task opts to produce no output: see [Bug 1736623](https://bugzilla.mozilla.org/show_bug.cgi?id=1736623).
+
+## More details
+
+### Maximum and minimum runtime
+
+Background tasks are meant to finish their work in a (very) short time. There are two preferences that control these values globally:
+
+#### `toolkit.backgroundtasks.defaultTimeoutSec` (default 10 minutes)
+
+Defines the maximum runtime. Once this timeout is exceeded, the shutdown sequence will be started, regardless of the still running JS payload's state. It is thus recommended, that any potentially long running JS payload adds async shutdown blockers that makes it bail out or checks [isInOrBeyondShutdownPhase](https://searchfox.org/mozilla-central/rev/f60cf6bfa8bd096efd9bb3a445364f5a0f32897a/toolkit/components/startup/public/nsIAppStartup.idl#193) in appropriate places, otherwise shutdown hangs might occur.
+
+#### `toolkit.backgroundtasks.defaultMinTaskRuntimeMS` (default 500 ms)
+
+Sets the minimum runtime that even an empty background task will wait before starting its shutdown sequence. The main purpose is to give any asynchronously running startup launch of components sufficient time to complete their startup before we ask them to shutdown. Note that this is wallclock counting from the start of the payload, such that if the background task takes longer for itself, no additional time will be added to the execution. If the background task itself may cause further asynchronous component launches or other processing, it should take care of waiting on them to finish before returning. Note that there is [an additional 100 ms delay before we actually launch the task](https://searchfox.org/mozilla-central/rev/11a4d97a7b5cdfa133f4bda4525649f651703018/toolkit/components/backgroundtasks/BackgroundTasks.cpp#203,227) plus the process startup and shutdown overhead, such that even an empty task will take ~800 ms minimum (on a modern Windows laptop) to finish with `toolkit.backgroundtasks.defaultMinTaskRuntimeMS == 500`.
+
+#### Overriding the global preference values
+
+Additionally you can control these values on a per-task granularity by having:
+
+```
+export const backgroundTaskTimeoutSec = <some seconds>;
+export const backgroundTaskMinRuntimeMS = <some millisecs>;
+```
+
+at [the top of your task definition like here](https://searchfox.org/mozilla-central/rev/f60cf6bfa8bd096efd9bb3a445364f5a0f32897a/toolkit/mozapps/update/BackgroundTask_backgroundupdate.sys.mjs#47-50).

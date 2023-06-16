@@ -13,7 +13,7 @@ const PREFS_TO_CLEAR = [
   `messaging-system-action.${MESSAGING_ACTION_PREF}`,
 ];
 
-add_setup(async function() {
+add_setup(async function () {
   registerCleanupFunction(async () => {
     PREFS_TO_CLEAR.forEach(pref => Services.prefs.clearUserPref(pref));
   });

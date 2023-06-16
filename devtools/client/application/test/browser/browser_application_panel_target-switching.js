@@ -14,7 +14,7 @@ const CONTENT_PROCESS_URI_MANIFEST =
   URL_ROOT + "resources/manifest/load-ok.html";
 
 // test workers when target switching
-add_task(async function() {
+add_task(async function () {
   await enableApplicationPanel();
 
   info("Open a page that runs in the parent process");
@@ -41,7 +41,7 @@ add_task(async function() {
 });
 
 // test manifest when target switching
-add_task(async function() {
+add_task(async function () {
   await enableApplicationPanel();
 
   info("Open a page that runs in the parent process");

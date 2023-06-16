@@ -13,7 +13,7 @@
 namespace mozilla {
 
 RemoteSandboxBroker::RemoteSandboxBroker(uint32_t aLaunchArch)
-    : mLaunchArch(aLaunchArch), mParent(new RemoteSandboxBrokerParent) {}
+    : mParent(new RemoteSandboxBrokerParent), mLaunchArch(aLaunchArch) {}
 
 RemoteSandboxBroker::~RemoteSandboxBroker() {
   MOZ_ASSERT(

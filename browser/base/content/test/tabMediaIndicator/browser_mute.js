@@ -8,7 +8,7 @@ function test_on_browser(browser) {
   ok(!browser.audioMuted, "Audio should be unmuted now");
 }
 
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,

@@ -27,7 +27,7 @@ add_task(async function test() {
   is(tab1.linkedBrowser, browser1, "Tab's browser should stay the same.");
   browser1.goBack(false);
   await BrowserTestUtils.browserLoaded(browser1, false);
-  let persisted = await SpecialPowers.spawn(browser1, [], async function() {
+  let persisted = await SpecialPowers.spawn(browser1, [], async function () {
     return content.document.documentElement.getAttribute("persisted");
   });
 

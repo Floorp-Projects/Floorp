@@ -10,10 +10,17 @@ ChromeUtils.defineESModuleGetters(this, {
   UrlbarProviderWeather: "resource:///modules/UrlbarProviderWeather.sys.mjs",
 });
 
-const { WEATHER_SUGGESTION } = MerinoTestUtils;
+const { WEATHER_RS_DATA, WEATHER_SUGGESTION } = MerinoTestUtils;
 
 add_task(async function init() {
-  await QuickSuggestTestUtils.ensureQuickSuggestInit();
+  await QuickSuggestTestUtils.ensureQuickSuggestInit({
+    remoteSettingsResults: [
+      {
+        type: "weather",
+        weather: WEATHER_RS_DATA,
+      },
+    ],
+  });
   UrlbarPrefs.set("quicksuggest.enabled", true);
   await MerinoTestUtils.initWeather();
 });
@@ -22,7 +29,7 @@ add_task(async function init() {
 // * Nimbus values: none
 // * Min keyword length pref: none
 // * Expected: no suggestion
-add_task(async function() {
+add_task(async function () {
   await doKeywordsTest({
     desc: "No data",
     tests: {
@@ -50,7 +57,7 @@ add_task(async function() {
 // * Nimbus values: none
 // * Min keyword length pref: none
 // * Expected: no suggestion
-add_task(async function() {
+add_task(async function () {
   await doKeywordsTest({
     desc: "Empty settings",
     settingsData: {},
@@ -79,7 +86,7 @@ add_task(async function() {
 // * Nimbus values: none
 // * Min keyword length pref: none
 // * Expected: full keywords only
-add_task(async function() {
+add_task(async function () {
   await doKeywordsTest({
     desc: "Settings only, keywords only",
     settingsData: {
@@ -110,7 +117,7 @@ add_task(async function() {
 // * Nimbus values: none
 // * Min keyword length pref: none
 // * Expected: full keywords only
-add_task(async function() {
+add_task(async function () {
   await doKeywordsTest({
     desc: "Settings only, min keyword length = 0",
     settingsData: {
@@ -142,7 +149,7 @@ add_task(async function() {
 // * Nimbus values: none
 // * Min keyword length pref: none
 // * Expected: use settings data
-add_task(async function() {
+add_task(async function () {
   await doKeywordsTest({
     desc: "Settings only, min keyword length > 0",
     settingsData: {
@@ -174,7 +181,7 @@ add_task(async function() {
 // * Nimbus values: none
 // * Min keyword length pref: 6
 // * Expected: use settings keywords and min keyword length pref
-add_task(async function() {
+add_task(async function () {
   await doKeywordsTest({
     desc: "Settings only, min keyword length = 0, pref exists",
     settingsData: {
@@ -207,7 +214,7 @@ add_task(async function() {
 // * Nimbus values: none
 // * Min keyword length pref: 6
 // * Expected: use settings keywords and min keyword length pref
-add_task(async function() {
+add_task(async function () {
   await doKeywordsTest({
     desc: "Settings only, min keyword length > 0, pref exists",
     settingsData: {
@@ -240,7 +247,7 @@ add_task(async function() {
 // * Nimbus values: empty
 // * Min keyword length pref: none
 // * Expected: no suggestion
-add_task(async function() {
+add_task(async function () {
   await doKeywordsTest({
     desc: "Settings: empty; Nimbus: empty",
     settingsData: {},
@@ -270,7 +277,7 @@ add_task(async function() {
 // * Nimbus values: keywords only
 // * Min keyword length pref: none
 // * Expected: full keywords in Nimbus
-add_task(async function() {
+add_task(async function () {
   await doKeywordsTest({
     desc: "Settings: keywords; Nimbus: keywords",
     settingsData: {
@@ -304,7 +311,7 @@ add_task(async function() {
 // * Nimbus values: keywords only
 // * Min keyword length pref: none
 // * Expected: full keywords in Nimbus
-add_task(async function() {
+add_task(async function () {
   await doKeywordsTest({
     desc: "Settings: keywords, min keyword length = 0; Nimbus: keywords",
     settingsData: {
@@ -339,7 +346,7 @@ add_task(async function() {
 // * Nimbus values: keywords only
 // * Min keyword length pref: none
 // * Expected: Nimbus keywords with settings min keyword length
-add_task(async function() {
+add_task(async function () {
   await doKeywordsTest({
     desc: "Settings: keywords, min keyword length > 0; Nimbus: keywords",
     settingsData: {
@@ -374,10 +381,9 @@ add_task(async function() {
 // * Nimbus values: keywords and min keyword length = 0
 // * Min keyword length pref: none
 // * Expected: Nimbus keywords with settings min keyword length
-add_task(async function() {
+add_task(async function () {
   await doKeywordsTest({
-    desc:
-      "Settings: keywords, min keyword length > 0; Nimbus: keywords, min keyword length = 0",
+    desc: "Settings: keywords, min keyword length > 0; Nimbus: keywords, min keyword length = 0",
     settingsData: {
       keywords: ["weather"],
       min_keyword_length: 3,
@@ -411,10 +417,9 @@ add_task(async function() {
 // * Nimbus values: keywords and min keyword length > 0
 // * Min keyword length pref: none
 // * Expected: use Nimbus values
-add_task(async function() {
+add_task(async function () {
   await doKeywordsTest({
-    desc:
-      "Settings: keywords, min keyword length > 0; Nimbus: keywords, min keyword length > 0",
+    desc: "Settings: keywords, min keyword length > 0; Nimbus: keywords, min keyword length > 0",
     settingsData: {
       keywords: ["weather"],
       min_keyword_length: 3,
@@ -448,10 +453,9 @@ add_task(async function() {
 // * Nimbus values: keywords and min keyword length = 0
 // * Min keyword length pref: exists
 // * Expected: Nimbus keywords with min keyword length pref
-add_task(async function() {
+add_task(async function () {
   await doKeywordsTest({
-    desc:
-      "Settings: keywords, min keyword length > 0; Nimbus: keywords, min keyword length = 0; pref exists",
+    desc: "Settings: keywords, min keyword length > 0; Nimbus: keywords, min keyword length = 0; pref exists",
     settingsData: {
       keywords: ["weather"],
       min_keyword_length: 3,
@@ -486,10 +490,9 @@ add_task(async function() {
 // * Nimbus values: keywords and min keyword length > 0
 // * Min keyword length pref: exists
 // * Expected: Nimbus keywords with min keyword length pref
-add_task(async function() {
+add_task(async function () {
   await doKeywordsTest({
-    desc:
-      "Settings: keywords, min keyword length > 0; Nimbus: keywords, min keyword length > 0; pref exists",
+    desc: "Settings: keywords, min keyword length > 0; Nimbus: keywords, min keyword length > 0; pref exists",
     settingsData: {
       keywords: ["weather", "forecast"],
       min_keyword_length: 3,
@@ -524,7 +527,7 @@ add_task(async function() {
 // * Nimbus values: keywords only
 // * Min keyword length pref: none
 // * Expected: full keywords
-add_task(async function() {
+add_task(async function () {
   await doKeywordsTest({
     desc: "Settings: none; Nimbus: keywords",
     nimbusValues: {
@@ -555,7 +558,7 @@ add_task(async function() {
 // * Nimbus values: keywords and min keyword length = 0
 // * Min keyword length pref: none
 // * Expected: full keywords
-add_task(async function() {
+add_task(async function () {
   await doKeywordsTest({
     desc: "Settings: none; Nimbus: keywords, min keyword length = 0",
     nimbusValues: {
@@ -587,7 +590,7 @@ add_task(async function() {
 // * Nimbus values: keywords and min keyword length > 0
 // * Min keyword length pref: none
 // * Expected: use Nimbus values
-add_task(async function() {
+add_task(async function () {
   await doKeywordsTest({
     desc: "Settings: none; Nimbus: keywords, min keyword length > 0",
     nimbusValues: {
@@ -619,10 +622,9 @@ add_task(async function() {
 // * Nimbus values: keywords and min keyword length > 0
 // * Min keyword length pref: exists
 // * Expected: use Nimbus keywords and min keyword length pref
-add_task(async function() {
+add_task(async function () {
   await doKeywordsTest({
-    desc:
-      "Settings: none; Nimbus: keywords, min keyword length > 0; pref exists",
+    desc: "Settings: none; Nimbus: keywords, min keyword length > 0; pref exists",
     nimbusValues: {
       weatherKeywords: ["weather", "forecast"],
       weatherKeywordsMinimumLength: 3,
@@ -746,7 +748,12 @@ async function doKeywordsTest({
     nimbusCleanup = await UrlbarTestUtils.initNimbusFeature(nimbusValues);
   }
 
-  QuickSuggest.weather._test_setRsData(settingsData);
+  await QuickSuggestTestUtils.setRemoteSettingsResults([
+    {
+      type: "weather",
+      weather: settingsData,
+    },
+  ]);
 
   if (minKeywordLength) {
     UrlbarPrefs.set("weather.minKeywordLength", minKeywordLength);
@@ -784,7 +791,13 @@ async function doKeywordsTest({
   if (!QuickSuggest.weather.suggestion) {
     fetchPromise = QuickSuggest.weather.waitForFetches();
   }
-  QuickSuggest.weather._test_setRsData(MerinoTestUtils.WEATHER_RS_DATA);
+  await QuickSuggestTestUtils.setRemoteSettingsResults([
+    {
+      type: "weather",
+      weather: MerinoTestUtils.WEATHER_RS_DATA,
+    },
+  ]);
+
   UrlbarPrefs.clear("weather.minKeywordLength");
   await fetchPromise;
 }
@@ -811,14 +824,23 @@ async function doMatchingQuickSuggestTest(pref, isSponsored) {
   UrlbarPrefs.set(pref, true);
   await QuickSuggestTestUtils.setRemoteSettingsResults([
     {
-      id: 1,
-      url: "http://example.com/",
-      title: "Suggestion",
-      keywords: [keyword],
-      click_url: "http://example.com/click",
-      impression_url: "http://example.com/impression",
-      advertiser: "TestAdvertiser",
-      iab_category,
+      type: "data",
+      attachment: [
+        {
+          id: 1,
+          url: "http://example.com/",
+          title: "Suggestion",
+          keywords: [keyword],
+          click_url: "http://example.com/click",
+          impression_url: "http://example.com/impression",
+          advertiser: "TestAdvertiser",
+          iab_category,
+        },
+      ],
+    },
+    {
+      type: "weather",
+      weather: MerinoTestUtils.WEATHER_RS_DATA,
     },
   ]);
 
@@ -885,7 +907,7 @@ async function doMatchingQuickSuggestTest(pref, isSponsored) {
   UrlbarPrefs.clear(pref);
 }
 
-add_task(async function() {
+add_task(async function () {
   await doIncrementTest({
     desc: "Settings only",
     setup: {
@@ -938,7 +960,7 @@ add_task(async function() {
   });
 });
 
-add_task(async function() {
+add_task(async function () {
   await doIncrementTest({
     desc: "Settings only with cap",
     setup: {
@@ -1031,7 +1053,7 @@ add_task(async function() {
   });
 });
 
-add_task(async function() {
+add_task(async function () {
   await doIncrementTest({
     desc: "Settings and Nimbus",
     setup: {
@@ -1101,7 +1123,7 @@ add_task(async function() {
   });
 });
 
-add_task(async function() {
+add_task(async function () {
   await doIncrementTest({
     desc: "Settings and Nimbus with cap in Nimbus",
     setup: {
@@ -1237,7 +1259,12 @@ async function doIncrementTest({ desc, setup, tests }) {
     nimbusCleanup = await UrlbarTestUtils.initNimbusFeature(nimbusValues);
   }
 
-  QuickSuggest.weather._test_setRsData(settingsData);
+  await QuickSuggestTestUtils.setRemoteSettingsResults([
+    {
+      type: "weather",
+      weather: settingsData,
+    },
+  ]);
 
   if (fetchPromise) {
     info("Waiting for fetch");
@@ -1295,7 +1322,12 @@ async function doIncrementTest({ desc, setup, tests }) {
   if (!QuickSuggest.weather.suggestion) {
     fetchPromise = QuickSuggest.weather.waitForFetches();
   }
-  QuickSuggest.weather._test_setRsData(MerinoTestUtils.WEATHER_RS_DATA);
+  await QuickSuggestTestUtils.setRemoteSettingsResults([
+    {
+      type: "weather",
+      weather: MerinoTestUtils.WEATHER_RS_DATA,
+    },
+  ]);
   UrlbarPrefs.clear("weather.minKeywordLength");
   await fetchPromise;
 }

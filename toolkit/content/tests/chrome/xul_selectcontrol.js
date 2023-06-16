@@ -16,14 +16,12 @@
 //   keynav-leftright - key navigation is left/right rather than up/down
 // The win:, mac: and gtk: or other prefixes may be used for platform specific behaviour
 var behaviours = {
-  menu:
-    "win:activate-disabled-menuitem activate-disabled-menuitem-mousemove select-keynav-wraps select-extended-keynav",
+  menu: "win:activate-disabled-menuitem activate-disabled-menuitem-mousemove select-keynav-wraps select-extended-keynav",
   menulist: "allow-other-value other-value-clears-selection",
   listbox: "select-extended-keynav",
   richlistbox: "select-extended-keynav",
   radiogroup: "select-keynav-wraps dont-select-disabled allow-other-value",
-  tabs:
-    "select-extended-keynav mac:select-keynav-wraps allow-other-value selection-required keynav-leftright",
+  tabs: "select-extended-keynav mac:select-keynav-wraps allow-other-value selection-required keynav-leftright",
 };
 
 function behaviourContains(tag, behaviour) {

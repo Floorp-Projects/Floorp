@@ -1,7 +1,7 @@
 # Test data for unit conversions
-#  Copyright © 1991-2021 Unicode, Inc.
+#  Copyright © 1991-2023 Unicode, Inc.
 #  For terms of use, see http://www.unicode.org/copyright.html
-#  Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+#  SPDX-License-Identifier: Unicode-DFS-2016
 #  CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
 #
 # Format:
@@ -76,6 +76,7 @@ energy	;	kilowatt-hour	;	kilogram-square-meter-second-per-cubic-second	;	3,600,0
 energy	;	therm-us	;	kilogram-square-meter-per-square-second	;	105,480,400 * x	;	1.054804E11
 force	;	newton	;	kilogram-meter-per-square-second	;	1 * x	;	1000.0
 force	;	pound-force	;	kilogram-meter-per-square-second	;	4.4482216152605 * x	;	4448.222
+force	;	kilowatt-hour-per-100-kilometer	;	kilogram-square-meter-second-per-meter-cubic-second	;	36 * x	;	36000.0
 frequency	;	hertz	;	revolution-per-second	;	1 * x	;	1000.0
 frequency	;	kilohertz	;	revolution-per-second	;	1,000 * x	;	1000000.0
 frequency	;	megahertz	;	revolution-per-second	;	1,000,000 * x	;	1.0E9
@@ -104,9 +105,9 @@ length	;	mile-scandinavian	;	meter	;	10,000 * x	;	1.0E7
 length	;	100-kilometer	;	meter	;	100,000 * x	;	1.0E8
 length	;	earth-radius	;	meter	;	6,378,100 * x	;	6.3781E9
 length	;	solar-radius	;	meter	;	695,700,000 * x	;	6.957E11
-length	;	astronomical-unit	;	meter	;	149,597,900,000 * x	;	1.495979E14
-length	;	light-year	;	meter	;	9,460,730,000,000,000 * x	;	9.46073E18
-length	;	parsec	;	meter	;	30,856,780,000,000,000 * x	;	3.085678E19
+length	;	astronomical-unit	;	meter	;	149,597,870,700 * x	;	1.495979E14
+length	;	light-year	;	meter	;	9,460,730,472,580,800 * x	;	9.46073E18
+length	;	parsec	;	meter	;	12,699,352,539,696,155,673,600,000/411,557,987 * x	;	3.085678E19
 luminous-flux	;	lumen	;	candela-square-meter-per-square-meter	;	1 * x	;	1000.0
 luminous-intensity	;	candela	;	candela	;	1 * x	;	1,000.00
 mass	;	microgram	;	kilogram	;	0.000000001 * x	;	1.0E-6
@@ -198,6 +199,7 @@ volume	;	cubic-kilometer	;	cubic-meter	;	1,000,000,000 * x	;	1.0E12
 volume	;	cubic-mile	;	cubic-meter	;	4,168,181,825.440579584 * x	;	4.168182E12
 year-duration	;	month	;	year	;	0.25/3 * x	;	83.33333
 year-duration	;	month-person	;	year	;	0.25/3 * x	;	83.33333
+year-duration	;	quarter	;	year	;	0.25 * x	;	250.0
 year-duration	;	year	;	year	;	1 * x	;	1,000.00
 year-duration	;	year-person	;	year	;	1 * x	;	1000.0
 year-duration	;	decade	;	year	;	10 * x	;	10000.0

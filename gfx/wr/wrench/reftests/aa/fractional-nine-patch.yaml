@@ -1,0 +1,21 @@
+---
+root:
+  items:
+    - bounds: 0 0 450 400
+      type: rect
+      color: white
+    - type: stacking-context
+      bounds: 50.0 50.0 0 0
+      transform: [0.9999767, 8.142047e-6, 0.0, 0.0, 1.6284093e-5, 0.9999767, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0019226074, 0.0019683838, 0.0, 1.0]
+      items:
+        - type: stacking-context
+          items:
+            - type: clip
+              id: 3
+              complex:
+                - rect: [0, 0, 375, 300]
+                  radius: 12
+            - type: rect
+              bounds: 0 0 375 300
+              color: red
+              clip-chain: [3]

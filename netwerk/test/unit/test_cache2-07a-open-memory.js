@@ -10,14 +10,14 @@ function run_test() {
     "memory",
     Ci.nsICacheStorage.OPEN_NORMALLY,
     null,
-    new OpenCallback(NEW, "mem1-meta", "mem1-data", function(entryM1) {
+    new OpenCallback(NEW, "mem1-meta", "mem1-data", function (entryM1) {
       Assert.ok(!entryM1.persistent);
       asyncOpenCacheEntry(
         "http://mem-first/",
         "disk",
         Ci.nsICacheStorage.OPEN_NORMALLY,
         null,
-        new OpenCallback(NORMAL, "mem1-meta", "mem1-data", function(entryM2) {
+        new OpenCallback(NORMAL, "mem1-meta", "mem1-data", function (entryM2) {
           Assert.ok(!entryM1.persistent);
           Assert.ok(!entryM2.persistent);
 
@@ -35,7 +35,7 @@ function run_test() {
               NEW | WAITFORWRITE,
               "disk1-meta",
               "disk1-data",
-              function(entryD1) {
+              function (entryD1) {
                 Assert.ok(entryD1.persistent);
                 // Now open the same URL as a memory-only entry, the disk entry must be doomed.
                 asyncOpenCacheEntry(
@@ -44,7 +44,7 @@ function run_test() {
                   Ci.nsICacheStorage.OPEN_NORMALLY,
                   null,
                   // This must be recreated
-                  new OpenCallback(NEW, "mem2-meta", "mem2-data", function(
+                  new OpenCallback(NEW, "mem2-meta", "mem2-data", function (
                     entryD2
                   ) {
                     Assert.ok(entryD1.persistent);
@@ -59,7 +59,7 @@ function run_test() {
                         NORMAL,
                         "mem2-meta",
                         "mem2-data",
-                        function(entryD3) {
+                        function (entryD3) {
                           Assert.ok(entryD1.persistent);
                           Assert.ok(!entryD2.persistent);
                           Assert.ok(!entryD3.persistent);

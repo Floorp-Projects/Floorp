@@ -170,7 +170,7 @@ class FwdTrans8x8TestBase {
     for (int j = 0; j < 64; ++j) {
       const int diff = abs(count_sign_block[j][0] - count_sign_block[j][1]);
       const int max_diff = kSignBiasMaxDiff255;
-      EXPECT_LT(diff, max_diff << (bit_depth_ - 8))
+      ASSERT_LT(diff, max_diff << (bit_depth_ - 8))
           << "Error: 8x8 FDCT/FHT has a sign bias > "
           << 1. * max_diff / count_test_block * 100 << "%"
           << " for input range [-255, 255] at index " << j
@@ -201,7 +201,7 @@ class FwdTrans8x8TestBase {
     for (int j = 0; j < 64; ++j) {
       const int diff = abs(count_sign_block[j][0] - count_sign_block[j][1]);
       const int max_diff = kSignBiasMaxDiff15;
-      EXPECT_LT(diff, max_diff << (bit_depth_ - 8))
+      ASSERT_LT(diff, max_diff << (bit_depth_ - 8))
           << "Error: 8x8 FDCT/FHT has a sign bias > "
           << 1. * max_diff / count_test_block * 100 << "%"
           << " for input range [-15, 15] at index " << j
@@ -275,11 +275,11 @@ class FwdTrans8x8TestBase {
       }
     }
 
-    EXPECT_GE(1 << 2 * (bit_depth_ - 8), max_error)
+    ASSERT_GE(1 << 2 * (bit_depth_ - 8), max_error)
         << "Error: 8x8 FDCT/IDCT or FHT/IHT has an individual"
         << " roundtrip error > 1";
 
-    EXPECT_GE((count_test_block << 2 * (bit_depth_ - 8)) / 5, total_error)
+    ASSERT_GE((count_test_block << 2 * (bit_depth_ - 8)) / 5, total_error)
         << "Error: 8x8 FDCT/IDCT or FHT/IHT has average roundtrip "
         << "error > 1/5 per block";
   }
@@ -360,17 +360,17 @@ class FwdTrans8x8TestBase {
         total_coeff_error += abs(coeff_diff);
       }
 
-      EXPECT_GE(1 << 2 * (bit_depth_ - 8), max_error)
+      ASSERT_GE(1 << 2 * (bit_depth_ - 8), max_error)
           << "Error: Extremal 8x8 FDCT/IDCT or FHT/IHT has"
-          << "an individual roundtrip error > 1";
+          << " an individual roundtrip error > 1";
 
-      EXPECT_GE((count_test_block << 2 * (bit_depth_ - 8)) / 5, total_error)
+      ASSERT_GE((count_test_block << 2 * (bit_depth_ - 8)) / 5, total_error)
           << "Error: Extremal 8x8 FDCT/IDCT or FHT/IHT has average"
           << " roundtrip error > 1/5 per block";
 
-      EXPECT_EQ(0, total_coeff_error)
+      ASSERT_EQ(0, total_coeff_error)
           << "Error: Extremal 8x8 FDCT/FHT has"
-          << "overflow issues in the intermediate steps > 1";
+          << " overflow issues in the intermediate steps > 1";
     }
   }
 
@@ -426,7 +426,7 @@ class FwdTrans8x8TestBase {
         const int diff = dst[j] - src[j];
 #endif
         const uint32_t error = diff * diff;
-        EXPECT_GE(1u << 2 * (bit_depth_ - 8), error)
+        ASSERT_GE(1u << 2 * (bit_depth_ - 8), error)
             << "Error: 8x8 IDCT has error " << error << " at index " << j;
       }
     }
@@ -456,7 +456,7 @@ class FwdTrans8x8TestBase {
       for (int j = 0; j < kNumCoeffs; ++j) {
         const int32_t diff = coeff[j] - coeff_r[j];
         const uint32_t error = diff * diff;
-        EXPECT_GE(9u << 2 * (bit_depth_ - 8), error)
+        ASSERT_GE(9u << 2 * (bit_depth_ - 8), error)
             << "Error: 8x8 DCT has error " << error << " at index " << j;
       }
     }
@@ -512,7 +512,7 @@ class FwdTrans8x8TestBase {
         const int diff = dst[j] - ref[j];
 #endif
         const uint32_t error = diff * diff;
-        EXPECT_EQ(0u, error)
+        ASSERT_EQ(0u, error)
             << "Error: 8x8 IDCT has error " << error << " at index " << j;
       }
     }

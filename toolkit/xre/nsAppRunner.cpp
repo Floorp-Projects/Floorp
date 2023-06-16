@@ -754,6 +754,14 @@ nsIXULRuntime::ContentWin32kLockdownState GetLiveWin32kLockdownState() {
 
   // HasUserValue The Pref functions can only be called on main thread
   MOZ_ASSERT(NS_IsMainThread());
+
+#  ifdef MOZ_BACKGROUNDTASKS
+  if (BackgroundTasks::IsBackgroundTaskMode()) {
+    // Let's bail out before loading all the graphics libs.
+    return nsIXULRuntime::ContentWin32kLockdownState::DisabledByDefault;
+  }
+#  endif
+
   mozilla::EnsureWin32kInitialized();
   gfxPlatform::GetPlatform();
 
@@ -1449,17 +1457,6 @@ NS_IMETHODIMP
 nsXULAppInfo::GetAccessibilityEnabled(bool* aResult) {
 #ifdef ACCESSIBILITY
   *aResult = GetAccService() != nullptr;
-#else
-  *aResult = false;
-#endif
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULAppInfo::GetAccessibleHandlerUsed(bool* aResult) {
-#if defined(ACCESSIBILITY) && defined(XP_WIN)
-  *aResult = Preferences::GetBool("accessibility.handler.enabled", false) &&
-             a11y::IsHandlerRegistered();
 #else
   *aResult = false;
 #endif
@@ -2702,7 +2699,11 @@ static ReturnAbortOnError ProfileLockedDialog(nsIFile* aProfileDir,
   rv = xpcom.Initialize();
   NS_ENSURE_SUCCESS(rv, rv);
 
+#if defined(MOZ_TELEMETRY_REPORTING)
+  // We cannot check if telemetry has been disabled by the user, yet.
+  // So, rely on the build time settings, instead.
   mozilla::Telemetry::WriteFailedProfileLock(aProfileDir);
+#endif
 
   rv = xpcom.SetWindowCreator(aNative);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
@@ -3558,19 +3559,7 @@ static bool RemoveComponentRegistries(nsIFile* aProfileDir,
   aLocalProfileDir->Clone(getter_AddRefs(file));
   if (!file) return false;
 
-#if defined(XP_UNIX) || defined(XP_BEOS)
-#  define PLATFORM_FASL_SUFFIX ".mfasl"
-#elif defined(XP_WIN)
-#  define PLATFORM_FASL_SUFFIX ".mfl"
-#endif
-
-  file->AppendNative(nsLiteralCString("XUL" PLATFORM_FASL_SUFFIX));
-  file->Remove(false);
-
-  file->SetNativeLeafName(nsLiteralCString("XPC" PLATFORM_FASL_SUFFIX));
-  file->Remove(false);
-
-  file->SetNativeLeafName("startupCache"_ns);
+  file->AppendNative("startupCache"_ns);
   nsresult rv = file->Remove(true);
   return NS_SUCCEEDED(rv) || rv == NS_ERROR_FILE_NOT_FOUND;
 }
@@ -3872,6 +3861,29 @@ static void MaybeAddCPUMicrocodeCrashAnnotation() {
 #endif
 }
 
+#if defined(MOZ_BACKGROUNDTASKS)
+static void SetupConsoleForBackgroundTask(
+    const nsCString& aBackgroundTaskName) {
+  // We do not suppress output on Windows because:
+  // 1. Background task subprocesses launched via LaunchApp() does not attach to
+  //    the console.
+  // 2. Suppressing output intermittently causes failures on when running
+  //    multiple tasks (see bug 1831631)
+#  ifndef XP_WIN
+  if (BackgroundTasks::IsNoOutputTaskName(aBackgroundTaskName) &&
+      !CheckArg("attach-console") &&
+      !EnvHasValue("MOZ_BACKGROUNDTASKS_IGNORE_NO_OUTPUT")) {
+    // Suppress output, somewhat crudely.  We need to suppress stderr as well
+    // as stdout because assertions, of which there are many, write to stderr.
+    Unused << freopen("/dev/null", "w", stdout);
+    Unused << freopen("/dev/null", "w", stderr);
+    return;
+  }
+#  endif
+  printf_stderr("*** You are running in background task mode. ***\n");
+}
+#endif
+
 /*
  * XRE_mainInit - Initial setup and command line parameter processing.
  * Main() will exit early if either return value != 0 or if aExitFlag is
@@ -3903,30 +3915,7 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
       CheckArg("backgroundtask", &backgroundTaskName, CheckArgFlag::None)) {
     backgroundTask = Some(backgroundTaskName);
 
-    CheckArgFlag checkArgFlag =
-#  ifdef XP_WIN
-        CheckArgFlag::None;  // attach-console is consumed below in
-                             // NS_CreateNativeAppSupport on Windows
-#  else
-        CheckArgFlag::RemoveArg;  // but not on non-Windows, so we consume it
-                                  // explicitly here
-#  endif
-
-    if (BackgroundTasks::IsNoOutputTaskName(backgroundTask.ref()) &&
-        !CheckArg("attach-console", nullptr, checkArgFlag) &&
-        !EnvHasValue("MOZ_BACKGROUNDTASKS_IGNORE_NO_OUTPUT")) {
-      // Suppress output, somewhat crudely.  We need to suppress stderr as well
-      // as stdout because assertions, of which there are many, write to stderr.
-#  ifdef XP_WIN
-      Unused << freopen("nul:", "w", stdout);
-      Unused << freopen("nul:", "w", stderr);
-#  else
-      Unused << freopen("/dev/null", "w", stdout);
-      Unused << freopen("/dev/null", "w", stderr);
-#  endif
-    } else {
-      printf_stderr("*** You are running in background task mode. ***\n");
-    }
+    SetupConsoleForBackgroundTask(backgroundTask.ref());
   }
 
   BackgroundTasks::Init(backgroundTask);
@@ -5093,10 +5082,16 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
 
   bool lastStartupWasCrash = CheckLastStartupWasCrash().unwrapOr(false);
 
+  CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::LastStartupWasCrash, lastStartupWasCrash);
+
   if (CheckArg("purgecaches") || PR_GetEnv("MOZ_PURGE_CACHES") ||
       lastStartupWasCrash || gSafeMode) {
     cachesOK = false;
   }
+
+  CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::StartupCacheValid, cachesOK && versionOK);
 
   // Every time a profile is loaded by a build with a different version,
   // it updates the compatibility.ini file saying what version last wrote

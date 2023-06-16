@@ -136,7 +136,7 @@ export var Integration = new Proxy(
 /**
  * Individual integration point for which overrides can be registered.
  */
-var IntegrationPoint = function() {
+var IntegrationPoint = function () {
   this._overrideFns = new Set();
   this._combined = {
     // eslint-disable-next-line mozilla/use-chromeutils-generateqi

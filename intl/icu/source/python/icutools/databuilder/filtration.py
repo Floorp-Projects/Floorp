@@ -273,8 +273,8 @@ def _preprocess_file_filters(requests, config, io):
     default_filter_json = "exclude" if config.strategy == "additive" else "include"
     for category in all_categories:
         filter_json = default_filter_json
-        # Special default for category "brkitr_lstm" as "exclude" for now.
-        if "brkitr_lstm" == category:
+        # Special default for category "brkitr_lstm" and "brkitr_adaboost" as "exclude" for now.
+        if "brkitr_lstm" == category or "brkitr_adaboost" == category:
             filter_json = "exclude"
         # Figure out the correct filter to create for now.
         if "featureFilters" in json_data and category in json_data["featureFilters"]:

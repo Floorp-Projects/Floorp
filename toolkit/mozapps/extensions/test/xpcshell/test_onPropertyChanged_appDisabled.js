@@ -1,9 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// turn on Cu.isInAutomation
-Services.prefs.setBoolPref(PREF_DISABLE_SECURITY, true);
-
 const ID = "addon1@tests.mozilla.org";
 add_task(async function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");

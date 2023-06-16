@@ -11,7 +11,7 @@ var max = 0;
 var using_proxy = false;
 
 const RESPONSE_LENGTH = 3000000;
-const STATUS_RECEIVING_FROM = 0x804b0006;
+const STATUS_RECEIVING_FROM = 0x4b0006;
 
 const TYPE_ONSTATUS = 1;
 const TYPE_ONPROGRESS = 2;
@@ -19,7 +19,7 @@ const TYPE_ONSTARTREQUEST = 3;
 const TYPE_ONDATAAVAILABLE = 4;
 const TYPE_ONSTOPREQUEST = 5;
 
-var ProgressCallback = function() {};
+var ProgressCallback = function () {};
 
 ProgressCallback.prototype = {
   _listener: null,

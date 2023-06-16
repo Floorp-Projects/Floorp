@@ -3,9 +3,7 @@
   "$id": "file:///ExtensionDoorhanger.schema.json",
   "title": "ExtensionDoorhanger",
   "description": "A template with a heading, addon icon, title and description. No markup allowed.",
-  "allOf": [
-    { "$ref": "file:///FxMSCommon.schema.json#/$defs/Message" }
-  ],
+  "allOf": [{ "$ref": "file:///FxMSCommon.schema.json#/$defs/Message" }],
   "type": "object",
   "properties": {
     "content": {
@@ -39,6 +37,10 @@
         "persistent_doorhanger": {
           "type": "boolean",
           "description": "Prevent the doorhanger from being dismissed if user interacts with the page or switches between applications."
+        },
+        "show_in_private_browsing": {
+          "type": "boolean",
+          "description": "Whether to allow the message to be shown in private browsing mode. Defaults to false."
         },
         "notification_text": {
           "$ref": "file:///FxMSCommon.schema.json#/$defs/localizableText",
@@ -273,8 +275,8 @@
                                 "description": "URL used in combination with the primary action dispatched."
                               }
                             ]
-                            }
                           }
+                        }
                       }
                     }
                   }
@@ -285,20 +287,11 @@
         }
       },
       "additionalProperties": true,
-      "required": [
-        "layout",
-        "bucket_id",
-        "heading_text",
-        "text",
-        "buttons"
-      ],
+      "required": ["layout", "bucket_id", "heading_text", "text", "buttons"],
       "if": {
         "properties": {
           "skip_address_bar_notifier": {
-            "anyOf": [
-              { "const": "false" },
-              { "const": null }
-            ]
+            "anyOf": [{ "const": "false" }, { "const": null }]
           }
         }
       },

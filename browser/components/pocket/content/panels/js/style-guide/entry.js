@@ -13,8 +13,9 @@ function onDOMLoaded() {
 }
 
 function setupDarkModeUI() {
-  let isDarkModeEnabled = window?.matchMedia(`(prefers-color-scheme: dark)`)
-    .matches;
+  let isDarkModeEnabled = window?.matchMedia(
+    `(prefers-color-scheme: dark)`
+  ).matches;
   let elDarkModeToggle = document.querySelector(`#dark_mode_toggle input`);
   let elBody = document.querySelector(`body`);
 
@@ -30,7 +31,7 @@ function setupDarkModeUI() {
 
   setTheme();
 
-  elDarkModeToggle.addEventListener(`click`, function(e) {
+  elDarkModeToggle.addEventListener(`click`, function (e) {
     e.preventDefault;
     isDarkModeEnabled = !isDarkModeEnabled;
     setTheme();

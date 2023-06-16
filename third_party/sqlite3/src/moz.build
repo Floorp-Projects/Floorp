@@ -62,6 +62,8 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'uikit':
 if CONFIG['MOZ_DEBUG']:
     DEFINES['SQLITE_DEBUG'] = 1
     DEFINES['SQLITE_ENABLE_API_ARMOR'] = True
+else:
+    DEFINES['SQLITE_OMIT_COMPILEOPTION_DIAGS'] = 1
 
 if CONFIG['OS_TARGET'] == 'Android':
     # default to user readable only to fit Android security model
@@ -107,3 +109,14 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         '-Wno-sign-compare',
         '-Wno-type-limits',
     ]
+
+# Set a default journal size limit. Note an hot journal can grow over this
+# limit, but if it does Sqlite will truncate it once it returns being idle.
+# Also note growing a journal has a cost, so a too strict limit may affect
+# performance.
+# Also note this is necessary for safely supporting SQLITE_FCNTL_PERSIST_WAL
+# that our base VFS uses, indeed when a journal limit is set, the journal will
+# be truncated to 0 on shutdown, reducing the likelihood of corruption if the
+# user doesn't move auxiliary files along with the main database.
+# This is in bytes.
+DEFINES['SQLITE_DEFAULT_JOURNAL_SIZE_LIMIT'] = 1572864

@@ -7,7 +7,7 @@
 
 const TEST_URI = "<div id='target' style='color: rgb(255, 0, 0);'>test</div>";
 
-add_task(async function() {
+add_task(async function () {
   info(
     "Check whether the color as well in computed view is updated " +
       "when the rule in rule view is changed in case of 3 pane mode"
@@ -41,7 +41,7 @@ add_task(async function() {
   );
 });
 
-add_task(async function() {
+add_task(async function () {
   info(
     "Check that the computed view is not updated " +
       "if the rule view is changed in 2 pane mode."

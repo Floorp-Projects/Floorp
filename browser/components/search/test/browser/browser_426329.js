@@ -251,7 +251,7 @@ add_task(async function testRightClick() {
     triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
   });
   await new Promise(resolve => {
-    setTimeout(function() {
+    setTimeout(function () {
       is(gBrowser.tabs.length, preTabNo, "RightClick did not open new tab");
       is(gBrowser.currentURI.spec, "about:blank", "RightClick did nothing");
       resolve();

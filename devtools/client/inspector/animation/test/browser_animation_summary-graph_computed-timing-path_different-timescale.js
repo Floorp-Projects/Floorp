@@ -5,14 +5,11 @@
 
 // Test the Computed Timing Path component for different time scales.
 
-add_task(async function() {
+add_task(async function () {
   await addTab(URL_ROOT + "doc_simple_animation.html");
   await removeAnimatedElementsExcept([".animated", ".end-delay"]);
-  const {
-    animationInspector,
-    inspector,
-    panel,
-  } = await openAnimationInspector();
+  const { animationInspector, inspector, panel } =
+    await openAnimationInspector();
 
   info("Checking the path for different time scale");
   let onDetailRendered = animationInspector.once(

@@ -37,6 +37,9 @@ export class GeckoViewPdfjsChild extends GeckoViewActorChild {
         this.dispatchEvent(aMsg.data.type, detail);
         break;
       }
+      case "PDFJS:Child:getNimbus":
+        Services.obs.notifyObservers(aMsg.data, "pdfjs-getNimbus");
+        break;
     }
   }
 }

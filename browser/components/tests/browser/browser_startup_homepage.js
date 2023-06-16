@@ -77,8 +77,7 @@ add_task(async function test_once_invalid() {
     "https://valid.firefox.com/|https://mozilla.org/",
     {
       "browser.startup.homepage_override.once": {
-        url:
-          "https://valid.firefox.com|https://invalidfirefox.com|https://mozilla.org",
+        url: "https://valid.firefox.com|https://invalidfirefox.com|https://mozilla.org",
       },
     }
   );

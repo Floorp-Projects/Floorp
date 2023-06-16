@@ -15,9 +15,8 @@ add_task(async function test_multistore_basics() {
   Telemetry.scalarSet(IMPRESSION_ID_ONLY, expectedString);
 
   const mainScalars = Telemetry.getSnapshotForScalars("main").parent;
-  const impressionIdScalars = Telemetry.getSnapshotForScalars(
-    "deletion-request"
-  ).parent;
+  const impressionIdScalars =
+    Telemetry.getSnapshotForScalars("deletion-request").parent;
 
   Assert.ok(
     MAIN_ONLY in mainScalars,

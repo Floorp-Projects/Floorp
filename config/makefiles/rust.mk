@@ -92,7 +92,7 @@ ifndef rustflags_sancov
 # Never enable when coverage is enabled to work around https://github.com/rust-lang/rust/issues/90045.
 ifndef MOZ_CODE_COVERAGE
 ifeq (,$(findstring gkrust_gtest,$(RUST_LIBRARY_FILE)))
-cargo_rustc_flags += -Clto
+cargo_rustc_flags += -Clto$(if $(filter full,$(MOZ_LTO_RUST_CROSS)),=fat)
 endif
 # We need -Cembed-bitcode=yes for all crates when using -Clto.
 RUSTFLAGS += -Cembed-bitcode=yes
@@ -280,7 +280,10 @@ rust_pgo_flags := -C profile-use=$(PGO_PROFILE_PATH)
 endif
 endif
 
-$(target_rust_ltoable): RUSTFLAGS:=$(rustflags_override) $(rustflags_sancov) $(RUSTFLAGS) $(if $(MOZ_LTO_RUST_CROSS),-Clinker-plugin-lto) $(rust_pgo_flags)
+$(target_rust_ltoable): RUSTFLAGS:=$(rustflags_override) $(rustflags_sancov) $(RUSTFLAGS) $(rust_pgo_flags) \
+								$(if $(MOZ_LTO_RUST_CROSS),\
+								    -Clinker-plugin-lto \
+									,)
 $(target_rust_nonltoable): RUSTFLAGS:=$(rustflags_override) $(rustflags_sancov) $(RUSTFLAGS)
 
 TARGET_RECIPES := $(target_rust_ltoable) $(target_rust_nonltoable)
@@ -458,6 +461,13 @@ endif
 endif
 endif
 
+define make_default_rule
+$(1):
+
+endef
+$(foreach dep, $(filter %.h,$(RUST_LIBRARY_DEPS)),$(eval $(call make_default_rule,$(dep))))
+
+
 SUGGEST_INSTALL_ON_FAILURE = (ret=$$?; if [ $$ret = 101 ]; then echo If $1 is not installed, install it using: cargo install $1; fi; exit $$ret)
 
 ifndef CARGO_NO_AUTO_ARG
@@ -539,6 +549,7 @@ define RUST_PROGRAM_DEPENDENCIES
 $(1)_deps := $(wordlist 2, 10000000, $(if $(wildcard $(1).d),$(shell cat $(1).d)))
 $(1): $(CARGO_FILE) $(call resfile,module) $(if $$($(1)_deps),$$($(1)_deps),force-cargo-program-build)
 	$(if $$($(1)_deps),+$(MAKE) force-cargo-program-build,:)
+$(foreach dep,$(filter %.h,$$($(1)_deps)),$(eval $(call make_default_rule,$(dep))))
 endef
 
 $(foreach RUST_PROGRAM,$(RUST_PROGRAMS), $(eval $(call RUST_PROGRAM_DEPENDENCIES,$(RUST_PROGRAM))))

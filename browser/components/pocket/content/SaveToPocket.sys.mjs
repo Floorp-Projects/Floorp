@@ -8,13 +8,9 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AboutReaderParent: "resource:///actors/AboutReaderParent.sys.mjs",
+  CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
   Pocket: "chrome://pocket/content/Pocket.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "CustomizableUI",
-  "resource:///modules/CustomizableUI.jsm"
-);
 
 var PocketCustomizableWidget = {
   init() {

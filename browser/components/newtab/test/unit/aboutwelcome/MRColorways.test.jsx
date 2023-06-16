@@ -68,18 +68,12 @@ describe("Multistage AboutWelcome module", () => {
 
       // Default automatic theme is selected by default
       assert.strictEqual(
-        colorwaysOptionIcons
-          .first()
-          .prop("className")
-          .includes("selected"),
+        colorwaysOptionIcons.first().prop("className").includes("selected"),
         true
       );
 
       assert.strictEqual(
-        colorwaysOptionIcons
-          .first()
-          .prop("className")
-          .includes("default"),
+        colorwaysOptionIcons.first().prop("className").includes("default"),
         true
       );
     });
@@ -95,18 +89,12 @@ describe("Multistage AboutWelcome module", () => {
 
       // Default automatic theme is selected when unsupported in colorway alpenglow theme is active
       assert.strictEqual(
-        colorwaysOptionIcons
-          .first()
-          .prop("className")
-          .includes("selected"),
+        colorwaysOptionIcons.first().prop("className").includes("selected"),
         true
       );
 
       assert.strictEqual(
-        colorwaysOptionIcons
-          .first()
-          .prop("className")
-          .includes("default"),
+        colorwaysOptionIcons.first().prop("className").includes("default"),
         true
       );
     });
@@ -133,10 +121,7 @@ describe("Multistage AboutWelcome module", () => {
       // First colorway option
       // Default theme radio option is selected by default
       assert.strictEqual(
-        colorwaysOptionIcons
-          .first()
-          .prop("className")
-          .includes("selected"),
+        colorwaysOptionIcons.first().prop("className").includes("selected"),
         true
       );
 
@@ -148,10 +133,7 @@ describe("Multistage AboutWelcome module", () => {
 
       // Second colorway option
       assert.strictEqual(
-        colorwaysOptionIcons
-          .last()
-          .prop("className")
-          .includes("selected"),
+        colorwaysOptionIcons.last().prop("className").includes("selected"),
         false
       );
 

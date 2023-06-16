@@ -5,7 +5,7 @@
 "use strict";
 
 // Restoring default should not place addon widgets back in the toolbar
-add_task(async function() {
+add_task(async function () {
   ok(CustomizableUI.inDefaultState, "Default state to begin");
 
   const kWidgetId =
@@ -35,7 +35,7 @@ add_task(async function() {
 });
 
 // resetCustomization shouldn't move 3rd party widgets out of custom toolbars
-add_task(async function() {
+add_task(async function () {
   const kToolbarId = "bug982656-toolbar-with-defaultset";
   const kWidgetId =
     "bug982656-add-on-widget-should-restore-to-default-area-when-area-is-not-builtin";

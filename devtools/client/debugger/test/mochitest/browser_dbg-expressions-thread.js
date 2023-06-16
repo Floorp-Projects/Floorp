@@ -12,7 +12,7 @@ const TEST_COM_URI = `${URL_ROOT_COM_SSL}examples/doc_dbg-fission-frame-sources.
 const TEST_ORG_IFRAME_URI = `${URL_ROOT_ORG_SSL}examples/doc_dbg-fission-frame-sources-frame.html`;
 const DATA_URI = "data:text/html,<title>foo</title>";
 
-add_task(async function() {
+add_task(async function () {
   // Load a test page with a remote frame and wait for both sources to be visible.
   // simple1.js is imported by the main page. simple2.js comes from the frame.
   const dbg = await initDebuggerWithAbsoluteURL(
@@ -21,12 +21,10 @@ add_task(async function() {
     "simple2.js"
   );
 
-  // expand threads pane
   const threadsPaneEl = await waitForElementWithSelector(
     dbg,
     ".threads-pane .header-label"
   );
-  threadsPaneEl.click();
 
   await waitForElement(dbg, "threadsPaneItems");
   const threadsEl = findAllElements(dbg, "threadsPaneItems");

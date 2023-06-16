@@ -27,7 +27,7 @@ add_task(async function partial_source() {
     let sourceTab = await openViewPartialSource("#other", frameBC);
 
     let browser = gBrowser.selectedBrowser;
-    let textContent = await SpecialPowers.spawn(browser, [], async function() {
+    let textContent = await SpecialPowers.spawn(browser, [], async function () {
       return content.document.body.textContent;
     });
     is(
@@ -35,7 +35,7 @@ add_task(async function partial_source() {
       '<a id="other" href="about:about">other text</a>',
       "Correct content loaded"
     );
-    let selection = await SpecialPowers.spawn(browser, [], async function() {
+    let selection = await SpecialPowers.spawn(browser, [], async function () {
       return String(content.getSelection());
     });
     is(selection, "other text", "Correct text selected");

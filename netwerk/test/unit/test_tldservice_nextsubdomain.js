@@ -13,7 +13,7 @@ function run_test() {
     { data: "file://foo/bar", throw: true },
   ];
 
-  tests.forEach(function(test) {
+  tests.forEach(function (test) {
     try {
       var r = Services.eTLD.getNextSubDomain(test.data);
       Assert.equal(r, test.result);

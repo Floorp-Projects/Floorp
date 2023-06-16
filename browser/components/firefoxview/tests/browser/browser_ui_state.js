@@ -12,7 +12,7 @@ add_task(async function test_state_prefs_unset() {
   );
   setupCompleteStub.returns(true);
 
-  await withFirefoxView({}, async function(browser) {
+  await withFirefoxView({}, async function (browser) {
     const { document } = browser.contentWindow;
     let recentlyClosedTabsContainer = document.querySelector(
       "#recently-closed-tabs-container"
@@ -47,7 +47,7 @@ add_task(async function test_state_prefs_defined() {
   );
   setupCompleteStub.returns(true);
 
-  await withFirefoxView({}, async function(browser) {
+  await withFirefoxView({}, async function (browser) {
     const { document } = browser.contentWindow;
     let recentlyClosedTabsContainer = document.querySelector(
       "#recently-closed-tabs-container"
@@ -82,7 +82,7 @@ add_task(async function test_state_pref_set_on_toggle() {
   );
   setupCompleteStub.returns(true);
 
-  await withFirefoxView({}, async function(browser) {
+  await withFirefoxView({}, async function (browser) {
     const { document } = browser.contentWindow;
 
     await waitForElementVisible(browser, "#tab-pickup-container > summary");
@@ -120,7 +120,7 @@ add_task(async function test_state_prefs_ignored_during_sync_setup() {
     "isTabSyncSetupComplete"
   );
   setupCompleteStub.returns(false);
-  await withFirefoxView({}, async function(browser) {
+  await withFirefoxView({}, async function (browser) {
     const { document } = browser.contentWindow;
     let recentlyClosedTabsContainer = document.querySelector(
       "#recently-closed-tabs-container"

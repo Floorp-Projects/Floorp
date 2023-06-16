@@ -42,7 +42,7 @@ void PerformAlphaBlending(const float* bg, const float* bga, const float* fg,
                           bool alpha_is_premultiplied, bool clamp) {
   if (bg == bga && fg == fga) {
     for (size_t x = 0; x < num_pixels; ++x) {
-      float fa = clamp ? fga[x] : std::min(std::max(0.0f, fga[x]), 1.0f);
+      float fa = clamp ? fga[x] : Clamp(fga[x]);
       out[x] = (1.f - (1.f - fa) * (1.f - bga[x]));
     }
   } else {
@@ -66,9 +66,13 @@ void PerformAlphaWeightedAdd(const float* bg, const float* fg, const float* fga,
                              float* out, size_t num_pixels, bool clamp) {
   if (fg == fga) {
     memcpy(out, bg, num_pixels * sizeof(*out));
-  } else {
+  } else if (clamp) {
     for (size_t x = 0; x < num_pixels; ++x) {
       out[x] = bg[x] + fg[x] * Clamp(fga[x]);
+    }
+  } else {
+    for (size_t x = 0; x < num_pixels; ++x) {
+      out[x] = bg[x] + fg[x] * fga[x];
     }
   }
 }

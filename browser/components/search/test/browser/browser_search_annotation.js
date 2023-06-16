@@ -5,8 +5,8 @@
 
 // Test whether a visit information is annotated correctly when searching on searchbar.
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
 });
 
 const FRECENCY = {
@@ -43,7 +43,7 @@ async function assertDatabase({ targetURL, expected }) {
   );
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
 
@@ -56,7 +56,7 @@ add_setup(async function() {
     { setAsDefault: true }
   );
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     gCUITestUtils.removeSearchBar();
   });
 });

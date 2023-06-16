@@ -298,6 +298,8 @@ class PeerConnection : public PeerConnectionInternal,
       const std::set<std::string>& transport_names) override;
   Call::Stats GetCallStats() override;
 
+  absl::optional<AudioDeviceModule::Stats> GetAudioDeviceStats() override;
+
   bool GetLocalCertificate(
       const std::string& transport_name,
       rtc::scoped_refptr<rtc::RTCCertificate>* certificate) override;
@@ -594,6 +596,8 @@ class PeerConnection : public PeerConnectionInternal,
       RtpTransportInternal* rtp_transport,
       rtc::scoped_refptr<DtlsTransport> dtls_transport,
       DataChannelTransportInterface* data_channel_transport) override;
+
+  void SetSctpTransportName(std::string sctp_transport_name);
 
   std::function<void(const rtc::CopyOnWriteBuffer& packet,
                      int64_t packet_time_us)>

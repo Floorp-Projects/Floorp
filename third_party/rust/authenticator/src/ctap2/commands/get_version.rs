@@ -2,7 +2,6 @@ use super::{CommandError, RequestCtap1, Retryable};
 use crate::consts::U2F_VERSION;
 use crate::transport::errors::{ApduErrorStatus, HIDError};
 use crate::u2ftypes::CTAP1RequestAPDU;
-use crate::u2ftypes::U2FDevice;
 
 #[allow(non_camel_case_types)]
 pub enum U2FInfo {
@@ -38,10 +37,7 @@ impl RequestCtap1 for GetVersion {
         }
     }
 
-    fn ctap1_format<Dev>(&self, _dev: &mut Dev) -> Result<(Vec<u8>, ()), HIDError>
-    where
-        Dev: U2FDevice,
-    {
+    fn ctap1_format(&self) -> Result<(Vec<u8>, ()), HIDError> {
         let flags = 0;
 
         let cmd = U2F_VERSION;

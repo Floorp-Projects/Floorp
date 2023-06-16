@@ -1,7 +1,7 @@
-var WebVRHelpers = (function() {
+var WebVRHelpers = (function () {
   "use strict";
 
-  var RequestPresentOnVRDisplay = function(vrDisplay, vrLayers, callback) {
+  var RequestPresentOnVRDisplay = function (vrDisplay, vrLayers, callback) {
     if (callback) {
       callback();
     }

@@ -7,7 +7,7 @@
 
 const { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
 
-add_task(async function() {
+add_task(async function () {
   const tab = await addTab("about:blank");
   const toolbox = await openToolboxForTab(
     tab,
@@ -19,10 +19,8 @@ add_task(async function() {
   );
 
   const win = getWindow(toolbox);
-  const {
-    outerWidth: originalWindowWidth,
-    outerHeight: originalWindowHeight,
-  } = win;
+  const { outerWidth: originalWindowWidth, outerHeight: originalWindowHeight } =
+    win;
   registerCleanupFunction(() => {
     for (const preference of toolboxButtonPreferences) {
       Services.prefs.clearUserPref(preference);

@@ -107,7 +107,7 @@ function checkReadyState(pageLoadStrategy, eventData = {}) {
  *     If <code>current</code> is not defined, or any of
  *     <code>current</code> or <code>future</code>  are invalid URLs.
  */
-navigate.isLoadEventExpected = function(current, options = {}) {
+navigate.isLoadEventExpected = function (current, options = {}) {
   const { browsingContext, future, target } = options;
 
   if (typeof current == "undefined") {
@@ -161,7 +161,7 @@ navigate.isLoadEventExpected = function(current, options = {}) {
  * @param {string} url
  *     URL to navigate to.
  */
-navigate.navigateTo = async function(browsingContext, url) {
+navigate.navigateTo = async function (browsingContext, url) {
   const opts = {
     loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_IS_LINK,
     triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
@@ -177,7 +177,7 @@ navigate.navigateTo = async function(browsingContext, url) {
  * @param {CanonicalBrowsingContext} browsingContext
  *     Browsing context to refresh.
  */
-navigate.refresh = async function(browsingContext) {
+navigate.refresh = async function (browsingContext) {
   const flags = Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
   browsingContext.reload(flags);
 };

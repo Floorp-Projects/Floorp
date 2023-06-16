@@ -24,7 +24,7 @@ add_task(async function setup_pref() {
   });
 });
 
-add_task(async function() {
+add_task(async function () {
   const win = await BrowserTestUtils.openNewBrowserWindow({
     fission: true,
   });

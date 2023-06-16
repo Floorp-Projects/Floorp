@@ -41,11 +41,7 @@ const uuidGenerator = Services.uuid;
 
 function randomName() {
   return (
-    "moz-taskschd-test-" +
-    uuidGenerator
-      .generateUUID()
-      .toString()
-      .slice(1, -1)
+    "moz-taskschd-test-" + uuidGenerator.generateUUID().toString().slice(1, -1)
   );
 }
 

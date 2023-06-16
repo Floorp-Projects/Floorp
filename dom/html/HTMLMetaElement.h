@@ -20,14 +20,12 @@ class HTMLMetaElement final : public nsGenericHTMLElement {
   // nsISupports
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLMetaElement, nsGenericHTMLElement)
 
-  virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  virtual void UnbindFromTree(bool aNullParent = true) override;
+  nsresult BindToTree(BindContext&, nsINode& aParent) override;
+  void UnbindFromTree(bool aNullParent = true) override;
 
-  virtual void AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                            const nsAttrValue* aValue,
-                            const nsAttrValue* aOldValue,
-                            nsIPrincipal* aSubjectPrincipal,
-                            bool aNotify) override;
+  void AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                    const nsAttrValue* aValue, const nsAttrValue* aOldValue,
+                    nsIPrincipal* aSubjectPrincipal, bool aNotify) override;
 
   void CreateAndDispatchEvent(Document&, const nsAString& aEventName);
 

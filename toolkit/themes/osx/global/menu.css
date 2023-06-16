@@ -113,6 +113,7 @@ menubar > menu[_moz-menuactive="true"][open="true"] {
 /* menu/menuitems in popups */
 
 menupopup {
+  /* stylelint-disable-next-line font-family-no-missing-generic-family-keyword */
   font: -moz-pull-down-menu;
 }
 

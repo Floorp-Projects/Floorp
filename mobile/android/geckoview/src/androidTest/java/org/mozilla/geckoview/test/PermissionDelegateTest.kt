@@ -61,20 +61,20 @@ class PermissionDelegateTest : BaseSessionTest() {
         assertInAutomationThat(
             "Should have camera permission",
             hasPermission(Manifest.permission.CAMERA),
-            equalTo(true)
+            equalTo(true),
         )
 
         assertInAutomationThat(
             "Should have microphone permission",
             hasPermission(Manifest.permission.RECORD_AUDIO),
-            equalTo(true)
+            equalTo(true),
         )
 
         mainSession.loadTestPath(HELLO_HTML_PATH)
         mainSession.waitForPageStop()
 
         val devices = mainSession.evaluateJS(
-            "window.navigator.mediaDevices.enumerateDevices()"
+            "window.navigator.mediaDevices.enumerateDevices()",
         ) as JSONArray
 
         var hasVideo = false
@@ -91,12 +91,12 @@ class PermissionDelegateTest : BaseSessionTest() {
         assertThat(
             "Device list should contain camera device",
             hasVideo,
-            equalTo(true)
+            equalTo(true),
         )
         assertThat(
             "Device list should contain microphone device",
             hasAudio,
-            equalTo(true)
+            equalTo(true),
         )
 
         mainSession.delegateDuringNextWait(object : PermissionDelegate {
@@ -106,7 +106,7 @@ class PermissionDelegateTest : BaseSessionTest() {
                 uri: String,
                 video: Array<out MediaSource>?,
                 audio: Array<out MediaSource>?,
-                callback: MediaCallback
+                callback: MediaCallback,
             ) {
                 assertThat("URI should match", uri, endsWith(HELLO_HTML_PATH))
                 assertThat("Video source should be valid", video, not(emptyArray()))
@@ -143,7 +143,7 @@ class PermissionDelegateTest : BaseSessionTest() {
                      stream.getTracks().forEach(track => track.stop());
                      return true;
                    })
-            """.trimMargin()
+            """.trimMargin(),
         ) as Boolean
 
         assertThat("Stream should be active and id should not be empty.", isActive, equalTo(true))
@@ -156,7 +156,7 @@ class PermissionDelegateTest : BaseSessionTest() {
                 uri: String,
                 video: Array<out MediaSource>?,
                 audio: Array<out MediaSource>?,
-                callback: MediaCallback
+                callback: MediaCallback,
             ) {
                 callback.reject()
             }
@@ -166,12 +166,12 @@ class PermissionDelegateTest : BaseSessionTest() {
             if (isEmulator()) {
                 mainSession.waitForJS(
                     """
-                        window.navigator.mediaDevices.getUserMedia({ video: true })"""
+                        window.navigator.mediaDevices.getUserMedia({ video: true })""",
                 )
             } else {
                 mainSession.waitForJS(
                     """
-                        window.navigator.mediaDevices.getUserMedia({ audio: true, video: true })"""
+                        window.navigator.mediaDevices.getUserMedia({ audio: true, video: true })""",
                 )
             }
             fail("Request should have failed")
@@ -179,7 +179,7 @@ class PermissionDelegateTest : BaseSessionTest() {
             assertThat(
                 "Error should be correct",
                 e.reason as String,
-                containsString("NotAllowedError")
+                containsString("NotAllowedError"),
             )
         }
     }
@@ -188,7 +188,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         assertInAutomationThat(
             "Should have location permission",
             hasPermission(Manifest.permission.ACCESS_FINE_LOCATION),
-            equalTo(true)
+            equalTo(true),
         )
 
         val url = createTestUrl(HELLO_HTML_PATH)
@@ -204,7 +204,7 @@ class PermissionDelegateTest : BaseSessionTest() {
             "permissionsLocationProvider",
             1.1111,
             2.2222,
-            false
+            false,
         )
         locProvider.postLocation()
 
@@ -213,14 +213,14 @@ class PermissionDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 1, order = [1])
             override fun onContentPermissionRequest(
                 session: GeckoSession,
-                perm: ContentPermission
+                perm: ContentPermission,
             ):
                 GeckoResult<Int> {
                 assertThat("URI should match", perm.uri, endsWith(url))
                 assertThat(
                     "Type should match",
                     perm.permission,
-                    equalTo(PermissionDelegate.PERMISSION_GEOLOCATION)
+                    equalTo(PermissionDelegate.PERMISSION_GEOLOCATION),
                 )
                 return GeckoResult.fromValue(ContentPermission.VALUE_ALLOW)
             }
@@ -229,12 +229,12 @@ class PermissionDelegateTest : BaseSessionTest() {
             override fun onAndroidPermissionsRequest(
                 session: GeckoSession,
                 permissions: Array<out String>?,
-                callback: PermissionDelegate.Callback
+                callback: PermissionDelegate.Callback,
             ) {
                 assertThat(
                     "Permissions list should be correct",
                     listOf(*permissions!!),
-                    hasItems(Manifest.permission.ACCESS_FINE_LOCATION)
+                    hasItems(Manifest.permission.ACCESS_FINE_LOCATION),
                 )
                 callback.grant()
             }
@@ -247,7 +247,7 @@ class PermissionDelegateTest : BaseSessionTest() {
                         position => resolve(
                             position.coords.latitude !== undefined &&
                             position.coords.longitude !== undefined),
-                        error => reject(error.code)))"""
+                        error => reject(error.code)))""",
             ) as Boolean
 
             assertThat("Request should succeed", hasPosition, equalTo(true))
@@ -255,7 +255,7 @@ class PermissionDelegateTest : BaseSessionTest() {
             assertThat(
                 "Error should not because the permission was denied.",
                 ex.reason as String,
-                not("1")
+                not("1"),
             )
         }
 
@@ -301,7 +301,7 @@ class PermissionDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onContentPermissionRequest(
                 session: GeckoSession,
-                perm: ContentPermission
+                perm: ContentPermission,
             ):
                 GeckoResult<Int> {
                 return GeckoResult.fromValue(ContentPermission.VALUE_DENY)
@@ -311,7 +311,7 @@ class PermissionDelegateTest : BaseSessionTest() {
             override fun onAndroidPermissionsRequest(
                 session: GeckoSession,
                 permissions: Array<out String>?,
-                callback: PermissionDelegate.Callback
+                callback: PermissionDelegate.Callback,
             ) {
             }
         })
@@ -320,7 +320,7 @@ class PermissionDelegateTest : BaseSessionTest() {
             """new Promise((resolve, reject) =>
                 window.navigator.geolocation.getCurrentPosition(reject,
                   error => resolve(error.code)
-                ))"""
+                ))""",
         )
 
         // Error code 1 means permission denied.
@@ -393,13 +393,13 @@ class PermissionDelegateTest : BaseSessionTest() {
             "Non-permanent only makes sense with private browsing " +
                 "(because non-private browsing exceptions are always permanent",
             permanent || privateBrowsing,
-            equalTo(true)
+            equalTo(true),
         )
 
         val runtime0 = TrackingPermissionInstance.start(
             targetContext,
             temporaryProfile.get(),
-            privateBrowsing
+            privateBrowsing,
         )
 
         sessionRule.waitForResult(runtime0.loadTestPath(TRACKERS_PATH))
@@ -408,12 +408,12 @@ class PermissionDelegateTest : BaseSessionTest() {
         assertThat(
             "Permission value should start at DENY",
             permission,
-            equalTo(ContentPermission.VALUE_DENY)
+            equalTo(ContentPermission.VALUE_DENY),
         )
 
         if (privateBrowsing && permanent) {
             runtime0.setPrivateBrowsingPermanentTrackingPermission(
-                ContentPermission.VALUE_ALLOW
+                ContentPermission.VALUE_ALLOW,
             )
         } else {
             runtime0.setTrackingPermission(ContentPermission.VALUE_ALLOW)
@@ -425,7 +425,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         assertThat(
             "Permission value should be ALLOW after setting",
             permission,
-            equalTo(ContentPermission.VALUE_ALLOW)
+            equalTo(ContentPermission.VALUE_ALLOW),
         )
 
         sessionRule.waitForResult(runtime0.quit())
@@ -434,7 +434,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         val runtime1 = TrackingPermissionInstance.start(
             targetContext,
             temporaryProfile.get(),
-            privateBrowsing
+            privateBrowsing,
         )
 
         sessionRule.waitForResult(runtime1.loadTestPath(TRACKERS_PATH))
@@ -447,8 +447,8 @@ class PermissionDelegateTest : BaseSessionTest() {
                 when {
                     permanent -> ContentPermission.VALUE_ALLOW
                     else -> ContentPermission.VALUE_DENY
-                }
-            )
+                },
+            ),
         )
 
         sessionRule.waitForResult(runtime1.quit())
@@ -461,7 +461,7 @@ class PermissionDelegateTest : BaseSessionTest() {
             override fun onLocationChange(
                 session: GeckoSession,
                 url: String?,
-                perms: MutableList<ContentPermission>
+                perms: MutableList<ContentPermission>,
             ) {
                 for (perm in perms) {
                     if (perm.permission == PermissionDelegate.PERMISSION_TRACKING) {
@@ -469,7 +469,7 @@ class PermissionDelegateTest : BaseSessionTest() {
                             assertThat(
                                 "Value should match",
                                 perm.value,
-                                equalTo(value)
+                                equalTo(value),
                             )
                         }
                         found = true
@@ -481,7 +481,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         assertThat(
             "Permission should have been found if expected",
             found,
-            equalTo(value != null)
+            equalTo(value != null),
         )
     }
 
@@ -514,14 +514,14 @@ class PermissionDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onContentPermissionRequest(
                 session: GeckoSession,
-                perm: ContentPermission
+                perm: ContentPermission,
             ):
                 GeckoResult<Int> {
                 assertThat("URI should match", perm.uri, endsWith(url))
                 assertThat(
                     "Type should match",
                     perm.permission,
-                    equalTo(PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION)
+                    equalTo(PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION),
                 )
                 return GeckoResult.fromValue(ContentPermission.VALUE_ALLOW)
             }
@@ -532,7 +532,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         assertThat(
             "Permission should be granted",
             result as String,
-            equalTo("granted")
+            equalTo("granted"),
         )
 
         val perms = sessionRule.waitForResult(storageController.getPermissions(url))
@@ -571,7 +571,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         assertThat(
             "Permission should be granted",
             result2 as String,
-            equalTo("granted")
+            equalTo("granted"),
         )
     }
 
@@ -586,7 +586,7 @@ class PermissionDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onContentPermissionRequest(
                 session: GeckoSession,
-                perm: ContentPermission
+                perm: ContentPermission,
             ):
                 GeckoResult<Int> {
                 return GeckoResult.fromValue(ContentPermission.VALUE_DENY)
@@ -598,7 +598,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         assertThat(
             "Permission should not be granted",
             result as String,
-            equalTo("denied")
+            equalTo("denied"),
         )
 
         val perms = sessionRule.waitForResult(storageController.getPermissions(url))
@@ -641,8 +641,8 @@ class PermissionDelegateTest : BaseSessionTest() {
         // The profile used in automation sets this to false, so we need to hack it back to true here.
         sessionRule.setPrefsUntilTestEnd(
             mapOf(
-                "media.geckoview.autoplay.request" to true
-            )
+                "media.geckoview.autoplay.request" to true,
+            ),
         )
 
         mainSession.loadTestPath(AUTOPLAY_PATH)
@@ -669,14 +669,14 @@ class PermissionDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onContentPermissionRequest(
                 session: GeckoSession,
-                perm: ContentPermission
+                perm: ContentPermission,
             ):
                 GeckoResult<Int> {
                 assertThat("URI should match", perm.uri, endsWith(url))
                 assertThat(
                     "Type should match",
                     perm.permission,
-                    equalTo(PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION)
+                    equalTo(PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION),
                 )
                 assertThat("Context ID should match", perm.contextId, equalTo(mainSession.settings.contextId))
                 return GeckoResult.fromValue(ContentPermission.VALUE_ALLOW)
@@ -688,7 +688,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         assertThat(
             "Permission should be granted",
             result as String,
-            equalTo("granted")
+            equalTo("granted"),
         )
 
         val perms = sessionRule.waitForResult(storageController.getPermissions(url, false))
@@ -725,7 +725,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         val session2 = sessionRule.createOpenSession(
             GeckoSessionSettings.Builder()
                 .contextId("foo")
-                .build()
+                .build(),
         )
 
         session2.loadUri(url)
@@ -735,19 +735,19 @@ class PermissionDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onContentPermissionRequest(
                 session: GeckoSession,
-                perm: ContentPermission
+                perm: ContentPermission,
             ):
                 GeckoResult<Int> {
                 assertThat("URI should match", perm.uri, endsWith(url))
                 assertThat(
                     "Type should match",
                     perm.permission,
-                    equalTo(PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION)
+                    equalTo(PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION),
                 )
                 assertThat(
                     "Context ID should match",
                     perm.contextId,
-                    equalTo(session2.settings.contextId)
+                    equalTo(session2.settings.contextId),
                 )
                 return GeckoResult.fromValue(ContentPermission.VALUE_ALLOW)
             }
@@ -758,7 +758,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         assertThat(
             "Permission should be granted",
             result2 as String,
-            equalTo("granted")
+            equalTo("granted"),
         )
 
         val perms2 = sessionRule.waitForResult(storageController.getPermissions(url, false))
@@ -804,14 +804,14 @@ class PermissionDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onContentPermissionRequest(
                 session: GeckoSession,
-                perm: ContentPermission
+                perm: ContentPermission,
             ):
                 GeckoResult<Int> {
                 assertThat("URI should match", perm.uri, endsWith(url))
                 assertThat(
                     "Type should match",
                     perm.permission,
-                    equalTo(PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION)
+                    equalTo(PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION),
                 )
                 return GeckoResult.fromValue(ContentPermission.VALUE_DENY)
             }
@@ -836,7 +836,7 @@ class PermissionDelegateTest : BaseSessionTest() {
 
         storageController.setPermission(
             notificationPerm!!,
-            ContentPermission.VALUE_ALLOW
+            ContentPermission.VALUE_ALLOW,
         )
 
         mainSession.delegateDuringNextWait(object : NavigationDelegate {
@@ -861,7 +861,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         assertThat(
             "Permission should be granted",
             result as String,
-            equalTo("granted")
+            equalTo("granted"),
         )
     }
 
@@ -875,14 +875,14 @@ class PermissionDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onContentPermissionRequest(
                 session: GeckoSession,
-                perm: ContentPermission
+                perm: ContentPermission,
             ):
                 GeckoResult<Int> {
                 assertThat("URI should match", perm.uri, endsWith(url))
                 assertThat(
                     "Type should match",
                     perm.permission,
-                    equalTo(PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION)
+                    equalTo(PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION),
                 )
                 return GeckoResult.fromValue(ContentPermission.VALUE_ALLOW)
             }
@@ -893,7 +893,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         assertThat(
             "Permission should be granted",
             result as String,
-            equalTo("granted")
+            equalTo("granted"),
         )
 
         val perms = sessionRule.waitForResult(storageController.getPermissions(url))
@@ -914,7 +914,7 @@ class PermissionDelegateTest : BaseSessionTest() {
 
         storageController.setPermission(
             notificationPerm!!,
-            ContentPermission.VALUE_DENY
+            ContentPermission.VALUE_DENY,
         )
 
         mainSession.delegateDuringNextWait(object : NavigationDelegate {
@@ -939,7 +939,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         assertThat(
             "Permission should be denied",
             result2 as String,
-            equalTo("denied")
+            equalTo("denied"),
         )
     }
 
@@ -953,14 +953,14 @@ class PermissionDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onContentPermissionRequest(
                 session: GeckoSession,
-                perm: ContentPermission
+                perm: ContentPermission,
             ):
                 GeckoResult<Int> {
                 assertThat("URI should match", perm.uri, endsWith(url))
                 assertThat(
                     "Type should match",
                     perm.permission,
-                    equalTo(PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION)
+                    equalTo(PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION),
                 )
                 return GeckoResult.fromValue(ContentPermission.VALUE_ALLOW)
             }
@@ -971,7 +971,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         assertThat(
             "Permission should be granted",
             result as String,
-            equalTo("granted")
+            equalTo("granted"),
         )
 
         val perms = sessionRule.waitForResult(storageController.getPermissions(url))
@@ -992,14 +992,14 @@ class PermissionDelegateTest : BaseSessionTest() {
 
         storageController.setPermission(
             notificationPerm!!,
-            ContentPermission.VALUE_PROMPT
+            ContentPermission.VALUE_PROMPT,
         )
 
         mainSession.delegateDuringNextWait(object : PermissionDelegate {
             @AssertCalled(count = 1)
             override fun onContentPermissionRequest(
                 session: GeckoSession,
-                perm: ContentPermission
+                perm: ContentPermission,
             ):
                 GeckoResult<Int> {
                 return GeckoResult.fromValue(ContentPermission.VALUE_PROMPT)
@@ -1011,7 +1011,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         assertThat(
             "Permission should be default",
             result2 as String,
-            equalTo("default")
+            equalTo("default"),
         )
     }
 
@@ -1025,14 +1025,14 @@ class PermissionDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onContentPermissionRequest(
                 session: GeckoSession,
-                perm: ContentPermission
+                perm: ContentPermission,
             ):
                 GeckoResult<Int> {
                 assertThat("URI should match", perm.uri, endsWith(url))
                 assertThat(
                     "Type should match",
                     perm.permission,
-                    equalTo(PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION)
+                    equalTo(PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION),
                 )
                 return GeckoResult.fromValue(ContentPermission.VALUE_ALLOW)
             }
@@ -1043,7 +1043,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         assertThat(
             "Permission should be granted",
             result as String,
-            equalTo("granted")
+            equalTo("granted"),
         )
 
         val perms = sessionRule.waitForResult(storageController.getPermissions(url))

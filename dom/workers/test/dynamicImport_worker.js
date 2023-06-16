@@ -3,7 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-onmessage = function(event) {
+onmessage = function (event) {
   switch (event.data) {
     case "start":
       import("./dynamicImport_nested.mjs").then(m => postMessage(m.message));

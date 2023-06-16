@@ -400,9 +400,11 @@ nsresult nsHttpChannel::AddSecurityMessage(const nsAString& aMessageTag,
 
 NS_IMETHODIMP
 nsHttpChannel::LogBlockedCORSRequest(const nsAString& aMessage,
-                                     const nsACString& aCategory) {
+                                     const nsACString& aCategory,
+                                     bool aIsWarning) {
   if (mWarningReporter) {
-    return mWarningReporter->LogBlockedCORSRequest(aMessage, aCategory);
+    return mWarningReporter->LogBlockedCORSRequest(aMessage, aCategory,
+                                                   aIsWarning);
   }
   return NS_ERROR_UNEXPECTED;
 }
@@ -537,6 +539,20 @@ nsresult nsHttpChannel::OnBeforeConnect() {
     nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
         this, getter_AddRefs(resultPrincipal));
   }
+
+  // Check if we already know about the HSTS status of the host
+  nsISiteSecurityService* sss = gHttpHandler->GetSSService();
+  NS_ENSURE_TRUE(sss, NS_ERROR_OUT_OF_MEMORY);
+  bool isSecureURI;
+  OriginAttributes originAttributes;
+  if (!StoragePrincipalHelper::GetOriginAttributesForHSTS(this,
+                                                          originAttributes)) {
+    return NS_ERROR_FAILURE;
+  }
+  rv = sss->IsSecureURI(mURI, originAttributes, &isSecureURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+  // Save that on the loadInfo so it can later be consumed by SecurityInfo.jsm
+  mLoadInfo->SetHstsStatus(isSecureURI);
 
   // At this point it is no longer possible to call
   // HttpBaseChannel::UpgradeToSecure.
@@ -7013,17 +7029,7 @@ static void RecordOnStartTelemetry(nsresult aStatus,
     Others = 2,
   };
 
-  if (StaticPrefs::network_trr_odoh_enabled()) {
-    nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
-    if (!dns) {
-      return;
-    }
-    bool ODoHActivated = false;
-    if (NS_SUCCEEDED(dns->GetODoHActivated(&ODoHActivated)) && ODoHActivated) {
-      Telemetry::Accumulate(Telemetry::HTTP_CHANNEL_ONSTART_SUCCESS_ODOH,
-                            NS_SUCCEEDED(aStatus));
-    }
-  } else if (TRRService::Get() && TRRService::Get()->IsConfirmed()) {
+  if (TRRService::Get() && TRRService::Get()->IsConfirmed()) {
     // Note this telemetry probe is not working when DNS resolution is done in
     // the socket process.
     HttpOnStartState state = HttpOnStartState::Others;
@@ -8142,7 +8148,7 @@ nsHttpChannel::OnDataAvailable(nsIRequest* request, nsIInputStream* input,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsHttpChannel::RetargetDeliveryTo(nsIEventTarget* aNewTarget) {
+nsHttpChannel::RetargetDeliveryTo(nsISerialEventTarget* aNewTarget) {
   MOZ_ASSERT(NS_IsMainThread(), "Should be called on main thread only");
 
   NS_ENSURE_ARG(aNewTarget);
@@ -8175,7 +8181,7 @@ nsHttpChannel::RetargetDeliveryTo(nsIEventTarget* aNewTarget) {
 
     // If retarget fails for transaction pump, we must restore mCachePump.
     if (NS_FAILED(rv) && retargetableCachePump) {
-      nsCOMPtr<nsIEventTarget> main = GetMainThreadSerialEventTarget();
+      nsCOMPtr<nsISerialEventTarget> main = GetMainThreadSerialEventTarget();
       NS_ENSURE_TRUE(main, NS_ERROR_UNEXPECTED);
       rv = retargetableCachePump->RetargetDeliveryTo(main);
     }
@@ -8184,7 +8190,7 @@ nsHttpChannel::RetargetDeliveryTo(nsIEventTarget* aNewTarget) {
 }
 
 NS_IMETHODIMP
-nsHttpChannel::GetDeliveryTarget(nsIEventTarget** aEventTarget) {
+nsHttpChannel::GetDeliveryTarget(nsISerialEventTarget** aEventTarget) {
   if (mCachePump) {
     return mCachePump->GetDeliveryTarget(aEventTarget);
   }
@@ -9840,14 +9846,16 @@ void nsHttpChannel::DisableIsOpaqueResponseAllowedAfterSniffCheck(
         if (!isInitialRequest) {
           // Step 8.1
           BlockOpaqueResponseAfterSniff(
-              u"media request after sniffing, but not initial request"_ns);
+              u"media request after sniffing, but not initial request"_ns,
+              OpaqueResponseBlockedTelemetryReason::MEDIA_NOT_INITIAL);
           return;
         }
 
         if (mResponseHead->Status() != 200 && mResponseHead->Status() != 206) {
           // Step 8.2
           BlockOpaqueResponseAfterSniff(
-              u"media request's response status is neither 200 nor 206"_ns);
+              u"media request's response status is neither 200 nor 206"_ns,
+              OpaqueResponseBlockedTelemetryReason::MEDIA_INCORRECT_RESP);
           return;
         }
       }

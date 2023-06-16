@@ -6,10 +6,10 @@
 // Check expanding/collapsing object with symbol properties in the console.
 const TEST_URI = "data:text/html;charset=utf8,<!DOCTYPE html>";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     class MyClass {
       constructor(isParent = true) {
         this.publicProperty = "public property";

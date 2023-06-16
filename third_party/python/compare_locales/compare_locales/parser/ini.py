@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
 import re
 
 from .base import (
@@ -49,10 +47,10 @@ class IniParser(Parser):
         if m:
             return IniSection(ctx, m.span(), m.span('val'))
 
-        return super(IniParser, self).getNext(ctx, offset)
+        return super().getNext(ctx, offset)
 
     def getJunk(self, ctx, offset, *expressions):
         # base.Parser.getNext calls us with self.reKey, self.reComment.
         # Add self.reSection to the end-of-junk expressions
         expressions = expressions + (self.reSection,)
-        return super(IniParser, self).getJunk(ctx, offset, *expressions)
+        return super().getJunk(ctx, offset, *expressions)

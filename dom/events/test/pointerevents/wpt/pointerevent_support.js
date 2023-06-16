@@ -27,7 +27,7 @@ function check_PointerEvent(event, testNamePrefix) {
     event.type;
 
   if (expectedPointerType != null) {
-    test(function() {
+    test(function () {
       assert_equals(
         event.pointerType,
         expectedPointerType,
@@ -36,7 +36,7 @@ function check_PointerEvent(event, testNamePrefix) {
     }, pointerTestName + " event pointerType is correct.");
   }
 
-  test(function() {
+  test(function () {
     assert_true(
       event instanceof event.target.ownerDocument.defaultView.PointerEvent,
       "event is a PointerEvent event"
@@ -72,14 +72,14 @@ function check_PointerEvent(event, testNamePrefix) {
     ["readonly", "string", "pointerType"],
     ["readonly", "boolean", "isPrimary"],
     ["readonly", "long", "detail", 0],
-  ].forEach(function(attr) {
+  ].forEach(function (attr) {
     var readonly = attr[0];
     var type = attr[1];
     var name = attr[2];
     var value = attr[3];
 
     // existence check
-    test(function() {
+    test(function () {
       assert_true(
         name in event,
         name + " attribute in " + event.type + " event"
@@ -88,7 +88,7 @@ function check_PointerEvent(event, testNamePrefix) {
 
     // readonly check
     if (readonly === "readonly") {
-      test(function() {
+      test(function () {
         assert_readonly(
           event.type,
           name,
@@ -98,7 +98,7 @@ function check_PointerEvent(event, testNamePrefix) {
     }
 
     // type check
-    test(function() {
+    test(function () {
       assert_true(
         idl_type_check[type](event[name]),
         name + " attribute of type " + type
@@ -114,7 +114,7 @@ function check_PointerEvent(event, testNamePrefix) {
 
     // value check if defined
     if (value != undefined) {
-      test(function() {
+      test(function () {
         assert_equals(event[name], value, name + " attribute value");
       }, pointerTestName + "." + name + " value is " + value + ".");
     }
@@ -122,7 +122,7 @@ function check_PointerEvent(event, testNamePrefix) {
 
   // Check the pressure value
   // TA: 1.6, 1.7, 1.8
-  test(function() {
+  test(function () {
     // TA: 1.6
     assert_greater_than_equal(
       event.pressure,
@@ -160,7 +160,7 @@ function check_PointerEvent(event, testNamePrefix) {
   // Check mouse-specific properties
   if (event.pointerType === "mouse") {
     // TA: 1.9, 1.10, 1.13
-    test(function() {
+    test(function () {
       assert_equals(event.width, 1, "width of mouse should be 1");
       assert_equals(event.height, 1, "height of mouse should be 1");
       assert_equals(event.tiltX, 0, event.type + ".tiltX is 0 for mouse");
@@ -214,7 +214,7 @@ function updateDescriptionSecondStepTouchActionElement(
   target,
   scrollReturnInterval
 ) {
-  window.setTimeout(function() {
+  window.setTimeout(function () {
     objectScroller(target, "up", 0);
   }, scrollReturnInterval);
   document.getElementById("desc").innerHTML =
@@ -226,7 +226,7 @@ function updateDescriptionThirdStepTouchActionElement(
   scrollReturnInterval,
   callback = null
 ) {
-  window.setTimeout(function() {
+  window.setTimeout(function () {
     objectScroller(target, "left", 0);
     if (callback) {
       callback();
@@ -279,13 +279,13 @@ function MultiPointerTypeTest(testName, types) {
   this.createNextTest();
 }
 
-MultiPointerTypeTest.prototype.skip = function() {
+MultiPointerTypeTest.prototype.skip = function () {
   var prevTest = this.currentTest;
   this.createNextTest();
   prevTest.timeout();
 };
 
-MultiPointerTypeTest.prototype.done = function() {
+MultiPointerTypeTest.prototype.done = function () {
   var prevTest = this.currentTest;
   this.createNextTest();
   if (prevTest != null) {
@@ -293,11 +293,11 @@ MultiPointerTypeTest.prototype.done = function() {
   }
 };
 
-MultiPointerTypeTest.prototype.step = function(stepFunction) {
+MultiPointerTypeTest.prototype.step = function (stepFunction) {
   this.currentTest.step(stepFunction);
 };
 
-MultiPointerTypeTest.prototype.createNextTest = function() {
+MultiPointerTypeTest.prototype.createNextTest = function () {
   if (this.currentTypeIndex < this.types.length) {
     var pointerTypeDescription = document.getElementById(
       "pointerTypeDescription"

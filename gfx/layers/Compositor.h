@@ -327,14 +327,6 @@ class Compositor : public TextureSourceProvider {
     mRecordFrames = aWillRecord;
   }
 
-  /**
-   * Record the current frame for readback by the |CompositionRecorder|.
-   *
-   * If this compositor does not support this feature, a null pointer is
-   * returned instead.
-   */
-  already_AddRefed<RecordedFrame> RecordFrame(const TimeStamp& aTimeStamp);
-
  protected:
   /**
    * Whether or not the compositor should be prepared to record frames. While

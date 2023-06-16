@@ -24,7 +24,7 @@ const suggestion_type = "navigational";
 const index = 1;
 const position = index + 1;
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       // `bestMatch.enabled` must be set to show nav suggestions with the best

@@ -17,7 +17,7 @@ async function installTrigger(filename) {
   SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [`${BASE}/${filename}`],
-    async function(url) {
+    async function (url) {
       content.wrappedJSObject.installTrigger(url);
     }
   );

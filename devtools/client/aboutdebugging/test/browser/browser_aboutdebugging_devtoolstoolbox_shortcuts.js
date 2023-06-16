@@ -12,17 +12,14 @@ Services.scriptloader.loadSubScript(
 /**
  * Test shortcut keys on about:devtools-toolbox page.
  */
-add_task(async function() {
+add_task(async function () {
   info("Force all debug target panes to be expanded");
   prepareCollapsibilitiesTest();
 
   const { document, tab, window } = await openAboutDebugging();
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
-  const {
-    devtoolsBrowser,
-    devtoolsTab,
-    devtoolsWindow,
-  } = await openAboutDevtoolsToolbox(document, tab, window);
+  const { devtoolsBrowser, devtoolsTab, devtoolsWindow } =
+    await openAboutDevtoolsToolbox(document, tab, window);
 
   info("Check whether the shortcut keys which opens devtools is disabled");
   await assertShortcutKeys(devtoolsBrowser, false);

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<style>
+#marker {
+  width: 1px;
+  height: 1px;
+}
+#outer {
+  height: 1000px;
+  background: #a0ffff;
+  overflow: scroll;
+}
+
+#inner {
+  height: 16593200px;
+  background: #ffa0a0;
+}
+
+.log {
+  white-space: pre;
+}
+</style>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1831148">Mozilla Bug 1831148</a>
+<div id="marker"></div>
+<div id="outer">
+  <div id="inner"></div>
+</div>
+<script>
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(() => {
+  const interval = 20;
+  const increment = outer.scrollHeight / interval;
+  const offset = marker.getBoundingClientRect().bottom;
+  for (let i = 0; i < interval; i++) {
+    outer.scrollTop = i * increment;
+    console.log(outer.scrollTop);
+    // Shift to account for viewport coordinate shift.
+    const bcrTop = -inner.getBoundingClientRect().top + offset;
+    // Floating point value diverges from scrollTop.
+    isfuzzy(bcrTop, outer.scrollTop, 1, "scrollTop and BCR top match");
+  }
+  SimpleTest.finish();
+});
+</script>

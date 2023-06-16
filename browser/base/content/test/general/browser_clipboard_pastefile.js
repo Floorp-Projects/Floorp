@@ -27,7 +27,7 @@ function setClipboard(path) {
   Services.clipboard.setData(trans, null, Ci.nsIClipboard.kGlobalClipboard);
 }
 
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.events.dataTransfer.mozFile.enabled", true]],
   });
@@ -50,7 +50,7 @@ add_task(async function() {
   );
   let browser = tab.linkedBrowser;
 
-  let resultPromise = SpecialPowers.spawn(browser, [], function(arg) {
+  let resultPromise = SpecialPowers.spawn(browser, [], function (arg) {
     return new Promise(resolve => {
       content.document.addEventListener("testresult", event => {
         resolve(event.detail.result);
@@ -59,7 +59,7 @@ add_task(async function() {
   });
 
   // Focus <input> in content
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     content.document.getElementById("input").focus();
   });
 
@@ -76,7 +76,7 @@ add_task(async function() {
   await new Promise((resolve, reject) => {
     input.addEventListener(
       "paste",
-      function(event) {
+      function (event) {
         let dt = event.clipboardData;
         is(dt.types.length, 3, "number of types");
         ok(dt.types.includes("text/plain"), "text/plain exists in types");

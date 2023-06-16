@@ -95,7 +95,7 @@ PlacesItem.prototype = {
     var string =
       (this.props.type ? this.props.type + " " : "") +
       "(" +
-      (function() {
+      (function () {
         var ret = [];
         for (var i in props) {
           if (that.props[props[i]]) {

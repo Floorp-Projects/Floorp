@@ -214,7 +214,7 @@ class BytecodeSection {
 
   uint32_t maxStackDepth() const { return maxStackDepth_; }
 
-  void updateDepth(BytecodeOffset target);
+  void updateDepth(JSOp op, BytecodeOffset target);
 
   // ---- Try notes ----
 

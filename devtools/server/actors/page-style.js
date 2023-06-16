@@ -106,7 +106,8 @@ class PageStyleActor extends Actor {
     this._observedRules = [];
     this._styleApplied = this._styleApplied.bind(this);
 
-    this.styleSheetsManager = this.inspector.targetActor.getStyleSheetsManager();
+    this.styleSheetsManager =
+      this.inspector.targetActor.getStyleSheetsManager();
 
     this._onStylesheetUpdated = this._onStylesheetUpdated.bind(this);
     this.styleSheetsManager.on("stylesheet-updated", this._onStylesheetUpdated);
@@ -398,16 +399,16 @@ class PageStyleActor extends Actor {
     }
 
     // @font-face fonts at the top, then alphabetically, then by weight
-    fontsArray.sort(function(a, b) {
+    fontsArray.sort(function (a, b) {
       return a.weight > b.weight ? 1 : -1;
     });
-    fontsArray.sort(function(a, b) {
+    fontsArray.sort(function (a, b) {
       if (a.CSSFamilyName == b.CSSFamilyName) {
         return 0;
       }
       return a.CSSFamilyName > b.CSSFamilyName ? 1 : -1;
     });
-    fontsArray.sort(function(a, b) {
+    fontsArray.sort(function (a, b) {
       if ((a.rule && b.rule) || (!a.rule && !b.rule)) {
         return 0;
       }
@@ -845,9 +846,8 @@ class PageStyleActor extends Actor {
           ? entry.inherited.rawNode
           : node.rawNode;
 
-        const { bindingElement, pseudo } = CssLogic.getBindingElementAndPseudo(
-          element
-        );
+        const { bindingElement, pseudo } =
+          CssLogic.getBindingElementAndPseudo(element);
         const relevantLinkVisited = CssLogic.hasVisitedState(bindingElement);
         entry.matchedSelectors = [];
 

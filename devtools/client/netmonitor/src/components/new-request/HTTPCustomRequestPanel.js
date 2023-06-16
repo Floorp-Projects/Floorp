@@ -115,9 +115,8 @@ class HTTPCustomRequestPanel extends Component {
     this.deleteInputMapItem = this.deleteInputMapItem.bind(this);
     this.checkInputMapItem = this.checkInputMapItem.bind(this);
     this.handleClear = this.handleClear.bind(this);
-    this.createQueryParamsListFromURL = this.createQueryParamsListFromURL.bind(
-      this
-    );
+    this.createQueryParamsListFromURL =
+      this.createQueryParamsListFromURL.bind(this);
     this.onUpdateQueryParams = this.onUpdateQueryParams.bind(this);
   }
 

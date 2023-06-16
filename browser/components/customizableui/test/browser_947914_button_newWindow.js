@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   info("Check new window button existence and functionality");
   CustomizableUI.addWidgetToArea(
     "new-window-button",
@@ -26,7 +26,7 @@ add_task(async function() {
         newWindow = aSubject;
         newWindow.addEventListener(
           "load",
-          function() {
+          function () {
             is(
               newWindow.location.href,
               AppConstants.BROWSER_CHROME_URL,

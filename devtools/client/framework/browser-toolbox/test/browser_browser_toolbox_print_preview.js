@@ -18,7 +18,7 @@ requestLongerTimeout(4);
 
 // Test that the MultiProcessBrowserToolbox can be opened when print preview is
 // started, and can select elements in the print preview document.
-add_task(async function() {
+add_task(async function () {
   // Forces the Browser Toolbox to open on the inspector by default
   await pushPref("devtools.browsertoolbox.panel", "inspector");
 

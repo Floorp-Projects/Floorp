@@ -85,9 +85,8 @@
       input.addEventListener("focus", this);
       input.addEventListener("blur", this);
 
-      const searchBtn = (this._searchButtonIcon = document.createXULElement(
-        "image"
-      ));
+      const searchBtn = (this._searchButtonIcon =
+        document.createXULElement("image"));
       searchBtn.className = "textbox-search-icon";
       searchBtn.addEventListener("click", e => this._iconClick(e));
 

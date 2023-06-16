@@ -6,7 +6,7 @@
 // Tests that the 3 pane inspector toggle button can render the bottom-left and
 // bottom-right panels of equal sizes in the SIDE host.
 
-add_task(async function() {
+add_task(async function () {
   info("Switch to 2 pane inspector to test the 3 pane toggle button behavior");
   await pushPref("devtools.inspector.three-pane-enabled", false);
 

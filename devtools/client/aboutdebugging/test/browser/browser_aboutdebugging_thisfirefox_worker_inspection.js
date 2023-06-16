@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const thisFirefoxClient = createThisFirefoxClientMock();
   // Prepare a worker mock.
   const testWorker = {

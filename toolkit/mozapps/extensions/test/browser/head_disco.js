@@ -13,13 +13,13 @@
 
 "use strict";
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+const { AddonTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
 );
 
 const {
   ExtensionUtils: { promiseEvent, promiseObserved },
-} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+} = ChromeUtils.importESModule("resource://gre/modules/ExtensionUtils.sys.mjs");
 
 AddonTestUtils.initMochitest(this);
 

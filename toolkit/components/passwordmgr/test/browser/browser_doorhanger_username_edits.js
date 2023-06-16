@@ -57,7 +57,7 @@ add_task(async function test_edit_username() {
 
     // Create the pre-existing logins when needed.
     if (testCase.usernameInPageExists) {
-      Services.logins.addLogin(
+      await Services.logins.addLoginAsync(
         LoginTestUtils.testData.formLogin({
           origin: "https://example.com",
           formActionOrigin: "https://example.com",
@@ -68,7 +68,7 @@ add_task(async function test_edit_username() {
     }
 
     if (testCase.usernameChangedToExists) {
-      Services.logins.addLogin(
+      await Services.logins.addLoginAsync(
         LoginTestUtils.testData.formLogin({
           origin: "https://example.com",
           formActionOrigin: "https://example.com",
@@ -87,7 +87,7 @@ add_task(async function test_edit_username() {
           "https://example.com/browser/toolkit/components/" +
           "passwordmgr/test/browser/form_basic.html",
       },
-      async function(browser) {
+      async function (browser) {
         await formFilledPromise;
         await initForm(browser, {
           "#form-basic-username": testCase.usernameInPage,
@@ -118,7 +118,7 @@ add_task(async function test_edit_username() {
           "popupshown",
           event => event.target == PopupNotifications.panel
         );
-        await SpecialPowers.spawn(browser, [], async function() {
+        await SpecialPowers.spawn(browser, [], async function () {
           content.document.getElementById("form-basic").submit();
         });
         info("Waiting for the submit message");
@@ -180,11 +180,13 @@ add_task(async function test_edit_username() {
 });
 
 async function initForm(browser, formDefaults = {}) {
-  await ContentTask.spawn(browser, formDefaults, async function(
-    selectorValues
-  ) {
-    for (let [sel, value] of Object.entries(selectorValues)) {
-      content.document.querySelector(sel).value = value;
+  await ContentTask.spawn(
+    browser,
+    formDefaults,
+    async function (selectorValues) {
+      for (let [sel, value] of Object.entries(selectorValues)) {
+        content.document.querySelector(sel).value = value;
+      }
     }
-  });
+  );
 }

@@ -65,7 +65,6 @@ class GeneralPattern;
 
 #define SVG_HIT_TEST_FILL 0x01
 #define SVG_HIT_TEST_STROKE 0x02
-#define SVG_HIT_TEST_CHECK_MRECT 0x04
 
 bool NS_SVGNewGetBBoxEnabled();
 
@@ -251,14 +250,6 @@ class SVGUtils final {
    * frame.  Returns true if no clipPath set. */
   static bool HitTestClip(nsIFrame* aFrame, const gfxPoint& aPoint);
 
-  /**
-   * Hit testing - check if point hits any children of aFrame.  aPoint is
-   * expected to be in the coordinate space established by aFrame for its
-   * children (e.g. the space established by the 'viewBox' attribute on <svg>).
-   */
-  static nsIFrame* HitTestChildren(SVGDisplayContainerFrame* aFrame,
-                                   const gfxPoint& aPoint);
-
   /*
    * Returns the CanvasTM of the indicated frame, whether it's a
    * child SVG frame, container SVG frame, or a regular frame.
@@ -278,10 +269,6 @@ class SVGUtils final {
    * that might affect them.
    */
   static void NotifyChildrenOfSVGChange(nsIFrame* aFrame, uint32_t aFlags);
-
-  static nsRect TransformFrameRectToOuterSVG(const nsRect& aRect,
-                                             const gfxMatrix& aMatrix,
-                                             nsPresContext* aPresContext);
 
   /*
    * Convert a surface size to an integer for use by thebes
@@ -310,9 +297,6 @@ class SVGUtils final {
    */
   static gfxRect GetClipRectForFrame(const nsIFrame* aFrame, float aX, float aY,
                                      float aWidth, float aHeight);
-
-  static void SetClipRect(gfxContext* aContext, const gfxMatrix& aCTM,
-                          const gfxRect& aRect);
 
   /* Using group opacity instead of fill or stroke opacity on a
    * geometry object seems to be a common authoring mistake.  If we're

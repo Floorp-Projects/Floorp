@@ -2,16 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {
-  element,
-  ShadowRoot,
-  WebElement,
-  WebFrame,
-  WebReference,
-  WebWindow,
-} = ChromeUtils.importESModule(
-  "chrome://remote/content/marionette/element.sys.mjs"
-);
+const { element, ShadowRoot, WebElement, WebFrame, WebReference, WebWindow } =
+  ChromeUtils.importESModule(
+    "chrome://remote/content/marionette/element.sys.mjs"
+  );
 const { NodeCache } = ChromeUtils.importESModule(
   "chrome://remote/content/shared/webdriver/NodeCache.sys.mjs"
 );
@@ -564,9 +558,8 @@ add_task(function test_getKnownShadowRoot() {
   let detachedShadowRoot = el.attachShadow({ mode: "open" });
   detachedShadowRoot.innerHTML = "<input></input>";
 
-  const detachedShadowRootRef = nodeCache.getOrCreateNodeReference(
-    detachedShadowRoot
-  );
+  const detachedShadowRootRef =
+    nodeCache.getOrCreateNodeReference(detachedShadowRoot);
 
   // ... not connected to the DOM
   Assert.throws(() => {
@@ -703,10 +696,6 @@ add_task(function test_WebReference_isReference() {
   ok(WebReference.isReference({ [WebElement.Identifier]: "foo" }));
   ok(WebReference.isReference({ [WebWindow.Identifier]: "foo" }));
   ok(WebReference.isReference({ [WebFrame.Identifier]: "foo" }));
-});
-
-add_task(function test_generateUUID() {
-  equal(typeof element.generateUUID(), "string");
 });
 
 add_task(function test_WebElement_toJSON() {

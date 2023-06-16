@@ -428,6 +428,10 @@ en_AU{
             "SHP",
             "St Helena Pound",
         }
+        SLL{
+            "SLL",
+            "Sierra Leonean Leone (1964–2022)",
+        }
         SOS{
             "SOS",
             "Somali Shilling",
@@ -643,6 +647,10 @@ en_AU{
         QAR{
             one{"Qatari riyal"}
             other{"Quatari riyals"}
+        }
+        SLL{
+            one{"Sierra Leonean leone (1964–2022)"}
+            other{"Sierra Leonean leones (1964–2022)"}
         }
         SRD{
             one{"Suriname dollar"}

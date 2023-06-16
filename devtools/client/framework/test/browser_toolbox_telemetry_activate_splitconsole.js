@@ -53,7 +53,7 @@ const DATA = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   // See Bug 1500141: this test frequently fails on beta because some highlighter
   // requests made by the BoxModel component in the layout view come back when the
   // connection between the client and the server has been destroyed. We are forcing

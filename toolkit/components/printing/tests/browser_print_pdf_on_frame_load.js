@@ -17,7 +17,7 @@ add_task(async function test_print_pdf_on_frame_load() {
 
   await BrowserTestUtils.withNewTab(
     `${TEST_PATH}file_print_pdf_on_frame_load.html`,
-    async function(browser) {
+    async function (browser) {
       info(
         "Waiting for window.print() to run and ensure we're showing the preview..."
       );

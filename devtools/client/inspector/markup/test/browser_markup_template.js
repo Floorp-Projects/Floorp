@@ -5,7 +5,7 @@
 
 // Test the markup view displaying the content of a <template> tag.
 
-add_task(async function() {
+add_task(async function () {
   const TEST_URL =
     `data:text/html;charset=utf-8,` +
     encodeURIComponent(`

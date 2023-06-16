@@ -10,12 +10,12 @@ let MOVE = { expected: [[EVENT_REORDER, "container"]] };
 // Set last ordinal child as aria-owned, should produce no reorder.
 addAccessibleTask(
   `<ul id="container"><li id="a">Test</li></ul>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let containerAcc = findAccessibleChildByID(accDoc, "container");
 
     testChildrenIds(containerAcc, ["a"]);
 
-    await contentSpawnMutation(browser, NO_MOVE, function() {
+    await contentSpawnMutation(browser, NO_MOVE, function () {
       // aria-own ordinal child in place, should be a no-op.
       content.document
         .getElementById("container")
@@ -30,12 +30,12 @@ addAccessibleTask(
 // Order should respect aria-owns.
 addAccessibleTask(
   `<ul id="container"><li id="a">Test</li></ul>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let containerAcc = findAccessibleChildByID(accDoc, "container");
 
     testChildrenIds(containerAcc, ["a"]);
 
-    await contentSpawnMutation(browser, MOVE, function() {
+    await contentSpawnMutation(browser, MOVE, function () {
       let container = content.document.getElementById("container");
       container.setAttribute("aria-owns", "a");
 
@@ -46,7 +46,7 @@ addAccessibleTask(
 
     testChildrenIds(containerAcc, ["aa", "a"]);
 
-    await contentSpawnMutation(browser, MOVE, function() {
+    await contentSpawnMutation(browser, MOVE, function () {
       content.document.getElementById("container").removeAttribute("aria-owns");
     });
 
@@ -57,12 +57,12 @@ addAccessibleTask(
 // Remove a no-move aria-owns attribute, should result in a no-move.
 addAccessibleTask(
   `<ul id="container" aria-owns="a"><li id="a">Test</li></ul>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let containerAcc = findAccessibleChildByID(accDoc, "container");
 
     testChildrenIds(containerAcc, ["a"]);
 
-    await contentSpawnMutation(browser, NO_MOVE, function() {
+    await contentSpawnMutation(browser, NO_MOVE, function () {
       // remove aria-owned child that is already ordinal, should be no-op.
       content.document.getElementById("container").removeAttribute("aria-owns");
     });
@@ -79,12 +79,12 @@ addAccessibleTask(
   </ul>
   <ul aria-owns="a"></ul>
   <ul id="container"></ul>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let containerAcc = findAccessibleChildByID(accDoc, "container");
 
     testChildrenIds(containerAcc, []);
 
-    await contentSpawnMutation(browser, NO_MOVE, function() {
+    await contentSpawnMutation(browser, NO_MOVE, function () {
       content.document
         .getElementById("container")
         .setAttribute("aria-owns", "a");
@@ -102,7 +102,7 @@ addAccessibleTask(
     <option id="a"></option>
     <option id="b"></option>
   </select>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let containerAcc = findAccessibleChildByID(accDoc, "container");
     let selectAcc = findAccessibleChildByID(accDoc, "select");
 
@@ -121,7 +121,7 @@ addAccessibleTask(
   <select id="select" aria-owns="a">
     <option id="c"></option>
   </select>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let containerAcc = findAccessibleChildByID(accDoc, "container");
     let selectAcc = findAccessibleChildByID(accDoc, "select");
 
@@ -140,7 +140,7 @@ addAccessibleTask(
   <select id="select2">
     <option id="c"></option>
   </select>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let selectAcc1 = findAccessibleChildByID(accDoc, "select1");
     let selectAcc2 = findAccessibleChildByID(accDoc, "select2");
 
@@ -157,12 +157,12 @@ addAccessibleTask(
     <option id="b"></option>
     <option id="c"></option>
   </select>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let containerAcc = findAccessibleChildByID(accDoc, "container");
 
     testChildrenIds(containerAcc.firstChild, ["a", "b", "c"]);
 
-    await contentSpawnMutation(browser, NO_MOVE, function() {
+    await contentSpawnMutation(browser, NO_MOVE, function () {
       content.document
         .getElementById("container")
         .setAttribute("aria-owns", "a c b");
@@ -176,7 +176,7 @@ addAccessibleTask(
 addAccessibleTask(
   `
   <select id="container" aria-owns="boom" multiple></select>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     ok(true, "Did not crash");
   }
 );
@@ -189,7 +189,7 @@ addAccessibleTask(
     <li id="c">Test 3</li>
   </ul>
   <ul id="two"></ul>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let one = findAccessibleChildByID(accDoc, "one");
     let two = findAccessibleChildByID(accDoc, "two");
 
@@ -200,7 +200,7 @@ addAccessibleTask(
       ],
     };
 
-    await contentSpawnMutation(browser, waitfor, function() {
+    await contentSpawnMutation(browser, waitfor, function () {
       // Put same id twice in aria-owns
       content.document.getElementById("two").setAttribute("aria-owns", "a a");
     });
@@ -208,7 +208,7 @@ addAccessibleTask(
     testChildrenIds(one, ["b", "c"]);
     testChildrenIds(two, ["a"]);
 
-    await contentSpawnMutation(browser, waitfor, function() {
+    await contentSpawnMutation(browser, waitfor, function () {
       // If the previous double-id aria-owns worked correctly, we should
       // be in a good state and all is fine..
       content.document.getElementById("two").setAttribute("aria-owns", "a b");
@@ -219,36 +219,36 @@ addAccessibleTask(
   }
 );
 
-addAccessibleTask(`<div id="a"></div><div id="b"></div>`, async function(
-  browser,
-  accDoc
-) {
-  testChildrenIds(accDoc, ["a", "b"]);
+addAccessibleTask(
+  `<div id="a"></div><div id="b"></div>`,
+  async function (browser, accDoc) {
+    testChildrenIds(accDoc, ["a", "b"]);
 
-  let waitFor = {
-    expected: [[EVENT_REORDER, e => e.accessible == accDoc]],
-  };
+    let waitFor = {
+      expected: [[EVENT_REORDER, e => e.accessible == accDoc]],
+    };
 
-  await contentSpawnMutation(browser, waitFor, function() {
-    content.document.documentElement.style.display = "none";
-    content.document.documentElement.getBoundingClientRect();
-    content.document.body.setAttribute("aria-owns", "b a");
-    content.document.documentElement.remove();
-  });
+    await contentSpawnMutation(browser, waitFor, function () {
+      content.document.documentElement.style.display = "none";
+      content.document.documentElement.getBoundingClientRect();
+      content.document.body.setAttribute("aria-owns", "b a");
+      content.document.documentElement.remove();
+    });
 
-  testChildrenIds(accDoc, []);
-});
+    testChildrenIds(accDoc, []);
+  }
+);
 
 // Don't allow ordinal child to be placed after aria-owned child (bug 1405796)
 addAccessibleTask(
   `<div id="container"><div id="a">Hello</div></div>
                    <div><div id="c">There</div><div id="d">There</div></div>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let containerAcc = findAccessibleChildByID(accDoc, "container");
 
     testChildrenIds(containerAcc, ["a"]);
 
-    await contentSpawnMutation(browser, MOVE, function() {
+    await contentSpawnMutation(browser, MOVE, function () {
       content.document
         .getElementById("container")
         .setAttribute("aria-owns", "c");
@@ -256,7 +256,7 @@ addAccessibleTask(
 
     testChildrenIds(containerAcc, ["a", "c"]);
 
-    await contentSpawnMutation(browser, MOVE, function() {
+    await contentSpawnMutation(browser, MOVE, function () {
       let span = content.document.createElement("span");
       content.document.getElementById("container").appendChild(span);
 
@@ -267,7 +267,7 @@ addAccessibleTask(
 
     testChildrenIds(containerAcc, ["a", "b", "c"]);
 
-    await contentSpawnMutation(browser, MOVE, function() {
+    await contentSpawnMutation(browser, MOVE, function () {
       content.document
         .getElementById("container")
         .setAttribute("aria-owns", "c d");

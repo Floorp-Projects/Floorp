@@ -12,7 +12,7 @@
 const TEST_URI =
   "http://example.com/browser/devtools/client/webconsole/test/browser/test-checkloaduri-failure.html";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const targetURL = "file:///something-weird";

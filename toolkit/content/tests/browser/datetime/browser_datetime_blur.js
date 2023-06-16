@@ -10,19 +10,19 @@ const PAGE_CONTENT = `data:text/html,
   </body>`;
 
 function getBlurEvents() {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     return content.wrappedJSObject.gBlurEvents;
   });
 }
 
 function getDateFocusEvents() {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     return content.wrappedJSObject.gDateFocusEvents;
   });
 }
 
 function getTextFocusEvents() {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     return content.wrappedJSObject.gTextFocusEvents;
   });
 }

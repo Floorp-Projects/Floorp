@@ -67,8 +67,8 @@ function addListeners(elem) {
     "gotpointercapture",
     "lostpointercapture",
   ];
-  All_Events.forEach(function(name) {
-    elem.addEventListener(name, function(event) {
+  All_Events.forEach(function (name) {
+    elem.addEventListener(name, function (event) {
       console.log("(" + event.type + ")-(" + event.pointerType + ")");
 
       // Perform checks only for trusted events.

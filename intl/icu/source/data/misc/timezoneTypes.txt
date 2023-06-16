@@ -5,6 +5,7 @@ timezoneTypes:table(nofallback){
     bcpTypeAlias{
         tz{
             aqams{"nzakl"}
+            camtr{"cator"}
             cnckg{"cnsha"}
             cnhrb{"cnsha"}
             cnkhg{"cnurc"}
@@ -29,6 +30,7 @@ timezoneTypes:table(nofallback){
             "America:Indiana:Indianapolis"{"America/Indianapolis"}
             "America:Kentucky:Louisville"{"America/Louisville"}
             "America:Knox_IN"{"America/Indiana/Knox"}
+            "America:Montreal"{"America/Toronto"}
             "America:Nuuk"{"America/Godthab"}
             "America:Porto_Acre"{"America/Rio_Branco"}
             "America:Rosario"{"America/Cordoba"}
@@ -236,6 +238,7 @@ timezoneTypes:table(nofallback){
             "America:Cayman"{"kygec"}
             "America:Chicago"{"uschi"}
             "America:Chihuahua"{"mxchi"}
+            "America:Ciudad_Juarez"{"mxcjs"}
             "America:Coral_Harbour"{"cayzs"}
             "America:Cordoba"{"arcor"}
             "America:Costa_Rica"{"crsjo"}
@@ -301,7 +304,6 @@ timezoneTypes:table(nofallback){
             "America:Moncton"{"camon"}
             "America:Monterrey"{"mxmty"}
             "America:Montevideo"{"uymvd"}
-            "America:Montreal"{"camtr"}
             "America:Montserrat"{"msmni"}
             "America:Nassau"{"bsnas"}
             "America:New_York"{"usnyc"}

@@ -191,9 +191,8 @@ function selectSource(dbg, url) {
       if (!location) {
         return false;
       }
-      const sourceTextContent = dbg.selectors.getSelectedSourceTextContent(
-        state
-      );
+      const sourceTextContent =
+        dbg.selectors.getSelectedSourceTextContent(state);
       if (!sourceTextContent) {
         return false;
       }
@@ -207,7 +206,7 @@ function selectSource(dbg, url) {
 }
 exports.selectSource = selectSource;
 
-function evalInContent(dbg, tab, testFunction) {
+function evalInContent(tab, testFunction) {
   dump(`Run function in content process: ${testFunction}\n`);
   // Load a frame script using a data URI so we can run a script
   // inside of the content process and trigger debugger functionality
@@ -289,7 +288,7 @@ exports.removeBreakpoints = removeBreakpoints;
 async function pauseDebugger(dbg, tab, testFunction, { line, file }) {
   await addBreakpoint(dbg, line, file);
   const onPaused = waitForPaused(dbg);
-  await evalInContent(dbg, tab, testFunction);
+  await evalInContent(tab, testFunction);
   return onPaused;
 }
 exports.pauseDebugger = pauseDebugger;

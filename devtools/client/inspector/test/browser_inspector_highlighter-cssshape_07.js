@@ -10,7 +10,7 @@ const TEST_URL = URL_ROOT + "doc_inspector_highlighter_cssshapes.html";
 const HIGHLIGHTER_TYPE = "ShapesHighlighter";
 const SHAPE_SELECTORS = ["#polygon-transform", "#ellipse"];
 
-add_task(async function() {
+add_task(async function () {
   const env = await openInspectorForURL(TEST_URL);
   const helper = await getHighlighterHelperFor(HIGHLIGHTER_TYPE)(env);
   const { highlighterTestFront, inspector } = env;
@@ -146,12 +146,10 @@ async function getBoundingBoxInPx(config) {
   const quads = await getAllAdjustedQuadsForContentPageElement(selector);
   const { width, height } = quads.content[0].bounds;
   const highlightedNode = await getNodeFront(selector, inspector);
-  const highlighterFront = inspector.inspectorFront.getKnownHighlighter(
-    HIGHLIGHTER_TYPE
-  );
-  const computedStyle = await highlightedNode.inspectorFront.pageStyle.getComputed(
-    highlightedNode
-  );
+  const highlighterFront =
+    inspector.inspectorFront.getKnownHighlighter(HIGHLIGHTER_TYPE);
+  const computedStyle =
+    await highlightedNode.inspectorFront.pageStyle.getComputed(highlightedNode);
   const paddingTop = parseFloat(computedStyle["padding-top"].value);
   const paddingLeft = parseFloat(computedStyle["padding-left"].value);
   // path is always of form "Mx y Lx y Lx y Lx y Z", where x/y are numbers

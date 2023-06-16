@@ -276,18 +276,16 @@ let ssm = Services.scriptSecurityManager;
 const PRINCIPAL_AMO = ssm.createContentPrincipalFromOrigin(
   "https://amo.example.com"
 );
-const PRINCIPAL_COM = ssm.createContentPrincipalFromOrigin(
-  "http://example.com"
-);
+const PRINCIPAL_COM =
+  ssm.createContentPrincipalFromOrigin("http://example.com");
 const SUB_PRINCIPAL_COM = ssm.createContentPrincipalFromOrigin(
   "http://abc.example.com"
 );
 const THIRDPARTY_PRINCIPAL_COM = ssm.createContentPrincipalFromOrigin(
   "http://fake-example.com"
 );
-const PRINCIPAL_ORG = ssm.createContentPrincipalFromOrigin(
-  "http://example.org"
-);
+const PRINCIPAL_ORG =
+  ssm.createContentPrincipalFromOrigin("http://example.org");
 const PRINCIPAL_ETLD = ssm.createContentPrincipalFromOrigin("http://github.io");
 
 const TESTS = [

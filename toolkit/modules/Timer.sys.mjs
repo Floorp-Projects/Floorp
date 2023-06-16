@@ -50,9 +50,11 @@ function _setTimeoutOrIsInterval(
     },
 
     // nsINamed
-    name: `${
-      aIsInterval ? "setInterval" : "setTimeout"
-    }() for ${Cu.getDebugName(aCallback)}`,
+    get name() {
+      return `${
+        aIsInterval ? "setInterval" : "setTimeout"
+      }() for ${Cu.getDebugName(aCallback)}`;
+    },
   };
 
   timer.initWithCallback(

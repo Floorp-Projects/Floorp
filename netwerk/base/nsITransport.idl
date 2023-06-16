@@ -133,8 +133,8 @@ interface nsITransport : nsISupports
      * the NS_NET_STATUS_* constants defined below, which have a type of
      * nsresult.
      */
-    const unsigned long STATUS_READING = 0x804b0008;
-    const unsigned long STATUS_WRITING = 0x804b0009;
+    const unsigned long STATUS_READING = 0x4b0008;
+    const unsigned long STATUS_WRITING = 0x4b0009;
 };
 
 [scriptable, uuid(EDA4F520-67F7-484b-A691-8C3226A5B0A6)]

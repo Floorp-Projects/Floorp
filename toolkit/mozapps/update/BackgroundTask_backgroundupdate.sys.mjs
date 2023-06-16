@@ -15,12 +15,9 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AppUpdater: "resource://gre/modules/AppUpdater.sys.mjs",
   BackgroundTasksUtils: "resource://gre/modules/BackgroundTasksUtils.sys.mjs",
+  ExtensionUtils: "resource://gre/modules/ExtensionUtils.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ExtensionUtils: "resource://gre/modules/ExtensionUtils.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -267,15 +264,15 @@ export async function runBackgroundTask(commandLine) {
         predicate,
         lock
       );
-      let telemetryClientID = await lazy.BackgroundTasksUtils.readTelemetryClientID(
-        lock
-      );
+      let telemetryClientID =
+        await lazy.BackgroundTasksUtils.readTelemetryClientID(lock);
       Glean.backgroundUpdate.clientId.set(telemetryClientID);
 
       // Read targeting snapshot, collect background update specific telemetry.  Never throws.
-      defaultProfileTargetingSnapshot = await BackgroundUpdate.readFirefoxMessagingSystemTargetingSnapshot(
-        lock
-      );
+      defaultProfileTargetingSnapshot =
+        await BackgroundUpdate.readFirefoxMessagingSystemTargetingSnapshot(
+          lock
+        );
     });
 
     for (let [name, value] of Object.entries(defaultProfilePrefs)) {

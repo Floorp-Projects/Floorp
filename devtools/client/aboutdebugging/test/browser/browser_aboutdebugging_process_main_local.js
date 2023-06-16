@@ -14,7 +14,7 @@ Services.scriptloader.loadSubScript(
 // The main added value for this test is to check that listing processes
 // and opening a toolbox targeting a process works, even though debugging
 // the main process of This Firefox is not really supported.
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.aboutdebugging.process-debugging", true);
   await pushPref("devtools.aboutdebugging.test-local-process-debugging", true);
 

@@ -9,7 +9,7 @@ const HISTOGRAM_NAME = "FX_SESSION_RESTORE_SEND_UPDATE_CAUSED_OOM";
  * to Telemetry.
  */
 
-add_setup(async function() {
+add_setup(async function () {
   Services.telemetry.canRecordExtended = true;
 });
 
@@ -18,8 +18,8 @@ function frameScript() {
   // Other operations are unaffected.
   let mm = docShell.messageManager;
 
-  let wrap = function(original) {
-    return function(name, ...args) {
+  let wrap = function (original) {
+    return function (name, ...args) {
       if (name != "SessionStore:update") {
         return original(name, ...args);
       }
@@ -34,7 +34,7 @@ function frameScript() {
   mm.sendSyncMessage = wrap(mm.sendSyncMessage.bind(mm));
 }
 
-add_task(async function() {
+add_task(async function () {
   // Capture original state.
   let snapshot = Services.telemetry.getHistogramById(HISTOGRAM_NAME).snapshot();
 

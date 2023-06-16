@@ -15,7 +15,7 @@ function getActorInstance(connID, actorID) {
  * in order to add actors after initialization but rather can add actors anytime
  * regardless of the object's state.
  */
-add_task(async function() {
+add_task(async function () {
   ActorRegistry.registerModule("resource://test/pre_init_global_actors.js", {
     prefix: "preInitGlobal",
     constructor: "PreInitGlobalActor",

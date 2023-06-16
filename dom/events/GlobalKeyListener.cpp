@@ -623,6 +623,11 @@ already_AddRefed<dom::EventTarget> XULKeySetGlobalKeyListener::GetHandlerTarget(
 
 bool XULKeySetGlobalKeyListener::CanHandle(KeyEventHandler* aHandler,
                                            bool aWillExecute) const {
+  // If the <key> element itself is disabled, ignore it.
+  if (aHandler->KeyElementIsDisabled()) {
+    return false;
+  }
+
   nsCOMPtr<dom::Element> commandElement;
   if (!GetElementForHandler(aHandler, getter_AddRefs(commandElement))) {
     return false;

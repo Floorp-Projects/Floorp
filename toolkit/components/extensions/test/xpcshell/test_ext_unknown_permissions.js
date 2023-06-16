@@ -19,7 +19,7 @@ add_task(async function test_unknown_permissions() {
   let { messages } = await promiseConsoleOutput(() => extension.startup());
 
   const { WebExtensionPolicy } = Cu.getGlobalForObject(
-    ChromeUtils.import("resource://gre/modules/Extension.jsm")
+    ChromeUtils.importESModule("resource://gre/modules/Extension.sys.mjs")
   );
 
   let policy = WebExtensionPolicy.getByID(extension.id);

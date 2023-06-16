@@ -12,8 +12,40 @@ ms_BN{
                 group{"."}
             }
         }
+        olck{
+            symbols{
+                decimal{","}
+            }
+        }
     }
     calendar{
+        buddhist{
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "dd MMMM y G",
+                "d MMMM y G",
+                "dd/MM/y G",
+                "d/MM/y GGGGG",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "GyMMMMdd",
+                "GyMMMMd",
+                "GyMMdd",
+                "GGGGGyMMd",
+            }
+        }
         generic{
             DateTimePatterns{
                 "h:mm:ss a zzzz",
@@ -66,6 +98,33 @@ ms_BN{
                 "yMMMMd",
                 "yMMMd",
                 "yyMMd",
+            }
+        }
+        islamic{
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "dd MMMM y G",
+                "d MMMM y G",
+                "dd/MM/y G",
+                "d/MM/y GGGGG",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "GyMMMMdd",
+                "GyMMMMd",
+                "GyMMdd",
+                "GGGGGyMMd",
             }
         }
     }

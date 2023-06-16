@@ -26,14 +26,16 @@
     },
     "scene1_title": {
       "allof": [
-        {"$ref": "#/definitions/plainText"},
-        {"description": "snippet title displayed before snippet text"}
+        { "$ref": "#/definitions/plainText" },
+        { "description": "snippet title displayed before snippet text" }
       ]
     },
     "scene1_text": {
       "allOf": [
-        {"$ref": "#/definitions/richText"},
-        {"description": "Main body text of snippet. HTML subset allowed: i, b, u, strong, em, br"}
+        { "$ref": "#/definitions/richText" },
+        {
+          "description": "Main body text of snippet. HTML subset allowed: i, b, u, strong, em, br"
+        }
       ]
     },
     "scene1_section_title_icon": {
@@ -50,20 +52,24 @@
     },
     "scene1_section_title_url": {
       "allOf": [
-        {"$ref": "#/definitions/link_url"},
-        {"description": "A url, scene1_section_title_text links to this"}
+        { "$ref": "#/definitions/link_url" },
+        { "description": "A url, scene1_section_title_text links to this" }
       ]
     },
     "scene2_title": {
       "allOf": [
-        {"$ref": "#/definitions/plainText"},
-        {"description": "Title displayed before text in scene 2. Should be plain text."}
+        { "$ref": "#/definitions/plainText" },
+        {
+          "description": "Title displayed before text in scene 2. Should be plain text."
+        }
       ]
     },
     "scene2_text": {
       "allOf": [
-        {"$ref": "#/definitions/richText"},
-        {"description": "Main body text of snippet. HTML subset allowed: i, b, u, strong, em, br"}
+        { "$ref": "#/definitions/richText" },
+        {
+          "description": "Main body text of snippet. HTML subset allowed: i, b, u, strong, em, br"
+        }
       ]
     },
     "scene1_icon": {
@@ -114,8 +120,10 @@
     },
     "scene1_button_label": {
       "allOf": [
-        {"$ref": "#/definitions/plainText"},
-        {"description": "Text for a button next to main snippet text that links to button_url. Requires button_url."}
+        { "$ref": "#/definitions/plainText" },
+        {
+          "description": "Text for a button next to main snippet text that links to button_url. Requires button_url."
+        }
       ],
       "default": "Learn more"
     },
@@ -129,8 +137,10 @@
     },
     "retry_button_label": {
       "allOf": [
-        {"$ref": "#/definitions/plainText"},
-        {"description": "Text for the button in the event of a submission error/failure."}
+        { "$ref": "#/definitions/plainText" },
+        {
+          "description": "Text for the button in the event of a submission error/failure."
+        }
       ],
       "default": "Try again"
     },
@@ -156,8 +166,8 @@
       "additionalProperties": {
         "url": {
           "allOf": [
-            {"$ref": "#/definitions/link_url"},
-            {"description": "The url where the link points to."}
+            { "$ref": "#/definitions/link_url" },
+            { "description": "The url where the link points to." }
           ]
         },
         "metric": {
@@ -174,4 +184,3 @@
     "scene1_button_background_color": ["scene1_button_label"]
   }
 }
-

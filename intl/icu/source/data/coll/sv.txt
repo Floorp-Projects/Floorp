@@ -9,7 +9,7 @@ sv{
                 "[import und-u-co-search]"
                 "[import sv-u-co-standard]"
             }
-            Version{"42"}
+            Version{"43"}
         }
         standard{
             Sequence{
@@ -19,7 +19,7 @@ sv{
                 "&Y<<ü<<<Ü<<ű<<<Ű"
                 "&[before 1]ǀ<å<<<Å<ä<<<Ä<<æ<<<Æ<<ę<<<Ę<ö<<<Ö<<ø<<<Ø<<ő<<<Ő<<œ<<<Œ<<ô<<<Ô"
             }
-            Version{"42"}
+            Version{"43"}
         }
         traditional{
             Sequence{
@@ -30,7 +30,7 @@ sv{
                 "&Y<<ü<<<Ü<<ű<<<Ű"
                 "&[before 1]ǀ<å<<<Å<ä<<<Ä<<æ<<<Æ<<ę<<<Ę<ö<<<Ö<<ø<<<Ø<<ő<<<Ő<<œ<<<Œ<<ô<<<Ô"
             }
-            Version{"42"}
+            Version{"43"}
         }
     }
 }

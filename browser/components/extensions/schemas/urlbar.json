@@ -11,9 +11,7 @@
         "choices": [
           {
             "type": "string",
-            "enum": [
-              "urlbar"
-            ]
+            "enum": ["urlbar"]
           }
         ]
       }
@@ -22,9 +20,7 @@
   {
     "namespace": "urlbar",
     "description": "Use the <code>browser.urlbar</code> API to experiment with new features in the URLBar. Restricted to Mozilla privileged WebExtensions.",
-    "permissions": [
-      "urlbar"
-    ],
+    "permissions": ["urlbar"],
     "types": [
       {
         "id": "EngagementState",

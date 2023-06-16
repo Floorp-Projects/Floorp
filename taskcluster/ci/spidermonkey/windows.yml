@@ -24,7 +24,7 @@ sm-plain-win64/debug:
             - win64-clang
             - win64-rust
             - win64-mozmake
-            - win64-vs2017
+            - vs
 
 sm-plain-win32/debug:
     description: "Spidermonkey Plain win32 debug"
@@ -43,7 +43,7 @@ sm-plain-win32/debug:
             - win64-clang
             - win64-rust
             - win64-mozmake
-            - win64-vs2017
+            - vs
 
 sm-plain-win64/opt:
     description: "Spidermonkey Plain win64 opt"
@@ -60,7 +60,7 @@ sm-plain-win64/opt:
             - win64-clang
             - win64-rust
             - win64-mozmake
-            - win64-vs2017
+            - vs
 
 sm-plain-win32/opt:
     description: "Spidermonkey Plain win32 opt"
@@ -79,7 +79,7 @@ sm-plain-win32/opt:
             - win64-clang
             - win64-rust
             - win64-mozmake
-            - win64-vs2017
+            - vs
 
 sm-compacting-win64/debug:
     description: "Spidermonkey Compacting win64 debug"
@@ -96,7 +96,7 @@ sm-compacting-win64/debug:
             - win64-clang
             - win64-rust
             - win64-mozmake
-            - win64-vs2017
+            - vs
 
 sm-compacting-win32/debug:
     description: "Spidermonkey Compacting win32 debug"
@@ -115,4 +115,4 @@ sm-compacting-win32/debug:
             - win64-clang
             - win64-rust
             - win64-mozmake
-            - win64-vs2017
+            - vs

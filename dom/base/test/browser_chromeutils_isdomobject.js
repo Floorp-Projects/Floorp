@@ -75,7 +75,7 @@ add_task(async function DOMObjects_contentProcess() {
       gBrowser,
       url: `data:text/html,<div>`,
     },
-    async function(browser) {
+    async function (browser) {
       await SpecialPowers.spawn(browser, [], async () => {
         const args = [
           content,

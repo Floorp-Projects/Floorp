@@ -19,8 +19,8 @@ var { require: browserRequire } = BrowserLoader({
 });
 
 window.EVENTS = {};
-window.on = function() {};
-window.off = function() {};
+window.on = function () {};
+window.off = function () {};
 
 SimpleTest.registerCleanupFunction(() => {
   window.EVENTS = null;

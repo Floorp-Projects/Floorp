@@ -12,6 +12,7 @@ import subprocess
 from contextlib import redirect_stdout
 from datetime import datetime, timedelta
 
+from mach.util import get_state_dir
 from mozbuild.base import MozbuildObject
 from mozversioncontrol import get_repository_object
 
@@ -31,11 +32,12 @@ from .perfselector.classification import (
     Suites,
     Variants,
 )
+from .perfselector.perfcomparators import get_comparator
 from .perfselector.utils import LogProcessor
 
 here = os.path.abspath(os.path.dirname(__file__))
 build = MozbuildObject.from_environment(cwd=here)
-cache_file = pathlib.Path(build.statedir, "try_perf_revision_cache.json")
+cache_file = pathlib.Path(get_state_dir(), "try_perf_revision_cache.json")
 
 PERFHERDER_BASE_URL = (
     "https://treeherder.mozilla.org/perfherder/"
@@ -126,6 +128,14 @@ class PerfParser(CompareParser):
             },
         ],
         [
+            ["--custom-car"],
+            {
+                "action": "store_true",
+                "default": False,
+                "help": "Show tests available for Custom Chromium-as-Release (disabled by default).",
+            },
+        ],
+        [
             ["--safari"],
             {
                 "action": "store_true",
@@ -193,7 +203,7 @@ class PerfParser(CompareParser):
                 "help": "See --browsertime-upload-apk. This option does the same "
                 "thing except it's for mozperftest tests such as the startup ones. "
                 "Note that those tests only exist through --show-all, as they "
-                "aren't contained in any existing categories. ",
+                "aren't contained in any existing categories.",
             },
         ],
         [
@@ -202,6 +212,28 @@ class PerfParser(CompareParser):
                 "action": "store_true",
                 "default": False,
                 "help": "Adds a task that detects performance changes using MWU.",
+            },
+        ],
+        [
+            ["--comparator"],
+            {
+                "type": str,
+                "default": "BasePerfComparator",
+                "help": "Either a path to a file to setup a custom comparison, "
+                "or a builtin name. See the Firefox source docs for mach try perf for "
+                "examples of how to build your own, along with the interface.",
+            },
+        ],
+        [
+            ["--comparator-args"],
+            {
+                "nargs": "*",
+                "type": str,
+                "default": [],
+                "dest": "comparator_args",
+                "help": "Arguments provided to the base, and new revision setup stages "
+                "of the comparator.",
+                "metavar": "ARG=VALUE",
             },
         ],
         [
@@ -846,18 +878,43 @@ class PerfParser(CompareParser):
 
         return categories
 
-    def check_cached_revision(base_commit=None):
+    def inject_change_detector(base_cmd, all_tasks, selected_tasks):
+        query = "'perftest 'mwu 'detect"
+        mwu_task = PerfParser.get_tasks(base_cmd, [], query, all_tasks)
+
+        if len(mwu_task) > 1 or len(mwu_task) == 0:
+            raise InvalidRegressionDetectorQuery(
+                f"Expected 1 task from change detector "
+                f"query, but found {len(mwu_task)}"
+            )
+
+        selected_tasks |= set(mwu_task)
+
+    def check_cached_revision(selected_tasks, base_commit=None):
         """
         If the base_commit parameter does not exist, remove expired cache data.
         Cache data format:
         {
-                base_commit[str]: {
+                base_commit[str]: [
+                    {
                         "base_revision_treeherder": "2b04563b5",
-                        "date": "2023-03-12"
-                }
+                        "date": "2023-03-12",
+                        "tasks": ["a-task"],
+                    },
+                    {
+                        "base_revision_treeherder": "999998888",
+                        "date": "2023-03-12",
+                        "tasks": ["b-task"],
+                    },
+                ]
         }
 
-        :param base_commit: The base commit to search
+        The list represents different pushes with different task selections.
+
+        TODO: See if we can request additional tests on a given base revision.
+
+        :param selected_tasks list: The list of tasks selected by the user
+        :param base_commit str: The base commit to search
         :return: The base_revision_treeherder if found, else None
         """
         today = datetime.now()
@@ -869,46 +926,85 @@ class PerfParser(CompareParser):
 
         with cache_file.open("r") as f:
             cache_data = json.load(f)
+
         # Remove expired cache data
         if base_commit is None:
             for cached_base_commit in list(cache_data):
-                if cache_data[cached_base_commit]["date"] < expired_date:
+                if not isinstance(cache_data[cached_base_commit], list):
+                    # TODO: Remove in the future, this is for backwards-compatibility
+                    # with the previous cache structure
                     cache_data.pop(cached_base_commit)
+                else:
+                    # Go through the pushes, and expire any that are too old
+                    new_pushes = []
+                    for push in cache_data[cached_base_commit]:
+                        if push["date"] > expired_date:
+                            new_pushes.append(push)
+                    # If no pushes are left after expiration, expire the base commit
+                    if new_pushes:
+                        cache_data[cached_base_commit] = new_pushes
+                    else:
+                        cache_data.pop(cached_base_commit)
             with cache_file.open("w") as f:
                 json.dump(cache_data, f, indent=4)
 
         cached_base_commit = cache_data.get(base_commit, None)
         if cached_base_commit:
-            return cached_base_commit["base_revision_treeherder"]
+            for push in cached_base_commit:
+                if set(selected_tasks) <= set(push["tasks"]):
+                    return push["base_revision_treeherder"]
 
-    def save_revision_treeherder(base_commit, base_revision_treeherder):
+    def save_revision_treeherder(selected_tasks, base_commit, base_revision_treeherder):
         """
         Save the base revision of treeherder to the cache.
         See "check_cached_revision" for more information about the data structure.
 
-        :param base_commit: The base commit to save
-        :param base_revision_treeherder: The base revision of treeherder to save
+        :param selected_tasks list: The list of tasks selected by the user
+        :param base_commit str: The base commit to save
+        :param base_revision_treeherder str: The base revision of treeherder to save
         :return: None
         """
         today = datetime.now().strftime("%Y-%m-%d")
         new_revision = {
             "base_revision_treeherder": base_revision_treeherder,
             "date": today,
+            "tasks": list(selected_tasks),
         }
         cache_data = {}
 
         if cache_file.is_file():
             with cache_file.open("r") as f:
                 cache_data = json.load(f)
-                cache_data[base_commit] = new_revision
+                cache_data.setdefault(base_commit, []).append(new_revision)
         else:
-            cache_data[base_commit] = new_revision
+            cache_data[base_commit] = [new_revision]
 
         with cache_file.open(mode="w") as f:
             json.dump(cache_data, f, indent=4)
 
+    def setup_try_config(try_config, extra_args, base_revision_treeherder=None):
+        if try_config is None:
+            try_config = {}
+        if extra_args:
+            args = " ".join(extra_args)
+            try_config.setdefault("env", {})["PERF_FLAGS"] = args
+        if base_revision_treeherder:
+            # Reset updated since we no longer need to worry
+            # about failing while we're on a base commit
+            try_config.setdefault("env", {})[
+                "PERF_BASE_REVISION"
+            ] = base_revision_treeherder
+
     def perf_push_to_try(
-        selected_tasks, selected_categories, queries, try_config, dry_run, single_run
+        selected_tasks,
+        selected_categories,
+        queries,
+        try_config,
+        dry_run,
+        single_run,
+        extra_args,
+        comparator,
+        comparator_args,
     ):
         """Perf-specific push to try method.
 
@@ -929,7 +1025,15 @@ class PerfParser(CompareParser):
             "&".join([q for q in queries if q is not None and len(q) > 0]),
         )
 
-        updated = False
+        # Get the comparator to run
+        comparator_klass = get_comparator(comparator)
+        comparator_obj = comparator_klass(
+            vcs, compare_commit, current_revision_ref, comparator_args
+        )
+        base_comparator = True
+        if comparator_klass.__name__ != "BasePerfComparator":
+            base_comparator = False
+
         new_revision_treeherder = ""
         base_revision_treeherder = ""
         try:
@@ -941,10 +1045,21 @@ class PerfParser(CompareParser):
             # Push the base revision first. This lets the new revision appear
             # first in the Treeherder view, and it also lets us enhance the new
             # revision with information about the base run.
-            base_revision_treeherder = PerfParser.check_cached_revision(compare_commit)
+            base_revision_treeherder = None
+            if base_comparator:
+                # Don't cache the base revision when a custom comparison is being performed
+                # since the base revision is now unique and not general to all pushes
+                base_revision_treeherder = PerfParser.check_cached_revision(
+                    selected_tasks, compare_commit
+                )
+
             if not (dry_run or single_run or base_revision_treeherder):
-                vcs.update(compare_commit)
-                updated = True
+                # Setup the base revision, and try config. This lets us change the options
+                # we run the tests with through the PERF_FLAGS environment variable.
+                base_extra_args = list(extra_args)
+                base_try_config = copy.deepcopy(try_config)
+                comparator_obj.setup_base_revision(base_extra_args)
+                PerfParser.setup_try_config(base_try_config, base_extra_args)
 
                 with redirect_stdout(log_processor):
                     # XXX Figure out if we can use the `again` selector in some way
@@ -954,7 +1069,7 @@ class PerfParser(CompareParser):
                         "perf-again",
                         "{msg}".format(msg=msg),
                         try_task_config=generate_try_task_config(
-                            "fuzzy", selected_tasks, try_config
+                            "fuzzy", selected_tasks, base_try_config
                         ),
                         stage_changes=False,
                         dry_run=dry_run,
@@ -963,17 +1078,20 @@ class PerfParser(CompareParser):
                     )
 
                 base_revision_treeherder = log_processor.revision
-                PerfParser.save_revision_treeherder(
-                    compare_commit, base_revision_treeherder
-                )
+                if base_comparator:
+                    PerfParser.save_revision_treeherder(
+                        selected_tasks, compare_commit, base_revision_treeherder
+                    )
 
-                # Reset updated since we no longer need to worry
-                # about failing while we're on a base commit
-                updated = False
-                try_config.setdefault("env", {})[
-                    "PERF_BASE_REVISION"
-                ] = base_revision_treeherder
-                vcs.update(current_revision_ref)
+                comparator_obj.teardown_base_revision()
+
+            new_extra_args = list(extra_args)
+            comparator_obj.setup_new_revision(new_extra_args)
+            PerfParser.setup_try_config(
+                try_config,
+                new_extra_args,
+                base_revision_treeherder=base_revision_treeherder,
+            )
 
             with redirect_stdout(log_processor):
                 push_to_try(
@@ -990,24 +1108,12 @@ class PerfParser(CompareParser):
                 )
 
             new_revision_treeherder = log_processor.revision
+            comparator_obj.teardown_new_revision()
 
         finally:
-            if updated:
-                vcs.update(current_revision_ref)
+            comparator_obj.teardown()
 
         return base_revision_treeherder, new_revision_treeherder
-
-    def inject_change_detector(base_cmd, all_tasks, selected_tasks):
-        query = "'perftest 'mwu 'detect"
-        mwu_task = PerfParser.get_tasks(base_cmd, [], query, all_tasks)
-
-        if len(mwu_task) > 1 or len(mwu_task) == 0:
-            raise InvalidRegressionDetectorQuery(
-                f"Expected 1 task from change detector "
-                f"query, but found {len(mwu_task)}"
-            )
-
-        selected_tasks |= set(mwu_task)
 
     def run(
         update=False,
@@ -1063,12 +1169,6 @@ class PerfParser(CompareParser):
         if detect_changes:
             PerfParser.inject_change_detector(base_cmd, all_tasks, selected_tasks)
 
-        if try_config is None:
-            try_config = {}
-        if kwargs.get("extra_args", []):
-            args = " ".join(kwargs["extra_args"])
-            try_config.setdefault("env", {})["PERF_FLAGS"] = args
-
         return PerfParser.perf_push_to_try(
             selected_tasks,
             selected_categories,
@@ -1076,6 +1176,9 @@ class PerfParser(CompareParser):
             try_config,
             dry_run,
             single_run,
+            kwargs.get("extra_args", []),
+            kwargs.get("comparator", "BasePerfComparator"),
+            kwargs.get("comparator_args", []),
         )
 
     def run_category_checks():
@@ -1196,7 +1299,7 @@ def run(**kwargs):
     # Make sure the categories are following
     # the rules we've setup
     PerfParser.run_category_checks()
-    PerfParser.check_cached_revision()
+    PerfParser.check_cached_revision([])
 
     revisions = PerfParser.run(
         profile=kwargs.get("try_config", {}).get("gecko-profile", False),

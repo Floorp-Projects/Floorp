@@ -1,16 +1,17 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html>
-<head>
-<meta charset='utf-8'>
-<script src="/tests/SimpleTest/SimpleTest.js"></script>
-<link rel="stylesheet" href="/tests/SimpleTest/test.css">
-</head>
-<body>
-<script>
-
-ok(!SpecialPowers.getBoolPref('dom.webgpu.enabled'), 'Pref should be disabled.');
-ok(navigator.gpu === undefined, 'navigator.gpu === undefined');
-
-</script>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+  </head>
+  <body>
+    <script>
+      ok(
+        !SpecialPowers.getBoolPref("dom.webgpu.enabled"),
+        "Pref should be disabled."
+      );
+      ok(navigator.gpu === undefined, "navigator.gpu === undefined");
+    </script>
+  </body>
 </html>

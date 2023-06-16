@@ -11,7 +11,7 @@ const gCencMediaKeySystemConfig = [
 ];
 
 function bail(message) {
-  return function(err) {
+  return function (err) {
     if (err) {
       message += "; " + String(err);
     }
@@ -135,7 +135,7 @@ function GenerateClearKeyLicense(licenseRequest, keyStore) {
 }
 
 function UpdateSessionFunc(test, token, sessionType, resolve, reject) {
-  return function(ev) {
+  return function (ev) {
     var license = GenerateClearKeyLicense(ev.message, test.keys);
     Log(
       token,
@@ -143,11 +143,11 @@ function UpdateSessionFunc(test, token, sessionType, resolve, reject) {
     );
     ev.target
       .update(license)
-      .then(function() {
+      .then(function () {
         Log(token, "MediaKeySession update ok!");
         resolve(ev.target);
       })
-      .catch(function(reason) {
+      .catch(function (reason) {
         reject(`${token} MediaKeySession update failed: ${reason}`);
       });
   };
@@ -161,7 +161,7 @@ function MaybeCrossOriginURI(test, uri) {
 }
 
 function AppendTrack(test, ms, track, token) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     var sb;
     var curFragment = 0;
     var fragments = track.fragments;
@@ -180,7 +180,7 @@ function AppendTrack(test, ms, track, token) {
       req.open("GET", fragmentFile);
       req.responseType = "arraybuffer";
 
-      req.addEventListener("load", function() {
+      req.addEventListener("load", function () {
         Log(
           token,
           track.name + ": fetch of " + fragmentFile + " complete, appending"
@@ -188,10 +188,10 @@ function AppendTrack(test, ms, track, token) {
         sb.appendBuffer(new Uint8Array(req.response));
       });
 
-      req.addEventListener("error", function() {
+      req.addEventListener("error", function () {
         reject(`${token} - ${track.name}: error fetching ${fragmentFile}`);
       });
-      req.addEventListener("abort", function() {
+      req.addEventListener("abort", function () {
         reject(`${token} - ${track.name}: aborted fetching ${fragmentFile}`);
       });
 
@@ -206,7 +206,7 @@ function AppendTrack(test, ms, track, token) {
 
     Log(token, track.name + ": addSourceBuffer(" + track.type + ")");
     sb = ms.addSourceBuffer(track.type);
-    sb.addEventListener("updateend", function() {
+    sb.addEventListener("updateend", function () {
       Log(
         token,
         track.name +
@@ -234,17 +234,17 @@ function LoadTest(test, elem, token, endOfStream = true) {
   elem.src = URL.createObjectURL(ms);
   elem.crossOrigin = test.crossOrigin || false;
 
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     ms.addEventListener(
       "sourceopen",
-      function() {
+      function () {
         Log(token, "sourceopen");
         Promise.all(
-          test.tracks.map(function(track) {
+          test.tracks.map(function (track) {
             return AppendTrack(test, ms, track, token);
           })
         )
-          .then(function() {
+          .then(function () {
             Log(token, "Tracks loaded, calling MediaSource.endOfStream()");
             if (endOfStream) {
               ms.endOfStream();
@@ -260,7 +260,7 @@ function LoadTest(test, elem, token, endOfStream = true) {
 
 function EMEPromise() {
   var self = this;
-  self.promise = new Promise(function(resolve, reject) {
+  self.promise = new Promise(function (resolve, reject) {
     self.resolve = resolve;
     self.reject = reject;
   });
@@ -421,7 +421,7 @@ function CloseSessions(v, sessions) {
 function SetupEME(v, test, token) {
   let p = new EMEPromise();
 
-  v.onerror = function() {
+  v.onerror = function () {
     p.reject(`${token} got an error event.`);
   };
 
@@ -440,11 +440,11 @@ function SetupEME(v, test, token) {
 }
 
 function fetchWithXHR(uri, onLoadFunction) {
-  var p = new Promise(function(resolve, reject) {
+  var p = new Promise(function (resolve, reject) {
     var xhr = new XMLHttpRequest();
     xhr.open("GET", uri, true);
     xhr.responseType = "arraybuffer";
-    xhr.addEventListener("load", function() {
+    xhr.addEventListener("load", function () {
       is(
         xhr.status,
         200,
@@ -463,10 +463,10 @@ function fetchWithXHR(uri, onLoadFunction) {
 }
 
 function once(target, name, cb) {
-  var p = new Promise(function(resolve, reject) {
+  var p = new Promise(function (resolve, reject) {
     target.addEventListener(
       name,
-      function(arg) {
+      function (arg) {
         resolve(arg);
       },
       { once: true }

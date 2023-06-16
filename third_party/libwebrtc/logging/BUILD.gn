@@ -101,6 +101,8 @@ rtc_library("rtc_event_audio") {
     "rtc_event_log/events/rtc_event_audio_receive_stream_config.h",
     "rtc_event_log/events/rtc_event_audio_send_stream_config.cc",
     "rtc_event_log/events/rtc_event_audio_send_stream_config.h",
+    "rtc_event_log/events/rtc_event_neteq_set_minimum_delay.cc",
+    "rtc_event_log/events/rtc_event_neteq_set_minimum_delay.h",
   ]
 
   deps = [
@@ -306,6 +308,7 @@ rtc_library("rtc_event_log_impl_encoder") {
     "../rtc_base:ignore_wundef",
     "../rtc_base:logging",
     "../rtc_base:safe_conversions",
+    "../system_wrappers:field_trial",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/memory",
@@ -354,7 +357,10 @@ rtc_source_set("rtc_event_log_impl_output") {
 
 if (rtc_enable_protobuf) {
   rtc_library("rtc_event_log_impl") {
-    visibility = [ "../api/rtc_event_log:rtc_event_log_factory" ]
+    visibility = [
+      ":rtc_event_log_tests",
+      "../api/rtc_event_log:rtc_event_log_factory",
+    ]
     sources = [
       "rtc_event_log/rtc_event_log_impl.cc",
       "rtc_event_log/rtc_event_log_impl.h",
@@ -396,7 +402,6 @@ rtc_library("fake_rtc_event_log") {
 
   deps = [
     "../api/rtc_event_log",
-    "../rtc_base",
     "../rtc_base:macromagic",
     "../rtc_base/synchronization:mutex",
   ]
@@ -481,6 +486,7 @@ if (rtc_enable_protobuf) {
         "rtc_event_log/encoder/rtc_event_log_encoder_unittest.cc",
         "rtc_event_log/events/rtc_event_field_encoding_unittest.cc",
         "rtc_event_log/events/rtc_event_field_extraction_unittest.cc",
+        "rtc_event_log/rtc_event_log_impl_unittest.cc",
         "rtc_event_log/rtc_event_log_unittest.cc",
         "rtc_event_log/rtc_event_log_unittest_helper.cc",
         "rtc_event_log/rtc_event_log_unittest_helper.h",
@@ -494,6 +500,7 @@ if (rtc_enable_protobuf) {
         ":rtc_event_frame_events",
         ":rtc_event_generic_packet_events",
         ":rtc_event_log2_proto",
+        ":rtc_event_log_impl",
         ":rtc_event_log_impl_encoder",
         ":rtc_event_log_parser",
         ":rtc_event_log_proto",
@@ -526,6 +533,7 @@ if (rtc_enable_protobuf) {
         "../test:fileutils",
         "../test:test_support",
         "../test/logging:log_writer",
+        "../test/time_controller",
         "//testing/gtest",
       ]
       absl_deps = [

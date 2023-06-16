@@ -14,7 +14,7 @@ add_task(async function test_openPasswordManagement() {
 
   let tabOpenPromise = BrowserTestUtils.waitForNewTab(gBrowser, "about:logins");
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     let doc = content.document;
 
     let savePasswordCheckBox = doc.getElementById("savePasswords");

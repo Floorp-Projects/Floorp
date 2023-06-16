@@ -75,7 +75,7 @@ httpServer.registerPathHandler("/redirect.html", (request, response) => {
   response.write("Redirected!");
 });
 
-add_task(async function() {
+add_task(async function () {
   // Enable async events so that clicks on preview iframe's links are correctly
   // going through the parent process which is meant to cancel any mousedown.
   await pushPref("test.events.async.enabled", true);
@@ -144,7 +144,7 @@ add_task(async function() {
     await SpecialPowers.spawn(
       iframe.browsingContext,
       [expectedHtmlPreview],
-      async function(expectedHtml) {
+      async function (expectedHtml) {
         is(
           content.document.documentElement.outerHTML,
           expectedHtml,
@@ -155,15 +155,19 @@ add_task(async function() {
 
     // Only assert copy to clipboard on the first test page
     if (expectedHtmlPreview == TEST_HTML) {
-      await waitForClipboardPromise(async function() {
-        await SpecialPowers.spawn(iframe.browsingContext, [], async function() {
-          const elt = content.document.getElementById("to-copy");
-          EventUtils.synthesizeMouseAtCenter(elt, { clickCount: 2 }, content);
-          await new Promise(r =>
-            elt.addEventListener("dblclick", r, { once: true })
-          );
-          EventUtils.synthesizeKey("c", { accelKey: true }, content);
-        });
+      await waitForClipboardPromise(async function () {
+        await SpecialPowers.spawn(
+          iframe.browsingContext,
+          [],
+          async function () {
+            const elt = content.document.getElementById("to-copy");
+            EventUtils.synthesizeMouseAtCenter(elt, { clickCount: 2 }, content);
+            await new Promise(r =>
+              elt.addEventListener("dblclick", r, { once: true })
+            );
+            EventUtils.synthesizeKey("c", { accelKey: true }, content);
+          }
+        );
       }, "HTML");
     }
 

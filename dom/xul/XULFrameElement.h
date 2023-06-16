@@ -53,15 +53,13 @@ class XULFrameElement final : public nsXULElement, public nsFrameLoaderOwner {
                         mozilla::ErrorResult& rv);
 
   // nsIContent
-  virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  virtual void UnbindFromTree(bool aNullParent) override;
-  virtual void DestroyContent() override;
+  nsresult BindToTree(BindContext&, nsINode& aParent) override;
+  void UnbindFromTree(bool aNullParent) override;
+  void DestroyContent() override;
 
-  virtual void AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                            const nsAttrValue* aValue,
-                            const nsAttrValue* aOldValue,
-                            nsIPrincipal* aSubjectPrincipal,
-                            bool aNotify) override;
+  void AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                    const nsAttrValue* aValue, const nsAttrValue* aOldValue,
+                    nsIPrincipal* aSubjectPrincipal, bool aNotify) override;
 
   NS_IMPL_FROMNODE_HELPER(XULFrameElement,
                           IsAnyOfXULElements(nsGkAtoms::iframe,

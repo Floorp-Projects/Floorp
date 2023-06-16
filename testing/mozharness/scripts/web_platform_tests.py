@@ -594,8 +594,6 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
             env["MOZ_HEADLESS_WIDTH"] = self.config["headless_width"]
             env["MOZ_HEADLESS_HEIGHT"] = self.config["headless_height"]
 
-        env["STYLO_THREADS"] = "4"
-
         if self.is_android:
             env["ADB_PATH"] = self.adb_path
 

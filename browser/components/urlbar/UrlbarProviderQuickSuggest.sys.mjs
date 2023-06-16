@@ -163,8 +163,12 @@ class ProviderQuickSuggest extends UrlbarProvider {
       if (instance != this.queryInstance) {
         return;
       }
-      if (canAdd) {
-        let result = this.#makeResult(queryContext, suggestion);
+
+      let result;
+      if (
+        canAdd &&
+        (result = await this.#makeResult(queryContext, suggestion))
+      ) {
         this.#resultFromLastQuery = result;
         addCallback(this, result);
         return;
@@ -216,23 +220,59 @@ class ProviderQuickSuggest extends UrlbarProvider {
       this.#recordEngagement(queryContext, isPrivate, result, details);
     }
 
-    // Handle dismissals.
-    if (
-      details.result?.providerName == this.name &&
-      details.selType == "dismiss"
-    ) {
-      this.#dismissResult(queryContext, details.result);
+    if (details.result?.providerName == this.name) {
+      if (details.result.payload.dynamicType === "addons") {
+        lazy.QuickSuggest.getFeature("AddonSuggestions").handlePossibleCommand(
+          queryContext,
+          details.result,
+          details.selType
+        );
+      } else if (details.selType == "dismiss") {
+        // Handle dismissals.
+        this.#dismissResult(queryContext, details.result);
+      }
     }
 
     this.#resultFromLastQuery = null;
   }
 
-  #makeResult(queryContext, suggestion) {
+  /**
+   * This is called only for dynamic result types, when the urlbar view updates
+   * the view of one of the results of the provider.  It should return an object
+   * describing the view update.
+   *
+   * @param {UrlbarResult} result The result whose view will be updated.
+   * @returns {object} An object describing the view update.
+   */
+  getViewUpdate(result) {
+    // For now, we support only addons suggestion.
+    return lazy.QuickSuggest.getFeature("AddonSuggestions").getViewUpdate(
+      result
+    );
+  }
+
+  getResultCommands(result) {
+    if (result.payload.dynamicType === "addons") {
+      return lazy.QuickSuggest.getFeature("AddonSuggestions").getResultCommands(
+        result
+      );
+    }
+
+    return null;
+  }
+
+  async #makeResult(queryContext, suggestion) {
     let result;
     switch (suggestion.provider) {
+      case "amo":
+      case "AddonSuggestions":
+        result = await lazy.QuickSuggest.getFeature(
+          "AddonSuggestions"
+        ).makeResult(queryContext, suggestion, this._trimmedSearchString);
+        break;
       case "adm": // Merino
       case "AdmWikipedia": // remote settings
-        result = lazy.QuickSuggest.getFeature("AdmWikipedia").makeResult(
+        result = await lazy.QuickSuggest.getFeature("AdmWikipedia").makeResult(
           queryContext,
           suggestion,
           this._trimmedSearchString
@@ -241,6 +281,11 @@ class ProviderQuickSuggest extends UrlbarProvider {
       default:
         result = this.#makeDefaultResult(queryContext, suggestion);
         break;
+    }
+
+    if (!result) {
+      // Feature might return null, if the feature is disabled and so on.
+      return null;
     }
 
     if (!result.hasSuggestedIndex) {

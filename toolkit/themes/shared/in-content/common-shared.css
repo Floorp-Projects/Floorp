@@ -188,7 +188,6 @@
   :root {
     --in-content-page-color: CanvasText;
     --in-content-page-background: Canvas;
-    --in-content-deemphasized-text: GrayText;
 
     --in-content-box-background: -moz-Dialog;
     --in-content-box-background-odd: -moz-Dialog;

@@ -35,9 +35,8 @@ this.cpstartup = class extends ExtensionAPI {
     this.framescriptURL = this.extension.baseURI.resolve("/framescript.js");
     Services.mm.loadFrameScript(this.framescriptURL, true);
 
-    this.originalPreallocatedEnabled = Services.prefs.getBoolPref(
-      PREALLOCATED_PREF
-    );
+    this.originalPreallocatedEnabled =
+      Services.prefs.getBoolPref(PREALLOCATED_PREF);
     Services.prefs.setBoolPref(PREALLOCATED_PREF, false);
 
     this.readyCallback = null;

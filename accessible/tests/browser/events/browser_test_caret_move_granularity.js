@@ -26,7 +26,7 @@ addAccessibleTask(
   `<textarea id="textarea" style="scrollbar-width: none;" cols="15">` +
     `one two three four five six seven eight` +
     `</textarea>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     const textarea = findAccessibleChildByID(accDoc, "textarea");
     let caretMoved = waitForEvent(
       EVENT_TEXT_CARET_MOVED,

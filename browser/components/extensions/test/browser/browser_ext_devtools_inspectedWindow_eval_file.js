@@ -13,10 +13,8 @@ add_task(async function test_devtools_inspectedWindow_eval_in_file_url() {
 
   async function devtools_page() {
     try {
-      const [
-        evalResult,
-        errorResult,
-      ] = await browser.devtools.inspectedWindow.eval("location.protocol");
+      const [evalResult, errorResult] =
+        await browser.devtools.inspectedWindow.eval("location.protocol");
       browser.test.assertEq(undefined, errorResult, "eval should not fail");
       browser.test.assertEq("file:", evalResult, "eval should succeed");
       browser.test.notifyPass("inspectedWindow-eval-file");

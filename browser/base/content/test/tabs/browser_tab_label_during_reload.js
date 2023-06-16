@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(
     gBrowser,
     "about:preferences"

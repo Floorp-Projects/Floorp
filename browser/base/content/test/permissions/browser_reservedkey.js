@@ -164,7 +164,7 @@ add_task(async function test_backspace_delete() {
     "<input id='field' value='something'></body>";
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, uri);
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     content.document.getElementById("field").focus();
 
     // Add a promise that resolves when the backspace key gets received
@@ -185,14 +185,14 @@ add_task(async function test_backspace_delete() {
   let fieldValue = await SpecialPowers.spawn(
     tab.linkedBrowser,
     [],
-    async function() {
+    async function () {
       return content.keysPromise;
     }
   );
   is(fieldValue, "omething", "backspace not prevented");
 
   // now do the same thing for the delete key:
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     content.document.getElementById("field").focus();
 
     // Add a promise that resolves when the backspace key gets received
@@ -212,7 +212,7 @@ add_task(async function test_backspace_delete() {
   fieldValue = await SpecialPowers.spawn(
     tab.linkedBrowser,
     [],
-    async function() {
+    async function () {
       return content.keysPromise;
     }
   );
@@ -269,16 +269,11 @@ if (
       await SpecialPowers.spawn(
         tab.linkedBrowser,
         [key.getAttribute("key")],
-        async function(aExpectedKeyValue) {
+        async function (aExpectedKeyValue) {
           content.promiseTestResult = new Promise(resolve => {
             content.addEventListener("keyup", event => {
               if (event.key.toLowerCase() == aExpectedKeyValue.toLowerCase()) {
-                resolve(
-                  content
-                    .getSelection()
-                    .getRangeAt(0)
-                    .toString()
-                );
+                resolve(content.getSelection().getRangeAt(0).toString());
               }
             });
           });
@@ -293,7 +288,7 @@ if (
       const selectedText = await SpecialPowers.spawn(
         tab.linkedBrowser,
         [],
-        async function() {
+        async function () {
           return content.promiseTestResult;
         }
       );

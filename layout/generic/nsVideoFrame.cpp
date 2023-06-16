@@ -98,18 +98,6 @@ nsresult nsVideoFrame::CreateAnonymousContent(
     NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
     mPosterImage = NS_NewHTMLImageElement(nodeInfo.forget());
     NS_ENSURE_TRUE(mPosterImage, NS_ERROR_OUT_OF_MEMORY);
-
-    // Set the nsImageLoadingContent::ImageState() to 0. This means that the
-    // image will always report its state as 0, so it will never be reframed
-    // to show frames for loading or the broken image icon. This is important,
-    // as the image is native anonymous, and so can't be reframed (currently).
-    HTMLImageElement* imgContent = HTMLImageElement::FromNode(mPosterImage);
-    NS_ENSURE_TRUE(imgContent, NS_ERROR_FAILURE);
-
-    imgContent->ForceImageState(true, 0);
-    // And now have it update its internal state
-    mPosterImage->UpdateState(false);
-
     UpdatePosterSource(false);
 
     // XXX(Bug 1631371) Check if this should use a fallible operation as it

@@ -282,7 +282,7 @@ async function removeNotARIAOwnedEl(browser, accDoc) {
 
 addAccessibleTask(
   "e10s/doc_treeupdate_ariaowns.html",
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     await testContainer1(browser, accDoc);
     await removeContainer(browser, accDoc);
     await stealAndRecacheChildren(browser, accDoc);
@@ -307,7 +307,7 @@ addAccessibleTask(
     document.getElementById("c").setAttribute("aria-owns", "a");
   </script>
   `,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     testAccessibleTree(accDoc, {
       DOCUMENT: [
         {

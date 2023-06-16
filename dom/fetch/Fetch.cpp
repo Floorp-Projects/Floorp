@@ -1185,7 +1185,7 @@ nsresult ExtractByteStreamFromBody(const fetch::ResponseBodyInit& aBodyInit,
 
 template <class Derived>
 FetchBody<Derived>::FetchBody(nsIGlobalObject* aOwner)
-    : mOwner(aOwner), mReadableStreamReader(nullptr), mBodyUsed(false) {
+    : mOwner(aOwner), mBodyUsed(false) {
   MOZ_ASSERT(aOwner);
 
   if (!NS_IsMainThread()) {
@@ -1213,7 +1213,7 @@ template FetchBody<Request>::~FetchBody();
 template FetchBody<Response>::~FetchBody();
 
 template <class Derived>
-bool FetchBody<Derived>::GetBodyUsed(ErrorResult& aRv) const {
+bool FetchBody<Derived>::BodyUsed() const {
   if (mBodyUsed) {
     return true;
   }
@@ -1226,24 +1226,9 @@ bool FetchBody<Derived>::GetBodyUsed(ErrorResult& aRv) const {
   return false;
 }
 
-template bool FetchBody<Request>::GetBodyUsed(ErrorResult&) const;
+template bool FetchBody<Request>::BodyUsed() const;
 
-template bool FetchBody<Response>::GetBodyUsed(ErrorResult&) const;
-
-template <class Derived>
-bool FetchBody<Derived>::CheckBodyUsed() const {
-  IgnoredErrorResult result;
-  bool bodyUsed = GetBodyUsed(result);
-  if (result.Failed()) {
-    // Ignore the error.
-    return true;
-  }
-  return bodyUsed;
-}
-
-template bool FetchBody<Request>::CheckBodyUsed() const;
-
-template bool FetchBody<Response>::CheckBodyUsed() const;
+template bool FetchBody<Response>::BodyUsed() const;
 
 template <class Derived>
 void FetchBody<Derived>::SetBodyUsed(JSContext* aCx, ErrorResult& aRv) {
@@ -1267,14 +1252,10 @@ void FetchBody<Derived>::SetBodyUsed(JSContext* aCx, ErrorResult& aRv) {
     } else {
       MOZ_ASSERT(mFetchStreamReader);
       //  Let's activate the FetchStreamReader.
-      RefPtr<ReadableStreamDefaultReader> reader;
-      mFetchStreamReader->StartConsuming(aCx, mReadableStreamBody,
-                                         getter_AddRefs(reader), aRv);
+      mFetchStreamReader->StartConsuming(aCx, mReadableStreamBody, aRv);
       if (NS_WARN_IF(aRv.Failed())) {
         return;
       }
-
-      mReadableStreamReader = reader.forget();
     }
   }
 }
@@ -1307,11 +1288,7 @@ already_AddRefed<Promise> FetchBody<Derived>::ConsumeBody(
     return promise.forget();
   }
 
-  bool bodyUsed = GetBodyUsed(aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-  if (bodyUsed) {
+  if (BodyUsed()) {
     aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
     return nullptr;
   }
@@ -1491,11 +1468,7 @@ already_AddRefed<ReadableStream> FetchBody<Derived>::GetBody(JSContext* aCx,
   RefPtr<ReadableStream> body(mReadableStreamBody);
 
   // If the body has been already consumed, we lock the stream.
-  bool bodyUsed = GetBodyUsed(aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-  if (bodyUsed) {
+  if (BodyUsed()) {
     LockStream(aCx, body, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
@@ -1532,8 +1505,6 @@ void FetchBody<Derived>::LockStream(JSContext* aCx, ReadableStream* aStream,
   if (aRv.Failed()) {
     return;
   }
-
-  mReadableStreamReader = reader;
 }
 
 template void FetchBody<Request>::LockStream(JSContext* aCx,
@@ -1551,7 +1522,7 @@ void FetchBody<Derived>::MaybeTeeReadableStreamBody(
     ErrorResult& aRv) {
   MOZ_DIAGNOSTIC_ASSERT(aStreamReader);
   MOZ_DIAGNOSTIC_ASSERT(aInputStream);
-  MOZ_DIAGNOSTIC_ASSERT(!CheckBodyUsed());
+  MOZ_DIAGNOSTIC_ASSERT(!BodyUsed());
 
   *aBodyOut = nullptr;
   *aStreamReader = nullptr;
@@ -1633,7 +1604,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(EmptyBody, FetchBody<EmptyBody>)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwner)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAbortSignalImpl)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFetchStreamReader)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mReadableStreamReader)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(EmptyBody,
@@ -1641,7 +1611,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(EmptyBody,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAbortSignalImpl)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFetchStreamReader)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReadableStreamReader)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(EmptyBody, FetchBody<EmptyBody>)

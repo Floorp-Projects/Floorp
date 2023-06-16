@@ -4,8 +4,7 @@
   http://creativecommons.org/publicdomain/zero/1.0/
 -->
 <window title="DOM Worker Threads Test"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="test();">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
@@ -14,23 +13,39 @@
   <script type="application/javascript">
   <![CDATA[
 
-    function test()
-    {
+    add_task(async function classic_worker_test() {
+      let worker = window.classicWorker = new ChromeWorker("chromeWorker_worker.js");
+      await new Promise((resolve, reject) => {
+        worker.onmessage = function(event) {
+          is(event.data, "Done!", "Got the done message!");
+          resolve();
+        };
+        worker.onerror = function(event) {
+          ok(false, "Classic Worker had an error: " + event.message);
+          worker.terminate();
+          reject();
+        };
+        worker.postMessage("go");
+      });
+    });
+
+    add_task(async function module_worker_test() {
       waitForWorkerFinish();
 
-      var worker = new ChromeWorker("chromeWorker_worker.js");
-      worker.onmessage = function(event) {
-        is(event.data, "Done!", "Wrong message!");
-        finish();
-      }
-      worker.onerror = function(event) {
-        ok(false, "Worker had an error: " + event.message);
-        worker.terminate();
-        finish();
-      }
-      worker.postMessage("go");
-    }
-
+      let worker = window.moduleWorker = new ChromeWorker("chromeWorker_worker.sys.mjs", { type: "module" });
+      await new Promise((resolve, reject) => {
+        worker.onmessage = function(event) {
+          is(event.data, "Done!", "Got the done message!");
+          resolve();
+        };
+        worker.onerror = function(event) {
+          ok(false, "Module Worker had an error: " + event.message);
+          worker.terminate();
+          reject();
+        };
+        worker.postMessage("go");
+      });
+    });
   ]]>
   </script>
 

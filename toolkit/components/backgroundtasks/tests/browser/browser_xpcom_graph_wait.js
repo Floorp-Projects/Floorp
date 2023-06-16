@@ -96,22 +96,6 @@ const backgroundtaskPhases = {
         "@mozilla.org/xpcom/debug;1",
         "@mozilla.org/xre/app-info;1",
         "@mozilla.org/mime;1",
-        {
-          name: "@mozilla.org/gfx/info;1",
-          condition: WIN,
-        },
-        {
-          name: "@mozilla.org/image/tools;1",
-          condition: WIN,
-        },
-        {
-          name: "@mozilla.org/gfx/screenmanager;1",
-          condition: WIN,
-        },
-        {
-          name: "@mozilla.org/gfx/parent/screenmanager;1",
-          condition: WIN,
-        },
       ],
     },
   },
@@ -121,7 +105,7 @@ const backgroundtaskPhases = {
         // We have a profile marker for this, even though it failed to load!
         "resource:///modules/backgroundtasks/BackgroundTask_wait.sys.mjs",
 
-        "resource://gre/modules/ConsoleAPIStorage.jsm",
+        "resource://gre/modules/ConsoleAPIStorage.sys.mjs",
         "resource://gre/modules/Timer.sys.mjs",
 
         // We have a profile marker for this, even though it failed to load!
@@ -165,8 +149,9 @@ function getStackFromProfile(profile, stack, libs) {
               indexString = "0" + indexString;
             }
             let offset = addr - lib.start;
-            frame = `#${indexString}: ???[${lib.debugPath} ${"+0x" +
-              offset.toString(16)}]`;
+            frame = `#${indexString}: ???[${lib.debugPath} ${
+              "+0x" + offset.toString(16)
+            }]`;
             break;
           }
         }
@@ -230,9 +215,8 @@ add_task(async function test_xpcom_graph_wait() {
   for (let m of profile.markers.data) {
     let markerName = profile.stringTable[m[nameCol]];
     if (markerName.startsWith("BackgroundTasksManager:")) {
-      phases[
-        markerName.split("BackgroundTasksManager:")[1]
-      ] = markersForCurrentPhase;
+      phases[markerName.split("BackgroundTasksManager:")[1]] =
+        markersForCurrentPhase;
       markersForCurrentPhase = newMarkers();
       continue;
     }
@@ -300,11 +284,10 @@ add_task(async function test_xpcom_graph_wait() {
   for (let phaseName in backgroundtaskPhases) {
     for (let listName in backgroundtaskPhases[phaseName]) {
       for (let scriptType in backgroundtaskPhases[phaseName][listName]) {
-        backgroundtaskPhases[phaseName][listName][
-          scriptType
-        ] = filterConditions(
-          backgroundtaskPhases[phaseName][listName][scriptType]
-        );
+        backgroundtaskPhases[phaseName][listName][scriptType] =
+          filterConditions(
+            backgroundtaskPhases[phaseName][listName][scriptType]
+          );
       }
 
       // Turn human-readable contract IDs into CIDs.  It's worth noting that one
@@ -334,7 +317,8 @@ add_task(async function test_xpcom_graph_wait() {
   // Turn `{CID}` into `{CID} (@contractID)` or `{CID} (one of
   // @contractID1, ..., @contractIDn)` as appropriate.
   function renderResource(resource) {
-    const UUID_PATTERN = /^\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}$/i;
+    const UUID_PATTERN =
+      /^\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}$/i;
     if (UUID_PATTERN.test(resource)) {
       let foundContractIDs = [];
       for (let contractID of Cm.getContractIDs()) {

@@ -6,7 +6,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger("doc-sources.html", "long.js");
 
   await selectSource(dbg, "long.js", 1);

@@ -13,7 +13,7 @@
 // (that's to see if the reload loads from cache or not)
 const TEST_URL = URL_ROOT + "incremental-js-value-script.sjs";
 
-add_task(async function() {
+add_task(async function () {
   info(" ### Test reloading a Tab");
 
   // Create a TargetCommand for a given test tab
@@ -59,7 +59,7 @@ add_task(async function() {
   await commands.destroy();
 });
 
-add_task(async function() {
+add_task(async function () {
   info(" ### Test reloading an Add-on");
 
   const extension = ExtensionTestUtils.loadExtension({
@@ -78,17 +78,16 @@ add_task(async function() {
   // We have to start listening in order to ensure having a targetFront available
   await targetCommand.startListening();
 
-  const {
-    onResource: onReloaded,
-  } = await commands.resourceCommand.waitForNextResource(
-    commands.resourceCommand.TYPES.DOCUMENT_EVENT,
-    {
-      ignoreExistingResources: true,
-      predicate(resource) {
-        return resource.name == "dom-loading";
-      },
-    }
-  );
+  const { onResource: onReloaded } =
+    await commands.resourceCommand.waitForNextResource(
+      commands.resourceCommand.TYPES.DOCUMENT_EVENT,
+      {
+        ignoreExistingResources: true,
+        predicate(resource) {
+          return resource.name == "dom-loading";
+        },
+      }
+    );
 
   const backgroundPageURL = targetCommand.targetFront.url;
   ok(backgroundPageURL, "Got the background page URL");
@@ -110,7 +109,7 @@ add_task(async function() {
   await extension.unload();
 });
 function getContentVariable() {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     return content.wrappedJSObject.jsValue;
   });
 }

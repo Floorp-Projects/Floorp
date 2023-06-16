@@ -1,1 +1,8 @@
-[["warning", "Moved-from object 'x' is moved", "clang-analyzer-cplusplus.Move"], {"reliability": "high"}]
+[
+  [
+    "warning",
+    "Moved-from object 'x' is moved",
+    "clang-analyzer-cplusplus.Move"
+  ],
+  { "reliability": "high" }
+]

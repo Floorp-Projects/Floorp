@@ -6,7 +6,7 @@
 /**
  * Tests if server side timings are displayed
  */
-add_task(async function() {
+add_task(async function () {
   const { tab, monitor } = await initNetMonitor(HTTPS_CUSTOM_GET_URL, {
     requestCount: 1,
   });
@@ -19,7 +19,7 @@ add_task(async function() {
   await SpecialPowers.spawn(
     tab.linkedBrowser,
     [SERVER_TIMINGS_TYPE_SJS],
-    async function(url) {
+    async function (url) {
       content.wrappedJSObject.performRequests(1, url);
     }
   );

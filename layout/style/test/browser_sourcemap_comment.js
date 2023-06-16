@@ -1,4 +1,4 @@
-add_task(async function() {
+add_task(async function () {
   // Test text and expected results.
   let test_cases = [
     ["/*# sourceMappingURL=here*/", "here"],
@@ -29,8 +29,8 @@ add_task(async function() {
       gBrowser,
       url: uri,
     },
-    async function(browser) {
-      await SpecialPowers.spawn(browser, [test_cases], function(tests) {
+    async function (browser) {
+      await SpecialPowers.spawn(browser, [test_cases], function (tests) {
         for (let i = 0; i < content.document.styleSheets.length; ++i) {
           let sheet = content.document.styleSheets[i];
 

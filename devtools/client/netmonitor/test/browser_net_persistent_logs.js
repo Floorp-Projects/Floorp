@@ -8,7 +8,7 @@
  * You can also use this initialization format as a template for other tests.
  */
 
-add_task(async function() {
+add_task(async function () {
   const { monitor } = await initNetMonitor(SINGLE_GET_URL, {
     requestCount: 1,
   });

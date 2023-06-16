@@ -51,6 +51,13 @@ function classPreview() {
       if (#privateVar in this && this.#privateVar !== 0) {
         i = i * 2;
       }
+      const y = {
+        hello: {
+          foo: "foo",
+           bar: "bar"
+        },
+      };
+      y;
       debugger;
     }
   }

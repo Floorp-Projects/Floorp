@@ -32,6 +32,7 @@
 #include "vp9/encoder/vp9_encoder.h"
 #include "./y4minput.h"
 
+#define OUTPUT_FRAME_STATS 0
 #define OUTPUT_RC_STATS 1
 
 #define SIMULCAST_MODE 0
@@ -880,7 +881,9 @@ int main(int argc, const char **argv) {
   int pts = 0;            /* PTS starts at 0 */
   int frame_duration = 1; /* 1 timebase tick per frame */
   int end_of_stream = 0;
+#if OUTPUT_FRAME_STATS
   int frames_received = 0;
+#endif
 #if OUTPUT_RC_STATS
   VpxVideoWriter *outfile[VPX_SS_MAX_LAYERS] = { NULL };
   struct RateControlStats rc;
@@ -1126,14 +1129,14 @@ int main(int argc, const char **argv) {
             }
 #endif
           }
-          /*
+#if OUTPUT_FRAME_STATS
           printf("SVC frame: %d, kf: %d, size: %d, pts: %d\n", frames_received,
                  !!(cx_pkt->data.frame.flags & VPX_FRAME_IS_KEY),
                  (int)cx_pkt->data.frame.sz, (int)cx_pkt->data.frame.pts);
-          */
+          ++frames_received;
+#endif
           if (enc_cfg.ss_number_layers == 1 && enc_cfg.ts_number_layers == 1)
             si->bytes_sum[0] += (int)cx_pkt->data.frame.sz;
-          ++frames_received;
 #if CONFIG_VP9_DECODER && !SIMULCAST_MODE
           if (vpx_codec_decode(&decoder, cx_pkt->data.frame.buf,
                                (unsigned int)cx_pkt->data.frame.sz, NULL, 0))

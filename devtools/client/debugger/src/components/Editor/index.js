@@ -8,7 +8,7 @@ import { bindActionCreators } from "redux";
 import ReactDOM from "react-dom";
 import { connect } from "../../utils/connect";
 
-import { getLineText } from "./../../utils/source";
+import { getLineText, isLineBlackboxed } from "./../../utils/source";
 import { createLocation } from "./../../utils/location";
 import { features } from "../../utils/prefs";
 import { getIndentation } from "../../utils/indentation";
@@ -43,12 +43,14 @@ import {
   getBlackBoxRanges,
   isSourceBlackBoxed,
   getHighlightedLineRangeForSelectedSource,
+  isSourceMapIgnoreListEnabled,
+  isSourceOnSourceMapIgnoreList,
 } from "../../selectors";
 
 // Redux actions
 import actions from "../../actions";
 
-import SearchBar from "./SearchBar";
+import SearchInFileBar from "./SearchInFileBar";
 import HighlightLines from "./HighlightLines";
 import Preview from "./Preview";
 import Breakpoints from "./Breakpoints";
@@ -134,13 +136,14 @@ class Editor extends PureComponent {
       symbols: PropTypes.object,
       startPanelSize: PropTypes.number.isRequired,
       endPanelSize: PropTypes.number.isRequired,
-      searchOn: PropTypes.bool.isRequired,
+      searchInFileEnabled: PropTypes.bool.isRequired,
       inlinePreviewEnabled: PropTypes.bool.isRequired,
       editorWrappingEnabled: PropTypes.bool.isRequired,
       skipPausing: PropTypes.bool.isRequired,
       blackboxedRanges: PropTypes.object.isRequired,
       breakableLines: PropTypes.object.isRequired,
       highlightedLineRange: PropTypes.object,
+      isSourceOnIgnoreList: PropTypes.bool,
     };
   }
 
@@ -339,11 +342,11 @@ class Editor extends PureComponent {
     }
 
     return openConditionalPanel(
-      {
+      createLocation({
         line,
         column,
-        sourceId: selectedSource.id,
-      },
+        source: selectedSource,
+      }),
       false
     );
   };
@@ -414,6 +417,7 @@ class Editor extends PureComponent {
       isPaused,
       conditionalPanelLocation,
       closeConditionalPanel,
+      isSourceOnIgnoreList,
       blackboxedRanges,
     } = this.props;
     const { editor } = this.state;
@@ -458,6 +462,7 @@ class Editor extends PureComponent {
           editorActions,
           editor,
           blackboxedRanges,
+          isSourceOnIgnoreList,
           line
         ),
       ]);
@@ -483,18 +488,14 @@ class Editor extends PureComponent {
       closeConditionalPanel,
       addBreakpointAtLine,
       continueToHere,
-      toggleBlackBox,
       breakableLines,
+      blackboxedRanges,
+      isSourceOnIgnoreList,
     } = this.props;
 
     // ignore right clicks in the gutter
     if (isSecondary(ev) || ev.button === 2 || !selectedSource) {
       return;
-    }
-
-    // if user clicks gutter to set breakpoint on blackboxed source, un-blackbox the source.
-    if (this.props.selectedSourceIsBlackBoxed) {
-      toggleBlackBox(cx, selectedSource);
     }
 
     if (conditionalPanelLocation) {
@@ -517,15 +518,28 @@ class Editor extends PureComponent {
     }
 
     if (isCmd(ev)) {
-      continueToHere(cx, {
-        line: sourceLine,
-        column: undefined,
-        sourceId: selectedSource.id,
-      });
+      continueToHere(
+        cx,
+        createLocation({
+          line: sourceLine,
+          column: undefined,
+          source: selectedSource,
+        })
+      );
       return;
     }
 
-    addBreakpointAtLine(cx, sourceLine, ev.altKey, ev.shiftKey);
+    addBreakpointAtLine(
+      cx,
+      sourceLine,
+      ev.altKey,
+      ev.shiftKey ||
+        isLineBlackboxed(
+          blackboxedRanges[selectedSource.url],
+          sourceLine,
+          isSourceOnIgnoreList
+        )
+    );
   };
 
   onGutterContextMenu = event => {
@@ -533,12 +547,8 @@ class Editor extends PureComponent {
   };
 
   onClick(e) {
-    const {
-      cx,
-      selectedSource,
-      updateCursorPosition,
-      jumpToMappedLocation,
-    } = this.props;
+    const { cx, selectedSource, updateCursorPosition, jumpToMappedLocation } =
+      this.props;
 
     if (selectedSource) {
       const sourceLocation = getSourceLocationFromMouseEvent(
@@ -556,11 +566,8 @@ class Editor extends PureComponent {
   }
 
   shouldScrollToLocation(nextProps, editor) {
-    const {
-      selectedLocation,
-      selectedSource,
-      selectedSourceTextContent,
-    } = this.props;
+    const { selectedLocation, selectedSource, selectedSourceTextContent } =
+      this.props;
     if (
       !editor ||
       !nextProps.selectedSource ||
@@ -644,9 +651,9 @@ class Editor extends PureComponent {
   }
 
   getInlineEditorStyles() {
-    const { searchOn } = this.props;
+    const { searchInFileEnabled } = this.props;
 
-    if (searchOn) {
+    if (searchInFileEnabled) {
       return {
         height: `calc(100% - ${cssVars.searchbarHeight})`,
       };
@@ -666,6 +673,9 @@ class Editor extends PureComponent {
       inlinePreviewEnabled,
       editorWrappingEnabled,
       highlightedLineRange,
+      blackboxedRanges,
+      isSourceOnIgnoreList,
+      selectedSourceIsBlackBoxed,
     } = this.props;
     const { editor, contextMenu } = this.state;
 
@@ -684,21 +694,26 @@ class Editor extends PureComponent {
         {highlightedLineRange ? (
           <HighlightLines editor={editor} range={highlightedLineRange} />
         ) : null}
-        {features.blackboxLines ? <BlackboxLines editor={editor} /> : null}
-        <Exceptions />
-        {
-          <EditorMenu
+        {isSourceOnIgnoreList || selectedSourceIsBlackBoxed ? (
+          <BlackboxLines
             editor={editor}
-            contextMenu={contextMenu}
-            clearContextMenu={this.clearContextMenu}
             selectedSource={selectedSource}
-            editorWrappingEnabled={editorWrappingEnabled}
+            isSourceOnIgnoreList={isSourceOnIgnoreList}
+            blackboxedRangesForSelectedSource={
+              blackboxedRanges[selectedSource.url]
+            }
           />
-        }
-        {conditionalPanelLocation ? <ConditionalPanel editor={editor} /> : null}
-        {features.columnBreakpoints ? (
-          <ColumnBreakpoints editor={editor} />
         ) : null}
+        <Exceptions />
+        <EditorMenu
+          editor={editor}
+          contextMenu={contextMenu}
+          clearContextMenu={this.clearContextMenu}
+          selectedSource={selectedSource}
+          editorWrappingEnabled={editorWrappingEnabled}
+        />
+        {conditionalPanelLocation ? <ConditionalPanel editor={editor} /> : null}
+        <ColumnBreakpoints editor={editor} />
         {isPaused && inlinePreviewEnabled ? (
           <InlinePreviews editor={editor} selectedSource={selectedSource} />
         ) : null}
@@ -706,14 +721,12 @@ class Editor extends PureComponent {
     );
   }
 
-  renderSearchBar() {
-    const { editor } = this.state;
-
+  renderSearchInFileBar() {
     if (!this.props.selectedSource) {
       return null;
     }
 
-    return <SearchBar editor={editor} />;
+    return <SearchInFileBar editor={this.state.editor} />;
   }
 
   render() {
@@ -730,7 +743,7 @@ class Editor extends PureComponent {
           className="editor-mount devtools-monospace"
           style={this.getInlineEditorStyles()}
         />
-        {this.renderSearchBar()}
+        {this.renderSearchInFileBar()}
         {this.renderItems()}
       </div>
     );
@@ -753,7 +766,10 @@ const mapStateToProps = state => {
     selectedSourceIsBlackBoxed: selectedSource
       ? isSourceBlackBoxed(state, selectedSource)
       : null,
-    searchOn: getActiveSearch(state) === "file",
+    isSourceOnIgnoreList:
+      isSourceMapIgnoreListEnabled(state) &&
+      isSourceOnSourceMapIgnoreList(state, selectedSource),
+    searchInFileEnabled: getActiveSearch(state) === "file",
     conditionalPanelLocation: getConditionalPanelLocation(state),
     symbols: getSymbols(state, selectedLocation),
     isPaused: getIsCurrentThreadPaused(state),
@@ -776,7 +792,6 @@ const mapDispatchToProps = dispatch => ({
       toggleBreakpointAtLine: actions.toggleBreakpointAtLine,
       addBreakpointAtLine: actions.addBreakpointAtLine,
       jumpToMappedLocation: actions.jumpToMappedLocation,
-      traverseResults: actions.traverseResults,
       updateViewport: actions.updateViewport,
       updateCursorPosition: actions.updateCursorPosition,
       closeTab: actions.closeTab,

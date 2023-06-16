@@ -14,7 +14,7 @@
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/a11y/RemoteAccessible.h"
 #include "mozilla/dom/BrowserParent.h"
-#include "mozilla/StaticPrefs_accessibility.h"
+#include "nsAccessibilityService.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -78,13 +78,6 @@ AtkObject* refAccessibleAtPointHelper(AtkObject* aAtkObj, gint aX, gint aY,
                                       AtkCoordType aCoordType) {
   Accessible* acc = GetInternalObj(aAtkObj);
   if (!acc) {
-    // This might be an ATK Socket.
-    acc = GetAccessibleWrap(aAtkObj);
-    if (!acc) {
-      return nullptr;
-    }
-  }
-  if (acc->IsLocal() && acc->AsLocal()->IsDefunct()) {
     return nullptr;
   }
 
@@ -119,14 +112,7 @@ void getExtentsHelper(AtkObject* aAtkObj, gint* aX, gint* aY, gint* aWidth,
   *aX = *aY = *aWidth = *aHeight = -1;
 
   Accessible* acc = GetInternalObj(aAtkObj);
-  if (!acc || (acc->IsLocal() && acc->AsLocal()->IsDefunct())) {
-    return;
-  }
-
-  if (!StaticPrefs::accessibility_cache_enabled_AtStartup() &&
-      acc->IsRemote()) {
-    acc->AsRemote()->Extents(aCoordType == ATK_XY_WINDOW, aX, aY, aWidth,
-                             aHeight);
+  if (!acc) {
     return;
   }
 

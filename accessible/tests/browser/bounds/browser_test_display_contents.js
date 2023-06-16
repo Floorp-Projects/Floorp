@@ -7,12 +7,8 @@
 /* import-globals-from ../../mochitest/layout.js */
 
 async function testContentBounds(browser, acc) {
-  let [
-    expectedX,
-    expectedY,
-    expectedWidth,
-    expectedHeight,
-  ] = await getContentBoundsForDOMElm(browser, getAccessibleDOMNodeID(acc));
+  let [expectedX, expectedY, expectedWidth, expectedHeight] =
+    await getContentBoundsForDOMElm(browser, getAccessibleDOMNodeID(acc));
 
   let contentDPR = await getContentDPR(browser);
   let [x, y, width, height] = getBounds(acc, contentDPR);

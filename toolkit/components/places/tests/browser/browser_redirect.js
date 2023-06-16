@@ -20,7 +20,7 @@ const TYPED_VISIT_BONUS = Services.prefs.getIntPref(
 // of idle-daily).
 Services.prefs.setCharPref("places.frecency.decayRate", "1.0");
 
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   Services.prefs.clearUserPref("places.frecency.decayRate");
   await PlacesUtils.history.clear();
 });

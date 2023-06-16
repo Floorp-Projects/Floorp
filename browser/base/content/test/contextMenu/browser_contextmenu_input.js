@@ -151,7 +151,7 @@ add_task(async function test_password_input() {
         await SpecialPowers.spawn(
           gBrowser.selectedBrowser,
           [],
-          async function() {
+          async function () {
             let doc = content.document;
             let input = doc.getElementById("input_password");
             input.type = "password";
@@ -163,7 +163,7 @@ add_task(async function test_password_input() {
         await SpecialPowers.spawn(
           gBrowser.selectedBrowser,
           [],
-          async function() {
+          async function () {
             let doc = content.document;
             let input = doc.getElementById("input_password");
             input.outerHTML = `<input id=\"input_password\">`;

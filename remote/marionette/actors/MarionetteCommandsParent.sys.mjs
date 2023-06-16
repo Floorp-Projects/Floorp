@@ -206,9 +206,10 @@ export class MarionetteCommandsParent extends JSWindowActorParent {
   }
 
   async switchToFrame(id) {
-    const {
-      browsingContextId,
-    } = await this.sendQuery("MarionetteCommandsParent:switchToFrame", { id });
+    const { browsingContextId } = await this.sendQuery(
+      "MarionetteCommandsParent:switchToFrame",
+      { id }
+    );
 
     return {
       browsingContext: BrowsingContext.get(browsingContextId),
@@ -306,9 +307,10 @@ export function getMarionetteCommandsActorProxy(browsingContextFn) {
 
               // TODO: Scenarios where the window/tab got closed and
               // currentWindowGlobal is null will be handled in Bug 1662808.
-              const actor = browsingContext.currentWindowGlobal.getActor(
-                "MarionetteCommands"
-              );
+              const actor =
+                browsingContext.currentWindowGlobal.getActor(
+                  "MarionetteCommands"
+                );
 
               const result = await actor[methodName](...args);
               return result;

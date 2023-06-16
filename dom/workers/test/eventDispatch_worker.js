@@ -16,7 +16,7 @@ function testEventTarget(event) {
 
 addEventListener(
   fakeEventType,
-  function(event) {
+  function (event) {
     throw new Error("Trusted event listener received untrusted event!");
   },
   false,
@@ -25,7 +25,7 @@ addEventListener(
 
 addEventListener(
   fakeEventType,
-  function(event) {
+  function (event) {
     if (event.target !== self || event.currentTarget !== self) {
       throw new Error("Fake event has bad target!");
     }
@@ -41,7 +41,7 @@ addEventListener(
 
 addEventListener(
   fakeEventType,
-  function(event) {
+  function (event) {
     throw new Error(
       "This shouldn't get called because of stopImmediatePropagation."
     );
@@ -51,7 +51,7 @@ addEventListener(
 );
 
 var count = 0;
-onmessage = function(event) {
+onmessage = function (event) {
   if (event.target !== self || event.currentTarget !== self) {
     throw new Error("Event has bad target!");
   }

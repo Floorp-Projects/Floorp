@@ -2,14 +2,14 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 var originalWindowHeight;
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   window.resizeTo(window.outerWidth, originalWindowHeight);
   while (gBrowser.tabs[1]) {
     gBrowser.removeTab(gBrowser.tabs[1]);
   }
 });
 
-add_task(async function() {
+add_task(async function () {
   originalWindowHeight = window.outerHeight;
   window.resizeTo(window.outerWidth, 300);
   let prefs = await openPreferencesViaOpenPreferencesAPI("paneSearch", {

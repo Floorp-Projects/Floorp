@@ -1194,6 +1194,7 @@ rm{
     }
     Currencies%narrow{
         AUD{"$"}
+        BYN{"BYN"}
         CAD{"$"}
         EUR{"€"}
         GBP{"£"}

@@ -345,8 +345,6 @@ def profiling(value):
         return True
 
 
-add_old_configure_assignment("MOZ_PROFILING", profiling)
-
 with only_when("--enable-compile-environment"):
     imply_option("--enable-frame-pointers", True, when=profiling)
 
@@ -941,7 +939,7 @@ def wasm_moz_intgemm(value, target, no_experimental):
     if no_experimental:
         return
 
-    if value and target.cpu in ("x86", "x86_64"):
+    if value and target.cpu in ("x86", "x86_64", "aarch64"):
         return True
 
 
@@ -1106,7 +1104,7 @@ set_define(
 # ======================================================
 system_lib_option("--with-system-icu", help="Use system ICU")
 
-system_icu = pkg_check_modules("MOZ_ICU", "icu-i18n >= 72.1", when="--with-system-icu")
+system_icu = pkg_check_modules("MOZ_ICU", "icu-i18n >= 73.1", when="--with-system-icu")
 
 
 @depends("--with-system-icu")
@@ -1198,31 +1196,6 @@ def is_wasi_target(os):
 
 set_define("_WASI_EMULATED_PROCESS_CLOCKS", True, when=is_wasi_target)
 set_define("_WASI_EMULATED_GETPID", True, when=is_wasi_target)
-
-# Enable change-array-by-copy
-# ===================================================
-
-
-@depends(milestone.is_nightly)
-def use_change_array_by_copy(is_nightly):
-    return is_nightly
-
-
-option(
-    "--enable-change-array-by-copy",
-    default=use_change_array_by_copy,
-    help="{Enable|Disable} change-array-by-copy method pref/command-line option (disabled by default in Release-or-Beta)",
-)
-
-
-@depends("--enable-change-array-by-copy")
-def enable_change_array_by_copy(value):
-    if value:
-        return True
-
-
-set_config("ENABLE_CHANGE_ARRAY_BY_COPY", enable_change_array_by_copy)
-set_define("ENABLE_CHANGE_ARRAY_BY_COPY", enable_change_array_by_copy)
 
 # Enable New Set methods
 # ===================================================

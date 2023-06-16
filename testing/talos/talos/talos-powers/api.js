@@ -276,8 +276,8 @@ TalosPowersService.prototype = {
       // We can wait for various startup items here to complete during
       // the getInfo.html step for Talos so that subsequent runs don't
       // have to do things like re-request the SafeBrowsing list.
-      let { SafeBrowsing } = ChromeUtils.import(
-        "resource://gre/modules/SafeBrowsing.jsm"
+      let { SafeBrowsing } = ChromeUtils.importESModule(
+        "resource://gre/modules/SafeBrowsing.sys.mjs"
       );
 
       // Speed things up in case nobody else called this:
@@ -300,7 +300,7 @@ TalosPowersService.prototype = {
       // There aren't currently any easily observable notifications or
       // events to let us know when the feed is ready, so we'll just poll
       // for now.
-      let pollForFeed = async function() {
+      let pollForFeed = async function () {
         let foundFeed = AboutNewTab.activityStream.store.feeds.get(
           "feeds.system.topsites"
         );
@@ -347,7 +347,7 @@ TalosPowersService.prototype = {
       // the firstPaint measurement hasn't been set yet. In
       // that case, we set up an observer for the next time
       // a window is painted and re-retrieve the startup info.
-      let obs = function(subject, topic) {
+      let obs = function (subject, topic) {
         Services.obs.removeObserver(this, topic);
         startupInfo = Services.startup.getStartupInfo();
         mm.sendAsyncMessage(

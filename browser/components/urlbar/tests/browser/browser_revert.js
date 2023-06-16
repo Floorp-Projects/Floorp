@@ -1,13 +1,13 @@
 // Test reverting the urlbar value with ESC after a tab switch.
 
-add_task(async function() {
+add_task(async function () {
   registerCleanupFunction(PlacesUtils.history.clear);
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
       url: "http://example.com",
     },
-    async function(browser) {
+    async function (browser) {
       let originalValue = gURLBar.value;
       let tab = gBrowser.selectedTab;
       info("Put a typed value.");

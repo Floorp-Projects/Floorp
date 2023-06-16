@@ -161,7 +161,7 @@ addAccessibleTask(
   <input id="checkbox" type="checkbox">
   <input id="file" type="file">
   <input id="text">`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     await runStateTests(browser, accDoc, "checkbox", attributeTests);
     await runStateTests(browser, accDoc, "file", ariaTests);
     await runStateTests(browser, accDoc, "text", extraStateTests);
@@ -177,7 +177,7 @@ addAccessibleTask(
   <button id="b1">b1</button>
   <button id="b2">b2</button>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const b1 = findAccessibleChildByID(docAcc, "b1");
     const b2 = findAccessibleChildByID(docAcc, "b2");
 
@@ -207,7 +207,7 @@ addAccessibleTask(
   <button id="b1">b1</button>
   <button id="b2">b2</button>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     testStates(docAcc, STATE_FOCUSED);
   }
 );
@@ -219,7 +219,7 @@ addAccessibleTask(
   `
   <button id="button">button</button>
   `,
-  async function(browser, iframeDocAcc, topDocAcc) {
+  async function (browser, iframeDocAcc, topDocAcc) {
     testStates(topDocAcc, STATE_FOCUSED);
     const button = findAccessibleChildByID(iframeDocAcc, "button");
     testStates(button, 0, 0, STATE_FOCUSED);
@@ -240,7 +240,7 @@ addAccessibleTask(
   `
 <button id="button"></button>
 <span id="span" tabindex="-1">span</span>`,
-  async function(browser, topDocAcc) {
+  async function (browser, topDocAcc) {
     info("Changing visibility on iframe");
     let reordered = waitForEvent(EVENT_REORDER, topDocAcc);
     await SpecialPowers.spawn(browser, [DEFAULT_IFRAME_ID], iframeId => {
@@ -281,7 +281,7 @@ addAccessibleTask(
   `
   <div id="div">hello world</div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const div = findAccessibleChildByID(docAcc, "div");
     await untilCacheOk(() => checkOpacity(div, true), "Found opaque state");
 
@@ -312,7 +312,7 @@ addAccessibleTask(
  */
 addAccessibleTask(
   `<div id="div" contenteditable></div>`,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const div = findAccessibleChildByID(docAcc, "div");
     testStates(div, 0, EXT_STATE_EDITABLE, 0, 0);
     // Ensure that a contentEditable descendant doesn't cause editable to be
@@ -387,7 +387,7 @@ addAccessibleTask(
  */
 addAccessibleTask(
   `<iframe id="iframe"></iframe>`,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const iframe = findAccessibleChildByID(docAcc, "iframe");
     info("Setting iframe src");
     // This iframe won't finish loading. Thus, it will get the stale state and
@@ -425,7 +425,7 @@ addAccessibleTask(
   <div id="multiNoSel" role="option" tabindex="0">multiNoSel</div>
 </div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const noSel = findAccessibleChildByID(docAcc, "noSel");
     testStates(noSel, 0, 0, STATE_FOCUSED | STATE_SELECTED, 0);
     info("Focusing noSel");
@@ -458,7 +458,7 @@ addAccessibleTask(
  */
 addAccessibleTask(
   `<input type="email" id="email">`,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const email = findAccessibleChildByID(docAcc, "email");
     info("Focusing email");
     let focused = waitForEvent(EVENT_FOCUS, email);

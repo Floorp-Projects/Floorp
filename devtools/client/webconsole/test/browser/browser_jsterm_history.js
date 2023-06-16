@@ -8,7 +8,7 @@
 const TEST_URI = "data:text/html;charset=UTF-8,<!DOCTYPE html>test";
 const COMMANDS = ["document", "window", "window.location"];
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm } = hud;
   jsterm.focus();

@@ -18,9 +18,11 @@ perf:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1759744
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1799727
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1834774
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1759744#c5
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1799727#c4
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1834774#c3
     notification_emails:
       - perf-telemetry-alerts@mozilla.com
       - dpalmeiro@mozilla.com
@@ -29,6 +31,11 @@ perf:
       load_time:
         description:
           "Time between loadEventStart and navigationStart, in ms."
+        type: quantity
+        unit: ms
+      dns_lookup_time:
+        description:
+          "Time taken to perform dns lookup of the top level document, in ms."
         type: quantity
         unit: ms
       response_time:

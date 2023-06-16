@@ -55,7 +55,7 @@ class VideoFrameConverterTest : public ::testing::Test {
   RefPtr<FrameListener> mListener;
 
   VideoFrameConverterTest()
-      : mTimestampMaker(dom::RTCStatsTimestampMaker()),
+      : mTimestampMaker(dom::RTCStatsTimestampMaker::Create()),
         mConverter(MakeAndAddRef<DebugVideoFrameConverter>(mTimestampMaker)),
         mListener(MakeAndAddRef<FrameListener>(
             mConverter->VideoFrameConvertedEvent())) {}
@@ -376,7 +376,9 @@ TEST_F(VideoFrameConverterTest, TimestampPropagation) {
   EXPECT_EQ(frame0.height(), 480);
   EXPECT_FALSE(IsFrameBlack(frame0));
   EXPECT_EQ(frame0.timestamp_us(),
-            mTimestampMaker.ConvertMozTimeToRealtime(now + d1).us());
+            dom::RTCStatsTimestamp::FromMozTime(mTimestampMaker, now + d1)
+                .ToRealtime()
+                .us());
   EXPECT_GE(conversionTime0 - now, d1);
 
   const auto& [frame1, conversionTime1] = frames[1];
@@ -384,7 +386,9 @@ TEST_F(VideoFrameConverterTest, TimestampPropagation) {
   EXPECT_EQ(frame1.height(), 600);
   EXPECT_FALSE(IsFrameBlack(frame1));
   EXPECT_EQ(frame1.timestamp_us(),
-            mTimestampMaker.ConvertMozTimeToRealtime(now + d2).us());
+            dom::RTCStatsTimestamp::FromMozTime(mTimestampMaker, now + d2)
+                .ToRealtime()
+                .us());
   EXPECT_GE(conversionTime1 - now, d2);
 }
 
@@ -426,7 +430,9 @@ TEST_F(VideoFrameConverterTest, IgnoreOldFrames) {
   EXPECT_EQ(frame0.height(), 480);
   EXPECT_FALSE(IsFrameBlack(frame0));
   EXPECT_EQ(frame0.timestamp_us(),
-            mTimestampMaker.ConvertMozTimeToRealtime(now + d1).us());
+            dom::RTCStatsTimestamp::FromMozTime(mTimestampMaker, now + d1)
+                .ToRealtime()
+                .us());
   EXPECT_GE(conversionTime0 - now, d1);
 
   const auto& [frame1, conversionTime1] = frames[1];
@@ -434,7 +440,9 @@ TEST_F(VideoFrameConverterTest, IgnoreOldFrames) {
   EXPECT_EQ(frame1.height(), 480);
   EXPECT_FALSE(IsFrameBlack(frame1));
   EXPECT_GT(frame1.timestamp_us(),
-            mTimestampMaker.ConvertMozTimeToRealtime(now + d2).us());
+            dom::RTCStatsTimestamp::FromMozTime(mTimestampMaker, now + d2)
+                .ToRealtime()
+                .us());
   EXPECT_GE(conversionTime1 - now, d2);
 
   const auto& [frame2, conversionTime2] = frames[2];
@@ -468,7 +476,9 @@ TEST_F(VideoFrameConverterTest, SameFrameTimerRacingWithPacing) {
   EXPECT_EQ(frame0.height(), 480);
   EXPECT_FALSE(IsFrameBlack(frame0));
   EXPECT_EQ(frame0.timestamp_us(),
-            mTimestampMaker.ConvertMozTimeToRealtime(now + d1).us());
+            dom::RTCStatsTimestamp::FromMozTime(mTimestampMaker, now + d1)
+                .ToRealtime()
+                .us());
   EXPECT_GE(conversionTime0 - now, d1);
 
   const auto& [frame1, conversionTime1] = frames[1];
@@ -476,17 +486,19 @@ TEST_F(VideoFrameConverterTest, SameFrameTimerRacingWithPacing) {
   EXPECT_EQ(frame1.height(), 480);
   EXPECT_FALSE(IsFrameBlack(frame1));
   EXPECT_EQ(frame1.timestamp_us(),
-            mTimestampMaker.ConvertMozTimeToRealtime(now + d2).us());
+            dom::RTCStatsTimestamp::FromMozTime(mTimestampMaker, now + d2)
+                .ToRealtime()
+                .us());
   EXPECT_GE(conversionTime1 - now, d2);
 
   const auto& [frame2, conversionTime2] = frames[2];
   EXPECT_EQ(frame2.width(), 640);
   EXPECT_EQ(frame2.height(), 480);
   EXPECT_FALSE(IsFrameBlack(frame2));
-  EXPECT_EQ(
-      frame2.timestamp_us(),
-      mTimestampMaker
-          .ConvertMozTimeToRealtime(now + d2 + TimeDuration::FromSeconds(1))
-          .us());
+  EXPECT_EQ(frame2.timestamp_us(),
+            dom::RTCStatsTimestamp::FromMozTime(
+                mTimestampMaker, now + d2 + TimeDuration::FromSeconds(1))
+                .ToRealtime()
+                .us());
   EXPECT_GE(conversionTime2 - now, d2 + TimeDuration::FromSeconds(1));
 }

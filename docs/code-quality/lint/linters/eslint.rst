@@ -1,7 +1,7 @@
 ESLint
 ======
 
-`ESLint`_ is a popular linter for JavaScript. The ESLint integration also uses
+`ESLint`__ is a popular linter for JavaScript. The ESLint integration also uses
 `Prettier`_ to enforce code formatting.
 
 Run Locally
@@ -195,11 +195,11 @@ For test harness issues, file bugs in Developer Infrastructure :: Lint and Forma
    eslint-plugin-mozilla
    eslint-plugin-spidermonkey-js
 
-.. _ESLint: http://eslint.org/
+.. __: https://eslint.org/
 .. _Prettier: https://prettier.io/
 .. _Usage guide: ../usage.html
-.. _ESLint's documentation: http://eslint.org/docs/user-guide/configuring
-.. _eslint.org's rule list: http://eslint.org/docs/rules/
+.. _ESLint's documentation: https://eslint.org/docs/user-guide/configuring
+.. _eslint.org's rule list: https://eslint.org/docs/rules/
 .. _eslint-plugin-mozilla: eslint-plugin-mozilla.html
 .. _eslint-plugin-spidermonkey-js: eslint-plugin-spidermonkey-js.html
 .. _informed that it is a module: https://searchfox.org/mozilla-central/rev/9399e5832979755cd340383f4ca4069dd5fc7774/browser/base/content/.eslintrc.js

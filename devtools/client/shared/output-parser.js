@@ -261,12 +261,8 @@ OutputParser.prototype = {
     const variableNode = this._createNode("span", {}, varText);
 
     // Parse the first variable name within the parens of var().
-    const {
-      tokens,
-      functionData,
-      sawComma,
-      sawVariable,
-    } = this._parseMatchingParens(text, tokenStream, options, true);
+    const { tokens, functionData, sawComma, sawVariable } =
+      this._parseMatchingParens(text, tokenStream, options, true);
 
     const result = sawVariable ? "" : functionData.join("");
 
@@ -352,7 +348,7 @@ OutputParser.prototype = {
     let fontFamilyNameParts = [];
     let previousWasBang = false;
 
-    const colorOK = function() {
+    const colorOK = function () {
       return (
         options.supportsColor ||
         (options.expectFilter &&
@@ -361,7 +357,7 @@ OutputParser.prototype = {
       );
     };
 
-    const angleOK = function(angle) {
+    const angleOK = function (angle) {
       return new angleUtils.CssAngle(angle).valid;
     };
 
@@ -1479,7 +1475,7 @@ OutputParser.prototype = {
       // in order to prevent the value input to be focused.
       // Bug 711942 will add a tooltip to edit angle values and we should
       // be able to move this listener to Tooltip.js when it'll be implemented.
-      swatch.addEventListener("click", function(event) {
+      swatch.addEventListener("click", function (event) {
         if (event.shiftKey) {
           event.stopPropagation();
         }
@@ -1711,9 +1707,8 @@ OutputParser.prototype = {
       // whitespace, and the ")" into |trailer|.  We considered adding
       // functionality for this to CSSLexer, in some way, but this
       // seemed simpler on the whole.
-      const urlParts = /^(url\([ \t\r\n\f]*(["']?))(.*?)(\2[ \t\r\n\f]*\))$/i.exec(
-        match
-      );
+      const urlParts =
+        /^(url\([ \t\r\n\f]*(["']?))(.*?)(\2[ \t\r\n\f]*\))$/i.exec(match);
 
       // Bail out if that didn't match anything.
       if (!urlParts) {

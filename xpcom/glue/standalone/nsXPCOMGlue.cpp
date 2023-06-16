@@ -404,6 +404,9 @@ BootstrapResult GetBootstrap(const char* aXPCOMFile,
 
   MOZ_TRY(XPCOMGlueLoad(file.get(), aLibLoadingStrategy));
 
+  if (!sTop) {
+    return Err(AsVariant(NS_ERROR_NOT_AVAILABLE));
+  }
   GetBootstrapType func =
       (GetBootstrapType)GetSymbol(sTop->libHandle, "XRE_GetBootstrap");
   if (!func) {

@@ -301,7 +301,8 @@ async function isGivenTabUsingDefaultMetadata(tab, options = {}) {
   );
   ok(fallbackTitle.length, "l10n fallback title is not empty");
 
-  const metadata = tab.linkedBrowser.browsingContext.mediaController.getMetadata();
+  const metadata =
+    tab.linkedBrowser.browsingContext.mediaController.getMetadata();
 
   await SpecialPowers.spawn(
     tab.linkedBrowser,

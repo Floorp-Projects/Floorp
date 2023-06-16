@@ -17,10 +17,10 @@
 #include "frontend/FrontendContext.h"  // frontend::FrontendContext
 #include "gc/GC.h"
 #include "js/GCAPI.h"
+#include "js/Printer.h"
 #include "js/Utility.h"  // JS::FreePolicy
 #include "util/Unicode.h"
 #include "vm/JSContext.h"
-#include "vm/Printer.h"
 #include "vm/StringType.h"
 
 using namespace JS;

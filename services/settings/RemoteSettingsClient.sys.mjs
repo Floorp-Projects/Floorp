@@ -1051,11 +1051,8 @@ export class RemoteSettingsClient extends EventEmitter {
     lazy.console.debug(
       `${this.identifier} Fetch changes from server (expected=${expectedTimestamp}, since=${since})`
     );
-    const {
-      metadata,
-      remoteTimestamp,
-      remoteRecords,
-    } = await this._fetchChangeset(expectedTimestamp, since);
+    const { metadata, remoteTimestamp, remoteRecords } =
+      await this._fetchChangeset(expectedTimestamp, since);
 
     // We build a sync result, based on remote changes.
     const syncResult = {

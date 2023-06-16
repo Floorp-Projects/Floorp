@@ -23,6 +23,9 @@ zh_Hans_MO{
         NIO{
             other{"尼加拉瓜科多巴"}
         }
+        XAG{
+            other{"白银"}
+        }
     }
     CurrencyUnitPatterns{
         other{"{0} {1}"}

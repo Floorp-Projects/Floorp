@@ -163,7 +163,6 @@ def dmd(value):
 
 set_config("MOZ_DMD", dmd)
 set_define("MOZ_DMD", dmd)
-add_old_configure_assignment("MOZ_DMD", dmd)
 imply_option("--enable-profiling", dmd)
 imply_option("--enable-jemalloc", dmd, when=compile_environment)
 imply_option("--enable-replace-malloc", dmd, when=compile_environment)
@@ -490,7 +489,7 @@ def toolkit_gtk(toolkit):
 # ==============================================================
 wayland_headers = pkg_check_modules(
     "MOZ_WAYLAND",
-    "gtk+-wayland-3.0 >= 3.14 xkbcommon >= 0.4.1 libdrm >= 2.4",
+    "gtk+-wayland-3.0 >= 3.14 xkbcommon >= 0.4.1",
     allow_missing=depends(full_toolkit)(lambda t: t == "cairo-gtk3"),
     when=toolkit_gtk,
 )
@@ -505,6 +504,31 @@ def wayland_headers(wayland, toolkit_gtk, artifacts):
 
 set_config("MOZ_WAYLAND", depends_if(wayland_headers)(lambda _: True))
 set_define("MOZ_WAYLAND", depends_if(wayland_headers)(lambda _: True))
+
+# Hardware-accelerated video decode with VAAPI and V4L2
+# ==============================================================
+
+
+@depends(target, wayland_headers)
+def vaapi(target, wayland_headers):
+    # VAAPI is only used in Wayland. It's mostly used on x86(-64) but is
+    # sometimes used on ARM/ARM64 SOCs. Wayland implies GTK and Linux.
+    if target.cpu in ("arm", "aarch64", "x86", "x86_64") and wayland_headers:
+        return True
+
+
+@depends(target, wayland_headers)
+def v4l2(target, wayland_headers):
+    # V4L2 decode is only used in Wayland, and generally only appears on
+    # embedded SOCs. Wayland implies GTK and Linux.
+    if target.cpu in ("arm", "aarch64", "riscv64") and wayland_headers:
+        return True
+
+
+set_config("MOZ_ENABLE_VAAPI", True, when=vaapi)
+set_config("MOZ_ENABLE_V4L2", True, when=v4l2)
+set_define("MOZ_ENABLE_VAAPI", True, when=vaapi)
+set_define("MOZ_ENABLE_V4L2", True, when=v4l2)
 
 # GL Provider
 # ==============================================================
@@ -526,14 +550,12 @@ def gl_provider_define(provider):
 set_define("MOZ_GL_PROVIDER", gl_provider_define)
 
 
-@depends(gl_provider, wayland_headers, toolkit_gtk)
-def gl_default_provider(value, wayland, toolkit_gtk):
+@depends(gl_provider, toolkit_gtk)
+def gl_default_provider(value, toolkit_gtk):
     if value:
         return value
-    elif wayland:
-        return "EGL"
     elif toolkit_gtk:
-        return "GLX"
+        return "EGL"
 
 
 set_config("MOZ_GL_PROVIDER", gl_provider)
@@ -589,7 +611,6 @@ def fc_freetype(value, toolkit):
         return True
 
 
-add_old_configure_assignment("USE_FC_FREETYPE", fc_freetype)
 set_define("USE_FC_FREETYPE", fc_freetype)
 
 # Pango
@@ -751,7 +772,6 @@ def fmp4(value, target, wmf, applemedia):
 
 set_config("MOZ_FMP4", fmp4)
 set_define("MOZ_FMP4", fmp4)
-add_old_configure_assignment("MOZ_FMP4", fmp4)
 
 
 @depends(target)
@@ -1125,7 +1145,6 @@ def webspeech(value):
 
 set_config("MOZ_WEBSPEECH", webspeech)
 set_define("MOZ_WEBSPEECH", webspeech)
-add_old_configure_assignment("MOZ_WEBSPEECH", webspeech)
 
 # Speech API test backend
 # ==============================================================
@@ -1467,7 +1486,6 @@ def enable_asan_reporter(value):
 
 set_config("MOZ_ASAN_REPORTER", enable_asan_reporter)
 set_define("MOZ_ASAN_REPORTER", enable_asan_reporter)
-add_old_configure_assignment("MOZ_ASAN_REPORTER", enable_asan_reporter)
 
 # Elfhack
 # ==============================================================
@@ -2420,16 +2438,6 @@ option(
 )
 
 
-@depends(target, host, when="--with-wasm-sandboxed-libraries")
-def check_wasm_sandboxing(target, host):
-    if target.kernel == "WINNT" and host.kernel == "WINNT" and target.cpu != host.cpu:
-        # Bug 1741233
-        die(
-            f"Wasm sandboxing is not supported yet when building for {target.cpu} on {host.cpu} Windows. "
-            "Please use --without-wasm-sandboxed-libraries for now."
-        )
-
-
 @depends("--with-wasm-sandboxed-libraries")
 def requires_wasm_sandboxing(libraries):
     if libraries:
@@ -3002,6 +3010,7 @@ def necko_wifi_dbus(necko_wifi, dbus):
 
 
 set_config("NECKO_WIFI_DBUS", True, when=necko_wifi_dbus)
+set_define("NECKO_WIFI_DBUS", True, when=necko_wifi_dbus)
 
 
 # Frontend JS debug mode
@@ -3315,6 +3324,17 @@ option(
 
 set_config("MOZ_SYSTEM_POLICIES", True, when="--enable-system-policies")
 
+# Allow disabling the creation a legacy profile
+# ==============================================================
+
+option(
+    "--disable-legacy-profile-creation",
+    help="Disable the creation a legacy profile, to be used by old versions "
+    "of Firefox, when no profiles exist.",
+)
+
+set_config("MOZ_CREATE_LEGACY_PROFILE", True, when="--enable-legacy-profile-creation")
+
 
 # STL wrapping
 # ==============================================================
@@ -3323,3 +3343,53 @@ set_config(
     "STL_FLAGS",
     depends(build_environment.dist)(lambda dist: [f"-I{dist}/stl_wrappers"]),
 )
+
+
+# Perl detection
+# ==============================================================
+@depends(target)
+def need_perl(target):
+    # Ideally, we'd also depend on gnu_as here, but that adds complications.
+    return target.cpu == "arm"
+
+
+perl = check_prog("PERL", ("perl5", "perl"), when=need_perl)
+
+
+@template
+def perl_version_check(min_version):
+    @depends(perl)
+    @checking("for minimum required perl version >= %s" % min_version)
+    def get_perl_version(perl):
+        return Version(
+            check_cmd_output(
+                perl,
+                "-e",
+                "print $]",
+                onerror=lambda: die("Failed to get perl version."),
+            )
+        )
+
+    @depends(get_perl_version)
+    def check_perl_version(version):
+        if version < min_version:
+            die("Perl %s or higher is required.", min_version)
+
+    @depends(perl)
+    @checking("for full perl installation")
+    @imports("subprocess")
+    def has_full_perl_installation(perl):
+        ret = subprocess.call([perl, "-e", "use Config; exit(!-d $Config{archlib})"])
+        return ret == 0
+
+    @depends(has_full_perl_installation)
+    def require_full_perl_installation(has_full_perl_installation):
+        if not has_full_perl_installation:
+            die(
+                "Cannot find Config.pm or $Config{archlib}. "
+                "A full perl installation is required."
+            )
+
+
+with only_when(need_perl):
+    perl_version_check("5.006")

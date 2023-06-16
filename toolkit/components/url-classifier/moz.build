@@ -55,11 +55,11 @@ SOURCES += [
 ]
 
 EXTRA_JS_MODULES += [
-    "SafeBrowsing.jsm",
-    "UrlClassifierHashCompleter.jsm",
-    "UrlClassifierLib.jsm",
-    "UrlClassifierListManager.jsm",
-    "UrlClassifierRemoteSettingsService.jsm",
+    "SafeBrowsing.sys.mjs",
+    "UrlClassifierHashCompleter.sys.mjs",
+    "UrlClassifierLib.sys.mjs",
+    "UrlClassifierListManager.sys.mjs",
+    "UrlClassifierRemoteSettingsService.sys.mjs",
 ]
 
 XPCOM_MANIFESTS += [

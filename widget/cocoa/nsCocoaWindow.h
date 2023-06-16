@@ -253,7 +253,7 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
 
   virtual void* GetNativeData(uint32_t aDataType) override;
 
-  virtual void ConstrainPosition(bool aAllowSlop, int32_t* aX, int32_t* aY) override;
+  virtual void ConstrainPosition(DesktopIntPoint&) override;
   virtual void SetSizeConstraints(const SizeConstraints& aConstraints) override;
   virtual void Move(double aX, double aY) override;
   virtual nsSizeMode SizeMode() override { return mSizeMode; }
@@ -365,6 +365,7 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   // Class method versions of NSWindow/Delegate callbacks which need to
   // access object state.
   void CocoaWindowWillEnterFullscreen(bool aFullscreen);
+  void CocoaWindowDidEnterFullscreen(bool aFullscreen);
   void CocoaWindowDidFailFullscreen(bool aAttemptedFullscreen);
   void CocoaWindowDidResize();
   void CocoaSendToplevelActivateEvents();
@@ -462,6 +463,12 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   // window during the fullscreen transition animation because only focused
   // contexts are permitted to enter DOM fullscreen.
   int mIgnoreOcclusionCount;
+
+  // Set to true when a native fullscreen transition is initiated -- either to
+  // or from fullscreen -- and set to false when it is complete. During this
+  // period, we presume the window is visible, which prevents us from sending
+  // unnecessary OcclusionStateChanged events.
+  bool mHasStartedNativeFullscreen;
 
   bool mModal;
   bool mFakeModal;

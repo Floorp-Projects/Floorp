@@ -847,7 +847,7 @@ struct BarrierMethods<JS::BigInt*>
 // aggregate Lookup kinds embed a JSObject* that is frequently null and do not
 // null test before dispatching to the hasher.
 template <typename T>
-struct JS_PUBLIC_API MovableCellHasher {
+struct JS_PUBLIC_API StableCellHasher {
   using Key = T;
   using Lookup = T;
 
@@ -860,21 +860,21 @@ struct JS_PUBLIC_API MovableCellHasher {
 };
 
 template <typename T>
-struct JS_PUBLIC_API MovableCellHasher<JS::Heap<T>> {
+struct JS_PUBLIC_API StableCellHasher<JS::Heap<T>> {
   using Key = JS::Heap<T>;
   using Lookup = T;
 
   static bool maybeGetHash(const Lookup& l, HashNumber* hashOut) {
-    return MovableCellHasher<T>::maybeGetHash(l, hashOut);
+    return StableCellHasher<T>::maybeGetHash(l, hashOut);
   }
   static bool ensureHash(const Lookup& l, HashNumber* hashOut) {
-    return MovableCellHasher<T>::ensureHash(l, hashOut);
+    return StableCellHasher<T>::ensureHash(l, hashOut);
   }
   static HashNumber hash(const Lookup& l) {
-    return MovableCellHasher<T>::hash(l);
+    return StableCellHasher<T>::hash(l);
   }
   static bool match(const Key& k, const Lookup& l) {
-    return MovableCellHasher<T>::match(k.unbarrieredGet(), l);
+    return StableCellHasher<T>::match(k.unbarrieredGet(), l);
   }
 };
 
@@ -883,16 +883,16 @@ struct JS_PUBLIC_API MovableCellHasher<JS::Heap<T>> {
 namespace mozilla {
 
 template <typename T>
-struct FallibleHashMethods<js::MovableCellHasher<T>> {
+struct FallibleHashMethods<js::StableCellHasher<T>> {
   template <typename Lookup>
   static bool maybeGetHash(Lookup&& l, HashNumber* hashOut) {
-    return js::MovableCellHasher<T>::maybeGetHash(std::forward<Lookup>(l),
-                                                  hashOut);
+    return js::StableCellHasher<T>::maybeGetHash(std::forward<Lookup>(l),
+                                                 hashOut);
   }
   template <typename Lookup>
   static bool ensureHash(Lookup&& l, HashNumber* hashOut) {
-    return js::MovableCellHasher<T>::ensureHash(std::forward<Lookup>(l),
-                                                hashOut);
+    return js::StableCellHasher<T>::ensureHash(std::forward<Lookup>(l),
+                                               hashOut);
   }
 };
 

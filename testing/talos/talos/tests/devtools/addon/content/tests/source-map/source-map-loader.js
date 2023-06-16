@@ -16,14 +16,13 @@ const {
   SourceMapLoader,
 } = require("resource://devtools/client/shared/source-map-loader/index.js");
 
-module.exports = async function() {
+module.exports = async function () {
   await testSetup("data:text/html,source-map");
   const sourceMapLoader = new SourceMapLoader();
 
   const fakeGeneratedSource = {
     id: "fake-id",
-    url:
-      "http://example.com/tests/devtools/addon/content/tests/source-map/angular-min.js",
+    url: "http://example.com/tests/devtools/addon/content/tests/source-map/angular-min.js",
     sourceMapBaseURL:
       "http://example.com/tests/devtools/addon/content/tests/source-map/",
     sourceMapURL: "angular-min.js.map",

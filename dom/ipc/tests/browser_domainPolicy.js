@@ -55,7 +55,7 @@ function deactivateDomainPolicy() {
   }
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.pagethumbnails.capturing_disabled", false]],
   });

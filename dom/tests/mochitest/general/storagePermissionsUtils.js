@@ -8,7 +8,7 @@ const kPrefName = "network.cookie.cookieBehavior";
 // Check if we are in frame, and declare ok and finishTest appropriately
 const inFrame = ("" + location).match(/frame/);
 if (inFrame) {
-  ok = function(a, message) {
+  ok = function (a, message) {
     if (!a) {
       parent.postMessage("FAILURE: " + message, "http://mochi.test:8888");
     } else {
@@ -16,11 +16,11 @@ if (inFrame) {
     }
   };
 
-  finishTest = function() {
+  finishTest = function () {
     parent.postMessage("done", "http://mochi.test:8888");
   };
 } else {
-  finishTest = function() {
+  finishTest = function () {
     SimpleTest.finish();
   };
 }
@@ -49,7 +49,7 @@ function runIFrame(url) {
 function runWorker(url) {
   return new Promise((resolve, reject) => {
     var worker = new Worker(url);
-    worker.addEventListener("message", function(e) {
+    worker.addEventListener("message", function (e) {
       if (e.data == "done") {
         resolve();
         return;
@@ -92,11 +92,11 @@ function chromePower(allowed, blockSessionStorage) {
     ok(true, "getting caches from chrome should never throw");
     return new Promise((resolve, reject) => {
       promise.then(
-        function() {
+        function () {
           ok(shouldResolve, "The promise was resolved for chrome");
           resolve();
         },
-        function(e) {
+        function (e) {
           ok(!shouldResolve, "The promise was rejected for chrome: " + e);
           resolve();
         }
@@ -135,11 +135,11 @@ function storageAllowed() {
 
     return new Promise((resolve, reject) => {
       promise.then(
-        function() {
+        function () {
           ok(location.protocol == "https:", "The promise was not rejected");
           resolve();
         },
-        function() {
+        function () {
           ok(
             location.protocol !== "https:",
             "The promise should not have been rejected"
@@ -194,11 +194,11 @@ function storagePrevented() {
 
     return new Promise((resolve, reject) => {
       promise.then(
-        function() {
+        function () {
           ok(false, "The promise should have rejected");
           resolve();
         },
-        function() {
+        function () {
           ok(true, "The promise was rejected");
           resolve();
         }

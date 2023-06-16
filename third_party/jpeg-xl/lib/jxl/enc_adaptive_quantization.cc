@@ -74,14 +74,14 @@ float ComputeMaskForAcStrategyUse(const float out_val) {
 
 template <class D, class V>
 V ComputeMask(const D d, const V out_val) {
-  const auto kBase = Set(d, -0.74174993f);
-  const auto kMul4 = Set(d, 3.2353257320940401f);
-  const auto kMul2 = Set(d, 12.906028311180409f);
-  const auto kOffset2 = Set(d, 305.04035728311436f);
-  const auto kMul3 = Set(d, 5.0220313103171232f);
-  const auto kOffset3 = Set(d, 2.1925739705298404f);
+  const auto kBase = Set(d, -0.76471879237038032f);
+  const auto kMul4 = Set(d, 4.4585596705216615f);
+  const auto kMul2 = Set(d, 17.282053892620215f);
+  const auto kOffset2 = Set(d, 302.36961315317848f);
+  const auto kMul3 = Set(d, 7.0561261998705858f);
+  const auto kOffset3 = Set(d, 2.3179635626140773f);
   const auto kOffset4 = Mul(Set(d, 0.25f), kOffset3);
-  const auto kMul0 = Set(d, 0.74760422233706747f);
+  const auto kMul0 = Set(d, 0.80061762862741759f);
   const auto k1 = Set(d, 1.0f);
 
   // Avoid division by zero.
@@ -98,12 +98,12 @@ V ComputeMask(const D d, const V out_val) {
 }
 
 // mul and mul2 represent a scaling difference between jxl and butteraugli.
-static const float kSGmul = 226.0480446705883f;
+static const float kSGmul = 226.77216153508914f;
 static const float kSGmul2 = 1.0f / 73.377132366608819f;
 static const float kLog2 = 0.693147181f;
 // Includes correction factor for std::log -> log2.
 static const float kSGRetMul = kSGmul2 * 18.6580932135f * kLog2;
-static const float kSGVOffset = 7.14672470003f;
+static const float kSGVOffset = 7.7825991679894591f;
 
 template <bool invert, typename D, typename V>
 V RatioOfDerivativesOfCubicRootToSimpleGamma(const D d, V v) {
@@ -196,18 +196,18 @@ template <class D, class V>
 V ColorModulation(const D d, const size_t x, const size_t y,
                   const ImageF& xyb_x, const ImageF& xyb_y, const ImageF& xyb_b,
                   const double butteraugli_target, V out_val) {
-  static const float kStrengthMul = 3.0;
-  static const float kRedRampStart = 0.045;
-  static const float kRedRampLength = 0.09;
-  static const float kBlueRampLength = 0.086890611400405895;
-  static const float kBlueRampStart = 0.26973418507870539;
-  const float strength = kStrengthMul * (1.0f - 0.25f * butteraugli_target);
+  static const float kStrengthMul = 4.2456542701250122f;
+  static const float kRedRampStart = 0.18748564245760829f;
+  static const float kRedRampLength = 0.16701783842516479f;
+  static const float kBlueRampLength = 0.16117602661852037f;
+  static const float kBlueRampStart = 0.47897504338287333f;
+  const float strength = kStrengthMul * (1.0f - 0.15f * butteraugli_target);
   if (strength < 0) {
     return out_val;
   }
   // x values are smaller than y and b values, need to take the difference into
   // account.
-  const float red_strength = strength * 6.5;
+  const float red_strength = strength * 6.0f;
   const float blue_strength = strength;
   {
     // Reduce some bits from areas not blue or red.
@@ -217,7 +217,8 @@ V ColorModulation(const D d, const size_t x, const size_t y,
   // Calculate how much of the 8x8 block is covered with blue or red.
   auto blue_coverage = Zero(d);
   auto red_coverage = Zero(d);
-  auto bias_y = Set(d, 0.15f);
+  auto bias_y = Set(d, 0.2f);
+  auto bias_y_add = Set(d, 0.1f);
   for (size_t dy = 0; dy < 8; ++dy) {
     const float* const JXL_RESTRICT row_in_x = xyb_x.Row(y + dy);
     const float* const JXL_RESTRICT row_in_y = xyb_y.Row(y + dy);
@@ -225,8 +226,8 @@ V ColorModulation(const D d, const size_t x, const size_t y,
     for (size_t dx = 0; dx < 8; dx += Lanes(d)) {
       const auto pixel_y = Load(d, row_in_y + x + dx);
       // Estimate redness-greeness relative to the intensity.
-      const auto pixel_xpy =
-          Div(Abs(Load(d, row_in_x + x + dx)), Max(pixel_y, bias_y));
+      const auto pixel_xpy = Div(Abs(Load(d, row_in_x + x + dx)),
+                                 Max(Add(bias_y_add, pixel_y), bias_y));
       const auto pixel_x =
           Max(Set(d, 0.0f), Sub(pixel_xpy, Set(d, kRedRampStart)));
       const auto pixel_b =
@@ -270,6 +271,8 @@ V HfModulation(const D d, const size_t x, const size_t y, const ImageF& xyb,
 
   auto sum = Zero(d);  // sum of absolute differences with right and below
 
+  static const float valmin = 0.52489909479039587f;
+  auto valminv = Set(d, valmin);
   for (size_t dy = 0; dy < 8; ++dy) {
     const float* JXL_RESTRICT row_in = xyb.Row(y + dy) + x;
     const float* JXL_RESTRICT row_in_next =
@@ -288,20 +291,30 @@ V HfModulation(const D d, const size_t x, const size_t y, const ImageF& xyb,
       const auto p = Load(d, row_in + dx);
       const auto pr = LoadU(d, row_in + dx + 1);
       const auto mask = BitCast(d, Load(du, kMaskRight + dx));
-      sum = Add(sum, And(mask, AbsDiff(p, pr)));
+      sum = Add(sum, And(mask, Min(valminv, AbsDiff(p, pr))));
 
       const auto pd = Load(d, row_in_next + dx);
-      sum = Add(sum, AbsDiff(p, pd));
+      sum = Add(sum, Min(valminv, AbsDiff(p, pd)));
     }
 #if HWY_TARGET == HWY_SCALAR
     const auto p = Load(d, row_in + 7);
     const auto pd = Load(d, row_in_next + 7);
-    sum = Add(sum, AbsDiff(p, pd));
+    sum = Add(sum, Min(valminv, AbsDiff(p, pd)));
 #endif
   }
+  // more negative value gives more bpp
+  static const float kOffset = -2.6545897672771526;
+  static const float kMul = -0.049868161744916512;
 
   sum = SumOfLanes(d, sum);
-  return MulAdd(sum, Set(d, -2.0052193233688884f / 112), out_val);
+  float scalar_sum = GetLane(sum);
+  static const float maxsum = 7.9076877647025947f;
+  static const float minsum = 0.53640540945659809f;
+  scalar_sum = std::min(maxsum, scalar_sum);
+  scalar_sum = std::max(minsum, scalar_sum);
+  scalar_sum += kOffset;
+  scalar_sum *= kMul;
+  return Add(Set(d, scalar_sum), out_val);
 }
 
 void PerBlockModulations(const float butteraugli_target, const ImageF& xyb_x,
@@ -345,8 +358,8 @@ void PerBlockModulations(const float butteraugli_target, const ImageF& xyb_x,
 
 template <typename D, typename V>
 V MaskingSqrt(const D d, V v) {
-  static const float kLogOffset = 28;
-  static const float kMul = 211.50759899638012f;
+  static const float kLogOffset = 27.97044946785558f;
+  static const float kMul = 211.53333281566171f;
   const auto mul_v = Set(d, kMul * 1e8);
   const auto offset_v = Set(d, kLogOffset);
   return Mul(Set(d, 0.25f), Sqrt(MulAdd(v, Sqrt(mul_v), offset_v)));
@@ -714,9 +727,9 @@ ImageF TileDistMap(const ImageF& distmap, int tile_size, int margin,
   return tile_distmap;
 }
 
-constexpr float kDcQuantPow = 0.87f;
-static const float kDcQuant = 1.29f;
-static const float kAcQuant = 0.841f;
+static const float kDcQuantPow = 0.83;
+static const float kDcQuant = 1.095924047623553f;
+static const float kAcQuant = 0.80751132443618624f;
 
 void FindBestQuantization(const ImageBundle& linear, const Image3F& opsin,
                           PassesEncoderState* enc_state,

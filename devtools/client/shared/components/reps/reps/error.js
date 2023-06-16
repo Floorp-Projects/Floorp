@@ -5,7 +5,7 @@
 "use strict";
 
 // Make this available to both AMD and CJS environments
-define(function(require, exports, module) {
+define(function (require, exports, module) {
   // ReactJS
   const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
   const {
@@ -155,13 +155,8 @@ define(function(require, exports, module) {
 
     parseStackString(preview.stack).forEach((frame, index, frames) => {
       let onLocationClick;
-      const {
-        filename,
-        lineNumber,
-        columnNumber,
-        functionName,
-        location,
-      } = frame;
+      const { filename, lineNumber, columnNumber, functionName, location } =
+        frame;
 
       if (
         props.onViewSourceInDebugger &&

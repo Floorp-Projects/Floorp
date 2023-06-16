@@ -58,7 +58,6 @@ DIRS += [
     "media",
     "midi",
     "notification",
-    "offline",
     "power",
     "push",
     "quota",

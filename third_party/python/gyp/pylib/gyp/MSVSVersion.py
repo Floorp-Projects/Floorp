@@ -17,6 +17,10 @@ def JoinPath(*args):
   return os.path.normpath(os.path.join(*args))
 
 
+def version_to_tuple(version_str):
+  return tuple(int(x) for x in version_str.split('.'))
+
+
 class VisualStudioVersion(object):
   """Information regarding a version of Visual Studio."""
 
@@ -260,10 +264,20 @@ def _CreateVersion(name, path, sdk_based=False):
   if path:
     path = os.path.normpath(path)
   versions = {
+      '2022': VisualStudioVersion('2022',
+                                  'Visual Studio 2022',
+                                  solution_version='12.00',
+                                  project_version='17.0',
+                                  flat_sln=False,
+                                  uses_vcxproj=True,
+                                  path=path,
+                                  sdk_based=sdk_based,
+                                  default_toolset='v143',
+                                  compatible_sdks=['v8.1', 'v10.0']),
       '2019': VisualStudioVersion('2019',
                                   'Visual Studio 2019',
                                   solution_version='12.00',
-                                  project_version='15.0',
+                                  project_version='16.0',
                                   flat_sln=False,
                                   uses_vcxproj=True,
                                   path=path,
@@ -400,6 +414,8 @@ def _DetectVisualStudioVersions(versions_to_check, force_express):
       2013(e) - Visual Studio 2013 (12)
       2015    - Visual Studio 2015 (14)
       2017    - Visual Studio 2017 (15)
+      2019    - Visual Studio 2019 (16)
+      2022    - Visual Studio 2022 (17)
     Where (e) is e for express editions of MSVS and blank otherwise.
   """
   version_to_year = {
@@ -409,9 +425,19 @@ def _DetectVisualStudioVersions(versions_to_check, force_express):
       '11.0': '2012',
       '12.0': '2013',
       '14.0': '2015',
-      '15.0': '2017'
+      '15.0': '2017',
+      '16.0': '2019',
+      '17.0': '2022',
   }
   versions = []
+
+  # MSVC's vcvars*.bat scripts set up extra environment variables we can use:
+  # * path to the VS installation root, for example:
+  #   C:\Program Files\Microsoft Visual Studio\2022\Professional
+  env_vs_path = os.getenv('VSINSTALLDIR')
+  # * VS version, e.g. 17.0
+  env_vs_version = os.getenv('VisualStudioVersion')
+
   for version in versions_to_check:
     # Old method of searching for which VS version is installed
     # We don't use the 2010-encouraged-way because we also want to get the
@@ -448,12 +474,16 @@ def _DetectVisualStudioVersions(versions_to_check, force_express):
       if not path:
         continue
       path = _ConvertToCygpath(path)
-      if version == '15.0':
-          if os.path.exists(path):
-              versions.append(_CreateVersion('2017', path))
+      if version_to_tuple(version) >= (15, 0):
+        if os.path.exists(path):
+          versions.append(_CreateVersion(version_to_year[version], path))
       elif version != '14.0':  # There is no Express edition for 2015.
         versions.append(_CreateVersion(version_to_year[version] + 'e',
             os.path.join(path, '..'), sdk_based=True))
+
+    if env_vs_version and env_vs_path and env_vs_version == version:
+      versions.append(_CreateVersion(version_to_year[env_vs_version],
+                                     env_vs_path))
 
   return versions
 
@@ -470,7 +500,8 @@ def SelectVisualStudioVersion(version='auto', allow_fallback=True):
   if version == 'auto':
     version = os.environ.get('GYP_MSVS_VERSION', 'auto')
   version_map = {
-    'auto': ('15.0', '14.0', '12.0', '10.0', '9.0', '8.0', '11.0'),
+    'auto': ('17.0', '16.0', '15.0', '14.0', '12.0', '10.0', '9.0', '8.0',
+             '11.0'),
     '2005': ('8.0',),
     '2005e': ('8.0',),
     '2008': ('9.0',),
@@ -483,6 +514,8 @@ def SelectVisualStudioVersion(version='auto', allow_fallback=True):
     '2013e': ('12.0',),
     '2015': ('14.0',),
     '2017': ('15.0',),
+    '2019': ('16.0',),
+    '2022': ('17.0',),
   }
   override_path = os.environ.get('GYP_MSVS_OVERRIDE_PATH')
   if override_path:

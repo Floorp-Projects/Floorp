@@ -10,7 +10,7 @@
 // verifies animation has more precsion when it's in cross-origin-isolated and
 // cross-origin-isolated doesn't affect RFP.
 add_task(async function runRTPTestAnimation() {
-  let runTests = async function(data) {
+  let runTests = async function (data) {
     function waitForCondition(aCond, aCallback, aErrorMsg) {
       var tries = 0;
       var interval = content.setInterval(() => {
@@ -59,7 +59,7 @@ add_task(async function runRTPTestAnimation() {
         // expect those tests to fail.
         // If we are testing that preference, we accept either rounded or not
         // rounded values as A-OK.
-        var maybeAcceptEverything = function(value) {
+        var maybeAcceptEverything = function (value) {
           if (
             data.options.reduceTimerPrecision &&
             !data.options.resistFingerprinting

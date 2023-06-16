@@ -144,9 +144,9 @@ for (let tc of TESTCASES) {
 
   // A form is considered a username-only form
   for (let formHasSigninKeyword of [false, true]) {
-    (function() {
+    (function () {
       const testcase = tc;
-      add_task(async function() {
+      add_task(async function () {
         if (formHasSigninKeyword) {
           testcase.decription += " (form has a login keyword)";
         }

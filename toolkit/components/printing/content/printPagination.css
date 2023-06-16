@@ -8,7 +8,6 @@
   --grey-90-a10: rgba(12, 12, 13, 0.1);
   --shadow-30: 0 4px 16px var(--grey-90-a10);
   --border-active-shadow: var(--blue-50);
-  --border-active-color: ButtonShadow;
 }
 
 :host {

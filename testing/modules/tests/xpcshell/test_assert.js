@@ -13,7 +13,7 @@ function run_test() {
   let assert = new Assert();
 
   function makeBlock(f, ...args) {
-    return function() {
+    return function () {
       return f.apply(assert, args);
     };
   }
@@ -230,14 +230,14 @@ function run_test() {
       throw err;
     }
   }
-  assert.throws(function() {
+  assert.throws(function () {
     ifError(new Error("test error"));
   }, /test error/);
 
   // make sure that validating using constructor really works
   threw = false;
   try {
-    assert.throws(function() {
+    assert.throws(function () {
       throw new Error({});
     }, Array);
   } catch (e) {
@@ -249,7 +249,7 @@ function run_test() {
   assert.throws(makeBlock(thrower, TypeError), /test/);
 
   // use a fn to validate error object
-  assert.throws(makeBlock(thrower, TypeError), function(err) {
+  assert.throws(makeBlock(thrower, TypeError), function (err) {
     if (err instanceof TypeError && /test/.test(err)) {
       return true;
     }
@@ -298,7 +298,7 @@ function run_test() {
 
   // https://github.com/joyent/node/issues/2893
   try {
-    assert.throws(function() {
+    assert.throws(function () {
       ifError(null);
     });
   } catch (e) {
@@ -447,7 +447,7 @@ add_task(async function test_rejects() {
   }
 
   // A "throwable" error that's not an actual Error().
-  let SomeErrorLikeThing = function() {};
+  let SomeErrorLikeThing = function () {};
 
   // The actual tests...
 

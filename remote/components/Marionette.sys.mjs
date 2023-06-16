@@ -223,10 +223,9 @@ class MarionetteParentProcess {
 
     try {
       this.server = new lazy.TCPListener(lazy.MarionettePrefs.port);
-      this.server.start();
+      await this.server.start();
     } catch (e) {
       lazy.logger.fatal("Marionette server failed to start", e);
-      await this.uninit();
       Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
       return;
     }
@@ -253,7 +252,7 @@ class MarionetteParentProcess {
 
   async uninit() {
     if (this.running) {
-      this.server.stop();
+      await this.server.stop();
       Services.obs.notifyObservers(this, NOTIFY_LISTENING);
       lazy.logger.debug("Marionette stopped listening");
 
@@ -303,6 +302,6 @@ if (isRemote) {
 }
 
 // This is used by the XPCOM codepath which expects a constructor
-export const MarionetteFactory = function() {
+export const MarionetteFactory = function () {
   return Marionette;
 };

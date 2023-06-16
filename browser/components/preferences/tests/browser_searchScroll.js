@@ -6,8 +6,8 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+const { AddonTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
 );
 const { SearchTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/SearchTestUtils.sys.mjs"
@@ -19,7 +19,7 @@ const { SearchUtils } = ChromeUtils.importESModule(
 AddonTestUtils.initMochitest(this);
 SearchTestUtils.init(this);
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.w3c_touch_events.enabled", 0]],
   });

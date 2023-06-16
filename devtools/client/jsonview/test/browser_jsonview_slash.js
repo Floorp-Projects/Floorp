@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   info("Test JSON with slash started.");
 
   const TEST_JSON_URL = 'data:application/json,{"a/b":[1,2],"a":{"b":[3,4]}}';

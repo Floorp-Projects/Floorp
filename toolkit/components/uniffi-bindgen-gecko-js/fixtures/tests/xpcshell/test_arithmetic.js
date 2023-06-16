@@ -1,11 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const Arithmetic = ChromeUtils.import(
-  "resource://gre/modules/RustArithmetic.jsm"
+const Arithmetic = ChromeUtils.importESModule(
+  "resource://gre/modules/RustArithmetic.sys.mjs"
 );
 
-add_task(async function() {
+add_task(async function () {
   Assert.ok(Arithmetic.IntegerOverflow);
   Assert.equal(await Arithmetic.add(2, 4), 6);
   Assert.equal(await Arithmetic.add(4, 8), 12);

@@ -1,4 +1,4 @@
-add_task(async function() {
+add_task(async function () {
   let uri = "http://example.com/browser/layout/style/test/sourcemap_css.html";
   info(`URI is ${uri}`);
 
@@ -7,8 +7,8 @@ add_task(async function() {
       gBrowser,
       url: uri,
     },
-    async function(browser) {
-      await SpecialPowers.spawn(browser, [], function() {
+    async function (browser) {
+      await SpecialPowers.spawn(browser, [], function () {
         let seenSheets = 0;
 
         for (let i = 0; i < content.document.styleSheets.length; ++i) {

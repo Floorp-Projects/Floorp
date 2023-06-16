@@ -274,7 +274,6 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
     case nsIAccessibleEvent::EVENT_LIVE_REGION_REMOVED:
     case nsIAccessibleEvent::EVENT_NAME_CHANGE:
     case nsIAccessibleEvent::EVENT_OBJECT_ATTRIBUTE_CHANGED:
-    case nsIAccessibleEvent::EVENT_TABLE_STYLING_CHANGED:
       [nativeAcc handleAccessibleEvent:eventType];
       break;
 
@@ -285,16 +284,6 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
   return NS_OK;
 
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
-}
-
-bool AccessibleWrap::ApplyPostFilter(const EWhichPostFilter& aSearchKey,
-                                     const nsString& aSearchText) {
-  // We currently only support the eContainsText post filter.
-  MOZ_ASSERT(aSearchKey == EWhichPostFilter::eContainsText,
-             "Only search text supported");
-  nsAutoString name;
-  Name(name);
-  return CaseInsensitiveFindInReadable(aSearchText, name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

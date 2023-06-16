@@ -1473,18 +1473,13 @@ void nsIFrame::AssertNewStyleIsSane(ComputedStyle& aNewStyle) {
 #endif
 
 void nsIFrame::ReparentFrameViewTo(nsViewManager* aViewManager,
-                                   nsView* aNewParentView,
-                                   nsView* aOldParentView) {
+                                   nsView* aNewParentView) {
   if (HasView()) {
     if (IsMenuPopupFrame()) {
       // This view must be parented by the root view, don't reparent it.
       return;
     }
     nsView* view = GetView();
-    // Verify that the current parent view is what we think it is
-    // nsView*  parentView;
-    // NS_ASSERTION(parentView == aOldParentView, "unexpected parent view");
-
     aViewManager->RemoveChild(view);
 
     // The view will remember the Z-order and other attributes that have been
@@ -1498,8 +1493,7 @@ void nsIFrame::ReparentFrameViewTo(nsViewManager* aViewManager,
       // Iterate the child frames, and check each child frame to see if it has
       // a view
       for (nsIFrame* child : childList.mList) {
-        child->ReparentFrameViewTo(aViewManager, aNewParentView,
-                                   aOldParentView);
+        child->ReparentFrameViewTo(aViewManager, aNewParentView);
       }
     }
   }
@@ -1556,7 +1550,7 @@ void nsIFrame::CreateView() {
   // we know this frame has no view, so it will crawl the children. Also,
   // we know that any descendants with views must have 'parentView' as their
   // parent view.
-  ReparentFrameViewTo(viewManager, view, parentView);
+  ReparentFrameViewTo(viewManager, view);
 
   // Remember our view
   SetView(view);
@@ -2092,13 +2086,15 @@ nscoord nsIFrame::SynthesizeFallbackBaseline(
 }
 
 nscoord nsIFrame::GetLogicalBaseline(WritingMode aWM) const {
-  return GetLogicalBaseline(aWM, GetDefaultBaselineSharingGroup());
+  return GetLogicalBaseline(aWM, GetDefaultBaselineSharingGroup(),
+                            BaselineExportContext::LineLayout);
 }
 
 nscoord nsIFrame::GetLogicalBaseline(
-    WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
+    WritingMode aWM, BaselineSharingGroup aBaselineGroup,
+    BaselineExportContext aExportContext) const {
   const auto result =
-      GetNaturalBaselineBOffset(aWM, aBaselineGroup)
+      GetNaturalBaselineBOffset(aWM, aBaselineGroup, aExportContext)
           .valueOrFrom([this, aWM, aBaselineGroup]() {
             return SynthesizeFallbackBaseline(aWM, aBaselineGroup);
           });
@@ -2158,9 +2154,6 @@ nsIFrame::CaretBlockAxisMetrics nsIFrame::GetCaretBlockAxisMetrics(
 }
 
 const nsAtom* nsIFrame::ComputePageValue() const {
-  if (!StaticPrefs::layout_css_named_pages_enabled()) {
-    return nsGkAtoms::_empty;
-  }
   const nsAtom* value = nsGkAtoms::_empty;
   const nsIFrame* frame = this;
   do {
@@ -7614,6 +7607,11 @@ bool nsIFrame::IsInvalid(nsRect& aRect) {
 }
 
 void nsIFrame::SchedulePaint(PaintType aType, bool aFrameChanged) {
+  if (PresShell()->IsPaintingSuppressed()) {
+    // We can't have any display items yet, and when we unsuppress we will
+    // invalidate the root frame.
+    return;
+  }
   nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(this);
   InvalidateRenderingObservers(displayRoot, this, aFrameChanged);
   SchedulePaintInternal(displayRoot, this, aType);
@@ -8006,6 +8004,16 @@ bool nsIFrame::IsSubgrid() const {
 }
 
 static nsIFrame* GetNearestBlockContainer(nsIFrame* frame) {
+  while (!frame->IsBlockContainer()) {
+    frame = frame->GetParent();
+    NS_ASSERTION(
+        frame,
+        "How come we got to the root frame without seeing a containing block?");
+  }
+  return frame;
+}
+
+bool nsIFrame::IsBlockContainer() const {
   // The block wrappers we use to wrap blocks inside inlines aren't
   // described in the CSS spec.  We need to make them not be containing
   // blocks.
@@ -8015,21 +8023,18 @@ static nsIFrame* GetNearestBlockContainer(nsIFrame* frame) {
   //
   // If we ever start skipping table row groups from being containing blocks,
   // you need to remove the StickyScrollContainer hack referencing bug 1421660.
-  while (frame->IsFrameOfType(nsIFrame::eLineParticipant) ||
-         frame->IsBlockWrapper() || frame->IsSubgrid() ||
+  return !IsFrameOfType(nsIFrame::eLineParticipant) && !IsBlockWrapper() &&
+         !IsSubgrid() &&
          // Table rows are not containing blocks either
-         frame->IsTableRowFrame()) {
-    frame = frame->GetParent();
-    NS_ASSERTION(
-        frame,
-        "How come we got to the root frame without seeing a containing block?");
-  }
-  return frame;
+         !IsTableRowFrame();
 }
 
 nsIFrame* nsIFrame::GetContainingBlock(
     uint32_t aFlags, const nsStyleDisplay* aStyleDisplay) const {
   MOZ_ASSERT(aStyleDisplay == StyleDisplay());
+
+  // Keep this in sync with MightBeContainingBlockFor in ReflowInput.cpp.
+
   if (!GetParent()) {
     return nullptr;
   }
@@ -8272,9 +8277,9 @@ void nsIFrame::ListTextRuns(FILE* out, nsTHashSet<const void*>& aSeen) const {
 }
 
 void nsIFrame::ListMatchedRules(FILE* out, const char* aPrefix) const {
-  nsTArray<const RawServoStyleRule*> rawRuleList;
+  nsTArray<const StyleLockedStyleRule*> rawRuleList;
   Servo_ComputedValues_GetStyleRuleList(mComputedStyle, &rawRuleList);
-  for (const RawServoStyleRule* rawRule : rawRuleList) {
+  for (const StyleLockedStyleRule* rawRule : rawRuleList) {
     nsAutoCString ruleText;
     Servo_StyleRule_GetCssText(rawRule, &ruleText);
     fprintf_stderr(out, "%s%s\n", aPrefix, ruleText.get());
@@ -9522,11 +9527,8 @@ nsIFrame::SelectablePeekReport nsIFrame::GetFrameFromDirection(
           // If the new frame is in a native anonymous subtree, we should treat
           // it as not selectable unless the frame and found frame are in same
           // subtree.
-          if (!aOptions.contains(
-                  PeekOffsetOption::
-                      AllowContentInDifferentNativeAnonymousSubtreeRoot) &&
-              aFrame->GetClosestNativeAnonymousSubtreeRoot() !=
-                  nativeAnonymousSubtreeContent) {
+          if (aFrame->GetClosestNativeAnonymousSubtreeRoot() !=
+              nativeAnonymousSubtreeContent) {
             return false;
           }
           return !aOptions.contains(PeekOffsetOption::ForceEditableRegion) ||

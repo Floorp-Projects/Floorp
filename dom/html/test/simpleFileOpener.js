@@ -4,7 +4,7 @@ Cu.importGlobalProperties(["File"]);
 
 var file;
 
-addMessageListener("file.open", function(stem) {
+addMessageListener("file.open", function (stem) {
   try {
     if (!file) {
       file = Cc["@mozilla.org/file/directory_service;1"]
@@ -14,7 +14,7 @@ addMessageListener("file.open", function(stem) {
       file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
     }
 
-    File.createFromNsIFile(file).then(function(domFile) {
+    File.createFromNsIFile(file).then(function (domFile) {
       sendAsyncMessage("file.opened", {
         fullPath: file.path,
         leafName: file.leafName,
@@ -26,7 +26,7 @@ addMessageListener("file.open", function(stem) {
   }
 });
 
-addMessageListener("file.remove", function() {
+addMessageListener("file.remove", function () {
   try {
     file.remove(/* recursive: */ false);
     file = undefined;

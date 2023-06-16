@@ -51,7 +51,7 @@ inline bool nsPIDOMWindowInner::IsHandlingResizeEvent() const {
   return mIsHandlingResizeEvent;
 }
 
-inline bool nsPIDOMWindowInner::HasActiveDocument() {
+inline bool nsPIDOMWindowInner::HasActiveDocument() const {
   return IsCurrentInnerWindow();
 }
 

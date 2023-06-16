@@ -123,8 +123,8 @@ void Clipboard::ReadRequest::Answer() {
 
                   RefPtr<ClipboardItem::ItemEntry> entry =
                       MakeRefPtr<ClipboardItem::ItemEntry>(
-                          NS_ConvertUTF8toUTF16(format));
-                  entry->LoadData(*global, *trans);
+                          global, NS_ConvertUTF8toUTF16(format));
+                  entry->LoadDataFromSystemClipboard(*trans);
                   entries.AppendElement(std::move(entry));
                 }
 
@@ -400,7 +400,7 @@ class BlobTextHandler final : public PromiseNativeHandler {
 
 NS_IMPL_ISUPPORTS0(BlobTextHandler)
 
-RefPtr<NativeEntryPromise> GetStringNativeEntry(
+static RefPtr<NativeEntryPromise> GetStringNativeEntry(
     const nsAString& aType, const OwningStringOrBlob& aData) {
   if (aData.IsString()) {
     RefPtr<nsVariantCC> variant = new nsVariantCC();
@@ -460,7 +460,7 @@ class ImageDecodeCallback final : public imgIContainerCallback {
 
 NS_IMPL_ISUPPORTS(ImageDecodeCallback, imgIContainerCallback)
 
-RefPtr<NativeEntryPromise> GetImageNativeEntry(
+static RefPtr<NativeEntryPromise> GetImageNativeEntry(
     const nsAString& aType, const OwningStringOrBlob& aData) {
   if (aData.IsString()) {
     CopyableErrorResult rv;
@@ -486,7 +486,7 @@ RefPtr<NativeEntryPromise> GetImageNativeEntry(
   return callback->Promise();
 }
 
-Result<NativeEntry, ErrorResult> SanitizeNativeEntry(
+static Result<NativeEntry, ErrorResult> SanitizeNativeEntry(
     const NativeEntry& aEntry) {
   MOZ_ASSERT(aEntry.mType.EqualsLiteral(kHTMLMime));
 
@@ -517,6 +517,35 @@ Result<NativeEntry, ErrorResult> SanitizeNativeEntry(
   return NativeEntry(aEntry.mType, variant);
 }
 
+static RefPtr<NativeEntryPromise> GetNativeEntry(
+    const nsAString& aType, const OwningStringOrBlob& aData) {
+  if (aType.EqualsLiteral(kPNGImageMime)) {
+    return GetImageNativeEntry(aType, aData);
+  }
+
+  RefPtr<NativeEntryPromise> promise = GetStringNativeEntry(aType, aData);
+  if (aType.EqualsLiteral(kHTMLMime)) {
+    promise = promise->Then(
+        GetMainThreadSerialEventTarget(), __func__,
+        [](const NativeEntryPromise::ResolveOrRejectValue& aValue)
+            -> RefPtr<NativeEntryPromise> {
+          if (aValue.IsReject()) {
+            return NativeEntryPromise::CreateAndReject(aValue.RejectValue(),
+                                                       __func__);
+          }
+
+          auto sanitized = SanitizeNativeEntry(aValue.ResolveValue());
+          if (sanitized.isErr()) {
+            return NativeEntryPromise::CreateAndReject(
+                CopyableErrorResult(sanitized.unwrapErr()), __func__);
+          }
+          return NativeEntryPromise::CreateAndResolve(sanitized.unwrap(),
+                                                      __func__);
+        });
+  }
+  return promise;
+}
+
 // Restrict to types allowed by Chrome
 // SVG is still disabled by default in Chrome.
 static bool IsValidType(const nsAString& aType) {
@@ -525,8 +554,8 @@ static bool IsValidType(const nsAString& aType) {
 }
 
 using NativeItemPromise = NativeEntryPromise::AllPromiseType;
-
-RefPtr<NativeItemPromise> GetClipboardNativeItem(const ClipboardItem& aItem) {
+static RefPtr<NativeItemPromise> GetClipboardNativeItem(
+    const ClipboardItem& aItem) {
   nsTArray<RefPtr<NativeEntryPromise>> promises;
   for (const auto& entry : aItem.Entries()) {
     const nsAString& type = entry->Type();
@@ -537,35 +566,66 @@ RefPtr<NativeItemPromise> GetClipboardNativeItem(const ClipboardItem& aItem) {
       return NativeItemPromise::CreateAndReject(rv, __func__);
     }
 
-    const OwningStringOrBlob& data = entry->Data();
-    if (type.EqualsLiteral(kPNGImageMime)) {
-      promises.AppendElement(GetImageNativeEntry(type, data));
-    } else {
-      RefPtr<NativeEntryPromise> promise = GetStringNativeEntry(type, data);
-      if (type.EqualsLiteral(kHTMLMime)) {
-        promise = promise->Then(
-            GetMainThreadSerialEventTarget(), __func__,
-            [](const NativeEntryPromise::ResolveOrRejectValue& aValue)
-                -> RefPtr<NativeEntryPromise> {
-              if (aValue.IsReject()) {
-                return NativeEntryPromise::CreateAndReject(aValue.RejectValue(),
-                                                           __func__);
-              }
+    using GetDataPromise = ClipboardItem::ItemEntry::GetDataPromise;
+    promises.AppendElement(entry->GetData()->Then(
+        GetMainThreadSerialEventTarget(), __func__,
+        [t = nsString(type)](const GetDataPromise::ResolveOrRejectValue& aValue)
+            -> RefPtr<NativeEntryPromise> {
+          if (aValue.IsReject()) {
+            return NativeEntryPromise::CreateAndReject(
+                CopyableErrorResult(aValue.RejectValue()), __func__);
+          }
 
-              auto sanitized = SanitizeNativeEntry(aValue.ResolveValue());
-              if (sanitized.isErr()) {
-                return NativeEntryPromise::CreateAndReject(
-                    CopyableErrorResult(sanitized.unwrapErr()), __func__);
-              }
-              return NativeEntryPromise::CreateAndResolve(sanitized.unwrap(),
-                                                          __func__);
-            });
-      }
-      promises.AppendElement(promise);
-    }
+          return GetNativeEntry(t, aValue.ResolveValue());
+        }));
   }
   return NativeEntryPromise::All(GetCurrentSerialEventTarget(), promises);
 }
+
+class ClipboardWriteCallback final : public nsIAsyncSetClipboardDataCallback {
+ public:
+  // This object will never be held by a cycle-collected object, so it doesn't
+  // need to be cycle-collected despite holding alive cycle-collected objects.
+  NS_DECL_ISUPPORTS
+
+  explicit ClipboardWriteCallback(Promise* aPromise,
+                                  ClipboardItem* aClipboardItem)
+      : mPromise(aPromise), mClipboardItem(aClipboardItem) {}
+
+  // nsIAsyncSetClipboardDataCallback
+  NS_IMETHOD OnComplete(nsresult aResult) override {
+    MOZ_ASSERT(mPromise);
+
+    RefPtr<Promise> promise = std::move(mPromise);
+    // XXX We need to check state here is because the promise might be rejected
+    // before the callback is called, we probably could wrap the promise into a
+    // structure to make it less confused.
+    if (promise->State() == Promise::PromiseState::Pending) {
+      if (NS_FAILED(aResult)) {
+        promise->MaybeRejectWithNotAllowedError(
+            "Clipboard write is not allowed.");
+        return NS_OK;
+      }
+
+      promise->MaybeResolveWithUndefined();
+    }
+
+    return NS_OK;
+  }
+
+ protected:
+  ~ClipboardWriteCallback() {
+    // Callback should be notified.
+    MOZ_ASSERT(!mPromise);
+  };
+
+  // It will be reset to nullptr once callback is notified.
+  RefPtr<Promise> mPromise;
+  // Keep ClipboardItem alive until clipboard write is done.
+  RefPtr<ClipboardItem> mClipboardItem;
+};
+
+NS_IMPL_ISUPPORTS(ClipboardWriteCallback, nsIAsyncSetClipboardDataCallback)
 
 }  // namespace
 
@@ -623,9 +683,19 @@ already_AddRefed<Promise> Clipboard::Write(
     return p.forget();
   }
 
+  nsCOMPtr<nsIAsyncSetClipboardData> request;
+  RefPtr<ClipboardWriteCallback> callback =
+      MakeRefPtr<ClipboardWriteCallback>(p, aData[0]);
+  nsresult rv = clipboard->AsyncSetData(nsIClipboard::kGlobalClipboard,
+                                        callback, getter_AddRefs(request));
+  if (NS_FAILED(rv)) {
+    p->MaybeReject(rv);
+    return p.forget();
+  }
+
   GetClipboardNativeItem(aData[0])->Then(
       GetMainThreadSerialEventTarget(), __func__,
-      [owner, p, clipboard, context, principal = RefPtr{&aSubjectPrincipal}](
+      [owner, request, context, principal = RefPtr{&aSubjectPrincipal}](
           const nsTArray<NativeEntry>& aEntries) {
         RefPtr<DataTransfer> dataTransfer =
             new DataTransfer(owner, eCopy,
@@ -637,7 +707,7 @@ already_AddRefed<Promise> Clipboard::Write(
               entry.mType, entry.mData, 0, principal);
 
           if (NS_FAILED(rv)) {
-            p->MaybeRejectWithUndefined();
+            request->Abort(rv);
             return;
           }
         }
@@ -646,24 +716,16 @@ already_AddRefed<Promise> Clipboard::Write(
         RefPtr<nsITransferable> transferable =
             dataTransfer->GetTransferable(0, context);
         if (!transferable) {
-          p->MaybeRejectWithUndefined();
+          request->Abort(NS_ERROR_FAILURE);
           return;
         }
 
         // Finally write data to clipboard
-        nsresult rv =
-            clipboard->SetData(transferable,
-                               /* owner of the transferable */ nullptr,
-                               nsIClipboard::kGlobalClipboard);
-        if (NS_FAILED(rv)) {
-          p->MaybeRejectWithUndefined();
-          return;
-        }
-
-        p->MaybeResolveWithUndefined();
+        request->SetData(transferable, /* clipboard owner */ nullptr);
       },
-      [p](const CopyableErrorResult& aErrorResult) {
+      [p, request](const CopyableErrorResult& aErrorResult) {
         p->MaybeReject(CopyableErrorResult(aErrorResult));
+        request->Abort(NS_ERROR_ABORT);
       });
 
   return p.forget();
@@ -672,13 +734,16 @@ already_AddRefed<Promise> Clipboard::Write(
 already_AddRefed<Promise> Clipboard::WriteText(const nsAString& aData,
                                                nsIPrincipal& aSubjectPrincipal,
                                                ErrorResult& aRv) {
-  // Create a single-element Sequence to reuse Clipboard::Write.
-  OwningStringOrBlob data;
-  data.SetAsString() = aData;
+  nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal();
+  if (!global) {
+    aRv.ThrowInvalidStateError("Unable to get global.");
+    return nullptr;
+  }
 
+  // Create a single-element Sequence to reuse Clipboard::Write.
   nsTArray<RefPtr<ClipboardItem::ItemEntry>> items;
   items.AppendElement(MakeRefPtr<ClipboardItem::ItemEntry>(
-      NS_LITERAL_STRING_FROM_CSTRING(kTextMime), std::move(data)));
+      global, NS_LITERAL_STRING_FROM_CSTRING(kTextMime), aData));
 
   nsTArray<OwningNonNull<ClipboardItem>> sequence;
   RefPtr<ClipboardItem> item = MakeRefPtr<ClipboardItem>(

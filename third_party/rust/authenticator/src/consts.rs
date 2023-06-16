@@ -116,6 +116,7 @@ pub const U2F_REGISTER_HASH_ID: u8 = 0x00; // Version 2 hash identintifier
 // U2F_AUTHENTICATE command defines
 pub const U2F_REQUEST_USER_PRESENCE: u8 = 0x03; // Verify user presence and sign
 pub const U2F_CHECK_IS_REGISTERED: u8 = 0x07; // Check if the key handle is registered
+pub const U2F_DONT_ENFORCE_USER_PRESENCE_AND_SIGN: u8 = 0x08; // Sign, but don't verify user presence
 
 // U2FHID_INIT command defines
 pub const INIT_NONCE_SIZE: usize = 8; // Size of channel initialization challenge

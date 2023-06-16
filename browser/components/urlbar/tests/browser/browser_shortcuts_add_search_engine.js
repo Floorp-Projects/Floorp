@@ -13,7 +13,7 @@ const { PromptTestUtils } = ChromeUtils.importESModule(
 const BASE_URL =
   "http://mochi.test:8888/browser/browser/components/urlbar/tests/browser/";
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.suggest.searches", false]],
   });
@@ -82,9 +82,9 @@ async function do_test_shortcuts(activateTask) {
     });
     await rebuildPromise;
 
-    let addEngineButtons = Array.from(
-      shortcutButtons.buttons.children
-    ).filter(b => b.classList.contains("searchbar-engine-one-off-add-engine"));
+    let addEngineButtons = Array.from(shortcutButtons.buttons.children).filter(
+      b => b.classList.contains("searchbar-engine-one-off-add-engine")
+    );
     Assert.equal(
       addEngineButtons.length,
       2,
@@ -184,9 +184,9 @@ add_task(async function shortcuts_many() {
     });
     await rebuildPromise;
 
-    let addEngineButtons = Array.from(
-      shortcutButtons.buttons.children
-    ).filter(b => b.classList.contains("searchbar-engine-one-off-add-engine"));
+    let addEngineButtons = Array.from(shortcutButtons.buttons.children).filter(
+      b => b.classList.contains("searchbar-engine-one-off-add-engine")
+    );
     Assert.equal(
       addEngineButtons.length,
       gURLBar.addSearchEngineHelper.maxInlineEngines,

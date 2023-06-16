@@ -5,7 +5,7 @@
 const TRIGGERING_PAGE = "http://example.org";
 const LOADED_RESOURCE = "http://example.com";
 
-add_task(async function() {
+add_task(async function () {
   // Enable HTTPS-Only Mode
   await SpecialPowers.pushPrefEnv({
     set: [["dom.security.https_only_mode", true]],
@@ -40,9 +40,10 @@ async function runTest(desc, startsWith) {
 
     // Replace loadinfo with one whose triggeringPrincipal is a content
     // principal for TRIGGERING_PAGE.
-    const triggeringPrincipal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-      TRIGGERING_PAGE
-    );
+    const triggeringPrincipal =
+      Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+        TRIGGERING_PAGE
+      );
     let dummyURI = Services.io.newURI(LOADED_RESOURCE);
     let dummyChannel = NetUtil.newChannel({
       uri: dummyURI,

@@ -30,8 +30,8 @@ function assertSelected(index) {
 
 let gMaxResults;
 
-add_task(async function() {
-  registerCleanupFunction(async function() {
+add_task(async function () {
+  registerCleanupFunction(async function () {
     await PlacesUtils.history.clear();
   });
 

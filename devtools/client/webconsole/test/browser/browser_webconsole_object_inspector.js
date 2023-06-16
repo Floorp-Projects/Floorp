@@ -7,12 +7,12 @@
 const TEST_URI =
   "data:text/html;charset=utf8,<!DOCTYPE html><h1>test Object Inspector</h1>";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   logAllStoreChanges(hud);
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.wrappedJSObject.console.log("oi-test", [1, 2, { a: "a", b: "b" }], {
       c: "c",
       d: [3, 4],

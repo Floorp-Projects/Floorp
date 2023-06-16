@@ -72,9 +72,6 @@ keyTypeData:table(nofallback){
             co{
                 direct{"true"}
             }
-            tz{
-                camtr{"true"}
-            }
         }
     }
     typeMap{

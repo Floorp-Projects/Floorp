@@ -51,7 +51,7 @@ const GOOGLE_DOMAINS = [
 const SEARCH_TERM = "chocolate";
 const SEARCH_SERP_URL = `https://example.com/?q=${SEARCH_TERM}`;
 
-add_setup(async function() {
+add_setup(async function () {
   await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
 

@@ -140,10 +140,23 @@ menuitem.bookmark-item {
   min-height: 0;
 }
 
-#TabsToolbar:not(:-moz-lwtheme) {
-  appearance: auto;
-  -moz-default-appearance: menubar;
-  color: -moz-menubartext;
+#titlebar {
+  background-color: ActiveCaption;
+  color: CaptionText;
+}
+
+#titlebar:-moz-window-inactive {
+  background-color: InactiveCaption;
+  color: InactiveCaptionText;
+}
+
+#TabsToolbar,
+#toolbar-menubar,
+#main-menubar,
+#titlebar:-moz-lwtheme {
+  appearance: none;
+  background-color: transparent;
+  color: inherit;
 }
 
 #context_reloadTab {
@@ -281,18 +294,6 @@ menuitem.bookmark-item {
     background-color: transparent;
   }
 
-  :root[tabsintitlebar] #titlebar {
-    color: CaptionText;
-  }
-
-  :root[tabsintitlebar] #titlebar:-moz-window-inactive {
-    color: InactiveCaptionText;
-  }
-
-  :root[tabsintitlebar] #titlebar:-moz-lwtheme {
-    color: inherit;
-  }
-
   :root[tabsintitlebar] #navigator-toolbox-background {
     appearance: auto;
     -moz-default-appearance: -moz-window-titlebar-maximized;
@@ -300,6 +301,11 @@ menuitem.bookmark-item {
 
   :root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) #navigator-toolbox-background {
     -moz-default-appearance: -moz-window-titlebar;
+  }
+
+  :root[tabsintitlebar] #titlebar {
+    /* Use the toolbox background */
+    background-color: transparent;
   }
 
   :root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) #navigator-toolbox:-moz-lwtheme,
@@ -312,18 +318,6 @@ menuitem.bookmark-item {
    * bar such that the window controls don't appear to move up. */
   :root[tabsintitlebar] #toolbar-menubar[autohide="true"] {
     height: calc(var(--tab-min-height) + 2 * var(--tab-block-margin));
-  }
-
-  /* Make #TabsToolbar transparent as we style underlying #titlebar with
-   * -moz-window-titlebar (Gtk+ theme). */
-  :root[tabsintitlebar] #TabsToolbar,
-  :root[tabsintitlebar] #toolbar-menubar {
-    appearance: none;
-    color: inherit;
-  }
-
-  :root[tabsintitlebar] #main-menubar {
-    color: inherit;
   }
 
   /* The button box must appear on top of the navigator-toolbox in order for

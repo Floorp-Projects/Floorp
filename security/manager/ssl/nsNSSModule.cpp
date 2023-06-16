@@ -15,7 +15,6 @@
 #include "mozilla/ModuleUtils.h"
 #include "mozilla/SyncRunnable.h"
 #include "nsCertTree.h"
-#include "nsCryptoHash.h"
 #include "nsNSSCertificateDB.h"
 #include "nsPK11TokenDB.h"
 #include "nsRandomGenerator.h"
@@ -96,7 +95,6 @@ IMPL(nsPK11TokenDB, nullptr)
 IMPL(PKCS11ModuleDB, nullptr)
 IMPL(nsNSSCertificateDB, nullptr)
 IMPL(nsCertTree, nullptr)
-IMPL(nsCryptoHash, nullptr, ProcessRestriction::AnyProcess)
 IMPL(ContentSignatureVerifier, nullptr)
 IMPL(nsRandomGenerator, nullptr, ProcessRestriction::AnyProcess)
 IMPL(OSKeyStore, nullptr, ProcessRestriction::ParentProcessOnly,

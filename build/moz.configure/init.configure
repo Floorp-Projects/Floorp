@@ -650,15 +650,19 @@ def config_sub(shell, triplet):
     # Config.sub doesn't like the *-windows-msvc/*-windows-gnu triplets, so
     # munge those before and after calling config.sub.
     suffix = None
-    mingw_suffix = "-mingw32"
-    for check_suffix in ("-windows-msvc", "-windows-gnu"):
+    munging = {
+        "-windows-msvc": "-mingw32",
+        "-windows-gnu": "-mingw32",
+    }
+    for check_suffix, replacement in munging.items():
         if triplet.endswith(check_suffix):
             suffix = check_suffix
-            triplet = triplet[: -len(suffix)] + mingw_suffix
+            triplet = triplet[: -len(suffix)] + replacement
+            break
     result = check_cmd_output(shell, config_sub, triplet).strip()
     if suffix:
-        assert result.endswith(mingw_suffix)
-        result = result[: -len(mingw_suffix)] + suffix
+        assert result.endswith(replacement)
+        result = result[: -len(replacement)] + suffix
     return result
 
 
@@ -766,7 +770,6 @@ def cross_compiling(host, target):
 
 set_config("CROSS_COMPILE", cross_compiling)
 set_define("CROSS_COMPILE", cross_compiling)
-add_old_configure_assignment("CROSS_COMPILE", cross_compiling)
 
 
 @depends(target)
@@ -822,7 +825,8 @@ set_config("CPU_ARCH", target.cpu)
 add_old_configure_assignment("CPU_ARCH", target.cpu)
 set_config("INTEL_ARCHITECTURE", target_variables.INTEL_ARCHITECTURE)
 set_config("TARGET_CPU", target.raw_cpu)
-set_config("TARGET_OS", target.raw_os)
+set_config("TARGET_OS", target.os)
+set_config("TARGET_RAW_OS", target.raw_os)
 set_config("TARGET_ENDIANNESS", target.endianness)
 
 
@@ -976,7 +980,6 @@ def android_cpu_arch(target):
 
 
 set_config("ANDROID_CPU_ARCH", android_cpu_arch)
-add_old_configure_assignment("ANDROID_CPU_ARCH", android_cpu_arch)
 
 
 @depends("--enable-project", build_environment, "--help")
@@ -1157,21 +1160,16 @@ set_config("NIGHTLY_BUILD", milestone.is_nightly)
 set_define("NIGHTLY_BUILD", milestone.is_nightly)
 set_config("RELEASE_OR_BETA", milestone.is_release_or_beta)
 set_define("RELEASE_OR_BETA", milestone.is_release_or_beta)
-add_old_configure_assignment("RELEASE_OR_BETA", milestone.is_release_or_beta)
 set_config("MOZ_ESR", milestone.is_esr)
 set_define("MOZ_ESR", milestone.is_esr)
 set_config("EARLY_BETA_OR_EARLIER", milestone.is_early_beta_or_earlier)
 set_define("EARLY_BETA_OR_EARLIER", milestone.is_early_beta_or_earlier)
-add_old_configure_assignment(
-    "EARLY_BETA_OR_EARLIER", milestone.is_early_beta_or_earlier
-)
 set_define("MOZILLA_VERSION", depends(milestone)(lambda m: '"%s"' % m.version))
 set_config("MOZILLA_VERSION", milestone.version)
 set_define("MOZILLA_VERSION_U", milestone.version)
 set_define("MOZILLA_UAVERSION", depends(milestone)(lambda m: '"%s"' % m.uaversion))
 set_config("MOZILLA_SYMBOLVERSION", milestone.symbolversion)
-# JS configure still wants to look at these.
-add_old_configure_assignment("MOZILLA_VERSION", milestone.version)
+# JS configure still want to look at this one.
 add_old_configure_assignment("MOZILLA_SYMBOLVERSION", milestone.symbolversion)
 
 set_config("MOZ_APP_VERSION", milestone.app_version)

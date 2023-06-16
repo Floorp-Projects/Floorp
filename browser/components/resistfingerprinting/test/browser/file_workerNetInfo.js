@@ -21,7 +21,7 @@ function runTests() {
   finish();
 }
 
-self.onmessage = function(e) {
+self.onmessage = function (e) {
   if (e.data.type === "runTests") {
     runTests();
   } else {

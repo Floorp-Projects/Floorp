@@ -1078,7 +1078,7 @@ static void vpx_filter_block1d4_h8_avx2(
     // f4|f7 f6 f5 f4|f7 f6 f5 f4
     secondFilters = _mm256_shuffle_epi32(filtersReg32, 0x55);
 
-    // s6  s5 s4 s3 s5 s4 s3 s2 s4 s3 s2 s1 s3 s2 s1 s0 | s6 s5 s4 s3 s5 s4 s3
+    // s6 s5 s4 s3 s5 s4 s3 s2 s4 s3 s2 s1 s3 s2 s1 s0 | s6 s5 s4 s3 s5 s4 s3
     // s2 s4 s3 s2 s1 s3 s2 s1 s0
     filt1Reg = _mm256_load_si256((__m256i const *)filt_d4_global_avx2);
 
@@ -1102,7 +1102,7 @@ static void vpx_filter_block1d4_h8_avx2(
       srcRegFilt32b1_1 = _mm256_shuffle_epi8(srcReg32b1, filt1Reg);
 
       // multiply 4 adjacent elements with the filter and add the result
-      // .....|f3*r14+f2*r13|f1*r13+f0*r12|f3*r13+f2*r12|f1*r11+f0*r10||.........
+      // ...|f3*r14+f2*r13|f1*r13+f0*r12|f3*r13+f2*r12|f1*r11+f0*r10||...
       // |f1*r03+f0*r02|f3*r04+f2*r03|f1*r02+f0*r01|f3*r03+f2*r02|f1*r01+f0*r00
       srcRegFilt32b1_1 = _mm256_maddubs_epi16(srcRegFilt32b1_1, firstFilters);
 

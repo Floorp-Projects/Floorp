@@ -71,9 +71,8 @@ export class LoginRelatedRealmsParent extends JSWindowActorParent {
     try {
       let formOriginURI = Services.io.newURI(formOrigin);
       let originDomain = formOriginURI.host;
-      let [
-        { relatedRealms } = {},
-      ] = await this.getSharedCredentialsCollection();
+      let [{ relatedRealms } = {}] =
+        await this.getSharedCredentialsCollection();
       if (!relatedRealms) {
         return [];
       }

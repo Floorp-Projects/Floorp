@@ -17,6 +17,7 @@
 #include "gc/AtomMarking.h"
 #include "gc/GCContext.h"
 #include "gc/GCMarker.h"
+#include "gc/GCParallelTask.h"
 #include "gc/IteratorUtils.h"
 #include "gc/Nursery.h"
 #include "gc/Scheduling.h"
@@ -367,15 +368,6 @@ class GCRuntime {
   void* addressOfNurseryPosition() {
     return nursery_.refNoCheck().addressOfPosition();
   }
-  const void* addressOfNurseryCurrentEnd() {
-    return nursery_.refNoCheck().addressOfCurrentEnd();
-  }
-  const void* addressOfStringNurseryCurrentEnd() {
-    return nursery_.refNoCheck().addressOfCurrentStringEnd();
-  }
-  const void* addressOfBigIntNurseryCurrentEnd() {
-    return nursery_.refNoCheck().addressOfCurrentBigIntEnd();
-  }
 
   const void* addressOfLastBufferedWholeCell() {
     return storeBuffer_.refNoCheck().addressOfLastBufferedWholeCell();
@@ -610,18 +602,11 @@ class GCRuntime {
   // Allocator
   template <AllowGC allowGC>
   [[nodiscard]] bool checkAllocatorState(JSContext* cx, AllocKind kind);
-  template <AllowGC allowGC>
-  void* tryNewNurseryObject(JSContext* cx, size_t thingSize,
-                            const JSClass* clasp, AllocSite* site);
+  template <JS::TraceKind kind, AllowGC allowGC>
+  void* tryNewNurseryCell(JSContext* cx, size_t thingSize, AllocSite* site);
   template <AllowGC allowGC>
   static void* tryNewTenuredThing(JSContext* cx, AllocKind kind,
                                   size_t thingSize);
-  template <AllowGC allowGC>
-  void* tryNewNurseryStringCell(JSContext* cx, size_t thingSize,
-                                AllocKind kind);
-  template <AllowGC allowGC>
-  void* tryNewNurseryBigIntCell(JSContext* cx, size_t thingSize,
-                                AllocKind kind);
   static void* refillFreeListInGC(Zone* zone, AllocKind thingKind);
 
   // Delayed marking.
@@ -683,7 +668,7 @@ class GCRuntime {
                        const AutoLockGC& lock);
 
   // Allocator internals
-  [[nodiscard]] bool gcIfNeededAtAllocation(JSContext* cx);
+  void gcIfNeededAtAllocation(JSContext* cx);
   static void* refillFreeList(JSContext* cx, AllocKind thingKind);
   void attemptLastDitchGC(JSContext* cx);
 #ifdef DEBUG

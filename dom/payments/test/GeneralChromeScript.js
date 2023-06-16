@@ -14,7 +14,7 @@ const paymentSrv = Cc[
   "@mozilla.org/dom/payments/payment-request-service;1"
 ].getService(Ci.nsIPaymentRequestService);
 
-addMessageListener("teardown", function() {
+addMessageListener("teardown", function () {
   paymentSrv.setTestingUIService(null);
   sendAsyncMessage("teardown-complete");
 });

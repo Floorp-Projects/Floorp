@@ -26,11 +26,9 @@ const TEST_SERVICE_WORKER_URL =
 const REMOVE_DIALOG_URL =
   "chrome://browser/content/preferences/dialogs/siteDataRemoveSelected.xhtml";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "SiteDataTestUtils",
-  "resource://testing-common/SiteDataTestUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  SiteDataTestUtils: "resource://testing-common/SiteDataTestUtils.sys.mjs",
+});
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
@@ -78,9 +76,8 @@ function promiseLoadSubDialog(aURL) {
         is_element_visible(aEvent.detail.dialog._overlay, "Overlay is visible");
 
         // Check that stylesheets were injected
-        let expectedStyleSheetURLs = aEvent.detail.dialog._injectedStyleSheets.slice(
-          0
-        );
+        let expectedStyleSheetURLs =
+          aEvent.detail.dialog._injectedStyleSheets.slice(0);
         for (let styleSheet of aEvent.detail.dialog._frame.contentDocument
           .styleSheets) {
           let i = expectedStyleSheetURLs.indexOf(styleSheet.href);
@@ -115,10 +112,10 @@ function openPreferencesViaOpenPreferencesAPI(aPane, aOptions) {
 
     newTabBrowser.addEventListener(
       "Initialized",
-      function() {
+      function () {
         newTabBrowser.contentWindow.addEventListener(
           "load",
-          async function() {
+          async function () {
             let win = gBrowser.contentWindow;
             let selectedPane = win.history.state;
             await finalPrefPaneLoaded;
@@ -221,9 +218,10 @@ async function addTestData(data) {
       });
     }
 
-    let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-      site.origin
-    );
+    let principal =
+      Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+        site.origin
+      );
 
     hosts.add(principal.baseDomain || principal.host);
   }
@@ -266,9 +264,8 @@ function promiseServiceWorkersCleared() {
 function promiseServiceWorkerRegisteredFor(url) {
   return TestUtils.waitForCondition(() => {
     try {
-      let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-        url
-      );
+      let principal =
+        Services.scriptSecurityManager.createContentPrincipalFromOrigin(url);
       let sw = serviceWorkerManager.getRegistrationByPrincipal(
         principal,
         principal.spec

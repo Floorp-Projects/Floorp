@@ -1,7 +1,7 @@
 function OnMessage(e) {
   if (e.data.msg == "whoareyou") {
     if ("ServiceWorker" in self) {
-      self.clients.matchAll().then(function(clients) {
+      self.clients.matchAll().then(function (clients) {
         clients[0].postMessage({ result: "serviceworker" });
       });
     } else {
@@ -11,7 +11,7 @@ function OnMessage(e) {
 }
 
 var port;
-onconnect = function(e) {
+onconnect = function (e) {
   port = e.ports[0];
   port.onmessage = OnMessage;
   port.start();

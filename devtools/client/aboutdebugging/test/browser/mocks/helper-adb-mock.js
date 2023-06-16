@@ -39,31 +39,31 @@ function disableAdbMock() {
  */
 function createAdbMock() {
   const adbMock = {};
-  adbMock.registerListener = function(listener) {
+  adbMock.registerListener = function (listener) {
     console.log("MOCKED METHOD registerListener");
   };
 
-  adbMock.getRuntimes = function() {
+  adbMock.getRuntimes = function () {
     console.log("MOCKED METHOD getRuntimes");
   };
 
-  adbMock.getDevices = function() {
+  adbMock.getDevices = function () {
     console.log("MOCKED METHOD getDevices");
   };
 
-  adbMock.updateRuntimes = function() {
+  adbMock.updateRuntimes = function () {
     console.log("MOCKED METHOD updateRuntimes");
   };
 
-  adbMock.unregisterListener = function(listener) {
+  adbMock.unregisterListener = function (listener) {
     console.log("MOCKED METHOD unregisterListener");
   };
 
-  adbMock.once = function() {
+  adbMock.once = function () {
     console.log("MOCKED METHOD once");
   };
 
-  adbMock.isProcessStarted = function() {
+  adbMock.isProcessStarted = function () {
     console.log("MOCKED METHOD isProcessStarted");
   };
 
@@ -85,7 +85,7 @@ function addObserverMock(adbMock) {
 
   const observerMock = {};
   EventEmitter.decorate(observerMock);
-  adbMock.registerListener = function(listener) {
+  adbMock.registerListener = function (listener) {
     console.log("MOCKED METHOD registerListener with mock scanner");
     observerMock.on("runtime-list-updated", listener);
   };

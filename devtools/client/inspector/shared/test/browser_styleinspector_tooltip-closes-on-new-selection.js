@@ -8,7 +8,7 @@
 const TEST_URI = "<div class='one'>el 1</div><div class='two'>el 2</div>";
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
-add_task(async function() {
+add_task(async function () {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let { inspector, view } = await openRuleView();
   await selectNode(".one", inspector);

@@ -27,7 +27,7 @@ async function createAndShutdownContentProcess(url) {
       waitForLoad: true,
       forceNewProcess: true,
     },
-    async function(otherBrowser) {
+    async function (otherBrowser) {
       let remoteTab = otherBrowser.frameLoader.remoteTab;
 
       ok(true, "Content process created.");
@@ -40,7 +40,7 @@ async function createAndShutdownContentProcess(url) {
       );
 
       // Trigger onmessage in the content browser
-      await SpecialPowers.spawn(otherBrowser, [], function() {
+      await SpecialPowers.spawn(otherBrowser, [], function () {
         content.postMessage("LoadedMessage", "*");
       });
 

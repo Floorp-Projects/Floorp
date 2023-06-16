@@ -258,6 +258,9 @@ ta{
         "America:Chihuahua"{
             ec{"சுவாவா"}
         }
+        "America:Ciudad_Juarez"{
+            ec{"சியுடாட் வாரஸ்"}
+        }
         "America:Coral_Harbour"{
             ec{"அடிகோகன்"}
         }

@@ -35,10 +35,11 @@ class AsyncEventDispatcher : public CancelableRunnable {
    * the event is dispatched to it, otherwise the dispatch path starts
    * at the first chrome ancestor of that target.
    */
-  AsyncEventDispatcher(nsINode* aTarget, const nsAString& aEventType,
-                       CanBubble aCanBubble,
-                       ChromeOnlyDispatch aOnlyChromeDispatch,
-                       Composed aComposed = Composed::eDefault)
+  AsyncEventDispatcher(
+      dom::EventTarget* aTarget, const nsAString& aEventType,
+      CanBubble aCanBubble,
+      ChromeOnlyDispatch aOnlyChromeDispatch = ChromeOnlyDispatch::eNo,
+      Composed aComposed = Composed::eDefault)
       : CancelableRunnable("AsyncEventDispatcher"),
         mTarget(aTarget),
         mEventType(aEventType),
@@ -65,14 +66,6 @@ class AsyncEventDispatcher : public CancelableRunnable {
     MOZ_ASSERT(mEventMessage != eUnidentifiedEvent);
   }
 
-  AsyncEventDispatcher(dom::EventTarget* aTarget, const nsAString& aEventType,
-                       CanBubble aCanBubble)
-      : CancelableRunnable("AsyncEventDispatcher"),
-        mTarget(aTarget),
-        mEventType(aEventType),
-        mEventMessage(eUnidentifiedEvent),
-        mCanBubble(aCanBubble) {}
-
   AsyncEventDispatcher(dom::EventTarget* aTarget,
                        mozilla::EventMessage aEventMessage,
                        CanBubble aCanBubble)
@@ -90,11 +83,14 @@ class AsyncEventDispatcher : public CancelableRunnable {
    * asynchronously (i.e., after all objects allocated in the stack are
    * destroyed).
    */
-  AsyncEventDispatcher(dom::EventTarget* aTarget, dom::Event* aEvent)
+  AsyncEventDispatcher(
+      dom::EventTarget* aTarget, dom::Event* aEvent,
+      ChromeOnlyDispatch aOnlyChromeDispatch = ChromeOnlyDispatch::eNo)
       : CancelableRunnable("AsyncEventDispatcher"),
         mTarget(aTarget),
         mEvent(aEvent),
-        mEventMessage(eUnidentifiedEvent) {
+        mEventMessage(eUnidentifiedEvent),
+        mOnlyChromeDispatch(aOnlyChromeDispatch) {
     MOZ_ASSERT(
         aEvent->IsSafeToBeDispatchedAsynchronously(),
         "The DOM event should be created without Widget*Event and "
@@ -104,16 +100,68 @@ class AsyncEventDispatcher : public CancelableRunnable {
 
   AsyncEventDispatcher(dom::EventTarget* aTarget, WidgetEvent& aEvent);
 
-  NS_IMETHOD Run() override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override;
   nsresult Cancel() override;
   nsresult PostDOMEvent();
-  void RunDOMEventWhenSafe();
+
+  /**
+   * Dispatch event immediately if it's safe to dispatch the event.
+   * Otherwise, posting the event into the queue to dispatch it when it's safe.
+   *
+   * Note that this method allows callers to call itself with unsafe aTarget
+   * because its lifetime is guaranteed by this method (in the case of
+   * synchronous dispatching) or AsyncEventDispatcher (in the case of
+   * asynchronous dispatching).
+   */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY static void RunDOMEventWhenSafe(
+      dom::EventTarget& aTarget, const nsAString& aEventType,
+      CanBubble aCanBubble,
+      ChromeOnlyDispatch aOnlyChromeDispatch = ChromeOnlyDispatch::eNo,
+      Composed aComposed = Composed::eDefault);
+
+  /**
+   * Dispatch event immediately if it's safe to dispatch the event.
+   * Otherwise, posting the event into the queue to dispatch it when it's safe.
+   *
+   * NOTE: Only this is now marked as MOZ_CAN_RUN_SCRIPT because all callers
+   * have already had safe smart pointers for both aTarget and aEvent.
+   * If you need to use this in a hot path without smart pointers, you may need
+   * to create unsafe version of this method for avoiding the extra add/release
+   * refcount cost in the case of asynchronous dispatching.
+   */
+  MOZ_CAN_RUN_SCRIPT static void RunDOMEventWhenSafe(
+      dom::EventTarget& aTarget, dom::Event& aEvent,
+      ChromeOnlyDispatch aOnlyChromeDispatch = ChromeOnlyDispatch::eNo);
+
+  /**
+   * Dispatch event immediately if it's safe to dispatch the event.
+   * Otherwise, posting the event into the queue to dispatch it when it's safe.
+   *
+   * Note that this method allows callers to call itself with unsafe aTarget
+   * because its lifetime is guaranteed by EventDispatcher (in the case of
+   * synchronous dispatching) or AsyncEventDispatcher (in the case of
+   * asynchronous dispatching).
+   */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY static nsresult RunDOMEventWhenSafe(
+      nsINode& aTarget, WidgetEvent& aEvent,
+      nsEventStatus* aEventStatus = nullptr);
 
   // Calling this causes the Run() method to check that
   // mTarget->IsInComposedDoc(). mTarget must be an nsINode or else we'll
   // assert.
   void RequireNodeInDocument();
 
+ protected:
+  void RunDOMEventWhenSafe();
+  MOZ_CAN_RUN_SCRIPT static void DispatchEventOnTarget(
+      dom::EventTarget* aTarget, dom::Event* aEvent,
+      ChromeOnlyDispatch aOnlyChromeDispatch, Composed aComposed);
+  MOZ_CAN_RUN_SCRIPT static void DispatchEventOnTarget(
+      dom::EventTarget* aTarget, const nsAString& aEventType,
+      CanBubble aCanBubble, ChromeOnlyDispatch aOnlyChromeDispatch,
+      Composed aComposed);
+
+ public:
   nsCOMPtr<dom::EventTarget> mTarget;
   RefPtr<dom::Event> mEvent;
   // If mEventType is set, mEventMessage will be eUnidentifiedEvent.

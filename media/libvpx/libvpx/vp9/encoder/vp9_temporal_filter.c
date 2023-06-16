@@ -450,8 +450,6 @@ void vp9_highbd_apply_temporal_filter_c(
   // Apply the filter to luma
   for (row = 0; row < (int)block_height; row++) {
     for (col = 0; col < (int)block_width; col++) {
-      const int uv_row = row >> ss_y;
-      const int uv_col = col >> ss_x;
       const int filter_weight = get_filter_weight(
           row, col, block_height, block_width, blk_fw, use_32x32);
 
@@ -476,6 +474,8 @@ void vp9_highbd_apply_temporal_filter_c(
 
       // Sum the corresponding uv pixels to the current y modifier
       // Note we are rounding down instead of rounding to the nearest pixel.
+      uv_row = row >> ss_y;
+      uv_col = col >> ss_x;
       y_mod += u_diff_sse[uv_row * uv_diff_stride + uv_col];
       y_mod += v_diff_sse[uv_row * uv_diff_stride + uv_col];
 

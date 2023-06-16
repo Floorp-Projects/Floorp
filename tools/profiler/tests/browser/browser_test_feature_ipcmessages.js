@@ -6,7 +6,7 @@ requestLongerTimeout(10);
 
 async function waitForLoad() {
   return SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-    return new Promise(function(resolve) {
+    return new Promise(function (resolve) {
       if (content.document.readyState !== "complete") {
         content.document.addEventListener("readystatechange", () => {
           if (content.document.readyState === "complete") {
@@ -45,10 +45,8 @@ add_task(async function test_profile_feature_ipcmessges() {
         "the feature is enabled."
     );
     {
-      const {
-        parentThread,
-        contentThread,
-      } = await waitSamplingAndStopProfilerAndGetThreads(contentPid);
+      const { parentThread, contentThread } =
+        await waitSamplingAndStopProfilerAndGetThreads(contentPid);
 
       Assert.greater(
         getPayloadsOfType(parentThread, "IPC").length,
@@ -82,10 +80,8 @@ add_task(async function test_profile_feature_ipcmessges() {
         "feature is turned off."
     );
     {
-      const {
-        parentThread,
-        contentThread,
-      } = await waitSamplingAndStopProfilerAndGetThreads(contentPid);
+      const { parentThread, contentThread } =
+        await waitSamplingAndStopProfilerAndGetThreads(contentPid);
       Assert.equal(
         getPayloadsOfType(parentThread, "IPC").length,
         0,

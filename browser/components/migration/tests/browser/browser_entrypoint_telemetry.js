@@ -51,9 +51,8 @@ add_task(async function test_legacy_wizard() {
     });
 
     let histogram = TelemetryTestUtils.getAndClearHistogram(HISTOGRAM_ID);
-    let legacyHistogram = TelemetryTestUtils.getAndClearHistogram(
-      LEGACY_HISTOGRAM_ID
-    );
+    let legacyHistogram =
+      TelemetryTestUtils.getAndClearHistogram(LEGACY_HISTOGRAM_ID);
 
     // Let's arbitrarily pick the "Bookmarks" entrypoint, and make sure this
     // is recorded.
@@ -71,9 +70,8 @@ add_task(async function test_legacy_wizard() {
     }
 
     histogram = TelemetryTestUtils.getAndClearHistogram(HISTOGRAM_ID);
-    legacyHistogram = TelemetryTestUtils.getAndClearHistogram(
-      LEGACY_HISTOGRAM_ID
-    );
+    legacyHistogram =
+      TelemetryTestUtils.getAndClearHistogram(LEGACY_HISTOGRAM_ID);
 
     // Now let's pick the "Preferences" entrypoint, and make sure this
     // is recorded.
@@ -90,9 +88,8 @@ add_task(async function test_legacy_wizard() {
     }
 
     histogram = TelemetryTestUtils.getAndClearHistogram(HISTOGRAM_ID);
-    legacyHistogram = TelemetryTestUtils.getAndClearHistogram(
-      LEGACY_HISTOGRAM_ID
-    );
+    legacyHistogram =
+      TelemetryTestUtils.getAndClearHistogram(LEGACY_HISTOGRAM_ID);
 
     // Finally, check the fallback by passing in something invalid as an entrypoint.
     await showThenCloseMigrationWizardViaEntrypoint(undefined);

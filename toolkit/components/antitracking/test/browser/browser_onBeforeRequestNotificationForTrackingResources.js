@@ -7,7 +7,7 @@
  */
 
 let extension;
-add_task(async function() {
+add_task(async function () {
   extension = ExtensionTestUtils.loadExtension({
     manifest: { permissions: ["webRequest", "webRequestBlocking", "*://*/*"] },
     async background() {
@@ -47,7 +47,7 @@ add_task(async function() {
   await extension.awaitMessage("ready");
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Starting subResources test");
 
   await SpecialPowers.flushPrefEnv();
@@ -80,7 +80,7 @@ add_task(async function() {
   await promise;
 
   info("Verify the number of tracking nodes found");
-  await SpecialPowers.spawn(browser, [{ expected: 3 }], async function(obj) {
+  await SpecialPowers.spawn(browser, [{ expected: 3 }], async function (obj) {
     is(
       content.document.blockedNodeByClassifierCount,
       obj.expected,

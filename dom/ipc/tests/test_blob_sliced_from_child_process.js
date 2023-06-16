@@ -59,7 +59,7 @@ add_task(async function test() {
   });
 
   let mm = page.browser.messageManager;
-  mm.addMessageListener(messageName, function(message) {
+  mm.addMessageListener(messageName, function (message) {
     if ("blob" in message.data) {
       equal(receivedBlob, false, "Have not yet received Blob");
       equal(receivedSlice, false, "Have not yet received Slice");
@@ -87,7 +87,7 @@ add_task(async function test() {
       equal(slice.type, blobType, "Slice has correct type");
 
       let reader = new FileReader();
-      reader.onload = function() {
+      reader.onload = function () {
         equal(
           reader.result,
           blobData[blobData.length - 1],
@@ -110,7 +110,7 @@ add_task(async function test() {
       equal(slice.type, blobType, "Slice has correct type");
 
       let reader = new FileReader();
-      reader.onload = function() {
+      reader.onload = function () {
         equal(reader.result, sliceText, "Slice has correct data");
 
         let slice2 = slice.slice(1, 2, blobType);
@@ -120,7 +120,7 @@ add_task(async function test() {
         equal(slice2.type, blobType, "Slice has correct type");
 
         let reader2 = new FileReader();
-        reader2.onload = function() {
+        reader2.onload = function () {
           equal(reader2.result, sliceText[1], "Slice has correct data");
 
           resolveSlice();

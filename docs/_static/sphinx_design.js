@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-(function() {
+(function () {
   "use strict";
 
   var dropdownClassName = "sd-dropdown";
@@ -38,9 +38,8 @@
       aTag.classList.add("dropdown-link");
       aTag.innerHTML = "¶";
 
-      var summaryElement = dropdowns[i].getElementsByClassName(
-        "sd-summary-title"
-      )[0];
+      var summaryElement =
+        dropdowns[i].getElementsByClassName("sd-summary-title")[0];
       summaryElement.insertBefore(
         aTag,
         summaryElement.getElementsByClassName("docutils")[0]

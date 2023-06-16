@@ -11,7 +11,7 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
 
 async function testRefresh(url) {
   // Open an article in a browser tab
-  await BrowserTestUtils.withNewTab(url, async function(browser) {
+  await BrowserTestUtils.withNewTab(url, async function (browser) {
     let pageShownPromise = BrowserTestUtils.waitForContentEvent(
       browser,
       "AboutReaderContentReady"
@@ -40,7 +40,7 @@ async function testRefresh(url) {
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   // Testing a non-text/plain document
   await testRefresh(TEST_PATH + "readerModeArticle.html");
 

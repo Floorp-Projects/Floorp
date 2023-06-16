@@ -41,16 +41,14 @@ export default [
     isActive: false,
   },
   {
-    info:
-      "scroll-padding is inactive on element with horizontally clipped overflow",
+    info: "scroll-padding is inactive on element with horizontally clipped overflow",
     property: "scroll-padding",
     tagName: "div",
     rules: ["div { overflow-x: clip; scroll-padding: 10px; }"],
     isActive: false,
   },
   {
-    info:
-      "scroll-padding is inactive on element with vertically clipped overflow",
+    info: "scroll-padding is inactive on element with vertically clipped overflow",
     property: "scroll-padding",
     tagName: "div",
     rules: ["div { overflow-y: clip; scroll-padding: 10px; }"],
@@ -64,24 +62,21 @@ export default [
     isActive: false,
   },
   {
-    info:
-      "scroll-padding-top is inactive on element with horizontally clipped overflow",
+    info: "scroll-padding-top is inactive on element with horizontally clipped overflow",
     property: "scroll-padding-top",
     tagName: "div",
     rules: ["div { overflow-x: clip; scroll-padding-top: 10px; }"],
     isActive: false,
   },
   {
-    info:
-      "scroll-padding-top is inactive on element with vertically clipped overflow",
+    info: "scroll-padding-top is inactive on element with vertically clipped overflow",
     property: "scroll-padding-top",
     tagName: "div",
     rules: ["div { overflow-y: clip; scroll-padding-top: 10px; }"],
     isActive: false,
   },
   {
-    info:
-      "scroll-padding-top is active on element with horizontally clipped but vertical auto-overflow (as 'clip' is computed to 'hidden')",
+    info: "scroll-padding-top is active on element with horizontally clipped but vertical auto-overflow (as 'clip' is computed to 'hidden')",
     property: "scroll-padding-top",
     tagName: "div",
     rules: [
@@ -90,8 +85,7 @@ export default [
     isActive: true,
   },
   {
-    info:
-      "scroll-padding-top is active on element with vertically clipped but horizontal auto-overflow (as 'clip' is computed to 'hidden')",
+    info: "scroll-padding-top is active on element with vertically clipped but horizontal auto-overflow (as 'clip' is computed to 'hidden')",
     property: "scroll-padding-top",
     tagName: "div",
     rules: [
@@ -128,16 +122,14 @@ export default [
     isActive: false,
   },
   {
-    info:
-      "scroll-padding-block-end is inactive on element with visible overflow",
+    info: "scroll-padding-block-end is inactive on element with visible overflow",
     property: "scroll-padding-block-end",
     tagName: "div",
     rules: ["div { scroll-padding-block-end: 10px; }"],
     isActive: false,
   },
   {
-    info:
-      "scroll-padding-block-start is inactive on element with visible overflow",
+    info: "scroll-padding-block-start is inactive on element with visible overflow",
     property: "scroll-padding-block-start",
     tagName: "div",
     rules: ["div { scroll-padding-block-start: 10px; }"],
@@ -151,16 +143,14 @@ export default [
     isActive: false,
   },
   {
-    info:
-      "scroll-padding-inline-end is inactive on element with visible overflow",
+    info: "scroll-padding-inline-end is inactive on element with visible overflow",
     property: "scroll-padding-inline-end",
     tagName: "div",
     rules: ["div { scroll-padding-inline-end: 10px; }"],
     isActive: false,
   },
   {
-    info:
-      "scroll-padding-inline-start is inactive on element with visible overflow",
+    info: "scroll-padding-inline-start is inactive on element with visible overflow",
     property: "scroll-padding-inline-start",
     tagName: "div",
     rules: ["div { scroll-padding-inline-start: 10px; }"],

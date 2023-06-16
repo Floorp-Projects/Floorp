@@ -20,7 +20,7 @@ loadHelperScript("helper_html_tooltip.js");
 const TOOLTIP_HEIGHT = 30;
 const TOOLTIP_WIDTH = 100;
 
-add_task(async function() {
+add_task(async function () {
   // Force the toolbox to be 400px high;
   await pushPref("devtools.toolbox.footer.height", 400);
 

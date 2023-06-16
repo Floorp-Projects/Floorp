@@ -84,7 +84,7 @@ function getIndentationFromIteration(iterFunc) {
  *                  getIndentationFromIteration
  */
 function getIndentationFromString(string) {
-  const iteratorFn = function(start, end, callback) {
+  const iteratorFn = function (start, end, callback) {
     const split = string.split(/\r\n|\r|\n|\f/);
     split.slice(start, end).forEach(callback);
   };

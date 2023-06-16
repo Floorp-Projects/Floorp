@@ -2,7 +2,7 @@
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
-XPCOMUtils.defineLazyGetter(this, "URL", function() {
+XPCOMUtils.defineLazyGetter(this, "URL", function () {
   return "http://localhost:" + httpserver.identity.primaryPort;
 });
 
@@ -13,7 +13,7 @@ var httpbody = "0123456789";
 var last = 0,
   max = 0;
 
-const STATUS_RECEIVING_FROM = 0x804b0006;
+const STATUS_RECEIVING_FROM = 0x4b0006;
 const LOOPS = 50000;
 
 const TYPE_ONSTATUS = 1;
@@ -22,7 +22,7 @@ const TYPE_ONSTARTREQUEST = 3;
 const TYPE_ONDATAAVAILABLE = 4;
 const TYPE_ONSTOPREQUEST = 5;
 
-var ProgressCallback = function() {};
+var ProgressCallback = function () {};
 
 ProgressCallback.prototype = {
   _listener: null,

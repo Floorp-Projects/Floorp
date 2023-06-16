@@ -25,7 +25,7 @@ function test() {
   // to Date.now() will have the same time value.
   SpecialPowers.pushPrefEnv(
     { set: [["privacy.reduceTimerPrecision", false]] },
-    function() {
+    function () {
       originalTab = gBrowser.selectedTab;
       nextStep(step2);
     }

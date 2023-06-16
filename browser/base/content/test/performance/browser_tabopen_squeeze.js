@@ -19,7 +19,7 @@ const EXPECTED_REFLOWS = [
  * uninterruptible reflows when opening a new tab that will
  * cause the existing tabs to squeeze smaller.
  */
-add_task(async function() {
+add_task(async function () {
   // Force-enable tab animations
   gReduceMotionOverride = false;
 
@@ -43,13 +43,14 @@ add_task(async function() {
 
   gURLBar.focus();
 
-  let tabStripRect = gBrowser.tabContainer.arrowScrollbox.getBoundingClientRect();
+  let tabStripRect =
+    gBrowser.tabContainer.arrowScrollbox.getBoundingClientRect();
   let textBoxRect = gURLBar
     .querySelector("moz-input-box")
     .getBoundingClientRect();
 
   await withPerfObserver(
-    async function() {
+    async function () {
       let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
       BrowserOpenTab();
       await BrowserTestUtils.waitForEvent(

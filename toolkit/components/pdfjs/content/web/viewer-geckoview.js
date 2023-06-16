@@ -371,6 +371,10 @@ class FirefoxExternalServices extends _app.DefaultExternalServices {
     const maxArea = FirefoxCom.requestSync("getCanvasMaxArea");
     return (0, _pdfjsLib.shadow)(this, "canvasMaxAreaInBytes", maxArea);
   }
+  static async getNimbusExperimentData() {
+    const nimbusData = await FirefoxCom.requestAsync("getNimbusExperimentData", null);
+    return nimbusData && JSON.parse(nimbusData);
+  }
 }
 _app.PDFViewerApplication.externalServices = FirefoxExternalServices;
 document.mozL10n.setExternalLocalizerServices({
@@ -510,7 +514,6 @@ var _webPdf_presentation_mode = __webpack_require__(9);
 var _pdf_rendering_queue = __webpack_require__(15);
 var _pdf_scripting_manager = __webpack_require__(16);
 var _webPdf_sidebar = __webpack_require__(9);
-var _webPdf_sidebar_resizer = __webpack_require__(9);
 var _webPdf_thumbnail_viewer = __webpack_require__(9);
 var _pdf_viewer = __webpack_require__(17);
 var _webSecondary_toolbar = __webpack_require__(9);
@@ -572,11 +575,14 @@ class DefaultExternalServices {
   static get canvasMaxAreaInBytes() {
     return (0, _pdfjsLib.shadow)(this, "canvasMaxAreaInBytes", -1);
   }
+  static getNimbusExperimentData() {
+    return (0, _pdfjsLib.shadow)(this, "getNimbusExperimentData", Promise.resolve(null));
+  }
 }
 exports.DefaultExternalServices = DefaultExternalServices;
 const PDFViewerApplication = {
   initialBookmark: document.location.hash.substring(1),
-  _initializedCapability: (0, _pdfjsLib.createPromiseCapability)(),
+  _initializedCapability: new _pdfjsLib.PromiseCapability(),
   appConfig: null,
   pdfDocument: null,
   pdfLoadingTask: null,
@@ -589,7 +595,6 @@ const PDFViewerApplication = {
   pdfLinkService: null,
   pdfHistory: null,
   pdfSidebar: null,
-  pdfSidebarResizer: null,
   pdfOutlineViewer: null,
   pdfAttachmentViewer: null,
   pdfLayerViewer: null,
@@ -627,9 +632,11 @@ const PDFViewerApplication = {
   _printAnnotationStoragePromise: null,
   _touchInfo: null,
   _isCtrlKeyDown: false,
+  _nimbusDataPromise: null,
   async initialize(appConfig) {
     this.preferences = this.externalServices.createPreferences();
     this.appConfig = appConfig;
+    this._nimbusDataPromise = this.externalServices.getNimbusExperimentData();
     await this._initializeOptions();
     this._forceCssTheme();
     await this._initializeL10n();
@@ -863,7 +870,7 @@ const PDFViewerApplication = {
     }
     if (appConfig.toolbar) {
       if (_app_options.AppOptions.get("enableFloatingToolbar")) {
-        this.toolbar = new _webToolbar.Toolbar(appConfig.toolbar, eventBus, this.l10n);
+        this.toolbar = new _webToolbar.Toolbar(appConfig.toolbar, eventBus, this.l10n, await this._nimbusDataPromise, this.externalServices);
       }
     }
     if (appConfig.secondaryToolbar) {
@@ -910,7 +917,6 @@ const PDFViewerApplication = {
         l10n: this.l10n
       });
       this.pdfSidebar.onToggled = this.forceRendering.bind(this);
-      this.pdfSidebarResizer = new _webPdf_sidebar_resizer.PDFSidebarResizer(appConfig.sidebarResizer, eventBus, this.l10n);
     }
   },
   run(config) {
@@ -1913,8 +1919,8 @@ function webViewerPageRendered({
   if (PDFViewerApplication.pdfSidebar?.visibleView === _ui_utils.SidebarView.THUMBS) {
     const pageView = PDFViewerApplication.pdfViewer.getPageView(pageNumber - 1);
     const thumbnailView = PDFViewerApplication.pdfThumbnailViewer?.getThumbnail(pageNumber - 1);
-    if (pageView && thumbnailView) {
-      thumbnailView.setImage(pageView);
+    if (pageView) {
+      thumbnailView?.setImage(pageView);
     }
   }
   if (error) {
@@ -2649,6 +2655,7 @@ exports.removeNullCharacters = removeNullCharacters;
 exports.roundToDivide = roundToDivide;
 exports.scrollIntoView = scrollIntoView;
 exports.toggleCheckedBtn = toggleCheckedBtn;
+exports.toggleExpandedBtn = toggleExpandedBtn;
 exports.watchScroll = watchScroll;
 const DEFAULT_SCALE_VALUE = "auto";
 exports.DEFAULT_SCALE_VALUE = DEFAULT_SCALE_VALUE;
@@ -3145,6 +3152,11 @@ function toggleCheckedBtn(button, toggle, view = null) {
   button.setAttribute("aria-checked", toggle);
   view?.classList.toggle("hidden", !toggle);
 }
+function toggleExpandedBtn(button, toggle, view = null) {
+  button.classList.toggle("toggled", toggle);
+  button.setAttribute("aria-expanded", toggle);
+  view?.classList.toggle("hidden", !toggle);
+}
 
 /***/ }),
 /* 5 */
@@ -3302,7 +3314,7 @@ const defaultOptions = {
     kind: OptionKind.API
   },
   cMapUrl: {
-    value: "../web/cmaps/",
+    value: "resource://pdf.js/web/cmaps/",
     kind: OptionKind.API
   },
   disableAutoFetch: {
@@ -3350,7 +3362,7 @@ const defaultOptions = {
     kind: OptionKind.API
   },
   standardFontDataUrl: {
-    value: "../web/standard_fonts/",
+    value: "resource://pdf.js/web/standard_fonts/",
     kind: OptionKind.API
   },
   verbosity: {
@@ -4027,7 +4039,7 @@ exports.SimpleLinkService = SimpleLinkService;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.Toolbar = exports.SecondaryToolbar = exports.PDFThumbnailViewer = exports.PDFSidebarResizer = exports.PDFSidebar = exports.PDFPresentationMode = exports.PDFOutlineViewer = exports.PDFLayerViewer = exports.PDFFindBar = exports.PDFDocumentProperties = exports.PDFCursorTools = exports.PDFAttachmentViewer = exports.AnnotationEditorParams = void 0;
+exports.SecondaryToolbar = exports.PDFThumbnailViewer = exports.PDFSidebar = exports.PDFPresentationMode = exports.PDFOutlineViewer = exports.PDFLayerViewer = exports.PDFFindBar = exports.PDFDocumentProperties = exports.PDFCursorTools = exports.PDFAttachmentViewer = exports.AnnotationEditorParams = void 0;
 const AnnotationEditorParams = null;
 exports.AnnotationEditorParams = AnnotationEditorParams;
 const PDFAttachmentViewer = null;
@@ -4046,14 +4058,10 @@ const PDFPresentationMode = null;
 exports.PDFPresentationMode = PDFPresentationMode;
 const PDFSidebar = null;
 exports.PDFSidebar = PDFSidebar;
-const PDFSidebarResizer = null;
-exports.PDFSidebarResizer = PDFSidebarResizer;
 const PDFThumbnailViewer = null;
 exports.PDFThumbnailViewer = PDFThumbnailViewer;
 const SecondaryToolbar = null;
 exports.SecondaryToolbar = SecondaryToolbar;
-const Toolbar = null;
-exports.Toolbar = Toolbar;
 
 /***/ }),
 /* 10 */
@@ -4159,7 +4167,7 @@ class PasswordPrompt {
     if (this.#activeCapability) {
       await this.#activeCapability.promise;
     }
-    this.#activeCapability = (0, _pdfjsLib.createPromiseCapability)();
+    this.#activeCapability = new _pdfjsLib.PromiseCapability();
     try {
       await this.overlayManager.open(this.dialog);
     } catch (ex) {
@@ -4556,7 +4564,7 @@ class PDFFindController {
     this._dirtyMatch = false;
     clearTimeout(this._findTimeout);
     this._findTimeout = null;
-    this._firstPageCapability = (0, _pdfjsLib.createPromiseCapability)();
+    this._firstPageCapability = new _pdfjsLib.PromiseCapability();
   }
   get #query() {
     const {
@@ -4729,7 +4737,7 @@ class PDFFindController {
       disableNormalization: true
     };
     for (let i = 0, ii = this._linkService.pagesCount; i < ii; i++) {
-      const extractTextCapability = (0, _pdfjsLib.createPromiseCapability)();
+      const extractTextCapability = new _pdfjsLib.PromiseCapability();
       this._extractTextPromises[i] = extractTextCapability.promise;
       promise = promise.then(() => {
         return this._pdfDocument.getPage(i + 1).then(pdfPage => {
@@ -5897,7 +5905,7 @@ class PDFScriptingManager {
     const pdfDocument = this._pdfDocument,
       visitedPages = this._visitedPages;
     if (initialize) {
-      this._closeCapability = (0, _pdfjsLib.createPromiseCapability)();
+      this._closeCapability = new _pdfjsLib.PromiseCapability();
     }
     if (!this._closeCapability) {
       return;
@@ -5953,7 +5961,7 @@ class PDFScriptingManager {
     throw new Error("_getDocProperties: Unable to lookup properties.");
   }
   _createScripting() {
-    this._destroyCapability = (0, _pdfjsLib.createPromiseCapability)();
+    this._destroyCapability = new _pdfjsLib.PromiseCapability();
     if (this._scripting) {
       throw new Error("_createScripting: Scripting already exists.");
     }
@@ -6086,7 +6094,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = _ui_utils.TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = '3.6.126';
+    const viewerVersion = '3.7.95';
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -6129,12 +6137,7 @@ class PDFViewer {
     return this._pages[index];
   }
   get pageViewsReady() {
-    if (!this._pagesCapability.settled) {
-      return false;
-    }
-    return this._pages.every(function (pageView) {
-      return pageView?.pdfPage;
-    });
+    return this._pagesCapability.settled && this._pages.every(pageView => pageView?.pdfPage);
   }
   get renderForms() {
     return this.#annotationMode === _pdfjsLib.AnnotationMode.ENABLE_FORMS;
@@ -6606,9 +6609,9 @@ class PDFViewer {
     this._location = null;
     this._pagesRotation = 0;
     this._optionalContentConfigPromise = null;
-    this._firstPageCapability = (0, _pdfjsLib.createPromiseCapability)();
-    this._onePageRenderedCapability = (0, _pdfjsLib.createPromiseCapability)();
-    this._pagesCapability = (0, _pdfjsLib.createPromiseCapability)();
+    this._firstPageCapability = new _pdfjsLib.PromiseCapability();
+    this._onePageRenderedCapability = new _pdfjsLib.PromiseCapability();
+    this._pagesCapability = new _pdfjsLib.PromiseCapability();
     this._scrollMode = _ui_utils.ScrollMode.VERTICAL;
     this._previousScrollMode = _ui_utils.ScrollMode.UNKNOWN;
     this._spreadMode = _ui_utils.SpreadMode.NONE;
@@ -9319,15 +9322,38 @@ exports.Toolbar = void 0;
 class Toolbar {
   #buttons;
   #eventBus;
-  constructor(options, eventBus, _l10n) {
+  #externalServices;
+  constructor(options, eventBus, _l10n, nimbusData, externalServices) {
     this.#eventBus = eventBus;
-    this.#buttons = [{
+    this.#externalServices = externalServices;
+    const buttons = [{
       element: options.download,
-      eventName: "download"
+      eventName: "download",
+      nimbusName: "download-button"
     }, {
       element: options.openInApp,
-      eventName: "openinexternalapp"
+      eventName: "openinexternalapp",
+      nimbusName: "open-in-app-button"
     }];
+    if (nimbusData) {
+      this.#buttons = [];
+      for (const button of buttons) {
+        if (nimbusData[button.nimbusName]) {
+          this.#buttons.push(button);
+        } else {
+          button.element.remove();
+        }
+      }
+      if (this.#buttons.length > 0) {
+        options.container.classList.add("show");
+      } else {
+        options.container.remove();
+        options.mainContainer.classList.add("noToolbar");
+      }
+    } else {
+      options.container.classList.add("show");
+      this.#buttons = buttons;
+    }
     this.#bindListeners(options);
   }
   setPageNumber(pageNumber, pageLabel) {}
@@ -9345,6 +9371,12 @@ class Toolbar {
           this.#eventBus.dispatch(eventName, {
             source: this,
             ...eventDetails
+          });
+          this.#externalServices.reportTelemetry({
+            type: "gv-buttons",
+            data: {
+              id: `${element.id}_tapped`
+            }
           });
         }
       });
@@ -9606,8 +9638,8 @@ var _ui_utils = __webpack_require__(4);
 var _app_options = __webpack_require__(6);
 var _pdf_link_service = __webpack_require__(8);
 var _app = __webpack_require__(3);
-const pdfjsVersion = '3.6.126';
-const pdfjsBuild = '3f89a99a5';
+const pdfjsVersion = '3.7.95';
+const pdfjsBuild = 'cbc4b20b1';
 const AppConstants = null;
 exports.PDFViewerApplicationConstants = AppConstants;
 window.PDFViewerApplication = _app.PDFViewerApplication;

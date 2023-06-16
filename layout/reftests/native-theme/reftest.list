@@ -44,21 +44,10 @@ fails-if(Android&&!asyncPan) != 492155-4.html about:blank
 # RTL mirroring tests
 == checkbox-not-mirrored-when-rtl.html checkbox-not-mirrored-when-rtl-ref.html
 
-!= chrome://reftest/content/native-theme/resizer-bottomend.xhtml chrome://reftest/content/native-theme/blank-window.xhtml
-random-if(d2d) == chrome://reftest/content/native-theme/resizer-bottomend.xhtml chrome://reftest/content/native-theme/resizer-bottomright.xhtml # bug 581086
-!= chrome://reftest/content/native-theme/resizer-bottomend.xhtml chrome://reftest/content/native-theme/resizer-bottomend-rtl.xhtml
-# Disabled on Linux (bug 519152), random on Windows (bug 581086)
-skip-if(gtkWidget) != chrome://reftest/content/native-theme/resizer-bottomend-rtl.xhtml chrome://reftest/content/native-theme/blank-window.xhtml
-skip-if(gtkWidget) random-if(d2d) == chrome://reftest/content/native-theme/resizer-bottomend-rtl.xhtml chrome://reftest/content/native-theme/resizer-bottomend-flipped.xhtml
-skip-if(gtkWidget) == chrome://reftest/content/native-theme/resizer-bottomleft-rtl.xhtml chrome://reftest/content/native-theme/resizer-bottomleft.xhtml
-skip-if(gtkWidget) == chrome://reftest/content/native-theme/resizer-bottomright-rtl.xhtml chrome://reftest/content/native-theme/resizer-bottomright.xhtml
-
-!= chrome://reftest/content/native-theme/resizer-bottomstart.xhtml chrome://reftest/content/native-theme/blank-window.xhtml
-random-if(d2d) == chrome://reftest/content/native-theme/resizer-bottomstart.xhtml chrome://reftest/content/native-theme/resizer-bottomleft.xhtml
-random-if(d2d) == chrome://reftest/content/native-theme/resizer-bottomstart.xhtml chrome://reftest/content/native-theme/resizer-left.xhtml
-!= chrome://reftest/content/native-theme/resizer-bottomstart.xhtml chrome://reftest/content/native-theme/resizer-bottomstart-rtl.xhtml
-skip-if(gtkWidget) != chrome://reftest/content/native-theme/resizer-bottomstart-rtl.xhtml chrome://reftest/content/native-theme/blank-window.xhtml
-skip-if(gtkWidget) random-if(d2d) == chrome://reftest/content/native-theme/resizer-bottomstart-rtl.xhtml chrome://reftest/content/native-theme/resizer-bottomend.xhtml
+!= chrome://reftest/content/native-theme/resizer-bottomleft.xhtml chrome://reftest/content/native-theme/blank-window.xhtml
+== chrome://reftest/content/native-theme/resizer-bottomleft-rtl.xhtml chrome://reftest/content/native-theme/resizer-bottomleft.xhtml
+!= chrome://reftest/content/native-theme/resizer-bottomright.xhtml chrome://reftest/content/native-theme/blank-window.xhtml
+== chrome://reftest/content/native-theme/resizer-bottomright-rtl.xhtml chrome://reftest/content/native-theme/resizer-bottomright.xhtml
 
 # Windows-only, depends on native scrollbar metrics
 skip-if(!winWidget) == scroll-thumb-minimum-size-notheme.html scroll-thumb-minimum-size-notheme-ref.html

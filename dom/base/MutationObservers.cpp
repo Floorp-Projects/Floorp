@@ -47,22 +47,25 @@ using namespace mozilla::dom;
 
 template <typename NotifyObserver>
 static inline nsINode* ForEachAncestorObserver(nsINode* aNode,
-                                               NotifyObserver& aFunc) {
+                                               NotifyObserver& aFunc,
+                                               uint32_t aCallback) {
   nsINode* last;
   nsINode* node = aNode;
   do {
     mozilla::SafeDoublyLinkedList<nsIMutationObserver>* observers =
         node->GetMutationObservers();
-    if (observers && !observers->isEmpty()) {
+    if (observers) {
       for (auto iter = observers->begin(); iter != observers->end(); ++iter) {
-        aFunc(&*iter);
+        if (iter->IsCallbackEnabled(aCallback)) {
+          aFunc(&*iter);
+        }
       }
     }
     last = node;
-    if (ShadowRoot* shadow = ShadowRoot::FromNode(node)) {
-      node = shadow->GetHost();
-    } else {
-      node = node->GetParentNode();
+    if (!(node = node->GetParentNode())) {
+      if (ShadowRoot* shadow = ShadowRoot::FromNode(last)) {
+        node = shadow->GetHost();
+      }
     }
   } while (node);
   return last;
@@ -75,7 +78,8 @@ enum class NotifyPresShell { No, Before, After };
 
 template <NotifyPresShell aNotifyPresShell = NotifyPresShell::After,
           typename NotifyObserver>
-static inline void Notify(nsINode* aNode, NotifyObserver&& aNotify) {
+static inline void Notify(nsINode* aNode, NotifyObserver&& aNotify,
+                          uint32_t aCallback) {
   Document* doc = aNode->OwnerDoc();
   nsDOMMutationEnterLeave enterLeave(doc);
 
@@ -87,7 +91,7 @@ static inline void Notify(nsINode* aNode, NotifyObserver&& aNotify) {
       NOTIFY_PRESSHELL(aNotify);
     }
   }
-  nsINode* last = ForEachAncestorObserver(aNode, aNotify);
+  nsINode* last = ForEachAncestorObserver(aNode, aNotify, aCallback);
   // For non-removals, the pres shell gets notified last, since it needs to
   // operate on the "final" DOM shape.
   if constexpr (aNotifyPresShell == NotifyPresShell::After) {
@@ -108,27 +112,31 @@ static inline void Notify(nsINode* aNode, NotifyObserver&& aNotify) {
       obs->func_ params_;                                                    \
     }                                                                        \
   };                                                                         \
-  ForEachAncestorObserver(content_, forEach);                                \
+  ForEachAncestorObserver(content_, forEach, nsIMutationObserver::k##func_); \
   PR_END_MACRO
 
 namespace mozilla {
 void MutationObservers::NotifyCharacterDataWillChange(
     nsIContent* aContent, const CharacterDataChangeInfo& aInfo) {
-  Notify(aContent, NOTIFIER(CharacterDataWillChange, aContent, aInfo));
+  Notify(aContent, NOTIFIER(CharacterDataWillChange, aContent, aInfo),
+         nsIMutationObserver::kCharacterDataWillChange);
 }
 
 void MutationObservers::NotifyCharacterDataChanged(
     nsIContent* aContent, const CharacterDataChangeInfo& aInfo) {
   aContent->OwnerDoc()->Changed();
-  Notify(aContent, NOTIFIER(CharacterDataChanged, aContent, aInfo));
+  Notify(aContent, NOTIFIER(CharacterDataChanged, aContent, aInfo),
+         nsIMutationObserver::kCharacterDataChanged);
 }
 
 void MutationObservers::NotifyAttributeWillChange(Element* aElement,
                                                   int32_t aNameSpaceID,
                                                   nsAtom* aAttribute,
                                                   int32_t aModType) {
-  Notify(aElement, NOTIFIER(AttributeWillChange, aElement, aNameSpaceID,
-                            aAttribute, aModType));
+  Notify(aElement,
+         NOTIFIER(AttributeWillChange, aElement, aNameSpaceID, aAttribute,
+                  aModType),
+         nsIMutationObserver::kAttributeWillChange);
 }
 
 void MutationObservers::NotifyAttributeChanged(Element* aElement,
@@ -137,21 +145,26 @@ void MutationObservers::NotifyAttributeChanged(Element* aElement,
                                                int32_t aModType,
                                                const nsAttrValue* aOldValue) {
   aElement->OwnerDoc()->Changed();
-  Notify(aElement, NOTIFIER(AttributeChanged, aElement, aNameSpaceID,
-                            aAttribute, aModType, aOldValue));
+  Notify(aElement,
+         NOTIFIER(AttributeChanged, aElement, aNameSpaceID, aAttribute,
+                  aModType, aOldValue),
+         nsIMutationObserver::kAttributeChanged);
 }
 
 void MutationObservers::NotifyAttributeSetToCurrentValue(Element* aElement,
                                                          int32_t aNameSpaceID,
                                                          nsAtom* aAttribute) {
-  Notify(aElement, NOTIFIER(AttributeSetToCurrentValue, aElement, aNameSpaceID,
-                            aAttribute));
+  Notify(
+      aElement,
+      NOTIFIER(AttributeSetToCurrentValue, aElement, aNameSpaceID, aAttribute),
+      nsIMutationObserver::kAttributeSetToCurrentValue);
 }
 
 void MutationObservers::NotifyContentAppended(nsIContent* aContainer,
                                               nsIContent* aFirstNewContent) {
   aContainer->OwnerDoc()->Changed();
-  Notify(aContainer, NOTIFIER(ContentAppended, aFirstNewContent));
+  Notify(aContainer, NOTIFIER(ContentAppended, aFirstNewContent),
+         nsIMutationObserver::kContentAppended);
 }
 
 void MutationObservers::NotifyContentInserted(nsINode* aContainer,
@@ -159,7 +172,8 @@ void MutationObservers::NotifyContentInserted(nsINode* aContainer,
   MOZ_ASSERT(aContainer->IsContent() || aContainer->IsDocument(),
              "container must be an nsIContent or an Document");
   aContainer->OwnerDoc()->Changed();
-  Notify(aContainer, NOTIFIER(ContentInserted, aChild));
+  Notify(aContainer, NOTIFIER(ContentInserted, aChild),
+         nsIMutationObserver::kContentInserted);
 }
 
 void MutationObservers::NotifyContentRemoved(nsINode* aContainer,
@@ -171,21 +185,24 @@ void MutationObservers::NotifyContentRemoved(nsINode* aContainer,
   MOZ_ASSERT(aChild->GetParentNode() == aContainer,
              "We expect the parent link to be still around at this point");
   Notify<NotifyPresShell::Before>(
-      aContainer, NOTIFIER(ContentRemoved, aChild, aPreviousSibling));
+      aContainer, NOTIFIER(ContentRemoved, aChild, aPreviousSibling),
+      nsIMutationObserver::kContentRemoved);
 }
 
 void MutationObservers::NotifyARIAAttributeDefaultWillChange(
     mozilla::dom::Element* aElement, nsAtom* aAttribute, int32_t aModType) {
   Notify<NotifyPresShell::No>(
       aElement,
-      NOTIFIER(ARIAAttributeDefaultWillChange, aElement, aAttribute, aModType));
+      NOTIFIER(ARIAAttributeDefaultWillChange, aElement, aAttribute, aModType),
+      nsIMutationObserver::kARIAAttributeDefaultWillChange);
 }
 
 void MutationObservers::NotifyARIAAttributeDefaultChanged(
     mozilla::dom::Element* aElement, nsAtom* aAttribute, int32_t aModType) {
   Notify<NotifyPresShell::No>(
       aElement,
-      NOTIFIER(ARIAAttributeDefaultChanged, aElement, aAttribute, aModType));
+      NOTIFIER(ARIAAttributeDefaultChanged, aElement, aAttribute, aModType),
+      nsIMutationObserver::kARIAAttributeDefaultChanged);
 }
 
 }  // namespace mozilla

@@ -2,8 +2,8 @@
 
 /* exported assertPersistentListeners, AppConstants, TEST_ICON_ARRAYBUFFER */
 
-var { AppConstants } = SpecialPowers.ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+var { AppConstants } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 
 var TEST_ICON_DATA =
@@ -23,8 +23,8 @@ async function assertPersistentListeners(
     [extWrapper.id, apiNs, apiEvents, expected],
     async (id, apiNs, apiEvents, expected) => {
       try {
-        const { ExtensionTestCommon } = ChromeUtils.import(
-          "resource://testing-common/ExtensionTestCommon.jsm"
+        const { ExtensionTestCommon } = ChromeUtils.importESModule(
+          "resource://testing-common/ExtensionTestCommon.sys.mjs"
         );
         const ext = { id };
         for (const event of apiEvents) {

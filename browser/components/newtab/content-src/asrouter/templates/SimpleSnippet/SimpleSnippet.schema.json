@@ -21,14 +21,16 @@
   "properties": {
     "title": {
       "allOf": [
-        {"$ref": "#/definitions/plainText"},
-        {"description": "Snippet title displayed before snippet text"}
+        { "$ref": "#/definitions/plainText" },
+        { "description": "Snippet title displayed before snippet text" }
       ]
     },
     "text": {
       "allOf": [
-        {"$ref": "#/definitions/richText"},
-        {"description": "Main body text of snippet. HTML subset allowed: i, b, u, strong, em, br"}
+        { "$ref": "#/definitions/richText" },
+        {
+          "description": "Main body text of snippet. HTML subset allowed: i, b, u, strong, em, br"
+        }
       ]
     },
     "icon": {
@@ -63,8 +65,8 @@
     },
     "button_url": {
       "allOf": [
-        {"$ref": "#/definitions/link_url"},
-        {"description": "A url, button_label links to this"}
+        { "$ref": "#/definitions/link_url" },
+        { "description": "A url, button_label links to this" }
       ]
     },
     "button_action_args": {
@@ -80,8 +82,10 @@
     },
     "button_label": {
       "allOf": [
-        {"$ref": "#/definitions/plainText"},
-        {"description": "Text for a button next to main snippet text that links to button_url. Requires button_url."}
+        { "$ref": "#/definitions/plainText" },
+        {
+          "description": "Text for a button next to main snippet text that links to button_url. Requires button_url."
+        }
       ]
     },
     "button_color": {
@@ -109,8 +113,8 @@
       "additionalProperties": {
         "url": {
           "allOf": [
-            {"$ref": "#/definitions/link_url"},
-            {"description": "The url where the link points to."}
+            { "$ref": "#/definitions/link_url" },
+            { "description": "The url where the link points to." }
           ]
         },
         "metric": {
@@ -137,8 +141,8 @@
     },
     "section_title_url": {
       "allOf": [
-        {"$ref": "#/definitions/link_url"},
-        {"description": "A url, section_title_text links to this"}
+        { "$ref": "#/definitions/link_url" },
+        { "description": "A url, section_title_text links to this" }
       ]
     }
   },

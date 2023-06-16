@@ -10,7 +10,7 @@
  * - long polling requests remaining open for a long time
  */
 
-add_task(async function() {
+add_task(async function () {
   // We start the netmonitor on a basic page to avoid opening the panel on
   // an incomplete polling request.
   const { monitor } = await initNetMonitor(SIMPLE_URL, {

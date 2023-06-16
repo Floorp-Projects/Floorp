@@ -10,7 +10,7 @@
 const TEST_URL = `data:text/html;charset=utf8,
                   <div class='test-class'></div>Text node`;
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
   const { walker } = inspector;
 

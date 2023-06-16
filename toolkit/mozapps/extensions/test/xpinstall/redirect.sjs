@@ -6,7 +6,7 @@ function handleRequest(request, response) {
   let parts = request.queryString.split("&");
   let settings = {};
 
-  parts.forEach(function(aString) {
+  parts.forEach(function (aString) {
     let [k, v] = aString.split("=");
     settings[k] = decodeURIComponent(v);
   });
@@ -26,7 +26,7 @@ function handleRequest(request, response) {
     response.setHeader("Content-Type", "text/plain");
     response.write("Setup complete");
   } else if (settings.mode == "redirect") {
-    getObjectState("xpinstall-redirect-settings", function(aObject) {
+    getObjectState("xpinstall-redirect-settings", function (aObject) {
       settings = aObject.wrappedJSObject.settings;
     });
 

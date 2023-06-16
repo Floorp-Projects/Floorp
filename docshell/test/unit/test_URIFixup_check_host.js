@@ -22,7 +22,7 @@ add_task(async function setup() {
     "browser.urlbar.dnsResolveFullyQualifiedNames",
     true
   );
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.prefs.clearUserPref("browser.fixup.alternate.prefix");
     Services.prefs.clearUserPref("browser.fixup.alternate.suffix");
     Services.prefs.clearUserPref("browser.fixup.alternate.protocol");

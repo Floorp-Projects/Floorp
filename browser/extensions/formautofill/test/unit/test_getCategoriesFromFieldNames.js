@@ -1,7 +1,7 @@
 "use strict";
 
 var FormAutofillUtils;
-add_task(async function() {
+add_task(async function () {
   ({ FormAutofillUtils } = ChromeUtils.importESModule(
     "resource://gre/modules/shared/FormAutofillUtils.sys.mjs"
   ));

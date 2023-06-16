@@ -12,12 +12,6 @@ const TextProperty = require("resource://devtools/client/inspector/rules/models/
 
 loader.lazyRequireGetter(
   this,
-  "getTargetBrowsers",
-  "resource://devtools/client/inspector/shared/compatibility-user-settings.js",
-  true
-);
-loader.lazyRequireGetter(
-  this,
   "promiseWarn",
   "resource://devtools/client/inspector/shared/utils.js",
   true
@@ -86,6 +80,7 @@ class Rule {
 
     this.domRule.off("rule-updated", this.onStyleRuleFrontUpdated);
     this.compatibilityIssues = null;
+    this.destroyed = true;
   }
 
   get declarations() {
@@ -215,15 +210,10 @@ class Rule {
    */
   async getCompatibilityIssues() {
     if (!this.compatibilityIssues) {
-      this.compatibilityIssues = Promise.all([
-        getTargetBrowsers(),
-        this.inspector.inspectorFront.getCompatibilityFront(),
-      ]).then(([targetBrowsers, compatibility]) =>
-        compatibility.getCSSDeclarationBlockIssues(
-          this.domRule.declarations,
-          targetBrowsers
-        )
-      );
+      this.compatibilityIssues =
+        this.inspector.commands.inspectorCommand.getCSSDeclarationBlockIssues(
+          this.domRule.declarations
+        );
     }
 
     return this.compatibilityIssues;

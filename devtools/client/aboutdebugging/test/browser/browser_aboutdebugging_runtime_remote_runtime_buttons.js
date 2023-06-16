@@ -10,7 +10,7 @@ const USB_APP_NAME = "Lorem ipsum";
 /**
  * Test that remote runtimes show action buttons that are hidden for 'This Firefox'.
  */
-add_task(async function() {
+add_task(async function () {
   // enable USB devices mocks
   const mocks = new Mocks();
   mocks.createUSBRuntime(USB_RUNTIME_ID, {

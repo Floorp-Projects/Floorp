@@ -1,7 +1,7 @@
 "use strict";
 
-const { UrlClassifierTestUtils } = ChromeUtils.import(
-  "resource://testing-common/UrlClassifierTestUtils.jsm"
+const { UrlClassifierTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
 );
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
@@ -202,9 +202,10 @@ var tests = [
         false
       );
     }
-    var principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-      normalOrigin
-    );
+    var principal =
+      Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+        normalOrigin
+      );
     testPriorityMap = [
       {
         path: normalOrigin + "/innocent.css",
@@ -262,9 +263,10 @@ var tests = [
         true
       );
     }
-    var principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-      normalOrigin
-    );
+    var principal =
+      Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+        normalOrigin
+      );
     testPriorityMap = [
       {
         path: normalOrigin + "/innocent.css",

@@ -11,7 +11,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 // Lazy-load JSON file that backs Storage instances.
-XPCOMUtils.defineLazyGetter(lazy, "lazyStore", async function() {
+XPCOMUtils.defineLazyGetter(lazy, "lazyStore", async function () {
   const path = PathUtils.join(
     PathUtils.profileDir,
     "shield-recipe-client.json"

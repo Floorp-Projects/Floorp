@@ -53,7 +53,7 @@ const HTTP_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1 = authLogin({
   origin: ORIGIN_HTTPS_EXAMPLE_ORG,
 });
 
-XPCOMUtils.defineLazyGetter(this, "_stringBundle", function() {
+XPCOMUtils.defineLazyGetter(this, "_stringBundle", function () {
   return Services.strings.createBundle(
     "chrome://passwordmgr/locale/passwordmgr.properties"
   );
@@ -252,9 +252,7 @@ function authLogin(modifications = {}) {
 async function runTestcase({ formOrigin, savedLogins, expectedItems }) {
   const DOCUMENT_CONTENT = "<form><input id='pw' type=password></form>";
 
-  for (let login of savedLogins) {
-    Services.logins.addLogin(login);
-  }
+  await Services.logins.addLogins(savedLogins);
 
   // Create the logins menuitems fragment.
   let { fragment, document } = createLoginsFragment(

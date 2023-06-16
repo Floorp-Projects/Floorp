@@ -22,7 +22,7 @@ function checkSpacers() {
 /**
  * Check that after a reset, CUI's internal bookkeeping correctly deals with flexible spacers.
  */
-add_task(async function() {
+add_task(async function () {
   await startCustomizing();
   checkSpacers();
 

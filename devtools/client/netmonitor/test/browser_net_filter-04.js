@@ -24,14 +24,13 @@ const REQUESTS_WITH_MEDIA_AND_FLASH = REQUESTS_WITH_MEDIA.concat([
   { url: "sjs_content-type-test-server.sjs?fmt=flash" },
 ]);
 
-const REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS = REQUESTS_WITH_MEDIA_AND_FLASH.concat(
-  [
+const REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS =
+  REQUESTS_WITH_MEDIA_AND_FLASH.concat([
     /* "Upgrade" is a reserved header and can not be set on XMLHttpRequest */
     { url: "sjs_content-type-test-server.sjs?fmt=ws" },
-  ]
-);
+  ]);
 
-add_task(async function() {
+add_task(async function () {
   Services.prefs.setCharPref(
     "devtools.netmonitor.filters",
     '["bogus", "js", "alsobogus"]'

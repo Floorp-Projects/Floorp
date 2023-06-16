@@ -4895,7 +4895,7 @@ MArrayState* MArrayState::Copy(TempAllocator& alloc, MArrayState* state) {
 }
 
 MNewArray::MNewArray(uint32_t length, MConstant* templateConst,
-                     gc::InitialHeap initialHeap, bool vmCall)
+                     gc::Heap initialHeap, bool vmCall)
     : MUnaryInstruction(classOpcode, templateConst),
       length_(length),
       initialHeap_(initialHeap),
@@ -6333,12 +6333,6 @@ MDefinition::AliasType MGuardShape::mightAlias(const MDefinition* store) const {
           return AliasType::NoAlias;
         }
         break;
-      case MDefinition::Opcode::MegamorphicStoreSlot:
-        if (store->toMegamorphicStoreSlot()->object()->skipObjectGuards() ==
-            receiverObject) {
-          return AliasType::NoAlias;
-        }
-        break;
       default:
         break;
     }
@@ -6423,21 +6417,6 @@ bool MMegamorphicLoadSlot::congruentTo(const MDefinition* ins) const {
 AliasSet MMegamorphicLoadSlot::getAliasSet() const {
   return AliasSet::Load(AliasSet::ObjectFields | AliasSet::FixedSlot |
                         AliasSet::DynamicSlot);
-}
-
-bool MMegamorphicStoreSlot::congruentTo(const MDefinition* ins) const {
-  if (!ins->isMegamorphicStoreSlot()) {
-    return false;
-  }
-  if (ins->toMegamorphicStoreSlot()->name() != name()) {
-    return false;
-  }
-  return congruentIfOperandsEqual(ins);
-}
-
-AliasSet MMegamorphicStoreSlot::getAliasSet() const {
-  return AliasSet::Store(AliasSet::ObjectFields | AliasSet::FixedSlot |
-                         AliasSet::DynamicSlot);
 }
 
 bool MMegamorphicHasProp::congruentTo(const MDefinition* ins) const {
@@ -7116,7 +7095,7 @@ MDefinition* MGetInlinedArgumentHole::foldsTo(TempAllocator& alloc) {
 MInlineArgumentsSlice* MInlineArgumentsSlice::New(
     TempAllocator& alloc, MDefinition* begin, MDefinition* count,
     MCreateInlinedArgumentsObject* args, JSObject* templateObj,
-    gc::InitialHeap initialHeap) {
+    gc::Heap initialHeap) {
   auto* ins = new (alloc) MInlineArgumentsSlice(templateObj, initialHeap);
 
   uint32_t argc = args->numActuals();
@@ -7247,3 +7226,36 @@ MWasmShuffleSimd128* jit::BuildWasmShuffleSimd128(TempAllocator& alloc,
   return MWasmShuffleSimd128::New(alloc, lhs, rhs, s);
 }
 #endif  // ENABLE_WASM_SIMD
+
+static MDefinition* FoldTrivialWasmCasts(TempAllocator& alloc,
+                                         wasm::RefType sourceType,
+                                         wasm::RefType destType) {
+  // Upcasts are trivially valid.
+  if (wasm::RefType::isSubTypeOf(sourceType, destType)) {
+    return MConstant::New(alloc, Int32Value(1), MIRType::Int32);
+  }
+
+  // If two types are completely disjoint, then all casts between them are
+  // impossible.
+  if (!wasm::RefType::castPossible(destType, sourceType)) {
+    return MConstant::New(alloc, Int32Value(0), MIRType::Int32);
+  }
+
+  return nullptr;
+}
+
+MDefinition* MWasmGcObjectIsSubtypeOfAbstract::foldsTo(TempAllocator& alloc) {
+  MDefinition* folded = FoldTrivialWasmCasts(alloc, sourceType(), destType());
+  if (folded) {
+    return folded;
+  }
+  return this;
+}
+
+MDefinition* MWasmGcObjectIsSubtypeOfConcrete::foldsTo(TempAllocator& alloc) {
+  MDefinition* folded = FoldTrivialWasmCasts(alloc, sourceType(), destType());
+  if (folded) {
+    return folded;
+  }
+  return this;
+}

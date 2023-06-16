@@ -13,14 +13,14 @@ const {
 
 // Always log packets when running tests.
 Services.prefs.setBoolPref("devtools.debugger.log", true);
-SimpleTest.registerCleanupFunction(function() {
+SimpleTest.registerCleanupFunction(function () {
   Services.prefs.clearUserPref("devtools.debugger.log");
 });
 
 if (!DevToolsServer.initialized) {
   DevToolsServer.init();
   DevToolsServer.registerAllActors();
-  SimpleTest.registerCleanupFunction(function() {
+  SimpleTest.registerCleanupFunction(function () {
     DevToolsServer.destroy();
   });
 }

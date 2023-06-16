@@ -5,11 +5,11 @@
 var DEBUG = 0;
 var debug;
 if (DEBUG) {
-  debug = function(s) {
+  debug = function (s) {
     dump("-*- IndexedDBHelper: " + s + "\n");
   };
 } else {
-  debug = function(s) {};
+  debug = function (s) {};
 }
 
 function getErrorName(err) {
@@ -65,12 +65,12 @@ IndexedDBHelper.prototype = {
       Services.tm.dispatchToMainThread(() => invokeCallbacks(getErrorName(e)));
       return;
     }
-    req.onsuccess = function(event) {
+    req.onsuccess = function (event) {
       if (DEBUG) {
         debug("Opened database:" + self.dbName + " " + self.dbVersion);
       }
       self._db = event.target.result;
-      self._db.onversionchange = function(event) {
+      self._db.onversionchange = function (event) {
         if (DEBUG) {
           debug("WARNING: DB modified from a different window.");
         }
@@ -78,7 +78,7 @@ IndexedDBHelper.prototype = {
       invokeCallbacks();
     };
 
-    req.onupgradeneeded = function(aEvent) {
+    req.onupgradeneeded = function (aEvent) {
       if (DEBUG) {
         debug(
           "Database needs upgrade:" +
@@ -100,13 +100,13 @@ IndexedDBHelper.prototype = {
         aEvent.newVersion
       );
     };
-    req.onerror = function(aEvent) {
+    req.onerror = function (aEvent) {
       if (DEBUG) {
         debug("Failed to open database: " + self.dbName);
       }
       invokeCallbacks(getErrorName(aEvent.target.error));
     };
-    req.onblocked = function(aEvent) {
+    req.onblocked = function (aEvent) {
       if (DEBUG) {
         debug("Opening database request is blocked.");
       }
@@ -193,7 +193,7 @@ IndexedDBHelper.prototype = {
         stores = txn.objectStore(store_name);
       }
 
-      txn.oncomplete = function() {
+      txn.oncomplete = function () {
         if (DEBUG) {
           debug("Transaction complete. Returning to callback.");
         }
@@ -214,7 +214,7 @@ IndexedDBHelper.prototype = {
         }
       };
 
-      txn.onabort = function() {
+      txn.onabort = function () {
         if (DEBUG) {
           debug("Caught error on transaction");
         }

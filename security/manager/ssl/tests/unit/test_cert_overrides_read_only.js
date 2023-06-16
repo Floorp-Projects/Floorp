@@ -65,7 +65,7 @@ function run_test() {
   add_tls_server_setup("BadCertAndPinningServer", "bad_certs", false);
 
   let fakeOCSPResponder = new HttpServer();
-  fakeOCSPResponder.registerPrefixHandler("/", function(request, response) {
+  fakeOCSPResponder.registerPrefixHandler("/", function (request, response) {
     response.setStatusLine(request.httpVersion, 500, "Internal Server Error");
   });
   fakeOCSPResponder.start(8888);
@@ -86,7 +86,7 @@ function run_test() {
     SEC_ERROR_UNKNOWN_ISSUER
   );
 
-  add_test(function() {
+  add_test(function () {
     fakeOCSPResponder.stop(run_next_test);
   });
 

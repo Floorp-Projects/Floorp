@@ -4,7 +4,7 @@ const TEST_URL =
   // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.com/browser/browser/base/content/test/general/app_bug575561.html";
 
-add_task(async function() {
+add_task(async function () {
   SimpleTest.requestCompleteLog();
 
   // allow top level data: URI navigations, otherwise clicking data: link fails
@@ -46,7 +46,7 @@ add_task(async function() {
   // Pinned: Link to an about: URI should not open a new tab
   // Tests link to about:logo
   await testLink(
-    function(doc) {
+    function (doc) {
       let link = doc.createElement("a");
       link.textContent = "Link to Mozilla";
       link.href = "about:logo";
@@ -98,7 +98,7 @@ async function testLink(
     href = await SpecialPowers.spawn(
       browser,
       [[testSubFrame, aLinkIndexOrFunction]],
-      function([subFrame, index]) {
+      function ([subFrame, index]) {
         let doc = subFrame
           ? content.document.querySelector("iframe").contentDocument
           : content.document;

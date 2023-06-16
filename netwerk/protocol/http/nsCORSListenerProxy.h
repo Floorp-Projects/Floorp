@@ -73,7 +73,8 @@ class nsCORSListenerProxy final : public nsIStreamListener,
                                     bool aPrivateBrowsing,
                                     bool aFromChromeContext,
                                     const nsAString& aMessage,
-                                    const nsACString& aCategory);
+                                    const nsACString& aCategory,
+                                    bool aIsWarning = false);
 
  private:
   // Only HttpChannelParent can call RemoveFromCorsPreflightCache

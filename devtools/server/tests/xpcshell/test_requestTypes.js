@@ -8,7 +8,7 @@ const {
   generateRequestTypes,
 } = require("resource://devtools/shared/protocol/Actor.js");
 
-add_task(async function() {
+add_task(async function () {
   DevToolsServer.init();
   DevToolsServer.registerAllActors();
 

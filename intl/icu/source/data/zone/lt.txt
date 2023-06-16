@@ -258,6 +258,9 @@ lt{
         "America:Chihuahua"{
             ec{"Čihuahua"}
         }
+        "America:Ciudad_Juarez"{
+            ec{"Siudad Chuaresas"}
+        }
         "America:Coral_Harbour"{
             ec{"Atikokanas"}
         }

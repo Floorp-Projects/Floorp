@@ -62,7 +62,7 @@ class Test(object):
             sixgill=self.cfg.sixgill_plugin,
             options=options,
         )
-        if self.cfg.verbose:
+        if self.cfg.verbose > 0:
             print("Running %s" % cmd)
         subprocess.check_call(["sh", "-c", cmd])
 
@@ -99,7 +99,7 @@ sixgill_bin = '{bindir}'
         cmd = [
             sys.executable,
             os.path.join(scriptdir, "analyze.py"),
-            "-v" if self.verbose else "-q",
+            ["-q", "", "-v"][min(self.verbose, 2)],
         ]
         cmd += ["--first", startPhase]
         if upto:
@@ -107,7 +107,6 @@ sixgill_bin = '{bindir}'
         cmd.append("--source=%s" % self.indir)
         cmd.append("--js=%s" % self.cfg.js)
         if self.cfg.verbose:
-            cmd.append("--verbose")
             print("Running " + " ".join(cmd))
         subprocess.check_call(cmd)
 

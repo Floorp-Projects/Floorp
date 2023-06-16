@@ -53,7 +53,8 @@ const TEST_UPDATE_PROFILE_2_VALUES = {
   "#email": "profile2@mozilla.org",
 };
 const TEST_BASIC_ADDRESS_FORM_URL = ADDRESS_FORM_URL;
-const TEST_BASIC_ADDRESS_FORM_WITHOUT_AC_URL = ADDRESS_FORM_WITHOUT_AUTOCOMPLETE_URL;
+const TEST_BASIC_ADDRESS_FORM_WITHOUT_AC_URL =
+  ADDRESS_FORM_WITHOUT_AUTOCOMPLETE_URL;
 // This should be sync with the address fields that appear in TEST_BASIC_ADDRESS_FORM
 const TEST_BASIC_ADDRESS_FORM_FIELDS = [
   "street_address",
@@ -256,7 +257,7 @@ async function openTabAndUseAutofillProfile(
   return null;
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       [ENABLED_PREF, true],
@@ -280,7 +281,7 @@ add_task(async function test_popup_opened() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: TEST_BASIC_ADDRESS_FORM_URL },
-    async function(browser) {
+    async function (browser) {
       const focusInput = TEST_FOCUS_NAME_FIELD_SELECTOR;
 
       await openPopupOn(browser, focusInput);
@@ -318,7 +319,7 @@ add_task(async function test_popup_opened_form_without_autocomplete() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: TEST_BASIC_ADDRESS_FORM_WITHOUT_AC_URL },
-    async function(browser) {
+    async function (browser) {
       const focusInput = TEST_FOCUS_NAME_FIELD_SELECTOR;
       await openPopupOn(browser, focusInput);
       await closePopup(browser);
@@ -359,7 +360,7 @@ add_task(async function test_submit_autofill_profile_new() {
   ) {
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: TEST_BASIC_ADDRESS_FORM_URL },
-      async function(browser) {
+      async function (browser) {
         let onPopupShown = waitForPopupShown();
         let onChanged;
         if (expectChanged !== undefined) {
@@ -445,7 +446,7 @@ add_task(async function test_submit_autofill_profile_update() {
 
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: TEST_BASIC_ADDRESS_FORM_URL },
-      async function(browser) {
+      async function (browser) {
         let onPopupShown = waitForPopupShown();
         let onChanged;
         if (expectChanged !== undefined) {

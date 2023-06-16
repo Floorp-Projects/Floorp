@@ -13,7 +13,6 @@ CompiledModules(
     "event-listeners.js",
     "exceptions.js",
     "expressions.js",
-    "file-search.js",
     "getCallStackFrames.js",
     "index.js",
     "isLineInScope.js",

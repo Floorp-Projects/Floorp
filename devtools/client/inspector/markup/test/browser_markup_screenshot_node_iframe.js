@@ -15,7 +15,7 @@ const TEST_URL = `${exampleOrgDocument}?html=
     id="remote"></iframe>`;
 
 // Test that the "Screenshot Node" feature works with a node inside an iframe.
-add_task(async function() {
+add_task(async function () {
   const { inspector, toolbox } = await openInspectorForURL(encodeURI(TEST_URL));
 
   info("Select the red node");

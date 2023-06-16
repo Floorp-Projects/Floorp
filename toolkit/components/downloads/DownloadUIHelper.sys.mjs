@@ -126,7 +126,7 @@ export var DownloadUIHelper = {
  *        The nsIDOMWindow to which prompts should be attached, or null to
  *        attach prompts to the most recently active window.
  */
-var DownloadPrompter = function(aParent) {
+var DownloadPrompter = function (aParent) {
   this._prompter = Services.ww.getNewPrompter(aParent);
 };
 

@@ -28,9 +28,9 @@ function* testSteps() {
   for (let i = 0; i < 100; i++) {
     request = objectStore.add({ foo: i });
     request.onerror = errorHandler;
-    request.onsuccess = function(event) {
+    request.onsuccess = function (event) {
       if (++addedCount == 100) {
-        executeSoon(function() {
+        executeSoon(function () {
           testGenerator.next();
         });
       }
@@ -86,7 +86,7 @@ function* testSteps() {
 
   request = objectStore.openCursor();
   request.onerror = errorHandler;
-  request.onsuccess = function(event) {
+  request.onsuccess = function (event) {
     is(event.target.result, null, "ObjectStore shouldn't have any items");
     testGenerator.next(event);
   };

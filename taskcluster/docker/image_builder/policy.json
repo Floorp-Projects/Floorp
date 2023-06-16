@@ -1,11 +1,11 @@
 {
-    "default": [{"type": "reject"}],
-    "transports": {
-        "docker-archive": {
-            "": [{"type": "insecureAcceptAnything"}]
-        },
-        "dir": {
-            "": [{"type": "insecureAcceptAnything"}]
-        }
+  "default": [{ "type": "reject" }],
+  "transports": {
+    "docker-archive": {
+      "": [{ "type": "insecureAcceptAnything" }]
+    },
+    "dir": {
+      "": [{ "type": "insecureAcceptAnything" }]
     }
+  }
 }

@@ -7,7 +7,7 @@ http://www.cairographics.org/.
 
 VERSIONS:
 
-  cairo (12d521df8acc483b2daa844d4f05dc2fe2765ba6)
+  cairo (277a1daec80cb6cf7bfb0e200cf78e7842cb2f82)
   pixman (0.42.2)
 
 ==== Patches ====

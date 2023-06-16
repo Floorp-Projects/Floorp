@@ -5,7 +5,7 @@ $primary-green: rgb(0, 128, 120);
 $primary-blue-dark: rgb(0, 221, 255);
 $primary-text-color-dark: rgb(43, 42, 51);
 
-//* -------------------------------------------------------------------------- */
+// -------------------------------------------------------------------------- //
 // Photon colors from http://design.firefox.com/photon/visuals/color.html
 
 $blue-40: #45A1FF;
@@ -29,7 +29,7 @@ $black-20: rgba($black, 0.2);
 $black-30: rgba($black, 0.3);
 $black-40: rgba($black, 0.4);
 
-//* -------------------------------------------------------------------------- */
+// -------------------------------------------------------------------------- //
 // Other colors
 
 $white: #FFF;
@@ -46,7 +46,7 @@ $newtab-wordmark-darktheme-color: rgb(251, 251, 254);
 $in-content-page-color: rgb(21, 20, 26);
 $in-content-page-color-dark: rgb(251, 251, 254);
 
-//* -------------------------------------------------------------------------- */
+// -------------------------------------------------------------------------- //
 // These colors should match the colors in the default themes
 // (toolkit/mozapps/extensions/...). Note that they could get replaced by other
 // themes. The color set in --tabpanel-background-color (tabs.inc.css) should
@@ -70,8 +70,9 @@ $section-horizontal-padding: 25px;
 $section-vertical-padding: 10px;
 $section-spacing: 40px - $section-vertical-padding * 2;
 $grid-unit: 96px; // 1 top site
-// New Tab Experience grid unit needs to be smaller, but for now we are changing this UI with a pref, so requires duplication.
-$grid-unit-small: 80px; // 1 top site 
+// New Tab Experience grid unit needs to be smaller, but for now we are changing
+// this UI with a pref, so requires duplication.
+$grid-unit-small: 80px; // 1 top site
 
 $icon-size: 16px;
 $smaller-icon-size: 12px;
@@ -106,10 +107,12 @@ $card-height: 266px;
 $card-preview-image-height: 122px;
 $card-title-margin: 2px;
 $card-text-line-height: 19px;
+
 // Larger cards for wider screens:
 $card-width-large: 309px;
 $card-height-large: 370px;
 $card-preview-image-height-large: 155px;
+
 // Compact cards for Highlights
 $card-height-compact: 160px;
 $card-preview-image-height-compact: 108px;
@@ -135,7 +138,7 @@ $textbox-shadow-size: 4px;
 
 $customize-menu-slide-bezier: cubic-bezier(0.46, 0.03, 0.52, 0.96);
 $customize-menu-expand-bezier: cubic-bezier(0.82, 0.085, 0.395, 0.895);
-$customize-menu-border-tint: 1px solid rgba(0, 0, 0, 0.15);
+$customize-menu-border-tint: 1px solid rgba(0, 0, 0, 15%);
 
 @mixin fade-in {
   box-shadow: inset $inner-box-shadow, $shadow-primary;

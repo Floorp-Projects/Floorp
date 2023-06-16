@@ -4,7 +4,7 @@ const { PermissionTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/PermissionTestUtils.sys.mjs"
 );
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["media.navigator.permission.fake", true]],
   });
@@ -59,14 +59,14 @@ add_task(async function test_popup_request() {
 
     files: {
       "popup.html": scriptPage("popup.js"),
-      "popup.js": function() {
+      "popup.js": function () {
         browser.test
           .assertRejects(
             navigator.mediaDevices.getUserMedia({ audio: true }),
             /The request is not allowed/,
             "Calling gUM in popup pages without permission throws an error"
           )
-          .then(function() {
+          .then(function () {
             browser.test.notifyPass("done");
           });
       },
@@ -92,7 +92,7 @@ add_task(async function test_popup_request() {
 
     files: {
       "page.html": scriptPage("page.js"),
-      "page.js": async function() {
+      "page.js": async function () {
         const isBackgroundPage =
           window == (await browser.runtime.getBackgroundPage());
 

@@ -118,22 +118,22 @@ function verifyCookies(names, uri) {
     actual_cookies.push(cookie);
   }
   if (names.length != actual_cookies.length) {
-    let left = names.filter(function(n) {
+    let left = names.filter(function (n) {
       return (
-        actual_cookies.findIndex(function(c) {
+        actual_cookies.findIndex(function (c) {
           return c.name == n;
         }) == -1
       );
     });
     let right = actual_cookies
-      .filter(function(c) {
+      .filter(function (c) {
         return (
-          names.findIndex(function(n) {
+          names.findIndex(function (n) {
             return c.name == n;
           }) == -1
         );
       })
-      .map(function(c) {
+      .map(function (c) {
         return c.name;
       });
     if (left.length) {
@@ -144,7 +144,7 @@ function verifyCookies(names, uri) {
     }
   }
   Assert.equal(names.length, actual_cookies.length);
-  actual_cookies.sort(function(a, b) {
+  actual_cookies.sort(function (a, b) {
     if (a.lastAccessed < b.lastAccessed) {
       return -1;
     }
@@ -188,7 +188,7 @@ function setCookie(name, domain, path, maxAge, url) {
 
   Services.cookies.setCookieStringFromHttp(url, value, channel);
 
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve) {
     // Windows XP has low precision timestamps that cause our cookie eviction
     // algorithm to produce different results from other platforms. We work around
     // this by ensuring that there's a clear gap between each cookie update.

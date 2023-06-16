@@ -439,8 +439,8 @@ class nsTableFrame : public nsContainerFrame {
       mozilla::WritingMode aWM,
       BaselineSharingGroup aBaselineGroup) const override;
   Maybe<nscoord> GetNaturalBaselineBOffset(
-      mozilla::WritingMode aWM,
-      BaselineSharingGroup aBaselineGroup) const override;
+      mozilla::WritingMode aWM, BaselineSharingGroup aBaselineGroup,
+      BaselineExportContext) const override;
 
   /** return the row span of a cell, taking into account row span magic at the
    * bottom of a table. The row span equals the number of rows spanned by aCell

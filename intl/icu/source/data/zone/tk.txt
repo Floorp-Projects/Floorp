@@ -255,6 +255,9 @@ tk{
         "America:Chihuahua"{
             ec{"Çihuahua"}
         }
+        "America:Ciudad_Juarez"{
+            ec{"Sýudad-Huares"}
+        }
         "America:Coral_Harbour"{
             ec{"Atikokan"}
         }
@@ -1336,6 +1339,9 @@ tk{
             lg{"Demirgazyk Amerika Ýuwaş umman wagty"}
             ls{"Demirgazyk Amerika Ýuwaş umman standart wagty"}
         }
+        "meta:Anadyr"{
+            lg{"Anadyr wagty"}
+        }
         "meta:Apia"{
             ld{"Apia tomusky wagty"}
             lg{"Apia wagty"}
@@ -1601,6 +1607,9 @@ tk{
             lg{"Ýaponiýa wagty"}
             ls{"Ýaponiýa standart wagty"}
         }
+        "meta:Kamchatka"{
+            lg{"Petropavlowsk-Kamçatskiý wagty"}
+        }
         "meta:Kazakhstan_Eastern"{
             ls{"Gündogar Gazagystan wagty"}
         }
@@ -1779,6 +1788,9 @@ tk{
             ld{"Sahalin tomusky wagty"}
             lg{"Sahalin wagty"}
             ls{"Sahalin standart wagty"}
+        }
+        "meta:Samara"{
+            lg{"Samara wagty"}
         }
         "meta:Samoa"{
             ld{"Samoa tomusky wagty"}

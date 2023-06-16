@@ -5,7 +5,7 @@
 /* import-globals-from helper-addons.js */
 Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-addons.js", this);
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.eventPages.enabled", true]],
   });
@@ -21,9 +21,8 @@ add_task(
     const EXTENSION_ID = "test-devtools-eventpage@mozilla.org";
     const EXTENSION_NAME = "Temporary EventPage-based web extension";
 
-    const promiseBackgroundLoaded = promiseBackgroundContextLoaded(
-      EXTENSION_ID
-    );
+    const promiseBackgroundLoaded =
+      promiseBackgroundContextLoaded(EXTENSION_ID);
 
     let waitForBGStatusUpdate = promiseBackgroundStatusUpdate(window);
 
@@ -40,7 +39,7 @@ add_task(
           },
         },
         files: {
-          "bgpage.js": function() {
+          "bgpage.js": function () {
             // Emit a dump when the script is loaded to make it easier
             // to investigate intermittents.
             dump(`Background script loaded: ${window.location}\n`);
@@ -105,9 +104,8 @@ add_task(
     );
 
     info(`Click on the terminate button for ${EXTENSION_NAME}`);
-    const promiseBackgroundUnloaded = promiseBackgroundContextUnloaded(
-      EXTENSION_ID
-    );
+    const promiseBackgroundUnloaded =
+      promiseBackgroundContextUnloaded(EXTENSION_ID);
     const waitForTerminateSuccess = waitForDispatch(
       window.AboutDebugging.store,
       "TERMINATE_EXTENSION_BGSCRIPT_SUCCESS"
@@ -139,9 +137,8 @@ add_task(
       targetElement: target,
     });
 
-    const waitForBGSuspendIgnored = promiseTerminateBackgroundScriptIgnored(
-      EXTENSION_ID
-    );
+    const waitForBGSuspendIgnored =
+      promiseTerminateBackgroundScriptIgnored(EXTENSION_ID);
     waitForBGStatusUpdate = promiseBackgroundStatusUpdate(window);
     await triggerExtensionEventPageIdleTimeout(EXTENSION_ID);
     await Promise.race([waitForBGStatusUpdate, waitForBGSuspendIgnored]);

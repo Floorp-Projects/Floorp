@@ -28,7 +28,7 @@ const TEST_URI = `http://example.com/document-builder.sjs?html=${encodeURICompon
   HTML
 )}`;
 
-add_task(async function() {
+add_task(async function () {
   const { inspector, highlighterTestFront } = await openInspectorForURL(
     TEST_URI
   );

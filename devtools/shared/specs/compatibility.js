@@ -22,7 +22,8 @@ types.addDictType("compatibilityissues", {
   type: "string",
   property: "string",
   aliases: "nullable:array:string",
-  url: "string",
+  url: "nullable:string",
+  specUrl: "nullable:string",
   deprecated: "boolean",
   experimental: "boolean",
   unsupportedBrowsers: "array:browsertype",
@@ -46,11 +47,11 @@ const compatibilitySpec = generateActorSpec({
     },
     getCSSDeclarationBlockIssues: {
       request: {
-        declarationBlock: Arg(0, "array:declaration"),
+        domRulesDeclarations: Arg(0, "array:array:declaration"),
         targetBrowsers: Arg(1, "array:browsertype"),
       },
       response: {
-        compatibilityIssues: RetVal("array:compatibilityissues"),
+        compatibilityIssues: RetVal("array:array:compatibilityissues"),
       },
     },
     getNodeCssIssues: {

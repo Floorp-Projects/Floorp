@@ -4,7 +4,7 @@ var is = window.parent.is;
 var ok = window.parent.ok;
 var SimpleTest = window.parent.SimpleTest;
 
-worker.onmessage = function(event) {
+worker.onmessage = function (event) {
   var args = JSON.parse(event.data);
 
   if (args.name == "testFinished") {
@@ -50,13 +50,13 @@ worker.onmessage = function(event) {
   );
 };
 
-worker.onerror = function(event) {
+worker.onerror = function (event) {
   ok(false, "Worker had an error: " + event.message);
   SimpleTest.finish();
 };
 
-var { AppConstants } = SpecialPowers.ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+var { AppConstants } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 var isNightly = AppConstants.NIGHTLY_BUILD;
 var isRelease = AppConstants.RELEASE_OR_BETA;

@@ -186,7 +186,6 @@ def make_task_description(config, jobs):
             build_platform, is_shippable, config
         )
         worker_type_alias = "linux-signing" if is_shippable else "linux-depsigning"
-        mac_behavior = None
         task = {
             "label": label,
             "description": description,
@@ -215,32 +214,12 @@ def make_task_description(config, jobs):
             ]
         elif "macosx" in build_platform:
             # iscript overrides
-            shippable = "false"
-            if "shippable" in attributes and attributes["shippable"]:
-                shippable = "true"
-            mac_behavior = evaluate_keyed_by(
-                config.graph_config["mac-notarization"]["mac-behavior"],
-                "mac behavior",
-                {
-                    "project": config.params["project"],
-                    "shippable": shippable,
-                },
-            )
-            if mac_behavior == "mac_notarize":
-                if "part-1" in config.kind:
-                    mac_behavior = "mac_notarize_part_1"
-                elif config.kind.endswith("signing"):
-                    mac_behavior = "mac_notarize_part_3"
-                else:
-                    raise Exception(f"Unknown kind {config.kind} for mac_behavior!")
-            elif "part-1" in config.kind:
-                continue
-            task["worker"]["mac-behavior"] = mac_behavior
+            task["worker"]["mac-behavior"] = "mac_sign_and_pkg"
+
             worker_type_alias_map = {
                 "linux-depsigning": "mac-depsigning",
                 "linux-signing": "mac-signing",
             }
-
             assert worker_type_alias in worker_type_alias_map, (
                 "Make sure to adjust the below worker_type_alias logic for "
                 "mac if you change the signing workerType aliases!"
@@ -250,10 +229,6 @@ def make_task_description(config, jobs):
             for attr in ("entitlements-url", "requirements-plist-url"):
                 if job.get(attr):
                     task["worker"][attr] = job[attr]
-
-            # Override behavior for signingscript mac-signing kind
-            if config.kind.endswith("-mac-signing"):
-                task["worker"]["mac-behavior"] = "mac_sign_and_pkg"
 
         task["worker-type"] = worker_type_alias
         if treeherder:

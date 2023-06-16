@@ -8,7 +8,7 @@
 
 const TEST_URI = "http://example.com/";
 
-add_task(async function() {
+add_task(async function () {
   // Start a listener on the console service.
   let good = true;
   const listener = {

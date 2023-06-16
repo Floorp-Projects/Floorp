@@ -144,7 +144,7 @@ function setupServerRecords(server, records) {
           id: record.guid,
           entry: Object.assign({}, record),
         }),
-        Date.now() / 1000
+        getDateForSync()
       )
     );
   }

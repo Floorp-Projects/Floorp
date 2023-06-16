@@ -37,13 +37,13 @@ const Toolbar = createFactory(
   require("resource://devtools/client/netmonitor/src/components/Toolbar.js")
 );
 
-loader.lazyGetter(this, "NetworkDetailsBar", function() {
+loader.lazyGetter(this, "NetworkDetailsBar", function () {
   return createFactory(
     require("resource://devtools/client/netmonitor/src/components/request-details/NetworkDetailsBar.js")
   );
 });
 
-loader.lazyGetter(this, "NetworkActionBar", function() {
+loader.lazyGetter(this, "NetworkActionBar", function () {
   return createFactory(
     require("resource://devtools/client/netmonitor/src/components/NetworkActionBar.js")
   );

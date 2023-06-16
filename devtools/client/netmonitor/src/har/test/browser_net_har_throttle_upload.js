@@ -5,7 +5,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   await throttleUploadTest(true);
   await throttleUploadTest(false);
 });
@@ -20,12 +20,6 @@ async function throttleUploadTest(actuallyThrottle) {
 
   const { connector, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  const { HarMenuUtils } = windowRequire(
-    "devtools/client/netmonitor/src/har/har-menu-utils"
-  );
-  const { getSortedRequests } = windowRequire(
-    "devtools/client/netmonitor/src/selectors/index"
-  );
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -43,19 +37,17 @@ async function throttleUploadTest(actuallyThrottle) {
 
   // Execute one POST request on the page and wait till its done.
   const wait = waitForNetworkEvents(monitor, 1);
-  await SpecialPowers.spawn(tab.linkedBrowser, [{ size }], async function(
-    args
-  ) {
-    content.wrappedJSObject.executeTest2(args.size);
-  });
+  await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [{ size }],
+    async function (args) {
+      content.wrappedJSObject.executeTest2(args.size);
+    }
+  );
   await wait;
 
   // Copy HAR into the clipboard (asynchronous).
-  const jsonString = await HarMenuUtils.copyAllAsHar(
-    getSortedRequests(store.getState()),
-    connector
-  );
-  const har = JSON.parse(jsonString);
+  const har = await copyAllAsHARWithContextMenu(monitor);
 
   // Check out the HAR log.
   isnot(har.log, null, "The HAR log must exist");

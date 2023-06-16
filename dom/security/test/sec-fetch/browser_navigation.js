@@ -55,7 +55,7 @@ async function testNavigations() {
 
   // Load another site
   loaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     content.document.notifyUserGestureActivation(); // simulate user activation
     let test2Button = content.document.getElementById("test2_button");
     test2Button.click();
@@ -64,7 +64,7 @@ async function testNavigations() {
   await loaded;
   // Load another site
   loaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     content.document.notifyUserGestureActivation(); // simulate user activation
     let test3Button = content.document.getElementById("test3_button");
     test3Button.click();
@@ -118,7 +118,7 @@ async function testNavigations() {
 
   info("going back with history.back");
   loaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     content.document.notifyUserGestureActivation(); // simulate user activation
     content.history.back();
     content.document.clearUserGestureActivation();
@@ -127,7 +127,7 @@ async function testNavigations() {
 
   info("going forward with history.forward");
   loaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     content.document.notifyUserGestureActivation(); // simulate user activation
     content.history.forward();
     content.document.clearUserGestureActivation();
@@ -142,14 +142,14 @@ async function testNavigations() {
 
   info("going back with history.back without user activation");
   loaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     content.history.back();
   });
   await loaded;
 
   info("going forward with history.forward without user activation");
   loaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     content.history.forward();
   });
   await loaded;
@@ -159,7 +159,7 @@ async function testNavigations() {
   Services.obs.removeObserver(checkSecFetchUser, "http-on-stop-request");
 }
 
-add_task(async function() {
+add_task(async function () {
   waitForExplicitFinish();
 
   await testNavigations();

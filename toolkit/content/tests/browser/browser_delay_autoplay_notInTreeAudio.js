@@ -20,7 +20,7 @@ function play_not_in_tree_audio() {
   content.document.body.removeChild(audio);
 
   // Add timeout to ensure the audio is removed from DOM tree.
-  content.setTimeout(function() {
+  content.setTimeout(function () {
     info("Prepare to start playing audio.");
     audio.play();
   }, 1000);

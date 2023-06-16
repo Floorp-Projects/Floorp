@@ -40,7 +40,6 @@
 #include "nsThreadUtils.h"
 #include "nsTransportUtils.h"
 #include "nsURLHelper.h"
-#include "plstr.h"
 #include "prerr.h"
 #include "sslexp.h"
 #include "xpcpublic.h"

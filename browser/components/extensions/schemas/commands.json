@@ -6,7 +6,7 @@
   {
     "namespace": "manifest",
     "types": [
-     {
+      {
         "id": "KeyName",
         "type": "string",
         "format": "manifestShortcutKey"
@@ -81,7 +81,7 @@
         "id": "Command",
         "type": "object",
         "properties": {
-          "name":        {
+          "name": {
             "type": "string",
             "optional": true,
             "description": "The name of the Extension Command"
@@ -110,6 +110,31 @@
             "type": "string"
           }
         ]
+      },
+      {
+        "name": "onChanged",
+        "description": "Fired when a registered command's shortcut is changed.",
+        "type": "function",
+        "parameters": [
+          {
+            "type": "object",
+            "name": "changeInfo",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "The name of the shortcut."
+              },
+              "newShortcut": {
+                "type": "string",
+                "description": "The new shortcut active for this command, or blank if not active."
+              },
+              "oldShortcut": {
+                "type": "string",
+                "description": "The old shortcut which is no longer active for this command, or blank if the shortcut was previously inactive."
+              }
+            }
+          }
+        ]
       }
     ],
     "functions": [
@@ -127,7 +152,7 @@
               "name": {
                 "type": "string",
                 "description": "The name of the command."
-                },
+              },
               "description": {
                 "type": "string",
                 "optional": true,

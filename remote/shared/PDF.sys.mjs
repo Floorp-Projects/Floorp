@@ -33,7 +33,7 @@ print.defaults = {
   orientationValue: ["landscape", "portrait"],
 };
 
-print.addDefaultSettings = function(settings) {
+print.addDefaultSettings = function (settings) {
   const {
     background = false,
     margin = {},
@@ -82,7 +82,7 @@ print.addDefaultSettings = function(settings) {
   };
 };
 
-print.getPrintSettings = function(settings) {
+print.getPrintSettings = function (settings) {
   const psService = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
     Ci.nsIPrintSettingsService
   );
@@ -217,7 +217,7 @@ function parseRanges(ranges) {
   return rv;
 }
 
-print.printToBinaryString = async function(browsingContext, printSettings) {
+print.printToBinaryString = async function (browsingContext, printSettings) {
   // Create a stream to write to.
   const stream = Cc["@mozilla.org/storagestream;1"].createInstance(
     Ci.nsIStorageStream

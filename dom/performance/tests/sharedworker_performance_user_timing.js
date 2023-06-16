@@ -25,7 +25,7 @@ function isnot(a, b, msg) {
 
 importScripts("test_performance_user_timing.js");
 
-onconnect = function(evt) {
+onconnect = function (evt) {
   port = evt.ports[0];
 
   for (var i = 0; i < steps.length; ++i) {

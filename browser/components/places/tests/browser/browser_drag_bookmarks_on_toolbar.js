@@ -93,7 +93,7 @@ function synthesizeDragWithDirection(aElement, aExpectedDragData, aDirection) {
     });
   });
 
-  var prevent = function(aEvent) {
+  var prevent = function (aEvent) {
     aEvent.preventDefault();
   };
 
@@ -159,7 +159,7 @@ function getExpectedDataForPlacesNode(aNode) {
     "text/html",
   ];
 
-  flavors.forEach(function(aFlavor) {
+  flavors.forEach(function (aFlavor) {
     var wrappedFlavor = aFlavor + ": " + PlacesUtils.wrapNode(aNode, aFlavor);
     wrappedNode.push(wrappedFlavor);
   });
@@ -167,7 +167,7 @@ function getExpectedDataForPlacesNode(aNode) {
   return [wrappedNode];
 }
 
-add_setup(async function() {
+add_setup(async function () {
   var toolbar = document.getElementById("PersonalToolbar");
   var wasCollapsed = toolbar.collapsed;
 

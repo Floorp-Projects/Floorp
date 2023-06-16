@@ -8,7 +8,7 @@ add_task(async function run_test() {
     },
 
     func() {
-      return this.notify("bar", "baz", async function() {
+      return this.notify("bar", "baz", async function () {
         rightThis = this == obj;
         didCall = true;
         return 5;
@@ -16,7 +16,7 @@ add_task(async function run_test() {
     },
 
     throwy() {
-      return this.notify("bad", "one", async function() {
+      return this.notify("bad", "one", async function () {
         rightThis = this == obj;
         didCall = true;
         throw new Error("covfefe");
@@ -25,7 +25,7 @@ add_task(async function run_test() {
   };
 
   let state = 0;
-  let makeObs = function(topic) {
+  let makeObs = function (topic) {
     let obj2 = {
       observe(subject, obsTopic, data) {
         this.state = ++state;

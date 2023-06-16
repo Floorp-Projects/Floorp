@@ -21,7 +21,7 @@ function checkGlobal(global, description) {
   checkCtor(global, "Function", description);
 }
 
-add_task(async function() {
+add_task(async function () {
   let systemGlobal = Cu.getGlobalForObject(Services);
   checkGlobal(systemGlobal, "system global");
 });

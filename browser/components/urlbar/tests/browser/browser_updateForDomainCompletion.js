@@ -4,13 +4,13 @@
  * Disable keyword.enabled (so no keyword search), and check that when
  * you type in "example" and hit enter, the browser shows an error page.
  */
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["keyword.enabled", false]],
   });
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function(browser) {
+    async function (browser) {
       gURLBar.value = "example";
       gURLBar.select();
       const loadPromise = BrowserTestUtils.waitForErrorPage(browser);
@@ -26,7 +26,7 @@ add_task(async function() {
  * that when you type in "example" and hit enter, the browser loads and the URL bar
  * is updated accordingly.
  */
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["keyword.enabled", false],
@@ -35,7 +35,7 @@ add_task(async function() {
   });
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function(browser) {
+    async function (browser) {
       gURLBar.value = "example";
       gURLBar.select();
       const loadPromise = BrowserTestUtils.waitForDocLoadAndStopIt(

@@ -4,8 +4,8 @@ const { PromiseTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/PromiseTestUtils.sys.mjs"
 );
 
-const { AppUiTestDelegate } = ChromeUtils.import(
-  "resource://testing-common/AppUiTestDelegate.jsm"
+const { AppUiTestDelegate } = ChromeUtils.importESModule(
+  "resource://testing-common/AppUiTestDelegate.sys.mjs"
 );
 
 // Ignore error "Actor 'Conduits' destroyed before query 'RunListener' was resolved"

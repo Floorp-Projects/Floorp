@@ -1,20 +1,40 @@
-import {accessSync} from 'fs';
+/**
+ * Copyright 2023 Google Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import {mkdtemp} from 'fs/promises';
-import os from 'os';
 import path from 'path';
 
-import {Browser} from '../api/Browser.js';
-import {CDPBrowser} from '../common/Browser.js';
+import {
+  computeSystemExecutablePath,
+  Browser as SupportedBrowsers,
+  ChromeReleaseChannel as BrowsersChromeReleaseChannel,
+} from '@puppeteer/browsers';
+
+import {debugError} from '../common/util.js';
+import {Browser} from '../puppeteer-core.js';
 import {assert} from '../util/assert.js';
 
-import {BrowserRunner} from './BrowserRunner.js';
 import {
   BrowserLaunchArgumentOptions,
   ChromeReleaseChannel,
   PuppeteerNodeLaunchOptions,
 } from './LaunchOptions.js';
-import {ProductLauncher} from './ProductLauncher.js';
+import {ProductLauncher, ResolvedLaunchArgs} from './ProductLauncher.js';
 import {PuppeteerNode} from './PuppeteerNode.js';
+import {rm} from './util/fs.js';
 
 /**
  * @internal
@@ -24,27 +44,43 @@ export class ChromeLauncher extends ProductLauncher {
     super(puppeteer, 'chrome');
   }
 
-  override async launch(
+  override launch(options: PuppeteerNodeLaunchOptions = {}): Promise<Browser> {
+    const headless = options.headless ?? true;
+    if (
+      headless === true &&
+      (!this.puppeteer.configuration.logLevel ||
+        this.puppeteer.configuration.logLevel === 'warn') &&
+      !Boolean(process.env['PUPPETEER_DISABLE_HEADLESS_WARNING'])
+    ) {
+      console.warn(
+        [
+          '\x1B[1m\x1B[43m\x1B[30m',
+          'Puppeteer old Headless deprecation warning:\x1B[0m\x1B[33m',
+          '  In the near feature `headless: true` will default to the new Headless mode',
+          '  for Chrome instead of the old Headless implementation. For more',
+          '  information, please see https://developer.chrome.com/articles/new-headless/.',
+          '  Consider opting in early by passing `headless: "new"` to `puppeteer.launch()`',
+          '  If you encounter any bugs, please report them to https://github.com/puppeteer/puppeteer/issues/new/choose.\x1B[0m\n',
+        ].join('\n  ')
+      );
+    }
+
+    return super.launch(options);
+  }
+
+  /**
+   * @internal
+   */
+  override async computeLaunchArguments(
     options: PuppeteerNodeLaunchOptions = {}
-  ): Promise<Browser> {
+  ): Promise<ResolvedLaunchArgs> {
     const {
       ignoreDefaultArgs = false,
       args = [],
-      dumpio = false,
+      pipe = false,
+      debuggingPort,
       channel,
       executablePath,
-      pipe = false,
-      env = process.env,
-      handleSIGINT = true,
-      handleSIGTERM = true,
-      handleSIGHUP = true,
-      ignoreHTTPSErrors = false,
-      defaultViewport = {width: 800, height: 600},
-      slowMo = 0,
-      timeout = 30000,
-      waitForInitialPage = true,
-      debuggingPort,
-      protocol,
     } = options;
 
     const chromeArguments = [];
@@ -103,81 +139,29 @@ export class ChromeLauncher extends ProductLauncher {
       chromeExecutable = this.executablePath(channel);
     }
 
-    const usePipe = chromeArguments.includes('--remote-debugging-pipe');
-    const runner = new BrowserRunner(
-      this.product,
-      chromeExecutable,
-      chromeArguments,
+    return {
+      executablePath: chromeExecutable,
+      args: chromeArguments,
+      isTempUserDataDir,
       userDataDir,
-      isTempUserDataDir
-    );
-    runner.start({
-      handleSIGHUP,
-      handleSIGTERM,
-      handleSIGINT,
-      dumpio,
-      env,
-      pipe: usePipe,
-    });
+    };
+  }
 
-    let browser;
-    try {
-      const connection = await runner.setupConnection({
-        usePipe,
-        timeout,
-        slowMo,
-        preferredRevision: this.puppeteer.browserRevision,
-      });
-
-      if (protocol === 'webDriverBiDi') {
-        try {
-          const BiDi = await import(
-            /* webpackIgnore: true */ '../common/bidi/bidi.js'
-          );
-          const bidiConnection = await BiDi.connectBidiOverCDP(connection);
-          browser = await BiDi.Browser.create({
-            connection: bidiConnection,
-            closeCallback: runner.close.bind(runner),
-            process: runner.proc,
-          });
-        } catch (error) {
-          runner.kill();
-          throw error;
-        }
-
-        return browser;
-      }
-
-      browser = await CDPBrowser._create(
-        this.product,
-        connection,
-        [],
-        ignoreHTTPSErrors,
-        defaultViewport,
-        runner.proc,
-        runner.close.bind(runner),
-        options.targetFilter
-      );
-    } catch (error) {
-      runner.kill();
-      throw error;
-    }
-
-    if (waitForInitialPage) {
+  /**
+   * @internal
+   */
+  override async cleanUserDataDir(
+    path: string,
+    opts: {isTemp: boolean}
+  ): Promise<void> {
+    if (opts.isTemp) {
       try {
-        await browser.waitForTarget(
-          t => {
-            return t.type() === 'page';
-          },
-          {timeout}
-        );
+        await rm(path);
       } catch (error) {
-        await browser.close();
+        debugError(error);
         throw error;
       }
     }
-
-    return browser;
   }
 
   override defaultArgs(options: BrowserLaunchArgumentOptions = {}): string[] {
@@ -195,7 +179,8 @@ export class ChromeLauncher extends ProductLauncher {
       '--disable-dev-shm-usage',
       '--disable-extensions',
       // AcceptCHFrame disabled because of crbug.com/1348106.
-      '--disable-features=Translate,BackForwardCache,AcceptCHFrame,MediaRouter,OptimizationHints',
+      // DIPS is disabled because of crbug.com/1439578. TODO: enable after M115.
+      '--disable-features=Translate,BackForwardCache,AcceptCHFrame,MediaRouter,OptimizationHints,DIPS',
       '--disable-hang-monitor',
       '--disable-ipc-flooding-protection',
       '--disable-popup-blocking',
@@ -246,86 +231,27 @@ export class ChromeLauncher extends ProductLauncher {
 
   override executablePath(channel?: ChromeReleaseChannel): string {
     if (channel) {
-      return this.#executablePathForChannel(channel);
+      return computeSystemExecutablePath({
+        browser: SupportedBrowsers.CHROME,
+        channel: convertPuppeteerChannelToBrowsersChannel(channel),
+      });
     } else {
       return this.resolveExecutablePath();
     }
   }
+}
 
-  /**
-   * @internal
-   */
-  #executablePathForChannel(channel: ChromeReleaseChannel): string {
-    const platform = os.platform();
-
-    let chromePath: string | undefined;
-    switch (platform) {
-      case 'win32':
-        switch (channel) {
-          case 'chrome':
-            chromePath = `${process.env['PROGRAMFILES']}\\Google\\Chrome\\Application\\chrome.exe`;
-            break;
-          case 'chrome-beta':
-            chromePath = `${process.env['PROGRAMFILES']}\\Google\\Chrome Beta\\Application\\chrome.exe`;
-            break;
-          case 'chrome-canary':
-            chromePath = `${process.env['PROGRAMFILES']}\\Google\\Chrome SxS\\Application\\chrome.exe`;
-            break;
-          case 'chrome-dev':
-            chromePath = `${process.env['PROGRAMFILES']}\\Google\\Chrome Dev\\Application\\chrome.exe`;
-            break;
-        }
-        break;
-      case 'darwin':
-        switch (channel) {
-          case 'chrome':
-            chromePath =
-              '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-            break;
-          case 'chrome-beta':
-            chromePath =
-              '/Applications/Google Chrome Beta.app/Contents/MacOS/Google Chrome Beta';
-            break;
-          case 'chrome-canary':
-            chromePath =
-              '/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary';
-            break;
-          case 'chrome-dev':
-            chromePath =
-              '/Applications/Google Chrome Dev.app/Contents/MacOS/Google Chrome Dev';
-            break;
-        }
-        break;
-      case 'linux':
-        switch (channel) {
-          case 'chrome':
-            chromePath = '/opt/google/chrome/chrome';
-            break;
-          case 'chrome-beta':
-            chromePath = '/opt/google/chrome-beta/chrome';
-            break;
-          case 'chrome-dev':
-            chromePath = '/opt/google/chrome-unstable/chrome';
-            break;
-        }
-        break;
-    }
-
-    if (!chromePath) {
-      throw new Error(
-        `Unable to detect browser executable path for '${channel}' on ${platform}.`
-      );
-    }
-
-    // Check if Chrome exists and is accessible.
-    try {
-      accessSync(chromePath);
-    } catch (error) {
-      throw new Error(
-        `Could not find Google Chrome executable for channel '${channel}' at '${chromePath}'.`
-      );
-    }
-
-    return chromePath;
+function convertPuppeteerChannelToBrowsersChannel(
+  channel: ChromeReleaseChannel
+): BrowsersChromeReleaseChannel {
+  switch (channel) {
+    case 'chrome':
+      return BrowsersChromeReleaseChannel.STABLE;
+    case 'chrome-dev':
+      return BrowsersChromeReleaseChannel.DEV;
+    case 'chrome-beta':
+      return BrowsersChromeReleaseChannel.BETA;
+    case 'chrome-canary':
+      return BrowsersChromeReleaseChannel.CANARY;
   }
 }

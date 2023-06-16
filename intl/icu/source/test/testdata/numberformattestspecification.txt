@@ -123,13 +123,12 @@ pattern	format	output	breaks
 ''''#	1	''1
 '''''#	1	fail
 '-''-'#	1	-'-1
-// K doesn't know the locale symbol for et
--'-'#	1	−-1	K
+-'-'#	1	−-1
 '#'#	1	#1
 ''#''	1	'1'
-''#-	1	'1−	K
-'-'#-	1	-1−	K
--#'-'	1	−1-	K
+''#-	1	'1−
+'-'#-	1	-1−
+-#'-'	1	−1-
 
 test int64
 set locale en
@@ -299,8 +298,7 @@ set pattern 0.00+;(#)
 begin
 format	output	breaks
 7	7.00+
-// JDK does not support negative suffixes
--3.5	(3.50)	K
+-3.5	(3.50)
 
 test minimum grouping digits
 set locale en
@@ -681,7 +679,7 @@ set pattern [0.00];(#)
 begin
 format	output	breaks
 Inf	[\u221e]
--Inf	(\u221e)	K
+-Inf	(\u221e)
 // J does not print the affixes
 // K prints \uFFFD
 NaN	[NaN]	K
@@ -693,7 +691,7 @@ begin
 format	output	breaks
 Inf	\u221e
 -Inf	-\u221e
-NaN	NaN	K
+NaN	NaN
 
 test nan and infinity with padding
 set locale en_US
@@ -717,18 +715,14 @@ begin
 // documentation says localizedPattern is not supported, change to pattern
 locale	pattern	format	output	breaks
 en	#0%	0.4376	44%
-// This next test breaks JDK. JDK doesn't multiply by 100.
-fa	\u0025\u00a0\u0023\u0030	0.4376	\u066a\u00a0\u06f4\u06f4	K
+fa	\u0025\u00a0\u0023\u0030	0.4376	\u066a\u00a0\u06f4\u06f4
 
 test localized pattern basic symbol coverage
 begin
 locale	localizedPattern	toPattern	breaks
 it	#.##0,00	#,##0.00
-// JDK either doesn't know sl uses this character for minus sign
-// or doesn't support minus sign in localized pattern
-sl	#.##0;#.##0−	#,##0;#,##0-	K
-// JDK does not have data for "×10^" in this locale
-en_SE	0,00×10^0;0,00×10^0-	0.00E0;0.00E0-	K
+sl	#.##0;#.##0−	#,##0;#,##0-
+en_SE	0,00×10^0;0,00×10^0-	0.00E0;0.00E0-
 // JDK does not seem to transform the digits in localized patterns
 ar_SA	#\u066C##\u0660\u066B\u0660\u0660;a#	#,##0.00;a#,##0.00	K
 
@@ -752,7 +746,7 @@ pp#,000	pp#,000
 #,#00.025	#,#00.025
 // No secondary grouping in JDK
 #,##,###.02500	#,##,###.02500	K
-pp#,000;(#)	pp#,000;(#,000)	K
+pp#,000;(#)	pp#,000;(#,000)
 **####,##,##0.0##;(#)	**#,##,##,##0.0##;**(##,##,##0.0##)	CJKP
 // No significant digits in JDK
 @@###	@@###	K
@@ -779,7 +773,8 @@ parse	output	breaks
 +5347,,,d8	5347
 (5,347.25)	-5347.25
 5,347.25	5347.25	K
-(5,347.25	-5347.25
+// JDK 11 stopped parsing this
+(5,347.25	-5347.25	K
 // S is successful at parsing this as -5347.25 in lenient mode
 -5,347.25	-5347.25	K
 +3.52E4	35200
@@ -789,7 +784,8 @@ parse	output	breaks
 (34,,25E-1)	-342.5
 // Trailing grouping separators are not OK.
 // C/J/P stop at the offending separator.
-(34,,25,E-1)	fail	CJKP
+// JDK 11 gets this right
+(34,,25,E-1)	fail	CJP
 (34,,25,E-1)	-3425	K
 (34  25 E-1)	-342.5	K
 (34,,25 E-1)	-342.5	K
@@ -819,12 +815,13 @@ parse	output	breaks
 (  19 45 )	-1945	K
 (,,19,45)	-1945
 // C parses to the spaces
-(,,19 45)	-19
+// JDK 11 stopped parsing this
+(,,19 45)	-19	K
 (  19,45)	-1945	K
-(,,19,45,)	-1945
+(,,19,45,)	-1945	K
 // C will parse up to the letter.
-(,,19,45,d1)	-1945
-(,,19,45d1)	-1945
+(,,19,45,d1)	-1945	K
+(,,19,45d1)	-1945	K
 (  19 45 d1)	-1945	K
 (  19 45d1)	-1945	K
 (19,45,.25)	-1945.25
@@ -845,8 +842,8 @@ parse	output	breaks
 1,234,,,+	1234	K
 1,234-	-1234
 // C and P bail because of trailing separators
-1,234,-	-1234	CJP
-1234  -	-1234
+1,234,-	-1234	CJKP
+1234  -	-1234	K
 
 
 
@@ -874,8 +871,7 @@ parse	output	breaks
 (63,425)	-63425
 (63,425E-1)	-6342.5
 // Both prefix and suffix needed for strict.
-// JDK accepts this and parses as -342.5
-(3425E-1	fail	K
+(3425E-1	fail
 +3.52EE4	3.52
 +12,34,567.8901	1234567.8901
 // With strict digit separators don't have to be the right type
@@ -900,8 +896,7 @@ parse	output	breaks
 +79	79
 +79	79
 + 79	fail
-// JDK parses as -1945
-(1,945d1)	fail	K
+(1,945d1)	fail
 
 test parse strict scientific
 // See #13737: Old behavior should be retained in this case
@@ -1014,9 +1009,10 @@ begin
 parse	output	breaks
 १३	13	
 १३.३१‍	13.31	
-123'456	123456
-524'11.3	52411.3
-३'११‍	311
+// JDK 11 parses this as 123
+123'456	123456	K
+524'11.3	52411.3	K
+३'११‍	311	K
 
 test parse with European-style comma/period
 set locale pt
@@ -1326,8 +1322,8 @@ USD52.41	USD	52.41	K
 EUR52.41	USD	fail
 $52.41	EUR	fail
 USD52.41	EUR	fail
-\u20ac52.41	EUR	52.41	K
-EUR52.41	EUR	52.41
+\u20ac52.41	EUR	52.41
+EUR52.41	EUR	52.41	K
 
 test parse currency ISO strict
 set pattern 0.00 \u00a4\u00a4;(#) \u00a4\u00a4
@@ -1381,6 +1377,125 @@ begin
 format	output	breaks
 -0.99	-0	K
 
+// JDK seems to always round halfEven! Why? Bug in JDK or bug in test?
+test rounding mode ceil
+set locale en
+set roundingMode ceiling
+begin
+format	output	breaks
+-1.5	-1	K
+0.4	1	K
+0.5	1	K
+0.6	1
+1.5	2
+
+// JDK seems to always round halfEven! Why? Bug in JDK or bug in test?
+test rounding mode floor
+set locale en
+set roundingMode floor
+begin
+format	output	breaks
+-1.5	-2
+0.4	0
+0.5	0
+0.6	0	K
+1.5	1	K
+
+// JDK seems to always round halfEven! Why? Bug in JDK or bug in test?
+test rounding mode expand
+set locale en
+set roundingMode up
+begin
+format	output	breaks
+-1.5	-2
+0.4	1	K
+0.5	1	K
+0.6	1
+1.5	2
+
+// JDK seems to always round halfEven! Why? Bug in JDK or bug in test?
+test rounding mode trunc
+set locale en
+set roundingMode down
+begin
+format	output	breaks
+-1.5	-1	K
+0.4	0
+0.5	0
+0.6	0	K
+1.5	1	K
+
+// Not supported in Java BigDecimal
+test rounding mode halfCeil
+set locale en
+set roundingMode halfCeiling
+begin
+format	output	breaks
+-1.5	-1	JKP
+0.4	0	JP
+0.5	1	JKP
+0.6	1	JP
+1.5	2	JP
+
+// Not supported in Java BigDecimal
+test rounding mode halfFloor
+set locale en
+set roundingMode halfFloor
+begin
+format	output	breaks
+-1.5	-2	JP
+0.4	0	JP
+0.5	0	JP
+0.6	1	JP
+1.5	1	JKP
+
+// JDK seems to always round halfEven! Why? Bug in JDK or bug in test?
+test rounding mode halfExpand
+set locale en
+set roundingMode halfUp
+begin
+format	output	breaks
+-1.5	-2
+0.4	0
+0.5	1	K
+0.6	1
+1.5	2
+
+// JDK seems to always round halfEven! Why? Bug in JDK or bug in test?
+test rounding mode halfTrunc
+set locale en
+set roundingMode halfDown
+begin
+format	output	breaks
+-1.5	-1	K
+0.4	0
+0.5	0
+0.6	1
+1.5	1	K
+
+test rounding mode halfEven
+set locale en
+set roundingMode halfEven
+begin
+format	output	breaks
+-1.5	-2
+0.4	0
+0.5	0
+0.6	1
+1.5	2
+
+// Not supported in Java BigDecimal
+test rounding mode halfOdd
+set locale en
+set roundingMode halfOdd
+begin
+format	output	breaks
+-1.5	-1	JKP
+0.4	0	JP
+0.5	1	JKP
+0.6	1	JP
+1.5	1	JKP
+
 test parse decimalPatternMatchRequired
 set locale en
 set decimalPatternMatchRequired 1
@@ -1431,8 +1546,8 @@ Aa1.23E3	1	1230
 Aa1.23E3	0	1230
 Aa1.23e3	1	1.23
 Aa1.23e3	0	1230	K
-NaN	1	NaN	K
-NaN	0	NaN	K
+NaN	1	NaN
+NaN	0	NaN
 nan	1	fail
 nan	0	NaN	K
 
@@ -1441,7 +1556,7 @@ set locale en
 set lenient 1
 begin
 parse	output	breaks
-NaN	NaN	K
+NaN	NaN
 // JDK returns zero
 1E999999999999999	Inf	K
 -1E999999999999999	-Inf	K

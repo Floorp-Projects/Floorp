@@ -48,11 +48,11 @@ function finish_test(count) {
       tab.linkedBrowser,
       "DOMContentLoaded",
       true
-    ).then(async function() {
+    ).then(async function () {
       let url = await ContentTask.spawn(
         tab.linkedBrowser,
         null,
-        async function() {
+        async function () {
           return content.document.documentURI;
         }
       );

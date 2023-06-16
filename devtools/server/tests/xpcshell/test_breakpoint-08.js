@@ -12,7 +12,7 @@
 add_task(
   threadFrontTest(({ threadFront, debuggee }) => {
     return new Promise(resolve => {
-      threadFront.once("paused", async function(packet) {
+      threadFront.once("paused", async function (packet) {
         const line = debuggee.line0 + 3;
         const source = await getSourceById(
           threadFront,
@@ -31,7 +31,7 @@ add_task(
         // eslint-disable-next-line no-undef
         Assert.equal(response.actualLocation.line, location.line + 1);
 
-        threadFront.once("paused", function(packet) {
+        threadFront.once("paused", function (packet) {
           // Check the return value.
           Assert.equal(packet.frame.where.actor, source.actor);
           // eslint-disable-next-line no-undef
@@ -43,7 +43,7 @@ add_task(
           Assert.equal(debuggee.b, undefined);
 
           // Remove the breakpoint.
-          response.bpClient.remove(function(response) {
+          response.bpClient.remove(function (response) {
             threadFront.resume().then(resolve);
           });
         });

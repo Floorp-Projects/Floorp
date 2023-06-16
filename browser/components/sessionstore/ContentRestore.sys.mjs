@@ -190,7 +190,8 @@ ContentRestoreInternal.prototype = {
         // userTypedClear value means that the load had started.
         // Load userTypedValue and fix up the URL if it's partial/broken.
         let loadURIOptions = {
-          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+          triggeringPrincipal:
+            Services.scriptSecurityManager.getSystemPrincipal(),
           loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP,
         };
         webNavigation.fixupAndLoadURIString(
@@ -212,7 +213,8 @@ ContentRestoreInternal.prototype = {
       } else {
         // If there's nothing to restore, we should still blank the page.
         let loadURIOptions = {
-          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+          triggeringPrincipal:
+            Services.scriptSecurityManager.getSystemPrincipal(),
           loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY,
           // Specify an override to force the load to finish in the current
           // process, as tests rely on this behaviour for non-fission session
@@ -416,11 +418,8 @@ ProgressListener.prototype = {
   },
 
   onStateChange(webProgress, request, stateFlags, status) {
-    let {
-      STATE_IS_WINDOW,
-      STATE_STOP,
-      STATE_START,
-    } = Ci.nsIWebProgressListener;
+    let { STATE_IS_WINDOW, STATE_STOP, STATE_START } =
+      Ci.nsIWebProgressListener;
     if (!webProgress.isTopLevel || !(stateFlags & STATE_IS_WINDOW)) {
       return;
     }

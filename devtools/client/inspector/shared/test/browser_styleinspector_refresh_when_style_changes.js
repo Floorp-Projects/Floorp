@@ -44,7 +44,7 @@ const TEST_DATA = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   const tab = await addTab(TEST_URI);
 
   const { inspector } = await openRuleView();
@@ -86,13 +86,13 @@ async function toggleClassAndWaitForViewChange(
 ) {
   const onRefreshed = inspector.once(eventName);
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [whatToMutate], function({
-    target,
-    className,
-    force,
-  }) {
-    content.document.querySelector(target).classList.toggle(className, force);
-  });
+  await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [whatToMutate],
+    function ({ target, className, force }) {
+      content.document.querySelector(target).classList.toggle(className, force);
+    }
+  );
 
   await onRefreshed;
   ok(true, "The view was refreshed after the class was changed");

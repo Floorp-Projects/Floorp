@@ -19,7 +19,7 @@ export function ModuleLoader(base, depth, proto) {
     wantXrays: false,
   });
 
-  const require = async function(id) {
+  const require = async function (id) {
     if (modules[id]) {
       return modules[id].exported_symbols;
     }

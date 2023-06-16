@@ -2,8 +2,8 @@ const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"
 );
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
-const { getFxAccountsSingleton } = ChromeUtils.import(
-  "resource://gre/modules/FxAccounts.jsm"
+const { getFxAccountsSingleton } = ChromeUtils.importESModule(
+  "resource://gre/modules/FxAccounts.sys.mjs"
 );
 const { FirefoxRelayTelemetry } = ChromeUtils.importESModule(
   "resource://gre/modules/FirefoxRelayTelemetry.mjs"
@@ -140,7 +140,7 @@ async function openRelayAC(browser) {
   await promiseHidden;
 }
 
-add_setup(async function() {
+add_setup(async function () {
   gHttpServer = new HttpServer();
   setupServerScenario();
 
@@ -170,14 +170,15 @@ add_setup(async function() {
 
   gRelayACOptionsTitles = await new Localization([
     "browser/firefoxRelay.ftl",
+    "toolkit/branding/brandings.ftl",
   ]).formatMessages([
-    "firefox-relay-opt-in-title",
-    "firefox-relay-generate-mask-title",
+    "firefox-relay-opt-in-title-1",
+    "firefox-relay-use-mask-title",
   ]);
 
   registerCleanupFunction(async () => {
     await new Promise(resolve => {
-      gHttpServer.stop(function() {
+      gHttpServer.stop(function () {
         resolve();
       });
     });
@@ -195,15 +196,15 @@ add_task(async function test_pref_toggle() {
       gBrowser,
       url: "about:preferences#privacy",
     },
-    async function(browser) {
+    async function (browser) {
       const relayIntegrationCheckbox = content.document.querySelector(
         "checkbox#relayIntegration"
       );
       relayIntegrationCheckbox.click();
       relayIntegrationCheckbox.click();
       await assertEvents([
-        { object: "pref_change", method: "enabled" },
         { object: "pref_change", method: "disabled" },
+        { object: "pref_change", method: "enabled" },
       ]);
     }
   );
@@ -216,7 +217,7 @@ add_task(async function test_popup_option_optin_enabled() {
       gBrowser,
       url: TEST_URL_PATH,
     },
-    async function(browser) {
+    async function (browser) {
       await openRelayAC(browser);
       const notificationPopup = document.getElementById("notification-popup");
       const notificationShown = BrowserTestUtils.waitForPopupEvent(
@@ -271,7 +272,7 @@ add_task(async function test_popup_option_optin_postponed() {
       gBrowser,
       url: TEST_URL_PATH,
     },
-    async function(browser) {
+    async function (browser) {
       await openRelayAC(browser);
       const notificationPopup = document.getElementById("notification-popup");
       const notificationShown = BrowserTestUtils.waitForPopupEvent(
@@ -308,7 +309,7 @@ add_task(async function test_popup_option_optin_disabled() {
       gBrowser,
       url: TEST_URL_PATH,
     },
-    async function(browser) {
+    async function (browser) {
       await openRelayAC(browser);
       const notificationPopup = document.getElementById("notification-popup");
       const notificationShown = BrowserTestUtils.waitForPopupEvent(
@@ -344,7 +345,7 @@ add_task(async function test_popup_option_fillusername() {
       gBrowser,
       url: TEST_URL_PATH,
     },
-    async function(browser) {
+    async function (browser) {
       await openRelayAC(browser);
       await BrowserTestUtils.waitForEvent(
         ConfirmationHint._panel,
@@ -370,7 +371,7 @@ add_task(async function test_fillusername_free_tier_limit() {
       gBrowser,
       url: TEST_URL_PATH,
     },
-    async function(browser) {
+    async function (browser) {
       await openRelayAC(browser);
 
       const notificationPopup = document.getElementById("notification-popup");
@@ -408,7 +409,7 @@ add_task(async function test_fillusername_free_tier_limit() {
         },
       ]);
 
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         const username = content.document.getElementById("form-basic-username");
         Assert.equal(
           username.value,
@@ -429,7 +430,7 @@ add_task(async function test_fillusername_error() {
       gBrowser,
       url: TEST_URL_PATH,
     },
-    async function(browser) {
+    async function (browser) {
       await openRelayAC(browser);
 
       const notificationPopup = document.getElementById("notification-popup");
@@ -470,7 +471,7 @@ add_task(async function test_auth_token_error() {
       gBrowser,
       url: TEST_URL_PATH,
     },
-    async function(browser) {
+    async function (browser) {
       await openRelayAC(browser);
       const notificationPopup = document.getElementById("notification-popup");
       const notificationShown = BrowserTestUtils.waitForPopupEvent(

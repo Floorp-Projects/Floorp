@@ -299,12 +299,12 @@ function run_test() {
   do_get_profile();
   add_tls_server_setup("BadCertAndPinningServer", "bad_certs");
 
-  add_test(function() {
+  add_test(function () {
     test_cert_pkcs7_export();
     run_next_test();
   });
 
-  add_test(function() {
+  add_test(function () {
     test_cert_pkcs7_empty_array();
     run_next_test();
   });

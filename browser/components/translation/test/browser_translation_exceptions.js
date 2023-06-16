@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// TODO (Bug 1817084) Remove this file when we disable the extension
 // tests the translation infobar, using a fake 'Translation' implementation.
 
 const { PermissionTestUtils } = ChromeUtils.importESModule(
@@ -19,13 +20,13 @@ function test() {
   Services.prefs.setBoolPref(kEnableTranslationPref, true);
   let tab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = tab;
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     gBrowser.removeTab(tab);
     Services.prefs.clearUserPref(kShowUIPref);
     Services.prefs.clearUserPref(kEnableTranslationPref);
   });
   BrowserTestUtils.browserLoaded(tab.linkedBrowser).then(() => {
-    (async function() {
+    (async function () {
       for (let testCase of gTests) {
         info(testCase.desc);
         await testCase.run();
@@ -65,7 +66,7 @@ function openPopup(aPopup) {
   return new Promise(resolve => {
     aPopup.addEventListener(
       "popupshown",
-      function() {
+      function () {
         TestUtils.executeSoon(resolve);
       },
       { once: true }
@@ -83,7 +84,7 @@ function waitForWindowLoad(aWin) {
   return new Promise(resolve => {
     aWin.addEventListener(
       "load",
-      function() {
+      function () {
         TestUtils.executeSoon(resolve);
       },
       { capture: true, once: true }
@@ -117,7 +118,7 @@ var gTests = [
 
       // Open the translation exceptions dialog.
       let win = openDialog(
-        "chrome://browser/content/preferences/dialogs/translation.xhtml",
+        "chrome://browser/content/preferences/dialogs/translationExceptions.xhtml",
         "Browser:TranslationExceptions",
         "",
         null
@@ -183,7 +184,7 @@ var gTests = [
 
       // Open the translation exceptions dialog.
       let win = openDialog(
-        "chrome://browser/content/preferences/dialogs/translation.xhtml",
+        "chrome://browser/content/preferences/dialogs/translationExceptions.xhtml",
         "Browser:TranslationExceptions",
         "",
         null

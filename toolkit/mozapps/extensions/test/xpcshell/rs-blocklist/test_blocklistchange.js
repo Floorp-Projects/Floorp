@@ -279,8 +279,11 @@ if (useMLBF) {
         throw new Error(`Unexpected mock addon ID: ${guid}`);
       }
 
-      const { minVersion = "1", maxVersion = "3", targetApplication } =
-        block.versionRange?.[0] || {};
+      const {
+        minVersion = "1",
+        maxVersion = "3",
+        targetApplication,
+      } = block.versionRange?.[0] || {};
 
       for (let v = minVersion; v <= maxVersion; ++v) {
         BLOCKLIST_DATA[key].push({
@@ -310,7 +313,7 @@ var WindowWatcher = {
 
     // Simulate auto-disabling any softblocks
     var list = openArgs.wrappedJSObject.list;
-    list.forEach(function(aItem) {
+    list.forEach(function (aItem) {
       if (!aItem.blocked) {
         aItem.disable = true;
       }
@@ -330,7 +333,7 @@ MockRegistrar.register(
 
 var InstallConfirm = {
   confirm(aWindow, aUrl, aInstalls) {
-    aInstalls.forEach(function(aInstall) {
+    aInstalls.forEach(function (aInstall) {
       aInstall.install();
     });
   },

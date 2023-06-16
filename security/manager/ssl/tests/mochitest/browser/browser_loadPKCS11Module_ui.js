@@ -134,7 +134,7 @@ function openLoadModuleDialog() {
   return new Promise(resolve => {
     win.addEventListener(
       "load",
-      function() {
+      function () {
         executeSoon(() => resolve(win));
       },
       { once: true }

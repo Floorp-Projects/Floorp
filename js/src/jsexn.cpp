@@ -323,9 +323,15 @@ void js::ErrorToException(JSContext* cx, JSErrorReport* reportp,
     return;
   }
 
-  RootedString fileName(cx, JS_NewStringCopyZ(cx, reportp->filename));
-  if (!fileName) {
-    return;
+  Rooted<JSString*> fileName(cx);
+  if (const char* filename = reportp->filename) {
+    fileName =
+        JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(filename, strlen(filename)));
+    if (!fileName) {
+      return;
+    }
+  } else {
+    fileName = cx->emptyString();
   }
 
   uint32_t sourceId = reportp->sourceId;

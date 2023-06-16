@@ -9,21 +9,21 @@ function run_test() {
     "disk",
     Ci.nsICacheStorage.OPEN_NORMALLY,
     null,
-    new OpenCallback(NEW, "200m1", "200part1a-", function(entry) {
+    new OpenCallback(NEW, "200m1", "200part1a-", function (entry) {
       // Open normally but wait for validation from the server
       asyncOpenCacheEntry(
         "http://r200/",
         "disk",
         Ci.nsICacheStorage.OPEN_NORMALLY,
         null,
-        new OpenCallback(PARTIAL, "200m1", "200part1a-", function(entry) {
+        new OpenCallback(PARTIAL, "200m1", "200part1a-", function (entry) {
           // emulate 200 from the server, i.e. recreate the entry, resume transaction and
           // write new content to the output stream
           new OpenCallback(
             NEW | WAITFORWRITE | RECREATE,
             "200m2",
             "200part1b--part2b",
-            function(entry) {
+            function (entry) {
               entry.setValid();
             }
           ).onCacheEntryAvailable(entry, true, Cr.NS_OK);
@@ -37,7 +37,9 @@ function run_test() {
         "disk",
         Ci.nsICacheStorage.OPEN_NORMALLY,
         null,
-        new OpenCallback(NORMAL, "200m2", "200part1b--part2b", function(entry) {
+        new OpenCallback(NORMAL, "200m2", "200part1b--part2b", function (
+          entry
+        ) {
           mc.fired();
         })
       );
@@ -46,7 +48,9 @@ function run_test() {
         "disk",
         Ci.nsICacheStorage.OPEN_NORMALLY,
         null,
-        new OpenCallback(NORMAL, "200m2", "200part1b--part2b", function(entry) {
+        new OpenCallback(NORMAL, "200m2", "200part1b--part2b", function (
+          entry
+        ) {
           mc.fired();
         })
       );
@@ -55,7 +59,9 @@ function run_test() {
         "disk",
         Ci.nsICacheStorage.OPEN_NORMALLY,
         null,
-        new OpenCallback(NORMAL, "200m2", "200part1b--part2b", function(entry) {
+        new OpenCallback(NORMAL, "200m2", "200part1b--part2b", function (
+          entry
+        ) {
           mc.fired();
         })
       );

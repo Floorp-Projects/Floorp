@@ -29,6 +29,8 @@ extern mozilla::LogModule* GetMediaSourceAPILog();
 struct JSContext;
 class JSObject;
 
+using TimeUnit = mozilla::media::TimeUnit;
+
 namespace mozilla::dom {
 
 SourceBufferList::~SourceBufferList() = default;
@@ -115,9 +117,9 @@ void SourceBufferList::Ended() {
   }
 }
 
-double SourceBufferList::GetHighestBufferedEndTime() {
+TimeUnit SourceBufferList::GetHighestBufferedEndTime() {
   MOZ_ASSERT(NS_IsMainThread());
-  double highestEndTime = 0;
+  TimeUnit highestEndTime = TimeUnit::Zero();
   for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
     highestEndTime =
         std::max(highestEndTime, mSourceBuffers[i]->GetBufferedEnd());
@@ -147,9 +149,9 @@ SourceBufferList::SourceBufferList(MediaSource* aMediaSource)
 
 MediaSource* SourceBufferList::GetParentObject() const { return mMediaSource; }
 
-double SourceBufferList::HighestStartTime() {
+TimeUnit SourceBufferList::HighestStartTime() {
   MOZ_ASSERT(NS_IsMainThread());
-  double highestStartTime = 0;
+  TimeUnit highestStartTime = TimeUnit::Zero();
   for (auto& sourceBuffer : mSourceBuffers) {
     highestStartTime =
         std::max(sourceBuffer->HighestStartTime(), highestStartTime);
@@ -157,9 +159,9 @@ double SourceBufferList::HighestStartTime() {
   return highestStartTime;
 }
 
-double SourceBufferList::HighestEndTime() {
+TimeUnit SourceBufferList::HighestEndTime() {
   MOZ_ASSERT(NS_IsMainThread());
-  double highestEndTime = 0;
+  TimeUnit highestEndTime = TimeUnit::Zero();
   for (auto& sourceBuffer : mSourceBuffers) {
     highestEndTime = std::max(sourceBuffer->HighestEndTime(), highestEndTime);
   }

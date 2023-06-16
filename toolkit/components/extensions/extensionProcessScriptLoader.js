@@ -6,4 +6,6 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/ExtensionProcessScript.jsm");
+ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionProcessScript.sys.mjs"
+);

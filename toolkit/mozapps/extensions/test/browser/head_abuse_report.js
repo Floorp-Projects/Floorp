@@ -12,14 +12,14 @@
 
 /* global MockProvider, loadInitialView, closeView */
 
-const { AbuseReporter } = ChromeUtils.import(
-  "resource://gre/modules/AbuseReporter.jsm"
+const { AbuseReporter } = ChromeUtils.importESModule(
+  "resource://gre/modules/AbuseReporter.sys.mjs"
 );
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+const { AddonTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
 );
-const { ExtensionCommon } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionCommon.jsm"
+const { ExtensionCommon } = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionCommon.sys.mjs"
 );
 
 const { makeWidgetId } = ExtensionCommon;
@@ -415,9 +415,8 @@ const AbuseReportTestUtils = {
   },
 
   triggerSubmit(reason, message) {
-    const reportEl = this.getReportDialog().document.querySelector(
-      "addon-abuse-report"
-    );
+    const reportEl =
+      this.getReportDialog().document.querySelector("addon-abuse-report");
     reportEl._form.elements.message.value = message;
     reportEl._form.elements.reason.value = reason;
     reportEl.submit();

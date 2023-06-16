@@ -2,6 +2,205 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [20.1.0](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v20.0.0...puppeteer-core-v20.1.0) (2023-05-03)
+
+
+### Features
+
+* **chrome:** roll to Chrome 113.0.5672.63 (r1121455) ([#10116](https://github.com/puppeteer/puppeteer/issues/10116)) ([19f4334](https://github.com/puppeteer/puppeteer/commit/19f43348a884edfc3e73ab60e41a9757239df013))
+
+## [20.0.0](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v19.11.1...puppeteer-core-v20.0.0) (2023-05-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* drop support for node14 ([#10019](https://github.com/puppeteer/puppeteer/issues/10019))
+* switch to Chrome for Testing instead of Chromium ([#10054](https://github.com/puppeteer/puppeteer/issues/10054))
+
+### Features
+
+* add AbortSignal to waitForFunction ([#10078](https://github.com/puppeteer/puppeteer/issues/10078)) ([4dd4cb9](https://github.com/puppeteer/puppeteer/commit/4dd4cb929242a6b1a621fd461edd3167d40e1c4c))
+* drop support for node14 ([#10019](https://github.com/puppeteer/puppeteer/issues/10019)) ([7405d65](https://github.com/puppeteer/puppeteer/commit/7405d6585aa09b240fbab09aa360674d4442b3d9))
+* switch to Chrome for Testing instead of Chromium ([#10054](https://github.com/puppeteer/puppeteer/issues/10054)) ([df4d60c](https://github.com/puppeteer/puppeteer/commit/df4d60c187aa11c4ad783827242e9511f4ec2aab))
+
+
+### Bug Fixes
+
+* use AbortSignal.throwIfAborted ([#10105](https://github.com/puppeteer/puppeteer/issues/10105)) ([575f00a](https://github.com/puppeteer/puppeteer/commit/575f00a31d0278f7ff27096e770ff84399cd9993))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @puppeteer/browsers bumped from 0.5.0 to 1.0.0
+
+## [19.11.1](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v19.11.0...puppeteer-core-v19.11.1) (2023-04-25)
+
+
+### Bug Fixes
+
+* implement click `count` ([#10069](https://github.com/puppeteer/puppeteer/issues/10069)) ([8124a7d](https://github.com/puppeteer/puppeteer/commit/8124a7d5bfc1cfa8cb579271f78ce586efc62b8e))
+* implement flag for disabling headless warning ([#10073](https://github.com/puppeteer/puppeteer/issues/10073)) ([cfe9bbc](https://github.com/puppeteer/puppeteer/commit/cfe9bbc852d014b31c754950590b6b6c96573eeb))
+
+## [19.11.0](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v19.10.1...puppeteer-core-v19.11.0) (2023-04-24)
+
+
+### Features
+
+* add warn for `headless: true` ([#10039](https://github.com/puppeteer/puppeteer/issues/10039)) ([23d6a95](https://github.com/puppeteer/puppeteer/commit/23d6a95cf10c90f8aba2b12d7b02a73072e20382))
+
+
+### Bug Fixes
+
+* infer last pressed button in mouse move ([#10067](https://github.com/puppeteer/puppeteer/issues/10067)) ([a6eaac4](https://github.com/puppeteer/puppeteer/commit/a6eaac4c39d4b0ab3ab1a3c2f319a70fde393edb))
+
+## [19.10.1](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v19.10.0...puppeteer-core-v19.10.1) (2023-04-21)
+
+
+### Bug Fixes
+
+* move fs.js to the node folder ([#10055](https://github.com/puppeteer/puppeteer/issues/10055)) ([704624e](https://github.com/puppeteer/puppeteer/commit/704624eb2045a7e38ed14044d6863a2871e9d7e2))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @puppeteer/browsers bumped from 0.4.1 to 0.5.0
+
+## [19.10.0](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v19.9.1...puppeteer-core-v19.10.0) (2023-04-20)
+
+
+### Features
+
+* support AbortController in waitForSelector ([#10018](https://github.com/puppeteer/puppeteer/issues/10018)) ([9109b76](https://github.com/puppeteer/puppeteer/commit/9109b76276c9d86a2c521c72fc5b7189979279ca))
+* **webworker:** expose WebWorker.client ([#10042](https://github.com/puppeteer/puppeteer/issues/10042)) ([c125128](https://github.com/puppeteer/puppeteer/commit/c12512822a546e7bfdefd2c68f020aab2a308f4f))
+
+
+### Bug Fixes
+
+* continue requests without network instrumentation ([#10046](https://github.com/puppeteer/puppeteer/issues/10046)) ([8283823](https://github.com/puppeteer/puppeteer/commit/8283823cb860528a938e84cb5ba2b5f4cf980e83))
+* install bindings once ([#10049](https://github.com/puppeteer/puppeteer/issues/10049)) ([690aec1](https://github.com/puppeteer/puppeteer/commit/690aec1b5cb4e7e574abde9c533c6c0954e6f1aa))
+
+## [19.9.1](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v19.9.0...puppeteer-core-v19.9.1) (2023-04-17)
+
+
+### Bug Fixes
+
+* improve mouse actions ([#10021](https://github.com/puppeteer/puppeteer/issues/10021)) ([34db39e](https://github.com/puppeteer/puppeteer/commit/34db39e4474efee9d4579743026c3d6b6c8e494b))
+
+## [19.9.0](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v19.8.5...puppeteer-core-v19.9.0) (2023-04-13)
+
+
+### Features
+
+* add ElementHandle.isVisible and ElementHandle.isHidden  ([#10007](https://github.com/puppeteer/puppeteer/issues/10007)) ([26c81b7](https://github.com/puppeteer/puppeteer/commit/26c81b7408a98cb9ef1aac9b57a038b699e6d518))
+* add ElementHandle.scrollIntoView ([#10005](https://github.com/puppeteer/puppeteer/issues/10005)) ([0d556a7](https://github.com/puppeteer/puppeteer/commit/0d556a71d6bcd5da501724ccbb4ce0be433768df))
+
+
+### Bug Fixes
+
+* make isIntersectingViewport work with SVG elements ([#10004](https://github.com/puppeteer/puppeteer/issues/10004)) ([656b562](https://github.com/puppeteer/puppeteer/commit/656b562c7488d4976a7a53264feef508c6b629dd))
+
+
+### Performance Improvements
+
+* amortize handle iterator ([#10002](https://github.com/puppeteer/puppeteer/issues/10002)) ([ab27f73](https://github.com/puppeteer/puppeteer/commit/ab27f738c9abb56f6083d02f7f45d2b8da9fc3f3))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @puppeteer/browsers bumped from 0.4.0 to 0.4.1
+
+## [19.8.5](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v19.8.4...puppeteer-core-v19.8.5) (2023-04-06)
+
+
+### Bug Fixes
+
+* add filter to setDiscoverTargets for Firefox ([#9693](https://github.com/puppeteer/puppeteer/issues/9693)) ([c09764e](https://github.com/puppeteer/puppeteer/commit/c09764e4c43d7a62096f430b598d63f2b688e860))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @puppeteer/browsers bumped from 0.3.3 to 0.4.0
+
+## [19.8.4](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v19.8.3...puppeteer-core-v19.8.4) (2023-04-06)
+
+
+### Bug Fixes
+
+* ignore extraInfo events if the response is served from cache ([#9983](https://github.com/puppeteer/puppeteer/issues/9983)) ([e7265c9](https://github.com/puppeteer/puppeteer/commit/e7265c9aa94e749de5745e5e98d45d4659f19d30))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @puppeteer/browsers bumped from 0.3.2 to 0.3.3
+
+## [19.8.3](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v19.8.1...puppeteer-core-v19.8.3) (2023-04-03)
+
+
+### Bug Fixes
+
+* use shadowRoot for tree walker ([#9950](https://github.com/puppeteer/puppeteer/issues/9950)) ([728547d](https://github.com/puppeteer/puppeteer/commit/728547d4608e8c601e209ede860493b1986da174))
+
+## [19.8.1](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v19.8.0...puppeteer-core-v19.8.1) (2023-03-28)
+
+
+### Bug Fixes
+
+* increase the default protocol timeout ([#9928](https://github.com/puppeteer/puppeteer/issues/9928)) ([4465f4b](https://github.com/puppeteer/puppeteer/commit/4465f4bd1900afc0b049ac863f4e372453a0c234))
+
+## [19.8.0](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v19.7.5...puppeteer-core-v19.8.0) (2023-03-24)
+
+
+### Features
+
+* add Page.waitForDevicePrompt ([#9299](https://github.com/puppeteer/puppeteer/issues/9299)) ([a5149d5](https://github.com/puppeteer/puppeteer/commit/a5149d52f54036a27a411bc070902b1eb3a7a629))
+* **chromium:** roll to Chromium 112.0.5614.0 (r1108766) ([#9841](https://github.com/puppeteer/puppeteer/issues/9841)) ([eddb1f6](https://github.com/puppeteer/puppeteer/commit/eddb1f6ec3958b79fea297123f7621eb7beaff04))
+
+
+### Bug Fixes
+
+* fallback to CSS ([#9876](https://github.com/puppeteer/puppeteer/issues/9876)) ([e6ec9c2](https://github.com/puppeteer/puppeteer/commit/e6ec9c295847fa0f1ec240952f0f2523bb13b7c8))
+* implement protocol-level timeouts ([#9877](https://github.com/puppeteer/puppeteer/issues/9877)) ([510b36c](https://github.com/puppeteer/puppeteer/commit/510b36c50001c95783b00dc8af42b5801ec57358))
+* viewport.deviceScaleFactor can be set to system default ([#9911](https://github.com/puppeteer/puppeteer/issues/9911)) ([022c909](https://github.com/puppeteer/puppeteer/commit/022c90932658d13ff4ae4aa51d26716f5dbe54ac))
+* waitForNavigation issue with aborted events ([#9883](https://github.com/puppeteer/puppeteer/issues/9883)) ([36c029b](https://github.com/puppeteer/puppeteer/commit/36c029b38d64a10590bfc74ecea255a58914b0d2))
+
+## [19.7.5](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v19.7.4...puppeteer-core-v19.7.5) (2023-03-14)
+
+
+### Bug Fixes
+
+* sort elements based on selector matching algorithm ([#9836](https://github.com/puppeteer/puppeteer/issues/9836)) ([9044609](https://github.com/puppeteer/puppeteer/commit/9044609be3ea78c650420533e7f6f40b83cedd99))
+
+
+### Performance Improvements
+
+* use `querySelector*` for pure CSS selectors ([#9835](https://github.com/puppeteer/puppeteer/issues/9835)) ([8aea8e0](https://github.com/puppeteer/puppeteer/commit/8aea8e047103b72c0238dde8e4777acf7897ddaa))
+
+## [19.7.4](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v19.7.3...puppeteer-core-v19.7.4) (2023-03-10)
+
+
+### Bug Fixes
+
+* call _detach on disconnect ([#9807](https://github.com/puppeteer/puppeteer/issues/9807)) ([bc1a04d](https://github.com/puppeteer/puppeteer/commit/bc1a04def8f699ad245c12ec69ac176e3e7e888d))
+* restore rimraf for puppeteer-core code ([#9815](https://github.com/puppeteer/puppeteer/issues/9815)) ([cefc4ea](https://github.com/puppeteer/puppeteer/commit/cefc4eab4750d2c1209eb36ca44f6963a4a6bf4c))
+* update troubleshooting guide links in errors ([#9821](https://github.com/puppeteer/puppeteer/issues/9821)) ([0165f06](https://github.com/puppeteer/puppeteer/commit/0165f06deef9e45862fd127a205ade5ad30ddaa3))
+
+## [19.7.3](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v19.7.2...puppeteer-core-v19.7.3) (2023-03-06)
+
+
+### Bug Fixes
+
+* update dependencies ([#9781](https://github.com/puppeteer/puppeteer/issues/9781)) ([364b23f](https://github.com/puppeteer/puppeteer/commit/364b23f8b5c7b04974f233c58e5ded9a8f912ff2))
+
 ## [19.7.2](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v19.7.1...puppeteer-core-v19.7.2) (2023-02-20)
 
 

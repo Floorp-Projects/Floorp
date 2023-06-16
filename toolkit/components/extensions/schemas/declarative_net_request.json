@@ -8,24 +8,30 @@
     "types": [
       {
         "$extend": "Permission",
-        "choices": [{
-          "type": "string",
-          "enum": ["declarativeNetRequest"]
-        }]
+        "choices": [
+          {
+            "type": "string",
+            "enum": ["declarativeNetRequest"]
+          }
+        ]
       },
       {
         "$extend": "OptionalPermission",
-        "choices": [{
-          "type": "string",
-          "enum": ["declarativeNetRequestFeedback"]
-        }]
-      }, 
+        "choices": [
+          {
+            "type": "string",
+            "enum": ["declarativeNetRequestFeedback"]
+          }
+        ]
+      },
       {
         "$extend": "PermissionNoPrompt",
-        "choices": [{
-          "type": "string",
-          "enum": ["declarativeNetRequestWithHostAccess"]
-        }]
+        "choices": [
+          {
+            "type": "string",
+            "enum": ["declarativeNetRequestWithHostAccess"]
+          }
+        ]
       },
       {
         "$extend": "WebExtensionManifest",
@@ -67,7 +73,10 @@
   {
     "namespace": "declarativeNetRequest",
     "description": "Use the declarativeNetRequest API to block or modify network requests by specifying declarative rules.",
-    "permissions": ["declarativeNetRequest", "declarativeNetRequestWithHostAccess"],
+    "permissions": [
+      "declarativeNetRequest",
+      "declarativeNetRequestWithHostAccess"
+    ],
     "types": [
       {
         "id": "ResourceType",
@@ -100,10 +109,7 @@
         "id": "UnsupportedRegexReason",
         "type": "string",
         "description": "Describes the reason why a given regular expression isn't supported.",
-        "enum": [
-          "syntaxError",
-          "memoryLimitExceeded"
-        ]
+        "enum": ["syntaxError", "memoryLimitExceeded"]
       },
       {
         "id": "MatchedRule",
@@ -346,8 +352,15 @@
             "description": "The action to take if this rule is matched.",
             "properties": {
               "type": {
-                 "type": "string",
-                 "enum": ["block", "redirect", "allow", "upgradeScheme", "modifyHeaders", "allowAllRequests"]
+                "type": "string",
+                "enum": [
+                  "block",
+                  "redirect",
+                  "allow",
+                  "upgradeScheme",
+                  "modifyHeaders",
+                  "allowAllRequests"
+                ]
               },
               "redirect": {
                 "type": "object",

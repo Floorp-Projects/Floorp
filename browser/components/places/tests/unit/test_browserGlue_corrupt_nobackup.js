@@ -21,7 +21,7 @@ function run_test() {
 
 registerCleanupFunction(remove_bookmarks_html);
 
-add_task(async function() {
+add_task(async function () {
   // Create a corrupt database.
   await createCorruptDB();
 

@@ -233,7 +233,7 @@ class LoadInfo final : public nsILoadInfo {
       bool aServiceWorkerTaintingSynthesized, bool aDocumentHasUserInteracted,
       bool aAllowListFutureDocumentsCreatedFromThisRedirectChain,
       bool aNeedForCheckingAntiTrackingHeuristic, const nsAString& aCspNonce,
-      bool aSkipContentSniffing, uint32_t aHttpsOnlyStatus,
+      bool aSkipContentSniffing, uint32_t aHttpsOnlyStatus, bool aHstsStatus,
       bool aHasValidUserGestureActivation, bool aAllowDeprecatedSystemRequests,
       bool aIsInDevToolsContext, bool aParserCreatedScript,
       nsILoadInfo::StoragePermissionState aStoragePermission,
@@ -342,6 +342,7 @@ class LoadInfo final : public nsILoadInfo {
   nsString mCspNonce;
   bool mSkipContentSniffing = false;
   uint32_t mHttpsOnlyStatus = nsILoadInfo::HTTPS_ONLY_UNINITIALIZED;
+  bool mHstsStatus = false;
   bool mHasValidUserGestureActivation = false;
   bool mAllowDeprecatedSystemRequests = false;
   bool mIsUserTriggeredSave = false;

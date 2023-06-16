@@ -28,7 +28,7 @@ async function testHasNoPermission(params) {
     background: `(${background})(${contentSetup})`,
 
     files: {
-      "script.js": function() {
+      "script.js": function () {
         browser.runtime.sendMessage("first script ran");
       },
     },
@@ -75,15 +75,15 @@ add_task(async function testBadPermissions() {
         },
       },
     },
-    contentSetup: function() {
-      browser.commands.onCommand.addListener(function(command) {
+    contentSetup: function () {
+      browser.commands.onCommand.addListener(function (command) {
         if (command == "test-tabs-executeScript") {
           browser.test.sendMessage("tabs-command-key-pressed");
         }
       });
       return Promise.resolve();
     },
-    setup: async function(extension) {
+    setup: async function (extension) {
       await EventUtils.synthesizeKey("k", { altKey: true, shiftKey: true });
       await extension.awaitMessage("tabs-command-key-pressed");
     },
@@ -102,13 +102,13 @@ add_task(async function testBadPermissions() {
         },
       },
     },
-    contentSetup: function() {
+    contentSetup: function () {
       browser.browserAction.onClicked.addListener(() => {
         browser.test.sendMessage("tabs-command-key-pressed");
       });
       return Promise.resolve();
     },
-    setup: async function(extension) {
+    setup: async function (extension) {
       await EventUtils.synthesizeKey("k", { altKey: true, shiftKey: true });
       await extension.awaitMessage("tabs-command-key-pressed");
     },
@@ -127,7 +127,7 @@ add_task(async function testBadPermissions() {
         },
       },
     },
-    contentSetup: async function() {
+    contentSetup: async function () {
       browser.pageAction.onClicked.addListener(() => {
         browser.test.sendMessage("tabs-command-key-pressed");
       });
@@ -137,7 +137,7 @@ add_task(async function testBadPermissions() {
       });
       await browser.pageAction.show(tab.id);
     },
-    setup: async function(extension) {
+    setup: async function (extension) {
       await EventUtils.synthesizeKey("k", { altKey: true, shiftKey: true });
       await extension.awaitMessage("tabs-command-key-pressed");
     },
@@ -171,7 +171,7 @@ add_task(async function testBadPermissions() {
       permissions: ["activeTab"],
       page_action: {},
     },
-    contentSetup: async function() {
+    contentSetup: async function () {
       let [tab] = await browser.tabs.query({
         active: true,
         currentWindow: true,
@@ -197,7 +197,7 @@ add_task(async function testMatchDataURI() {
         <script src="page.js"></script>
         <iframe id="inherited" src="data:text/html;charset=utf-8,inherited"></iframe>
       `,
-      "page.js": function() {
+      "page.js": function () {
         browser.test.onMessage.addListener((msg, url) => {
           if (msg !== "navigate") {
             return;

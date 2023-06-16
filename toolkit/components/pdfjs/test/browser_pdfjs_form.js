@@ -38,7 +38,7 @@ add_task(async function test_defaults() {
   // Test that the forms state matches the pref.
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function(browser) {
+    async function (browser) {
       await waitForPdfJSAnnotationLayer(
         browser,
         TESTROOT + "file_pdfjs_form.pdf"
@@ -53,7 +53,7 @@ add_task(async function test_defaults() {
 add_task(async function test_disabling() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function(browser) {
+    async function (browser) {
       // First, make sure they are enabled.
       await SpecialPowers.pushPrefEnv({
         set: [["pdfjs.annotationMode", 2]],

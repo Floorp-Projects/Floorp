@@ -46,6 +46,7 @@ known_extra_args = [
     "bucket_count",
     "histogram_type",
     "numerators",
+    "ordered_labels",
 ]
 
 # List of all ping-specific args that JOG undertsands.

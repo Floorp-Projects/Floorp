@@ -110,7 +110,8 @@ add_task(async () => {
   is(jsContent2, JS_CONTENT);
 
   info("Enable persist");
-  const networkParentFront = await commands.watcherFront.getNetworkParentActor();
+  const networkParentFront =
+    await commands.watcherFront.getNetworkParentActor();
   await networkParentFront.setPersist(true);
 
   await reloadBrowser();

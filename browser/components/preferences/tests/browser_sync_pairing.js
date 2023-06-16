@@ -17,7 +17,7 @@ const { sinon } = ChromeUtils.importESModule(
 
 let flowCounter = 0;
 
-add_setup(async function() {
+add_setup(async function () {
   Services.prefs.setBoolPref("identity.fxaccounts.pairing.enabled", true);
   // Sync start-up might interfere with our tests, don't let UIState send UI updates.
   const origNotifyStateUpdated = UIState._internal.notifyStateUpdated;

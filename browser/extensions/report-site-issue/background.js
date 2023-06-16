@@ -102,6 +102,7 @@ function getWebCompatInfoForTab(tab) {
     browser.browserInfo.getUpdateChannel(),
     browser.browserInfo.hasTouchScreen(),
     browser.tabExtras.getWebcompatInfo(id),
+    browser.browserInfo.getAdditionalData(),
     checkForFrameworks(id),
     browser.tabs.captureTab(id, Config.screenshotFormat).catch(e => {
       console.error("WebCompat Reporter: getting a screenshot failed", e);
@@ -115,6 +116,7 @@ function getWebCompatInfoForTab(tab) {
       channel,
       hasTouchScreen,
       frameInfo,
+      additionalData,
       frameworks,
       screenshot,
     ]) => {
@@ -125,6 +127,15 @@ function getWebCompatInfoForTab(tab) {
       const consoleLog = frameInfo.log;
       delete frameInfo.log;
 
+      additionalData.isPB = frameInfo.isPB;
+      additionalData.prefs = { ...additionalData.prefs, ...graphicsPrefs };
+      additionalData.hasMixedActiveContentBlocked =
+        frameInfo.hasMixedActiveContentBlocked;
+      additionalData.hasMixedDisplayContentBlocked =
+        frameInfo.hasMixedDisplayContentBlocked;
+      additionalData.hasTrackingContentBlocked =
+        !!frameInfo.hasTrackingContentBlocked;
+
       return Object.assign(frameInfo, {
         tabId: id,
         blockList,
@@ -133,6 +144,7 @@ function getWebCompatInfoForTab(tab) {
           channel,
           consoleLog,
           frameworks,
+          additionalData,
           hasTouchScreen,
           "mixed active content blocked":
             frameInfo.hasMixedActiveContentBlocked,

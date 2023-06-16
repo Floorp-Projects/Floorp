@@ -41,20 +41,14 @@ describe("System Tick Feed", () => {
     expectation.verify();
   });
   it("should not fire SYSTEM_TICK events after UNINIT", () => {
-    let expectation = sinon
-      .mock(instance.store)
-      .expects("dispatch")
-      .never();
+    let expectation = sinon.mock(instance.store).expects("dispatch").never();
 
     instance.onAction({ type: at.UNINIT });
     clock.tick(SYSTEM_TICK_INTERVAL * 2);
     expectation.verify();
   });
   it("should not fire SYSTEM_TICK events while the user is away", () => {
-    let expectation = sinon
-      .mock(instance.store)
-      .expects("dispatch")
-      .never();
+    let expectation = sinon.mock(instance.store).expects("dispatch").never();
 
     instance.onAction({ type: at.INIT });
     instance._idleService = { idleTime: SYSTEM_TICK_INTERVAL + 1 };

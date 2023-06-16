@@ -17,16 +17,18 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
   MacAttribution: "resource:///modules/MacAttribution.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
+  PanelTestProvider: "resource://activity-stream/lib/PanelTestProvider.sys.mjs",
+  RemoteL10n: "resource://activity-stream/lib/RemoteL10n.sys.mjs",
+  SnippetsTestMessageProvider:
+    "resource://activity-stream/lib/SnippetsTestMessageProvider.sys.mjs",
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
   TargetingContext: "resource://messaging-system/targeting/Targeting.sys.mjs",
   Utils: "resource://services-settings/Utils.sys.mjs",
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  SnippetsTestMessageProvider:
-    "resource://activity-stream/lib/SnippetsTestMessageProvider.jsm",
-  PanelTestProvider: "resource://activity-stream/lib/PanelTestProvider.jsm",
   Spotlight: "resource://activity-stream/lib/Spotlight.jsm",
   ToastNotification: "resource://activity-stream/lib/ToastNotification.jsm",
   ToolbarBadgeHub: "resource://activity-stream/lib/ToolbarBadgeHub.jsm",
@@ -40,8 +42,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   ASRouterTriggerListeners:
     "resource://activity-stream/lib/ASRouterTriggerListeners.jsm",
   KintoHttpClient: "resource://services-common/kinto-http-client.js",
-  RemoteL10n: "resource://activity-stream/lib/RemoteL10n.jsm",
-  setTimeout: "resource://gre/modules/Timer.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {
@@ -51,8 +51,8 @@ const { actionCreators: ac } = ChromeUtils.importESModule(
   "resource://activity-stream/common/Actions.sys.mjs"
 );
 
-const { CFRMessageProvider } = ChromeUtils.import(
-  "resource://activity-stream/lib/CFRMessageProvider.jsm"
+const { CFRMessageProvider } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/CFRMessageProvider.sys.mjs"
 );
 const { OnboardingMessageProvider } = ChromeUtils.import(
   "resource://activity-stream/lib/OnboardingMessageProvider.jsm"
@@ -635,9 +635,8 @@ class _ASRouter {
     this.isUnblockedMessage = this.isUnblockedMessage.bind(this);
     this.unblockAll = this.unblockAll.bind(this);
     this.forceWNPanel = this.forceWNPanel.bind(this);
-    this._onExperimentEnrollmentsUpdated = this._onExperimentEnrollmentsUpdated.bind(
-      this
-    );
+    this._onExperimentEnrollmentsUpdated =
+      this._onExperimentEnrollmentsUpdated.bind(this);
     this.forcePBWindow = this.forcePBWindow.bind(this);
     Services.telemetry.setEventRecordingEnabled(REACH_EVENT_CATEGORY, true);
   }
@@ -877,14 +876,11 @@ class _ASRouter {
       let newState = { messages: [], providers: [] };
       for (const provider of this.state.providers) {
         if (needsUpdate.includes(provider)) {
-          const {
-            messages,
-            lastUpdated,
-            errors,
-          } = await MessageLoaderUtils.loadMessagesForProvider(provider, {
-            storage: this._storage,
-            dispatchCFRAction: this.dispatchCFRAction,
-          });
+          const { messages, lastUpdated, errors } =
+            await MessageLoaderUtils.loadMessagesForProvider(provider, {
+              storage: this._storage,
+              dispatchCFRAction: this.dispatchCFRAction,
+            });
           newState.providers.push({ ...provider, lastUpdated, errors });
           newState.messages = [...newState.messages, ...messages];
         } else {
@@ -1202,11 +1198,8 @@ class _ASRouter {
 
   // Return an object containing targeting parameters used to select messages
   _getMessagesContext() {
-    const {
-      messageImpressions,
-      previousSessionEnd,
-      screenImpressions,
-    } = this.state;
+    const { messageImpressions, previousSessionEnd, screenImpressions } =
+      this.state;
 
     return {
       get messageImpressions() {
@@ -2070,22 +2063,22 @@ class _ASRouter {
   }
 
   async forcePBWindow(browser, msg) {
-    const privateBrowserOpener = await new Promise((
-      resolveOnContentBrowserCreated // wrap this in a promise to give back the right browser
-    ) =>
-      browser.ownerGlobal.openTrustedLinkIn(
-        "about:privatebrowsing?debug",
-        "window",
-        {
-          private: true,
-          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(
-            {}
-          ),
-          csp: null,
-          resolveOnContentBrowserCreated,
-          opener: "devtools",
-        }
-      )
+    const privateBrowserOpener = await new Promise(
+      (
+        resolveOnContentBrowserCreated // wrap this in a promise to give back the right browser
+      ) =>
+        browser.ownerGlobal.openTrustedLinkIn(
+          "about:privatebrowsing?debug",
+          "window",
+          {
+            private: true,
+            triggeringPrincipal:
+              Services.scriptSecurityManager.getSystemPrincipal({}),
+            csp: null,
+            resolveOnContentBrowserCreated,
+            opener: "devtools",
+          }
+        )
     );
 
     lazy.setTimeout(() => {

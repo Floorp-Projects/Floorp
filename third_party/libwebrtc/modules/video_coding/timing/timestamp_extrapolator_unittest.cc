@@ -120,6 +120,19 @@ TEST(TimestampExtrapolatorTest, TimestampExtrapolatesMultipleRtpWrapArounds) {
   }
 }
 
+TEST(TimestampExtrapolatorTest, NegativeRtpTimestampWrapAround) {
+  SimulatedClock clock(Timestamp::Millis(1337));
+  TimestampExtrapolator ts_extrapolator(clock.CurrentTime());
+  uint32_t rtp = 0;
+  ts_extrapolator.Update(clock.CurrentTime(), rtp);
+  EXPECT_THAT(ts_extrapolator.ExtrapolateLocalTime(rtp),
+              Optional(clock.CurrentTime()));
+  // Go backwards!
+  rtp -= kRtpHz.hertz();
+  EXPECT_THAT(ts_extrapolator.ExtrapolateLocalTime(rtp),
+              Optional(clock.CurrentTime() - TimeDelta::Seconds(1)));
+}
+
 TEST(TimestampExtrapolatorTest, Slow90KHzClock) {
   // This simulates a slow camera, which produces frames at 24Hz instead of
   // 25Hz. The extrapolator should be able to resolve this with enough data.

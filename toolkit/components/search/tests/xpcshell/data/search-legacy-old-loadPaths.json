@@ -94,21 +94,22 @@
     },
     {
       "id": "example@tests.mozilla.orgdefault",
-      "_name":"Example",
-      "_loadPath":"[other]addEngineWithDetails:example@tests.mozilla.org",
-      "description":null,
-      "_iconURL":"",
-      "_metaData":{},
-      "_urls":[
-      {
-        "params": [
-          {
-            "name": "q",
-            "value": "{searchTerms}"
-          }
-        ],
-        "rels": [],
-        "template": "https://example.com/"}
+      "_name": "Example",
+      "_loadPath": "[other]addEngineWithDetails:example@tests.mozilla.org",
+      "description": null,
+      "_iconURL": "",
+      "_metaData": {},
+      "_urls": [
+        {
+          "params": [
+            {
+              "name": "q",
+              "value": "{searchTerms}"
+            }
+          ],
+          "rels": [],
+          "template": "https://example.com/"
+        }
       ],
       "_telemetryId": null,
       "_updateInterval": null,

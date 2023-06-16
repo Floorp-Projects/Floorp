@@ -109,13 +109,10 @@ void SVGMarkerElement::SetOrientToAuto() {
   mOrient.SetBaseType(SVG_MARKER_ORIENT_AUTO, this, IgnoreErrors());
 }
 
-void SVGMarkerElement::SetOrientToAngle(DOMSVGAngle& angle, ErrorResult& rv) {
-  float f = angle.Value();
-  if (!std::isfinite(f)) {
-    rv.ThrowTypeError("Unknown or invalid type");
-    return;
-  }
-  mOrient.SetBaseValue(f, angle.UnitType(), this, true);
+void SVGMarkerElement::SetOrientToAngle(DOMSVGAngle& aAngle) {
+  nsAutoString angle;
+  aAngle.GetValueAsString(angle);
+  mOrient.SetBaseValueString(angle, this, true);
 }
 
 //----------------------------------------------------------------------

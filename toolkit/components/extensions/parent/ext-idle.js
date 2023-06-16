@@ -96,7 +96,8 @@ this.idle = class extends ExtensionAPIPersistent {
           // There is no great way to modify a persistent listener param, but we
           // need to keep this for the startup listener.
           if (!extension.persistentBackground) {
-            extension.startupData.idleDetectionInterval = detectionIntervalInSeconds;
+            extension.startupData.idleDetectionInterval =
+              detectionIntervalInSeconds;
             extension.saveStartupData();
           }
         },

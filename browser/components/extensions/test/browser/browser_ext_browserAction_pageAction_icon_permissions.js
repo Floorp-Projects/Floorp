@@ -14,14 +14,14 @@ add_task(async function testInvalidIconSizes() {
       page_action: {},
     },
 
-    background: function() {
+    background: function () {
       browser.tabs.query({ active: true, currentWindow: true }, tabs => {
         let tabId = tabs[0].id;
 
         let promises = [];
         for (let api of ["pageAction", "browserAction"]) {
           // helper function to run setIcon and check if it fails
-          let assertSetIconThrows = function(detail, error, message) {
+          let assertSetIconThrows = function (detail, error, message) {
             detail.tabId = tabId;
             browser.test.assertThrows(
               () => browser[api].setIcon(detail),
@@ -38,19 +38,19 @@ add_task(async function testInvalidIconSizes() {
 
             assertSetIconThrows({ [type]: { abcdef: img } });
             assertSetIconThrows({ [type]: { "48px": img } });
-            assertSetIconThrows({ [type]: { "20.5": img } });
+            assertSetIconThrows({ [type]: { 20.5: img } });
             assertSetIconThrows({ [type]: { "5.0": img } });
             assertSetIconThrows({ [type]: { "-300": img } });
-            assertSetIconThrows({ [type]: { abc: img, "5": img } });
+            assertSetIconThrows({ [type]: { abc: img, 5: img } });
           }
 
           assertSetIconThrows({
             imageData: { abcdef: imageData },
-            path: { "5": "test.png" },
+            path: { 5: "test.png" },
           });
           assertSetIconThrows({
             path: { abcdef: "test.png" },
-            imageData: { "5": imageData },
+            imageData: { 5: imageData },
           });
         }
 
@@ -76,14 +76,14 @@ add_task(async function testDefaultDetails() {
   let icons = [
     "foo/bar.png",
     "/foo/bar.png",
-    { "38": "foo/bar.png" },
-    { "70": "foo/bar.png" },
+    { 38: "foo/bar.png" },
+    { 70: "foo/bar.png" },
   ];
 
   if (window.devicePixelRatio > 1) {
-    icons.push({ "38": "baz/quux.png", "70": "foo/bar.png" });
+    icons.push({ 38: "baz/quux.png", 70: "foo/bar.png" });
   } else {
-    icons.push({ "38": "foo/bar.png", "70": "baz/quux@2x.png" });
+    icons.push({ 38: "foo/bar.png", 70: "baz/quux@2x.png" });
   }
 
   let expectedURL = new RegExp(
@@ -97,7 +97,7 @@ add_task(async function testDefaultDetails() {
         page_action: { default_icon: icon },
       },
 
-      background: function() {
+      background: function () {
         browser.tabs.query({ active: true, currentWindow: true }, tabs => {
           let tabId = tabs[0].id;
 
@@ -123,8 +123,8 @@ add_task(async function testDefaultDetails() {
 
     await promiseAnimationFrame();
 
-    let browserActionButton = document.getElementById(browserActionId)
-      .firstElementChild;
+    let browserActionButton =
+      document.getElementById(browserActionId).firstElementChild;
     let image = getListStyleImage(browserActionButton);
 
     ok(
@@ -157,7 +157,7 @@ add_task(async function testSecureURLsDenied() {
       page_action: {},
     },
 
-    background: function() {
+    background: function () {
       browser.tabs.query({ active: true, currentWindow: true }, tabs => {
         let tabId = tabs[0].id;
 

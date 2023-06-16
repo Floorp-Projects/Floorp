@@ -302,6 +302,45 @@ class nsIMutationObserver
   virtual void ARIAAttributeDefaultChanged(mozilla::dom::Element* aElement,
                                            nsAtom* aAttribute,
                                            int32_t aModType) = 0;
+
+  enum : uint32_t {
+    kNone = 0,
+    kCharacterDataWillChange = 1 << 0,
+    kCharacterDataChanged = 1 << 1,
+    kAttributeWillChange = 1 << 2,
+    kAttributeChanged = 1 << 3,
+    kAttributeSetToCurrentValue = 1 << 4,
+    kContentAppended = 1 << 5,
+    kContentInserted = 1 << 6,
+    kContentRemoved = 1 << 7,
+    kNodeWillBeDestroyed = 1 << 8,
+    kParentChainChanged = 1 << 9,
+    kARIAAttributeDefaultWillChange = 1 << 10,
+    kARIAAttributeDefaultChanged = 1 << 11,
+
+    kBeginUpdate = 1 << 12,
+    kEndUpdate = 1 << 13,
+    kBeginLoad = 1 << 14,
+    kEndLoad = 1 << 15,
+    kElementStateChanged = 1 << 16,
+
+    kAnimationAdded = 1 << 17,
+    kAnimationChanged = 1 << 18,
+    kAnimationRemoved = 1 << 19,
+
+    kAll = 0xFFFFFFFF
+  };
+
+  void SetEnabledCallbacks(uint32_t aCallbacks) {
+    mEnabledCallbacks = aCallbacks;
+  }
+
+  bool IsCallbackEnabled(uint32_t aCallback) const {
+    return mEnabledCallbacks & aCallback;
+  }
+
+ private:
+  uint32_t mEnabledCallbacks = kAll;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIMutationObserver, NS_IMUTATION_OBSERVER_IID)

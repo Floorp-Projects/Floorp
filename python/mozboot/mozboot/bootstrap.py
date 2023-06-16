@@ -98,7 +98,7 @@ Mozilla recommends a number of changes to Mercurial to enhance your
 experience with it.
 
 Would you like to run a configuration wizard to ensure Mercurial is
-optimally configured?"""
+optimally configured? (This will also ensure 'version-control-tools' is up-to-date)"""
 
 CONFIGURE_GIT = """
 Mozilla recommends using git-cinnabar to work with mozilla-central (or
@@ -249,7 +249,7 @@ class Bootstrapper(object):
 
         self.instance = cls(**args)
 
-    def maybe_install_private_packages_or_exit(self, application):
+    def maybe_install_private_packages_or_exit(self, application, checkout_type):
         # Install the clang packages needed for building the style system, as
         # well as the version of NodeJS that we currently support.
         # Also install the clang static-analysis package by default
@@ -341,7 +341,7 @@ class Bootstrapper(object):
         self._validate_python_environment(checkout_root)
 
         if self.instance.no_system_changes:
-            self.maybe_install_private_packages_or_exit(application)
+            self.maybe_install_private_packages_or_exit(application, checkout_type)
             self._output_mozconfig(application, mozconfig_builder)
             sys.exit(0)
 
@@ -387,7 +387,7 @@ class Bootstrapper(object):
                     checkout_root,
                 )
 
-        self.maybe_install_private_packages_or_exit(application)
+        self.maybe_install_private_packages_or_exit(application, checkout_type)
         self.check_code_submission(checkout_root)
         # Wait until after moz-phab setup to check telemetry so that employees
         # will be automatically opted-in.
@@ -596,6 +596,7 @@ def current_firefox_checkout(env, hg: Optional[Path] = None):
     while path:
         hg_dir = path / ".hg"
         git_dir = path / ".git"
+        moz_configure = path / "moz.configure"
         if hg and hg_dir.exists():
             # Verify the hg repo is a Firefox repo by looking at rev 0.
             try:
@@ -621,6 +622,8 @@ def current_firefox_checkout(env, hg: Optional[Path] = None):
             if moz_configure.exists():
                 _warn_if_risky_revision(path)
                 return ("git" if git_dir.exists() else "hg"), path
+        elif moz_configure.exists():
+            return "SOURCE", path
 
         if not len(path.parents):
             break

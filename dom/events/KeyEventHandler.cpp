@@ -166,7 +166,14 @@ bool KeyEventHandler::TryConvertToKeyboardShortcut(
   return true;
 }
 
-already_AddRefed<dom::Element> KeyEventHandler::GetHandlerElement() {
+bool KeyEventHandler::KeyElementIsDisabled() const {
+  RefPtr<dom::Element> keyElement = GetHandlerElement();
+  return keyElement &&
+         keyElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
+                                 nsGkAtoms::_true, eCaseMatters);
+}
+
+already_AddRefed<dom::Element> KeyEventHandler::GetHandlerElement() const {
   if (mIsXULKey) {
     nsCOMPtr<dom::Element> element = do_QueryReferent(mHandlerElement);
     return element.forget();

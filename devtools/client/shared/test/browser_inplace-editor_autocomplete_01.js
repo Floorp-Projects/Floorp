@@ -32,7 +32,7 @@ const testData = [
   ["VK_LEFT", "background", -1, 0],
 ];
 
-const mockGetCSSPropertyList = function() {
+const mockGetCSSPropertyList = function () {
   return [
     "background",
     "border",
@@ -43,7 +43,7 @@ const mockGetCSSPropertyList = function() {
   ];
 };
 
-add_task(async function() {
+add_task(async function () {
   await addTab(
     "data:text/html;charset=utf-8," + "inplace editor CSS property autocomplete"
   );
@@ -67,7 +67,7 @@ add_task(async function() {
   gBrowser.removeCurrentTab();
 });
 
-const runPropertyAutocompletionTest = async function(editor) {
+const runPropertyAutocompletionTest = async function (editor) {
   info("Starting to test for css property completion");
   editor._getCSSPropertyList = mockGetCSSPropertyList;
 

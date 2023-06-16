@@ -1663,8 +1663,7 @@ bool nsGlobalWindowOuter::IsBlackForCC(bool aTracingNeeded) {
 // nsGlobalWindowOuter::nsIScriptGlobalObject
 //*****************************************************************************
 
-bool nsGlobalWindowOuter::ShouldResistFingerprinting(
-    RFPTarget aTarget /* = RFPTarget::Unknown */) const {
+bool nsGlobalWindowOuter::ShouldResistFingerprinting(RFPTarget aTarget) const {
   if (mDoc) {
     return mDoc->ShouldResistFingerprinting(aTarget);
   }
@@ -2038,8 +2037,11 @@ static nsresult CreateNativeGlobalForInner(
   creationOptions.setDefineSharedArrayBufferConstructor(
       aDefineSharedArrayBufferConstructor);
 
+  // TODO(bug 1834744) we will need some way of passing different targets to the
+  // JS engine
   xpc::InitGlobalObjectOptions(options, principal->IsSystemPrincipal(),
-                               aDocument->ShouldResistFingerprinting());
+                               aDocument->ShouldResistFingerprinting(
+                                   RFPTarget::IsAlwaysEnabledForPrecompute));
 
   // Determine if we need the Components object.
   bool needComponents = principal->IsSystemPrincipal();
@@ -3577,7 +3579,8 @@ void nsGlobalWindowOuter::SetInnerHeightOuter(double aInnerHeight,
 
 CSSIntSize nsGlobalWindowOuter::GetOuterSize(CallerType aCallerType,
                                              ErrorResult& aError) {
-  if (nsIGlobalObject::ShouldResistFingerprinting(aCallerType)) {
+  if (nsIGlobalObject::ShouldResistFingerprinting(aCallerType,
+                                                  RFPTarget::Unknown)) {
     CSSSize size;
     aError = GetInnerSize(size);
     return RoundedToInt(size);
@@ -3654,10 +3657,29 @@ void nsGlobalWindowOuter::SetOuterHeightOuter(int32_t aOuterHeight,
   SetOuterSize(aOuterHeight, false, aCallerType, aError);
 }
 
+CSSPoint nsGlobalWindowOuter::ScreenEdgeSlop() {
+  if (NS_WARN_IF(!mDocShell)) {
+    return {};
+  }
+  RefPtr<nsPresContext> pc = mDocShell->GetPresContext();
+  if (NS_WARN_IF(!pc)) {
+    return {};
+  }
+  nsCOMPtr<nsIWidget> widget = GetMainWidget();
+  if (NS_WARN_IF(!widget)) {
+    return {};
+  }
+  LayoutDeviceIntPoint pt = widget->GetScreenEdgeSlop();
+  auto auPoint =
+      LayoutDeviceIntPoint::ToAppUnits(pt, pc->AppUnitsPerDevPixel());
+  return CSSPoint::FromAppUnits(auPoint);
+}
+
 CSSIntPoint nsGlobalWindowOuter::GetScreenXY(CallerType aCallerType,
                                              ErrorResult& aError) {
   // When resisting fingerprinting, always return (0,0)
-  if (nsIGlobalObject::ShouldResistFingerprinting(aCallerType)) {
+  if (nsIGlobalObject::ShouldResistFingerprinting(aCallerType,
+                                                  RFPTarget::Unknown)) {
     return CSSIntPoint(0, 0);
   }
 
@@ -3750,7 +3772,8 @@ Maybe<CSSIntSize> nsGlobalWindowOuter::GetRDMDeviceSize(
 
 float nsGlobalWindowOuter::GetMozInnerScreenXOuter(CallerType aCallerType) {
   // When resisting fingerprinting, always return 0.
-  if (nsIGlobalObject::ShouldResistFingerprinting(aCallerType)) {
+  if (nsIGlobalObject::ShouldResistFingerprinting(aCallerType,
+                                                  RFPTarget::Unknown)) {
     return 0.0;
   }
 
@@ -3760,7 +3783,8 @@ float nsGlobalWindowOuter::GetMozInnerScreenXOuter(CallerType aCallerType) {
 
 float nsGlobalWindowOuter::GetMozInnerScreenYOuter(CallerType aCallerType) {
   // Return 0 to prevent fingerprinting.
-  if (nsIGlobalObject::ShouldResistFingerprinting(aCallerType)) {
+  if (nsIGlobalObject::ShouldResistFingerprinting(aCallerType,
+                                                  RFPTarget::Unknown)) {
     return 0.0;
   }
 

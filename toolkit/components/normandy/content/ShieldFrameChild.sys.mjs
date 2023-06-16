@@ -17,13 +17,13 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AboutPages: "resource://normandy-content/AboutPages.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "gBrandBundle", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gBrandBundle", function () {
   return Services.strings.createBundle(
     "chrome://branding/locale/brand.properties"
   );
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "gStringBundle", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gStringBundle", function () {
   return Services.strings.createBundle(
     "chrome://global/locale/aboutStudies.properties"
   );

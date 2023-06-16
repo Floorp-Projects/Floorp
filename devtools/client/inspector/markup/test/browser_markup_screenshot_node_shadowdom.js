@@ -18,7 +18,7 @@ const TEST_URL = `data:text/html;charset=utf8,
   </script>`;
 
 // Test that the "Screenshot Node" feature works with a node inside a shadow root.
-add_task(async function() {
+add_task(async function () {
   const { inspector, toolbox } = await openInspectorForURL(encodeURI(TEST_URL));
 
   info("Select the green node");

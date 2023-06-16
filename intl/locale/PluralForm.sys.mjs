@@ -234,7 +234,7 @@ export var PluralForm = {
     // Return functions that give 1) the number of forms and 2) gets the right
     // plural form
     return [
-      function(aNum, aWords) {
+      function (aNum, aWords) {
         // Figure out which index to use for the semi-colon separated words
         let index = pluralFunc(aNum ? Number(aNum) : 0);
         let words = aWords ? aWords.split(/;/) : [""];

@@ -76,6 +76,18 @@ public class SurfaceControlManager {
     return new Surface(child);
   }
 
+  // Removes an existing parent SurfaceControl and its corresponding child from the manager. This
+  // can be used when we require the next call to getChildSurface() for the specified parent to
+  // create a new child rather than return the existing one.
+  @RequiresApi(api = Build.VERSION_CODES.Q)
+  @WrapForJNI(exceptionMode = "abort")
+  public synchronized void removeSurface(final SurfaceControl parent) {
+    final SurfaceControl child = mChildSurfaceControls.remove(parent);
+    if (child != null) {
+      child.release();
+    }
+  }
+
   // Must be called whenever the GPU process has died. This destroys all the child SurfaceControls
   // that have been created, meaning subsequent calls to getChildSurface() will create new ones.
   @RequiresApi(api = Build.VERSION_CODES.Q)

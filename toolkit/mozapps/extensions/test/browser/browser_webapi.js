@@ -4,14 +4,14 @@
 
 const TESTPAGE = `${SECURE_TESTROOT}webapi_checkavailable.html`;
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.webapi.testing", true]],
   });
 });
 
 function testWithAPI(task) {
-  return async function() {
+  return async function () {
     await BrowserTestUtils.withNewTab(TESTPAGE, task);
   };
 }
@@ -60,7 +60,7 @@ let addons = gProvider.createAddons([
 addons[3].permissions &= ~AddonManager.PERM_CAN_UNINSTALL;
 
 function API_getAddonByID(browser, id) {
-  return SpecialPowers.spawn(browser, [id], async function(id) {
+  return SpecialPowers.spawn(browser, [id], async function (id) {
     let addon = await content.navigator.mozAddonManager.getAddonByID(id);
     let addonDetails = {};
     for (let prop in addon) {
@@ -72,7 +72,7 @@ function API_getAddonByID(browser, id) {
 }
 
 add_task(
-  testWithAPI(async function(browser) {
+  testWithAPI(async function (browser) {
     function compareObjects(web, real) {
       ok(
         !!Object.keys(web).length,

@@ -7,7 +7,7 @@ function whenNewWindowLoaded(aOptions, aCallback) {
   let win = OpenBrowserWindow(aOptions);
   win.addEventListener(
     "load",
-    function() {
+    function () {
       aCallback(win);
     },
     { once: true }
@@ -52,20 +52,20 @@ function test() {
   }
 
   function testOnWindow(aOptions, aCallback) {
-    whenNewWindowLoaded(aOptions, function(aWin) {
+    whenNewWindowLoaded(aOptions, function (aWin) {
       windowsToClose.push(aWin);
       // execute should only be called when need, like when you are opening
       // web pages on the test. If calling executeSoon() is not necesary, then
       // call whenNewWindowLoaded() instead of testOnWindow() on your test.
-      executeSoon(function() {
+      executeSoon(function () {
         aCallback(aWin);
       });
     });
   }
 
   // this function is called after calling finish() on the test.
-  registerCleanupFunction(function() {
-    windowsToClose.forEach(function(aWin) {
+  registerCleanupFunction(function () {
+    windowsToClose.forEach(function (aWin) {
       aWin.close();
     });
     uri = Services.io.newURI("http://localhost");
@@ -73,14 +73,14 @@ function test() {
   });
 
   // test first when on private mode
-  testOnWindow({ private: true }, function(aWin) {
-    doTest(true, aWin, function() {
+  testOnWindow({ private: true }, function (aWin) {
+    doTest(true, aWin, function () {
       // test when not on private mode
-      testOnWindow({}, function(aWin) {
-        doTest(false, aWin, function() {
+      testOnWindow({}, function (aWin) {
+        doTest(false, aWin, function () {
           // test again when on private mode
-          testOnWindow({ private: true }, function(aWin) {
-            doTest(true, aWin, function() {
+          testOnWindow({ private: true }, function (aWin) {
+            doTest(true, aWin, function () {
               finish();
             });
           });

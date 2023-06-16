@@ -21,6 +21,9 @@ root:table(nofallback){
                 resource:process(transliterator){"Any_Accents.txt"}
             }
         }
+        Amharic-Amharic/Geminate{
+            alias{"am_Ethi-am_Ethi/Geminate"}
+        }
         Amharic-Latin/BGN{
             alias{"am-am_Latn/BGN"}
         }
@@ -342,16 +345,34 @@ root:table(nofallback){
                 resource:process(transliterator){"Ethi_Latn_ALALOC.txt"}
             }
         }
+        Ethi-Latn/ALALOC_Geminate{
+            file{
+                direction{"FORWARD"}
+                resource:process(transliterator){"Ethi_Latn_ALALOC_Geminate.txt"}
+            }
+        }
         Ethi-Latn/Aethiopi{
             file{
                 direction{"FORWARD"}
                 resource:process(transliterator){"Ethi_Latn_Aethiopi.txt"}
             }
         }
+        Ethi-Latn/Aethiopi_Geminate{
+            file{
+                direction{"FORWARD"}
+                resource:process(transliterator){"Ethi_Latn_Aethiopi_Geminate.txt"}
+            }
+        }
         Ethi-Latn/Beta_Metsehaf{
             file{
                 direction{"FORWARD"}
                 resource:process(transliterator){"Ethi_Latn_Beta_Metsehaf.txt"}
+            }
+        }
+        Ethi-Latn/Beta_Metsehaf_Geminate{
+            file{
+                direction{"FORWARD"}
+                resource:process(transliterator){"Ethi_Latn_Beta_Metsehaf_Geminate.txt"}
             }
         }
         Ethi-Latn/ES3842{
@@ -364,6 +385,12 @@ root:table(nofallback){
             file{
                 direction{"FORWARD"}
                 resource:process(transliterator){"Ethi_Latn_IES_JES_1964.txt"}
+            }
+        }
+        Ethi-Latn/IES_JES_1964_Geminate{
+            file{
+                direction{"FORWARD"}
+                resource:process(transliterator){"Ethi_Latn_IES_JES_1964_Geminate.txt"}
             }
         }
         Ethi-Latn/Lambdin{
@@ -405,8 +432,17 @@ root:table(nofallback){
         Ethiopic-Latin/ALALOC{
             alias{"Ethi-Latn/ALALOC"}
         }
+        Ethiopic-Latin/ALALOC_Geminate{
+            alias{"Ethi-Latn/ALALOC_Geminate"}
+        }
         Ethiopic-Latin/Aethiopica{
             alias{"Ethi-Latn/Aethiopi"}
+        }
+        Ethiopic-Latin/Aethiopica_Geminate{
+            alias{"Ethi-Latn/Aethiopi_Geminate"}
+        }
+        Ethiopic-Latin/BetaMetsehaf_Geminate{
+            alias{"Ethi-Latn/Beta_Metsehaf_Geminate"}
         }
         Ethiopic-Latin/Beta_Metsehaf{
             alias{"Ethi-Latn/Beta_Metsehaf"}
@@ -416,6 +452,9 @@ root:table(nofallback){
         }
         Ethiopic-Latin/IES_JES_1964{
             alias{"Ethi-Latn/IES_JES_1964"}
+        }
+        Ethiopic-Latin/IES_JES_1964_Geminate{
+            alias{"Ethi-Latn/IES_JES_1964_Geminate"}
         }
         Ethiopic-Latin/Lambdin{
             alias{"Ethi-Latn/Lambdin"}
@@ -1869,6 +1908,9 @@ root:table(nofallback){
         am-Ethi-t-am-brai{
             alias{"am_Brai-am_Ethi"}
         }
+        am-Ethi-t-am-ethi-m0-geminate{
+            alias{"am_Ethi-am_Ethi/Geminate"}
+        }
         am-Ethi-t-d0-morse{
             alias{"am_Ethi-d0_Morse"}
         }
@@ -1990,6 +2032,12 @@ root:table(nofallback){
             file{
                 direction{"FORWARD"}
                 resource:process(transliterator){"am_Ethi_am_Brai.txt"}
+            }
+        }
+        am_Ethi-am_Ethi/Geminate{
+            file{
+                direction{"FORWARD"}
+                resource:process(transliterator){"am_Ethi_am_Ethi_Geminate.txt"}
             }
         }
         am_Ethi-d0_Morse{
@@ -3780,17 +3828,29 @@ root:table(nofallback){
         und-Latn-t-und-ethi-m0-aethiopi{
             alias{"Ethi-Latn/Aethiopi"}
         }
+        und-Latn-t-und-ethi-m0-aethiopi-geminate{
+            alias{"Ethi-Latn/Aethiopi_Geminate"}
+        }
         und-Latn-t-und-ethi-m0-alaloc{
             alias{"Ethi-Latn/ALALOC"}
         }
+        und-Latn-t-und-ethi-m0-alaloc-geminate{
+            alias{"Ethi-Latn/ALALOC_Geminate"}
+        }
         und-Latn-t-und-ethi-m0-betamets{
             alias{"Ethi-Latn/Beta_Metsehaf"}
+        }
+        und-Latn-t-und-ethi-m0-betamets-geminate{
+            alias{"Ethi-Latn/Beta_Metsehaf_Geminate"}
         }
         und-Latn-t-und-ethi-m0-es3842{
             alias{"Ethi-Latn/ES3842"}
         }
         und-Latn-t-und-ethi-m0-iesjes-1964{
             alias{"Ethi-Latn/IES_JES_1964"}
+        }
+        und-Latn-t-und-ethi-m0-iesjes-1964-geminate{
+            alias{"Ethi-Latn/IES_JES_1964_Geminate"}
         }
         und-Latn-t-und-ethi-m0-lambdin{
             alias{"Ethi-Latn/Lambdin"}

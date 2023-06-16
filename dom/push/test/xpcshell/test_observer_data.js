@@ -19,8 +19,9 @@ add_task(async function test_notifyWithData() {
     payload
   );
 
-  let data = (await notifyPromise).subject.QueryInterface(Ci.nsIPushMessage)
-    .data;
+  let data = (await notifyPromise).subject.QueryInterface(
+    Ci.nsIPushMessage
+  ).data;
   deepEqual(
     data.json(),
     {
@@ -47,8 +48,9 @@ add_task(async function test_empty_notifyWithData() {
     []
   );
 
-  let data = (await notifyPromise).subject.QueryInterface(Ci.nsIPushMessage)
-    .data;
+  let data = (await notifyPromise).subject.QueryInterface(
+    Ci.nsIPushMessage
+  ).data;
   throws(
     _ => data.json(),
     /InvalidStateError/,

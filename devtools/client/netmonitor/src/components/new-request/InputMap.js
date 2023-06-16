@@ -69,9 +69,10 @@ class InputMap extends Component {
         // Get next to last child on the list,
         // because that was the item that was just added and
         // we need to focous on it, so the user can keep editing it.
-        const targetParentNode = this.listRef.current.childNodes?.[
-          this.listRef.current.childElementCount - 2
-        ];
+        const targetParentNode =
+          this.listRef.current.childNodes?.[
+            this.listRef.current.childElementCount - 2
+          ];
         targetParentNode?.querySelector(`.${target.className}`).focus();
       });
     };

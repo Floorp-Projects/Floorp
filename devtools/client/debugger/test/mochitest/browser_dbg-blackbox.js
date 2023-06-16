@@ -30,7 +30,6 @@ const SOURCE_IS_NOT_IGNORED = "none";
 
 // Tests basic functionality for blackbox source and blackbox single and multiple lines
 add_task(async function testAllBlackBox() {
-  await pushPref("devtools.debugger.features.blackbox-lines", true);
   // using the doc-command-click.html as it has a simple js file we can use
   // testing.
   const file = "simple4.js";
@@ -49,7 +48,6 @@ add_task(async function testAllBlackBox() {
 
 // Test that the blackboxed lines are persisted accross reloads and still work accordingly.
 add_task(async function testBlackBoxOnReload() {
-  await pushPref("devtools.debugger.features.blackbox-lines", true);
   const file = "simple4.js";
   const dbg = await initDebugger("doc-command-click.html", file);
 
@@ -83,7 +81,7 @@ add_task(async function testBlackBoxOnReload() {
   assertNotPaused(dbg);
 
   info("Ignoring line 2 using the gutter context menu");
-  await openContextMenu(dbg, "gutter", 2);
+  await openContextMenuInDebugger(dbg, "gutter", 2);
   await selectBlackBoxContextMenuItem(dbg, "blackbox-line");
 
   info("Ignoring line 7 to 9 using the editor context menu");
@@ -125,8 +123,6 @@ add_task(async function testBlackBoxOnReload() {
 });
 
 add_task(async function testBlackBoxOnToolboxRestart() {
-  await pushPref("devtools.debugger.features.blackbox-lines", true);
-
   const dbg = await initDebugger("doc-command-click.html", "simple4.js");
   const source = findSource(dbg, "simple4.js");
 
@@ -141,7 +137,7 @@ add_task(async function testBlackBoxOnToolboxRestart() {
   await onReloaded;
 
   info("Ignoring line 2 using the gutter context menu");
-  await openContextMenu(dbg, "gutter", 2);
+  await openContextMenuInDebugger(dbg, "gutter", 2);
   await selectBlackBoxContextMenuItem(dbg, "blackbox-line");
 
   await reloadBrowser();
@@ -194,7 +190,7 @@ async function testBlackBoxSource(dbg, source) {
   info(
     "Blackbox the whole simple4.js source file using the editor context menu"
   );
-  await openContextMenu(dbg, "CodeMirrorLines");
+  await openContextMenuInDebugger(dbg, "CodeMirrorLines");
   await selectBlackBoxContextMenuItem(dbg, "blackbox");
 
   info("Assert that all lines in the source are styled correctly");
@@ -392,7 +388,7 @@ async function testBlackBoxMultipleLines(dbg, source) {
 
 async function testBlackBoxSingleLine(dbg, source) {
   info("Black box line 2 of funcA() with the debugger statement");
-  await openContextMenu(dbg, "gutter", 2);
+  await openContextMenuInDebugger(dbg, "gutter", 2);
   await selectBlackBoxContextMenuItem(dbg, "blackbox-line");
 
   await assertEditorBlackBoxBoxContextMenuItems(dbg, {
@@ -421,7 +417,7 @@ async function testBlackBoxSingleLine(dbg, source) {
   });
 
   info("Black box line 4 of funcC() with the debugger statement");
-  await openContextMenu(dbg, "gutter", 4);
+  await openContextMenuInDebugger(dbg, "gutter", 4);
   await selectBlackBoxContextMenuItem(dbg, "blackbox-line");
 
   info("Assert that the ignored line 4 is styled correctly");
@@ -441,7 +437,7 @@ async function testBlackBoxSingleLine(dbg, source) {
 
   info("Un-blackbox line 2 of funcA()");
   selectEditorLines(dbg, 2, 2);
-  await openContextMenu(dbg, "CodeMirrorLines");
+  await openContextMenuInDebugger(dbg, "CodeMirrorLines");
   await selectBlackBoxContextMenuItem(dbg, "blackbox-line");
 
   await assertEditorBlackBoxBoxContextMenuItems(dbg, {
@@ -494,6 +490,17 @@ async function resumeAndWaitForPauseCounter(dbg) {
   );
 }
 
+async function assertContextMenuDisabled(dbg, selector, shouldBeDisabled) {
+  const item = await waitFor(() => findContextMenu(dbg, selector));
+  is(
+    item.disabled,
+    shouldBeDisabled,
+    `The the context menu item is ${
+      shouldBeDisabled ? "disabled" : "not disabled"
+    }`
+  );
+}
+
 /**
  * Asserts that the gutter blackbox context menu items which are visible are correct
  * @params {Object} dbg
@@ -502,16 +509,17 @@ async function resumeAndWaitForPauseCounter(dbg) {
  *                 and any blackboxed/nonBlackboxed sources
  */
 async function assertGutterBlackBoxBoxContextMenuItems(dbg, testFixtures) {
-  const {
-    blackboxedLine,
-    nonBlackBoxedLine,
-    blackboxedSourceState,
-  } = testFixtures;
+  const { blackboxedLine, nonBlackBoxedLine, blackboxedSourceState } =
+    testFixtures;
   if (blackboxedLine) {
     info(
       "Asserts that the gutter context menu items when clicking on the gutter of a blackboxed line"
     );
-    const popup = await openContextMenu(dbg, "gutter", blackboxedLine);
+    const popup = await openContextMenuInDebugger(
+      dbg,
+      "gutter",
+      blackboxedLine
+    );
     // When the whole source is blackboxed the the gutter visually shows `ignore line`
     // but it is disabled indicating that individual lines cannot be nonBlackboxed.
     const item =
@@ -520,6 +528,11 @@ async function assertGutterBlackBoxBoxContextMenuItems(dbg, testFixtures) {
         : contextMenuItems.unignoreLine;
 
     await assertContextMenuLabel(dbg, item.selector, item.label);
+    await assertContextMenuDisabled(
+      dbg,
+      item.selector,
+      blackboxedSourceState == SOURCE_IS_FULLY_IGNORED
+    );
     await closeContextMenu(dbg, popup);
   }
 
@@ -527,10 +540,14 @@ async function assertGutterBlackBoxBoxContextMenuItems(dbg, testFixtures) {
     info(
       "Asserts that the gutter context menu items when clicking on the gutter of a nonBlackboxed line"
     );
-    const popup = await openContextMenu(dbg, "gutter", nonBlackBoxedLine);
+    const popup = await openContextMenuInDebugger(
+      dbg,
+      "gutter",
+      nonBlackBoxedLine
+    );
     const item = contextMenuItems.ignoreLine;
     await assertContextMenuLabel(dbg, item.selector, item.label);
-
+    await assertContextMenuDisabled(dbg, item.selector, false);
     await closeContextMenu(dbg, popup);
   }
 }
@@ -542,10 +559,8 @@ async function assertGutterBlackBoxBoxContextMenuItems(dbg, testFixtures) {
  *                 Details needed for the assertion. Any blackboxed/nonBlackboxed sources
  */
 async function assertSourceTreeBlackBoxBoxContextMenuItems(dbg, testFixtures) {
-  const {
-    blackBoxedSourceTreeNode,
-    nonBlackBoxedSourceTreeNode,
-  } = testFixtures;
+  const { blackBoxedSourceTreeNode, nonBlackBoxedSourceTreeNode } =
+    testFixtures;
   if (blackBoxedSourceTreeNode) {
     info(
       "Asserts that the source tree blackbox context menu items when clicking on a blackboxed source tree node"
@@ -713,61 +728,6 @@ async function assertEditorBlackBoxBoxContextMenuItems(dbg, testFixtures) {
   }
 }
 
-async function selectEditorLinesAndOpenContextMenu(dbg, lines) {
-  const { startLine, endLine } = lines;
-  const elementName = "line";
-  if (!endLine) {
-    await clickElement(dbg, elementName, startLine);
-  } else {
-    getCM(dbg).setSelection(
-      { line: startLine - 1, ch: 0 },
-      { line: endLine, ch: 0 }
-    );
-  }
-  return openContextMenu(dbg, elementName, startLine);
-}
-
-/**
- * Opens the debugger editor context menu in either codemirror or the
- * the debugger gutter.
- * @param {Object} dbg
- * @param {String} elementName
- *                  The element to select
- * @param {Number} line
- *                  The line to open the context menu on.
- */
-async function openContextMenu(dbg, elementName, line) {
-  const waitForOpen = waitForContextMenu(dbg);
-  info(`Open ${elementName} context menu on line ${line || ""}`);
-  rightClickElement(dbg, elementName, line);
-  return waitForOpen;
-}
-
-/**
- * Selects the specific black box context menu item
- * @param {Object} dbg
- * @param {String} itemName
- *                  The name of the context menu item.
- */
-async function selectBlackBoxContextMenuItem(dbg, itemName) {
-  let wait = null;
-  if (itemName == "blackbox-line" || itemName == "blackbox-lines") {
-    wait = Promise.any([
-      waitForDispatch(dbg.store, "BLACKBOX_SOURCE_RANGES"),
-      waitForDispatch(dbg.store, "UNBLACKBOX_SOURCE_RANGES"),
-    ]);
-  } else if (itemName == "blackbox") {
-    wait = Promise.any([
-      waitForDispatch(dbg.store, "BLACKBOX_WHOLE_SOURCES"),
-      waitForDispatch(dbg.store, "UNBLACKBOX_WHOLE_SOURCES"),
-    ]);
-  }
-
-  info(`Select the ${itemName} context menu item`);
-  selectContextMenuItem(dbg, `#node-menu-${itemName}`);
-  return wait;
-}
-
 /**
  * Selects a range of lines
  * @param {Object} dbg
@@ -779,65 +739,4 @@ function selectEditorLines(dbg, startLine, endLine) {
     { line: startLine - 1, ch: 0 },
     { line: endLine, ch: 0 }
   );
-}
-/**
- * Asserts that the styling for ignored lines are applied
- * @param {Object} dbg
- * @param {Object} options
- *                 lines {null | Number | Number[]} [lines] Line(s) to assert.
- *                   - If null is passed, the assertion is on all the blackboxed lines
- *                   - If a line number is passed, the assertion is on the specified line
- *                   - If an array (start and end lines) is passed, the assertion is on the multiple lines seelected
- *                 hasBlackboxedLinesClass
- *                   If `true` assert that style exist, else assert that style does not exist
- */
-function assertIgnoredStyleInSourceLines(
-  dbg,
-  { lines, hasBlackboxedLinesClass }
-) {
-  if (lines) {
-    if (!lines[1]) {
-      // Single line ignored
-      const element = findElement(dbg, "line", lines[0]);
-      const hasStyle = hasBlackboxedLinesClass
-        ? element.parentNode.classList.contains("blackboxed-line")
-        : !element.parentNode.classList.contains("blackboxed-line");
-      ok(
-        hasStyle,
-        `Line ${lines[0]} ${
-          hasBlackboxedLinesClass ? "does not have" : "has"
-        } ignored styling`
-      );
-    } else {
-      // Multiple lines ignored
-      let currentLine = lines[0];
-      while (currentLine <= lines[1]) {
-        const element = findElement(dbg, "line", currentLine);
-        const hasStyle = hasBlackboxedLinesClass
-          ? element.parentNode.classList.contains("blackboxed-line")
-          : !element.parentNode.classList.contains("blackboxed-line");
-        ok(
-          hasStyle,
-          `Line ${currentLine} ${
-            hasBlackboxedLinesClass ? "does not have" : "has"
-          } ignored styling`
-        );
-        currentLine = currentLine + 1;
-      }
-    }
-  } else {
-    const codeLines = findAllElementsWithSelector(
-      dbg,
-      ".CodeMirror-code .CodeMirror-line"
-    );
-    const blackboxedLines = findAllElementsWithSelector(
-      dbg,
-      ".CodeMirror-code .blackboxed-line"
-    );
-    is(
-      hasBlackboxedLinesClass ? codeLines.length : 0,
-      blackboxedLines.length,
-      `${blackboxedLines.length} of ${codeLines.length} lines are blackboxed`
-    );
-  }
 }

@@ -5,9 +5,6 @@
 export var NormandyUtils = {
   generateUuid() {
     // Generate a random UUID, convert it to a string, and slice the braces off the ends.
-    return Services.uuid
-      .generateUUID()
-      .toString()
-      .slice(1, -1);
+    return Services.uuid.generateUUID().toString().slice(1, -1);
   },
 };

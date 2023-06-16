@@ -26,23 +26,29 @@
 
 namespace jxl {
 
+struct SizeConstraints;
+
 // Decodes "bytes" and sets io->metadata.m.
 // color_space_hint may specify the color space, otherwise, defaults to sRGB.
 Status SetFromBytes(Span<const uint8_t> bytes,
                     const extras::ColorHints& color_hints, CodecInOut* io,
                     ThreadPool* pool = nullptr,
+                    const SizeConstraints* constraints = nullptr,
                     extras::Codec* orig_codec = nullptr);
 // Helper function to use no color_space_hint.
 JXL_INLINE Status SetFromBytes(const Span<const uint8_t> bytes, CodecInOut* io,
                                ThreadPool* pool = nullptr,
+                               const SizeConstraints* constraints = nullptr,
                                extras::Codec* orig_codec = nullptr) {
-  return SetFromBytes(bytes, extras::ColorHints(), io, pool, orig_codec);
+  return SetFromBytes(bytes, extras::ColorHints(), io, pool, constraints,
+                      orig_codec);
 }
 
 // Reads from file and calls SetFromBytes.
 Status SetFromFile(const std::string& pathname,
                    const extras::ColorHints& color_hints, CodecInOut* io,
                    ThreadPool* pool = nullptr,
+                   const SizeConstraints* constraints = nullptr,
                    extras::Codec* orig_codec = nullptr);
 
 // Replaces "bytes" with an encoding of pixels transformed from c_current

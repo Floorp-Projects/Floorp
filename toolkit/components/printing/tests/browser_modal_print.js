@@ -92,8 +92,9 @@ add_task(async function testTabOrder() {
     ok(previewBrowser, "Got the print preview browser");
 
     let focused;
-    let navigationShadowRoot = document.querySelector(".printPreviewNavigation")
-      .shadowRoot;
+    let navigationShadowRoot = document.querySelector(
+      ".printPreviewNavigation"
+    ).shadowRoot;
     for (let buttonId of [
       "navigateEnd",
       "navigateNext",
@@ -278,9 +279,6 @@ add_task(async function testPageSizeLandscape() {
 });
 
 add_task(async function testFirstPageSizePortrait() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["layout.css.named-pages.enabled", true]],
-  });
   await PrintHelper.withTestPageHTTPS(async helper => {
     await helper.startPrint();
 
@@ -296,9 +294,6 @@ add_task(async function testFirstPageSizePortrait() {
 });
 
 add_task(async function testFirstPageSizeLandscape() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["layout.css.named-pages.enabled", true]],
-  });
   await PrintHelper.withTestPageHTTPS(async helper => {
     await helper.startPrint();
 

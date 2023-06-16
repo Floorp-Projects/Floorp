@@ -29,12 +29,11 @@ async function testClearing(
   let { scheme, host } = Services.io.newURI(originA);
   let partitionKey = `(${scheme},${host})`;
 
-  let {
-    origin: originBPartitioned,
-  } = Services.scriptSecurityManager.createContentPrincipal(
-    Services.io.newURI(originB),
-    { partitionKey }
-  );
+  let { origin: originBPartitioned } =
+    Services.scriptSecurityManager.createContentPrincipal(
+      Services.io.newURI(originB),
+      { partitionKey }
+    );
 
   // Add some test quota storage.
   if (testQuota) {
@@ -68,7 +67,7 @@ async function testClearing(
     });
   }
 
-  await BrowserTestUtils.withNewTab(testURI, async function(browser) {
+  await BrowserTestUtils.withNewTab(testURI, async function (browser) {
     // Verify we have added quota storage.
     if (testQuota) {
       let usage = await SiteDataTestUtils.getQuotaUsage(originA);

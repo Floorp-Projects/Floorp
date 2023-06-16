@@ -2251,6 +2251,11 @@ HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
   }
   MOZ_ASSERT(aPointToInsert.IsSetAndValid());
 
+  if (aContentToInsert.NodeType() == nsINode::DOCUMENT_TYPE_NODE ||
+      aContentToInsert.NodeType() == nsINode::PROCESSING_INSTRUCTION_NODE) {
+    return CreateNodeResultBase<NodeType>::NotHandled();
+  }
+
   // Search up the parent chain to find a suitable container.
   EditorDOMPoint pointToInsert(aPointToInsert);
   MOZ_ASSERT(pointToInsert.IsSet());
@@ -4384,12 +4389,12 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::RemoveContainerWithTransaction(
 
 MOZ_CAN_RUN_SCRIPT_BOUNDARY void HTMLEditor::ContentAppended(
     nsIContent* aFirstNewContent) {
-  DoContentInserted(aFirstNewContent, eAppended);
+  DoContentInserted(aFirstNewContent, ContentNodeIs::Appended);
 }
 
 MOZ_CAN_RUN_SCRIPT_BOUNDARY void HTMLEditor::ContentInserted(
     nsIContent* aChild) {
-  DoContentInserted(aChild, eInserted);
+  DoContentInserted(aChild, ContentNodeIs::Inserted);
 }
 
 bool HTMLEditor::IsInObservedSubtree(nsIContent* aChild) {
@@ -4416,7 +4421,7 @@ bool HTMLEditor::IsInObservedSubtree(nsIContent* aChild) {
 }
 
 void HTMLEditor::DoContentInserted(nsIContent* aChild,
-                                   InsertedOrAppended aInsertedOrAppended) {
+                                   ContentNodeIs aContentNodeIs) {
   MOZ_ASSERT(aChild);
   nsINode* container = aChild->GetParentNode();
   MOZ_ASSERT(container);
@@ -4464,7 +4469,7 @@ void HTMLEditor::DoContentInserted(nsIContent* aChild,
     // Update spellcheck for only the newly-inserted node (bug 743819)
     if (mInlineSpellChecker) {
       nsIContent* endContent = aChild;
-      if (aInsertedOrAppended == eAppended) {
+      if (aContentNodeIs == ContentNodeIs::Appended) {
         nsIContent* child = nullptr;
         for (child = aChild; child; child = child->GetNextSibling()) {
           if (child->InclusiveDescendantMayNeedSpellchecking(this)) {

@@ -17,6 +17,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
   QuickSuggestRemoteSettings:
     "resource:///modules/urlbar/private/QuickSuggestRemoteSettings.sys.mjs",
+  RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
   TestUtils: "resource://testing-common/TestUtils.sys.mjs",
@@ -44,7 +45,6 @@ Object.defineProperty(lazy, "UrlbarTestUtils", {
       );
       module.init(gTestScope);
       gTestScope.registerCleanupFunction(() => {
-        module.uninit();
         // Make sure the utils are re-initialized during the next test.
         lazy._UrlbarTestUtils = null;
       });
@@ -131,6 +131,103 @@ const TEST_SCOPE_PROPERTIES = [
 ];
 
 /**
+ * Mock RemoteSettings.
+ *
+ * @param {object} options
+ *   Options object
+ * @param {object} options.config
+ *   Dummy config in the RemoteSettings.
+ * @param {Array} options.data
+ *   Dummy data in the RemoteSettings.
+ */
+class MockRemoteSettings {
+  constructor({ config = DEFAULT_CONFIG, data = [] }) {
+    this.#config = config;
+    this.#data = data;
+
+    // Make a stub for "get" function to return dummy data.
+    const rs = lazy.RemoteSettings("quicksuggest");
+    this.#sandbox = lazy.sinon.createSandbox();
+    this.#sandbox.stub(rs, "get").callsFake(async query => {
+      return query.filters.type === "configuration"
+        ? [{ configuration: this.#config }]
+        : this.#data.filter(r => r.type === query.filters.type);
+    });
+
+    // Make a stub for "download" in attachments.
+    this.#sandbox.stub(rs.attachments, "download").callsFake(async record => {
+      if (!record.attachment) {
+        throw new Error("No attachmet in the record");
+      }
+      const encoder = new TextEncoder();
+      return {
+        buffer: encoder.encode(JSON.stringify(record.attachment)),
+      };
+    });
+  }
+
+  async sync() {
+    if (!lazy.QuickSuggestRemoteSettings.rs) {
+      // There are no registered features that use remote settings.
+      return;
+    }
+
+    // Observe config-set event to recognize that the config is synced.
+    const onConfigSync = new Promise(resolve => {
+      lazy.QuickSuggestRemoteSettings.emitter.once("config-set", resolve);
+    });
+
+    // Make a stub for each feature to recognize that the features are synced.
+    const features = lazy.QuickSuggestRemoteSettings.features;
+    const onFeatureSyncs = features.map(feature => {
+      return new Promise(resolve => {
+        const stub = this.#sandbox
+          .stub(feature, "onRemoteSettingsSync")
+          .callsFake(async (...args) => {
+            // Call and wait for the original function.
+            await stub.wrappedMethod.apply(feature, args);
+            stub.restore();
+            resolve();
+          });
+      });
+    });
+
+    // Force to sync.
+    const rs = lazy.RemoteSettings("quicksuggest");
+    rs.emit("sync");
+
+    // Wait for sync.
+    await Promise.all([onConfigSync, ...onFeatureSyncs]);
+  }
+
+  /*
+   * Update the config and data in RemoteSettings. If the config or the data are
+   * undefined, use the current one.
+   *
+   * @param {object} options
+   *   Options object
+   * @param {object} options.config
+   *   Dummy config in the RemoteSettings.
+   * @param {Array} options.data
+   *   Dummy data in the RemoteSettings.
+   */
+  async update({ config = this.#config, data = this.#data }) {
+    this.#config = config;
+    this.#data = data;
+
+    await this.sync();
+  }
+
+  cleanup() {
+    this.#sandbox.restore();
+  }
+
+  #config = null;
+  #data = null;
+  #sandbox = null;
+}
+
+/**
  * Test utils for quick suggest.
  */
 class _QuickSuggestTestUtils {
@@ -204,25 +301,20 @@ class _QuickSuggestTestUtils {
    *   otherwise.
    */
   async ensureQuickSuggestInit({
-    remoteSettingsResults = [],
+    remoteSettingsResults,
     merinoSuggestions = null,
     config = DEFAULT_CONFIG,
   } = {}) {
-    lazy.QuickSuggestRemoteSettings._test_ignoreSettingsSync = true;
+    this.#mockRemoteSettings = new MockRemoteSettings({
+      config,
+      data: remoteSettingsResults,
+    });
 
     this.info?.("ensureQuickSuggestInit calling QuickSuggest.init()");
     lazy.QuickSuggest.init();
 
-    this.setConfig(config);
-
-    // Clear remote settings suggestions and add the test suggestions.
-    let admWikipedia = lazy.QuickSuggest.getFeature("AdmWikipedia");
-    admWikipedia._test_suggestionsMap.clear();
-    if (remoteSettingsResults) {
-      this.info?.("ensureQuickSuggestInit adding remote settings results");
-      await admWikipedia._test_suggestionsMap.add(remoteSettingsResults);
-      this.info?.("ensureQuickSuggestInit done adding remote settings results");
-    }
+    // Sync with current data.
+    await this.#mockRemoteSettings.sync();
 
     // Set up Merino.
     if (merinoSuggestions) {
@@ -235,9 +327,7 @@ class _QuickSuggestTestUtils {
 
     let cleanup = async () => {
       this.info?.("ensureQuickSuggestInit starting cleanup");
-      this.setConfig(DEFAULT_CONFIG);
-      delete lazy.QuickSuggestRemoteSettings._test_ignoreSettingsSync;
-      admWikipedia._test_suggestionsMap.clear();
+      this.#mockRemoteSettings.cleanup();
       if (merinoSuggestions) {
         lazy.UrlbarPrefs.clear("quicksuggest.dataCollection.enabled");
       }
@@ -249,17 +339,15 @@ class _QuickSuggestTestUtils {
   }
 
   /**
-   * Clears the current remote settings results and adds a new set of results.
-   * This can be used to add remote settings results after
+   * Clears the current remote settings data and adds a new set of data.
+   * This can be used to add remote settings data after
    * `ensureQuickSuggestInit()` has been called.
    *
-   * @param {Array} results
-   *   Array of remote settings result objects.
+   * @param {Array} data
+   *   Array of remote settings data objects.
    */
-  async setRemoteSettingsResults(results) {
-    let admWikipedia = lazy.QuickSuggest.getFeature("AdmWikipedia");
-    admWikipedia._test_suggestionsMap.clear();
-    await admWikipedia._test_suggestionsMap.add(results);
+  async setRemoteSettingsResults(data) {
+    await this.#mockRemoteSettings.update({ data });
   }
 
   /**
@@ -268,10 +356,9 @@ class _QuickSuggestTestUtils {
    *
    * @param {object} config
    *   The config to be applied. See
-   *   {@link QuickSuggestRemoteSettings._test_setConfig}
    */
-  setConfig(config) {
-    lazy.QuickSuggestRemoteSettings._test_setConfig(config);
+  async setConfig(config) {
+    await this.#mockRemoteSettings.update({ config });
   }
 
   /**
@@ -289,9 +376,9 @@ class _QuickSuggestTestUtils {
    */
   async withConfig({ config, callback }) {
     let original = lazy.QuickSuggestRemoteSettings.config;
-    this.setConfig(config);
+    await this.setConfig(config);
     await callback();
-    this.setConfig(original);
+    await this.setConfig(original);
   }
 
   /**
@@ -772,13 +859,12 @@ class _QuickSuggestTestUtils {
     // enrollments, but tests can trigger lots of updates back to back.
     await this.waitForScenarioUpdated();
 
-    let doExperimentCleanup = await lazy.ExperimentFakes.enrollWithFeatureConfig(
-      {
+    let doExperimentCleanup =
+      await lazy.ExperimentFakes.enrollWithFeatureConfig({
         enabled: true,
         featureId: "urlbar",
         value: valueOverrides,
-      }
-    );
+      });
 
     // Wait for the pref updates triggered by the experiment enrollment.
     this.info?.("Awaiting update after enrolling in experiment");
@@ -924,6 +1010,8 @@ class _QuickSuggestTestUtils {
     Services.locale.requestedLocales = requested;
     await promise;
   }
+
+  #mockRemoteSettings = null;
 }
 
 export var QuickSuggestTestUtils = new _QuickSuggestTestUtils();

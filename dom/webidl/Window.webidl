@@ -25,15 +25,11 @@ interface XULControllers;
 interface nsIDOMWindowUtils;
 interface nsIPrintSettings;
 
-typedef OfflineResourceList ApplicationCache;
-
 // http://www.whatwg.org/specs/web-apps/current-work/
 [Global, LegacyUnenumerableNamedProperties, NeedResolve,
  Exposed=Window,
  InstrumentedProps=(AbsoluteOrientationSensor,
                     Accelerometer,
-                    ApplicationCache,
-                    ApplicationCacheErrorEvent,
                     Atomics,
                     AudioParamMap,
                     AudioWorklet,
@@ -248,7 +244,6 @@ typedef OfflineResourceList ApplicationCache;
   readonly attribute Navigator clientInformation;
 
   [Replaceable] readonly attribute External external;
-  [Throws, SecureContext, Pref="browser.cache.offline.enable"] readonly attribute ApplicationCache applicationCache;
 
   // user prompts
   [Throws, NeedsSubjectPrincipal] undefined alert();
@@ -463,6 +458,16 @@ partial interface Window {
   // versa. Useful for interacting with the screen manager.
   [ChromeOnly, Throws]
   readonly attribute double desktopToDeviceScale;
+
+  // Returns the amount of CSS pixels relative to this window we're allowed to
+  // go out of the screen. This is needed so that SessionRestore is able to
+  // position windows that use client-side decorations correctly, but still
+  // pull mispositioned windows into the screen.
+  [ChromeOnly]
+  readonly attribute double screenEdgeSlopX;
+  [ChromeOnly]
+  readonly attribute double screenEdgeSlopY;
+
 
   /* The maximum offset that the window can be scrolled to
      (i.e., the document width/height minus the scrollport width/height) */

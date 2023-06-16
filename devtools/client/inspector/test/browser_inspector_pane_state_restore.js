@@ -14,7 +14,7 @@ const EXPECTED_NEW_WIDTH = 150;
 const EXPECTED_NEW_HEIGHT = 100;
 const EXPECTED_NEW_SIDEBAR_WIDTH = 250;
 
-add_task(async function() {
+add_task(async function () {
   // Simulate that the user has already stored their preferred split boxes widths.
   await pushPref(
     "devtools.toolsidebar-width.inspector",

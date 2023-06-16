@@ -33,7 +33,8 @@ export var UrlbarTokenizer = {
   REGEXP_SINGLE_WORD_HOST: /^[^.:]+$/i,
   REGEXP_HOSTPORT_IP_LIKE: /^(?=(.*[.:].*){2})[a-f0-9\.\[\]:]+$/i,
   // This accepts partial IPv4.
-  REGEXP_HOSTPORT_INVALID_IP: /\.{2,}|\d{5,}|\d{4,}(?![:\]])|^\.|^(\d+\.){4,}\d+$|^\d{4,}$/,
+  REGEXP_HOSTPORT_INVALID_IP:
+    /\.{2,}|\d{5,}|\d{4,}(?![:\]])|^\.|^(\d+\.){4,}\d+$|^\d{4,}$/,
   // This only accepts complete IPv4.
   REGEXP_HOSTPORT_IPV4: /^(\d{1,3}\.){3,}\d{1,3}(:\d+)?$/,
   // This accepts partial IPv6.

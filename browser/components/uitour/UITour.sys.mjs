@@ -10,8 +10,11 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AboutReaderParent: "resource:///actors/AboutReaderParent.sys.mjs",
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   BuiltInThemes: "resource:///modules/BuiltInThemes.sys.mjs",
+  CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
   FxAccounts: "resource://gre/modules/FxAccounts.sys.mjs",
+  PanelMultiView: "resource:///modules/PanelMultiView.sys.mjs",
   ProfileAge: "resource://gre/modules/ProfileAge.sys.mjs",
   ResetProfile: "resource://gre/modules/ResetProfile.sys.mjs",
   TelemetryController: "resource://gre/modules/TelemetryController.sys.mjs",
@@ -20,10 +23,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AddonManager: "resource://gre/modules/AddonManager.jsm",
   BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
-  CustomizableUI: "resource:///modules/CustomizableUI.jsm",
-  PanelMultiView: "resource:///modules/PanelMultiView.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
@@ -213,7 +213,7 @@ export var UITour = {
     // Lazy getter is initialized here so it can be replicated any time
     // in a test.
     delete this.url;
-    XPCOMUtils.defineLazyGetter(this, "url", function() {
+    XPCOMUtils.defineLazyGetter(this, "url", function () {
       return Services.urlFormatter.formatURLPref("browser.uitour.url");
     });
 
@@ -488,9 +488,8 @@ export var UITour = {
             }
             // We want to replace the current tab.
             browser.loadURI(url.URI, {
-              triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
-                {}
-              ),
+              triggeringPrincipal:
+                Services.scriptSecurityManager.createNullPrincipal({}),
             });
           });
         break;
@@ -511,9 +510,8 @@ export var UITour = {
 
             // We want to replace the current tab.
             browser.loadURI(url.URI, {
-              triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
-                {}
-              ),
+              triggeringPrincipal:
+                Services.scriptSecurityManager.createNullPrincipal({}),
             });
           });
         break;
@@ -1051,8 +1049,9 @@ export var UITour = {
       !this.isElementVisible(aTarget.node)
     ) {
       return Promise.reject(
-        `_ensureTarget: Reject the ${aTarget.name ||
-          aTarget.targetName} target since it isn't visible.`
+        `_ensureTarget: Reject the ${
+          aTarget.name || aTarget.targetName
+        } target since it isn't visible.`
       );
     }
 
@@ -1303,7 +1302,7 @@ export var UITour = {
 
       tooltip.addEventListener(
         "popuphiding",
-        function(event) {
+        function (event) {
           tooltipClose.removeEventListener("command", closeButtonCallback);
           if (aOptions.targetCallback && aAnchor.removeTargetListener) {
             aAnchor.removeTargetListener(document, targetCallback);
@@ -1326,7 +1325,7 @@ export var UITour = {
       if (tooltip.state == "closed") {
         document.defaultView.addEventListener(
           "endmodalstate",
-          function() {
+          function () {
             tooltip.openPopup(aAnchorEl, alignment);
           },
           { once: true }
@@ -1498,10 +1497,11 @@ export var UITour = {
     let url = "about:newtab";
     aWindow.openLinkIn(url, "current", {
       targetBrowser: aBrowser,
-      triggeringPrincipal: Services.scriptSecurityManager.createContentPrincipal(
-        Services.io.newURI(url),
-        {}
-      ),
+      triggeringPrincipal:
+        Services.scriptSecurityManager.createContentPrincipal(
+          Services.io.newURI(url),
+          {}
+        ),
     });
   },
 
@@ -1509,10 +1509,11 @@ export var UITour = {
     let url = "about:protections";
     aWindow.openLinkIn(url, "current", {
       targetBrowser: aBrowser,
-      triggeringPrincipal: Services.scriptSecurityManager.createContentPrincipal(
-        Services.io.newURI(url),
-        {}
-      ),
+      triggeringPrincipal:
+        Services.scriptSecurityManager.createContentPrincipal(
+          Services.io.newURI(url),
+          {}
+        ),
     });
   },
 
@@ -1838,7 +1839,8 @@ export var UITour = {
         }
       }
 
-      appinfo.canSetDefaultBrowserInBackground = canSetDefaultBrowserInBackground;
+      appinfo.canSetDefaultBrowserInBackground =
+        canSetDefaultBrowserInBackground;
 
       // Expose Profile creation and last reset dates in weeks.
       const ONE_WEEK = 7 * 24 * 60 * 60 * 1000;

@@ -13,7 +13,7 @@ if CONFIG["MOZ_LINKER"] or CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
     DIRS += ["android"]
 
-if CONFIG["OS_ARCH"] == "Linux":
+if CONFIG["OS_ARCH"] == "Linux" and not CONFIG["FUZZING_SNAPSHOT"]:
     DIRS += ["interposers"]
 
 DIRS += [

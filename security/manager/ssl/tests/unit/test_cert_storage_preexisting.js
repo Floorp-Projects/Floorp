@@ -11,7 +11,7 @@
 // directory.)
 
 /* eslint-disable no-unused-vars */
-add_task(async function() {
+add_task(async function () {
   let dbDirectory = do_get_profile();
   dbDirectory.append("security_state");
   let dbFile = do_get_file("test_cert_storage_preexisting/data.safe.bin");

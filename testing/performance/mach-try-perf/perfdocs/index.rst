@@ -194,6 +194,57 @@ The following fields are available:
 
 Note that setting the App/Variant-Restriction fields should be used to restrict the available apps and variants, not expand them as the suites, apps, and platforms combined already provide the largest coverage. The restrictions should be used when you know certain things definitely won't work, or will never be implemented for this category of tests. For instance, our `Resource Usage` tests only work on Firefox even though they may exist in Raptor which can run tests with Chrome.
 
+Comparators
+-----------
+
+If the standard/default push-to-try comparison is not enough, you can build your own "comparator" that can setup the base, and new revisions. The default comparator `BasePerfComparator` runs the standard mach-try-perf comparison, and there also exists a custom comparator called `BenchmarkComparator` for running custom benchmark comparisons on try (using Github PR links).
+
+If you'd like to add a custom comparator, you can either create it in a separate file and pass it in the `--comparator`, or add it to the `tools/tryselect/selectors/perfselector/perfcomparators.py` and use the name of the class as the `--comparator` argument (e.g. `--comparator BenchmarkComparator`). You can pass additional arguments to it using the `--comparator-args` option that accepts arguments in the format `NAME=VALUE`.
+
+The custom comparator needs to be a subclass of `BasePerfComparator`, and optionally overrides its methods. See the comparators file for more information about the interface available. Here's the general interface for it (subject to change), note that the `@comparator` decorator is required when making a builtin comparator::
+
+    @comparator
+    class BasePerfComparator:
+        def __init__(self, vcs, compare_commit, current_revision_ref, comparator_args):
+            """Initialize the standard/default settings for Comparators.
+
+            :param vcs object: Used for updating the local repo.
+            :param compare_commit str: The base revision found for the local repo.
+            :param current_revision_ref str: The current revision of the local repo.
+            :param comparator_args list: List of comparator args in the format NAME=VALUE.
+            """
+
+        def setup_base_revision(self, extra_args):
+            """Setup the base try run/revision.
+
+            The extra_args can be used to set additional
+            arguments for Raptor (not available for other harnesses).
+
+            :param extra_args list: A list of extra arguments to pass to the try tasks.
+            """
+
+        def teardown_base_revision(self):
+            """Teardown the setup for the base revision."""
+
+        def setup_new_revision(self, extra_args):
+            """Setup the new try run/revision.
+
+            Note that the extra_args are reset between the base, and new revision runs.
+
+            :param extra_args list: A list of extra arguments to pass to the try tasks.
+            """
+
+        def teardown_new_revision(self):
+            """Teardown the new run/revision setup."""
+
+        def teardown(self):
+            """Teardown for failures.
+
+            This method can be used for ensuring that the repo is cleaned up
+            when a failure is hit at any point in the process of doing the
+            new/base revision setups, or the pushes to try.
+            """
+
 Frequently Asked Questions (FAQ)
 --------------------------------
 

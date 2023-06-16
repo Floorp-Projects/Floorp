@@ -21,8 +21,7 @@ on Firefox and finding a bug that's a good fit for your skills can be a
 challenge, and we're always looking for ways to improve this process: making
 Mozilla more open, accessible, and easier to participate with. If you're
 having any trouble following this documentation, or hit a barrier you
-can't get around, please join us in the the Introduction room on Matrix
-or contact Mike Hoye directly at mhoye@mozilla.com.
+can't get around, please join us in the the Introduction room on Matrix.
 
 What skills do I need?
 ----------------------

@@ -12,7 +12,7 @@ import { configureFxAccountIdentity } from "resource://testing-common/services/s
 
 // Create a new sync_auth object and initialize it with a
 // mocked TokenServerClient which always receives the specified response.
-export var initializeIdentityWithTokenServerResponse = function(response) {
+export var initializeIdentityWithTokenServerResponse = function (response) {
   // First create a mock "request" object that well' hack into the token server.
   // A log for it
   let requestLog = Log.repository.getLogger("testing.mock-rest");
@@ -36,7 +36,7 @@ export var initializeIdentityWithTokenServerResponse = function(response) {
   function MockTSC() {}
   MockTSC.prototype = new TokenServerClient();
   MockTSC.prototype.constructor = MockTSC;
-  MockTSC.prototype.newRESTRequest = function(url) {
+  MockTSC.prototype.newRESTRequest = function (url) {
     return new MockRESTRequest(url);
   };
   // Arrange for the same observerPrefix as sync_auth uses.

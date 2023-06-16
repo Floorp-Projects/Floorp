@@ -8,11 +8,12 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const TEST_URL = `${URL_ROOT}page_style.html`;
 
-addRDMTask(TEST_URL, async function({ ui, manager }) {
+addRDMTask(TEST_URL, async function ({ ui, manager }) {
   // Store the RDM body text color for later.
   const rdmWindow = ui.toolWindow;
-  const rdmTextColor = rdmWindow.getComputedStyle(rdmWindow.document.body)
-    .color;
+  const rdmTextColor = rdmWindow.getComputedStyle(
+    rdmWindow.document.body
+  ).color;
 
   info(
     "Trigger the no page style action and wait for the text color to change"
@@ -54,7 +55,7 @@ function waitForContentPageTextColor(ui, expectedColor) {
   return SpecialPowers.spawn(
     ui.getViewportBrowser(),
     [{ expectedColor }],
-    function(args) {
+    function (args) {
       return new Promise(resolve => {
         const interval = content.setInterval(() => {
           const color = content.getComputedStyle(content.document.body).color;

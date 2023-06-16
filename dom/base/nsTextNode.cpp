@@ -133,15 +133,9 @@ void nsTextNode::List(FILE* out, int32_t aIndent) const {
   fprintf(out, "Text@%p", static_cast<const void*>(this));
   fprintf(out, " flags=[%08x]", static_cast<unsigned int>(GetFlags()));
   if (IsClosestCommonInclusiveAncestorForRangeInSelection()) {
-    const LinkedList<nsRange>* ranges =
+    const LinkedList<AbstractRange>* ranges =
         GetExistingClosestCommonInclusiveAncestorRanges();
-    int32_t count = 0;
-    if (ranges) {
-      // Can't use range-based iteration on a const LinkedList, unfortunately.
-      for (const nsRange* r = ranges->getFirst(); r; r = r->getNext()) {
-        ++count;
-      }
-    }
+    uint32_t count = ranges ? ranges->length() : 0;
     fprintf(out, " ranges:%d", count);
   }
   fprintf(out, " primaryframe=%p", static_cast<void*>(GetPrimaryFrame()));

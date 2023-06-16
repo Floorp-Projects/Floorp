@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* eslint-disable block-spacing */
-
 const { Log } = ChromeUtils.importESModule(
   "resource://gre/modules/Log.sys.mjs"
 );
@@ -110,8 +108,8 @@ add_task(async function log_message_with_params() {
   );
 
   // If an object has a .toJSON method, the formatter uses it.
-  let ob = function() {};
-  ob.toJSON = function() {
+  let ob = function () {};
+  ob.toJSON = function () {
     return { sneaky: "value" };
   };
   Assert.equal(
@@ -120,26 +118,26 @@ add_task(async function log_message_with_params() {
   );
 
   // Fall back to .toSource() if JSON.stringify() fails on an object.
-  ob = function() {};
-  ob.toJSON = function() {
+  ob = function () {};
+  ob.toJSON = function () {
     throw new Error("oh noes JSON");
   };
   Assert.equal(
     formatMessage("Fail is ${sub}", { sub: ob }),
-    "Fail is (function() {})"
+    "Fail is (function () {})"
   );
 
   // Fall back to .toString if both .toJSON and .toSource fail.
-  ob.toSource = function() {
+  ob.toSource = function () {
     throw new Error("oh noes SOURCE");
   };
   Assert.equal(
     formatMessage("Fail is ${sub}", { sub: ob }),
-    "Fail is function() {}"
+    "Fail is function () {}"
   );
 
   // Fall back to '[object]' if .toJSON, .toSource and .toString fail.
-  ob.toString = function() {
+  ob.toString = function () {
     throw new Error("oh noes STRING");
   };
   Assert.equal(
@@ -237,13 +235,13 @@ add_task(async function log_message_with_params() {
   /* eslint-disable object-shorthand */
   let vOf = {
     a: 1,
-    valueOf: function() {
+    valueOf: function () {
       throw new Error("oh noes valueOf");
     },
   };
   Assert.equal(
     formatMessage("Broken valueOf ${}", vOf),
-    'Broken valueOf ({a:1, valueOf:(function() {\n      throw new Error("oh noes valueOf");\n    })})'
+    'Broken valueOf ({a:1, valueOf:(function () {\n      throw new Error("oh noes valueOf");\n    })})'
   );
   /* eslint-enable object-shorthand */
 

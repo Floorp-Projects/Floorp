@@ -55,7 +55,6 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/ProcessHangMonitor.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/StaticPrefs_accessibility.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
@@ -1126,8 +1125,7 @@ void BrowserParent::Deactivate(bool aWindowLowering, uint64_t aActionId) {
 #ifdef ACCESSIBILITY
 a11y::PDocAccessibleParent* BrowserParent::AllocPDocAccessibleParent(
     PDocAccessibleParent* aParent, const uint64_t&,
-    const MaybeDiscardedBrowsingContext&, const uint32_t&,
-    const IAccessibleHolder&) {
+    const MaybeDiscardedBrowsingContext&) {
   // Reference freed in DeallocPDocAccessibleParent.
   return a11y::DocAccessibleParent::New().take();
 }
@@ -1141,8 +1139,7 @@ bool BrowserParent::DeallocPDocAccessibleParent(PDocAccessibleParent* aParent) {
 mozilla::ipc::IPCResult BrowserParent::RecvPDocAccessibleConstructor(
     PDocAccessibleParent* aDoc, PDocAccessibleParent* aParentDoc,
     const uint64_t& aParentID,
-    const MaybeDiscardedBrowsingContext& aBrowsingContext,
-    const uint32_t& aMsaaID, const IAccessibleHolder& aDocCOMProxy) {
+    const MaybeDiscardedBrowsingContext& aBrowsingContext) {
 #  if defined(ANDROID)
   MonitorAutoLock mal(nsAccessibilityService::GetAndroidMonitor());
 #  endif
@@ -1189,15 +1186,9 @@ mozilla::ipc::IPCResult BrowserParent::RecvPDocAccessibleConstructor(
     }
 
 #  ifdef XP_WIN
-    MOZ_ASSERT(aDocCOMProxy.IsNull());
-    if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-      a11y::MsaaAccessible::GetFrom(doc)->SetID(aMsaaID);
-    }
     if (a11y::nsWinUtils::IsWindowEmulationStarted()) {
       doc->SetEmulatedWindowHandle(parentDoc->GetEmulatedWindowHandle());
     }
-#  else
-    Unused << aDoc->SendConstructedInParentProcess();
 #  endif
 
     return IPC_OK();
@@ -1212,23 +1203,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvPDocAccessibleConstructor(
     // In this case, we don't get aParentDoc and aParentID.
     MOZ_ASSERT(!aParentDoc && !aParentID);
     doc->SetTopLevelInContentProcess();
-#  ifdef XP_WIN
-    if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-      MOZ_ASSERT(!aDocCOMProxy.IsNull());
-      RefPtr<IAccessible> proxy(aDocCOMProxy.Get());
-      doc->SetCOMInterface(proxy);
-    }
-#  endif
     a11y::ProxyCreated(doc);
-#  ifdef XP_WIN
-    if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-      // This *must* be called after ProxyCreated because
-      // MsaaAccessible::GetFrom will fail before that.
-      a11y::MsaaAccessible* msaa = a11y::MsaaAccessible::GetFrom(doc);
-      MOZ_ASSERT(msaa);
-      msaa->SetID(aMsaaID);
-    }
-#  endif
     // It's possible the embedder accessible hasn't been set yet; e.g.
     // a hidden iframe. In that case, embedderDoc will be null and this will
     // be handled when the embedder is set.
@@ -1263,19 +1238,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvPDocAccessibleConstructor(
     doc->SetTopLevel();
     a11y::DocManager::RemoteDocAdded(doc);
 #  ifdef XP_WIN
-    if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-      doc->MaybeInitWindowEmulation();
-    } else {
-      a11y::MsaaAccessible::GetFrom(doc)->SetID(aMsaaID);
-      MOZ_ASSERT(!aDocCOMProxy.IsNull());
-
-      RefPtr<IAccessible> proxy(aDocCOMProxy.Get());
-      doc->SetCOMInterface(proxy);
-      doc->MaybeInitWindowEmulation();
-      if (a11y::LocalAccessible* outerDoc = doc->OuterDocOfRemoteBrowser()) {
-        doc->SendParentCOMProxy(outerDoc);
-      }
-    }
+    doc->MaybeInitWindowEmulation();
 #  endif
   }
   return IPC_OK();
@@ -2340,7 +2303,9 @@ mozilla::ipc::IPCResult BrowserParent::RecvNotifyIMEFocus(
     aResolve(IMENotificationRequests());
     return IPC_OK();
   }
-
+  if (NS_WARN_IF(!aContentCache.IsValid())) {
+    return IPC_FAIL(this, "Invalid content cache data");
+  }
   mContentCache.AssignContent(aContentCache, widget, &aIMENotification);
   IMEStateManager::NotifyIME(aIMENotification, widget, this);
 
@@ -2360,6 +2325,9 @@ mozilla::ipc::IPCResult BrowserParent::RecvNotifyIMETextChange(
   if (!widget || !IMEStateManager::DoesBrowserParentHaveIMEFocus(this)) {
     return IPC_OK();
   }
+  if (NS_WARN_IF(!aContentCache.IsValid())) {
+    return IPC_FAIL(this, "Invalid content cache data");
+  }
   mContentCache.AssignContent(aContentCache, widget, &aIMENotification);
   mContentCache.MaybeNotifyIME(widget, aIMENotification);
   return IPC_OK();
@@ -2371,6 +2339,9 @@ mozilla::ipc::IPCResult BrowserParent::RecvNotifyIMECompositionUpdate(
   nsCOMPtr<nsIWidget> widget = GetTextInputHandlingWidget();
   if (!widget || !IMEStateManager::DoesBrowserParentHaveIMEFocus(this)) {
     return IPC_OK();
+  }
+  if (NS_WARN_IF(!aContentCache.IsValid())) {
+    return IPC_FAIL(this, "Invalid content cache data");
   }
   mContentCache.AssignContent(aContentCache, widget, &aIMENotification);
   mContentCache.MaybeNotifyIME(widget, aIMENotification);
@@ -2384,6 +2355,9 @@ mozilla::ipc::IPCResult BrowserParent::RecvNotifyIMESelection(
   if (!widget || !IMEStateManager::DoesBrowserParentHaveIMEFocus(this)) {
     return IPC_OK();
   }
+  if (NS_WARN_IF(!aContentCache.IsValid())) {
+    return IPC_FAIL(this, "Invalid content cache data");
+  }
   mContentCache.AssignContent(aContentCache, widget, &aIMENotification);
   mContentCache.MaybeNotifyIME(widget, aIMENotification);
   return IPC_OK();
@@ -2395,7 +2369,9 @@ mozilla::ipc::IPCResult BrowserParent::RecvUpdateContentCache(
   if (!widget || !IMEStateManager::DoesBrowserParentHaveIMEFocus(this)) {
     return IPC_OK();
   }
-
+  if (NS_WARN_IF(!aContentCache.IsValid())) {
+    return IPC_FAIL(this, "Invalid content cache data");
+  }
   mContentCache.AssignContent(aContentCache, widget);
   return IPC_OK();
 }
@@ -2418,6 +2394,9 @@ mozilla::ipc::IPCResult BrowserParent::RecvNotifyIMEPositionChange(
   nsCOMPtr<nsIWidget> widget = GetTextInputHandlingWidget();
   if (!widget || !IMEStateManager::DoesBrowserParentHaveIMEFocus(this)) {
     return IPC_OK();
+  }
+  if (NS_WARN_IF(!aContentCache.IsValid())) {
+    return IPC_FAIL(this, "Invalid content cache data");
   }
   mContentCache.AssignContent(aContentCache, widget, &aIMENotification);
   mContentCache.MaybeNotifyIME(widget, aIMENotification);
@@ -2963,11 +2942,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvNotifyContentBlockingEvent(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult BrowserParent::RecvSetAllowDeprecatedTls(bool value) {
-  Preferences::SetBool("security.tls.version.enable-deprecated", value);
-  return IPC_OK();
-}
-
 already_AddRefed<nsIBrowser> BrowserParent::GetBrowser() {
   nsCOMPtr<nsIBrowser> browser;
   RefPtr<Element> currentElement = mFrameElement;
@@ -3132,11 +3106,11 @@ bool BrowserParent::SendInsertText(const nsString& aStringToInsert) {
 }
 
 bool BrowserParent::SendPasteTransferable(
-    IPCDataTransfer&& aDataTransfer, const bool& aIsPrivateData,
+    IPCTransferableData&& aTransferableData, const bool& aIsPrivateData,
     nsIPrincipal* aRequestingPrincipal,
     const nsContentPolicyType& aContentPolicyType) {
   return PBrowserParent::SendPasteTransferable(
-      std::move(aDataTransfer), aIsPrivateData, aRequestingPrincipal,
+      std::move(aTransferableData), aIsPrivateData, aRequestingPrincipal,
       aContentPolicyType);
 }
 
@@ -3269,13 +3243,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvGetInputContext(
 mozilla::ipc::IPCResult BrowserParent::RecvSetInputContext(
     const InputContext& aContext, const InputContextAction& aAction) {
   IMEStateManager::SetInputContextForChildProcess(this, aContext, aAction);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult BrowserParent::RecvDispatchFocusToTopLevelWindow() {
-  if (nsCOMPtr<nsIWidget> widget = GetTopLevelWidget()) {
-    widget->SetFocus(nsIWidget::Raise::No, CallerType::System);
-  }
   return IPC_OK();
 }
 
@@ -3733,7 +3700,7 @@ nsresult BrowserParent::HandleEvent(Event* aEvent) {
 }
 
 mozilla::ipc::IPCResult BrowserParent::RecvInvokeDragSession(
-    nsTArray<IPCDataTransfer>&& aTransfers, const uint32_t& aAction,
+    nsTArray<IPCTransferableData>&& aTransferables, const uint32_t& aAction,
     Maybe<BigBuffer>&& aVisualDnDData, const uint32_t& aStride,
     const gfx::SurfaceFormat& aFormat, const LayoutDeviceIntRect& aDragRect,
     nsIPrincipal* aPrincipal, nsIContentSecurityPolicy* aCsp,
@@ -3756,7 +3723,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvInvokeDragSession(
                                       getter_AddRefs(cookieJarSettings));
 
   RefPtr<RemoteDragStartData> dragStartData = new RemoteDragStartData(
-      this, std::move(aTransfers), aDragRect, aPrincipal, aCsp,
+      this, std::move(aTransferables), aDragRect, aPrincipal, aCsp,
       cookieJarSettings, aSourceWindowContext.GetMaybeDiscarded(),
       aSourceTopWindowContext.GetMaybeDiscarded());
 

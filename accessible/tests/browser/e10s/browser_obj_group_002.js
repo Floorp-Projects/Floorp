@@ -18,7 +18,7 @@ addAccessibleTask(
       <td role="gridcell" id="grid_cell4">cell4</td>
     </tr>
   </table>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let getAcc = id => findAccessibleChildByID(accDoc, id);
 
     // ////////////////////////////////////////////////////////////////////////
@@ -33,9 +33,9 @@ addAccessibleTask(
     testGroupParentAttrs(getAcc("grid"), 2, false, false);
   },
   {
-    topLevel: !isWinNoCache,
-    iframe: !isWinNoCache,
-    remoteIframe: !isWinNoCache,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
     chrome: true,
   }
 );
@@ -55,7 +55,7 @@ addAccessibleTask(
       <div role="gridcell" id="treegrid_cell6">cell2</div>
     </div>
   </div>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let getAcc = id => findAccessibleChildByID(accDoc, id);
 
     // ////////////////////////////////////////////////////////////////////////
@@ -77,9 +77,9 @@ addAccessibleTask(
     testGroupParentAttrs(getAcc("treegrid_row1"), 4, false);
   },
   {
-    topLevel: !isWinNoCache,
-    iframe: !isWinNoCache,
-    remoteIframe: !isWinNoCache,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
     chrome: true,
   }
 );
@@ -94,7 +94,7 @@ addAccessibleTask(
     <h6 id="h6">heading6</h6>
     <div id="ariaHeadingNoLevel" role="heading">ariaHeadingNoLevel</div>
   </div>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let getAcc = id => findAccessibleChildByID(accDoc, id);
 
     // ////////////////////////////////////////////////////////////////////////
@@ -110,9 +110,9 @@ addAccessibleTask(
     testAbsentAttrs(getAcc("headings"), { "child-item-count": "", tree: "" });
   },
   {
-    topLevel: !isWinNoCache,
-    iframe: !isWinNoCache,
-    remoteIframe: !isWinNoCache,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
     chrome: true,
   }
 );
@@ -124,7 +124,7 @@ addAccessibleTask(
     <li id="combo1_opt3" role="option">Shazaam</li>
     <li id="combo1_opt4" role="option">JoeSentMe</li>
   </ul>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let getAcc = id => findAccessibleChildByID(accDoc, id);
 
     // ////////////////////////////////////////////////////////////////////////
@@ -136,9 +136,9 @@ addAccessibleTask(
     testGroupParentAttrs(getAcc("combo1"), 4, false);
   },
   {
-    topLevel: !isWinNoCache,
-    iframe: !isWinNoCache,
-    remoteIframe: !isWinNoCache,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
     chrome: true,
   }
 );
@@ -149,7 +149,7 @@ addAccessibleTask(
       <div role="cell" id="table_cell" aria-colindex="3">cell</div>
     </div>
   </div>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let getAcc = id => findAccessibleChildByID(accDoc, id);
 
     // ////////////////////////////////////////////////////////////////////////
@@ -163,9 +163,9 @@ addAccessibleTask(
     testGroupParentAttrs(getAcc("table_row"), 4, false);
   },
   {
-    topLevel: !isWinNoCache,
-    iframe: !isWinNoCache,
-    remoteIframe: !isWinNoCache,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
     chrome: true,
   }
 );
@@ -183,7 +183,7 @@ addAccessibleTask(
       </div>
     </div>
   </div>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let getAcc = id => findAccessibleChildByID(accDoc, id);
 
     // Attributes calculated even when row is wrapped in a div.
@@ -191,9 +191,9 @@ addAccessibleTask(
     testGroupAttrs(getAcc("wrapped_row_2"), 2, 2, null);
   },
   {
-    topLevel: !isWinNoCache,
-    iframe: !isWinNoCache,
-    remoteIframe: !isWinNoCache,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
     chrome: true,
   }
 );
@@ -204,7 +204,7 @@ addAccessibleTask(
     <div role="listitem" id="t1_li1">Oranges</div>
   </div>
   <div role="listitem" id="t1_li3">Bananas</div>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let getAcc = id => findAccessibleChildByID(accDoc, id);
 
     // ////////////////////////////////////////////////////////////////////////
@@ -215,9 +215,9 @@ addAccessibleTask(
     testGroupParentAttrs(getAcc("aria-list_4"), 3, false);
   },
   {
-    topLevel: !isWinNoCache,
-    iframe: !isWinNoCache,
-    remoteIframe: !isWinNoCache,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
     chrome: true,
   }
 );
@@ -242,7 +242,7 @@ addAccessibleTask(
     </div>
     <div id="comm_nested_3" role="comment"><p>Comment 3 level 1</p></div>
   </article>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let getAcc = id => findAccessibleChildByID(accDoc, id);
 
     // Test group attributes of ARIA comments
@@ -257,9 +257,9 @@ addAccessibleTask(
     testGroupAttrs(getAcc("comm_nested_3"), 3, 3, 1);
   },
   {
-    topLevel: !isWinNoCache,
-    iframe: !isWinNoCache,
-    remoteIframe: !isWinNoCache,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
     chrome: true,
   }
 );
@@ -268,7 +268,7 @@ addAccessibleTask(
   `<div role="tree" id="tree4"><div role="treeitem"
   id="tree4_ti1">Item 1</div><div role="treeitem"
   id="tree4_ti2">Item 2</div></div>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let getAcc = id => findAccessibleChildByID(accDoc, id);
 
     // Test that group position information updates after deleting node.
@@ -286,9 +286,9 @@ addAccessibleTask(
     testGroupParentAttrs(getAcc("tree4"), 1, true);
   },
   {
-    topLevel: !isWinNoCache,
-    iframe: !isWinNoCache,
-    remoteIframe: !isWinNoCache,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
     chrome: true,
   }
 );
@@ -338,7 +338,7 @@ addAccessibleTask(
     </div>
   </div>
 `,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let getAcc = id => findAccessibleChildByID(accDoc, id);
 
     testGroupAttrs(getAcc("ti1"), 1, 2, 1);
@@ -357,9 +357,9 @@ addAccessibleTask(
     testGroupAttrs(getAcc("r2"), 2, 2, 0);
   },
   {
-    topLevel: !isWinNoCache,
-    iframe: !isWinNoCache,
-    remoteIframe: !isWinNoCache,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
     chrome: true,
   }
 );
@@ -375,16 +375,16 @@ addAccessibleTask(
       <div role="treeitem" id="ti2">second</div>
     </div>
   </div>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let getAcc = id => findAccessibleChildByID(accDoc, id);
 
     testGroupAttrs(getAcc("ti1"), 1, 1, 1);
     testGroupAttrs(getAcc("ti2"), 1, 1, 1);
   },
   {
-    topLevel: !isWinNoCache,
-    iframe: !isWinNoCache,
-    remoteIframe: !isWinNoCache,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
     chrome: true,
   }
 );

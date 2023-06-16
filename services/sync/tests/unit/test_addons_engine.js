@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { AddonManager } = ChromeUtils.import(
-  "resource://gre/modules/AddonManager.jsm"
+const { AddonManager } = ChromeUtils.importESModule(
+  "resource://gre/modules/AddonManager.sys.mjs"
 );
 const { CHANGE_INSTALLED } = ChromeUtils.importESModule(
   "resource://services-sync/addonsreconciler.sys.mjs"
@@ -121,7 +121,7 @@ add_task(async function test_get_changed_ids() {
   let timerPrecision = Preferences.get("privacy.reduceTimerPrecision");
   Preferences.set("privacy.reduceTimerPrecision", false);
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Preferences.set("privacy.reduceTimerPrecision", timerPrecision);
   });
 

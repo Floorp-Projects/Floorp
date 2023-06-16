@@ -5,11 +5,11 @@
 
 const TEST_URL = "http://example.com/";
 
-add_task(async function() {
+add_task(async function () {
   await PlacesUtils.bookmarks.eraseEverything();
   let organizer = await promiseLibrary();
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await promiseLibraryClosed(organizer);
     await PlacesUtils.bookmarks.eraseEverything();
   });
@@ -59,7 +59,7 @@ add_task(async function() {
   await selectBookmarksIn(organizer, bookmarks, "UnfiledBookmarks");
 });
 
-var selectBookmarksIn = async function(organizer, bookmarks, aLeftPaneQuery) {
+var selectBookmarksIn = async function (organizer, bookmarks, aLeftPaneQuery) {
   let PlacesOrganizer = organizer.PlacesOrganizer;
   let ContentTree = organizer.ContentTree;
   info("Selecting " + aLeftPaneQuery + " in the left pane");

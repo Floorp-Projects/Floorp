@@ -214,11 +214,7 @@ describe("Tree", () => {
     expect(formatTree(wrapper)).toMatchSnapshot();
     expect(shouldItemUpdate.mock.calls).toHaveLength(0);
 
-    wrapper
-      .find("Tree")
-      .first()
-      .instance()
-      .forceUpdate();
+    wrapper.find("Tree").first().instance().forceUpdate();
     expect(formatTree(wrapper)).toMatchSnapshot();
     expect(shouldItemUpdate.mock.calls).toHaveLength(2);
 
@@ -239,9 +235,7 @@ describe("Tree", () => {
     expect(formatTree(wrapper)).toMatchSnapshot();
     expect(wrapper.find(".active").prop("id")).toBe("key-G");
 
-    getTreeNodes(wrapper)
-      .first()
-      .simulate("click");
+    getTreeNodes(wrapper).first().simulate("click");
     expect(formatTree(wrapper)).toMatchSnapshot();
     expect(wrapper.find(".focused").prop("id")).toBe("key-A");
     expect(wrapper.find(".active").exists()).toBe(false);
@@ -395,18 +389,14 @@ describe("Tree", () => {
     );
     expect(wrapper.find(".focused").prop("id")).toBe("key-G");
 
-    getTreeNodes(wrapper)
-      .first()
-      .simulate("click");
+    getTreeNodes(wrapper).first().simulate("click");
     expect(formatTree(wrapper)).toMatchSnapshot();
     expect(wrapper.getDOMNode().getAttribute("aria-activedescendant")).toBe(
       "key-A"
     );
     expect(wrapper.find(".focused").prop("id")).toBe("key-A");
 
-    getTreeNodes(wrapper)
-      .first()
-      .simulate("click");
+    getTreeNodes(wrapper).first().simulate("click");
     expect(formatTree(wrapper)).toMatchSnapshot();
     expect(wrapper.getDOMNode().getAttribute("aria-activedescendant")).toBe(
       "key-A"
@@ -698,15 +688,10 @@ describe("Tree", () => {
     const wrapper = mountTree({
       expanded: new Set("ABCDEFGHIJKLMNO".split("")),
     });
-    const treeRef = wrapper
-      .find("Tree")
-      .first()
-      .instance().treeRef.current;
+    const treeRef = wrapper.find("Tree").first().instance().treeRef.current;
     treeRef.focus = jest.fn();
 
-    getTreeNodes(wrapper)
-      .first()
-      .simulate("click");
+    getTreeNodes(wrapper).first().simulate("click");
     expect(treeRef.focus.mock.calls).toHaveLength(1);
   });
 
@@ -715,10 +700,7 @@ describe("Tree", () => {
       expanded: new Set("ABCDEFGHIJKLMNO".split("")),
       focused: "A",
     });
-    const treeRef = wrapper
-      .find("Tree")
-      .first()
-      .instance().treeRef.current;
+    const treeRef = wrapper.find("Tree").first().instance().treeRef.current;
     treeRef.focus = jest.fn();
     wrapper.simulate("blur");
     expect(treeRef.focus.mock.calls).toHaveLength(0);

@@ -11,12 +11,12 @@ let assert;
 // Unfortunately it throws a lot on mochitests...
 
 if (isNodeTest()) {
-  assert = function(condition, message) {
+  assert = function (condition, message) {
     if (!condition) {
       throw new Error(`Assertion failure: ${message}`);
     }
   };
 } else {
-  assert = function() {};
+  assert = function () {};
 }
 export default assert;

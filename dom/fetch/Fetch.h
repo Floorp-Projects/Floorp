@@ -136,11 +136,7 @@ class FetchBody : public BodyStreamHolder, public AbortFollower {
 
   NS_INLINE_DECL_REFCOUNTING_INHERITED(FetchBody, BodyStreamHolder)
 
-  bool GetBodyUsed(ErrorResult& aRv) const;
-
-  // For use in assertions. On success, returns true if the body is used, false
-  // if not. On error, this sweeps the error under the rug and returns true.
-  bool CheckBodyUsed() const;
+  bool BodyUsed() const;
 
   already_AddRefed<Promise> ArrayBuffer(JSContext* aCx, ErrorResult& aRv) {
     return ConsumeBody(aCx, BodyConsumer::CONSUME_ARRAYBUFFER, aRv);
@@ -205,15 +201,6 @@ class FetchBody : public BodyStreamHolder, public AbortFollower {
   // to the Console.
   void SetBodyUsed(JSContext* aCx, ErrorResult& aRv);
 
-  // BodyStreamHolder
-  void NullifyStream() override {
-    BodyStreamHolder::NullifyStream();
-    mReadableStreamReader = nullptr;
-    mFetchStreamReader = nullptr;
-  }
-
-  void MarkAsRead() override { mBodyUsed = true; }
-
   virtual AbortSignalImpl* GetSignalImpl() const = 0;
 
   virtual AbortSignalImpl* GetSignalImplToConsumeBody() const = 0;
@@ -230,7 +217,6 @@ class FetchBody : public BodyStreamHolder, public AbortFollower {
 
   // This is the Reader used to retrieve data from the body. This needs to be
   // traversed by subclasses.
-  RefPtr<ReadableStreamDefaultReader> mReadableStreamReader;
   RefPtr<FetchStreamReader> mFetchStreamReader;
 
   explicit FetchBody(nsIGlobalObject* aOwner);
@@ -254,7 +240,7 @@ class FetchBody : public BodyStreamHolder, public AbortFollower {
   bool mBodyUsed;
 
   // The main-thread event target for runnable dispatching.
-  nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
+  nsCOMPtr<nsISerialEventTarget> mMainThreadEventTarget;
 };
 
 class EmptyBody final : public FetchBody<EmptyBody> {

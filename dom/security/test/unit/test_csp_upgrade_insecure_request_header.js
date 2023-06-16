@@ -9,7 +9,7 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 // the ContentPolicyType assertion in the constructor.
 Services.prefs.setBoolPref("network.loadinfo.skip_type_assertion", true);
 
-XPCOMUtils.defineLazyGetter(this, "URL", function() {
+XPCOMUtils.defineLazyGetter(this, "URL", function () {
   return "http://localhost:" + httpserver.identity.primaryPort;
 });
 

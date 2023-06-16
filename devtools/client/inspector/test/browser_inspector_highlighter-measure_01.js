@@ -19,7 +19,7 @@ const HIGHLIGHTER_TYPE = "MeasuringToolHighlighter";
 const X = 32;
 const Y = 20;
 
-add_task(async function() {
+add_task(async function () {
   const helper = await openInspectorForURL(TEST_URL).then(
     getHighlighterHelperFor(HIGHLIGHTER_TYPE)
   );

@@ -2,9 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+ChromeUtils.defineESModuleGetters(this, {
   CustomizableUITestUtils:
-    "resource://testing-common/CustomizableUITestUtils.jsm",
+    "resource://testing-common/CustomizableUITestUtils.sys.mjs",
 });
 
 let gCUITestUtils = new CustomizableUITestUtils(window);
@@ -86,7 +86,7 @@ add_task(async function test_prevent_install_ui() {
     gBrowser,
     "about:preferences#search"
   );
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     let linkContainer = content.document.getElementById("addEnginesBox");
     if (!linkContainer.hidden) {
       await ContentTaskUtils.waitForMutationCondition(

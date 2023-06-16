@@ -512,8 +512,8 @@ const ASRouterTriggerListeners = new Map([
       },
 
       observe(subject, topic, data) {
-        const browser = Services.wm.getMostRecentBrowserWindow()?.gBrowser
-          .selectedBrowser;
+        const browser =
+          Services.wm.getMostRecentBrowserWindow()?.gBrowser.selectedBrowser;
         if (
           !browser ||
           topic !== this._topic ||

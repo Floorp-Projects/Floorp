@@ -250,6 +250,10 @@ bool SdpHelper::OwnsTransport(const Sdp& sdp, uint16_t level,
 bool SdpHelper::OwnsTransport(const SdpMediaSection& msection,
                               const BundledMids& bundledMids,
                               sdp::SdpType type) {
+  if (MsectionIsDisabled(msection)) {
+    return false;
+  }
+
   if (!msection.GetAttributeList().HasAttribute(SdpAttribute::kMidAttribute)) {
     // No mid, definitely no bundle for this m-section
     return true;
@@ -729,6 +733,69 @@ bool SdpHelper::SdpMatch(const Sdp& sdp1, const Sdp& sdp2) {
   }
 
   return true;
+}
+
+nsresult SdpHelper::ValidateTransportAttributes(const Sdp& aSdp,
+                                                sdp::SdpType aType) {
+  BundledMids bundledMids;
+  nsresult rv = GetBundledMids(aSdp, &bundledMids);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  for (size_t level = 0; level < aSdp.GetMediaSectionCount(); ++level) {
+    const auto& msection = aSdp.GetMediaSection(level);
+    if (OwnsTransport(msection, bundledMids, aType)) {
+      const auto& mediaAttrs = msection.GetAttributeList();
+      if (mediaAttrs.GetIceUfrag().empty()) {
+        SDP_SET_ERROR("Invalid description, no ice-ufrag attribute at level "
+                      << level);
+        return NS_ERROR_INVALID_ARG;
+      }
+
+      if (mediaAttrs.GetIcePwd().empty()) {
+        SDP_SET_ERROR("Invalid description, no ice-pwd attribute at level "
+                      << level);
+        return NS_ERROR_INVALID_ARG;
+      }
+
+      if (!mediaAttrs.HasAttribute(SdpAttribute::kFingerprintAttribute)) {
+        SDP_SET_ERROR("Invalid description, no fingerprint attribute at level "
+                      << level);
+        return NS_ERROR_INVALID_ARG;
+      }
+
+      const SdpFingerprintAttributeList& fingerprints(
+          mediaAttrs.GetFingerprint());
+      if (fingerprints.mFingerprints.empty()) {
+        SDP_SET_ERROR(
+            "Invalid description, no supported fingerprint algorithms present "
+            "at level "
+            << level);
+        return NS_ERROR_INVALID_ARG;
+      }
+
+      if (mediaAttrs.HasAttribute(SdpAttribute::kSetupAttribute, true)) {
+        if (mediaAttrs.GetSetup().mRole == SdpSetupAttribute::kHoldconn) {
+          SDP_SET_ERROR(
+              "Invalid description, illegal setup attribute \"holdconn\" "
+              "at level "
+              << level);
+          return NS_ERROR_INVALID_ARG;
+        }
+
+        if (aType == sdp::kAnswer &&
+            mediaAttrs.GetSetup().mRole == SdpSetupAttribute::kActpass) {
+          SDP_SET_ERROR(
+              "Invalid answer, illegal setup attribute \"actpass\" at level "
+              << level);
+          return NS_ERROR_INVALID_ARG;
+        }
+      } else if (aType == sdp::kOffer) {
+        SDP_SET_ERROR("Invalid offer, no setup attribute at level " << level);
+        return NS_ERROR_INVALID_ARG;
+      }
+    }
+  }
+  return NS_OK;
 }
 
 }  // namespace mozilla

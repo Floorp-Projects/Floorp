@@ -7,7 +7,7 @@ function run_test() {
   initTestDevToolsServer();
   add_test_bulk_actor();
 
-  add_task(async function() {
+  add_task(async function () {
     await test_string_error(socket_transport, json_reply);
     await test_string_error(local_transport, json_reply);
     DevToolsServer.destroy();
@@ -49,7 +49,7 @@ function add_test_bulk_actor() {
 
 /** * Tests ***/
 
-var test_string_error = async function(transportFactory, onReady) {
+var test_string_error = async function (transportFactory, onReady) {
   const transport = await transportFactory();
 
   const client = new DevToolsClient(transport);

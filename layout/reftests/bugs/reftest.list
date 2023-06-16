@@ -1166,7 +1166,7 @@ fails-if(Android) == 455826-1.html 455826-1-ref.html
 == chrome://reftest/content/bugs/456147.xhtml 456147-ref.html
 fuzzy(24-110,110-800) == 456219-1a.html 456219-1-ref.html # bug 1128229
 fuzzy(24-110,107-1251) == 456219-1b.html 456219-1-ref.html # bug 1128229
-fuzzy(24-110,107-2940) == 456219-1c.html 456219-1-ref.html # bug 1128229
+fuzzy(24-110,107-3051) == 456219-1c.html 456219-1-ref.html # bug 1128229
 fuzzy(0-10,0-8) == 456219-2.html 456219-2-ref.html
 == 456330-1.gif 456330-1-ref.png
 == 456484-1.html 456484-1-ref.html
@@ -2010,7 +2010,6 @@ fuzzy(0-129,0-48) == 1406179.html 1406179-ref.html
 == 1406183-1.html 1406183-1-ref.html
 == 1410028.html 1410028-ref.html
 fuzzy-if((!gtkWidget&&!geckoview&&!swgl&&!(isCoverageBuild&&winWidget))||useDrawSnapshot,1-2,17300-17500) skip-if(winWidget&&isCoverageBuild) == 1412375.html 1412375-ref.html # Skip WinCCov: Bug 1740155
-test-pref(font.size.systemFontScale,200) == 1412743.html 1412743-ref.html
 fuzzy(0-255,0-4054) == 1415987-1.html 1415987-1-ref.html # this is a large fuzz, without the fix the test fails in the range 246-255,3237-25110, which overlaps the fuzz range, but would still catch regressing this bug some of the time which is better than not having a test.
 == 1419820-1.html 1419820-1-ref.html
 == 1420946-1.html 1420946-1-ref.html
@@ -2056,7 +2055,8 @@ random-if(useDrawSnapshot) == 1546856-1.html 1546856-ref.html
 test-pref(layout.css.prefers-color-scheme.content-override,0) != 1551040.txt 1551040.txt
 test-pref(layout.css.prefers-color-scheme.content-override,0) == 1551040.html 1551040.html
 != 1552789-1.html 1552789-ref-1.html
-pref(image.downscale-during-decode.enabled,true) skip-if(((gtkWidget&&isDebugBuild)||(gtkWidget&&AddressSanitizer)||Android||ThreadSanitizer)||(Android&&isDebugBuild)) random-if(useDrawSnapshot) == 1553571-1.html 1553571-1-ref.html
+pref(image.downscale-during-decode.enabled,true) skip-if(((gtkWidget&&isDebugBuild)||(gtkWidget&&AddressSanitizer)||Android||ThreadSanitizer)||(Android&&isDebugBuild)) random-if(useDrawSnapshot) fuzzy(0-2,0-188) == 1553571-1.html 1553571-1-ref.html
+pref(image.downscale-during-decode.enabled,true) fuzzy(0-2,0-2004) skip-if(((gtkWidget&&isDebugBuild)||(gtkWidget&&AddressSanitizer)||Android||ThreadSanitizer)||(Android&&isDebugBuild)) random-if(useDrawSnapshot) == 1553571-2.html 1553571-2-ref.html
 == 1558937-1.html 1558937-1-ref.html
 != 1563484.html 1563484-notref.html
 == 1563484.html 1563484-ref.html
@@ -2130,9 +2130,16 @@ skip-if(!/^Windows\x20NT\x2010\.0/.test(http.oscpu)) != 1798297-1.html 1798297-1
 == 1799425-1.html 1799425-1-ref.html
 == 1800437-1.html 1800437-1-ref.html
 == 1803999-1.html 1803999-1-ref.html
+# testing the same bug but we can hit it via a few different code paths, 1 is raster image, 2 is vector image, 3 is vector image with an image restriction region
+pref(image.downscale-during-decode.enabled,true) == 1804872-1.html 1804872-1-ref.html
+pref(image.downscale-during-decode.enabled,true) == 1804872-2.html 1804872-2-ref.html
+pref(image.downscale-during-decode.enabled,true) == 1804872-3.html 1804872-3-ref.html
 == 1814628-1.html 1814628-1-ref.html
 == 1814047.html 1814047-ref.html
 == 1818412-1.html 1818412-1-ref.html
 == 1827009-1.html 1827009-1-ref.html
 pref(layout.testing.overlay-scrollbars.always-visible,true) pref(ui.useOverlayScrollbars,1) == 1827337-1.html 1827337-1-ref.html
 pref(layout.testing.overlay-scrollbars.always-visible,true) pref(ui.useOverlayScrollbars,1) fuzzy-if(winWidget,0-21,0-134) fuzzy-if(cocoaWidget,0-2,0-12) == 1828879-1.html 1828879-1-ref.html
+skip-if(!OSX) != 1834316-1.html 1834316-1-notref.html
+skip-if(!OSX) test-pref(layout.css.font-visibility.standard,1) ref-pref(layout.css.font-visibility.standard,3) == 1835271-1.html 1835271-1-ref.html
+skip-if(!OSX) != 1836024-1.html 1836024-1-notref.html

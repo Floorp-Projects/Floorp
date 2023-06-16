@@ -11,10 +11,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  RemoteL10n: "resource://activity-stream/lib/RemoteL10n.jsm",
+  RemoteL10n: "resource://activity-stream/lib/RemoteL10n.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {

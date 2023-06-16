@@ -9,7 +9,7 @@ Services.scriptloader.loadSubScript(
 /**
  * Dragging an URL to a tab without userContextId set.
  */
-add_task(async function() {
+add_task(async function () {
   let tab = BrowserTestUtils.addTab(gBrowser, "http://example.com/");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
@@ -50,7 +50,7 @@ add_task(async function() {
     "Tab shouldn't have usercontextid attribute"
   );
 
-  await SpecialPowers.spawn(tab2.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab2.linkedBrowser, [], async function () {
     Assert.equal(content.document.documentURI, "http://test1.example.com/");
     Assert.equal(
       content.document.nodePrincipal.originAttributes.userContextId,
@@ -72,7 +72,7 @@ add_task(async function() {
  * When dragging an URL to a new tab, the new tab should have the same
  * userContextId as the original tab.
  */
-add_task(async function() {
+add_task(async function () {
   let tab = BrowserTestUtils.addTab(gBrowser, "http://example.com/", {
     userContextId: 1,
   });
@@ -112,7 +112,7 @@ add_task(async function() {
   let tab2 = await newTabPromise;
   Assert.equal(tab2.getAttribute("usercontextid"), 1);
 
-  await SpecialPowers.spawn(tab2.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab2.linkedBrowser, [], async function () {
     Assert.equal(content.document.documentURI, "http://test1.example.com/");
     Assert.equal(
       content.document.nodePrincipal.originAttributes.userContextId,
@@ -136,7 +136,7 @@ add_task(async function() {
  * Ex: if you drag a link from tab 1 with userContext 1 to tab 2 with
  * userContext 2, the link will open in tab 2 with userContext 2.
  */
-add_task(async function() {
+add_task(async function () {
   let tab = BrowserTestUtils.addTab(gBrowser, "http://example.com/", {
     userContextId: 1,
   });
@@ -162,7 +162,7 @@ add_task(async function() {
 
   await BrowserTestUtils.browserLoaded(tab2.linkedBrowser);
 
-  await SpecialPowers.spawn(tab2.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab2.linkedBrowser, [], async function () {
     Assert.equal(content.document.documentURI, "http://test1.example.com/");
     Assert.equal(
       content.document.nodePrincipal.originAttributes.userContextId,

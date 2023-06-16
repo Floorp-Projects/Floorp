@@ -32,13 +32,12 @@ export class InputListAutoComplete {
       return items;
     }
 
-    const filter = !aField.hasAttribute("mozNoFilter");
     const lowerFieldValue = aField.value.toLowerCase();
 
     for (const option of aField.list.options) {
       const label = option.label || option.text || option.value || "";
 
-      if (filter && !label.toLowerCase().includes(lowerFieldValue)) {
+      if (!label.toLowerCase().includes(lowerFieldValue)) {
         continue;
       }
 

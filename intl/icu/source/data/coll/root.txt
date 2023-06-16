@@ -3,7 +3,7 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 root{
     UCARules:process(uca_rules){"../unidata/UCARules.txt"}
-    Version{"42"}
+    Version{"43"}
     collations{
         default{"standard"}
         emoji{
@@ -414,7 +414,7 @@ root{
                 "& 👨 << 🧔 <<🧔‍♂ <<🧔🏻‍♂ <<🧔🏼‍♂ <<🧔🏽‍♂ <<🧔🏾‍♂ <<🧔🏿‍♂ <<👱‍♂ <<👱🏻‍♂ <<👱🏼‍♂ <<👱🏽‍♂ <<👱🏾‍♂ <<👱🏿‍♂"
                 "& 👩 << 🧔‍♀ << 🧔🏻‍♀ << 🧔🏼‍♀ << 🧔🏽‍♀ << 🧔🏾‍♀ << 🧔🏿‍♀ << 👱‍♀ << 👱🏻‍♀ << 👱🏼‍♀ << 👱🏽‍♀ << 👱🏾‍♀ << 👱🏿‍♀"
             }
-            Version{"42"}
+            Version{"43"}
         }
         eor{
             Sequence{
@@ -954,7 +954,7 @@ root{
                 "&ք"
                 "<և"
             }
-            Version{"42"}
+            Version{"43"}
         }
         private-unihan{
             Sequence{
@@ -1197,7 +1197,7 @@ root{
                 "&龟=\uFDD0龟"
                 "&龠=\uFDD0龠"
             }
-            Version{"42"}
+            Version{"43"}
         }
         search{
             Sequence{
@@ -1229,8 +1229,7 @@ root{
                 "<<<ﻫ<<<ﻬ<<<ﻪ<<<ﻩ"
                 "<<ة"
                 "<<<ﺔ<<<ﺓ"
-                "&[last primary ignorable]<<׳"
-                "<<״"
+                "&[last primary ignorable]"
                 "<<ـ"
                 "<<ฺ"
                 "&ᄀ"
@@ -1316,11 +1315,11 @@ root{
                 "&ᅳᅵ"
                 "=ᅴ"
             }
-            Version{"42"}
+            Version{"43"}
         }
         standard{
             Sequence{""}
-            Version{"42"}
+            Version{"43"}
         }
     }
     depends:process(dependency){"ucadata.icu"}

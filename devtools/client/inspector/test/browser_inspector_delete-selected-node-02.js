@@ -9,7 +9,7 @@
 
 const TEST_PAGE = URL_ROOT + "doc_inspector_delete-selected-node-02.html";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_PAGE);
 
   await testManuallyDeleteSelectedNode();

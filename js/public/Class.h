@@ -818,6 +818,16 @@ enum class ESClass {
 /* Fills |vp| with the unboxed value for boxed types, or undefined otherwise. */
 bool Unbox(JSContext* cx, JS::HandleObject obj, JS::MutableHandleValue vp);
 
+// Classes with JSCLASS_SKIP_NURSERY_FINALIZE or Wrapper classes with
+// CROSS_COMPARTMENT flags will not have their finalizer called if they are
+// nursery allocated and not promoted to the tenured heap. The finalizers for
+// these classes must do nothing except free data which was allocated via
+// Nursery::allocateBuffer.
+inline bool CanNurseryAllocateFinalizedClass(const JSClass* const clasp) {
+  MOZ_ASSERT(clasp->hasFinalize());
+  return clasp->flags & JSCLASS_SKIP_NURSERY_FINALIZE;
+}
+
 #ifdef DEBUG
 JS_PUBLIC_API bool HasObjectMovedOp(JSObject* obj);
 #endif

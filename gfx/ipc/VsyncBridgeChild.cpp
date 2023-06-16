@@ -119,7 +119,7 @@ void VsyncBridgeChild::ProcessingError(Result aCode, const char* aReason) {
                      "Processing error in VsyncBridgeChild");
 }
 
-void VsyncBridgeChild::HandleFatalError(const char* aMsg) const {
+void VsyncBridgeChild::HandleFatalError(const char* aMsg) {
   dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aMsg, OtherPid());
 }
 

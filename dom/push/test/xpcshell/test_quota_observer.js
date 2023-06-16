@@ -15,7 +15,7 @@ function run_test() {
   run_next_test();
 }
 
-let putRecord = async function(perm, record) {
+let putRecord = async function (perm, record) {
   let uri = Services.io.newURI(record.scope);
 
   PermissionTestUtils.add(

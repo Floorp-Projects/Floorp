@@ -151,6 +151,28 @@ const char* MFVideoPrimariesToStr(MFVideoPrimaries aPrimaries) {
   }
 }
 
+void ByteArrayFromGUID(REFGUID aGuidIn, nsTArray<uint8_t>& aByteArrayOut) {
+  aByteArrayOut.SetLength(sizeof(GUID));
+  // GUID is little endian. The byte array in network order is big endian.
+  GUID* reversedGuid = reinterpret_cast<GUID*>(aByteArrayOut.Elements());
+  *reversedGuid = aGuidIn;
+  reversedGuid->Data1 = _byteswap_ulong(aGuidIn.Data1);
+  reversedGuid->Data2 = _byteswap_ushort(aGuidIn.Data2);
+  reversedGuid->Data3 = _byteswap_ushort(aGuidIn.Data3);
+  // Data4 is already a byte array so no need to byte swap.
+}
+
+void GUIDFromByteArray(const nsTArray<uint8_t>& aByteArrayIn, GUID& aGuidOut) {
+  MOZ_ASSERT(aByteArrayIn.Length() == sizeof(GUID));
+  GUID* reversedGuid =
+      reinterpret_cast<GUID*>(const_cast<uint8_t*>(aByteArrayIn.Elements()));
+  aGuidOut = *reversedGuid;
+  aGuidOut.Data1 = _byteswap_ulong(reversedGuid->Data1);
+  aGuidOut.Data2 = _byteswap_ushort(reversedGuid->Data2);
+  aGuidOut.Data3 = _byteswap_ushort(reversedGuid->Data3);
+  // Data4 is already a byte array so no need to byte swap.
+}
+
 #undef ENUM_TO_STR
 #undef ENUM_TO_STR2
 

@@ -4,7 +4,7 @@ import os
 import shutil
 import sys
 import logging
-from distutils.spawn import find_executable
+from shutil import which
 
 # The `pkg_resources` module is provided by `setuptools`, which is itself a
 # dependency of `virtualenv`. Tolerate its absence so that this module may be
@@ -27,7 +27,7 @@ class Virtualenv:
         self.path = path
         self.skip_virtualenv_setup = skip_virtualenv_setup
         if not skip_virtualenv_setup:
-            self.virtualenv = find_executable("virtualenv")
+            self.virtualenv = which("virtualenv")
             if not self.virtualenv:
                 raise ValueError("virtualenv must be installed and on the PATH")
             self._working_set = None
@@ -57,7 +57,7 @@ class Virtualenv:
 
     @property
     def pip_path(self):
-        path = find_executable("pip3", self.bin_path)
+        path = which("pip3", path=self.bin_path)
         if path is None:
             raise ValueError("pip3 not found")
         return path
@@ -121,17 +121,22 @@ class Virtualenv:
         # occurs while packages are in the process of being published.
         call(self.pip_path, "install", "--prefer-binary", *requirements)
 
-    def install_requirements(self, requirements_path):
-        with open(requirements_path) as f:
-            try:
-                self.working_set.require(f.read())
-            except Exception:
-                pass
-            else:
-                return
+    def install_requirements(self, *requirements_paths):
+        install = []
+        # Check which requirements are already satisfied, to skip calling pip
+        # at all in the case that we've already installed everything, and to
+        # minimise the installs in other cases.
+        for requirements_path in requirements_paths:
+            with open(requirements_path) as f:
+                try:
+                    self.working_set.require(f.read())
+                except Exception:
+                    install.append(requirements_path)
 
-        # `--prefer-binary` guards against race conditions when installation
-        # occurs while packages are in the process of being published.
-        call(
-            self.pip_path, "install", "--prefer-binary", "-r", requirements_path
-        )
+        if install:
+            # `--prefer-binary` guards against race conditions when installation
+            # occurs while packages are in the process of being published.
+            cmd = [self.pip_path, "install", "--prefer-binary"]
+            for path in install:
+                cmd.extend(["-r", path])
+            call(*cmd)

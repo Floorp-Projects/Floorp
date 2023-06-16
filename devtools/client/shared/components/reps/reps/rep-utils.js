@@ -5,7 +5,7 @@
 "use strict";
 
 // Make this available to both AMD and CJS environments
-define(function(require, exports, module) {
+define(function (require, exports, module) {
   // Dependencies
   const validProtocols = /(http|https|ftp|data|resource|chrome):/i;
 
@@ -57,7 +57,8 @@ define(function(require, exports, module) {
   //                       (so also '%')
   // )
   // eslint-disable-next-line max-len
-  const urlRegex = /(^|[\s(,;'"`“])((?:https?:\/(\/)?|www\d{0,3}[.][a-z0-9.\-]{2,249}|[a-z0-9.\-]{2,250}[.][a-z]{2,4}\/)[-\w.!~*'();,/?:@&=+$#%]*)/im;
+  const urlRegex =
+    /(^|[\s(,;'"`“])((?:https?:\/(\/)?|www\d{0,3}[.][a-z0-9.\-]{2,249}|[a-z0-9.\-]{2,250}[.][a-z]{2,4}\/)[-\w.!~*'();,/?:@&=+$#%]*)/im;
 
   // Set of terminators that are likely to have been part of the context rather
   // than part of the URL and so should be uneaten. This is '(', ',', ';', plus
@@ -320,7 +321,7 @@ define(function(require, exports, module) {
    * render a fallback rep if the render fails.
    */
   function wrapRender(renderMethod) {
-    const wrappedFunction = function(props) {
+    const wrappedFunction = function (props) {
       try {
         return renderMethod.call(this, props);
       } catch (e) {

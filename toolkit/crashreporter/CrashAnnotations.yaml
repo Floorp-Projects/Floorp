@@ -11,11 +11,6 @@
 # - ping: A boolean that indicates whether the annotation is allowlisted for
 #   going into the crash ping, if not specified this defaults to false
 
-A11yHandlerRegistered:
-  description: >
-    Set to "true" if the accessibility handler is registered, "false" otherwise.
-  type: string
-
 AbortMessage:
   description: >
     Message passed to NS_DebugBreak().
@@ -36,11 +31,6 @@ AccessibilityInProcClient:
     Hexadecimal mask of in-process accessibility consumers, see
     accessible/windows/msaa/Compatibility.h for the mappings.
   type: string
-
-ActualStreamLen:
-  description: >
-    Actual length of an IPC proxy stream.
-  type: integer
 
 AdapterDeviceID:
   description: >
@@ -188,12 +178,6 @@ ClassRegistrationInfoParent:
     Microsoft COM class registration annotation for the parent process.
   type: string
 
-CoMarshalInterfaceFailure:
-  description: >
-    Annotation describing the error returned by trying to marshal an object
-    via CoMarshalInterface during the creation of an IPC proxy stream.
-  type: string
-
 ContentSandboxCapabilities:
   description: >
     List of capabilities of the content process sandbox.
@@ -224,12 +208,6 @@ GpuSandboxLevel:
     GPU sandbox level.
   type: integer
 
-CoUnmarshalInterfaceResult:
-  description: >
-    Annotation describing the error returned by trying to unmarshal an object
-    via CoUnmarshalInterface during the creation of an IPC proxy stream.
-  type: integer
-
 CPUMicrocodeVersion:
   description: >
     Version of the CPU microcode.
@@ -246,12 +224,6 @@ CrashTime:
     Crash time in seconds since the Epoch.
   type: string
   ping: true
-
-CreateStreamOnHGlobalFailure:
-  description: >
-    Set when failing to obtain a global memory handle during the creation of an
-    IPC proxy stream.
-  type: string
 
 CycleCollector:
   description: >
@@ -302,11 +274,6 @@ EventLoopNestingLevel:
   type: integer
   ping: true
 
-ExpectedStreamLen:
-  description: >
-    Expected length of an IPC proxy stream.
-  type: integer
-
 ExperimentalFeatures:
   description: >
     Comma-separated list of enabled experimental features from about:preferences#experimental.
@@ -318,12 +285,6 @@ FontName:
     Set before attempting to load a font to help diagnose crashes during loading.
   type: string
   ping: true
-
-GetHGlobalFromStreamFailure:
-  description: >
-    Error returned when invoking GetHGlobalFromStreamFailure() during the
-    creation of an IPC stream proxy.
-  type: string
 
 GMPLibraryPath:
   description: >
@@ -434,16 +395,6 @@ InstallTime:
   description: >
     The time when Firefox was installed expressed as seconds since the Epoch
   type: integer
-
-InterfaceRegistrationInfoChild:
-  description: >
-    Microsoft COM interface registration annotation for the child process.
-  type: string
-
-InterfaceRegistrationInfoParent:
-  description: >
-    Microsoft COM interface registration annotation for the parent process.
-  type: string
 
 ipc_channel_error:
   description: >
@@ -583,12 +534,18 @@ JSOutOfMemory:
     to satisfy the allocation.
   type: string
 
+
 LastInteractionDuration:
   description: >
     How long the user had been inactive in seconds if the user was inactive
     at crash.  The value is not set if the user state was active.
   type: integer
   ping: true
+
+LastStartupWasCrash:
+  description: >
+    True if the last startup was detected to have been a crash.
+  type: boolean
 
 MacMemoryPressure:
   description: >
@@ -657,11 +614,6 @@ MainThreadRunnableName:
   type: string
   ping: true
 
-MarshalActCtxManifestPath:
-  description: >
-    Proxy stream marshalling current activation context manifest path.
-  type: string
-
 MozCrashReason:
   description: >
     Plaintext description of why Firefox crashed, this is usually set by
@@ -721,28 +673,6 @@ ProfilerChildShutdownPhase:
     and the point the profiler shutdown sequence has reached.
   type: string
   ping: true
-
-ProxyStreamSize:
-  description: >
-    Size of an IPC proxy stream.
-  type: integer
-
-ProxyStreamSizeFrom:
-  description: >
-    Describes how the size of a proxy stream was obtained. It can be set to
-    either Stream::Stat or GlobalSize.
-  type: string
-
-ProxyStreamUnmarshalStatus:
-  description: >
-    Status of the proxy stream unmarshalling, see ipc/mscom/ProxyStream.cpp for
-    the various value this annotation can take.
-  type: string
-
-ProxyStreamValid:
-  description: >
-    Set to "false" when encountering an invalid IPC proxy stream.
-  type: string
 
 PurgeablePhysicalMemory:
   description: >
@@ -831,6 +761,12 @@ ShutdownReason:
   type: string
   ping: true
 
+StartupCacheValid:
+  description: >
+    True if the startup cache was deemed valid and usable. Will be false if the
+    last session used a different browser version or had a startup cache.
+  type: boolean
+
 StartupCrash:
   description: >
     If set to 1 then this crash occurred during startup.
@@ -841,12 +777,6 @@ StartupTime:
   description: >
     The time when Firefox was launched expressed in seconds since the Epoch.
   type: integer
-
-StatFailure:
-  description: >
-    Error returned when invoking IStream's Stat function during the creation
-    of an IPC proxy stream.
-  type: string
 
 StorageConnectionNotClosed:
   description: >
@@ -955,16 +885,6 @@ UnknownNetAddrSocketFamily:
     An unknown network address family was requested to Necko. The value is the
     requested family number.
   type: integer
-
-UnmarshalActCtx:
-  description: >
-    Proxy stream unmarshalling current activation context.
-  type: string
-
-UnmarshalActCtxManifestPath:
-  description: >
-    Proxy stream unmarshalling current activation context manifest path.
-  type: string
 
 UptimeTS:
   description: >

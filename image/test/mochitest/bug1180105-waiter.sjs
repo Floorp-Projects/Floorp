@@ -19,7 +19,7 @@ function waitForFinish(response) {
     response.finish();
   } else {
     waitTimer.initWithCallback(
-      function() {
+      function () {
         waitForFinish(response);
       },
       10,

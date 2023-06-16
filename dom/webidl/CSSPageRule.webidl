@@ -12,6 +12,6 @@
 // implement this yet.
 [Exposed=Window]
 interface CSSPageRule : CSSRule {
-  [Pref="layout.css.named-pages.enabled"] attribute UTF8String selectorText;
+  attribute UTF8String selectorText;
   [SameObject, PutForwards=cssText] readonly attribute CSSStyleDeclaration style;
 };

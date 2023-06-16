@@ -883,11 +883,23 @@ kok{
                     }
                 }
                 stand-alone{
+                    abbreviated{
+                        "Q1",
+                        "Q2",
+                        "Q3",
+                        "Q4",
+                    }
                     narrow{
                         "1",
                         "2",
                         "3",
                         "4",
+                    }
+                    wide{
+                        "1लें त्रैमासीक",
+                        "2रें त्रैमासीक",
+                        "3रें त्रैमासीक",
+                        "4थें त्रैमासीक",
                     }
                 }
             }
@@ -1103,6 +1115,11 @@ kok{
         }
         day-narrow{
             dn{"दीस"}
+            relative{
+                "-1"{"काल"}
+                "0"{"आयज"}
+                "1"{"फाल्यां"}
+            }
             relativeTime{
                 future{
                     other{"{0} दिसानीं"}
@@ -1114,6 +1131,11 @@ kok{
         }
         day-short{
             dn{"दीस"}
+            relative{
+                "-1"{"काल"}
+                "0"{"आयज"}
+                "1"{"फाल्यां"}
+            }
             relativeTime{
                 future{
                     other{"{0} दिसानीं"}
@@ -1330,6 +1352,11 @@ kok{
         }
         month-narrow{
             dn{"म्हयनो"}
+            relative{
+                "-1"{"फाटलो म्हयनो"}
+                "0"{"हो म्हयनो"}
+                "1"{"फुडलो म्हयनो"}
+            }
             relativeTime{
                 future{
                     other{"{0} म्हयन्यानीं"}
@@ -1341,6 +1368,11 @@ kok{
         }
         month-short{
             dn{"म्हयनो"}
+            relative{
+                "-1"{"फाटलो म्हयनो"}
+                "0"{"हो म्हयनो"}
+                "1"{"फुडलो म्हयनो"}
+            }
             relativeTime{
                 future{
                     other{"{0} म्हयन्यानीं"}
@@ -1448,6 +1480,7 @@ kok{
             }
         }
         second-narrow{
+            dn{"सेकंद"}
             relativeTime{
                 future{
                     other{"{0} सेकंदानीं"}
@@ -1667,6 +1700,11 @@ kok{
         }
         week-narrow{
             dn{"सप्तक"}
+            relative{
+                "-1"{"निमाणो सप्तक"}
+                "0"{"हो सप्तक"}
+                "1"{"फुडलो सप्तक"}
+            }
             relativePeriod{"{0} चो सप्तक"}
             relativeTime{
                 future{
@@ -1679,8 +1717,16 @@ kok{
         }
         week-short{
             dn{"सप्तक"}
+            relative{
+                "-1"{"निमाणो सप्तक"}
+                "0"{"हो सप्तक"}
+                "1"{"फुडलो सप्तक"}
+            }
             relativePeriod{"{0} चो सप्तक"}
             relativeTime{
+                future{
+                    other{"{0} सप्तकांनीं"}
+                }
                 past{
                     other{"{0} सप्तकां आदीं"}
                 }
@@ -1731,6 +1777,11 @@ kok{
         }
         year-narrow{
             dn{"वर्स"}
+            relative{
+                "-1"{"फाटलें वर्स"}
+                "0"{"हें वर्स"}
+                "1"{"फुडलें वर्स"}
+            }
             relativeTime{
                 future{
                     other{"{0} वर्सांनीं"}
@@ -1742,6 +1793,11 @@ kok{
         }
         year-short{
             dn{"वर्स"}
+            relative{
+                "-1"{"फाटलें वर्स"}
+                "0"{"हें वर्स"}
+                "1"{"फुडलें वर्स"}
+            }
             relativeTime{
                 future{
                     other{"{0} वर्सांनीं"}
@@ -1823,10 +1879,6 @@ kok{
         metric{"मॅट्रिक"}
     }
     personNames{
-        initialPattern{
-            initial{"{0}."}
-            initialSequence{"{0} {1}"}
-        }
         nameOrderLocales{
             givenFirst{
                 "und",
@@ -1841,6 +1893,75 @@ kok{
                 "yue",
                 "zh",
             }
+        }
+        namePattern{
+            givenFirst-long-addressing-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-long-addressing-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-long-monogram-informal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-long-referring-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-medium-addressing-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-medium-addressing-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-medium-monogram-formal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-medium-monogram-informal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-medium-referring-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-medium-referring-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-short-addressing-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-short-addressing-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-short-monogram-formal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-short-monogram-informal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-short-referring-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-short-referring-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            sorting-long-referring-informal{"{surname} {surname2}, {title} {given} {given2} {credentials}"}
+            sorting-medium-referring-formal{"{surname} {surname2}, {title} {given} {given2} {credentials}"}
+            sorting-medium-referring-informal{"{surname} {surname2}, {title} {given} {given2} {credentials}"}
+            sorting-short-referring-formal{"{surname} {surname2}, {title} {given} {given2} {credentials}"}
+            sorting-short-referring-informal{"{surname} {surname2}, {title} {given} {given2} {credentials}"}
+            surnameFirst-long-addressing-formal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
+            surnameFirst-long-addressing-informal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
+            surnameFirst-long-monogram-informal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-long-referring-informal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
+            surnameFirst-medium-addressing-formal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
+            surnameFirst-medium-addressing-informal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
+            surnameFirst-medium-monogram-formal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-medium-monogram-informal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-medium-referring-formal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
+            surnameFirst-medium-referring-informal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
+            surnameFirst-short-addressing-formal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
+            surnameFirst-short-addressing-informal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
+            surnameFirst-short-monogram-formal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-short-monogram-informal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-short-referring-formal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
+            surnameFirst-short-referring-informal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
         }
     }
 }

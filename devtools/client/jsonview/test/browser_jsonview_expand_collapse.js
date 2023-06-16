@@ -12,7 +12,7 @@ XPCOMUtils.defineLazyGetter(this, "jsonViewStrings", () => {
 const TEST_JSON_URL = URL_ROOT + "array_json.json";
 const EXPAND_THRESHOLD = 100 * 1024;
 
-add_task(async function() {
+add_task(async function () {
   info("Test expand/collapse small JSON started");
 
   await addJsonViewTab(TEST_JSON_URL);
@@ -39,7 +39,7 @@ add_task(async function() {
   is(countAfter, 6, "There must be six expanded rows");
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test expand button for big JSON started");
 
   const json = JSON.stringify({

@@ -128,7 +128,6 @@ class nsDNSService final : public mozilla::net::DNSServiceBase,
   uint32_t mResCacheExpiration = 0;
   uint32_t mResCacheGrace = 0;
   bool mResolverPrefsUpdated = false;
-  bool mODoHActivated = false;
   nsClassHashtable<nsCStringHashKey, nsTArray<nsCString>> mFailedSVCDomainNames;
 };
 

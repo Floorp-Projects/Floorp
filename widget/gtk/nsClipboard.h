@@ -10,6 +10,7 @@
 
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Span.h"
+#include "nsBaseClipboard.h"
 #include "nsIClipboard.h"
 #include "nsIObserver.h"
 #include "nsCOMPtr.h"
@@ -106,13 +107,26 @@ class nsRetrievalContext {
   static ClipboardTargets sPrimaryTargets;
 };
 
-class nsClipboard : public nsIClipboard, public nsIObserver {
+class nsClipboard : public ClipboardSetDataHelper, public nsIObserver {
  public:
   nsClipboard();
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIOBSERVER
-  NS_DECL_NSICLIPBOARD
+
+  // nsIClipboard
+  NS_IMETHOD GetData(nsITransferable* aTransferable,
+                     int32_t aWhichClipboard) override;
+  NS_IMETHOD EmptyClipboard(int32_t aWhichClipboard) override;
+  NS_IMETHOD HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
+                                    int32_t aWhichClipboard,
+                                    bool* _retval) override;
+  NS_IMETHOD IsClipboardTypeSupported(int32_t aWhichClipboard,
+                                      bool* _retval) override;
+  RefPtr<mozilla::GenericPromise> AsyncGetData(
+      nsITransferable* aTransferable, int32_t aWhichClipboard) override;
+  RefPtr<DataFlavorsPromise> AsyncHasDataMatchingFlavors(
+      const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard) override;
 
   // Make sure we are initialized, called from the factory
   // constructor
@@ -122,6 +136,12 @@ class nsClipboard : public nsIClipboard, public nsIObserver {
   void SelectionGetEvent(GtkClipboard* aGtkClipboard,
                          GtkSelectionData* aSelectionData);
   void SelectionClearEvent(GtkClipboard* aGtkClipboard);
+
+ protected:
+  // Implement the native clipboard behavior.
+  NS_IMETHOD SetNativeClipboardData(nsITransferable* aTransferable,
+                                    nsIClipboardOwner* aOwner,
+                                    int32_t aWhichClipboard) override;
 
  private:
   virtual ~nsClipboard();

@@ -6,7 +6,7 @@
 /* global workerURL */
 const importURL = "relativeLoad_import.js";
 
-onmessage = function(event) {
+onmessage = function (event) {
   var xhr = new XMLHttpRequest();
   xhr.open("GET", "worker_testXHR.txt", false);
   xhr.send(null);
@@ -19,10 +19,10 @@ onmessage = function(event) {
 
   importScripts(importURL);
   var worker = new Worker("relativeLoad_worker2.js");
-  worker.onerror = function(e) {
+  worker.onerror = function (e) {
     throw e.message;
   };
-  worker.onmessage = function(e) {
+  worker.onmessage = function (e) {
     if (e.data != workerURL) {
       throw new Error("Bad data!");
     }

@@ -9,7 +9,7 @@ const URL = "data:text/html;charset=utf8,test page for menu api";
 const Menu = require("resource://devtools/client/framework/menu.js");
 const MenuItem = require("resource://devtools/client/framework/menu-item.js");
 
-add_task(async function() {
+add_task(async function () {
   info("Create a test tab and open the toolbox");
   const tab = await addTab(URL);
   const toolbox = await gDevTools.showToolboxForTab(tab, {

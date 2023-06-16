@@ -329,6 +329,8 @@ class nsAttrValue {
         : tag(aTag), value(static_cast<int16_t>(aValue)) {
       static_assert(mozilla::EnumTypeFitsWithin<T, int16_t>::value,
                     "aValue must be an enum that fits within int16_t");
+      // TODO: statically assert there are no duplicate values, otherwise
+      // `GetEnumString()` above will return wrong values.
     }
 
     /** The string the value maps to */

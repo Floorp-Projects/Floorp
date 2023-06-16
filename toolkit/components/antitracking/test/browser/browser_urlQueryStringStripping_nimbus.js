@@ -55,20 +55,21 @@ function setDefaultPrefs(prefs) {
     originalValues.set(key, value);
   });
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     prefs.forEach(([key, value]) => {
       prefValueToSetter(value)(key, originalValues.get(key));
     });
   });
 }
 
-add_setup(async function() {
+add_setup(async function () {
   // Disable the feature via the default pref. This is required so we can set
   // user values via Nimbus.
   setDefaultPrefs([
     ["privacy.query_stripping.enabled", false],
     ["privacy.query_stripping.enabled.pbmode", false],
     ["privacy.query_stripping.strip_list", ""],
+    ["privacy.query_stripping.strip_on_share.enabled", false],
   ]);
 
   await SpecialPowers.pushPrefEnv({

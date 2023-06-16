@@ -94,4 +94,5 @@ exports.isSupportedDebugTargetPane = isSupportedDebugTargetPane;
 function supportsTemporaryExtensionInstaller(runtimeType) {
   return runtimeType === RUNTIMES.THIS_FIREFOX;
 }
-exports.supportsTemporaryExtensionInstaller = supportsTemporaryExtensionInstaller;
+exports.supportsTemporaryExtensionInstaller =
+  supportsTemporaryExtensionInstaller;

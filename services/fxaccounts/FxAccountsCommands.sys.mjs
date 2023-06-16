@@ -2,12 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {
-  COMMAND_SENDTAB,
-  COMMAND_SENDTAB_TAIL,
-  SCOPE_OLD_SYNC,
-  log,
-} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+const { COMMAND_SENDTAB, COMMAND_SENDTAB_TAIL, SCOPE_OLD_SYNC, log } =
+  ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 const lazy = {};
 ChromeUtils.defineModuleGetter(
   lazy,
@@ -365,11 +361,8 @@ export class SendTab {
   }
 
   async _decrypt(ciphertext) {
-    let {
-      privateKey,
-      publicKey,
-      authSecret,
-    } = await this._getPersistedSendTabKeys();
+    let { privateKey, publicKey, authSecret } =
+      await this._getPersistedSendTabKeys();
     publicKey = urlsafeBase64Decode(publicKey);
     authSecret = urlsafeBase64Decode(authSecret);
     ciphertext = new Uint8Array(urlsafeBase64Decode(ciphertext));
@@ -469,7 +462,8 @@ export class SendTab {
       // already persisted in plaintext and the encrypted bundle
       // does not include the sync-key (the sync key is used to encrypt
       // it though)
-      encryptedSendTabKeys = await this._generateAndPersistEncryptedSendTabKey();
+      encryptedSendTabKeys =
+        await this._generateAndPersistEncryptedSendTabKey();
     }
     return encryptedSendTabKeys;
   }

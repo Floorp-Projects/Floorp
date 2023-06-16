@@ -91,10 +91,8 @@ add_task(async function eventsForTopFrameNavigation({ client }) {
     ignoreTimestamps: true,
   });
 
-  const {
-    frameId: frameIdSubFrame,
-    parentFrameId,
-  } = frameAttachedEvents[0].payload;
+  const { frameId: frameIdSubFrame, parentFrameId } =
+    frameAttachedEvents[0].payload;
   is(parentFrameId, frameIdNav, "Got expected parent frame id");
 
   // network events for subdocument and script

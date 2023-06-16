@@ -38,8 +38,9 @@ const PREF_DEPRECATED_DEVICE_NAME = "services.sync.client.name";
 // them with the unicode replacement character.
 // At time of writing, FxA has a regex DISPLAY_SAFE_UNICODE_WITH_NON_BMP, which
 // the regex below is based on.
-// eslint-disable-next-line no-control-regex
-const INVALID_NAME_CHARS = /[\u0000-\u001F\u007F\u0080-\u009F\u2028-\u2029\uE000-\uF8FF\uFFF9-\uFFFC\uFFFE-\uFFFF]/g;
+const INVALID_NAME_CHARS =
+  // eslint-disable-next-line no-control-regex
+  /[\u0000-\u001F\u007F\u0080-\u009F\u2028-\u2029\uE000-\uF8FF\uFFF9-\uFFFC\uFFFE-\uFFFF]/g;
 const MAX_NAME_LEN = 255;
 const REPLACEMENT_CHAR = "\uFFFD";
 
@@ -95,17 +96,6 @@ export class FxAccountsDevice {
       user = Services.env.get("USERNAME");
     }
 
-    let brand = Services.strings.createBundle(
-      "chrome://branding/locale/brand.properties"
-    );
-    let brandName;
-    try {
-      brandName = brand.GetStringFromName("brandShortName");
-    } catch (O_o) {
-      // this only fails in tests and markh can't work out why :(
-      brandName = Services.appinfo.name;
-    }
-
     // The DNS service may fail to provide a hostname in edge-cases we don't
     // fully understand - bug 1391488.
     let hostname;
@@ -124,17 +114,12 @@ export class FxAccountsDevice {
         Ci.nsIHttpProtocolHandler
       ).oscpu;
 
-    // It's a little unfortunate that this string is defined as being weave/sync,
-    // but it's not worth moving it.
-    let syncStrings = Services.strings.createBundle(
-      "chrome://weave/locale/sync.properties"
+    const l10n = new Localization(
+      ["services/accounts.ftl", "branding/brand.ftl"],
+      true
     );
     return sanitizeDeviceName(
-      syncStrings.formatStringFromName("client.name2", [
-        user,
-        brandName,
-        system,
-      ])
+      l10n.formatValueSync("account-client-name", { user, system })
     );
   }
 
@@ -266,9 +251,9 @@ export class FxAccountsDevice {
     if (
       ourDevice &&
       (ourDevice.pushCallback === null || // fxa server doesn't know our subscription.
-      ourDevice.pushEndpointExpired || // fxa server thinks it has expired.
-      !subscription || // we don't have a local subscription.
-      subscription.isExpired() || // our local subscription is expired.
+        ourDevice.pushEndpointExpired || // fxa server thinks it has expired.
+        !subscription || // we don't have a local subscription.
+        subscription.isExpired() || // our local subscription is expired.
         ourDevice.pushCallback != subscription.endpoint) // we don't agree with fxa.
     ) {
       log.warn(`Our push endpoint needs resubscription`);
@@ -370,7 +355,8 @@ export class FxAccountsDevice {
     const remoteAvailableCommandsKeys = Object.keys(
       remoteAvailableCommands
     ).sort();
-    const localAvailableCommands = await this._fxai.commands.availableCommands();
+    const localAvailableCommands =
+      await this._fxai.commands.availableCommands();
     const localAvailableCommandsKeys = Object.keys(
       localAvailableCommands
     ).sort();
@@ -428,7 +414,8 @@ export class FxAccountsDevice {
     }
 
     try {
-      const subscription = await this._fxai.fxaPushService.registerPushEndpoint();
+      const subscription =
+        await this._fxai.fxaPushService.registerPushEndpoint();
       const deviceName = this.getLocalName();
       let deviceOptions = {};
 
@@ -442,14 +429,16 @@ export class FxAccountsDevice {
           deviceOptions.pushAuthKey = urlsafeBase64Encode(authKey);
         }
       }
-      deviceOptions.availableCommands = await this._fxai.commands.availableCommands();
+      deviceOptions.availableCommands =
+        await this._fxai.commands.availableCommands();
       const availableCommandsKeys = Object.keys(
         deviceOptions.availableCommands
       ).sort();
       log.info("registering with available commands", availableCommandsKeys);
 
       let device;
-      if (currentDevice && currentDevice.id) {
+      let is_existing = currentDevice && currentDevice.id;
+      if (is_existing) {
         log.debug("updating existing device details");
         device = await this._fxai.fxAccountsClient.updateDevice(
           sessionToken,
@@ -465,7 +454,6 @@ export class FxAccountsDevice {
           this.getLocalType(),
           deviceOptions
         );
-        Services.obs.notifyObservers(null, ON_NEW_DEVICE_ID);
       }
 
       // Get the freshest device props before updating them.
@@ -480,6 +468,10 @@ export class FxAccountsDevice {
           registeredCommandsKeys: availableCommandsKeys,
         },
       });
+      // Must send the notification after we've written the storage.
+      if (!is_existing) {
+        Services.obs.notifyObservers(null, ON_NEW_DEVICE_ID);
+      }
       return device.id;
     } catch (error) {
       return this._handleDeviceError(currentState, error, sessionToken);

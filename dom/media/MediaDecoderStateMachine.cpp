@@ -734,6 +734,8 @@ class MediaDecoderStateMachine::DecodingState
     return rv;
   }
 
+  virtual bool IsBufferingAllowed() const { return true; }
+
  private:
   void DispatchDecodeTasksIfNeeded();
   void MaybeStartBuffering();
@@ -932,12 +934,18 @@ class MediaDecoderStateMachine::LoopingDecodingState
     if (mMaster->HasAudio() && HasDecodedLastAudioFrame()) {
       SLOG("Mark audio queue as finished");
       mMaster->mAudioDataRequest.DisconnectIfExists();
+      mMaster->mAudioWaitRequest.DisconnectIfExists();
       AudioQueue().Finish();
     }
     if (mMaster->HasVideo() && HasDecodedLastVideoFrame()) {
       SLOG("Mark video queue as finished");
       mMaster->mVideoDataRequest.DisconnectIfExists();
+      mMaster->mVideoWaitRequest.DisconnectIfExists();
       VideoQueue().Finish();
+    }
+
+    if (mWaitingAudioDataFromStart) {
+      mMaster->mMediaSink->EnableTreatAudioUnderrunAsSilence(false);
     }
 
     // Clear waiting data should be done after marking queue as finished.
@@ -961,6 +969,11 @@ class MediaDecoderStateMachine::LoopingDecodingState
 
   void HandleAudioDecoded(AudioData* aAudio) override {
     // TODO : check if we need to update mOriginalDecodedDuration
+
+    if (mWaitingAudioDataFromStart) {
+      mMaster->mMediaSink->EnableTreatAudioUnderrunAsSilence(false);
+      mWaitingAudioDataFromStart = false;
+    }
 
     // After pushing data to the queue, timestamp might be adjusted.
     DecodingState::HandleAudioDecoded(aAudio);
@@ -1511,15 +1524,16 @@ class MediaDecoderStateMachine::LoopingDecodingState
   }
 
   bool ShouldStopPrerolling() const override {
-    // When the data has reached EOS, that means the queue has been finished. If
-    // MDSM isn't playing now, then we would preroll some data in order to let
-    // new data to reopen the queue before starting playback again.
+    // These checks is used to handle the media queue aren't opened correctly
+    // because they've been close before entering the looping state. Therefore,
+    // we need to preroll data in order to let new data to reopen the queue
+    // automatically. Otherwise, playback can't start successfully.
     bool isWaitingForNewData = false;
     if (mMaster->HasAudio()) {
-      isWaitingForNewData |= mIsReachingAudioEOS;
+      isWaitingForNewData |= (mIsReachingAudioEOS && AudioQueue().IsFinished());
     }
     if (mMaster->HasVideo()) {
-      isWaitingForNewData |= mIsReachingVideoEOS;
+      isWaitingForNewData |= (mIsReachingVideoEOS && VideoQueue().IsFinished());
     }
     return !isWaitingForNewData && DecodingState::ShouldStopPrerolling();
   }
@@ -1545,6 +1559,10 @@ class MediaDecoderStateMachine::LoopingDecodingState
       return mAudioSeekRequest.Exists() || mAudioDataRequest.Exists();
     }
     return mVideoSeekRequest.Exists() || mVideoDataRequest.Exists();
+  }
+
+  bool IsBufferingAllowed() const override {
+    return !mIsReachingAudioEOS && !mIsReachingVideoEOS;
   }
 
   bool mIsReachingAudioEOS;
@@ -1595,6 +1613,12 @@ class MediaDecoderStateMachine::LoopingDecodingState
   // determined.
   bool mAudioEndedBeforeEnteringStateWithoutDuration;
   bool mVideoEndedBeforeEnteringStateWithoutDuration;
+
+  // True if the audio has reached EOS, but the data from the start position is
+  // not avalible yet. We use this to determine whether we should enable
+  // appending silence audio frames into audio backend while audio underrun in
+  // order to keep audio clock running.
+  bool mWaitingAudioDataFromStart = false;
 };
 
 /**
@@ -3038,8 +3062,9 @@ void MediaDecoderStateMachine::DecodingState::Step() {
   mMaster->UpdatePlaybackPositionPeriodically();
   MOZ_ASSERT(!mMaster->IsPlaying() || mMaster->IsStateMachineScheduled(),
              "Must have timer scheduled");
-
-  MaybeStartBuffering();
+  if (IsBufferingAllowed()) {
+    MaybeStartBuffering();
+  }
 }
 
 void MediaDecoderStateMachine::DecodingState::HandleEndOfAudio() {
@@ -3137,13 +3162,25 @@ void MediaDecoderStateMachine::LoopingDecodingState::HandleError(
     case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
       if (aIsAudio) {
         HandleWaitingForAudio();
+        // Now we won't be able to get new audio from the start position.
+        // This could happen for MSE, because data for the start hasn't been
+        // appended yet. If we can get the data before all queued audio has been
+        // consumed, then nothing special would happen. If not, then the audio
+        // underrun would happen and the audio clock stalls, which means video
+        // playback would also stall. Therefore, in this special situation, we
+        // can treat those audio underrun as silent frames in order to keep
+        // driving the clock. But we would cancel this behavior once the new
+        // audio data comes, or we fallback to the non-seamless looping.
+        mWaitingAudioDataFromStart = true;
+        mMaster->mMediaSink->EnableTreatAudioUnderrunAsSilence(true);
       } else {
         HandleWaitingForVideo();
       }
-      break;
+      [[fallthrough]];
     case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
-      // This would happen after we've closed resource so that we won't be
-      // able to get any sample anymore.
+      // This could happen after either the resource has been close, or the data
+      // hasn't been appended in MSE, so that we won't be able to get any
+      // sample and need to fallback to normal looping.
       if (mIsReachingAudioEOS && mIsReachingVideoEOS) {
         SetState<CompletedState>();
       }
@@ -3157,8 +3194,11 @@ void MediaDecoderStateMachine::LoopingDecodingState::HandleError(
 void MediaDecoderStateMachine::SeekingState::SeekCompleted() {
   const auto newCurrentTime = CalculateNewCurrentTime();
 
-  if (newCurrentTime == mMaster->Duration() && !mMaster->mIsLiveStream) {
-    // Seeked to end of media. Explicitly finish the queues so DECODING
+  if ((newCurrentTime == mMaster->Duration() ||
+       newCurrentTime.EqualsAtLowestResolution(
+           mMaster->Duration().ToBase(USECS_PER_S))) &&
+      !mMaster->mIsLiveStream) {
+    SLOG("Seek completed, seeked to end: %s", newCurrentTime.ToString().get());
     // will transition to COMPLETED immediately. Note we don't do
     // this when playing a live stream, since the end of media will advance
     // once we download more data!
@@ -4709,12 +4749,44 @@ void MediaDecoderStateMachine::CancelSuspendTimer() {
 
 void MediaDecoderStateMachine::AdjustByLooping(media::TimeUnit& aTime) const {
   MOZ_ASSERT(OnTaskQueue());
+
+  // No need to adjust time.
+  if (mOriginalDecodedDuration == media::TimeUnit::Zero()) {
+    return;
+  }
+
+  // There are situations where we need to perform subtraction instead of modulo
+  // to accurately adjust the clock. When we are not in a state of seamless
+  // looping, it is usually necessary to normalize the clock time within the
+  // range of [0, duration]. However, if the current clock time is greater than
+  // the duration (i.e., duration+1) and not in looping, we should not adjust it
+  // to 1 as we are not looping back to the starting position. Instead, we
+  // should leave the clock time unchanged and trim it later to match the
+  // maximum duration time.
+  if (mStateObj->GetState() != DECODER_STATE_LOOPING_DECODING) {
+    // Use the smaller offset rather than the larger one, as the larger offset
+    // indicates the next round of looping. For example, if the duration is X
+    // and the playback is currently in the third round of looping, both
+    // queues will have an offset of 3X. However, if the audio decoding is
+    // faster and the fourth round of data has already been added to the audio
+    // queue, the audio offset will become 4X. Since playback is still in the
+    // third round, we should use the smaller offset of 3X to adjust the time.
+    TimeUnit offset = TimeUnit::FromInfinity();
+    if (HasAudio()) {
+      offset = std::min(AudioQueue().GetOffset(), offset);
+    }
+    if (HasVideo()) {
+      offset = std::min(VideoQueue().GetOffset(), offset);
+    }
+    if (aTime > offset) {
+      aTime -= offset;
+      return;
+    }
+  }
+
   // When seamless looping happens at least once, it doesn't matter if we're
   // looping or not.
-  if (mOriginalDecodedDuration != media::TimeUnit::Zero()) {
-    aTime = aTime % mOriginalDecodedDuration;
-  }
-  // Otherwise, no need to adjust time.
+  aTime = aTime % mOriginalDecodedDuration;
 }
 
 bool MediaDecoderStateMachine::IsInSeamlessLooping() const {
@@ -4728,6 +4800,16 @@ bool MediaDecoderStateMachine::HasLastDecodedData(MediaData::Type aType) {
     return mDecodedAudioEndTime != TimeUnit::Zero();
   }
   return mDecodedVideoEndTime != TimeUnit::Zero();
+}
+
+bool MediaDecoderStateMachine::IsCDMProxySupported(CDMProxy* aProxy) {
+#ifdef MOZ_WMF_CDM
+  MOZ_ASSERT(aProxy);
+  // This proxy only works with the external state machine.
+  return !aProxy->AsWMFCDMProxy();
+#else
+  return true;
+#endif
 }
 
 }  // namespace mozilla

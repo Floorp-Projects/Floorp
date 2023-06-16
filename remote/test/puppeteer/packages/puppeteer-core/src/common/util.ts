@@ -20,6 +20,7 @@ import type {Protocol} from 'devtools-protocol';
 
 import type {ElementHandle} from '../api/ElementHandle.js';
 import type {JSHandle} from '../api/JSHandle.js';
+import {Page} from '../api/Page.js';
 import {isNode} from '../environment.js';
 import {assert} from '../util/assert.js';
 import {isErrorLike} from '../util/ErrorLike.js';
@@ -72,7 +73,7 @@ export function valueFromRemoteObject(
 ): any {
   assert(!remoteObject.objectId, 'Cannot extract value when objectId is given');
   if (remoteObject.unserializableValue) {
-    if (remoteObject.type === 'bigint' && typeof BigInt !== 'undefined') {
+    if (remoteObject.type === 'bigint') {
       return BigInt(remoteObject.unserializableValue.replace('n', ''));
     }
     switch (remoteObject.unserializableValue) {
@@ -339,7 +340,7 @@ export async function waitWithTimeout<T>(
   const timeoutError = new TimeoutError(
     `waiting for ${taskName} failed: timeout ${timeout}ms exceeded`
   );
-  const timeoutPromise = new Promise<T>((_res, rej) => {
+  const timeoutPromise = new Promise<never>((_, rej) => {
     return (reject = rej);
   });
   let timeoutTimer = null;
@@ -360,13 +361,24 @@ export async function waitWithTimeout<T>(
 /**
  * @internal
  */
-let fs: typeof import('fs') | null = null;
+let fs: typeof import('fs/promises') | null = null;
 /**
  * @internal
  */
-export async function importFS(): Promise<typeof import('fs')> {
+export async function importFSPromises(): Promise<
+  typeof import('fs/promises')
+> {
   if (!fs) {
-    fs = await import('fs');
+    try {
+      fs = await import('fs/promises');
+    } catch (error) {
+      if (error instanceof TypeError) {
+        throw new Error(
+          'Cannot write to a path outside of a Node-like environment.'
+        );
+      }
+      throw error;
+    }
   }
   return fs;
 }
@@ -380,23 +392,16 @@ export async function getReadableAsBuffer(
 ): Promise<Buffer | null> {
   const buffers = [];
   if (path) {
-    let fs: typeof import('fs').promises;
-    try {
-      fs = (await importFS()).promises;
-    } catch (error) {
-      if (error instanceof TypeError) {
-        throw new Error(
-          'Cannot write to a path outside of a Node-like environment.'
-        );
-      }
-      throw error;
-    }
+    const fs = await importFSPromises();
     const fileHandle = await fs.open(path, 'w+');
-    for await (const chunk of readable) {
-      buffers.push(chunk);
-      await fileHandle.writeFile(chunk);
+    try {
+      for await (const chunk of readable) {
+        buffers.push(chunk);
+        await fileHandle.writeFile(chunk);
+      }
+    } finally {
+      await fileHandle.close();
     }
-    await fileHandle.close();
   } else {
     for await (const chunk of readable) {
       buffers.push(chunk);
@@ -431,13 +436,37 @@ export async function getReadableFromProtocolStream(
         return;
       }
 
-      const response = await client.send('IO.read', {handle, size});
-      this.push(response.data, response.base64Encoded ? 'base64' : undefined);
-      if (response.eof) {
-        eof = true;
-        await client.send('IO.close', {handle});
-        this.push(null);
+      try {
+        const response = await client.send('IO.read', {handle, size});
+        this.push(response.data, response.base64Encoded ? 'base64' : undefined);
+        if (response.eof) {
+          eof = true;
+          await client.send('IO.close', {handle});
+          this.push(null);
+        }
+      } catch (error) {
+        if (isErrorLike(error)) {
+          this.destroy(error);
+          return;
+        }
+        throw error;
       }
     },
   });
+}
+
+/**
+ * @internal
+ */
+export async function setPageContent(
+  page: Pick<Page, 'evaluate'>,
+  content: string
+): Promise<void> {
+  // We rely upon the fact that document.open() will reset frame lifecycle with "init"
+  // lifecycle event. @see https://crrev.com/608658
+  return page.evaluate(html => {
+    document.open();
+    document.write(html);
+    document.close();
+  }, content);
 }

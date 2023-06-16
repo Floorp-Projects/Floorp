@@ -18,10 +18,10 @@
 #include "gc/GC.h"
 #include "gc/GCInternals.h"
 #include "gc/Memory.h"
+#include "js/Printer.h"
 #include "util/GetPidProvider.h"
 #include "util/Text.h"
 #include "vm/JSONPrinter.h"
-#include "vm/Printer.h"
 #include "vm/Runtime.h"
 #include "vm/Time.h"
 

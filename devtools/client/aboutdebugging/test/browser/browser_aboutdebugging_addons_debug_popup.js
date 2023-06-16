@@ -100,9 +100,8 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
   info(
     "Click on the extension popup frame and wait for a `dom-complete` resource"
   );
-  const {
-    onDomCompleteResource,
-  } = await waitForNextTopLevelDomCompleteResource(toolbox.commands);
+  const { onDomCompleteResource } =
+    await waitForNextTopLevelDomCompleteResource(toolbox.commands);
   popupFrameBtn.click();
   await onDomCompleteResource;
 
@@ -163,7 +162,7 @@ async function installTestAddon(doc) {
     {
       background() {
         const { browser } = this;
-        window.backgroundFunction = function() {
+        window.backgroundFunction = function () {
           browser.test.sendMessage("onBackgroundFunctionCalled");
         };
       },
@@ -185,9 +184,9 @@ async function installTestAddon(doc) {
           </body>
         </html>
       `,
-        "popup.js": function() {
+        "popup.js": function () {
           const { browser } = this;
-          window.popupPageFunction = function() {
+          window.popupPageFunction = function () {
             browser.test.sendMessage(
               "onPopupPageFunctionCalled",
               browser.runtime.getManifest()
@@ -209,8 +208,8 @@ async function installTestAddon(doc) {
  * Helper to retrieve the Extension instance.
  */
 async function waitForExtension(addonName) {
-  const { Management } = ChromeUtils.import(
-    "resource://gre/modules/Extension.jsm"
+  const { Management } = ChromeUtils.importESModule(
+    "resource://gre/modules/Extension.sys.mjs"
   );
 
   return new Promise(resolve => {

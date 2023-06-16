@@ -160,9 +160,12 @@ add_setup(async () => {
   ];
   Services.locale.requestedLocales = ["en"];
 
-  sinon.spy(NimbusFeatures.search, "onUpdate");
-  sinon.stub(NimbusFeatures.search, "ready").resolves();
-  getVariableStub = sinon.stub(NimbusFeatures.search, "getVariable");
+  sinon.spy(NimbusFeatures.searchConfiguration, "onUpdate");
+  sinon.stub(NimbusFeatures.searchConfiguration, "ready").resolves();
+  getVariableStub = sinon.stub(
+    NimbusFeatures.searchConfiguration,
+    "getVariable"
+  );
   getVariableStub.returns(null);
 
   SearchTestUtils.useMockIdleService();
@@ -189,11 +192,10 @@ add_task(async function test_configuration_changes_default() {
 add_task(async function test_experiment_changes_default() {
   clearTelemetry();
 
-  let reloadObserved = SearchTestUtils.promiseSearchNotification(
-    "engines-reloaded"
-  );
+  let reloadObserved =
+    SearchTestUtils.promiseSearchNotification("engines-reloaded");
   getVariableStub.callsFake(name => (name == "experiment" ? "test1" : null));
-  NimbusFeatures.search.onUpdate.firstCall.args[0]();
+  NimbusFeatures.searchConfiguration.onUpdate.firstCall.args[0]();
   await reloadObserved;
 
   await checkTelemetry("experiment", testChromeIconEngine, testEngine2);
@@ -205,9 +207,8 @@ add_task(async function test_experiment_changes_default() {
 add_task(async function test_locale_changes_default() {
   clearTelemetry();
 
-  let reloadObserved = SearchTestUtils.promiseSearchNotification(
-    "engines-reloaded"
-  );
+  let reloadObserved =
+    SearchTestUtils.promiseSearchNotification("engines-reloaded");
   Services.locale.requestedLocales = ["fr"];
   await reloadObserved;
 
@@ -217,9 +218,8 @@ add_task(async function test_locale_changes_default() {
 add_task(async function test_region_changes_default() {
   clearTelemetry();
 
-  let reloadObserved = SearchTestUtils.promiseSearchNotification(
-    "engines-reloaded"
-  );
+  let reloadObserved =
+    SearchTestUtils.promiseSearchNotification("engines-reloaded");
   Region._setHomeRegion("DE", true);
   await reloadObserved;
 
@@ -279,7 +279,7 @@ add_task(async function test_experiment_with_separate_default_notifies() {
   getVariableStub.callsFake(name =>
     name == "seperatePrivateDefaultUIEnabled" ? true : null
   );
-  NimbusFeatures.search.onUpdate.firstCall.args[0]();
+  NimbusFeatures.searchConfiguration.onUpdate.firstCall.args[0]();
 
   await checkTelemetry("experiment", null, testChromeIconEngine, true);
 
@@ -287,7 +287,7 @@ add_task(async function test_experiment_with_separate_default_notifies() {
 
   // Reset the stub so that we are no longer in an experiment.
   getVariableStub.returns(null);
-  NimbusFeatures.search.onUpdate.firstCall.args[0]();
+  NimbusFeatures.searchConfiguration.onUpdate.firstCall.args[0]();
 
   await checkTelemetry("experiment", testChromeIconEngine, null, true);
 });

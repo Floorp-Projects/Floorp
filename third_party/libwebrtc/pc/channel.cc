@@ -433,11 +433,7 @@ void BaseChannel::OnRtpPacket(const webrtc::RtpPacketReceived& parsed_packet) {
                         << ToString();
     return;
   }
-
-  webrtc::Timestamp packet_time = parsed_packet.arrival_time();
-  media_channel_->OnPacketReceived(
-      parsed_packet.Buffer(),
-      packet_time.IsMinusInfinity() ? -1 : packet_time.us());
+  media_channel_->OnPacketReceived(parsed_packet);
 }
 
 bool BaseChannel::MaybeUpdateDemuxerAndRtpExtensions_w(
@@ -826,7 +822,9 @@ VoiceChannel::VoiceChannel(rtc::Thread* worker_thread,
                   mid,
                   srtp_required,
                   crypto_options,
-                  ssrc_generator) {}
+                  ssrc_generator),
+      send_channel_(this->media_channel()->AsVoiceChannel()),
+      receive_channel_(this->media_channel()->AsVoiceChannel()) {}
 
 VoiceChannel::~VoiceChannel() {
   TRACE_EVENT0("webrtc", "VoiceChannel::~VoiceChannel");
@@ -950,7 +948,9 @@ VideoChannel::VideoChannel(rtc::Thread* worker_thread,
                   mid,
                   srtp_required,
                   crypto_options,
-                  ssrc_generator) {}
+                  ssrc_generator),
+      send_channel_(this->media_channel()->AsVideoChannel()),
+      receive_channel_(this->media_channel()->AsVideoChannel()) {}
 
 VideoChannel::~VideoChannel() {
   TRACE_EVENT0("webrtc", "VideoChannel::~VideoChannel");

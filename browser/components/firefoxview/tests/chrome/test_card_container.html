@@ -1,0 +1,122 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>CardContainer Tests</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
+  <link rel="localization" href="browser/firefoxView.ftl"/>
+  <script type="module" src="chrome://browser/content/firefoxview/card-container.mjs"></script>
+</head>
+<body>
+  <style>
+  </style>
+<p id="display"></p>
+<div id="content">
+  <card-container viewAllPage="history">
+    <h2 slot="header" data-l10n-id="history-header"></h2>
+    <ul slot="main">
+        <li>History Row 1</li>
+        <li>History Row 2</li>
+        <li>History Row 3</li>
+        <li>History Row 4</li>
+        <li>History Row 5</li>
+    </ul>
+  </card-container>
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript">
+  const cardContainer = document.querySelector("card-container");
+
+  /**
+  * Tests that the card-container can expand and collapse when the summary element is clicked
+  */
+  add_task(async function test_open_close_card() {
+    is(
+      cardContainer.isExpanded,
+      true,
+      "The card-container is expanded initially"
+    );
+
+    // Click the summary to collapse the details disclosure
+    cardContainer.summaryEl.click();
+    is(
+      cardContainer.detailsEl.hasAttribute("open"),
+      false,
+      "The card-container is collapsed"
+    );
+
+    // Click on the summary again to expand the details disclosure
+    cardContainer.summaryEl.click();
+    is(
+      cardContainer.detailsEl.hasAttribute("open"),
+      true,
+      "The card-container is expanded"
+    );
+  });
+
+   /**
+   * Tests keyboard navigation of the card-container component
+   */
+  add_task(async function test_keyboard_navigation() {
+    const tab = async shiftKey => {
+      info(`Tab${shiftKey ? ' + Shift' : ''}`);
+      synthesizeKey("KEY_Tab", { shiftKey });
+    };
+    const enter = async () => {
+      info("Enter");
+      synthesizeKey("KEY_Enter", {});
+    };
+
+     // Setting this pref allows the test to run as expected with a keyboard on MacOS
+    await SpecialPowers.pushPrefEnv({
+      set: [["accessibility.tabfocus", 7]],
+    });
+
+    cardContainer.summaryEl.focus();
+    is(
+      cardContainer.shadowRoot.activeElement,
+      cardContainer.summaryEl,
+      "Focus should be on the summary element within card-container"
+    );
+
+    // Tab to the 'View all' link
+    await tab();
+    is(
+      cardContainer.shadowRoot.activeElement,
+      cardContainer.viewAllLink,
+      "Focus should be on the 'View all' link within card-container"
+    );
+
+    // Shift + Tab back to the summary element
+    await tab(true);
+    is(
+      cardContainer.shadowRoot.activeElement,
+      cardContainer.summaryEl,
+      "Focus should be back on the summary element within card-container"
+    );
+
+    // Select the summary to collapse the details disclosure
+    await enter();
+    is(
+      cardContainer.detailsEl.hasAttribute("open"),
+      false,
+      "The card-container is collapsed"
+    );
+
+    // Select the summary again to expand the details disclosure
+    await enter();
+    is(
+      cardContainer.detailsEl.hasAttribute("open"),
+      true,
+      "The card-container is expanded"
+    );
+
+    await SpecialPowers.popPrefEnv();
+  });
+</script>
+</pre>
+</body>
+</html>

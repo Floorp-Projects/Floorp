@@ -5,47 +5,56 @@
         "id": "engine1@search.mozilla.org"
       },
       "orderHint": 10000,
-      "appliesTo": [{
-        "included": { "everywhere": true },
-        "default": "yes-if-no-other",
-        "defaultPrivate": "yes-if-no-other"
-      }]
+      "appliesTo": [
+        {
+          "included": { "everywhere": true },
+          "default": "yes-if-no-other",
+          "defaultPrivate": "yes-if-no-other"
+        }
+      ]
     },
     {
       "webExtension": {
         "id": "engine2@search.mozilla.org"
       },
       "orderHint": 7000,
-      "appliesTo": [{
-        "included": { "everywhere": true },
-        "default": "no"
-      }, {
-        "included": { "everywhere": true },
-        "default": "yes",
-        "experiment": "exp1"
-      }]
+      "appliesTo": [
+        {
+          "included": { "everywhere": true },
+          "default": "no"
+        },
+        {
+          "included": { "everywhere": true },
+          "default": "yes",
+          "experiment": "exp1"
+        }
+      ]
     },
     {
       "webExtension": {
         "id": "exp2@search.mozilla.org"
       },
       "orderHint": 5000,
-      "appliesTo": [{
-        "included": { "everywhere": true },
-        "defaultPrivate": "yes",
-        "experiment": "exp2"
-      }]
+      "appliesTo": [
+        {
+          "included": { "everywhere": true },
+          "defaultPrivate": "yes",
+          "experiment": "exp2"
+        }
+      ]
     },
     {
       "webExtension": {
         "id": "exp3@search.mozilla.org"
       },
       "orderHint": 20000,
-      "appliesTo": [{
-        "included": { "everywhere": true },
-        "default": "yes",
-        "experiment": "exp3"
-      }]
+      "appliesTo": [
+        {
+          "included": { "everywhere": true },
+          "default": "yes",
+          "experiment": "exp3"
+        }
+      ]
     }
   ]
 }

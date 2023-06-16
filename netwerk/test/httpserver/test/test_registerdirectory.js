@@ -6,7 +6,7 @@
 
 // tests the registerDirectory API
 
-XPCOMUtils.defineLazyGetter(this, "BASE", function() {
+XPCOMUtils.defineLazyGetter(this, "BASE", function () {
   return "http://localhost:" + srv.identity.primaryPort;
 });
 
@@ -47,7 +47,7 @@ function checkFile(ch, status, data) {
   );
 }
 
-XPCOMUtils.defineLazyGetter(this, "tests", function() {
+XPCOMUtils.defineLazyGetter(this, "tests", function () {
   return [
     /** *********************
      * without a base path *
@@ -59,7 +59,7 @@ XPCOMUtils.defineLazyGetter(this, "tests", function() {
      ********************/
     new Test(
       BASE + "/test_registerdirectory.js",
-      function(ch) {
+      function (ch) {
         nocache(ch);
         serverBasePath = testsDirectory.clone();
         srv.registerDirectory("/", serverBasePath);
@@ -73,7 +73,7 @@ XPCOMUtils.defineLazyGetter(this, "tests", function() {
      *****************************/
     new Test(
       BASE + "/test_registerdirectory.js",
-      function(ch) {
+      function (ch) {
         nocache(ch);
         serverBasePath = null;
         srv.registerDirectory("/", serverBasePath);
@@ -87,7 +87,7 @@ XPCOMUtils.defineLazyGetter(this, "tests", function() {
      ***************************/
     new Test(
       BASE + "/test_registerdirectory.js",
-      function(ch) {
+      function (ch) {
         nocache(ch);
         srv.registerPathHandler(
           "/test_registerdirectory.js",
@@ -116,7 +116,7 @@ XPCOMUtils.defineLazyGetter(this, "tests", function() {
      ********************/
     new Test(
       BASE + "/test_registerdirectory.js",
-      function(ch) {
+      function (ch) {
         nocache(ch);
 
         // set the base path again
@@ -132,7 +132,7 @@ XPCOMUtils.defineLazyGetter(this, "tests", function() {
      *************************/
     new Test(
       BASE + "/test_registerdirectory.js",
-      function(ch) {
+      function (ch) {
         nocache(ch);
         srv.registerPathHandler(
           "/test_registerdirectory.js",
@@ -148,7 +148,7 @@ XPCOMUtils.defineLazyGetter(this, "tests", function() {
      ************************/
     new Test(
       BASE + "/test_registerdirectory.js",
-      function(ch) {
+      function (ch) {
         nocache(ch);
         serverBasePath = null;
         srv.registerDirectory("/", serverBasePath);
@@ -162,7 +162,7 @@ XPCOMUtils.defineLazyGetter(this, "tests", function() {
      ************************/
     new Test(
       BASE + "/test_registerdirectory.js",
-      function(ch) {
+      function (ch) {
         nocache(ch);
         srv.registerPathHandler("/test_registerdirectory.js", null);
       },
@@ -175,7 +175,7 @@ XPCOMUtils.defineLazyGetter(this, "tests", function() {
      *************************/
     new Test(
       BASE + "/foo/test_registerdirectory.js",
-      function(ch) {
+      function (ch) {
         nocache(ch);
         serverBasePath = testsDirectory.clone();
         srv.registerDirectory("/foo/", serverBasePath);
@@ -199,7 +199,7 @@ XPCOMUtils.defineLazyGetter(this, "tests", function() {
      ******************/
     new Test(
       BASE + "/foo/test_registerdirectory.js/test_registerdirectory.js",
-      function(ch) {
+      function (ch) {
         nocache(ch);
         srv.registerDirectory(
           "/foo/test_registerdirectory.js/",
@@ -220,7 +220,7 @@ XPCOMUtils.defineLazyGetter(this, "tests", function() {
      **************************/
     new Test(
       BASE + "/foo/test_registerdirectory.js",
-      function(ch) {
+      function (ch) {
         nocache(ch);
         srv.registerDirectory("/foo/", null);
       },
@@ -243,7 +243,7 @@ XPCOMUtils.defineLazyGetter(this, "tests", function() {
      *******************/
     new Test(
       BASE + "/foo/test_registerdirectory.js/test_registerdirectory.js",
-      function(ch) {
+      function (ch) {
         nocache(ch);
         srv.registerDirectory("/foo/test_registerdirectory.js/", null);
       },

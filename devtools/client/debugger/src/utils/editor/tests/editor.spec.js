@@ -3,7 +3,6 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import {
-  traverseResults,
   toEditorLine,
   toEditorPosition,
   toEditorRange,
@@ -21,32 +20,6 @@ import {
 
 import { makeMockSource } from "../../test-mockup";
 
-describe("traverseResults", () => {
-  const e = { stopPropagation: jest.fn(), preventDefault: jest.fn() };
-  const ctx = {};
-  const query = "Awesome books";
-  const modifiers = {
-    caseSensitive: false,
-    regexMatch: false,
-    wholeWord: false,
-  };
-  it("traverses next", () => {
-    traverseResults(e, ctx, query, "next", modifiers);
-    expect(e.stopPropagation).toHaveBeenCalled();
-    expect(e.preventDefault).toHaveBeenCalled();
-    // expect(findNext).toHaveBeenCalledWith(ctx, query, true, modifiers);
-  });
-
-  it("traverses previous", () => {
-    e.stopPropagation.mockClear();
-    e.preventDefault.mockClear();
-    traverseResults(e, ctx, query, "prev", modifiers);
-    expect(e.stopPropagation).toHaveBeenCalled();
-    expect(e.preventDefault).toHaveBeenCalled();
-    // expect(findPrev).toHaveBeenCalledWith(ctx, query, true, modifiers);
-  });
-});
-
 describe("toEditorLine", () => {
   it("returns an editor line", () => {
     const testId = "test-123";
@@ -57,7 +30,7 @@ describe("toEditorLine", () => {
 
 describe("toEditorPosition", () => {
   it("returns an editor position", () => {
-    const loc = { sourceId: "source", line: 100, column: 25 };
+    const loc = { source: { id: "source" }, line: 100, column: 25 };
     expect(toEditorPosition(loc)).toEqual({
       line: 99,
       column: 25,
@@ -69,8 +42,8 @@ describe("toEditorRange", () => {
   it("returns an editor range", () => {
     const testId = "test-123";
     const loc = {
-      start: { line: 100, column: 25 },
-      end: { line: 200, column: 0 },
+      start: { source: { id: testId }, line: 100, column: 25 },
+      end: { source: { id: testId }, line: 200, column: 0 },
     };
     expect(toEditorRange(testId, loc)).toEqual({
       start: { line: 99, column: 25 },
@@ -163,8 +136,8 @@ describe("getSourceLocationFromMouseEvent", () => {
     const source = makeMockSource(undefined, "test-123");
     const e = { clientX: 30, clientY: 60 };
     expect(getSourceLocationFromMouseEvent(editor, source, e)).toEqual({
-      sourceId: "test-123",
       source,
+      sourceId: source.id,
       line: 7,
       column: 31,
       sourceActorId: undefined,

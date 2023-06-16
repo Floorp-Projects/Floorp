@@ -8,8 +8,10 @@ import {
   getQuickOpenEnabled,
   getSource,
   getSourceContent,
-  getFileSearchQuery,
   getMainThread,
+  getIgnoreListSourceUrls,
+  getSourceByURL,
+  getBreakpointsForSource,
 } from "../selectors";
 import { selectSource } from "../actions/sources/select";
 import {
@@ -17,7 +19,8 @@ import {
   getLocationsInViewport,
   updateDocuments,
 } from "../utils/editor";
-import { searchContents } from "./file-search";
+import { blackboxSourceActorsForSource } from "./sources/blackbox";
+import { toggleBreakpoints } from "./breakpoints";
 import { copyToTheClipboard } from "../utils/clipboard";
 import { isFulfilled } from "../utils/async-value";
 import { primaryPaneTabs } from "../constants";
@@ -60,17 +63,6 @@ export function setActiveSearch(activeSearch) {
       type: "TOGGLE_ACTIVE_SEARCH",
       value: activeSearch,
     });
-  };
-}
-
-export function updateActiveFileSearch(cx) {
-  return ({ dispatch, getState }) => {
-    const isFileSearchOpen = getActiveSearch(getState()) === "file";
-    const fileSearchQuery = getFileSearchQuery(getState());
-    if (isFileSearchOpen && fileSearchQuery) {
-      const editor = getEditor();
-      dispatch(searchContents(cx, fileSearchQuery, editor, false));
-    }
   };
 }
 
@@ -138,6 +130,15 @@ export function togglePaneCollapse(position, paneCollapsed) {
     const prevPaneCollapse = getPaneCollapse(getState(), position);
     if (prevPaneCollapse === paneCollapsed) {
       return;
+    }
+
+    // Set active search to null when closing start panel if project search was active
+    if (
+      position === "start" &&
+      paneCollapsed &&
+      getActiveSearch(getState()) === primaryPaneTabs.PROJECT_SEARCH
+    ) {
+      dispatch(closeActiveSearch());
     }
 
     dispatch({
@@ -259,6 +260,31 @@ export function setJavascriptTracingLogMethod(value) {
     dispatch({
       type: "SET_JAVASCRIPT_TRACING_LOG_METHOD",
       value,
+    });
+  };
+}
+
+export function setHideOrShowIgnoredSources(shouldHide) {
+  return ({ dispatch, getState }) => {
+    dispatch({ type: "HIDE_IGNORED_SOURCES", shouldHide });
+  };
+}
+
+export function toggleSourceMapIgnoreList(cx, shouldEnable) {
+  return async thunkArgs => {
+    const { dispatch, getState } = thunkArgs;
+    const ignoreListSourceUrls = getIgnoreListSourceUrls(getState());
+    // Blackbox the source actors on the server
+    for (const url of ignoreListSourceUrls) {
+      const source = getSourceByURL(getState(), url);
+      await blackboxSourceActorsForSource(thunkArgs, source, shouldEnable);
+      // Disable breakpoints in sources on the ignore list
+      const breakpoints = getBreakpointsForSource(getState(), source.id);
+      await dispatch(toggleBreakpoints(cx, shouldEnable, breakpoints));
+    }
+    await dispatch({
+      type: "ENABLE_SOURCEMAP_IGNORELIST",
+      shouldEnable,
     });
   };
 }

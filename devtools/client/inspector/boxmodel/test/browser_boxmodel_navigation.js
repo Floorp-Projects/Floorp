@@ -14,7 +14,7 @@ const TEST_URI = `
   </style><div></div>
 `;
 
-add_task(async function() {
+add_task(async function () {
   await addTab("data:text/html," + encodeURIComponent(TEST_URI));
   const { inspector, boxmodel } = await openLayoutView();
   await selectNode("div", inspector);

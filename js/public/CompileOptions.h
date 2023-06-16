@@ -123,8 +123,12 @@ class JS_PUBLIC_API TransitiveCompileOptions {
  protected:
   // non-POD options:
 
+  // UTF-8 encoded file name.
   const char* filename_ = nullptr;
+
+  // UTF-8 encoded introducer file name.
   const char* introducerFilename_ = nullptr;
+
   const char16_t* sourceMapURL_ = nullptr;
 
   // POD options:
@@ -233,8 +237,8 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   bool deoptimizeModuleGlobalVars = false;
 
   /**
-   * |introductionType| is a statically allocated C string: one of "eval",
-   * "Function", or "GeneratorFunction".
+   * |introductionType| is a statically allocated C string. See JSScript.h
+   * for more information.
    */
   const char* introductionType = nullptr;
 
@@ -469,6 +473,11 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
     introducerFilename_ = rhs.introducerFilename();
     sourceMapURL_ = rhs.sourceMapURL();
   }
+
+  // Construct CompileOptions for FrontendContext-APIs.
+  struct ForFrontendContext {};
+  explicit CompileOptions(const ForFrontendContext&)
+      : ReadOnlyCompileOptions() {}
 
   CompileOptions& setFile(const char* f) {
     filename_ = f;

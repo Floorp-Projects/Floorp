@@ -1738,10 +1738,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
   int32_t action = nsIMIMEInfo::saveToDisk;
   mMimeInfo->GetPreferredAction(&action);
 
-  bool forcePrompt =
-      mReason == nsIHelperAppLauncherDialog::REASON_TYPESNIFFED ||
-      (mReason == nsIHelperAppLauncherDialog::REASON_SERVERREQUEST &&
-       !StaticPrefs::browser_download_improvements_to_download_panel());
+  bool forcePrompt = mReason == nsIHelperAppLauncherDialog::REASON_TYPESNIFFED;
 
   // OK, now check why we're here
   if (!alwaysAsk && forcePrompt) {
@@ -1751,8 +1748,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
   }
 
   bool shouldAutomaticallyHandleInternally =
-      action == nsIMIMEInfo::handleInternally &&
-      StaticPrefs::browser_download_improvements_to_download_panel();
+      action == nsIMIMEInfo::handleInternally;
 
   // If we're not asking, check we actually know what to do:
   if (!alwaysAsk) {
@@ -2463,8 +2459,7 @@ void nsExternalAppHandler::RequestSaveDestination(
 NS_IMETHODIMP nsExternalAppHandler::PromptForSaveDestination() {
   if (mCanceled) return NS_OK;
 
-  if (!StaticPrefs::browser_download_improvements_to_download_panel() ||
-      mForceSave) {
+  if (mForceSave) {
     mMimeInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk);
   }
 
@@ -2492,9 +2487,7 @@ nsresult nsExternalAppHandler::ContinueSave(nsIFile* aNewFileLocation) {
 
   int32_t action = nsIMIMEInfo::saveToDisk;
   mMimeInfo->GetPreferredAction(&action);
-  mHandleInternally =
-      action == nsIMIMEInfo::handleInternally &&
-      StaticPrefs::browser_download_improvements_to_download_panel();
+  mHandleInternally = action == nsIMIMEInfo::handleInternally;
 
   nsresult rv = NS_OK;
   nsCOMPtr<nsIFile> fileToUse = aNewFileLocation;
@@ -2592,8 +2585,7 @@ NS_IMETHODIMP nsExternalAppHandler::SetDownloadToLaunch(
   // directory as originally downloaded so the download can be renamed in place
   // later.
   nsCOMPtr<nsIFile> fileToUse;
-  if (aNewFileLocation &&
-      StaticPrefs::browser_download_improvements_to_download_panel()) {
+  if (aNewFileLocation) {
     fileToUse = aNewFileLocation;
   } else {
     (void)GetDownloadDirectory(getter_AddRefs(fileToUse));

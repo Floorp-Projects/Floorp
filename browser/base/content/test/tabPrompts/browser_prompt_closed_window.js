@@ -12,7 +12,7 @@ add_task(async function test_closed_tab_doesnt_show_prompt() {
 
   // Get a promise for the initial, in-tab prompt:
   let promptPromise = BrowserTestUtils.promiseAlertDialogOpen();
-  await ContentTask.spawn(newWin.gBrowser.selectedBrowser, [], function() {
+  await ContentTask.spawn(newWin.gBrowser.selectedBrowser, [], function () {
     // Don't want to block, so use setTimeout with 0 timeout:
     content.setTimeout(
       () =>

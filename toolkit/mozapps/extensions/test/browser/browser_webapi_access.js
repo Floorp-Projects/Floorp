@@ -7,7 +7,7 @@ function check_frame_availability(browser) {
 }
 
 function check_availability(browser) {
-  return SpecialPowers.spawn(browser, [], async function() {
+  return SpecialPowers.spawn(browser, [], async function () {
     return content.document.getElementById("result").textContent == "true";
   });
 }
@@ -102,7 +102,7 @@ add_task(async function test_navigated_window() {
     async function test_available(browser) {
       let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
 
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         await content.wrappedJSObject.openWindow();
       });
 
@@ -112,13 +112,13 @@ add_task(async function test_navigated_window() {
         gBrowser.getBrowserForTab(tab)
       );
 
-      SpecialPowers.spawn(browser, [], async function() {
+      SpecialPowers.spawn(browser, [], async function () {
         content.wrappedJSObject.navigate();
       });
 
       await loadPromise;
 
-      let available = await SpecialPowers.spawn(browser, [], async function() {
+      let available = await SpecialPowers.spawn(browser, [], async function () {
         return content.wrappedJSObject.check();
       });
 

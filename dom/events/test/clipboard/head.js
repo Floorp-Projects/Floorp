@@ -123,7 +123,7 @@ function promiseClickContentElement(aBrowser, aContentElementId) {
       let promise = new Promise(resolve => {
         contentElement.addEventListener(
           "click",
-          function(e) {
+          function (e) {
             resolve({ x: e.screenX, y: e.screenY });
           },
           { once: true }

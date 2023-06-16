@@ -7,7 +7,7 @@
  * in the database is unordered so that a hierarchy is defined before its
  * ancestor in the bookmarks table.
  */
-add_task(async function() {
+add_task(async function () {
   let bms = await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.unfiledGuid,
     children: [
@@ -46,8 +46,9 @@ add_task(async function() {
   );
 
   info("Checking first level");
-  let root = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.unfiledGuid)
-    .root;
+  let root = PlacesUtils.getFolderContents(
+    PlacesUtils.bookmarks.unfiledGuid
+  ).root;
   let level1 = root.getChild(0);
   Assert.equal(level1.title, "f1");
   info("Checking second level");

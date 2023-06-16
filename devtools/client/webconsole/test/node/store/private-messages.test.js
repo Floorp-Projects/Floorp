@@ -203,7 +203,7 @@ describe("private messages", () => {
   it("releases private backend actors on PRIVATE_MESSAGES_CLEAR action", () => {
     const releasedActors = [];
     const { dispatch, getState } = setupStore([]);
-    const mockFrontRelease = function() {
+    const mockFrontRelease = function () {
       releasedActors.push(this.actorID);
     };
 

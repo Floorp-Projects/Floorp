@@ -476,8 +476,13 @@ interface nsIHttpChannel : nsIIdentChannel
      *
      * @param aCategory
      *        The category under which the message should be displayed.
+     *
+     * @param aIsWarning
+     *        When true, this is a warning message.
      */
-    void logBlockedCORSRequest(in AString aMessage, in ACString aCategory);
+    void logBlockedCORSRequest(in AString aMessage,
+                               in ACString aCategory,
+                               in boolean aIsWarning);
 
     void logMimeTypeMismatch(in ACString aMessageName,
                              in boolean aWarning,

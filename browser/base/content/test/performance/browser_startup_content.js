@@ -42,8 +42,8 @@ const known_scripts = {
     "resource://gre/modules/TelemetryControllerContent.sys.mjs", // bug 1470339
 
     // Extensions
-    "resource://gre/modules/ExtensionProcessScript.jsm",
-    "resource://gre/modules/ExtensionUtils.jsm",
+    "resource://gre/modules/ExtensionProcessScript.sys.mjs",
+    "resource://gre/modules/ExtensionUtils.sys.mjs",
   ]),
   frameScripts: new Set([
     // Test related
@@ -73,6 +73,10 @@ const intermittently_loaded_scripts = {
     "resource://gre/modules/nsAsyncShutdown.sys.mjs",
     "resource://gre/modules/sessionstore/Utils.sys.mjs",
 
+    // Translations code which may be preffed on.
+    "resource://gre/actors/TranslationsChild.sys.mjs",
+    "resource://gre/modules/ConsoleAPIStorage.sys.mjs", // Logging related.
+
     // Session store.
     "resource://gre/modules/sessionstore/SessionHistory.sys.mjs",
 
@@ -90,8 +94,8 @@ const intermittently_loaded_scripts = {
     "resource://testing-common/BrowserTestUtilsChild.sys.mjs",
     "resource://testing-common/ContentEventListenerChild.sys.mjs",
     "resource://specialpowers/AppTestDelegateChild.sys.mjs",
-    "resource://specialpowers/SpecialPowersChild.sys.mjs",
-    "resource://specialpowers/WrapPrivileged.sys.mjs",
+    "resource://testing-common/SpecialPowersChild.sys.mjs",
+    "resource://testing-common/WrapPrivileged.sys.mjs",
   ]),
   frameScripts: new Set([]),
   processScripts: new Set([
@@ -109,7 +113,7 @@ const forbiddenScripts = {
   ]),
 };
 
-add_task(async function() {
+add_task(async function () {
   SimpleTest.requestCompleteLog();
 
   let tab = await BrowserTestUtils.openNewForegroundTab({
@@ -128,7 +132,7 @@ add_task(async function() {
   // Load a custom frame script to avoid using ContentTask which loads Task.jsm
   mm.loadFrameScript(
     "data:text/javascript,(" +
-      function() {
+      function () {
         /* eslint-env mozilla/frame-script */
         const Cm = Components.manager;
         Cm.QueryInterface(Ci.nsIServiceManager);

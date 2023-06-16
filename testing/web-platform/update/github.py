@@ -65,7 +65,7 @@ class GitHub(object):
 
 class GitHubRepo(object):
     def __init__(self, github, data):
-        """Object respresenting a GitHub respoitory"""
+        """Object representing a GitHub repository"""
         self.gh = github
         self.owner = data["owner"]
         self.name = data["name"]

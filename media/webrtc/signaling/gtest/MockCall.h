@@ -64,8 +64,6 @@ class MockAudioReceiveStream : public webrtc::AudioReceiveStreamInterface {
 
   bool IsRunning() const override { return true; }
 
-  bool transport_cc() const override { return false; }
-
   Stats GetStats(bool get_and_clear_legacy_stats) const override {
     return mStats;
   }
@@ -87,11 +85,6 @@ class MockAudioReceiveStream : public webrtc::AudioReceiveStreamInterface {
   }
   virtual void SetDecoderMap(
       std::map<int, webrtc::SdpAudioFormat> decoder_map) override;
-  virtual void SetTransportCc(bool use_transport_cc) override {
-    // Unimplemented after webrtc.org e2561e17e2 removed the Reconfigure
-    // method.
-    MOZ_ASSERT(false);
-  }
   virtual void SetNackHistory(int history_ms) override {
     // Unimplemented after webrtc.org e2561e17e2 removed the Reconfigure
     // method.
@@ -101,7 +94,6 @@ class MockAudioReceiveStream : public webrtc::AudioReceiveStreamInterface {
   void SetFrameDecryptor(rtc::scoped_refptr<webrtc::FrameDecryptorInterface>
                              frame_decryptor) override {}
   void SetRtpExtensions(std::vector<webrtc::RtpExtension> extensions) override;
-  const std::vector<webrtc::RtpExtension>& GetRtpExtensions() const override;
   webrtc::RtpHeaderExtensionMap GetRtpExtensionMap() const override;
   bool SetBaseMinimumPlayoutDelayMs(int delay_ms) override { return false; }
   int GetBaseMinimumPlayoutDelayMs() const override { return 0; }
@@ -162,9 +154,6 @@ class MockVideoReceiveStream : public webrtc::VideoReceiveStreamInterface {
   void Start() override {}
 
   void Stop() override {}
-
-  bool transport_cc() const override { return false; }
-  void SetTransportCc(bool use_transport_cc) override {}
 
   Stats GetStats() const override { return mStats; }
 
@@ -369,7 +358,7 @@ class MockCallWrapper : public mozilla::WebrtcCallWrapper {
         nullptr, nullptr);
     auto wrapper = mozilla::MakeRefPtr<MockCallWrapper>(
         state, nullptr, nullptr, nullptr,
-        mozilla::dom::RTCStatsTimestampMaker(), nullptr);
+        mozilla::dom::RTCStatsTimestampMaker::Create(), nullptr);
     wrapper->SetCall(mozilla::WrapUnique(new MockCall(wrapper)));
     return wrapper;
   }

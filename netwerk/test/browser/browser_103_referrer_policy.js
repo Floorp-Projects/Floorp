@@ -36,7 +36,7 @@ async function test_referrer_policy(input, expected_results) {
       url: requestUrl,
       waitForLoad: true,
     },
-    async function() {}
+    async function () {}
   );
 
   let gotRequestCount = await fetch(

@@ -252,7 +252,10 @@ class CloneDataPolicy {
  * tag and data are the pair of uint32_t values from the header. The callback
  * may use the JS_Read* APIs to read any other relevant parts of the object
  * from the reader r. closure is any value passed to the JS_ReadStructuredClone
- * function. Return the new object on success, nullptr on error/exception.
+ * function.
+ *
+ * Return the new object on success, or raise an exception and return nullptr on
+ * error.
  */
 typedef JSObject* (*ReadStructuredCloneOp)(
     JSContext* cx, JSStructuredCloneReader* r,
@@ -269,7 +272,8 @@ typedef JSObject* (*ReadStructuredCloneOp)(
  * the value v to the writer w. closure is any value passed to the
  * JS_WriteStructuredClone function.
  *
- * Return true on success, false on error/exception.
+ * Return true on success, false on error. On error, an exception should
+ * normally be set.
  */
 typedef bool (*WriteStructuredCloneOp)(JSContext* cx,
                                        JSStructuredCloneWriter* w,
@@ -278,9 +282,21 @@ typedef bool (*WriteStructuredCloneOp)(JSContext* cx,
                                        void* closure);
 
 /**
- * This is called when JS_WriteStructuredClone is given an invalid transferable.
+ * This is called when serialization or deserialization encounters an error.
  * To follow HTML5, the application must throw a DATA_CLONE_ERR DOMException
  * with error set to one of the JS_SCERR_* values.
+ *
+ * Note that if the .reportError field of the JSStructuredCloneCallbacks is
+ * set (to a function with this signature), then an exception will *not* be
+ * set on the JSContext when an error is encountered. The clone operation
+ * will still be aborted and will return false, however, so it is up to the
+ * embedding to do what it needs to for the error.
+ *
+ * Example: for the DOM, mozilla::dom::StructuredCloneHolder will save away
+ * the error message during its reportError callback. Then when the overall
+ * operation fails, it will clear any exception that might have been set
+ * from other ways to fail and pass the saved error message to
+ * ErrorResult::ThrowDataCloneError().
  */
 typedef void (*StructuredCloneErrorOp)(JSContext* cx, uint32_t errorid,
                                        void* closure, const char* errorMessage);
@@ -291,6 +307,10 @@ typedef void (*StructuredCloneErrorOp)(JSContext* cx, uint32_t errorid,
  * JS engine calls the reportError op if set, otherwise it throws a
  * DATA_CLONE_ERR DOM Exception. This method is called before any other
  * callback and must return a non-null object in returnObject on success.
+ *
+ * If this readTransfer() hook is called and produces an object, then the
+ * read() hook will *not* be called for the same object, since the main data
+ * will only contain a backreference to the already-read object.
  */
 typedef bool (*ReadTransferStructuredCloneOp)(
     JSContext* cx, JSStructuredCloneReader* r, uint32_t tag, void* content,
@@ -458,22 +478,15 @@ class MOZ_NON_MEMMOVABLE JS_PUBLIC_API JSStructuredCloneData {
   // the initial size and initial capacity of the BufferList must be zero.
   explicit JSStructuredCloneData(JS::StructuredCloneScope scope)
       : bufList_(0, 0, kStandardCapacity, js::SystemAllocPolicy()),
-        scope_(scope),
-        callbacks_(nullptr),
-        closure_(nullptr),
-        ownTransferables_(OwnTransferablePolicy::NoTransferables) {}
+        scope_(scope) {}
 
   // Steal the raw data from a BufferList. In this case, we don't know the
   // scope and none of the callback info is assigned yet.
-  JSStructuredCloneData(BufferList&& buffers, JS::StructuredCloneScope scope)
+  JSStructuredCloneData(BufferList&& buffers, JS::StructuredCloneScope scope,
+                        OwnTransferablePolicy ownership)
       : bufList_(std::move(buffers)),
         scope_(scope),
-        callbacks_(nullptr),
-        closure_(nullptr),
-        ownTransferables_(OwnTransferablePolicy::NoTransferables) {}
-  MOZ_IMPLICIT JSStructuredCloneData(BufferList&& buffers)
-      : JSStructuredCloneData(std::move(buffers),
-                              JS::StructuredCloneScope::Unassigned) {}
+        ownTransferables_(ownership) {}
   JSStructuredCloneData(JSStructuredCloneData&& other) = default;
   JSStructuredCloneData& operator=(JSStructuredCloneData&& other) = default;
   ~JSStructuredCloneData();
@@ -563,7 +576,8 @@ class MOZ_NON_MEMMOVABLE JS_PUBLIC_API JSStructuredCloneData {
                                bool* success) const {
     MOZ_ASSERT(scope() == JS::StructuredCloneScope::DifferentProcess);
     return JSStructuredCloneData(
-        bufList_.Borrow<js::SystemAllocPolicy>(iter, size, success), scope());
+        bufList_.Borrow<js::SystemAllocPolicy>(iter, size, success), scope(),
+        IgnoreTransferablesIfAny);
   }
 
   // Iterate over all contained data, one BufferList segment's worth at a

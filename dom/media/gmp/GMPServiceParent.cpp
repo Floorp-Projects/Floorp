@@ -1794,12 +1794,15 @@ GMPServiceParent::~GMPServiceParent() {
 mozilla::ipc::IPCResult GMPServiceParent::RecvLaunchGMP(
     const NodeIdVariant& aNodeIdVariant, const nsACString& aAPI,
     nsTArray<nsCString>&& aTags, nsTArray<ProcessId>&& aAlreadyBridgedTo,
-    uint32_t* aOutPluginId, ProcessId* aOutProcessId,
-    nsCString* aOutDisplayName, Endpoint<PGMPContentParent>* aOutEndpoint,
-    nsresult* aOutRv, nsCString* aOutErrorDescription) {
+    uint32_t* aOutPluginId, GMPPluginType* aOutPluginType,
+    ProcessId* aOutProcessId, nsCString* aOutDisplayName,
+    Endpoint<PGMPContentParent>* aOutEndpoint, nsresult* aOutRv,
+    nsCString* aOutErrorDescription) {
   if (mService->IsShuttingDown()) {
     *aOutRv = NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
     *aOutErrorDescription = "Service is shutting down."_ns;
+    *aOutPluginId = 0;
+    *aOutPluginType = GMPPluginType::Unknown;
     return IPC_OK();
   }
 
@@ -1808,6 +1811,8 @@ mozilla::ipc::IPCResult GMPServiceParent::RecvLaunchGMP(
   if (!NS_SUCCEEDED(rv)) {
     *aOutRv = rv;
     *aOutErrorDescription = "GetNodeId failed."_ns;
+    *aOutPluginId = 0;
+    *aOutPluginType = GMPPluginType::Unknown;
     return IPC_OK();
   }
 
@@ -1815,10 +1820,12 @@ mozilla::ipc::IPCResult GMPServiceParent::RecvLaunchGMP(
       mService->SelectPluginForAPI(nodeIdString, aAPI, aTags);
   if (gmp) {
     *aOutPluginId = gmp->GetPluginId();
+    *aOutPluginType = gmp->GetPluginType();
   } else {
     *aOutRv = NS_ERROR_FAILURE;
     *aOutErrorDescription = "SelectPluginForAPI returns nullptr."_ns;
     *aOutPluginId = 0;
+    *aOutPluginType = GMPPluginType::Unknown;
     return IPC_OK();
   }
 

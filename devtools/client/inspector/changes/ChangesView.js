@@ -188,10 +188,12 @@ class ChangesView {
    *        Host element of a CSS declaration rendered the Changes panel.
    */
   copyDeclaration(element) {
-    const name = element.querySelector(".changes__declaration-name")
-      .textContent;
-    const value = element.querySelector(".changes__declaration-value")
-      .textContent;
+    const name = element.querySelector(
+      ".changes__declaration-name"
+    ).textContent;
+    const value = element.querySelector(
+      ".changes__declaration-value"
+    ).textContent;
     const isRemoved = element.classList.contains("diff-remove");
     const text = isRemoved ? `/* ${name}: ${value}; */` : `${name}: ${value};`;
     clipboardHelper.copyString(text);

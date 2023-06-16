@@ -46,13 +46,13 @@ function assertSelected_one_off(index) {
   );
 }
 
-add_task(async function() {
+add_task(async function () {
   let maxResults = Services.prefs.getIntPref("browser.urlbar.maxRichResults");
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "about:mozilla"
   );
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.history.clear();
     BrowserTestUtils.removeTab(tab);
   });
@@ -89,9 +89,10 @@ add_task(async function() {
   assertSelected_one_off(0);
 
   info("Key Down numButtons-1 should select the last one-off");
-  let numButtons = UrlbarTestUtils.getOneOffSearchButtons(
-    window
-  ).getSelectableButtons(true).length;
+  let numButtons =
+    UrlbarTestUtils.getOneOffSearchButtons(window).getSelectableButtons(
+      true
+    ).length;
   repeat(numButtons - 1, () => EventUtils.synthesizeKey("KEY_ArrowDown"));
   assertSelected_one_off(numButtons - 1);
 

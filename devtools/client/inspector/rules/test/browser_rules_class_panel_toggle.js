@@ -5,7 +5,7 @@
 
 // Test that the class panel can be toggled.
 
-add_task(async function() {
+add_task(async function () {
   await addTab("data:text/html;charset=utf-8,<body class='class1 class2'>");
   const { inspector, view } = await openRuleView();
 

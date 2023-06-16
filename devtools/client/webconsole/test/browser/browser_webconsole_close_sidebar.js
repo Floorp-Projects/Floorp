@@ -7,7 +7,7 @@
 
 const TEST_URI = "data:text/html;charset=utf8,<!DOCTYPE html>";
 
-add_task(async function() {
+add_task(async function () {
   // Should be removed when sidebar work is complete
   await pushPref("devtools.webconsole.sidebarToggle", true);
 
@@ -29,7 +29,7 @@ add_task(async function() {
     "Console was cleared",
     ".console-api"
   );
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.wrappedJSObject.console.clear();
   });
   await onMessagesCleared;
@@ -74,7 +74,7 @@ add_task(async function() {
 
 async function showSidebar(hud) {
   const onMessage = waitForMessageByType(hud, "Object", ".console-api");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.wrappedJSObject.console.log({ a: 1 });
   });
   await onMessage;

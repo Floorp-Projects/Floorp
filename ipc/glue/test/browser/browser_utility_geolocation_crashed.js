@@ -25,7 +25,7 @@ async function getGeolocation() {
   return promise;
 }
 
-add_setup(async function() {
+add_setup(async function () {
   // Avoid the permission doorhanger and cache that would trigger instead
   // of re-requesting location. Setting geo.timeout to 0 causes it to
   // retry the system geolocation (incl. recreating the utility process)

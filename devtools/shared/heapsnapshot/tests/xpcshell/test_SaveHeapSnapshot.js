@@ -103,9 +103,7 @@ function testGoodParameters() {
   ok(true, "Should be able to save a snapshot for a debuggee global.");
 
   dbg = new Debugger();
-  const sandboxes = Array(10)
-    .fill(null)
-    .map(makeNewSandbox);
+  const sandboxes = Array(10).fill(null).map(makeNewSandbox);
   sandboxes.forEach(sb => dbg.addDebuggee(sb));
 
   ChromeUtils.saveHeapSnapshot({ debugger: dbg });

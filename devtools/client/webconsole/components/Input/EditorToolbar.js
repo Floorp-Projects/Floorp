@@ -43,9 +43,8 @@ class EditorToolbar extends Component {
   constructor(props) {
     super(props);
 
-    this.onReverseSearchButtonClick = this.onReverseSearchButtonClick.bind(
-      this
-    );
+    this.onReverseSearchButtonClick =
+      this.onReverseSearchButtonClick.bind(this);
   }
 
   onReverseSearchButtonClick(event) {
@@ -71,12 +70,8 @@ class EditorToolbar extends Component {
   }
 
   render() {
-    const {
-      editorMode,
-      dispatch,
-      reverseSearchInputVisible,
-      webConsoleUI,
-    } = this.props;
+    const { editorMode, dispatch, reverseSearchInputVisible, webConsoleUI } =
+      this.props;
 
     if (!editorMode) {
       return null;

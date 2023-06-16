@@ -9,7 +9,7 @@ const asyncStorage = require("resource://devtools/shared/async-storage.js");
  * Test if the New Request panel shows up as a expected when opened from the toolbar
  */
 
-add_task(async function() {
+add_task(async function () {
   // Turn on the pref
   await pushPref("devtools.netmonitor.features.newEditAndResend", true);
   // Reset the storage for the persisted custom request

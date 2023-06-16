@@ -116,6 +116,12 @@ EventGenerator::NewAudioNetworkAdaptation() {
   return std::make_unique<RtcEventAudioNetworkAdaptation>(std::move(config));
 }
 
+std::unique_ptr<RtcEventNetEqSetMinimumDelay>
+EventGenerator::NewNetEqSetMinimumDelay(uint32_t ssrc) {
+  return std::make_unique<RtcEventNetEqSetMinimumDelay>(
+      ssrc, prng_.Rand(std::numeric_limits<int>::max()));
+}
+
 std::unique_ptr<RtcEventBweUpdateDelayBased>
 EventGenerator::NewBweUpdateDelayBased() {
   constexpr int32_t kMaxBweBps = 20000000;
@@ -1349,6 +1355,14 @@ void EventVerifier::VerifyLoggedVideoSendConfig(
     const LoggedVideoSendConfig& logged_event) const {
   EXPECT_EQ(original_event.timestamp_ms(), logged_event.log_time_ms());
   VerifyLoggedStreamConfig(original_event.config(), logged_event.config);
+}
+
+void EventVerifier::VerifyLoggedNetEqSetMinimumDelay(
+    const RtcEventNetEqSetMinimumDelay& original_event,
+    const LoggedNetEqSetMinimumDelayEvent& logged_event) const {
+  EXPECT_EQ(original_event.timestamp_ms(), logged_event.timestamp.ms());
+  EXPECT_EQ(original_event.remote_ssrc(), logged_event.remote_ssrc);
+  EXPECT_EQ(original_event.minimum_delay_ms(), logged_event.minimum_delay_ms);
 }
 
 }  // namespace test

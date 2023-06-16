@@ -1,28 +1,34 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="Content-Security-Policy" content="default-src chrome:; object-src 'none'; img-src https://img-getpocket.cdn.mozilla.net;" />
-        <base href="chrome://pocket/content/panels/">
-        <link rel="localization" href="toolkit/branding/brandings.ftl" />
-        <link rel="localization" href="browser/aboutPocket.ftl" />
-        <title>Pocket: Style Guide</title>
-        <link rel="stylesheet" href="css/main.compiled.css">
-    </head>
-    <body>
-        <script src="js/vendor.bundle.js"></script>
-        <script src="js/main.bundle.js"></script>
-        <script src="js/style-guide/entry.js"></script>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src chrome:; object-src 'none'; img-src https://img-getpocket.cdn.mozilla.net;"
+    />
+    <base href="chrome://pocket/content/panels/" />
+    <link rel="localization" href="toolkit/branding/brandings.ftl" />
+    <link rel="localization" href="browser/aboutPocket.ftl" />
+    <title>Pocket: Style Guide</title>
+    <link rel="stylesheet" href="css/main.compiled.css" />
+  </head>
+  <body>
+    <script src="js/vendor.bundle.js"></script>
+    <script src="js/main.bundle.js"></script>
+    <script src="js/style-guide/entry.js"></script>
 
-        <div id="stp_style_guide">
-            <div id="dark_mode_toggle">
-                <form autocomplete="off">
-                    <label for="dark_mode_checkbox"><strong>Dark Mode: </strong></label>
-                    <input id="dark_mode_checkbox" type="checkbox"/>
-                </form>
-            </div>
-            <h1>Save To Pocket:<br/> Style Guide</h1>
-            <div id="stp_style_guide_components"></div>
-        </div>
-    </body>
+    <div id="stp_style_guide">
+      <div id="dark_mode_toggle">
+        <form autocomplete="off">
+          <label for="dark_mode_checkbox"><strong>Dark Mode: </strong></label>
+          <input id="dark_mode_checkbox" type="checkbox" />
+        </form>
+      </div>
+      <h1>
+        Save To Pocket:<br />
+        Style Guide
+      </h1>
+      <div id="stp_style_guide_components"></div>
+    </div>
+  </body>
 </html>

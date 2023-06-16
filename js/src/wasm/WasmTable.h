@@ -43,7 +43,7 @@ using TableAnyRefVector = GCVector<HeapPtr<JSObject*>, 0, SystemAllocPolicy>;
 class Table : public ShareableBase<Table> {
   using InstanceSet = JS::WeakCache<GCHashSet<
       WeakHeapPtr<WasmInstanceObject*>,
-      MovableCellHasher<WeakHeapPtr<WasmInstanceObject*>>, SystemAllocPolicy>>;
+      StableCellHasher<WeakHeapPtr<WasmInstanceObject*>>, SystemAllocPolicy>>;
   using FuncRefVector = Vector<FunctionTableElem, 0, SystemAllocPolicy>;
 
   WeakHeapPtr<WasmTableObject*> maybeObject_;

@@ -3,8 +3,8 @@
 /* eslint max-len: ["error", 80] */
 "use strict";
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+const { AddonTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
 );
 
 AddonTestUtils.initMochitest(this);
@@ -35,7 +35,7 @@ function mockResults() {
   };
 }
 
-add_setup(async function() {
+add_setup(async function () {
   let results = btoa(JSON.stringify(mockResults()));
   await SpecialPowers.pushPrefEnv({
     set: [

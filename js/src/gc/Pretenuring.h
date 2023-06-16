@@ -158,8 +158,8 @@ class AllocSite {
 
   // Whether allocations at this site should be allocated in the nursery or the
   // tenured heap.
-  InitialHeap initialHeap() const {
-    return state() == State::LongLived ? TenuredHeap : DefaultHeap;
+  Heap initialHeap() const {
+    return state() == State::LongLived ? Heap::Tenured : Heap::Default;
   }
 
   bool hasNurseryAllocations() const {

@@ -6,7 +6,7 @@
 Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-addons.js", this);
 
 // Test that the reload button updates the addon list with the correct metadata.
-add_task(async function() {
+add_task(async function () {
   const { document, tab, window } = await openAboutDebugging();
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
 

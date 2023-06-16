@@ -32,7 +32,7 @@ function assertURL(result, expectedUrl, keyword, input, postData) {
 
 const TEST_URL = `${TEST_BASE_URL}print_postdata.sjs`;
 
-add_setup(async function() {
+add_setup(async function () {
   await PlacesUtils.keywords.insert({
     keyword: "get",
     url: TEST_URL + "?q=%s",
@@ -59,7 +59,7 @@ add_setup(async function() {
     setAsDefault: true,
   });
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.keywords.remove("get");
     await PlacesUtils.keywords.remove("post");
     await PlacesUtils.keywords.remove("question?");
@@ -190,7 +190,7 @@ add_task(async function test_keyword_using_post() {
   let postData = await SpecialPowers.spawn(
     tab.linkedBrowser,
     [],
-    async function() {
+    async function () {
       return content.document.body.textContent;
     }
   );

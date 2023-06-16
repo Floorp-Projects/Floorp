@@ -28,7 +28,7 @@ addIntegrationTask(async function testReloadingStableOriginalSource(
 
   info("Add initial breakpoint");
   await selectSource(dbg, "original.js");
-  await addBreakpoint(dbg, "original.js", 6);
+  await addBreakpoint(dbg, "original.js", 8);
 
   info("Check that only one breakpoint is set");
   is(dbg.selectors.getBreakpointCount(), 1, "Only one breakpoint exists");
@@ -40,22 +40,24 @@ addIntegrationTask(async function testReloadingStableOriginalSource(
 
   info("Check that the breakpoint location info is correct");
   let breakpoint = dbg.selectors.getBreakpointsList(dbg)[0];
-  is(breakpoint.location.line, 6);
+  is(breakpoint.location.line, 8);
   if (isCompressed) {
     is(breakpoint.generatedLocation.line, 1);
     is(breakpoint.generatedLocation.column, 1056);
   } else {
-    is(breakpoint.generatedLocation.line, 82);
+    is(breakpoint.generatedLocation.line, 84);
   }
 
-  const expectedOriginalFileContentOnBreakpointLine = "await bar();";
-  const expectedGeneratedFileContentOnBreakpointLine = "await bar();";
+  const expectedOriginalFileContentOnBreakpointLine =
+    "await nonSourceMappedFunction();";
+  const expectedGeneratedFileContentOnBreakpointLine =
+    "await nonSourceMappedFunction();";
 
   info("Check that the breakpoint is displayed on the correct line in the ui");
-  await assertBreakpoint(dbg, 6);
+  await assertBreakpoint(dbg, 8);
 
   info("Check that breakpoint is on the first line within the function `foo`");
-  assertTextContentOnLine(dbg, 6, expectedOriginalFileContentOnBreakpointLine);
+  assertTextContentOnLine(dbg, 8, expectedOriginalFileContentOnBreakpointLine);
 
   info(
     "Check that the breakpoint is displayed in correct location in bundle.js (generated source)"
@@ -64,10 +66,10 @@ addIntegrationTask(async function testReloadingStableOriginalSource(
   if (isCompressed) {
     await assertBreakpoint(dbg, 1);
   } else {
-    await assertBreakpoint(dbg, 82);
+    await assertBreakpoint(dbg, 84);
     assertTextContentOnLine(
       dbg,
-      82,
+      84,
       expectedGeneratedFileContentOnBreakpointLine
     );
   }

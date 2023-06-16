@@ -19,19 +19,18 @@ void WriteOutput(j_compress_ptr cinfo, std::initializer_list<uint8_t> bytes);
 
 void EncodeAPP0(j_compress_ptr cinfo);
 void EncodeAPP14(j_compress_ptr cinfo);
-void EncodeSOF(j_compress_ptr cinfo);
+void EncodeSOF(j_compress_ptr cinfo, bool is_baseline);
 void EncodeSOS(j_compress_ptr cinfo, int scan_index);
 void EncodeDHT(j_compress_ptr cinfo, const JPEGHuffmanCode* huffman_codes,
-               size_t num_huffman_codes);
-void EncodeDQT(j_compress_ptr cinfo);
+               size_t num_huffman_codes, bool pre_shifted = false);
+void EncodeDQT(j_compress_ptr cinfo, bool write_all_tables, bool* is_baseline);
 bool EncodeDRI(j_compress_ptr cinfo);
 
-bool EncodeScan(j_compress_ptr cinfo,
-                const std::vector<std::vector<coeff_t>>& coeffs,
-                int scan_index);
+bool EncodeScan(j_compress_ptr cinfo, int scan_index);
 
-void EncodeSingleScan(j_compress_ptr cinfo,
-                      const std::vector<std::vector<coeff_t>>& coeffs);
+void EncodeSingleScan(j_compress_ptr cinfo);
+
+void WriteiMCURow(j_compress_ptr cinfo);
 
 }  // namespace jpegli
 

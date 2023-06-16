@@ -217,7 +217,7 @@ export class FirefoxProfileMigrator extends MigratorBase {
               newSessionFile.path
             );
             migrationPromise.then(
-              function() {
+              function () {
                 let buildID = Services.appinfo.platformBuildID;
                 let mstone = Services.appinfo.platformVersion;
                 // Force the browser to one-off resume the session that we give it:
@@ -238,7 +238,7 @@ export class FirefoxProfileMigrator extends MigratorBase {
                 savePrefs();
                 aCallback(true);
               },
-              function() {
+              function () {
                 aCallback(false);
               }
             );

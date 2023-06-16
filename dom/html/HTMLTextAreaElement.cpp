@@ -69,7 +69,7 @@ HTMLTextAreaElement::HTMLTextAreaElement(
   // until someone calls UpdateEditableState on us, apparently!  Also
   // by default we don't have to show validity UI and so forth.
   AddStatesSilently(ElementState::ENABLED | ElementState::OPTIONAL_ |
-                    ElementState::VALID);
+                    ElementState::VALID | ElementState::VALUE_EMPTY);
 }
 
 HTMLTextAreaElement::~HTMLTextAreaElement() {
@@ -308,25 +308,22 @@ void HTMLTextAreaElement::SetUserInput(const nsAString& aValue,
                             ValueSetterOption::MoveCursorToEndIfValueChanged});
 }
 
-nsresult HTMLTextAreaElement::SetValueChanged(bool aValueChanged) {
+void HTMLTextAreaElement::SetValueChanged(bool aValueChanged) {
   MOZ_ASSERT(mState);
 
   bool previousValue = mValueChanged;
-
   mValueChanged = aValueChanged;
   if (!aValueChanged && !mState->IsEmpty()) {
     mState->EmptyValue();
   }
-
-  if (mValueChanged != previousValue) {
-    UpdateTooLongValidityState();
-    UpdateTooShortValidityState();
-    // We need to do this unconditionally because the validity ui bits depend on
-    // this.
-    UpdateState(true);
+  if (mValueChanged == previousValue) {
+    return;
   }
-
-  return NS_OK;
+  UpdateTooLongValidityState();
+  UpdateTooShortValidityState();
+  // We need to do this unconditionally because the validity ui bits depend on
+  // this.
+  UpdateState(true);
 }
 
 void HTMLTextAreaElement::SetLastValueChangeWasInteractive(
@@ -670,6 +667,16 @@ nsresult HTMLTextAreaElement::SetValueFromSetRangeText(
                                    ValueSetterOption::SetValueChanged});
 }
 
+void HTMLTextAreaElement::SetDirectionFromValue(bool aNotify,
+                                                const nsAString* aKnownValue) {
+  nsAutoString value;
+  if (!aKnownValue) {
+    GetValue(value);
+    aKnownValue = &value;
+  }
+  SetDirectionalityFromValue(this, *aKnownValue, aNotify);
+}
+
 nsresult HTMLTextAreaElement::Reset() {
   nsAutoString resetVal;
   GetDefaultValue(resetVal, IgnoreErrors());
@@ -787,7 +794,7 @@ ElementState HTMLTextAreaElement::IntrinsicState() const {
     }
   }
 
-  if (HasAttr(nsGkAtoms::placeholder) && IsValueEmpty()) {
+  if (IsValueEmpty() && HasAttr(nsGkAtoms::placeholder)) {
     state |= ElementState::PLACEHOLDER_SHOWN;
   }
 
@@ -799,6 +806,11 @@ nsresult HTMLTextAreaElement::BindToTree(BindContext& aContext,
   nsresult rv =
       nsGenericHTMLFormControlElementWithState::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Set direction based on value if dir=auto
+  if (HasDirAuto()) {
+    SetDirectionFromValue(false);
+  }
 
   // If there is a disabled fieldset in the parent chain, the element is now
   // barred from constraint validation and can't suffer from value missing.
@@ -926,6 +938,9 @@ void HTMLTextAreaElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       if (nsTextControlFrame* f = do_QueryFrame(GetPrimaryFrame())) {
         f->PlaceholderChanged(aOldValue, aValue);
       }
+    } else if (aName == nsGkAtoms::dir && aValue &&
+               aValue->Equals(nsGkAtoms::_auto, eIgnoreCase)) {
+      SetDirectionFromValue(aNotify);
     }
   }
 
@@ -949,13 +964,6 @@ nsresult HTMLTextAreaElement::CopyInnerTo(Element* aDest) {
 
 bool HTMLTextAreaElement::IsMutable() const {
   return (!HasAttr(kNameSpaceID_None, nsGkAtoms::readonly) && !IsDisabled());
-}
-
-bool HTMLTextAreaElement::IsValueEmpty() const {
-  nsAutoString value;
-  GetValueInternal(value, true);
-
-  return value.IsEmpty();
 }
 
 void HTMLTextAreaElement::SetCustomValidity(const nsAString& aError) {
@@ -1004,7 +1012,6 @@ bool HTMLTextAreaElement::IsValueMissing() const {
   if (!Required() || !IsMutable()) {
     return false;
   }
-
   return IsValueEmpty();
 }
 
@@ -1124,18 +1131,32 @@ void HTMLTextAreaElement::InitializeKeyboardEventListeners() {
   mState->InitializeKeyboardEventListeners();
 }
 
-void HTMLTextAreaElement::OnValueChanged(ValueChangeKind aKind) {
+void HTMLTextAreaElement::OnValueChanged(ValueChangeKind aKind,
+                                         bool aNewValueEmpty,
+                                         const nsAString* aKnownNewValue) {
   if (aKind != ValueChangeKind::Internal) {
     mLastValueChangeWasInteractive = aKind == ValueChangeKind::UserInteraction;
   }
 
+  const bool emptyBefore = IsValueEmpty();
+  if (aNewValueEmpty) {
+    AddStates(ElementState::VALUE_EMPTY);
+  } else {
+    RemoveStates(ElementState::VALUE_EMPTY);
+  }
+
   // Update the validity state
-  bool validBefore = IsValid();
+  const bool validBefore = IsValid();
   UpdateTooLongValidityState();
   UpdateTooShortValidityState();
   UpdateValueMissingValidityState();
 
-  if (validBefore != IsValid() || HasAttr(nsGkAtoms::placeholder)) {
+  if (HasDirAuto()) {
+    SetDirectionFromValue(true, aKnownNewValue);
+  }
+
+  if (validBefore != IsValid() ||
+      (emptyBefore != IsValueEmpty() && HasAttr(nsGkAtoms::placeholder))) {
     UpdateState(true);
   }
 }

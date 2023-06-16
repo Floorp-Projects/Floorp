@@ -29,7 +29,7 @@ function checksCertTab(tabsCount) {
 }
 
 async function checkCertChain(browser) {
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     let certificateTabs;
     await ContentTaskUtils.waitForCondition(() => {
       let certificateSection = content.document.querySelector(
@@ -38,9 +38,8 @@ async function checkCertChain(browser) {
       if (!certificateSection) {
         return false;
       }
-      certificateTabs = certificateSection.shadowRoot.querySelectorAll(
-        ".certificate-tab"
-      );
+      certificateTabs =
+        certificateSection.shadowRoot.querySelectorAll(".certificate-tab");
       return certificateTabs.length;
     }, "Found certificate tabs.");
 
@@ -67,7 +66,7 @@ function openCertDownloadDialog(cert) {
   return new Promise((resolve, reject) => {
     win.addEventListener(
       "load",
-      function() {
+      function () {
         executeSoon(() => resolve([win]));
       },
       { once: true }
@@ -123,7 +122,7 @@ add_task(async function testBadCert() {
   let tabsCount = gBrowser.tabs.length;
   let loaded = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     let advancedButton = content.document.getElementById("advancedButton");
     Assert.ok(advancedButton, "advancedButton found");
     Assert.equal(
@@ -158,7 +157,7 @@ add_task(async function testBadCertIframe() {
   let tabsCount = gBrowser.tabs.length;
   let loaded = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     let doc = content.document.querySelector("iframe").contentDocument;
     let advancedButton = doc.getElementById("advancedButton");
     Assert.ok(advancedButton, "advancedButton found");
@@ -193,7 +192,7 @@ add_task(async function testGoodCert() {
   let tabsCount = gBrowser.tabs.length;
 
   info(`Loading ${url}`);
-  await BrowserTestUtils.withNewTab({ gBrowser, url }, async function() {
+  await BrowserTestUtils.withNewTab({ gBrowser, url }, async function () {
     info("Opening pageinfo");
     let pageInfo = BrowserPageInfo(url, "securityTab", {});
     await BrowserTestUtils.waitForEvent(pageInfo, "load");
@@ -229,42 +228,44 @@ add_task(async function testPreferencesCert() {
   let tabsCount;
 
   info(`Loading ${url}`);
-  await BrowserTestUtils.withNewTab({ gBrowser, url }, async function(browser) {
-    tabsCount = gBrowser.tabs.length;
-    checkAndClickButton(browser.contentDocument, "viewCertificatesButton");
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url },
+    async function (browser) {
+      tabsCount = gBrowser.tabs.length;
+      checkAndClickButton(browser.contentDocument, "viewCertificatesButton");
 
-    let certDialogLoaded = promiseLoadSubDialog(
-      "chrome://pippki/content/certManager.xhtml"
-    );
-    let dialogWin = await certDialogLoaded;
-    let doc = dialogWin.document;
-    Assert.ok(doc, "doc loaded");
+      let certDialogLoaded = promiseLoadSubDialog(
+        "chrome://pippki/content/certManager.xhtml"
+      );
+      let dialogWin = await certDialogLoaded;
+      let doc = dialogWin.document;
+      Assert.ok(doc, "doc loaded");
 
-    doc.getElementById("certmanagertabs").selectedTab = doc.getElementById(
-      "mine_tab"
-    );
-    let treeView = doc.getElementById("user-tree").view;
-    let selectedCert;
-    // See https://searchfox.org/mozilla-central/rev/40ef22080910c2e2c27d9e2120642376b1d8b8b2/browser/components/preferences/in-content/tests/browser_cert_export.js#41
-    for (let i = 0; i < treeView.rowCount; i++) {
-      treeView.selection.select(i);
-      dialogWin.getSelectedCerts();
-      let certs = dialogWin.selected_certs;
-      if (certs && certs[0]) {
-        selectedCert = certs[0];
-        break;
+      doc.getElementById("certmanagertabs").selectedTab =
+        doc.getElementById("mine_tab");
+      let treeView = doc.getElementById("user-tree").view;
+      let selectedCert;
+      // See https://searchfox.org/mozilla-central/rev/40ef22080910c2e2c27d9e2120642376b1d8b8b2/browser/components/preferences/in-content/tests/browser_cert_export.js#41
+      for (let i = 0; i < treeView.rowCount; i++) {
+        treeView.selection.select(i);
+        dialogWin.getSelectedCerts();
+        let certs = dialogWin.selected_certs;
+        if (certs && certs[0]) {
+          selectedCert = certs[0];
+          break;
+        }
       }
+      Assert.ok(selectedCert, "A cert should be selected");
+      let viewButton = doc.getElementById("mine_viewButton");
+      Assert.equal(viewButton.disabled, false, "Should enable view button");
+
+      let loaded = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
+      viewButton.click();
+      await loaded;
+
+      checksCertTab(tabsCount);
+      await checkCertChain(gBrowser.selectedBrowser);
     }
-    Assert.ok(selectedCert, "A cert should be selected");
-    let viewButton = doc.getElementById("mine_viewButton");
-    Assert.equal(viewButton.disabled, false, "Should enable view button");
-
-    let loaded = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
-    viewButton.click();
-    await loaded;
-
-    checksCertTab(tabsCount);
-    await checkCertChain(gBrowser.selectedBrowser);
-  });
+  );
   gBrowser.removeCurrentTab(); // closes about:certificate
 });

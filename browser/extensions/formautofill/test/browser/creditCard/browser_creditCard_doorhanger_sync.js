@@ -11,7 +11,7 @@ add_task(async function test_submit_creditCard_with_sync_account() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
-    async function(browser) {
+    async function (browser) {
       let onPopupShown = waitForPopupShown();
       await focusUpdateSubmitForm(browser, {
         focusSelector: "#cc-name",
@@ -98,7 +98,7 @@ add_task(async function test_submit_creditCard_with_synced_already() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
-    async function(browser) {
+    async function (browser) {
       let onPopupShown = waitForPopupShown();
       await focusUpdateSubmitForm(browser, {
         focusSelector: "#cc-name",

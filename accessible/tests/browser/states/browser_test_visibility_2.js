@@ -12,7 +12,7 @@ addAccessibleTask(
   `
   <table id="table" style="width:150vw;" border><tr id="row"><td id="one" style="width:50vw;">one</td><td style="width:50vw;" id="two">two</td><td id="three">three</td></tr></table>
   `,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     const table = findAccessibleChildByID(accDoc, "table");
     const row = findAccessibleChildByID(accDoc, "row");
     const one = findAccessibleChildByID(accDoc, "one");
@@ -50,7 +50,7 @@ addAccessibleTask(
   `
   <table id="table" style="height:150vh;" border><tr style="height:100vh;" id="rowA"><td id="one">one</td></tr><tr id="rowB"><td id="two">two</td></tr></table>
   `,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     const table = findAccessibleChildByID(accDoc, "table");
     const rowA = findAccessibleChildByID(accDoc, "rowA");
     const one = findAccessibleChildByID(accDoc, "one");
@@ -85,7 +85,7 @@ addAccessibleTask(
   `
   <div id="div">hello</div>
   `,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let textLeaf = findAccessibleChildByID(accDoc, "div").firstChild;
     await untilCacheOk(
       () => testVisibility(textLeaf, false, false),
@@ -114,7 +114,7 @@ addAccessibleTask(
   <style>div { height: 5px; width: 5px; background: green; }</style>
   <div id="outer" role="group"><div style="background:blue;" id="inner" role="group">hi</div></div>
   `,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     const outer = findAccessibleChildByID(accDoc, "outer");
     const inner = findAccessibleChildByID(accDoc, "inner");
 

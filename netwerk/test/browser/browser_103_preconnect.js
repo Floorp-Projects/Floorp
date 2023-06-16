@@ -7,7 +7,7 @@ Services.prefs.setBoolPref("network.early-hints.preconnect.enabled", true);
 Services.prefs.setBoolPref("network.http.debug-observations", true);
 Services.prefs.setIntPref("network.early-hints.preconnect.max_connections", 10);
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   Services.prefs.clearUserPref("network.early-hints.enabled");
   Services.prefs.clearUserPref("network.early-hints.preconnect.enabled");
   Services.prefs.clearUserPref("network.http.debug-observations");
@@ -44,14 +44,24 @@ async function test_hint_preconnect(href, crossOrigin) {
       url: requestUrl,
       waitForLoad: true,
     },
-    async function() {}
+    async function () {}
   );
 
-  if (!crossOrigin) {
-    crossOrigin = "anonymous";
-  }
+  // Extracting "localhost:443"
+  let hostPortRegex = /\[.*\](.*?)\^/;
+  let hostPortMatch = hostPortRegex.exec(observed);
+  let hostPort = hostPortMatch ? hostPortMatch[1] : "";
+  // Extracting "%28https%2Cexample.com%29"
+  let partitionKeyRegex = /\^partitionKey=(.*)$/;
+  let partitionKeyMatch = partitionKeyRegex.exec(observed);
+  let partitionKey = partitionKeyMatch ? partitionKeyMatch[1] : "";
+  // See nsHttpConnectionInfo::BuildHashKey, the second character is A if this
+  // is an anonymous connection.
+  let anonymousFlag = observed[2];
 
-  Assert.equal(observed, `${href}/${crossOrigin}`);
+  Assert.equal(anonymousFlag, crossOrigin === "use-credentials" ? "." : "A");
+  Assert.equal(hostPort, "localhost:443");
+  Assert.equal(partitionKey, "%28https%2Cexample.com%29");
 }
 
 add_task(async function test_103_preconnect() {

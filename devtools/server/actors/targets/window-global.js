@@ -41,7 +41,8 @@ const { PrivateBrowsingUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/PrivateBrowsingUtils.sys.mjs"
 );
 
-const EXTENSION_CONTENT_JSM = "resource://gre/modules/ExtensionContent.jsm";
+const EXTENSION_CONTENT_SYS_MJS =
+  "resource://gre/modules/ExtensionContent.sys.mjs";
 
 const { Pool } = require("resource://devtools/shared/protocol.js");
 const {
@@ -75,7 +76,15 @@ loader.lazyRequireGetter(
   true
 );
 const lazy = {};
-ChromeUtils.defineModuleGetter(lazy, "ExtensionContent", EXTENSION_CONTENT_JSM);
+loader.lazyGetter(lazy, "ExtensionContent", () => {
+  return ChromeUtils.importESModule(EXTENSION_CONTENT_SYS_MJS, {
+    // ExtensionContent.sys.mjs is a singleton and must be loaded through the
+    // main loader. Note that the user of lazy.ExtensionContent elsewhere in
+    // this file (at webextensionsContentScriptGlobals) looks up the module
+    // via Cu.isESModuleLoaded, which also uses the main loader as desired.
+    loadInDevToolsLoader: false,
+  }).ExtensionContent;
+});
 
 loader.lazyRequireGetter(
   this,
@@ -283,9 +292,8 @@ class WindowGlobalTargetActor extends BaseTargetActor {
     this._extraActors = {};
     this._sourcesManager = null;
 
-    this._shouldAddNewGlobalAsDebuggee = this._shouldAddNewGlobalAsDebuggee.bind(
-      this
-    );
+    this._shouldAddNewGlobalAsDebuggee =
+      this._shouldAddNewGlobalAsDebuggee.bind(this);
 
     this.makeDebugger = makeDebugger.bind(null, {
       findDebuggees: () => {
@@ -317,13 +325,11 @@ class WindowGlobalTargetActor extends BaseTargetActor {
 
     this._workerDescriptorActorList = null;
     this._workerDescriptorActorPool = null;
-    this._onWorkerDescriptorActorListChanged = this._onWorkerDescriptorActorListChanged.bind(
-      this
-    );
+    this._onWorkerDescriptorActorListChanged =
+      this._onWorkerDescriptorActorListChanged.bind(this);
 
-    this._onConsoleApiProfilerEvent = this._onConsoleApiProfilerEvent.bind(
-      this
-    );
+    this._onConsoleApiProfilerEvent =
+      this._onConsoleApiProfilerEvent.bind(this);
     Services.obs.addObserver(
       this._onConsoleApiProfilerEvent,
       "console-api-profiler"
@@ -491,7 +497,7 @@ class WindowGlobalTargetActor extends BaseTargetActor {
     // Only retrieve the content scripts globals if the ExtensionContent JSM module
     // has been already loaded (which is true if the WebExtensions internals have already
     // been loaded in the same content process).
-    if (Cu.isModuleLoaded(EXTENSION_CONTENT_JSM)) {
+    if (Cu.isESModuleLoaded(EXTENSION_CONTENT_SYS_MJS)) {
       return lazy.ExtensionContent.getContentScriptGlobals(this.window);
     }
 
@@ -922,7 +928,8 @@ class WindowGlobalTargetActor extends BaseTargetActor {
         }
 
         this._workerDescriptorActorPool = pool;
-        this._workerDescriptorActorList.onListChanged = this._onWorkerDescriptorActorListChanged;
+        this._workerDescriptorActorList.onListChanged =
+          this._onWorkerDescriptorActorListChanged;
 
         return {
           workers: actors,
@@ -1746,7 +1753,7 @@ class DebuggerProgressListener {
     });
   }
 
-  onWindowCreated = DevToolsUtils.makeInfallible(function(evt) {
+  onWindowCreated = DevToolsUtils.makeInfallible(function (evt) {
     if (this._targetActor.isDestroyed()) {
       return;
     }
@@ -1784,7 +1791,7 @@ class DebuggerProgressListener {
     this._targetActor._windowReady(window, { isBFCache });
   }, "DebuggerProgressListener.prototype.onWindowCreated");
 
-  onWindowHidden = DevToolsUtils.makeInfallible(function(evt) {
+  onWindowHidden = DevToolsUtils.makeInfallible(function (evt) {
     if (this._targetActor.isDestroyed()) {
       return;
     }
@@ -1814,7 +1821,7 @@ class DebuggerProgressListener {
     this._knownWindowIDs.delete(getWindowID(window));
   }, "DebuggerProgressListener.prototype.onWindowHidden");
 
-  observe = DevToolsUtils.makeInfallible(function(subject, topic) {
+  observe = DevToolsUtils.makeInfallible(function (subject, topic) {
     if (this._targetActor.isDestroyed()) {
       return;
     }
@@ -1846,7 +1853,7 @@ class DebuggerProgressListener {
     }
   }, "DebuggerProgressListener.prototype.observe");
 
-  onStateChange = DevToolsUtils.makeInfallible(function(
+  onStateChange = DevToolsUtils.makeInfallible(function (
     progress,
     request,
     flag,

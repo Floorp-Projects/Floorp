@@ -9,7 +9,7 @@
 const TEST_URI =
   "data:text/html;charset=utf-8,<!DOCTYPE html>Test document.body autocompletion";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm, ui } = hud;
 
@@ -24,8 +24,8 @@ add_task(async function() {
   await onPopupOpen;
 
   ok(popup.isOpen, "popup is open");
-  const cacheMatches = ui.wrapper.getStore().getState().autocomplete.cache
-    .matches;
+  const cacheMatches = ui.wrapper.getStore().getState().autocomplete
+    .cache.matches;
   is(popup.itemCount, cacheMatches.length, "popup.itemCount is correct");
   ok(
     cacheMatches.includes("addEventListener"),

@@ -24,7 +24,7 @@ let stub = sinon.stub(gBrowser.ownerGlobal, "WindowsUIUtils").get(() => {
   };
 });
 
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   stub.restore();
 });
 

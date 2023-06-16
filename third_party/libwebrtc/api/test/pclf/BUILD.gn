@@ -35,7 +35,9 @@ rtc_source_set("media_configuration") {
     "../..:video_quality_analyzer_api",
     "../../../modules/audio_processing:api",
     "../../../rtc_base:checks",
-    "../../../rtc_base:rtc_base",
+    "../../../rtc_base:network",
+    "../../../rtc_base:rtc_certificate_generator",
+    "../../../rtc_base:ssl",
     "../../../rtc_base:stringutils",
     "../../../rtc_base:threading",
     "../../../test:fileutils",
@@ -75,7 +77,9 @@ rtc_library("media_quality_test_params") {
     "../../../api/video_codecs:video_codecs_api",
     "../../../modules/audio_processing:api",
     "../../../p2p:rtc_p2p",
-    "../../../rtc_base",
+    "../../../rtc_base:network",
+    "../../../rtc_base:rtc_certificate_generator",
+    "../../../rtc_base:ssl",
     "../../../rtc_base:threading",
   ]
 }
@@ -101,7 +105,9 @@ rtc_library("peer_configurer") {
     "../../../api/transport:network_control",
     "../../../api/video_codecs:video_codecs_api",
     "../../../modules/audio_processing:api",
-    "../../../rtc_base",
+    "../../../rtc_base:network",
+    "../../../rtc_base:rtc_certificate_generator",
+    "../../../rtc_base:ssl",
     "../../../rtc_base:threading",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]

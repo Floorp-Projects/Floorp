@@ -7,7 +7,6 @@
 #include "nsObjCExceptions.h"
 
 #include "plbase64.h"
-#include "plstr.h"
 
 #include "nsCocoaUtils.h"
 #include "nsXULAppAPI.h"

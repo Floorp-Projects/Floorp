@@ -2,12 +2,12 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+const { AddonTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
 );
 
-const { AddonManager } = ChromeUtils.import(
-  "resource://gre/modules/AddonManager.jsm"
+const { AddonManager } = ChromeUtils.importESModule(
+  "resource://gre/modules/AddonManager.sys.mjs"
 );
 
 const { AboutNewTab } = ChromeUtils.import(
@@ -15,11 +15,9 @@ const { AboutNewTab } = ChromeUtils.import(
 );
 
 // Lazy load to avoid having Services.appinfo cached first.
-ChromeUtils.defineModuleGetter(
-  this,
-  "ExtensionParent",
-  "resource://gre/modules/ExtensionParent.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  ExtensionParent: "resource://gre/modules/ExtensionParent.sys.mjs",
+});
 
 const { HomePage } = ChromeUtils.import("resource:///modules/HomePage.jsm");
 

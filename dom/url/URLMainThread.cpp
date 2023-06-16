@@ -92,8 +92,8 @@ void URLMainThread::RevokeObjectURL(const GlobalObject& aGlobal,
 }
 
 /* static */
-bool URLMainThread::IsValidURL(const GlobalObject& aGlobal,
-                               const nsAString& aURL, ErrorResult& aRv) {
+bool URLMainThread::IsValidObjectURL(const GlobalObject& aGlobal,
+                                     const nsAString& aURL, ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
   NS_LossyConvertUTF16toASCII asciiurl(aURL);
   return BlobURLProtocolHandler::HasDataEntry(asciiurl);

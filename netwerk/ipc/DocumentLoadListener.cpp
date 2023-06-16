@@ -1406,8 +1406,8 @@ void DocumentLoadListener::ApplyPendingFunctions(
                                                       aParams.mMessageCategory);
           },
           [reporter](const LogBlockedCORSRequestParams& aParams) {
-            Unused << reporter->LogBlockedCORSRequest(aParams.mMessage,
-                                                      aParams.mCategory);
+            Unused << reporter->LogBlockedCORSRequest(
+                aParams.mMessage, aParams.mCategory, aParams.mIsWarning);
           },
           [reporter](const LogMimeTypeMismatchParams& aParams) {
             Unused << reporter->LogMimeTypeMismatch(
@@ -1452,6 +1452,15 @@ bool DocumentLoadListener::ResumeSuspendedChannel(
   // Our caller will invoke `EndDocumentLoad` for us.
 
   return !mIsFinished;
+}
+
+void DocumentLoadListener::CancelEarlyHintPreloads() {
+  mEarlyHintsService.Cancel("DocumentLoadListener::CancelEarlyHintPreloads"_ns);
+}
+
+void DocumentLoadListener::RegisterEarlyHintLinksAndGetConnectArgs(
+    dom::ContentParentId aCpId, nsTArray<EarlyHintConnectArgs>& aOutLinks) {
+  mEarlyHintsService.RegisterLinksAndGetConnectArgs(aCpId, aOutLinks);
 }
 
 void DocumentLoadListener::SerializeRedirectData(
@@ -2094,7 +2103,7 @@ DocumentLoadListener::RedirectToRealChannel(
     }
 
     nsTArray<EarlyHintConnectArgs> ehArgs;
-    mEarlyHintsService.RegisterLinksAndGetConnectArgs(ehArgs);
+    mEarlyHintsService.RegisterLinksAndGetConnectArgs(cp->ChildID(), ehArgs);
 
     RedirectToRealChannelArgs args;
     SerializeRedirectData(args, /* aIsCrossProcess */ true, aRedirectFlags,
@@ -2142,12 +2151,9 @@ DocumentLoadListener::RedirectToRealChannel(
       MakeRefPtr<PDocumentChannelParent::RedirectToRealChannelPromise::Private>(
           __func__);
 
-  nsTArray<EarlyHintConnectArgs> ehArgs;
-  mEarlyHintsService.RegisterLinksAndGetConnectArgs(ehArgs);
-
   mOpenPromise->Resolve(
       OpenPromiseSucceededType({std::move(aStreamFilterEndpoints),
-                                aRedirectFlags, aLoadFlags, std::move(ehArgs),
+                                aRedirectFlags, aLoadFlags,
                                 mEarlyHintsService.LinkType(), promise}),
       __func__);
 

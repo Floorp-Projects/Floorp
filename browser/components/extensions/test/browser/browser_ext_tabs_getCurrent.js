@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: ["tabs"],
@@ -11,7 +11,7 @@ add_task(async function() {
     },
 
     files: {
-      "tab.js": function() {
+      "tab.js": function () {
         let url = document.location.href;
 
         browser.tabs.getCurrent(currentTab => {
@@ -46,7 +46,7 @@ add_task(async function() {
         });
       },
 
-      "popup.js": function() {
+      "popup.js": function () {
         browser.tabs.getCurrent(tab => {
           browser.test.assertEq(tab, undefined, "getCurrent in popup script");
           browser.test.sendMessage("popup-finished");
@@ -57,7 +57,7 @@ add_task(async function() {
       "popup.html": `<head><meta charset="utf-8"><script src="popup.js"></script></head>`,
     },
 
-    background: function() {
+    background: function () {
       browser.tabs.getCurrent(tab => {
         browser.test.assertEq(
           tab,

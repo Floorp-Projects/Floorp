@@ -42,7 +42,7 @@ function test() {
     "Invalid window for duplicateTab throws"
   );
   Assert.throws(
-    () => ss.getClosedTabData({}),
+    () => ss.getClosedTabDataForWindow({}),
     /NS_ERROR_ILLEGAL_VALUE/,
     "Invalid window for getClosedTabData throws"
   );

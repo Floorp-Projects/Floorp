@@ -103,11 +103,13 @@ class TableViewer {
    The numbers need to be adapted if the number of columns changes. */
 `;
     for (let i = numColumns + 1; i <= numColumns * 2 - 1; i++) {
-      styleText += `#tableViewer > div:nth-child(${numColumns}n+${i}):nth-child(${numColumns *
-        2}n+${i}),\n`;
+      styleText += `#tableViewer > div:nth-child(${numColumns}n+${i}):nth-child(${
+        numColumns * 2
+      }n+${i}),\n`;
     }
-    styleText += `#tableViewer > div:nth-child(${numColumns}n+${numColumns *
-      2}):nth-child(${numColumns * 2}n+${numColumns * 2})\n
+    styleText += `#tableViewer > div:nth-child(${numColumns}n+${
+      numColumns * 2
+    }):nth-child(${numColumns * 2}n+${numColumns * 2})\n
 {
   background: var(--in-content-box-background-odd);
 }`;

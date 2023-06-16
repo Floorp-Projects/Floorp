@@ -74,7 +74,7 @@ const SEARCH_ENGINE_DETAILS = [
 ];
 
 function promiseContentSearchReady(browser) {
-  return SpecialPowers.spawn(browser, [], async function(args) {
+  return SpecialPowers.spawn(browser, [], async function (args) {
     SpecialPowers.pushPrefEnv({
       set: [
         [
@@ -99,10 +99,10 @@ add_task(async function test_setup() {
 });
 
 for (let engine of SEARCH_ENGINE_DETAILS) {
-  add_task(async function() {
+  add_task(async function () {
     let previouslySelectedEngine = await Services.search.getDefault();
 
-    registerCleanupFunction(async function() {
+    registerCleanupFunction(async function () {
       await Services.search.setDefault(
         previouslySelectedEngine,
         Ci.nsISearchService.CHANGE_REASON_UNKNOWN
@@ -188,7 +188,7 @@ async function testSearchEngine(engineDetails) {
         await promiseContentSearchReady(browser);
       },
       async run(tab) {
-        await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+        await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
           let input = content.document.querySelector("input[id*=search-]");
           input.focus();
           input.value = "foo";

@@ -30,7 +30,7 @@ function run_test() {
   );
   xhr.send(null);
 
-  xhr.onload = function() {
+  xhr.onload = function () {
     // We create another XHR to connect to the same site, but this time we
     // specify with different origin attributes, which will make the XHR use a
     // different cookie-jar than the previous one.
@@ -46,7 +46,7 @@ function run_test() {
     let loadInfo = xhr2.channel.loadInfo;
     Assert.equal(loadInfo.originAttributes.userContextId, 1);
 
-    xhr2.onload = function() {
+    xhr2.onload = function () {
       server.stop(do_test_finished);
     };
   };

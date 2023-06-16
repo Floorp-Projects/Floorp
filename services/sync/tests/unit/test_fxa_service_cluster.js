@@ -4,11 +4,10 @@
 const { Service } = ChromeUtils.importESModule(
   "resource://services-sync/service.sys.mjs"
 );
-const {
-  initializeIdentityWithTokenServerResponse,
-} = ChromeUtils.importESModule(
-  "resource://testing-common/services/sync/fxa_utils.sys.mjs"
-);
+const { initializeIdentityWithTokenServerResponse } =
+  ChromeUtils.importESModule(
+    "resource://testing-common/services/sync/fxa_utils.sys.mjs"
+  );
 
 add_task(async function test_findCluster() {
   _("Test FxA _findCluster()");

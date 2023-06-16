@@ -13,7 +13,6 @@
 #include "frontend/ScriptIndex.h"  // ScriptIndex
 #include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions, JS::InstantiateOptions
 #include "js/SourceText.h"  // JS::SourceText
-#include "js/Stack.h"       // JS::NativeStackLimit
 #include "js/TypeDecls.h"   // JS::Handle (fwd)
 #include "js/UniquePtr.h"   // js::UniquePtr
 #include "vm/ScopeKind.h"   // js::ScopeKind
@@ -33,20 +32,17 @@ struct ExtensibleCompilationStencil;
 class ScopeBindingCache;
 
 extern already_AddRefed<CompilationStencil> CompileGlobalScriptToStencil(
-    JSContext* maybeCx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
-    js::LifoAlloc& tempLifoAlloc, CompilationInput& input,
-    ScopeBindingCache* scopeCache, JS::SourceText<char16_t>& srcBuf,
-    ScopeKind scopeKind);
+    JSContext* maybeCx, FrontendContext* fc, js::LifoAlloc& tempLifoAlloc,
+    CompilationInput& input, ScopeBindingCache* scopeCache,
+    JS::SourceText<char16_t>& srcBuf, ScopeKind scopeKind);
 
 extern already_AddRefed<CompilationStencil> CompileGlobalScriptToStencil(
-    JSContext* maybeCx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
-    js::LifoAlloc& tempLifoAlloc, CompilationInput& input,
-    ScopeBindingCache* scopeCache, JS::SourceText<mozilla::Utf8Unit>& srcBuf,
-    ScopeKind scopeKind);
+    JSContext* maybeCx, FrontendContext* fc, js::LifoAlloc& tempLifoAlloc,
+    CompilationInput& input, ScopeBindingCache* scopeCache,
+    JS::SourceText<mozilla::Utf8Unit>& srcBuf, ScopeKind scopeKind);
 
 extern UniquePtr<ExtensibleCompilationStencil>
 CompileGlobalScriptToExtensibleStencil(JSContext* maybeCx, FrontendContext* fc,
-                                       JS::NativeStackLimit stackLimit,
                                        CompilationInput& input,
                                        ScopeBindingCache* scopeCache,
                                        JS::SourceText<char16_t>& srcBuf,
@@ -54,9 +50,9 @@ CompileGlobalScriptToExtensibleStencil(JSContext* maybeCx, FrontendContext* fc,
 
 extern UniquePtr<ExtensibleCompilationStencil>
 CompileGlobalScriptToExtensibleStencil(
-    JSContext* maybeCx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
-    CompilationInput& input, ScopeBindingCache* scopeCache,
-    JS::SourceText<mozilla::Utf8Unit>& srcBuf, ScopeKind scopeKind);
+    JSContext* maybeCx, FrontendContext* fc, CompilationInput& input,
+    ScopeBindingCache* scopeCache, JS::SourceText<mozilla::Utf8Unit>& srcBuf,
+    ScopeKind scopeKind);
 
 // Perform some operation to reduce the time taken by instantiation.
 //
@@ -73,13 +69,11 @@ CompileGlobalScriptToExtensibleStencil(
                                               CompilationGCOutput& gcOutput);
 
 extern JSScript* CompileGlobalScript(JSContext* cx, FrontendContext* fc,
-                                     JS::NativeStackLimit stackLimit,
                                      const JS::ReadOnlyCompileOptions& options,
                                      JS::SourceText<char16_t>& srcBuf,
                                      ScopeKind scopeKind);
 
 extern JSScript* CompileGlobalScript(JSContext* cx, FrontendContext* fc,
-                                     JS::NativeStackLimit stackLimit,
                                      const JS::ReadOnlyCompileOptions& options,
                                      JS::SourceText<mozilla::Utf8Unit>& srcBuf,
                                      ScopeKind scopeKind);
@@ -92,13 +86,11 @@ extern JSScript* CompileEvalScript(JSContext* cx,
 
 extern bool DelazifyCanonicalScriptedFunction(JSContext* cx,
                                               FrontendContext* fc,
-                                              JS::NativeStackLimit stackLimit,
                                               JS::Handle<JSFunction*> fun);
 
 extern already_AddRefed<CompilationStencil> DelazifyCanonicalScriptedFunction(
-    JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
-    ScopeBindingCache* scopeCache, CompilationStencil& context,
-    ScriptIndex scriptIndex);
+    JSContext* cx, FrontendContext* fc, ScopeBindingCache* scopeCache,
+    CompilationStencil& context, ScriptIndex scriptIndex);
 
 // Certain compile options will disable the syntax parser entirely.
 inline bool CanLazilyParse(const JS::ReadOnlyCompileOptions& options) {

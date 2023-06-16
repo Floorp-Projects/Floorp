@@ -22,8 +22,8 @@ var EXPORTED_SYMBOLS = ["XPIProvider", "XPIInternal"];
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { AddonManager, AddonManagerPrivate } = ChromeUtils.import(
-  "resource://gre/modules/AddonManager.jsm"
+const { AddonManager, AddonManagerPrivate } = ChromeUtils.importESModule(
+  "resource://gre/modules/AddonManager.sys.mjs"
 );
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
@@ -32,19 +32,19 @@ const { AppConstants } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonSettings: "resource://gre/modules/addons/AddonSettings.sys.mjs",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
+  Dictionary: "resource://gre/modules/Extension.sys.mjs",
+  Extension: "resource://gre/modules/Extension.sys.mjs",
+  ExtensionData: "resource://gre/modules/Extension.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
+  Langpack: "resource://gre/modules/Extension.sys.mjs",
+  SitePermission: "resource://gre/modules/Extension.sys.mjs",
   TelemetrySession: "resource://gre/modules/TelemetrySession.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AddonSettings: "resource://gre/modules/addons/AddonSettings.jsm",
-  Dictionary: "resource://gre/modules/Extension.jsm",
-  Extension: "resource://gre/modules/Extension.jsm",
-  ExtensionData: "resource://gre/modules/Extension.jsm",
-  Langpack: "resource://gre/modules/Extension.jsm",
-  SitePermission: "resource://gre/modules/Extension.jsm",
   XPIDatabase: "resource://gre/modules/addons/XPIDatabase.jsm",
   XPIDatabaseReconcile: "resource://gre/modules/addons/XPIDatabase.jsm",
   XPIInstall: "resource://gre/modules/addons/XPIInstall.jsm",
@@ -188,7 +188,8 @@ const ALL_XPI_TYPES = new Set([
 /**
  * Valid IDs fit this pattern.
  */
-var gIDTest = /^(\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}|[a-z0-9-\._]*\@[a-z0-9-\._]+)$/i;
+var gIDTest =
+  /^(\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}|[a-z0-9-\._]*\@[a-z0-9-\._]+)$/i;
 
 const { Log } = ChromeUtils.importESModule(
   "resource://gre/modules/Log.sys.mjs"
@@ -460,6 +461,7 @@ const JSON_FIELDS = Object.freeze([
   "loader",
   "lastModifiedTime",
   "path",
+  "recommendationState",
   "rootURI",
   "runInSafeMode",
   "signedState",
@@ -552,6 +554,7 @@ class XPIState {
       lastModifiedTime: this.lastModifiedTime,
       loader: this.loader,
       path: this.relativePath,
+      recommendationState: this.recommendationState,
       rootURI: this.rootURI,
       runInSafeMode: this.runInSafeMode,
       signedState: this.signedState,
@@ -655,6 +658,7 @@ class XPIState {
     this.signedDate = aDBAddon.signedDate;
     this.file = aDBAddon._sourceBundle;
     this.rootURI = aDBAddon.rootURI;
+    this.recommendationState = aDBAddon.recommendationState;
 
     if ((aUpdated || mustGetMod) && this.file) {
       this.getModTime(this.file);
@@ -3321,7 +3325,7 @@ for (let meth of [
   "updateSystemAddons",
   "stageLangpacksForAppUpdate",
 ]) {
-  XPIProvider[meth] = function() {
+  XPIProvider[meth] = function () {
     return lazy.XPIInstall[meth](...arguments);
   };
 }
@@ -3333,7 +3337,7 @@ for (let meth of [
   "updateAddonRepositoryData",
   "updateAddonAppDisabledStates",
 ]) {
-  XPIProvider[meth] = function() {
+  XPIProvider[meth] = function () {
     return lazy.XPIDatabase[meth](...arguments);
   };
 }

@@ -62,6 +62,10 @@ su{
             }
         }
         gregorian{
+            AmPmMarkers{
+                "AM",
+                "PM",
+            }
             DateTimePatterns{
                 "H.mm.ss zzzz",
                 "H.mm.ss z",
@@ -249,6 +253,20 @@ su{
                     }
                 }
                 stand-alone{
+                    abbreviated{
+                        "Jan",
+                        "Péb",
+                        "Mar",
+                        "Apr",
+                        "Méi",
+                        "Jun",
+                        "Jul",
+                        "Ags",
+                        "Sép",
+                        "Okt",
+                        "Nop",
+                        "Dés",
+                    }
                     narrow{
                         "J",
                         "P",
@@ -286,6 +304,12 @@ su{
                         "K2",
                         "K3",
                         "K4",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
                     }
                     wide{
                         "kuartal ka-1",
@@ -340,6 +364,12 @@ su{
             dn{"AM/PM"}
         }
         era{
+            dn{"éra"}
+        }
+        era-narrow{
+            dn{"éra"}
+        }
+        era-short{
             dn{"éra"}
         }
         hour{

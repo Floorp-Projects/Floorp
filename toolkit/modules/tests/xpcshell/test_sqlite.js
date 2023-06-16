@@ -338,11 +338,12 @@ add_task(async function test_execute_invalid_statement() {
   await new Promise(resolve => {
     Assert.equal(c._connectionData._anonymousStatements.size, 0);
 
-    c.execute("SELECT invalid FROM unknown").then(do_throw, function onError(
-      error
-    ) {
-      resolve();
-    });
+    c.execute("SELECT invalid FROM unknown").then(
+      do_throw,
+      function onError(error) {
+        resolve();
+      }
+    );
   });
 
   // Ensure we don't leak the statement instance.
@@ -369,13 +370,15 @@ add_task(async function test_on_row_exception_ignored() {
   }
 
   let i = 0;
-  let hasResult = await c.execute("SELECT * FROM DIRS", null, function onRow(
-    row
-  ) {
-    i++;
+  let hasResult = await c.execute(
+    "SELECT * FROM DIRS",
+    null,
+    function onRow(row) {
+      i++;
 
-    throw new Error("Some silly error.");
-  });
+      throw new Error("Some silly error.");
+    }
+  );
 
   Assert.equal(hasResult, true);
   Assert.equal(i, 10);
@@ -393,16 +396,17 @@ add_task(async function test_on_row_stop_iteration() {
   }
 
   let i = 0;
-  let hasResult = await c.execute("SELECT * FROM dirs", null, function onRow(
-    row,
-    cancel
-  ) {
-    i++;
+  let hasResult = await c.execute(
+    "SELECT * FROM dirs",
+    null,
+    function onRow(row, cancel) {
+      i++;
 
-    if (i == 5) {
-      cancel();
+      if (i == 5) {
+        cancel();
+      }
     }
-  });
+  );
 
   Assert.equal(hasResult, true);
   Assert.equal(i, 5);
@@ -433,7 +437,7 @@ add_task(async function test_invalid_transaction_type() {
   let c = await getDummyDatabase("invalid_transaction_type");
 
   Assert.throws(
-    () => c.executeTransaction(function() {}, "foobar"),
+    () => c.executeTransaction(function () {}, "foobar"),
     /Unknown transaction type/,
     "Unknown transaction type should throw"
   );
@@ -514,7 +518,7 @@ add_task(async function test_multiple_transactions() {
 
   for (let i = 0; i < 10; ++i) {
     // We don't wait for these transactions.
-    c.executeTransaction(async function() {
+    c.executeTransaction(async function () {
       await c.execute("INSERT INTO dirs (path) VALUES (:path)", {
         path: `foo${i}`,
       });
@@ -522,7 +526,7 @@ add_task(async function test_multiple_transactions() {
     });
   }
   for (let i = 0; i < 10; ++i) {
-    await c.executeTransaction(async function() {
+    await c.executeTransaction(async function () {
       await c.execute("INSERT INTO dirs (path) VALUES (:path)", {
         path: `bar${i}`,
       });
@@ -561,7 +565,7 @@ add_task(async function test_wrapped_connection_transaction() {
   // Start a transaction on the raw connection.
   await c.executeSimpleSQLAsync("BEGIN");
   // Now use executeTransaction, it will be executed, but not in a transaction.
-  await wrapper.executeTransaction(async function() {
+  await wrapper.executeTransaction(async function () {
     await wrapper.execute(
       "CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT)"
     );
@@ -1050,7 +1054,7 @@ add_task(async function test_direct() {
   end.finalize();
 
   deferred = PromiseUtils.defer();
-  db.asyncClose(function() {
+  db.asyncClose(function () {
     deferred.resolve();
   });
   await deferred.promise;

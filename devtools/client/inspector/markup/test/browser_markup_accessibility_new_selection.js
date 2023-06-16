@@ -8,7 +8,7 @@
 // the user keyboard action. In this case markup tree container must receive
 // keyboard focus so that further interactions continue within the markup tree.
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(
     "data:text/html;charset=utf-8,<h1>foo</h1><span>bar</span>"
   );

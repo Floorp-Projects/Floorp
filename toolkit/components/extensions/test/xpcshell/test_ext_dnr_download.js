@@ -47,7 +47,7 @@ add_task(async function test_download_api_can_be_blocked_by_dnr() {
     },
     // Not needed, but to rule out downloads being blocked by CSP:
     allowInsecureRequests: true,
-    background: async function() {
+    background: async function () {
       await browser.declarativeNetRequest.updateSessionRules({
         addRules: [
           {
@@ -83,7 +83,7 @@ add_task(async function test_download_api_ignores_dnr_from_other_extension() {
       manifest_version: 3,
       permissions: ["declarativeNetRequest"],
     },
-    background: async function() {
+    background: async function () {
       await browser.declarativeNetRequest.updateSessionRules({
         addRules: [
           {
@@ -102,7 +102,7 @@ add_task(async function test_download_api_ignores_dnr_from_other_extension() {
     manifest: {
       permissions: ["downloads"],
     },
-    background: async function() {
+    background: async function () {
       let downloadDonePromise = new Promise(resolve => {
         browser.downloads.onChanged.addListener(delta => {
           if (delta.state.current === "interrupted") {
@@ -151,7 +151,7 @@ add_task(
         manifest_version: 3,
         permissions: ["declarativeNetRequest"],
       },
-      background: async function() {
+      background: async function () {
         await browser.declarativeNetRequest.updateSessionRules({
           addRules: [
             {
@@ -169,7 +169,7 @@ add_task(
       manifest: {
         permissions: ["downloads"],
       },
-      background: async function() {
+      background: async function () {
         browser.downloads.onChanged.addListener(delta => {
           browser.test.assertEq(delta.state.current, "interrupted");
           browser.test.sendMessage("done");

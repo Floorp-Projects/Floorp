@@ -1,4 +1,4 @@
-window.doSubscribe = async function(applicationServerKey) {
+window.doSubscribe = async function (applicationServerKey) {
   const registration = await navigator.serviceWorker.register("./sw.js");
   const sub = await registration.pushManager.subscribe({
     applicationServerKey,
@@ -6,7 +6,7 @@ window.doSubscribe = async function(applicationServerKey) {
   return sub.toJSON();
 };
 
-window.doGetSubscription = async function() {
+window.doGetSubscription = async function () {
   const registration = await navigator.serviceWorker.register("./sw.js");
   const sub = await registration.pushManager.getSubscription();
   if (sub) {
@@ -16,16 +16,16 @@ window.doGetSubscription = async function() {
   return null;
 };
 
-window.doUnsubscribe = async function() {
+window.doUnsubscribe = async function () {
   const registration = await navigator.serviceWorker.register("./sw.js");
   const sub = await registration.pushManager.getSubscription();
   sub.unsubscribe();
   return {};
 };
 
-window.doWaitForPushEvent = function() {
+window.doWaitForPushEvent = function () {
   return new Promise(resolve => {
-    navigator.serviceWorker.addEventListener("message", function(e) {
+    navigator.serviceWorker.addEventListener("message", function (e) {
       if (e.data.type === "push") {
         resolve(e.data.payload);
       }
@@ -33,9 +33,9 @@ window.doWaitForPushEvent = function() {
   });
 };
 
-window.doWaitForSubscriptionChange = function() {
+window.doWaitForSubscriptionChange = function () {
   return new Promise(resolve => {
-    navigator.serviceWorker.addEventListener("message", function(e) {
+    navigator.serviceWorker.addEventListener("message", function (e) {
       if (e.data.type === "pushsubscriptionchange") {
         resolve(e.data.type);
       }

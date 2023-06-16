@@ -93,6 +93,9 @@ vcpkg = { path = "build/rust/vcpkg" }
 # Helper crate for integration in the gecko build system.
 mozbuild = { path = "build/rust/mozbuild" }
 
+# Dummy oslog replacement. It's only used by glean in code that is not actually used.
+oslog = { path = "build/rust/oslog" }
+
 # Patch bitflags 2.0 to 1.0 while not too many crates use 2.0 features
 bitflags = { path = "build/rust/bitflags" }
 
@@ -122,16 +125,13 @@ base64 = { path = "build/rust/base64" }
 wasi = { path = "build/rust/wasi" }
 
 # Patch bindgen 0.63 to 0.64
-bindgen_0_63 = { package = "bindgen", path = "build/rust/bindgen" }
+bindgen = { path = "build/rust/bindgen" }
 
 # Patch ntapi 0.3 to 0.4
 ntapi = { path = "build/rust/ntapi" }
 
 # Patch nix 0.24 to 0.26
 nix = { path = "build/rust/nix" }
-
-# Patch hermit-abi 0.1 to 0.2
-hermit-abi = { path = "build/rust/hermit-abi" }
 
 # Patch autocfg to hide rustc output. Workaround for https://github.com/cuviper/autocfg/issues/30
 autocfg = { path = "third_party/rust/autocfg" }
@@ -145,15 +145,18 @@ web-sys = { path = "build/rust/dummy-web/web-sys" }
 # Overrides to allow easier use of common internal crates.
 moz_asserts = { path = "mozglue/static/rust/moz_asserts" }
 
-# Patch bindgen to work around issues with some unsound transmutes when compiling with LLVM 16+.
-bindgen = { path = "third_party/rust/bindgen" }
-
 # Patch `rure` to disable building the cdylib and staticlib targets
 # Cargo has no way to disable building targets your dependencies provide which
 # you don't depend on, and linking the cdylib breaks during instrumentation
 # builds.
 # Workaround for https://github.com/rust-lang/cargo/issues/11232
 rure = { path = "third_party/rust/rure" }
+
+# 0.31.1 but without rust-cssparser#342.
+# TODO: Remove these, and just use v0.31.1 once bug 1836219 lands
+# (which will get syn 2 into the tree).
+cssparser = { path = "third_party/rust/cssparser" }
+cssparser-macros = { path = "third_party/rust/cssparser-macros" }
 
 # Other overrides
 chardetng = { git = "https://github.com/hsivonen/chardetng", rev="3484d3e3ebdc8931493aa5df4d7ee9360a90e76b" }
@@ -185,8 +188,3 @@ uniffi_bindgen = "=0.23.0"
 uniffi_build = "=0.23.0"
 uniffi_macros = "=0.23.0"
 weedle2 = "=4.0.0"
-
-# Backport https://github.com/mozilla/authenticator-rs/commit/2da9e991 to
-# authenticator-rs 0.4.0-alpha.14 for Bug 1824811.
-[patch.crates-io.authenticator]
-path = "third_party/rust/authenticator"

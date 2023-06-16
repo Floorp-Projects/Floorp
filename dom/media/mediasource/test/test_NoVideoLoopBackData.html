@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: loop-back data not available yet (shorter video)</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+
+/**
+ * This test is used to check whether a looping video can loop back successfully
+ * when it has a shorter video track than its audio track. When reaching EOS for
+ * the shorter track, there is no loop-back data at the start position (they are
+ * not appended yet) Even that, we should still be able to loop back but the
+ * looping would become non-seamless in this situation.
+ */
+SimpleTest.waitForExplicitFinish();
+
+runWithMSE(async (ms, el) => {
+  await once(ms, "sourceopen");
+  ok(true, "Receive a sourceopen event");
+  const videosb = ms.addSourceBuffer("video/mp4");
+  const audiosb = ms.addSourceBuffer("audio/mp4");
+
+  // Here we create a way shorter video than audio because audio decoding is
+  // very fast. If two track only have small diffence in length, audio track
+  // would still reach to the end first. But in this test, we want to test
+  // reaching video EOS first.
+  info(`create different length source buffers`);
+  await fetchAndLoad(audiosb, "bipbop/bipbop_audio", ["init"], ".mp4");
+  await fetchAndLoad(audiosb, "bipbop/bipbop_audio", range(5, 8), ".m4s");
+  videosb.appendWindowEnd = audiosb.buffered.end(0) - 2.5;
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", ["init"], ".mp4");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", range(5, 8), ".m4s");
+  ms.endOfStream();
+  await Promise.all([once(el, "durationchange"), once(ms, "sourceended")]);
+  info(`audio=[${audiosb.buffered.start(0)}-${audiosb.buffered.end(0)}], video=[${videosb.buffered.start(0)}-${videosb.buffered.end(0)}]`);
+  ok(true, `endOfStream completed, buffer=[${el.buffered.start(0)}, ${el.buffered.end(0)}]`);
+  ok(audiosb.buffered.end(0) > videosb.buffered.end(0), `audio should be longer than video`);
+
+  info(`seek to the position where buffered data exists`);
+  el.loop = true;
+  el.controls = true;
+  el.currentTime = el.buffered.start(0);
+  await el.play();
+
+  info(`video should trigger seeking when reaching to the end`);
+  let seekingCount = 0, seekedCount = 0;
+  el.addEventListener("seeking", () => {
+    is(++seekingCount, 1, "should only receive seeking once!");
+  });
+  el.addEventListener("seeked", () => {
+    is(++seekedCount, 1, "should only receive seeked once!");
+  });
+  await once(el, "seeking");
+
+  info(`trim old data before append new data`);
+  let p = Promise.all([once(videosb, "updateend"), once(audiosb, "updateend")]);
+  videosb.remove(videosb.buffered.start(0), videosb.buffered.end(0));
+  audiosb.remove(audiosb.buffered.start(0), audiosb.buffered.end(0));
+  await p;
+
+  info(`append new data`);
+  const seekedPromise = once(el, "seeked");
+  p = Promise.all([once(videosb, "updateend"), once(audiosb, "updateend")]);
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", range(1, 2), ".m4s");
+  await fetchAndLoad(audiosb, "bipbop/bipbop_audio", range(1, 2), ".m4s");
+  await p;
+  info(`audio=[${audiosb.buffered.start(0)}-${audiosb.buffered.end(0)}], video=[${videosb.buffered.start(0)}-${videosb.buffered.end(0)}]`);
+
+  info(`now we should be able to finish seeking to the start position`);
+  await seekedPromise;
+
+  SimpleTest.finish(SimpleTest);
+});
+
+</script>
+</body>
+</html>

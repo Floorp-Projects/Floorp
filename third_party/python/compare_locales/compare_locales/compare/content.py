@@ -4,8 +4,6 @@
 
 'Mozilla l10n compare locales tool'
 
-from __future__ import absolute_import
-from __future__ import print_function
 import codecs
 import os
 import shutil
@@ -232,7 +230,7 @@ class ContentComparer:
                             skips.append(l10nent)
                         self.observers.notify(
                             tp, l10n,
-                            u"%s at line %d, column %d for %s" %
+                            "%s at line %d, column %d for %s" %
                             (msg, line, col, refent.key)
                         )
                 pass

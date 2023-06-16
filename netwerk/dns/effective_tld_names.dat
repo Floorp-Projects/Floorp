@@ -6650,16 +6650,13 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2023-04-14T15:13:16Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2023-06-10T15:11:57Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
 
 // aarp : 2015-05-21 AARP
 aarp
-
-// abarth : 2015-07-30 Fiat Chrysler Automobiles N.V.
-abarth
 
 // abb : 2014-10-24 ABB Ltd
 abb
@@ -6738,9 +6735,6 @@ airtel
 
 // akdn : 2015-04-23 Fondation Aga Khan (Aga Khan Foundation)
 akdn
-
-// alfaromeo : 2015-07-31 Fiat Chrysler Automobiles N.V.
-alfaromeo
 
 // alibaba : 2015-01-15 Alibaba Group Holding Limited
 alibaba
@@ -7654,9 +7648,6 @@ ferrari
 // ferrero : 2014-12-18 Ferrero Trading Lux S.A.
 ferrero
 
-// fiat : 2015-07-31 Fiat Chrysler Automobiles N.V.
-fiat
-
 // fidelity : 2015-07-30 Fidelity Brokerage Services LLC
 fidelity
 
@@ -8275,9 +8266,6 @@ lamer
 // lancaster : 2015-02-12 LANCASTER
 lancaster
 
-// lancia : 2015-07-31 Fiat Chrysler Automobiles N.V.
-lancia
-
 // land : 2013-09-10 Binky Moon, LLC
 land
 
@@ -8463,9 +8451,6 @@ marriott
 
 // marshalls : 2015-07-16 The TJX Companies, Inc.
 marshalls
-
-// maserati : 2015-07-31 Fiat Chrysler Automobiles N.V.
-maserati
 
 // mattel : 2015-08-06 Mattel Sites, Inc.
 mattel
@@ -8704,10 +8689,10 @@ office
 // okinawa : 2013-12-05 BRregistry, Inc.
 okinawa
 
-// olayan : 2015-05-14 Crescent Holding GmbH
+// olayan : 2015-05-14 Competrol (Luxembourg) Sarl
 olayan
 
-// olayangroup : 2015-05-14 Crescent Holding GmbH
+// olayangroup : 2015-05-14 Competrol (Luxembourg) Sarl
 olayangroup
 
 // oldnavy : 2015-07-31 The Gap, Inc.
@@ -9940,7 +9925,7 @@ xin
 // xn--mgba3a3ejt : 2014-11-20 Aramco Services Company
 ارامكو
 
-// xn--mgba7c0bbn0a : 2015-05-14 Crescent Holding GmbH
+// xn--mgba7c0bbn0a : 2015-05-14 Competrol (Luxembourg) Sarl
 العليان
 
 // xn--mgbaakc7dvf : 2015-09-03 Emirates Telecommunications Corporation (trading as Etisalat)
@@ -10027,7 +10012,7 @@ vermögensberatung
 // xn--vhquv : 2013-08-27 Binky Moon, LLC
 企业
 
-// xn--vuq861b : 2014-10-16 Beijing Tele-info Network Technology Co., Ltd.
+// xn--vuq861b : 2014-10-16 Beijing Tele-info Technology Co., Ltd.
 信息
 
 // xn--w4r85el8fhu5dnra : 2015-04-30 Kerry Trading Co. Limited

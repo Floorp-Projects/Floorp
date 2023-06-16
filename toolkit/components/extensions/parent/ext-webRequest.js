@@ -4,11 +4,9 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "WebRequest",
-  "resource://gre/modules/WebRequest.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  WebRequest: "resource://gre/modules/WebRequest.sys.mjs",
+});
 
 var { parseMatchPatterns } = ExtensionUtils;
 
@@ -114,7 +112,7 @@ function makeWebRequestEventAPI(context, event, extensionApi) {
 }
 
 function makeWebRequestEventRegistrar(event) {
-  return function({ fire, context }, params) {
+  return function ({ fire, context }, params) {
     // ExtensionAPIPersistent makes sure this function will be bound
     // to the ExtensionAPIPersistent instance.
     const { extension } = this;
@@ -191,7 +189,7 @@ this.webRequest = class extends ExtensionAPIPersistent {
           this
         ),
         onCompleted: makeWebRequestEventAPI(context, "onCompleted", this),
-        getSecurityInfo: function(requestId, options = {}) {
+        getSecurityInfo: function (requestId, options = {}) {
           return WebRequest.getSecurityInfo({
             id: requestId,
             policy: context.extension.policy,
@@ -199,7 +197,7 @@ this.webRequest = class extends ExtensionAPIPersistent {
             options,
           });
         },
-        handlerBehaviorChanged: function() {
+        handlerBehaviorChanged: function () {
           // TODO: Flush all caches.
         },
       },

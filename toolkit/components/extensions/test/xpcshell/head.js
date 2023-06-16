@@ -20,24 +20,25 @@ var {
   setTimeout,
   setTimeoutWithTarget,
 } = ChromeUtils.importESModule("resource://gre/modules/Timer.sys.mjs");
-var { AddonTestUtils, MockAsyncShutdown } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+var { AddonTestUtils, MockAsyncShutdown } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
 );
 
 ChromeUtils.defineESModuleGetters(this, {
   ContentTask: "resource://testing-common/ContentTask.sys.mjs",
+  Extension: "resource://gre/modules/Extension.sys.mjs",
+  ExtensionData: "resource://gre/modules/Extension.sys.mjs",
+  ExtensionParent: "resource://gre/modules/ExtensionParent.sys.mjs",
+  ExtensionTestUtils:
+    "resource://testing-common/ExtensionXPCShellUtils.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+  MessageChannel: "resource://testing-common/MessageChannel.sys.mjs",
   PromiseTestUtils: "resource://testing-common/PromiseTestUtils.sys.mjs",
+  Schemas: "resource://gre/modules/Schemas.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  Extension: "resource://gre/modules/Extension.jsm",
-  ExtensionData: "resource://gre/modules/Extension.jsm",
-  ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
-  ExtensionTestUtils: "resource://testing-common/ExtensionXPCShellUtils.jsm",
-  MessageChannel: "resource://testing-common/MessageChannel.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
-  Schemas: "resource://gre/modules/Schemas.jsm",
 });
 
 PromiseTestUtils.allowMatchingRejectionsGlobally(
@@ -96,7 +97,7 @@ function clearCache() {
   imageCache.clearCache(false);
 }
 
-var promiseConsoleOutput = async function(task) {
+var promiseConsoleOutput = async function (task) {
   const DONE = `=== console listener ${Math.random()} done ===`;
 
   let listener;
@@ -221,8 +222,8 @@ let extensionHandlers = new WeakSet();
 function handlingUserInputFrameScript() {
   /* globals content */
   // eslint-disable-next-line no-shadow
-  const { MessageChannel } = ChromeUtils.import(
-    "resource://testing-common/MessageChannel.jsm"
+  const { MessageChannel } = ChromeUtils.importESModule(
+    "resource://testing-common/MessageChannel.sys.mjs"
   );
 
   let handle;

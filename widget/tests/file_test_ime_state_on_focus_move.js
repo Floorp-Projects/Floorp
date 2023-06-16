@@ -98,9 +98,8 @@ class IMEStateOnFocusMoveTester {
     } else if (this.#mContainerIsEditable) {
       getEditingHost(aContainer).focus(); // FIXME: use editing host instead
     } else {
-      this.#mCreatedElementForPreviousFocusedElement = doc.createElement(
-        "input"
-      );
+      this.#mCreatedElementForPreviousFocusedElement =
+        doc.createElement("input");
       this.#mCreatedElementForPreviousFocusedElement.setAttribute(
         "type",
         this.#mTest.expectedEnabledValue ==

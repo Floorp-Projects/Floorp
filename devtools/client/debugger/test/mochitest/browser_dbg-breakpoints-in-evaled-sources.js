@@ -27,7 +27,7 @@ const EVALED_SOURCE_TEXT = `setTimeout(function() {
  * This test will follow those STRs while also performing a few additional
  * checks (eg verify breakpoints can be hit at various stages of the test).
  */
-add_task(async function() {
+add_task(async function () {
   info("Open the debugger and set a breakpoint on a regular script");
   const dbg = await initDebugger("doc-scripts.html");
   await selectSource(dbg, "doc-scripts.html");

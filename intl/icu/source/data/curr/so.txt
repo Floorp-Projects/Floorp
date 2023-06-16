@@ -684,6 +684,7 @@ so{
         AFN{"؋"}
         AMD{"֏"}
         AZN{"₼"}
+        BYN{"BYN"}
         GHS{"GH₵"}
         VEF{"Bs"}
     }
@@ -1238,6 +1239,10 @@ so{
         SLL{
             one{"leonka Sira Leon"}
             other{"leonka Sira Leon"}
+        }
+        SOS{
+            one{"Shilingka Soomaaliya"}
+            other{"Shilingka Soomaaliya"}
         }
         SRD{
             one{"Doolarka Surinamees"}

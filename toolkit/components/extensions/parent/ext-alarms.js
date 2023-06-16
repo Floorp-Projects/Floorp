@@ -109,7 +109,7 @@ this.alarms = class extends ExtensionAPIPersistent {
 
     return {
       alarms: {
-        create: function(name, alarmInfo) {
+        create: function (name, alarmInfo) {
           name = name || "";
           if (self.alarms.has(name)) {
             self.alarms.get(name).clear();
@@ -118,7 +118,7 @@ this.alarms = class extends ExtensionAPIPersistent {
           self.alarms.set(alarm.name, alarm);
         },
 
-        get: function(name) {
+        get: function (name) {
           name = name || "";
           if (self.alarms.has(name)) {
             return Promise.resolve(self.alarms.get(name).data);
@@ -126,12 +126,12 @@ this.alarms = class extends ExtensionAPIPersistent {
           return Promise.resolve();
         },
 
-        getAll: function() {
+        getAll: function () {
           let result = Array.from(self.alarms.values(), alarm => alarm.data);
           return Promise.resolve(result);
         },
 
-        clear: function(name) {
+        clear: function (name) {
           name = name || "";
           if (self.alarms.has(name)) {
             self.alarms.get(name).clear();
@@ -140,7 +140,7 @@ this.alarms = class extends ExtensionAPIPersistent {
           return Promise.resolve(false);
         },
 
-        clearAll: function() {
+        clearAll: function () {
           let cleared = false;
           for (let alarm of self.alarms.values()) {
             alarm.clear();

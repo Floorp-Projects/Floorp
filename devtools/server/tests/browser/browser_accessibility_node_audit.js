@@ -56,15 +56,11 @@ async function checkAudit(a11yWalker, node, expected, options) {
   );
 }
 
-add_task(async function() {
-  const {
-    target,
-    walker,
-    a11yWalker,
-    parentAccessibility,
-  } = await initAccessibilityFrontsForUrl(
-    MAIN_DOMAIN + "doc_accessibility_infobar.html"
-  );
+add_task(async function () {
+  const { target, walker, a11yWalker, parentAccessibility } =
+    await initAccessibilityFrontsForUrl(
+      MAIN_DOMAIN + "doc_accessibility_infobar.html"
+    );
 
   const headerNode = await walker.querySelector(walker.rootNode, "#h1");
   await checkAudit(

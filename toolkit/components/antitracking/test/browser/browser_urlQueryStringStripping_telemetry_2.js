@@ -6,8 +6,8 @@ const QUERY_STRIPPING_COUNT = "QUERY_STRIPPING_COUNT";
 const QUERY_STRIPPING_PARAM_COUNT = "QUERY_STRIPPING_PARAM_COUNT";
 const QUERY_STRIPPING_COUNT_BY_PARAM = "QUERY_STRIPPING_COUNT_BY_PARAM";
 
-const histogramLabels = Services.telemetry.getCategoricalLabels()
-  .QUERY_STRIPPING_COUNT_BY_PARAM;
+const histogramLabels =
+  Services.telemetry.getCategoricalLabels().QUERY_STRIPPING_COUNT_BY_PARAM;
 
 async function clearTelemetry() {
   // There's an arbitrary interval of 2 seconds in which the content
@@ -86,7 +86,7 @@ function testTelemetry(queryParamToCount) {
   }
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.query_stripping.enabled", true],

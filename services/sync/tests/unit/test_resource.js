@@ -164,7 +164,7 @@ function server_headers(metadata, response) {
 }
 
 var quotaValue;
-Observers.add("weave:service:quota:remaining", function(subject) {
+Observers.add("weave:service:quota:remaining", function (subject) {
   quotaValue = subject;
 });
 
@@ -281,7 +281,7 @@ add_task(async function test_get() {
   let resLogger = res._log;
   let dbg = resLogger.debug;
   let debugMessages = [];
-  resLogger.debug = function(msg, extra) {
+  resLogger.debug = function (msg, extra) {
     debugMessages.push(`${msg}: ${JSON.stringify(extra)}`);
     dbg.call(this, msg);
   };
@@ -539,11 +539,7 @@ add_test(function test_uri_construction() {
     Ci.nsIURL
   );
   let uri2 = CommonUtils.makeURI("http://foo/").QueryInterface(Ci.nsIURL);
-  uri2 = uri2
-    .mutate()
-    .setQuery(query)
-    .finalize()
-    .QueryInterface(Ci.nsIURL);
+  uri2 = uri2.mutate().setQuery(query).finalize().QueryInterface(Ci.nsIURL);
   Assert.equal(uri1.query, uri2.query);
 
   run_next_test();

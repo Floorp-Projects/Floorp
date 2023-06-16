@@ -52,12 +52,12 @@ function childFrameScript() {
     input.click();
   }
 
-  addMessageListener("testBug1086684:parentReady", function(message) {
+  addMessageListener("testBug1086684:parentReady", function (message) {
     parentReady(message);
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   Services.prefs.setBoolPref("dom.security.https_first", false);
   let page = await XPCShellContentUtils.loadContentPage(childFrameURL, {
     remote: true,

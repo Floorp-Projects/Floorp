@@ -2,8 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-const { CustomizableUITestUtils } = ChromeUtils.import(
-  "resource://testing-common/CustomizableUITestUtils.jsm"
+const { CustomizableUITestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/CustomizableUITestUtils.sys.mjs"
 );
 let gCUITestUtils = new CustomizableUITestUtils(window);
 
@@ -16,12 +16,12 @@ add_task(async function test_setup() {
   });
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Cmd+k should focus the search box in the toolbar when it's present");
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:home" },
-    async function(browser) {
+    async function (browser) {
       await BrowserTestUtils.synthesizeMouseAtCenter("#brandLogo", {}, browser);
 
       let doc = window.document;

@@ -1,7 +1,3 @@
-# coding=utf8
-from __future__ import unicode_literals
-from __future__ import absolute_import
-
 import argparse
 import json
 import os
@@ -13,7 +9,7 @@ import hglib
 from hglib.util import b, cmdbuilder
 
 
-class Blame(object):
+class Blame:
     def __init__(self, client):
         self.client = client
         self.users = []
@@ -53,7 +49,7 @@ class Blame(object):
                 key_vals = []
             if isinstance(e, FluentEntity):
                 key_vals += [
-                    ('{}.{}'.format(e.key, attr.key), attr.val_span)
+                    (f'{e.key}.{attr.key}', attr.val_span)
                     for attr in e.attributes
                 ]
             for key, (val_start, val_end) in key_vals:

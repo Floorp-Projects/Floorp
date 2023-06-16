@@ -1,4 +1,5 @@
-<?% config.freshness.reviewed = '2021-02-21' %?>
+<!-- go/cmark -->
+<!--* freshness: {owner: 'titovartem' reviewed: '2021-02-21'} *-->
 
 # DefaultVideoQualityAnalyzer
 

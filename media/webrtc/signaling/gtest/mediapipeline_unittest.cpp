@@ -246,8 +246,9 @@ class TestAgent {
   explicit TestAgent(const RefPtr<SharedWebrtcState>& aSharedState)
       : control_(aSharedState->mCallWorkerThread),
         audio_config_(109, "opus", 48000, 2, false),
-        call_(WebrtcCallWrapper::Create(mozilla::dom::RTCStatsTimestampMaker(),
-                                        nullptr, aSharedState)),
+        call_(WebrtcCallWrapper::Create(
+            mozilla::dom::RTCStatsTimestampMaker::Create(), nullptr,
+            aSharedState)),
         audio_conduit_(
             AudioSessionConduit::Create(call_, test_utils->sts_target())),
         audio_pipeline_(),

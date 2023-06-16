@@ -30,5 +30,5 @@ RUN /usr/local/sbin/setup_packages.sh $TASKCLUSTER_ROOT_URL $DOCKER_IMAGE_PACKAG
         --verbose \
         jessie \
         /srv/jessie-$arch \
-        http://snapshot.debian.org/archive/debian/20210208T213147Z; \
+        https://archive.debian.org/debian; \
     done

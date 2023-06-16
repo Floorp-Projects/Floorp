@@ -13,8 +13,8 @@ use crate::shared_lock::{
 };
 use crate::str::CssStringWriter;
 use crate::stylesheets::{
-    layer_rule::LayerName, stylesheet::Namespaces, supports_rule::SupportsCondition, CssRule,
-    CssRuleType, StylesheetInDocument,
+    layer_rule::LayerName, supports_rule::SupportsCondition, CssRule, CssRuleType,
+    StylesheetInDocument,
 };
 use crate::values::CssUrl;
 use cssparser::{Parser, SourceLocation};
@@ -212,8 +212,7 @@ impl ImportRule {
     /// whole import rule or parse the media query list or what not.
     pub fn parse_layer_and_supports<'i, 't>(
         input: &mut Parser<'i, 't>,
-        context: &ParserContext,
-        namespaces: &Namespaces,
+        context: &mut ParserContext,
     ) -> (ImportLayer, Option<ImportSupportsCondition>) {
         let layer = if input
             .try_parse(|input| input.expect_ident_matching("layer"))
@@ -228,7 +227,8 @@ impl ImportRule {
                         .parse_nested_block(|input| LayerName::parse(context, input))
                         .map(|name| ImportLayer::Named(name))
                 })
-                .ok().unwrap_or(ImportLayer::None)
+                .ok()
+                .unwrap_or(ImportLayer::None)
         };
 
         let supports = if !static_prefs::pref!("layout.css.import-supports.enabled") {
@@ -237,9 +237,8 @@ impl ImportRule {
             input
                 .try_parse(SupportsCondition::parse_for_import)
                 .map(|condition| {
-                    let eval_context =
-                        ParserContext::new_with_rule_type(context, CssRuleType::Style, namespaces);
-                    let enabled = condition.eval(&eval_context, namespaces);
+                    let enabled = context
+                        .nest_for_rule(CssRuleType::Style, |context| condition.eval(context));
                     ImportSupportsCondition { condition, enabled }
                 })
                 .ok()

@@ -11,7 +11,6 @@
 #include "mozilla/a11y/CacheConstants.h"
 #include "mozilla/a11y/HyperTextAccessibleBase.h"
 #include "mozilla/a11y/Role.h"
-#include "mozilla/WeakPtr.h"
 #include "AccAttributes.h"
 #include "nsIAccessibleText.h"
 #include "nsIAccessibleTypes.h"
@@ -32,13 +31,7 @@ enum class RelationType;
  * process.
  */
 template <class Derived>
-#ifdef XP_WIN
-class RemoteAccessibleBase : public Accessible,
-                             public HyperTextAccessibleBase,
-                             public SupportsWeakPtr {
-#else
 class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
-#endif
  public:
   virtual ~RemoteAccessibleBase() { MOZ_ASSERT(!mWrapper); }
 
@@ -231,6 +224,21 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
   virtual Maybe<int32_t> GetIntARIAAttr(nsAtom* aAttrName) const override;
 
   virtual void Language(nsAString& aLocale) override;
+
+  //////////////////////////////////////////////////////////////////////////////
+  // EditableTextAccessible
+
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void ReplaceText(
+      const nsAString& aText) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void InsertText(
+      const nsAString& aText, int32_t aPosition) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void CopyText(int32_t aStartPos,
+                                                    int32_t aEndPos) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void CutText(int32_t aStartPos,
+                                                   int32_t aEndPos) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void DeleteText(int32_t aStartPos,
+                                                      int32_t aEndPos) override;
+  MOZ_CAN_RUN_SCRIPT virtual void PasteText(int32_t aPosition) override;
 
   //////////////////////////////////////////////////////////////////////////////
   // SelectAccessible
@@ -444,6 +452,7 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
   LayoutDeviceIntRect BoundsWithOffset(
       Maybe<nsRect> aOffset, bool aBoundsAreForHittesting = false) const;
   bool IsFixedPos() const;
+  bool IsOverflowHidden() const;
 
   // This function is used exclusively for hit testing.
   bool ContainsPoint(int32_t aX, int32_t aY);

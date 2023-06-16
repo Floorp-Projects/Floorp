@@ -96,7 +96,7 @@
           {
             "name": "viewTemplate",
             "type": "object",
-            "additionalProperties":  true,
+            "additionalProperties": true,
             "description": "The view template."
           }
         ]

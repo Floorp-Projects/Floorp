@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["test.aboutconfig.copy.false", false],
@@ -15,7 +15,7 @@ add_setup(async function() {
 });
 
 add_task(async function test_copy() {
-  await AboutConfigTest.withNewTab(async function() {
+  await AboutConfigTest.withNewTab(async function () {
     for (let [name, expectedString] of [
       [PREF_BOOLEAN_DEFAULT_TRUE, "true"],
       [PREF_BOOLEAN_USERVALUE_TRUE, "true"],
@@ -91,7 +91,7 @@ add_task(async function test_copy() {
 });
 
 add_task(async function test_copy_multiple() {
-  await AboutConfigTest.withNewTab(async function() {
+  await AboutConfigTest.withNewTab(async function () {
     // Lines are separated by a single LF character on all platforms.
     let expectedString =
       "test.aboutconfig.copy.false\tfalse\t\n" +

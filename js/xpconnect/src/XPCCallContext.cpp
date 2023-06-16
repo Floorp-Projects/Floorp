@@ -70,7 +70,7 @@ XPCCallContext::XPCCallContext(
     return;
   }
   const JSClass* clasp = JS::GetClass(unwrapped);
-  if (IS_WN_CLASS(clasp)) {
+  if (clasp->isWrappedNative()) {
     mWrapper = XPCWrappedNative::Get(unwrapped);
   } else if (IsTearoffClass(clasp)) {
     mTearOff = XPCWrappedNativeTearOff::Get(unwrapped);

@@ -4,24 +4,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { Log } from "resource://gre/modules/Log.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 import { TelemetryUtils } from "resource://gre/modules/TelemetryUtils.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonManagerPrivate: "resource://gre/modules/AddonManager.sys.mjs",
   TelemetryController: "resource://gre/modules/TelemetryController.sys.mjs",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
   TelemetryReportingPolicy:
     "resource://gre/modules/TelemetryReportingPolicy.sys.mjs",
   TelemetryScheduler: "resource://gre/modules/TelemetryScheduler.sys.mjs",
   TelemetryStorage: "resource://gre/modules/TelemetryStorage.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
 });
 
 const Utils = TelemetryUtils;
@@ -902,7 +897,7 @@ var Impl = {
         this.addObserver("idle-daily");
         await Services.telemetry.gatherMemory();
 
-        Services.telemetry.asyncFetchTelemetryData(function() {});
+        Services.telemetry.asyncFetchTelemetryData(function () {});
 
         if (IS_UNIFIED_TELEMETRY) {
           // Check for a previously written aborted session ping.
@@ -1153,7 +1148,7 @@ var Impl = {
       case "idle-daily":
         // Enqueue to main-thread, otherwise components may be inited by the
         // idle-daily category and miss the gather-telemetry notification.
-        Services.tm.dispatchToMainThread(function() {
+        Services.tm.dispatchToMainThread(function () {
           // Notify that data should be gathered now.
           // TODO: We are keeping this behaviour for now but it will be removed as soon as
           // bug 1127907 lands.

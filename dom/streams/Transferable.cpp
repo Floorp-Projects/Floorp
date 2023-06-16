@@ -815,7 +815,13 @@ MOZ_CAN_RUN_SCRIPT static void SetUpCrossRealmTransformReadable(
 bool ReadableStream::Transfer(JSContext* aCx, UniqueMessagePortId& aPortId) {
   // Step 1: If ! IsReadableStreamLocked(value) is true, throw a
   // "DataCloneError" DOMException.
-  // (Implemented in StructuredCloneHolder::CustomCanTransferHandler)
+  // (Implemented in StructuredCloneHolder::CustomCanTransferHandler, but double
+  // check here as the state might have changed in case this ReadableStream is
+  // created by a TransferStream and being transferred together with the
+  // parent.)
+  if (IsReadableStreamLocked(this)) {
+    return false;
+  }
 
   // Step 2: Let port1 be a new MessagePort in the current Realm.
   // Step 3: Let port2 be a new MessagePort in the current Realm.
@@ -902,7 +908,13 @@ bool ReadableStream::ReceiveTransfer(
 bool WritableStream::Transfer(JSContext* aCx, UniqueMessagePortId& aPortId) {
   // Step 1: If ! IsWritableStreamLocked(value) is true, throw a
   // "DataCloneError" DOMException.
-  // (Implemented in StructuredCloneHolder::CustomCanTransferHandler)
+  // (Implemented in StructuredCloneHolder::CustomCanTransferHandler, but double
+  // check here as the state might have changed in case this WritableStream is
+  // created by a TransferStream and being transferred together with the
+  // parent.)
+  if (IsWritableStreamLocked(this)) {
+    return false;
+  }
 
   // Step 2: Let port1 be a new MessagePort in the current Realm.
   // Step 3: Let port2 be a new MessagePort in the current Realm.
@@ -994,7 +1006,13 @@ bool TransformStream::Transfer(JSContext* aCx, UniqueMessagePortId& aPortId1,
   // "DataCloneError" DOMException.
   // Step 4: If ! IsWritableStreamLocked(writable) is true, throw a
   // "DataCloneError" DOMException.
-  // (Implemented in StructuredCloneHolder::CustomCanTransferHandler)
+  // (Implemented in StructuredCloneHolder::CustomCanTransferHandler, but double
+  // check here as the state might have changed by
+  // Readable/WritableStream::Transfer in case the stream members of this
+  // TransformStream are being transferred together.)
+  if (IsReadableStreamLocked(mReadable) || IsWritableStreamLocked(mWritable)) {
+    return false;
+  }
 
   // Step 5: Set dataHolder.[[readable]] to !
   // StructuredSerializeWithTransfer(readable, « readable »).

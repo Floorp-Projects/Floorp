@@ -27,6 +27,7 @@
 #include "vpx/vpx_integer.h"
 #include "vpx_ports/mem.h"
 #include "vpx_ports/msvc.h"  // for round()
+#include "vpx_ports/vpx_timer.h"
 
 using libvpx_test::ACMRandom;
 
@@ -548,12 +549,50 @@ class Trans16x16TestBase {
     }
   }
 
+  void RunSpeedTest() {
+    ACMRandom rnd(ACMRandom::DeterministicSeed());
+    const int count_test_block = 10000;
+    int c_sum_time = 0;
+    int simd_sum_time = 0;
+
+    DECLARE_ALIGNED(32, int16_t, input_block[kNumCoeffs]);
+    DECLARE_ALIGNED(32, tran_low_t, output_ref_block[kNumCoeffs]);
+    DECLARE_ALIGNED(32, tran_low_t, output_block[kNumCoeffs]);
+
+    // Initialize a test block with input range [-mask_, mask_].
+    for (int j = 0; j < kNumCoeffs; ++j) {
+      input_block[j] = (rnd.Rand16() & mask_) - (rnd.Rand16() & mask_);
+    }
+
+    vpx_usec_timer timer_c;
+    vpx_usec_timer_start(&timer_c);
+    for (int i = 0; i < count_test_block; ++i) {
+      vpx_fdct16x16_c(input_block, output_ref_block, pitch_);
+    }
+    vpx_usec_timer_mark(&timer_c);
+    c_sum_time += static_cast<int>(vpx_usec_timer_elapsed(&timer_c));
+
+    vpx_usec_timer timer_mod;
+    vpx_usec_timer_start(&timer_mod);
+    for (int i = 0; i < count_test_block; ++i) {
+      RunFwdTxfm(input_block, output_block, pitch_);
+    }
+
+    vpx_usec_timer_mark(&timer_mod);
+    simd_sum_time += static_cast<int>(vpx_usec_timer_elapsed(&timer_mod));
+
+    printf(
+        "c_time = %d \t simd_time = %d \t Gain = %4.2f \n", c_sum_time,
+        simd_sum_time,
+        (static_cast<float>(c_sum_time) / static_cast<float>(simd_sum_time)));
+  }
+
   void CompareInvReference(IdctFunc ref_txfm, int thresh) {
     ACMRandom rnd(ACMRandom::DeterministicSeed());
     const int count_test_block = 10000;
     const int eob = 10;
     const int16_t *scan = vp9_default_scan_orders[TX_16X16].scan;
-    DECLARE_ALIGNED(16, tran_low_t, coeff[kNumCoeffs]);
+    DECLARE_ALIGNED(32, tran_low_t, coeff[kNumCoeffs]);
     DECLARE_ALIGNED(16, uint8_t, dst[kNumCoeffs]);
     DECLARE_ALIGNED(16, uint8_t, ref[kNumCoeffs]);
 #if CONFIG_VP9_HIGHBITDEPTH
@@ -602,6 +641,80 @@ class Trans16x16TestBase {
                              << error << " at index " << j;
       }
     }
+  }
+
+  void RunInvTrans16x16SpeedTest(IdctFunc ref_txfm, int thresh) {
+    ACMRandom rnd(ACMRandom::DeterministicSeed());
+    const int count_test_block = 10000;
+    const int eob = 10;
+    const int16_t *scan = vp9_default_scan_orders[TX_16X16].scan;
+    int64_t c_sum_time = 0;
+    int64_t simd_sum_time = 0;
+    DECLARE_ALIGNED(32, tran_low_t, coeff[kNumCoeffs]);
+    DECLARE_ALIGNED(16, uint8_t, dst[kNumCoeffs]);
+    DECLARE_ALIGNED(16, uint8_t, ref[kNumCoeffs]);
+#if CONFIG_VP9_HIGHBITDEPTH
+    DECLARE_ALIGNED(16, uint16_t, dst16[kNumCoeffs]);
+    DECLARE_ALIGNED(16, uint16_t, ref16[kNumCoeffs]);
+#endif  // CONFIG_VP9_HIGHBITDEPTH
+
+    for (int j = 0; j < kNumCoeffs; ++j) {
+      if (j < eob) {
+        // Random values less than the threshold, either positive or negative
+        coeff[scan[j]] = rnd(thresh);
+      } else {
+        coeff[scan[j]] = 0;
+      }
+      if (bit_depth_ == VPX_BITS_8) {
+        dst[j] = 0;
+        ref[j] = 0;
+#if CONFIG_VP9_HIGHBITDEPTH
+      } else {
+        dst16[j] = 0;
+        ref16[j] = 0;
+#endif  // CONFIG_VP9_HIGHBITDEPTH
+      }
+    }
+
+    if (bit_depth_ == VPX_BITS_8) {
+      vpx_usec_timer timer_c;
+      vpx_usec_timer_start(&timer_c);
+      for (int i = 0; i < count_test_block; ++i) {
+        ref_txfm(coeff, ref, pitch_);
+      }
+      vpx_usec_timer_mark(&timer_c);
+      c_sum_time += vpx_usec_timer_elapsed(&timer_c);
+
+      vpx_usec_timer timer_mod;
+      vpx_usec_timer_start(&timer_mod);
+      for (int i = 0; i < count_test_block; ++i) {
+        RunInvTxfm(coeff, dst, pitch_);
+      }
+      vpx_usec_timer_mark(&timer_mod);
+      simd_sum_time += vpx_usec_timer_elapsed(&timer_mod);
+    } else {
+#if CONFIG_VP9_HIGHBITDEPTH
+      vpx_usec_timer timer_c;
+      vpx_usec_timer_start(&timer_c);
+      for (int i = 0; i < count_test_block; ++i) {
+        ref_txfm(coeff, CAST_TO_BYTEPTR(ref16), pitch_);
+      }
+      vpx_usec_timer_mark(&timer_c);
+      c_sum_time += vpx_usec_timer_elapsed(&timer_c);
+
+      vpx_usec_timer timer_mod;
+      vpx_usec_timer_start(&timer_mod);
+      for (int i = 0; i < count_test_block; ++i) {
+        RunInvTxfm(coeff, CAST_TO_BYTEPTR(dst16), pitch_);
+      }
+      vpx_usec_timer_mark(&timer_mod);
+      simd_sum_time += vpx_usec_timer_elapsed(&timer_mod);
+#endif  // CONFIG_VP9_HIGHBITDEPTH
+    }
+    printf(
+        "c_time = %" PRId64 " \t simd_time = %" PRId64 " \t Gain = %4.2f \n",
+        c_sum_time, simd_sum_time,
+        (static_cast<float>(c_sum_time) / static_cast<float>(simd_sum_time)));
   }
 
   int pitch_;
@@ -664,6 +777,8 @@ TEST_P(Trans16x16DCT, QuantCheck) {
 
 TEST_P(Trans16x16DCT, InvAccuracyCheck) { RunInvAccuracyCheck(); }
 
+TEST_P(Trans16x16DCT, DISABLED_Speed) { RunSpeedTest(); }
+
 class Trans16x16HT : public Trans16x16TestBase,
                      public ::testing::TestWithParam<Ht16x16Param> {
  public:
@@ -714,7 +829,6 @@ TEST_P(Trans16x16HT, QuantCheck) {
   RunQuantCheck(429, 729);
 }
 
-#if HAVE_SSE2 && CONFIG_VP9_HIGHBITDEPTH && !CONFIG_EMULATE_HARDWARE
 class InvTrans16x16DCT : public Trans16x16TestBase,
                          public ::testing::TestWithParam<Idct16x16Param> {
  public:
@@ -745,7 +859,10 @@ GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(InvTrans16x16DCT);
 TEST_P(InvTrans16x16DCT, CompareReference) {
   CompareInvReference(ref_txfm_, thresh_);
 }
-#endif  // HAVE_SSE2 && CONFIG_VP9_HIGHBITDEPTH && !CONFIG_EMULATE_HARDWARE
+
+TEST_P(InvTrans16x16DCT, DISABLED_Speed) {
+  RunInvTrans16x16SpeedTest(ref_txfm_, thresh_);
+}
 
 using std::make_tuple;
 
@@ -787,6 +904,12 @@ INSTANTIATE_TEST_SUITE_P(
         make_tuple(&vp9_fht16x16_c, &vp9_iht16x16_256_add_c, 1, VPX_BITS_8),
         make_tuple(&vp9_fht16x16_c, &vp9_iht16x16_256_add_c, 2, VPX_BITS_8),
         make_tuple(&vp9_fht16x16_c, &vp9_iht16x16_256_add_c, 3, VPX_BITS_8)));
+
+INSTANTIATE_TEST_SUITE_P(C, InvTrans16x16DCT,
+                         ::testing::Values(make_tuple(&vpx_idct16x16_256_add_c,
+                                                      &vpx_idct16x16_256_add_c,
+                                                      6225, VPX_BITS_8)));
+
 #endif  // CONFIG_VP9_HIGHBITDEPTH
 
 #if HAVE_NEON && !CONFIG_VP9_HIGHBITDEPTH && !CONFIG_EMULATE_HARDWARE
@@ -821,7 +944,24 @@ INSTANTIATE_TEST_SUITE_P(
                                  2, VPX_BITS_8),
                       make_tuple(&vp9_fht16x16_sse2, &vp9_iht16x16_256_add_sse2,
                                  3, VPX_BITS_8)));
+
+INSTANTIATE_TEST_SUITE_P(SSE2, InvTrans16x16DCT,
+                         ::testing::Values(make_tuple(
+                             &vpx_idct16x16_256_add_c,
+                             &vpx_idct16x16_256_add_sse2, 6225, VPX_BITS_8)));
 #endif  // HAVE_SSE2 && !CONFIG_VP9_HIGHBITDEPTH && !CONFIG_EMULATE_HARDWARE
+
+#if HAVE_AVX2 && !CONFIG_VP9_HIGHBITDEPTH && !CONFIG_EMULATE_HARDWARE
+INSTANTIATE_TEST_SUITE_P(
+    AVX2, Trans16x16DCT,
+    ::testing::Values(make_tuple(&vpx_fdct16x16_avx2,
+                                 &vpx_idct16x16_256_add_sse2, 0, VPX_BITS_8)));
+
+INSTANTIATE_TEST_SUITE_P(AVX2, InvTrans16x16DCT,
+                         ::testing::Values(make_tuple(
+                             &vpx_idct16x16_256_add_c,
+                             &vpx_idct16x16_256_add_avx2, 6225, VPX_BITS_8)));
+#endif  // HAVE_AVX2 && !CONFIG_VP9_HIGHBITDEPTH && !CONFIG_EMULATE_HARDWARE
 
 #if HAVE_SSE2 && CONFIG_VP9_HIGHBITDEPTH && !CONFIG_EMULATE_HARDWARE
 INSTANTIATE_TEST_SUITE_P(

@@ -10,34 +10,21 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+  AddonRepository: "resource://gre/modules/addons/AddonRepository.sys.mjs",
   BuiltInThemes: "resource:///modules/BuiltInThemes.sys.mjs",
   ClientID: "resource://gre/modules/ClientID.sys.mjs",
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
+  ExtensionCommon: "resource://gre/modules/ExtensionCommon.sys.mjs",
+  ExtensionParent: "resource://gre/modules/ExtensionParent.sys.mjs",
+  ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  AddonManager: "resource://gre/modules/AddonManager.jsm",
-  AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
-  ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
-  ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
-  ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.jsm",
-});
-
-XPCOMUtils.defineLazyGetter(this, "browserBundle", () => {
-  return Services.strings.createBundle(
-    "chrome://browser/locale/browser.properties"
-  );
-});
-XPCOMUtils.defineLazyGetter(this, "brandBundle", () => {
-  return Services.strings.createBundle(
-    "chrome://branding/locale/brand.properties"
-  );
-});
 XPCOMUtils.defineLazyGetter(this, "extensionStylesheets", () => {
-  const { ExtensionParent } = ChromeUtils.import(
-    "resource://gre/modules/ExtensionParent.jsm"
+  const { ExtensionParent } = ChromeUtils.importESModule(
+    "resource://gre/modules/ExtensionParent.sys.mjs"
   );
   return ExtensionParent.extensionStylesheets;
 });
@@ -222,7 +209,10 @@ const AddonManagerListenerHandler = {
       {},
       {
         has: () => true,
-        get: (_, name) => (...args) => this.delegateEvent(name, args),
+        get:
+          (_, name) =>
+          (...args) =>
+            this.delegateEvent(name, args),
       }
     );
     AddonManager.addAddonListener(this._listener);
@@ -1803,8 +1793,9 @@ class InlineOptionsBrowser extends HTMLElement {
     }
 
     let readyPromise;
-    let remoteSubframes = window.docShell.QueryInterface(Ci.nsILoadContext)
-      .useRemoteSubframes;
+    let remoteSubframes = window.docShell.QueryInterface(
+      Ci.nsILoadContext
+    ).useRemoteSubframes;
     // For now originAttributes have no effect, which will change if the
     // optionsURL becomes anything but moz-extension* or we start considering
     // OA for extensions.
@@ -1991,8 +1982,6 @@ class AddonPermissionsList extends HTMLElement {
   }
 
   async render() {
-    let appName = brandBundle.GetStringFromName("brandShortName");
-
     let empty = { origins: [], permissions: [] };
     let requiredPerms = { ...(this.addon.userPermissions ?? empty) };
     let optionalPerms = { ...(this.addon.optionalPermissions ?? empty) };
@@ -2012,9 +2001,7 @@ class AddonPermissionsList extends HTMLElement {
       {
         permissions: requiredPerms,
         optionalPermissions: optionalPerms,
-        appName,
       },
-      browserBundle,
       { buildOptionalOrigins: manifestV3enabled }
     );
     let optionalEntries = [
@@ -2095,15 +2082,10 @@ class AddonSitePermissionsList extends HTMLElement {
   }
 
   async render() {
-    let appName = brandBundle.GetStringFromName("brandShortName");
-    let permissions = Extension.formatPermissionStrings(
-      {
-        sitePermissions: this.addon.sitePermissions,
-        siteOrigin: this.addon.siteOrigin,
-        appName,
-      },
-      browserBundle
-    );
+    let permissions = Extension.formatPermissionStrings({
+      sitePermissions: this.addon.sitePermissions,
+      siteOrigin: this.addon.siteOrigin,
+    });
 
     this.textContent = "";
     let frag = importTemplate("addon-sitepermissions-list");
@@ -2331,9 +2313,8 @@ class AddonDetails extends HTMLElement {
 
     // Full description.
     this.renderDescription(addon);
-    this.querySelector(
-      ".addon-detail-contribute"
-    ).hidden = !addon.contributionURL;
+    this.querySelector(".addon-detail-contribute").hidden =
+      !addon.contributionURL;
     this.querySelector(".addon-detail-row-updates").hidden = !hasPermission(
       addon,
       "upgrade"
@@ -2882,9 +2863,8 @@ class AddonCard extends HTMLElement {
     if (addon.incognito != "not_allowed" && addon.type == "extension") {
       // Keep update synchronous, the badge can appear later.
       isAllowedInPrivateBrowsing(addon).then(isAllowed => {
-        card.querySelector(
-          ".addon-badge-private-browsing-allowed"
-        ).hidden = !isAllowed;
+        card.querySelector(".addon-badge-private-browsing-allowed").hidden =
+          !isAllowed;
       });
     }
 
@@ -4019,9 +3999,8 @@ class RecommendedFooter extends HTMLElement {
   connectedCallback() {
     if (this.childElementCount == 0) {
       this.appendChild(importTemplate("recommended-footer"));
-      this.querySelector(
-        ".privacy-policy-link"
-      ).href = Services.prefs.getStringPref(PREF_PRIVACY_POLICY_URL);
+      this.querySelector(".privacy-policy-link").href =
+        Services.prefs.getStringPref(PREF_PRIVACY_POLICY_URL);
       this.addEventListener("click", this);
     }
   }

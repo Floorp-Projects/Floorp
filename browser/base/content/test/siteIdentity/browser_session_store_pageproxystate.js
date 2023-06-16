@@ -7,7 +7,7 @@ const triggeringPrincipal_base64 = E10SUtils.SERIALIZED_SYSTEMPRINCIPAL;
 
 let origBrowserState = SessionStore.getBrowserState();
 
-add_setup(async function() {
+add_setup(async function () {
   registerCleanupFunction(() => {
     SessionStore.setBrowserState(origBrowserState);
   });

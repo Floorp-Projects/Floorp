@@ -35,9 +35,10 @@ function promiseTabLoadEvent(tab, url) {
   return loaded;
 }
 
-var gInvalidFormPopup = gBrowser.selectedBrowser.browsingContext.currentWindowGlobal
-  .getActor("FormValidation")
-  ._getAndMaybeCreatePanel(document);
+var gInvalidFormPopup =
+  gBrowser.selectedBrowser.browsingContext.currentWindowGlobal
+    .getActor("FormValidation")
+    ._getAndMaybeCreatePanel(document);
 ok(
   gInvalidFormPopup,
   "The browser should have a popup to show when a form is invalid"
@@ -101,7 +102,7 @@ async function openNewTab(uri, background) {
 }
 
 function clickChildElement(browser) {
-  return SpecialPowers.spawn(browser, [], async function() {
+  return SpecialPowers.spawn(browser, [], async function () {
     let element = content.document.getElementById("s");
     element.click();
     return {
@@ -111,39 +112,46 @@ function clickChildElement(browser) {
 }
 
 async function blurChildElement(browser) {
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     content.document.getElementById("i").blur();
   });
 }
 
 async function checkChildFocus(browser, message) {
-  await SpecialPowers.spawn(browser, [[message, testId]], async function(args) {
-    let [msg, id] = args;
-    var focused =
-      content.document.activeElement == content.document.getElementById("i");
+  await SpecialPowers.spawn(
+    browser,
+    [[message, testId]],
+    async function (args) {
+      let [msg, id] = args;
+      var focused =
+        content.document.activeElement == content.document.getElementById("i");
 
-    var validMsg = true;
-    if (msg) {
-      validMsg = msg == content.document.getElementById("i").validationMessage;
+      var validMsg = true;
+      if (msg) {
+        validMsg =
+          msg == content.document.getElementById("i").validationMessage;
+      }
+
+      Assert.equal(
+        focused,
+        true,
+        "Test " + id + " First invalid element should be focused"
+      );
+      Assert.equal(
+        validMsg,
+        true,
+        "Test " +
+          id +
+          " The panel should show the message from validationMessage"
+      );
     }
-
-    Assert.equal(
-      focused,
-      true,
-      "Test " + id + " First invalid element should be focused"
-    );
-    Assert.equal(
-      validMsg,
-      true,
-      "Test " + id + " The panel should show the message from validationMessage"
-    );
-  });
+  );
 }
 
 /**
  * In this test, we check that no popup appears if the form is valid.
  */
-add_task(async function() {
+add_task(async function () {
   incrementTest();
   let uri =
     getDocHeader() +
@@ -155,7 +163,7 @@ add_task(async function() {
 
   await new Promise((resolve, reject) => {
     // XXXndeakin This isn't really going to work when the content is another process
-    executeSoon(function() {
+    executeSoon(function () {
       checkPopupHide();
       resolve();
     });
@@ -168,7 +176,7 @@ add_task(async function() {
  * In this test, we check that, when an invalid form is submitted,
  * the invalid element is focused and a popup appears.
  */
-add_task(async function() {
+add_task(async function () {
   incrementTest();
   let uri =
     getDocHeader() +
@@ -197,7 +205,7 @@ add_task(async function() {
  * In this test, we check that, when an invalid form is submitted,
  * the first invalid element is focused and a popup appears.
  */
-add_task(async function() {
+add_task(async function () {
   incrementTest();
   let uri =
     getDocHeader() +
@@ -225,7 +233,7 @@ add_task(async function() {
  * In this test, we check that, we hide the popup by interacting with the
  * invalid element if the element becomes valid.
  */
-add_task(async function() {
+add_task(async function () {
   incrementTest();
   let uri =
     getDocHeader() +
@@ -260,7 +268,7 @@ add_task(async function() {
  * In this test, we check that, we don't hide the popup by interacting with the
  * invalid element if the element is still invalid.
  */
-add_task(async function() {
+add_task(async function () {
   incrementTest();
   let uri =
     getDocHeader() +
@@ -283,7 +291,7 @@ add_task(async function() {
 
   await new Promise((resolve, reject) => {
     EventUtils.sendString("a");
-    executeSoon(function() {
+    executeSoon(function () {
       checkPopupShow(anchorRect);
       resolve();
     });
@@ -296,7 +304,7 @@ add_task(async function() {
  * In this test, we check that we can hide the popup by blurring the invalid
  * element.
  */
-add_task(async function() {
+add_task(async function () {
   incrementTest();
   let uri =
     getDocHeader() +
@@ -330,7 +338,7 @@ add_task(async function() {
 /**
  * In this test, we check that we can hide the popup by pressing TAB.
  */
-add_task(async function() {
+add_task(async function () {
   incrementTest();
   let uri =
     getDocHeader() +
@@ -364,7 +372,7 @@ add_task(async function() {
 /**
  * In this test, we check that the popup will hide if we move to another tab.
  */
-add_task(async function() {
+add_task(async function () {
   incrementTest();
   let uri =
     getDocHeader() +
@@ -401,7 +409,7 @@ add_task(async function() {
  * In this test, we check that the popup will hide if we navigate to another
  * page.
  */
-add_task(async function() {
+add_task(async function () {
   incrementTest();
   let uri =
     getDocHeader() +
@@ -437,7 +445,7 @@ add_task(async function() {
 /**
  * In this test, we check that the message is correctly updated when it changes.
  */
-add_task(async function() {
+add_task(async function () {
   incrementTest();
   let uri =
     getDocHeader() +
@@ -466,7 +474,7 @@ add_task(async function() {
   // been updated.
   await new Promise((resolve, reject) => {
     // XXXndeakin This isn't really going to work when the content is another process
-    executeSoon(function() {
+    executeSoon(function () {
       checkChildFocus(browser, gInvalidFormPopup.firstElementChild.textContent);
       resolve();
     });
@@ -479,7 +487,7 @@ add_task(async function() {
  * In this test, we reload the page while the form validation popup is visible. The validation
  * popup should hide.
  */
-add_task(async function() {
+add_task(async function () {
   incrementTest();
   let uri =
     getDocHeader() +

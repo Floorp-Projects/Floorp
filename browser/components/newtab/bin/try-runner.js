@@ -8,7 +8,7 @@
  * which are run via taskcluster node(debugger).
  *
  * Forked from
- * https://searchfox.org/mozilla-central/source/devtools/client/debugger/bin/try-runner.js
+ * https://searchfox.org/mozilla-central/rev/c3453c7a0427eb27d467e1582f821f402aed9850/devtools/client/debugger/bin/try-runner.js
  */
 
 const { execFileSync } = require("child_process");
@@ -49,31 +49,56 @@ function logStart(name) {
   console.log(`TEST START | ${name}`);
 }
 
+const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
+
 function checkBundles() {
   logStart("checkBundles");
 
-  const ASbundle = path.join("data", "content", "activity-stream.bundle.js");
-  const AWbundle = path.join(
-    "aboutwelcome",
-    "content",
-    "aboutwelcome.bundle.js"
-  );
-  let errors = [];
+  const items = {
+    "Activity Stream bundle": {
+      path: path.join("data", "content", "activity-stream.bundle.js"),
+    },
+    "activity-stream.html": {
+      path: path.join("prerendered", "activity-stream.html"),
+    },
+    "activity-stream-debug.html": {
+      path: path.join("prerendered", "activity-stream-debug.html"),
+    },
+    "activity-stream-noscripts.html": {
+      path: path.join("prerendered", "activity-stream-noscripts.html"),
+    },
+    "activity-stream-linux.css": {
+      path: path.join("css", "activity-stream-linux.css"),
+    },
+    "activity-stream-mac.css": {
+      path: path.join("css", "activity-stream-mac.css"),
+    },
+    "activity-stream-windows.css": {
+      path: path.join("css", "activity-stream-windows.css"),
+    },
+    "About:welcome bundle": {
+      path: path.join("aboutwelcome", "content", "aboutwelcome.bundle.js"),
+    },
+    "aboutwelcome.css": {
+      path: path.join("aboutwelcome", "content", "aboutwelcome.css"),
+    },
+  };
+  const errors = [];
 
-  let ASbefore = readFileSync(ASbundle, "utf8");
-  let AWbefore = readFileSync(AWbundle, "utf8");
-
-  let bundleExitCode = execOut("npm", ["run", "bundle"]).exitCode;
-
-  let ASafter = readFileSync(ASbundle, "utf8");
-  let AWafter = readFileSync(AWbundle, "utf8");
-
-  if (ASbefore !== ASafter) {
-    errors.push("Activity Stream bundle out of date");
+  for (const name of Object.keys(items)) {
+    const item = items[name];
+    item.before = readFileSync(item.path, item.encoding || "utf8");
   }
 
-  if (AWbefore !== AWafter) {
-    errors.push("About:welcome bundle out of date");
+  let bundleExitCode = execOut(npmCommand, ["run", "bundle"]).exitCode;
+
+  for (const name of Object.keys(items)) {
+    const item = items[name];
+    const after = readFileSync(item.path, item.encoding || "utf8");
+
+    if (item.before !== after) {
+      errors.push(`${name} out of date`);
+    }
   }
 
   if (bundleExitCode !== 0) {
@@ -88,7 +113,7 @@ function karma() {
   logStart("karma");
 
   const errors = [];
-  const { exitCode, out } = execOut("npm", [
+  const { exitCode, out } = execOut(npmCommand, [
     "run",
     "testmc:unit",
     // , "--", "--log-level", "--verbose",
@@ -141,42 +166,6 @@ function karma() {
   return errors.length === 0 && !exitCode;
 }
 
-function sasslint() {
-  logStart("sasslint");
-  const { exitCode, out } = execOut("npm", [
-    "run",
-    "--silent",
-    "lint:sasslint",
-    "--",
-    "--format",
-    "json",
-  ]);
-
-  // Successful exit and no output means sasslint passed.
-  if (!exitCode && !out.length) {
-    return true;
-  }
-
-  let fileObjects = JSON.parse(out);
-  let filesWithIssues = fileObjects.filter(
-    file => file.warningCount || file.errorCount
-  );
-
-  let errs = [];
-  let errorString;
-  filesWithIssues.forEach(file => {
-    file.messages.forEach(messageObj => {
-      errorString = `${file.filePath}(${messageObj.line}, ${messageObj.column}): ${messageObj.message} (${messageObj.ruleId})`;
-      errs.push(errorString);
-    });
-  });
-
-  const errors = logErrors("sasslint", errs);
-
-  // Pass if there's no detected errors and nothing unexpected.
-  return errors.length === 0 && !exitCode;
-}
-
 function zipCodeCoverage() {
   logStart("zipCodeCoverage");
   const { exitCode, out } = execOut("zip", [
@@ -195,7 +184,7 @@ function zipCodeCoverage() {
 }
 
 const tests = {};
-const success = [checkBundles, karma, zipCodeCoverage, sasslint].every(
+const success = [checkBundles, karma, zipCodeCoverage].every(
   t => (tests[t.name] = t())
 );
 console.log(tests);

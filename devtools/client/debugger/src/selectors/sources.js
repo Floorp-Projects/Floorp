@@ -132,6 +132,10 @@ export function getSelectedSourceId(state) {
   return source?.id;
 }
 
+export function getShouldSelectOriginalLocation(state) {
+  return state.sources.shouldSelectOriginalLocation;
+}
+
 /**
  * Gets the first source actor for the source and/or thread
  * provided.
@@ -150,6 +154,10 @@ export function getFirstSourceActorForGeneratedSource(
   threadId
 ) {
   let source = getSource(state, sourceId);
+  // The source may have been removed if we are being called by async code
+  if (!source) {
+    return null;
+  }
   if (source.isOriginal) {
     source = getSource(state, originalToGeneratedId(source.id));
   }
@@ -331,9 +339,8 @@ export function getSourcesToRemoveForThread(state, threadActorID) {
       sourcesToRemove.push(state.sources.mutableSources.get(sourceId));
 
       // Also remove any original sources related to this generated source
-      const originalSourceIds = state.sources.mutableOriginalSources.get(
-        sourceId
-      );
+      const originalSourceIds =
+        state.sources.mutableOriginalSources.get(sourceId);
       if (originalSourceIds?.length > 0) {
         for (const originalSourceId of originalSourceIds) {
           sourcesToRemove.push(

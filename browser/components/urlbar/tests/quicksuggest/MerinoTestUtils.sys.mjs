@@ -6,8 +6,6 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
-  QuickSuggestRemoteSettings:
-    "resource:///modules/urlbar/private/QuickSuggestRemoteSettings.sys.mjs",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
 });
@@ -322,13 +320,11 @@ class _MerinoTestUtils {
     await this.server.start();
     this.server.response.body.suggestions = [WEATHER_SUGGESTION];
 
-    lazy.QuickSuggestRemoteSettings._test_ignoreSettingsSync = true;
     lazy.QuickSuggest.weather._test_fetchIntervalMs = WEATHER_FETCH_INTERVAL_MS;
 
     // Enabling weather will trigger a fetch. Wait for it to finish so the
     // suggestion is ready when this function returns.
     let fetchPromise = lazy.QuickSuggest.weather.waitForFetches();
-    lazy.QuickSuggest.weather._test_setRsData({ ...WEATHER_RS_DATA });
     lazy.UrlbarPrefs.set("weather.featureGate", true);
     lazy.UrlbarPrefs.set("suggest.weather", true);
     await fetchPromise;

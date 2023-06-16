@@ -129,3 +129,21 @@ network:
     telemetry_mirror: NETWORKING_DATA_TRANSFERRED_PB_PER_CONTENT_TYPE
     no_lint:
       - COMMON_PREFIX
+
+  cors_authorization_header:
+    type: labeled_counter
+    labels:
+      - allowed
+      - disallowed
+      - covered_by_wildcard
+    description: >
+      Count how many times we see `Authorization` header in
+      `Access-Control-Request-Headers` header and the possible outcomes.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1687364
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1687364
+    notification_emails:
+      - necko@mozilla.com
+      - kershaw@mozilla.com
+    expires: 130

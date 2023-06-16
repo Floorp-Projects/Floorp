@@ -128,6 +128,11 @@ options-enable-remote-label = Enable remote debugging
 options-enable-remote-tooltip2 =
     .title = Turning this option on will allow to debug this browser instance remotely
 
+# The label for checkbox that enables F12 as a shortcut to open DevTools
+options-enable-f12-label = Use the F12 key to open or close DevTools
+options-enable-f12-tooltip =
+    .title = Turning this option on will bind the F12 key to open or close the DevTools toolbox
+
 # The label for checkbox that toggles custom formatters for objects
 options-enable-custom-formatters-label = Enable custom formatters
 options-enable-custom-formatters-tooltip =

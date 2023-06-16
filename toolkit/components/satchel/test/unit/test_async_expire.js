@@ -22,7 +22,7 @@ function promiseExpiration() {
   return promise;
 }
 
-add_task(async function() {
+add_task(async function () {
   // ===== test init =====
   let testfile = do_get_file("asyncformhistory_expire.sqlite");
   let profileDir = do_get_profile();

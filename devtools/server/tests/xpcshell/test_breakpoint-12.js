@@ -16,14 +16,14 @@ var gCount;
 add_task(
   threadFrontTest(({ threadFront, debuggee }) => {
     return new Promise(resolve => {
-      threadFront.once("paused", async function(packet) {
+      threadFront.once("paused", async function (packet) {
         const source = await getSourceById(
           threadFront,
           packet.frame.where.actor
         );
         const location = { line: debuggee.line0 + 3 };
 
-        source.setBreakpoint(location).then(function([response, bpClient]) {
+        source.setBreakpoint(location).then(function ([response, bpClient]) {
           // Check that the breakpoint has properly skipped forward one line.
           Assert.equal(response.actualLocation.source.actor, source.actor);
           Assert.equal(response.actualLocation.line, location.line + 1);
@@ -37,12 +37,12 @@ add_task(
       /* eslint-disable no-multi-spaces */
       Cu.evalInSandbox(
         "var line0 = Error().lineNumber;\n" +
-        "function foo() {\n" + // line0 + 1
-        "  this.a = 1;\n" + // line0 + 2
-        "  // A comment.\n" + // line0 + 3
-        "  this.b = 2;\n" + // line0 + 4
-        "}\n" + // line0 + 5
-        "debugger;\n" + // line0 + 6
+          "function foo() {\n" + // line0 + 1
+          "  this.a = 1;\n" + // line0 + 2
+          "  // A comment.\n" + // line0 + 3
+          "  this.b = 2;\n" + // line0 + 4
+          "}\n" + // line0 + 5
+          "debugger;\n" + // line0 + 6
           "foo();\n", // line0 + 7
         debuggee
       );
@@ -51,7 +51,7 @@ add_task(
       // Set many breakpoints at the same location.
       function set_breakpoints(source, location) {
         Assert.notEqual(gCount, NUM_BREAKPOINTS);
-        source.setBreakpoint(location).then(function([response, bpClient]) {
+        source.setBreakpoint(location).then(function ([response, bpClient]) {
           // Check that the breakpoint has properly skipped forward one line.
           Assert.equal(response.actualLocation.source.actor, source.actor);
           Assert.equal(response.actualLocation.line, location.line + 1);
@@ -65,7 +65,7 @@ add_task(
 
           // After setting all the breakpoints, check that only one has effectively
           // remained.
-          threadFront.once("paused", function(packet) {
+          threadFront.once("paused", function (packet) {
             // Check the return value.
             Assert.equal(packet.frame.where.actor, source.actor);
             Assert.equal(packet.frame.where.line, location.line + 1);
@@ -75,11 +75,11 @@ add_task(
             Assert.equal(debuggee.a, 1);
             Assert.equal(debuggee.b, undefined);
 
-            threadFront.once("paused", function(packet) {
+            threadFront.once("paused", function (packet) {
               // We don't expect any more pauses after the breakpoint was hit once.
               Assert.ok(false);
             });
-            threadFront.resume().then(function() {
+            threadFront.resume().then(function () {
               // Give any remaining breakpoints a chance to trigger.
               do_timeout(1000, resolve);
             });

@@ -222,7 +222,7 @@ function compareArrayToResult(aArray, aRoot) {
   }
 
   // check expected number of results against actual
-  var expectedResultCount = aArray.filter(function(aEl) {
+  var expectedResultCount = aArray.filter(function (aEl) {
     return aEl.isInQuery;
   }).length;
   if (expectedResultCount != aRoot.childCount) {

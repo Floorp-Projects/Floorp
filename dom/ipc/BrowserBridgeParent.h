@@ -98,9 +98,6 @@ class BrowserBridgeParent : public PBrowserBridgeParent {
   mozilla::ipc::IPCResult RecvDeactivate(const bool& aWindowLowering,
                                          uint64_t aActionId);
 
-  mozilla::ipc::IPCResult RecvSetIsUnderHiddenEmbedderElement(
-      const bool& aIsUnderHiddenEmbedderElement);
-
   mozilla::ipc::IPCResult RecvUpdateRemoteStyle(
       const StyleImageRendering& aImageRendering);
 

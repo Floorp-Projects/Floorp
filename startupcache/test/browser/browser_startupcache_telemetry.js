@@ -9,7 +9,7 @@ const LABELS_STARTUP_CACHE_REQUESTS = {
   Miss: 2,
 };
 
-add_task(async function() {
+add_task(async function () {
   // Turn off tab preloading to avoid issues with RemoteController.js
   await SpecialPowers.pushPrefEnv({
     set: [["browser.newtab.preload", false]],

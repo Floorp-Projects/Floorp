@@ -5,22 +5,32 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="Content-Security-Policy" content="default-src chrome:; object-src 'none'" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src chrome:; object-src 'none'"
+    />
     <meta name="color-scheme" content="light dark" />
     <title data-l10n-id="page-title"></title>
-    <link rel="stylesheet" href="chrome://global/skin/in-content/info-pages.css" media="all"/>
-    <link rel="icon" type="image/png" id="favicon" href="chrome://browser/content/robot.ico"/>
-    <link rel="stylesheet" href="chrome://browser/content/aboutRobots.css"/>
+    <link
+      rel="stylesheet"
+      href="chrome://global/skin/in-content/info-pages.css"
+      media="all"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      id="favicon"
+      href="chrome://browser/content/robot.ico"
+    />
+    <link rel="stylesheet" href="chrome://browser/content/aboutRobots.css" />
     <linkset>
-      <link rel="localization" href="browser/aboutRobots.ftl"/>
+      <link rel="localization" href="browser/aboutRobots.ftl" />
     </linkset>
   </head>
 
   <body>
-
     <!-- PAGE CONTAINER (for styling purposes only) -->
     <div class="container">
-
       <!-- Error Title -->
       <div class="title">
         <h1 class="title-text" data-l10n-id="error-title-text"></h1>
@@ -28,7 +38,6 @@
 
       <!-- LONG CONTENT (the section most likely to require scrolling) -->
       <div class="description">
-
         <!-- Short Description -->
         <div>
           <p id="errorShortDescText" data-l10n-id="error-short-desc-text"></p>
@@ -48,16 +57,17 @@
         <div>
           <small data-l10n-id="error-trailer-desc-text"></small>
         </div>
-
       </div>
 
       <!-- Button -->
       <div class="button-container">
-        <button id="errorTryAgain"
-                data-l10n-id="error-try-again"
-                data-l10n-attrs="label2"></button>
+        <button
+          id="errorTryAgain"
+          data-l10n-id="error-try-again"
+          data-l10n-attrs="label2"
+        ></button>
       </div>
     </div>
   </body>
-  <script src="chrome://browser/content/aboutRobots.js"/>
+  <script src="chrome://browser/content/aboutRobots.js" />
 </html>

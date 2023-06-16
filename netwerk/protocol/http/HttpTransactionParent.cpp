@@ -200,10 +200,10 @@ void HttpTransactionParent::SetSniffedTypeToChannel(
 }
 
 NS_IMETHODIMP
-HttpTransactionParent::GetDeliveryTarget(nsIEventTarget** aEventTarget) {
+HttpTransactionParent::GetDeliveryTarget(nsISerialEventTarget** aEventTarget) {
   MutexAutoLock lock(mEventTargetMutex);
 
-  nsCOMPtr<nsIEventTarget> target = mODATarget;
+  nsCOMPtr<nsISerialEventTarget> target = mODATarget;
   if (!mODATarget) {
     target = mTargetThread;
   }
@@ -211,8 +211,8 @@ HttpTransactionParent::GetDeliveryTarget(nsIEventTarget** aEventTarget) {
   return NS_OK;
 }
 
-already_AddRefed<nsIEventTarget> HttpTransactionParent::GetODATarget() {
-  nsCOMPtr<nsIEventTarget> target;
+already_AddRefed<nsISerialEventTarget> HttpTransactionParent::GetODATarget() {
+  nsCOMPtr<nsISerialEventTarget> target;
   {
     MutexAutoLock lock(mEventTargetMutex);
     target = mODATarget ? mODATarget : mTargetThread;
@@ -225,7 +225,7 @@ already_AddRefed<nsIEventTarget> HttpTransactionParent::GetODATarget() {
 }
 
 NS_IMETHODIMP HttpTransactionParent::RetargetDeliveryTo(
-    nsIEventTarget* aEventTarget) {
+    nsISerialEventTarget* aEventTarget) {
   LOG(("HttpTransactionParent::RetargetDeliveryTo [this=%p, aTarget=%p]", this,
        aEventTarget));
 

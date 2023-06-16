@@ -125,7 +125,7 @@ async function testPopupPatterns(nonPopup) {
           gBrowser,
           url: BLANK_PAGE,
         },
-        async function(browser) {
+        async function (browser) {
           const newWinPromise = BrowserTestUtils.waitForNewWindow();
           BrowserTestUtils.loadURIString(gBrowser, SCRIPT_PAGE);
 
@@ -159,7 +159,7 @@ async function testPopupPatterns(nonPopup) {
           gBrowser,
           url: BLANK_PAGE,
         },
-        async function(browser) {
+        async function (browser) {
           const newTabPromise = BrowserTestUtils.waitForNewTab(
             gBrowser,
             OPEN_PAGE
@@ -178,7 +178,7 @@ async function testPopupPatterns(nonPopup) {
           gBrowser,
           url: BLANK_PAGE,
         },
-        async function(browser) {
+        async function (browser) {
           const pagePromise = BrowserTestUtils.browserLoaded(
             browser,
             false,

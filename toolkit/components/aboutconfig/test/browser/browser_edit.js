@@ -6,7 +6,7 @@ const PREF_MODIFY_BOOLEAN = "test.aboutconfig.modify.boolean";
 const PREF_MODIFY_NUMBER = "test.aboutconfig.modify.number";
 const PREF_MODIFY_STRING = "test.aboutconfig.modify.string";
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       [PREF_MODIFY_BOOLEAN, true],
@@ -31,7 +31,7 @@ add_task(async function test_add_user_pref() {
     Ci.nsIPrefBranch.PREF_INVALID
   );
 
-  await AboutConfigTest.withNewTab(async function() {
+  await AboutConfigTest.withNewTab(async function () {
     // The row for a new preference appears when searching for its name.
     Assert.ok(!this.getRow(PREF_NEW));
 
@@ -79,7 +79,7 @@ add_task(async function test_delete_user_pref() {
     [2, "value"],
   ]) {
     Preferences.set(PREF_NEW, testValue);
-    await AboutConfigTest.withNewTab(async function() {
+    await AboutConfigTest.withNewTab(async function () {
       // Deleting the preference should keep the row.
       let row = this.getRow(PREF_NEW);
       row.resetColumnButton.click();
@@ -111,7 +111,7 @@ add_task(async function test_click_type_label_multiple_forms() {
   const PREF_TO_DELETE = "test.aboutconfig.modify.boolean";
   const PREF_NEW_WHILE_DELETED = "test.aboutconfig.modify.";
 
-  await AboutConfigTest.withNewTab(async function() {
+  await AboutConfigTest.withNewTab(async function () {
     this.search(PREF_NEW_WHILE_DELETED);
 
     // This preference will remain deleted during the test.
@@ -158,7 +158,7 @@ add_task(async function test_reset_user_pref() {
     ],
   });
 
-  await AboutConfigTest.withNewTab(async function() {
+  await AboutConfigTest.withNewTab(async function () {
     // Click reset.
     let row = this.getRow(PREF_BOOLEAN_DEFAULT_TRUE);
     row.resetColumnButton.click();
@@ -188,7 +188,7 @@ add_task(async function test_reset_user_pref() {
 });
 
 add_task(async function test_modify() {
-  await AboutConfigTest.withNewTab(async function() {
+  await AboutConfigTest.withNewTab(async function () {
     // Test toggle for boolean prefs.
     for (let nameOfBoolPref of [
       PREF_MODIFY_BOOLEAN,
@@ -274,7 +274,7 @@ add_task(async function test_edit_field_selected() {
     [PREF_MODIFY_STRING, "A string", "A new string"],
     [PREF_MODIFY_NUMBER, "100", "500"],
   ];
-  await AboutConfigTest.withNewTab(async function() {
+  await AboutConfigTest.withNewTab(async function () {
     for (let [prefName, startValue, endValue] of prefsToCheck) {
       Preferences.set(prefName, startValue);
       let row = this.getRow(prefName);
@@ -293,7 +293,7 @@ add_task(async function test_edit_field_selected() {
 });
 
 add_task(async function test_escape_cancels_edit() {
-  await AboutConfigTest.withNewTab(async function() {
+  await AboutConfigTest.withNewTab(async function () {
     let row = this.getRow(PREF_MODIFY_STRING);
     Preferences.set(PREF_MODIFY_STRING, "Edit me, maybe");
 
@@ -328,7 +328,7 @@ add_task(async function test_double_click_modify() {
   Preferences.set(PREF_MODIFY_NUMBER, 10);
   Preferences.set(PREF_MODIFY_STRING, "Hello!");
 
-  await AboutConfigTest.withNewTab(async function() {
+  await AboutConfigTest.withNewTab(async function () {
     this.search(PREF_MODIFY_PREFIX);
 
     let click = (target, opts) =>

@@ -258,6 +258,9 @@ kn{
         "America:Chihuahua"{
             ec{"ಚಿವಾವ"}
         }
+        "America:Ciudad_Juarez"{
+            ec{"ಸಿಯುಡಾಡ್ ವಾರೆಝ್"}
+        }
         "America:Coral_Harbour"{
             ec{"ಅಟಿಕೊಕಾನ್"}
         }

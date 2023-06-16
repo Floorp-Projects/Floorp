@@ -2169,26 +2169,6 @@ void nsNativeThemeCocoa::DrawStatusBar(CGContextRef cgContext, const HIRect& inB
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
-static void RenderResizer(CGContextRef cgContext, const HIRect& aRenderRect, void* aData) {
-  HIThemeGrowBoxDrawInfo* drawInfo = (HIThemeGrowBoxDrawInfo*)aData;
-  HIThemeDrawGrowBox(&CGPointZero, drawInfo, cgContext, kHIThemeOrientationNormal);
-}
-
-void nsNativeThemeCocoa::DrawResizer(CGContextRef cgContext, const HIRect& aRect, bool aIsRTL) {
-  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
-
-  HIThemeGrowBoxDrawInfo drawInfo;
-  drawInfo.version = 0;
-  drawInfo.state = kThemeStateActive;
-  drawInfo.kind = kHIThemeGrowBoxKindNormal;
-  drawInfo.direction = kThemeGrowRight | kThemeGrowDown;
-  drawInfo.size = kHIThemeGrowBoxSizeNormal;
-
-  RenderTransformedHIThemeControl(cgContext, aRect, RenderResizer, &drawInfo, aIsRTL);
-
-  NS_OBJC_END_TRY_IGNORE_BLOCK;
-}
-
 void nsNativeThemeCocoa::DrawMultilineTextField(CGContextRef cgContext, const CGRect& inBoxRect,
                                                 bool aIsFocused) {
   mTextFieldCell.enabled = YES;
@@ -2531,9 +2511,6 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
     case StyleAppearance::Tabpanels:
       return Some(WidgetInfo::TabPanel(FrameIsInActiveWindow(aFrame)));
 
-    case StyleAppearance::Resizer:
-      return Some(WidgetInfo::Resizer(IsFrameRTL(aFrame)));
-
     default:
       break;
   }
@@ -2772,11 +2749,6 @@ void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo,
           DrawTabPanel(cgContext, macRect, isInsideActiveWindow);
           break;
         }
-        case Widget::eResizer: {
-          bool isRTL = aWidgetInfo.Params<bool>();
-          DrawResizer(cgContext, macRect, isRTL);
-          break;
-        }
       }
 
       // Reset the base CTM.
@@ -2848,7 +2820,6 @@ bool nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(
     case StyleAppearance::Listbox:
     case StyleAppearance::Tab:
     case StyleAppearance::Tabpanels:
-    case StyleAppearance::Resizer:
       return false;
 
     default:
@@ -3183,19 +3154,6 @@ LayoutDeviceIntSize nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPre
     case StyleAppearance::MozMenulistArrowButton:
       return ThemeCocoa::GetMinimumWidgetSize(aPresContext, aFrame, aAppearance);
 
-    case StyleAppearance::Resizer: {
-      HIThemeGrowBoxDrawInfo drawInfo;
-      drawInfo.version = 0;
-      drawInfo.state = kThemeStateActive;
-      drawInfo.kind = kHIThemeGrowBoxKindNormal;
-      drawInfo.direction = kThemeGrowRight | kThemeGrowDown;
-      drawInfo.size = kHIThemeGrowBoxSizeNormal;
-      HIPoint pnt = {0, 0};
-      HIRect bounds;
-      HIThemeGetGrowBoxBounds(&pnt, &drawInfo, &bounds);
-      result.SizeTo(bounds.size.width, bounds.size.height);
-      break;
-    }
     default:
       break;
   }
@@ -3219,8 +3177,6 @@ nsNativeThemeCocoa::WidgetStateChanged(nsIFrame* aFrame, StyleAppearance aAppear
     case StyleAppearance::Toolbox:
     case StyleAppearance::Toolbar:
     case StyleAppearance::Statusbar:
-    case StyleAppearance::Statusbarpanel:
-    case StyleAppearance::Resizerpanel:
     case StyleAppearance::Tooltip:
     case StyleAppearance::Tabpanels:
     case StyleAppearance::Tabpanel:
@@ -3346,20 +3302,6 @@ bool nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFra
     case StyleAppearance::Range:
       return !IsWidgetStyled(aPresContext, aFrame, aAppearance);
 
-    case StyleAppearance::Resizer: {
-      nsIFrame* parentFrame = aFrame->GetParent();
-      if (!parentFrame || !parentFrame->IsScrollFrame()) return true;
-
-      // Note that IsWidgetStyled is not called for resizers on Mac. This is
-      // because for scrollable containers, the native resizer looks better
-      // when (non-overlay) scrollbars are present even when the style is
-      // overriden, and the custom transparent resizer looks better when
-      // scrollbars are not present.
-      nsIScrollableFrame* scrollFrame = do_QueryFrame(parentFrame);
-      return (!LookAndFeel::UseOverlayScrollbars() && scrollFrame &&
-              (!scrollFrame->GetScrollbarVisibility().isEmpty()));
-    }
-
     default:
       break;
   }
@@ -3433,7 +3375,6 @@ bool nsNativeThemeCocoa::WidgetAppearanceDependsOnWindowFocus(StyleAppearance aA
     case StyleAppearance::Treeline:
     case StyleAppearance::Textarea:
     case StyleAppearance::Listbox:
-    case StyleAppearance::Resizer:
       return false;
     default:
       return true;

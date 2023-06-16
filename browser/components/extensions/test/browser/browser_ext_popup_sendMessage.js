@@ -22,7 +22,7 @@ add_task(async function test_popup_sendMessage_reply() {
 
     files: {
       "popup.html": scriptPage("popup.js"),
-      "popup.js": async function() {
+      "popup.js": async function () {
         browser.runtime.onMessage.addListener(async msg => {
           if (msg == "popup-ping") {
             return "popup-pong";

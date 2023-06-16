@@ -49,7 +49,7 @@ async function promiseNewTabLoadedInBrowser(browser) {
   }
 
   info(`Waiting for readyState complete in the browser`);
-  await SpecialPowers.spawn(browser, [], function() {
+  await SpecialPowers.spawn(browser, [], function () {
     return ContentTaskUtils.waitForCondition(() => {
       return content.document.readyState == "complete";
     });

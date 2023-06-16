@@ -114,6 +114,7 @@ struct CFLFunction {
   float distance_mul;
 };
 
+// Chroma-from-luma search, values_m will have luma -- and values_s chroma.
 int32_t FindBestMultiplier(const float* values_m, const float* values_s,
                            size_t num, float base, float distance_mul,
                            bool fast) {
@@ -139,7 +140,7 @@ int32_t FindBestMultiplier(const float* values_m, const float* values_s,
     x = -GetLane(SumOfLanes(df, cb)) /
         (GetLane(SumOfLanes(df, ca)) + num * distance_mul * 0.5f);
   } else {
-    constexpr float eps = 1;
+    constexpr float eps = 100;
     constexpr float kClamp = 20.0f;
     CFLFunction fn(values_m, values_s, num, base, distance_mul);
     x = 0;
@@ -150,10 +151,22 @@ int32_t FindBestMultiplier(const float* values_m, const float* values_s,
       float dfpeps, dfmeps;
       float df = fn.Compute(x, eps, &dfpeps, &dfmeps);
       float ddf = (dfpeps - dfmeps) / (2 * eps);
-      float step = df / ddf;
+      float kExperimentalInsignificantStabilizer = 0.85;
+      float step = df / (ddf + kExperimentalInsignificantStabilizer);
       x -= std::min(kClamp, std::max(-kClamp, step));
       if (std::abs(step) < 3e-3) break;
     }
+  }
+  // CFL seems to be tricky for larger transforms for HF components
+  // close to zero. This heuristic brings the solutions closer to zero
+  // and reduces red-green oscillations.
+  float towards_zero = 2.6;
+  if (x >= towards_zero) {
+    x -= towards_zero;
+  } else if (x <= -towards_zero) {
+    x += towards_zero;
+  } else {
+    x = 0;
   }
   return std::max(-128.0f, std::min(127.0f, roundf(x)));
 }
@@ -189,13 +202,14 @@ void ComputeDC(const ImageF& dc_values, bool fast, int32_t* dc_x,
 }
 
 void ComputeTile(const Image3F& opsin, const DequantMatrices& dequant,
-                 const AcStrategyImage* ac_strategy, const Quantizer* quantizer,
+                 const AcStrategyImage* ac_strategy,
+                 const ImageI* raw_quant_field, const Quantizer* quantizer,
                  const Rect& r, bool fast, bool use_dct8, ImageSB* map_x,
                  ImageSB* map_b, ImageF* dc_values, float* mem) {
   static_assert(kEncTileDimInBlocks == kColorTileDimInBlocks,
                 "Invalid color tile dim");
   size_t xsize_blocks = opsin.xsize() / kBlockDim;
-  constexpr float kDistanceMultiplierAC = 1e-3f;
+  constexpr float kDistanceMultiplierAC = 1e-9f;
 
   const size_t y0 = r.y0();
   const size_t x0 = r.x0();
@@ -259,9 +273,6 @@ void ComputeTile(const Image3F& opsin, const DequantMatrices& dequant,
           dequant.InvMatrix(acs.Strategy(), 0);
       const float* const JXL_RESTRICT qm_b =
           dequant.InvMatrix(acs.Strategy(), 2);
-      // Why does a constant seem to work better than
-      // raw_quant_field->Row(y)[x] ?
-      float q = use_dct8 ? 1 : quantizer->Scale() * 400.0f;
       float q_dc_x = use_dct8 ? 1 : 1.0f / quantizer->GetInvDcStep(0);
       float q_dc_b = use_dct8 ? 1 : 1.0f / quantizer->GetInvDcStep(2);
 
@@ -300,6 +311,14 @@ void ComputeTile(const Image3F& opsin, const DequantMatrices& dequant,
           block_b[cx * kBlockDim * iy + ix] = 0;
         }
       }
+      // Unclear why this is like it is. (This works slightly better
+      // than the previous approach which was also a hack.)
+      const float qq =
+          (raw_quant_field == nullptr) ? 1.0f : raw_quant_field->Row(y)[x];
+      // Experimentally values 128-130 seem best -- I don't know why we
+      // need this multiplier.
+      const float kStrangeMultiplier = 128;
+      float q = use_dct8 ? 1 : quantizer->Scale() * kStrangeMultiplier * qq;
       const auto qv = Set(df, q);
       for (size_t i = 0; i < cx * cy * 64; i += Lanes(df)) {
         const auto b_y = Load(df, block_y + i);
@@ -344,12 +363,14 @@ void CfLHeuristics::Init(const Image3F& opsin) {
 void CfLHeuristics::ComputeTile(const Rect& r, const Image3F& opsin,
                                 const DequantMatrices& dequant,
                                 const AcStrategyImage* ac_strategy,
+                                const ImageI* raw_quant_field,
                                 const Quantizer* quantizer, bool fast,
                                 size_t thread, ColorCorrelationMap* cmap) {
   bool use_dct8 = ac_strategy == nullptr;
   HWY_DYNAMIC_DISPATCH(ComputeTile)
-  (opsin, dequant, ac_strategy, quantizer, r, fast, use_dct8, &cmap->ytox_map,
-   &cmap->ytob_map, &dc_values, mem.get() + thread * kItemsPerThread);
+  (opsin, dequant, ac_strategy, raw_quant_field, quantizer, r, fast, use_dct8,
+   &cmap->ytox_map, &cmap->ytob_map, &dc_values,
+   mem.get() + thread * kItemsPerThread);
 }
 
 void CfLHeuristics::ComputeDC(bool fast, ColorCorrelationMap* cmap) {

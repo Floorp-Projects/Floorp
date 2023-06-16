@@ -252,7 +252,7 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScaleByScreen()
       override;
 
-  void ConstrainPosition(bool aAllowSlop, int32_t* aX, int32_t* aY) override {}
+  void ConstrainPosition(DesktopIntPoint&) override {}
   void MoveClient(const DesktopPoint& aOffset) override;
   void ResizeClient(const DesktopSize& aSize, bool aRepaint) override;
   void ResizeClient(const DesktopRect& aRect, bool aRepaint) override;
@@ -348,8 +348,6 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   using ByMoveToRect = nsIWidgetListener::ByMoveToRect;
   void NotifyWindowMoved(int32_t aX, int32_t aY,
                          ByMoveToRect = ByMoveToRect::No);
-
-  void SetNativeData(uint32_t aDataType, uintptr_t aVal) override {}
 
   // Should be called by derived implementations to notify on system color and
   // theme changes.

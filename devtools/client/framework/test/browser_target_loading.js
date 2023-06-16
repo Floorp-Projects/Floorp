@@ -29,9 +29,9 @@ add_task(async function testOpenToolboxOnLoadingDocument() {
   info("Check that the console opened and has the message from the page");
   const { hud } = toolbox.getPanel("webconsole");
   await waitFor(() =>
-    Array.from(
-      hud.ui.window.document.querySelectorAll(".message-body")
-    ).some(el => el.innerText.includes("page loaded"))
+    Array.from(hud.ui.window.document.querySelectorAll(".message-body")).some(
+      el => el.innerText.includes("page loaded")
+    )
   );
   ok(true, "The console opened with the expected content");
 });

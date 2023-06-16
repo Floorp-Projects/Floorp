@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+<pre id="test">
+<script type="application/javascript">
+/**
+  Runs inside iframe in test_enumerateDevices_legacy.html.
+*/
+
+const pushPrefs = (...p) => SpecialPowers.pushPrefEnv({set: p});
+
+(async () => {
+  await pushPrefs(["media.navigator.streams.fake", true]);
+
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  parent.postMessage(JSON.stringify(devices), "https://example.com:443");
+
+})().catch(e => setTimeout(() => { throw e; }));
+</script>
+</pre>
+</body>
+</html>

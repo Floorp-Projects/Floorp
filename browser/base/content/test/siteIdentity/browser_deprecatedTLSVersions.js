@@ -33,18 +33,18 @@ function getConnectionState() {
   return document.getElementById("identity-popup").getAttribute("connection");
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   // Set preferences back to their original values
   Services.prefs.clearUserPref("security.tls.version.min");
   Services.prefs.clearUserPref("security.tls.version.max");
 });
 
-add_task(async function() {
+add_task(async function () {
   // Run with all versions enabled for this test.
   Services.prefs.setIntPref("security.tls.version.min", 1);
   Services.prefs.setIntPref("security.tls.version.max", 4);
 
-  await BrowserTestUtils.withNewTab("about:blank", async function(browser) {
+  await BrowserTestUtils.withNewTab("about:blank", async function (browser) {
     // Try deprecated versions
     BrowserTestUtils.loadURIString(browser, HTTPS_TLS1_0);
     await BrowserTestUtils.browserLoaded(browser);

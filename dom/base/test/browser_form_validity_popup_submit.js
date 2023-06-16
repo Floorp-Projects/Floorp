@@ -28,7 +28,7 @@ add_task(async function bug_1790128() {
       gBrowser,
       url: `data:text/html,${encodeURI(HTML)}`,
     },
-    async function(aBrowser) {
+    async function (aBrowser) {
       let promisePopupShown = promiseValidityPopupShown();
       await BrowserTestUtils.synthesizeMouseAtCenter("#submit", {}, aBrowser);
       let popup = await promisePopupShown;

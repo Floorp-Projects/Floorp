@@ -21,8 +21,8 @@ add_setup(async () => {
   Services.prefs.setBoolPref("extensions.dnr.enabled", true);
 
   // Install a spy on WebRequest.getTabIdForChannelWrapper.
-  const { WebRequest } = ChromeUtils.import(
-    "resource://gre/modules/WebRequest.jsm"
+  const { WebRequest } = ChromeUtils.importESModule(
+    "resource://gre/modules/WebRequest.sys.mjs"
   );
   const { sinon } = ChromeUtils.importESModule(
     "resource://testing-common/Sinon.sys.mjs"

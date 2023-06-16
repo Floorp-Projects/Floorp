@@ -18,8 +18,8 @@ this.mozscreenshots = class extends ExtensionAPI {
     let uri = Services.io.newURI("resources/", null, this.extension.rootURI);
     resProto.setSubstitution("mozscreenshots", uri);
 
-    const { TestRunner } = ChromeUtils.import(
-      "resource://mozscreenshots/TestRunner.jsm"
+    const { TestRunner } = ChromeUtils.importESModule(
+      "resource://mozscreenshots/TestRunner.sys.mjs"
     );
     TestRunner.init(this.extension.rootURI);
   }

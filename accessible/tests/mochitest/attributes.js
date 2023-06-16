@@ -302,24 +302,24 @@ const kInputFontSize =
     ? "10pt"
     : MAC
     ? "8pt"
-    : function() {
+    : function () {
         return true;
       };
 
-const kAbsentFontFamily = function(aFontFamily) {
+const kAbsentFontFamily = function (aFontFamily) {
   return aFontFamily != "sans-serif";
 };
-const kInputFontFamily = function(aFontFamily) {
+const kInputFontFamily = function (aFontFamily) {
   return aFontFamily != "sans-serif";
 };
 
-const kMonospaceFontFamily = function(aFontFamily) {
+const kMonospaceFontFamily = function (aFontFamily) {
   return aFontFamily != "monospace";
 };
-const kSansSerifFontFamily = function(aFontFamily) {
+const kSansSerifFontFamily = function (aFontFamily) {
   return aFontFamily != "sans-serif";
 };
-const kSerifFontFamily = function(aFontFamily) {
+const kSerifFontFamily = function (aFontFamily) {
   return aFontFamily != "serif";
 };
 

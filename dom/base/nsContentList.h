@@ -346,6 +346,7 @@ class nsContentList : public nsBaseContentList,
     mState = State::Dirty;
     InvalidateNamedItemsCache();
     Reset();
+    SetEnabledCallbacks(nsIMutationObserver::kNodeWillBeDestroyed);
   }
 
   void LastRelease() override;
@@ -430,6 +431,13 @@ class nsContentList : public nsBaseContentList,
    */
   void RemoveFromCaches() override { RemoveFromHashtable(); }
 
+  void MaybeMarkDirty() {
+    if (mState != State::Dirty && ++mMissedUpdates > 128) {
+      mMissedUpdates = 0;
+      SetDirty();
+    }
+  }
+
   nsINode* mRootNode;  // Weak ref
   int32_t mMatchNameSpaceId;
   RefPtr<nsAtom> mHTMLMatchAtom;
@@ -450,6 +458,8 @@ class nsContentList : public nsBaseContentList,
   void* mData = nullptr;
 
   mozilla::UniquePtr<NamedItemsCache> mNamedItemsCache;
+
+  uint8_t mMissedUpdates = 0;
 
   // The current state of the list.
   State mState;

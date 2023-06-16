@@ -104,8 +104,8 @@ export class UrlbarProviderOpenTabs extends UrlbarProvider {
    * Copy over cached open tabs to the memory table once the Urlbar
    * connection has been initialized.
    */
-  static promiseDBPopulated = lazy.PlacesUtils.largeCacheDBConnDeferred.promise.then(
-    async () => {
+  static promiseDBPopulated =
+    lazy.PlacesUtils.largeCacheDBConnDeferred.promise.then(async () => {
       // Must be set before populating.
       UrlbarProviderOpenTabs.memoryTableInitialized = true;
       // Populate the table with the current cached tabs.
@@ -114,8 +114,7 @@ export class UrlbarProviderOpenTabs extends UrlbarProvider {
           await addToMemoryTable(url, userContextId).catch(console.error);
         }
       }
-    }
-  );
+    });
 
   /**
    * Registers a tab as open.

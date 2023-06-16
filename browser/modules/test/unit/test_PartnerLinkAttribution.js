@@ -4,12 +4,10 @@
 
 "use strict";
 
-const {
-  PartnerLinkAttribution,
-  CONTEXTUAL_SERVICES_PING_TYPES,
-} = ChromeUtils.importESModule(
-  "resource:///modules/PartnerLinkAttribution.sys.mjs"
-);
+const { PartnerLinkAttribution, CONTEXTUAL_SERVICES_PING_TYPES } =
+  ChromeUtils.importESModule(
+    "resource:///modules/PartnerLinkAttribution.sys.mjs"
+  );
 
 const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"

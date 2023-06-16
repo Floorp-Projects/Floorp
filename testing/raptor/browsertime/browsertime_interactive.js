@@ -53,7 +53,7 @@ async function get_command_function(cmd, commands) {
   return [func, parent_mod];
 }
 
-module.exports = async function(context, commands) {
+module.exports = async function (context, commands) {
   context.log.info("Starting an interactive browsertime test");
   let page_cycles = context.options.browsertime.page_cycles;
   let post_startup_delay = context.options.browsertime.post_startup_delay;

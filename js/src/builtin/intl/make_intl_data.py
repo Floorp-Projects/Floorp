@@ -6,7 +6,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 """ Usage:
-    make_intl_data.py langtags [cldr_core.zip]
+    make_intl_data.py langtags [cldr_common.zip]
     make_intl_data.py tzdata
     make_intl_data.py currency
     make_intl_data.py units
@@ -1430,6 +1430,23 @@ def readSupplementalData(core_file):
             if (language, script) not in default_replacements
         ]
 
+        # Remove redundant mappings.
+        #
+        # For example starting with CLDR 43, the deprecated region "SU" has the
+        # following non-default replacement entries for "GE":
+        # - ('sva', None, 'GE')
+        # - ('sva', 'Cyrl', 'GE')
+        # - ('sva', 'Latn', 'GE')
+        #
+        # The latter two entries are redundant, because they're already handled
+        # by the first entry.
+        non_default_replacements = [
+            (language, script, region)
+            for (language, script, region) in non_default_replacements
+            if script is None
+            or (language, None, region) not in non_default_replacements
+        ]
+
         # If there are no non-default replacements, we can handle the region as
         # part of the simple region mapping.
         if non_default_replacements:
@@ -2052,7 +2069,7 @@ def updateCLDRLangTags(args):
     print("\tCLDR version: %s" % version)
     print("\tDownload url: %s" % url)
     if filename is not None:
-        print("\tLocal CLDR core.zip file: %s" % filename)
+        print("\tLocal CLDR common.zip file: %s" % filename)
     print("\tOutput file: %s" % out)
     print("")
 
@@ -2067,11 +2084,11 @@ def updateCLDRLangTags(args):
 
     print("Processing CLDR data...")
     if filename is not None:
-        print("Always make sure you have the newest CLDR core.zip!")
+        print("Always make sure you have the newest CLDR common.zip!")
         with open(filename, "rb") as cldr_file:
             readFiles(cldr_file)
     else:
-        print("Downloading CLDR core.zip...")
+        print("Downloading CLDR common.zip...")
         with closing(urlopen(url)) as cldr_file:
             cldr_data = io.BytesIO(cldr_file.read())
             readFiles(cldr_data)
@@ -4045,7 +4062,7 @@ if __name__ == "__main__":
     parser_cldr_tags.add_argument(
         "--url",
         metavar="URL",
-        default="https://unicode.org/Public/cldr/<VERSION>/core.zip",
+        default="https://unicode.org/Public/cldr/<VERSION>/cldr-common-<VERSION>.0.zip",
         type=EnsureHttps,
         help="Download url CLDR data (default: %(default)s)",
     )
@@ -4057,7 +4074,7 @@ if __name__ == "__main__":
         help="Output file (default: %(default)s)",
     )
     parser_cldr_tags.add_argument(
-        "file", nargs="?", help="Local cldr-core.zip file, if omitted uses <URL>"
+        "file", nargs="?", help="Local cldr-common.zip file, if omitted uses <URL>"
     )
     parser_cldr_tags.set_defaults(func=updateCLDRLangTags)
 
@@ -4091,7 +4108,7 @@ if __name__ == "__main__":
     parser_currency.add_argument(
         "--url",
         metavar="URL",
-        default="https://www.currency-iso.org/dam/downloads/lists/list_one.xml",  # NOQA: E501
+        default="https://www.six-group.com/dam/download/financial-information/data-center/iso-currrency/lists/list-one.xml",  # NOQA: E501
         type=EnsureHttps,
         help="Download url for the currency & funds code list (default: "
         "%(default)s)",

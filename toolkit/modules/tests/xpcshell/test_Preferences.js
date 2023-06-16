@@ -215,7 +215,7 @@ add_test(function test_reset_nonexistent_pref_branch() {
 
 add_test(function test_observe_prefs_function() {
   let observed = false;
-  let observer = function() {
+  let observer = function () {
     observed = !observed;
   };
 
@@ -296,7 +296,7 @@ add_test(function test_observe_prefs_nsIObserver() {
 // passes the preference's new value but not its name.
 add_test(function test_observe_exact_pref() {
   let observed = false;
-  let observer = function() {
+  let observer = function () {
     observed = !observed;
   };
 
@@ -312,7 +312,7 @@ add_test(function test_observe_exact_pref() {
 });
 
 add_test(function test_observe_value_of_set_pref() {
-  let observer = function(newVal) {
+  let observer = function (newVal) {
     Assert.equal(newVal, "something");
   };
 
@@ -329,7 +329,7 @@ add_test(function test_observe_value_of_set_pref() {
 });
 
 add_test(function test_observe_value_of_reset_pref() {
-  let observer = function(newVal) {
+  let observer = function (newVal) {
     Assert.ok(typeof newVal == "undefined");
   };
 

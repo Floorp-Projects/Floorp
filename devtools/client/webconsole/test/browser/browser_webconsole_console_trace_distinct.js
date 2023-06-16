@@ -12,7 +12,7 @@ const TEST_URI = `data:text/html,<!DOCTYPE html><meta charset=utf8><script>
     rab();rab();
   </script>`;
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
   await waitFor(() => findConsoleAPIMessage(hud, "trace"));
   ok(true, "console.trace() message is displayed in the console");

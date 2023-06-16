@@ -5,17 +5,17 @@
 
 requestLongerTimeout(4);
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  AddonManager: "resource://gre/modules/AddonManager.jsm",
-  ExtensionSettingsStore: "resource://gre/modules/ExtensionSettingsStore.jsm",
-  HomePage: "resource:///modules/HomePage.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+  ExtensionControlledPopup:
+    "resource:///modules/ExtensionControlledPopup.sys.mjs",
+  ExtensionSettingsStore:
+    "resource://gre/modules/ExtensionSettingsStore.sys.mjs",
 });
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "ExtensionControlledPopup",
-  "resource:///modules/ExtensionControlledPopup.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  HomePage: "resource:///modules/HomePage.jsm",
+});
 
 // Named this way so they correspond to the extensions
 const HOME_URI_2 = "http://example.com/";
@@ -84,9 +84,8 @@ add_task(async function test_multiple_extensions_overriding_home_page() {
           browser.test.sendMessage("homepageSet");
           break;
         case "tryClear":
-          let clearResult = await browser.browserSettings.homepageOverride.clear(
-            {}
-          );
+          let clearResult =
+            await browser.browserSettings.homepageOverride.clear({});
           browser.test.assertFalse(
             clearResult,
             "Calling homepageOverride.clear returns false."

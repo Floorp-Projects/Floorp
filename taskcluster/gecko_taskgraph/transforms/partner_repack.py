@@ -35,6 +35,23 @@ def skip_unnecessary_platforms(config, tasks):
 
 
 @transforms.add
+def remove_mac_dependency(config, tasks):
+    """Remove mac dependency depending on current level
+    to accomodate for mac notarization not running on level 1
+    """
+    level = int(config.params.get("level", 0))
+    for task in tasks:
+        if "macosx" not in task["attributes"]["build_platform"]:
+            yield task
+            continue
+        skipped_kind = "mac-signing" if level == 3 else "mac-notarization"
+        for dep_label in list(task["dependencies"].keys()):
+            if skipped_kind in dep_label:
+                del task["dependencies"][dep_label]
+        yield task
+
+
+@transforms.add
 def populate_repack_manifests_url(config, tasks):
     for task in tasks:
         partner_url_config = get_partner_url_config(config.params, config.graph_config)

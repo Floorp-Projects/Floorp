@@ -23,7 +23,7 @@ window.talosDebug = {
   // End of config
 
   sum(values) {
-    return values.reduce(function(a, b) {
+    return values.reduce(function (a, b) {
       return a + b;
     });
   },
@@ -35,7 +35,7 @@ window.talosDebug = {
 
   median(values) {
     var clone = values.slice(0);
-    var sorted = clone.sort(function(a, b) {
+    var sorted = clone.sort(function (a, b) {
       // eslint-disable-next-line no-nested-ternary
       return a > b ? 1 : a < b ? -1 : 0;
     });
@@ -57,10 +57,10 @@ window.talosDebug = {
 
     return Math.sqrt(
       values
-        .map(function(v) {
+        .map(function (v) {
           return Math.pow(v - avg, 2);
         })
-        .reduce(function(a, b) {
+        .reduce(function (a, b) {
           return a + b;
         }) /
         (values.length - 1)
@@ -159,7 +159,7 @@ window.talosDebug = {
       return;
     }
 
-    var collection = ("" + dataCSV).split(",").map(function(item) {
+    var collection = ("" + dataCSV).split(",").map(function (item) {
       return parseFloat(item);
     });
     var res = d.statsDisplay(collection);
@@ -183,7 +183,7 @@ window.talosDebug = {
     }
 
     if (d.displayData) {
-      var disp = collection.map(function(item) {
+      var disp = collection.map(function (item) {
         return item.toFixed(d.fixed);
       });
       if (warmup >= 0) {
@@ -192,7 +192,7 @@ window.talosDebug = {
       res += "\n\nRecorded:\n" + disp.join(", ");
 
       res += "\n\nStddev from item NN to last:\n";
-      disp = collection.map(function(value, index) {
+      disp = collection.map(function (value, index) {
         return d
           .stddev(collection.slice(index), d.average(collection.slice(index)))
           .toFixed(d.fixed);

@@ -44,11 +44,8 @@ class DevicePixelRatioMenu extends PureComponent {
   }
 
   onShowDevicePixelMenu(event) {
-    const {
-      displayPixelRatio,
-      onChangePixelRatio,
-      selectedPixelRatio,
-    } = this.props;
+    const { displayPixelRatio, onChangePixelRatio, selectedPixelRatio } =
+      this.props;
 
     const menuItems = PIXEL_RATIO_PRESET.map(value => {
       return {
@@ -68,12 +65,8 @@ class DevicePixelRatioMenu extends PureComponent {
   }
 
   render() {
-    const {
-      devices,
-      displayPixelRatio,
-      selectedDevice,
-      selectedPixelRatio,
-    } = this.props;
+    const { devices, displayPixelRatio, selectedDevice, selectedPixelRatio } =
+      this.props;
 
     const isDisabled =
       devices.listState !== Types.loadableState.LOADED || selectedDevice !== "";

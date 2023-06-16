@@ -7,11 +7,17 @@
 
 #include <string.h>
 
+#include <array>
+#include <atomic>
 #include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <hwy/aligned_allocator.h>
 
+#include "lib/jpegli/color_quantize.h"
 #include "lib/jpegli/color_transform.h"
 #include "lib/jpegli/decode_internal.h"
+#include "lib/jpegli/error.h"
 #include "lib/jpegli/idct.h"
 #include "lib/jpegli/upsample.h"
 #include "lib/jxl/base/byte_order.h"
@@ -56,7 +62,6 @@ using hwy::HWY_NAMESPACE::Rebind;
 using hwy::HWY_NAMESPACE::ShiftLeftSame;
 using hwy::HWY_NAMESPACE::ShiftRightSame;
 using hwy::HWY_NAMESPACE::Vec;
-
 using D = HWY_FULL(float);
 using DI = HWY_FULL(int32_t);
 constexpr D d;
@@ -85,12 +90,22 @@ void DecenterRow(float* row, size_t xsize) {
   }
 }
 
+void DitherRow(j_decompress_ptr cinfo, float* row, int c, size_t y,
+               size_t xsize) {
+  jpeg_decomp_master* m = cinfo->master;
+  if (!m->dither_[c]) return;
+  const float* dither_row =
+      &m->dither_[c][(y & m->dither_mask_) * m->dither_size_];
+  for (size_t x = 0; x < xsize; ++x) {
+    row[x] += dither_row[x & m->dither_mask_];
+  }
+}
+
 template <typename T>
-void StoreUnsignedRow(float* JXL_RESTRICT input[3], size_t x0, size_t len,
+void StoreUnsignedRow(float* JXL_RESTRICT input[], size_t x0, size_t len,
                       size_t num_channels, float multiplier, T* output) {
   const HWY_CAPPED(float, 8) d;
   auto zero = Zero(d);
-  auto one = Set(d, 1.0f);
   auto mul = Set(d, multiplier);
   const Rebind<T, decltype(d)> du;
 #if JXL_MEMORY_SANITIZER
@@ -101,24 +116,31 @@ void StoreUnsignedRow(float* JXL_RESTRICT input[3], size_t x0, size_t len,
 #endif
   if (num_channels == 1) {
     for (size_t i = 0; i < len; i += Lanes(d)) {
-      auto v0 = Mul(Clamp(zero, Load(d, &input[0][x0 + i]), one), mul);
-      Store(DemoteTo(du, NearestInt(v0)), du, &output[i]);
+      auto v0 = Clamp(zero, Mul(LoadU(d, &input[0][x0 + i]), mul), mul);
+      StoreU(DemoteTo(du, NearestInt(v0)), du, &output[i]);
+    }
+  } else if (num_channels == 2) {
+    for (size_t i = 0; i < len; i += Lanes(d)) {
+      auto v0 = Clamp(zero, Mul(LoadU(d, &input[0][x0 + i]), mul), mul);
+      auto v1 = Clamp(zero, Mul(LoadU(d, &input[1][x0 + i]), mul), mul);
+      StoreInterleaved2(DemoteTo(du, NearestInt(v0)),
+                        DemoteTo(du, NearestInt(v1)), du, &output[2 * i]);
     }
   } else if (num_channels == 3) {
     for (size_t i = 0; i < len; i += Lanes(d)) {
-      auto v0 = Mul(Clamp(zero, Load(d, &input[0][x0 + i]), one), mul);
-      auto v1 = Mul(Clamp(zero, Load(d, &input[1][x0 + i]), one), mul);
-      auto v2 = Mul(Clamp(zero, Load(d, &input[2][x0 + i]), one), mul);
+      auto v0 = Clamp(zero, Mul(LoadU(d, &input[0][x0 + i]), mul), mul);
+      auto v1 = Clamp(zero, Mul(LoadU(d, &input[1][x0 + i]), mul), mul);
+      auto v2 = Clamp(zero, Mul(LoadU(d, &input[2][x0 + i]), mul), mul);
       StoreInterleaved3(DemoteTo(du, NearestInt(v0)),
                         DemoteTo(du, NearestInt(v1)),
                         DemoteTo(du, NearestInt(v2)), du, &output[3 * i]);
     }
   } else if (num_channels == 4) {
     for (size_t i = 0; i < len; i += Lanes(d)) {
-      auto v0 = Mul(Clamp(zero, Load(d, &input[0][x0 + i]), one), mul);
-      auto v1 = Mul(Clamp(zero, Load(d, &input[1][x0 + i]), one), mul);
-      auto v2 = Mul(Clamp(zero, Load(d, &input[2][x0 + i]), one), mul);
-      auto v3 = Mul(Clamp(zero, Load(d, &input[3][x0 + i]), one), mul);
+      auto v0 = Clamp(zero, Mul(LoadU(d, &input[0][x0 + i]), mul), mul);
+      auto v1 = Clamp(zero, Mul(LoadU(d, &input[1][x0 + i]), mul), mul);
+      auto v2 = Clamp(zero, Mul(LoadU(d, &input[2][x0 + i]), mul), mul);
+      auto v3 = Clamp(zero, Mul(LoadU(d, &input[3][x0 + i]), mul), mul);
       StoreInterleaved4(DemoteTo(du, NearestInt(v0)),
                         DemoteTo(du, NearestInt(v1)),
                         DemoteTo(du, NearestInt(v2)),
@@ -135,31 +157,103 @@ void StoreFloatRow(float* JXL_RESTRICT input[3], size_t x0, size_t len,
                    size_t num_channels, float* output) {
   const HWY_CAPPED(float, 8) d;
   if (num_channels == 1) {
-    memcpy(output, input[0], len * sizeof(output[0]));
+    memcpy(output, input[0] + x0, len * sizeof(output[0]));
+  } else if (num_channels == 2) {
+    for (size_t i = 0; i < len; i += Lanes(d)) {
+      StoreInterleaved2(LoadU(d, &input[0][x0 + i]),
+                        LoadU(d, &input[1][x0 + i]), d, &output[2 * i]);
+    }
   } else if (num_channels == 3) {
     for (size_t i = 0; i < len; i += Lanes(d)) {
       StoreInterleaved3(LoadU(d, &input[0][x0 + i]),
                         LoadU(d, &input[1][x0 + i]),
                         LoadU(d, &input[2][x0 + i]), d, &output[3 * i]);
     }
+  } else if (num_channels == 4) {
+    for (size_t i = 0; i < len; i += Lanes(d)) {
+      StoreInterleaved4(LoadU(d, &input[0][x0 + i]),
+                        LoadU(d, &input[1][x0 + i]),
+                        LoadU(d, &input[2][x0 + i]),
+                        LoadU(d, &input[3][x0 + i]), d, &output[4 * i]);
+    }
   }
 }
 
-void WriteToOutput(float* JXL_RESTRICT rows[3], size_t xoffset, size_t x0,
-                   size_t len, size_t num_channels, JpegliDataType data_type,
-                   bool swap_endianness, uint8_t* JXL_RESTRICT scratch_space,
+static constexpr float kFSWeightMR = 7.0f / 16.0f;
+static constexpr float kFSWeightBL = 3.0f / 16.0f;
+static constexpr float kFSWeightBM = 5.0f / 16.0f;
+static constexpr float kFSWeightBR = 1.0f / 16.0f;
+
+float LimitError(float error) {
+  float abserror = std::abs(error);
+  if (abserror > 48.0f) {
+    abserror = 32.0f;
+  } else if (abserror > 16.0f) {
+    abserror = 0.5f * abserror + 8.0f;
+  }
+  return error > 0.0f ? abserror : -abserror;
+}
+
+void WriteToOutput(j_decompress_ptr cinfo, float* JXL_RESTRICT rows[],
+                   size_t xoffset, size_t len, size_t num_channels,
                    uint8_t* JXL_RESTRICT output) {
-  if (data_type == JPEGLI_TYPE_UINT8) {
+  jpeg_decomp_master* m = cinfo->master;
+  uint8_t* JXL_RESTRICT scratch_space = m->output_scratch_;
+  if (cinfo->quantize_colors && m->quant_pass_ == 1) {
+    float* error_row[kMaxComponents];
+    float* next_error_row[kMaxComponents];
+    if (cinfo->dither_mode == JDITHER_ORDERED) {
+      for (size_t c = 0; c < num_channels; ++c) {
+        DitherRow(cinfo, &rows[c][xoffset], c, cinfo->output_scanline,
+                  cinfo->output_width);
+      }
+    } else if (cinfo->dither_mode == JDITHER_FS) {
+      for (size_t c = 0; c < num_channels; ++c) {
+        if (cinfo->output_scanline % 2 == 0) {
+          error_row[c] = m->error_row_[c];
+          next_error_row[c] = m->error_row_[c + kMaxComponents];
+        } else {
+          error_row[c] = m->error_row_[c + kMaxComponents];
+          next_error_row[c] = m->error_row_[c];
+        }
+        memset(next_error_row[c], 0.0, cinfo->output_width * sizeof(float));
+      }
+    }
+    const float mul = 255.0f;
+    if (cinfo->dither_mode != JDITHER_FS) {
+      StoreUnsignedRow(rows, xoffset, len, num_channels, mul, scratch_space);
+    }
+    for (size_t i = 0; i < len; ++i) {
+      uint8_t* pixel = &scratch_space[num_channels * i];
+      if (cinfo->dither_mode == JDITHER_FS) {
+        for (size_t c = 0; c < num_channels; ++c) {
+          float val = rows[c][i] * mul + LimitError(error_row[c][i]);
+          pixel[c] = std::round(std::min(255.0f, std::max(0.0f, val)));
+        }
+      }
+      int index = LookupColorIndex(cinfo, pixel);
+      output[i] = index;
+      if (cinfo->dither_mode == JDITHER_FS) {
+        size_t prev_i = i > 0 ? i - 1 : 0;
+        size_t next_i = i + 1 < len ? i + 1 : len - 1;
+        for (size_t c = 0; c < num_channels; ++c) {
+          float error = pixel[c] - cinfo->colormap[c][index];
+          error_row[c][next_i] += kFSWeightMR * error;
+          next_error_row[c][prev_i] += kFSWeightBL * error;
+          next_error_row[c][i] += kFSWeightBM * error;
+          next_error_row[c][next_i] += kFSWeightBR * error;
+        }
+      }
+    }
+  } else if (m->output_data_type_ == JPEGLI_TYPE_UINT8) {
     const float mul = 255.0;
-    size_t offset = x0 * num_channels;
-    StoreUnsignedRow(rows, xoffset + x0, len, num_channels, mul, scratch_space);
-    memcpy(output + offset, scratch_space, len * num_channels);
-  } else if (data_type == JPEGLI_TYPE_UINT16) {
+    StoreUnsignedRow(rows, xoffset, len, num_channels, mul, scratch_space);
+    memcpy(output, scratch_space, len * num_channels);
+  } else if (m->output_data_type_ == JPEGLI_TYPE_UINT16) {
     const float mul = 65535.0;
-    size_t offset = x0 * num_channels * 2;
     uint16_t* tmp = reinterpret_cast<uint16_t*>(scratch_space);
-    StoreUnsignedRow(rows, xoffset + x0, len, num_channels, mul, tmp);
-    if (swap_endianness) {
+    StoreUnsignedRow(rows, xoffset, len, num_channels, mul, tmp);
+    if (m->swap_endianness_) {
       const HWY_CAPPED(uint16_t, 8) du;
       size_t output_len = len * num_channels;
       for (size_t j = 0; j < output_len; j += Lanes(du)) {
@@ -168,18 +262,17 @@ void WriteToOutput(float* JXL_RESTRICT rows[3], size_t xoffset, size_t x0,
         StoreU(vswap, du, tmp + j);
       }
     }
-    memcpy(output + offset, tmp, len * num_channels * 2);
-  } else if (data_type == JPEGLI_TYPE_FLOAT) {
-    size_t offset = x0 * num_channels * 4;
+    memcpy(output, tmp, len * num_channels * 2);
+  } else if (m->output_data_type_ == JPEGLI_TYPE_FLOAT) {
     float* tmp = reinterpret_cast<float*>(scratch_space);
-    StoreFloatRow(rows, xoffset + x0, len, num_channels, tmp);
-    if (swap_endianness) {
+    StoreFloatRow(rows, xoffset, len, num_channels, tmp);
+    if (m->swap_endianness_) {
       size_t output_len = len * num_channels;
       for (size_t j = 0; j < output_len; ++j) {
         tmp[j] = BSwapFloat(tmp[j]);
       }
     }
-    memcpy(output + offset, tmp, len * num_channels * 4);
+    memcpy(output, tmp, len * num_channels * 4);
   }
 }
 
@@ -203,13 +296,11 @@ void GatherBlockStats(const int16_t* JXL_RESTRICT coeffs,
                                                 sumabs);
 }
 
-void WriteToOutput(float* JXL_RESTRICT rows[3], size_t xoffset, size_t x0,
-                   size_t len, size_t num_channels, JpegliDataType data_type,
-                   bool swap_endianness, uint8_t* JXL_RESTRICT scratch_space,
+void WriteToOutput(j_decompress_ptr cinfo, float* JXL_RESTRICT rows[],
+                   size_t xoffset, size_t len, size_t num_channels,
                    uint8_t* JXL_RESTRICT output) {
-  return HWY_DYNAMIC_DISPATCH(WriteToOutput)(
-      rows, xoffset, x0, len, num_channels, data_type, swap_endianness,
-      scratch_space, output);
+  return HWY_DYNAMIC_DISPATCH(WriteToOutput)(cinfo, rows, xoffset, len,
+                                             num_channels, output);
 }
 
 void DecenterRow(float* row, size_t xsize) {
@@ -219,7 +310,6 @@ void DecenterRow(float* row, size_t xsize) {
 // Padding for horizontal chroma upsampling.
 constexpr size_t kPaddingLeft = 64;
 constexpr size_t kPaddingRight = 64;
-constexpr size_t kTempOutputLen = 1024;
 
 bool ShouldApplyDequantBiases(j_decompress_ptr cinfo, int ci) {
   const auto& compinfo = cinfo->comp_info[ci];
@@ -257,61 +347,291 @@ void ComputeOptimalLaplacianBiases(const int num_blocks, const int* nonzeros,
   }
 }
 
+constexpr std::array<int, SAVED_COEFS> Q_POS = {0, 1, 8,  16, 9,
+                                                2, 3, 10, 17, 24};
+
+bool is_nonzero_quantizers(const JQUANT_TBL* qtable) {
+  return std::all_of(Q_POS.begin(), Q_POS.end(),
+                     [&](int pos) { return qtable->quantval[pos] != 0; });
+}
+
+// Determine whether smoothing should be applied during decompression
+bool do_smoothing(j_decompress_ptr cinfo) {
+  jpeg_decomp_master* m = cinfo->master;
+  bool smoothing_useful = false;
+
+  if (!cinfo->progressive_mode || cinfo->coef_bits == nullptr) {
+    return false;
+  }
+  auto coef_bits_latch = m->coef_bits_latch;
+  auto prev_coef_bits_latch = m->prev_coef_bits_latch;
+
+  for (int ci = 0; ci < cinfo->num_components; ci++) {
+    jpeg_component_info* compptr = &cinfo->comp_info[ci];
+    JQUANT_TBL* qtable = compptr->quant_table;
+    int* coef_bits = cinfo->coef_bits[ci];
+    int* prev_coef_bits = cinfo->coef_bits[ci + cinfo->num_components];
+
+    // Return early if conditions for smoothing are not met
+    if (qtable == nullptr || !is_nonzero_quantizers(qtable) ||
+        coef_bits[0] < 0) {
+      return false;
+    }
+
+    coef_bits_latch[ci][0] = coef_bits[0];
+
+    for (int coefi = 1; coefi < SAVED_COEFS; coefi++) {
+      prev_coef_bits_latch[ci][coefi] =
+          cinfo->input_scan_number > 1 ? prev_coef_bits[coefi] : -1;
+      if (coef_bits[coefi] != 0) {
+        smoothing_useful = true;
+      }
+      coef_bits_latch[ci][coefi] = coef_bits[coefi];
+    }
+  }
+
+  return smoothing_useful;
+}
+
+void PredictSmooth(j_decompress_ptr cinfo, JBLOCKARRAY blocks, int component,
+                   size_t bx, int iy) {
+  const size_t imcu_row = cinfo->output_iMCU_row;
+  int16_t* scratch = cinfo->master->smoothing_scratch_;
+  std::vector<int> Q_VAL(SAVED_COEFS);
+  int* coef_bits;
+
+  std::array<std::array<int, 5>, 5> dc_values;
+  auto& compinfo = cinfo->comp_info[component];
+  const size_t by0 = imcu_row * compinfo.v_samp_factor;
+  const size_t by = by0 + iy;
+
+  int prev_iy = by > 0 ? iy - 1 : 0;
+  int prev_prev_iy = by > 1 ? iy - 2 : prev_iy;
+  int next_iy = by + 1 < compinfo.height_in_blocks ? iy + 1 : iy;
+  int next_next_iy = by + 2 < compinfo.height_in_blocks ? iy + 2 : next_iy;
+
+  const int16_t* cur_row = blocks[iy][bx];
+  const int16_t* prev_row = blocks[prev_iy][bx];
+  const int16_t* prev_prev_row = blocks[prev_prev_iy][bx];
+  const int16_t* next_row = blocks[next_iy][bx];
+  const int16_t* next_next_row = blocks[next_next_iy][bx];
+
+  int prev_block_ind = bx ? -DCTSIZE2 : 0;
+  int prev_prev_block_ind = bx > 1 ? -2 * DCTSIZE2 : prev_block_ind;
+  int next_block_ind = bx + 1 < compinfo.width_in_blocks ? DCTSIZE2 : 0;
+  int next_next_block_ind =
+      bx + 2 < compinfo.width_in_blocks ? DCTSIZE2 * 2 : next_block_ind;
+
+  std::array<const int16_t*, 5> row_ptrs = {prev_prev_row, prev_row, cur_row,
+                                            next_row, next_next_row};
+  std::array<int, 5> block_inds = {prev_prev_block_ind, prev_block_ind, 0,
+                                   next_block_ind, next_next_block_ind};
+
+  memcpy(scratch, cur_row, DCTSIZE2 * sizeof(cur_row[0]));
+
+  for (int r = 0; r < 5; ++r) {
+    for (int c = 0; c < 5; ++c) {
+      dc_values[r][c] = row_ptrs[r][block_inds[c]];
+    }
+  }
+  // Get the correct coef_bits: In case of an incomplete scan, we use the
+  // prev coeficients.
+  if (cinfo->output_iMCU_row + 1 > cinfo->input_iMCU_row) {
+    coef_bits = cinfo->master->prev_coef_bits_latch[component];
+  } else {
+    coef_bits = cinfo->master->coef_bits_latch[component];
+  }
+
+  bool change_dc = true;
+  for (int i = 1; i < SAVED_COEFS; i++) {
+    if (coef_bits[i] != -1) {
+      change_dc = false;
+      break;
+    }
+  }
+
+  JQUANT_TBL* quanttbl = cinfo->quant_tbl_ptrs[compinfo.quant_tbl_no];
+  for (size_t i = 0; i < 6; ++i) {
+    Q_VAL[i] = quanttbl->quantval[Q_POS[i]];
+  }
+  if (change_dc) {
+    for (size_t i = 6; i < SAVED_COEFS; ++i) {
+      Q_VAL[i] = quanttbl->quantval[Q_POS[i]];
+    }
+  }
+  auto calculate_dct_value = [&](int coef_index) {
+    int64_t num = 0;
+    int pred;
+    int Al;
+    // we use the symmetry of the smoothing matrices by transposing the 5x5 dc
+    // matrix in that case.
+    bool swap_indices = coef_index == 2 || coef_index == 5 || coef_index == 8 ||
+                        coef_index == 9;
+    auto dc = [&](int i, int j) {
+      return swap_indices ? dc_values[j][i] : dc_values[i][j];
+    };
+    Al = coef_bits[coef_index];
+    switch (coef_index) {
+      case 0:
+        // set the DC
+        num = (-2 * dc(0, 0) - 6 * dc(0, 1) - 8 * dc(0, 2) - 6 * dc(0, 3) -
+               2 * dc(0, 4) - 6 * dc(1, 0) + 6 * dc(1, 1) + 42 * dc(1, 2) +
+               6 * dc(1, 3) - 6 * dc(1, 4) - 8 * dc(2, 0) + 42 * dc(2, 1) +
+               152 * dc(2, 2) + 42 * dc(2, 3) - 8 * dc(2, 4) - 6 * dc(3, 0) +
+               6 * dc(3, 1) + 42 * dc(3, 2) + 6 * dc(3, 3) - 6 * dc(3, 4) -
+               2 * dc(4, 0) - 6 * dc(4, 1) - 8 * dc(4, 2) - 6 * dc(4, 3) -
+               2 * dc(4, 4));
+        // special case: for the DC the dequantization is different
+        Al = 0;
+        break;
+      case 1:
+      case 2:
+        // set Q01 or Q10
+        num = (change_dc ? (-dc(0, 0) - dc(0, 1) + dc(0, 3) + dc(0, 4) -
+                            3 * dc(1, 0) + 13 * dc(1, 1) - 13 * dc(1, 3) +
+                            3 * dc(1, 4) - 3 * dc(2, 0) + 38 * dc(2, 1) -
+                            38 * dc(2, 3) + 3 * dc(2, 4) - 3 * dc(3, 0) +
+                            13 * dc(3, 1) - 13 * dc(3, 3) + 3 * dc(3, 4) -
+                            dc(4, 0) - dc(4, 1) + dc(4, 3) + dc(4, 4))
+                         : (-7 * dc(2, 0) + 50 * dc(2, 1) - 50 * dc(2, 3) +
+                            7 * dc(2, 4)));
+        break;
+      case 3:
+      case 5:
+        // set Q02 or Q20
+        num = (change_dc
+                   ? dc(0, 2) + 2 * dc(1, 1) + 7 * dc(1, 2) + 2 * dc(1, 3) -
+                         5 * dc(2, 1) - 14 * dc(2, 2) - 5 * dc(2, 3) +
+                         2 * dc(3, 1) + 7 * dc(3, 2) + 2 * dc(3, 3) + dc(4, 2)
+                   : (-dc(0, 2) + 13 * dc(1, 2) - 24 * dc(2, 2) +
+                      13 * dc(3, 2) - dc(4, 2)));
+        break;
+      case 4:
+        // set Q11
+        num =
+            (change_dc ? -dc(0, 0) + dc(0, 4) + 9 * dc(1, 1) - 9 * dc(1, 3) -
+                             9 * dc(3, 1) + 9 * dc(3, 3) + dc(4, 0) - dc(4, 4)
+                       : (dc(1, 4) + dc(3, 0) - 10 * dc(3, 1) + 10 * dc(3, 3) -
+                          dc(0, 1) - dc(3, 4) + dc(4, 1) - dc(4, 3) + dc(0, 3) -
+                          dc(1, 0) + 10 * dc(1, 1) - 10 * dc(1, 3)));
+        break;
+      case 6:
+      case 9:
+        // set Q03 or Q30
+        num = (dc(1, 1) - dc(1, 3) + 2 * dc(2, 1) - 2 * dc(2, 3) + dc(3, 1) -
+               dc(3, 3));
+        break;
+      case 7:
+      case 8:
+        // set Q12 and Q21
+        num = (dc(1, 1) - 3 * dc(1, 2) + dc(1, 3) - dc(3, 1) + 3 * dc(3, 2) -
+               dc(3, 3));
+        break;
+    }
+    num = Q_VAL[0] * num;
+    if (num >= 0) {
+      pred = ((Q_VAL[coef_index] << 7) + num) / (Q_VAL[coef_index] << 8);
+      if (Al > 0 && pred >= (1 << Al)) pred = (1 << Al) - 1;
+    } else {
+      pred = ((Q_VAL[coef_index] << 7) - num) / (Q_VAL[coef_index] << 8);
+      if (Al > 0 && pred >= (1 << Al)) pred = (1 << Al) - 1;
+      pred = -pred;
+    }
+    return static_cast<int16_t>(pred);
+  };
+
+  int loop_end = change_dc ? SAVED_COEFS : 6;
+  for (int i = 1; i < loop_end; ++i) {
+    if (coef_bits[i] != 0 && scratch[Q_POS[i]] == 0) {
+      scratch[Q_POS[i]] = calculate_dct_value(i);
+    }
+  }
+  if (change_dc) {
+    scratch[0] = calculate_dct_value(0);
+  }
+}
+
 void PrepareForOutput(j_decompress_ptr cinfo) {
   jpeg_decomp_master* m = cinfo->master;
+  size_t iMCU_width = cinfo->max_h_samp_factor * m->min_scaled_dct_size;
+  size_t output_stride = m->iMCU_cols_ * iMCU_width;
   for (int c = 0; c < cinfo->num_components; ++c) {
     const auto& comp = cinfo->comp_info[c];
-    const size_t stride = m->iMCU_cols_ * cinfo->max_h_samp_factor * DCTSIZE;
-    m->raw_height_[c] = cinfo->total_iMCU_rows * comp.v_samp_factor * DCTSIZE;
-    m->raw_output_[c].Allocate(3 * comp.v_samp_factor * DCTSIZE, stride);
-    m->render_output_[c].Allocate(cinfo->max_v_samp_factor, stride);
+    size_t cheight = comp.v_samp_factor * m->scaled_dct_size[c];
+    m->raw_height_[c] = cinfo->total_iMCU_rows * cheight;
+    m->raw_output_[c].Allocate(cinfo, 3 * cheight, output_stride);
   }
-  m->idct_scratch_ = hwy::AllocateAligned<float>(DCTSIZE2 * 2);
-  size_t MCU_row_stride = m->iMCU_cols_ * cinfo->max_h_samp_factor * DCTSIZE;
-  m->upsample_scratch_ = hwy::AllocateAligned<float>(
-      MCU_row_stride + kPaddingLeft + kPaddingRight);
+  int num_all_components =
+      std::max(cinfo->out_color_components, cinfo->num_components);
+  for (int c = 0; c < num_all_components; ++c) {
+    m->render_output_[c].Allocate(cinfo, cinfo->max_v_samp_factor,
+                                  output_stride);
+  }
+  m->idct_scratch_ = Allocate<float>(cinfo, 5 * DCTSIZE2, JPOOL_IMAGE_ALIGNED);
+  m->upsample_scratch_ = Allocate<float>(
+      cinfo, output_stride + kPaddingLeft + kPaddingRight, JPOOL_IMAGE_ALIGNED);
   size_t bytes_per_sample = jpegli_bytes_per_sample(m->output_data_type_);
   size_t bytes_per_pixel = cinfo->out_color_components * bytes_per_sample;
-  m->output_scratch_ =
-      hwy::AllocateAligned<uint8_t>(bytes_per_pixel * kTempOutputLen);
+  size_t scratch_stride = RoundUpTo(output_stride, HWY_ALIGNMENT);
+  m->output_scratch_ = Allocate<uint8_t>(
+      cinfo, bytes_per_pixel * scratch_stride, JPOOL_IMAGE_ALIGNED);
+  m->smoothing_scratch_ =
+      Allocate<int16_t>(cinfo, DCTSIZE2, JPOOL_IMAGE_ALIGNED);
+  bool smoothing = do_smoothing(cinfo);
+  m->apply_smoothing = smoothing && cinfo->do_block_smoothing;
   size_t coeffs_per_block = cinfo->num_components * DCTSIZE2;
-  m->nonzeros_ = hwy::AllocateAligned<int>(coeffs_per_block);
-  m->sumabs_ = hwy::AllocateAligned<int>(coeffs_per_block);
-  memset(m->nonzeros_.get(), 0, coeffs_per_block * sizeof(m->nonzeros_[0]));
-  memset(m->sumabs_.get(), 0, coeffs_per_block * sizeof(m->sumabs_[0]));
-  m->num_processed_blocks_.resize(cinfo->num_components);
-  for (int c = 0; c < cinfo->num_components; ++c) {
-    m->num_processed_blocks_[c] = 0;
-  }
-  m->biases_ = hwy::AllocateAligned<float>(coeffs_per_block);
-  memset(m->biases_.get(), 0, coeffs_per_block * sizeof(m->biases_[0]));
+  m->nonzeros_ = Allocate<int>(cinfo, coeffs_per_block, JPOOL_IMAGE_ALIGNED);
+  m->sumabs_ = Allocate<int>(cinfo, coeffs_per_block, JPOOL_IMAGE_ALIGNED);
+  memset(m->nonzeros_, 0, coeffs_per_block * sizeof(m->nonzeros_[0]));
+  memset(m->sumabs_, 0, coeffs_per_block * sizeof(m->sumabs_[0]));
+  memset(m->num_processed_blocks_, 0, sizeof(m->num_processed_blocks_));
+  m->biases_ = Allocate<float>(cinfo, coeffs_per_block, JPOOL_IMAGE_ALIGNED);
+  memset(m->biases_, 0, coeffs_per_block * sizeof(m->biases_[0]));
   cinfo->output_iMCU_row = 0;
   cinfo->output_scanline = 0;
   const float kDequantScale = 1.0f / (8 * 255);
-  m->dequant_ = hwy::AllocateAligned<float>(coeffs_per_block);
+  if (m->dequant_ == nullptr) {
+    m->dequant_ = Allocate<float>(cinfo, coeffs_per_block, JPOOL_IMAGE_ALIGNED);
+    memset(m->dequant_, 0, coeffs_per_block * sizeof(float));
+  }
   for (int c = 0; c < cinfo->num_components; c++) {
     const auto& comp = cinfo->comp_info[c];
     JQUANT_TBL* table = comp.quant_table;
+    if (table == nullptr) continue;
     for (size_t k = 0; k < DCTSIZE2; ++k) {
       m->dequant_[c * DCTSIZE2 + k] = table->quantval[k] * kDequantScale;
     }
   }
+  ChooseInverseTransform(cinfo);
+  ChooseColorTransform(cinfo);
 }
 
 void DecodeCurrentiMCURow(j_decompress_ptr cinfo) {
   jpeg_decomp_master* m = cinfo->master;
   const size_t imcu_row = cinfo->output_iMCU_row;
+  JBLOCKARRAY ba[kMaxComponents];
+  for (int c = 0; c < cinfo->num_components; ++c) {
+    const jpeg_component_info* comp = &cinfo->comp_info[c];
+    int by0 = imcu_row * comp->v_samp_factor;
+    int block_rows_left = comp->height_in_blocks - by0;
+    int max_block_rows = std::min(comp->v_samp_factor, block_rows_left);
+    int offset = m->streaming_mode_ ? 0 : by0;
+    ba[c] = (*cinfo->mem->access_virt_barray)(
+        reinterpret_cast<j_common_ptr>(cinfo), m->coef_arrays[c], offset,
+        max_block_rows, false);
+  }
   for (int c = 0; c < cinfo->num_components; ++c) {
     size_t k0 = c * DCTSIZE2;
-    auto& comp = m->components_[c];
     auto& compinfo = cinfo->comp_info[c];
     size_t block_row = imcu_row * compinfo.v_samp_factor;
     if (ShouldApplyDequantBiases(cinfo, c)) {
       // Update statistics for this iMCU row.
       for (int iy = 0; iy < compinfo.v_samp_factor; ++iy) {
         size_t by = block_row + iy;
-        size_t bix = by * compinfo.width_in_blocks;
-        int16_t* JXL_RESTRICT coeffs = &comp.coeffs[bix * DCTSIZE2];
+        if (by >= compinfo.height_in_blocks) {
+          continue;
+        }
+        int16_t* JXL_RESTRICT coeffs = &ba[c][iy][0][0];
         size_t num = compinfo.width_in_blocks * DCTSIZE2;
         GatherBlockStats(coeffs, num, &m->nonzeros_[k0], &m->sumabs_[k0]);
         m->num_processed_blocks_[c] += compinfo.width_in_blocks;
@@ -326,13 +646,28 @@ void DecodeCurrentiMCURow(j_decompress_ptr cinfo) {
     RowBuffer<float>* raw_out = &m->raw_output_[c];
     for (int iy = 0; iy < compinfo.v_samp_factor; ++iy) {
       size_t by = block_row + iy;
-      size_t bix = by * compinfo.width_in_blocks;
-      int16_t* JXL_RESTRICT row_in = &comp.coeffs[bix * DCTSIZE2];
-      float* JXL_RESTRICT row_out = raw_out->Row(by * DCTSIZE);
+      if (by >= compinfo.height_in_blocks) {
+        continue;
+      }
+      size_t dctsize = m->scaled_dct_size[c];
+      int16_t* JXL_RESTRICT row_in = &ba[c][iy][0][0];
+      float* JXL_RESTRICT row_out = raw_out->Row(by * dctsize);
       for (size_t bx = 0; bx < compinfo.width_in_blocks; ++bx) {
-        InverseTransformBlock(&row_in[bx * DCTSIZE2], &m->dequant_[k0],
-                              &m->biases_[k0], m->idct_scratch_.get(),
-                              &row_out[bx * DCTSIZE], raw_out->stride());
+        if (m->apply_smoothing) {
+          PredictSmooth(cinfo, ba[c], c, bx, iy);
+          (*m->inverse_transform[c])(m->smoothing_scratch_, &m->dequant_[k0],
+                                     &m->biases_[k0], m->idct_scratch_,
+                                     &row_out[bx * dctsize], raw_out->stride(),
+                                     dctsize);
+        } else {
+          (*m->inverse_transform[c])(&row_in[bx * DCTSIZE2], &m->dequant_[k0],
+                                     &m->biases_[k0], m->idct_scratch_,
+                                     &row_out[bx * dctsize], raw_out->stride(),
+                                     dctsize);
+        }
+      }
+      if (m->streaming_mode_) {
+        memset(row_in, 0, compinfo.width_in_blocks * sizeof(JBLOCK));
       }
     }
   }
@@ -349,26 +684,28 @@ void ProcessRawOutput(j_decompress_ptr cinfo, JSAMPIMAGE data) {
     size_t y0 = cinfo->output_iMCU_row * compinfo.v_samp_factor * DCTSIZE;
     size_t y1 = std::min(y0 + comp_nrows, comp_height);
     for (size_t y = y0; y < y1; ++y) {
-      for (size_t x0 = 0; x0 < comp_width; x0 += kTempOutputLen) {
-        float* rows[3] = {m->raw_output_[c].Row(y)};
-        size_t len = std::min(comp_width - x0, kTempOutputLen);
-        uint8_t* output = data[c][y - y0];
-        WriteToOutput(rows, 0, x0, len, 1, m->output_data_type_,
-                      m->swap_endianness_, m->output_scratch_.get(), output);
-      }
+      float* rows[1] = {m->raw_output_[c].Row(y)};
+      uint8_t* output = data[c][y - y0];
+      DecenterRow(rows[0], comp_width);
+      WriteToOutput(cinfo, rows, 0, comp_width, 1, output);
     }
   }
   ++cinfo->output_iMCU_row;
   cinfo->output_scanline += cinfo->max_v_samp_factor * DCTSIZE;
+  if (cinfo->output_scanline >= cinfo->output_height) {
+    ++m->output_passes_done_;
+  }
 }
 
 void ProcessOutput(j_decompress_ptr cinfo, size_t* num_output_rows,
                    JSAMPARRAY scanlines, size_t max_output_rows) {
   jpeg_decomp_master* m = cinfo->master;
-  size_t xsize_blocks = DivCeil(cinfo->image_width, DCTSIZE);
   const int vfactor = cinfo->max_v_samp_factor;
+  const int hfactor = cinfo->max_h_samp_factor;
   const size_t imcu_row = cinfo->output_iMCU_row;
-  const size_t imcu_height = vfactor * DCTSIZE;
+  const size_t imcu_height = vfactor * m->min_scaled_dct_size;
+  const size_t imcu_width = hfactor * m->min_scaled_dct_size;
+  const size_t output_width = m->iMCU_cols_ * imcu_width;
   if (imcu_row == cinfo->total_iMCU_rows ||
       (imcu_row > 1 && cinfo->output_scanline < (imcu_row - 1) * imcu_height)) {
     // We are ready to output some scanlines.
@@ -383,71 +720,77 @@ void ProcessOutput(j_decompress_ptr cinfo, size_t* num_output_rows,
       for (int c = 0; c < cinfo->num_components; ++c) {
         RowBuffer<float>* raw_out = &m->raw_output_[c];
         RowBuffer<float>* render_out = &m->render_output_[c];
-        const auto& compinfo = cinfo->comp_info[c];
-        size_t yc = (y / vfactor) * compinfo.v_samp_factor;
-        if (compinfo.v_samp_factor < vfactor) {
-          const float* JXL_RESTRICT row_mid = raw_out->Row(yc);
-          const float* JXL_RESTRICT row_top =
-              yc == 0 ? row_mid : raw_out->Row(yc - 1);
-          const float* JXL_RESTRICT row_bot =
-              yc + 1 == m->raw_height_[c] ? row_mid : raw_out->Row(yc + 1);
-          Upsample2Vertical(row_top, row_mid, row_bot, render_out->Row(0),
-                            render_out->Row(1), xsize_blocks * DCTSIZE);
-        } else {
-          JXL_ASSERT(y == static_cast<size_t>(yc));
-          for (int yix = 0; yix < vfactor; ++yix) {
-            memcpy(render_out->Row(yix), raw_out->Row(yc + yix),
-                   raw_out->memstride());
+        int line_groups = vfactor / m->v_factor[c];
+        size_t yc = y / m->v_factor[c];
+        for (int dy = 0; dy < line_groups; ++dy) {
+          if (cinfo->do_fancy_upsampling && m->v_factor[c] == 2) {
+            size_t ymid = yc + dy;
+            const float* JXL_RESTRICT row_mid = raw_out->Row(ymid);
+            const float* JXL_RESTRICT row_top =
+                ymid == 0 ? row_mid : raw_out->Row(ymid - 1);
+            const float* JXL_RESTRICT row_bot = ymid + 1 == m->raw_height_[c]
+                                                    ? row_mid
+                                                    : raw_out->Row(ymid + 1);
+            Upsample2Vertical(row_top, row_mid, row_bot,
+                              render_out->Row(2 * dy),
+                              render_out->Row(2 * dy + 1), output_width);
+          } else {
+            for (int yix = 0; yix < m->v_factor[c]; ++yix) {
+              size_t ymid = yc + dy;
+              memcpy(render_out->Row(m->v_factor[c] * dy + yix),
+                     raw_out->Row(ymid), raw_out->xsize() * sizeof(float));
+            }
           }
         }
       }
       for (int yix = 0; yix < vfactor; ++yix) {
         if (y + yix < ybegin || y + yix >= yend) continue;
-        float* rows[4];
-        for (int c = 0; c < cinfo->out_color_components; ++c) {
+        float* rows[kMaxComponents];
+        int num_all_components =
+            std::max(cinfo->out_color_components, cinfo->num_components);
+        for (int c = 0; c < num_all_components; ++c) {
           rows[c] = m->render_output_[c].Row(yix);
         }
-        if (cinfo->jpeg_color_space == JCS_YCCK) {
-          YCCKToCMYK(rows[0], rows[1], rows[2], rows[3],
-                     xsize_blocks * DCTSIZE);
-        } else if (cinfo->jpeg_color_space == JCS_YCbCr) {
-          YCbCrToRGB(rows[0], rows[1], rows[2], xsize_blocks * DCTSIZE);
-        } else {
-          for (int c = 0; c < cinfo->out_color_components; ++c) {
-            // Libjpeg encoder converts all unsigned input values to signed
-            // ones, i.e. for 8 bit input from [0..255] to [-128..127]. For
-            // YCbCr jpegs this is undone in the YCbCr -> RGB conversion above
-            // by adding 128 to Y channel, but for grayscale and RGB jpegs we
-            // need to undo it here channel by channel.
-            DecenterRow(rows[c], xsize_blocks * DCTSIZE);
-          }
+        (*m->color_transform)(rows, output_width);
+        for (int c = 0; c < cinfo->out_color_components; ++c) {
+          // Undo the centering of the sample values around zero.
+          DecenterRow(rows[c], output_width);
         }
-        for (size_t x0 = 0; x0 < cinfo->output_width; x0 += kTempOutputLen) {
-          size_t len = std::min(cinfo->output_width - x0, kTempOutputLen);
-          if (scanlines) {
-            uint8_t* output = scanlines[*num_output_rows];
-            WriteToOutput(rows, m->xoffset_, x0, len,
-                          cinfo->out_color_components, m->output_data_type_,
-                          m->swap_endianness_, m->output_scratch_.get(),
-                          output);
-          }
+        if (scanlines) {
+          uint8_t* output = scanlines[*num_output_rows];
+          WriteToOutput(cinfo, rows, m->xoffset_, cinfo->output_width,
+                        cinfo->out_color_components, output);
         }
         JXL_ASSERT(cinfo->output_scanline == y + yix);
         ++cinfo->output_scanline;
         ++(*num_output_rows);
+        if (cinfo->output_scanline == cinfo->output_height) {
+          ++m->output_passes_done_;
+        }
       }
     }
   } else {
     DecodeCurrentiMCURow(cinfo);
     for (int c = 0; c < cinfo->num_components; ++c) {
+      if (m->h_factor[c] == 1) continue;
       const auto& compinfo = cinfo->comp_info[c];
-      if (compinfo.h_samp_factor < cinfo->max_h_samp_factor) {
-        RowBuffer<float>* raw_out = &m->raw_output_[c];
-        size_t y0 = imcu_row * compinfo.v_samp_factor * DCTSIZE;
-        for (int iy = 0; iy < compinfo.v_samp_factor * DCTSIZE; ++iy) {
+      RowBuffer<float>* raw_out = &m->raw_output_[c];
+      size_t cheight = compinfo.v_samp_factor * m->scaled_dct_size[c];
+      size_t y0 = imcu_row * cheight;
+      if (cinfo->do_fancy_upsampling && m->h_factor[c] == 2) {
+        for (size_t iy = 0; iy < cheight; ++iy) {
           float* JXL_RESTRICT row = raw_out->Row(y0 + iy);
-          Upsample2Horizontal(row, m->upsample_scratch_.get(),
-                              xsize_blocks * DCTSIZE);
+          Upsample2Horizontal(row, m->upsample_scratch_, output_width);
+        }
+      } else {
+        for (size_t iy = 0; iy < cheight; ++iy) {
+          float* JXL_RESTRICT row = raw_out->Row(y0 + iy);
+          float* JXL_RESTRICT tmp = m->upsample_scratch_;
+          // TODO(szabadka) SIMDify this.
+          for (size_t x = 0; x < output_width; ++x) {
+            tmp[x] = row[x / m->h_factor[c]];
+          }
+          memcpy(row, tmp, output_width * sizeof(tmp[0]));
         }
       }
     }

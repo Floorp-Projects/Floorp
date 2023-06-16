@@ -197,7 +197,7 @@ const TESTS = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   const { commands } = await openTabAndSetupStorage(
     MAIN_DOMAIN + "storage-updates.html"
   );

@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-add_setup(async function() {
+add_setup(async function () {
   await PlacesUtils.bookmarks.eraseEverything();
   const TEST_EXAMPLE_URL = "http://example.com/";
   const TEST_EXAMPLE_PARAMS = "?foo=1|2";
@@ -20,7 +20,7 @@ add_setup(async function() {
     title: TEST_EXAMPLE_TITLE,
   });
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.bookmarks.eraseEverything();
   });
 });

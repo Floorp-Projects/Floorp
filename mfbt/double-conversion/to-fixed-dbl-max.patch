@@ -1,7 +1,7 @@
 diff --git a/mfbt/double-conversion/double-conversion/double-to-string.cc b/mfbt/double-conversion/double-conversion/double-to-string.cc
 --- a/mfbt/double-conversion/double-conversion/double-to-string.cc
 +++ b/mfbt/double-conversion/double-conversion/double-to-string.cc
-@@ -200,25 +200,21 @@ bool DoubleToStringConverter::ToShortest
+@@ -207,25 +207,21 @@ bool DoubleToStringConverter::ToShortest
    }
    return true;
  }

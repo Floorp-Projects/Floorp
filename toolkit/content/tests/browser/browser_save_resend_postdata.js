@@ -59,14 +59,14 @@ function test() {
     var file = destDir.clone();
     file.append("no_default_file_name");
     MockFilePicker.setFiles([file]);
-    MockFilePicker.showCallback = function(fp) {
+    MockFilePicker.showCallback = function (fp) {
       MockFilePicker.filterIndex = 1; // kSaveAsType_URL
     };
 
     mockTransferCallback = onTransferComplete;
     mockTransferRegisterer.register();
 
-    registerCleanupFunction(function() {
+    registerCleanupFunction(function () {
       mockTransferRegisterer.unregister();
       MockFilePicker.cleanup();
       destDir.remove(true);

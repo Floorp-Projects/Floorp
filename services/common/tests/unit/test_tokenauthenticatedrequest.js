@@ -29,7 +29,7 @@ add_task(async function test_authenticated_request() {
   let auth;
 
   let server = httpd_setup({
-    "/foo": function(request, response) {
+    "/foo": function (request, response) {
       Assert.ok(request.hasHeader("Authorization"));
       Assert.equal(auth, request.getHeader("Authorization"));
 

@@ -89,6 +89,15 @@ interface GPUAdapterInfo {
     readonly attribute DOMString architecture;
     readonly attribute DOMString device;
     readonly attribute DOMString description;
+
+    // Non-standard; see <https://bugzilla.mozilla.org/show_bug.cgi?id=1831994>.
+    [ChromeOnly] readonly attribute DOMString wgpuName;
+    [ChromeOnly] readonly attribute unsigned long wgpuVendor;
+    [ChromeOnly] readonly attribute unsigned long wgpuDevice;
+    [ChromeOnly] readonly attribute DOMString wgpuDeviceType;
+    [ChromeOnly] readonly attribute DOMString wgpuDriver;
+    [ChromeOnly] readonly attribute DOMString wgpuDriverInfo;
+    [ChromeOnly] readonly attribute DOMString wgpuBackend;
 };
 
 [Pref="dom.webgpu.enabled",
@@ -166,16 +175,30 @@ GPUDevice includes GPUObjectBase;
 [Pref="dom.webgpu.enabled",
  Exposed=(Window /* ,DedicatedWorker */), SecureContext]
 interface GPUBuffer {
+    // TODO: s/unsigned long long/GPUSize64/: https://github.com/gpuweb/gpuweb/issues/4080
+    readonly attribute unsigned long long size;
+    // TODO: s/unsigned long/GPUBufferUsageFlags/: https://github.com/gpuweb/gpuweb/issues/4080
+    readonly attribute unsigned long usage;
+
+    readonly attribute GPUBufferMapState mapState;
+
     [NewObject]
     Promise<undefined> mapAsync(GPUMapModeFlags mode, optional GPUSize64 offset = 0, optional GPUSize64 size);
     [NewObject, Throws]
     ArrayBuffer getMappedRange(optional GPUSize64 offset = 0, optional GPUSize64 size);
     [Throws]
     undefined unmap();
+
     [Throws]
     undefined destroy();
 };
 GPUBuffer includes GPUObjectBase;
+
+enum GPUBufferMapState {
+    "unmapped",
+    "pending",
+    "mapped"
+};
 
 dictionary GPUBufferDescriptor : GPUObjectDescriptorBase {
     required GPUSize64 size;
@@ -220,6 +243,18 @@ interface GPUTexture {
     GPUTextureView createView(optional GPUTextureViewDescriptor descriptor = {});
 
     undefined destroy();
+
+    // TODO: s/unsigned long/GPUIntegerCoordinate: https://github.com/gpuweb/gpuweb/issues/4080
+    readonly attribute unsigned long width;
+    readonly attribute unsigned long height;
+    readonly attribute unsigned long depthOrArrayLayers;
+    readonly attribute unsigned long mipLevelCount;
+    // TODO: s/unsigned long/GPUSize32: https://github.com/gpuweb/gpuweb/issues/4080
+    readonly attribute unsigned long sampleCount;
+    readonly attribute GPUTextureDimension dimension;
+    readonly attribute GPUTextureFormat format;
+    // TODO: s/unsigned long/GPUSize32: https://github.com/gpuweb/gpuweb/issues/4080
+    readonly attribute unsigned long usage;
 };
 GPUTexture includes GPUObjectBase;
 
@@ -318,7 +353,9 @@ enum GPUTextureFormat {
     "rgba8sint",
     "bgra8unorm",
     "bgra8unorm-srgb",
+
     // Packed 32-bit formats
+    "rgb9e5ufloat",
     "rgb10a2unorm",
     "rg11b10float",
 
@@ -342,6 +379,9 @@ enum GPUTextureFormat {
     "depth24plus-stencil8",
     "depth32float",
 
+    // "depth32float-stencil8" feature
+    "depth32float-stencil8",
+
     // BC compressed formats usable if "texture-compression-bc" is both
     // supported by the device/user agent and enabled in requestDevice.
     "bc1-rgba-unorm",
@@ -358,12 +398,6 @@ enum GPUTextureFormat {
     "bc6h-rgb-float",
     "bc7-rgba-unorm",
     "bc7-rgba-unorm-srgb",
-
-    // "depth24unorm-stencil8" feature
-    //"depth24unorm-stencil8",
-
-    // "depth32float-stencil8" feature
-    //"depth32float-stencil8",
 };
 
 [Pref="dom.webgpu.enabled",

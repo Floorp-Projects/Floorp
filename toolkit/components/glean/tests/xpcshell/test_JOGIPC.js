@@ -107,7 +107,7 @@ const METRICS = [
     ["test-only"],
     `"ping"`,
     false,
-    JSON.stringify({ labels: ["label_1", "label_2"] }),
+    JSON.stringify({ ordered_labels: ["label_1", "label_2"] }),
   ],
   [
     "labeled_counter",
@@ -116,12 +116,15 @@ const METRICS = [
     ["test-only"],
     `"ping"`,
     false,
-    JSON.stringify({ labels: ["label_1", "label_2"] }),
+    JSON.stringify({ ordered_labels: ["label_1", "label_2"] }),
   ],
   ["rate", "jog_ipc", "jog_rate", ["test-only"], `"ping"`, false],
 ];
 
 add_task({ skip_if: () => runningInParent }, async function run_child_stuff() {
+  // Ensure any _actual_ runtime metrics are registered first.
+  // Otherwise the jog_ipc.* ones will have incorrect ids.
+  Glean.testOnly.badCode;
   for (let metric of METRICS) {
     Services.fog.testRegisterRuntimeMetric(...metric);
   }
@@ -170,6 +173,9 @@ add_task({ skip_if: () => runningInParent }, async function run_child_stuff() {
 add_task(
   { skip_if: () => !runningInParent },
   async function test_child_metrics() {
+    // Ensure any _actual_ runtime metrics are registered first.
+    // Otherwise the jog_ipc.* ones will have incorrect ids.
+    Glean.testOnly.badCode;
     for (let metric of METRICS) {
       Services.fog.testRegisterRuntimeMetric(...metric);
     }

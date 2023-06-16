@@ -13,10 +13,10 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
 
 ChromeUtils.defineESModuleGetters(this, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
-
   ContextualIdentityService:
     "resource://gre/modules/ContextualIdentityService.sys.mjs",
-
+  ExtensionSettingsStore:
+    "resource://gre/modules/ExtensionSettingsStore.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   ShellService: "resource:///modules/ShellService.sys.mjs",
   URILoadingHelper: "resource:///modules/URILoadingHelper.sys.mjs",
@@ -25,7 +25,6 @@ ChromeUtils.defineESModuleGetters(this, {
 XPCOMUtils.defineLazyModuleGetters(this, {
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  ExtensionSettingsStore: "resource://gre/modules/ExtensionSettingsStore.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "ReferrerInfo", () =>
@@ -322,7 +321,7 @@ function eventMatchesKey(aEvent, aKey) {
   if (keyModifiers) {
     keyModifiers = keyModifiers.split(/[\s,]+/);
     // Capitalize first letter of aKey's modifers to compare to aEvent's modifier
-    keyModifiers.forEach(function(modifier, index) {
+    keyModifiers.forEach(function (modifier, index) {
       if (modifier == "accel") {
         keyModifiers[index] =
           AppConstants.platform == "macosx" ? "Meta" : "Control";
@@ -424,7 +423,7 @@ function openAboutDialog() {
 async function openPreferences(paneID, extraArgs) {
   // This function is duplicated from preferences.js.
   function internalPrefCategoryNameToFriendlyName(aName) {
-    return (aName || "").replace(/^pane./, function(toReplace) {
+    return (aName || "").replace(/^pane./, function (toReplace) {
       return toReplace[4].toLowerCase();
     });
   }
@@ -519,17 +518,14 @@ function openSwitchingDevicesPage() {
 }
 
 function buildHelpMenu() {
-  document.getElementById(
-    "feedbackPage"
-  ).disabled = !Services.policies.isAllowed("feedbackCommands");
+  document.getElementById("feedbackPage").disabled =
+    !Services.policies.isAllowed("feedbackCommands");
 
-  document.getElementById(
-    "helpSafeMode"
-  ).disabled = !Services.policies.isAllowed("safeMode");
+  document.getElementById("helpSafeMode").disabled =
+    !Services.policies.isAllowed("safeMode");
 
-  document.getElementById(
-    "troubleShooting"
-  ).disabled = !Services.policies.isAllowed("aboutSupport");
+  document.getElementById("troubleShooting").disabled =
+    !Services.policies.isAllowed("aboutSupport");
 
   let supportMenu = Services.policies.getSupportMenu();
   if (supportMenu) {

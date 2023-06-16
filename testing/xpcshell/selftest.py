@@ -536,6 +536,7 @@ prefs =
         kwargs["sequential"] = True
         kwargs["testingModulesDir"] = self.testing_modules
         kwargs["utility_path"] = self.utility_path
+        kwargs["repeat"] = 0
         self.assertEqual(
             expected,
             self.x.runTests(kwargs),

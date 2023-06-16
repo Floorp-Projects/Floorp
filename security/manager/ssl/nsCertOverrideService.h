@@ -34,8 +34,6 @@ class nsCertOverride final : public nsICertOverride {
   mozilla::OriginAttributes mOriginAttributes;
   bool mIsTemporary;  // true: session only, false: stored on disk
   nsCString mFingerprint;
-  nsCString mDBKey;
-  nsCOMPtr<nsIX509Cert> mCert;
 
  private:
   ~nsCertOverride() = default;
@@ -130,9 +128,8 @@ class nsCertOverrideService final : public nsICertOverrideService,
   nsresult Write(const mozilla::MutexAutoLock& aProofOfLock);
   nsresult AddEntryToList(const nsACString& host, int32_t port,
                           const mozilla::OriginAttributes& aOriginAttributes,
-                          nsIX509Cert* aCert, const bool aIsTemporary,
+                          const bool aIsTemporary,
                           const nsACString& fingerprint,
-                          const nsACString& dbKey,
                           const mozilla::MutexAutoLock& aProofOfLock);
   already_AddRefed<nsCertOverride> GetOverrideFor(
       const nsACString& aHostName, int32_t aPort,

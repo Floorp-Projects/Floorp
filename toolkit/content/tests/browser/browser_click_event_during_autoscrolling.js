@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["general.autoScroll", true],
@@ -14,7 +14,7 @@ add_task(async function() {
 
   await BrowserTestUtils.withNewTab(
     "https://example.com/browser/toolkit/content/tests/browser/file_empty.html",
-    async function(browser) {
+    async function (browser) {
       ok(browser.isRemoteBrowser, "This test passes only in e10s mode");
       await SpecialPowers.spawn(browser, [], () => {
         content.document.body.innerHTML =
@@ -97,15 +97,16 @@ add_task(async function() {
         constructor(aBrowser, aEventTypes) {
           this.eventData = new Map();
           for (let eventType of aEventTypes) {
-            const removeEventListener = BrowserTestUtils.addContentEventListener(
-              aBrowser,
-              eventType,
-              () => {
-                let eventData = this.eventData.get(eventType);
-                eventData.count++;
-              },
-              { capture: true }
-            );
+            const removeEventListener =
+              BrowserTestUtils.addContentEventListener(
+                aBrowser,
+                eventType,
+                () => {
+                  let eventData = this.eventData.get(eventType);
+                  eventData.count++;
+                },
+                { capture: true }
+              );
             this.eventData.set(eventType, {
               count: 0, // how many times the event fired.
               removeEventListener, // function to remove the event listener.

@@ -4,29 +4,24 @@
  * Covers the following cases:
  *  - RFP is disabled entirely
  *  - RFP is enabled entirely
-
- *  - (A) RFP is exempted on the framer and framee
- *  - (B) RFP is exempted on the framer and framee
-
- *  - (C) RFP is exempted on the framer but not the framee
- *  - (D) RFP is exempted on the framer but not the framee
-
- *  - (E) RFP is not exempted on the framer nor the framee
- *  - (F) RFP is not exempted on the framer nor the framee
- * 
- *  - (G) RFP is not exempted on the framer but is on the framee
- *  - (H) RFP is not exempted on the framer but is on the framee
+ *
+ *  - (A) RFP is exempted on the framer and framee and (if needed) on another cross-origin domain
+ *  - (B) RFP is exempted on the framer and framee but is not on another (if needed) cross-origin domain
+ *  - (C) RFP is exempted on the framer and (if needed) on another cross-origin domain, but not the framee
+ *  - (D) RFP is exempted on the framer but not the framee nor another (if needed) cross-origin domain
+ *  - (E) RFP is not exempted on the framer nor the framee but (if needed) is exempted on another cross-origin domain
+ *  - (F) RFP is not exempted on the framer nor the framee nor another (if needed) cross-origin domain
+ *  - (G) RFP is not exempted on the framer but is on the framee and (if needed) on another cross-origin domain
+ *  - (H) RFP is not exempted on the framer nor another (if needed) cross-origin domain but is on the framee
  */
 
 "use strict";
 
 requestLongerTimeout(3);
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "AppConstants",
-  "resource://gre/modules/AppConstants.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
+});
 
 // =============================================================================================
 // =============================================================================================
@@ -60,10 +55,7 @@ async function testTimePrecision(results, expectedResults, extraData) {
 }
 
 const RFP_TIME_ATOM_MS = 16.667;
-const framer_domain = "example.com";
-const iframe_domain = "example.org";
-const cross_origin_domain = "example.net";
-const uri = `https://${framer_domain}/browser/browser/components/resistfingerprinting/test/browser/file_reduceTimePrecision_iframer.html`;
+const uri = `https://${FRAMER_DOMAIN}/browser/browser/components/resistfingerprinting/test/browser/file_reduceTimePrecision_iframer.html`;
 
 // The first three variables are defined here; and then set for test banks below.
 let extraData = {};
@@ -75,11 +67,9 @@ let expectedResults = {}; // In this test, we don't have explicit expected value
 // Create a function that defines all the tests
 function addAllTests(extraData_, extraPrefs_) {
   add_task(
-    partial(
-      defaultsTest,
+    defaultsTest.bind(
+      null,
       uri,
-      iframe_domain,
-      cross_origin_domain,
       testTimePrecision,
       expectedResults,
       extraData_,
@@ -88,11 +78,9 @@ function addAllTests(extraData_, extraPrefs_) {
   );
 
   add_task(
-    partial(
-      simpleRFPTest,
+    simpleRFPTest.bind(
+      null,
       uri,
-      iframe_domain,
-      cross_origin_domain,
       testTimePrecision,
       expectedResults,
       extraData_,
@@ -100,13 +88,11 @@ function addAllTests(extraData_, extraPrefs_) {
     )
   );
 
-  // (A) RFP is exempted on the framer and framee and each contacts an exempted cross-origin resource
+  // (A) RFP is exempted on the framer and framee and (if needed) on another cross-origin domain
   add_task(
-    partial(
-      testA,
+    testA.bind(
+      null,
       uri,
-      iframe_domain,
-      cross_origin_domain,
       testTimePrecision,
       expectedResults,
       extraData_,
@@ -114,13 +100,11 @@ function addAllTests(extraData_, extraPrefs_) {
     )
   );
 
-  // (B) RFP is exempted on the framer and framee and each contacts a non-exempted cross-origin resource
+  // (B) RFP is exempted on the framer and framee but is not on another (if needed) cross-origin domain
   add_task(
-    partial(
-      testB,
+    testB.bind(
+      null,
       uri,
-      iframe_domain,
-      cross_origin_domain,
       testTimePrecision,
       expectedResults,
       extraData_,
@@ -128,13 +112,11 @@ function addAllTests(extraData_, extraPrefs_) {
     )
   );
 
-  // (C) RFP is exempted on the framer but not the framee and each contacts an exempted cross-origin resource
+  // (C) RFP is exempted on the framer and (if needed) on another cross-origin domain, but not the framee
   add_task(
-    partial(
-      testC,
+    testC.bind(
+      null,
       uri,
-      iframe_domain,
-      cross_origin_domain,
       testTimePrecision,
       expectedResults,
       extraData_,
@@ -142,13 +124,11 @@ function addAllTests(extraData_, extraPrefs_) {
     )
   );
 
-  // (D) RFP is exempted on the framer but not the framee and each contacts a non-exempted cross-origin resource
+  // (D) RFP is exempted on the framer but not the framee nor another (if needed) cross-origin domain
   add_task(
-    partial(
-      testD,
+    testD.bind(
+      null,
       uri,
-      iframe_domain,
-      cross_origin_domain,
       testTimePrecision,
       expectedResults,
       extraData_,
@@ -156,13 +136,11 @@ function addAllTests(extraData_, extraPrefs_) {
     )
   );
 
-  // (E) RFP is not exempted on the framer nor the framee and each contacts an exempted cross-origin resource
+  // (E) RFP is not exempted on the framer nor the framee but (if needed) is exempted on another cross-origin domain
   add_task(
-    partial(
-      testE,
+    testE.bind(
+      null,
       uri,
-      iframe_domain,
-      cross_origin_domain,
       testTimePrecision,
       expectedResults,
       extraData_,
@@ -170,13 +148,11 @@ function addAllTests(extraData_, extraPrefs_) {
     )
   );
 
-  // (F) RFP is not exempted on the framer nor the framee and each contacts a non-exempted cross-origin resource
+  // (F) RFP is not exempted on the framer nor the framee nor another (if needed) cross-origin domain
   add_task(
-    partial(
-      testF,
+    testF.bind(
+      null,
       uri,
-      iframe_domain,
-      cross_origin_domain,
       testTimePrecision,
       expectedResults,
       extraData_,
@@ -184,13 +160,11 @@ function addAllTests(extraData_, extraPrefs_) {
     )
   );
 
-  // (G) RFP is not exempted on the framer but is on the framee and each contacts an exempted cross-origin resource
+  // (G) RFP is not exempted on the framer but is on the framee and (if needed) on another cross-origin domain
   add_task(
-    partial(
-      testG,
+    testG.bind(
+      null,
       uri,
-      iframe_domain,
-      cross_origin_domain,
       testTimePrecision,
       expectedResults,
       extraData_,
@@ -198,13 +172,11 @@ function addAllTests(extraData_, extraPrefs_) {
     )
   );
 
-  // (H) RFP is not exempted on the framer but is on the framee and each contacts a non-exempted cross-origin resource
+  // (H) RFP is not exempted on the framer nor another (if needed) cross-origin domain but is on the framee
   add_task(
-    partial(
-      testH,
+    testH.bind(
+      null,
       uri,
-      iframe_domain,
-      cross_origin_domain,
       testTimePrecision,
       expectedResults,
       extraData_,

@@ -6,17 +6,36 @@
 #ifndef NS_CLIPBOARD_H
 #define NS_CLIPBOARD_H
 
-#include "nsIClipboard.h"
+#include "nsBaseClipboard.h"
 
-class nsClipboard final : public nsIClipboard {
+class nsClipboard final : public ClipboardSetDataHelper {
  private:
-  ~nsClipboard() {}
+  ~nsClipboard() = default;
 
  public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSICLIPBOARD
+  nsClipboard() = default;
 
-  nsClipboard();
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // nsIClipboard
+  NS_IMETHOD GetData(nsITransferable* aTransferable,
+                     int32_t aWhichClipboard) override;
+  NS_IMETHOD EmptyClipboard(int32_t aWhichClipboard) override;
+  NS_IMETHOD HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
+                                    int32_t aWhichClipboard,
+                                    bool* _retval) override;
+  NS_IMETHOD IsClipboardTypeSupported(int32_t aWhichClipboard,
+                                      bool* _retval) override;
+  RefPtr<mozilla::GenericPromise> AsyncGetData(
+      nsITransferable* aTransferable, int32_t aWhichClipboard) override;
+  RefPtr<DataFlavorsPromise> AsyncHasDataMatchingFlavors(
+      const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard) override;
+
+ protected:
+  // Implement the native clipboard behavior.
+  NS_IMETHOD SetNativeClipboardData(nsITransferable* aTransferable,
+                                    nsIClipboardOwner* aOwner,
+                                    int32_t aWhichClipboard) override;
 };
 
 #endif

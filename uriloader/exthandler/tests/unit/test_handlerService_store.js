@@ -243,11 +243,7 @@ add_task(async function test_store_preferredAction() {
   const actions = [
     {
       preferred: Ci.nsIHandlerInfo.alwaysAsk,
-      expected: Services.prefs.getBoolPref(
-        "browser.download.improvements_to_download_panel"
-      )
-        ? Ci.nsIHandlerInfo.alwaysAsk
-        : Ci.nsIHandlerInfo.useHelperApp,
+      expected: Ci.nsIHandlerInfo.alwaysAsk,
     },
     {
       preferred: Ci.nsIHandlerInfo.handleInternally,
@@ -360,9 +356,8 @@ add_task(
 
     await unloadHandlerStore();
 
-    let actualHandlerInfo = HandlerServiceTestUtils.getHandlerInfo(
-      "example/new"
-    );
+    let actualHandlerInfo =
+      HandlerServiceTestUtils.getHandlerInfo("example/new");
     HandlerServiceTestUtils.assertHandlerInfoMatches(actualHandlerInfo, {
       type: "example/new",
       preferredAction: Ci.nsIHandlerInfo.saveToDisk,
@@ -392,9 +387,8 @@ add_task(
 
     await unloadHandlerStore();
 
-    let actualHandlerInfo = HandlerServiceTestUtils.getHandlerInfo(
-      "example/new"
-    );
+    let actualHandlerInfo =
+      HandlerServiceTestUtils.getHandlerInfo("example/new");
     HandlerServiceTestUtils.assertHandlerInfoMatches(actualHandlerInfo, {
       type: "example/new",
       preferredAction: Ci.nsIHandlerInfo.saveToDisk,

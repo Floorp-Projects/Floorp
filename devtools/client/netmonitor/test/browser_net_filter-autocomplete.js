@@ -26,7 +26,7 @@ const REQUESTS = [
 ];
 
 function testAutocompleteContents(expected, document) {
-  expected.forEach(function(item, i) {
+  expected.forEach(function (item, i) {
     is(
       document.querySelector(
         `.devtools-autocomplete-listbox .autocomplete-item:nth-child(${i + 1})`
@@ -37,7 +37,7 @@ function testAutocompleteContents(expected, document) {
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   const { monitor } = await initNetMonitor(FILTERING_URL, { requestCount: 1 });
   const { document, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");

@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["general.autoScroll", true],
@@ -68,7 +68,7 @@ add_task(async function() {
 
   await BrowserTestUtils.withNewTab(
     "https://example.com/browser/toolkit/content/tests/browser/file_empty.html",
-    async function(browser) {
+    async function (browser) {
       await SpecialPowers.spawn(browser, [], () => {
         content.document.body.innerHTML =
           '<div contenteditable style="height: 10000px;"></div>';
@@ -104,7 +104,7 @@ add_task(async function() {
 
   await BrowserTestUtils.withNewTab(
     "https://example.com/browser/toolkit/content/tests/browser/file_empty.html",
-    async function(browser) {
+    async function (browser) {
       await SpecialPowers.spawn(browser, [], () => {
         content.document.body.innerHTML =
           '<div style="height: 10000px;"></div>';
@@ -141,7 +141,7 @@ add_task(async function() {
 
   await BrowserTestUtils.withNewTab(
     "https://example.com/browser/toolkit/content/tests/browser/file_empty.html",
-    async function(browser) {
+    async function (browser) {
       await SpecialPowers.spawn(browser, [], () => {
         content.document.body.innerHTML =
           '<div contenteditable style="height: 10000px;"><div contenteditable="false" style="height: 10000px;"></div></div>';
@@ -174,7 +174,7 @@ add_task(async function() {
 
   await BrowserTestUtils.withNewTab(
     "https://example.com/browser/toolkit/content/tests/browser/file_empty.html",
-    async function(browser) {
+    async function (browser) {
       await SpecialPowers.spawn(browser, [], () => {
         content.document.body.innerHTML =
           '<div contenteditable style="height: 10000px;"></div>';
@@ -203,7 +203,7 @@ add_task(async function() {
 
   await BrowserTestUtils.withNewTab(
     "https://example.com/browser/toolkit/content/tests/browser/file_empty.html",
-    async function(browser) {
+    async function (browser) {
       await SpecialPowers.spawn(browser, [], () => {
         content.document.body.innerHTML =
           '<div style="height: 10000px;"></div>';
@@ -237,7 +237,7 @@ add_task(async function() {
 
   await BrowserTestUtils.withNewTab(
     "https://example.com/browser/toolkit/content/tests/browser/file_empty.html",
-    async function(browser) {
+    async function (browser) {
       await SpecialPowers.spawn(browser, [], () => {
         content.document.body.innerHTML =
           '<input style="height: 10000px; width: 10000px;">';
@@ -270,7 +270,7 @@ add_task(async function() {
 
   await BrowserTestUtils.withNewTab(
     "https://example.com/browser/toolkit/content/tests/browser/file_empty.html",
-    async function(browser) {
+    async function (browser) {
       await SpecialPowers.spawn(browser, [], () => {
         content.document.body.innerHTML =
           '<input style="height: 10000px; width: 10000px;">';

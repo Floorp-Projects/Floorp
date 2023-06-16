@@ -36,7 +36,7 @@ const reducers = {
   },
 };
 
-module.exports = function(boxModel = INITIAL_BOX_MODEL, action) {
+module.exports = function (boxModel = INITIAL_BOX_MODEL, action) {
   const reducer = reducers[action.type];
   if (!reducer) {
     return boxModel;

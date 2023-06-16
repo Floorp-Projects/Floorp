@@ -20,6 +20,41 @@ interface nsIArray;
 native AsyncGetDataPromise(RefPtr<mozilla::GenericPromise>);
 native AsyncDataFlavorsPromise(RefPtr<DataFlavorsPromise>);
 
+[scriptable, builtinclass, uuid(801e2318-c8fa-11ed-afa1-0242ac120002)]
+interface nsIAsyncSetClipboardData : nsISupports {
+  /**
+   * Provide the data for the set request.
+   *
+   * @param  aTransferable
+   *         The transferable contains the data to be written.
+   * @param  aOwner [optional]
+   *         The owner of the transferable.
+   */
+  void setData(in nsITransferable aTransferable, [optional] in nsIClipboardOwner aOwner);
+
+  /**
+   * Abort the request to set data.
+   *
+   * @param  aReason
+   *         The reason for the abort, can not be NS_OK.
+   */
+  void abort(in nsresult aReason);
+};
+
+[scriptable, uuid(78f7c18e-c8fa-11ed-afa1-0242ac120002)]
+interface nsIAsyncSetClipboardDataCallback : nsISupports
+{
+  /**
+   * Indicates that the clipboard asyncSetData request has either succeeded or
+   * been canceled.
+   *
+   * @param  aResult
+   *         The result of the request. NS_OK if successful, or another value
+   *         that indicates the reason for failure or cancellation.
+   */
+  void onComplete(in nsresult aResult);
+};
+
 [scriptable, builtinclass, uuid(ceaa0047-647f-4b8e-ad1c-aff9fa62aa51)]
 interface nsIClipboard : nsISupports
 {
@@ -28,6 +63,10 @@ interface nsIClipboard : nsISupports
     const long kFindClipboard = 2;
     // Used to cache current selection on (nsClipboard) for macOS service menu.
     const long kSelectionCache = 3;
+
+%{ C++
+    static const uint32_t kClipboardTypeCount = kSelectionCache + 1;
+%}
 
    /**
     * Given a transferable, set the data on the native clipboard
@@ -40,6 +79,23 @@ interface nsIClipboard : nsISupports
 
     void setData ( in nsITransferable aTransferable, in nsIClipboardOwner anOwner,
                     in long aWhichClipboard ) ;
+
+    /**
+     * Requests setting data to the native clipboard. The acutal set occur
+     * when the data is provided by calling nsIAsyncSetClipboardData::setData().
+     * The result will be notified by nsIClipboardCallback. A new set request
+     * will cancel any prior pending requests, if any exist.
+     *
+     * @param  aWhichClipboard
+     *         Specifies the clipboard to which this operation applies.
+     * @param  aCallback [optional]
+     *         The callback object that will be notified upon completion.
+     * @return nsIAsyncSetClipboardData
+     *         The write request object. The actual write will occur when the
+     *         data is provided by calling nsIAsyncSetClipboardData::setData().
+     */
+    nsIAsyncSetClipboardData asyncSetData(in long aWhichClipboard,
+                                          [optional] in nsIAsyncSetClipboardDataCallback aCallback);
 
    /**
     * Filters the flavors aTransferable can import (see

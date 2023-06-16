@@ -82,9 +82,9 @@ add_task(function test_initialize() {
  * Tests the behavior of addLogin with regard to metadata.  The logins added
  * here are also used by the following tests.
  */
-add_task(function test_addLogin_metainfo() {
+add_task(async function test_addLogin_metainfo() {
   // Add a login without metadata to the database.
-  Services.logins.addLogin(gLoginInfo1);
+  await Services.logins.addLoginAsync(gLoginInfo1);
 
   // The object provided to addLogin should not have been modified.
   Assert.equal(gLoginInfo1.guid, null);
@@ -104,7 +104,7 @@ add_task(function test_addLogin_metainfo() {
 
   // Add a login without metadata to the database.
   let originalLogin = gLoginInfo2.clone().QueryInterface(Ci.nsILoginMetaInfo);
-  Services.logins.addLogin(gLoginInfo2);
+  await Services.logins.addLoginAsync(gLoginInfo2);
 
   // The object provided to addLogin should not have been modified.
   assertMetaInfoEqual(gLoginInfo2, originalLogin);
@@ -114,7 +114,7 @@ add_task(function test_addLogin_metainfo() {
   assertMetaInfoEqual(gLoginMetaInfo2, gLoginInfo2);
 
   // Add an authentication login to the database before continuing.
-  Services.logins.addLogin(gLoginInfo3);
+  await Services.logins.addLoginAsync(gLoginInfo3);
   gLoginMetaInfo3 = retrieveLoginMatching(gLoginInfo3);
   LoginTestUtils.checkLogins([gLoginInfo1, gLoginInfo2, gLoginInfo3]);
 });
@@ -122,13 +122,13 @@ add_task(function test_addLogin_metainfo() {
 /**
  * Tests that adding a login with a duplicate GUID throws an exception.
  */
-add_task(function test_addLogin_metainfo_duplicate() {
+add_task(async function test_addLogin_metainfo_duplicate() {
   let loginInfo = TestData.formLogin({
     origin: "http://duplicate.example.com",
     guid: gLoginMetaInfo2.guid,
   });
-  Assert.throws(
-    () => Services.logins.addLogin(loginInfo),
+  await Assert.rejects(
+    Services.logins.addLoginAsync(loginInfo),
     /specified GUID already exists/
   );
 

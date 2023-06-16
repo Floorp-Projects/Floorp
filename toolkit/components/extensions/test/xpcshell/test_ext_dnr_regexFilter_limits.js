@@ -470,7 +470,8 @@ add_task(async function static_regexFilter_limit() {
     );
   }
 
-  const errorMsgPattern = /Ignoring static ruleset "([^"]+)" in extension "dnr@ext" because: Number of regexFilter rules across all enabled static rulesets exceeds MAX_NUMBER_OF_REGEX_RULES if ruleset "\1" were to be enabled./;
+  const errorMsgPattern =
+    /Ignoring static ruleset "([^"]+)" in extension "dnr@ext" because: Number of regexFilter rules across all enabled static rulesets exceeds MAX_NUMBER_OF_REGEX_RULES if ruleset "\1" were to be enabled./;
   function checkFailedRulesets(testName, messages, rulesetIds) {
     let actualRulesetIds = messages
       .map(m => errorMsgPattern.exec(m.message)?.[1])

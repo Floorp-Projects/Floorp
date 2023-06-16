@@ -13,11 +13,14 @@ var { ObjectUtils } = ChromeUtils.import(
 var { FormLikeFactory } = ChromeUtils.importESModule(
   "resource://gre/modules/FormLikeFactory.sys.mjs"
 );
-var { AddonTestUtils, MockAsyncShutdown } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+var { FormAutofillHandler } = ChromeUtils.importESModule(
+  "resource://gre/modules/shared/FormAutofillHandler.sys.mjs"
 );
-var { ExtensionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/ExtensionXPCShellUtils.jsm"
+var { AddonTestUtils, MockAsyncShutdown } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
+);
+var { ExtensionTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/ExtensionXPCShellUtils.sys.mjs"
 );
 var { FileTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/FileTestUtils.sys.mjs"
@@ -32,25 +35,12 @@ var { TestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TestUtils.sys.mjs"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "AddonManager",
-  "resource://gre/modules/AddonManager.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "AddonManagerPrivate",
-  "resource://gre/modules/AddonManager.jsm"
-);
 ChromeUtils.defineESModuleGetters(this, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+  AddonManagerPrivate: "resource://gre/modules/AddonManager.sys.mjs",
+  ExtensionParent: "resource://gre/modules/ExtensionParent.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
 });
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "ExtensionParent",
-  "resource://gre/modules/ExtensionParent.jsm"
-);
 
 {
   // We're going to register a mock file source
@@ -102,6 +92,11 @@ function SetPref(name, value) {
     default:
       throw new Error("Unknown type");
   }
+}
+
+// Return the current date rounded in the manner that sync does.
+function getDateForSync() {
+  return Math.round(Date.now() / 10) / 100;
 }
 
 async function loadExtension() {
@@ -182,87 +177,90 @@ async function initProfileStorage(
   return profileStorage;
 }
 
-function verifySectionFieldDetails(sections, expectedResults) {
-  Assert.equal(
-    sections.length,
-    expectedResults.length,
-    "Expected section count."
-  );
-  sections.forEach((sectionInfo, sectionIndex) => {
-    let expectedSectionInfo = expectedResults[sectionIndex];
-    info("FieldName Prediction Results: " + sectionInfo.map(i => i.fieldName));
+function verifySectionAutofillResult(sections, expectedSectionsInfo) {
+  sections.forEach((section, index) => {
+    const expectedSection = expectedSectionsInfo[index];
+
+    const fieldDetails = section.fieldDetails;
+    const expectedFieldDetails = expectedSection.fields;
+
+    info(`verify autofill section[${index}]`);
+
+    fieldDetails.forEach((field, fieldIndex) => {
+      const expeceted = expectedFieldDetails[fieldIndex];
+
+      Assert.equal(
+        expeceted.autofill,
+        field.element.value,
+        `Autofilled value for element(id=${field.element.id}, field name=${field.fieldName}) should be equal`
+      );
+    });
+  });
+}
+
+function verifySectionFieldDetails(sections, expectedSectionsInfo) {
+  sections.forEach((section, index) => {
+    const expectedSection = expectedSectionsInfo[index];
+
+    const fieldDetails = section.fieldDetails;
+    const expectedFieldDetails = expectedSection.fields;
+
+    info(`section[${index}] ${expectedSection.description ?? ""}:`);
+    info(`FieldName Prediction Results: ${fieldDetails.map(i => i.fieldName)}`);
     info(
-      "FieldName Expected Results:   " +
-        expectedSectionInfo.map(i => i.fieldName)
+      `FieldName Expected Results:   ${expectedFieldDetails.map(
+        detail => detail.fieldName
+      )}`
     );
     Assert.equal(
-      sectionInfo.length,
-      expectedSectionInfo.length,
-      "Expected field count."
+      fieldDetails.length,
+      expectedFieldDetails.length,
+      `Expected field count.`
     );
 
-    sectionInfo.forEach((field, fieldIndex) => {
-      let expectedField = expectedSectionInfo[fieldIndex];
-      if (!("part" in expectedField)) {
-        expectedField.part = null;
+    fieldDetails.forEach((field, fieldIndex) => {
+      const expectedFieldDetail = expectedFieldDetails[fieldIndex];
+
+      const expected = {
+        ...{
+          reason: "autocomplete",
+          section: "",
+          contactType: "",
+          addressType: "",
+        },
+        ...expectedSection.default,
+        ...expectedFieldDetail,
+      };
+
+      const keys = new Set([...Object.keys(field), ...Object.keys(expected)]);
+      ["autofill", "elementWeakRef", "confidence", "part"].forEach(k =>
+        keys.delete(k)
+      );
+
+      for (const key of keys) {
+        const expectedValue = expected[key];
+        const actualValue = field[key];
+        Assert.equal(
+          expectedValue,
+          actualValue,
+          `${key} should be equal, expect ${expectedValue}, got ${actualValue}`
+        );
       }
-      delete field.reason;
-      delete field.elementWeakRef;
-      delete field.confidence;
-      Assert.deepEqual(field, expectedField);
     });
+
+    Assert.equal(
+      section.isValidSection(),
+      !expectedSection.invalid,
+      `Should be an ${expectedSection.invalid ? "invalid" : "valid"} section`
+    );
   });
 }
 
 var FormAutofillHeuristics, LabelUtils;
 var AddressDataLoader, FormAutofillUtils;
 
-async function runHeuristicsTest(patterns, fixturePathPrefix) {
-  add_setup(async () => {
-    ({ FormAutofillHeuristics } = ChromeUtils.importESModule(
-      "resource://gre/modules/shared/FormAutofillHeuristics.sys.mjs"
-    ));
-    ({ AddressDataLoader, FormAutofillUtils } = ChromeUtils.importESModule(
-      "resource://gre/modules/shared/FormAutofillUtils.sys.mjs"
-    ));
-    ({ LabelUtils } = ChromeUtils.importESModule(
-      "resource://gre/modules/shared/LabelUtils.sys.mjs"
-    ));
-  });
-
-  patterns.forEach(testPattern => {
-    add_task(async function() {
-      info("Starting test fixture: " + testPattern.fixturePath);
-      let file = do_get_file(fixturePathPrefix + testPattern.fixturePath);
-      let doc = MockDocument.createTestDocumentFromFile(
-        "http://localhost:8080/test/",
-        file
-      );
-
-      let forms = [];
-
-      for (let field of FormAutofillUtils.autofillFieldSelector(doc)) {
-        let formLike = FormLikeFactory.createFromField(field);
-        if (!forms.some(form => form.rootElement === formLike.rootElement)) {
-          forms.push(formLike);
-        }
-      }
-
-      Assert.equal(
-        forms.length,
-        testPattern.expectedResult.length,
-        "Expected form count."
-      );
-
-      forms.forEach((form, formIndex) => {
-        let sections = FormAutofillHeuristics.getFormInfo(form);
-        verifySectionFieldDetails(
-          sections.map(section => section.fieldDetails),
-          testPattern.expectedResult[formIndex]
-        );
-      });
-    });
-  });
+function autofillFieldSelector(doc) {
+  return doc.querySelectorAll("input, select");
 }
 
 /**

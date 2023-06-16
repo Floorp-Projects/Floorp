@@ -339,7 +339,6 @@ static uint32_t gLastTouchID = 0;
 static GUniquePtr<GdkEventCrossing> sStoredLeaveNotifyEvent;
 
 #define NS_WINDOW_TITLE_MAX_LENGTH 4095
-#define kWindowPositionSlop 20
 
 // cursor cache
 static GdkCursor* gCursorCache[eCursorCount];
@@ -416,6 +415,7 @@ nsWindow::nsWindow()
       mNoAutoHide(false),
       mIsTransparent(false),
       mHasReceivedSizeAllocate(false),
+      mWidgetCursorLocked(false),
       mPopupTrackInHierarchy(false),
       mPopupTrackInHierarchyConfigured(false),
       mHiddenPopupPositioned(false),
@@ -820,7 +820,14 @@ void nsWindow::RegisterTouchWindow() {
   mTouches.Clear();
 }
 
-void nsWindow::ConstrainPosition(bool aAllowSlop, int32_t* aX, int32_t* aY) {
+LayoutDeviceIntPoint nsWindow::GetScreenEdgeSlop() {
+  if (DrawsToCSDTitlebar()) {
+    return GetClientOffset();
+  }
+  return {};
+}
+
+void nsWindow::ConstrainPosition(DesktopIntPoint& aPoint) {
   if (!mShell || GdkIsWaylandDisplay()) {
     return;
   }
@@ -833,52 +840,40 @@ void nsWindow::ConstrainPosition(bool aAllowSlop, int32_t* aX, int32_t* aY) {
 
   /* get our playing field. use the current screen, or failing that
     for any reason, use device caps for the default screen. */
-  nsCOMPtr<nsIScreen> screen;
   nsCOMPtr<nsIScreenManager> screenmgr =
       do_GetService("@mozilla.org/gfx/screenmanager;1");
-  if (screenmgr) {
-    screenmgr->ScreenForRect(*aX, *aY, logWidth, logHeight,
-                             getter_AddRefs(screen));
+  if (!screenmgr) {
+    return;
   }
-
+  nsCOMPtr<nsIScreen> screen;
+  screenmgr->ScreenForRect(aPoint.x, aPoint.y, logWidth, logHeight,
+                           getter_AddRefs(screen));
   // We don't have any screen so leave the coordinates as is
-  if (!screen) return;
-
-  nsIntRect screenRect;
-  if (mSizeMode != nsSizeMode_Fullscreen) {
-    // For normalized windows, use the desktop work area.
-    screen->GetAvailRectDisplayPix(&screenRect.x, &screenRect.y,
-                                   &screenRect.width, &screenRect.height);
-  } else {
-    // For full screen windows, use the desktop.
-    screen->GetRectDisplayPix(&screenRect.x, &screenRect.y, &screenRect.width,
-                              &screenRect.height);
+  if (!screen) {
+    return;
   }
 
-  if (aAllowSlop) {
-    if (*aX < screenRect.x - logWidth + kWindowPositionSlop) {
-      *aX = screenRect.x - logWidth + kWindowPositionSlop;
-    } else if (*aX >= screenRect.XMost() - kWindowPositionSlop) {
-      *aX = screenRect.XMost() - kWindowPositionSlop;
-    }
+  // For normalized windows, use the desktop work area.
+  // For full screen windows, use the desktop.
+  DesktopIntRect screenRect = mSizeMode == nsSizeMode_Fullscreen
+                                  ? screen->GetRectDisplayPix()
+                                  : screen->GetAvailRectDisplayPix();
 
-    if (*aY < screenRect.y - logHeight + kWindowPositionSlop) {
-      *aY = screenRect.y - logHeight + kWindowPositionSlop;
-    } else if (*aY >= screenRect.YMost() - kWindowPositionSlop) {
-      *aY = screenRect.YMost() - kWindowPositionSlop;
-    }
-  } else {
-    if (*aX < screenRect.x) {
-      *aX = screenRect.x;
-    } else if (*aX >= screenRect.XMost() - logWidth) {
-      *aX = screenRect.XMost() - logWidth;
-    }
+  // Expand for the decoration size if needed.
+  auto slop =
+      DesktopIntPoint::Round(GetScreenEdgeSlop() / GetDesktopToDeviceScale());
+  screenRect.Inflate(slop.x, slop.y);
 
-    if (*aY < screenRect.y) {
-      *aY = screenRect.y;
-    } else if (*aY >= screenRect.YMost() - logHeight) {
-      *aY = screenRect.YMost() - logHeight;
-    }
+  if (aPoint.x < screenRect.x) {
+    aPoint.x = screenRect.x;
+  } else if (aPoint.x >= screenRect.XMost() - logWidth) {
+    aPoint.x = screenRect.XMost() - logWidth;
+  }
+
+  if (aPoint.y < screenRect.y) {
+    aPoint.y = screenRect.y;
+  } else if (aPoint.y >= screenRect.YMost() - logHeight) {
+    aPoint.y = screenRect.YMost() - logHeight;
   }
 }
 
@@ -3343,6 +3338,10 @@ void nsWindow::SetCursor(const Cursor& aCursor) {
     return;
   }
 
+  if (mWidgetCursorLocked) {
+    return;
+  }
+
   // Only change cursor if it's actually been changed
   if (!mUpdateCursor && mCursor == aCursor) {
     return;
@@ -3428,10 +3427,10 @@ void* nsWindow::GetNativeData(uint32_t aDataType) {
 #ifdef MOZ_WAYLAND
       if (GdkIsWaylandDisplay()) {
         if (mCompositorWidgetDelegate &&
-            mCompositorWidgetDelegate->AsGtkCompositorWidget()) {
-          MOZ_DIAGNOSTIC_ASSERT(
-              !mCompositorWidgetDelegate->AsGtkCompositorWidget()->IsHidden(),
-              "We're getting OpenGL window for hidden window!");
+            mCompositorWidgetDelegate->AsGtkCompositorWidget() &&
+            mCompositorWidgetDelegate->AsGtkCompositorWidget()->IsHidden()) {
+          NS_WARNING("Getting OpenGL EGL window for hidden Gtk window!");
+          return nullptr;
         }
         eglWindow = moz_container_wayland_get_egl_window(
             mContainer, FractionalScaleFactor());
@@ -4448,6 +4447,7 @@ void nsWindow::OnMotionNotifyEvent(GdkEventMotion* aEvent) {
     }
   }
 
+  mWidgetCursorLocked = false;
   const auto refPoint = GetRefPoint(this, aEvent);
   if (auto edge = CheckResizerEdge(refPoint)) {
     nsCursor cursor = eCursor_none;
@@ -4470,6 +4470,10 @@ void nsWindow::OnMotionNotifyEvent(GdkEventMotion* aEvent) {
         break;
     }
     SetCursor(Cursor{cursor});
+    // If we set resize cursor on widget level keep it locked and prevent layout
+    // to switch it back to default (by synthetic mouse events for instance)
+    // until resize is finished.
+    mWidgetCursorLocked = true;
     return;
   }
 
@@ -6446,7 +6450,15 @@ nsAutoCString nsWindow::GetDebugTag() const {
 }
 
 void nsWindow::NativeMoveResize(bool aMoved, bool aResized) {
-  GdkPoint topLeft = DevicePixelsToGdkPointRoundDown(mBounds.TopLeft());
+  GdkPoint topLeft = [&] {
+    auto target = mBounds.TopLeft();
+    // gtk_window_move will undo the csd offset, but nothing else, so only add
+    // the client offset if drawing to the csd titlebar.
+    if (DrawsToCSDTitlebar()) {
+      target += mClientOffset;
+    }
+    return DevicePixelsToGdkPointRoundDown(target);
+  }();
   GdkRectangle size = DevicePixelsToGdkSizeRoundUp(mLastSizeRequest);
 
   LOG("nsWindow::NativeMoveResize move %d resize %d to %d,%d -> %d x %d\n",
@@ -9515,7 +9527,7 @@ void nsWindow::LockNativePointer() {
     return;
   }
 
-  auto waylandDisplay = WaylandDisplayGet();
+  auto* waylandDisplay = WaylandDisplayGet();
 
   auto* pointerConstraints = waylandDisplay->GetPointerConstraints();
   if (!pointerConstraints) {

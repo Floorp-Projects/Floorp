@@ -6,7 +6,7 @@
 
 const kToolbar = "test-toolbar-963639-non-customizable-customizing-attribute";
 
-add_task(async function() {
+add_task(async function () {
   info(
     "Test for Bug 963639 - CustomizeMode _onToolbarVisibilityChange sets @customizing on non-customizable toolbars"
   );

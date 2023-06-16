@@ -17,7 +17,7 @@ async function waitForZoom(zoom) {
 }
 
 // Bug 934951 - Zoom controls percentage label doesn't update when it's in the toolbar and you navigate.
-add_task(async function() {
+add_task(async function () {
   CustomizableUI.addWidgetToArea("zoom-controls", CustomizableUI.AREA_NAVBAR);
   gZoomResetButton = document.getElementById("zoom-reset-button");
   let tab1 = BrowserTestUtils.addTab(gBrowser, "about:mozilla");

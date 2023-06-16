@@ -19,7 +19,7 @@ const PAGECONTENT_SMALL = `
 async function performLargePopupTests(win) {
   let browser = win.gBrowser.selectedBrowser;
 
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     let doc = content.document;
     let select = doc.getElementById("one");
     for (var i = 0; i < 180; i++) {
@@ -262,18 +262,20 @@ async function performLargePopupTests(win) {
       browser,
       "MozAfterPaint"
     );
-    await SpecialPowers.spawn(browser, [position], async function(
-      contentPosition
-    ) {
-      let select = content.document.getElementById("one");
-      select.setAttribute("style", contentPosition || "");
-      select.getBoundingClientRect();
-    });
+    await SpecialPowers.spawn(
+      browser,
+      [position],
+      async function (contentPosition) {
+        let select = content.document.getElementById("one");
+        select.setAttribute("style", contentPosition || "");
+        select.getBoundingClientRect();
+      }
+    );
     await contentPainted;
   }
 
   if (navigator.platform.indexOf("Mac") == 0) {
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       let doc = content.document;
       doc.body.style = "padding-top: 400px;";
 

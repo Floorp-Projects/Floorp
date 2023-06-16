@@ -14,18 +14,13 @@
 // * if the locked node has multi animations,
 //   the class will add to those animation target as well
 
-add_task(async function() {
+add_task(async function () {
   await addTab(URL_ROOT + "doc_simple_animation.html");
   await removeAnimatedElementsExcept([".animated", ".multi"]);
-  const {
-    animationInspector,
-    inspector,
-    panel,
-  } = await openAnimationInspector();
-  const {
-    waitForHighlighterTypeShown,
-    waitForHighlighterTypeHidden,
-  } = getHighlighterTestHelpers(inspector);
+  const { animationInspector, inspector, panel } =
+    await openAnimationInspector();
+  const { waitForHighlighterTypeShown, waitForHighlighterTypeHidden } =
+    getHighlighterTestHelpers(inspector);
 
   info("Check highlighting when mouse over on a target node");
   const onHighlight = waitForHighlighterTypeShown(

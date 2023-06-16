@@ -48,8 +48,7 @@ const TESTCASES = [
     expected: null,
   },
   {
-    name:
-      "Check correct mime-info is returned when download contentType is unambiguous",
+    name: "Check correct mime-info is returned when download contentType is unambiguous",
     testFile: "download-test.txt",
     contentType: "text/plain",
     expected: {
@@ -57,8 +56,7 @@ const TESTCASES = [
     },
   },
   {
-    name:
-      "Returns correct mime-info from file extension when download contentType is missing",
+    name: "Returns correct mime-info from file extension when download contentType is missing",
     testFile: "download-test.pdf",
     contentType: undefined,
     expected: {
@@ -74,15 +72,13 @@ const TESTCASES = [
     },
   },
   {
-    name:
-      "Returns null when contentType is missing and file extension is unknown",
+    name: "Returns null when contentType is missing and file extension is unknown",
     testFile: "download-test.xxunknown",
     contentType: undefined,
     expected: null,
   },
   {
-    name:
-      "Returns contentType when contentType is ambiguous and file extension is unknown",
+    name: "Returns contentType when contentType is ambiguous and file extension is unknown",
     testFile: "download-test.xxunknown",
     contentType: "application/octet-stream",
     expected: {
@@ -90,8 +86,7 @@ const TESTCASES = [
     },
   },
   {
-    name:
-      "Returns contentType when contentType is ambiguous and there is no file extension",
+    name: "Returns contentType when contentType is ambiguous and there is no file extension",
     testFile: "download-test",
     contentType: "application/octet-stream",
     expected: {

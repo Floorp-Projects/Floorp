@@ -6,7 +6,7 @@
 const EMPTY_URL = "/browser/dom/workers/test/empty.html";
 const WORKER_URL = "/browser/dom/workers/test/empty_worker.js";
 
-add_task(async function() {
+add_task(async function () {
   let tab = BrowserTestUtils.addTab(
     gBrowser,
     "http://mochi.test:8888" + EMPTY_URL
@@ -19,7 +19,7 @@ add_task(async function() {
   await SpecialPowers.spawn(
     browser,
     ["http://example.org" + WORKER_URL],
-    function(spec) {
+    function (spec) {
       return new content.Promise((resolve, reject) => {
         let w = new content.window.Worker(spec);
         w.onerror = _ => {
@@ -39,7 +39,7 @@ add_task(async function() {
   BrowserTestUtils.removeTab(tab);
 });
 
-add_task(async function() {
+add_task(async function () {
   let tab = BrowserTestUtils.addTab(
     gBrowser,
     "https://example.org" + EMPTY_URL
@@ -52,7 +52,7 @@ add_task(async function() {
   await SpecialPowers.spawn(
     browser,
     ["http://example.org" + WORKER_URL],
-    function(spec) {
+    function (spec) {
       return new content.Promise((resolve, reject) => {
         let w = new content.window.Worker(spec);
         w.onerror = _ => {

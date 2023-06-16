@@ -30,13 +30,8 @@ class KeyframesGraph extends PureComponent {
   }
 
   render() {
-    const {
-      getComputedStyle,
-      keyframes,
-      name,
-      simulateAnimation,
-      type,
-    } = this.props;
+    const { getComputedStyle, keyframes, name, simulateAnimation, type } =
+      this.props;
 
     return dom.div(
       {

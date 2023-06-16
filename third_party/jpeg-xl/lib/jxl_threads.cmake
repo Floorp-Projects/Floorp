@@ -11,40 +11,37 @@ include(jxl_lists.cmake)
 # parameter should already be created with add_library(), but this function
 # sets all the remaining common properties.
 function(_set_jxl_threads _target)
+  target_compile_options(${_target} PRIVATE ${JPEGXL_INTERNAL_FLAGS})
+  target_compile_options(${_target} PUBLIC ${JPEGXL_COVERAGE_FLAGS})
+  set_property(TARGET ${_target} PROPERTY POSITION_INDEPENDENT_CODE ON)
 
-target_compile_options(${_target} PRIVATE ${JPEGXL_INTERNAL_FLAGS})
-target_compile_options(${_target} PUBLIC ${JPEGXL_COVERAGE_FLAGS})
-set_property(TARGET ${_target} PROPERTY POSITION_INDEPENDENT_CODE ON)
+  target_include_directories(${_target}
+    PRIVATE
+      "${PROJECT_SOURCE_DIR}"
+    PUBLIC
+      "${CMAKE_CURRENT_SOURCE_DIR}/include"
+      "${CMAKE_CURRENT_BINARY_DIR}/include")
 
-target_include_directories(${_target}
-  PRIVATE
-    "${PROJECT_SOURCE_DIR}"
-  PUBLIC
-    "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    "${CMAKE_CURRENT_BINARY_DIR}/include")
+  target_link_libraries(${_target}
+    PUBLIC ${JPEGXL_COVERAGE_FLAGS} Threads::Threads
+  )
 
-target_link_libraries(${_target}
-  PUBLIC ${JPEGXL_COVERAGE_FLAGS} Threads::Threads
-)
+  set_target_properties(${_target} PROPERTIES
+    CXX_VISIBILITY_PRESET hidden
+    VISIBILITY_INLINES_HIDDEN 1
+    DEFINE_SYMBOL JXL_THREADS_INTERNAL_LIBRARY_BUILD
+  )
 
-set_target_properties(${_target} PROPERTIES
-  CXX_VISIBILITY_PRESET hidden
-  VISIBILITY_INLINES_HIDDEN 1
-  DEFINE_SYMBOL JXL_THREADS_INTERNAL_LIBRARY_BUILD
-)
-
-# Always install the library as jxl_threads.{a,so} file without the "-static"
-# suffix, except in Windows.
-if (NOT WIN32 OR MINGW)
-  set_target_properties(${_target} PROPERTIES OUTPUT_NAME "jxl_threads")
-endif()
-install(TARGETS ${_target}
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
-
+  # Always install the library as jxl_threads.{a,so} file without the "-static"
+  # suffix, except in Windows.
+  if (NOT WIN32 OR MINGW)
+    set_target_properties(${_target} PROPERTIES OUTPUT_NAME "jxl_threads")
+  endif()
+  install(TARGETS ${_target}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 endfunction()
-
 
 ### Static library.
 add_library(jxl_threads-static STATIC ${JPEGXL_INTERNAL_THREADS_SOURCES})

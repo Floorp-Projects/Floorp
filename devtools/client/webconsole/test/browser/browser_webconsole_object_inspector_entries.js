@@ -10,7 +10,7 @@ const TEST_URI = `https://example.com/document-builder.sjs?html=${encodeURICompo
 
 const { ELLIPSIS } = require("resource://devtools/shared/l10n.js");
 
-add_task(async function() {
+add_task(async function () {
   // This will make it so we'll have stable MIDI devices reported
   await pushPref("midi.testing", true);
   await pushPref("dom.webmidi.enabled", true);
@@ -24,7 +24,7 @@ add_task(async function() {
   const taskResult = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [],
-    async function() {
+    async function () {
       const formData = new content.FormData();
       formData.append("a", 1);
       formData.append("a", 2);

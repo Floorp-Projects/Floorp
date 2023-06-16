@@ -15,7 +15,7 @@ const RUNTIME_ID_2 = "RUNTIME_ID_2";
 
 // Test that removed USB devices are still visible as "Unplugged devices", until
 // about:debugging is reloaded.
-add_task(async function() {
+add_task(async function () {
   const mocks = new Mocks();
   let { document, tab } = await openAboutDebugging();
 

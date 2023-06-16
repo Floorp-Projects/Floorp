@@ -117,10 +117,10 @@ async function onHistoryReady() {
     "Pretend visit to before-today.com should still exist"
   );
 
-  let checkZero = function(num, message) {
+  let checkZero = function (num, message) {
     is(num, 0, message);
   };
-  let checkOne = function(num, message) {
+  let checkOne = function (num, message) {
     is(num, 1, message);
   };
 
@@ -996,7 +996,7 @@ async function setupFormHistory() {
   });
 
   var checks = 0;
-  let checkOne = function(num, message) {
+  let checkOne = function (num, message) {
     is(num, 1, message);
     checks++;
   };
@@ -1184,7 +1184,7 @@ async function setupDownloads() {
  * @param aID
  *        The ids of the downloads to check.
  */
-let downloadExists = async function(list, path) {
+let downloadExists = async function (list, path) {
   let listArray = await list.getAll();
   return listArray.some(i => i.target.path == path);
 };

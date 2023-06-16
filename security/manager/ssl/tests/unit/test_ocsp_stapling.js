@@ -16,7 +16,7 @@ function add_ocsp_test(
   aStaplingEnabled,
   aExpectOCSPRequest = false
 ) {
-  add_connection_test(aHost, aExpectedResult, function() {
+  add_connection_test(aHost, aExpectedResult, function () {
     gExpectOCSPRequest = aExpectOCSPRequest;
     clearOCSPCache();
     clearSessionCache();
@@ -149,7 +149,7 @@ function add_tests() {
     Ci.nsIX509CertDB
   );
   let otherTestCA = constructCertFromFile("ocsp_certs/other-test-ca.pem");
-  add_test(function() {
+  add_test(function () {
     certDB.setCertTrust(
       otherTestCA,
       Ci.nsIX509Cert.CA_CERT,
@@ -166,7 +166,7 @@ function add_tests() {
 
   // The stapled response is from a CA that is trusted but did not issue the
   // server's certificate.
-  add_test(function() {
+  add_test(function () {
     certDB.setCertTrust(
       otherTestCA,
       Ci.nsIX509Cert.CA_CERT,
@@ -228,7 +228,7 @@ function add_tests() {
   add_connection_test(
     "ocsp-stapling-none.example.com",
     PRErrorCodeSuccess,
-    function() {
+    function () {
       gExpectOCSPRequest = true;
       clearOCSPCache();
       clearSessionCache();
@@ -372,7 +372,7 @@ function run_test() {
   Services.prefs.setIntPref("security.OCSP.timeoutMilliseconds.soft", 5000);
 
   let fakeOCSPResponder = new HttpServer();
-  fakeOCSPResponder.registerPrefixHandler("/", function(request, response) {
+  fakeOCSPResponder.registerPrefixHandler("/", function (request, response) {
     response.setStatusLine(request.httpVersion, 500, "Internal Server Error");
     ok(
       gExpectOCSPRequest,
@@ -385,7 +385,7 @@ function run_test() {
 
   add_tests();
 
-  add_test(function() {
+  add_test(function () {
     fakeOCSPResponder.stop(check_ocsp_stapling_telemetry);
   });
 

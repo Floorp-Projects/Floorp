@@ -23,7 +23,7 @@ registerCleanupFunction(() => MockFilePicker.cleanup());
 
 let gTempDownloadDir;
 
-add_setup(async function() {
+add_setup(async function () {
   // Create temp directory
   let time = new Date().getTime();
   let tempDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
@@ -140,7 +140,7 @@ async function savelink() {
   await popupShown;
 
   await new Promise(resolve => {
-    MockFilePicker.showCallback = function(fp) {
+    MockFilePicker.showCallback = function (fp) {
       resolve();
       let file = gTempDownloadDir.clone();
       file.append("file_with__funny_name.png");

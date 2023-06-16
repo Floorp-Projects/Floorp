@@ -13,7 +13,7 @@ const TEST_URI = `<style>
   </style>
   <div id="div1"></div>`;
 
-add_task(async function() {
+add_task(async function () {
   // Make sure the toolbox is tall enough to have empty space below the
   // boxmodel-container.
   await pushPref("devtools.toolbox.footer.height", 500);

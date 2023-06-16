@@ -4,22 +4,22 @@
 /* This code is loaded in every child process that is started by mochitest.
  */
 
-const { ExtensionUtils } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionUtils.jsm"
-);
+import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   ContentTaskUtils: "resource://testing-common/ContentTaskUtils.sys.mjs",
-  MockColorPicker: "resource://specialpowers/MockColorPicker.sys.mjs",
-  MockFilePicker: "resource://specialpowers/MockFilePicker.sys.mjs",
-  MockPermissionPrompt: "resource://specialpowers/MockPermissionPrompt.sys.mjs",
+  MockColorPicker: "resource://testing-common/MockColorPicker.sys.mjs",
+  MockFilePicker: "resource://testing-common/MockFilePicker.sys.mjs",
+  MockPermissionPrompt:
+    "resource://testing-common/MockPermissionPrompt.sys.mjs",
   PerTestCoverageUtils:
     "resource://testing-common/PerTestCoverageUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
-  SpecialPowersSandbox: "resource://specialpowers/SpecialPowersSandbox.sys.mjs",
-  WrapPrivileged: "resource://specialpowers/WrapPrivileged.sys.mjs",
+  SpecialPowersSandbox:
+    "resource://testing-common/SpecialPowersSandbox.sys.mjs",
+  WrapPrivileged: "resource://testing-common/WrapPrivileged.sys.mjs",
 });
 ChromeUtils.defineModuleGetter(
   lazy,
@@ -309,7 +309,7 @@ export class SpecialPowersChild extends JSWindowActorChild {
       case "Assert":
         {
           if ("info" in message.data) {
-            this.SimpleTest.info(message.data.info);
+            (this.xpcshellScope || this.SimpleTest).info(message.data.info);
             break;
           }
 
@@ -320,6 +320,8 @@ export class SpecialPowersChild extends JSWindowActorChild {
           if (SimpleTest) {
             let expected = expectFail ? "fail" : "pass";
             SimpleTest.record(passed, name, diag, stack, expected);
+          } else if (this.xpcshellScope) {
+            this.xpcshellScope.do_report_result(passed, name, stack);
           } else {
             // Well, this is unexpected.
             dump(name + "\n");
@@ -613,9 +615,11 @@ export class SpecialPowersChild extends JSWindowActorChild {
         let name = aMessage.json.name;
         let message = aMessage.json.message;
         if (this.contentWindow) {
-          message = new StructuredCloneHolder(message).deserialize(
-            this.contentWindow
-          );
+          message = new StructuredCloneHolder(
+            `SpecialPowers/receiveMessage/${name}`,
+            null,
+            message
+          ).deserialize(this.contentWindow);
         }
         // Ignore message from other chrome script
         if (messageId != id) {
@@ -754,7 +758,7 @@ export class SpecialPowersChild extends JSWindowActorChild {
       crashDumpFilesToIgnore: this._unexpectedCrashDumpFiles,
     };
     var crashDumpFiles = await this.sendQuery("SPProcessCrashService", message);
-    crashDumpFiles.forEach(function(aFilename) {
+    crashDumpFiles.forEach(function (aFilename) {
       self._unexpectedCrashDumpFiles[aFilename] = true;
     });
     return crashDumpFiles;
@@ -1362,7 +1366,7 @@ export class SpecialPowersChild extends JSWindowActorChild {
     let count = 0;
 
     function genGCCallback(cb) {
-      return function() {
+      return function () {
         Cu.forceCC();
         if (++count < 3) {
           Cu.schedulePreciseGC(genGCCallback(cb));
@@ -1475,7 +1479,7 @@ export class SpecialPowersChild extends JSWindowActorChild {
     ];
     for (var i in props) {
       let prop = props[i];
-      res[prop] = function() {
+      res[prop] = function () {
         return serv[prop].apply(serv, arguments);
       };
     }
@@ -1581,7 +1585,9 @@ export class SpecialPowersChild extends JSWindowActorChild {
       args,
       task: String(task),
       caller: Cu.getFunctionSourceLocation(task),
-      hasHarness: typeof this.SimpleTest === "object",
+      hasHarness:
+        typeof this.SimpleTest === "object" ||
+        typeof this.xpcshellScope === "object",
       imports: this._spawnTaskImports,
     });
   }
@@ -1661,6 +1667,13 @@ export class SpecialPowersChild extends JSWindowActorChild {
   }
   set SimpleTest(val) {
     this._SimpleTest = val;
+  }
+
+  get xpcshellScope() {
+    return this._xpcshellScope;
+  }
+  set xpcshellScope(val) {
+    this._xpcshellScope = val;
   }
 
   async evictAllContentViewers() {
@@ -2066,7 +2079,7 @@ export class SpecialPowersChild extends JSWindowActorChild {
       "setInputStream"
     );
 
-    return new Promise(function(resolve) {
+    return new Promise(function (resolve) {
       let listener = {
         httpStatus: 0,
 
@@ -2159,10 +2172,16 @@ export class SpecialPowersChild extends JSWindowActorChild {
       case "cmd_highlight":
       case "cmd_insertImageNoUI":
       case "cmd_insertLinkNoUI":
-      case "cmd_paragraphState":
-        let params = Cu.createCommandParams();
+      case "cmd_paragraphState": {
+        const params = Cu.createCommandParams();
         params.setStringValue("state_attribute", param);
         return window.docShell.doCommandWithParams(cmd, params);
+      }
+      case "cmd_pasteTransferable": {
+        const params = Cu.createCommandParams();
+        params.setISupportsValue("transferable", param);
+        return window.docShell.doCommandWithParams(cmd, params);
+      }
       default:
         return window.docShell.doCommand(cmd);
     }
@@ -2264,7 +2283,7 @@ export class SpecialPowersChild extends JSWindowActorChild {
 }
 
 SpecialPowersChild.prototype._proxiedObservers = {
-  "specialpowers-http-notify-request": function(aMessage) {
+  "specialpowers-http-notify-request": function (aMessage) {
     let uri = aMessage.json.uri;
     Services.obs.notifyObservers(
       null,
@@ -2273,11 +2292,11 @@ SpecialPowersChild.prototype._proxiedObservers = {
     );
   },
 
-  "specialpowers-service-worker-shutdown": function(aMessage) {
+  "specialpowers-service-worker-shutdown": function (aMessage) {
     Services.obs.notifyObservers(null, "specialpowers-service-worker-shutdown");
   },
 
-  "specialpowers-csp-on-violate-policy": function(aMessage) {
+  "specialpowers-csp-on-violate-policy": function (aMessage) {
     let subject = null;
 
     try {
@@ -2296,7 +2315,7 @@ SpecialPowersChild.prototype._proxiedObservers = {
     );
   },
 
-  "specialpowers-xfo-on-violate-policy": function(aMessage) {
+  "specialpowers-xfo-on-violate-policy": function (aMessage) {
     let subject = Services.io.newURI(aMessage.data.subject);
     Services.obs.notifyObservers(
       subject,

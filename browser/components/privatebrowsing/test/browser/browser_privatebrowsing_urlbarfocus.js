@@ -24,13 +24,13 @@ function openNewPrivateWindow() {
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   let win = await openNewPrivateWindow();
   checkUrlbarFocus(win);
   win.close();
 });
 
-add_task(async function() {
+add_task(async function () {
   AboutNewTab.newTabURL = "about:blank";
   registerCleanupFunction(() => {
     AboutNewTab.resetNewTabURL();

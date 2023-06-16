@@ -1178,9 +1178,8 @@ PlacesTreeView.prototype = {
       return;
     }
 
-    let [desiredColumn, desiredIsDescending] = this._sortTypeToColumnType(
-      aSortingMode
-    );
+    let [desiredColumn, desiredIsDescending] =
+      this._sortTypeToColumnType(aSortingMode);
     let column = this._findColumnByType(desiredColumn);
     if (column) {
       let sortDir = desiredIsDescending ? "descending" : "ascending";

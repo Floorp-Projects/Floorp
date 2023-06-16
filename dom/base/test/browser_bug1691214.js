@@ -9,8 +9,8 @@ const BASE_URL = "http://mochi.test:8888/browser/dom/base/test/";
 add_task(async function bug1691214() {
   await BrowserTestUtils.withNewTab(
     BASE_URL + "file_bug1691214.html",
-    async function(browser) {
-      let win = await newFocusedWindow(function() {
+    async function (browser) {
+      let win = await newFocusedWindow(function () {
         return BrowserTestUtils.synthesizeMouseAtCenter("#link-1", {}, browser);
       });
       is(Services.focus.focusedWindow, win, "New window should be focused");
@@ -51,8 +51,8 @@ add_task(async function bug1691214() {
 add_task(async function bug1700871() {
   await BrowserTestUtils.withNewTab(
     BASE_URL + "file_bug1700871.html",
-    async function(browser) {
-      let win = await newFocusedWindow(function() {
+    async function (browser) {
+      let win = await newFocusedWindow(function () {
         return BrowserTestUtils.synthesizeMouseAtCenter("#link-1", {}, browser);
       });
 
@@ -60,12 +60,12 @@ add_task(async function bug1700871() {
 
       info("waiting for three submit events and ensuring focus hasn't moved");
 
-      await SpecialPowers.spawn(browser, [], function() {
+      await SpecialPowers.spawn(browser, [], function () {
         let pending = 3;
         return new Promise(resolve => {
           content.document
             .querySelector("iframe")
-            .addEventListener("load", function(e) {
+            .addEventListener("load", function (e) {
               info("Got load on the frame: " + pending);
               if (!--pending) {
                 resolve();
@@ -83,8 +83,8 @@ add_task(async function bug1700871() {
 add_task(async function bug1793829() {
   await BrowserTestUtils.withNewTab(
     BASE_URL + "file_bug1691214.html",
-    async function(browser) {
-      let win = await newFocusedWindow(function() {
+    async function (browser) {
+      let win = await newFocusedWindow(function () {
         return BrowserTestUtils.synthesizeMouseAtCenter("#link-1", {}, browser);
       });
       is(Services.focus.focusedWindow, win, "New window should be focused");
@@ -100,7 +100,7 @@ add_task(async function bug1793829() {
 
       info("Trying to steal focus.");
 
-      await SpecialPowers.spawn(browser, [], function() {
+      await SpecialPowers.spawn(browser, [], function () {
         content.document.clearUserGestureActivation();
         content.document.getElementById("link-2").click();
       });

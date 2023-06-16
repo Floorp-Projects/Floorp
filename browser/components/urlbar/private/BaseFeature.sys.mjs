@@ -70,9 +70,7 @@ export class BaseFeature {
    * @param {boolean} enabled
    *   Whether the feature should be enabled or not.
    */
-  enable(enabled) {
-    throw new Error("`enable()` must be overridden");
-  }
+  enable(enabled) {}
 
   /**
    * If the feature manages suggestions from remote settings that should be
@@ -115,7 +113,7 @@ export class BaseFeature {
    * @returns {UrlbarResult}
    *   A new result for the suggestion.
    */
-  makeResult(queryContext, suggestion, searchString) {
+  async makeResult(queryContext, suggestion, searchString) {
     return null;
   }
 

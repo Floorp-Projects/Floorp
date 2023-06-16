@@ -72,11 +72,9 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/image/tools;1",
   "imgITools"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PageThumbs",
-  "resource://gre/modules/PageThumbs.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PageThumbs: "resource://gre/modules/PageThumbs.sys.mjs",
+});
 
 // nsIURI -> imgIContainer
 function _imageFromURI(uri, privateMode, callback) {
@@ -92,7 +90,7 @@ function _imageFromURI(uri, privateMode, callback) {
   } catch (e) {
     // Ignore channels which do not support nsIPrivateBrowsingChannel
   }
-  NetUtil.asyncFetch(channel, function(inputStream, resultCode) {
+  NetUtil.asyncFetch(channel, function (inputStream, resultCode) {
     if (!Components.isSuccessCode(resultCode)) {
       return;
     }
@@ -166,7 +164,7 @@ function PreviewController(win, tab) {
 
   this.tab.addEventListener("TabAttrModified", this);
 
-  XPCOMUtils.defineLazyGetter(this, "canvasPreview", function() {
+  XPCOMUtils.defineLazyGetter(this, "canvasPreview", function () {
     let canvas = lazy.PageThumbs.createCanvas(this.win.win);
     canvas.mozOpaque = true;
     return canvas;
@@ -309,7 +307,7 @@ PreviewController.prototype = {
       ctx.restore();
 
       // Deliver the resulting composite canvas to Windows
-      this.win.tabbrowser.previewTab(this.tab, function() {
+      this.win.tabbrowser.previewTab(this.tab, function () {
         aTaskbarCallback.done(composite, false);
       });
     });
@@ -557,7 +555,7 @@ TabWindow.prototype = {
       () => {
         // invalidate every preview. note the internal implementation of
         // invalidate ignores thumbnails that aren't visible.
-        this.previews.forEach(function(aPreview) {
+        this.previews.forEach(function (aPreview) {
           let controller = aPreview.controller.wrappedJSObject;
           if (!controller.testCacheBrowserDims()) {
             controller.cacheBrowserDims();
@@ -710,9 +708,8 @@ var AeroPeek = {
     }
 
     Services.prefs.addObserver(TOGGLE_PREF_NAME, this, true);
-    this.enabled = this._prefenabled = Services.prefs.getBoolPref(
-      TOGGLE_PREF_NAME
-    );
+    this.enabled = this._prefenabled =
+      Services.prefs.getBoolPref(TOGGLE_PREF_NAME);
     this.initialized = true;
   },
 
@@ -735,7 +732,7 @@ var AeroPeek = {
 
     this._enabled = enable;
 
-    this.windows.forEach(function(win) {
+    this.windows.forEach(function (win) {
       win.enabled = enable;
     });
   },
@@ -876,7 +873,7 @@ var AeroPeek = {
         this.checkPreviewCount();
         break;
       case "timer-callback":
-        this.previews.forEach(function(preview) {
+        this.previews.forEach(function (preview) {
           let controller = preview.controller.wrappedJSObject;
           controller.resetCanvasPreview();
         });

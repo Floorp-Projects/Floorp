@@ -82,9 +82,9 @@ pub use crate::nth::parse_nth;
 pub use crate::parser::{BasicParseError, BasicParseErrorKind, ParseError, ParseErrorKind};
 pub use crate::parser::{Delimiter, Delimiters, Parser, ParserInput, ParserState};
 pub use crate::rules_and_declarations::{parse_important, parse_one_declaration};
-pub use crate::rules_and_declarations::{parse_one_rule, RuleListParser};
+pub use crate::rules_and_declarations::{parse_one_rule, StyleSheetParser};
 pub use crate::rules_and_declarations::{AtRuleParser, QualifiedRuleParser};
-pub use crate::rules_and_declarations::{DeclarationListParser, DeclarationParser};
+pub use crate::rules_and_declarations::{RuleBodyParser, RuleBodyItemParser, DeclarationParser};
 pub use crate::serializer::{serialize_identifier, serialize_name, serialize_string};
 pub use crate::serializer::{CssStringWriter, ToCss, TokenSerializationType};
 pub use crate::tokenizer::{SourceLocation, SourcePosition, Token};
@@ -97,14 +97,8 @@ pub use phf as _cssparser_internal_phf;
 mod macros;
 
 mod rules_and_declarations;
-
-#[cfg(feature = "dummy_match_byte")]
 mod tokenizer;
 
-#[cfg(not(feature = "dummy_match_byte"))]
-mod tokenizer {
-    include!(concat!(env!("OUT_DIR"), "/tokenizer.rs"));
-}
 mod color;
 mod cow_rc_str;
 mod from_bytes;

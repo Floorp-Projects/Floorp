@@ -1,10 +1,10 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
-const { AddonManagerPrivate } = ChromeUtils.import(
-  "resource://gre/modules/AddonManager.jsm"
+const { AddonManagerPrivate } = ChromeUtils.importESModule(
+  "resource://gre/modules/AddonManager.sys.mjs"
 );
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+const { AddonTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
 );
 
 AddonTestUtils.initMochitest(this);
@@ -25,7 +25,7 @@ async function createWebExtension(details) {
   };
 
   if (details.iconURL) {
-    options.manifest.icons = { "64": details.iconURL };
+    options.manifest.icons = { 64: details.iconURL };
   }
 
   let xpi = AddonTestUtils.createTempWebExtensionFile(options);
@@ -96,7 +96,7 @@ add_task(async function test_sideloading() {
     permissions: ["<all_urls>"],
   });
 
-  testCleanup = async function() {
+  testCleanup = async function () {
     // clear out ExtensionsUI state about sideloaded extensions so
     // subsequent tests don't get confused.
     ExtensionsUI.sideloaded.clear();
@@ -108,7 +108,7 @@ add_task(async function test_sideloading() {
   BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, "about:robots");
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     // Return to about:blank when we're done
     BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, "about:blank");
     await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
@@ -179,8 +179,8 @@ add_task(async function test_sideloading() {
     panel,
     /\/foo-icon\.png$/,
     [
-      ["webextPerms.hostDescription.allUrls"],
-      ["webextPerms.description.history"],
+      ["webext-perms-host-description-all-urls"],
+      ["webext-perms-description-history"],
     ],
     kSideloaded
   );
@@ -229,16 +229,15 @@ add_task(async function test_sideloading() {
   checkNotification(
     panel,
     DEFAULT_ICON_URL,
-    [["webextPerms.hostDescription.allUrls"]],
+    [["webext-perms-host-description-all-urls"]],
     kSideloaded
   );
 
   // Test incognito checkbox in post install notification
   function setupPostInstallNotificationTest() {
-    let promiseNotificationShown = promiseAppMenuNotificationShown(
-      "addon-installed"
-    );
-    return async function(addon) {
+    let promiseNotificationShown =
+      promiseAppMenuNotificationShown("addon-installed");
+    return async function (addon) {
       info(`Expect post install notification for "${addon.name}"`);
       let postInstallPanel = await promiseNotificationShown;
       let incognitoCheckbox = postInstallPanel.querySelector(
@@ -297,7 +296,7 @@ add_task(async function test_sideloading() {
   checkNotification(
     panel,
     DEFAULT_ICON_URL,
-    [["webextPerms.hostDescription.allUrls"]],
+    [["webext-perms-host-description-all-urls"]],
     kSideloaded
   );
 

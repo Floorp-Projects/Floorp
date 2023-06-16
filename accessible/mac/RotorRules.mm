@@ -12,7 +12,7 @@
 #include "nsIAccessiblePivot.h"
 #include "nsAccUtils.h"
 
-#include "mozilla/StaticPrefs_accessibility.h"
+#include "nsAccessibilityService.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -61,16 +61,10 @@ uint16_t RotorRule::Match(Accessible* aAcc) {
         result &= ~nsIAccessibleTraversalRule::FILTER_MATCH;
         break;
       default:
-        if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-          // If caching is enabled and we have a non-empty search text,
-          // we can query the cached name to do furhter filtering. If
-          // the cache is disabled this will happen in the post-filter stage
-          // where we send a sync message to content.
-          nsAutoString name;
-          aAcc->Name(name);
-          if (!CaseInsensitiveFindInReadable(mSearchText, name)) {
-            result &= ~nsIAccessibleTraversalRule::FILTER_MATCH;
-          }
+        nsAutoString name;
+        aAcc->Name(name);
+        if (!CaseInsensitiveFindInReadable(mSearchText, name)) {
+          result &= ~nsIAccessibleTraversalRule::FILTER_MATCH;
         }
         break;
     }

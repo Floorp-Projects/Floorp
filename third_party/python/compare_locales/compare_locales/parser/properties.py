@@ -2,18 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
 import re
 
 from .base import (
     Entity, OffsetComment, Whitespace,
     Parser
 )
-from six import unichr
 
 
-class PropertiesEntityMixin(object):
+class PropertiesEntityMixin:
     escape = re.compile(r'\\((?P<uni>u[0-9a-fA-F]{1,4})|'
                         '(?P<nl>\n[ \t]*)|(?P<single>.))', re.M)
     known_escapes = {'n': '\n', 'r': '\r', 't': '\t', '\\': '\\'}
@@ -23,7 +20,7 @@ class PropertiesEntityMixin(object):
         def unescape(m):
             found = m.groupdict()
             if found['uni']:
-                return unichr(int(found['uni'][1:], 16))
+                return chr(int(found['uni'][1:], 16))
             if found['nl']:
                 return ''
             return self.known_escapes.get(found['single'], found['single'])

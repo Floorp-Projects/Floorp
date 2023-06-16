@@ -4,13 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { ExtensionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/ExtensionXPCShellUtils.jsm"
-);
+import { ExtensionTestUtils } from "resource://testing-common/ExtensionXPCShellUtils.sys.mjs";
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
-);
+import { AddonTestUtils } from "resource://testing-common/AddonTestUtils.sys.mjs";
 
 export const CookieXPCShellUtils = {
   init(scope) {
@@ -37,7 +33,7 @@ export const CookieXPCShellUtils = {
   async getCookieStringFromDocument(uri, options = {}) {
     const contentPage = await this.loadContentPage(uri, options);
     const cookies = await contentPage.spawn(
-      null,
+      [],
       // eslint-disable-next-line no-undef
       () => content.document.cookie
     );
@@ -48,7 +44,7 @@ export const CookieXPCShellUtils = {
   async setCookieToDocument(uri, set, options = {}) {
     const contentPage = await this.loadContentPage(uri, options);
     await contentPage.spawn(
-      set,
+      [set],
       // eslint-disable-next-line no-undef
       cookies => (content.document.cookie = cookies)
     );

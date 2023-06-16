@@ -111,6 +111,7 @@
 #include "nsCharTraits.h"
 #include "nsCOMPtr.h"
 #include "nsComputedDOMStyle.h"
+#include "nsContentUtils.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSColorUtils.h"
 #include "nsCSSFrameConstructor.h"
@@ -2359,9 +2360,13 @@ static Rect TransformGfxRectToAncestor(
   }
   const nsIFrame* ancestor = aOutAncestor ? *aOutAncestor : aAncestor.mFrame;
   float factor = ancestor->PresContext()->AppUnitsPerDevPixel();
+  // Caller is expected to properly clamp if the result is to be converted to
+  // app units. Technically, the clipping bound here is infinite, but that
+  // causes clipping to become unpredictable due to floating point errors.
+  const auto boundsAppUnits = Rect::MaxIntRect();
   Rect maxBounds =
-      Rect(float(nscoord_MIN) / factor * 0.5, float(nscoord_MIN) / factor * 0.5,
-           float(nscoord_MAX) / factor, float(nscoord_MAX) / factor);
+      Rect(boundsAppUnits.x / factor, boundsAppUnits.y / factor,
+           boundsAppUnits.width / factor, boundsAppUnits.height / factor);
   return ctm.TransformAndClipBounds(aRect, maxBounds);
 }
 
@@ -2680,7 +2685,7 @@ nsIFrame* nsLayoutUtils::GetFrameForPoint(
   rv = GetFramesForArea(aRelativeTo, nsRect(aPt, nsSize(1, 1)), outFrames,
                         aOptions);
   NS_ENSURE_SUCCESS(rv, nullptr);
-  return outFrames.Length() ? outFrames.ElementAt(0) : nullptr;
+  return outFrames.SafeElementAt(0);
 }
 
 nsresult nsLayoutUtils::GetFramesForArea(RelativeTo aRelativeTo,
@@ -2844,36 +2849,23 @@ void nsLayoutUtils::AddExtraBackgroundItems(nsDisplayListBuilder* aBuilder,
                                             const nsRect& aCanvasArea,
                                             const nsRegion& aVisibleRegion,
                                             nscolor aBackstop) {
-  LayoutFrameType frameType = aFrame->Type();
-  nsPresContext* presContext = aFrame->PresContext();
-  PresShell* presShell = presContext->PresShell();
-
-  // For the viewport frame in print preview/page layout we want to paint
-  // the grey background behind the page, not the canvas color.
-  if (frameType == LayoutFrameType::Viewport &&
-      nsLayoutUtils::NeedsPrintPreviewBackground(presContext)) {
-    nsRect bounds =
-        nsRect(aBuilder->ToReferenceFrame(aFrame), aFrame->GetSize());
-    nsDisplayListBuilder::AutoBuildingDisplayList buildingDisplayList(
-        aBuilder, aFrame, bounds, bounds);
-    presShell->AddPrintPreviewBackgroundItem(aBuilder, aList, aFrame, bounds);
-  } else if (frameType != LayoutFrameType::Page) {
+  if (aFrame->IsPageFrame()) {
     // For printing, this function is first called on an nsPageFrame, which
     // creates a display list with a PageContent item. The PageContent item's
-    // paint function calls this function on the nsPageFrame's child which is
-    // an nsPageContentFrame. We only want to add the canvas background color
-    // item once, for the nsPageContentFrame.
-
-    // Add the canvas background color to the bottom of the list. This
-    // happens after we've built the list so that AddCanvasBackgroundColorItem
-    // can monkey with the contents if necessary.
-    nsRect canvasArea = aVisibleRegion.GetBounds();
-    canvasArea.IntersectRect(aCanvasArea, canvasArea);
-    nsDisplayListBuilder::AutoBuildingDisplayList buildingDisplayList(
-        aBuilder, aFrame, canvasArea, canvasArea);
-    presShell->AddCanvasBackgroundColorItem(aBuilder, aList, aFrame, canvasArea,
-                                            aBackstop);
+    // paint function calls this function on the nsPageFrame's child which is an
+    // nsPageContentFrame. We only want to add the canvas background color item
+    // once, for the nsPageContentFrame.
+    return;
   }
+  // Add the canvas background color to the bottom of the list. This
+  // happens after we've built the list so that AddCanvasBackgroundColorItem
+  // can monkey with the contents if necessary.
+  nsRect canvasArea = aVisibleRegion.GetBounds();
+  canvasArea.IntersectRect(aCanvasArea, canvasArea);
+  nsDisplayListBuilder::AutoBuildingDisplayList buildingDisplayList(
+      aBuilder, aFrame, canvasArea, canvasArea);
+  aFrame->PresShell()->AddCanvasBackgroundColorItem(aBuilder, aList, aFrame,
+                                                    canvasArea, aBackstop);
 }
 
 // #define PRINT_HITTESTINFO_STATS
@@ -3158,8 +3150,10 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
 
   // If the dynamic toolbar is completely collapsed, the visible rect should
   // be expanded to include this area.
-  if (presContext->IsRootContentDocumentCrossProcess() &&
-      presContext->HasDynamicToolbar()) {
+  const bool hasDynamicToolbar =
+      presContext->IsRootContentDocumentCrossProcess() &&
+      presContext->HasDynamicToolbar();
+  if (hasDynamicToolbar) {
     rootInkOverflow.SizeTo(nsLayoutUtils::ExpandHeightForDynamicToolbar(
         presContext, rootInkOverflow.Size()));
   }
@@ -3220,9 +3214,16 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
     }
   });
 
-  nsRect canvasArea(nsPoint(0, 0), aFrame->GetSize());
+  nsRect canvasArea(nsPoint(0, 0),
+                    aFrame->InkOverflowRectRelativeToSelf().Size());
   bool ignoreViewportScrolling =
       !aFrame->GetParent() && presShell->IgnoringViewportScrolling();
+
+  if (!aFrame->GetParent() && hasDynamicToolbar) {
+    canvasArea.SizeTo(nsLayoutUtils::ExpandHeightForDynamicToolbar(
+        presContext, canvasArea.Size()));
+  }
+
   if (ignoreViewportScrolling && rootScrollFrame) {
     nsIScrollableFrame* rootScrollableFrame =
         presShell->GetRootScrollFrameAsScrollable();
@@ -5954,8 +5955,8 @@ bool nsLayoutUtils::GetLastLineBaseline(WritingMode aWM, const nsIFrame* aFrame,
     // `ColumnSetWrapperFrame` level, but this keeps it symmetric to
     // `GetFirstLinePosition`.
     if (aFrame->IsColumnSetFrame()) {
-      const auto baseline =
-          aFrame->GetNaturalBaselineBOffset(aWM, BaselineSharingGroup::Last);
+      const auto baseline = aFrame->GetNaturalBaselineBOffset(
+          aWM, BaselineSharingGroup::Last, BaselineExportContext::Other);
       if (!baseline) {
         return false;
       }
@@ -6657,9 +6658,24 @@ IntSize nsLayoutUtils::ComputeImageContainerDrawingParameters(
   LayerIntRect destRect = SnapRectForImage(itm, scaleFactors, aDestRect);
 
   // Since we always decode entire raster images, we only care about the
-  // ImageIntRegion for vector images, for which we may only draw part of in
-  // some cases.
-  if (aImage->GetType() != imgIContainer::TYPE_VECTOR) {
+  // ImageIntRegion for vector images when we are recording blobs, for which we
+  // may only draw part of in some cases.
+  if ((aImage->GetType() != imgIContainer::TYPE_VECTOR) ||
+      !(aFlags & imgIContainer::FLAG_RECORD_BLOB)) {
+    // If the transform scale of our stacking context helper is being animated
+    // on the compositor then the transform will have the current value of the
+    // scale, but the scale factors will have max value of the scale animation.
+    // So we want to ask for a decoded image that can fulfill that larger size.
+    int32_t scaleWidth = int32_t(ceil(aDestRect.Width() * scaleFactors.xScale));
+    if (scaleWidth > destRect.width + 2) {
+      destRect.width = scaleWidth;
+    }
+    int32_t scaleHeight =
+        int32_t(ceil(aDestRect.Height() * scaleFactors.yScale));
+    if (scaleHeight > destRect.height + 2) {
+      destRect.height = scaleHeight;
+    }
+
     return aImage->OptimalImageSizeForDest(
         gfxSize(destRect.Width(), destRect.Height()),
         imgIContainer::FRAME_CURRENT, samplingFilter, aFlags);
@@ -7772,13 +7788,24 @@ size_t nsLayoutUtils::SizeOfTextRunsForFrames(nsIFrame* aFrame,
 
 /* static */
 void nsLayoutUtils::RecomputeSmoothScrollDefault() {
-  // We want prefers-reduced-motion to determine the default
-  // value of the general.smoothScroll pref. If the user
-  // changed the pref we want to respect the change.
-  Preferences::SetBool(
-      "general.smoothScroll",
-      !LookAndFeel::GetInt(LookAndFeel::IntID::PrefersReducedMotion, 0),
-      PrefValueKind::Default);
+  if (nsContentUtils::ShouldResistFingerprinting(
+          "We use the global RFP pref to maintain consistent scroll behavior "
+          "in the browser.",
+          RFPTarget::CSSPrefersReducedMotion)) {
+    // When resist fingerprinting is enabled, we should not default disable
+    // smooth scrolls when the user prefers-reduced-motion to avoid leaking
+    // the value of the OS pref to sites.
+    Preferences::SetBool(StaticPrefs::GetPrefName_general_smoothScroll(), true,
+                         PrefValueKind::Default);
+  } else {
+    // We want prefers-reduced-motion to determine the default
+    // value of the general.smoothScroll pref. If the user
+    // changed the pref we want to respect the change.
+    Preferences::SetBool(
+        StaticPrefs::GetPrefName_general_smoothScroll(),
+        !LookAndFeel::GetInt(LookAndFeel::IntID::PrefersReducedMotion, 0),
+        PrefValueKind::Default);
+  }
 }
 
 /* static */
@@ -8515,12 +8542,6 @@ SurfaceFromElementResult::GetSourceSurface() {
 bool nsLayoutUtils::IsNonWrapperBlock(nsIFrame* aFrame) {
   MOZ_ASSERT(aFrame);
   return aFrame->IsBlockFrameOrSubclass() && !aFrame->IsBlockWrapper();
-}
-
-bool nsLayoutUtils::NeedsPrintPreviewBackground(nsPresContext* aPresContext) {
-  return aPresContext->IsRootPaginatedDocument() &&
-         (aPresContext->Type() == nsPresContext::eContext_PrintPreview ||
-          aPresContext->Type() == nsPresContext::eContext_PageLayout);
 }
 
 AutoMaybeDisableFontInflation::AutoMaybeDisableFontInflation(nsIFrame* aFrame) {

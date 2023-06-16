@@ -13,7 +13,7 @@ add_task(async function test_dataURI_unique_opaque_origin() {
   await SpecialPowers.spawn(
     browser,
     [{ principal: pagePrincipal }],
-    async function(args) {
+    async function (args) {
       info("data URI principal: " + content.document.nodePrincipal.origin);
       Assert.ok(
         content.document.nodePrincipal.isNullPrincipal,

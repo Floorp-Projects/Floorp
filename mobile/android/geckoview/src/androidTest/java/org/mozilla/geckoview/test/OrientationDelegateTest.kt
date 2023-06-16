@@ -57,7 +57,7 @@ class OrientationDelegateTest : BaseSessionTest() {
                 assertThat(
                     "The orientation should be portrait",
                     aOrientation,
-                    equalTo(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
+                    equalTo(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT),
                 )
                 activityRule.scenario.onActivity { activity ->
                     activity.requestedOrientation = aOrientation
@@ -79,7 +79,7 @@ class OrientationDelegateTest : BaseSessionTest() {
                 assertThat(
                     "The orientation should be landscape",
                     aOrientation,
-                    equalTo(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
+                    equalTo(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE),
                 )
                 activityRule.scenario.onActivity { activity ->
                     activity.requestedOrientation = aOrientation
@@ -140,7 +140,7 @@ class OrientationDelegateTest : BaseSessionTest() {
                     }
                 }, { once: true });
             })
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         // Lock to landscape twice to verify successful locking to existing orientation
@@ -170,7 +170,7 @@ class OrientationDelegateTest : BaseSessionTest() {
                 assertThat(
                     "The orientation value is as expected",
                     aOrientation,
-                    equalTo(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
+                    equalTo(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE),
                 )
                 activityRule.scenario.onActivity { activity ->
                     activity.requestedOrientation = aOrientation
@@ -206,13 +206,13 @@ class OrientationDelegateTest : BaseSessionTest() {
             .then(() => r("successful"))
             .catch(e => r(e.name))
           })
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         assertThat(
             "The operation must throw NotSupportedError",
             promise.value,
-            equalTo("NotSupportedError")
+            equalTo("NotSupportedError"),
         )
 
         val promise2 = mainSession.evaluatePromiseJS(
@@ -222,13 +222,13 @@ class OrientationDelegateTest : BaseSessionTest() {
             .then(() => r("successful"))
             .catch(e => r(e.name))
           })
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         assertThat(
             "The operation must throw NotSupportedError even if same orientation",
             promise2.value,
-            equalTo("NotSupportedError")
+            equalTo("NotSupportedError"),
         )
     }
 
@@ -280,7 +280,7 @@ class OrientationDelegateTest : BaseSessionTest() {
                     }
                 }, { once: true });
             })
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         activityRule.scenario.onActivity { activity ->
@@ -295,7 +295,7 @@ class OrientationDelegateTest : BaseSessionTest() {
                 assertThat(
                     "The orientation should be portrait",
                     aOrientation,
-                    equalTo(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
+                    equalTo(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT),
                 )
                 activityRule.scenario.onActivity { activity ->
                     activity.requestedOrientation = aOrientation

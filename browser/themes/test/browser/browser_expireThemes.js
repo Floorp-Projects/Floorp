@@ -5,16 +5,13 @@ const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"
 );
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+const { AddonTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
 );
 
 ChromeUtils.defineESModuleGetters(this, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   BuiltInThemes: "resource:///modules/BuiltInThemes.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  AddonManager: "resource://gre/modules/AddonManager.jsm",
 });
 
 const kLushSoftID = "lush-soft-colorway@mozilla.org";
@@ -53,7 +50,7 @@ add_task(async function retainExpiredActiveTheme() {
   );
 
   AddonTestUtils.initMochitest(this);
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     Services.prefs.clearUserPref(kRetainedThemesPref);
     BuiltInThemes.builtInThemeMap = oldBuiltInThemeMap;
     await BuiltInThemes.ensureBuiltInThemes();

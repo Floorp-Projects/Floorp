@@ -35,8 +35,7 @@ add_task(async function test_XPIStates_invalid_paths() {
           },
         },
         checkStartupModifications: true,
-        path:
-          "c:\\Users\\XpcShell\\Application Data\\Mozilla Firefox\\Profiles\\meh",
+        path: "c:\\Users\\XpcShell\\Application Data\\Mozilla Firefox\\Profiles\\meh",
       },
     },
     {
@@ -70,8 +69,7 @@ add_task(async function test_XPIStates_invalid_paths() {
           },
         },
         checkStartupModifications: true,
-        path:
-          "c:\\Users\\XpcShell\\Application Data\\Mozilla Firefox\\Profiles\\meh",
+        path: "c:\\Users\\XpcShell\\Application Data\\Mozilla Firefox\\Profiles\\meh",
       },
     },
   ];

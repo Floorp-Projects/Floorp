@@ -27,17 +27,18 @@ add_task(async function test_no_toggle_on_audio() {
       // document, so we insert that too.
       const VIDEO_ID = "video-element";
       const SCRIPT_SRC = "click-event-helper.js";
-      await SpecialPowers.spawn(browser, [VIDEO_ID, SCRIPT_SRC], async function(
-        videoID,
-        scriptSrc
-      ) {
-        let video = content.document.querySelector("video");
-        video.id = videoID;
+      await SpecialPowers.spawn(
+        browser,
+        [VIDEO_ID, SCRIPT_SRC],
+        async function (videoID, scriptSrc) {
+          let video = content.document.querySelector("video");
+          video.id = videoID;
 
-        let script = content.document.createElement("script");
-        script.src = scriptSrc;
-        content.document.head.appendChild(script);
-      });
+          let script = content.document.createElement("script");
+          script.src = scriptSrc;
+          content.document.head.appendChild(script);
+        }
+      );
 
       await testToggleHelper(browser, VIDEO_ID, false);
     }

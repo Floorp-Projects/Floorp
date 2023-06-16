@@ -106,10 +106,7 @@ class ClassList {
       .filter(item => item !== "")
       .map(({ className }) => className);
 
-    return currentClasses
-      .concat(previewClasses)
-      .join(" ")
-      .trim();
+    return currentClasses.concat(previewClasses).join(" ").trim();
   }
 
   /**

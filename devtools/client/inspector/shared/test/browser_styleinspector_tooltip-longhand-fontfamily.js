@@ -16,7 +16,7 @@ const TEST_URI = `
   <div id="testElement">test element</div>
 `;
 
-add_task(async function() {
+add_task(async function () {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let { inspector, view } = await openRuleView();
   await selectNode("#testElement", inspector);
@@ -167,7 +167,7 @@ async function testExpandedComputedViewProperty(computedView, nodeFront) {
 
 function getPropertyView(computedView, name) {
   let propertyView = null;
-  computedView.propertyViews.some(function(view) {
+  computedView.propertyViews.some(function (view) {
     if (view.name == name) {
       propertyView = view;
       return true;

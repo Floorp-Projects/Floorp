@@ -17,7 +17,7 @@ const INSECURE_TEST_URI = SECURE_TEST_URI.replace("https://", "http://");
 
 // From a secure URI, navigate the iframe to about:blank (should still be
 // secure).
-add_task(async function() {
+add_task(async function () {
   let uri = SECURE_TEST_URI + "#blank";
   await BrowserTestUtils.withNewTab(uri, async browser => {
     let identityMode = window.document.getElementById("identity-box").className;
@@ -30,15 +30,15 @@ add_task(async function() {
       });
     });
 
-    let newIdentityMode = window.document.getElementById("identity-box")
-      .className;
+    let newIdentityMode =
+      window.document.getElementById("identity-box").className;
     is(newIdentityMode, "verifiedDomain", "identity should be secure after");
   });
 });
 
 // From a secure URI, navigate the iframe to an insecure URI (http://...)
 // (mixed active content should be blocked, should still be secure).
-add_task(async function() {
+add_task(async function () {
   let uri = SECURE_TEST_URI + "#insecure";
   await BrowserTestUtils.withNewTab(uri, async browser => {
     let identityMode = window.document.getElementById("identity-box").className;
@@ -51,8 +51,8 @@ add_task(async function() {
       });
     });
 
-    let newIdentityMode = window.document.getElementById("identity-box")
-      .classList;
+    let newIdentityMode =
+      window.document.getElementById("identity-box").classList;
     ok(
       newIdentityMode.contains("mixedActiveBlocked"),
       "identity should be blocked mixed active content after"
@@ -67,7 +67,7 @@ add_task(async function() {
 
 // From an insecure URI (http://..), navigate the iframe to about:blank (should
 // still be insecure).
-add_task(async function() {
+add_task(async function () {
   let uri = INSECURE_TEST_URI + "#blank";
   await BrowserTestUtils.withNewTab(uri, async browser => {
     let identityMode = window.document.getElementById("identity-box").className;
@@ -80,15 +80,15 @@ add_task(async function() {
       });
     });
 
-    let newIdentityMode = window.document.getElementById("identity-box")
-      .className;
+    let newIdentityMode =
+      window.document.getElementById("identity-box").className;
     is(newIdentityMode, "notSecure", "identity should be 'not secure' after");
   });
 });
 
 // From an insecure URI (http://..), navigate the iframe to a secure URI
 // (https://...) (should still be insecure).
-add_task(async function() {
+add_task(async function () {
   let uri = INSECURE_TEST_URI + "#secure";
   await BrowserTestUtils.withNewTab(uri, async browser => {
     let identityMode = window.document.getElementById("identity-box").className;
@@ -101,8 +101,8 @@ add_task(async function() {
       });
     });
 
-    let newIdentityMode = window.document.getElementById("identity-box")
-      .className;
+    let newIdentityMode =
+      window.document.getElementById("identity-box").className;
     is(newIdentityMode, "notSecure", "identity should be 'not secure' after");
   });
 });

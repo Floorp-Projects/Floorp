@@ -42,6 +42,12 @@ using gfx::CICP::TransferCharacteristics;
 using layers::PlanarYCbCrImage;
 using media::TimeUnit;
 
+double ToMicrosecondResolution(double aSeconds) {
+  double integer;
+  modf(aSeconds * USECS_PER_S, &integer);
+  return integer / USECS_PER_S;
+}
+
 CheckedInt64 SaferMultDiv(int64_t aValue, uint64_t aMul, uint64_t aDiv) {
   if (aMul > INT64_MAX || aDiv > INT64_MAX) {
     return CheckedInt64(INT64_MAX) + 1;  // Return an invalid checked int.
@@ -57,16 +63,6 @@ CheckedInt64 SaferMultDiv(int64_t aValue, uint64_t aMul, uint64_t aDiv) {
 // audio rate.
 CheckedInt64 FramesToUsecs(int64_t aFrames, uint32_t aRate) {
   return SaferMultDiv(aFrames, USECS_PER_S, aRate);
-}
-
-TimeUnit FramesToTimeUnit(int64_t aFrames, uint32_t aRate) {
-  if (MOZ_UNLIKELY(!aRate)) {
-    return TimeUnit::Invalid();
-  }
-  int64_t major = aFrames / aRate;
-  int64_t remainder = aFrames % aRate;
-  return TimeUnit::FromMicroseconds(major) * USECS_PER_S +
-         (TimeUnit::FromMicroseconds(remainder) * USECS_PER_S) / aRate;
 }
 
 // Converts from microseconds to number of audio frames, given the specified

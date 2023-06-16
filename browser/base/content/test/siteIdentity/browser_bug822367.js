@@ -51,7 +51,7 @@ add_task(async function MixedTest1A() {
 });
 
 add_task(async function MixedTest1B() {
-  await SpecialPowers.spawn(gTestBrowser, [], async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function () {
     await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("p1").innerHTML == "hello",
       "Waited too long for mixed script to run in Test 1"
@@ -92,7 +92,7 @@ add_task(async function MixedTest3A() {
 });
 
 add_task(async function MixedTest3B() {
-  await SpecialPowers.spawn(gTestBrowser, [], async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function () {
     let p1 = ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("p1").innerHTML == "hello",
       "Waited too long for mixed script to run in Test 3"
@@ -134,7 +134,7 @@ add_task(async function MixedTest4A() {
 
 add_task(async function MixedTest4B() {
   let url = HTTPS_TEST_ROOT + "file_bug822367_4B.html";
-  await SpecialPowers.spawn(gTestBrowser, [url], async function(wantedUrl) {
+  await SpecialPowers.spawn(gTestBrowser, [url], async function (wantedUrl) {
     await ContentTaskUtils.waitForCondition(
       () => content.document.location == wantedUrl,
       "Waited too long for mixed script to run in Test 4"
@@ -149,7 +149,7 @@ add_task(async function MixedTest4C() {
     passiveLoaded: false,
   });
 
-  await SpecialPowers.spawn(gTestBrowser, [], async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function () {
     await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("p1").innerHTML == "",
       "Mixed script loaded in test 4 after location change!"
@@ -180,7 +180,7 @@ add_task(async function MixedTest5A() {
 });
 
 add_task(async function MixedTest5B() {
-  await SpecialPowers.spawn(gTestBrowser, [], async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function () {
     await ContentTaskUtils.waitForCondition(
       () => content.document.getElementById("p1").innerHTML == "hello",
       "Waited too long for mixed script to run in Test 5"
@@ -220,7 +220,7 @@ add_task(async function MixedTest6B() {
 });
 
 add_task(async function MixedTest6C() {
-  await SpecialPowers.spawn(gTestBrowser, [], async function() {
+  await SpecialPowers.spawn(gTestBrowser, [], async function () {
     function test() {
       try {
         return (

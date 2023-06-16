@@ -118,8 +118,8 @@ add_task(async function startup() {
     },
   };
 
-  let startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"].getService()
-    .wrappedJSObject;
+  let startupRecorder =
+    Cc["@mozilla.org/test/startuprecorder;1"].getService().wrappedJSObject;
   await startupRecorder.done;
 
   ok(startupRecorder.data.prefStats, "startupRecorder has prefStats");
@@ -190,6 +190,16 @@ add_task(async function navigate_around() {
     },
   };
 
+  if (Services.prefs.getBoolPref("browser.translations.enable")) {
+    // The translations pref logs the translation decision on each DOMContentLoaded,
+    // and only shows the log by the preferences set in the console.createInstance.
+    // See Bug 1835693. This means that it is invoked on each page load.
+    knownProblematicPrefs["browser.translations.logLevel"] = {
+      min: 50,
+      max: 50,
+    };
+  }
+
   if (SpecialPowers.useRemoteSubframes) {
     // We access this when considering starting a new content process.
     // Because there is no complete list of content process types,
@@ -203,12 +213,11 @@ add_task(async function navigate_around() {
       max: 51,
     };
     // This pref is only accessed in automation to speed up tests.
-    knownProblematicPrefs[
-      "dom.ipc.keepProcessesAlive.webIsolated.perOrigin"
-    ] = {
-      min: 100,
-      max: 102,
-    };
+    knownProblematicPrefs["dom.ipc.keepProcessesAlive.webIsolated.perOrigin"] =
+      {
+        min: 100,
+        max: 102,
+      };
     if (AppConstants.platform == "linux") {
       // The following sandbox pref is covered by
       // https://bugzilla.mozilla.org/show_bug.cgi?id=1600189

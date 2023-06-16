@@ -5,7 +5,7 @@
 
 console.log("[WORKER] started", globalThis.location.toString(), globalThis);
 
-globalThis.onmessage = function(e) {
+globalThis.onmessage = function (e) {
   const { type, message } = e.data;
 
   if (type === "log-in-worker") {

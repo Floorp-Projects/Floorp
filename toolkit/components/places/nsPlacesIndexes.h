@@ -35,6 +35,9 @@
 #define CREATE_IDX_MOZ_PLACES_ORIGIN_ID \
   CREATE_PLACES_IDX("originidindex", "moz_places", "origin_id", "")
 
+#define CREATE_IDX_MOZ_PLACES_ALT_FRECENCY \
+  CREATE_PLACES_IDX("altfrecencyindex", "moz_places", "alt_frecency", "")
+
 /**
  * moz_historyvisits
  */

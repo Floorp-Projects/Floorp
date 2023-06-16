@@ -40,7 +40,7 @@ function makeH2Chan() {
   return chan;
 }
 
-let Http3Listener = function() {};
+let Http3Listener = function () {};
 
 Http3Listener.prototype = {
   version1enabled: "",

@@ -53,6 +53,9 @@ class WebTransportParent : public PWebTransportParent,
       nsTArray<uint8_t>&& aData, const TimeStamp& aExpirationTime,
       OutgoingDatagramResolver&& aResolver);
 
+  ::mozilla::ipc::IPCResult RecvGetMaxDatagramSize(
+      GetMaxDatagramSizeResolver&& aResolver);
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   class OnResetOrStopSendingCallback final {
@@ -84,6 +87,7 @@ class WebTransportParent : public PWebTransportParent,
   // OnSessionClosed is called on the socket thread.
   std::function<void()> mExecuteAfterResolverCallback MOZ_GUARDED_BY(mMutex);
   OutgoingDatagramResolver mOutgoingDatagramResolver;
+  GetMaxDatagramSizeResolver mMaxDatagramSizeResolver;
   FlippedOnce<false> mClosed MOZ_GUARDED_BY(mMutex);
 
   nsCOMPtr<nsIWebTransport> mWebTransport;

@@ -1,29 +1,33 @@
 <!DOCTYPE html>
 <html>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, user-scalable=no">
-<style>
-html, body {
-  margin: 0px;
-  padding: 0px;
-  /* background contains one extra transparent.gif because we want trick the
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, user-scalable=no" />
+  <style>
+    html,
+    body {
+      margin: 0px;
+      padding: 0px;
+      /* background contains one extra transparent.gif because we want trick the
      contentful paint detection; We want to make sure the background is loaded
      before the test starts so we always wait for the contentful paint timestamp
      to exist, however, gradient isn't considered as contentful per spec, so Gecko
      wouldn't generate a timestamp for it. Hence, we added a transparent gif
      to the image list to trick the detection. */
-  background: url('/assets/www/transparent.gif'), linear-gradient(135deg, red, white);
-}
-iframe {
-  margin: 0px;
-  padding: 0px;
-  height: 98vh;
-  width: 100%;
-  border: none;
-  display: block;
-}
-</style>
-<iframe frameborder=0 srcdoc="<!DOCTYPE HTML>
+      background: url("/assets/www/transparent.gif"),
+        linear-gradient(135deg, red, white);
+    }
+    iframe {
+      margin: 0px;
+      padding: 0px;
+      height: 98vh;
+      width: 100%;
+      border: none;
+      display: block;
+    }
+  </style>
+  <iframe
+    frameborder="0"
+    srcdoc="<!DOCTYPE HTML>
                 <html>
                 <style>
                 html, body {
@@ -45,6 +49,7 @@ iframe {
                   }
                 </script>
                 </body>
-                </html>">
-</iframe>
+                </html>"
+  >
+  </iframe>
 </html>

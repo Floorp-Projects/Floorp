@@ -4,8 +4,8 @@
 
 "use strict";
 
-const { TelemetryTestUtils } = ChromeUtils.import(
-  "resource://testing-common/TelemetryTestUtils.jsm"
+const { TelemetryTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
 
 // Visited pages listed by descending visit date.
@@ -55,7 +55,7 @@ function searchBookmarks(gLibrary, searchTerm) {
   gLibrary.PlacesSearchBox.search(searchBox.value);
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
 

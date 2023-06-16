@@ -13,7 +13,7 @@ async function resetState() {
   await Promise.all([ASRouter.resetMessageState(), ASRouter.unblockAll()]);
 }
 
-add_setup(async function() {
+add_setup(async function () {
   registerCleanupFunction(resetState);
   await resetState();
   await SpecialPowers.pushPrefEnv({
@@ -33,7 +33,7 @@ add_task(async function test_privatebrowsing_asrouter_messages_state() {
 
   let { win, tab } = await openTabAndWaitForRender();
 
-  await SpecialPowers.spawn(tab, [], async function() {
+  await SpecialPowers.spawn(tab, [], async function () {
     const promoContainer = content.document.querySelector(".promo");
     ok(promoContainer, "Focus promo is shown");
   });
@@ -67,7 +67,7 @@ add_task(async function test_default_promo() {
 
   let { win: win1, tab: tab1 } = await openTabAndWaitForRender();
 
-  await SpecialPowers.spawn(tab1, [], async function() {
+  await SpecialPowers.spawn(tab1, [], async function () {
     const promoContainer = content.document.querySelector(".promo"); // container which is present if promo is enabled and should show
     const promoHeader = content.document.getElementById("promo-header");
 
@@ -84,7 +84,7 @@ add_task(async function test_default_promo() {
 
   let { win: win4, tab: tab4 } = await openTabAndWaitForRender();
 
-  await SpecialPowers.spawn(tab4, [], async function() {
+  await SpecialPowers.spawn(tab4, [], async function () {
     is(
       content.document.querySelector(".promo button"),
       null,
@@ -103,7 +103,7 @@ add_task(async function test_remove_promo_from_prerendered_tab_if_blocked() {
 
   const { win, tab: tab1 } = await openTabAndWaitForRender();
 
-  await SpecialPowers.spawn(tab1, [], async function() {
+  await SpecialPowers.spawn(tab1, [], async function () {
     const promoContainer = content.document.querySelector(".promo"); // container which is present if promo message is not blocked
     ok(promoContainer, "Focus promo is shown in a new tab");
     content.document.getElementById("dismiss-btn").click();
@@ -112,15 +112,25 @@ add_task(async function test_remove_promo_from_prerendered_tab_if_blocked() {
     }, "The promo container is removed.");
   });
 
+  let newTabStartPromise = new Promise(resolve => {
+    async function observer(subject) {
+      Services.obs.removeObserver(observer, "browser-open-newtab-start");
+      resolve(subject.wrappedJSObject);
+    }
+    Services.obs.addObserver(observer, "browser-open-newtab-start");
+  });
+  let newtabShown = BrowserTestUtils.waitForCondition(
+    () => win.gBrowser.currentURI.spec == "about:privatebrowsing",
+    `Should open correct url about:privatebrowsing.`
+  );
   win.BrowserOpenTab();
-  await BrowserTestUtils.switchTab(win.gBrowser, win.gBrowser.tabs[1]);
-  await SimpleTest.promiseFocus(win.gBrowser.selectedBrowser);
-  const tab2 = win.gBrowser.selectedBrowser;
+  const tab2 = await newTabStartPromise;
+  await newtabShown;
+  await BrowserTestUtils.switchTab(win.gBrowser, tab2);
 
-  await SpecialPowers.spawn(tab2, [], async function() {
-    const promoContainer = content.document.querySelector(".promo"); // container which is not present if promo message is blocked
-    ok(
-      !promoContainer,
+  await SpecialPowers.spawn(tab2, [], async function () {
+    await ContentTaskUtils.waitForCondition(
+      () => !content.document.querySelector(".promo"),
       "Focus promo is not shown in a new tab after being dismissed in another tab"
     );
   });

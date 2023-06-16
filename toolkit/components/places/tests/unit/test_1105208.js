@@ -1,6 +1,6 @@
 // Test that result node for folder shortcuts get the target folder title if
 // the shortcut itself has no title set.
-add_task(async function() {
+add_task(async function () {
   let folder = await PlacesUtils.bookmarks.insert({
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,

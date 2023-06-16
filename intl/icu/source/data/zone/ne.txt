@@ -258,6 +258,9 @@ ne{
         "America:Chihuahua"{
             ec{"चिहुवाहुवा"}
         }
+        "America:Ciudad_Juarez"{
+            ec{"जुआरेज सहर"}
+        }
         "America:Coral_Harbour"{
             ec{"एटिकोकान"}
         }

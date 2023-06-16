@@ -8,6 +8,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/JSONStringWriteFuncs.h"
+#include "mozilla/StaticPrefs_places.h"
 
 #include "Database.h"
 
@@ -107,8 +108,7 @@
 
 using namespace mozilla;
 
-namespace mozilla {
-namespace places {
+namespace mozilla::places {
 
 namespace {
 
@@ -139,11 +139,8 @@ bool isRecentCorruptFile(const nsCOMPtr<nsIFile>& aCorruptFile) {
     return false;
   }
   PRTime lastMod = 0;
-  if (NS_FAILED(aCorruptFile->GetLastModifiedTime(&lastMod)) || lastMod <= 0 ||
-      (PR_Now() - lastMod) > RECENT_BACKUP_TIME_MICROSEC) {
-    return false;
-  }
-  return true;
+  return NS_SUCCEEDED(aCorruptFile->GetLastModifiedTime(&lastMod)) &&
+         lastMod > 0 && (PR_Now() - lastMod) <= RECENT_BACKUP_TIME_MICROSEC;
 }
 
 /**
@@ -1282,6 +1279,13 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
 
       // Firefox 114  uses schema version 73
 
+      if (currentSchemaVersion < 74) {
+        rv = MigrateV74Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 115  uses schema version 74
+
       // Schema Upgrades must add migration code here.
       // >>> IMPORTANT! <<<
       // NEVER MIX UP SYNC AND ASYNC EXECUTION IN MIGRATORS, YOU MAY LOCK THE
@@ -1312,6 +1316,8 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
     rv = mMainConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_GUID);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mMainConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_ORIGIN_ID);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mMainConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_ALT_FRECENCY);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // moz_historyvisits.
@@ -1634,6 +1640,11 @@ nsresult Database::InitFunctions() {
   NS_ENSURE_SUCCESS(rv, rv);
   rv = SetShouldStartFrecencyRecalculationFunction::create(mMainConn);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (StaticPrefs::places_frecency_pages_alternative_featureGate_AtStartup()) {
+    rv = CalculateAltFrecencyFunction::create(mMainConn);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   return NS_OK;
 }
@@ -2516,6 +2527,26 @@ nsresult Database::MigrateV73Up() {
   return NS_OK;
 }
 
+nsresult Database::MigrateV74Up() {
+  // Add alt_frecency and recalc_alt_frecency to moz_places.
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mMainConn->CreateStatement(
+      "SELECT alt_frecency FROM moz_places"_ns, getter_AddRefs(stmt));
+  if (NS_FAILED(rv)) {
+    rv = mMainConn->ExecuteSimpleSQL(
+        "ALTER TABLE moz_places "
+        "ADD COLUMN alt_frecency INTEGER"_ns);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mMainConn->ExecuteSimpleSQL(
+        "ALTER TABLE moz_places "
+        "ADD COLUMN recalc_alt_frecency INTEGER NOT NULL DEFAULT 0"_ns);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mMainConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_ALT_FRECENCY);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return NS_OK;
+}
+
 nsresult Database::RecalculateOriginFrecencyStatsInternal() {
   return mMainConn->ExecuteSimpleSQL(nsLiteralCString(
       "INSERT OR REPLACE INTO moz_meta(key, value) VALUES "
@@ -2851,5 +2882,4 @@ Database::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
-}  // namespace places
-}  // namespace mozilla
+}  // namespace mozilla::places

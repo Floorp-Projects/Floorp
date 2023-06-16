@@ -19,7 +19,7 @@ add_task(async function test_OPEN_PROTECTION_REPORT() {
 
     // When the graph is built it means any messaging has finished,
     // we can close the tab.
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       await ContentTaskUtils.waitForCondition(() => {
         let bars = content.document.querySelectorAll(".graph-bar");
         return bars.length;

@@ -14,7 +14,7 @@ add_task(async function test_setup() {
   });
 });
 
-add_task(async function() {
+add_task(async function () {
   let windowsToClose = [];
 
   function performSearch(aWin, aIsPrivate) {
@@ -70,7 +70,7 @@ add_task(async function() {
   searchBar.textbox.toggleHistoryPopup();
   searchBar.value = "";
 
-  windowsToClose.forEach(function(win) {
+  windowsToClose.forEach(function (win) {
     win.close();
   });
 });

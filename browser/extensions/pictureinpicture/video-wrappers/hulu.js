@@ -32,7 +32,7 @@ class PictureInPictureVideoWrapper {
 
     if (container) {
       updateCaptionsFunction("");
-      const callback = function(mutationsList, observer) {
+      const callback = function (mutationsList, observer) {
         // This will get the subtitles for both live and regular playback videos
         // and combine them to display. liveVideoText should be an empty string
         // when the video is regular playback and vice versa. If both

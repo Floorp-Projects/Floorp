@@ -25,7 +25,7 @@ const REASON_DAILY = "daily";
 const REASON_ENVIRONMENT_CHANGE = "environment-change";
 const REASON_SHUTDOWN = "shutdown";
 
-var promiseValidateArchivedPings = async function(aExpectedReasons) {
+var promiseValidateArchivedPings = async function (aExpectedReasons) {
   // The list of ping reasons which mark the session end (and must reset the subsession
   // count).
   const SESSION_END_PING_REASONS = new Set([
@@ -283,7 +283,7 @@ add_task(async function test_subsessionsChaining() {
   await promiseValidateArchivedPings(expectedReasons);
 });
 
-add_task(async function() {
+add_task(async function () {
   await TelemetryController.testShutdown();
   do_test_finished();
 });

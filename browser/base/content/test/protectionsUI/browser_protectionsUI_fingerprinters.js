@@ -9,7 +9,7 @@ const TRACKING_PAGE =
 const FP_PROTECTION_PREF = "privacy.trackingprotection.fingerprinting.enabled";
 let fpHistogram;
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       [
@@ -66,7 +66,7 @@ async function testIdentityState(hasException) {
 
   promise = waitForContentBlockingEvent();
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function () {
     content.postMessage("fingerprinting", "*");
   });
 
@@ -142,7 +142,7 @@ async function testCategoryItem() {
 
   promise = waitForContentBlockingEvent();
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function () {
     content.postMessage("fingerprinting", "*");
   });
 
@@ -196,7 +196,7 @@ async function testSubview(hasException) {
   }
 
   promise = waitForContentBlockingEvent();
-  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function () {
     content.postMessage("fingerprinting", "*");
   });
   await promise;

@@ -14,7 +14,7 @@ const TEST_DATA = [
   { expectedTextContent: "div.ball.long" },
 ];
 
-add_task(async function() {
+add_task(async function () {
   await addTab(URL_ROOT + "doc_simple_animation.html");
   await removeAnimatedElementsExcept([".animated", ".long"]);
   const { animationInspector, panel } = await openAnimationInspector();
@@ -35,9 +35,8 @@ add_task(async function() {
     animationItemEl.scrollIntoView(false);
     await waitUntil(() => animationItemEl.querySelector(".animation-target"));
 
-    const animationTargetEl = animationItemEl.querySelector(
-      ".animation-target"
-    );
+    const animationTargetEl =
+      animationItemEl.querySelector(".animation-target");
     ok(
       animationTargetEl,
       "The animation target element should be in each animation item element"

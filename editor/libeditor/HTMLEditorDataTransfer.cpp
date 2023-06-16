@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ErrorList.h"
 #include "HTMLEditor.h"
 
 #include <string.h>
@@ -19,6 +18,7 @@
 #include "SelectionState.h"
 #include "WSRunObject.h"
 
+#include "ErrorList.h"
 #include "mozilla/dom/Comment.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/Document.h"
@@ -50,6 +50,7 @@
 #include "nsDebug.h"
 #include "nsDependentSubstring.h"
 #include "nsError.h"
+#include "nsFocusManager.h"
 #include "nsGkAtoms.h"
 #include "nsIClipboard.h"
 #include "nsIContent.h"
@@ -941,6 +942,9 @@ HTMLEditor::HTMLWithContextInserter::InsertContents(
               "ignored");
           break;  // from the inner `for` loop
         }
+        if (MOZ_UNLIKELY(!moveChildResult.inspect().Handled())) {
+          continue;
+        }
         inserted = true;
         lastInsertedPoint.Set(child);
         pointToInsert = lastInsertedPoint.NextPoint();
@@ -1025,6 +1029,9 @@ HTMLEditor::HTMLWithContextInserter::InsertContents(
                 "ignored");
             break;  // from the inner `for` loop
           }
+          if (MOZ_UNLIKELY(!moveChildResult.inspect().Handled())) {
+            continue;
+          }
           inserted = true;
           lastInsertedPoint.Set(child);
           pointToInsert = lastInsertedPoint.NextPoint();
@@ -1105,6 +1112,9 @@ HTMLEditor::HTMLWithContextInserter::InsertContents(
               "ignored");
           break;  // from the inner `for` loop
         }
+        if (MOZ_UNLIKELY(!moveChildResult.inspect().Handled())) {
+          continue;
+        }
         CreateContentResult unwrappedMoveChildResult = moveChildResult.unwrap();
         inserted = true;
         lastInsertedPoint.Set(child);
@@ -1141,6 +1151,9 @@ HTMLEditor::HTMLWithContextInserter::InsertContents(
               MOZ_KnownLive(content), pointToInsert,
               SplitAtEdges::eDoNotCreateEmptyContainer);
       if (MOZ_LIKELY(moveContentResult.isOk())) {
+        if (MOZ_UNLIKELY(!moveContentResult.inspect().Handled())) {
+          continue;
+        }
         lastInsertedPoint.Set(content);
         pointToInsert = lastInsertedPoint;
         MOZ_ASSERT(pointToInsert.IsSetAndValidInComposedDoc());
@@ -1197,6 +1210,9 @@ HTMLEditor::HTMLWithContextInserter::InsertContents(
                 "SplitAtEdges::eDoNotCreateEmptyContainer) failed, but "
                 "ignored");
             continue;  // the inner `for` loop
+          }
+          if (MOZ_UNLIKELY(!moveParentResult.inspect().Handled())) {
+            continue;
           }
           insertedContextParentContent = oldParentContent;
           pointToInsert.Set(oldParentContent);
@@ -2261,39 +2277,19 @@ HTMLEditor::HavePrivateHTMLFlavor HTMLEditor::ClipboardHasPrivateHTMLFlavor(
                                                   : HavePrivateHTMLFlavor::No;
 }
 
-nsresult HTMLEditor::PasteAsAction(int32_t aClipboardType,
-                                   bool aDispatchPasteEvent,
-                                   nsIPrincipal* aPrincipal) {
-  if (IsReadonly()) {
-    return NS_OK;
-  }
-
-  AutoEditActionDataSetter editActionData(*this, EditAction::ePaste,
-                                          aPrincipal);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  if (aDispatchPasteEvent) {
-    if (!FireClipboardEvent(ePaste, aClipboardType)) {
-      return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
-    }
-  } else {
-    // The caller must already have dispatched a "paste" event.
-    editActionData.NotifyOfDispatchingClipboardEvent();
-  }
-
-  editActionData.InitializeDataTransferWithClipboard(
+nsresult HTMLEditor::HandlePaste(AutoEditActionDataSetter& aEditActionData,
+                                 int32_t aClipboardType) {
+  aEditActionData.InitializeDataTransferWithClipboard(
       SettingDataTransfer::eWithFormat, aClipboardType);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
+  nsresult rv = aEditActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
   if (NS_FAILED(rv)) {
     NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
                          "CanHandleAndMaybeDispatchBeforeInputEvent() failed");
-    return EditorBase::ToGenericNSResult(rv);
+    return rv;
   }
   rv = PasteInternal(aClipboardType);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "HTMLEditor::PasteInternal() failed");
-  return EditorBase::ToGenericNSResult(rv);
+  return rv;
 }
 
 nsresult HTMLEditor::PasteInternal(int32_t aClipboardType) {
@@ -2408,36 +2404,17 @@ nsresult HTMLEditor::PasteInternal(int32_t aClipboardType) {
   return rv;
 }
 
-nsresult HTMLEditor::PasteTransferableAsAction(nsITransferable* aTransferable,
-                                               nsIPrincipal* aPrincipal) {
-  // FIXME: This may be called as a call of nsIEditor::PasteTransferable.
-  // In this case, we should keep handling the paste even in the readonly mode.
-  if (IsReadonly()) {
-    return NS_OK;
-  }
-
-  AutoEditActionDataSetter editActionData(*this, EditAction::ePaste,
-                                          aPrincipal);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
+nsresult HTMLEditor::HandlePasteTransferable(
+    AutoEditActionDataSetter& aEditActionData, nsITransferable& aTransferable) {
   // InitializeDataTransfer may fetch input stream in aTransferable, so it
   // may be invalid after calling this.
-  editActionData.InitializeDataTransfer(aTransferable);
+  aEditActionData.InitializeDataTransfer(&aTransferable);
 
-  // Use an invalid value for the clipboard type as data comes from
-  // aTransferable and we don't currently implement a way to put that in the
-  // data transfer yet.
-  if (!FireClipboardEvent(ePaste, nsIClipboard::kGlobalClipboard)) {
-    return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
-  }
-
-  // Dispatch "beforeinput" event after "paste" event.
-  nsresult rv = editActionData.MaybeDispatchBeforeInputEvent();
+  nsresult rv = aEditActionData.MaybeDispatchBeforeInputEvent();
   if (NS_FAILED(rv)) {
     NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
                          "MaybeDispatchBeforeInputEvent(), failed");
-    return EditorBase::ToGenericNSResult(rv);
+    return rv;
   }
 
   RefPtr<DataTransfer> dataTransfer = GetInputEventDataTransfer();
@@ -2451,19 +2428,21 @@ nsresult HTMLEditor::PasteTransferableAsAction(nsITransferable* aTransferable,
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "HTMLEditor::InsertFromDataTransfer("
                          "DeleteSelectedContent::Yes) failed");
-  } else {
-    nsAutoString contextStr, infoStr;
-    rv = InsertFromTransferableAtSelection(aTransferable, contextStr, infoStr,
-                                           HavePrivateHTMLFlavor::No);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::InsertFromTransferableAtSelection("
-                         "HavePrivateHTMLFlavor::No) failed");
+    return rv;
   }
-  return EditorBase::ToGenericNSResult(rv);
+
+  nsAutoString contextStr, infoStr;
+  rv = InsertFromTransferableAtSelection(&aTransferable, contextStr, infoStr,
+                                         HavePrivateHTMLFlavor::No);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "HTMLEditor::InsertFromTransferableAtSelection("
+                       "HavePrivateHTMLFlavor::No) failed");
+  return rv;
 }
 
-nsresult HTMLEditor::PasteNoFormattingAsAction(int32_t aSelectionType,
-                                               nsIPrincipal* aPrincipal) {
+nsresult HTMLEditor::PasteNoFormattingAsAction(
+    int32_t aClipboardType, DispatchPasteEvent aDispatchPasteEvent,
+    nsIPrincipal* aPrincipal) {
   if (IsReadonly()) {
     return NS_OK;
   }
@@ -2474,10 +2453,68 @@ nsresult HTMLEditor::PasteNoFormattingAsAction(int32_t aSelectionType,
     return NS_ERROR_NOT_INITIALIZED;
   }
   editActionData.InitializeDataTransferWithClipboard(
-      SettingDataTransfer::eWithoutFormat, aSelectionType);
+      SettingDataTransfer::eWithoutFormat, aClipboardType);
 
-  if (!FireClipboardEvent(ePasteNoFormatting, aSelectionType)) {
-    return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
+  if (aDispatchPasteEvent == DispatchPasteEvent::Yes) {
+    RefPtr<nsFocusManager> focusManager = nsFocusManager::GetFocusManager();
+    if (NS_WARN_IF(!focusManager)) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    const RefPtr<Element> focusedElement = focusManager->GetFocusedElement();
+
+    Result<ClipboardEventResult, nsresult> ret =
+        DispatchClipboardEventAndUpdateClipboard(ePasteNoFormatting,
+                                                 aClipboardType);
+    if (MOZ_UNLIKELY(ret.isErr())) {
+      NS_WARNING(
+          "EditorBase::DispatchClipboardEventAndUpdateClipboard("
+          "ePasteNoFormatting) failed");
+      return EditorBase::ToGenericNSResult(ret.unwrapErr());
+    }
+    switch (ret.inspect()) {
+      case ClipboardEventResult::DoDefault:
+        break;
+      case ClipboardEventResult::DefaultPreventedOfPaste:
+      case ClipboardEventResult::IgnoredOrError:
+        return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
+      case ClipboardEventResult::CopyOrCutHandled:
+        MOZ_ASSERT_UNREACHABLE("Invalid result for ePaste");
+    }
+
+    // If focus is changed by a "paste" event listener, we should keep handling
+    // the "pasting" in new focused editor because Chrome works as so.
+    const RefPtr<Element> newFocusedElement = focusManager->GetFocusedElement();
+    if (MOZ_UNLIKELY(focusedElement != newFocusedElement)) {
+      // For the privacy reason, let's top handling it if new focused element is
+      // in different document.
+      if (focusManager->GetFocusedWindow() != GetWindow()) {
+        return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
+      }
+      RefPtr<EditorBase> editorBase =
+          nsContentUtils::GetActiveEditor(GetPresContext());
+      if (!editorBase || (editorBase->IsHTMLEditor() &&
+                          !editorBase->AsHTMLEditor()->IsActiveInDOMWindow())) {
+        return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
+      }
+      if (editorBase != this) {
+        if (editorBase->IsHTMLEditor()) {
+          nsresult rv =
+              MOZ_KnownLive(editorBase->AsHTMLEditor())
+                  ->PasteNoFormattingAsAction(
+                      aClipboardType, DispatchPasteEvent::No, aPrincipal);
+          NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                               "HTMLEditor::PasteNoFormattingAsAction("
+                               "DispatchPasteEvent::No) failed");
+          return EditorBase::ToGenericNSResult(rv);
+        }
+        nsresult rv = editorBase->PasteAsAction(
+            aClipboardType, DispatchPasteEvent::No, aPrincipal);
+        NS_WARNING_ASSERTION(
+            NS_SUCCEEDED(rv),
+            "EditorBase::PasteAsAction(DispatchPasteEvent::No) failed");
+        return EditorBase::ToGenericNSResult(rv);
+      }
+    }
   }
 
   // Dispatch "beforeinput" event after "paste" event.  And perhaps, before
@@ -2529,7 +2566,7 @@ nsresult HTMLEditor::PasteNoFormattingAsAction(int32_t aSelectionType,
   }
 
   // Get the Data from the clipboard
-  rv = clipboard->GetData(transferable, aSelectionType);
+  rv = clipboard->GetData(transferable, aClipboardType);
   if (NS_FAILED(rv)) {
     NS_WARNING("nsIClipboard::GetData() failed");
     return rv;
@@ -2626,45 +2663,28 @@ bool HTMLEditor::CanPasteTransferable(nsITransferable* aTransferable) {
   return false;
 }
 
-nsresult HTMLEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
-                                              bool aDispatchPasteEvent,
-                                              nsIPrincipal* aPrincipal) {
+nsresult HTMLEditor::HandlePasteAsQuotation(
+    AutoEditActionDataSetter& aEditActionData, int32_t aClipboardType) {
   MOZ_ASSERT(aClipboardType == nsIClipboard::kGlobalClipboard ||
              aClipboardType == nsIClipboard::kSelectionClipboard);
-
-  if (IsReadonly()) {
-    return NS_OK;
-  }
-
-  AutoEditActionDataSetter editActionData(*this, EditAction::ePasteAsQuotation,
-                                          aPrincipal);
-  editActionData.InitializeDataTransferWithClipboard(
+  aEditActionData.InitializeDataTransferWithClipboard(
       SettingDataTransfer::eWithFormat, aClipboardType);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
+  if (NS_WARN_IF(!aEditActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  if (aDispatchPasteEvent) {
-    if (!FireClipboardEvent(ePaste, aClipboardType)) {
-      return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
-    }
-  } else {
-    // The caller must already have dispatched a "paste" event.
-    editActionData.NotifyOfDispatchingClipboardEvent();
-  }
-
-  nsresult rv = editActionData.MaybeDispatchBeforeInputEvent();
+  nsresult rv = aEditActionData.MaybeDispatchBeforeInputEvent();
   if (NS_FAILED(rv)) {
     NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
                          "MaybeDispatchBeforeInputEvent(), failed");
-    return EditorBase::ToGenericNSResult(rv);
+    return rv;
   }
 
   if (IsInPlaintextMode()) {
     nsresult rv = PasteAsPlaintextQuotation(aClipboardType);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "HTMLEditor::PasteAsPlaintextQuotation() failed");
-    return EditorBase::ToGenericNSResult(rv);
+    return rv;
   }
 
   // If it's not in plain text edit mode, paste text into new
@@ -2675,7 +2695,7 @@ nsresult HTMLEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
     Result<EditActionResult, nsresult> result = CanHandleHTMLEditSubAction();
     if (MOZ_UNLIKELY(result.isErr())) {
       NS_WARNING("HTMLEditor::CanHandleHTMLEditSubAction() failed");
-      return EditorBase::ToGenericNSResult(result.unwrapErr());
+      return result.unwrapErr();
     }
     if (result.inspect().Canceled()) {
       return NS_OK;
@@ -2698,7 +2718,7 @@ nsresult HTMLEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
 
   rv = EnsureNoPaddingBRElementForEmptyEditor();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-    return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_DESTROYED);
+    return NS_ERROR_EDITOR_DESTROYED;
   }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditorBase::EnsureNoPaddingBRElementForEmptyEditor() "
@@ -2707,7 +2727,7 @@ nsresult HTMLEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
   if (NS_SUCCEEDED(rv) && SelectionRef().IsCollapsed()) {
     nsresult rv = EnsureCaretNotAfterInvisibleBRElement();
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-      return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_DESTROYED);
+      return NS_ERROR_EDITOR_DESTROYED;
     }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "HTMLEditor::EnsureCaretNotAfterInvisibleBRElement() "
@@ -2715,7 +2735,7 @@ nsresult HTMLEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
     if (NS_SUCCEEDED(rv)) {
       nsresult rv = PrepareInlineStylesForCaret();
       if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-        return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_DESTROYED);
+        return NS_ERROR_EDITOR_DESTROYED;
       }
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rv),
@@ -2744,8 +2764,8 @@ nsresult HTMLEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
                         .get());
                 return NS_OK;
               });
-  if (MOZ_UNLIKELY(blockquoteElementOrError.isErr() ||
-                   NS_WARN_IF(Destroyed()))) {
+  if (MOZ_UNLIKELY(blockquoteElementOrError.isErr()) ||
+      NS_WARN_IF(Destroyed())) {
     NS_WARNING(
         "HTMLEditor::DeleteSelectionAndCreateElement(nsGkAtoms::blockquote) "
         "failed");
@@ -2757,14 +2777,14 @@ nsresult HTMLEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
   // Collapse Selection in the new `<blockquote>` element.
   rv = CollapseSelectionToStartOf(
       MOZ_KnownLive(*blockquoteElementOrError.inspect()));
-  if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+  if (NS_FAILED(rv)) {
     NS_WARNING("EditorBase::CollapseSelectionToStartOf() failed");
     return rv;
   }
 
   rv = PasteInternal(aClipboardType);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "HTMLEditor::PasteInternal() failed");
-  return EditorBase::ToGenericNSResult(rv);
+  return rv;
 }
 
 nsresult HTMLEditor::PasteAsPlaintextQuotation(int32_t aSelectionType) {

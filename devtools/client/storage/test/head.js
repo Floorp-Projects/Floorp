@@ -157,7 +157,7 @@ async function openTabAndSetupStorage(url, options = {}) {
  * @param {String} addonId
  *        The ID of the Web Extension to debug.
  */
-var openStoragePanelForAddon = async function(addonId) {
+var openStoragePanelForAddon = async function (addonId) {
   const toolbox = await gDevTools.showToolboxForWebExtension(addonId, {
     toolId: "storage",
   });
@@ -182,7 +182,7 @@ var openStoragePanelForAddon = async function(addonId) {
  *
  * @return {Promise} a promise that resolves when the storage inspector is ready
  */
-var openStoragePanel = async function({ tab, hostType } = {}) {
+var openStoragePanel = async function ({ tab, hostType } = {}) {
   const toolbox = await openToolboxForTab(
     tab || gBrowser.selectedTab,
     "storage",
@@ -342,9 +342,7 @@ function findVariableViewProperties(ruleArray, parsed) {
     // Return the results - a promise resolved to hold the updated ruleArray.
     const returnResults = onAllRulesMatched.bind(null, ruleArray);
 
-    return Promise.all(outstanding)
-      .then(lastStep)
-      .then(returnResults);
+    return Promise.all(outstanding).then(lastStep).then(returnResults);
   }
 
   function onMatch(prop, rule, matched) {
@@ -386,7 +384,7 @@ function findVariableViewProperties(ruleArray, parsed) {
             const matched = matchVariablesViewProperty(prop, rule);
             return matched
               .then(onMatch.bind(null, prop, rule))
-              .then(function() {
+              .then(function () {
                 rule.name = name;
               });
           },
@@ -395,7 +393,7 @@ function findVariableViewProperties(ruleArray, parsed) {
           }
         )
         .then(processExpandRules.bind(null, rules))
-        .then(function() {
+        .then(function () {
           resolve(null);
         });
     });
@@ -959,7 +957,7 @@ function containsFocus(doc, container) {
   return false;
 }
 
-var focusSearchBoxUsingShortcut = async function(panelWin, callback) {
+var focusSearchBoxUsingShortcut = async function (panelWin, callback) {
   info("Focusing search box");
   const searchBox = panelWin.document.getElementById("storage-searchbox");
   const focused = once(searchBox, "focus");

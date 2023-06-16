@@ -947,7 +947,7 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
                                aRootManager, aResources);
         }
         aContext->GetDrawTarget()->FlushItem(aItemBounds);
-      } else {
+      } else if (!trans2d.IsSingular()) {
         aContext->Multiply(ThebesMatrix(trans2d));
         aGroup->PaintItemRange(this, aChildren->begin(), aChildren->end(),
                                aContext, aRecorder, aRootManager, aResources);

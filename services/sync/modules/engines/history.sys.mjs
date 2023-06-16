@@ -102,9 +102,10 @@ HistoryEngine.prototype = {
       return {};
     }
 
-    let guidsToRemove = await lazy.PlacesSyncUtils.history.determineNonSyncableGuids(
-      modifiedGUIDs
-    );
+    let guidsToRemove =
+      await lazy.PlacesSyncUtils.history.determineNonSyncableGuids(
+        modifiedGUIDs
+      );
     await this._tracker.removeChangedID(...guidsToRemove);
     return changedIDs;
   },
@@ -404,9 +405,8 @@ HistoryStore.prototype = {
       // Dates need to be integers. Future and far past dates are clamped to the
       // current date and earliest sensible date, respectively.
       let originalVisitDate = lazy.PlacesUtils.toDate(Math.round(visit.date));
-      visit.date = lazy.PlacesSyncUtils.history.clampVisitDate(
-        originalVisitDate
-      );
+      visit.date =
+        lazy.PlacesSyncUtils.history.clampVisitDate(originalVisitDate);
 
       if (visit.date.getTime() < oldestAllowed) {
         // Visit is older than the oldest visit we have, and we have so many

@@ -108,7 +108,8 @@ void HTMLVideoElement::UpdateMediaSize(const nsIntSize& aSize) {
   // If we have a clone target, we should update its size as well.
   if (mVisualCloneTarget) {
     Maybe<nsIntSize> newSize = Some(aSize);
-    mVisualCloneTarget->Invalidate(true, newSize, true);
+    mVisualCloneTarget->Invalidate(ImageSizeChanged::Yes, newSize,
+                                   ForceInvalidate::Yes);
   }
 }
 
@@ -140,9 +141,9 @@ Maybe<CSSIntSize> HTMLVideoElement::GetVideoSize() const {
   return Some(size);
 }
 
-void HTMLVideoElement::Invalidate(bool aImageSizeChanged,
+void HTMLVideoElement::Invalidate(ImageSizeChanged aImageSizeChanged,
                                   const Maybe<nsIntSize>& aNewIntrinsicSize,
-                                  bool aForceInvalidate) {
+                                  ForceInvalidate aForceInvalidate) {
   HTMLMediaElement::Invalidate(aImageSizeChanged, aNewIntrinsicSize,
                                aForceInvalidate);
   if (mVisualCloneTarget) {
@@ -193,11 +194,9 @@ void HTMLVideoElement::UnbindFromTree(bool aNullParent) {
   if (mVisualCloneSource) {
     mVisualCloneSource->EndCloningVisually();
   } else if (mVisualCloneTarget) {
-    RefPtr<AsyncEventDispatcher> asyncDispatcher =
-        new AsyncEventDispatcher(this, u"MozStopPictureInPicture"_ns,
-                                 CanBubble::eNo, ChromeOnlyDispatch::eYes);
-    asyncDispatcher->RunDOMEventWhenSafe();
-
+    AsyncEventDispatcher::RunDOMEventWhenSafe(
+        *this, u"MozStopPictureInPicture"_ns, CanBubble::eNo,
+        ChromeOnlyDispatch::eYes);
     EndCloningVisually();
   }
 
@@ -259,7 +258,7 @@ uint32_t HTMLVideoElement::MozParsedFrames() const {
     return 0;
   }
 
-  if (OwnerDoc()->ShouldResistFingerprinting()) {
+  if (OwnerDoc()->ShouldResistFingerprinting(RFPTarget::Unknown)) {
     return nsRFPService::GetSpoofedTotalFrames(TotalPlayTime());
   }
 
@@ -272,7 +271,7 @@ uint32_t HTMLVideoElement::MozDecodedFrames() const {
     return 0;
   }
 
-  if (OwnerDoc()->ShouldResistFingerprinting()) {
+  if (OwnerDoc()->ShouldResistFingerprinting(RFPTarget::Unknown)) {
     return nsRFPService::GetSpoofedTotalFrames(TotalPlayTime());
   }
 
@@ -285,7 +284,7 @@ uint32_t HTMLVideoElement::MozPresentedFrames() {
     return 0;
   }
 
-  if (OwnerDoc()->ShouldResistFingerprinting()) {
+  if (OwnerDoc()->ShouldResistFingerprinting(RFPTarget::Unknown)) {
     return nsRFPService::GetSpoofedPresentedFrames(TotalPlayTime(),
                                                    VideoWidth(), VideoHeight());
   }
@@ -299,7 +298,7 @@ uint32_t HTMLVideoElement::MozPaintedFrames() {
     return 0;
   }
 
-  if (OwnerDoc()->ShouldResistFingerprinting()) {
+  if (OwnerDoc()->ShouldResistFingerprinting(RFPTarget::Unknown)) {
     return nsRFPService::GetSpoofedPresentedFrames(TotalPlayTime(),
                                                    VideoWidth(), VideoHeight());
   }
@@ -311,7 +310,8 @@ uint32_t HTMLVideoElement::MozPaintedFrames() {
 double HTMLVideoElement::MozFrameDelay() {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
 
-  if (!IsVideoStatsEnabled() || OwnerDoc()->ShouldResistFingerprinting()) {
+  if (!IsVideoStatsEnabled() ||
+      OwnerDoc()->ShouldResistFingerprinting(RFPTarget::Unknown)) {
     return 0.0;
   }
 
@@ -348,7 +348,7 @@ HTMLVideoElement::GetVideoPlaybackQuality() {
     }
 
     if (mDecoder) {
-      if (OwnerDoc()->ShouldResistFingerprinting()) {
+      if (OwnerDoc()->ShouldResistFingerprinting(RFPTarget::Unknown)) {
         totalFrames = nsRFPService::GetSpoofedTotalFrames(TotalPlayTime());
         droppedFrames = nsRFPService::GetSpoofedDroppedFrames(
             TotalPlayTime(), VideoWidth(), VideoHeight());

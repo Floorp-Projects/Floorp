@@ -14,7 +14,7 @@ var gAppManagerDialog = {
   async init() {
     this.handlerInfo = window.arguments[0];
 
-    document.addEventListener("dialogaccept", function() {
+    document.addEventListener("dialogaccept", function () {
       gAppManagerDialog.onOK();
     });
 

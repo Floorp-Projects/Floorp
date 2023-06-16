@@ -74,9 +74,8 @@ this.DynamicFPIHelper = {
         await TestUtils.topicObserved("browser-delayed-startup-finished");
       }
 
-      const { topPage, thirdPartyPage, partitionKey } = this.getTestPageConfig(
-        runInSecureContext
-      );
+      const { topPage, thirdPartyPage, partitionKey } =
+        this.getTestPageConfig(runInSecureContext);
 
       info("Creating a new tab");
       let tab = BrowserTestUtils.addTab(win.gBrowser, topPage);

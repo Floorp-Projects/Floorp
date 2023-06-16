@@ -23,7 +23,7 @@ add_task(async function test_main() {
   requestLongerTimeout(2);
 
   async function twoRafsInContent(browser) {
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       await new Promise(r =>
         content.requestAnimationFrame(() => content.requestAnimationFrame(r))
       );
@@ -38,7 +38,7 @@ add_task(async function test_main() {
   }
 
   async function checkScrollPosInContent(browser, iter, num) {
-    let visualScrollPos = await SpecialPowers.spawn(browser, [], function() {
+    let visualScrollPos = await SpecialPowers.spawn(browser, [], function () {
       const offsetX = {};
       const offsetY = {};
       SpecialPowers.getDOMWindowUtils(content).getVisualViewportOffset(
@@ -48,7 +48,7 @@ add_task(async function test_main() {
       return offsetY.value;
     });
 
-    let scrollPos = await SpecialPowers.spawn(browser, [], function() {
+    let scrollPos = await SpecialPowers.spawn(browser, [], function () {
       return content.window.scrollY;
     });
 

@@ -162,7 +162,6 @@ bool js::jit::CanInlineNativeCrossRealm(InlinableNative native) {
     case InlinableNative::IsPossiblyWrappedRegExpObject:
     case InlinableNative::RegExpMatcher:
     case InlinableNative::RegExpSearcher:
-    case InlinableNative::RegExpTester:
     case InlinableNative::RegExpPrototypeOptimizable:
     case InlinableNative::RegExpInstanceOptimizable:
     case InlinableNative::GetFirstDollarIndex:
@@ -208,6 +207,10 @@ bool js::jit::CanInlineNativeCrossRealm(InlinableNative native) {
     case InlinableNative::IntrinsicIsTypedArray:
     case InlinableNative::IntrinsicIsPossiblyWrappedTypedArray:
     case InlinableNative::IntrinsicPossiblyWrappedTypedArrayLength:
+    case InlinableNative::IntrinsicRegExpBuiltinExec:
+    case InlinableNative::IntrinsicRegExpBuiltinExecForTest:
+    case InlinableNative::IntrinsicRegExpExec:
+    case InlinableNative::IntrinsicRegExpExecForTest:
     case InlinableNative::IntrinsicTypedArrayLength:
     case InlinableNative::IntrinsicTypedArrayByteOffset:
     case InlinableNative::IntrinsicTypedArrayElementSize:

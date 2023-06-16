@@ -359,7 +359,7 @@ function initialHTML(doc) {
 // However, the HTML parser is not synchronous, so this function uses a mutation
 // observer to detect the creation of the element. Then the text node is appended.
 function insertJsonData(win, json) {
-  new win.MutationObserver(function(mutations, observer) {
+  new win.MutationObserver(function (mutations, observer) {
     for (const { target, addedNodes } of mutations) {
       if (target.nodeType == 1 && target.id == "content") {
         for (const node of addedNodes) {
@@ -378,13 +378,13 @@ function insertJsonData(win, json) {
 }
 
 function keepThemeUpdated(win) {
-  const listener = function() {
+  const listener = function () {
     win.document.documentElement.className = "theme-" + getTheme();
   };
   addThemeObserver(listener);
   win.addEventListener(
     "unload",
-    function(event) {
+    function (event) {
       removeThemeObserver(listener);
       win = null;
     },

@@ -28,7 +28,7 @@ const EXPECTED_UNDERFLOW_REFLOWS = [
  * uninterruptible reflows when closing that tab, which causes the tab strip to
  * underflow.
  */
-add_task(async function() {
+add_task(async function () {
   // Force-enable tab animations
   gReduceMotionOverride = false;
 
@@ -48,7 +48,8 @@ add_task(async function() {
   gURLBar.focus();
   await disableFxaBadge();
 
-  let tabStripRect = gBrowser.tabContainer.arrowScrollbox.getBoundingClientRect();
+  let tabStripRect =
+    gBrowser.tabContainer.arrowScrollbox.getBoundingClientRect();
   let textBoxRect = gURLBar
     .querySelector("moz-input-box")
     .getBoundingClientRect();
@@ -87,7 +88,7 @@ add_task(async function() {
   };
 
   await withPerfObserver(
-    async function() {
+    async function () {
       let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
       BrowserOpenTab();
       await BrowserTestUtils.waitForEvent(
@@ -112,7 +113,7 @@ add_task(async function() {
   // Now test that opening and closing a tab while overflowed doesn't cause
   // us to reflow.
   await withPerfObserver(
-    async function() {
+    async function () {
       let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
       BrowserOpenTab();
       await switchDone;
@@ -126,7 +127,7 @@ add_task(async function() {
   );
 
   await withPerfObserver(
-    async function() {
+    async function () {
       let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
       BrowserTestUtils.removeTab(gBrowser.selectedTab, { animate: true });
       await switchDone;
@@ -149,7 +150,7 @@ add_task(async function() {
 
   // Now switch to the first tab. We shouldn't flush layout at all.
   await withPerfObserver(
-    async function() {
+    async function () {
       let firstTab = gBrowser.tabs[0];
       await BrowserTestUtils.switchTab(gBrowser, firstTab);
       await TestUtils.waitForCondition(() => {
@@ -182,7 +183,7 @@ add_task(async function() {
     // ... and make sure we don't flush layout when closing it, and exiting
     // the overflowed state.
     await withPerfObserver(
-      async function() {
+      async function () {
         let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
         BrowserTestUtils.removeTab(lastTab, { animate: true });
         await switchDone;

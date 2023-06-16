@@ -2,11 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 import re
-import six
 
 
 class EntityPos(int):
@@ -16,7 +12,7 @@ class EntityPos(int):
 mochibake = re.compile('\ufffd')
 
 
-class Checker(object):
+class Checker:
     '''Abstract class to implement checks per file type.
     '''
     pattern = None
@@ -46,7 +42,7 @@ class Checker(object):
             yield (
                 "warning",
                 EntityPos(m.start()),
-                "\ufffd in: {}".format(l10nEnt.key),
+                f"\ufffd in: {l10nEnt.key}",
                 "encodings"
             )
 
@@ -57,14 +53,13 @@ class Checker(object):
         self.reference = reference
 
 
-class CSSCheckMixin(object):
+class CSSCheckMixin:
     def maybe_style(self, ref_value, l10n_value):
         ref_map, _ = self.parse_css_spec(ref_value)
         if not ref_map:
             return
         l10n_map, errors = self.parse_css_spec(l10n_value)
-        for t in self.check_style(ref_map, l10n_map, errors):
-            yield t
+        yield from self.check_style(ref_map, l10n_map, errors)
 
     def check_style(self, ref_map, l10n_map, errors):
         if not l10n_map:
@@ -83,7 +78,7 @@ class CSSCheckMixin(object):
                 if unit != ref_unit:
                     msgs.append("units for %s don't match "
                                 "(%s != %s)" % (prop, unit, ref_unit))
-        for prop in six.iterkeys(ref_map):
+        for prop in ref_map.keys():
             msgs.insert(0, '%s only in reference' % prop)
         if msgs:
             yield ('warning', 0, ', '.join(msgs), 'css')

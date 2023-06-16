@@ -101,7 +101,7 @@ async function initTabSync() {
   await TestUtils.waitForTick();
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await resetSyncedTabsLastFetched();
   await SpecialPowers.pushPrefEnv({
     set: [["browser.tabs.firefox-view.notify-for-tabs", true]],

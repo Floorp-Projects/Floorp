@@ -7,7 +7,7 @@
 
 "use strict";
 
-this.log = (function() {
+this.log = (function () {
   const exports = {};
   const logLevel = "warn";
 

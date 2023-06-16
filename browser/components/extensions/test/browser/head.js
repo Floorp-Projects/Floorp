@@ -50,8 +50,8 @@ PromiseTestUtils.allowMatchingRejectionsGlobally(
   /Receiving end does not exist/
 );
 
-const { AppUiTestDelegate, AppUiTestInternals } = ChromeUtils.import(
-  "resource://testing-common/AppUiTestDelegate.jsm"
+const { AppUiTestDelegate, AppUiTestInternals } = ChromeUtils.importESModule(
+  "resource://testing-common/AppUiTestDelegate.sys.mjs"
 );
 
 const { Preferences } = ChromeUtils.importESModule(
@@ -61,18 +61,12 @@ const { ClientEnvironmentBase } = ChromeUtils.importESModule(
   "resource://gre/modules/components-utils/ClientEnvironment.sys.mjs"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "Management",
-  "resource://gre/modules/Extension.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  Management: "resource://gre/modules/Extension.sys.mjs",
+});
 
-var {
-  makeWidgetId,
-  promisePopupShown,
-  getPanelForNode,
-  awaitBrowserLoaded,
-} = AppUiTestInternals;
+var { makeWidgetId, promisePopupShown, getPanelForNode, awaitBrowserLoaded } =
+  AppUiTestInternals;
 
 // The extension tests can run a lot slower under ASAN.
 if (AppConstants.ASAN) {
@@ -127,7 +121,7 @@ var focusWindow = async function focusWindow(win) {
   let promise = new Promise(resolve => {
     win.addEventListener(
       "focus",
-      function() {
+      function () {
         resolve();
       },
       { capture: true, once: true }
@@ -218,7 +212,7 @@ function promisePopupNotificationShown(name, win = window) {
 }
 
 function promisePossiblyInaccurateContentDimensions(browser) {
-  return SpecialPowers.spawn(browser, [], async function() {
+  return SpecialPowers.spawn(browser, [], async function () {
     function copyProps(obj, props) {
       let res = {};
       for (let prop of props) {
@@ -326,7 +320,7 @@ async function focusButtonAndPressKey(key, elem, modifiers) {
   elem.blur();
 }
 
-var awaitExtensionPanel = function(extension, win = window, awaitLoad = true) {
+var awaitExtensionPanel = function (extension, win = window, awaitLoad = true) {
   return AppUiTestDelegate.awaitExtensionPanel(win, extension.id, awaitLoad);
 };
 
@@ -348,7 +342,7 @@ function getBrowserActionPopup(extension, win = window) {
   return win.gUnifiedExtensions.panel;
 }
 
-var showBrowserAction = function(extension, win = window) {
+var showBrowserAction = function (extension, win = window) {
   return AppUiTestInternals.showBrowserAction(win, extension.id);
 };
 
@@ -1049,9 +1043,11 @@ function getCssAvailRect(screen) {
 
 function isRectContained(actualRect, maxRect) {
   is(
-    `top=${actualRect.top >= maxRect.top},bottom=${actualRect.bottom <=
-      maxRect.bottom},left=${actualRect.left >=
-      maxRect.left},right=${actualRect.right <= maxRect.right}`,
+    `top=${actualRect.top >= maxRect.top},bottom=${
+      actualRect.bottom <= maxRect.bottom
+    },left=${actualRect.left >= maxRect.left},right=${
+      actualRect.right <= maxRect.right
+    }`,
     "top=true,bottom=true,left=true,right=true",
     `Dimension must be inside, top:${actualRect.top}>=${maxRect.top}, bottom:${actualRect.bottom}<=${maxRect.bottom}, left:${actualRect.left}>=${maxRect.left}, right:${actualRect.right}<=${maxRect.right}`
   );

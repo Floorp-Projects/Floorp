@@ -17,16 +17,13 @@ const asyncStore = asyncStoreHelper("debugger", {
 });
 exports.asyncStore = asyncStore;
 
-exports.getThreadOptions = async function() {
+exports.getThreadOptions = async function () {
   return {
     pauseOnExceptions: Services.prefs.getBoolPref(
       "devtools.debugger.pause-on-exceptions"
     ),
     ignoreCaughtExceptions: Services.prefs.getBoolPref(
       "devtools.debugger.ignore-caught-exceptions"
-    ),
-    shouldShowOverlay: Services.prefs.getBoolPref(
-      "devtools.debugger.features.overlay"
     ),
     shouldIncludeSavedFrames: Services.prefs.getBoolPref(
       "devtools.debugger.features.async-captured-stacks"

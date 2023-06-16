@@ -265,7 +265,7 @@ add_task(async function test_beforeSave_rejects() {
     storeForSave.saveSoon();
   });
 
-  await Assert.rejects(promiseSave, function(ex) {
+  await Assert.rejects(promiseSave, function (ex) {
     return ex.message == "oops";
   });
 });

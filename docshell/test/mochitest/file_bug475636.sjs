@@ -59,8 +59,7 @@ catch (e) {\
   // refresh to js url should not be followed
   {
     refresh: jsURL,
-    doc:
-      '<!DOCTYPE HTML>\
+    doc: '<!DOCTYPE HTML>\
 <script>\
 setTimeout(function() {\
   window.parent.postMessage("pass", "*");\

@@ -47,7 +47,7 @@ function mixin(obj) {
  * @api public
  */
 
-Emitter.prototype.on = function(event, fn) {
+Emitter.prototype.on = function (event, fn) {
   this._callbacks = this._callbacks || {};
   (this._callbacks["$" + event] = this._callbacks["$" + event] || []).push(fn);
   return this;
@@ -61,7 +61,7 @@ Emitter.prototype.on = function(event, fn) {
  * @return {Emitter}
  */
 
-Emitter.prototype.emit = function(event) {
+Emitter.prototype.emit = function (event) {
   this._callbacks = this._callbacks || {};
 
   const args = new Array(arguments.length - 1);

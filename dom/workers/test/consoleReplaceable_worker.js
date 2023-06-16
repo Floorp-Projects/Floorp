@@ -3,10 +3,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-onmessage = function(event) {
+onmessage = function (event) {
   postMessage({ event: "console exists", status: !!console, last: false });
   var logCalled = false;
-  console.log = function() {
+  console.log = function () {
     logCalled = true;
   };
   console.log("foo");

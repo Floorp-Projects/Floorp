@@ -7,7 +7,7 @@
 const TEST_COM_URI = `${URL_ROOT_COM_SSL}examples/doc_dbg-fission-pause-exceptions.html`;
 // Tests Pause on exceptions in remote iframes
 
-add_task(async function() {
+add_task(async function () {
   // Load a test page with a remote iframe
   const dbg = await initDebuggerWithAbsoluteURL(TEST_COM_URI);
 

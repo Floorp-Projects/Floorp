@@ -6,13 +6,11 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "ProxyChannelFilter",
-  "resource://gre/modules/ProxyChannelFilter.jsm"
-);
-var { ExtensionPreferencesManager } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionPreferencesManager.jsm"
+ChromeUtils.defineESModuleGetters(this, {
+  ProxyChannelFilter: "resource://gre/modules/ProxyChannelFilter.sys.mjs",
+});
+var { ExtensionPreferencesManager } = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionPreferencesManager.sys.mjs"
 );
 
 var { ExtensionError } = ExtensionUtils;

@@ -2,7 +2,7 @@ function ok(expect, msg) {
   postMessage({ type: "status", status: !!expect, msg });
 }
 
-onmessage = function(event) {
+onmessage = function (event) {
   ok(!!event.data.bitmap1, "Get the 1st ImageBitmap from the main script.");
   ok(!!event.data.bitmap2, "Get the 2nd ImageBitmap from the main script.");
   ok(!!event.data.bitmap3, "Get the 3rd ImageBitmap from the main script.");
@@ -14,7 +14,7 @@ onmessage = function(event) {
   // and then send the newly created ImageBitmap back to the main-thread
   var promise = createImageBitmap(event.data.bitmap2);
   promise.then(
-    function(bitmap) {
+    function (bitmap) {
       ok(
         true,
         "Successfully create a new ImageBitmap from the 2nd original bitmap in worker."
@@ -26,7 +26,7 @@ onmessage = function(event) {
       // finish the test
       postMessage({ type: "finish" });
     },
-    function() {
+    function () {
       ok(
         false,
         "Cannot create a new bitmap from the original bitmap in worker."

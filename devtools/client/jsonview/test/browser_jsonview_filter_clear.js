@@ -22,7 +22,7 @@ function clickAndWaitForFilterClear(selector) {
 
     return new Promise(resolve => {
       // Wait until we have 0 hidden rows
-      const observer = new content.MutationObserver(function(mutations) {
+      const observer = new content.MutationObserver(function (mutations) {
         info("New mutation ! ");
         info(`${mutations}`);
         for (let i = 0; i < mutations.length; i++) {
@@ -48,7 +48,7 @@ function clickAndWaitForFilterClear(selector) {
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   info("Test filter input is cleared when pressing the clear button");
 
   await addJsonViewTab(TEST_JSON_URL);

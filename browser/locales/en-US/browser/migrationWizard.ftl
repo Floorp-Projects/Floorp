@@ -38,6 +38,7 @@ migration-wizard-migrator-display-name-chromium-edge-beta = Microsoft Edge Beta
 migration-wizard-migrator-display-name-edge-legacy = Microsoft Edge Legacy
 migration-wizard-migrator-display-name-firefox = Firefox
 migration-wizard-migrator-display-name-file-password-csv = Passwords from CSV file
+migration-wizard-migrator-display-name-file-bookmarks = Bookmarks from HTML file
 migration-wizard-migrator-display-name-ie = Microsoft Internet Explorer
 migration-wizard-migrator-display-name-opera = Opera
 migration-wizard-migrator-display-name-opera-gx = Opera GX
@@ -62,6 +63,7 @@ migration-favorites-option-label = Favorites
 migration-logins-and-passwords-option-label = Saved logins and passwords
 migration-history-option-label = Browsing history
 migration-form-autofill-option-label = Form autofill data
+migration-payment-methods-option-label = Payment methods
 
 migration-passwords-from-file-progress-header = Import Passwords File
 migration-passwords-from-file-success-header = Passwords Imported Successfully
@@ -107,6 +109,34 @@ migration-wizard-progress-success-updated-passwords =
        *[other] { $updatedEntries } updated
     }
 
+migration-bookmarks-from-file-picker-title = Import Bookmarks File
+migration-bookmarks-from-file-progress-header = Importing Bookmarks
+migration-bookmarks-from-file = Bookmarks
+migration-bookmarks-from-file-success-header = Bookmarks Imported Successfully
+
+# A description for the .html file format that may be shown as the file type
+# filter by the operating system.
+migration-bookmarks-from-file-html-filter-title =
+  { PLATFORM() ->
+      [macos] HTML Document
+     *[other] HTML File
+  }
+
+# A description for the .json file format that may be shown as the file type
+# filter by the operating system.
+migration-bookmarks-from-file-json-filter-title = JSON File
+
+# Shown in the migration wizard after importing bookmarks from a file
+# has completed.
+#
+# Variables:
+#  $newEntries (Number): the number of imported bookmarks.
+migration-wizard-progress-success-new-bookmarks =
+    { $newEntries ->
+        [one] { $newEntries } bookmark
+       *[other] { $newEntries } bookmarks
+    }
+
 migration-import-button-label = Import
 migration-choose-to-import-from-file-button-label = Import From File
 migration-import-from-file-button-label = Select File
@@ -131,6 +161,7 @@ migration-list-favorites-label = favorites
 migration-list-password-label = passwords
 migration-list-history-label = history
 migration-list-autofill-label = autofill data
+migration-list-payment-methods-label = payment methods
 
 ##
 
@@ -198,6 +229,17 @@ migration-wizard-progress-success-history =
     }
 
 migration-wizard-progress-success-formdata = Form history
+
+# Shown in the migration wizard after importing payment methods from another
+# browser has completed.
+#
+# Variables:
+#  $quantity (Number): the number of successfully imported payment methods
+migration-wizard-progress-success-payment-methods =
+    { $quantity ->
+        [one] { $quantity } payment method
+       *[other] { $quantity } payment methods
+    }
 
 migration-wizard-safari-permissions-sub-header = To import Safari bookmarks and browsing history:
 migration-wizard-safari-instructions-continue = Select “Continue”

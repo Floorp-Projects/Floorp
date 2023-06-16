@@ -8,7 +8,7 @@ const { PlacesTestUtils } = ChromeUtils.importESModule(
 
 const {
   ExtensionUtils: { makeDataURI },
-} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+} = ChromeUtils.importESModule("resource://gre/modules/ExtensionUtils.sys.mjs");
 
 // A small 1x1 test png
 const IMAGE_1x1 =
@@ -51,7 +51,7 @@ async function getSites(extension, options) {
   return extension.awaitMessage("sites");
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
 

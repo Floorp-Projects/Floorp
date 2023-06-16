@@ -269,7 +269,7 @@ async function test_ca_distrust(ee_cert, cert_to_modify_trust, isRootCA) {
   );
 }
 
-add_task(async function() {
+add_task(async function () {
   let certList = ["ca", "int", "ee"];
   let loadedCerts = [];
   for (let certName of certList) {

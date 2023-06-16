@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_setup(async function() {
+add_setup(async function () {
   // Disable other tracking protection feature to avoid interfering with the
   // current test. This also setup prefs for testing email tracking.
   await SpecialPowers.pushPrefEnv({

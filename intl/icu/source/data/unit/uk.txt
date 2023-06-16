@@ -743,6 +743,7 @@ uk{
                     }
                 }
             }
+            times{"{0}⋅{1}"}
         }
         concentr{
             item{
@@ -5301,10 +5302,22 @@ uk{
             }
             radian{
                 dnam{"рад."}
+                few{"{0} рад."}
+                many{"{0} рад."}
+                one{"{0} рад."}
+                other{"{0} рад."}
+            }
+            revolution{
+                dnam{"об"}
+                few{"{0} об"}
+                many{"{0} об"}
+                one{"{0} об"}
+                other{"{0} об"}
             }
         }
         area{
             acre{
+                dnam{"акри"}
                 few{"{0} акр"}
                 many{"{0} акр"}
                 one{"{0} акр"}
@@ -5324,6 +5337,14 @@ uk{
                 one{"{0}га"}
                 other{"{0}га"}
             }
+            square-centimeter{
+                dnam{"см²"}
+                few{"{0} см²"}
+                many{"{0} см²"}
+                one{"{0} см²"}
+                other{"{0} см²"}
+                per{"{0}/см²"}
+            }
             square-foot{
                 dnam{"фт²"}
                 few{"{0} фт²"}
@@ -5331,24 +5352,44 @@ uk{
                 one{"{0} фт²"}
                 other{"{0} фт²"}
             }
+            square-inch{
+                dnam{"дюйми²"}
+                few{"{0} дюйми²"}
+                many{"{0} дюймів²"}
+                one{"{0} дюйм²"}
+                other{"{0} дюйма²"}
+                per{"{0}/дюйм²"}
+            }
             square-kilometer{
+                dnam{"км²"}
                 few{"{0} км²"}
                 many{"{0} км²"}
                 one{"{0} км²"}
                 other{"{0} км²"}
+                per{"{0}/км²"}
             }
             square-meter{
+                dnam{"м²"}
                 few{"{0} м²"}
                 many{"{0} м²"}
                 one{"{0} м²"}
                 other{"{0} м²"}
+                per{"{0}/м²"}
             }
             square-mile{
+                dnam{"милі²"}
                 few{"{0} мл²"}
                 many{"{0} мл²"}
                 one{"{0} мл²"}
                 other{"{0} мл²"}
                 per{"{0}/мл²"}
+            }
+            square-yard{
+                dnam{"ярди²"}
+                few{"{0} ярди²"}
+                many{"{0} ярдів²"}
+                one{"{0} ярд²"}
+                other{"{0} ярда²"}
             }
         }
         compound{
@@ -5381,6 +5422,51 @@ uk{
             10p6{"М{0}"}
             10p9{"Г{0}"}
             per{"{0}/{1}"}
+            power2{
+                few{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                many{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                one{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+            }
+            power3{
+                few{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                many{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                one{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+            }
+            times{"{0}⋅{1}"}
         }
         concentr{
             item{
@@ -5392,11 +5478,27 @@ uk{
             }
             karat{
                 dnam{"кар."}
+                few{"{0} кар."}
+                many{"{0} кар."}
+                one{"{0} кар."}
+                other{"{0} кар."}
+            }
+            milligram-ofglucose-per-deciliter{
+                dnam{"мг/дл"}
+                few{"{0} мг/дл"}
+                many{"{0} мг/дл"}
+                one{"{0} мг/дл"}
+                other{"{0} мг/дл"}
             }
             millimole-per-liter{
                 dnam{"ммоль/л"}
+                few{"{0} ммоль/л"}
+                many{"{0} ммоль/л"}
+                one{"{0} ммоль/л"}
+                other{"{0} ммоль/л"}
             }
             mole{
+                dnam{"моль"}
                 few{"{0}моль"}
                 many{"{0}моль"}
                 one{"{0}моль"}
@@ -5411,6 +5513,10 @@ uk{
             }
             permille{
                 dnam{"‰"}
+                few{"{0}‰"}
+                many{"{0}‰"}
+                one{"{0}‰"}
+                other{"{0}‰"}
             }
             permillion{
                 dnam{"м. д."}
@@ -5421,6 +5527,10 @@ uk{
             }
             permyriad{
                 dnam{"‱"}
+                few{"{0}‱"}
+                many{"{0}‱"}
+                one{"{0}‱"}
+                other{"{0}‱"}
             }
         }
         consumption{
@@ -5433,6 +5543,10 @@ uk{
             }
             liter-per-kilometer{
                 dnam{"л/км"}
+                few{"{0} л/км"}
+                many{"{0} л/км"}
+                one{"{0} л/км"}
+                other{"{0} л/км"}
             }
             mile-per-gallon{
                 dnam{"мл/гал"}
@@ -5459,33 +5573,80 @@ uk{
         digital{
             bit{
                 dnam{"б"}
+                few{"{0} б"}
+                many{"{0} б"}
+                one{"{0} б"}
+                other{"{0} б"}
             }
             byte{
                 dnam{"Б"}
+                few{"{0} Б"}
+                many{"{0} Б"}
+                one{"{0} Б"}
+                other{"{0} Б"}
             }
             gigabit{
                 dnam{"Гб"}
+                few{"{0} Гб"}
+                many{"{0} Гб"}
+                one{"{0} Гб"}
+                other{"{0} Гб"}
             }
             gigabyte{
                 dnam{"ГБ"}
+                few{"{0} ГБ"}
+                many{"{0} ГБ"}
+                one{"{0} ГБ"}
+                other{"{0} ГБ"}
             }
             kilobit{
                 dnam{"кб"}
+                few{"{0} кб"}
+                many{"{0} кб"}
+                one{"{0} кб"}
+                other{"{0} кб"}
             }
             kilobyte{
                 dnam{"кБ"}
+                few{"{0} кБ"}
+                many{"{0} кБ"}
+                one{"{0} кБ"}
+                other{"{0} кБ"}
             }
             megabit{
                 dnam{"Мб"}
+                few{"{0} Мб"}
+                many{"{0} Мб"}
+                one{"{0} Мб"}
+                other{"{0} Мб"}
             }
             megabyte{
                 dnam{"МБ"}
+                few{"{0} МБ"}
+                many{"{0} МБ"}
+                one{"{0} МБ"}
+                other{"{0} МБ"}
+            }
+            petabyte{
+                dnam{"ПБ"}
+                few{"{0} ПБ"}
+                many{"{0} ПБ"}
+                one{"{0} ПБ"}
+                other{"{0} ПБ"}
             }
             terabit{
                 dnam{"Тб"}
+                few{"{0} Тб"}
+                many{"{0} Тб"}
+                one{"{0} Тб"}
+                other{"{0} Тб"}
             }
             terabyte{
                 dnam{"ТБ"}
+                few{"{0} ТБ"}
+                many{"{0} ТБ"}
+                one{"{0} ТБ"}
+                other{"{0} ТБ"}
             }
         }
         duration{
@@ -5503,6 +5664,13 @@ uk{
                 one{"{0}д"}
                 other{"{0}д"}
                 per{"{0}/д"}
+            }
+            decade{
+                dnam{"10-річчя"}
+                few{"{0} 10-річчя"}
+                many{"{0} 10-річ"}
+                one{"{0} 10-річчя"}
+                other{"{0} 10-річчя"}
             }
             hour{
                 dnam{"г"}
@@ -5583,19 +5751,49 @@ uk{
             }
         }
         electric{
+            ampere{
+                dnam{"А"}
+                few{"{0} А"}
+                many{"{0} А"}
+                one{"{0} А"}
+                other{"{0} А"}
+            }
+            milliampere{
+                dnam{"мА"}
+                few{"{0} мА"}
+                many{"{0} мА"}
+                one{"{0} мА"}
+                other{"{0} мА"}
+            }
             ohm{
                 dnam{"Ом"}
+                few{"{0} Ом"}
+                many{"{0} Ом"}
+                one{"{0} Ом"}
+                other{"{0} Ом"}
             }
             volt{
                 dnam{"В"}
+                few{"{0} В"}
+                many{"{0} В"}
+                one{"{0} В"}
+                other{"{0} В"}
             }
         }
         energy{
             british-thermal-unit{
+                dnam{"Отб"}
                 few{"{0}Отб"}
                 many{"{0}Отб"}
                 one{"{0}Отб"}
                 other{"{0}Отб"}
+            }
+            calorie{
+                dnam{"кал"}
+                few{"{0} кал"}
+                many{"{0} кал"}
+                one{"{0} кал"}
+                other{"{0} кал"}
             }
             electronvolt{
                 dnam{"еВ"}
@@ -5604,11 +5802,33 @@ uk{
                 one{"{0}еВ"}
                 other{"{0}еВ"}
             }
+            foodcalorie{
+                dnam{"ккал"}
+                few{"{0} ккал"}
+                many{"{0} ккал"}
+                one{"{0} ккал"}
+                other{"{0} ккал"}
+            }
             joule{
                 dnam{"Дж"}
+                few{"{0} Дж"}
+                many{"{0} Дж"}
+                one{"{0} Дж"}
+                other{"{0} Дж"}
+            }
+            kilocalorie{
+                dnam{"ккал"}
+                few{"{0} ккал"}
+                many{"{0} ккал"}
+                one{"{0} ккал"}
+                other{"{0} ккал"}
             }
             kilojoule{
                 dnam{"кДж"}
+                few{"{0} кДж"}
+                many{"{0} кДж"}
+                one{"{0} кДж"}
+                other{"{0} кДж"}
             }
             kilowatt-hour{
                 dnam{"кВт⋅год"}
@@ -5648,7 +5868,44 @@ uk{
                 other{"{0}фнтс"}
             }
         }
+        frequency{
+            gigahertz{
+                dnam{"ГГц"}
+                few{"{0} ГГц"}
+                many{"{0} ГГц"}
+                one{"{0} ГГц"}
+                other{"{0} ГГц"}
+            }
+            hertz{
+                dnam{"Гц"}
+                few{"{0} Гц"}
+                many{"{0} Гц"}
+                one{"{0} Гц"}
+                other{"{0} Гц"}
+            }
+            kilohertz{
+                dnam{"кГц"}
+                few{"{0} кГц"}
+                many{"{0} кГц"}
+                one{"{0} кГц"}
+                other{"{0} кГц"}
+            }
+            megahertz{
+                dnam{"МГц"}
+                few{"{0} МГц"}
+                many{"{0} МГц"}
+                one{"{0} МГц"}
+                other{"{0} МГц"}
+            }
+        }
         graphics{
+            dot{
+                dnam{"тчк"}
+                few{"{0} тчк"}
+                many{"{0} тчк"}
+                one{"{0} тчк"}
+                other{"{0} тчк"}
+            }
             dot-per-centimeter{
                 dnam{"тчк/см"}
                 few{"{0} тчк/см"}
@@ -5671,6 +5928,7 @@ uk{
                 other{"{0} ем"}
             }
             megapixel{
+                dnam{"Мп"}
                 few{"{0}Мп"}
                 many{"{0}Мп"}
                 one{"{0}Мп"}
@@ -5699,6 +5957,13 @@ uk{
             }
         }
         length{
+            astronomical-unit{
+                dnam{"а. о."}
+                few{"{0} а. о."}
+                many{"{0} а. о."}
+                one{"{0} а. о."}
+                other{"{0} а. о."}
+            }
             centimeter{
                 dnam{"см"}
                 few{"{0} см"}
@@ -5713,6 +5978,13 @@ uk{
                 many{"{0}дм"}
                 one{"{0}дм"}
                 other{"{0}дм"}
+            }
+            earth-radius{
+                dnam{"R⊕"}
+                few{"{0} R⊕"}
+                many{"{0} R⊕"}
+                one{"{0} R⊕"}
+                other{"{0} R⊕"}
             }
             fathom{
                 dnam{"фтм"}
@@ -5737,6 +6009,7 @@ uk{
                 other{"{0} фрл"}
             }
             inch{
+                dnam{"дюйми"}
                 few{"{0} дм"}
                 many{"{0} дм"}
                 one{"{0} дм"}
@@ -5752,6 +6025,7 @@ uk{
                 per{"{0}/км"}
             }
             light-year{
+                dnam{"св. р."}
                 few{"{0} св. р."}
                 many{"{0} св. р."}
                 one{"{0} св. р."}
@@ -5801,6 +6075,7 @@ uk{
                 other{"{0}нм"}
             }
             nautical-mile{
+                dnam{"м. милі"}
                 few{"{0} м. мл"}
                 many{"{0} м. мл"}
                 one{"{0} м. мл"}
@@ -5835,6 +6110,7 @@ uk{
                 other{"{0}R☉"}
             }
             yard{
+                dnam{"ярди"}
                 few{"{0} ярди"}
                 many{"{0} ярдів"}
                 one{"{0} ярд"}
@@ -5842,8 +6118,26 @@ uk{
             }
         }
         light{
+            candela{
+                dnam{"кд"}
+                few{"{0} кд"}
+                many{"{0} кд"}
+                one{"{0} кд"}
+                other{"{0} кд"}
+            }
+            lumen{
+                dnam{"лм"}
+                few{"{0} лм"}
+                many{"{0} лм"}
+                one{"{0} лм"}
+                other{"{0} лм"}
+            }
             lux{
                 dnam{"лк"}
+                few{"{0} лк"}
+                many{"{0} лк"}
+                one{"{0} лк"}
+                other{"{0} лк"}
             }
             solar-luminosity{
                 dnam{"L☉"}
@@ -5899,12 +6193,14 @@ uk{
                 per{"{0}/кг"}
             }
             microgram{
+                dnam{"мкг"}
                 few{"{0}мкг"}
                 many{"{0}мкг"}
                 one{"{0}мкг"}
                 other{"{0}мкг"}
             }
             milligram{
+                dnam{"мг"}
                 few{"{0}мг"}
                 many{"{0}мг"}
                 one{"{0}мг"}
@@ -5963,17 +6259,40 @@ uk{
             }
         }
         power{
+            gigawatt{
+                dnam{"ГВт"}
+                few{"{0} ГВт"}
+                many{"{0} ГВт"}
+                one{"{0} ГВт"}
+                other{"{0} ГВт"}
+            }
             horsepower{
+                dnam{"к. с."}
                 few{"{0} к.с."}
                 many{"{0} к.с."}
                 one{"{0} к.с."}
                 other{"{0} к.с."}
             }
             kilowatt{
+                dnam{"кВт"}
                 few{"{0} кВт"}
                 many{"{0} кВт"}
                 one{"{0} кВт"}
                 other{"{0} кВт"}
+            }
+            megawatt{
+                dnam{"МВт"}
+                few{"{0} МВт"}
+                many{"{0} МВт"}
+                one{"{0} МВт"}
+                other{"{0} МВт"}
+            }
+            milliwatt{
+                dnam{"мВт"}
+                few{"{0} мВт"}
+                many{"{0} мВт"}
+                one{"{0} мВт"}
+                other{"{0} мВт"}
             }
             watt{
                 dnam{"Вт"}
@@ -5984,12 +6303,47 @@ uk{
             }
         }
         pressure{
+            atmosphere{
+                dnam{"атм"}
+                few{"{0} атм"}
+                many{"{0} атм"}
+                one{"{0} атм"}
+                other{"{0} атм"}
+            }
+            bar{
+                dnam{"бар"}
+                few{"{0} бар"}
+                many{"{0} бар"}
+                one{"{0} бар"}
+                other{"{0} бар"}
+            }
             hectopascal{
                 dnam{"гПа"}
                 few{"{0} гПа"}
                 many{"{0} гПа"}
                 one{"{0} гПа"}
                 other{"{0} гПа"}
+            }
+            inch-ofhg{
+                dnam{"дюйми рт. ст."}
+                few{"{0} дюйми рт. ст."}
+                many{"{0} дюймів рт. ст."}
+                one{"{0} дюйм рт. ст."}
+                other{"{0} дюйма рт. ст."}
+            }
+            kilopascal{
+                dnam{"кПа"}
+                few{"{0} кПа"}
+                many{"{0} кПа"}
+                one{"{0} кПа"}
+                other{"{0} кПа"}
+            }
+            megapascal{
+                dnam{"МПа"}
+                few{"{0} МПа"}
+                many{"{0} МПа"}
+                one{"{0} МПа"}
+                other{"{0} МПа"}
             }
             millibar{
                 dnam{"мбар"}
@@ -6004,6 +6358,13 @@ uk{
                 many{"{0}ммрс"}
                 one{"{0}ммрс"}
                 other{"{0}ммрс"}
+            }
+            pascal{
+                dnam{"Па"}
+                few{"{0} Па"}
+                many{"{0} Па"}
+                one{"{0} Па"}
+                other{"{0} Па"}
             }
             pound-force-per-square-inch{
                 dnam{"фнт/дюйм²"}
@@ -6075,12 +6436,14 @@ uk{
         }
         torque{
             newton-meter{
+                dnam{"Н·м"}
                 few{"{0}Н·м"}
                 many{"{0}Н·м"}
                 one{"{0}Н·м"}
                 other{"{0}Н·м"}
             }
             pound-force-foot{
+                dnam{"фунт-фут"}
                 few{"{0}фн-фт"}
                 many{"{0}фн-фт"}
                 one{"{0}фн-фт"}
@@ -6109,6 +6472,21 @@ uk{
                 one{"{0}буш"}
                 other{"{0}буш"}
             }
+            centiliter{
+                dnam{"сл"}
+                few{"{0} сл"}
+                many{"{0} сл"}
+                one{"{0} сл"}
+                other{"{0} сл"}
+            }
+            cubic-centimeter{
+                dnam{"см³"}
+                few{"{0} см³"}
+                many{"{0} см³"}
+                one{"{0} см³"}
+                other{"{0} см³"}
+                per{"{0}/см³"}
+            }
             cubic-foot{
                 dnam{"фт³"}
                 few{"{0} фт³"}
@@ -6116,17 +6494,41 @@ uk{
                 one{"{0} фт³"}
                 other{"{0} фт³"}
             }
+            cubic-inch{
+                dnam{"дюйми³"}
+                few{"{0} дюйми³"}
+                many{"{0} дюймів³"}
+                one{"{0} дюйм³"}
+                other{"{0} дюйма³"}
+            }
             cubic-kilometer{
+                dnam{"км³"}
                 few{"{0} км³"}
                 many{"{0} км³"}
                 one{"{0} км³"}
                 other{"{0} км³"}
             }
+            cubic-meter{
+                dnam{"м³"}
+                few{"{0} м³"}
+                many{"{0} м³"}
+                one{"{0} м³"}
+                other{"{0} м³"}
+                per{"{0}/м³"}
+            }
             cubic-mile{
+                dnam{"милі³"}
                 few{"{0} милі³"}
                 many{"{0} миль³"}
                 one{"{0} миля³"}
                 other{"{0} милі³"}
+            }
+            cubic-yard{
+                dnam{"ярди³"}
+                few{"{0} ярди³"}
+                many{"{0} ярдів³"}
+                one{"{0} ярд³"}
+                other{"{0} ярда³"}
             }
             cup{
                 dnam{"чаш."}
@@ -6141,6 +6543,20 @@ uk{
                 many{"{0} м. чаш."}
                 one{"{0} м. чаш."}
                 other{"{0} м. чаш."}
+            }
+            deciliter{
+                dnam{"дл"}
+                few{"{0} дл"}
+                many{"{0} дл"}
+                one{"{0} дл"}
+                other{"{0} дл"}
+            }
+            dessert-spoon{
+                dnam{"дес. л."}
+                few{"{0} дес. л."}
+                many{"{0} дес. л."}
+                one{"{0} дес. л."}
+                other{"{0} дес. л."}
             }
             dessert-spoon-imperial{
                 dnam{"англ. дес. л."}
@@ -6163,12 +6579,27 @@ uk{
                 one{"{0} кр."}
                 other{"{0} кр."}
             }
+            fluid-ounce{
+                dnam{"рід. унція"}
+                few{"{0} рід. унції"}
+                many{"{0} рід. унцій"}
+                one{"{0} рід. унція"}
+                other{"{0} рід. унції"}
+            }
             fluid-ounce-imperial{
                 dnam{"англ. рід. ун."}
                 few{"{0} англ. рід. ун."}
                 many{"{0} англ. рід. ун."}
                 one{"{0} англ. рід. ун."}
                 other{"{0} англ. рід. ун."}
+            }
+            gallon{
+                dnam{"гал."}
+                few{"{0} гал."}
+                many{"{0} гал."}
+                one{"{0} гал."}
+                other{"{0} гал."}
+                per{"{0}/гал."}
             }
             gallon-imperial{
                 dnam{"англ. гал."}
@@ -6177,6 +6608,13 @@ uk{
                 one{"{0} англ. гал."}
                 other{"{0} англ. гал."}
                 per{"{0}/англ. гал."}
+            }
+            hectoliter{
+                dnam{"гл"}
+                few{"{0} гл"}
+                many{"{0} гл"}
+                one{"{0} гл"}
+                other{"{0} гл"}
             }
             jigger{
                 dnam{"мір."}
@@ -6191,6 +6629,21 @@ uk{
                 many{"{0}л"}
                 one{"{0}л"}
                 other{"{0}л"}
+                per{"{0}/л"}
+            }
+            megaliter{
+                dnam{"Мл"}
+                few{"{0} Мл"}
+                many{"{0} Мл"}
+                one{"{0} Мл"}
+                other{"{0} Мл"}
+            }
+            milliliter{
+                dnam{"мл"}
+                few{"{0} мл"}
+                many{"{0} мл"}
+                one{"{0} мл"}
+                other{"{0} мл"}
             }
             pinch{
                 dnam{"дріб."}
@@ -6213,12 +6666,33 @@ uk{
                 one{"{0} м. пінт."}
                 other{"{0} м. пінт."}
             }
+            quart{
+                dnam{"квар."}
+                few{"{0} квар."}
+                many{"{0} квар."}
+                one{"{0} квар."}
+                other{"{0} квар."}
+            }
             quart-imperial{
                 dnam{"англ. квар."}
                 few{"{0} англ. квар."}
                 many{"{0} англ. квар."}
                 one{"{0} англ. квар."}
                 other{"{0} англ. квар."}
+            }
+            tablespoon{
+                dnam{"ст. ложка"}
+                few{"{0} ст. ложки"}
+                many{"{0} ст. ложок"}
+                one{"{0} ст. ложка"}
+                other{"{0} ст. ложки"}
+            }
+            teaspoon{
+                dnam{"ч. л."}
+                few{"{0} ч. л."}
+                many{"{0} ч. л."}
+                one{"{0} ч. л."}
+                other{"{0} ч. л."}
             }
         }
     }
@@ -6383,6 +6857,50 @@ uk{
             10p6{"М{0}"}
             10p9{"Г{0}"}
             per{"{0}/{1}"}
+            power2{
+                few{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                many{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                one{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+            }
+            power3{
+                few{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                many{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                one{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+            }
             times{"{0}⋅{1}"}
         }
         concentr{
@@ -6444,6 +6962,10 @@ uk{
             }
             permyriad{
                 dnam{"проміріада"}
+                few{"{0}‱"}
+                many{"{0}‱"}
+                one{"{0}‱"}
+                other{"{0}‱"}
             }
         }
         consumption{
@@ -6892,6 +7414,12 @@ uk{
                 one{"{0} дм"}
                 other{"{0} дм"}
             }
+            earth-radius{
+                few{"{0} R⊕"}
+                many{"{0} R⊕"}
+                one{"{0} R⊕"}
+                other{"{0} R⊕"}
+            }
             fathom{
                 dnam{"фатоми"}
                 few{"{0} фтм"}
@@ -7010,6 +7538,10 @@ uk{
             }
             solar-radius{
                 dnam{"радіус Сонця"}
+                few{"{0} R☉"}
+                many{"{0} R☉"}
+                one{"{0} R☉"}
+                other{"{0} R☉"}
             }
             yard{
                 dnam{"ярди"}
@@ -7043,6 +7575,10 @@ uk{
             }
             solar-luminosity{
                 dnam{"світності Сонця"}
+                few{"{0} L☉"}
+                many{"{0} L☉"}
+                one{"{0} L☉"}
+                other{"{0} L☉"}
             }
         }
         mass{
@@ -7062,6 +7598,10 @@ uk{
             }
             earth-mass{
                 dnam{"маси Землі"}
+                few{"{0} M⊕"}
+                many{"{0} M⊕"}
+                one{"{0} M⊕"}
+                other{"{0} M⊕"}
             }
             grain{
                 dnam{"гран"}
@@ -7125,6 +7665,10 @@ uk{
             }
             solar-mass{
                 dnam{"маси Сонця"}
+                few{"{0} M☉"}
+                many{"{0} M☉"}
+                one{"{0} M☉"}
+                other{"{0} M☉"}
             }
             stone{
                 dnam{"стоун"}

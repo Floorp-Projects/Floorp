@@ -45,52 +45,37 @@ CtapRegisterArgs::GetRpId(nsAString& aRpId) {
 NS_IMETHODIMP
 CtapRegisterArgs::GetRpName(nsAString& aRpName) {
   mozilla::ipc::AssertIsOnBackgroundThread();
-  if (mInfo.Extra().isNothing()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  aRpName = (*mInfo.Extra()).Rp().Name();
+  aRpName = mInfo.Rp().Name();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 CtapRegisterArgs::GetUserId(nsTArray<uint8_t>& aUserId) {
   mozilla::ipc::AssertIsOnBackgroundThread();
-  if (mInfo.Extra().isNothing()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
   aUserId.Clear();
-  aUserId.AppendElements((*mInfo.Extra()).User().Id());
+  aUserId.AppendElements(mInfo.User().Id());
   return NS_OK;
 }
 
 NS_IMETHODIMP
 CtapRegisterArgs::GetUserName(nsAString& aUserName) {
   mozilla::ipc::AssertIsOnBackgroundThread();
-  if (mInfo.Extra().isNothing()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  aUserName = (*mInfo.Extra()).User().Name();
+  aUserName = mInfo.User().Name();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 CtapRegisterArgs::GetUserDisplayName(nsAString& aUserDisplayName) {
   mozilla::ipc::AssertIsOnBackgroundThread();
-  if (mInfo.Extra().isNothing()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  aUserDisplayName = (*mInfo.Extra()).User().DisplayName();
+  aUserDisplayName = mInfo.User().DisplayName();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 CtapRegisterArgs::GetCoseAlgs(nsTArray<int32_t>& aCoseAlgs) {
   mozilla::ipc::AssertIsOnBackgroundThread();
-  if (mInfo.Extra().isNothing()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
   aCoseAlgs.Clear();
-  for (const CoseAlg& coseAlg : (*mInfo.Extra()).coseAlgs()) {
+  for (const CoseAlg& coseAlg : mInfo.coseAlgs()) {
     aCoseAlgs.AppendElement(coseAlg.alg());
   }
   return NS_OK;
@@ -109,11 +94,8 @@ CtapRegisterArgs::GetExcludeList(nsTArray<nsTArray<uint8_t> >& aExcludeList) {
 NS_IMETHODIMP
 CtapRegisterArgs::GetHmacCreateSecret(bool* aHmacCreateSecret) {
   mozilla::ipc::AssertIsOnBackgroundThread();
-  if (mInfo.Extra().isNothing()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
 
-  for (const WebAuthnExtension& ext : (*mInfo.Extra()).Extensions()) {
+  for (const WebAuthnExtension& ext : mInfo.Extensions()) {
     if (ext.type() == WebAuthnExtension::TWebAuthnExtensionHmacSecret) {
       *aHmacCreateSecret =
           ext.get_WebAuthnExtensionHmacSecret().hmacCreateSecret();
@@ -127,21 +109,15 @@ CtapRegisterArgs::GetHmacCreateSecret(bool* aHmacCreateSecret) {
 NS_IMETHODIMP
 CtapRegisterArgs::GetResidentKey(nsAString& aResidentKey) {
   mozilla::ipc::AssertIsOnBackgroundThread();
-  if (mInfo.Extra().isNothing()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  aResidentKey = (*mInfo.Extra()).AuthenticatorSelection().residentKey();
+  aResidentKey = mInfo.AuthenticatorSelection().residentKey();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 CtapRegisterArgs::GetUserVerification(nsAString& aUserVerificationRequirement) {
   mozilla::ipc::AssertIsOnBackgroundThread();
-  if (mInfo.Extra().isNothing()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
   aUserVerificationRequirement =
-      (*mInfo.Extra()).AuthenticatorSelection().userVerificationRequirement();
+      mInfo.AuthenticatorSelection().userVerificationRequirement();
   return NS_OK;
 }
 
@@ -149,17 +125,11 @@ NS_IMETHODIMP
 CtapRegisterArgs::GetAuthenticatorAttachment(
     nsAString& aAuthenticatorAttachment) {
   mozilla::ipc::AssertIsOnBackgroundThread();
-  if (mInfo.Extra().isNothing()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  if ((*mInfo.Extra())
-          .AuthenticatorSelection()
-          .authenticatorAttachment()
-          .isNothing()) {
+  if (mInfo.AuthenticatorSelection().authenticatorAttachment().isNothing()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
   aAuthenticatorAttachment =
-      *(*mInfo.Extra()).AuthenticatorSelection().authenticatorAttachment();
+      *mInfo.AuthenticatorSelection().authenticatorAttachment();
   return NS_OK;
 }
 
@@ -174,16 +144,12 @@ NS_IMETHODIMP
 CtapRegisterArgs::GetAttestationConveyancePreference(
     nsAString& aAttestationConveyancePreference) {
   mozilla::ipc::AssertIsOnBackgroundThread();
-  if (mInfo.Extra().isNothing()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
 
   if (mForceNoneAttestation) {
     aAttestationConveyancePreference = NS_ConvertUTF8toUTF16(
         MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_NONE);
   } else {
-    aAttestationConveyancePreference =
-        (*mInfo.Extra()).attestationConveyancePreference();
+    aAttestationConveyancePreference = mInfo.attestationConveyancePreference();
   }
   return NS_OK;
 }
@@ -232,11 +198,8 @@ CtapSignArgs::GetAllowList(nsTArray<nsTArray<uint8_t> >& aAllowList) {
 NS_IMETHODIMP
 CtapSignArgs::GetHmacCreateSecret(bool* aHmacCreateSecret) {
   mozilla::ipc::AssertIsOnBackgroundThread();
-  if (mInfo.Extra().isNothing()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
 
-  for (const WebAuthnExtension& ext : (*mInfo.Extra()).Extensions()) {
+  for (const WebAuthnExtension& ext : mInfo.Extensions()) {
     if (ext.type() == WebAuthnExtension::TWebAuthnExtensionHmacSecret) {
       *aHmacCreateSecret =
           ext.get_WebAuthnExtensionHmacSecret().hmacCreateSecret();
@@ -250,11 +213,8 @@ CtapSignArgs::GetHmacCreateSecret(bool* aHmacCreateSecret) {
 NS_IMETHODIMP
 CtapSignArgs::GetAppId(nsAString& aAppId) {
   mozilla::ipc::AssertIsOnBackgroundThread();
-  if (mInfo.Extra().isNothing()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
 
-  for (const WebAuthnExtension& ext : (*mInfo.Extra()).Extensions()) {
+  for (const WebAuthnExtension& ext : mInfo.Extensions()) {
     if (ext.type() == WebAuthnExtension::TWebAuthnExtensionAppId) {
       aAppId = ext.get_WebAuthnExtensionAppId().appIdentifier();
       return NS_OK;
@@ -267,11 +227,8 @@ CtapSignArgs::GetAppId(nsAString& aAppId) {
 NS_IMETHODIMP
 CtapSignArgs::GetAppIdHash(nsTArray<uint8_t>& aAppIdHash) {
   mozilla::ipc::AssertIsOnBackgroundThread();
-  if (mInfo.Extra().isNothing()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
 
-  for (const WebAuthnExtension& ext : (*mInfo.Extra()).Extensions()) {
+  for (const WebAuthnExtension& ext : mInfo.Extensions()) {
     if (ext.type() == WebAuthnExtension::TWebAuthnExtensionAppId) {
       aAppIdHash.Clear();
       aAppIdHash.AppendElements(ext.get_WebAuthnExtensionAppId().AppId());
@@ -285,10 +242,7 @@ CtapSignArgs::GetAppIdHash(nsTArray<uint8_t>& aAppIdHash) {
 NS_IMETHODIMP
 CtapSignArgs::GetUserVerification(nsAString& aUserVerificationRequirement) {
   mozilla::ipc::AssertIsOnBackgroundThread();
-  if (mInfo.Extra().isNothing()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  aUserVerificationRequirement = (*mInfo.Extra()).userVerificationRequirement();
+  aUserVerificationRequirement = mInfo.userVerificationRequirement();
   return NS_OK;
 }
 

@@ -14,12 +14,12 @@ async function runPrefTest(
     ],
   });
 
-  await BrowserTestUtils.withNewTab("about:blank", async function(browser) {
+  await BrowserTestUtils.withNewTab("about:blank", async function (browser) {
     await ContentTask.spawn(
       browser,
       { aExecuteFromPBM, aDesc, aAssertURLStartsWith },
       // eslint-disable-next-line no-shadow
-      async function({ aExecuteFromPBM, aDesc, aAssertURLStartsWith }) {
+      async function ({ aExecuteFromPBM, aDesc, aAssertURLStartsWith }) {
         const responseURL = await new Promise(resolve => {
           let xhr = new XMLHttpRequest();
           xhr.timeout = 1200;
@@ -49,7 +49,7 @@ async function runPrefTest(
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   requestLongerTimeout(2);
 
   await runPrefTest(

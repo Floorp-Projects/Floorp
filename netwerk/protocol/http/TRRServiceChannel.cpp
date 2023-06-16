@@ -1180,18 +1180,15 @@ nsresult TRRServiceChannel::SetupReplacementChannel(nsIURI* aNewURI,
     encodedChannel->SetApplyConversion(LoadApplyConversion());
   }
 
-  // mContentTypeHint is empty when this channel is used to download
-  // ODoHConfigs.
   if (mContentTypeHint.IsEmpty()) {
     return NS_OK;
   }
 
   // Make sure we set content-type on the old channel properly.
-  MOZ_ASSERT(mContentTypeHint.Equals("application/dns-message") ||
-             mContentTypeHint.Equals("application/oblivious-dns-message"));
+  MOZ_ASSERT(mContentTypeHint.Equals("application/dns-message"));
 
   // Apply TRR specific settings. Note that we already know mContentTypeHint is
-  // "application/dns-message" or "application/oblivious-dns-message" here.
+  // "application/dns-message" here.
   return TRR::SetupTRRServiceChannelInternal(
       httpChannel,
       mRequestHead.ParsedMethod() == nsHttpRequestHead::kMethod_Get,
@@ -1288,7 +1285,8 @@ TRRServiceChannel::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
 
 NS_IMETHODIMP
 TRRServiceChannel::LogBlockedCORSRequest(const nsAString& aMessage,
-                                         const nsACString& aCategory) {
+                                         const nsACString& aCategory,
+                                         bool aIsWarning) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

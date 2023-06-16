@@ -22,9 +22,7 @@ add_task(async function test_initialize() {
       autocompleteUnexpectedPopupShowing
     );
   });
-  for (let login of loginList()) {
-    Services.logins.addLogin(login);
-  }
+  await Services.logins.addLogins(loginList());
   autocompletePopup.addEventListener(
     "popupshowing",
     autocompleteUnexpectedPopupShowing
@@ -39,7 +37,7 @@ add_task(async function test_context_menu_username() {
       gBrowser,
       url: TEST_ORIGIN + BASIC_FORM_PAGE_PATH,
     },
-    async function(browser) {
+    async function (browser) {
       await formFilled;
       await openContextMenu(browser, "#form-basic-username");
 
@@ -58,7 +56,7 @@ add_task(async function test_context_menu_password() {
       gBrowser,
       url: TEST_ORIGIN + BASIC_FORM_PAGE_PATH,
     },
-    async function(browser) {
+    async function (browser) {
       await formFilled;
       await openContextMenu(browser, "#form-basic-password");
 

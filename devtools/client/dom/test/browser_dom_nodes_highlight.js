@@ -8,7 +8,7 @@ const TEST_PAGE_URL = URL_ROOT + "page_dom_nodes.html";
 /**
  * Checks that hovering nodes highlights them in the content page
  */
-add_task(async function() {
+add_task(async function () {
   info("Test DOM panel node highlight started");
 
   const { panel, tab } = await addTestTab(TEST_PAGE_URL);

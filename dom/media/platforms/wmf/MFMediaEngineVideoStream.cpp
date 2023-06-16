@@ -10,6 +10,11 @@
 
 namespace mozilla {
 
+#define LOG(msg, ...)                           \
+  MOZ_LOG(gMFMediaEngineLog, LogLevel::Debug,   \
+          ("MFMediaStream=%p (%s), " msg, this, \
+           this->GetDescriptionName().get(), ##__VA_ARGS__))
+
 #define LOGV(msg, ...)                          \
   MOZ_LOG(gMFMediaEngineLog, LogLevel::Verbose, \
           ("MFMediaStream=%p (%s), " msg, this, \
@@ -31,7 +36,7 @@ MFMediaEngineVideoStream* MFMediaEngineVideoStream::Create(
       GetStreamTypeFromMimeType(aInfo.GetAsVideoInfo()->mMimeType);
   MOZ_ASSERT(StreamTypeIsVideo(stream->mStreamType));
   stream->mHasReceivedInitialCreateDecoderConfig = false;
-  stream->SetDCompSurfaceHandle(INVALID_HANDLE_VALUE);
+  stream->SetDCompSurfaceHandle(INVALID_HANDLE_VALUE, gfx::IntSize{});
   return stream;
 }
 
@@ -43,23 +48,32 @@ void MFMediaEngineVideoStream::SetKnowsCompositor(
       [self, knowCompositor = RefPtr<layers::KnowsCompositor>{aKnowsCompositor},
        this]() {
         mKnowsCompositor = knowCompositor;
-        LOGV("Set SetKnowsCompositor=%p", mKnowsCompositor.get());
+        LOG("Set SetKnowsCompositor=%p", mKnowsCompositor.get());
         ResolvePendingDrainPromiseIfNeeded();
       }));
 }
 
-void MFMediaEngineVideoStream::SetDCompSurfaceHandle(
-    HANDLE aDCompSurfaceHandle) {
+void MFMediaEngineVideoStream::SetDCompSurfaceHandle(HANDLE aDCompSurfaceHandle,
+                                                     gfx::IntSize aDisplay) {
   ComPtr<MFMediaEngineVideoStream> self = this;
   Unused << mTaskQueue->Dispatch(NS_NewRunnableFunction(
       "MFMediaEngineStream::SetDCompSurfaceHandle",
-      [self, aDCompSurfaceHandle, this]() {
+      [self, aDCompSurfaceHandle, aDisplay, this]() {
         if (mDCompSurfaceHandle == aDCompSurfaceHandle) {
           return;
         }
         mDCompSurfaceHandle = aDCompSurfaceHandle;
         mNeedRecreateImage = true;
-        LOGV("Set DCompSurfaceHandle, handle=%p", mDCompSurfaceHandle);
+        {
+          MutexAutoLock lock(mMutex);
+          if (aDCompSurfaceHandle != INVALID_HANDLE_VALUE &&
+              aDisplay != mDisplay) {
+            LOG("Update display [%dx%d] -> [%dx%d]", mDisplay.Width(),
+                mDisplay.Height(), aDisplay.Width(), aDisplay.Height());
+            mDisplay = aDisplay;
+          }
+        }
+        LOG("Set DCompSurfaceHandle, handle=%p", mDCompSurfaceHandle);
         ResolvePendingDrainPromiseIfNeeded();
       }));
 }
@@ -174,14 +188,22 @@ HRESULT MFMediaEngineVideoStream::CreateMediaType(const TrackInfo& aInfo,
   const auto videoPrimaries = ToMFVideoPrimaries(videoInfo.mColorSpace);
   RETURN_IF_FAILED(mediaType->SetUINT32(MF_MT_VIDEO_PRIMARIES, videoPrimaries));
 
-  LOGV(
-      "Created video type, subtype=%s, image=[%ux%u], display=[%ux%u], "
+  LOG("Created video type, subtype=%s, image=[%ux%u], display=[%ux%u], "
       "rotation=%s, tranFuns=%s, primaries=%s, encrypted=%d",
       GUIDToStr(subType), imageWidth, imageHeight, displayWidth, displayHeight,
       MFVideoRotationFormatToStr(rotation),
       MFVideoTransferFunctionToStr(transFunc),
       MFVideoPrimariesToStr(videoPrimaries), mIsEncrypted);
-  *aMediaType = mediaType.Detach();
+  if (IsEncrypted()) {
+    ComPtr<IMFMediaType> protectedMediaType;
+    RETURN_IF_FAILED(wmf::MFWrapMediaType(mediaType.Get(),
+                                          MFMediaType_Protected, subType,
+                                          protectedMediaType.GetAddressOf()));
+    LOG("Wrap MFMediaType_Video into MFMediaType_Protected");
+    *aMediaType = protectedMediaType.Detach();
+  } else {
+    *aMediaType = mediaType.Detach();
+  }
   return S_OK;
 }
 
@@ -213,8 +235,8 @@ bool MFMediaEngineVideoStream::IsDCompImageReady() {
         mDCompSurfaceHandle, mDisplay, gfx::SurfaceFormat::B8G8R8A8,
         mKnowsCompositor);
     mNeedRecreateImage = false;
-    LOGV("Created dcomp surface image, handle=%p, size=[%u,%u]",
-         mDCompSurfaceHandle, mDisplay.Width(), mDisplay.Height());
+    LOG("Created dcomp surface image, handle=%p, size=[%u,%u]",
+        mDCompSurfaceHandle, mDisplay.Width(), mDisplay.Height());
   }
   return true;
 }
@@ -261,7 +283,7 @@ void MFMediaEngineVideoStream::ResolvePendingDrainPromiseIfNeeded() {
          outputData->GetEndTime().ToMicroseconds());
   }
   mPendingDrainPromise.Resolve(std::move(outputs), __func__);
-  LOGV("Resolved pending drain promise");
+  LOG("Resolved pending drain promise");
 }
 
 MediaDataDecoder::ConversionRequired MFMediaEngineVideoStream::NeedsConversion()
@@ -299,7 +321,7 @@ void MFMediaEngineVideoStream::UpdateConfig(const VideoInfo& aInfo) {
     return;
   }
 
-  LOGV("Video config changed, will update stream descriptor");
+  LOG("Video config changed, will update stream descriptor");
   PROFILER_MARKER_TEXT("VideoConfigChange", MEDIA_PLAYBACK, {},
                        nsPrintfCString("stream=%s, id=%" PRIu64,
                                        GetDescriptionName().get(), mStreamId));
@@ -344,6 +366,7 @@ nsCString MFMediaEngineVideoStream::GetCodecName() const {
   };
 }
 
+#undef LOG
 #undef LOGV
 
 }  // namespace mozilla

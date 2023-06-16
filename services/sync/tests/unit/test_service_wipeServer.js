@@ -12,7 +12,7 @@ function FakeCollection() {
 FakeCollection.prototype = {
   handler() {
     let self = this;
-    return function(request, response) {
+    return function (request, response) {
       let body = "";
       self.timestamp = new_timestamp();
       let timestamp = "" + self.timestamp;

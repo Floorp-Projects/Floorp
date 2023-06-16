@@ -322,7 +322,8 @@ BookmarksEngine.prototype = {
   },
 
   async ensureCurrentSyncID(newSyncID) {
-    let shouldWipeRemote = await lazy.PlacesSyncUtils.bookmarks.shouldWipeRemote();
+    let shouldWipeRemote =
+      await lazy.PlacesSyncUtils.bookmarks.shouldWipeRemote();
     if (!shouldWipeRemote) {
       this._log.debug(
         "Checking if server sync ID ${newSyncID} matches existing",

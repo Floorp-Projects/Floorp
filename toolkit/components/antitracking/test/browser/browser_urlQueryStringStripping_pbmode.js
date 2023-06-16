@@ -27,11 +27,12 @@ async function waitForListServiceInit(strippingEnabled) {
   );
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.query_stripping.strip_list", "paramToStrip1 paramToStrip2"],
       ["privacy.query_stripping.listService.logLevel", "Debug"],
+      ["privacy.query_stripping.strip_on_share.enabled", false],
     ],
   });
 

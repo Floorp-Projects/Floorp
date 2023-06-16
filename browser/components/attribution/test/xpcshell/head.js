@@ -9,8 +9,7 @@ const { AttributionCode } = ChromeUtils.importESModule(
 
 let validAttrCodes = [
   {
-    code:
-      "source%3Dgoogle.com%26medium%3Dorganic%26campaign%3D(not%20set)%26content%3D(not%20set)",
+    code: "source%3Dgoogle.com%26medium%3Dorganic%26campaign%3D(not%20set)%26content%3D(not%20set)",
     parsed: {
       source: "google.com",
       medium: "organic",
@@ -19,8 +18,7 @@ let validAttrCodes = [
     },
   },
   {
-    code:
-      "source%3Dgoogle.com%26medium%3Dorganic%26campaign%3D(not%20set)%26content%3D(not%20set)%26msstoresignedin%3Dtrue",
+    code: "source%3Dgoogle.com%26medium%3Dorganic%26campaign%3D(not%20set)%26content%3D(not%20set)%26msstoresignedin%3Dtrue",
     parsed: {
       source: "google.com",
       medium: "organic",
@@ -110,11 +108,7 @@ async function setupStubs() {
   // prevent the most obvious incorrect invocation, namely
   // `add_task(setupStubs)`.
   let caller = Components.stack.caller;
-  const testID = caller.filename
-    .toString()
-    .split("/")
-    .pop()
-    .split(".")[0];
+  const testID = caller.filename.toString().split("/").pop().split(".")[0];
   notEqual(testID, "head");
 
   let applicationFile = do_get_tempdir();

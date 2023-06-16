@@ -27,7 +27,7 @@ function checkSorting(cookies) {
   }
 }
 
-add_task(async function() {
+add_task(async function () {
   Services.prefs.setBoolPref(
     "network.cookieJarSettings.unblocked_for_testing",
     true

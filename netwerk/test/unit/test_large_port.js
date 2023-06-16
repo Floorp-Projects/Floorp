@@ -54,10 +54,7 @@ function run_test() {
   );
   Assert.throws(
     () => {
-      url = url
-        .mutate()
-        .setPort(65536)
-        .finalize();
+      url = url.mutate().setPort(65536).finalize();
     },
     /NS_ERROR_MALFORMED_URI/,
     "invalid port in port setter"

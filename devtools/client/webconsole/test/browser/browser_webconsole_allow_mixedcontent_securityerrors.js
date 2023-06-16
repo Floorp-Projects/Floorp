@@ -19,7 +19,7 @@ const LEARN_MORE_URI =
   "Mixed_content" +
   DOCS_GA_PARAMS;
 
-add_task(async function() {
+add_task(async function () {
   await Promise.all([
     pushPref("security.mixed_content.block_active_content", false),
     pushPref("security.mixed_content.block_display_content", false),
@@ -53,9 +53,8 @@ add_task(async function() {
   };
 
   info("Clicking on the Learn More link");
-  const learnMoreLink = mixedActiveContentMessage.querySelector(
-    ".learn-more-link"
-  );
+  const learnMoreLink =
+    mixedActiveContentMessage.querySelector(".learn-more-link");
   const linkSimulation = await simulateLinkClick(learnMoreLink);
   checkLink({
     ...linkSimulation,

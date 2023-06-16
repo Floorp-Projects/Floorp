@@ -19,7 +19,6 @@
 #include "nsLocalFile.h"
 #include "nsPrintfCString.h"
 #include "mozilla/StackWalk.h"
-#include "plstr.h"
 #include "prio.h"
 
 #ifdef XP_WIN

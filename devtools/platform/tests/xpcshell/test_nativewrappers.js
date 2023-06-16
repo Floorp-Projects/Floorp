@@ -15,7 +15,7 @@ function run_test() {
 
   const dbg = new Debugger();
   dbg.addDebuggee(g);
-  dbg.onDebuggerStatement = function(frame) {
+  dbg.onDebuggerStatement = function (frame) {
     const args = frame.arguments;
     try {
       args[0];

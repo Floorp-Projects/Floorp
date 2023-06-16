@@ -5,7 +5,7 @@
 
 const { ELLIPSIS } = require("resource://devtools/shared/l10n.js");
 
-add_task(async function() {
+add_task(async function () {
   info("Test Object type property started");
 
   const TEST_JSON_URL = 'data:application/json,{"x":{"type":"string"}}';

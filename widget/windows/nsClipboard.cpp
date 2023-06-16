@@ -84,7 +84,11 @@ UINT nsClipboard::GetCustomClipboardFormat() {
 // nsClipboard constructor
 //
 //-------------------------------------------------------------------------
-nsClipboard::nsClipboard() : nsBaseClipboard() {
+nsClipboard::nsClipboard()
+    : nsBaseClipboard(mozilla::dom::ClipboardCapabilities(
+          false /* supportsSelectionClipboard */,
+          false /* supportsFindClipboard */,
+          false /* supportsSelectionCache */)) {
   mWindow = nullptr;
 
   // Register for a shutdown notification so that we can flush data
@@ -474,7 +478,9 @@ static void RepeatedlyTryOleSetClipboard(IDataObject* aDataObj) {
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsClipboard::SetNativeClipboardData(int32_t aWhichClipboard) {
+NS_IMETHODIMP nsClipboard::SetNativeClipboardData(
+    nsITransferable* aTransferable, nsIClipboardOwner* aOwner,
+    int32_t aWhichClipboard) {
   MOZ_LOG(gWin32ClipboardLog, LogLevel::Debug, ("%s", __FUNCTION__));
 
   if (aWhichClipboard != kGlobalClipboard) {
@@ -482,7 +488,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(int32_t aWhichClipboard) {
   }
 
   // make sure we have a good transferable
-  if (!mTransferable) {
+  if (!aTransferable) {
     return NS_ERROR_FAILURE;
   }
 
@@ -492,7 +498,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(int32_t aWhichClipboard) {
 
   RefPtr<IDataObject> dataObj;
   auto mightNeedToFlush = MightNeedToFlush::No;
-  if (NS_SUCCEEDED(CreateNativeDataObject(mTransferable,
+  if (NS_SUCCEEDED(CreateNativeDataObject(aTransferable,
                                           getter_AddRefs(dataObj), nullptr,
                                           &mightNeedToFlush))) {
     RepeatedlyTryOleSetClipboard(dataObj);

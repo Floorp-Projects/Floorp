@@ -5,10 +5,11 @@
 
 #include "lib/extras/packed_image_convert.h"
 
+#include <jxl/color_encoding.h>
+#include <jxl/types.h>
+
 #include <cstdint>
 
-#include "jxl/color_encoding.h"
-#include "jxl/types.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/color_management.h"
@@ -168,14 +169,12 @@ Status ConvertPackedPixelFileToCodecInOut(const PackedPixelFile& ppf,
   }
 
   // Convert the pixels
-  io->dec_pixels = 0;
   io->frames.clear();
   for (const auto& frame : ppf.frames) {
     ImageBundle bundle(&io->metadata.m);
     JXL_RETURN_IF_ERROR(
         ConvertPackedFrameToImageBundle(ppf.info, frame, *io, pool, &bundle));
     io->frames.push_back(std::move(bundle));
-    io->dec_pixels += frame.color.xsize * frame.color.ysize;
   }
 
   if (ppf.info.exponent_bits_per_sample == 0) {
@@ -217,6 +216,12 @@ Status ConvertCodecInOutToPackedPixelFile(const CodecInOut& io,
   ppf->info.bits_per_sample = io.metadata.m.bit_depth.bits_per_sample;
   ppf->info.exponent_bits_per_sample =
       io.metadata.m.bit_depth.exponent_bits_per_sample;
+
+  ppf->info.intensity_target = io.metadata.m.tone_mapping.intensity_target;
+  ppf->info.linear_below = io.metadata.m.tone_mapping.linear_below;
+  ppf->info.min_nits = io.metadata.m.tone_mapping.min_nits;
+  ppf->info.relative_to_max_display =
+      io.metadata.m.tone_mapping.relative_to_max_display;
 
   ppf->info.alpha_bits = io.metadata.m.GetAlphaBits();
   ppf->info.alpha_premultiplied = alpha_premultiplied;

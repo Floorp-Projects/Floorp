@@ -65,6 +65,12 @@ async protocol PWebTransport
   async OutgoingDatagram(uint8_t[] data, TimeStamp expirationTime)
     returns(nsresult response);
 
+  /**
+  * Get the maximum supported datagram size from necko stack
+  */
+  async GetMaxDatagramSize()
+    returns(uint64_t maxDatagramSize);
+
  child:
 
   async IncomingUnidirectionalStream(uint64_t streamId, nullable DataPipeReceiver receive);

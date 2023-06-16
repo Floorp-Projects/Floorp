@@ -18,7 +18,7 @@ const TEST_HIGH2 = "https://test1.example.org/";
 const TEST_LOW1 = "http://example.org/";
 const TEST_LOW2 = "https://example.com/";
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.tabs.remote.separatePrivilegedMozillaWebContentProcess", true],
@@ -38,7 +38,7 @@ add_setup(async function() {
 add_task(async function webpages_in_privileged_content_process() {
   Services.ppmm.releaseCachedProcesses();
 
-  await BrowserTestUtils.withNewTab(TEST_HIGH1, async function(browser1) {
+  await BrowserTestUtils.withNewTab(TEST_HIGH1, async function (browser1) {
     checkBrowserRemoteType(browser1, E10SUtils.PRIVILEGEDMOZILLA_REMOTE_TYPE);
 
     // Note the processID for about:newtab for comparison later.
@@ -52,7 +52,7 @@ add_task(async function webpages_in_privileged_content_process() {
       `${TEST_HIGH2}#foo`,
       `${TEST_HIGH2}?q=foo`,
     ]) {
-      await BrowserTestUtils.withNewTab(url, async function(browser2) {
+      await BrowserTestUtils.withNewTab(url, async function (browser2) {
         is(
           browser2.frameLoader.remoteTab.osPid,
           privilegedPid,
@@ -72,7 +72,7 @@ add_task(async function webpages_in_privileged_content_process() {
 add_task(async function process_switching_through_loading_in_the_same_tab() {
   Services.ppmm.releaseCachedProcesses();
 
-  await BrowserTestUtils.withNewTab(TEST_LOW1, async function(browser) {
+  await BrowserTestUtils.withNewTab(TEST_LOW1, async function (browser) {
     checkBrowserRemoteType(browser, E10SUtils.WEB_REMOTE_TYPE);
 
     for (let [url, remoteType] of [
@@ -113,7 +113,7 @@ add_task(async function process_switching_through_loading_in_the_same_tab() {
 add_task(async function process_switching_through_navigation_features() {
   Services.ppmm.releaseCachedProcesses();
 
-  await BrowserTestUtils.withNewTab(TEST_HIGH1, async function(browser) {
+  await BrowserTestUtils.withNewTab(TEST_HIGH1, async function (browser) {
     checkBrowserRemoteType(browser, E10SUtils.PRIVILEGEDMOZILLA_REMOTE_TYPE);
 
     // Note the processID for about:newtab for comparison later.
@@ -129,7 +129,7 @@ add_task(async function process_switching_through_navigation_features() {
       content.open(uri, "_blank");
     });
     let newTab = await promiseTabOpened;
-    registerCleanupFunction(async function() {
+    registerCleanupFunction(async function () {
       BrowserTestUtils.removeTab(newTab);
     });
     browser = newTab.linkedBrowser;

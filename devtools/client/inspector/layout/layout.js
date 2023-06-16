@@ -55,9 +55,8 @@ class LayoutView {
       this.inspector,
       this.inspector.panelWin
     );
-    const {
-      onSetFlexboxOverlayColor,
-    } = this.flexboxInspector.getComponentProps();
+    const { onSetFlexboxOverlayColor } =
+      this.flexboxInspector.getComponentProps();
 
     this.gridInspector = new GridInspector(
       this.inspector,

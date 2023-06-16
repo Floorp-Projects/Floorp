@@ -8,7 +8,7 @@ const TEST_URI =
   "https://example.com/browser/devtools/client/webconsole/" +
   "test/browser/test-console-custom-formatters-errors.html";
 
-add_task(async function() {
+add_task(async function () {
   // ToDo: This preference can be removed once the custom formatters feature is stable enough
   await pushPref("devtools.custom-formatters", true);
   await pushPref("devtools.custom-formatters.enabled", true);

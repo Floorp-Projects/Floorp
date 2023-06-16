@@ -307,10 +307,7 @@ export class OpenSearchEngine extends SearchEngine {
 
     let rels = [];
     if (element.hasAttribute("rel")) {
-      rels = element
-        .getAttribute("rel")
-        .toLowerCase()
-        .split(/\s+/);
+      rels = element.getAttribute("rel").toLowerCase().split(/\s+/);
     }
 
     // Support an alternate suggestion type, see bug 1425827 for details.

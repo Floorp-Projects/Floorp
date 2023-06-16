@@ -10,8 +10,8 @@ registerCleanupFunction(() => {
   enableBackgroundUpdateTimer();
 });
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+const { AddonTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
 );
 
 const PREF_UPDATE_ENABLED = "extensions.update.enabled";

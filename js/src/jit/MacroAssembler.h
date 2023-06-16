@@ -1311,6 +1311,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void branchIfNotRegExpInstanceOptimizable(Register regexp, Register temp,
                                             Label* label);
 
+  void loadRegExpLastIndex(Register regexp, Register string, Register lastIndex,
+                           Label* notFoundZeroLastIndex);
+
   // ===============================================================
   // Shift functions
 
@@ -3833,24 +3836,24 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                            wasm::FailureMode failureMode);
 
   // Perform a subtype check that `object` is a subtype of `type`, branching to
-  // `label` depending on `onSuccess`.
+  // `label` depending on `onSuccess`. `type` must be in the `any` hierarchy.
   //
-  // `scratch1` is required iff the destination type is eq or lower and not
-  // none. `superSuperTypeVector` is required iff the destination type is a
-  // concrete type. `scratch2` is required iff the destination type is a
-  // concrete type and its `subTypingDepth` is >=
-  // wasm::MinSuperTypeVectorLength.
+  // `superSuperTypeVector` is required iff the destination type is a concrete
+  // type. `scratch1` is required iff the destination type is eq or lower and
+  // not none. `scratch2` is required iff the destination type is a concrete
+  // type and its `subTypingDepth` is >= wasm::MinSuperTypeVectorLength.
   //
   // `object` and `superSuperTypeVector` are preserved. Scratch registers are
   // clobbered.
-  void branchWasmGcObjectIsRefType(Register object, const wasm::RefType& type,
-                                   Label* label, bool onSuccess,
+  void branchWasmGcObjectIsRefType(Register object, wasm::RefType sourceType,
+                                   wasm::RefType destType, Label* label,
+                                   bool onSuccess,
                                    Register superSuperTypeVector,
                                    Register scratch1, Register scratch2);
-  static bool needScratch1ForBranchWasmGcRefType(const wasm::RefType& type);
-  static bool needScratch2ForBranchWasmGcRefType(const wasm::RefType& type);
+  static bool needScratch1ForBranchWasmGcRefType(wasm::RefType type);
+  static bool needScratch2ForBranchWasmGcRefType(wasm::RefType type);
   static bool needSuperSuperTypeVectorForBranchWasmGcRefType(
-      const wasm::RefType& type);
+      wasm::RefType type);
 
   // Perform a subtype check that `subSuperTypeVector` is a subtype of
   // `superSuperTypeVector`, branching to `label` depending on `onSuccess`.
@@ -4641,7 +4644,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
    * digits need to be heap allocated.
    */
   void copyBigIntWithInlineDigits(Register src, Register dest, Register temp,
-                                  gc::InitialHeap initialHeap, Label* fail);
+                                  gc::Heap initialHeap, Label* fail);
 
   /**
    * Compare a BigInt and an Int32 value. Falls through to the false case.
@@ -5056,15 +5059,13 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // Inline allocation.
  private:
   void checkAllocatorState(Label* fail);
-  bool shouldNurseryAllocate(gc::AllocKind allocKind,
-                             gc::InitialHeap initialHeap);
+  bool shouldNurseryAllocate(gc::AllocKind allocKind, gc::Heap initialHeap);
   void nurseryAllocateObject(
       Register result, Register temp, gc::AllocKind allocKind,
       size_t nDynamicSlots, Label* fail,
       const AllocSiteInput& allocSite = AllocSiteInput());
   void bumpPointerAllocate(Register result, Register temp, Label* fail,
-                           CompileZone* zone, void* posAddr,
-                           const void* curEddAddr, JS::TraceKind traceKind,
+                           CompileZone* zone, JS::TraceKind traceKind,
                            uint32_t size,
                            const AllocSiteInput& allocSite = AllocSiteInput());
   void updateAllocSite(Register temp, Register result, CompileZone* zone,
@@ -5073,13 +5074,12 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void freeListAllocate(Register result, Register temp, gc::AllocKind allocKind,
                         Label* fail);
   void allocateObject(Register result, Register temp, gc::AllocKind allocKind,
-                      uint32_t nDynamicSlots, gc::InitialHeap initialHeap,
-                      Label* fail,
+                      uint32_t nDynamicSlots, gc::Heap initialHeap, Label* fail,
                       const AllocSiteInput& allocSite = AllocSiteInput());
   void nurseryAllocateString(Register result, Register temp,
                              gc::AllocKind allocKind, Label* fail);
   void allocateString(Register result, Register temp, gc::AllocKind allocKind,
-                      gc::InitialHeap initialHeap, Label* fail);
+                      gc::Heap initialHeap, Label* fail);
   void nurseryAllocateBigInt(Register result, Register temp, Label* fail);
   void copySlotsFromTemplate(Register obj,
                              const TemplateNativeObject& templateObj,
@@ -5097,22 +5097,20 @@ class MacroAssembler : public MacroAssemblerSpecific {
  public:
   void callFreeStub(Register slots);
   void createGCObject(Register result, Register temp,
-                      const TemplateObject& templateObj,
-                      gc::InitialHeap initialHeap, Label* fail,
-                      bool initContents = true);
+                      const TemplateObject& templateObj, gc::Heap initialHeap,
+                      Label* fail, bool initContents = true);
 
   void createPlainGCObject(Register result, Register shape, Register temp,
                            Register temp2, uint32_t numFixedSlots,
                            uint32_t numDynamicSlots, gc::AllocKind allocKind,
-                           gc::InitialHeap initialHeap, Label* fail,
+                           gc::Heap initialHeap, Label* fail,
                            const AllocSiteInput& allocSite,
                            bool initContents = true);
 
   void createArrayWithFixedElements(
       Register result, Register shape, Register temp, uint32_t arrayLength,
-      uint32_t arrayCapacity, gc::AllocKind allocKind,
-      gc::InitialHeap initialHeap, Label* fail,
-      const AllocSiteInput& allocSite = AllocSiteInput());
+      uint32_t arrayCapacity, gc::AllocKind allocKind, gc::Heap initialHeap,
+      Label* fail, const AllocSiteInput& allocSite = AllocSiteInput());
 
   void initGCThing(Register obj, Register temp,
                    const TemplateObject& templateObj, bool initContents = true);
@@ -5124,12 +5122,12 @@ class MacroAssembler : public MacroAssemblerSpecific {
                            TypedArrayObject* templateObj,
                            TypedArrayLength lengthKind);
 
-  void newGCString(Register result, Register temp, gc::InitialHeap initialHeap,
+  void newGCString(Register result, Register temp, gc::Heap initialHeap,
                    Label* fail);
   void newGCFatInlineString(Register result, Register temp,
-                            gc::InitialHeap initialHeap, Label* fail);
+                            gc::Heap initialHeap, Label* fail);
 
-  void newGCBigInt(Register result, Register temp, gc::InitialHeap initialHeap,
+  void newGCBigInt(Register result, Register temp, gc::Heap initialHeap,
                    Label* fail);
 
   // Compares two strings for equality based on the JSOP.
@@ -5196,15 +5194,17 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                               Register outIndex,
                                               Register outKind);
 
+  template <typename IdType>
 #ifdef JS_CODEGEN_X86
   // See MegamorphicSetElement in LIROps.yaml
-  void emitMegamorphicCachedSetSlot(
-      ValueOperand id, Register obj, Register scratch1, ValueOperand value,
-      Label* cacheHit,
-      void (*emitPreBarrier)(MacroAssembler&, const Address&, MIRType));
+  void emitMegamorphicCachedSetSlot(IdType id, Register obj, Register scratch1,
+                                    ValueOperand value, Label* cacheHit,
+                                    void (*emitPreBarrier)(MacroAssembler&,
+                                                           const Address&,
+                                                           MIRType));
 #else
   void emitMegamorphicCachedSetSlot(
-      ValueOperand id, Register obj, Register scratch1, Register scratch2,
+      IdType id, Register obj, Register scratch1, Register scratch2,
       Register scratch3, ValueOperand value, Label* cacheHit,
       void (*emitPreBarrier)(MacroAssembler&, const Address&, MIRType));
 #endif

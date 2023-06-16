@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.selection = (function() {
+this.selection = (function () {
   let exports = {};
   class Selection {
     constructor(x1, y1, x2, y2) {

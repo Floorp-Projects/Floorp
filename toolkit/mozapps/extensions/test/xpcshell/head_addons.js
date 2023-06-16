@@ -17,10 +17,6 @@ const PREF_EM_STRICT_COMPATIBILITY = "extensions.strictCompatibility";
 const PREF_GETADDONS_BYIDS = "extensions.getAddons.get.url";
 const PREF_XPI_SIGNATURES_REQUIRED = "xpinstall.signatures.required";
 
-const PREF_DISABLE_SECURITY =
-  "security.turn_off_all_security_so_that_" +
-  "viruses_can_take_over_this_computer";
-
 // Maximum error in file modification times. Some file systems don't store
 // modification times exactly. As long as we are closer than this then it
 // still passes.
@@ -30,8 +26,8 @@ const MAX_TIME_DIFFERENCE = 3000;
 // times are modified (10 hours old).
 const MAKE_FILE_OLD_DIFFERENCE = 10 * 3600 * 1000;
 
-const { AddonManager, AddonManagerPrivate } = ChromeUtils.import(
-  "resource://gre/modules/AddonManager.jsm"
+const { AddonManager, AddonManagerPrivate } = ChromeUtils.importESModule(
+  "resource://gre/modules/AddonManager.sys.mjs"
 );
 var { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
@@ -43,40 +39,25 @@ var { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 var { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-var { AddonRepository } = ChromeUtils.import(
-  "resource://gre/modules/addons/AddonRepository.jsm"
+var { AddonRepository } = ChromeUtils.importESModule(
+  "resource://gre/modules/addons/AddonRepository.sys.mjs"
 );
 
-var { AddonTestUtils, MockAsyncShutdown } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+var { AddonTestUtils, MockAsyncShutdown } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "Blocklist",
-  "resource://gre/modules/Blocklist.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "Extension",
-  "resource://gre/modules/Extension.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "ExtensionTestUtils",
-  "resource://testing-common/ExtensionXPCShellUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "ExtensionTestCommon",
-  "resource://testing-common/ExtensionTestCommon.jsm"
-);
 ChromeUtils.defineModuleGetter(
   this,
   "HttpServer",
   "resource://testing-common/httpd.js"
 );
 ChromeUtils.defineESModuleGetters(this, {
+  Blocklist: "resource://gre/modules/Blocklist.sys.mjs",
+  Extension: "resource://gre/modules/Extension.sys.mjs",
+  ExtensionTestCommon: "resource://testing-common/ExtensionTestCommon.sys.mjs",
+  ExtensionTestUtils:
+    "resource://testing-common/ExtensionXPCShellUtils.sys.mjs",
   MockRegistrar: "resource://testing-common/MockRegistrar.sys.mjs",
   MockRegistry: "resource://testing-common/MockRegistry.sys.mjs",
   PromiseTestUtils: "resource://testing-common/PromiseTestUtils.sys.mjs",
@@ -583,7 +564,7 @@ function do_check_addons(aActualAddons, aExpectedAddons, aProperties) {
 function do_check_addon(aActualAddon, aExpectedAddon, aProperties) {
   Assert.notEqual(aActualAddon, null);
 
-  aProperties.forEach(function(aProperty) {
+  aProperties.forEach(function (aProperty) {
     let actualValue = aActualAddon[aProperty];
     let expectedValue = aExpectedAddon[aProperty];
 
@@ -1176,8 +1157,8 @@ async function mockGfxBlocklistItemsFromDisk(path) {
 
 async function mockGfxBlocklistItems(items) {
   const { generateUUID } = Services.uuid;
-  const { BlocklistPrivate } = ChromeUtils.import(
-    "resource://gre/modules/Blocklist.jsm"
+  const { BlocklistPrivate } = ChromeUtils.importESModule(
+    "resource://gre/modules/Blocklist.sys.mjs"
   );
   const client = RemoteSettings("gfx", {
     bucketName: "blocklists",
@@ -1187,9 +1168,7 @@ async function mockGfxBlocklistItems(items) {
       return item;
     }
     return {
-      id: generateUUID()
-        .toString()
-        .replace(/[{}]/g, ""),
+      id: generateUUID().toString().replace(/[{}]/g, ""),
       last_modified: Date.now(),
       ...item,
     };

@@ -95,7 +95,7 @@ var CrashMonitorInternal = {
    * @return {Promise} A promise that resolves/rejects once loading is complete
    */
   loadPreviousCheckpoints() {
-    this.previousCheckpoints = (async function() {
+    this.previousCheckpoints = (async function () {
       let notifications;
       try {
         notifications = await IOUtils.readJSON(CrashMonitorInternal.path);
@@ -160,7 +160,7 @@ export var CrashMonitor = {
     // called after receiving it
     CrashMonitorInternal.checkpoints["profile-after-change"] = true;
 
-    NOTIFICATIONS.forEach(function(aTopic) {
+    NOTIFICATIONS.forEach(function (aTopic) {
       Services.obs.addObserver(this, aTopic);
     }, this);
 
@@ -200,7 +200,7 @@ export var CrashMonitor = {
       SHUTDOWN_PHASES.every(elem => elem in CrashMonitorInternal.checkpoints)
     ) {
       // All notifications received, unregister observers
-      NOTIFICATIONS.forEach(function(aTopic) {
+      NOTIFICATIONS.forEach(function (aTopic) {
         Services.obs.removeObserver(this, aTopic);
       }, this);
     }

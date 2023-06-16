@@ -32,12 +32,12 @@ ConsoleListener.prototype = {
   },
 };
 
-addMessageListener("load", function(e) {
+addMessageListener("load", function (e) {
   consoleListener = new ConsoleListener();
   sendAsyncMessage("ready", {});
 });
 
-addMessageListener("unload", function(e) {
+addMessageListener("unload", function (e) {
   Services.console.unregisterListener(consoleListener);
   consoleListener = null;
   sendAsyncMessage("unloaded", {});

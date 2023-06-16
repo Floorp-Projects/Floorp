@@ -39,7 +39,7 @@ httpServer.registerPathHandler("/evil", (request, response) => {
   );
 });
 
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebuggerWithAbsoluteURL(`${BASE_URL}/index.html`);
 
   await getDebuggerSplitConsole(dbg);

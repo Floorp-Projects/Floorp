@@ -435,16 +435,12 @@ function testtag_tree_TreeSelection(tree, testid, multiple) {
   selection.toggleSelect(1);
   if (multiple) {
     selection.selectAll();
-    testtag_tree_TreeSelection_State(tree, testid + "selectAll 2", 1, [
-      0,
+    testtag_tree_TreeSelection_State(
+      tree,
+      testid + "selectAll 2",
       1,
-      2,
-      3,
-      4,
-      5,
-      6,
-      7,
-    ]);
+      [0, 1, 2, 3, 4, 5, 6, 7]
+    );
   }
   selection.currentIndex = 2;
   selection.clearSelection();
@@ -474,11 +470,12 @@ function testtag_tree_TreeSelection(tree, testid, multiple) {
   if (multiple) {
     selection.select(1);
     selection.rangedSelect(0, 2, true);
-    testtag_tree_TreeSelection_State(tree, testid + "rangedSelect augment", 2, [
-      0,
-      1,
+    testtag_tree_TreeSelection_State(
+      tree,
+      testid + "rangedSelect augment",
       2,
-    ]);
+      [0, 1, 2]
+    );
     is(
       selection.shiftSelectPivot,
       0,
@@ -492,11 +489,12 @@ function testtag_tree_TreeSelection(tree, testid, multiple) {
 
     // check that rangedSelect can take a start value higher than end
     selection.rangedSelect(3, 1, false);
-    testtag_tree_TreeSelection_State(tree, testid + "rangedSelect reverse", 1, [
+    testtag_tree_TreeSelection_State(
+      tree,
+      testid + "rangedSelect reverse",
       1,
-      2,
-      3,
-    ]);
+      [1, 2, 3]
+    );
     is(
       selection.shiftSelectPivot,
       3,
@@ -1245,7 +1243,7 @@ function testtag_tree_UI_editing(tree, testid, rowInfo) {
   var ci = tree.currentIndex;
 
   // cursor navigation should not change the selection while editing
-  var testKey = function(key) {
+  var testKey = function (key) {
     synthesizeKeyExpectEvent(
       key,
       {},
@@ -1741,7 +1739,7 @@ function testtag_tree_wheel(aTree) {
   }
   window.addEventListener("wheel", wheelListener);
 
-  deltaModes.forEach(function(aDeltaMode) {
+  deltaModes.forEach(function (aDeltaMode) {
     var delta = aDeltaMode == WheelEvent.DOM_DELTA_PIXEL ? 5.0 : 0.3;
     helper(2, -delta, 0, aDeltaMode);
     helper(2, -delta, -1, aDeltaMode);
@@ -2057,7 +2055,7 @@ function getSortedColumnArray(aTree) {
     array.push(columns.getColumnAt(i));
   }
 
-  array.sort(function(a, b) {
+  array.sort(function (a, b) {
     var o1 = parseInt(a.element.style.order);
     var o2 = parseInt(b.element.style.order);
     return o1 - o2;
@@ -2068,7 +2066,7 @@ function getSortedColumnArray(aTree) {
 function checkColumns(aTree, aReference, aMessage) {
   var columns = getSortedColumnArray(aTree);
   var ids = [];
-  columns.forEach(function(e) {
+  columns.forEach(function (e) {
     ids.push(e.element.id);
   });
   is(compareArrays(ids, aReference), true, aMessage);

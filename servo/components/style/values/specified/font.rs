@@ -18,7 +18,7 @@ use crate::values::generics::NonNegative;
 use crate::values::specified::length::{FontBaseSize, PX_PER_PT};
 use crate::values::specified::{AllowQuirks, Angle, Integer, LengthPercentage};
 use crate::values::specified::{NoCalcLength, NonNegativeNumber, NonNegativePercentage, Number};
-use crate::values::{CustomIdent, SelectorParseErrorKind, serialize_atom_identifier};
+use crate::values::{serialize_atom_identifier, CustomIdent, SelectorParseErrorKind};
 use crate::Atom;
 use cssparser::{Parser, Token};
 #[cfg(feature = "gecko")]
@@ -747,13 +747,13 @@ impl FontSizeKeyword {
     #[cfg(feature = "gecko")]
     #[inline]
     fn to_length(&self, cx: &Context) -> NonNegativeLength {
-        let gecko_font = cx.style().get_font().gecko();
-        let family = &gecko_font.mFont.family.families;
+        let font = cx.style().get_font();
+        let family = &font.mFont.family.families;
         let generic = family
             .single_generic()
             .unwrap_or(computed::GenericFontFamily::None);
         let base_size = unsafe {
-            Atom::with(gecko_font.mLanguage.mRawPtr, |language| {
+            Atom::with(font.mLanguage.mRawPtr, |language| {
                 cx.device().base_size_for_generic(language, generic)
             })
         };
@@ -983,7 +983,7 @@ impl Parse for FontSize {
 }
 
 bitflags! {
-    #[cfg_attr(feature = "servo", derive(MallocSizeOf))]
+    #[derive(Clone, Copy)]
     /// Flags of variant alternates in bit
     struct VariantAlternatesParsingFlags: u8 {
         /// None of variant alternates enabled
@@ -1006,7 +1006,15 @@ bitflags! {
 }
 
 #[derive(
-    Clone, Debug, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToCss, ToComputedValue, ToResolvedValue, ToShmem,
+    Clone,
+    Debug,
+    MallocSizeOf,
+    PartialEq,
+    SpecifiedValueInfo,
+    ToCss,
+    ToComputedValue,
+    ToResolvedValue,
+    ToShmem,
 )]
 #[repr(C, u8)]
 /// Set of variant alternates
@@ -1208,7 +1216,7 @@ macro_rules! impl_variant_east_asian {
         )+
     } => {
         bitflags! {
-            #[derive(MallocSizeOf, ToComputedValue, ToResolvedValue, ToShmem)]
+            #[derive(Clone, Copy, Eq, MallocSizeOf, PartialEq, ToComputedValue, ToResolvedValue, ToShmem)]
             /// Vairants for east asian variant
             pub struct FontVariantEastAsian: u16 {
                 /// None of the features
@@ -1379,7 +1387,7 @@ macro_rules! impl_variant_ligatures {
         )+
     } => {
         bitflags! {
-            #[derive(MallocSizeOf, ToComputedValue, ToResolvedValue, ToShmem)]
+            #[derive(Clone, Copy, Eq, MallocSizeOf, PartialEq, ToComputedValue, ToResolvedValue, ToShmem)]
             /// Variants of ligatures
             pub struct FontVariantLigatures: u16 {
                 /// Specifies that common default features are enabled
@@ -1557,8 +1565,8 @@ macro_rules! impl_variant_numeric {
         )+
     } => {
         bitflags! {
-            #[derive(MallocSizeOf, ToComputedValue, ToResolvedValue, ToShmem)]
-            /// Vairants of numeric values
+            #[derive(Clone, Copy, Eq, MallocSizeOf, PartialEq, ToComputedValue, ToResolvedValue, ToShmem)]
+            /// Variants of numeric values
             pub struct FontVariantNumeric: u8 {
                 /// None of other variants are enabled.
                 const NORMAL = 0;
@@ -1789,9 +1797,15 @@ pub struct FontPalette(Atom);
 
 #[allow(missing_docs)]
 impl FontPalette {
-    pub fn normal() -> Self { Self(atom!("normal")) }
-    pub fn light() -> Self { Self(atom!("light")) }
-    pub fn dark() -> Self { Self(atom!("dark")) }
+    pub fn normal() -> Self {
+        Self(atom!("normal"))
+    }
+    pub fn light() -> Self {
+        Self(atom!("light"))
+    }
+    pub fn dark() -> Self {
+        Self(atom!("dark"))
+    }
 }
 
 impl Parse for FontPalette {

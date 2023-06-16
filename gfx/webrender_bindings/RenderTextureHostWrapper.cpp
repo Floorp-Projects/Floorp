@@ -180,6 +180,9 @@ RenderTextureHostSWGL* RenderTextureHostWrapper::AsRenderTextureHostSWGL() {
 
 RenderAndroidHardwareBufferTextureHost*
 RenderTextureHostWrapper::AsRenderAndroidHardwareBufferTextureHost() {
+  if (mTextureId.isSome()) {
+    EnsureRemoteTexture();
+  }
   if (!mTextureHost) {
     return nullptr;
   }
@@ -188,6 +191,9 @@ RenderTextureHostWrapper::AsRenderAndroidHardwareBufferTextureHost() {
 
 RenderAndroidSurfaceTextureHost*
 RenderTextureHostWrapper::AsRenderAndroidSurfaceTextureHost() {
+  if (mTextureId.isSome()) {
+    EnsureRemoteTexture();
+  }
   if (!mTextureHost) {
     return nullptr;
   }

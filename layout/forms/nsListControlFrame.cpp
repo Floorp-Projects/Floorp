@@ -71,7 +71,8 @@ nsListControlFrame::nsListControlFrame(ComputedStyle* aStyle,
 nsListControlFrame::~nsListControlFrame() = default;
 
 Maybe<nscoord> nsListControlFrame::GetNaturalBaselineBOffset(
-    WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
+    WritingMode aWM, BaselineSharingGroup aBaselineGroup,
+    BaselineExportContext) const {
   // Unlike scroll frames which we inherit from, we don't export a baseline.
   return Nothing{};
 }

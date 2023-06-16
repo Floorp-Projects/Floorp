@@ -1,8 +1,0 @@
-if [ -z "${VSPATH}" ]; then
-    VSPATH="$(cd ${MOZ_FETCHES_DIR} && pwd)/vs"
-fi
-
-if [ -d "${VSPATH}" ]; then
-    export WIN32_REDIST_DIR="${VSPATH}/VC/Redist/MSVC/14.16.27012/arm64/Microsoft.VC141.CRT"
-    export WINSYSROOT="${VSPATH}"
-fi

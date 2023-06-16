@@ -225,7 +225,7 @@ export class FakePrefs extends FakensIPrefBranch {
  * Slimmed down version of toolkit/modules/EventEmitter.sys.mjs
  */
 export function EventEmitter() {}
-EventEmitter.decorate = function(objectToDecorate) {
+EventEmitter.decorate = function (objectToDecorate) {
   let emitter = new EventEmitter();
   objectToDecorate.on = emitter.on.bind(emitter);
   objectToDecorate.off = emitter.off.bind(emitter);

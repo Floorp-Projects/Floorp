@@ -11,13 +11,13 @@ function run_test() {
   let ok = gfxInfo.controlGPUProcessForXPCShell(true);
   Assert.equal(ok, true);
 
-  let endTesting = function() {
+  let endTesting = function () {
     gfxInfo.controlGPUProcessForXPCShell(false);
     do_test_finished();
   };
 
   let foundGPUProcess = false;
-  let onHandleReport = function(
+  let onHandleReport = function (
     aProcess,
     aPath,
     aKind,
@@ -29,7 +29,7 @@ function run_test() {
       foundGPUProcess = true;
     }
   };
-  let onFinishReporting = function() {
+  let onFinishReporting = function () {
     Assert.equal(foundGPUProcess, true);
     endTesting();
   };

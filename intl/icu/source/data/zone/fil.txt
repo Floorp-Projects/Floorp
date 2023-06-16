@@ -258,6 +258,9 @@ fil{
         "America:Chihuahua"{
             ec{"Chihuahua"}
         }
+        "America:Ciudad_Juarez"{
+            ec{"Lungsod ng Juárez"}
+        }
         "America:Coral_Harbour"{
             ec{"Atikokan"}
         }

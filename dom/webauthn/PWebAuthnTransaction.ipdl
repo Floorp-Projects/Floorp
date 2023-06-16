@@ -75,15 +75,6 @@ struct CoseAlg {
   long alg;
 };
 
-struct WebAuthnMakeCredentialExtraInfo {
-  WebAuthnMakeCredentialRpInfo Rp;
-  WebAuthnMakeCredentialUserInfo User;
-  CoseAlg[] coseAlgs;
-  WebAuthnExtension[] Extensions;
-  WebAuthnAuthenticatorSelection AuthenticatorSelection;
-  nsString attestationConveyancePreference;
-};
-
 struct WebAuthnMakeCredentialInfo {
   nsString Origin;
   nsString RpId;
@@ -91,7 +82,12 @@ struct WebAuthnMakeCredentialInfo {
   nsCString ClientDataJSON;
   uint32_t TimeoutMS;
   WebAuthnScopedCredential[] ExcludeList;
-  WebAuthnMakeCredentialExtraInfo? Extra;
+  WebAuthnMakeCredentialRpInfo Rp;
+  WebAuthnMakeCredentialUserInfo User;
+  CoseAlg[] coseAlgs;
+  WebAuthnExtension[] Extensions;
+  WebAuthnAuthenticatorSelection AuthenticatorSelection;
+  nsString attestationConveyancePreference;
   uint64_t BrowsingContextId;
 };
 
@@ -99,14 +95,7 @@ struct WebAuthnMakeCredentialResult {
   nsCString ClientDataJSON;
   uint8_t[] AttestationObject;
   uint8_t[] KeyHandle;
-  /* Might be empty if the token implementation doesn't support CTAP1. */
-  uint8_t[] RegistrationData;
   WebAuthnExtensionResult[] Extensions;
-};
-
-struct WebAuthnGetAssertionExtraInfo {
-  WebAuthnExtension[] Extensions;
-  nsString userVerificationRequirement;
 };
 
 struct WebAuthnGetAssertionInfo {
@@ -116,7 +105,8 @@ struct WebAuthnGetAssertionInfo {
   nsCString ClientDataJSON;
   uint32_t TimeoutMS;
   WebAuthnScopedCredential[] AllowList;
-  WebAuthnGetAssertionExtraInfo? Extra;
+  WebAuthnExtension[] Extensions;
+  nsString userVerificationRequirement;
   uint64_t BrowsingContextId;
 };
 
@@ -126,8 +116,6 @@ struct WebAuthnGetAssertionResult {
   uint8_t[] Signature;
   uint8_t[] AuthenticatorData;
   WebAuthnExtensionResult[] Extensions;
-  /* Might be empty if the token implementation doesn't support CTAP1. */
-  uint8_t[] SignatureData;
   uint8_t[] UserHandle;
 };
 

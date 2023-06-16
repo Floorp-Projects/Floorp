@@ -18,7 +18,7 @@ add_task(async function test_working_token_exchange() {
   let duration = 300;
 
   let server = httpd_setup({
-    "/1.0/foo/1.0": function(request, response) {
+    "/1.0/foo/1.0": function (request, response) {
       Assert.ok(request.hasHeader("accept"));
       Assert.equal("application/json", request.getHeader("accept"));
 
@@ -58,7 +58,7 @@ add_task(async function test_working_token_exchange_with_nodetype() {
   let nodeType = "the-node-type";
 
   let server = httpd_setup({
-    "/1.0/foo/1.0": function(request, response) {
+    "/1.0/foo/1.0": function (request, response) {
       Assert.ok(request.hasHeader("accept"));
       Assert.equal("application/json", request.getHeader("accept"));
 
@@ -112,7 +112,7 @@ add_task(async function test_invalid_403_no_content_type() {
   _("Ensure that a 403 without content-type is handled properly.");
 
   let server = httpd_setup({
-    "/1.0/foo/1.0": function(request, response) {
+    "/1.0/foo/1.0": function (request, response) {
       response.setStatusLine(request.httpVersion, 403, "Forbidden");
       // No Content-Type header by design.
 
@@ -146,7 +146,7 @@ add_task(async function test_send_extra_headers() {
 
   let duration = 300;
   let server = httpd_setup({
-    "/1.0/foo/1.0": function(request, response) {
+    "/1.0/foo/1.0": function (request, response) {
       Assert.ok(request.hasHeader("x-foo"));
       Assert.equal(request.getHeader("x-foo"), "42");
 
@@ -207,7 +207,7 @@ add_task(async function test_error_404_proper_response() {
   _("Ensure that a Cornice error report for 404 is handled properly.");
 
   let server = httpd_setup({
-    "/1.0/foo/1.0": function(request, response) {
+    "/1.0/foo/1.0": function (request, response) {
       response.setStatusLine(request.httpVersion, 404, "Not Found");
       response.setHeader("Content-Type", "application/json; charset=utf-8");
 
@@ -239,7 +239,7 @@ add_task(async function test_bad_json() {
   _("Ensure that malformed JSON is handled properly.");
 
   let server = httpd_setup({
-    "/1.0/foo/1.0": function(request, response) {
+    "/1.0/foo/1.0": function (request, response) {
       response.setStatusLine(request.httpVersion, 200, "OK");
       response.setHeader("Content-Type", "application/json");
 
@@ -269,7 +269,7 @@ add_task(async function test_400_response() {
   _("Ensure HTTP 400 is converted to malformed-request.");
 
   let server = httpd_setup({
-    "/1.0/foo/1.0": function(request, response) {
+    "/1.0/foo/1.0": function (request, response) {
       response.setStatusLine(request.httpVersion, 400, "Bad Request");
       response.setHeader("Content-Type", "application/json; charset=utf-8");
 
@@ -299,7 +299,7 @@ add_task(async function test_401_with_error_cause() {
   _("Ensure 401 cause is specified in body.status");
 
   let server = httpd_setup({
-    "/1.0/foo/1.0": function(request, response) {
+    "/1.0/foo/1.0": function (request, response) {
       response.setStatusLine(request.httpVersion, 401, "Unauthorized");
       response.setHeader("Content-Type", "application/json; charset=utf-8");
 
@@ -329,7 +329,7 @@ add_task(async function test_unhandled_media_type() {
   _("Ensure that unhandled media types throw an error.");
 
   let server = httpd_setup({
-    "/1.0/foo/1.0": function(request, response) {
+    "/1.0/foo/1.0": function (request, response) {
       response.setStatusLine(request.httpVersion, 200, "OK");
       response.setHeader("Content-Type", "text/plain");
 
@@ -359,7 +359,7 @@ add_task(async function test_rich_media_types() {
 
   let duration = 300;
   let server = httpd_setup({
-    "/foo": function(request, response) {
+    "/foo": function (request, response) {
       response.setStatusLine(request.httpVersion, 200, "OK");
       response.setHeader("Content-Type", "application/json; foo=bar; bar=foo");
 

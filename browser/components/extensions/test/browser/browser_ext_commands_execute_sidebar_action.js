@@ -30,7 +30,7 @@ add_task(async function test_execute_sidebar_action() {
         </html>
       `,
 
-      "sidebar.js": function() {
+      "sidebar.js": function () {
         browser.runtime.sendMessage("from-sidebar-action");
       },
     },

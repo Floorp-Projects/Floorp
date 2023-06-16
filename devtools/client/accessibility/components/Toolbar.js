@@ -16,7 +16,7 @@ const AccessibilityTreeFilter = createFactory(
 const AccessibilityPrefs = createFactory(
   require("resource://devtools/client/accessibility/components/AccessibilityPrefs.js")
 );
-loader.lazyGetter(this, "SimulationMenuButton", function() {
+loader.lazyGetter(this, "SimulationMenuButton", function () {
   return createFactory(
     require("resource://devtools/client/accessibility/components/SimulationMenuButton.js")
   );

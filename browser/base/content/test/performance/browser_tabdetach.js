@@ -52,7 +52,7 @@ add_task(async function test_detach_not_overflowed() {
 
   let win;
   await withPerfObserver(
-    async function() {
+    async function () {
       win = await detachTab(gBrowser.tabs[1]);
     },
     {
@@ -78,7 +78,7 @@ add_task(async function test_detach_overflowed() {
 
   let win;
   await withPerfObserver(
-    async function() {
+    async function () {
       win = await detachTab(
         gBrowser.tabs[Math.floor(TAB_COUNT_FOR_OVERFLOW / 2)]
       );

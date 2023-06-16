@@ -40,7 +40,7 @@ add_task(async function testBrowserActionClickCanceled() {
     Management: {
       global: { browserActionFor },
     },
-  } = ChromeUtils.import("resource://gre/modules/Extension.jsm");
+  } = ChromeUtils.importESModule("resource://gre/modules/Extension.sys.mjs");
 
   let ext = WebExtensionPolicy.getByID(extension.id)?.extension;
   let browserAction = browserActionFor(ext);
@@ -164,7 +164,7 @@ add_task(async function testBrowserActionDisabled() {
       },
     },
 
-    background: async function() {
+    background: async function () {
       await browser.browserAction.disable();
       browser.test.sendMessage("browserAction-disabled");
     },
@@ -186,7 +186,7 @@ add_task(async function testBrowserActionDisabled() {
     Management: {
       global: { browserActionFor },
     },
-  } = ChromeUtils.import("resource://gre/modules/Extension.jsm");
+  } = ChromeUtils.importESModule("resource://gre/modules/Extension.sys.mjs");
 
   let ext = WebExtensionPolicy.getByID(extension.id)?.extension;
   let browserAction = browserActionFor(ext);
@@ -276,7 +276,7 @@ add_task(async function testBrowserActionTabPopulation() {
 
     files: {
       "popup.html": scriptPage("popup.js"),
-      "popup.js": function() {
+      "popup.js": function () {
         browser.tabs.query({ active: true, currentWindow: true }).then(tabs => {
           browser.test.assertEq(
             "mochitest index /",
@@ -338,7 +338,7 @@ add_task(async function testClosePopupDuringPreload() {
 
     files: {
       "popup.html": scriptPage("popup.js"),
-      "popup.js": function() {
+      "popup.js": function () {
         browser.test.sendMessage("popup_loaded");
         window.close();
       },
@@ -358,7 +358,7 @@ add_task(async function testClosePopupDuringPreload() {
     Management: {
       global: { browserActionFor },
     },
-  } = ChromeUtils.import("resource://gre/modules/Extension.jsm");
+  } = ChromeUtils.importESModule("resource://gre/modules/Extension.sys.mjs");
 
   let ext = WebExtensionPolicy.getByID(extension.id)?.extension;
   let browserAction = browserActionFor(ext);

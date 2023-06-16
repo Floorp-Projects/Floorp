@@ -4,9 +4,7 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { DOMRequestIpcHelper } = ChromeUtils.import(
-  "resource://gre/modules/DOMRequestHelper.jsm"
-);
+import { DOMRequestIpcHelper } from "resource://gre/modules/DOMRequestHelper.sys.mjs";
 
 const lazy = {};
 
@@ -81,8 +79,8 @@ Push.prototype = {
   askPermission() {
     lazy.console.debug("askPermission()");
 
-    let hasValidTransientUserGestureActivation = this._window.document
-      .hasValidTransientUserGestureActivation;
+    let hasValidTransientUserGestureActivation =
+      this._window.document.hasValidTransientUserGestureActivation;
 
     return this.createPromise((resolve, reject) => {
       let permissionDenied = () => {

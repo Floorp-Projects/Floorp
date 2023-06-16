@@ -1,0 +1,125 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.card-container {
+  padding: 8px;
+  border-radius: 8px;
+  background-color: var(--fxview-background-color-secondary);
+  margin-block-end: 24px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+@media (prefers-contrast) {
+  .card-container {
+    border: 1px solid CanvasText;
+  }
+}
+
+.card-container-header {
+  display: inline-flex;
+  gap: 16px;
+  width: 100%;
+  align-items: center;
+  cursor: pointer;
+  border-radius: 1px;
+  outline-offset: 6px;
+}
+
+.card-container-header[withViewAll] {
+  width: 85%;
+}
+
+.card-container-header[hidden] {
+  display: none;
+}
+
+.view-all-link {
+  color: var(--fxview-primary-action-background);
+  float: inline-end;
+  outline-offset: 8px;
+  border-radius: 1px;
+  width: 12%;
+  text-align: end;
+}
+
+.card-container-header:focus-visible,
+.view-all-link:focus-visible {
+  outline: 2px solid var(--in-content-focus-outline-color);
+}
+
+.chevron-icon {
+  background-image: url("chrome://global/skin/icons/arrow-up.svg");
+  padding: 2px;
+  display: inline-block;
+  justify-self: start;
+  fill: currentColor;
+  margin-block: 0;
+  width: 16px;
+  height: 16px;
+  background-position: center;
+  -moz-context-properties: fill;
+  border: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  border-radius: 4px;
+}
+
+.chevron-icon:hover {
+  background-color: var(--fxview-element-background-hover);
+}
+
+@media (prefers-contrast) {
+  .chevron-icon {
+    border: 1px solid ButtonText;
+    color: ButtonText;
+  }
+
+  .chevron-icon:hover {
+    border: 1px solid SelectedItem;
+    color: SelectedItem;
+  }
+
+  .chevron-icon:active {
+    color: SelectedItem;
+  }
+
+  .chevron-icon,
+  .chevron-icon:hover,
+  .chevron-icon:active {
+    background-color: ButtonFace;
+  }
+}
+
+.card-container:not([open]) .chevron-icon {
+  background-image: url("chrome://global/skin/icons/arrow-down.svg");
+}
+
+.card-container:not([open]) a {
+  display: none;
+}
+
+::slotted(h2) {
+  margin: 0;
+  font-size: 1.13em;
+  font-weight: 600;
+}
+
+.card-container-footer {
+  text-align: center;
+  color: var(--fxview-primary-action-background);
+  cursor: pointer;
+}
+
+::slotted([slot=footer]) {
+  text-decoration: underline;
+}
+
+@media (max-width: 39rem) {
+  .card-container-header[withViewAll] {
+    width: 77%;
+  }
+  .view-all-link {
+    width: 20%;
+  }
+}

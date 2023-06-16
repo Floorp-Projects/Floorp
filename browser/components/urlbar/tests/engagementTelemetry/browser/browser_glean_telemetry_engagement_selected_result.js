@@ -17,7 +17,7 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-add_setup(async function() {
+add_setup(async function () {
   await setup();
 });
 
@@ -803,5 +803,118 @@ add_task(async function selected_result_trending() {
   await SearchTestUtils.updateRemoteSettingsConfig();
   await settingsWritten;
   await PlacesUtils.history.clear();
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function selected_result_trending_rich() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.richSuggestions.featureGate", true],
+      ["browser.urlbar.suggest.searches", true],
+      ["browser.urlbar.trending.featureGate", true],
+      ["browser.urlbar.trending.requireSearchMode", false],
+      ["browser.urlbar.trending.maxResultsNoSearchMode", 1],
+      ["browser.urlbar.weather.featureGate", false],
+    ],
+  });
+
+  let defaultEngine = await Services.search.getDefault();
+  let extension = await SearchTestUtils.installSearchExtension(
+    {
+      name: "mozengine",
+      search_url: "https://example.org/",
+    },
+    { setAsDefault: true, skipUnload: true }
+  );
+
+  SearchTestUtils.useMockIdleService();
+  await SearchTestUtils.updateRemoteSettingsConfig([
+    {
+      webExtension: { id: "mozengine@tests.mozilla.org" },
+      urls: {
+        trending: {
+          fullPath:
+            "https://example.com/browser/browser/components/search/test/browser/trendingSuggestionEngine.sjs?richsuggestions=true",
+          query: "",
+        },
+      },
+      appliesTo: [{ included: { everywhere: true } }],
+      default: "yes",
+    },
+  ]);
+
+  await doTest(async browser => {
+    await openPopup("");
+    await selectRowByProvider("SearchSuggestions");
+    await doEnter();
+
+    assertEngagementTelemetry([
+      {
+        selected_result: "trending_search_rich",
+        selected_result_subtype: "",
+        provider: "SearchSuggestions",
+        results: "trending_search_rich",
+      },
+    ]);
+  });
+
+  await extension.unload();
+  await Services.search.setDefault(
+    defaultEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
+  let settingsWritten = SearchTestUtils.promiseSearchNotification(
+    "write-settings-to-disk-complete"
+  );
+  await SearchTestUtils.updateRemoteSettingsConfig();
+  await settingsWritten;
+  await PlacesUtils.history.clear();
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function selected_result_addons() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.addons.featureGate", true],
+      ["browser.urlbar.suggest.searches", false],
+    ],
+  });
+
+  const cleanupQuickSuggest = await ensureQuickSuggestInit({
+    merinoSuggestions: [
+      {
+        provider: "amo",
+        icon: "https://example.com/good-addon.svg",
+        url: "https://example.com/good-addon",
+        title: "Good Addon",
+        description: "This is a good addon",
+        custom_details: {
+          amo: {
+            rating: "4.8",
+            number_of_ratings: "1234567",
+            guid: "good@addon",
+          },
+        },
+        is_top_pick: true,
+      },
+    ],
+  });
+
+  await doTest(async browser => {
+    await openPopup("only match the Merino suggestion");
+    await selectRowByProvider("UrlbarProviderQuickSuggest");
+    await doEnter();
+
+    assertEngagementTelemetry([
+      {
+        selected_result: "merino_amo",
+        selected_result_subtype: "",
+        provider: "UrlbarProviderQuickSuggest",
+        results: "search_engine,merino_amo",
+      },
+    ]);
+  });
+
+  cleanupQuickSuggest();
   await SpecialPowers.popPrefEnv();
 });

@@ -55,7 +55,7 @@ function startup() {
       try {
         if (profile === gProfileService.defaultProfile) {
           setTimeout(
-            function(a) {
+            function (a) {
               profilesElement.ensureElementIsVisible(a);
               profilesElement.selectItem(a);
             },
@@ -146,9 +146,8 @@ function acceptDialog(event) {
   var profilesElement = document.getElementById("profiles");
   var selectedProfile = profilesElement.selectedItem;
   if (!selectedProfile) {
-    var pleaseSelectTitle = gProfileManagerBundle.getString(
-      "pleaseSelectTitle"
-    );
+    var pleaseSelectTitle =
+      gProfileManagerBundle.getString("pleaseSelectTitle");
     var pleaseSelect = gProfileManagerBundle.getFormattedString(
       "pleaseSelect",
       [appName]

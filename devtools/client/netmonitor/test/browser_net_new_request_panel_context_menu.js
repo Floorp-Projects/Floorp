@@ -10,7 +10,7 @@ const asyncStorage = require("resource://devtools/shared/async-storage.js");
  * when opened from an existing request
  */
 
-add_task(async function() {
+add_task(async function () {
   // Turn true the pref
   await pushPref("devtools.netmonitor.features.newEditAndResend", true);
   // Reset the storage for the persisted custom request
@@ -103,9 +103,8 @@ add_task(async function() {
 
   for (let i = 0; i < urlParametersValues.length; i++) {
     const { name, value } = expectedURLQueryParams[i];
-    const [formName, formValue] = urlParametersValues[i].querySelectorAll(
-      "textarea"
-    );
+    const [formName, formValue] =
+      urlParametersValues[i].querySelectorAll("textarea");
     is(
       name,
       formName.value,

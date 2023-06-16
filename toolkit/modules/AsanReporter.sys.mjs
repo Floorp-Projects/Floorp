@@ -71,7 +71,7 @@ async function processDirectory() {
   const asanDumpDir = PathUtils.join(PathUtils.profileDir, "asan");
   const children = await IOUtils.getChildren(asanDumpDir);
 
-  const results = children.filter(function(path) {
+  const results = children.filter(function (path) {
     const name = PathUtils.filename(path);
     return name.startsWith("ff_asan_log.") && !name.includes("submitted");
   });
@@ -98,7 +98,7 @@ async function submitReport(reportFile) {
 }
 
 function submitToServer(data) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     logger.debug("Setting up XHR request");
     let client = Services.prefs.getStringPref(PREF_CLIENT_ID);
     let api_url = Services.prefs.getStringPref(PREF_API_URL);
@@ -147,7 +147,7 @@ function submitToServer(data) {
       xhr.channel.loadFlags |= Ci.nsIRequest.LOAD_ANONYMOUS;
     }
 
-    xhr.onreadystatechange = function() {
+    xhr.onreadystatechange = function () {
       if (xhr.readyState == 4) {
         if (xhr.status == "201") {
           logger.debug("XHR: OK");

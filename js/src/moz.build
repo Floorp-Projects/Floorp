@@ -89,9 +89,6 @@ if CONFIG["FUZZING_JS_FUZZILLI"]:
     # trace-pc instrumentation.
     include("/tools/fuzzing/libfuzzer-config.mozbuild")
 
-CONFIGURE_SUBST_FILES += [
-    "devtools/rootAnalysis/Makefile",
-]
 CONFIGURE_DEFINE_FILES += [
     "js-confdefs.h",
 ]
@@ -173,6 +170,7 @@ EXPORTS.js += [
     "../public/Object.h",
     "../public/OffThreadScriptCompilation.h",
     "../public/Principals.h",
+    "../public/Printer.h",
     "../public/Printf.h",
     "../public/ProfilingCategory.h",
     "../public/ProfilingFrameIterator.h",

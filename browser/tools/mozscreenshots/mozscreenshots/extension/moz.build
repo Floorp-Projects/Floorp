@@ -15,24 +15,24 @@ FINAL_TARGET_FILES += [
 ]
 
 FINAL_TARGET_FILES.resources += [
-    "Screenshot.jsm",
-    "TestRunner.jsm",
+    "Screenshot.sys.mjs",
+    "TestRunner.sys.mjs",
 ]
 
 FINAL_TARGET_FILES.resources.configurations += [
-    "configurations/AppMenu.jsm",
-    "configurations/Buttons.jsm",
-    "configurations/ControlCenter.jsm",
-    "configurations/CustomizeMode.jsm",
-    "configurations/DevTools.jsm",
-    "configurations/LightweightThemes.jsm",
-    "configurations/PermissionPrompts.jsm",
-    "configurations/Preferences.jsm",
-    "configurations/Tabs.jsm",
-    "configurations/TabsInTitlebar.jsm",
-    "configurations/Toolbars.jsm",
-    "configurations/UIDensities.jsm",
-    "configurations/WindowSize.jsm",
+    "configurations/AppMenu.sys.mjs",
+    "configurations/Buttons.sys.mjs",
+    "configurations/ControlCenter.sys.mjs",
+    "configurations/CustomizeMode.sys.mjs",
+    "configurations/DevTools.sys.mjs",
+    "configurations/LightweightThemes.sys.mjs",
+    "configurations/PermissionPrompts.sys.mjs",
+    "configurations/Preferences.sys.mjs",
+    "configurations/Tabs.sys.mjs",
+    "configurations/TabsInTitlebar.sys.mjs",
+    "configurations/Toolbars.sys.mjs",
+    "configurations/UIDensities.sys.mjs",
+    "configurations/WindowSize.sys.mjs",
 ]
 
 FINAL_TARGET_FILES.resources.lib += [

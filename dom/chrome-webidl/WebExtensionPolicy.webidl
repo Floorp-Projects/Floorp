@@ -145,6 +145,13 @@ interface WebExtensionPolicy {
   static readonly attribute boolean backgroundServiceWorkerEnabled;
 
   /**
+   * Whether the Quarantined Domains feature is enabled.  Use this as a single
+   * source of truth instead of checking extensions.QuarantinedDomains.enabled
+   * pref directly because the logic might change.
+   */
+  static readonly attribute boolean quarantinedDomainsEnabled;
+
+  /**
    * Set based on the manifest.incognito value:
    * If "spanning" or "split" will be true.
    * If "not_allowed" will be false.
@@ -170,6 +177,16 @@ interface WebExtensionPolicy {
    * Returns true if the extension currently has the given permission.
    */
   boolean hasPermission(DOMString permission);
+
+  /**
+   * Returns true if the domain is on the Quarantined Domains list.
+   */
+  static boolean isQuarantinedURI(URI uri);
+
+  /**
+   * Returns true if this extension is quarantined from the URI.
+   */
+  boolean quarantinedFromURI(URI uri);
 
   /**
    * Returns true if the given path relative to the extension's moz-extension:
@@ -296,6 +313,8 @@ dictionary WebExtensionInit {
   DOMString type = "";
 
   boolean isPrivileged = false;
+
+  boolean ignoreQuarantine = false;
 
   boolean temporarilyInstalled = false;
 

@@ -8,7 +8,7 @@ const RUNTIME_DEVICE_NAME = "RUNTIME_DEVICE_NAME";
 const RUNTIME_SHORT_NAME = "testshort";
 
 // Test that USB runtimes appear and disappear from the sidebar.
-add_task(async function() {
+add_task(async function () {
   const mocks = new Mocks();
 
   const { document, tab } = await openAboutDebugging();

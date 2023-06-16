@@ -59,13 +59,8 @@
     "96": "icons/lightbulb.svg",
     "128": "icons/lightbulb.svg"
   },
-  "permissions": [
-    "tabs",
-    "<all_urls>"
-  ],
+  "permissions": ["tabs", "<all_urls>"],
   "background": {
-    "scripts": [
-      "background.js"
-    ]
+    "scripts": ["background.js"]
   }
 }

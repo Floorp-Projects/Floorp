@@ -4,7 +4,7 @@
 
 /* eslint-env node */
 
-module.exports = async function(context, commands) {
+module.exports = async function (context, commands) {
   context.log.info("Starting a browsertime scenario test");
   let page_cycles = context.options.browsertime.page_cycles;
   let page_cycle_delay = context.options.browsertime.page_cycle_delay;

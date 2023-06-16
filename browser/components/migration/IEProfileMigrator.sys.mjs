@@ -112,9 +112,10 @@ IE7FormPasswords.prototype = {
 
     try {
       let nsIWindowsRegKey = Ci.nsIWindowsRegKey;
-      let key = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
-        nsIWindowsRegKey
-      );
+      let key =
+        Cc["@mozilla.org/windows-registry-key;1"].createInstance(
+          nsIWindowsRegKey
+        );
       key.open(
         nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
         kLoginsKey,
@@ -156,9 +157,10 @@ IE7FormPasswords.prototype = {
     this.ctypesKernelHelpers = new MSMigrationUtils.CtypesKernelHelpers();
     this._crypto = new lazy.OSCrypto();
     let nsIWindowsRegKey = Ci.nsIWindowsRegKey;
-    let key = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
-      nsIWindowsRegKey
-    );
+    let key =
+      Cc["@mozilla.org/windows-registry-key;1"].createInstance(
+        nsIWindowsRegKey
+      );
     key.open(
       nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
       kLoginsKey,
@@ -369,7 +371,8 @@ export class IEProfileMigrator extends MigratorBase {
     if (AppConstants.isPlatformAndVersionAtMost("win", "6.1")) {
       resources.push(new IE7FormPasswords());
     }
-    let windowsVaultFormPasswordsMigrator = MSMigrationUtils.getWindowsVaultFormPasswordsMigrator();
+    let windowsVaultFormPasswordsMigrator =
+      MSMigrationUtils.getWindowsVaultFormPasswordsMigrator();
     windowsVaultFormPasswordsMigrator.name = "IEVaultFormPasswords";
     resources.push(windowsVaultFormPasswordsMigrator);
     return resources.filter(r => r.exists);

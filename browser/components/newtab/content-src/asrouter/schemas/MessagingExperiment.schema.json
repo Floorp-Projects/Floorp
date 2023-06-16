@@ -3,14 +3,23 @@
   "$id": "resource://activity-stream/schemas/MessagingExperiment.schema.json",
   "title": "Messaging Experiment",
   "description": "A Firefox Messaging System message.",
-  "oneOf": [
-    {
-      "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/TemplatedMessage"
+  "if": {
+    "type": "object",
+    "properties": {
+      "template": {
+        "const": "multi"
+      }
     },
-    {
-      "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/MultiMessage"
-    }
-  ],
+    "required": [
+      "template"
+    ]
+  },
+  "then": {
+    "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/MultiMessage"
+  },
+  "else": {
+    "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/TemplatedMessage"
+  },
   "$defs": {
     "CFRUrlbarChiclet": {
       "$schema": "https://json-schema.org/draft/2019-09/schema",
@@ -140,6 +149,10 @@
             "persistent_doorhanger": {
               "type": "boolean",
               "description": "Prevent the doorhanger from being dismissed if user interacts with the page or switches between applications."
+            },
+            "show_in_private_browsing": {
+              "type": "boolean",
+              "description": "Whether to allow the message to be shown in private browsing mode. Defaults to false."
             },
             "notification_text": {
               "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",

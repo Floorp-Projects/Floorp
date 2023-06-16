@@ -18,8 +18,7 @@ var tabs1 = [
   { uri: "about:config", profile: "profile1" },
   { uri: "about:credits", profile: "profile1" },
   {
-    uri:
-      "data:text/html,<html><head><title>Apple</title></head><body>Apple</body></html>",
+    uri: "data:text/html,<html><head><title>Apple</title></head><body>Apple</body></html>",
     title: "Apple",
     profile: "profile1",
   },

@@ -2,11 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import concurrent.futures as futures
 import io
 import mimetypes
 import os
 import sys
+from concurrent import futures
 from pprint import pprint
 
 import boto3

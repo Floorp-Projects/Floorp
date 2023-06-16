@@ -200,8 +200,8 @@ var tests = [
 ];
 
 // Test checkbox disabling the main action in different combinations
-["checkedState", "uncheckedState"].forEach(function(state) {
-  [true, false].forEach(function(checked) {
+["checkedState", "uncheckedState"].forEach(function (state) {
+  [true, false].forEach(function (checked) {
     tests.push({
       id: `checkbox_disableMainAction_${state}_${
         checked ? "checked" : "unchecked"

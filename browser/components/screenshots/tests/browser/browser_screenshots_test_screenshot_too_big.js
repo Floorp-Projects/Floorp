@@ -30,7 +30,7 @@ add_task(async function test_screenshot_too_large_cropped() {
   ]);
   let showAlertMessageStub = sinon
     .stub(ScreenshotsUtils, "showAlertMessage")
-    .callsFake(function(title, message) {
+    .callsFake(function (title, message) {
       is(title, errorTitle.value, "Got error title");
       is(message, errorMessage.value, "Got error message");
     });

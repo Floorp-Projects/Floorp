@@ -1,4 +1,4 @@
-add_task(async function() {
+add_task(async function () {
   const kPrefName_AutoScroll = "general.autoScroll";
   Services.prefs.setBoolPref(kPrefName_AutoScroll, false);
 
@@ -19,7 +19,7 @@ add_task(async function() {
     gBrowser.selectedBrowser
   );
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     var iframe = content.document.getElementById("iframe");
 
     if (iframe) {
@@ -48,7 +48,7 @@ add_task(async function() {
   let msg = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [],
-    async function() {
+    async function () {
       // Skip the first animation frame callback as it's the same callback that
       // the browser uses to kick off the scrolling.
       return new Promise(resolve => {

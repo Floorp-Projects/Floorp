@@ -22,17 +22,12 @@ toolbar {
 }
 
 toolbar[type="menubar"] {
-  appearance: auto;
-  -moz-default-appearance: menubar;
-  color: -moz-menubartext;
-  min-width: 1px;
-  min-height: 20px;
+  appearance: none;
   padding: 1px 0;
 }
 
 toolbar:-moz-lwtheme {
   appearance: none;
-  color: inherit;
 }
 
 toolbarseparator {

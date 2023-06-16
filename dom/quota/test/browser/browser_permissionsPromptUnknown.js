@@ -13,21 +13,21 @@ addTest(async function testPermissionUnknownInPrivateWindow() {
 
   registerPopupEventHandler(
     "popupshowing",
-    function() {
+    function () {
       ok(false, "Shouldn't show a popup this time");
     },
     win
   );
   registerPopupEventHandler(
     "popupshown",
-    function() {
+    function () {
       ok(false, "Shouldn't show a popup this time");
     },
     win
   );
   registerPopupEventHandler(
     "popuphidden",
-    function() {
+    function () {
       ok(false, "Shouldn't show a popup this time");
     },
     win

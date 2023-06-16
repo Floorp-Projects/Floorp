@@ -9,7 +9,7 @@ const {
 } = require("resource://devtools/client/memory/actions/refresh.js");
 const { debounce } = require("resource://devtools/shared/debounce.js");
 
-const setFilterString = (exports.setFilterString = function(filterString) {
+const setFilterString = (exports.setFilterString = function (filterString) {
   return {
     type: actions.SET_FILTER_STRING,
     filter: filterString,
@@ -25,7 +25,7 @@ const debouncedRefreshDispatcher = debounce(
   FILTER_INPUT_DEBOUNCE_MS
 );
 
-exports.setFilterStringAndRefresh = function(filterString, heapWorker) {
+exports.setFilterStringAndRefresh = function (filterString, heapWorker) {
   return ({ dispatch, getState }) => {
     dispatch(setFilterString(filterString));
     debouncedRefreshDispatcher(dispatch, heapWorker);

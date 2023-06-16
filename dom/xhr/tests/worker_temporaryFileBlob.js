@@ -17,7 +17,7 @@ function next() {
   postMessage({ type: "finish" });
 }
 
-onmessage = function(e) {
+onmessage = function (e) {
   if (e.data == "simple") {
     test_simple();
   } else if (e.data == "abort") {

@@ -19,9 +19,9 @@ function run_test() {
     "disk",
     Ci.nsICacheStorage.OPEN_TRUNCATE,
     Services.loadContextInfo.default,
-    new OpenCallback(NEW | WAITFORWRITE, "", payload, function(entry) {
+    new OpenCallback(NEW | WAITFORWRITE, "", payload, function (entry) {
       var is = entry.openInputStream(0);
-      pumpReadStream(is, function(read) {
+      pumpReadStream(is, function (read) {
         Assert.equal(read.length, kChunkSize + 10);
         is.close();
         Assert.ok(read == payload); // not using do_check_eq since logger will fail for the 1/4MB string

@@ -23,10 +23,10 @@
 // TODO(emilio): We should remove the opaque type now, cbindgen should be able
 // to just generate the forward declaration.
 
-SERVO_BOXED_TYPE(StyleSet, RawServoStyleSet)
-SERVO_BOXED_TYPE(AnimationValueMap, RawServoAnimationValueMap)
-SERVO_BOXED_TYPE(AuthorStyles, RawServoAuthorStyles)
-SERVO_BOXED_TYPE(SelectorList, RawServoSelectorList)
-SERVO_BOXED_TYPE(SharedMemoryBuilder, RawServoSharedMemoryBuilder)
-SERVO_BOXED_TYPE(SourceSizeList, RawServoSourceSizeList)
-SERVO_BOXED_TYPE(UseCounters, StyleUseCounters)
+SERVO_BOXED_TYPE(StyleSet, PerDocumentStyleData)
+SERVO_BOXED_TYPE(AnimationValueMap, AnimationValueMap)
+SERVO_BOXED_TYPE(AuthorStyles, AuthorStyles)
+SERVO_BOXED_TYPE(SelectorList, SelectorList)
+SERVO_BOXED_TYPE(SharedMemoryBuilder, SharedMemoryBuilder)
+SERVO_BOXED_TYPE(SourceSizeList, SourceSizeList)
+SERVO_BOXED_TYPE(UseCounters, UseCounters)

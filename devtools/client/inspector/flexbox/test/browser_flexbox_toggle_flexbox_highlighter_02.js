@@ -8,16 +8,14 @@
 
 const TEST_URI = URL_ROOT + "doc_flexbox_specific_cases.html";
 
-add_task(async function() {
+add_task(async function () {
   await addTab(TEST_URI);
   const { inspector, flexboxInspector } = await openLayoutView();
   const { document: doc } = flexboxInspector;
   const { store } = inspector;
   const HIGHLIGHTER_TYPE = inspector.highlighters.TYPES.FLEXBOX;
-  const {
-    getActiveHighlighter,
-    getNodeForActiveHighlighter,
-  } = getHighlighterTestHelpers(inspector);
+  const { getActiveHighlighter, getNodeForActiveHighlighter } =
+    getHighlighterTestHelpers(inspector);
 
   const onFlexHighlighterToggleRendered = waitForDOM(
     doc,

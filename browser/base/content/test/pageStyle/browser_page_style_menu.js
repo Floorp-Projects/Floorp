@@ -10,7 +10,7 @@ function fillPopupAndGetItems() {
 }
 
 function getRootColor() {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     return content.document.defaultView.getComputedStyle(
       content.document.documentElement
     ).color;
@@ -46,7 +46,7 @@ add_task(async function test_menu() {
   let validLinks = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [items],
-    function(contentItems) {
+    function (contentItems) {
       let contentValidLinks = 0;
       for (let el of content.document.querySelectorAll("link, style")) {
         var title = el.getAttribute("title");
@@ -101,14 +101,14 @@ add_task(async function test_menu() {
   // Assert that the menu works as expected.
   disableStyles.click();
 
-  await TestUtils.waitForCondition(async function() {
+  await TestUtils.waitForCondition(async function () {
     let color = await getRootColor();
     return color != LIME && color != BLUE;
   }, "ensuring disabled styles work");
 
   otherStyles.click();
 
-  await TestUtils.waitForCondition(async function() {
+  await TestUtils.waitForCondition(async function () {
     let color = await getRootColor();
     return color == BLUE;
   }, "ensuring alternate styles work. clicking on: " + otherStyles.label);
@@ -116,7 +116,7 @@ add_task(async function test_menu() {
   defaultStyles.click();
 
   info("ensuring default styles work");
-  await TestUtils.waitForCondition(async function() {
+  await TestUtils.waitForCondition(async function () {
     let color = await getRootColor();
     return color == LIME;
   }, "ensuring default styles work");
@@ -132,7 +132,7 @@ add_task(async function test_default_style_with_no_sheets() {
       url: PAGE,
       waitForLoad: true,
     },
-    async function(browser) {
+    async function (browser) {
       await promiseStylesheetsLoaded(browser, 2);
 
       let menuitems = fillPopupAndGetItems();
@@ -145,7 +145,7 @@ add_task(async function test_default_style_with_no_sheets() {
 
       // Reset the styles.
       document.getElementById("menu_pageStylePersistentOnly").click();
-      await TestUtils.waitForCondition(async function() {
+      await TestUtils.waitForCondition(async function () {
         let color = await getRootColor();
         return color != BLUE && color != RED;
       });
@@ -162,7 +162,7 @@ add_task(async function test_page_style_file() {
   const FILE_PAGE = Services.io.newFileURI(
     new FileUtils.File(getTestFilePath("page_style_sample.html"))
   ).spec;
-  await BrowserTestUtils.withNewTab(FILE_PAGE, async function(browser) {
+  await BrowserTestUtils.withNewTab(FILE_PAGE, async function (browser) {
     await promiseStylesheetsLoaded(browser, kStyleSheetsInPageStyleSample);
     let menuitems = fillPopupAndGetItems();
     is(

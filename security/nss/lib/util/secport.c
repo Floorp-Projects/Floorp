@@ -800,3 +800,80 @@ NSS_SecureMemcmpZero(const void *mem, size_t n)
     /* 0 <= r < 256, so -r has bit 8 set when r != 0 */
     return 1 & (-r >> 8);
 }
+
+/*
+ * A "value barrier" prevents the compiler from making optimizations based on
+ * the value that a variable takes.
+ *
+ * Standard C does not have value barriers, so C implementations of them are
+ * compiler-specific and are not guaranteed to be effective. Thus, the value
+ * barriers here are a best-effort, defense-in-depth, strategy. They are not a
+ * substitute for standard constant-time programming discipline.
+ *
+ * Some implementations have a performance penalty, so value barriers should
+ * be used sparingly.
+ */
+static inline int
+value_barrier_int(int x)
+{
+#if defined(__GNUC__) || defined(__clang__)
+    /* This inline assembly trick from Chandler Carruth's CppCon 2015 talk
+     * generates no instructions.
+     *
+     * "+r"(x) means that x will be mapped to a register that is both an input
+     * and an output to the assembly routine (""). The compiler will not
+     * inspect the assembly routine itself, so it cannot assume anything about
+     * the value of x after this line.
+     */
+    __asm__(""
+            : "+r"(x)
+            : /* no other inputs */);
+    return x;
+#else
+    /* If the compiler does not support the inline assembly trick above, we can
+     * put x in `volatile` storage and read it out again. This will generate
+     * explict store and load instructions, and possibly more depending on the
+     * target.
+     */
+    volatile int y = x;
+    return y;
+#endif
+}
+
+/*
+ * A branch-free implementation of
+ *      if (!b) {
+ *           memmove(dest, src0, n);
+ *      } else {
+ *           memmove(dest, src1, n);
+ *      }
+ *
+ * The memmove is performed with src0 if `b == 0` and with src1
+ * otherwise.
+ *
+ * As with memmove, the selected src can overlap dest.
+ *
+ * Each of dest, src0, and src1 must point to an allocated buffer
+ * of at least n bytes.
+ */
+void
+NSS_SecureSelect(void *dest, const void *src0, const void *src1, size_t n, unsigned char b)
+
+{
+    // This value barrier makes it safe for the compiler to inline
+    // NSS_SecureSelect into a routine where it could otherwise infer something
+    // about the value of b, e.g. that b is 0/1 valued.
+    int w = value_barrier_int(b);
+
+    // 0 <= b < 256, and int is at least 16 bits, so -w has bits 8-15
+    // set when w != 0.
+    unsigned char mask = 0xff & (-w >> 8);
+
+    for (size_t i = 0; i < n; ++i) {
+        unsigned char s0i = ((unsigned char *)src0)[i];
+        unsigned char s1i = ((unsigned char *)src1)[i];
+        // if mask == 0 this simplifies to s0 ^ 0
+        // if mask == -1 this simplifies to s0 ^ s0 ^ s1
+        ((unsigned char *)dest)[i] = s0i ^ (mask & (s0i ^ s1i));
+    }
+}

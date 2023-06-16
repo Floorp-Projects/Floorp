@@ -60,7 +60,7 @@ function promiseImageDownloaded() {
     var destFile = destDir.clone();
 
     MockFilePicker.displayDirectory = destDir;
-    MockFilePicker.showCallback = function(fp) {
+    MockFilePicker.showCallback = function (fp) {
       fileName = fp.defaultString;
       destFile.append(fileName);
       MockFilePicker.setFiles([destFile]);
@@ -70,7 +70,7 @@ function promiseImageDownloaded() {
     mockTransferCallback = onTransferComplete;
     mockTransferRegisterer.register();
 
-    registerCleanupFunction(function() {
+    registerCleanupFunction(function () {
       mockTransferCallback = null;
       mockTransferRegisterer.unregister();
       MockFilePicker.cleanup();
@@ -79,7 +79,7 @@ function promiseImageDownloaded() {
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   let testURI =
     "http://mochi.test:8888/browser/browser/base/content/test/general/bug792517.html";
   let privateWindow = await BrowserTestUtils.openNewBrowserWindow({

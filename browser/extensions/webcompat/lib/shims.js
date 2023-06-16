@@ -18,17 +18,17 @@ const platformPromise = browser.runtime.getPlatformInfo().then(info => {
   return info.os === "android" ? "android" : "desktop";
 });
 
-let debug = async function() {
+let debug = async function () {
   if ((await releaseBranchPromise) !== "release_or_beta") {
     console.debug.apply(this, arguments);
   }
 };
-let error = async function() {
+let error = async function () {
   if ((await releaseBranchPromise) !== "release_or_beta") {
     console.error.apply(this, arguments);
   }
 };
-let warn = async function() {
+let warn = async function () {
   if ((await releaseBranchPromise) !== "release_or_beta") {
     console.warn.apply(this, arguments);
   }
@@ -116,10 +116,8 @@ class Shim {
 
       this._disabledByReleaseBranch = false;
       for (const supportedBranchAndPlatform of this.branches || []) {
-        const [
-          supportedBranch,
-          supportedPlatform,
-        ] = supportedBranchAndPlatform.split(":");
+        const [supportedBranch, supportedPlatform] =
+          supportedBranchAndPlatform.split(":");
         if (
           (!supportedPlatform || supportedPlatform == platform) &&
           supportedBranch != branch
@@ -973,8 +971,9 @@ class Shims {
       const redirect = target || file;
 
       warn(
-        `Shimming tracking ${type} ${url} on tab ${tabId} frame ${frameId} with ${redirect ||
-          runFirst}`
+        `Shimming tracking ${type} ${url} on tab ${tabId} frame ${frameId} with ${
+          redirect || runFirst
+        }`
       );
 
       const warning = `${name} is being shimmed by Firefox. See https://bugzilla.mozilla.org/show_bug.cgi?id=${bug} for details.`;

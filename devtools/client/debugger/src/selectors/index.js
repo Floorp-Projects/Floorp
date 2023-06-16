@@ -14,7 +14,6 @@ export { getBreakpointSources } from "./breakpointSources";
 export * from "./event-listeners";
 export * from "./exceptions";
 export * from "./expressions";
-export * from "./file-search";
 export { getCallStackFrames } from "./getCallStackFrames";
 export { isLineInScope } from "./isLineInScope";
 export { isSelectedFrameVisible } from "./isSelectedFrameVisible";
@@ -41,7 +40,7 @@ import { objectInspector } from "devtools/client/shared/components/reps/index";
 
 const { reducer } = objectInspector;
 
-Object.keys(reducer).forEach(function(key) {
+Object.keys(reducer).forEach(function (key) {
   if (key === "default" || key === "__esModule") {
     return;
   }

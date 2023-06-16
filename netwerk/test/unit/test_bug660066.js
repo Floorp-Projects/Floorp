@@ -41,10 +41,7 @@ function run_test() {
   do_check_uri_neq(simpleURI, fileDataURI);
 
   do_info("Changing the nsSimpleURI spec to match the nsFileDataURI");
-  simpleURI = simpleURI
-    .mutate()
-    .setSpec(BLOBURI_SPEC)
-    .finalize();
+  simpleURI = simpleURI.mutate().setSpec(BLOBURI_SPEC).finalize();
 
   do_info("Verifying that .spec matches");
   Assert.equal(simpleURI.spec, fileDataURI.spec);

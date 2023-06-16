@@ -11,7 +11,7 @@ const TEST_URI = `data:text/html,<!DOCTYPE html><meta charset=utf8><script>
   console.log("in group");
 </script>`;
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
   const outputScroller = hud.ui.outputScroller;
 
@@ -54,7 +54,7 @@ add_task(async function() {
       "to bottom"
   );
   const onNewMessage = waitForMessageByType(hud, "new-message", ".console-api");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.console.group("GROUP-2");
     content.console.log("new-message");
   });

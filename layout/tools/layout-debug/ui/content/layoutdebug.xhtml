@@ -19,114 +19,259 @@
 
 -->
 
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        xmlns:html="http://www.w3.org/1999/xhtml"
-        id="main-window"
-        align="stretch"
-        data-l10n-id="layoutdebug-main-window"
-        windowtype="mozapp:layoutdebug"
-        onload="OnLDBLoad();"
-        onclose="OnLDBBeforeUnload(event);"
-        onunload="OnLDBUnload();"
-        width="1024" height="768"
-        screenX="4" screenY="4"
-        >
-
+<window
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  id="main-window"
+  align="stretch"
+  data-l10n-id="layoutdebug-main-window"
+  windowtype="mozapp:layoutdebug"
+  onload="OnLDBLoad();"
+  onclose="OnLDBBeforeUnload(event);"
+  onunload="OnLDBUnload();"
+  width="1024"
+  height="768"
+  screenX="4"
+  screenY="4"
+>
   <linkset>
-    <html:link rel="localization" href="layoutdebug/layoutdebug.ftl"/>
+    <html:link rel="localization" href="layoutdebug/layoutdebug.ftl" />
   </linkset>
 
-  <script src="chrome://layoutdebug/content/layoutdebug.js"/>
+  <script src="chrome://layoutdebug/content/layoutdebug.js" />
 
   <commandset id="tasksCommands">
-    <command id="cmd_open" oncommand="openFile();"/>
-    <command id="cmd_close" oncommand="window.close();"/>
-    <command id="cmd_focusURLBar" oncommand="focusURLBar();"/>
-    <command id="cmd_reload" oncommand="gBrowser.reload();"/>
-    <command id="cmd_dumpContent" oncommand="gDebugger.dumpContent();"/>
-    <command id="cmd_dumpFrames" oncommand="gDebugger.dumpFrames();"/>
-    <command id="cmd_dumpFramesInCSSPixels" oncommand="gDebugger.dumpFramesInCSSPixels();"/>
-    <command id="cmd_dumpTextRuns" oncommand="gDebugger.dumpTextRuns();"/>
-    <command id="cmd_openDevTools" oncommand="gDebugger.openDevTools();"/>
+    <command id="cmd_open" oncommand="openFile();" />
+    <command id="cmd_close" oncommand="window.close();" />
+    <command id="cmd_focusURLBar" oncommand="focusURLBar();" />
+    <command id="cmd_reload" oncommand="gBrowser.reload();" />
+    <command id="cmd_dumpContent" oncommand="gDebugger.dumpContent();" />
+    <command id="cmd_dumpFrames" oncommand="gDebugger.dumpFrames();" />
+    <command
+      id="cmd_dumpFramesInCSSPixels"
+      oncommand="gDebugger.dumpFramesInCSSPixels();"
+    />
+    <command id="cmd_dumpTextRuns" oncommand="gDebugger.dumpTextRuns();" />
+    <command id="cmd_openDevTools" oncommand="gDebugger.openDevTools();" />
   </commandset>
 
   <keyset id="tasksKeys">
-    <key id="key_open" key="O" modifiers="accel" command="cmd_open"/>
-    <key id="key_close" key="W" modifiers="accel" command="cmd_close"/>
-    <key id="key_focusURLBar" key="L" modifiers="accel" command="cmd_focusURLBar"/>
-    <key id="key_reload" key="R" modifiers="accel" command="cmd_reload"/>
-    <key id="key_dumpContent" key="D" modifiers="accel" command="cmd_dumpContent"/> <!-- "D" means DOM tree -->
-    <key id="key_dumpFrames" key="F" modifiers="accel" command="cmd_dumpFrames"/>
-    <key id="key_dumpFramesInCSSPixels" key="P" modifiers="accel" command="cmd_dumpFramesInCSSPixels"/>
-    <key id="key_dumpTextRuns" key="T" modifiers="accel" command="cmd_dumpTextRuns"/>
-    <key id="key_devTools" keycode="VK_F12" command="cmd_openDevTools"/>
+    <key id="key_open" key="O" modifiers="accel" command="cmd_open" />
+    <key id="key_close" key="W" modifiers="accel" command="cmd_close" />
+    <key
+      id="key_focusURLBar"
+      key="L"
+      modifiers="accel"
+      command="cmd_focusURLBar"
+    />
+    <key id="key_reload" key="R" modifiers="accel" command="cmd_reload" />
+    <key
+      id="key_dumpContent"
+      key="D"
+      modifiers="accel"
+      command="cmd_dumpContent"
+    />
+    <!-- "D" means DOM tree -->
+    <key
+      id="key_dumpFrames"
+      key="F"
+      modifiers="accel"
+      command="cmd_dumpFrames"
+    />
+    <key
+      id="key_dumpFramesInCSSPixels"
+      key="P"
+      modifiers="accel"
+      command="cmd_dumpFramesInCSSPixels"
+    />
+    <key
+      id="key_dumpTextRuns"
+      key="T"
+      modifiers="accel"
+      command="cmd_dumpTextRuns"
+    />
+    <key id="key_devTools" keycode="VK_F12" command="cmd_openDevTools" />
   </keyset>
 
   <vbox flex="1">
-
     <toolbox>
       <toolbar type="menubar">
-      <menubar id="main-menubar">
-        <menu id="menu_file" label="File" accesskey="F">
-          <menupopup id="menu_FilePopup">
-            <menuitem id="menu_open" label="Open File…" accesskey="O" key="key_open" command="cmd_open"/>
-            <menuitem id="menu_close" label="Close" accesskey="C" key="key_close" command="cmd_close"/>
-          </menupopup>
-        </menu>
-        <menu data-l10n-id="layoutdebug-toggle-menu">
-          <menupopup>
-            <menuitem type="checkbox" id="menu_paintDumping" data-l10n-id="layoutdebug-paint-dumping" oncommand="toggle(this);" />
-            <menuitem type="checkbox" id="menu_invalidateDumping" data-l10n-id="layoutdebug-invalidate-dumping" oncommand="toggle(this);" />
-            <menuseparator />
-            <menuitem type="checkbox" id="menu_eventDumping" data-l10n-id="layoutdebug-event-dumping" oncommand="toggle(this);" />
-            <menuitem type="checkbox" id="menu_motionEventDumping" data-l10n-id="layoutdebug-motion-event-dumping" oncommand="toggle(this);" />
-            <menuitem type="checkbox" id="menu_crossingEventDumping" data-l10n-id="layoutdebug-crossing-event-dumping" oncommand="toggle(this);" />
-            <menuseparator />
-            <menuitem type="checkbox" id="menu_reflowCounts" data-l10n-id="layoutdebug-reflow-counts" oncommand="toggle(this);" />
-            <menuitem type="checkbox" id="menu_pagedMode" data-l10n-id="layoutdebug-paged-mode" oncommand="toggle(this);" />
-          </menupopup>
-        </menu>
-        <menu data-l10n-id="layoutdebug-dump-menu">
-          <menupopup>
-            <menuitem id="menu_processIDs" label="Process IDs" accesskey="P" oncommand="gDebugger.dumpProcessIDs();" />
-            <menuitem id="menu_dumpContent" data-l10n-id="layoutdebug-dump-content" oncommand="gDebugger.dumpContent();" />
-            <menuitem id="menu_dumpFrames" data-l10n-id="layoutdebug-dump-frames" oncommand="gDebugger.dumpFrames();" />
-            <menuitem id="menu_dumpFramesInCSSPixels" data-l10n-id="layoutdebug-dump-frames-in-css-pixels" oncommand="gDebugger.dumpFramesInCSSPixels();" />
-            <menuitem id="menu_dumpTextRuns" data-l10n-id="layoutdebug-dump-text-runs" oncommand="gDebugger.dumpTextRuns();" />
-            <menuitem id="menu_dumpViews" data-l10n-id="layoutdebug-dump-views" oncommand="gDebugger.dumpViews();" />
-            <menuitem id="menu_dumpCounterManager" data-l10n-id="layoutdebug-dump-counter-manager" oncommand="gDebugger.dumpCounterManager();" />
-            <menuseparator />
-            <menuitem id="menu_dumpStyleSheets" data-l10n-id="layoutdebug-dump-style-sheets" oncommand="gDebugger.dumpStyleSheets();" />
-            <menuitem id="menu_dumpMatchedRules" data-l10n-id="layoutdebug-dump-matched-rules" oncommand="gDebugger.dumpMatchedRules();" />
-            <menuitem id="menu_dumpComputedStyles" data-l10n-id="layoutdebug-dump-computed-styles" oncommand="gDebugger.dumpComputedStyles();" />
-            <menuseparator />
-            <menuitem id="menu_dumpReflowStats" data-l10n-id="layoutdebug-dump-reflow-stats" oncommand="gDebugger.dumpReflowStats();" />
-          </menupopup>
-        </menu>
-        <menu id="tasksMenu"/>
-        <menu id="menu_Help"/>
-      </menubar>
+        <menubar id="main-menubar">
+          <menu id="menu_file" label="File" accesskey="F">
+            <menupopup id="menu_FilePopup">
+              <menuitem
+                id="menu_open"
+                label="Open File…"
+                accesskey="O"
+                key="key_open"
+                command="cmd_open"
+              />
+              <menuitem
+                id="menu_close"
+                label="Close"
+                accesskey="C"
+                key="key_close"
+                command="cmd_close"
+              />
+            </menupopup>
+          </menu>
+          <menu data-l10n-id="layoutdebug-toggle-menu">
+            <menupopup>
+              <menuitem
+                type="checkbox"
+                id="menu_paintDumping"
+                data-l10n-id="layoutdebug-paint-dumping"
+                oncommand="toggle(this);"
+              />
+              <menuitem
+                type="checkbox"
+                id="menu_invalidateDumping"
+                data-l10n-id="layoutdebug-invalidate-dumping"
+                oncommand="toggle(this);"
+              />
+              <menuseparator />
+              <menuitem
+                type="checkbox"
+                id="menu_eventDumping"
+                data-l10n-id="layoutdebug-event-dumping"
+                oncommand="toggle(this);"
+              />
+              <menuitem
+                type="checkbox"
+                id="menu_motionEventDumping"
+                data-l10n-id="layoutdebug-motion-event-dumping"
+                oncommand="toggle(this);"
+              />
+              <menuitem
+                type="checkbox"
+                id="menu_crossingEventDumping"
+                data-l10n-id="layoutdebug-crossing-event-dumping"
+                oncommand="toggle(this);"
+              />
+              <menuseparator />
+              <menuitem
+                type="checkbox"
+                id="menu_reflowCounts"
+                data-l10n-id="layoutdebug-reflow-counts"
+                oncommand="toggle(this);"
+              />
+              <menuitem
+                type="checkbox"
+                id="menu_pagedMode"
+                data-l10n-id="layoutdebug-paged-mode"
+                oncommand="toggle(this);"
+              />
+            </menupopup>
+          </menu>
+          <menu data-l10n-id="layoutdebug-dump-menu">
+            <menupopup>
+              <menuitem
+                id="menu_processIDs"
+                label="Process IDs"
+                accesskey="P"
+                oncommand="gDebugger.dumpProcessIDs();"
+              />
+              <menuitem
+                id="menu_dumpContent"
+                data-l10n-id="layoutdebug-dump-content"
+                oncommand="gDebugger.dumpContent();"
+              />
+              <menuitem
+                id="menu_dumpFrames"
+                data-l10n-id="layoutdebug-dump-frames"
+                oncommand="gDebugger.dumpFrames();"
+              />
+              <menuitem
+                id="menu_dumpFramesInCSSPixels"
+                data-l10n-id="layoutdebug-dump-frames-in-css-pixels"
+                oncommand="gDebugger.dumpFramesInCSSPixels();"
+              />
+              <menuitem
+                id="menu_dumpTextRuns"
+                data-l10n-id="layoutdebug-dump-text-runs"
+                oncommand="gDebugger.dumpTextRuns();"
+              />
+              <menuitem
+                id="menu_dumpViews"
+                data-l10n-id="layoutdebug-dump-views"
+                oncommand="gDebugger.dumpViews();"
+              />
+              <menuitem
+                id="menu_dumpCounterManager"
+                data-l10n-id="layoutdebug-dump-counter-manager"
+                oncommand="gDebugger.dumpCounterManager();"
+              />
+              <menuseparator />
+              <menuitem
+                id="menu_dumpStyleSheets"
+                data-l10n-id="layoutdebug-dump-style-sheets"
+                oncommand="gDebugger.dumpStyleSheets();"
+              />
+              <menuitem
+                id="menu_dumpMatchedRules"
+                data-l10n-id="layoutdebug-dump-matched-rules"
+                oncommand="gDebugger.dumpMatchedRules();"
+              />
+              <menuitem
+                id="menu_dumpComputedStyles"
+                data-l10n-id="layoutdebug-dump-computed-styles"
+                oncommand="gDebugger.dumpComputedStyles();"
+              />
+              <menuseparator />
+              <menuitem
+                id="menu_dumpReflowStats"
+                data-l10n-id="layoutdebug-dump-reflow-stats"
+                oncommand="gDebugger.dumpReflowStats();"
+              />
+            </menupopup>
+          </menu>
+          <menu id="tasksMenu" />
+          <menu id="menu_Help" />
+        </menubar>
       </toolbar>
 
       <toolbar>
-        <toolbarbutton id="back-button" class="toolbarbutton-1"
-                       data-l10n-id="layoutdebug-back-button"
-                       oncommand="gBrowser.goBack();" />
-        <toolbarbutton id="forward-button" class="toolbarbutton-1"
-                       data-l10n-id="layoutdebug-forward-button"
-                       oncommand="gBrowser.goForward();" />
-        <toolbarbutton id="reload-button" class="toolbarbutton-1"
-                       data-l10n-id="layoutdebug-reload-button"
-                       command="cmd_reload" />
-        <toolbarbutton id="stop-button" class="toolbarbutton-1"
-                       data-l10n-id="layoutdebug-stop-button"
-                       oncommand="gBrowser.stop();" />
+        <toolbarbutton
+          id="back-button"
+          class="toolbarbutton-1"
+          data-l10n-id="layoutdebug-back-button"
+          oncommand="gBrowser.goBack();"
+        />
+        <toolbarbutton
+          id="forward-button"
+          class="toolbarbutton-1"
+          data-l10n-id="layoutdebug-forward-button"
+          oncommand="gBrowser.goForward();"
+        />
+        <toolbarbutton
+          id="reload-button"
+          class="toolbarbutton-1"
+          data-l10n-id="layoutdebug-reload-button"
+          command="cmd_reload"
+        />
+        <toolbarbutton
+          id="stop-button"
+          class="toolbarbutton-1"
+          data-l10n-id="layoutdebug-stop-button"
+          oncommand="gBrowser.stop();"
+        />
 
-        <html:input id="urlbar" style="flex: 1;" onkeypress="if (event.keyCode == 13) go();"/>
+        <html:input
+          id="urlbar"
+          style="flex: 1"
+          onkeypress="if (event.keyCode == 13) go();"
+        />
       </toolbar>
     </toolbox>
 
-    <browser flex="1" id="browser" type="content" primary="true" remote="true" remoteType="web"/>
+    <browser
+      flex="1"
+      id="browser"
+      type="content"
+      primary="true"
+      remote="true"
+      remoteType="web"
+    />
 
     <hbox>
       <description id="status-text" value="" />

@@ -8,12 +8,12 @@
     "types": [
       {
         "$extend": "PermissionNoPrompt",
-        "choices": [{
-          "type": "string",
-          "enum": [
-            "contextualIdentities"
-          ]
-        }]
+        "choices": [
+          {
+            "type": "string",
+            "enum": ["contextualIdentities"]
+          }
+        ]
       }
     ]
   },
@@ -27,12 +27,30 @@
         "type": "object",
         "description": "Represents information about a contextual identity.",
         "properties": {
-          "name": {"type": "string", "description": "The name of the contextual identity."},
-          "icon": {"type": "string", "description": "The icon name of the contextual identity."},
-          "iconUrl": {"type": "string", "description": "The icon url of the contextual identity."},
-          "color": {"type": "string", "description": "The color name of the contextual identity."},
-          "colorCode": {"type": "string", "description": "The color hash of the contextual identity."},
-          "cookieStoreId": {"type": "string", "description": "The cookie store ID of the contextual identity."}
+          "name": {
+            "type": "string",
+            "description": "The name of the contextual identity."
+          },
+          "icon": {
+            "type": "string",
+            "description": "The icon name of the contextual identity."
+          },
+          "iconUrl": {
+            "type": "string",
+            "description": "The icon url of the contextual identity."
+          },
+          "color": {
+            "type": "string",
+            "description": "The color name of the contextual identity."
+          },
+          "colorCode": {
+            "type": "string",
+            "description": "The color hash of the contextual identity."
+          },
+          "cookieStoreId": {
+            "type": "string",
+            "description": "The cookie store ID of the contextual identity."
+          }
         }
       }
     ],
@@ -61,7 +79,11 @@
             "name": "details",
             "description": "Information to filter the contextual identities being retrieved.",
             "properties": {
-              "name": {"type": "string", "optional": true, "description": "Filters the contextual identity by name."}
+              "name": {
+                "type": "string",
+                "optional": true,
+                "description": "Filters the contextual identity by name."
+              }
             }
           }
         ]
@@ -77,9 +99,21 @@
             "name": "details",
             "description": "Details about the contextual identity being created.",
             "properties": {
-              "name": {"type": "string", "optional": false, "description": "The name of the contextual identity." },
-              "color": {"type": "string", "optional": false, "description": "The color of the contextual identity." },
-              "icon": {"type": "string", "optional": false, "description": "The icon of the contextual identity." }
+              "name": {
+                "type": "string",
+                "optional": false,
+                "description": "The name of the contextual identity."
+              },
+              "color": {
+                "type": "string",
+                "optional": false,
+                "description": "The color of the contextual identity."
+              },
+              "icon": {
+                "type": "string",
+                "optional": false,
+                "description": "The icon of the contextual identity."
+              }
             }
           }
         ]
@@ -100,9 +134,21 @@
             "name": "details",
             "description": "Details about the contextual identity being created.",
             "properties": {
-              "name": {"type": "string", "optional": true, "description": "The name of the contextual identity." },
-              "color": {"type": "string", "optional": true, "description": "The color of the contextual identity." },
-              "icon": {"type": "string", "optional": true, "description": "The icon of the contextual identity." }
+              "name": {
+                "type": "string",
+                "optional": true,
+                "description": "The name of the contextual identity."
+              },
+              "color": {
+                "type": "string",
+                "optional": true,
+                "description": "The color of the contextual identity."
+              },
+              "icon": {
+                "type": "string",
+                "optional": true,
+                "description": "The icon of the contextual identity."
+              }
             }
           }
         ]
@@ -131,7 +177,10 @@
             "type": "object",
             "name": "changeInfo",
             "properties": {
-              "contextualIdentity": {"$ref": "ContextualIdentity", "description": "Contextual identity that has been updated"}
+              "contextualIdentity": {
+                "$ref": "ContextualIdentity",
+                "description": "Contextual identity that has been updated"
+              }
             }
           }
         ]
@@ -145,7 +194,10 @@
             "type": "object",
             "name": "changeInfo",
             "properties": {
-              "contextualIdentity": {"$ref": "ContextualIdentity", "description": "Contextual identity that has been created"}
+              "contextualIdentity": {
+                "$ref": "ContextualIdentity",
+                "description": "Contextual identity that has been created"
+              }
             }
           }
         ]
@@ -159,7 +211,10 @@
             "type": "object",
             "name": "changeInfo",
             "properties": {
-              "contextualIdentity": {"$ref": "ContextualIdentity", "description": "Contextual identity that has been removed"}
+              "contextualIdentity": {
+                "$ref": "ContextualIdentity",
+                "description": "Contextual identity that has been removed"
+              }
             }
           }
         ]

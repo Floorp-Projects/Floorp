@@ -51,7 +51,7 @@ const TEST_DATA = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   await addTab(URL_ROOT + "doc_infinity_duration.html");
   const { panel } = await openAnimationInspector();
 

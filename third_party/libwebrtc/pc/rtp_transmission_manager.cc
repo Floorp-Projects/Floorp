@@ -150,10 +150,11 @@ RtpTransmissionManager::AddTrackPlanB(
       (track->kind() == MediaStreamTrackInterface::kAudioKind
            ? cricket::MEDIA_TYPE_AUDIO
            : cricket::MEDIA_TYPE_VIDEO);
-  auto new_sender =
-      CreateSender(media_type, track->id(), track, adjusted_stream_ids,
-                   init_send_encodings ? *init_send_encodings
-                                       : std::vector<RtpEncodingParameters>());
+  auto new_sender = CreateSender(
+      media_type, track->id(), track, adjusted_stream_ids,
+      init_send_encodings
+          ? *init_send_encodings
+          : std::vector<RtpEncodingParameters>(1, RtpEncodingParameters{}));
   if (track->kind() == MediaStreamTrackInterface::kAudioKind) {
     new_sender->internal()->SetMediaChannel(voice_media_send_channel());
     GetAudioTransceiver()->internal()->AddSender(new_sender);
@@ -217,10 +218,11 @@ RtpTransmissionManager::AddTrackUnifiedPlan(
     if (FindSenderById(sender_id)) {
       sender_id = rtc::CreateRandomUuid();
     }
-    auto sender = CreateSender(media_type, sender_id, track, stream_ids,
-                               init_send_encodings
-                                   ? *init_send_encodings
-                                   : std::vector<RtpEncodingParameters>());
+    auto sender = CreateSender(
+        media_type, sender_id, track, stream_ids,
+        init_send_encodings
+            ? *init_send_encodings
+            : std::vector<RtpEncodingParameters>(1, RtpEncodingParameters{}));
     auto receiver = CreateReceiver(media_type, rtc::CreateRandomUuid());
     transceiver = CreateAndAddTransceiver(sender, receiver);
     transceiver->internal()->set_created_by_addtrack(true);
@@ -411,7 +413,7 @@ void RtpTransmissionManager::AddAudioTrack(AudioTrackInterface* track,
   // Normal case; we've never seen this track before.
   auto new_sender = CreateSender(cricket::MEDIA_TYPE_AUDIO, track->id(),
                                  rtc::scoped_refptr<AudioTrackInterface>(track),
-                                 {stream->id()}, {});
+                                 {stream->id()}, {{}});
   new_sender->internal()->SetMediaChannel(voice_media_send_channel());
   GetAudioTransceiver()->internal()->AddSender(new_sender);
   // If the sender has already been configured in SDP, we call SetSsrc,
@@ -458,7 +460,7 @@ void RtpTransmissionManager::AddVideoTrack(VideoTrackInterface* track,
   // Normal case; we've never seen this track before.
   auto new_sender = CreateSender(cricket::MEDIA_TYPE_VIDEO, track->id(),
                                  rtc::scoped_refptr<VideoTrackInterface>(track),
-                                 {stream->id()}, {});
+                                 {stream->id()}, {{}});
   new_sender->internal()->SetMediaChannel(video_media_send_channel());
   GetVideoTransceiver()->internal()->AddSender(new_sender);
   const RtpSenderInfo* sender_info =

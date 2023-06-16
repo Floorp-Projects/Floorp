@@ -31,7 +31,7 @@ typedef pid_t PlatformThreadId;
 #  elif defined(OS_BSD)
 #    include <sys/types.h>
 typedef lwpid_t PlatformThreadId;
-#  elif defined(OS_MACOSX)
+#  elif defined(OS_MACOSX) || defined(OS_IOS)
 #    include <mach/mach.h>
 typedef mach_port_t PlatformThreadId;
 #  endif

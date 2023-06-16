@@ -7,7 +7,7 @@
  * Tests for timings columns. Note that the column
  * header is visible only if there are requests in the list.
  */
-add_task(async function() {
+add_task(async function () {
   const { monitor } = await initNetMonitor(SIMPLE_URL, {
     requestCount: 1,
   });

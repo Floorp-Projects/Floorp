@@ -160,24 +160,21 @@ class nsSocketTransportService final : public nsPISocketTransportService,
   Atomic<bool> mInitialized{false};
   // indicates whether we are currently in the process of shutting down
   Atomic<bool> mShuttingDown{false};
-  Atomic<bool> mSocketThreadShutDown{false};
-  // Effectively owned by the SocketThread
-  RefPtr<nsSocketTransportService> mSelf;
 
-  Mutex mLock MOZ_UNANNOTATED{"nsSocketTransportService::mLock"};
+  Mutex mLock{"nsSocketTransportService::mLock"};
   // Variables in the next section protected by mLock
 
   // mThread and mDirectTaskDispatcher are only ever modified on the main
   // thread. Will be set on Init and set to null after shutdown. You must access
   // mThread and mDirectTaskDispatcher outside the main thread via respectively
   // GetThreadSafely and GetDirectTaskDispatchedSafely().
-  nsCOMPtr<nsIThread> mThread;
+  nsCOMPtr<nsIThread> mThread MOZ_GUARDED_BY(mLock);
   // We store a pointer to mThread as a direct task dispatcher to avoid having
   // to do do_QueryInterface whenever we need to access the interface.
-  nsCOMPtr<nsIDirectTaskDispatcher> mDirectTaskDispatcher;
-  UniquePtr<PollableEvent> mPollableEvent;
-  bool mOffline{false};
-  bool mGoingOffline{false};
+  nsCOMPtr<nsIDirectTaskDispatcher> mDirectTaskDispatcher MOZ_GUARDED_BY(mLock);
+  UniquePtr<PollableEvent> mPollableEvent MOZ_GUARDED_BY(mLock);
+  bool mOffline MOZ_GUARDED_BY(mLock) = false;
+  bool mGoingOffline MOZ_GUARDED_BY(mLock) = false;
 
   // Detaches all sockets.
   void Reset(bool aGuardLocals);
@@ -288,7 +285,7 @@ class nsSocketTransportService final : public nsPISocketTransportService,
   // True if TCP keepalive is enabled globally.
   bool mKeepaliveEnabledPref{false};
   // Timeout of pollable event signalling.
-  TimeDuration mPollableEventTimeout;
+  TimeDuration mPollableEventTimeout MOZ_GUARDED_BY(mLock);
 
   Atomic<bool> mServingPendingQueue{false};
   Atomic<int32_t, Relaxed> mMaxTimePerPollIter{100};

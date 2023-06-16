@@ -15,7 +15,7 @@
 /* Only overwrite the deemphasized text color in non-dark mode. */
 @media not (prefers-color-scheme: dark) {
   :host {
-    --in-content-deemphasized-text: #737373;
+    --text-color-deemphasized: #737373;
   }
 }
 
@@ -262,7 +262,7 @@ input[type = "url"]:focus:-moz-ui-invalid:not(:placeholder-shown) ~ .tooltip-con
 .field-label {
   display: block;
   font-size: smaller;
-  color: var(--in-content-deemphasized-text);
+  color: var(--text-color-deemphasized);
   margin-bottom: 8px;
 }
 
@@ -413,7 +413,7 @@ input[name="password"] {
 }
 
 .vulnerable-alert > .alert-learn-more-link {
-  color: var(--in-content-deemphasized-text);
+  color: var(--text-color-deemphasized);
 }
 
 .error-message {

@@ -174,8 +174,7 @@ add_task(async function test_notification_ack_data() {
             'keyid="notification3"; salt="DFq188piWU7osPBgqn4Nlg"; rs=24',
           encoding: "aesgcm128",
         },
-        data:
-          "LKru3ZzxBZuAxYtsaCfaj_fehkrIvqbVd1iSwnwAUgnL-cTeDD-83blxHXTq7r0z9ydTdMtC3UjAcWi8LMnfY-BFzi0qJAjGYIikDA",
+        data: "LKru3ZzxBZuAxYtsaCfaj_fehkrIvqbVd1iSwnwAUgnL-cTeDD-83blxHXTq7r0z9ydTdMtC3UjAcWi8LMnfY-BFzi0qJAjGYIikDA",
       },
       ackCode: 100,
       receive: {
@@ -213,8 +212,7 @@ add_task(async function test_notification_ack_data() {
           encryption: 'keyid=v5;salt="TvjOou1TqJOQY_ZsOYV3Ww";rs=24',
           encoding: "aesgcm",
         },
-        data:
-          "rG9WYQ2ZwUgfj_tMlZ0vcIaNpBN05FW-9RUBZAM-UUZf0_9eGpuENBpUDAw3mFmd2XJpmvPvAtLVs54l3rGwg1o",
+        data: "rG9WYQ2ZwUgfj_tMlZ0vcIaNpBN05FW-9RUBZAM-UUZf0_9eGpuENBpUDAw3mFmd2XJpmvPvAtLVs54l3rGwg1o",
       },
       ackCode: 100,
       receive: {

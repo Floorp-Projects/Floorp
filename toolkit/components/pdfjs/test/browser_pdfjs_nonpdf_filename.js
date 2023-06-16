@@ -15,7 +15,7 @@ add_task(async function test_filename_nonpdf_extension() {
   var MockFilePicker = SpecialPowers.MockFilePicker;
   MockFilePicker.init(window);
   let filepickerNamePromise = new Promise(resolve => {
-    MockFilePicker.showCallback = function(fp) {
+    MockFilePicker.showCallback = function (fp) {
       resolve(fp.defaultString);
       return MockFilePicker.returnCancel;
     };
@@ -28,7 +28,7 @@ add_task(async function test_filename_nonpdf_extension() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: LINK_PAGE_URL },
-    async function(browser) {
+    async function (browser) {
       await SpecialPowers.spawn(browser, [], async () => {
         let link = content.document.getElementById("custom_filename");
         let response = await content.fetch(link.href, {

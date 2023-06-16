@@ -1,13 +1,13 @@
 const TESTPAGE = `${SECURE_TESTROOT}webapi_addon_listener.html`;
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.webapi.testing", true]],
   });
 });
 
 async function getListenerEvents(browser) {
-  let result = await SpecialPowers.spawn(browser, [], async function() {
+  let result = await SpecialPowers.spawn(browser, [], async function () {
     return content.document.getElementById("result").textContent;
   });
 
@@ -26,14 +26,14 @@ provider.createAddons([
 ]);
 
 // Test disable and enable from content
-add_task(async function() {
-  await BrowserTestUtils.withNewTab(TESTPAGE, async function(browser) {
+add_task(async function () {
+  await BrowserTestUtils.withNewTab(TESTPAGE, async function (browser) {
     let addon = await promiseAddonByID(ID);
     isnot(addon, null, "Test addon exists");
     is(addon.userDisabled, false, "addon is enabled");
 
     // Disable the addon from content.
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       return content.navigator.mozAddonManager
         .getAddonByID("test@tests.mozilla.org")
         .then(addon => addon.setEnabled(false));
@@ -47,7 +47,7 @@ add_task(async function() {
     Assert.deepEqual(events, expected, "Got expected disable events");
 
     // Enable the addon from content.
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       return content.navigator.mozAddonManager
         .getAddonByID("test@tests.mozilla.org")
         .then(addon => addon.setEnabled(true));

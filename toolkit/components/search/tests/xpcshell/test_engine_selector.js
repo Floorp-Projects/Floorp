@@ -99,13 +99,11 @@ add_task(async function setup() {
 });
 
 add_task(async function test_engine_selector() {
-  let {
-    engines,
-    privateDefault,
-  } = await engineSelector.fetchEngineConfiguration({
-    locale: "en-US",
-    region: "us",
-  });
+  let { engines, privateDefault } =
+    await engineSelector.fetchEngineConfiguration({
+      locale: "en-US",
+      region: "us",
+    });
   Assert.equal(
     privateDefault.engineName,
     "altavista",

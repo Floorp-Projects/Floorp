@@ -68,18 +68,10 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AddonManager",
-  "resource://gre/modules/AddonManager.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "SitePermissions",
-  "resource:///modules/SitePermissions.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+  SitePermissions: "resource:///modules/SitePermissions.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -94,7 +86,7 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/content-pref/service;1",
   "nsIContentPrefService2"
 );
-XPCOMUtils.defineLazyGetter(lazy, "gBrowserBundle", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gBrowserBundle", function () {
   return Services.strings.createBundle(
     "chrome://browser/locale/browser.properties"
   );
@@ -919,9 +911,8 @@ class XRPermissionPrompt extends PermissionPromptForRequest {
     };
 
     if (options.checkbox.show) {
-      options.checkbox.label = lazy.gBrowserBundle.GetStringFromName(
-        "xr.remember"
-      );
+      options.checkbox.label =
+        lazy.gBrowserBundle.GetStringFromName("xr.remember");
     }
 
     return options;
@@ -1239,9 +1230,8 @@ class MIDIPermissionPrompt extends SitePermsAddonInstallRequest {
     };
 
     if (options.checkbox.show) {
-      options.checkbox.label = lazy.gBrowserBundle.GetStringFromName(
-        "midi.remember"
-      );
+      options.checkbox.label =
+        lazy.gBrowserBundle.GetStringFromName("midi.remember");
     }
 
     return options;

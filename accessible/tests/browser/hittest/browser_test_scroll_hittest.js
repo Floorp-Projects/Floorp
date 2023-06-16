@@ -44,7 +44,7 @@ addAccessibleTask(
   <div id="footer-bar" style="height: 500px; background-color: blue;"></div>
 </div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const container = findAccessibleChildByID(docAcc, "container");
     const scrollable = findAccessibleChildByID(docAcc, "message-scrollable");
     const titleBar = findAccessibleChildByID(docAcc, "title-bar");

@@ -603,54 +603,76 @@ nscoord nsBlockFrame::SynthesizeFallbackBaseline(
   return Baseline::SynthesizeBOffsetFromMarginBox(this, aWM, aBaselineGroup);
 }
 
+template <typename LineIteratorType>
+Maybe<nscoord> nsBlockFrame::GetBaselineBOffset(
+    LineIteratorType aStart, LineIteratorType aEnd, WritingMode aWM,
+    BaselineSharingGroup aBaselineGroup,
+    BaselineExportContext aExportContext) const {
+  MOZ_ASSERT((std::is_same_v<LineIteratorType, ConstLineIterator> &&
+              aBaselineGroup == BaselineSharingGroup::First) ||
+                 (std::is_same_v<LineIteratorType, ConstReverseLineIterator> &&
+                  aBaselineGroup == BaselineSharingGroup::Last),
+             "Iterator direction must match baseline sharing group.");
+  for (auto line = aStart; line != aEnd; ++line) {
+    if (!line->IsBlock()) {
+      // XXX Is this the right test?  We have some bogus empty lines
+      // floating around, but IsEmpty is perhaps too weak.
+      if (line->BSize() != 0 || !line->IsEmpty()) {
+        const auto ascent = line->BStart() + line->GetLogicalAscent();
+        if (aBaselineGroup == BaselineSharingGroup::Last) {
+          return Some(BSize(aWM) - ascent);
+        }
+        return Some(ascent);
+      }
+      continue;
+    }
+    nsIFrame* kid = line->mFirstChild;
+    if (aWM.IsOrthogonalTo(kid->GetWritingMode())) {
+      continue;
+    }
+    if (aExportContext == BaselineExportContext::LineLayout &&
+        kid->IsTableWrapperFrame()) {
+      // `<table>` in inline-block context does not export any baseline.
+      continue;
+    }
+    const auto kidBaselineGroup =
+        aExportContext == BaselineExportContext::LineLayout
+            ? kid->GetDefaultBaselineSharingGroup()
+            : aBaselineGroup;
+    const auto kidBaseline =
+        kid->GetNaturalBaselineBOffset(aWM, kidBaselineGroup, aExportContext);
+    if (!kidBaseline) {
+      continue;
+    }
+    auto result = *kidBaseline;
+    if (kidBaselineGroup == BaselineSharingGroup::Last) {
+      result = kid->BSize(aWM) - result;
+    }
+    // Ignore relative positioning for baseline calculations.
+    const nsSize& sz = line->mContainerSize;
+    result += kid->GetLogicalNormalPosition(aWM, sz).B(aWM);
+    if (aBaselineGroup == BaselineSharingGroup::Last) {
+      return Some(BSize(aWM) - result);
+    }
+    return Some(result);
+  }
+  return Nothing{};
+}
+
 Maybe<nscoord> nsBlockFrame::GetNaturalBaselineBOffset(
-    WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
+    WritingMode aWM, BaselineSharingGroup aBaselineGroup,
+    BaselineExportContext aExportContext) const {
   if (StyleDisplay()->IsContainLayout()) {
     return Nothing{};
   }
 
   if (aBaselineGroup == BaselineSharingGroup::First) {
-    nscoord result;
-    if (!nsLayoutUtils::GetFirstLineBaseline(aWM, this, &result)) {
-      return Nothing{};
-    }
-    return Some(result);
+    return GetBaselineBOffset(LinesBegin(), LinesEnd(), aWM, aBaselineGroup,
+                              aExportContext);
   }
 
-  for (ConstReverseLineIterator line = LinesRBegin(), line_end = LinesREnd();
-       line != line_end; ++line) {
-    if (line->IsBlock()) {
-      nsIFrame* kid = line->mFirstChild;
-      if (aWM.IsOrthogonalTo(kid->GetWritingMode())) {
-        continue;
-      }
-      if (kid->IsTableWrapperFrame()) {
-        // `<table>` in block display context does not export any baseline.
-        continue;
-      }
-      const auto kidBaselineGroup = kid->GetDefaultBaselineSharingGroup();
-      const auto kidBaseline =
-          kid->GetNaturalBaselineBOffset(aWM, kidBaselineGroup);
-      if (!kidBaseline) {
-        continue;
-      }
-      auto result = *kidBaseline;
-      if (kidBaselineGroup == BaselineSharingGroup::Last) {
-        result = kid->BSize(aWM) - result;
-      }
-      // Ignore relative positioning for baseline calculations.
-      const nsSize& sz = line->mContainerSize;
-      result += kid->GetLogicalNormalPosition(aWM, sz).B(aWM);
-      return Some(BSize(aWM) - result);
-    } else {
-      // XXX Is this the right test?  We have some bogus empty lines
-      // floating around, but IsEmpty is perhaps too weak.
-      if (line->BSize() != 0 || !line->IsEmpty()) {
-        return Some(BSize(aWM) - (line->BStart() + line->GetLogicalAscent()));
-      }
-    }
-  }
-  return Nothing{};
+  return GetBaselineBOffset(LinesRBegin(), LinesREnd(), aWM, aBaselineGroup,
+                            aExportContext);
 }
 
 nscoord nsBlockFrame::GetCaretBaseline() const {
@@ -1570,7 +1592,8 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
       const auto baselineGroup = BaselineSharingGroup::First;
       Maybe<nscoord> result;
       if (MOZ_LIKELY(!wm.IsOrthogonalTo(marker->GetWritingMode()))) {
-        result = marker->GetNaturalBaselineBOffset(wm, baselineGroup);
+        result = marker->GetNaturalBaselineBOffset(
+            wm, baselineGroup, BaselineExportContext::LineLayout);
       }
       const auto markerBaseline = result.valueOrFrom([bbox, wm, marker]() {
         return bbox.BSize(wm) + marker->GetLogicalUsedMargin(wm).BEnd(wm);
@@ -2056,16 +2079,22 @@ void nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
       const nscoord maxBSize = aReflowInput.ComputedMaxBSize();
       if (maxBSize != NS_UNCONSTRAINEDSIZE &&
           aState.mConsumedBSize + bSize - borderPadding.BStart(wm) > maxBSize) {
-        nscoord bEnd = std::max(0, maxBSize - aState.mConsumedBSize) +
-                       borderPadding.BStart(wm);
-        // Note that |borderPadding| has GetSkipSides applied, so we ask
-        // aReflowInput for the actual value we'd use on a last fragment here:
-        bEnd += aReflowInput.ComputedLogicalBorderPadding(wm).BEnd(wm);
-        if (bEnd <= aReflowInput.AvailableBSize()) {
+        // Compute this fragment's block-size, with the max-block-size
+        // constraint taken into consideration.
+        const nscoord clampedBSizeWithoutEndBP =
+            std::max(0, maxBSize - aState.mConsumedBSize) +
+            borderPadding.BStart(wm);
+        const nscoord clampedBSize =
+            clampedBSizeWithoutEndBP + borderPadding.BEnd(wm);
+        if (clampedBSize <= aReflowInput.AvailableBSize()) {
           // We actually fit after applying `max-size` so we should be
           // Overflow-Incomplete instead.
-          bSize = bEnd;
+          bSize = clampedBSize;
           aState.mReflowStatus.SetOverflowIncomplete();
+        } else {
+          // We cannot fit after applying `max-size` with our block-end BP, so
+          // we should draw it in our next continuation.
+          bSize = clampedBSizeWithoutEndBP;
         }
       }
       finalSize.BSize(wm) = bSize;
@@ -2670,9 +2699,6 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowState& aState) {
     MOZ_ASSERT(presCtx->IsPaginated(),
                "canBreakForPageNames should not be set during non-paginated "
                "reflow");
-    MOZ_ASSERT(StaticPrefs::layout_css_named_pages_enabled(),
-               "canBreakForPageNames should not be set when "
-               "layout.css.named_pages.enabled is false");
   }
 
   // Reflow the lines that are already ours
@@ -5518,12 +5544,7 @@ void nsBlockFrame::DrainSelfPushedFloats() {
   // placeholders were in earlier blocks (since first-in-flows whose
   // placeholders are in this block will get pulled appropriately by
   // AddFloat, and will then be more likely to be in the correct order).
-  // FIXME: What if there's a continuation in our pushed floats list
-  // whose prev-in-flow is in a previous continuation of this block
-  // rather than this block?  Might we need to pull it back so we don't
-  // report ourselves complete?
-  // FIXME: Maybe we should just pull all of them back?
-  nsPresContext* presContext = PresContext();
+  mozilla::PresShell* presShell = PresShell();
   nsFrameList* ourPushedFloats = GetPushedFloats();
   if (ourPushedFloats) {
     // When we pull back floats, we want to put them with the pushed
@@ -5537,30 +5558,27 @@ void nsBlockFrame::DrainSelfPushedFloats() {
       insertionPrevSibling = f;
     }
 
-    for (nsIFrame *f = ourPushedFloats->LastChild(), *next; f; f = next) {
-      next = f->GetPrevSibling();
+    nsIFrame* f = ourPushedFloats->LastChild();
+    while (f) {
+      nsIFrame* prevSibling = f->GetPrevSibling();
 
-      if (f->GetPrevContinuation()) {
-        // FIXME
-      } else {
-        nsPlaceholderFrame* placeholder = f->GetPlaceholderFrame();
-        nsIFrame* floatOriginalParent =
-            presContext->PresShell()
-                ->FrameConstructor()
-                ->GetFloatContainingBlock(placeholder);
-        if (floatOriginalParent != this) {
-          // This is a first continuation that was pushed from one of our
-          // previous continuations.  Take it out of the pushed floats
-          // list and put it in our floats list, before any of our
-          // floats, but after other pushed floats.
-          ourPushedFloats->RemoveFrame(f);
-          mFloats.InsertFrame(nullptr, insertionPrevSibling, f);
-        }
+      nsPlaceholderFrame* placeholder = f->GetPlaceholderFrame();
+      nsIFrame* floatOriginalParent =
+          presShell->FrameConstructor()->GetFloatContainingBlock(placeholder);
+      if (floatOriginalParent != this) {
+        // This is a first continuation that was pushed from one of our
+        // previous continuations.  Take it out of the pushed floats
+        // list and put it in our floats list, before any of our
+        // floats, but after other pushed floats.
+        ourPushedFloats->RemoveFrame(f);
+        mFloats.InsertFrame(nullptr, insertionPrevSibling, f);
       }
+
+      f = prevSibling;
     }
 
     if (ourPushedFloats->IsEmpty()) {
-      RemovePushedFloats()->Delete(presContext->PresShell());
+      RemovePushedFloats()->Delete(presShell);
     }
   }
 }

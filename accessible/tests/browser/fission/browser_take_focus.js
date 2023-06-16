@@ -12,7 +12,7 @@ loadScripts(
 
 addAccessibleTask(
   `<div role="group"><input id="textbox" value="hello"/></div>`,
-  async function(browser, iframeDocAcc, contentDocAcc) {
+  async function (browser, iframeDocAcc, contentDocAcc) {
     const textbox = findAccessibleChildByID(iframeDocAcc, "textbox");
     const iframe = findAccessibleChildByID(contentDocAcc, "default-iframe-id");
     const iframeDoc = findAccessibleChildByID(

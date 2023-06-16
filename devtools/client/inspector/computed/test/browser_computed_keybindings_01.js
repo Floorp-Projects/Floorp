@@ -14,7 +14,7 @@ const TEST_URI = `
   <span class="matches">Some styled text</span>
 `;
 
-add_task(async function() {
+add_task(async function () {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, view } = await openComputedView();
   await selectNode(".matches", inspector);
@@ -83,7 +83,7 @@ function checkHelpLinkKeybinding(view) {
   info('Check that MDN link is opened on "F1"');
   const propView = getFirstVisiblePropertyView(view);
   return new Promise(resolve => {
-    propView.mdnLinkClick = function(event) {
+    propView.mdnLinkClick = function (event) {
       ok(true, "Pressing F1 opened the MDN link");
       resolve();
     };

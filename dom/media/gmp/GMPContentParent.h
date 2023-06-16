@@ -8,6 +8,7 @@
 
 #include "mozilla/gmp/PGMPContentParent.h"
 #include "GMPSharedMemManager.h"
+#include "GMPNativeTypes.h"
 #include "nsISupportsImpl.h"
 
 namespace mozilla::gmp {
@@ -45,9 +46,11 @@ class GMPContentParent final : public PGMPContentParent, public GMPSharedMem {
   void SetDisplayName(const nsCString& aDisplayName) {
     mDisplayName = aDisplayName;
   }
-  const nsCString& GetDisplayName() { return mDisplayName; }
+  const nsCString& GetDisplayName() const { return mDisplayName; }
   void SetPluginId(const uint32_t aPluginId) { mPluginId = aPluginId; }
   uint32_t GetPluginId() const { return mPluginId; }
+  void SetPluginType(GMPPluginType aPluginType) { mPluginType = aPluginType; }
+  GMPPluginType GetPluginType() const { return mPluginType; }
 
   class CloseBlocker {
    public:
@@ -82,6 +85,7 @@ class GMPContentParent final : public PGMPContentParent, public GMPSharedMem {
   RefPtr<GMPParent> mParent;
   nsCString mDisplayName;
   uint32_t mPluginId;
+  GMPPluginType mPluginType = GMPPluginType::Unknown;
   uint32_t mCloseBlockerCount = 0;
 };
 

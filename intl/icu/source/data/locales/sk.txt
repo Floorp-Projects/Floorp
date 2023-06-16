@@ -592,14 +592,14 @@ sk{
                 }
                 GyMMMEd{
                     G{"E d. M. y G – E d. M. y G"}
-                    M{"E d. M. – E d. M. y G"}
-                    d{"E d. M. – E d. M. y G"}
+                    M{"E d. M. – E d. M. y G"}
+                    d{"E d. M. – E d. M. y G"}
                     y{"E d. M. y – E d. M. y G"}
                 }
                 GyMMMd{
                     G{"d. M. y G – d. M. y G"}
-                    M{"d. M. – d. M. y G"}
-                    d{"d. – d. M. y G"}
+                    M{"d. M. – d. M. y G"}
+                    d{"d. – d. M. y G"}
                     y{"d. M. y – d. M. y G"}
                 }
                 GyMd{
@@ -623,32 +623,32 @@ sk{
                     H{"HH – HH v"}
                 }
                 M{
-                    M{"M. – M."}
+                    M{"M. – M."}
                 }
                 MEd{
-                    M{"E d. M. – E d. M."}
-                    d{"E d. M. – E d. M."}
+                    M{"E d. M. – E d. M."}
+                    d{"E d. M. – E d. M."}
                 }
                 MMM{
                     M{"LLL – LLL"}
                 }
                 MMMEd{
-                    M{"E d. M. – E d. M."}
-                    d{"E d. – E d. M."}
+                    M{"E d. M. – E d. M."}
+                    d{"E d. – E d. M."}
                 }
                 MMMM{
                     M{"LLLL – LLLL"}
                 }
                 MMMd{
-                    M{"d. M. – d. M."}
-                    d{"d. – d. M."}
+                    M{"d. M. – d. M."}
+                    d{"d. – d. M."}
                 }
                 Md{
-                    M{"d. M. – d. M."}
-                    d{"d. M. – d. M."}
+                    M{"d. M. – d. M."}
+                    d{"d. M. – d. M."}
                 }
                 d{
-                    d{"d. – d."}
+                    d{"d. – d."}
                 }
                 fallback{"{0} – {1}"}
                 h{
@@ -686,8 +686,8 @@ sk{
                     y{"LLL y – LLL y G"}
                 }
                 yMMMEd{
-                    M{"E d. M. – E d. M. y G"}
-                    d{"E d. – E d. M. y G"}
+                    M{"E d. M. – E d. M. y G"}
+                    d{"E d. – E d. M. y G"}
                     y{"E d. M. y – E d. M. y G"}
                 }
                 yMMMM{
@@ -695,8 +695,8 @@ sk{
                     y{"LLLL y – LLLL y G"}
                 }
                 yMMMd{
-                    M{"d. M. – d. M. y G"}
-                    d{"d. – d. M. y G"}
+                    M{"d. M. – d. M. y G"}
+                    d{"d. – d. M. y G"}
                     y{"d. M. y – d. M. y G"}
                 }
                 yMd{
@@ -1008,14 +1008,14 @@ sk{
                 }
                 GyMMMEd{
                     G{"E d. M. y G – E d. M. y G"}
-                    M{"E d. M. – E d. M. y G"}
-                    d{"E d. M. – E d. M. y G"}
+                    M{"E d. M. – E d. M. y G"}
+                    d{"E d. M. – E d. M. y G"}
                     y{"E d. M. y – E d. M. y G"}
                 }
                 GyMMMd{
                     G{"d. M. y G – d. M. y G"}
-                    M{"d. M. – d. M. y G"}
-                    d{"d. – d. M. y G"}
+                    M{"d. M. – d. M. y G"}
+                    d{"d. – d. M. y G"}
                     y{"d. M. y – d. M. y G"}
                 }
                 GyMd{
@@ -1039,32 +1039,32 @@ sk{
                     H{"HH – HH v"}
                 }
                 M{
-                    M{"M. – M."}
+                    M{"M. – M."}
                 }
                 MEd{
-                    M{"E d. M. – E d. M."}
-                    d{"E d. M. – E d. M."}
+                    M{"E d. M. – E d. M."}
+                    d{"E d. M. – E d. M."}
                 }
                 MMM{
                     M{"LLL – LLL"}
                 }
                 MMMEd{
-                    M{"E d. M. – E d. M."}
-                    d{"E d. – E d. M."}
+                    M{"E d. M. – E d. M."}
+                    d{"E d. – E d. M."}
                 }
                 MMMM{
                     M{"LLLL – LLLL"}
                 }
                 MMMd{
-                    M{"d. M. – d. M."}
-                    d{"d. – d. M."}
+                    M{"d. M. – d. M."}
+                    d{"d. – d. M."}
                 }
                 Md{
-                    M{"d. M. – d. M."}
-                    d{"d. M. – d. M."}
+                    M{"d. M. – d. M."}
+                    d{"d. M. – d. M."}
                 }
                 d{
-                    d{"d. – d."}
+                    d{"d. – d."}
                 }
                 fallback{"{0} – {1}"}
                 h{
@@ -1102,8 +1102,8 @@ sk{
                     y{"M/y – M/y"}
                 }
                 yMMMEd{
-                    M{"E d. M. – E d. M. y"}
-                    d{"E d. – E d. M. y"}
+                    M{"E d. M. – E d. M. y"}
+                    d{"E d. – E d. M. y"}
                     y{"E d. M. y – E d. M. y"}
                 }
                 yMMMM{
@@ -1111,8 +1111,8 @@ sk{
                     y{"LLLL y – LLLL y"}
                 }
                 yMMMd{
-                    M{"d. M. – d. M. y"}
-                    d{"d. – d. M. y"}
+                    M{"d. M. – d. M. y"}
+                    d{"d. – d. M. y"}
                     y{"d. M. y – d. M. y"}
                 }
                 yMd{
@@ -2053,6 +2053,11 @@ sk{
         }
         month-narrow{
             dn{"mes."}
+            relative{
+                "-1"{"minulý mes."}
+                "0"{"tento mes."}
+                "1"{"budúci mes."}
+            }
             relativeTime{
                 future{
                     few{"o {0} mes."}
@@ -2550,6 +2555,11 @@ sk{
         }
         week-narrow{
             dn{"týž."}
+            relative{
+                "-1"{"minulý týž."}
+                "0"{"tento týž."}
+                "1"{"budúci týž."}
+            }
             relativePeriod{"týž. dňa {0}"}
             relativeTime{
                 future{
@@ -2699,7 +2709,25 @@ sk{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        or-narrow{
+            2{"{0} alebo {1}"}
+            end{"{0} alebo {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        or-short{
+            2{"{0} alebo {1}"}
+            end{"{0} alebo {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
+            2{"{0} a {1}"}
+            end{"{0} a {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-narrow{
             2{"{0} a {1}"}
             end{"{0} a {1}"}
             middle{"{0}, {1}"}
@@ -2781,50 +2809,49 @@ sk{
             }
         }
         namePattern{
-            givenFirst-long-addressing-formal{"{prefix} {given} {given2} {surname} {surname2}"}
+            givenFirst-long-addressing-formal{"{title} {given} {given2} {surname} {surname2}"}
             givenFirst-long-addressing-informal{"{given-informal} {surname}"}
-            givenFirst-long-monogram-formal{"{given-monogram}{given2-monogram}{surname-core-monogram}"}
             givenFirst-long-monogram-informal{"{given-informal-monogram}{surname-core-monogram}"}
-            givenFirst-long-referring-formal{"{prefix} {given} {given2} {surname} {surname2}, {suffix}"}
+            givenFirst-long-referring-formal{"{title} {given} {given2} {surname} {surname2}, {credentials}"}
             givenFirst-long-referring-informal{"{given-informal} {surname}"}
-            givenFirst-medium-addressing-formal{"{prefix} {surname}"}
+            givenFirst-medium-addressing-formal{"{title} {surname}"}
             givenFirst-medium-addressing-informal{"{given-informal}"}
             givenFirst-medium-monogram-formal{"{given-monogram}{surname-core-monogram}"}
             givenFirst-medium-monogram-informal{"{given-informal-monogram}{surname-core-monogram}"}
-            givenFirst-medium-referring-formal{"{prefix} {given} {surname}"}
+            givenFirst-medium-referring-formal{"{title} {given} {surname}"}
             givenFirst-medium-referring-informal{"{given-informal} {surname}"}
-            givenFirst-short-addressing-formal{"{prefix} {surname}"}
+            givenFirst-short-addressing-formal{"{surname}"}
             givenFirst-short-addressing-informal{"{given-informal}"}
             givenFirst-short-monogram-formal{"{surname-core-monogram}"}
             givenFirst-short-monogram-informal{"{given-informal-monogram}"}
-            givenFirst-short-referring-formal{"{given-initial} {given2-initial} {surname}"}
+            givenFirst-short-referring-formal{"{title} {surname}"}
             givenFirst-short-referring-informal{"{given-informal}"}
             sorting-long-referring-formal{
-                "{surname-core}, {given} {given2} {surname-prefix} ({prefix}, {suffix"
-                "})"
+                "{surname-core}, {given} {given2} {surname-prefix} ({title}, {credent"
+                "ials})"
             }
             sorting-long-referring-informal{"{surname-core}, {given-informal} {surname-prefix}"}
             sorting-medium-referring-formal{"{surname-core}, {given} {given2-initial} {surname-prefix}"}
             sorting-medium-referring-informal{"{surname-core}, {given-informal} {surname-prefix}"}
             sorting-short-referring-formal{"{surname-core}, {given-initial} {given2-initial}"}
             sorting-short-referring-informal{"{surname-core}, {given-informal-initial}"}
-            surnameFirst-long-addressing-formal{"{prefix} {surname} {surname2} {given} {given2}"}
+            surnameFirst-long-addressing-formal{"{title} {surname} {surname2} {given} {given2}"}
             surnameFirst-long-addressing-informal{"{surname} {given-informal}"}
             surnameFirst-long-monogram-formal{"{surname-core-monogram}{given-monogram}{given2-monogram}"}
             surnameFirst-long-monogram-informal{"{surname-core-monogram}{given-informal-monogram}"}
-            surnameFirst-long-referring-formal{"{prefix} {surname} {surname2} {given} {given2}, {suffix}"}
+            surnameFirst-long-referring-formal{"{title} {surname} {surname2} {given} {given2}, {credentials}"}
             surnameFirst-long-referring-informal{"{surname} {given-informal}"}
-            surnameFirst-medium-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-medium-addressing-formal{"{title} {surname}"}
             surnameFirst-medium-addressing-informal{"{given-informal}"}
             surnameFirst-medium-monogram-formal{"{surname-core-monogram}{given-monogram}"}
             surnameFirst-medium-monogram-informal{"{surname-core-monogram}{given-informal-monogram}"}
-            surnameFirst-medium-referring-formal{"{prefix} {surname} {given}"}
+            surnameFirst-medium-referring-formal{"{title} {surname} {given}"}
             surnameFirst-medium-referring-informal{"{surname} {given-informal}"}
             surnameFirst-short-addressing-formal{"{surname}"}
             surnameFirst-short-addressing-informal{"{given-informal}"}
             surnameFirst-short-monogram-formal{"{surname-core-monogram}"}
             surnameFirst-short-monogram-informal{"{given-informal-monogram}"}
-            surnameFirst-short-referring-formal{"{prefix} {surname}"}
+            surnameFirst-short-referring-formal{"{title} {surname}"}
             surnameFirst-short-referring-informal{"{given-informal}"}
         }
     }

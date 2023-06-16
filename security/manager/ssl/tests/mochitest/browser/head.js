@@ -73,7 +73,7 @@ async function openCertManager() {
   return new Promise((resolve, reject) => {
     win.addEventListener(
       "load",
-      function() {
+      function () {
         executeSoon(() => resolve(win));
       },
       { once: true }

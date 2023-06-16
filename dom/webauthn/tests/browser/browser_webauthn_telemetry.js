@@ -65,11 +65,8 @@ add_task(async function test() {
   await checkRpIdHash(authDataObj.rpIdHash, "example.com");
 
   // Get a new assertion.
-  let {
-    clientDataJSON,
-    authenticatorData,
-    signature,
-  } = await promiseWebAuthnGetAssertion(tab, rawId);
+  let { clientDataJSON, authenticatorData, signature } =
+    await promiseWebAuthnGetAssertion(tab, rawId);
 
   // Check the we can parse clientDataJSON.
   JSON.parse(buffer2string(clientDataJSON));

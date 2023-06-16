@@ -294,7 +294,7 @@ var tests = [
 ];
 
 function run_test() {
-  tests.forEach(function(test) {
+  tests.forEach(function (test) {
     test();
   });
 }

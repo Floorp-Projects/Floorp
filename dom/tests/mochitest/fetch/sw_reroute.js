@@ -20,7 +20,7 @@ function testScript(script) {
         ["dom.serviceWorkers.idle_timeout", 60000],
       ],
     },
-    function() {
+    function () {
       var scriptURL = location.href.includes("sw_empty_reroute.html")
         ? "empty.js"
         : "reroute.js";
@@ -34,7 +34,7 @@ function testScript(script) {
 
 function finishTest() {
   iframe.remove();
-  gRegistration.unregister().then(SimpleTest.finish, function(e) {
+  gRegistration.unregister().then(SimpleTest.finish, function (e) {
     dump("unregistration failed: " + e + "\n");
     SimpleTest.finish();
   });

@@ -5,7 +5,7 @@ async function test_browser_outline_refocus(
   aShouldFocusBeVisible,
   aOpenTabCallback
 ) {
-  await BrowserTestUtils.withNewTab(URL, async function(browser) {
+  await BrowserTestUtils.withNewTab(URL, async function (browser) {
     let tab = gBrowser.getTabForBrowser(browser);
     let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
 
@@ -41,7 +41,7 @@ add_task(async function browser_outline_refocus_mouse() {
   await test_browser_outline_refocus(
     "Link shouldn't show outlines since it was originally focused by mouse",
     false,
-    function(aBrowser) {
+    function (aBrowser) {
       info("clicking on link");
       return BrowserTestUtils.synthesizeMouseAtCenter("a", {}, aBrowser);
     }
@@ -56,7 +56,7 @@ add_task(async function browser_outline_refocus_key() {
   await test_browser_outline_refocus(
     "Link should show outlines since it was originally focused by keyboard",
     true,
-    function(aBrowser) {
+    function (aBrowser) {
       info("Navigating via keyboard");
       EventUtils.sendKey("tab");
       EventUtils.sendKey("return");

@@ -9,7 +9,7 @@ async function installMozAM(filename) {
   await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [`${BASE}/${filename}`],
-    async function(url) {
+    async function (url) {
       await content.wrappedJSObject.installMozAM(url);
     }
   );

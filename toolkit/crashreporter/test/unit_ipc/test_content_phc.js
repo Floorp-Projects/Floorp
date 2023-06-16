@@ -10,10 +10,10 @@ add_task(async function run_test() {
   }
 
   await do_content_crash(
-    function() {
+    function () {
       crashType = CrashTestUtils.CRASH_PHC_USE_AFTER_FREE;
     },
-    function(mdump, extra) {
+    function (mdump, extra) {
       Assert.equal(extra.PHCKind, "FreedPage");
 
       // This is a string holding a decimal address.

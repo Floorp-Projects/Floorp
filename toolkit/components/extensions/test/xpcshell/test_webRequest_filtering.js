@@ -1,11 +1,11 @@
 "use strict";
 
-var { WebRequest } = ChromeUtils.import(
-  "resource://gre/modules/WebRequest.jsm"
+var { WebRequest } = ChromeUtils.importESModule(
+  "resource://gre/modules/WebRequest.sys.mjs"
 );
 
-var { ExtensionParent } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionParent.jsm"
+var { ExtensionParent } = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionParent.sys.mjs"
 );
 
 const server = createHttpServer({ hosts: ["example.com"] });
@@ -79,7 +79,7 @@ async function openAndCloseContentPage(url) {
   // stylesheet with the same URI loaded from the same origin doesn't otherwise
   // guarantee that onBeforeRequest and so on happen, because it may not need
   // to go through necko at all.
-  await contentPage.spawn(null, () =>
+  await contentPage.spawn([], () =>
     content.windowUtils.clearSharedStyleSheetCache()
   );
   await contentPage.close();

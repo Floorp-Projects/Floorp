@@ -36,6 +36,7 @@ as{
                 scientificFormat{"#E0"}
             }
             symbols{
+                approximatelySign{"~"}
                 decimal{"."}
                 exponential{"E"}
                 group{","}
@@ -937,6 +938,20 @@ as{
                         "মাঘ",
                         "ফাল্গুন",
                     }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
                     wide{
                         "চৈত্ৰ",
                         "বৈশাখ",
@@ -953,6 +968,20 @@ as{
                     }
                 }
                 stand-alone{
+                    abbreviated{
+                        "চৈত্ৰ",
+                        "বৈশাখ",
+                        "জ্যেষ্ঠ",
+                        "আষাঢ়",
+                        "শ্ৰাৱণ",
+                        "ভাদ্ৰ",
+                        "অশ্বিন",
+                        "কাৰ্তিক",
+                        "অগ্ৰহায়ণ",
+                        "পৌষ",
+                        "মাঘ",
+                        "ফাল্গুন",
+                    }
                     wide{
                         "চৈত্ৰ",
                         "বৈশাখ",
@@ -1088,6 +1117,11 @@ as{
         }
         day-narrow{
             dn{"দিন"}
+            relative{
+                "-1"{"কালি"}
+                "0"{"আজি"}
+                "1"{"কাইলৈ"}
+            }
             relativeTime{
                 future{
                     one{"{0} দিনত"}
@@ -1101,6 +1135,11 @@ as{
         }
         day-short{
             dn{"দিন"}
+            relative{
+                "-1"{"কালি"}
+                "0"{"আজি"}
+                "1"{"কাইলৈ"}
+            }
             relativeTime{
                 future{
                     one{"{0} দিনত"}
@@ -1363,6 +1402,11 @@ as{
         }
         month-short{
             dn{"মাহ"}
+            relative{
+                "-1"{"যোৱা মাহ"}
+                "0"{"এই মাহ"}
+                "1"{"অহা মাহ"}
+            }
             relativeTime{
                 future{
                     one{"{0} মাহত"}
@@ -1630,6 +1674,23 @@ as{
                 }
             }
         }
+        tue-narrow{
+            relative{
+                "-1"{"যোৱা মঙ্গল"}
+                "0"{"এই মঙ্গল"}
+                "1"{"অহা মঙ্গল"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} মঙ্গলে"}
+                    other{"{0} মঙ্গলে"}
+                }
+                past{
+                    one{"{0} মঙ্গলৰ পূৰ্বে"}
+                    other{"{0} মঙ্গলৰ পূৰ্বে"}
+                }
+            }
+        }
         tue-short{
             relative{
                 "-1"{"যোৱা মঙ্গল"}
@@ -1719,6 +1780,11 @@ as{
         }
         week-narrow{
             dn{"সপ্তাহ"}
+            relative{
+                "-1"{"যোৱা সপ্তাহ"}
+                "0"{"এই সপ্তাহ"}
+                "1"{"অহা সপ্তাহ"}
+            }
             relativePeriod{"{0}ৰ সপ্তাহ"}
             relativeTime{
                 future{
@@ -1733,6 +1799,11 @@ as{
         }
         week-short{
             dn{"সপ্তাহ"}
+            relative{
+                "-1"{"যোৱা সপ্তাহ"}
+                "0"{"এই সপ্তাহ"}
+                "1"{"অহা সপ্তাহ"}
+            }
             relativePeriod{"{0}ৰ সপ্তাহ"}
             relativeTime{
                 future{
@@ -1792,6 +1863,11 @@ as{
         }
         year-narrow{
             dn{"বছৰ"}
+            relative{
+                "-1"{"যোৱা বছৰ"}
+                "0"{"এই বছৰ"}
+                "1"{"অহা বছৰ"}
+            }
             relativeTime{
                 future{
                     one{"{0} বছৰত"}
@@ -1838,6 +1914,18 @@ as{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        or-narrow{
+            2{"{0} বা {1}"}
+            end{"{0} বা {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        or-short{
+            2{"{0} বা {1}"}
+            end{"{0} বা {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} আৰু {1}"}
             end{"{0} আৰু {1}"}
@@ -1848,6 +1936,13 @@ as{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
             middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-short{
+            2{"{0} আৰু {1}"}
+            end{"{0} আৰু {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         unit{
             2{"{0}, {1}"}
@@ -1922,22 +2017,18 @@ as{
             }
         }
         namePattern{
-            givenFirst-long-addressing-formal{"{prefix} {surname}"}
+            givenFirst-long-addressing-formal{"{title} {surname}"}
             givenFirst-long-addressing-informal{"{given-informal}"}
-            givenFirst-long-monogram-formal{
-                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
-                "llCaps}"
-            }
             givenFirst-long-monogram-informal{"{given-informal-monogram-allCaps}{surname-monogram-allCaps}"}
-            givenFirst-long-referring-formal{"{given} {given2} {surname} {suffix}"}
+            givenFirst-long-referring-formal{"{given} {given2} {surname} {credentials}"}
             givenFirst-long-referring-informal{"{given-informal} {surname}"}
-            givenFirst-medium-addressing-formal{"{prefix} {surname}"}
+            givenFirst-medium-addressing-formal{"{title} {surname}"}
             givenFirst-medium-addressing-informal{"{given-informal}"}
             givenFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             givenFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname} {suffix}"}
+            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname} {credentials}"}
             givenFirst-medium-referring-informal{"{given-informal} {surname}"}
-            givenFirst-short-addressing-formal{"{prefix} {surname}"}
+            givenFirst-short-addressing-formal{"{title} {surname}"}
             givenFirst-short-addressing-informal{"{given-informal}"}
             givenFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             givenFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
@@ -1949,22 +2040,18 @@ as{
             sorting-medium-referring-informal{"{surname}, {given-informal}"}
             sorting-short-referring-formal{"{surname-core}, {given-initial} {given2-initial} {surname-prefix}"}
             sorting-short-referring-informal{"{surname}, {given-informal}"}
-            surnameFirst-long-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-long-addressing-formal{"{title} {surname}"}
             surnameFirst-long-addressing-informal{"{given-informal}"}
-            surnameFirst-long-monogram-formal{
-                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
-                "llCaps}"
-            }
             surnameFirst-long-monogram-informal{"{surname-monogram-allCaps}{given-informal-monogram-allCaps}"}
-            surnameFirst-long-referring-formal{"{surname} {given} {given2} {suffix}"}
+            surnameFirst-long-referring-formal{"{surname} {given} {given2} {credentials}"}
             surnameFirst-long-referring-informal{"{surname} {given-informal}"}
-            surnameFirst-medium-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-medium-addressing-formal{"{title} {surname}"}
             surnameFirst-medium-addressing-informal{"{given-informal}"}
             surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            surnameFirst-medium-referring-formal{"{surname} {given} {given2-initial} {suffix}"}
+            surnameFirst-medium-referring-formal{"{surname} {given} {given2-initial} {credentials}"}
             surnameFirst-medium-referring-informal{"{surname} {given-informal}"}
-            surnameFirst-short-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-short-addressing-formal{"{title} {surname}"}
             surnameFirst-short-addressing-informal{"{given-informal}"}
             surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}

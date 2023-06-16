@@ -11,7 +11,7 @@ function getPlacementArea(id) {
 
 // Check that a destroyed widget recreated after a reset call goes to
 // the navigation bar.
-add_task(function() {
+add_task(function () {
   const kWidgetId = "test-recreate-after-reset";
   let spec = {
     id: kWidgetId,

@@ -11,8 +11,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Utils: "resource://services-settings/Utils.sys.mjs",
 });
 
-const { BasePromiseWorker } = ChromeUtils.import(
-  "resource://gre/modules/PromiseWorker.jsm"
+const { BasePromiseWorker } = ChromeUtils.importESModule(
+  "resource://gre/modules/PromiseWorker.sys.mjs"
 );
 
 const RECIPE_NAME = "personality-provider-recipe";

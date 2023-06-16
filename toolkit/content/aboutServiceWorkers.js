@@ -131,7 +131,7 @@ async function display(info, pushService) {
   loadingMessage.classList.add("inactive");
   div.appendChild(loadingMessage);
 
-  unregisterButton.onclick = function() {
+  unregisterButton.onclick = function () {
     let cb = {
       unregisterSucceeded() {
         parent.removeChild(div);
@@ -166,7 +166,7 @@ async function display(info, pushService) {
 
 window.addEventListener(
   "DOMContentLoaded",
-  function() {
+  function () {
     init();
   },
   { once: true }

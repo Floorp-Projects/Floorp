@@ -1,6 +1,9 @@
+@use 'sass:math';
+
 .pocket-logged-in-cta {
   $max-button-width: 130px;
   $min-button-height: 18px;
+
   font-size: 13px;
   margin-inline-end: 20px;
   display: flex;
@@ -29,7 +32,7 @@
   .cta-text {
     font-weight: normal;
     font-size: 13px;
-    line-height: 1.230769231; // (16 / 13) –> 16px computed
+    line-height: math.div(16, 13); // (16 / 13) -> 16px computed
   }
 
   .pocket-cta-button,

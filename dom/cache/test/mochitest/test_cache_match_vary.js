@@ -24,7 +24,7 @@ function checkResponse(r, response, responseText) {
     response.headers.get("Vary"),
     "Both responses should have the same Vary header"
   );
-  return r.text().then(function(text) {
+  return r.text().then(function (text) {
     is(text, responseText, "The response body should be correct");
   });
 }
@@ -36,7 +36,7 @@ function checkResponse(r, response, responseText) {
 //             with the specified headers.
 // * responseText: The body of the above response object.
 function setupTest(headers) {
-  return setupTestMultipleEntries([headers]).then(function(test) {
+  return setupTestMultipleEntries([headers]).then(function (test) {
     return {
       response: test.response[0],
       responseText: test.responseText[0],
@@ -46,37 +46,37 @@ function setupTest(headers) {
 }
 function setupTestMultipleEntries(headers) {
   ok(Array.isArray(headers), "headers should be an array");
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     var response, responseText, cache;
     Promise.all(
-      headers.map(function(h) {
+      headers.map(function (h) {
         return fetch(requestURL, { headers: h });
       })
     )
-      .then(function(res) {
+      .then(function (res) {
         response = res;
         return Promise.all(
-          response.map(function(r) {
+          response.map(function (r) {
             return r.text();
           })
         );
       })
-      .then(function(text) {
+      .then(function (text) {
         responseText = text;
         return caches.open(name);
       })
-      .then(function(c) {
+      .then(function (c) {
         cache = c;
         return Promise.all(
-          headers.map(function(h) {
+          headers.map(function (h) {
             return c.add(new Request(requestURL, { headers: h }));
           })
         );
       })
-      .then(function() {
+      .then(function () {
         resolve({ response, responseText, cache });
       })
-      .catch(function(err) {
+      .catch(function (err) {
         reject(err);
       });
   });
@@ -85,21 +85,21 @@ function setupTestMultipleEntries(headers) {
 function testBasics() {
   var test;
   return setupTest({ WhatToVary: "Custom" })
-    .then(function(t) {
+    .then(function (t) {
       test = t;
       // Ensure that searching without specifying a Custom header succeeds.
       return test.cache.match(requestURL);
     })
-    .then(function(r) {
+    .then(function (r) {
       return checkResponse(r, test.response, test.responseText);
     })
-    .then(function() {
+    .then(function () {
       // Ensure that searching with a non-matching value for the Custom header fails.
       return test.cache.match(
         new Request(requestURL, { headers: { Custom: "foo=bar" } })
       );
     })
-    .then(function(r) {
+    .then(function (r) {
       is(
         typeof r,
         "undefined",
@@ -111,7 +111,7 @@ function testBasics() {
         { ignoreVary: true }
       );
     })
-    .then(function(r) {
+    .then(function (r) {
       return checkResponse(r, test.response, test.responseText);
     });
 }
@@ -128,21 +128,21 @@ function testBasicKeys() {
   }
   var test;
   return setupTest({ WhatToVary: "Custom" })
-    .then(function(t) {
+    .then(function (t) {
       test = t;
       // Ensure that searching without specifying a Custom header succeeds.
       return test.cache.keys(requestURL);
     })
-    .then(function(r) {
+    .then(function (r) {
       return checkRequest(r);
     })
-    .then(function() {
+    .then(function () {
       // Ensure that searching with a non-matching value for the Custom header fails.
       return test.cache.keys(
         new Request(requestURL, { headers: { Custom: "foo=bar" } })
       );
     })
-    .then(function(r) {
+    .then(function (r) {
       is(
         r.length,
         0,
@@ -154,7 +154,7 @@ function testBasicKeys() {
         { ignoreVary: true }
       );
     })
-    .then(function(r) {
+    .then(function (r) {
       return checkRequest(r);
     });
 }
@@ -162,10 +162,10 @@ function testBasicKeys() {
 function testStar() {
   function ensurePromiseRejected(promise) {
     return promise.then(
-      function() {
+      function () {
         ok(false, "Promise should be rejected");
       },
-      function(err) {
+      function (err) {
         is(
           err.name,
           "TypeError",
@@ -174,9 +174,9 @@ function testStar() {
       }
     );
   }
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     var cache;
-    caches.open(name).then(function(c) {
+    caches.open(name).then(function (c) {
       cache = c;
       Promise.all([
         ensurePromiseRejected(
@@ -193,7 +193,7 @@ function testStar() {
         ensurePromiseRejected(
           fetch(
             new Request(requestURL + "4", { headers: { WhatToVary: "*" } })
-          ).then(function(response) {
+          ).then(function (response) {
             return cache.put(requestURL + "4", response);
           })
         ),
@@ -217,7 +217,7 @@ function testStar() {
             new Request(requestURL + "8", {
               headers: { WhatToVary: "*,User-Agent" },
             })
-          ).then(function(response) {
+          ).then(function (response) {
             return cache.put(requestURL + "8", response);
           })
         ),
@@ -241,7 +241,7 @@ function testStar() {
             new Request(requestURL + "11", {
               headers: { WhatToVary: "User-Agent,*" },
             })
-          ).then(function(response) {
+          ).then(function (response) {
             return cache.put(requestURL + "11", response);
           })
         ),
@@ -253,14 +253,14 @@ function testStar() {
 function testMatch() {
   var test;
   return setupTest({ WhatToVary: "Custom", Custom: "foo=bar" })
-    .then(function(t) {
+    .then(function (t) {
       test = t;
       // Ensure that searching with a different Custom header fails.
       return test.cache.match(
         new Request(requestURL, { headers: { Custom: "bar=baz" } })
       );
     })
-    .then(function(r) {
+    .then(function (r) {
       is(
         typeof r,
         "undefined",
@@ -271,7 +271,7 @@ function testMatch() {
         new Request(requestURL, { headers: { Custom: "foo=bar" } })
       );
     })
-    .then(function(r) {
+    .then(function (r) {
       return checkResponse(r, test.response, test.responseText);
     });
 }
@@ -279,14 +279,14 @@ function testMatch() {
 function testInvalidHeaderName() {
   var test;
   return setupTest({ WhatToVary: "Foo/Bar, Custom-User-Agent" })
-    .then(function(t) {
+    .then(function (t) {
       test = t;
       // Ensure that searching with a different User-Agent header fails.
       return test.cache.match(
         new Request(requestURL, { headers: { "Custom-User-Agent": "MyUA" } })
       );
     })
-    .then(function(r) {
+    .then(function (r) {
       is(
         typeof r,
         "undefined",
@@ -298,16 +298,16 @@ function testInvalidHeaderName() {
         { ignoreVary: true }
       );
     })
-    .then(function(r) {
+    .then(function (r) {
       return checkResponse(r, test.response, test.responseText);
     })
-    .then(function() {
+    .then(function () {
       // Ensure that we do not mistakenly recognize the tokens in the invalid header name.
       return test.cache.match(
         new Request(requestURL, { headers: { Foo: "foobar" } })
       );
     })
-    .then(function(r) {
+    .then(function (r) {
       return checkResponse(r, test.response, test.responseText);
     });
 }
@@ -315,7 +315,7 @@ function testInvalidHeaderName() {
 function testMultipleHeaders() {
   var test;
   return setupTest({ WhatToVary: "Custom-Referer,\tCustom-Accept-Encoding" })
-    .then(function(t) {
+    .then(function (t) {
       test = t;
       // Ensure that searching with a different Referer header fails.
       return test.cache.match(
@@ -324,7 +324,7 @@ function testMultipleHeaders() {
         })
       );
     })
-    .then(function(r) {
+    .then(function (r) {
       is(
         typeof r,
         "undefined",
@@ -338,10 +338,10 @@ function testMultipleHeaders() {
         { ignoreVary: true }
       );
     })
-    .then(function(r) {
+    .then(function (r) {
       return checkResponse(r, test.response, test.responseText);
     })
-    .then(function() {
+    .then(function () {
       // Ensure that searching with a different Custom-Accept-Encoding header fails.
       return test.cache.match(
         new Request(requestURL, {
@@ -349,7 +349,7 @@ function testMultipleHeaders() {
         })
       );
     })
-    .then(function(r) {
+    .then(function (r) {
       is(
         typeof r,
         "undefined",
@@ -363,28 +363,28 @@ function testMultipleHeaders() {
         { ignoreVary: true }
       );
     })
-    .then(function(r) {
+    .then(function (r) {
       return checkResponse(r, test.response, test.responseText);
     })
-    .then(function() {
+    .then(function () {
       // Ensure that searching with an empty Custom-Referer header succeeds.
       return test.cache.match(
         new Request(requestURL, { headers: { "Custom-Referer": "" } })
       );
     })
-    .then(function(r) {
+    .then(function (r) {
       return checkResponse(r, test.response, test.responseText);
     })
-    .then(function() {
+    .then(function () {
       // Ensure that searching with an empty Custom-Accept-Encoding header succeeds.
       return test.cache.match(
         new Request(requestURL, { headers: { "Custom-Accept-Encoding": "" } })
       );
     })
-    .then(function(r) {
+    .then(function (r) {
       return checkResponse(r, test.response, test.responseText);
     })
-    .then(function() {
+    .then(function () {
       // Ensure that searching with an empty Custom-Referer header but with a different Custom-Accept-Encoding header fails.
       return test.cache.match(
         new Request(requestURL, {
@@ -395,7 +395,7 @@ function testMultipleHeaders() {
         })
       );
     })
-    .then(function(r) {
+    .then(function (r) {
       is(
         typeof r,
         "undefined",
@@ -412,7 +412,7 @@ function testMultipleHeaders() {
         { ignoreVary: true }
       );
     })
-    .then(function(r) {
+    .then(function (r) {
       return checkResponse(r, test.response, test.responseText);
     });
 }
@@ -423,16 +423,16 @@ function testMultipleCacheEntries() {
     { WhatToVary: "Accept-Language", "Accept-Language": "en-US" },
     { WhatToVary: "Accept-Language", "Accept-Language": "en-US, fa-IR" },
   ])
-    .then(function(t) {
+    .then(function (t) {
       test = t;
       return test.cache.matchAll();
     })
-    .then(function(r) {
+    .then(function (r) {
       is(r.length, 2, "Two cache entries should be stored in the DB");
       // Ensure that searching without specifying an Accept-Language header fails.
       return test.cache.matchAll(requestURL);
     })
-    .then(function(r) {
+    .then(function (r) {
       is(
         r.length,
         0,
@@ -441,23 +441,23 @@ function testMultipleCacheEntries() {
       // Ensure that searching without specifying an Accept-Language header but with ignoreVary succeeds.
       return test.cache.matchAll(requestURL, { ignoreVary: true });
     })
-    .then(function(r) {
+    .then(function (r) {
       return Promise.all([
         checkResponse(r[0], test.response[0], test.responseText[0]),
         checkResponse(r[1], test.response[1], test.responseText[1]),
       ]);
     })
-    .then(function() {
+    .then(function () {
       // Ensure that searching with Accept-Language: en-US succeeds.
       return test.cache.matchAll(
         new Request(requestURL, { headers: { "Accept-Language": "en-US" } })
       );
     })
-    .then(function(r) {
+    .then(function (r) {
       is(r.length, 1, "One cache entry should be found");
       return checkResponse(r[0], test.response[0], test.responseText[0]);
     })
-    .then(function() {
+    .then(function () {
       // Ensure that searching with Accept-Language: en-US,fa-IR succeeds.
       return test.cache.matchAll(
         new Request(requestURL, {
@@ -465,30 +465,30 @@ function testMultipleCacheEntries() {
         })
       );
     })
-    .then(function(r) {
+    .then(function (r) {
       is(r.length, 1, "One cache entry should be found");
       return checkResponse(r[0], test.response[1], test.responseText[1]);
     })
-    .then(function() {
+    .then(function () {
       // Ensure that searching with a valid Accept-Language header but with ignoreVary returns both entries.
       return test.cache.matchAll(
         new Request(requestURL, { headers: { "Accept-Language": "en-US" } }),
         { ignoreVary: true }
       );
     })
-    .then(function(r) {
+    .then(function (r) {
       return Promise.all([
         checkResponse(r[0], test.response[0], test.responseText[0]),
         checkResponse(r[1], test.response[1], test.responseText[1]),
       ]);
     })
-    .then(function() {
+    .then(function () {
       // Ensure that searching with Accept-Language: fa-IR fails.
       return test.cache.matchAll(
         new Request(requestURL, { headers: { "Accept-Language": "fa-IR" } })
       );
     })
-    .then(function(r) {
+    .then(function (r) {
       is(
         r.length,
         0,
@@ -500,7 +500,7 @@ function testMultipleCacheEntries() {
         { ignoreVary: true }
       );
     })
-    .then(function(r) {
+    .then(function (r) {
       is(r.length, 2, "Two cache entries should be found");
       return Promise.all([
         checkResponse(r[0], test.response[0], test.responseText[0]),
@@ -512,34 +512,34 @@ function testMultipleCacheEntries() {
 // Make sure to clean up after each test step.
 function step(testPromise) {
   return testPromise.then(
-    function() {
+    function () {
       caches.delete(name);
     },
-    function() {
+    function () {
       caches.delete(name);
     }
   );
 }
 
 step(testBasics())
-  .then(function() {
+  .then(function () {
     return step(testBasicKeys());
   })
-  .then(function() {
+  .then(function () {
     return step(testStar());
   })
-  .then(function() {
+  .then(function () {
     return step(testMatch());
   })
-  .then(function() {
+  .then(function () {
     return step(testInvalidHeaderName());
   })
-  .then(function() {
+  .then(function () {
     return step(testMultipleHeaders());
   })
-  .then(function() {
+  .then(function () {
     return step(testMultipleCacheEntries());
   })
-  .then(function() {
+  .then(function () {
     testDone();
   });

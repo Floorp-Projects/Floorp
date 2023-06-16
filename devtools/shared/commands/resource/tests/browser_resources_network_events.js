@@ -79,7 +79,7 @@ add_task(async function testCanceledRequest() {
     "https://example.org/document-builder.sjs?delay=1000&html=foo";
   const html =
     "<!DOCTYPE html><script>(" +
-    function(xhrUrl) {
+    function (xhrUrl) {
       const xhr = new XMLHttpRequest();
       xhr.open("GET", xhrUrl);
       xhr.send(null);

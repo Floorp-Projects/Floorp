@@ -12,7 +12,7 @@ function handleRequest(request, response) {
 
   timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   timer.initWithCallback(
-    function() {
+    function () {
       var body =
         "<svg xmlns='http://www.w3.org/2000/svg' width='70' height='0'></svg>";
       response.bodyOutputStream.write(body, body.length);

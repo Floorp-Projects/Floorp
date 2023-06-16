@@ -9,7 +9,7 @@ const RUNTIME_DEVICE_NAME = "test device name";
 const RUNTIME_APP_NAME = "TestApp";
 
 // Test whether process category exists by the runtime type.
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.aboutdebugging.process-debugging", true);
 
   const mocks = new Mocks();

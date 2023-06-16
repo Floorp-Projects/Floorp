@@ -50,7 +50,7 @@ add_task(async function testTabSwitchContext() {
       "2.png": imageBuffer,
     },
 
-    getTests: function(tabs) {
+    getTests: function (tabs) {
       let defaultIcon = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
       let details = [
         {
@@ -245,7 +245,7 @@ add_task(async function testMultipleWindows() {
       "tab.png": imageBuffer,
     },
 
-    getTests: function(tabs, windows) {
+    getTests: function (tabs, windows) {
       let details = [
         {
           icon: browser.runtime.getURL("default.png"),
@@ -349,7 +349,7 @@ add_task(async function testNavigationClearsData() {
     Management: {
       global: { tabTracker },
     },
-  } = ChromeUtils.import("resource://gre/modules/Extension.jsm");
+  } = ChromeUtils.importESModule("resource://gre/modules/Extension.sys.mjs");
   let extension,
     tabs = [];
   async function addTab(...args) {
@@ -392,7 +392,7 @@ add_task(async function testNavigationClearsData() {
     manifest: {
       page_action: { default_title },
     },
-    background: function() {
+    background: function () {
       browser.test.onMessage.addListener(
         async ({ method, param, expect, msg }) => {
           let result = await browser.pageAction[method](param);

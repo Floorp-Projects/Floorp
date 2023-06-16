@@ -9,7 +9,7 @@ const TEST_URI_ORG = `https://example.org/document-builder.sjs?html=<meta charse
 </script><body>`;
 const TEST_URI_COM = TEST_URI_ORG.replace(/org/g, "com");
 
-add_task(async function() {
+add_task(async function () {
   info("Add a tab and open the console");
   const tab = await addTab("about:robots");
   const hud = await openConsole(tab);

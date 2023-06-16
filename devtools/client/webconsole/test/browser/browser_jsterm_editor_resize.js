@@ -8,7 +8,7 @@
 const TEST_URI =
   "data:text/html;charset=utf-8,<!DOCTYPE html>Web Console test for editor resize";
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.webconsole.input.editor", true);
   await pushPref("devtools.webconsole.input.editorOnboarding", false);
 

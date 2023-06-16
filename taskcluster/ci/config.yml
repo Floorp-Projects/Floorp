@@ -64,8 +64,6 @@ treeherder:
         'M-1proc': 'Mochitests without e10s or fission'
         'M-a11y-checks': 'Mochitests with accessibility checks enabled'
         'M-a11y-checks-nofis': 'Mochitests with accessibility checks enabled and without fission enabled'
-        'M-a11y-no-cache': 'Mochitests with accessibility cache disabled'
-        'M-a11y-no-cache-1proc': 'Mochitests with accessibility cache, e10s, and fission disabled'
         'M-xorig': 'Mochitests with cross-origin and fission enabled'
         'M-gli': 'Mochitests with WebGL over IPC'
         'M-gli-nofis': 'Mochitests with WebGL over IPC without fission enabled'
@@ -84,6 +82,7 @@ treeherder:
         'M-f': 'Mochitest failures'
         'M-dt-no-eft-nofis': 'DevTools Mochitests with EFT without fission enabled'
         'M-msix': 'Mochitests from MSIX builds'
+        'M-editor-legacy-dir': 'Mochitests within the legacy join/split node direction mode of the editor'
         'MSI': 'Repack installers into MSIs'
         'MSIs': 'Signing of Repacked installers of MSIs'
         'MSIX': 'Repack into MSIX package'
@@ -99,6 +98,7 @@ treeherder:
         'R-wr-dc1-p': 'Reftests with dcomp present but not overlays'
         'R-wr-dc2-o': 'Reftests with dcomp overlays but not compositing'
         'R-wr-dc3-c': 'Reftests with dcomp compositing'
+        'R-editor-legacy-dir': 'Reftests within the legacy join/split node direction mode of the editor'
         'Rap': 'Raptor performance tests on Firefox'
         'Rap-live': 'Raptor performance tests on Firefox with live sites'
         'Rap-fis': 'Raptor performance tests on Firefox with fission enabled'
@@ -131,6 +131,7 @@ treeherder:
         'W-swr': 'Web platform tests with software webrender enabled'
         'W-b': 'Web platform tests (backlog)'
         'W-b-nofis': 'Web platform tests (backlog) without fission enabled'
+        'W-editor-legacy-dir': 'Web platform tests within the legacy join/split node direction mode of the editor'
         'X': 'Xpcshell tests'
         'X-condprof': 'Xpcshell tests with a conditioned profile'
         'X-nofis': 'Xpcshell tests without fission enabled'
@@ -267,8 +268,8 @@ release-promotion:
                 - release-partner-repack
                 - release-partner-repack-chunking-dummy
                 - release-partner-repack-signing
-                - release-partner-repack-notarization-part-1
-                - release-partner-repack-notarization-poller
+                - release-partner-repack-mac-signing
+                - release-partner-repack-mac-notarization
                 - release-partner-repack-repackage
                 - release-partner-repack-repackage-signing
                 - release-partner-repack-beetmover
@@ -377,8 +378,8 @@ merge-automation:
             replacements: []
             merge-old-head: false
             end-tag: "FIREFOX_ESR_{major_version}_BASE"
-            to-repo: 'https://hg.mozilla.org/releases/mozilla-esr102'
-            to-branch: 'esr102'
+            to-repo: 'https://hg.mozilla.org/releases/mozilla-esr115'
+            to-branch: 'esr115'
         bump-central:
             fetch-version-from: "browser/config/version.txt"
             version-files:
@@ -412,6 +413,19 @@ merge-automation:
             merge-old-head: false
             to-repo: 'https://hg.mozilla.org/releases/mozilla-esr102'
             to-branch: 'esr102'
+        bump-esr115:
+            fetch-version-from: "browser/config/version.txt"
+            version-files:
+                - filename: "config/milestone.txt"
+                  version-bump: "minor"
+                - filename: "browser/config/version.txt"
+                  version-bump: "minor"
+                - filename: "browser/config/version_display.txt"
+                  version-bump: "minor"
+            replacements: []
+            merge-old-head: false
+            to-repo: 'https://hg.mozilla.org/releases/mozilla-esr115'
+            to-branch: 'esr115'
 
 scriptworker:
     # See additional configuration in taskcluster/gecko_taskgraph/util/scriptworker.py
@@ -550,11 +564,6 @@ workers:
             implementation: scriptworker-signing
             os: macosx
             worker-type: depsigning-mac-v1
-        mac-notarization-poller:
-            provisioner: scriptworker-prov-v1
-            implementation: notarization-poller
-            os: macosx
-            worker-type: mac-notarization-poller
         mac-signing:
             provisioner: scriptworker-prov-v1
             implementation: scriptworker-signing
@@ -609,6 +618,11 @@ workers:
             implementation: generic-worker
             os: linux
             worker-type: 'gecko-{alias}'
+        t-linux-wayland:
+            provisioner: '{trust-domain}-t'
+            implementation: generic-worker
+            os: linux
+            worker-type: 't-linux-vm-2204-wayland'
         t-osx-1015-r8:
             provisioner: releng-hardware
             implementation: generic-worker
@@ -650,7 +664,7 @@ workers:
             implementation: generic-worker
             os: windows
             worker-type: 'gecko-{alias}'
-        win10-64-2004(|-gpu|-ssd|-source|-ssd-gpu):
+        win10-64-2009(|-gpu|-ssd|-source|-ssd-gpu):
             provisioner: 'gecko-t'
             implementation: generic-worker
             os: windows
@@ -693,13 +707,6 @@ workers:
 
 
 mac-notarization:
-    mac-behavior:
-        by-project:
-            mozilla-(central|beta|release|esr.*):
-                by-shippable:
-                    "true": mac_notarize
-                    default: mac_sign_and_pkg
-            default: mac_sign_and_pkg
     mac-entitlements:
         by-platform:
             macosx64.*:

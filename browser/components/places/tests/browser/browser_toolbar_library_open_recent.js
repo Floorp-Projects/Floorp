@@ -122,7 +122,7 @@ async function getRecentlyBookmarkedItems() {
   return Array.from(items).slice(0, 2);
 }
 
-add_setup(async function() {
+add_setup(async function () {
   let libraryButton = CustomizableUI.getPlacementOfWidget("library-button");
   if (!libraryButton) {
     CustomizableUI.addWidgetToArea(

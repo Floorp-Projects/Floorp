@@ -511,6 +511,11 @@ interface nsILoadInfo : nsISupports
   [infallible] attribute unsigned long httpsOnlyStatus;
 
   /**
+   * Reflects whetehr this is an HTTP Strict Transport Security host
+   */
+[infallible] attribute boolean hstsStatus;
+
+  /**
    * Returns true if at the time of the loadinfo construction the document
    * that triggered this load has the bit hasValidTransientUserGestureActivation
    * set or the load was triggered from External. (Mostly this bool is used

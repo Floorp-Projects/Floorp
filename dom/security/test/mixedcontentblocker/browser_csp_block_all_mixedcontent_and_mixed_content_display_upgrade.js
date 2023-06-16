@@ -15,7 +15,7 @@ function on_new_message(msgObj) {
   const message = msgObj.message;
 
   // Check if csp warns about block-all-mixed content being obsolete
-  if (message.includes("Content Security Policy")) {
+  if (message.includes("Content-Security-Policy")) {
     ok(
       message.includes("block-all-mixed-content obsolete"),
       "CSP warns about block-all-mixed content being obsolete"
@@ -30,7 +30,7 @@ function on_new_message(msgObj) {
   }
 }
 
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["security.mixed_content.upgrade_display_content", true]],
   });
@@ -46,11 +46,11 @@ add_task(async function() {
       url,
       waitForLoad: true,
     },
-    async function(browser) {
+    async function (browser) {
       let loadedElements = await ContentTask.spawn(
         browser,
         [],
-        async function() {
+        async function () {
           // Check image loaded
           let image = content.document.getElementById("some-img");
           let imageLoaded =

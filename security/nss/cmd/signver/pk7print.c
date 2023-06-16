@@ -156,7 +156,7 @@ sv_PrintAttribute(FILE *out, SEC_PKCS7Attribute *attr, char *m)
     if (attr->values != NULL) {
         i = 0;
         while ((value = attr->values[i]) != NULL) {
-            sprintf(om, "%svalue[%d]=%s", m, i++, attr->encoded ? "(encoded)" : "");
+            snprintf(om, sizeof(om), "%svalue[%d]=%s", m, i++, attr->encoded ? "(encoded)" : "");
             if (attr->encoded || attr->typeTag == NULL) {
                 sv_PrintAsHex(out, value, om);
             } else {
@@ -263,7 +263,7 @@ sv_PrintSignerInfo(FILE *out, SEC_PKCS7SignerInfo *info, char *m)
         fprintf(out, "%sauthenticatedAttributes=%d\n", m, iv);
         iv = 0;
         while ((attr = info->authAttr[iv]) != NULL) {
-            sprintf(mm, "%sattribute[%d].", m, iv++);
+            snprintf(mm, sizeof(mm), "%sattribute[%d].", m, iv++);
             sv_PrintAttribute(out, attr, mm);
         }
     }
@@ -283,7 +283,7 @@ sv_PrintSignerInfo(FILE *out, SEC_PKCS7SignerInfo *info, char *m)
         fprintf(out, "%sunauthenticatedAttributes=%d\n", m, iv);
         iv = 0;
         while ((attr = info->unAuthAttr[iv]) != NULL) {
-            sprintf(mm, "%sattribute[%d].", m, iv++);
+            snprintf(mm, sizeof(mm), "%sattribute[%d].", m, iv++);
             sv_PrintAttribute(out, attr, mm);
         }
     }
@@ -337,7 +337,7 @@ sv_PrintSubjectPublicKeyInfo(FILE *out, PLArenaPool *arena,
     int rv;
     char mm[200];
 
-    sprintf(mm, "%s.publicKeyAlgorithm=", msg);
+    snprintf(mm, sizeof(mm), "%s.publicKeyAlgorithm=", msg);
     sv_PrintAlgorithmID(out, &i->algorithm, mm);
 
     DER_ConvertBitString(&i->subjectPublicKey);
@@ -349,7 +349,7 @@ sv_PrintSubjectPublicKeyInfo(FILE *out, PLArenaPool *arena,
                                     &i->subjectPublicKey);
             if (rv)
                 return rv;
-            sprintf(mm, "%s.rsaPublicKey.", msg);
+            snprintf(mm, sizeof(mm), "%s.rsaPublicKey.", msg);
             sv_PrintRSAPublicKey(out, &pk, mm);
             break;
         case SEC_OID_ANSIX9_DSA_SIGNATURE:
@@ -366,7 +366,7 @@ sv_PrintSubjectPublicKeyInfo(FILE *out, PLArenaPool *arena,
             if (rv)
                 return rv;
 #endif
-            sprintf(mm, "%s.dsaPublicKey.", msg);
+            snprintf(mm, sizeof(mm), "%s.dsaPublicKey.", msg);
             sv_PrintDSAPublicKey(out, &pk, mm);
             break;
         case SEC_OID_ANSIX962_EC_PUBLIC_KEY:
@@ -378,7 +378,7 @@ sv_PrintSubjectPublicKeyInfo(FILE *out, PLArenaPool *arena,
                                   &i->subjectPublicKey);
             if (rv)
                 return rv;
-            sprintf(mm, "%s.ecdsaPublicKey.", msg);
+            snprintf(mm, sizeof(mm), "%s.ecdsaPublicKey.", msg);
             sv_PrintECDSAPublicKey(out, &pk, mm);
             break;
         default:
@@ -478,11 +478,11 @@ sv_PrintCRLInfo(FILE *out, CERTCrl *crl, char *m)
             sv_PrintInteger(out, &(entry->serialNumber), "serialNumber=");
             fprintf(out, "%sentry[%d].", m, iv);
             sv_PrintTime(out, &(entry->revocationDate), "revocationDate=");
-            sprintf(om, "%sentry[%d].signedCRLEntriesExtensions.", m, iv++);
+            snprintf(om, sizeof(om), "%sentry[%d].signedCRLEntriesExtensions.", m, iv++);
             sv_PrintExtensions(out, entry->extensions, om);
         }
     }
-    sprintf(om, "%ssignedCRLEntriesExtensions.", m);
+    snprintf(om, sizeof(om), "%ssignedCRLEntriesExtensions.", m);
     sv_PrintExtensions(out, crl->extensions, om);
 }
 
@@ -514,23 +514,23 @@ sv_PrintCertificate(FILE *out, SECItem *der, char *m, int level)
     /* Pretty print it out */
     iv = DER_GetInteger(&c->version);
     fprintf(out, "%sversion=%d (0x%x)\n", m, iv + 1, iv);
-    sprintf(mm, "%sserialNumber=", m);
+    snprintf(mm, sizeof(mm), "%sserialNumber=", m);
     sv_PrintInteger(out, &c->serialNumber, mm);
-    sprintf(mm, "%ssignatureAlgorithm=", m);
+    snprintf(mm, sizeof(mm), "%ssignatureAlgorithm=", m);
     sv_PrintAlgorithmID(out, &c->signature, mm);
-    sprintf(mm, "%sissuerName=", m);
+    snprintf(mm, sizeof(mm), "%sissuerName=", m);
     sv_PrintName(out, &c->issuer, mm);
-    sprintf(mm, "%svalidity.", m);
+    snprintf(mm, sizeof(mm), "%svalidity.", m);
     sv_PrintValidity(out, &c->validity, mm);
-    sprintf(mm, "%ssubject=", m);
+    snprintf(mm, sizeof(mm), "%ssubject=", m);
     sv_PrintName(out, &c->subject, mm);
-    sprintf(mm, "%ssubjectPublicKeyInfo", m);
+    snprintf(mm, sizeof(mm), "%ssubjectPublicKeyInfo", m);
     rv = sv_PrintSubjectPublicKeyInfo(out, arena, &c->subjectPublicKeyInfo, mm);
     if (rv) {
         PORT_FreeArena(arena, PR_FALSE);
         return rv;
     }
-    sprintf(mm, "%ssignedExtensions.", m);
+    snprintf(mm, sizeof(mm), "%ssignedExtensions.", m);
     sv_PrintExtensions(out, c->extensions, mm);
 
     PORT_FreeArena(arena, PR_FALSE);
@@ -604,7 +604,7 @@ sv_PrintPKCS7Signed(FILE *out, SEC_PKCS7SignedData *src)
         fprintf(out, "pkcs7.digestAlgorithmListLength=%d\n", iv);
         iv = 0;
         while ((digAlg = src->digestAlgorithms[iv]) != NULL) {
-            sprintf(om, "pkcs7.digestAlgorithm[%d]=", iv++);
+            snprintf(om, sizeof(om), "pkcs7.digestAlgorithm[%d]=", iv++);
             sv_PrintAlgorithmID(out, digAlg, om);
         }
     }
@@ -624,7 +624,7 @@ sv_PrintPKCS7Signed(FILE *out, SEC_PKCS7SignedData *src)
 
         iv = 0;
         while ((aCert = src->rawCerts[iv]) != NULL) {
-            sprintf(om, "certificate[%d].", iv++);
+            snprintf(om, sizeof(om), "certificate[%d].", iv++);
             rv = sv_PrintSignedData(out, aCert, om, sv_PrintCertificate);
             if (rv)
                 return rv;
@@ -639,14 +639,14 @@ sv_PrintPKCS7Signed(FILE *out, SEC_PKCS7SignedData *src)
         fprintf(out, "pkcs7.signedRevocationLists=%d\n", iv);
         iv = 0;
         while ((aCrl = src->crls[iv]) != NULL) {
-            sprintf(om, "signedRevocationList[%d].", iv);
+            snprintf(om, sizeof(om), "signedRevocationList[%d].", iv);
             fprintf(out, "%s", om);
             sv_PrintAlgorithmID(out, &aCrl->signatureWrap.signatureAlgorithm,
                                 "signatureAlgorithm=");
             DER_ConvertBitString(&aCrl->signatureWrap.signature);
             fprintf(out, "%s", om);
             sv_PrintAsHex(out, &aCrl->signatureWrap.signature, "signature=");
-            sprintf(om, "certificateRevocationList[%d].", iv);
+            snprintf(om, sizeof(om), "certificateRevocationList[%d].", iv);
             sv_PrintCRLInfo(out, &aCrl->crl, om);
             iv++;
         }
@@ -660,7 +660,7 @@ sv_PrintPKCS7Signed(FILE *out, SEC_PKCS7SignedData *src)
         fprintf(out, "pkcs7.signerInformationListLength=%d\n", iv);
         iv = 0;
         while ((sigInfo = src->signerInfos[iv]) != NULL) {
-            sprintf(om, "signerInformation[%d].", iv++);
+            snprintf(om, sizeof(om), "signerInformation[%d].", iv++);
             sv_PrintSignerInfo(out, sigInfo, om);
         }
     }
@@ -690,7 +690,7 @@ secu_PrintPKCS7Enveloped(FILE *out, SEC_PKCS7EnvelopedData *src,
     fprintf(out, "Recipient Information List:\n");
     iv = 0;
     while ((recInfo = src->recipientInfos[iv++]) != NULL) {
-        sprintf(om, "Recipient Information (%x)", iv);
+        snprintf(om, sizeof(om), "Recipient Information (%x)", iv);
         secu_PrintRecipientInfo(out, recInfo, om, level + 2);
     }
     }
@@ -725,7 +725,7 @@ secu_PrintPKCS7SignedAndEnveloped(FILE *out,
     fprintf(out, "Recipient Information List:\n");
     iv = 0;
     while ((recInfo = src->recipientInfos[iv++]) != NULL) {
-        sprintf(om, "Recipient Information (%x)", iv);
+        snprintf(om, sizeof(om), "Recipient Information (%x)", iv);
         secu_PrintRecipientInfo(out, recInfo, om, level + 2);
     }
     }
@@ -735,7 +735,7 @@ secu_PrintPKCS7SignedAndEnveloped(FILE *out,
     secu_Indent(out, level + 1);  fprintf(out, "Digest Algorithm List:\n");
     iv = 0;
     while ((digAlg = src->digestAlgorithms[iv++]) != NULL) {
-        sprintf(om, "Digest Algorithm (%x)", iv);
+        snprintf(om, sizeof(om), "Digest Algorithm (%x)", iv);
         sv_PrintAlgorithmID(out, digAlg, om);
     }
     }
@@ -748,7 +748,7 @@ secu_PrintPKCS7SignedAndEnveloped(FILE *out,
     secu_Indent(out, level + 1);  fprintf(out, "Certificate List:\n");
     iv = 0;
     while ((aCert = src->rawCerts[iv++]) != NULL) {
-        sprintf(om, "Certificate (%x)", iv);
+        snprintf(om, sizeof(om), "Certificate (%x)", iv);
         rv = SECU_PrintSignedData(out, aCert, om, level + 2,
                       SECU_PrintCertificate);
         if (rv)
@@ -762,7 +762,7 @@ secu_PrintPKCS7SignedAndEnveloped(FILE *out,
     fprintf(out, "Signed Revocation Lists:\n");
     iv = 0;
     while ((aCrl = src->crls[iv++]) != NULL) {
-        sprintf(om, "Signed Revocation List (%x)", iv);
+        snprintf(om, sizeof(om), "Signed Revocation List (%x)", iv);
         secu_Indent(out, level + 2);  fprintf(out, "%s:\n", om);
         sv_PrintAlgorithmID(out, &aCrl->signatureWrap.signatureAlgorithm,
                   "Signature Algorithm");
@@ -780,7 +780,7 @@ secu_PrintPKCS7SignedAndEnveloped(FILE *out,
     fprintf(out, "Signer Information List:\n");
     iv = 0;
     while ((sigInfo = src->signerInfos[iv++]) != NULL) {
-        sprintf(om, "Signer Information (%x)", iv);
+        snprintf(om, sizeof(om), "Signer Information (%x)", iv);
         secu_PrintSignerInfo(out, sigInfo, om, level + 2);
     }
     }

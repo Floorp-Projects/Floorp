@@ -7,15 +7,17 @@ This module helps emulate Visual Studio 2008 behavior on top of other
 build systems, primarily ninja.
 """
 
-import collections
 import os
 import re
 import subprocess
 import sys
 
+from six.moves import collections_abc
+
 from gyp.common import OrderedSet
 import gyp.MSVSUtil
 import gyp.MSVSVersion
+from gyp.MSVSVersion import version_to_tuple
 
 try:
   # basestring was removed in python3.
@@ -37,9 +39,10 @@ def QuoteForRspFile(arg):
   # works more or less because most programs (including the compiler, etc.)
   # use that function to handle command line arguments.
 
-  # Use a heuristic to try to find args that are paths, and normalize them
-  if arg.find('/') > 0 or arg.count('/') > 1:
-    arg = os.path.normpath(arg)
+  if not os.getenv('GYP_MSVS_DISABLE_PATH_NORMALIZATION'):
+    # Use a heuristic to try to find args that are paths, and normalize them
+    if arg.find('/') > 0 or arg.count('/') > 1:
+      arg = os.path.normpath(arg)
 
   # For a literal quote, CommandLineToArgvW requires 2n+1 backslashes
   # preceding it, and results in n backslashes + the quote. So we substitute
@@ -91,7 +94,7 @@ def _AddPrefix(element, prefix):
   """Add |prefix| to |element| or each subelement if element is iterable."""
   if element is None:
     return element
-  if (isinstance(element, collections.abc.Iterable) and
+  if (isinstance(element, collections_abc.Iterable) and
       not isinstance(element, basestring)):
     return [prefix + e for e in element]
   else:
@@ -104,7 +107,7 @@ def _DoRemapping(element, map):
   if map is not None and element is not None:
     if not callable(map):
       map = map.get # Assume it's a dict, otherwise a callable to do the remap.
-    if (isinstance(element, collections.abc.Iterable) and
+    if (isinstance(element, collections_abc.Iterable) and
         not isinstance(element, basestring)):
       element = filter(None, [map(elem) for elem in element])
     else:
@@ -117,7 +120,7 @@ def _AppendOrReturn(append, element):
   then add |element| to it, adding each item in |element| if it's a list or
   tuple."""
   if append is not None and element is not None:
-    if (isinstance(element, collections.abc.Iterable) and
+    if (isinstance(element, collections_abc.Iterable) and
         not isinstance(element, basestring)):
       append.extend(element)
     else:
@@ -138,7 +141,8 @@ def _FindDirectXInstallation():
   if not dxsdk_dir:
     # Setup params to pass to and attempt to launch reg.exe.
     cmd = ['reg.exe', 'query', r'HKLM\Software\Microsoft\DirectX', '/s']
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                         universal_newlines=True)
     for line in p.communicate()[0].splitlines():
       if 'InstallPath' in line:
         dxsdk_dir = line.split('    ')[3] + "\\"
@@ -321,7 +325,7 @@ class MsvsSettings(object):
     # first level is globally for the configuration (this is what we consider
     # "the" config at the gyp level, which will be something like 'Debug' or
     # 'Release'), VS2015 and later only use this level
-    if self.vs_version.short_name >= 2015:
+    if int(self.vs_version.short_name) >= 2015:
       return config
     # and a second target-specific configuration, which is an
     # override for the global one. |config| is remapped here to take into
@@ -485,7 +489,7 @@ class MsvsSettings(object):
         prefix='/arch:')
     cflags.extend(['/FI' + f for f in self._Setting(
         ('VCCLCompilerTool', 'ForcedIncludeFiles'), config, default=[])])
-    if self.vs_version.project_version >= 12.0:
+    if version_to_tuple(self.vs_version.project_version) >= (12, 0):
       # New flag introduced in VS2013 (project version 12.0) Forces writes to
       # the program database (PDB) to be serialized through MSPDBSRV.EXE.
       # https://msdn.microsoft.com/en-us/library/dn502518.aspx
@@ -1050,7 +1054,8 @@ def GenerateEnvironmentFiles(toplevel_build_dir, generator_flags,
     args = vs.SetupScript(arch)
     args.extend(('&&', 'set'))
     popen = subprocess.Popen(
-        args, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        args, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+        universal_newlines=True)
     variables, _ = popen.communicate()
     if popen.returncode != 0:
       raise Exception('"%s" failed with error %d' % (args, popen.returncode))
@@ -1071,7 +1076,8 @@ def GenerateEnvironmentFiles(toplevel_build_dir, generator_flags,
     args = vs.SetupScript(arch)
     args.extend(('&&',
       'for', '%i', 'in', '(cl.exe)', 'do', '@echo', 'LOC:%~$PATH:i'))
-    popen = subprocess.Popen(args, shell=True, stdout=subprocess.PIPE)
+    popen = subprocess.Popen(args, shell=True, stdout=subprocess.PIPE,
+                             universal_newlines=True)
     output, _ = popen.communicate()
     cl_paths[arch] = _ExtractCLPath(output)
   return cl_paths

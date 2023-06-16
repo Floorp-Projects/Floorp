@@ -22,21 +22,21 @@ const {
 
 // Always log packets when running tests.
 Services.prefs.setBoolPref("devtools.debugger.log", true);
-SimpleTest.registerCleanupFunction(function() {
+SimpleTest.registerCleanupFunction(function () {
   Services.prefs.clearUserPref("devtools.debugger.log");
 });
 
 if (!DevToolsServer.initialized) {
   DevToolsServer.init();
   DevToolsServer.registerAllActors();
-  SimpleTest.registerCleanupFunction(function() {
+  SimpleTest.registerCleanupFunction(function () {
     DevToolsServer.destroy();
   });
 }
 
 var gAttachCleanups = [];
 
-SimpleTest.registerCleanupFunction(function() {
+SimpleTest.registerCleanupFunction(function () {
   for (const cleanup of gAttachCleanups) {
     cleanup();
   }
@@ -53,8 +53,8 @@ SimpleTest.registerCleanupFunction(function() {
  */
 async function attachURL(url) {
   // Get the current browser window
-  const gBrowser = Services.wm.getMostRecentWindow("navigator:browser")
-    .gBrowser;
+  const gBrowser =
+    Services.wm.getMostRecentWindow("navigator:browser").gBrowser;
 
   // open the url in a new tab, save a reference to the new inner window global object
   // and wait for it to load. The tests rely on this window object to send a "ready"
@@ -68,7 +68,7 @@ async function attachURL(url) {
   const commands = await CommandsFactory.forTab(gBrowser.selectedTab);
   await commands.targetCommand.startListening();
 
-  const cleanup = async function() {
+  const cleanup = async function () {
     await commands.destroy();
     if (win) {
       win.close();

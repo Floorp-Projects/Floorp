@@ -5,7 +5,7 @@ const TEST_URL = "data:text/html,test for opening toolbox in different hosts";
 
 var { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
 
-add_task(async function() {
+add_task(async function () {
   const tab1 = await addTab(TEST_URL);
   const tab2 = BrowserTestUtils.addTab(gBrowser);
 

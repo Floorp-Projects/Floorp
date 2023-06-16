@@ -298,9 +298,8 @@ addAccessibleTask(
 
 /*
  * After executing function 'change' which operates on 'elem', verify the specified
- * 'event' is fired on the test's table (assumed id="table"). After the event, check
- * if the given native accessible 'table' is a layout or data table by role
- * using 'isLayout'.
+ * 'event' (if not null) is fired on elem. After the event, check if the given
+ * native accessible 'table' is a layout or data table by role using 'isLayout'.
  */
 async function testIsLayout(table, elem, event, change, isLayout) {
   info(
@@ -309,15 +308,9 @@ async function testIsLayout(table, elem, event, change, isLayout) {
       ", expecting table change to " +
       (isLayout ? "AXGroup" : "AXTable")
   );
-  const toWait = waitForEvent(
-    event,
-    event == EVENT_TABLE_STYLING_CHANGED ? "table" : elem
-  );
+  const toWait = event ? waitForEvent(event, elem) : null;
   await change();
-  if (event != EVENT_TABLE_STYLING_CHANGED || !isCacheEnabled) {
-    // We can't wait for this event when the cache is on because
-    // we don't fire it. Instead we rely on the `untilCacheIs` check
-    // below.
+  if (toWait) {
     await toWait;
   }
   let intendedRole = isLayout ? "AXGroup" : "AXTable";
@@ -486,7 +479,7 @@ addAccessibleTask(
     await testIsLayout(
       table,
       "cellOne",
-      EVENT_TABLE_STYLING_CHANGED,
+      null,
       async () => {
         await SpecialPowers.spawn(browser, [], () => {
           content.document
@@ -502,7 +495,7 @@ addAccessibleTask(
     await testIsLayout(
       table,
       "cellOne",
-      EVENT_TABLE_STYLING_CHANGED,
+      null,
       async () => {
         await SpecialPowers.spawn(browser, [], () => {
           content.document
@@ -518,7 +511,7 @@ addAccessibleTask(
     await testIsLayout(
       table,
       "rowOne",
-      EVENT_TABLE_STYLING_CHANGED,
+      null,
       async () => {
         await SpecialPowers.spawn(browser, [], () => {
           content.document
@@ -534,7 +527,7 @@ addAccessibleTask(
     await testIsLayout(
       table,
       "rowOne",
-      EVENT_TABLE_STYLING_CHANGED,
+      null,
       async () => {
         await SpecialPowers.spawn(browser, [], () => {
           content.document
@@ -593,8 +586,8 @@ addAccessibleTask(
       const head = content.document.getElementById("thead");
       const body = content.document.getElementById("tbody");
 
-      head.addEventListener("click", function() {});
-      body.addEventListener("click", function() {});
+      head.addEventListener("click", function () {});
+      body.addEventListener("click", function () {});
     });
     await reorder;
 

@@ -16,7 +16,7 @@ function expectNotAllowedError(aResult) {
 }
 
 function promiseMakeCredential(tab) {
-  return ContentTask.spawn(tab.linkedBrowser, null, async function() {
+  return ContentTask.spawn(tab.linkedBrowser, null, async function () {
     const cose_alg_ECDSA_w_SHA256 = -7;
 
     let publicKey = {
@@ -37,7 +37,7 @@ function promiseMakeCredential(tab) {
 }
 
 function promiseGetAssertion(tab) {
-  return ContentTask.spawn(tab.linkedBrowser, null, async function() {
+  return ContentTask.spawn(tab.linkedBrowser, null, async function () {
     let newCredential = {
       type: "public-key",
       id: content.crypto.getRandomValues(new Uint8Array(16)),

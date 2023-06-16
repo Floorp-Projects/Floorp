@@ -1,4 +1,4 @@
-add_task(async function() {
+add_task(async function () {
   await openPreferencesViaOpenPreferencesAPI("general", { leaveOpen: true });
   await gBrowser.contentWindow.gMainPane._selectDefaultLanguageGroupPromise;
   await TestUtils.waitForCondition(

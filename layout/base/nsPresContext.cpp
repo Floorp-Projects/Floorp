@@ -233,9 +233,7 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
     : mPresShell(nullptr),
       mDocument(aDocument),
       mMedium(aType == eContext_Galley ? nsGkAtoms::screen : nsGkAtoms::print),
-      mSystemFontScale(1.0),
       mTextZoom(1.0),
-      mEffectiveTextZoom(1.0),
       mFullZoom(1.0),
       mLastFontInflationScreenSize(gfxSize(-1.0, -1.0)),
       mCurAppUnitsPerDevPixel(0),
@@ -755,6 +753,12 @@ nsresult nsPresContext::Init(nsDeviceContext* aDeviceContext) {
 bool nsPresContext::UpdateFontVisibility() {
   FontVisibility oldValue = mFontVisibility;
 
+  // Chrome presContext is allowed access to all fonts.
+  if (IsChrome()) {
+    mFontVisibility = FontVisibility::User;
+    return mFontVisibility != oldValue;
+  }
+
   // Is this a private browsing context?
   bool isPrivate = false;
   if (nsCOMPtr<nsILoadContext> loadContext = mDocument->GetLoadContext()) {
@@ -764,7 +768,7 @@ bool nsPresContext::UpdateFontVisibility() {
   // Read the relevant pref depending on RFP/trackingProtection state
   // to determine the visibility level to use.
   int32_t level;
-  if (mDocument->ShouldResistFingerprinting()) {
+  if (mDocument->ShouldResistFingerprinting(RFPTarget::Unknown)) {
     level = StaticPrefs::layout_css_font_visibility_resistFingerprinting();
   } else if (StaticPrefs::privacy_trackingprotection_enabled() ||
              (isPrivate &&
@@ -933,10 +937,12 @@ void nsPresContext::RecomputeBrowsingContextDependentData() {
     // matter... Medium also doesn't affect those.
     return;
   }
-  auto systemZoom = LookAndFeel::SystemZoomSettings();
-  SetFullZoom(browsingContext->FullZoom() * systemZoom.mFullZoom);
-  SetTextZoom(browsingContext->TextZoom() * systemZoom.mTextZoom);
-  SetOverrideDPPX(browsingContext->OverrideDPPX());
+  if (!IsPrintingOrPrintPreview()) {
+    auto systemZoom = LookAndFeel::SystemZoomSettings();
+    SetFullZoom(browsingContext->FullZoom() * systemZoom.mFullZoom);
+    SetTextZoom(browsingContext->TextZoom() * systemZoom.mTextZoom);
+    SetOverrideDPPX(browsingContext->OverrideDPPX());
+  }
 
   auto* top = browsingContext->Top();
   SetColorSchemeOverride([&] {
@@ -1055,6 +1061,7 @@ bool nsPresContext::UpdateContainerQueryStyles() {
     return false;
   }
 
+  AUTO_PROFILER_LABEL_RELEVANT_FOR_JS("Container Query Styles Update", LAYOUT);
   AUTO_PROFILER_MARKER_TEXT("UpdateContainerQueryStyles", LAYOUT, {}, ""_ns);
 
   PresShell()->DoFlushLayout(/* aInterruptible = */ false);
@@ -1289,8 +1296,8 @@ void nsPresContext::SetImageAnimationMode(uint16_t aMode) {
   mImageAnimationMode = aMode;
 }
 
-void nsPresContext::UpdateEffectiveTextZoom() {
-  float newZoom = mSystemFontScale * mTextZoom;
+void nsPresContext::SetTextZoom(float aTextZoom) {
+  float newZoom = aTextZoom;
   float minZoom = StaticPrefs::zoom_minPercent() / 100.0f;
   float maxZoom = StaticPrefs::zoom_maxPercent() / 100.0f;
 
@@ -1300,7 +1307,11 @@ void nsPresContext::UpdateEffectiveTextZoom() {
     newZoom = maxZoom;
   }
 
-  mEffectiveTextZoom = newZoom;
+  if (newZoom == mTextZoom) {
+    return;
+  }
+
+  mTextZoom = newZoom;
 
   // Media queries could have changed, since we changed the meaning
   // of 'em' units in them.

@@ -20,7 +20,7 @@ NSS Sample Code Sample_2_Initialization of NSS
 
 .. container::
 
-   .. code:: brush:
+   .. code:: c
 
       /* NSPR Headers */
       #include <prthread.h>

@@ -13,7 +13,7 @@ const kTestFrameAncestorsURIFrame =
   kTestPath + "file_framing_error_pages.sjs?csp";
 
 add_task(async function open_test_xfo_error_page() {
-  await BrowserTestUtils.withNewTab("about:blank", async function(browser) {
+  await BrowserTestUtils.withNewTab("about:blank", async function (browser) {
     let loaded = BrowserTestUtils.browserLoaded(
       browser,
       true,
@@ -23,9 +23,9 @@ add_task(async function open_test_xfo_error_page() {
     BrowserTestUtils.loadURIString(browser, kTestXFrameOptionsURI);
     await loaded;
 
-    await SpecialPowers.spawn(browser, [], async function() {
-      const iframeDoc = content.document.getElementById("testframe")
-        .contentDocument;
+    await SpecialPowers.spawn(browser, [], async function () {
+      const iframeDoc =
+        content.document.getElementById("testframe").contentDocument;
       let errorPage = iframeDoc.body.innerHTML;
       ok(errorPage.includes("csp-xfo-error-title"), "xfo error page correct");
     });
@@ -33,7 +33,7 @@ add_task(async function open_test_xfo_error_page() {
 });
 
 add_task(async function open_test_csp_frame_ancestor_error_page() {
-  await BrowserTestUtils.withNewTab("about:blank", async function(browser) {
+  await BrowserTestUtils.withNewTab("about:blank", async function (browser) {
     let loaded = BrowserTestUtils.browserLoaded(
       browser,
       true,
@@ -43,9 +43,9 @@ add_task(async function open_test_csp_frame_ancestor_error_page() {
     BrowserTestUtils.loadURIString(browser, kTestFrameAncestorsURI);
     await loaded;
 
-    await SpecialPowers.spawn(browser, [], async function() {
-      const iframeDoc = content.document.getElementById("testframe")
-        .contentDocument;
+    await SpecialPowers.spawn(browser, [], async function () {
+      const iframeDoc =
+        content.document.getElementById("testframe").contentDocument;
       let errorPage = iframeDoc.body.innerHTML;
       ok(errorPage.includes("csp-xfo-error-title"), "csp error page correct");
     });

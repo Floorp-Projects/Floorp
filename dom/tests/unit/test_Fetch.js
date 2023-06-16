@@ -76,7 +76,7 @@ add_test(function test_GetData() {
     testData.request.headers[headerName] = "test-value-for-" + headerName;
   }
 
-  server.registerPathHandler(testData.testPath, function(aRequest, aResponse) {
+  server.registerPathHandler(testData.testPath, function (aRequest, aResponse) {
     try {
       // check our request headers made it OK
       for (let headerName of headerNames) {
@@ -95,7 +95,7 @@ add_test(function test_GetData() {
 
   // fetch, via GET, with some request headers set
   fetch(getBaseUrl() + testData.testPath, { headers: testData.request.headers })
-    .then(function(response) {
+    .then(function (response) {
       // check response looks as expected
       Assert.ok(response.ok);
       Assert.equal(response.status, testData.response.status);
@@ -114,13 +114,13 @@ add_test(function test_GetData() {
       );
 
       // ensure response.text() returns a promise that resolves appropriately
-      response.text().then(function(text) {
+      response.text().then(function (text) {
         Assert.equal(text, testData.response.body);
         do_test_finished();
         run_next_test();
       });
     })
-    .catch(function(e) {
+    .catch(function (e) {
       do_report_unexpected_exception(e);
       do_test_finished();
       run_next_test();
@@ -133,7 +133,7 @@ add_test(function test_GetDataNoInit() {
 
   let testData = createTestData("/getData");
 
-  server.registerPathHandler(testData.testPath, function(aRequest, aResponse) {
+  server.registerPathHandler(testData.testPath, function (aRequest, aResponse) {
     try {
       // send a response
       writeDataToResponse(testData.response, aResponse);
@@ -143,19 +143,19 @@ add_test(function test_GetDataNoInit() {
   });
 
   fetch(getBaseUrl() + testData.testPath, { headers: testData.request.headers })
-    .then(function(response) {
+    .then(function (response) {
       // check response looks as expected
       Assert.ok(response.ok);
       Assert.equal(response.status, testData.response.status);
 
       // ensure response.text() returns a promise that resolves appropriately
-      response.text().then(function(text) {
+      response.text().then(function (text) {
         Assert.equal(text, testData.response.body);
         do_test_finished();
         run_next_test();
       });
     })
-    .catch(function(e) {
+    .catch(function (e) {
       do_report_unexpected_exception(e);
       do_test_finished();
       run_next_test();
@@ -174,7 +174,7 @@ add_test(function test_get40x() {
 
   // No need to register a path handler - httpd will return 404 anyway.
   // Fetch, via GET, the resource that doesn't exist
-  fetch(getBaseUrl() + notFoundData.testPath).then(function(response) {
+  fetch(getBaseUrl() + notFoundData.testPath).then(function (response) {
     Assert.equal(response.status, 404);
     do_test_finished();
     run_next_test();
@@ -190,20 +190,20 @@ add_test(function test_get50x() {
   serverErrorData.response.statusText = "The server broke";
   serverErrorData.response.body = null;
 
-  server.registerPathHandler(serverErrorData.testPath, function(
-    aRequest,
-    aResponse
-  ) {
-    try {
-      // send the error response
-      writeDataToResponse(serverErrorData.response, aResponse);
-    } catch (e) {
-      do_report_unexpected_exception(e);
+  server.registerPathHandler(
+    serverErrorData.testPath,
+    function (aRequest, aResponse) {
+      try {
+        // send the error response
+        writeDataToResponse(serverErrorData.response, aResponse);
+      } catch (e) {
+        do_report_unexpected_exception(e);
+      }
     }
-  });
+  );
 
   // fetch, via GET, the resource that creates a server error
-  fetch(getBaseUrl() + serverErrorData.testPath).then(function(response) {
+  fetch(getBaseUrl() + serverErrorData.testPath).then(function (response) {
     Assert.equal(response.status, 500);
     do_test_finished();
     run_next_test();
@@ -261,7 +261,7 @@ add_test(function test_PostJSONData() {
   let testData = createTestData("/postJSONData");
   testData.request.body = '{"foo": "bar"}';
 
-  server.registerPathHandler(testData.testPath, function(aRequest, aResponse) {
+  server.registerPathHandler(testData.testPath, function (aRequest, aResponse) {
     try {
       let requestData = readDataFromRequest(aRequest);
 
@@ -284,7 +284,7 @@ add_test(function test_PostJSONData() {
       "Content-Type": "application/json",
     },
   })
-    .then(function(aResponse) {
+    .then(function (aResponse) {
       Assert.ok(aResponse.ok);
       Assert.equal(aResponse.status, testData.response.status);
       Assert.equal(aResponse.statusText, testData.response.statusText);
@@ -292,7 +292,7 @@ add_test(function test_PostJSONData() {
       do_test_finished();
       run_next_test();
     })
-    .catch(function(e) {
+    .catch(function (e) {
       do_report_unexpected_exception(e);
       do_test_finished();
       run_next_test();
@@ -309,7 +309,7 @@ add_test(function test_PostTextData() {
   let responseHeaderName = "some-response-header";
   testData.response.headers[responseHeaderName] = "some header value";
 
-  server.registerPathHandler(testData.testPath, function(aRequest, aResponse) {
+  server.registerPathHandler(testData.testPath, function (aRequest, aResponse) {
     try {
       let requestData = readDataFromRequest(aRequest);
 
@@ -332,7 +332,7 @@ add_test(function test_PostTextData() {
       "Content-Type": testData.request.contentType,
     },
   })
-    .then(function(aResponse) {
+    .then(function (aResponse) {
       Assert.ok(aResponse.ok);
       Assert.equal(aResponse.status, testData.response.status);
       Assert.equal(aResponse.statusText, testData.response.statusText);
@@ -346,7 +346,7 @@ add_test(function test_PostTextData() {
       do_test_finished();
       run_next_test();
     })
-    .catch(function(e) {
+    .catch(function (e) {
       do_report_unexpected_exception(e);
       do_test_finished();
       run_next_test();
@@ -360,7 +360,7 @@ function run_test() {
 
   run_next_test();
 
-  registerCleanupFunction(function() {
-    server.stop(function() {});
+  registerCleanupFunction(function () {
+    server.stop(function () {});
   });
 }

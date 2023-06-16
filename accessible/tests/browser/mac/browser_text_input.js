@@ -78,9 +78,8 @@ function matchWebArea(expectedId, expectedInfo) {
       return false;
     }
 
-    let textChangeElemID = data.AXTextChangeElement.getAttributeValue(
-      "AXDOMIdentifier"
-    );
+    let textChangeElemID =
+      data.AXTextChangeElement.getAttributeValue("AXDOMIdentifier");
 
     return (
       iface.getAttributeValue("AXRole") == "AXWebArea" &&
@@ -178,10 +177,6 @@ function testSelectionEventLeftChar(event, expectedChar) {
 }
 
 function testSelectionEventLine(event, expectedLine) {
-  if (!expectedLine && !isCacheEnabled) {
-    todo(false, "Blank lines are broken with cache disabled");
-    return;
-  }
   const selStart = event.macIface.getParameterizedAttributeValue(
     "AXStartTextMarkerForTextMarkerRange",
     event.data.AXSelectedTextMarkerRange
@@ -501,7 +496,7 @@ addAccessibleTask(
  */
 addAccessibleTask(
   `<input id="input" value="abc">`,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     await focusIntoInput(docAcc, "input");
 
     let event = await synthKeyAndTestSelectionChanged(
@@ -558,7 +553,7 @@ gh
 </textarea>
 <div role="textbox" id="wrapped" contenteditable style="width: 1ch;">a b c</div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     let hard = getNativeInterface(docAcc, "hard");
     await focusIntoInput(docAcc, "hard");
     is(hard.getAttributeValue("AXInsertionPointLineNumber"), 0);

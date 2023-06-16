@@ -19,7 +19,7 @@ const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html>
 </head>
 <body>Test autocomplete close on content navigation</body>`;
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm } = hud;
   info("web console opened");

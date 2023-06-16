@@ -82,7 +82,7 @@ function setGlobalState(data, key) {
 
 function getGlobalState(key) {
   var data;
-  getObjectState(key, function(x) {
+  getObjectState(key, function (x) {
     data = x && x.wrappedJSObject.data;
   });
   return data;

@@ -40,7 +40,7 @@
       // We use margin-left over margin-inline-start on purpose.
       // This is because we are using it to offset an image's content,
       // and the image content is the same in ltr and rtl.
-      margin-left: var(--placeholderBackgroundOffsetx); // sass-lint:disable-line no-disallowed-properties
+      margin-left: var(--placeholderBackgroundOffsetx); // stylelint-disable-line property-disallowed-list
       margin-top: var(--placeholderBackgroundOffsety);
       background-size: var(--placeholderBackgroundScale);
     }

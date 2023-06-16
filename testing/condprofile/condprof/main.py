@@ -28,7 +28,10 @@ def main(args=sys.argv[1:]):
         "--profile", help="Existing profile Dir", type=str, default=None
     )
     parser.add_argument(
-        "--customization", help="Profile customization to use", type=str, default="all"
+        "--customization",
+        help="Profile customization to use",
+        type=str,
+        default="default",
     )
     parser.add_argument(
         "--visible", help="Don't use headless mode", action="store_true", default=False

@@ -23,6 +23,7 @@ job-defaults:
         max-run-time: 3600
         env:
             PERFHERDER_EXTRA_OPTIONS: static-analysis-autotest
+    use-system-python: false
     run-on-projects: ['mozilla-central']
     run:
         using: mozharness
@@ -96,5 +97,5 @@ jobs:
                 - win64-node
                 - win64-dump_syms
                 - win64-winchecksec
-                - win64-vs2017
+                - vs
                 - sysroot-wasm32-wasi

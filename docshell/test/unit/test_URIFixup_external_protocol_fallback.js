@@ -38,9 +38,8 @@ add_task(async function setup() {
   );
 
   info("Register new dummy protocol");
-  const dummyProtocolHandlerInfo = externalProtocolService.getProtocolHandlerInfo(
-    "dummy"
-  );
+  const dummyProtocolHandlerInfo =
+    externalProtocolService.getProtocolHandlerInfo("dummy");
   const handlerService = Cc[
     "@mozilla.org/uriloader/handler-service;1"
   ].getService(Ci.nsIHandlerService);

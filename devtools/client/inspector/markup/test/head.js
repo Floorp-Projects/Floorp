@@ -69,7 +69,7 @@ function getContainerForNodeFront(nodeFront, { markup }) {
  * @param {Boolean} Set to true in the event that the node shouldn't be found.
  * @return {MarkupContainer}
  */
-var getContainerForSelector = async function(
+var getContainerForSelector = async function (
   selector,
   inspector,
   expectFailure = false
@@ -128,7 +128,7 @@ function waitForChildrenUpdated({ markup }) {
  * loaded in the toolbox
  * @return {Promise} Resolves when the node has been selected.
  */
-var clickContainer = async function(selector, inspector) {
+var clickContainer = async function (selector, inspector) {
   info("Clicking on the markup-container for node " + selector);
 
   const nodeFront = await getNodeFront(selector, inspector);
@@ -177,7 +177,7 @@ function setEditableFieldValue(field, value, inspector) {
  * loaded in the toolbox
  * @return a promise that resolves when the node has mutated
  */
-var addNewAttributes = async function(selector, text, inspector) {
+var addNewAttributes = async function (selector, text, inspector) {
   info(`Entering text "${text}" in new attribute field for node ${selector}`);
 
   const container = await focusNode(selector, inspector);
@@ -199,7 +199,7 @@ var addNewAttributes = async function(selector, text, inspector) {
  * Note that node.getAttribute() returns attribute values provided by the HTML
  * parser. The parser only provides unescaped entities so &amp; will return &.
  */
-var assertAttributes = async function(selector, expected) {
+var assertAttributes = async function (selector, expected) {
   const actualAttributes = await getContentPageElementAttributes(selector);
   is(
     actualAttributes.length,
@@ -290,7 +290,7 @@ function searchUsingSelectorSearch(selector, inspector) {
  * @return A promise that resolves with a boolean indicating whether
  *         the menu items are disabled once the menu has been checked.
  */
-var isEditingMenuDisabled = async function(
+var isEditingMenuDisabled = async function (
   nodeFront,
   inspector,
   assert = true
@@ -331,7 +331,11 @@ var isEditingMenuDisabled = async function(
  * @return A promise that resolves with a boolean indicating whether
  *         the menu items are enabled once the menu has been checked.
  */
-var isEditingMenuEnabled = async function(nodeFront, inspector, assert = true) {
+var isEditingMenuEnabled = async function (
+  nodeFront,
+  inspector,
+  assert = true
+) {
   // To ensure clipboard contains something to paste.
   clipboard.copyString("<p>test</p>");
 
@@ -447,7 +451,7 @@ function checkFocusedAttribute(attrName, editMode) {
  *         A promise that resolves with an array of attribute names
  *         (e.g. ["id", "class", "href"])
  */
-var getAttributesFromEditor = async function(selector, inspector) {
+var getAttributesFromEditor = async function (selector, inspector) {
   const nodeList = (
     await getContainerForSelector(selector, inspector)
   ).tagLine.querySelectorAll("[data-attr]");

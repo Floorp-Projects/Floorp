@@ -3,7 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { createFrame } from "./create";
-import { makePendingLocationId } from "../../utils/breakpoint";
+import { makeBreakpointServerLocationId } from "../../utils/breakpoint";
 
 import Reps from "devtools/client/shared/components/reps/index";
 
@@ -26,12 +26,23 @@ function currentThreadFront() {
   return currentTarget().threadFront;
 }
 
-function createObjectFront(grip) {
+/**
+ * Create an object front for the passed grip
+ *
+ * @param {Object} grip
+ * @param {Object} frame: An optional frame that will manage the created object front.
+ *                        if not passed, the current thread front will manage the object.
+ * @returns {ObjectFront}
+ */
+function createObjectFront(grip, frame) {
   if (!grip.actor) {
     throw new Error("Actor is missing");
   }
-
-  return commands.client.createObjectFront(grip, currentThreadFront());
+  const threadFront = frame?.thread
+    ? lookupThreadFront(frame.thread)
+    : currentThreadFront();
+  const frameFront = frame ? threadFront.getActorByID(frame.id) : null;
+  return commands.client.createObjectFront(grip, threadFront, frameFront);
 }
 
 async function loadObjectProperties(root, threadActorID) {
@@ -171,7 +182,8 @@ async function setXHRBreakpoint(path, method) {
     await forEachThread(thread => thread.setXHRBreakpoint(path, method));
     return;
   }
-  const breakpointsFront = await commands.targetCommand.watcherFront.getBreakpointListActor();
+  const breakpointsFront =
+    await commands.targetCommand.watcherFront.getBreakpointListActor();
   await breakpointsFront.setXHRBreakpoint(path, method);
 }
 
@@ -182,7 +194,8 @@ async function removeXHRBreakpoint(path, method) {
     await forEachThread(thread => thread.removeXHRBreakpoint(path, method));
     return;
   }
-  const breakpointsFront = await commands.targetCommand.watcherFront.getBreakpointListActor();
+  const breakpointsFront =
+    await commands.targetCommand.watcherFront.getBreakpointListActor();
   await breakpointsFront.removeXHRBreakpoint(path, method);
 }
 
@@ -209,7 +222,7 @@ async function removeWatchpoint(object, property) {
 }
 
 function hasBreakpoint(location) {
-  return !!breakpoints[makePendingLocationId(location)];
+  return !!breakpoints[makeBreakpointServerLocationId(location)];
 }
 
 function getServerBreakpointsList() {
@@ -217,14 +230,14 @@ function getServerBreakpointsList() {
 }
 
 async function setBreakpoint(location, options) {
-  const breakpoint = breakpoints[makePendingLocationId(location)];
+  const breakpoint = breakpoints[makeBreakpointServerLocationId(location)];
   if (
     breakpoint &&
     JSON.stringify(breakpoint.options) == JSON.stringify(options)
   ) {
     return null;
   }
-  breakpoints[makePendingLocationId(location)] = { location, options };
+  breakpoints[makeBreakpointServerLocationId(location)] = { location, options };
 
   // Map frontend options to a more restricted subset of what
   // the server supports. For example frontend uses `hidden` attribute
@@ -242,7 +255,8 @@ async function setBreakpoint(location, options) {
       thread.setBreakpoint(location, serverOptions)
     );
   }
-  const breakpointsFront = await commands.targetCommand.watcherFront.getBreakpointListActor();
+  const breakpointsFront =
+    await commands.targetCommand.watcherFront.getBreakpointListActor();
   await breakpointsFront.setBreakpoint(location, serverOptions);
 
   // Call setBreakpoint for threads linked to targets
@@ -261,14 +275,15 @@ async function setBreakpoint(location, options) {
 }
 
 async function removeBreakpoint(location) {
-  delete breakpoints[makePendingLocationId(location)];
+  delete breakpoints[makeBreakpointServerLocationId(location)];
 
   const hasWatcherSupport = commands.targetCommand.hasTargetWatcherSupport();
   if (!hasWatcherSupport) {
     // Without watcher support, unconditionally forward removeBreakpoint to all threads.
     return forEachThread(async thread => thread.removeBreakpoint(location));
   }
-  const breakpointsFront = await commands.targetCommand.watcherFront.getBreakpointListActor();
+  const breakpointsFront =
+    await commands.targetCommand.watcherFront.getBreakpointListActor();
   await breakpointsFront.removeBreakpoint(location);
 
   // Call removeBreakpoint for threads linked to targets
@@ -362,7 +377,8 @@ async function pauseOnExceptions(
 async function blackBox(sourceActor, shouldBlackBox, ranges) {
   const hasWatcherSupport = commands.targetCommand.hasTargetWatcherSupport();
   if (hasWatcherSupport) {
-    const blackboxingFront = await commands.targetCommand.watcherFront.getBlackboxingActor();
+    const blackboxingFront =
+      await commands.targetCommand.watcherFront.getBlackboxingActor();
     if (shouldBlackBox) {
       await blackboxingFront.blackbox(sourceActor.url, ranges);
     } else {
@@ -404,7 +420,8 @@ async function setEventListenerBreakpoints(ids) {
     await forEachThread(thread => thread.setActiveEventBreakpoints(ids));
     return;
   }
-  const breakpointListFront = await commands.targetCommand.watcherFront.getBreakpointListActor();
+  const breakpointListFront =
+    await commands.targetCommand.watcherFront.getBreakpointListActor();
   await breakpointListFront.setActiveEventBreakpoints(ids);
 }
 
@@ -457,7 +474,8 @@ function fetchAncestorFramePositions(index) {
 async function setOverride(url, path) {
   const hasWatcherSupport = commands.targetCommand.hasTargetWatcherSupport();
   if (hasWatcherSupport) {
-    const networkFront = await commands.targetCommand.watcherFront.getNetworkParentActor();
+    const networkFront =
+      await commands.targetCommand.watcherFront.getNetworkParentActor();
     return networkFront.override(url, path);
   }
   return null;
@@ -466,7 +484,8 @@ async function setOverride(url, path) {
 async function removeOverride(url) {
   const hasWatcherSupport = commands.targetCommand.hasTargetWatcherSupport();
   if (hasWatcherSupport) {
-    const networkFront = await commands.targetCommand.watcherFront.getNetworkParentActor();
+    const networkFront =
+      await commands.targetCommand.watcherFront.getNetworkParentActor();
     networkFront.removeOverride(url);
   }
 }

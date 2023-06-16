@@ -4,7 +4,7 @@
 add_task(async function testDiscardWithNotLoadedUserTypedValue() {
   let tab1 = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    "http://example.com"
+    "https://example.com"
   );
 
   // Make sure we flushed the state at least once (otherwise the fix
@@ -31,14 +31,14 @@ add_task(async function testDiscardWithNotLoadedUserTypedValue() {
   const promiseTabLoaded = BrowserTestUtils.browserLoaded(
     tab1.linkedBrowser,
     false,
-    "http://example.com/"
+    "https://example.com/"
   );
   await BrowserTestUtils.switchTab(gBrowser, tab1);
-  info("Wait for the restored tab to load http://example.com");
+  info("Wait for the restored tab to load https://example.com");
   await promiseTabLoaded;
   is(
     tab1.linkedBrowser.currentURI.spec,
-    "http://example.com/",
+    "https://example.com/",
     "Restored discarded tab has loaded the expected url"
   );
 

@@ -12,7 +12,7 @@ add_task(async function test_structuredCloneHolder() {
 
   const obj = { foo: [{ bar: "baz" }] };
 
-  let holder = new StructuredCloneHolder(obj);
+  let holder = new StructuredCloneHolder("", "", obj);
 
   // Test same-compartment deserialization
 
@@ -39,7 +39,7 @@ add_task(async function test_structuredCloneHolder() {
   // Test non-object-value round-trip.
 
   equal(
-    new StructuredCloneHolder("foo").deserialize(global),
+    new StructuredCloneHolder("", "", "foo").deserialize(global),
     "foo",
     "Round-tripping non-object values works as expected"
   );
@@ -128,7 +128,7 @@ add_task(async function test_structuredCloneHolder_xray() {
   let holder;
   Cu.exportFunction(
     function serialize(val) {
-      holder = new StructuredCloneHolder(val, sandbox1);
+      holder = new StructuredCloneHolder("", "", val, sandbox1);
     },
     sandbox1,
     { defineAs: "serialize" }

@@ -24,7 +24,7 @@ describe("Release actor enhancer:", () => {
     it("releases backend actors when limit reached adding a single message", () => {
       const logLimit = 100;
       const releasedActors = [];
-      const mockFrontRelease = function() {
+      const mockFrontRelease = function () {
         releasedActors.push(this.actorID);
       };
 
@@ -73,7 +73,7 @@ describe("Release actor enhancer:", () => {
         storeOptions: { logLimit },
       });
 
-      const mockFrontRelease = function() {
+      const mockFrontRelease = function () {
         releasedActors.push(this.actorID);
       };
 
@@ -124,7 +124,7 @@ describe("Release actor enhancer:", () => {
       const releasedActors = [];
       const { dispatch, getState } = setupStore([]);
 
-      const mockFrontRelease = function() {
+      const mockFrontRelease = function () {
         releasedActors.push(this.actorID);
       };
 

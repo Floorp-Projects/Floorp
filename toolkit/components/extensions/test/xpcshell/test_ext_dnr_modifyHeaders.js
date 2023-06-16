@@ -381,10 +381,12 @@ add_task(async function requestHeaders_set_host_header() {
   AddonTestUtils.checkMessages(messages, {
     expected: [
       {
-        message: /Failed to apply modifyHeaders action to header "Host" \(DNR rule id 2 from ruleset "_session"\): Error: Unable to set host header, url missing from permissions\./,
+        message:
+          /Failed to apply modifyHeaders action to header "Host" \(DNR rule id 2 from ruleset "_session"\): Error: Unable to set host header, url missing from permissions\./,
       },
       {
-        message: /Failed to apply modifyHeaders action to header "Host" \(DNR rule id 3 from ruleset "_session"\): Error: Unable to set host header to restricted url\./,
+        message:
+          /Failed to apply modifyHeaders action to header "Host" \(DNR rule id 3 from ruleset "_session"\): Error: Unable to set host header to restricted url\./,
       },
     ],
   });
@@ -456,7 +458,8 @@ add_task(async function requestHeaders_set_host_header_multiple_extensions() {
   AddonTestUtils.checkMessages(messages, {
     expected: [
       {
-        message: /Failed to apply modifyHeaders action to header "Host" \(DNR rule id 1 from ruleset "_session"\): Error: Unable to set host header, url missing from permissions\./,
+        message:
+          /Failed to apply modifyHeaders action to header "Host" \(DNR rule id 1 from ruleset "_session"\): Error: Unable to set host header, url missing from permissions\./,
       },
     ],
   });
@@ -619,7 +622,7 @@ add_task(async function responseHeaders_set_content_security_policy_header() {
   async function testFetchAndCSP(url) {
     info(`testFetchAndCSP: ${url}`);
     let contentPage = await ExtensionTestUtils.loadContentPage(url);
-    let cspTestResults = await contentPage.spawn(null, async () => {
+    let cspTestResults = await contentPage.spawn([], async () => {
       const { document } = content;
       async function doFetchAndCheckCSP(url) {
         const cspTestResult = { url, violatedCSP: [] };
@@ -849,13 +852,9 @@ add_task(async function requestHeaders_and_responseHeaders_cookies() {
     const url = `http://cookietest${pathAndQuery}`;
     info(`loadPageAndGetCookies: ${url}`);
     let contentPage = await ExtensionTestUtils.loadContentPage(url);
-    let res = await contentPage.spawn(null, () => {
+    let res = await contentPage.spawn([], () => {
       const { document } = content;
-      const sortCookies = s =>
-        s
-          .split("; ")
-          .sort()
-          .join("; ");
+      const sortCookies = s => s.split("; ").sort().join("; ");
       return {
         // Server at /setcookie echos value of Cookie request header.
         serverSeenCookies: sortCookies(document.body.textContent),
@@ -992,7 +991,7 @@ add_task(async function modifyHeaders_multiple_extensions() {
   );
   async function checkHeaderActionResult(query, expectedHeaders, description) {
     const url = `/responseheadersFixture?${query}`;
-    const result = await contentPage.spawn(url, async url => {
+    const result = await contentPage.spawn([url], async url => {
       const res = await content.fetch(url);
       return {
         a: res.headers.get("a"),

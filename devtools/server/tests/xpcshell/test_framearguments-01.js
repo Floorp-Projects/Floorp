@@ -32,7 +32,7 @@ add_task(
 function evalCode(debuggee) {
   debuggee.eval(
     "(" +
-      function() {
+      function () {
         function stopMe(number, bool, string, null_, undef, object) {
           debugger;
         }

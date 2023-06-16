@@ -141,10 +141,6 @@ af{
                     }
                 }
                 currencyFormat%alphaNextToNumber{
-                    1000000{
-                        one{"¤0 m"}
-                        other{"¤0 m"}
-                    }
                     100000000{
                         one{"¤ 000 m"}
                         other{"¤ 000 m"}
@@ -1194,6 +1190,10 @@ af{
                     one{"oor {0} Vr."}
                     other{"oor {0} Vr."}
                 }
+                past{
+                    one{"{0} Vr. gelede"}
+                    other{"{0} Vr. gelede"}
+                }
             }
         }
         fri-short{
@@ -1324,6 +1324,10 @@ af{
                 future{
                     one{"oor {0} Ma."}
                     other{"oor {0} Ma."}
+                }
+                past{
+                    one{"{0} Ma. gelede"}
+                    other{"{0} Ma. gelede"}
                 }
             }
         }
@@ -1470,6 +1474,10 @@ af{
                     one{"oor {0} Sa."}
                     other{"oor {0} Sa."}
                 }
+                past{
+                    one{"{0} Sa. gelede"}
+                    other{"{0} Sa. gelede"}
+                }
             }
         }
         sat-short{
@@ -1549,10 +1557,19 @@ af{
             }
         }
         sun-narrow{
+            relative{
+                "-1"{"verlede So."}
+                "0"{"hierdie So."}
+                "1"{"volgende So."}
+            }
             relativeTime{
                 future{
                     one{"oor {0} So."}
                     other{"oor {0} So."}
+                }
+                past{
+                    one{"{0} So. gelede"}
+                    other{"{0} So. gelede"}
                 }
             }
         }
@@ -1601,6 +1618,10 @@ af{
                     one{"oor {0} Do."}
                     other{"oor {0} Do."}
                 }
+                past{
+                    one{"{0} Do. gelede"}
+                    other{"{0} Do. gelede"}
+                }
             }
         }
         thu-short{
@@ -1648,6 +1669,10 @@ af{
                     one{"oor {0} Di."}
                     other{"oor {0} Di."}
                 }
+                past{
+                    one{"{0} Di. gelede"}
+                    other{"{0} Di. gelede"}
+                }
             }
         }
         tue-short{
@@ -1694,6 +1719,10 @@ af{
                 future{
                     one{"oor {0} Wo."}
                     other{"oor {0} Wo."}
+                }
+                past{
+                    one{"{0} Wo. gelede"}
+                    other{"{0} Wo. gelede"}
                 }
             }
         }
@@ -1869,6 +1898,18 @@ af{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        or-narrow{
+            2{"{0} of {1}"}
+            end{"{0} of {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        or-short{
+            2{"{0} of {1}"}
+            end{"{0} of {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} en {1}"}
             end{"{0} en {1}"}
@@ -1876,7 +1917,10 @@ af{
             start{"{0}, {1}"}
         }
         standard-narrow{
+            2{"{0} en {1}"}
             end{"{0}, {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         standard-short{
             2{"{0} en {1}"}
@@ -1909,37 +1953,25 @@ af{
         metric{"Metrieke stelsel"}
     }
     personNames{
-        foreignSpaceReplacement{" "}
         nameOrderLocales{
             givenFirst{
                 "und",
                 "af",
             }
-            surnameFirst{
-                "ja",
-                "ko",
-                "vi",
-                "yue",
-                "zh",
-            }
         }
         namePattern{
-            givenFirst-long-addressing-formal{"{prefix} {surname}"}
+            givenFirst-long-addressing-formal{"{title} {surname}"}
             givenFirst-long-addressing-informal{"{given-informal}"}
-            givenFirst-long-monogram-formal{
-                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
-                "llCaps}"
-            }
             givenFirst-long-monogram-informal{"{given-informal-monogram-allCaps}{surname-monogram-allCaps}"}
-            givenFirst-long-referring-formal{"{given} {given2} {surname} {suffix}"}
+            givenFirst-long-referring-formal{"{title} {given} {given2} {surname} {generation}, {credentials}"}
             givenFirst-long-referring-informal{"{given-informal} {surname}"}
-            givenFirst-medium-addressing-formal{"{prefix} {surname}"}
+            givenFirst-medium-addressing-formal{"{title} {surname}"}
             givenFirst-medium-addressing-informal{"{given-informal}"}
             givenFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             givenFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname} {suffix}"}
-            givenFirst-medium-referring-informal{"{given} {given2-initial} {surname} {suffix}"}
-            givenFirst-short-addressing-formal{"{prefix} {surname}"}
+            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname} {credentials}"}
+            givenFirst-medium-referring-informal{"{given} {given2-initial} {surname} {credentials}"}
+            givenFirst-short-addressing-formal{"{title} {surname}"}
             givenFirst-short-addressing-informal{"{given-informal}"}
             givenFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             givenFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
@@ -1951,22 +1983,18 @@ af{
             sorting-medium-referring-informal{"{surname}, {given-informal}"}
             sorting-short-referring-formal{"{surname-core}, {given-initial} {given2-initial} {surname-prefix}"}
             sorting-short-referring-informal{"{surname}, {given-informal}"}
-            surnameFirst-long-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-long-addressing-formal{"{title} {surname}"}
             surnameFirst-long-addressing-informal{"{given-informal}"}
-            surnameFirst-long-monogram-formal{
-                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
-                "llCaps}"
-            }
             surnameFirst-long-monogram-informal{"{surname-monogram-allCaps}{given-informal-monogram-allCaps}"}
-            surnameFirst-long-referring-formal{"{surname} {given} {given2} {suffix}"}
+            surnameFirst-long-referring-formal{"{surname} {given} {given2} {credentials}"}
             surnameFirst-long-referring-informal{"{surname} {given-informal}"}
-            surnameFirst-medium-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-medium-addressing-formal{"{title} {surname}"}
             surnameFirst-medium-addressing-informal{"{given-informal}"}
             surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            surnameFirst-medium-referring-formal{"{surname} {given} {given2-initial} {suffix}"}
+            surnameFirst-medium-referring-formal{"{surname} {given} {given2-initial} {credentials}"}
             surnameFirst-medium-referring-informal{"{surname} {given-informal}"}
-            surnameFirst-short-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-short-addressing-formal{"{title} {surname}"}
             surnameFirst-short-addressing-informal{"{given-informal}"}
             surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}

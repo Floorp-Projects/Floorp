@@ -10,7 +10,7 @@ const asyncStorage = require("resource://devtools/shared/async-storage.js");
 
 const TEST_URI = URL_ROOT + "doc_flexbox_specific_cases.html";
 
-add_task(async function() {
+add_task(async function () {
   // Make sure there are no custom highlighter colors stored before starting.
   await asyncStorage.removeItem("flexboxInspectorHostColors");
 

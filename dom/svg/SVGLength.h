@@ -105,10 +105,14 @@ class SVGLength {
     return mUnit == dom::SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE;
   }
 
-  static bool IsValidUnitType(uint16_t unit) {
-    return unit > dom::SVGLength_Binding::SVG_LENGTHTYPE_UNKNOWN &&
-           unit <= dom::SVGLength_Binding::SVG_LENGTHTYPE_PC;
+  static bool IsValidUnitType(uint16_t aUnitType) {
+    return aUnitType > dom::SVGLength_Binding::SVG_LENGTHTYPE_UNKNOWN &&
+           aUnitType <= dom::SVGLength_Binding::SVG_LENGTHTYPE_PC;
   }
+
+  static void GetUnitString(nsAString& aUnit, uint16_t aUnitType);
+
+  static uint16_t GetUnitTypeForString(const nsAString& aUnit);
 
   /**
    * Returns the number of user units per current unit.

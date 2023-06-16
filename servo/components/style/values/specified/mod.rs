@@ -20,7 +20,6 @@ use crate::values::serialize_atom_identifier;
 use crate::values::specified::calc::CalcNode;
 use crate::{Atom, Namespace, One, Prefix, Zero};
 use cssparser::{Parser, Token};
-use std::f32;
 use std::fmt::{self, Write};
 use std::ops::Add;
 use style_traits::values::specified::AllowedNumericType;
@@ -31,12 +30,15 @@ pub use self::align::{AlignContent, AlignItems, AlignSelf, AlignTracks, ContentD
 #[cfg(feature = "gecko")]
 pub use self::align::{JustifyContent, JustifyItems, JustifySelf, JustifyTracks, SelfAlignment};
 pub use self::angle::{AllowUnitlessZeroAngle, Angle};
+pub use self::animation::{AnimationIterationCount, AnimationName, AnimationTimeline};
+pub use self::animation::{ScrollAxis, ScrollTimelineName, TransitionProperty, ViewTimelineInset};
 pub use self::background::{BackgroundRepeat, BackgroundSize};
 pub use self::basic_shape::FillRule;
 pub use self::border::{BorderCornerRadius, BorderImageSlice, BorderImageWidth};
 pub use self::border::{BorderImageRepeat, BorderImageSideWidth};
 pub use self::border::{BorderRadius, BorderSideWidth, BorderSpacing, BorderStyle};
 pub use self::box_::{Appearance, BreakBetween, BreakWithin, ContainerName, ContainerType};
+pub use self::box_::{BaselineSource, TouchAction, VerticalAlign, WillChange};
 pub use self::box_::{
     Clear, ContainIntrinsicSize, ContentVisibility, Float, LineClamp, Overflow, OverflowAnchor,
 };
@@ -44,7 +46,6 @@ pub use self::box_::{Contain, Display};
 pub use self::box_::{OverflowClipBox, OverscrollBehavior, Perspective, Resize, ScrollbarGutter};
 pub use self::box_::{ScrollSnapAlign, ScrollSnapAxis, ScrollSnapStop};
 pub use self::box_::{ScrollSnapStrictness, ScrollSnapType};
-pub use self::box_::{TouchAction, VerticalAlign, WillChange};
 pub use self::color::{
     Color, ColorOrAuto, ColorPropertyValue, ColorScheme, ForcedColorAdjust, PrintColorAdjust,
 };
@@ -72,7 +73,7 @@ pub use self::length::{
 #[cfg(feature = "gecko")]
 pub use self::list::ListStyleType;
 pub use self::list::Quotes;
-pub use self::motion::{OffsetPath, OffsetRotate};
+pub use self::motion::{OffsetPath, OffsetPosition, OffsetRotate};
 pub use self::outline::OutlineStyle;
 pub use self::page::{PageName, PageOrientation, PageSize, PageSizeOrientation, PaperSize};
 pub use self::percentage::{NonNegativePercentage, Percentage};
@@ -101,8 +102,6 @@ pub use self::transform::{TransformOrigin, TransformStyle, Translate};
 #[cfg(feature = "gecko")]
 pub use self::ui::CursorImage;
 pub use self::ui::{BoolInteger, Cursor, UserSelect};
-pub use self::animation::{AnimationIterationCount, AnimationName, AnimationTimeline};
-pub use self::animation::{ScrollAxis, ScrollTimelineName, TransitionProperty, ViewTimelineInset};
 pub use super::generics::grid::GridTemplateComponent as GenericGridTemplateComponent;
 
 #[cfg(feature = "gecko")]
@@ -879,12 +878,7 @@ impl Parse for Attr {
 
 /// Get the Namespace for a given prefix from the namespace map.
 fn get_namespace_for_prefix(prefix: &Prefix, context: &ParserContext) -> Option<Namespace> {
-    context
-        .namespaces
-        .as_ref()?
-        .prefixes
-        .get(prefix)
-        .map(|x| x.clone())
+    context.namespaces.prefixes.get(prefix).cloned()
 }
 
 impl Attr {

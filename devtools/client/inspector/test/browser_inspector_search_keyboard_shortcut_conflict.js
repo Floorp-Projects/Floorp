@@ -7,7 +7,7 @@
 // inspector panel (eg markup-view iframe) and that shortcuts triggered by other
 // panels are not consumed by the inspector.
 // See Bug 1589617.
-add_task(async function() {
+add_task(async function () {
   const { inspector, toolbox } = await openInspectorForURL(
     "data:text/html;charset=utf-8,<span>Test search shortcut conflicts</span>"
   );

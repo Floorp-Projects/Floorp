@@ -854,7 +854,13 @@ Status DefaultEncoderHeuristics::LossyFrameHeuristics(
 
   // Apply inverse-gaborish.
   if (shared.frame_header.loop_filter.gab) {
-    GaborishInverse(opsin, 0.9908511000000001f, pool);
+    // Unsure why better to do some more gaborish on X and B than Y.
+    float weight[3] = {
+        1.0036278514398933f,
+        0.99406123118127299f,
+        0.99719338015886894f,
+    };
+    GaborishInverse(opsin, weight, pool);
   }
 
   FindBestDequantMatrices(cparams, *opsin, modular_frame_encoder,
@@ -881,6 +887,7 @@ Status DefaultEncoderHeuristics::LossyFrameHeuristics(
     if (cparams.speed_tier <= SpeedTier::kSquirrel) {
       cfl_heuristics.ComputeTile(r, *opsin, enc_state->shared.matrices,
                                  /*ac_strategy=*/nullptr,
+                                 /*raw_quant_field=*/nullptr,
                                  /*quantizer=*/nullptr, /*fast=*/false, thread,
                                  &enc_state->shared.cmap);
     }
@@ -905,7 +912,7 @@ Status DefaultEncoderHeuristics::LossyFrameHeuristics(
     if (cparams.speed_tier <= SpeedTier::kHare) {
       cfl_heuristics.ComputeTile(
           r, *opsin, enc_state->shared.matrices, &enc_state->shared.ac_strategy,
-          &enc_state->shared.quantizer,
+          &enc_state->shared.raw_quant_field, &enc_state->shared.quantizer,
           /*fast=*/cparams.speed_tier >= SpeedTier::kWombat, thread,
           &enc_state->shared.cmap);
     }

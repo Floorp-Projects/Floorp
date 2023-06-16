@@ -9,7 +9,6 @@
 #include "SessionAccessibility.h"
 #include "mozilla/a11y/RemoteAccessible.h"
 #include "mozilla/Components.h"
-#include "mozilla/StaticPrefs_accessibility.h"
 #include "nsIAccessibleEvent.h"
 #include "nsIAccessiblePivot.h"
 #include "nsIStringBundle.h"
@@ -97,9 +96,7 @@ void a11y::ProxyEvent(RemoteAccessible* aTarget, uint32_t aEventType) {
       sessionAcc->SendFocusEvent(aTarget);
       break;
     case nsIAccessibleEvent::EVENT_REORDER:
-      if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-        sessionAcc->SendWindowContentChangedEvent();
-      }
+      sessionAcc->SendWindowContentChangedEvent();
       break;
     default:
       break;

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.thumbnailGenerator = (function() {
+this.thumbnailGenerator = (function () {
   let exports = {}; // This is used in webextension/background/takeshot.js,
   // server/src/pages/shot/controller.js, and
   // server/scr/pages/shotindex/view.js. It is used in a browser
@@ -96,7 +96,7 @@ this.thumbnailGenerator = (function() {
       let srcHeight = imageHeight;
       let destWidth, destHeight;
 
-      thumbnailImage.onload = function() {
+      thumbnailImage.onload = function () {
         destWidth = Math.round(srcWidth * maxResizeScaleFactor);
         destHeight = Math.round(srcHeight * maxResizeScaleFactor);
         if (

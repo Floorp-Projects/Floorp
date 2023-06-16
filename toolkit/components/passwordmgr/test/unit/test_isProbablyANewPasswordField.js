@@ -160,8 +160,8 @@ add_task(async function test_returns_false_when_pref_disabled() {
 for (let testcase of TESTCASES) {
   info("Sanity checking the testcase: " + testcase.description);
 
-  (function() {
-    add_task(async function() {
+  (function () {
+    add_task(async function () {
       info("Starting testcase: " + testcase.description);
       let document = Document.isInstance(testcase.document)
         ? testcase.document

@@ -19,7 +19,7 @@ const EXPECTED = {
   text: "This is a simple page",
 };
 
-module.exports = async function() {
+module.exports = async function () {
   await testSetup(SIMPLE_URL);
   await openDebuggerAndLog("cold", EXPECTED);
   await closeToolbox();

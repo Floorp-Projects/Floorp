@@ -492,7 +492,14 @@ hb_face_t* FT2FontEntry::CreateHBFace() const {
 }
 
 bool FT2FontEntry::HasFontTable(uint32_t aTableTag) {
+  // If we already have a FreeType face, we can just use that.
+  if (mFTFace) {
+    RefPtr<SharedFTFace> face = GetFTFace();
+    return gfxFT2FontEntryBase::FaceHasTable(face, aTableTag);
+  }
+
   {
+    // If we have a cached set of tables, query that.
     AutoReadLock lock(mLock);
     if (mAvailableTables.Count() > 0) {
       return mAvailableTables.Contains(aTableTag);
@@ -530,6 +537,8 @@ bool FT2FontEntry::HasFontTable(uint32_t aTableTag) {
     return mAvailableTables.Contains(aTableTag);
   }
 
+  // Last resort: we'll have to create a (temporary) FreeType face to query
+  // for table presence.
   RefPtr<SharedFTFace> face = GetFTFace();
   return gfxFT2FontEntryBase::FaceHasTable(face, aTableTag);
 }

@@ -26,24 +26,24 @@
 #include "js/GCVector.h"          // JS::RootedVector
 #include "js/HeapAPI.h"           // JS::GCCellPtr, js::gc::IsInsideNursery
 #include "js/Id.h"                // JS::PropertyKey
-#include "js/RootingAPI.h"        // JS::Handle, JS::Rooted
-#include "js/TracingAPI.h"        // JS::CallbackTracer, JS_GetTraceThingInfo
-#include "js/UbiNode.h"           // JS::ubi::Node
-#include "js/Value.h"             // JS::Value
-#include "js/Wrapper.h"           // js::UncheckedUnwrapWithoutExpose
-#include "vm/BigIntType.h"        // JS::BigInt::dump
-#include "vm/FrameIter.h"         // js::AllFramesIter, js::FrameIter
-#include "vm/Interpreter.h"       // GetFunctionThis
-#include "vm/JSContext.h"         // JSContext
-#include "vm/JSFunction.h"        // JSFunction
-#include "vm/JSObject.h"          // JSObject
-#include "vm/JSScript.h"          // JSScript
-#include "vm/Printer.h"     // js::GenericPrinter, js::QuoteString, js::Sprinter
-#include "vm/Realm.h"       // JS::Realm
-#include "vm/Runtime.h"     // JSRuntime
-#include "vm/Scope.h"       // js::PositionalFormalParameterIter
-#include "vm/Stack.h"       // js::DONT_CHECK_ALIASING
-#include "vm/StringType.h"  // JSAtom, JSString, js::ToString
+#include "js/Printer.h"     // js::GenericPrinter, js::QuoteString, js::Sprinter
+#include "js/RootingAPI.h"  // JS::Handle, JS::Rooted
+#include "js/TracingAPI.h"  // JS::CallbackTracer, JS_GetTraceThingInfo
+#include "js/UbiNode.h"     // JS::ubi::Node
+#include "js/Value.h"       // JS::Value
+#include "js/Wrapper.h"     // js::UncheckedUnwrapWithoutExpose
+#include "vm/BigIntType.h"  // JS::BigInt::dump
+#include "vm/FrameIter.h"   // js::AllFramesIter, js::FrameIter
+#include "vm/Interpreter.h"  // GetFunctionThis
+#include "vm/JSContext.h"    // JSContext
+#include "vm/JSFunction.h"   // JSFunction
+#include "vm/JSObject.h"     // JSObject
+#include "vm/JSScript.h"     // JSScript
+#include "vm/Realm.h"        // JS::Realm
+#include "vm/Runtime.h"      // JSRuntime
+#include "vm/Scope.h"        // js::PositionalFormalParameterIter
+#include "vm/Stack.h"        // js::DONT_CHECK_ALIASING
+#include "vm/StringType.h"   // JSAtom, JSString, js::ToString
 
 #include "vm/JSObject-inl.h"  // js::IsCallable
 #include "vm/Realm-inl.h"     // js::AutoRealm

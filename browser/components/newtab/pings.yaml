@@ -29,3 +29,17 @@ newtab:
     - mmccorquodale@mozilla.com
     - anicholson@mozilla.com
     - najiang@mozilla.com
+
+messaging-system:
+  description: |
+    This is a ping representing single events triggered by the messaging system
+    and captures some pings from About:Welcome, ASRouter, and other corners.
+  include_client_id: false
+  send_if_empty: false
+  bugs:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+  data_reviews:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+  notification_emails:
+    - pmcmanis@mozilla.com
+    - dmosedale@mozilla.com

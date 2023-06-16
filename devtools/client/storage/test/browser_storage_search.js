@@ -1,7 +1,7 @@
 // Tests the filter search box in the storage inspector
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   await openTabAndSetupStorage(MAIN_DOMAIN_SECURED + "storage-search.html");
 
   gUI.tree.expandAll();

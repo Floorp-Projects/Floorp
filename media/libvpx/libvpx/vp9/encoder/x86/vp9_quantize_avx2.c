@@ -295,7 +295,8 @@ static VPX_FORCE_INLINE void highbd_load_fp_values(
 
 static VPX_FORCE_INLINE __m256i highbd_get_max_lane_eob(
     const int16_t *iscan_ptr, __m256i eobmax, __m256i nz_mask) {
-  const __m256i packed_nz_mask = _mm256_packs_epi32(nz_mask, nz_mask);
+  const __m256i packed_nz_mask =
+      _mm256_packs_epi32(nz_mask, _mm256_setzero_si256());
   const __m256i packed_nz_mask_perm =
       _mm256_permute4x64_epi64(packed_nz_mask, 0xD8);
   const __m256i iscan =

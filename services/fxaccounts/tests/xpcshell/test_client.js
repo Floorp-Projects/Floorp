@@ -47,7 +47,7 @@ add_task(async function test_authenticated_get_request() {
   let method = "GET";
 
   let server = httpd_setup({
-    "/foo": function(request, response) {
+    "/foo": function (request, response) {
       Assert.ok(request.hasHeader("Authorization"));
 
       response.setStatusLine(request.httpVersion, 200, "OK");
@@ -72,7 +72,7 @@ add_task(async function test_authenticated_post_request() {
   let method = "POST";
 
   let server = httpd_setup({
-    "/foo": function(request, response) {
+    "/foo": function (request, response) {
       Assert.ok(request.hasHeader("Authorization"));
 
       response.setStatusLine(request.httpVersion, 200, "OK");
@@ -99,7 +99,7 @@ add_task(async function test_500_error() {
   let method = "GET";
 
   let server = httpd_setup({
-    "/foo": function(request, response) {
+    "/foo": function (request, response) {
       response.setStatusLine(request.httpVersion, 500, "Internal Server Error");
       response.bodyOutputStream.write(message, message.length);
     },
@@ -121,7 +121,7 @@ add_task(async function test_500_error() {
 add_task(async function test_backoffError() {
   let method = "GET";
   let server = httpd_setup({
-    "/retryDelay": function(request, response) {
+    "/retryDelay": function (request, response) {
       response.setHeader("Retry-After", "30");
       response.setStatusLine(
         request.httpVersion,
@@ -131,7 +131,7 @@ add_task(async function test_backoffError() {
       let message = "<h1>Ooops!</h1>";
       response.bodyOutputStream.write(message, message.length);
     },
-    "/duringDelayIShouldNotBeCalled": function(request, response) {
+    "/duringDelayIShouldNotBeCalled": function (request, response) {
       response.setStatusLine(request.httpVersion, 200, "OK");
       let jsonMessage = '{"working": "yes"}';
       response.bodyOutputStream.write(jsonMessage, jsonMessage.length);
@@ -190,7 +190,7 @@ add_task(async function test_signUp() {
   let unicodeUsername = "andr\xe9@example.org"; // 'andré@example.org'
   let unicodePassword = "p\xe4ssw\xf6rd"; // 'pässwörd'
   let server = httpd_setup({
-    "/account/create": function(request, response) {
+    "/account/create": function (request, response) {
       let body = CommonUtils.readBytesFromInputStream(request.bodyInputStream);
       body = CommonUtils.decodeUTF8(body);
       let jsonBody = JSON.parse(body);
@@ -295,7 +295,7 @@ add_task(async function test_signIn() {
   // Note this strings must be unicode and not already utf-8 encoded.
   let unicodeUsername = "m\xe9@example.com"; // 'mé@example.com'
   let server = httpd_setup({
-    "/account/login": function(request, response) {
+    "/account/login": function (request, response) {
       let body = CommonUtils.readBytesFromInputStream(request.bodyInputStream);
       body = CommonUtils.decodeUTF8(body);
       let jsonBody = JSON.parse(body);
@@ -389,7 +389,7 @@ add_task(async function test_signOut() {
   let signedOut = false;
 
   let server = httpd_setup({
-    "/session/destroy": function(request, response) {
+    "/session/destroy": function (request, response) {
       if (!signedOut) {
         signedOut = true;
         Assert.ok(request.hasHeader("Authorization"));
@@ -429,7 +429,7 @@ add_task(async function test_recoveryEmailStatus() {
   let tries = 0;
 
   let server = httpd_setup({
-    "/recovery_email/status": function(request, response) {
+    "/recovery_email/status": function (request, response) {
       Assert.ok(request.hasHeader("Authorization"));
       Assert.equal("", request._queryString);
 
@@ -464,7 +464,7 @@ add_task(async function test_recoveryEmailStatus() {
 add_task(async function test_recoveryEmailStatusWithReason() {
   let emailStatus = JSON.stringify({ verified: true });
   let server = httpd_setup({
-    "/recovery_email/status": function(request, response) {
+    "/recovery_email/status": function (request, response) {
       Assert.ok(request.hasHeader("Authorization"));
       // if there is a query string then it will have a reason
       Assert.equal("reason=push", request._queryString);
@@ -492,7 +492,7 @@ add_task(async function test_resendVerificationEmail() {
   let tries = 0;
 
   let server = httpd_setup({
-    "/recovery_email/resend_code": function(request, response) {
+    "/recovery_email/resend_code": function (request, response) {
       Assert.ok(request.hasHeader("Authorization"));
       if (tries === 0) {
         tries += 1;
@@ -537,7 +537,7 @@ add_task(async function test_accountKeys() {
   let attempt = 0;
 
   let server = httpd_setup({
-    "/account/keys": function(request, response) {
+    "/account/keys": function (request, response) {
       Assert.ok(request.hasHeader("Authorization"));
       attempt += 1;
 
@@ -615,7 +615,7 @@ add_task(async function test_accountKeys() {
 
 add_task(async function test_accessTokenWithSessionToken() {
   let server = httpd_setup({
-    "/oauth/token": function(request, response) {
+    "/oauth/token": function (request, response) {
       const responseMessage = JSON.stringify({
         access_token:
           "43793fdfffec22eb39fc3c44ed09193a6fde4c24e5d6a73f73178597b268af69",
@@ -661,7 +661,7 @@ add_task(async function test_accountExists() {
   let emptyMessage = "{}";
 
   let server = httpd_setup({
-    "/account/login": function(request, response) {
+    "/account/login": function (request, response) {
       let body = CommonUtils.readBytesFromInputStream(request.bodyInputStream);
       let jsonBody = JSON.parse(body);
 
@@ -724,7 +724,7 @@ add_task(async function test_registerDevice() {
   const ERROR_NAME = "test that the client promise rejects";
 
   const server = httpd_setup({
-    "/account/device": function(request, response) {
+    "/account/device": function (request, response) {
       const body = JSON.parse(
         CommonUtils.readBytesFromInputStream(request.bodyInputStream)
       );
@@ -787,7 +787,7 @@ add_task(async function test_updateDevice() {
   const ERROR_ID = "test that the client promise rejects";
 
   const server = httpd_setup({
-    "/account/device": function(request, response) {
+    "/account/device": function (request, response) {
       const body = JSON.parse(
         CommonUtils.readBytesFromInputStream(request.bodyInputStream)
       );
@@ -842,7 +842,7 @@ add_task(async function test_getDeviceList() {
   let canReturnDevices;
 
   const server = httpd_setup({
-    "/account/devices": function(request, response) {
+    "/account/devices": function (request, response) {
       if (canReturnDevices) {
         response.setStatusLine(request.httpVersion, 200, "OK");
         response.bodyOutputStream.write("[]", 2);
@@ -880,7 +880,7 @@ add_task(async function test_client_metrics() {
   }
 
   let server = httpd_setup({
-    "/session/destroy": function(request, response) {
+    "/session/destroy": function (request, response) {
       response.setHeader("Content-Type", "application/json; charset=utf-8");
       response.setStatusLine(request.httpVersion, 401, "Unauthorized");
       writeResp(response, {
@@ -897,7 +897,7 @@ add_task(async function test_client_metrics() {
     client.signOut(FAKE_SESSION_TOKEN, {
       service: "sync",
     }),
-    function(err) {
+    function (err) {
       return err.errno == 111;
     }
   );
@@ -918,7 +918,7 @@ add_task(async function test_email_case() {
   }
 
   let server = httpd_setup({
-    "/account/login": function(request, response) {
+    "/account/login": function (request, response) {
       response.setHeader("Content-Type", "application/json; charset=utf-8");
       attempts += 1;
       if (attempts > 2) {

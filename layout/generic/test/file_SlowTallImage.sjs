@@ -14,7 +14,7 @@ function handleRequest(request, response) {
   response.processAsync();
   response.setHeader("Content-Type", "image/png");
   let delay = request.queryString.indexOf("slow") >= 0 ? 600 : 200;
-  setTimeout(function() {
+  setTimeout(function () {
     response.write(IMG_BYTES);
     response.finish();
   }, delay);

@@ -17,12 +17,8 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "privacy.userContext.enabled"
 );
 
-var {
-  DefaultMap,
-  DefaultWeakMap,
-  ExtensionError,
-  parseMatchPatterns,
-} = ExtensionUtils;
+var { DefaultMap, DefaultWeakMap, ExtensionError, parseMatchPatterns } =
+  ExtensionUtils;
 
 var { defineLazyGetter } = ExtensionCommon;
 
@@ -891,7 +887,7 @@ class TabBase {
   }
 }
 
-defineLazyGetter(TabBase.prototype, "incognito", function() {
+defineLazyGetter(TabBase.prototype, "incognito", function () {
   return this._incognito;
 });
 

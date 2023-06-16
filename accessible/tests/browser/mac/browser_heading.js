@@ -13,7 +13,7 @@ addAccessibleTask(
   <h1 id="single-line-content">We’re building a richer search experience</h1>
   <h1 id="multi-lines-content">
 We’re building a
-richer
+richest
 search experience
   </h1>
   `,
@@ -33,7 +33,45 @@ search experience
     );
     is(
       multiLinesContentHeading.getAttributeValue("AXTitle"),
-      "We’re building a richer search experience"
+      "We’re building a richest search experience"
     );
+  }
+);
+
+/**
+ * Test AXTitle/AXDescription attributes of heading elements
+ */
+addAccessibleTask(
+  `
+  <h1 id="a">Hello <a href="#">world</a></h1>
+  <h1 id="b">Hello</h1>
+  <h1 id="c" aria-label="Goodbye">Hello</h1>
+  `,
+  async (browser, accDoc) => {
+    const a = getNativeInterface(accDoc, "a");
+    is(
+      a.getAttributeValue("AXTitle"),
+      "Hello world",
+      "Correct AXTitle for 'a'"
+    );
+    ok(
+      !a.getAttributeValue("AXDescription"),
+      "'a' Should not have AXDescription"
+    );
+
+    const b = getNativeInterface(accDoc, "b");
+    is(b.getAttributeValue("AXTitle"), "Hello", "Correct AXTitle for 'b'");
+    ok(
+      !b.getAttributeValue("AXDescription"),
+      "'b' Should not have AXDescription"
+    );
+
+    const c = getNativeInterface(accDoc, "c");
+    is(
+      c.getAttributeValue("AXDescription"),
+      "Goodbye",
+      "Correct AXDescription for 'c'"
+    );
+    ok(!c.getAttributeValue("AXTitle"), "'c' Should not have AXTitle");
   }
 );

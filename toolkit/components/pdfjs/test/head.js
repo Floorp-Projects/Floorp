@@ -49,7 +49,7 @@ async function waitForPdfJSAllLayers(browser, url, layers) {
   BrowserTestUtils.loadURIString(browser, url);
   await Promise.all([loadPromise, annotationPromise, annotationEditorPromise]);
 
-  await SpecialPowers.spawn(browser, [layers], async function(layers) {
+  await SpecialPowers.spawn(browser, [layers], async function (layers) {
     const { ContentTaskUtils } = ChromeUtils.importESModule(
       "resource://testing-common/ContentTaskUtils.sys.mjs"
     );
@@ -131,7 +131,7 @@ async function enableEditor(browser, name) {
  * @returns {Object} the bbox of the span containing the text.
  */
 async function getSpanBox(browser, text) {
-  return SpecialPowers.spawn(browser, [text], async function(text) {
+  return SpecialPowers.spawn(browser, [text], async function (text) {
     const { ContentTaskUtils } = ChromeUtils.importESModule(
       "resource://testing-common/ContentTaskUtils.sys.mjs"
     );
@@ -166,7 +166,7 @@ async function getSpanBox(browser, text) {
  * @returns
  */
 async function countElements(browser, selector) {
-  return SpecialPowers.spawn(browser, [selector], async function(selector) {
+  return SpecialPowers.spawn(browser, [selector], async function (selector) {
     return new Promise(resolve => {
       content.setTimeout(() => {
         resolve(content.document.querySelectorAll(selector).length);
@@ -222,7 +222,7 @@ async function clickOn(browser, selector) {
 }
 
 async function focusEditorLayer(browser) {
-  return SpecialPowers.spawn(browser, [], async function() {
+  return SpecialPowers.spawn(browser, [], async function () {
     const layer = content.document.querySelector(".annotationEditorLayer");
     if (layer === content.document.activeElement) {
       return Promise.resolve();
@@ -243,7 +243,7 @@ async function focusEditorLayer(browser) {
  * Hit a key.
  */
 async function hitKey(browser, char) {
-  await SpecialPowers.spawn(browser, [char], async function(char) {
+  await SpecialPowers.spawn(browser, [char], async function (char) {
     const { ContentTaskUtils } = ChromeUtils.importESModule(
       "resource://testing-common/ContentTaskUtils.sys.mjs"
     );

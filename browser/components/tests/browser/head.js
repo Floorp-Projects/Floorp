@@ -21,8 +21,8 @@ function AssertEvents(message, ...events) {
   );
 }
 
-const BROWSER_GLUE = Cc["@mozilla.org/browser/browserglue;1"].getService()
-  .wrappedJSObject;
+const BROWSER_GLUE =
+  Cc["@mozilla.org/browser/browserglue;1"].getService().wrappedJSObject;
 
 // Helpers for mocking various shell states.
 

@@ -78,7 +78,7 @@ TestAppend.prototype = {
   checkData(status, entry) {
     Assert.equal(status, Cr.NS_OK);
     var self = this;
-    pumpReadStream(entry.openInputStream(0), function(str) {
+    pumpReadStream(entry.openInputStream(0), function (str) {
       Assert.equal(str.length, 10);
       Assert.equal(str, "12345abcde");
       entry.close();

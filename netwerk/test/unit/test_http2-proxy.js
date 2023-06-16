@@ -53,15 +53,6 @@ class ProxyFilter {
     this.QueryInterface = ChromeUtils.generateQI(["nsIProtocolProxyFilter"]);
   }
   applyFilter(uri, pi, cb) {
-    if (
-      uri.pathQueryRef.startsWith("/execute") ||
-      uri.pathQueryRef.startsWith("/fork") ||
-      uri.pathQueryRef.startsWith("/kill")
-    ) {
-      // So we allow NodeServer.execute to work
-      cb.onProxyFilterResult(pi);
-      return;
-    }
     cb.onProxyFilterResult(
       pps.newProxyInfo(
         this._type,
@@ -95,7 +86,7 @@ class SimpleAuthPrompt2 {
   }
   asyncPromptAuth(channel, callback, context, encryptionLevel, authInfo) {
     this.signal.triggered = true;
-    executeSoon(function() {
+    executeSoon(function () {
       authInfo.username = "user";
       authInfo.password = "pass";
       callback.onAuthAvailable(context, authInfo);
@@ -151,7 +142,7 @@ function get_response(channel, flags = CL_ALLOW_UNKNOWN_CL, delay = 0) {
       flags
     );
     if (delay > 0) {
-      do_timeout(delay, function() {
+      do_timeout(delay, function () {
         channel.asyncOpen(listener);
       });
     } else {
@@ -232,14 +223,14 @@ class http2ProxyCode {
     // connections when shutting down the proxy.
     proxy.socketIndex = 0;
     proxy.socketMap = {};
-    proxy.on("connection", function(socket) {
+    proxy.on("connection", function (socket) {
       let index = proxy.socketIndex++;
       proxy.socketMap[index] = socket;
-      socket.on("close", function() {
+      socket.on("close", function () {
         delete proxy.socketMap[index];
       });
     });
-    proxy.closeSockets = function() {
+    proxy.closeSockets = function () {
       for (let i in proxy.socketMap) {
         proxy.socketMap[i].destroy();
       }
@@ -587,7 +578,8 @@ add_task(async function proxy_stream_reset_failure() {
 
 // The soft errors are not closing the session.
 add_task(async function origin_server_stream_soft_failure() {
-  var current_num_sessions_to_origin_server = await proxy_session_to_origin_server_counter();
+  var current_num_sessions_to_origin_server =
+    await proxy_session_to_origin_server_counter();
 
   const { status, http_code, proxy_connect_response_code } = await get_response(
     make_channel(`https://foo.example.com/illegalhpacksoft`),
@@ -612,7 +604,8 @@ add_task(async function origin_server_stream_soft_failure() {
 // The soft errors are not closing the session.
 add_task(
   async function origin_server_stream_soft_failure_multiple_streams_not_affected() {
-    var current_num_sessions_to_origin_server = await proxy_session_to_origin_server_counter();
+    var current_num_sessions_to_origin_server =
+      await proxy_session_to_origin_server_counter();
 
     let should_succeed = get_response(
       make_channel(`https://foo.example.com/750ms`)
@@ -766,7 +759,8 @@ add_task(async function proxy_success_check_number_of_session() {
 
 // The hard errors are closing the session.
 add_task(async function origin_server_stream_hard_failure() {
-  var current_num_sessions_to_origin_server = await proxy_session_to_origin_server_counter();
+  var current_num_sessions_to_origin_server =
+    await proxy_session_to_origin_server_counter();
   const { status, http_code, proxy_connect_response_code } = await get_response(
     make_channel(`https://foo.example.com/illegalhpackhard`),
     CL_EXPECT_FAILURE
@@ -812,7 +806,8 @@ add_task(async function origin_server_stream_hard_failure() {
 // The hard errors are closing the session.
 add_task(
   async function origin_server_stream_hard_failure_multiple_streams_affected() {
-    var current_num_sessions_to_origin_server = await proxy_session_to_origin_server_counter();
+    var current_num_sessions_to_origin_server =
+      await proxy_session_to_origin_server_counter();
     let should_fail = get_response(
       make_channel(`https://foo.example.com/750msNoData`),
       CL_EXPECT_FAILURE

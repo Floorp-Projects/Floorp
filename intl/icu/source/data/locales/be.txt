@@ -345,12 +345,32 @@ be{
                 abbreviated{
                     "б.э.",
                 }
+                narrow{
+                    "б.э.",
+                }
+                wide{
+                    "б.э.",
+                }
             }
         }
         chinese{
             monthNames{
                 format{
                     abbreviated{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
+                    narrow{
                         "1",
                         "2",
                         "3",
@@ -381,6 +401,91 @@ be{
                         "12",
                     }
                     wide{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
+                }
+            }
+        }
+        coptic{
+            monthNames{
+                format{
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
+                    }
+                }
+            }
+        }
+        dangi{
+            monthNames{
+                format{
+                    abbreviated{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
+                    narrow{
                         "1",
                         "2",
                         "3",
@@ -818,6 +923,14 @@ be{
                     "да н.э.",
                     "н.э.",
                 }
+                narrow{
+                    "да н.э.",
+                    "н.э.",
+                }
+                narrow%variant{
+                    "да н.э.",
+                    "н.э.",
+                }
                 wide{
                     "да нараджэння Хрыстова",
                     "ад нараджэння Хрыстова",
@@ -1224,6 +1337,13 @@ be{
         }
         day-narrow{
             dn{"д."}
+            relative{
+                "-1"{"учора"}
+                "-2"{"пазаўчора"}
+                "0"{"сёння"}
+                "1"{"заўтра"}
+                "2"{"паслязаўтра"}
+            }
             relativeTime{
                 future{
                     few{"праз {0} дні"}
@@ -1241,6 +1361,13 @@ be{
         }
         day-short{
             dn{"дзень"}
+            relative{
+                "-1"{"учора"}
+                "-2"{"пазаўчора"}
+                "0"{"сёння"}
+                "1"{"заўтра"}
+                "2"{"паслязаўтра"}
+            }
             relativeTime{
                 future{
                     few{"праз {0} дні"}
@@ -1368,6 +1495,9 @@ be{
         }
         hour-narrow{
             dn{"гадз"}
+            relative{
+                "0"{"у гэту гадзіну"}
+            }
             relativeTime{
                 future{
                     few{"праз {0} гадз"}
@@ -1385,6 +1515,9 @@ be{
         }
         hour-short{
             dn{"гадз"}
+            relative{
+                "0"{"у гэту гадзіну"}
+            }
             relativeTime{
                 future{
                     few{"праз {0} гадз"}
@@ -1422,6 +1555,9 @@ be{
         }
         minute-narrow{
             dn{"хв"}
+            relative{
+                "0"{"у гэту хвіліну"}
+            }
             relativeTime{
                 future{
                     few{"праз {0} хв"}
@@ -1439,6 +1575,9 @@ be{
         }
         minute-short{
             dn{"хв"}
+            relative{
+                "0"{"у гэту хвіліну"}
+            }
             relativeTime{
                 future{
                     few{"праз {0} хв"}
@@ -1607,6 +1746,11 @@ be{
         }
         quarter-narrow{
             dn{"кв."}
+            relative{
+                "-1"{"у мінулым квартале"}
+                "0"{"у гэтым квартале"}
+                "1"{"у наступным квартале"}
+            }
             relativeTime{
                 future{
                     few{"праз {0} кв."}
@@ -1624,6 +1768,11 @@ be{
         }
         quarter-short{
             dn{"кв."}
+            relative{
+                "-1"{"у мінулым квартале"}
+                "0"{"у гэтым квартале"}
+                "1"{"у наступным квартале"}
+            }
             relativeTime{
                 future{
                     few{"праз {0} кв."}
@@ -1724,6 +1873,9 @@ be{
         }
         second-narrow{
             dn{"с"}
+            relative{
+                "0"{"цяпер"}
+            }
             relativeTime{
                 future{
                     few{"праз {0} с"}
@@ -1741,6 +1893,9 @@ be{
         }
         second-short{
             dn{"с"}
+            relative{
+                "0"{"цяпер"}
+            }
             relativeTime{
                 future{
                     few{"праз {0} с"}
@@ -2187,7 +2342,25 @@ be{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        or-narrow{
+            2{"{0} ці {1}"}
+            end{"{0} ці {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        or-short{
+            2{"{0} ці {1}"}
+            end{"{0} ці {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
+            2{"{0} і {1}"}
+            end{"{0} і {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-narrow{
             2{"{0} і {1}"}
             end{"{0} і {1}"}
             middle{"{0}, {1}"}
@@ -2229,28 +2402,23 @@ be{
                 "und",
                 "be",
             }
-            surnameFirst{
-                "ko",
-                "vi",
-                "yue",
-                "zh",
-            }
         }
         namePattern{
-            givenFirst-long-addressing-formal{"{prefix} {surname}"}
+            givenFirst-long-addressing-formal{"{title} {surname}"}
             givenFirst-long-addressing-informal{"{given-informal}"}
-            givenFirst-long-monogram-formal{
+            givenFirst-long-monogram-informal{
                 "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
                 "llCaps}"
             }
-            givenFirst-long-referring-formal{"{given} {given2} {surname} {suffix}"}
+            givenFirst-long-referring-formal{"{given} {given2} {surname} {credentials}"}
             givenFirst-long-referring-informal{"{given-informal} {surname}"}
-            givenFirst-medium-addressing-formal{"{prefix} {surname}"}
+            givenFirst-medium-addressing-formal{"{title} {surname}"}
             givenFirst-medium-addressing-informal{"{given-informal}"}
             givenFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             givenFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
+            givenFirst-medium-referring-formal{"{given} {given2} {surname} {credentials}"}
             givenFirst-medium-referring-informal{"{given-informal} {surname}"}
-            givenFirst-short-addressing-formal{"{prefix} {surname}"}
+            givenFirst-short-addressing-formal{"{title} {surname}"}
             givenFirst-short-addressing-informal{"{given-informal}"}
             givenFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             givenFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
@@ -2258,23 +2426,22 @@ be{
             givenFirst-short-referring-informal{"{given-informal} {surname-initial}"}
             sorting-long-referring-formal{"{surname-core}, {given} {given2} {surname-prefix}"}
             sorting-long-referring-informal{"{surname}, {given-informal}"}
+            sorting-medium-referring-formal{"{surname-core}, {given} {given2} {surname-prefix}"}
             sorting-medium-referring-informal{"{surname}, {given-informal}"}
+            sorting-short-referring-formal{"{surname-core}, {given} {given2} {surname-prefix}"}
             sorting-short-referring-informal{"{surname}, {given-informal}"}
-            surnameFirst-long-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-long-addressing-formal{"{title} {surname}"}
             surnameFirst-long-addressing-informal{"{given-informal}"}
-            surnameFirst-long-monogram-formal{
-                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
-                "llCaps}"
-            }
             surnameFirst-long-monogram-informal{"{surname-monogram-allCaps}{given-informal-monogram-allCaps}"}
-            surnameFirst-long-referring-formal{"{surname} {given} {given2} {suffix}"}
+            surnameFirst-long-referring-formal{"{surname} {given} {given2} {credentials}"}
             surnameFirst-long-referring-informal{"{surname} {given-informal}"}
-            surnameFirst-medium-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-medium-addressing-formal{"{title} {surname}"}
             surnameFirst-medium-addressing-informal{"{given-informal}"}
             surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
+            surnameFirst-medium-referring-formal{"{surname} {given} {given2} {credentials}"}
             surnameFirst-medium-referring-informal{"{surname} {given-informal}"}
-            surnameFirst-short-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-short-addressing-formal{"{title} {surname}"}
             surnameFirst-short-addressing-informal{"{given-informal}"}
             surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}

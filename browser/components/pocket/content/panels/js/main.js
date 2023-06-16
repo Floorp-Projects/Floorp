@@ -9,7 +9,7 @@ import SavedOverlay from "./saved/overlay.js";
 import StyleGuideOverlay from "./style-guide/overlay.js";
 import pktPanelMessaging from "./messages.js";
 
-var PKT_PANEL = function() {};
+var PKT_PANEL = function () {};
 
 PKT_PANEL.prototype = {
   initHome() {

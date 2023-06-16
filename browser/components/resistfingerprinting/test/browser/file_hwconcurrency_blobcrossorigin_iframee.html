@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<meta charset="utf8">
+<script type="text/javascript">
+
+  var s = `<html><script>
+    let result = {
+      hardwareConcurrency : navigator.hardwareConcurrency
+    };
+    window.parent.postMessage(result, "*");`;
+  // eslint-disable-next-line
+  s += `</` + `script></html>`;
+
+  let b = new Blob([s], { type: "text/html" });
+  let url = URL.createObjectURL(b);
+  location.href = url;
+
+</script>
+<body>
+<output id="result"></output>
+</body>

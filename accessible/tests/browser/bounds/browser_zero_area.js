@@ -30,7 +30,7 @@ addAccessibleTask(
   <div id="a2" style="height:100px; width:100px; background:green;"><div style="height:300px; max-width: 300px; background:blue;"></div></div>
   <div id="a3" style="height:0; width:0;"><div style="height:200px; width:200px; background:green;"></div></div>
   `,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     const a1 = findAccessibleChildByID(accDoc, "a1");
     const a2 = findAccessibleChildByID(accDoc, "a2");
     const a3 = findAccessibleChildByID(accDoc, "a3");
@@ -49,7 +49,7 @@ addAccessibleTask(
 <br>
 <div id="a" style="height:0; width:0;"></div>
 `,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     const a = findAccessibleChildByID(accDoc, "a");
     await testContentBounds(browser, a, 0, 0);
   }
@@ -63,7 +63,7 @@ addAccessibleTask(
   `
 <input type="radio" id="radio" style="left: -671091em; position: absolute;">
 `,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     const radio = findAccessibleChildByID(accDoc, "radio");
     const contentDPR = await getContentDPR(browser);
     const [x, y, width, height] = getBounds(radio, contentDPR);
@@ -93,7 +93,7 @@ addAccessibleTask(
   <div id="inner1">testing</div>
 </aside>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     await testBoundsWithContent(docAcc, "inner0", browser);
     await testBoundsWithContent(docAcc, "inner1", browser);
   },
@@ -110,7 +110,7 @@ addAccessibleTask(
   <div id="div">Testing</div>
 </span>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     await testBoundsWithContent(docAcc, "span", browser);
     await testBoundsWithContent(docAcc, "div", browser);
   },

@@ -73,9 +73,8 @@ class TargetConfigurationActor extends Actor {
     super(watcherActor.conn, targetConfigurationSpec);
     this.watcherActor = watcherActor;
 
-    this._onBrowsingContextAttached = this._onBrowsingContextAttached.bind(
-      this
-    );
+    this._onBrowsingContextAttached =
+      this._onBrowsingContextAttached.bind(this);
     // We need to be notified of new browsing context being created so we can re-set flags
     // we already set on the "previous" browsing context. We're using this event  as it's
     // emitted very early in the document lifecycle (i.e. before any script on the page is
@@ -184,9 +183,8 @@ class TargetConfigurationActor extends Actor {
   }
 
   _getConfiguration() {
-    const targetConfigurationData = this.watcherActor.getSessionDataForType(
-      TARGET_CONFIGURATION
-    );
+    const targetConfigurationData =
+      this.watcherActor.getSessionDataForType(TARGET_CONFIGURATION);
     if (!targetConfigurationData) {
       return {};
     }
@@ -409,7 +407,8 @@ class TargetConfigurationActor extends Actor {
       flag !== undefined &&
       this._initialTouchEventsOverride === undefined
     ) {
-      this._initialTouchEventsOverride = this._browsingContext.touchEventsOverride;
+      this._initialTouchEventsOverride =
+        this._browsingContext.touchEventsOverride;
     }
 
     if (flag !== undefined) {

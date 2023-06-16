@@ -1,6 +1,6 @@
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   let tab1 = BrowserTestUtils.addTab(
     gBrowser,
     "data:text/plain;charset=utf-8,foo"

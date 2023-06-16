@@ -5,7 +5,7 @@
 /**
  * Checks that we don't encodeURI twice when creating bookmarks.html.
  */
-add_task(async function() {
+add_task(async function () {
   let url =
     "http://bt.ktxp.com/search.php?keyword=%E5%A6%84%E6%83%B3%E5%AD%A6%E7%94%9F%E4%BC%9A";
   let bm = await PlacesUtils.bookmarks.insert({
@@ -26,8 +26,9 @@ add_task(async function() {
   await BookmarkHTMLUtils.importFromFile(file, { replace: true });
 
   info("Checking first level");
-  let root = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.unfiledGuid)
-    .root;
+  let root = PlacesUtils.getFolderContents(
+    PlacesUtils.bookmarks.unfiledGuid
+  ).root;
   let node = root.getChild(0);
   Assert.equal(node.uri, url);
 

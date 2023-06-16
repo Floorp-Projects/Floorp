@@ -64,6 +64,7 @@
 #endif
 
 #include "gc/GC-inl.h"
+#include "gc/StableCellHasher-inl.h"
 #include "jit/InlineScriptTree-inl.h"
 #include "jit/MacroAssembler-inl.h"
 #include "jit/SafepointIndex-inl.h"
@@ -303,7 +304,7 @@ uint8_t* JitRuntime::allocateIonOsrTempData(size_t size) {
 
 void JitRuntime::freeIonOsrTempData() { ionOsrTempData_.ref().reset(); }
 
-JitRealm::JitRealm() : initialStringHeap(gc::TenuredHeap) {}
+JitRealm::JitRealm() : initialStringHeap(gc::Heap::Tenured) {}
 
 void JitRealm::initialize(bool zoneHasNurseryStrings) {
   setStringsCanBeInNursery(zoneHasNurseryStrings);
@@ -1182,8 +1183,7 @@ bool OptimizeMIR(MIRGenerator* mir) {
   // LICM can hoist instructions from conditional branches and
   // trigger bailouts. Disable it if bailing out of a hoisted
   // instruction has previously invalidated this script.
-  if (mir->optimizationInfo().licmEnabled() &&
-      !mir->outerInfo().hadLICMInvalidation()) {
+  if (mir->licmEnabled()) {
     JitSpewCont(JitSpew_LICM, "\n");
     if (!LICM(mir, graph)) {
       return false;

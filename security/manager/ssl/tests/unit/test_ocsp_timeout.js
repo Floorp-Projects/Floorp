@@ -44,7 +44,7 @@ function run_test() {
   add_one_test(true, "security.OCSP.timeoutMilliseconds.hard", 10000);
   add_one_test(true, "security.OCSP.timeoutMilliseconds.hard", 15000);
 
-  add_test(function() {
+  add_test(function () {
     socket.close();
     run_next_test();
   });
@@ -53,7 +53,7 @@ function run_test() {
 
 function add_one_test(useHardFail, timeoutPrefName, timeoutMilliseconds) {
   let startTime;
-  add_test(function() {
+  add_test(function () {
     Services.prefs.setBoolPref("security.OCSP.require", useHardFail);
     Services.prefs.setIntPref(timeoutPrefName, timeoutMilliseconds);
     startTime = new Date();
@@ -66,7 +66,7 @@ function add_one_test(useHardFail, timeoutPrefName, timeoutMilliseconds) {
     clearSessionCache
   );
 
-  add_test(function() {
+  add_test(function () {
     let endTime = new Date();
     let timeDifference = endTime - startTime;
     info(`useHardFail = ${useHardFail}`);

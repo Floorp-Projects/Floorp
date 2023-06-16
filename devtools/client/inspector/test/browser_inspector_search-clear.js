@@ -23,7 +23,7 @@ const TEST_URI = "data:application/xhtml+xml;charset=utf-8," + encodeURI(XHTML);
 
 // Type "d" in inspector-searchbox, Enter [Back space] key and check if the
 // clear button is shown correctly
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URI);
   const { searchBox, searchClearButton } = inspector;
 
@@ -32,9 +32,8 @@ add_task(async function() {
   info("Type d and the clear button will be shown");
 
   const command = once(searchBox, "input");
-  let onSearchProcessingDone = inspector.searchSuggestions.once(
-    "processing-done"
-  );
+  let onSearchProcessingDone =
+    inspector.searchSuggestions.once("processing-done");
   EventUtils.synthesizeKey("c", {}, inspector.panelWin);
   await command;
 

@@ -1,5 +1,5 @@
-const { ExtensionTestCommon } = SpecialPowers.ChromeUtils.import(
-  "resource://testing-common/ExtensionTestCommon.jsm"
+const { ExtensionTestCommon } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://testing-common/ExtensionTestCommon.sys.mjs"
 );
 
 var ExtensionTestUtils = {
@@ -20,7 +20,7 @@ var ExtensionTestUtils = {
   },
 };
 
-ExtensionTestUtils.loadExtension = function(ext) {
+ExtensionTestUtils.loadExtension = function (ext) {
   // Cleanup functions need to be registered differently depending on
   // whether we're in browser chrome or plain mochitests.
   var registerCleanup;

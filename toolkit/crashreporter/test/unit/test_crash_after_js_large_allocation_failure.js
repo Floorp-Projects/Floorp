@@ -7,13 +7,13 @@ add_task(async function run_test() {
   }
 
   await do_crash(
-    function() {
+    function () {
       crashType = CrashTestUtils.CRASH_MOZ_CRASH;
       crashReporter.annotateCrashReport("TestKey", "Yes");
       Cu.getJSTestingFunctions().reportLargeAllocationFailure();
       Cu.forceGC();
     },
-    function(mdump, extra) {
+    function (mdump, extra) {
       Assert.equal(extra.TestKey, "Yes");
       Assert.equal(false, "JSOutOfMemory" in extra);
       Assert.equal(extra.JSLargeAllocationFailure, "Recovered");

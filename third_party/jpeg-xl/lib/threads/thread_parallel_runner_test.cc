@@ -6,8 +6,10 @@
 #include <atomic>
 
 #include "lib/jxl/base/data_parallel.h"
-#include "lib/jxl/base/thread_pool_internal.h"
+#include "lib/jxl/test_utils.h"
 #include "lib/jxl/testing.h"
+
+using jxl::test::ThreadPoolForTests;
 
 namespace jpegxl {
 namespace {
@@ -26,7 +28,7 @@ int PopulationCount(uint64_t bits) {
 // (joining with its threads), num_threads=0 works (runs on current thread).
 TEST(ThreadParallelRunnerTest, TestPool) {
   for (int num_threads = 0; num_threads <= 18; ++num_threads) {
-    jxl::ThreadPoolInternal pool(num_threads);
+    ThreadPoolForTests pool(num_threads);
     for (int num_tasks = 0; num_tasks < 32; ++num_tasks) {
       std::vector<int> mementos(num_tasks);
       for (int begin = 0; begin < 32; ++begin) {
@@ -55,7 +57,7 @@ TEST(ThreadParallelRunnerTest, TestSmallAssignments) {
   // WARNING: cumulative total threads must not exceed profiler.h kMaxThreads.
   const int kMaxThreads = 8;
   for (int num_threads = 1; num_threads <= kMaxThreads; ++num_threads) {
-    jxl::ThreadPoolInternal pool(num_threads);
+    ThreadPoolForTests pool(num_threads);
 
     // (Avoid mutex because it may perturb the worker thread scheduling)
     std::atomic<uint64_t> id_bits{0};
@@ -95,7 +97,7 @@ struct Counter {
 
 TEST(ThreadParallelRunnerTest, TestCounter) {
   const int kNumThreads = 12;
-  jxl::ThreadPoolInternal pool(kNumThreads);
+  ThreadPoolForTests pool(kNumThreads);
   alignas(128) Counter counters[kNumThreads];
 
   const int kNumTasks = kNumThreads * 19;

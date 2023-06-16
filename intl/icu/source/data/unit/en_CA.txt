@@ -326,6 +326,9 @@ en_CA{
             }
         }
         area{
+            square-inch{
+                per{"{0}/sq in"}
+            }
             square-meter{
                 dnam{"metres²"}
             }
@@ -349,9 +352,24 @@ en_CA{
             }
         }
         duration{
+            hour{
+                per{"{0}/hr"}
+            }
             minute{
                 one{"{0}min"}
                 other{"{0}min"}
+            }
+            month{
+                per{"{0}/mo"}
+            }
+            second{
+                per{"{0}/sec"}
+            }
+            week{
+                per{"{0}/wk"}
+            }
+            year{
+                per{"{0}/yr"}
             }
         }
         electric{
@@ -412,6 +430,9 @@ en_CA{
             fahrenheit{
                 one{"{0}°F"}
                 other{"{0}°F"}
+            }
+            generic{
+                dnam{"deg"}
             }
         }
         volume{

@@ -7,11 +7,8 @@
 // service data on shutdown if configured to do so.
 
 ChromeUtils.defineESModuleGetters(this, {
+  Sanitizer: "resource:///modules/Sanitizer.sys.mjs",
   TestUtils: "resource://testing-common/TestUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  Sanitizer: "resource:///modules/Sanitizer.jsm",
 });
 
 Sanitizer.onStartup();

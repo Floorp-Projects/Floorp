@@ -1,62 +1,66 @@
 <html>
-    <head>
-        <meta charset="utf-8">
-        <title>Inputs</title>
-        <script>
-            class CustomTextBox extends HTMLElement {
-                constructor() {
-                    super();
-
-                    this.attachShadow({mode: 'open'});
-                    const wrapper = document.createElement('span');
-                    this.textbox = wrapper.appendChild(document.createElement("input"));
-                    this.textbox.value = "adipisci";
-                    this.shadowRoot.append(wrapper);
-                }
-
-                focus() {
-                    this.textbox.focus();
-                }
-
-                select() {
-                    this.textbox.select();
-                }
-
-                setSelectionRange(start, end) {
-                    this.textbox.setSelectionRange(start, end);
-                }
-
-                get selectionStart() {
-                    return this.textbox.selectionStart;
-                }
-
-                get selectionEnd() {
-                    return this.textbox.selectionEnd;
-                }
-
-                get value() {
-                    return this.textbox.value;
-                }
-            }
-            customElements.define('x-input', CustomTextBox);
-        </script>
-    </head>
-    <body>
-        <div id="text">lorem</div>
-        <input type="text" id="input" value="ipsum">
-        <textarea id="textarea">dolor</textarea>
-        <div id="contenteditable" contenteditable="true">sit</div>
-        <iframe id="iframe" src="selectionAction_frame.html"></iframe>
-        <iframe id="designmode" src="selectionAction_frame.html"></iframe>
-        <iframe id="iframe-xorigin" src="http://127.0.0.1:4245/assets/www/selectionAction_frame_xorigin.html"></iframe>
-        <x-input id="x-input"></x-input>
-    </body>
+  <head>
+    <meta charset="utf-8" />
+    <title>Inputs</title>
     <script>
-        addEventListener("load", function() {
-            document.getElementById("iframe").contentDocument.body.textContent = "amet";
-            var designmode = document.getElementById("designmode");
-            designmode.contentDocument.body.textContent = "consectetur";
-            designmode.contentDocument.designMode = "on";
-        });
+      class CustomTextBox extends HTMLElement {
+        constructor() {
+          super();
+
+          this.attachShadow({ mode: "open" });
+          const wrapper = document.createElement("span");
+          this.textbox = wrapper.appendChild(document.createElement("input"));
+          this.textbox.value = "adipisci";
+          this.shadowRoot.append(wrapper);
+        }
+
+        focus() {
+          this.textbox.focus();
+        }
+
+        select() {
+          this.textbox.select();
+        }
+
+        setSelectionRange(start, end) {
+          this.textbox.setSelectionRange(start, end);
+        }
+
+        get selectionStart() {
+          return this.textbox.selectionStart;
+        }
+
+        get selectionEnd() {
+          return this.textbox.selectionEnd;
+        }
+
+        get value() {
+          return this.textbox.value;
+        }
+      }
+      customElements.define("x-input", CustomTextBox);
     </script>
+  </head>
+  <body>
+    <div id="text">lorem</div>
+    <input type="text" id="input" value="ipsum" />
+    <textarea id="textarea">dolor</textarea>
+    <div id="contenteditable" contenteditable="true">sit</div>
+    <iframe id="iframe" src="selectionAction_frame.html"></iframe>
+    <iframe id="designmode" src="selectionAction_frame.html"></iframe>
+    <iframe
+      id="iframe-xorigin"
+      src="http://127.0.0.1:4245/assets/www/selectionAction_frame_xorigin.html"
+    ></iframe>
+    <x-input id="x-input"></x-input>
+  </body>
+  <script>
+    addEventListener("load", function () {
+      document.getElementById("iframe").contentDocument.body.textContent =
+        "amet";
+      var designmode = document.getElementById("designmode");
+      designmode.contentDocument.body.textContent = "consectetur";
+      designmode.contentDocument.designMode = "on";
+    });
+  </script>
 </html>

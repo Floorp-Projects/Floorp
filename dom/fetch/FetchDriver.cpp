@@ -6,6 +6,7 @@
 
 #include "js/Value.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/TaskQueue.h"
 #include "mozilla/dom/FetchDriver.h"
 
 #include "mozilla/dom/ReferrerInfo.h"
@@ -1236,7 +1237,9 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest) {
 
   // Try to retarget off main thread.
   if (nsCOMPtr<nsIThreadRetargetableRequest> rr = do_QueryInterface(aRequest)) {
-    Unused << NS_WARN_IF(NS_FAILED(rr->RetargetDeliveryTo(sts)));
+    RefPtr<TaskQueue> queue =
+        TaskQueue::Create(sts.forget(), "FetchDriver STS Delivery Queue");
+    Unused << NS_WARN_IF(NS_FAILED(rr->RetargetDeliveryTo(queue)));
   }
   return NS_OK;
 }

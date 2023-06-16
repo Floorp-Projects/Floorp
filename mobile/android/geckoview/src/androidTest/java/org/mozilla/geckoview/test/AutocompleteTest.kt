@@ -68,32 +68,32 @@ class AutocompleteTest : BaseSessionTest() {
         assertThat(
             "Guid should match",
             login.guid,
-            equalTo(null)
+            equalTo(null),
         )
         assertThat(
             "Origin should match",
             login.origin,
-            equalTo("")
+            equalTo(""),
         )
         assertThat(
             "Form action origin should match",
             login.formActionOrigin,
-            equalTo(null)
+            equalTo(null),
         )
         assertThat(
             "HTTP realm should match",
             login.httpRealm,
-            equalTo(null)
+            equalTo(null),
         )
         assertThat(
             "Username should match",
             login.username,
-            equalTo("")
+            equalTo(""),
         )
         assertThat(
             "Password should match",
             login.password,
-            equalTo("")
+            equalTo(""),
         )
     }
 
@@ -103,8 +103,8 @@ class AutocompleteTest : BaseSessionTest() {
             mapOf(
                 // Enable login management since it's disabled in automation.
                 "signon.rememberSignons" to true,
-                "signon.autofillForms.http" to true
-            )
+                "signon.autofillForms.http" to true,
+            ),
         )
 
         val fetchHandled = GeckoResult<Void>()
@@ -156,27 +156,27 @@ class AutocompleteTest : BaseSessionTest() {
         assertThat(
             "Guid should match",
             creditCard.guid,
-            equalTo(null)
+            equalTo(null),
         )
         assertThat(
             "Name should match",
             creditCard.name,
-            equalTo("")
+            equalTo(""),
         )
         assertThat(
             "Number should match",
             creditCard.number,
-            equalTo("")
+            equalTo(""),
         )
         assertThat(
             "Expiration month should match",
             creditCard.expirationMonth,
-            equalTo("")
+            equalTo(""),
         )
         assertThat(
             "Expiration year should match",
             creditCard.expirationYear,
-            equalTo("")
+            equalTo(""),
         )
     }
 
@@ -213,7 +213,7 @@ class AutocompleteTest : BaseSessionTest() {
                 .number(number[1])
                 .expirationMonth(expMonth[1])
                 .expirationYear(expYear[1])
-                .build()
+                .build(),
         )
 
         val selectHandled = GeckoResult<Void>()
@@ -235,14 +235,14 @@ class AutocompleteTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onCreditCardSelect(
                 session: GeckoSession,
-                prompt: AutocompleteRequest<CreditCardSelectOption>
+                prompt: AutocompleteRequest<CreditCardSelectOption>,
             ): GeckoResult<PromptDelegate.PromptResponse>? {
                 assertThat("Session should not be null", session, notNullValue())
 
                 assertThat(
                     "There should be two options",
                     prompt.options.size,
-                    equalTo(2)
+                    equalTo(2),
                 )
 
                 for (i in 0..1) {
@@ -252,22 +252,22 @@ class AutocompleteTest : BaseSessionTest() {
                     assertThat(
                         "Name should match",
                         creditCard.name,
-                        equalTo(name[i])
+                        equalTo(name[i]),
                     )
                     assertThat(
                         "Number should match",
                         creditCard.number,
-                        equalTo(number[i])
+                        equalTo(number[i]),
                     )
                     assertThat(
                         "Expiration month should match",
                         creditCard.expirationMonth,
-                        equalTo(expMonth[i])
+                        equalTo(expMonth[i]),
                     )
                     assertThat(
                         "Expiration year should match",
                         creditCard.expirationYear,
-                        equalTo(expYear[i])
+                        equalTo(expYear[i]),
                     )
                 }
                 Handler(Looper.getMainLooper()).postDelayed({
@@ -285,22 +285,22 @@ class AutocompleteTest : BaseSessionTest() {
         assertThat(
             "Filled name should match",
             mainSession.evaluateJS("document.querySelector('#name').value") as String,
-            equalTo(name[0])
+            equalTo(name[0]),
         )
         assertThat(
             "Filled number should match",
             mainSession.evaluateJS("document.querySelector('#number').value") as String,
-            equalTo(number[0])
+            equalTo(number[0]),
         )
         assertThat(
             "Filled expiration month should match",
             mainSession.evaluateJS("document.querySelector('#expMonth').value") as String,
-            equalTo(expMonth[0])
+            equalTo(expMonth[0]),
         )
         assertThat(
             "Filled expiration year should match",
             mainSession.evaluateJS("document.querySelector('#expYear').value") as String,
-            equalTo(expYear[0])
+            equalTo(expYear[0]),
         )
     }
 
@@ -312,62 +312,62 @@ class AutocompleteTest : BaseSessionTest() {
         assertThat(
             "Guid should match",
             address.guid,
-            equalTo(null)
+            equalTo(null),
         )
         assertThat(
             "Name should match",
             address.name,
-            equalTo("")
+            equalTo(""),
         )
         assertThat(
             "Given name should match",
             address.givenName,
-            equalTo("")
+            equalTo(""),
         )
         assertThat(
             "Family name should match",
             address.familyName,
-            equalTo("")
+            equalTo(""),
         )
         assertThat(
             "Street address should match",
             address.streetAddress,
-            equalTo("")
+            equalTo(""),
         )
         assertThat(
             "Address level 1 should match",
             address.addressLevel1,
-            equalTo("")
+            equalTo(""),
         )
         assertThat(
             "Address level 2 should match",
             address.addressLevel2,
-            equalTo("")
+            equalTo(""),
         )
         assertThat(
             "Address level 3 should match",
             address.addressLevel3,
-            equalTo("")
+            equalTo(""),
         )
         assertThat(
             "Postal code should match",
             address.postalCode,
-            equalTo("")
+            equalTo(""),
         )
         assertThat(
             "Country should match",
             address.country,
-            equalTo("")
+            equalTo(""),
         )
         assertThat(
             "Tel should match",
             address.tel,
-            equalTo("")
+            equalTo(""),
         )
         assertThat(
             "Email should match",
             address.email,
-            equalTo("")
+            equalTo(""),
         )
     }
 
@@ -402,7 +402,7 @@ class AutocompleteTest : BaseSessionTest() {
                 .number(number[2])
                 .expirationMonth(expMonth[2])
                 .expirationYear(expYear[2])
-                .build()
+                .build(),
         )
 
         mainSession.loadTestPath(CC_FORM_HTML_PATH)
@@ -429,7 +429,7 @@ class AutocompleteTest : BaseSessionTest() {
                 assertThat(
                     "There should be three options",
                     prompt.options.size,
-                    equalTo(3)
+                    equalTo(3),
                 )
                 prompt.setDelegate(promptInstanceDelegate)
                 Handler(Looper.getMainLooper()).postDelayed({
@@ -493,14 +493,14 @@ class AutocompleteTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onAddressSelect(
                 session: GeckoSession,
-                prompt: AutocompleteRequest<AddressSelectOption>
+                prompt: AutocompleteRequest<AddressSelectOption>,
             ): GeckoResult<PromptDelegate.PromptResponse>? {
                 assertThat("Session should not be null", session, notNullValue())
 
                 assertThat(
                     "There should be one option",
                     prompt.options.size,
-                    equalTo(savedAddresses.size)
+                    equalTo(savedAddresses.size),
                 )
 
                 val addressOption = prompt.options.find { it.value.familyName == selectedAddress.familyName }
@@ -510,62 +510,62 @@ class AutocompleteTest : BaseSessionTest() {
                 assertThat(
                     "Guid should match",
                     address?.guid,
-                    equalTo(selectedAddress.guid)
+                    equalTo(selectedAddress.guid),
                 )
                 assertThat(
                     "Name should match",
                     address?.name,
-                    equalTo(selectedAddress.name)
+                    equalTo(selectedAddress.name),
                 )
                 assertThat(
                     "Given name should match",
                     address?.givenName,
-                    equalTo(selectedAddress.givenName)
+                    equalTo(selectedAddress.givenName),
                 )
                 assertThat(
                     "Family name should match",
                     address?.familyName,
-                    equalTo(selectedAddress.familyName)
+                    equalTo(selectedAddress.familyName),
                 )
                 assertThat(
                     "Street address should match",
                     address?.streetAddress,
-                    equalTo(selectedAddress.streetAddress)
+                    equalTo(selectedAddress.streetAddress),
                 )
                 assertThat(
                     "Address level 1 should match",
                     address?.addressLevel1,
-                    equalTo(selectedAddress.addressLevel1)
+                    equalTo(selectedAddress.addressLevel1),
                 )
                 assertThat(
                     "Address level 2 should match",
                     address?.addressLevel2,
-                    equalTo(selectedAddress.addressLevel2)
+                    equalTo(selectedAddress.addressLevel2),
                 )
                 assertThat(
                     "Address level 3 should match",
                     address?.addressLevel3,
-                    equalTo(selectedAddress.addressLevel3)
+                    equalTo(selectedAddress.addressLevel3),
                 )
                 assertThat(
                     "Postal code should match",
                     address?.postalCode,
-                    equalTo(selectedAddress.postalCode)
+                    equalTo(selectedAddress.postalCode),
                 )
                 assertThat(
                     "Country should match",
                     address?.country,
-                    equalTo(selectedAddress.country)
+                    equalTo(selectedAddress.country),
                 )
                 assertThat(
                     "Tel should match",
                     address?.tel,
-                    equalTo(selectedAddress.tel)
+                    equalTo(selectedAddress.tel),
                 )
                 assertThat(
                     "Email should match",
                     address?.email,
-                    equalTo(selectedAddress.email)
+                    equalTo(selectedAddress.email),
                 )
 
                 Handler(Looper.getMainLooper()).postDelayed({
@@ -586,42 +586,42 @@ class AutocompleteTest : BaseSessionTest() {
         assertThat(
             "Filled given name should match",
             mainSession.evaluateJS("document.querySelector('#givenName').value") as String,
-            equalTo(selectedAddress.givenName)
+            equalTo(selectedAddress.givenName),
         )
         assertThat(
             "Filled family name should match",
             mainSession.evaluateJS("document.querySelector('#familyName').value") as String,
-            equalTo(selectedAddress.familyName)
+            equalTo(selectedAddress.familyName),
         )
         assertThat(
             "Filled street address should match",
             mainSession.evaluateJS("document.querySelector('#streetAddress').value") as String,
-            equalTo(selectedAddress.streetAddress)
+            equalTo(selectedAddress.streetAddress),
         )
         assertThat(
             "Filled country should match",
             mainSession.evaluateJS("document.querySelector('#country').value") as String,
-            equalTo(selectedAddress.country)
+            equalTo(selectedAddress.country),
         )
         assertThat(
             "Filled postal code should match",
             mainSession.evaluateJS("document.querySelector('#postalCode').value") as String,
-            equalTo(selectedAddress.postalCode)
+            equalTo(selectedAddress.postalCode),
         )
         assertThat(
             "Filled email should match",
             mainSession.evaluateJS("document.querySelector('#email').value") as String,
-            equalTo(selectedAddress.email)
+            equalTo(selectedAddress.email),
         )
         assertThat(
             "Filled telephone number should match",
             mainSession.evaluateJS("document.querySelector('#tel').value") as String,
-            equalTo(selectedAddress.tel)
+            equalTo(selectedAddress.tel),
         )
         assertThat(
             "Filled organization should match",
             mainSession.evaluateJS("document.querySelector('#organization').value") as String,
-            equalTo(selectedAddress.organization)
+            equalTo(selectedAddress.organization),
         )
     }
 
@@ -691,7 +691,7 @@ class AutocompleteTest : BaseSessionTest() {
                 .tel(tels[0])
                 .organization(organizations[0])
                 .build(),
-            selectedAddress
+            selectedAddress,
         )
 
         checkAddressesForCorrectness(savedAddresses.toTypedArray(), selectedAddress)
@@ -744,7 +744,7 @@ class AutocompleteTest : BaseSessionTest() {
                 assertThat(
                     "There should be one option",
                     prompt.options.size,
-                    equalTo(1)
+                    equalTo(1),
                 )
                 prompt.setDelegate(promptInstanceDelegate)
                 Handler(Looper.getMainLooper()).postDelayed({
@@ -771,8 +771,8 @@ class AutocompleteTest : BaseSessionTest() {
                 // Enable login management since it's disabled in automation.
                 "signon.rememberSignons" to true,
                 "signon.autofillForms.http" to true,
-                "signon.userInputRequiredToCapture.enabled" to false
-            )
+                "signon.userInputRequiredToCapture.enabled" to false,
+            ),
         )
 
         sessionRule.delegateDuringNextWait(object : StorageDelegate {
@@ -803,7 +803,7 @@ class AutocompleteTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onLoginSave(
                 session: GeckoSession,
-                prompt: AutocompleteRequest<LoginSaveOption>
+                prompt: AutocompleteRequest<LoginSaveOption>,
             ): GeckoResult<PromptDelegate.PromptResponse>? {
                 val option = prompt.options[0]
                 val login = option.value
@@ -813,13 +813,13 @@ class AutocompleteTest : BaseSessionTest() {
                 assertThat(
                     "Username should match",
                     login.username,
-                    equalTo("user1x")
+                    equalTo("user1x"),
                 )
 
                 assertThat(
                     "Password should match",
                     login.password,
-                    equalTo("pass1x")
+                    equalTo("pass1x"),
                 )
 
                 return GeckoResult.fromValue(prompt.dismiss())
@@ -834,8 +834,8 @@ class AutocompleteTest : BaseSessionTest() {
                 // Enable login management since it's disabled in automation.
                 "signon.rememberSignons" to true,
                 "signon.autofillForms.http" to true,
-                "signon.userInputRequiredToCapture.enabled" to false
-            )
+                "signon.userInputRequiredToCapture.enabled" to false,
+            ),
         )
 
         mainSession.loadTestPath(FORMS3_HTML_PATH)
@@ -849,13 +849,13 @@ class AutocompleteTest : BaseSessionTest() {
                 assertThat(
                     "Username should match",
                     login.username,
-                    equalTo("user1x")
+                    equalTo("user1x"),
                 )
 
                 assertThat(
                     "Password should match",
                     login.password,
-                    equalTo("pass1x")
+                    equalTo("pass1x"),
                 )
 
                 saveHandled.complete(null)
@@ -866,7 +866,7 @@ class AutocompleteTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onLoginSave(
                 session: GeckoSession,
-                prompt: AutocompleteRequest<LoginSaveOption>
+                prompt: AutocompleteRequest<LoginSaveOption>,
             ): GeckoResult<PromptDelegate.PromptResponse>? {
                 assertThat("Session should not be null", session, notNullValue())
 
@@ -878,13 +878,13 @@ class AutocompleteTest : BaseSessionTest() {
                 assertThat(
                     "Username should match",
                     login.username,
-                    equalTo("user1x")
+                    equalTo("user1x"),
                 )
 
                 assertThat(
                     "Password should match",
                     login.password,
-                    equalTo("pass1x")
+                    equalTo("pass1x"),
                 )
 
                 return GeckoResult.fromValue(prompt.confirm(option))
@@ -908,8 +908,8 @@ class AutocompleteTest : BaseSessionTest() {
                 // Enable login management since it's disabled in automation.
                 "signon.rememberSignons" to true,
                 "signon.autofillForms.http" to true,
-                "signon.userInputRequiredToCapture.enabled" to false
-            )
+                "signon.userInputRequiredToCapture.enabled" to false,
+            ),
         )
 
         mainSession.loadTestPath(FORMS3_HTML_PATH)
@@ -923,13 +923,13 @@ class AutocompleteTest : BaseSessionTest() {
                 assertThat(
                     "Username should match",
                     login.username,
-                    equalTo("user1x")
+                    equalTo("user1x"),
                 )
 
                 assertThat(
                     "Password should match",
                     login.password,
-                    equalTo("pass1xmod")
+                    equalTo("pass1xmod"),
                 )
 
                 saveHandled.complete(null)
@@ -940,7 +940,7 @@ class AutocompleteTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onLoginSave(
                 session: GeckoSession,
-                prompt: AutocompleteRequest<LoginSaveOption>
+                prompt: AutocompleteRequest<LoginSaveOption>,
             ): GeckoResult<PromptDelegate.PromptResponse>? {
                 assertThat("Session should not be null", session, notNullValue())
 
@@ -952,13 +952,13 @@ class AutocompleteTest : BaseSessionTest() {
                 assertThat(
                     "Username should match",
                     login.username,
-                    equalTo("user1x")
+                    equalTo("user1x"),
                 )
 
                 assertThat(
                     "Password should match",
                     login.password,
-                    equalTo("pass1x")
+                    equalTo("pass1x"),
                 )
 
                 val modLogin = LoginEntry.Builder()
@@ -990,8 +990,8 @@ class AutocompleteTest : BaseSessionTest() {
                 // Enable login management since it's disabled in automation.
                 "signon.rememberSignons" to true,
                 "signon.autofillForms.http" to true,
-                "signon.userInputRequiredToCapture.enabled" to false
-            )
+                "signon.userInputRequiredToCapture.enabled" to false,
+            ),
         )
 
         val saveHandled = GeckoResult<Void>()
@@ -1016,19 +1016,19 @@ class AutocompleteTest : BaseSessionTest() {
                 assertThat(
                     "Username should match",
                     login.username,
-                    equalTo(user1)
+                    equalTo(user1),
                 )
 
                 assertThat(
                     "Password should match",
                     login.password,
-                    equalTo(forEachCall(pass1, pass2))
+                    equalTo(forEachCall(pass1, pass2)),
                 )
 
                 assertThat(
                     "GUID should match",
                     login.guid,
-                    equalTo(forEachCall(null, guid))
+                    equalTo(forEachCall(null, guid)),
                 )
 
                 val savedLogin = LoginEntry.Builder()
@@ -1053,7 +1053,7 @@ class AutocompleteTest : BaseSessionTest() {
             @AssertCalled(count = 2)
             override fun onLoginSave(
                 session: GeckoSession,
-                prompt: AutocompleteRequest<LoginSaveOption>
+                prompt: AutocompleteRequest<LoginSaveOption>,
             ): GeckoResult<PromptDelegate.PromptResponse>? {
                 assertThat("Session should not be null", session, notNullValue())
 
@@ -1065,13 +1065,13 @@ class AutocompleteTest : BaseSessionTest() {
                 assertThat(
                     "Username should match",
                     login.username,
-                    equalTo(user1)
+                    equalTo(user1),
                 )
 
                 assertThat(
                     "Password should match",
                     login.password,
-                    equalTo(forEachCall(pass1, pass2))
+                    equalTo(forEachCall(pass1, pass2)),
                 )
 
                 return GeckoResult.fromValue(prompt.confirm(option))
@@ -1124,7 +1124,7 @@ class AutocompleteTest : BaseSessionTest() {
             @AssertCalled
             override fun onCreditCardSave(
                 session: GeckoSession,
-                request: AutocompleteRequest<CreditCardSaveOption>
+                request: AutocompleteRequest<CreditCardSaveOption>,
             ): GeckoResult<PromptDelegate.PromptResponse> {
                 assertThat("Session should not be null", session, notNullValue())
 
@@ -1136,22 +1136,22 @@ class AutocompleteTest : BaseSessionTest() {
                 assertThat(
                     "Credit card name should match",
                     cc.name,
-                    equalTo(ccName)
+                    equalTo(ccName),
                 )
                 assertThat(
                     "Credit card number should match",
                     cc.number,
-                    equalTo(ccNumber)
+                    equalTo(ccNumber),
                 )
                 assertThat(
                     "Credit card expiration month should match",
                     cc.expirationMonth,
-                    equalTo(ccExpMonth)
+                    equalTo(ccExpMonth),
                 )
                 assertThat(
                     "Credit card expiration year should match",
                     cc.expirationYear,
-                    equalTo(ccExpYear)
+                    equalTo(ccExpYear),
                 )
 
                 return GeckoResult.fromValue(request.confirm(option))
@@ -1203,7 +1203,7 @@ class AutocompleteTest : BaseSessionTest() {
             @AssertCalled
             override fun onCreditCardSave(
                 session: GeckoSession,
-                request: AutocompleteRequest<CreditCardSaveOption>
+                request: AutocompleteRequest<CreditCardSaveOption>,
             ): GeckoResult<PromptDelegate.PromptResponse> {
                 assertThat("Session should not be null", session, notNullValue())
 
@@ -1215,22 +1215,22 @@ class AutocompleteTest : BaseSessionTest() {
                 assertThat(
                     "Credit card name should match",
                     cc.name,
-                    equalTo(ccName)
+                    equalTo(ccName),
                 )
                 assertThat(
                     "Credit card number should match",
                     cc.number,
-                    equalTo(ccNumber)
+                    equalTo(ccNumber),
                 )
                 assertThat(
                     "Credit card expiration month should match",
                     cc.expirationMonth,
-                    equalTo(ccExpMonth)
+                    equalTo(ccExpMonth),
                 )
                 assertThat(
                     "Credit card expiration year should match",
                     cc.expirationYear,
-                    equalTo(ccExpYear)
+                    equalTo(ccExpYear),
                 )
 
                 return GeckoResult.fromValue(request.confirm(option))
@@ -1290,7 +1290,7 @@ class AutocompleteTest : BaseSessionTest() {
             @AssertCalled
             override fun onCreditCardSave(
                 session: GeckoSession,
-                request: AutocompleteRequest<CreditCardSaveOption>
+                request: AutocompleteRequest<CreditCardSaveOption>,
             ): GeckoResult<PromptDelegate.PromptResponse> {
                 assertThat("Session should not be null", session, notNullValue())
 
@@ -1302,22 +1302,22 @@ class AutocompleteTest : BaseSessionTest() {
                 assertThat(
                     "Credit card name should match",
                     cc.name,
-                    equalTo(ccName)
+                    equalTo(ccName),
                 )
                 assertThat(
                     "Credit card number should match",
                     cc.number,
-                    equalTo(ccNumber)
+                    equalTo(ccNumber),
                 )
                 assertThat(
                     "Credit card expiration month should match",
                     cc.expirationMonth,
-                    equalTo(ccExpMonth)
+                    equalTo(ccExpMonth),
                 )
                 assertThat(
                     "Credit card expiration year should match",
                     cc.expirationYear,
-                    equalTo(ccExpYear)
+                    equalTo(ccExpYear),
                 )
 
                 return GeckoResult.fromValue(request.dismiss())
@@ -1353,7 +1353,7 @@ class AutocompleteTest : BaseSessionTest() {
             @AssertCalled
             override fun onCreditCardSave(
                 session: GeckoSession,
-                request: AutocompleteRequest<CreditCardSaveOption>
+                request: AutocompleteRequest<CreditCardSaveOption>,
             ): GeckoResult<PromptDelegate.PromptResponse> {
                 assertThat("Session should not be null", session, notNullValue())
 
@@ -1365,22 +1365,22 @@ class AutocompleteTest : BaseSessionTest() {
                 assertThat(
                     "Credit card name should match",
                     cc.name,
-                    equalTo(ccName)
+                    equalTo(ccName),
                 )
                 assertThat(
                     "Credit card number should match",
                     cc.number,
-                    equalTo(ccNumber)
+                    equalTo(ccNumber),
                 )
                 assertThat(
                     "Credit card expiration month should match",
                     cc.expirationMonth,
-                    equalTo(ccExpMonth)
+                    equalTo(ccExpMonth),
                 )
                 assertThat(
                     "Credit card expiration year should match",
                     cc.expirationYear,
-                    equalTo(ccExpYear)
+                    equalTo(ccExpYear),
                 )
 
                 val modifiedCreditCard = CreditCard.Builder()
@@ -1438,22 +1438,22 @@ class AutocompleteTest : BaseSessionTest() {
                 assertThat(
                     "Credit card name should match",
                     creditCard.name,
-                    equalTo(ccName)
+                    equalTo(ccName),
                 )
                 assertThat(
                     "Credit card number should match",
                     creditCard.number,
-                    equalTo(forEachCall(ccNumber1, ccNumber2))
+                    equalTo(forEachCall(ccNumber1, ccNumber2)),
                 )
                 assertThat(
                     "Credit card expiration month should match",
                     creditCard.expirationMonth,
-                    equalTo(forEachCall(ccExpMonth1, ccExpMonth2))
+                    equalTo(forEachCall(ccExpMonth1, ccExpMonth2)),
                 )
                 assertThat(
                     "Credit card expiration year should match",
                     creditCard.expirationYear,
-                    equalTo(forEachCall(ccExpYear1, ccExpYear2))
+                    equalTo(forEachCall(ccExpYear1, ccExpYear2)),
                 )
 
                 val savedCC = CreditCard.Builder()
@@ -1477,7 +1477,7 @@ class AutocompleteTest : BaseSessionTest() {
             @AssertCalled(count = 2)
             override fun onCreditCardSave(
                 session: GeckoSession,
-                request: AutocompleteRequest<CreditCardSaveOption>
+                request: AutocompleteRequest<CreditCardSaveOption>,
             ): GeckoResult<PromptDelegate.PromptResponse> {
                 assertThat("Session should not be null", session, notNullValue())
 
@@ -1489,22 +1489,22 @@ class AutocompleteTest : BaseSessionTest() {
                 assertThat(
                     "Credit card name should match",
                     cc.name,
-                    equalTo(ccName)
+                    equalTo(ccName),
                 )
                 assertThat(
                     "Credit card number should match",
                     cc.number,
-                    equalTo(forEachCall(ccNumber1, ccNumber2))
+                    equalTo(forEachCall(ccNumber1, ccNumber2)),
                 )
                 assertThat(
                     "Credit card expiration month should match",
                     cc.expirationMonth,
-                    equalTo(forEachCall(ccExpMonth1, ccExpMonth2))
+                    equalTo(forEachCall(ccExpMonth1, ccExpMonth2)),
                 )
                 assertThat(
                     "Credit card expiration year should match",
                     cc.expirationYear,
-                    equalTo(forEachCall(ccExpYear1, ccExpYear2))
+                    equalTo(forEachCall(ccExpYear1, ccExpYear2)),
                 )
 
                 return GeckoResult.fromValue(request.confirm(option))
@@ -1550,8 +1550,8 @@ class AutocompleteTest : BaseSessionTest() {
                 // Enable login management since it's disabled in automation.
                 "signon.rememberSignons" to true,
                 "signon.autofillForms.http" to true,
-                "signon.userInputRequiredToCapture.enabled" to false
-            )
+                "signon.userInputRequiredToCapture.enabled" to false,
+            ),
         )
 
         val usedHandled = GeckoResult<Void>()
@@ -1583,25 +1583,25 @@ class AutocompleteTest : BaseSessionTest() {
                     assertThat(
                         "Used fields should match",
                         usedFields,
-                        equalTo(UsedField.PASSWORD)
+                        equalTo(UsedField.PASSWORD),
                     )
 
                     assertThat(
                         "Username should match",
                         login.username,
-                        equalTo(user1)
+                        equalTo(user1),
                     )
 
                     assertThat(
                         "Password should match",
                         login.password,
-                        equalTo(pass1)
+                        equalTo(pass1),
                     )
 
                     assertThat(
                         "GUID should match",
                         login.guid,
-                        equalTo(guid)
+                        equalTo(guid),
                     )
 
                     usedHandled.complete(null)
@@ -1625,7 +1625,7 @@ class AutocompleteTest : BaseSessionTest() {
             @AssertCalled(false)
             override fun onLoginSave(
                 session: GeckoSession,
-                prompt: AutocompleteRequest<LoginSaveOption>
+                prompt: AutocompleteRequest<LoginSaveOption>,
             ): GeckoResult<PromptDelegate.PromptResponse>? {
                 return null
             }
@@ -1660,8 +1660,8 @@ class AutocompleteTest : BaseSessionTest() {
                 // Enable login management since it's disabled in automation.
                 "signon.rememberSignons" to true,
                 "signon.autofillForms.http" to true,
-                "signon.userInputRequiredToCapture.enabled" to false
-            )
+                "signon.userInputRequiredToCapture.enabled" to false,
+            ),
         )
 
         val user1 = "user1x"
@@ -1693,7 +1693,7 @@ class AutocompleteTest : BaseSessionTest() {
             @AssertCalled(false)
             override fun onLoginSave(
                 session: GeckoSession,
-                prompt: AutocompleteRequest<LoginSaveOption>
+                prompt: AutocompleteRequest<LoginSaveOption>,
             ): GeckoResult<PromptDelegate.PromptResponse>? {
                 return null
             }
@@ -1703,25 +1703,25 @@ class AutocompleteTest : BaseSessionTest() {
         mainSession.waitForPageStop()
         mainSession.evaluateJS("document.querySelector('#user1').focus()")
         mainSession.evaluateJS(
-            "document.querySelector('#user1').value = '$user1'"
+            "document.querySelector('#user1').value = '$user1'",
         )
         mainSession.pressKey(KeyEvent.KEYCODE_TAB)
 
         val pass = mainSession.evaluateJS(
-            "document.querySelector('#pass1').value"
+            "document.querySelector('#pass1').value",
         ) as String
 
         if (autofillEnabled) {
             assertThat(
                 "Password should match",
                 pass,
-                equalTo(pass1)
+                equalTo(pass1),
             )
         } else {
             assertThat(
                 "Password should not be filled",
                 pass,
-                equalTo("")
+                equalTo(""),
             )
         }
     }
@@ -1746,8 +1746,8 @@ class AutocompleteTest : BaseSessionTest() {
                 "signon.rememberSignons" to true,
                 "signon.autofillForms.http" to true,
                 "dom.disable_open_during_load" to false,
-                "signon.userInputRequiredToCapture.enabled" to false
-            )
+                "signon.userInputRequiredToCapture.enabled" to false,
+            ),
         )
 
         // Test:
@@ -1824,13 +1824,13 @@ class AutocompleteTest : BaseSessionTest() {
                 assertThat(
                     "Username should match",
                     login.username,
-                    equalTo(username)
+                    equalTo(username),
                 )
 
                 assertThat(
                     "Password should match",
                     login.password,
-                    equalTo(password)
+                    equalTo(password),
                 )
 
                 handle.complete(null)
@@ -1841,25 +1841,25 @@ class AutocompleteTest : BaseSessionTest() {
                 assertThat(
                     "Used fields should match",
                     usedFields,
-                    equalTo(UsedField.PASSWORD)
+                    equalTo(UsedField.PASSWORD),
                 )
 
                 assertThat(
                     "Username should match",
                     login.username,
-                    equalTo(user1)
+                    equalTo(user1),
                 )
 
                 assertThat(
                     "Password should match",
                     login.password,
-                    equalTo(pass1)
+                    equalTo(pass1),
                 )
 
                 assertThat(
                     "GUID should match",
                     login.guid,
-                    equalTo(user1)
+                    equalTo(user1),
                 )
 
                 usedHandled.complete(null)
@@ -1873,7 +1873,7 @@ class AutocompleteTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onLoginSave(
                 session: GeckoSession,
-                prompt: AutocompleteRequest<LoginSaveOption>
+                prompt: AutocompleteRequest<LoginSaveOption>,
             ): GeckoResult<PromptDelegate.PromptResponse>? {
                 assertThat("Session should not be null", session, notNullValue())
 
@@ -1885,13 +1885,13 @@ class AutocompleteTest : BaseSessionTest() {
                 assertThat(
                     "Username should match",
                     login.username,
-                    equalTo(user1)
+                    equalTo(user1),
                 )
 
                 assertThat(
                     "Password should match",
                     login.password,
-                    equalTo(pass1)
+                    equalTo(pass1),
                 )
 
                 return GeckoResult.fromValue(prompt.confirm(option))
@@ -1915,7 +1915,7 @@ class AutocompleteTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onLoginSave(
                 session: GeckoSession,
-                prompt: AutocompleteRequest<LoginSaveOption>
+                prompt: AutocompleteRequest<LoginSaveOption>,
             ): GeckoResult<PromptDelegate.PromptResponse>? {
                 assertThat("Session should not be null", session, notNullValue())
 
@@ -1927,13 +1927,13 @@ class AutocompleteTest : BaseSessionTest() {
                 assertThat(
                     "Username should match",
                     login.username,
-                    equalTo(user2)
+                    equalTo(user2),
                 )
 
                 assertThat(
                     "Password should match",
                     login.password,
-                    equalTo(pass2)
+                    equalTo(pass2),
                 )
 
                 return GeckoResult.fromValue(prompt.confirm(option))
@@ -1955,14 +1955,14 @@ class AutocompleteTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onLoginSelect(
                 session: GeckoSession,
-                prompt: AutocompleteRequest<LoginSelectOption>
+                prompt: AutocompleteRequest<LoginSelectOption>,
             ): GeckoResult<PromptDelegate.PromptResponse>? {
                 assertThat("Session should not be null", session, notNullValue())
 
                 assertThat(
                     "There should be two options",
                     prompt.options.size,
-                    equalTo(2)
+                    equalTo(2),
                 )
 
                 var usernames = arrayOf(user1, user2)
@@ -1975,12 +1975,12 @@ class AutocompleteTest : BaseSessionTest() {
                     assertThat(
                         "Username should match",
                         login.username,
-                        equalTo(usernames[i])
+                        equalTo(usernames[i]),
                     )
                     assertThat(
                         "Password should match",
                         login.password,
-                        equalTo(passwords[i])
+                        equalTo(passwords[i]),
                     )
                 }
 
@@ -2002,13 +2002,13 @@ class AutocompleteTest : BaseSessionTest() {
         assertThat(
             "Filled username should match",
             session3.evaluateJS("document.querySelector('#user1').value") as String,
-            equalTo(user1)
+            equalTo(user1),
         )
 
         assertThat(
             "Filled password should match",
             session3.evaluateJS("document.querySelector('#pass1').value") as String,
-            equalTo(pass1)
+            equalTo(pass1),
         )
 
         // Submit the selection.
@@ -2024,8 +2024,8 @@ class AutocompleteTest : BaseSessionTest() {
                 "signon.rememberSignons" to true,
                 "signon.autofillForms.http" to true,
                 "dom.disable_open_during_load" to false,
-                "signon.userInputRequiredToCapture.enabled" to false
-            )
+                "signon.userInputRequiredToCapture.enabled" to false,
+            ),
         )
 
         // Test:
@@ -2103,13 +2103,13 @@ class AutocompleteTest : BaseSessionTest() {
                 assertThat(
                     "Username should match",
                     login.username,
-                    equalTo(username)
+                    equalTo(username),
                 )
 
                 assertThat(
                     "Password should match",
                     login.password,
-                    equalTo(password)
+                    equalTo(password),
                 )
 
                 handle.complete(null)
@@ -2126,7 +2126,7 @@ class AutocompleteTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onLoginSave(
                 session: GeckoSession,
-                prompt: AutocompleteRequest<LoginSaveOption>
+                prompt: AutocompleteRequest<LoginSaveOption>,
             ): GeckoResult<PromptDelegate.PromptResponse>? {
                 assertThat("Session should not be null", session, notNullValue())
 
@@ -2138,13 +2138,13 @@ class AutocompleteTest : BaseSessionTest() {
                 assertThat(
                     "Username should match",
                     login.username,
-                    equalTo(user1)
+                    equalTo(user1),
                 )
 
                 assertThat(
                     "Password should match",
                     login.password,
-                    equalTo(pass1)
+                    equalTo(pass1),
                 )
 
                 return GeckoResult.fromValue(prompt.confirm(option))
@@ -2168,7 +2168,7 @@ class AutocompleteTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onLoginSave(
                 session: GeckoSession,
-                prompt: AutocompleteRequest<LoginSaveOption>
+                prompt: AutocompleteRequest<LoginSaveOption>,
             ): GeckoResult<PromptDelegate.PromptResponse>? {
                 assertThat("Session should not be null", session, notNullValue())
 
@@ -2180,13 +2180,13 @@ class AutocompleteTest : BaseSessionTest() {
                 assertThat(
                     "Username should match",
                     login.username,
-                    equalTo(user2)
+                    equalTo(user2),
                 )
 
                 assertThat(
                     "Password should match",
                     login.password,
-                    equalTo(pass2)
+                    equalTo(pass2),
                 )
 
                 return GeckoResult.fromValue(prompt.confirm(option))
@@ -2208,14 +2208,14 @@ class AutocompleteTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onLoginSelect(
                 session: GeckoSession,
-                prompt: AutocompleteRequest<LoginSelectOption>
+                prompt: AutocompleteRequest<LoginSelectOption>,
             ): GeckoResult<PromptDelegate.PromptResponse>? {
                 assertThat("Session should not be null", session, notNullValue())
 
                 assertThat(
                     "There should be two options",
                     prompt.options.size,
-                    equalTo(2)
+                    equalTo(2),
                 )
 
                 var usernames = arrayOf(user1, user2)
@@ -2228,12 +2228,12 @@ class AutocompleteTest : BaseSessionTest() {
                     assertThat(
                         "Username should match",
                         login.username,
-                        equalTo(usernames[i])
+                        equalTo(usernames[i]),
                     )
                     assertThat(
                         "Password should match",
                         login.password,
-                        equalTo(passwords[i])
+                        equalTo(passwords[i]),
                     )
                 }
 
@@ -2244,7 +2244,7 @@ class AutocompleteTest : BaseSessionTest() {
                         .formActionOrigin(login.formActionOrigin)
                         .username(userMod)
                         .password(passMod)
-                        .build()
+                        .build(),
                 )
 
                 Handler(Looper.getMainLooper()).postDelayed({
@@ -2265,13 +2265,13 @@ class AutocompleteTest : BaseSessionTest() {
         assertThat(
             "Filled username should match",
             session3.evaluateJS("document.querySelector('#user1').value") as String,
-            equalTo(userMod)
+            equalTo(userMod),
         )
 
         assertThat(
             "Filled password should match",
             session3.evaluateJS("document.querySelector('#pass1').value") as String,
-            equalTo(passMod)
+            equalTo(passMod),
         )
 
         // Submit the selection.
@@ -2289,8 +2289,8 @@ class AutocompleteTest : BaseSessionTest() {
                 "signon.generation.enabled" to true,
                 "signon.generation.available" to true,
                 "dom.disable_open_during_load" to false,
-                "signon.userInputRequiredToCapture.enabled" to false
-            )
+                "signon.userInputRequiredToCapture.enabled" to false,
+            ),
         )
 
         // Test:
@@ -2322,13 +2322,13 @@ class AutocompleteTest : BaseSessionTest() {
                 assertThat(
                     "Username should match",
                     login.username,
-                    equalTo(user1)
+                    equalTo(user1),
                 )
 
                 assertThat(
                     "Password should match",
                     login.password,
-                    equalTo(genPass)
+                    equalTo(genPass),
                 )
 
                 saveHandled1.complete(null)
@@ -2345,14 +2345,14 @@ class AutocompleteTest : BaseSessionTest() {
             @AssertCalled
             override fun onLoginSelect(
                 session: GeckoSession,
-                prompt: AutocompleteRequest<LoginSelectOption>
+                prompt: AutocompleteRequest<LoginSelectOption>,
             ): GeckoResult<PromptDelegate.PromptResponse>? {
                 assertThat("Session should not be null", session, notNullValue())
 
                 assertThat(
                     "There should be one option",
                     prompt.options.size,
-                    equalTo(1)
+                    equalTo(1),
                 )
 
                 val option = prompt.options[0]
@@ -2361,14 +2361,14 @@ class AutocompleteTest : BaseSessionTest() {
                 assertThat(
                     "Hint should match",
                     option.hint,
-                    equalTo(SelectOption.Hint.GENERATED)
+                    equalTo(SelectOption.Hint.GENERATED),
                 )
 
                 assertThat("Login should not be null", login, notNullValue())
                 assertThat(
                     "Password should not be empty",
                     login.password,
-                    not(isEmptyOrNullString())
+                    not(isEmptyOrNullString()),
                 )
 
                 genPass = login.password
@@ -2386,7 +2386,7 @@ class AutocompleteTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onLoginSave(
                 session: GeckoSession,
-                prompt: AutocompleteRequest<LoginSaveOption>
+                prompt: AutocompleteRequest<LoginSaveOption>,
             ): GeckoResult<PromptDelegate.PromptResponse>? {
                 assertThat("Session should not be null", session, notNullValue())
 
@@ -2398,7 +2398,7 @@ class AutocompleteTest : BaseSessionTest() {
                 assertThat(
                     "Username should match",
                     login.username,
-                    equalTo(user1)
+                    equalTo(user1),
                 )
 
                 // TODO: The flag is only set for login entry updates yet.
@@ -2412,13 +2412,13 @@ class AutocompleteTest : BaseSessionTest() {
                 assertThat(
                     "Password should not be empty",
                     login.password,
-                    not(isEmptyOrNullString())
+                    not(isEmptyOrNullString()),
                 )
 
                 assertThat(
                     "Password should match",
                     login.password,
-                    equalTo(genPass)
+                    equalTo(genPass),
                 )
 
                 return GeckoResult.fromValue(prompt.confirm(option))
@@ -2433,23 +2433,23 @@ class AutocompleteTest : BaseSessionTest() {
         assertThat(
             "Filled username should match",
             mainSession.evaluateJS("document.querySelector('#user1').value") as String,
-            equalTo(user1)
+            equalTo(user1),
         )
 
         val filledPass = mainSession.evaluateJS(
-            "document.querySelector('#pass1').value"
+            "document.querySelector('#pass1').value",
         ) as String
 
         assertThat(
             "Password should not be empty",
             filledPass,
-            not(isEmptyOrNullString())
+            not(isEmptyOrNullString()),
         )
 
         assertThat(
             "Filled password should match",
             filledPass,
-            equalTo(genPass)
+            equalTo(genPass),
         )
 
         // Submit the selection.
@@ -2464,8 +2464,8 @@ class AutocompleteTest : BaseSessionTest() {
                 // Enable login management since it's disabled in automation.
                 "signon.rememberSignons" to true,
                 "signon.autofillForms.http" to true,
-                "signon.userInputRequiredToCapture.enabled" to false
-            )
+                "signon.userInputRequiredToCapture.enabled" to false,
+            ),
         )
 
         val user = arrayOf("user1x", "user2x")
@@ -2486,7 +2486,7 @@ class AutocompleteTest : BaseSessionTest() {
                 .formActionOrigin(origin)
                 .username(user[1])
                 .password(pass[1])
-                .build()
+                .build(),
         )
 
         sessionRule.delegateUntilTestEnd(object : StorageDelegate {
@@ -2510,7 +2510,7 @@ class AutocompleteTest : BaseSessionTest() {
                 assertThat(
                     "There should be two options",
                     prompt.options.size,
-                    equalTo(2)
+                    equalTo(2),
                 )
                 prompt.setDelegate(promptInstanceDelegate)
                 Handler(Looper.getMainLooper()).postDelayed({

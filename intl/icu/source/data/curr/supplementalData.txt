@@ -1954,7 +1954,7 @@ supplementalData:table(nofallback){
                 id{"HRK"}
                 to:intvector{
                     389,
-                    -1210045441,
+                    -1296445441,
                 }
             }
             {
@@ -3784,8 +3784,8 @@ supplementalData:table(nofallback){
                 }
                 id{"SLL"}
                 to:intvector{
-                    391,
-                    974987263,
+                    396,
+                    -1034816513,
                 }
             }
             {

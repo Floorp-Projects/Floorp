@@ -124,6 +124,7 @@ void Assembler::processCodeLabels(uint8_t* rawCode) {
 
 void Assembler::WritePoolGuard(BufferOffset branch, Instruction* dest,
                                BufferOffset afterPool) {
+  DEBUG_PRINTF("\tWritePoolGuard\n");
   int32_t off = afterPool.getOffset() - branch.getOffset();
   if (!is_int21(off) || !((off & 0x1) == 0)) {
     printf("%d\n", off);
@@ -1182,7 +1183,8 @@ int32_t Assembler::branch_offset_helper(Label* L, OffsetSize bits) {
   } else {
     BufferOffset deadline(next_instr_offset.getOffset() +
                           ImmBranchMaxForwardOffset(bits));
-    DEBUG_PRINTF("\tregisterBranchDeadline %d\n", deadline.getOffset());
+    DEBUG_PRINTF("\tregisterBranchDeadline %d type %d\n", deadline.getOffset(),
+                 OffsetSizeToImmBranchRangeType(bits));
     m_buffer.registerBranchDeadline(OffsetSizeToImmBranchRangeType(bits),
                                     deadline);
     if (L->used()) {

@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
 /**
@@ -24,8 +28,8 @@ const pluginsArray = new window.wrappedJSObject.Array();
 Object.setPrototypeOf(pluginsArray, PluginArray.prototype);
 
 Object.defineProperty(navigator.wrappedJSObject, "plugins", {
-  get: exportFunction(function() {
+  get: exportFunction(function () {
     return pluginsArray;
   }, window),
-  set: exportFunction(function(val) {}, window),
+  set: exportFunction(function (val) {}, window),
 });

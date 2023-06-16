@@ -15,7 +15,7 @@ const {
 
 const TEST_URL = PAGES_BASE_URL + "custom/styleeditor/index.html";
 
-module.exports = async function() {
+module.exports = async function () {
   await testSetup(TEST_URL);
   const toolbox = await openToolboxAndLog("custom.styleeditor", "styleeditor");
   await reloadPageAndLog("custom.styleeditor", toolbox);

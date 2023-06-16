@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { PasswordEngine } = ChromeUtils.importESModule(
+const { PasswordEngine, LoginRec } = ChromeUtils.importESModule(
   "resource://services-sync/engines/passwords.sys.mjs"
 );
 const { Service } = ChromeUtils.importESModule(
@@ -28,7 +28,8 @@ add_task(async function test_tracking() {
 
   async function createPassword() {
     _("RECORD NUM: " + recordNum);
-    let record = {
+    let record = new LoginRec("passwords", "GUID" + recordNum);
+    record.cleartext = {
       id: "GUID" + recordNum,
       hostname: "http://foo.bar.com",
       formSubmitURL: "http://foo.bar.com",
@@ -39,7 +40,7 @@ add_task(async function test_tracking() {
     };
     recordNum++;
     let login = store._nsLoginInfoFromRecord(record);
-    Services.logins.addLogin(login);
+    await Services.logins.addLoginAsync(login);
     await tracker.asyncObserver.promiseObserversComplete();
   }
 
@@ -115,7 +116,8 @@ add_task(async function test_removeAllLogins() {
 
   async function createPassword() {
     _("RECORD NUM: " + recordNum);
-    let record = {
+    let record = new LoginRec("passwords", "GUID" + recordNum);
+    record.cleartext = {
       id: "GUID" + recordNum,
       hostname: "http://foo.bar.com",
       formSubmitURL: "http://foo.bar.com",
@@ -126,7 +128,7 @@ add_task(async function test_removeAllLogins() {
     };
     recordNum++;
     let login = store._nsLoginInfoFromRecord(record);
-    Services.logins.addLogin(login);
+    await Services.logins.addLoginAsync(login);
     await tracker.asyncObserver.promiseObserversComplete();
   }
   try {

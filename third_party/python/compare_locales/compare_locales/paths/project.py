@@ -2,18 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
 import re
 from compare_locales import mozpath
 from .matcher import Matcher
-import six
 
 
 class ExcludeError(ValueError):
     pass
 
 
-class ProjectConfig(object):
+class ProjectConfig:
     '''Abstraction of l10n project configuration data.
     '''
 
@@ -144,8 +142,7 @@ class ProjectConfig(object):
         'Recursively get all configs in this project and its children'
         yield self
         for child in self.children:
-            for config in child.configs:
-                yield config
+            yield from child.configs
 
     @property
     def all_locales(self):
@@ -174,7 +171,7 @@ class ProjectConfig(object):
             return 'ignore'
         return rv
 
-    class FilterCache(object):
+    class FilterCache:
         def __init__(self, locale):
             self.locale = locale
             self.rules = []
@@ -204,9 +201,9 @@ class ProjectConfig(object):
             for exclude in self.excludes
         ):
             return
-        actions = set(
+        actions = {
             child._filter(l10n_file, entity=entity)
-            for child in self.children)
+            for child in self.children}
         if 'error' in actions:
             # return early if we know we'll error
             return 'error'
@@ -238,22 +235,20 @@ class ProjectConfig(object):
             for path in rule['path']:
                 _rule = rule.copy()
                 _rule['path'] = Matcher(path, env=self.environ, root=self.root)
-                for __rule in self._compile_rule(_rule):
-                    yield __rule
+                yield from self._compile_rule(_rule)
             return
-        if isinstance(rule['path'], six.string_types):
+        if isinstance(rule['path'], str):
             rule['path'] = Matcher(
                 rule['path'], env=self.environ, root=self.root
             )
         if 'key' not in rule:
             yield rule
             return
-        if not isinstance(rule['key'], six.string_types):
+        if not isinstance(rule['key'], str):
             for key in rule['key']:
                 _rule = rule.copy()
                 _rule['key'] = key
-                for __rule in self._compile_rule(_rule):
-                    yield __rule
+                yield from self._compile_rule(_rule)
             return
         rule = rule.copy()
         key = rule['key']

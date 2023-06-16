@@ -6,7 +6,7 @@
 /**
  * Tests if "Referrer Policy" is displayed in the header panel.
  */
-add_task(async function() {
+add_task(async function () {
   const { tab, monitor } = await initNetMonitor(POST_RAW_URL, {
     requestCount: 1,
   });

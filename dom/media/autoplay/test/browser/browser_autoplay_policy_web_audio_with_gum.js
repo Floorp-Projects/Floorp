@@ -24,7 +24,7 @@ add_task(async function startTestingWebAudioWithGUM() {
 
   await SpecialPowers.pushPrefEnv({
     set: [["media.navigator.permission.force", true]],
-  }).then(async function() {
+  }).then(async function () {
     info("- test web audio with gUM denied -");
     await testWebAudioWithGUM({
       constraints: { video: true },
@@ -63,7 +63,7 @@ function createAudioContext() {
   ac.stateChangePromise = new Promise(resolve => {
     ac.addEventListener(
       "statechange",
-      function() {
+      function () {
         resolve();
       },
       { once: true }
@@ -72,7 +72,7 @@ function createAudioContext() {
   ac.notAllowedToStart = new Promise(resolve => {
     ac.addEventListener(
       "blocked",
-      function() {
+      function () {
         resolve();
       },
       { once: true }

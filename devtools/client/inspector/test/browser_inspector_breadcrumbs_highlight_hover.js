@@ -6,15 +6,13 @@
 
 // Test that hovering over nodes on the breadcrumb buttons in the inspector
 // shows the highlighter over those nodes
-add_task(async function() {
+add_task(async function () {
   info("Loading the test document and opening the inspector");
   const { inspector, highlighterTestFront } = await openInspectorForURL(
     "data:text/html;charset=utf-8,<h1>foo</h1><span>bar</span>"
   );
-  const {
-    waitForHighlighterTypeShown,
-    waitForHighlighterTypeHidden,
-  } = getHighlighterTestHelpers(inspector);
+  const { waitForHighlighterTypeShown, waitForHighlighterTypeHidden } =
+    getHighlighterTestHelpers(inspector);
 
   info("Selecting the test node");
   await selectNode("span", inspector);

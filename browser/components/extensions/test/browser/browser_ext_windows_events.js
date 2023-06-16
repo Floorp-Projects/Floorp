@@ -87,7 +87,7 @@ add_task(async function test_windows_events_not_allowed() {
     Management: {
       global: { windowTracker },
     },
-  } = ChromeUtils.import("resource://gre/modules/Extension.jsm");
+  } = ChromeUtils.importESModule("resource://gre/modules/Extension.sys.mjs");
 
   let currentWindow = window;
   let currentWindowId = windowTracker.getId(currentWindow);

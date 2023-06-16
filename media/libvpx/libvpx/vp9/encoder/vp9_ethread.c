@@ -94,10 +94,10 @@ static void create_enc_workers(VP9_COMP *cpi, int num_workers) {
   vp9_bitstream_encode_tiles_buffer_dealloc(cpi);
   vp9_encode_free_mt_data(cpi);
 
-  CHECK_MEM_ERROR(cm, cpi->workers,
+  CHECK_MEM_ERROR(&cm->error, cpi->workers,
                   vpx_malloc(num_workers * sizeof(*cpi->workers)));
 
-  CHECK_MEM_ERROR(cm, cpi->tile_thr_data,
+  CHECK_MEM_ERROR(&cm->error, cpi->tile_thr_data,
                   vpx_calloc(num_workers, sizeof(*cpi->tile_thr_data)));
 
   for (i = 0; i < num_workers; i++) {
@@ -111,7 +111,7 @@ static void create_enc_workers(VP9_COMP *cpi, int num_workers) {
       thread_data->cpi = cpi;
 
       // Allocate thread data.
-      CHECK_MEM_ERROR(cm, thread_data->td,
+      CHECK_MEM_ERROR(&cm->error, thread_data->td,
                       vpx_memalign(32, sizeof(*thread_data->td)));
       vp9_zero(*thread_data->td);
 
@@ -121,7 +121,7 @@ static void create_enc_workers(VP9_COMP *cpi, int num_workers) {
       vp9_setup_pc_tree(cm, thread_data->td);
 
       // Allocate frame counters in thread data.
-      CHECK_MEM_ERROR(cm, thread_data->td->counts,
+      CHECK_MEM_ERROR(&cm->error, thread_data->td->counts,
                       vpx_calloc(1, sizeof(*thread_data->td->counts)));
 
       // Create threads
@@ -292,7 +292,7 @@ void vp9_row_mt_sync_mem_alloc(VP9RowMTSync *row_mt_sync, VP9_COMMON *cm,
   {
     int i;
 
-    CHECK_MEM_ERROR(cm, row_mt_sync->mutex,
+    CHECK_MEM_ERROR(&cm->error, row_mt_sync->mutex,
                     vpx_malloc(sizeof(*row_mt_sync->mutex) * rows));
     if (row_mt_sync->mutex) {
       for (i = 0; i < rows; ++i) {
@@ -300,7 +300,7 @@ void vp9_row_mt_sync_mem_alloc(VP9RowMTSync *row_mt_sync, VP9_COMMON *cm,
       }
     }
 
-    CHECK_MEM_ERROR(cm, row_mt_sync->cond,
+    CHECK_MEM_ERROR(&cm->error, row_mt_sync->cond,
                     vpx_malloc(sizeof(*row_mt_sync->cond) * rows));
     if (row_mt_sync->cond) {
       for (i = 0; i < rows; ++i) {
@@ -310,7 +310,7 @@ void vp9_row_mt_sync_mem_alloc(VP9RowMTSync *row_mt_sync, VP9_COMMON *cm,
   }
 #endif  // CONFIG_MULTITHREAD
 
-  CHECK_MEM_ERROR(cm, row_mt_sync->cur_col,
+  CHECK_MEM_ERROR(&cm->error, row_mt_sync->cur_col,
                   vpx_malloc(sizeof(*row_mt_sync->cur_col) * rows));
 
   // Set up nsync.

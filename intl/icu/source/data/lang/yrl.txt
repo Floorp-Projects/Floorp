@@ -556,6 +556,9 @@ yrl{
         yue{"kãtunei (katuwa)"}
         zh{"xinanheẽga, mãdarĩ"}
     }
+    Languages%short{
+        en_US{"ẽgirixi (EUA)"}
+    }
     Languages%variant{
         ps{"puxitu"}
     }

@@ -20,7 +20,7 @@ const REQUESTS_WITH_MEDIA = BASIC_REQUESTS.concat([
   { url: "sjs_content-type-test-server.sjs?fmt=video" },
 ]);
 
-add_task(async function() {
+add_task(async function () {
   const { monitor } = await initNetMonitor(FILTERING_URL, { requestCount: 1 });
   info("Starting test... ");
 
@@ -29,11 +29,8 @@ add_task(async function() {
 
   const { document, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  const {
-    getDisplayedRequests,
-    getSelectedRequest,
-    getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
+  const { getDisplayedRequests, getSelectedRequest, getSortedRequests } =
+    windowRequire("devtools/client/netmonitor/src/selectors/index");
 
   store.dispatch(Actions.batchEnable(false));
 

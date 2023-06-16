@@ -25,7 +25,7 @@ Note that even when working in the document of a panel, we are sometimes interac
 Open the Browser Toolbox, if you see errors such as
 
 ```
-JavaScript Error: "Content Security Policy: The page’s settings blocked the loading of a resource [...]"
+JavaScript Error: "Content-Security-Policy: The page’s settings blocked the loading of a resource [...]"
 ```
 
 it means you are trying to load a resource with a forbidden scheme.

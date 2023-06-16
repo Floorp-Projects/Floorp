@@ -30,10 +30,10 @@
 #include "mozilla/a11y/DocAccessiblePlatformExtParent.h"
 #include "mozilla/a11y/DocManager.h"
 #include "mozilla/jni/GeckoBundleUtils.h"
+#include "mozilla/jni/NativesInlines.h"
 #include "mozilla/widget/GeckoViewSupport.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/dom/MouseEventBinding.h"
-#include "mozilla/StaticPrefs_accessibility.h"
 
 #ifdef DEBUG
 #  include <android/log.h>
@@ -115,10 +115,6 @@ void SessionAccessibility::Init() {
   Settings::Init();
 }
 
-bool SessionAccessibility::IsCacheEnabled() {
-  return StaticPrefs::accessibility_cache_enabled_AtStartup();
-}
-
 void SessionAccessibility::GetNodeInfo(int32_t aID,
                                        mozilla::jni::Object::Param aNodeInfo) {
   MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
@@ -126,7 +122,7 @@ void SessionAccessibility::GetNodeInfo(int32_t aID,
   java::GeckoBundle::GlobalRef ret = nullptr;
   RefPtr<SessionAccessibility> self(this);
   if (Accessible* acc = GetAccessibleByID(aID)) {
-    if (acc->IsLocal() || !IsCacheEnabled()) {
+    if (acc->IsLocal()) {
       mal.Unlock();
       nsAppShell::SyncRunEvent(
           [this, self, aID, aNodeInfo = jni::Object::GlobalRef(aNodeInfo)] {
@@ -146,7 +142,6 @@ void SessionAccessibility::GetNodeInfo(int32_t aID,
 
 int SessionAccessibility::GetNodeClassName(int32_t aID) {
   MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
-  MOZ_ASSERT(IsCacheEnabled(), "Cache is enabled");
   ReleasableMonitorAutoLock mal(nsAccessibilityService::GetAndroidMonitor());
   int32_t classNameEnum = java::SessionAccessibility::CLASSNAME_VIEW;
   RefPtr<SessionAccessibility> self(this);
@@ -182,7 +177,6 @@ void SessionAccessibility::Click(int32_t aID) {
 
 bool SessionAccessibility::Pivot(int32_t aID, int32_t aGranularity,
                                  bool aForward, bool aInclusive) {
-  MOZ_ASSERT(IsCacheEnabled(), "Cache is enabled");
   MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
   MonitorAutoLock mal(nsAccessibilityService::GetAndroidMonitor());
   RefPtr<SessionAccessibility> self(this);
@@ -408,9 +402,7 @@ void SessionAccessibility::SendWindowStateChangedEvent(
       AccessibleWrap::GetVirtualViewID(aAccessible),
       AccessibleWrap::AndroidClass(aAccessible), nullptr);
 
-  if (IsCacheEnabled()) {
-    SendWindowContentChangedEvent();
-  }
+  SendWindowContentChangedEvent();
 }
 
 void SessionAccessibility::SendTextSelectionChangedEvent(
@@ -419,21 +411,22 @@ void SessionAccessibility::SendTextSelectionChangedEvent(
   int32_t fromIndex = aCaretOffset;
   int32_t startSel = -1;
   int32_t endSel = -1;
-  bool hasSelection = false;
-  if (aAccessible->IsRemote() && !IsCacheEnabled()) {
-    nsAutoString unused;
-    hasSelection = aAccessible->AsRemote()->SelectionBoundsAt(
-        0, unused, &startSel, &endSel);
-  } else {
-    hasSelection = aAccessible->AsHyperTextBase()->SelectionBoundsAt(
-        0, &startSel, &endSel);
-  }
+  bool hasSelection =
+      aAccessible->AsHyperTextBase()->SelectionBoundsAt(0, &startSel, &endSel);
 
   if (hasSelection) {
     fromIndex = startSel == aCaretOffset ? endSel : startSel;
   }
 
+  nsAutoString text;
+  if (aAccessible->IsHyperText()) {
+    aAccessible->AsHyperTextBase()->TextSubstring(0, -1, text);
+  } else if (aAccessible->IsText()) {
+    aAccessible->AppendTextTo(text, 0, -1);
+  }
+
   GECKOBUNDLE_START(eventInfo);
+  GECKOBUNDLE_PUT(eventInfo, "text", jni::StringParam(text));
   GECKOBUNDLE_PUT(eventInfo, "fromIndex",
                   java::sdk::Integer::ValueOf(fromIndex));
   GECKOBUNDLE_PUT(eventInfo, "toIndex",
@@ -461,13 +454,7 @@ void SessionAccessibility::SendTextChangedEvent(Accessible* aAccessible,
   if (aAccessible->IsHyperText()) {
     aAccessible->AsHyperTextBase()->TextSubstring(0, -1, text);
   } else if (aAccessible->IsText()) {
-    if (aAccessible->IsRemote() && !IsCacheEnabled()) {
-      // XXX: AppendTextTo is not implemented in the IPDL and only
-      // works when cache is enabled.
-      aAccessible->Name(text);
-    } else {
-      aAccessible->AppendTextTo(text, 0, -1);
-    }
+    aAccessible->AppendTextTo(text, 0, -1);
   }
   nsAutoString beforeText(text);
   if (aIsInsert) {
@@ -479,6 +466,7 @@ void SessionAccessibility::SendTextChangedEvent(Accessible* aAccessible,
   GECKOBUNDLE_START(eventInfo);
   GECKOBUNDLE_PUT(eventInfo, "text", jni::StringParam(text));
   GECKOBUNDLE_PUT(eventInfo, "beforeText", jni::StringParam(beforeText));
+  GECKOBUNDLE_PUT(eventInfo, "fromIndex", java::sdk::Integer::ValueOf(aStart));
   GECKOBUNDLE_PUT(eventInfo, "addedCount",
                   java::sdk::Integer::ValueOf(aIsInsert ? aLen : 0));
   GECKOBUNDLE_PUT(eventInfo, "removedCount",
@@ -499,13 +487,7 @@ void SessionAccessibility::SendTextTraversedEvent(Accessible* aAccessible,
   if (aAccessible->IsHyperText()) {
     aAccessible->AsHyperTextBase()->TextSubstring(0, -1, text);
   } else if (aAccessible->IsText()) {
-    if (aAccessible->IsRemote() && !IsCacheEnabled()) {
-      // XXX: AppendTextTo is not implemented in the IPDL and only
-      // works when cache is enabled.
-      aAccessible->Name(text);
-    } else {
-      aAccessible->AppendTextTo(text, 0, -1);
-    }
+    aAccessible->AppendTextTo(text, 0, -1);
   }
 
   GECKOBUNDLE_START(eventInfo);

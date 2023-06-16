@@ -14,7 +14,7 @@ const TEST_URI = `
   <div id="testElement">test element</div>
 `;
 
-add_task(async function() {
+add_task(async function () {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, view } = await openRuleView();
 
@@ -37,9 +37,8 @@ async function testRuleView(ruleView, nodeFront) {
   const propertyList = ruleView.element.querySelectorAll(
     ".ruleview-propertylist"
   );
-  const fontExpander = propertyList[1].querySelectorAll(
-    ".ruleview-expander"
-  )[0];
+  const fontExpander =
+    propertyList[1].querySelectorAll(".ruleview-expander")[0];
   fontExpander.click();
 
   const rule = getRuleViewRule(ruleView, "#testElement");

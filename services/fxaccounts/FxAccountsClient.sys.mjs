@@ -26,7 +26,7 @@ const SIGNUP = "/account/create";
 // Devices older than this many days will not appear in the devices list
 const DEVICES_FILTER_DAYS = 21;
 
-export var FxAccountsClient = function(
+export var FxAccountsClient = function (
   host = Services.prefs.getCharPref(HOST_PREF)
 ) {
   this.host = host;

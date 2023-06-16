@@ -103,7 +103,7 @@ add_task(async function test_getcurrent_privateBrowsing() {
           </body>
         </html>
       `,
-      "sidebar.js": function() {
+      "sidebar.js": function () {
         browser.theme.getCurrent().then(theme => {
           if (!theme?.images) {
             browser.test.fail(
@@ -135,8 +135,8 @@ add_task(async function test_getcurrent_privateBrowsing() {
     private: true,
   });
 
-  const { ExtensionCommon } = ChromeUtils.import(
-    "resource://gre/modules/ExtensionCommon.jsm"
+  const { ExtensionCommon } = ChromeUtils.importESModule(
+    "resource://gre/modules/ExtensionCommon.sys.mjs"
   );
   const { makeWidgetId } = ExtensionCommon;
   privateWin.SidebarUI.show(`${makeWidgetId(extension.id)}-sidebar-action`);

@@ -6,7 +6,7 @@
 
 const {
   getBrowsersList,
-} = require("resource://devtools/client/inspector/shared/compatibility-user-settings.js");
+} = require("resource://devtools/shared/compatibility/compatibility-user-settings.js");
 
 add_task(async () => {
   info("Check whether each default browsers data are unique by id and status");

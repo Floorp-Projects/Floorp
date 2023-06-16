@@ -10,7 +10,7 @@ const TEST_URI =
   "https://example.com/browser/devtools/client/webconsole/" +
   "test/browser/test-location-debugger-link-logpoint.html";
 
-add_task(async function() {
+add_task(async function () {
   // On e10s, the exception thrown in test-location-debugger-link-errors.js
   // is triggered in child process and is ignored by test harness
   if (!Services.appinfo.browserTabsRemoteAutostart) {
@@ -103,7 +103,7 @@ add_task(async function() {
 });
 
 // Test clicking locations of logpoints from different files
-add_task(async function() {
+add_task(async function () {
   if (!Services.appinfo.browserTabsRemoteAutostart) {
     expectUncaughtException();
   }

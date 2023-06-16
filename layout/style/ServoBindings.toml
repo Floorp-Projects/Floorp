@@ -203,8 +203,6 @@ allowlist-vars = [
 # TODO(emilio): A bunch of types here can go away once we generate bindings and
 # structs together.
 allowlist-types = [
-    "RawGecko.*",
-    "RawServo.*",
     "ServoCssRules",
     "nsFontFaceRuleContainer",
     "Matrix4x4Components",
@@ -414,7 +412,6 @@ opaque-types = [
     "mozilla::dom::TreeOrderedArray", # AutoTArray<>
     "gfxSize",  # <- union { struct { T width; T height; }; T components[2] };
     "gfxSize_Super",  # Ditto.
-    "mozilla::StyleAnimationValue",
     "StyleAnimationValue", # pulls in a whole bunch of stuff we don't need in the bindings
     "mozilla::dom::.*Callback", # Pulls in ErrorResult and other things that
                                 # don't align properly on Linux 32-bit
@@ -451,6 +448,7 @@ cbindgen-types = [
     { gecko = "StyleFontLanguageOverride", servo = "crate::values::computed::font::FontLanguageOverride" },
     { gecko = "StyleOffsetPath", servo = "crate::values::computed::motion::OffsetPath" },
     { gecko = "StyleGenericOffsetPath", servo = "crate::values::generics::motion::OffsetPath" },
+    { gecko = "StyleOffsetPosition", servo = "crate::values::computed::motion::OffsetPosition" },
     { gecko = "StyleOffsetRotate", servo = "crate::values::computed::motion::OffsetRotate" },
     { gecko = "StylePathCommand", servo = "crate::values::specified::svg_path::PathCommand" },
     { gecko = "StyleRayFunction", servo = "crate::values::generics::motion::RayFunction" },
@@ -537,8 +535,6 @@ cbindgen-types = [
     { gecko = "StyleMasonryItemOrder", servo = "crate::values::specified::MasonryItemOrder" },
     { gecko = "StyleTextTransform", servo = "crate::values::computed::TextTransform" },
     { gecko = "StyleTextUnderlinePosition", servo = "crate::values::computed::TextUnderlinePosition" },
-    { gecko = "StyleOwned", servo = "crate::gecko_bindings::sugar::ownership::Owned" },
-    { gecko = "StyleOwnedOrNull", servo = "crate::gecko_bindings::sugar::ownership::OwnedOrNull" },
     { gecko = "StyleStrong", servo = "crate::gecko_bindings::sugar::ownership::Strong" },
     { gecko = "StyleGenericFontFamily", servo = "crate::values::computed::font::GenericFontFamily" },
     { gecko = "StyleGenericPosition", servo = "crate::values::generics::position::GenericPosition" },
@@ -648,6 +644,17 @@ cbindgen-types = [
     { gecko = "StyleBoolInteger", servo = "crate::values::computed::BoolInteger" },
     { gecko = "StyleTime", servo = "crate::values::computed::Time" },
     { gecko = "StyleXTextScale", servo = "crate::values::computed::XTextScale" },
+    { gecko = "StyleAnimationValueMap", servo = "crate::properties::animated_properties::AnimationValueMap" },
+    { gecko = "StyleAuthorStyles", servo = "crate::gecko::data::AuthorStyles" },
+    { gecko = "StyleUseCounters", servo = "crate::use_counters::UseCounters" },
+    { gecko = "StyleStylesheetContents", servo = "crate::stylesheets::StylesheetContents" },
+    { gecko = "StyleAnimationValue", servo = "crate::properties::animated_properties::AnimationValue" },
+    { gecko = "StyleLockedDeclarationBlock", servo = "crate::gecko::arc_types::LockedDeclarationBlock" },
+    { gecko = "StyleLockedMediaList", servo = "crate::gecko::arc_types::LockedMediaList" },
+    { gecko = "StyleLockedImportRule", servo = "crate::gecko::arc_types::LockedImportRule" },
+    { gecko = "StyleLockedFontFaceRule", servo = "crate::gecko::arc_types::LockedFontFaceRule" },
+    { gecko = "StyleBaselineSource", servo = "crate::values::computed::BaselineSource" },
+    { gecko = "StyleAu", servo = "app_units::Au" },
 ]
 
 mapped-generic-types = [
@@ -656,9 +663,6 @@ mapped-generic-types = [
     { generic = false, gecko = "mozilla::ServoWritingMode", servo = "crate::logical_geometry::WritingMode" },
     { generic = false, gecko = "mozilla::ServoCustomPropertiesMap", servo = "Option<servo_arc::Arc<crate::custom_properties::CustomPropertiesMap>>" },
     { generic = false, gecko = "mozilla::ServoRuleNode", servo = "Option<crate::rule_tree::StrongRuleNode>" },
-    { generic = false, gecko = "mozilla::ServoVisitedStyle", servo = "Option<servo_arc::RawOffsetArc<crate::properties::ComputedValues>>" },
-    { generic = true, gecko = "mozilla::ServoRawOffsetArc", servo = "servo_arc::RawOffsetArc" },
-    { generic = true, gecko = "mozilla::ServoManuallyDrop", servo = "::std::mem::ManuallyDrop" },
     { generic = false, gecko = "nsACString", servo = "nsstring::nsACString" },
     { generic = false, gecko = "nsAString", servo = "nsstring::nsAString" },
     { generic = false, gecko = "nsCString", servo = "nsstring::nsCString" },

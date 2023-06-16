@@ -53,43 +53,43 @@ $መ = m ;
 $ሠ = ś ;
 $ረ = r ;
 $ሰ = s ;
-# $ꬁ = ;  not supported in Aethiopica
+# $ꬁ = ;  not supported in Beta Maṣāḥǝft
 $ሸ = š ;
-# $ⶠ  = ; not supported in Aethiopica
+# $ⶠ  = ; not supported in Beta Maṣāḥǝft
 $ቀ = q ;
 $ቐ = q\u0332 ;
 $በ = b ;
 $ቨ = v ;
 $ተ = t ;
 $ቸ = č ;
-# $ⶨ = ;  not supported in Aethiopica
+# $ⶨ = ;  not supported in Beta Maṣāḥǝft
 $ኀ = ḫ ;
 $ነ = n ;
 $ኘ = ñ ;
 $ከ = k ;
-# $ⷈ = ;  not supported in Aethiopica
+# $ⷈ = ;  not supported in Beta Maṣāḥǝft
 $ኸ = ḵ ;
-# $ⷐ = ;  not supported in Aethiopica
+# $ⷐ = ;  not supported in Beta Maṣāḥǝft
 $ወ = w ;
 $ዘ = z ;
 $ዠ = ž ;
-# $ⶰ = ;  not supported in Aethiopica
-# $ꬑ = ;  not supported in Aethiopica
+# $ⶰ = ;  not supported in Beta Maṣāḥǝft
+# $ꬑ = ;  not supported in Beta Maṣāḥǝft
 $የ = y ;
 $ደ = d ;
-# $ዸ = ;  not supported in Aethiopica
-# $ꬉ = ;  not supported in Aethiopica
+# $ዸ = ;  not supported in Beta Maṣāḥǝft
+# $ꬉ = ;  not supported in Beta Maṣāḥǝft
 $ጀ = ǧ ;
 $ገ = g ;
-# $ⷘ = ;  not supported in Aethiopica
+# $ⷘ = ;  not supported in Beta Maṣāḥǝft
 $ጘ = ŋ ;
 $ጠ = ṭ ;
 $ጨ = č\u0323 ;
-# $ⶸ = ;  not supported in Aethiopica
-# $ꬠ = ;  not supported in Aethiopica
+# $ⶸ = ;  not supported in Beta Maṣāḥǝft
+# $ꬠ = ;  not supported in Beta Maṣāḥǝft
 $ጰ = ṗ ;
 $ጸ = ṣ ;
-# $ꬨ = ;  not supported in Aethiopica
+# $ꬨ = ;  not supported in Beta Maṣāḥǝft
 $ፀ = ḍ ;
 $ፈ = f ;
 $ፐ = p ;
@@ -112,47 +112,48 @@ $ጥበቅ = \u135f ;
 ([ሠ-ሧ]) $ጥበቅ → $ሠ | $1 ;
 ([ረ-ሯⶂፘ]) $ጥበቅ → $ረ | $1 ;
 ([ሰ-ሷⶃ]) $ጥበቅ → $ሰ | $1 ;
-# ([ꬁ-ꬆ]) $ጥበቅ → $ꬁ | $1 ;  not supported in Aethiopica
+# ([ꬁ-ꬆ]) $ጥበቅ → $ꬁ | $1 ;  not supported in Beta Maṣāḥǝft
 ([ሸ-ሿⶄ]) $ጥበቅ → $ሸ | $1 ;
-# ([ⶠ-ⶦ]) $ጥበቅ → $ⶠ | $1 ;  not supported in Aethiopica
+# ([ⶠ-ⶦ]) $ጥበቅ → $ⶠ | $1 ;  not supported in Beta Maṣāḥǝft
 ([ቀ-ቍ]) $ጥበቅ → $ቀ | $1 ;
-# ([ⷀ-ⷆ]) $ጥበቅ → $ⷀ | $1 ;  not supported in Aethiopica
+# ([ⷀ-ⷆ]) $ጥበቅ → $ⷀ | $1 ;  not supported in Beta Maṣāḥǝft
 ([ቐ-ቝ]) $ጥበቅ → $ቐ | $1 ;
 ([በ-ቧⶅᎄ-ᎇ]) $ጥበቅ → $በ | $1 ;
 ([ቨ-ቯ]) $ጥበቅ → $ቨ | $1 ;
 ([ተ-ቷ]) $ጥበቅ → $ተ | $1 ;
 ([ቸ-ቿ]) $ጥበቅ → $ቸ | $1 ;
-# ([ⶨ-ⶮ]) $ጥበቅ → $ⶨ | $1 ;  not supported in Aethiopica
+# ([ⶨ-ⶮ]) $ጥበቅ → $ⶨ | $1 ;  not supported in Beta Maṣāḥǝft
 ([ኀ-ኍ]) $ጥበቅ → $ኀ | $1 ;
 ([ነ-ኗ]) $ጥበቅ → $ነ | $1 ;
 ([ኘ-ኟ]) $ጥበቅ → $ኘ | $1 ;
 ([ከ-ኵ]) $ጥበቅ → $ከ | $1 ;
-# ([ⷈ-ⷎ]) $ጥበቅ → $ⷈ | $1 ;  not supported in Aethiopica
+# ([ⷈ-ⷎ]) $ጥበቅ → $ⷈ | $1 ;  not supported in Beta Maṣāḥǝft
 ([ኸ-ዅ]) $ጥበቅ → $ኸ | $1 ;
-# ([ⷐ-ⷖ]) $ጥበቅ → $ⷐ | $1 ;  not supported in Aethiopica
+# ([ⷐ-ⷖ]) $ጥበቅ → $ⷐ | $1 ;  not supported in Beta Maṣāḥǝft
 ([ወ-ዏ]) $ጥበቅ → $ወ | $1 ;
 ([ዘ-ዟⶋ]) $ጥበቅ → $ዘ | $1 ;
-# ([ꬑ-ꬖ]) $ጥበቅ → $ꬑ | $1 ;  not supported in Aethiopica
+# ([ꬑ-ꬖ]) $ጥበቅ → $ꬑ | $1 ;  not supported in Beta Maṣāḥǝft
 ([ዠ-ዧ]) $ጥበቅ → $ዠ | $1 ;
 # ([ⶰ-ⶶ]) $ጥበቅ → $ዠ | $1 ;
 ([የ-ዯ]) $ጥበቅ → $የ | $1 ;
 ([ደ-ዷⶌ]) $ጥበቅ → $ደ | $1 ;
-# ([ዸ-ዿⶍ]) $ጥበቅ → $ዸ | $1 ; not supported in Aethiopica
-# ([ꬉ-ꬎ]) $ጥበቅ → $ꬉ | $1 ;  not supported in Aethiopica
+# ([ዸ-ዿⶍ]) $ጥበቅ → $ዸ | $1 ; not supported in Beta Maṣāḥǝft
+# ([ꬉ-ꬎ]) $ጥበቅ → $ꬉ | $1 ;  not supported in Beta Maṣāḥǝft
 ([ጀ-ጇⶎ]) $ጥበቅ → $ጀ | $1 ;
 ([ገ-ጕጏ]) $ጥበቅ → $ገ | $1 ;
-# ([ⷘ-ⷞ]) $ጥበቅ → $ገ | $1 ;  not supported in Aethiopica
+# ([ⷘ-ⷞ]) $ጥበቅ → $ገ | $1 ;  not supported in Beta Maṣāḥǝft
 ([ጘ-ጟⶓ-ⶖ]) $ጥበቅ → $ጘ | $1 ;
 ([ጠ-ጧⶏ]) $ጥበቅ → $ጠ | $1 ;
 ([ጨ-ጯⶐ]) $ጥበቅ → $ጨ | $1 ;
-# ([ⶸ-ⶾ]) $ጥበቅ → $ⶸ | $1 ;  not supported in Aethiopica
-# ([ꬠ-ꬦ]) $ጥበቅ → $ꬠ | $1 ;  not supported in Aethiopica
+# ([ⶸ-ⶾ]) $ጥበቅ → $ⶸ | $1 ;  not supported in Beta Maṣāḥǝft
+# ([ꬠ-ꬦ]) $ጥበቅ → $ꬠ | $1 ;  not supported in Beta Maṣāḥǝft
 ([ጰ-ጷⶑ]) $ጥበቅ → $ጰ | $1 ;
 ([ጸ-ጿ]) $ጥበቅ → $ጸ | $1 ;
-# ([ꬨ-ꬮ]) $ጥበቅ → $ꬨ | $1 ;  not supported in Aethiopica
+# ([ꬨ-ꬮ]) $ጥበቅ → $ꬨ | $1 ;  not supported in Beta Maṣāḥǝft
 ([ፀ-ፇ]) $ጥበቅ → $ፀ | $1 ;
 ([ፈ-ፏፚᎈ-ᎋ]) $ጥበቅ → $ፈ | $1 ;
 ([ፐ-ፗᎌ-ᎏ]) $ጥበቅ → $ፐ | $1 ;
+$ጥበቅ → ; # remove any spurious gemination marks
 #
 ########################################################################
 # Start of Syllabic Transformations

@@ -89,7 +89,7 @@ exported_symbols.smokeTest = async function smokeTest() {
   }
 };
 
-exported_symbols.quotaTest = async function() {
+exported_symbols.quotaTest = async function () {
   const storage = navigator.storage;
   const allowCreate = { create: true };
 
@@ -133,7 +133,7 @@ exported_symbols.quotaTest = async function() {
   }
 };
 
-exported_symbols.pagedIterationTest = async function() {
+exported_symbols.pagedIterationTest = async function () {
   const root = await navigator.storage.getDirectory();
 
   for await (let contentItem of root.keys()) {

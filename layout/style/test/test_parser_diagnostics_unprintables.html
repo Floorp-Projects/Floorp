@@ -39,11 +39,11 @@ let patterns = [
   // _Dimension
   { i: "@namespace fnord 14<t>;",  o: "within @namespace: \u201814<i>\u2019" },
   // _AtKeyword
-  { i: "x{@<t>: }",        o: "declaration but found \u2018@<i>\u2019." },
+  { i: "x{@<t>: }",                o: "declaration but found \u2018@<i>\u2019." },
   // _String
-  { i: "x{ '<t>'}" ,       o: 'declaration but found \u2018"<s>"\u2019.' },
+  { i: "x{ color: '<t>'}" ,        o: 'color but found \u2018"<s>"\u2019.' },
   // _Bad_String
-  { i: "x{ '<t>\n}",       o: 'declaration but found \u2018"<s>\u2019.' },
+  { i: "x{ color: '<t>\n}",        o: 'color but found \u2018"<s>\u2019.' },
 ];
 
 // Blocks of characters to test, and how they should be escaped when
@@ -206,6 +206,8 @@ function nextTest() {
   let css = subst(patterns[curpat].i, substitutions[cursubst]);
   let msg = quotemeta(subst(patterns[curpat].o, substitutions[cursubst]));
 
+  info(css);
+  info(msg);
   SimpleTest.expectConsoleMessages(function () { testbench.innerHTML = css },
                                    [{ errorMessage: new RegExp(msg) }],
                                    nextTest);

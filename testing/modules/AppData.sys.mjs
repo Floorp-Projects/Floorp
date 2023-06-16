@@ -2,11 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* global OS */
-Cc["@mozilla.org/net/osfileconstantsservice;1"]
-  .getService(Ci.nsIOSFileConstantsService)
-  .init();
-
 // Reference needed in order for fake app dir provider to be active.
 var gFakeAppDirectoryProvider;
 
@@ -23,8 +18,8 @@ var gFakeAppDirectoryProvider;
  * This returns a promise that will be resolved once the new directory
  * is created and installed.
  */
-export var makeFakeAppDir = function() {
-  let dirMode = OS.Constants.libc.S_IRWXU;
+export var makeFakeAppDir = function () {
+  let dirMode = 0o700;
   let baseFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
   let appD = baseFile.clone();
   appD.append("UAppData");

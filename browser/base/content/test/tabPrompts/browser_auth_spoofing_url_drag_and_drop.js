@@ -29,7 +29,7 @@ async function trigger401AndHandle(crossDomain) {
   let dialogShown = waitForDialogAndDragNDropURL(crossDomain);
   await BrowserTestUtils.withNewTab(
     crossDomain ? CROSS_DOMAIN_URL : SAME_DOMAIN_URL,
-    async function() {
+    async function () {
       await dialogShown;
     }
   );

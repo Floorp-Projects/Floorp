@@ -670,7 +670,7 @@ nsresult txEXSLTRegExFunctionCall::evaluate(txIEvalContext* aContext,
   }
 
   nsCOMPtr<txIEXSLTFunctions> funcs =
-      do_ImportModule("resource://gre/modules/txEXSLTRegExFunctions.jsm");
+      do_ImportESModule("resource://gre/modules/txEXSLTRegExFunctions.sys.mjs");
   MOZ_ALWAYS_TRUE(funcs);
 
   switch (mType) {

@@ -646,19 +646,10 @@ void RespondWithHandler::ResolvedCallback(JSContext* aCx,
     return;
   }
 
-  {
-    ErrorResult error;
-    bool bodyUsed = response->GetBodyUsed(error);
-    error.WouldReportJSException();
-    if (NS_WARN_IF(error.Failed())) {
-      autoCancel.SetCancelErrorResult(aCx, error);
-      return;
-    }
-    if (NS_WARN_IF(bodyUsed)) {
-      autoCancel.SetCancelMessage("InterceptedUsedResponseWithURL"_ns,
-                                  mRequestURL);
-      return;
-    }
+  if (NS_WARN_IF(response->BodyUsed())) {
+    autoCancel.SetCancelMessage("InterceptedUsedResponseWithURL"_ns,
+                                mRequestURL);
+    return;
   }
 
   SafeRefPtr<InternalResponse> ir = response->GetInternalResponse();

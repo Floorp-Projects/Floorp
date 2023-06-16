@@ -31,6 +31,9 @@
 #    include "CFTypeRefPtr.h"
 #    include "CocoaFileUtils.h"
 #  endif
+#  if defined(MOZ_WIDGET_GTK)
+#    include "mozilla/WidgetUtilsGtk.h"
+#  endif
 
 #endif
 
@@ -201,11 +204,21 @@ static nsresult GetUnixSystemConfigDir(nsIFile** aFile) {
 
   ToLowerCase(appName);
 
-  const char* mozSystemConfigDir = PR_GetEnv("MOZ_SYSTEM_CONFIG_DIR");
-  const char* defaultSystemConfigDir = "/etc";
-  nsDependentCString sysConfigDir = nsDependentCString(
-      mozSystemConfigDir ? mozSystemConfigDir : defaultSystemConfigDir);
-
+  nsDependentCString sysConfigDir;
+  if (PR_GetEnv("XPCSHELL_TEST_PROFILE_DIR")) {
+    const char* mozSystemConfigDir = PR_GetEnv("MOZ_SYSTEM_CONFIG_DIR");
+    if (mozSystemConfigDir) {
+      sysConfigDir.Assign(nsDependentCString(mozSystemConfigDir));
+    }
+  }
+#    if defined(MOZ_WIDGET_GTK)
+  if (sysConfigDir.IsEmpty() && mozilla::widget::IsRunningUnderFlatpak()) {
+    sysConfigDir.Assign(nsLiteralCString("/app/etc"));
+  }
+#    endif
+  if (sysConfigDir.IsEmpty()) {
+    sysConfigDir.Assign(nsLiteralCString("/etc"));
+  }
   MOZ_TRY(NS_NewNativeLocalFile(sysConfigDir, true, aFile));
   MOZ_TRY((*aFile)->AppendNative(appName));
   return NS_OK;

@@ -34,14 +34,14 @@ class HistoryDelegateTest : BaseSessionTest() {
                 session: GeckoSession,
                 url: String,
                 lastVisitedURL: String?,
-                flags: Int
+                flags: Int,
             ): GeckoResult<Boolean>? {
                 assertThat("Should pass visited URL", url, equalTo(testUri))
                 assertThat("Should not pass last visited URL", lastVisitedURL, nullValue())
                 assertThat(
                     "Should set visit flags",
                     flags,
-                    equalTo(GeckoSession.HistoryDelegate.VISIT_TOP_LEVEL)
+                    equalTo(GeckoSession.HistoryDelegate.VISIT_TOP_LEVEL),
                 )
                 return GeckoResult.fromValue(true)
             }
@@ -49,19 +49,19 @@ class HistoryDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun getVisited(
                 session: GeckoSession,
-                urls: Array<String>
+                urls: Array<String>,
             ): GeckoResult<BooleanArray>? {
                 val expected = arrayOf(
                     "https://mozilla.org/",
                     "https://getfirefox.com/",
                     "https://bugzilla.mozilla.org/",
                     "https://testpilot.firefox.com/",
-                    "https://accounts.firefox.com/"
+                    "https://accounts.firefox.com/",
                 )
                 assertThat(
                     "Should pass URLs to check",
                     urls.sorted(),
-                    equalTo(expected.sorted())
+                    equalTo(expected.sorted()),
                 )
 
                 val visits = BooleanArray(urls.size, {
@@ -80,7 +80,7 @@ class HistoryDelegateTest : BaseSessionTest() {
         mainSession.waitUntilCalled(
             GeckoSession.HistoryDelegate::class,
             "onVisited",
-            "getVisited"
+            "getVisited",
         )
 
         // Sometimes link changes are not applied immediately, wait for a little bit
@@ -91,19 +91,19 @@ class HistoryDelegateTest : BaseSessionTest() {
         assertThat(
             "Mozilla should be visited",
             mainSession.getLinkColor("#mozilla"),
-            equalTo(VISITED_COLOR)
+            equalTo(VISITED_COLOR),
         )
 
         assertThat(
             "Test Pilot should be visited",
             mainSession.getLinkColor("#testpilot"),
-            equalTo(VISITED_COLOR)
+            equalTo(VISITED_COLOR),
         )
 
         assertThat(
             "Bugzilla should be unvisited",
             mainSession.getLinkColor("#bugzilla"),
-            equalTo(UNVISITED_COLOR)
+            equalTo(UNVISITED_COLOR),
         )
     }
 
@@ -118,17 +118,17 @@ class HistoryDelegateTest : BaseSessionTest() {
                 assertThat(
                     "History should have one entry",
                     state.size,
-                    equalTo(1)
+                    equalTo(1),
                 )
                 assertThat(
                     "URLs should match",
                     state[state.currentIndex].uri,
-                    endsWith(HELLO_HTML_PATH)
+                    endsWith(HELLO_HTML_PATH),
                 )
                 assertThat(
                     "History index should be 0",
                     state.currentIndex,
-                    equalTo(0)
+                    equalTo(0),
                 )
             }
         })
@@ -141,17 +141,17 @@ class HistoryDelegateTest : BaseSessionTest() {
                 assertThat(
                     "History should have two entries",
                     state.size,
-                    equalTo(2)
+                    equalTo(2),
                 )
                 assertThat(
                     "URLs should match",
                     state[state.currentIndex].uri,
-                    endsWith(HELLO2_HTML_PATH)
+                    endsWith(HELLO2_HTML_PATH),
                 )
                 assertThat(
                     "History index should be 1",
                     state.currentIndex,
-                    equalTo(1)
+                    equalTo(1),
                 )
             }
         })
@@ -164,17 +164,17 @@ class HistoryDelegateTest : BaseSessionTest() {
                 assertThat(
                     "History should have two entries",
                     state.size,
-                    equalTo(2)
+                    equalTo(2),
                 )
                 assertThat(
                     "URLs should match",
                     state[state.currentIndex].uri,
-                    endsWith(HELLO_HTML_PATH)
+                    endsWith(HELLO_HTML_PATH),
                 )
                 assertThat(
                     "History index should be 0",
                     state.currentIndex,
-                    equalTo(0)
+                    equalTo(0),
                 )
             }
         })
@@ -187,17 +187,17 @@ class HistoryDelegateTest : BaseSessionTest() {
                 assertThat(
                     "History should have two entries",
                     state.size,
-                    equalTo(2)
+                    equalTo(2),
                 )
                 assertThat(
                     "URLs should match",
                     state[state.currentIndex].uri,
-                    endsWith(HELLO2_HTML_PATH)
+                    endsWith(HELLO2_HTML_PATH),
                 )
                 assertThat(
                     "History index should be 1",
                     state.currentIndex,
-                    equalTo(1)
+                    equalTo(1),
                 )
             }
         })
@@ -210,17 +210,17 @@ class HistoryDelegateTest : BaseSessionTest() {
                 assertThat(
                     "History should have two entries",
                     state.size,
-                    equalTo(2)
+                    equalTo(2),
                 )
                 assertThat(
                     "URLs should match",
                     state[state.currentIndex].uri,
-                    endsWith(HELLO_HTML_PATH)
+                    endsWith(HELLO_HTML_PATH),
                 )
                 assertThat(
                     "History index should be 1",
                     state.currentIndex,
-                    equalTo(0)
+                    equalTo(0),
                 )
             }
         })
@@ -233,17 +233,17 @@ class HistoryDelegateTest : BaseSessionTest() {
                 assertThat(
                     "History should have two entries",
                     state.size,
-                    equalTo(2)
+                    equalTo(2),
                 )
                 assertThat(
                     "URLs should match",
                     state[state.currentIndex].uri,
-                    endsWith(HELLO2_HTML_PATH)
+                    endsWith(HELLO2_HTML_PATH),
                 )
                 assertThat(
                     "History index should be 1",
                     state.currentIndex,
-                    equalTo(1)
+                    equalTo(1),
                 )
             }
         })
@@ -262,17 +262,17 @@ class HistoryDelegateTest : BaseSessionTest() {
                 assertThat(
                     "History should have one entry",
                     state.size,
-                    equalTo(1)
+                    equalTo(1),
                 )
                 assertThat(
                     "URLs should match",
                     state[state.currentIndex].uri,
-                    endsWith(HELLO_HTML_PATH)
+                    endsWith(HELLO_HTML_PATH),
                 )
                 assertThat(
                     "History index should be 0",
                     state.currentIndex,
-                    equalTo(0)
+                    equalTo(0),
                 )
             }
         })
@@ -285,17 +285,17 @@ class HistoryDelegateTest : BaseSessionTest() {
                 assertThat(
                     "History should have two entries",
                     state.size,
-                    equalTo(2)
+                    equalTo(2),
                 )
                 assertThat(
                     "URLs should match",
                     state[state.currentIndex].uri,
-                    endsWith(HELLO2_HTML_PATH)
+                    endsWith(HELLO2_HTML_PATH),
                 )
                 assertThat(
                     "History index should be 1",
                     state.currentIndex,
-                    equalTo(1)
+                    equalTo(1),
                 )
             }
         })

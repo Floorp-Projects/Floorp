@@ -97,7 +97,7 @@ function testClone() {
   var clone2 = null;
   return orig
     .text()
-    .then(function(body) {
+    .then(function (body) {
       origBody = body;
       is(origBody, "Sample body", "Original body string matches");
       ok(orig.bodyUsed, "Original body is consumed.");
@@ -117,7 +117,7 @@ function testClone() {
       clone2 = clone.clone();
       return clone.text();
     })
-    .then(function(body) {
+    .then(function (body) {
       is(body, origBody, "Clone body matches original body.");
       ok(clone.bodyUsed, "Clone body is consumed.");
 
@@ -134,7 +134,7 @@ function testClone() {
 
       return clone2.text();
     })
-    .then(function(body) {
+    .then(function (body) {
       is(body, origBody, "Clone body matches original body.");
       ok(clone2.bodyUsed, "Clone body is consumed.");
 
@@ -154,7 +154,7 @@ function testClone() {
 function testUsedRequest() {
   // Passing a used request should fail.
   var req = new Request("", { method: "post", body: "This is foo" });
-  var p1 = req.text().then(function(v) {
+  var p1 = req.text().then(function (v) {
     try {
       var req2 = new Request(req);
       ok(false, "Used Request cannot be passed to new Request");
@@ -201,10 +201,10 @@ function testBug1184550() {
   fetch(req);
   ok(req.bodyUsed, "Request body should be used immediately after fetch()");
   return fetch(req)
-    .then(function(resp) {
+    .then(function (resp) {
       ok(false, "Second fetch with same request should fail.");
     })
-    .catch(function(err) {
+    .catch(function (err) {
       is(err.name, "TypeError", "Second fetch with same request should fail.");
     });
 }
@@ -408,7 +408,7 @@ function testBodyUsed() {
 var text = "κόσμε";
 function testBodyCreation() {
   var req1 = new Request("", { method: "post", body: text });
-  var p1 = req1.text().then(function(v) {
+  var p1 = req1.text().then(function (v) {
     ok(typeof v === "string", "Should resolve to string");
     is(text, v, "Extracted string should match");
   });
@@ -417,7 +417,7 @@ function testBodyCreation() {
     method: "post",
     body: new Uint8Array([72, 101, 108, 108, 111]),
   });
-  var p2 = req2.text().then(function(v) {
+  var p2 = req2.text().then(function (v) {
     is("Hello", v, "Extracted string should match");
   });
 
@@ -425,12 +425,12 @@ function testBodyCreation() {
     method: "post",
     body: new Uint8Array([72, 101, 108, 108, 111]).buffer,
   });
-  var p2b = req2b.text().then(function(v) {
+  var p2b = req2b.text().then(function (v) {
     is("Hello", v, "Extracted string should match");
   });
 
   var reqblob = new Request("", { method: "post", body: new Blob([text]) });
-  var pblob = reqblob.text().then(function(v) {
+  var pblob = reqblob.text().then(function (v) {
     is(v, text, "Extracted string should match");
   });
 
@@ -441,7 +441,7 @@ function testBodyCreation() {
   params.append("feature", "stickyfeet");
   params.append("quantity", "700");
   var req3 = new Request("", { method: "post", body: params });
-  var p3 = req3.text().then(function(v) {
+  var p3 = req3.text().then(function (v) {
     var extracted = new URLSearchParams(v);
     is(extracted.get("item"), "Geckos", "Param should match");
     is(extracted.get("feature"), "stickyfeet", "Param should match");
@@ -459,7 +459,7 @@ function testFormDataBodyCreation() {
   var r1 = new Request("", { method: "post", body: f1 });
   // Since f1 is serialized immediately, later additions should not show up.
   f1.append("more", "stuff");
-  var p1 = r1.formData().then(function(fd) {
+  var p1 = r1.formData().then(function (fd) {
     ok(fd instanceof FormData, "Valid FormData extracted.");
     ok(fd.has("key"), "key should exist.");
     ok(fd.has("foo"), "foo should exist.");
@@ -469,7 +469,7 @@ function testFormDataBodyCreation() {
   f1.append("blob", new Blob([text]));
   var r2 = new Request("", { method: "post", body: f1 });
   f1.delete("key");
-  var p2 = r2.formData().then(function(fd) {
+  var p2 = r2.formData().then(function (fd) {
     ok(fd instanceof FormData, "Valid FormData extracted.");
     ok(fd.has("more"), "more should exist.");
 
@@ -477,7 +477,7 @@ function testFormDataBodyCreation() {
     is(b.name, "blob", "blob entry should be a Blob.");
     ok(b instanceof Blob, "blob entry should be a Blob.");
 
-    return readAsText(b).then(function(output) {
+    return readAsText(b).then(function (output) {
       is(output, text, "Blob contents should match.");
     });
   });
@@ -487,41 +487,41 @@ function testFormDataBodyCreation() {
 
 function testBodyExtraction() {
   var text = "κόσμε";
-  var newReq = function() {
+  var newReq = function () {
     return new Request("", { method: "post", body: text });
   };
   return newReq()
     .text()
-    .then(function(v) {
+    .then(function (v) {
       ok(typeof v === "string", "Should resolve to string");
       is(text, v, "Extracted string should match");
     })
-    .then(function() {
+    .then(function () {
       return newReq()
         .blob()
-        .then(function(v) {
+        .then(function (v) {
           ok(v instanceof Blob, "Should resolve to Blob");
-          return readAsText(v).then(function(result) {
+          return readAsText(v).then(function (result) {
             is(result, text, "Decoded Blob should match original");
           });
         });
     })
-    .then(function() {
+    .then(function () {
       return newReq()
         .json()
         .then(
-          function(v) {
+          function (v) {
             ok(false, "Invalid json should reject");
           },
-          function(e) {
+          function (e) {
             ok(true, "Invalid json should reject");
           }
         );
     })
-    .then(function() {
+    .then(function () {
       return newReq()
         .arrayBuffer()
-        .then(function(v) {
+        .then(function (v) {
           ok(v instanceof ArrayBuffer, "Should resolve to ArrayBuffer");
           var dec = new TextDecoder();
           is(
@@ -531,14 +531,14 @@ function testBodyExtraction() {
           );
         });
     })
-    .then(function() {
+    .then(function () {
       return newReq()
         .formData()
         .then(
-          function(v) {
+          function (v) {
             ok(false, "invalid FormData read should fail.");
           },
-          function(e) {
+          function (e) {
             ok(e.name == "TypeError", "invalid FormData read should fail.");
           }
         );
@@ -554,7 +554,7 @@ function testFormDataBodyExtraction() {
   params.append("quantity", "800");
 
   var req = new Request("", { method: "POST", body: params });
-  var p1 = req.formData().then(function(fd) {
+  var p1 = req.formData().then(function (fd) {
     ok(fd.has("item"), "Has entry 'item'.");
     ok(fd.has("feature"), "Has entry 'feature'.");
     var entries = fd.getAll("quantity");
@@ -568,7 +568,7 @@ function testFormDataBodyExtraction() {
   f1.append("foo", "bar");
   f1.append("blob", new Blob([text]));
   var r2 = new Request("", { method: "post", body: f1 });
-  var p2 = r2.formData().then(function(fd) {
+  var p2 = r2.formData().then(function (fd) {
     ok(fd.has("key"), "Has entry 'key'.");
     ok(fd.has("foo"), "Has entry 'foo'.");
     ok(fd.has("blob"), "Has entry 'blob'.");
@@ -584,7 +584,7 @@ function testFormDataBodyExtraction() {
     new File([ws], "file name has spaces.txt", { type: "new/lines" })
   );
   var r3 = new Request("", { method: "post", body: f1 });
-  var p3 = r3.formData().then(function(fd) {
+  var p3 = r3.formData().then(function (fd) {
     ok(fd.has("foo"), "Has entry 'foo'.");
     ok(fd.has("blob"), "Has entry 'blob'.");
     var entries = fd.getAll("blob");
@@ -598,7 +598,7 @@ function testFormDataBodyExtraction() {
     is(f.name, "file name has spaces.txt", "File name should match.");
     is(f.type, "new/lines", "File type should match.");
     is(f.size, ws.length, "File size should match.");
-    return readAsText(f).then(function(text) {
+    return readAsText(f).then(function (text) {
       is(text, ws, "File contents should match.");
     });
   });
@@ -619,10 +619,10 @@ function testFormDataBodyExtraction() {
     },
   });
   var p4 = r4.formData().then(
-    function() {
+    function () {
       ok(false, "Invalid mimetype should fail.");
     },
-    function() {
+    function () {
       ok(true, "Invalid mimetype should fail.");
     }
   );
@@ -635,10 +635,10 @@ function testFormDataBodyExtraction() {
     },
   });
   var p5 = r5.formData().then(
-    function() {
+    function () {
       ok(false, "Invalid mimetype should fail.");
     },
-    function() {
+    function () {
       ok(true, "Invalid mimetype should fail.");
     }
   );
@@ -683,7 +683,7 @@ function testModeCorsPreflightEnumValue() {
 // Request.
 function testBug1154268() {
   var r1 = new Request("/index.html", { method: "POST", body: "Hi there" });
-  ["HEAD", "GET"].forEach(function(method) {
+  ["HEAD", "GET"].forEach(function (method) {
     try {
       var r2 = new Request(r1, { method });
       ok(

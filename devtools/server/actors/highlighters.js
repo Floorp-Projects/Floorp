@@ -351,6 +351,7 @@ const HIGHLIGHTERS = {
   selector: "devtools/server/actors/highlighters/selector",
   shapes: "devtools/server/actors/highlighters/shapes",
   tabbingOrder: "devtools/server/actors/highlighters/tabbing-order",
+  viewportSize: "devtools/server/actors/highlighters/viewport-size",
 };
 
 // Each array in this array is called as register(arr[0], arr[1]).
@@ -369,6 +370,7 @@ const registerCalls = [
   ["SelectorHighlighter", HIGHLIGHTERS.selector],
   ["ShapesHighlighter", HIGHLIGHTERS.shapes],
   ["TabbingOrderHighlighter", HIGHLIGHTERS.tabbingOrder],
+  ["ViewportSizeHighlighter", HIGHLIGHTERS.viewportSize],
 ];
 
 // Register each highlighter above.

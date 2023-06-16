@@ -237,6 +237,7 @@ gd{
         hax{"Haida Dheasach"}
         he{"Eabhra"}
         hi{"Hindis"}
+        hi_Latn{"Hindis (Laideann)"}
         hif{"Hindis Fhìditheach"}
         hil{"Hiligaynon"}
         hit{"Cànan Het"}

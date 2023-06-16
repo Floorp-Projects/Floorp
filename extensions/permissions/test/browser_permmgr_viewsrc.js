@@ -1,9 +1,10 @@
-add_task(async function() {
+add_task(async function () {
   // Add a permission for example.com, start a new content process, and make
   // sure that the permission has been sent down.
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    "https://example.com"
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      "https://example.com"
+    );
   Services.perms.addFromPrincipal(
     principal,
     "viewsourceTestingPerm",
@@ -17,7 +18,7 @@ add_task(async function() {
     /* waitForStateStop */ false,
     /* forceNewProcess */ true
   );
-  await SpecialPowers.spawn(tab.linkedBrowser, [principal], async function(p) {
+  await SpecialPowers.spawn(tab.linkedBrowser, [principal], async function (p) {
     is(
       Services.perms.testPermissionFromPrincipal(p, "viewsourceTestingPerm"),
       Services.perms.ALLOW_ACTION

@@ -42,9 +42,9 @@ add_task(async function test_ensure_bundled_addons_are_localized() {
     }
   }
 
-  let colorwayThemes = Array.from(
-    BuiltInThemes.builtInThemeMap.keys()
-  ).filter(id => id.endsWith("colorway@mozilla.org"));
+  let colorwayThemes = Array.from(BuiltInThemes.builtInThemeMap.keys()).filter(
+    id => id.endsWith("colorway@mozilla.org")
+  );
   ok(!!colorwayThemes.length, "Colorway themes should exist");
   for (let id of colorwayThemes) {
     let l10nId = id.replace("@mozilla.org", "");

@@ -244,7 +244,7 @@ function openBrowserWindow(
     let uriArray = Cc["@mozilla.org/array;1"].createInstance(
       Ci.nsIMutableArray
     );
-    urlOrUrlList.forEach(function(uri) {
+    urlOrUrlList.forEach(function (uri) {
       var sstring = Cc["@mozilla.org/supports-string;1"].createInstance(
         Ci.nsISupportsString
       );
@@ -695,7 +695,8 @@ nsBrowserContentHandler.prototype = {
             // into account because that requires waiting for the session file
             // to be read. If a crash occurs after updating, before restarting,
             // we may open the startPage in addition to restoring the session.
-            willRestoreSession = lazy.SessionStartup.isAutomaticRestoreEnabled();
+            willRestoreSession =
+              lazy.SessionStartup.isAutomaticRestoreEnabled();
 
             overridePage = Services.urlFormatter.formatURLPref(
               "startup.homepage_override_url"
@@ -1058,10 +1059,8 @@ nsDefaultCommandLineHandler.prototype = {
         }
 
         async function handleNotification() {
-          const {
-            launchUrl,
-            privilegedName,
-          } = await alertService.handleWindowsTag(tag);
+          const { launchUrl, privilegedName } =
+            await alertService.handleWindowsTag(tag);
 
           // If `launchUrl` or `privilegedName` are provided, then the
           // notification was from a prior instance of the application and we
@@ -1201,6 +1200,28 @@ nsDefaultCommandLineHandler.prototype = {
       }
     } catch (e) {
       console.error(e);
+    }
+
+    if (
+      AppConstants.platform == "win" &&
+      cmdLine.handleFlag("to-handle-default-browser-agent", false)
+    ) {
+      // The Default Browser Agent launches Firefox in response to a Windows
+      // native notification, but it does so in a non-standard manner.
+      Services.telemetry.setEventRecordingEnabled(
+        "browser.launched_to_handle",
+        true
+      );
+      Glean.browserLaunchedToHandle.systemNotification.record({
+        name: "default-browser-agent",
+      });
+
+      let thanksURI = Services.io.newURI(
+        Services.urlFormatter.formatURLPref(
+          "browser.shell.defaultBrowserAgent.thanksURL"
+        )
+      );
+      urilist.push(thanksURI);
     }
 
     if (cmdLine.findFlag("screenshot", true) != -1) {

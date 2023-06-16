@@ -1,4 +1,4 @@
-add_task(async function() {
+add_task(async function () {
   // Create mocked objects for test
   let launcher = createMockedObjects(false);
   // Open helper app dialog with mocked launcher

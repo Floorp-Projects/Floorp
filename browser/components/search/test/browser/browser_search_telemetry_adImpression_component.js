@@ -3,12 +3,8 @@
 
 "use strict";
 
-const {
-  SearchSERPTelemetry,
-  SearchSERPTelemetryUtils,
-} = ChromeUtils.importESModule(
-  "resource:///modules/SearchSERPTelemetry.sys.mjs"
-);
+const { SearchSERPTelemetry, SearchSERPTelemetryUtils } =
+  ChromeUtils.importESModule("resource:///modules/SearchSERPTelemetry.sys.mjs");
 
 const WINDOW_HEIGHT = 768;
 const WINDOW_WIDTH = 1024;
@@ -18,7 +14,8 @@ const WINDOW_WIDTH = 1024;
 const TEST_PROVIDER_INFO = [
   {
     telemetryId: "example",
-    searchPageRegexp: /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/searchTelemetryAd_components_/,
+    searchPageRegexp:
+      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/searchTelemetryAd/,
     queryParamName: "s",
     codeParamName: "abc",
     taggedCodes: ["ff"],
@@ -38,38 +35,19 @@ const TEST_PROVIDER_INFO = [
             },
           ],
         },
-        excluded: {
-          regexps: [/^https:\/\/example\.com\/search\?(?:.+)&prs=/],
-        },
       },
       {
         type: SearchSERPTelemetryUtils.COMPONENTS.REFINED_SEARCH_BUTTONS,
         included: {
           parent: {
-            selector: ".moz-carousel",
+            selector: ".refined-search-buttons",
           },
           children: [
             {
-              selector: ".moz-carousel-text",
-            },
-          ],
-          regexps: [/^https:\/\/example\.com\/search\?(?:.+)&prs=/],
-        },
-        nonAd: true,
-      },
-      {
-        type: SearchSERPTelemetryUtils.COMPONENTS.REFINED_SEARCH_BUTTONS,
-        included: {
-          parent: {
-            selector: ".moz-rich-suggestions",
-          },
-          children: [
-            {
-              selector: ".moz-rich-suggestion a",
+              selector: "a",
             },
           ],
         },
-        nonAd: true,
         topDown: true,
       },
       {
@@ -138,7 +116,7 @@ async function waitForIdle() {
   }
 }
 
-add_setup(async function() {
+add_setup(async function () {
   SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
   await waitForIdle();
   // Enable local telemetry recording for the duration of the tests.
@@ -406,9 +384,7 @@ add_task(async function test_ad_visibility() {
 
 add_task(async function test_impressions_without_ads() {
   resetTelemetry();
-  let url = getSERPUrl(
-    "searchTelemetryAd_components_refined_search_button.html"
-  );
+  let url = getSERPUrl("searchTelemetryAd_searchbox_with_content.html");
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
   await promiseAdImpressionReceived();
@@ -416,8 +392,8 @@ add_task(async function test_impressions_without_ads() {
   assertAdImpressionEvents([
     {
       component: SearchSERPTelemetryUtils.COMPONENTS.REFINED_SEARCH_BUTTONS,
-      ads_loaded: "2",
-      ads_visible: "2",
+      ads_loaded: "1",
+      ads_visible: "1",
       ads_hidden: "0",
     },
   ]);

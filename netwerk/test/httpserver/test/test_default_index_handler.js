@@ -10,7 +10,7 @@
 
 var srv, dir, gDirEntries;
 
-XPCOMUtils.defineLazyGetter(this, "BASE_URL", function() {
+XPCOMUtils.defineLazyGetter(this, "BASE_URL", function () {
   return "http://localhost:" + srv.identity.primaryPort + "/";
 });
 
@@ -28,7 +28,7 @@ function run_test() {
   function done() {
     do_test_pending();
     destroyTestDirectory();
-    srv.stop(function() {
+    srv.stop(function () {
       do_test_finished();
     });
   }
@@ -216,7 +216,7 @@ function makeFile(name, isDirectory, parentDir, lst) {
  * TESTS *
  *********/
 
-XPCOMUtils.defineLazyGetter(this, "tests", function() {
+XPCOMUtils.defineLazyGetter(this, "tests", function () {
   return [
     new Test(BASE_URL, null, start, stopRootDirectory),
     new Test(BASE_URL + "foo/", null, start, stopFooDirectory),

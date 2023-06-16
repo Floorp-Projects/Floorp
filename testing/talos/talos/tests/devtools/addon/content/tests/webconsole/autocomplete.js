@@ -15,7 +15,7 @@ const {
 
 const TEST_NAME = "console.autocomplete";
 
-module.exports = async function() {
+module.exports = async function () {
   await testSetup(`data:text/html,<meta charset=utf8><script>
     /*
      * Create an object with a null prototype in order to not have the autocomplete

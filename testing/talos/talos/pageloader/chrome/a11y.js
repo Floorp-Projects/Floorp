@@ -4,7 +4,7 @@
 
 /* eslint-env mozilla/frame-script */
 
-(function() {
+(function () {
   let gAccService = 0;
 
   function initAccessibility() {

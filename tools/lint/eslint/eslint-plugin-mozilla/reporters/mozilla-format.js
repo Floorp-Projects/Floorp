@@ -23,13 +23,13 @@ function MozillaFormatter(runner) {
     console.log("SUITE-START | eslint-plugin-mozilla");
   });
 
-  runner.on("pass", function(test) {
+  runner.on("pass", function (test) {
     passes++;
     let title = test.title.replace(/\n/g, "|");
     console.log(`TEST-PASS | ${path.basename(test.file)} | ${title}`);
   });
 
-  runner.on("fail", function(test, err) {
+  runner.on("fail", function (test, err) {
     failures.push(test);
     // Replace any newlines in the title.
     let title = test.title.replace(/\n/g, "|");
@@ -41,7 +41,7 @@ function MozillaFormatter(runner) {
     mocha.reporters.Base.list([test]);
   });
 
-  runner.on("end", function() {
+  runner.on("end", function () {
     // Space the results out visually with an additional blank line.
     console.log("");
     console.log("INFO | Result summary:");

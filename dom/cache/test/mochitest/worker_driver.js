@@ -27,9 +27,9 @@
 // For an example see test_worker_interfaces.html and test_worker_interfaces.js.
 
 function workerTestExec(script) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     var worker = new Worker("worker_wrapper.js");
-    worker.onmessage = function(event) {
+    worker.onmessage = function (event) {
       is(
         event.data.context,
         "Worker",
@@ -43,7 +43,7 @@ function workerTestExec(script) {
         ok(event.data.status, event.data.context + ": " + event.data.msg);
       } else if (event.data.type == "getPrefs") {
         let result = {};
-        event.data.prefs.forEach(function(pref) {
+        event.data.prefs.forEach(function (pref) {
           result[pref] = SpecialPowers.Services.prefs.getBoolPref(pref);
         });
         worker.postMessage({
@@ -53,7 +53,7 @@ function workerTestExec(script) {
         });
       } else if (event.data.type == "getPermissions") {
         let result = {};
-        event.data.permissions.forEach(function(permission) {
+        event.data.permissions.forEach(function (permission) {
           result[permission] = SpecialPowers.hasPermission(
             permission,
             window.document
@@ -72,7 +72,7 @@ function workerTestExec(script) {
       }
     };
 
-    worker.onerror = function(event) {
+    worker.onerror = function (event) {
       reject("Worker had an error: " + event.data);
     };
 

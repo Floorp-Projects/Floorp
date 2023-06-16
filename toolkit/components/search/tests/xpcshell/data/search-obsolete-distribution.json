@@ -29,9 +29,7 @@
       "_urls": [
         {
           "template": "https://example.com/search",
-          "rels": [
-            "searchform"
-          ],
+          "rels": ["searchform"],
           "resultDomain": "example.com",
           "params": []
         }

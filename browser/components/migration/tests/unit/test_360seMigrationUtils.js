@@ -33,16 +33,15 @@ add_task(async function test_360se10_logged_in() {
   );
   await IOUtils.copy(loggedOutBackup, loggedInBackup);
 
-  const alternativeBookmarks = await Qihoo360seMigrationUtils.getAlternativeBookmarks(
-    {
+  const alternativeBookmarks =
+    await Qihoo360seMigrationUtils.getAlternativeBookmarks({
       bookmarksPath: PathUtils.join(parentPath, "Default", "Bookmarks"),
       localState: {
         sync_login_info: {
           filepath: loggedInPath,
         },
       },
-    }
-  );
+    });
   Assert.ok(
     alternativeBookmarks.resource && alternativeBookmarks.resource.exists,
     "Should return the legacy bookmark resource."
@@ -61,16 +60,15 @@ add_task(async function test_360se10_logged_in_outdated_sqlite() {
     new Date("2020-08-18").valueOf()
   );
 
-  const alternativeBookmarks = await Qihoo360seMigrationUtils.getAlternativeBookmarks(
-    {
+  const alternativeBookmarks =
+    await Qihoo360seMigrationUtils.getAlternativeBookmarks({
       bookmarksPath: PathUtils.join(parentPath, "Default", "Bookmarks"),
       localState: {
         sync_login_info: {
           filepath: loggedInPath,
         },
       },
-    }
-  );
+    });
   Assert.strictEqual(
     alternativeBookmarks.resource,
     undefined,
@@ -86,16 +84,15 @@ add_task(async function test_360se10_logged_in_outdated_sqlite() {
 });
 
 add_task(async function test_360se10_logged_out() {
-  const alternativeBookmarks = await Qihoo360seMigrationUtils.getAlternativeBookmarks(
-    {
+  const alternativeBookmarks =
+    await Qihoo360seMigrationUtils.getAlternativeBookmarks({
       bookmarksPath: PathUtils.join(parentPath, "Default", "Bookmarks"),
       localState: {
         sync_login_info: {
           filepath: "",
         },
       },
-    }
-  );
+    });
   Assert.strictEqual(
     alternativeBookmarks.resource,
     undefined,
@@ -115,16 +112,15 @@ add_task(async function test_360se9_logged_in_outdated_sqlite() {
     new Date("2020-08-18").valueOf()
   );
 
-  const alternativeBookmarks = await Qihoo360seMigrationUtils.getAlternativeBookmarks(
-    {
+  const alternativeBookmarks =
+    await Qihoo360seMigrationUtils.getAlternativeBookmarks({
       bookmarksPath: PathUtils.join(parentPath, "Default4SE9Test", "Bookmarks"),
       localState: {
         sync_login_info: {
           filepath: loggedInPath,
         },
       },
-    }
-  );
+    });
   Assert.strictEqual(
     alternativeBookmarks.resource,
     undefined,
@@ -146,16 +142,15 @@ add_task(async function test_360se9_logged_in_outdated_sqlite() {
 });
 
 add_task(async function test_360se9_logged_out() {
-  const alternativeBookmarks = await Qihoo360seMigrationUtils.getAlternativeBookmarks(
-    {
+  const alternativeBookmarks =
+    await Qihoo360seMigrationUtils.getAlternativeBookmarks({
       bookmarksPath: PathUtils.join(parentPath, "Default4SE9Test", "Bookmarks"),
       localState: {
         sync_login_info: {
           filepath: "",
         },
       },
-    }
-  );
+    });
   Assert.strictEqual(
     alternativeBookmarks.resource,
     undefined,

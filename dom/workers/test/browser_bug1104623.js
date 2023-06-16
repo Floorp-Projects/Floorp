@@ -24,7 +24,7 @@ function test() {
   let tab = BrowserTestUtils.addTab(gBrowser, testURL);
   gBrowser.selectedTab = tab;
 
-  whenBrowserLoaded(tab.linkedBrowser, function() {
+  whenBrowserLoaded(tab.linkedBrowser, function () {
     let doc = tab.linkedBrowser.contentDocument;
     let contentWin = tab.linkedBrowser.contentWindow;
 
@@ -39,7 +39,7 @@ function test() {
     let worker = new contentWin.Worker(blobURL);
     ok(worker, "Worker has been created");
 
-    worker.onerror = function(error) {
+    worker.onerror = function (error) {
       ok(false, "Worker.onerror:" + error.message);
       worker.terminate();
       contentWin.URL.revokeObjectURL(blob);
@@ -47,7 +47,7 @@ function test() {
       executeSoon(finish);
     };
 
-    worker.onmessage = function() {
+    worker.onmessage = function () {
       ok(true, "Worker.onmessage");
       worker.terminate();
       contentWin.URL.revokeObjectURL(blob);

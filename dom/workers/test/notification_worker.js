@@ -8,7 +8,7 @@ function is(a, b, message) {
 
 if (self.Notification) {
   var steps = [
-    function() {
+    function () {
       ok(typeof Notification === "function", "Notification constructor exists");
       ok(Notification.permission, "Notification.permission exists");
       ok(
@@ -17,7 +17,7 @@ if (self.Notification) {
       );
     },
 
-    function(done) {
+    function (done) {
       var options = {
         dir: "auto",
         lang: "",
@@ -55,16 +55,16 @@ if (self.Notification) {
       // store notification in test context
       this.notification = notification;
 
-      notification.onshow = function() {
+      notification.onshow = function () {
         ok(true, "onshow handler should be called");
         done();
       };
     },
 
-    function(done) {
+    function (done) {
       var notification = this.notification;
 
-      notification.onclose = function() {
+      notification.onclose = function () {
         ok(true, "onclose handler should be called");
         done();
       };
@@ -73,7 +73,7 @@ if (self.Notification) {
     },
   ];
 
-  onmessage = function(e) {
+  onmessage = function (e) {
     var context = {};
     (function executeRemainingTests(remainingTests) {
       if (!remainingTests.length) {

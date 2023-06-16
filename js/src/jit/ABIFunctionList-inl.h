@@ -138,8 +138,8 @@ namespace jit {
   _(js::jit::GetContextSensitiveInterpreterStub)                      \
   _(js::jit::GetIndexFromString)                                      \
   _(js::jit::GetInt32FromStringPure)                                  \
-  _(js::jit::GetNativeDataPropertyByIdPure)                           \
-  _(js::jit::GetNativeDataPropertyByNamePure)                         \
+  _(js::jit::GetNativeDataPropertyPure)                               \
+  _(js::jit::GetNativeDataPropertyPureWithCacheLookup)                \
   _(js::jit::GetNativeDataPropertyByValuePure)                        \
   _(js::jit::GlobalHasLiveOnDebuggerStatement)                        \
   _(js::jit::HandleCodeCoverageAtPC)                                  \
@@ -162,7 +162,6 @@ namespace jit {
   _(js::jit::PostWriteElementBarrier<IndexInBounds::Maybe>)           \
   _(js::jit::Printf0)                                                 \
   _(js::jit::Printf1)                                                 \
-  _(js::jit::SetNativeDataPropertyPure)                               \
   _(js::jit::StringFromCharCodeNoGC)                                  \
   _(js::jit::TypeOfNameObject)                                        \
   _(js::jit::WrapObjectPure)                                          \

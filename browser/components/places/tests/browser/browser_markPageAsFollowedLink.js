@@ -14,7 +14,7 @@ add_task(async function test() {
   let deferredRightFrameVisit = PromiseUtils.defer();
 
   Services.obs.addObserver(function observe(subject) {
-    (async function() {
+    (async function () {
       let url = subject.QueryInterface(Ci.nsIURI).spec;
       if (url == LEFT_URL) {
         is(
@@ -45,7 +45,7 @@ add_task(async function test() {
   // Click on the link in the left frame to cause a page load in the
   // right frame.
   info("Clicking link");
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     content.frames[0].document.getElementById("clickme").click();
   });
 

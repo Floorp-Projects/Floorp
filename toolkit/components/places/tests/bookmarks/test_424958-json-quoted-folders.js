@@ -7,8 +7,9 @@
 const FOLDER_TITLE = '"quoted folder"';
 
 function checkQuotedFolder() {
-  let toolbar = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.toolbarGuid)
-    .root;
+  let toolbar = PlacesUtils.getFolderContents(
+    PlacesUtils.bookmarks.toolbarGuid
+  ).root;
 
   // test for our quoted folder
   Assert.equal(toolbar.childCount, 1);
@@ -20,7 +21,7 @@ function checkQuotedFolder() {
   toolbar.containerOpen = false;
 }
 
-add_task(async function() {
+add_task(async function () {
   // make json file
   let jsonFile = PathUtils.join(PathUtils.profileDir, "bookmarks.json");
 

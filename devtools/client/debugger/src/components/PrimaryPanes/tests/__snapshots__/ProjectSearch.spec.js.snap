@@ -298,151 +298,51 @@ exports[`ProjectSearch found search results 1`] = `
           </SearchInput>
         </Connect(SearchInput)>
       </div>
-      <ManagedTree
+      <Tree
         autoExpandAll={true}
         autoExpandDepth={1}
         autoExpandNodeChildrenLimit={100}
         focused={null}
         getChildren={[Function]}
+        getKey={[Function]}
         getParent={[Function]}
         getPath={[Function]}
         getRoots={[Function]}
+        isExpanded={[Function]}
         itemHeight={24}
+        onCollapse={[Function]}
+        onExpand={[Function]}
         onFocus={[Function]}
         renderItem={[Function]}
       >
         <div
-          className="managed-tree"
+          aria-activedescendant={null}
+          className="tree "
+          onBlur={[Function]}
+          onFocus={[Function]}
+          onKeyDown={[Function]}
+          onKeyPress={[Function]}
+          onKeyUp={[Function]}
+          role="tree"
+          style={Object {}}
+          tabIndex="0"
         >
-          <Tree
-            autoExpandAll={true}
-            autoExpandDepth={1}
-            autoExpandNodeChildrenLimit={100}
-            focused={null}
-            getChildren={[Function]}
-            getKey={[Function]}
-            getParent={[Function]}
-            getPath={[Function]}
-            getRoots={[Function]}
-            isExpanded={[Function]}
-            itemHeight={24}
-            onCollapse={[Function]}
-            onExpand={[Function]}
-            onFocus={[Function]}
-            renderItem={[Function]}
-          >
-            <div
-              aria-activedescendant={null}
-              className="tree "
-              onBlur={[Function]}
-              onFocus={[Function]}
-              onKeyDown={[Function]}
-              onKeyPress={[Function]}
-              onKeyUp={[Function]}
-              role="tree"
-              style={Object {}}
-              tabIndex="0"
-            >
-              <TreeNode
-                active={false}
-                depth={0}
-                expanded={true}
-                focused={false}
-                id="undefined-$"
-                index={0}
-                isExpandable={true}
-                item={
-                  Object {
-                    "location": Object {
-                      "source": Object {
-                        "url": "testFilePath1",
-                      },
-                    },
-                    "matches": Array [
-                      Object {
-                        "location": Object {
-                          "column": 30,
-                          "source": Object {},
-                        },
-                        "match": "match1",
-                        "type": "MATCH",
-                        "value": "some thing match1",
-                      },
-                      Object {
-                        "location": Object {
-                          "column": 60,
-                          "source": Object {},
-                        },
-                        "match": "match2",
-                        "type": "MATCH",
-                        "value": "some thing match2",
-                      },
-                      Object {
-                        "location": Object {
-                          "column": 90,
-                          "source": Object {},
-                        },
-                        "match": "match3",
-                        "type": "MATCH",
-                        "value": "some thing match3",
-                      },
-                    ],
-                    "type": "RESULT",
-                  }
-                }
-                key="undefined-$-inactive"
-                onClick={[Function]}
-                onCollapse={[Function]}
-                onExpand={[Function]}
-                renderItem={[Function]}
-              >
-                <div
-                  aria-expanded={true}
-                  aria-level={1}
-                  className="tree-node"
-                  data-expandable={true}
-                  id="undefined-$"
-                  onClick={[Function]}
-                  onKeyDownCapture={null}
-                  role="treeitem"
-                >
-                  <div
-                    className="file-result"
-                  >
-                    <AccessibleImage
-                      className="arrow expanded"
-                    >
-                      <span
-                        className="img arrow expanded"
-                      />
-                    </AccessibleImage>
-                    <AccessibleImage
-                      className="file"
-                    >
-                      <span
-                        className="img file"
-                      />
-                    </AccessibleImage>
-                    <span
-                      className="file-path"
-                    />
-                    <span
-                      className="matches-summary"
-                    >
-                       (3 matches)
-                    </span>
-                  </div>
-                </div>
-              </TreeNode>
-              <TreeNode
-                active={false}
-                depth={1}
-                expanded={false}
-                focused={false}
-                id="undefined-undefined-30-1"
-                index={1}
-                isExpandable={false}
-                item={
+          <TreeNode
+            active={false}
+            depth={0}
+            expanded={true}
+            focused={false}
+            id="undefined-$"
+            index={0}
+            isExpandable={true}
+            item={
+              Object {
+                "location": Object {
+                  "source": Object {
+                    "url": "testFilePath1",
+                  },
+                },
+                "matches": Array [
                   Object {
                     "location": Object {
                       "column": 30,
@@ -451,69 +351,7 @@ exports[`ProjectSearch found search results 1`] = `
                     "match": "match1",
                     "type": "MATCH",
                     "value": "some thing match1",
-                  }
-                }
-                key="undefined-undefined-30-1-inactive"
-                onClick={[Function]}
-                onCollapse={[Function]}
-                onExpand={[Function]}
-                renderItem={[Function]}
-              >
-                <div
-                  aria-level={2}
-                  className="tree-node"
-                  data-expandable={false}
-                  id="undefined-undefined-30-1"
-                  onClick={[Function]}
-                  onKeyDownCapture={null}
-                  role="treeitem"
-                >
-                  <span
-                    className="tree-indent tree-last-indent"
-                  >
-                    ​
-                  </span>
-                  <div
-                    className="result"
-                    onClick={[Function]}
-                  >
-                    <span
-                      className="line-number"
-                    />
-                    <span
-                      className="line-value"
-                    >
-                      <span
-                        className="line-match"
-                        key="0"
-                      >
-                        some thing match1
-                      </span>
-                      <span
-                        className="query-match"
-                        key="1"
-                      >
-                        some t
-                      </span>
-                      <span
-                        className="line-match"
-                        key="2"
-                      >
-                        some thing match1
-                      </span>
-                    </span>
-                  </div>
-                </div>
-              </TreeNode>
-              <TreeNode
-                active={false}
-                depth={1}
-                expanded={false}
-                focused={false}
-                id="undefined-undefined-60-2"
-                index={2}
-                isExpandable={false}
-                item={
+                  },
                   Object {
                     "location": Object {
                       "column": 60,
@@ -522,69 +360,7 @@ exports[`ProjectSearch found search results 1`] = `
                     "match": "match2",
                     "type": "MATCH",
                     "value": "some thing match2",
-                  }
-                }
-                key="undefined-undefined-60-2-inactive"
-                onClick={[Function]}
-                onCollapse={[Function]}
-                onExpand={[Function]}
-                renderItem={[Function]}
-              >
-                <div
-                  aria-level={2}
-                  className="tree-node"
-                  data-expandable={false}
-                  id="undefined-undefined-60-2"
-                  onClick={[Function]}
-                  onKeyDownCapture={null}
-                  role="treeitem"
-                >
-                  <span
-                    className="tree-indent tree-last-indent"
-                  >
-                    ​
-                  </span>
-                  <div
-                    className="result"
-                    onClick={[Function]}
-                  >
-                    <span
-                      className="line-number"
-                    />
-                    <span
-                      className="line-value"
-                    >
-                      <span
-                        className="line-match"
-                        key="0"
-                      >
-                        some thing match2
-                      </span>
-                      <span
-                        className="query-match"
-                        key="1"
-                      >
-                        some t
-                      </span>
-                      <span
-                        className="line-match"
-                        key="2"
-                      >
-                        some thing match2
-                      </span>
-                    </span>
-                  </div>
-                </div>
-              </TreeNode>
-              <TreeNode
-                active={false}
-                depth={1}
-                expanded={false}
-                focused={false}
-                id="undefined-undefined-90-3"
-                index={3}
-                isExpandable={false}
-                item={
+                  },
                   Object {
                     "location": Object {
                       "column": 90,
@@ -593,151 +369,284 @@ exports[`ProjectSearch found search results 1`] = `
                     "match": "match3",
                     "type": "MATCH",
                     "value": "some thing match3",
-                  }
-                }
-                key="undefined-undefined-90-3-inactive"
-                onClick={[Function]}
-                onCollapse={[Function]}
-                onExpand={[Function]}
-                renderItem={[Function]}
+                  },
+                ],
+                "type": "RESULT",
+              }
+            }
+            key="undefined-$-inactive"
+            onClick={[Function]}
+            onCollapse={[Function]}
+            onExpand={[Function]}
+            renderItem={[Function]}
+          >
+            <div
+              aria-expanded={true}
+              aria-level={1}
+              className="tree-node"
+              data-expandable={true}
+              id="undefined-$"
+              onClick={[Function]}
+              onKeyDownCapture={null}
+              role="treeitem"
+            >
+              <div
+                className="file-result"
               >
-                <div
-                  aria-level={2}
-                  className="tree-node"
-                  data-expandable={false}
-                  id="undefined-undefined-90-3"
-                  onClick={[Function]}
-                  onKeyDownCapture={null}
-                  role="treeitem"
+                <AccessibleImage
+                  className="arrow expanded"
                 >
                   <span
-                    className="tree-indent tree-last-indent"
-                  >
-                    ​
-                  </span>
-                  <div
-                    className="result"
-                    onClick={[Function]}
-                  >
-                    <span
-                      className="line-number"
-                    />
-                    <span
-                      className="line-value"
-                    >
-                      <span
-                        className="line-match"
-                        key="0"
-                      >
-                        some thing match3
-                      </span>
-                      <span
-                        className="query-match"
-                        key="1"
-                      >
-                        some t
-                      </span>
-                      <span
-                        className="line-match"
-                        key="2"
-                      >
-                        some thing match3
-                      </span>
-                    </span>
-                  </div>
-                </div>
-              </TreeNode>
-              <TreeNode
-                active={false}
-                depth={0}
-                expanded={true}
-                focused={false}
-                id="undefined-4"
-                index={4}
-                isExpandable={true}
-                item={
-                  Object {
-                    "location": Object {
-                      "source": Object {
-                        "url": "testFilePath2",
-                      },
-                    },
-                    "matches": Array [
-                      Object {
-                        "location": Object {
-                          "column": 80,
-                          "source": Object {},
-                        },
-                        "match": "match4",
-                        "type": "MATCH",
-                        "value": "some thing match4",
-                      },
-                      Object {
-                        "location": Object {
-                          "column": 40,
-                          "source": Object {},
-                        },
-                        "match": "match5",
-                        "type": "MATCH",
-                        "value": "some thing match5",
-                      },
-                    ],
-                    "type": "RESULT",
-                  }
-                }
-                key="undefined-4-inactive"
-                onClick={[Function]}
-                onCollapse={[Function]}
-                onExpand={[Function]}
-                renderItem={[Function]}
-              >
-                <div
-                  aria-expanded={true}
-                  aria-level={1}
-                  className="tree-node"
-                  data-expandable={true}
-                  id="undefined-4"
-                  onClick={[Function]}
-                  onKeyDownCapture={null}
-                  role="treeitem"
+                    className="img arrow expanded"
+                  />
+                </AccessibleImage>
+                <AccessibleImage
+                  className="file"
                 >
-                  <div
-                    className="file-result"
+                  <span
+                    className="img file"
+                  />
+                </AccessibleImage>
+                <span
+                  className="file-path"
+                />
+                <span
+                  className="matches-summary"
+                >
+                   (3 matches)
+                </span>
+              </div>
+            </div>
+          </TreeNode>
+          <TreeNode
+            active={false}
+            depth={1}
+            expanded={false}
+            focused={false}
+            id="undefined-undefined-30-1"
+            index={1}
+            isExpandable={false}
+            item={
+              Object {
+                "location": Object {
+                  "column": 30,
+                  "source": Object {},
+                },
+                "match": "match1",
+                "type": "MATCH",
+                "value": "some thing match1",
+              }
+            }
+            key="undefined-undefined-30-1-inactive"
+            onClick={[Function]}
+            onCollapse={[Function]}
+            onExpand={[Function]}
+            renderItem={[Function]}
+          >
+            <div
+              aria-level={2}
+              className="tree-node"
+              data-expandable={false}
+              id="undefined-undefined-30-1"
+              onClick={[Function]}
+              onKeyDownCapture={null}
+              role="treeitem"
+            >
+              <span
+                className="tree-indent tree-last-indent"
+              >
+                ​
+              </span>
+              <div
+                className="result"
+                onClick={[Function]}
+              >
+                <span
+                  className="line-number"
+                />
+                <span
+                  className="line-value"
+                >
+                  <span
+                    className="line-match"
+                    key="0"
                   >
-                    <AccessibleImage
-                      className="arrow expanded"
-                    >
-                      <span
-                        className="img arrow expanded"
-                      />
-                    </AccessibleImage>
-                    <AccessibleImage
-                      className="file"
-                    >
-                      <span
-                        className="img file"
-                      />
-                    </AccessibleImage>
-                    <span
-                      className="file-path"
-                    />
-                    <span
-                      className="matches-summary"
-                    >
-                       (2 matches)
-                    </span>
-                  </div>
-                </div>
-              </TreeNode>
-              <TreeNode
-                active={false}
-                depth={1}
-                expanded={false}
-                focused={false}
-                id="undefined-undefined-80-5"
-                index={5}
-                isExpandable={false}
-                item={
+                    some thing match1
+                  </span>
+                  <span
+                    className="query-match"
+                    key="1"
+                  >
+                    some t
+                  </span>
+                  <span
+                    className="line-match"
+                    key="2"
+                  >
+                    some thing match1
+                  </span>
+                </span>
+              </div>
+            </div>
+          </TreeNode>
+          <TreeNode
+            active={false}
+            depth={1}
+            expanded={false}
+            focused={false}
+            id="undefined-undefined-60-2"
+            index={2}
+            isExpandable={false}
+            item={
+              Object {
+                "location": Object {
+                  "column": 60,
+                  "source": Object {},
+                },
+                "match": "match2",
+                "type": "MATCH",
+                "value": "some thing match2",
+              }
+            }
+            key="undefined-undefined-60-2-inactive"
+            onClick={[Function]}
+            onCollapse={[Function]}
+            onExpand={[Function]}
+            renderItem={[Function]}
+          >
+            <div
+              aria-level={2}
+              className="tree-node"
+              data-expandable={false}
+              id="undefined-undefined-60-2"
+              onClick={[Function]}
+              onKeyDownCapture={null}
+              role="treeitem"
+            >
+              <span
+                className="tree-indent tree-last-indent"
+              >
+                ​
+              </span>
+              <div
+                className="result"
+                onClick={[Function]}
+              >
+                <span
+                  className="line-number"
+                />
+                <span
+                  className="line-value"
+                >
+                  <span
+                    className="line-match"
+                    key="0"
+                  >
+                    some thing match2
+                  </span>
+                  <span
+                    className="query-match"
+                    key="1"
+                  >
+                    some t
+                  </span>
+                  <span
+                    className="line-match"
+                    key="2"
+                  >
+                    some thing match2
+                  </span>
+                </span>
+              </div>
+            </div>
+          </TreeNode>
+          <TreeNode
+            active={false}
+            depth={1}
+            expanded={false}
+            focused={false}
+            id="undefined-undefined-90-3"
+            index={3}
+            isExpandable={false}
+            item={
+              Object {
+                "location": Object {
+                  "column": 90,
+                  "source": Object {},
+                },
+                "match": "match3",
+                "type": "MATCH",
+                "value": "some thing match3",
+              }
+            }
+            key="undefined-undefined-90-3-inactive"
+            onClick={[Function]}
+            onCollapse={[Function]}
+            onExpand={[Function]}
+            renderItem={[Function]}
+          >
+            <div
+              aria-level={2}
+              className="tree-node"
+              data-expandable={false}
+              id="undefined-undefined-90-3"
+              onClick={[Function]}
+              onKeyDownCapture={null}
+              role="treeitem"
+            >
+              <span
+                className="tree-indent tree-last-indent"
+              >
+                ​
+              </span>
+              <div
+                className="result"
+                onClick={[Function]}
+              >
+                <span
+                  className="line-number"
+                />
+                <span
+                  className="line-value"
+                >
+                  <span
+                    className="line-match"
+                    key="0"
+                  >
+                    some thing match3
+                  </span>
+                  <span
+                    className="query-match"
+                    key="1"
+                  >
+                    some t
+                  </span>
+                  <span
+                    className="line-match"
+                    key="2"
+                  >
+                    some thing match3
+                  </span>
+                </span>
+              </div>
+            </div>
+          </TreeNode>
+          <TreeNode
+            active={false}
+            depth={0}
+            expanded={true}
+            focused={false}
+            id="undefined-4"
+            index={4}
+            isExpandable={true}
+            item={
+              Object {
+                "location": Object {
+                  "source": Object {
+                    "url": "testFilePath2",
+                  },
+                },
+                "matches": Array [
                   Object {
                     "location": Object {
                       "column": 80,
@@ -746,69 +655,7 @@ exports[`ProjectSearch found search results 1`] = `
                     "match": "match4",
                     "type": "MATCH",
                     "value": "some thing match4",
-                  }
-                }
-                key="undefined-undefined-80-5-inactive"
-                onClick={[Function]}
-                onCollapse={[Function]}
-                onExpand={[Function]}
-                renderItem={[Function]}
-              >
-                <div
-                  aria-level={2}
-                  className="tree-node"
-                  data-expandable={false}
-                  id="undefined-undefined-80-5"
-                  onClick={[Function]}
-                  onKeyDownCapture={null}
-                  role="treeitem"
-                >
-                  <span
-                    className="tree-indent tree-last-indent"
-                  >
-                    ​
-                  </span>
-                  <div
-                    className="result"
-                    onClick={[Function]}
-                  >
-                    <span
-                      className="line-number"
-                    />
-                    <span
-                      className="line-value"
-                    >
-                      <span
-                        className="line-match"
-                        key="0"
-                      >
-                        some thing match4
-                      </span>
-                      <span
-                        className="query-match"
-                        key="1"
-                      >
-                        some t
-                      </span>
-                      <span
-                        className="line-match"
-                        key="2"
-                      >
-                        some thing match4
-                      </span>
-                    </span>
-                  </div>
-                </div>
-              </TreeNode>
-              <TreeNode
-                active={false}
-                depth={1}
-                expanded={false}
-                focused={false}
-                id="undefined-undefined-40-6"
-                index={6}
-                isExpandable={false}
-                item={
+                  },
                   Object {
                     "location": Object {
                       "column": 40,
@@ -817,64 +664,199 @@ exports[`ProjectSearch found search results 1`] = `
                     "match": "match5",
                     "type": "MATCH",
                     "value": "some thing match5",
-                  }
-                }
-                key="undefined-undefined-40-6-inactive"
-                onClick={[Function]}
-                onCollapse={[Function]}
-                onExpand={[Function]}
-                renderItem={[Function]}
+                  },
+                ],
+                "type": "RESULT",
+              }
+            }
+            key="undefined-4-inactive"
+            onClick={[Function]}
+            onCollapse={[Function]}
+            onExpand={[Function]}
+            renderItem={[Function]}
+          >
+            <div
+              aria-expanded={true}
+              aria-level={1}
+              className="tree-node"
+              data-expandable={true}
+              id="undefined-4"
+              onClick={[Function]}
+              onKeyDownCapture={null}
+              role="treeitem"
+            >
+              <div
+                className="file-result"
               >
-                <div
-                  aria-level={2}
-                  className="tree-node"
-                  data-expandable={false}
-                  id="undefined-undefined-40-6"
-                  onClick={[Function]}
-                  onKeyDownCapture={null}
-                  role="treeitem"
+                <AccessibleImage
+                  className="arrow expanded"
                 >
                   <span
-                    className="tree-indent tree-last-indent"
-                  >
-                    ​
-                  </span>
-                  <div
-                    className="result"
-                    onClick={[Function]}
-                  >
-                    <span
-                      className="line-number"
-                    />
-                    <span
-                      className="line-value"
-                    >
-                      <span
-                        className="line-match"
-                        key="0"
-                      >
-                        some thing match5
-                      </span>
-                      <span
-                        className="query-match"
-                        key="1"
-                      >
-                        some t
-                      </span>
-                      <span
-                        className="line-match"
-                        key="2"
-                      >
-                        some thing match5
-                      </span>
-                    </span>
-                  </div>
-                </div>
-              </TreeNode>
+                    className="img arrow expanded"
+                  />
+                </AccessibleImage>
+                <AccessibleImage
+                  className="file"
+                >
+                  <span
+                    className="img file"
+                  />
+                </AccessibleImage>
+                <span
+                  className="file-path"
+                />
+                <span
+                  className="matches-summary"
+                >
+                   (2 matches)
+                </span>
+              </div>
             </div>
-          </Tree>
+          </TreeNode>
+          <TreeNode
+            active={false}
+            depth={1}
+            expanded={false}
+            focused={false}
+            id="undefined-undefined-80-5"
+            index={5}
+            isExpandable={false}
+            item={
+              Object {
+                "location": Object {
+                  "column": 80,
+                  "source": Object {},
+                },
+                "match": "match4",
+                "type": "MATCH",
+                "value": "some thing match4",
+              }
+            }
+            key="undefined-undefined-80-5-inactive"
+            onClick={[Function]}
+            onCollapse={[Function]}
+            onExpand={[Function]}
+            renderItem={[Function]}
+          >
+            <div
+              aria-level={2}
+              className="tree-node"
+              data-expandable={false}
+              id="undefined-undefined-80-5"
+              onClick={[Function]}
+              onKeyDownCapture={null}
+              role="treeitem"
+            >
+              <span
+                className="tree-indent tree-last-indent"
+              >
+                ​
+              </span>
+              <div
+                className="result"
+                onClick={[Function]}
+              >
+                <span
+                  className="line-number"
+                />
+                <span
+                  className="line-value"
+                >
+                  <span
+                    className="line-match"
+                    key="0"
+                  >
+                    some thing match4
+                  </span>
+                  <span
+                    className="query-match"
+                    key="1"
+                  >
+                    some t
+                  </span>
+                  <span
+                    className="line-match"
+                    key="2"
+                  >
+                    some thing match4
+                  </span>
+                </span>
+              </div>
+            </div>
+          </TreeNode>
+          <TreeNode
+            active={false}
+            depth={1}
+            expanded={false}
+            focused={false}
+            id="undefined-undefined-40-6"
+            index={6}
+            isExpandable={false}
+            item={
+              Object {
+                "location": Object {
+                  "column": 40,
+                  "source": Object {},
+                },
+                "match": "match5",
+                "type": "MATCH",
+                "value": "some thing match5",
+              }
+            }
+            key="undefined-undefined-40-6-inactive"
+            onClick={[Function]}
+            onCollapse={[Function]}
+            onExpand={[Function]}
+            renderItem={[Function]}
+          >
+            <div
+              aria-level={2}
+              className="tree-node"
+              data-expandable={false}
+              id="undefined-undefined-40-6"
+              onClick={[Function]}
+              onKeyDownCapture={null}
+              role="treeitem"
+            >
+              <span
+                className="tree-indent tree-last-indent"
+              >
+                ​
+              </span>
+              <div
+                className="result"
+                onClick={[Function]}
+              >
+                <span
+                  className="line-number"
+                />
+                <span
+                  className="line-value"
+                >
+                  <span
+                    className="line-match"
+                    key="0"
+                  >
+                    some thing match5
+                  </span>
+                  <span
+                    className="query-match"
+                    key="1"
+                  >
+                    some t
+                  </span>
+                  <span
+                    className="line-match"
+                    key="2"
+                  >
+                    some thing match5
+                  </span>
+                </span>
+              </div>
+            </div>
+          </TreeNode>
         </div>
-      </ManagedTree>
+      </Tree>
     </div>
   </div>
 </ProjectSearch>
@@ -1035,16 +1017,20 @@ exports[`ProjectSearch showErrorEmoji false if not done & results 1`] = `
         summaryMsg="5 results"
       />
     </div>
-    <ManagedTree
+    <Tree
       autoExpandAll={true}
       autoExpandDepth={1}
       autoExpandNodeChildrenLimit={100}
       focused={null}
       getChildren={[Function]}
+      getKey={[Function]}
       getParent={[Function]}
       getPath={[Function]}
       getRoots={[Function]}
+      isExpanded={[Function]}
       itemHeight={24}
+      onCollapse={[Function]}
+      onExpand={[Function]}
       onFocus={[Function]}
       renderItem={[Function]}
     />

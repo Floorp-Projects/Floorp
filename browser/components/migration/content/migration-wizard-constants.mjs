@@ -46,6 +46,7 @@ export const MigrationWizardConstants = Object.freeze({
     FORMDATA: "FORMDATA",
     PASSWORDS: "PASSWORDS",
     BOOKMARKS: "BOOKMARKS",
+    PAYMENT_METHODS: "PAYMENT_METHODS",
 
     // We don't yet show OTHERDATA or SESSION resources.
   }),
@@ -59,6 +60,7 @@ export const MigrationWizardConstants = Object.freeze({
     PASSWORDS_FROM_FILE: "PASSWORDS_FROM_FILE",
     PASSWORDS_NEW: "PASSWORDS_NEW",
     PASSWORDS_UPDATED: "PASSWORDS_UPDATED",
+    BOOKMARKS_FROM_FILE: "BOOKMARKS_FROM_FILE",
   }),
 
   /**

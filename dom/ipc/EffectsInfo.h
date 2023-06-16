@@ -29,12 +29,14 @@ class EffectsInfo {
     return EffectsInfo{nsRect(), Scale2D(), ParentLayerToScreenScale2D()};
   }
 
-  bool operator==(const EffectsInfo& aOther) {
+  bool operator==(const EffectsInfo& aOther) const {
     return mVisibleRect == aOther.mVisibleRect &&
            mRasterScale == aOther.mRasterScale &&
            mTransformToAncestorScale == aOther.mTransformToAncestorScale;
   }
-  bool operator!=(const EffectsInfo& aOther) { return !(*this == aOther); }
+  bool operator!=(const EffectsInfo& aOther) const {
+    return !(*this == aOther);
+  }
 
   bool IsVisible() const { return !mVisibleRect.IsEmpty(); }
 

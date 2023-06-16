@@ -19,7 +19,9 @@ add_task(async function testAudioDecodingInUtility() {
 });
 
 add_task(async function testUtilityTelemetry() {
-  const codecs = ["vorbis", "mp3", "aac", "flac"];
-  await verifyTelemetryForProcess("utility", codecs);
-  await verifyNoTelemetryForProcess("rdd", codecs);
+  const platform = Services.appinfo.OS;
+  for (let exp of utilityPerCodecs[platform]) {
+    await verifyTelemetryForProcess(exp.process, exp.codecs);
+  }
+  await verifyNoTelemetryForProcess("rdd", ["vorbis", "mp3", "aac", "flac"]);
 });

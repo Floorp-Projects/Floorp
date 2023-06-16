@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-add_setup(async function() {
+add_setup(async function () {
   await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
     url: "about:logins",
@@ -23,9 +23,8 @@ add_task(async function test() {
       content.document.querySelector("confirmation-dialog")
     );
     let cancelButton = dialog.shadowRoot.querySelector(".cancel-button");
-    let confirmDeleteButton = dialog.shadowRoot.querySelector(
-      ".confirm-button"
-    );
+    let confirmDeleteButton =
+      dialog.shadowRoot.querySelector(".confirm-button");
     let dismissButton = dialog.shadowRoot.querySelector(".dismiss-button");
     let message = dialog.shadowRoot.querySelector(".message");
     let title = dialog.shadowRoot.querySelector(".title");

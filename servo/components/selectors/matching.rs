@@ -28,6 +28,7 @@ pub static RECOMMENDED_SELECTOR_BLOOM_FILTER_SIZE: usize = 4096;
 bitflags! {
     /// Set of flags that are set on either the element or its parent (depending
     /// on the flag) if the element could potentially match a selector.
+    #[derive(Clone, Copy)]
     pub struct ElementSelectorFlags: usize {
         /// When a child is added or removed from the parent, all the children
         /// must be restyled, because they may match :nth-last-child,
@@ -57,13 +58,18 @@ bitflags! {
         /// The element has an empty selector, so when a child is appended we
         /// might need to restyle the parent completely.
         const HAS_EMPTY_SELECTOR = 1 << 4;
+
+        /// This element has a relative selector that anchors to it, or may do so
+        /// if its descendants or its later siblings change.
+        const ANCHORS_RELATIVE_SELECTOR = 1 << 5;
     }
 }
 
 impl ElementSelectorFlags {
     /// Returns the subset of flags that apply to the element.
     pub fn for_self(self) -> ElementSelectorFlags {
-        self & (ElementSelectorFlags::HAS_EMPTY_SELECTOR)
+        self & (ElementSelectorFlags::HAS_EMPTY_SELECTOR |
+            ElementSelectorFlags::ANCHORS_RELATIVE_SELECTOR)
     }
 
     /// Returns the subset of flags that apply to the parent.
@@ -316,12 +322,14 @@ where
                     }
                 }
             },
-            _ => {
+            ref other => {
                 debug_assert!(
                     false,
                     "Used MatchingMode::ForStatelessPseudoElement \
-                     in a non-pseudo selector"
+                     in a non-pseudo selector {:?}",
+                    other
                 );
+                return false;
             },
         }
 
@@ -360,6 +368,12 @@ fn matches_relative_selectors<E: Element>(
     element: &E,
     context: &mut MatchingContext<E::Impl>,
 ) -> bool {
+    if context.needs_selector_flags() {
+        // If we've considered anchoring `:has()` selector while trying to match this element,
+        // mark it as such, as it has implications on style sharing (See style sharing
+        // code for further information).
+        element.apply_selector_flags(ElementSelectorFlags::ANCHORS_RELATIVE_SELECTOR);
+    }
     for RelativeSelector {
         match_hint,
         selector,

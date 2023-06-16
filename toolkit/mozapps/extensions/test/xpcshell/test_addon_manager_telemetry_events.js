@@ -5,8 +5,8 @@
 const { TelemetryController } = ChromeUtils.importESModule(
   "resource://gre/modules/TelemetryController.sys.mjs"
 );
-const { AMTelemetry } = ChromeUtils.import(
-  "resource://gre/modules/AddonManager.jsm"
+const { AMTelemetry } = ChromeUtils.importESModule(
+  "resource://gre/modules/AddonManager.sys.mjs"
 );
 
 // We don't have an easy way to serve update manifests from a secure URL.

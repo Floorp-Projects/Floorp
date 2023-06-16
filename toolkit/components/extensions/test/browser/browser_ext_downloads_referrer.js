@@ -29,7 +29,7 @@ add_setup(() => {
 
   let MockFilePicker = SpecialPowers.MockFilePicker;
   MockFilePicker.init(window);
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     MockFilePicker.cleanup();
 
     if (tempDir.exists()) {
@@ -38,7 +38,7 @@ add_setup(() => {
   });
 
   MockFilePicker.displayDirectory = tempDir;
-  MockFilePicker.showCallback = function(fp) {
+  MockFilePicker.showCallback = function (fp) {
     info("MockFilePicker: shown");
     const filename = fp.defaultString;
     info("MockFilePicker: save as " + filename);

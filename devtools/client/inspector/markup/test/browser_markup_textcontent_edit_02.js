@@ -9,7 +9,7 @@
 const TEST_URL = URL_ROOT + "doc_markup_edit.html";
 const SELECTOR = ".node6";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
 
   info("Expanding all nodes");

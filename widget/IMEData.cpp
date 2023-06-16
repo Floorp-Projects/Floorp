@@ -244,9 +244,7 @@ std::ostream& operator<<(std::ostream& aStream, const InputContext& aContext) {
           << aContext.mHTMLInputType << "\", mHTMLInputMode=\""
           << aContext.mHTMLInputMode << "\", mActionHint=\""
           << aContext.mActionHint << "\", mAutocapitalize=\""
-          << aContext.mAutocapitalize << "\", mMayBeIMEUnaware="
-          << (aContext.mMayBeIMEUnaware ? "true" : "false")
-          << ", mIsPrivateBrowsing="
+          << aContext.mAutocapitalize << "\", mIsPrivateBrowsing="
           << (aContext.mInPrivateBrowsing ? "true" : "false") << " }";
   return aStream;
 }

@@ -36,7 +36,7 @@ add_task(async function testSteps() {
   }
 
   const responseList = await Promise.all(
-    requestList.map(function(request) {
+    requestList.map(function (request) {
       return cache.match(request);
     })
   );

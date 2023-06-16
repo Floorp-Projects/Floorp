@@ -21,7 +21,7 @@ add_task(async () => {
 
   const performCollection = new Promise((resolve, reject) => {
     // Record the reports from the live memory reporters then process them.
-    let handleReport = function(
+    let handleReport = function (
       aProcess,
       aUnsafePath,
       aKind,

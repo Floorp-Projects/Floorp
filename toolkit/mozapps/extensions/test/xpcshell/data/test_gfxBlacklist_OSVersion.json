@@ -2,11 +2,7 @@
   {
     "os": "WINNT 6.2",
     "vendor": "0xabcd",
-    "devices": [
-      "0x2783",
-      "0x1234",
-      "0x2782"
-    ],
+    "devices": ["0x2783", "0x1234", "0x2782"],
     "feature": " DIRECT2D ",
     "featureStatus": " BLOCKED_DRIVER_VERSION ",
     "driverVersion": " 8.52.322.2202 ",
@@ -15,11 +11,7 @@
   {
     "os": "Darwin 13",
     "vendor": "0xabcd",
-    "devices": [
-      "0x2783",
-      "0x1234",
-      "0x2782"
-    ],
+    "devices": ["0x2783", "0x1234", "0x2782"],
     "feature": " OPENGL_LAYERS ",
     "featureStatus": " BLOCKED_DRIVER_VERSION ",
     "driverVersion": " 8.52.322.2202 ",

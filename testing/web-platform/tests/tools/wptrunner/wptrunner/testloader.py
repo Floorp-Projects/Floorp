@@ -1,5 +1,6 @@
 # mypy: allow-untyped-defs
 
+import abc
 import hashlib
 import itertools
 import json
@@ -8,6 +9,7 @@ from urllib.parse import urlsplit
 from abc import ABCMeta, abstractmethod
 from queue import Empty
 from collections import defaultdict, deque, namedtuple
+from typing import Any, cast
 
 from . import manifestinclude
 from . import manifestexpected
@@ -78,8 +80,8 @@ def update_include_for_groups(test_groups, include):
     return new_include
 
 
-class TestChunker:
-    def __init__(self, total_chunks, chunk_number, **kwargs):
+class TestChunker(abc.ABC):
+    def __init__(self, total_chunks: int, chunk_number: int, **kwargs: Any):
         self.total_chunks = total_chunks
         self.chunk_number = chunk_number
         assert self.chunk_number <= self.total_chunks
@@ -87,8 +89,9 @@ class TestChunker:
         assert self.logger
         self.kwargs = kwargs
 
+    @abstractmethod
     def __call__(self, manifest):
-        raise NotImplementedError
+        ...
 
 
 class Unchunked(TestChunker):
@@ -102,30 +105,50 @@ class Unchunked(TestChunker):
 
 class HashChunker(TestChunker):
     def __call__(self, manifest):
-        chunk_index = self.chunk_number - 1
         for test_type, test_path, tests in manifest:
-            h = int(hashlib.md5(test_path.encode()).hexdigest(), 16)
-            if h % self.total_chunks == chunk_index:
-                yield test_type, test_path, tests
+            tests_for_chunk = {
+                test for test in tests
+                if self._key_in_chunk(self.chunk_key(test_type, test_path, test))
+            }
+            if tests_for_chunk:
+                yield test_type, test_path, tests_for_chunk
+
+    def _key_in_chunk(self, key: str) -> bool:
+        chunk_index = self.chunk_number - 1
+        digest = hashlib.md5(key.encode()).hexdigest()
+        return int(digest, 16) % self.total_chunks == chunk_index
+
+    @abstractmethod
+    def chunk_key(self, test_type: str, test_path: str,
+                  test: wpttest.Test) -> str:
+        ...
 
 
-class DirectoryHashChunker(TestChunker):
+class PathHashChunker(HashChunker):
+    def chunk_key(self, test_type: str, test_path: str,
+                  test: wpttest.Test) -> str:
+        return test_path
+
+
+class IDHashChunker(HashChunker):
+    def chunk_key(self, test_type: str, test_path: str,
+                  test: wpttest.Test) -> str:
+        return cast(str, test.id)
+
+
+class DirectoryHashChunker(HashChunker):
     """Like HashChunker except the directory is hashed.
 
     This ensures that all tests in the same directory end up in the same
     chunk.
     """
-    def __call__(self, manifest):
-        chunk_index = self.chunk_number - 1
+    def chunk_key(self, test_type: str, test_path: str,
+                  test: wpttest.Test) -> str:
         depth = self.kwargs.get("depth")
-        for test_type, test_path, tests in manifest:
-            if depth:
-                hash_path = os.path.sep.join(os.path.dirname(test_path).split(os.path.sep, depth)[:depth])
-            else:
-                hash_path = os.path.dirname(test_path)
-            h = int(hashlib.md5(hash_path.encode()).hexdigest(), 16)
-            if h % self.total_chunks == chunk_index:
-                yield test_type, test_path, tests
+        if depth:
+            return os.path.sep.join(os.path.dirname(test_path).split(os.path.sep, depth)[:depth])
+        else:
+            return os.path.dirname(test_path)
 
 
 class TestFilter:
@@ -245,7 +268,8 @@ class TestLoader:
         if chunker_kwargs is None:
             chunker_kwargs = {}
         self.chunker = {"none": Unchunked,
-                        "hash": HashChunker,
+                        "hash": PathHashChunker,
+                        "id_hash": IDHashChunker,
                         "dir_hash": DirectoryHashChunker}[chunk_type](total_chunks,
                                                                       chunk_number,
                                                                       **chunker_kwargs)
@@ -404,6 +428,13 @@ class TestSource:
         for _ in range(num_of_workers):
             test_queue.put(TestGroup(None, None, None))
 
+    @classmethod
+    def process_count(cls, requested_processes, num_test_groups):
+        """Get the number of processes to use.
+
+        This must always be at least one, but otherwise not more than the number of test groups"""
+        return max(1, min(requested_processes, num_test_groups))
+
 
 class GroupedSource(TestSource):
     @classmethod
@@ -430,8 +461,10 @@ class GroupedSource(TestSource):
 
         for item in groups:
             test_queue.put(item)
-        cls.add_sentinal(test_queue, kwargs["processes"])
-        return test_queue
+
+        processes = cls.process_count(kwargs["processes"], len(groups))
+        cls.add_sentinal(test_queue, processes)
+        return test_queue, processes
 
     @classmethod
     def tests_by_group(cls, tests_by_type, **kwargs):
@@ -451,6 +484,7 @@ class SingleTestSource(TestSource):
     def make_queue(cls, tests_by_type, **kwargs):
         mp = mpcontext.get_context()
         test_queue = mp.Queue()
+        num_test_groups = 0
         for test_type, tests in tests_by_type.items():
             processes = kwargs["processes"]
             queues = [deque([]) for _ in range(processes)]
@@ -465,9 +499,11 @@ class SingleTestSource(TestSource):
             for item in zip(queues, itertools.repeat(test_type), metadatas):
                 if len(item[0]) > 0:
                     test_queue.put(TestGroup(*item))
-        cls.add_sentinal(test_queue, kwargs["processes"])
+                    num_test_groups += 1
 
-        return test_queue
+        processes = cls.process_count(kwargs["processes"], num_test_groups)
+        cls.add_sentinal(test_queue, processes)
+        return test_queue, processes
 
     @classmethod
     def tests_by_group(cls, tests_by_type, **kwargs):
@@ -498,6 +534,7 @@ class GroupFileTestSource(TestSource):
     def make_queue(cls, tests_by_type, **kwargs):
         mp = mpcontext.get_context()
         test_queue = mp.Queue()
+        num_test_groups = 0
 
         for test_type, tests in tests_by_type.items():
             tests_by_group = cls.tests_by_group({test_type: tests},
@@ -515,10 +552,11 @@ class GroupFileTestSource(TestSource):
                     test.update_metadata(group_metadata)
 
                 test_queue.put(TestGroup(group, test_type, group_metadata))
+                num_test_groups += 1
 
-        cls.add_sentinal(test_queue, kwargs["processes"])
-
-        return test_queue
+        processes = cls.process_count(kwargs["processes"], num_test_groups)
+        cls.add_sentinal(test_queue, processes)
+        return test_queue, processes
 
     @classmethod
     def tests_by_group(cls, tests_by_type, **kwargs):

@@ -50,17 +50,11 @@
                       "description": "Optional extra params for the feature (this should be validated against a schema)"
                     }
                   },
-                  "required": [
-                    "featureId",
-                    "value"
-                  ],
+                  "required": ["featureId", "value"],
                   "description": "A single feature configuration"
                 }
               },
-              "required": [
-                "slug",
-                "feature"
-              ]
+              "required": ["slug", "feature"]
             },
             {
               "type": "object",
@@ -85,11 +79,7 @@
                       "additionalProperties": {}
                     }
                   },
-                  "required": [
-                    "featureId",
-                    "enabled",
-                    "value"
-                  ],
+                  "required": ["featureId", "enabled", "value"],
                   "description": "The feature key must be provided with valid values to prevent crashes if the DTO is encountered by Desktop clients earlier than version 95."
                 },
                 "features": {
@@ -107,19 +97,12 @@
                         "description": "Optional extra params for the feature (this should be validated against a schema)"
                       }
                     },
-                    "required": [
-                      "featureId",
-                      "value"
-                    ]
+                    "required": ["featureId", "value"]
                   },
                   "description": "An array of feature configurations"
                 }
               },
-              "required": [
-                "slug",
-                "feature",
-                "features"
-              ]
+              "required": ["slug", "feature", "features"]
             },
             {
               "type": "object",
@@ -143,18 +126,12 @@
                         "description": "Optional extra params for the feature (this should be validated against a schema)"
                       }
                     },
-                    "required": [
-                      "featureId",
-                      "value"
-                    ]
+                    "required": ["featureId", "value"]
                   },
                   "description": "An array of feature configurations"
                 }
               },
-              "required": [
-                "slug",
-                "features"
-              ]
+              "required": ["slug", "features"]
             }
           ],
           "description": "Branch configuration for the experiment"
@@ -226,6 +203,10 @@
             }
           ],
           "description": "Per-locale localization substitutions.\n\nThe top level key is the locale (e.g., \"en-US\" or \"fr\"). Each entry is a mapping of string IDs to their localized equivalents.\n\nOnly supported on desktop."
+        },
+        "unenrollReason": {
+          "type": "string",
+          "description": "The reason for unenrollment. Only present when the enrollment is inactive."
         }
       },
       "required": [

@@ -74,7 +74,7 @@ function sendParts(response) {
     if (!wait) {
       callback = getSendNextPart(response);
     } else {
-      callback = function() {
+      callback = function () {
         sendParts(response);
       };
     }
@@ -93,7 +93,7 @@ function getSendNextPart(response) {
   var part = bodyParts[bodyPartIndex];
   var nextPartHead = "Content-Type: " + part[1] + "\r\n\r\n";
   var inputStream = getFileAsInputStream(part[0]);
-  return function() {
+  return function () {
     response.bodyOutputStream.write(nextPartHead, nextPartHead.length);
     response.bodyOutputStream.writeFrom(inputStream, inputStream.available());
     inputStream.close();

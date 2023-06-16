@@ -8,7 +8,7 @@ const ALL_CHANNELS = Ci.nsITelemetry.DATASET_ALL_CHANNELS;
 /**
  * Test the edit_resend telemetry event.
  */
-add_task(async function() {
+add_task(async function () {
   if (
     Services.prefs.getBoolPref(
       "devtools.netmonitor.features.newEditAndResend",

@@ -5,7 +5,7 @@ SpecialPowers.pushPrefEnv({ set: [["dom.disable_window_flip", false]] });
 
 const FILE = getRootDirectory(gTestPath) + "open_window_in_new_tab.html";
 
-add_task(async function() {
+add_task(async function () {
   info("Opening first tab: " + FILE);
   let firstTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, FILE);
 
@@ -28,8 +28,8 @@ add_task(async function() {
   await BrowserTestUtils.switchTab(gBrowser, firstTab);
 
   info("Focusing second tab by clicking on the first tab");
-  await BrowserTestUtils.switchTab(gBrowser, async function() {
-    await SpecialPowers.spawn(firstTab.linkedBrowser, [""], async function() {
+  await BrowserTestUtils.switchTab(gBrowser, async function () {
+    await SpecialPowers.spawn(firstTab.linkedBrowser, [""], async function () {
       content.document.querySelector("#focus").click();
     });
   });
@@ -40,7 +40,7 @@ add_task(async function() {
   await BrowserTestUtils.removeTab(secondTab);
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Opening first tab: " + FILE);
   let firstTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, FILE);
 
@@ -66,7 +66,7 @@ add_task(async function() {
     // We need to wait for something _not_ happening, so we need to use an arbitrary setTimeout.
     //
     // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-    setTimeout(function() {
+    setTimeout(function () {
       is(gBrowser.selectedTab, secondTab, "Should've remained in original tab");
       resolve();
     }, 500);

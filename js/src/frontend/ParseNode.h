@@ -45,7 +45,7 @@ struct JSContext;
 
 namespace js {
 
-class GenericPrinter;
+class JS_PUBLIC_API GenericPrinter;
 class LifoAlloc;
 class RegExpObject;
 

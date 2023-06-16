@@ -10,7 +10,7 @@
 #include "nsXPCOMPrivate.h"  // for MAXPATHLEN
 #ifdef XP_WIN
 #  include <windows.h>
-#elif defined(XP_MACOSX)
+#elif defined(XP_DARWIN)
 #  include <CoreFoundation/CoreFoundation.h>
 #elif defined(XP_UNIX)
 #  include <unistd.h>
@@ -94,7 +94,7 @@ class BinaryPath {
     return NS_OK;
   }
 
-#elif defined(XP_MACOSX)
+#elif defined(XP_DARWIN)
   static nsresult Get(char aResult[MAXPATHLEN]) {
     // Works even if we're not bundled.
     CFBundleRef appBundle = CFBundleGetMainBundle();

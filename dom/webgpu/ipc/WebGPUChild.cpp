@@ -127,6 +127,9 @@ static ffi::WGPUTextureFormat ConvertTextureFormat(
     case dom::GPUTextureFormat::Bgra8unorm_srgb:
       result.tag = ffi::WGPUTextureFormat_Bgra8UnormSrgb;
       break;
+    case dom::GPUTextureFormat::Rgb9e5ufloat:
+      result.tag = ffi::WGPUTextureFormat_Rgb9e5Ufloat;
+      break;
     case dom::GPUTextureFormat::Rgb10a2unorm:
       result.tag = ffi::WGPUTextureFormat_Rgb10a2Unorm;
       break;
@@ -210,6 +213,9 @@ static ffi::WGPUTextureFormat ConvertTextureFormat(
       break;
     case dom::GPUTextureFormat::Depth24plus_stencil8:
       result.tag = ffi::WGPUTextureFormat_Depth24PlusStencil8;
+      break;
+    case dom::GPUTextureFormat::Depth32float_stencil8:
+      result.tag = ffi::WGPUTextureFormat_Depth32FloatStencil8;
       break;
     case dom::GPUTextureFormat::EndGuard_:
       MOZ_ASSERT_UNREACHABLE();
@@ -374,9 +380,7 @@ RawId WebGPUChild::DeviceCreateBuffer(RawId aSelfId,
 
 RawId WebGPUChild::DeviceCreateTexture(RawId aSelfId,
                                        const dom::GPUTextureDescriptor& aDesc) {
-  // Somehow cbindgen does not successfully rename this into
-  // WGPUTextureDescriptor. See wgpu_bindings/cbindgen.toml.
-  ffi::WGPUTextureDescriptor______nsACString__FfiSlice_TextureFormat desc = {};
+  ffi::WGPUTextureDescriptor desc = {};
 
   webgpu::StringHelper label(aDesc.mLabel);
   desc.label = label.Get();

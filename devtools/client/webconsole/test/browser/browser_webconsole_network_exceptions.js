@@ -12,7 +12,7 @@ const TEST_URI2 =
   "https://example.com/browser/devtools/client/webconsole/" +
   "test/browser/test-network-exceptions.html";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   // On e10s, the exception is triggered in child process

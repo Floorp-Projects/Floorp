@@ -512,8 +512,7 @@ var ProcessHangMonitor = {
 
       buttons.unshift({
         label: bundle.getString("processHang.add-on.learn-more.text"),
-        link:
-          "https://support.mozilla.org/kb/warning-unresponsive-script#w_other-causes",
+        link: "https://support.mozilla.org/kb/warning-unresponsive-script#w_other-causes",
       });
     } else {
       let scriptBrowser = report.scriptBrowser;
@@ -523,9 +522,8 @@ var ProcessHangMonitor = {
           brandShortName,
         ]);
       } else {
-        let tab = scriptBrowser?.ownerGlobal.gBrowser?.getTabForBrowser(
-          scriptBrowser
-        );
+        let tab =
+          scriptBrowser?.ownerGlobal.gBrowser?.getTabForBrowser(scriptBrowser);
         if (!tab) {
           notificationTag = "nonspecific_tab";
           message = bundle.getFormattedString(
@@ -544,9 +542,8 @@ var ProcessHangMonitor = {
       }
     }
 
-    let notification = win.gNotificationBox.getNotificationWithValue(
-      "process-hang"
-    );
+    let notification =
+      win.gNotificationBox.getNotificationWithValue("process-hang");
     if (notificationTag == notification?.getAttribute("notification-tag")) {
       return;
     }
@@ -594,9 +591,8 @@ var ProcessHangMonitor = {
    * Ensure that no hang notifications are visible in |win|.
    */
   hideNotification(win) {
-    let notification = win.gNotificationBox.getNotificationWithValue(
-      "process-hang"
-    );
+    let notification =
+      win.gNotificationBox.getNotificationWithValue("process-hang");
     if (notification) {
       win.gNotificationBox.removeNotification(notification);
     }

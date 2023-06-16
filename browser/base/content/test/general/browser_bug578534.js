@@ -16,8 +16,8 @@ add_task(async function test() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: uriString },
-    async function(browser) {
-      await SpecialPowers.spawn(browser, [], function() {
+    async function (browser) {
+      await SpecialPowers.spawn(browser, [], function () {
         is(
           content.navigator.cookieEnabled,
           true,

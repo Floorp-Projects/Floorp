@@ -2375,7 +2375,7 @@ void nsWindow::SuppressAnimation(bool aSuppress) {
 // Constrain a potential move to fit onscreen
 // Position (aX, aY) is specified in Windows screen (logical) pixels,
 // except when using per-monitor DPI, in which case it's device pixels.
-void nsWindow::ConstrainPosition(bool aAllowSlop, int32_t* aX, int32_t* aY) {
+void nsWindow::ConstrainPosition(DesktopIntPoint& aPoint) {
   if (!mIsTopWidgetWindow)  // only a problem for top-level windows
     return;
 
@@ -2400,7 +2400,7 @@ void nsWindow::ConstrainPosition(bool aAllowSlop, int32_t* aX, int32_t* aY) {
   nsCOMPtr<nsIScreen> screen;
   int32_t left, top, width, height;
 
-  screenmgr->ScreenForRect(*aX, *aY, logWidth, logHeight,
+  screenmgr->ScreenForRect(aPoint.x, aPoint.y, logWidth, logHeight,
                            getter_AddRefs(screen));
   if (mFrameState->GetSizeMode() != nsSizeMode_Fullscreen) {
     // For normalized windows, use the desktop work area.
@@ -2420,28 +2420,15 @@ void nsWindow::ConstrainPosition(bool aAllowSlop, int32_t* aX, int32_t* aY) {
   screenRect.top = top;
   screenRect.bottom = top + height;
 
-  if (aAllowSlop) {
-    if (*aX < screenRect.left - logWidth + kWindowPositionSlop)
-      *aX = screenRect.left - logWidth + kWindowPositionSlop;
-    else if (*aX >= screenRect.right - kWindowPositionSlop)
-      *aX = screenRect.right - kWindowPositionSlop;
+  if (aPoint.x < screenRect.left)
+    aPoint.x = screenRect.left;
+  else if (aPoint.x >= screenRect.right - logWidth)
+    aPoint.x = screenRect.right - logWidth;
 
-    if (*aY < screenRect.top - logHeight + kWindowPositionSlop)
-      *aY = screenRect.top - logHeight + kWindowPositionSlop;
-    else if (*aY >= screenRect.bottom - kWindowPositionSlop)
-      *aY = screenRect.bottom - kWindowPositionSlop;
-
-  } else {
-    if (*aX < screenRect.left)
-      *aX = screenRect.left;
-    else if (*aX >= screenRect.right - logWidth)
-      *aX = screenRect.right - logWidth;
-
-    if (*aY < screenRect.top)
-      *aY = screenRect.top;
-    else if (*aY >= screenRect.bottom - logHeight)
-      *aY = screenRect.bottom - logHeight;
-  }
+  if (aPoint.y < screenRect.top)
+    aPoint.y = screenRect.top;
+  else if (aPoint.y >= screenRect.bottom - logHeight)
+    aPoint.y = screenRect.bottom - logHeight;
 }
 
 /**************************************************************
@@ -3647,7 +3634,7 @@ void nsWindow::TryDwmResizeHack() {
   // It is not known under what circumstances the bug will trigger. Windows 11
   // is known to be required, but many Windows 11 machines do not exhibit the
   // issue. Even machines that _do_ exhibit it will sometimes not do so when
-  // apparently- irrelevant changes are made to the configuration. (See bug
+  // apparently-irrelevant changes are made to the configuration. (See bug
   // 1763981.)
   //
   // The bug is triggered by Firefox when a maximized window (which has window
@@ -3655,6 +3642,9 @@ void nsWindow::TryDwmResizeHack() {
   // think it may occur, we "flicker-resize" the relevant window -- that is, we
   // reduce its height by 1px, then restore it. This causes DWM to acquire the
   // new client-area metrics.
+  //
+  // Note that, in particular, this bug will not occur when using a separate
+  // compositor window, as our compositor windows never have any nonclient area.
   //
   // This is admittedly a sledgehammer where a screwdriver should suffice.
 
@@ -3819,12 +3809,6 @@ nsresult nsWindow::MakeFullScreen(bool aFullScreen) {
 // Return some native data according to aDataType
 void* nsWindow::GetNativeData(uint32_t aDataType) {
   switch (aDataType) {
-    case NS_NATIVE_TMP_WINDOW:
-      return (void*)::CreateWindowExW(
-          mIsRTL ? WS_EX_LAYOUTRTL : 0,
-          ChooseWindowClass(mWindowType, /* aForMenupopupFrame = */ false), L"",
-          WS_CHILD, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-          mWnd, nullptr, nsToolkit::mDllInstance, nullptr);
     case NS_NATIVE_WIDGET:
     case NS_NATIVE_WINDOW:
     case NS_NATIVE_WINDOW_WEBRTC_DEVICE_ID:
@@ -3849,10 +3833,6 @@ void* nsWindow::GetNativeData(uint32_t aDataType) {
   }
 
   return nullptr;
-}
-
-void nsWindow::SetNativeData(uint32_t aDataType, uintptr_t aVal) {
-  NS_ERROR("SetNativeData called with unsupported data type.");
 }
 
 // Free some native data according to aDataType

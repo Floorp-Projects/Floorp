@@ -46,16 +46,16 @@ const HTML = `
 const TEST_URI =
   "https://example.net/document-builder.sjs?html=" + encodeURI(HTML);
 
-add_task(async function() {
+add_task(async function () {
   const tab = await addTab(TEST_URI);
 
   info("Retrieve the browsing context for nested_same_process_frame");
   const nestedSameProcessFrameBC = await SpecialPowers.spawn(
     tab.linkedBrowser,
     [],
-    function() {
+    function () {
       const remote_frame1 = content.document.getElementById("remote_frame1");
-      return SpecialPowers.spawn(remote_frame1, [], function() {
+      return SpecialPowers.spawn(remote_frame1, [], function () {
         return content.document.getElementById(
           "nested_same_process_frame"
         ).browsingContext;
@@ -72,7 +72,7 @@ add_task(async function() {
   const sameProcessFrameBC = await SpecialPowers.spawn(
     tab.linkedBrowser,
     [],
-    function() {
+    function () {
       return content.document.getElementById("same_process_frame")
         .browsingContext;
     }
@@ -87,9 +87,9 @@ add_task(async function() {
   const nestedRemoteFrameBC = await SpecialPowers.spawn(
     tab.linkedBrowser,
     [],
-    function() {
+    function () {
       const remote_frame2 = content.document.getElementById("remote_frame2");
-      return SpecialPowers.spawn(remote_frame2, [], function() {
+      return SpecialPowers.spawn(remote_frame2, [], function () {
         return content.document.getElementById(
           "nested_remote_frame"
         ).browsingContext;

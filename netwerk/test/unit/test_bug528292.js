@@ -5,19 +5,19 @@ const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 const sentCookieVal = "foo=bar";
 const responseBody = "response body";
 
-XPCOMUtils.defineLazyGetter(this, "baseURL", function() {
+XPCOMUtils.defineLazyGetter(this, "baseURL", function () {
   return "http://localhost:" + httpServer.identity.primaryPort;
 });
 
 const preRedirectPath = "/528292/pre-redirect";
 
-XPCOMUtils.defineLazyGetter(this, "preRedirectURL", function() {
+XPCOMUtils.defineLazyGetter(this, "preRedirectURL", function () {
   return baseURL + preRedirectPath;
 });
 
 const postRedirectPath = "/528292/post-redirect";
 
-XPCOMUtils.defineLazyGetter(this, "postRedirectURL", function() {
+XPCOMUtils.defineLazyGetter(this, "postRedirectURL", function () {
   return baseURL + postRedirectPath;
 });
 

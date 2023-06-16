@@ -32,9 +32,6 @@ gclient config --name src "https://chromium.googlesource.com/chromium/src.git" -
 
 cd src
 
-# need sudo access to run this and get required dependencies for linux
-./build/install-build-deps.sh
-
 # now we can run hooks and fetch PGO + everything else
 gclient runhooks
 

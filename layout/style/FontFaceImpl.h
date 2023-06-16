@@ -18,11 +18,11 @@
 #include "nsTHashSet.h"
 
 class gfxFontFaceBufferSource;
-struct RawServoFontFaceRule;
 
 namespace mozilla {
 struct CSSFontFaceDescriptors;
 class PostTraversalTask;
+struct StyleLockedFontFaceRule;
 namespace dom {
 class CSSFontFaceRule;
 class FontFace;
@@ -101,9 +101,9 @@ class FontFaceImpl final {
 
   static already_AddRefed<FontFaceImpl> CreateForRule(
       FontFace* aOwner, FontFaceSetImpl* aFontFaceSet,
-      RawServoFontFaceRule* aRule);
+      StyleLockedFontFaceRule* aRule);
 
-  RawServoFontFaceRule* GetRule() { return mRule; }
+  StyleLockedFontFaceRule* GetRule() { return mRule; }
 
   bool HasLocalSrc() const;
 
@@ -235,7 +235,7 @@ class FontFaceImpl final {
 
   void GetDesc(nsCSSFontDesc aDescID, nsACString& aResult) const;
 
-  RawServoFontFaceRule* GetData() const {
+  StyleLockedFontFaceRule* GetData() const {
     AssertIsOnOwningThread();
     return HasRule() ? mRule : mDescriptors;
   }
@@ -249,7 +249,7 @@ class FontFaceImpl final {
 
   // The @font-face rule this FontFace object is reflecting, if it is a
   // rule backed FontFace.
-  RefPtr<RawServoFontFaceRule> mRule;
+  RefPtr<StyleLockedFontFaceRule> mRule;
 
   // The FontFace object's user font entry.  This is initially null, but is set
   // during FontFaceSet::UpdateRules and when a FontFace is explicitly loaded.
@@ -281,7 +281,7 @@ class FontFaceImpl final {
   // FIXME This should hold a unique ptr to just the descriptors inside,
   // so that we don't need to create a rule for it and don't need to
   // assign a fake line number and column number. See bug 1450904.
-  RefPtr<RawServoFontFaceRule> mDescriptors;
+  RefPtr<StyleLockedFontFaceRule> mDescriptors;
 
   // The value of the unicode-range descriptor as a gfxCharacterMap.  Valid
   // only when mUnicodeRangeDirty is false.

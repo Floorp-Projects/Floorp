@@ -336,7 +336,8 @@ void PointerEventHandler::CheckPointerCaptureState(WidgetPointerEvent* aEvent) {
   // content to set pointer capture other than the spoofed one. Thus, it must be
   // from chrome if the capture info exists in this case. And we don't have to
   // do anything if the pointer id is the same as the spoofed one.
-  if (nsContentUtils::ShouldResistFingerprinting("Efficiency Check") &&
+  if (nsContentUtils::ShouldResistFingerprinting("Efficiency Check",
+                                                 RFPTarget::PointerEvents) &&
       aEvent->pointerId != (uint32_t)GetSpoofedPointerIdForRFP() &&
       !captureInfo) {
     PointerCaptureInfo* spoofedCaptureInfo =
@@ -348,7 +349,7 @@ void PointerEventHandler::CheckPointerCaptureState(WidgetPointerEvent* aEvent) {
     // in this case.
     if (!spoofedCaptureInfo || !spoofedCaptureInfo->mPendingElement ||
         !spoofedCaptureInfo->mPendingElement->OwnerDoc()
-             ->ShouldResistFingerprinting()) {
+             ->ShouldResistFingerprinting(RFPTarget::PointerEvents)) {
       return;
     }
 

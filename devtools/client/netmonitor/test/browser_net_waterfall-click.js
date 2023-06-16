@@ -7,7 +7,7 @@
  * Test that clicking on the waterfall opens the timing sidebar panel.
  */
 
-add_task(async function() {
+add_task(async function () {
   const { tab, monitor } = await initNetMonitor(
     CONTENT_TYPE_WITHOUT_CACHE_URL,
     { requestCount: 1 }

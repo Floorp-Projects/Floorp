@@ -5,7 +5,7 @@
 
 // Create a simple page for the iframe
 const httpServer = createTestHTTPServer();
-httpServer.registerPathHandler(`/`, function(request, response) {
+httpServer.registerPathHandler(`/`, function (request, response) {
   response.setStatusLine(request.httpVersion, 200, "OK");
   response.write(`
     <html>
@@ -35,7 +35,7 @@ const TEST_URI = `data:text/html,<!DOCTYPE html><meta charset=utf8>
   <iframe src="http://localhost:${httpServer.identity.primaryPort}/"></iframe>
   `;
 
-add_task(async function() {
+add_task(async function () {
   // Enable CSS Warnings
   await pushPref("devtools.webconsole.filter.css", true);
 

@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   // Set WS messages limit to a lower value for testing
   await pushPref("devtools.netmonitor.msg.displayed-messages.limit", 10);
 

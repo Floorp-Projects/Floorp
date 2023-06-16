@@ -632,18 +632,57 @@ ig{
             "Ego Kwacha Obodo Zambia",
         }
     }
+    Currencies%narrow{
+        BYN{"BYN"}
+    }
     CurrencyPlurals{
         AED{
             other{"Ego dirhams obodo UAE"}
         }
+        AFN{
+            other{"Ego Afghani Obodo Afghanistan"}
+        }
+        ALL{
+            other{"Ego Lek Obodo Albania"}
+        }
+        AMD{
+            other{"Ego Dram obodo Armenia"}
+        }
+        ANG{
+            other{"Ego Antillean Guilder obodo Netherlands"}
+        }
         AOA{
             other{"Ego kwanzas obodo Angola"}
+        }
+        ARS{
+            other{"Ego Peso obodo Argentina"}
         }
         AUD{
             other{"Ego dollars obodo Australia"}
         }
+        AWG{
+            other{"Ego Florin obodo Aruba"}
+        }
         AZN{
             other{"Ego manats obodo Azerbaijan"}
+        }
+        BAM{
+            other{"Akara mgbanwe ego obodo Bosnia-Herzegovina"}
+        }
+        BBD{
+            other{"Ego Dollar obodo Barbados"}
+        }
+        BDT{
+            other{"Ego Taka obodo Bangladesh"}
+        }
+        BGN{
+            other{"Ego Lev mba Bulgaria"}
+        }
+        BHD{
+            other{"Ego Dinar Obodo Bahrain"}
+        }
+        BIF{
+            other{"Ego Franc obodo Burundi"}
         }
         BMD{
             other{"Dollars Bermuda"}
@@ -651,11 +690,23 @@ ig{
         BND{
             other{"Ego dollars obodo Brunei"}
         }
+        BOB{
+            other{"Ego Boliviano obodo Bolivia"}
+        }
         BRL{
             other{"Real Brazil"}
         }
+        BSD{
+            other{"Ego Dollar Obodo Bahamas"}
+        }
+        BTN{
+            other{"Ego Ngultrum obodo Bhutan"}
+        }
         BWP{
             other{"Ego pulas obodo Bostwana"}
+        }
+        BYN{
+            other{"Ego Ruble mba Belarus"}
         }
         BZD{
             other{"Dollars Belize"}
@@ -666,17 +717,50 @@ ig{
         CDF{
             other{"Ego francs mba Congo"}
         }
+        CHF{
+            other{"Ego Franc mba Switzerland"}
+        }
+        CLP{
+            other{"Ego Peso obodo Chile"}
+        }
+        CNH{
+            other{"Ego Yuan Obodo China (ndị bi na mmiri)"}
+        }
         CNY{
             other{"Yuan China"}
+        }
+        COP{
+            other{"Ego Peso obodo Columbia"}
         }
         CRC{
             other{"Ego colóns obodo Costa Rica"}
         }
+        CUC{
+            other{"Ego Peso e nwere ike ịgbanwe nke obodo Cuba"}
+        }
         CUP{
             other{"Ego pesos obodo Cuba"}
         }
+        CVE{
+            other{"Escudo Caboverdiano"}
+        }
+        CZK{
+            other{"Ego Koruna obodo Czech"}
+        }
         DJF{
             other{"ego francs obodo Djibouti"}
+        }
+        DKK{
+            other{"Ego Krone Obodo Denmark"}
+        }
+        DOP{
+            other{"Ego Peso Obodo Dominica"}
+        }
+        DZD{
+            other{"Ego Dinar Obodo Algeria"}
+        }
+        EGP{
+            other{"Ego Pound obodo Egypt"}
         }
         ERN{
             other{"Ego nakfas obodo Eritrea"}
@@ -690,11 +774,53 @@ ig{
         FJD{
             other{"Ego dollars obodo Fijian"}
         }
+        FKP{
+            other{"Ego Pound obodo Falkland Islands"}
+        }
         GBP{
             other{"Pound British"}
         }
+        GEL{
+            other{"Ego Lari Obodo Georgia"}
+        }
+        GHS{
+            other{"Ego Cedi obodo Ghana"}
+        }
+        GIP{
+            other{"Ego Pound obodo Gibraltar"}
+        }
+        GMD{
+            other{"Ego Dalasi obodo Gambia"}
+        }
+        GNF{
+            other{"Ego Franc obodo Guinea"}
+        }
+        GTQ{
+            other{"Ego Quetzal obodo Guatemala"}
+        }
+        GYD{
+            other{"Ego Dollar obodo Guyana"}
+        }
+        HKD{
+            other{"Ego Dollar Obodo Honk Kong"}
+        }
+        HNL{
+            other{"Ego Lempira obodo Honduras"}
+        }
         HRK{
             other{"Ego kunas obodo Croatia"}
+        }
+        HTG{
+            other{"Ego Gourde obodo Haiti"}
+        }
+        HUF{
+            other{"Ego Forint obodo Hungary"}
+        }
+        IDR{
+            other{"Ego Rupiah Obodo Indonesia"}
+        }
+        ILS{
+            other{"Ego Shekel ọhụrụ obodo Israel"}
         }
         INR{
             other{"Rupee India"}
@@ -702,17 +828,68 @@ ig{
         IQD{
             other{"Ego dinars obodo Iraq"}
         }
+        IRR{
+            other{"Ego Rial obodo Iran"}
+        }
+        ISK{
+            other{"Ego Króna obodo Iceland"}
+        }
+        JMD{
+            other{"Ego Dollar obodo Jamaica"}
+        }
+        JOD{
+            other{"Ego Dinar Obodo Jordan"}
+        }
         JPY{
             other{"Yen Japan"}
+        }
+        KES{
+            other{"Ego Shilling obodo Kenya"}
+        }
+        KGS{
+            other{"Ego Som Obodo Kyrgyzstan"}
+        }
+        KHR{
+            other{"Ego Riel obodo Cambodia"}
+        }
+        KMF{
+            other{"Ego Franc obodo Comoros"}
+        }
+        KPW{
+            other{"Ego Won Obodo North Korea"}
+        }
+        KRW{
+            other{"Ego Won Obodo South Korea"}
+        }
+        KWD{
+            other{"Ego Dinar Obodo Kuwait"}
         }
         KYD{
             other{"Ego dollars obodo Cayman Islands"}
         }
+        KZT{
+            other{"Ego Tenge obodo Kazakhstani"}
+        }
+        LAK{
+            other{"Ego Kip Obodo Laos"}
+        }
         LBP{
             other{"Ego Pound Obodo Lebanon"}
         }
+        LKR{
+            other{"Ego Rupee obodo Sri Lanka"}
+        }
+        LRD{
+            other{"Ego Dollar obodo Liberia"}
+        }
         LSL{
             other{"Ego loti obodo Lesotho"}
+        }
+        LYD{
+            other{"Ego Dinar obodo Libya"}
+        }
+        MAD{
+            other{"Ego Dirham obodo Morocco"}
         }
         MDL{
             other{"Ego leu mba Moldova"}
@@ -723,11 +900,50 @@ ig{
         MKD{
             other{"Ego denari mba Macedonia"}
         }
+        MMK{
+            other{"Ego Kyat obodo Myanmar"}
+        }
+        MNT{
+            other{"Ego Turgik Obodo Mongolia"}
+        }
+        MOP{
+            other{"Ego Pataca ndị Obodo Macanese"}
+        }
+        MRU{
+            other{"Ego Ouguiya Obodo Mauritania"}
+        }
+        MUR{
+            other{"Ego Rupee obodo Mauritania"}
+        }
+        MVR{
+            other{"Ego Rufiyaa obodo Moldova"}
+        }
         MWK{
             other{"Ego kwachas obodo Malawi"}
         }
+        MXN{
+            other{"Ego Peso obodo Mexico"}
+        }
+        MYR{
+            other{"Ego Ringgit obodo Malaysia"}
+        }
         MZN{
             other{"Ego meticals obodo Mozambique"}
+        }
+        NAD{
+            other{"Ego Dollar obodo Namibia"}
+        }
+        NGN{
+            other{"Naịra"}
+        }
+        NIO{
+            other{"Ego Córodoba obodo Nicaragua"}
+        }
+        NOK{
+            other{"Ego Krone Obodo Norway"}
+        }
+        NPR{
+            other{"Ego Rupee obodo Nepal"}
         }
         NZD{
             other{"Ego dollars obodo New Zealand"}
@@ -735,14 +951,44 @@ ig{
         OMR{
             other{"Ego rials Obodo Oman"}
         }
+        PAB{
+            other{"Ego Balboa obodo Panama"}
+        }
+        PEN{
+            other{"Ego Sol obodo Peru"}
+        }
+        PGK{
+            other{"Ego Kina obodo Papua New Guinea"}
+        }
+        PHP{
+            other{"Ego piso obodo Philippine"}
+        }
+        PKR{
+            other{"Ego Rupee obodo Pakistan"}
+        }
+        PLN{
+            other{"Ego Zloty mba Poland"}
+        }
+        PYG{
+            other{"Ego Guarani obodo Paraguay"}
+        }
         QAR{
             other{"Ego rials obodo Qatar"}
         }
         RON{
             other{"Ego leu Obodo Romania"}
         }
+        RSD{
+            other{"Ego Dinar obodo Serbia"}
+        }
         RUB{
             other{"Ruble Russia"}
+        }
+        RWF{
+            other{"Ego Franc obodo Rwanda"}
+        }
+        SAR{
+            other{"Ego Riyal obodo Saudi"}
         }
         SBD{
             other{"Ego dollars obodo Solomon Islands"}
@@ -750,20 +996,68 @@ ig{
         SCR{
             other{"Ego rupees obodo Seychelles"}
         }
+        SDG{
+            other{"Ego Pound obodo Sudan"}
+        }
+        SEK{
+            other{"Ego Krona Obodo Sweden"}
+        }
+        SGD{
+            other{"Ego Dollar obodo Singapore"}
+        }
+        SHP{
+            other{"Ego Pound obodo St Helena"}
+        }
+        SLL{
+            other{"Ego Leone obodo Sierra Leone"}
+        }
+        SOS{
+            other{"Ego shilling obodo Somali"}
+        }
         SRD{
             other{"Dollar Surinamese"}
         }
         SSP{
             other{"Ego pounds mba ọdịda anyanwụ Sudan"}
         }
+        STN{
+            other{"Ego Dobra nke obodo Sāo Tomé na Principe"}
+        }
+        SYP{
+            other{"Ego Pound obodo Syria"}
+        }
         SZL{
             other{"Ego emalangeni obodo Swaziland"}
+        }
+        THB{
+            other{"Ego Baht obodo Thai"}
+        }
+        TJS{
+            other{"Who Somoni obodo Tajikistan"}
+        }
+        TMT{
+            other{"Ego Manat Obodo Turkmenistan"}
+        }
+        TND{
+            other{"Ego Dinar Obodo Tunisia"}
+        }
+        TOP{
+            other{"Ego paʻanga obodo Tonga"}
+        }
+        TRY{
+            other{"Ego Lira obodo Turkey"}
         }
         TTD{
             other{"Dollars Trinidad & Tobago"}
         }
+        TWD{
+            other{"Dollar obodo New Taiwan"}
+        }
         TZS{
             other{"Ego Shillings Obodo Tanzania"}
+        }
+        UAH{
+            other{"Ego Hryvnia obodo Ukraine"}
         }
         UGX{
             other{"Ego shillings obodo Uganda"}
@@ -771,14 +1065,29 @@ ig{
         USD{
             other{"Dollars US"}
         }
+        UYU{
+            other{"Ego Peso obodo Uruguay"}
+        }
         UZS{
             other{"Ego som obodo Uzbekistan"}
+        }
+        VES{
+            other{"Ego Bolivar obodo Venezuela"}
+        }
+        VND{
+            other{"Ego Dong obodo Vietnam"}
         }
         VUV{
             other{"Ego Vanuatu vatus obodo Vanuatu"}
         }
+        WST{
+            other{"Ego Tala obodo Samoa"}
+        }
         XAF{
             other{"Ego francs mba etiti Africa"}
+        }
+        XCD{
+            other{"Ego Dollar obodo East Carribbean"}
         }
         XOF{
             other{"Ego CFA francs mba ọdịda anyanwụ Afrịka"}
@@ -788,6 +1097,9 @@ ig{
         }
         XXX{
             other{"(ego amaghị)"}
+        }
+        YER{
+            other{"Ego Rial obodo Yemeni"}
         }
         ZAR{
             other{"Ego rand obodo South Africa"}

@@ -56,7 +56,7 @@ function* testSteps() {
 
     info("Sorting elements");
 
-    result.sort(function(a, b) {
+    result.sort(function (a, b) {
       let originA = a.origin;
       let originB = b.origin;
 

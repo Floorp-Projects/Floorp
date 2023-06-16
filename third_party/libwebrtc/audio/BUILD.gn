@@ -70,6 +70,7 @@ rtc_library("audio") {
     "../common_audio:common_audio_c",
     "../logging:rtc_event_audio",
     "../logging:rtc_stream_config",
+    "../media:media_channel",
     "../media:rtc_media_base",
     "../modules/async_audio_processing",
     "../modules/audio_coding",
@@ -96,6 +97,7 @@ rtc_library("audio") {
     "../rtc_base:rate_limiter",
     "../rtc_base:refcount",
     "../rtc_base:rtc_event",
+    "../rtc_base:rtc_numerics",
     "../rtc_base:rtc_task_queue",
     "../rtc_base:safe_conversions",
     "../rtc_base:safe_minmax",
@@ -149,6 +151,7 @@ if (rtc_include_tests) {
       "audio_state_unittest.cc",
       "channel_receive_frame_transformer_delegate_unittest.cc",
       "channel_send_frame_transformer_delegate_unittest.cc",
+      "channel_send_unittest.cc",
       "mock_voe_channel_proxy.h",
       "remix_resample_unittest.cc",
       "test/audio_stats_test.cc",
@@ -158,12 +161,15 @@ if (rtc_include_tests) {
     deps = [
       ":audio",
       ":audio_end_to_end_test",
+      ":channel_receive_unittest",
       "../api:libjingle_peerconnection_api",
       "../api:mock_audio_mixer",
       "../api:mock_frame_decryptor",
       "../api:mock_frame_encryptor",
+      "../api:scoped_refptr",
       "../api/audio:audio_frame_api",
       "../api/audio_codecs:audio_codecs_api",
+      "../api/audio_codecs:builtin_audio_encoder_factory",
       "../api/audio_codecs/opus:audio_decoder_opus",
       "../api/audio_codecs/opus:audio_encoder_opus",
       "../api/crypto:frame_decryptor_interface",
@@ -171,6 +177,7 @@ if (rtc_include_tests) {
       "../api/task_queue:default_task_queue_factory",
       "../api/task_queue/test:mock_task_queue_base",
       "../api/units:time_delta",
+      "../api/units:timestamp",
       "../call:mock_bitrate_allocator",
       "../call:mock_call_interfaces",
       "../call:mock_rtp_interfaces",
@@ -179,6 +186,7 @@ if (rtc_include_tests) {
       "../call:rtp_sender",
       "../common_audio",
       "../logging:mocks",
+      "../modules/audio_device:audio_device_api",
       "../modules/audio_device:audio_device_impl",  # For TestAudioDeviceModule
       "../modules/audio_device:mock_audio_device",
       "../modules/audio_mixer:audio_mixer_impl",
@@ -195,6 +203,7 @@ if (rtc_include_tests) {
       "../rtc_base:rtc_base_tests_utils",
       "../rtc_base:safe_compare",
       "../rtc_base:task_queue_for_test",
+      "../rtc_base:threading",
       "../rtc_base:timeutils",
       "../system_wrappers",
       "../test:audio_codec_mocks",
@@ -209,6 +218,22 @@ if (rtc_include_tests) {
       "../test/time_controller:time_controller",
       "utility:utility_tests",
       "//testing/gtest",
+    ]
+  }
+
+  rtc_library("channel_receive_unittest") {
+    testonly = true
+    sources = [ "channel_receive_unittest.cc" ]
+    deps = [
+      ":audio",
+      "../api/crypto:frame_decryptor_interface",
+      "../api/task_queue:default_task_queue_factory",
+      "../modules/audio_device:audio_device_api",
+      "../modules/audio_device:mock_audio_device",
+      "../rtc_base:threading",
+      "../test:mock_transport",
+      "../test:test_support",
+      "../test/time_controller",
     ]
   }
 
@@ -308,34 +333,6 @@ if (rtc_include_tests) {
       if (is_mac) {
         data += [ "../tools_webrtc/audio_quality/mac/pesq" ]
       }
-    }
-  }
-
-  if (!build_with_chromium) {
-    rtc_library("audio_perf_tests") {
-      testonly = true
-
-      sources = [
-        "test/audio_bwe_integration_test.cc",
-        "test/audio_bwe_integration_test.h",
-      ]
-      deps = [
-        "../api:simulated_network_api",
-        "../api/task_queue",
-        "../call:fake_network",
-        "../call:simulated_network",
-        "../common_audio",
-        "../rtc_base:task_queue_for_test",
-        "../system_wrappers",
-        "../test:field_trial",
-        "../test:fileutils",
-        "../test:test_common",
-        "../test:test_main",
-        "../test:test_support",
-        "//testing/gtest",
-      ]
-      absl_deps = [ "//third_party/abseil-cpp/absl/functional:any_invocable" ]
-      data = [ "//resources/voice_engine/audio_dtx16.wav" ]
     }
   }
 }

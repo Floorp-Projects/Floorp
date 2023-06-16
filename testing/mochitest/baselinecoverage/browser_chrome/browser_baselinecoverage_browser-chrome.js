@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   requestLongerTimeout(2);
   let newWin = await BrowserTestUtils.openNewBrowserWindow();
 
@@ -13,7 +13,7 @@ add_task(async function() {
       gBrowser,
       url: "about:blank",
     },
-    async function(browser) {
+    async function (browser) {
       ok(true, "Collecting baseline coverage for browser-chrome tests.");
       await new Promise(c => setTimeout(c, 30 * 1000));
     }

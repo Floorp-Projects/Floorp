@@ -133,9 +133,8 @@ class ScriptModule extends WindowGlobalBiDiModule {
           result = realm.globalObjectReference.makeDebuggeeValue(asyncResult);
         } catch (asyncException) {
           evaluationStatus = EvaluationStatus.Throw;
-          exception = realm.globalObjectReference.makeDebuggeeValue(
-            asyncException
-          );
+          exception =
+            realm.globalObjectReference.makeDebuggeeValue(asyncException);
 
           // If the returned promise was rejected by calling its reject callback
           // the stack will be available on promiseResolutionSite.

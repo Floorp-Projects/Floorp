@@ -176,22 +176,15 @@ extern const char XPC_SCRIPT_ERROR_CONTRACTID[];
 extern const char XPC_XPCONNECT_CONTRACTID[];
 
 /***************************************************************************/
-// Useful macros...
+// Helper function.
 
-#define XPC_STRING_GETTER_BODY(dest, src)   \
-  NS_ENSURE_ARG_POINTER(dest);              \
-  *dest = src ? moz_xstrdup(src) : nullptr; \
-  return NS_OK
+namespace xpc {
 
-// If IS_WN_CLASS for the JSClass of an object is true, the object is a
-// wrappednative wrapper, holding the XPCWrappedNative in its private slot.
-static inline bool IS_WN_CLASS(const JSClass* clazz) {
-  return clazz->isWrappedNative();
+inline bool IsWrappedNativeReflector(JSObject* obj) {
+  return JS::GetClass(obj)->isWrappedNative();
 }
 
-static inline bool IS_WN_REFLECTOR(JSObject* obj) {
-  return IS_WN_CLASS(JS::GetClass(obj));
-}
+}  // namespace xpc
 
 /***************************************************************************
 ****************************************************************************
@@ -1404,7 +1397,7 @@ class XPCWrappedNative final : public nsIXPConnectWrappedNative {
   void SetSet(already_AddRefed<XPCNativeSet> set) { mSet = set; }
 
   static XPCWrappedNative* Get(JSObject* obj) {
-    MOZ_ASSERT(IS_WN_REFLECTOR(obj));
+    MOZ_ASSERT(xpc::IsWrappedNativeReflector(obj));
     return JS::GetObjectISupports<XPCWrappedNative>(obj);
   }
 

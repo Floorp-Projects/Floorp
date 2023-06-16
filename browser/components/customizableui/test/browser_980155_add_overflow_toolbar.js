@@ -60,8 +60,8 @@ add_task(async function addOverflowingToolbar() {
     "Customization target should not be toolbar node"
   );
 
-  let oldChildCount = CustomizableUI.getCustomizationTarget(toolbarNode)
-    .childElementCount;
+  let oldChildCount =
+    CustomizableUI.getCustomizationTarget(toolbarNode).childElementCount;
   let overflowableList = document.getElementById(
     kToolbarName + "-overflow-list"
   );

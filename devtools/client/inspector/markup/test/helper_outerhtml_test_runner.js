@@ -20,7 +20,7 @@
  */
 function runEditOuterHTMLTests(tests, inspector) {
   info("Running " + tests.length + " edit-outer-html tests");
-  return (async function() {
+  return (async function () {
     for (const step of tests) {
       await runEditOuterHTMLTest(step, inspector);
     }
@@ -87,8 +87,8 @@ async function runEditOuterHTMLTest(test, inspector) {
   // abruptly closing hanging requests when the test ends
   await onUpdated;
 
-  const closeTagLine = inspector.markup.getContainer(pageNodeFront)
-    .closeTagLine;
+  const closeTagLine =
+    inspector.markup.getContainer(pageNodeFront).closeTagLine;
   if (closeTagLine) {
     is(
       closeTagLine.querySelectorAll(".theme-fg-contrast").length,

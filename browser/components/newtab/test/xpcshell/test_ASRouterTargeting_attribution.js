@@ -30,10 +30,8 @@ add_task(async function check_attribution_data() {
   AttributionCode._clearCache();
   await AttributionCode.getAttrDataAsync();
 
-  const {
-    campaign: attributionCampain,
-    source: attributionSource,
-  } = ASRouterTargeting.Environment.attributionData;
+  const { campaign: attributionCampain, source: attributionSource } =
+    ASRouterTargeting.Environment.attributionData;
   equal(
     attributionCampain,
     campaign,

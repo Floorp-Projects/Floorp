@@ -232,8 +232,7 @@ add_task(async function test_tokenizer() {
       ],
     },
     {
-      desc:
-        "bogus protocol with host (we allow visits to http://///example.com)",
+      desc: "bogus protocol with host (we allow visits to http://///example.com)",
       searchString: "http:///test",
       expectedTokens: [
         { value: "http:///test", type: UrlbarTokenizer.TYPE.POSSIBLE_URL },

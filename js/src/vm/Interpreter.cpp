@@ -39,6 +39,7 @@
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/friend/StackLimits.h"    // js::AutoCheckRecursionLimit
 #include "js/friend/WindowProxy.h"    // js::IsWindowProxy
+#include "js/Printer.h"
 #include "util/CheckedArithmetic.h"
 #include "util/StringBuffer.h"
 #include "vm/AsyncFunction.h"
@@ -56,7 +57,6 @@
 #include "vm/Opcodes.h"
 #include "vm/PIC.h"
 #include "vm/PlainObject.h"  // js::PlainObject
-#include "vm/Printer.h"
 #include "vm/Scope.h"
 #include "vm/Shape.h"
 #include "vm/SharedStencil.h"  // GCThingIndex
@@ -5360,14 +5360,14 @@ JSObject* js::NewPlainObjectBaselineFallback(JSContext* cx,
     ar.emplace(cx, shape);
   }
 
-  gc::InitialHeap initialHeap = site->initialHeap();
+  gc::Heap initialHeap = site->initialHeap();
   return NativeObject::create(cx, allocKind, initialHeap, shape, site);
 }
 
 JSObject* js::NewPlainObjectOptimizedFallback(JSContext* cx,
                                               Handle<SharedShape*> shape,
                                               gc::AllocKind allocKind,
-                                              gc::InitialHeap initialHeap) {
+                                              gc::Heap initialHeap) {
   MOZ_ASSERT(shape->getObjectClass() == &PlainObject::class_);
 
   mozilla::Maybe<AutoRealm> ar;
@@ -5390,7 +5390,7 @@ ArrayObject* js::NewArrayObjectBaselineFallback(JSContext* cx, uint32_t length,
                                                 gc::AllocKind allocKind,
                                                 gc::AllocSite* site) {
   NewObjectKind newKind =
-      site->initialHeap() == gc::TenuredHeap ? TenuredObject : GenericObject;
+      site->initialHeap() == gc::Heap::Tenured ? TenuredObject : GenericObject;
   ArrayObject* array = NewDenseFullyAllocatedArray(cx, length, newKind, site);
   // It's important that we allocate an object with the alloc kind we were
   // expecting so that a new arena gets allocated if the current arena for that

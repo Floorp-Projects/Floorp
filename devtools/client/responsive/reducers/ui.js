@@ -126,7 +126,7 @@ const reducers = {
   },
 };
 
-module.exports = function(ui = INITIAL_UI, action) {
+module.exports = function (ui = INITIAL_UI, action) {
   const reducer = reducers[action.type];
   if (!reducer) {
     return ui;

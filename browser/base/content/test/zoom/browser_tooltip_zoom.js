@@ -1,6 +1,6 @@
 add_task(async function test_zoom_tooltip() {
   const TEST_PAGE_URL = 'data:text/html,<html title="tooltiptext">';
-  await BrowserTestUtils.withNewTab(TEST_PAGE_URL, async function(browser) {
+  await BrowserTestUtils.withNewTab(TEST_PAGE_URL, async function (browser) {
     FullZoom.setZoom(2.0, browser);
 
     const tooltip = document.getElementById("remoteBrowserTooltip");

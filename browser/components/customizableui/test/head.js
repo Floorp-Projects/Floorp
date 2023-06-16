@@ -4,10 +4,10 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  CustomizableUI: "resource:///modules/CustomizableUI.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
   CustomizableUITestUtils:
-    "resource://testing-common/CustomizableUITestUtils.jsm",
+    "resource://testing-common/CustomizableUITestUtils.sys.mjs",
 });
 
 var EventUtils = {};
@@ -283,7 +283,7 @@ function openAndLoadWindow(aOptions, aWaitForDelayedStartup = false) {
     } else {
       win.addEventListener(
         "load",
-        function() {
+        function () {
           resolve(win);
         },
         { once: true }
@@ -296,7 +296,7 @@ function promiseWindowClosed(win) {
   return new Promise(resolve => {
     win.addEventListener(
       "unload",
-      function() {
+      function () {
         resolve();
       },
       { once: true }

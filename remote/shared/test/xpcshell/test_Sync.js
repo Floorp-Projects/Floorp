@@ -6,12 +6,8 @@ const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs"
 );
 
-const {
-  AnimationFramePromise,
-  Deferred,
-  EventPromise,
-  PollPromise,
-} = ChromeUtils.importESModule("chrome://remote/content/shared/Sync.sys.mjs");
+const { AnimationFramePromise, Deferred, EventPromise, PollPromise } =
+  ChromeUtils.importESModule("chrome://remote/content/shared/Sync.sys.mjs");
 
 /**
  * Mimic a DOM node for listening for events.
@@ -294,7 +290,7 @@ add_task(function test_PollPromise_funcTypes() {
     Assert.throws(() => new PollPromise(type), /TypeError/);
   }
   new PollPromise(() => {});
-  new PollPromise(function() {});
+  new PollPromise(function () {});
 });
 
 add_task(function test_PollPromise_timeoutTypes() {

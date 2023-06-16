@@ -29,7 +29,7 @@ function* testSteps() {
   for (let i in objectStoreData) {
     request = objectStore.add(objectStoreData[i].value, objectStoreData[i].key);
     request.onerror = errorHandler;
-    request.onsuccess = function(event) {
+    request.onsuccess = function (event) {
       if (++addedData == objectStoreData.length) {
         testGenerator.next(event);
       }

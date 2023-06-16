@@ -17,7 +17,7 @@ function getPersistentStoragePermStatus(origin) {
 
 // Test listing site using quota usage or site using appcache
 // This is currently disabled because of bug 1414751.
-add_task(async function() {
+add_task(async function () {
   // Open a test site which would save into appcache
   await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_OFFLINE_URL);
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
@@ -56,9 +56,10 @@ add_task(async function() {
 
   // Always remember to clean up
   await new Promise(resolve => {
-    let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-      TEST_QUOTA_USAGE_ORIGIN
-    );
+    let principal =
+      Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+        TEST_QUOTA_USAGE_ORIGIN
+      );
     let request = Services.qms.clearStoragesForPrincipal(
       principal,
       null,
@@ -73,7 +74,7 @@ add_task(async function() {
 }).skip(); // Bug 1414751
 
 // Test buttons are disabled and loading message shown while updating sites
-add_task(async function() {
+add_task(async function () {
   let updatedPromise = promiseSiteDataManagerSitesUpdated();
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
   await updatedPromise;
@@ -153,7 +154,7 @@ add_task(async function() {
 });
 
 // Test clearing service worker through the settings panel
-add_task(async function() {
+add_task(async function () {
   // Register a test service worker
   await loadServiceWorkerTestPage(TEST_SERVICE_WORKER_URL);
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
@@ -190,7 +191,7 @@ add_task(async function() {
 });
 
 // Test showing and removing sites with cookies.
-add_task(async function() {
+add_task(async function () {
   // Add some test cookies.
   let uri = Services.io.newURI("https://example.com");
   let uri2 = Services.io.newURI("https://example.org");
@@ -282,7 +283,7 @@ add_task(async function() {
         creationDate2Formatted,
       },
     ],
-    function(args) {
+    function (args) {
       let frameDoc = content.gSubDialog._topDialog._frame.contentDocument;
 
       let siteItems = frameDoc.getElementsByTagName("richlistitem");
@@ -348,7 +349,7 @@ add_task(async function() {
   await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [{ creationDate1Formatted }],
-    function(args) {
+    function (args) {
       let frameDoc = content.gSubDialog._topDialog._frame.contentDocument;
 
       let siteItems = frameDoc.getElementsByTagName("richlistitem");
@@ -388,7 +389,7 @@ add_task(async function() {
 
   await openSiteDataSettingsDialog();
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     let frameDoc = content.gSubDialog._topDialog._frame.contentDocument;
 
     let siteItems = frameDoc.getElementsByTagName("richlistitem");

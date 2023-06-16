@@ -34,7 +34,7 @@ const Accordion = createFactory(
   require("resource://devtools/client/shared/components/Accordion.js")
 );
 
-loader.lazyGetter(this, "TreeRow", function() {
+loader.lazyGetter(this, "TreeRow", function () {
   return createFactory(
     require("resource://devtools/client/shared/components/tree/TreeRow.js")
   );

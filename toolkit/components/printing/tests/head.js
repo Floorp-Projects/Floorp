@@ -27,7 +27,7 @@ class PrintHelper {
 
     let taskReturn = await BrowserTestUtils.withNewTab(
       isPdf ? "about:blank" : pageUrl,
-      async function(browser) {
+      async function (browser) {
         if (isPdf) {
           let loaded = BrowserTestUtils.waitForContentEvent(
             browser,
@@ -184,7 +184,8 @@ class PrintHelper {
   }
 
   resetSettings() {
-    this.win.PrintEventHandler.settings = this.win.PrintEventHandler.defaultSettings;
+    this.win.PrintEventHandler.settings =
+      this.win.PrintEventHandler.defaultSettings;
     this.win.PrintEventHandler.saveSettingsToPrefs(
       this.win.PrintEventHandler.kInitSaveAll
     );
@@ -568,7 +569,7 @@ class PrintHelper {
 }
 
 function waitForPreviewVisible() {
-  return BrowserTestUtils.waitForCondition(function() {
+  return BrowserTestUtils.waitForCondition(function () {
     let preview = document.querySelector(".printPreviewBrowser");
     return preview && BrowserTestUtils.is_visible(preview);
   });

@@ -37,11 +37,11 @@ const lazy = {};
  * Smart getters
  */
 
-XPCOMUtils.defineLazyGetter(lazy, "_prefs", function() {
+XPCOMUtils.defineLazyGetter(lazy, "_prefs", function () {
   return Services.prefs.getBranch(PREF_TASKBAR_BRANCH);
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "_stringBundle", function() {
+XPCOMUtils.defineLazyGetter(lazy, "_stringBundle", function () {
   return Services.strings.createBundle(
     "chrome://browser/locale/taskbar.properties"
   );
@@ -249,7 +249,7 @@ var Builder = class {
 
   _buildTasks() {
     var items = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
-    this._tasks.forEach(function(task) {
+    this._tasks.forEach(function (task) {
       if (
         (this._shuttingDown && !task.close) ||
         (!this._shuttingDown && !task.open)
@@ -298,7 +298,7 @@ var Builder = class {
     this._pendingStatements[LIST_TYPE.FREQUENT] = this._getHistoryResults(
       Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING,
       this._maxItemCount,
-      function(aResult) {
+      function (aResult) {
         if (!aResult) {
           delete this._pendingStatements[LIST_TYPE.FREQUENT];
           // The are no more results, build the list.
@@ -332,7 +332,7 @@ var Builder = class {
     this._pendingStatements[LIST_TYPE.RECENT] = this._getHistoryResults(
       Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING,
       this._maxItemCount * 2,
-      function(aResult) {
+      function (aResult) {
         if (!aResult) {
           // The are no more results, build the list.
           this._buildCustom(_getString("taskbar.recent.label"), items);

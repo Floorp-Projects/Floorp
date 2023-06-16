@@ -56,14 +56,14 @@ EXTRA_PP_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES += [
-    "AbuseReporter.jsm",
-    "addonManager.js",
-    "AddonManager.jsm",
-    "amContentHandler.jsm",
-    "amInstallTrigger.jsm",
-    "amWebAPI.jsm",
-    "Blocklist.jsm",
-    "LightweightThemeManager.jsm",
+    "AbuseReporter.sys.mjs",
+    "AddonManager.sys.mjs",
+    "amContentHandler.sys.mjs",
+    "amInstallTrigger.sys.mjs",
+    "amManager.sys.mjs",
+    "amWebAPI.sys.mjs",
+    "Blocklist.sys.mjs",
+    "LightweightThemeManager.sys.mjs",
 ]
 
 JAR_MANIFESTS += ["jar.mn"]
@@ -94,7 +94,7 @@ FINAL_LIBRARY = "xul"
 with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Add-ons Manager")
 
-with Files("Blocklist.jsm"):
+with Files("Blocklist.sys.mjs"):
     BUG_COMPONENT = ("Toolkit", "Blocklist Implementation")
 
 with Files("content/blocklist**"):

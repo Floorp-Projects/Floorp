@@ -103,6 +103,10 @@
                      data-l10n-id="appmenuitem-find-in-page"
                      key="key_find"
                      command="cmd_find"/>
+      <toolbarbutton id="appMenu-translate-button"
+                     class="subviewbutton"
+                     data-l10n-id="appmenuitem-translate"
+                     command="cmd_translate"/>
       <toolbaritem id="appMenu-zoom-controls" class="subviewbutton toolbaritem-combined-buttons" closemenu="none">
         <label class="toolbarbutton-text" data-l10n-id="appmenuitem-zoom"/>
         <toolbarbutton id="appMenu-zoomReduce-button2"
@@ -590,6 +594,8 @@
                       oncommand="gSync.openConnectAnotherDeviceFromFxaMenu(this);"/>
       <toolbarbutton id="PanelUI-fxa-menu-sendtab-button"
                       class="subviewbutton subviewbutton-nav"
+                      data-l10n-id="fxa-menu-send-tab-to-device"
+                      data-l10n-args='{"tabCount":1}'
                       closemenu="none"
                       oncommand="gSync.showSendToDeviceViewFromFxaMenu(this);"/>
       <toolbarbutton id="PanelUI-fxa-menu-sync-prefs-button"

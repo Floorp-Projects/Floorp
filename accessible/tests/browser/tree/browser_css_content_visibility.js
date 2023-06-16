@@ -36,7 +36,7 @@ const snippet1 = `
   </div>
   `;
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["layout.css.content-visibility.enabled", true]],
   });
@@ -45,7 +45,7 @@ add_setup(async function() {
 // Check if the element specified with `content-visibility` property is accessible
 addAccessibleTask(
   snippet1,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     const container = findAccessibleChildByID(accDoc, "container");
     ok(
       findAccessibleChildByID(container, "hidden-target"),
@@ -109,7 +109,7 @@ const snippet2 = `
 
 addAccessibleTask(
   snippet2,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     const target = findAccessibleChildByID(accDoc, "target");
     ok(
       !findAccessibleChildByID(target, "child"),

@@ -12,7 +12,7 @@ const TEST_URI = `
   }
 
   .has-issue {
-    font-variant-alternates: historical-forms;
+    scrollbar-width: thin;
     user-modify: read-only;
   }
 
@@ -30,8 +30,14 @@ const TEST_DATA_SELECTED = [
   {
     selector: ".has-issue",
     expectedIssues: [
-      { property: "font-variant-alternates" },
-      { property: "user-modify" },
+      {
+        property: "scrollbar-width",
+        url: "https://developer.mozilla.org/docs/Web/CSS/scrollbar-width",
+      },
+      {
+        property: "user-modify",
+        url: "https://developer.mozilla.org/docs/Web/CSS/user-modify",
+      },
     ],
   },
   {
@@ -40,24 +46,35 @@ const TEST_DATA_SELECTED = [
   },
   {
     selector: "body",
-    expectedIssues: [{ property: "ruby-align" }],
+    expectedIssues: [
+      {
+        property: "ruby-align",
+        url: "https://developer.mozilla.org/docs/Web/CSS/ruby-align",
+      },
+    ],
   },
 ];
 
 const TEST_DATA_ALL = [
-  { property: "ruby-align" },
-  { property: "font-variant-alternates" },
-  { property: "user-modify" },
+  {
+    property: "ruby-align",
+    url: "https://developer.mozilla.org/docs/Web/CSS/ruby-align",
+  },
+  {
+    property: "scrollbar-width",
+    url: "https://developer.mozilla.org/docs/Web/CSS/scrollbar-width",
+  },
+  {
+    property: "user-modify",
+    url: "https://developer.mozilla.org/docs/Web/CSS/user-modify",
+  },
 ];
 
-add_task(async function() {
+add_task(async function () {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
-  const {
-    allElementsPane,
-    inspector,
-    selectedElementPane,
-  } = await openCompatibilityView();
+  const { allElementsPane, inspector, selectedElementPane } =
+    await openCompatibilityView();
 
   for (const { selector, expectedIssues } of TEST_DATA_SELECTED) {
     info(`Check the issue list for ${selector} node`);

@@ -10,6 +10,7 @@
 <body  xmlns="http://www.w3.org/1999/xhtml">
 <div id="display">
 <input id="input" type="text"/><input id="anotherInput" type="text"/><br/>
+<textarea></textarea>
 <iframe id="iframe" width="300" height="150"
         src="data:text/html,&lt;textarea id='textarea' cols='20' rows='4'&gt;&lt;/textarea&gt;"></iframe><br/>
 <div contenteditable=""><br/></div>
@@ -52,6 +53,10 @@ function todo_is(aLeft, aRight, aMessage)
   SimpleTest.todo_is(aLeft, aRight, aMessage);
 }
 
+function info(aMessage) {
+  SimpleTest.info(aMessage);
+}
+
 function finish()
 {
   window.close();
@@ -78,14 +83,24 @@ function checkInputEvent(aEvent, aCancelable, aIsComposing, aInputType, aData, a
 
 const kIsMac = (navigator.platform.indexOf("Mac") == 0);
 
-var iframe = document.getElementById("iframe");
-var childWindow = iframe.contentWindow;
-var textareaInFrame;
-var input = document.getElementById("input");
-var otherWindow = window.arguments[0];
-var otherDocument = otherWindow.document;
-var inputInChildWindow = otherDocument.getElementById("input");
-var contenteditable = document.querySelector("div[contenteditable]");
+const iframe = document.getElementById("iframe");
+let childWindow = iframe.contentWindow;
+let textareaInFrame;
+const input = document.getElementById("input");
+const textarea = document.querySelector("textarea");
+const otherWindow = window.arguments[0];
+const otherDocument = otherWindow.document;
+const inputInChildWindow = otherDocument.getElementById("input");
+const contenteditable = document.querySelector("div[contenteditable]");
+
+const kLF = navigator.platform.startsWith("Win") ? "\r\n" : "\n";
+function getNativeText(aXPText)
+{
+  if (kLF == "\n") {
+    return aXPText;
+  }
+  return aXPText.replace(/\n/g, kLF);
+}
 
 function createTIP()
 {
@@ -4546,6 +4561,166 @@ async function runIMEStateUpdateTests() {
   );
 }
 
+async function runTextNotificationChangesDuringNoFrame() {
+  const TIP = createTIP();
+  let onTextChange;
+  function callback(aTIP, aNotification)
+  {
+    if (aTIP != TIP) {
+      return true;
+    }
+    switch (aNotification.type) {
+      case "request-to-commit":
+        aTIP.commitComposition();
+        break;
+      case "request-to-cancel":
+        aTIP.cancelComposition();
+        break;
+      case "notify-text-change":
+        if (onTextChange) {
+          onTextChange(aNotification);
+        }
+        break;
+    }
+    return true;
+  }
+
+  function promiseTextChangeNotification() {
+    return new Promise(resolve => onTextChange = resolve);
+  }
+
+  function waitForTick() {
+    return new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  }
+
+  const input = document.querySelector("input[type=text]");
+  input.focus();
+  TIP.beginInputTransactionForTests(window, callback);
+
+  await (async function test_text_change_notification_for_value_set_during_no_frame() {
+    const description = "runTextNotificationChangesDuringNoFrame: test_text_change_notification_for_value_set_during_no_frame";
+    input.value = "Start";
+    input.style.display = "inline";
+    input.getBoundingClientRect();
+    await waitForTick();
+    const waitNotifications = promiseTextChangeNotification();
+    input.style.display = "block";
+    input.value = "Changed";
+    info(`${description}: waiting for notifications...`);
+    const notification = await waitNotifications;
+    is(
+      notification?.offset,
+      0,
+      `${description}: offset should be 0`
+    );
+    is(
+      notification?.removedLength,
+      "Start".length,
+      `${description}: removedLength should be the length of the old value`
+    );
+    is(
+      notification?.addedLength,
+      "Changed".length,
+      `${description}: addedLength should be the length of the new value`
+    );
+  })();
+
+  await (async function test_text_change_notification_for_multiple_value_set_during_no_frame() {
+    const description = "runTextNotificationChangesDuringNoFrame: test_text_change_notification_for_multiple_value_set_during_no_frame";
+    input.value = "Start";
+    input.style.display = "inline";
+    input.getBoundingClientRect();
+    await waitForTick();
+    const waitNotifications = promiseTextChangeNotification();
+    input.style.display = "block";
+    input.value = "Changed";
+    input.value = "Again!";
+    info(`${description}: waiting for notifications...`);
+    const notification = await waitNotifications;
+    is(
+      notification?.offset,
+      0,
+      `${description}: offset should be 0`
+    );
+    is(
+      notification?.removedLength,
+      "Start".length,
+      `${description}: removedLength should be the length of the old value`
+    );
+    is(
+      notification?.addedLength,
+      "Again!".length,
+      `${description}: addedLength should be the length of the new value`
+    );
+  })();
+
+  await (async function test_text_change_notification_for_value_set_and_typing_character_during_no_frame() {
+    const description = "runTextNotificationChangesDuringNoFrame: test_text_change_notification_for_value_set_and_typing_character_during_no_frame";
+    input.value = "Start";
+    input.style.display = "inline";
+    input.getBoundingClientRect();
+    await waitForTick();
+    const waitNotifications = promiseTextChangeNotification();
+    input.style.display = "block";
+    input.value = "Change";
+    const dKey = new KeyboardEvent("", { code: "KeyD", key: "d", keyCode: KeyboardEvent.DOM_VK_D });
+    TIP.keydown(dKey);
+    TIP.keyup(dKey);
+    info(`${description}: waiting for notifications...`);
+    const notification = await waitNotifications;
+    is(
+      notification?.offset,
+      0,
+      `${description}: offset should be 0`
+    );
+    is(
+      notification?.removedLength,
+      "Start".length,
+      `${description}: removedLength should be the length of the old value`
+    );
+    is(
+      notification?.addedLength,
+      "Change".length,
+      `${description}: addedLength should be the length of the new (set) value`
+    );
+  })();
+
+  input.style.display = "";
+
+  textarea.focus();
+  TIP.beginInputTransaction(window, callback);
+
+  await (async function test_text_change_notification_for_multi_line_value_set_during_no_frame() {
+    const description = "runTextNotificationChangesDuringNoFrame: test_text_change_notification_for_multi_line_value_set_during_no_frame";
+    textarea.value = "Start\n2nd Line";
+    textarea.style.display = "inline";
+    textarea.getBoundingClientRect();
+    await waitForTick();
+    const waitNotifications = promiseTextChangeNotification();
+    textarea.style.display = "block";
+    textarea.value = "Changed\n2nd Line";
+    info(`${description}: waiting for notifications...`);
+    const notification = await waitNotifications;
+    is(
+      notification?.offset,
+      0,
+      `${description}: offset should be 0`
+    );
+    is(
+      notification?.removedLength,
+      getNativeText("Start\n2nd Line").length,
+      `${description}: removedLength should be the length of the old value`
+    );
+    is(
+      notification?.addedLength,
+      getNativeText("Changed\n2nd Line").length,
+      `${description}: addedLength should be the length of the new value`
+    );
+  })();
+
+  textarea.style.display = "";
+}
+
 async function runTests()
 {
   textareaInFrame = iframe.contentDocument.getElementById("textarea");
@@ -4559,6 +4734,7 @@ async function runTests()
   runCommitCompositionTests();
   await runCallbackTests(false);
   await runCallbackTests(true);
+  await runTextNotificationChangesDuringNoFrame();
   await runFocusNotificationTestAfterDrop();
   await runUnloadTests1();
   await runUnloadTests2();

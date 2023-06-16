@@ -121,10 +121,10 @@ function AnimationTest(
   this.closeFunc = closeFunc ? closeFunc : "";
 }
 
-AnimationTest.prototype.preloadImage = function() {
+AnimationTest.prototype.preloadImage = function () {
   if (this.srcAttr) {
     this.myImage = new Image();
-    this.myImage.onload = function() {
+    this.myImage.onload = function () {
       currentTest.continueTest();
     };
     this.myImage.src = this.srcAttr;
@@ -133,7 +133,7 @@ AnimationTest.prototype.preloadImage = function() {
   }
 };
 
-AnimationTest.prototype.outputDebugInfo = function(message, id, dataUri) {
+AnimationTest.prototype.outputDebugInfo = function (message, id, dataUri) {
   if (!gShouldOutputDebugInfo) {
     return;
   }
@@ -148,11 +148,11 @@ AnimationTest.prototype.outputDebugInfo = function(message, id, dataUri) {
   todo(false, "Debug (" + id + "): " + message + " " + dataUri);
 };
 
-AnimationTest.prototype.isFinished = function() {
+AnimationTest.prototype.isFinished = function () {
   return this.isTestFinished;
 };
 
-AnimationTest.prototype.takeCleanSnapshot = function() {
+AnimationTest.prototype.takeCleanSnapshot = function () {
   var cleanElement;
   if (this.cleanId) {
     cleanElement = document.getElementById(this.cleanId);
@@ -179,7 +179,7 @@ AnimationTest.prototype.takeCleanSnapshot = function() {
   );
 };
 
-AnimationTest.prototype.takeBlankSnapshot = function() {
+AnimationTest.prototype.takeBlankSnapshot = function () {
   // Take a snapshot of the initial (essentially blank) page
   this.blankSnapshot = snapshotWindow(window, false);
 
@@ -198,7 +198,7 @@ AnimationTest.prototype.takeBlankSnapshot = function() {
  * image, if applicable, and then asynchronously call continueTest(), or if not
  * applicable, synchronously trigger a call to continueTest().
  */
-AnimationTest.prototype.beginTest = function() {
+AnimationTest.prototype.beginTest = function () {
   SimpleTest.waitForExplicitFinish();
   SimpleTest.requestFlakyTimeout("untriaged");
 
@@ -211,7 +211,7 @@ AnimationTest.prototype.beginTest = function() {
  * beginTest() either synchronously or asynchronously, as an image load
  * callback.
  */
-AnimationTest.prototype.continueTest = async function() {
+AnimationTest.prototype.continueTest = async function () {
   // In case something goes wrong, fail earlier than mochitest timeout,
   // and with more information.
   setTimeout(failTest, this.timeout);
@@ -230,7 +230,7 @@ AnimationTest.prototype.continueTest = async function() {
   });
 };
 
-AnimationTest.prototype.setupPolledImage = function() {
+AnimationTest.prototype.setupPolledImage = function () {
   // Make sure the image is visible
   if (!this.reusingImageAsReference) {
     this.enableDisplay(document.getElementById(this.imageElementId));
@@ -270,7 +270,7 @@ AnimationTest.prototype.setupPolledImage = function() {
   }
 };
 
-AnimationTest.prototype.checkImage = function() {
+AnimationTest.prototype.checkImage = function () {
   if (this.isTestFinished) {
     return;
   }
@@ -300,7 +300,7 @@ AnimationTest.prototype.checkImage = function() {
   }
 };
 
-AnimationTest.prototype.takeReferenceSnapshot = function(resolve) {
+AnimationTest.prototype.takeReferenceSnapshot = function (resolve) {
   this.numRefsTaken++;
 
   // Test to make sure the reference image doesn't match a clean snapshot
@@ -406,7 +406,7 @@ AnimationTest.prototype.takeReferenceSnapshot = function(resolve) {
   resolve();
 };
 
-AnimationTest.prototype.enableDisplay = function(element) {
+AnimationTest.prototype.enableDisplay = function (element) {
   if (!element) {
     return;
   }
@@ -418,7 +418,7 @@ AnimationTest.prototype.enableDisplay = function(element) {
   }
 };
 
-AnimationTest.prototype.disableDisplay = function(element) {
+AnimationTest.prototype.disableDisplay = function (element) {
   if (!element) {
     return;
   }
@@ -430,7 +430,7 @@ AnimationTest.prototype.disableDisplay = function(element) {
   }
 };
 
-AnimationTest.prototype.testBlankCameBack = function() {
+AnimationTest.prototype.testBlankCameBack = function () {
   var blankSnapshot2 = snapshotWindow(window, false);
   var result = compareSnapshots(this.blankSnapshot, blankSnapshot2, true);
   ok(
@@ -445,7 +445,7 @@ AnimationTest.prototype.testBlankCameBack = function() {
   }
 };
 
-AnimationTest.prototype.cleanUpAndFinish = function() {
+AnimationTest.prototype.cleanUpAndFinish = function () {
   // On the off chance that failTest and checkImage are triggered
   // back-to-back, use a flag to prevent multiple calls to SimpleTest.finish.
   if (this.isTestFinished) {

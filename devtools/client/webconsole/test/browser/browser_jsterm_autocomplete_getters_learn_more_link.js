@@ -26,7 +26,7 @@ const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html>
 const DOC_URL =
   "https://firefox-source-docs.mozilla.org/devtools-user/web_console/invoke_getters_from_autocomplete/";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
   const toolbox = await gDevTools.getToolboxForTab(gBrowser.selectedTab);
 

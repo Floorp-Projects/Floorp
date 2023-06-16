@@ -27,7 +27,7 @@ async function waitContentVisibilityChange(aIsHidden, aBrowser) {
   await SpecialPowers.spawn(
     aBrowser.selectedBrowser,
     [aIsHidden],
-    async function(aExpectedResult) {
+    async function (aExpectedResult) {
       let visibilityState = aExpectedResult ? "hidden" : "visible";
       if (
         content.document.hidden === aExpectedResult &&
@@ -62,7 +62,7 @@ async function waitContentVisibilityChange(aIsHidden, aBrowser) {
  * only support this on Mac for now, other platforms don't support reporting
  * occlusion state.
  */
-add_task(async function() {
+add_task(async function () {
   info("creating test window");
   let winTest = await BrowserTestUtils.openNewBrowserWindow();
   // Specify the width, height, left and top, so that the new window can be

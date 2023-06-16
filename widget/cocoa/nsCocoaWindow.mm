@@ -146,6 +146,7 @@ nsCocoaWindow::nsCocoaWindow()
       mInFullScreenMode(false),
       mInNativeFullScreenMode(false),
       mIgnoreOcclusionCount(0),
+      mHasStartedNativeFullscreen(false),
       mModal(false),
       mFakeModal(false),
       mIsAnimationSuppressed(false),
@@ -1140,9 +1141,7 @@ void nsCocoaWindow::Enable(bool aState) {}
 
 bool nsCocoaWindow::IsEnabled() const { return true; }
 
-#define kWindowPositionSlop 20
-
-void nsCocoaWindow::ConstrainPosition(bool aAllowSlop, int32_t* aX, int32_t* aY) {
+void nsCocoaWindow::ConstrainPosition(DesktopIntPoint& aPoint) {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   if (!mWindow || ![mWindow screen]) {
@@ -1162,7 +1161,7 @@ void nsCocoaWindow::ConstrainPosition(bool aAllowSlop, int32_t* aX, int32_t* aY)
   nsCOMPtr<nsIScreenManager> screenMgr = do_GetService("@mozilla.org/gfx/screenmanager;1");
   if (screenMgr) {
     nsCOMPtr<nsIScreen> screen;
-    screenMgr->ScreenForRect(*aX, *aY, width, height, getter_AddRefs(screen));
+    screenMgr->ScreenForRect(aPoint.x, aPoint.y, width, height, getter_AddRefs(screen));
 
     if (screen) {
       screen->GetRectDisplayPix(&(screenBounds.x), &(screenBounds.y), &(screenBounds.width),
@@ -1170,30 +1169,16 @@ void nsCocoaWindow::ConstrainPosition(bool aAllowSlop, int32_t* aX, int32_t* aY)
     }
   }
 
-  if (aAllowSlop) {
-    if (*aX < screenBounds.x - width + kWindowPositionSlop) {
-      *aX = screenBounds.x - width + kWindowPositionSlop;
-    } else if (*aX >= screenBounds.x + screenBounds.width - kWindowPositionSlop) {
-      *aX = screenBounds.x + screenBounds.width - kWindowPositionSlop;
-    }
+  if (aPoint.x < screenBounds.x) {
+    aPoint.x = screenBounds.x;
+  } else if (aPoint.x >= screenBounds.x + screenBounds.width - width) {
+    aPoint.x = screenBounds.x + screenBounds.width - width;
+  }
 
-    if (*aY < screenBounds.y - height + kWindowPositionSlop) {
-      *aY = screenBounds.y - height + kWindowPositionSlop;
-    } else if (*aY >= screenBounds.y + screenBounds.height - kWindowPositionSlop) {
-      *aY = screenBounds.y + screenBounds.height - kWindowPositionSlop;
-    }
-  } else {
-    if (*aX < screenBounds.x) {
-      *aX = screenBounds.x;
-    } else if (*aX >= screenBounds.x + screenBounds.width - width) {
-      *aX = screenBounds.x + screenBounds.width - width;
-    }
-
-    if (*aY < screenBounds.y) {
-      *aY = screenBounds.y;
-    } else if (*aY >= screenBounds.y + screenBounds.height - height) {
-      *aY = screenBounds.y + screenBounds.height - height;
-    }
+  if (aPoint.y < screenBounds.y) {
+    aPoint.y = screenBounds.y;
+  } else if (aPoint.y >= screenBounds.y + screenBounds.height - height) {
+    aPoint.y = screenBounds.y + screenBounds.height - height;
   }
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
@@ -1630,13 +1615,26 @@ static bool AlwaysUsesNativeFullScreen() {
 void nsCocoaWindow::CocoaWindowWillEnterFullscreen(bool aFullscreen) {
   MOZ_ASSERT(mUpdateFullscreenOnResize.isNothing());
 
+  mHasStartedNativeFullscreen = true;
+
   // Ensure that we update our fullscreen state as early as possible, when the resize
   // happens.
   mUpdateFullscreenOnResize =
       Some(aFullscreen ? TransitionType::Fullscreen : TransitionType::Windowed);
 }
 
+void nsCocoaWindow::CocoaWindowDidEnterFullscreen(bool aFullscreen) {
+  mHasStartedNativeFullscreen = false;
+  DispatchOcclusionEvent();
+  HandleUpdateFullscreenOnResize();
+  FinishCurrentTransitionIfMatching(aFullscreen ? TransitionType::Fullscreen
+                                                : TransitionType::Windowed);
+}
+
 void nsCocoaWindow::CocoaWindowDidFailFullscreen(bool aAttemptedFullscreen) {
+  mHasStartedNativeFullscreen = false;
+  DispatchOcclusionEvent();
+
   // If we already updated our fullscreen state due to a resize, we need to update it again.
   if (mUpdateFullscreenOnResize.isNothing()) {
     UpdateFullscreenState(!aAttemptedFullscreen, true);
@@ -2274,7 +2272,9 @@ void nsCocoaWindow::DispatchOcclusionEvent() {
     return;
   }
 
-  bool newOcclusionState = !([mWindow occlusionState] & NSWindowOcclusionStateVisible);
+  // Our new occlusion state is true if the window is not visible.
+  bool newOcclusionState =
+      !(mHasStartedNativeFullscreen || ([mWindow occlusionState] & NSWindowOcclusionStateVisible));
 
   // Don't dispatch if the new occlustion state is the same as the current state.
   if (mIsFullyOccluded == newOcclusionState) {
@@ -2959,9 +2959,7 @@ void nsCocoaWindow::CocoaWindowDidResize() {
   if (!mGeckoWindow) {
     return;
   }
-
-  mGeckoWindow->HandleUpdateFullscreenOnResize();
-  mGeckoWindow->FinishCurrentTransitionIfMatching(nsCocoaWindow::TransitionType::Fullscreen);
+  mGeckoWindow->CocoaWindowDidEnterFullscreen(true);
 }
 
 - (void)windowWillExitFullScreen:(NSNotification*)notification {
@@ -2975,9 +2973,7 @@ void nsCocoaWindow::CocoaWindowDidResize() {
   if (!mGeckoWindow) {
     return;
   }
-
-  mGeckoWindow->HandleUpdateFullscreenOnResize();
-  mGeckoWindow->FinishCurrentTransitionIfMatching(nsCocoaWindow::TransitionType::Windowed);
+  mGeckoWindow->CocoaWindowDidEnterFullscreen(false);
 }
 
 - (void)windowDidFailToEnterFullScreen:(NSWindow*)window {

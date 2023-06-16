@@ -19,7 +19,7 @@ const TEST_URI = `
   <div>LETTER SPACING</div>
 `;
 
-add_task(async function() {
+add_task(async function () {
   const URI = "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI);
   const { inspector, view } = await openFontInspectorForURL(URI);
   const viewDoc = view.document;

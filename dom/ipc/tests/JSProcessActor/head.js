@@ -60,7 +60,7 @@ function declTestWithOptions(name, cfg, fileExt) {
   }
 
   // Add a new task for the actor test declared here.
-  add_task(async function() {
+  add_task(async function () {
     info("Entering test: " + name);
 
     // Register our actor, and load a new tab with the provided URL

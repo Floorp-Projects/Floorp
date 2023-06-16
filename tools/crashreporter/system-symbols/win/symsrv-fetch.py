@@ -41,9 +41,7 @@ from aiohttp.connector import TCPConnector
 # Just hardcoded here
 MICROSOFT_SYMBOL_SERVER = "https://msdl.microsoft.com/download/symbols/"
 USER_AGENT = "Microsoft-Symbol-Server/6.3.0.0"
-MOZILLA_SYMBOL_SERVER = (
-    "https://s3-us-west-2.amazonaws.com/org.mozilla.crash-stats.symbols-public/v1/"
-)
+MOZILLA_SYMBOL_SERVER = "https://symbols.mozilla.org/"
 MISSING_SYMBOLS_URL = "https://symbols.mozilla.org/missingsymbols.csv?microsoft=only"
 HEADERS = {"User-Agent": USER_AGENT}
 SYM_SRV = "SRV*{0}*https://msdl.microsoft.com/download/symbols;SRV*{0}*https://software.intel.com/sites/downloads/symbols;SRV*{0}*https://download.amd.com/dir/bin;SRV*{0}*https://driver-symbols.nvidia.com"  # noqa

@@ -9,11 +9,9 @@
 var USERSCRIPT_PREFNAME = "extensions.webextensions.userScripts.enabled";
 var USERSCRIPT_DISABLED_ERRORMSG = `userScripts APIs are currently experimental and must be enabled with the ${USERSCRIPT_PREFNAME} preference.`;
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "Schemas",
-  "resource://gre/modules/Schemas.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  Schemas: "resource://gre/modules/Schemas.sys.mjs",
+});
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,

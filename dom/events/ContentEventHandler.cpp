@@ -13,6 +13,7 @@
 #include "mozilla/IntegerRange.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/RangeBoundary.h"
 #include "mozilla/RangeUtils.h"
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEditor.h"
@@ -80,11 +81,12 @@ nsresult ContentEventHandler::RawRange::SetStart(
   // Collapse if not positioned yet, or if positioned in another document.
   if (!IsPositioned() || newRoot != mRoot) {
     mRoot = newRoot;
-    mStart = mEnd = aStart;
+    mStart.CopyFrom(aStart, RangeBoundaryIsMutationObserved::Yes);
+    mEnd.CopyFrom(aStart, RangeBoundaryIsMutationObserved::Yes);
     return NS_OK;
   }
 
-  mStart = aStart;
+  mStart.CopyFrom(aStart, RangeBoundaryIsMutationObserved::Yes);
   AssertStartIsBeforeOrEqualToEnd();
   return NS_OK;
 }
@@ -102,11 +104,12 @@ nsresult ContentEventHandler::RawRange::SetEnd(const RawRangeBoundary& aEnd) {
   // Collapse if not positioned yet, or if positioned in another document.
   if (!IsPositioned() || newRoot != mRoot) {
     mRoot = newRoot;
-    mStart = mEnd = aEnd;
+    mStart.CopyFrom(aEnd, RangeBoundaryIsMutationObserved::Yes);
+    mEnd.CopyFrom(aEnd, RangeBoundaryIsMutationObserved::Yes);
     return NS_OK;
   }
 
-  mEnd = aEnd;
+  mEnd.CopyFrom(aEnd, RangeBoundaryIsMutationObserved::Yes);
   AssertStartIsBeforeOrEqualToEnd();
   return NS_OK;
 }
@@ -138,8 +141,8 @@ nsresult ContentEventHandler::RawRange::SetStartAndEnd(
     MOZ_ASSERT(*aStart.Offset(RawRangeBoundary::OffsetFilter::kValidOffsets) <=
                *aEnd.Offset(RawRangeBoundary::OffsetFilter::kValidOffsets));
     mRoot = newStartRoot;
-    mStart = aStart;
-    mEnd = aEnd;
+    mStart.CopyFrom(aStart, RangeBoundaryIsMutationObserved::Yes);
+    mEnd.CopyFrom(aEnd, RangeBoundaryIsMutationObserved::Yes);
     return NS_OK;
   }
 
@@ -154,14 +157,15 @@ nsresult ContentEventHandler::RawRange::SetStartAndEnd(
   // If they have different root, this should be collapsed at the end point.
   if (newStartRoot != newEndRoot) {
     mRoot = newEndRoot;
-    mStart = mEnd = aEnd;
+    mStart.CopyFrom(aEnd, RangeBoundaryIsMutationObserved::Yes);
+    mEnd.CopyFrom(aEnd, RangeBoundaryIsMutationObserved::Yes);
     return NS_OK;
   }
 
   // Otherwise, set the range as specified.
   mRoot = newStartRoot;
-  mStart = aStart;
-  mEnd = aEnd;
+  mStart.CopyFrom(aStart, RangeBoundaryIsMutationObserved::Yes);
+  mEnd.CopyFrom(aEnd, RangeBoundaryIsMutationObserved::Yes);
   AssertStartIsBeforeOrEqualToEnd();
   return NS_OK;
 }
@@ -174,10 +178,9 @@ nsresult ContentEventHandler::RawRange::SelectNodeContents(
     return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
   }
   mRoot = newRoot;
-  mStart =
-      RawRangeBoundary(const_cast<nsINode*>(aNodeToSelectContents), nullptr);
-  mEnd = RawRangeBoundary(const_cast<nsINode*>(aNodeToSelectContents),
-                          aNodeToSelectContents->GetLastChild());
+  mStart = RangeBoundary(const_cast<nsINode*>(aNodeToSelectContents), nullptr);
+  mEnd = RangeBoundary(const_cast<nsINode*>(aNodeToSelectContents),
+                       aNodeToSelectContents->GetLastChild());
   return NS_OK;
 }
 
@@ -555,6 +558,17 @@ static uint32_t CountNewlinesInXPLength(const Text& aTextNode,
   return newlines;
 }
 
+static uint32_t CountNewlinesInXPLength(const nsAString& aText) {
+  uint32_t count = 0;
+  const char16_t* end = aText.EndReading();
+  for (const char16_t* iter = aText.BeginReading(); iter < end; ++iter) {
+    if (*iter == '\n') {
+      count++;
+    }
+  }
+  return count;
+}
+
 static uint32_t CountNewlinesInNativeLength(const Text& aTextNode,
                                             uint32_t aNativeLength) {
   const nsTextFragment& textFragment = aTextNode.TextFragment();
@@ -639,6 +653,21 @@ static uint32_t ConvertToXPOffset(const Text& aTextNode,
   // On other platforms, the native and XP newlines are the same.
   return aNativeOffset;
 #endif
+}
+
+/* static */
+uint32_t ContentEventHandler::GetNativeTextLength(const nsAString& aText) {
+  const uint32_t textLengthDifference =
+#if defined(XP_WIN)
+      // On Windows, the length of a native newline ("\r\n") is twice the length
+      // of the XP newline ("\n"), so XP length is equal to the length of the
+      // native offset plus the number of newlines encountered in the string.
+      CountNewlinesInXPLength(aText);
+#else
+      // On other platforms, the native and XP newlines are the same.
+      0;
+#endif
+  return aText.Length() + textLengthDifference;
 }
 
 /* static */

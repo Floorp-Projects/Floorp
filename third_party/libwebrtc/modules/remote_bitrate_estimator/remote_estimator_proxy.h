@@ -26,7 +26,7 @@
 #include "modules/remote_bitrate_estimator/packet_arrival_map.h"
 #include "modules/rtp_rtcp/source/rtcp_packet.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/transport_feedback.h"
-#include "rtc_base/numerics/sequence_number_util.h"
+#include "rtc_base/numerics/sequence_number_unwrapper.h"
 #include "rtc_base/synchronization/mutex.h"
 
 namespace webrtc {

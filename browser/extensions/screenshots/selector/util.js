@@ -4,19 +4,19 @@
 
 "use strict";
 
-this.util = (function() {
+this.util = (function () {
   // eslint-disable-line no-unused-vars
   const exports = {};
 
   /** Removes a node from its document, if it's a node and the node is attached to a parent */
-  exports.removeNode = function(el) {
+  exports.removeNode = function (el) {
     if (el && el.parentNode) {
       el.remove();
     }
   };
 
   /** Truncates the X coordinate to the document size */
-  exports.truncateX = function(x) {
+  exports.truncateX = function (x) {
     const max = Math.max(
       document.documentElement.clientWidth,
       document.body.clientWidth,
@@ -32,7 +32,7 @@ this.util = (function() {
   };
 
   /** Truncates the Y coordinate to the document size */
-  exports.truncateY = function(y) {
+  exports.truncateY = function (y) {
     const max = Math.max(
       document.documentElement.clientHeight,
       document.body.clientHeight,
@@ -51,7 +51,7 @@ this.util = (function() {
   const CAPTURE_WIGGLE = 10;
   const ELEMENT_NODE = document.ELEMENT_NODE;
 
-  exports.captureEnclosedText = function(box) {
+  exports.captureEnclosedText = function (box) {
     const scrollX = window.scrollX;
     const scrollY = window.scrollY;
     const text = [];

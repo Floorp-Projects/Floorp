@@ -110,7 +110,7 @@ add_task(async function test_contenteditable() {
       gBrowser,
       url,
     },
-    async function(browser) {
+    async function (browser) {
       await openMenuAndPaste(browser, false);
       await openMenuAndPaste(browser, true);
     }

@@ -8,7 +8,7 @@ const { LEFT, RIGHT, BOTTOM, WINDOW } = Toolbox.HostType;
 
 const URL = "data:text/html;charset=utf8,browser_toolbox_hosts_telemetry.js";
 
-add_task(async function() {
+add_task(async function () {
   startTelemetry();
 
   info("Create a test tab and open the toolbox");

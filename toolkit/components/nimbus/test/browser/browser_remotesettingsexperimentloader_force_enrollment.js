@@ -32,7 +32,7 @@ async function setup(recipes) {
   };
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["messaging-system.log", "all"],

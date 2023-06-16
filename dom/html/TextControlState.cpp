@@ -6,6 +6,8 @@
 
 #include "TextControlState.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/IMEContentObserver.h"
+#include "mozilla/IMEStateManager.h"
 #include "mozilla/TextInputListener.h"
 
 #include "nsCOMPtr.h"
@@ -1032,14 +1034,14 @@ nsresult TextInputListener::OnEditActionHandled(TextEditor& aTextEditor) {
     }
 
     if (weakFrame.IsAlive()) {
-      HandleValueChanged();
+      HandleValueChanged(aTextEditor);
     }
   }
 
   return mTextControlState ? mTextControlState->OnEditActionHandled() : NS_OK;
 }
 
-void TextInputListener::HandleValueChanged() {
+void TextInputListener::HandleValueChanged(TextEditor& aTextEditor) {
   // Make sure we know we were changed (do NOT set this to false if there are
   // no undo items; JS could change the value and we'd still need to save it)
   if (mSetValueChanged) {
@@ -1050,7 +1052,8 @@ void TextInputListener::HandleValueChanged() {
     // NOTE(emilio): execCommand might get here even though it might not be a
     // "proper" user-interactive change. Might be worth reconsidering which
     // ValueChangeKind are we passing down.
-    mTxtCtrlElement->OnValueChanged(ValueChangeKind::UserInteraction);
+    mTxtCtrlElement->OnValueChanged(ValueChangeKind::UserInteraction,
+                                    aTextEditor.IsEmpty(), nullptr);
     if (mTextControlState) {
       mTextControlState->ClearLastInteractiveValue();
     }
@@ -1929,21 +1932,10 @@ nsresult TextControlState::PrepareEditor(const nsAString* aValue) {
     }
   }
 
-  if (IsPasswordTextControl()) {
-    // Disable undo for <input type="password">.  Note that we want to do this
-    // at the very end of InitEditor(), so the calls to EnableUndoRedo() when
-    // setting the default value don't screw us up.  Since changing the
-    // control type does a reframe, we don't have to worry about dynamic type
-    // changes here.
-    DebugOnly<bool> disabledUndoRedo = newTextEditor->DisableUndoRedo();
-    NS_WARNING_ASSERTION(disabledUndoRedo,
-                         "Failed to disable undo/redo transaction");
-  } else {
-    DebugOnly<bool> enabledUndoRedo =
-        newTextEditor->EnableUndoRedo(TextControlElement::DEFAULT_UNDO_CAP);
-    NS_WARNING_ASSERTION(enabledUndoRedo,
-                         "Failed to enable undo/redo transaction");
-  }
+  DebugOnly<bool> enabledUndoRedo =
+      newTextEditor->EnableUndoRedo(TextControlElement::DEFAULT_UNDO_CAP);
+  NS_WARNING_ASSERTION(enabledUndoRedo,
+                       "Failed to enable undo/redo transaction");
 
   if (!mEditorInitialized) {
     newTextEditor->PostCreate();
@@ -2711,7 +2703,8 @@ bool TextControlState::SetValue(const nsAString& aValue,
   // If we were handling SetValue() before, don't update the DOM state twice,
   // just let the outer call do so.
   if (!wasHandlingSetValue) {
-    handlingSetValue.GetTextControlElement()->OnValueChanged(changeKind);
+    handlingSetValue.GetTextControlElement()->OnValueChanged(
+        changeKind, handlingSetValue.GetSettingValue());
   }
   return true;
 }
@@ -2957,6 +2950,12 @@ bool TextControlState::SetValueWithoutTextEditor(
       if (mBoundFrame) {
         mBoundFrame->UpdateValueDisplay(true);
       }
+      // If the text control element has focus, IMEContentObserver is not
+      // observing the content changes due to no bound frame.  Therefore,
+      // we need to let IMEContentObserver know all values are being replaced.
+      else if (IMEContentObserver* observer = GetIMEContentObserver()) {
+        observer->OnTextControlValueChangedDuringNoFrame(mValue);
+      }
     }
 
     // If this is called as part of user input, we need to dispatch "input"
@@ -2973,7 +2972,8 @@ bool TextControlState::SetValueWithoutTextEditor(
       // Update validity state before dispatching "input" event for its
       // listeners like `EditorBase::NotifyEditorObservers()`.
       aHandlingSetValue.GetTextControlElement()->OnValueChanged(
-          ValueChangeKind::UserInteraction);
+          ValueChangeKind::UserInteraction,
+          aHandlingSetValue.GetSettingValue());
 
       ClearLastInteractiveValue();
 
@@ -2998,20 +2998,6 @@ bool TextControlState::SetValueWithoutTextEditor(
   }
 
   return true;
-}
-
-bool TextControlState::HasNonEmptyValue() {
-  // If the frame for editor is alive, we can compute it with mTextEditor.
-  // Otherwise, we need to check cached value via GetValue().
-  if (mTextEditor && mBoundFrame && mEditorInitialized &&
-      !(mHandlingState &&
-        mHandlingState->IsHandling(TextControlAction::CommitComposition))) {
-    return !mTextEditor->IsEmpty();
-  }
-
-  nsAutoString value;
-  GetValue(value, true);
-  return !value.IsEmpty();
 }
 
 void TextControlState::InitializeKeyboardEventListeners() {
@@ -3060,6 +3046,14 @@ void TextControlState::GetPreviewText(nsAString& aValue) {
 
 bool TextControlState::EditorHasComposition() {
   return mTextEditor && mTextEditor->IsIMEComposing();
+}
+
+IMEContentObserver* TextControlState::GetIMEContentObserver() const {
+  if (NS_WARN_IF(!mTextCtrlElement) ||
+      mTextCtrlElement != IMEStateManager::GetFocusedElement()) {
+    return nullptr;
+  }
+  return IMEStateManager::GetActiveContentObserver();
 }
 
 }  // namespace mozilla

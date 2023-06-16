@@ -7,8 +7,8 @@ function delay(time) {
   });
 }
 
-const { Extension } = ChromeUtils.import(
-  "resource://gre/modules/Extension.jsm"
+const { Extension } = ChromeUtils.importESModule(
+  "resource://gre/modules/Extension.sys.mjs"
 );
 
 add_task(async function test_startup_request_handler() {

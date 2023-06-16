@@ -52,7 +52,7 @@ function openWindowWithUserContextId(userContextId, isPrivate) {
   return windowPromise;
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.userContext.enabled", true]],
   });

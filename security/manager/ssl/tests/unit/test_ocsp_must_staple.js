@@ -20,7 +20,7 @@ function add_ocsp_test(
   add_connection_test(
     aHost,
     aExpectedResult,
-    function() {
+    function () {
       gExpectOCSPRequest = aExpectOCSPRequest;
       clearOCSPCache();
       clearSessionCache();
@@ -115,7 +115,7 @@ function add_tests() {
   );
 
   // check that disabling must-staple works
-  add_test(function() {
+  add_test(function () {
     clearSessionCache();
     Services.prefs.setBoolPref("security.ssl.enable_ocsp_must_staple", false);
     run_next_test();
@@ -139,7 +139,7 @@ function run_test() {
   Services.prefs.setIntPref("security.OCSP.timeoutMilliseconds.soft", 5000);
 
   let fakeOCSPResponder = new HttpServer();
-  fakeOCSPResponder.registerPrefixHandler("/", function(request, response) {
+  fakeOCSPResponder.registerPrefixHandler("/", function (request, response) {
     response.setStatusLine(request.httpVersion, 500, "Internal Server Error");
     ok(
       gExpectOCSPRequest,
@@ -152,7 +152,7 @@ function run_test() {
 
   add_tests();
 
-  add_test(function() {
+  add_test(function () {
     fakeOCSPResponder.stop(run_next_test);
   });
 

@@ -56,10 +56,11 @@ class RenderCompositorEGL : public RenderCompositor {
   RefPtr<gl::GLContext> mGL;
 
   EGLSurface mEGLSurface;
-#ifdef MOZ_WIDGET_ANDROID
-  // On android we must track our own surface size.
-  LayoutDeviceIntSize mEGLSurfaceSize;
-#endif
+
+  // Whether we are in the process of handling a NEW_SURFACE error. On Android
+  // this is used to allow the widget an opportunity to recover from the first
+  // instance, before raising a WebRenderError on subsequent occurences.
+  bool mHandlingNewSurfaceError = false;
 
   // FileDescriptor of release fence.
   // Release fence is a fence that is used for waiting until usage/composite of

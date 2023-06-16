@@ -24,7 +24,7 @@ function inHouseContainsPosition(a, b) {
 }
 
 export function highlightCalls(cx) {
-  return async function({ dispatch, getState, parserWorker }) {
+  return async function ({ dispatch, getState, parserWorker }) {
     if (!cx) {
       return null;
     }
@@ -58,7 +58,7 @@ export function highlightCalls(cx) {
     const localAstScope = originalAstScopes[0];
     const allFunctionCalls = symbols.callExpressions;
 
-    const highlightedCalls = allFunctionCalls.filter(function(call) {
+    const highlightedCalls = allFunctionCalls.filter(function (call) {
       const containsStart = inHouseContainsPosition(
         localAstScope,
         call.location.start
@@ -79,7 +79,7 @@ export function highlightCalls(cx) {
 }
 
 export function unhighlightCalls(cx) {
-  return async function({ dispatch, getState }) {
+  return async function ({ dispatch, getState }) {
     const { thread } = cx;
     return dispatch({
       type: "UNHIGHLIGHT_CALLS",

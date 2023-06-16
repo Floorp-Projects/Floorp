@@ -21,8 +21,8 @@ const CONTENT_PROMPT_SUBDIALOG = Services.prefs.getBoolPref(
  */
 async function closeDialogs(tab, dialogCount) {
   let dialogElementsCount = dialogCount;
-  let dialogs = tab.linkedBrowser.tabDialogBox.getContentDialogManager()
-    .dialogs;
+  let dialogs =
+    tab.linkedBrowser.tabDialogBox.getContentDialogManager().dialogs;
 
   is(
     dialogs.length,
@@ -49,7 +49,7 @@ async function closeDialogs(tab, dialogCount) {
 
     // The click is handled async; wait for an event loop turn for that to
     // happen.
-    await new Promise(function(resolve) {
+    await new Promise(function (resolve) {
       Services.tm.dispatchToMainThread(resolve);
     });
   }
@@ -76,9 +76,8 @@ async function closeDialogs(tab, dialogCount) {
 async function closeTabModals(tab, promptCount) {
   let promptElementsCount = promptCount;
   while (promptElementsCount--) {
-    let promptElements = tab.linkedBrowser.parentNode.querySelectorAll(
-      "tabmodalprompt"
-    );
+    let promptElements =
+      tab.linkedBrowser.parentNode.querySelectorAll("tabmodalprompt");
     is(
       promptElements.length,
       promptElementsCount + 1,
@@ -106,15 +105,14 @@ async function closeTabModals(tab, promptCount) {
 
       // The click is handled async; wait for an event loop turn for that to
       // happen.
-      await new Promise(function(resolve) {
+      await new Promise(function (resolve) {
         Services.tm.dispatchToMainThread(resolve);
       });
     }
   }
 
-  let promptElements = tab.linkedBrowser.parentNode.querySelectorAll(
-    "tabmodalprompt"
-  );
+  let promptElements =
+    tab.linkedBrowser.parentNode.querySelectorAll("tabmodalprompt");
   is(promptElements.length, 0, "Prompts should all be dismissed.");
 }
 
@@ -125,7 +123,7 @@ async function closeTabModals(tab, promptCount) {
  * We assert the presentation of the multiple alerts, ensuring we show only
  * the oldest one.
  */
-add_task(async function() {
+add_task(async function () {
   const PROMPTCOUNT = 9;
 
   let unopenedPromptCount = PROMPTCOUNT;

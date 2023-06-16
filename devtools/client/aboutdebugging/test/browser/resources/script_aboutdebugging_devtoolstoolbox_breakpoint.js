@@ -5,7 +5,7 @@
 
 // Random method on which a breakpoint will be set from the DevTools UI in the
 // test.
-window.testMethod = function() {
+window.testMethod = function () {
   const a = 1;
   const b = 2;
   return a + b;

@@ -105,6 +105,9 @@ class Perftest(object):
         python=None,
         fission=True,
         extra_summary_methods=[],
+        benchmark_repository=None,
+        benchmark_revision=None,
+        benchmark_branch=None,
         **kwargs
     ):
         self._remote_test_root = None
@@ -151,6 +154,9 @@ class Perftest(object):
             "project": project,
             "verbose": verbose,
             "extra_summary_methods": extra_summary_methods,
+            "benchmark_repository": benchmark_repository,
+            "benchmark_revision": benchmark_revision,
+            "benchmark_branch": benchmark_branch,
         }
 
         self.firefox_android_apps = FIREFOX_ANDROID_APPS
@@ -636,14 +642,18 @@ class PerftestAndroid(Perftest):
                     % (e.__class__.__name__, e)
                 )
 
-        if self.config["app"] == "chrome-m":
+        if self.config["app"] == "chrome-m" or browser_version is None:
             # We absolutely need to determine the chrome
             # version here so that we can select the correct
             # chromedriver for browsertime
             from mozdevice import ADBDeviceFactory
 
             device = ADBDeviceFactory(verbose=True)
+
+            # Chrome uses a specific binary that we don't set as a command line option
             binary = "com.android.chrome"
+            if self.config["app"] not in ("chrome-m",):
+                binary = self.config["binary"]
 
             pkg_info = device.shell_output("dumpsys package %s" % binary)
             version_matcher = re.compile(r".*versionName=([\d.]+)")

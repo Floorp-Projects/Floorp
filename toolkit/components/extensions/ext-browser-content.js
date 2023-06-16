@@ -6,17 +6,10 @@
 
 "use strict";
 
-var { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
 ChromeUtils.defineESModuleGetters(this, {
+  ExtensionCommon: "resource://gre/modules/ExtensionCommon.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
 });
 
 // Minimum time between two resizes.

@@ -11,6 +11,18 @@ function(jxl_discover_tests TESTNAME)
   endif ()
 endfunction()
 
+function(jxl_link_libraries DST SRC)
+  if (CMAKE_VERSION VERSION_LESS "3.13.5")
+    target_include_directories(${DST} SYSTEM PUBLIC
+       $<BUILD_INTERFACE:$<TARGET_PROPERTY:${SRC},INTERFACE_SYSTEM_INCLUDE_DIRECTORIES>>
+    )
+    add_dependencies(${DST} ${SRC})
+  else()
+    target_link_libraries(${DST} PUBLIC ${SRC})
+  endif()
+endfunction()
+
+
 if (CMAKE_VERSION VERSION_LESS "3.12.4")
   set(JXL_HWY_INCLUDE_DIRS "$<BUILD_INTERFACE:$<TARGET_PROPERTY:hwy,INTERFACE_INCLUDE_DIRECTORIES>>")
 else()

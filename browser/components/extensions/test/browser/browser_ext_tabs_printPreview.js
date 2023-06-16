@@ -10,7 +10,7 @@ add_task(async function testPrintPreview() {
       permissions: ["tabs"],
     },
 
-    background: async function() {
+    background: async function () {
       await browser.tabs.printPreview();
       browser.test.assertTrue(true, "print preview entered");
       browser.test.notifyPass("tabs.printPreview");

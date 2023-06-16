@@ -16,18 +16,15 @@
 
 #define ONCHANGE_STRING u"change"_ns
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 MediaQueryList::MediaQueryList(Document* aDocument,
                                const nsACString& aMediaQueryList,
                                CallerType aCallerType)
     : DOMEventTargetHelper(aDocument->GetInnerWindow()),
       mDocument(aDocument),
-      mMatches(false),
-      mMatchesValid(false) {
-  mMediaList = MediaList::Create(aMediaQueryList, aCallerType);
-
+      mMediaList(MediaList::Create(aMediaQueryList, aCallerType)),
+      mViewportDependent(mMediaList->IsViewportDependent()) {
   KeepAliveIfHasListenersFor(nsGkAtoms::onchange);
 }
 
@@ -56,17 +53,23 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(MediaQueryList, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(MediaQueryList, DOMEventTargetHelper)
 
-void MediaQueryList::GetMedia(nsACString& aMedia) {
+void MediaQueryList::GetMedia(nsACString& aMedia) const {
   mMediaList->GetText(aMedia);
 }
 
 bool MediaQueryList::Matches() {
+  if (mViewportDependent &&
+      mDocument->StyleOrLayoutObservablyDependsOnParentDocumentLayout()) {
+    RefPtr<Document> doc = mDocument;
+    // This is enough to trigger media query updates in the current doc, and
+    // will flush the parent document layout if appropriate.
+    doc->FlushPendingNotifications(FlushType::Layout);
+  }
   if (!mMatchesValid) {
     MOZ_ASSERT(!HasListeners(),
                "when listeners present, must keep mMatches current");
     RecomputeMatches();
   }
-
   return mMatches;
 }
 
@@ -103,7 +106,9 @@ void MediaQueryList::RemoveListener(EventListener* aListener,
   RemoveEventListener(ONCHANGE_STRING, aListener, options, aRv);
 }
 
-bool MediaQueryList::HasListeners() { return HasListenersFor(ONCHANGE_STRING); }
+bool MediaQueryList::HasListeners() const {
+  return HasListenersFor(ONCHANGE_STRING);
+}
 
 void MediaQueryList::Disconnect() {
   DisconnectFromOwner();
@@ -166,5 +171,4 @@ size_t MediaQueryList::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
   return n;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

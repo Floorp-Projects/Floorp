@@ -27,8 +27,9 @@ var openingObserver = {
         // We'll parse the report text as JSON and verify that the properties
         // have expected values.
         var reportText = "{}";
-        var uploadStream = subject.QueryInterface(Ci.nsIUploadChannel)
-          .uploadStream;
+        var uploadStream = subject.QueryInterface(
+          Ci.nsIUploadChannel
+        ).uploadStream;
 
         if (uploadStream) {
           // get the bytes from the request body
@@ -59,6 +60,6 @@ var openingObserver = {
 };
 
 Services.obs.addObserver(openingObserver, "http-on-opening-request");
-addMessageListener("finish", function() {
+addMessageListener("finish", function () {
   Services.obs.removeObserver(openingObserver, "http-on-opening-request");
 });

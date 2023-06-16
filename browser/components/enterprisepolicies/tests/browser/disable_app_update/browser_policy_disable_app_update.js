@@ -31,7 +31,7 @@ add_task(async function test_update_preferences_ui() {
     "about:preferences"
   );
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     let setting = content.document.getElementById("updateSettingsContainer");
     is(
       setting.hidden,

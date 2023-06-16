@@ -174,13 +174,8 @@ export class SessionData {
     // duplicates and unknown items.
     let updates = [];
     for (const sessionDataItemUpdate of sessionDataItemUpdates) {
-      const {
-        category,
-        contextDescriptor,
-        method,
-        moduleName,
-        values,
-      } = sessionDataItemUpdate;
+      const { category, contextDescriptor, method, moduleName, values } =
+        sessionDataItemUpdate;
       const updatedValues = [];
       for (const value of values) {
         const item = { moduleName, category, contextDescriptor, value };

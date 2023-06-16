@@ -8,14 +8,14 @@
 const TEST_URI =
   "data:text/html,<!DOCTYPE html><meta charset=utf8>Test logging in RDM";
 
-add_task(async function() {
+add_task(async function () {
   const tab = await addTab(TEST_URI);
 
   info("Open responsive design mode");
   await openRDM(tab);
 
   info("Log a message before the console is open");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.wrappedJSObject.console.log("Cached message");
   });
 
@@ -28,7 +28,7 @@ add_task(async function() {
   ok(true, "Cached message is displayed in the console");
 
   info("Log a message while the console is open");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.wrappedJSObject.console.log("Live message");
   });
 

@@ -36,7 +36,7 @@ var newWindow;
 
 function test() {
   waitForExplicitFinish();
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     while (tabs.length) {
       gBrowser.removeTab(tabs.pop());
     }

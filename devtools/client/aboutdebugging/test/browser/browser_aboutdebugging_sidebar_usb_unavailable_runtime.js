@@ -12,7 +12,7 @@ const RUNTIME_ID = "RUNTIME_ID";
 // - are displayed without a connect button.
 // - cannot be selected
 // - display a specific text ("Waiting for runtime") instead of the runtime name
-add_task(async function() {
+add_task(async function () {
   const mocks = new Mocks();
   const { document, tab } = await openAboutDebugging();
 
@@ -30,9 +30,8 @@ add_task(async function() {
     "Sidebar item shows as `Waiting for browser`"
   );
 
-  const hasConnectButton = usbRuntimeSidebarItem.querySelector(
-    ".qa-connect-button"
-  );
+  const hasConnectButton =
+    usbRuntimeSidebarItem.querySelector(".qa-connect-button");
   ok(!hasConnectButton, "Connect button is not displayed");
 
   const hasLink = usbRuntimeSidebarItem.querySelector(".qa-sidebar-link");

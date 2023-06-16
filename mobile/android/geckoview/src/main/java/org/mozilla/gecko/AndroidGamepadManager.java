@@ -49,6 +49,7 @@ public class AndroidGamepadManager {
   }
 
   private static final int FIRST_DPAD_BUTTON = 12;
+
   // A list of axis number, gamepad button mappings for negative, positive.
   // Button mappings are added to FIRST_DPAD_BUTTON.
   private static enum DpadAxis {

@@ -13,7 +13,7 @@ const {
   openTrustedLink,
 } = require("resource://devtools/client/shared/link.js");
 
-add_task(async function() {
+add_task(async function () {
   // Open a link to a page that will not trigger any request.
   info("Open web link to example.com test page");
   openDocLink(TEST_URI);

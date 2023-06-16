@@ -261,7 +261,7 @@ registerCleanupFunction(() => {
   clipboard = null;
 });
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
   for (const test of TEST_CASES) {
     const {

@@ -46,7 +46,7 @@ function checkClone(other_listener, aRequest) {
   // For as long as clone notification is synchronous, we can't test the clone state reliably.
   var listener = new ImageListener(
     null,
-    function(foo, bar) {
+    function (foo, bar) {
       do_test_finished();
     } /* getCloneStopCallback(other_listener)*/
   );
@@ -203,16 +203,16 @@ function run_loadImageWithChannel_tests() {
 }
 
 function all_done_callback() {
-  server.stop(function() {
+  server.stop(function () {
     do_test_finished();
   });
 }
 
 function startImageCallback(otherCb) {
-  return function(listener, request) {
+  return function (listener, request) {
     // Make sure we can load the same image immediately out of the cache.
     do_test_pending();
-    var listener2 = new ImageListener(null, function(foo, bar) {
+    var listener2 = new ImageListener(null, function (foo, bar) {
       do_test_finished();
     });
     var outer = Cc["@mozilla.org/image/tools;1"]

@@ -50,7 +50,7 @@ function on_new_console_messages(msgObj) {
   }
 }
 
-add_task(async function() {
+add_task(async function () {
   requestLongerTimeout(4);
 
   await SpecialPowers.pushPrefEnv({

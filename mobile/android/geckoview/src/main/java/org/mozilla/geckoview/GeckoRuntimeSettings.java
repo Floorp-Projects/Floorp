@@ -130,6 +130,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
       getSettings().mDebugPause = enabled;
       return this;
     }
+
     /**
      * Set whether the to report the full bit depth of the device.
      *
@@ -475,7 +476,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
       new Pref<Integer>("browser.display.use_document_fonts", 1);
   /* package */ final Pref<Boolean> mConsoleOutput =
       new Pref<Boolean>("geckoview.console.enabled", false);
-  /* package */ final Pref<Integer> mFontSizeFactor = new Pref<>("font.size.systemFontScale", 100);
+  /* package */ float mFontSizeFactor = 1f;
   /* package */ final Pref<Boolean> mEnterpriseRootsEnabled =
       new Pref<>("security.enterprise_roots.enabled", false);
   /* package */ final Pref<Integer> mFontInflationMinTwips =
@@ -965,12 +966,16 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
 
   /* package */ @NonNull
   GeckoRuntimeSettings setFontSizeFactorInternal(final float fontSizeFactor) {
-    final int fontSizePercentage = Math.round(sanitizeFontSizeFactor(fontSizeFactor) * 100);
-    mFontSizeFactor.commit(fontSizePercentage);
+    final float newFactor = sanitizeFontSizeFactor(fontSizeFactor);
+    if (mFontSizeFactor == newFactor) {
+      return this;
+    }
+    mFontSizeFactor = newFactor;
     if (getFontInflationEnabled()) {
-      final int scaledFontInflation = Math.round(FONT_INFLATION_BASE_VALUE * fontSizeFactor);
+      final int scaledFontInflation = Math.round(FONT_INFLATION_BASE_VALUE * newFactor);
       mFontInflationMinTwips.commit(scaledFontInflation);
     }
+    GeckoSystemStateListener.onDeviceChanged();
     return this;
   }
 
@@ -980,7 +985,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
    * @return The currently applied font size factor.
    */
   public float getFontSizeFactor() {
-    return mFontSizeFactor.get() / 100f;
+    return mFontSizeFactor;
   }
 
   /**
@@ -1021,8 +1026,10 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
 
   /** A light theme for web content is preferred. */
   public static final int COLOR_SCHEME_LIGHT = 0;
+
   /** A dark theme for web content is preferred. */
   public static final int COLOR_SCHEME_DARK = 1;
+
   /** The preferred color scheme will be based on system settings. */
   public static final int COLOR_SCHEME_SYSTEM = -1;
 
@@ -1185,8 +1192,10 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
 
   /** Allow all insecure connections */
   public static final int ALLOW_ALL = 0;
+
   /** Allow insecure connections in normal browsing, but only HTTPS in private browsing. */
   public static final int HTTPS_ONLY_PRIVATE = 1;
+
   /** Only allow HTTPS connections. */
   public static final int HTTPS_ONLY = 2;
 

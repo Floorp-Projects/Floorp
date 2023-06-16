@@ -97,7 +97,7 @@ event.DoubleClickTracker = {
 };
 
 // Only used by legacyactions.js
-event.parseModifiers_ = function(modifiers, win) {
+event.parseModifiers_ = function (modifiers, win) {
   return _getEventUtils(win)._parseModifiers(modifiers);
 };
 
@@ -120,7 +120,7 @@ event.parseModifiers_ = function(modifiers, win) {
  *
  * @returns {boolean} defaultPrevented
  */
-event.synthesizeMouseAtPoint = function(left, top, opts, win) {
+event.synthesizeMouseAtPoint = function (left, top, opts, win) {
   return _getEventUtils(win).synthesizeMouseAtPoint(left, top, opts, win);
 };
 
@@ -143,7 +143,7 @@ event.synthesizeMouseAtPoint = function(left, top, opts, win) {
  *
  * @returns {boolean} defaultPrevented
  */
-event.synthesizeTouchAtPoint = function(left, top, opts, win) {
+event.synthesizeTouchAtPoint = function (left, top, opts, win) {
   return _getEventUtils(win).synthesizeTouchAtPoint(left, top, opts, win);
 };
 
@@ -163,11 +163,11 @@ event.synthesizeTouchAtPoint = function(left, top, opts, win) {
  * @param {Window} win
  *     Window object.
  */
-event.synthesizeWheelAtPoint = function(left, top, opts, win) {
+event.synthesizeWheelAtPoint = function (left, top, opts, win) {
   return _getEventUtils(win).synthesizeWheelAtPoint(left, top, opts, win);
 };
 
-event.synthesizeMultiTouch = function(opts, win) {
+event.synthesizeMultiTouch = function (opts, win) {
   const modifiers = _getEventUtils(win)._parseModifiers(opts);
   win.windowUtils.sendTouchEvent(
     opts.type,
@@ -193,7 +193,7 @@ event.synthesizeMultiTouch = function(opts, win) {
  * @param {Window} win
  *     Window object.
  */
-event.sendKeyDown = function(key, win) {
+event.sendKeyDown = function (key, win) {
   event.sendSingleKey(key, win, "keydown");
 };
 
@@ -205,7 +205,7 @@ event.sendKeyDown = function(key, win) {
  * @param {Window} win
  *     Window object.
  */
-event.sendKeyUp = function(key, win) {
+event.sendKeyUp = function (key, win) {
   event.sendSingleKey(key, win, "keyup");
 };
 
@@ -220,7 +220,7 @@ event.sendKeyUp = function(key, win) {
  *     Event to emit. By default the full keydown/keypressed/keyup event
  *     sequence is emitted.
  */
-event.sendSingleKey = function(key, win, type = null) {
+event.sendSingleKey = function (key, win, type = null) {
   let keyValue = key.key;
   if (!key.printable) {
     keyValue = `KEY_${keyValue}`;
@@ -248,7 +248,7 @@ event.sendSingleKey = function(key, win, type = null) {
  * @param {Window} win
  *     Window object
  */
-event.sendKeys = function(keyString, win) {
+event.sendKeys = function (keyString, win) {
   const modifiers = {};
   for (let modifier in event.Modifiers) {
     modifiers[modifier] = false;
@@ -273,7 +273,7 @@ event.sendKeys = function(keyString, win) {
   }
 };
 
-event.sendEvent = function(eventType, el, modifiers = {}, opts = {}) {
+event.sendEvent = function (eventType, el, modifiers = {}, opts = {}) {
   opts.canBubble = opts.canBubble || true;
 
   let doc = el.ownerDocument || el.document;
@@ -288,30 +288,30 @@ event.sendEvent = function(eventType, el, modifiers = {}, opts = {}) {
   el.dispatchEvent(ev);
 };
 
-event.mouseover = function(el, modifiers = {}, opts = {}) {
+event.mouseover = function (el, modifiers = {}, opts = {}) {
   return event.sendEvent("mouseover", el, modifiers, opts);
 };
 
-event.mousemove = function(el, modifiers = {}, opts = {}) {
+event.mousemove = function (el, modifiers = {}, opts = {}) {
   return event.sendEvent("mousemove", el, modifiers, opts);
 };
 
-event.mousedown = function(el, modifiers = {}, opts = {}) {
+event.mousedown = function (el, modifiers = {}, opts = {}) {
   return event.sendEvent("mousedown", el, modifiers, opts);
 };
 
-event.mouseup = function(el, modifiers = {}, opts = {}) {
+event.mouseup = function (el, modifiers = {}, opts = {}) {
   return event.sendEvent("mouseup", el, modifiers, opts);
 };
 
-event.click = function(el, modifiers = {}, opts = {}) {
+event.click = function (el, modifiers = {}, opts = {}) {
   return event.sendEvent("click", el, modifiers, opts);
 };
 
-event.change = function(el, modifiers = {}, opts = {}) {
+event.change = function (el, modifiers = {}, opts = {}) {
   return event.sendEvent("change", el, modifiers, opts);
 };
 
-event.input = function(el, modifiers = {}, opts = {}) {
+event.input = function (el, modifiers = {}, opts = {}) {
   return event.sendEvent("input", el, modifiers, opts);
 };

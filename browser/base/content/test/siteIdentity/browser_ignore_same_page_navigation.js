@@ -6,7 +6,7 @@
 // Test that the nsISecureBrowserUI implementation doesn't send extraneous OnSecurityChange events
 // when it receives OnLocationChange events with the LOCATION_CHANGE_SAME_DOCUMENT flag set.
 
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.withNewTab("about:blank", async browser => {
     let onLocationChangeCount = 0;
     let onSecurityChangeCount = 0;

@@ -744,6 +744,12 @@ lo{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimePatterns%atTime{
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
             DateTimeSkeletons{
                 "Hmsszzzz",
                 "Hmssz",
@@ -930,6 +936,10 @@ lo{
                 "ກ່ອນທ່ຽງ",
                 "ຫຼັງທ່ຽງ",
             }
+            AmPmMarkersNarrow{
+                "ກ່ອນທ່ຽງ",
+                "ຫຼັງທ່ຽງ",
+            }
             DateTimePatterns{
                 "H ໂມງ m ນາທີ ss ວິນາທີ zzzz",
                 "H ໂມງ m ນາທີ ss ວິນາທີ z",
@@ -940,6 +950,12 @@ lo{
                 "d MMM y",
                 "d/M/y",
                 "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            DateTimePatterns%atTime{
                 "{1}, {0}",
                 "{1}, {0}",
                 "{1}, {0}",
@@ -1129,10 +1145,13 @@ lo{
                     }
                     narrow{
                         afternoon1{"ສ"}
+                        am{"ກ່ອນທ່ຽງ"}
                         evening1{"ແລງ"}
+                        midnight{"ທ່ຽງ​ຄືນ"}
                         morning1{"​ເຊົ້າ"}
                         night1{"​ກາງ​ຄືນ"}
                         noon{"ຕອນທ່ຽງ"}
+                        pm{"ຫຼັງທ່ຽງ"}
                     }
                     wide{
                         afternoon1{"ສວຍ"}
@@ -2290,6 +2309,11 @@ lo{
             }
         }
         fri-narrow{
+            relative{
+                "-1"{"ສຸກແລ້ວ"}
+                "0"{"ສຸກນີ້"}
+                "1"{"ສຸກໜ້າ"}
+            }
             relativeTime{
                 future{
                     other{"ໃນອີກ {0} ວັນສຸກ"}
@@ -2402,6 +2426,11 @@ lo{
             }
         }
         mon-narrow{
+            relative{
+                "-1"{"ຈັນແລ້ວ"}
+                "0"{"ຈັນນີ້"}
+                "1"{"ຈັນໜ້າ"}
+            }
             relativeTime{
                 future{
                     other{"ໃນ {0} ວັນຈັນ"}
@@ -2444,6 +2473,11 @@ lo{
         }
         month-narrow{
             dn{"ດ."}
+            relative{
+                "-1"{"ເດືອນແລ້ວ"}
+                "0"{"ເດືອນນີ້"}
+                "1"{"ເດືອນໜ້າ"}
+            }
             relativeTime{
                 future{
                     other{"ໃນອີກ {0} ດ."}
@@ -2455,6 +2489,11 @@ lo{
         }
         month-short{
             dn{"ດ."}
+            relative{
+                "-1"{"ເດືອນແລ້ວ"}
+                "0"{"ເດືອນນີ້"}
+                "1"{"ເດືອນໜ້າ"}
+            }
             relativeTime{
                 future{
                     other{"ໃນອີກ {0} ດ."}
@@ -2486,6 +2525,9 @@ lo{
                 future{
                     other{"ໃນ {0} ຕມ."}
                 }
+                past{
+                    other{"{0} ຕມ. ກ່ອນ"}
+                }
             }
         }
         quarter-short{
@@ -2515,6 +2557,11 @@ lo{
             }
         }
         sat-narrow{
+            relative{
+                "-1"{"ເສົາແລ້ວ"}
+                "0"{"ເສົານີ້"}
+                "1"{"ເສົາໜ້າ"}
+            }
             relativeTime{
                 future{
                     other{"ໃນ {0} ວັນເສົາ"}
@@ -2591,6 +2638,11 @@ lo{
             }
         }
         sun-narrow{
+            relative{
+                "-1"{"ວັນທິດແລ້ວ"}
+                "0"{"ວັນທິດນີ້"}
+                "1"{"ວັນທິດໜ້າ"}
+            }
             relativeTime{
                 future{
                     other{"ໃນ {0} ວັນອາທິດ"}
@@ -2631,6 +2683,11 @@ lo{
             }
         }
         thu-narrow{
+            relative{
+                "-1"{"ພະຫັດແລ້ວ"}
+                "0"{"ພະຫັດນີ້"}
+                "1"{"ພະຫັດໜ້າ"}
+            }
             relativeTime{
                 future{
                     other{"ໃນ {0} ວັນພະຫັດ"}
@@ -2716,6 +2773,11 @@ lo{
             }
         }
         wed-narrow{
+            relative{
+                "-1"{"ພຸດແລ້ວ"}
+                "0"{"ພຸດນີ້"}
+                "1"{"ພຸດໜ້າ"}
+            }
             relativeTime{
                 future{
                     other{"ໃນ {0} ວັນພຸດ"}
@@ -2759,6 +2821,11 @@ lo{
         }
         week-narrow{
             dn{"ອ."}
+            relative{
+                "-1"{"ອາທິດແລ້ວ"}
+                "0"{"ອາທິດນີ້"}
+                "1"{"ອາທິດໜ້າ"}
+            }
             relativePeriod{"ອາທິດທີ {0}"}
             relativeTime{
                 future{
@@ -2771,6 +2838,11 @@ lo{
         }
         week-short{
             dn{"ອ."}
+            relative{
+                "-1"{"ອາທິດແລ້ວ"}
+                "0"{"ອາທິດນີ້"}
+                "1"{"ອາທິດໜ້າ"}
+            }
             relativePeriod{"ອາທິດທີ {0}"}
             relativeTime{
                 future{
@@ -2826,6 +2898,11 @@ lo{
         }
         year-narrow{
             dn{"ປີ"}
+            relative{
+                "-1"{"ປີກາຍ"}
+                "0"{"ປີນີ້"}
+                "1"{"ປີໜ້າ"}
+            }
             relativeTime{
                 future{
                     other{"ໃນອີກ {0} ປີ"}
@@ -2837,6 +2914,11 @@ lo{
         }
         year-short{
             dn{"ປີ"}
+            relative{
+                "-1"{"ປີກາຍ"}
+                "0"{"ປີນີ້"}
+                "1"{"ປີໜ້າ"}
+            }
             relativeTime{
                 future{
                     other{"ໃນອີກ {0} ປີ"}
@@ -2863,13 +2945,28 @@ lo{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        or-narrow{
+            2{"{0} ຫຼື {1}"}
+            end{"{0} ຫຼື {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        or-short{
+            2{"{0} ຫຼື {1}"}
+            end{"{0} ຫຼື {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} ແລະ {1}"}
             end{"{0}, {1}"}
             start{"{0}, {1}"}
         }
         standard-narrow{
+            2{"{0} ແລະ {1}"}
             end{"{0}, {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         standard-short{
             2{"{0} ແລະ {1}"}
@@ -2902,6 +2999,7 @@ lo{
         metric{"ເມທຣິກ"}
     }
     personNames{
+        foreignSpaceReplacement{" "}
         nameOrderLocales{
             givenFirst{
                 "und",
@@ -2915,45 +3013,49 @@ lo{
             }
         }
         namePattern{
-            givenFirst-long-addressing-formal{"{prefix}{surname}"}
+            givenFirst-long-addressing-formal{"{title} {surname}"}
             givenFirst-long-addressing-informal{"{given-informal}"}
             givenFirst-long-monogram-informal{"{given-informal-monogram-allCaps}{surname-monogram-allCaps}"}
-            givenFirst-long-referring-formal{"{suffix}{given}{given2}{surname}"}
-            givenFirst-long-referring-informal{"{given-informal}{surname}"}
-            givenFirst-medium-addressing-formal{"{prefix}{surname}"}
+            givenFirst-long-referring-formal{"{credentials} {title} {given} {given2} {surname} {generation}"}
+            givenFirst-long-referring-informal{"{given-informal} {surname}"}
+            givenFirst-medium-addressing-formal{"{title} {surname}"}
             givenFirst-medium-addressing-informal{"{given-informal}"}
             givenFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             givenFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            givenFirst-medium-referring-formal{"{suffix}{given}{given2-initial}{surname}"}
-            givenFirst-medium-referring-informal{"{given-informal}{surname}"}
-            givenFirst-short-addressing-formal{"{prefix}{surname}"}
+            givenFirst-medium-referring-formal{"{credentials} {given} {given2} {surname}"}
+            givenFirst-medium-referring-informal{"{given-informal} {surname}"}
+            givenFirst-short-addressing-formal{"{title} {surname}"}
             givenFirst-short-addressing-informal{"{given-informal}"}
             givenFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             givenFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
-            givenFirst-short-referring-formal{"{given-initial}{given2-initial}{surname}"}
-            givenFirst-short-referring-informal{"{given-informal}{surname-initial}"}
-            sorting-long-referring-formal{"{surname-core},{given}{given2}{surname-prefix}"}
-            sorting-long-referring-informal{"{surname},{given-informal}"}
-            sorting-medium-referring-formal{"{surname-core},{given}{given2-initial}{surname-prefix}"}
-            sorting-medium-referring-informal{"{surname},{given-informal}"}
-            sorting-short-referring-formal{"{surname-core},{given-initial}{given2-initial}{surname-prefix}"}
-            sorting-short-referring-informal{"{surname},{given-informal}"}
-            surnameFirst-long-addressing-formal{"{prefix}{surname}"}
+            givenFirst-short-referring-formal{"{given} {given2} {surname}"}
+            givenFirst-short-referring-informal{"{given-informal} {surname}"}
+            sorting-long-referring-formal{"{surname-core}, {given} {given2} {surname-prefix}"}
+            sorting-long-referring-informal{"{surname}, {given-informal}"}
+            sorting-medium-referring-formal{"{surname-core}, {given} {given2} {surname-prefix}"}
+            sorting-medium-referring-informal{"{surname}, {given-informal}"}
+            sorting-short-referring-formal{"{surname-core}, {given} {given2} {surname-prefix}"}
+            sorting-short-referring-informal{"{surname}, {given-informal}"}
+            surnameFirst-long-addressing-formal{"{title} {surname}"}
             surnameFirst-long-addressing-informal{"{given-informal}"}
-            surnameFirst-long-referring-formal{"{surname}{given}{given2}{suffix}"}
-            surnameFirst-long-referring-informal{"{surname}{given-informal}"}
-            surnameFirst-medium-addressing-formal{"{prefix}{surname}"}
+            surnameFirst-long-monogram-informal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-long-referring-formal{"{credentials} {surname} {title} {given} {given2} {generation}"}
+            surnameFirst-long-referring-informal{"{surname} {given-informal}"}
+            surnameFirst-medium-addressing-formal{"{title} {surname}"}
             surnameFirst-medium-addressing-informal{"{given-informal}"}
             surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            surnameFirst-medium-referring-formal{"{surname}{given}{given2-initial}{suffix}"}
-            surnameFirst-medium-referring-informal{"{surname}{given-informal}"}
-            surnameFirst-short-addressing-formal{"{prefix}{surname}"}
+            surnameFirst-medium-referring-formal{"{credentials} {surname} {given} {given2} {generation}"}
+            surnameFirst-medium-referring-informal{"{surname} {given-informal}"}
+            surnameFirst-short-addressing-formal{"{title} {surname}"}
             surnameFirst-short-addressing-informal{"{given-informal}"}
             surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
-            surnameFirst-short-referring-formal{"{surname}{given-initial}{given2-initial}"}
-            surnameFirst-short-referring-informal{"{surname}{given-initial}"}
+            surnameFirst-short-referring-formal{"{surname} {given} {given2}"}
+            surnameFirst-short-referring-informal{"{surname} {given}"}
         }
     }
 }

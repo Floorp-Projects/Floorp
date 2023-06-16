@@ -107,9 +107,10 @@ async function checkSelectorsFromTopDocumentForNode(
   expectedSelectors,
   assertionText
 ) {
-  const selectors = await commands.inspectorCommand.getNodeFrontSelectorsFromTopDocument(
-    nodeFront
-  );
+  const selectors =
+    await commands.inspectorCommand.getNodeFrontSelectorsFromTopDocument(
+      nodeFront
+    );
   is(
     JSON.stringify(selectors),
     JSON.stringify(expectedSelectors),

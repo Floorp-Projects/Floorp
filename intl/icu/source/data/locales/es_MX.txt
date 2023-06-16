@@ -197,19 +197,6 @@ es_MX{
                 yMMMEd{"EEE, d 'de' MMM 'de' y"}
                 yQQQ{"QQQ y"}
             }
-            dayNames{
-                format{
-                    narrow{
-                        "D",
-                        "L",
-                        "M",
-                        "M",
-                        "J",
-                        "V",
-                        "S",
-                    }
-                }
-            }
             dayPeriod{
                 format{
                     narrow{
@@ -588,9 +575,8 @@ es_MX{
         UK{"imperial"}
     }
     personNames{
-        foreignSpaceReplacement{" "}
         namePattern{
-            givenFirst-long-referring-formal{"{prefix} {given} {given2} {surname} {surname2}"}
+            givenFirst-long-referring-formal{"{title} {given} {given2} {surname} {surname2}"}
         }
     }
 }

@@ -147,8 +147,10 @@ async function assertUIChange(key, value) {
 }
 
 function keyedScalarExists(scalar, key, value) {
-  let snapshot = Services.telemetry.getSnapshotForKeyedScalars("main", false)
-    .parent;
+  let snapshot = Services.telemetry.getSnapshotForKeyedScalars(
+    "main",
+    false
+  ).parent;
   if (!snapshot.hasOwnProperty(scalar)) {
     return false;
   }

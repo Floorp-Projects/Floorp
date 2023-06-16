@@ -75,9 +75,9 @@ function createRule(ruleData, rules) {
         // For the purpose of displaying in the UI, we treat at-rules as selectors.
         if (!rule.selectors || !rule.selectors.length) {
           rule.selectors = [
-            `${rule.typeName} ${rule.conditionText ||
-              rule.name ||
-              rule.keyText}`,
+            `${rule.typeName} ${
+              rule.conditionText || rule.name || rule.keyText
+            }`,
           ];
         }
 
@@ -372,7 +372,7 @@ const reducers = {
   },
 };
 
-module.exports = function(state = INITIAL_STATE, action) {
+module.exports = function (state = INITIAL_STATE, action) {
   const reducer = reducers[action.type];
   if (!reducer) {
     return state;

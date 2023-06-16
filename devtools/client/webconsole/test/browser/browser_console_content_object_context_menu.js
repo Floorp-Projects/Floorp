@@ -13,7 +13,7 @@ const TEST_URI = `data:text/html,<!DOCTYPE html><meta charset=utf8>console API c
   });
 </script>`;
 
-add_task(async function() {
+add_task(async function () {
   // Show the content messages
   await pushPref("devtools.browsertoolbox.scope", "everything");
 

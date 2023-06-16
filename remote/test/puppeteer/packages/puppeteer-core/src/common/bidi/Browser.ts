@@ -16,12 +16,15 @@
 
 import {ChildProcess} from 'child_process';
 
+import * as Bidi from 'chromium-bidi/lib/cjs/protocol/protocol.js';
+
 import {
   Browser as BrowserBase,
   BrowserCloseCallback,
   BrowserContextOptions,
 } from '../../api/Browser.js';
 import {BrowserContext as BrowserContextBase} from '../../api/BrowserContext.js';
+import {Viewport} from '../PuppeteerViewport.js';
 
 import {BrowserContext} from './BrowserContext.js';
 import {Connection} from './Connection.js';
@@ -30,29 +33,30 @@ import {Connection} from './Connection.js';
  * @internal
  */
 export class Browser extends BrowserBase {
-  /**
-   * @internal
-   */
   static async create(opts: Options): Promise<Browser> {
     // TODO: await until the connection is established.
     try {
       await opts.connection.send('session.new', {});
     } catch {}
+    await opts.connection.send('session.subscribe', {
+      events: [
+        'browsingContext.contextCreated',
+      ] as Bidi.Session.SubscribeParametersEvent[],
+    });
     return new Browser(opts);
   }
 
   #process?: ChildProcess;
   #closeCallback?: BrowserCloseCallback;
   #connection: Connection;
+  #defaultViewport: Viewport | null;
 
-  /**
-   * @internal
-   */
   constructor(opts: Options) {
     super();
     this.#process = opts.process;
     this.#closeCallback = opts.closeCallback;
     this.#connection = opts.connection;
+    this.#defaultViewport = opts.defaultViewport;
   }
 
   override async close(): Promise<void> {
@@ -71,7 +75,9 @@ export class Browser extends BrowserBase {
   override async createIncognitoBrowserContext(
     _options?: BrowserContextOptions
   ): Promise<BrowserContextBase> {
-    return new BrowserContext(this.#connection);
+    return new BrowserContext(this.#connection, {
+      defaultViewport: this.#defaultViewport,
+    });
   }
 }
 
@@ -79,4 +85,5 @@ interface Options {
   process?: ChildProcess;
   closeCallback?: BrowserCloseCallback;
   connection: Connection;
+  defaultViewport: Viewport | null;
 }

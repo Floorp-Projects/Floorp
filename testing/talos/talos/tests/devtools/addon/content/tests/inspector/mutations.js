@@ -17,7 +17,7 @@ const {
  * Measure the time necessary to perform successive childList mutations in the content
  * page and update the markup-view accordingly.
  */
-module.exports = async function() {
+module.exports = async function () {
   let tab = await testSetup(SIMPLE_URL);
   let messageManager = tab.linkedBrowser.messageManager;
 

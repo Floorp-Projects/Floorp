@@ -96,7 +96,7 @@ void RestyleManager::ContentAppended(nsIContent* aFirstNewContent) {
 #endif
   uint32_t selectorFlags =
       container->GetFlags() &
-      (NODE_ALL_SELECTOR_FLAGS & ~NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS);
+      (NODE_RESTYLE_SELECTOR_FLAGS & ~NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS);
   if (selectorFlags == 0) {
     return;
   }
@@ -264,7 +264,7 @@ void RestyleManager::CharacterDataChanged(
   nsINode* parent = aContent->GetParentNode();
   MOZ_ASSERT(parent, "How were we notified of a stray node?");
 
-  uint32_t slowSelectorFlags = parent->GetFlags() & NODE_ALL_SELECTOR_FLAGS;
+  uint32_t slowSelectorFlags = parent->GetFlags() & NODE_RESTYLE_SELECTOR_FLAGS;
   if (!(slowSelectorFlags &
         (NODE_HAS_EMPTY_SELECTOR | NODE_HAS_EDGE_CHILD_SELECTOR))) {
     // Nothing to do, no other slow selector can change as a result of this.
@@ -344,7 +344,7 @@ void RestyleManager::RestyleForInsertOrChange(nsIContent* aChild) {
   nsINode* container = aChild->GetParentNode();
   MOZ_ASSERT(container);
 
-  uint32_t selectorFlags = container->GetFlags() & NODE_ALL_SELECTOR_FLAGS;
+  uint32_t selectorFlags = container->GetFlags() & NODE_RESTYLE_SELECTOR_FLAGS;
   if (selectorFlags == 0) {
     return;
   }
@@ -408,7 +408,7 @@ void RestyleManager::ContentRemoved(nsIContent* aOldChild,
     IncrementUndisplayedRestyleGeneration();
   }
 
-  uint32_t selectorFlags = container->GetFlags() & NODE_ALL_SELECTOR_FLAGS;
+  uint32_t selectorFlags = container->GetFlags() & NODE_RESTYLE_SELECTOR_FLAGS;
   if (selectorFlags == 0) {
     return;
   }
@@ -3272,7 +3272,7 @@ void RestyleManager::ProcessAllPendingAttributeAndStateInvalidations() {
     // Servo data for the element might have been dropped. (e.g. by removing
     // from its document)
     if (key->HasFlag(ELEMENT_HAS_SNAPSHOT)) {
-      Servo_ProcessInvalidations(StyleSet()->RawSet(), key, &mSnapshots);
+      Servo_ProcessInvalidations(StyleSet()->RawData(), key, &mSnapshots);
     }
   }
   ClearSnapshots();
@@ -3300,24 +3300,17 @@ void RestyleManager::ElementStateChanged(Element* aElement,
   const ElementState kVisitedAndUnvisited =
       ElementState::VISITED | ElementState::UNVISITED;
 
-  // When visited links are disabled, they cannot influence style for obvious
-  // reasons.
-  //
-  // When layout.css.always-repaint-on-unvisited is true, we'll restyle when the
-  // relevant visited query finishes, regardless of the style (see
-  // Link::VisitedQueryFinished). So there's no need to do anything as a result
-  // of this state change just yet.
+  // We'll restyle when the relevant visited query finishes, regardless of the
+  // style (see Link::VisitedQueryFinished). So there's no need to do anything
+  // as a result of this state change just yet.
   //
   // Note that this check checks for _both_ bits: This is only true when visited
   // changes to unvisited or vice-versa, but not when we start or stop being a
   // link itself.
   if (aChangedBits.HasAllStates(kVisitedAndUnvisited)) {
-    if (!Gecko_VisitedStylesEnabled(aElement->OwnerDoc()) ||
-        StaticPrefs::layout_css_always_repaint_on_unvisited()) {
-      aChangedBits &= ~kVisitedAndUnvisited;
-      if (aChangedBits.IsEmpty()) {
-        return;
-      }
+    aChangedBits &= ~kVisitedAndUnvisited;
+    if (aChangedBits.IsEmpty()) {
+      return;
     }
   }
 

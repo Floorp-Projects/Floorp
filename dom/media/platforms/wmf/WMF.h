@@ -190,6 +190,9 @@ HRESULT MFPutWorkItem(DWORD dwQueue, IMFAsyncCallback* pCallback,
 HRESULT MFSerializeAttributesToStream(IMFAttributes* pAttr, DWORD dwOptions,
                                       IStream* pStm);
 
+HRESULT MFWrapMediaType(IMFMediaType* pOrig, REFGUID MajorType, REFGUID SubType,
+                        IMFMediaType** ppWrap);
+
 }  // namespace mozilla::wmf
 
 #endif

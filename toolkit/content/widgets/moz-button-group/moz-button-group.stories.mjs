@@ -10,7 +10,7 @@ import {
 } from "./moz-button-group.mjs";
 
 export default {
-  title: "Button Group",
+  title: "UI Widgets/Button Group",
   component: "moz-button-group",
   argTypes: {
     platform: {

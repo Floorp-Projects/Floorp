@@ -4,7 +4,7 @@
 
 let getExtension = () => {
   return ExtensionTestUtils.loadExtension({
-    background: async function() {
+    background: async function () {
       const runningListener = isRunning => {
         if (isRunning) {
           browser.test.sendMessage("started");
@@ -71,7 +71,8 @@ let getExtension = () => {
             }
             break;
           case "test profile as array buffer":
-            let arrayBuffer = await browser.geckoProfiler.getProfileAsArrayBuffer();
+            let arrayBuffer =
+              await browser.geckoProfiler.getProfileAsArrayBuffer();
             browser.test.assertTrue(
               arrayBuffer.byteLength >= 2,
               "The profile array buffer contains data."

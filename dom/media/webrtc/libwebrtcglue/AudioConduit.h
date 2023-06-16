@@ -32,7 +32,8 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   Maybe<int> ActiveSendPayloadType() const override;
   Maybe<int> ActiveRecvPayloadType() const override;
 
-  void OnRtpReceived(MediaPacket&& aPacket, webrtc::RTPHeader&& aHeader);
+  void OnRtpReceived(webrtc::RtpPacketReceived&& aPacket,
+                     webrtc::RTPHeader&& aHeader);
   void OnRtcpReceived(MediaPacket&& aPacket);
 
   void OnRtcpBye() override;
@@ -50,7 +51,8 @@ class WebrtcAudioConduit : public AudioSessionConduit,
     return mReceiverRtcpSendEvent;
   }
   void ConnectReceiverRtpEvent(
-      MediaEventSourceExc<MediaPacket, webrtc::RTPHeader>& aEvent) override {
+      MediaEventSourceExc<webrtc::RtpPacketReceived, webrtc::RTPHeader>& aEvent)
+      override {
     mReceiverRtpEventListener =
         aEvent.Connect(mCallThread, this, &WebrtcAudioConduit::OnRtpReceived);
   }
@@ -110,6 +112,8 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   bool SendReceiverRtcp(const uint8_t* aData, size_t aLength) override;
 
   bool HasCodecPluginID(uint64_t aPluginID) const override { return false; }
+
+  void SetJitterBufferTarget(DOMHighResTimeStamp aTargetMs) override;
 
   void DeliverPacket(rtc::CopyOnWriteBuffer packet, PacketType type) override;
 
@@ -234,6 +238,9 @@ class WebrtcAudioConduit : public AudioSessionConduit,
 
   // Socket transport service thread. Any thread.
   const nsCOMPtr<nsISerialEventTarget> mStsThread;
+
+  // Target jitter buffer to be applied to the receive stream in milliseconds.
+  uint16_t mJitterBufferTargetMs = 0;
 
   struct Control {
     // Mirrors and events that map to AudioConduitControlInterface for control.

@@ -199,13 +199,8 @@ class CustomRequestPanel extends Component {
       sendCustomRequest,
       updateRequest,
     } = this.props;
-    const {
-      method,
-      customQueryValue,
-      requestHeaders,
-      requestPostData,
-      url,
-    } = request;
+    const { method, customQueryValue, requestHeaders, requestPostData, url } =
+      request;
 
     let headers = "";
     if (requestHeaders) {

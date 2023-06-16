@@ -22,7 +22,7 @@ async function reInitSessionFile() {
   await SessionFile.read();
 }
 
-add_setup(async function() {
+add_setup(async function () {
   // Make sure that we are not racing with SessionSaver's time based
   // saves.
   Services.prefs.setIntPref(PREF_SS_INTERVAL, 10000000);
@@ -141,7 +141,7 @@ add_task(async function test_creation() {
   gBrowser.removeTab(tab);
 });
 
-var promiseSource = async function(name) {
+var promiseSource = async function (name) {
   let URL =
     "http://example.com/?atomic_backup_test_recovery=" +
     Math.random() +

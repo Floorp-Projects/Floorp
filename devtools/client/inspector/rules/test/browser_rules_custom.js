@@ -7,7 +7,7 @@ const TEST_URI = URL_ROOT + "doc_custom.html";
 
 // Tests the display of custom declarations in the rule-view.
 
-add_task(async function() {
+add_task(async function () {
   await addTab(TEST_URI);
   const { inspector, view } = await openRuleView();
 

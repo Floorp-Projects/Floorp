@@ -27,8 +27,8 @@ const { UpdateUtils } = ChromeUtils.importESModule(
 const { GMPPrefs, OPEN_H264_ID } = ChromeUtils.importESModule(
   "resource://gre/modules/GMPUtils.sys.mjs"
 );
-const { ProductAddonCheckerTestUtils } = ChromeUtils.import(
-  "resource://gre/modules/addons/ProductAddonChecker.jsm"
+const { ProductAddonCheckerTestUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/addons/ProductAddonChecker.sys.mjs"
 );
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
@@ -1032,7 +1032,7 @@ async function test_checkForAddons_installAddon(
     // Cleanup
     extractedFile.parent.remove(true);
     zipFile.remove(false);
-    httpServer.stop(function() {});
+    httpServer.stop(function () {});
     installManager.uninit();
   } catch (ex) {
     zipFile.remove(false);
@@ -1165,7 +1165,7 @@ add_test(function test_installAddon_noServer() {
  */
 
 add_task(async function test_GMPExtractor_paths() {
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     // Must stop holding on to the zip file using the JAR cache:
     let zipFile = new FileUtils.File(
       PathUtils.join(tempDir.path, "dummy_gmp.zip")
@@ -1622,14 +1622,15 @@ function getTestServerForContentSignatureTests() {
     });
     // We expose this promise so that tests can wait until the server has
     // reverted the overridden request (to avoid double overrides).
-    promiseHolder.serverPromise = ProductAddonCheckerTestUtils.overrideServiceRequest(
-      overriddenServiceRequest,
-      () => {
-        res.setHeader("content-signature", validContentSignatureHeader);
-        res.write(goodXml);
-        return promiseHolder.installPromise;
-      }
-    );
+    promiseHolder.serverPromise =
+      ProductAddonCheckerTestUtils.overrideServiceRequest(
+        overriddenServiceRequest,
+        () => {
+          res.setHeader("content-signature", validContentSignatureHeader);
+          res.write(goodXml);
+          return promiseHolder.installPromise;
+        }
+      );
   });
 
   const x5uAbortPath = "/x5u_abort.xml";
@@ -1642,14 +1643,15 @@ function getTestServerForContentSignatureTests() {
     });
     // We expose this promise so that tests can wait until the server has
     // reverted the overridden request (to avoid double overrides).
-    promiseHolder.serverPromise = ProductAddonCheckerTestUtils.overrideServiceRequest(
-      overriddenServiceRequest,
-      () => {
-        res.setHeader("content-signature", validContentSignatureHeader);
-        res.write(goodXml);
-        return promiseHolder.installPromise;
-      }
-    );
+    promiseHolder.serverPromise =
+      ProductAddonCheckerTestUtils.overrideServiceRequest(
+        overriddenServiceRequest,
+        () => {
+          res.setHeader("content-signature", validContentSignatureHeader);
+          res.write(goodXml);
+          return promiseHolder.installPromise;
+        }
+      );
     setTimeout(() => {
       overriddenServiceRequest.abort();
     }, 100);

@@ -90,7 +90,7 @@ function test() {
 
   info("fake webextension docShell created");
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     policy.active = false;
     if (chromeWebNav) {
       chromeWebNav.close();

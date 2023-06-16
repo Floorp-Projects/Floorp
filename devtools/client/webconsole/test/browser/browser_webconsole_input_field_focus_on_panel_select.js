@@ -9,7 +9,7 @@
 const TEST_URI =
   "data:text/html;charset=utf8,<!DOCTYPE html><p>Test console input focus";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Focus after console is opened");

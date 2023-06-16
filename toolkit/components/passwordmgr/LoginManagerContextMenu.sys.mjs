@@ -57,7 +57,7 @@ export const LoginManagerContextMenu = {
       // login is bound so we can keep the reference to each object.
       item.addEventListener(
         "command",
-        function(login, event) {
+        function (login, event) {
           this._fillTargetField(
             login,
             inputElementIdentifier,
@@ -222,7 +222,7 @@ export const LoginManagerContextMenu = {
 XPCOMUtils.defineLazyGetter(
   LoginManagerContextMenu,
   "_stringBundle",
-  function() {
+  function () {
     return Services.strings.createBundle(
       "chrome://passwordmgr/locale/passwordmgr.properties"
     );
@@ -232,7 +232,7 @@ XPCOMUtils.defineLazyGetter(
 XPCOMUtils.defineLazyGetter(
   LoginManagerContextMenu,
   "dateAndTimeFormatter",
-  function() {
+  function () {
     return new Services.intl.DateTimeFormat(undefined, {
       dateStyle: "medium",
     });

@@ -55,7 +55,7 @@ add_task(async function openDebuggerFromDialog() {
   info("Execute an infinite loop");
   // Note that spawn will return a promise that may be rejected because of the infinite loop
   // And mochitest may consider this as an error. So ignore any rejection.
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.wrappedJSObject.infiniteLoop();
   }).catch(e => {});
 

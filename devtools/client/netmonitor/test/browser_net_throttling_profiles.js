@@ -10,14 +10,14 @@ requestLongerTimeout(2);
 const throttlingProfiles = require("resource://devtools/client/shared/components/throttling/profiles.js");
 
 const httpServer = createTestHTTPServer();
-httpServer.registerPathHandler(`/`, function(request, response) {
+httpServer.registerPathHandler(`/`, function (request, response) {
   response.setStatusLine(request.httpVersion, 200, "OK");
   response.write(`<meta charset=utf8><h1>Test throttling profiles</h1>`);
 });
 
 // The "data" path takes a size query parameter and will return a body of the
 // requested size.
-httpServer.registerPathHandler("/data", function(request, response) {
+httpServer.registerPathHandler("/data", function (request, response) {
   const size = request.queryString.match(/size=(\d+)/)[1];
   response.setHeader("Content-Type", "text/plain");
 
@@ -28,7 +28,7 @@ httpServer.registerPathHandler("/data", function(request, response) {
 
 const TEST_URI = `http://localhost:${httpServer.identity.primaryPort}/`;
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.cache.disabled", true);
 
   const { monitor } = await initNetMonitor(TEST_URI, { requestCount: 1 });

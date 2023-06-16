@@ -258,6 +258,9 @@ ru{
         "America:Chihuahua"{
             ec{"Чиуауа"}
         }
+        "America:Ciudad_Juarez"{
+            ec{"Сьюдад-Хуарес"}
+        }
         "America:Coral_Harbour"{
             ec{"Корал-Харбор"}
         }

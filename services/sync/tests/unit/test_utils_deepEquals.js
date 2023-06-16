@@ -14,11 +14,11 @@ function run_test() {
   let d2 = eval(data);
   /* eslint-enable no-eval */
 
-  d1.forEach(function(a) {
+  d1.forEach(function (a) {
     _("Testing", a, typeof a, JSON.stringify([a]));
     let numMatch = 0;
 
-    d2.forEach(function(b) {
+    d2.forEach(function (b) {
       if (Utils.deepEquals(a, b)) {
         numMatch++;
         _("Found a match", b, typeof b, JSON.stringify([b]));

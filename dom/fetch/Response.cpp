@@ -42,7 +42,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(Response, FetchBody<Response>)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mHeaders)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSignalImpl)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFetchStreamReader)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mReadableStreamReader)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -51,7 +50,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(Response, FetchBody<Response>)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mHeaders)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSignalImpl)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFetchStreamReader)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReadableStreamReader)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(Response, FetchBody<Response>)
@@ -166,10 +164,10 @@ already_AddRefed<Response> Response::Redirect(const GlobalObject& aGlobal,
   return r.forget();
 }
 
-/*static*/
-already_AddRefed<Response> Response::Constructor(
+/* static */ already_AddRefed<Response> Response::CreateAndInitializeAResponse(
     const GlobalObject& aGlobal, const Nullable<fetch::ResponseBodyInit>& aBody,
-    const ResponseInit& aInit, ErrorResult& aRv) {
+    const nsACString& aDefaultContentType, const ResponseInit& aInit,
+    ErrorResult& aRv) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
 
   if (NS_WARN_IF(!global)) {
@@ -177,12 +175,14 @@ already_AddRefed<Response> Response::Constructor(
     return nullptr;
   }
 
+  // Initialize a response, Step 1.
   if (aInit.mStatus < 200 || aInit.mStatus > 599) {
     aRv.ThrowRangeError("Invalid response status code.");
     return nullptr;
   }
 
-  // Check if the status text contains illegal characters
+  // Initialize a response, Step 2: Check if the status text contains illegal
+  // characters
   nsACString::const_iterator start, end;
   aInit.mStatusText.BeginReading(start);
   aInit.mStatusText.EndReading(end);
@@ -197,6 +197,7 @@ already_AddRefed<Response> Response::Constructor(
     return nullptr;
   }
 
+  // Initialize a response, Step 3-4.
   SafeRefPtr<InternalResponse> internalResponse =
       MakeSafeRefPtr<InternalResponse>(aInit.mStatus, aInit.mStatusText);
 
@@ -317,6 +318,10 @@ already_AddRefed<Response> Response::Constructor(
         return nullptr;
       }
 
+      if (!aDefaultContentType.IsVoid()) {
+        contentTypeWithCharset = aDefaultContentType;
+      }
+
       bodySize = size;
     }
 
@@ -339,11 +344,39 @@ already_AddRefed<Response> Response::Constructor(
   return r.forget();
 }
 
-already_AddRefed<Response> Response::Clone(JSContext* aCx, ErrorResult& aRv) {
-  bool bodyUsed = GetBodyUsed(aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
+/* static */
+already_AddRefed<Response> Response::CreateFromJson(const GlobalObject& aGlobal,
+                                                    JSContext* aCx,
+                                                    JS::Handle<JS::Value> aData,
+                                                    const ResponseInit& aInit,
+                                                    ErrorResult& aRv) {
+  aRv.MightThrowJSException();
+  nsAutoString serializedValue;
+  if (!nsContentUtils::StringifyJSON(aCx, aData, serializedValue,
+                                     UndefinedIsVoidString)) {
+    aRv.StealExceptionFromJSContext(aCx);
     return nullptr;
   }
+  if (serializedValue.IsVoid()) {
+    aRv.ThrowTypeError<MSG_JSON_INVALID_VALUE>();
+    return nullptr;
+  }
+  Nullable<fetch::ResponseBodyInit> body;
+  body.SetValue().SetAsUSVString().ShareOrDependUpon(serializedValue);
+  return CreateAndInitializeAResponse(aGlobal, body, "application/json"_ns,
+                                      aInit, aRv);
+}
+
+/*static*/
+already_AddRefed<Response> Response::Constructor(
+    const GlobalObject& aGlobal, const Nullable<fetch::ResponseBodyInit>& aBody,
+    const ResponseInit& aInit, ErrorResult& aRv) {
+  return CreateAndInitializeAResponse(aGlobal, aBody, VoidCString(), aInit,
+                                      aRv);
+}
+
+already_AddRefed<Response> Response::Clone(JSContext* aCx, ErrorResult& aRv) {
+  bool bodyUsed = BodyUsed();
 
   if (!bodyUsed && mReadableStreamBody) {
     bool locked = mReadableStreamBody->Locked();
@@ -391,7 +424,7 @@ already_AddRefed<Response> Response::Clone(JSContext* aCx, ErrorResult& aRv) {
 
 already_AddRefed<Response> Response::CloneUnfiltered(JSContext* aCx,
                                                      ErrorResult& aRv) {
-  if (GetBodyUsed(aRv)) {
+  if (BodyUsed()) {
     aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
     return nullptr;
   }
@@ -431,7 +464,7 @@ already_AddRefed<Response> Response::CloneUnfiltered(JSContext* aCx,
 }
 
 void Response::SetBody(nsIInputStream* aBody, int64_t aBodySize) {
-  MOZ_ASSERT(!CheckBodyUsed());
+  MOZ_ASSERT(!BodyUsed());
   mInternalResponse->SetBody(aBody, aBodySize);
 }
 

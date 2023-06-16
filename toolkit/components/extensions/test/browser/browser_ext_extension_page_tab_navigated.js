@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+const { AddonTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
 );
 
 // The test tasks in this test file tends to trigger an intermittent
@@ -47,7 +47,7 @@ function createTestExtPage({ script }) {
 }
 
 function createTestExtPageScript(name) {
-  return `(${function(pageName) {
+  return `(${function (pageName) {
     browser.webRequest.onBeforeRequest.addListener(
       details => {
         browser.test.log(

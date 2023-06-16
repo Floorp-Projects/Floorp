@@ -4,7 +4,7 @@
 // be saved into session store and thus, it will not show up in
 // Recently Closed Tabs.
 
-add_task(async function() {
+add_task(async function () {
   let tab = BrowserTestUtils.addTab(gBrowser, "about:privatebrowsing");
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
@@ -19,6 +19,6 @@ add_task(async function() {
   ss.setCustomTabValue(tab, "foobar", r);
 
   await promiseRemoveTabAndSessionState(tab);
-  let closedTabData = JSON.stringify(ss.getClosedTabData(window));
+  let closedTabData = JSON.stringify(ss.getClosedTabDataForWindow(window));
   ok(!closedTabData.includes(r), "tab not stored in _closedTabs");
 });

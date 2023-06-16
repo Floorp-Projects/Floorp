@@ -18,7 +18,7 @@ try {
   var chromeGlobal = this;
 
   // Encapsulate in its own scope to allows loading this frame script more than once.
-  (function() {
+  (function () {
     // In most cases, we are debugging a tab in content process, without chrome
     // privileges. But in some tests, we are attaching to privileged document.
     // Because the debugger can't be running in the same compartment than its debuggee,
@@ -53,7 +53,7 @@ try {
 
     const connections = new Map();
 
-    const onConnect = DevToolsUtils.makeInfallible(function(msg) {
+    const onConnect = DevToolsUtils.makeInfallible(function (msg) {
       const mm = msg.target;
       const prefix = msg.data.prefix;
       const addonId = msg.data.addonId;
@@ -138,7 +138,7 @@ try {
 
     addMessageListener("debug:connect", onConnect);
 
-    const onDisconnect = DevToolsUtils.makeInfallible(function(msg) {
+    const onDisconnect = DevToolsUtils.makeInfallible(function (msg) {
       const prefix = msg.data.prefix;
       const conn = connections.get(prefix);
       if (!conn) {
@@ -179,11 +179,10 @@ try {
 
       // When debugging chrome pages, we initialized a dedicated loader, also destroy it
       if (customLoader) {
-        const {
-          releaseDistinctSystemPrincipalLoader,
-        } = ChromeUtils.importESModule(
-          "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs"
-        );
+        const { releaseDistinctSystemPrincipalLoader } =
+          ChromeUtils.importESModule(
+            "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs"
+          );
         releaseDistinctSystemPrincipalLoader(chromeGlobal);
       }
     }

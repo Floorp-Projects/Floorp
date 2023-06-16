@@ -1224,6 +1224,10 @@ sc{
             "dòllaru zimbabweanu (2008)",
         }
     }
+    Currencies%narrow{
+        BYN{"BYN"}
+        RUR{"RUR"}
+    }
     CurrencyPlurals{
         ADP{
             one{"peseta andorrana"}
@@ -2445,5 +2449,9 @@ sc{
             one{"dòllaru zimbabweanu (2008"}
             other{"dòllaros zimbabweanos (2008)"}
         }
+    }
+    CurrencyUnitPatterns{
+        one{"{0} {1}"}
+        other{"{0} {1}"}
     }
 }

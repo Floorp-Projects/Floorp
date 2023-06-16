@@ -7,7 +7,7 @@
  * Tests if cached requests have the correct status code
  */
 
-add_task(async function() {
+add_task(async function () {
   // Disable rcwn to make cache behavior deterministic.
   await pushPref("network.http.rcwn.enabled", false);
 
@@ -122,7 +122,7 @@ add_task(async function() {
 
   async function performRequestsAndWait() {
     const wait = waitForNetworkEvents(monitor, 3);
-    await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
       content.wrappedJSObject.performCachedRequests();
     });
     await wait;

@@ -130,7 +130,6 @@ if (rtc_include_tests) {
       "../../api/units:data_size",
       "../../api/units:time_delta",
       "../../api/units:timestamp",
-      "../../rtc_base",
       "../../rtc_base:checks",
       "../../rtc_base:random",
       "../../system_wrappers",

@@ -27,10 +27,8 @@ class RequestBlockingContextMenu {
       enableAllBlockedUrls,
     } = this.props;
 
-    const {
-      disableDisableAllBlockedUrls,
-      disableEnableAllBlockedUrls,
-    } = contextMenuOptions;
+    const { disableDisableAllBlockedUrls, disableEnableAllBlockedUrls } =
+      contextMenuOptions;
 
     const menu = [
       {

@@ -8,7 +8,7 @@ const { UrlbarSearchUtils } = ChromeUtils.importESModule(
 
 let baconEngineExtension;
 
-add_task(async function() {
+add_task(async function () {
   await UrlbarSearchUtils.init();
   // Tell the search service we are running in the US.  This also has the
   // desired side-effect of preventing our geoip lookup.

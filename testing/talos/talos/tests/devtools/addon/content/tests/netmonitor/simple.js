@@ -19,7 +19,7 @@ const {
 
 const EXPECTED_REQUESTS = 1;
 
-module.exports = async function() {
+module.exports = async function () {
   await testSetup(SIMPLE_URL);
   const toolbox = await openToolboxAndLog("simple.netmonitor", "netmonitor");
 

@@ -8,12 +8,12 @@
     "types": [
       {
         "$extend": "OptionalPermission",
-        "choices": [{
-          "type": "string",
-          "enum": [
-            "find"
-          ]
-        }]
+        "choices": [
+          {
+            "type": "string",
+            "enum": ["find"]
+          }
+        ]
       }
     ]
   },

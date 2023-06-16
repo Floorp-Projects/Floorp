@@ -26,7 +26,7 @@ function createPromiseForTransferComplete(expectedFileName, destFile) {
       MockFilePicker.filterIndex = 0; // kSaveAsType_Complete
 
       MockFilePicker.showCallback = null;
-      mockTransferCallback = function(downloadSuccess) {
+      mockTransferCallback = function (downloadSuccess) {
         ok(downloadSuccess, "File should have been downloaded successfully");
         mockTransferCallback = () => {};
         resolve();
@@ -37,9 +37,9 @@ function createPromiseForTransferComplete(expectedFileName, destFile) {
 
 let tempDir = createTemporarySaveDirectory();
 
-add_setup(async function() {
+add_setup(async function () {
   mockTransferRegisterer.register();
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     mockTransferRegisterer.unregister();
     MockFilePicker.cleanup();
     tempDir.remove(true);
@@ -53,7 +53,7 @@ add_setup(async function() {
 add_task(async function test_pdf_saveas() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function(browser) {
+    async function (browser) {
       await waitForPdfJS(browser, TESTROOT + "file_pdfjs_test.pdf");
       let destFile = tempDir.clone();
       MockFilePicker.displayDirectory = tempDir;
@@ -81,13 +81,13 @@ add_task(async function test_pdf_saveas_forms() {
   let destFile = tempDir.clone();
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function(browser) {
+    async function (browser) {
       await waitForPdfJSAnnotationLayer(
         browser,
         TESTROOT + "file_pdfjs_form.pdf"
       );
       // Fill in the form input field.
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         let formInput = content.document.querySelector(
           "#viewerContainer input"
         );
@@ -111,9 +111,9 @@ add_task(async function test_pdf_saveas_forms() {
   // data persisted.
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function(browser) {
+    async function (browser) {
       await waitForPdfJSAnnotationLayer(browser, NetUtil.newURI(destFile).spec);
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         let formInput = content.document.querySelector(
           "#viewerContainer input"
         );
@@ -129,20 +129,17 @@ add_task(async function test_pdf_saveas_forms() {
  * content disposition filename defaults to using the provided filename.
  */
 add_task(async function test_pdf_saveas_customname() {
-  // Ensure improvements_to_download_panel is enabled so that we render the
-  // attachment directly with the original request in a new tab.
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.helperApps.showOpenOptionForPdfJS", true],
       ["browser.helperApps.showOpenOptionForViewableInternally", true],
-      ["browser.download.improvements_to_download_panel", true],
       ["browser.download.always_ask_before_handling_new_types", false],
       ["browser.download.open_pdf_attachments_inline", true],
     ],
   });
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: TESTROOT + "file_pdf_download_link.html" },
-    async function(browser) {
+    async function (browser) {
       // Click on the download link in the loaded file. This will create a new
       // tab with the PDF loaded in it.
       BrowserTestUtils.synthesizeMouseAtCenter("#custom_filename", {}, browser);

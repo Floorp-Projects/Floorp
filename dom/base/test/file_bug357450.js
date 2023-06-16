@@ -57,7 +57,7 @@ function testGetElements(root, classtestCount) {
   is(nodes.length, 0, "bogus arg should get an empty nodelist");
 }
 
-addLoadEvent(function() {
+addLoadEvent(function () {
   if (document.getElementsByName) {
     var anchorNodes = document.getElementsByName("nametest");
     is(anchorNodes.length, 1, "getElementsByName still works");

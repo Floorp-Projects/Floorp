@@ -32,6 +32,13 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // inserted.
   ["accessibility.tabToSearch.announceResults", true],
 
+  // Feature gate pref for addon suggestions in the urlbar.
+  ["addons.featureGate", false],
+
+  // The number of times the user has clicked the "Show less frequently" command
+  // for addon suggestions.
+  ["addons.showLessFrequentlyCount", 0],
+
   // "Autofill" is the name of the feature that automatically completes domains
   // and URLs that the user has visited as the user is typing them in the urlbar
   // textbox.  If false, autofill will be disabled.
@@ -266,6 +273,10 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether results will include sponsored quick suggest suggestions.
   ["suggest.quicksuggest.sponsored", false],
 
+  // If `browser.urlbar.addons.featureGate` is true, this controls whether
+  // addon suggestions are turned on.
+  ["suggest.addons", true],
+
   // Whether results will include search suggestions.
   ["suggest.searches", false],
 
@@ -424,6 +435,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
 
   // The maximum number of trending results to show while not in search mode.
   ["trending.maxResultsNoSearchMode", 10],
+
+  // Feature gate pref for rich suggestions being shown in the urlbar.
+  ["richSuggestions.featureGate", false],
 ]);
 
 const PREF_OTHER_DEFAULTS = new Map([
@@ -439,6 +453,8 @@ const PREF_OTHER_DEFAULTS = new Map([
 // Variables with fallback prefs do not need to be defined here because their
 // defaults are the values of their fallbacks.
 const NIMBUS_DEFAULTS = {
+  addonsShowLessFrequentlyCap: 0,
+  addonsUITreatment: "a",
   experimentType: "",
   isBestMatchExperiment: false,
   quickSuggestRemoteSettingsDataType: "data",
@@ -1428,8 +1444,8 @@ class Preferences {
           prefName => !this.get(prefName)
         );
       case "autoFillAdaptiveHistoryUseCountThreshold":
-        const nimbusValue = this._nimbus
-          .autoFillAdaptiveHistoryUseCountThreshold;
+        const nimbusValue =
+          this._nimbus.autoFillAdaptiveHistoryUseCountThreshold;
         return nimbusValue === undefined
           ? this.get("autoFill.adaptiveHistory.useCountThreshold")
           : parseFloat(nimbusValue);

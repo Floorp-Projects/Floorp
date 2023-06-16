@@ -708,6 +708,11 @@ public final class GeckoRuntime implements Parcelable {
   }
 
   @WrapForJNI
+  /* package */ float textScaleFactor() {
+    return getSettings().getFontSizeFactor();
+  }
+
+  @WrapForJNI
   /* package */ boolean usesDarkTheme() {
     switch (getSettings().getPreferredColorScheme()) {
       case GeckoRuntimeSettings.COLOR_SCHEME_SYSTEM:

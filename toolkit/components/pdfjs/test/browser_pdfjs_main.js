@@ -27,10 +27,10 @@ add_task(async function test() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function(newTabBrowser) {
+    async function (newTabBrowser) {
       await waitForPdfJS(newTabBrowser, TESTROOT + "file_pdfjs_test.pdf");
 
-      await SpecialPowers.spawn(newTabBrowser, [], async function() {
+      await SpecialPowers.spawn(newTabBrowser, [], async function () {
         // Overall sanity tests
         Assert.ok(
           content.document.querySelector("div#viewer"),

@@ -281,7 +281,7 @@ function getNotificationButton(win, notificationId, button) {
  * called to continue the setup of the test updater.
  */
 function setupTestUpdater() {
-  return (async function() {
+  return (async function () {
     if (Services.prefs.getBoolPref(PREF_APP_UPDATE_STAGING_ENABLED)) {
       try {
         restoreUpdaterBackup();
@@ -306,7 +306,7 @@ function setupTestUpdater() {
  * copyTestUpdater to continue the setup of the test updater.
  */
 function moveRealUpdater() {
-  return (async function() {
+  return (async function () {
     try {
       // Move away the real updater
       let greBinDir = getGREBinDir();
@@ -346,7 +346,7 @@ function moveRealUpdater() {
  * at times leave the file in use.
  */
 function copyTestUpdater(attempt = 0) {
-  return (async function() {
+  return (async function () {
     try {
       // Copy the test updater
       let greBinDir = getGREBinDir();
@@ -436,7 +436,7 @@ function restoreUpdaterBackup() {
  * and the other files for the updater if a backup of the file exists.
  */
 function finishTestRestoreUpdaterBackup() {
-  return (async function() {
+  return (async function () {
     try {
       // Windows debug builds keep the updater file in use for a short period of
       // time after the updater process exits.
@@ -534,7 +534,7 @@ function runDoorhangerUpdateTest(params, steps) {
       pageURLs,
       expectedStateOverride,
     } = step;
-    return (async function() {
+    return (async function () {
       if (!params.popupShown && !PanelUI.isNotificationPanelOpen) {
         await BrowserTestUtils.waitForEvent(
           PanelUI.notificationPanel,
@@ -597,7 +597,7 @@ function runDoorhangerUpdateTest(params, steps) {
     })();
   }
 
-  return (async function() {
+  return (async function () {
     if (params.slowStaging) {
       Services.env.set("MOZ_TEST_SLOW_SKIP_UPDATE_STAGE", "1");
     } else {
@@ -628,7 +628,7 @@ function runDoorhangerUpdateTest(params, steps) {
     if (params.checkAttempts) {
       // Perform a background check doorhanger test.
       executeSoon(() => {
-        (async function() {
+        (async function () {
           gAUS.checkForBackgroundUpdates();
           for (var i = 0; i < params.checkAttempts - 1; i++) {
             await waitForEvent("update-error", "check-attempt-failed");
@@ -677,7 +677,7 @@ function runAboutDialogUpdateTest(params, steps) {
       noContinue,
       expectedStateOverride,
     } = step;
-    return (async function() {
+    return (async function () {
       await TestUtils.waitForCondition(
         () =>
           aboutDialog.gAppUpdater &&
@@ -804,8 +804,16 @@ function runAboutDialogUpdateTest(params, steps) {
               expectedText,
               "Sanity check: Expected download status text should be non-empty"
             );
+            if (aboutDialog.document.hasPendingL10nMutations) {
+              await BrowserTestUtils.waitForEvent(
+                aboutDialog.document,
+                "L10nMutationsFinished"
+              );
+            }
             Assert.equal(
-              aboutDialog.document.getElementById("downloadStatus").textContent,
+              aboutDialog.document.querySelector(
+                `#downloading label[data-l10n-name="download-status"]`
+              ).textContent,
               expectedText,
               "Download status text should be correct"
             );
@@ -815,16 +823,42 @@ function runAboutDialogUpdateTest(params, steps) {
         await continueFileHandler(continueFile);
       }
 
-      let linkPanels = ["downloadFailed", "manualUpdate", "unsupportedSystem"];
+      let linkPanels = [
+        "downloadFailed",
+        "manualUpdate",
+        "unsupportedSystem",
+        "internalError",
+      ];
       if (linkPanels.includes(panelId)) {
         // The unsupportedSystem panel uses the update's detailsURL and the
         // downloadFailed and manualUpdate panels use the app.update.url.manual
         // preference.
-        let link = selectedPanel.querySelector("label.text-link");
+        let selector = "label.text-link";
+        if (selectedPanel.ownerDocument.hasPendingL10nMutations) {
+          await BrowserTestUtils.waitForEvent(
+            selectedPanel.ownerDocument,
+            "L10nMutationsFinished"
+          );
+        }
+        let link = selectedPanel.querySelector(selector);
         is(
           link.href,
           gDetailsURL,
           `The panel's link href should equal ${gDetailsURL}`
+        );
+        const assertNonEmptyText = (node, description) => {
+          let textContent = node.textContent.trim();
+          ok(textContent, `${description}, got "${textContent}"`);
+        };
+        assertNonEmptyText(
+          link,
+          `The panel's link should have non-empty textContent`
+        );
+        let linkWrapperClone = link.parentNode.cloneNode(true);
+        linkWrapperClone.querySelector(selector).remove();
+        assertNonEmptyText(
+          linkWrapperClone,
+          `The panel's link should have text around the link`
         );
       }
 
@@ -846,7 +880,7 @@ function runAboutDialogUpdateTest(params, steps) {
     })();
   }
 
-  return (async function() {
+  return (async function () {
     Services.env.set("MOZ_TEST_SLOW_SKIP_UPDATE_STAGE", "1");
     await SpecialPowers.pushPrefEnv({
       set: [
@@ -940,7 +974,7 @@ function runAboutPrefsUpdateTest(params, steps) {
       forceApply,
       expectedStateOverride,
     } = step;
-    return (async function() {
+    return (async function () {
       await SpecialPowers.spawn(
         tab.linkedBrowser,
         [{ panelId }],
@@ -1075,7 +1109,16 @@ function runAboutPrefsUpdateTest(params, steps) {
             let actualText = await SpecialPowers.spawn(
               tab.linkedBrowser,
               [],
-              () => content.document.getElementById("downloading").textContent
+              async () => {
+                const { document } = content;
+                if (document.hasPendingL10nMutations) {
+                  await ContentTaskUtils.waitForEvent(
+                    document,
+                    "L10nMutationsFinished"
+                  );
+                }
+                return document.getElementById("downloading").textContent;
+              }
             );
             let expectedSuffix = DownloadUtils.getTransferTotal(
               data[resultName] == gBadSizeResult ? 0 : patch.size,
@@ -1104,6 +1147,7 @@ function runAboutPrefsUpdateTest(params, steps) {
             "downloadFailed",
             "manualUpdate",
             "unsupportedSystem",
+            "internalError",
           ];
           if (linkPanels.includes(panelId)) {
             let { selectedPanel } = content.gAppUpdater;
@@ -1122,11 +1166,31 @@ function runAboutPrefsUpdateTest(params, steps) {
             if (selectedPanel.id == "manualUpdate") {
               selector = "a.manualLink";
             }
+            if (selectedPanel.ownerDocument.hasPendingL10nMutations) {
+              await ContentTaskUtils.waitForEvent(
+                selectedPanel.ownerDocument,
+                "L10nMutationsFinished"
+              );
+            }
             let link = selectedPanel.querySelector(selector);
             is(
               link.href,
               gDetailsURL,
               `The panel's link href should equal ${gDetailsURL}`
+            );
+            const assertNonEmptyText = (node, description) => {
+              let textContent = node.textContent.trim();
+              ok(textContent, `${description}, got "${textContent}"`);
+            };
+            assertNonEmptyText(
+              link,
+              `The panel's link should have non-empty textContent`
+            );
+            let linkWrapperClone = link.parentNode.cloneNode(true);
+            linkWrapperClone.querySelector(selector).remove();
+            assertNonEmptyText(
+              linkWrapperClone,
+              `The panel's link should have text around the link`
             );
           }
 
@@ -1148,7 +1212,7 @@ function runAboutPrefsUpdateTest(params, steps) {
     })();
   }
 
-  return (async function() {
+  return (async function () {
     Services.env.set("MOZ_TEST_SLOW_SKIP_UPDATE_STAGE", "1");
     await SpecialPowers.pushPrefEnv({
       set: [
@@ -1257,7 +1321,7 @@ function removeUpdateSettingsIni() {
  * @return A promise which will resolve after the .
  */
 function runTelemetryUpdateTest(updateParams, event, stageFailure = false) {
-  return (async function() {
+  return (async function () {
     Services.telemetry.clearScalars();
     Services.env.set("MOZ_TEST_SKIP_UPDATE_STAGE", "1");
     await SpecialPowers.pushPrefEnv({

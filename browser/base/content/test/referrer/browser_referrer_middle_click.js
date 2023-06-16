@@ -5,7 +5,7 @@ function startMiddleClickTestCase(aTestNumber) {
   info(
     "browser_referrer_middle_click: " + getReferrerTestDescription(aTestNumber)
   );
-  someTabLoaded(gTestWindow).then(function(aNewTab) {
+  someTabLoaded(gTestWindow).then(function (aNewTab) {
     BrowserTestUtils.switchTab(gTestWindow.gBrowser, aNewTab).then(() => {
       checkReferrerAndStartNextTest(
         aTestNumber,

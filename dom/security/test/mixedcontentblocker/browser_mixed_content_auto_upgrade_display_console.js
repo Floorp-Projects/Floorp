@@ -11,7 +11,7 @@ let seenAutoUpgradeMessage = false;
 const kTestURI =
   testPath + "file_mixed_content_auto_upgrade_display_console.html";
 
-add_task(async function() {
+add_task(async function () {
   // A longer timeout is necessary for this test than the plain mochitests
   // due to opening a new tab with the web console.
   requestLongerTimeout(4);

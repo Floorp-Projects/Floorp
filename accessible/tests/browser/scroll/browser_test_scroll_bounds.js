@@ -13,13 +13,19 @@ requestLongerTimeout(2);
 
 const appUnitsPerDevPixel = 60;
 
-function testCachedScrollPosition(acc, expectedX, expectedY) {
+function testCachedScrollPosition(
+  acc,
+  expectedX,
+  expectedY,
+  shouldBeEmpty = false
+) {
   let cachedPosition = "";
   try {
     cachedPosition = acc.cache.getStringProperty("scroll-position");
   } catch (e) {
-    // If the key doesn't exist, this means 0, 0.
-    cachedPosition = "0, 0";
+    info("Cache was not populated");
+    // If the key doesn't exist, this frame is not scrollable.
+    return shouldBeEmpty;
   }
 
   // The value we retrieve from the cache is in app units, but the values
@@ -52,7 +58,7 @@ addAccessibleTask(
   <div id='rect' style='height:40px; width:200px; background:blue; margin-bottom:3400px'>
   </div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     ok(docAcc, "iframe document acc is present");
     await testBoundsWithContent(docAcc, "square", browser);
     await testBoundsWithContent(docAcc, "rect", browser);
@@ -95,14 +101,7 @@ addAccessibleTask(
   <div id='rect' style='height:40px; width:200px; background:blue; margin-bottom:3400px'>
   </div>
   `,
-  async function(browser, docAcc) {
-    // We can only access the `cache` attribute of an accessible when
-    // the cache is enabled and we're in a remote browser. Verify
-    // both these conditions hold, and return early if they don't.
-    if (!isCacheEnabled || !browser.isRemoteBrowser) {
-      return;
-    }
-
+  async function (browser, docAcc) {
     ok(docAcc, "iframe document acc is present");
     await untilCacheOk(
       () => testCachedScrollPosition(docAcc, 0, 0),
@@ -162,7 +161,7 @@ addAccessibleTask(
     </div>
   </div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const origTopBounds = await testBoundsWithContent(docAcc, "top", browser);
     const origDBounds = await testBoundsWithContent(docAcc, "d", browser);
     const e = waitForEvent(EVENT_REORDER, docAcc);
@@ -331,7 +330,7 @@ addAccessibleTask(
 <hr style="height: 200vh;">
 <p>bottom</p>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const fixed = findAccessibleChildByID(docAcc, "fixed");
     ok(fixed, "fixed is accessible");
     isnot(fixed.role, ROLE_TABLE, "fixed doesn't have ROLE_TABLE");
@@ -390,7 +389,7 @@ addAccessibleTask(
     <button id="top">top</button>
   </div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const containerBounds = await testBoundsWithContent(docAcc, "d", browser);
     const e = waitForEvent(EVENT_REORDER, docAcc);
     await invokeContentTask(browser, [], () => {
@@ -552,7 +551,7 @@ addAccessibleTask(
   <p id="mutateEnd">mutateEnd</p>
 </div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     ok(findAccessibleChildByID(docAcc, "sticky"), "sticky is accessible");
     info("Scrolling to sticky");
     await invokeContentTask(browser, [], () => {
@@ -610,4 +609,54 @@ addAccessibleTask(
     assertBoundsFuzzyEqual(newMutateBounds, origMutateBounds);
   },
   { chrome: true, iframe: true, remoteIframe: true }
+);
+
+/**
+ * Test scroll offset on non-scrollable accs
+ */
+addAccessibleTask(
+  `
+  <div id='square' style='height:100px; width: 100px; background:green;'>hello world
+  </div>
+  `,
+  async function (browser, docAcc) {
+    const square = findAccessibleChildByID(docAcc, "square");
+    await untilCacheOk(
+      () => testCachedScrollPosition(square, 0, 0, true),
+      "Square is not scrollable."
+    );
+
+    info("Adding more text content to square");
+    await invokeContentTask(browser, [], () => {
+      const s = content.document.getElementById("square");
+      s.textContent =
+        "hello world I am some text and I should overflow this container because I am very long";
+      s.offsetTop; // Flush layout.
+    });
+
+    await waitForContentPaint(browser);
+
+    await untilCacheOk(
+      () => testCachedScrollPosition(square, 0, 0, true),
+      "Square is not scrollable (still has overflow:visible)."
+    );
+
+    info("Adding overflow:auto; styling");
+    await invokeContentTask(browser, [], () => {
+      const s = content.document.getElementById("square");
+      s.setAttribute(
+        "style",
+        "overflow:auto; height:100px; width: 100px; background:green;"
+      );
+      s.offsetTop; // Flush layout.
+    });
+
+    await waitForContentPaint(browser);
+
+    await untilCacheOk(
+      () => testCachedScrollPosition(square, 0, 0),
+      "Square is scrollable."
+    );
+  },
+  { iframe: true, remoteIframe: true }
 );

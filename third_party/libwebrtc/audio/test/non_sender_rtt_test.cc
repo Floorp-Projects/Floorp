@@ -23,7 +23,7 @@ TEST_F(NonSenderRttTest, NonSenderRttStats) {
     const int kTestDurationMs = 10000;
     const int64_t kRttMs = 30;
 
-    BuiltInNetworkBehaviorConfig GetNetworkPipeConfig() const override {
+    BuiltInNetworkBehaviorConfig GetSendTransportConfig() const override {
       BuiltInNetworkBehaviorConfig pipe_config;
       pipe_config.queue_delay_ms = kRttMs / 2;
       return pipe_config;

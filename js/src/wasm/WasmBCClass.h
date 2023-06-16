@@ -1338,9 +1338,11 @@ struct BaseCompiler final {
                                                 Lhs lhs, Rhs rhs);
 #ifdef ENABLE_WASM_GC
   // Jump to the given branch, passing results, if the WasmGcObject, `object`,
-  // is a subtype of `typeIndex`.
+  // is a subtype of `destType`.
   [[nodiscard]] bool jumpConditionalWithResults(BranchState* b, RegRef object,
-                                                RefType type, bool onSuccess);
+                                                RefType sourceType,
+                                                RefType destType,
+                                                bool onSuccess);
 #endif
   template <typename Cond>
   [[nodiscard]] bool sniffConditionalControlCmp(Cond compareOp,
@@ -1655,7 +1657,7 @@ struct BaseCompiler final {
   [[nodiscard]] bool emitBrOnCastCommon(bool onSuccess,
                                         uint32_t labelRelativeDepth,
                                         const ResultType& labelType,
-                                        const RefType& destType);
+                                        RefType sourceType, RefType destType);
   [[nodiscard]] bool emitBrOnCast();
   [[nodiscard]] bool emitExternInternalize();
   [[nodiscard]] bool emitExternExternalize();
@@ -1686,14 +1688,14 @@ struct BaseCompiler final {
   void emitGcSetScalar(const T& dst, FieldType type, AnyReg value);
 
   // Common code for both old and new ref.test instructions.
-  void emitRefTestCommon(const RefType& type);
+  void emitRefTestCommon(RefType sourceType, RefType destType);
   // Common code for both old and new ref.cast instructions.
-  void emitRefCastCommon(const RefType& type);
+  void emitRefCastCommon(RefType sourceType, RefType destType);
 
   // Allocate registers and branch if the given object is a subtype of the given
   // heap type.
-  void branchGcRefType(RegRef object, const RefType& type, Label* label,
-                       bool onSuccess);
+  void branchGcRefType(RegRef object, RefType sourceType, RefType destType,
+                       Label* label, bool onSuccess);
 
   // Write `value` to wasm struct `object`, at `areaBase + areaOffset`.  The
   // caller must decide on the in- vs out-of-lineness before the call and set

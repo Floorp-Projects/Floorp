@@ -125,7 +125,7 @@ async function checkDialog(
   });
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["prompts.contentPromptSubDialog", true],
@@ -196,7 +196,7 @@ add_task(async function test_check_auth() {
     Ci.nsIPrompt.MODAL_TYPE_TAB
   );
 
-  let subframeLoad = function(browser) {
+  let subframeLoad = function (browser) {
     return SpecialPowers.spawn(browser, [AUTH_URI], uri => {
       let f = content.document.createElement("iframe");
       f.src = uri;

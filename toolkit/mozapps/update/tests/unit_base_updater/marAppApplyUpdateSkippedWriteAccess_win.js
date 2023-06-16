@@ -25,7 +25,7 @@ async function run_test() {
     FILE_UPDATE_TEST,
     FILE_UPDATE_VERSION,
   ];
-  filesToLock.forEach(function(aFileLeafName) {
+  filesToLock.forEach(function (aFileLeafName) {
     let file = getUpdateDirFile(aFileLeafName);
     if (!file.exists()) {
       file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o444);
@@ -37,7 +37,7 @@ async function run_test() {
   });
 
   registerCleanupFunction(() => {
-    filesToLock.forEach(function(aFileLeafName) {
+    filesToLock.forEach(function (aFileLeafName) {
       let file = getUpdateDirFile(aFileLeafName);
       if (file.exists()) {
         file.QueryInterface(Ci.nsILocalFileWin);

@@ -604,13 +604,11 @@ void RenderThread::HandleFrameOneDocInner(wr::WindowId aWindowId, bool aRender,
 
     WindowInfo* info = it->second.get();
     PendingFrameInfo& frameInfo = info->mPendingFrames.front();
-    frameInfo.mFrameNeedsRender |= aRender;
-    render = frameInfo.mFrameNeedsRender;
 
     frame = frameInfo;
   } else {
     // Just give the frame info default values.
-    frame = {TimeStamp::Now(), VsyncId(), aRender};
+    frame = {TimeStamp::Now(), VsyncId()};
   }
 
   // Sadly this doesn't include the lock, since we don't have the frame there
@@ -925,8 +923,7 @@ void RenderThread::IncPendingFrameCount(wr::WindowId aWindowId,
     return;
   }
   it->second->mPendingFrameBuild++;
-  it->second->mPendingFrames.push(
-      PendingFrameInfo{aStartTime, aStartId, false});
+  it->second->mPendingFrames.push(PendingFrameInfo{aStartTime, aStartId});
 }
 
 void RenderThread::DecPendingFrameBuildCount(wr::WindowId aWindowId) {

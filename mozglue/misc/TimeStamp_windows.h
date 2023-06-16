@@ -86,6 +86,13 @@ class TimeStampValue {
     return int64_t(*this - aOther) != 0;
   }
   bool IsNull() const { return mIsNull; }
+
+#if defined(DEBUG)
+  uint64_t GTC() const { return mGTC; }
+  uint64_t QPC() const { return mQPC; }
+
+  bool HasQPC() const { return mHasQPC; }
+#endif
 };
 
 }  // namespace mozilla

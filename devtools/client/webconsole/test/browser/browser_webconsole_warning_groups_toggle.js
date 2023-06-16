@@ -18,11 +18,11 @@ const BLOCKED_URL =
   "browser/devtools/client/webconsole/test/browser/test-image.png";
 const WARNING_GROUP_PREF = "devtools.webconsole.groupWarningMessages";
 
-const { UrlClassifierTestUtils } = ChromeUtils.import(
-  "resource://testing-common/UrlClassifierTestUtils.jsm"
+const { UrlClassifierTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
 );
 UrlClassifierTestUtils.addTestTrackers();
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   UrlClassifierTestUtils.cleanupTestTrackers();
 });
 
@@ -240,7 +240,7 @@ let cpt = 0;
  */
 function emitContentBlockedMessage(hud) {
   const url = `${BLOCKED_URL}?${++cpt}`;
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [url], function(innerURL) {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [url], function (innerURL) {
     content.wrappedJSObject.loadImage(innerURL);
   });
 }
@@ -253,7 +253,7 @@ function emitContentBlockedMessage(hud) {
  */
 function logString(hud, str) {
   const onMessage = waitForMessageByType(hud, str, ".console-api");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [str], function(arg) {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [str], function (arg) {
     content.console.log(arg);
   });
   return onMessage;

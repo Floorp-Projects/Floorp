@@ -108,35 +108,15 @@ nsScannerSubstring::nsScannerSubstring()
     : mStart(nullptr, nullptr),
       mEnd(nullptr, nullptr),
       mBufferList(nullptr),
-      mLength(0),
-      mIsDirty(true) {}
+      mLength(0) {}
 
 nsScannerSubstring::nsScannerSubstring(const nsAString& s)
-    : mBufferList(nullptr), mIsDirty(true) {
+    : mBufferList(nullptr) {
   Rebind(s);
 }
 
 nsScannerSubstring::~nsScannerSubstring() {
   release_ownership_of_buffer_list();
-}
-
-int32_t nsScannerSubstring::CountChar(char16_t c) const {
-  /*
-    re-write this to use a counting sink
-   */
-
-  size_type result = 0;
-  size_type lengthToExamine = Length();
-
-  nsScannerIterator iter;
-  for (BeginReading(iter);;) {
-    int32_t lengthToExamineInThisFragment = iter.size_forward();
-    const char16_t* fromBegin = iter.get();
-    result += size_type(
-        NS_COUNT(fromBegin, fromBegin + lengthToExamineInThisFragment, c));
-    if (!(lengthToExamine -= lengthToExamineInThisFragment)) return result;
-    iter.advance(lengthToExamineInThisFragment);
-  }
 }
 
 void nsScannerSubstring::Rebind(const nsScannerSubstring& aString,
@@ -151,38 +131,15 @@ void nsScannerSubstring::Rebind(const nsScannerSubstring& aString,
   mEnd = aEnd;
   mBufferList = aString.mBufferList;
   mLength = Distance(aStart, aEnd);
-  mIsDirty = true;
 }
 
 void nsScannerSubstring::Rebind(const nsAString& aString) {
   release_ownership_of_buffer_list();
 
   mBufferList = new nsScannerBufferList(AllocBufferFromString(aString));
-  mIsDirty = true;
 
   init_range_from_buffer_list();
   acquire_ownership_of_buffer_list();
-}
-
-const nsAString& nsScannerSubstring::AsString() const {
-  if (mIsDirty) {
-    nsScannerSubstring* mutable_this = const_cast<nsScannerSubstring*>(this);
-
-    if (mStart.mBuffer == mEnd.mBuffer) {
-      // We only have a single fragment to deal with, so just return it
-      // as a substring.
-      mutable_this->mFlattenedRep.Rebind(mStart.mPosition, mEnd.mPosition);
-    } else {
-      // Otherwise, we need to copy the data into a flattened buffer.
-      nsScannerIterator start, end;
-      CopyUnicodeTo(BeginReading(start), EndReading(end),
-                    mutable_this->mFlattenedRep);
-    }
-
-    mutable_this->mIsDirty = false;
-  }
-
-  return mFlattenedRep;
 }
 
 nsScannerIterator& nsScannerSubstring::BeginReading(
@@ -273,8 +230,6 @@ void nsScannerString::AppendBuffer(Buffer* aBuf) {
 
   mEnd.mBuffer = aBuf;
   mEnd.mPosition = aBuf->DataEnd();
-
-  mIsDirty = true;
 }
 
 void nsScannerString::DiscardPrefix(const nsScannerIterator& aIter) {
@@ -286,8 +241,6 @@ void nsScannerString::DiscardPrefix(const nsScannerIterator& aIter) {
   old_start.mBuffer->DecrementUsageCount();
 
   mBufferList->DiscardUnreferencedPrefix(old_start.mBuffer);
-
-  mIsDirty = true;
 }
 
 void nsScannerString::UngetReadable(const nsAString& aReadable,
@@ -321,8 +274,6 @@ void nsScannerString::UngetReadable(const nsAString& aReadable,
 
   mEnd.mBuffer = mBufferList->Tail();
   mEnd.mPosition = mEnd.mBuffer->DataEnd();
-
-  mIsDirty = true;
 }
 
 /**
@@ -364,16 +315,6 @@ void nsScannerSharedSubstring::ReleaseBuffer() {
   mBuffer->DecrementUsageCount();
   mBufferList->DiscardUnreferencedPrefix(mBuffer);
   mBufferList->Release();
-}
-
-void nsScannerSharedSubstring::MakeMutable() {
-  nsString temp(mString);  // this will force a copy of the data
-  mString.Assign(temp);    // mString will now share the just-allocated buffer
-
-  ReleaseBuffer();
-
-  mBuffer = nullptr;
-  mBufferList = nullptr;
 }
 
 /**
@@ -418,20 +359,6 @@ bool CopyUnicodeTo(const nsScannerIterator& aSrcStart,
 }
 
 bool AppendUnicodeTo(const nsScannerIterator& aSrcStart,
-                     const nsScannerIterator& aSrcEnd,
-                     nsScannerSharedSubstring& aDest) {
-  // Check whether we can just create a dependent string.
-  if (aDest.str().IsEmpty()) {
-    // We can just make |aDest| point to the buffer.
-    // This will take care of copying if the buffer spans fragments.
-    aDest.Rebind(aSrcStart, aSrcEnd);
-    return true;
-  }
-  // The dest string is not empty, so it can't be a dependent substring.
-  return AppendUnicodeTo(aSrcStart, aSrcEnd, aDest.writable());
-}
-
-bool AppendUnicodeTo(const nsScannerIterator& aSrcStart,
                      const nsScannerIterator& aSrcEnd, nsAString& aDest) {
   const nsAString::size_type oldLength = aDest.Length();
   mozilla::CheckedInt<nsAString::size_type> newLen(
@@ -449,128 +376,4 @@ bool AppendUnicodeTo(const nsScannerIterator& aSrcStart,
 
   copy_multifragment_string(fromBegin, aSrcEnd, writer);
   return true;
-}
-
-bool FindCharInReadable(char16_t aChar, nsScannerIterator& aSearchStart,
-                        const nsScannerIterator& aSearchEnd) {
-  while (aSearchStart != aSearchEnd) {
-    int32_t fragmentLength;
-    if (SameFragment(aSearchStart, aSearchEnd))
-      fragmentLength = aSearchEnd.get() - aSearchStart.get();
-    else
-      fragmentLength = aSearchStart.size_forward();
-
-    const char16_t* charFoundAt =
-        nsCharTraits<char16_t>::find(aSearchStart.get(), fragmentLength, aChar);
-    if (charFoundAt) {
-      aSearchStart.advance(charFoundAt - aSearchStart.get());
-      return true;
-    }
-
-    aSearchStart.advance(fragmentLength);
-  }
-
-  return false;
-}
-
-bool FindInReadable(const nsAString& aPattern, nsScannerIterator& aSearchStart,
-                    nsScannerIterator& aSearchEnd,
-                    const nsStringComparator compare) {
-  bool found_it = false;
-
-  // only bother searching at all if we're given a non-empty range to search
-  if (aSearchStart != aSearchEnd) {
-    nsAString::const_iterator aPatternStart, aPatternEnd;
-    aPattern.BeginReading(aPatternStart);
-    aPattern.EndReading(aPatternEnd);
-
-    // outer loop keeps searching till we find it or run out of string to search
-    while (!found_it) {
-      // fast inner loop (that's what it's called, not what it is) looks for a
-      // potential match
-      while (aSearchStart != aSearchEnd &&
-             compare(aPatternStart.get(), aSearchStart.get(), 1, 1))
-        ++aSearchStart;
-
-      // if we broke out of the `fast' loop because we're out of string ...
-      // we're done: no match
-      if (aSearchStart == aSearchEnd) break;
-
-      // otherwise, we're at a potential match, let's see if we really hit one
-      nsAString::const_iterator testPattern(aPatternStart);
-      nsScannerIterator testSearch(aSearchStart);
-
-      // slow inner loop verifies the potential match (found by the `fast' loop)
-      // at the current position
-      for (;;) {
-        // we already compared the first character in the outer loop,
-        //  so we'll advance before the next comparison
-        ++testPattern;
-        ++testSearch;
-
-        // if we verified all the way to the end of the pattern, then we found
-        // it!
-        if (testPattern == aPatternEnd) {
-          found_it = true;
-          aSearchEnd = testSearch;  // return the exact found range through the
-                                    // parameters
-          break;
-        }
-
-        // if we got to end of the string we're searching before we hit the end
-        // of the
-        //  pattern, we'll never find what we're looking for
-        if (testSearch == aSearchEnd) {
-          aSearchStart = aSearchEnd;
-          break;
-        }
-
-        // else if we mismatched ... it's time to advance to the next search
-        // position
-        //  and get back into the `fast' loop
-        if (compare(testPattern.get(), testSearch.get(), 1, 1)) {
-          ++aSearchStart;
-          break;
-        }
-      }
-    }
-  }
-
-  return found_it;
-}
-
-/**
- * This implementation is simple, but does too much work.
- * It searches the entire string from left to right, and returns the last match
- * found, if any. This implementation will be replaced when I get
- * |reverse_iterator|s working.
- */
-bool RFindInReadable(const nsAString& aPattern, nsScannerIterator& aSearchStart,
-                     nsScannerIterator& aSearchEnd,
-                     const nsStringComparator aComparator) {
-  bool found_it = false;
-
-  nsScannerIterator savedSearchEnd(aSearchEnd);
-  nsScannerIterator searchStart(aSearchStart), searchEnd(aSearchEnd);
-
-  while (searchStart != searchEnd) {
-    if (FindInReadable(aPattern, searchStart, searchEnd, aComparator)) {
-      found_it = true;
-
-      // this is the best match so far, so remember it
-      aSearchStart = searchStart;
-      aSearchEnd = searchEnd;
-
-      // ...and get ready to search some more
-      //  (it's tempting to set |searchStart=searchEnd| ... but that misses
-      //  overlapping patterns)
-      ++searchStart;
-      searchEnd = savedSearchEnd;
-    }
-  }
-
-  // if we never found it, return an empty range
-  if (!found_it) aSearchStart = aSearchEnd;
-
-  return found_it;
 }

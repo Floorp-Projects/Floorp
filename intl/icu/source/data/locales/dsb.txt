@@ -411,29 +411,29 @@ dsb{
                     y{"GGGGG y-MM-dd – y-MM-dd"}
                 }
                 M{
-                    M{"M. – M."}
+                    M{"M. – M."}
                 }
                 MEd{
-                    M{"E, d.M. – E, d.M."}
-                    d{"E, d.M. – E, d.M."}
+                    M{"E, d.M. – E, d.M."}
+                    d{"E, d.M. – E, d.M."}
                 }
                 MMM{
                     M{"LLL – LLL"}
                 }
                 MMMEd{
                     M{"E, d. MMM – E, d. MMM"}
-                    d{"E, d. – E, d. MMM"}
+                    d{"E, d. – E, d. MMM"}
                 }
                 MMMd{
                     M{"d. MMM – d. MMM"}
-                    d{"d. – d. MMM"}
+                    d{"d. – d. MMM"}
                 }
                 Md{
-                    M{"d.M. – d.M."}
-                    d{"d.M. – d.M."}
+                    M{"d.M. – d.M."}
+                    d{"d.M. – d.M."}
                 }
                 d{
-                    d{"d. – d."}
+                    d{"d. – d."}
                 }
                 fallback{"{0} – {1}"}
                 y{
@@ -454,7 +454,7 @@ dsb{
                 }
                 yMMMEd{
                     M{"E, d. MMM – E, d. MMM y G"}
-                    d{"E, d. – E, d. MMM y G"}
+                    d{"E, d. – E, d. MMM y G"}
                     y{"E, d. MMM y – E, d. MMM y G"}
                 }
                 yMMMM{
@@ -463,7 +463,7 @@ dsb{
                 }
                 yMMMd{
                     M{"d. MMM – d. MMM y G"}
-                    d{"d. – d. MMM y G"}
+                    d{"d. – d. MMM y G"}
                     y{"d. MMM y – d. MMM y G"}
                 }
                 yMd{
@@ -709,7 +709,7 @@ dsb{
                 }
                 GyMEd{
                     G{"E, dd.MM.y G – E, dd.MM.y G"}
-                    M{"E, dd.MM. – E, dd.MM.y G"}
+                    M{"E, dd.MM. – E, dd.MM.y G"}
                     d{"E, dd.MM.y – E, dd.MM.y G"}
                     y{"E, dd.MM.y – E, dd.MM.y G"}
                 }
@@ -721,7 +721,7 @@ dsb{
                 GyMMMEd{
                     G{"E, d. MMM y G – E, d. MMM y G"}
                     M{"E, d. MMM – E, d. MMM y G"}
-                    d{"E, d. – E, d. MMM y G"}
+                    d{"E, d. – E, d. MMM y G"}
                     y{"E, d. MMM y – E, d. MMM y G"}
                 }
                 GyMMMd{
@@ -732,7 +732,7 @@ dsb{
                 }
                 GyMd{
                     G{"dd.MM.y G – dd.MM.y G"}
-                    M{"dd.MM. – dd.MM.y G"}
+                    M{"dd.MM. – dd.MM.y G"}
                     d{"dd.–dd.MM.y G"}
                     y{"dd.MM.y – dd.MM.y G"}
                 }
@@ -751,29 +751,29 @@ dsb{
                     H{"H–H v"}
                 }
                 M{
-                    M{"M. – M."}
+                    M{"M. – M."}
                 }
                 MEd{
-                    M{"E, d.M. – E, d.M."}
-                    d{"E, d.M. – E, d.M."}
+                    M{"E, d.M. – E, d.M."}
+                    d{"E, d.M. – E, d.M."}
                 }
                 MMM{
                     M{"LLL – LLL"}
                 }
                 MMMEd{
                     M{"E, d. MMM – E, d. MMM"}
-                    d{"E, d. – E, d. MMM"}
+                    d{"E, d. – E, d. MMM"}
                 }
                 MMMd{
                     M{"d. MMM – d. MMM"}
-                    d{"d. – d. MMM"}
+                    d{"d. – d. MMM"}
                 }
                 Md{
-                    M{"d.M. – d.M."}
-                    d{"d.M. – d.M."}
+                    M{"d.M. – d.M."}
+                    d{"d.M. – d.M."}
                 }
                 d{
-                    d{"d. – d."}
+                    d{"d. – d."}
                 }
                 fallback{"{0} – {1}"}
                 h{
@@ -812,7 +812,7 @@ dsb{
                 }
                 yMMMEd{
                     M{"E, d. MMM – E, d. MMM y"}
-                    d{"E, d. – E, d. MMM y"}
+                    d{"E, d. – E, d. MMM y"}
                     y{"E, d. MMM y – E, d. MMM y"}
                 }
                 yMMMM{
@@ -821,7 +821,7 @@ dsb{
                 }
                 yMMMd{
                     M{"d. MMM – d. MMM y"}
-                    d{"d. – d. MMM y"}
+                    d{"d. – d. MMM y"}
                     y{"d. MMM y – d. MMM y"}
                 }
                 yMd{
@@ -1140,7 +1140,16 @@ dsb{
         dayperiod-narrow{
             dn{"poł. dnja"}
         }
+        dayperiod-short{
+            dn{"połojca dnja"}
+        }
         era{
+            dn{"epocha"}
+        }
+        era-narrow{
+            dn{"epocha"}
+        }
+        era-short{
             dn{"epocha"}
         }
         fri{
@@ -1949,6 +1958,12 @@ dsb{
         weekday{
             dn{"źeń tyźenja"}
         }
+        weekday-narrow{
+            dn{"źeń tyźenja"}
+        }
+        weekday-short{
+            dn{"źeń tyźenja"}
+        }
         weekdayOfMonth{
             dn{"źeń tyźenja w mjasecu"}
         }
@@ -2030,6 +2045,9 @@ dsb{
         zone-narrow{
             dn{"cas. pasmo"}
         }
+        zone-short{
+            dn{"casowe pasmo"}
+        }
     }
     layout{
         characters{"left-to-right"}
@@ -2040,11 +2058,31 @@ dsb{
             2{"{0} abo {1}"}
             end{"{0} abo {1}"}
         }
+        or-narrow{
+            2{"{0} abo {1}"}
+            end{"{0} abo {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         or-short{
             2{"{0} abo {1}"}
             end{"{0} abo {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         standard{
+            2{"{0} a {1}"}
+            end{"{0} a {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-narrow{
+            2{"{0} a {1}"}
+            end{"{0} a {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-short{
             2{"{0} a {1}"}
             end{"{0} a {1}"}
             middle{"{0}, {1}"}
@@ -2086,52 +2124,6 @@ dsb{
                 "yue",
                 "zh",
             }
-        }
-        namePattern{
-            givenFirst-long-addressing-formal{"{prefix} {surname}"}
-            givenFirst-long-addressing-informal{"{given-informal}"}
-            givenFirst-long-monogram-informal{"{given-informal-monogram-allCaps}{surname-monogram-allCaps}"}
-            givenFirst-long-referring-formal{"{given} {given2} {surname} {suffix}"}
-            givenFirst-long-referring-informal{"{given-informal} {surname}"}
-            givenFirst-medium-addressing-formal{"{prefix} {surname}"}
-            givenFirst-medium-addressing-informal{"{given-informal}"}
-            givenFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
-            givenFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname} {suffix}"}
-            givenFirst-medium-referring-informal{"{given-informal} {surname}"}
-            givenFirst-short-addressing-formal{"{prefix} {surname}"}
-            givenFirst-short-addressing-informal{"{given-informal}"}
-            givenFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
-            givenFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
-            givenFirst-short-referring-formal{"{given-initial} {given2-initial} {surname}"}
-            givenFirst-short-referring-informal{"{given-informal} {surname-initial}"}
-            sorting-long-referring-formal{"{surname-core}, {given} {given2} {surname-prefix}"}
-            sorting-long-referring-informal{"{surname}, {given-informal}"}
-            sorting-medium-referring-formal{"{surname-core}, {given} {given2-initial} {surname-prefix}"}
-            sorting-medium-referring-informal{"{surname}, {given-informal}"}
-            sorting-short-referring-formal{"{surname-core}, {given-initial} {given2-initial} {surname-prefix}"}
-            sorting-short-referring-informal{"{surname}, {given-informal}"}
-            surnameFirst-long-addressing-formal{"{prefix} {surname}"}
-            surnameFirst-long-addressing-informal{"{given-informal}"}
-            surnameFirst-long-monogram-formal{
-                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
-                "llCaps}"
-            }
-            surnameFirst-long-monogram-informal{"{surname-monogram-allCaps}{given-informal-monogram-allCaps}"}
-            surnameFirst-long-referring-formal{"{surname}, {given} {given2} {suffix}"}
-            surnameFirst-long-referring-informal{"{surname}, {given-informal}"}
-            surnameFirst-medium-addressing-formal{"{prefix} {surname}"}
-            surnameFirst-medium-addressing-informal{"{given-informal}"}
-            surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
-            surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            surnameFirst-medium-referring-formal{"{surname}, {given} {given2-initial} {suffix}"}
-            surnameFirst-medium-referring-informal{"{surname}, {given-informal}"}
-            surnameFirst-short-addressing-formal{"{prefix} {surname}"}
-            surnameFirst-short-addressing-informal{"{given-informal}"}
-            surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
-            surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
-            surnameFirst-short-referring-formal{"{surname}, {given-initial} {given2-initial}"}
-            surnameFirst-short-referring-informal{"{surname}, {given-initial}"}
         }
     }
 }

@@ -36,6 +36,8 @@
  *
  */
 
+#include <jxl/codestream_header.h>
+#include <jxl/encode.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -43,15 +45,13 @@
 #include <utility>
 #include <vector>
 
-#include "jxl/codestream_header.h"
-#include "jxl/encode.h"
+#include "lib/extras/size_constraints.h"
 #include "lib/jxl/base/byte_order.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/base/scope_guard.h"
 #include "lib/jxl/common.h"
 #include "lib/jxl/sanitizers.h"
-#include "lib/jxl/size_constraints.h"
 #include "png.h" /* original (unpatched) libpng is ok */
 
 namespace jxl {
@@ -491,6 +491,12 @@ int processing_start(png_structp& png_ptr, png_infop& info_ptr, void* frame_ptr,
                      std::vector<std::vector<uint8_t>>& chunksInfo) {
   unsigned char header[8] = {137, 80, 78, 71, 13, 10, 26, 10};
 
+  // Cleanup prior decoder, if any.
+  png_destroy_read_struct(&png_ptr, &info_ptr, 0);
+  // Just in case. Not all versions on libpng wipe-out the pointers.
+  png_ptr = nullptr;
+  info_ptr = nullptr;
+
   png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
   info_ptr = png_create_info_struct(png_ptr);
   if (!png_ptr || !info_ptr) return 1;
@@ -554,9 +560,8 @@ int processing_finish(png_structp png_ptr, png_infop info_ptr,
 }  // namespace
 
 Status DecodeImageAPNG(const Span<const uint8_t> bytes,
-                       const ColorHints& color_hints,
-                       const SizeConstraints& constraints,
-                       PackedPixelFile* ppf) {
+                       const ColorHints& color_hints, PackedPixelFile* ppf,
+                       const SizeConstraints* constraints) {
   Reader r;
   unsigned int id, j, w, h, w0, h0, x0, y0;
   unsigned int delay_num, delay_den, dop, bop, rowbytes, imagesize;
@@ -699,7 +704,8 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
           JXL_CHECK(w == png_get_image_width(png_ptr, info_ptr));
           JXL_CHECK(h == png_get_image_height(png_ptr, info_ptr));
           int colortype = png_get_color_type(png_ptr, info_ptr);
-          ppf->info.bits_per_sample = png_get_bit_depth(png_ptr, info_ptr);
+          int png_bit_depth = png_get_bit_depth(png_ptr, info_ptr);
+          ppf->info.bits_per_sample = png_bit_depth;
           png_color_8p sigbits = NULL;
           png_get_sBIT(png_ptr, info_ptr, &sigbits);
           if (colortype & 1) {
@@ -735,7 +741,7 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
                                                  : JXL_COLOR_SPACE_RGB);
           ppf->info.xsize = w;
           ppf->info.ysize = h;
-          JXL_RETURN_IF_ERROR(VerifyDimensions(&constraints, w, h));
+          JXL_RETURN_IF_ERROR(VerifyDimensions(constraints, w, h));
           num_channels =
               ppf->info.num_color_channels + (ppf->info.alpha_bits ? 1 : 0);
           format = {
@@ -745,6 +751,9 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
               /*endianness=*/JXL_BIG_ENDIAN,
               /*align=*/0,
           };
+          if (png_bit_depth > 8 && format.data_type == JXL_TYPE_UINT8) {
+            png_set_strip_16(png_ptr);
+          }
           bytes_per_pixel =
               num_channels * (format.data_type == JXL_TYPE_UINT16 ? 2 : 1);
           rowbytes = w * bytes_per_pixel;

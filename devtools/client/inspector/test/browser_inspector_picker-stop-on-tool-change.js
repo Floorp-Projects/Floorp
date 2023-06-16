@@ -10,7 +10,7 @@ const TEST_URI =
   "data:text/html;charset=UTF-8," +
   "testing the highlighter goes away on tool selection";
 
-add_task(async function() {
+add_task(async function () {
   const { toolbox } = await openInspectorForURL(TEST_URI);
   const pickerStopped = toolbox.nodePicker.once("picker-stopped");
 

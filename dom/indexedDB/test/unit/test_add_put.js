@@ -54,10 +54,8 @@ function* testSteps() {
                   id: 5,
                 }).onsuccess = grabEventAndContinueHandler;
               } else {
-                store.add(
-                  { existing: "data" },
-                  5
-                ).onsuccess = grabEventAndContinueHandler;
+                store.add({ existing: "data" }, 5).onsuccess =
+                  grabEventAndContinueHandler;
               }
 
               let e = yield undefined;

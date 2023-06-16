@@ -19,7 +19,7 @@ async function checkVPNCardVisibility(tab, shouldBeHidden, subscribed = false) {
   await SpecialPowers.spawn(
     tab.linkedBrowser,
     [{ _shouldBeHidden: shouldBeHidden, _subscribed: subscribed }],
-    async function({ _shouldBeHidden, _subscribed }) {
+    async function ({ _shouldBeHidden, _subscribed }) {
       await ContentTaskUtils.waitForCondition(() => {
         const vpnCard = content.document.querySelector(".vpn-card");
         const subscribedStateCorrect =
@@ -40,7 +40,7 @@ async function checkVPNPromoBannerVisibility(tab, shouldBeHidden) {
   await SpecialPowers.spawn(
     tab.linkedBrowser,
     [{ _shouldBeHidden: shouldBeHidden }],
-    async function({ _shouldBeHidden }) {
+    async function ({ _shouldBeHidden }) {
       await ContentTaskUtils.waitForCondition(() => {
         const vpnBanner = content.document.querySelector(".vpn-banner");
         return ContentTaskUtils.is_hidden(vpnBanner) === _shouldBeHidden;
@@ -66,7 +66,7 @@ async function revertRegions() {
   setHomeRegion(initialHomeRegion);
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.contentblocking.report.monitor.enabled", false],

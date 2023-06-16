@@ -110,7 +110,6 @@ namespace jit {
   _(NaNToZero)                    \
   _(RegExpMatcher)                \
   _(RegExpSearcher)               \
-  _(RegExpTester)                 \
   _(StringReplace)                \
   _(Substr)                       \
   _(TypeOf)                       \
@@ -694,14 +693,6 @@ class RRegExpSearcher final : public RInstruction {
                              SnapshotIterator& iter) const override;
 };
 
-class RRegExpTester final : public RInstruction {
- public:
-  RINSTRUCTION_HEADER_NUM_OP_(RegExpTester, 3)
-
-  [[nodiscard]] bool recover(JSContext* cx,
-                             SnapshotIterator& iter) const override;
-};
-
 class RStringReplace final : public RInstruction {
  private:
   bool isFlatReplacement_;
@@ -772,7 +763,7 @@ class RNewObject final : public RInstruction {
 class RNewPlainObject final : public RInstruction {
  private:
   gc::AllocKind allocKind_;
-  gc::InitialHeap initialHeap_;
+  gc::Heap initialHeap_;
 
  public:
   RINSTRUCTION_HEADER_NUM_OP_(NewPlainObject, 1)
@@ -784,7 +775,7 @@ class RNewPlainObject final : public RInstruction {
 class RNewArrayObject final : public RInstruction {
  private:
   uint32_t length_;
-  gc::InitialHeap initialHeap_;
+  gc::Heap initialHeap_;
 
  public:
   RINSTRUCTION_HEADER_NUM_OP_(NewArrayObject, 1)

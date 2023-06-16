@@ -26,3 +26,9 @@ interface RTCRtpReceiver {
                                                      boolean hasLevel,
                                                      byte level);
 };
+
+//https://w3c.github.io/webrtc-extensions/#rtcrtpreceiver-jitterbuffertarget-rtcrtpreceiver-interface
+partial interface RTCRtpReceiver {
+  [Throws]
+  attribute DOMHighResTimeStamp? jitterBufferTarget;
+};

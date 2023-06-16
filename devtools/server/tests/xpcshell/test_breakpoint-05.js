@@ -12,19 +12,19 @@
 add_task(
   threadFrontTest(({ threadFront, debuggee }) => {
     return new Promise(resolve => {
-      threadFront.once("paused", async function(packet) {
+      threadFront.once("paused", async function (packet) {
         const source = await getSourceById(
           threadFront,
           packet.frame.where.actor
         );
         const location = { line: debuggee.line0 + 3 };
 
-        source.setBreakpoint(location).then(function([response, bpClient]) {
+        source.setBreakpoint(location).then(function ([response, bpClient]) {
           // Check that the breakpoint has properly skipped forward one line.
           Assert.equal(response.actualLocation.source.actor, source.actor);
           Assert.equal(response.actualLocation.line, location.line + 1);
 
-          threadFront.once("paused", function(packet) {
+          threadFront.once("paused", function (packet) {
             // Check the return value.
             Assert.equal(packet.frame.where.actor, source.actor);
             Assert.equal(packet.frame.where.line, location.line + 1);
@@ -35,7 +35,7 @@ add_task(
             Assert.equal(debuggee.b, undefined);
 
             // Remove the breakpoint.
-            bpClient.remove(function(response) {
+            bpClient.remove(function (response) {
               threadFront.resume().then(resolve);
             });
           });

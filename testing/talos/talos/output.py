@@ -30,6 +30,10 @@ class Output(object):
     def __call__(self):
         suites = []
         test_results = {
+            "application": {
+                "name": self.results.results[0].browser_name.lower(),
+                "version": self.results.results[0].browser_version,
+            },
             "framework": {
                 "name": self.results.results[0].framework,
             },

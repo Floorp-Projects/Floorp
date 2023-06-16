@@ -88,7 +88,7 @@ add_task(async function populatePromise() {
   let count = 0;
   let expectedLinks = makeLinks(0, 10, 2);
 
-  let getLinksFcn = async function(callback) {
+  let getLinksFcn = async function (callback) {
     // Should not be calling getLinksFcn twice
     count++;
     Assert.equal(count, 1);
@@ -688,7 +688,7 @@ add_task(async function getHighlightsWithPocketSuccess() {
 
   const fakeResponse = {
     list: {
-      "123": {
+      123: {
         time_added: "123",
         image: { src: "foo.com/img.png" },
         excerpt: "A description for foo",
@@ -698,7 +698,7 @@ add_task(async function getHighlightsWithPocketSuccess() {
         open_url: "http://www.getpocket.com/itemID",
         status: "0",
       },
-      "456": {
+      456: {
         item_id: "456",
         status: "2",
       },
@@ -768,7 +768,7 @@ add_task(async function getHighlightsWithPocketCached() {
 
   let fakeResponse = {
     list: {
-      "123": {
+      123: {
         time_added: "123",
         image: { src: "foo.com/img.png" },
         excerpt: "A description for foo",
@@ -778,7 +778,7 @@ add_task(async function getHighlightsWithPocketCached() {
         open_url: "http://www.getpocket.com/itemID",
         status: "0",
       },
-      "456": {
+      456: {
         item_id: "456",
         status: "2",
       },
@@ -848,7 +848,7 @@ add_task(async function getHighlightsWithPocketCached() {
 add_task(async function getHighlightsWithPocketFailure() {
   await setUpActivityStreamTest();
 
-  NewTabUtils.activityStreamProvider.fetchSavedPocketItems = function() {
+  NewTabUtils.activityStreamProvider.fetchSavedPocketItems = function () {
     throw new Error();
   };
   let provider = NewTabUtils.activityStreamLinks;

@@ -8,7 +8,7 @@ add_task(async function testDetectLanguage() {
       permissions: ["tabs"],
     },
 
-    background: async function() {
+    background: async function () {
       const BASE_PATH = "browser/browser/components/extensions/test/browser";
 
       function loadTab(url) {

@@ -6,7 +6,7 @@
 add_task(async function test_allowScriptsToClose() {
   const files = {
     "dummy.html": "<meta charset=utf-8><script src=close.js></script>",
-    "close.js": function() {
+    "close.js": function () {
       window.close();
       if (!window.closed) {
         browser.test.sendMessage("close-failed");

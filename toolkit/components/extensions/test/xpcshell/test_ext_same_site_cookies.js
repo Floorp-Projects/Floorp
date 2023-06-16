@@ -74,7 +74,7 @@ add_task(async function test_webRequest_same_site_cookie_access() {
               "http://example.com/same_site_cookies?loadXHR",
               true
             );
-            xhr.onload = function() {
+            xhr.onload = function () {
               browser.test.assertEq(
                 "myKey=mySameSiteExtensionCookie",
                 xhr.responseText,
@@ -82,7 +82,7 @@ add_task(async function test_webRequest_same_site_cookie_access() {
               );
               browser.test.sendMessage("same-site-cookie-test-done");
             };
-            xhr.onerror = function() {
+            xhr.onerror = function () {
               browser.test.fail("xhr onerror");
               browser.test.sendMessage("same-site-cookie-test-done");
             };
@@ -95,7 +95,7 @@ add_task(async function test_webRequest_same_site_cookie_access() {
     },
 
     files: {
-      "content_script.js": function() {
+      "content_script.js": function () {
         let myImage = document.createElement("img");
         // Set the src via wrappedJSObject so the load is triggered with the
         // content page's principal rather than ours.
@@ -103,11 +103,11 @@ add_task(async function test_webRequest_same_site_cookie_access() {
           "src",
           "http://example.com/same_site_cookies?loadImage" + Math.random()
         );
-        myImage.onload = function() {
+        myImage.onload = function () {
           browser.test.log("image onload");
           browser.test.sendMessage("image-loaded-and-same-site-cookie-set");
         };
-        myImage.onerror = function() {
+        myImage.onerror = function () {
           browser.test.log("image onerror");
         };
         document.body.appendChild(myImage);

@@ -163,9 +163,8 @@ add_task(async function page_with_iframe() {
       EXAMPLE_URL_2
     );
     await SpecialPowers.spawn(browser, [EXAMPLE_URL_2], url => {
-      content.document.getElementById(
-        "hidden-iframe"
-      ).contentWindow.location = url;
+      content.document.getElementById("hidden-iframe").contentWindow.location =
+        url;
     });
     await pageLoadPromise;
     info("iFrame finished loading.");

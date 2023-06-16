@@ -9,8 +9,8 @@
  * we clear storage under the correct partition.
  */
 
-const { SiteDataTestUtils } = ChromeUtils.import(
-  "resource://testing-common/SiteDataTestUtils.jsm"
+const { SiteDataTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/SiteDataTestUtils.sys.mjs"
 );
 
 const HOST_A = "example.com";
@@ -43,7 +43,7 @@ function createFrame(browser, src, id, sandbox) {
   return SpecialPowers.spawn(
     browser,
     [{ page: src, frameId: id, sandbox }],
-    async function(obj) {
+    async function (obj) {
       await new content.Promise(resolve => {
         let frame = content.document.createElement("iframe");
         if (obj.sandbox) {
@@ -157,7 +157,7 @@ async function runClearSiteDataTest(
           frameId: THIRD_PARTY_FRAME_ID_ORIGIN_B,
         },
       ],
-      async function(obj) {
+      async function (obj) {
         await new content.Promise(resolve => {
           let frame = content.document.getElementById(obj.frameId);
           frame.addEventListener("load", resolve, { once: true });
@@ -371,7 +371,7 @@ async function setupInitialStorageState(storageType) {
   );
 }
 
-add_setup(async function() {
+add_setup(async function () {
   info("Starting ClearSiteData test");
 
   await SpecialPowers.flushPrefEnv();

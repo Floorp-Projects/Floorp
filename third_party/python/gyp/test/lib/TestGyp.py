@@ -7,7 +7,6 @@ TestGyp.py:  a testing framework for GYP integration tests.
 """
 from __future__ import print_function
 
-import collections
 import errno
 import itertools
 import os
@@ -18,6 +17,8 @@ import sys
 import tempfile
 
 from contextlib import contextmanager
+
+from six.moves import collections_abc
 
 import TestCmd
 import TestCommon
@@ -496,7 +497,7 @@ class TestGypCMake(TestGypBase):
     if status is None:
       kw['status'] = None
     else:
-      if not isinstance(status, collections.Iterable): status = (status,)
+      if not isinstance(status, collections_abc.Iterable): status = (status,)
       kw['status'] = list(itertools.chain((0,), status))
     self.cmake_build(gyp_file, target, **kw)
     kw['status'] = status

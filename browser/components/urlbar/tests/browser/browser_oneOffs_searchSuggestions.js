@@ -19,7 +19,7 @@ const serverInfo = {
 var gEngine;
 var gEngine2;
 
-add_setup(async function() {
+add_setup(async function () {
   await PlacesUtils.history.clear();
   await UrlbarTestUtils.formHistory.clear();
   await SpecialPowers.pushPrefEnv({
@@ -41,7 +41,7 @@ add_setup(async function() {
     gEngine,
     Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await Services.search.setDefault(
       oldDefaultEngine,
       Ci.nsISearchService.CHANGE_REASON_UNKNOWN
@@ -177,9 +177,8 @@ add_task(async function test_clickAfterSuggestion() {
   await withSuggestions(async (index, usingFormHistory) => {
     await selectSecondSuggestion(index, usingFormHistory);
 
-    let oneOffs = UrlbarTestUtils.getOneOffSearchButtons(
-      window
-    ).getSelectableButtons(true);
+    let oneOffs =
+      UrlbarTestUtils.getOneOffSearchButtons(window).getSelectableButtons(true);
     let resultsPromise = UrlbarTestUtils.promiseSearchComplete(window);
     EventUtils.synthesizeMouseAtCenter(oneOffs[1], {});
     await resultsPromise;
@@ -196,9 +195,8 @@ add_task(async function test_clickAfterSuggestion_nonDefault() {
   await withSuggestions(async (index, usingFormHistory) => {
     await selectSecondSuggestion(index, usingFormHistory);
 
-    let oneOffs = UrlbarTestUtils.getOneOffSearchButtons(
-      window
-    ).getSelectableButtons(true);
+    let oneOffs =
+      UrlbarTestUtils.getOneOffSearchButtons(window).getSelectableButtons(true);
     let resultsPromise = UrlbarTestUtils.promiseSearchComplete(window);
     EventUtils.synthesizeMouseAtCenter(oneOffs[1], {});
     await resultsPromise;

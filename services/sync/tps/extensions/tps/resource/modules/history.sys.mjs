@@ -110,11 +110,9 @@ export var HistoryEntry = {
       all_items_found = all_items_found && "found" in itemvisit;
       Logger.logInfo(
         `History entry for ${item.uri}, type: ${itemvisit.type}, date: ${itemvisit.date}` +
-          `(${itemvisit.date *
-            60 *
-            60 *
-            1000 *
-            1000}), found = ${!!itemvisit.found}`
+          `(${
+            itemvisit.date * 60 * 60 * 1000 * 1000
+          }), found = ${!!itemvisit.found}`
       );
     }
     return all_items_found;

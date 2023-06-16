@@ -191,13 +191,8 @@ function OptInBox({ error, message }) {
  */
 class StudyList extends React.Component {
   render() {
-    const {
-      addonStudies,
-      prefStudies,
-      translations,
-      experiments,
-      debugMode,
-    } = this.props;
+    const { addonStudies, prefStudies, translations, experiments, debugMode } =
+      this.props;
 
     if (!addonStudies.length && !prefStudies.length && !experiments.length) {
       return r("p", { className: "study-list-info" }, translations.noStudies);

@@ -7,7 +7,7 @@
 
 // Test for CurrentTimeScrubber on RTL environment.
 
-add_task(async function() {
+add_task(async function () {
   Services.scriptloader.loadSubScript(
     CHROME_URL_ROOT + "current-time-scrubber_head.js",
     this

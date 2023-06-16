@@ -261,6 +261,7 @@ extern int NSS_PutEnv(const char *envVarName, const char *envValue);
 
 extern int NSS_SecureMemcmp(const void *a, const void *b, size_t n);
 extern unsigned int NSS_SecureMemcmpZero(const void *mem, size_t n);
+extern void NSS_SecureSelect(void *dest, const void *src0, const void *src1, size_t n, unsigned char b);
 
 /*
  * Load a shared library called "newShLibName" in the same directory as

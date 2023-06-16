@@ -12,11 +12,9 @@ var { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "AddonManager",
-  "resource://gre/modules/AddonManager.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+});
 
 const SIMPLETEST_OVERRIDES = [
   "ok",
@@ -98,7 +96,7 @@ function testInit() {
     );
   } else {
     // This code allows us to redirect without requiring specialpowers for chrome and a11y tests.
-    let messageHandler = function(m) {
+    let messageHandler = function (m) {
       // eslint-disable-next-line no-undef
       messageManager.removeMessageListener("chromeEvent", messageHandler);
       var url = m.json.data;
@@ -108,7 +106,8 @@ function testInit() {
       // eslint-disable-next-line no-undef
       var webNav = content.window.docShell.QueryInterface(Ci.nsIWebNavigation);
       let loadURIOptions = {
-        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+        triggeringPrincipal:
+          Services.scriptSecurityManager.getSystemPrincipal(),
       };
       webNav.fixupAndLoadURIString(url, loadURIOptions);
     };
@@ -435,8 +434,7 @@ Tester.prototype = {
             if (lastURIcount >= 3) {
               this.currentTest.addResult(
                 new testResult({
-                  name:
-                    "terminating browser early - unable to close tabs; skipping remaining tests in folder",
+                  name: "terminating browser early - unable to close tabs; skipping remaining tests in folder",
                   allowFailure: this.currentTest.allowFailure,
                 })
               );
@@ -461,7 +459,8 @@ Tester.prototype = {
     if (window.gBrowser && AppConstants.MOZ_APP_NAME != "thunderbird") {
       gBrowser.addTab("about:blank", {
         skipAnimation: true,
-        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+        triggeringPrincipal:
+          Services.scriptSecurityManager.getSystemPrincipal(),
       });
       gBrowser.removeTab(gBrowser.selectedTab, { skipPermitUnload: true });
       gBrowser.stop();
@@ -659,7 +658,7 @@ Tester.prototype = {
     let newTimers;
     try {
       await this.TestUtils.waitForCondition(
-        async function() {
+        async function () {
           // The array returned by nsITimerManager.getTimers doesn't include
           // timers that are queued in the event loop of their target thread.
           // By waiting for a tick, we ensure the timers that might fire about
@@ -768,7 +767,7 @@ Tester.prototype = {
       this.PromiseTestUtils.assertNoMoreExpectedRejections();
       await this.ensureVsyncDisabled();
 
-      Object.keys(window).forEach(function(prop) {
+      Object.keys(window).forEach(function (prop) {
         if (parseInt(prop) == prop) {
           // This is a string which when parsed as an integer and then
           // stringified gives the original string.  As in, this is in fact a
@@ -955,9 +954,8 @@ Tester.prototype = {
           let path = Services.env.get("MOZ_UPLOAD_DIR");
           let profilePath = PathUtils.join(path, filename);
           try {
-            const {
-              profile,
-            } = await Services.profiler.getProfileDataAsGzippedArrayBuffer();
+            const { profile } =
+              await Services.profiler.getProfileDataAsGzippedArrayBuffer();
             await IOUtils.write(profilePath, new Uint8Array(profile));
             this.currentTest.addResult(
               new testResult({
@@ -1040,8 +1038,8 @@ Tester.prototype = {
           }
 
           // Destroy BackgroundPageThumbs resources.
-          let { BackgroundPageThumbs } = ChromeUtils.import(
-            "resource://gre/modules/BackgroundPageThumbs.jsm"
+          let { BackgroundPageThumbs } = ChromeUtils.importESModule(
+            "resource://gre/modules/BackgroundPageThumbs.sys.mjs"
           );
           BackgroundPageThumbs._destroy();
 
@@ -1249,7 +1247,7 @@ Tester.prototype = {
     scope.TestUtils = this.TestUtils;
     scope.ExtensionTestUtils = this.ExtensionTestUtils;
     // Pass a custom report function for mochitest style reporting.
-    scope.Assert = new this.Assert(function(err, message, stack) {
+    scope.Assert = new this.Assert(function (err, message, stack) {
       currentTest.addResult(
         new testResult(
           err
@@ -1272,14 +1270,14 @@ Tester.prototype = {
     this.ContentTask.setTestScope(currentScope);
 
     // Allow Assert.sys.mjs methods to be tacked to the current scope.
-    scope.export_assertions = function() {
+    scope.export_assertions = function () {
       for (let func in this.Assert) {
         this[func] = this.Assert[func].bind(this.Assert);
       }
     };
 
     // Override SimpleTest methods with ours.
-    SIMPLETEST_OVERRIDES.forEach(function(m) {
+    SIMPLETEST_OVERRIDES.forEach(function (m) {
       this.SimpleTest[m] = this[m];
     }, scope);
 
@@ -1377,9 +1375,8 @@ Tester.prototype = {
       var self = this;
       var timeoutExpires = Date.now() + gTimeoutSeconds * 1000;
       var waitUntilAtLeast = timeoutExpires - 1000;
-      this.currentTest.scope.__waitTimer = this.SimpleTest._originalSetTimeout.apply(
-        window,
-        [
+      this.currentTest.scope.__waitTimer =
+        this.SimpleTest._originalSetTimeout.apply(window, [
           function timeoutFn() {
             // We sometimes get woken up long before the gTimeoutSeconds
             // have elapsed (when running in chaos mode for example). This
@@ -1440,8 +1437,7 @@ Tester.prototype = {
             self.nextTest();
           },
           gTimeoutSeconds * 1000,
-        ]
-      );
+        ]);
     }
   },
 
@@ -1782,17 +1778,16 @@ function testScope(aTester, aTest, expected) {
     self.__expectedMaxAsserts = max;
   };
 
-  this.setExpectedFailuresForSelfTest = function test_setExpectedFailuresForSelfTest(
-    expectedAllowedFailureCount
-  ) {
-    aTest.allowFailure = true;
-    aTest.expectedAllowedFailureCount = expectedAllowedFailureCount;
-  };
+  this.setExpectedFailuresForSelfTest =
+    function test_setExpectedFailuresForSelfTest(expectedAllowedFailureCount) {
+      aTest.allowFailure = true;
+      aTest.expectedAllowedFailureCount = expectedAllowedFailureCount;
+    };
 
   this.finish = function test_finish() {
     self.__done = true;
     if (self.__waitTimer) {
-      self.executeSoon(function() {
+      self.executeSoon(function () {
         if (self.__done && self.__waitTimer) {
           clearTimeout(self.__waitTimer);
           self.__waitTimer = null;
@@ -1804,7 +1799,7 @@ function testScope(aTester, aTest, expected) {
 
   this.requestCompleteLog = function test_requestCompleteLog() {
     self.__tester.structuredLogger.deactivateBuffering();
-    self.registerCleanupFunction(function() {
+    self.registerCleanupFunction(function () {
       self.__tester.structuredLogger.activateBuffering();
     });
   };

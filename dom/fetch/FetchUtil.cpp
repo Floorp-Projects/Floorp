@@ -714,12 +714,7 @@ bool FetchUtil::StreamResponseToJS(JSContext* aCx, JS::Handle<JSObject*> aObj,
     return ThrowException(aCx, JSMSG_WASM_BAD_RESPONSE_STATUS);
   }
 
-  IgnoredErrorResult result;
-  bool used = response->GetBodyUsed(result);
-  if (NS_WARN_IF(result.Failed())) {
-    return ThrowException(aCx, JSMSG_WASM_ERROR_CONSUMING_RESPONSE);
-  }
-  if (used) {
+  if (response->BodyUsed()) {
     return ThrowException(aCx, JSMSG_WASM_RESPONSE_ALREADY_CONSUMED);
   }
 
@@ -728,6 +723,7 @@ bool FetchUtil::StreamResponseToJS(JSContext* aCx, JS::Handle<JSObject*> aObj,
       nsAutoString url;
       response->GetUrl(url);
 
+      IgnoredErrorResult result;
       nsCString sourceMapUrl;
       response->GetInternalHeaders()->Get("SourceMap"_ns, sourceMapUrl, result);
       if (NS_WARN_IF(result.Failed())) {

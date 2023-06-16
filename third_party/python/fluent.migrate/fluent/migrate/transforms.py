@@ -1,4 +1,3 @@
-# coding=utf8
 """Migration Transforms.
 
 Transforms are AST nodes which describe how legacy translations should be
@@ -62,8 +61,6 @@ TextElement by PLURALS and then run through the REPLACE_IN_TEXT transform.
     )
 """
 
-from __future__ import unicode_literals
-from __future__ import absolute_import
 import re
 
 from fluent.syntax import ast as FTL
@@ -76,8 +73,7 @@ def chain_elements(elements):
     for element in elements:
         if isinstance(element, FTL.Pattern):
             # PY3 yield from element.elements
-            for child in element.elements:
-                yield child
+            yield from element.elements
         elif isinstance(element, FTL.PatternElement):
             yield element
         elif isinstance(element, FTL.Expression):
@@ -212,7 +208,7 @@ class FluentSource(Source):
                 'Cannot migrate from Term Attributes, as they are'
                 'locale-dependent ({})'.format(path)
             )
-        super(FluentSource, self).__init__(path, key)
+        super().__init__(path, key)
 
     def __call__(self, ctx):
         pattern = ctx.get_fluent_source_pattern(self.path, self.key)
@@ -236,7 +232,7 @@ class TransformPattern(FluentSource, Transformer):
     actual modifications.
     """
     def __call__(self, ctx):
-        pattern = super(TransformPattern, self).__call__(ctx)
+        pattern = super().__call__(ctx)
         return self.visit(pattern)
 
     def visit_Pattern(self, node):
@@ -284,7 +280,7 @@ class LegacySource(Source):
                 'Please use COPY_PATTERN to migrate from Fluent files '
                 '({})'.format(path))
 
-        super(LegacySource, self).__init__(path, key)
+        super().__init__(path, key)
         self.trim = trim
 
     def get_text(self, ctx):
@@ -311,7 +307,7 @@ class COPY(LegacySource):
     """Create a Pattern with the translation value from the given source."""
 
     def __call__(self, ctx):
-        element = super(COPY, self).__call__(ctx)
+        element = super().__call__(ctx)
         return Transform.pattern_of(element)
 
 
@@ -429,12 +425,12 @@ class REPLACE(LegacySource):
         elif path.endswith('.properties'):
             normalize_printf = True
 
-        super(REPLACE, self).__init__(path, key, **kwargs)
+        super().__init__(path, key, **kwargs)
         self.replacements = replacements
         self.normalize_printf = normalize_printf
 
     def __call__(self, ctx):
-        element = super(REPLACE, self).__call__(ctx)
+        element = super().__call__(ctx)
         return REPLACE_IN_TEXT(
             element, self.replacements,
             normalize_printf=self.normalize_printf
@@ -455,16 +451,16 @@ class PLURALS(LegacySource):
 
     def __init__(self, path, key, selector, foreach=Transform.pattern_of,
                  **kwargs):
-        super(PLURALS, self).__init__(path, key, **kwargs)
+        super().__init__(path, key, **kwargs)
         self.selector = selector
         self.foreach = foreach
 
     def __call__(self, ctx):
-        element = super(PLURALS, self).__call__(ctx)
+        element = super().__call__(ctx)
         selector = ctx.evaluate(self.selector)
         keys = ctx.plural_categories
         forms = [
-            FTL.TextElement(part)
+            FTL.TextElement(part.strip())
             for part in element.value.split(';')
         ]
 

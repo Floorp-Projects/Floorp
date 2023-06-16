@@ -166,6 +166,7 @@ struct LoadInfoArgs
   nsString                    cspNonce;
   bool                        skipContentSniffing;
   uint32_t                    httpsOnlyStatus;
+  bool                        hstsStatus;
   bool                        hasValidUserGestureActivation;
   bool                        allowDeprecatedSystemRequests;
   bool                        isInDevToolsContext;
@@ -213,6 +214,8 @@ struct ParentLoadInfoForwarderArgs
   bool skipContentSniffing;
 
   uint32_t httpsOnlyStatus;
+
+  bool hstsStatus;
 
   // Returns true if at the time of the loadinfo construction the document
   // that triggered this load has the bit hasValidTransientUserGestureActivation
@@ -335,7 +338,6 @@ struct HttpChannelOpenArgs
   bool                        uploadStreamHasHeaders;
   bool                        allowSTS;
   bool                        resumeAt;
-  bool                        chooseApplicationCache;
   bool                        allowSpdy;
   bool                        allowHttp3;
   bool                        allowAltSvc;

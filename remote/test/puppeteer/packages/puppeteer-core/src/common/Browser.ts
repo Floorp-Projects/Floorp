@@ -33,6 +33,7 @@ import {
 import {BrowserContext} from '../api/BrowserContext.js';
 import {Page} from '../api/Page.js';
 import {assert} from '../util/assert.js';
+import {createDeferredPromise} from '../util/DeferredPromise.js';
 
 import {ChromeTargetManager} from './ChromeTargetManager.js';
 import {CDPSession, Connection, ConnectionEmittedEvents} from './Connection.js';
@@ -478,11 +479,8 @@ export class CDPBrowser extends BrowserBase {
     options: WaitForTargetOptions = {}
   ): Promise<Target> {
     const {timeout = 30000} = options;
-    let resolve: (value: Target | PromiseLike<Target>) => void;
-    let isResolved = false;
-    const targetPromise = new Promise<Target>(x => {
-      return (resolve = x);
-    });
+    const targetPromise = createDeferredPromise<Target | PromiseLike<Target>>();
+
     this.on(BrowserEmittedEvents.TargetCreated, check);
     this.on(BrowserEmittedEvents.TargetChanged, check);
     try {
@@ -497,9 +495,8 @@ export class CDPBrowser extends BrowserBase {
     }
 
     async function check(target: Target): Promise<void> {
-      if ((await predicate(target)) && !isResolved) {
-        isResolved = true;
-        resolve(target);
+      if ((await predicate(target)) && !targetPromise.resolved()) {
+        targetPromise.resolve(target);
       }
     }
   }
@@ -525,16 +522,6 @@ export class CDPBrowser extends BrowserBase {
     }, []);
   }
 
-  /**
-   * A string representing the browser name and version.
-   *
-   * @remarks
-   *
-   * For headless Chromium, this is similar to `HeadlessChrome/61.0.3153.0`. For
-   * non-headless, this is similar to `Chrome/61.0.3153.0`.
-   *
-   * The format of browser.version() might change with future releases of Chromium.
-   */
   override async version(): Promise<string> {
     const version = await this.#getVersion();
     return version.product;
@@ -549,24 +536,15 @@ export class CDPBrowser extends BrowserBase {
     return version.userAgent;
   }
 
-  /**
-   * Closes Chromium and all of its pages (if any were opened). The
-   * {@link CDPBrowser} object itself is considered to be disposed and cannot be
-   * used anymore.
-   */
   override async close(): Promise<void> {
     await this.#closeCallback.call(null);
     this.disconnect();
   }
 
-  /**
-   * Disconnects Puppeteer from the browser, but leaves the Chromium process running.
-   * After calling `disconnect`, the {@link CDPBrowser} object is considered disposed and
-   * cannot be used anymore.
-   */
   override disconnect(): void {
     this.#targetManager.dispose();
     this.#connection.dispose();
+    this._detach();
   }
 
   /**

@@ -119,7 +119,7 @@ class CacheLoadHandler final : public PromiseNativeHandler,
   nsCString mCSPHeaderValue;
   nsCString mCSPReportOnlyHeaderValue;
   nsCString mReferrerPolicyHeaderValue;
-  nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
+  nsCOMPtr<nsISerialEventTarget> mMainThreadEventTarget;
 };
 
 /*

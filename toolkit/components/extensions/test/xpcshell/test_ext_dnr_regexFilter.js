@@ -436,10 +436,8 @@ add_task(async function regexSubstitution_invalid() {
     await runAsDNRExtension({
       manifest: { browser_specific_settings: { gecko: { id: "@dnr" } } },
       background: async dnrTestUtils => {
-        const {
-          testRejectedRedirectAtRuntime,
-          testInvalidRegexSubstitution,
-        } = dnrTestUtils;
+        const { testRejectedRedirectAtRuntime, testInvalidRegexSubstitution } =
+          dnrTestUtils;
 
         await testInvalidRegexSubstitution(
           "http://dest/\\x20",

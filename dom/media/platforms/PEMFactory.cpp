@@ -47,14 +47,15 @@ bool PEMFactory::SupportsMimeType(const nsACString& aMimeType) const {
 }
 
 already_AddRefed<MediaDataEncoder> PEMFactory::CreateEncoder(
-    const CreateEncoderParams& aParams) {
+    const CreateEncoderParams& aParams, const bool aHardwareNotAllowed) {
   const TrackInfo& info = aParams.mConfig;
   RefPtr<PlatformEncoderModule> m = FindPEM(info);
   if (!m) {
     return nullptr;
   }
 
-  return info.IsVideo() ? m->CreateVideoEncoder(aParams) : nullptr;
+  return info.IsVideo() ? m->CreateVideoEncoder(aParams, aHardwareNotAllowed)
+                        : nullptr;
 }
 
 already_AddRefed<PlatformEncoderModule> PEMFactory::FindPEM(

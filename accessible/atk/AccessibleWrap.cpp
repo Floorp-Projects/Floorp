@@ -30,7 +30,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Sprintf.h"
-#include "mozilla/StaticPrefs_accessibility.h"
+#include "nsAccessibilityService.h"
 #include "nsComponentManagerUtils.h"
 
 using namespace mozilla;
@@ -708,38 +708,20 @@ AtkObject* refChildCB(AtkObject* aAtkObj, gint aChildIndex) {
     return nullptr;
   }
 
-  AtkObject* childAtkObj = nullptr;
-  AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
-  if (accWrap) {
-    if (nsAccUtils::MustPrune(accWrap)) {
-      return nullptr;
-    }
-
-    LocalAccessible* accChild = accWrap->EmbeddedChildAt(aChildIndex);
-    if (accChild) {
-      childAtkObj = AccessibleWrap::GetAtkObject(accChild);
-    } else {
-      OuterDocAccessible* docOwner = accWrap->AsOuterDoc();
-      if (docOwner) {
-        RemoteAccessible* proxyDoc = docOwner->RemoteChildDoc();
-        if (proxyDoc) childAtkObj = GetWrapperFor(proxyDoc);
-      }
-    }
-  } else if (RemoteAccessible* proxy = GetProxy(aAtkObj)) {
-    if (nsAccUtils::MustPrune(proxy)) {
-      return nullptr;
-    }
-
-    Accessible* child = proxy->EmbeddedChildAt(aChildIndex);
-    if (child) {
-      childAtkObj = GetWrapperFor(child->AsRemote());
-    }
-  } else {
+  Accessible* acc = GetInternalObj(aAtkObj);
+  if (!acc || nsAccUtils::MustPrune(acc)) {
+    return nullptr;
+  }
+  Accessible* accChild = acc->EmbeddedChildAt(aChildIndex);
+  if (!accChild) {
     return nullptr;
   }
 
+  AtkObject* childAtkObj = GetWrapperFor(accChild);
   NS_ASSERTION(childAtkObj, "Fail to get AtkObj");
-  if (!childAtkObj) return nullptr;
+  if (!childAtkObj) {
+    return nullptr;
+  }
 
   g_object_ref(childAtkObj);
 
@@ -797,11 +779,8 @@ AtkStateSet* refStateSetCB(AtkObject* aAtkObj) {
   AtkStateSet* state_set = nullptr;
   state_set = ATK_OBJECT_CLASS(parent_class)->ref_state_set(aAtkObj);
 
-  AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
-  if (accWrap) {
-    TranslateStates(accWrap->State(), accWrap->Role(), state_set);
-  } else if (RemoteAccessible* proxy = GetProxy(aAtkObj)) {
-    TranslateStates(proxy->State(), proxy->Role(), state_set);
+  if (Accessible* acc = GetInternalObj(aAtkObj)) {
+    TranslateStates(acc->State(), acc->Role(), state_set);
   } else {
     TranslateStates(states::DEFUNCT, roles::NOTHING, state_set);
   }
@@ -842,43 +821,6 @@ AtkRelationSet* refRelationSetCB(AtkObject* aAtkObj) {
     return relation_set;
   }
 
-  if (!StaticPrefs::accessibility_cache_enabled_AtStartup() &&
-      acc->IsRemote()) {
-    RemoteAccessible* proxy = acc->AsRemote();
-    const AtkRelationType typeMap[] = {
-#define RELATIONTYPE(gecko, s, atk, m, i) atk,
-#include "RelationTypeMap.h"
-#undef RELATIONTYPE
-    };
-    nsTArray<RelationType> types;
-    nsTArray<nsTArray<RemoteAccessible*>> targetSets;
-    proxy->Relations(&types, &targetSets);
-
-    size_t relationCount = types.Length();
-    for (size_t i = 0; i < relationCount; i++) {
-      if (typeMap[static_cast<uint32_t>(types[i])] == ATK_RELATION_NULL) {
-        continue;
-      }
-
-      size_t targetCount = targetSets[i].Length();
-      AutoTArray<AtkObject*, 5> wrappers;
-      for (size_t j = 0; j < targetCount; j++) {
-        wrappers.AppendElement(GetWrapperFor(targetSets[i][j]));
-      }
-
-      AtkRelationType atkType = typeMap[static_cast<uint32_t>(types[i])];
-      AtkRelation* atkRelation =
-          atk_relation_set_get_relation_by_type(relation_set, atkType);
-      if (atkRelation) atk_relation_set_remove(relation_set, atkRelation);
-
-      atkRelation =
-          atk_relation_new(wrappers.Elements(), wrappers.Length(), atkType);
-      atk_relation_set_add(relation_set, atkRelation);
-      g_object_unref(atkRelation);
-    }
-    return relation_set;
-  }
-
 #define RELATIONTYPE(geckoType, geckoTypeName, atkType, msaaType, ia2Type) \
   UpdateAtkRelation(RelationType::geckoType, acc, atkType, relation_set);
 
@@ -892,24 +834,15 @@ AtkRelationSet* refRelationSetCB(AtkObject* aAtkObj) {
 // Check if aAtkObj is a valid MaiAtkObject, and return the AccessibleWrap
 // for it.
 AccessibleWrap* GetAccessibleWrap(AtkObject* aAtkObj) {
-  bool isMAIObject = IS_MAI_OBJECT(aAtkObj);
-  NS_ENSURE_TRUE(isMAIObject || MAI_IS_ATK_SOCKET(aAtkObj), nullptr);
+  NS_ENSURE_TRUE(IS_MAI_OBJECT(aAtkObj), nullptr);
 
-  AccessibleWrap* accWrap = nullptr;
-  if (isMAIObject) {
-    // If we're working with an ATK object, we need to convert the Accessible
-    // back to an AccessibleWrap:
-    Accessible* storedAcc = MAI_ATK_OBJECT(aAtkObj)->acc;
-    if (!storedAcc) {
-      return nullptr;
-    }
-
-    accWrap = static_cast<AccessibleWrap*>(storedAcc->AsLocal());
-  } else {
-    // The ATK socket stores an AccessibleWrap directly, so we can get the value
-    // with no casting.
-    accWrap = MAI_ATK_SOCKET(aAtkObj)->accWrap;
+  // If we're working with an ATK object, we need to convert the Accessible
+  // back to an AccessibleWrap:
+  Accessible* storedAcc = MAI_ATK_OBJECT(aAtkObj)->acc;
+  if (!storedAcc) {
+    return nullptr;
   }
+  auto* accWrap = static_cast<AccessibleWrap*>(storedAcc->AsLocal());
 
   // Check if the accessible was deconstructed.
   if (!accWrap) return nullptr;

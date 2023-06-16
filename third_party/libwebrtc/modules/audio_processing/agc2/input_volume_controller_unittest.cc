@@ -325,6 +325,76 @@ class InputVolumeControllerTestHelper {
   InputVolumeController controller;
 };
 
+class InputVolumeControllerChannelSampleRateTest
+    : public ::testing::TestWithParam<std::tuple<int, int>> {
+ protected:
+  int GetNumChannels() const { return std::get<0>(GetParam()); }
+  int GetSampleRateHz() const { return std::get<1>(GetParam()); }
+};
+
+TEST_P(InputVolumeControllerChannelSampleRateTest, CheckIsAlive) {
+  const int num_channels = GetNumChannels();
+  const int sample_rate_hz = GetSampleRateHz();
+
+  constexpr InputVolumeController::Config kConfig{.enable_clipping_predictor =
+                                                      true};
+  InputVolumeController controller(num_channels, kConfig);
+  controller.Initialize();
+  AudioBuffer buffer(sample_rate_hz, num_channels, sample_rate_hz, num_channels,
+                     sample_rate_hz, num_channels);
+
+  constexpr int kStartupVolume = 100;
+  int applied_initial_volume = kStartupVolume;
+
+  // Trigger a downward adaptation with clipping.
+  constexpr int kLevelWithinTargetDbfs =
+      (kConfig.target_range_min_dbfs + kConfig.target_range_max_dbfs) / 2;
+  WriteAlternatingAudioBufferSamples(/*samples_value=*/kMaxSample, buffer);
+  const int initial_volume1 = applied_initial_volume;
+  for (int i = 0; i < 400; ++i) {
+    controller.AnalyzeInputAudio(applied_initial_volume, buffer);
+    auto recommended_input_volume = controller.RecommendInputVolume(
+        kLowSpeechProbability,
+        /*speech_level_dbfs=*/kLevelWithinTargetDbfs);
+    ASSERT_TRUE(recommended_input_volume.has_value());
+    applied_initial_volume = *recommended_input_volume;
+  }
+  ASSERT_LT(controller.recommended_input_volume(), initial_volume1);
+
+  // Fill in audio that does not clip.
+  WriteAlternatingAudioBufferSamples(/*samples_value=*/1234.5f, buffer);
+
+  // Trigger an upward adaptation.
+  const int initial_volume2 = controller.recommended_input_volume();
+  for (int i = 0; i < kConfig.clipped_wait_frames; ++i) {
+    controller.AnalyzeInputAudio(applied_initial_volume, buffer);
+    auto recommended_input_volume = controller.RecommendInputVolume(
+        kHighSpeechProbability,
+        /*speech_level_dbfs=*/kConfig.target_range_min_dbfs - 5);
+    ASSERT_TRUE(recommended_input_volume.has_value());
+    applied_initial_volume = *recommended_input_volume;
+  }
+  EXPECT_GT(controller.recommended_input_volume(), initial_volume2);
+
+  // Trigger a downward adaptation.
+  const int initial_volume = controller.recommended_input_volume();
+  for (int i = 0; i < kConfig.update_input_volume_wait_frames; ++i) {
+    controller.AnalyzeInputAudio(applied_initial_volume, buffer);
+    auto recommended_input_volume = controller.RecommendInputVolume(
+        kHighSpeechProbability,
+        /*speech_level_dbfs=*/kConfig.target_range_max_dbfs + 5);
+    ASSERT_TRUE(recommended_input_volume.has_value());
+    applied_initial_volume = *recommended_input_volume;
+  }
+  EXPECT_LT(controller.recommended_input_volume(), initial_volume);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    ,
+    InputVolumeControllerChannelSampleRateTest,
+    ::testing::Combine(::testing::Values(1, 2, 3, 6),
+                       ::testing::Values(8000, 16000, 32000, 48000)));
+
 class InputVolumeControllerParametrizedTest
     : public ::testing::TestWithParam<int> {};
 

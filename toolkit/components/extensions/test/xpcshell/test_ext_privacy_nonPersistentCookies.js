@@ -39,7 +39,8 @@ add_task(async function test_nonPersistentCookies_is_deprecated() {
     await extension.unload();
   });
 
-  const expectedMessage = /"'nonPersistentCookies' has been deprecated and it has no effect anymore."/;
+  const expectedMessage =
+    /"'nonPersistentCookies' has been deprecated and it has no effect anymore."/;
 
   AddonTestUtils.checkMessages(
     messages,

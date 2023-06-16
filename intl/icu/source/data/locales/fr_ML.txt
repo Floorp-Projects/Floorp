@@ -26,6 +26,12 @@ fr_ML{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimePatterns%atTime{
+                "{1} 'à' {0}",
+                "{1} 'à' {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
             quarters{
                 format{
                     wide{

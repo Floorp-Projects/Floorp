@@ -54,7 +54,7 @@
 // To help you follow all the callbacks and event handlers, this code pulls out
 // event handler functions so that control flows from top to bottom.
 
-window.onload = function() {
+window.onload = function () {
   // This mochitest is not complete until we call SimpleTest.finish. Don't just
   // exit as soon as we return to the main event loop.
   SimpleTest.waitForExplicitFinish();
@@ -72,15 +72,15 @@ window.onload = function() {
 
     // Hand over the suspend and resume functions to the content page, along
     // with some testing utilities.
-    content.suspendTimeouts = function() {
+    content.suspendTimeouts = function () {
       SimpleTest.info("test_suspendTimeouts", "calling suspendTimeouts");
       windowUtils.suspendTimeouts();
     };
-    content.resumeTimeouts = function() {
+    content.resumeTimeouts = function () {
       windowUtils.resumeTimeouts();
       SimpleTest.info("test_suspendTimeouts", "resumeTimeouts called");
     };
-    content.info = function(message) {
+    content.info = function (message) {
       SimpleTest.info("suspendTimeouts_content.js", message);
     };
     content.ok = SimpleTest.ok;

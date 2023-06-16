@@ -41,11 +41,8 @@ add_task(async function test_profile_fission_no_private_browsing() {
     const activeTabID = contentBrowser.browsingContext.browserId;
 
     info("Capture the profile data.");
-    const {
-      profile,
-      contentProcess,
-      contentThread,
-    } = await stopProfilerNowAndGetThreads(contentPid);
+    const { profile, contentProcess, contentThread } =
+      await stopProfilerNowAndGetThreads(contentPid);
 
     Assert.equal(
       contentThread.isPrivateBrowsing,
@@ -153,10 +150,8 @@ add_task(async function test_profile_fission_private_browsing() {
     const activeTabID = contentBrowser.browsingContext.browserId;
 
     info("Capture the profile data.");
-    const {
-      contentProcess,
-      contentThread,
-    } = await stopProfilerNowAndGetThreads(contentPid);
+    const { contentProcess, contentThread } =
+      await stopProfilerNowAndGetThreads(contentPid);
 
     Assert.equal(
       contentThread.isPrivateBrowsing,

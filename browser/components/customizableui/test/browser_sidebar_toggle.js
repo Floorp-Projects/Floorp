@@ -4,7 +4,7 @@
 
 "use strict";
 
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   await resetCustomization();
 
   // Ensure sidebar is hidden after each test:
@@ -13,7 +13,7 @@ registerCleanupFunction(async function() {
   }
 });
 
-var showSidebar = async function(win = window) {
+var showSidebar = async function (win = window) {
   let button = win.document.getElementById("sidebar-button");
   let sidebarFocusedPromise = BrowserTestUtils.waitForEvent(
     win.document,
@@ -25,7 +25,7 @@ var showSidebar = async function(win = window) {
   ok(button.hasAttribute("checked"), "Toolbar button is checked");
 };
 
-var hideSidebar = async function(win = window) {
+var hideSidebar = async function (win = window) {
   let button = win.document.getElementById("sidebar-button");
   EventUtils.synthesizeMouseAtCenter(button, {}, win);
   ok(!win.SidebarUI.isOpen, "Sidebar is closed");
@@ -33,7 +33,7 @@ var hideSidebar = async function(win = window) {
 };
 
 // Check the sidebar widget shows the default items
-add_task(async function() {
+add_task(async function () {
   CustomizableUI.addWidgetToArea("sidebar-button", "nav-bar");
 
   await showSidebar();

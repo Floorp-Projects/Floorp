@@ -26,7 +26,7 @@ const TEST_URL =
   "</head>" +
   '<div style="background:blue; width:200px; height:200px"></div>';
 
-addRDMTask(TEST_URL, async function({ ui, manager }) {
+addRDMTask(TEST_URL, async function ({ ui, manager }) {
   await setViewportSize(ui, manager, 50, 50);
   const browser = ui.getViewportBrowser();
 

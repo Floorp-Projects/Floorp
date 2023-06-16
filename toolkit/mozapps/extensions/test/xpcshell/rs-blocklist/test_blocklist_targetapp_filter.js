@@ -1,5 +1,5 @@
-const { BlocklistPrivate } = ChromeUtils.import(
-  "resource://gre/modules/Blocklist.jsm"
+const { BlocklistPrivate } = ChromeUtils.importESModule(
+  "resource://gre/modules/Blocklist.sys.mjs"
 );
 const { RemoteSettings } = ChromeUtils.importESModule(
   "resource://services-settings/remote-settings.sys.mjs"
@@ -76,8 +76,7 @@ add_task(async function test_returns_all_without_target() {
       ],
     },
     {
-      name:
-        "Java(\\(TM\\))? Plug-in 11\\.(7[6-9]|[8-9]\\d|1([0-6]\\d|70))(\\.\\d+)?([^\\d\\._]|$)",
+      name: "Java(\\(TM\\))? Plug-in 11\\.(7[6-9]|[8-9]\\d|1([0-6]\\d|70))(\\.\\d+)?([^\\d\\._]|$)",
       versionRange: [
         {
           severity: 0,

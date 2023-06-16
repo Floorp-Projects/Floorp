@@ -4,13 +4,10 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+  AddonTestUtils: "resource://testing-common/AddonTestUtils.sys.mjs",
   SearchTestUtils: "resource://testing-common/SearchTestUtils.sys.mjs",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  AddonManager: "resource://gre/modules/AddonManager.jsm",
-  AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
 });
 
 const EXTENSION1_ID = "extension1@mozilla.com";
@@ -93,7 +90,7 @@ async function checkTelemetry(source, prevEngine, newEngine) {
   );
 }
 
-add_setup(async function() {
+add_setup(async function () {
   let searchExtensions = getChromeDir(getResolvedURI(gTestPath));
   searchExtensions.append("search-engines");
 
@@ -207,8 +204,8 @@ add_task(async function test_extension_setting_default_engine_external() {
     let extension = ExtensionTestUtils.loadExtension({
       manifest: {
         icons: {
-          "48": "icon.png",
-          "96": "icon@2x.png",
+          48: "icon.png",
+          96: "icon@2x.png",
         },
         browser_specific_settings: {
           gecko: {

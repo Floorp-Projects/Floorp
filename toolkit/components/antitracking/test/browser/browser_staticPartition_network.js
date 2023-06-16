@@ -11,7 +11,7 @@ const gHttpHandler = Cc["@mozilla.org/network/protocol;1?name=http"].getService(
   Ci.nsIHttpProtocolHandler
 );
 
-add_task(async function() {
+add_task(async function () {
   info("Starting tlsSessionTickets test");
 
   await SpecialPowers.flushPrefEnv();
@@ -64,7 +64,7 @@ add_task(async function() {
   checkAltSvcCache([]);
 
   info("Loading something in the tab");
-  await SpecialPowers.spawn(browser, [{ thirdPartyURL }], async function(obj) {
+  await SpecialPowers.spawn(browser, [{ thirdPartyURL }], async function (obj) {
     dump("AAA: " + content.window.location.href + "\n");
     let src = content.document.createElement("script");
     let p = new content.Promise(resolve => {
@@ -85,15 +85,19 @@ add_task(async function() {
   await BrowserTestUtils.browserLoaded(browser2);
 
   info("Loading something in the second tab");
-  await SpecialPowers.spawn(browser2, [{ thirdPartyURL }], async function(obj) {
-    let src = content.document.createElement("script");
-    let p = new content.Promise(resolve => {
-      src.onload = resolve;
-    });
-    content.document.body.appendChild(src);
-    src.src = obj.thirdPartyURL;
-    await p;
-  });
+  await SpecialPowers.spawn(
+    browser2,
+    [{ thirdPartyURL }],
+    async function (obj) {
+      let src = content.document.createElement("script");
+      let p = new content.Promise(resolve => {
+        src.onload = resolve;
+      });
+      content.document.body.appendChild(src);
+      src.src = obj.thirdPartyURL;
+      await p;
+    }
+  );
 
   checkAltSvcCache([partitionKey1, partitionKey2]);
 
@@ -102,7 +106,7 @@ add_task(async function() {
   BrowserTestUtils.removeTab(tab2);
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Cleaning up.");
   await new Promise(resolve => {
     Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>

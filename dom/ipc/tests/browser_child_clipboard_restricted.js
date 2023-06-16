@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-add_task(async function() {
+add_task(async function () {
   // Create a new content tab to make sure the paste is cross-process.
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -9,7 +9,7 @@ add_task(async function() {
   );
   let browser = tab.linkedBrowser;
 
-  await SpecialPowers.spawn(browser, [], async function(arg) {
+  await SpecialPowers.spawn(browser, [], async function (arg) {
     const trans = Cc["@mozilla.org/widget/transferable;1"].createInstance(
       Ci.nsITransferable
     );

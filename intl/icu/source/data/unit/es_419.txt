@@ -102,9 +102,6 @@ es_419{
             g-force{
                 dnam{"G"}
             }
-            meter-per-square-second{
-                dnam{"m/s²"}
-            }
         }
         area{
             square-meter{
@@ -164,17 +161,6 @@ es_419{
                 other{"{0} kWh/100km"}
             }
         }
-        graphics{
-            dot{
-                dnam{"pt"}
-            }
-            dot-per-centimeter{
-                dnam{"ppcm"}
-            }
-            megapixel{
-                dnam{"Mpx"}
-            }
-        }
         length{
             astronomical-unit{
                 dnam{"ua"}
@@ -189,6 +175,7 @@ es_419{
                 other{"{0}mi esc."}
             }
             nautical-mile{
+                dnam{"nmi"}
                 one{"{0}nmi"}
                 other{"{0}nmi"}
             }
@@ -197,15 +184,6 @@ es_419{
             }
         }
         mass{
-            carat{
-                dnam{"ct"}
-            }
-            microgram{
-                dnam{"μg"}
-            }
-            milligram{
-                dnam{"mg"}
-            }
             ounce-troy{
                 dnam{"ozt"}
                 one{"{0}ozt"}
@@ -216,19 +194,12 @@ es_419{
                 one{"{0}ton"}
                 other{"{0}ton"}
             }
-            tonne{
-                dnam{"t"}
-            }
         }
         power{
             horsepower{
+                dnam{"hp"}
                 one{"{0}hp"}
                 other{"{0}hp"}
-            }
-        }
-        speed{
-            knot{
-                dnam{"kn"}
             }
         }
         volume{
@@ -244,6 +215,12 @@ es_419{
                 dnam{"pt"}
                 one{"{0}pt"}
                 other{"{0}pt"}
+            }
+            tablespoon{
+                dnam{"cdas."}
+            }
+            teaspoon{
+                dnam{"cdtas."}
             }
         }
     }

@@ -71,7 +71,11 @@ void HTMLDialogElement::Close(
 
 void HTMLDialogElement::Show(ErrorResult& aError) {
   if (Open()) {
-    return;
+    if (!IsInTopLayer()) {
+      return;
+    }
+    return aError.ThrowInvalidStateError(
+        "Cannot call show() on an open modal dialog.");
   }
 
   if (IsPopoverOpen()) {
@@ -83,6 +87,7 @@ void HTMLDialogElement::Show(ErrorResult& aError) {
 
   StorePreviouslyFocusedElement();
 
+  OwnerDoc()->HideAllPopoversWithoutRunningScript();
   FocusDialog();
 }
 
@@ -121,13 +126,16 @@ void HTMLDialogElement::UnbindFromTree(bool aNullParent) {
 }
 
 void HTMLDialogElement::ShowModal(ErrorResult& aError) {
-  if (!IsInComposedDoc()) {
-    return aError.ThrowInvalidStateError("Dialog element is not connected");
+  if (Open()) {
+    if (IsInTopLayer()) {
+      return;
+    }
+    return aError.ThrowInvalidStateError(
+        "Cannot call showModal() on an open non-modal dialog.");
   }
 
-  if (Open()) {
-    return aError.ThrowInvalidStateError(
-        "Dialog element already has an 'open' attribute");
+  if (!IsInComposedDoc()) {
+    return aError.ThrowInvalidStateError("Dialog element is not connected");
   }
 
   if (IsPopoverOpen()) {
@@ -141,6 +149,7 @@ void HTMLDialogElement::ShowModal(ErrorResult& aError) {
 
   StorePreviouslyFocusedElement();
 
+  OwnerDoc()->HideAllPopoversWithoutRunningScript();
   FocusDialog();
 
   aError.SuppressException();
@@ -150,7 +159,8 @@ void HTMLDialogElement::FocusDialog() {
   // 1) If subject is inert, return.
   // 2) Let control be the first descendant element of subject, in tree
   // order, that is not inert and has the autofocus attribute specified.
-  if (RefPtr<Document> doc = GetComposedDoc()) {
+  RefPtr<Document> doc = OwnerDoc();
+  if (IsInComposedDoc()) {
     doc->FlushPendingNotifications(FlushType::Frames);
   }
 

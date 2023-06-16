@@ -307,6 +307,17 @@
 <!-- unrecognized file type starting with a dot -->
 <object id="i80" data="http://localhost:8000/save_filename.sjs?type=otherimage&filename=.alternate" data-filename="alternate"
         data-unknown="true"></object>
+
+<!-- filename with lnk extension -->
+<img id="i81" src="http://localhost:8000/save_filename.sjs?type=nonsense&filename=shortcut.lnk"
+     data-nodrag="true" data-unknown="typeonly"
+     data-filename="shortcut.lnk.download">
+
+<!-- long filename with lnk extension -->
+<img id="i82" src="http://localhost:8000/save_filename.sjs?type=nonsense&filename=longshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshort1234567890.lnk"
+     data-nodrag="true" data-unknown="typeonly"
+     data-filename="longshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshort1234567890.lnk.download">
+
 </span>
 
 <!-- This set is used to test the filename specified by the download attribute is validated correctly. -->
@@ -338,6 +349,7 @@
   <a id="link1" href="http://localhost:8000/save_filename.sjs?type=png&filename=two.jpeg" data-filename="two.png">Two</a>
   <a id="link2" href="http://localhost:8000/save_filename.sjs?type=png&filename=three.con" data-filename="three.png">Three</a>
   <a id="link3" href="http://localhost:8000/save_filename.sjs?type=png&dispname=four" data-filename="four.png">Four</a>
+  <a id="link4" href="http://localhost:8000/save_filename.sjs?type=png&filename=five.local" data-filename="five.png">Five</a>
 </span>
 
 <!-- The content-disposition attachment generates links from the images/objects/scripts above

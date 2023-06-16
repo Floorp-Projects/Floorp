@@ -11,7 +11,7 @@
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
 
-#include "vm/Printer.h"
+#include "js/Printer.h"
 
 using namespace js;
 using namespace js::jit;

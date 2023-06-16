@@ -1,0 +1,160 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Test for stability when providing invalid UTF-16 strings</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+  <script>
+    const Cc = SpecialPowers.Cc;
+    const Ci = SpecialPowers.Ci;
+    let notifier = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);;
+    let notification = Cc["@mozilla.org/alert-notification;1"]
+
+    function buildObserver(alertName) {
+      let resolve;
+      let reject;
+      let promise = new Promise((res, rej) => {resolve = res; reject = rej});
+
+      let success = false;
+      function observe(aSubject, aTopic, aData) {
+        if (aTopic == "alertshow") {
+          success = true;
+          notifier.closeAlert(alertName);
+        } else if (aTopic == "alertfinished") {
+          ok(true, "alertfinished");
+          if (success) {
+            resolve();
+          } else {
+            reject();
+          }
+        }
+      }
+
+      return { promise, observe };
+    };
+
+    function buildAlert(options) {
+      let alert = notification.createInstance(
+        Ci.nsIAlertNotification
+      );
+      alert.init(
+        options.name,
+        options.imageURL,
+        options.title,
+        options.text,
+        options.textClickable,
+        options.cookie,
+        options.dir,
+        options.lang,
+        options.data,
+        options.principal,
+        options.inPrivateBrowsing,
+        options.requireInteraction,
+        options.silent,
+        options.vibrate || []
+      );
+      if (options.actions) {
+        alert.actions = options.actions;
+      }
+      return alert;
+    }
+
+    async function runTest(options) {
+      let alert = buildAlert(options)
+      const { promise, observe } = buildObserver(options.name);
+      notifier.showAlert(alert, observe);
+      await promise;
+    }
+
+    let invalidUtf16 = String.fromCharCode(0xdfff);
+
+    add_task(async function test_invalid_utf16_name() {
+      let name = invalidUtf16;
+      let alert = buildAlert({name});
+
+      // Extract the alert name to ensure it was not forced to be valid UTF-16.
+      ok(name == alert.name, "Notification name was not forced to be valid UTF-16");
+
+      const { promise, observe } = buildObserver(name);
+      notifier.showAlert(alert, observe);
+      await promise;
+
+      ok(true, "Notification shown with invalid UTF-16 name");
+    });
+
+    add_task(async function test_invalid_utf16_title() {
+      let name = "invalid title";
+      let title = invalidUtf16;
+      await runTest({name, title});
+
+      ok(true, "Notification shown with invalid UTF-16 title");
+    });
+
+    add_task(async function test_invalid_utf16_body() {
+      let name = "invalid body";
+      let text = invalidUtf16;
+      await runTest({name, text});
+
+      ok(true, "Notification shown with invalid UTF-16 body");
+    });
+
+    add_task(async function test_invalid_utf16_image_url() {
+      let name = "invalid image URL";
+      let imageURL = invalidUtf16;
+      await runTest({name, imageURL});
+
+      ok(true, "Notification shown with invalid UTF-16 image url");
+    });
+
+    add_task(async function test_invalid_utf16_data() {
+      let name = "invalid data";
+      let data = invalidUtf16;
+      await runTest({name, data});
+
+      ok(true, "Notification shown with invalid UTF-16 data");
+    });
+
+    // At time of writing, actions are a Windows only, privileged feature.
+    add_task(async function test_invalid_utf16_action_body() {
+      let name = "invalid action body";
+      let actions = [
+        { action: invalidUtf16 },
+      ];
+      await runTest({name, actions});
+
+      ok(true, "Notification shown with invalid UTF-16 action body");
+    });
+
+    // At time of writing, actions are a Windows only, privileged feature.
+    add_task(async function test_invalid_utf16_action_title() {
+      let name = "invalid action title";
+      let actions = [
+        {title:invalidUtf16},
+      ];
+      await runTest({name, actions});
+
+      ok(true, "Notification shown with invalid UTF-16 action title");
+    });
+
+    // At time of writing, actions are a Windows only, privileged feature.
+    add_task(async function test_invalid_utf16_action_image_url() {
+      let name = "invalid action image URL";
+      let actions = [
+        { iconURL: invalidUtf16 },
+      ];
+      await runTest({name, actions});
+
+      ok(true, "Notification shown with invalid UTF-16 action image URL");
+    });
+  </script>
+</head>
+
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test"></pre>
+</body>
+
+</html>

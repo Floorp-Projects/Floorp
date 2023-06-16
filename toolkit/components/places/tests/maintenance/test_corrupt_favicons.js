@@ -4,7 +4,7 @@
 // Tests that history initialization correctly handles a corrupt favicons file
 // that can't be opened.
 
-add_task(async function() {
+add_task(async function () {
   await createCorruptDb("favicons.sqlite");
 
   Assert.equal(

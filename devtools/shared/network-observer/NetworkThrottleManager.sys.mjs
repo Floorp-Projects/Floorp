@@ -354,9 +354,8 @@ class NetworkThrottleQueue {
       thisSliceBytes -= totalBytes;
       let readThisTime = 0;
       while (thisSliceBytes > 0 && this.#downloadQueue.length) {
-        const { length, done } = this.#downloadQueue[0].sendSomeData(
-          thisSliceBytes
-        );
+        const { length, done } =
+          this.#downloadQueue[0].sendSomeData(thisSliceBytes);
         thisSliceBytes -= length;
         readThisTime += length;
         if (done) {

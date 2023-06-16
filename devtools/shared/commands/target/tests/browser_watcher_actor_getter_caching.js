@@ -7,7 +7,7 @@
 
 const TEST_URL = "data:text/html;charset=utf-8,Actor caching test";
 
-add_task(async function() {
+add_task(async function () {
   info("Setup the test page with workers of all types");
   const tab = await addTab(TEST_URL);
 

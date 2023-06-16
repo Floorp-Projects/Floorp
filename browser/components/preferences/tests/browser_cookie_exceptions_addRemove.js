@@ -76,9 +76,8 @@ function deletePermission(permission, dialog) {
   let elements = permissionsBox.getElementsByAttribute("origin", permission);
   is(elements.length, 1, "It should find only one entry");
   permissionsBox.selectItem(elements[0]);
-  let removePermissionButton = dialog.document.getElementById(
-    "removePermission"
-  );
+  let removePermissionButton =
+    dialog.document.getElementById("removePermission");
   is(
     removePermissionButton.hasAttribute("disabled"),
     false,
@@ -265,7 +264,7 @@ add_task(async function checkPermissions() {
       needPreviousData: true,
       newData: "https://mytest.com",
       steps: ["addNewPermission", "save"],
-      expected: (function() {
+      expected: (function () {
         let result = websites.slice();
         result.push("https://mytest.com");
         return result;

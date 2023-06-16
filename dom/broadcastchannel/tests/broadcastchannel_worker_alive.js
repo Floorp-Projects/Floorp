@@ -1,4 +1,4 @@
-new BroadcastChannel("foobar").addEventListener("message", function(event) {
+new BroadcastChannel("foobar").addEventListener("message", function (event) {
   if (event.data != "READY") {
     event.target.postMessage(event.data);
   }

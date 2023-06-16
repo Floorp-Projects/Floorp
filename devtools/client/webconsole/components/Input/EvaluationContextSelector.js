@@ -24,7 +24,7 @@ const {
 } = require("resource://devtools/client/webconsole/utils/messages.js");
 const targetSelectors = require("resource://devtools/shared/commands/target/selectors/targets.js");
 
-loader.lazyGetter(this, "TARGET_TYPES", function() {
+loader.lazyGetter(this, "TARGET_TYPES", function () {
   return require("resource://devtools/shared/commands/target/target-command.js")
     .TYPES;
 });
@@ -34,13 +34,13 @@ const MenuButton = createFactory(
   require("resource://devtools/client/shared/components/menu/MenuButton.js")
 );
 
-loader.lazyGetter(this, "MenuItem", function() {
+loader.lazyGetter(this, "MenuItem", function () {
   return createFactory(
     require("resource://devtools/client/shared/components/menu/MenuItem.js")
   );
 });
 
-loader.lazyGetter(this, "MenuList", function() {
+loader.lazyGetter(this, "MenuList", function () {
   return createFactory(
     require("resource://devtools/client/shared/components/menu/MenuList.js")
   );

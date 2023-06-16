@@ -151,6 +151,7 @@ cs{
         dar{"dargština"}
         dav{"taita"}
         de{"němčina"}
+        de_AT{"němčina (Rakousko)"}
         de_CH{"němčina standardní (Švýcarsko)"}
         del{"delawarština"}
         den{"slejvština (athabaský jazyk)"}
@@ -176,12 +177,16 @@ cs{
         el{"řečtina"}
         elx{"elamitština"}
         en{"angličtina"}
+        en_AU{"angličtina (Austrálie)"}
+        en_CA{"angličtina (Kanada)"}
         en_GB{"angličtina (Velká Británie)"}
         en_US{"angličtina (USA)"}
         enm{"angličtina (středověká)"}
         eo{"esperanto"}
         es{"španělština"}
+        es_419{"španělština (Latinská Amerika)"}
         es_ES{"španělština (Evropa)"}
+        es_MX{"španělština (Mexiko)"}
         esu{"jupikština (středoaljašská)"}
         et{"estonština"}
         eu{"baskičtina"}
@@ -199,6 +204,8 @@ cs{
         fo{"faerština"}
         fon{"fonština"}
         fr{"francouzština"}
+        fr_CA{"francouzština (Kanada)"}
+        fr_CH{"francouzština (Švýcarsko)"}
         frc{"francouzština (cajunská)"}
         frm{"francouzština (středověká)"}
         fro{"francouzština (stará)"}
@@ -242,6 +249,7 @@ cs{
         hax{"haidština (jižní)"}
         he{"hebrejština"}
         hi{"hindština"}
+        hi_Latn{"hindština (latinka)"}
         hif{"hindština (Fidži)"}
         hil{"hiligajnonština"}
         hit{"chetitština"}
@@ -480,6 +488,7 @@ cs{
         pro{"provensálština"}
         ps{"paštština"}
         pt{"portugalština"}
+        pt_BR{"portugalština (Brazílie)"}
         pt_PT{"portugalština (Evropa)"}
         qu{"kečuánština"}
         quc{"kičé"}
@@ -659,6 +668,7 @@ cs{
         zgh{"tamazight (standardní marocký)"}
         zh{"čínština"}
         zh_Hans{"čínština (zjednodušená)"}
+        zh_Hant{"čínština (tradiční)"}
         zu{"zuluština"}
         zun{"zunijština"}
         zxx{"žádný jazykový obsah"}

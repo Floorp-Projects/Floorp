@@ -1,4 +1,4 @@
-self.addEventListener("message", async function(event) {
+self.addEventListener("message", async function (event) {
   try {
     const offscreen = event.data.offscreen;
     const context = offscreen.getContext("webgpu");

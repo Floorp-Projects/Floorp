@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 root{
-    Version{"42"}
+    Version{"43"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}

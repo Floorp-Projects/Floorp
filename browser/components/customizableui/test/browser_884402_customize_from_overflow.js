@@ -3,7 +3,7 @@
 var overflowPanel = document.getElementById("widget-overflow");
 
 var originalWindowWidth;
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   overflowPanel.removeAttribute("animate");
   window.resizeTo(originalWindowWidth, window.outerHeight);
   let navbar = document.getElementById(CustomizableUI.AREA_NAVBAR);
@@ -12,7 +12,7 @@ registerCleanupFunction(function() {
 
 // Right-click on an item within the overflow panel should
 // show a context menu with options to move it.
-add_task(async function() {
+add_task(async function () {
   overflowPanel.setAttribute("animate", "false");
   let fxaButton = document.getElementById("fxa-toolbar-menu-button");
   if (BrowserTestUtils.is_hidden(fxaButton)) {

@@ -717,12 +717,6 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
     case ColorID::MozComboboxtext:
       aColor = mComboBoxText;
       break;
-    case ColorID::MozMenubartext:
-      aColor = mMenuBarText;
-      break;
-    case ColorID::MozMenubarhovertext:
-      aColor = mMenuBarHoverText;
-      break;
     case ColorID::MozColheadertext:
       aColor = mMozColHeaderText;
       break;
@@ -961,11 +955,6 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = EffectiveTheme().mTitlebarRadius;
       break;
     }
-    case IntID::GtkMenuRadius: {
-      EnsureInit();
-      aResult = EffectiveTheme().mMenuRadius;
-      break;
-    }
     case IntID::AllowOverlayScrollbarsOverlap: {
       aResult = 1;
       break;
@@ -1197,14 +1186,6 @@ static bool GetThemeIsDark() {
   gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &fg);
   return RelativeLuminanceUtils::Compute(GDK_RGBA_TO_NS_RGBA(bg)) <
          RelativeLuminanceUtils::Compute(GDK_RGBA_TO_NS_RGBA(fg));
-}
-
-void nsLookAndFeel::ConfigureTheme(const LookAndFeelTheme& aTheme) {
-  MOZ_ASSERT(XRE_IsContentProcess());
-  GtkSettings* settings = gtk_settings_get_default();
-  g_object_set(settings, "gtk-theme-name", aTheme.themeName().get(),
-               "gtk-application-prefer-dark-theme",
-               aTheme.preferDarkTheme() ? TRUE : FALSE, nullptr);
 }
 
 void nsLookAndFeel::RestoreSystemTheme() {
@@ -1564,19 +1545,6 @@ void nsLookAndFeel::ConfigureFinalEffectiveTheme() {
   }
 }
 
-void nsLookAndFeel::GetGtkContentTheme(LookAndFeelTheme& aTheme) {
-  if (NS_SUCCEEDED(Preferences::GetCString("widget.content.gtk-theme-override",
-                                           aTheme.themeName()))) {
-    return;
-  }
-
-  auto& theme = StaticPrefs::widget_content_allow_gtk_dark_theme()
-                    ? mSystemTheme
-                    : LightTheme();
-  aTheme.preferDarkTheme() = theme.mPreferDarkTheme;
-  aTheme.themeName() = theme.mName;
-}
-
 static nscolor GetBackgroundColor(
     GtkStyleContext* aStyle, nscolor aForForegroundColor,
     GtkStateFlags aState = GTK_STATE_FLAG_NORMAL,
@@ -1846,14 +1814,6 @@ void nsLookAndFeel::PerThemeData::Init() {
         "background");
     return mMozWindowBackground;
   }();
-  mMenuRadius = 0;
-  if (!IsSolidCSDStyleUsed()) {
-    mMenuRadius = GetBorderRadius(style);
-    if (!mMenuRadius) {
-      mMenuRadius =
-          GetBorderRadius(GetStyleContext(MOZ_GTK_MENUPOPUP_DECORATION));
-    }
-  }
 
   style = GetStyleContext(MOZ_GTK_MENUITEM);
   gtk_style_context_get_color(style, GTK_STATE_FLAG_PRELIGHT, &color);
@@ -1983,13 +1943,6 @@ void nsLookAndFeel::PerThemeData::Init() {
   gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);
   mComboBoxText = GDK_RGBA_TO_NS_RGBA(color);
 
-  // Menubar text and hover text colors
-  style = GetStyleContext(MOZ_GTK_MENUBARITEM);
-  gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);
-  mMenuBarText = GDK_RGBA_TO_NS_RGBA(color);
-  gtk_style_context_get_color(style, GTK_STATE_FLAG_PRELIGHT, &color);
-  mMenuBarHoverText = GDK_RGBA_TO_NS_RGBA(color);
-
   // GTK's guide to fancy odd row background colors:
   // 1) Check if a theme explicitly defines an odd row color
   // 2) If not, check if it defines an even row color, and darken it
@@ -2073,7 +2026,6 @@ void nsLookAndFeel::PerThemeData::Init() {
              NS_SUCCEEDED(rv) ? color : 0);
     }
     LOGLNF(" * titlebar-radius: %d\n", mTitlebarRadius);
-    LOGLNF(" * menu-radius: %d\n", mMenuRadius);
   }
 }
 

@@ -9,7 +9,7 @@
 const TEST_URL = URL_ROOT + "doc_inspector_add_node.html";
 const PARENT_TREE_LEVEL = 3;
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
 
   info("Adding a node in an element that has no children and is collapsed");

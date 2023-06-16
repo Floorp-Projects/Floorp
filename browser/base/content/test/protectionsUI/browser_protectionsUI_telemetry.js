@@ -16,7 +16,7 @@ const TRACKING_PAGE =
  */
 var oldCanRecord = Services.telemetry.canRecordExtended;
 Services.telemetry.canRecordExtended = true;
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   UrlClassifierTestUtils.cleanupTestTrackers();
   Services.telemetry.canRecordExtended = oldCanRecord;
   Services.prefs.clearUserPref(PREF);
@@ -31,7 +31,7 @@ function getShieldCounts() {
   return getShieldHistogram().snapshot().values;
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await UrlClassifierTestUtils.addTestTrackers();
   Services.prefs.setBoolPref(DTSCBN_PREF, true);
 

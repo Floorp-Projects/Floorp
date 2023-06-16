@@ -6,7 +6,13 @@ import PropTypes from "prop-types";
 import React, { Component } from "react";
 import Breakpoint from "./Breakpoint";
 
-import { getSelectedSource, getFirstVisibleBreakpoints } from "../../selectors";
+import {
+  getSelectedSource,
+  getFirstVisibleBreakpoints,
+  getBlackBoxRanges,
+  isSourceMapIgnoreListEnabled,
+  isSourceOnSourceMapIgnoreList,
+} from "../../selectors";
 import { makeBreakpointId } from "../../utils/breakpoint";
 import { connect } from "../../utils/connect";
 import { breakpointItemActions } from "./menus/breakpoints";
@@ -21,6 +27,9 @@ class Breakpoints extends Component {
       breakpointActions: PropTypes.object,
       editorActions: PropTypes.object,
       selectedSource: PropTypes.object,
+      blackboxedRanges: PropTypes.object,
+      isSelectedSourceOnIgnoreList: PropTypes.bool,
+      blackboxedRangesForSelectedSource: PropTypes.array,
     };
   }
   render() {
@@ -31,6 +40,8 @@ class Breakpoints extends Component {
       editor,
       breakpointActions,
       editorActions,
+      blackboxedRangesForSelectedSource,
+      isSelectedSourceOnIgnoreList,
     } = this.props;
 
     if (!selectedSource || !breakpoints) {
@@ -46,6 +57,10 @@ class Breakpoints extends Component {
               key={makeBreakpointId(bp.location)}
               breakpoint={bp}
               selectedSource={selectedSource}
+              blackboxedRangesForSelectedSource={
+                blackboxedRangesForSelectedSource
+              }
+              isSelectedSourceOnIgnoreList={isSelectedSourceOnIgnoreList}
               editor={editor}
               breakpointActions={breakpointActions}
               editorActions={editorActions}
@@ -58,12 +73,22 @@ class Breakpoints extends Component {
 }
 
 export default connect(
-  state => ({
-    // Retrieves only the first breakpoint per line so that the
-    // breakpoint marker represents only the first breakpoint
-    breakpoints: getFirstVisibleBreakpoints(state),
-    selectedSource: getSelectedSource(state),
-  }),
+  state => {
+    const selectedSource = getSelectedSource(state);
+    const blackboxedRanges = getBlackBoxRanges(state);
+    return {
+      // Retrieves only the first breakpoint per line so that the
+      // breakpoint marker represents only the first breakpoint
+      breakpoints: getFirstVisibleBreakpoints(state),
+      selectedSource,
+      blackboxedRangesForSelectedSource:
+        selectedSource && blackboxedRanges[selectedSource.url],
+      isSelectedSourceOnIgnoreList:
+        selectedSource &&
+        isSourceMapIgnoreListEnabled(state) &&
+        isSourceOnSourceMapIgnoreList(state, selectedSource),
+    };
+  },
   dispatch => ({
     breakpointActions: breakpointItemActions(dispatch),
     editorActions: editorItemActions(dispatch),

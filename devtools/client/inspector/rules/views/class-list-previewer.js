@@ -244,9 +244,8 @@ class ClassListPreviewer {
     try {
       const classNames = await this.model.getClassNames(newValue);
       if (!this.autocompletePopup.isOpen) {
-        this._previewClassesBeforeAutocompletion = this.model.previewClasses.map(
-          previewClass => previewClass.className
-        );
+        this._previewClassesBeforeAutocompletion =
+          this.model.previewClasses.map(previewClass => previewClass.className);
       }
       items = classNames.map(className => {
         return {

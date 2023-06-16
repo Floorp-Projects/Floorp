@@ -49,9 +49,10 @@ export class DetectUserSessionStart {
     this._perfService.mark("visibility_event_rcvd_ts");
 
     try {
-      let visibility_event_rcvd_ts = this._perfService.getMostRecentAbsMarkStartByName(
-        "visibility_event_rcvd_ts"
-      );
+      let visibility_event_rcvd_ts =
+        this._perfService.getMostRecentAbsMarkStartByName(
+          "visibility_event_rcvd_ts"
+        );
 
       this._store.dispatch(
         ac.AlsoToMain({

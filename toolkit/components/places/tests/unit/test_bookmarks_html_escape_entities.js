@@ -5,7 +5,7 @@
 
 // Checks that html entities are escaped in bookmarks.html files.
 
-add_task(async function() {
+add_task(async function () {
   // Removes bookmarks.html if the file already exists.
   let HTMLFile = PathUtils.join(PathUtils.profileDir, "bookmarks.html");
   await IOUtils.remove(HTMLFile, { ignoreAbsent: true });
@@ -43,9 +43,12 @@ add_task(async function() {
         reject(e);
       }
     };
-    xhr.onabort = xhr.onerror = xhr.ontimeout = () => {
-      reject(new Error("xmlhttprequest failed"));
-    };
+    xhr.onabort =
+      xhr.onerror =
+      xhr.ontimeout =
+        () => {
+          reject(new Error("xmlhttprequest failed"));
+        };
     xhr.open("GET", PathUtils.toFileURI(HTMLFile));
     xhr.responseType = "document";
     xhr.overrideMimeType("text/html");

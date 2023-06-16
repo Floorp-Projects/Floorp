@@ -262,7 +262,8 @@ function runTests(flag, prefs, trackingResource) {
 
       sendAsyncMessage("last-channel-flags", {
         classificationFlags: classifiedChannel.classificationFlags,
-        isThirdPartyTrackingResource: classifiedChannel.isThirdPartyTrackingResource(),
+        isThirdPartyTrackingResource:
+          classifiedChannel.isThirdPartyTrackingResource(),
       });
     }
 

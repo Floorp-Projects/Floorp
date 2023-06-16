@@ -77,11 +77,11 @@ function doReadOnlyTransaction(db, key, remaining) {
   let objectStore = db.transaction(objName1, "readonly").objectStore(objName1);
   let index = objectStore.index(idxName1);
 
-  index.openKeyCursor(key, "prev").onsuccess = function(event) {
+  index.openKeyCursor(key, "prev").onsuccess = function (event) {
     let cursor = event.target.result;
     ok(cursor, "Got readonly cursor");
 
-    objectStore.get(cursor.primaryKey).onsuccess = function(event) {
+    objectStore.get(cursor.primaryKey).onsuccess = function (event) {
       if (++key == objDataCount) {
         key = 0;
       }
@@ -106,14 +106,14 @@ function doReadWriteTransaction(db, key, remaining) {
   );
 
   let objectStore = db.transaction(objName2, "readwrite").objectStore(objName2);
-  objectStore.openCursor(key).onsuccess = function(event) {
+  objectStore.openCursor(key).onsuccess = function (event) {
     let cursor = event.target.result;
     ok(cursor, "Got readwrite cursor");
 
     let value = cursor.value;
     value[idxKeyPathProp]++;
 
-    cursor.update(value).onsuccess = function(event) {
+    cursor.update(value).onsuccess = function (event) {
       if (++key == objDataCount) {
         key = 0;
       }

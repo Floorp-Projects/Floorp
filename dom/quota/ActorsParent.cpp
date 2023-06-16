@@ -169,18 +169,6 @@
 #include "prthread.h"
 #include "prtime.h"
 
-// As part of bug 1536596 in order to identify the remaining sources of
-// principal info inconsistencies, we have added anonymized crash logging and
-// are temporarily making these checks occur on both debug and optimized
-// nightly, dev-edition, and early beta builds through use of
-// EARLY_BETA_OR_EARLIER during Firefox 82.  The plan is to return this
-// condition to MOZ_DIAGNOSTIC_ASSERT_ENABLED during Firefox 84 at the latest.
-// The analysis and disabling is tracked by bug 1536596.
-
-#ifdef EARLY_BETA_OR_EARLIER
-#  define QM_PRINCIPALINFO_VERIFICATION_ENABLED
-#endif
-
 // The amount of time, in milliseconds, that our IO thread will stay alive
 // after the last event it processes.
 #define DEFAULT_THREAD_TIMEOUT_MS 30000
@@ -1646,32 +1634,6 @@ class RecordQuotaInfoLoadTimeHelper final : public Runnable {
  * Helper classes
  ******************************************************************************/
 
-#ifdef QM_PRINCIPALINFO_VERIFICATION_ENABLED
-
-class PrincipalVerifier final : public Runnable {
-  nsTArray<PrincipalInfo> mPrincipalInfos;
-
- public:
-  static already_AddRefed<PrincipalVerifier> CreateAndDispatch(
-      nsTArray<PrincipalInfo>&& aPrincipalInfos);
-
- private:
-  explicit PrincipalVerifier(nsTArray<PrincipalInfo>&& aPrincipalInfos)
-      : Runnable("dom::quota::PrincipalVerifier"),
-        mPrincipalInfos(std::move(aPrincipalInfos)) {
-    AssertIsOnIOThread();
-  }
-
-  virtual ~PrincipalVerifier() = default;
-
-  Result<Ok, nsCString> CheckPrincipalInfoValidity(
-      const PrincipalInfo& aPrincipalInfo);
-
-  NS_DECL_NSIRUNNABLE
-};
-
-#endif
-
 /*******************************************************************************
  * Helper Functions
  ******************************************************************************/
@@ -1721,28 +1683,6 @@ Result<bool, nsresult> MaybeUpdateGroupForOrigin(
     if (aOriginMetadata.mGroup != upToDateGroup) {
       aOriginMetadata.mGroup = upToDateGroup;
       updated = true;
-
-#ifdef QM_PRINCIPALINFO_VERIFICATION_ENABLED
-      OriginAttributes originAttributes;
-      nsCString originNoSuffix;
-      QM_TRY(OkIf(originAttributes.PopulateFromOrigin(aOriginMetadata.mOrigin,
-                                                      originNoSuffix)),
-             Err(NS_ERROR_FAILURE));
-
-      ContentPrincipalInfo contentPrincipalInfo;
-      contentPrincipalInfo.attrs() = originAttributes;
-      contentPrincipalInfo.originNoSuffix() = originNoSuffix;
-      contentPrincipalInfo.spec() = originNoSuffix;
-      contentPrincipalInfo.baseDomain() = baseDomain;
-
-      PrincipalInfo principalInfo(contentPrincipalInfo);
-
-      nsTArray<PrincipalInfo> principalInfos;
-      principalInfos.AppendElement(principalInfo);
-
-      RefPtr<PrincipalVerifier> principalVerifier =
-          PrincipalVerifier::CreateAndDispatch(std::move(principalInfos));
-#endif
     }
   }
 
@@ -4497,6 +4437,9 @@ Result<FullOriginMetadata, nsresult> QuotaManager::LoadFullOriginMetadata(
   PrincipalInfo principalInfo;
   QM_TRY(MOZ_TO_RESULT(PrincipalToPrincipalInfo(principal, &principalInfo)));
 
+  QM_TRY(MOZ_TO_RESULT(IsPrincipalInfoValid(principalInfo)),
+         Err(NS_ERROR_MALFORMED_URI));
+
   QM_TRY_UNWRAP(auto principalMetadata,
                 GetInfoFromValidatedPrincipalInfo(principalInfo));
 
@@ -4584,6 +4527,9 @@ Result<OriginMetadata, nsresult> QuotaManager::GetOriginMetadata(
   PrincipalInfo principalInfo;
   QM_TRY(MOZ_TO_RESULT(PrincipalToPrincipalInfo(principal, &principalInfo)));
 
+  QM_TRY(MOZ_TO_RESULT(IsPrincipalInfoValid(principalInfo)),
+         Err(NS_ERROR_MALFORMED_URI));
+
   QM_TRY_UNWRAP(auto principalMetadata,
                 GetInfoFromValidatedPrincipalInfo(principalInfo));
 
@@ -4654,8 +4600,28 @@ nsresult QuotaManager::InitializeRepository(PersistenceType aPersistenceType,
                     switch (dirEntryKind) {
                       case nsIFileKind::ExistsAsDirectory: {
                         QM_TRY_UNWRAP(
-                            auto metadata,
-                            LoadFullOriginMetadataWithRestore(childDirectory));
+                            auto maybeMetadata,
+                            QM_OR_ELSE_WARN_IF(
+                                // Expression
+                                LoadFullOriginMetadataWithRestore(
+                                    childDirectory)
+                                    .map([](auto metadata)
+                                             -> Maybe<FullOriginMetadata> {
+                                      return Some(std::move(metadata));
+                                    }),
+                                // Predicate.
+                                IsSpecificError<NS_ERROR_MALFORMED_URI>,
+                                // Fallback.
+                                ErrToDefaultOk<Maybe<FullOriginMetadata>>));
+
+                        if (!maybeMetadata) {
+                          // Unknown directories during initialization are
+                          // allowed. Just warn if we find them.
+                          UNKNOWN_FILE_WARNING(leafName);
+                          break;
+                        }
+
+                        auto metadata = maybeMetadata.extract();
 
                         MOZ_ASSERT(metadata.mPersistenceType ==
                                    aPersistenceType);
@@ -6610,7 +6576,8 @@ QuotaManager::GetInfoFromValidatedPrincipalInfo(
     }
 
     default: {
-      MOZ_CRASH("Should never get here!");
+      MOZ_ASSERT_UNREACHABLE("Should never get here!");
+      return Err(NS_ERROR_UNEXPECTED);
     }
   }
 }
@@ -8551,8 +8518,30 @@ nsresult GetUsageOp::ProcessOrigin(QuotaManager& aQuotaManager,
                                    const PersistenceType aPersistenceType) {
   AssertIsOnIOThread();
 
-  QM_TRY_INSPECT(const auto& metadata,
-                 aQuotaManager.LoadFullOriginMetadataWithRestore(&aOriginDir));
+  QM_TRY_UNWRAP(auto maybeMetadata,
+                QM_OR_ELSE_WARN_IF(
+                    // Expression
+                    aQuotaManager.LoadFullOriginMetadataWithRestore(&aOriginDir)
+                        .map([](auto metadata) -> Maybe<FullOriginMetadata> {
+                          return Some(std::move(metadata));
+                        }),
+                    // Predicate.
+                    IsSpecificError<NS_ERROR_MALFORMED_URI>,
+                    // Fallback.
+                    ErrToDefaultOk<Maybe<FullOriginMetadata>>));
+
+  if (!maybeMetadata) {
+    // Unknown directories during getting usage are allowed. Just warn if we
+    // find them.
+    QM_TRY_INSPECT(const auto& leafName,
+                   MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsAutoString, aOriginDir,
+                                                     GetLeafName));
+
+    UNKNOWN_FILE_WARNING(leafName);
+    return NS_OK;
+  }
+
+  auto metadata = maybeMetadata.extract();
 
   QM_TRY_INSPECT(const auto& usageInfo,
                  GetUsageForOrigin(aQuotaManager, aPersistenceType, metadata));
@@ -9231,10 +9220,33 @@ void ClearRequestBase::DeleteFiles(QuotaManager& aQuotaManager,
            this](nsCOMPtr<nsIFile>&& file) -> mozilla::Result<Ok, nsresult> {
             QM_TRY_INSPECT(const auto& dirEntryKind, GetDirEntryKind(*file));
 
+            QM_TRY_INSPECT(const auto& leafName,
+                           MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsAutoString, file,
+                                                             GetLeafName));
+
             switch (dirEntryKind) {
               case nsIFileKind::ExistsAsDirectory: {
-                QM_TRY_INSPECT(const auto& metadata,
-                               aQuotaManager.GetOriginMetadata(file));
+                QM_TRY_UNWRAP(
+                    auto maybeMetadata,
+                    QM_OR_ELSE_WARN_IF(
+                        // Expression
+                        aQuotaManager.GetOriginMetadata(file).map(
+                            [](auto metadata) -> Maybe<OriginMetadata> {
+                              return Some(std::move(metadata));
+                            }),
+                        // Predicate.
+                        IsSpecificError<NS_ERROR_MALFORMED_URI>,
+                        // Fallback.
+                        ErrToDefaultOk<Maybe<OriginMetadata>>));
+
+                if (!maybeMetadata) {
+                  // Unknown directories during clearing are allowed. Just warn
+                  // if we find them.
+                  UNKNOWN_FILE_WARNING(leafName);
+                  break;
+                }
+
+                auto metadata = maybeMetadata.extract();
 
                 MOZ_ASSERT(metadata.mPersistenceType == aPersistenceType);
 
@@ -9296,10 +9308,6 @@ void ClearRequestBase::DeleteFiles(QuotaManager& aQuotaManager,
               }
 
               case nsIFileKind::ExistsAsFile: {
-                QM_TRY_INSPECT(const auto& leafName,
-                               MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
-                                   nsAutoString, file, GetLeafName));
-
                 // Unknown files during clearing are allowed. Just warn if we
                 // find them.
                 if (!IsOSMetadata(leafName)) {
@@ -9756,7 +9764,30 @@ nsresult ListOriginsOp::ProcessOrigin(QuotaManager& aQuotaManager,
                                       const PersistenceType aPersistenceType) {
   AssertIsOnIOThread();
 
-  QM_TRY_UNWRAP(auto metadata, aQuotaManager.GetOriginMetadata(&aOriginDir));
+  QM_TRY_UNWRAP(auto maybeMetadata,
+                QM_OR_ELSE_WARN_IF(
+                    // Expression
+                    aQuotaManager.GetOriginMetadata(&aOriginDir)
+                        .map([](auto metadata) -> Maybe<OriginMetadata> {
+                          return Some(std::move(metadata));
+                        }),
+                    // Predicate.
+                    IsSpecificError<NS_ERROR_MALFORMED_URI>,
+                    // Fallback.
+                    ErrToDefaultOk<Maybe<OriginMetadata>>));
+
+  if (!maybeMetadata) {
+    // Unknown directories during listing are allowed. Just warn if we find
+    // them.
+    QM_TRY_INSPECT(const auto& leafName,
+                   MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsAutoString, aOriginDir,
+                                                     GetLeafName));
+
+    UNKNOWN_FILE_WARNING(leafName);
+    return NS_OK;
+  }
+
+  auto metadata = maybeMetadata.extract();
 
   if (aQuotaManager.IsOriginInternal(metadata.mOrigin)) {
     return NS_OK;
@@ -9778,130 +9809,6 @@ void ListOriginsOp::GetResponse(RequestResponse& aResponse) {
   nsTArray<nsCString>& origins = aResponse.get_ListOriginsResponse().origins();
   mOrigins.SwapElements(origins);
 }
-
-#ifdef QM_PRINCIPALINFO_VERIFICATION_ENABLED
-
-// static
-already_AddRefed<PrincipalVerifier> PrincipalVerifier::CreateAndDispatch(
-    nsTArray<PrincipalInfo>&& aPrincipalInfos) {
-  AssertIsOnIOThread();
-
-  RefPtr<PrincipalVerifier> verifier =
-      new PrincipalVerifier(std::move(aPrincipalInfos));
-
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(verifier));
-
-  return verifier.forget();
-}
-
-Result<Ok, nsCString> PrincipalVerifier::CheckPrincipalInfoValidity(
-    const PrincipalInfo& aPrincipalInfo) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  switch (aPrincipalInfo.type()) {
-    // A system principal is acceptable.
-    case PrincipalInfo::TSystemPrincipalInfo: {
-      return Ok{};
-    }
-
-    case PrincipalInfo::TContentPrincipalInfo: {
-      const ContentPrincipalInfo& info =
-          aPrincipalInfo.get_ContentPrincipalInfo();
-
-      nsCOMPtr<nsIURI> uri;
-      nsresult rv = NS_NewURI(getter_AddRefs(uri), info.spec());
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return Err("NS_NewURI failed"_ns);
-      }
-
-      nsCOMPtr<nsIPrincipal> principal =
-          BasePrincipal::CreateContentPrincipal(uri, info.attrs());
-      if (NS_WARN_IF(!principal)) {
-        return Err("CreateContentPrincipal failed"_ns);
-      }
-
-      nsCString originNoSuffix;
-      rv = principal->GetOriginNoSuffix(originNoSuffix);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return Err("GetOriginNoSuffix failed"_ns);
-      }
-
-      if (NS_WARN_IF(originNoSuffix != info.originNoSuffix())) {
-        static const char messageTemplate[] =
-            "originNoSuffix (%s) doesn't match passed one (%s)!";
-
-        QM_WARNING(messageTemplate, originNoSuffix.get(),
-                   info.originNoSuffix().get());
-
-        return Err(nsPrintfCString(
-            messageTemplate, AnonymizedOriginString(originNoSuffix).get(),
-            AnonymizedOriginString(info.originNoSuffix()).get()));
-      }
-
-      nsCString baseDomain;
-      rv = principal->GetBaseDomain(baseDomain);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return Err("GetBaseDomain failed"_ns);
-      }
-
-      if (NS_WARN_IF(baseDomain != info.baseDomain())) {
-        static const char messageTemplate[] =
-            "baseDomain (%s) doesn't match passed one (%s)!";
-
-        QM_WARNING(messageTemplate, baseDomain.get(), info.baseDomain().get());
-
-        return Err(nsPrintfCString(messageTemplate,
-                                   AnonymizedCString(baseDomain).get(),
-                                   AnonymizedCString(info.baseDomain()).get()));
-      }
-
-      return Ok{};
-    }
-
-    default: {
-      break;
-    }
-  }
-
-  return Err("Null and expanded principals are not acceptable"_ns);
-}
-
-NS_IMETHODIMP
-PrincipalVerifier::Run() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsAutoCString allDetails;
-  for (auto& principalInfo : mPrincipalInfos) {
-    const auto res = CheckPrincipalInfoValidity(principalInfo);
-    if (res.isErr()) {
-      if (!allDetails.IsEmpty()) {
-        allDetails.AppendLiteral(", ");
-      }
-
-      allDetails.Append(res.inspectErr());
-    }
-  }
-
-  if (!allDetails.IsEmpty()) {
-    allDetails.Insert("Invalid principal infos found: ", 0);
-
-    // In case of invalid principal infos, this will produce a crash reason such
-    // as:
-    //   Invalid principal infos found: originNoSuffix (https://aaa.aaaaaaa.aaa)
-    //   doesn't match passed one (about:aaaa)!
-    //
-    // In case of errors while validating a principal, it will contain a
-    // different message describing that error, which does not contain any
-    // details of the actual principal info at the moment.
-    //
-    // This string will be leaked.
-    MOZ_CRASH_UNSAFE(strdup(allDetails.BeginReading()));
-  }
-
-  return NS_OK;
-}
-
-#endif
 
 nsresult StorageOperationBase::GetDirectoryMetadata(nsIFile* aDirectory,
                                                     int64_t& aTimestamp,
@@ -10062,10 +9969,6 @@ nsresult StorageOperationBase::ProcessOriginDirectories() {
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-#ifdef QM_PRINCIPALINFO_VERIFICATION_ENABLED
-  nsTArray<PrincipalInfo> principalInfos;
-#endif
-
   for (auto& originProps : mOriginProps) {
     switch (originProps.mType) {
       case OriginProps::eChrome: {
@@ -10087,16 +9990,24 @@ nsresult StorageOperationBase::ProcessOriginDirectories() {
         QM_TRY(
             MOZ_TO_RESULT(PrincipalToPrincipalInfo(principal, &principalInfo)));
 
+        QM_WARNONLY_TRY_UNWRAP(
+            auto valid,
+            MOZ_TO_RESULT(quotaManager->IsPrincipalInfoValid(principalInfo)));
+
+        if (!valid) {
+          // Unknown directories during upgrade are allowed. Just warn if we
+          // find them.
+          UNKNOWN_FILE_WARNING(originProps.mLeafName);
+          originProps.mIgnore = true;
+          break;
+        }
+
         QM_TRY_UNWRAP(
             auto principalMetadata,
             quotaManager->GetInfoFromValidatedPrincipalInfo(principalInfo));
 
         originProps.mOriginMetadata = {std::move(principalMetadata),
                                        *originProps.mPersistenceType};
-
-#ifdef QM_PRINCIPALINFO_VERIFICATION_ENABLED
-        principalInfos.AppendElement(principalInfo);
-#endif
 
         break;
       }
@@ -10111,13 +10022,6 @@ nsresult StorageOperationBase::ProcessOriginDirectories() {
     }
   }
 
-#ifdef QM_PRINCIPALINFO_VERIFICATION_ENABLED
-  if (!principalInfos.IsEmpty()) {
-    RefPtr<PrincipalVerifier> principalVerifier =
-        PrincipalVerifier::CreateAndDispatch(std::move(principalInfos));
-  }
-#endif
-
   // Don't try to upgrade obsolete origins, remove them right after we detect
   // them.
   for (const auto& originProps : mOriginProps) {
@@ -10127,7 +10031,7 @@ nsresult StorageOperationBase::ProcessOriginDirectories() {
       MOZ_ASSERT(originProps.mOriginMetadata.mOrigin.IsEmpty());
 
       QM_TRY(MOZ_TO_RESULT(RemoveObsoleteOrigin(originProps)));
-    } else {
+    } else if (!originProps.mIgnore) {
       MOZ_ASSERT(!originProps.mOriginMetadata.mGroup.IsEmpty());
       MOZ_ASSERT(!originProps.mOriginMetadata.mOrigin.IsEmpty());
 

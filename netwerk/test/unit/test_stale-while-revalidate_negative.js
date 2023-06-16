@@ -66,7 +66,7 @@ async function stop_server(httpserver) {
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   let httpserver = new HttpServer();
   httpserver.registerPathHandler("/testdir", test_handler);
   httpserver.start(-1);

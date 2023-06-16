@@ -42,8 +42,7 @@ ruleTester.run("reject-relative-requires", rule, {
       errors: invalidError(),
     },
     {
-      code:
-        'loader.lazyRequireGetter(this, "path", "../parent/folder/path", true)',
+      code: 'loader.lazyRequireGetter(this, "path", "../parent/folder/path", true)',
       errors: invalidError(),
     },
     {

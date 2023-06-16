@@ -26,7 +26,7 @@ function EnsureExtFor(contextType, extName, shouldHave = true) {
 function Lastly_WithDraftExtsEnabled(func) {
   SimpleTest.waitForExplicitFinish();
 
-  var fnEnsure = function() {
+  var fnEnsure = function () {
     func();
     SimpleTest.finish();
   };

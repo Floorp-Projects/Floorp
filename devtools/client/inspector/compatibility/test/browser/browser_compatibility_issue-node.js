@@ -12,7 +12,7 @@ const TEST_URI = `
   }
   div {
     user-modify: read-only;
-    font-variant-alternates: historical-forms;
+    scrollbar-width: thin;
   }
   </style>
   <body>
@@ -26,18 +26,16 @@ const TEST_DATA_ALL = [
     nodes: ["body", "div"],
   },
   {
-    property: "font-variant-alternates",
+    property: "scrollbar-width",
     nodes: ["div"],
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
-  const {
-    allElementsPane,
-    selectedElementPane,
-  } = await openCompatibilityView();
+  const { allElementsPane, selectedElementPane } =
+    await openCompatibilityView();
 
   info("Check nodes that caused issues on the selected element");
   is(

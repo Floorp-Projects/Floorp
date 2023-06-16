@@ -15,8 +15,8 @@
 #include <stdarg.h>
 
 #include "jit/JSONSpewer.h"
+#include "js/Printer.h"
 #include "js/TypeDecls.h"
-#include "vm/Printer.h"
 
 enum JSValueType : uint8_t;
 

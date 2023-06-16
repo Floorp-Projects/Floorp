@@ -89,14 +89,14 @@ class GeckoAppShellTest : BaseSessionTest() {
                 override fun onLocationChange(
                     session: GeckoSession,
                     url: String?,
-                    perms: MutableList<GeckoSession.PermissionDelegate.ContentPermission>
+                    perms: MutableList<GeckoSession.PermissionDelegate.ContentPermission>,
                 ) {
                     // Result of first clock settings change
                     if (onLoadRequestCount == 0) {
                         assertThat(
                             "Should use a 24 hour clock.",
                             GeckoAppShell.getIs24HourFormat(),
-                            equalTo(true)
+                            equalTo(true),
                         )
                         onLoadRequestCount++
 
@@ -110,7 +110,7 @@ class GeckoAppShellTest : BaseSessionTest() {
                         assertThat(
                             "Should use a 12 hour clock.",
                             GeckoAppShell.getIs24HourFormat(),
-                            equalTo(false)
+                            equalTo(false),
                         )
                     }
                 }

@@ -843,7 +843,7 @@ nsresult nsIconChannel::StartAsyncOpen() {
 
   // Use the main thread for the pumped events unless the load info
   // specifies otherwise
-  nsCOMPtr<nsIEventTarget> listenerTarget =
+  nsCOMPtr<nsISerialEventTarget> listenerTarget =
       nsContentUtils::GetEventTargetByLoadInfo(mLoadInfo,
                                                mozilla::TaskCategory::Other);
   if (!listenerTarget) {

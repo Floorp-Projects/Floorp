@@ -131,7 +131,8 @@ export class ChromeProfileMigrator extends MigratorBase {
         ];
         if (lazy.ChromeMigrationUtils.supportsLoginsForPlatform) {
           possibleResourcePromises.push(
-            this._GetPasswordsResource(profileFolder)
+            this._GetPasswordsResource(profileFolder),
+            this._GetPaymentMethodsResource(profileFolder)
           );
         }
         let possibleResources = await Promise.all(possibleResourcePromises);
@@ -380,6 +381,93 @@ export class ChromeProfileMigrator extends MigratorBase {
       },
     };
   }
+  async _GetPaymentMethodsResource(aProfileFolder) {
+    if (
+      !Services.prefs.getBoolPref(
+        "browser.migrate.chrome.payment_methods.enabled",
+        false
+      )
+    ) {
+      return null;
+    }
+
+    let paymentMethodsPath = PathUtils.join(aProfileFolder, "Web Data");
+
+    if (!(await IOUtils.exists(paymentMethodsPath))) {
+      return null;
+    }
+
+    let rows = await MigrationUtils.getRowsFromDBWithoutLocks(
+      paymentMethodsPath,
+      "Chrome Credit Cards",
+      "SELECT name_on_card, card_number_encrypted, expiration_month, expiration_year FROM credit_cards"
+    ).catch(ex => {
+      console.error(ex);
+    });
+
+    if (!rows?.length) {
+      return null;
+    }
+
+    let {
+      _chromeUserDataPathSuffix,
+      _keychainServiceName,
+      _keychainAccountName,
+      _keychainMockPassphrase = null,
+    } = this;
+
+    return {
+      type: MigrationUtils.resourceTypes.PAYMENT_METHODS,
+
+      async migrate(aCallback) {
+        let crypto;
+        try {
+          if (AppConstants.platform == "win") {
+            let { ChromeWindowsLoginCrypto } = ChromeUtils.importESModule(
+              "resource:///modules/ChromeWindowsLoginCrypto.sys.mjs"
+            );
+            crypto = new ChromeWindowsLoginCrypto(_chromeUserDataPathSuffix);
+          } else if (AppConstants.platform == "macosx") {
+            let { ChromeMacOSLoginCrypto } = ChromeUtils.importESModule(
+              "resource:///modules/ChromeMacOSLoginCrypto.sys.mjs"
+            );
+            crypto = new ChromeMacOSLoginCrypto(
+              _keychainServiceName,
+              _keychainAccountName,
+              _keychainMockPassphrase
+            );
+          } else {
+            aCallback(false);
+            return;
+          }
+        } catch (ex) {
+          // Handle the user canceling Keychain access or other OSCrypto errors.
+          console.error(ex);
+          aCallback(false);
+          return;
+        }
+
+        let cards = [];
+        for (let row of rows) {
+          cards.push({
+            "cc-name": row.getResultByName("name_on_card"),
+            "cc-number": await crypto.decryptData(
+              row.getResultByName("card_number_encrypted"),
+              null
+            ),
+            "cc-exp-month": parseInt(
+              row.getResultByName("expiration_month"),
+              10
+            ),
+            "cc-exp-year": parseInt(row.getResultByName("expiration_year"), 10),
+          });
+        }
+
+        await MigrationUtils.insertCreditCardsWrapper(cards);
+        aCallback(true);
+      },
+    };
+  }
 }
 
 async function GetBookmarksResource(aProfileFolder, aBrowserKey) {
@@ -394,9 +482,11 @@ async function GetBookmarksResource(aProfileFolder, aBrowserKey) {
       console.error(ex);
     }
 
-    let alternativeBookmarks = await lazy.Qihoo360seMigrationUtils.getAlternativeBookmarks(
-      { bookmarksPath, localState }
-    );
+    let alternativeBookmarks =
+      await lazy.Qihoo360seMigrationUtils.getAlternativeBookmarks({
+        bookmarksPath,
+        localState,
+      });
     if (alternativeBookmarks.resource) {
       return alternativeBookmarks.resource;
     }
@@ -421,9 +511,9 @@ async function GetBookmarksResource(aProfileFolder, aBrowserKey) {
     type: MigrationUtils.resourceTypes.BOOKMARKS,
 
     migrate(aCallback) {
-      return (async function() {
+      return (async function () {
         let gotErrors = false;
-        let errorGatherer = function() {
+        let errorGatherer = function () {
           gotErrors = true;
         };
 
@@ -552,7 +642,7 @@ async function GetHistoryResource(aProfileFolder) {
     type: MigrationUtils.resourceTypes.HISTORY,
 
     migrate(aCallback) {
-      (async function() {
+      (async function () {
         const LIMIT = Services.prefs.getIntPref(
           "browser.migrate.chrome.history.limit"
         );

@@ -9,10 +9,9 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
   TEST_URI
 );
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.download.improvements_to_download_panel", true],
       ["browser.download.alwaysOpenPanel", true],
       ["browser.download.always_ask_before_handling_new_types", false],
       ["security.dialog_enable_delay", 1000],

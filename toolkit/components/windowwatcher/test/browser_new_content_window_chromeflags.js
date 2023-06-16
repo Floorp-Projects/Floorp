@@ -113,7 +113,7 @@ registerCleanupFunction(() => {
  */
 function getContentChromeFlags(win) {
   let b = win.gBrowser.selectedBrowser;
-  return SpecialPowers.spawn(b, [], async function() {
+  return SpecialPowers.spawn(b, [], async function () {
     // Content scripts provide docShell as a global.
     /* global docShell */
     docShell.QueryInterface(Ci.nsIInterfaceRequestor);
@@ -187,7 +187,7 @@ add_task(async function test_disallowed_flags() {
       gBrowser,
       url: SCRIPT_PAGE,
     },
-    async function(browser) {
+    async function (browser) {
       let win = await newWinPromise;
       let parentChromeFlags = getParentChromeFlags(win);
       assertContentFlags(parentChromeFlags);
@@ -234,7 +234,7 @@ add_task(async function test_disallowed_flags() {
       gBrowser,
       url: SCRIPT_PAGE_FOR_CHROME_ALL,
     },
-    async function(browser) {
+    async function (browser) {
       let win = await newWinPromise;
       let parentChromeFlags = getParentChromeFlags(win);
       Assert.notEqual(
@@ -261,7 +261,7 @@ add_task(async function test_scrollbars_flag() {
       gBrowser,
       url: SCRIPT_PAGE,
     },
-    async function(browser) {
+    async function (browser) {
       let win = await newWinPromise;
 
       let parentChromeFlags = getParentChromeFlags(win);

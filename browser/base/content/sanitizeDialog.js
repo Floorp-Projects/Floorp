@@ -51,7 +51,7 @@ var gSanitizePromptDialog = {
     let OKButton = this._dialog.getButton("accept");
     document.l10n.setAttributes(OKButton, "sanitize-button-ok");
 
-    document.addEventListener("dialogaccept", function(e) {
+    document.addEventListener("dialogaccept", function (e) {
       gSanitizePromptDialog.sanitize(e);
     });
 
@@ -268,7 +268,7 @@ var gSanitizePromptDialog = {
 document.mozSubdialogReady = new Promise(resolve => {
   window.addEventListener(
     "load",
-    function() {
+    function () {
       gSanitizePromptDialog.init().then(resolve);
     },
     {

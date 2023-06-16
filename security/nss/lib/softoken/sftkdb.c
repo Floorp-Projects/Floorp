@@ -124,7 +124,6 @@ sftkdb_isAuthenticatedAttribute(CK_ATTRIBUTE_TYPE type)
     }
     return PR_FALSE;
 }
-
 /*
  * convert a native ULONG to a database ulong. Database ulong's
  * are all 4 byte big endian values.
@@ -141,7 +140,7 @@ sftk_ULong2SDBULong(unsigned char *data, CK_ULONG value)
 
 /*
  * convert a database ulong back to a native ULONG. (reverse of the above
- * function.
+ * function).
  */
 static CK_ULONG
 sftk_SDBULong2ULong(unsigned char *data)
@@ -153,6 +152,39 @@ sftk_SDBULong2ULong(unsigned char *data)
         value |= (((CK_ULONG)data[i]) << (SDB_ULONG_SIZE - 1 - i) * BBP);
     }
     return value;
+}
+
+/* certain trust records are default values, which are the values
+ * returned if the signature check fails anyway.
+ * In those cases, we can skip the signature check. */
+PRBool
+sftkdb_isNullTrust(const CK_ATTRIBUTE *template)
+{
+    switch (template->type) {
+        case CKA_TRUST_SERVER_AUTH:
+        case CKA_TRUST_CLIENT_AUTH:
+        case CKA_TRUST_EMAIL_PROTECTION:
+        case CKA_TRUST_CODE_SIGNING:
+            if (template->ulValueLen != SDB_ULONG_SIZE) {
+                break;
+            }
+            if (sftk_SDBULong2ULong(template->pValue) ==
+                CKT_NSS_TRUST_UNKNOWN) {
+                return PR_TRUE;
+            }
+            break;
+        case CKA_TRUST_STEP_UP_APPROVED:
+            if (template->ulValueLen != 1) {
+                break;
+            }
+            if (*((unsigned char *)(template->pValue)) == 0) {
+                return PR_TRUE;
+            }
+            break;
+        default:
+            break;
+    }
+    return PR_FALSE;
 }
 
 /*
@@ -255,9 +287,9 @@ sftkdb_getRawAttributeSignature(SFTKDBHandle *handle, SDB *db,
     char id[30];
     CK_RV crv;
 
-    sprintf(id, SFTKDB_META_SIG_TEMPLATE,
-            sftkdb_TypeString(handle),
-            (unsigned int)objectID, (unsigned int)type);
+    snprintf(id, sizeof(id), SFTKDB_META_SIG_TEMPLATE,
+             sftkdb_TypeString(handle),
+             (unsigned int)objectID, (unsigned int)type);
 
     crv = (*db->sdb_GetMetaData)(db, id, signText, NULL);
     return crv;
@@ -280,9 +312,9 @@ sftkdb_DestroyAttributeSignature(SFTKDBHandle *handle, SDB *db,
     char id[30];
     CK_RV crv;
 
-    sprintf(id, SFTKDB_META_SIG_TEMPLATE,
-            sftkdb_TypeString(handle),
-            (unsigned int)objectID, (unsigned int)type);
+    snprintf(id, sizeof(id), SFTKDB_META_SIG_TEMPLATE,
+             sftkdb_TypeString(handle),
+             (unsigned int)objectID, (unsigned int)type);
 
     crv = (*db->sdb_DestroyMetaData)(db, id);
     return crv;
@@ -306,9 +338,9 @@ sftkdb_PutAttributeSignature(SFTKDBHandle *handle, SDB *keyTarget,
     char id[30];
     CK_RV crv;
 
-    sprintf(id, SFTKDB_META_SIG_TEMPLATE,
-            sftkdb_TypeString(handle),
-            (unsigned int)objectID, (unsigned int)type);
+    snprintf(id, sizeof(id), SFTKDB_META_SIG_TEMPLATE,
+             sftkdb_TypeString(handle),
+             (unsigned int)objectID, (unsigned int)type);
 
     crv = (*keyTarget->sdb_PutMetaData)(keyTarget, id, signText, NULL);
     return crv;
@@ -415,7 +447,7 @@ sftkdb_fixupTemplateOut(CK_ATTRIBUTE *template, CK_OBJECT_HANDLE objectID,
             SECITEM_ZfreeItem(plainText, PR_TRUE);
         }
         /* make sure signed attributes are valid */
-        if (checkSig && sftkdb_isAuthenticatedAttribute(ntemplate[i].type)) {
+        if (checkSig && sftkdb_isAuthenticatedAttribute(ntemplate[i].type) && !sftkdb_isNullTrust(&ntemplate[i])) {
             SECStatus rv;
             CK_RV local_crv;
             SECItem signText;
@@ -2325,7 +2357,7 @@ sftkdb_updateIntegrity(PLArenaPool *arena, SFTKDBHandle *handle,
             crv = sftkdb_getRawAttributeSignature(handle, source, sourceID, type,
                                                   &signature);
             if (crv != CKR_OK) {
-                /* old databases don't have signature IDs because they are 
+                /* old databases don't have signature IDs because they are
                  * 3DES encrypted. Since we know not to look for integrity
                  * for 3DES records it's OK not to find one here. A new record
                  * will be created when we reencrypt using AES CBC */
@@ -2395,7 +2427,6 @@ sftkdb_mergeObject(SFTKDBHandle *handle, CK_OBJECT_HANDLE id,
 
     objectType = sftkdb_getULongFromTemplate(CKA_CLASS, ptemplate,
                                              max_attributes);
-
     /*
      * Update Object updates the object template if necessary then returns
      * whether or not we need to actually write the object out to our target

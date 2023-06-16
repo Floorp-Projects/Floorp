@@ -9,9 +9,8 @@ function test() {
     CustomizableUI.AREA_NAVBAR
   );
 
-  let gFuturePlacements = CustomizableUI.getTestOnlyInternalProp(
-    "gFuturePlacements"
-  );
+  let gFuturePlacements =
+    CustomizableUI.getTestOnlyInternalProp("gFuturePlacements");
   is(
     gFuturePlacements.size,
     0,
@@ -59,8 +58,10 @@ function test() {
     testWidgetNew.id
   );
 
-  let savedPlacements = CustomizableUI.getTestOnlyInternalProp("gSavedState")
-    .placements[CustomizableUI.AREA_NAVBAR];
+  let savedPlacements =
+    CustomizableUI.getTestOnlyInternalProp("gSavedState").placements[
+      CustomizableUI.AREA_NAVBAR
+    ];
   // Then call the re-init routine so we re-add the builtin widgets
   CustomizableUIInternal._updateForNewVersion();
   is(gFuturePlacements.size, 1, "Should have 1 more future placement");

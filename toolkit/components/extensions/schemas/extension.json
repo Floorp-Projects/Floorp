@@ -16,7 +16,10 @@
         "allowedContexts": ["content", "devtools"],
         "description": "Set for the lifetime of a callback if an ansychronous extension api has resulted in an error. If no error has occured lastError will be <var>undefined</var>.",
         "properties": {
-          "message": { "type": "string", "description": "Description of the error that has taken place." }
+          "message": {
+            "type": "string",
+            "description": "Description of the error that has taken place."
+          }
         },
         "additionalProperties": {
           "type": "any"
@@ -79,7 +82,7 @@
               },
               "tabId": {
                 "type": "integer",
-                "optional":true,
+                "optional": true,
                 "description": "Find a view according to a tab id. If this field is omitted, returns all views."
               }
             }
@@ -101,11 +104,11 @@
         "description": "Returns the JavaScript 'window' object for the background page running inside the current extension. Returns null if the extension has no background page.",
         "parameters": [],
         "returns": {
-            "type": "object",
-            "optional": true,
-            "isInstanceOf": "Window",
-            "additionalProperties": { "type": "any" }
-         }
+          "type": "object",
+          "optional": true,
+          "isInstanceOf": "Window",
+          "additionalProperties": { "type": "any" }
+        }
       },
       {
         "name": "isAllowedIncognitoAccess",
@@ -150,9 +153,7 @@
         "unsupported": true,
         "type": "function",
         "description": "Sets the value of the ap CGI parameter used in the extension's update URL.  This value is ignored for extensions that are hosted in the browser vendor's store.",
-        "parameters": [
-          {"type": "string", "name": "data", "maxLength": 1024}
-        ]
+        "parameters": [{ "type": "string", "name": "data", "maxLength": 1024 }]
       }
     ],
     "events": [
@@ -163,9 +164,18 @@
         "type": "function",
         "description": "Fired when a request is sent from either an extension process or a content script.",
         "parameters": [
-          {"name": "request", "type": "any", "optional": true, "description": "The request sent by the calling script."},
-          {"name": "sender", "$ref": "runtime.MessageSender" },
-          {"name": "sendResponse", "type": "function", "description": "Function to call (at most once) when you have a response. The argument should be any JSON-ifiable object, or undefined if there is no response. If you have more than one <code>onRequest</code> listener in the same document, then only one may send a response." }
+          {
+            "name": "request",
+            "type": "any",
+            "optional": true,
+            "description": "The request sent by the calling script."
+          },
+          { "name": "sender", "$ref": "runtime.MessageSender" },
+          {
+            "name": "sendResponse",
+            "type": "function",
+            "description": "Function to call (at most once) when you have a response. The argument should be any JSON-ifiable object, or undefined if there is no response. If you have more than one <code>onRequest</code> listener in the same document, then only one may send a response."
+          }
         ]
       },
       {
@@ -175,9 +185,18 @@
         "type": "function",
         "description": "Fired when a request is sent from another extension.",
         "parameters": [
-          {"name": "request", "type": "any", "optional": true, "description": "The request sent by the calling script."},
-          {"name": "sender", "$ref": "runtime.MessageSender" },
-          {"name": "sendResponse", "type": "function", "description": "Function to call when you have a response. The argument should be any JSON-ifiable object, or undefined if there is no response." }
+          {
+            "name": "request",
+            "type": "any",
+            "optional": true,
+            "description": "The request sent by the calling script."
+          },
+          { "name": "sender", "$ref": "runtime.MessageSender" },
+          {
+            "name": "sendResponse",
+            "type": "function",
+            "description": "Function to call when you have a response. The argument should be any JSON-ifiable object, or undefined if there is no response."
+          }
         ]
       }
     ]

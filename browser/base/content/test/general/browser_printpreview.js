@@ -4,7 +4,7 @@ async function test() {
   waitForExplicitFinish();
 
   BrowserTestUtils.openNewForegroundTab(gBrowser, "about:home", true).then(
-    function(tab) {
+    function (tab) {
       ourTab = tab;
       ok(
         !document.querySelector(".printPreviewBrowser"),

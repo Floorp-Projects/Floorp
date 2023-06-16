@@ -16,7 +16,7 @@ const FAKE_ENDPOINT = "https://fake/endpoint";
 
 // Test that the push service url is displayed for service workers subscribed to a push
 // service.
-add_task(async function() {
+add_task(async function () {
   await enableServiceWorkerDebugging();
 
   info("Mock the push service");

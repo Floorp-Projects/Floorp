@@ -46,10 +46,8 @@ function getPreviousHistoryValue(state) {
 
 function getReverseSearchResult(state) {
   const { history } = state;
-  const {
-    currentReverseSearchResults,
-    currentReverseSearchResultsPosition,
-  } = history;
+  const { currentReverseSearchResults, currentReverseSearchResultsPosition } =
+    history;
 
   if (
     !Array.isArray(currentReverseSearchResults) ||

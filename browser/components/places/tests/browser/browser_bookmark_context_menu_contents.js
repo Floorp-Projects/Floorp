@@ -30,7 +30,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "privacy.userContext.enabled"
 );
 
-add_setup(async function() {
+add_setup(async function () {
   await PlacesUtils.bookmarks.eraseEverything();
 
   let toolbar = document.getElementById("PersonalToolbar");
@@ -175,7 +175,7 @@ add_task(async function test_bookmark_contextmenu_contents() {
     );
   }
 
-  await checkContextMenu(async function() {
+  await checkContextMenu(async function () {
     let toolbarBookmark = await PlacesUtils.bookmarks.insert({
       parentGuid: PlacesUtils.bookmarks.toolbarGuid,
       title: "Bookmark Title",
@@ -201,7 +201,7 @@ add_task(async function test_bookmark_contextmenu_contents() {
   let tabs = [];
   let contextMenuOnContent;
 
-  await checkContextMenu(async function() {
+  await checkContextMenu(async function () {
     info("Check context menu after opening context menu on content");
     const toolbarBookmark = await PlacesUtils.bookmarks.insert({
       parentGuid: PlacesUtils.bookmarks.toolbarGuid,
@@ -265,7 +265,7 @@ add_task(async function test_empty_contextmenu_contents() {
     "show-other-bookmarks_PersonalToolbar",
   ];
 
-  await checkContextMenu(async function() {
+  await checkContextMenu(async function () {
     let contextMenu = document.getElementById("placesContext");
     let toolbar = document.querySelector("#PlacesToolbarItems");
     let openToolbarContextMenuPromise = BrowserTestUtils.waitForPopupEvent(
@@ -300,7 +300,7 @@ add_task(async function test_separator_contextmenu_contents() {
     "show-other-bookmarks_PersonalToolbar",
   ];
 
-  await checkContextMenu(async function() {
+  await checkContextMenu(async function () {
     let sep = await PlacesUtils.bookmarks.insert({
       type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
       parentGuid: PlacesUtils.bookmarks.toolbarGuid,
@@ -339,7 +339,7 @@ add_task(async function test_folder_contextmenu_contents() {
     "show-other-bookmarks_PersonalToolbar",
   ];
 
-  await checkContextMenu(async function() {
+  await checkContextMenu(async function () {
     let folder = await PlacesUtils.bookmarks.insert({
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       parentGuid: PlacesUtils.bookmarks.toolbarGuid,
@@ -385,9 +385,8 @@ add_task(async function test_sidebar_folder_contextmenu_contents() {
         });
         tree.selectItems([folder.guid]);
 
-        let contextMenu = SidebarUI.browser.contentDocument.getElementById(
-          "placesContext"
-        );
+        let contextMenu =
+          SidebarUI.browser.contentDocument.getElementById("placesContext");
         let popupShownPromise = BrowserTestUtils.waitForEvent(
           contextMenu,
           "popupshown"
@@ -430,9 +429,8 @@ add_task(async function test_sidebar_multiple_folders_contextmenu_contents() {
         });
         tree.selectItems([folder1.guid, folder2.guid]);
 
-        let contextMenu = SidebarUI.browser.contentDocument.getElementById(
-          "placesContext"
-        );
+        let contextMenu =
+          SidebarUI.browser.contentDocument.getElementById("placesContext");
         let popupShownPromise = BrowserTestUtils.waitForEvent(
           contextMenu,
           "popupshown"
@@ -474,9 +472,8 @@ add_task(async function test_sidebar_bookmark_contextmenu_contents() {
       async bookmark => {
         tree.selectItems([bookmark.guid]);
 
-        let contextMenu = SidebarUI.browser.contentDocument.getElementById(
-          "placesContext"
-        );
+        let contextMenu =
+          SidebarUI.browser.contentDocument.getElementById("placesContext");
         let popupShownPromise = BrowserTestUtils.waitForEvent(
           contextMenu,
           "popupshown"
@@ -515,16 +512,14 @@ add_task(async function test_sidebar_bookmark_search_contextmenu_contents() {
       async bookmark => {
         info("Checking bookmark sidebar menu contents in search context");
         // Perform a search first
-        let searchBox = SidebarUI.browser.contentDocument.getElementById(
-          "search-box"
-        );
+        let searchBox =
+          SidebarUI.browser.contentDocument.getElementById("search-box");
         searchBox.value = SECOND_BOOKMARK_TITLE;
         searchBox.doCommand();
         tree.selectItems([bookmark.guid]);
 
-        let contextMenu = SidebarUI.browser.contentDocument.getElementById(
-          "placesContext"
-        );
+        let contextMenu =
+          SidebarUI.browser.contentDocument.getElementById("placesContext");
         let popupShownPromise = BrowserTestUtils.waitForEvent(
           contextMenu,
           "popupshown"
@@ -645,9 +640,8 @@ add_task(async function test_sidebar_mixedselection_contextmenu_contents() {
         });
         tree.selectItems([bookmark.guid, folder.guid]);
 
-        let contextMenu = SidebarUI.browser.contentDocument.getElementById(
-          "placesContext"
-        );
+        let contextMenu =
+          SidebarUI.browser.contentDocument.getElementById("placesContext");
         let popupShownPromise = BrowserTestUtils.waitForEvent(
           contextMenu,
           "popupshown"
@@ -684,9 +678,8 @@ add_task(async function test_sidebar_multiple_bookmarks_contextmenu_contents() {
         });
         tree.selectItems([bookmark.guid, bookmark2.guid]);
 
-        let contextMenu = SidebarUI.browser.contentDocument.getElementById(
-          "placesContext"
-        );
+        let contextMenu =
+          SidebarUI.browser.contentDocument.getElementById("placesContext");
         let popupShownPromise = BrowserTestUtils.waitForEvent(
           contextMenu,
           "popupshown"
@@ -720,9 +713,8 @@ add_task(async function test_sidebar_multiple_links_contextmenu_contents() {
         tree.ownerDocument.getElementById("bylastvisited").doCommand();
         tree.selectAll();
 
-        let contextMenu = SidebarUI.browser.contentDocument.getElementById(
-          "placesContext"
-        );
+        let contextMenu =
+          SidebarUI.browser.contentDocument.getElementById("placesContext");
         let popupShownPromise = BrowserTestUtils.waitForEvent(
           contextMenu,
           "popupshown"
@@ -757,9 +749,8 @@ add_task(async function test_sidebar_mixed_bookmarks_contextmenu_contents() {
         });
         tree.selectItems([bookmark.guid, folder.guid]);
 
-        let contextMenu = SidebarUI.browser.contentDocument.getElementById(
-          "placesContext"
-        );
+        let contextMenu =
+          SidebarUI.browser.contentDocument.getElementById("placesContext");
         let popupShownPromise = BrowserTestUtils.waitForEvent(
           contextMenu,
           "popupshown"

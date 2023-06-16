@@ -9,13 +9,13 @@
 
 // The order of these tests matters!
 
-add_setup(async function() {
+add_setup(async function () {
   let bm = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: "http://example.com/?q=%s",
     title: "test",
   });
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.bookmarks.remove(bm);
     await PlacesUtils.history.clear();
   });
@@ -153,7 +153,7 @@ add_task(
     const TIMEOUT = 3000;
     let delay = UrlbarPrefs.get("delay");
     UrlbarPrefs.set("delay", TIMEOUT);
-    registerCleanupFunction(function() {
+    registerCleanupFunction(function () {
       UrlbarPrefs.set("delay", delay);
     });
 
@@ -187,7 +187,7 @@ add_task(
 // The main reason for running each test task in a new tab that's closed when
 // the task finishes is to avoid switch-to-tab results.
 function taskWithNewTab(fn) {
-  return async function() {
+  return async function () {
     await BrowserTestUtils.withNewTab("about:blank", fn);
   };
 }

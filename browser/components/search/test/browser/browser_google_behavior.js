@@ -55,7 +55,7 @@ if (code) {
 }
 
 function promiseContentSearchReady(browser) {
-  return SpecialPowers.spawn(browser, [], async function(args) {
+  return SpecialPowers.spawn(browser, [], async function (args) {
     return new Promise(resolve => {
       SpecialPowers.pushPrefEnv({
         set: [
@@ -72,27 +72,28 @@ function promiseContentSearchReady(browser) {
         }
       }
 
-      content.addEventListener("ContentSearchService", function listener(
-        aEvent
-      ) {
-        if (aEvent.detail.type == "State") {
-          content.removeEventListener("ContentSearchService", listener);
-          resolve();
+      content.addEventListener(
+        "ContentSearchService",
+        function listener(aEvent) {
+          if (aEvent.detail.type == "State") {
+            content.removeEventListener("ContentSearchService", listener);
+            resolve();
+          }
         }
-      });
+      );
     });
   });
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await Services.search.init();
 });
 
 for (let engine of searchEngineDetails) {
-  add_task(async function() {
+  add_task(async function () {
     let previouslySelectedEngine = Services.search.defaultEngine;
 
-    registerCleanupFunction(function() {
+    registerCleanupFunction(function () {
       Services.search.defaultEngine = previouslySelectedEngine;
     });
 
@@ -174,7 +175,7 @@ async function testSearchEngine(engineDetails) {
         await promiseContentSearchReady(browser);
       },
       async run(tab) {
-        await SpecialPowers.spawn(tab.linkedBrowser, [], async function(args) {
+        await SpecialPowers.spawn(tab.linkedBrowser, [], async function (args) {
           let input = content.document.querySelector("input[id*=search-]");
           input.focus();
           input.value = "foo";

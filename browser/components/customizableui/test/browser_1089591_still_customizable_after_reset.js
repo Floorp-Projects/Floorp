@@ -1,7 +1,7 @@
 "use strict";
 
 // Dragging the elements again after a reset should work
-add_task(async function() {
+add_task(async function () {
   await startCustomizing();
   let historyButton = document.getElementById("wrapper-history-panelmenu");
   let devButton = document.getElementById("wrapper-developer-button");

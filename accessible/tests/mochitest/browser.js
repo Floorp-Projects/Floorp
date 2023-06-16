@@ -119,14 +119,15 @@ function openBrowserWindowIntl() {
     }
   }
 
-  gBrowserContext.browserWnd = window.browsingContext.topChromeWindow.openDialog(
-    AppConstants.BROWSER_CHROME_URL,
-    "_blank",
-    params,
-    gBrowserContext.startURL || "data:text/html,<html></html>"
-  );
+  gBrowserContext.browserWnd =
+    window.browsingContext.topChromeWindow.openDialog(
+      AppConstants.BROWSER_CHROME_URL,
+      "_blank",
+      params,
+      gBrowserContext.startURL || "data:text/html,<html></html>"
+    );
 
-  whenDelayedStartupFinished(browserWindow(), function() {
+  whenDelayedStartupFinished(browserWindow(), function () {
     addA11yLoadEvent(startBrowserTests, browserWindow());
   });
 }

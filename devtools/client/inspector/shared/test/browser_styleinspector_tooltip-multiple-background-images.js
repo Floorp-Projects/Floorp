@@ -12,7 +12,7 @@ const BLUE_DOT =
 const TEST_STYLE = `h1 {background: url(${YELLOW_DOT}), url(${BLUE_DOT});}`;
 const TEST_URI = `<style>${TEST_STYLE}</style><h1>test element</h1>`;
 
-add_task(async function() {
+add_task(async function () {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector } = await openInspector();
 

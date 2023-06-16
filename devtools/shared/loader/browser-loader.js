@@ -48,7 +48,8 @@ const COMMON_LIBRARY_DIRS = ["resource://devtools/client/shared/vendor"];
 // An example:
 // * `resource://devtools/client/inspector/components`
 // * `resource://devtools/client/inspector/shared/components`
-const browserBasedDirsRegExp = /^resource\:\/\/devtools\/client\/\S*\/components\//;
+const browserBasedDirsRegExp =
+  /^resource\:\/\/devtools\/client\/\S*\/components\//;
 
 /*
  * Create a loader to be used in a browser environment. This evaluates

@@ -135,6 +135,13 @@ export var TelemetryScheduler = {
     this._shuttingDown = true;
   },
 
+  // Reset some specific innards without shutting down and re-init'ing.
+  // Test-only method.
+  testReset() {
+    this._idleDispatch?.cancel();
+    this._idleDispatch = undefined;
+  },
+
   _clearTimeout() {
     if (this._schedulerTimer) {
       Policy.clearSchedulerTickTimeout(this._schedulerTimer);

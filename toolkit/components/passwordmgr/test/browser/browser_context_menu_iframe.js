@@ -21,9 +21,7 @@ add_task(async function test_initialize() {
     Services.prefs.clearUserPref("signon.autofillForms");
     Services.prefs.clearUserPref("signon.schemeUpgrades");
   });
-  for (let login of loginList()) {
-    Services.logins.addLogin(login);
-  }
+  await Services.logins.addLogins(loginList());
 });
 
 /**
@@ -35,7 +33,7 @@ add_task(async function test_context_menu_iframe_fill() {
       gBrowser,
       url: TEST_ORIGIN + IFRAME_PAGE_PATH,
     },
-    async function(browser) {
+    async function (browser) {
       await openPasswordContextMenu(
         browser,
         "#form-basic-password",
@@ -51,7 +49,7 @@ add_task(async function test_context_menu_iframe_fill() {
         return SpecialPowers.spawn(
           browser.browsingContext.children[0],
           [name],
-          function(inputname) {
+          function (inputname) {
             return content.document.getElementById(inputname).value;
           }
         );
@@ -61,9 +59,8 @@ add_task(async function test_context_menu_iframe_fill() {
       );
 
       // Execute the command of the first login menuitem found at the context menu.
-      let firstLoginItem = popupMenu.getElementsByClassName(
-        "context-login-item"
-      )[0];
+      let firstLoginItem =
+        popupMenu.getElementsByClassName("context-login-item")[0];
       Assert.ok(firstLoginItem, "Found the first login item");
 
       await TestUtils.waitForTick();
@@ -117,7 +114,7 @@ add_task(async function test_context_menu_iframe_sandbox() {
       gBrowser,
       url: TEST_ORIGIN + IFRAME_PAGE_PATH,
     },
-    async function(browser) {
+    async function (browser) {
       info("Opening context menu for test_context_menu_iframe_sandbox");
       await openPasswordContextMenu(
         browser,
@@ -148,7 +145,7 @@ add_task(async function test_context_menu_iframe_sandbox_same_origin() {
       gBrowser,
       url: TEST_ORIGIN + IFRAME_PAGE_PATH,
     },
-    async function(browser) {
+    async function (browser) {
       await openPasswordContextMenu(
         browser,
         "#form-basic-password",

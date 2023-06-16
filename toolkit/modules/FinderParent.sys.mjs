@@ -103,7 +103,10 @@ FinderParent.prototype = {
     // browsing context where the result was found. However,
     // ensure that this browsing context is still valid, and
     // if not, return null.
-    if (aList.includes(this._lastFoundBrowsingContext)) {
+    if (
+      aList.includes(this._lastFoundBrowsingContext) &&
+      !this._lastFoundBrowsingContext.isUnderHiddenEmbedderElement
+    ) {
       return this._lastFoundBrowsingContext;
     }
 
@@ -159,6 +162,10 @@ FinderParent.prototype = {
   },
 
   gatherBrowsingContexts(aBrowsingContext) {
+    if (aBrowsingContext.isUnderHiddenEmbedderElement) {
+      return [];
+    }
+
     let list = [aBrowsingContext];
 
     for (let child of aBrowsingContext.children) {

@@ -238,7 +238,8 @@ class LazyMessageList extends Component {
     const scrollportMin =
       this.props.viewportRef.current.getBoundingClientRect().top -
       this.#overdrawHeight;
-    const uppermostItemRect = this.#topBufferRef.current.nextSibling.getBoundingClientRect();
+    const uppermostItemRect =
+      this.#topBufferRef.current.nextSibling.getBoundingClientRect();
     const uppermostItemMin = uppermostItemRect.top;
     const uppermostItemMax = uppermostItemRect.bottom;
 
@@ -293,12 +294,8 @@ class LazyMessageList extends Component {
   }
 
   render() {
-    const {
-      items,
-      itemDefaultHeight,
-      renderItem,
-      itemsToKeepAlive,
-    } = this.props;
+    const { items, itemDefaultHeight, renderItem, itemsToKeepAlive } =
+      this.props;
     if (!items.length) {
       return createElement(Fragment, {
         key: "LazyMessageList",

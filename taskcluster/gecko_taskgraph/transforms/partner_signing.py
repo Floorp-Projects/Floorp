@@ -22,9 +22,7 @@ def set_mac_label(config, jobs):
         dep_job = job["primary-dependency"]
         if "mac-notarization" in config.kind:
             default_label = dep_job.label.replace("mac-signing", "mac-notarization")
-        else:
-            default_label = dep_job.label.replace("notarization-part-1", "signing")
-        job.setdefault("label", default_label)
+            job.setdefault("label", default_label)
         assert job["label"] != dep_job.label, "Unable to determine label for {}".format(
             config.kind
         )
@@ -65,9 +63,4 @@ def define_upstream_artifacts(config, jobs):
             }
             for spec in artifacts_specifications
         ]
-        # Override the format for signingscript notarization
-        if "mac-notarization" in config.kind:
-            for artifact in job["upstream-artifacts"]:
-                artifact["formats"] = ["apple_notarization"]
-
         yield job

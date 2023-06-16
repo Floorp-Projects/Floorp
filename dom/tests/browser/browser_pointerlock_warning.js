@@ -66,7 +66,7 @@ add_task(async function show_pointerlock_warning_escape() {
     ok(true, "Pointerlock warning hidden");
 
     // Pointerlock should be released after escape is pressed.
-    await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
       Assert.equal(content.document.pointerLockElement, null);
     });
 

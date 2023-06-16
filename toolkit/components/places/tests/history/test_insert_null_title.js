@@ -15,7 +15,7 @@ async function fetchTitle(url) {
   return entry.title;
 }
 
-add_task(async function() {
+add_task(async function () {
   const url = "http://mozilla.com";
   let title = "Mozilla";
 

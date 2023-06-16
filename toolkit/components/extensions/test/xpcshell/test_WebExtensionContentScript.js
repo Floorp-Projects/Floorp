@@ -243,7 +243,7 @@ async function test_frame_matching(meta) {
   ];
 
   // matchesWindowGlobal tests against content frames
-  await contentPage.spawn({ tests, urls, meta }, args => {
+  await contentPage.spawn([{ tests, urls, meta }], args => {
     let { manifestVersion = 2, allowedOrigins = [], expectMatches } = args.meta;
 
     this.windows = new Map();
@@ -251,6 +251,8 @@ async function test_frame_matching(meta) {
     for (let c of Array.from(this.content.frames)) {
       this.windows.set(c.location.href, c);
     }
+    const { MatchPatternSet, WebExtensionContentScript, WebExtensionPolicy } =
+      Cu.getGlobalForObject(Services);
     this.policy = new WebExtensionPolicy({
       id: "foo@bar.baz",
       mozExtensionHostname: "88fb51cd-159f-4859-83db-7065485bc9b2",

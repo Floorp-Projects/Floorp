@@ -30,6 +30,7 @@ function initTest() {
       ["network.cookie.cookieBehavior", 0],
       // Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
       ["network.cookie.sameSite.laxByDefault", false],
+      ["network.cors_preflight.authorization_covered_by_wildcard", false],
 	]
   }, initTestCallback);
 }
@@ -419,6 +420,58 @@ function* runTest() {
                  allowHeaders: "x-my-header, $_%",
                },
 
+               // Test cases for "Access-Control-Allow-Headers" containing "*".
+               { pass: 1,
+                 method: "POST",
+                 body: "hi there",
+                 headers: { "x-my-header": "myValue" },
+                 allowHeaders: "*",
+               },
+               { pass: 1,
+                 method: "POST",
+                 body: "hi there",
+                 headers: { "x-my-header": "myValue",
+                            "Authorization": "12345" },
+                 allowHeaders: "*, Authorization",
+               },
+               { pass: 1,
+                 method: "POST",
+                 body: "hi there",
+                 headers: { "x-my-header": "myValue",
+                            "Authorization": "12345" },
+                 allowHeaders: "Authorization, *",
+               },
+               { pass: 0,
+                 method: "POST",
+                 body: "hi there",
+                 headers: { "x-my-header": "myValue",
+                            "Authorization": "12345" },
+                 allowHeaders: "*",
+               },
+               { pass: 0,
+                 method: "POST",
+                 body: "hi there",
+                 headers: { "x-my-header": "myValue",
+                            "Authorization": "12345" },
+                 allowHeaders: "x-my-header",
+               },
+               { pass: 1,
+                 method: "POST",
+                 body: "hi there",
+                 headers: { "*": "myValue" },
+                 allowHeaders: "*",
+                 withCred: 1,
+                 allowCred: 1,
+               },
+               { pass: 0,
+                 method: "POST",
+                 body: "hi there",
+                 headers: { "x-my-header": "myValue" },
+                 allowHeaders: "*",
+                 withCred: 1,
+                 allowCred: 1,
+               },
+
                // Other methods
                { pass: 1,
                  method: "DELETE",
@@ -645,6 +698,7 @@ function* runTest() {
       uploadProgress: test.uploadProgress,
       body: test.body,
       responseHeaders: test.responseHeaders,
+      withCred: test.withCred ? test.withCred : 0,
     };
 
     if (test.pass) {
@@ -662,6 +716,9 @@ function* runTest() {
 
     if (test.noAllowPreflight)
       req.url += "&noAllowPreflight";
+
+    if (test.allowCred)
+      req.url += "&allowCred";
 
     if (test.pass && "headers" in test) {
       function isUnsafeHeader(name) {
@@ -1482,6 +1539,7 @@ function* runTest() {
 
 
   SpecialPowers.clearUserPref("network.cookie.sameSite.laxByDefault");
+  SpecialPowers.clearUserPref("browser.contentblocking.category");
   SimpleTest.finish();
 }
 

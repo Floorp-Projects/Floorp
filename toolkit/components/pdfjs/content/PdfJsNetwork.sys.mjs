@@ -91,7 +91,7 @@ export var NetworkManager = (function NetworkManagerClosure() {
       xhr.responseType = "arraybuffer";
 
       if (args.onError) {
-        xhr.onerror = function(evt) {
+        xhr.onerror = function (evt) {
           args.onError(xhr.status);
         };
       }

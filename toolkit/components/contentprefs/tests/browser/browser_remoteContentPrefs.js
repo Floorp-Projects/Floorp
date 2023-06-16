@@ -236,7 +236,7 @@ async function runTest(isPrivate) {
   newWindow.close();
 }
 
-add_task(async function() {
+add_task(async function () {
   await runTest(false);
   await runTest(true);
 });

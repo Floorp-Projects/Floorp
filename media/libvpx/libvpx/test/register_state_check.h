@@ -184,13 +184,13 @@ class RegisterStateCheckMMX {
   uint16_t pre_fpu_env_[14];
 };
 
-#define API_REGISTER_STATE_CHECK(statement)         \
-  do {                                              \
-    {                                               \
-      libvpx_test::RegisterStateCheckMMX reg_check; \
-      ASM_REGISTER_STATE_CHECK(statement);          \
-    }                                               \
-    __asm__ volatile("" ::: "memory");              \
+#define API_REGISTER_STATE_CHECK(statement)             \
+  do {                                                  \
+    {                                                   \
+      libvpx_test::RegisterStateCheckMMX reg_check_mmx; \
+      ASM_REGISTER_STATE_CHECK(statement);              \
+    }                                                   \
+    __asm__ volatile("" ::: "memory");                  \
   } while (false)
 
 }  // namespace libvpx_test

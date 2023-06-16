@@ -20,12 +20,12 @@ import {
   getContext,
 } from "../../selectors";
 
-import ManagedTree from "../shared/ManagedTree";
 import SearchInput from "../shared/SearchInput";
 import AccessibleImage from "../shared/AccessibleImage";
 
 const { PluralForm } = require("devtools/shared/plural-form");
 const classnames = require("devtools/client/shared/classnames.js");
+const Tree = require("devtools/client/shared/components/Tree");
 
 import "./ProjectSearch.css";
 
@@ -44,6 +44,7 @@ export class ProjectSearch extends Component {
       inputValue: this.props.query || "",
       inputFocused: false,
       focusedItem: null,
+      expanded: new Set(),
     };
   }
 
@@ -212,7 +213,7 @@ export class ProjectSearch extends Component {
     }
     if (results.length) {
       return (
-        <ManagedTree
+        <Tree
           getRoots={() => results}
           getChildren={file => file.matches || []}
           itemHeight={24}
@@ -224,6 +225,20 @@ export class ProjectSearch extends Component {
           renderItem={this.renderItem}
           focused={this.state.focusedItem}
           onFocus={this.onFocus}
+          isExpanded={item => {
+            return this.state.expanded.has(item);
+          }}
+          onExpand={item => {
+            const { expanded } = this.state;
+            expanded.add(item);
+            this.setState({ expanded });
+          }}
+          onCollapse={item => {
+            const { expanded } = this.state;
+            expanded.delete(item);
+            this.setState({ expanded });
+          }}
+          getKey={getFilePath}
         />
       );
     }

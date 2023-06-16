@@ -9,12 +9,12 @@ const LEARN_MORE_URI =
   "https://developer.mozilla.org/docs/Web/API/Document/requestStorageAccess" +
   DOCS_GA_PARAMS;
 
-const { UrlClassifierTestUtils } = ChromeUtils.import(
-  "resource://testing-common/UrlClassifierTestUtils.jsm"
+const { UrlClassifierTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
 );
 
 UrlClassifierTestUtils.addTestTrackers();
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   UrlClassifierTestUtils.cleanupTestTrackers();
 });
 
@@ -76,7 +76,7 @@ async function runRequestStorageAccess({
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI_FIRST_PARTY);
 
   async function checkErrorMessage(text) {

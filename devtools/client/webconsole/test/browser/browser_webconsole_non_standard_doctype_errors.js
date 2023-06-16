@@ -18,7 +18,7 @@ const LEARN_MORE_URI =
   "https://developer.mozilla.org/docs/Web/HTML/Quirks_Mode_and_Standards_Mode" +
   DOCS_GA_PARAMS;
 
-add_task(async function() {
+add_task(async function () {
   info("Navigate to page with quirky doctype");
   const hud = await openNewTabAndConsole(TEST_URI_QUIRKY_DOCTYPE);
 
@@ -31,9 +31,8 @@ add_task(async function() {
   ok(!!quirkyDocTypeMessage, "Quirky doctype warning message is visible");
 
   info("Clicking on the Learn More link");
-  const quirkyDocTypeMessageLearnMoreLink = quirkyDocTypeMessage.querySelector(
-    ".learn-more-link"
-  );
+  const quirkyDocTypeMessageLearnMoreLink =
+    quirkyDocTypeMessage.querySelector(".learn-more-link");
   let linkSimulation = await simulateLinkClick(
     quirkyDocTypeMessageLearnMoreLink
   );
@@ -60,9 +59,8 @@ add_task(async function() {
   );
 
   info("Clicking on the Learn More link");
-  const almostStandardDocTypeMessageLearnMoreLink = almostStandardDocTypeMessage.querySelector(
-    ".learn-more-link"
-  );
+  const almostStandardDocTypeMessageLearnMoreLink =
+    almostStandardDocTypeMessage.querySelector(".learn-more-link");
   linkSimulation = await simulateLinkClick(
     almostStandardDocTypeMessageLearnMoreLink
   );
@@ -86,9 +84,8 @@ add_task(async function() {
   ok(!!noDocTypeMessage, "No doctype warning message is visible");
 
   info("Clicking on the Learn More link");
-  const noDocTypeMessageLearnMoreLink = noDocTypeMessage.querySelector(
-    ".learn-more-link"
-  );
+  const noDocTypeMessageLearnMoreLink =
+    noDocTypeMessage.querySelector(".learn-more-link");
   linkSimulation = await simulateLinkClick(noDocTypeMessageLearnMoreLink);
 
   is(

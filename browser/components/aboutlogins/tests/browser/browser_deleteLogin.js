@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-add_setup(async function() {
+add_setup(async function () {
   TEST_LOGIN1 = await addLogin(TEST_LOGIN1);
   TEST_LOGIN2 = await addLogin(TEST_LOGIN2);
   await BrowserTestUtils.openNewForegroundTab({
@@ -97,9 +97,8 @@ add_task(async function test_login_item() {
       let confirmDeleteDialog = Cu.waiveXrays(
         content.document.querySelector("confirmation-dialog")
       );
-      let confirmButton = confirmDeleteDialog.shadowRoot.querySelector(
-        ".confirm-button"
-      );
+      let confirmButton =
+        confirmDeleteDialog.shadowRoot.querySelector(".confirm-button");
       confirmButton.click();
     });
   }
@@ -127,9 +126,8 @@ add_task(async function test_login_item() {
       let confirmDeleteDialog = Cu.waiveXrays(
         content.document.querySelector("confirmation-dialog")
       );
-      let confirmButton = confirmDeleteDialog.shadowRoot.querySelector(
-        ".confirm-button"
-      );
+      let confirmButton =
+        confirmDeleteDialog.shadowRoot.querySelector(".confirm-button");
       confirmButton.click();
     });
   }

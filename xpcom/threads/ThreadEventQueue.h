@@ -66,7 +66,7 @@ class ThreadEventQueue final : public SynchronizedEventQueue {
   bool PutEventInternal(already_AddRefed<nsIRunnable>&& aEvent,
                         EventQueuePriority aPriority, NestedSink* aQueue);
 
-  const UniquePtr<EventQueue> mBaseQueue;
+  const UniquePtr<EventQueue> mBaseQueue MOZ_GUARDED_BY(mLock);
 
   struct NestedQueueItem {
     UniquePtr<EventQueue> mQueue;

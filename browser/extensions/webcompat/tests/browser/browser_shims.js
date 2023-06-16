@@ -5,7 +5,7 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref(TRACKING_PREF);
 });
 
-add_setup(async function() {
+add_setup(async function () {
   await UrlClassifierTestUtils.addTestTrackers();
 });
 

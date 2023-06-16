@@ -1,7 +1,7 @@
 function test() {
   waitForExplicitFinish();
 
-  (async function() {
+  (async function () {
     let testPage =
       // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       "http://example.org/browser/browser/base/content/test/zoom/zoom_test.html";

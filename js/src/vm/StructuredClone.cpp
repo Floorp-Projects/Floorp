@@ -350,7 +350,6 @@ struct SCOutput {
     buf.setCallbacks(callbacks, closure, policy);
   }
   void extractBuffer(JSStructuredCloneData* data) { *data = std::move(buf); }
-  void discardTransferables();
 
   uint64_t tell() const { return buf.Size(); }
   uint64_t count() const { return buf.Size() / sizeof(uint64_t); }
@@ -448,8 +447,8 @@ struct JSStructuredCloneReader {
   [[nodiscard]] bool readUint32(uint32_t* num);
 
   template <typename CharT>
-  JSString* readStringImpl(uint32_t nchars, gc::InitialHeap heap);
-  JSString* readString(uint32_t data, gc::InitialHeap heap = gc::DefaultHeap);
+  JSString* readStringImpl(uint32_t nchars, gc::Heap heap);
+  JSString* readString(uint32_t data, gc::Heap heap = gc::Heap::Default);
 
   BigInt* readBigInt(uint32_t data);
 
@@ -485,7 +484,7 @@ struct JSStructuredCloneReader {
   [[nodiscard]] bool readObjectField(HandleObject obj, HandleValue key);
 
   [[nodiscard]] bool startRead(MutableHandleValue vp,
-                               gc::InitialHeap strHeap = gc::DefaultHeap);
+                               gc::Heap strHeap = gc::Heap::Default);
 
   SCInput& in;
 
@@ -566,10 +565,9 @@ struct JSStructuredCloneWriter {
         transferable(cx, tVal),
         transferableObjects(cx, TransferableObjectsList(cx)),
         cloneDataPolicy(cloneDataPolicy) {
-    out.setCallbacks(cb, cbClosure, OwnTransferablePolicy::NoTransferables);
+    out.setCallbacks(cb, cbClosure,
+                     OwnTransferablePolicy::OwnsTransferablesIfAny);
   }
-
-  ~JSStructuredCloneWriter();
 
   bool init() {
     return parseTransferable() && writeHeader() && writeTransferMap();
@@ -647,9 +645,8 @@ struct JSStructuredCloneWriter {
   // The "memory" list described in the HTML5 internal structured cloning
   // algorithm.  memory is a superset of objs; items are never removed from
   // Memory until a serialization operation is finished
-  using CloneMemory =
-      GCHashMap<JSObject*, uint32_t, MovableCellHasher<JSObject*>,
-                SystemAllocPolicy>;
+  using CloneMemory = GCHashMap<JSObject*, uint32_t,
+                                StableCellHasher<JSObject*>, SystemAllocPolicy>;
   Rooted<CloneMemory> memory;
 
   // Set of transferable objects
@@ -1020,8 +1017,6 @@ bool SCOutput::writeChars(const Latin1Char* p, size_t nchars) {
   return writeBytes(p, nchars);
 }
 
-void SCOutput::discardTransferables() { buf.discardTransferables(); }
-
 }  // namespace js
 
 JSStructuredCloneData::~JSStructuredCloneData() { discardTransferables(); }
@@ -1129,13 +1124,6 @@ void JSStructuredCloneData::discardTransferables() {
 
 static_assert(JSString::MAX_LENGTH < UINT32_MAX);
 
-JSStructuredCloneWriter::~JSStructuredCloneWriter() {
-  // Free any transferable data left lying around in the buffer
-  if (out.count()) {
-    out.discardTransferables();
-  }
-}
-
 bool JSStructuredCloneWriter::parseTransferable() {
   // NOTE: The transferables set is tested for non-emptiness at various
   //       junctures in structured cloning, so this set must be initialized
@@ -1230,7 +1218,7 @@ bool JSStructuredCloneWriter::parseTransferable() {
       bool sameProcessScopeRequired = false;
       if (!out.buf.callbacks_->canTransfer(
               cx, unwrappedObj, &sameProcessScopeRequired, out.buf.closure_)) {
-        return false;
+        return reportDataCloneError(JS_SCERR_TRANSFERABLE);
       }
 
       if (sameProcessScopeRequired) {
@@ -2451,7 +2439,7 @@ bool JSStructuredCloneWriter::write(HandleValue v) {
 
 template <typename CharT>
 JSString* JSStructuredCloneReader::readStringImpl(uint32_t nchars,
-                                                  gc::InitialHeap heap) {
+                                                  gc::Heap heap) {
   if (nchars > JSString::MAX_LENGTH) {
     JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
                               JSMSG_SC_BAD_SERIALIZED_DATA, "string length");
@@ -2466,8 +2454,7 @@ JSString* JSStructuredCloneReader::readStringImpl(uint32_t nchars,
   return chars.toStringDontDeflate(context(), nchars, heap);
 }
 
-JSString* JSStructuredCloneReader::readString(uint32_t data,
-                                              gc::InitialHeap heap) {
+JSString* JSStructuredCloneReader::readString(uint32_t data, gc::Heap heap) {
   uint32_t nchars = data & BitMask(31);
   bool latin1 = data & (1 << 31);
   return latin1 ? readStringImpl<Latin1Char>(nchars, heap)
@@ -2860,7 +2847,7 @@ static bool PrimitiveToObject(JSContext* cx, MutableHandleValue vp) {
 }
 
 bool JSStructuredCloneReader::startRead(MutableHandleValue vp,
-                                        gc::InitialHeap strHeap) {
+                                        gc::Heap strHeap) {
   uint32_t tag, data;
   bool alreadAppended = false;
 
@@ -2967,7 +2954,7 @@ bool JSStructuredCloneReader::startRead(MutableHandleValue vp,
         return false;
       }
 
-      JSString* str = readString(stringData, gc::TenuredHeap);
+      JSString* str = readString(stringData, gc::Heap::Tenured);
       if (!str) {
         return false;
       }
@@ -3312,6 +3299,9 @@ bool JSStructuredCloneReader::readTransferMap() {
       }
       if (!callbacks->readTransfer(cx, this, tag, content, extraData, closure,
                                    &obj)) {
+        if (!cx->isExceptionPending()) {
+          ReportDataCloneError(cx, callbacks, JS_SCERR_TRANSFERABLE, closure);
+        }
         return false;
       }
       MOZ_ASSERT(obj);
@@ -3394,7 +3384,7 @@ JSObject* JSStructuredCloneReader::readSavedFrameHeader(
     }
 
     if (mutedErrors.isBoolean()) {
-      if (!startRead(&source, gc::TenuredHeap) || !source.isString()) {
+      if (!startRead(&source, gc::Heap::Tenured) || !source.isString()) {
         return nullptr;
       }
     } else if (mutedErrors.isString()) {
@@ -3436,7 +3426,7 @@ JSObject* JSStructuredCloneReader::readSavedFrameHeader(
   savedFrame->initSourceId(0);
 
   RootedValue name(context());
-  if (!startRead(&name, gc::TenuredHeap)) {
+  if (!startRead(&name, gc::Heap::Tenured)) {
     return nullptr;
   }
   if (!(name.isString() || name.isNull())) {
@@ -3456,7 +3446,7 @@ JSObject* JSStructuredCloneReader::readSavedFrameHeader(
   savedFrame->initFunctionDisplayName(atomName);
 
   RootedValue cause(context());
-  if (!startRead(&cause, gc::TenuredHeap)) {
+  if (!startRead(&cause, gc::Heap::Tenured)) {
     return nullptr;
   }
   if (!(cause.isString() || cause.isNull())) {
@@ -4004,12 +3994,8 @@ bool JSAutoStructuredCloneBuffer::write(
       cx, value, &data_, data_.scopeForInternalWriting(), cloneDataPolicy,
       optionalCallbacks ? optionalCallbacks : data_.callbacks_,
       optionalCallbacks ? closure : data_.closure_, transferable);
-
-  if (ok) {
-    data_.ownTransferables_ = OwnTransferablePolicy::OwnsTransferablesIfAny;
-  } else {
+  if (!ok) {
     version_ = JS_STRUCTURED_CLONE_VERSION;
-    data_.ownTransferables_ = OwnTransferablePolicy::NoTransferables;
   }
   return ok;
 }

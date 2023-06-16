@@ -10,7 +10,7 @@ add_task(async function run_test() {
   await do_backgroundtask_crash(
     CrashTestUtils.CRASH_MOZ_CRASH,
     { TestKey: "TestValue" },
-    function(mdump, extra) {
+    function (mdump, extra) {
       Assert.equal(extra.TestKey, "TestValue");
       Assert.equal(extra.BackgroundTaskMode, "1");
       Assert.equal(extra.BackgroundTaskName, "crash");

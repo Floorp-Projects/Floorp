@@ -73,30 +73,30 @@ function run_test() {
  */
 function test_finalize_bad_construction() {
   // First argument does not match second
-  must_throw(function() {
+  must_throw(function () {
     ctypes.CDataFinalizer({}, dispose);
   });
-  must_throw(function() {
+  must_throw(function () {
     ctypes.CDataFinalizer(dispose, dispose);
   });
 
   // Not enough arguments
-  must_throw(function() {
+  must_throw(function () {
     ctypes.CDataFinalizer(dispose);
   }, "TypeError: CDataFinalizer constructor takes two arguments");
 
   // Too many arguments
-  must_throw(function() {
+  must_throw(function () {
     ctypes.CDataFinalizer(dispose, dispose, dispose);
   }, "TypeError: CDataFinalizer constructor takes two arguments");
 
   // Second argument is null
-  must_throw(function() {
+  must_throw(function () {
     ctypes.CDataFinalizer(dispose, null);
   }, "TypeError: expected _a CData object_ of a function pointer type, got null");
 
   // Second argument is undefined
-  must_throw(function() {
+  must_throw(function () {
     let a;
     ctypes.CDataFinalizer(dispose, a);
   }, "TypeError: expected _a CData object_ of a function pointer type, got undefined");
@@ -109,15 +109,15 @@ function test_double_dispose() {
   function test_one_combination(i, a, b) {
     let v = ctypes.CDataFinalizer(acquire(i), dispose);
     a(v);
-    must_throw(function() {
+    must_throw(function () {
       b(v);
     });
   }
 
-  let call_dispose = function(v) {
+  let call_dispose = function (v) {
     v.dispose();
   };
-  let call_forget = function(v) {
+  let call_forget = function (v) {
     v.forget();
   };
 

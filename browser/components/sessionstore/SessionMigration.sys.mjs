@@ -28,12 +28,12 @@ var SessionMigrationInternal = {
       selectedWindow: aStateObj.selectedWindow,
       _closedWindows: [],
     };
-    state.windows = aStateObj.windows.map(function(oldWin) {
+    state.windows = aStateObj.windows.map(function (oldWin) {
       var win = { extData: {} };
-      win.tabs = oldWin.tabs.map(function(oldTab) {
+      win.tabs = oldWin.tabs.map(function (oldTab) {
         var tab = {};
         // Keep only titles, urls and triggeringPrincipals for history entries
-        tab.entries = oldTab.entries.map(function(entry) {
+        tab.entries = oldTab.entries.map(function (entry) {
           return {
             url: entry.url,
             triggeringPrincipal_base64: entry.triggeringPrincipal_base64,
@@ -79,7 +79,7 @@ export var SessionMigration = {
    * Migrate a limited set of session data from one path to another.
    */
   migrate(aFromPath, aToPath) {
-    return (async function() {
+    return (async function () {
       let inState = await SessionMigrationInternal.readState(aFromPath);
       let outState = SessionMigrationInternal.convertState(inState);
       // Unfortunately, we can't use SessionStore's own SessionFile to

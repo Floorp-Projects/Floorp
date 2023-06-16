@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
 import re
 
 from .base import (
@@ -60,7 +58,7 @@ def getParser(path):
             p = entry_point.resolve()()
             if p.use(path):
                 return p
-    except (ImportError, IOError):
+    except (ImportError, OSError):
         pass
     raise UserWarning("Cannot find Parser")
 

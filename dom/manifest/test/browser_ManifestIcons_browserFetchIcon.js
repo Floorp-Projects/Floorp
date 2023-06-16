@@ -2,11 +2,11 @@
 
 Services.prefs.setBoolPref("dom.manifest.enabled", true);
 
-const { ManifestIcons } = ChromeUtils.import(
-  "resource://gre/modules/ManifestIcons.jsm"
+const { ManifestIcons } = ChromeUtils.importESModule(
+  "resource://gre/modules/ManifestIcons.sys.mjs"
 );
-const { ManifestObtainer } = ChromeUtils.import(
-  "resource://gre/modules/ManifestObtainer.jsm"
+const { ManifestObtainer } = ChromeUtils.importESModule(
+  "resource://gre/modules/ManifestObtainer.sys.mjs"
 );
 
 const defaultURL = new URL(
@@ -40,20 +40,20 @@ function getIconColor(icon) {
     const canvas = content.document.createElement("canvas");
     const ctx = canvas.getContext("2d");
     const image = new content.Image();
-    image.onload = function() {
+    image.onload = function () {
       ctx.drawImage(image, 0, 0);
       resolve(ctx.getImageData(1, 1, 1, 1).data);
     };
-    image.onerror = function() {
+    image.onerror = function () {
       reject(new Error("could not create image"));
     };
     image.src = icon;
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   const tabOptions = { gBrowser, url: makeTestURL() };
-  await BrowserTestUtils.withNewTab(tabOptions, async function(browser) {
+  await BrowserTestUtils.withNewTab(tabOptions, async function (browser) {
     const manifest = await ManifestObtainer.browserObtainManifest(browser);
     let icon = await ManifestIcons.browserFetchIcon(browser, manifest, 25);
     let color = await SpecialPowers.spawn(browser, [icon], getIconColor);

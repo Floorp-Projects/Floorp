@@ -1041,9 +1041,8 @@ var UnsubmittedCrashHandler = {
       return null;
     }
 
-    let notification = chromeWin.gNotificationBox.getNotificationWithValue(
-      notificationID
-    );
+    let notification =
+      chromeWin.gNotificationBox.getNotificationWithValue(notificationID);
     if (notification) {
       return null;
     }
@@ -1091,7 +1090,7 @@ var UnsubmittedCrashHandler = {
         // which we interpret as meaning that they don't care
         // to submit the reports. We'll ignore these particular
         // reports going forward.
-        reportIDs.forEach(function(reportID) {
+        reportIDs.forEach(function (reportID) {
           lazy.CrashSubmit.ignore(reportID);
         });
         if (onAction) {

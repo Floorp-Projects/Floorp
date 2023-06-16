@@ -42,7 +42,6 @@ std::string FlexfecReceiveStream::Config::ToString() const {
     ss << protected_media_ssrcs[i] << ", ";
   if (!protected_media_ssrcs.empty())
     ss << protected_media_ssrcs[i];
-  ss << "], transport_cc: " << (rtp.transport_cc ? "on" : "off");
   ss << ", rtp.extensions: [";
   i = 0;
   for (; i + 1 < rtp.extensions.size(); ++i)
@@ -133,7 +132,6 @@ FlexfecReceiveStreamImpl::FlexfecReceiveStreamImpl(
     RtcpRttStats* rtt_stats)
     : extension_map_(std::move(config.rtp.extensions)),
       remote_ssrc_(config.rtp.remote_ssrc),
-      transport_cc_(config.rtp.transport_cc),
       payload_type_(config.payload_type),
       receiver_(
           MaybeCreateFlexfecReceiver(clock, config, recovered_packet_receiver)),

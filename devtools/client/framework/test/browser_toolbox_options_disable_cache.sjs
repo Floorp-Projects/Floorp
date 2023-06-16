@@ -7,14 +7,15 @@ function handleRequest(request, response) {
     ? request.getHeader("If-None-Match")
     : "";
 
-  const guid = "xxxxxxxx-xxxx-xxxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(
-    c
-  ) {
-    const r = (Math.random() * 16) | 0;
-    const v = c === "x" ? r : (r & 0x3) | 0x8;
+  const guid = "xxxxxxxx-xxxx-xxxx-yxxx-xxxxxxxxxxxx".replace(
+    /[xy]/g,
+    function (c) {
+      const r = (Math.random() * 16) | 0;
+      const v = c === "x" ? r : (r & 0x3) | 0x8;
 
-    return v.toString(16);
-  });
+      return v.toString(16);
+    }
+  );
 
   const page = "<!DOCTYPE html><html><body><h1>" + guid + "</h1></body></html>";
 

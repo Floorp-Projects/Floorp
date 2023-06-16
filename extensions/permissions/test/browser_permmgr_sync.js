@@ -1,7 +1,6 @@
 function addPerm(aOrigin, aName) {
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    aOrigin
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(aOrigin);
   Services.perms.addFromPrincipal(
     principal,
     aName,
@@ -9,7 +8,7 @@ function addPerm(aOrigin, aName) {
   );
 }
 
-add_task(async function() {
+add_task(async function () {
   // Make sure that we get a new process for the tab which we create. This is
   // important, because we want to assert information about the initial state
   // of the local permissions cache.
@@ -24,8 +23,8 @@ add_task(async function() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank", forceNewProcess: true },
-    async function(aBrowser) {
-      await SpecialPowers.spawn(aBrowser, [], async function() {
+    async function (aBrowser) {
+      await SpecialPowers.spawn(aBrowser, [], async function () {
         // Before the load http URIs shouldn't have been sent down yet
         is(
           Services.perms.testPermissionFromPrincipal(
@@ -88,7 +87,7 @@ add_task(async function() {
         });
 
         // After the load finishes, the iframe process should know about example.com, but not foo.bar.example.com
-        await content.SpecialPowers.spawn(iframe, [], async function() {
+        await content.SpecialPowers.spawn(iframe, [], async function () {
           is(
             Services.perms.testPermissionFromPrincipal(
               Services.scriptSecurityManager.createContentPrincipalFromOrigin(
@@ -189,7 +188,7 @@ add_task(async function() {
       addPerm("https://example.com", "newperm4");
       addPerm("https://someotherrandomwebsite.com", "cookie");
 
-      await SpecialPowers.spawn(aBrowser, [], async function() {
+      await SpecialPowers.spawn(aBrowser, [], async function () {
         // The new permissions should be available, but only for
         // http://example.com (without Fission), and about:home.
         is(
@@ -307,7 +306,7 @@ add_task(async function() {
 
         // After the load finishes, the iframe process should not know about
         // the permissions of its base domain.
-        await content.SpecialPowers.spawn(iframe, [], async function() {
+        await content.SpecialPowers.spawn(iframe, [], async function () {
           is(
             Services.perms.testPermissionFromPrincipal(
               Services.scriptSecurityManager.createContentPrincipalFromOrigin(

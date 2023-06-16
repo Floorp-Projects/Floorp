@@ -12,7 +12,7 @@ const LONG_STRING_LENGTH = 400;
 const LONG_STRING_INITIAL_LENGTH = 400;
 let ORIGINAL_LONG_STRING_LENGTH, ORIGINAL_LONG_STRING_INITIAL_LENGTH;
 
-add_task(async function() {
+add_task(async function () {
   const tab = await addTab(URL_ROOT + "network_requests_iframe.html");
 
   const commands = await CommandsFactory.forTab(tab);
@@ -41,7 +41,7 @@ add_task(async function() {
       })
       .then(() => {
         // Spawn the network request after we started watching
-        SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+        SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
           content.wrappedJSObject.testXhrPost();
         });
       });
@@ -69,7 +69,8 @@ add_task(async function() {
   await commands.destroy();
 
   DevToolsServer.LONG_STRING_LENGTH = ORIGINAL_LONG_STRING_LENGTH;
-  DevToolsServer.LONG_STRING_INITIAL_LENGTH = ORIGINAL_LONG_STRING_INITIAL_LENGTH;
+  DevToolsServer.LONG_STRING_INITIAL_LENGTH =
+    ORIGINAL_LONG_STRING_INITIAL_LENGTH;
 });
 
 function assertRequestHeaders(response) {

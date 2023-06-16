@@ -821,14 +821,18 @@ bool DnsAndConnectSocket::Claim() {
   if (mSpeculative) {
     mSpeculative = false;
     mAllow1918 = true;
-    uint32_t flags;
-    if (mPrimaryTransport.mSocketTransport &&
-        NS_SUCCEEDED(
-            mPrimaryTransport.mSocketTransport->GetConnectionFlags(&flags))) {
-      flags &= ~nsISocketTransport::DISABLE_RFC1918;
-      flags &= ~nsISocketTransport::IS_SPECULATIVE_CONNECTION;
-      mPrimaryTransport.mSocketTransport->SetConnectionFlags(flags);
-    }
+    auto resetFlag = [](TransportSetup& transport) {
+      uint32_t flags;
+      if (transport.mSocketTransport &&
+          NS_SUCCEEDED(
+              transport.mSocketTransport->GetConnectionFlags(&flags))) {
+        flags &= ~nsISocketTransport::DISABLE_RFC1918;
+        flags &= ~nsISocketTransport::IS_SPECULATIVE_CONNECTION;
+        transport.mSocketTransport->SetConnectionFlags(flags);
+      }
+    };
+    resetFlag(mPrimaryTransport);
+    resetFlag(mBackupTransport);
 
     Telemetry::AutoCounter<Telemetry::HTTPCONNMGR_USED_SPECULATIVE_CONN>
         usedSpeculativeConn;
@@ -1226,7 +1230,6 @@ nsresult DnsAndConnectSocket::TransportSetup::SetupStreams(
   }
 
   if (dnsAndSock->mSpeculative) {
-    MOZ_ASSERT(!mIsBackup);
     tmpFlags |= nsISocketTransport::IS_SPECULATIVE_CONNECTION;
   }
 

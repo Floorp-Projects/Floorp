@@ -57,20 +57,20 @@ const StatusCode = createFactory(
   require("resource://devtools/client/netmonitor/src/components/StatusCode.js")
 );
 
-loader.lazyGetter(this, "MDNLink", function() {
+loader.lazyGetter(this, "MDNLink", function () {
   return createFactory(
     require("resource://devtools/client/shared/components/MdnLink.js")
   );
 });
-loader.lazyGetter(this, "Rep", function() {
+loader.lazyGetter(this, "Rep", function () {
   return require("resource://devtools/client/shared/components/reps/index.js")
     .REPS.Rep;
 });
-loader.lazyGetter(this, "MODE", function() {
+loader.lazyGetter(this, "MODE", function () {
   return require("resource://devtools/client/shared/components/reps/index.js")
     .MODE;
 });
-loader.lazyGetter(this, "TreeRow", function() {
+loader.lazyGetter(this, "TreeRow", function () {
   return createFactory(
     require("resource://devtools/client/shared/components/tree/TreeRow.js")
   );

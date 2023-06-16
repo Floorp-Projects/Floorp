@@ -646,19 +646,23 @@ export class _ExperimentFeature {
   }
 }
 
-XPCOMUtils.defineLazyGetter(ExperimentAPI, "_manager", function() {
+XPCOMUtils.defineLazyGetter(ExperimentAPI, "_manager", function () {
   return lazy.ExperimentManager;
 });
 
-XPCOMUtils.defineLazyGetter(ExperimentAPI, "_store", function() {
+XPCOMUtils.defineLazyGetter(ExperimentAPI, "_store", function () {
   return IS_MAIN_PROCESS
     ? lazy.ExperimentManager.store
     : new lazy.ExperimentStore();
 });
 
-XPCOMUtils.defineLazyGetter(ExperimentAPI, "_remoteSettingsClient", function() {
-  return lazy.RemoteSettings(lazy.COLLECTION_ID);
-});
+XPCOMUtils.defineLazyGetter(
+  ExperimentAPI,
+  "_remoteSettingsClient",
+  function () {
+    return lazy.RemoteSettings(lazy.COLLECTION_ID);
+  }
+);
 
 class ExperimentLocalizationError extends Error {
   constructor(reason) {

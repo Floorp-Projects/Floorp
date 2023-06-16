@@ -222,7 +222,9 @@ class PLDHashTable {
 
     Slot& operator=(Slot&& aOther) = default;
 
-    bool operator==(const Slot& aOther) { return mEntry == aOther.mEntry; }
+    bool operator==(const Slot& aOther) const {
+      return mEntry == aOther.mEntry;
+    }
 
     PLDHashNumber KeyHash() const { return *HashPtr(); }
     void SetKeyHash(PLDHashNumber aHash) { *HashPtr() = aHash; }

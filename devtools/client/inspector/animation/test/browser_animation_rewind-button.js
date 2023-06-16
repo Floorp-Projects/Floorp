@@ -10,7 +10,7 @@ requestLongerTimeout(2);
 // * make animations to rewind to zero
 // * the state should be always paused after rewinding
 
-add_task(async function() {
+add_task(async function () {
   await addTab(URL_ROOT + "doc_multi_timings.html");
   await removeAnimatedElementsExcept([".delay-negative", ".delay-positive"]);
   const { animationInspector, panel } = await openAnimationInspector();

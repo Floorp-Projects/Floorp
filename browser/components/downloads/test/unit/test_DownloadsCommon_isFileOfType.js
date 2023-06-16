@@ -60,8 +60,7 @@ const TESTCASES = [
     expected: false,
   },
   {
-    name:
-      "download succeeded, file exists, unknown extension but contentType matches",
+    name: "download succeeded, file exists, unknown extension but contentType matches",
     typeArg: "application/pdf",
     downloadProps: {
       target: "download-test.xxunknown",
@@ -70,8 +69,7 @@ const TESTCASES = [
     expected: true,
   },
   {
-    name:
-      "download succeeded, file exists, contentType is generic and file extension maps to matching mime-type",
+    name: "download succeeded, file exists, contentType is generic and file extension maps to matching mime-type",
     typeArg: "application/pdf",
     downloadProps: {
       target: "download-test.pdf",
@@ -99,8 +97,7 @@ const TESTCASES = [
     expected: false,
   },
   {
-    name:
-      "contentType is missing and file extension doesnt map to a known mime-type",
+    name: "contentType is missing and file extension doesnt map to a known mime-type",
     typeArg: "application/pdf",
     downloadProps: {
       contentType: undefined,

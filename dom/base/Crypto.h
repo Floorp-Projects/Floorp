@@ -32,7 +32,7 @@ class Crypto final : public nsISupports, public nsWrapperCache {
   void GetRandomValues(JSContext* aCx, const ArrayBufferView& aArray,
                        JS::MutableHandle<JSObject*> aRetval, ErrorResult& aRv);
 
-  void RandomUUID(nsAString& aRetVal);
+  void RandomUUID(nsACString& aRetVal);
 
   SubtleCrypto* Subtle();
 

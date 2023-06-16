@@ -5,7 +5,7 @@
 
 const TEST_URL = "about:buildconfig";
 
-add_setup(async function() {
+add_setup(async function () {
   // The following initialization code is necessary to avoid a frequent
   // intermittent failure in verify-fission where, due to timings, we may or
   // may not import default bookmarks.
@@ -20,7 +20,7 @@ add_setup(async function() {
   // Clean before and after so we don't have anything in the folders.
   await PlacesUtils.bookmarks.eraseEverything();
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.bookmarks.eraseEverything();
   });
 });
@@ -34,7 +34,7 @@ async function simulateDrop(
   targetGuid,
   isVirtualRoot = false
 ) {
-  await withSidebarTree("bookmarks", async function(tree) {
+  await withSidebarTree("bookmarks", async function (tree) {
     for (let target of selectTargets) {
       tree.selectItems([target]);
       if (tree.selectedNode instanceof Ci.nsINavHistoryContainerResultNode) {
@@ -233,7 +233,7 @@ add_task(async function test_move_within_itself() {
     ],
   });
 
-  await withSidebarTree("bookmarks", async function(tree) {
+  await withSidebarTree("bookmarks", async function (tree) {
     // Select the folder containing the bookmarks
     // and save its index position
     tree.selectItems([PlacesUtils.bookmarks.unfiledGuid]);

@@ -40,7 +40,7 @@ add_task(async function run_test() {
 
   function wasCalledHandler(wbo) {
     let handler = wbo.handler();
-    return function() {
+    return function () {
       wbo.wasCalled = true;
       handler.apply(this, arguments);
     };

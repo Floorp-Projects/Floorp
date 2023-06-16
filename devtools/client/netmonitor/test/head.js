@@ -332,7 +332,7 @@ function initNetMonitor(
     );
   }
 
-  return (async function() {
+  return (async function () {
     await SpecialPowers.pushPrefEnv({
       set: [
         // Capture all stacks so that the timing of devtools opening
@@ -378,7 +378,7 @@ function initNetMonitor(
 function restartNetMonitor(monitor, { requestCount }) {
   info("Restarting the specified network monitor.");
 
-  return (async function() {
+  return (async function () {
     const tab = monitor.commands.descriptorFront.localTab;
     const url = tab.linkedBrowser.currentURI.spec;
 
@@ -411,7 +411,7 @@ async function clearNetworkEvents(monitor) {
 function teardown(monitor) {
   info("Destroying the specified network monitor.");
 
-  return (async function() {
+  return (async function () {
     const tab = monitor.commands.descriptorFront.localTab;
 
     await waitForAllNetworkUpdateEvents();
@@ -707,8 +707,9 @@ function verifyRequestItemTarget(
     const value = target
       .querySelector(".requests-list-status-code")
       .getAttribute("data-status-code");
-    const codeValue = target.querySelector(".requests-list-status-code")
-      .textContent;
+    const codeValue = target.querySelector(
+      ".requests-list-status-code"
+    ).textContent;
     const tooltip = target
       .querySelector(".requests-list-status-code")
       .getAttribute("title");
@@ -752,8 +753,9 @@ function verifyRequestItemTarget(
     is(tooltip, fullMimeType, "The tooltip type is correct.");
   }
   if (transferred !== undefined) {
-    const value = target.querySelector(".requests-list-transferred")
-      .textContent;
+    const value = target.querySelector(
+      ".requests-list-transferred"
+    ).textContent;
     const tooltip = target
       .querySelector(".requests-list-transferred")
       .getAttribute("title");
@@ -773,8 +775,9 @@ function verifyRequestItemTarget(
     is(tooltip, size, "The tooltip size is correct.");
   }
   if (time !== undefined) {
-    const value = target.querySelector(".requests-list-timings-total")
-      .textContent;
+    const value = target.querySelector(
+      ".requests-list-timings-total"
+    ).textContent;
     const tooltip = target
       .querySelector(".requests-list-timings-total")
       .getAttribute("title");
@@ -880,7 +883,7 @@ function promiseXHR(data) {
 
     xhr.addEventListener(
       "loadend",
-      function(event) {
+      function (event) {
         resolve({ status: xhr.status, response: xhr.response });
       },
       { once: true }

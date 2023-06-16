@@ -19,7 +19,7 @@ const ORIGIN =
 
 add_task(async function test_fullscreen_cross_origin() {
   async function requestFullscreenThenCloseTab() {
-    await BrowserTestUtils.withNewTab(ORIGIN, async function(browser) {
+    await BrowserTestUtils.withNewTab(ORIGIN, async function (browser) {
       info("Start fullscreen on iframe frameAllowed");
 
       // Make sure there is no attribute "inDOMFullscreen" before requesting fullscreen.
@@ -34,7 +34,7 @@ add_task(async function test_fullscreen_cross_origin() {
       );
 
       // Request fullscreen from iframe
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         let frame = content.document.getElementById("frameAllowed");
         frame.focus();
         await SpecialPowers.spawn(frame, [], async () => {

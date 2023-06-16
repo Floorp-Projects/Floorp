@@ -54,6 +54,10 @@ void jpegli_set_quality(j_compress_ptr cinfo, int quality,
 void jpegli_set_linear_quality(j_compress_ptr cinfo, int scale_factor,
                                boolean force_baseline);
 
+#if JPEG_LIB_VERSION >= 70
+void jpegli_default_qtables(j_compress_ptr cinfo, boolean force_baseline);
+#endif
+
 int jpegli_quality_scaling(int quality);
 
 void jpegli_add_quant_table(j_compress_ptr cinfo, int which_tbl,
@@ -63,6 +67,10 @@ void jpegli_add_quant_table(j_compress_ptr cinfo, int which_tbl,
 void jpegli_simple_progression(j_compress_ptr cinfo);
 
 void jpegli_suppress_tables(j_compress_ptr cinfo, boolean suppress);
+
+#if JPEG_LIB_VERSION >= 70
+void jpegli_calc_jpeg_dimensions(j_compress_ptr cinfo);
+#endif
 
 void jpegli_copy_critical_parameters(j_decompress_ptr srcinfo,
                                      j_compress_ptr dstinfo);
@@ -104,8 +112,12 @@ void jpegli_destroy_compress(j_compress_ptr cinfo);
 // the future.
 //
 
-// Sets the butteraugli target distance for the compressor.
-void jpegli_set_distance(j_compress_ptr cinfo, float distance);
+// Sets the butteraugli target distance for the compressor. This may override
+// the default quantization table indexes based on jpeg colorspace, therefore
+// it must be called after jpegli_set_defaults() or after the last
+// jpegli_set_colorspace() or jpegli_default_colorspace() calls.
+void jpegli_set_distance(j_compress_ptr cinfo, float distance,
+                         boolean force_baseline);
 
 // Returns the butteraugli target distance for the given quality parameter.
 float jpegli_quality_to_distance(int quality);
@@ -114,6 +126,12 @@ float jpegli_quality_to_distance(int quality);
 // matrices and chroma subsampling. Must be called before jpegli_set_defaults()
 // because some default setting depend on the XYB mode.
 void jpegli_set_xyb_mode(j_compress_ptr cinfo);
+
+// Signals to the encoder that the pixel data that will be provided later
+// through jpegli_write_scanlines() has this transfer function. This must be
+// called before jpegli_set_defaults() because it changes the default
+// quantization tables.
+void jpegli_set_cicp_transfer_function(j_compress_ptr cinfo, int code);
 
 void jpegli_set_input_format(j_compress_ptr cinfo, JpegliDataType data_type,
                              JpegliEndianness endianness);
@@ -131,7 +149,7 @@ void jpegli_set_progressive_level(j_compress_ptr cinfo, int level);
 // linear quality parameters will be used to scale the standard quantization
 // tables from Annex K of the JPEG standard. By default jpegli uses a different
 // set of quantization tables and used different scaling parameters for DC and
-// AC coefficients.
+// AC coefficients. Must be called before jpegli_set_defaults().
 void jpegli_use_standard_quant_tables(j_compress_ptr cinfo);
 
 #if defined(__cplusplus) || defined(c_plusplus)

@@ -212,7 +212,7 @@ async function runIframeTest(loadMethod) {
       IFRAME_PAGE
     );
 
-    let bc = await SpecialPowers.spawn(browser, [], function() {
+    let bc = await SpecialPowers.spawn(browser, [], function () {
       return content.document.getElementById("frame1").browsingContext;
     });
 
@@ -270,13 +270,13 @@ async function runIframeTest(loadMethod) {
     await assertMenulist(requireUserInteraction ? [1, 0] : [1, 0], IFRAME_PAGE);
 
     // Add some user interaction to frame 1.
-    bc = await SpecialPowers.spawn(browser, [], function() {
+    bc = await SpecialPowers.spawn(browser, [], function () {
       return content.document.getElementById("frame1").browsingContext;
     });
     await BrowserTestUtils.synthesizeMouse("body", 0, 0, {}, bc, true);
 
     // Add some user interaction to frame 2.
-    bc = await SpecialPowers.spawn(browser, [], function() {
+    bc = await SpecialPowers.spawn(browser, [], function () {
       return content.document.getElementById("frame2").browsingContext;
     });
     await BrowserTestUtils.synthesizeMouse("body", 0, 0, {}, bc, true);
@@ -291,7 +291,7 @@ async function runIframeTest(loadMethod) {
     );
 
     // Add some user interaction to frame 1, again.
-    bc = await SpecialPowers.spawn(browser, [], function() {
+    bc = await SpecialPowers.spawn(browser, [], function () {
       return content.document.getElementById("frame1").browsingContext;
     });
     await BrowserTestUtils.synthesizeMouse("body", 0, 0, {}, bc, true);
@@ -334,7 +334,7 @@ add_task(async function test_hashURI() {
     info(`Creating and following a link to ${url}`);
     let browser = gBrowser.selectedBrowser;
     let loaded = BrowserTestUtils.waitForLocationChange(gBrowser, url);
-    await SpecialPowers.spawn(browser, [url], function(url) {
+    await SpecialPowers.spawn(browser, [url], function (url) {
       let a = content.document.createElement("a");
       a.href = url;
       content.document.body.appendChild(a);

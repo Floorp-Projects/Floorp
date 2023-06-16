@@ -5,13 +5,13 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
   "https://example.com"
 );
 
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["pdfjs.eventBusDispatchToDOM", true]],
   });
   await BrowserTestUtils.withNewTab(
     TEST_PATH + "file_pdfjs_not_subject_to_csp.html",
-    async function(browser) {
+    async function (browser) {
       let pdfPromise = BrowserTestUtils.waitForContentEvent(
         browser,
         "documentloaded",
@@ -20,14 +20,14 @@ add_task(async function() {
         true
       );
 
-      await ContentTask.spawn(browser, {}, async function() {
+      await ContentTask.spawn(browser, {}, async function () {
         let pdfButton = content.document.getElementById("pdfButton");
         pdfButton.click();
       });
 
       await pdfPromise;
 
-      await ContentTask.spawn(browser, {}, async function() {
+      await ContentTask.spawn(browser, {}, async function () {
         let pdfFrame = content.document.getElementById("pdfFrame");
         // 1) Sanity that we have loaded the PDF using a blob
         ok(pdfFrame.src.startsWith("blob:"), "it's a blob URL");

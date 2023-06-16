@@ -39,7 +39,7 @@ const UGLY_HTML = FORMATTED_HTML.replace(/[\r\n\s]+/g, "");
 // And here is the inner html of the body node from the ugly code above.
 const UGLY_INNER_HTML = UGLY_HTML.replace(/<\/*body>/g, "");
 
-add_task(async function() {
+add_task(async function () {
   // Load the ugly code in a new tab and open the inspector.
   const { inspector } = await openInspectorForURL(
     "data:text/html;charset=utf-8," + encodeURIComponent(UGLY_HTML)

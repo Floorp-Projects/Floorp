@@ -3,19 +3,16 @@
   "name": "test-invalid-extension",
   "version": "1",
   "description": "the name says it all",
-  "permissions": [
-    "*://*.foo.com/*",
-    "alarms",
-    "notifications",
-    "tabs"
-  ],
+  "permissions": ["*://*.foo.com/*", "alarms", "notifications", "tabs"],
   "background": {
     "scripts": ["background.js"]
   },
-  "content_scripts": [{
-    "matches": "*://*.foo.com/*",
-    "js": ["content.js"]
-  }],
+  "content_scripts": [
+    {
+      "matches": "*://*.foo.com/*",
+      "js": ["content.js"]
+    }
+  ],
   "browser_action": {
     "default_icon": {
       "32": "home.svg"

@@ -1,1 +1,8 @@
-[["warning", "3.1415926535 is a magic number; consider replacing it with a named constant", "readability-magic-numbers"], {"reliability": "high"}]
+[
+  [
+    "warning",
+    "3.1415926535 is a magic number; consider replacing it with a named constant",
+    "readability-magic-numbers"
+  ],
+  { "reliability": "high" }
+]

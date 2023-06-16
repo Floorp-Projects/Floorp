@@ -28,6 +28,7 @@
 #include "media/base/stream_params.h"
 #include "media/engine/webrtc_video_engine.h"
 #include "modules/audio_processing/include/audio_processing.h"
+#include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/network_route.h"
 #include "rtc_base/thread.h"
@@ -121,6 +122,9 @@ class RtpHelper : public Base {
     return RemoveStreamBySsrc(&send_streams_, ssrc);
   }
   virtual void ResetUnsignaledRecvStream() {}
+  virtual absl::optional<uint32_t> GetUnsignaledSsrc() const {
+    return absl::nullopt;
+  }
   virtual void OnDemuxerCriteriaUpdatePending() {}
   virtual void OnDemuxerCriteriaUpdateComplete() {}
 
@@ -293,9 +297,9 @@ class RtpHelper : public Base {
   void set_recv_rtcp_parameters(const RtcpParameters& params) {
     recv_rtcp_parameters_ = params;
   }
-  void OnPacketReceived(rtc::CopyOnWriteBuffer packet,
-                        int64_t packet_time_us) override {
-    rtp_packets_.push_back(std::string(packet.cdata<char>(), packet.size()));
+  void OnPacketReceived(const webrtc::RtpPacketReceived& packet) override {
+    rtp_packets_.push_back(
+        std::string(packet.Buffer().cdata<char>(), packet.size()));
   }
   void OnPacketSent(const rtc::SentPacket& sent_packet) override {}
   void OnReadyToSend(bool ready) override { ready_to_send_ = ready; }
@@ -381,7 +385,9 @@ class FakeVoiceMediaChannel : public RtpHelper<VoiceMediaChannel> {
   absl::optional<int> GetBaseMinimumPlayoutDelayMs(
       uint32_t ssrc) const override;
 
-  bool GetStats(VoiceMediaInfo* info, bool get_and_clear_legacy_stats) override;
+  bool GetSendStats(VoiceMediaSendInfo* info) override;
+  bool GetReceiveStats(VoiceMediaReceiveInfo* info,
+                       bool get_and_clear_legacy_stats) override;
 
   void SetRawAudioSink(
       uint32_t ssrc,
@@ -473,7 +479,8 @@ class FakeVideoMediaChannel : public RtpHelper<VideoMediaChannel> {
   bool RemoveRecvStream(uint32_t ssrc) override;
 
   void FillBitrateInfo(BandwidthEstimationInfo* bwe_info) override;
-  bool GetStats(VideoMediaInfo* info) override;
+  bool GetSendStats(VideoMediaSendInfo* info) override;
+  bool GetReceiveStats(VideoMediaReceiveInfo* info) override;
 
   std::vector<webrtc::RtpSource> GetSources(uint32_t ssrc) const override;
 
@@ -530,6 +537,8 @@ class FakeVoiceEngine : public VoiceEngineInterface {
   int GetInputLevel();
   bool StartAecDump(webrtc::FileWrapper file, int64_t max_size_bytes) override;
   void StopAecDump() override;
+  absl::optional<webrtc::AudioDeviceModule::Stats> GetAudioDeviceStats()
+      override;
   std::vector<webrtc::RtpHeaderExtensionCapability> GetRtpHeaderExtensions()
       const override;
   void SetRtpHeaderExtensions(

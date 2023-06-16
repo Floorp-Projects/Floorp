@@ -5,7 +5,7 @@
 
 add_task(async function doorhanger_bc_downloadAutoFailures_bgWin() {
   function getBackgroundWindowHandler(destroyWindow) {
-    return async function() {
+    return async function () {
       await TestUtils.waitForCondition(
         () => PanelUI.menuButton.hasAttribute("badge-status"),
         "Background window has a badge.",

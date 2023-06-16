@@ -33,7 +33,7 @@ class CSSFontFaceRuleDecl final : public nsICSSDeclaration {
   // For accessing the constructor.
   friend class CSSFontFaceRule;
 
-  explicit CSSFontFaceRuleDecl(already_AddRefed<RawServoFontFaceRule> aDecl)
+  explicit CSSFontFaceRuleDecl(already_AddRefed<StyleLockedFontFaceRule> aDecl)
       : mRawRule(std::move(aDecl)) {}
 
   ~CSSFontFaceRuleDecl() = default;
@@ -41,8 +41,8 @@ class CSSFontFaceRuleDecl final : public nsICSSDeclaration {
   inline CSSFontFaceRule* ContainingRule();
   inline const CSSFontFaceRule* ContainingRule() const;
 
-  RefPtr<RawServoFontFaceRule> mRawRule;
-  void SetRawAfterClone(RefPtr<RawServoFontFaceRule>);
+  RefPtr<StyleLockedFontFaceRule> mRawRule;
+  void SetRawAfterClone(RefPtr<StyleLockedFontFaceRule>);
 
  private:
   void* operator new(size_t size) noexcept(true) = delete;
@@ -50,7 +50,7 @@ class CSSFontFaceRuleDecl final : public nsICSSDeclaration {
 
 class CSSFontFaceRule final : public css::Rule {
  public:
-  CSSFontFaceRule(already_AddRefed<RawServoFontFaceRule> aRawRule,
+  CSSFontFaceRule(already_AddRefed<StyleLockedFontFaceRule> aRawRule,
                   StyleSheet* aSheet, css::Rule* aParentRule, uint32_t aLine,
                   uint32_t aColumn)
       : css::Rule(aSheet, aParentRule, aLine, aColumn),
@@ -63,8 +63,8 @@ class CSSFontFaceRule final : public css::Rule {
                                                          css::Rule)
   bool IsCCLeaf() const final;
 
-  RawServoFontFaceRule* Raw() const { return mDecl.mRawRule; }
-  void SetRawAfterClone(RefPtr<RawServoFontFaceRule>);
+  StyleLockedFontFaceRule* Raw() const { return mDecl.mRawRule; }
+  void SetRawAfterClone(RefPtr<StyleLockedFontFaceRule>);
 
   // WebIDL interface
   StyleCssRuleType Type() const final;

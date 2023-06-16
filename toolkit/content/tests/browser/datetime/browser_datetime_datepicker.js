@@ -214,7 +214,7 @@ add_task(async function test_datepicker_reopen_state() {
     `data:text/html, <input type="date" value="${inputValue}">`
   );
 
-  // Navigate to the next month but does not commit the change
+  // Navigate to the next month but do not commit the change
   Assert.equal(
     helper.getElement(MONTH_YEAR).textContent,
     DATE_FORMAT(new Date(inputValue))
@@ -222,29 +222,41 @@ add_task(async function test_datepicker_reopen_state() {
 
   helper.click(helper.getElement(BTN_NEXT_MONTH));
 
+  // January 2017
   Assert.equal(
     helper.getElement(MONTH_YEAR).textContent,
     DATE_FORMAT(new Date(nextMonth))
   );
 
-  EventUtils.synthesizeKey("VK_ESCAPE", {}, window);
+  let closed = helper.promisePickerClosed();
 
-  await helper.promisePickerClosed();
+  EventUtils.synthesizeKey("KEY_Escape", {});
+
+  await closed;
 
   Assert.equal(helper.panel.state, "closed", "Panel should be closed");
 
-  // Ensures the picker opens to the month of the input value
+  // December 2016
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     let input = content.document.querySelector("input");
-    function getCalendarButton(input) {
-      const shadowRoot = SpecialPowers.wrap(input).openOrClosedShadowRoot;
-      return shadowRoot.getElementById("calendar-button");
-    }
-    getCalendarButton(input).click();
+    Assert.equal(
+      input.value,
+      "2016-12-15",
+      "The input value remains unchanged after the picker is dismissed"
+    );
   });
 
-  await helper.waitForPickerReady();
+  let ready = helper.waitForPickerReady();
 
+  // Move focus from the browser to an input field and open a picker:
+  EventUtils.synthesizeKey("KEY_Tab", {});
+  EventUtils.synthesizeKey(" ", {});
+
+  await ready;
+
+  Assert.equal(helper.panel.state, "open", "Panel should be opened");
+
+  // December 2016
   Assert.equal(
     helper.getElement(MONTH_YEAR).textContent,
     DATE_FORMAT(new Date(inputValue))

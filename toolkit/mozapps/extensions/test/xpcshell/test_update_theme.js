@@ -1,8 +1,8 @@
 "use strict";
 
 XPCOMUtils.defineLazyGetter(this, "Management", () => {
-  const { ExtensionParent } = ChromeUtils.import(
-    "resource://gre/modules/ExtensionParent.jsm"
+  const { ExtensionParent } = ChromeUtils.importESModule(
+    "resource://gre/modules/ExtensionParent.sys.mjs"
   );
   return ExtensionParent.apiManager;
 });

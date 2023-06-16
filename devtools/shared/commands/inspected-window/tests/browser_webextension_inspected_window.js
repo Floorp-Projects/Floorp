@@ -69,7 +69,7 @@ function injectedScript() {
   if (!window.pageScriptExecutedFirst) {
     window.addEventListener(
       "DOMContentLoaded",
-      function() {
+      function () {
         if (document.querySelector("pre")) {
           document.querySelector("pre").textContent =
             "injected script executed first";
@@ -121,12 +121,8 @@ add_task(async function test_successfull_inspectedWindowEval_result() {
 });
 
 add_task(async function test_successfull_inspectedWindowEval_resultAsGrip() {
-  const {
-    commands,
-    extension,
-    fakeExtCallerInfo,
-    webConsoleFront,
-  } = await setup(URL_ROOT_SSL);
+  const { commands, extension, fakeExtCallerInfo, webConsoleFront } =
+    await setup(URL_ROOT_SSL);
 
   let result = await commands.inspectedWindowCommand.eval(
     fakeExtCallerInfo,

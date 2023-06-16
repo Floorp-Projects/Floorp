@@ -109,10 +109,10 @@ function _untrackWindowOrder(window) {
 var WindowHelper = {
   addWindow(window) {
     // Add event listeners
-    TAB_EVENTS.forEach(function(event) {
+    TAB_EVENTS.forEach(function (event) {
       window.gBrowser.tabContainer.addEventListener(event, _handleEvent);
     });
-    WINDOW_EVENTS.forEach(function(event) {
+    WINDOW_EVENTS.forEach(function (event) {
       window.addEventListener(event, _handleEvent);
     });
 
@@ -126,10 +126,10 @@ var WindowHelper = {
     _untrackWindowOrder(window);
 
     // Remove the event listeners
-    TAB_EVENTS.forEach(function(event) {
+    TAB_EVENTS.forEach(function (event) {
       window.gBrowser.tabContainer.removeEventListener(event, _handleEvent);
     });
-    WINDOW_EVENTS.forEach(function(event) {
+    WINDOW_EVENTS.forEach(function (event) {
       window.removeEventListener(event, _handleEvent);
     });
   },

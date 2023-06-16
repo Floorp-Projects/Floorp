@@ -20,7 +20,7 @@ const EVENTS_DELAY = 2000;
 // This used to be > 100 events for this test case.
 const MAX_EVENTS = 10;
 
-add_task(async function() {
+add_task(async function () {
   const { toolbox, ui } = await openStyleEditorForURL(TESTCASE_URI);
 
   const win = toolbox.win.parent;

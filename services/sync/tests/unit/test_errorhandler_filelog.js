@@ -77,7 +77,7 @@ function readFile(file, callback) {
       uri: NetUtil.newURI(file),
       loadUsingSystemPrincipal: true,
     },
-    function(inputStream, statusCode, request) {
+    function (inputStream, statusCode, request) {
       let data = NetUtil.readInputStreamToString(
         inputStream,
         inputStream.available()
@@ -106,7 +106,7 @@ add_test(function test_logOnSuccess_true() {
     Assert.ok(!entries.hasMoreElements());
 
     // Ensure the log message was actually written to file.
-    readFile(logfile, function(error, data) {
+    readFile(logfile, function (error, data) {
       Assert.ok(Components.isSuccessCode(error));
       Assert.notEqual(data.indexOf(MESSAGE), -1);
 
@@ -165,7 +165,7 @@ add_test(function test_sync_error_logOnError_true() {
     Assert.ok(!entries.hasMoreElements());
 
     // Ensure the log message was actually written to file.
-    readFile(logfile, function(error, data) {
+    readFile(logfile, function (error, data) {
       Assert.ok(Components.isSuccessCode(error));
       Assert.notEqual(data.indexOf(MESSAGE), -1);
 
@@ -224,7 +224,7 @@ add_test(function test_login_error_logOnError_true() {
     Assert.ok(!entries.hasMoreElements());
 
     // Ensure the log message was actually written to file.
-    readFile(logfile, function(error, data) {
+    readFile(logfile, function (error, data) {
       Assert.ok(Components.isSuccessCode(error));
       Assert.notEqual(data.indexOf(MESSAGE), -1);
 
@@ -289,7 +289,7 @@ add_test(function test_newFailed_errorLog() {
     Assert.ok(!entries.hasMoreElements());
 
     // Ensure the log message was actually written to file.
-    readFile(logfile, function(error, data) {
+    readFile(logfile, function (error, data) {
       Assert.ok(Components.isSuccessCode(error));
       Assert.notEqual(data.indexOf(MESSAGE), -1);
 
@@ -333,7 +333,7 @@ add_test(function test_errorLog_dumpAddons() {
     Assert.ok(!entries.hasMoreElements());
 
     // Ensure we logged some addon list (which is probably empty)
-    readFile(logfile, function(error, data) {
+    readFile(logfile, function (error, data) {
       Assert.ok(Components.isSuccessCode(error));
       Assert.notEqual(data.indexOf("Addons installed"), -1);
 
@@ -392,7 +392,7 @@ add_test(async function test_logErrorCleanup_age() {
       Assert.ok(entries.hasMoreElements());
       let logfile = entries.getNext().QueryInterface(Ci.nsIFile);
       Assert.ok(
-        oldLogs.every(function(e) {
+        oldLogs.every(function (e) {
           return e != logfile.leafName;
         })
       );

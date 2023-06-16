@@ -16,7 +16,7 @@ add_task(async function test_main() {
   dump("Switched background tab to foreground\n");
 
   // Verify main-thread scroll position is where we expect
-  let scrollPos = await ContentTask.spawn(browser, null, function() {
+  let scrollPos = await ContentTask.spawn(browser, null, function () {
     return content.window.scrollY;
   });
   is(scrollPos, 5000, "Expected background tab to be at scroll pos 5000");
@@ -29,7 +29,7 @@ add_task(async function test_main() {
   // the main thread will fail to clear the main-thread scroll origin (which
   // was set by the scroll to the #scrolltarget anchor), and so will not
   // accept APZ's scroll position updates.
-  let contentScrollFunction = async function() {
+  let contentScrollFunction = async function () {
     await content.window.wrappedJSObject.promiseNativeWheelAndWaitForWheelEvent(
       content.window,
       100,

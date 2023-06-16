@@ -105,16 +105,14 @@ add_task(async () => {
  */
 add_task(async () => {
   await testAutoplayExistingPermissionAgainstDefaultSetting({
-    name:
-      "Site has prexisting allow permission but default setting is 'blocked'",
+    name: "Site has prexisting allow permission but default setting is 'blocked'",
     permission: Services.perms.ALLOW_ACTION,
     defaultSetting: "blocked",
     shouldPlay: true,
     mode: "autoplay attribute",
   });
   await testAutoplayExistingPermissionAgainstDefaultSetting({
-    name:
-      "Site has prexisting block permission but default setting is 'allowed'",
+    name: "Site has prexisting block permission but default setting is 'allowed'",
     permission: Services.perms.DENY_ACTION,
     defaultSetting: "allowed",
     shouldPlay: false,
@@ -146,8 +144,7 @@ add_task(async function testExistingPermissionForIframe() {
   });
 
   await testAutoplayExistingPermissionForIframe({
-    name:
-      "Prexisting ALLOW for main page, prexisting DENY for different origin iframe",
+    name: "Prexisting ALLOW for main page, prexisting DENY for different origin iframe",
     permissionForParent: Services.perms.ALLOW_ACTION,
     permissionForChild: Services.perms.DENY_ACTION,
     isIframeDifferentOrgin: false,
@@ -155,8 +152,7 @@ add_task(async function testExistingPermissionForIframe() {
   });
 
   await testAutoplayExistingPermissionForIframe({
-    name:
-      "Prexisting DENY for main page, prexisting ALLOW for different origin iframe",
+    name: "Prexisting DENY for main page, prexisting ALLOW for different origin iframe",
     permissionForParent: Services.perms.DENY_ACTION,
     permissionForChild: Services.perms.ALLOW_ACTION,
     isIframeDifferentOrgin: false,

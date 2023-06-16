@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const kPrefName_CaretBrowsingOn = "accessibility.browsewithcaret";
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -16,7 +16,7 @@ add_task(async function() {
 
   await BrowserTestUtils.withNewTab(
     "https://example.com/browser/browser/base/content/test/keyboard/file_empty.html",
-    async function(browser) {
+    async function (browser) {
       await SpecialPowers.spawn(browser, [], () => {
         content.document.documentElement.scrollTop; // Flush layout.
       });

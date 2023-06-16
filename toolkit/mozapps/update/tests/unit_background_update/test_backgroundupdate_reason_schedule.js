@@ -12,11 +12,11 @@ const { BackgroundUpdate } = ChromeUtils.importESModule(
 let reasons = () => BackgroundUpdate._reasonsToNotScheduleUpdates();
 let REASON = BackgroundUpdate.REASON;
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+const { AddonTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
 );
-const { ExtensionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/ExtensionXPCShellUtils.jsm"
+const { ExtensionTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/ExtensionXPCShellUtils.sys.mjs"
 );
 
 setupProfileService();

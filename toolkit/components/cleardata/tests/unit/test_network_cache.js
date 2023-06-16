@@ -99,9 +99,10 @@ add_task(async function test_deleteFromPrincipal() {
     "The memory cache has an entry"
   );
 
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    "http://example.com/"
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      "http://example.com/"
+    );
   await new Promise(aResolve => {
     Services.clearData.deleteDataFromPrincipal(
       principal,

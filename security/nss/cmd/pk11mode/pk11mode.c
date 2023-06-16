@@ -322,6 +322,7 @@ main(int argc, char **argv)
     CK_FUNCTION_LIST_PTR pFunctionList;
     CK_RV crv = CKR_OK;
     CK_C_INITIALIZE_ARGS_NSS initArgs;
+    CK_C_INITIALIZE_ARGS_NSS initArgsRerun; /* rerun selftests */
     CK_SLOT_ID *pSlotList = NULL;
     CK_TOKEN_INFO tokenInfo;
     CK_ULONG slotID = 0; /* slotID == 0 for FIPSMODE */
@@ -329,6 +330,7 @@ main(int argc, char **argv)
     CK_UTF8CHAR *pwd = NULL;
     CK_ULONG pwdLen = 0;
     char *moduleSpec = NULL;
+    char *moduleSpecRerun = NULL;
     char *configDir = NULL;
     char *dbPrefix = NULL;
     char *disableUnload = NULL;
@@ -462,8 +464,13 @@ main(int argc, char **argv)
     moduleSpec = PR_smprintf("configdir='%s' certPrefix='%s' "
                              "keyPrefix='%s' secmod='secmod.db' flags= ",
                              configDir, dbPrefix, dbPrefix);
+    moduleSpecRerun = PR_smprintf("configdir='%s' certPrefix='%s' "
+                                  "keyPrefix='%s' secmod='secmod.db' flags=forcePOST ",
+                                  configDir, dbPrefix, dbPrefix);
     initArgs.LibraryParameters = (CK_CHAR_PTR *)moduleSpec;
     initArgs.pReserved = NULL;
+    initArgsRerun = initArgs;
+    initArgsRerun.LibraryParameters = (CK_CHAR_PTR *)moduleSpecRerun;
 
     /*DebugBreak();*/
     /* FIPSMODE invokes FC_Initialize as pFunctionList->C_Initialize */
@@ -709,7 +716,7 @@ main(int argc, char **argv)
     if (doForkTests) {
         /* testing one more C_Initialize / C_Finalize to exercise getpid()
          * fork check code */
-        crv = pFunctionList->C_Initialize(&initArgs);
+        crv = pFunctionList->C_Initialize(&initArgsRerun);
         if (crv == CKR_OK) {
             PKM_LogIt("C_Initialize succeeded\n");
         } else {
@@ -744,6 +751,9 @@ cleanup:
     }
     if (moduleSpec) {
         PR_smprintf_free(moduleSpec);
+    }
+    if (moduleSpecRerun) {
+        PR_smprintf_free(moduleSpecRerun);
     }
 
 #ifdef _WIN32

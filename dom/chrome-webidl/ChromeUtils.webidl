@@ -614,6 +614,13 @@ partial namespace ChromeUtils {
   undefined resetLastExternalProtocolIframeAllowed();
 
   /**
+   * For webdriver consistency purposes, we need to be able to end a wheel
+   * transaction from the browser chrome.
+   */
+  [ChromeOnly]
+  undefined endWheelTransaction();
+
+  /**
    * Register a new toplevel window global actor. This method may only be
    * called in the parent process. |name| must be globally unique.
    *

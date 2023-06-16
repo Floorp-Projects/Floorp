@@ -231,9 +231,8 @@ class BaselineCodeGen {
   [[nodiscard]] bool emitSetElemSuper(bool strict);
   [[nodiscard]] bool emitSetPropSuper(bool strict);
 
-  // Try to bake in the result of GetGName/BindGName instead of using an IC.
+  // Try to bake in the result of BindGName instead of using an IC.
   // Return true if we managed to optimize the op.
-  bool tryOptimizeGetGlobalName();
   bool tryOptimizeBindGlobalName();
 
   [[nodiscard]] bool emitInitPropGetterSetter();

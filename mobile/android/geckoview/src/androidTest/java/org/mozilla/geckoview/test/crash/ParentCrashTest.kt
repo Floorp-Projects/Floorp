@@ -36,7 +36,7 @@ class ParentCrashTest : BaseSessionTest() {
         val runtime = TestRuntimeService.RuntimeInstance.start(
             targetContext,
             RuntimeCrashTestService::class.java,
-            temporaryProfile.get()
+            temporaryProfile.get(),
         )
         runtime.loadUri("about:crashparent")
 

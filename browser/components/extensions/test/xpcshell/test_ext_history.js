@@ -2,19 +2,15 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+const { AddonTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
 );
 
 ChromeUtils.defineESModuleGetters(this, {
+  ExtensionCommon: "resource://gre/modules/ExtensionCommon.sys.mjs",
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  this,
-  "ExtensionCommon",
-  "resource://gre/modules/ExtensionCommon.jsm"
-);
 
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();

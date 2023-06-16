@@ -1,24 +1,24 @@
 [
   {
     "namespace": "manifest",
-    "types": [{
-      "$extend": "PermissionPrivileged",
-      "choices": [{
-        "type": "string",
-        "enum": [
-          "normandyAddonStudy"
+    "types": [
+      {
+        "$extend": "PermissionPrivileged",
+        "choices": [
+          {
+            "type": "string",
+            "enum": ["normandyAddonStudy"]
+          }
         ]
-      }]
-    }]
+      }
+    ]
   },
   {
     "namespace": "normandyAddonStudy",
     "description": "Normandy Study API",
     "allowedContexts": ["content", "devtools"],
     "defaultContexts": ["content", "devtools"],
-    "permissions": [
-      "normandyAddonStudy"
-    ],
+    "permissions": ["normandyAddonStudy"],
     "types": [
       {
         "id": "Study",

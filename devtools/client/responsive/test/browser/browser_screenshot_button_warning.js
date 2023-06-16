@@ -15,7 +15,7 @@ const TEST_URL = `http://example.net/document-builder.sjs?html=
 
 addRDMTask(
   TEST_URL,
-  async function({ ui, browser, manager }) {
+  async function ({ ui, browser, manager }) {
     const { toolWindow } = ui;
     const { document } = toolWindow;
 

@@ -13,7 +13,7 @@ const TEST_URI =
 const MIME_WARNING_MSG =
   "The script from “https://example.com/browser/devtools/client/webconsole/test/browser/test-non-javascript-mime.js” was loaded even though its MIME type (“text/plain”) is not a valid JavaScript MIME type";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
   await waitFor(() => findWarningMessage(hud, MIME_WARNING_MSG), "", 100);
   ok(true, "MIME type warning displayed");

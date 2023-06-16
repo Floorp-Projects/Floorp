@@ -133,6 +133,9 @@ class WebExtensionPolicyCore final {
                     bool aCheckRestricted = true,
                     bool aAllowFilePermission = false) const;
 
+  bool QuarantinedFromDoc(const DocInfo& aDoc) const;
+  bool QuarantinedFromURI(const URLInfo& aURI) const;
+
   // Try to get a reference to the cycle-collected main-thread-only
   // WebExtensionPolicy instance.
   //
@@ -172,6 +175,7 @@ class WebExtensionPolicyCore final {
   /* const */ nsString mBaseCSP;
 
   const bool mIsPrivileged;
+  const bool mIgnoreQuarantine;
   const bool mTemporarilyInstalled;
 
   const nsString mBackgroundWorkerScript;
@@ -253,6 +257,17 @@ class WebExtensionPolicy final : public nsISupports, public nsWrapperCache {
   static bool IsRestrictedDoc(const DocInfo& aDoc);
   static bool IsRestrictedURI(const URLInfo& aURI);
 
+  static bool IsQuarantinedDoc(const DocInfo& aDoc);
+  static bool IsQuarantinedURI(const URLInfo& aURI);
+
+  bool QuarantinedFromDoc(const DocInfo& aDoc) const {
+    return mCore->QuarantinedFromDoc(aDoc);
+  }
+
+  bool QuarantinedFromURI(const URLInfo& aURI) const {
+    return mCore->QuarantinedFromURI(aURI);
+  }
+
   nsCString BackgroundPageHTML() const;
 
   MOZ_CAN_RUN_SCRIPT
@@ -333,9 +348,20 @@ class WebExtensionPolicy final : public nsISupports, public nsWrapperCache {
     return IsRestrictedURI(aURI);
   }
 
+  static bool IsQuarantinedURI(dom::GlobalObject& aGlobal,
+                               const URLInfo& aURI) {
+    return IsQuarantinedURI(aURI);
+  }
+
+  bool QuarantinedFromURI(dom::GlobalObject& aGlobal,
+                          const URLInfo& aURI) const {
+    return QuarantinedFromURI(aURI);
+  }
+
   static bool UseRemoteWebExtensions(dom::GlobalObject& aGlobal);
   static bool IsExtensionProcess(dom::GlobalObject& aGlobal);
   static bool BackgroundServiceWorkerEnabled(dom::GlobalObject& aGlobal);
+  static bool QuarantinedDomainsEnabled(dom::GlobalObject& aGlobal);
 
   nsISupports* GetParentObject() const { return mParent; }
 

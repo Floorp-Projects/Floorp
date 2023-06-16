@@ -6,7 +6,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   // Needed for the execute() function below
   await pushPref("security.allow_parent_unrestricted_js_loads", true);
 

@@ -2,7 +2,7 @@
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
-XPCOMUtils.defineLazyGetter(this, "URL", function() {
+XPCOMUtils.defineLazyGetter(this, "URL", function () {
   return "http://localhost:" + httpserv.identity.primaryPort;
 });
 
@@ -22,17 +22,13 @@ let randomFlagValues = [
 
   0xffffffff,
 
-  0x12345678,
-  0x12345678,
+  0x12345678, 0x12345678,
 
-  0x11111111,
-  0x22222222,
+  0x11111111, 0x22222222,
 
-  0xaaaaaaaa,
-  0x77777777,
+  0xaaaaaaaa, 0x77777777,
 
-  0xbbbbbbbb,
-  0xcccccccc,
+  0xbbbbbbbb, 0xcccccccc,
 ];
 
 function handler(metadata, response) {

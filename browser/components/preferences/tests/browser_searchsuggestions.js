@@ -5,14 +5,13 @@ const PRIVATE_PREF_NAME = "browser.search.suggest.enabled.private";
 let initialUrlbarSuggestValue;
 let initialSuggestionsInPrivateValue;
 
-add_setup(async function() {
+add_setup(async function () {
   const originalSuggest = Services.prefs.getBoolPref(SUGGEST_PREF_NAME);
   initialUrlbarSuggestValue = Services.prefs.getBoolPref(
     URLBAR_SUGGEST_PREF_NAME
   );
-  initialSuggestionsInPrivateValue = Services.prefs.getBoolPref(
-    PRIVATE_PREF_NAME
-  );
+  initialSuggestionsInPrivateValue =
+    Services.prefs.getBoolPref(PRIVATE_PREF_NAME);
 
   registerCleanupFunction(() => {
     Services.prefs.setBoolPref(SUGGEST_PREF_NAME, originalSuggest);

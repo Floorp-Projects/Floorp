@@ -7,7 +7,7 @@
  * Test that we don't show sync pane when it's disabled.
  * See https://bugzilla.mozilla.org/show_bug.cgi?id=1536752.
  */
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["identity.fxaccounts.enabled", false]],
   });

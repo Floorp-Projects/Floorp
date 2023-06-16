@@ -28,7 +28,7 @@ function sendEventToContent(browser, data) {
   );
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.newtab.preload", false],
@@ -38,14 +38,12 @@ add_setup(async function() {
   });
 
   await SearchTestUtils.promiseNewSearchEngine({
-    url:
-      "chrome://mochitests/content/browser/browser/components/search/test/browser/testEngine.xml",
+    url: "chrome://mochitests/content/browser/browser/components/search/test/browser/testEngine.xml",
     setAsDefault: true,
   });
 
   await SearchTestUtils.promiseNewSearchEngine({
-    url:
-      "chrome://mochitests/content/browser/browser/components/search/test/browser/testEngine_diacritics.xml",
+    url: "chrome://mochitests/content/browser/browser/components/search/test/browser/testEngine_diacritics.xml",
     setAsDefaultPrivate: true,
   });
 
@@ -456,7 +454,7 @@ async function addTab() {
   return { browser: tab.linkedBrowser };
 }
 
-var currentStateObj = async function(isPrivateWindowValue, hiddenEngine = "") {
+var currentStateObj = async function (isPrivateWindowValue, hiddenEngine = "") {
   let state = {
     engines: [],
     currentEngine: await constructEngineObj(await Services.search.getDefault()),

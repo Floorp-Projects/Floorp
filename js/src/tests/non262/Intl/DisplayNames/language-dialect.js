@@ -33,7 +33,7 @@ const tests = {
     },
     short: {
       "en-Hant-GB": "Englisch (GB) (Traditionell)",
-      "en-Hans-US": "Englisch (Vereinfacht, USA)",
+      "en-Hans-US": "Englisch (USA) (Vereinfacht)",
     },
     narrow: {},
   },

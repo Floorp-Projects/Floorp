@@ -8,7 +8,7 @@ const URI =
 let MockFilePicker = SpecialPowers.MockFilePicker;
 MockFilePicker.init(window);
 
-add_setup(async function() {
+add_setup(async function () {
   info("Setting the prefs.");
 
   // make sure userContext is enabled.
@@ -86,7 +86,7 @@ add_task(async function test() {
     mockTransferRegisterer.register();
   });
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     mockTransferRegisterer.unregister();
     MockFilePicker.cleanup();
     tempDir.remove(true);

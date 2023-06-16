@@ -33,7 +33,7 @@ function checkWarning(pref, buffer) {
         resolve(true);
       },
     };
-    do_timeout(1000, function() {
+    do_timeout(1000, function () {
       if (complete) {
         return;
       }
@@ -47,7 +47,7 @@ function checkWarning(pref, buffer) {
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   // Simple change, shouldn't cause a warning
   info("Checking that a simple change doesn't cause a warning");
   let buf = makeBuffer(100);

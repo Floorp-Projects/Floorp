@@ -5,7 +5,7 @@
 // Test that the HeapAnalyses{Client,Worker} bubbles errors properly when things
 // go wrong.
 
-add_task(async function() {
+add_task(async function () {
   const client = new HeapAnalysesClient();
 
   // Snapshot file path to a file that doesn't exist.

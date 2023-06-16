@@ -29,7 +29,7 @@
 const PAGE_URL =
   "https://example.com/browser/remote/cdp/test/browser/input/doc_dispatchKeyEvent_race.html";
 
-add_task(async function({ client }) {
+add_task(async function ({ client }) {
   await loadURL(PAGE_URL);
 
   const { Input, Runtime } = client;
@@ -40,7 +40,7 @@ add_task(async function({ client }) {
   const { context } = await Runtime.executionContextCreated();
 
   info("Focus the input on the page");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     const input = content.document.querySelector("input");
     input.focus();
     is(input, content.document.activeElement, "Input should be focused");

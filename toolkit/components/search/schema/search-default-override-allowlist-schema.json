@@ -1,10 +1,6 @@
 {
   "type": "object",
-  "required": [
-    "thirdPartyId",
-    "overridesId",
-    "urls"
-  ],
+  "required": ["thirdPartyId", "overridesId", "urls"],
   "properties": {
     "thirdPartyId": {
       "type": "string",
@@ -24,9 +20,7 @@
       "description": "An array of URL sets which must be matched (with the add-on's manifest settings) to allow the override",
       "items": {
         "type": "object",
-        "required": [
-          "search_url"
-        ],
+        "required": ["search_url"],
         "properties": {
           "search_url": {
             "type": "string",

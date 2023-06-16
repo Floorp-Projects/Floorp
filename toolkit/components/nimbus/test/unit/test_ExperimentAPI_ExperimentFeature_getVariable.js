@@ -1,9 +1,7 @@
 "use strict";
 
-const {
-  ExperimentAPI,
-  _ExperimentFeature: ExperimentFeature,
-} = ChromeUtils.importESModule("resource://nimbus/ExperimentAPI.sys.mjs");
+const { ExperimentAPI, _ExperimentFeature: ExperimentFeature } =
+  ChromeUtils.importESModule("resource://nimbus/ExperimentAPI.sys.mjs");
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );

@@ -7,7 +7,7 @@
 
 const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html>Test command autocomplete`;
 
-add_task(async function() {
+add_task(async function () {
   // Run with autocomplete preference as false
   await pushPref("devtools.webconsole.input.autocomplete", false);
   await performTests_false();

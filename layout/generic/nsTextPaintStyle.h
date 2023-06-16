@@ -10,7 +10,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/Span.h"
-#include "mozilla/SVGUtils.h"
 
 #include "nsAtom.h"
 #include "nsISelectionController.h"
@@ -18,6 +17,10 @@
 
 class nsTextFrame;
 class nsPresContext;
+
+namespace mozilla {
+enum class StyleTextDecorationStyle : uint8_t;
+}
 
 /**
  * This helper object computes colors used for painting, and also IME

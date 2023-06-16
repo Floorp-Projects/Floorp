@@ -8,10 +8,7 @@ const { debug, warn } = GeckoViewUtils.initLogging("GeckoViewPrompter");
 
 export class GeckoViewPrompter {
   constructor(aParent) {
-    this.id = Services.uuid
-      .generateUUID()
-      .toString()
-      .slice(1, -1); // Discard surrounding braces
+    this.id = Services.uuid.generateUUID().toString().slice(1, -1); // Discard surrounding braces
 
     if (aParent) {
       if (Window.isInstance(aParent)) {
@@ -28,7 +25,8 @@ export class GeckoViewPrompter {
       this._domWin = Services.wm.getMostRecentWindow("navigator:geckoview");
     }
 
-    this._innerWindowId = this._domWin?.browsingContext.currentWindowContext.innerWindowId;
+    this._innerWindowId =
+      this._domWin?.browsingContext.currentWindowContext.innerWindowId;
   }
 
   get domWin() {

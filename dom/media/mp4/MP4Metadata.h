@@ -96,7 +96,7 @@ class MP4Metadata : public DecoderDoctorLifeLogger<MP4Metadata> {
   ResultAndCryptoFile Crypto() const;
 
   using ResultAndIndice = ResultAndType<mozilla::UniquePtr<IndiceWrapper>>;
-  ResultAndIndice GetTrackIndice(uint32_t aTrackId);
+  ResultAndIndice GetTrackIndice(uint32_t aTrackId) const;
 
   nsresult Parse();
 

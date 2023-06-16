@@ -346,8 +346,7 @@ add_task(async function test() {
     },
 
     {
-      desc:
-        "Results in sibling group, no other results in same group, has child group",
+      desc: "Results in sibling group, no other results in same group, has child group",
       resultGroups: {
         flexChildren: true,
         children: [

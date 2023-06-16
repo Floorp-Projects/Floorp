@@ -123,13 +123,6 @@ async function _commandsFromURL(client, id, type) {
       throw new Error(`commandsFromURL, worker with id '${id}' doesn't exist`);
     }
   } else if (type == "process") {
-    // @backward-compat { version 113 } Firefox 110 dropped support for `id` argument.
-    // We can remove this assertion after a little while and assume everyone forgot about it.
-    if (id) {
-      throw new Error(
-        `commandsFromURL, id attribute for process is no longer supported. Only support debugging the parent process.`
-      );
-    }
     // When debugging firefox itself, force the server to accept debugging processes.
     DevToolsServer.allowChromeProcess = true;
     commands = await CommandsFactory.forMainProcess({ client });

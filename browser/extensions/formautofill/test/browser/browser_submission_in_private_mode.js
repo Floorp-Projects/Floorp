@@ -1,6 +1,6 @@
 "use strict";
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["extensions.formautofill.addresses.capture.enabled", true],
@@ -19,7 +19,7 @@ add_task(async function test_add_address() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser: privateWin.gBrowser, url: FORM_URL },
-    async function(privateBrowser) {
+    async function (privateBrowser) {
       await focusUpdateSubmitForm(privateBrowser, {
         focusSelector: "#organization",
         newValues: {

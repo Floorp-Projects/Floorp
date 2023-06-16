@@ -5,10 +5,14 @@
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  PageEventManager: "resource://activity-stream/lib/PageEventManager.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AboutWelcomeParent: "resource:///actors/AboutWelcomeParent.jsm",
   ASRouter: "resource://activity-stream/lib/ASRouter.jsm",
-  PageEventManager: "resource://activity-stream/lib/PageEventManager.jsm",
 });
 
 const TRANSITION_MS = 500;
@@ -72,7 +76,7 @@ export class FeatureCallout {
       "cfrFeaturesUserPref",
       "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features",
       true,
-      function(pref, previous, latest) {
+      function (pref, previous, latest) {
         if (latest) {
           this.showFeatureCallout();
         } else {
@@ -278,8 +282,9 @@ export class FeatureCallout {
           "messaging_experiments",
           "feature_callout",
           "create_failed",
-          `${this.message.id || "no_message"}-${this.currentScreen
-            ?.parent_selector || "no_current_screen"}`
+          `${this.message.id || "no_message"}-${
+            this.currentScreen?.parent_selector || "no_current_screen"
+          }`
         );
       }
 
@@ -347,8 +352,8 @@ export class FeatureCallout {
     overlap -= arrowWidth;
     // Is the document layout right to left?
     const RTL = this.doc.dir === "rtl";
-    const customPosition = this.currentScreen?.content
-      .callout_position_override;
+    const customPosition =
+      this.currentScreen?.content.callout_position_override;
 
     // Early exit if the container doesn't exist,
     // or if we're missing a parent element and don't have a custom callout position
@@ -859,7 +864,7 @@ export class FeatureCallout {
    * @property {PageEventListenerParams} params Event listener parameters
    * @property {PageEventListenerAction} action Sent when the event fires
    *
-   * @typedef {Object} PageEventListenerParams See PageEventManager.jsm
+   * @typedef {Object} PageEventListenerParams See PageEventManager.sys.mjs
    * @property {String} type Event type string e.g. `click`
    * @property {String} selectors Target selector, e.g. `tag.class, #id[attr]`
    * @property {PageEventListenerOptions} [options] addEventListener options

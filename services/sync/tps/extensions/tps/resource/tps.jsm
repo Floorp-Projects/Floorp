@@ -65,17 +65,14 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PasswordValidator: "resource://services-sync/engines/passwords.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   Preference: "resource://tps/modules/prefs.sys.mjs",
+  STATUS_OK: "resource://services-sync/constants.sys.mjs",
   Separator: "resource://tps/modules/bookmarks.sys.mjs",
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
-  STATUS_OK: "resource://services-sync/constants.sys.mjs",
   Svc: "resource://services-sync/util.sys.mjs",
   SyncTelemetry: "resource://services-sync/telemetry.sys.mjs",
   WEAVE_VERSION: "resource://services-sync/constants.sys.mjs",
   Weave: "resource://services-sync/main.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  extensionStorageSync: "resource://gre/modules/ExtensionStorageSync.jsm",
+  extensionStorageSync: "resource://gre/modules/ExtensionStorageSync.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "fileProtocolHandler", () => {
@@ -168,7 +165,7 @@ var TPS = {
   _init: function TPS__init() {
     this.delayAutoSync();
 
-    OBSERVER_TOPICS.forEach(function(aTopic) {
+    OBSERVER_TOPICS.forEach(function (aTopic) {
       Services.obs.addObserver(this, aTopic, true);
     }, this);
 
@@ -207,7 +204,7 @@ var TPS = {
 
       switch (topic) {
         case "profile-before-change":
-          OBSERVER_TOPICS.forEach(function(topic) {
+          OBSERVER_TOPICS.forEach(function (topic) {
             Services.obs.removeObserver(this, topic);
           }, this);
 
@@ -487,7 +484,7 @@ var TPS = {
         switch (action) {
           case ACTION_ADD:
             lazy.Logger.AssertTrue(
-              passwordOb.Create() > -1,
+              (await passwordOb.Create()) > -1,
               "error adding password"
             );
             break;
@@ -785,9 +782,10 @@ var TPS = {
     let getServerBookmarkState = async () => {
       let bookmarkEngine = lazy.Weave.Service.engineManager.get("bookmarks");
       let collection = bookmarkEngine.itemSource();
-      let collectionKey = bookmarkEngine.service.collectionKeys.keyForCollection(
-        bookmarkEngine.name
-      );
+      let collectionKey =
+        bookmarkEngine.service.collectionKeys.keyForCollection(
+          bookmarkEngine.name
+        );
       collection.full = true;
       let items = [];
       let resp = await collection.get();
@@ -1197,7 +1195,7 @@ var TPS = {
   _interceptSyncTelemetry() {
     let originalObserve = lazy.SyncTelemetry.observe;
     let self = this;
-    lazy.SyncTelemetry.observe = function() {
+    lazy.SyncTelemetry.observe = function () {
       try {
         originalObserve.apply(this, arguments);
       } catch (e) {

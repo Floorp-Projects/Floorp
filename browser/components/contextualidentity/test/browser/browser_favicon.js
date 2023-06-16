@@ -14,12 +14,11 @@ function getIconFile() {
   new Promise(resolve => {
     NetUtil.asyncFetch(
       {
-        uri:
-          "http://www.example.com/browser/browser/components/contextualidentity/test/browser/favicon-normal32.png",
+        uri: "http://www.example.com/browser/browser/components/contextualidentity/test/browser/favicon-normal32.png",
         loadUsingSystemPrincipal: true,
         contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_FAVICON,
       },
-      function(inputStream, status) {
+      function (inputStream, status) {
         let size = inputStream.available();
         gFaviconData = NetUtil.readInputStreamToString(inputStream, size);
         resolve();
@@ -76,7 +75,7 @@ function loadFaviconHandler(metadata, response) {
   response.bodyOutputStream.write(gFaviconData, gFaviconData.length);
 }
 
-add_setup(async function() {
+add_setup(async function () {
   // Make sure userContext is enabled.
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.userContext.enabled", true]],
@@ -120,7 +119,7 @@ add_task(async function test() {
     await SpecialPowers.spawn(
       tabInfo.browser,
       [{ userContext: USER_CONTEXTS[userContextId] }],
-      function(arg) {
+      function (arg) {
         content.document.cookie = "userContext=" + arg.userContext;
       }
     );

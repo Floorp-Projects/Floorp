@@ -16,9 +16,8 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
  * Creates dummy protocol handler
  */
 function initTestHandlers() {
-  let handlerInfoThatAsks = HandlerServiceTestUtils.getBlankHandlerInfo(
-    "local-app-test"
-  );
+  let handlerInfoThatAsks =
+    HandlerServiceTestUtils.getBlankHandlerInfo("local-app-test");
 
   let appHandler = Cc[
     "@mozilla.org/uriloader/local-handler-app;1"
@@ -31,9 +30,8 @@ function initTestHandlers() {
   handlerInfoThatAsks.alwaysAskBeforeHandling = false;
   gHandlerService.store(handlerInfoThatAsks);
 
-  let webHandlerInfo = HandlerServiceTestUtils.getBlankHandlerInfo(
-    "web+somesite"
-  );
+  let webHandlerInfo =
+    HandlerServiceTestUtils.getBlankHandlerInfo("web+somesite");
   let webHandler = Cc[
     "@mozilla.org/uriloader/web-handler-app;1"
   ].createInstance(Ci.nsIWebHandlerApp);
@@ -59,7 +57,7 @@ function makeCmdLineHelper(url) {
   );
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["network.protocol-handler.prompt-from-external", true]],
   });

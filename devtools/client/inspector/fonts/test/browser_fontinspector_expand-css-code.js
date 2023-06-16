@@ -7,7 +7,7 @@
 
 const TEST_URI = URL_ROOT + "doc_browser_fontinspector.html";
 
-add_task(async function() {
+add_task(async function () {
   const { view, inspector } = await openFontInspectorForURL(TEST_URI);
   const viewDoc = view.document;
   await selectNode("div", inspector);

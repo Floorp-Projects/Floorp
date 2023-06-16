@@ -14,8 +14,8 @@ const TAG_NAME = "testTag";
 var bookmarks;
 var bookmarkId;
 
-add_setup(async function() {
-  registerCleanupFunction(async function() {
+add_setup(async function () {
+  registerCleanupFunction(async function () {
     sandbox.restore();
     await PlacesUtils.bookmarks.eraseEverything();
     await PlacesUtils.history.clear();

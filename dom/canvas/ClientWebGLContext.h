@@ -2225,8 +2225,6 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   already_AddRefed<dom::Promise> MakeXRCompatible(ErrorResult& aRv);
 
  protected:
-  bool ShouldResistFingerprinting() const;
-
   uint32_t GetPrincipalHashValue() const;
 
   // Prepare the context for capture before compositing

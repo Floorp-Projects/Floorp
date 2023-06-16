@@ -4,7 +4,7 @@
 "use strict";
 
 const tests = [
-  async function(win) {
+  async function (win) {
     info("Type something, click on search settings.");
     await BrowserTestUtils.withNewTab(
       { gBrowser: win.gBrowser, url: "about:blank" },
@@ -23,7 +23,7 @@ const tests = [
     return null;
   },
 
-  async function(win) {
+  async function (win) {
     info("Type something, Up, Enter on search settings.");
     await BrowserTestUtils.withNewTab(
       { gBrowser: win.gBrowser, url: "about:blank" },

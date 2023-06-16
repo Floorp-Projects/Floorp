@@ -11,7 +11,7 @@ function run_test() {
   let testWorker = new Worker(
     "chrome://locale/content/intl_on_workers_worker.js"
   );
-  testWorker.onmessage = function(e) {
+  testWorker.onmessage = function (e) {
     try {
       let workerLocale = e.data;
       equal(

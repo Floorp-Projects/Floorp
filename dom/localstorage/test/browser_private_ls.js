@@ -20,7 +20,7 @@ function checkTabWindowLS(tab) {
   return SpecialPowers.spawn(tab.linkedBrowser, [], lsCheckFunc);
 }
 
-add_task(async function() {
+add_task(async function () {
   const pageUrl =
     "http://example.com/browser/dom/localstorage/test/page_private_ls.html";
 

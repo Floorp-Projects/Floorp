@@ -34,8 +34,6 @@ NSS 3.44.1 release notes
 `New in NSS 3.44.1 <#new_in_nss_3.44.1>`__
 ------------------------------------------
 
-.. container::
-
 .. _new_functionality:
 
 `New Functionality <#new_functionality>`__

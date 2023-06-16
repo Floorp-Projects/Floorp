@@ -10,7 +10,7 @@ const TEST_URI = `
   </div>
 `;
 
-add_task(async function() {
+add_task(async function () {
   // Test is slow on Linux EC2 instances - Bug 1137765
   requestLongerTimeout(2);
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));

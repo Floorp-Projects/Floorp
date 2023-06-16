@@ -125,8 +125,8 @@
               {
                 "name": "keys",
                 "choices": [
-                  {"type": "string"},
-                  {"type": "array", "items": {"type": "string"}}
+                  { "type": "string" },
+                  { "type": "array", "items": { "type": "string" } }
                 ],
                 "description": "A single key or a list of keys for items to remove."
               },
@@ -269,8 +269,8 @@
               {
                 "name": "keys",
                 "choices": [
-                  {"type": "string"},
-                  {"type": "array", "items": {"type": "string"}}
+                  { "type": "string" },
+                  { "type": "array", "items": { "type": "string" } }
                 ],
                 "description": "A single key or a list of keys for items to remove."
               },
@@ -387,6 +387,11 @@
             "description": "The maximum size (in bytes) of the managed storage JSON manifest file. Files larger than this limit will fail to load."
           }
         }
+      },
+      "session": {
+        "allowedContexts": ["devtools"],
+        "$ref": "StorageArea",
+        "description": "Items in the <code>session</code> storage area are kept in memory, and only until the either browser or extension is closed or reloaded."
       }
     }
   }

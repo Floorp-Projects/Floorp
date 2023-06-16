@@ -20,8 +20,8 @@ class nsLocalHandlerAppUIKit final : public nsLocalHandlerApp {
   nsLocalHandlerAppUIKit(const nsAString& aName, nsIFile* aExecutable)
       : nsLocalHandlerApp(aName, aExecutable) {}
 
-  NS_IMETHOD LaunchWithURI(nsIURI* aURI,
-                           BrowsingContext* aBrowsingContext) override;
+  NS_IMETHOD LaunchWithURI(
+      nsIURI* aURI, mozilla::dom::BrowsingContext* aBrowsingContext) override;
 };
 
 #endif /* nslocalhandlerappuikit_h_ */

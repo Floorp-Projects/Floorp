@@ -63,7 +63,7 @@ function loadExtension() {
         <!DOCTYPE html><meta charset="utf-8">
         <script src="script.js"></script>
       `,
-      "script.js": function() {
+      "script.js": function () {
         let port = browser.runtime.connect();
         port.onMessage.addListener(msg => {
           browser.test.assertEq("ping", msg, "expected message");

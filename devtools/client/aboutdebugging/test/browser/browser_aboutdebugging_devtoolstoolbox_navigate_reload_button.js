@@ -8,7 +8,7 @@ function clickReload(devtoolsDocument) {
 }
 
 // Test that ensures the remote page is reloaded when the button is clicked
-add_task(async function() {
+add_task(async function () {
   const debug_tab = await addTab("about:home");
 
   const { document, tab, window } = await openAboutDebugging();
@@ -16,17 +16,13 @@ add_task(async function() {
   // go to This Firefox and inspect the new tab
   info("Inspecting a new tab in This Firefox");
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
-  const {
-    devtoolsDocument,
-    devtoolsTab,
-    devtoolsWindow,
-  } = await openAboutDevtoolsToolbox(document, tab, window, "about:home");
+  const { devtoolsDocument, devtoolsTab, devtoolsWindow } =
+    await openAboutDevtoolsToolbox(document, tab, window, "about:home");
 
   info("Clicking reload button and waiting for requests to complete");
   const toolbox = getToolbox(devtoolsWindow);
-  const {
-    onDomCompleteResource,
-  } = await waitForNextTopLevelDomCompleteResource(toolbox.commands);
+  const { onDomCompleteResource } =
+    await waitForNextTopLevelDomCompleteResource(toolbox.commands);
 
   // Watch for navigation promises.
   const refreshes = Promise.all([

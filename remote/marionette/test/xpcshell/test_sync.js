@@ -90,7 +90,7 @@ add_task(function test_PollPromise_funcTypes() {
     Assert.throws(() => new PollPromise(type), /TypeError/);
   }
   new PollPromise(() => {});
-  new PollPromise(function() {});
+  new PollPromise(function () {});
 });
 
 add_task(function test_PollPromise_timeoutTypes() {
@@ -193,7 +193,7 @@ add_task(function test_TimedPromise_funcTypes() {
     Assert.throws(() => new TimedPromise(type), /TypeError/);
   }
   new TimedPromise(resolve => resolve());
-  new TimedPromise(function(resolve) {
+  new TimedPromise(function (resolve) {
     resolve();
   });
 });
@@ -380,5 +380,40 @@ add_task(async function test_waitForObserverTopic_checkFnTypes() {
     Services.obs.notifyObservers(this, "message", data2);
     let result = await sent;
     equal(expected_data, result.data);
+  }
+});
+
+add_task(async function test_waitForObserverTopic_timeoutTypes() {
+  for (let timeout of ["foo", true, [], {}]) {
+    Assert.throws(
+      () => waitForObserverTopic("message", { timeout }),
+      /TypeError/
+    );
+  }
+  for (let timeout of [1.2, -1]) {
+    Assert.throws(
+      () => waitForObserverTopic("message", { timeout }),
+      /RangeError/
+    );
+  }
+  for (let timeout of [null, undefined, 42]) {
+    let data = { foo: "bar" };
+    let sent = waitForObserverTopic("message", { timeout });
+    Services.obs.notifyObservers(this, "message", data);
+    let result = await sent;
+    equal(this, result.subject);
+    equal(data, result.data);
+  }
+});
+
+add_task(async function test_waitForObserverTopic_timeoutElapse() {
+  try {
+    await waitForObserverTopic("message", { timeout: 0 });
+    ok(false, "Expected Timeout error not raised");
+  } catch (e) {
+    ok(
+      e.message.includes("waitForObserverTopic timed out after"),
+      "Expected error received"
+    );
   }
 });

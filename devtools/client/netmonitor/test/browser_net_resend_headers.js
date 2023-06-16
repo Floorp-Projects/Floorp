@@ -7,7 +7,7 @@
  * Test if custom request headers are not ignored (bug 1270096 and friends)
  */
 
-add_task(async function() {
+add_task(async function () {
   const { monitor } = await initNetMonitor(HTTPS_SIMPLE_SJS, {
     requestCount: 1,
   });

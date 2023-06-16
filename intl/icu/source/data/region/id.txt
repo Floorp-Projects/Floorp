@@ -313,6 +313,5 @@ id{
         FK{"Kepulauan Falkland (Malvinas)"}
         NZ{"Aotearoa (Selandia Baru)"}
         TL{"Timor Timur"}
-        TR{"Turkiye"}
     }
 }

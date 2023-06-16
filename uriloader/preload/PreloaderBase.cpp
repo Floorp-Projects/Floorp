@@ -124,7 +124,8 @@ void PreloaderBase::AddLoadBackgroundFlag(nsIChannel* aChannel) {
 }
 
 void PreloaderBase::NotifyOpen(const PreloadHashKey& aKey,
-                               dom::Document* aDocument, bool aIsPreload) {
+                               dom::Document* aDocument, bool aIsPreload,
+                               bool aIsModule) {
   if (aDocument) {
     DebugOnly<bool> alreadyRegistered =
         aDocument->Preloads().RegisterPreload(aKey, this);
@@ -137,7 +138,10 @@ void PreloaderBase::NotifyOpen(const PreloadHashKey& aKey,
   mKey = aKey;
   mIsUsed = !aIsPreload;
 
-  if (!mIsUsed && !mUsageTimer) {
+  // Start usage timer for rel="preload", but not for rel="modulepreload"
+  // because modules may be loaded for functionality the user does not
+  // immediately interact with after page load (e.g. a docs search box)
+  if (!aIsModule && !mIsUsed && !mUsageTimer) {
     auto callback = MakeRefPtr<UsageTimer>(this, aDocument);
     NS_NewTimerWithCallback(getter_AddRefs(mUsageTimer), callback, 10000,
                             nsITimer::TYPE_ONE_SHOT);
@@ -147,8 +151,9 @@ void PreloaderBase::NotifyOpen(const PreloadHashKey& aKey,
 }
 
 void PreloaderBase::NotifyOpen(const PreloadHashKey& aKey, nsIChannel* aChannel,
-                               dom::Document* aDocument, bool aIsPreload) {
-  NotifyOpen(aKey, aDocument, aIsPreload);
+                               dom::Document* aDocument, bool aIsPreload,
+                               bool aIsModule) {
+  NotifyOpen(aKey, aDocument, aIsPreload, aIsModule);
   mChannel = aChannel;
 
   nsCOMPtr<nsIInterfaceRequestor> callbacks;

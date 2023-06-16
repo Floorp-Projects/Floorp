@@ -180,7 +180,7 @@ add_task(async function test_search() {
     equal(item.status, "success", "search() succeeded");
     equal(item.downloads.length, 1, "search() found exactly 1 download");
 
-    Object.keys(expect).forEach(function(field) {
+    Object.keys(expect).forEach(function (field) {
       equal(
         item.downloads[0][field],
         expect[field],

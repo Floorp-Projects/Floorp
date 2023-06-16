@@ -119,7 +119,7 @@ function focusElementInChild(elementid, elementtype) {
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   tab1 = BrowserTestUtils.addTab(gBrowser);
   browser1 = gBrowser.getBrowserForTab(tab1);
 
@@ -325,7 +325,7 @@ add_task(async function() {
   let switchWaiter = new Promise((resolve, reject) => {
     gBrowser.addEventListener(
       "TabSwitchDone",
-      function() {
+      function () {
         executeSoon(resolve);
       },
       { once: true }

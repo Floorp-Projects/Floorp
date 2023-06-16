@@ -5,7 +5,7 @@
 
 // Tests for matched selector texts in the computed view.
 
-add_task(async function() {
+add_task(async function () {
   await addTab("data:text/html;charset=utf-8,<div style='color:blue;'></div>");
   const { inspector, view } = await openComputedView();
   await selectNode("div", inspector);
@@ -19,9 +19,8 @@ add_task(async function() {
   propertyView.matchedExpanded = true;
   await propertyView.refreshMatchedSelectors();
 
-  const span = propertyView.matchedSelectorsContainer.querySelector(
-    "span.rule-text"
-  );
+  const span =
+    propertyView.matchedSelectorsContainer.querySelector("span.rule-text");
   ok(span, "Found the first table row");
 
   const selector = propertyView.matchedSelectorViews[0];
@@ -30,7 +29,7 @@ add_task(async function() {
 
 function getPropertyView(computedView, name) {
   let propertyView = null;
-  computedView.propertyViews.some(function(view) {
+  computedView.propertyViews.some(function (view) {
     if (view.name == name) {
       propertyView = view;
       return true;

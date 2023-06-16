@@ -5,7 +5,7 @@ var reader = new FileReaderSync();
  * FileReaderSync to read the file. Returns an object containing the
  * file read a binary string, text, url and ArrayBuffer.
  */
-onmessage = function(event) {
+onmessage = function (event) {
   var file = event.data.file;
   var encoding = event.data.encoding;
 

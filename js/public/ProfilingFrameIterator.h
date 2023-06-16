@@ -226,8 +226,8 @@ class ProfiledFrameRange {
       ++index_;
       return *this;
     }
-    bool operator==(const Iter& rhs) { return index_ == rhs.index_; }
-    bool operator!=(const Iter& rhs) { return !(*this == rhs); }
+    bool operator==(const Iter& rhs) const { return index_ == rhs.index_; }
+    bool operator!=(const Iter& rhs) const { return !(*this == rhs); }
 
    private:
     const ProfiledFrameRange& range_;

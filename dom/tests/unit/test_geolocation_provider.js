@@ -25,7 +25,7 @@ var observer = {
       Assert.ok(1);
       this._numProviders--;
       if (!this._numProviders) {
-        httpserver.stop(function() {
+        httpserver.stop(function () {
           Assert.ok(success);
           do_test_finished();
         });

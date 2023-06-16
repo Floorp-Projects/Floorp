@@ -3,9 +3,7 @@
   "$id": "file:///WhatsNewMessage.schema.json",
   "title": "WhatsNewMessage",
   "description": "A template for the messages that appear in the What's New panel.",
-  "allOf": [
-    { "$ref": "file:///FxMSCommon.schema.json#/$defs/Message" }
-  ],
+  "allOf": [{ "$ref": "file:///FxMSCommon.schema.json#/$defs/Message" }],
   "type": "object",
   "properties": {
     "content": {
@@ -13,9 +11,7 @@
       "properties": {
         "layout": {
           "description": "Different message layouts",
-          "enum": [
-            "tracking-protections"
-          ]
+          "enum": ["tracking-protections"]
         },
         "bucket_id": {
           "type": "string",
@@ -48,21 +44,11 @@
         },
         "cta_type": {
           "description": "Type of url open action",
-          "enum": [
-            "OPEN_URL",
-            "OPEN_ABOUT_PAGE",
-            "OPEN_PROTECTION_REPORT"
-          ]
+          "enum": ["OPEN_URL", "OPEN_ABOUT_PAGE", "OPEN_PROTECTION_REPORT"]
         },
         "cta_where": {
           "description": "How to open the cta: new window, tab, focused, unfocused.",
-          "enum": [
-            "current",
-            "tabshifted",
-            "tab",
-            "save",
-            "window"
-          ]
+          "enum": ["current", "tabshifted", "tab", "save", "window"]
         },
         "icon_url": {
           "description": "(optional) URL for the What's New message icon.",
@@ -75,13 +61,7 @@
         }
       },
       "additionalProperties": true,
-      "required": [
-        "published_date",
-        "title",
-        "body",
-        "cta_url",
-        "bucket_id"
-      ]
+      "required": ["published_date", "title", "body", "cta_url", "bucket_id"]
     },
     "template": {
       "type": "string",

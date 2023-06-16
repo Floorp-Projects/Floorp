@@ -16,7 +16,7 @@ const templatePrivate = "https://example.com/?query=";
 
 const searchPopup = document.getElementById("PopupSearchAutoComplete");
 
-add_setup(async function() {
+add_setup(async function () {
   await gCUITestUtils.addSearchBar();
 
   await SpecialPowers.pushPrefEnv({
@@ -52,7 +52,7 @@ add_setup(async function() {
     Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     gCUITestUtils.removeSearchBar();
     await Services.search.setDefault(
       originalEngine,

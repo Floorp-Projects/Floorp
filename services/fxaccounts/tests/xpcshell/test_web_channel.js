@@ -3,20 +3,15 @@
 
 "use strict";
 
-const {
-  ON_PROFILE_CHANGE_NOTIFICATION,
-  WEBCHANNEL_ID,
-  log,
-} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+const { ON_PROFILE_CHANGE_NOTIFICATION, WEBCHANNEL_ID, log } =
+  ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 const { CryptoUtils } = ChromeUtils.importESModule(
   "resource://services-crypto/utils.sys.mjs"
 );
-const {
-  FxAccountsWebChannel,
-  FxAccountsWebChannelHelpers,
-} = ChromeUtils.importESModule(
-  "resource://gre/modules/FxAccountsWebChannel.sys.mjs"
-);
+const { FxAccountsWebChannel, FxAccountsWebChannelHelpers } =
+  ChromeUtils.importESModule(
+    "resource://gre/modules/FxAccountsWebChannel.sys.mjs"
+  );
 
 const URL_STRING = "https://example.com";
 
@@ -26,7 +21,7 @@ const mockSendingContext = {
   eventTarget: {},
 };
 
-add_test(function() {
+add_test(function () {
   validationHelper(undefined, "Error: Missing configuration options");
 
   validationHelper(
@@ -55,6 +50,11 @@ add_test(function() {
 });
 
 add_task(async function test_rejection_reporting() {
+  Services.prefs.setBoolPref(
+    "browser.tabs.remote.separatePrivilegedMozillaWebContentProcess",
+    false
+  );
+
   let mockMessage = {
     command: "fxaccounts:login",
     messageId: "1234",
@@ -223,7 +223,7 @@ add_test(function test_profile_image_change_message() {
     data: { uid: "foo" },
   };
 
-  makeObserver(ON_PROFILE_CHANGE_NOTIFICATION, function(subject, topic, data) {
+  makeObserver(ON_PROFILE_CHANGE_NOTIFICATION, function (subject, topic, data) {
     Assert.equal(data, "foo");
     run_next_test();
   });
@@ -1328,7 +1328,7 @@ add_task(async function test_helpers_change_password_with_error() {
 });
 
 function makeObserver(aObserveTopic, aObserveFunc) {
-  let callback = function(aSubject, aTopic, aData) {
+  let callback = function (aSubject, aTopic, aData) {
     log.debug("observed " + aTopic + " " + aData);
     if (aTopic == aObserveTopic) {
       removeMe();

@@ -15,14 +15,11 @@ AddonTestUtils.createAppInfo(
   "43"
 );
 
-let {
-  promiseRestartManager,
-  promiseShutdownManager,
-  promiseStartupManager,
-} = AddonTestUtils;
+let { promiseRestartManager, promiseShutdownManager, promiseStartupManager } =
+  AddonTestUtils;
 
-const { Management } = ChromeUtils.import(
-  "resource://gre/modules/Extension.jsm"
+const { Management } = ChromeUtils.importESModule(
+  "resource://gre/modules/Extension.sys.mjs"
 );
 
 // Crashes a <browser>'s remote process.
@@ -148,7 +145,7 @@ add_task(async function test_unload_extension_during_background_page_startup() {
     Management.once("extension-browser-inserted", (eventName, browser) => {
       // Intercept background page load.
       let browserFixupAndLoadURIString = browser.fixupAndLoadURIString;
-      browser.fixupAndLoadURIString = function() {
+      browser.fixupAndLoadURIString = function () {
         Assert.equal(++backgroundLoadCount, 1, "loadURI should be called once");
         Assert.equal(
           arguments[0],

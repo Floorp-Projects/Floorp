@@ -10,9 +10,15 @@
 #include "gmp-video-frame-encoded.h"
 #include "ipc/EnumSerializer.h"
 #include "ipc/IPCMessageUtilsSpecializations.h"
+#include "GMPNativeTypes.h"
 #include "GMPSanitizedExports.h"
 
 namespace IPC {
+
+template <>
+struct ParamTraits<GMPPluginType>
+    : public ContiguousEnumSerializerInclusive<
+          GMPPluginType, GMPPluginType::Unknown, GMPPluginType::Widevine> {};
 
 template <>
 struct ParamTraits<GMPErr>

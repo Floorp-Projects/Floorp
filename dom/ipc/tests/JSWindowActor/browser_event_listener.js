@@ -4,7 +4,7 @@
 
 async function createAndShowDropdown(browser) {
   // Add a select element to the DOM of the loaded document.
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     content.document.body.innerHTML += `
       <select id="testSelect">
         <option>A</option>
@@ -111,7 +111,7 @@ async function testEventProcessedOnce(browser, waitForUrl) {
         info("No CWG yet");
         return false;
       }
-      return SpecialPowers.spawn(browser, [waitForUrl], async function(url) {
+      return SpecialPowers.spawn(browser, [waitForUrl], async function (url) {
         info(content.document.documentURI);
         return content.document.documentURI.includes(url);
       });
@@ -119,7 +119,7 @@ async function testEventProcessedOnce(browser, waitForUrl) {
   }
 
   info("Dispatching event");
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     content.document.dispatchEvent(
       new content.CustomEvent("mozwindowactortestevent", { bubbles: true })
     );

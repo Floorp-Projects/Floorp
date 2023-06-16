@@ -30,7 +30,7 @@ function test_basic(aDirectory, aNext) {
 
 function test_getFilesAndDirectories(aDirectory, aRecursive, aNext) {
   function checkSubDir(dir) {
-    return dir.getFilesAndDirectories().then(function(data) {
+    return dir.getFilesAndDirectories().then(function (data) {
       for (var i = 0; i < data.length; ++i) {
         ok(
           data[i] instanceof File || data[i] instanceof Directory,
@@ -67,6 +67,10 @@ function test_getFilesAndDirectories(aDirectory, aRecursive, aNext) {
             "File.webkitRelativePath should be called: parentdir.path + '/' + file.name: " +
               data[i].webkitRelativePath
           );
+          ok(
+            !data[i].webkitRelativePath.endsWith("symlink.txt"),
+            "We should never see a path ending with symlink.txt, our symlink sentinel."
+          );
         }
       }
     });
@@ -75,7 +79,7 @@ function test_getFilesAndDirectories(aDirectory, aRecursive, aNext) {
   aDirectory
     .getFilesAndDirectories()
     .then(
-      function(data) {
+      function (data) {
         ok(data.length, "We should have some data.");
         var promises = [];
         for (var i = 0; i < data.length; ++i) {
@@ -112,7 +116,7 @@ function test_getFilesAndDirectories(aDirectory, aRecursive, aNext) {
 
         return Promise.all(promises);
       },
-      function() {
+      function () {
         ok(false, "Something when wrong");
       }
     )
@@ -123,7 +127,7 @@ function test_getFiles(aDirectory, aRecursive, aNext) {
   aDirectory
     .getFiles(aRecursive)
     .then(
-      function(data) {
+      function (data) {
         for (var i = 0; i < data.length; ++i) {
           ok(data[i] instanceof File, "File: " + data[i].name);
           is(aDirectory.path[0], "/", "Directory path must start with '/'");
@@ -138,7 +142,7 @@ function test_getFiles(aDirectory, aRecursive, aNext) {
           );
         }
       },
-      function() {
+      function () {
         ok(false, "Something when wrong");
       }
     )
@@ -148,7 +152,7 @@ function test_getFiles(aDirectory, aRecursive, aNext) {
 function test_getFiles_recursiveComparison(aDirectory, aNext) {
   aDirectory
     .getFiles(true)
-    .then(function(data) {
+    .then(function (data) {
       is(data.length, 2, "Only 2 files for this test.");
       ok(
         data[0].name == "foo.txt" || data[0].name == "bar.txt",
@@ -159,17 +163,17 @@ function test_getFiles_recursiveComparison(aDirectory, aNext) {
         "Second filename matches"
       );
     })
-    .then(function() {
+    .then(function () {
       return aDirectory.getFiles(false);
     })
-    .then(function(data) {
+    .then(function (data) {
       is(data.length, 1, "Only 1 file for this test.");
       ok(
         data[0].name == "foo.txt" || data[0].name == "bar.txt",
         "First filename matches"
       );
     })
-    .catch(function() {
+    .catch(function () {
       ok(false, "Something when wrong");
     })
     .then(aNext);

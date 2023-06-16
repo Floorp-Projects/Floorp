@@ -37,7 +37,7 @@ const TEST_URL =
   </script>
 `);
 
-add_task(async function() {
+add_task(async function () {
   await addTab(TEST_URL);
   await testNodeWithChangingPath();
   await testNodeWithChangingId();

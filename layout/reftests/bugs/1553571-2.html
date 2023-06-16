@@ -1,0 +1,34 @@
+<!-- reftest-wait because it takes at least two changes of the transform style before it becomes active -->
+<html class='reftest-wait'>
+<head>
+<script>
+var changesLeft = 10;
+function go() {
+	window.setTimeout(changeit, 0);
+}
+
+function changeit() {
+	var a = document.getElementById("a");
+	a.style.transform = 'scale(' + (256.1 + Math.random()*0.01) + ') rotate(1deg)';
+
+	if (changesLeft > 0) {
+		--changesLeft;
+		window.setTimeout(changeit, 50);
+	}
+	if (changesLeft == 0) {
+		// 75-100ms is the timeout for expirty from the active layer tracker.
+		// Increase the time between transform tweaks to 74ms to give the reftest the best
+		// chance of running the mozafterpaint handler and checking that there are no more
+		// paints pending so it can finish.
+		window.setTimeout(changeit, 74);
+		document.documentElement.classList.remove("reftest-wait");
+	}
+}
+</script>
+</head>
+<body onload="go();">
+<div id="a" style="width: 1px; height: 1px; position: absolute; left: 200px; top: 200px;">
+	<img style="width: 1px; height: 1px;" src="repeatable-diagonal-gradient.png">
+</div>
+</body>
+</html>

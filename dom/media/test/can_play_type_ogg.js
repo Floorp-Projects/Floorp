@@ -4,7 +4,7 @@ function check_ogg(v, enabled, finish) {
   }
 
   function basic_test() {
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
       // Ogg types
       check("video/ogg", "maybe");
       check("audio/ogg", "maybe");
@@ -23,7 +23,7 @@ function check_ogg(v, enabled, finish) {
 
   // Verify Opus support
   function verify_opus_support() {
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
       var OpusEnabled = SpecialPowers.getBoolPref(
         "media.opus.enabled",
         undefined
@@ -42,7 +42,7 @@ function check_ogg(v, enabled, finish) {
   function opus_enable() {
     return SpecialPowers.pushPrefEnv({
       set: [["media.opus.enabled", true]],
-    }).then(function() {
+    }).then(function () {
       check("audio/ogg; codecs=opus", "probably");
     });
   }
@@ -50,7 +50,7 @@ function check_ogg(v, enabled, finish) {
   function opus_disable() {
     return SpecialPowers.pushPrefEnv({
       set: [["media.opus.enabled", false]],
-    }).then(function() {
+    }).then(function () {
       check("audio/ogg; codecs=opus", "");
     });
   }

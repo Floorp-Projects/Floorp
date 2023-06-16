@@ -49,7 +49,7 @@ const { BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN } = Ci.nsICookieService;
 
 const PASSWORD_MANAGER_PREF_ID = "services.passwordSavingEnabled";
 
-XPCOMUtils.defineLazyGetter(this, "AlertsServiceDND", function() {
+XPCOMUtils.defineLazyGetter(this, "AlertsServiceDND", function () {
   try {
     let alertsService = Cc["@mozilla.org/alerts-service;1"]
       .getService(Ci.nsIAlertsService)
@@ -297,9 +297,8 @@ function dataCollectionCheckboxHandler({
 
 // Sets the "Learn how" SUMO link in the Strict/Custom options of Content Blocking.
 function setUpContentBlockingWarnings() {
-  document.getElementById(
-    "fpiIncompatibilityWarning"
-  ).hidden = !gIsFirstPartyIsolated;
+  document.getElementById("fpiIncompatibilityWarning").hidden =
+    !gIsFirstPartyIsolated;
 }
 
 function initTCPStandardSection() {
@@ -899,19 +898,19 @@ var gPrivacyPane = {
       "change",
       gPrivacyPane.updatePrivacyMicroControls.bind(gPrivacyPane)
     );
-    setEventListener("historyMode", "command", function() {
+    setEventListener("historyMode", "command", function () {
       gPrivacyPane.updateHistoryModePane();
       gPrivacyPane.updateHistoryModePrefs();
       gPrivacyPane.updatePrivacyMicroControls();
       gPrivacyPane.updateAutostart();
     });
-    setEventListener("clearHistoryButton", "command", function() {
+    setEventListener("clearHistoryButton", "command", function () {
       let historyMode = document.getElementById("historyMode");
       // Select "everything" in the clear history dialog if the
       // user has set their history mode to never remember history.
       gPrivacyPane.clearPrivateDataNow(historyMode.value == "dontremember");
     });
-    setEventListener("openSearchEnginePreferences", "click", function(event) {
+    setEventListener("openSearchEnginePreferences", "click", function (event) {
       if (event.button == 0) {
         gotoPref("search");
       }
@@ -1014,9 +1013,8 @@ var gPrivacyPane = {
       "command",
       gPrivacyPane.showMicrophoneExceptions
     );
-    document.getElementById(
-      "speakerSettingsRow"
-    ).hidden = !Services.prefs.getBoolPref("media.setsinkid.enabled", false);
+    document.getElementById("speakerSettingsRow").hidden =
+      !Services.prefs.getBoolPref("media.setsinkid.enabled", false);
     setEventListener(
       "speakerSettingsButton",
       "command",
@@ -1590,8 +1588,9 @@ var gPrivacyPane = {
 
     let completelyBlockCookies =
       behavior == Ci.nsICookieService.BEHAVIOR_REJECT;
-    let privateBrowsing = Preferences.get("browser.privatebrowsing.autostart")
-      .value;
+    let privateBrowsing = Preferences.get(
+      "browser.privatebrowsing.autostart"
+    ).value;
     deleteOnCloseCheckbox.disabled = privateBrowsing || completelyBlockCookies;
     deleteOnCloseNote.hidden = !privateBrowsing;
 
@@ -2304,7 +2303,7 @@ var gPrivacyPane = {
   },
 
   updateTotalDataSizeLabel(siteDataUsage) {
-    SiteDataManager.getCacheSize().then(function(cacheUsage) {
+    SiteDataManager.getCacheSize().then(function (cacheUsage) {
       let totalSiteDataSizeLabel = document.getElementById("totalSiteDataSize");
       let totalUsage = siteDataUsage + cacheUsage;
       let [value, unit] = DownloadUtils.convertByteUnits(totalUsage);
@@ -2458,9 +2457,8 @@ var gPrivacyPane = {
    */
   _updateFirefoxSuggestSection(onInit = false) {
     // Show the best match checkbox container as appropriate.
-    document.getElementById(
-      "firefoxSuggestBestMatchContainer"
-    ).hidden = !UrlbarPrefs.get("bestMatchEnabled");
+    document.getElementById("firefoxSuggestBestMatchContainer").hidden =
+      !UrlbarPrefs.get("bestMatchEnabled");
 
     let container = document.getElementById("firefoxSuggestContainer");
 
@@ -2884,7 +2882,7 @@ var gPrivacyPane = {
   toggleRelayIntegration() {
     const checkbox = document.getElementById("relayIntegration");
     if (checkbox.checked) {
-      FirefoxRelay.markAsEnabled();
+      FirefoxRelay.markAsAvailable();
       FirefoxRelayTelemetry.recordRelayPrefEvent("enabled");
     } else {
       FirefoxRelay.markAsDisabled();
@@ -2893,11 +2891,10 @@ var gPrivacyPane = {
   },
 
   _updateRelayIntegrationUI() {
-    document.getElementById(
-      "relayIntegrationBox"
-    ).hidden = !FirefoxRelay.isAvailable;
+    document.getElementById("relayIntegrationBox").hidden =
+      !FirefoxRelay.isAvailable;
     document.getElementById("relayIntegration").checked =
-      FirefoxRelay.isEnabled;
+      FirefoxRelay.isAvailable && !FirefoxRelay.isDisabled;
   },
 
   _initRelayIntegrationUI() {
@@ -3011,7 +3008,7 @@ var gPrivacyPane = {
       "browser.safebrowsing.downloads.remote.block_uncommon"
     );
 
-    enableSafeBrowsing.addEventListener("command", function() {
+    enableSafeBrowsing.addEventListener("command", function () {
       safeBrowsingPhishingPref.value = enableSafeBrowsing.checked;
       safeBrowsingMalwarePref.value = enableSafeBrowsing.checked;
 
@@ -3024,7 +3021,7 @@ var gPrivacyPane = {
         blockUncommonPref.locked;
     });
 
-    blockDownloads.addEventListener("command", function() {
+    blockDownloads.addEventListener("command", function () {
       blockDownloadsPref.value = blockDownloads.checked;
       blockUncommonUnwanted.disabled =
         !blockDownloads.checked ||
@@ -3032,7 +3029,7 @@ var gPrivacyPane = {
         blockUncommonPref.locked;
     });
 
-    blockUncommonUnwanted.addEventListener("command", function() {
+    blockUncommonUnwanted.addEventListener("command", function () {
       blockUnwantedPref.value = blockUncommonUnwanted.checked;
       blockUncommonPref.value = blockUncommonUnwanted.checked;
 
@@ -3206,7 +3203,7 @@ var gPrivacyPane = {
       "toolkit.crashreporter.infoURL",
       "crashReporterLearnMore"
     );
-    setEventListener("crashReporterLabel", "click", function(event) {
+    setEventListener("crashReporterLabel", "click", function (event) {
       if (event.target.localName == "a") {
         return;
       }

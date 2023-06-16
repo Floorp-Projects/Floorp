@@ -521,16 +521,21 @@ add_task(async function test_runContext_conversion() {
 
   await insertPromise;
 
-  let resultA = rulesInserted.find(rule => rule.domains.includes("a.com"))
-    .clickRule;
-  let resultB = rulesInserted.find(rule => rule.domains.includes("b.com"))
-    .clickRule;
-  let resultC = rulesInserted.find(rule => rule.domains.includes("c.com"))
-    .clickRule;
-  let resultD = rulesInserted.find(rule => rule.domains.includes("d.com"))
-    .clickRule;
-  let resultE = rulesInserted.find(rule => rule.domains.includes("e.com"))
-    .clickRule;
+  let resultA = rulesInserted.find(rule =>
+    rule.domains.includes("a.com")
+  ).clickRule;
+  let resultB = rulesInserted.find(rule =>
+    rule.domains.includes("b.com")
+  ).clickRule;
+  let resultC = rulesInserted.find(rule =>
+    rule.domains.includes("c.com")
+  ).clickRule;
+  let resultD = rulesInserted.find(rule =>
+    rule.domains.includes("d.com")
+  ).clickRule;
+  let resultE = rulesInserted.find(rule =>
+    rule.domains.includes("e.com")
+  ).clickRule;
 
   Assert.equal(
     resultA.runContext,

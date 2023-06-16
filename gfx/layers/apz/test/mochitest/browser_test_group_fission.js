@@ -123,9 +123,10 @@ add_task(async function test_main() {
       await BrowserTestUtils.withNewTab(
         { gBrowser: fissionWindow.gBrowser, url },
         async browser => {
-          let tabActor = browser.browsingContext.currentWindowGlobal.getActor(
-            "FissionTestHelper"
-          );
+          let tabActor =
+            browser.browsingContext.currentWindowGlobal.getActor(
+              "FissionTestHelper"
+            );
           let donePromise = tabActor.getTestCompletePromise();
           if (subtest.setup) {
             subtest.setup(fissionWindow);

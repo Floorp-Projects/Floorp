@@ -955,12 +955,7 @@ export var PlacesUtils = {
    * @return the reversed host string.
    */
   getReversedHost(url) {
-    return (
-      url.host
-        .split("")
-        .reverse()
-        .join("") + "."
-    );
+    return url.host.split("").reverse().join("") + ".";
   },
 
   /**
@@ -1363,13 +1358,6 @@ export var PlacesUtils = {
     return found;
   },
 
-  getChildCountForFolder(guid) {
-    let folder = PlacesUtils.getFolderContents(guid).root;
-    let childCount = folder.childCount;
-    folder.containerOpen = false;
-    return childCount;
-  },
-
   /**
    * Returns an array containing all the uris in the first level of the
    * passed in container.
@@ -1504,7 +1492,7 @@ export var PlacesUtils = {
       }
       PlacesUtils.favicons.getFaviconDataForPage(
         aPageUrl,
-        function(uri, dataLen, data, mimeType, size) {
+        function (uri, dataLen, data, mimeType, size) {
           if (uri) {
             resolve({ uri, dataLen, data, mimeType, size });
           } else {
@@ -1665,7 +1653,7 @@ export var PlacesUtils = {
    * resolved to null.
    */
   async promiseBookmarksTree(aItemGuid = "", aOptions = {}) {
-    let createItemInfoObject = async function(aRow, aIncludeParentGuid) {
+    let createItemInfoObject = async function (aRow, aIncludeParentGuid) {
       let item = {};
       let copyProps = (...props) => {
         for (let prop of props) {
@@ -1918,10 +1906,7 @@ export var PlacesUtils = {
       case "hex":
         let hash = lazy.gCryptoHash.finish(false);
         return Array.from(hash, (c, i) =>
-          hash
-            .charCodeAt(i)
-            .toString(16)
-            .padStart(2, "0")
+          hash.charCodeAt(i).toString(16).padStart(2, "0")
         ).join("");
       case "ascii":
       default:
@@ -2030,7 +2015,7 @@ export var PlacesUtils = {
   },
 };
 
-XPCOMUtils.defineLazyGetter(PlacesUtils, "history", function() {
+XPCOMUtils.defineLazyGetter(PlacesUtils, "history", function () {
   let hs = Cc["@mozilla.org/browser/nav-history-service;1"].getService(
     Ci.nsINavHistoryService
   );
@@ -2094,7 +2079,7 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsITaggingService"
 );
 
-XPCOMUtils.defineLazyGetter(lazy, "bundle", function() {
+XPCOMUtils.defineLazyGetter(lazy, "bundle", function () {
   const PLACES_STRING_BUNDLE_URI = "chrome://places/locale/places.properties";
   return Services.strings.createBundle(PLACES_STRING_BUNDLE_URI);
 });
@@ -2124,7 +2109,7 @@ function setupDbForShutdown(conn, name) {
       try {
         PlacesUtils.history.connectionShutdownClient.jsclient.addBlocker(
           `${name} closing as part of Places shutdown`,
-          async function() {
+          async function () {
             state = "1. Service has initiated shutdown";
 
             // At this stage, all external clients have finished using the
@@ -2642,10 +2627,8 @@ PlacesUtils.keywords = {
       throw new Error("Invalid keyword");
     }
 
-    let {
-      keyword,
-      source = Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-    } = keywordOrEntry;
+    let { keyword, source = Ci.nsINavBookmarksService.SOURCE_DEFAULT } =
+      keywordOrEntry;
     keyword = keywordOrEntry.keyword.trim().toLowerCase();
     return PlacesUtils.withConnectionWrapper(
       "PlacesUtils.keywords.remove",
@@ -2657,7 +2640,7 @@ PlacesUtils.keywords = {
         let { url } = cache.get(keyword);
         cache.delete(keyword);
 
-        await db.executeTransaction(async function() {
+        await db.executeTransaction(async function () {
           await db.execute(
             `DELETE FROM moz_keywords WHERE keyword = :keyword`,
             { keyword }
@@ -2704,7 +2687,7 @@ PlacesUtils.keywords = {
     }
     return PlacesUtils.withConnectionWrapper(
       "PlacesUtils.keywords.reassign",
-      async function(db) {
+      async function (db) {
         let keywordsToReassign = [];
         let keywordsToRemove = [];
         let cache = await promiseKeywordsCache();
@@ -2720,7 +2703,7 @@ PlacesUtils.keywords = {
           return;
         }
 
-        await db.executeTransaction(async function() {
+        await db.executeTransaction(async function () {
           // Remove existing keywords from the new URL.
           await db.executeCached(
             `DELETE FROM moz_keywords WHERE keyword = :keyword`,
@@ -2788,7 +2771,7 @@ PlacesUtils.keywords = {
     }
     return PlacesUtils.withConnectionWrapper(
       "PlacesUtils.keywords.removeFromURLsIfNotBookmarked",
-      async function(db) {
+      async function (db) {
         let keywordsByHref = new Map();
         let cache = await promiseKeywordsCache();
         for (let [keyword, entry] of cache) {
@@ -2856,7 +2839,7 @@ PlacesUtils.keywords = {
   eraseEverything() {
     return PlacesUtils.withConnectionWrapper(
       "PlacesUtils.keywords.eraseEverything",
-      async function(db) {
+      async function (db) {
         let cache = await promiseKeywordsCache();
         if (!cache.size) {
           return;
@@ -2883,7 +2866,7 @@ PlacesUtils.keywords = {
 var gKeywordsCachePromise = Promise.resolve();
 
 function promiseKeywordsCache() {
-  let promise = gKeywordsCachePromise.then(function(cache) {
+  let promise = gKeywordsCachePromise.then(function (cache) {
     if (cache) {
       return cache;
     }
@@ -2955,7 +2938,7 @@ var GuidHelper = {
 
     let itemId = await PlacesUtils.withConnectionWrapper(
       "GuidHelper.getItemId",
-      async function(db) {
+      async function (db) {
         let rows = await db.executeCached(
           "SELECT b.id, b.guid from moz_bookmarks b WHERE b.guid = :guid LIMIT 1",
           { guid: aGuid }
@@ -3010,7 +2993,7 @@ var GuidHelper = {
 
     let guid = await PlacesUtils.withConnectionWrapper(
       "GuidHelper.getItemGuid",
-      async function(db) {
+      async function (db) {
         let rows = await db.executeCached(
           "SELECT b.id, b.guid from moz_bookmarks b WHERE b.id = :id LIMIT 1",
           { id: aItemId }

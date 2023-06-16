@@ -129,11 +129,10 @@ extern bool enableIteratorHelpers;
 extern bool enableShadowRealms;
 extern bool enableArrayGrouping;
 extern bool enableArrayFromAsync;
+extern bool enableWellFormedUnicodeStrings;
 extern bool enablePrivateClassFields;
 extern bool enablePrivateClassMethods;
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
 extern bool enableChangeArrayByCopy;
-#endif
 #ifdef ENABLE_NEW_SET_METHODS
 extern bool enableNewSetMethods;
 #endif

@@ -4,7 +4,7 @@
 /* import-globals-from ../../head.js */
 
 function run_test() {
-  do_check_throws_nsIException(function() {
+  do_check_throws_nsIException(function () {
     Services.env.QueryInterface(Ci.nsIFile);
   }, "NS_NOINTERFACE");
 }

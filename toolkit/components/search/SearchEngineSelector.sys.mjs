@@ -88,7 +88,8 @@ export class SearchEngineSelector {
       return this._getConfigurationPromise;
     }
 
-    this._configuration = await (this._getConfigurationPromise = this._getConfiguration());
+    this._configuration = await (this._getConfigurationPromise =
+      this._getConfiguration());
     delete this._getConfigurationPromise;
 
     if (!this._configuration?.length) {

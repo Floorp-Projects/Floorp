@@ -5,7 +5,7 @@ add_task(async function duplicateTab() {
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   if (!Services.appinfo.sessionHistoryInParent) {
-    await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+    await SpecialPowers.spawn(tab.linkedBrowser, [], function () {
       let docshell = content.window.docShell.QueryInterface(
         Ci.nsIWebNavigation
       );
@@ -14,9 +14,8 @@ add_task(async function duplicateTab() {
     });
   } else {
     let historyID = tab.linkedBrowser.browsingContext.historyID;
-    let shEntry = tab.linkedBrowser.browsingContext.sessionHistory.getEntryAtIndex(
-      0
-    );
+    let shEntry =
+      tab.linkedBrowser.browsingContext.sessionHistory.getEntryAtIndex(0);
     is(shEntry.docshellID.toString(), historyID.toString());
   }
 
@@ -24,7 +23,7 @@ add_task(async function duplicateTab() {
   await BrowserTestUtils.browserLoaded(tab2.linkedBrowser);
 
   if (!Services.appinfo.sessionHistoryInParent) {
-    await SpecialPowers.spawn(tab2.linkedBrowser, [], function() {
+    await SpecialPowers.spawn(tab2.linkedBrowser, [], function () {
       let docshell = content.window.docShell.QueryInterface(
         Ci.nsIWebNavigation
       );
@@ -33,9 +32,8 @@ add_task(async function duplicateTab() {
     });
   } else {
     let historyID = tab2.linkedBrowser.browsingContext.historyID;
-    let shEntry = tab2.linkedBrowser.browsingContext.sessionHistory.getEntryAtIndex(
-      0
-    );
+    let shEntry =
+      tab2.linkedBrowser.browsingContext.sessionHistory.getEntryAtIndex(0);
     is(shEntry.docshellID.toString(), historyID.toString());
   }
 
@@ -50,7 +48,7 @@ add_task(async function contentToChromeNavigate() {
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   if (!Services.appinfo.sessionHistoryInParent) {
-    await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+    await SpecialPowers.spawn(tab.linkedBrowser, [], function () {
       let docshell = content.window.docShell.QueryInterface(
         Ci.nsIWebNavigation
       );

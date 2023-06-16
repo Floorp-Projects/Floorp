@@ -36,7 +36,7 @@ const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html>
     });
   </script>`;
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("javascript.options.asyncstack_capture_debuggee_only", false);
   const hud = await openNewTabAndConsole(TEST_URI);
 

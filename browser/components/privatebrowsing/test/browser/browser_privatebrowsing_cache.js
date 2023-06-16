@@ -15,10 +15,10 @@ function test() {
     {
       set: [["privacy.partition.network_state", false]],
     },
-    function() {
+    function () {
       Sanitizer.sanitize(["cache"], { ignoreTimespan: false });
 
-      getStorageEntryCount("regular", function(nrEntriesR1) {
+      getStorageEntryCount("regular", function (nrEntriesR1) {
         is(nrEntriesR1, 0, "Disk cache reports 0KB and has no entries");
 
         get_cache_for_private_window();
@@ -63,23 +63,23 @@ function getStorageEntryCount(device, goon) {
 }
 
 function get_cache_for_private_window() {
-  let win = whenNewWindowLoaded({ private: true }, function() {
-    executeSoon(function() {
+  let win = whenNewWindowLoaded({ private: true }, function () {
+    executeSoon(function () {
       ok(true, "The private window got loaded");
 
       let tab = BrowserTestUtils.addTab(win.gBrowser, "https://example.com");
       win.gBrowser.selectedTab = tab;
       let newTabBrowser = win.gBrowser.getBrowserForTab(tab);
 
-      BrowserTestUtils.browserLoaded(newTabBrowser).then(function() {
-        executeSoon(function() {
-          getStorageEntryCount("private", function(nrEntriesP) {
+      BrowserTestUtils.browserLoaded(newTabBrowser).then(function () {
+        executeSoon(function () {
+          getStorageEntryCount("private", function (nrEntriesP) {
             ok(
               nrEntriesP >= 1,
               "Memory cache reports some entries from example.org domain"
             );
 
-            getStorageEntryCount("regular", function(nrEntriesR2) {
+            getStorageEntryCount("regular", function (nrEntriesR2) {
               is(nrEntriesR2, 0, "Disk cache reports 0KB and has no entries");
 
               win.close();

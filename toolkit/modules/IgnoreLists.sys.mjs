@@ -44,7 +44,8 @@ class IgnoreListsManager {
       return this._getSettingsPromise;
     }
 
-    const settings = await (this._getSettingsPromise = this._getIgnoreListSettings());
+    const settings = await (this._getSettingsPromise =
+      this._getIgnoreListSettings());
     delete this._getSettingsPromise;
     return settings;
   }

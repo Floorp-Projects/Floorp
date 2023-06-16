@@ -12,8 +12,10 @@ async function createTab() {
 }
 
 function getTelemetryMaxPipCount(resetMax = false) {
-  const scalarData = Services.telemetry.getSnapshotForScalars("main", resetMax)
-    .parent;
+  const scalarData = Services.telemetry.getSnapshotForScalars(
+    "main",
+    resetMax
+  ).parent;
   return scalarData["pictureinpicture.most_concurrent_players"];
 }
 

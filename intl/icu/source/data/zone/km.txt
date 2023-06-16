@@ -258,6 +258,9 @@ km{
         "America:Chihuahua"{
             ec{"ជីហួហួ"}
         }
+        "America:Ciudad_Juarez"{
+            ec{"ស៊ីអ៊ូដាដ ហ៊ូអារ៉េស"}
+        }
         "America:Coral_Harbour"{
             ec{"អាទីកូកាន"}
         }

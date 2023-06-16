@@ -107,7 +107,7 @@ async function testTelemetry(
   clearTelemetry();
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["network.cookie.cookieBehavior", BEHAVIOR_REJECT_TRACKER],
@@ -165,7 +165,7 @@ add_task(async function testTelemetryForStorageAccessAPI() {
 
       await new content.Promise(resolve => {
         let ifr = content.document.createElement("iframe");
-        ifr.onload = function() {
+        ifr.onload = function () {
           info("Sending code to the 3rd party content");
           ifr.contentWindow.postMessage(msg, "*");
         };
@@ -240,7 +240,7 @@ add_task(async function testTelemetryForWindowOpenHeuristic() {
       info("Checking if storage access is denied");
       await new content.Promise(resolve => {
         let ifr = content.document.createElement("iframe");
-        ifr.onload = function() {
+        ifr.onload = function () {
           info("Sending code to the 3rd party content");
           ifr.contentWindow.postMessage(msg, "*");
         };

@@ -14,7 +14,7 @@ function mockState(state) {
   });
 }
 
-add_setup(async function() {
+add_setup(async function () {
   let aboutLoginsTab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
     url: "about:logins",
@@ -66,9 +66,8 @@ add_task(async function test_login_syncing_enabled() {
     browser,
     [[TEST_EMAIL, TEST_AVATAR_URL]],
     async ([expectedEmail, expectedAvatarURL]) => {
-      let fxAccountsButton = content.document.querySelector(
-        "fxaccounts-button"
-      );
+      let fxAccountsButton =
+        content.document.querySelector("fxaccounts-button");
       Assert.ok(fxAccountsButton, "fxAccountsButton should exist");
       fxAccountsButton = Cu.waiveXrays(fxAccountsButton);
       await ContentTaskUtils.waitForCondition(

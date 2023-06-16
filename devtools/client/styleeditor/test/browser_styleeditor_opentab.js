@@ -7,7 +7,7 @@
 // context menu item for stylesheets (bug 992947).
 const TESTCASE_URI = TEST_BASE_HTTPS + "simple.html";
 
-add_task(async function() {
+add_task(async function () {
   const { panel, ui } = await openStyleEditorForURL(TESTCASE_URI);
 
   const openLinkNewTabItem = panel.panelWindow.document.getElementById(
@@ -65,7 +65,7 @@ function onPopupShow(contextMenu) {
   return new Promise(resolve => {
     contextMenu.addEventListener(
       "popupshown",
-      function() {
+      function () {
         resolve();
       },
       { once: true }
@@ -77,7 +77,7 @@ function onPopupHide(contextMenu) {
   return new Promise(resolve => {
     contextMenu.addEventListener(
       "popuphidden",
-      function() {
+      function () {
         resolve();
       },
       { once: true }

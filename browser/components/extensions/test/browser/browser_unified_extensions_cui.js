@@ -54,7 +54,7 @@ add_task(async function test_extension_in_collapsed_area() {
             <body>
           </html>
         `,
-        "popup.js": function() {
+        "popup.js": function () {
           browser.test.sendMessage("test-popup-opened");
         },
       },

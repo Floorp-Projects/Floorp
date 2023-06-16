@@ -46,7 +46,7 @@ function clickSearchbarSuggestion(entryName, clickOptions = {}) {
   EventUtils.synthesizeMouseAtCenter(richlistitem, clickOptions);
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await gCUITestUtils.addSearchBar();
   const url = getRootDirectory(gTestPath) + "telemetrySearchSuggestions.xml";
   suggestionEngine = await SearchTestUtils.promiseNewSearchEngine({ url });
@@ -81,7 +81,7 @@ add_setup(async function() {
   // Enable event recording for the events tested here.
   Services.telemetry.setEventRecordingEnabled("navigation", true);
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     Services.telemetry.canRecordExtended = oldCanRecord;
     Services.telemetry.setEventRecordingEnabled("navigation", false);
   });
@@ -94,9 +94,8 @@ add_task(async function test_plainQuery() {
   let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
     "FX_SEARCHBAR_SELECTED_RESULT_METHOD"
   );
-  let search_hist = TelemetryTestUtils.getAndClearKeyedHistogram(
-    "SEARCH_COUNTS"
-  );
+  let search_hist =
+    TelemetryTestUtils.getAndClearKeyedHistogram("SEARCH_COUNTS");
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -162,9 +161,8 @@ add_task(async function test_oneOff_enter() {
   let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
     "FX_SEARCHBAR_SELECTED_RESULT_METHOD"
   );
-  let search_hist = TelemetryTestUtils.getAndClearKeyedHistogram(
-    "SEARCH_COUNTS"
-  );
+  let search_hist =
+    TelemetryTestUtils.getAndClearKeyedHistogram("SEARCH_COUNTS");
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -310,9 +308,8 @@ async function checkSuggestionClick(clickOptions, waitForActionFn) {
   let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
     "FX_SEARCHBAR_SELECTED_RESULT_METHOD"
   );
-  let search_hist = TelemetryTestUtils.getAndClearKeyedHistogram(
-    "SEARCH_COUNTS"
-  );
+  let search_hist =
+    TelemetryTestUtils.getAndClearKeyedHistogram("SEARCH_COUNTS");
 
   let previousEngine = await Services.search.getDefault();
   await Services.search.setDefault(

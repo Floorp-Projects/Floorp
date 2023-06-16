@@ -48,8 +48,8 @@ const known_scripts = {
     "resource://gre/modules/TelemetryControllerContent.sys.mjs", // bug 1470339
 
     // Extensions
-    "resource://gre/modules/ExtensionProcessScript.jsm",
-    "resource://gre/modules/ExtensionUtils.jsm",
+    "resource://gre/modules/ExtensionProcessScript.sys.mjs",
+    "resource://gre/modules/ExtensionUtils.sys.mjs",
   ]),
   processScripts: new Set([
     "chrome://global/content/process-content.js",
@@ -72,9 +72,9 @@ const intermittently_loaded_scripts = {
     "chrome://remote/content/shared/Log.sys.mjs",
     "resource://testing-common/BrowserTestUtilsChild.sys.mjs",
     "resource://testing-common/ContentEventListenerChild.sys.mjs",
-    "resource://specialpowers/SpecialPowersChild.sys.mjs",
+    "resource://testing-common/SpecialPowersChild.sys.mjs",
     "resource://specialpowers/AppTestDelegateChild.sys.mjs",
-    "resource://specialpowers/WrapPrivileged.sys.mjs",
+    "resource://testing-common/WrapPrivileged.sys.mjs",
   ]),
   processScripts: new Set([]),
 };
@@ -87,7 +87,7 @@ const forbiddenScripts = {
   ]),
 };
 
-add_task(async function() {
+add_task(async function () {
   SimpleTest.requestCompleteLog();
 
   // Increase the maximum number of webIsolated content processes to make sure

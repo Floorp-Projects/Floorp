@@ -105,12 +105,12 @@ function unregisterAutoCompleteSearch(aSearch) {
 }
 
 var gTests = [
-  function(controller) {
+  function (controller) {
     info("handleText");
     controller.input.textValue = "hel";
     controller.handleText();
   },
-  function(controller) {
+  function (controller) {
     info("handleStartComposition");
     controller.handleStartComposition();
     info("handleEndComposition");
@@ -118,20 +118,20 @@ var gTests = [
     // an input event always follows compositionend event.
     controller.handleText();
   },
-  function(controller) {
+  function (controller) {
     info("handleEscape");
     controller.handleEscape();
   },
-  function(controller) {
+  function (controller) {
     info("handleEnter");
     controller.handleEnter(false);
   },
-  function(controller) {
+  function (controller) {
     info("handleTab");
     controller.handleTab();
   },
 
-  function(controller) {
+  function (controller) {
     info("handleKeyNavigation");
     // Hardcode KeyboardEvent.DOM_VK_RIGHT, because we can't easily
     // include KeyboardEvent here.
@@ -139,7 +139,7 @@ var gTests = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   // Make an AutoCompleteSearch that always returns nothing
   let search = new AutoCompleteSearch("test");
   registerAutoCompleteSearch(search);
@@ -153,11 +153,11 @@ add_task(async function() {
   controller.input = input;
 
   for (let testFn of gTests) {
-    input.onSearchBegin = function() {
+    input.onSearchBegin = function () {
       executeSoon(() => testFn(controller));
     };
     let promise = new Promise(resolve => {
-      input.onSearchComplete = function() {
+      input.onSearchComplete = function () {
         resolve();
       };
     });

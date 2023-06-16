@@ -142,24 +142,13 @@ TEST_F(RetransmissionEndToEndTest, ReceivesNackAndRetransmitsAudio) {
     size_t GetNumVideoStreams() const override { return 0; }
     size_t GetNumAudioStreams() const override { return 1; }
 
-    std::unique_ptr<test::PacketTransport> CreateReceiveTransport(
-        TaskQueueBase* task_queue) override {
-      auto receive_transport = std::make_unique<test::PacketTransport>(
-          task_queue, nullptr, this, test::PacketTransport::kReceiver,
-          payload_type_map_,
-          std::make_unique<FakeNetworkPipe>(
-              Clock::GetRealTimeClock(), std::make_unique<SimulatedNetwork>(
-                                             BuiltInNetworkBehaviorConfig())));
-      receive_transport_ = receive_transport.get();
-      return receive_transport;
-    }
-
     Action OnSendRtp(const uint8_t* packet, size_t length) override {
       RtpPacket rtp_packet;
       EXPECT_TRUE(rtp_packet.Parse(packet, length));
 
       if (!sequence_number_to_retransmit_) {
         sequence_number_to_retransmit_ = rtp_packet.SequenceNumber();
+        return DROP_PACKET;
 
         // Don't ask for retransmission straight away, may be deduped in pacer.
       } else if (rtp_packet.SequenceNumber() ==
@@ -186,6 +175,7 @@ TEST_F(RetransmissionEndToEndTest, ReceivesNackAndRetransmitsAudio) {
       (*receive_configs)[0].rtp.nack.rtp_history_ms = kNackRtpHistoryMs;
       local_ssrc_ = (*receive_configs)[0].rtp.local_ssrc;
       remote_ssrc_ = (*receive_configs)[0].rtp.remote_ssrc;
+      receive_transport_ = (*receive_configs)[0].rtcp_send_transport;
     }
 
     void PerformTest() override {
@@ -407,18 +397,6 @@ void RetransmissionEndToEndTest::DecodesRetransmittedFrame(bool enable_rtx,
         // This should be the only dropped packet.
         EXPECT_EQ(0u, retransmitted_timestamp_);
         retransmitted_timestamp_ = rtp_packet.Timestamp();
-        if (absl::c_linear_search(rendered_timestamps_,
-                                  retransmitted_timestamp_)) {
-          // Frame was rendered before last packet was scheduled for sending.
-          // This is extremly rare but possible scenario because prober able to
-          // resend packet before it was send.
-          // TODO(danilchap): Remove this corner case when prober would not be
-          // able to sneak in between packet saved to history for resending and
-          // pacer notified about existance of that packet for sending.
-          // See https://bugs.chromium.org/p/webrtc/issues/detail?id=5540 for
-          // details.
-          observation_complete_.Set();
-        }
         return DROP_PACKET;
       }
 
@@ -431,7 +409,6 @@ void RetransmissionEndToEndTest::DecodesRetransmittedFrame(bool enable_rtx,
         MutexLock lock(&mutex_);
         if (frame.timestamp() == retransmitted_timestamp_)
           observation_complete_.Set();
-        rendered_timestamps_.push_back(frame.timestamp());
       }
       orig_renderer_->OnFrame(frame);
     }
@@ -512,7 +489,6 @@ void RetransmissionEndToEndTest::DecodesRetransmittedFrame(bool enable_rtx,
     const std::string payload_name_;
     int marker_bits_observed_;
     uint32_t retransmitted_timestamp_ RTC_GUARDED_BY(&mutex_);
-    std::vector<uint32_t> rendered_timestamps_ RTC_GUARDED_BY(&mutex_);
   } test(enable_rtx, enable_red);
 
   RunBaseTest(&test);

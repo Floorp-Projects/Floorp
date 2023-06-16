@@ -1,18 +1,20 @@
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:preferences" },
-    async function(browser) {
+    async function (browser) {
       let newTabURL = "http://www.example.com/";
-      await SpecialPowers.spawn(browser, [newTabURL], async function(
-        newTabURL
-      ) {
-        let doc = content.document;
-        let label = doc.createXULElement("label", { is: "text-link" });
-        label.href = newTabURL;
-        label.id = "textlink-test";
-        label.textContent = "click me";
-        doc.body.append(label);
-      });
+      await SpecialPowers.spawn(
+        browser,
+        [newTabURL],
+        async function (newTabURL) {
+          let doc = content.document;
+          let label = doc.createXULElement("label", { is: "text-link" });
+          label.href = newTabURL;
+          label.id = "textlink-test";
+          label.textContent = "click me";
+          doc.body.append(label);
+        }
+      );
 
       // Test that click will open tab in foreground.
       let awaitNewTab = BrowserTestUtils.waitForNewTab(gBrowser, newTabURL);

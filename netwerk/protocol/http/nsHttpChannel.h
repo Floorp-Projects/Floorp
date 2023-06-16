@@ -198,7 +198,8 @@ class nsHttpChannel final : public HttpBaseChannel,
   [[nodiscard]] nsresult AddSecurityMessage(
       const nsAString& aMessageTag, const nsAString& aMessageCategory) override;
   NS_IMETHOD LogBlockedCORSRequest(const nsAString& aMessage,
-                                   const nsACString& aCategory) override;
+                                   const nsACString& aCategory,
+                                   bool aIsWarning) override;
   NS_IMETHOD LogMimeTypeMismatch(const nsACString& aMessageName, bool aWarning,
                                  const nsAString& aURL,
                                  const nsAString& aContentType) override;

@@ -36,7 +36,7 @@ PlacesUtils.observers.addListener(
   observer.handlePlacesEvents
 );
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   PlacesUtils.observers.removeListener(
     ["bookmark-added", "bookmark-time-changed", "bookmark-title-changed"],
     observer.handlePlacesEvents

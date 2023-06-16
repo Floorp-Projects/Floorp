@@ -23,7 +23,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   pushBroadcastService: "resource://gre/modules/PushBroadcastService.sys.mjs",
 });
 
-const CONNECTION_PROTOCOLS = (function() {
+const CONNECTION_PROTOCOLS = (function () {
   if ("android" != AppConstants.MOZ_WIDGET_TOOLKIT) {
     ({ PushServiceWebSocket } = ChromeUtils.importESModule(
       "resource://gre/modules/PushServiceWebSocket.sys.mjs"
@@ -186,9 +186,8 @@ export var PushService = {
       return this._pendingRegisterRequest[key];
     }
 
-    return (this._pendingRegisterRequest[key] = this._registerWithServer(
-      aPageRecord
-    ));
+    return (this._pendingRegisterRequest[key] =
+      this._registerWithServer(aPageRecord));
   },
 
   _deletePendingRequest(aPageRecord) {
@@ -756,7 +755,8 @@ export var PushService = {
             record.p256dhPrivateKey = privKey;
           }
           if (!record.hasAuthenticationSecret()) {
-            record.authenticationSecret = lazy.PushCrypto.generateAuthenticationSecret();
+            record.authenticationSecret =
+              lazy.PushCrypto.generateAuthenticationSecret();
           }
           return record;
         });

@@ -11,9 +11,9 @@ if (ctypes.toString() != "[object ctypes]") {
   throw "Bad ctypes object: " + ctypes.toString();
 }
 
-onmessage = function(event) {
+onmessage = function (event) {
   let worker = new ChromeWorker("chromeWorker_subworker.js");
-  worker.onmessage = function(msg) {
+  worker.onmessage = function (msg) {
     postMessage(msg.data);
   };
   worker.postMessage(event.data);

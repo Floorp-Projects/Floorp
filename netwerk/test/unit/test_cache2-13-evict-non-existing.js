@@ -7,7 +7,7 @@ function run_test() {
   storage.asyncDoomURI(
     createURI("http://non-existing/"),
     "",
-    new EvictionCallback(false, function() {
+    new EvictionCallback(false, function () {
       finish_cache2_test();
     })
   );

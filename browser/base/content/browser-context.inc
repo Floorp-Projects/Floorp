@@ -117,6 +117,10 @@
       <menuitem id="context-copylink"
                 data-l10n-id="main-context-menu-copy-link-simple"
                 oncommand="gContextMenu.copyLink();"/>
+      <menuitem id="context-stripOnShareLink"
+                data-l10n-id="main-context-menu-strip-on-share-link"
+                hidden="true"
+                oncommand="gContextMenu.copyStrippedLink();"/>
       <menu id="context-sendlinktodevice"
             class="sync-ui-item"
             data-l10n-id="main-context-menu-link-send-to-device"
@@ -249,13 +253,7 @@
       <menuitem id="context-setDesktopBackground"
                 data-l10n-id="main-context-menu-image-set-image-as-background"
                 oncommand="gContextMenu.setDesktopBackground();"/>
-      <menuitem id="context-ctp-play"
-                data-l10n-id="main-context-menu-plugin-play"
-                oncommand="gContextMenu.playPlugin();"/>
-      <menuitem id="context-ctp-hide"
-                data-l10n-id="main-context-menu-plugin-hide"
-                oncommand="gContextMenu.hidePlugin();"/>
-      <menuseparator id="context-sep-ctp"/>
+      <menuseparator id="context-sep-sharing"/>
 #ifdef XP_MACOSX
       <menuitem id="context-bookmarkpage"
                 data-l10n-id="main-context-menu-bookmark-page-mac"

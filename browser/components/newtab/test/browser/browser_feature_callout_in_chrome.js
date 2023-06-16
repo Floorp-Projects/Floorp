@@ -131,7 +131,7 @@ const testMessage = {
 
 const testMessageCalloutSelector = testMessage.message.content.screens[0].id;
 
-add_setup(async function() {
+add_setup(async function () {
   requestLongerTimeout(2);
 });
 
@@ -325,10 +325,11 @@ add_task(
       pdfTestMessage.message.content.screens[0].id;
 
     pdfTestMessage.message.content.screens[0].parent_selector = "hbox#browser";
-    pdfTestMessage.message.content.screens[0].content.callout_position_override = {
-      top: "45px",
-      right: "25px",
-    };
+    pdfTestMessage.message.content.screens[0].content.callout_position_override =
+      {
+        top: "45px",
+        right: "25px",
+      };
 
     const sandbox = sinon.createSandbox();
     const sendTriggerStub = sandbox.stub(ASRouter, "sendTriggerMessage");
@@ -383,10 +384,11 @@ add_task(
       pdfTestMessage.message.content.screens[0].id;
 
     pdfTestMessage.message.content.screens[0].parent_selector = "hbox#browser";
-    pdfTestMessage.message.content.screens[0].content.callout_position_override = {
-      top: "45px",
-      right: "25px",
-    };
+    pdfTestMessage.message.content.screens[0].content.callout_position_override =
+      {
+        top: "45px",
+        right: "25px",
+      };
 
     const sandbox = sinon.createSandbox();
     const sendTriggerStub = sandbox.stub(ASRouter, "sendTriggerMessage");

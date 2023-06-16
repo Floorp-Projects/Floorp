@@ -6,7 +6,7 @@
 // Ensure Alt-B and Alt-F keyboard shortcuts work as expected in the source editor.
 // See Bug 1481443.
 
-add_task(async function() {
+add_task(async function () {
   const { ed, win } = await setup();
   const editorDoc = ed.container.contentDocument;
   await promiseWaitForFocus();

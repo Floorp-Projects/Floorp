@@ -1007,6 +1007,8 @@ class Path : public external::AtomicRefCounted<Path> {
 
   virtual Point ComputePointAtLength(Float aLength, Point* aTangent = nullptr);
 
+  virtual bool IsEmpty() const { return false; }
+
  protected:
   Path();
   void EnsureFlattenedPath();

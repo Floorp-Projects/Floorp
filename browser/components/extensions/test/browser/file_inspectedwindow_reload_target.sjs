@@ -104,8 +104,9 @@ function handleInjectedScriptTestRequest(request, response, params) {
   if (frames > 0) {
     // Output an iframe in seamless mode, so that there is an higher chance that in case
     // of test failures we get a screenshot where the nested iframes are all visible.
-    content = `<iframe seamless src="?test=injected-script&frames=${frames -
-      1}"></iframe>`;
+    content = `<iframe seamless src="?test=injected-script&frames=${
+      frames - 1
+    }"></iframe>`;
   }
 
   response.write(`<!DOCTYPE html>

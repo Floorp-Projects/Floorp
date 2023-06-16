@@ -38,7 +38,6 @@ async function SetParentalControlEnabled(aEnabled) {
   MockRegistrar.unregister(cid);
 }
 
-let runningODoHTests = false;
 let runningOHTTPTests = false;
 let h2Port;
 
@@ -69,8 +68,6 @@ function setModeAndURIForOHTTP(mode, path, domain) {
 function setModeAndURI(mode, path, domain) {
   if (runningOHTTPTests) {
     setModeAndURIForOHTTP(mode, path, domain);
-  } else if (runningODoHTests) {
-    setModeAndURIForODoH(mode, path);
   } else {
     Services.prefs.setIntPref("network.trr.mode", mode);
     if (domain) {
@@ -197,11 +194,7 @@ async function test_GET_ECS() {
   info("Verifying resolution via GET with ECS disabled");
   Services.dns.clearCache(true);
   // The template part should be discarded
-  if (runningODoHTests) {
-    setModeAndURI(3, "odoh");
-  } else {
-    setModeAndURI(3, "doh{?dns}");
-  }
+  setModeAndURI(3, "doh{?dns}");
   Services.prefs.setBoolPref("network.trr.useGET", true);
   Services.prefs.setBoolPref("network.trr.disable-ECS", true);
 
@@ -209,11 +202,7 @@ async function test_GET_ECS() {
 
   info("Verifying resolution via GET with ECS enabled");
   Services.dns.clearCache(true);
-  if (runningODoHTests) {
-    setModeAndURI(3, "odoh");
-  } else {
-    setModeAndURI(3, "doh");
-  }
+  setModeAndURI(3, "doh");
   Services.prefs.setBoolPref("network.trr.disable-ECS", false);
 
   await new TRRDNSListener("get.example.com", "5.5.5.5");
@@ -364,14 +353,6 @@ async function test_strict_native_fallback() {
     info("Now with confirmation failed - should fallback");
     Services.dns.clearCache(true);
     setModeAndURI(2, "doh?responseIP=2.2.2.2&corruptedAnswer=true");
-    if (runningODoHTests) {
-      Services.prefs.setCharPref(
-        "network.trr.uri",
-        "https://foo.example.com:" +
-          h2Port +
-          "/odohconfig?failConfirmation=true"
-      );
-    }
     Services.prefs.setCharPref("network.trr.confirmationNS", "example.com");
     await TestUtils.waitForCondition(
       // 3 => CONFIRM_FAILED, 4 => CONFIRM_TRYING_FAILED
@@ -390,12 +371,6 @@ async function test_strict_native_fallback() {
   setModeAndURI(2, "doh?responseIP=2.2.2.2");
   if (!mozinfo.socketprocess_networking) {
     // Only need to reset confirmation state if we messed with it before.
-    if (runningODoHTests) {
-      Services.prefs.setCharPref(
-        "network.trr.uri",
-        "https://foo.example.com:" + h2Port + "/odohconfig"
-      );
-    }
     Services.prefs.setCharPref("network.trr.confirmationNS", "skip");
     await TestUtils.waitForCondition(
       // 5 => CONFIRM_DISABLED
@@ -496,22 +471,14 @@ async function test_CNAME() {
   // The dns-cname path alternates between sending us a CNAME pointing to
   // another domain, and an A record. If we follow the cname correctly, doing
   // a lookup with this path as the DoH URI should resolve to that A record.
-  if (runningODoHTests) {
-    setModeAndURI(3, "odoh?cname=content");
-  } else {
-    setModeAndURI(3, "dns-cname");
-  }
+  setModeAndURI(3, "dns-cname");
 
   await new TRRDNSListener("cname.example.com", "99.88.77.66");
 
   info("Verifying that we bail out when we're thrown into a CNAME loop");
   Services.dns.clearCache(true);
   // First mode 3.
-  if (runningODoHTests) {
-    setModeAndURI(3, "odoh?responseIP=none&cnameloop=true");
-  } else {
-    setModeAndURI(3, "doh?responseIP=none&cnameloop=true");
-  }
+  setModeAndURI(3, "doh?responseIP=none&cnameloop=true");
 
   let { inStatus } = await new TRRDNSListener(
     "test18.example.com",
@@ -525,22 +492,14 @@ async function test_CNAME() {
 
   // Now mode 2.
   Services.dns.clearCache(true);
-  if (runningODoHTests) {
-    setModeAndURI(2, "ododoh?responseIP=none&cnameloop=trueoh");
-  } else {
-    setModeAndURI(2, "doh?responseIP=none&cnameloop=true");
-  }
+  setModeAndURI(2, "doh?responseIP=none&cnameloop=true");
 
   await new TRRDNSListener("test20.example.com", "127.0.0.1"); // Should fallback
 
   info("Check that we correctly handle CNAME bundled with an A record");
   Services.dns.clearCache(true);
   // "dns-cname-a" path causes server to send a CNAME as well as an A record
-  if (runningODoHTests) {
-    setModeAndURI(3, "odoh?cname=ARecord");
-  } else {
-    setModeAndURI(3, "dns-cname-a");
-  }
+  setModeAndURI(3, "dns-cname-a");
 
   await new TRRDNSListener("cname-a.example.com", "9.8.7.6");
 }
@@ -647,14 +606,14 @@ async function test_captiveportal_canonicalURL() {
     setModeAndURI(2, "doh?responseIP=2.2.2.2");
 
     const cpServer = new HttpServer();
-    cpServer.registerPathHandler("/cp", function handleRawData(
-      request,
-      response
-    ) {
-      response.setHeader("Content-Type", "text/plain", false);
-      response.setHeader("Cache-Control", "no-cache", false);
-      response.bodyOutputStream.write("data", 4);
-    });
+    cpServer.registerPathHandler(
+      "/cp",
+      function handleRawData(request, response) {
+        response.setHeader("Content-Type", "text/plain", false);
+        response.setHeader("Cache-Control", "no-cache", false);
+        response.bodyOutputStream.write("data", 4);
+      }
+    );
     cpServer.start(-1);
     cpServer.identity.setPrimary(
       "http",
@@ -773,14 +732,14 @@ async function test25e() {
   setModeAndURI(3, "doh?responseIP=192.192.192.192");
 
   const cpServer = new HttpServer();
-  cpServer.registerPathHandler("/cp", function handleRawData(
-    request,
-    response
-  ) {
-    response.setHeader("Content-Type", "text/plain", false);
-    response.setHeader("Cache-Control", "no-cache", false);
-    response.bodyOutputStream.write("data", 4);
-  });
+  cpServer.registerPathHandler(
+    "/cp",
+    function handleRawData(request, response) {
+      response.setHeader("Content-Type", "text/plain", false);
+      response.setHeader("Cache-Control", "no-cache", false);
+      response.bodyOutputStream.write("data", 4);
+    }
+  );
   cpServer.start(-1);
   cpServer.identity.setPrimary(
     "http",
@@ -1092,12 +1051,12 @@ async function test_no_retry_without_doh() {
       chan.asyncOpen(new ChannelListener(resolve, null, CL_EXPECT_FAILURE))
     );
     equal(
-      statusCounter.statusCount[0x804b000b],
+      statusCounter.statusCount[0x4b000b],
       1,
       "Expecting only one instance of NS_NET_STATUS_RESOLVED_HOST"
     );
     equal(
-      statusCounter.statusCount[0x804b0007],
+      statusCounter.statusCount[0x4b0007],
       1,
       "Expecting only one instance of NS_NET_STATUS_CONNECTING_TO"
     );

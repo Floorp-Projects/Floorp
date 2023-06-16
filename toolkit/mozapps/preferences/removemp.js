@@ -22,7 +22,7 @@ var gRemovePasswordDialog = {
     // Initialize the enabled state of the Remove button by checking the
     // initial value of the password ("" should be incorrect).
     this.validateInput();
-    document.addEventListener("dialogaccept", function() {
+    document.addEventListener("dialogaccept", function () {
       gRemovePasswordDialog.removePassword();
     });
   },
@@ -42,7 +42,7 @@ var gRemovePasswordDialog = {
   removePassword() {
     if (this._token.checkPassword(this._password.value)) {
       this._token.changePassword(this._password.value, "");
-      this.createAlert("pw-change-success-title", "pp-erased-ok");
+      this.createAlert("pw-change-success-title", "settings-pp-erased-ok");
     } else {
       this._password.value = "";
       this._password.focus();

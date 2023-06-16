@@ -32,7 +32,7 @@ function createAudioContext() {
   ac.allowedToStart = new Promise(resolve => {
     ac.addEventListener(
       "statechange",
-      function() {
+      function () {
         if (ac.state === "running") {
           resolve();
         }
@@ -44,7 +44,7 @@ function createAudioContext() {
   ac.notAllowedToStart = new Promise(resolve => {
     ac.addEventListener(
       "blocked",
-      function() {
+      function () {
         resolve();
       },
       { once: true }
@@ -69,7 +69,7 @@ async function resumeAudioContext(isAllowedToStart) {
   const blockedPromise = new Promise(resolve => {
     ac.addEventListener(
       "blocked",
-      function() {
+      function () {
         resolve();
       },
       { once: true }
@@ -210,8 +210,7 @@ add_task(async function start_tests() {
   ];
   for (let method of startMethods) {
     await testAutoplayUnknownPermission({
-      name:
-        "Unknown permission and start AudioContext after granting user activation",
+      name: "Unknown permission and start AudioContext after granting user activation",
       method,
     });
   }

@@ -7,6 +7,13 @@
 const URL_FOUND = "resource://devtools/shared/DevToolsUtils.js";
 const URL_NOT_FOUND = "resource://devtools/this/is/not/here.js";
 
+// Disable `xpc::IsInAutomation()` so we don't crash when accessing a
+// nonexistent resource URI.
+Services.prefs.setBoolPref(
+  "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer",
+  false
+);
+
 /**
  * Test that non-existent files are handled correctly.
  */

@@ -38,7 +38,7 @@ function getOsPid(browsingContext) {
 
 addAccessibleTask(
   `<iframe id="${NESTED_IFRAME_ID}" src="${nestedURL.href}"/>`,
-  async function(browser, iframeDocAcc, contentDocAcc) {
+  async function (browser, iframeDocAcc, contentDocAcc) {
     ok(iframeDocAcc, "IFRAME document accessible is present");
     let nestedDocAcc = findAccessibleChildByID(
       iframeDocAcc,

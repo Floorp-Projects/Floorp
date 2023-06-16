@@ -1,9 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const Sprites = ChromeUtils.import("resource://gre/modules/RustSprites.jsm");
+const Sprites = ChromeUtils.importESModule(
+  "resource://gre/modules/RustSprites.sys.mjs"
+);
 
-add_task(async function() {
+add_task(async function () {
   Assert.ok(Sprites.Sprite);
 
   const sempty = await Sprites.Sprite.init(null);

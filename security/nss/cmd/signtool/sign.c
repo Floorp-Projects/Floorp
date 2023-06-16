@@ -279,8 +279,8 @@ create_pk7(char *dir, char *keyName, int *keyType)
     *keyType = jar_find_key_type(cert);
     file_ext = (*keyType == dsaKey) ? "dsa" : "rsa";
 
-    sprintf(sf_file, "%s/META-INF/%s.sf", dir, base);
-    sprintf(pk7_file, "%s/META-INF/%s.%s", dir, base, file_ext);
+    snprintf(sf_file, sizeof(sf_file), "%s/META-INF/%s.sf", dir, base);
+    snprintf(pk7_file, sizeof(pk7_file), "%s/META-INF/%s.%s", dir, base, file_ext);
 
     if ((in = fopen(sf_file, "rb")) == NULL) {
         PR_fprintf(errorFD, "%s: Can't open %s for reading\n", PROGRAM_NAME,
@@ -368,7 +368,7 @@ manifesto(char *dirname, char *install_script, PRBool recurse)
         exit(ERRX);
     }
 
-    sprintf(metadir, "%s/META-INF", dirname);
+    snprintf(metadir, sizeof(metadir), "%s/META-INF", dirname);
 
     strcpy(sfname, metadir);
 
@@ -494,7 +494,7 @@ manifesto_fn(char *relpath, char *basedir, char *reldir, char *filename, void *a
             return 0;
     }
 
-    sprintf(fullname, "%s/%s", basedir, relpath);
+    snprintf(fullname, sizeof(fullname), "%s/%s", basedir, relpath);
 
     fprintf(mf, "\n");
 

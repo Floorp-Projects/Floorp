@@ -10,23 +10,6 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<script>
-const chromeScript = runChecksAfterCommonInit(false);
-
-let originSecure = "https://" + window.location.host;
-let originNonSecure = "http://" + window.location.host;
-
-addLoginsInParent(
-  // We have two actual HTTPS to avoid autofill before the schemeUpgrades pref flips to true.
-  [originSecure, originSecure, null, "name", "pass", "uname", "pword"],
-  [originSecure, originSecure, null, "name1", "pass1", "uname", "pword"],
-
-  // Same as above but HTTP instead of HTTPS (to test de-duping)
-  [originNonSecure, originNonSecure, null, "name1", "pass1", "uname", "pword"],
-
-  // Different HTTP login to upgrade with secure formActionOrigin
-  [originNonSecure, originSecure, null, "name2", "passHTTPtoHTTPS", "uname", "pword"]);
-</script>
 <p id="display"></p>
 
 <!-- we presumably can't hide the content for this test. -->
@@ -36,7 +19,9 @@ addLoginsInParent(
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
-let iframe = document.getElementsByTagName("iframe")[0];
+const originSecure = "https://" + window.location.host;
+const originNonSecure = "http://" + window.location.host;
+const iframe = document.getElementsByTagName("iframe")[0];
 let iframeDoc, hostname;
 
 // Restore the form to the default state.
@@ -68,6 +53,20 @@ async function setup(formUrl = HTTPS_FORM_URL) {
     return this.content.document.documentURIObject.host;
   });
 }
+
+add_setup(async () => {
+  await setStoredLoginsAsync(
+    // We have two actual HTTPS to avoid autofill before the schemeUpgrades pref flips to true.
+    [originSecure, originSecure, null, "name", "pass", "uname", "pword"],
+    [originSecure, originSecure, null, "name1", "pass1", "uname", "pword"],
+
+    // Same as above but HTTP instead of HTTPS (to test de-duping)
+    [originNonSecure, originNonSecure, null, "name1", "pass1", "uname", "pword"],
+
+    // Different HTTP login to upgrade with secure formActionOrigin
+    [originNonSecure, originSecure, null, "name2", "passHTTPtoHTTPS", "uname", "pword"]
+  );
+});
 
 add_task(async function setup_https_frame() {
   await setup(HTTPS_FORM_URL);

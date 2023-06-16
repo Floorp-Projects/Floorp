@@ -98,11 +98,13 @@ TimeUnit AudioSinkWrapper::GetPosition(TimeStamp* aTimeStamp) {
     pos = GetSystemClockPosition(t);
     LOGV("%p: Getting position from the system clock %lf", this,
          pos.ToSeconds());
-    if (mAudioQueue.GetSize() > 0 && IsMuted()) {
-      // audio track, but it's muted and won't be dequeued, discard packets that
-      // are behind the current media time, to keep the queue size under
-      // control.
-      DropAudioPacketsIfNeeded(pos);
+    if (IsMuted()) {
+      if (mAudioQueue.GetSize() > 0) {
+        // audio track, but it's muted and won't be dequeued, discard packets
+        // that are behind the current media time, to keep the queue size under
+        // control.
+        DropAudioPacketsIfNeeded(pos);
+      }
       // If muted, it's necessary to manually check if the audio has "ended",
       // meaning that all the audio packets have been consumed, to resolve the
       // ended promise.
@@ -388,6 +390,10 @@ nsresult AudioSinkWrapper::StartAudioSink(const TimeUnit& aStartTime,
                 TimeUnit switchTime = GetPosition();
                 DropAudioPacketsIfNeeded(switchTime);
                 mAudioSink.swap(audioSink);
+                if (mTreatUnderrunAsSilence) {
+                  mAudioSink->EnableTreatAudioUnderrunAsSilence(
+                      mTreatUnderrunAsSilence);
+                }
                 LOG("AudioSink async, start");
                 nsresult rv2 =
                     mAudioSink->Start(switchTime, mEndedPromiseHolder);
@@ -405,6 +411,9 @@ nsresult AudioSinkWrapper::StartAudioSink(const TimeUnit& aStartTime,
       mEndedPromiseHolder.RejectIfExists(rv, __func__);
       LOG("Sync AudioSinkWrapper initialization failed");
       return rv;
+    }
+    if (mTreatUnderrunAsSilence) {
+      mAudioSink->EnableTreatAudioUnderrunAsSilence(mTreatUnderrunAsSilence);
     }
     rv = mAudioSink->Start(aStartTime, mEndedPromiseHolder);
     if (NS_FAILED(rv)) {
@@ -471,6 +480,13 @@ void AudioSinkWrapper::GetDebugInfo(dom::MediaSinkDebugInfo& aInfo) {
   aInfo.mAudioSinkWrapper.mAudioEnded = mAudioEnded;
   if (mAudioSink) {
     mAudioSink->GetDebugInfo(aInfo);
+  }
+}
+
+void AudioSinkWrapper::EnableTreatAudioUnderrunAsSilence(bool aEnabled) {
+  mTreatUnderrunAsSilence = aEnabled;
+  if (mAudioSink) {
+    mAudioSink->EnableTreatAudioUnderrunAsSilence(aEnabled);
   }
 }
 

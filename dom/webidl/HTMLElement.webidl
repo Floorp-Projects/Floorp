@@ -50,7 +50,7 @@ interface HTMLElement : Element {
   [Pure]
   readonly attribute boolean isContentEditable;
   [CEReactions, SetterThrows, Pure, Pref="dom.element.popover.enabled"]
-           attribute DOMString popover;
+           attribute DOMString? popover;
   [CEReactions, SetterThrows, Pure]
            attribute boolean spellcheck;
   [CEReactions, Pure, SetterThrows, Pref="dom.forms.inputmode"]
@@ -79,7 +79,7 @@ interface HTMLElement : Element {
   [Throws, Pref="dom.element.popover.enabled"]
   undefined hidePopover();
   [Throws, Pref="dom.element.popover.enabled"]
-  undefined togglePopover(boolean force);
+  undefined togglePopover(optional boolean force);
 };
 
 // http://dev.w3.org/csswg/cssom-view/#extensions-to-the-htmlelement-interface

@@ -22,8 +22,10 @@ function countEntries(histogramData) {
 async function countEntriesOfChildHistogram(id, expected) {
   let histogram;
   await TestUtils.waitForCondition(() => {
-    let histograms = Services.telemetry.getSnapshotForHistograms("main", false)
-      .content;
+    let histograms = Services.telemetry.getSnapshotForHistograms(
+      "main",
+      false
+    ).content;
 
     histogram = histograms[id];
 

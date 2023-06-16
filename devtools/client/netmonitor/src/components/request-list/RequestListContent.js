@@ -34,11 +34,11 @@ loader.lazyRequireGetter(
   "resource://devtools/client/netmonitor/src/utils/firefox/open-request-in-tab.js",
   true
 );
-loader.lazyGetter(this, "setImageTooltip", function() {
+loader.lazyGetter(this, "setImageTooltip", function () {
   return require("resource://devtools/client/shared/widgets/tooltip/ImageTooltipHelper.js")
     .setImageTooltip;
 });
-loader.lazyGetter(this, "getImageDimensions", function() {
+loader.lazyGetter(this, "getImageDimensions", function () {
   return require("resource://devtools/client/shared/widgets/tooltip/ImageTooltipHelper.js")
     .getImageDimensions;
 });

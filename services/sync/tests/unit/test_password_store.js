@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.importESModule(
+const { LoginRec } = ChromeUtils.importESModule(
   "resource://services-sync/engines/passwords.sys.mjs"
 );
 const { Service } = ChromeUtils.importESModule(
@@ -75,8 +75,8 @@ async function changePassword(
   recordIsUpdated
 ) {
   const BOGUS_GUID = "zzzzzz" + hostname;
-
-  let record = {
+  let record = new LoginRec("passwords", BOGUS_GUID);
+  record.cleartext = {
     id: BOGUS_GUID,
     hostname,
     formSubmitURL: hostname,
@@ -315,7 +315,9 @@ async function test_LoginRec_toString(store, recordData) {
 add_task(async function run_test() {
   const BOGUS_GUID_A = "zzzzzzzzzzzz";
   const BOGUS_GUID_B = "yyyyyyyyyyyy";
-  let recordA = {
+  let recordA = new LoginRec("passwords", BOGUS_GUID_A);
+  let recordB = new LoginRec("passwords", BOGUS_GUID_B);
+  recordA.cleartext = {
     id: BOGUS_GUID_A,
     hostname: "http://foo.bar.com",
     formSubmitURL: "http://foo.bar.com",
@@ -325,7 +327,7 @@ add_task(async function run_test() {
     usernameField: "username",
     passwordField: "password",
   };
-  let recordB = {
+  recordB.cleartext = {
     id: BOGUS_GUID_B,
     hostname: "http://foo.baz.com",
     formSubmitURL: "http://foo.baz.com",
@@ -333,6 +335,7 @@ add_task(async function run_test() {
     password: "smith",
     usernameField: "username",
     passwordField: "password",
+    unknownStr: "an unknown string from another field",
   };
 
   let engine = Service.engineManager.get("passwords");
@@ -364,6 +367,15 @@ add_task(async function run_test() {
 
     Assert.equal(goodLogins.length, 1);
     Assert.equal(badLogins.length, 0);
+
+    // applyIncoming should've put any unknown fields from the server
+    // into a catch-all unknownFields field
+    Assert.equal(
+      goodLogins[0].unknownFields,
+      JSON.stringify({
+        unknownStr: "an unknown string from another field",
+      })
+    );
 
     Assert.ok(!!(await store.getAllIDs())[BOGUS_GUID_B]);
     Assert.ok(!(await store.getAllIDs())[BOGUS_GUID_A]);

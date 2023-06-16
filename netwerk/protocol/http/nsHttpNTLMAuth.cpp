@@ -11,7 +11,6 @@
 #include "nsCOMPtr.h"
 #include "nsServiceManagerUtils.h"
 #include "plbase64.h"
-#include "plstr.h"
 #include "prnetdb.h"
 
 //-----------------------------------------------------------------------------

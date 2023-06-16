@@ -17,7 +17,7 @@ async function addBookmark(bookmark) {
     });
   }
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     if (bookmark.keyword) {
       await PlacesUtils.keywords.remove(bookmark.keyword);
     }

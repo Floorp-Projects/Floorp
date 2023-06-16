@@ -11,7 +11,7 @@
 const TEST_URI = `${URL_ROOT_COM_SSL}test-console-evaluation-context-selector.html`;
 const IFRAME_FILE = `test-console-evaluation-context-selector-child.html`;
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.webconsole.input.context", true);
 
   const tab = await addTab(TEST_URI);

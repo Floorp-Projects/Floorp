@@ -20,7 +20,8 @@ const { LoginTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/LoginTestUtils.sys.mjs"
 );
 if (LoginHelper.relatedRealmsEnabled) {
-  let rsPromise = LoginTestUtils.remoteSettings.setupWebsitesWithSharedCredentials();
+  let rsPromise =
+    LoginTestUtils.remoteSettings.setupWebsitesWithSharedCredentials();
   async () => {
     await rsPromise;
   };
@@ -40,7 +41,7 @@ if (LoginHelper.improvedPasswordRulesEnabled) {
  * the test can start checking filled-in values. Tests that check observer
  * notifications might be confused by this.
  */
-function commonInit(selfFilling, testDependsOnDeprecatedLogin) {
+async function commonInit(selfFilling, testDependsOnDeprecatedLogin) {
   var pwmgr = Services.logins;
   assert.ok(pwmgr != null, "Access LoginManager");
 
@@ -69,7 +70,7 @@ function commonInit(selfFilling, testDependsOnDeprecatedLogin) {
       "uname",
       "pword"
     );
-    pwmgr.addLogin(login);
+    await pwmgr.addLoginAsync(login);
   }
 
   // Last sanity check
@@ -145,19 +146,22 @@ addMessageListener("cleanup", () => {
 
 addMessageListener(
   "setupParent",
-  ({ selfFilling = false, testDependsOnDeprecatedLogin = false } = {}) => {
-    commonInit(selfFilling, testDependsOnDeprecatedLogin);
+  async ({
+    selfFilling = false,
+    testDependsOnDeprecatedLogin = false,
+  } = {}) => {
+    await commonInit(selfFilling, testDependsOnDeprecatedLogin);
     sendAsyncMessage("doneSetup");
   }
 );
 
-addMessageListener("loadRecipes", async function(recipes) {
+addMessageListener("loadRecipes", async function (recipes) {
   var recipeParent = await LoginManagerParent.recipeParentPromise;
   await recipeParent.load(recipes);
   sendAsyncMessage("loadedRecipes", recipes);
 });
 
-addMessageListener("resetRecipes", async function() {
+addMessageListener("resetRecipes", async function () {
   let recipeParent = await LoginManagerParent.recipeParentPromise;
   await recipeParent.reset();
   sendAsyncMessage("recipesReset");

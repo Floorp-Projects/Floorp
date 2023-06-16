@@ -40,7 +40,7 @@ async function checkURLBarValueStays(browser) {
   );
 }
 
-add_task(async function() {
+add_task(async function () {
   // Disable autofill so that when checkURLBarValueStays types "a", it's not
   // autofilled to addons.mozilla.org (or anything else).
   await SpecialPowers.pushPrefEnv({
@@ -51,14 +51,14 @@ add_task(async function() {
       gBrowser,
       url: TEST_URL,
     },
-    async function(browser) {
+    async function (browser) {
       let promise1 = checkURLBarValueStays(browser);
-      SpecialPowers.spawn(browser, [""], function() {
+      SpecialPowers.spawn(browser, [""], function () {
         content.wrappedJSObject.dos_hash();
       });
       await promise1;
       let promise2 = checkURLBarValueStays(browser);
-      SpecialPowers.spawn(browser, [""], function() {
+      SpecialPowers.spawn(browser, [""], function () {
         content.wrappedJSObject.dos_pushState();
       });
       await promise2;

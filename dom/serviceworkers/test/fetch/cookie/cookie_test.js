@@ -1,4 +1,4 @@
-self.addEventListener("fetch", function(event) {
+self.addEventListener("fetch", function (event) {
   if (event.request.url.includes("synth.html")) {
     var body =
       "<script>" +

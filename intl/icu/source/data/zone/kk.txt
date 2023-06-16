@@ -258,6 +258,9 @@ kk{
         "America:Chihuahua"{
             ec{"Чиуауа"}
         }
+        "America:Ciudad_Juarez"{
+            ec{"Сьюдад-Хуарес"}
+        }
         "America:Coral_Harbour"{
             ec{"Атикокан"}
         }

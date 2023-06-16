@@ -4,7 +4,7 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
-XPCOMUtils.defineLazyGetter(this, "HTTP_TEST_URL", function() {
+XPCOMUtils.defineLazyGetter(this, "HTTP_TEST_URL", function () {
   return "http://test1.example.com";
 });
 

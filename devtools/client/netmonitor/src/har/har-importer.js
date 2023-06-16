@@ -18,7 +18,7 @@ var guid = 0;
  * https://dvcs.w3.org/hg/webperf/raw-file/tip/specs/HAR/Overview.html
  * http://www.softwareishard.com/blog/har-12-spec/
  */
-var HarImporter = function(actions) {
+var HarImporter = function (actions) {
   this.actions = actions;
 };
 

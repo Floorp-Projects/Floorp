@@ -12,7 +12,7 @@ const {
   PageState,
 } = require("resource://devtools/client/application/src/reducers/page-state.js");
 
-add_task(async function() {
+add_task(async function () {
   info("Test page reducer: UPDATE_DOMAIN action");
   const state = PageState();
   const action = updateDomain("https://example.com/foo/#bar");

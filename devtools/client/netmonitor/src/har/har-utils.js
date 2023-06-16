@@ -8,7 +8,7 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
-XPCOMUtils.defineLazyGetter(this, "ZipWriter", function() {
+XPCOMUtils.defineLazyGetter(this, "ZipWriter", function () {
   return Components.Constructor("@mozilla.org/zipwriter;1", "nsIZipWriter");
 });
 

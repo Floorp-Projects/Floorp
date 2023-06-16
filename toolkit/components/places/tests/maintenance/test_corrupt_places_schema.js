@@ -3,7 +3,7 @@
 
 // Tests that history initialization correctly handles a corrupt places schema.
 
-add_task(async function() {
+add_task(async function () {
   let path = await setupPlacesDatabase(["migration", "places_v43.sqlite"]);
 
   // Ensure the database will go through a migration that depends on moz_places

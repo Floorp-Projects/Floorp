@@ -26,7 +26,7 @@ const TEST_DATA = [
   },
 ];
 
-add_task(function() {
+add_task(function () {
   for (const { description, input, expected, testMessage } of TEST_DATA) {
     info(description);
 

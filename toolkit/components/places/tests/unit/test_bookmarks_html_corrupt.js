@@ -24,7 +24,7 @@ add_task(async function test_corrupt_database() {
     url: "http://test.mozilla.org",
     title: "We love belugas",
   });
-  await PlacesUtils.withConnectionWrapper("test", async function(db) {
+  await PlacesUtils.withConnectionWrapper("test", async function (db) {
     await db.execute("UPDATE moz_bookmarks SET fk = NULL WHERE guid = :guid", {
       guid: corruptBookmark.guid,
     });
@@ -51,7 +51,7 @@ add_task(async function test_corrupt_database() {
  * @resolves When the checks are finished.
  * @rejects Never.
  */
-var database_check = async function() {
+var database_check = async function () {
   // BOOKMARKS MENU
   let root = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.menuGuid).root;
   Assert.equal(root.childCount, 2);

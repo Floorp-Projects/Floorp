@@ -19,9 +19,9 @@
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/base/random.h"
-#include "lib/jxl/base/thread_pool_internal.h"
 #include "lib/jxl/image_ops.h"
 #include "lib/jxl/image_test_utils.h"
+#include "lib/jxl/test_utils.h"
 #include "lib/jxl/testing.h"
 
 #ifndef JXL_DEBUG_CONVOLVE
@@ -138,7 +138,7 @@ void VerifySeparable7(const size_t xsize, const size_t ysize, ThreadPool* pool,
 void TestConvolve() {
   TestNeighbors();
 
-  ThreadPoolInternal pool(4);
+  test::ThreadPoolForTests pool(4);
   EXPECT_EQ(true,
             RunOnPool(
                 &pool, kConvolveMaxRadius, 40, ThreadPool::NoInit,
@@ -147,7 +147,7 @@ void TestConvolve() {
                   Rng rng(129 + 13 * xsize);
 
                   ThreadPool* null_pool = nullptr;
-                  ThreadPoolInternal pool3(3);
+                  test::ThreadPoolForTests pool3(3);
                   for (size_t ysize = kConvolveMaxRadius; ysize < 16; ++ysize) {
                     JXL_DEBUG(JXL_DEBUG_CONVOLVE,
                               "%" PRIuS " x %" PRIuS " (target %" PRIx64

@@ -25,7 +25,7 @@ pub enum InlineBaseDirection {
 
 // TODO: improve the readability of the WritingMode serialization, refer to the Debug:fmt()
 bitflags!(
-    #[cfg_attr(feature = "servo", derive(MallocSizeOf, Serialize))]
+    #[derive(Clone, Copy, Eq, MallocSizeOf, PartialEq, Serialize)]
     #[repr(C)]
     pub struct WritingMode: u8 {
         /// A vertical writing mode; writing-mode is vertical-rl,
@@ -170,7 +170,7 @@ impl WritingMode {
 
     /// Returns the `horizontal-tb` value.
     pub fn horizontal_tb() -> Self {
-        Self::from_bits_truncate(0)
+        Self::empty()
     }
 
     #[inline]
@@ -418,7 +418,7 @@ impl DebugWritingMode {
 
     #[inline]
     fn new(mode: WritingMode) -> DebugWritingMode {
-        DebugWritingMode { mode: mode }
+        DebugWritingMode { mode }
     }
 }
 

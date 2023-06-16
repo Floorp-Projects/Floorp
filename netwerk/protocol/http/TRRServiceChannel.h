@@ -71,7 +71,8 @@ class TRRServiceChannel : public HttpBaseChannel,
   NS_IMETHOD AsyncOpen(nsIStreamListener* aListener) override;
 
   NS_IMETHOD LogBlockedCORSRequest(const nsAString& aMessage,
-                                   const nsACString& aCategory) override;
+                                   const nsACString& aCategory,
+                                   bool aIsWarning) override;
   NS_IMETHOD LogMimeTypeMismatch(const nsACString& aMessageName, bool aWarning,
                                  const nsAString& aURL,
                                  const nsAString& aContentType) override;

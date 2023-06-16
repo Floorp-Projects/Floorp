@@ -16,10 +16,8 @@ let { formAutofillStorage } = ChromeUtils.importESModule(
   "resource://autofill/FormAutofillStorage.sys.mjs"
 );
 
-const {
-  ADDRESSES_COLLECTION_NAME,
-  CREDITCARDS_COLLECTION_NAME,
-} = FormAutofillUtils;
+const { ADDRESSES_COLLECTION_NAME, CREDITCARDS_COLLECTION_NAME } =
+  FormAutofillUtils;
 
 let destroyed = false;
 

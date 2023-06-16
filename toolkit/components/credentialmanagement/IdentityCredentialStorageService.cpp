@@ -125,7 +125,7 @@ IdentityCredentialStorageService::GetAsyncShutdownBarrier() const {
 nsresult IdentityCredentialStorageService::Init() {
   AssertIsOnMainThread();
 
-  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdown)) {
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
     MonitorAutoLock lock(mMonitor);
     mShuttingDown.Flip();
     return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;

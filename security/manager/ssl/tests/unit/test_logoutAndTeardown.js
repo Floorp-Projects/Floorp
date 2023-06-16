@@ -180,7 +180,7 @@ function startClient(port) {
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   Services.prefs.setCharPref("network.dns.localDomains", hostname);
   let cert = getTestServerCertificate();
 
@@ -190,6 +190,6 @@ add_task(async function() {
   server.close();
 });
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   Services.prefs.clearUserPref("network.dns.localDomains");
 });

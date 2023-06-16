@@ -1,4 +1,4 @@
-add_task(async function() {
+add_task(async function () {
   let keyUps = 0;
 
   await BrowserTestUtils.openNewForegroundTab(
@@ -10,7 +10,7 @@ add_task(async function() {
 
   window.addEventListener(
     "keyup",
-    function(event) {
+    function (event) {
       if (event.originalTarget == gURLBar.inputField) {
         keyUps++;
       }
@@ -20,7 +20,7 @@ add_task(async function() {
 
   gURLBar.addEventListener(
     "keydown",
-    function(event) {
+    function (event) {
       gBrowser.selectedBrowser.focus();
     },
     { capture: true, once: true }

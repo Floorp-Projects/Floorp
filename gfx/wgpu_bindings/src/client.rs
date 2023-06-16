@@ -4,7 +4,7 @@
 
 use crate::{
     cow_label, wgpu_string, AdapterInformation, ByteBuf, CommandEncoderAction, DeviceAction,
-    DropAction, ImplicitLayout, QueueWriteAction, RawString, TextureAction, ImageDataLayout,
+    DropAction, ImageDataLayout, ImplicitLayout, QueueWriteAction, RawString, TextureAction,
 };
 
 use wgc::{hub::IdentityManager, id};
@@ -14,7 +14,7 @@ pub use wgc::command::{compute_ffi::*, render_ffi::*};
 
 use parking_lot::Mutex;
 
-use nsstring::nsACString;
+use nsstring::{nsACString, nsString};
 
 use std::{borrow::Cow, ptr};
 
@@ -427,9 +427,38 @@ pub extern "C" fn wgpu_client_fill_default_limits(limits: &mut wgt::Limits) {
 #[no_mangle]
 pub extern "C" fn wgpu_client_adapter_extract_info(
     byte_buf: &ByteBuf,
-    info: &mut AdapterInformation,
+    info: &mut AdapterInformation<nsString>,
 ) {
-    *info = bincode::deserialize(unsafe { byte_buf.as_slice() }).unwrap();
+    let AdapterInformation {
+        backend,
+        device_type,
+        device,
+        driver_info,
+        driver,
+        features,
+        id,
+        limits,
+        name,
+        vendor,
+    } = bincode::deserialize::<AdapterInformation<String>>(unsafe { byte_buf.as_slice() }).unwrap();
+
+    let nss = |s: &str| {
+        let mut ns_string = nsString::new();
+        ns_string.assign_str(s);
+        ns_string
+    };
+    *info = AdapterInformation {
+        backend,
+        device_type,
+        device,
+        driver_info: nss(&driver_info),
+        driver: nss(&driver),
+        features,
+        id,
+        limits,
+        name: nss(&name),
+        vendor,
+    };
 }
 
 #[no_mangle]

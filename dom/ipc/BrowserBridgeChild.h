@@ -47,8 +47,6 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
 
   void Deactivate(bool aWindowLowering, uint64_t aActionId);
 
-  void SetIsUnderHiddenEmbedderElement(bool aIsUnderHiddenEmbedderElement);
-
   already_AddRefed<BrowserBridgeHost> FinishInit(nsFrameLoader* aFrameLoader);
 
 #if defined(ACCESSIBILITY)
@@ -59,13 +57,7 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
   }
 
   uint64_t GetEmbedderAccessibleID() { return mEmbedderAccessibleID; }
-
-#  if defined(XP_WIN)
-  already_AddRefed<IDispatch> GetEmbeddedDocAccessible() {
-    return RefPtr{mEmbeddedDocAccessible}.forget();
-  }
-#  endif  // defined(XP_WIN)
-#endif    // defined(ACCESSIBILITY)
+#endif  // defined(ACCESSIBILITY)
 
   static BrowserBridgeChild* GetFrom(nsFrameLoader* aFrameLoader);
 
@@ -83,9 +75,6 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
 
   mozilla::ipc::IPCResult RecvMoveFocus(const bool& aForward,
                                         const bool& aForDocumentNavigation);
-
-  mozilla::ipc::IPCResult RecvSetEmbeddedDocAccessibleCOMProxy(
-      const IDispatchHolder& aCOMProxy);
 
   // TODO: Use MOZ_CAN_RUN_SCRIPT when it gains IPDL support (bug 1539864)
   MOZ_CAN_RUN_SCRIPT_BOUNDARY mozilla::ipc::IPCResult
@@ -122,10 +111,7 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
   // We need to keep track of the embedder accessible id we last sent to the
   // parent process.
   uint64_t mEmbedderAccessibleID = 0;
-#  if defined(XP_WIN)
-  RefPtr<IDispatch> mEmbeddedDocAccessible;
-#  endif  // defined(XP_WIN)
-#endif    // defined(ACCESSIBILITY)
+#endif  // defined(ACCESSIBILITY)
 };
 
 }  // namespace mozilla::dom

@@ -2,7 +2,7 @@ let testURL =
   "https://example.com/browser/" +
   "uriloader/exthandler/tests/mochitest/protocolHandler.html";
 
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["security.external_protocol_requires_permission", false]],
   });
@@ -53,7 +53,7 @@ add_task(async function() {
     "https://example.com/foobar?uri=web%2Btestprotocol%3Atest";
 
   // Create a framed link:
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     let iframe = content.document.createElement("iframe");
     iframe.src = `data:text/html,<a href="web+testprotocol:test">Click me</a>`;
     content.document.body.append(iframe);

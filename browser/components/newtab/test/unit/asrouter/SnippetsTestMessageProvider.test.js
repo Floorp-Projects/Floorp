@@ -1,7 +1,7 @@
 import EOYSnippetSchema from "../../../content-src/asrouter/templates/EOYSnippet/EOYSnippet.schema.json";
 import SimpleBelowSearchSnippetSchema from "../../../content-src/asrouter/templates/SimpleBelowSearchSnippet/SimpleBelowSearchSnippet.schema.json";
 import SimpleSnippetSchema from "../../../content-src/asrouter/templates/SimpleSnippet/SimpleSnippet.schema.json";
-import { SnippetsTestMessageProvider } from "../../../lib/SnippetsTestMessageProvider.jsm";
+import { SnippetsTestMessageProvider } from "../../../lib/SnippetsTestMessageProvider.sys.mjs";
 import SubmitFormSnippetSchema from "../../../content-src/asrouter/templates/SubmitFormSnippet/SubmitFormSnippet.schema.json";
 import SubmitFormScene2SnippetSchema from "../../../content-src/asrouter/templates/SubmitFormSnippet/SubmitFormScene2Snippet.schema.json";
 

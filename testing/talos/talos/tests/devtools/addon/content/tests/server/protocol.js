@@ -33,7 +33,7 @@ class DampTestFront extends FrontClassWithSpec(dampTestSpec) {
 }
 protocol.registerFront(DampTestFront);
 
-module.exports = async function() {
+module.exports = async function () {
   let tab = await testSetup(SIMPLE_URL);
   let messageManager = tab.linkedBrowser.messageManager;
 

@@ -19,7 +19,7 @@ Services.prefs.setBoolPref(kPrefShortcutEnabled, true);
 Services.prefs.setBoolPref(kPrefWarnOnEnable, true);
 Services.prefs.setBoolPref(kPrefCaretBrowsingOn, false);
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   for (let pref of [
     kPrefShortcutEnabled,
     kPrefWarnOnEnable,
@@ -56,7 +56,7 @@ function hitF7() {
 
 async function toggleCaretNoDialog(expected) {
   let openedDialog = false;
-  promiseCaretPromptOpened().then(function(win) {
+  promiseCaretPromptOpened().then(function (win) {
     openedDialog = true;
     win.close(); // This will eventually return focus here and allow the test to continue...
   });
@@ -112,7 +112,7 @@ async function toggleCaretNoDialog(expected) {
 }
 
 function waitForFocusOnInput(browser) {
-  return SpecialPowers.spawn(browser, [], async function() {
+  return SpecialPowers.spawn(browser, [], async function () {
     let textEl = content.document.getElementById("in");
     return ContentTaskUtils.waitForCondition(() => {
       return content.document.activeElement == textEl;
@@ -121,7 +121,7 @@ function waitForFocusOnInput(browser) {
 }
 
 function focusInput(browser) {
-  return SpecialPowers.spawn(browser, [], async function() {
+  return SpecialPowers.spawn(browser, [], async function () {
     let textEl = content.document.getElementById("in");
     textEl.focus();
   });

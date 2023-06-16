@@ -362,14 +362,16 @@ menupopup::part(drop-indicator) {
 /* Override theme colors since the picker uses extra colors that
    themes cannot set */
 #DateTimePickerPanel {
+  color-scheme: light;
   --arrowpanel-background: Field;
   --arrowpanel-color: FieldText;
-  --arrowpanel-border-color: ThreeDShadow;
 }
 
-#DateTimePickerPanel[side="top"],
-#DateTimePickerPanel[side="bottom"] {
-  margin-inline: 0;
+/* stylelint-disable-next-line media-feature-name-no-unknown */
+@media (-moz-content-prefers-color-scheme: dark) and (not (prefers-contrast)) {
+  #DateTimePickerPanel {
+    color-scheme: dark;
+  }
 }
 
 #widget-overflow .webextension-popup-browser {
@@ -1034,4 +1036,28 @@ popupnotificationcontent {
   .swipe-nav-icon.will-navigate > .swipe-nav-icon-circle {
     fill: var(--swipe-nav-icon-primary-color);
   }
+}
+
+panel toolbarseparator {
+  appearance: none;
+  min-height: 0;
+  border-top: 1px solid var(--panel-separator-color);
+  border-bottom: none;
+  margin: var(--panel-separator-margin);
+  padding: 0;
+}
+
+/* Picture-in-Picture panel */
+#PictureInPicturePanel {
+  width: var(--menu-panel-width-wide);
+  font: caption;
+}
+
+#PictureInPicturePanelBody {
+  gap: 8px;
+  padding: 8px 16px;
+}
+
+#PictureInPicturePanelFooter {
+  margin: 8px 16px 16px;
 }

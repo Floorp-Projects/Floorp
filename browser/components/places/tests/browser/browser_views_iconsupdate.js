@@ -7,7 +7,7 @@
  * The menu is not tested since it uses the same code as the toolbar.
  */
 
-add_task(async function() {
+add_task(async function () {
   const PAGE_URI = NetUtil.newURI("http://places.test/");
   const ICON_URI = NetUtil.newURI(
     "http://mochi.test:8888/browser/browser/components/places/tests/browser/favicon-normal16.png"
@@ -18,7 +18,7 @@ add_task(async function() {
   let wasCollapsed = toolbar.collapsed;
   if (wasCollapsed) {
     await promiseSetToolbarVisibility(toolbar, true);
-    registerCleanupFunction(async function() {
+    registerCleanupFunction(async function () {
       await promiseSetToolbarVisibility(toolbar, false);
     });
   }
@@ -40,7 +40,7 @@ add_task(async function() {
     title: "test icon",
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
   });
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.bookmarks.remove(bm);
   });
 

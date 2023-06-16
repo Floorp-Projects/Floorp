@@ -25,7 +25,7 @@ function clickSwitcherButton(querySelector) {
   return switcherPromise;
 }
 
-add_task(async function() {
+add_task(async function () {
   // If a sidebar is already open, close it.
   if (!document.getElementById("sidebar-box").hidden) {
     ok(

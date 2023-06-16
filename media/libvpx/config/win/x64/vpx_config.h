@@ -11,6 +11,7 @@
 #define RESTRICT    
 #define INLINE      __inline
 #define VPX_ARCH_ARM 0
+#define VPX_ARCH_AARCH64 0
 #define VPX_ARCH_MIPS 0
 #define VPX_ARCH_X86 0
 #define VPX_ARCH_X86_64 1

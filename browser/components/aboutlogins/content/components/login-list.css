@@ -16,7 +16,7 @@
   padding: 0 16px 16px;
   border-bottom: 1px solid var(--in-content-border-color);
   background-color: var(--in-content-box-background);
-  color: var(--in-content-deemphasized-text);
+  color: var(--text-color-deemphasized);
   font-size: 0.8em;
 }
 
@@ -182,7 +182,7 @@ ol {
 
 .username {
   font-size: 0.85em;
-  color: var(--in-content-deemphasized-text);
+  color: var(--text-color-deemphasized);
 }
 
 .alert-icon {

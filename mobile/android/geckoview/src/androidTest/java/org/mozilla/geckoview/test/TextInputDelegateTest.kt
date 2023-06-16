@@ -44,7 +44,7 @@ class TextInputDelegateTest : BaseSessionTest() {
             arrayOf("#input"),
             arrayOf("#textarea"),
             arrayOf("#contenteditable"),
-            arrayOf("#designmode")
+            arrayOf("#designmode"),
         )
     }
 
@@ -62,7 +62,7 @@ class TextInputDelegateTest : BaseSessionTest() {
             when (id) {
                 "#contenteditable" -> mainSession.evaluateJS("document.querySelector('$id').textContent = '$content'")
                 "#designmode" -> mainSession.evaluateJS(
-                    "document.querySelector('$id').contentDocument.body.textContent = '$content'"
+                    "document.querySelector('$id').contentDocument.body.textContent = '$content'",
                 )
                 else -> mainSession.evaluateJS("document.querySelector('$id').value = '$content'")
             }
@@ -73,19 +73,19 @@ class TextInputDelegateTest : BaseSessionTest() {
             "#contenteditable" -> mainSession.evaluateJS(
                 """[
                     document.getSelection().anchorOffset,
-                    document.getSelection().focusOffset]"""
+                    document.getSelection().focusOffset]""",
             )
             "#designmode" -> mainSession.evaluateJS(
                 """(function() {
                         var sel = document.querySelector('$id').contentDocument.getSelection();
                         var text = document.querySelector('$id').contentDocument.body.firstChild;
                         return [sel.anchorOffset, sel.focusOffset];
-                    })()"""
+                    })()""",
             )
             else -> mainSession.evaluateJS(
                 """(document.querySelector('$id').selectionDirection !== 'backward'
                 ? [ document.querySelector('$id').selectionStart, document.querySelector('$id').selectionEnd ]
-                : [ document.querySelector('$id').selectionEnd, document.querySelector('$id').selectionStart ])"""
+                : [ document.querySelector('$id').selectionEnd, document.querySelector('$id').selectionStart ])""",
             )
         }.asJsonArray().let {
             Pair(it.getInt(0), it.getInt(1))
@@ -102,7 +102,7 @@ class TextInputDelegateTest : BaseSessionTest() {
                         } else {
                             selection.collapse(document.querySelector('$id'), 0);
                         }
-                    })()"""
+                    })()""",
                 )
                 "#designmode" -> mainSession.evaluateJS(
                     """(function() {
@@ -113,7 +113,7 @@ class TextInputDelegateTest : BaseSessionTest() {
                         } else {
                             selection.collapse(document.querySelector('$id').contentDocument.body, 0);
                         }
-                    })()"""
+                    })()""",
                 )
                 else -> mainSession.evaluateJS("document.querySelector('$id').setSelectionRange($start, $end)")
             }
@@ -132,7 +132,7 @@ class TextInputDelegateTest : BaseSessionTest() {
             when (id) {
                 "#designmode" -> "new Promise(r => document.querySelector('$id').contentDocument.addEventListener('compositionupdate', r, { once: true }))"
                 else -> "new Promise(r => document.querySelector('$id').addEventListener('compositionupdate', r, { once: true }))"
-            }
+            },
         )
         ic.setComposingText(text, newCursorPosition)
         promise.value
@@ -143,7 +143,7 @@ class TextInputDelegateTest : BaseSessionTest() {
             when (id) {
                 "#designmode" -> "new Promise(r => document.querySelector('$id').contentDocument.addEventListener('compositionend', r, { once: true }))"
                 else -> "new Promise(r => document.querySelector('$id').addEventListener('compositionend', r, { once: true }))"
-            }
+            },
         )
         ic.finishComposingText()
         promise.value
@@ -159,7 +159,7 @@ class TextInputDelegateTest : BaseSessionTest() {
             when (id) {
                 "#designmode" -> "new Promise(r => document.querySelector('$id').contentDocument.addEventListener('compositionend', r, { once: true }))"
                 else -> "new Promise(r => document.querySelector('$id').addEventListener('compositionend', r, { once: true }))"
-            }
+            },
         )
         ic.commitText(text, newCursorPosition)
         promise.value
@@ -171,7 +171,7 @@ class TextInputDelegateTest : BaseSessionTest() {
             when (id) {
                 "#designmode" -> "new Promise(r => document.querySelector('$id').contentDocument.addEventListener('input', r, { once: true }))"
                 else -> "new Promise(r => document.querySelector('$id').addEventListener('input', r, { once: true }))"
-            }
+            },
         )
         ic.deleteSurroundingText(before, after)
         if (before != 0 || after != 0) {
@@ -187,7 +187,7 @@ class TextInputDelegateTest : BaseSessionTest() {
                 "#designmode" -> "new Promise(r => document.querySelector('$id').contentDocument.addEventListener('selectionchange', r, { once: true }))"
                 "#contenteditable" -> "new Promise(r => document.addEventListener('selectionchange', r, { once: true }))"
                 else -> "new Promise(r => document.querySelector('$id').addEventListener('selectionchange', r, { once: true }))"
-            }
+            },
         )
         ic.setSelection(start, end)
         promise.value
@@ -198,7 +198,7 @@ class TextInputDelegateTest : BaseSessionTest() {
             when (id) {
                 "#designmode" -> "new Promise(r => document.querySelector('$id').contentDocument.addEventListener('keyup', r, { once: true }))"
                 else -> "new Promise(r => document.querySelector('$id').addEventListener('keyup', r, { once: true }))"
-            }
+            },
         )
         val time = SystemClock.uptimeMillis()
         val keyEvent = KeyEvent(time, time, KeyEvent.ACTION_DOWN, keyCode, 0)
@@ -225,7 +225,7 @@ class TextInputDelegateTest : BaseSessionTest() {
                 assertThat(
                     "Reason should be correct",
                     reason,
-                    equalTo(GeckoSession.TextInputDelegate.RESTART_REASON_FOCUS)
+                    equalTo(GeckoSession.TextInputDelegate.RESTART_REASON_FOCUS),
                 )
             }
         })
@@ -237,7 +237,7 @@ class TextInputDelegateTest : BaseSessionTest() {
                 assertThat(
                     "Reason should be correct",
                     reason,
-                    equalTo(GeckoSession.TextInputDelegate.RESTART_REASON_BLUR)
+                    equalTo(GeckoSession.TextInputDelegate.RESTART_REASON_BLUR),
                 )
             }
 
@@ -275,7 +275,7 @@ class TextInputDelegateTest : BaseSessionTest() {
                 assertThat(
                     "Reason should be correct",
                     reason,
-                    equalTo(GeckoSession.TextInputDelegate.RESTART_REASON_FOCUS)
+                    equalTo(GeckoSession.TextInputDelegate.RESTART_REASON_FOCUS),
                 )
             }
 
@@ -302,7 +302,7 @@ class TextInputDelegateTest : BaseSessionTest() {
         mainSession.waitUntilCalled(
             GeckoSession.TextInputDelegate::class,
             "restartInput",
-            "showSoftInput"
+            "showSoftInput",
         )
 
         // We should get a pair of restartInput calls for the blur/focus,
@@ -318,9 +318,9 @@ class TextInputDelegateTest : BaseSessionTest() {
                     equalTo(
                         forEachCall(
                             GeckoSession.TextInputDelegate.RESTART_REASON_BLUR,
-                            GeckoSession.TextInputDelegate.RESTART_REASON_FOCUS
-                        )
-                    )
+                            GeckoSession.TextInputDelegate.RESTART_REASON_FOCUS,
+                        ),
+                    ),
                 )
             }
 
@@ -387,7 +387,7 @@ class TextInputDelegateTest : BaseSessionTest() {
         message: String,
         ic: InputConnection,
         expected: String,
-        checkGecko: Boolean = true
+        checkGecko: Boolean = true,
     ) {
         processChildEvents()
         processParentEvents()
@@ -403,7 +403,7 @@ class TextInputDelegateTest : BaseSessionTest() {
         ic: InputConnection,
         start: Int,
         end: Int,
-        checkGecko: Boolean = true
+        checkGecko: Boolean = true,
     ) {
         processChildEvents()
         processParentEvents()
@@ -421,7 +421,7 @@ class TextInputDelegateTest : BaseSessionTest() {
         message: String,
         ic: InputConnection,
         value: Int,
-        checkGecko: Boolean = true
+        checkGecko: Boolean = true,
     ) =
         assertSelection(message, ic, value, value, checkGecko)
 
@@ -431,7 +431,7 @@ class TextInputDelegateTest : BaseSessionTest() {
         expected: String,
         start: Int,
         end: Int,
-        checkGecko: Boolean = true
+        checkGecko: Boolean = true,
     ) {
         processChildEvents()
         processParentEvents()
@@ -452,15 +452,15 @@ class TextInputDelegateTest : BaseSessionTest() {
         ic: InputConnection,
         expected: String,
         value: Int,
-        checkGecko: Boolean = true
+        checkGecko: Boolean = true,
     ) =
         assertTextAndSelection(message, ic, expected, value, value, checkGecko)
 
     private fun setupContent(content: String) {
         sessionRule.setPrefsUntilTestEnd(
             mapOf(
-                "dom.select_events.textcontrols.enabled" to true
-            )
+                "dom.select_events.textcontrols.enabled" to true,
+            ),
         )
 
         mainSession.textInput.view = View(InstrumentationRegistry.getInstrumentation().targetContext)
@@ -501,7 +501,7 @@ class TextInputDelegateTest : BaseSessionTest() {
             ic,
             "foo",
             0,
-            3
+            3,
         )
         setSelection(ic, 3, 3)
         assertSelectionAt("Can collapse selection", ic, 3)
@@ -530,7 +530,7 @@ class TextInputDelegateTest : BaseSessionTest() {
             "Can commit text (select after)",
             ic,
             "foobar",
-            6
+            6,
         )
         commitText(ic, "foo", -1) // Selection at start of new text
         assertTextAndSelectionAt(
@@ -538,7 +538,7 @@ class TextInputDelegateTest : BaseSessionTest() {
             ic,
             "foobarfoo",
             5, /* checkGecko */
-            false
+            false,
         )
     }
 
@@ -564,14 +564,14 @@ class TextInputDelegateTest : BaseSessionTest() {
             "Can delete text before",
             ic,
             "foobrfoo",
-            4
+            4,
         )
         deleteSurroundingText(ic, 1, 1)
         assertTextAndSelectionAt(
             "Can delete text before/after",
             ic,
             "foofoo",
-            3
+            3,
         )
         deleteSurroundingText(ic, 0, 10)
         assertTextAndSelectionAt("Can delete text after", ic, "foo", 3)
@@ -625,7 +625,7 @@ class TextInputDelegateTest : BaseSessionTest() {
             "Can set composing region text",
             ic,
             "farbar",
-            3
+            3,
         )
 
         ic.setComposingRegion(1, 4)
@@ -633,7 +633,7 @@ class TextInputDelegateTest : BaseSessionTest() {
             "Can set existing composing region",
             ic,
             "farbar",
-            3
+            3,
         )
 
         setComposingText(ic, "rab", 3)
@@ -642,7 +642,7 @@ class TextInputDelegateTest : BaseSessionTest() {
             ic,
             "frabar",
             6, /* checkGecko */
-            false
+            false,
         )
 
         finishComposingText(ic)
@@ -665,14 +665,14 @@ class TextInputDelegateTest : BaseSessionTest() {
         assertThat(
             "Can retrieve text before cursor",
             "foo",
-            equalTo(ic.getTextBeforeCursor(3, 0))
+            equalTo(ic.getTextBeforeCursor(3, 0)),
         )
 
         // Test getTextAfterCursor
         assertThat(
             "Can retrieve text after cursor",
             "bar",
-            equalTo(ic.getTextAfterCursor(3, 0))
+            equalTo(ic.getTextAfterCursor(3, 0)),
         )
     }
 
@@ -695,7 +695,7 @@ class TextInputDelegateTest : BaseSessionTest() {
             time,
             KeyEvent.ACTION_DOWN,
             KeyEvent.KEYCODE_SHIFT_LEFT,
-            0
+            0,
         )
         ic.sendKeyEvent(shiftKey)
         pressKey(ic, KeyEvent.KEYCODE_DPAD_LEFT)
@@ -718,7 +718,7 @@ class TextInputDelegateTest : BaseSessionTest() {
             time,
             KeyEvent.ACTION_DOWN,
             KeyEvent.KEYCODE_SHIFT_LEFT,
-            0
+            0,
         )
         ic.sendKeyEvent(shiftKey)
         pressKey(ic, KeyEvent.KEYCODE_DPAD_RIGHT)
@@ -749,7 +749,7 @@ class TextInputDelegateTest : BaseSessionTest() {
             time,
             KeyEvent.ACTION_DOWN,
             KeyEvent.KEYCODE_SHIFT_LEFT,
-            0
+            0,
         )
 
         // Wait for selection change
@@ -758,7 +758,7 @@ class TextInputDelegateTest : BaseSessionTest() {
                 "#designmode" -> "new Promise(r => document.querySelector('$id').contentDocument.addEventListener('selectionchange', r, { once: true }))"
                 "#contenteditable" -> "new Promise(r => document.addEventListener('selectionchange', r, { once: true }))"
                 else -> "new Promise(r => document.querySelector('$id').addEventListener('selectionchange', r, { once: true }))"
-            }
+            },
         )
 
         ic.sendKeyEvent(shiftKey)
@@ -775,14 +775,14 @@ class TextInputDelegateTest : BaseSessionTest() {
             ic,
             "frabar",
             6,
-            5
+            5,
         )
 
         promise = mainSession.evaluatePromiseJS(
             when (id) {
                 "#designmode" -> "new Promise(r => document.querySelector('$id').contentDocument.addEventListener('input', r, { once: true }))"
                 else -> "new Promise(r => document.querySelector('$id').addEventListener('input', r, { once: true }))"
-            }
+            },
         )
 
         pressKey(ic, KeyEvent.KEYCODE_T)
@@ -808,7 +808,7 @@ class TextInputDelegateTest : BaseSessionTest() {
             "Multiple setComposingText don't commit composition string",
             ic,
             "aab",
-            3
+            3,
         )
     }
 
@@ -834,7 +834,7 @@ class TextInputDelegateTest : BaseSessionTest() {
             assertThat(
                 "This test is only for contenteditable or designmode",
                 true,
-                equalTo(true)
+                equalTo(true),
             )
             return
         }
@@ -863,7 +863,7 @@ class TextInputDelegateTest : BaseSessionTest() {
                             }
                         }, { once: true }))
                 """.trimIndent()
-            }
+            },
         )
 
         // InputContentInfo requires content:// uri, so we have to set test data to custom content provider.
@@ -897,14 +897,14 @@ class TextInputDelegateTest : BaseSessionTest() {
             "Can set the same composing text",
             ic,
             "foo",
-            3
+            3,
         )
         setComposingText(ic, "bar", 1)
         assertTextAndSelectionAt(
             "Can set different composing text",
             ic,
             "bar",
-            3
+            3,
         )
         // Setting same text doesn't fire compositionupdate
         ic.setComposingText("bar", 1)
@@ -912,7 +912,7 @@ class TextInputDelegateTest : BaseSessionTest() {
             "Can set the same composing text",
             ic,
             "bar",
-            3
+            3,
         )
         // Setting same text doesn't fire compositionupdate
         ic.setComposingText("bar", 1)
@@ -920,7 +920,7 @@ class TextInputDelegateTest : BaseSessionTest() {
             "Can set the same composing text again",
             ic,
             "bar",
-            3
+            3,
         )
         finishComposingText(ic)
         assertTextAndSelectionAt("Can finish composing text", ic, "bar", 3)
@@ -945,7 +945,7 @@ class TextInputDelegateTest : BaseSessionTest() {
             "Can commit ideographic space",
             ic,
             "\u3000",
-            1
+            1,
         )
     }
 
@@ -971,7 +971,7 @@ class TextInputDelegateTest : BaseSessionTest() {
             time,
             KeyEvent.ACTION_DOWN,
             KeyEvent.KEYCODE_SHIFT_LEFT,
-            0
+            0,
         )
         ic.sendKeyEvent(shiftKey)
 
@@ -980,7 +980,7 @@ class TextInputDelegateTest : BaseSessionTest() {
             when (id) {
                 "#designmode" -> "new Promise(r => document.querySelector('$id').contentDocument.addEventListener('input', r, { once: true }))"
                 else -> "new Promise(r => document.querySelector('$id').addEventListener('input', r, { once: true }))"
-            }
+            },
         )
 
         pressKey(ic, KeyEvent.KEYCODE_DEL)
@@ -993,7 +993,7 @@ class TextInputDelegateTest : BaseSessionTest() {
             "Cannot forward delete with shift+backspace",
             ic,
             "oo",
-            0
+            0,
         )
     }
 
@@ -1013,14 +1013,14 @@ class TextInputDelegateTest : BaseSessionTest() {
             "Can commit then set composition",
             ic,
             "farbar",
-            6
+            6,
         )
         setComposingText(ic, "baz", 1)
         assertTextAndSelectionAt(
             "Composition still exists after setting",
             ic,
             "farbaz",
-            6
+            6,
         )
 
         finishComposingText(ic)
@@ -1054,7 +1054,7 @@ class TextInputDelegateTest : BaseSessionTest() {
                                      window.addEventListener('input',() => {
                                          window.addEventListener('keyup', r, { once: true }) },
                                          { once: true }) },
-                                     { once: true}))"""
+                                     { once: true}))""",
             )
         ic.beginBatchEdit()
         ic.setSelection(0, 3)
@@ -1093,8 +1093,8 @@ class TextInputDelegateTest : BaseSessionTest() {
                             InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or
                             InputType.TYPE_TEXT_FLAG_AUTO_CORRECT or
                             InputType.TYPE_TEXT_FLAG_IME_MULTI_LINE
-                }
-            )
+                },
+            ),
         )
     }
 
@@ -1157,8 +1157,8 @@ class TextInputDelegateTest : BaseSessionTest() {
                             InputType.TYPE_CLASS_TEXT or
                                 InputType.TYPE_TEXT_VARIATION_URI
                         else -> 0
-                    }
-                )
+                    },
+                ),
             )
         }
     }
@@ -1183,7 +1183,7 @@ class TextInputDelegateTest : BaseSessionTest() {
             mainSession.evaluateJS(
                 """
                 document.querySelector('$id').enterKeyHint = '$enterkeyhint';
-                document.querySelector('$id').focus()"""
+                document.querySelector('$id').focus()""",
             )
             mainSession.waitUntilCalled(GeckoSession.TextInputDelegate::class, "restartInput")
 
@@ -1201,8 +1201,8 @@ class TextInputDelegateTest : BaseSessionTest() {
                         "search" -> EditorInfo.IME_ACTION_SEARCH
                         "send" -> EditorInfo.IME_ACTION_SEND
                         else -> EditorInfo.IME_ACTION_NONE
-                    }
-                )
+                    },
+                ),
             )
 
             mainSession.evaluateJS("document.querySelector('$id').blur()")
@@ -1230,7 +1230,7 @@ class TextInputDelegateTest : BaseSessionTest() {
             mainSession.evaluateJS(
                 """
                 document.querySelector('$id').autocapitalize = '$autocapitalize';
-                document.querySelector('$id').focus()"""
+                document.querySelector('$id').focus()""",
             )
             mainSession.waitUntilCalled(GeckoSession.TextInputDelegate::class, "restartInput")
 
@@ -1246,8 +1246,8 @@ class TextInputDelegateTest : BaseSessionTest() {
                         "sentences" -> InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
                         "words" -> InputType.TYPE_TEXT_FLAG_CAP_WORDS
                         else -> 0
-                    }
-                )
+                    },
+                ),
             )
 
             mainSession.evaluateJS("document.querySelector('$id').blur()")
@@ -1318,7 +1318,7 @@ class TextInputDelegateTest : BaseSessionTest() {
                 document.querySelector('$id').blur();
                 document.querySelector('$id').focus();
             })
-         """
+         """,
         )
 
         setComposingText(ic, "b", 1)
@@ -1326,7 +1326,7 @@ class TextInputDelegateTest : BaseSessionTest() {
             "Don't change caret position after calling blur and focus",
             ic,
             "b",
-            1
+            1,
         )
 
         setComposingText(ic, "a", 1)
@@ -1334,14 +1334,14 @@ class TextInputDelegateTest : BaseSessionTest() {
             "Can set composition string after calling blur and focus",
             ic,
             "ba",
-            2
+            2,
         )
 
         pressKey(ic, KeyEvent.KEYCODE_R)
         assertText(
             "Can set input string by keypress after calling blur and focus",
             ic,
-            "bar"
+            "bar",
         )
     }
 
@@ -1364,7 +1364,7 @@ class TextInputDelegateTest : BaseSessionTest() {
             document.querySelector('$id').addEventListener('input', () => {
                 input_event_count++;
             })
-        """
+        """,
         )
 
         setComposingText(ic, "barbaz", 1)

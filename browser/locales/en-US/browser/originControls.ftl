@@ -10,6 +10,9 @@
 origin-controls-no-access =
     .label = Extension Can’t Read and Change Data
 
+origin-controls-quarantined =
+    .label = Extension Not Allowed to Read and Change Data
+
 origin-controls-options =
     .label = Extension Can Read and Change Data:
 
@@ -30,6 +33,8 @@ origin-controls-option-always-on =
 ## messages. They currently appear in the unified extensions panel.
 
 origin-controls-state-no-access = Can’t read and change data on this site
+
+origin-controls-state-quarantined = Not allowed by { -vendor-short-name } on this site
 
 origin-controls-state-always-on = Can always read and change data on this site
 

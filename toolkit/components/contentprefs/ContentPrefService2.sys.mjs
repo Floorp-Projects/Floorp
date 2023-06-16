@@ -350,7 +350,7 @@ ContentPrefService2.prototype = {
     }
 
     let outStore = new ContentPrefStore();
-    storesToCheck.forEach(function(store) {
+    storesToCheck.forEach(function (store) {
       for (let [sgroup, val] of store.match(group, name, includeSubdomains)) {
         outStore.set(sgroup, name, val);
       }
@@ -380,7 +380,7 @@ ContentPrefService2.prototype = {
 
     if (context && context.usePrivateBrowsing) {
       this._pbStore.set(group, name, value);
-      this._schedule(function() {
+      this._schedule(function () {
         cbHandleCompletion(callback, Ci.nsIContentPrefCallback2.COMPLETE_OK);
         this._notifyPrefSet(group, name, value, context.usePrivateBrowsing);
       });

@@ -14,7 +14,7 @@ Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-adb.js", this);
 
 // Test that manifest URLs for addon targets show the manifest correctly in a new tab.
 // This test reuses the ADB extension to be sure to have a valid manifest URL to open.
-add_task(async function() {
+add_task(async function () {
   await pushPref(
     "devtools.remote.adb.extensionURL",
     CHROME_URL_ROOT + "resources/test-adb-extension/adb-extension-#OS#.xpi"
@@ -47,7 +47,7 @@ add_task(async function() {
   const textContent = await SpecialPowers.spawn(
     target.linkedBrowser,
     [],
-    function() {
+    function () {
       return content.wrappedJSObject.document.body.textContent;
     }
   );

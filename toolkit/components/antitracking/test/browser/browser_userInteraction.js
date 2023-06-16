@@ -3,7 +3,7 @@
 
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 
-add_task(async function() {
+add_task(async function () {
   info("Starting subResources test");
 
   await SpecialPowers.flushPrefEnv();
@@ -49,7 +49,7 @@ add_task(async function() {
   });
 
   info("Simulating user-interaction.");
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     content.document.userInteractionForTesting();
   });
 
@@ -68,7 +68,7 @@ add_task(async function() {
     });
 
     info("Simulating another user-interaction.");
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       content.document.userInteractionForTesting();
     });
 
@@ -101,7 +101,7 @@ add_task(async function() {
   });
 
   info("Simulating another user-interaction.");
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     content.document.userInteractionForTesting();
   });
 
@@ -114,7 +114,7 @@ add_task(async function() {
   UrlClassifierTestUtils.cleanupTestTrackers();
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Cleaning up.");
   await new Promise(resolve => {
     Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>

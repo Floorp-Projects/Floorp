@@ -10,6 +10,6 @@
  *
  * Replacement for `extends` API from "sdk/core/heritage".
  */
-exports.extend = function(prototype, properties) {
+exports.extend = function (prototype, properties) {
   return Object.create(prototype, Object.getOwnPropertyDescriptors(properties));
 };

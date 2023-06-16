@@ -11,7 +11,7 @@ describe("addHighlightToTargetSiblings", () => {
   it("should add preview highlight class to related target siblings", async () => {
     const div = document.createElement("div");
     const divChildren = ["a", "divided", "token"];
-    divChildren.forEach(function(span) {
+    divChildren.forEach(function (span) {
       const child = document.createElement("span");
       const text = document.createTextNode(span);
       child.appendChild(text);
@@ -83,7 +83,7 @@ describe("removeHighlightForTargetSiblings", () => {
   it("should remove preview highlight class from target's related siblings", async () => {
     const div = document.createElement("div");
     const divChildren = ["a", "divided", "token"];
-    divChildren.forEach(function(span) {
+    divChildren.forEach(function (span) {
       const child = document.createElement("span");
       const text = document.createTextNode(span);
       child.appendChild(text);

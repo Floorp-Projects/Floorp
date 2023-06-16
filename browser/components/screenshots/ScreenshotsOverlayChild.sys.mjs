@@ -294,17 +294,13 @@ class AnonymousContentOverlay {
    * @returns document fragment that can be injected into the Anonymous Content
    */
   buildOverlay() {
-    let [
-      cancel,
-      instructions,
-      download,
-      copy,
-    ] = lazy.overlayLocalization.formatMessagesSync([
-      { id: "screenshots-overlay-cancel-button" },
-      { id: "screenshots-overlay-instructions" },
-      { id: "screenshots-overlay-download-button" },
-      { id: "screenshots-overlay-copy-button" },
-    ]);
+    let [cancel, instructions, download, copy] =
+      lazy.overlayLocalization.formatMessagesSync([
+        { id: "screenshots-overlay-cancel-button" },
+        { id: "screenshots-overlay-instructions" },
+        { id: "screenshots-overlay-download-button" },
+        { id: "screenshots-overlay-copy-button" },
+      ]);
 
     const htmlString = `
     <div id="screenshots-component">
@@ -723,10 +719,8 @@ class StateHandler {
    */
   resizingStart() {
     this.#screenshotsContainer.hideButtonsLayer();
-    let {
-      width,
-      height,
-    } = this.#screenshotsContainer.getSelectionLayerBoxDimensions();
+    let { width, height } =
+      this.#screenshotsContainer.getSelectionLayerBoxDimensions();
     this.#lastBox = {
       width,
       height,
@@ -958,10 +952,8 @@ class StateHandler {
     this.#screenshotsContainer.sortSelectionLayerBoxCoords();
     this.setState("selected");
 
-    let {
-      width,
-      height,
-    } = this.#screenshotsContainer.getSelectionLayerBoxDimensions();
+    let { width, height } =
+      this.#screenshotsContainer.getSelectionLayerBoxDimensions();
 
     if (
       !this.#previousDimensions ||
@@ -2083,14 +2075,8 @@ class ScreenshotsContainerLayer extends AnonLayer {
    * @param win The window object
    */
   updateSize(win) {
-    let {
-      clientWidth,
-      clientHeight,
-      width,
-      height,
-      scrollX,
-      scrollY,
-    } = this.getDimensionsFromWindow(win);
+    let { clientWidth, clientHeight, width, height, scrollX, scrollY } =
+      this.getDimensionsFromWindow(win);
 
     let shouldDraw = true;
 
@@ -2107,10 +2093,8 @@ class ScreenshotsContainerLayer extends AnonLayer {
       this.drawScreenshotsContainer();
       // We just updated the screenshots container so we check if the window
       // dimensions are still accurate
-      let {
-        width: updatedWidth,
-        height: updatedHeight,
-      } = this.getDimensionsFromWindow(win);
+      let { width: updatedWidth, height: updatedHeight } =
+        this.getDimensionsFromWindow(win);
 
       // If the width and height are the same then we don't need to draw the overlay again
       if (updatedWidth === width && updatedHeight === height) {

@@ -7,7 +7,7 @@
  * Check that moving items from the toolbar or panel to the palette by
  * dropping on the panel container (not inside the visible panel) works.
  */
-add_task(async function() {
+add_task(async function () {
   await startCustomizing();
   let panelContainer = document.getElementById("customization-panel-container");
   // Try dragging an item from the navbar:
@@ -47,7 +47,7 @@ add_task(async function() {
   );
 });
 
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   await gCustomizeMode.reset();
   await endCustomizing();
 });

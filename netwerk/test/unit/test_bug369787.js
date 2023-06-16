@@ -16,7 +16,7 @@ function change_content_type() {
 }
 
 function TestListener() {}
-TestListener.prototype.onStartRequest = function(request) {
+TestListener.prototype.onStartRequest = function (request) {
   try {
     // request might be different from channel
     channel = request.QueryInterface(Ci.nsIChannel);
@@ -27,7 +27,7 @@ TestListener.prototype.onStartRequest = function(request) {
     throw ex;
   }
 };
-TestListener.prototype.onStopRequest = function(request, status) {
+TestListener.prototype.onStopRequest = function (request, status) {
   try {
     change_content_type();
   } catch (ex) {

@@ -5,7 +5,6 @@
 menupopup {
   position: fixed;
   z-index: 10000;
-  background: white;
   border: 1px solid #cccccc;
   padding: 5px 0;
   background: #f2f2f2;

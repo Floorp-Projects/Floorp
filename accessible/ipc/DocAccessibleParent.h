@@ -264,15 +264,6 @@ class DocAccessibleParent : public RemoteAccessible,
   void MaybeInitWindowEmulation();
 
   /**
-   * Note that an OuterDocAccessible can be created before the
-   * DocAccessibleParent or vice versa. Therefore, this must be conditionally
-   * called when either of these is created.
-   * @param aOuterDoc The OuterDocAccessible to be returned as the parent of
-   *        this document.
-   */
-  void SendParentCOMProxy(Accessible* aOuterDoc);
-
-  /**
    * Set emulated native window handle for a document.
    * @param aWindowHandle emulated native window handle
    */
@@ -338,6 +329,8 @@ class DocAccessibleParent : public RemoteAccessible,
 
   void URL(nsAString& aURL) const;
   void URL(nsACString& aURL) const;
+
+  void MimeType(nsAString& aURL) const;
 
   virtual Relation RelationByType(RelationType aType) const override;
 
@@ -406,13 +399,7 @@ class DocAccessibleParent : public RemoteAccessible,
 #if defined(XP_WIN)
   // The handle associated with the emulated window that contains this document
   HWND mEmulatedWindowHandle;
-
-#  if defined(MOZ_SANDBOX)
-  mscom::PreservedStreamPtr mParentProxyStream;
-  mscom::PreservedStreamPtr mDocProxyStream;
-  mscom::PreservedStreamPtr mTopLevelDocProxyStream;
-#  endif  // defined(MOZ_SANDBOX)
-#endif    // defined(XP_WIN)
+#endif  // defined(XP_WIN)
 
   /*
    * Conceptually this is a map from IDs to proxies, but we store the ID in the

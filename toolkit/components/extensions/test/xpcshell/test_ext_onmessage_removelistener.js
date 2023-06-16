@@ -13,7 +13,7 @@ function backgroundScript() {
 
   // Make sure that, if we somehow fail to remove the listener, then we'll run
   // the listener before the test is marked as passing.
-  setTimeout(function() {
+  setTimeout(function () {
     browser.test.notifyPass("onmessage_removelistener");
   }, 0);
 }

@@ -1003,15 +1003,8 @@ this.DateTimeBoxWidget = class {
       return;
     }
 
-    let {
-      year,
-      month,
-      day,
-      hour,
-      minute,
-      second,
-      millisecond,
-    } = this.getInputElementValues();
+    let { year, month, day, hour, minute, second, millisecond } =
+      this.getInputElementValues();
     if (this.shouldShowDate()) {
       this.log("setFieldsFromInputValue: " + value);
       this.setFieldValue(this.mYearField, year);
@@ -1061,16 +1054,8 @@ this.DateTimeBoxWidget = class {
       return;
     }
 
-    let {
-      year,
-      month,
-      day,
-      hour,
-      minute,
-      second,
-      millisecond,
-      dayPeriod,
-    } = this.getCurrentValue();
+    let { year, month, day, hour, minute, second, millisecond, dayPeriod } =
+      this.getCurrentValue();
 
     let time = "";
     let date = "";
@@ -1306,15 +1291,8 @@ this.DateTimeBoxWidget = class {
   }
 
   isAnyFieldAvailable(aForPicker = false) {
-    let {
-      year,
-      month,
-      day,
-      hour,
-      minute,
-      second,
-      millisecond,
-    } = this.getCurrentValue();
+    let { year, month, day, hour, minute, second, millisecond } =
+      this.getCurrentValue();
     if (
       !this.isEmpty(year) ||
       !this.isEmpty(month) ||
@@ -1339,15 +1317,8 @@ this.DateTimeBoxWidget = class {
   }
 
   isAnyFieldEmpty() {
-    let {
-      year,
-      month,
-      day,
-      hour,
-      minute,
-      second,
-      millisecond,
-    } = this.getCurrentValue();
+    let { year, month, day, hour, minute, second, millisecond } =
+      this.getCurrentValue();
     return (
       (this.mYearField && this.isEmpty(year)) ||
       (this.mMonthField && this.isEmpty(month)) ||

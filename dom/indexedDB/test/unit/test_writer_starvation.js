@@ -5,7 +5,7 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 
 if (!this.window) {
-  this.runTest = function() {
+  this.runTest = function () {
     todo(false, "Test disabled in xpcshell test suite for now");
     finishTest();
   };
@@ -53,11 +53,8 @@ function* testSteps() {
 
   for (let i = 0; i < SYNC_REQUEST_COUNT; i++) {
     readerCount++;
-    let request = db
-      .transaction("foo")
-      .objectStore("foo")
-      .get(key);
-    request.onsuccess = function(event) {
+    let request = db.transaction("foo").objectStore("foo").get(key);
+    request.onsuccess = function (event) {
       is(event.target.transaction.mode, "readonly", "Correct mode");
       callbackCount++;
     };
@@ -66,11 +63,8 @@ function* testSteps() {
   while (continueReading) {
     readerCount++;
     info("Generating additional readonly request (" + readerCount + ")");
-    let request = db
-      .transaction("foo")
-      .objectStore("foo")
-      .get(key);
-    request.onsuccess = function(event) {
+    let request = db.transaction("foo").objectStore("foo").get(key);
+    request.onsuccess = function (event) {
       callbackCount++;
       info("Received readonly request callback (" + callbackCount + ")");
       is(event.target.transaction.mode, "readonly", "Correct mode");
@@ -85,7 +79,7 @@ function* testSteps() {
           .transaction("foo", "readwrite")
           .objectStore("foo")
           .add({}, readerCount);
-        request.onsuccess = function(event) {
+        request.onsuccess = function (event) {
           callbackCount++;
           info("Received readwrite request callback (" + callbackCount + ")");
           is(event.target.transaction.mode, "readwrite", "Correct mode");
@@ -101,7 +95,7 @@ function* testSteps() {
     };
 
     setTimeout(
-      function() {
+      function () {
         testGenerator.next();
       },
       writerCount ? 1000 : 100
@@ -110,7 +104,7 @@ function* testSteps() {
   }
 
   while (callbackCount < readerCount + writerCount) {
-    executeSoon(function() {
+    executeSoon(function () {
       testGenerator.next();
     });
     yield undefined;

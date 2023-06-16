@@ -94,8 +94,7 @@ add_task(async function public_api_uses_mlbf() {
     await Blocklist.getAddonBlocklistEntry(blockedAddon),
     {
       state: Ci.nsIBlocklistService.STATE_BLOCKED,
-      url:
-        "https://addons.mozilla.org/en-US/xpcshell/blocked-addon/@blocked/1/",
+      url: "https://addons.mozilla.org/en-US/xpcshell/blocked-addon/@blocked/1/",
     },
     "Blocked addon should have blocked entry"
   );
@@ -175,7 +174,7 @@ add_task(async function handle_database_corruption() {
 
   let fetchCount = 0;
   const originalFetchMLBF = ExtensionBlocklistMLBF._fetchMLBF;
-  ExtensionBlocklistMLBF._fetchMLBF = function() {
+  ExtensionBlocklistMLBF._fetchMLBF = function () {
     ++fetchCount;
     return originalFetchMLBF.apply(this, arguments);
   };

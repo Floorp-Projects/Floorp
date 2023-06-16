@@ -17,6 +17,12 @@ ur_IN{
         zgh{"معیاری مراقشی تمازیقی"}
         zh_Hans{"آسان چینی"}
     }
+    Languages%menu{
+        ckb{"سورانی کردی"}
+    }
+    Languages%variant{
+        ckb{"سورانی کردی"}
+    }
     Types{
         numbers{
             armnlow{"آرمینیائی لوئر کیس اعداد"}

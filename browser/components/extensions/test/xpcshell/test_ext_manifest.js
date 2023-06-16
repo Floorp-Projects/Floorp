@@ -44,7 +44,7 @@ add_task(async function test_manifest() {
       let error = new RegExp(`Error processing ${action}.default_icon`);
       await testManifest(manifest, error);
 
-      manifest[action] = { default_icon: { "16": path } };
+      manifest[action] = { default_icon: { 16: path } };
       await testManifest(manifest, error);
     }
   }
@@ -67,7 +67,7 @@ add_task(async function test_manifest() {
       }
       await testManifest(manifest);
 
-      manifest[action] = { default_icon: { "16": path } };
+      manifest[action] = { default_icon: { 16: path } };
       if (action == "sidebar_action") {
         manifest[action].default_panel = "foo.html";
       }

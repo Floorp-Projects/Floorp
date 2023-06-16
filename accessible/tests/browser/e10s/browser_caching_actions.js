@@ -101,7 +101,7 @@ addAccessibleTask(
 
   <div onclick=""><p id="p_in_clickable_div">p in clickable div</p></div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     is(docAcc.actionCount, 0, "Doc should not have any actions");
 
     const _testActions = async (id, expectedActions, domEvents) => {
@@ -207,9 +207,9 @@ addAccessibleTask(
   },
   {
     chrome: true,
-    topLevel: !isWinNoCache,
-    iframe: !isWinNoCache,
-    remoteIframe: !isWinNoCache,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
   }
 );
 
@@ -221,7 +221,7 @@ addAccessibleTask(
 <button id="noKey">noKey</button>
 <button id="key" accesskey="a">key</button>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const noKey = findAccessibleChildByID(docAcc, "noKey");
     is(noKey.accessKey, "", "noKey has no accesskey");
     const key = findAccessibleChildByID(docAcc, "key");
@@ -259,7 +259,7 @@ addAccessibleTask(
   },
   {
     chrome: true,
-    topLevel: !isWinNoCache,
+    topLevel: true,
     iframe: false, // Bug 1796846
     remoteIframe: false, // Bug 1796846
   }

@@ -26,6 +26,11 @@
 }
 
 .asrouter-admin {
+  $border-color: var(--newtab-border-color);
+  $monospace: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', 'Droid Sans Mono',
+    'Source Code Pro', monospace;
+  $sidebar-width: 240px;
+
   position: fixed;
   top: 0;
   inset-inline-start: 0;
@@ -33,10 +38,6 @@
   background: var(--newtab-background-color);
   height: 100%;
   overflow-y: scroll;
-  $border-color: var(--newtab-border-color);
-  $monospace: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', 'Droid Sans Mono',
-  'Source Code Pro', monospace;
-  $sidebar-width: 240px;
   margin: 0 auto;
   font-size: 14px;
   padding-inline-start: $sidebar-width;

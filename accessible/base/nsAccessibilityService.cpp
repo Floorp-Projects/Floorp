@@ -43,13 +43,8 @@
 #include "TreeWalker.h"
 #include "xpcAccessibleApplication.h"
 
-#ifdef MOZ_ACCESSIBILITY_ATK
-#  include "AtkSocketAccessible.h"
-#endif
-
 #ifdef XP_WIN
 #  include "mozilla/a11y/Compatibility.h"
-#  include "mozilla/dom/ContentChild.h"
 #  include "mozilla/StaticPtr.h"
 #endif
 
@@ -74,7 +69,6 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/Services.h"
-#include "mozilla/StaticPrefs_accessibility.h"
 
 #include "XULAlertAccessible.h"
 #include "XULComboboxAccessible.h"
@@ -195,19 +189,34 @@ static bool AttributesMustBeAccessible(nsIContent* aContent,
  */
 static bool MustBeGenericAccessible(nsIContent* aContent,
                                     DocAccessible* aDocument) {
+  if (aContent->IsInNativeAnonymousSubtree() || aContent->IsSVGElement()) {
+    // We should not force create accs for anonymous content.
+    // This is an issue for inputs, which have an intermediate
+    // container with relevant overflow styling between the input
+    // and its internal input content.
+    // We should also avoid this for SVG elements (ie. `<foreignobject>`s
+    // which have default overflow:hidden styling).
+    return false;
+  }
   nsIFrame* frame = aContent->GetPrimaryFrame();
   MOZ_ASSERT(frame);
+  nsAutoCString overflow;
+  frame->Style()->GetComputedPropertyValue(eCSSProperty_overflow, overflow);
   // If the frame has been transformed, and the content has any children, we
   // should create an Accessible so that we can account for the transform when
   // calculating the Accessible's bounds using the parent process cache.
-  // Ditto for content which is position: fixed or sticky.
+  // Ditto for content which is position: fixed or sticky or has overflow
+  // styling (auto, scroll, hidden).
   // However, don't do this for XUL widgets, as this breaks XUL a11y code
   // expectations in some cases. XUL widgets are only used in the parent
   // process and can't be cached anyway.
-  return aContent->HasChildren() && !aContent->IsXULElement() &&
-         (frame->IsTransformed() || frame->IsStickyPositioned() ||
+  return !aContent->IsXULElement() &&
+         ((aContent->HasChildren() && frame->IsTransformed()) ||
+          frame->IsStickyPositioned() ||
           (frame->StyleDisplay()->mPosition == StylePositionProperty::Fixed &&
-           nsLayoutUtils::IsReallyFixedPos(frame)));
+           nsLayoutUtils::IsReallyFixedPos(frame)) ||
+          overflow.Equals("auto"_ns) || overflow.Equals("scroll"_ns) ||
+          overflow.Equals("hidden"_ns));
 }
 
 /**
@@ -489,8 +498,7 @@ void nsAccessibilityService::FireAccessibleEvent(uint32_t aEvent,
 
 void nsAccessibilityService::NotifyOfPossibleBoundsChange(
     mozilla::PresShell* aPresShell, nsIContent* aContent) {
-  if (IPCAccessibilityActive() &&
-      StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (IPCAccessibilityActive()) {
     DocAccessible* document = aPresShell->GetDocAccessible();
     if (document) {
       // DocAccessible::GetAccessible() won't return the document if a root
@@ -517,52 +525,49 @@ void nsAccessibilityService::NotifyOfComputedStyleChange(
   LocalAccessible* accessible = aContent == document->GetContent()
                                     ? document
                                     : document->GetAccessible(aContent);
-  if (!accessible && aContent && aContent->HasChildren()) {
+  if (!accessible && aContent && aContent->HasChildren() &&
+      !aContent->IsInNativeAnonymousSubtree()) {
     // If the content has children and its frame has a transform, create an
     // Accessible so that we can account for the transform when calculating
     // the Accessible's bounds using the parent process cache. Ditto for
-    // position: fixed/sticky content.
-    const nsIFrame* frame = aContent->GetPrimaryFrame();
-    const ComputedStyle* newStyle = frame ? frame->Style() : nullptr;
-    if (newStyle &&
-        (newStyle->StyleDisplay()->HasTransform(frame) ||
-         newStyle->StyleDisplay()->mPosition == StylePositionProperty::Fixed ||
-         newStyle->StyleDisplay()->mPosition ==
-             StylePositionProperty::Sticky)) {
-      document->ContentInserted(aContent, aContent->GetNextSibling());
+    // position: fixed/sticky and content with overflow styling (hidden, auto,
+    // scroll)
+    if (const nsIFrame* frame = aContent->GetPrimaryFrame()) {
+      const auto& disp = *frame->StyleDisplay();
+      if (disp.HasTransform(frame) ||
+          disp.mPosition == StylePositionProperty::Fixed ||
+          disp.mPosition == StylePositionProperty::Sticky ||
+          disp.IsScrollableOverflow()) {
+        document->ContentInserted(aContent, aContent->GetNextSibling());
+      }
     }
-  } else if (accessible && IPCAccessibilityActive() &&
-             StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  } else if (accessible && IPCAccessibilityActive()) {
     accessible->MaybeQueueCacheUpdateForStyleChanges();
   }
 }
 
 void nsAccessibilityService::NotifyOfResolutionChange(
     mozilla::PresShell* aPresShell, float aResolution) {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    DocAccessible* document = aPresShell->GetDocAccessible();
-    if (document && document->IPCDoc()) {
-      AutoTArray<mozilla::a11y::CacheData, 1> data;
-      RefPtr<AccAttributes> fields = new AccAttributes();
-      fields->SetAttribute(nsGkAtoms::resolution, aResolution);
-      data.AppendElement(mozilla::a11y::CacheData(0, fields));
-      document->IPCDoc()->SendCache(CacheUpdateType::Update, data);
-    }
+  DocAccessible* document = aPresShell->GetDocAccessible();
+  if (document && document->IPCDoc()) {
+    AutoTArray<mozilla::a11y::CacheData, 1> data;
+    RefPtr<AccAttributes> fields = new AccAttributes();
+    fields->SetAttribute(nsGkAtoms::resolution, aResolution);
+    data.AppendElement(mozilla::a11y::CacheData(0, fields));
+    document->IPCDoc()->SendCache(CacheUpdateType::Update, data);
   }
 }
 
 void nsAccessibilityService::NotifyOfDevPixelRatioChange(
     mozilla::PresShell* aPresShell, int32_t aAppUnitsPerDevPixel) {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    DocAccessible* document = aPresShell->GetDocAccessible();
-    if (document && document->IPCDoc()) {
-      AutoTArray<mozilla::a11y::CacheData, 1> data;
-      RefPtr<AccAttributes> fields = new AccAttributes();
-      fields->SetAttribute(nsGkAtoms::_moz_device_pixel_ratio,
-                           aAppUnitsPerDevPixel);
-      data.AppendElement(mozilla::a11y::CacheData(0, fields));
-      document->IPCDoc()->SendCache(CacheUpdateType::Update, data);
-    }
+  DocAccessible* document = aPresShell->GetDocAccessible();
+  if (document && document->IPCDoc()) {
+    AutoTArray<mozilla::a11y::CacheData, 1> data;
+    RefPtr<AccAttributes> fields = new AccAttributes();
+    fields->SetAttribute(nsGkAtoms::_moz_device_pixel_ratio,
+                         aAppUnitsPerDevPixel);
+    data.AppendElement(mozilla::a11y::CacheData(0, fields));
+    document->IPCDoc()->SendCache(CacheUpdateType::Update, data);
   }
 }
 
@@ -670,13 +675,6 @@ void nsAccessibilityService::TableLayoutGuessMaybeChanged(
   if (DocAccessible* document = GetDocAccessible(aPresShell)) {
     if (LocalAccessible* acc = document->GetAccessible(aContent)) {
       if (LocalAccessible* table = nsAccUtils::TableFor(acc)) {
-        if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-          // Only fire this event when the cache is off -- we don't
-          // need to maintain the mac table cache otherwise, since
-          // we'll use the core cache instead.
-          document->FireDelayedEvent(
-              nsIAccessibleEvent::EVENT_TABLE_STYLING_CHANGED, table);
-        }
         document->QueueCacheUpdate(table, CacheDomain::Table);
       }
     }
@@ -1349,6 +1347,8 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
         // <g> can also contain <foreignObject>.
         newAcc =
             new EnumRoleHyperTextAccessible<roles::GROUPING>(content, document);
+      } else if (content->IsSVGElement(nsGkAtoms::a)) {
+        newAcc = new HTMLLinkAccessible(content, document);
       }
 
     } else if (content->IsMathMLElement()) {
@@ -1476,22 +1476,7 @@ bool nsAccessibilityService::Init() {
   if (XRE_IsParentProcess()) {
     gApplicationAccessible = new ApplicationAccessibleWrap();
   } else {
-#if defined(XP_WIN)
-    dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
-    MOZ_ASSERT(contentChild);
-    // If we were instantiated by the chrome process, GetMsaaID() will return
-    // a non-zero value and we may safely continue with initialization.
-    if (!StaticPrefs::accessibility_cache_enabled_AtStartup() &&
-        !contentChild->GetMsaaID()) {
-      // Since we were not instantiated by chrome, we need to synchronously
-      // obtain a MSAA content process id.
-      contentChild->SendGetA11yContentId();
-    }
-
-    gApplicationAccessible = new ApplicationAccessibleWrap();
-#else
     gApplicationAccessible = new ApplicationAccessible();
-#endif  // defined(XP_WIN)
   }
 
   NS_ADDREF(gApplicationAccessible);  // will release in Shutdown()

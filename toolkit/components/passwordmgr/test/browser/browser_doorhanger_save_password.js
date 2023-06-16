@@ -80,16 +80,11 @@ for (let testData of testCases) {
 }
 
 async function test_save_change(testData) {
-  let {
-    oldUsername,
-    username,
-    oldPassword,
-    password,
-    expectOutcome,
-  } = testData;
+  let { oldUsername, username, oldPassword, password, expectOutcome } =
+    testData;
   // Add a login for the origin of the form if testing a change notification.
   if (oldPassword) {
-    Services.logins.addLogin(
+    await Services.logins.addLoginAsync(
       LoginTestUtils.testData.formLogin({
         origin: "https://example.com",
         formActionOrigin: "https://example.com",
@@ -106,7 +101,7 @@ async function test_save_change(testData) {
         "https://example.com/browser/toolkit/components/" +
         "passwordmgr/test/browser/form_basic.html",
     },
-    async function(browser) {
+    async function (browser) {
       await SimpleTest.promiseFocus(browser.ownerGlobal);
 
       // Update the form with credentials from the test case.
@@ -119,7 +114,7 @@ async function test_save_change(testData) {
       // Submit the form with the new credentials. This will cause the doorhanger
       // notification to be displayed.
       let formSubmittedPromise = listenForTestNotification("ShowDoorhanger");
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         let doc = this.content.document;
         doc.getElementById("form-basic").submit();
       });

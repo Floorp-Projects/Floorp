@@ -2,7 +2,7 @@ var EXPORTED_SYMBOLS = ["checkFromJSM"];
 
 function checkFromJSM(ok, is, finish) {
   let worker = new ChromeWorker("jsm_url_worker.js");
-  worker.onmessage = function(event) {
+  worker.onmessage = function (event) {
     if (event.data.type == "finish") {
       finish();
     } else if (event.data.type == "url") {
@@ -12,7 +12,7 @@ function checkFromJSM(ok, is, finish) {
     }
   };
 
-  worker.onerror = function(event) {
+  worker.onerror = function (event) {
     is(event.target, worker);
     ok(false, "Worker had an error: " + event.data);
     worker.terminate();

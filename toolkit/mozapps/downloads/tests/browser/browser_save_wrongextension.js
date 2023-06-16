@@ -56,7 +56,7 @@ add_task(async function test() {
     mockTransferRegisterer.register();
   });
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     mockTransferRegisterer.unregister();
     tempDir.remove(true);
   });

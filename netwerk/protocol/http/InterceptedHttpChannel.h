@@ -250,8 +250,8 @@ class InterceptedHttpChannel final
   AsyncOpen(nsIStreamListener* aListener) override;
 
   NS_IMETHOD
-  LogBlockedCORSRequest(const nsAString& aMessage,
-                        const nsACString& aCategory) override;
+  LogBlockedCORSRequest(const nsAString& aMessage, const nsACString& aCategory,
+                        bool aIsWarning) override;
 
   NS_IMETHOD
   LogMimeTypeMismatch(const nsACString& aMessageName, bool aWarning,

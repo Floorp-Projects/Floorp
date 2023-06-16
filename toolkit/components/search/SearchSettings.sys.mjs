@@ -325,9 +325,8 @@ export class SearchSettings {
    */
   setVerifiedMetaDataAttribute(name, val) {
     this.#settings.metaData[name] = val;
-    this.#settings.metaData[
-      this.getHashName(name)
-    ] = lazy.SearchUtils.getVerificationHash(val);
+    this.#settings.metaData[this.getHashName(name)] =
+      lazy.SearchUtils.getVerificationHash(val);
     this._delayedWrite();
   }
 

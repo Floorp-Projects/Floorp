@@ -28,7 +28,7 @@ runWithMSE(async (ms, v) => {
   await fetchAndLoad(sb, "bipbop/bipbop_video", ["2"], ".m4s");
   is(v.buffered.length, 1, "Continuous buffered range");
   is(v.buffered.start(0), 0, "Buffered range starts at 0");
-  ok(sb.timestampOffset > 0, "SourceBuffer.timestampOffset set to allow continuous range");
+  ok(sb.timestampOffset >= 0, "SourceBuffer.timestampOffset set to allow continuous range");
   SimpleTest.finish();
 });
 </script>

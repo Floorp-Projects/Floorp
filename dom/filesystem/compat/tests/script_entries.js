@@ -3,7 +3,7 @@
 Cu.importGlobalProperties(["File", "Directory"]);
 var tmpFile, tmpDir;
 
-addMessageListener("entries.open", function(e) {
+addMessageListener("entries.open", function (e) {
   tmpFile = Services.dirsvc
     .QueryInterface(Ci.nsIProperties)
     .get("TmpD", Ci.nsIFile);
@@ -33,14 +33,14 @@ addMessageListener("entries.open", function(e) {
   dir2.append("subsubdir");
   dir2.create(Ci.nsIFile.DIRECTORY_TYPE, 0o700);
 
-  File.createFromNsIFile(tmpFile).then(function(file) {
+  File.createFromNsIFile(tmpFile).then(function (file) {
     sendAsyncMessage("entries.opened", {
       data: [new Directory(tmpDir.path), file],
     });
   });
 });
 
-addMessageListener("entries.delete", function(e) {
+addMessageListener("entries.delete", function (e) {
   tmpFile.remove(true);
   tmpDir.remove(true);
   sendAsyncMessage("entries.deleted");

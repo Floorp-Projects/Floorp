@@ -7,19 +7,16 @@
 
 "use strict";
 
-const {
-  SearchSERPTelemetry,
-  SearchSERPTelemetryUtils,
-} = ChromeUtils.importESModule(
-  "resource:///modules/SearchSERPTelemetry.sys.mjs"
-);
+const { SearchSERPTelemetry, SearchSERPTelemetryUtils } =
+  ChromeUtils.importESModule("resource:///modules/SearchSERPTelemetry.sys.mjs");
 
 // Note: example.org is used for the SERP page, and example.com is used to serve
 // the ads. This is done to simulate different domains like the real servers.
 const TEST_PROVIDER_INFO = [
   {
     telemetryId: "example",
-    searchPageRegexp: /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/searchTelemetry(?:Ad)?.html/,
+    searchPageRegexp:
+      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/searchTelemetry(?:Ad)?.html/,
     queryParamName: "s",
     codeParamName: "abc",
     taggedCodes: ["ff"],
@@ -34,7 +31,8 @@ const TEST_PROVIDER_INFO = [
   },
   {
     telemetryId: "example-data-attributes",
-    searchPageRegexp: /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/searchTelemetryAd_dataAttributes(?:_none|_href)?.html/,
+    searchPageRegexp:
+      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/searchTelemetryAd_dataAttributes(?:_none|_href)?.html/,
     queryParamName: "s",
     codeParamName: "abc",
     taggedCodes: ["ff"],
@@ -49,7 +47,8 @@ const TEST_PROVIDER_INFO = [
   },
   {
     telemetryId: "slow-page-load",
-    searchPageRegexp: /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/slow_loading_page_with_ads(_on_load_event)?.html/,
+    searchPageRegexp:
+      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/slow_loading_page_with_ads(_on_load_event)?.html/,
     queryParamName: "s",
     codeParamName: "abc",
     taggedCodes: ["ff"],
@@ -86,7 +85,7 @@ async function waitForIdle() {
   }
 }
 
-add_setup(async function() {
+add_setup(async function () {
   SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
   await waitForIdle();
   // Enable local telemetry recording for the duration of the tests.
@@ -628,9 +627,7 @@ async function track_ad_click(testOrganic) {
   await promiseAdImpressionReceived(1);
 
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
-    content.document.getElementById("ad1").click();
-  });
+  BrowserTestUtils.synthesizeMouseAtCenter("#ad1", {}, tab.linkedBrowser);
   await pageLoadPromise;
   await promiseWaitForAdLinkCheck();
 
@@ -711,9 +708,7 @@ async function track_ad_click(testOrganic) {
   await promiseAdImpressionReceived(2);
 
   pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
-    content.document.getElementById("ad1").click();
-  });
+  BrowserTestUtils.synthesizeMouseAtCenter("#ad1", {}, tab.linkedBrowser);
   await pageLoadPromise;
   await promiseWaitForAdLinkCheck();
 
@@ -810,9 +805,7 @@ add_task(async function test_track_ad_click_with_location_change_other_tab() {
   await BrowserTestUtils.switchTab(gBrowser, tab);
 
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
-    content.document.getElementById("ad1").click();
-  });
+  BrowserTestUtils.synthesizeMouseAtCenter("#ad1", {}, tab.linkedBrowser);
   await pageLoadPromise;
 
   await assertSearchSourcesTelemetry(

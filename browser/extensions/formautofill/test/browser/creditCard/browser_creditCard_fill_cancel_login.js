@@ -14,7 +14,7 @@ add_task(async function test_fill_creditCard_but_cancel_login() {
   let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(false); // cancel
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
-    async function(browser) {
+    async function (browser) {
       await openPopupOn(browser, "#cc-name");
       const ccItem = getDisplayedPopupItems(browser)[0];
       let popupClosePromise = BrowserTestUtils.waitForPopupEvent(
@@ -24,7 +24,7 @@ add_task(async function test_fill_creditCard_but_cancel_login() {
       await EventUtils.synthesizeMouseAtCenter(ccItem, {});
       await Promise.all([osKeyStoreLoginShown, popupClosePromise]);
 
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         is(content.document.querySelector("#cc-name").value, "", "Check name");
         is(
           content.document.querySelector("#cc-number").value,

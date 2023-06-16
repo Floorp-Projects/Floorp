@@ -66,7 +66,15 @@ bool IsWidevineKeySystem(const nsAString& aKeySystem) {
 }
 
 #ifdef MOZ_WMF_CDM
-bool IsPlayReadyKeySystem(const nsAString& aKeySystem) {
+bool IsPlayReadyKeySystemAndSupported(const nsAString& aKeySystem) {
+  if (!StaticPrefs::media_eme_playready_enabled()) {
+    return false;
+  }
+  // 1=enabled encrypted and clear, 2=enabled encrytped.
+  if (StaticPrefs::media_wmf_media_engine_enabled() != 1 &&
+      StaticPrefs::media_wmf_media_engine_enabled() != 2) {
+    return false;
+  }
   return aKeySystem.EqualsLiteral(kPlayReadyKeySystemName) ||
          aKeySystem.EqualsLiteral(kPlayReadyKeySystemHardware);
 }
@@ -80,7 +88,7 @@ nsString KeySystemToProxyName(const nsAString& aKeySystem) {
     return u"gmp-widevinecdm"_ns;
   }
 #ifdef MOZ_WMF_CDM
-  if (IsPlayReadyKeySystem(aKeySystem)) {
+  if (IsPlayReadyKeySystemAndSupported(aKeySystem)) {
     return u"mfcdm-playready"_ns;
   }
 #endif

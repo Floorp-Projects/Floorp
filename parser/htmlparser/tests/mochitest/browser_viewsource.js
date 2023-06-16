@@ -1,6 +1,6 @@
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const PAGE_URL = getRootDirectory(gTestPath) + "file_viewsource.html";
   let viewSourceTab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -17,7 +17,7 @@ add_task(async function() {
   let viewSourceContentPromise = SpecialPowers.spawn(
     viewSourceTab.linkedBrowser,
     [],
-    async function() {
+    async function () {
       return content.document.body.textContent;
     }
   );

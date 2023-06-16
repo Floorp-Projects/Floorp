@@ -23,7 +23,7 @@ const EXPECTED_REQUESTS = {
   max: 280,
 };
 
-module.exports = async function() {
+module.exports = async function () {
   await testSetup(COMPLICATED_URL);
   const toolbox = await openToolboxAndLog(
     "complicated.netmonitor",

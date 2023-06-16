@@ -25,8 +25,6 @@ const kDebuggerPrefs = [
   "devtools.chrome.enabled",
 ];
 
-const DEVTOOLS_F12_DISABLED_PREF = "devtools.experiment.f12.shortcut_disabled";
-
 const DEVTOOLS_POLICY_DISABLED_PREF = "devtools.policy.disabled";
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
@@ -34,13 +32,10 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "CustomizableUI",
-  "resource:///modules/CustomizableUI.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
+  CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
   CustomizableWidgets: "resource:///modules/CustomizableWidgets.sys.mjs",
+  PanelMultiView: "resource:///modules/PanelMultiView.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   WebChannel: "resource://gre/modules/WebChannel.sys.mjs",
 });
@@ -49,15 +44,10 @@ ChromeUtils.defineModuleGetter(
   "ProfilerMenuButton",
   "resource://devtools/client/performance-new/popup/menu-button.jsm.js"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PanelMultiView",
-  "resource:///modules/PanelMultiView.jsm"
-);
 
 // We don't want to spend time initializing the full loader here so we create
 // our own lazy require.
-XPCOMUtils.defineLazyGetter(lazy, "Telemetry", function() {
+XPCOMUtils.defineLazyGetter(lazy, "Telemetry", function () {
   const { require } = ChromeUtils.importESModule(
     "resource://devtools/shared/loader/Loader.sys.mjs"
   );
@@ -67,7 +57,7 @@ XPCOMUtils.defineLazyGetter(lazy, "Telemetry", function() {
   return Telemetry;
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "KeyShortcutsBundle", function() {
+XPCOMUtils.defineLazyGetter(lazy, "KeyShortcutsBundle", function () {
   return new Localization(["devtools/startup/key-shortcuts.ftl"], true);
 });
 
@@ -93,7 +83,7 @@ function getLocalizedKeyShortcut(id) {
   }
 }
 
-XPCOMUtils.defineLazyGetter(lazy, "KeyShortcuts", function() {
+XPCOMUtils.defineLazyGetter(lazy, "KeyShortcuts", function () {
   const isMac = AppConstants.platform == "macosx";
 
   // Common modifier shared by most key shortcuts
@@ -301,7 +291,7 @@ export function validateProfilerWebChannelUrl(targetUrl) {
   return frontEndUrl;
 }
 
-XPCOMUtils.defineLazyGetter(lazy, "ProfilerPopupBackground", function() {
+XPCOMUtils.defineLazyGetter(lazy, "ProfilerPopupBackground", function () {
   return ChromeUtils.import(
     "resource://devtools/client/performance-new/shared/background.jsm.js"
   );
@@ -358,13 +348,6 @@ DevToolsStartup.prototype = {
     const isInitialLaunch =
       cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH;
     if (isInitialLaunch) {
-      // The F12 shortcut might be disabled to avoid accidental usage.
-      // Users who are already considered as devtools users should not be
-      // impacted.
-      if (this.isDevToolsUser()) {
-        Services.prefs.setBoolPref(DEVTOOLS_F12_DISABLED_PREF, false);
-      }
-
       // Store devtoolsFlag to check it later in onWindowReady.
       this.devtoolsFlag = flags.devtools;
 
@@ -409,6 +392,103 @@ DevToolsStartup.prototype = {
     if (flags.devToolsServer) {
       this.handleDevToolsServerFlag(cmdLine, flags.devToolsServer);
     }
+
+    // If Firefox is already opened, and DevTools are also already opened,
+    // try to open links passed via command line arguments.
+    if (!isInitialLaunch && this.initialized && cmdLine.length) {
+      this.checkForDebuggerLink(cmdLine);
+    }
+  },
+
+  /**
+   * Lookup in all arguments passed to firefox binary to find
+   * URLs including a precise location, like this:
+   *   https://domain.com/file.js:1:10 (URL ending with `:${line}:${number}`)
+   * When such argument exists, try to open this source and precise location
+   * in the debugger.
+   *
+   * @param {nsICommandLine} cmdLine
+   */
+  checkForDebuggerLink(cmdLine) {
+    const urlFlagIdx = cmdLine.findFlag("url", false);
+    // Bail out when there is no -url argument, or if that's last and so there is no URL after it.
+    if (urlFlagIdx == -1 && urlFlagIdx + 1 < cmdLine.length) {
+      return;
+    }
+
+    // The following code would only work if we have a top level browser window opened
+    const window = Services.wm.getMostRecentWindow("navigator:browser");
+    if (!window) {
+      return;
+    }
+
+    const urlParam = cmdLine.getArgument(urlFlagIdx + 1);
+
+    // Avoid processing valid url like:
+    //   http://foo@user:123
+    // Note that when loading `http://foo.com` the URL of the default html page will be `http://foo.com/`.
+    // So that there will always be another `/` after `https://`
+    if (
+      (urlParam.startsWith("http://") || urlParam.startsWith("https://")) &&
+      urlParam.lastIndexOf("/") <= 7
+    ) {
+      return;
+    }
+
+    let match = urlParam.match(/^(?<url>\w+:.+):(?<line>\d+):(?<column>\d+)$/);
+    if (!match) {
+      // fallback on only having the line when there is no column
+      match = urlParam.match(/^(?<url>\w+:.+):(?<line>\d+)?$/);
+      if (!match) {
+        return;
+      }
+    }
+
+    const { url, line, column } = match.groups;
+
+    // If for any reason the final url is invalid, ignore it
+    try {
+      Services.io.newURI(url);
+    } catch (e) {
+      return;
+    }
+
+    // Avoid regular Firefox code from processing this argument,
+    // otherwise we would open the source in DevTools and in a new tab.
+    //
+    // /!\ This has to be called synchronously from the call to `DevToolsStartup.handle(cmdLine)`
+    //     Otherwise the next command lines listener will interpret the argument redundantly.
+    cmdLine.removeArguments(urlFlagIdx, urlFlagIdx + 1);
+
+    // Avoid opening a new empty top level window if there is no more arguments
+    if (!cmdLine.length) {
+      cmdLine.preventDefault = true;
+    }
+
+    // Note that the following method is async and returns a promise.
+    // But the current method has to be synchronous because of cmdLine.removeArguments.
+    this.openSourceInDebugger(window, {
+      url,
+      line: parseInt(line, 10),
+      column: parseInt(column || 0, 10),
+    });
+  },
+
+  /**
+   * If DevTools and the debugger are opened, try to open the source
+   * at specified location in the debugger.
+   * Otherwise fallback by opening this location via view-source.
+   *
+   * @param {Window} window
+   *        The top level browser window into which we should open the URL.
+   * @param {String} url
+   * @param {Number} line
+   * @param {Number} column
+   */
+  async openSourceInDebugger(window, { url, line, column }) {
+    const require = this.initDevTools("CommandLine");
+    const { gDevTools } = require("devtools/client/framework/devtools");
+    await gDevTools.openSourceInDebugger(window, { url, line, column });
   },
 
   readCommandLineFlags(cmdLine) {
@@ -599,9 +679,8 @@ DevToolsStartup.prototype = {
       return;
     }
     const featureFlagPref = "devtools.performance.popup.feature-flag";
-    const isPopupFeatureFlagEnabled = Services.prefs.getBoolPref(
-      featureFlagPref
-    );
+    const isPopupFeatureFlagEnabled =
+      Services.prefs.getBoolPref(featureFlagPref);
     this.profilerRecordingButtonCreated = true;
 
     // Listen for messages from the front-end. This needs to happen even if the
@@ -916,7 +995,7 @@ DevToolsStartup.prototype = {
     let devtoolsThreadResumed = false;
     const pauseOnStartup = cmdLine.handleFlag("wait-for-jsdebugger", false);
     if (pauseOnStartup) {
-      const observe = function(subject, topic, data) {
+      const observe = function (subject, topic, data) {
         devtoolsThreadResumed = true;
         Services.obs.removeObserver(observe, "devtools-thread-ready");
       };

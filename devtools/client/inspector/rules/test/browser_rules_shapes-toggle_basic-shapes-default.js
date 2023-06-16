@@ -28,7 +28,7 @@ const TEST_URI = `
 
 const HIGHLIGHTER_TYPE = "ShapesHighlighter";
 
-add_task(async function() {
+add_task(async function () {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, view } = await openRuleView();
   const highlighters = view.highlighters;
@@ -44,8 +44,11 @@ add_task(async function() {
 
   for (const [selector, expectShapesToogle] of selectors) {
     await selectNode(selector, inspector);
-    const container = getRuleViewProperty(view, selector, "clip-path")
-      .valueSpan;
+    const container = getRuleViewProperty(
+      view,
+      selector,
+      "clip-path"
+    ).valueSpan;
     const shapesToggle = container.querySelector(".ruleview-shapeswatch");
 
     if (expectShapesToogle) {

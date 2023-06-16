@@ -64,7 +64,7 @@ var c2 = 1;
 
 var tests = [
   // test things without a search term
-  async function() {
+  async function () {
     info("Test 0: same count, different date");
     await task_setCountDate(uri1, c1, d1);
     await task_setCountDate(uri2, c1, d2);
@@ -93,7 +93,7 @@ var tests = [
       ],
     });
   },
-  async function() {
+  async function () {
     info("Test 1: same count, different date");
     await task_setCountDate(uri1, c1, d2);
     await task_setCountDate(uri2, c1, d1);
@@ -118,7 +118,7 @@ var tests = [
       ],
     });
   },
-  async function() {
+  async function () {
     info("Test 2: different count, same date");
     await task_setCountDate(uri1, c1, d1);
     await task_setCountDate(uri2, c2, d1);
@@ -143,7 +143,7 @@ var tests = [
       ],
     });
   },
-  async function() {
+  async function () {
     info("Test 3: different count, same date");
     await task_setCountDate(uri1, c2, d1);
     await task_setCountDate(uri2, c1, d1);
@@ -170,7 +170,7 @@ var tests = [
   },
 
   // test things with a search term
-  async function() {
+  async function () {
     info("Test 4: same count, different date");
     await task_setCountDate(uri1, c1, d1);
     await task_setCountDate(uri2, c1, d2);
@@ -195,7 +195,7 @@ var tests = [
       ],
     });
   },
-  async function() {
+  async function () {
     info("Test 5: same count, different date");
     await task_setCountDate(uri1, c1, d2);
     await task_setCountDate(uri2, c1, d1);
@@ -220,7 +220,7 @@ var tests = [
       ],
     });
   },
-  async function() {
+  async function () {
     info("Test 6: different count, same date");
     await task_setCountDate(uri1, c1, d1);
     await task_setCountDate(uri2, c2, d1);
@@ -245,7 +245,7 @@ var tests = [
       ],
     });
   },
-  async function() {
+  async function () {
     info("Test 7: different count, same date");
     await task_setCountDate(uri1, c2, d1);
     await task_setCountDate(uri2, c1, d1);
@@ -272,7 +272,7 @@ var tests = [
   },
   // There are multiple tests for 8, hence the multiple functions
   // Bug 426166 section
-  async function() {
+  async function () {
     info("Test 8.1a: same count, same date");
     await setBookmark(uri3);
     await setBookmark(uri4);

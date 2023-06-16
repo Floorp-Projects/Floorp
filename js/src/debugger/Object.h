@@ -148,12 +148,12 @@ class DebuggerObject : public NativeObject {
   [[nodiscard]] static bool makeDebuggeeNativeFunction(
       JSContext* cx, Handle<DebuggerObject*> object, HandleValue value,
       MutableHandleValue result);
-  enum class CheckJitInfo { No, Yes };
   [[nodiscard]] static bool isSameNative(JSContext* cx,
                                          Handle<DebuggerObject*> object,
                                          HandleValue value,
-                                         CheckJitInfo checkJitInfo,
                                          MutableHandleValue result);
+  [[nodiscard]] static bool isNativeGetterWithJitInfo(
+      JSContext* cx, Handle<DebuggerObject*> object, MutableHandleValue result);
   [[nodiscard]] static bool unsafeDereference(JSContext* cx,
                                               Handle<DebuggerObject*> object,
                                               MutableHandleObject result);

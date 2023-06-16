@@ -4,6 +4,10 @@
 
 /* globals ExtensionAPI, Services, XPCOMUtils */
 
+ChromeUtils.defineESModuleGetters(this, {
+  SpecialPowersParent: "resource://testing-common/SpecialPowersParent.sys.mjs",
+});
+
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "resProto",
@@ -13,13 +17,6 @@ XPCOMUtils.defineLazyServiceGetter(
 
 this.specialpowers = class extends ExtensionAPI {
   onStartup() {
-    let uri = Services.io.newURI("content/", null, this.extension.rootURI);
-    resProto.setSubstitutionWithFlags(
-      "specialpowers",
-      uri,
-      resProto.ALLOW_CONTENT_ACCESS
-    );
-
     // Register special testing modules.
     let manifest = Services.dirsvc.get("ProfD", Ci.nsIFile);
     manifest.append("tests.manifest");
@@ -27,20 +24,25 @@ this.specialpowers = class extends ExtensionAPI {
       .QueryInterface(Ci.nsIComponentRegistrar)
       .autoRegister(manifest);
 
-    ChromeUtils.registerWindowActor("SpecialPowers", {
-      allFrames: true,
-      includeChrome: true,
-      child: {
-        esModuleURI: "resource://specialpowers/SpecialPowersChild.sys.mjs",
-        observers: [
-          "chrome-document-global-created",
-          "content-document-global-created",
-        ],
-      },
-      parent: {
-        esModuleURI: "resource://specialpowers/SpecialPowersParent.sys.mjs",
-      },
-    });
+    {
+      let uri = Services.io.newURI("content/", null, this.extension.rootURI);
+      resProto.setSubstitutionWithFlags(
+        "specialpowers",
+        uri,
+        resProto.ALLOW_CONTENT_ACCESS
+      );
+    }
+
+    if (!resProto.hasSubstitution("testing-common")) {
+      let uri = Services.io.newURI("modules/", null, this.extension.rootURI);
+      resProto.setSubstitution(
+        "testing-common",
+        uri,
+        resProto.ALLOW_CONTENT_ACCESS
+      );
+    }
+
+    SpecialPowersParent.registerActor();
 
     ChromeUtils.registerWindowActor("AppTestDelegate", {
       parent: {
@@ -59,7 +61,7 @@ this.specialpowers = class extends ExtensionAPI {
   }
 
   onShutdown() {
-    ChromeUtils.unregisterWindowActor("SpecialPowers");
+    SpecialPowersParent.unregisterActor();
     ChromeUtils.unregisterWindowActor("AppTestDelegate");
     resProto.setSubstitution("specialpowers", null);
   }

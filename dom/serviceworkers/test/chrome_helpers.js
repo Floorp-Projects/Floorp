@@ -5,13 +5,13 @@ let swm = Cc["@mozilla.org/serviceworkers/manager;1"].getService(
 let EXAMPLE_URL = "https://example.com/chrome/dom/serviceworkers/test/";
 
 function waitForIframeLoad(iframe) {
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve) {
     iframe.onload = resolve;
   });
 }
 
 function waitForRegister(scope, callback) {
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve) {
     let listener = {
       onRegister(registration) {
         if (registration.scope !== scope) {
@@ -26,7 +26,7 @@ function waitForRegister(scope, callback) {
 }
 
 function waitForUnregister(scope) {
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve) {
     let listener = {
       onUnregister(registration) {
         if (registration.scope !== scope) {
@@ -41,7 +41,7 @@ function waitForUnregister(scope) {
 }
 
 function waitForServiceWorkerRegistrationChange(registration, callback) {
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve) {
     let listener = {
       onChange() {
         registration.removeListener(listener);
@@ -56,7 +56,7 @@ function waitForServiceWorkerRegistrationChange(registration, callback) {
 }
 
 function waitForServiceWorkerShutdown() {
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve) {
     let observer = {
       observe(subject, topic, data) {
         if (topic !== "service-worker-shutdown") {

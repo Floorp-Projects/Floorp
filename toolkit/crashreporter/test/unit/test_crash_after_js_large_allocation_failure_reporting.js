@@ -7,7 +7,7 @@ add_task(async function run_test() {
   }
 
   await do_crash(
-    function() {
+    function () {
       crashType = CrashTestUtils.CRASH_MOZ_CRASH;
       crashReporter.annotateCrashReport("TestKey", "Yes");
 
@@ -18,7 +18,7 @@ add_task(async function run_test() {
       Services.obs.addObserver(crashWhileReporting, "memory-pressure");
       Cu.getJSTestingFunctions().reportLargeAllocationFailure();
     },
-    function(mdump, extra) {
+    function (mdump, extra) {
       Assert.equal(extra.TestKey, "Yes");
       Assert.equal(extra.JSLargeAllocationFailure, "Reporting");
     },

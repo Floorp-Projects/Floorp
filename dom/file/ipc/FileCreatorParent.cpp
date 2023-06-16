@@ -27,7 +27,7 @@ mozilla::ipc::IPCResult FileCreatorParent::CreateAndShareFile(
                      aLastModified.isSome() ? aLastModified.value() : 0,
                      aExistenceCheck, aIsFromNsIFile, getter_AddRefs(blobImpl));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    Unused << Send__delete__(this, FileCreationErrorResult(rv));
+    (void)Send__delete__(this, FileCreationErrorResult(rv));
     return IPC_OK();
   }
 
@@ -49,12 +49,11 @@ mozilla::ipc::IPCResult FileCreatorParent::CreateAndShareFile(
                 IPCBlob ipcBlob;
                 nsresult rv = dom::IPCBlobUtils::Serialize(blobImpl, ipcBlob);
                 if (NS_WARN_IF(NS_FAILED(rv))) {
-                  Unused << Send__delete__(self, FileCreationErrorResult(rv));
+                  (void)Send__delete__(self, FileCreationErrorResult(rv));
                   return;
                 }
 
-                Unused << Send__delete__(self,
-                                         FileCreationSuccessResult(ipcBlob));
+                (void)Send__delete__(self, FileCreationSuccessResult(ipcBlob));
               }
             }));
       }));

@@ -16,6 +16,7 @@ transforms:
 job-defaults:
     attributes:
         retrigger: true
+    use-system-python: false
 
 jobs:
     linux64-valgrind-qr/opt-swr:

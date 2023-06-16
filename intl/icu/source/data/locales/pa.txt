@@ -22,6 +22,13 @@ pa{
     ExemplarCharactersPunctuation{"[\\- ‐ ‑ – — , ; \\: ! ? . ' ‘ ’ \u0022 “ ” ( ) \\[ \\] / \\& ′ ″]"}
     MoreInformation{"?"}
     NumberElements{
+        adlm{
+            symbols{
+                decimal{"."}
+                plusSign{"+"}
+                timeSeparator{":"}
+            }
+        }
         arabext{
             patterns{
                 currencyFormat{"¤#,##,##0.00"}
@@ -45,6 +52,31 @@ pa{
                 timeSeparator{"٫"}
             }
         }
+        bali{
+            symbols{
+                timeSeparator{":"}
+            }
+        }
+        beng{
+            symbols{
+                timeSeparator{":"}
+            }
+        }
+        brah{
+            symbols{
+                timeSeparator{":"}
+            }
+        }
+        cakm{
+            symbols{
+                timeSeparator{":"}
+            }
+        }
+        cham{
+            symbols{
+                timeSeparator{":"}
+            }
+        }
         default{"latn"}
         guru{
             patterns{
@@ -55,10 +87,60 @@ pa{
                 scientificFormat{"[#E0]"}
             }
             symbols{
+                approximatelySign{"~"}
                 decimal{"."}
                 exponential{"E"}
                 group{","}
                 infinity{"∞"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        java{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        kali{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        knda{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
                 minusSign{"-"}
                 nan{"NaN"}
                 perMille{"‰"}
@@ -270,6 +352,22 @@ pa{
         }
         minimumGroupingDigits{"1"}
         native{"guru"}
+        rohg{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
     }
     calendar{
         buddhist{
@@ -562,6 +660,12 @@ pa{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimePatterns%atTime{
+                "{1} {0}",
+                "{1} {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
             DateTimeSkeletons{
                 "ahmmsszzzz",
                 "ahmmssz",
@@ -737,6 +841,12 @@ pa{
                 "d MMM y",
                 "d/M/yy",
                 "{1}, {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            DateTimePatterns%atTime{
                 "{1} {0}",
                 "{1} {0}",
                 "{1}, {0}",
@@ -1416,8 +1526,50 @@ pa{
             }
         }
         islamic{
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE, dd MMMM y G",
+                "d MMMM y G",
+                "d MMM y G",
+                "dd/MM/y GGGGG",
+                "{1}, {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
             availableFormats{
+                E{"ccc"}
+                Ed{"E, d"}
+                Gy{"G y"}
+                GyMMM{"MMM y G"}
+                GyMMMEd{"E, d MMM y G"}
                 GyMMMd{"d MMM, y G"}
+                GyMd{"d/M/GGGGG y"}
+                M{"L"}
+                MEd{"E, d/M"}
+                MMM{"LLL"}
+                MMMEd{"E, d MMM"}
+                MMMMd{"MMMM d"}
+                MMMd{"d MMM"}
+                Md{"d/M"}
+                d{"d"}
+                y{"y G"}
+                yMMM{"MMM y G"}
+                yQQQ{"QQQ y G"}
+                yyyy{"y G"}
+                yyyyM{"M/y GGGGG"}
+                yyyyMEd{"E, d/M/y GGGGG"}
+                yyyyMMM{"MMM y G"}
+                yyyyMMMEd{"E, d MMM y G"}
+                yyyyMMMM{"MMMM y G"}
+                yyyyMMMd{"d MMM y G"}
+                yyyyMd{"d/M/y GGGGG"}
+                yyyyQQQ{"QQQ y G"}
+                yyyyQQQQ{"QQQQ y G"}
             }
             eras{
                 abbreviated{
@@ -2585,10 +2737,16 @@ pa{
             start{"{0}, {1}"}
         }
         or-narrow{
+            2{"{0} ਜਾਂ {1}"}
             end{"{0}, ਜਾਂ {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         or-short{
+            2{"{0} ਜਾਂ {1}"}
             end{"{0}, ਜਾਂ {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         standard{
             2{"{0} ਅਤੇ {1}"}
@@ -2681,25 +2839,39 @@ pa{
             }
         }
         namePattern{
-            givenFirst-long-addressing-formal{"{prefix} {surname}"}
+            givenFirst-long-addressing-formal{"{title} {surname}"}
             givenFirst-long-addressing-informal{"{given-informal}"}
             givenFirst-long-monogram-formal{
-                "{given-monogram-allCaps}. {given2-monogram-allCaps}. {surname-monogr"
-                "am-allCaps}"
+                "{given-monogram-allCaps}.{given2-monogram-allCaps}.{surname-monogram-allCaps}",
+                "{given-monogram-allCaps}.{surname-monogram-allCaps}",
             }
-            givenFirst-long-monogram-informal{"{given-informal-monogram-allCaps}. {surname-monogram-allCaps}"}
-            givenFirst-long-referring-formal{"{given} {given2} {surname} {suffix}"}
+            givenFirst-long-monogram-informal{
+                "{given-informal-monogram-allCaps}.{surname-monogram-allCaps}",
+                "{given-monogram-allCaps}.{surname-monogram-allCaps}",
+            }
             givenFirst-long-referring-informal{"{given-informal} {surname}"}
-            givenFirst-medium-addressing-formal{"{prefix} {surname}"}
+            givenFirst-medium-addressing-formal{"{title} {surname}"}
             givenFirst-medium-addressing-informal{"{given-informal}"}
-            givenFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
-            givenFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname} {suffix}"}
+            givenFirst-medium-monogram-formal{
+                "{surname-monogram-allCaps}",
+                "{given-monogram-allCaps}.{surname-monogram-allCaps}",
+            }
+            givenFirst-medium-monogram-informal{
+                "{given-informal-monogram-allCaps}",
+                "{given-monogram-allCaps}.{surname-monogram-allCaps}",
+            }
+            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname} {credentials}"}
             givenFirst-medium-referring-informal{"{given-informal} {surname}"}
-            givenFirst-short-addressing-formal{"{prefix} {surname}"}
+            givenFirst-short-addressing-formal{"{title} {surname}"}
             givenFirst-short-addressing-informal{"{given-informal}"}
-            givenFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
-            givenFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
+            givenFirst-short-monogram-formal{
+                "{surname-monogram-allCaps}",
+                "{given-monogram-allCaps}.{surname-monogram-allCaps}",
+            }
+            givenFirst-short-monogram-informal{
+                "{given-informal-monogram-allCaps}",
+                "{given-monogram-allCaps}.{surname-monogram-allCaps}",
+            }
             givenFirst-short-referring-formal{"{given-initial} {given2-initial} {surname}"}
             givenFirst-short-referring-informal{"{given-informal} {surname-initial}"}
             sorting-long-referring-formal{"{surname-core}, {given} {given2} {surname-prefix}"}
@@ -2708,22 +2880,18 @@ pa{
             sorting-medium-referring-informal{"{surname}, {given-informal}"}
             sorting-short-referring-formal{"{surname-core}, {given-initial} {given2-initial} {surname-prefix}"}
             sorting-short-referring-informal{"{surname}, {given-informal}"}
-            surnameFirst-long-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-long-addressing-formal{"{title} {surname}"}
             surnameFirst-long-addressing-informal{"{given-informal}"}
-            surnameFirst-long-monogram-formal{
-                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
-                "llCaps}"
-            }
-            surnameFirst-long-monogram-informal{"{surname-monogram-allCaps}. {given-informal-monogram-allCaps}"}
-            surnameFirst-long-referring-formal{"{surname} {given} {given2} {suffix}"}
+            surnameFirst-long-monogram-informal{"{surname-monogram-allCaps}.{given-informal-monogram-allCaps}"}
+            surnameFirst-long-referring-formal{"{surname} {given} {given2} {credentials}"}
             surnameFirst-long-referring-informal{"{surname} {given-informal}"}
-            surnameFirst-medium-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-medium-addressing-formal{"{title} {surname}"}
             surnameFirst-medium-addressing-informal{"{given-informal}"}
             surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            surnameFirst-medium-referring-formal{"{surname} {given} {given2-initial} {suffix}"}
+            surnameFirst-medium-referring-formal{"{surname} {given} {given2-initial} {credentials}"}
             surnameFirst-medium-referring-informal{"{surname} {given-informal}"}
-            surnameFirst-short-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-short-addressing-formal{"{title} {surname}"}
             surnameFirst-short-addressing-informal{"{given-informal}"}
             surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}

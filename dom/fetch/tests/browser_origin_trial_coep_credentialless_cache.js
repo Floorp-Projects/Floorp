@@ -17,7 +17,7 @@ async function store(storer, url, requestCredentialMode) {
   await SpecialPowers.spawn(
     storer.linkedBrowser,
     [url, requestCredentialMode],
-    async function(url, requestCredentialMode) {
+    async function (url, requestCredentialMode) {
       const cache = await content.caches.open("v1");
       const fetchRequest = new content.Request(url, {
         mode: "no-cors",
@@ -35,7 +35,7 @@ async function retrieve(retriever, resourceURL) {
   return await SpecialPowers.spawn(
     retriever.linkedBrowser,
     [resourceURL],
-    async function(url) {
+    async function (url) {
       const cache = await content.caches.open("v1");
       try {
         await cache.match(url);
@@ -62,7 +62,7 @@ async function testCache(
   is(result, expectation);
 }
 
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.tabs.remote.coep.credentialless", false],

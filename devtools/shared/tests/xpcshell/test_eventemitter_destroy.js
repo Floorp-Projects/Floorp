@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(function() {
+add_task(function () {
   const { DevToolsLoader, require } = ChromeUtils.importESModule(
     "resource://devtools/shared/loader/Loader.sys.mjs"
   );
@@ -12,7 +12,7 @@ add_task(function() {
   // Force-load the module once in the global loader to avoid Bug 1622718.
   require("resource://devtools/shared/event-emitter.js");
 
-  const emitterRef = (function() {
+  const emitterRef = (function () {
     const loader = new DevToolsLoader();
 
     const ref = Cu.getWeakReference(

@@ -138,7 +138,7 @@ class JSFunction : public js::NativeObject {
 
  public:
   static inline JSFunction* create(JSContext* cx, js::gc::AllocKind kind,
-                                   js::gc::InitialHeap heap,
+                                   js::gc::Heap heap,
                                    js::Handle<js::SharedShape*> shape);
 
   /* Call objects must be created for each invocation of this function. */

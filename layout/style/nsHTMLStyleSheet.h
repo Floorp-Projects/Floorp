@@ -21,14 +21,16 @@
 #include "nsString.h"
 
 class nsMappedAttributes;
-struct RawServoDeclarationBlock;
 namespace mozilla {
+struct StyleLockedDeclarationBlock;
 namespace dom {
 class Document;
 }  // namespace dom
 }  // namespace mozilla
 
 class nsHTMLStyleSheet final {
+  using StyleLockedDeclarationBlock = mozilla::StyleLockedDeclarationBlock;
+
  public:
   explicit nsHTMLStyleSheet(mozilla::dom::Document* aDocument);
 
@@ -43,13 +45,13 @@ class nsHTMLStyleSheet final {
   nsresult SetActiveLinkColor(nscolor aColor);
   nsresult SetVisitedLinkColor(nscolor aColor);
 
-  const RefPtr<RawServoDeclarationBlock>& GetServoUnvisitedLinkDecl() const {
+  const StyleLockedDeclarationBlock* GetServoUnvisitedLinkDecl() const {
     return mServoUnvisitedLinkDecl;
   }
-  const RefPtr<RawServoDeclarationBlock>& GetServoVisitedLinkDecl() const {
+  const StyleLockedDeclarationBlock* GetServoVisitedLinkDecl() const {
     return mServoVisitedLinkDecl;
   }
-  const RefPtr<RawServoDeclarationBlock>& GetServoActiveLinkDecl() const {
+  const mozilla::StyleLockedDeclarationBlock* GetServoActiveLinkDecl() const {
     return mServoActiveLinkDecl;
   }
 
@@ -69,15 +71,15 @@ class nsHTMLStyleSheet final {
   ~nsHTMLStyleSheet() = default;
 
   // Implementation of SetLink/VisitedLink/ActiveLinkColor
-  nsresult ImplLinkColorSetter(RefPtr<RawServoDeclarationBlock>& aDecl,
-                               nscolor aColor);
+  nsresult ImplLinkColorSetter(
+      RefPtr<mozilla::StyleLockedDeclarationBlock>& aDecl, nscolor aColor);
 
  public:  // for mLangRuleTable structures only
  private:
   mozilla::dom::Document* mDocument;
-  RefPtr<RawServoDeclarationBlock> mServoUnvisitedLinkDecl;
-  RefPtr<RawServoDeclarationBlock> mServoVisitedLinkDecl;
-  RefPtr<RawServoDeclarationBlock> mServoActiveLinkDecl;
+  RefPtr<StyleLockedDeclarationBlock> mServoUnvisitedLinkDecl;
+  RefPtr<StyleLockedDeclarationBlock> mServoVisitedLinkDecl;
+  RefPtr<StyleLockedDeclarationBlock> mServoActiveLinkDecl;
 
   PLDHashTable mMappedAttrTable;
   // Whether or not the mapped attributes table

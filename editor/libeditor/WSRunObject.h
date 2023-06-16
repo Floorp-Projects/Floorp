@@ -61,6 +61,34 @@ class MOZ_STACK_CLASS WSScanResult final {
     CurrentBlockBoundary,
   };
 
+  friend std::ostream& operator<<(std::ostream& aStream, const WSType& aType) {
+    switch (aType) {
+      case WSType::NotInitialized:
+        return aStream << "WSType::NotInitialized";
+      case WSType::UnexpectedError:
+        return aStream << "WSType::UnexpectedError";
+      case WSType::LeadingWhiteSpaces:
+        return aStream << "WSType::LeadingWhiteSpaces";
+      case WSType::TrailingWhiteSpaces:
+        return aStream << "WSType::TrailingWhiteSpaces";
+      case WSType::CollapsibleWhiteSpaces:
+        return aStream << "WSType::CollapsibleWhiteSpaces";
+      case WSType::NonCollapsibleCharacters:
+        return aStream << "WSType::NonCollapsibleCharacters";
+      case WSType::SpecialContent:
+        return aStream << "WSType::SpecialContent";
+      case WSType::BRElement:
+        return aStream << "WSType::BRElement";
+      case WSType::PreformattedLineBreak:
+        return aStream << "WSType::PreformattedLineBreak";
+      case WSType::OtherBlockBoundary:
+        return aStream << "WSType::OtherBlockBoundary";
+      case WSType::CurrentBlockBoundary:
+        return aStream << "WSType::CurrentBlockBoundary";
+    }
+    return aStream << "<Illegal value>";
+  }
+
   friend class WSRunScanner;  // Because of WSType.
 
  public:

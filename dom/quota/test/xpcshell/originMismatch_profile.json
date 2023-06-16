@@ -16,21 +16,23 @@
                 "dir": true,
                 "entries": [
                   { "name": ".metadata-v2", "dir": false },
-                  { "name": "cache",
-                     "dir": true,
-                     "entries": [{ "name": ".padding", "dir": false }]
+                  {
+                    "name": "cache",
+                    "dir": true,
+                    "entries": [{ "name": ".padding", "dir": false }]
                   }
                 ]
               },
-              { "name": "http+++www.example.com.", "dir": true  },
+              { "name": "http+++www.example.com.", "dir": true },
               {
                 "name": "http+++www.example.org",
                 "dir": true,
                 "entries": [
                   { "name": ".metadata-v2", "dir": false },
-                  { "name": "cache",
-                     "dir": true,
-                     "entries": [{ "name": ".padding", "dir": false }]
+                  {
+                    "name": "cache",
+                    "dir": true,
+                    "entries": [{ "name": ".padding", "dir": false }]
                   }
                 ]
               }
@@ -52,7 +54,8 @@
             "name": "default",
             "dir": true,
             "entries": [
-              { "name": "http+++www.example.com.",
+              {
+                "name": "http+++www.example.com.",
                 "dir": true,
                 "entries": [{ "name": ".metadata-v2", "dir": false }]
               },

@@ -26,12 +26,12 @@ function runTests() {
   if (location.search !== "?nested") {
     var worker = new Worker("importForeignScripts_worker.js?nested");
 
-    worker.onmessage = function(e) {
+    worker.onmessage = function (e) {
       target.postMessage(e.data);
       target.postMessage("finish");
     };
 
-    worker.onerror = function() {
+    worker.onerror = function () {
       target.postMessage("nested worker error");
     };
 
@@ -39,15 +39,15 @@ function runTests() {
   }
 }
 
-onmessage = function(e) {
+onmessage = function (e) {
   if (e.data === "start") {
     runTests();
   }
 };
 
-onconnect = function(e) {
+onconnect = function (e) {
   target = e.ports[0];
-  e.ports[0].onmessage = function(msg) {
+  e.ports[0].onmessage = function (msg) {
     if (msg.data === "start") {
       runTests();
     }

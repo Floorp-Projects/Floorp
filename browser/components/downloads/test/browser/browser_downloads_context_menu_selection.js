@@ -28,7 +28,7 @@ add_setup(async function setup() {
   await PlacesUtils.history.clear();
   await startServer();
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await task_resetState();
     await PlacesUtils.history.clear();
   });

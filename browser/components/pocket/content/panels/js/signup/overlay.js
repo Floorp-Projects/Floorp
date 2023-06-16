@@ -8,11 +8,11 @@ import ReactDOM from "react-dom";
 import pktPanelMessaging from "../messages.js";
 import Signup from "../components/Signup/Signup";
 
-var SignupOverlay = function(options) {
+var SignupOverlay = function (options) {
   this.inited = false;
   this.active = false;
 
-  this.create = function({ pockethost }) {
+  this.create = function ({ pockethost }) {
     // Extract local variables passed into template via URL query params
     const { searchParams } = new URL(window.location.href);
     const locale = searchParams.get(`locale`) || ``;

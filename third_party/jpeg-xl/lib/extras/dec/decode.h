@@ -17,9 +17,11 @@
 #include "lib/extras/dec/color_hints.h"
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/base/status.h"
-#include "lib/jxl/codec_in_out.h"
 
 namespace jxl {
+
+struct SizeConstraints;
+
 namespace extras {
 
 // Codecs supported by CodecInOut::Encode.
@@ -43,8 +45,9 @@ Codec CodecFromExtension(std::string extension,
 // Decodes "bytes" info *ppf.
 // color_space_hint may specify the color space, otherwise, defaults to sRGB.
 Status DecodeBytes(Span<const uint8_t> bytes, const ColorHints& color_hints,
-                   const SizeConstraints& constraints,
-                   extras::PackedPixelFile* ppf, Codec* orig_codec = nullptr);
+                   extras::PackedPixelFile* ppf,
+                   const SizeConstraints* constraints = nullptr,
+                   Codec* orig_codec = nullptr);
 
 }  // namespace extras
 }  // namespace jxl

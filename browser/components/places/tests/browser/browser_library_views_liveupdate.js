@@ -8,7 +8,7 @@
 
 let gLibrary = null;
 
-add_setup(async function() {
+add_setup(async function () {
   gLibrary = await promiseLibrary();
 
   await PlacesUtils.bookmarks.eraseEverything();

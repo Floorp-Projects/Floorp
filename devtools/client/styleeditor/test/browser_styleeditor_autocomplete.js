@@ -129,7 +129,7 @@ function getTestCases(cssProperties) {
   ];
 }
 
-add_task(async function() {
+add_task(async function () {
   // We try to type "background" above, so backdrop-filter enabledness affects
   // the expectations. Instead of branching on the test set the pref to true
   // here as that is the end state, and it doesn't interact with the test in

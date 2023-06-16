@@ -1157,7 +1157,8 @@
       if (this.isRemoteBrowser && this.messageManager) {
         if (aCharset != null) {
           this._characterSet = aCharset;
-          this._mayEnableCharacterEncodingMenu = aMayEnableCharacterEncodingMenu;
+          this._mayEnableCharacterEncodingMenu =
+            aMayEnableCharacterEncodingMenu;
         }
 
         if (aContentType != null) {

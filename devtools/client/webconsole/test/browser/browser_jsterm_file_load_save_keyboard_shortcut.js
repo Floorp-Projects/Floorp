@@ -12,7 +12,7 @@ const LOCAL_FILE_NAME = "snippet.js";
 const LOCAL_FILE_ORIGINAL_CONTENT = `"Hello from local file"`;
 const LOCAL_FILE_NEW_CONTENT = `"Hello from console input"`;
 
-add_task(async function() {
+add_task(async function () {
   info("Open the console");
   const hud = await openNewTabAndConsole(TEST_URI);
   is(getInputValue(hud), "", "Input is empty after opening");

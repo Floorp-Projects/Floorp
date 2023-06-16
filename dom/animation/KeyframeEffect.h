@@ -23,7 +23,7 @@
 #include "mozilla/Keyframe.h"
 #include "mozilla/KeyframeEffectParams.h"
 #include "mozilla/PostRestyleMode.h"
-// RawServoDeclarationBlock and associated RefPtrTraits
+// StyleLockedDeclarationBlock and associated RefPtrTraits
 #include "mozilla/ServoBindingTypes.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/dom/AnimationEffect.h"
@@ -272,7 +272,7 @@ class KeyframeEffect : public AnimationEffect {
   // Updates |aComposeResult| with the animation values produced by this
   // AnimationEffect for the current time except any properties contained
   // in |aPropertiesToSkip|.
-  void ComposeStyle(RawServoAnimationValueMap& aComposeResult,
+  void ComposeStyle(StyleAnimationValueMap& aComposeResult,
                     const nsCSSPropertyIDSet& aPropertiesToSkip);
 
   // Returns true if at least one property is being animated on compositor.
@@ -328,7 +328,7 @@ class KeyframeEffect : public AnimationEffect {
   AnimationValue BaseStyle(nsCSSPropertyID aProperty) const {
     AnimationValue result;
     bool hasProperty = false;
-    // We cannot use getters_AddRefs on RawServoAnimationValue because it is
+    // We cannot use getters_AddRefs on StyleAnimationValue because it is
     // an incomplete type, so Get() doesn't work. Instead, use GetWeak, and
     // then assign the raw pointer to a RefPtr.
     result.mServo = mBaseValues.GetWeak(aProperty, &hasProperty);
@@ -464,13 +464,13 @@ class KeyframeEffect : public AnimationEffect {
   // least one animation value that is composited with the underlying value
   // (i.e. it uses the additive or accumulate composite mode).
   using BaseValuesHashmap =
-      nsRefPtrHashtable<nsUint32HashKey, RawServoAnimationValue>;
+      nsRefPtrHashtable<nsUint32HashKey, StyleAnimationValue>;
   BaseValuesHashmap mBaseValues;
 
  private:
   nsChangeHint mCumulativeChangeHint = nsChangeHint{0};
 
-  void ComposeStyleRule(RawServoAnimationValueMap& aAnimationValues,
+  void ComposeStyleRule(StyleAnimationValueMap& aAnimationValues,
                         const AnimationProperty& aProperty,
                         const AnimationPropertySegment& aSegment,
                         const ComputedTiming& aComputedTiming);

@@ -9,7 +9,7 @@ const networkLocationsModule = require("resource://devtools/client/aboutdebuggin
  * Test the sidebar is updated correctly when network runtimes are added/removed.
  */
 
-add_task(async function() {
+add_task(async function () {
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("devtools.aboutdebugging.network-locations");
   });

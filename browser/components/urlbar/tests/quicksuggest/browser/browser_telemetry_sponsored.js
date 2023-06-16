@@ -28,9 +28,14 @@ const suggestion_type = "sponsored";
 const index = 1;
 const position = index + 1;
 
-add_setup(async function() {
+add_setup(async function () {
   await setUpTelemetryTest({
-    remoteSettingsResults: [REMOTE_SETTINGS_RESULT],
+    remoteSettingsResults: [
+      {
+        type: "data",
+        attachment: [REMOTE_SETTINGS_RESULT],
+      },
+    ],
   });
 });
 
@@ -203,7 +208,9 @@ add_task(async function sponsoredBestMatch() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.bestMatch.enabled", true]],
   });
-  QuickSuggestTestUtils.setConfig(QuickSuggestTestUtils.BEST_MATCH_CONFIG);
+  await QuickSuggestTestUtils.setConfig(
+    QuickSuggestTestUtils.BEST_MATCH_CONFIG
+  );
   await doTelemetryTest({
     index,
     suggestion: REMOTE_SETTINGS_RESULT,
@@ -355,6 +362,6 @@ add_task(async function sponsoredBestMatch() {
       },
     },
   });
-  QuickSuggestTestUtils.setConfig(QuickSuggestTestUtils.DEFAULT_CONFIG);
+  await QuickSuggestTestUtils.setConfig(QuickSuggestTestUtils.DEFAULT_CONFIG);
   await SpecialPowers.popPrefEnv();
 });

@@ -5,6 +5,7 @@
 loader: gecko_taskgraph.loader.single_dep:loader
 
 transforms:
+    - gecko_taskgraph.transforms.repackage_set_upstream_mac_kind:transforms
     - gecko_taskgraph.transforms.name_sanity:transforms
     - gecko_taskgraph.transforms.repackage:transforms
     - gecko_taskgraph.transforms.repackage_routes:transforms
@@ -13,6 +14,8 @@ transforms:
 
 kind-dependencies:
     - build-signing
+    - build-mac-signing
+    - build-mac-notarization
     - toolchain
 
 only-for-build-platforms:
@@ -38,6 +41,13 @@ only-for-build-platforms:
     - win64-asan-reporter-shippable/opt
 
 job-template:
+    upstream-mac-kind:
+        by-build-type:
+            debug: build-mac-signing
+            default:
+                by-project:
+                    mozilla-(central|beta|release|esr.*): build-mac-notarization
+                    default: build-mac-signing
     worker-type: b-linux-gcp
     worker:
         max-run-time:

@@ -283,6 +283,11 @@ kok{
                 dnam{"नॅनोसेकंदांनी"}
                 other{"{0} नॅनोसेकंदांनी"}
             }
+            quarter{
+                dnam{"qtr"}
+                other{"{0} q"}
+                per{"{0}/q"}
+            }
             second{
                 dnam{"सेकंद"}
                 other{"{0} सेकंदांनी"}
@@ -561,6 +566,10 @@ kok{
                 other{"{0} किलोग्राम"}
                 per{"{0}/किलोग्राम"}
             }
+            microgram{
+                dnam{"μg"}
+                other{"{0} μg"}
+            }
             milligram{
                 dnam{"मिलिग्राम"}
                 other{"{0} मिलिग्राम"}
@@ -691,6 +700,10 @@ kok{
                 dnam{"अंश फारेनहायट"}
                 other{"{0} अंश फारेनहायट"}
             }
+            generic{
+                dnam{"°"}
+                other{"{0}°"}
+            }
             kelvin{
                 dnam{"केल्वीन"}
                 other{"{0} केल्वीन"}
@@ -801,6 +814,7 @@ kok{
             }
             hectoliter{
                 dnam{"हॅक्टोलीटर"}
+                other{"{0} hL"}
             }
             jigger{
                 dnam{"जिगर"}
@@ -1125,6 +1139,11 @@ kok{
                 dnam{"नॅसे"}
                 other{"{0}नॅसे"}
             }
+            quarter{
+                dnam{"qtr"}
+                other{"{0} q"}
+                per{"{0}/q"}
+            }
             second{
                 dnam{"सेकंद"}
                 other{"{0}से"}
@@ -1360,12 +1379,15 @@ kok{
         }
         light{
             candela{
+                dnam{"cd"}
                 other{"{0}cd"}
             }
             lumen{
+                dnam{"lm"}
                 other{"{0}lm"}
             }
             lux{
+                dnam{"लक्स"}
                 other{"{0}लक्स"}
             }
             solar-luminosity{
@@ -1637,6 +1659,7 @@ kok{
                 other{"{0}fl oz Im"}
             }
             gallon{
+                dnam{"गॅ"}
                 other{"{0}गॅ"}
                 per{"{0}/गॅ"}
             }

@@ -57,7 +57,7 @@ function noEarlyHintsResponse(metadata, response) {
   response.bodyOutputStream.write(httpbody, httpbody.length);
 }
 
-let EarlyHintsListener = function() {};
+let EarlyHintsListener = function () {};
 
 EarlyHintsListener.prototype = {
   _expected_hints: "",

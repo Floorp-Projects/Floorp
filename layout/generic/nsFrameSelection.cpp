@@ -424,8 +424,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFrameSelection)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDomSelections[i])
   }
 
-  for (const auto& value : tmp->mHighlightSelections.Values()) {
-    CycleCollectionNoteChild(cb, value.get(), "mHighlightSelections[]");
+  for (const auto& value : tmp->mHighlightSelections) {
+    CycleCollectionNoteChild(cb, value.second().get(),
+                             "mHighlightSelections[]");
   }
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(
@@ -1559,8 +1560,16 @@ UniquePtr<SelectionDetails> nsFrameSelection::LookUpSelection(
           kPresentSelectionTypes[j], aSlowCheck);
     }
   }
-  for (auto const& highlightSelection : mHighlightSelections.Values()) {
-    details = highlightSelection->LookUpSelection(
+
+  // This may seem counter intuitive at first. Highlight selections need to be
+  // iterated from back to front:
+  //
+  //  - `mHighlightSelections` is ordered by insertion, i.e. if two or more
+  //  highlights overlap, the latest must take precedence.
+  //  - however, the `LookupSelection()` algorithm reverses the order by setting
+  //    the current `details` as `mNext`.
+  for (const auto& iter : Reversed(mHighlightSelections)) {
+    details = iter.second()->LookUpSelection(
         aContent, static_cast<uint32_t>(aContentOffset),
         static_cast<uint32_t>(aContentLength), std::move(details),
         SelectionType::eHighlight, aSlowCheck);
@@ -1600,36 +1609,64 @@ void nsFrameSelection::AddHighlightSelection(
     const nsAtom* aHighlightName, const mozilla::dom::Highlight& aHighlight) {
   RefPtr<Selection> selection =
       aHighlight.CreateHighlightSelection(aHighlightName, this);
-  mHighlightSelections.InsertOrUpdate(aHighlightName, std::move(selection));
+  if (auto iter =
+          std::find_if(mHighlightSelections.begin(), mHighlightSelections.end(),
+                       [&aHighlightName](auto const& aElm) {
+                         return aElm.first() == aHighlightName;
+                       });
+      iter != mHighlightSelections.end()) {
+    iter->second() = std::move(selection);
+  } else {
+    mHighlightSelections.AppendElement(
+        CompactPair<RefPtr<const nsAtom>, RefPtr<Selection>>(
+            aHighlightName, std::move(selection)));
+  }
 }
 
 void nsFrameSelection::RemoveHighlightSelection(const nsAtom* aHighlightName) {
-  if (auto maybeSelection = mHighlightSelections.MaybeGet(aHighlightName)) {
-    RefPtr<Selection> selection = *maybeSelection;
+  if (auto iter =
+          std::find_if(mHighlightSelections.begin(), mHighlightSelections.end(),
+                       [&aHighlightName](auto const& aElm) {
+                         return aElm.first() == aHighlightName;
+                       });
+      iter != mHighlightSelections.end()) {
+    RefPtr<Selection> selection = iter->second();
     selection->RemoveAllRanges(IgnoreErrors());
-    mHighlightSelections.Remove(aHighlightName);
+    mHighlightSelections.RemoveElementAt(iter);
   }
 }
 
 void nsFrameSelection::AddHighlightSelectionRange(
     const nsAtom* aHighlightName, const mozilla::dom::Highlight& aHighlight,
     mozilla::dom::AbstractRange& aRange) {
-  if (auto lookupResult = mHighlightSelections.Lookup(aHighlightName)) {
-    RefPtr<Selection> selection = lookupResult.Data();
+  if (auto iter =
+          std::find_if(mHighlightSelections.begin(), mHighlightSelections.end(),
+                       [&aHighlightName](auto const& aElm) {
+                         return aElm.first() == aHighlightName;
+                       });
+      iter != mHighlightSelections.end()) {
+    RefPtr<Selection> selection = iter->second();
     selection->AddHighlightRangeAndSelectFramesAndNotifyListeners(aRange);
   } else {
     // if the selection does not exist yet, add all of its ranges and exit.
     RefPtr<Selection> selection =
         aHighlight.CreateHighlightSelection(aHighlightName, this);
-    lookupResult.Data() = selection;
+    mHighlightSelections.AppendElement(
+        CompactPair<RefPtr<const nsAtom>, RefPtr<Selection>>(
+            aHighlightName, std::move(selection)));
   }
 }
 
 void nsFrameSelection::RemoveHighlightSelectionRange(
     const nsAtom* aHighlightName, mozilla::dom::AbstractRange& aRange) {
-  if (const auto lookupResult = mHighlightSelections.Lookup(aHighlightName)) {
+  if (auto iter =
+          std::find_if(mHighlightSelections.begin(), mHighlightSelections.end(),
+                       [&aHighlightName](auto const& aElm) {
+                         return aElm.first() == aHighlightName;
+                       });
+      iter != mHighlightSelections.end()) {
     // NOLINTNEXTLINE(performance-unnecessary-copy-initialization)
-    RefPtr<Selection> selection = lookupResult.Data();
+    RefPtr<Selection> selection = iter->second();
     selection->RemoveRangeAndUnselectFramesAndNotifyListeners(aRange,
                                                               IgnoreErrors());
   }

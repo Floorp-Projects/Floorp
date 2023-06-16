@@ -135,8 +135,6 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
     uint32_t pause_count = 0;
     uint32_t total_freezes_duration_ms = 0;
     uint32_t total_pauses_duration_ms = 0;
-    uint32_t total_frames_duration_ms = 0;
-    double sum_squared_frame_durations = 0.0;
 
     VideoContentType content_type = VideoContentType::UNSPECIFIED;
 

@@ -15,33 +15,36 @@ namespace ots {
 // The maximum number of class value.
 const uint16_t kMaxClassDefValue = 0xFFFF;
 
-struct LookupSubtableParser {
-  struct TypeParser {
-    uint16_t type;
-    bool (*parse)(const Font *font, const uint8_t *data,
-                  const size_t length);
-  };
-  size_t num_types;
-  uint16_t extension_type;
-  const TypeParser *parsers;
+class OpenTypeLayoutTable : public Table {
+  public:
+    explicit OpenTypeLayoutTable(Font *font, uint32_t tag, uint32_t type)
+      : Table(font, tag, type) { }
 
-  bool Parse(const Font *font, const uint8_t *data,
-             const size_t length, const uint16_t lookup_type) const;
+    bool Parse(const uint8_t *data, size_t length);
+    bool Serialize(OTSStream *out);
+
+  protected:
+    bool ParseContextSubtable(const uint8_t *data, const size_t length);
+    bool ParseChainingContextSubtable(const uint8_t *data, const size_t length);
+    bool ParseExtensionSubtable(const uint8_t *data, const size_t length);
+
+  private:
+    bool ParseScriptListTable(const uint8_t *data, const size_t length);
+    bool ParseFeatureListTable(const uint8_t *data, const size_t length);
+    bool ParseLookupListTable(const uint8_t *data, const size_t length);
+    bool ParseFeatureVariationsTable(const uint8_t *data, const size_t length);
+    bool ParseLookupTable(const uint8_t *data, const size_t length);
+
+    virtual bool ValidLookupSubtableType(const uint16_t lookup_type,
+                                         bool extension = false) const = 0;
+    virtual bool ParseLookupSubtable(const uint8_t *data, const size_t length,
+                                     const uint16_t lookup_type) = 0;
+
+    const uint8_t *m_data = nullptr;
+    size_t m_length = 0;
+    uint16_t m_num_features = 0;
+    uint16_t m_num_lookups = 0;
 };
-
-bool ParseScriptListTable(const ots::Font *font,
-                          const uint8_t *data, const size_t length,
-                          const uint16_t num_features);
-
-bool ParseFeatureListTable(const ots::Font *font,
-                           const uint8_t *data, const size_t length,
-                           const uint16_t num_lookups,
-                           uint16_t *num_features);
-
-bool ParseLookupListTable(Font *font, const uint8_t *data,
-                          const size_t length,
-                          const LookupSubtableParser* parser,
-                          uint16_t* num_lookups);
 
 bool ParseClassDefTable(const ots::Font *font,
                         const uint8_t *data, size_t length,
@@ -55,39 +58,6 @@ bool ParseCoverageTable(const ots::Font *font,
 
 bool ParseDeviceTable(const ots::Font *font,
                       const uint8_t *data, size_t length);
-
-// Parser for 'Contextual' subtable shared by GSUB/GPOS tables.
-bool ParseContextSubtable(const ots::Font *font,
-                          const uint8_t *data, const size_t length,
-                          const uint16_t num_glyphs,
-                          const uint16_t num_lookups);
-
-// Parser for 'Chaining Contextual' subtable shared by GSUB/GPOS tables.
-bool ParseChainingContextSubtable(const ots::Font *font,
-                                  const uint8_t *data, const size_t length,
-                                  const uint16_t num_glyphs,
-                                  const uint16_t num_lookups);
-
-bool ParseExtensionSubtable(const Font *font,
-                            const uint8_t *data, const size_t length,
-                            const LookupSubtableParser* parser);
-
-// For feature variations table (in GSUB/GPOS v1.1)
-bool ParseConditionTable(const Font *font,
-                         const uint8_t *data, const size_t length,
-                         const uint16_t axis_count);
-
-bool ParseConditionSetTable(const Font *font,
-                            const uint8_t *data, const size_t length,
-                            const uint16_t axis_count);
-
-bool ParseFeatureTableSubstitutionTable(const Font *font,
-                                        const uint8_t *data, const size_t length,
-                                        const uint16_t num_lookups);
-
-bool ParseFeatureVariationsTable(const Font *font,
-                                 const uint8_t *data, const size_t length,
-                                 const uint16_t num_lookups);
 
 }  // namespace ots
 

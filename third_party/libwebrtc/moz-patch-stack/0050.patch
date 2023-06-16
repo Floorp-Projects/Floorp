@@ -15,10 +15,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/edac9d01a9ac7594f
  3 files changed, 24 insertions(+)
 
 diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index d4d8444c35..e656a6be84 100644
+index c7b5e7bc7c..05447ac3bd 100644
 --- a/video/rtp_video_stream_receiver2.cc
 +++ b/video/rtp_video_stream_receiver2.cc
-@@ -1073,6 +1073,16 @@ absl::optional<int64_t> RtpVideoStreamReceiver2::LastReceivedKeyframePacketMs()
+@@ -1062,6 +1062,16 @@ absl::optional<int64_t> RtpVideoStreamReceiver2::LastReceivedKeyframePacketMs()
    return absl::nullopt;
  }
  
@@ -36,7 +36,7 @@ index d4d8444c35..e656a6be84 100644
      std::unique_ptr<RtpFrameObject> frame) {
    RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
 diff --git a/video/rtp_video_stream_receiver2.h b/video/rtp_video_stream_receiver2.h
-index cead2a3147..d9e1da33ed 100644
+index 48bcab157e..21f125ae2f 100644
 --- a/video/rtp_video_stream_receiver2.h
 +++ b/video/rtp_video_stream_receiver2.h
 @@ -211,6 +211,12 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
@@ -53,10 +53,10 @@ index cead2a3147..d9e1da33ed 100644
    // Implements RtpVideoFrameReceiver.
    void ManageFrame(std::unique_ptr<RtpFrameObject> frame) override;
 diff --git a/video/video_receive_stream2.cc b/video/video_receive_stream2.cc
-index 9a95c58a93..9a88d5216c 100644
+index ce96512795..be850834d6 100644
 --- a/video/video_receive_stream2.cc
 +++ b/video/video_receive_stream2.cc
-@@ -608,6 +608,14 @@ VideoReceiveStreamInterface::Stats VideoReceiveStream2::GetStats() const {
+@@ -597,6 +597,14 @@ VideoReceiveStreamInterface::Stats VideoReceiveStream2::GetStats() const {
      if (rtx_statistician)
        stats.total_bitrate_bps += rtx_statistician->BitrateReceived();
    }

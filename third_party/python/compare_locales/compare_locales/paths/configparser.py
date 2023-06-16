@@ -2,25 +2,23 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
 import errno
 import logging
 from compare_locales import mozpath
 from .project import ProjectConfig
 from .matcher import expand
-import pytoml as toml
-import six
+import toml
 
 
 class ConfigNotFound(EnvironmentError):
     def __init__(self, path):
-        super(ConfigNotFound, self).__init__(
+        super().__init__(
             errno.ENOENT,
             'Configuration file not found',
             path)
 
 
-class ParseContext(object):
+class ParseContext:
     def __init__(self, path, env, ignore_missing_includes):
         self.path = path
         self.env = env
@@ -29,7 +27,7 @@ class ParseContext(object):
         self.pc = ProjectConfig(path)
 
 
-class TOMLParser(object):
+class TOMLParser:
     def parse(self, path, env=None, ignore_missing_includes=False):
         ctx = self.context(
             path, env=env, ignore_missing_includes=ignore_missing_includes
@@ -53,9 +51,9 @@ class TOMLParser(object):
 
     def load(self, ctx):
         try:
-            with open(ctx.path, 'rb') as fin:
+            with open(ctx.path, 'rt') as fin:
                 ctx.data = toml.load(fin)
-        except (toml.TomlError, IOError):
+        except (toml.TomlDecodeError, OSError):
             raise ConfigNotFound(ctx.path)
 
     def processBasePath(self, ctx):
@@ -91,7 +89,7 @@ class TOMLParser(object):
         assert ctx.data is not None
         for data in ctx.data.get('filters', []):
             paths = data['path']
-            if isinstance(paths, six.string_types):
+            if isinstance(paths, str):
                 paths = [paths]
             rule = {
                 "path": paths,

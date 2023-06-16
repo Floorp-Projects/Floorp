@@ -368,8 +368,67 @@ HRESULT MFMediaEngineStream::CreateInputSample(IMFSample** aSample) {
     RETURN_IF_FAILED(sample->SetUINT32(MFSampleExtension_CleanPoint, 1));
   }
 
-  // TODO : set up encrypt attributes
+  // Setup encrypt attributes
+  if (data->mCrypto.IsEncrypted()) {
+    RETURN_IF_FAILED(AddEncryptAttributes(sample.Get(), data->mCrypto));
+  }
+
   *aSample = sample.Detach();
+  return S_OK;
+}
+
+HRESULT MFMediaEngineStream::AddEncryptAttributes(
+    IMFSample* aSample, const CryptoSample& aCryptoConfig) {
+  // Scheme
+  MFSampleEncryptionProtectionScheme protectionScheme;
+  if (aCryptoConfig.mCryptoScheme == CryptoScheme::Cenc) {
+    protectionScheme = MFSampleEncryptionProtectionScheme::
+        MF_SAMPLE_ENCRYPTION_PROTECTION_SCHEME_AES_CTR;
+  } else if (aCryptoConfig.mCryptoScheme == CryptoScheme::Cbcs) {
+    protectionScheme = MFSampleEncryptionProtectionScheme::
+        MF_SAMPLE_ENCRYPTION_PROTECTION_SCHEME_AES_CBC;
+  } else {
+    SLOG("Unexpected encryption scheme");
+    return MF_E_UNEXPECTED;
+  }
+  RETURN_IF_FAILED(aSample->SetUINT32(
+      MFSampleExtension_Encryption_ProtectionScheme, protectionScheme));
+
+  // KID
+  if (aCryptoConfig.mKeyId.Length() != sizeof(GUID)) {
+    SLOG("Unsupported key ID size (%zu)", aCryptoConfig.mKeyId.Length());
+    return MF_E_UNEXPECTED;
+  }
+  GUID keyId;
+  GUIDFromByteArray(aCryptoConfig.mKeyId, keyId);
+  RETURN_IF_FAILED(aSample->SetGUID(MFSampleExtension_Content_KeyID, keyId));
+  // TODO : if we want to suspend/resume the media engine, then we can consider
+  // to store last key id and set it in CDM to refresh the decryptor.
+
+  // IV
+  RETURN_IF_FAILED(aSample->SetBlob(
+      MFSampleExtension_Encryption_SampleID,
+      reinterpret_cast<const uint8_t*>(aCryptoConfig.mIV.Elements()),
+      aCryptoConfig.mIVSize));
+
+  // Subsample entries.
+  MOZ_ASSERT(aCryptoConfig.mEncryptedSizes.Length() ==
+             aCryptoConfig.mPlainSizes.Length());
+  size_t numSubsamples = aCryptoConfig.mEncryptedSizes.Length();
+  if (numSubsamples != 0) {
+    std::vector<MediaFoundationSubsampleEntry> subsampleEntries;
+    for (size_t idx = 0; idx < numSubsamples; idx++) {
+      subsampleEntries.push_back(MediaFoundationSubsampleEntry{
+          aCryptoConfig.mPlainSizes[idx], aCryptoConfig.mEncryptedSizes[idx]});
+    }
+    const uint32_t entriesSize =
+        sizeof(MediaFoundationSubsampleEntry) * numSubsamples;
+    RETURN_IF_FAILED(aSample->SetBlob(
+        MFSampleExtension_Encryption_SubSample_Mapping,
+        reinterpret_cast<const uint8_t*>(subsampleEntries.data()),
+        entriesSize));
+  }
+
   return S_OK;
 }
 

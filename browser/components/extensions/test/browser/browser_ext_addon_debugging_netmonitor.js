@@ -68,11 +68,11 @@ add_task(async function test_addon_debugging_netmonitor_panel() {
 
   function background() {
     let expectedURL;
-    window.doFetchHTTPRequest = async function(urlToFetch) {
+    window.doFetchHTTPRequest = async function (urlToFetch) {
       expectedURL = urlToFetch;
       await fetch(urlToFetch);
     };
-    window.testNetworkRequestReceived = async function(requests) {
+    window.testNetworkRequestReceived = async function (requests) {
       browser.test.log(
         "Addon Debugging Netmonitor panel collected requests: " +
           JSON.stringify(requests)

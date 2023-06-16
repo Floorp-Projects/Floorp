@@ -13,10 +13,10 @@ add_task(async function run_test() {
   // single test doesn't work. That explains why this test exists separately
   // from test_content_phc.js.
   await do_content_crash(
-    function() {
+    function () {
       crashType = CrashTestUtils.CRASH_PHC_DOUBLE_FREE;
     },
-    function(mdump, extra) {
+    function (mdump, extra) {
       Assert.equal(extra.PHCKind, "FreedPage");
 
       // This is a string holding a decimal address.

@@ -72,7 +72,7 @@ function doRandomLookups(pset, prefixes, N) {
 //    prefixes:
 function doExpectedLookups(pset, prefixes, N) {
   for (let i = 0; i < N; i++) {
-    prefixes.forEach(function(x) {
+    prefixes.forEach(function (x) {
       dump("Checking " + x + "\n");
       Assert.ok(wrappedProbe(pset, x));
     });

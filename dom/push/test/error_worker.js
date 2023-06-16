@@ -1,4 +1,4 @@
-this.onpush = function(event) {
+this.onpush = function (event) {
   var request = event.data.json();
   if (request.type == "exception") {
     throw new Error("Uncaught exception");

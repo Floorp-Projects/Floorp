@@ -6,7 +6,7 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "test-support@tests.mozilla.org"
-     }
+    }
   },
   "content_scripts": [
     {

@@ -2,7 +2,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-// sass-lint:disable no-color-literals, hex-length
+// stylelint-disable color-hex-length -- we want to preserve these values
+// exactly, since they're drawn from other parts of the browser.
+
 @mixin light-theme {
   --fc-background: var(--fc-background-light, #FFF);
   --fc-color: var(--fc-color-light, #15141A);

@@ -3,9 +3,7 @@
   "$id": "file:///CFRUrlbarChiclet.schema.json",
   "title": "CFRUrlbarChiclet",
   "description": "A template with a chiclet button with text.",
-  "allOf": [
-    { "$ref": "file:///FxMSCommon.schema.json#/$defs/Message" }
-  ],
+  "allOf": [{ "$ref": "file:///FxMSCommon.schema.json#/$defs/Message" }],
   "type": "object",
   "properties": {
     "content": {
@@ -65,5 +63,4 @@
     }
   },
   "required": ["targeting", "trigger"]
-
 }

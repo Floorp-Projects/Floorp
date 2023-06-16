@@ -25,7 +25,7 @@ add_task(async function setup() {
   // Create our JSON backup from bookmarks.glue.json.
   create_JSON_backup("bookmarks.glue.json");
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     remove_bookmarks_html();
     remove_all_JSON_backups();
 

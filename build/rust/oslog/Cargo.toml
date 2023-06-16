@@ -1,0 +1,15 @@
+[package]
+name = "oslog"
+version = "0.1.999"
+edition = "2018"
+license = "MIT"
+
+[lib]
+path = "lib.rs"
+
+[dependencies.log]
+version = "0.4"
+default-features = false
+
+[features]
+logger = []

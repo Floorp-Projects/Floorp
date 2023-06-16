@@ -14,7 +14,7 @@ if (AppConstants.platform == "win") {
       {
         gBrowser,
       },
-      async function(browser) {
+      async function (browser) {
         // Crash the tab
         let annotations = await BrowserTestUtils.crashFrame(browser);
 
@@ -38,7 +38,7 @@ if (AppConstants.platform == "linux") {
       {
         gBrowser,
       },
-      async function(browser) {
+      async function (browser) {
         // Crash the tab
         let annotations = await BrowserTestUtils.crashFrame(
           browser,

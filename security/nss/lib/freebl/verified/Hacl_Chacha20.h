@@ -28,14 +28,12 @@
 extern "C" {
 #endif
 
-#include "kremlin/internal/types.h"
-#include "kremlin/lowstar_endianness.h"
 #include <string.h>
-#include <stdbool.h>
+#include "krml/internal/types.h"
+#include "krml/lowstar_endianness.h"
+#include "krml/internal/target.h"
 
-#include "Hacl_Kremlib.h"
-
-extern const uint32_t Hacl_Impl_Chacha20_Vec_chacha20_constants[4U];
+#include "Hacl_Krmllib.h"
 
 void
 Hacl_Chacha20_chacha20_encrypt(

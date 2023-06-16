@@ -10,7 +10,7 @@ const TEST_URI =
   "http://example.com/browser/devtools/client/webconsole/" +
   "test/browser/test-console.html";
 
-add_task(async function() {
+add_task(async function () {
   const tab = await addTab(TEST_URI);
   const browser = tab.linkedBrowser;
   const hud = await openConsole();

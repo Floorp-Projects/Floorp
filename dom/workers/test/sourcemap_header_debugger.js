@@ -4,7 +4,7 @@
  */
 "use strict";
 
-addEventListener("message", function(event) {
+addEventListener("message", function (event) {
   let data;
   try {
     data = JSON.parse(event.data);

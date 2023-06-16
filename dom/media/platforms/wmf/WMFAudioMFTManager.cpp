@@ -13,6 +13,8 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Telemetry.h"
 #include "nsTArray.h"
+#include "BufferReader.h"
+#include "mozilla/ScopeExit.h"
 
 #define LOG(...) MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 
@@ -37,6 +39,13 @@ WMFAudioMFTManager::WMFAudioMFTManager(const AudioInfo& aConfig)
           aacCodecSpecificData.mDecoderConfigDescriptorBinaryBlob->Elements();
       configLength =
           aacCodecSpecificData.mDecoderConfigDescriptorBinaryBlob->Length();
+
+      mRemainingEncoderDelay = mEncoderDelay =
+          aacCodecSpecificData.mEncoderDelayFrames;
+      mTotalMediaFrames = aacCodecSpecificData.mMediaFrameCount;
+      LOG("AudioMFT decoder: Found AAC decoder delay (%" PRIu32
+          "frames) and total media frames (%" PRIu64 " frames)\n",
+          mEncoderDelay, mTotalMediaFrames);
     } else {
       // Gracefully handle failure to cover all codec specific cases above. Once
       // we're confident there is no fall through from these cases above, we
@@ -213,7 +222,12 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset, RefPtr<MediaData>& aOutData) {
     mFirstFrame = false;
   }
 
-  TimeUnit pts = GetSampleTime(sample);
+  LONGLONG hns;
+  hr = sample->GetSampleTime(&hns);
+  if (FAILED(hr)) {
+    return E_FAIL;
+  }
+  TimeUnit pts = TimeUnit::FromHns(hns, mAudioRate);
   NS_ENSURE_TRUE(pts.IsValid(), E_FAIL);
 
   RefPtr<IMFMediaBuffer> buffer;
@@ -224,6 +238,7 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset, RefPtr<MediaData>& aOutData) {
                          // don't need to free it.
   DWORD maxLength = 0, currentLength = 0;
   hr = buffer->Lock(&data, &maxLength, &currentLength);
+  ScopeExit exit([buffer] { buffer->Unlock(); });
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   // Output is made of floats.
@@ -247,18 +262,16 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset, RefPtr<MediaData>& aOutData) {
     return E_OUTOFMEMORY;
   }
 
-  PodCopy(audioData.Data(), reinterpret_cast<float*>(data), numSamples);
+  float* floatData = reinterpret_cast<float*>(data);
+  PodCopy(audioData.Data(), floatData, numSamples);
 
-  buffer->Unlock();
-
-  TimeUnit duration = FramesToTimeUnit(numFrames, mAudioRate);
+  TimeUnit duration(numFrames, mAudioRate);
   NS_ENSURE_TRUE(duration.IsValid(), E_FAIL);
 
   const bool isAudioRateChangedToHigher = oldAudioRate < mAudioRate;
   if (IsPartialOutput(duration, isAudioRateChangedToHigher)) {
-    LOG("Encounter a partial frame?! duration shrinks from %" PRId64
-        " to %" PRId64,
-        mLastOutputDuration.ToMicroseconds(), duration.ToMicroseconds());
+    LOG("Encounter a partial frame?! duration shrinks from %s to %s",
+        mLastOutputDuration.ToString().get(), duration.ToString().get());
     return MF_E_TRANSFORM_NEED_MORE_INPUT;
   }
 

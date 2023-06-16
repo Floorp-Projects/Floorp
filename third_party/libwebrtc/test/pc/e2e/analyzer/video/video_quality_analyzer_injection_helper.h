@@ -78,11 +78,10 @@ class VideoQualityAnalyzerInjectionHelper : public StatsObserverInterface {
   // TODO(titovartem): Remove method with `peer_name` only parameter.
   std::unique_ptr<rtc::VideoSinkInterface<VideoFrame>> CreateVideoSink(
       absl::string_view peer_name);
-  // TODO(titovartem): Remove default value for `report_infra_metrics`.
   std::unique_ptr<AnalyzingVideoSink> CreateVideoSink(
       absl::string_view peer_name,
       const VideoSubscription& subscription,
-      bool report_infra_metrics = false);
+      bool report_infra_metrics);
 
   void Start(std::string test_case_name,
              rtc::ArrayView<const std::string> peer_names,

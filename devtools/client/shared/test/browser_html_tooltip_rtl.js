@@ -21,7 +21,7 @@ const TOOLBOX_WIDTH = 500;
 const TOOLTIP_WIDTH = 150;
 const TOOLTIP_HEIGHT = 30;
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.toolbox.sidebar.width", TOOLBOX_WIDTH);
 
   const { doc } = await createHost("right", TEST_URI);

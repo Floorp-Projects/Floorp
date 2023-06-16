@@ -47,7 +47,7 @@ add_task(async function test_experiment_messaging_system_impressions() {
 
   let { win: win1, tab: tab1 } = await openTabAndWaitForRender();
 
-  await SpecialPowers.spawn(tab1, [LOCALE], async function(locale) {
+  await SpecialPowers.spawn(tab1, [LOCALE], async function (locale) {
     is(
       content.document
         .querySelector(".promo button")
@@ -72,7 +72,7 @@ add_task(async function test_experiment_messaging_system_impressions() {
 
   let { win: win2, tab: tab2 } = await openTabAndWaitForRender();
 
-  await SpecialPowers.spawn(tab2, [LOCALE], async function(locale) {
+  await SpecialPowers.spawn(tab2, [LOCALE], async function (locale) {
     is(
       content.document
         .querySelector(".promo button")
@@ -97,7 +97,7 @@ add_task(async function test_experiment_messaging_system_impressions() {
 
   let { win: win3, tab: tab3 } = await openTabAndWaitForRender();
 
-  await SpecialPowers.spawn(tab3, [], async function() {
+  await SpecialPowers.spawn(tab3, [], async function () {
     is(
       content.document.querySelector(".promo button"),
       null,
@@ -105,12 +105,17 @@ add_task(async function test_experiment_messaging_system_impressions() {
     );
   });
 
-  let event3 = Services.telemetry.snapshotEvents(
-    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-    false
-  ).content;
-
-  Assert.equal(!!event3, false, "Should not have promo expose");
+  // Verify that the telemetry events array does not
+  // contain an expose event for pbNewtab
+  info("Should not have promo expose");
+  TelemetryTestUtils.assertEvents([], {
+    category: "normandy",
+    method: "expose",
+    object: "nimbus_experiment",
+    extra_keys: {
+      featureId: "pbNewtab",
+    },
+  });
 
   Services.telemetry.clearEvents();
 

@@ -162,7 +162,7 @@ def test_split_variants(monkeypatch, run_transform, make_test_task):
     (
         pytest.param(
             {
-                "attributes": {"unittest_variant": "webrender-sw+wayland+1proc"},
+                "attributes": {"unittest_variant": "webrender-sw+1proc"},
                 "test-platform": "linux1804-64-clang-trunk-qr/opt",
             },
             {
@@ -179,11 +179,32 @@ def test_split_variants(monkeypatch, run_transform, make_test_task):
                 },
                 "runtime": {
                     "1proc": True,
-                    "wayland": True,
                     "webrender-sw": True,
                 },
             },
             id="linux",
+        ),
+        pytest.param(
+            {
+                "attributes": {},
+                "test-platform": "linux2204-64-wayland-shippable/opt",
+            },
+            {
+                "platform": {
+                    "arch": "64",
+                    "display": "wayland",
+                    "os": {
+                        "name": "linux",
+                        "version": "2204",
+                    },
+                },
+                "build": {
+                    "type": "opt",
+                    "shippable": True,
+                },
+                "runtime": {},
+            },
+            id="linux wayland shippable",
         ),
         pytest.param(
             {

@@ -72,9 +72,8 @@ export class MessageHandlerFrameChild extends JSWindowActorChild {
   async receiveMessage(message) {
     if (message.name === "MessageHandlerFrameParent:sendCommand") {
       const { sessionId, command } = message.data;
-      const messageHandler = this._registry.getOrCreateMessageHandler(
-        sessionId
-      );
+      const messageHandler =
+        this._registry.getOrCreateMessageHandler(sessionId);
       try {
         return await messageHandler.handleCommand(command);
       } catch (e) {

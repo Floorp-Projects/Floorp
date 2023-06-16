@@ -43,13 +43,13 @@ WINDOWS_WORKER_TYPES = {
         "virtual-with-gpu": "t-win10-64-gpu-s",
         "hardware": "t-win10-64-ref-hw",
     },
-    "windows10-64-2004-qr": {
-        "virtual": "win10-64-2004",
-        "virtual-with-gpu": "win10-64-2004-gpu",
+    "windows10-64-2009-qr": {
+        "virtual": "win10-64-2009",
+        "virtual-with-gpu": "win10-64-2009-gpu",
     },
-    "windows10-64-2004-shippable-qr": {
-        "virtual": "win10-64-2004",
-        "virtual-with-gpu": "win10-64-2004-gpu",
+    "windows10-64-2009-shippable-qr": {
+        "virtual": "win10-64-2009",
+        "virtual-with-gpu": "win10-64-2009-gpu",
     },
     "windows11-32-2009-mingwclang-qr": {
         "virtual": "win11-64-2009",
@@ -122,7 +122,7 @@ def set_worker_type(config, tasks):
         # during the taskcluster migration, this is a bit tortured, but it
         # will get simpler eventually!
         test_platform = task["test-platform"]
-        if task.get("worker-type") and task.get("worker-type") != "default":
+        if task.get("worker-type", "default") != "default":
             # This test already has its worker type defined, so just use that (yields below)
             # Unless the value is set to "default", in that case ignore it.
             pass
@@ -183,4 +183,17 @@ def set_worker_type(config, tasks):
         else:
             raise Exception(f"unknown test_platform {test_platform}")
 
+        yield task
+
+
+@transforms.add
+def set_wayland_env(config, tasks):
+    for task in tasks:
+        if task["worker-type"] != "t-linux-wayland":
+            yield task
+            continue
+
+        env = task.setdefault("worker", {}).setdefault("env", {})
+        env["MOZ_ENABLE_WAYLAND"] = "1"
+        env["WAYLAND_DISPLAY"] = "wayland-0"
         yield task

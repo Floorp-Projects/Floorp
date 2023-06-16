@@ -38,7 +38,7 @@ async function installAndStartExtension() {
   return extension;
 }
 
-add_task(async function() {
+add_task(async function () {
   const extension = await installAndStartExtension();
   const tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,

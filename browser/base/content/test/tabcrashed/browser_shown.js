@@ -7,7 +7,7 @@ const COMMENTS = "Here's my test comment!";
 // Avoid timeouts, as in bug 1325530
 requestLongerTimeout(2);
 
-add_setup(async function() {
+add_setup(async function () {
   await setupLocalCrashReportServer();
 });
 
@@ -45,7 +45,7 @@ function crashTabTestHelper(fieldValues, expectedExtra) {
       gBrowser,
       url: PAGE,
     },
-    async function(browser) {
+    async function (browser) {
       let prefs = TabCrashHandler.prefs;
       let originalSendReport = prefs.getBoolPref("sendReport");
       let originalIncludeURL = prefs.getBoolPref("includeURL");

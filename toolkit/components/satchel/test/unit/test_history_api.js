@@ -66,7 +66,7 @@ function promiseUpdateEntry(op, name, value) {
   return promiseUpdate(change);
 }
 
-add_task(async function() {
+add_task(async function () {
   let oldSupportsDeletedTable = FormHistory._supportsDeletedTable;
   FormHistory._supportsDeletedTable = true;
 

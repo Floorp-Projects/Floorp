@@ -35,8 +35,8 @@ add_task(async function testRequestIOActivity() {
   waitForExplicitFinish();
   Services.obs.notifyObservers(null, "profile-initial-state");
 
-  await BrowserTestUtils.withNewTab(TEST_URL, async function(browser) {
-    await BrowserTestUtils.withNewTab(TEST_URL2, async function(browser) {
+  await BrowserTestUtils.withNewTab(TEST_URL, async function (browser) {
+    await BrowserTestUtils.withNewTab(TEST_URL2, async function (browser) {
       let results = await ChromeUtils.requestIOActivity();
       processResults(results);
 

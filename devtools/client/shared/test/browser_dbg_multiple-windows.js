@@ -18,7 +18,7 @@ var {
 const TAB1_URL = "data:text/html;charset=utf-8,first-tab";
 const TAB2_URL = "data:text/html;charset=utf-8,second-tab";
 
-add_task(async function() {
+add_task(async function () {
   DevToolsServer.init();
   DevToolsServer.registerAllActors();
 
@@ -79,7 +79,7 @@ async function testNewWindow(client, win) {
 
 async function testFocusFirst(client) {
   const tab = window.gBrowser.selectedTab;
-  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
+  await ContentTask.spawn(tab.linkedBrowser, null, async function () {
     const onFocus = new Promise(resolve => {
       content.addEventListener("focus", resolve, { once: true });
     });

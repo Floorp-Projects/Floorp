@@ -19,7 +19,7 @@ function test_simple() {
 
   var xhr = createXHR();
 
-  xhr.onloadend = function() {
+  xhr.onloadend = function () {
     ok(xhr.response instanceof Blob, "We have a blob!");
     ok(!(xhr.response instanceof File), "Our blob is not a file!");
     if ("SpecialPowers" in self) {
@@ -33,7 +33,7 @@ function test_simple() {
 
     var fr = new FileReader();
     fr.readAsText(xhr.response);
-    fr.onload = function() {
+    fr.onload = function () {
       is(fr.result, data, "Data content matches");
       next();
     };
@@ -45,11 +45,11 @@ function test_abort() {
 
   var xhr = createXHR();
 
-  xhr.onprogress = function() {
+  xhr.onprogress = function () {
     xhr.abort();
   };
 
-  xhr.onloadend = function() {
+  xhr.onloadend = function () {
     ok(!xhr.response, "We should not have a Blob!");
     next();
   };
@@ -61,7 +61,7 @@ function test_reuse() {
   var xhr = createXHR();
 
   var count = 0;
-  xhr.onloadend = function() {
+  xhr.onloadend = function () {
     ok(xhr.response instanceof Blob, "We have a blob!");
     ok(!(xhr.response instanceof File), "Our blob is not a file!");
     if ("SpecialPowers" in self) {
@@ -75,7 +75,7 @@ function test_reuse() {
 
     var fr = new FileReader();
     fr.readAsText(xhr.response);
-    fr.onload = function() {
+    fr.onload = function () {
       is(fr.result, data, "Data content matches");
       if (++count > 2) {
         next();
@@ -95,7 +95,7 @@ function test_reuse() {
 
 function test_worker_generic(test) {
   var w = new Worker("worker_temporaryFileBlob.js");
-  w.onmessage = function(e) {
+  w.onmessage = function (e) {
     if (e.data.type == "info") {
       info(e.data.msg);
     } else if (e.data.type == "check") {

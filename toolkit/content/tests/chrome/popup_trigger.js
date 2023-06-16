@@ -11,7 +11,7 @@ var gCachedEvent2 = null;
 function cacheEvent(modifiers) {
   var cachedEvent = null;
 
-  var mouseFn = function(event) {
+  var mouseFn = function (event) {
     cachedEvent = event;
   };
 

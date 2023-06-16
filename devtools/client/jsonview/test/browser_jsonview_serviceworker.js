@@ -7,7 +7,7 @@ const TEST_JSON_URL = URL_ROOT_SSL + "valid_json.json";
 const EMPTY_PAGE = URL_ROOT_SSL + "empty.html";
 const SW = URL_ROOT_SSL + "passthrough-sw.js";
 
-add_task(async function() {
+add_task(async function () {
   info("Test valid JSON with service worker started");
 
   await SpecialPowers.pushPrefEnv({

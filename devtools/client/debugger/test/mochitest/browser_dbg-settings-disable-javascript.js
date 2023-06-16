@@ -8,7 +8,7 @@ requestLongerTimeout(2);
 
 // Tests that using the Settings menu to enable and disable JavaScript
 // updates the pref properly
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger("doc-scripts.html", "simple1.js");
   const menuItemClassName = ".debugger-settings-menu-item-disable-javascript";
 

@@ -3,8 +3,8 @@ var gTestRoot = getRootDirectory(gTestPath).replace(
   "http://127.0.0.1:8888/"
 );
 
-add_task(async function() {
-  registerCleanupFunction(function() {
+add_task(async function () {
+  registerCleanupFunction(function () {
     gBrowser.removeCurrentTab();
     window.focus();
   });
@@ -33,10 +33,10 @@ function promiseTabLoadEvent(tab, url) {
   return loaded;
 }
 
-add_task(async function() {
+add_task(async function () {
   let pluginTab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser));
   await promiseTabLoadEvent(pluginTab, gTestRoot + "block_all_plugins.html");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     let doc = content.document;
 
     let objectElt = doc.getElementById("object");

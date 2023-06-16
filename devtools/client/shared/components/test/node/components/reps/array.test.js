@@ -77,9 +77,7 @@ describe("Array", () => {
     expect(renderRep({ mode: MODE.TINY }).text()).toBe("[…]");
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultShortOutput);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(
-      `[ ${Array(maxLengthMap.get(MODE.LONG))
-        .fill('"foo"')
-        .join(", ")}, … ]`
+      `[ ${Array(maxLengthMap.get(MODE.LONG)).fill('"foo"').join(", ")}, … ]`
     );
   });
 

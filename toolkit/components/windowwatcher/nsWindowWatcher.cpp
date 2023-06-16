@@ -15,7 +15,6 @@
 #include "nsISimpleEnumerator.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsJSUtils.h"
-#include "plstr.h"
 
 #include "nsDocShell.h"
 #include "nsGlobalWindow.h"

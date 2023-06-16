@@ -2,10 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.blobConverters = (function() {
+this.blobConverters = (function () {
   const exports = {};
 
-  exports.dataUrlToBlob = function(url) {
+  exports.dataUrlToBlob = function (url) {
     const binary = atob(url.split(",", 2)[1]);
     let contentType = exports.getTypeFromDataUrl(url);
     if (contentType !== "image/png" && contentType !== "image/jpeg") {
@@ -16,27 +16,27 @@ this.blobConverters = (function() {
     return blob;
   };
 
-  exports.getTypeFromDataUrl = function(url) {
+  exports.getTypeFromDataUrl = function (url) {
     let contentType = url.split(",", 1)[0];
     contentType = contentType.split(";", 1)[0];
     contentType = contentType.split(":", 2)[1];
     return contentType;
   };
 
-  exports.blobToArray = function(blob) {
+  exports.blobToArray = function (blob) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.addEventListener("loadend", function() {
+      reader.addEventListener("loadend", function () {
         resolve(reader.result);
       });
       reader.readAsArrayBuffer(blob);
     });
   };
 
-  exports.blobToDataUrl = function(blob) {
+  exports.blobToDataUrl = function (blob) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.addEventListener("loadend", function() {
+      reader.addEventListener("loadend", function () {
         resolve(reader.result);
       });
       reader.readAsDataURL(blob);

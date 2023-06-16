@@ -139,11 +139,8 @@ class ViewportDimension extends PureComponent {
   }
 
   onInputSubmit() {
-    const {
-      viewport,
-      onRemoveDeviceAssociation,
-      doResizeViewport,
-    } = this.props;
+    const { viewport, onRemoveDeviceAssociation, doResizeViewport } =
+      this.props;
 
     if (!this.state.isWidthValid || !this.state.isHeightValid) {
       const { width, height } = viewport;

@@ -25,7 +25,7 @@ const kEdgeRegistryRoot =
   "microsoft.microsoftedge_8wekyb3d8bbwe\\MicrosoftEdge";
 const kEdgeDatabasePath = "AC\\MicrosoftEdge\\User\\Default\\DataStore\\Data\\";
 
-XPCOMUtils.defineLazyGetter(lazy, "gEdgeDatabase", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gEdgeDatabase", function () {
   let edgeDir = MSMigrationUtils.getEdgeLocalDataFolder();
   if (!edgeDir) {
     return null;
@@ -533,7 +533,8 @@ export class EdgeProfileMigrator extends MigratorBase {
       new EdgeTypedURLDBMigrator(),
       new EdgeReadingListMigrator(),
     ];
-    let windowsVaultFormPasswordsMigrator = MSMigrationUtils.getWindowsVaultFormPasswordsMigrator();
+    let windowsVaultFormPasswordsMigrator =
+      MSMigrationUtils.getWindowsVaultFormPasswordsMigrator();
     windowsVaultFormPasswordsMigrator.name = "EdgeVaultFormPasswords";
     resources.push(windowsVaultFormPasswordsMigrator);
     return resources.filter(r => r.exists);

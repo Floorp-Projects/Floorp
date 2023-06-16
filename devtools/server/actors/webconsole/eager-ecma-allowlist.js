@@ -22,7 +22,7 @@ function getter(obj, name) {
 
 const TypedArray = Reflect.getPrototypeOf(Int8Array);
 
-const allowList = [
+const functionAllowList = [
   Array,
   Array.from,
   Array.isArray,
@@ -162,6 +162,9 @@ const allowList = [
   isFinite,
   isNaN,
   unescape,
+];
+
+const getterAllowList = [
   getter(ArrayBuffer.prototype, "byteLength"),
   getter(ArrayBuffer, Symbol.species),
   getter(Array, Symbol.species),
@@ -238,8 +241,8 @@ const changesArrayByCopy = [
 ];
 for (const fn of changesArrayByCopy) {
   if (typeof fn == "function") {
-    allowList.push(fn);
+    functionAllowList.push(fn);
   }
 }
 
-module.exports = allowList;
+module.exports = { functions: functionAllowList, getters: getterAllowList };

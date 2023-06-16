@@ -25,6 +25,8 @@ class Breakpoint extends PureComponent {
       editor: PropTypes.object.isRequired,
       editorActions: PropTypes.object.isRequired,
       selectedSource: PropTypes.object,
+      blackboxedRangesForSelectedSource: PropTypes.array,
+      isSelectedSourceOnIgnoreList: PropTypes.bool.isRequired,
     };
   }
 
@@ -56,13 +58,8 @@ class Breakpoint extends PureComponent {
   }
 
   onClick = event => {
-    const {
-      cx,
-      breakpointActions,
-      editorActions,
-      breakpoint,
-      selectedSource,
-    } = this.props;
+    const { cx, breakpointActions, editorActions, breakpoint, selectedSource } =
+      this.props;
 
     // ignore right clicks
     if ((event.ctrlKey && event.button === 0) || event.button === 2) {
@@ -74,21 +71,16 @@ class Breakpoint extends PureComponent {
 
     const selectedLocation = getSelectedLocation(breakpoint, selectedSource);
     if (event.metaKey) {
-      editorActions.continueToHere(cx, selectedLocation.line);
+      editorActions.continueToHere(cx, selectedLocation);
       return;
     }
 
     if (event.shiftKey) {
-      if (features.columnBreakpoints) {
-        breakpointActions.toggleBreakpointsAtLine(
-          cx,
-          !breakpoint.disabled,
-          selectedLocation.line
-        );
-        return;
-      }
-
-      breakpointActions.toggleDisabledBreakpoint(cx, breakpoint);
+      breakpointActions.toggleBreakpointsAtLine(
+        cx,
+        !breakpoint.disabled,
+        selectedLocation.line
+      );
       return;
     }
 
@@ -100,14 +92,28 @@ class Breakpoint extends PureComponent {
   };
 
   onContextMenu = event => {
-    const { cx, breakpoint, selectedSource, breakpointActions } = this.props;
+    const {
+      cx,
+      breakpoint,
+      selectedSource,
+      breakpointActions,
+      blackboxedRangesForSelectedSource,
+      isSelectedSourceOnIgnoreList,
+    } = this.props;
     event.stopPropagation();
     event.preventDefault();
     const selectedLocation = getSelectedLocation(breakpoint, selectedSource);
 
     showMenu(
       event,
-      breakpointItems(cx, breakpoint, selectedLocation, breakpointActions)
+      breakpointItems(
+        cx,
+        breakpoint,
+        selectedLocation,
+        breakpointActions,
+        blackboxedRangesForSelectedSource,
+        isSelectedSourceOnIgnoreList
+      )
     );
   };
 

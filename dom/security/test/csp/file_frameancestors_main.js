@@ -1,13 +1,12 @@
 // Script to populate the test frames in the frame ancestors mochitest.
 //
 function setupFrames() {
-  var $ = function(v) {
+  var $ = function (v) {
     return document.getElementById(v);
   };
   var base = {
     self: "/tests/dom/security/test/csp/file_frameancestors.sjs",
-    a:
-      "http://mochi.test:8888/tests/dom/security/test/csp/file_frameancestors.sjs",
+    a: "http://mochi.test:8888/tests/dom/security/test/csp/file_frameancestors.sjs",
     b: "http://example.com/tests/dom/security/test/csp/file_frameancestors.sjs",
   };
 

@@ -49,9 +49,16 @@ def test_android7_power():
             control_server.test_name = "gve-pytest"
             control_server.device = device
             control_server.app_name = "org.mozilla.geckoview_example"
+
+            original_get = WebExtensionAndroid.get_browser_meta
+            WebExtensionAndroid.get_browser_meta = mock.MagicMock()
+            WebExtensionAndroid.get_browser_meta.return_value = ("app", "version")
+
             web_extension = WebExtensionAndroid(
                 "geckoview", "org.mozilla.geckoview_example", power_test=True
             )
+            WebExtensionAndroid.get_browser_meta = original_get
+
             web_extension.device = device
             web_extension.config["power_test"] = True
             web_extension.control_server = control_server
@@ -130,9 +137,16 @@ def test_android8_power():
             control_server.test_name = "gve-pytest"
             control_server.device = device
             control_server.app_name = "org.mozilla.geckoview_example"
+
+            original_get = WebExtensionAndroid.get_browser_meta
+            WebExtensionAndroid.get_browser_meta = mock.MagicMock()
+            WebExtensionAndroid.get_browser_meta.return_value = ("app", "version")
+
             web_extension = WebExtensionAndroid(
                 "geckoview", "org.mozilla.geckoview_example", power_test=True
             )
+            WebExtensionAndroid.get_browser_meta = original_get
+
             web_extension.device = device
             web_extension.config["power_test"] = True
             web_extension.control_server = control_server
@@ -216,9 +230,16 @@ def test_androidos_baseline_power():
             control_server.test_name = "gve-pytest"
             control_server.device = device
             control_server.app_name = "org.mozilla.geckoview_example"
+
+            original_get = WebExtensionAndroid.get_browser_meta
+            WebExtensionAndroid.get_browser_meta = mock.MagicMock()
+            WebExtensionAndroid.get_browser_meta.return_value = ("app", "version")
+
             web_extension = WebExtensionAndroid(
                 "geckoview", "org.mozilla.geckoview_example", power_test=True
             )
+            WebExtensionAndroid.get_browser_meta = original_get
+
             web_extension.device = device
             web_extension.config["power_test"] = True
             web_extension.control_server = control_server

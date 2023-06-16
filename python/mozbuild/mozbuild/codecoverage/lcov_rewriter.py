@@ -4,6 +4,7 @@
 
 import json
 import os
+import sys
 from argparse import ArgumentParser
 
 try:
@@ -235,7 +236,7 @@ class LcovFile(object):
         current_pp_info = None
         current_lines = []
         for lcov_path in self.lcov_paths:
-            with open(lcov_path) as lcov_fh:
+            with open(lcov_path, "r", encoding="utf-8") as lcov_fh:
                 for line in lcov_fh:
                     line = line.rstrip()
                     if not line:
@@ -433,7 +434,7 @@ class UrlFinder(object):
         self._final_mapping = {}
 
         try:
-            with open(chrome_map_path) as fh:
+            with open(chrome_map_path, "r", encoding="utf-8") as fh:
                 url_prefixes, overrides, install_info, buildconfig = json.load(fh)
         except IOError:
             print(
@@ -670,9 +671,14 @@ class LcovFileRewriter(object):
                     return None
             except Exception as e:
                 if url not in unknowns:
-                    print(
-                        "Error: %s.\nCouldn't find source info for %s, removing record"
-                        % (e, url)
+                    # The exception can contain random filename used by
+                    # test cases, and there can be character that cannot be
+                    # encoded with the stdout encoding.
+                    sys.stdout.buffer.write(
+                        (
+                            "Error: %s.\nCouldn't find source info for %s, removing record"
+                            % (e, url)
+                        ).encode(sys.stdout.encoding, errors="replace")
                     )
                 unknowns.add(url)
                 return None
@@ -692,14 +698,14 @@ class LcovFileRewriter(object):
 
         if output_file:
             lcov_file = LcovFile(in_paths)
-            with open(output_file, "w+") as out_fh:
+            with open(output_file, "w+", encoding="utf-8") as out_fh:
                 lcov_file.print_file(
                     out_fh, rewrite_source, self.pp_rewriter.rewrite_record
                 )
         else:
             for in_path in in_paths:
                 lcov_file = LcovFile([in_path])
-                with open(in_path + output_suffix, "w+") as out_fh:
+                with open(in_path + output_suffix, "w+", encoding="utf-8") as out_fh:
                     lcov_file.print_file(
                         out_fh, rewrite_source, self.pp_rewriter.rewrite_record
                     )

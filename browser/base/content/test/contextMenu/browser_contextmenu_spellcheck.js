@@ -67,7 +67,7 @@ add_task(async function test_text_input_spellcheck() {
         await SpecialPowers.spawn(
           gBrowser.selectedBrowser,
           [],
-          async function() {
+          async function () {
             let doc = content.document;
             let input = doc.getElementById("input_spellcheck_no_value");
             input.setAttribute("spellcheck", "true");
@@ -200,7 +200,7 @@ add_task(async function test_text_input_spellcheck_deadactor() {
 
   // Now navigate the tab, after ensuring there's an unload listener, so
   // we don't end up in bfcache:
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     content.document.body.setAttribute("onunload", "");
   });
   wgp = gBrowser.selectedBrowser.browsingContext.currentWindowGlobal;

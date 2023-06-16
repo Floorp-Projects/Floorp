@@ -223,7 +223,8 @@ nsStyleFont::nsStyleFont(const nsStyleFont& aSrc)
 }
 
 static StyleXTextScale InitialTextScale(const Document& aDoc) {
-  if (nsContentUtils::IsChromeDoc(&aDoc)) {
+  if (nsContentUtils::IsChromeDoc(&aDoc) ||
+      nsContentUtils::IsPDFJS(aDoc.NodePrincipal())) {
     return StyleXTextScale::ZoomOnly;
   }
   return StyleXTextScale::All;
@@ -297,7 +298,7 @@ nsChangeHint nsStyleFont::CalcDifference(const nsStyleFont& aNewData) const {
 
 Length nsStyleFont::ZoomText(const Document& aDocument, Length aSize) {
   if (auto* pc = aDocument.GetPresContext()) {
-    aSize.ScaleBy(pc->EffectiveTextZoom());
+    aSize.ScaleBy(pc->TextZoom());
   }
   return aSize;
 }
@@ -380,11 +381,6 @@ nsChangeHint nsStylePadding::CalcDifference(
   return hint;
 }
 
-static nscoord TwipsPerPixel(const Document& aDocument) {
-  auto* pc = aDocument.GetPresContext();
-  return pc ? pc->AppUnitsPerDevPixel() : mozilla::AppUnitsPerCSSPixel();
-}
-
 static inline BorderRadius ZeroBorderRadius() {
   auto zero = LengthPercentage::Zero();
   return {{{zero, zero}}, {{zero, zero}}, {{zero, zero}}, {{zero, zero}}};
@@ -408,8 +404,7 @@ nsStyleBorder::nsStyleBorder(const Document& aDocument)
       mBorderRightColor(StyleColor::CurrentColor()),
       mBorderBottomColor(StyleColor::CurrentColor()),
       mBorderLeftColor(StyleColor::CurrentColor()),
-      mComputedBorder(0, 0, 0, 0),
-      mTwipsPerPixel(TwipsPerPixel(aDocument)) {
+      mComputedBorder(0, 0, 0, 0) {
   MOZ_COUNT_CTOR(nsStyleBorder);
 
   nscoord medium = kMediumBorderWidth;
@@ -434,8 +429,7 @@ nsStyleBorder::nsStyleBorder(const nsStyleBorder& aSrc)
       mBorderBottomColor(aSrc.mBorderBottomColor),
       mBorderLeftColor(aSrc.mBorderLeftColor),
       mComputedBorder(aSrc.mComputedBorder),
-      mBorder(aSrc.mBorder),
-      mTwipsPerPixel(aSrc.mTwipsPerPixel) {
+      mBorder(aSrc.mBorder) {
   MOZ_COUNT_CTOR(nsStyleBorder);
   for (const auto side : mozilla::AllPhysicalSides()) {
     mBorderStyle[side] = aSrc.mBorderStyle[side];
@@ -480,8 +474,7 @@ nsChangeHint nsStyleBorder::CalcDifference(
   // force reflow of all descendants, but the hint would need to force
   // reflow of the frame's children (see how
   // ReflowInput::InitResizeFlags initializes the inline-resize flag).
-  if (mTwipsPerPixel != aNewData.mTwipsPerPixel ||
-      GetComputedBorder() != aNewData.GetComputedBorder() ||
+  if (GetComputedBorder() != aNewData.GetComputedBorder() ||
       mFloatEdge != aNewData.mFloatEdge ||
       mBorderImageOutset != aNewData.mBorderImageOutset ||
       mBoxDecorationBreak != aNewData.mBoxDecorationBreak) {
@@ -556,8 +549,7 @@ nsStyleOutline::nsStyleOutline(const Document& aDocument)
       mOutlineOffset({0.0f}),
       mOutlineColor(StyleColor::CurrentColor()),
       mOutlineStyle(StyleOutlineStyle::BorderStyle(StyleBorderStyle::None)),
-      mActualOutlineWidth(0),
-      mTwipsPerPixel(TwipsPerPixel(aDocument)) {
+      mActualOutlineWidth(0) {
   MOZ_COUNT_CTOR(nsStyleOutline);
 }
 
@@ -566,8 +558,7 @@ nsStyleOutline::nsStyleOutline(const nsStyleOutline& aSrc)
       mOutlineOffset(aSrc.mOutlineOffset),
       mOutlineColor(aSrc.mOutlineColor),
       mOutlineStyle(aSrc.mOutlineStyle),
-      mActualOutlineWidth(aSrc.mActualOutlineWidth),
-      mTwipsPerPixel(aSrc.mTwipsPerPixel) {
+      mActualOutlineWidth(aSrc.mActualOutlineWidth) {
   MOZ_COUNT_CTOR(nsStyleOutline);
 }
 
@@ -591,8 +582,7 @@ nsChangeHint nsStyleOutline::CalcDifference(
   }
 
   if (mOutlineWidth != aNewData.mOutlineWidth ||
-      mOutlineOffset != aNewData.mOutlineOffset ||
-      mTwipsPerPixel != aNewData.mTwipsPerPixel) {
+      mOutlineOffset != aNewData.mOutlineOffset) {
     return nsChangeHint_NeutralChange;
   }
 
@@ -718,8 +708,7 @@ nsStyleColumn::nsStyleColumn(const Document& aDocument)
       mColumnRuleColor(StyleColor::CurrentColor()),
       mColumnRuleStyle(StyleBorderStyle::None),
       mColumnRuleWidth(kMediumBorderWidth),
-      mActualColumnRuleWidth(0),
-      mTwipsPerPixel(TwipsPerPixel(aDocument)) {
+      mActualColumnRuleWidth(0) {
   MOZ_COUNT_CTOR(nsStyleColumn);
 }
 
@@ -733,8 +722,7 @@ nsStyleColumn::nsStyleColumn(const nsStyleColumn& aSource)
       mColumnFill(aSource.mColumnFill),
       mColumnSpan(aSource.mColumnSpan),
       mColumnRuleWidth(aSource.mColumnRuleWidth),
-      mActualColumnRuleWidth(aSource.mActualColumnRuleWidth),
-      mTwipsPerPixel(aSource.mTwipsPerPixel) {
+      mActualColumnRuleWidth(aSource.mActualColumnRuleWidth) {
   MOZ_COUNT_CTOR(nsStyleColumn);
 }
 
@@ -761,10 +749,7 @@ nsChangeHint nsStyleColumn::CalcDifference(
     return NS_STYLE_HINT_VISUAL;
   }
 
-  // XXX Is it right that we never check mTwipsPerPixel to return a
-  // non-nsChangeHint_NeutralChange hint?
-  if (mColumnRuleWidth != aNewData.mColumnRuleWidth ||
-      mTwipsPerPixel != aNewData.mTwipsPerPixel) {
+  if (mColumnRuleWidth != aNewData.mColumnRuleWidth) {
     return nsChangeHint_NeutralChange;
   }
 
@@ -2220,7 +2205,7 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mOffsetDistance(LengthPercentage::Zero()),
       mOffsetRotate{true, StyleAngle{0.0}},
       mOffsetAnchor(StylePositionOrAuto::Auto()),
-      mOffsetPosition(StylePositionOrAuto::Auto()),
+      mOffsetPosition(StyleOffsetPosition::Auto()),
       mTransformOrigin{LengthPercentage::FromPercentage(0.5),
                        LengthPercentage::FromPercentage(0.5),
                        {0.}},
@@ -2228,6 +2213,7 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mPerspectiveOrigin(Position::FromPercentage(0.5f)),
       mVerticalAlign(
           StyleVerticalAlign::Keyword(StyleVerticalAlignKeyword::Baseline)),
+      mBaselineSource(StyleBaselineSource::Auto),
       mWebkitLineClamp(0),
       mShapeMargin(LengthPercentage::Zero()),
       mShapeOutside(StyleShapeOutside::None()) {
@@ -2283,6 +2269,7 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
       mChildPerspective(aSource.mChildPerspective),
       mPerspectiveOrigin(aSource.mPerspectiveOrigin),
       mVerticalAlign(aSource.mVerticalAlign),
+      mBaselineSource(aSource.mBaselineSource),
       mWebkitLineClamp(aSource.mWebkitLineClamp),
       mShapeImageThreshold(aSource.mShapeImageThreshold),
       mShapeMargin(aSource.mShapeMargin),
@@ -2328,23 +2315,16 @@ static inline nsChangeHint CompareTransformValues(
 
 static inline nsChangeHint CompareMotionValues(
     const nsStyleDisplay& aDisplay, const nsStyleDisplay& aNewDisplay) {
-  if (aDisplay.mOffsetPath == aNewDisplay.mOffsetPath &&
-      aDisplay.mOffsetPosition == aNewDisplay.mOffsetPosition) {
+  if (aDisplay.mOffsetPath == aNewDisplay.mOffsetPath) {
     if (aDisplay.mOffsetDistance == aNewDisplay.mOffsetDistance &&
         aDisplay.mOffsetRotate == aNewDisplay.mOffsetRotate &&
-        aDisplay.mOffsetAnchor == aNewDisplay.mOffsetAnchor) {
+        aDisplay.mOffsetAnchor == aNewDisplay.mOffsetAnchor &&
+        aDisplay.mOffsetPosition == aNewDisplay.mOffsetPosition) {
       return nsChangeHint(0);
     }
 
     // No motion path transform is applied.
-    if (!aDisplay.IsStackingContext()) {
-      return nsChangeHint_NeutralChange;
-    }
-
-    // offset-distance and offset-rotate affect offset-path only.
-    if (aDisplay.mOffsetPath.IsNone() &&
-        aDisplay.mOffsetAnchor == aNewDisplay.mOffsetAnchor) {
-      // Only offset-distance and/or offset-rotate is changed.
+    if (aDisplay.mOffsetPath.IsNone()) {
       return nsChangeHint_NeutralChange;
     }
   }
@@ -2354,7 +2334,7 @@ static inline nsChangeHint CompareMotionValues(
   // Set the same hints as what we use for transform because motion path is
   // a kind of transform and will be combined with other transforms.
   nsChangeHint result = nsChangeHint_UpdateTransformLayer;
-  if (aDisplay.IsStackingContext() && aNewDisplay.IsStackingContext()) {
+  if (!aDisplay.mOffsetPath.IsNone() && !aNewDisplay.mOffsetPath.IsNone()) {
     result |= nsChangeHint_UpdatePostTransformOverflow;
   } else {
     result |= nsChangeHint_UpdateOverflow;
@@ -2519,7 +2499,8 @@ nsChangeHint nsStyleDisplay::CalcDifference(
   }
 
   if (mWebkitLineClamp != aNewData.mWebkitLineClamp ||
-      mVerticalAlign != aNewData.mVerticalAlign) {
+      mVerticalAlign != aNewData.mVerticalAlign ||
+      mBaselineSource != aNewData.mBaselineSource) {
     // XXX Can this just be AllReflowHints + RepaintFrame, and be included in
     // the block below?
     hint |= NS_STYLE_HINT_REFLOW;

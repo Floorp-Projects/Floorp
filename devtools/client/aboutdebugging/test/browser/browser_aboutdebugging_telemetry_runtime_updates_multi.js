@@ -45,7 +45,7 @@ const RUNTIME_2_EXTRAS = {
  * Test runtime update events when a device is connected/disconnected with multiple
  * runtimes available on the same device.
  */
-add_task(async function() {
+add_task(async function () {
   // enable USB devices mocks
   const mocks = new Mocks();
   setupTelemetryTest();

@@ -6,11 +6,8 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
+  ExtensionTestCommon: "resource://testing-common/ExtensionTestCommon.sys.mjs",
   TestUtils: "resource://testing-common/TestUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  ExtensionTestCommon: "resource://testing-common/ExtensionTestCommon.jsm",
 });
 
 add_setup(function checkExtensionsWebIDLEnabled() {
@@ -40,12 +37,8 @@ function getBackgroundServiceWorkerRegistration(extension) {
 function waitForTerminatedWorkers(swRegInfo) {
   info(`Wait all ${swRegInfo.scope} workers to be terminated`);
   return TestUtils.waitForCondition(() => {
-    const {
-      evaluatingWorker,
-      installingWorker,
-      waitingWorker,
-      activeWorker,
-    } = swRegInfo;
+    const { evaluatingWorker, installingWorker, waitingWorker, activeWorker } =
+      swRegInfo;
     return !(
       evaluatingWorker ||
       installingWorker ||
@@ -57,8 +50,8 @@ function waitForTerminatedWorkers(swRegInfo) {
 
 function unmockHandleAPIRequest(extPage) {
   return extPage.spawn([], () => {
-    const { ExtensionAPIRequestHandler } = ChromeUtils.import(
-      "resource://gre/modules/ExtensionProcessScript.jsm"
+    const { ExtensionAPIRequestHandler } = ChromeUtils.importESModule(
+      "resource://gre/modules/ExtensionProcessScript.sys.mjs"
     );
 
     // Unmock ExtensionAPIRequestHandler.
@@ -83,11 +76,11 @@ function mockHandleAPIRequest(extPage, mockHandleAPIRequest) {
       };
     });
 
-  return extPage.spawn(
+  return extPage.legacySpawn(
     [ExtensionTestCommon.serializeFunction(mockHandleAPIRequest)],
     mockFnText => {
-      const { ExtensionAPIRequestHandler } = ChromeUtils.import(
-        "resource://gre/modules/ExtensionProcessScript.jsm"
+      const { ExtensionAPIRequestHandler } = ChromeUtils.importESModule(
+        "resource://gre/modules/ExtensionProcessScript.sys.mjs"
       );
 
       mockFnText = `(() => {
@@ -102,7 +95,7 @@ function mockHandleAPIRequest(extPage, mockHandleAPIRequest) {
           ExtensionAPIRequestHandler.handleAPIRequest;
       }
 
-      ExtensionAPIRequestHandler.handleAPIRequest = function(policy, request) {
+      ExtensionAPIRequestHandler.handleAPIRequest = function (policy, request) {
         if (request.apiNamespace === "test") {
           return this._handleAPIRequest_orig(policy, request);
         }
@@ -232,7 +225,7 @@ async function runExtensionAPITest(
 
   async function runTestCaseInWorker({ page, extension }) {
     info(`*** Run test case in an extension service worker`);
-    const result = await page.spawn([], async () => {
+    const result = await page.legacySpawn([], async () => {
       const { active } = await content.navigator.serviceWorker.ready;
       const { port1, port2 } = new MessageChannel();
 

@@ -4,110 +4,179 @@
 
 <!DOCTYPE html>
 <html>
+  <head>
+    <title id="reader-title"></title>
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src chrome:; img-src data: *; media-src *; object-src 'none'"
+    />
+    <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width; user-scalable=0" />
+    <link
+      rel="stylesheet"
+      href="chrome://global/skin/aboutReader.css"
+      type="text/css"
+    />
+    <link
+      rel="stylesheet"
+      href="chrome://global/skin/aboutReaderPocket.css"
+      type="text/css"
+    />
+    <link rel="localization" href="toolkit/about/aboutReader.ftl" />
+    <link rel="localization" href="toolkit/branding/brandings.ftl" />
+  </head>
 
-<head>
-  <title id="reader-title"></title>
-  <meta http-equiv="Content-Security-Policy" content="default-src chrome:; img-src data: *; media-src *; object-src 'none'" />
-  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
-  <meta name="viewport" content="width=device-width; user-scalable=0" />
-  <link rel="stylesheet" href="chrome://global/skin/aboutReader.css" type="text/css"/>
-  <link rel="stylesheet" href="chrome://global/skin/aboutReaderPocket.css" type="text/css"/>
-  <link rel="localization" href="toolkit/about/aboutReader.ftl"/>
-  <link rel="localization" href="toolkit/branding/brandings.ftl"/>
-</head>
+  <body>
+    <div class="top-anchor"></div>
 
-<body>
-  <div class="top-anchor"></div>
-
-  <div id="toolbar" class="toolbar-container">
-    <div class="toolbar reader-toolbar">
-      <div class="reader-controls">
-        <button class="close-button toolbar-button" aria-labelledby="toolbar-close" data-telemetry-id="reader-close">
-          <span class="hover-label" id="toolbar-close" data-l10n-id="about-reader-toolbar-close"></span>
-        </button>
-        <ul class="dropdown style-dropdown">
-          <li>
-            <button class="dropdown-toggle toolbar-button style-button" aria-labelledby="toolbar-type-controls" data-telemetry-id="reader-type-controls">
-              <span class="hover-label" id="toolbar-type-controls" data-l10n-id="about-reader-toolbar-type-controls"></span>
-            </button>
-          </li>
-          <li class="dropdown-popup">
-            <div class="dropdown-arrow"></div>
-            <div class="font-type-buttons radiorow"></div>
-            <div class="font-size-buttons buttonrow">
-              <button class="minus-button" data-l10n-id="about-reader-toolbar-minus"></button>
-              <span class="font-size-value"></span>
-              <button class="plus-button" data-l10n-id="about-reader-toolbar-plus"></button>
-            </div>
-            <div class="content-width-buttons buttonrow">
-               <button class="content-width-minus-button" data-l10n-id="about-reader-toolbar-contentwidthminus"></button>
-               <span class="content-width-value"></span>
-               <button class="content-width-plus-button" data-l10n-id="about-reader-toolbar-contentwidthplus"></button>
-            </div>
-            <div class="line-height-buttons buttonrow">
-                <button class="line-height-minus-button" data-l10n-id="about-reader-toolbar-lineheightminus"></button>
+    <div id="toolbar" class="toolbar-container">
+      <div class="toolbar reader-toolbar">
+        <div class="reader-controls">
+          <button
+            class="close-button toolbar-button"
+            aria-labelledby="toolbar-close"
+            data-telemetry-id="reader-close"
+          >
+            <span
+              class="hover-label"
+              id="toolbar-close"
+              data-l10n-id="about-reader-toolbar-close"
+            ></span>
+          </button>
+          <ul class="dropdown style-dropdown">
+            <li>
+              <button
+                class="dropdown-toggle toolbar-button style-button"
+                aria-labelledby="toolbar-type-controls"
+                data-telemetry-id="reader-type-controls"
+              >
+                <span
+                  class="hover-label"
+                  id="toolbar-type-controls"
+                  data-l10n-id="about-reader-toolbar-type-controls"
+                ></span>
+              </button>
+            </li>
+            <li class="dropdown-popup">
+              <div class="dropdown-arrow"></div>
+              <div class="font-type-buttons radiorow"></div>
+              <div class="font-size-buttons buttonrow">
+                <button
+                  class="minus-button"
+                  data-l10n-id="about-reader-toolbar-minus"
+                ></button>
+                <span class="font-size-value"></span>
+                <button
+                  class="plus-button"
+                  data-l10n-id="about-reader-toolbar-plus"
+                ></button>
+              </div>
+              <div class="content-width-buttons buttonrow">
+                <button
+                  class="content-width-minus-button"
+                  data-l10n-id="about-reader-toolbar-contentwidthminus"
+                ></button>
+                <span class="content-width-value"></span>
+                <button
+                  class="content-width-plus-button"
+                  data-l10n-id="about-reader-toolbar-contentwidthplus"
+                ></button>
+              </div>
+              <div class="line-height-buttons buttonrow">
+                <button
+                  class="line-height-minus-button"
+                  data-l10n-id="about-reader-toolbar-lineheightminus"
+                ></button>
                 <span class="line-height-value"></span>
-                <button class="line-height-plus-button" data-l10n-id="about-reader-toolbar-lineheightplus"></button>
-            </div>
-            <div class="color-scheme-buttons radiorow"></div>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </div>
-
-  <div class="container">
-    <div class="header reader-header">
-      <a class="domain reader-domain"></a>
-      <div class="domain-border"></div>
-      <h1 class="reader-title"></h1>
-      <div class="credits reader-credits"></div>
-      <div class="meta-data">
-        <div class="reader-estimated-time"></div>
-      </div>
-    </div>
-
-    <hr>
-
-    <div class="content">
-      <div class="moz-reader-content"></div>
-    </div>
-
-    <div>
-      <div class="reader-message"></div>
-    </div>
-    <div aria-owns="toolbar"></div>
-  </div>
-
-  <div id="pocket-cta-container" hidden>
-    <div class="pocket-cta-inner" id="pocket-cta-only">
-      <div class="pocket-cta">
-        <header class="pocket-cta-header">Save anything from across the web in Pocket, your personal library.</header>
-        <p class="pocket-cta-subhead">As part of the Firefox family, Pocket provides a quiet, calm space that’s perfect for reading. It strips away all the distractions of the internet so you can really focus.</p>
-        <a href="https://getpocket.com/signup?utm_source=firefox_reader&utm_medium=variant_cta_only" class="pocket-btn pocket-sign-up"><strong>Sign up</strong> - it’s free</a>
-        <a href="https://getpocket.com/explore?utm_source=firefox_reader&utm_medium=variant_cta_only" class="pocket-btn pocket-discover-more"><strong>Discover more</strong></a>
-      </div>
-      <button class="pocket-dismiss-cta" title="Dismiss"></button>
-    </div>
-
-    <div class="pocket-cta-inner" id="pocket-cta-and-recs">
-      <div class="pocket-recs-top">
-        <div class="col">
-          <header class="pocket-cta-header">Discover the most thought-provoking stories out there, curated by Pocket.</header>
-          <p class="pocket-cta-subhead">As part of the Firefox family, Pocket surfaces the best articles out there—new perspectives, intriguing deep-dives, timeless classics—and we do this with the same dedication to privacy you’ve come to expect from Firefox and Mozilla. </p>
+                <button
+                  class="line-height-plus-button"
+                  data-l10n-id="about-reader-toolbar-lineheightplus"
+                ></button>
+              </div>
+              <div class="color-scheme-buttons radiorow"></div>
+            </li>
+          </ul>
         </div>
-        <div class="col">
-          <button class="pocket-collapse-recs"></button>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="header reader-header">
+        <a class="domain reader-domain"></a>
+        <div class="domain-border"></div>
+        <h1 class="reader-title"></h1>
+        <div class="credits reader-credits"></div>
+        <div class="meta-data">
+          <div class="reader-estimated-time"></div>
         </div>
       </div>
 
-      <div class="pocket-recs"></div>
+      <hr />
 
-      <div class="pocket-sign-up-wrapper">
-        <a href="https://getpocket.com/explore?utm_source=firefox_reader&utm_medium=variant_cta_plus_recs" class="pocket-btn pocket-sign-up"><strong>Discover more</strong></a>
+      <div class="content">
+        <div class="moz-reader-content"></div>
+      </div>
+
+      <div>
+        <div class="reader-message"></div>
+      </div>
+      <div aria-owns="toolbar"></div>
+    </div>
+
+    <div id="pocket-cta-container" hidden>
+      <div class="pocket-cta-inner" id="pocket-cta-only">
+        <div class="pocket-cta">
+          <header class="pocket-cta-header">
+            Save anything from across the web in Pocket, your personal library.
+          </header>
+          <p class="pocket-cta-subhead">
+            As part of the Firefox family, Pocket provides a quiet, calm space
+            that’s perfect for reading. It strips away all the distractions of
+            the internet so you can really focus.
+          </p>
+          <a
+            href="https://getpocket.com/signup?utm_source=firefox_reader&utm_medium=variant_cta_only"
+            class="pocket-btn pocket-sign-up"
+            ><strong>Sign up</strong> - it’s free</a
+          >
+          <a
+            href="https://getpocket.com/explore?utm_source=firefox_reader&utm_medium=variant_cta_only"
+            class="pocket-btn pocket-discover-more"
+            ><strong>Discover more</strong></a
+          >
+        </div>
+        <button class="pocket-dismiss-cta" title="Dismiss"></button>
+      </div>
+
+      <div class="pocket-cta-inner" id="pocket-cta-and-recs">
+        <div class="pocket-recs-top">
+          <div class="col">
+            <header class="pocket-cta-header">
+              Discover the most thought-provoking stories out there, curated by
+              Pocket.
+            </header>
+            <p class="pocket-cta-subhead">
+              As part of the Firefox family, Pocket surfaces the best articles
+              out there—new perspectives, intriguing deep-dives, timeless
+              classics—and we do this with the same dedication to privacy you’ve
+              come to expect from Firefox and Mozilla.
+            </p>
+          </div>
+          <div class="col">
+            <button class="pocket-collapse-recs"></button>
+          </div>
+        </div>
+
+        <div class="pocket-recs"></div>
+
+        <div class="pocket-sign-up-wrapper">
+          <a
+            href="https://getpocket.com/explore?utm_source=firefox_reader&utm_medium=variant_cta_plus_recs"
+            class="pocket-btn pocket-sign-up"
+            ><strong>Discover more</strong></a
+          >
+        </div>
       </div>
     </div>
-  </div>
-</body>
-
+  </body>
 </html>

@@ -273,7 +273,7 @@ body,
 
 body {
   background-color: var(--newtab-background-color);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Ubuntu", "Helvetica Neue", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Ubuntu, "Helvetica Neue", sans-serif;
   font-size: 16px;
 }
 
@@ -284,10 +284,6 @@ body {
 h1,
 h2 {
   font-weight: normal;
-}
-
-a {
-  text-decoration: none;
 }
 
 .inner-border {
@@ -590,6 +586,9 @@ main.has-snippet {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
+}
+.top-sites-list a {
+  text-decoration: none;
 }
 .top-sites-list:not(.dnd-active) .top-site-outer:is(.active, :focus, :hover) {
   background: var(--newtab-element-hover-color);
@@ -1254,11 +1253,11 @@ main.has-snippet {
   margin-bottom: 48px;
 }
 .search-wrapper .logo-and-wordmark .logo {
-  background: url("chrome://branding/content/about-logo.png") no-repeat center;
-  background-size: 82px;
   display: inline-block;
   height: 82px;
   width: 82px;
+  background: url("chrome://branding/content/about-logo.png") no-repeat center;
+  background-size: 82px;
 }
 @media (min-resolution: 2x) {
   .search-wrapper .logo-and-wordmark .logo {
@@ -1439,10 +1438,7 @@ main.has-snippet {
   height: 100%;
   opacity: 0;
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
 }
 .search-handoff-button .fake-textbox {
   opacity: 0.54;
@@ -1946,6 +1942,7 @@ main.has-snippet {
   background-size: 16px;
   padding-inline-start: 21px;
   margin-bottom: 20px;
+  text-decoration: underline;
 }
 @media (forced-colors: active) {
   .home-section .external-link {
@@ -1957,7 +1954,7 @@ main.has-snippet {
   background-position-x: right;
 }
 .home-section .external-link:hover {
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 .home-section .section .sponsored-checkbox:focus-visible,
@@ -2590,7 +2587,7 @@ main.has-snippet {
 .pocket-logged-in-cta .cta-text {
   font-weight: normal;
   font-size: 13px;
-  line-height: 1.230769231;
+  line-height: 1.2307692308;
 }
 .pocket-logged-in-cta .pocket-cta-button,
 .pocket-logged-in-cta .cta-text {
@@ -2601,7 +2598,7 @@ main.has-snippet {
   display: flex;
   align-items: center;
   white-space: nowrap;
-  line-height: 1.230769231;
+  line-height: 1.2307692308;
 }
 .more-recommendations::after {
   background: url("chrome://global/skin/icons/arrow-right-12.svg") no-repeat center center;
@@ -2709,7 +2706,7 @@ main.has-snippet {
   font-weight: 500;
 }
 .collapsible-section.ds-layout .section-top-bar .learn-more-link a:is(:focus, :hover) {
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 .ds-onboarding-container,
@@ -3157,6 +3154,9 @@ main.has-snippet {
   line-height: 20px;
   max-height: 20px;
 }
+.ds-highlights .section .section-list .card-outer a {
+  text-decoration: none;
+}
 .ds-highlights .hide-for-narrow {
   display: block;
 }
@@ -3205,7 +3205,7 @@ main.has-snippet {
   content: none;
 }
 .ds-navigation ul li a:hover, .ds-navigation ul li a:active {
-  text-decoration: underline;
+  text-decoration: none;
 }
 .ds-navigation ul li a:active {
   color: var(--newtab-primary-element-active-color);
@@ -3218,7 +3218,7 @@ main.has-snippet {
   float: inline-end;
 }
 .ds-navigation .ds-navigation-privacy:hover {
-  text-decoration: underline;
+  text-decoration: none;
 }
 .ds-navigation.ds-navigation-new-topics {
   display: block;
@@ -3551,10 +3551,14 @@ main.has-snippet {
   margin-inline-start: auto;
   margin-inline-end: 18.5px;
 }
-.ds-card:hover .card-stp-button-hover-background, .ds-card.active .card-stp-button-hover-background {
+.ds-card.active .card-stp-button-hover-background, .ds-card:focus-within .card-stp-button-hover-background, .ds-card:hover .card-stp-button-hover-background {
   display: block;
   opacity: 1;
   transition-duration: 0.3s;
+}
+.ds-card.active .card-stp-button-hover-background .context-menu-button, .ds-card:focus-within .card-stp-button-hover-background .context-menu-button, .ds-card:hover .card-stp-button-hover-background .context-menu-button {
+  opacity: 1;
+  transform: scale(1);
 }
 .ds-card .img {
   height: 0;
@@ -3568,6 +3572,7 @@ main.has-snippet {
   height: 100%;
   display: flex;
   flex-direction: column;
+  text-decoration: none;
 }
 .ds-card .ds-card-link:hover header {
   color: var(--newtab-primary-action-background);
@@ -4115,7 +4120,7 @@ main.has-snippet {
   line-height: 24px;
 }
 .ds-privacy-link a:hover {
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 .ds-topics-widget {
@@ -4618,12 +4623,6 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   font-style: normal;
   background: var(--newtab-text-emphasis-background);
 }
-.SimpleSnippet.bold .donation-form-url,
-.SimpleSnippet.bold .donation-amount, .SimpleSnippet.takeover .donation-form-url,
-.SimpleSnippet.takeover .donation-amount {
-  padding-top: 8px;
-  padding-bottom: 8px;
-}
 .SimpleSnippet.bold {
   height: 176px;
 }
@@ -4673,7 +4672,12 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
 .SimpleSnippet.tall .icon {
   margin-inline-end: 20px;
 }
-.SimpleSnippet.takeover .icon, .SimpleSnippet.bold .icon {
+.SimpleSnippet.bold .donation-form-url,
+.SimpleSnippet.bold .donation-amount, .SimpleSnippet.takeover .donation-form-url,
+.SimpleSnippet.takeover .donation-amount {
+  padding-block: 8px;
+}
+.SimpleSnippet.bold .icon, .SimpleSnippet.takeover .icon {
   margin-inline-end: 20px;
 }
 .SimpleSnippet .icon {

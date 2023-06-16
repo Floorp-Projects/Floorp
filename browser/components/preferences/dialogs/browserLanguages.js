@@ -7,17 +7,9 @@
 // This is exported by preferences.js but we can't import that in a subdialog.
 let { LangPackMatcher } = window.top;
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "AddonManager",
-  "resource://gre/modules/AddonManager.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "AddonRepository",
-  "resource://gre/modules/addons/AddonRepository.jsm"
-);
 ChromeUtils.defineESModuleGetters(this, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+  AddonRepository: "resource://gre/modules/addons/AddonRepository.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
 });
 ChromeUtils.defineModuleGetter(
@@ -445,11 +437,8 @@ var gBrowserLanguagesDialog = {
      */
 
     /** @type {Options} */
-    let {
-      telemetryId,
-      selectedLocalesForRestart,
-      search,
-    } = window.arguments[0];
+    let { telemetryId, selectedLocalesForRestart, search } =
+      window.arguments[0];
 
     this._telemetryId = telemetryId;
 

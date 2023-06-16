@@ -10,7 +10,7 @@ const { ASRouter } = ChromeUtils.import(
 let sendTriggerMessageSpy;
 let triggerMatch;
 
-add_setup(function() {
+add_setup(function () {
   let sandbox = sinon.createSandbox();
   sendTriggerMessageSpy = sandbox.spy(ASRouter, "sendTriggerMessage");
   triggerMatch = sandbox.match({ id: "defaultBrowserCheck" });

@@ -15,7 +15,7 @@ add_task(async function test_key_memoization() {
   let iv = cryptoSvc.generateRandomIV();
   let key = await cryptoSvc.generateRandomKey();
   let c = 0;
-  cryptoGlobal.subtle.importKey = function(
+  cryptoGlobal.subtle.importKey = function (
     format,
     keyData,
     algo,

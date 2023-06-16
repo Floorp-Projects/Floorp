@@ -4,7 +4,7 @@
  * Check inserting before a node that has moved from the toolbar into a
  * non-customizable bit of the browser works.
  */
-add_task(async function() {
+add_task(async function () {
   for (let toolbar of ["nav-bar", "TabsToolbar"]) {
     CustomizableUI.createWidget({
       id: "real-button",

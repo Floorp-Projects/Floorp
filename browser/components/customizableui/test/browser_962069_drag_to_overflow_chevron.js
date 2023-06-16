@@ -7,7 +7,7 @@
 var originalWindowWidth;
 
 // Drag to overflow chevron should open the overflow panel.
-add_task(async function() {
+add_task(async function () {
   // Load a page so the identity box can be dragged.
   BrowserTestUtils.loadURIString(gBrowser, "http://mochi.test:8888/");
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
@@ -68,7 +68,7 @@ add_task(async function() {
   await panelHiddenPromise;
 });
 
-add_task(async function() {
+add_task(async function () {
   window.resizeTo(originalWindowWidth, window.outerHeight);
   let navbar = document.getElementById(CustomizableUI.AREA_NAVBAR);
   await TestUtils.waitForCondition(() => !navbar.hasAttribute("overflowing"));

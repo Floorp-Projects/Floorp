@@ -79,7 +79,7 @@ add_task(async function testSimpleSourcesWithManualClickExpand() {
   await assertNodeIsFocused(dbg, 5);
 
   // Make sure new sources appear in the list.
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     const script = content.document.createElement("script");
     script.src = "math.min.js";
     content.document.body.appendChild(script);
@@ -361,6 +361,12 @@ add_task(async function testSourceTreeOnTheIntegrationTestPage() {
   assertSourceIcon(dbg, "script.js", "javascript");
   assertSourceIcon(dbg, "query.js?x=1", "javascript");
   assertSourceIcon(dbg, "original.js", "javascript");
+  // Framework icons are only displayed when we parse the source,
+  // which happens when we select the source
+  assertSourceIcon(dbg, "react-component-module.js", "javascript");
+  await selectSource(dbg, "react-component-module.js");
+  assertSourceIcon(dbg, "react-component-module.js", "react");
+
   info("Verify blackbox source icon");
   await selectSource(dbg, "script.js");
   await clickElement(dbg, "blackbox");
@@ -481,7 +487,7 @@ add_task(async function testSourceTreeWithEncodedPaths() {
   httpServer.registerContentType("html", "text/html");
   httpServer.registerContentType("js", "application/javascript");
 
-  httpServer.registerPathHandler("/index.html", function(request, response) {
+  httpServer.registerPathHandler("/index.html", function (request, response) {
     response.setStatusLine(request.httpVersion, 200, "OK");
     response.write(`<!DOCTYPE html>
     <html>
@@ -493,14 +499,14 @@ add_task(async function testSourceTreeWithEncodedPaths() {
       </body>
     `);
   });
-  httpServer.registerPathHandler(encodeURI("/my folder/my file.js"), function(
-    request,
-    response
-  ) {
-    response.setStatusLine(request.httpVersion, 200, "OK");
-    response.setHeader("Content-Type", "application/javascript", false);
-    response.write(`const x = 42`);
-  });
+  httpServer.registerPathHandler(
+    encodeURI("/my folder/my file.js"),
+    function (request, response) {
+      response.setStatusLine(request.httpVersion, 200, "OK");
+      response.setHeader("Content-Type", "application/javascript", false);
+      response.write(`const x = 42`);
+    }
+  );
   const port = httpServer.identity.primaryPort;
 
   const dbg = await initDebuggerWithAbsoluteURL(

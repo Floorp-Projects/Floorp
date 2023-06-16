@@ -160,15 +160,15 @@ interface nsISocketTransport : nsITransport
      * the NS_NET_STATUS_* constants defined below, which have a type of
      * nsresult.
      */
-    const unsigned long STATUS_RESOLVING      = 0x804b0003;
-    const unsigned long STATUS_RESOLVED       = 0x804b000b;
-    const unsigned long STATUS_CONNECTING_TO  = 0x804b0007;
-    const unsigned long STATUS_CONNECTED_TO   = 0x804b0004;
-    const unsigned long STATUS_SENDING_TO     = 0x804b0005;
-    const unsigned long STATUS_WAITING_FOR    = 0x804b000a;
-    const unsigned long STATUS_RECEIVING_FROM = 0x804b0006;
-    const unsigned long STATUS_TLS_HANDSHAKE_STARTING = 0x804b000c;
-    const unsigned long STATUS_TLS_HANDSHAKE_ENDED    = 0x804b000d;
+    const unsigned long STATUS_RESOLVING      = 0x4b0003;
+    const unsigned long STATUS_RESOLVED       = 0x4b000b;
+    const unsigned long STATUS_CONNECTING_TO  = 0x4b0007;
+    const unsigned long STATUS_CONNECTED_TO   = 0x4b0004;
+    const unsigned long STATUS_SENDING_TO     = 0x4b0005;
+    const unsigned long STATUS_WAITING_FOR    = 0x4b000a;
+    const unsigned long STATUS_RECEIVING_FROM = 0x4b0006;
+    const unsigned long STATUS_TLS_HANDSHAKE_STARTING = 0x4b000c;
+    const unsigned long STATUS_TLS_HANDSHAKE_ENDED    = 0x4b000d;
 
     /**
      * connectionFlags is a bitmask that can be used to modify underlying

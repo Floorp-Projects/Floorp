@@ -6,7 +6,7 @@ const { TelemetryTestUtils } = ChromeUtils.importESModule(
 
 const ALL_CHANNELS = Ci.nsITelemetry.DATASET_ALL_CHANNELS;
 
-add_task(async function() {
+add_task(async function () {
   let tab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
     waitForLoad: true,

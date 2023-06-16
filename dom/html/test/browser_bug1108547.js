@@ -6,8 +6,8 @@ requestLongerTimeout(2);
 function test() {
   waitForExplicitFinish();
 
-  runPass("file_bug1108547-2.html", function() {
-    runPass("file_bug1108547-3.html", function() {
+  runPass("file_bug1108547-2.html", function () {
+    runPass("file_bug1108547-3.html", function () {
       finish();
     });
   });
@@ -62,7 +62,7 @@ function runPass(getterFile, finishedCallback) {
   }
 
   function fetchResult() {
-    return SpecialPowers.spawn(testBrowser, [], function() {
+    return SpecialPowers.spawn(testBrowser, [], function () {
       return content.document.getElementById("result").textContent;
     });
   }

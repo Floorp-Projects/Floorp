@@ -839,11 +839,9 @@ class TestResolver(MozbuildObject):
         if test["name"].startswith("/_mozilla"):
             depth = depth + 1
 
-        # Webdriver BiDi tests are nested in a "bidi" subfolder. Increase the
-        # depth to avoid grouping all bidi tests in one chunk.
-        if test["name"].startswith(
-            ("/webdriver/tests/bidi", "/_mozilla/webdriver/bidi")
-        ):
+        # Webdriver tests are nested in "classic" and "bidi" folders. Increase
+        # the depth to avoid grouping all classic or bidi tests in one chunk.
+        if test["name"].startswith(("/webdriver", "/_mozilla/webdriver")):
             depth = depth + 1
 
         group = os.path.dirname(test["name"])

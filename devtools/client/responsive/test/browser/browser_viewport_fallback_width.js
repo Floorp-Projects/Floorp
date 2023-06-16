@@ -17,7 +17,7 @@ const TEST_URL =
     <div id="inner">Click me!</div>
   </div>`;
 
-addRDMTask(TEST_URL, async function({ ui, manager }) {
+addRDMTask(TEST_URL, async function ({ ui, manager }) {
   info("Toggling on touch simulation.");
   reloadOnTouchChange(true);
   await toggleTouchSimulation(ui);
@@ -33,7 +33,7 @@ addRDMTask(TEST_URL, async function({ ui, manager }) {
 });
 
 async function testICBWidth(ui) {
-  await SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {
+  await SpecialPowers.spawn(ui.getViewportBrowser(), [], async function () {
     const innerDiv = content.document.getElementById("inner");
 
     innerDiv.addEventListener("click", () => {

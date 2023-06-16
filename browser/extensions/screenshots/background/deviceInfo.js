@@ -6,7 +6,7 @@
 
 "use strict";
 
-this.deviceInfo = (function() {
+this.deviceInfo = (function () {
   const manifest = browser.runtime.getManifest();
 
   let platformInfo = {};

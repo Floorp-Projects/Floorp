@@ -10,7 +10,7 @@ const WORKER_URL = EXAMPLE_URL + "bug1047663_worker.sjs";
 function test() {
   waitForExplicitFinish();
 
-  (async function() {
+  (async function () {
     // Disable rcwn to make cache behavior deterministic.
     await SpecialPowers.pushPrefEnv({
       set: [["network.http.rcwn.enabled", false]],

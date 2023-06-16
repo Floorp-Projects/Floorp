@@ -178,8 +178,7 @@ struct GbmFormat {
   bool mIsSupported;
   bool mHasAlpha;
   int mFormat;
-  uint64_t* mModifiers;
-  int mModifiersCount;
+  nsTArray<uint64_t> mModifiers;
 };
 
 class DMABufDevice {
@@ -205,6 +204,10 @@ class DMABufDevice {
 
  private:
   void Configure();
+  void LoadFormatModifiers();
+
+  void SetModifiersToGfxVars();
+  void GetModifiersFromGfxVars();
 
  private:
   GbmFormat mXRGBFormat;

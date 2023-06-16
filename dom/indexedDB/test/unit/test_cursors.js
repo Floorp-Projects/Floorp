@@ -33,7 +33,7 @@ function* testSteps() {
 
   request = objectStore.openCursor();
   request.onerror = errorHandler;
-  request.onsuccess = function(event) {
+  request.onsuccess = function (event) {
     ok(!event.target.result, "No results");
     testGenerator.next();
   };
@@ -46,7 +46,7 @@ function* testSteps() {
 
   request = objectStore.openCursor();
   request.onerror = errorHandler;
-  request.onsuccess = function(event) {
+  request.onsuccess = function (event) {
     ok(!event.target.result, "No results");
     testGenerator.next();
   };
@@ -56,7 +56,7 @@ function* testSteps() {
 
   request = objectStore.openCursor();
   request.onerror = errorHandler;
-  request.onsuccess = function(event) {
+  request.onsuccess = function (event) {
     ok(!event.target.result, "No results");
     testGenerator.next();
   };
@@ -66,7 +66,7 @@ function* testSteps() {
 
   request = objectStore.openCursor();
   request.onerror = errorHandler;
-  request.onsuccess = function(event) {
+  request.onsuccess = function (event) {
     ok(!event.target.result, "No results");
     testGenerator.next();
   };
@@ -77,7 +77,7 @@ function* testSteps() {
   for (let i in keys) {
     request = objectStore.add("foo", keys[i]);
     request.onerror = errorHandler;
-    request.onsuccess = function(event) {
+    request.onsuccess = function (event) {
       if (++keyIndex == keys.length) {
         testGenerator.next();
       }
@@ -89,7 +89,7 @@ function* testSteps() {
 
   request = objectStore.openCursor();
   request.onerror = errorHandler;
-  request.onsuccess = function(event) {
+  request.onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       checkCursor(cursor, sortedKeys[keyIndex]);
@@ -121,7 +121,7 @@ function* testSteps() {
   let range = IDBKeyRange.bound(2000, "q");
   request = objectStore.openCursor(range);
   request.onerror = errorHandler;
-  request.onsuccess = function(event) {
+  request.onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       checkCursor(cursor, sortedKeys[keyIndex]);
@@ -143,7 +143,7 @@ function* testSteps() {
 
   request = objectStore.openCursor();
   request.onerror = errorHandler;
-  request.onsuccess = function(event) {
+  request.onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       checkCursor(cursor, sortedKeys[keyIndex]);
@@ -169,7 +169,7 @@ function* testSteps() {
 
   request = objectStore.openCursor();
   request.onerror = errorHandler;
-  request.onsuccess = function(event) {
+  request.onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       checkCursor(cursor, sortedKeys[keyIndex]);
@@ -195,7 +195,7 @@ function* testSteps() {
 
   request = objectStore.openCursor();
   request.onerror = errorHandler;
-  request.onsuccess = function(event) {
+  request.onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       checkCursor(cursor, sortedKeys[keyIndex]);
@@ -223,7 +223,7 @@ function* testSteps() {
   request = objectStore.openCursor();
   request.onerror = errorHandler;
   let storedCursor = null;
-  request.onsuccess = function(event) {
+  request.onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       storedCursor = cursor;
@@ -233,7 +233,7 @@ function* testSteps() {
       if (keyIndex == 4) {
         request = cursor.update("bar");
         request.onerror = errorHandler;
-        request.onsuccess = function(event) {
+        request.onsuccess = function (event) {
           keyIndex++;
           cursor.continue();
         };
@@ -273,7 +273,7 @@ function* testSteps() {
   request = objectStore.openCursor(null, "next");
   request.onerror = errorHandler;
   storedCursor = null;
-  request.onsuccess = function(event) {
+  request.onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       storedCursor = cursor;
@@ -283,7 +283,7 @@ function* testSteps() {
       if (keyIndex == 4) {
         request = cursor.delete();
         request.onerror = errorHandler;
-        request.onsuccess = function(event) {
+        request.onsuccess = function (event) {
           ok(event.target.result === undefined, "Should be undefined");
           is(keyIndex, 5, "Got result of delete before next continue");
           gotRemoveEvent = true;
@@ -323,7 +323,7 @@ function* testSteps() {
   request = objectStore.openCursor(null, "prev");
   request.onerror = errorHandler;
   storedCursor = null;
-  request.onsuccess = function(event) {
+  request.onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       storedCursor = cursor;

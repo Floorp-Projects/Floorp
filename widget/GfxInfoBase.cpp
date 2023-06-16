@@ -260,6 +260,12 @@ static const char* GetPrefNameForFeature(int32_t aFeature) {
     case nsIGfxInfo::FEATURE_ACCELERATED_CANVAS2D:
       name = BLOCKLIST_PREF_BRANCH "accelerated-canvas2d";
       break;
+    case nsIGfxInfo::FEATURE_H264_HW_DECODE:
+      name = BLOCKLIST_PREF_BRANCH "h264.hw-decode";
+      break;
+    case nsIGfxInfo::FEATURE_AV1_HW_DECODE:
+      name = BLOCKLIST_PREF_BRANCH "av1.hw-decode";
+      break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected nsIGfxInfo feature?!");
       break;

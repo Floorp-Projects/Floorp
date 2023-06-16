@@ -50,7 +50,7 @@ function* testSteps() {
     let event = yield undefined;
 
     let db = event.target.result;
-    db.onversionchange = function(event) {
+    db.onversionchange = function (event) {
       event.target.close();
     };
 

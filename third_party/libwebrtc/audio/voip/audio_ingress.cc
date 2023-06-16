@@ -23,6 +23,7 @@
 #include "modules/rtp_rtcp/source/rtcp_packet/sender_report.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/safe_minmax.h"
+#include "rtc_base/time_utils.h"
 
 namespace webrtc {
 

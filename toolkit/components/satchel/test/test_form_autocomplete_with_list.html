@@ -303,18 +303,6 @@ add_task(async function filters_with_letter_in_the_middle(){
     "final");
 });
 
-add_task(async function no_filtering_when_mozNoFilter(){
-  const { input } = await openPopupOn("#form3 > input");
-  input.setAttribute("mozNoFilter", "true");
-  sendString("f");
-  await notifyMenuChanged(3);
-  assertValueAfterKeys(
-    input,
-    ["KEY_ArrowDown", "KEY_Enter"],
-    "Google");
-  input.removeAttribute("mozNoFilter");
-});
-
 add_task(async function input_events(){
   const { input } = await openPopupOn("#form3 > input");
 

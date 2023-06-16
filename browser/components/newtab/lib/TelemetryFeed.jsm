@@ -33,30 +33,32 @@ ChromeUtils.defineModuleGetter(
   "PingCentre",
   "resource:///modules/PingCentre.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "UTEventReporting",
-  "resource://activity-stream/lib/UTEventReporting.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
   ClientID: "resource://gre/modules/ClientID.sys.mjs",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
+  ExtensionSettingsStore:
+    "resource://gre/modules/ExtensionSettingsStore.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
-  pktApi: "chrome://pocket/content/pktApi.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
   TelemetrySession: "resource://gre/modules/TelemetrySession.sys.mjs",
+  UTEventReporting: "resource://activity-stream/lib/UTEventReporting.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
+  pktApi: "chrome://pocket/content/pktApi.sys.mjs",
 });
 ChromeUtils.defineModuleGetter(
   lazy,
   "HomePage",
   "resource:///modules/HomePage.jsm"
 );
-ChromeUtils.defineModuleGetter(
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  AboutWelcomeTelemetry:
+    "resource://activity-stream/aboutwelcome/lib/AboutWelcomeTelemetry.jsm",
+});
+XPCOMUtils.defineLazyGetter(
   lazy,
-  "ExtensionSettingsStore",
-  "resource://gre/modules/ExtensionSettingsStore.jsm"
+  "Telemetry",
+  () => new lazy.AboutWelcomeTelemetry()
 );
 
 const ACTIVITY_STREAM_ID = "activity-stream";
@@ -467,9 +469,8 @@ class TelemetryFeed {
     }
 
     Object.keys(impressionSets).forEach(source => {
-      const { tiles, window_inner_width, window_inner_height } = impressionSets[
-        source
-      ];
+      const { tiles, window_inner_width, window_inner_height } =
+        impressionSets[source];
       const payload = this.createImpressionStats(port, {
         source,
         tiles,
@@ -648,13 +649,15 @@ class TelemetryFeed {
 
   /**
    * Per Bug 1484035, CFR metrics comply with following policies:
-   * 1). In release, it collects impression_id, and treats bucket_id as message_id
+   * 1). In release, it collects impression_id and bucket_id
    * 2). In prerelease, it collects client_id and message_id
    * 3). In shield experiments conducted in release, it collects client_id and message_id
+   * 4). In Private Browsing windows, unless in experiment, collects impression_id and bucket_id
    */
   async applyCFRPolicy(ping) {
     if (
-      lazy.UpdateUtils.getUpdateChannel(true) === "release" &&
+      (lazy.UpdateUtils.getUpdateChannel(true) === "release" ||
+        ping.is_private) &&
       !this.isInCFRCohort
     ) {
       ping.message_id = "n/a";
@@ -663,6 +666,7 @@ class TelemetryFeed {
       ping.client_id = await this.telemetryClientId;
     }
     delete ping.action;
+    delete ping.is_private;
     return { ping, pingType: "cfr" };
   }
 
@@ -1001,6 +1005,12 @@ class TelemetryFeed {
       console.error("Unknown ping type for ASRouter telemetry");
       return;
     }
+
+    // Now that the action has become a ping, we can echo it to Glean.
+    if (this.telemetryEnabled) {
+      lazy.Telemetry.submitGleanPingForPing({ ...ping, pingType });
+    }
+
     this.sendStructuredIngestionEvent(
       ping,
       STRUCTURED_INGESTION_NAMESPACE_MS,

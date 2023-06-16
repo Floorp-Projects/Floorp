@@ -104,7 +104,7 @@ add_task(async function test_insert_error_cases() {
 add_task(async function test_history_insert() {
   const TEST_URL = "http://mozilla.com/";
 
-  let inserter = async function(name, filter, referrer, date, transition) {
+  let inserter = async function (name, filter, referrer, date, transition) {
     info(name);
     info(
       `filter: ${filter}, referrer: ${referrer}, date: ${date}, transition: ${transition}`

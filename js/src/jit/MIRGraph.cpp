@@ -8,6 +8,7 @@
 
 #include "jit/CompileInfo.h"
 #include "jit/InlineScriptTree.h"
+#include "jit/IonOptimizationLevels.h"
 #include "jit/JitSpewer.h"
 #include "jit/MIR.h"
 #include "jit/MIRGenerator.h"
@@ -40,6 +41,11 @@ MIRGenerator::MIRGenerator(CompileRealm* realm,
       minWasmHeapLength_(0),
       options(options),
       gs_(alloc) {}
+
+bool MIRGenerator::licmEnabled() const {
+  return optimizationInfo().licmEnabled() && !disableLICM_ &&
+         !outerInfo().hadLICMInvalidation();
+}
 
 mozilla::GenericErrorResult<AbortReason> MIRGenerator::abort(AbortReason r) {
   if (JitSpewEnabled(JitSpew_IonAbort)) {

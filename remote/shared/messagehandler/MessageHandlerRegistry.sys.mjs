@@ -81,9 +81,8 @@ export class MessageHandlerRegistry extends EventEmitter {
      */
     this._messageHandlersMap = new Map();
 
-    this._onMessageHandlerDestroyed = this._onMessageHandlerDestroyed.bind(
-      this
-    );
+    this._onMessageHandlerDestroyed =
+      this._onMessageHandlerDestroyed.bind(this);
     this._onMessageHandlerEvent = this._onMessageHandlerEvent.bind(this);
   }
 

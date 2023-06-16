@@ -17,11 +17,36 @@ br{
     ExemplarCharactersPunctuation{"[\\- ‑ , ; \\: ! ? . ( ) \\[ \\] \\{ \\}]"}
     MoreInformation{"?"}
     NumberElements{
+        adlm{
+            patterns{
+                accountingFormat{"#,##0.00 ¤"}
+                currencyFormat{"#,##0.00 ¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0 %"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                approximatelySign{"~"}
+                decimal{","}
+                exponential{"E"}
+                group{" "}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
         arab{
             patterns{
                 accountingFormat{"#,##0.00 ¤"}
                 currencyFormat{"#,##0.00 ¤"}
+                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0 %"}
+                scientificFormat{"#E0"}
             }
             symbols{
                 approximatelySign{"~"}
@@ -87,6 +112,11 @@ br{
             }
         }
         fullwide{
+            symbols{
+                timeSeparator{":"}
+            }
+        }
+        gong{
             symbols{
                 timeSeparator{":"}
             }
@@ -505,6 +535,11 @@ br{
                 timeSeparator{":"}
             }
         }
+        rohg{
+            symbols{
+                timeSeparator{":"}
+            }
+        }
         saur{
             symbols{
                 timeSeparator{":"}
@@ -595,17 +630,20 @@ br{
                 "GGGGyMMdd",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"E d"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E d MMM y G"}
                 GyMMMd{"d MMM y G"}
+                M{"L"}
                 MEd{"E dd/MM"}
                 MMM{"LLL"}
                 MMMEd{"E d MMM"}
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 Md{"dd/MM"}
+                d{"d"}
                 y{"y G"}
                 yyyy{"y G"}
                 yyyyM{"MM/y GGGGG"}
@@ -630,6 +668,15 @@ br{
                 }
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h–h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm–h:mm B"}
+                    m{"h:mm–h:mm B"}
+                }
                 Gy{
                     G{"y G – y G"}
                     y{"y – y G"}
@@ -674,6 +721,9 @@ br{
                 Md{
                     M{"dd/MM–dd/MM"}
                     d{"dd/MM–dd/MM"}
+                }
+                d{
+                    d{"d–d"}
                 }
                 fallback{"{0} – {1}"}
                 h{
@@ -1610,9 +1660,15 @@ br{
                 Hv{
                     H{"HH–HH v"}
                 }
+                M{
+                    M{"MM–MM"}
+                }
                 MEd{
                     M{"E dd/MM – E dd/MM"}
                     d{"E dd/MM – E dd/MM"}
+                }
+                MMM{
+                    M{"LLL–LLL"}
                 }
                 MMMEd{
                     M{"E d MMM – E d MMM"}
@@ -1626,6 +1682,7 @@ br{
                     M{"dd/MM–dd/MM"}
                     d{"dd/MM–dd/MM"}
                 }
+                fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
                     h{"h–h a"}
@@ -2573,6 +2630,9 @@ br{
                 hv{
                     a{"h a – h a v"}
                     h{"h–h a v"}
+                }
+                y{
+                    y{"U–U"}
                 }
                 yM{
                     M{"MM/y – MM/y"}
@@ -5519,6 +5579,9 @@ br{
         }
         hour-narrow{
             dn{"e"}
+            relative{
+                "0"{"dʼan eur-mañ"}
+            }
             relativeTime{
                 future{
                     few{"+{0} h"}
@@ -6370,10 +6433,16 @@ br{
             start{"{0}, {1}"}
         }
         or-narrow{
+            2{"{0} pe {1}"}
             end{"{0} pe {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         or-short{
+            2{"{0} pe {1}"}
             end{"{0} pe {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         standard{
             2{"{0} ha {1}"}
@@ -6381,9 +6450,17 @@ br{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        standard-narrow{
+            2{"{0} & {1}"}
+            end{"{0} & {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard-short{
             2{"{0} & {1}"}
             end{"{0} & {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         unit{
             2{"{0}, {1}"}

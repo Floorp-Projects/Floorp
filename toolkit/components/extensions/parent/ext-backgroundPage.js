@@ -4,8 +4,8 @@
 
 "use strict";
 
-var { ExtensionParent } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionParent.jsm"
+var { ExtensionParent } = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionParent.sys.mjs"
 );
 var {
   HiddenExtensionPage,
@@ -13,12 +13,8 @@ var {
   watchExtensionWorkerContextLoaded,
 } = ExtensionParent;
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "ExtensionTelemetry",
-  "resource://gre/modules/ExtensionTelemetry.jsm"
-);
 ChromeUtils.defineESModuleGetters(this, {
+  ExtensionTelemetry: "resource://gre/modules/ExtensionTelemetry.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
@@ -525,21 +521,22 @@ this.backgroundPage = class extends ExtensionAPI {
         // see StreamFilterStatus enum defined in StreamFilter.webidl).
         // TODO(Bug 1748533): consider additional changes to prevent a StreamFilter that never gets to an
         // inactive state from preventing an even page from being ever suspended.
-        const hasActiveStreamFilter = await ExtensionParent.ParentAPIManager.queryStreamFilterSuspendCancel(
-          extension.backgroundContext.childId
-        ).catch(err => {
-          // an AbortError raised from the JSWindowActor is expected if the background page was already been
-          // terminated in the meantime, and so we only log the errors that don't match these particular conditions.
-          if (
-            extension.backgroundState == BACKGROUND_STATE.STOPPED &&
-            DOMException.isInstance(err) &&
-            err.name === "AbortError"
-          ) {
+        const hasActiveStreamFilter =
+          await ExtensionParent.ParentAPIManager.queryStreamFilterSuspendCancel(
+            extension.backgroundContext.childId
+          ).catch(err => {
+            // an AbortError raised from the JSWindowActor is expected if the background page was already been
+            // terminated in the meantime, and so we only log the errors that don't match these particular conditions.
+            if (
+              extension.backgroundState == BACKGROUND_STATE.STOPPED &&
+              DOMException.isInstance(err) &&
+              err.name === "AbortError"
+            ) {
+              return false;
+            }
+            Cu.reportError(err);
             return false;
-          }
-          Cu.reportError(err);
-          return false;
-        });
+          });
         if (!disableResetIdleForTest && hasActiveStreamFilter) {
           extension.emit("background-script-reset-idle", {
             reason: "hasActiveStreamFilter",

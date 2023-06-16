@@ -45,6 +45,10 @@ kea{
                 dnam{"ákri"}
                 other{"{0} ákri"}
             }
+            dunam{
+                dnam{"dunam"}
+                other{"{0} dunam"}
+            }
             hectare{
                 dnam{"ektar"}
                 other{"{0} ektar"}
@@ -133,6 +137,10 @@ kea{
             millimole-per-liter{
                 dnam{"milimol pur litru"}
                 other{"{0} milimol pur litru"}
+            }
+            mole{
+                dnam{"mol"}
+                other{"{0} mol"}
             }
             percent{
                 dnam{"pursentu"}
@@ -289,9 +297,11 @@ kea{
                 other{"{0} miliamper"}
             }
             ohm{
+                dnam{"ohm"}
                 other{"{0} ohm"}
             }
             volt{
+                dnam{"volt"}
                 other{"{0} volt"}
             }
         }
@@ -313,6 +323,7 @@ kea{
                 other{"{0} Kaloria"}
             }
             joule{
+                dnam{"J"}
                 other{"{0} joule"}
             }
             kilocalorie{
@@ -652,6 +663,10 @@ kea{
                 dnam{"grau Fahrenheit"}
                 other{"{0} grau Fahrenheit"}
             }
+            generic{
+                dnam{"°"}
+                other{"{0}°"}
+            }
             kelvin{
                 dnam{"kelvin"}
                 other{"{0} kelvin"}
@@ -808,6 +823,50 @@ kea{
         }
     }
     unitsNarrow{
+        compound{
+            10p-1{"d{0}"}
+            10p-12{"p{0}"}
+            10p-15{"f{0}"}
+            10p-18{"a{0}"}
+            10p-2{"c{0}"}
+            10p-21{"z{0}"}
+            10p-24{"y{0}"}
+            10p-3{"m{0}"}
+            10p-6{"μ{0}"}
+            10p-9{"n{0}"}
+            10p1{"da{0}"}
+            10p12{"T{0}"}
+            10p15{"P{0}"}
+            10p18{"E{0}"}
+            10p2{"h{0}"}
+            10p21{"Z{0}"}
+            10p24{"Y{0}"}
+            10p3{"k{0}"}
+            10p6{"M{0}"}
+            10p9{"G{0}"}
+            per{"{0}/{1}"}
+            power2{
+                other{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+            }
+            power3{
+                other{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+            }
+            times{"{0}⋅{1}"}
+        }
+        concentr{
+            percent{
+                dnam{"%"}
+                other{"{0}%"}
+            }
+        }
         consumption{
             liter-per-100-kilometer{
                 dnam{"l/100km"}
@@ -816,6 +875,10 @@ kea{
         }
         coordinate{
             dnam{"direson"}
+            east{"{0} E"}
+            north{"{0} N"}
+            south{"{0} S"}
+            west{"{0} W"}
         }
         duration{
             day{
@@ -872,8 +935,10 @@ kea{
         mass{
             gram{
                 dnam{"g"}
+                other{"{0} g"}
             }
             kilogram{
+                dnam{"kg"}
                 other{"{0}kg"}
             }
         }
@@ -881,6 +946,12 @@ kea{
             kilometer-per-hour{
                 dnam{"km/h"}
                 other{"{0} km/h"}
+            }
+        }
+        temperature{
+            celsius{
+                dnam{"°C"}
+                other{"{0} °C"}
             }
         }
         volume{
@@ -1166,6 +1237,20 @@ kea{
             megahertz{
                 dnam{"MHz"}
                 other{"{0} MHz"}
+            }
+        }
+        graphics{
+            dot{
+                dnam{"px"}
+                other{"{0} px"}
+            }
+            dot-per-centimeter{
+                dnam{"ppcm"}
+                other{"{0} ppcm"}
+            }
+            dot-per-inch{
+                dnam{"ppi"}
+                other{"{0} ppi"}
             }
         }
         length{

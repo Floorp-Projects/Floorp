@@ -14,7 +14,7 @@ const TEST_URI = `
   <div id="flex"></div>
 `;
 
-add_task(async function() {
+add_task(async function () {
   const tab = await addTab(
     "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI)
   );
@@ -36,10 +36,8 @@ add_task(async function() {
 async function checkFlexboxHighlighter() {
   const { inspector, view } = await openRuleView();
   const HIGHLIGHTER_TYPE = inspector.highlighters.TYPES.FLEXBOX;
-  const {
-    getNodeForActiveHighlighter,
-    waitForHighlighterTypeShown,
-  } = getHighlighterTestHelpers(inspector);
+  const { getNodeForActiveHighlighter, waitForHighlighterTypeShown } =
+    getHighlighterTestHelpers(inspector);
 
   await selectNode("#flex", inspector);
   const container = getRuleViewProperty(view, "#flex", "display").valueSpan;

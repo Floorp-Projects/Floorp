@@ -13,13 +13,13 @@ let gContainersPane = {
 
     document
       .getElementById("backContainersButton")
-      .addEventListener("command", function() {
+      .addEventListener("command", function () {
         gotoPref("general");
       });
 
     document
       .getElementById("containersAdd")
-      .addEventListener("command", function() {
+      .addEventListener("command", function () {
         gContainersPane.onAddButtonCommand();
       });
 
@@ -61,7 +61,7 @@ let gContainersPane = {
       item.appendChild(containerButtons);
 
       let prefsButton = document.createXULElement("button");
-      prefsButton.addEventListener("command", function(event) {
+      prefsButton.addEventListener("command", function (event) {
         gContainersPane.onPreferenceCommand(event.originalTarget);
       });
       prefsButton.setAttribute("value", container.userContextId);
@@ -69,7 +69,7 @@ let gContainersPane = {
       containerButtons.appendChild(prefsButton);
 
       let removeButton = document.createXULElement("button");
-      removeButton.addEventListener("command", function(event) {
+      removeButton.addEventListener("command", function (event) {
         gContainersPane.onRemoveCommand(event.originalTarget);
       });
       removeButton.setAttribute("value", container.userContextId);
@@ -85,17 +85,13 @@ let gContainersPane = {
 
     let count = ContextualIdentityService.countContainerTabs(userContextId);
     if (count > 0) {
-      let [
-        title,
-        message,
-        okButton,
-        cancelButton,
-      ] = await document.l10n.formatValues([
-        { id: "containers-remove-alert-title" },
-        { id: "containers-remove-alert-msg", args: { count } },
-        { id: "containers-remove-ok-button" },
-        { id: "containers-remove-cancel-button" },
-      ]);
+      let [title, message, okButton, cancelButton] =
+        await document.l10n.formatValues([
+          { id: "containers-remove-alert-title" },
+          { id: "containers-remove-alert-msg", args: { count } },
+          { id: "containers-remove-ok-button" },
+          { id: "containers-remove-cancel-button" },
+        ]);
 
       let buttonFlags =
         Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0 +
@@ -138,9 +134,8 @@ let gContainersPane = {
       color: defaultContainerColor,
     };
     if (userContextId) {
-      identity = ContextualIdentityService.getPublicIdentityFromId(
-        userContextId
-      );
+      identity =
+        ContextualIdentityService.getPublicIdentityFromId(userContextId);
       identity.name = ContextualIdentityService.getUserContextLabel(
         identity.userContextId
       );

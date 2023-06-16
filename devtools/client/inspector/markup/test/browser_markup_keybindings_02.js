@@ -8,7 +8,7 @@
 
 const TEST_URL = "data:text/html;charset=utf8,<div></div>";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector, toolbox } = await openInspectorForURL(TEST_URL);
 
   info("Focusing the tag editor of the test element");

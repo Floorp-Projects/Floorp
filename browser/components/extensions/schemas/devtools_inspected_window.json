@@ -73,7 +73,7 @@
                   {
                     "name": "error",
                     "type": "object",
-                    "additionalProperties": {"type": "any"},
+                    "additionalProperties": { "type": "any" },
                     "optional": true,
                     "description": "Set to undefined if the resource content was set successfully; describes error otherwise."
                   }

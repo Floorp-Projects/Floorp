@@ -13,7 +13,7 @@ add_task(async function test_fileurl_nonscript_load() {
   let uriString = Services.io.newFileURI(file).spec;
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, uriString);
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     BrowserTestUtils.removeTab(tab);
   });
 

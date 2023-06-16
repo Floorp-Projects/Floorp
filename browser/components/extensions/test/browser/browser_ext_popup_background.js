@@ -19,7 +19,7 @@ async function testPanel(browser, standAlone, background_check) {
   };
 
   function getBackground(browser) {
-    return SpecialPowers.spawn(browser, [], async function() {
+    return SpecialPowers.spawn(browser, [], async function () {
       return content.windowUtils.canvasBackgroundColor;
     });
   }
@@ -52,7 +52,7 @@ add_task(async function testPopupBackground() {
         <body style="width: 100px; height: 100px; background-color: green">
         </body>
       `,
-      background_check: function(bg) {
+      background_check: function (bg) {
         is(bg, "rgb(0, 128, 0)", "Initial background should be green");
       },
     },
@@ -63,7 +63,7 @@ add_task(async function testPopupBackground() {
         <body style="width: 100px; height: 100px"">
         </body>
       `,
-      background_check: function(bg) {
+      background_check: function (bg) {
         is(bg, "rgb(255, 255, 255)", "Initial background should be white");
       },
     },
@@ -75,7 +75,7 @@ add_task(async function testPopupBackground() {
         <body style="width: 100px; height: 100px;">
         </body>
       `,
-      background_check: function(bg) {
+      background_check: function (bg) {
         is(bg, "rgb(255, 255, 255)", "Initial background should be white");
       },
     },
@@ -87,7 +87,7 @@ add_task(async function testPopupBackground() {
         <body style="width: 100px; height: 100px;">
         </body>
       `,
-      background_check: function(bg) {
+      background_check: function (bg) {
         isnot(
           bg,
           "rgb(255, 255, 255)",

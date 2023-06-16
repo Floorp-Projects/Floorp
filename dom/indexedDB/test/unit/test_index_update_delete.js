@@ -66,14 +66,14 @@ function* testSteps() {
       let keyRange = IDBKeyRange.only(modifiedEntry);
 
       let sawEntry = false;
-      index.openCursor(keyRange).onsuccess = function(event) {
+      index.openCursor(keyRange).onsuccess = function (event) {
         let cursor = event.target.result;
         if (cursor) {
           sawEntry = true;
           is(cursor.key, modifiedEntry, "Correct key");
 
           cursor.value.index = unique ? 30 : 35;
-          cursor.update(cursor.value).onsuccess = function(event) {
+          cursor.update(cursor.value).onsuccess = function (event) {
             cursor.continue();
           };
         } else {
@@ -99,14 +99,14 @@ function* testSteps() {
       keyRange = IDBKeyRange.only(modifiedEntry);
 
       sawEntry = false;
-      index.openCursor(keyRange).onsuccess = function(event) {
+      index.openCursor(keyRange).onsuccess = function (event) {
         let cursor = event.target.result;
         if (cursor) {
           sawEntry = true;
           is(cursor.key, modifiedEntry, "Correct key");
 
           delete cursor.value.index;
-          cursor.update(cursor.value).onsuccess = function(event) {
+          cursor.update(cursor.value).onsuccess = function (event) {
             indexCount--;
             cursor.continue();
           };

@@ -63,6 +63,7 @@ class nsIWidget;
 class nsIX509Cert;
 
 namespace mozilla {
+class PClipboardWriteRequestParent;
 class PRemoteSpellcheckEngineParent;
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
@@ -296,7 +297,7 @@ class ContentParent final : public PContentParent,
       return *this;
     }
 
-    bool operator!=(const ContentParentIterator& aOther) {
+    bool operator!=(const ContentParentIterator& aOther) const {
       MOZ_ASSERT(mPolicy == aOther.mPolicy);
       return mCurrent != aOther.mCurrent;
     }
@@ -482,8 +483,6 @@ class ContentParent final : public PContentParent,
   bool DeallocPContentPermissionRequestParent(
       PContentPermissionRequestParent* actor);
 
-  virtual bool HandleWindowsMessages(const Message& aMsg) const override;
-
   void ForkNewProcess(bool aBlocking);
 
   mozilla::ipc::IPCResult RecvCreateWindow(
@@ -519,11 +518,6 @@ class ContentParent final : public PContentParent,
 
   mozilla::ipc::IPCResult RecvUnstoreAndBroadcastBlobURLUnregistration(
       const nsACString& aURI, nsIPrincipal* aPrincipal);
-
-  mozilla::ipc::IPCResult RecvGetA11yContentId(uint32_t* aContentId);
-
-  mozilla::ipc::IPCResult RecvA11yHandlerControl(
-      const uint32_t& aPid, const IHandlerControlHolder& aHandlerControl);
 
   virtual int32_t Pid() const override;
 
@@ -993,16 +987,12 @@ class ContentParent final : public PContentParent,
 
   mozilla::ipc::IPCResult RecvGetGfxVars(nsTArray<GfxVarUpdate>* aVars);
 
-  mozilla::ipc::IPCResult RecvSetClipboard(
-      const IPCDataTransfer& aDataTransfer, const bool& aIsPrivateData,
-      nsIPrincipal* aRequestingPrincipal,
-      mozilla::Maybe<CookieJarSettingsArgs> aCookieJarSettingsArgs,
-      const nsContentPolicyType& aContentPolicyType,
-      nsIReferrerInfo* aReferrerInfo, const int32_t& aWhichClipboard);
+  mozilla::ipc::IPCResult RecvSetClipboard(const IPCTransferable& aTransferable,
+                                           const int32_t& aWhichClipboard);
 
-  mozilla::ipc::IPCResult RecvGetClipboard(nsTArray<nsCString>&& aTypes,
-                                           const int32_t& aWhichClipboard,
-                                           IPCDataTransfer* aDataTransfer);
+  mozilla::ipc::IPCResult RecvGetClipboard(
+      nsTArray<nsCString>&& aTypes, const int32_t& aWhichClipboard,
+      IPCTransferableData* aTransferableData);
 
   mozilla::ipc::IPCResult RecvEmptyClipboard(const int32_t& aWhichClipboard);
 
@@ -1021,6 +1011,9 @@ class ContentParent final : public PContentParent,
   mozilla::ipc::IPCResult RecvGetClipboardAsync(
       nsTArray<nsCString>&& aTypes, const int32_t& aWhichClipboard,
       GetClipboardAsyncResolver&& aResolver);
+
+  already_AddRefed<PClipboardWriteRequestParent>
+  AllocPClipboardWriteRequestParent(const int32_t& aClipboardType);
 
   mozilla::ipc::IPCResult RecvPlaySound(nsIURI* aURI);
   mozilla::ipc::IPCResult RecvBeep();

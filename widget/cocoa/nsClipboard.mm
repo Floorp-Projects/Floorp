@@ -30,11 +30,16 @@ using mozilla::gfx::SourceSurface;
 
 mozilla::StaticRefPtr<nsITransferable> nsClipboard::sSelectionCache;
 
-nsClipboard::nsClipboard() : nsBaseClipboard(), mCachedClipboard(-1), mChangeCount(0) {}
+nsClipboard::nsClipboard()
+    : nsBaseClipboard(mozilla::dom::ClipboardCapabilities(false /* supportsSelectionClipboard */,
+                                                          true /* supportsFindClipboard */,
+                                                          true /* supportsSelectionCache */)) {}
 
 nsClipboard::~nsClipboard() { ClearSelectionCache(); }
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsClipboard, nsBaseClipboard)
+
+namespace {
 
 // We separate this into its own function because after an @try, all local
 // variables within that function get marked as volatile, and our C++ type
@@ -53,6 +58,22 @@ static NSData* GetDataFromPasteboard(NSPasteboard* aPasteboard, NSString* aType)
   return data;
 }
 
+static NSPasteboard* GetPasteboard(int32_t aWhichClipboard) {
+  switch (aWhichClipboard) {
+    case nsIClipboard::kGlobalClipboard:
+      return [NSPasteboard generalPasteboard];
+    case nsIClipboard::kFindClipboard:
+      if (@available(macOS 10.13, *)) {
+        return [NSPasteboard pasteboardWithName:NSPasteboardNameFind];
+      }
+      return [NSPasteboard pasteboardWithName:NSFindPboard];
+    default:
+      return nil;
+  }
+}
+
+}  // namespace
+
 void nsClipboard::SetSelectionCache(nsITransferable* aTransferable) {
   sSelectionCache = aTransferable;
 }
@@ -60,29 +81,31 @@ void nsClipboard::SetSelectionCache(nsITransferable* aTransferable) {
 void nsClipboard::ClearSelectionCache() { sSelectionCache = nullptr; }
 
 NS_IMETHODIMP
-nsClipboard::SetNativeClipboardData(int32_t aWhichClipboard) {
+nsClipboard::SetNativeClipboardData(nsITransferable* aTransferable, nsIClipboardOwner* aOwner,
+                                    int32_t aWhichClipboard) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  if ((aWhichClipboard != kGlobalClipboard && aWhichClipboard != kFindClipboard) || !mTransferable)
-    return NS_ERROR_FAILURE;
+  MOZ_ASSERT(aTransferable);
+  MOZ_ASSERT(nsIClipboard::IsClipboardTypeSupported(aWhichClipboard));
 
-  NSDictionary* pasteboardOutputDict = PasteboardDictFromTransferable(mTransferable);
+  if (aWhichClipboard == kSelectionCache) {
+    SetSelectionCache(aTransferable);
+    return NS_OK;
+  }
+
+  NSDictionary* pasteboardOutputDict = PasteboardDictFromTransferable(aTransferable);
   if (!pasteboardOutputDict) return NS_ERROR_FAILURE;
 
   unsigned int outputCount = [pasteboardOutputDict count];
   NSArray* outputKeys = [pasteboardOutputDict allKeys];
-  NSPasteboard* cocoaPasteboard;
+  NSPasteboard* cocoaPasteboard = GetPasteboard(aWhichClipboard);
+  MOZ_ASSERT(cocoaPasteboard);
   if (aWhichClipboard == kFindClipboard) {
-    if (@available(macOS 10.13, *)) {
-      cocoaPasteboard = [NSPasteboard pasteboardWithName:NSPasteboardNameFind];
-    } else {
-      cocoaPasteboard = [NSPasteboard pasteboardWithName:NSFindPboard];
-    }
     NSString* stringType = [UTIHelper stringFromPboardType:NSPasteboardTypeString];
     [cocoaPasteboard declareTypes:[NSArray arrayWithObject:stringType] owner:nil];
   } else {
     // Write everything else out to the general pasteboard.
-    cocoaPasteboard = [NSPasteboard generalPasteboard];
+    MOZ_ASSERT(aWhichClipboard == kGlobalClipboard);
     [cocoaPasteboard declareTypes:outputKeys owner:nil];
   }
 
@@ -301,17 +324,10 @@ nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable, int32_t aWhi
   if ((aWhichClipboard != kGlobalClipboard && aWhichClipboard != kFindClipboard) || !aTransferable)
     return NS_ERROR_FAILURE;
 
-  NSPasteboard* cocoaPasteboard;
-  if (aWhichClipboard == kFindClipboard) {
-    if (@available(macOS 10.13, *)) {
-      cocoaPasteboard = [NSPasteboard pasteboardWithName:NSPasteboardNameFind];
-    } else {
-      cocoaPasteboard = [NSPasteboard pasteboardWithName:NSFindPboard];
-    }
-  } else {
-    cocoaPasteboard = [NSPasteboard generalPasteboard];
+  NSPasteboard* cocoaPasteboard = GetPasteboard(aWhichClipboard);
+  if (!cocoaPasteboard) {
+    return NS_ERROR_FAILURE;
   }
-  if (!cocoaPasteboard) return NS_ERROR_FAILURE;
 
   // get flavor list that includes all acceptable flavors (including ones obtained through
   // conversion)
@@ -321,24 +337,26 @@ nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable, int32_t aWhi
 
   // If we were the last ones to put something on the pasteboard, then just use the cached
   // transferable. Otherwise clear it because it isn't relevant any more.
-  if (mCachedClipboard == aWhichClipboard && mChangeCount == [cocoaPasteboard changeCount]) {
-    if (mTransferable) {
-      for (uint32_t i = 0; i < flavors.Length(); i++) {
-        nsCString& flavorStr = flavors[i];
+  if (mCachedClipboard == aWhichClipboard) {
+    const auto& clipboardCache = mCaches[aWhichClipboard];
+    MOZ_ASSERT(clipboardCache);
+    if (mChangeCount == [cocoaPasteboard changeCount]) {
+      if (nsITransferable* cachedTrans = clipboardCache->GetTransferable()) {
+        for (uint32_t i = 0; i < flavors.Length(); i++) {
+          nsCString& flavorStr = flavors[i];
 
-        nsCOMPtr<nsISupports> dataSupports;
-        rv = mTransferable->GetTransferData(flavorStr.get(), getter_AddRefs(dataSupports));
-        if (NS_SUCCEEDED(rv)) {
-          aTransferable->SetTransferData(flavorStr.get(), dataSupports);
-          return NS_OK;  // maybe try to fill in more types? Is there a point?
+          nsCOMPtr<nsISupports> dataSupports;
+          rv = cachedTrans->GetTransferData(flavorStr.get(), getter_AddRefs(dataSupports));
+          if (NS_SUCCEEDED(rv)) {
+            aTransferable->SetTransferData(flavorStr.get(), dataSupports);
+            return NS_OK;  // maybe try to fill in more types? Is there a point?
+          }
         }
       }
+    } else {
+      // Remove transferable cache only. Don't clear system clipboard.
+      clipboardCache->Clear();
     }
-  } else {
-    // Remove transferable cache only. Don't clear system clipboard.
-    mEmptyingForSetData = true;
-    EmptyClipboard(aWhichClipboard);
-    mEmptyingForSetData = false;
   }
 
   // at this point we can't satisfy the request from cache data so let's look
@@ -363,19 +381,23 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList, int3
 
   *outResult = false;
 
-  if (aWhichClipboard != kGlobalClipboard) {
+  // We only support the set operation on kSelectionCache type, see bug 1835059.
+  if ((aWhichClipboard != kGlobalClipboard && aWhichClipboard != kFindClipboard)) {
     return NS_OK;
   }
 
-  NSPasteboard* generalPBoard = [NSPasteboard generalPasteboard];
+  NSPasteboard* cocoaPasteboard = GetPasteboard(aWhichClipboard);
+  MOZ_ASSERT(cocoaPasteboard);
   if (mCachedClipboard == aWhichClipboard) {
-    if (mChangeCount != [generalPBoard changeCount]) {
+    const auto& clipboardCache = mCaches[mCachedClipboard];
+    MOZ_ASSERT(clipboardCache);
+    if (mChangeCount != [cocoaPasteboard changeCount]) {
       // Clear the cached transferable as it is no longer valid.
-      ClearClipboardCache();
-    } else if (mTransferable) {
+      clipboardCache->Clear();
+    } else if (nsITransferable* cachedTrans = clipboardCache->GetTransferable()) {
       // See if we have data for this in our cached transferable.
       nsTArray<nsCString> flavors;
-      nsresult rv = mTransferable->FlavorsTransferableCanImport(flavors);
+      nsresult rv = cachedTrans->FlavorsTransferableCanImport(flavors);
       if (NS_SUCCEEDED(rv)) {
         if (CLIPBOARD_LOG_ENABLED()) {
           CLIPBOARD_LOG("    Cached transferable types (nums %zu)\n", flavors.Length());
@@ -400,7 +422,7 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList, int3
   }
 
   if (CLIPBOARD_LOG_ENABLED()) {
-    NSArray* types = [generalPBoard types];
+    NSArray* types = [cocoaPasteboard types];
     uint32_t count = [types count];
     CLIPBOARD_LOG("    Pasteboard types (nums %d)\n", count);
     for (uint32_t i = 0; i < count; i++) {
@@ -417,14 +439,14 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList, int3
     NSString* pboardType = nil;
     if (nsClipboard::IsStringType(mimeType, &pboardType)) {
       NSString* availableType =
-          [generalPBoard availableTypeFromArray:[NSArray arrayWithObject:pboardType]];
+          [cocoaPasteboard availableTypeFromArray:[NSArray arrayWithObject:pboardType]];
       if (availableType && [availableType isEqualToString:pboardType]) {
         CLIPBOARD_LOG("    has %s\n", mimeType.get());
         *outResult = true;
         break;
       }
     } else if (mimeType.EqualsLiteral(kCustomTypesMime)) {
-      NSString* availableType = [generalPBoard
+      NSString* availableType = [cocoaPasteboard
           availableTypeFromArray:
               [NSArray arrayWithObject:[UTIHelper stringFromPboardType:kMozCustomTypesPboardType]]];
       if (availableType) {
@@ -434,7 +456,7 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList, int3
       }
     } else if (mimeType.EqualsLiteral(kJPEGImageMime) || mimeType.EqualsLiteral(kJPGImageMime) ||
                mimeType.EqualsLiteral(kPNGImageMime) || mimeType.EqualsLiteral(kGIFImageMime)) {
-      NSString* availableType = [generalPBoard
+      NSString* availableType = [cocoaPasteboard
           availableTypeFromArray:
               [NSArray arrayWithObjects:[UTIHelper stringFromPboardType:NSPasteboardTypeTIFF],
                                         [UTIHelper stringFromPboardType:NSPasteboardTypePNG], nil]];
@@ -444,7 +466,7 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList, int3
         break;
       }
     } else if (mimeType.EqualsLiteral(kFileMime)) {
-      NSArray* items = [generalPBoard pasteboardItems];
+      NSArray* items = [cocoaPasteboard pasteboardItems];
       if (items && [items count] > 0) {
         // XXX we only check the first pasteboard item as we only get data from
         // first item in TransferableFromPasteboard for now.
@@ -470,14 +492,6 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList, int3
   return NS_OK;
 
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
-}
-
-NS_IMETHODIMP
-nsClipboard::IsClipboardTypeSupported(int32_t aWhichClipboard, bool* _retval) {
-  NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = kGlobalClipboard == aWhichClipboard || kFindClipboard == aWhichClipboard ||
-             kSelectionCache == aWhichClipboard;
-  return NS_OK;
 }
 
 // static
@@ -738,49 +752,21 @@ NSString* nsClipboard::WrapHtmlForSystemPasteboard(NSString* aString) {
   return wrapped;
 }
 
-/**
- * Sets the transferable object
- *
- */
-NS_IMETHODIMP
-nsClipboard::SetData(nsITransferable* aTransferable, nsIClipboardOwner* anOwner,
-                     int32_t aWhichClipboard) {
-  NS_ASSERTION(aTransferable, "clipboard given a null transferable");
-
-  if (aWhichClipboard == kSelectionCache) {
-    if (aTransferable) {
-      SetSelectionCache(aTransferable);
-      return NS_OK;
-    }
-    return NS_ERROR_FAILURE;
-  }
-
-  return nsBaseClipboard::SetData(aTransferable, anOwner, aWhichClipboard);
-}
-
 NS_IMETHODIMP
 nsClipboard::EmptyClipboard(int32_t aWhichClipboard) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  if (aWhichClipboard == kSelectionCache) {
-    ClearSelectionCache();
-    return NS_OK;
-  }
-
   if (!mEmptyingForSetData) {
-    NSPasteboard* cocoaPasteboard = nullptr;
-    if (aWhichClipboard == kFindClipboard) {
-      if (@available(macOS 10.13, *)) {
-        cocoaPasteboard = [NSPasteboard pasteboardWithName:NSPasteboardNameFind];
-      } else {
-        cocoaPasteboard = [NSPasteboard pasteboardWithName:NSFindPboard];
+    if (aWhichClipboard == kSelectionCache) {
+      ClearSelectionCache();
+    } else {
+      if (NSPasteboard* cocoaPasteboard = GetPasteboard(aWhichClipboard)) {
+        [cocoaPasteboard clearContents];
       }
-    } else if (aWhichClipboard == kGlobalClipboard) {
-      cocoaPasteboard = [NSPasteboard generalPasteboard];
-    }
-    if (cocoaPasteboard) {
-      [cocoaPasteboard clearContents];
-      mChangeCount = [cocoaPasteboard changeCount];
+      if (mCachedClipboard == aWhichClipboard) {
+        mCachedClipboard = -1;
+        mChangeCount = 0;
+      }
     }
   }
 

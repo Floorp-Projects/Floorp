@@ -102,7 +102,7 @@ export class QueryHandler {
   /**
    * Queries for multiple nodes given a selector and {@link ElementHandle}.
    *
-   * Akin to {@link Document.prototype.querySelectorAll}.
+   * Akin to {@link https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelectorAll | Document.querySelectorAll()}.
    */
   static async *queryAll(
     element: ElementHandle<Node>,
@@ -123,7 +123,7 @@ export class QueryHandler {
   /**
    * Queries for a single node given a selector and {@link ElementHandle}.
    *
-   * Akin to {@link Document.prototype.querySelector}.
+   * Akin to {@link https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector}.
    */
   static async queryOne(
     element: ElementHandle<Node>,
@@ -166,9 +166,11 @@ export class QueryHandler {
       element = await frame.worlds[PUPPETEER_WORLD].adoptHandle(elementOrFrame);
     }
 
-    const {visible = false, hidden = false, timeout} = options;
+    const {visible = false, hidden = false, timeout, signal} = options;
 
     try {
+      signal?.throwIfAborted();
+
       const handle = await frame.worlds[PUPPETEER_WORLD].waitForFunction(
         async (PuppeteerUtil, query, selector, root, visible) => {
           const querySelector = PuppeteerUtil.createFunction(
@@ -185,6 +187,7 @@ export class QueryHandler {
           polling: visible || hidden ? 'raf' : 'mutation',
           root: element,
           timeout,
+          signal,
         },
         LazyArg.create(context => {
           return context.puppeteerUtil;
@@ -195,6 +198,11 @@ export class QueryHandler {
         visible ? true : hidden ? false : undefined
       );
 
+      if (signal?.aborted) {
+        await handle.dispose();
+        throw signal.reason;
+      }
+
       if (!(handle instanceof ElementHandle)) {
         await handle.dispose();
         return null;
@@ -202,6 +210,9 @@ export class QueryHandler {
       return frame.worlds[MAIN_WORLD].transferHandle(handle);
     } catch (error) {
       if (!isErrorLike(error)) {
+        throw error;
+      }
+      if (error.name === 'AbortError') {
         throw error;
       }
       error.message = `Waiting for selector \`${selector}\` failed: ${error.message}`;

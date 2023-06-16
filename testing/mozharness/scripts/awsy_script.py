@@ -279,9 +279,9 @@ class AWSY(TestingMixin, MercurialScript, TooltoolMixin, CodeCoverageMixin):
         )
         if dmd_enabled:
             cmd.append("--setpref=security.sandbox.content.level=0")
-        cmd.append(test_file)
+        cmd.append("--setpref=layout.css.stylo-threads=4")
 
-        env["STYLO_THREADS"] = "4"
+        cmd.append(test_file)
 
         env["MOZ_UPLOAD_DIR"] = dirs["abs_blob_upload_dir"]
         if not os.path.isdir(env["MOZ_UPLOAD_DIR"]):

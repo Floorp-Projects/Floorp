@@ -270,7 +270,6 @@ void Compatibility::SuppressA11yForClipboardCopy() {
 
   if (doSuppress) {
     sA11yClipboardCopySuppressionStartTime = ::GetTickCount();
-    AccessibleWrap::SuppressHandlerA11yForClipboardCopy();
   }
 }
 

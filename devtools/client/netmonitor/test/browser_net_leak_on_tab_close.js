@@ -7,7 +7,7 @@
  * Tests that netmonitor doesn't leak windows on parent-side pages (bug 1285638)
  */
 
-add_task(async function() {
+add_task(async function () {
   // Tell initNetMonitor to enable cache. Otherwise it will assert that there were more
   // than zero network requests during the page load. But when loading about:config,
   // there are none.

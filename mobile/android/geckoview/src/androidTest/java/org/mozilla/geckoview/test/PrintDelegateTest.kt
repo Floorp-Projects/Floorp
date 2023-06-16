@@ -135,7 +135,7 @@ class PrintDelegateTest : BaseSessionTest() {
             val centerPixel = printCenterPixelColor()
             assertTrue(
                 "Android print opened and rendered.",
-                sessionRule.waitForResult(centerPixel) == orange
+                sessionRule.waitForResult(centerPixel) == orange,
             )
         }
     }
@@ -155,7 +155,7 @@ class PrintDelegateTest : BaseSessionTest() {
             val orange = rgb(255, 113, 57)
             assertTrue(
                 "Android print opened and rendered.",
-                sessionRule.waitForResult(centerPixel) == orange
+                sessionRule.waitForResult(centerPixel) == orange,
             )
         }
     }
@@ -175,7 +175,7 @@ class PrintDelegateTest : BaseSessionTest() {
             val orange = rgb(255, 113, 57)
             assertTrue(
                 "Android print opened and rendered.",
-                sessionRule.waitForResult(centerPixel) == orange
+                sessionRule.waitForResult(centerPixel) == orange,
             )
             var didCatch = false
             try {
@@ -184,7 +184,7 @@ class PrintDelegateTest : BaseSessionTest() {
                 assertThat(
                     "Print status context reported.",
                     e.message,
-                    containsString("Window.print: No browsing context")
+                    containsString("Window.print: No browsing context"),
                 )
                 didCatch = true
             }
@@ -208,7 +208,7 @@ class PrintDelegateTest : BaseSessionTest() {
             val orange = rgb(255, 113, 57)
             assertTrue(
                 "Android print opened and rendered static page.",
-                sessionRule.waitForResult(centerPixel) == orange
+                sessionRule.waitForResult(centerPixel) == orange,
             )
         }
     }

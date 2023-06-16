@@ -7,17 +7,14 @@
     @media (overflow-block: scroll) {
       .b { fill: green }
     }
-    @media (overflow-block: optional-paged) {
+    @media (overflow-block: paged) {
       .c { fill: green }
     }
-    @media (overflow-block: paged) {
+    @media (overflow-block: something-new-and-unknown) {
       .d { fill: green }
     }
-    @media (overflow-block: something-new-and-unknown) {
-      .e { fill: green }
-    }
     @media (overflow-block) {
-      .f { fill: green }
+      .e { fill: green }
     }
   </style>
   <circle cx="5" cy="10" r="5" class="a">A</circle>
@@ -25,5 +22,4 @@
   <circle cx="25" cy="10" r="5" class="c">C</circle>
   <circle cx="35" cy="10" r="5" class="d">D</circle>
   <circle cx="45" cy="10" r="5" class="e">E</circle>
-  <circle cx="55" cy="10" r="5" class="f">F</circle>
 </svg>

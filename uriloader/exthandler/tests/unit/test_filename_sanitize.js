@@ -277,4 +277,122 @@ add_task(async function validate_filename_method() {
     "라이브99만 시청컬처렐 다이제스티브 3박스 - 3박스 더 (뚱랑이 굿즈 증정) - 선물용 쇼핑백 2장컬처렐 다이제스티브 3박스 - 3박스 더 (뚱랑이 굿즈 증정) - 선물용 쇼핑백 2장24%102 000원 브랜드데",
     "very filename with extension only"
   );
+
+  Assert.equal(
+    mimeService.validateFileNameForSaving("filename.LNK", "text/unknown", 0),
+    "filename.LNK.download",
+    "filename.LNK"
+  );
+  Assert.equal(
+    mimeService.validateFileNameForSaving("filename.local", "text/unknown", 0),
+    "filename.local.download",
+    "filename.local"
+  );
+  Assert.equal(
+    mimeService.validateFileNameForSaving("filename.url", "text/unknown", 0),
+    "filename.url.download",
+    "filename.url"
+  );
+  Assert.equal(
+    mimeService.validateFileNameForSaving("filename.URl", "text/unknown", 0),
+    "filename.URl.download",
+    "filename.URl"
+  );
+  Assert.equal(
+    mimeService.validateFileNameForSaving("filename.scf", "text/unknown", 0),
+    "filename.scf.download",
+    "filename.scf"
+  );
+  Assert.equal(
+    mimeService.validateFileNameForSaving("filename.sCF", "text/unknown", 0),
+    "filename.sCF.download",
+    "filename.sCF"
+  );
+
+  Assert.equal(
+    mimeService.validateFileNameForSaving("filename.lnk\n", "text/unknown", 0),
+    "filename.lnk.download",
+    "filename.lnk with newline"
+  );
+
+  Assert.equal(
+    mimeService.validateFileNameForSaving(
+      "filename.lnk\n  ",
+      "text/unknown",
+      0
+    ),
+    "filename.lnk.download",
+    "filename.lnk with newline"
+  );
+
+  Assert.equal(
+    mimeService.validateFileNameForSaving(
+      "filename.\n\t  lnk",
+      "text/unknown",
+      0
+    ),
+    "filename. lnk",
+    "filename.lnk with space and newline"
+  );
+
+  Assert.equal(
+    mimeService.validateFileNameForSaving(
+      "filename.local\u180e\u180e\u180e",
+      "text/unknown",
+      0
+    ),
+    "filename.local.download",
+    "filename.lnk with vowel separators"
+  );
+
+  Assert.equal(
+    mimeService.validateFileNameForSaving(
+      "filename.LNK",
+      "text/unknown",
+      mimeService.VALIDATE_SANITIZE_ONLY
+    ),
+    "filename.LNK.download",
+    "filename.LNK sanitize only"
+  );
+
+  Assert.equal(
+    mimeService.validateFileNameForSaving(
+      "filename.LNK\n",
+      "text/unknown",
+      mimeService.VALIDATE_ALLOW_INVALID_FILENAMES
+    ),
+    "filename.LNK",
+    "filename.LNK allow invalid"
+  );
+
+  Assert.equal(
+    mimeService.validateFileNameForSaving(
+      "filename.URL\n",
+      "text/unknown",
+      mimeService.VALIDATE_SANITIZE_ONLY |
+        mimeService.VALIDATE_ALLOW_INVALID_FILENAMES
+    ),
+    "filename.URL",
+    "filename.URL allow invalid, sanitize only"
+  );
+
+  Assert.equal(
+    mimeService.validateFileNameForSaving(
+      "filename.desktop",
+      "text/unknown",
+      mimeService.VALIDATE_SANITIZE_ONLY
+    ),
+    "filename.desktop.download",
+    "filename.desktop sanitize only"
+  );
+  Assert.equal(
+    mimeService.validateFileNameForSaving(
+      "filename.DESKTOP\n",
+      "text/unknown",
+      mimeService.VALIDATE_SANITIZE_ONLY |
+        mimeService.VALIDATE_ALLOW_INVALID_FILENAMES
+    ),
+    "filename.DESKTOP",
+    "filename.DESKTOP allow invalid, sanitize only"
+  );
 });

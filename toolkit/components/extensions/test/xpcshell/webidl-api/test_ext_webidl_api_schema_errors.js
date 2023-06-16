@@ -48,7 +48,7 @@ const SCHEMA = [
   },
 ];
 
-add_setup(async function() {
+add_setup(async function () {
   await AddonTestUtils.promiseStartupManager();
 
   // The blob:-URL registered in `registerModules()` below gets loaded at:
@@ -102,7 +102,9 @@ add_task(async function test_schema_error_no_error_with_expected_value() {
 });
 
 add_task(async function test_schema_data_not_found_or_unexpected_schema_type() {
-  const { Schemas } = ChromeUtils.import("resource://gre/modules/Schemas.jsm");
+  const { Schemas } = ChromeUtils.importESModule(
+    "resource://gre/modules/Schemas.sys.mjs"
+  );
 
   const mockSchemaExtContext = {};
 
@@ -139,7 +141,8 @@ add_task(async function test_schema_data_not_found_or_unexpected_schema_type() {
         apiName: "get",
         requestType: "callFunction",
       },
-      expectedExceptions: /API Schema not found for browserSettings\.unknownNamespace/,
+      expectedExceptions:
+        /API Schema not found for browserSettings\.unknownNamespace/,
     },
     {
       description:
@@ -150,7 +153,8 @@ add_task(async function test_schema_data_not_found_or_unexpected_schema_type() {
         apiName: "onChange",
         requestType: "addListener",
       },
-      expectedExceptions: /API Schema not found for browserSettings\.nonExistingSetting/,
+      expectedExceptions:
+        /API Schema not found for browserSettings\.nonExistingSetting/,
     },
     {
       description:
@@ -175,7 +179,8 @@ add_task(async function test_schema_data_not_found_or_unexpected_schema_type() {
         apiName: "nonExistingMethod",
         requestType: "callFunction",
       },
-      expectedExceptions: /API Schema not found for browserSettings\.nonExistingMethod/,
+      expectedExceptions:
+        /API Schema not found for browserSettings\.nonExistingMethod/,
     },
     {
       description:

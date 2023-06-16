@@ -25,7 +25,8 @@ export class AboutHttpsOnlyErrorParent extends JSWindowActorParent {
       aBrowser.fixupAndLoadURIString(
         this.getDefaultHomePage(aBrowser.ownerGlobal),
         {
-          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+          triggeringPrincipal:
+            Services.scriptSecurityManager.getSystemPrincipal(),
         }
       );
     } else {

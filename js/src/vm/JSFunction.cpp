@@ -1094,8 +1094,7 @@ bool JSFunction::delazifyLazilyInterpretedFunction(JSContext* cx,
 
   // Finally, compile the script if it really doesn't exist.
   AutoReportFrontendContext fc(cx);
-  if (!frontend::DelazifyCanonicalScriptedFunction(
-          cx, &fc, cx->stackLimitForCurrentPrincipal(), fun)) {
+  if (!frontend::DelazifyCanonicalScriptedFunction(cx, &fc, fun)) {
     // The frontend shouldn't fail after linking the function and the
     // non-lazy script together.
     MOZ_ASSERT(fun->baseScript() == lazy);
@@ -1561,7 +1560,7 @@ JSFunction* js::NewFunctionWithProto(
     return nullptr;
   }
 
-  gc::InitialHeap heap = GetInitialHeap(newKind, clasp);
+  gc::Heap heap = GetInitialHeap(newKind, clasp);
   JSFunction* fun = JSFunction::create(cx, allocKind, heap, shape);
   if (!fun) {
     return nullptr;
@@ -1667,7 +1666,8 @@ static inline JSFunction* NewFunctionClone(JSContext* cx, HandleFunction fun,
     }
   }
 
-  JSFunction* clone = JSFunction::create(cx, allocKind, gc::DefaultHeap, shape);
+  JSFunction* clone =
+      JSFunction::create(cx, allocKind, gc::Heap::Default, shape);
   if (!clone) {
     return nullptr;
   }

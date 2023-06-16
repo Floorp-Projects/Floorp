@@ -24,7 +24,7 @@ const TrackedObjects = loader.require(
 // so that it can take a little bit to complete.
 requestLongerTimeout(2);
 
-add_task(async function() {
+add_task(async function () {
   // Use a sandbox to allocate test javascript object in order to avoid any
   // external noise
   const global = Cu.Sandbox("http://example.com");
@@ -36,7 +36,7 @@ add_task(async function() {
   // This will allocation 1001 objects. The array and 1000 elements in it.
   Cu.evalInSandbox(
     "let list; new " +
-      function() {
+      function () {
         list = [];
         for (let i = 0; i < 1000; i++) {
           list.push({});
@@ -97,7 +97,7 @@ add_task(async function() {
   tracker.stop();
 });
 
-add_task(async function() {
+add_task(async function () {
   const leaked = {};
   TrackedObjects.track(leaked);
   let transient = {};
@@ -117,7 +117,7 @@ add_task(async function() {
   TrackedObjects.clear();
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test start and stop recording without any debug mode");
   const tracker = allocationTracker({ watchDevToolsGlobals: true });
   await tracker.startRecordingAllocations();
@@ -125,7 +125,7 @@ add_task(async function() {
   tracker.stop();
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test start and stop recording with 'allocations' debug mode");
   const tracker = allocationTracker({ watchDevToolsGlobals: true });
   await tracker.startRecordingAllocations("allocations");
@@ -133,7 +133,7 @@ add_task(async function() {
   tracker.stop();
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test start and stop recording with 'leaks' debug mode");
   const tracker = allocationTracker({ watchDevToolsGlobals: true });
   await tracker.startRecordingAllocations("leaks");
@@ -141,7 +141,7 @@ add_task(async function() {
   tracker.stop();
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test start and stop recording with tracked objects");
 
   const leaked = {};
@@ -155,7 +155,7 @@ add_task(async function() {
   TrackedObjects.clear();
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test start and stop recording with tracked objects");
 
   const sandbox = Cu.Sandbox(window);
@@ -203,7 +203,7 @@ add_task(async function() {
   TrackedObjects.clear();
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test that transient globals are not leaked");
 
   const tracker = allocationTracker({ watchAllGlobals: true });

@@ -9,8 +9,8 @@ const {
   refresh,
 } = require("resource://devtools/client/memory/actions/refresh.js");
 
-exports.setCensusDisplayAndRefresh = function(heapWorker, display) {
-  return async function({ dispatch, getState }) {
+exports.setCensusDisplayAndRefresh = function (heapWorker, display) {
+  return async function ({ dispatch, getState }) {
     dispatch(setCensusDisplay(display));
     await dispatch(refresh(heapWorker));
   };
@@ -22,7 +22,7 @@ exports.setCensusDisplayAndRefresh = function(heapWorker, display) {
  *
  * @param {censusDisplayModel} display
  */
-const setCensusDisplay = (exports.setCensusDisplay = function(display) {
+const setCensusDisplay = (exports.setCensusDisplay = function (display) {
   assert(
     typeof display === "object" &&
       display &&

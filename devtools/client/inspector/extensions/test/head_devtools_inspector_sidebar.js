@@ -143,11 +143,8 @@ async function testSetExpressionSidebarPanel(panel, expected) {
 }
 
 function assertTreeView(panelDoc, expectedContent) {
-  const {
-    expectedTreeTables,
-    expectedStringCells,
-    expectedNumberCells,
-  } = expectedContent;
+  const { expectedTreeTables, expectedStringCells, expectedNumberCells } =
+    expectedContent;
 
   if (expectedTreeTables) {
     is(

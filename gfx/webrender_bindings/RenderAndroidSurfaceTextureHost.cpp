@@ -18,14 +18,15 @@ namespace wr {
 RenderAndroidSurfaceTextureHost::RenderAndroidSurfaceTextureHost(
     const java::GeckoSurfaceTexture::GlobalRef& aSurfTex, gfx::IntSize aSize,
     gfx::SurfaceFormat aFormat, bool aContinuousUpdate,
-    Maybe<gfx::Matrix4x4> aTransformOverride)
+    Maybe<gfx::Matrix4x4> aTransformOverride, bool aIsRemoteTexture)
     : mSurfTex(aSurfTex),
       mSize(aSize),
       mFormat(aFormat),
       mContinuousUpdate(aContinuousUpdate),
       mTransformOverride(aTransformOverride),
       mPrepareStatus(STATUS_NONE),
-      mAttachedToGLContext(false) {
+      mAttachedToGLContext(false),
+      mIsRemoteTexture(aIsRemoteTexture) {
   MOZ_COUNT_CTOR_INHERITED(RenderAndroidSurfaceTextureHost, RenderTextureHost);
 
   if (mSurfTex) {
@@ -47,7 +48,12 @@ wr::WrExternalImage RenderAndroidSurfaceTextureHost::Lock(uint8_t aChannelIndex,
   MOZ_ASSERT(aChannelIndex == 0);
   MOZ_ASSERT((mPrepareStatus == STATUS_PREPARED) ||
              (!mSurfTex->IsSingleBuffer() &&
-              mPrepareStatus == STATUS_UPDATE_TEX_IMAGE_NEEDED));
+              mPrepareStatus == STATUS_UPDATE_TEX_IMAGE_NEEDED) ||
+             mIsRemoteTexture);
+
+  if (mIsRemoteTexture) {
+    EnsureAttachedToGLContext();
+  }
 
   if (mGL.get() != aGL) {
     // This should not happen. On android, SingletonGL is used.
@@ -159,6 +165,10 @@ void RenderAndroidSurfaceTextureHost::NotifyNotUsed() {
     return;
   }
 
+  if (mIsRemoteTexture) {
+    UpdateTexImageIfNecessary();
+  }
+
   if (mSurfTex->IsSingleBuffer()) {
     MOZ_ASSERT(mPrepareStatus == STATUS_PREPARED);
     MOZ_ASSERT(mAttachedToGLContext);
@@ -176,6 +186,16 @@ void RenderAndroidSurfaceTextureHost::NotifyNotUsed() {
 }
 
 void RenderAndroidSurfaceTextureHost::UpdateTexImageIfNecessary() {
+  if (mIsRemoteTexture) {
+    EnsureAttachedToGLContext();
+    if (mPrepareStatus == STATUS_NONE) {
+      PrepareForUse();
+    }
+    if (mPrepareStatus == STATUS_MIGHT_BE_USED_BY_WR) {
+      NotifyForUse();
+    }
+  }
+
   if (mContinuousUpdate) {
     MOZ_ASSERT(!mSurfTex->IsSingleBuffer());
     mSurfTex->UpdateTexImage();

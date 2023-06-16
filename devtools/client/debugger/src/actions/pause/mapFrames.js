@@ -3,7 +3,6 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import {
-  getSource,
   getFrames,
   getBlackBoxRanges,
   getSelectedFrame,
@@ -13,8 +12,10 @@ import { isFrameBlackBoxed } from "../../utils/source";
 
 import assert from "../../utils/assert";
 import { getOriginalLocation } from "../../utils/source-maps";
-import { createLocation } from "../../utils/location";
-
+import {
+  debuggerToSourceMapLocation,
+  sourceMapToDebuggerLocation,
+} from "../../utils/location";
 import { isGeneratedId } from "devtools/client/shared/source-map-loader/index";
 
 function getSelectedFrameId(state, thread, frames) {
@@ -70,7 +71,7 @@ async function expandFrames(frames, { getState, sourceMapLoader }) {
       continue;
     }
     const originalFrames = await sourceMapLoader.getOriginalStackFrames(
-      frame.generatedLocation
+      debuggerToSourceMapLocation(frame.generatedLocation)
     );
     if (!originalFrames) {
       result.push(frame);
@@ -95,12 +96,10 @@ async function expandFrames(frames, { getState, sourceMapLoader }) {
       result.push({
         id,
         displayName: originalFrame.displayName,
-        // SourceMapLoader doesn't known about debugger's source objects
-        // so that we have to fetch it from here
-        location: createLocation({
-          ...originalFrame.location,
-          source: getSource(getState(), originalFrame.location.sourceId),
-        }),
+        location: sourceMapToDebuggerLocation(
+          getState(),
+          originalFrame.location
+        ),
         index: frame.index,
         source: null,
         thread: frame.thread,
@@ -130,7 +129,7 @@ async function expandFrames(frames, { getState, sourceMapLoader }) {
  * @static
  */
 export function mapFrames(cx) {
-  return async function(thunkArgs) {
+  return async function (thunkArgs) {
     const { dispatch, getState } = thunkArgs;
     const frames = getFrames(getState(), cx.thread);
     if (!frames) {

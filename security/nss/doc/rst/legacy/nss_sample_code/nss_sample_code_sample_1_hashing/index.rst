@@ -20,7 +20,7 @@ NSS Sample Code Sample_1_Hashing
 
 .. container::
 
-   .. code:: brush:
+   .. code:: c
 
       /* NSPR Headers */
       #include <prprf.h>

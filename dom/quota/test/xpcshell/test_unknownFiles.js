@@ -81,7 +81,7 @@ async function testSteps() {
 
   info("Testing getUsageForPrincipal functionality");
 
-  await testFunctionality(async function() {
+  await testFunctionality(async function () {
     info("Getting origin usage");
 
     request = getOriginUsage(principal);
@@ -97,7 +97,7 @@ async function testSteps() {
 
   info("Testing clearStoragesForPrincipal functionality");
 
-  await testFunctionality(async function() {
+  await testFunctionality(async function () {
     info("Clearing origin");
 
     request = clearOrigin(principal, "default");

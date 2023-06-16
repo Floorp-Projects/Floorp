@@ -156,10 +156,7 @@ add_task(async function test_interface() {
     bridge.lastSyncMillis = 1000 * (now + 2);
     await sync_engine_and_validate_telem(engine, false);
 
-    let metaGlobal = foo
-      .collection("meta")
-      .wbo("global")
-      .get();
+    let metaGlobal = foo.collection("meta").wbo("global").get();
     deepEqual(
       JSON.parse(metaGlobal.payload).engines.nineties,
       {

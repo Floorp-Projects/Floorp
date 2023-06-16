@@ -7,14 +7,14 @@ add_task(async function run_test() {
   }
 
   await do_crash(
-    function() {
+    function () {
       crashType = CrashTestUtils.CRASH_MOZ_CRASH;
       crashReporter.annotateCrashReport("TestKey", "Yes");
       Cu.getJSTestingFunctions().reportOutOfMemory();
       Cu.forceGC(); // recover from first OOM
       Cu.getJSTestingFunctions().reportOutOfMemory();
     },
-    function(mdump, extra) {
+    function (mdump, extra) {
       Assert.equal(extra.TestKey, "Yes");
 
       // Technically, GC can happen at any time, but it would be really

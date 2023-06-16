@@ -34,6 +34,7 @@
         "UPDATE moz_places SET "                                              \
         "visit_count = visit_count + " VISIT_COUNT_INC("NEW.visit_type") ", " \
         "recalc_frecency = (frecency <> 0), "                                 \
+        "recalc_alt_frecency = (frecency <> 0), "                             \
         "last_visit_date = MAX(IFNULL(last_visit_date, 0), NEW.visit_date) "  \
         "WHERE id = NEW.place_id;"                                            \
         "END")
@@ -47,6 +48,7 @@
         "UPDATE moz_places SET "                                              \
         "visit_count = visit_count - " VISIT_COUNT_INC("OLD.visit_type") ", " \
         "recalc_frecency = (frecency <> 0), "                                 \
+        "recalc_alt_frecency = (frecency <> 0), "                             \
         "last_visit_date = (SELECT visit_date FROM moz_historyvisits "        \
         "WHERE place_id = OLD.place_id "                                      \
         "ORDER BY visit_date DESC LIMIT 1) "                                  \
@@ -284,8 +286,9 @@
         "AFTER DELETE ON moz_bookmarks FOR EACH ROW "                          \
         "BEGIN "                                                               \
         "UPDATE moz_places "                                                   \
-        "SET foreign_count = foreign_count - 1, "                              \
-        "    recalc_frecency = NOT " IS_PLACE_QUERY                            \
+        "SET foreign_count = foreign_count - 1 "                               \
+        ",   recalc_frecency = NOT " IS_PLACE_QUERY                            \
+        ",   recalc_alt_frecency = NOT " IS_PLACE_QUERY                        \
         "WHERE id = OLD.fk;"                                                   \
         "END")
 
@@ -310,10 +313,10 @@
         "SET frecency = 1 WHERE frecency = -1 AND NOT " IS_PLACE_QUERY         \
         ";"                                                                    \
         "UPDATE moz_places "                                                   \
-        "SET foreign_count = foreign_count + 1, "                              \
-        "    hidden = " IS_PLACE_QUERY                                         \
-        ","                                                                    \
-        "    recalc_frecency = NOT " IS_PLACE_QUERY                            \
+        "SET foreign_count = foreign_count + 1 "                               \
+        ",   hidden = " IS_PLACE_QUERY                                         \
+        ",   recalc_frecency = NOT " IS_PLACE_QUERY                            \
+        ",   recalc_alt_frecency = NOT " IS_PLACE_QUERY                        \
         "WHERE id = NEW.fk;"                                                   \
         "END")
 
@@ -325,14 +328,15 @@
         "SELECT note_sync_change() "                                           \
         "WHERE NEW.syncChangeCounter <> OLD.syncChangeCounter; "               \
         "UPDATE moz_places "                                                   \
-        "SET foreign_count = foreign_count + 1, "                              \
-        "    hidden = " IS_PLACE_QUERY                                         \
-        ","                                                                    \
-        "    recalc_frecency = NOT " IS_PLACE_QUERY                            \
+        "SET foreign_count = foreign_count + 1 "                               \
+        ",   hidden = " IS_PLACE_QUERY                                         \
+        ",   recalc_frecency = NOT " IS_PLACE_QUERY                            \
+        ",   recalc_alt_frecency = NOT " IS_PLACE_QUERY                        \
         "WHERE OLD.fk <> NEW.fk AND id = NEW.fk;"                              \
         "UPDATE moz_places "                                                   \
-        "SET foreign_count = foreign_count - 1, "                              \
-        "    recalc_frecency = NOT " IS_PLACE_QUERY                            \
+        "SET foreign_count = foreign_count - 1 "                               \
+        ",   recalc_frecency = NOT " IS_PLACE_QUERY                            \
+        ",   recalc_alt_frecency = NOT " IS_PLACE_QUERY                        \
         "WHERE OLD.fk <> NEW.fk AND id = OLD.fk;"                              \
         "END")
 

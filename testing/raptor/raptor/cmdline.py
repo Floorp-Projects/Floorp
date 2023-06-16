@@ -513,6 +513,28 @@ def create_parser(mach_interface=False):
         help="Alternative methods for summarizing technical and visual pageload metrics. "
         "Options: geomean, mean.",
     )
+    add_arg(
+        "--benchmark-repository",
+        dest="benchmark_repository",
+        default=None,
+        type=str,
+        help="Repository that should be used for a particular benchmark test. "
+        "e.g. https://github.com/mozilla-mobile/firefox-android",
+    )
+    add_arg(
+        "--benchmark-revision",
+        dest="benchmark_revision",
+        default=None,
+        type=str,
+        help="Repository revision that should be used for a particular benchmark test.",
+    )
+    add_arg(
+        "--benchmark-branch",
+        dest="benchmark_branch",
+        default=None,
+        type=str,
+        help="Repository branch that should be used for a particular benchmark test.",
+    )
 
     add_logging_group(parser)
     return parser
@@ -617,6 +639,12 @@ def verify_options(parser, args):
             else:
                 # otherwise fail out
                 parser.error("--intent command-line argument is required!")
+
+    if args.benchmark_repository:
+        if not args.benchmark_revision:
+            parser.error(
+                "When a benchmark repository is provided, a revision is also required."
+            )
 
 
 def parse_args(argv=None):

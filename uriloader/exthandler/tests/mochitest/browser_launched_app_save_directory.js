@@ -11,10 +11,9 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
   "https://example.com"
 );
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.download.improvements_to_download_panel", true],
       ["browser.download.always_ask_before_handling_new_types", false],
       ["image.webp.enabled", true],
     ],

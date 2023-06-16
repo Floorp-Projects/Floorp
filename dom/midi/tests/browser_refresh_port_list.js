@@ -5,19 +5,19 @@ const EXAMPLE_ORG_URL = "https://example.org/browser/dom/midi/tests/";
 const PAGE = "refresh_port_list.html";
 
 async function get_access(browser) {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     return content.wrappedJSObject.get_access();
   });
 }
 
 async function reset_access(browser) {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     return content.wrappedJSObject.reset_access();
   });
 }
 
 async function get_num_ports(browser) {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     return content.wrappedJSObject.get_num_ports();
   });
 }
@@ -40,7 +40,7 @@ async function force_refresh(browser) {
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   gBrowser.selectedTab = BrowserTestUtils.addTab(
     gBrowser,
     EXAMPLE_ORG_URL + PAGE

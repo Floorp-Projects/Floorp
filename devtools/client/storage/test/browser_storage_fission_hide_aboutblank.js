@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const html = `<h1>about:blank iframe</h1><iframe src="about:blank"></iframe>`;
   const url = `https://example.com/document-builder.sjs?html=${encodeURI(
     html
@@ -17,7 +17,7 @@ add_task(async function() {
   checkTree(doc, ["localStorage", "about:blank"], false);
 });
 
-add_task(async function() {
+add_task(async function () {
   // open tab with about:blank as top-level page
   await openTabAndSetupStorage("about:blank");
   const doc = gPanelWindow.document;

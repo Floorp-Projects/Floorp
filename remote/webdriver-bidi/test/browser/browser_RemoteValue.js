@@ -9,14 +9,10 @@ const { NodeCache } = ChromeUtils.importESModule(
 const { Realm, WindowRealm } = ChromeUtils.importESModule(
   "chrome://remote/content/shared/Realm.sys.mjs"
 );
-const {
-  deserialize,
-  serialize,
-  setDefaultSerializationOptions,
-  stringify,
-} = ChromeUtils.importESModule(
-  "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs"
-);
+const { deserialize, serialize, setDefaultSerializationOptions, stringify } =
+  ChromeUtils.importESModule(
+    "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs"
+  );
 
 const browser = Services.appShell.createWindowlessBrowser(false);
 const bodyEl = browser.document.body;
@@ -368,8 +364,8 @@ const REMOTE_COMPLEX_VALUES = [
   },
   {
     value: {
-      "1": 1,
-      "2": "2",
+      1: 1,
+      2: "2",
       foo: true,
     },
     serialized: {
@@ -383,8 +379,8 @@ const REMOTE_COMPLEX_VALUES = [
   },
   {
     value: {
-      "1": 1,
-      "2": "2",
+      1: 1,
+      2: "2",
       foo: true,
     },
     serializationOptions: {
@@ -396,8 +392,8 @@ const REMOTE_COMPLEX_VALUES = [
   },
   {
     value: {
-      "1": 1,
-      "2": "2",
+      1: 1,
+      2: "2",
       foo: true,
     },
     serializationOptions: {
@@ -415,9 +411,9 @@ const REMOTE_COMPLEX_VALUES = [
   },
   {
     value: {
-      "1": 1,
-      "2": "2",
-      "3": {
+      1: 1,
+      2: "2",
+      3: {
         bar: "foo",
       },
       foo: true,
@@ -857,7 +853,7 @@ add_task(function test_deserializeLocalValuesInvalidValues() {
         ["1"],
         [[]],
         [["1"]],
-        [{ "1": "2" }],
+        [{ 1: "2" }],
         {},
       ],
     },
@@ -877,7 +873,7 @@ add_task(function test_deserializeLocalValuesInvalidValues() {
         ["1"],
         [[]],
         [["1"]],
-        [{ "1": "2" }],
+        [{ 1: "2" }],
         [
           [
             { type: "number", value: "1" },
@@ -1002,9 +998,8 @@ add_task(function test_serializeRemoteComplexValues() {
 
   for (const type of REMOTE_COMPLEX_VALUES) {
     const { value, serialized, serializationOptions } = type;
-    const serializationOptionsWithDefaults = setDefaultSerializationOptions(
-      serializationOptions
-    );
+    const serializationOptionsWithDefaults =
+      setDefaultSerializationOptions(serializationOptions);
 
     info(`Checking '${serialized.type}' with none ownershipType`);
     const serializationInternalMapWithNone = new Map();

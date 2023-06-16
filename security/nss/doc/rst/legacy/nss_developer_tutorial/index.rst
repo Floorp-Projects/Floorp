@@ -8,8 +8,6 @@ NSS Developer Tutorial
 `NSS Coding Style <#nss_coding_style>`__
 ----------------------------------------
 
-.. container::
-
 `Formatting <#formatting>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -25,7 +23,7 @@ NSS Developer Tutorial
 
    **Curly braces**: both of the following styles are allowed:
 
-   .. code:: brush:
+   .. code::
 
       if (condition) {
           action1();
@@ -35,7 +33,7 @@ NSS Developer Tutorial
 
    Or:
 
-   .. code:: brush:
+   .. code::
 
       if (condition)
       {
@@ -52,7 +50,7 @@ NSS Developer Tutorial
    When a block of code consists of a single statement, NSS doesn’t require curly braces, so both of
    these examples are fine:
 
-   .. code:: brush:
+   .. code::
 
       if (condition) {
           action();
@@ -60,7 +58,7 @@ NSS Developer Tutorial
 
    Or:
 
-   .. code:: brush:
+   .. code::
 
       if (condition)
           action();
@@ -69,7 +67,7 @@ NSS Developer Tutorial
 
    **Multiple-line comments** should be formatted as follows:
 
-   .. code:: brush:
+   .. code::
 
       /*
        * Line1
@@ -78,7 +76,7 @@ NSS Developer Tutorial
 
    or
 
-   .. code:: brush:
+   .. code::
 
       /*
       ** Line 1
@@ -87,7 +85,7 @@ NSS Developer Tutorial
 
    The following styles are also common, because they conserve vertical space:
 
-   .. code:: brush:
+   .. code::
 
       /* Line1
        * Line2
@@ -95,7 +93,7 @@ NSS Developer Tutorial
 
    or
 
-   .. code:: brush:
+   .. code::
 
       /* Line1
       ** Line2
@@ -103,7 +101,7 @@ NSS Developer Tutorial
 
    or
 
-   .. code:: brush:
+   .. code::
 
       /* Line1
        * Line2 */
@@ -129,7 +127,7 @@ NSS Developer Tutorial
 
    A data buffer is usually represented as:
 
-   .. code:: brush:
+   .. code:: c
 
       unsigned char *data;
       unsigned int len;
@@ -176,8 +174,6 @@ NSS Developer Tutorial
 `NSS C ABI backward compatibility <#nss_c_abi_backward_compatibility>`__
 ------------------------------------------------------------------------
 
-.. container::
-
 `Functions <#functions>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -195,8 +191,6 @@ NSS Developer Tutorial
 
 `Types <#types>`__
 ------------------
-
-.. container::
 
 `Structs <#structs>`__
 ~~~~~~~~~~~~~~~~~~~~~~

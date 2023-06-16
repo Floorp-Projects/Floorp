@@ -9,11 +9,11 @@
 
 var library;
 
-add_setup(async function() {
+add_setup(async function () {
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesUtils.history.clear();
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.bookmarks.eraseEverything();
     await PlacesUtils.history.clear();
     await promiseLibraryClosed(library);

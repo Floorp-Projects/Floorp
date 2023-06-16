@@ -7,7 +7,7 @@ const boxes = $("label.multiselect input:checkbox");
 var lastChecked = {};
 
 // implements shift+click
-labels.click(function(e) {
+labels.click(function (e) {
   if (e.target.tagName === "INPUT") {
     return;
   }
@@ -39,7 +39,7 @@ labels.click(function(e) {
 
 function selectAll(btn) {
   let checked = !!btn.value;
-  $("div.active label.filter-label").each(function(index) {
+  $("div.active label.filter-label").each(function (index) {
     $(this).find("input:checkbox")[0].checked = checked;
   });
   apply();

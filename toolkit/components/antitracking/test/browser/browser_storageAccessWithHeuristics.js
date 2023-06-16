@@ -15,7 +15,7 @@ function waitStoragePermission() {
   });
 }
 
-add_setup(async function() {
+add_setup(async function () {
   info("Starting subResources test");
 
   await SpecialPowers.flushPrefEnv();
@@ -93,7 +93,7 @@ async function runTestWindowOpenHeuristic(disableHeuristics) {
       info("Checking if storage access is denied");
       await new content.Promise(resolve => {
         let ifr = content.document.createElement("iframe");
-        ifr.onload = function() {
+        ifr.onload = function () {
           info("Sending code to the 3rd party content");
           ifr.contentWindow.postMessage(msg, "*");
         };
@@ -178,7 +178,7 @@ add_task(async function testDoublyNestedWindowOpenHeuristic() {
       info("Checking if storage access is denied");
       await new content.Promise(resolve => {
         let ifr = content.document.createElement("iframe");
-        ifr.onload = function() {
+        ifr.onload = function () {
           info("Sending code to the 3rd party content");
           ifr.contentWindow.postMessage(msg, "*");
         };
@@ -213,7 +213,7 @@ add_task(async function testDoublyNestedWindowOpenHeuristic() {
   BrowserTestUtils.removeTab(tab);
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Cleaning up.");
   await new Promise(resolve => {
     Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
@@ -726,7 +726,7 @@ add_task(async function testDoublyNestedUserInteractionHeuristic() {
   BrowserTestUtils.removeTab(tab);
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Wait until the storage permission is ready before cleaning up.");
   await waitStoragePermission();
 
@@ -776,7 +776,7 @@ async function runTestFirstPartyWindowOpenHeuristic(disableHeuristics) {
 
       await new content.Promise(resolve => {
         let ifr = content.document.createElement("iframe");
-        ifr.onload = function() {
+        ifr.onload = function () {
           info("Sending code to the 3rd party content");
           ifr.contentWindow.postMessage(msg.blockingCallback, "*");
         };
@@ -907,6 +907,6 @@ add_task(async function testFirstPartyWindowOpenHeuristicDisabled() {
   await runTestFirstPartyWindowOpenHeuristic(true);
 });
 
-add_task(async function() {
+add_task(async function () {
   UrlClassifierTestUtils.cleanupTestTrackers();
 });

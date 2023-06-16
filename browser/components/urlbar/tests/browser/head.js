@@ -91,3 +91,35 @@ async function waitForLoadOrTimeout(win = window, timeoutMs = 1000) {
   }
   return event || null;
 }
+
+/**
+ * Opens the url bar context menu by synthesizing a click.
+ * Returns a menu item that is specified by an id.
+ *
+ * @param {string} anonid - Identifier of a menu item of the url bar context menu.
+ * @returns {string} - The element that has the corresponding identifier.
+ */
+async function promiseContextualMenuitem(anonid) {
+  let textBox = gURLBar.querySelector("moz-input-box");
+  let cxmenu = textBox.menupopup;
+  let cxmenuPromise = BrowserTestUtils.waitForEvent(cxmenu, "popupshown");
+  EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {
+    type: "contextmenu",
+    button: 2,
+  });
+  await cxmenuPromise;
+  return textBox.getMenuItem(anonid);
+}
+
+/**
+ * Puts all CustomizableUI widgetry back to their default locations, and
+ * then fires the `aftercustomization` toolbox event so that UrlbarInput
+ * knows to reinitialize itself.
+ *
+ * @param {window} [win=window]
+ *   The top-level browser window to fire the `aftercustomization` event in.
+ */
+function resetCUIAndReinitUrlbarInput(win = window) {
+  CustomizableUI.reset();
+  CustomizableUI.dispatchToolboxEvent("aftercustomization", {}, win);
+}

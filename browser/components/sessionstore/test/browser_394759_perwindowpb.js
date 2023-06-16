@@ -10,7 +10,7 @@ const TESTS = [
 ];
 
 function promiseTestOpenCloseWindow(aIsPrivate, aTest) {
-  return (async function() {
+  return (async function () {
     let win = await BrowserTestUtils.openNewBrowserWindow({
       private: aIsPrivate,
     });
@@ -25,7 +25,7 @@ function promiseTestOpenCloseWindow(aIsPrivate, aTest) {
 }
 
 function promiseTestOnWindow(aIsPrivate, aValue) {
-  return (async function() {
+  return (async function () {
     let win = await BrowserTestUtils.openNewBrowserWindow({
       private: aIsPrivate,
     });
@@ -44,7 +44,7 @@ function promiseTestOnWindow(aIsPrivate, aValue) {
   })();
 }
 
-add_setup(async function() {
+add_setup(async function () {
   forgetClosedWindows();
   forgetClosedTabs(window);
 });

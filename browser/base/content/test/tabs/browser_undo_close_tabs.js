@@ -47,7 +47,7 @@ add_task(async function withMultiSelectedTabs() {
 
   is(
     SessionStore.getLastClosedTabCount(window),
-    SessionStore.getClosedTabCount(window) ? 1 : 0,
+    SessionStore.getClosedTabCountForWindow(window) ? 1 : 0,
     "LastClosedTabCount should be reset"
   );
 

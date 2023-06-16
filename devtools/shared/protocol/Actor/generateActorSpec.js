@@ -14,7 +14,7 @@ var {
 /**
  * Generates an actor specification from an actor description.
  */
-var generateActorSpec = function(actorDesc) {
+var generateActorSpec = function (actorDesc) {
   const actorSpec = {
     typeName: actorDesc.typeName,
     methods: [],

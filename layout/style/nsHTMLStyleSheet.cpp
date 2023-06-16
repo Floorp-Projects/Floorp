@@ -89,7 +89,7 @@ void nsHTMLStyleSheet::Reset() {
 }
 
 nsresult nsHTMLStyleSheet::ImplLinkColorSetter(
-    RefPtr<RawServoDeclarationBlock>& aDecl, nscolor aColor) {
+    RefPtr<StyleLockedDeclarationBlock>& aDecl, nscolor aColor) {
   if (!mDocument || !mDocument->GetPresShell()) {
     return NS_OK;
   }

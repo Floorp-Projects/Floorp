@@ -52,15 +52,15 @@ const HTTP_TRANSACTION_CODES = {
   0x5005: "RESPONSE_COMPLETE",
   0x5006: "TRANSACTION_CLOSE",
 
-  0x804b0003: "STATUS_RESOLVING",
-  0x804b000b: "STATUS_RESOLVED",
-  0x804b0007: "STATUS_CONNECTING_TO",
-  0x804b0004: "STATUS_CONNECTED_TO",
-  0x804b0005: "STATUS_SENDING_TO",
-  0x804b000a: "STATUS_WAITING_FOR",
-  0x804b0006: "STATUS_RECEIVING_FROM",
-  0x804b000c: "STATUS_TLS_STARTING",
-  0x804b000d: "STATUS_TLS_ENDING",
+  0x4b0003: "STATUS_RESOLVING",
+  0x4b000b: "STATUS_RESOLVED",
+  0x4b0007: "STATUS_CONNECTING_TO",
+  0x4b0004: "STATUS_CONNECTED_TO",
+  0x4b0005: "STATUS_SENDING_TO",
+  0x4b000a: "STATUS_WAITING_FOR",
+  0x4b0006: "STATUS_RECEIVING_FROM",
+  0x4b000c: "STATUS_TLS_STARTING",
+  0x4b000d: "STATUS_TLS_ENDING",
 };
 
 const HTTP_DOWNLOAD_ACTIVITIES = [
@@ -325,10 +325,8 @@ export class NetworkObserver {
         this.#createNetworkEvent(subject, { inProgressRequest: true });
       } else {
         // Handles any early blockings e.g by Web Extensions or by CORS
-        const {
-          blockingExtension,
-          blockedReason,
-        } = lazy.NetworkUtils.getBlockedReason(channel);
+        const { blockingExtension, blockedReason } =
+          lazy.NetworkUtils.getBlockedReason(channel);
         this.#createNetworkEvent(subject, { blockedReason, blockingExtension });
       }
     }
@@ -548,7 +546,7 @@ export class NetworkObserver {
    * @param number extraSizeData
    * @param string extraStringData
    */
-  observeActivity = DevToolsInfaillibleUtils.makeInfallible(function(
+  observeActivity = DevToolsInfaillibleUtils.makeInfallible(function (
     channel,
     activityType,
     activitySubtype,
@@ -1172,10 +1170,8 @@ export class NetworkObserver {
     harTimings.connect = this.#getConnectTiming(timings);
     harTimings.ssl = this.#getSslTiming(timings);
 
-    let {
-      secureConnectionStartTime,
-      secureConnectionStartTimeRelative,
-    } = this.#getSecureConnectionStartTimeInfo(timings);
+    let { secureConnectionStartTime, secureConnectionStartTimeRelative } =
+      this.#getSecureConnectionStartTimeInfo(timings);
 
     // sometimes the connection information events are attached to a speculative
     // channel instead of this one, but necko might glue them back together in the
@@ -1235,10 +1231,8 @@ export class NetworkObserver {
     harTimings.send = this.#getSendTiming(timings);
     harTimings.wait = this.#getWaitTiming(timings);
     harTimings.receive = this.#getReceiveTiming(timings);
-    let {
-      startSendingTime,
-      startSendingTimeRelative,
-    } = this.#getStartSendingTimeInfo(timings, connectStartTimeTc);
+    let { startSendingTime, startSendingTimeRelative } =
+      this.#getStartSendingTimeInfo(timings, connectStartTimeTc);
 
     if (secureConnectionStartTimeRelative) {
       const time = Math.max(Math.round(secureConnectionStartTime / 1000), -1);
@@ -1271,11 +1265,8 @@ export class NetworkObserver {
     const serverTimings = new Array(channel.serverTiming.length);
 
     for (let i = 0; i < channel.serverTiming.length; ++i) {
-      const {
-        name,
-        duration,
-        description,
-      } = channel.serverTiming.queryElementAt(i, Ci.nsIServerTiming);
+      const { name, duration, description } =
+        channel.serverTiming.queryElementAt(i, Ci.nsIServerTiming);
       serverTimings[i] = { name, duration, description };
     }
 

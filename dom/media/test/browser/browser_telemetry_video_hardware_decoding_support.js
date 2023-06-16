@@ -33,8 +33,10 @@ add_task(async function testVideoCodecs() {
     let video = document.createElement("video");
     video.src = GetTestWebBasedURL(fileName);
     await video.play();
-    let snapshot = Services.telemetry.getSnapshotForKeyedScalars("main", false)
-      .parent;
+    let snapshot = Services.telemetry.getSnapshotForKeyedScalars(
+      "main",
+      false
+    ).parent;
     ok(
       snapshot.hasOwnProperty(ALL_SCALAR),
       `Found stored scalar '${ALL_SCALAR}'`
@@ -75,8 +77,10 @@ add_task(async function testAudioCodecs() {
     info(GetTestWebBasedURL(file));
     audio.src = GetTestWebBasedURL(file);
     await audio.play();
-    let snapshot = Services.telemetry.getSnapshotForKeyedScalars("main", false)
-      .parent;
+    let snapshot = Services.telemetry.getSnapshotForKeyedScalars(
+      "main",
+      false
+    ).parent;
     ok(
       !snapshot ||
         (!snapshot.hasOwnProperty(ALL_SCALAR) &&

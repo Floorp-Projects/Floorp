@@ -3,7 +3,7 @@
 // Ported from js/src/tests/js1_8_5/reflect-parse/Match.js for use with devtools
 // server xpcshell tests.
 
-export const Match = (function() {
+export const Match = (function () {
   function Pattern(template) {
     // act like a constructor even as a function
     if (!(this instanceof Pattern)) {
@@ -47,14 +47,14 @@ export const Match = (function() {
   Pattern.ANY.template = Pattern.ANY;
 
   Pattern.NUMBER = new Pattern();
-  Pattern.NUMBER.match = function(act) {
+  Pattern.NUMBER.match = function (act) {
     if (typeof act !== "number") {
       throw new MatchError("Expected number, got: " + quote(act));
     }
   };
 
   Pattern.NATURAL = new Pattern();
-  Pattern.NATURAL.match = function(act) {
+  Pattern.NATURAL.match = function (act) {
     if (typeof act !== "number" || act !== Math.floor(act) || act < 0) {
       throw new MatchError("Expected natural number, got: " + quote(act));
     }

@@ -8,7 +8,6 @@
 
 #include "nscore.h"
 #include "prio.h"
-#include "plstr.h"
 #include "mozilla/Logging.h"
 #include "prinrval.h"
 

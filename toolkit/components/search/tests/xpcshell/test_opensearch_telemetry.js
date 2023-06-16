@@ -54,7 +54,7 @@ add_task(async function setup() {
   });
 });
 
-add_task(async function() {
+add_task(async function () {
   verifyTelemetry("secure_opensearch_engine_count", 10, "secure");
   verifyTelemetry("insecure_opensearch_engine_count", 4, "insecure");
   verifyTelemetry("secure_opensearch_update_count", 5, "securely updated");

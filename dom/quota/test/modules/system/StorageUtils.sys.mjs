@@ -51,12 +51,12 @@ export function clearStoragePrefs(optionalPrefsToClear) {
 export async function getUsageForOrigin(principal, fromMemory) {
   const request = Services.qms.getUsageForPrincipal(
     principal,
-    function() {},
+    function () {},
     fromMemory
   );
 
-  await new Promise(function(resolve) {
-    request.callback = function() {
+  await new Promise(function (resolve) {
+    request.callback = function () {
       resolve();
     };
   });
@@ -71,8 +71,8 @@ export async function getUsageForOrigin(principal, fromMemory) {
 export async function clearStoragesForOrigin(principal) {
   const request = Services.qms.clearStoragesForPrincipal(principal);
 
-  await new Promise(function(resolve) {
-    request.callback = function() {
+  await new Promise(function (resolve) {
+    request.callback = function () {
       resolve();
     };
   });
@@ -87,8 +87,8 @@ export async function clearStoragesForOrigin(principal) {
 export async function resetStorage() {
   const request = Services.qms.reset();
 
-  await new Promise(function(resolve) {
-    request.callback = function() {
+  await new Promise(function (resolve) {
+    request.callback = function () {
       resolve();
     };
   });

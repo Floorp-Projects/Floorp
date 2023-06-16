@@ -22,12 +22,12 @@ add_task(async function test_pageAction_basic() {
       </body></html>
       `,
 
-      "popup.js": function() {
+      "popup.js": function () {
         browser.runtime.sendMessage("from-popup");
       },
     },
 
-    background: function() {
+    background: function () {
       browser.runtime.onMessage.addListener(msg => {
         browser.test.assertEq(msg, "from-popup", "correct message received");
         browser.test.sendMessage("popup");
@@ -46,7 +46,8 @@ add_task(async function test_pageAction_basic() {
   let waitForConsole = new Promise(resolve => {
     SimpleTest.monitorConsole(resolve, [
       {
-        message: /Reading manifest: Warning processing page_action.unrecognized_property: An unexpected property was found/,
+        message:
+          /Reading manifest: Warning processing page_action.unrecognized_property: An unexpected property was found/,
       },
     ]);
   });
@@ -91,7 +92,7 @@ add_task(async function test_pageAction_pinned() {
       `,
     },
 
-    background: function() {
+    background: function () {
       browser.tabs.query({ active: true, currentWindow: true }, tabs => {
         let tabId = tabs[0].id;
 
@@ -132,7 +133,7 @@ add_task(async function test_pageAction_icon_on_subframe_navigation() {
       `,
     },
 
-    background: function() {
+    background: function () {
       browser.tabs.query({ active: true, currentWindow: true }, tabs => {
         let tabId = tabs[0].id;
 

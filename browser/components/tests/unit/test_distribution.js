@@ -8,7 +8,7 @@
 const TOPICDATA_DISTRIBUTION_CUSTOMIZATION = "force-distribution-customization";
 const TOPIC_BROWSERGLUE_TEST = "browser-glue-test";
 
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   // Remove the distribution dir, even if the test failed, otherwise all
   // next tests will use it.
   let folderPath = PathUtils.join(PathUtils.profileDir, "distribution");
@@ -17,7 +17,7 @@ registerCleanupFunction(async function() {
   Services.prefs.clearUserPref("distribution.testing.loadFromProfile");
 });
 
-add_task(async function() {
+add_task(async function () {
   // Set special pref to load distribution.ini from the profile folder.
   Services.prefs.setBoolPref("distribution.testing.loadFromProfile", true);
 
@@ -37,7 +37,7 @@ add_task(async function() {
   Assert.ok(testDistributionFile.exists());
 });
 
-add_task(async function() {
+add_task(async function () {
   // Force distribution.
   let glue = Cc["@mozilla.org/browser/browserglue;1"].getService(
     Ci.nsIObserver

@@ -140,6 +140,8 @@ serp:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1813162
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1824543
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1816736
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1816738
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1829953
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1813162
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1824543
@@ -173,7 +175,8 @@ serp:
           Possible values are:
           `urlbar`, `urlbar_handoff`, `urlbar_searchmode`, `urlbar_persisted`,
           `searchbar`, `contextmenu`, `webextension`, `system`, `reload`,
-          `tabhistory`, `unknown`, `follow_on_from_refine_on_incontent_search`.
+          `tabhistory`, `follow_on_from_refine_on_incontent_search`,
+          `follow_on_from_refine_on_SERP`, `opened_in_new_tab`, `unknown`.
           This will be `unknown` if we cannot determine the source.
         type: string
       shopping_tab_displayed:
@@ -286,3 +289,18 @@ serp:
           Possible values are:
           `tab_close`, `window_close`, `navigation`
         type: string
+
+  categorization_duration:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      The time it takes to categorize elements on a SERP.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1834100
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1834100
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    expires: never

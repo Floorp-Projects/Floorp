@@ -14,15 +14,13 @@ const TEST_URI = `
   <div id="grid"></div>
 `;
 
-add_task(async function() {
+add_task(async function () {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector } = await openLayoutView();
   const { highlighters, store } = inspector;
   const HIGHLIGHTER_TYPE = inspector.highlighters.TYPES.GRID;
-  const {
-    waitForHighlighterTypeShown,
-    waitForHighlighterTypeHidden,
-  } = getHighlighterTestHelpers(inspector);
+  const { waitForHighlighterTypeShown, waitForHighlighterTypeHidden } =
+    getHighlighterTestHelpers(inspector);
 
   info("Check the grid display badge is shown and not active.");
   await selectNode("#grid", inspector);

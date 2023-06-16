@@ -195,10 +195,10 @@ HandlerService.prototype = {
   _migrateProtocolHandlersIfNeeded() {
     const kMigrations = {
       "30boxes": () => {
-        const k30BoxesRegex = /^https?:\/\/(?:www\.)?30boxes.com\/external\/widget/i;
-        let webcalHandler = lazy.externalProtocolService.getProtocolHandlerInfo(
-          "webcal"
-        );
+        const k30BoxesRegex =
+          /^https?:\/\/(?:www\.)?30boxes.com\/external\/widget/i;
+        let webcalHandler =
+          lazy.externalProtocolService.getProtocolHandlerInfo("webcal");
         if (this.exists(webcalHandler)) {
           this.fillHandlerInfo(webcalHandler, "");
           let shouldStore = false;
@@ -263,9 +263,8 @@ HandlerService.prototype = {
           }
           return false;
         }
-        let mailHandler = lazy.externalProtocolService.getProtocolHandlerInfo(
-          "mailto"
-        );
+        let mailHandler =
+          lazy.externalProtocolService.getProtocolHandlerInfo("mailto");
         if (this.exists(mailHandler)) {
           this.fillHandlerInfo(mailHandler, "");
           let handlers = mailHandler.possibleApplicationHandlers;
@@ -367,11 +366,12 @@ HandlerService.prototype = {
     "image/svg+xml",
   ]),
   _migrateDownloadsImprovementsIfNeeded() {
-    // Migrate if the preference is enabled AND if the migration has never been run before.
+    // Migrate if the migration has never been run before.
     // Otherwise, we risk overwriting preferences for existing profiles!
     if (
       Services.prefs.getBoolPref(
-        "browser.download.improvements_to_download_panel"
+        "browser.download.improvements_to_download_panel",
+        true
       ) &&
       !Services.policies?.getActivePolicies()?.Handlers &&
       !this._store.data.isDownloadsImprovementsAlreadyMigrated &&
@@ -403,11 +403,12 @@ HandlerService.prototype = {
   },
 
   _migrateSVGXMLIfNeeded() {
-    // Migrate if the preference is enabled AND if the migration has never been run before.
+    // Migrate if the migration has never been run before.
     // We need to make sure we only run this once.
     if (
       Services.prefs.getBoolPref(
-        "browser.download.improvements_to_download_panel"
+        "browser.download.improvements_to_download_panel",
+        true
       ) &&
       !Services.policies?.getActivePolicies()?.Handlers &&
       !this._store.data.isSVGXMLAlreadyMigrated
@@ -454,9 +455,8 @@ HandlerService.prototype = {
           type,
           get _handlerInfo() {
             delete this._handlerInfo;
-            return (this._handlerInfo = lazy.externalProtocolService.getProtocolHandlerInfo(
-              type
-            ));
+            return (this._handlerInfo =
+              lazy.externalProtocolService.getProtocolHandlerInfo(type));
           },
         },
         {
@@ -495,7 +495,8 @@ HandlerService.prototype = {
       (handlerInfo.preferredAction == alwaysAsk &&
         this._isMIMEInfo(handlerInfo) &&
         Services.prefs.getBoolPref(
-          "browser.download.improvements_to_download_panel"
+          "browser.download.improvements_to_download_panel",
+          true
         ))
     ) {
       storedHandlerInfo.action = handlerInfo.preferredAction;
@@ -569,9 +570,8 @@ HandlerService.prototype = {
   // nsIHandlerService
   fillHandlerInfo(handlerInfo, overrideType) {
     let type = overrideType || handlerInfo.type;
-    let storedHandlerInfo = this._getHandlerListByHandlerInfoType(handlerInfo)[
-      type
-    ];
+    let storedHandlerInfo =
+      this._getHandlerListByHandlerInfoType(handlerInfo)[type];
     if (!storedHandlerInfo) {
       throw new Components.Exception(
         "handlerSvc fillHandlerInfo: don't know this type",

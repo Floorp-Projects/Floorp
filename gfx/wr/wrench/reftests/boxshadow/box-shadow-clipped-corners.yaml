@@ -1,0 +1,16 @@
+# Verify that if a clip results in all the corner segments of a box-shadow
+# (clip-out) primitive being culled, we still correctly clip-out and render
+# the inner segments
+---
+root:
+  items:
+    - type: clip
+      id: 2
+      bounds: [ 0, 100, 300, 100 ]
+
+    - type: box-shadow
+      bounds: [ 50, 50, 200, 200 ]
+      clip-chain: [2]
+      color: red
+      spread-radius: 10
+      border-radius: 10

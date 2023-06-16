@@ -10,7 +10,7 @@ const TEST_URI = URL_ROOT + "doc_flexbox_specific_cases.html";
 const ACCORDION_HEADER_SELECTOR = ".accordion-header";
 const ACCORDION_CONTENT_SELECTOR = ".accordion-content";
 
-add_task(async function() {
+add_task(async function () {
   await addTab(TEST_URI);
 
   await testAccordionState(

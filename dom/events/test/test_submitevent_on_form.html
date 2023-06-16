@@ -8,6 +8,7 @@
 </head>
 <body>
   <form action="javascript:doDefault()" id="form">
+    <input name="n1" value="v1">
     <input type="submit" value="Do Default Action">
   </form>
   <pre id="test">
@@ -15,23 +16,48 @@
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(runTests);
 
-var doDefaultAction = false;
+var defaultActionCount = 0;
 
 function doDefault()
 {
-  doDefaultAction = true;
+  defaultActionCount++;
 }
 
 async function runTests()
 {
+  const form = document.getElementById("form");
+  let formDataInEvent = null;
+
+  // Test if submission from submit() is deferred.
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.forms.submit.trusted_event_only", false]],
+  });
+
+  form.addEventListener("submit", function(e) {
+    form.elements[0].value = "v1";
+    form.submit();
+    form.elements[0].value = "v2";
+  }, { once: true });
+
+  form.addEventListener('formdata', e => {
+    formDataInEvent = e.formData;
+  });
+
+  form.dispatchEvent(new Event('submit'));
+  await new Promise(resolve => SimpleTest.executeSoon(resolve));
+
+  is(defaultActionCount, 1, "should only submit once");
+  is(formDataInEvent.get('n1'), 'v2', "submission from submit() should be deferred");
+
+  // Test untrusted submit event shouldn't trigger form default action.
+  defaultActionCount = 0;
   await SpecialPowers.pushPrefEnv({
     set: [["dom.forms.submit.trusted_event_only", true]],
   });
 
-  let form = document.getElementById("form");
   form.dispatchEvent(new Event('submit'));
   setTimeout(() => {
-    ok(!doDefaultAction, "untrusted submit event shouldn't trigger form default action");
+    is(defaultActionCount, 0, "untrusted submit event shouldn't trigger form default action");
     SimpleTest.finish();
   });
 }

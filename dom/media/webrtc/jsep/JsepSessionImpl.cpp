@@ -1425,39 +1425,6 @@ nsresult JsepSessionImpl::ParseSdp(const std::string& sdp,
       return NS_ERROR_INVALID_ARG;
     }
 
-    if (mediaAttrs.GetIceUfrag().empty()) {
-      JSEP_SET_ERROR("Invalid description, no ice-ufrag attribute");
-      return NS_ERROR_INVALID_ARG;
-    }
-
-    if (mediaAttrs.GetIcePwd().empty()) {
-      JSEP_SET_ERROR("Invalid description, no ice-pwd attribute");
-      return NS_ERROR_INVALID_ARG;
-    }
-
-    if (!mediaAttrs.HasAttribute(SdpAttribute::kFingerprintAttribute)) {
-      JSEP_SET_ERROR("Invalid description, no fingerprint attribute");
-      return NS_ERROR_INVALID_ARG;
-    }
-
-    const SdpFingerprintAttributeList& fingerprints(
-        mediaAttrs.GetFingerprint());
-    if (fingerprints.mFingerprints.empty()) {
-      JSEP_SET_ERROR(
-          "Invalid description, no supported fingerprint algorithms "
-          "present");
-      return NS_ERROR_INVALID_ARG;
-    }
-
-    if (mediaAttrs.HasAttribute(SdpAttribute::kSetupAttribute, true) &&
-        mediaAttrs.GetSetup().mRole == SdpSetupAttribute::kHoldconn) {
-      JSEP_SET_ERROR(
-          "Description has illegal setup attribute "
-          "\"holdconn\" in m-section at level "
-          << i);
-      return NS_ERROR_INVALID_ARG;
-    }
-
     if (mediaAttrs.HasAttribute(SdpAttribute::kExtmapAttribute)) {
       std::set<uint16_t> extIds;
       for (const auto& ext : mediaAttrs.GetExtmap().mExtmaps) {
@@ -1934,23 +1901,7 @@ nsresult JsepSessionImpl::ValidateRemoteDescription(const Sdp& description) {
 }
 
 nsresult JsepSessionImpl::ValidateOffer(const Sdp& offer) {
-  for (size_t i = 0; i < offer.GetMediaSectionCount(); ++i) {
-    const SdpMediaSection& offerMsection = offer.GetMediaSection(i);
-    if (mSdpHelper.MsectionIsDisabled(offerMsection)) {
-      continue;
-    }
-
-    const SdpAttributeList& offerAttrs(offerMsection.GetAttributeList());
-    if (!offerAttrs.HasAttribute(SdpAttribute::kSetupAttribute, true)) {
-      JSEP_SET_ERROR(
-          "Offer is missing required setup attribute "
-          " at level "
-          << i);
-      return NS_ERROR_INVALID_ARG;
-    }
-  }
-
-  return NS_OK;
+  return mSdpHelper.ValidateTransportAttributes(offer, sdp::kOffer);
 }
 
 nsresult JsepSessionImpl::ValidateAnswer(const Sdp& offer, const Sdp& answer) {
@@ -1960,6 +1911,9 @@ nsresult JsepSessionImpl::ValidateAnswer(const Sdp& offer, const Sdp& answer) {
                    << answer.GetMediaSectionCount() << ")");
     return NS_ERROR_INVALID_ARG;
   }
+
+  nsresult rv = mSdpHelper.ValidateTransportAttributes(answer, sdp::kAnswer);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   for (size_t i = 0; i < offer.GetMediaSectionCount(); ++i) {
     const SdpMediaSection& offerMsection = offer.GetMediaSection(i);
@@ -2000,15 +1954,6 @@ nsresult JsepSessionImpl::ValidateAnswer(const Sdp& offer, const Sdp& answer) {
                      << offerMsection.GetAttributeList().GetMid()
                      << "\', now \'"
                      << answerMsection.GetAttributeList().GetMid() << "\'");
-      return NS_ERROR_INVALID_ARG;
-    }
-
-    if (answerAttrs.HasAttribute(SdpAttribute::kSetupAttribute, true) &&
-        answerAttrs.GetSetup().mRole == SdpSetupAttribute::kActpass) {
-      JSEP_SET_ERROR(
-          "Answer contains illegal setup attribute \"actpass\""
-          " at level "
-          << i);
       return NS_ERROR_INVALID_ARG;
     }
 

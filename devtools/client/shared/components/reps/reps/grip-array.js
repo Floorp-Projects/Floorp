@@ -5,7 +5,7 @@
 "use strict";
 
 // Make this available to both AMD and CJS environments
-define(function(require, exports, module) {
+define(function (require, exports, module) {
   // Dependencies
   const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
   const { span } = require("devtools/client/shared/vendor/react-dom-factories");
@@ -44,7 +44,7 @@ define(function(require, exports, module) {
     const { object, mode = MODE.SHORT, shouldRenderTooltip } = props;
 
     let brackets;
-    const needSpace = function(space) {
+    const needSpace = function (space) {
       return space ? { left: "[ ", right: " ]" } : { left: "[", right: "]" };
     };
 

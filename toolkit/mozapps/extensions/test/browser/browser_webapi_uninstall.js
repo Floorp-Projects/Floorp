@@ -4,20 +4,20 @@
 
 const TESTPAGE = `${SECURE_TESTROOT}webapi_checkavailable.html`;
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.webapi.testing", true]],
   });
 });
 
 function testWithAPI(task) {
-  return async function() {
+  return async function () {
     await BrowserTestUtils.withNewTab(TESTPAGE, task);
   };
 }
 
 function API_uninstallByID(browser, id) {
-  return SpecialPowers.spawn(browser, [id], async function(id) {
+  return SpecialPowers.spawn(browser, [id], async function (id) {
     let addon = await content.navigator.mozAddonManager.getAddonByID(id);
 
     let result = await addon.uninstall();
@@ -26,7 +26,7 @@ function API_uninstallByID(browser, id) {
 }
 
 add_task(
-  testWithAPI(async function(browser) {
+  testWithAPI(async function (browser) {
     const ID1 = "addon1@tests.mozilla.org";
     const ID2 = "addon2@tests.mozilla.org";
     const ID3 = "addon3@tests.mozilla.org";

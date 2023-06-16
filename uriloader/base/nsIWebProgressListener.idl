@@ -265,6 +265,13 @@ interface nsIWebProgressListener : nsISupports
    * STATE_LOADED_FINGERPRINTING_CONTENT
    *   Fingerprinting content has been loaded.
    *
+   * STATE_REPLACED_FINGERPRINTING_CONTENT
+   *   Fingerprinting content which should be blocked from loading was replaced with a
+   *   shim.
+   *
+   * STATE_ALLOWED_FINGERPRINTING_CONTENT
+   *   Fingerprinting content which should be blocked from loading was allowed.
+   *
    * STATE_BLOCKED_CRYPTOMINING_CONTENT
    *   Cryptomining content has been blocked from loading.
    *
@@ -339,6 +346,8 @@ interface nsIWebProgressListener : nsISupports
   const unsigned long STATE_LOADED_LEVEL_2_TRACKING_CONTENT      = 0x00100000;
   const unsigned long STATE_BLOCKED_FINGERPRINTING_CONTENT       = 0x00000040;
   const unsigned long STATE_LOADED_FINGERPRINTING_CONTENT        = 0x00000400;
+  const unsigned long STATE_REPLACED_FINGERPRINTING_CONTENT      = 0x08000000;
+  const unsigned long STATE_ALLOWED_FINGERPRINTING_CONTENT       = 0x00000200;
   const unsigned long STATE_BLOCKED_CRYPTOMINING_CONTENT         = 0x00000800;
   const unsigned long STATE_LOADED_CRYPTOMINING_CONTENT          = 0x00200000;
   const unsigned long STATE_BLOCKED_UNSAFE_CONTENT               = 0x00004000;

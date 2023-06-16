@@ -5,11 +5,9 @@
 
 requestLongerTimeout(2);
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "AbuseReporter",
-  "resource://gre/modules/AbuseReporter.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  AbuseReporter: "resource://gre/modules/AbuseReporter.sys.mjs",
+});
 
 const { EnterprisePolicyTesting } = ChromeUtils.importESModule(
   "resource://testing-common/EnterprisePolicyTesting.sys.mjs"
@@ -555,8 +553,8 @@ add_task(async function test_open_context_menu_with_keyboard() {
 });
 
 add_task(async function test_context_menu_without_browserActionFor_global() {
-  const { ExtensionParent } = ChromeUtils.import(
-    "resource://gre/modules/ExtensionParent.jsm"
+  const { ExtensionParent } = ChromeUtils.importESModule(
+    "resource://gre/modules/ExtensionParent.sys.mjs"
   );
   const { browserActionFor } = ExtensionParent.apiManager.global;
   const cleanup = () => {

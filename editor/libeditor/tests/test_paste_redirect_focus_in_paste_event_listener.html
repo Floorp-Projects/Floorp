@@ -1,0 +1,143 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Testing handling "paste" command when a "paste" event listener moves focus</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script>
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(async () => {
+  info("Waiting for initializing clipboard...");
+  await SimpleTest.promiseClipboardChange(
+    "plain text",
+    () => SpecialPowers.clipboardCopyString("plain text")
+  );
+
+  const transferable =
+    SpecialPowers.Cc["@mozilla.org/widget/transferable;1"].createInstance(SpecialPowers.Ci.nsITransferable);
+  transferable.init(
+    SpecialPowers.wrap(window).docShell.QueryInterface(SpecialPowers.Ci.nsILoadContext)
+  );
+  const supportString =
+    SpecialPowers.Cc["@mozilla.org/supports-string;1"].createInstance(SpecialPowers.Ci.nsISupportsString);
+  supportString.data = "plain text";
+  transferable.setTransferData("text/plain", supportString);
+
+  function getValue(aElement) {
+    if (aElement.tagName.toLowerCase() == "input" ||
+        aElement.tagName.toLowerCase() == "textarea") {
+      return aElement.value;
+    }
+    return aElement.textContent;
+  }
+  function setValue(aElement, aValue) {
+    if (aElement.tagName.toLowerCase() == "input" ||
+        aElement.tagName.toLowerCase() == "textarea") {
+      aElement.value = aValue;
+      return;
+    }
+    aElement.innerHTML = aValue === "" ? "<br>" : aValue;
+  }
+
+  for (const command of [
+    "cmd_paste",
+    "cmd_pasteNoFormatting",
+    "cmd_pasteQuote",
+    "cmd_pasteTransferable"
+  ]) {
+    for (const editableSelector of [
+      "#src > input",
+      "#src > textarea",
+      "#src > div[contenteditable]"
+    ]) {
+      const editableElement = document.querySelector(editableSelector);
+      const editableElementDesc = `<${
+        editableElement.tagName.toLocaleLowerCase()
+      }${editableElement.hasAttribute("contenteditable") ? " contenteditable" : ""}>`;
+      (test_from_editableElement_to_input => {
+        const input = document.querySelector("#dest > input");
+        editableElement.focus();
+        editableElement.addEventListener(
+          "paste",
+          () => input.focus(),
+          {once: true}
+        );
+        SpecialPowers.doCommand(window, command, transferable);
+        is(
+          getValue(editableElement).replace(/\n/g, ""),
+          "",
+          `${command}: ${
+            editableElementDesc
+          } should not have the pasted text because focus is redirected to <input> in a "paste" event listener`
+        );
+        is(
+          input.value.replace("> ", ""),
+          "plain text",
+          `${command}: new focused <input> (moved from ${
+            editableElementDesc
+          }) should have the pasted text`
+        );
+        setValue(editableElement, "");
+        input.value = "";
+      })();
+
+      (test_from_editableElement_to_contenteditable => {
+        const contentEditable = document.querySelector("#dest > div[contenteditable]");
+        editableElement.focus();
+        editableElement.addEventListener(
+          "paste",
+          () => contentEditable.focus(),
+          {once: true}
+        );
+        SpecialPowers.doCommand(window, command, transferable);
+        is(
+          getValue(editableElement).replace(/\n/g, ""),
+          "",
+          `${command}: ${
+            editableElementDesc
+          } should not have the pasted text because focus is redirected to <div contenteditable> in a "paste" event listener`
+        );
+        is(
+          contentEditable.textContent.replace(/\n/g, "").replace("> ", ""),
+          "plain text",
+          `${command}: new focused <div contenteditable> (moved from ${
+            editableElementDesc
+          }) should have the pasted text`
+        );
+        setValue(editableElement, "");
+        contentEditable.innerHTML = "<br>";
+      })();
+
+      (test_from_editableElement_to_non_editable => {
+        const button = document.querySelector("#dest > button");
+        editableElement.focus();
+        editableElement.addEventListener(
+          "paste",
+          () => button.focus(),
+          {once: true}
+        );
+        SpecialPowers.doCommand(window, command, transferable);
+        is(
+          getValue(editableElement).replace(/\n/g, ""),
+          "",
+          `${command}: ${
+            editableElementDesc
+          } should not have the pasted text because focus is redirected to <button> in a "paste" event listener`
+        );
+        setValue(editableElement, "");
+      })();
+    }
+  }
+
+  SimpleTest.finish();
+});
+</script>
+</head>
+<body>
+<div id="src"><input><textarea></textarea><div contenteditable><br></div></div>
+<div id="dest"><input><div contenteditable><br></div><button>button</button></div>
+</body>
+</html>

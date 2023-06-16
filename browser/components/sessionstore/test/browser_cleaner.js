@@ -34,7 +34,7 @@ function getClosedState() {
 
 var CLOSED_STATE;
 
-add_setup(async function() {
+add_setup(async function () {
   forgetClosedWindows();
   forgetClosedTabs(window);
 });

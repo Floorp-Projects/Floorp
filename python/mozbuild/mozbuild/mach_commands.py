@@ -2248,7 +2248,10 @@ def repackage(command_context):
 
 
 @SubCommand(
-    "repackage", "deb", description="Repackage a tar file into a .deb for Linux"
+    "repackage",
+    "deb",
+    description="Repackage a tar file into a .deb for Linux",
+    virtualenv_name="repackage-deb",
 )
 @CommandArgument(
     "--input", "-i", type=str, required=True, help="Input tarfile filename"
@@ -2273,8 +2276,28 @@ def repackage(command_context):
     required=True,
     help="Location of the templates used to generate the debian/ directory files",
 )
+@CommandArgument(
+    "--release-product",
+    type=str,
+    required=True,
+    help="The product being shipped. Used to disambiguate beta/devedition etc.",
+)
+@CommandArgument(
+    "--release-type",
+    type=str,
+    required=True,
+    help="The release being shipped. Used to disambiguate nightly/try etc.",
+)
 def repackage_deb(
-    command_context, input, output, arch, version, build_number, templates
+    command_context,
+    input,
+    output,
+    arch,
+    version,
+    build_number,
+    templates,
+    release_product,
+    release_type,
 ):
     if not os.path.exists(input):
         print("Input file does not exist: %s" % input)
@@ -2285,9 +2308,23 @@ def repackage_deb(
         templates,
     )
 
+    from fluent.runtime.fallback import FluentLocalization, FluentResourceLoader
+
     from mozbuild.repackaging.deb import repackage_deb
 
-    repackage_deb(input, output, template_dir, arch, version, build_number)
+    repackage_deb(
+        command_context.log,
+        input,
+        output,
+        template_dir,
+        arch,
+        version,
+        build_number,
+        release_product,
+        release_type,
+        FluentLocalization,
+        FluentResourceLoader,
+    )
 
 
 @SubCommand(
@@ -2317,8 +2354,20 @@ def repackage_deb(
     help="The release's build number",
 )
 @CommandArgument("--output", "-o", type=str, required=True, help="Output filename")
+@CommandArgument(
+    "--templates",
+    type=str,
+    required=True,
+    help="Location of the templates used to generate the debian/ directory files",
+)
 def repackage_deb_l10n(
-    command_context, input_xpi_file, input_tar_file, output, version, build_number
+    command_context,
+    input_xpi_file,
+    input_tar_file,
+    output,
+    version,
+    build_number,
+    templates,
 ):
     for input_file in (input_xpi_file, input_tar_file):
         if not os.path.exists(input_file):
@@ -2327,10 +2376,7 @@ def repackage_deb_l10n(
 
     template_dir = os.path.join(
         command_context.topsrcdir,
-        "browser",
-        "installer",
-        "linux",
-        "debian",
+        templates,
     )
 
     from mozbuild.repackaging.deb import repackage_deb_l10n

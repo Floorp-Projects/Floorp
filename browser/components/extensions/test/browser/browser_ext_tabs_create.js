@@ -36,7 +36,7 @@ add_task(async function test_create_options() {
         <script src="background.js"></script>
       </head></html>`,
 
-      "bg/background.js": function() {
+      "bg/background.js": function () {
         let activeTab;
         let activeWindow;
 

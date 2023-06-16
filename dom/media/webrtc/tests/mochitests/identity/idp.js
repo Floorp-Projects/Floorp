@@ -1,4 +1,4 @@
-(function(global) {
+(function (global) {
   "use strict";
 
   // rather than create a million different IdP configurations and litter the
@@ -6,7 +6,7 @@
   // fragment as a way of generating instructions for the IdP
   var instructions = global.location.hash.replace("#", "").split(":");
   function is(target) {
-    return function(instruction) {
+    return function (instruction) {
       return instruction === target;
     };
   }

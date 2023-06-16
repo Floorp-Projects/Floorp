@@ -7,7 +7,7 @@
 
 const url = BrowserUIUtils.trimURLProtocol + "invalid.somehost/mytest";
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.trimURLs", true]],
   });

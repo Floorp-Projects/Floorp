@@ -1,4 +1,7 @@
-// Check byte counts produced by takeCensus.
+// Check counts produced by takeCensus.
+//
+// Note that tracking allocation sites adds unique IDs to objects which
+// increases their size, making it hard to test reported sizes exactly.
 
 let g = newGlobal({newCompartment: true});
 let dbg = new Debugger(g);
@@ -40,13 +43,13 @@ census.AllocationMarker.forEach((v, k) => {
   switch (k.line) {
   case 2003:
     assertEq(v.count, 1);
-    assertEq(v.bytes, sizeOfAM);
+    assertEq(v.bytes >= sizeOfAM, true);
     seen++;
     break;
 
   case 2005:
     assertEq(v.count, 10);
-    assertEq(v.bytes, 10 * sizeOfAM);
+    assertEq(v.bytes >= 10 * sizeOfAM, true);
     seen++;
     break;
 

@@ -1,4 +1,4 @@
-self.addEventListener("fetch", function(event) {
+self.addEventListener("fetch", function (event) {
   if (!event.request.url.endsWith("sw_clients/does_not_exist.html")) {
     return;
   }

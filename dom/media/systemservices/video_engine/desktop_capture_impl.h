@@ -170,6 +170,8 @@ class DesktopCaptureImpl : public DesktopCapturer::Callback,
   // mControlThread only.
   void RegisterCaptureDataCallback(
       rtc::VideoSinkInterface<VideoFrame>* aCallback) override;
+  void RegisterCaptureDataCallback(
+      RawVideoSinkInterface* dataCallback) override {}
   void DeRegisterCaptureDataCallback(
       rtc::VideoSinkInterface<VideoFrame>* aCallback) override;
   int32_t StopCaptureIfAllClientsClose() override;
@@ -201,8 +203,7 @@ class DesktopCaptureImpl : public DesktopCapturer::Callback,
  private:
   // Maximum CPU usage in %.
   static constexpr uint32_t kMaxDesktopCaptureCpuUsage = 50;
-  int32_t EnsureCapturer();
-  void InitOnThread(int aFramerate);
+  void InitOnThread(std::unique_ptr<DesktopCapturer> aCapturer, int aFramerate);
   void ShutdownOnThread();
   // DesktopCapturer::Callback interface.
   void OnCaptureResult(DesktopCapturer::Result aResult,
@@ -213,28 +214,28 @@ class DesktopCaptureImpl : public DesktopCapturer::Callback,
 
   // Control thread on which the public API is called.
   const nsCOMPtr<nsISerialEventTarget> mControlThread;
-  // Set in StartCapture. mControlThread only.
-  VideoCaptureCapability mRequestedCapability;
-  // This is created on mControlThread and accessed on both mControlThread and
-  // mCaptureThread. It is created prior to mCaptureThread starting and is
-  // destroyed after it is stopped.
-  std::unique_ptr<DesktopCapturer> mCapturer;
-  // Dedicated thread that does the capturing. Only used on mControlThread.
-  nsCOMPtr<nsIThread> mCaptureThread;
+  // Set in StartCapture.
+  mozilla::Maybe<VideoCaptureCapability> mRequestedCapability
+      RTC_GUARDED_BY(mControlThreadChecker);
+  // The DesktopCapturer is created on mControlThread but assigned and accessed
+  // only on mCaptureThread.
+  std::unique_ptr<DesktopCapturer> mCapturer
+      RTC_GUARDED_BY(mCaptureThreadChecker);
+  // Dedicated thread that does the capturing.
+  nsCOMPtr<nsIThread> mCaptureThread RTC_GUARDED_BY(mControlThreadChecker);
+  // Checks that API methods are called on mControlThread.
+  webrtc::SequenceChecker mControlThreadChecker;
   // Checks that frame delivery only happens on mCaptureThread.
   webrtc::SequenceChecker mCaptureThreadChecker;
   // Timer that triggers frame captures. Only used on mCaptureThread.
   // TODO(Bug 1806646): Drive capture with vsync instead.
-  nsCOMPtr<nsITimer> mCaptureTimer;
+  nsCOMPtr<nsITimer> mCaptureTimer RTC_GUARDED_BY(mCaptureThreadChecker);
   // Interval between captured frames, based on the framerate in
   // mRequestedCapability. mCaptureThread only.
-  mozilla::Maybe<mozilla::TimeDuration> mRequestedCaptureInterval;
+  mozilla::Maybe<mozilla::TimeDuration> mRequestedCaptureInterval
+      RTC_GUARDED_BY(mCaptureThreadChecker);
   // Used to make sure incoming timestamp is increasing for every frame.
-  // mCaptureThread only.
-  webrtc::Timestamp mNextFrameMinimumTime;
-  // True once fully started and not fully stopped. Only accessed on
-  // mControlThread.
-  bool mRunning;
+  webrtc::Timestamp mNextFrameMinimumTime RTC_GUARDED_BY(mCaptureThreadChecker);
   // Callbacks for captured frames. Mutated on mControlThread, callbacks happen
   // on mCaptureThread.
   mozilla::DataMutex<std::set<rtc::VideoSinkInterface<VideoFrame>*>> mCallbacks;

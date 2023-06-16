@@ -12,11 +12,11 @@
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/random.h"
 #include "lib/jxl/base/span.h"
-#include "lib/jxl/base/thread_pool_internal.h"
 #include "lib/jxl/common.h"
 #include "lib/jxl/dec_bit_reader.h"
 #include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_bit_writer.h"
+#include "lib/jxl/test_utils.h"
 #include "lib/jxl/testing.h"
 
 namespace jxl {
@@ -51,7 +51,7 @@ struct Symbol {
 
 // Reading from output gives the same values.
 TEST(BitReaderTest, TestRoundTrip) {
-  ThreadPoolInternal pool(8);
+  test::ThreadPoolForTests pool(8);
   EXPECT_TRUE(RunOnPool(
       &pool, 0, 1000, ThreadPool::NoInit,
       [](const uint32_t task, size_t /* thread */) {
@@ -85,7 +85,7 @@ TEST(BitReaderTest, TestRoundTrip) {
 
 // SkipBits is the same as reading that many bits.
 TEST(BitReaderTest, TestSkip) {
-  ThreadPoolInternal pool(8);
+  test::ThreadPoolForTests pool(8);
   EXPECT_TRUE(RunOnPool(
       &pool, 0, 96, ThreadPool::NoInit,
       [](const uint32_t task, size_t /* thread */) {

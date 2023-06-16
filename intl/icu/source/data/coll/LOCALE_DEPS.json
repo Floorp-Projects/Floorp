@@ -3,7 +3,7 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 
 {
-    "cldrVersion": "42",
+    "cldrVersion": "43",
     "aliases": {
         "ars": "ar_SA",
         "in": "id",

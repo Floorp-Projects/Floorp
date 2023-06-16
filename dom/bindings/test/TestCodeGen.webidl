@@ -593,19 +593,20 @@ interface TestInterface {
                                     TestStringEnumArguments arg23,
                                     TestObjectArguments arg24,
                                     TestOptionalArguments arg25,
-                                    TestUndefinedConstruction arg26,
-                                    TestIntegerConstruction arg27,
-                                    TestBooleanConstruction arg28,
-                                    TestFloatConstruction arg29,
-                                    TestStringConstruction arg30,
-                                    TestEnumConstruction arg31,
-                                    TestInterfaceConstruction arg32,
-                                    TestExternalInterfaceConstruction arg33,
-                                    TestCallbackInterfaceConstruction arg34,
-                                    TestCallbackConstruction arg35,
-                                    TestObjectConstruction arg36,
-                                    TestTypedArrayConstruction arg37,
-                                    TestSequenceConstruction arg38);
+                                    TestUnionArguments arg26,
+                                    TestUndefinedConstruction arg27,
+                                    TestIntegerConstruction arg28,
+                                    TestBooleanConstruction arg29,
+                                    TestFloatConstruction arg30,
+                                    TestStringConstruction arg31,
+                                    TestEnumConstruction arg32,
+                                    TestInterfaceConstruction arg33,
+                                    TestExternalInterfaceConstruction arg34,
+                                    TestCallbackInterfaceConstruction arg35,
+                                    TestCallbackConstruction arg36,
+                                    TestObjectConstruction arg37,
+                                    TestTypedArrayConstruction arg38,
+                                    TestSequenceConstruction arg39);
 
   // Any types
   undefined passAny(any arg);

@@ -36,7 +36,7 @@ import { RESTRequest } from "resource://services-common/rest.sys.mjs";
  *   The bearer token to access the profile server
  * @constructor
  */
-export var FxAccountsProfileClient = function(options) {
+export var FxAccountsProfileClient = function (options) {
   if (!options || !options.serverURL) {
     throw new Error("Missing 'serverURL' configuration option");
   }
@@ -236,7 +236,7 @@ FxAccountsProfileClient.prototype = {
  *          Error message
  * @constructor
  */
-export var FxAccountsProfileClientError = function(details) {
+export var FxAccountsProfileClientError = function (details) {
   details = details || {};
 
   this.name = "FxAccountsProfileClientError";
@@ -252,7 +252,7 @@ export var FxAccountsProfileClientError = function(details) {
  * @returns {{name: *, code: *, errno: *, error: *, message: *}}
  * @private
  */
-FxAccountsProfileClientError.prototype._toStringFields = function() {
+FxAccountsProfileClientError.prototype._toStringFields = function () {
   return {
     name: this.name,
     code: this.code,
@@ -267,6 +267,6 @@ FxAccountsProfileClientError.prototype._toStringFields = function() {
  *
  * @returns {String}
  */
-FxAccountsProfileClientError.prototype.toString = function() {
+FxAccountsProfileClientError.prototype.toString = function () {
   return this.name + "(" + JSON.stringify(this._toStringFields()) + ")";
 };

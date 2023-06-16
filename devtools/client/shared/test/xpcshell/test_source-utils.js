@@ -25,7 +25,7 @@ const CONTENT_URLS = [
 ];
 
 // Test `sourceUtils.parseURL`
-add_task(async function() {
+add_task(async function () {
   let parsed = sourceUtils.parseURL("https://foo.com:8888/boo/bar.js?q=query");
   equal(parsed.fileName, "bar.js", "parseURL parsed valid fileName");
   equal(parsed.host, "foo.com:8888", "parseURL parsed valid host");
@@ -57,7 +57,7 @@ add_task(async function() {
 });
 
 // Test `sourceUtils.isContentScheme`.
-add_task(async function() {
+add_task(async function () {
   for (const url of CHROME_URLS) {
     ok(
       !sourceUtils.isContentScheme(url),
@@ -73,7 +73,7 @@ add_task(async function() {
 });
 
 // Test `sourceUtils.isChromeScheme`.
-add_task(async function() {
+add_task(async function () {
   for (const url of CHROME_URLS) {
     ok(
       sourceUtils.isChromeScheme(url),
@@ -89,7 +89,7 @@ add_task(async function() {
 });
 
 // Test `sourceUtils.isWASM`.
-add_task(async function() {
+add_task(async function () {
   ok(
     sourceUtils.isWASM("wasm-function[66240] (?:13870536)"),
     "wasm function correctly identified"
@@ -101,7 +101,7 @@ add_task(async function() {
 });
 
 // Test `sourceUtils.isDataScheme`.
-add_task(async function() {
+add_task(async function () {
   const dataURI = "data:text/html;charset=utf-8,<!DOCTYPE html></html>";
   ok(
     sourceUtils.isDataScheme(dataURI),
@@ -123,7 +123,7 @@ add_task(async function() {
 });
 
 // Test `sourceUtils.getSourceNames`.
-add_task(async function() {
+add_task(async function () {
   testAbbreviation(
     "http://example.com/foo/bar/baz/boo.js",
     "boo.js",
@@ -133,7 +133,7 @@ add_task(async function() {
 });
 
 // Test `sourceUtils.getSourceNames`.
-add_task(async function() {
+add_task(async function () {
   // Check length
   const longMalformedURL = `example.com${new Array(100)
     .fill("/a")
@@ -224,7 +224,7 @@ add_task(async function() {
 });
 
 // Test for source mapped file name
-add_task(async function() {
+add_task(async function () {
   const { getSourceMappedFile } = sourceUtils;
   const source = "baz.js";
   const output = getSourceMappedFile(source);

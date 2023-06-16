@@ -31,9 +31,8 @@ export class PromptCollection {
           "confirmRepostPrompt"
         );
       }
-      resendLabel = this.stringBundles.app.GetStringFromName(
-        "resendButton.label"
-      );
+      resendLabel =
+        this.stringBundles.app.GetStringFromName("resendButton.label");
     } catch (exception) {
       console.error("Failed to get strings from appstrings.properties");
       return false;
@@ -180,7 +179,7 @@ for (const [bundleName, bundleUrl] of Object.entries(BUNDLES)) {
   XPCOMUtils.defineLazyGetter(
     PromptCollection.prototype.stringBundles,
     bundleName,
-    function() {
+    function () {
       let bundle = Services.strings.createBundle(bundleUrl);
       if (!bundle) {
         throw new Error("String bundle for dom not present!");

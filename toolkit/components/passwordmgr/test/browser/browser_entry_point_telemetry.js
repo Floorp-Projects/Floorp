@@ -1,6 +1,6 @@
 const TEST_ORIGIN = "https://example.com";
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["signon.rememberSignons.visibilityToggle", true]],
   });
@@ -66,7 +66,7 @@ add_task(async function pageInfo_entryPoint() {
       gBrowser,
       url: TEST_ORIGIN,
     },
-    async function(browser) {
+    async function (browser) {
       info("pageInfo_entryPoint, opening pageinfo");
       let pageInfo = BrowserPageInfo(TEST_ORIGIN, "securityTab", {});
       await BrowserTestUtils.waitForEvent(pageInfo, "page-info-init");

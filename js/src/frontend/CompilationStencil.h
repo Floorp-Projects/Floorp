@@ -1029,6 +1029,8 @@ struct ExtensibleCompilationStencil;
 //
 // The dependent XDR buffer or ExtensibleCompilationStencil must be kept
 // alive manually.
+//
+// See SMDOC in Stencil.h for more info.
 struct CompilationStencil {
   friend struct ExtensibleCompilationStencil;
 
@@ -1174,10 +1176,9 @@ struct CompilationStencil {
   [[nodiscard]] bool serializeStencils(JSContext* cx, CompilationInput& input,
                                        JS::TranscodeBuffer& buf,
                                        bool* succeededOut = nullptr) const;
-  [[nodiscard]] bool deserializeStencils(FrontendContext* fc,
-                                         CompilationInput& input,
-                                         const JS::TranscodeRange& range,
-                                         bool* succeededOut = nullptr);
+  [[nodiscard]] bool deserializeStencils(
+      FrontendContext* fc, const JS::ReadOnlyCompileOptions& options,
+      const JS::TranscodeRange& range, bool* succeededOut = nullptr);
 
   // To avoid any misuses, make sure this is neither copyable or assignable.
   CompilationStencil(const CompilationStencil&) = delete;
@@ -1239,6 +1240,8 @@ struct CompilationStencil {
 // All not-owning pointer fields point the internal LifoAlloc.
 //
 // See CompilationStencil for each field's description.
+//
+// Also see SMDOC in Stencil.h for more info.
 struct ExtensibleCompilationStencil {
   bool canLazilyParse = false;
 

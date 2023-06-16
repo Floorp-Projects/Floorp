@@ -46,7 +46,7 @@ function runPromiseRetvalTests(finishFunc) {
     .then(testThrownException.bind(undefined, window))
     .then(testThrownException.bind(undefined, frames[0]))
     .then(finishFunc)
-    .catch(function(e) {
+    .catch(function (e) {
       ok(
         false,
         `Exception thrown: ${e}@${location.pathname}:${e.lineNumber}:${e.columnNumber}`

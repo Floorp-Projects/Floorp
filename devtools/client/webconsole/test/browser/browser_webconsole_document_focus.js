@@ -7,13 +7,13 @@
 const TEST_URI =
   "data:text/html;charset=utf-8,<!DOCTYPE html>Test content focus after closing console";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Focus after console is opened");
   ok(isInputFocused(hud), "input node is focused after console is opened");
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.onFocus = new Promise(resolve => {
       content.addEventListener("focus", resolve, { once: true });
     });
@@ -25,7 +25,7 @@ add_task(async function() {
   const isFocused = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [],
-    async function() {
+    async function () {
       await content.onFocus;
       return Services.focus.focusedWindow == content;
     }
@@ -39,7 +39,7 @@ add_task(async function testSeparateWindowToolbox() {
   info("Focus after console is opened");
   ok(isInputFocused(hud), "input node is focused after console is opened");
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.onFocus = new Promise(resolve => {
       content.addEventListener("focus", resolve, { once: true });
     });
@@ -51,7 +51,7 @@ add_task(async function testSeparateWindowToolbox() {
   const isFocused = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [],
-    async function() {
+    async function () {
       await content.onFocus;
       return Services.focus.focusedWindow == content;
     }
@@ -83,7 +83,7 @@ add_task(async function testSeparateWindowToolboxInactiveTab() {
   const onFirstTabFocus = SpecialPowers.spawn(
     firstTab.linkedBrowser,
     [],
-    async function() {
+    async function () {
       await content.onFocus;
       return "focused";
     }

@@ -28,7 +28,7 @@ add_task(async function test_fullscreen_display_none() {
         </body>
       </html>`,
     },
-    async function(browser) {
+    async function (browser) {
       let warning = document.getElementById("fullscreen-warning");
       let warningShownPromise = BrowserTestUtils.waitForAttribute(
         "onscreen",

@@ -30,7 +30,7 @@ async function test_hint_completion_on_error(httpCode) {
       url: requestUrl,
       waitForLoad: true,
     },
-    async function() {}
+    async function () {}
   );
 
   let gotRequestCount = await fetch(

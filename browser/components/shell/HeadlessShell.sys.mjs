@@ -111,9 +111,8 @@ async function takeScreenshot(
 
     await loadContentWindow(browser, url);
 
-    let actor = browser.browsingContext.currentWindowGlobal.getActor(
-      "Screenshot"
-    );
+    let actor =
+      browser.browsingContext.currentWindowGlobal.getActor("Screenshot");
     let dimensions = await actor.getDimensions();
 
     let canvas = doc.createElementNS(
@@ -133,11 +132,12 @@ async function takeScreenshot(
     canvas.height = height;
     let rect = new DOMRect(0, 0, width, height);
 
-    let snapshot = await browser.browsingContext.currentWindowGlobal.drawSnapshot(
-      rect,
-      1,
-      "rgb(255, 255, 255)"
-    );
+    let snapshot =
+      await browser.browsingContext.currentWindowGlobal.drawSnapshot(
+        rect,
+        1,
+        "rgb(255, 255, 255)"
+      );
     context.drawImage(snapshot, 0, 0);
 
     snapshot.close();

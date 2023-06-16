@@ -2997,47 +2997,6 @@ void ParseSearchTermsFromQuery(const RefPtr<nsNavHistoryQuery>& aQuery,
 
 }  // namespace
 
-nsresult nsNavHistory::UpdateFrecency(int64_t aPlaceId) {
-  nsCOMPtr<mozIStorageAsyncStatement> updateFrecencyStmt =
-      mDB->GetAsyncStatement(
-          "UPDATE moz_places "
-          "SET frecency = CALCULATE_FRECENCY(:page_id) "
-          "WHERE id = :page_id");
-  NS_ENSURE_STATE(updateFrecencyStmt);
-  NS_DispatchToMainThread(new NotifyRankingChanged());
-  nsresult rv = updateFrecencyStmt->BindInt64ByName("page_id"_ns, aPlaceId);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<mozIStorageAsyncStatement> updateHiddenStmt = mDB->GetAsyncStatement(
-      "UPDATE moz_places "
-      "SET hidden = 0 "
-      "WHERE id = :page_id AND frecency <> 0");
-  NS_ENSURE_STATE(updateHiddenStmt);
-  rv = updateHiddenStmt->BindInt64ByName("page_id"_ns, aPlaceId);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<mozIStorageConnection> conn = mDB->MainConn();
-  if (!conn) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
-      ToRefPtr(std::move(updateFrecencyStmt)),
-      ToRefPtr(std::move(updateHiddenStmt)),
-  };
-  nsCOMPtr<mozIStoragePendingStatement> ps;
-  rv = conn->ExecuteAsync(stmts, nullptr, getter_AddRefs(ps));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Trigger frecency updates for all affected origins.
-  nsCOMPtr<mozIStorageAsyncStatement> updateOriginFrecenciesStmt =
-      mDB->GetAsyncStatement("DELETE FROM moz_updateoriginsupdate_temp");
-  NS_ENSURE_STATE(updateOriginFrecenciesStmt);
-  rv = updateOriginFrecenciesStmt->ExecuteAsync(nullptr, getter_AddRefs(ps));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
 const mozilla::intl::Collator* nsNavHistory::GetCollator() {
   if (mCollator) {
     return mCollator.get();

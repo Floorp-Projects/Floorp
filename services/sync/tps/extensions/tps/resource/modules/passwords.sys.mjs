@@ -89,7 +89,7 @@ Password.prototype = {
    *
    * @return the new login guid
    */
-  Create() {
+  async Create() {
     let login = new nsLoginInfo(
       this.props.hostname,
       this.props.submitURL,
@@ -99,7 +99,7 @@ Password.prototype = {
       this.props.usernameField,
       this.props.passwordField
     );
-    Services.logins.addLogin(login);
+    await Services.logins.addLoginAsync(login);
     login.QueryInterface(Ci.nsILoginMetaInfo);
     return login.guid;
   },

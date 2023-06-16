@@ -36,18 +36,18 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
 });
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+  AddonManagerPrivate: "resource://gre/modules/AddonManager.sys.mjs",
+  AddonRepository: "resource://gre/modules/addons/AddonRepository.sys.mjs",
+  AddonSettings: "resource://gre/modules/addons/AddonSettings.sys.mjs",
+  Blocklist: "resource://gre/modules/Blocklist.sys.mjs",
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
+  ExtensionData: "resource://gre/modules/Extension.sys.mjs",
+  ExtensionUtils: "resource://gre/modules/ExtensionUtils.sys.mjs",
   PermissionsUtils: "resource://gre/modules/PermissionsUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AddonManager: "resource://gre/modules/AddonManager.jsm",
-  AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
-  AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
-  AddonSettings: "resource://gre/modules/addons/AddonSettings.jsm",
-  ExtensionData: "resource://gre/modules/Extension.jsm",
-  ExtensionUtils: "resource://gre/modules/ExtensionUtils.jsm",
-  Blocklist: "resource://gre/modules/Blocklist.jsm",
   UpdateChecker: "resource://gre/modules/addons/XPIInstall.jsm",
   XPIInstall: "resource://gre/modules/addons/XPIInstall.jsm",
   XPIInternal: "resource://gre/modules/addons/XPIProvider.jsm",
@@ -306,7 +306,7 @@ function copyProperties(aObject, aProperties, aTarget) {
   if (!aTarget) {
     aTarget = {};
   }
-  aProperties.forEach(function(aProp) {
+  aProperties.forEach(function (aProp) {
     if (aProp in aObject) {
       aTarget[aProp] = aObject[aProp];
     }
@@ -1121,6 +1121,10 @@ AddonWrapper = class {
     return [];
   }
 
+  // NOTE: this boolean getter doesn't return true for all recommendation
+  // states at the moment. For the states actually supported on the autograph
+  // side see:
+  // https://github.com/mozilla-services/autograph/blob/8a34847a/autograph.yaml#L1456-L1460
   get isRecommended() {
     return this.recommendationStates.includes("recommended");
   }
@@ -1530,8 +1534,8 @@ function defineAddonWrapperProperty(name, getter) {
   "siteOrigin",
   "isCorrectlySigned",
   "isBuiltinColorwayTheme",
-].forEach(function(aProp) {
-  defineAddonWrapperProperty(aProp, function() {
+].forEach(function (aProp) {
+  defineAddonWrapperProperty(aProp, function () {
     let addon = addonFor(this);
     return aProp in addon ? addon[aProp] : undefined;
   });
@@ -1546,8 +1550,8 @@ function defineAddonWrapperProperty(name, getter) {
   "reviewCount",
   "reviewURL",
   "weeklyDownloads",
-].forEach(function(aProp) {
-  defineAddonWrapperProperty(aProp, function() {
+].forEach(function (aProp) {
+  defineAddonWrapperProperty(aProp, function () {
     let addon = addonFor(this);
     if (addon._repositoryAddon) {
       return addon._repositoryAddon[aProp];
@@ -1557,15 +1561,15 @@ function defineAddonWrapperProperty(name, getter) {
   });
 });
 
-["installDate", "updateDate"].forEach(function(aProp) {
-  defineAddonWrapperProperty(aProp, function() {
+["installDate", "updateDate"].forEach(function (aProp) {
+  defineAddonWrapperProperty(aProp, function () {
     let addon = addonFor(this);
     // installDate is always set, updateDate is sometimes missing.
     return new Date(addon[aProp] ?? addon.installDate);
   });
 });
 
-defineAddonWrapperProperty("signedDate", function() {
+defineAddonWrapperProperty("signedDate", function () {
   let addon = addonFor(this);
   let { signedDate } = addon;
   if (signedDate != null) {
@@ -1574,8 +1578,8 @@ defineAddonWrapperProperty("signedDate", function() {
   return null;
 });
 
-["sourceURI", "releaseNotesURI"].forEach(function(aProp) {
-  defineAddonWrapperProperty(aProp, function() {
+["sourceURI", "releaseNotesURI"].forEach(function (aProp) {
+  defineAddonWrapperProperty(aProp, function () {
     let addon = addonFor(this);
 
     // Temporary Installed Addons do not have a "sourceURI",
@@ -1604,8 +1608,8 @@ const updatedAddonFluentIds = new Map([
   ["extension-default-theme-name", "extension-default-theme-name-auto"],
 ]);
 
-["name", "description", "creator", "homepageURL"].forEach(function(aProp) {
-  defineAddonWrapperProperty(aProp, function() {
+["name", "description", "creator", "homepageURL"].forEach(function (aProp) {
+  defineAddonWrapperProperty(aProp, function () {
     let addon = addonFor(this);
 
     let formattedMessage;
@@ -1635,9 +1639,8 @@ const updatedAddonFluentIds = new Map([
         // {colorwayGroupName}-colorway@mozilla.org). L10n for colorway group
         // names is optional and falls back on the unlocalized name from the
         // theme's manifest. The intensity part, if present, must be localized.
-        let localizedColorwayGroupName = BuiltInThemesHelpers.getLocalizedColorwayGroupName(
-          addon.id
-        );
+        let localizedColorwayGroupName =
+          BuiltInThemesHelpers.getLocalizedColorwayGroupName(addon.id);
         let [colorwayGroupName, intensity] = addonIdPrefix.split("-", 2);
         if (intensity == colorwaySuffix) {
           // This theme doesn't have an intensity.
@@ -1689,8 +1692,8 @@ const updatedAddonFluentIds = new Map([
   });
 });
 
-["developers", "translators", "contributors"].forEach(function(aProp) {
-  defineAddonWrapperProperty(aProp, function() {
+["developers", "translators", "contributors"].forEach(function (aProp) {
+  defineAddonWrapperProperty(aProp, function () {
     let addon = addonFor(this);
 
     let [results, usedRepository] = chooseValue(
@@ -1700,7 +1703,7 @@ const updatedAddonFluentIds = new Map([
     );
 
     if (results && !usedRepository) {
-      results = results.map(function(aResult) {
+      results = results.map(function (aResult) {
         return new lazy.AddonManagerPrivate.AddonAuthor(aResult);
       });
     }

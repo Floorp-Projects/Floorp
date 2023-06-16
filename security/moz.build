@@ -173,7 +173,6 @@ GYP_DIRS["nss"].no_unified = True
 # This maps action names from gyp files to
 # Python scripts that can be used in moz.build GENERATED_FILES.
 GYP_DIRS["nss"].action_overrides = {
-    "generate_certdata_c": "generate_certdata.py",
     "generate_mapfile": "generate_mapfile.py",
 }
 

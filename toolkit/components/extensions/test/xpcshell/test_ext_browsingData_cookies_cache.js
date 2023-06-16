@@ -3,8 +3,8 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 "use strict";
 
-const { SiteDataTestUtils } = ChromeUtils.import(
-  "resource://testing-common/SiteDataTestUtils.jsm"
+const { SiteDataTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/SiteDataTestUtils.sys.mjs"
 );
 
 const COOKIE = {
@@ -135,7 +135,7 @@ add_task(async function testCookies() {
     2000
   );
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.prefs.clearUserPref("privacy.reduceTimerPrecision");
     Services.prefs.clearUserPref(
       "privacy.resistFingerprinting.reduceTimerPrecision.microseconds"

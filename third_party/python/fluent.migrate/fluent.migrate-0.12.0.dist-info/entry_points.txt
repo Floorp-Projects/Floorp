@@ -1,0 +1,3 @@
+[console_scripts]
+migrate-l10n = fluent.migrate.tool:cli
+validate-l10n-recipe = fluent.migrate.validator:cli

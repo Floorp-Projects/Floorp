@@ -16,7 +16,7 @@ add_task(
       let onResume = null;
       let packet = null;
 
-      threadFront.once("paused", function(pkt) {
+      threadFront.once("paused", function (pkt) {
         packet = pkt;
         onResume = threadFront.resume();
       });
@@ -35,7 +35,7 @@ add_task(
       Assert.equal(packet.why.exception, "42");
       packet = null;
 
-      threadFront.once("paused", function(pkt) {
+      threadFront.once("paused", function (pkt) {
         packet = pkt;
         onResume = threadFront.resume();
       });

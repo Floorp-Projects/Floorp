@@ -10,8 +10,8 @@
  */
 var tabPreviews = {
   get aspectRatio() {
-    let { PageThumbUtils } = ChromeUtils.import(
-      "resource://gre/modules/PageThumbUtils.jsm"
+    let { PageThumbUtils } = ChromeUtils.importESModule(
+      "resource://gre/modules/PageThumbUtils.sys.mjs"
     );
     let [width, height] = PageThumbUtils.getThumbnailSize(window);
     delete this.aspectRatio;
@@ -223,7 +223,7 @@ var ctrlTab = {
   },
   get keys() {
     var keys = {};
-    ["close", "find", "selectAll"].forEach(function(key) {
+    ["close", "find", "selectAll"].forEach(function (key) {
       keys[key] = document
         .getElementById("key_" + key)
         .getAttribute("key")
@@ -326,11 +326,11 @@ var ctrlTab = {
       this.updatePreview(this.previews[i], this.tabList[i]);
     }
 
-    var showAllLabel = gNavigatorBundle.getString("ctrlTab.listAllTabs.label");
-    this.showAllButton.label = PluralForm.get(
-      this.tabCount,
-      showAllLabel
-    ).replace("#1", this.tabCount);
+    document.l10n.setAttributes(
+      this.showAllButton,
+      "tabbrowser-ctrl-tab-list-all-tabs",
+      { tabCount: this.tabCount }
+    );
     this.showAllButton.hidden = !gTabsPanel.canOpen;
   },
 
@@ -546,7 +546,7 @@ var ctrlTab = {
     // to be under the mouse pointer initially won't be selected unintentionally.
     this._trackMouseOver = false;
     setTimeout(
-      function(self) {
+      function (self) {
         if (self.isOpen) {
           self._trackMouseOver = true;
         }
@@ -636,7 +636,7 @@ var ctrlTab = {
     // If the current tab is removed, another tab can steal our focus.
     if (aTab.selected && this.panel.state == "open") {
       setTimeout(
-        function(selected) {
+        function (selected) {
           selected.focus();
         },
         0,
@@ -720,9 +720,8 @@ var ctrlTab = {
         break;
       case "popupshowing":
         if (event.target.id == "menu_viewPopup") {
-          document.getElementById(
-            "menu_showAllTabs"
-          ).hidden = !gTabsPanel.canOpen;
+          document.getElementById("menu_showAllTabs").hidden =
+            !gTabsPanel.canOpen;
         }
         break;
       case "mouseover":

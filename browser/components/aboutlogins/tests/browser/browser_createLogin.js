@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-add_setup(async function() {
+add_setup(async function () {
   let aboutLoginsTab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
     url: "about:logins",
@@ -515,9 +515,8 @@ add_task(async function test_create_duplicate_login() {
       !confirmationDialog.hidden,
       "the discard-changes dialog should be visible"
     );
-    let discardChangesButton = confirmationDialog.shadowRoot.querySelector(
-      ".confirm-button"
-    );
+    let discardChangesButton =
+      confirmationDialog.shadowRoot.querySelector(".confirm-button");
     discardChangesButton.click();
 
     await ContentTaskUtils.waitForCondition(

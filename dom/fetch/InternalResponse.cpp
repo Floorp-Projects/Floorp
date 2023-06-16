@@ -207,16 +207,30 @@ ParentToChildInternalResponse InternalResponse::ToParentToChildInternalResponse(
   GetUnfilteredBody(getter_AddRefs(body), &bodySize);
 
   if (body) {
-    result.body() = Some(ToParentToChildStream(
-        WrapNotNull(body), bodySize, aBackgroundParent, mSerializeAsLazy));
-    result.bodySize() = bodySize;
+    ParentToChildStream bodyStream = ToParentToChildStream(
+        WrapNotNull(body), bodySize, aBackgroundParent, mSerializeAsLazy);
+    // The body stream can fail to serialize as an IPCStream. In the case, the
+    // IPCStream's type would be T__None. Don't set up IPCInternalResponse's
+    // body with the failed IPCStream.
+    if (mSerializeAsLazy || bodyStream.get_IPCStream().stream().type() !=
+                                mozilla::ipc::InputStreamParams::T__None) {
+      result.body() = Some(bodyStream);
+      result.bodySize() = bodySize;
+    }
   }
 
   nsCOMPtr<nsIInputStream> alternativeBody = TakeAlternativeBody();
   if (alternativeBody) {
-    result.alternativeBody() = Some(
+    ParentToChildStream alterBodyStream =
         ToParentToChildStream(WrapNotNull(alternativeBody), UNKNOWN_BODY_SIZE,
-                              aBackgroundParent, mSerializeAsLazy));
+                              aBackgroundParent, mSerializeAsLazy);
+    // The body stream can fail to serialize as an IPCStream. In the case, the
+    // IPCStream's type would be T__None. Don't set up IPCInternalResponse's
+    // body with the failed IPCStream.
+    if (mSerializeAsLazy || alterBodyStream.get_IPCStream().stream().type() !=
+                                mozilla::ipc::InputStreamParams::T__None) {
+      result.alternativeBody() = Some(alterBodyStream);
+    }
   }
 
   return result;

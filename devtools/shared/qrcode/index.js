@@ -45,7 +45,7 @@ Object.defineProperty(this, "decoder", {
  *        Quality level: L, M, Q, H
  * @return integer
  */
-exports.findMinimumVersion = function(message, quality) {
+exports.findMinimumVersion = function (message, quality) {
   const msgLength = message.length;
   const qualityLevel = QRErrorCorrectLevel[quality];
   for (let version = 1; version <= 10; version++) {
@@ -75,7 +75,7 @@ exports.findMinimumVersion = function(message, quality) {
  *   * height: image height
  *   * width:  image width
  */
-exports.encodeToDataURI = function(message, quality, version) {
+exports.encodeToDataURI = function (message, quality, version) {
   quality = quality || "H";
   version = version || exports.findMinimumVersion(message, quality);
   const encoder = new Encoder(version, quality);
@@ -92,7 +92,7 @@ exports.encodeToDataURI = function(message, quality, version) {
  *         The promise will be resolved with a string, which is the data inside
  *         the QR code.
  */
-exports.decodeFromURI = function(URI) {
+exports.decodeFromURI = function (URI) {
   if (!decoder) {
     return Promise.reject();
   }
@@ -108,7 +108,7 @@ exports.decodeFromURI = function(URI) {
  * @return string
  *         The data inside the QR code
  */
-exports.decodeFromCanvas = function(canvas) {
+exports.decodeFromCanvas = function (canvas) {
   if (!decoder) {
     throw new Error("Decoder not available");
   }

@@ -6,7 +6,7 @@
 
 // Calling CustomizableUI.registerArea twice with no
 // properties should not throw an exception.
-add_task(function() {
+add_task(function () {
   try {
     CustomizableUI.registerArea("area-996364", {});
     CustomizableUI.registerArea("area-996364", {});
@@ -17,7 +17,7 @@ add_task(function() {
   CustomizableUI.unregisterArea("area-996364", true);
 });
 
-add_task(function() {
+add_task(function () {
   let exceptionThrown = false;
   try {
     CustomizableUI.registerArea("area-996364-2", {
@@ -35,7 +35,7 @@ add_task(function() {
   // No need to unregister the area because registration fails.
 });
 
-add_task(function() {
+add_task(function () {
   let exceptionThrown;
   try {
     CustomizableUI.registerArea("area-996364-3", {
@@ -56,7 +56,7 @@ add_task(function() {
   CustomizableUI.unregisterArea("area-996364-3", true);
 });
 
-add_task(function() {
+add_task(function () {
   let exceptionThrown;
   try {
     CustomizableUI.registerArea("area-996364-4", {
@@ -77,7 +77,7 @@ add_task(function() {
   CustomizableUI.unregisterArea("area-996364-4", true);
 });
 
-add_task(function() {
+add_task(function () {
   let exceptionThrown;
   try {
     CustomizableUI.registerArea("area-996899-1", {
@@ -101,7 +101,7 @@ add_task(function() {
   CustomizableUI.unregisterArea("area-996899-1", true);
 });
 
-add_task(function() {
+add_task(function () {
   let exceptionThrown;
   try {
     CustomizableUI.registerArea("area-996899-2", {
@@ -125,7 +125,7 @@ add_task(function() {
   CustomizableUI.unregisterArea("area-996899-2", true);
 });
 
-add_task(function() {
+add_task(function () {
   let exceptionThrown;
   try {
     CustomizableUI.registerArea("area-996899-4", { overflowable: true });

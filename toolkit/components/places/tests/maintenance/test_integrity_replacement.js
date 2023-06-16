@@ -3,7 +3,7 @@
 
 // Tests that integrity check will replace a corrupt database.
 
-add_task(async function() {
+add_task(async function () {
   await setupPlacesDatabase("corruptPayload.sqlite");
   await Assert.rejects(
     PlacesDBUtils.checkIntegrity(),

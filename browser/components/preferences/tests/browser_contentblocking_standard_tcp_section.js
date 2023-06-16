@@ -127,12 +127,12 @@ async function testTCPSection({ dFPIEnabled }) {
   Services.prefs.setStringPref(CAT_PREF, "standard");
 }
 
-add_setup(async function() {
+add_setup(async function () {
   // Register cleanup function to restore default cookie behavior.
   const defaultPrefs = Services.prefs.getDefaultBranch("");
   const previousDefaultCB = defaultPrefs.getIntPref(COOKIE_BEHAVIOR_PREF);
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     defaultPrefs.setIntPref(COOKIE_BEHAVIOR_PREF, previousDefaultCB);
   });
 });

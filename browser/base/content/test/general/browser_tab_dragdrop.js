@@ -30,16 +30,16 @@ function checkBrowserIds(expected) {
   }
 }
 
-var getClicks = function(tab) {
-  return SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+var getClicks = function (tab) {
+  return SpecialPowers.spawn(tab.linkedBrowser, [], function () {
     return content.wrappedJSObject.clicks;
   });
 };
 
-var clickTest = async function(tab) {
+var clickTest = async function (tab) {
   let clicks = await getClicks(tab);
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function () {
     let target = content.document.body;
     let rect = target.getBoundingClientRect();
     let left = (rect.left + rect.right) / 2;
@@ -112,7 +112,7 @@ async function checkObjectValue(browser) {
   }
 }
 
-add_task(async function() {
+add_task(async function () {
   // create a few tabs
   let tabs = [
     gBrowser.tabs[0],

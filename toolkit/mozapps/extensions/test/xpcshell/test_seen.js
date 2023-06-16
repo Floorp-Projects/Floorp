@@ -2,12 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-// Make Cu.isInAutomation true.
-Services.prefs.setBoolPref(
-  "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer",
-  true
-);
-
 const ID = "addon@tests.mozilla.org";
 
 let profileDir = gProfD.clone();
@@ -23,7 +17,7 @@ createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 const XPIS = {};
 
 // Installing an add-on through the API should mark it as seen
-add_task(async function() {
+add_task(async function () {
   await promiseStartupManager();
 
   for (let n of [1, 2]) {
@@ -69,7 +63,7 @@ add_task(async function() {
 });
 
 // Sideloading an add-on in the systemwide location should mark it as unseen
-add_task(async function() {
+add_task(async function () {
   let savedStartupScanScopes = Services.prefs.getIntPref(
     "extensions.startupScanScopes"
   );
@@ -120,7 +114,7 @@ add_task(async function() {
 
 // Sideloading an add-on in the profile should mark it as unseen and it should
 // remain unseen after an update is sideloaded.
-add_task(async function() {
+add_task(async function () {
   let path = await manuallyInstall(XPIS[1], profileDir, ID);
   // Make sure the startup code will detect sideloaded updates
   setExtensionModifiedTime(path, Date.now() - 10000);
@@ -158,7 +152,7 @@ add_task(async function() {
 
 // Sideloading an add-on in the profile should mark it as unseen and it should
 // remain unseen after a regular update.
-add_task(async function() {
+add_task(async function () {
   let path = await manuallyInstall(XPIS[1], profileDir, ID);
   // Make sure the startup code will detect sideloaded updates
   setExtensionModifiedTime(path, Date.now() - 10000);
@@ -200,7 +194,7 @@ add_task(async function() {
 
 // After a sideloaded addon has been seen, sideloading an update should
 // not reset it to unseen.
-add_task(async function() {
+add_task(async function () {
   let path = await manuallyInstall(XPIS[1], profileDir, ID);
   // Make sure the startup code will detect sideloaded updates
   setExtensionModifiedTime(path, Date.now() - 10000);
@@ -240,7 +234,7 @@ add_task(async function() {
 
 // After a sideloaded addon has been seen, manually applying an update should
 // not reset it to unseen.
-add_task(async function() {
+add_task(async function () {
   let path = await manuallyInstall(XPIS[1], profileDir, ID);
   // Make sure the startup code will detect sideloaded updates
   setExtensionModifiedTime(path, Date.now() - 10000);

@@ -4,7 +4,7 @@
 "use strict";
 
 function changeToOption(helper, index) {
-  return helper.waitForSettingsEvent(async function() {
+  return helper.waitForSettingsEvent(async function () {
     let select = helper.get("duplex-select");
     select.focus();
     select.scrollIntoView({ block: "center" });

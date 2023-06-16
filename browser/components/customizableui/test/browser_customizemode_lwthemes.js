@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   await startCustomizing();
   // Find the footer buttons to test.
   let manageLink = document.querySelector("#customization-lwtheme-link");

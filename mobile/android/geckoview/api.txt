@@ -640,6 +640,10 @@ package org.mozilla.geckoview {
     method @UiThread public void surfaceDestroyed();
   }
 
+  public static interface GeckoDisplay.NewSurfaceProvider {
+    method @UiThread public void requestNewSurface();
+  }
+
   public static final class GeckoDisplay.ScreenshotBuilder {
     method @AnyThread @NonNull public GeckoDisplay.ScreenshotBuilder aspectPreservingSize(int);
     method @AnyThread @NonNull public GeckoDisplay.ScreenshotBuilder bitmap(@Nullable Bitmap);
@@ -656,6 +660,7 @@ package org.mozilla.geckoview {
   public static class GeckoDisplay.SurfaceInfo.Builder {
     ctor public Builder(@NonNull Surface);
     method @NonNull @UiThread public GeckoDisplay.SurfaceInfo build();
+    method @NonNull @UiThread public GeckoDisplay.SurfaceInfo.Builder newSurfaceProvider(@Nullable GeckoDisplay.NewSurfaceProvider);
     method @NonNull @UiThread public GeckoDisplay.SurfaceInfo.Builder offset(int, int);
     method @NonNull @UiThread public GeckoDisplay.SurfaceInfo.Builder size(int, int);
     method @NonNull @UiThread public GeckoDisplay.SurfaceInfo.Builder surfaceControl(@Nullable SurfaceControl);
@@ -983,6 +988,7 @@ package org.mozilla.geckoview {
     method @UiThread default public void onFirstContentfulPaint(@NonNull GeckoSession);
     method @UiThread default public void onFocusRequest(@NonNull GeckoSession);
     method @UiThread default public void onFullScreen(@NonNull GeckoSession, boolean);
+    method @AnyThread @Nullable default public JSONObject onGetNimbusFeature(@NonNull GeckoSession, @NonNull String);
     method @UiThread default public void onKill(@NonNull GeckoSession);
     method @UiThread default public void onMetaViewportFitChange(@NonNull GeckoSession, @NonNull String);
     method @UiThread default public void onPaintStatusReset(@NonNull GeckoSession);
@@ -995,6 +1001,7 @@ package org.mozilla.geckoview {
   }
 
   public static class GeckoSession.ContentDelegate.ContextElement {
+    ctor protected ContextElement(@Nullable String, @Nullable String, @Nullable String, @Nullable String, @NonNull String, @Nullable String, @Nullable String);
     ctor protected ContextElement(@Nullable String, @Nullable String, @Nullable String, @Nullable String, @NonNull String, @Nullable String);
     field public static final int TYPE_AUDIO = 3;
     field public static final int TYPE_IMAGE = 1;
@@ -1004,6 +1011,7 @@ package org.mozilla.geckoview {
     field @Nullable public final String baseUri;
     field @Nullable public final String linkUri;
     field @Nullable public final String srcUri;
+    field @Nullable public final String textContent;
     field @Nullable public final String title;
     field public final int type;
   }
@@ -1031,6 +1039,8 @@ package org.mozilla.geckoview {
 
   public static class GeckoSession.GeckoPrintException extends Exception {
     ctor protected GeckoPrintException();
+    field public static final int ERROR_NO_ACTIVITY_CONTEXT = -5;
+    field public static final int ERROR_NO_ACTIVITY_CONTEXT_DELEGATE = -4;
     field public static final int ERROR_PRINT_SETTINGS_SERVICE_NOT_AVAILABLE = -1;
     field public static final int ERROR_UNABLE_TO_CREATE_PRINT_SETTINGS = -2;
     field public static final int ERROR_UNABLE_TO_RETRIEVE_CANONICAL_BROWSING_CONTEXT = -3;
@@ -1656,7 +1666,7 @@ package org.mozilla.geckoview {
     method @AnyThread public static synchronized void setExternalContext(long);
   }
 
-  @UiThread public class GeckoView extends FrameLayout {
+  @UiThread public class GeckoView extends FrameLayout implements GeckoDisplay.NewSurfaceProvider {
     ctor public GeckoView(Context);
     ctor public GeckoView(Context, AttributeSet);
     method @NonNull @UiThread public GeckoResult<Bitmap> capturePixels();
@@ -1942,8 +1952,8 @@ package org.mozilla.geckoview {
   }
 
   @AnyThread public final class SessionPdfFileSaver {
-    method @Nullable public static WebResponse createResponse(@NonNull byte[], @NonNull String, @NonNull String, boolean, boolean);
-    method @NonNull public GeckoResult<GeckoSession.PdfSaveResult> save();
+    method @Nullable public static GeckoResult<WebResponse> createResponse(@NonNull GeckoSession, @NonNull String, @NonNull String, @NonNull String, boolean, boolean);
+    method @NonNull public GeckoResult<WebResponse> save();
   }
 
   public final class SessionTextInput {

@@ -1,4 +1,4 @@
-add_task(async function() {
+add_task(async function () {
   let loadedPromise = BrowserTestUtils.browserLoaded(
     gBrowser.selectedBrowser,
     true
@@ -8,7 +8,7 @@ add_task(async function() {
   BrowserTestUtils.loadURIString(gBrowser, htmlContent);
   await loadedPromise;
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function(arg) {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function (arg) {
     let frame = content.frames[0];
     let sel = frame.getSelection();
     let range = frame.document.createRange();

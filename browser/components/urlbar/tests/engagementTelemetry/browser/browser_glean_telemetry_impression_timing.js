@@ -5,7 +5,7 @@
 
 // Test for the taking timing for the impression telemetry.
 
-add_setup(async function() {
+add_setup(async function () {
   await setup();
 });
 

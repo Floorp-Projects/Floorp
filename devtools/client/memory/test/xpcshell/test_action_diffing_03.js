@@ -26,7 +26,7 @@ const {
 // trigger assertion failures.
 EXPECTED_DTU_ASSERT_FAILURE_COUNT = 2;
 
-add_task(async function() {
+add_task(async function () {
   const front = new StubbedMemoryFront();
   const heapWorker = new HeapAnalysesClient();
   await front.attach();

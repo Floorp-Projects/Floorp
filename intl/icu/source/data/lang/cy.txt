@@ -209,6 +209,7 @@ cy{
         hax{"Haida Deheuol"}
         he{"Hebraeg"}
         hi{"Hindi"}
+        hi_Latn{"Hindi (Lladin)"}
         hil{"Hiligaynon"}
         hit{"Hetheg"}
         hmn{"Hmongeg"}

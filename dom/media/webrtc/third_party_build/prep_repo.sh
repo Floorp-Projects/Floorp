@@ -26,7 +26,7 @@ set -eEuo pipefail
 rm -f $STATE_DIR/resume_state
 
 # If there is no cache file for the branch-head lookups done in
-# update_example_config.sh, go ahead and copy our small pre-warmed
+# update_default_config.sh, go ahead and copy our small pre-warmed
 # version.
 if [ ! -f $STATE_DIR/milestone.cache ]; then
   cp $SCRIPT_DIR/pre-warmed-milestone.cache $STATE_DIR/milestone.cache
@@ -74,8 +74,13 @@ sed -i.bak -e "/^Subject: / s/^Subject: /Subject: (cherry-pick-branch-heads\/$MO
 git am $TMP_DIR/*.patch # applies to branch mozpatches
 rm $TMP_DIR/*.patch $TMP_DIR/*.patch.bak
 
+# we don't use restore_patch_stack.py here because it would overwrite the patches
+# from the previous release branch we just added in the above step.
+
 # grab all the moz patches and apply
 git am $CURRENT_DIR/third_party/libwebrtc/moz-patch-stack/*.patch
+
+cd $CURRENT_DIR
 
 # cp all the no-op files to STATE_DIR
 NO_OP_FILE_COUNT=`ls third_party/libwebrtc/moz-patch-stack \
@@ -84,7 +89,5 @@ if [ "x$NO_OP_FILE_COUNT" != "x0" ]; then
   cp $CURRENT_DIR/third_party/libwebrtc/moz-patch-stack/*.no-op-cherry-pick-msg \
      $STATE_DIR
 fi
-
-cd $CURRENT_DIR
 
 bash $SCRIPT_DIR/verify_vendoring.sh || true

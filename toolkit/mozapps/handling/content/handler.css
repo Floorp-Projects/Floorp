@@ -40,7 +40,7 @@ label, description {
 /* Parent selector to win on specificity against common.css */
 #rememberContainer > .toggle-container-with-text {
   align-items: baseline;
-  color: var(--in-content-deemphasized-text);
+  color: var(--text-color-deemphasized);
 }
 
 .toggle-container-with-text > html|input[type="checkbox"] {

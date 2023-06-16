@@ -8,12 +8,8 @@
 
 var { ExtensionError, promiseObserved } = ExtensionUtils;
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "AddonManagerPrivate",
-  "resource://gre/modules/AddonManager.jsm"
-);
 ChromeUtils.defineESModuleGetters(this, {
+  AddonManagerPrivate: "resource://gre/modules/AddonManager.sys.mjs",
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
 });
 
@@ -39,7 +35,7 @@ const getRecentlyClosed = (maxResults, extension) => {
     if (!extension.canAccessWindow(window)) {
       continue;
     }
-    let closedTabData = SessionStore.getClosedTabData(window);
+    let closedTabData = SessionStore.getClosedTabDataForWindow(window);
     for (let tab of closedTabData) {
       recentlyClosed.push({
         lastModified: tab.closedAt,
@@ -141,7 +137,7 @@ this.sessions = class extends ExtensionAPIPersistent {
         async forgetClosedTab(windowId, sessionId) {
           await SessionStore.promiseInitialized;
           let window = windowTracker.getWindow(windowId, context);
-          let closedTabData = SessionStore.getClosedTabData(window);
+          let closedTabData = SessionStore.getClosedTabDataForWindow(window);
 
           let closedTabIndex = closedTabData.findIndex(closedTab => {
             return closedTab.closedId === parseInt(sessionId, 10);
@@ -190,7 +186,8 @@ this.sessions = class extends ExtensionAPIPersistent {
             // so we must find the tab in which case we can just use its closedId.
             let recentlyClosedTabs = [];
             for (let window of windowTracker.browserWindows()) {
-              let closedTabData = SessionStore.getClosedTabData(window);
+              let closedTabData =
+                SessionStore.getClosedTabDataForWindow(window);
               for (let tab of closedTabData) {
                 recentlyClosedTabs.push(tab);
               }

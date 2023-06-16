@@ -49,7 +49,7 @@ class SerializationOptions(Dict[str, Any]):
             max_dom_depth: Optional[int] = None,
             max_object_depth: Optional[int] = None,
             include_shadow_tree: Optional[str] = None
-        ):
+    ):
         if max_dom_depth is not None:
             self["maxDomDepth"] = max_dom_depth
         if max_object_depth is not None:

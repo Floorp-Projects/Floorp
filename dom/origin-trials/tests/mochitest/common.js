@@ -12,7 +12,7 @@ if (
   globalThis.SharedWorkerGlobalScope &&
   globalThis instanceof globalThis.SharedWorkerGlobalScope
 ) {
-  globalThis.addEventListener("connect", function(e) {
+  globalThis.addEventListener("connect", function (e) {
     const port = e.ports[0];
     workerReply(port);
   });
@@ -41,7 +41,7 @@ if (
 }
 
 function assertTestTrialActive(shouldBeActive) {
-  add_task(async function() {
+  add_task(async function () {
     info("Main thread test: " + document.URL);
     is(
       !!navigator.testTrialGatedAttribute,
@@ -65,7 +65,7 @@ function assertTestTrialActive(shouldBeActive) {
       return new Promise(resolve => {
         target.addEventListener(
           "message",
-          function(e) {
+          function (e) {
             is(
               e.data.testTrialInterfaceExposed,
               shouldBeActive,

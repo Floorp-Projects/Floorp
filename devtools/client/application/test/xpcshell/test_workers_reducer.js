@@ -18,7 +18,7 @@ const {
   WorkersState,
 } = require("resource://devtools/client/application/src/reducers/workers-state.js");
 
-add_task(async function() {
+add_task(async function () {
   info("Test workers reducer: UPDATE_CAN_DEBUG_WORKERS action");
 
   function testUpdateCanDebugWorkers(flagValue) {
@@ -36,7 +36,7 @@ add_task(async function() {
   testUpdateCanDebugWorkers(true);
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test workers reducer: UPDATE_WORKERS action");
   const state = WorkersState();
 
@@ -98,7 +98,7 @@ add_task(async function() {
   deepEqual(newState.list, expectedData, "workers contains the expected list");
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test workers reducer: START_WORKER action");
   const state = WorkersState();
   const action = { type: START_WORKER };
@@ -106,7 +106,7 @@ add_task(async function() {
   deepEqual(state, newState, "workers state stays the same");
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test workers reducer: UNREGISTER_WORKER action");
   const state = WorkersState();
   const action = { type: UNREGISTER_WORKER };

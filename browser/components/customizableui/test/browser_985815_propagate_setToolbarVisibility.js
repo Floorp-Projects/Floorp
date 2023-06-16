@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   ok(CustomizableUI.inDefaultState, "Should start in default state.");
   this.otherWin = await openAndLoadWindow({ private: true }, true);
   await startCustomizing(this.otherWin);
@@ -19,9 +19,8 @@ add_task(async function() {
     setToolbarVisibility(document.getElementById("PersonalToolbar"), true);
   }
 
-  let otherPersonalToolbar = this.otherWin.document.getElementById(
-    "PersonalToolbar"
-  );
+  let otherPersonalToolbar =
+    this.otherWin.document.getElementById("PersonalToolbar");
   let personalToolbar = document.getElementById("PersonalToolbar");
   ok(
     !otherPersonalToolbar.collapsed,

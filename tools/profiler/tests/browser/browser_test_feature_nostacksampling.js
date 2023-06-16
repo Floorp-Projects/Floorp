@@ -26,10 +26,8 @@ add_task(async function test_profile_feature_nostacksampling() {
 
     // Check that we can get no stacks when the feature is turned on.
     {
-      const {
-        parentThread,
-        contentThread,
-      } = await stopProfilerNowAndGetThreads(contentPid);
+      const { parentThread, contentThread } =
+        await stopProfilerNowAndGetThreads(contentPid);
       Assert.equal(
         parentThread.samples.data.length,
         0,
@@ -54,10 +52,8 @@ add_task(async function test_profile_feature_nostacksampling() {
 
     // Check that stack samples were recorded.
     {
-      const {
-        parentThread,
-        contentThread,
-      } = await waitSamplingAndStopProfilerAndGetThreads(contentPid);
+      const { parentThread, contentThread } =
+        await waitSamplingAndStopProfilerAndGetThreads(contentPid);
       Assert.greater(
         parentThread.samples.data.length,
         0,

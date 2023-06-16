@@ -13,7 +13,7 @@ const breakdown = {
   other: { by: "count", count: true, bytes: true },
 };
 
-add_task(async function() {
+add_task(async function () {
   const client = new HeapAnalysesClient();
 
   let threw = false;

@@ -21,7 +21,7 @@ add_task(async function remove_subframe_in_cross_site_frame() {
           frame.src = "load_forever.sjs";
           content.document.body.appendChild(frame);
 
-          frame.addEventListener("load", function() {
+          frame.addEventListener("load", function () {
             ok(false, "load should not finish before the frame is removed");
           });
         }

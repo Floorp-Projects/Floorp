@@ -9,7 +9,7 @@
 // browser_performanceAPI.js. The main difference is this test case verifies
 // performance API have more precsion when it's in cross-origin-isolated and
 // cross-origin-isolated doesn't affect RFP.
-let runWorkerTest = async function(data) {
+let runWorkerTest = async function (data) {
   let expectedPrecision = data.precision;
   await new Promise(resolve => {
     // eslint beleives that isrounded is available in this scope, but if you
@@ -30,7 +30,7 @@ let runWorkerTest = async function(data) {
     const expectedResourceEntriesLength = 2;
     const expectedTestAndMarkEntriesLength = 1;
 
-    worker.onmessage = function(e) {
+    worker.onmessage = function (e) {
       if (e.data.type == "result") {
         if (e.data.resultOf == "performance.timeOrigin") {
           ok(

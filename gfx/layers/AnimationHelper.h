@@ -87,9 +87,9 @@ class AnimationHelper {
    * that it reduces each property group to a single output value:
    *
    * [
-   *   { rotate, RawServoAnimationValue },
-   *   { scale, RawServoAnimationValue },
-   *   { transform, RawServoAnimationValue },
+   *   { rotate, StyleAnimationValue },
+   *   { scale, StyleAnimationValue },
+   *   { transform, StyleAnimationValue },
    * ]
    *
    * For transform animations, the caller (SampleAnimations) will combine the
@@ -100,7 +100,7 @@ class AnimationHelper {
       const MutexAutoLock& aProofOfMapLock, TimeStamp aPreviousFrameTime,
       TimeStamp aCurrentFrameTime, const AnimatedValue* aPreviousValue,
       nsTArray<PropertyAnimationGroup>& aPropertyAnimationGroups,
-      nsTArray<RefPtr<RawServoAnimationValue>>& aAnimationValues);
+      nsTArray<RefPtr<StyleAnimationValue>>& aAnimationValues);
 
   /**
    * Extract organized animation data by property into an array of
@@ -161,7 +161,7 @@ class AnimationHelper {
    * (e.g. transform, translate etc.).
    */
   static gfx::Matrix4x4 ServoAnimationValueToMatrix4x4(
-      const nsTArray<RefPtr<RawServoAnimationValue>>& aValue,
+      const nsTArray<RefPtr<StyleAnimationValue>>& aValue,
       const TransformData& aTransformData, gfx::Path* aCachedMotionPath);
 
   /**

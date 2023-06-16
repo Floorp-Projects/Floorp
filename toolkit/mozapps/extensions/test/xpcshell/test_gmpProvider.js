@@ -9,12 +9,8 @@ const { GMPTestUtils } = ChromeUtils.importESModule(
 const { GMPInstallManager } = ChromeUtils.importESModule(
   "resource://gre/modules/GMPInstallManager.sys.mjs"
 );
-const {
-  GMPPrefs,
-  GMP_PLUGIN_IDS,
-  OPEN_H264_ID,
-  WIDEVINE_ID,
-} = ChromeUtils.importESModule("resource://gre/modules/GMPUtils.sys.mjs");
+const { GMPPrefs, GMP_PLUGIN_IDS, OPEN_H264_ID, WIDEVINE_ID } =
+  ChromeUtils.importESModule("resource://gre/modules/GMPUtils.sys.mjs");
 const { UpdateUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/UpdateUtils.sys.mjs"
 );

@@ -1,4 +1,4 @@
-add_task(async function() {
+add_task(async function () {
   const doc = new DOMParser().parseFromString("<p>dadada</p>", "text/html");
 
   let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].getService(

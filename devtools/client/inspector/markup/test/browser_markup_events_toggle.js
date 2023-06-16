@@ -10,7 +10,7 @@ const TEST_URL = URL_ROOT_SSL + "doc_markup_events_toggle.html";
 
 loadHelperScript("helper_events_test_runner.js");
 
-add_task(async function() {
+add_task(async function () {
   const { inspector, toolbox } = await openInspectorForURL(TEST_URL);
   const { resourceCommand } = toolbox.commands;
   await inspector.markup.expandAll();
@@ -21,17 +21,16 @@ add_task(async function() {
   );
   // There's a "mouseup" event listener that is `console.info` (so we can check "native" events).
   // In order to know if it was called, we listen for the next console.info resource.
-  let {
-    onResource: onConsoleInfoMessage,
-  } = await resourceCommand.waitForNextResource(
-    resourceCommand.TYPES.CONSOLE_MESSAGE,
-    {
-      ignoreExistingResources: true,
-      predicate(resource) {
-        return resource.message.level == "info";
-      },
-    }
-  );
+  let { onResource: onConsoleInfoMessage } =
+    await resourceCommand.waitForNextResource(
+      resourceCommand.TYPES.CONSOLE_MESSAGE,
+      {
+        ignoreExistingResources: true,
+        predicate(resource) {
+          return resource.message.level == "info";
+        },
+      }
+    );
   await safeSynthesizeMouseEventAtCenterInContentPage("#target");
 
   let data = await getTargetElementHandledEventData();
@@ -63,11 +62,8 @@ add_task(async function() {
     "The event badge does not have the has-disabled-events class"
   );
 
-  const [
-    clickHeader,
-    mousedownHeader,
-    mouseupHeader,
-  ] = getHeadersInEventTooltip(tooltip);
+  const [clickHeader, mousedownHeader, mouseupHeader] =
+    getHeadersInEventTooltip(tooltip);
 
   info("Uncheck the mousedown event checkbox");
   await toggleEventListenerCheckbox(tooltip, mousedownHeader);
@@ -130,17 +126,16 @@ add_task(async function() {
     "mouseup checkbox was unchecked"
   );
 
-  ({
-    onResource: onConsoleInfoMessage,
-  } = await resourceCommand.waitForNextResource(
-    resourceCommand.TYPES.CONSOLE_MESSAGE,
-    {
-      ignoreExistingResources: true,
-      predicate(resource) {
-        return resource.message.level == "info";
-      },
-    }
-  ));
+  ({ onResource: onConsoleInfoMessage } =
+    await resourceCommand.waitForNextResource(
+      resourceCommand.TYPES.CONSOLE_MESSAGE,
+      {
+        ignoreExistingResources: true,
+        predicate(resource) {
+          return resource.message.level == "info";
+        },
+      }
+    ));
   const onTimeout = wait(500).then(() => "TIMEOUT");
   await safeSynthesizeMouseEventAtCenterInContentPage("#target");
   const raceResult = await Promise.race([onConsoleInfoMessage, onTimeout]);
@@ -197,17 +192,16 @@ add_task(async function() {
     "mouseup is checked again"
   );
 
-  ({
-    onResource: onConsoleInfoMessage,
-  } = await resourceCommand.waitForNextResource(
-    resourceCommand.TYPES.CONSOLE_MESSAGE,
-    {
-      ignoreExistingResources: true,
-      predicate(resource) {
-        return resource.message.level == "info";
-      },
-    }
-  ));
+  ({ onResource: onConsoleInfoMessage } =
+    await resourceCommand.waitForNextResource(
+      resourceCommand.TYPES.CONSOLE_MESSAGE,
+      {
+        ignoreExistingResources: true,
+        predicate(resource) {
+          return resource.message.level == "info";
+        },
+      }
+    ));
   await safeSynthesizeMouseEventAtCenterInContentPage("#target");
   await onConsoleInfoMessage;
   ok(true, "The mouseup event was re-enabled");
@@ -291,7 +285,7 @@ async function toggleEventListenerCheckbox(tooltip, headerEl) {
  *          Note that "mouseup" isn't handled here.
  */
 function getTargetElementHandledEventData() {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     // In doc_markup_events_toggle.html , we count the events handled by the target in
     // a stringified object in dataset.handledEvents.
     return JSON.parse(

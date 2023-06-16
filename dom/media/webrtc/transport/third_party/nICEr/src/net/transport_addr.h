@@ -44,7 +44,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Not good because INT8 are typedefed to different values in
 // <winsock2.h> and <r_types.h>.
 // {
-
+typedef unsigned char UBLAH_IGNORE_ME_PLEASE;
+typedef signed char BLAH_IGNORE_ME_PLEASE;
 #define UINT8 UBLAH_IGNORE_ME_PLEASE
 #define INT8 BLAH_IGNORE_ME_PLEASE
 #include <winsock2.h>

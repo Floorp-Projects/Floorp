@@ -1,8 +1,8 @@
 /* eslint max-len: ["error", 80] */
 "use strict";
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+const { AddonTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
 );
 
 AddonTestUtils.initMochitest(this);
@@ -52,7 +52,7 @@ async function checkIfDiscoverVisible(expectVisible) {
   await close_manager(managerWindow);
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["extensions.getAddons.discovery.api_url", TEST_API_URL],

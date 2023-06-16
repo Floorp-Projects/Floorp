@@ -17,7 +17,7 @@ Services.scriptloader.loadSubScript(
 // error, bug 1742890.
 SimpleTest.ignoreAllUncaughtExceptions(true);
 
-add_setup(async function() {
+add_setup(async function () {
   await pushPrefs(
     ["full-screen-api.transition-duration.enter", "0 0"],
     ["full-screen-api.transition-duration.leave", "0 0"],
@@ -35,9 +35,9 @@ add_task(async () => {
       gBrowser,
       url,
     },
-    async function(browser) {
+    async function (browser) {
       info("open new window");
-      SpecialPowers.spawn(browser, [url, name], function(u, n) {
+      SpecialPowers.spawn(browser, [url, name], function (u, n) {
         content.document.notifyUserGestureActivation();
         content.window.open(u, n, "width=100,height=100");
       });
@@ -48,7 +48,7 @@ add_task(async () => {
       await SimpleTest.promiseFocus(window);
 
       info("open an existing window and request fullscreen");
-      await SpecialPowers.spawn(browser, [url, name], function(u, n) {
+      await SpecialPowers.spawn(browser, [url, name], function (u, n) {
         content.document.notifyUserGestureActivation();
         content.window.open(u, n);
         content.document.body.requestFullscreen();

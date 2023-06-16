@@ -88,41 +88,45 @@ static const char* CodecStr(const GUID& aGUID) {
   }
 }
 
-static UINT32 EnumEncoders(const GUID& aSubtype, IMFActivate**& aActivates) {
+static UINT32 EnumEncoders(const GUID& aSubtype, IMFActivate**& aActivates,
+                           const bool aUseHW = true) {
   UINT32 num = 0;
   MFT_REGISTER_TYPE_INFO inType = {.guidMajorType = MFMediaType_Video,
                                    .guidSubtype = MFVideoFormat_NV12};
   MFT_REGISTER_TYPE_INFO outType = {.guidMajorType = MFMediaType_Video,
                                     .guidSubtype = aSubtype};
   HRESULT hr = S_OK;
-  if (IsWin32kLockedDown()) {
-    // Some HW encoders use DXGI API and crash when locked down.
-    // TODO: move HW encoding out of content process (bug 1754531).
-    MFT_ENC_SLOGD("Don't use HW encoder when win32k locked down.");
-  } else {
+  if (aUseHW) {
+    if (IsWin32kLockedDown()) {
+      // Some HW encoders use DXGI API and crash when locked down.
+      // TODO: move HW encoding out of content process (bug 1754531).
+      MFT_ENC_SLOGD("Don't use HW encoder when win32k locked down.");
+      return 0;
+    }
+
     hr = wmf::MFTEnumEx(MFT_CATEGORY_VIDEO_ENCODER,
                         MFT_ENUM_FLAG_HARDWARE | MFT_ENUM_FLAG_SORTANDFILTER,
                         &inType, &outType, &aActivates, &num);
-  }
-  if (FAILED(hr)) {
-    MFT_ENC_SLOGE("enumerate HW encoder for %s: error=%s", CodecStr(aSubtype),
-                  ErrorStr(hr));
-    return 0;
-  }
-
-  if (num == 0 && StaticPrefs::media_webrtc_platformencoder_sw_mft()) {
-    // Try software MFTs.
-    hr = wmf::MFTEnumEx(MFT_CATEGORY_VIDEO_ENCODER,
-                        MFT_ENUM_FLAG_SYNCMFT | MFT_ENUM_FLAG_ASYNCMFT |
-                            MFT_ENUM_FLAG_SORTANDFILTER,
-                        &inType, &outType, &aActivates, &num);
     if (FAILED(hr)) {
-      MFT_ENC_SLOGE("enumerate SW encoder for %s: error=%s", CodecStr(aSubtype),
+      MFT_ENC_SLOGE("enumerate HW encoder for %s: error=%s", CodecStr(aSubtype),
                     ErrorStr(hr));
       return 0;
     }
+    if (num > 0) {
+      return num;
+    }
   }
 
+  // Try software MFTs.
+  hr = wmf::MFTEnumEx(MFT_CATEGORY_VIDEO_ENCODER,
+                      MFT_ENUM_FLAG_SYNCMFT | MFT_ENUM_FLAG_ASYNCMFT |
+                          MFT_ENUM_FLAG_SORTANDFILTER,
+                      &inType, &outType, &aActivates, &num);
+  if (FAILED(hr)) {
+    MFT_ENC_SLOGE("enumerate SW encoder for %s: error=%s", CodecStr(aSubtype),
+                  ErrorStr(hr));
+    return 0;
+  }
   if (num == 0) {
     MFT_ENC_SLOGD("cannot find encoder for %s", CodecStr(aSubtype));
   }
@@ -203,13 +207,8 @@ nsTArray<MFTEncoder::Info>& MFTEncoder::Infos() {
 }
 
 already_AddRefed<IMFActivate> MFTEncoder::CreateFactory(const GUID& aSubtype) {
-  Maybe<Info> info = GetInfo(aSubtype);
-  if (!info) {
-    return nullptr;
-  }
-
   IMFActivate** activates = nullptr;
-  UINT32 num = EnumEncoders(aSubtype, activates);
+  UINT32 num = EnumEncoders(aSubtype, activates, !mHardwareNotAllowed);
   if (num == 0) {
     return nullptr;
   }

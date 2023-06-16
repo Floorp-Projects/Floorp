@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: ["tabs"],

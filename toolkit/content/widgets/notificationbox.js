@@ -267,13 +267,15 @@
     }
 
     _removeNotificationElement(aChild) {
+      let hadFocus = aChild.matches(":focus-within");
+
       if (aChild.eventCallback) {
         aChild.eventCallback("removed");
       }
       aChild.remove();
 
-      // make sure focus doesn't get lost (workaround for bug 570835)
-      if (!Services.focus.getFocusedElementForWindow(window, false, {})) {
+      // Make sure focus doesn't get lost (workaround for bug 570835).
+      if (hadFocus) {
         Services.focus.moveFocus(
           window,
           this.stack,
@@ -753,24 +755,23 @@
       setButtons(buttons) {
         this._buttons = buttons;
         for (let button of buttons) {
-          let link = button.link;
+          let link = button.link || button.supportPage;
           let localeId = button["l10n-id"];
-          if (!link && button.supportPage) {
-            link =
-              Services.urlFormatter.formatURLPref("app.support.baseURL") +
-              button.supportPage;
-            if (!button.label && !localeId) {
-              localeId = "notification-learnmore-default-label";
-            }
-          }
 
           let buttonElem;
-          if (link) {
+          if (button.hasOwnProperty("supportPage")) {
+            window.ensureCustomElements("moz-support-link");
+            buttonElem = document.createElement("a", {
+              is: "moz-support-link",
+            });
+            buttonElem.classList.add("notification-link");
+            buttonElem.setAttribute("support-page", button.supportPage);
+          } else if (link) {
             buttonElem = document.createXULElement("label", {
               is: "text-link",
             });
             buttonElem.setAttribute("href", link);
-            buttonElem.classList.add("notification-link");
+            buttonElem.classList.add("notification-link", "text-link");
           } else {
             buttonElem = document.createXULElement(
               "button",

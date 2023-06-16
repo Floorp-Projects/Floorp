@@ -8,7 +8,7 @@
  * for RTL builds because logic for RTL builds did not take into consideration
  * hidden tabs like the Firefox View tab. This test makes sure that this behavior does not reoccur.
  */
-add_task(async function() {
+add_task(async function () {
   info("Setting browser to RTL locale");
   await SpecialPowers.pushPrefEnv({ set: [["intl.l10n.pseudo", "bidi"]] });
 

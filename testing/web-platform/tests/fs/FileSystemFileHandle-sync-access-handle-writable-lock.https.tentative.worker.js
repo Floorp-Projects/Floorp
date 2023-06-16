@@ -1,6 +1,7 @@
 importScripts('/resources/testharness.js');
 importScripts('resources/test-helpers.js');
 importScripts('resources/sandboxed-fs-test-helpers.js');
+importScripts('resources/test-helpers.js');
 
 'use strict';
 

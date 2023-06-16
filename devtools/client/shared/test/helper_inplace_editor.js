@@ -26,7 +26,7 @@ const { colorUtils } = require("resource://devtools/shared/css/color.js");
  * @param {String} textContent
  *        (optional) String that will be used as the text content of the span.
  */
-const createInplaceEditorAndClick = async function(options, doc, textContent) {
+const createInplaceEditorAndClick = async function (options, doc, textContent) {
   const span = (options.element = createSpan(doc));
   if (textContent) {
     span.textContent = textContent;

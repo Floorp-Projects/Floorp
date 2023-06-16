@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<style>
+<!-- Create a Devanagari face with extra scaling, to make the difference from the
+     Limbu font more visually obvious if the fallback gets used. -->
+@font-face {
+  font-family: devanagari;
+  src: local("Devanagari Sangam MN"), local("Devanagari MN");
+  size-adjust: 150%;
+}
+p {
+  font-family: Noto Sans Limbu, devanagari, sans-serif;
+  font-size: 32px;
+  line-height: 3;
+}
+</style>
+
+<div>The double-danda character should NOT fall back to the oversized Devanagari font</div>
+<!-- DEVANAGARI DOUBLE DANDA is in the Devanagari block, but is also used in Limbu
+     and does not require script-specific shaping, so should not be masked from the
+     Noto Sans Limbu character map despite the lack of 'deva' shaping support. -->
+<p>ᤛᤧᤘᤠᤖᤥ᥄ ᤀᤠᤍᤠᤱᤒᤠ ᤜᤠᤍᤠᤱᤔᤠᤛᤣ ᤗᤠᤶᤎᤡᤱᤃᤥ ᤗᤠᤶᤎᤰ ᤕᤠᤰᤌᤢᤱᤐᤠᤴ ᤖᤧ ᤘᤡᤁᤡᤐᤡᤍᤡᤕᤠ ᤀᤥ ॥</p>

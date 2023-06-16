@@ -9,7 +9,7 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
   "https://example.com"
 );
 
-add_task(async function() {
+add_task(async function () {
   const testUserContextId = 2;
   const testCases = [
     {

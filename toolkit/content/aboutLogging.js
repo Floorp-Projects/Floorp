@@ -16,11 +16,11 @@ const gDirServ = Cc["@mozilla.org/file/directory_service;1"].getService(
 const { ProfilerMenuButton } = ChromeUtils.import(
   "resource://devtools/client/performance-new/popup/menu-button.jsm.js"
 );
-const { CustomizableUI } = ChromeUtils.import(
-  "resource:///modules/CustomizableUI.jsm"
+const { CustomizableUI } = ChromeUtils.importESModule(
+  "resource:///modules/CustomizableUI.sys.mjs"
 );
 
-XPCOMUtils.defineLazyGetter(this, "ProfilerPopupBackground", function() {
+XPCOMUtils.defineLazyGetter(this, "ProfilerPopupBackground", function () {
   return ChromeUtils.import(
     "resource://devtools/client/performance-new/shared/background.jsm.js"
   );
@@ -64,7 +64,7 @@ const gLoggingPresets = {
   },
   "media-playback": {
     modules:
-      "HTMLMediaElement:4,HTMLMediaElementEvents:4,cubeb:5,PlatformDecoderModule:5,AudioSink:5,AudioSinkWrapper:5,MediaDecoderStateMachine:4,MediaDecoder:4",
+      "HTMLMediaElement:4,HTMLMediaElementEvents:4,cubeb:5,PlatformDecoderModule:5,AudioSink:5,AudioSinkWrapper:5,MediaDecoderStateMachine:4,MediaDecoder:4,MediaFormatReader:5",
     l10nIds: {
       label: "about-logging-preset-media-playback-label",
       description: "about-logging-preset-media-playback-description",
@@ -96,6 +96,9 @@ const gLoggingSettings = {
   // If non-null, the threads that will be recorded by the Firefox Profiler. If
   // null, the threads from the profiler presets are going to be used.
   profilerThreads: null,
+  // If non-null, stack traces will be recorded for MOZ_LOG profiler markers.
+  // This is set only when coming from the URL, not when the user changes the UI.
+  profilerStacks: null,
 };
 
 // When the profiler has been started, this holds the promise the
@@ -103,14 +106,17 @@ const gLoggingSettings = {
 // effectively started.
 let gProfilerPromise = null;
 
+// Used in tests
 function presets() {
   return gLoggingPresets;
 }
 
+// Used in tests
 function settings() {
   return gLoggingSettings;
 }
 
+// Used in tests
 function profilerPromise() {
   return gProfilerPromise;
 }
@@ -136,7 +142,7 @@ function populatePresets() {
     gLoggingSettings.loggingPreset = preset;
   }
 
-  dropdown.onchange = function() {
+  dropdown.onchange = function () {
     // When switching to custom, leave the existing module list, to allow
     // editing.
     if (dropdown.value != "custom") {
@@ -157,19 +163,24 @@ function populatePresets() {
 
 function updateLoggingOutputType(profilerOutputType) {
   gLoggingSettings.loggingOutputType = profilerOutputType;
+  Services.prefs.setCharPref("logging.config.output_type", profilerOutputType);
+  $(`input[type=radio][value=${profilerOutputType}]`).checked = true;
 
-  if (gLoggingSettings.loggingOutputType === "profiler") {
-    // hide options related to file output for clarity
-    $("#log-file-configuration").hidden = true;
-  } else if (gLoggingSettings.loggingOutputType === "file") {
-    $("#log-file-configuration").hidden = false;
-    $("#no-log-file").hidden = !!$("#current-log-file").innerText.length;
+  switch (profilerOutputType) {
+    case "profiler":
+      if (!gLoggingSettings.profilerStacks) {
+        // If this value is set from the URL, do not allow to change it.
+        $("#with-profiler-stacks-checkbox").disabled = false;
+      }
+      // hide options related to file output for clarity
+      $("#log-file-configuration").hidden = true;
+      break;
+    case "file":
+      $("#with-profiler-stacks-checkbox").disabled = true;
+      $("#log-file-configuration").hidden = false;
+      $("#no-log-file").hidden = !!$("#current-log-file").innerText.length;
+      break;
   }
-
-  Services.prefs.setCharPref(
-    "logging.config.output_type",
-    gLoggingSettings.loggingOutputType
-  );
 }
 
 function displayErrorMessage(error) {
@@ -207,7 +218,8 @@ function parseURL() {
     outputTypeOverriden = null,
     loggingPresetOverriden = null,
     threadsOverriden = null,
-    profilerPresetOverriden = null;
+    profilerPresetOverriden = null,
+    profilerStacksOverriden = null;
   try {
     for (let [k, v] of options) {
       switch (k) {
@@ -238,6 +250,9 @@ function parseURL() {
             throw new Error(["about-logging-unknown-profiler-preset", k, v]);
           }
           profilerPresetOverriden = v;
+          break;
+        case "profilerstacks":
+          profilerStacksOverriden = true;
           break;
         default:
           throw new ParseError("about-logging-unknown-option", k, v);
@@ -286,12 +301,18 @@ function parseURL() {
     updateLogModules();
   }
   if (outputTypeOverriden) {
-    $$("input[type=radio]").forEach(e => {
-      e.setAttribute("disabled", true);
-      someElementsDisabled = true;
-      e.checked = e.value == outputTypeOverriden;
-    });
+    $$("input[type=radio]").forEach(e => (e.disabled = true));
+    someElementsDisabled = true;
+    updateLoggingOutputType(outputTypeOverriden);
   }
+  if (profilerStacksOverriden) {
+    const checkbox = $("#with-profiler-stacks-checkbox");
+    checkbox.disabled = true;
+    someElementsDisabled = true;
+    Services.prefs.setBoolPref("logging.config.profilerstacks", true);
+    gLoggingSettings.profilerStacks = true;
+  }
+
   if (loggingPresetOverriden) {
     gLoggingSettings.loggingPreset = loggingPresetOverriden;
   }
@@ -335,16 +356,26 @@ function init() {
     };
   });
 
-  try {
-    let loggingOutputType = Services.prefs.getCharPref(
-      "logging.config.output_type"
+  $("#with-profiler-stacks-checkbox").addEventListener("change", e => {
+    Services.prefs.setBoolPref(
+      "logging.config.profilerstacks",
+      e.target.checked
     );
-    if (loggingOutputType.length) {
-      updateLoggingOutputType(loggingOutputType);
-    }
-  } catch {
-    updateLoggingOutputType("profiler");
+    updateLogModules();
+  });
+
+  let loggingOutputType = Services.prefs.getCharPref(
+    "logging.config.output_type",
+    "profiler"
+  );
+  if (loggingOutputType.length) {
+    updateLoggingOutputType(loggingOutputType);
   }
+
+  $("#with-profiler-stacks-checkbox").checked = Services.prefs.getBoolPref(
+    "logging.config.profilerstacks",
+    false
+  );
 
   try {
     let loggingPreset = Services.prefs.getCharPref("logging.config.preset");
@@ -426,7 +457,7 @@ function updateLogFile(file) {
 
     if (file.exists()) {
       openLogFileButton.disabled = false;
-      openLogFileButton.onclick = function(e) {
+      openLogFileButton.onclick = function (e) {
         file.reveal();
       };
     }
@@ -452,22 +483,6 @@ function updateLogModules() {
     setLogModulesButton.disabled = true;
   } else {
     let activeLogModules = [];
-    try {
-      if (Services.prefs.getBoolPref("logging.config.add_timestamp")) {
-        activeLogModules.push("timestamp");
-      }
-    } catch (e) {}
-    try {
-      if (Services.prefs.getBoolPref("logging.config.sync")) {
-        activeLogModules.push("sync");
-      }
-    } catch (e) {}
-    try {
-      if (Services.prefs.getBoolPref("logging.config.profilerstacks")) {
-        activeLogModules.push("profilerstacks");
-      }
-    } catch (e) {}
-
     let children = Services.prefs.getBranch("logging.").getChildList("");
 
     for (let pref of children) {
@@ -480,6 +495,19 @@ function updateLogModules() {
         activeLogModules.push(`${pref}:${value}`);
       } catch (e) {
         console.error(e);
+      }
+    }
+
+    if (activeLogModules.length) {
+      // Add some options only if some modules are present.
+      if (Services.prefs.getBoolPref("logging.config.add_timestamp", false)) {
+        activeLogModules.push("timestamp");
+      }
+      if (Services.prefs.getBoolPref("logging.config.sync", false)) {
+        activeLogModules.push("sync");
+      }
+      if (Services.prefs.getBoolPref("logging.config.profilerstacks", false)) {
+        activeLogModules.push("profilerstacks");
       }
     }
 
@@ -602,16 +630,11 @@ function startLogging() {
         supportedFeatures
       );
     }
-    let {
-      entries,
-      interval,
-      features,
-      threads,
-      duration,
-    } = ProfilerPopupBackground.getRecordingSettings(
-      pageContext,
-      Services.profiler.GetFeatures()
-    );
+    let { entries, interval, features, threads, duration } =
+      ProfilerPopupBackground.getRecordingSettings(
+        pageContext,
+        Services.profiler.GetFeatures()
+      );
 
     if (gLoggingSettings.profilerThreads) {
       threads.push(...gLoggingSettings.profilerThreads.split(","));
@@ -669,6 +692,6 @@ async function stopLogging() {
 // the page is loaded via session-restore/bfcache. In such cases we need to call
 // init() to keep the page behaviour consistent with the ticked checkboxes.
 // Mostly the issue is with the autorefresh checkbox.
-window.addEventListener("pageshow", function() {
+window.addEventListener("pageshow", function () {
   init();
 });

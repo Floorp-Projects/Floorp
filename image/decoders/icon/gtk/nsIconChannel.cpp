@@ -294,6 +294,10 @@ nsresult nsIconChannel::GetIcon(nsIURI* aURI, ByteBuf* aDataOut) {
   nsCOMPtr<nsIMozIconURI> iconURI = do_QueryInterface(aURI);
   NS_ASSERTION(iconURI, "URI is not an nsIMozIconURI");
 
+  if (!iconURI) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   if (gfxPlatform::IsHeadless()) {
     return NS_ERROR_NOT_AVAILABLE;
   }

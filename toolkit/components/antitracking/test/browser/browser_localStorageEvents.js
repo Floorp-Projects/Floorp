@@ -1,4 +1,4 @@
-add_task(async function() {
+add_task(async function () {
   info("Starting subResources test");
 
   await SpecialPowers.flushPrefEnv();
@@ -45,7 +45,7 @@ add_task(async function testLocalStorageEventPropagation() {
       ifr.src = obj.page;
 
       await new content.Promise(resolve => {
-        ifr.onload = function() {
+        ifr.onload = function () {
           resolve();
         };
         content.document.body.appendChild(ifr);
@@ -130,7 +130,7 @@ add_task(async function testBlockedLocalStorageEventPropagation() {
       ifr.src = obj.page;
 
       await new content.Promise(resolve => {
-        ifr.onload = function() {
+        ifr.onload = function () {
           resolve();
         };
         content.document.body.appendChild(ifr);

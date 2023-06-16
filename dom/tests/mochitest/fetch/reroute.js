@@ -1,4 +1,4 @@
-onfetch = function(e) {
+onfetch = function (e) {
   if (e.request.url.includes("Referer")) {
     // Silently rewrite the referrer so the referrer test passes since the
     // document/worker isn't aware of this service worker.
@@ -6,7 +6,7 @@ onfetch = function(e) {
     url += "?headers=" + JSON.stringify({ Referer: self.location.href });
 
     e.respondWith(
-      e.request.text().then(function(text) {
+      e.request.text().then(function (text) {
         var body = text === "" ? undefined : text;
         var mode =
           e.request.mode == "navigate" ? "same-origin" : e.request.mode;

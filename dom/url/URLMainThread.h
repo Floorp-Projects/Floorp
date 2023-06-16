@@ -22,8 +22,8 @@ class URLMainThread final {
   static void RevokeObjectURL(const GlobalObject& aGlobal,
                               const nsAString& aURL, ErrorResult& aRv);
 
-  static bool IsValidURL(const GlobalObject& aGlobal, const nsAString& aURL,
-                         ErrorResult& aRv);
+  static bool IsValidObjectURL(const GlobalObject& aGlobal,
+                               const nsAString& aURL, ErrorResult& aRv);
 };
 
 }  // namespace mozilla::dom

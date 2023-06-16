@@ -13,7 +13,7 @@ const TEST_URI = "data:text/html;charset=utf-8,Test page";
 /**
  * Basic test that checks existence of the Notification box.
  */
-add_task(async function() {
+add_task(async function () {
   info("Test Notification box basic started");
 
   const toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");

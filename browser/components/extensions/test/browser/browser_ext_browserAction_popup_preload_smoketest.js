@@ -8,8 +8,8 @@
 // the default timeouts allows.
 requestLongerTimeout(4);
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+const { AddonTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
 );
 
 async function installTestAddon(addonId, unpacked = false) {
@@ -79,7 +79,7 @@ async function waitForExtensionAndBrowserAction(addonId) {
     Management: {
       global: { browserActionFor },
     },
-  } = ChromeUtils.import("resource://gre/modules/Extension.jsm");
+  } = ChromeUtils.importESModule("resource://gre/modules/Extension.sys.mjs");
 
   // trigger a number of preloads
   let extension;
@@ -167,11 +167,8 @@ async function testPopupLoadCompleted({ extension, browserAction, widget }) {
 add_task(async function testCancelPopupPreloadRaceOnUnpackedAddon() {
   const ID = "preloaded-popup@test";
   const addon = await installTestAddon(ID, /* unpacked */ true);
-  const {
-    extension,
-    browserAction,
-    widget,
-  } = await waitForExtensionAndBrowserAction(ID);
+  const { extension, browserAction, widget } =
+    await waitForExtensionAndBrowserAction(ID);
   info("Preload popup and cancel it multiple times");
   for (let i = 0; i < 200; i++) {
     await testCancelPreloadedPopup({ browserAction, widget });
@@ -185,11 +182,8 @@ add_task(async function testCancelPopupPreloadRaceOnUnpackedAddon() {
 add_task(async function testCancelPopupPreloadRaceOnPackedAddon() {
   const ID = "preloaded-popup@test";
   const addon = await installTestAddon(ID, /* unpacked */ false);
-  const {
-    extension,
-    browserAction,
-    widget,
-  } = await waitForExtensionAndBrowserAction(ID);
+  const { extension, browserAction, widget } =
+    await waitForExtensionAndBrowserAction(ID);
   info("Preload popup and cancel it multiple times");
   for (let i = 0; i < 200; i++) {
     await testCancelPreloadedPopup({ browserAction, widget });

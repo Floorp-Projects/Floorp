@@ -404,7 +404,8 @@ already_AddRefed<Promise> OffscreenCanvas::ConvertToBlob(
 
   RefPtr<EncodeCompleteCallback> callback =
       CreateEncodeCompleteCallback(promise);
-  bool usePlaceholder = ShouldResistFingerprinting();
+  bool usePlaceholder =
+      ShouldResistFingerprinting(RFPTarget::CanvasImageExtractionPrompt);
   CanvasRenderingContextHelper::ToBlob(callback, type, encodeOptions,
                                        /* aUsingCustomOptions */ false,
                                        usePlaceholder, aRv);
@@ -445,7 +446,8 @@ already_AddRefed<Promise> OffscreenCanvas::ToBlob(JSContext* aCx,
 
   RefPtr<EncodeCompleteCallback> callback =
       CreateEncodeCompleteCallback(promise);
-  bool usePlaceholder = ShouldResistFingerprinting();
+  bool usePlaceholder =
+      ShouldResistFingerprinting(RFPTarget::CanvasImageExtractionPrompt);
   CanvasRenderingContextHelper::ToBlob(aCx, callback, aType, aParams,
                                        usePlaceholder, aRv);
 
@@ -461,8 +463,8 @@ already_AddRefed<gfx::SourceSurface> OffscreenCanvas::GetSurfaceSnapshot(
   return mCurrentContext->GetSurfaceSnapshot(aOutAlphaType);
 }
 
-bool OffscreenCanvas::ShouldResistFingerprinting() const {
-  return nsContentUtils::ShouldResistFingerprinting(GetOwnerGlobal());
+bool OffscreenCanvas::ShouldResistFingerprinting(RFPTarget aTarget) const {
+  return nsContentUtils::ShouldResistFingerprinting(GetOwnerGlobal(), aTarget);
 }
 
 /* static */

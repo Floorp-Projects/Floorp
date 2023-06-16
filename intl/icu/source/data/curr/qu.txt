@@ -771,6 +771,9 @@ qu{
         EUR{
             other{"euro"}
         }
+        FJD{
+            other{"Dólar Fiyiano"}
+        }
         FKP{
             other{"Libra malvinense"}
         }

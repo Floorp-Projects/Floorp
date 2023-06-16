@@ -7,7 +7,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger("doc-pretty.html", "pretty.js");
 
   await selectSource(dbg, "pretty.js");
@@ -42,7 +42,7 @@ add_task(async function() {
 
 // Tests that breakpoints appear and work when you reload a page
 // with pretty-printed files.
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger("doc-pretty.html", "pretty.js");
 
   await selectSource(dbg, "pretty.js");
@@ -75,7 +75,7 @@ add_task(async function() {
 });
 
 // Test that breakpoints appear and work when set in the minified source
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger("doc-pretty.html", "pretty.js");
 
   await selectSource(dbg, "pretty.js");

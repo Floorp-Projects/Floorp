@@ -1199,18 +1199,16 @@ void FragmentOrElement::SaveSubtreeState() {
 // Generic DOMNode implementations
 
 void FragmentOrElement::FireNodeInserted(
-    Document* aDoc, nsINode* aParent, nsTArray<nsCOMPtr<nsIContent>>& aNodes) {
-  uint32_t count = aNodes.Length();
-  for (uint32_t i = 0; i < count; ++i) {
-    nsIContent* childContent = aNodes[i];
-
+    Document* aDoc, nsINode* aParent,
+    const nsTArray<nsCOMPtr<nsIContent>>& aNodes) {
+  for (const nsCOMPtr<nsIContent>& childContent : aNodes) {
     if (nsContentUtils::HasMutationListeners(
             childContent, NS_EVENT_BITS_MUTATION_NODEINSERTED, aParent)) {
       InternalMutationEvent mutation(true, eLegacyNodeInserted);
       mutation.mRelatedNode = aParent;
 
       mozAutoSubtreeModified subtree(aDoc, aParent);
-      (new AsyncEventDispatcher(childContent, mutation))->RunDOMEventWhenSafe();
+      AsyncEventDispatcher::RunDOMEventWhenSafe(*childContent, mutation);
     }
   }
 }
@@ -1966,6 +1964,9 @@ static bool ContainsMarkup(const nsAString& aStr) {
 
 void FragmentOrElement::SetInnerHTMLInternal(const nsAString& aInnerHTML,
                                              ErrorResult& aError) {
+  // Keep "this" alive should be guaranteed by the caller, and also the content
+  // of a template element (if this is one) should never been released by from
+  // this during this call.  Therefore, using raw pointer here is safe.
   FragmentOrElement* target = this;
   // Handle template case.
   if (target->IsTemplateElement()) {
@@ -1974,7 +1975,6 @@ void FragmentOrElement::SetInnerHTMLInternal(const nsAString& aInnerHTML,
     MOZ_ASSERT(frag);
     target = frag;
   }
-
   // Fast-path for strings with no markup. Limit this to short strings, to
   // avoid ContainsMarkup taking too long. The choice for 100 is based on
   // gut feeling.
@@ -1988,7 +1988,9 @@ void FragmentOrElement::SetInnerHTMLInternal(const nsAString& aInnerHTML,
     return;
   }
 
-  Document* doc = target->OwnerDoc();
+  // mozAutoSubtreeModified keeps the owner document alive.  Therefore, using a
+  // raw pointer here is safe.
+  Document* const doc = target->OwnerDoc();
 
   // Batch possible DOMSubtreeModified events.
   mozAutoSubtreeModified subtree(doc, nullptr);

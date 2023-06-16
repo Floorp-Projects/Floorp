@@ -17,7 +17,6 @@
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/chroma_from_luma.h"
-#include "lib/jxl/codec_in_out.h"
 #include "lib/jxl/common.h"
 #include "lib/jxl/dct_util.h"
 #include "lib/jxl/frame_header.h"
@@ -111,22 +110,21 @@ class ProgressiveSplitter {
   }
 
   template <typename T>
-  void SplitACCoefficients(const T* JXL_RESTRICT block, size_t size,
-                           const AcStrategy& acs, size_t bx, size_t by,
-                           size_t offset,
-                           T* JXL_RESTRICT output[kMaxNumPasses][3]);
+  void SplitACCoefficients(const T* JXL_RESTRICT block, const AcStrategy& acs,
+                           size_t bx, size_t by,
+                           T* JXL_RESTRICT output[kMaxNumPasses]);
 
  private:
   ProgressiveMode mode_;
 };
 
 extern template void ProgressiveSplitter::SplitACCoefficients<int32_t>(
-    const int32_t* JXL_RESTRICT, size_t, const AcStrategy&, size_t, size_t,
-    size_t, int32_t* JXL_RESTRICT[kMaxNumPasses][3]);
+    const int32_t* JXL_RESTRICT, const AcStrategy&, size_t, size_t,
+    int32_t* JXL_RESTRICT[kMaxNumPasses]);
 
 extern template void ProgressiveSplitter::SplitACCoefficients<int16_t>(
-    const int16_t* JXL_RESTRICT, size_t, const AcStrategy&, size_t, size_t,
-    size_t, int16_t* JXL_RESTRICT[kMaxNumPasses][3]);
+    const int16_t* JXL_RESTRICT, const AcStrategy&, size_t, size_t,
+    int16_t* JXL_RESTRICT[kMaxNumPasses]);
 
 }  // namespace jxl
 

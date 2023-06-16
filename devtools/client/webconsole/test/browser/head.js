@@ -42,7 +42,7 @@ const GA_PARAMS = `?${new URLSearchParams({
 
 const wcActions = require("resource://devtools/client/webconsole/actions/index.js");
 
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   // Reset all cookies, tests loading sjs_slow-response-test-server.sjs will
   // set a foo cookie which might have side effects on other tests.
   Services.cookies.removeAll();
@@ -98,22 +98,24 @@ async function openNewTabWithIframesAndConsole(tabUrl, iframes) {
   // to handle remote frames (we don't support creating frames target when the toolbox
   // is already open).
   await addTab(tabUrl);
-  await ContentTask.spawn(gBrowser.selectedBrowser, iframes, async function(
-    urls
-  ) {
-    const iframesLoadPromises = urls.map((url, i) => {
-      const iframe = content.document.createElement("iframe");
-      iframe.classList.add(`iframe-${i + 1}`);
-      const onLoadIframe = new Promise(resolve => {
-        iframe.addEventListener("load", resolve, { once: true });
+  await ContentTask.spawn(
+    gBrowser.selectedBrowser,
+    iframes,
+    async function (urls) {
+      const iframesLoadPromises = urls.map((url, i) => {
+        const iframe = content.document.createElement("iframe");
+        iframe.classList.add(`iframe-${i + 1}`);
+        const onLoadIframe = new Promise(resolve => {
+          iframe.addEventListener("load", resolve, { once: true });
+        });
+        content.document.body.append(iframe);
+        iframe.src = url;
+        return onLoadIframe;
       });
-      content.document.body.append(iframe);
-      iframe.src = url;
-      return onLoadIframe;
-    });
 
-    await Promise.all(iframesLoadPromises);
-  });
+      await Promise.all(iframesLoadPromises);
+    }
+  );
 
   return openConsole();
 }
@@ -157,7 +159,7 @@ function logAllStoreChanges(hud) {
     );
     info(
       "messages : " +
-        JSON.stringify(debugMessages, function(key, value) {
+        JSON.stringify(debugMessages, function (key, value) {
           if (value && value.getGrip) {
             return value.getGrip();
           }
@@ -953,86 +955,6 @@ async function closeConsole(tab = gBrowser.selectedTab) {
 }
 
 /**
- * Fake clicking a link and return the URL we would have navigated to.
- * This function should be used to check external links since we can't access
- * network in tests.
- * This can also be used to test that a click will not be fired.
- *
- * @param ElementNode element
- *        The <a> element we want to simulate click on.
- * @param Object clickEventProps
- *        The custom properties which would be used to dispatch a click event
- * @returns Promise
- *          A Promise that is resolved when the link click simulation occured or
- *          when the click is not dispatched.
- *          The promise resolves with an object that holds the following properties
- *          - link: url of the link or null(if event not fired)
- *          - where: "tab" if tab is active or "tabshifted" if tab is inactive
- *            or null(if event not fired)
- */
-function simulateLinkClick(element, clickEventProps) {
-  return overrideOpenLink(() => {
-    if (clickEventProps) {
-      // Click on the link using the event properties.
-      element.dispatchEvent(clickEventProps);
-    } else {
-      // Click on the link.
-      element.click();
-    }
-  });
-}
-
-/**
- * Override the browserWindow open*Link function, executes the passed function and either
- * wait for:
- * - the link to be "opened"
- * - 1s before timing out
- * Then it puts back the original open*Link functions in browserWindow.
- *
- * @returns {Promise<Object>}: A promise resolving with an object of the following shape:
- * - link: The link that was "opened"
- * - where: If the link was opened in the background (null) or not ("tab").
- */
-function overrideOpenLink(fn) {
-  const browserWindow = Services.wm.getMostRecentWindow(
-    gDevTools.chromeWindowType
-  );
-
-  // Override LinkIn methods to prevent navigating.
-  const oldOpenTrustedLinkIn = browserWindow.openTrustedLinkIn;
-  const oldOpenWebLinkIn = browserWindow.openWebLinkIn;
-
-  const onOpenLink = new Promise(resolve => {
-    const openLinkIn = function(link, where) {
-      browserWindow.openTrustedLinkIn = oldOpenTrustedLinkIn;
-      browserWindow.openWebLinkIn = oldOpenWebLinkIn;
-      resolve({ link, where });
-    };
-    browserWindow.openWebLinkIn = browserWindow.openTrustedLinkIn = openLinkIn;
-    fn();
-  });
-
-  // Declare a timeout Promise that we can use to make sure openTrustedLinkIn or
-  // openWebLinkIn was not called.
-  let timeoutId;
-  const onTimeout = new Promise(function(resolve) {
-    timeoutId = setTimeout(() => {
-      browserWindow.openTrustedLinkIn = oldOpenTrustedLinkIn;
-      browserWindow.openWebLinkIn = oldOpenWebLinkIn;
-      timeoutId = null;
-      resolve({ link: null, where: null });
-    }, 1000);
-  });
-
-  onOpenLink.then(() => {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-  });
-  return Promise.race([onOpenLink, onTimeout]);
-}
-
-/**
  * Open a network request logged in the webconsole in the netmonitor panel.
  *
  * @param {Object} toolbox
@@ -1527,7 +1449,7 @@ async function selectFrame(dbg, frame) {
 async function pauseDebugger(dbg) {
   info("Waiting for debugger to pause");
   const onPaused = waitForPaused(dbg);
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.wrappedJSObject.firstCall();
   }).catch(() => {});
   await onPaused;
@@ -1956,33 +1878,35 @@ async function getImageSizeFromClipboard() {
   // (which is value of the global `document` here). Doing so might push the
   // toolbox upwards, shrink the content page and fail the fullpage screenshot
   // test.
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [buffer], async function(
-    _buffer
-  ) {
-    const img = content.document.createElement("img");
-    const loaded = new Promise(r => {
-      img.addEventListener("load", r, { once: true });
-    });
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [buffer],
+    async function (_buffer) {
+      const img = content.document.createElement("img");
+      const loaded = new Promise(r => {
+        img.addEventListener("load", r, { once: true });
+      });
 
-    // Build a URL from the buffer passed to the ContentTask
-    const url = content.URL.createObjectURL(
-      new Blob([_buffer], { type: "image/png" })
-    );
+      // Build a URL from the buffer passed to the ContentTask
+      const url = content.URL.createObjectURL(
+        new Blob([_buffer], { type: "image/png" })
+      );
 
-    // Load the image
-    img.src = url;
-    content.document.documentElement.appendChild(img);
+      // Load the image
+      img.src = url;
+      content.document.documentElement.appendChild(img);
 
-    info("Waiting for the clipboard image to load in the content page");
-    await loaded;
+      info("Waiting for the clipboard image to load in the content page");
+      await loaded;
 
-    // Remove the image and revoke the URL.
-    img.remove();
-    content.URL.revokeObjectURL(url);
+      // Remove the image and revoke the URL.
+      img.remove();
+      content.URL.revokeObjectURL(url);
 
-    return {
-      width: img.width,
-      height: img.height,
-    };
-  });
+      return {
+        width: img.width,
+        height: img.height,
+      };
+    }
+  );
 }

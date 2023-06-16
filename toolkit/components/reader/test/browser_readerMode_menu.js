@@ -13,10 +13,10 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
  * Test that the reader mode correctly calculates and displays the
  * estimated reading time for a short article
  */
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.withNewTab(
     TEST_PATH + "readerModeArticleShort.html",
-    async function(browser) {
+    async function (browser) {
       let pageShownPromise = BrowserTestUtils.waitForContentEvent(
         browser,
         "AboutReaderContentReady"
@@ -24,7 +24,7 @@ add_task(async function() {
       let readerButton = document.getElementById("reader-mode-button");
       readerButton.click();
       await pageShownPromise;
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         function dispatchMouseEvent(win, target, eventName) {
           let mouseEvent = new win.MouseEvent(eventName, {
             view: win,

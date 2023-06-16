@@ -85,4 +85,4 @@ win64-sccache:
         toolchain:
             - linux64-clang-toolchain
             - linux64-rust-windows-toolchain
-            - win64-vs2017
+            - vs-toolchain

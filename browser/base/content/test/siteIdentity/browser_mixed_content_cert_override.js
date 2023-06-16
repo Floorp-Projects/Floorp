@@ -38,7 +38,7 @@ function checkIdentityPopup(icon) {
   );
 }
 
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.openNewForegroundTab(gBrowser);
 
   // check that a warning is shown when loading a page with mixed content and an overridden certificate

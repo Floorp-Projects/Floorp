@@ -16,7 +16,7 @@ requestLongerTimeout(4);
 // - the iframe dropdown also show the right targets
 // - both are updated accordingly when toggle to parent-process only scope
 
-add_task(async function() {
+add_task(async function () {
   // Forces the Browser Toolbox to open on the console by default
   await pushPref("devtools.browsertoolbox.panel", "webconsole");
   await pushPref("devtools.webconsole.input.context", true);

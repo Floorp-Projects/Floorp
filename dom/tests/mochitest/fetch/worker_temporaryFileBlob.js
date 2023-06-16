@@ -16,7 +16,7 @@ function next() {
   postMessage({ type: "finish" });
 }
 
-onmessage = function(e) {
+onmessage = function (e) {
   if (e.data == "xhr") {
     test_xhr_basic();
   } else if (e.data == "fetch") {

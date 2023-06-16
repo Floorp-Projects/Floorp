@@ -5,9 +5,9 @@
 // a Promise that resolves with the text or rejects with error.
 function readAsText(blob) {
   if (typeof FileReader !== "undefined") {
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
       var fs = new FileReader();
-      fs.onload = function() {
+      fs.onload = function () {
         resolve(fs.result);
       };
       fs.onerror = reject;
@@ -21,9 +21,9 @@ function readAsText(blob) {
 
 function readAsArrayBuffer(blob) {
   if (typeof FileReader !== "undefined") {
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
       var fs = new FileReader();
-      fs.onload = function() {
+      fs.onload = function () {
         resolve(fs.result);
       };
       fs.onerror = reject;

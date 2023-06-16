@@ -2,7 +2,7 @@
  * Listen for notifications from the child.
  * These are sent in case of error, or when the loads we await have completed.
  */
-window.addEventListener("message", function(event) {
+window.addEventListener("message", function (event) {
   if (event.data == "childLoadComplete") {
     // all loads happen, continue the test.
     advance();
@@ -22,7 +22,7 @@ window.addEventListener("message", function(event) {
  */
 function doXHR(url, onSuccess, onFail) {
   var xhr = new XMLHttpRequest();
-  xhr.onload = function() {
+  xhr.onload = function () {
     if (xhr.status == 200) {
       onSuccess(xhr);
     } else {
@@ -37,12 +37,14 @@ function doXHR(url, onSuccess, onFail) {
  * This triggers state-resetting on the counter server.
  */
 function resetCounter() {
-  doXHR("/tests/dom/base/test/bug704320_counter.sjs?reset", advance, function(
-    xhr
-  ) {
-    ok(false, "Need to be able to reset the request counter");
-    SimpleTest.finish();
-  });
+  doXHR(
+    "/tests/dom/base/test/bug704320_counter.sjs?reset",
+    advance,
+    function (xhr) {
+      ok(false, "Need to be able to reset the request counter");
+      SimpleTest.finish();
+    }
+  );
 }
 
 /**
@@ -51,7 +53,7 @@ function resetCounter() {
 function checkIndividualResults(testname, expected) {
   doXHR(
     "/tests/dom/base/test/bug704320_counter.sjs?results",
-    function(xhr) {
+    function (xhr) {
       var results = JSON.parse(xhr.responseText);
       info(xhr.responseText);
 
@@ -65,7 +67,7 @@ function checkIndividualResults(testname, expected) {
         testname + " Test: Expected 2 loads for image requests."
       );
 
-      expected.forEach(function(ref) {
+      expected.forEach(function (ref) {
         ok(
           results.img.referrers.includes(ref),
           testname +
@@ -78,7 +80,7 @@ function checkIndividualResults(testname, expected) {
       });
       advance();
     },
-    function(xhr) {
+    function (xhr) {
       ok(false, "Can't get results from the counter server.");
       SimpleTest.finish();
     }
@@ -92,7 +94,7 @@ function checkExpectedGlobalResults(testName) {
   var url = "bug704320.sjs?action=get-test-results";
   doXHR(
     url,
-    function(xhr) {
+    function (xhr) {
       var response = JSON.parse(xhr.response);
 
       for (type in response) {
@@ -112,7 +114,7 @@ function checkExpectedGlobalResults(testName) {
       }
       advance(testName);
     },
-    function(xhr) {
+    function (xhr) {
       ok(false, "Can't get results from the counter server.");
       SimpleTest.finish();
     }

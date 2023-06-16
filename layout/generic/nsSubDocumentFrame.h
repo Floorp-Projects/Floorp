@@ -7,7 +7,6 @@
 #ifndef NSSUBDOCUMENTFRAME_H_
 #define NSSUBDOCUMENTFRAME_H_
 
-#include "LayerState.h"
 #include "mozilla/Attributes.h"
 #include "nsDisplayList.h"
 #include "nsAtomicContainerFrame.h"
@@ -210,7 +209,6 @@ class nsDisplayRemote final : public nsPaintedDisplayItem {
   typedef mozilla::layers::EventRegionsOverride EventRegionsOverride;
   typedef mozilla::layers::LayersId LayersId;
   typedef mozilla::layers::StackingContextHelper StackingContextHelper;
-  typedef mozilla::LayerState LayerState;
   typedef mozilla::LayoutDeviceRect LayoutDeviceRect;
   typedef mozilla::LayoutDevicePoint LayoutDevicePoint;
 

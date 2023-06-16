@@ -6,7 +6,7 @@ requestLongerTimeout(2);
 
 const TEST_URI = URL_ROOT + "doc_browser_fontinspector.html";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector, view } = await openFontInspectorForURL(TEST_URI);
   ok(!!view, "Font inspector document is alive.");
 

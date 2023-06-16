@@ -28,7 +28,7 @@ function handleRequest(request, response) {
   bos.writeByteArray(part);
 
   response.timer1 = new Timer(
-    function(timer) {
+    function (timer) {
       bos.writeByteArray(bodyBytes);
     },
     1000,
@@ -36,7 +36,7 @@ function handleRequest(request, response) {
   );
 
   response.timer2 = new Timer(
-    function(timer) {
+    function (timer) {
       response.finish();
     },
     2000,

@@ -24,11 +24,11 @@ function test() {
   );
   win2.addEventListener(
     "load",
-    function() {
+    function () {
       // Create background test tab
       let browser = BrowserTestUtils.addTab(gBrowser, TEST_URL).linkedBrowser;
 
-      whenBrowserLoaded(browser, function() {
+      whenBrowserLoaded(browser, function () {
         let seenDialog = false;
 
         // Cancel the prompt the first time.

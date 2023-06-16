@@ -6,7 +6,7 @@
 /**
  * Test the Copy as PowerShell command
  */
-add_task(async function() {
+add_task(async function () {
   const { tab, monitor } = await initNetMonitor(HTTPS_CURL_URL, {
     requestCount: 1,
   });
@@ -121,7 +121,7 @@ Invoke-WebRequest -UseBasicParsing -Uri "https://example.com/browser/devtools/cl
           payload_: payload,
         },
       ],
-      async function({ url, method_, payload_ }) {
+      async function ({ url, method_, payload_ }) {
         content.wrappedJSObject.performRequest(url, method_, payload_);
       }
     );

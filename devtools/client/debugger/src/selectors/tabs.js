@@ -3,7 +3,6 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { createSelector } from "reselect";
-import { shallowEqual } from "../utils/shallow-equal";
 import { getPrettySourceURL } from "../utils/source";
 
 import { getSpecificSourceByURL } from "./sources";
@@ -17,13 +16,9 @@ export const getSourceTabs = createSelector(getTabs, tabs =>
   tabs.filter(tab => tab.source)
 );
 
-export const getSourcesForTabs = createSelector(
-  getSourceTabs,
-  sourceTabs => {
-    return sourceTabs.map(tab => tab.source);
-  },
-  { equalityCheck: shallowEqual, resultEqualityCheck: shallowEqual }
-);
+export const getSourcesForTabs = createSelector(getSourceTabs, sourceTabs => {
+  return sourceTabs.map(tab => tab.source);
+});
 
 export function tabExists(state, sourceId) {
   return !!getSourceTabs(state).find(tab => tab.source.id == sourceId);

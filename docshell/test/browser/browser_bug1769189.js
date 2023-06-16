@@ -7,10 +7,9 @@ add_task(async function test_beforeUnload_and_replaceState() {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
-      url:
-        "data:text/html,<script>window.addEventListener('beforeunload', () => { window.history.replaceState(true, ''); });</script>",
+      url: "data:text/html,<script>window.addEventListener('beforeunload', () => { window.history.replaceState(true, ''); });</script>",
     },
-    async function(browser) {
+    async function (browser) {
       let initialState = await SpecialPowers.spawn(browser, [], () => {
         return content.history.state;
       });

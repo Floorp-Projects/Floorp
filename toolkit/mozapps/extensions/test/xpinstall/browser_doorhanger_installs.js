@@ -5,14 +5,14 @@
 // TODO(Bug 1789718): adapt to synthetic addon type implemented by the SitePermAddonProvider
 // or remove if redundant, after the deprecated XPIProvider-based implementation is also removed.
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+const { AddonTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
 );
-const { ExtensionPermissions } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionPermissions.jsm"
+const { ExtensionPermissions } = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionPermissions.sys.mjs"
 );
-const { Management } = ChromeUtils.import(
-  "resource://gre/modules/Extension.jsm"
+const { Management } = ChromeUtils.importESModule(
+  "resource://gre/modules/Extension.sys.mjs"
 );
 
 const SECUREROOT =
@@ -72,7 +72,7 @@ async function waitForProgressNotification(
     panelEventPromise = new Promise(resolve => {
       win.PopupNotifications.panel.addEventListener(
         "popupshowing",
-        function() {
+        function () {
           resolve();
         },
         { once: true }
@@ -275,7 +275,7 @@ function waitForNotificationClose(win = window) {
     info("Waiting for notification to close");
     win.PopupNotifications.panel.addEventListener(
       "popuphidden",
-      function() {
+      function () {
         resolve();
       },
       { once: true }
@@ -1479,7 +1479,7 @@ var XPInstallObserver = {
     info(
       "Observed " + aTopic + " for " + installInfo.installs.length + " installs"
     );
-    installInfo.installs.forEach(function(aInstall) {
+    installInfo.installs.forEach(function (aInstall) {
       info(
         "Install of " +
           aInstall.sourceURI.spec +
@@ -1490,7 +1490,7 @@ var XPInstallObserver = {
   },
 };
 
-add_task(async function() {
+add_task(async function () {
   requestLongerTimeout(4);
 
   await SpecialPowers.pushPrefEnv({
@@ -1511,12 +1511,12 @@ add_task(async function() {
   Services.obs.addObserver(XPInstallObserver, "addon-install-blocked");
   Services.obs.addObserver(XPInstallObserver, "addon-install-failed");
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     // Make sure no more test parts run in case we were timed out
     TESTS = [];
 
     let aInstalls = await AddonManager.getAllInstalls();
-    aInstalls.forEach(function(aInstall) {
+    aInstalls.forEach(function (aInstall) {
       aInstall.cancel();
     });
 

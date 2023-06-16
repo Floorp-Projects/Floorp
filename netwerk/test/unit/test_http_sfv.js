@@ -213,8 +213,9 @@ add_task(async function test_sfv_list() {
   );
 
   // check list's member of inner list type
-  let inner_list_members = list_members[1].QueryInterface(Ci.nsISFVInnerList)
-    .items;
+  let inner_list_members = list_members[1].QueryInterface(
+    Ci.nsISFVInnerList
+  ).items;
   Assert.equal(inner_list_members.length, 2, "check inner list length");
 
   let inner_item1 = inner_list_members[0].QueryInterface(Ci.nsISFVItem);
@@ -316,8 +317,9 @@ add_task(async function test_sfv_dictionary() {
   //   "get dictionary member's parameter by key and check its value"
   // );
 
-  let dict_member2_items = dict_member2.QueryInterface(Ci.nsISFVInnerList)
-    .items;
+  let dict_member2_items = dict_member2.QueryInterface(
+    Ci.nsISFVInnerList
+  ).items;
   let dict_member2_params = dict_member2
     .QueryInterface(Ci.nsISFVInnerList)
     .params.QueryInterface(Ci.nsISFVParams);
@@ -480,27 +482,36 @@ add_task(async function test_sfv_list_parse_serialize() {
   );
 
   // create new inner list with parameters
-  let inner_list_params = gService.newParameters();
-  inner_list_params.set("key1", gService.newString("value1"));
-  inner_list_params.set("key2", gService.newBool(true));
-  inner_list_params.set("key3", gService.newBool(false));
-  let inner_list_items = [
-    gService.newItem(
-      gService.newDecimal(-1865.75653),
-      gService.newParameters()
-    ),
-    gService.newItem(gService.newToken("token"), gService.newParameters()),
-    gService.newItem(gService.newString(`no"yes`), gService.newParameters()),
-  ];
-  let new_list_member = gService.newInnerList(
-    inner_list_items,
-    inner_list_params
-  );
+  function params() {
+    let inner_list_params = gService.newParameters();
+    inner_list_params.set("key1", gService.newString("value1"));
+    inner_list_params.set("key2", gService.newBool(true));
+    inner_list_params.set("key3", gService.newBool(false));
+    return inner_list_params;
+  }
 
-  // set one of list members to inner list and check it's serialized as expected
-  let members = list_field.members;
-  members[1] = new_list_member;
-  list_field.members = members;
+  function changeMembers() {
+    // set one of list members to inner list and check it's serialized as expected
+    let members = list_field.members;
+    members[1] = gService.newInnerList(
+      [
+        gService.newItem(
+          gService.newDecimal(-1865.75653),
+          gService.newParameters()
+        ),
+        gService.newItem(gService.newToken("token"), gService.newParameters()),
+        gService.newItem(
+          gService.newString(`no"yes`),
+          gService.newParameters()
+        ),
+      ],
+      params()
+    );
+    return members;
+  }
+
+  list_field.members = changeMembers();
+
   Assert.equal(
     list_field.serialize(),
     `1, (-1865.757 token "no\\"yes");key1="value1";key2;key3=?0, (42 43)`,

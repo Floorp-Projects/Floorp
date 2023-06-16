@@ -25,6 +25,10 @@ const ACVP_IMAGE = {
   path: "automation/taskcluster/docker-acvp"
 };
 
+const ECCKIILA_IMAGE = {
+  name: "ecckiila",
+  path: "automation/taskcluster/docker-ecckiila"
+};
 
 const CLANG_FORMAT_IMAGE = {
   name: "clang-format",
@@ -532,7 +536,9 @@ async function scheduleLinux(name, overrides, args = "") {
       "/bin/bash",
       "-c",
       "bin/checkout.sh && nss/automation/taskcluster/scripts/run_tests.sh"
-    ]
+    ],
+    provisioner: "nss-t",
+    workerType: "t-linux-xlarge-gcp"
   }));
 
   // Extra builds.
@@ -661,6 +667,8 @@ function scheduleFuzzingRun(base, name, target, max_len, symbol = null, corpus =
         `-max_total_time=${MAX_FUZZ_TIME} ` +
         `-max_len=${max_len}`
     ],
+    provisioner: "nss-t",
+    workerType: "t-linux-xlarge-gcp",
     symbol: symbol || name
   }));
 }
@@ -1185,6 +1193,17 @@ async function scheduleTools() {
       "/bin/bash",
       "-c",
       "bin/checkout.sh && nss/automation/taskcluster/scripts/run_hacl.sh"
+    ]
+  }));
+  
+  queue.scheduleTask(merge(base, {
+    symbol: "ecckiila",
+    name: "ecckiila",
+    image: ECCKIILA_IMAGE,
+    command: [
+      "/bin/bash",
+      "-c",
+      "bin/checkout.sh && bin/ecckiila.sh && bin/run.sh"
     ]
   }));
 

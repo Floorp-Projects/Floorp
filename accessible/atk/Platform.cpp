@@ -10,7 +10,6 @@
 #include "nsIGSettingsService.h"
 #include "nsMai.h"
 #include "nsServiceManagerUtils.h"
-#include "AtkSocketAccessible.h"
 #include "prenv.h"
 #include "prlink.h"
 
@@ -83,19 +82,6 @@ void a11y::PlatformInit() {
                                             sATKHyperlinkImplGetTypeSymbol);
   if (pfn_atk_hyperlink_impl_get_type) {
     g_atk_hyperlink_impl_type = pfn_atk_hyperlink_impl_get_type();
-  }
-
-  AtkGetTypeType pfn_atk_socket_get_type =
-      (AtkGetTypeType)PR_FindFunctionSymbol(
-          sATKLib, AtkSocketAccessible::sATKSocketGetTypeSymbol);
-  if (pfn_atk_socket_get_type) {
-    AtkSocketAccessible::g_atk_socket_type = pfn_atk_socket_get_type();
-    AtkSocketAccessible::g_atk_socket_embed =
-        (AtkSocketEmbedType)PR_FindFunctionSymbol(
-            sATKLib, AtkSocketAccessible ::sATKSocketEmbedSymbol);
-    AtkSocketAccessible::gCanEmbed =
-        AtkSocketAccessible::g_atk_socket_type != G_TYPE_INVALID &&
-        AtkSocketAccessible::g_atk_socket_embed;
   }
 
   gAtkTableCellGetTypeFunc =

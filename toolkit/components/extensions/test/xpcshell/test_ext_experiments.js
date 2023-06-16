@@ -1,8 +1,8 @@
 "use strict";
 
 /* globals browser */
-const { AddonSettings } = ChromeUtils.import(
-  "resource://gre/modules/addons/AddonSettings.jsm"
+const { AddonSettings } = ChromeUtils.importESModule(
+  "resource://gre/modules/addons/AddonSettings.sys.mjs"
 );
 
 AddonTestUtils.init(this);

@@ -13,7 +13,7 @@ const {
   COMPLICATED_URL,
 } = require("damp-test/tests/head");
 
-module.exports = async function() {
+module.exports = async function () {
   await testSetup(COMPLICATED_URL);
   const toolbox = await openToolboxAndLog(
     "complicated.styleeditor",

@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const target = await addTabTarget("data:text/html;charset=utf-8,test-doc");
   const memory = await target.getFront("memory");
 
@@ -16,11 +16,11 @@ add_task(async function() {
   const [line1, line2, line3] = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [],
-    function() {
+    function () {
       // Use eval to ensure allocating the object in the page's compartment
       return content.eval(
         "(" +
-          function() {
+          function () {
             let alloc1, alloc2, alloc3;
 
             /* eslint-disable max-nested-callbacks */
@@ -32,7 +32,7 @@ add_task(async function() {
                   alloc2 = [];
                   alloc2.line = Error().lineNumber;
                   // eslint-disable-next-line new-parens
-                  alloc3 = new (function() {})();
+                  alloc3 = new (function () {})();
                   alloc3.line = Error().lineNumber;
                 })();
               })();

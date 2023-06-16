@@ -3,6 +3,14 @@
 
 "use strict";
 
+// See bug 1831731. This test should not actually try to create a connection to
+// the real DoH endpoint. But that may happen when clearing the proxy type, and
+// sometimes even in the next test.
+// To prevent that we override the IP to a local address.
+Cc["@mozilla.org/network/native-dns-override;1"]
+  .getService(Ci.nsINativeDNSResolverOverride)
+  .addIPOverride("mozilla.cloudflare-dns.com", "127.0.0.1");
+
 let oldProxyType = Services.prefs.getIntPref("network.proxy.type");
 function resetPrefs() {
   Services.prefs.clearUserPref("network.trr.mode");
@@ -44,7 +52,7 @@ async function loadErrorPage() {
 add_task(async function exceptionButtonTRROnly() {
   let browser = await loadErrorPage();
 
-  await SpecialPowers.spawn(browser, [], function() {
+  await SpecialPowers.spawn(browser, [], function () {
     const doc = content.document;
     ok(
       doc.documentURI.startsWith("about:neterror"),
@@ -85,7 +93,7 @@ add_task(async function TRROnlyExceptionButtonTelemetry() {
 
   let browser = await loadErrorPage();
 
-  await SpecialPowers.spawn(browser, [], function() {
+  await SpecialPowers.spawn(browser, [], function () {
     const doc = content.document;
     ok(
       doc.documentURI.startsWith("about:neterror"),
@@ -114,7 +122,7 @@ add_task(async function TRROnlyExceptionButtonTelemetry() {
     },
   ]);
 
-  await SpecialPowers.spawn(browser, [], function() {
+  await SpecialPowers.spawn(browser, [], function () {
     const doc = content.document;
     let buttons = ["neterrorTryAgainButton", "trrSettingsButton"];
     for (let buttonId of buttons) {

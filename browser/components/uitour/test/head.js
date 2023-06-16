@@ -247,7 +247,7 @@ function showMenuPromise(name) {
 }
 
 function waitForCallbackResultPromise() {
-  return SpecialPowers.spawn(gTestTab.linkedBrowser, [], async function() {
+  return SpecialPowers.spawn(gTestTab.linkedBrowser, [], async function () {
     let contentWin = Cu.waiveXrays(content);
     await ContentTaskUtils.waitForCondition(() => {
       return contentWin.callbackResult;
@@ -344,51 +344,53 @@ async function loadUITourTestPage(callback, host = "https://example.org/") {
           args,
           fnIndices,
         };
-        return SpecialPowers.spawn(browser, [taskArgs], async function(
-          contentArgs
-        ) {
-          let contentWin = Cu.waiveXrays(content);
-          let callbacksCalled = 0;
-          let resolveCallbackPromise;
-          let allCallbacksCalledPromise = new Promise(
-            resolve => (resolveCallbackPromise = resolve)
-          );
-          let argumentsWithFunctions = Cu.cloneInto(
-            contentArgs.args.map((arg, index) => {
-              if (arg === "" && contentArgs.fnIndices.includes(index)) {
-                return function() {
-                  callbacksCalled++;
-                  SpecialPowers.spawnChrome(
-                    [index, Array.from(arguments)],
-                    (indexParent, argumentsParent) => {
-                      // Please note that this handler only allows the callback to be used once.
-                      // That means that a single gContentAPI.observer() call can't be used
-                      // to observe multiple events.
-                      let window = this.browsingContext.topChromeWindow;
-                      let cb = window.gProxyCallbackMap.get(indexParent);
-                      window.gProxyCallbackMap.delete(indexParent);
-                      cb.apply(null, argumentsParent);
+        return SpecialPowers.spawn(
+          browser,
+          [taskArgs],
+          async function (contentArgs) {
+            let contentWin = Cu.waiveXrays(content);
+            let callbacksCalled = 0;
+            let resolveCallbackPromise;
+            let allCallbacksCalledPromise = new Promise(
+              resolve => (resolveCallbackPromise = resolve)
+            );
+            let argumentsWithFunctions = Cu.cloneInto(
+              contentArgs.args.map((arg, index) => {
+                if (arg === "" && contentArgs.fnIndices.includes(index)) {
+                  return function () {
+                    callbacksCalled++;
+                    SpecialPowers.spawnChrome(
+                      [index, Array.from(arguments)],
+                      (indexParent, argumentsParent) => {
+                        // Please note that this handler only allows the callback to be used once.
+                        // That means that a single gContentAPI.observer() call can't be used
+                        // to observe multiple events.
+                        let window = this.browsingContext.topChromeWindow;
+                        let cb = window.gProxyCallbackMap.get(indexParent);
+                        window.gProxyCallbackMap.delete(indexParent);
+                        cb.apply(null, argumentsParent);
+                      }
+                    );
+                    if (callbacksCalled >= contentArgs.fnIndices.length) {
+                      resolveCallbackPromise();
                     }
-                  );
-                  if (callbacksCalled >= contentArgs.fnIndices.length) {
-                    resolveCallbackPromise();
-                  }
-                };
-              }
-              return arg;
-            }),
-            content,
-            { cloneFunctions: true }
-          );
-          let rv = contentWin.Mozilla.UITour[contentArgs.methodName].apply(
-            contentWin.Mozilla.UITour,
-            argumentsWithFunctions
-          );
-          if (contentArgs.fnIndices.length) {
-            await allCallbacksCalledPromise;
+                  };
+                }
+                return arg;
+              }),
+              content,
+              { cloneFunctions: true }
+            );
+            let rv = contentWin.Mozilla.UITour[contentArgs.methodName].apply(
+              contentWin.Mozilla.UITour,
+              argumentsWithFunctions
+            );
+            if (contentArgs.fnIndices.length) {
+              await allCallbacksCalledPromise;
+            }
+            return rv;
           }
-          return rv;
-        });
+        );
       };
     },
   };
@@ -428,7 +430,7 @@ function UITourTest(usingAddTask = false) {
     waitForExplicitFinish();
   }
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     delete window.gContentAPI;
     if (gTestTab) {
       gBrowser.removeTab(gTestTab);
@@ -501,8 +503,8 @@ function nextTest() {
   }
   let test = tests.shift();
   info("Starting " + test.name);
-  waitForFocus(function() {
-    loadUITourTestPage(function() {
+  waitForFocus(function () {
+    loadUITourTestPage(function () {
       test(done);
     });
   });
@@ -513,10 +515,10 @@ function nextTest() {
  * wrapper around their test's generator function to reduce boilerplate.
  */
 function add_UITour_task(func) {
-  let genFun = async function() {
+  let genFun = async function () {
     await new Promise(resolve => {
-      waitForFocus(function() {
-        loadUITourTestPage(function() {
+      waitForFocus(function () {
+        loadUITourTestPage(function () {
           let funcPromise = (func() || Promise.resolve()).then(
             () => done(true),
             reason => {

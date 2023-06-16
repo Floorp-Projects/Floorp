@@ -16,7 +16,7 @@ const TEST_URI =
   "https://example.com/browser/devtools/client/webconsole/test/browser/stub-generators/test-network-event.html";
 const STUB_FILE = "networkEvent.js";
 
-add_task(async function() {
+add_task(async function () {
   const isStubsUpdate = Services.env.get(STUBS_UPDATE_ENV) == "true";
   info(`${isStubsUpdate ? "Update" : "Check"} ${STUB_FILE}`);
 
@@ -69,8 +69,8 @@ async function generateNetworkEventStubs() {
   const resourceCommand = commands.resourceCommand;
 
   const stacktraces = new Map();
-  let addNetworkStub = function() {};
-  let addNetworkUpdateStub = function() {};
+  let addNetworkStub = function () {};
+  let addNetworkUpdateStub = function () {};
 
   const onAvailable = resources => {
     for (const resource of resources) {
@@ -132,17 +132,21 @@ async function generateNetworkEventStubs() {
       };
     });
 
-    await SpecialPowers.spawn(gBrowser.selectedBrowser, [code], function(
-      subCode
-    ) {
-      const script = content.document.createElement("script");
-      script.append(
-        content.document.createTextNode(`function triggerPacket() {${subCode}}`)
-      );
-      content.document.body.append(script);
-      content.wrappedJSObject.triggerPacket();
-      script.remove();
-    });
+    await SpecialPowers.spawn(
+      gBrowser.selectedBrowser,
+      [code],
+      function (subCode) {
+        const script = content.document.createElement("script");
+        script.append(
+          content.document.createTextNode(
+            `function triggerPacket() {${subCode}}`
+          )
+        );
+        content.document.body.append(script);
+        content.wrappedJSObject.triggerPacket();
+        script.remove();
+      }
+    );
     await Promise.all([networkEventDone, networkEventUpdateDone]);
   }
   resourceCommand.unwatchResources(

@@ -48,6 +48,7 @@ import { LogManager } from "resource://normandy/lib/LogManager.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   BranchedAddonStudyAction:
     "resource://normandy/actions/BranchedAddonStudyAction.sys.mjs",
   CleanupManager: "resource://normandy/lib/CleanupManager.sys.mjs",
@@ -55,12 +56,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
   TelemetryEvents: "resource://normandy/lib/TelemetryEvents.sys.mjs",
 });
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AddonManager",
-  "resource://gre/modules/AddonManager.jsm"
-);
 
 const DB_NAME = "shield";
 const STORE_NAME = "addon-studies";

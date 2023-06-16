@@ -18,7 +18,7 @@ const {
   replaceImportESModuleCall,
 } = require(_path.resolve(__dirname, "./static-import.js"));
 
-module.exports = function(fileInfo, api) {
+module.exports = function (fileInfo, api) {
   const { jscodeshift } = api;
   const root = jscodeshift(fileInfo.source);
   doTranslate(fileInfo.path, jscodeshift, root);

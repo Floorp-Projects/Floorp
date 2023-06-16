@@ -92,9 +92,8 @@ export function buildGeneratedBindingList(
               name,
               loc,
               desc: async () => {
-                const objectFront = clientCommands.createObjectFront(
-                  globalGrip
-                );
+                const objectFront =
+                  clientCommands.createObjectFront(globalGrip);
                 return (await objectFront.getProperty(name)).descriptor;
               },
             });

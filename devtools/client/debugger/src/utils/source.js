@@ -117,6 +117,32 @@ export function findBlackBoxRange(source, blackboxedRanges, lineRange) {
 }
 
 /**
+ * Checks if a source line is blackboxed
+ * @param {Array} ranges - Line ranges that are blackboxed
+ * @param {Number} line
+ * @param {Boolean} isSourceOnIgnoreList - is the line in a source that is on
+ *                                         the sourcemap ignore lists then the line is blackboxed.
+ * @returns boolean
+ */
+export function isLineBlackboxed(ranges, line, isSourceOnIgnoreList) {
+  if (isSourceOnIgnoreList) {
+    return true;
+  }
+
+  if (!ranges) {
+    return false;
+  }
+  // If the whole source is ignored , then the line is
+  // ignored.
+  if (!ranges.length) {
+    return true;
+  }
+  return !!ranges.find(
+    range => line >= range.start.line && line <= range.end.line
+  );
+}
+
+/**
  * Returns true if the specified url and/or content type are specific to
  * javascript files.
  *

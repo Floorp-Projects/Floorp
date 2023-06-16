@@ -8,7 +8,7 @@
 // * remove animation
 // * modify animation
 
-add_task(async function() {
+add_task(async function () {
   await addTab(URL_ROOT + "doc_simple_animation.html");
   await removeAnimatedElementsExcept([
     ".compositor-all",
@@ -16,11 +16,8 @@ add_task(async function() {
     ".no-compositor",
     ".still",
   ]);
-  const {
-    animationInspector,
-    inspector,
-    panel,
-  } = await openAnimationInspector();
+  const { animationInspector, inspector, panel } =
+    await openAnimationInspector();
 
   info("Checking the mutation for add an animation");
   const originalAnimationCount = animationInspector.state.animations.length;

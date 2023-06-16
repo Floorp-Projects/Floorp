@@ -318,12 +318,8 @@ class GridActor extends Actor {
     this.gridFragments = getStringifiableFragments(gridFragments);
 
     // Record writing mode and text direction for use by the grid outline.
-    const {
-      direction,
-      gridTemplateColumns,
-      gridTemplateRows,
-      writingMode,
-    } = CssLogic.getComputedStyle(this.containerEl);
+    const { direction, gridTemplateColumns, gridTemplateRows, writingMode } =
+      CssLogic.getComputedStyle(this.containerEl);
 
     const form = {
       actor: this.actorID,

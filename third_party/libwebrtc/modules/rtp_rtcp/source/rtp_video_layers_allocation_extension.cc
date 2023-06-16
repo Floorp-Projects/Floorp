@@ -16,6 +16,7 @@
 #include "absl/algorithm/container.h"
 #include "api/video/video_layers_allocation.h"
 #include "modules/rtp_rtcp/source/byte_io.h"
+#include "modules/rtp_rtcp/source/leb128.h"
 #include "rtc_base/checks.h"
 
 namespace webrtc {
@@ -25,49 +26,6 @@ constexpr RTPExtensionType RtpVideoLayersAllocationExtension::kId;
 namespace {
 
 constexpr int kMaxNumRtpStreams = 4;
-
-// TODO(bugs.webrtc.org/12000): share Leb128 functions with av1 packetizer.
-// Returns minimum number of bytes required to store `value`.
-int Leb128Size(uint32_t value) {
-  int size = 0;
-  while (value >= 0x80) {
-    ++size;
-    value >>= 7;
-  }
-  return size + 1;
-}
-
-// Returns number of bytes consumed.
-int WriteLeb128(uint32_t value, uint8_t* buffer) {
-  int size = 0;
-  while (value >= 0x80) {
-    buffer[size] = 0x80 | (value & 0x7F);
-    ++size;
-    value >>= 7;
-  }
-  buffer[size] = value;
-  ++size;
-  return size;
-}
-
-// Reads leb128 encoded value and advance read_at by number of bytes consumed.
-// Sets read_at to nullptr on error.
-uint64_t ReadLeb128(const uint8_t*& read_at, const uint8_t* end) {
-  uint64_t value = 0;
-  int fill_bits = 0;
-  while (read_at != end && fill_bits < 64 - 7) {
-    uint8_t leb128_byte = *read_at;
-    value |= uint64_t{leb128_byte & 0x7Fu} << fill_bits;
-    ++read_at;
-    fill_bits += 7;
-    if ((leb128_byte & 0x80) == 0) {
-      return value;
-    }
-  }
-  // Failed to find terminator leb128 byte.
-  read_at = nullptr;
-  return 0;
-}
 
 bool AllocationIsValid(const VideoLayersAllocation& allocation) {
   // Since all multivalue fields are stored in (rtp_stream_id, spatial_id) order

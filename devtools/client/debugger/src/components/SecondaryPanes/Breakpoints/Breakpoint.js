@@ -11,13 +11,9 @@ import actions from "../../../actions";
 import showContextMenu from "./BreakpointsContextMenu";
 import { CloseButton } from "../../shared/Button";
 
-import {
-  getLocationWithoutColumn,
-  getSelectedText,
-  makeBreakpointId,
-} from "../../../utils/breakpoint";
+import { getSelectedText, makeBreakpointId } from "../../../utils/breakpoint";
 import { getSelectedLocation } from "../../../utils/selected-location";
-import { features } from "../../../utils/prefs";
+import { isLineBlackboxed } from "../../../utils/source";
 
 import {
   getBreakpointsList,
@@ -25,6 +21,8 @@ import {
   getSelectedSource,
   getCurrentThread,
   getContext,
+  isSourceMapIgnoreListEnabled,
+  isSourceOnSourceMapIgnoreList,
 } from "../../../selectors";
 
 const classnames = require("devtools/client/shared/classnames.js");
@@ -43,6 +41,8 @@ class Breakpoint extends PureComponent {
       selectSpecificLocation: PropTypes.func.isRequired,
       selectedSource: PropTypes.object,
       source: PropTypes.object.isRequired,
+      blackboxedRangesForSource: PropTypes.array.isRequired,
+      checkSourceOnIgnoreList: PropTypes.func.isRequired,
     };
   }
 
@@ -91,12 +91,8 @@ class Breakpoint extends PureComponent {
       return false;
     }
 
-    const bpId = features.columnBreakpoints
-      ? makeBreakpointId(this.selectedLocation)
-      : getLocationWithoutColumn(this.selectedLocation);
-    const frameId = features.columnBreakpoints
-      ? makeBreakpointId(frame.selectedLocation)
-      : getLocationWithoutColumn(frame.selectedLocation);
+    const bpId = makeBreakpointId(this.selectedLocation);
+    const frameId = makeBreakpointId(frame.selectedLocation);
     return bpId == frameId;
   }
 
@@ -105,7 +101,7 @@ class Breakpoint extends PureComponent {
     const { column, line } = this.selectedLocation;
 
     const isWasm = source?.isWasm;
-    const columnVal = features.columnBreakpoints && column ? `:${column}` : "";
+    const columnVal = column ? `:${column}` : "";
     const bpLocation = isWasm
       ? `0x${line.toString(16).toUpperCase()}`
       : `${line}${columnVal}`;
@@ -126,7 +122,12 @@ class Breakpoint extends PureComponent {
   }
 
   render() {
-    const { breakpoint, editor } = this.props;
+    const {
+      breakpoint,
+      editor,
+      blackboxedRangesForSource,
+      checkSourceOnIgnoreList,
+    } = this.props;
     const text = this.getBreakpointText();
     const labelId = `${breakpoint.id}-label`;
 
@@ -148,6 +149,11 @@ class Breakpoint extends PureComponent {
           type="checkbox"
           className="breakpoint-checkbox"
           checked={!breakpoint.disabled}
+          disabled={isLineBlackboxed(
+            blackboxedRangesForSource,
+            breakpoint.location.line,
+            checkSourceOnIgnoreList(breakpoint.location.source)
+          )}
           onChange={this.handleBreakpointCheckbox}
           onClick={ev => ev.stopPropagation()}
           aria-labelledby={labelId}
@@ -193,6 +199,9 @@ const mapStateToProps = (state, p) => ({
   cx: getContext(state),
   breakpoints: getBreakpointsList(state),
   frame: getFormattedFrame(state, getCurrentThread(state)),
+  checkSourceOnIgnoreList: source =>
+    isSourceMapIgnoreListEnabled(state) &&
+    isSourceOnSourceMapIgnoreList(state, source),
 });
 
 export default connect(mapStateToProps, {

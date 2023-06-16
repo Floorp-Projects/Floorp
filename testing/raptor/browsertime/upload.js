@@ -35,7 +35,7 @@ async function waitForUpload(timeout, commands, context) {
   };
 }
 
-module.exports = async function(context, commands) {
+module.exports = async function (context, commands) {
   let uploadSiteUrl = "https://uploadtest-381620.uc.r.appspot.com";
   let iterations = `${context.options.browsertime.upload_iterations}`;
 
@@ -51,7 +51,7 @@ module.exports = async function(context, commands) {
 
     if (context.options.browsertime.moz_fetch_dir == "None") {
       context.log.error(
-        "This test depends on the fetch task. Download the file, 'https://github.com/mozilla/perf-automation/raw/master/test_files/upload-test-50MB.dat' and set the os environment variable MOZ_FETCHES_DIR to that directory."
+        "This test depends on the fetch task. Download the file, 'https://github.com/mozilla/perf-automation/raw/master/test_files/upload-test-32MB.dat' and set the os environment variable MOZ_FETCHES_DIR to that directory."
       );
     }
 

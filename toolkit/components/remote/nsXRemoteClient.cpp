@@ -13,7 +13,6 @@
 #include "mozilla/Unused.h"
 #include "nsXRemoteClient.h"
 #include "RemoteUtils.h"
-#include "plstr.h"
 #include "prsystem.h"
 #include "mozilla/Logging.h"
 #include "prenv.h"

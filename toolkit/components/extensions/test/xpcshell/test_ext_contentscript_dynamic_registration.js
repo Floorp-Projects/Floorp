@@ -94,9 +94,8 @@ const verifyRegistrationWithNewProcess = async extension => {
       `${BASE_URL}/dummy_page.html`
     );
 
-    const {
-      childID,
-    } = secondContentPage.browsingContext.currentWindowGlobal.domProcess;
+    const { childID } =
+      secondContentPage.browsingContext.currentWindowGlobal.domProcess;
 
     Services.obs.removeObserver(obs, topic);
 

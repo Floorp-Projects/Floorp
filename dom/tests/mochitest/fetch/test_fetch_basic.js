@@ -1,18 +1,18 @@
 function testAboutURL() {
   var p1 = fetch("about:blank").then(
-    function(res) {
+    function (res) {
       ok(false, "about:blank should fail");
     },
-    function(e) {
+    function (e) {
       ok(e instanceof TypeError, "about:blank should fail");
     }
   );
 
   var p2 = fetch("about:config").then(
-    function(res) {
+    function (res) {
       ok(false, "about:config should fail");
     },
-    function(e) {
+    function (e) {
       ok(e instanceof TypeError, "about:config should fail");
     }
   );
@@ -76,7 +76,7 @@ function testDataURL() {
 function testSameOriginBlobURL() {
   var blob = new Blob(["english ", "sentence"], { type: "text/plain" });
   var url = URL.createObjectURL(blob);
-  return fetch(url).then(function(res) {
+  return fetch(url).then(function (res) {
     URL.revokeObjectURL(url);
     ok(true, "Blob URL fetch should resolve");
     if (res.type == "error") {
@@ -104,7 +104,7 @@ function testSameOriginBlobURL() {
       16,
       "Content-Length should match Blob's size"
     );
-    return res.text().then(function(body) {
+    return res.text().then(function (body) {
       is(body, "english sentence", "Blob fetch body should match");
     });
   });
@@ -117,17 +117,17 @@ function testNonGetBlobURL() {
     ["HEAD", "POST", "PUT", "DELETE"].map(method => {
       var req = new Request(url, { method });
       return fetch(req)
-        .then(function(res) {
+        .then(function (res) {
           ok(false, "Blob URL with non-GET request should not succeed");
         })
-        .catch(function(e) {
+        .catch(function (e) {
           ok(
             e instanceof TypeError,
             "Blob URL with non-GET request should get a TypeError"
           );
         });
     })
-  ).then(function() {
+  ).then(function () {
     URL.revokeObjectURL(url);
   });
 }
@@ -157,10 +157,10 @@ function testRequestMozErrors() {
 
 function testViewSourceURL() {
   var p2 = fetch("view-source:/").then(
-    function(res) {
+    function (res) {
       ok(false, "view-source: URL should fail");
     },
-    function(e) {
+    function (e) {
       ok(e instanceof TypeError, "view-source: URL should fail");
     }
   );

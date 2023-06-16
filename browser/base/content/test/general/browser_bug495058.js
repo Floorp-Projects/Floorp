@@ -10,7 +10,7 @@ const URIS = [
   "about:privatebrowsing",
 ];
 
-add_task(async function() {
+add_task(async function () {
   for (let uri of URIS) {
     let tab = BrowserTestUtils.addTab(gBrowser);
     BrowserTestUtils.loadURIString(tab.linkedBrowser, uri);

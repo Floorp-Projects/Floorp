@@ -59,7 +59,7 @@ function parseTestManifest(testManifest, params, callback) {
 function getTestManifest(url, params, callback) {
   let req = new XMLHttpRequest();
   req.open("GET", url);
-  req.onload = function() {
+  req.onload = function () {
     if (req.readyState == 4) {
       if (req.status == 200) {
         try {

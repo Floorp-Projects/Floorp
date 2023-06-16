@@ -124,7 +124,7 @@ async function testEVOnly() {
   await stopOCSPResponder(ocspResponder);
 }
 
-add_task(async function() {
+add_task(async function () {
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("network.dns.localDomains");
     Services.prefs.clearUserPref("security.OCSP.enabled");

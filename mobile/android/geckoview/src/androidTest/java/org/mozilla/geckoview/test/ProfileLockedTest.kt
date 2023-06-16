@@ -21,7 +21,7 @@ class ProfileLockedTest : BaseSessionTest() {
         val runtime0 = RuntimeInstance.start(
             targetContext,
             TestRuntimeService.instance0::class.java,
-            temporaryProfile.get()
+            temporaryProfile.get(),
         )
 
         // Start the first runtime and wait until it's ready
@@ -34,7 +34,7 @@ class ProfileLockedTest : BaseSessionTest() {
         val runtime1 = RuntimeInstance.start(
             targetContext,
             TestRuntimeService.instance1::class.java,
-            temporaryProfile.get()
+            temporaryProfile.get(),
         )
 
         // Wait for the first runtime to disconnect
@@ -46,7 +46,7 @@ class ProfileLockedTest : BaseSessionTest() {
         assertThat(
             "The service shouldn't be connected anymore",
             runtime0.isConnected,
-            equalTo(false)
+            equalTo(false),
         )
     }
 }

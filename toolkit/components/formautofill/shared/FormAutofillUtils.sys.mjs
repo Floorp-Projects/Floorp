@@ -56,10 +56,6 @@ const FIELD_STATES = {
   AUTO_FILLED: "AUTO_FILLED",
   PREVIEW: "PREVIEW",
 };
-const SECTION_TYPES = {
-  ADDRESS: "address",
-  CREDIT_CARD: "creditCard",
-};
 
 const ELIGIBLE_INPUT_TYPES = ["text", "email", "tel", "number", "month"];
 
@@ -223,7 +219,6 @@ FormAutofillUtils = {
   EDIT_CREDITCARD_L10N_IDS,
   MAX_FIELD_VALUE_LENGTH,
   FIELD_STATES,
-  SECTION_TYPES,
 
   _fieldNameInfo: {
     name: "name",
@@ -441,10 +436,6 @@ FormAutofillUtils = {
     }
   },
 
-  autofillFieldSelector(doc) {
-    return doc.querySelectorAll("input, select");
-  },
-
   /**
    * Determines if an element can be autofilled or not.
    *
@@ -456,23 +447,23 @@ FormAutofillUtils = {
   },
 
   /**
-   *  Determines if an element is visually hidden or not.
-   *
-   * NOTE: this does not encompass every possible way of hiding an element.
-   * Instead, we check some of the more common methods of hiding for performance reasons.
-   * See Bug 1727832 for follow up.
+   * Determines if an element is visually hidden or not.
    *
    * @param {HTMLElement} element
+   * @param {boolean} visibilityCheck true to run visiblity check against
+   *                  element.checkVisibility API. Otherwise, test by only checking
+   *                  `hidden` and `display` attributes
    * @returns {boolean} true if the element is visible
    */
-  isFieldVisible(element) {
-    if (element.hidden) {
-      return false;
+  isFieldVisible(element, visibilityCheck = true) {
+    if (visibilityCheck) {
+      return element.checkVisibility({
+        checkOpacity: true,
+        checkVisibilityCSS: true,
+      });
     }
-    if (element.style.display == "none") {
-      return false;
-    }
-    return true;
+
+    return !element.hidden && element.style.display != "none";
   },
 
   /**
@@ -485,20 +476,13 @@ FormAutofillUtils = {
     if (!element) {
       return false;
     }
+
     if (HTMLInputElement.isInstance(element)) {
       // `element.type` can be recognized as `text`, if it's missing or invalid.
-      if (!ELIGIBLE_INPUT_TYPES.includes(element.type)) {
-        return false;
-      }
-      // If the field is visually invisible, we do not want to autofill into it.
-      if (!this.isFieldVisible(element)) {
-        return false;
-      }
-    } else if (!HTMLSelectElement.isInstance(element)) {
-      return false;
+      return ELIGIBLE_INPUT_TYPES.includes(element.type);
     }
 
-    return true;
+    return HTMLSelectElement.isInstance(element);
   },
 
   loadDataFromScript(url, sandbox = {}) {
@@ -577,10 +561,17 @@ FormAutofillUtils = {
   /**
    * Get the collators based on the specified country.
    *
-   * @param   {string} country The specified country.
+   * @param {string}  country The specified country.
+   * @param {object}  [options = {}] a list of options for this method
+   * @param {boolean} [options.ignorePunctuation = true] Whether punctuation should be ignored.
+   * @param {string}  [options.sensitivity = 'base'] Which differences in the strings should lead to non-zero result values
+   * @param {string}  [options.usage = 'search'] Whether the comparison is for sorting or for searching for matching strings
    * @returns {Array} An array containing several collator objects.
    */
-  getSearchCollators(country) {
+  getSearchCollators(
+    country,
+    { ignorePunctuation = true, sensitivity = "base", usage = "search" } = {}
+  ) {
     // TODO: Only one language should be used at a time per country. The locale
     //       of the page should be taken into account to do this properly.
     //       We are going to support more countries in bug 1370193 and this
@@ -590,9 +581,9 @@ FormAutofillUtils = {
       let dataset = this.getCountryAddressData(country);
       let languages = dataset.languages || [dataset.lang];
       let options = {
-        ignorePunctuation: true,
-        sensitivity: "base",
-        usage: "search",
+        ignorePunctuation,
+        sensitivity,
+        usage,
       };
       this._collators[country] = languages.map(
         lang => new Intl.Collator(lang, options)
@@ -706,7 +697,7 @@ FormAutofillUtils = {
   },
 
   /**
-   * Use alternative country name list to identify a country code from a
+   * Use address data and alternative country name list to identify a country code from a
    * specified country name.
    *
    * @param   {string} countryName A country name to be identified
@@ -715,11 +706,19 @@ FormAutofillUtils = {
    * @returns {string} The matching country code.
    */
   identifyCountryCode(countryName, countrySpecified) {
-    let countries = countrySpecified
+    if (!countryName) {
+      return null;
+    }
+
+    if (AddressDataLoader.getData(countryName)) {
+      return countryName;
+    }
+
+    const countries = countrySpecified
       ? [countrySpecified]
       : [...FormAutofill.countries.keys()];
 
-    for (let country of countries) {
+    for (const country of countries) {
       let collators = this.getSearchCollators(country);
       let metadata = this.getCountryAddressData(country);
       if (country != metadata.key) {
@@ -736,9 +735,14 @@ FormAutofillUtils = {
       ];
       let reAlternativeCountryNames = this._reAlternativeCountryNames[country];
       if (!reAlternativeCountryNames) {
-        reAlternativeCountryNames = this._reAlternativeCountryNames[
-          country
-        ] = [];
+        reAlternativeCountryNames = this._reAlternativeCountryNames[country] =
+          [];
+      }
+
+      if (countryName.length == 3) {
+        if (this.strCompare(metadata.alpha_3_code, countryName, collators)) {
+          return country;
+        }
       }
 
       for (let i = 0; i < alternativeCountryNames.length; i++) {
@@ -917,7 +921,7 @@ FormAutofillUtils = {
         break;
       }
       case "country": {
-        if (this.getCountryAddressData(value).alternative_names) {
+        if (this.getCountryAddressData(value)) {
           for (let option of selectEl.options) {
             if (
               this.identifyCountryCode(option.text, value) ||
@@ -1180,13 +1184,13 @@ FormAutofillUtils = {
   },
 };
 
-XPCOMUtils.defineLazyGetter(FormAutofillUtils, "stringBundle", function() {
+XPCOMUtils.defineLazyGetter(FormAutofillUtils, "stringBundle", function () {
   return Services.strings.createBundle(
     "chrome://formautofill/locale/formautofill.properties"
   );
 });
 
-XPCOMUtils.defineLazyGetter(FormAutofillUtils, "brandBundle", function() {
+XPCOMUtils.defineLazyGetter(FormAutofillUtils, "brandBundle", function () {
   return Services.strings.createBundle(
     "chrome://branding/locale/brand.properties"
   );
@@ -1231,4 +1235,19 @@ XPCOMUtils.defineLazyPreferenceGetter(
   null,
   null,
   pref => parseFloat(pref)
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  FormAutofillUtils,
+  "visibilityCheckThreshold",
+  "extensions.formautofill.heuristics.visibilityCheckThreshold",
+  200
+);
+
+// This is only used in iOS
+XPCOMUtils.defineLazyPreferenceGetter(
+  FormAutofillUtils,
+  "focusOnAutofill",
+  "extensions.formautofill.focusOnAutofill",
+  true
 );

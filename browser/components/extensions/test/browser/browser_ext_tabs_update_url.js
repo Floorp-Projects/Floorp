@@ -30,7 +30,7 @@ async function testTabsUpdateURL(
         </html>
       `.trim(),
     },
-    background: function() {
+    background: function () {
       browser.test.sendMessage("ready", browser.runtime.getURL("tab.html"));
 
       browser.test.onMessage.addListener(
@@ -89,7 +89,7 @@ async function testTabsUpdateURL(
   await extension.unload();
 }
 
-add_task(async function() {
+add_task(async function () {
   info("Start testing tabs.update on javascript URLs");
 
   let dataURLPage = `data:text/html,

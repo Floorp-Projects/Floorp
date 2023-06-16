@@ -79,7 +79,8 @@ export class PreferenceExperimentAction extends BaseStudyAction {
         if (!experiment) {
           // Check all preferences that could be used by this experiment.
           // If there's already an active experiment that has set that preference, abort.
-          const activeExperiments = await lazy.PreferenceExperiments.getAllActive();
+          const activeExperiments =
+            await lazy.PreferenceExperiments.getAllActive();
           for (const branch of branches) {
             const conflictingPrefs = Object.keys(branch.preferences).filter(
               preferenceName => {

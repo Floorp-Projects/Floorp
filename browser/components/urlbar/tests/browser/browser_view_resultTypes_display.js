@@ -30,7 +30,7 @@ function assertElementsDisplayed(details, expected) {
   );
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.urlbar.suggest.searches", false],
@@ -289,7 +289,7 @@ add_task(async function test_remote_tab_result() {
   // Reset internal cache in UrlbarProviderRemoteTabs.
   Services.obs.notifyObservers(null, "weave:engine:sync:finish", "tabs");
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     sandbox.restore();
     weaveXPCService.ready = oldWeaveServiceReady;
     SyncedTabs._internal = originalSyncedTabsInternal;

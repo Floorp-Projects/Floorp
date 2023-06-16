@@ -2684,8 +2684,9 @@ NS_IMETHODIMP
 nsDOMWindowUtils::GetCurrentPreferredSampleRate(uint32_t* aRate) {
   nsCOMPtr<Document> doc = GetDocument();
   *aRate = CubebUtils::PreferredSampleRate(
-      doc ? doc->ShouldResistFingerprinting()
-          : nsContentUtils::ShouldResistFingerprinting("Fallback"));
+      doc ? doc->ShouldResistFingerprinting(RFPTarget::Unknown)
+          : nsContentUtils::ShouldResistFingerprinting("Fallback",
+                                                       RFPTarget::Unknown));
   return NS_OK;
 }
 
@@ -3244,7 +3245,7 @@ nsDOMWindowUtils::GetUnanimatedComputedStyle(Element* aElement,
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<RawServoAnimationValue> value =
+  RefPtr<StyleAnimationValue> value =
       Servo_ComputedValues_ExtractAnimationValue(computedStyle, propertyID)
           .Consume();
   if (!value) {
@@ -3255,7 +3256,7 @@ nsDOMWindowUtils::GetUnanimatedComputedStyle(Element* aElement,
   }
   nsAutoCString result;
   Servo_AnimationValue_Serialize(value, propertyID,
-                                 presShell->StyleSet()->RawSet(), &result);
+                                 presShell->StyleSet()->RawData(), &result);
   CopyUTF8toUTF16(result, aResult);
   return NS_OK;
 }

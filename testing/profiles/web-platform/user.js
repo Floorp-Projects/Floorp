@@ -56,6 +56,8 @@ user_pref("dom.disable_beforeunload", true);
 user_pref("dom.animations-api.implicit-keyframes.enabled", true);
 // Disable high DPI
 user_pref("layout.css.devPixelsPerPx", "1.0")
+// Enable the parallel styling code.
+user_pref("layout.css.stylo-threads", 4)
 // sometime wpt runs test even before the document becomes visible, which would
 // delay video.play() and cause play() running in wrong order.
 user_pref("media.block-autoplay-until-in-foreground", false);
@@ -67,8 +69,6 @@ user_pref("widget.disable-dark-scrollbar", true);
 // be confusing for tests that send click events before the first paint.
 user_pref("nglayout.initialpaint.unsuppress_with_no_background", true);
 user_pref("media.block-autoplay-until-in-foreground", false);
-// Enable AppCache globally for now whilst it's being removed in Bug 1584984
-user_pref("browser.cache.offline.enable", true);
 // Force a light color scheme unless explicitly overriden by pref.
 user_pref("layout.css.prefers-color-scheme.content-override", 1);
 // Force OffscreenCanvas support

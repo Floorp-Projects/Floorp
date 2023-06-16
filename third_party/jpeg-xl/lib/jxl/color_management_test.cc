@@ -17,7 +17,6 @@
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/file_io.h"
 #include "lib/jxl/base/random.h"
-#include "lib/jxl/base/thread_pool_internal.h"
 #include "lib/jxl/enc_color_management.h"
 #include "lib/jxl/enc_xyb.h"
 #include "lib/jxl/image_test_utils.h"
@@ -43,6 +42,8 @@ using ::testing::FloatNear;
 // Small enough to be fast. If changed, must update Generate*.
 static constexpr size_t kWidth = 16;
 
+static constexpr size_t kNumThreads = 1;  // only have a single row.
+
 struct Globals {
   // TODO(deymo): Make this a const.
   static Globals* GetInstance() {
@@ -51,9 +52,7 @@ struct Globals {
   }
 
  private:
-  static constexpr size_t kNumThreads = 0;  // only have a single row.
-
-  Globals() : pool(kNumThreads) {
+  Globals() {
     in_gray = GenerateGray();
     in_color = GenerateColor();
     out_gray = ImageF(kWidth, 1);
@@ -103,8 +102,6 @@ struct Globals {
   }
 
  public:
-  ThreadPoolInternal pool;
-
   // ImageF so we can use VerifyRelativeError; all are interleaved RGB.
   ImageF in_gray;
   ImageF in_color;
@@ -137,10 +134,10 @@ class ColorManagementTest
     ColorSpaceTransform xform_rev(cms);
     const float intensity_target =
         c.tf.IsHLG() ? 1000 : kDefaultIntensityTarget;
-    ASSERT_TRUE(xform_fwd.Init(c_native, c, intensity_target, kWidth,
-                               g->pool.NumThreads()));
-    ASSERT_TRUE(xform_rev.Init(c, c_native, intensity_target, kWidth,
-                               g->pool.NumThreads()));
+    ASSERT_TRUE(
+        xform_fwd.Init(c_native, c, intensity_target, kWidth, kNumThreads));
+    ASSERT_TRUE(
+        xform_rev.Init(c, c_native, intensity_target, kWidth, kNumThreads));
 
     const size_t thread = 0;
     const ImageF& in = c.IsGray() ? g->in_gray : g->in_color;

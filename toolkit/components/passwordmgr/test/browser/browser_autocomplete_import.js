@@ -1,5 +1,5 @@
-const { ChromeMigrationUtils } = ChromeUtils.import(
-  "resource:///modules/ChromeMigrationUtils.jsm"
+const { ChromeMigrationUtils } = ChromeUtils.importESModule(
+  "resource:///modules/ChromeMigrationUtils.sys.mjs"
 );
 const { ExperimentAPI } = ChromeUtils.importESModule(
   "resource://nimbus/ExperimentAPI.sys.mjs"
@@ -89,7 +89,7 @@ add_task(async function import_suggestion_wizard() {
       gBrowser,
       url: "https://example.com" + DIRECTORY_PATH + "form_basic.html",
     },
-    async function(browser) {
+    async function (browser) {
       const popup = document.getElementById("PopupAutoComplete");
       Assert.ok(popup, "Got popup");
       await openACPopup(popup, browser, "#form-basic-username");
@@ -138,7 +138,7 @@ add_task(async function import_suggestion_learn_more() {
       gBrowser,
       url: "https://example.com" + DIRECTORY_PATH + "form_basic.html",
     },
-    async function(browser) {
+    async function (browser) {
       const popup = document.getElementById("PopupAutoComplete");
       Assert.ok(popup, "Got popup");
       await openACPopup(popup, browser, "#form-basic-username");
@@ -176,7 +176,7 @@ add_task(async function import_suggestion_migrate() {
       gBrowser,
       url: "https://example.com" + DIRECTORY_PATH + "form_basic.html",
     },
-    async function(browser) {
+    async function (browser) {
       const popup = document.getElementById("PopupAutoComplete");
       Assert.ok(popup, "Got popup");
       await openACPopup(popup, browser, "#form-basic-username");
@@ -228,7 +228,7 @@ add_task(async function import_suggestion_not_shown() {
       gBrowser,
       url: "https://example.com" + DIRECTORY_PATH + "form_basic.html",
     },
-    async function(browser) {
+    async function (browser) {
       const popup = document.getElementById("PopupAutoComplete");
       Assert.ok(popup, "Got popup");
       let opened = false;

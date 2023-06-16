@@ -3,14 +3,14 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+#include <jxl/butteraugli.h>
+#include <jxl/parallel_runner.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include <atomic>
 
-#include "jxl/butteraugli.h"
-#include "jxl/parallel_runner.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/profiler.h"
 #include "lib/jxl/butteraugli/butteraugli.h"

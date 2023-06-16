@@ -23,7 +23,7 @@ add_task(async function test_aboutblankInIframe() {
   );
   let browser = tab.linkedBrowser;
 
-  await SpecialPowers.spawn(browser, [], async function(obj) {
+  await SpecialPowers.spawn(browser, [], async function (obj) {
     let ifr = content.document.createElement("iframe");
     let loading = new content.Promise(resolve => {
       ifr.onload = resolve;
@@ -32,7 +32,7 @@ add_task(async function test_aboutblankInIframe() {
     content.document.body.appendChild(ifr);
     await loading;
 
-    await SpecialPowers.spawn(ifr, [], async function(obj) {
+    await SpecialPowers.spawn(ifr, [], async function (obj) {
       ok(
         content.navigator.cookieEnabled,
         "Cookie should be enabled in about blank"

@@ -18,7 +18,7 @@ function clear_state() {
   Services.prefs.clearUserPref("services.settings.preview_enabled");
 }
 
-add_setup(async function() {
+add_setup(async function () {
   // Set this env vars in order to test the code path where the
   // server URL can only be overridden from Dev Tools.
   // See `isRunningTests` in `services/settings/Utils.jsm`.

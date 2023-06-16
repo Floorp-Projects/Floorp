@@ -26,9 +26,6 @@
         // InputTaskManager properly
         SpecialPowers.loadChromeScript(() => {
           /* eslint-env mozilla/chrome-script */
-          const { EventUtils } = ChromeUtils.import(
-            "resource://specialpowers/SpecialPowersEventUtils.jsm"
-          );
           var win = Services.wm.getMostRecentBrowserWindow();
           EventUtils.synthesizeKey("a", {}, win);
           EventUtils.synthesizeKey("b", {}, win);

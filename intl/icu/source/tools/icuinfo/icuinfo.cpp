@@ -168,26 +168,26 @@ void cmd_listplugins() {
     printf(    " >>>   Error          | Explanation \n");
     printf(    "-----------------------------------\n");
         
-    for(i=0;(plug=uplug_getPlugInternal(i))!=NULL;i++) {
+    for(i=0;(plug=uplug_getPlugInternal(i))!=nullptr;i++) {
         UErrorCode libStatus = U_ZERO_ERROR;
         const char *name = uplug_getPlugName(plug);
         const char *sym = uplug_getSymbolName(plug);
         const char *lib = uplug_getLibraryName(plug, &libStatus);
         const char *config = uplug_getConfiguration(plug);
         UErrorCode loadStatus = uplug_getPlugLoadStatus(plug);
-        const char *message = NULL;
+        const char *message = nullptr;
         
         printf("\n#%d  %-6s %s \n",
             i+1,
             udbg_enumName(UDBG_UPlugLevel,(int32_t)uplug_getPlugLevel(plug)),
-            name!=NULL?(*name?name:"this plugin did not call uplug_setPlugName()"):"(null)"
+            name!=nullptr?(*name?name:"this plugin did not call uplug_setPlugName()"):"(null)"
         );
         printf("    plugin| %10s:%-10s\n",
-            (U_SUCCESS(libStatus)?(lib!=NULL?lib:"(null)"):u_errorName(libStatus)),
-            sym!=NULL?sym:"(null)"
+            (U_SUCCESS(libStatus)?(lib!=nullptr?lib:"(null)"):u_errorName(libStatus)),
+            sym!=nullptr?sym:"(null)"
         );
         
-        if(config!=NULL&&*config) {
+        if(config!=nullptr&&*config) {
             printf("    config| %s\n", config);
         }
         
@@ -205,7 +205,7 @@ void cmd_listplugins() {
                 break;
                 
             case U_ZERO_ERROR: 
-                message = NULL; /* no message */
+                message = nullptr; /* no message */
                 break;
             default:
                 if(U_FAILURE(loadStatus)) {
@@ -215,7 +215,7 @@ void cmd_listplugins() {
                 }            
         }
         
-        if(message!=NULL) {
+        if(message!=nullptr) {
             printf("\\\\\\ status| %s\n"
                    "/// %s\n", u_errorName(loadStatus), message);
         }
@@ -281,7 +281,7 @@ main(int argc, char* argv[]) {
 
     if(options[7].doesOccur) {  /* 2nd part of version: cleanup */
       FILE *out = fopen(options[7].value, "w");
-      if(out==NULL) {
+      if(out==nullptr) {
         fprintf(stderr,"ERR: can't write to XML file %s\n", options[7].value);
         return 1;
       }

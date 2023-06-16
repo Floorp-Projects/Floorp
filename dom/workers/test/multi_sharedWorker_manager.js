@@ -33,7 +33,7 @@ function postToWorker(msg) {
       "multi_sharedWorker_sharedWorker.js",
       "FrameWorker"
     );
-    worker.onerror = function(error) {
+    worker.onerror = function (error) {
       debug("Worker error: " + error.message);
       error.preventDefault();
 
@@ -47,7 +47,7 @@ function postToWorker(msg) {
       bc.postMessage({ command: "fromWorker", workerMessage: data });
     };
 
-    worker.port.onmessage = function(message) {
+    worker.port.onmessage = function (message) {
       debug("Worker message: " + JSON.stringify(message.data));
       bc.postMessage({ command: "fromWorker", workerMessage: message.data });
     };

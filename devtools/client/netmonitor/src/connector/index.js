@@ -25,6 +25,13 @@ loader.lazyRequireGetter(
   "resource://devtools/client/shared/components/throttling/profiles.js"
 );
 
+loader.lazyRequireGetter(
+  this,
+  "HarMetadataCollector",
+  "resource://devtools/client/netmonitor/src/connector/har-metadata-collector.js",
+  true
+);
+
 const DEVTOOLS_ENABLE_PERSISTENT_LOG_PREF = "devtools.netmonitor.persistlog";
 
 /**
@@ -80,13 +87,17 @@ class Connector {
     // The owner object (NetMonitorAPI) received all events.
     this.owner = connection.owner;
 
-    this.networkFront = await this.commands.watcherFront.getNetworkParentActor();
+    this.networkFront =
+      await this.commands.watcherFront.getNetworkParentActor();
 
     this.dataProvider = new FirefoxDataProvider({
       commands: this.commands,
       actions: this.actions,
       owner: this.owner,
     });
+
+    this._harMetadataCollector = new HarMetadataCollector(this.commands);
+    await this._harMetadataCollector.connect();
 
     await this.commands.resourceCommand.watchResources([TYPES.DOCUMENT_EVENT], {
       onAvailable: this.onResourceAvailable,
@@ -130,11 +141,14 @@ class Connector {
 
     this.dataProvider.destroy();
     this.dataProvider = null;
+    this._harMetadataCollector.destroy();
   }
 
   clear() {
     // Clear all the caches in the data provider
     this.dataProvider.clear();
+
+    this._harMetadataCollector.clear();
 
     this.commands.resourceCommand.clearResources(Connector.NETWORK_RESOURCES);
     this.emitForTests("clear-network-resources");
@@ -448,6 +462,13 @@ class Connector {
    */
   getLongString(stringGrip) {
     return this.dataProvider.getLongString(stringGrip);
+  }
+
+  /**
+   * Used for HAR generation.
+   */
+  getHarData() {
+    return this._harMetadataCollector.getHarData();
   }
 
   /**

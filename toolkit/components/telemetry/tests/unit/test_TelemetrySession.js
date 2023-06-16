@@ -53,7 +53,7 @@ const DATAREPORTING_DIR = "datareporting";
 const ABORTED_PING_FILE_NAME = "aborted-session-ping";
 const ABORTED_SESSION_UPDATE_INTERVAL_MS = 5 * 60 * 1000;
 
-XPCOMUtils.defineLazyGetter(this, "DATAREPORTING_PATH", function() {
+XPCOMUtils.defineLazyGetter(this, "DATAREPORTING_PATH", function () {
   return PathUtils.join(PathUtils.profileDir, DATAREPORTING_DIR);
 });
 
@@ -177,7 +177,8 @@ function checkPayloadInfo(data, reason) {
   let isoDateCheck = arg => {
     // We expect use of this version of the ISO format:
     // 2015-04-12T18:51:19.1+00:00
-    const isoDateRegEx = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+[+-]\d{2}:\d{2}$/;
+    const isoDateRegEx =
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+[+-]\d{2}:\d{2}$/;
     return (
       stringCheck(arg) &&
       !Number.isNaN(Date.parse(arg)) &&
@@ -217,7 +218,8 @@ function checkPayloadInfo(data, reason) {
 
   // Check for a valid revision.
   if (data.revision != "") {
-    const revisionUrlRegEx = /^http[s]?:\/\/hg.mozilla.org(\/[a-z\S]+)+(\/rev\/[0-9a-z]+)$/g;
+    const revisionUrlRegEx =
+      /^http[s]?:\/\/hg.mozilla.org(\/[a-z\S]+)+(\/rev\/[0-9a-z]+)$/g;
     Assert.ok(revisionUrlRegEx.test(data.revision));
   }
 
@@ -273,7 +275,7 @@ function checkScalars(processes) {
     "The keyedScalars entry must be an object."
   );
 
-  let checkScalar = function(scalar, name) {
+  let checkScalar = function (scalar, name) {
     // Check if the value is of a supported type.
     const valueType = typeof scalar;
     switch (valueType) {
@@ -1228,7 +1230,7 @@ add_task(async function test_sendShutdownPing() {
     return;
   }
 
-  let checkPendingShutdownPing = async function() {
+  let checkPendingShutdownPing = async function () {
     let pendingPings = await TelemetryStorage.loadPendingPingList();
     Assert.equal(pendingPings.length, 1, "We expect 1 pending ping: shutdown.");
     // Load the pings off the disk.
@@ -1367,7 +1369,7 @@ add_task(async function test_sendFirstShutdownPing() {
     return;
   }
 
-  let storageContainsFirstShutdown = async function() {
+  let storageContainsFirstShutdown = async function () {
     let pendingPings = await TelemetryStorage.loadPendingPingList();
     let pings = await Promise.all(
       pendingPings.map(async p => {
@@ -1377,7 +1379,7 @@ add_task(async function test_sendFirstShutdownPing() {
     return pings.find(p => p.type == "first-shutdown");
   };
 
-  let checkShutdownNotSent = async function() {
+  let checkShutdownNotSent = async function () {
     // The failure-mode of the ping-sender is used to check that a ping was
     // *not* sent. This can be combined with the state of the storage to infer
     // the appropriate behavior from the preference flags.
@@ -1968,6 +1970,8 @@ add_task(async function test_schedulerEnvironmentReschedules() {
   await TelemetryController.testReset();
   await TelemetryController.testShutdown();
   await TelemetryStorage.testClearPendingPings();
+  // bug 1829855 - Sometimes the idle dispatch from a previous test interferes.
+  TelemetryScheduler.testReset();
   PingServer.clearRequests();
 
   // Set a fake current date and start Telemetry.
@@ -1993,14 +1997,20 @@ add_task(async function test_schedulerEnvironmentReschedules() {
   Preferences.set(PREF_TEST, 1);
 
   // Wait for the environment-changed ping.
-  await PingServer.promiseNextPing();
+  let ping = await PingServer.promiseNextPing();
+  Assert.equal(ping.type, "main", `Expected 'main' ping on ${ping.id}`);
+  Assert.equal(
+    ping.payload.info.reason,
+    "environment-change",
+    `Expected 'environment-change' reason on ${ping.id}`
+  );
 
   // We don't expect to receive any daily ping in this test, so assert if we do.
   PingServer.registerPingHandler((req, res) => {
     const receivedPing = decodeRequestPayload(req);
     Assert.ok(
       false,
-      `No ping should be received in this test (got ${receivedPing.id}).`
+      `No ping should be received in this test (got ${receivedPing.id} type: ${receivedPing.type} reason: ${receivedPing.payload.info.reason}).`
     );
   });
 
@@ -2339,5 +2349,9 @@ add_task(async function test_changeThrottling() {
 });
 
 add_task(async function stopServer() {
+  // It is important to shut down the TelemetryController first as, due to test
+  // environment changes, failure to upload pings here during shutdown results
+  // in an infinite loop of send failures and retries.
+  await TelemetryController.testShutdown();
   await PingServer.stop();
 });

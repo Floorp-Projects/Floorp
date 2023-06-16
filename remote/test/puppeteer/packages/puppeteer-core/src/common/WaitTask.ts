@@ -32,6 +32,7 @@ export interface WaitTaskOptions {
   polling: 'raf' | 'mutation' | number;
   root?: ElementHandle<Node>;
   timeout: number;
+  signal?: AbortSignal;
 }
 
 /**
@@ -50,6 +51,7 @@ export class WaitTask<T = unknown> {
   #result = createDeferredPromise<HandleFor<T>>();
 
   #poller?: JSHandle<Poller<T>>;
+  #signal?: AbortSignal;
 
   constructor(
     world: IsolatedWorld,
@@ -60,6 +62,16 @@ export class WaitTask<T = unknown> {
     this.#world = world;
     this.#polling = options.polling;
     this.#root = options.root;
+    this.#signal = options.signal;
+    this.#signal?.addEventListener(
+      'abort',
+      () => {
+        void this.terminate(this.#signal?.reason);
+      },
+      {
+        once: true,
+      }
+    );
 
     switch (typeof fn) {
       case 'string':
@@ -75,13 +87,13 @@ export class WaitTask<T = unknown> {
 
     if (options.timeout) {
       this.#timeout = setTimeout(() => {
-        this.terminate(
+        void this.terminate(
           new TimeoutError(`Waiting failed: ${options.timeout}ms exceeded`)
         );
       }, options.timeout);
     }
 
-    this.rerun();
+    void this.rerun();
   }
 
   get result(): Promise<HandleFor<T>> {
@@ -141,7 +153,7 @@ export class WaitTask<T = unknown> {
       }
 
       await this.#poller.evaluate(poller => {
-        poller.start();
+        void poller.start();
       });
 
       const result = await this.#poller.evaluateHandle(poller => {
@@ -233,7 +245,7 @@ export class TaskManager {
 
   terminateAll(error?: Error): void {
     for (const task of this.#tasks) {
-      task.terminate(error);
+      void task.terminate(error);
     }
     this.#tasks.clear();
   }

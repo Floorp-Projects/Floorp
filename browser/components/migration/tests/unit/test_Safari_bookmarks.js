@@ -1,13 +1,14 @@
 "use strict";
 
-const { CustomizableUI } = ChromeUtils.import(
-  "resource:///modules/CustomizableUI.jsm"
+const { CustomizableUI } = ChromeUtils.importESModule(
+  "resource:///modules/CustomizableUI.sys.mjs"
 );
 
-add_task(async function() {
+add_task(async function () {
   registerFakePath("ULibDir", do_get_file("Library/"));
-  const faviconPath = do_get_file("Library/Safari/Favicon Cache/favicons.db")
-    .path;
+  const faviconPath = do_get_file(
+    "Library/Safari/Favicon Cache/favicons.db"
+  ).path;
 
   let migrator = await MigrationUtils.getMigrator("safari");
   // Sanity check for the source.

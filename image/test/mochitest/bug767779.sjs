@@ -44,7 +44,7 @@ function sendParts(inputStream, response) {
 }
 
 function getSendNextPart(inputStream, response) {
-  return function() {
+  return function () {
     response.bodyOutputStream.writeFrom(inputStream, 468);
     if (!inputStream.available()) {
       inputStream.close();

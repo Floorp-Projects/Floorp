@@ -25,7 +25,7 @@ function test_openUILink_checkPrincipal() {
     // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://example.com/"
   )); // remote tab
-  BrowserTestUtils.browserLoaded(tab.linkedBrowser).then(async function() {
+  BrowserTestUtils.browserLoaded(tab.linkedBrowser).then(async function () {
     is(
       tab.linkedBrowser.currentURI.spec,
       // eslint-disable-next-line @microsoft/sdl/no-insecure-url
@@ -33,7 +33,7 @@ function test_openUILink_checkPrincipal() {
       "example.com loaded"
     );
 
-    await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+    await SpecialPowers.spawn(tab.linkedBrowser, [], function () {
       let channel = content.docShell.currentDocumentChannel;
 
       const loadingPrincipal = channel.loadInfo.loadingPrincipal;

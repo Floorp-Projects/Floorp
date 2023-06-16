@@ -19,7 +19,7 @@ const tests = [
   [`console.table(function f() {})`, `function f()`],
 ];
 
-add_task(async function() {
+add_task(async function () {
   const TEST_URI = "data:text/html,<!DOCTYPE html><meta charset=utf8>";
 
   const hud = await openNewTabAndConsole(TEST_URI);

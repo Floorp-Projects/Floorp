@@ -16,22 +16,22 @@ const {
   getStr,
 } = require("resource://devtools/client/inspector/layout/utils/l10n.js");
 
-loader.lazyGetter(this, "FlexItemList", function() {
+loader.lazyGetter(this, "FlexItemList", function () {
   return createFactory(
     require("resource://devtools/client/inspector/flexbox/components/FlexItemList.js")
   );
 });
-loader.lazyGetter(this, "FlexItemSizingOutline", function() {
+loader.lazyGetter(this, "FlexItemSizingOutline", function () {
   return createFactory(
     require("resource://devtools/client/inspector/flexbox/components/FlexItemSizingOutline.js")
   );
 });
-loader.lazyGetter(this, "FlexItemSizingProperties", function() {
+loader.lazyGetter(this, "FlexItemSizingProperties", function () {
   return createFactory(
     require("resource://devtools/client/inspector/flexbox/components/FlexItemSizingProperties.js")
   );
 });
-loader.lazyGetter(this, "Header", function() {
+loader.lazyGetter(this, "Header", function () {
   return createFactory(
     require("resource://devtools/client/inspector/flexbox/components/Header.js")
   );

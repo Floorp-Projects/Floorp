@@ -14,7 +14,7 @@ const kSecureURI =
     "chrome://mochitests/content",
     "https://example.com"
   ) + "dummy_page.html";
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.withNewTab(kSecureURI, async browser => {
     let identityMode = window.document.getElementById("identity-box").className;
     is(identityMode, "verifiedDomain", "identity should be secure before");
@@ -29,8 +29,8 @@ add_task(async function() {
       true
     );
 
-    let newIdentityMode = window.document.getElementById("identity-box")
-      .className;
+    let newIdentityMode =
+      window.document.getElementById("identity-box").className;
     is(
       newIdentityMode,
       "certErrorPage notSecureText",
@@ -39,7 +39,7 @@ add_task(async function() {
   });
 });
 
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.withNewTab(kSecureURI, async browser => {
     let identityMode = window.document.getElementById("identity-box").className;
     is(identityMode, "verifiedDomain", "identity should be secure before");
@@ -54,8 +54,8 @@ add_task(async function() {
       true
     );
 
-    let newIdentityMode = window.document.getElementById("identity-box")
-      .className;
+    let newIdentityMode =
+      window.document.getElementById("identity-box").className;
     is(
       newIdentityMode,
       "unknownIdentity",
@@ -116,7 +116,7 @@ function startServer(cert) {
 // just after doing so (resulting in a "connection reset" error page), the site
 // identity information gets updated appropriately (it should indicate "not
 // secure").
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     // This test fails on some platforms if we leave IPv6 enabled.
     set: [["network.dns.disableIPv6", true]],

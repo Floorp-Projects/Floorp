@@ -7,15 +7,16 @@
 #ifndef LIB_JXL_ENCODE_INTERNAL_H_
 #define LIB_JXL_ENCODE_INTERNAL_H_
 
+#include <jxl/encode.h>
+#include <jxl/memory_manager.h>
+#include <jxl/parallel_runner.h>
+#include <jxl/types.h>
+
 #include <deque>
 #include <vector>
 
-#include "enc_fast_lossless.h"
-#include "jxl/encode.h"
-#include "jxl/memory_manager.h"
-#include "jxl/parallel_runner.h"
-#include "jxl/types.h"
 #include "lib/jxl/base/data_parallel.h"
+#include "lib/jxl/enc_fast_lossless.h"
 #include "lib/jxl/enc_frame.h"
 #include "lib/jxl/memory_manager_internal.h"
 
@@ -213,7 +214,7 @@ struct JxlEncoderStruct {
   // requires position indices to point to codestream bytes,
   // so we need to keep track of the total of flushed or queue
   // codestream bytes. These bytes may be in a single jxlc box
-  // or accross multiple jxlp boxes.
+  // or across multiple jxlp boxes.
   size_t codestream_bytes_written_beginning_of_frame;
   size_t codestream_bytes_written_end_of_frame;
   jxl::JxlEncoderFrameIndexBox frame_index_box;

@@ -13,8 +13,8 @@ const { sinon } = ChromeUtils.importESModule(
 const { AttributionCode } = ChromeUtils.importESModule(
   "resource:///modules/AttributionCode.sys.mjs"
 );
-const { AddonRepository } = ChromeUtils.import(
-  "resource://gre/modules/addons/AddonRepository.jsm"
+const { AddonRepository } = ChromeUtils.importESModule(
+  "resource://gre/modules/addons/AddonRepository.sys.mjs"
 );
 
 const TEST_ATTRIBUTION_DATA = {
@@ -52,7 +52,7 @@ add_task(async function test_formatAttributionData() {
   const TEST_ADDON_INFO = {
     sourceURI: { scheme: "https", spec: "https://test.xpi" },
     name: "Test Add-on",
-    icons: { "64": "http://test.svg" },
+    icons: { 64: "http://test.svg" },
   };
   sandbox
     .stub(AttributionCode, "getAttrDataAsync")

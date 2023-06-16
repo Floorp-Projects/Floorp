@@ -526,6 +526,14 @@ Enable async stack capturing for the realm for the global object designated by
 Disable async stack capturing for the realm for the global object designated by
 <i>global</i>.
 
+### `enableUnlimitedStacksCapturing(global)`
+Allow to capture more than 50 stacktraces for the realm for the global object
+designated by <i>global</i>, even if it is not a debuggee.
+
+### `disableUnlimitedStacksCapturing(global)`
+Disallow to capture more than 50 stacktraces for the realm for the global object
+designated by <i>global</i>, unless it is a debuggee.
+
 ## Static methods of the Debugger Object
 
 The functions described below are not called with a `this` value.

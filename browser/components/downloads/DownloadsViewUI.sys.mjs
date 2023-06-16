@@ -235,9 +235,8 @@ export var DownloadsViewUI = {
     // Hide the "Go To Download Page" item if there's no referrer. Ideally the
     // Downloads API will require a referrer (see bug 1723712) to create a
     // download, but this fallback will ensure any failures aren't user facing.
-    contextMenu.querySelector(
-      ".downloadOpenReferrerMenuItem"
-    ).hidden = !download.source.referrerInfo?.originalReferrer;
+    contextMenu.querySelector(".downloadOpenReferrerMenuItem").hidden =
+      !download.source.referrerInfo?.originalReferrer;
 
     // Hide the "use system viewer" and "always use system viewer" items
     // if the feature is disabled or this download doesn't support it:
@@ -299,7 +298,6 @@ export var DownloadsViewUI = {
     // If non default mime-type or cannot be opened internally, display
     // "always open similar files" item instead so that users can add a new
     // mimetype to about:preferences table and set to open with system default.
-    // Only appear if browser.download.improvements_to_download_panel is enabled.
     let alwaysOpenSimilarFilesItem = contextMenu.querySelector(
       ".downloadAlwaysOpenSimilarFilesMenuItem"
     );
@@ -321,10 +319,11 @@ export var DownloadsViewUI = {
     //
     let filename = PathUtils.filename(download.target.path);
 
-    let isExemptExecutableExtension = Services.policies.isExemptExecutableExtension(
-      download.source.originalUrl || download.source.url,
-      filename?.split(".").at(-1)
-    );
+    let isExemptExecutableExtension =
+      Services.policies.isExemptExecutableExtension(
+        download.source.originalUrl || download.source.url,
+        filename?.split(".").at(-1)
+      );
 
     let shouldNotRememberChoice =
       !mimeInfo?.type ||
@@ -336,12 +335,10 @@ export var DownloadsViewUI = {
       (mimeInfo.type === "text/plain" &&
         lazy.gReputationService.isBinary(download.target.path));
 
-    if (DownloadsViewUI.improvementsIsOn && !canViewInternally) {
-      alwaysOpenSimilarFilesItem.hidden =
-        state !== DOWNLOAD_FINISHED || shouldNotRememberChoice;
-    } else {
-      alwaysOpenSimilarFilesItem.hidden = true;
-    }
+    alwaysOpenSimilarFilesItem.hidden =
+      canViewInternally ||
+      state !== DOWNLOAD_FINISHED ||
+      shouldNotRememberChoice;
 
     // Update checkbox for "always open..." options.
     if (preferredAction === useSystemDefault) {
@@ -353,13 +350,6 @@ export var DownloadsViewUI = {
     }
   },
 };
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  DownloadsViewUI,
-  "improvementsIsOn",
-  "browser.download.improvements_to_download_panel",
-  false
-);
 
 XPCOMUtils.defineLazyPreferenceGetter(
   DownloadsViewUI,
@@ -398,7 +388,7 @@ DownloadsViewUI.BaseView = class {
  * HistoryDownloadElementShell and the DownloadsViewItem for the panel. The
  * history view may use a HistoryDownload object in place of a Download object.
  */
-DownloadsViewUI.DownloadElementShell = function() {};
+DownloadsViewUI.DownloadElementShell = function () {};
 
 DownloadsViewUI.DownloadElementShell.prototype = {
   /**
@@ -456,7 +446,7 @@ DownloadsViewUI.DownloadElementShell.prototype = {
       document.importNode(downloadListItemFragment, true)
     );
     let downloadButton = this.element.querySelector(".downloadButton");
-    downloadButton.addEventListener("command", function(event) {
+    downloadButton.addEventListener("command", function (event) {
       event.target.ownerGlobal.DownloadsView.onDownloadButton(event);
     });
     for (let [propertyName, selector] of [
@@ -633,13 +623,8 @@ DownloadsViewUI.DownloadElementShell.prototype = {
    *        One of the presets defined in gDownloadElementButtons.
    */
   showButton(type) {
-    let {
-      commandName,
-      l10nId,
-      descriptionL10nId,
-      panelL10nId,
-      iconClass,
-    } = gDownloadElementButtons[type];
+    let { commandName, l10nId, descriptionL10nId, panelL10nId, iconClass } =
+      gDownloadElementButtons[type];
 
     this.buttonCommandName = commandName;
     let stringId = this.isPanel ? panelL10nId : l10nId;
@@ -701,10 +686,7 @@ DownloadsViewUI.DownloadElementShell.prototype = {
   _updateStateInner() {
     let progressPaused = false;
 
-    this.element.classList.toggle(
-      "openWhenFinished",
-      DownloadsViewUI.improvementsIsOn && !this.download.stopped
-    );
+    this.element.classList.toggle("openWhenFinished", !this.download.stopped);
 
     if (!this.download.stopped) {
       // The download is in progress, so we don't change the button state
@@ -713,30 +695,23 @@ DownloadsViewUI.DownloadElementShell.prototype = {
       let totalBytes = this.download.hasProgress
         ? this.download.totalBytes
         : -1;
-      let [
-        status,
-        newEstimatedSecondsLeft,
-      ] = lazy.DownloadUtils.getDownloadStatus(
-        this.download.currentBytes,
-        totalBytes,
-        this.download.speed,
-        this.lastEstimatedSecondsLeft
-      );
+      let [status, newEstimatedSecondsLeft] =
+        lazy.DownloadUtils.getDownloadStatus(
+          this.download.currentBytes,
+          totalBytes,
+          this.download.speed,
+          this.lastEstimatedSecondsLeft
+        );
       this.lastEstimatedSecondsLeft = newEstimatedSecondsLeft;
 
-      if (
-        DownloadsViewUI.improvementsIsOn &&
-        this.download.launchWhenSucceeded
-      ) {
+      if (this.download.launchWhenSucceeded) {
         status = lazy.DownloadUtils.getFormattedTimeStatus(
           newEstimatedSecondsLeft
         );
       }
-      let hoverStatus = DownloadsViewUI.improvementsIsOn
-        ? {
-            l10n: { id: "downloading-file-click-to-open" },
-          }
-        : undefined;
+      let hoverStatus = {
+        l10n: { id: "downloading-file-click-to-open" },
+      };
       this.showStatus(status, hoverStatus);
     } else {
       let verdict = "";

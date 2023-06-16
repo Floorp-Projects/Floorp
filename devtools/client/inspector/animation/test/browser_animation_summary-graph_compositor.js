@@ -8,18 +8,15 @@
 
 requestLongerTimeout(2);
 
-add_task(async function() {
+add_task(async function () {
   await addTab(URL_ROOT + "doc_simple_animation.html");
   await removeAnimatedElementsExcept([
     ".compositor-all",
     ".compositor-notall",
     ".no-compositor",
   ]);
-  const {
-    animationInspector,
-    inspector,
-    panel,
-  } = await openAnimationInspector();
+  const { animationInspector, inspector, panel } =
+    await openAnimationInspector();
 
   info("Check animation whose all properties are running on compositor");
   const summaryGraphAllEl = await findSummaryGraph(".compositor-all", panel);

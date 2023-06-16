@@ -24,6 +24,8 @@ export class MigrationWizard extends HTMLElement {
   #importFromFileButton = null;
   #chooseImportFromFile = null;
   #safariPermissionButton = null;
+  #safariPasswordImportSkipButton = null;
+  #safariPasswordImportSelectButton = null;
   #selectAllCheckbox = null;
   #resourceSummary = null;
   #expandedDetails = false;
@@ -83,6 +85,9 @@ export class MigrationWizard extends HTMLElement {
                 <label id="form-autofill" data-resource-type="FORMDATA">
                   <input type="checkbox"/><span data-l10n-id="migration-form-autofill-option-label"></span>
                 </label>
+                <label id="payment-methods" data-resource-type="PAYMENT_METHODS">
+                  <input type="checkbox"/><span data-l10n-id="migration-payment-methods-option-label"></span>
+                </label>
               </fieldset>
             </details>
 
@@ -119,6 +124,12 @@ export class MigrationWizard extends HTMLElement {
                 <span data-l10n-id="migration-form-autofill-option-label"></span>
                 <span class="success-text deemphasized-text">&nbsp;</span>
               </div>
+
+              <div data-resource-type="PAYMENT_METHODS" class="resource-progress-group">
+                <span class="progress-icon-parent"><span class="progress-icon" role="img"></span></span>
+                <span data-l10n-id="migration-payment-methods-option-label"></span>
+                <span class="success-text deemphasized-text">&nbsp;</span>
+              </div>
             </div>
             <moz-button-group class="buttons" part="buttons">
               <button class="cancel-close" data-l10n-id="migration-cancel-button-label" disabled></button>
@@ -147,6 +158,12 @@ export class MigrationWizard extends HTMLElement {
                 <span data-l10n-id="migration-passwords-updated"></span>
                 <span class="success-text deemphasized-text">&nbsp;</span>
               </div>
+
+              <div data-resource-type="BOOKMARKS_FROM_FILE" class="resource-progress-group">
+                <span class="progress-icon-parent"><span class="progress-icon" role="img"></span></span>
+                <span data-l10n-id="migration-bookmarks-from-file"></span>
+                <span class="success-text deemphasized-text">&nbsp;</span>
+              </div>
             </div>
             <moz-button-group class="buttons" part="buttons">
               <button class="cancel-close" data-l10n-id="migration-cancel-button-label" disabled></button>
@@ -168,8 +185,8 @@ export class MigrationWizard extends HTMLElement {
               </li>
             </ol>
             <moz-button-group class="buttons" part="buttons">
-              <button class="cancel-close" data-l10n-id="migration-safari-password-import-skip-button"></button>
-              <button class="primary" data-l10n-id="migration-safari-password-import-select-button"></button>
+              <button id="safari-password-import-skip" data-l10n-id="migration-safari-password-import-skip-button"></button>
+              <button id="safari-password-import-select" class="primary" data-l10n-id="migration-safari-password-import-select-button"></button>
             </moz-button-group>
           </div>
 
@@ -270,6 +287,16 @@ export class MigrationWizard extends HTMLElement {
     this.#safariPermissionButton.addEventListener("click", this);
 
     this.#selectAllCheckbox = shadow.querySelector("#select-all").control;
+
+    this.#safariPasswordImportSkipButton = shadow.querySelector(
+      "#safari-password-import-skip"
+    );
+    this.#safariPasswordImportSkipButton.addEventListener("click", this);
+
+    this.#safariPasswordImportSelectButton = shadow.querySelector(
+      "#safari-password-import-select"
+    );
+    this.#safariPasswordImportSelectButton.addEventListener("click", this);
 
     this.#shadowRoot = shadow;
   }
@@ -606,6 +633,7 @@ export class MigrationWizard extends HTMLElement {
           "migration-wizard-progress-icon-in-progress"
         );
         progressIcon.classList.remove("completed");
+        successText.textContent = "";
         // With no status text, we re-insert the &nbsp; so that the status
         // text area does not fully collapse.
         successText.appendChild(document.createTextNode("\u00A0"));
@@ -843,6 +871,20 @@ export class MigrationWizard extends HTMLElement {
   }
 
   /**
+   * Sends a request to get a string path for a passwords file exported
+   * from Safari.
+   */
+  #selectSafariPasswordFile() {
+    let migrationEventDetail = this.#gatherMigrationEventDetails();
+    this.dispatchEvent(
+      new CustomEvent("MigrationWizard:SelectSafariPasswordFile", {
+        bubbles: true,
+        detail: migrationEventDetail,
+      })
+    );
+  }
+
+  /**
    * Changes selected-data-header text and selected-data text based on
    * how many resources are checked
    */
@@ -867,6 +909,8 @@ export class MigrationWizard extends HTMLElement {
         "migration-list-history-label",
       [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.FORMDATA]:
         "migration-list-autofill-label",
+      [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PAYMENT_METHODS]:
+        "migration-list-payment-methods-label",
     };
 
     if (MigrationWizardConstants.USES_FAVORITES.includes(key)) {
@@ -984,6 +1028,28 @@ export class MigrationWizard extends HTMLElement {
               },
             })
           );
+        } else if (event.target == this.#safariPasswordImportSkipButton) {
+          // If the user chose to skip importing passwords from Safari, we
+          // programmatically uncheck the PASSWORDS resource type and re-request
+          // import.
+          let checkbox = this.#shadowRoot.querySelector(
+            `label[data-resource-type="${MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PASSWORDS}"]`
+          ).control;
+          checkbox.checked = false;
+
+          // If there are no other checked checkboxes, go back to the selection
+          // screen.
+          let checked = this.#shadowRoot.querySelectorAll(
+            `label[data-resource-type] > input:checked`
+          ).length;
+
+          if (!checked) {
+            this.requestState();
+          } else {
+            this.#doImport();
+          }
+        } else if (event.target == this.#safariPasswordImportSelectButton) {
+          this.#selectSafariPasswordFile();
         }
         break;
       }

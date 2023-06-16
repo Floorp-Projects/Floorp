@@ -6,9 +6,10 @@
 
 // This tests the SitePermissions.getAllPermissionDetailsForBrowser function.
 add_task(async function testGetAllPermissionDetailsForBrowser() {
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    "https://example.com"
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      "https://example.com"
+    );
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -111,9 +112,10 @@ add_task(async function testGetAllPermissionDetailsForBrowser() {
 });
 
 add_task(async function testTemporaryChangeEvent() {
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    "https://example.com"
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      "https://example.com"
+    );
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,

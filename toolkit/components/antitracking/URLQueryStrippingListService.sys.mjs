@@ -209,12 +209,8 @@ export class URLQueryStrippingListService {
       ...this.prefAllowList,
       ...this.remoteAllowList,
     ]);
-    let stripEntriesAsString = Array.from(stripEntries)
-      .join(" ")
-      .toLowerCase();
-    let allowEntriesAsString = Array.from(allowEntries)
-      .join(",")
-      .toLowerCase();
+    let stripEntriesAsString = Array.from(stripEntries).join(" ").toLowerCase();
+    let allowEntriesAsString = Array.from(allowEntries).join(",").toLowerCase();
 
     let observers = observer ? [observer] : this.observers;
 

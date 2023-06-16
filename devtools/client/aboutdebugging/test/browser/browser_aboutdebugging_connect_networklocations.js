@@ -11,7 +11,7 @@
 const TEST_NETWORK_LOCATION = "localhost:1111";
 const TEST_NETWORK_LOCATION_INVALID = "testnetwork";
 
-add_task(async function() {
+add_task(async function () {
   const { document, tab } = await openAboutDebugging();
 
   await selectConnectPage(document);

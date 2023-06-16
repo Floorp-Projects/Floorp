@@ -56,7 +56,7 @@ class ScriptSource;
 class VarScope;
 class LexicalScope;
 
-class Sprinter;
+class JS_PUBLIC_API Sprinter;
 
 namespace coverage {
 class LCovSource;
@@ -554,7 +554,7 @@ class ScriptSource {
   };
   ExclusiveData<ReaderInstances> readers_;
 
-  // The filename of this script.
+  // The UTF-8 encoded filename of this script.
   SharedImmutableString filename_;
 
   // Hash of the script filename;
@@ -569,7 +569,7 @@ class ScriptSource {
   // raw filename of "foo.js".
   //
   // In the case described above, this field will be set to to the original raw
-  // filename from above, otherwise it will be mozilla::Nothing.
+  // UTF-8 encoded filename from above, otherwise it will be mozilla::Nothing.
   SharedImmutableString introducerFilename_;
 
   SharedImmutableTwoByteString displayURL_;
@@ -583,6 +583,8 @@ class ScriptSource {
   // A string indicating how this source code was introduced into the system.
   // This is a constant, statically allocated C string, so does not need memory
   // management.
+  //
+  // TODO: Document the various additional introduction type constants.
   const char* introductionType_ = nullptr;
 
   // Bytecode offset in caller script that generated this code.  This is

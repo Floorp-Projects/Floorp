@@ -8,86 +8,166 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="Content-Security-Policy" content="default-src chrome: resource:; object-src 'none'" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src chrome: resource:; object-src 'none'"
+    />
     <meta name="color-scheme" content="light dark" />
     <title data-l10n-id="about-telemetry-page-title"></title>
-    <link rel="stylesheet" href="chrome://global/content/aboutTelemetry.css"
-          type="text/css"/>
+    <link
+      rel="stylesheet"
+      href="chrome://global/content/aboutTelemetry.css"
+      type="text/css"
+    />
 
-    <script src="chrome://global/content/aboutTelemetry.js"/>
-    <link rel="localization" href="branding/brand.ftl"/>
-    <link rel="localization" href="toolkit/about/aboutTelemetry.ftl"/>
+    <script src="chrome://global/content/aboutTelemetry.js" />
+    <link rel="localization" href="branding/brand.ftl" />
+    <link rel="localization" href="toolkit/about/aboutTelemetry.ftl" />
   </head>
 
   <body id="body">
-
     <div id="categories">
       <div class="heading">
         <span id="ping-type" class="change-ping dropdown"></span>
         <div id="controls" hidden="true">
-          <span id="older-ping" data-l10n-id="about-telemetry-previous-ping"></span>
+          <span
+            id="older-ping"
+            data-l10n-id="about-telemetry-previous-ping"
+          ></span>
           <span id="ping-date" class="change-ping"></span>
           <span id="newer-ping" data-l10n-id="about-telemetry-next-ping"></span>
         </div>
       </div>
-      <div id="category-home" class="category category-no-icon has-data selected" value="home-section">
-        <span class="category-name" data-l10n-id="about-telemetry-home-section"></span>
+      <div
+        id="category-home"
+        class="category category-no-icon has-data selected"
+        value="home-section"
+      >
+        <span
+          class="category-name"
+          data-l10n-id="about-telemetry-home-section"
+        ></span>
       </div>
       <div class="category category-no-icon" value="general-data-section">
-        <span class="category-name" data-l10n-id="about-telemetry-general-data-section"></span>
+        <span
+          class="category-name"
+          data-l10n-id="about-telemetry-general-data-section"
+        ></span>
       </div>
       <div class="category category-no-icon" value="environment-data-section">
-        <span class="category-name" data-l10n-id="about-telemetry-environment-data-section"></span>
+        <span
+          class="category-name"
+          data-l10n-id="about-telemetry-environment-data-section"
+        ></span>
       </div>
       <div class="category category-no-icon" value="session-info-section">
-        <span class="category-name" data-l10n-id="about-telemetry-session-info-section"></span>
+        <span
+          class="category-name"
+          data-l10n-id="about-telemetry-session-info-section"
+        ></span>
       </div>
       <div class="category category-no-icon" value="scalars-section">
-        <span class="category-name" data-l10n-id="about-telemetry-scalar-section"></span>
+        <span
+          class="category-name"
+          data-l10n-id="about-telemetry-scalar-section"
+        ></span>
       </div>
       <div class="category category-no-icon" value="keyed-scalars-section">
-        <span class="category-name" data-l10n-id="about-telemetry-keyed-scalar-section"></span>
+        <span
+          class="category-name"
+          data-l10n-id="about-telemetry-keyed-scalar-section"
+        ></span>
       </div>
       <div class="category category-no-icon" value="histograms-section">
-        <span class="category-name" data-l10n-id="about-telemetry-histograms-section"></span>
+        <span
+          class="category-name"
+          data-l10n-id="about-telemetry-histograms-section"
+        ></span>
       </div>
       <div class="category category-no-icon" value="keyed-histograms-section">
-        <span class="category-name" data-l10n-id="about-telemetry-keyed-histogram-section"></span>
+        <span
+          class="category-name"
+          data-l10n-id="about-telemetry-keyed-histogram-section"
+        ></span>
       </div>
       <div class="category category-no-icon" value="events-section">
-        <span class="category-name" data-l10n-id="about-telemetry-events-section"></span>
+        <span
+          class="category-name"
+          data-l10n-id="about-telemetry-events-section"
+        ></span>
       </div>
-      <div class="category category-no-icon" value="simple-measurements-section">
-        <span class="category-name" data-l10n-id="about-telemetry-simple-measurements-section"></span>
+      <div
+        class="category category-no-icon"
+        value="simple-measurements-section"
+      >
+        <span
+          class="category-name"
+          data-l10n-id="about-telemetry-simple-measurements-section"
+        ></span>
       </div>
       <div class="category category-no-icon" value="slow-sql-section">
-        <span class="category-name" data-l10n-id="about-telemetry-slow-sql-section"></span>
+        <span
+          class="category-name"
+          data-l10n-id="about-telemetry-slow-sql-section"
+        ></span>
       </div>
       <div class="category category-no-icon" value="addon-details-section">
-        <span class="category-name" data-l10n-id="about-telemetry-addon-details-section"></span>
+        <span
+          class="category-name"
+          data-l10n-id="about-telemetry-addon-details-section"
+        ></span>
       </div>
       <div class="category category-no-icon" value="late-writes-section">
-        <span class="category-name" data-l10n-id="about-telemetry-late-writes-section"></span>
+        <span
+          class="category-name"
+          data-l10n-id="about-telemetry-late-writes-section"
+        ></span>
       </div>
-      <div class="category category-no-icon has-data" value="raw-payload-section">
-        <span class="category-name" data-l10n-id="about-telemetry-raw-payload-section"></span>
+      <div
+        class="category category-no-icon has-data"
+        value="raw-payload-section"
+      >
+        <span
+          class="category-name"
+          data-l10n-id="about-telemetry-raw-payload-section"
+        ></span>
       </div>
-      <div id="category-raw" class="category category-no-icon has-data" value="raw-json-viewer">
-          <span class="category-name" data-l10n-id="about-telemetry-raw"></span>
+      <div
+        id="category-raw"
+        class="category category-no-icon has-data"
+        value="raw-json-viewer"
+      >
+        <span class="category-name" data-l10n-id="about-telemetry-raw"></span>
       </div>
     </div>
 
     <div id="main" class="main-content">
-
       <div id="ping-picker" class="hidden">
         <div id="ping-source-picker">
-          <h4 class="title" data-l10n-id="about-telemetry-ping-data-source"></h4>
+          <h4
+            class="title"
+            data-l10n-id="about-telemetry-ping-data-source"
+          ></h4>
           <label class="radio-container-with-text">
-            <input type="radio" id="ping-source-current" name="choose-ping-source" value="current" checked="checked" />
+            <input
+              type="radio"
+              id="ping-source-current"
+              name="choose-ping-source"
+              value="current"
+              checked="checked"
+            />
             <span data-l10n-id="about-telemetry-show-current-data"></span>
           </label>
-          <label id="ping-source-archive-container" class="radio-container-with-text">
-            <input type="radio" id="ping-source-archive" name="choose-ping-source" value="archive" />
+          <label
+            id="ping-source-archive-container"
+            class="radio-container-with-text"
+          >
+            <input
+              type="radio"
+              id="ping-source-archive"
+              name="choose-ping-source"
+              value="archive"
+            />
             <span data-l10n-id="about-telemetry-show-archived-ping-data"></span>
           </label>
         </div>
@@ -98,27 +178,45 @@
         <div id="archived-ping-picker">
           <h4 class="title" data-l10n-id="about-telemetry-choose-ping"></h4>
           <div>
-            <h4 class="title" data-l10n-id="about-telemetry-archive-ping-type"></h4>
+            <h4
+              class="title"
+              data-l10n-id="about-telemetry-archive-ping-type"
+            ></h4>
             <select id="choose-ping-type"></select>
           </div>
           <div>
-            <h4 class="title" data-l10n-id="about-telemetry-archive-ping-header"></h4>
+            <h4
+              class="title"
+              data-l10n-id="about-telemetry-archive-ping-header"
+            ></h4>
             <select id="choose-ping-id">
-              <optgroup data-l10n-id="about-telemetry-option-group-today">
-              </optgroup>
-              <optgroup data-l10n-id="about-telemetry-option-group-yesterday">
-              </optgroup>
-              <optgroup data-l10n-id="about-telemetry-option-group-older">
-              </optgroup>
+              <optgroup
+                data-l10n-id="about-telemetry-option-group-today"
+              ></optgroup>
+              <optgroup
+                data-l10n-id="about-telemetry-option-group-yesterday"
+              ></optgroup>
+              <optgroup
+                data-l10n-id="about-telemetry-option-group-older"
+              ></optgroup>
             </select>
           </div>
         </div>
       </div>
 
       <div class="header">
-        <div id="sectionTitle" class="header-name" data-l10n-id="about-telemetry-page-title" />
+        <div
+          id="sectionTitle"
+          class="header-name"
+          data-l10n-id="about-telemetry-page-title"
+        />
         <div id="sectionFilters">
-          <label id="storesLabel" for="stores" hidden="true" data-l10n-id="about-telemetry-current-store" />
+          <label
+            id="storesLabel"
+            for="stores"
+            hidden="true"
+            data-l10n-id="about-telemetry-current-store"
+          />
           <select id="stores" hidden="true"></select>
           <input type="text" id="search" placeholder="" />
         </div>
@@ -130,19 +228,59 @@
 
       <section id="home-section" class="active">
         <p id="page-subtitle"></p>
-        <p id="settings-explanation"><a id="uploadLink" data-l10n-name="upload-link" class="change-data-choices-link" href="#"></a></p>
-        <p id="ping-explanation"><a id="pingLink" data-l10n-name="ping-link" href="https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/concepts/pings.html"></a></p>
+        <p id="settings-explanation">
+          <a
+            id="uploadLink"
+            data-l10n-name="upload-link"
+            class="change-data-choices-link"
+            href="#"
+          ></a>
+        </p>
+        <p id="ping-explanation">
+          <a
+            id="pingLink"
+            data-l10n-name="ping-link"
+            href="https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/concepts/pings.html"
+          ></a>
+        </p>
         <p data-l10n-id="about-telemetry-more-information"></p>
         <ul>
-          <li data-l10n-id="about-telemetry-firefox-data-doc"><a id="dataDocLink" data-l10n-name="data-doc-link" href="https://docs.telemetry.mozilla.org/"></a></li>
-          <li data-l10n-id="about-telemetry-telemetry-client-doc"><a id="clientDocLink" data-l10n-name="client-doc-link" href="https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/index.html"></a></li>
-          <li data-l10n-id="about-telemetry-telemetry-dashboard"><a id="dashboardLink" data-l10n-name="dashboard-link" href="https://telemetry.mozilla.org/"></a></li>
-          <li data-l10n-id="about-telemetry-telemetry-probe-dictionary"><a id="probeDictionaryLink" data-l10n-name="probe-dictionary-link" href="https://probes.telemetry.mozilla.org/"></a></li>
+          <li data-l10n-id="about-telemetry-firefox-data-doc">
+            <a
+              id="dataDocLink"
+              data-l10n-name="data-doc-link"
+              href="https://docs.telemetry.mozilla.org/"
+            ></a>
+          </li>
+          <li data-l10n-id="about-telemetry-telemetry-client-doc">
+            <a
+              id="clientDocLink"
+              data-l10n-name="client-doc-link"
+              href="https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/index.html"
+            ></a>
+          </li>
+          <li data-l10n-id="about-telemetry-telemetry-dashboard">
+            <a
+              id="dashboardLink"
+              data-l10n-name="dashboard-link"
+              href="https://telemetry.mozilla.org/"
+            ></a>
+          </li>
+          <li data-l10n-id="about-telemetry-telemetry-probe-dictionary">
+            <a
+              id="probeDictionaryLink"
+              data-l10n-name="probe-dictionary-link"
+              href="https://probes.telemetry.mozilla.org/"
+            ></a>
+          </li>
         </ul>
       </section>
 
       <section id="raw-payload-section">
-        <button id="payload-json-viewer" data-l10n-id="about-telemetry-show-in-Firefox-json-viewer"></button>
+        <button
+          id="payload-json-viewer"
+          data-l10n-id="about-telemetry-show-in-Firefox-json-viewer"
+        ></button>
         <pre id="raw-payload-data"></pre>
       </section>
 
@@ -188,8 +326,16 @@
       </section>
 
       <section id="late-writes-section">
-        <a id="late-writes-fetch-symbols" href="" data-l10n-id="about-telemetry-fetch-stack-symbols"></a>
-        <a id="late-writes-hide-symbols" href="" data-l10n-id="about-telemetry-hide-stack-symbols"></a>
+        <a
+          id="late-writes-fetch-symbols"
+          href=""
+          data-l10n-id="about-telemetry-fetch-stack-symbols"
+        ></a>
+        <a
+          id="late-writes-hide-symbols"
+          href=""
+          data-l10n-id="about-telemetry-hide-stack-symbols"
+        ></a>
         <div id="late-writes" class="data"></div>
       </section>
 
@@ -197,7 +343,5 @@
         <div id="addon-details" class="data"></div>
       </section>
     </div>
-
   </body>
-
 </html>

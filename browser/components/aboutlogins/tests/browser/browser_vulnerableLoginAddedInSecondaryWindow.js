@@ -16,7 +16,7 @@ EXPECTED_BREACH = {
 
 let tabInSecondWindow;
 
-add_setup(async function() {
+add_setup(async function () {
   TEST_LOGIN1 = await addLogin(TEST_LOGIN1);
   TEST_LOGIN2 = await addLogin(TEST_LOGIN2);
   TEST_LOGIN3 = await addLogin(TEST_LOGIN3);
@@ -130,13 +130,16 @@ add_task(async function test_new_login_marked_vulnerable_in_both_windows() {
       );
     }
   );
+  console.log("xxxxxxx ---- 0");
 
   tabInSecondWindow.linkedBrowser.reload();
   await BrowserTestUtils.browserLoaded(
     tabInSecondWindow.linkedBrowser,
     false,
-    "about:logins"
+    url => url.includes("about:logins")
   );
+
+  console.log("xxxxxxx ---- 1");
 
   await SpecialPowers.spawn(tabInSecondWindow.linkedBrowser, [], async () => {
     let loginList = content.document.querySelector("login-list");
@@ -164,6 +167,7 @@ add_task(async function test_new_login_marked_vulnerable_in_both_windows() {
       }
     }
   });
+  console.log("xxxxxxx ---- 2");
 
   await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
@@ -194,10 +198,8 @@ add_task(async function test_new_login_marked_vulnerable_in_both_windows() {
     }
   );
   gBrowser.selectedBrowser.reload();
-  await BrowserTestUtils.browserLoaded(
-    gBrowser.selectedBrowser,
-    false,
-    "about:logins"
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, url =>
+    url.includes("about:logins")
   );
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {

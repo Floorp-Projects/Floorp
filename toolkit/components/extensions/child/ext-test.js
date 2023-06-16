@@ -4,7 +4,7 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyGetter(this, "isXpcshell", function() {
+XPCOMUtils.defineLazyGetter(this, "isXpcshell", function () {
   return Services.env.exists("XPCSHELL_TEST_PROFILE_DIR");
 });
 
@@ -167,7 +167,7 @@ this.test = class extends ExtensionAPI {
       }
 
       addListener(callback, ...args) {
-        const listenerWrapper = function(...args) {
+        const listenerWrapper = function (...args) {
           try {
             callback.call(this, ...args);
           } catch (e) {
@@ -259,7 +259,7 @@ this.test = class extends ExtensionAPI {
               // throw if needed.
               v = ChromeUtils.waiveXrays(v);
             }
-            new StructuredCloneHolder(v, globalThis);
+            new StructuredCloneHolder("test.assertEq", null, v, globalThis);
           }
           // When WebIDL bindings are used, the objects are already cloned
           // structurally, so we don't need to check again.

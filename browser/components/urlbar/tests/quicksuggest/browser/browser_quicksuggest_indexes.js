@@ -43,7 +43,7 @@ const REMOTE_SETTINGS_RESULTS = [
   },
 ];
 
-add_setup(async function() {
+add_setup(async function () {
   // This test intermittently times out on Mac TV WebRender.
   if (AppConstants.platform == "macosx") {
     requestLongerTimeout(3);
@@ -57,7 +57,12 @@ add_setup(async function() {
   await SearchTestUtils.installSearchExtension({}, { setAsDefault: true });
 
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
-    remoteSettingsResults: REMOTE_SETTINGS_RESULTS,
+    remoteSettingsResults: [
+      {
+        type: "data",
+        attachment: REMOTE_SETTINGS_RESULTS,
+      },
+    ],
   });
 
   registerCleanupFunction(async () => {

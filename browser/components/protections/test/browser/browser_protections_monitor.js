@@ -17,15 +17,15 @@ const mockMonitorData = {
   numBreachesResolved: 0,
 };
 
-add_task(async function() {
-  let tab = await BrowserTestUtils.openNewForegroundTab({
+add_task(async function () {
+  const tab = await BrowserTestUtils.openNewForegroundTab({
     url: "about:protections",
     gBrowser,
   });
 
   await BrowserTestUtils.reloadTab(tab);
 
-  let monitorCardEnabled = Services.prefs.getBoolPref(
+  const monitorCardEnabled = Services.prefs.getBoolPref(
     "browser.contentblocking.report.monitor.enabled"
   );
 
@@ -39,7 +39,7 @@ add_task(async function() {
     info(
       "Check that the correct content is displayed for users with monitor data."
     );
-    Services.logins.addLogin(TEST_LOGIN1);
+    await Services.logins.addLoginAsync(TEST_LOGIN1);
     AboutProtectionsParent.setTestOverride(mockGetMonitorData(mockMonitorData));
     await BrowserTestUtils.reloadTab(tab);
 
@@ -48,7 +48,7 @@ add_task(async function() {
       "Error was not thrown for trying to reach the Monitor endpoint, the cache has worked."
     );
 
-    await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
       await ContentTaskUtils.waitForCondition(() => {
         const hasLogins = content.document.querySelector(
           ".monitor-card.has-logins"
@@ -107,7 +107,7 @@ add_task(async function() {
     await BrowserTestUtils.reloadTab(tab);
   }
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     await ContentTaskUtils.waitForCondition(() => {
       const monitorCard = content.document.querySelector(".monitor-card");
       return !monitorCard["data-enabled"];
@@ -135,7 +135,7 @@ add_task(async function() {
 });
 
 async function checkNoLoginsContentIsDisplayed(tab, expectedLinkContent) {
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     await ContentTaskUtils.waitForCondition(() => {
       const noLogins = content.document.querySelector(
         ".monitor-card.no-logins"

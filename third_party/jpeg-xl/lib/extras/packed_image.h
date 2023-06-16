@@ -9,6 +9,9 @@
 // Helper class for storing external (int or float, interleaved) images. This is
 // the common format used by other libraries and in the libjxl API.
 
+#include <jxl/codestream_header.h>
+#include <jxl/encode.h>
+#include <jxl/types.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -19,9 +22,6 @@
 #include <string>
 #include <vector>
 
-#include "jxl/codestream_header.h"
-#include "jxl/encode.h"
-#include "jxl/types.h"
 #include "lib/jxl/common.h"
 
 namespace jxl {

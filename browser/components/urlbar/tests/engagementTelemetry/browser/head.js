@@ -93,24 +93,33 @@ async function ensureQuickSuggestInit({
     merinoSuggestions,
     remoteSettingsResults: [
       {
-        id: 1,
-        url: "https://example.com/sponsored",
-        title: "Sponsored suggestion",
-        keywords: ["sponsored"],
-        click_url: "https://example.com/click",
-        impression_url: "https://example.com/impression",
-        advertiser: "TestAdvertiser",
-        iab_category: "22 - Shopping",
+        type: "data",
+        attachment: [
+          {
+            id: 1,
+            url: "https://example.com/sponsored",
+            title: "Sponsored suggestion",
+            keywords: ["sponsored"],
+            click_url: "https://example.com/click",
+            impression_url: "https://example.com/impression",
+            advertiser: "TestAdvertiser",
+            iab_category: "22 - Shopping",
+          },
+          {
+            id: 2,
+            url: `https://example.com/nonsponsored`,
+            title: "Non-sponsored suggestion",
+            keywords: ["nonsponsored"],
+            click_url: "https://example.com/click",
+            impression_url: "https://example.com/impression",
+            advertiser: "TestAdvertiser",
+            iab_category: "5 - Education",
+          },
+        ],
       },
       {
-        id: 2,
-        url: `https://example.com/nonsponsored`,
-        title: "Non-sponsored suggestion",
-        keywords: ["nonsponsored"],
-        click_url: "https://example.com/click",
-        impression_url: "https://example.com/impression",
-        advertiser: "TestAdvertiser",
-        iab_category: "5 - Education",
+        type: "weather",
+        weather: MerinoTestUtils.WEATHER_RS_DATA,
       },
     ],
   });
@@ -407,8 +416,7 @@ async function setup() {
   });
 
   const engine = await SearchTestUtils.promiseNewSearchEngine({
-    url:
-      "chrome://mochitests/content/browser/browser/components/urlbar/tests/browser/searchSuggestionEngine.xml",
+    url: "chrome://mochitests/content/browser/browser/components/urlbar/tests/browser/searchSuggestionEngine.xml",
   });
   const originalDefaultEngine = await Services.search.getDefault();
   await Services.search.setDefault(
@@ -417,7 +425,7 @@ async function setup() {
   );
   await Services.search.moveEngine(engine, 0);
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await SpecialPowers.popPrefEnv();
     await Services.search.setDefault(
       originalDefaultEngine,

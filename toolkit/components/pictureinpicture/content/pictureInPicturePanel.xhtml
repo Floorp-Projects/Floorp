@@ -1,0 +1,47 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<html:template id="PictureInPicturePanelTemplate">
+  <panel
+    id="PictureInPicturePanel"
+    class="panel-no-padding"
+    type="arrow"
+    orient="vertical"
+    level="parent"
+    tabspecific="true"
+    onpopupshown="PictureInPicture.onPipPanelShown(event);"
+    onpopuphidden="PictureInPicture.onPipPanelHidden(event)"
+  >
+    <box class="panel-header">
+      <html:h1>
+        <html:span data-l10n-id="picture-in-picture-panel-header" />
+      </html:h1>
+    </box>
+    <toolbarseparator />
+    <vbox id="PictureInPicturePanelBody">
+      <html:div data-l10n-id="picture-in-picture-panel-headline" />
+      <html:div>
+        <html:span
+          class="deemphasized"
+          data-l10n-id="picture-in-picture-panel-body"
+        />
+        <html:a
+          is="moz-support-link"
+          id="pip-learn-more-link"
+          support-page="about-picture-picture-firefox"
+          data-l10n-name="support-link"
+        />
+      </html:div>
+    </vbox>
+    <toolbarseparator />
+    <vbox id="PictureInPicturePanelFooter">
+      <html:moz-toggle
+        id="respect-pipDisabled-switch"
+        data-l10n-id="picture-in-picture-enable-toggle"
+        data-l10n-attrs="label"
+        onclick="PictureInPicture.toggleRespectDisablePip(event);"
+      />
+    </vbox>
+  </panel>
+</html:template>

@@ -40,9 +40,8 @@
 
       this.scrollbox = this.shadowRoot.querySelector("scrollbox");
       this._scrollButtonUp = this.shadowRoot.getElementById("scrollbutton-up");
-      this._scrollButtonDown = this.shadowRoot.getElementById(
-        "scrollbutton-down"
-      );
+      this._scrollButtonDown =
+        this.shadowRoot.getElementById("scrollbutton-down");
 
       this._arrowScrollAnim = {
         scrollbox: this,

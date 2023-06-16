@@ -5,11 +5,9 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "AbuseReporter",
-  "resource://gre/modules/AbuseReporter.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  AbuseReporter: "resource://gre/modules/AbuseReporter.sys.mjs",
+});
 
 const IS_DIALOG_WINDOW = window.arguments && window.arguments.length;
 
@@ -819,11 +817,8 @@ if (IS_DIALOG_WINDOW) {
   // (vs. being an about:addons subframe).
   document.documentElement.className = "dialog-window";
 
-  const {
-    report,
-    deferredReport,
-    deferredReportPanel,
-  } = window.arguments[0].wrappedJSObject;
+  const { report, deferredReport, deferredReportPanel } =
+    window.arguments[0].wrappedJSObject;
 
   window.addEventListener(
     "unload",

@@ -4,11 +4,14 @@
 
 import { ContentProcessDomain } from "chrome://remote/content/cdp/domains/ContentProcessDomain.sys.mjs";
 
-const {
-  LOAD_FLAGS_BYPASS_CACHE,
-  LOAD_FLAGS_BYPASS_PROXY,
-  LOAD_FLAGS_NONE,
-} = Ci.nsIWebNavigation;
+const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  generateUUID: "chrome://remote/content/shared/UUID.sys.mjs",
+});
+
+const { LOAD_FLAGS_BYPASS_CACHE, LOAD_FLAGS_BYPASS_PROXY, LOAD_FLAGS_NONE } =
+  Ci.nsIWebNavigation;
 
 export class Page extends ContentProcessDomain {
   constructor(session) {
@@ -173,10 +176,7 @@ export class Page extends ContentProcessDomain {
     if (worldName) {
       this.worldsToEvaluateOnLoad.add(worldName);
     }
-    const identifier = Services.uuid
-      .generateUUID()
-      .toString()
-      .slice(1, -1);
+    const identifier = lazy.generateUUID();
     this.scriptsToEvaluateOnLoad.set(identifier, { worldName, source });
 
     return { identifier };

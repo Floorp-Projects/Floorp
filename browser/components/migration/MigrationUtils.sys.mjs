@@ -112,6 +112,9 @@ const FILE_MIGRATOR_MODULES = Object.freeze({
   PasswordFileMigrator: {
     moduleURI: "resource:///modules/FileMigrators.sys.mjs",
   },
+  BookmarksFileMigrator: {
+    moduleURI: "resource:///modules/FileMigrators.sys.mjs",
+  },
 });
 
 /**
@@ -139,6 +142,7 @@ class MigrationUtils {
     BOOKMARKS: 0x0020,
     OTHERDATA: 0x0040,
     SESSION: 0x0080,
+    PAYMENT_METHODS: 0x0100,
   });
 
   /**
@@ -179,7 +183,7 @@ class MigrationUtils {
    *   the wrapped function.
    */
   wrapMigrateFunction(aFunction, aCallback) {
-    return function() {
+    return function () {
       let success = false;
       try {
         aFunction.apply(null, arguments);
@@ -291,9 +295,8 @@ class MigrationUtils {
         MIGRATOR_MODULES
       )) {
         if (platforms.includes(AppConstants.platform)) {
-          let { [symbol]: migratorClass } = ChromeUtils.importESModule(
-            moduleURI
-          );
+          let { [symbol]: migratorClass } =
+            ChromeUtils.importESModule(moduleURI);
           if (gMigrators.has(migratorClass.key)) {
             console.error(
               "A pre-existing migrator exists with key " +
@@ -767,6 +770,7 @@ class MigrationUtils {
     bookmarks: 0,
     logins: 0,
     history: 0,
+    cards: 0,
   };
 
   getImportedCount(type) {
@@ -817,7 +821,7 @@ class MigrationUtils {
         if (parent == lazy.PlacesUtils.bookmarks.toolbarGuid) {
           lazy.PlacesUIUtils.maybeToggleBookmarkToolbarVisibility(
             true /* aForceVisible */
-          );
+          ).catch(console.error);
         }
       },
       ex => console.error(ex)
@@ -892,6 +896,22 @@ class MigrationUtils {
         null,
         Services.scriptSecurityManager.getSystemPrincipal()
       );
+    }
+  }
+
+  async insertCreditCardsWrapper(cards) {
+    this._importQuantities.cards += cards.length;
+    let { formAutofillStorage } = ChromeUtils.importESModule(
+      "resource://autofill/FormAutofillStorage.sys.mjs"
+    );
+
+    await formAutofillStorage.initialize();
+    for (let card of cards) {
+      try {
+        await formAutofillStorage.creditCards.add(card);
+      } catch (e) {
+        console.error("Failed to insert credit card due to error: ", e, card);
+      }
     }
   }
 

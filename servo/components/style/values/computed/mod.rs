@@ -42,22 +42,21 @@ pub use self::align::{
 #[cfg(feature = "gecko")]
 pub use self::align::{AlignSelf, JustifySelf};
 pub use self::angle::Angle;
+pub use self::animation::{AnimationIterationCount, AnimationName, AnimationTimeline};
+pub use self::animation::{ScrollAxis, ScrollTimelineName, TransitionProperty, ViewTimelineInset};
 pub use self::background::{BackgroundRepeat, BackgroundSize};
 pub use self::basic_shape::FillRule;
-pub use self::border::{BorderCornerRadius, BorderRadius, BorderSpacing};
-pub use self::border::{BorderImageRepeat, BorderImageSideWidth};
-pub use self::border::{BorderImageSlice, BorderImageWidth};
-pub use self::box_::{
-    Appearance, BreakBetween, BreakWithin, Clear, ContainIntrinsicSize, ContentVisibility, Float,
+pub use self::border::{
+    BorderCornerRadius, BorderImageRepeat, BorderImageSideWidth, BorderImageSlice,
+    BorderImageWidth, BorderRadius, BorderSideWidth, BorderSpacing,
 };
 pub use self::box_::{
-    Contain, ContainerName, ContainerType, Display, LineClamp, Overflow, OverflowAnchor,
+    Appearance, BaselineSource, BreakBetween, BreakWithin, Clear, Contain, ContainIntrinsicSize,
+    ContainerName, ContainerType, ContentVisibility, Display, Float, LineClamp, Overflow,
+    OverflowAnchor, OverflowClipBox, OverscrollBehavior, Perspective, Resize, ScrollSnapAlign,
+    ScrollSnapAxis, ScrollSnapStop, ScrollSnapStrictness, ScrollSnapType, ScrollbarGutter,
+    TouchAction, VerticalAlign, WillChange,
 };
-pub use self::box_::{OverflowClipBox, OverscrollBehavior, Perspective, Resize, ScrollbarGutter};
-pub use self::box_::{
-    ScrollSnapAlign, ScrollSnapAxis, ScrollSnapStop, ScrollSnapStrictness, ScrollSnapType,
-};
-pub use self::box_::{TouchAction, VerticalAlign, WillChange};
 pub use self::color::{
     Color, ColorOrAuto, ColorPropertyValue, ColorScheme, ForcedColorAdjust, PrintColorAdjust,
 };
@@ -80,7 +79,7 @@ pub use self::length::{NonNegativeLengthPercentage, NonNegativeLengthPercentageO
 #[cfg(feature = "gecko")]
 pub use self::list::ListStyleType;
 pub use self::list::Quotes;
-pub use self::motion::{OffsetPath, OffsetRotate};
+pub use self::motion::{OffsetPath, OffsetPosition, OffsetRotate};
 pub use self::outline::OutlineStyle;
 pub use self::page::{PageName, PageOrientation, PageSize, PageSizeOrientation, PaperSize};
 pub use self::percentage::{NonNegativePercentage, Percentage};
@@ -106,8 +105,6 @@ pub use self::transform::{TransformOrigin, TransformStyle, Translate};
 #[cfg(feature = "gecko")]
 pub use self::ui::CursorImage;
 pub use self::ui::{BoolInteger, Cursor, UserSelect};
-pub use self::animation::{AnimationIterationCount, AnimationName, AnimationTimeline};
-pub use self::animation::{ScrollAxis, ScrollTimelineName, TransitionProperty, ViewTimelineInset};
 pub use super::specified::TextTransform;
 pub use super::specified::ViewportVariant;
 pub use super::specified::{BorderStyle, TextDecorationLine};
@@ -390,7 +387,12 @@ impl<'a> Context<'a> {
     /// Apply text-zoom if enabled.
     #[cfg(feature = "gecko")]
     pub fn maybe_zoom_text(&self, size: CSSPixelLength) -> CSSPixelLength {
-        if self.style().get_font().clone__x_text_scale().text_zoom_enabled() {
+        if self
+            .style()
+            .get_font()
+            .clone__x_text_scale()
+            .text_zoom_enabled()
+        {
             self.device().zoom_text(size)
         } else {
             size

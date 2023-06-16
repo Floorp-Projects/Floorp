@@ -22,7 +22,7 @@ function getBrowserChildrenWithOrdinals() {
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   await SidebarUI.show("viewBookmarksSidebar");
   SidebarUI.showSwitcherPanel();
 

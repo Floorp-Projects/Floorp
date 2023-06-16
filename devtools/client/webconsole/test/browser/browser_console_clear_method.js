@@ -10,18 +10,18 @@
 
 const TEST_URI = "data:text/html;charset=utf8,<!DOCTYPE html><p>Bug 1296870";
 
-add_task(async function() {
+add_task(async function () {
   await loadTab(TEST_URI);
   const hud = await BrowserConsoleManager.toggleBrowserConsole();
 
   info("Log a new message from the content page");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     content.wrappedJSObject.console.log("msg");
   });
   await waitForMessageByType(hud, "msg", ".console-api");
 
   info("Send a console.clear() from the content page");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     content.wrappedJSObject.console.clear();
   });
   await waitForMessageByType(hud, "Console was cleared", ".console-api");

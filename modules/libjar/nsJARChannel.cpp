@@ -1324,7 +1324,7 @@ nsJARChannel::OnDataAvailable(nsIRequest* req, nsIInputStream* stream,
 }
 
 NS_IMETHODIMP
-nsJARChannel::RetargetDeliveryTo(nsIEventTarget* aEventTarget) {
+nsJARChannel::RetargetDeliveryTo(nsISerialEventTarget* aEventTarget) {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsCOMPtr<nsIThreadRetargetableRequest> request = do_QueryInterface(mRequest);
@@ -1336,7 +1336,7 @@ nsJARChannel::RetargetDeliveryTo(nsIEventTarget* aEventTarget) {
 }
 
 NS_IMETHODIMP
-nsJARChannel::GetDeliveryTarget(nsIEventTarget** aEventTarget) {
+nsJARChannel::GetDeliveryTarget(nsISerialEventTarget** aEventTarget) {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsCOMPtr<nsIThreadRetargetableRequest> request = do_QueryInterface(mRequest);

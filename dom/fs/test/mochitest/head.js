@@ -61,7 +61,7 @@ async function removeAllEntries() {
   }
 }
 
-add_setup(async function() {
+add_setup(async function () {
   const { setStoragePrefs, clearStoragesForOrigin } = await import(
     "/tests/dom/quota/test/modules/StorageUtils.js"
   );
@@ -74,7 +74,7 @@ add_setup(async function() {
 
   await setStoragePrefs(optionalPrefsToSet);
 
-  SimpleTest.registerCleanupFunction(async function() {
+  SimpleTest.registerCleanupFunction(async function () {
     await removeAllEntries();
 
     await clearStoragesForOrigin(SpecialPowers.wrap(document).nodePrincipal);

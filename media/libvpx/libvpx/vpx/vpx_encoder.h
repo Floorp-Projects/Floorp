@@ -58,7 +58,7 @@ extern "C" {
  * fields to structures
  */
 #define VPX_ENCODER_ABI_VERSION \
-  (15 + VPX_CODEC_ABI_VERSION + \
+  (16 + VPX_CODEC_ABI_VERSION + \
    VPX_EXT_RATECTRL_ABI_VERSION) /**<\hideinitializer*/
 
 /*! \brief Encoder capabilities bitfield
@@ -251,6 +251,31 @@ enum vpx_kf_mode {
   VPX_KF_AUTO,        /**< Encoder determines optimal placement automatically */
   VPX_KF_DISABLED = 0 /**< Encoder does not place keyframes. */
 };
+
+/*!\brief Temporal dependency model stats for each block before propagation */
+typedef struct VpxTplBlockStats {
+  int64_t intra_cost;  /**< Intra cost */
+  int64_t inter_cost;  /**< Inter cost */
+  int16_t mv_r;        /**< Motion vector row */
+  int16_t mv_c;        /**< Motion vector col */
+  int64_t recrf_rate;  /**< Rate from reconstructed ref frame */
+  int64_t recrf_dist;  /**< Distortion from reconstructed ref frame */
+  int ref_frame_index; /**< Ref frame index */
+} VpxTplBlockStats;
+
+/*!\brief Temporal dependency model stats for each frame before propagation */
+typedef struct VpxTplFrameStats {
+  int frame_width;  /**< Frame width */
+  int frame_height; /**< Frame height */
+  int num_blocks;   /**< Number of blocks. Size of block_stats_list */
+  VpxTplBlockStats *block_stats_list; /**< List of tpl stats for each block */
+} VpxTplFrameStats;
+
+/*!\brief Temporal dependency model stats for each GOP before propagation */
+typedef struct VpxTplGopStats {
+  int size; /**< GOP size, also the size of frame_stats_list. */
+  VpxTplFrameStats *frame_stats_list; /**< List of tpl stats for each frame */
+} VpxTplGopStats;
 
 /*!\brief Encoded Frame Flags
  *
@@ -858,7 +883,7 @@ typedef struct vpx_svc_parameters {
 
 /*!\brief Initialize an encoder instance
  *
- * Initializes a encoder context using the given interface. Applications
+ * Initializes an encoder context using the given interface. Applications
  * should call the vpx_codec_enc_init convenience macro instead of this
  * function directly, to ensure that the ABI version number parameter
  * is properly initialized.
@@ -866,6 +891,9 @@ typedef struct vpx_svc_parameters {
  * If the library was configured with --disable-multithread, this call
  * is not thread safe and should be guarded with a lock if being used
  * in a multithreaded context.
+ *
+ * If vpx_codec_enc_init_ver() fails, it is not necessary to call
+ * vpx_codec_destroy() on the encoder context.
  *
  * \param[in]    ctx     Pointer to this instance's context.
  * \param[in]    iface   Pointer to the algorithm interface to use.

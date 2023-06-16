@@ -8,7 +8,7 @@
 const SIMPLE_URI = TEST_BASE_HTTPS + "simple.html";
 const LONGNAME_URI = TEST_BASE_HTTPS + "longname.html";
 
-add_task(async function() {
+add_task(async function () {
   const { panel, ui } = await openStyleEditorForURL(SIMPLE_URI);
   const editor = await ui.editors[0].getSourceEditor();
 
@@ -89,9 +89,8 @@ add_task(async function testSystemStylesheet() {
     editor => editor.friendlyName === "aboutSupport.css"
   );
   ok(!!aboutSupportEditor, "Found the editor for aboutSupport.css");
-  const aboutSupportToggle = aboutSupportEditor.summary.querySelector(
-    ".stylesheet-toggle"
-  );
+  const aboutSupportToggle =
+    aboutSupportEditor.summary.querySelector(".stylesheet-toggle");
   ok(aboutSupportToggle, "enabled toggle button exists");
   ok(!aboutSupportToggle.disabled, "enabled toggle button is not disabled");
   is(

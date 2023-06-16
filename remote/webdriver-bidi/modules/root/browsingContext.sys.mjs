@@ -225,9 +225,8 @@ class BrowsingContextModule extends Module {
             lazy.pprint`Expected "referenceContext" to be a string, got ${referenceContextId}`
           );
 
-          const referenceBrowsingContext = lazy.TabManager.getBrowsingContextById(
-            referenceContextId
-          );
+          const referenceBrowsingContext =
+            lazy.TabManager.getBrowsingContextById(referenceContextId);
           if (!referenceBrowsingContext) {
             throw new lazy.error.NoSuchFrameError(
               `Browsing Context with id ${referenceContextId} not found`
@@ -253,7 +252,10 @@ class BrowsingContextModule extends Module {
     }
 
     await lazy.waitForInitialNavigationCompleted(
-      browser.browsingContext.webProgress
+      browser.browsingContext.webProgress,
+      {
+        unloadTimeout: 5000,
+      }
     );
 
     return {

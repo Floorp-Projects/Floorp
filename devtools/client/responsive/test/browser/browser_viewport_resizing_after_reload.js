@@ -13,7 +13,7 @@ const TEST_URL =
   '<div style="width:100%;height:1100px;background-color:lightblue"></div>' +
   "</body>";
 
-addRDMTask(TEST_URL, async function({ ui, manager }) {
+addRDMTask(TEST_URL, async function ({ ui, manager }) {
   info("--- Starting viewport test output ---");
 
   // We're going to take a 300,600 viewport (before), reload it,

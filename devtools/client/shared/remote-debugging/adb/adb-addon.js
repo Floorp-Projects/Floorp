@@ -4,8 +4,10 @@
 
 "use strict";
 
-const { AddonManager } = ChromeUtils.import(
-  "resource://gre/modules/AddonManager.jsm"
+const { AddonManager } = ChromeUtils.importESModule(
+  "resource://gre/modules/AddonManager.sys.mjs",
+  // AddonManager is a singleton, never create two instances of it.
+  { loadInDevToolsLoader: false }
 );
 const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
@@ -38,8 +40,11 @@ class ADBAddon extends EventEmitter {
     this._status = ADB_ADDON_STATES.UNKNOWN;
 
     const addonsListener = {};
-    addonsListener.onEnabled = addonsListener.onDisabled = addonsListener.onInstalled = addonsListener.onUninstalled = () =>
-      this.updateInstallStatus();
+    addonsListener.onEnabled =
+      addonsListener.onDisabled =
+      addonsListener.onInstalled =
+      addonsListener.onUninstalled =
+        () => this.updateInstallStatus();
     AddonManager.addAddonListener(addonsListener);
 
     this.updateInstallStatus();

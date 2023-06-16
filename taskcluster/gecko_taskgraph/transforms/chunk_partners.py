@@ -43,9 +43,7 @@ def chunk_partners(config, jobs):
                 "release-partner-repack-signing",
                 "release-eme-free-repack-signing",
                 "release-eme-free-repack-mac-signing",
-                "release-eme-free-repack-mac-notarization",
-                "release-partner-repack-notarization-part-1",
-                "release-eme-free-repack-notarization-part-1",
+                "release-partner-repack-mac-signing",
             ):
                 repacks_per_chunk = job.get("repacks-per-chunk")
                 chunks, remainder = divmod(len(platform_repack_ids), repacks_per_chunk)

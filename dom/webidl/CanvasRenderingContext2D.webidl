@@ -287,7 +287,12 @@ interface mixin CanvasTextDrawingStyles {
   attribute DOMString textAlign; // "start", "end", "left", "right", "center" (default: "start")
   attribute DOMString textBaseline; // "top", "hanging", "middle", "alphabetic", "ideographic", "bottom" (default: "alphabetic")
   attribute DOMString direction; // "ltr", "rtl", "inherit" (default: "inherit")
+  attribute UTF8String letterSpacing; // default: "0px"
   attribute DOMString fontKerning; // "auto", "normal", "none" (default: "auto")
+// NOT IMPLEMENTED  attribute CanvasFontStretch fontStretch; // (default: "normal")
+// NOT IMPLEMENTED  attribute CanvasFontVariantCaps fontVariantCaps; // (default: "normal")
+// NOT IMPLEMENTED  attribute CanvasTextRendering textRendering; // (default: "auto")
+  attribute UTF8String wordSpacing; // default: "0px"
 };
 
 interface mixin CanvasPathMethods {

@@ -16,7 +16,7 @@ const TEST_URI =
   "test/browser/" +
   "test-stacktrace-location-debugger-link.html";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
   const toolbox = await gDevTools.getToolboxForTab(gBrowser.selectedTab);
 

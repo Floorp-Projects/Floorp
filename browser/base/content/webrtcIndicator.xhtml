@@ -8,31 +8,38 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      id="webrtcIndicator"
-      windowtype="Browser:WebRTCGlobalIndicator"
-      chromemargin="0,0,0,0">
-
+<html
+  xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  id="webrtcIndicator"
+  windowtype="Browser:WebRTCGlobalIndicator"
+  chromemargin="0,0,0,0"
+>
   <head>
-    <link rel="localization" href="branding/brand.ftl"/>
-    <link rel="localization" href="browser/webrtcIndicator.ftl"/>
+    <link rel="localization" href="branding/brand.ftl" />
+    <link rel="localization" href="browser/webrtcIndicator.ftl" />
     <title data-l10n-id="webrtc-indicator-title"></title>
-    <script src="chrome://global/content/customElements.js"/>
+    <script src="chrome://global/content/customElements.js" />
     <script src="chrome://browser/content/webrtcIndicator.js"></script>
   </head>
 
-  <xul:menu id="webRTC-sharingCamera-menu" data-l10n-id="webrtc-camera-system-menu">
-    <xul:menupopup type="Camera">
-    </xul:menupopup>
+  <xul:menu
+    id="webRTC-sharingCamera-menu"
+    data-l10n-id="webrtc-camera-system-menu"
+  >
+    <xul:menupopup type="Camera"> </xul:menupopup>
   </xul:menu>
-  <xul:menu id="webRTC-sharingMicrophone-menu" data-l10n-id="webrtc-microphone-system-menu">
-    <xul:menupopup type="Microphone">
-    </xul:menupopup>
+  <xul:menu
+    id="webRTC-sharingMicrophone-menu"
+    data-l10n-id="webrtc-microphone-system-menu"
+  >
+    <xul:menupopup type="Microphone"> </xul:menupopup>
   </xul:menu>
-  <xul:menu id="webRTC-sharingScreen-menu" data-l10n-id="webrtc-screen-system-menu">
-    <xul:menupopup type="Screen">
-    </xul:menupopup>
+  <xul:menu
+    id="webRTC-sharingScreen-menu"
+    data-l10n-id="webrtc-screen-system-menu"
+  >
+    <xul:menupopup type="Screen"> </xul:menupopup>
   </xul:menu>
 
   <body role="alert">
@@ -40,19 +47,40 @@
     <div id="display-share" class="row-item" role="group" aria-labelledby="">
       <image id="display-share-icon" />
 
-      <span id="window-share-info" data-l10n-id="webrtc-sharing-window"/>
-      <span id="browser-window-share-info" data-l10n-id="webrtc-sharing-browser-window"/>
-      <span id="screen-share-info" data-l10n-id="webrtc-sharing-screen"/>
-      <button id="stop-sharing" class="stop-button" data-l10n-id="webrtc-stop-sharing-button"/>
+      <span id="window-share-info" data-l10n-id="webrtc-sharing-window" />
+      <span
+        id="browser-window-share-info"
+        data-l10n-id="webrtc-sharing-browser-window"
+      />
+      <span id="screen-share-info" data-l10n-id="webrtc-sharing-screen" />
+      <button
+        id="stop-sharing"
+        class="stop-button"
+        data-l10n-id="webrtc-stop-sharing-button"
+      />
     </div>
     <div class="row-item separator" />
     <div id="device-share" class="row-item">
-      <input type="checkbox" id="microphone-mute-toggle" class="control-icon" data-l10n-id="webrtc-microphone-unmuted"/>
-      <input type="checkbox" id="camera-mute-toggle" class="control-icon" data-l10n-id="webrtc-camera-unmuted"/>
+      <input
+        type="checkbox"
+        id="microphone-mute-toggle"
+        class="control-icon"
+        data-l10n-id="webrtc-microphone-unmuted"
+      />
+      <input
+        type="checkbox"
+        id="camera-mute-toggle"
+        class="control-icon"
+        data-l10n-id="webrtc-camera-unmuted"
+      />
     </div>
     <div class="row-item separator" />
     <div id="window-controls" class="row-item">
-      <button id="minimize" class="control-icon" data-l10n-id="webrtc-minimize"/>
+      <button
+        id="minimize"
+        class="control-icon"
+        data-l10n-id="webrtc-minimize"
+      />
     </div>
   </body>
 </html>

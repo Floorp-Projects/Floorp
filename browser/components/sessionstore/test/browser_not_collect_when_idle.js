@@ -60,7 +60,7 @@ add_task(async function testIntervalChanges() {
   );
   idleService._reset();
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.prefs.clearUserPref("browser.sessionstore.interval");
     MockRegistrar.unregister(fakeIdleService);
   });

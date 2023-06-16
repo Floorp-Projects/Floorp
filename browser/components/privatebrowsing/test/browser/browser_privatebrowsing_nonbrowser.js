@@ -5,7 +5,7 @@
  * when the last private browsing window closes, even if a chrome window
  * was opened from that private browsing window.
  */
-add_task(async function() {
+add_task(async function () {
   let win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
   let chromeWin = win.open(
     "chrome://browser/content/places/places.xhtml",

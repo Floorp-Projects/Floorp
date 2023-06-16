@@ -125,8 +125,8 @@ add_task(async function test_userscripts_register_cookieStoreId() {
 
     await extension.awaitMessage("last-content-script");
 
-    let result = await contentPage.spawn(null, () => {
-      let textContent = this.content.document.body.textContent;
+    let result = await contentPage.spawn([], () => {
+      let textContent = content.document.body.textContent;
       // Omit the default content from file_sample.html.
       return textContent.replace("\n\nSample text\n\n\n\n", "");
     });

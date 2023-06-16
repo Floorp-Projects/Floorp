@@ -3,28 +3,25 @@
 
 #include <sys/types.h>
 
-// # DEBUGGING FLAGS
-// =================
-// It is possible to debug the trace of the primitives defined in
-// this file by using the [DEBUG_VECTOR_TRACE] C flag.
-// As we use the same vector types to manipulate blocks of uint32 and blocks
-// of uint64, the log results will vary with the endianess, in particular for
-// some generic operations like [and] or [xor]. By default, the printing is
-// performed as if we were manipulating blocks of uint32. If you want to
-// switch to blocks of uint64, use the flag: [DEBUG_VECTOR_TRACE_ELEMENTS_64].
-// Note that if those flags are activated, it may be necessary to tweak a bit
-// the compilation options to build HACL. More specifically, you may need to
-// always activate the compiler options to use vector support (even for files
-// which actually don't make use of vectors, if they have libintvector.h as
-// a dependency). When comparing traces, note that some instructions are not
-// compiled in the same order on the different platforms, but it doesn't lead
-// to a lot of discrepancies in practice.
+/* We include config.h here to ensure that the various feature-flags are
+ * properly brought into scope. Users can either run the configure script, or
+ * write a config.h themselves and put it under version control. */
+#if defined(__has_include)
+#if __has_include("config.h")
+#include "config.h"
+#endif
+#endif
+
+/* # DEBUGGING:
+ * ============
+ * It is possible to debug the current definitions by using libintvector_debug.h
+ * See the include at the bottom of the file. */
 
 #define Lib_IntVector_Intrinsics_bit_mask64(x) -((x)&1)
 
 #if defined(__x86_64__) || defined(_M_X64)
 
-// The following functions are only available on machines that support Intel AVX
+#if defined(HACL_CAN_COMPILE_VEC128)
 
 #include <emmintrin.h>
 #include <tmmintrin.h>
@@ -215,7 +212,9 @@ typedef __m128i Lib_IntVector_Intrinsics_vec128;
 #define Lib_IntVector_Intrinsics_vec128_interleave_high64(x1, x2) \
     (_mm_unpackhi_epi64(x1, x2))
 
-// The following functions are only available on machines that support Intel AVX2
+#endif /* HACL_CAN_COMPILE_VEC128 */
+
+#if defined(HACL_CAN_COMPILE_VEC256)
 
 #include <immintrin.h>
 #include <wmmintrin.h>
@@ -423,7 +422,12 @@ typedef __m256i Lib_IntVector_Intrinsics_vec256;
 #define Lib_IntVector_Intrinsics_vec256_interleave_high128(x1, x2) \
     (_mm256_permute2x128_si256(x1, x2, 0x31))
 
+#endif /* HACL_CAN_COMPILE_VEC256 */
+
 #elif (defined(__aarch64__) || defined(_M_ARM64) || defined(__arm__) || defined(_M_ARM)) && !defined(__ARM_32BIT_STATE)
+
+#if defined(HACL_CAN_COMPILE_VEC128)
+
 #include <arm_neon.h>
 
 typedef uint32x4_t Lib_IntVector_Intrinsics_vec128;
@@ -617,15 +621,20 @@ Lib_IntVector_Intrinsics_vec128_load32s(uint32_t x1, uint32_t x2, uint32_t x3, u
 #define Lib_IntVector_Intrinsics_vec128_interleave_high64(x1, x2) \
     (vreinterpretq_u32_u64(vzip2q_u64(vreinterpretq_u64_u32(x1), vreinterpretq_u64_u32(x2))))
 
-// IBM z architecture
-#elif defined(__s390x__) // this flag is for GCC only
+#endif                   /* HACL_CAN_COMPILE_VEC128 */
 
+/* IBM z architecture */
+#elif defined(__s390x__) /* this flag is for GCC only */
+
+#if defined(HACL_CAN_COMPILE_VEC128)
+
+#include <stdint.h>
 #include <vecintrin.h>
 
-// The main vector 128 type
-// We can't use uint8_t, uint32_t, uint64_t... instead of unsigned char,
-// unsigned int, unsigned long long: the compiler complains that the parameter
-// combination is invalid.
+/* The main vector 128 type
+ * We can't use uint8_t, uint32_t, uint64_t... instead of unsigned char,
+ * unsigned int, unsigned long long: the compiler complains that the parameter
+ * combination is invalid. */
 typedef unsigned char vector128_8 __attribute__((vector_size(16)));
 typedef unsigned int vector128_32 __attribute__((vector_size(16)));
 typedef unsigned long long vector128_64 __attribute__((vector_size(16)));
@@ -633,33 +642,32 @@ typedef unsigned long long vector128_64 __attribute__((vector_size(16)));
 typedef vector128_8 Lib_IntVector_Intrinsics_vec128;
 typedef vector128_8 vector128;
 
-// Small helper to change the endianess of the vector's elements, seen as uint32.
-// Note that we can't use vec_revb.
-#define Lib_IntVector_Intrinsics_vec128_load_store_switch_endian32(x0) \
-    ((vector128)(vec_perm((vector128_8)(x0), (vector128_8){},          \
-                          (vector128_8){ 3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12 })))
+#define Lib_IntVector_Intrinsics_vec128_load32_le(x) \
+    (vector128)((vector128_32)vec_revb(*((vector128_32*)(const uint8_t*)(x))))
 
-// Small helper to change the endianess of the vector's elements, seen as uint64
-// Note that we can't use vec_revb.
-#define Lib_IntVector_Intrinsics_vec128_load_store_switch_endian64(x0) \
-    ((vector128)(vec_perm((vector128_8)(x0), (vector128_8){},          \
-                          (vector128_8){ 7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8 })))
+#define Lib_IntVector_Intrinsics_vec128_load32_be(x) \
+    (vector128)(*((vector128_32*)(const uint8_t*)(x)))
 
-#define Lib_IntVector_Intrinsics_vec128_load32_le(x)                        \
-    ((vector128)Lib_IntVector_Intrinsics_vec128_load_store_switch_endian32( \
-        ((vector128_8)vec_load_len((const uint8_t*)(x), 16))))
+#define Lib_IntVector_Intrinsics_vec128_load64_le(x) \
+    (vector128)((vector128_64)vec_revb(*((vector128_64*)(const uint8_t*)(x))))
 
-#define Lib_IntVector_Intrinsics_vec128_load64_le(x)                        \
-    ((vector128)Lib_IntVector_Intrinsics_vec128_load_store_switch_endian64( \
-        ((vector128_8)vec_load_len((const uint8_t*)(x), 16))))
+static inline void
+Lib_IntVector_Intrinsics_vec128_store32_le(const uint8_t *x0, vector128 x1)
+{
+    *((vector128_32 *)x0) = vec_revb((vector128_32)x1);
+}
 
-#define Lib_IntVector_Intrinsics_vec128_store32_le(x0, x1)                                        \
-    (vec_store_len(((vector128_8)Lib_IntVector_Intrinsics_vec128_load_store_switch_endian32(x1)), \
-                   ((uint8_t*)(x0)), (uint32_t)16))
+static inline void
+Lib_IntVector_Intrinsics_vec128_store32_be(const uint8_t *x0, vector128 x1)
+{
+    *((vector128_32 *)x0) = (vector128_32)x1;
+}
 
-#define Lib_IntVector_Intrinsics_vec128_store64_le(x0, x1)                                        \
-    (vec_store_len(((vector128_8)Lib_IntVector_Intrinsics_vec128_load_store_switch_endian64(x1)), \
-                   ((uint8_t*)(x0)), (uint32_t)16))
+static inline void
+Lib_IntVector_Intrinsics_vec128_store64_le(const uint8_t *x0, vector128 x1)
+{
+    *((vector128_64 *)x0) = vec_revb((vector128_64)x1);
+}
 
 #define Lib_IntVector_Intrinsics_vec128_add32(x0, x1) \
     ((vector128)((vector128_32)(((vector128_32)(x0)) + ((vector128_32)(x1)))))
@@ -719,15 +727,9 @@ typedef vector128_8 vector128;
 #define Lib_IntVector_Intrinsics_vec128_lognot(x0) \
     ((vector128)(vec_xor((vector128)(x0), (vector128)vec_splat_u32(-1))))
 
-// We need to permute the low and high components of the uint64
-// before calling vec_mule. The following helper does that.
-#define Lib_IntVector_Intrinsics_vec128_mul64_perm_low_high_(x0) \
-    ((vector128)(vec_perm((vector128_8)(x0), (vector128_8){},    \
-                          (vector128_8){ 4, 5, 6, 7, 0, 1, 2, 3, 12, 13, 14, 15, 8, 9, 10, 11 })))
-
-#define Lib_IntVector_Intrinsics_vec128_mul64(x0, x1)                                             \
-    ((vector128)(vec_mule((vector128_32)Lib_IntVector_Intrinsics_vec128_mul64_perm_low_high_(x0), \
-                          (vector128_32)Lib_IntVector_Intrinsics_vec128_mul64_perm_low_high_(x1))))
+#define Lib_IntVector_Intrinsics_vec128_mul64(x0, x1) \
+    ((vector128)(vec_mulo((vector128_32)(x0),         \
+                          (vector128_32)(x1))))
 
 #define Lib_IntVector_Intrinsics_vec128_or(x0, x1) \
     ((vector128)(vec_or((vector128)(x0), (vector128)(x1))))
@@ -739,7 +741,7 @@ typedef vector128_8 vector128;
     (Lib_IntVector_Intrinsics_vec128_rotate_left32(x0, (uint32_t)(32 - (x1))))
 
 #define Lib_IntVector_Intrinsics_vec128_rotate_right_lanes32(x0, x1) \
-    ((vector128)(vec_perm((vector128)(x0), (vector128){}, (vector128_8){ (x1 % 4) * 4 + 0, (x1 % 4) * 4 + 1, (x1 % 4) * 4 + 2, (x1 % 4) * 4 + 3, ((x1 + 1) % 4) * 4 + 0, ((x1 + 1) % 4) * 4 + 1, ((x1 + 1) % 4) * 4 + 2, ((x1 + 1) % 4) * 4 + 3, ((x1 + 2) % 4) * 4 + 0, ((x1 + 2) % 4) * 4 + 1, ((x1 + 2) % 4) * 4 + 2, ((x1 + 2) % 4) * 4 + 3, ((x1 + 3) % 4) * 4 + 0, ((x1 + 3) % 4) * 4 + 1, ((x1 + 3) % 4) * 4 + 2, ((x1 + 3) % 4) * 4 + 3 })))
+    ((vector128)(vec_sld((vector128)(x0), (vector128)(x0), (x1 % 4) * 4)))
 
 #define Lib_IntVector_Intrinsics_vec128_shift_left64(x0, x1)                         \
     (((vector128)((vector128_64)vec_rli((vector128_64)(x0), (unsigned long)(x1)))) & \
@@ -748,6 +750,140 @@ typedef vector128_8 vector128;
 #define Lib_IntVector_Intrinsics_vec128_shift_right64(x0, x1)                               \
     (((vector128)((vector128_64)vec_rli((vector128_64)(x0), (unsigned long)(64 - (x1))))) & \
      ((vector128)((vector128_64){ 0xffffffffffffffff >> (x1), 0xffffffffffffffff >> (x1) })))
+
+#define Lib_IntVector_Intrinsics_vec128_shift_right32(x0, x1)                              \
+    (((vector128)((vector128_32)vec_rli((vector128_32)(x0), (unsigned int)(32 - (x1))))) & \
+     ((vector128)((vector128_32){ 0xffffffff >> (x1), 0xffffffff >> (x1),                  \
+                                  0xffffffff >> (x1), 0xffffffff >> (x1) })))
+
+/* Doesn't work with vec_splat_u64 */
+#define Lib_IntVector_Intrinsics_vec128_smul64(x0, x1) \
+    ((vector128)(Lib_IntVector_Intrinsics_vec128_mul64(x0, ((vector128_64){ (unsigned long long)(x1), (unsigned long long)(x1) }))))
+
+#define Lib_IntVector_Intrinsics_vec128_sub64(x0, x1) \
+    ((vector128)((vector128_64)(x0) - (vector128_64)(x1)))
+
+static inline vector128
+Lib_IntVector_Intrinsics_vec128_xor(vector128 x0, vector128 x1)
+{
+    return ((vector128)(vec_xor((vector128)(x0), (vector128)(x1))));
+}
+
+#define Lib_IntVector_Intrinsics_vec128_zero \
+    ((vector128){})
+
+#endif /* HACL_CAN_COMPILE_VEC128 */
+
+#elif defined(__powerpc64__) // PowerPC 64 - this flag is for GCC only
+
+#if defined(HACL_CAN_COMPILE_VEC128)
+
+#include <altivec.h>
+#include <string.h> // for memcpy
+#include <stdint.h>
+
+// The main vector 128 type
+// We can't use uint8_t, uint32_t, uint64_t... instead of unsigned char,
+// unsigned int, unsigned long long: the compiler complains that the parameter
+// combination is invalid.
+typedef vector unsigned char vector128_8;
+typedef vector unsigned int vector128_32;
+typedef vector unsigned long long vector128_64;
+
+typedef vector128_8 Lib_IntVector_Intrinsics_vec128;
+typedef vector128_8 vector128;
+
+#define Lib_IntVector_Intrinsics_vec128_load32_le(x) \
+    ((vector128)((vector128_32)(vec_xl(0, (const unsigned int*)((const uint8_t*)(x))))))
+
+#define Lib_IntVector_Intrinsics_vec128_load64_le(x) \
+    ((vector128)((vector128_64)(vec_xl(0, (const unsigned long long*)((const uint8_t*)(x))))))
+
+#define Lib_IntVector_Intrinsics_vec128_store32_le(x0, x1) \
+    (vec_xst((vector128_32)(x1), 0, (unsigned int*)((uint8_t*)(x0))))
+
+#define Lib_IntVector_Intrinsics_vec128_store64_le(x0, x1) \
+    (vec_xst((vector128_64)(x1), 0, (unsigned long long*)((uint8_t*)(x0))))
+
+#define Lib_IntVector_Intrinsics_vec128_add32(x0, x1) \
+    ((vector128)((vector128_32)(((vector128_32)(x0)) + ((vector128_32)(x1)))))
+
+#define Lib_IntVector_Intrinsics_vec128_add64(x0, x1) \
+    ((vector128)((vector128_64)(((vector128_64)(x0)) + ((vector128_64)(x1)))))
+
+#define Lib_IntVector_Intrinsics_vec128_and(x0, x1) \
+    ((vector128)(vec_and((vector128)(x0), (vector128)(x1))))
+
+#define Lib_IntVector_Intrinsics_vec128_eq32(x0, x1) \
+    ((vector128)(vec_cmpeq(((vector128_32)(x0)), ((vector128_32)(x1)))))
+
+#define Lib_IntVector_Intrinsics_vec128_eq64(x0, x1) \
+    ((vector128)(vec_cmpeq(((vector128_64)(x0)), ((vector128_64)(x1)))))
+
+#define Lib_IntVector_Intrinsics_vec128_extract32(x0, x1) \
+    ((unsigned int)(vec_extract((vector128_32)(x0), x1)))
+
+#define Lib_IntVector_Intrinsics_vec128_extract64(x0, x1) \
+    ((unsigned long long)(vec_extract((vector128_64)(x0), x1)))
+
+#define Lib_IntVector_Intrinsics_vec128_gt32(x0, x1) \
+    ((vector128)((vector128_32)(((vector128_32)(x0)) > ((vector128_32)(x1)))))
+
+#define Lib_IntVector_Intrinsics_vec128_gt64(x0, x1) \
+    ((vector128)((vector128_64)(((vector128_64)(x0)) > ((vector128_64)(x1)))))
+
+#define Lib_IntVector_Intrinsics_vec128_insert32(x0, x1, x2) \
+    ((vector128)((vector128_32)vec_insert((unsigned int)(x1), (vector128_32)(x0), x2)))
+
+#define Lib_IntVector_Intrinsics_vec128_insert64(x0, x1, x2) \
+    ((vector128)((vector128_64)vec_insert((unsigned long long)(x1), (vector128_64)(x0), x2)))
+
+#define Lib_IntVector_Intrinsics_vec128_interleave_high32(x0, x1) \
+    ((vector128)((vector128_32)vec_mergel((vector128_32)(x0), (vector128_32)(x1))))
+
+#define Lib_IntVector_Intrinsics_vec128_interleave_high64(x0, x1) \
+    ((vector128)((vector128_64)vec_mergel((vector128_64)(x0), (vector128_64)(x1))))
+
+#define Lib_IntVector_Intrinsics_vec128_interleave_low32(x0, x1) \
+    ((vector128)((vector128_32)vec_mergeh((vector128_32)(x0), (vector128_32)(x1))))
+
+#define Lib_IntVector_Intrinsics_vec128_interleave_low64(x0, x1) \
+    ((vector128)((vector128_64)vec_mergeh((vector128_64)(x0), (vector128_64)(x1))))
+
+#define Lib_IntVector_Intrinsics_vec128_load32(x)                      \
+    ((vector128)((vector128_32){ (unsigned int)(x), (unsigned int)(x), \
+                                 (unsigned int)(x), (unsigned int)(x) }))
+
+#define Lib_IntVector_Intrinsics_vec128_load32s(x0, x1, x2, x3) \
+    ((vector128)((vector128_32){ (unsigned int)(x0), (unsigned int)(x1), (unsigned int)(x2), (unsigned int)(x3) }))
+
+#define Lib_IntVector_Intrinsics_vec128_load64(x) \
+    ((vector128)((vector128_64){ (unsigned long long)(x), (unsigned long long)(x) }))
+
+#define Lib_IntVector_Intrinsics_vec128_lognot(x0) \
+    ((vector128)(vec_xor((vector128)(x0), (vector128)vec_splat_u32(-1))))
+
+#define Lib_IntVector_Intrinsics_vec128_mul64(x0, x1) \
+    ((vector128)(vec_mule((vector128_32)(x0),         \
+                          (vector128_32)(x1))))
+
+#define Lib_IntVector_Intrinsics_vec128_or(x0, x1) \
+    ((vector128)(vec_or((vector128)(x0), (vector128)(x1))))
+
+#define Lib_IntVector_Intrinsics_vec128_rotate_left32(x0, x1) \
+    ((vector128)(vec_rl((vector128_32)(x0), (vector128_32){ (unsigned int)(x1), (unsigned int)(x1), (unsigned int)(x1), (unsigned int)(x1) })))
+
+#define Lib_IntVector_Intrinsics_vec128_rotate_right32(x0, x1) \
+    (Lib_IntVector_Intrinsics_vec128_rotate_left32(x0, (uint32_t)(32 - (x1))))
+
+#define Lib_IntVector_Intrinsics_vec128_rotate_right_lanes32(x0, x1) \
+    ((vector128)(vec_sld((vector128)(x0), (vector128)(x0), ((4 - (x1)) % 4) * 4)))
+
+#define Lib_IntVector_Intrinsics_vec128_shift_left64(x0, x1) \
+    ((vector128)((vector128_64)vec_sl((vector128_64)(x0), (vector128_64){ (unsigned long)(x1), (unsigned long)(x1) })))
+
+#define Lib_IntVector_Intrinsics_vec128_shift_right64(x0, x1) \
+    ((vector128)((vector128_64)vec_sr((vector128_64)(x0), (vector128_64){ (unsigned long)(x1), (unsigned long)(x1) })))
 
 // Doesn't work with vec_splat_u64
 #define Lib_IntVector_Intrinsics_vec128_smul64(x0, x1) \
@@ -762,6 +898,18 @@ typedef vector128_8 vector128;
 #define Lib_IntVector_Intrinsics_vec128_zero \
     ((vector128){})
 
-#endif // IBM z architecture
+#endif /* HACL_CAN_COMPILE_VEC128 */
 
+#endif // PowerPC64
+
+// DEBUGGING:
+// If libintvector_debug.h exists, use it to debug the current implementations.
+// Note that some flags must be enabled for the debugging to be effective:
+// see libintvector_debug.h for more details.
+#if defined(__has_include)
+#if __has_include("libintvector_debug.h")
+#include "libintvector_debug.h"
 #endif
+#endif
+
+#endif // __Vec_Intrin_H

@@ -15,7 +15,7 @@ addAccessibleTask(
 b
 c</textarea>
   `,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let onScrolling = waitForEvents([
       [EVENT_SCROLLING, accDoc],
       [EVENT_SCROLLING_END, accDoc],

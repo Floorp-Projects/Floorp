@@ -19,7 +19,7 @@ const iframeSrc = `data:text/html,
 addAccessibleTask(
   `
   <iframe id="iframe" src="${iframeSrc}"></iframe>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     // ID of the iframe that is being tested
     const id = "inner-iframe";
 
@@ -220,9 +220,8 @@ addAccessibleTask(
     reorderEventPromise = waitForEvent(EVENT_REORDER, iframe);
     await invokeContentTask(browser, [], () => {
       let docNode = content.document.getElementById("iframe").contentDocument;
-      let inputNode = (content.window.inputNode = docNode.createElement(
-        "input"
-      ));
+      let inputNode = (content.window.inputNode =
+        docNode.createElement("input"));
       docNode.documentElement.appendChild(inputNode);
     });
     event = await reorderEventPromise;
@@ -238,8 +237,9 @@ addAccessibleTask(
 
     reorderEventPromise = waitForEvent(EVENT_REORDER, iframe);
     await invokeContentTask(browser, [], () => {
-      let docEl = content.document.getElementById("iframe").contentDocument
-        .documentElement;
+      let docEl =
+        content.document.getElementById("iframe").contentDocument
+          .documentElement;
       // Remove aftermath of this test before next test starts.
       docEl.firstChild.remove();
     });

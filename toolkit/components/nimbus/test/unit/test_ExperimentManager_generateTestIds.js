@@ -24,11 +24,44 @@ const TEST_CONFIG = {
   count: 2000,
   total: 10000,
 };
+
 add_task(async function test_generateTestIds() {
   let result = await ExperimentManager.generateTestIds(TEST_CONFIG);
 
   Assert.ok(result, "should return object");
   Assert.ok(result.notInExperiment, "should have a id for no experiment");
+  Assert.ok(result.control, "should have id for control");
+  Assert.ok(result.branchA, "should have id for branchA");
+  Assert.ok(result.branchB, "should have id for branchB");
+});
+
+add_task(async function test_generateTestIds_bucketConfig() {
+  const { slug, branches, namespace, start, count, total } = TEST_CONFIG;
+  const result = await ExperimentManager.generateTestIds({
+    slug,
+    branches,
+    bucketConfig: { namespace, start, count, total },
+  });
+
+  Assert.ok(result, "should return object");
+  Assert.ok(result.notInExperiment, "should have a id for no experiment");
+  Assert.ok(result.control, "should have id for control");
+  Assert.ok(result.branchA, "should have id for branchA");
+  Assert.ok(result.branchB, "should have id for branchB");
+});
+
+add_task(async function test_generateTestIds_withoutNot() {
+  const result = await ExperimentManager.generateTestIds({
+    ...TEST_CONFIG,
+    count: TEST_CONFIG.total,
+  });
+
+  Assert.ok(result, "should return object");
+  Assert.equal(
+    result.notInExperiment,
+    undefined,
+    "should not have a id for no experiment"
+  );
   Assert.ok(result.control, "should have id for control");
   Assert.ok(result.branchA, "should have id for branchA");
   Assert.ok(result.branchB, "should have id for branchB");

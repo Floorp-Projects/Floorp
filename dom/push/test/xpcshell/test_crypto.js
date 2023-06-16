@@ -200,8 +200,7 @@ add_task(async function test_aes128gcm_ok() {
     {
       desc: "Example from draft-ietf-webpush-encryption-latest",
       result: "When I grow up, I want to be a watermelon",
-      data:
-        "DGv6ra1nlYgDCS1FRnbzlwAAEABBBP4z9KsN6nGRTbVYI_c7VJSPQTBtkgcy27mlmlMoZIIgDll6e3vCYLocInmYWAmS6TlzAC8wEqKK6PBru3jl7A_yl95bQpu6cVPTpK4Mqgkf1CXztLVBSt2Ks3oZwbuwXPXLWyouBWLVWGNWQexSgSxsj_Qulcy4a-fN",
+      data: "DGv6ra1nlYgDCS1FRnbzlwAAEABBBP4z9KsN6nGRTbVYI_c7VJSPQTBtkgcy27mlmlMoZIIgDll6e3vCYLocInmYWAmS6TlzAC8wEqKK6PBru3jl7A_yl95bQpu6cVPTpK4Mqgkf1CXztLVBSt2Ks3oZwbuwXPXLWyouBWLVWGNWQexSgSxsj_Qulcy4a-fN",
       authSecret: "BTBZMqHH6r4Tts7J_aSIgg",
       privateKey: {
         kty: "EC",
@@ -218,8 +217,7 @@ add_task(async function test_aes128gcm_ok() {
       desc: "rs = 24, pad = 0",
       result:
         "I am the very model of a modern Major-General; I've information vegetable, animal, and mineral",
-      data:
-        "goagSH7PP0ZGwUsgShmdkwAAABhBBDJVyIuUJbOSVMeWHP8VNPnxY-dZSw86doqOkEzZZZY1ALBWVXTVf0rUDH3oi68I9Hrp-01zA-mr8XKWl5kcH8cX0KiV2PtCwdkEyaQ73YF5fsDxgoWDiaTA3wPqMvuLDqGsZWHnE9Psnfoy7UMEqKlh2a1nE7ZOXiXcOBHLNj260jYzSJnEPV2eXixSXfyWpaSJHAwfj4wVdAAocmViIg6ywk8wFB1hgJpnX2UVEU_qIOcaP6AOIOr1UUQPfosQqC2MEHe5u9gHXF5pi-E267LAlkoYefq01KV_xK_vjbxpw8GAYfSjQEm0L8FG-CN37c8pnQ2Yf61MkihaXac9OctfNeWq_22cN6hn4qsOq0F7QoWIiZqWhB1vS9cJ3KUlyPQvKI9cvevDxw0fJHWeTFzhuwT9BjdILjjb2Vkqc0-qTDOawqD4c8WXsvdGDQCec5Y1x3UhdQXdjR_mhXypxFM37OZTvKJBr1vPCpRXl-bI6iOd7KScgtMM1x5luKhGzZyz25HyuFyj1ec82A",
+      data: "goagSH7PP0ZGwUsgShmdkwAAABhBBDJVyIuUJbOSVMeWHP8VNPnxY-dZSw86doqOkEzZZZY1ALBWVXTVf0rUDH3oi68I9Hrp-01zA-mr8XKWl5kcH8cX0KiV2PtCwdkEyaQ73YF5fsDxgoWDiaTA3wPqMvuLDqGsZWHnE9Psnfoy7UMEqKlh2a1nE7ZOXiXcOBHLNj260jYzSJnEPV2eXixSXfyWpaSJHAwfj4wVdAAocmViIg6ywk8wFB1hgJpnX2UVEU_qIOcaP6AOIOr1UUQPfosQqC2MEHe5u9gHXF5pi-E267LAlkoYefq01KV_xK_vjbxpw8GAYfSjQEm0L8FG-CN37c8pnQ2Yf61MkihaXac9OctfNeWq_22cN6hn4qsOq0F7QoWIiZqWhB1vS9cJ3KUlyPQvKI9cvevDxw0fJHWeTFzhuwT9BjdILjjb2Vkqc0-qTDOawqD4c8WXsvdGDQCec5Y1x3UhdQXdjR_mhXypxFM37OZTvKJBr1vPCpRXl-bI6iOd7KScgtMM1x5luKhGzZyz25HyuFyj1ec82A",
       authSecret: "_tK2LDGoIt6be6agJ_nvGA",
       privateKey: {
         kty: "EC",
@@ -235,8 +233,7 @@ add_task(async function test_aes128gcm_ok() {
     {
       desc: "rs = 49, pad = 84; ciphertext length falls on record boundary",
       result: "Hello, world",
-      data:
-        "-yiDzsHE_K3W0TcfbqSR4AAAADFBBC1EHuf5_2oDKaZJJ9BST9vnsixvtl4Qq0_cA4-UQgoMo_oo2tNshOyRoWLq4Hj6rSwc7XjegRPhlgKyDolPSXa5c-L89oL6DIzNmvPVv_Ht4W-tWjHOGdOLXh_h94pPrYQrvBAlTCxs3ZaitVKE2XLFPK2MO6yxD19X6w1KQzO2BBAroRfK4pEI-9n2Kai6aWDdAZRbOe03unBsQ0oQ_SvSCU_5JJvNrUUTX1_kX804Bx-LLTlBr9pDmBDXeqyvfOULVDJb9YyVAzN9BzeFoyPfo0M",
+      data: "-yiDzsHE_K3W0TcfbqSR4AAAADFBBC1EHuf5_2oDKaZJJ9BST9vnsixvtl4Qq0_cA4-UQgoMo_oo2tNshOyRoWLq4Hj6rSwc7XjegRPhlgKyDolPSXa5c-L89oL6DIzNmvPVv_Ht4W-tWjHOGdOLXh_h94pPrYQrvBAlTCxs3ZaitVKE2XLFPK2MO6yxD19X6w1KQzO2BBAroRfK4pEI-9n2Kai6aWDdAZRbOe03unBsQ0oQ_SvSCU_5JJvNrUUTX1_kX804Bx-LLTlBr9pDmBDXeqyvfOULVDJb9YyVAzN9BzeFoyPfo0M",
       authSecret: "lfF1cOUI72orKtG09creMw",
       privateKey: {
         kty: "EC",
@@ -252,8 +249,7 @@ add_task(async function test_aes128gcm_ok() {
     {
       desc: "rs = 18, pad = 0",
       result: "1",
-      data:
-        "fK69vCCTjuNAqUbxvU9o8QAAABJBBDfP21Ij2fleqgL27ZQP8i6vBbNiLpSdw86fM15u-bJq6qzKD3QICos2RZLyzMbV7d1DAEtwuRiH0UTZ-pPxbDvH6mj0_VR6lOyoSxbhOKYIAXc",
+      data: "fK69vCCTjuNAqUbxvU9o8QAAABJBBDfP21Ij2fleqgL27ZQP8i6vBbNiLpSdw86fM15u-bJq6qzKD3QICos2RZLyzMbV7d1DAEtwuRiH0UTZ-pPxbDvH6mj0_VR6lOyoSxbhOKYIAXc",
       authSecret: "1loE35Xy215gSDn3F9zeeQ",
       privateKey: {
         kty: "EC",
@@ -333,8 +329,7 @@ add_task(async function test_aes128gcm_err() {
       // The message is encrypted with only the first 12 bytes of the 16-byte
       // auth secret, so the derived decryption key and nonce won't match.
       desc: "Encrypted with mismatched auth secret",
-      data:
-        "gRX0mIuMOSp7rLQ8jxrFZQAAABJBBBmUSDxUHpvDmmrwP_cTqndFwoThOKQqJDW3l7IMS2mM9RGLT4VVMXwZDqvr-rdJwWTT9r3r4NRBcZExo1fYiQoTxNvUsW_z3VqD98ka1uBArEJzCn8LPNMkXp-Nb_McdR1BDP0",
+      data: "gRX0mIuMOSp7rLQ8jxrFZQAAABJBBBmUSDxUHpvDmmrwP_cTqndFwoThOKQqJDW3l7IMS2mM9RGLT4VVMXwZDqvr-rdJwWTT9r3r4NRBcZExo1fYiQoTxNvUsW_z3VqD98ka1uBArEJzCn8LPNMkXp-Nb_McdR1BDP0",
       privateKey: {
         kty: "EC",
         crv: "P-256",
@@ -351,8 +346,7 @@ add_task(async function test_aes128gcm_err() {
     {
       // Multiple records; the first has padding delimiter = 2, but should be 1.
       desc: "Early final record",
-      data:
-        "2-IVUH0a09Lq6r6ubodNjwAAABJBBHvEND80qDSM3E5GL_x8QKpqjGGnOcTEHUUSVQX3Dp_F-e-oaFLdSI3Pjo6iyvt14Hq9XufJ1cA4uv7weVcbC9opRBHOmMdt0DHA5YBXekmAo3XkXtMEKb4OLunafm34aW0BuOw",
+      data: "2-IVUH0a09Lq6r6ubodNjwAAABJBBHvEND80qDSM3E5GL_x8QKpqjGGnOcTEHUUSVQX3Dp_F-e-oaFLdSI3Pjo6iyvt14Hq9XufJ1cA4uv7weVcbC9opRBHOmMdt0DHA5YBXekmAo3XkXtMEKb4OLunafm34aW0BuOw",
       privateKey: {
         kty: "EC",
         crv: "P-256",
@@ -391,8 +385,7 @@ add_task(async function test_aesgcm_ok() {
     {
       desc: "padSize = 2, rs = 8, pad = 16",
       result: "Yet another message",
-      data:
-        "uEC5B_tR-fuQ3delQcrzrDCp40W6ipMZjGZ78USDJ5sMj-6bAOVG3AK6JqFl9E6AoWiBYYvMZfwThVxmDnw6RHtVeLKFM5DWgl1EwkOohwH2EhiDD0gM3io-d79WKzOPZE9rDWUSv64JstImSfX_ADQfABrvbZkeaWxh53EG59QMOElFJqHue4dMURpsMXg",
+      data: "uEC5B_tR-fuQ3delQcrzrDCp40W6ipMZjGZ78USDJ5sMj-6bAOVG3AK6JqFl9E6AoWiBYYvMZfwThVxmDnw6RHtVeLKFM5DWgl1EwkOohwH2EhiDD0gM3io-d79WKzOPZE9rDWUSv64JstImSfX_ADQfABrvbZkeaWxh53EG59QMOElFJqHue4dMURpsMXg",
       authSecret: "6plwZnSpVUbF7APDXus3UQ",
       privateKey: LEGACY_PRIVATE_KEY,
       publicKey: LEGACY_PUBLIC_KEY,
@@ -406,8 +399,7 @@ add_task(async function test_aesgcm_ok() {
     {
       desc: "padSize = 2, rs = 3, pad = 0",
       result: "Small record size",
-      data:
-        "oY4e5eDatDVt2fpQylxbPJM-3vrfhDasfPc8Q1PWt4tPfMVbz_sDNL_cvr0DXXkdFzS1lxsJsj550USx4MMl01ihjImXCjrw9R5xFgFrCAqJD3GwXA1vzS4T5yvGVbUp3SndMDdT1OCcEofTn7VC6xZ-zP8rzSQfDCBBxmPU7OISzr8Z4HyzFCGJeBfqiZ7yUfNlKF1x5UaZ4X6iU_TXx5KlQy_toV1dXZ2eEAMHJUcSdArvB6zRpFdEIxdcHcJyo1BIYgAYTDdAIy__IJVCPY_b2CE5W_6ohlYKB7xDyH8giNuWWXAgBozUfScLUVjPC38yJTpAUi6w6pXgXUWffende5FreQpnMFL1L4G-38wsI_-ISIOzdO8QIrXHxmtc1S5xzYu8bMqSgCinvCEwdeGFCmighRjj8t1zRWo0D14rHbQLPR_b1P5SvEeJTtS9Nm3iibM",
+      data: "oY4e5eDatDVt2fpQylxbPJM-3vrfhDasfPc8Q1PWt4tPfMVbz_sDNL_cvr0DXXkdFzS1lxsJsj550USx4MMl01ihjImXCjrw9R5xFgFrCAqJD3GwXA1vzS4T5yvGVbUp3SndMDdT1OCcEofTn7VC6xZ-zP8rzSQfDCBBxmPU7OISzr8Z4HyzFCGJeBfqiZ7yUfNlKF1x5UaZ4X6iU_TXx5KlQy_toV1dXZ2eEAMHJUcSdArvB6zRpFdEIxdcHcJyo1BIYgAYTDdAIy__IJVCPY_b2CE5W_6ohlYKB7xDyH8giNuWWXAgBozUfScLUVjPC38yJTpAUi6w6pXgXUWffende5FreQpnMFL1L4G-38wsI_-ISIOzdO8QIrXHxmtc1S5xzYu8bMqSgCinvCEwdeGFCmighRjj8t1zRWo0D14rHbQLPR_b1P5SvEeJTtS9Nm3iibM",
       authSecret: "g2rWVHUCpUxgcL9Tz7vyeQ",
       privateKey: LEGACY_PRIVATE_KEY,
       publicKey: LEGACY_PUBLIC_KEY,
@@ -615,8 +607,7 @@ add_task(async function test_aesgcm128_err() {
       // aesgcm128 doesn't use an auth secret, but we've mixed one in during
       // encryption, so the decryption key and nonce won't match.
       desc: "padSize = 1, rs = 4096, auth secret, pad = 8",
-      data:
-        "h0FmyldY8aT5EQ6CJrbfRn_IdDvytoLeHb9_q5CjtdFRfgDRknxLmOzavLaVG4oOiS0r",
+      data: "h0FmyldY8aT5EQ6CJrbfRn_IdDvytoLeHb9_q5CjtdFRfgDRknxLmOzavLaVG4oOiS0r",
       authSecret: "Sxb6u0gJIhGEogyLawjmCw",
       privateKey: LEGACY_PRIVATE_KEY,
       publicKey: LEGACY_PUBLIC_KEY,
@@ -657,8 +648,7 @@ add_task(async function test_aesgcm128_err() {
     },
     {
       desc: "Padding length > rs",
-      data:
-        "Ct_h1g7O55e6GvuhmpjLsGnv8Rmwvxgw8iDESNKGxk_8E99iHKDzdV8wJPyHA-6b2E6kzuVa5UWiQ7s4Zms1xzJ4FKgoxvBObXkc_r_d4mnb-j245z3AcvRmcYGk5_HZ0ci26SfhAN3lCgxGzTHS4nuHBRkGwOb4Tj4SFyBRlLoTh2jyVK2jYugNjH9tTrGOBg7lP5lajLTQlxOi91-RYZSfFhsLX3LrAkXuRoN7G1CdiI7Y3_eTgbPIPabDcLCnGzmFBTvoJSaQF17huMl_UnWoCj2WovA4BwK_TvWSbdgElNnQ4CbArJ1h9OqhDOphVu5GUGr94iitXRQR-fqKPMad0ULLjKQWZOnjuIdV1RYEZ873r62Yyd31HoveJcSDb1T8l_QK2zVF8V4k0xmK9hGuC0rF5YJPYPHgl5__usknzxMBnRrfV5_MOL5uPZwUEFsu",
+      data: "Ct_h1g7O55e6GvuhmpjLsGnv8Rmwvxgw8iDESNKGxk_8E99iHKDzdV8wJPyHA-6b2E6kzuVa5UWiQ7s4Zms1xzJ4FKgoxvBObXkc_r_d4mnb-j245z3AcvRmcYGk5_HZ0ci26SfhAN3lCgxGzTHS4nuHBRkGwOb4Tj4SFyBRlLoTh2jyVK2jYugNjH9tTrGOBg7lP5lajLTQlxOi91-RYZSfFhsLX3LrAkXuRoN7G1CdiI7Y3_eTgbPIPabDcLCnGzmFBTvoJSaQF17huMl_UnWoCj2WovA4BwK_TvWSbdgElNnQ4CbArJ1h9OqhDOphVu5GUGr94iitXRQR-fqKPMad0ULLjKQWZOnjuIdV1RYEZ873r62Yyd31HoveJcSDb1T8l_QK2zVF8V4k0xmK9hGuC0rF5YJPYPHgl5__usknzxMBnRrfV5_MOL5uPZwUEFsu",
       privateKey: LEGACY_PRIVATE_KEY,
       publicKey: LEGACY_PUBLIC_KEY,
       headers: {

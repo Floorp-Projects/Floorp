@@ -7,7 +7,7 @@
 // Adding the character encoding menu to the panel, exiting customize mode,
 // and moving it to the nav-bar should have it disabled if the page in the
 // content area isn't eligible to have its encoding overridden.
-add_task(async function() {
+add_task(async function () {
   await startCustomizing();
   CustomizableUI.addWidgetToArea(
     "characterencoding-button",

@@ -22,6 +22,10 @@
   --uei-dot-vertical-position-in-panel: max(0px, calc(var(--arrowpanel-menuitem-padding-block) / 2 - var(--uei-attention-dot-size) / 2));
 }
 
+#unified-extensions-view {
+  width: var(--menu-panel-width-wide);
+}
+
 /* Align extensions rendered with custom elements. */
 unified-extensions-item {
   display: flex;
@@ -36,7 +40,7 @@ unified-extensions-item > .subviewbutton {
   -moz-context-properties: fill;
   fill: currentColor;
   /* Have some spacing between items in the panel; mainly useful for when HCM is enabled. */
-  padding-block: 2px;
+  margin-block: 2px !important; /* override panelUI-shared.css */
 }
 
 .unified-extensions-item > .subviewbutton {
@@ -107,21 +111,24 @@ unified-extensions-item > .subviewbutton {
 .unified-extensions-item-message {
   margin: 0;
   padding-inline-start: .5em;
-  width: 22em;
   word-break: break-word;
 }
 
 .unified-extensions-item-message {
-  color: var(--panel-description-color);
+  color: var(--text-color-deemphasized);
 }
 
 .unified-extensions-item-menu-button.subviewbutton {
   list-style-image: url("chrome://global/skin/icons/settings.svg");
-  margin-inline-start: var(--arrowpanel-menuitem-margin-inline);
-  /* Have the icon even padding all around by default */
-  padding: var(--arrowpanel-menuitem-padding-inline);
-  border: 1px solid transparent;
-  background-color: transparent;
+  /* subtract the child's ~1px border from the block padding */
+  padding: calc(var(--arrowpanel-menuitem-margin-inline) - 1px)
+    var(--arrowpanel-menuitem-margin-inline);
+  padding-inline-end: 0;
+  border-radius: 0;
+  /* override panelUI-shared.css */
+  background-color: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
 }
 
 /* Hide subview label. */
@@ -129,7 +136,44 @@ unified-extensions-item > .subviewbutton {
   display: none !important; /* override panelUI-shared.css */
 }
 
-/* --- browser action CUI widget styles --- */
+.unified-extensions-item-menu-button.subviewbutton > .toolbarbutton-icon {
+  box-sizing: content-box;
+  padding: var(--arrowpanel-menuitem-padding-inline);
+  border: 1px solid transparent;
+  border-radius: var(--arrowpanel-menuitem-border-radius);
+}
+
+/* Background color, outline, and shadow on the icon to allow the clickable
+ * padding on the button to remain invisible */
+.unified-extensions-item-menu-button.subviewbutton:hover > .toolbarbutton-icon {
+  background-color: var(--uei-button-hover-bgcolor);
+}
+
+.unified-extensions-item-menu-button.subviewbutton:hover:active > .toolbarbutton-icon {
+  background-color: var(--uei-button-active-bgcolor);
+  box-shadow: 0 1px 0 hsla(210,4%,10%,.03) inset;
+}
+
+.unified-extensions-item-menu-button.subviewbutton:focus-visible > .toolbarbutton-icon {
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-outline-inset);
+}
+
+/* --- warning messages --- */
+
+#unified-extensions-messages-container {
+  margin: var(--arrowpanel-menuitem-margin);
+}
+
+.unified-extensions-message-bar {
+  padding-bottom: 2px;
+}
+
+/* Stack each child in the message bar. */
+.unified-extensions-message-bar > * {
+  display: inline-block;
+  padding-block: 1px;
+}
 
 /* Hide the menu button and the unified extensions content when the extension
  * item is placed on the toolbar. */
@@ -146,7 +190,7 @@ unified-extensions-item > .subviewbutton {
   }
 
   .unified-extensions-item-action-button.subviewbutton:not([disabled], :-moz-lwtheme),
-  .unified-extensions-item-menu-button.subviewbutton:not(:-moz-lwtheme) {
+  .unified-extensions-item-menu-button.subviewbutton > .toolbarbutton-icon:not(:-moz-lwtheme) {
     border-color: currentColor;
     background-color: ButtonFace;
     color: ButtonText;
@@ -175,16 +219,22 @@ unified-extensions-item > .subviewbutton {
   }
 
   .unified-extensions-item > .unified-extensions-item-action-button.subviewbutton:hover:not([disabled], :-moz-lwtheme),
-  .unified-extensions-item > .unified-extensions-item-menu-button.subviewbutton:hover:not(:-moz-lwtheme) {
+  .unified-extensions-item > .unified-extensions-item-menu-button.subviewbutton:hover > .toolbarbutton-icon:not(:-moz-lwtheme) {
     background-color: var(--uei-button-hover-bgcolor);
     color: var(--uei-button-hover-color);
     border-color: var(--uei-button-hover-bgcolor);
   }
 
   .unified-extensions-item > .unified-extensions-item-action-button.subviewbutton:hover:active:not([disabled], :-moz-lwtheme),
-  .unified-extensions-item > .unified-extensions-item-menu-button.subviewbutton:hover:active:not(:-moz-lwtheme) {
+  .unified-extensions-item > .unified-extensions-item-menu-button.subviewbutton:hover:active > .toolbarbutton-icon:not(:-moz-lwtheme) {
     background-color: var(--uei-button-active-bgcolor);
     color: var(--uei-button-active-color);
     border-color: var(--uei-button-active-color);
+  }
+
+  .unified-extensions-item > .unified-extensions-item-menu-button.subviewbutton:focus-visible > .toolbarbutton-icon:not(:-moz-lwtheme) {
+    /* The border would otherwise overlap with the focus outline, causing an
+     * unsightly anti-aliasing artifact */
+    border-color: transparent;
   }
 }

@@ -5,8 +5,9 @@
 
 #include "lib/extras/codec.h"
 
-#include "jxl/decode.h"
-#include "jxl/types.h"
+#include <jxl/decode.h>
+#include <jxl/types.h>
+
 #include "lib/extras/packed_image.h"
 #include "lib/jxl/base/padded_bytes.h"
 #include "lib/jxl/base/status.h"
@@ -38,12 +39,12 @@ constexpr size_t kMinBytes = 9;
 
 Status SetFromBytes(const Span<const uint8_t> bytes,
                     const extras::ColorHints& color_hints, CodecInOut* io,
-                    ThreadPool* pool, extras::Codec* orig_codec) {
+                    ThreadPool* pool, const SizeConstraints* constraints,
+                    extras::Codec* orig_codec) {
   if (bytes.size() < kMinBytes) return JXL_FAILURE("Too few bytes");
 
   extras::PackedPixelFile ppf;
-  if (extras::DecodeBytes(bytes, color_hints, io->constraints, &ppf,
-                          orig_codec)) {
+  if (extras::DecodeBytes(bytes, color_hints, &ppf, constraints, orig_codec)) {
     return ConvertPackedPixelFileToCodecInOut(ppf, pool, io);
   }
   return JXL_FAILURE("Codecs failed to decode");
@@ -51,11 +52,12 @@ Status SetFromBytes(const Span<const uint8_t> bytes,
 
 Status SetFromFile(const std::string& pathname,
                    const extras::ColorHints& color_hints, CodecInOut* io,
-                   ThreadPool* pool, extras::Codec* orig_codec) {
+                   ThreadPool* pool, const SizeConstraints* constraints,
+                   extras::Codec* orig_codec) {
   std::vector<uint8_t> encoded;
   JXL_RETURN_IF_ERROR(ReadFile(pathname, &encoded));
   JXL_RETURN_IF_ERROR(SetFromBytes(Span<const uint8_t>(encoded), color_hints,
-                                   io, pool, orig_codec));
+                                   io, pool, constraints, orig_codec));
   return true;
 }
 
@@ -132,6 +134,7 @@ Status Encode(const CodecInOut& io, const extras::Codec codec,
       ConvertCodecInOutToPackedPixelFile(io, format, c_desired, pool, &ppf));
   ppf.info.bits_per_sample = bits_per_sample;
   if (format.data_type == JXL_TYPE_FLOAT) {
+    ppf.info.bits_per_sample = 32;
     ppf.info.exponent_bits_per_sample = 8;
   }
   extras::EncodedImage encoded_image;

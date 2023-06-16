@@ -9,12 +9,12 @@ function test() {
   gBrowser.selectedBrowser.focus();
   gURLBar.addEventListener(
     "focus",
-    function() {
+    function () {
       ok(true, "Invoked onfocus handler");
       EventUtils.synthesizeKey("VK_RETURN", { shiftKey: true });
 
       // javscript: URIs are evaluated async.
-      SimpleTest.executeSoon(function() {
+      SimpleTest.executeSoon(function () {
         ok(true, "Evaluated without crashing");
         finish();
       });

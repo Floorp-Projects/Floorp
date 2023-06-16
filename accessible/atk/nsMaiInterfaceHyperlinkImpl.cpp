@@ -13,10 +13,12 @@ using namespace mozilla::a11y;
 
 extern "C" {
 static AtkHyperlink* getHyperlinkCB(AtkHyperlinkImpl* aImpl) {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aImpl));
-  if (!accWrap && !GetProxy(ATK_OBJECT(aImpl))) return nullptr;
+  Accessible* acc = GetInternalObj(ATK_OBJECT(aImpl));
+  if (!acc) {
+    return nullptr;
+  }
 
-  if (accWrap) NS_ASSERTION(accWrap->IsLink(), "why isn't it a link!");
+  NS_ASSERTION(acc->IsLink(), "why isn't it a link!");
 
   return MAI_ATK_OBJECT(aImpl)->GetAtkHyperlink();
 }

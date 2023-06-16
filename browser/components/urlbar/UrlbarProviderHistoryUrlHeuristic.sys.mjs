@@ -135,4 +135,5 @@ class ProviderHistoryUrlHeuristic extends UrlbarProvider {
   }
 }
 
-export var UrlbarProviderHistoryUrlHeuristic = new ProviderHistoryUrlHeuristic();
+export var UrlbarProviderHistoryUrlHeuristic =
+  new ProviderHistoryUrlHeuristic();

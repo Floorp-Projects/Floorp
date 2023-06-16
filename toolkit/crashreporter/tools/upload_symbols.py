@@ -291,7 +291,7 @@ def upload_symbols(zip_path):
             log.error("Error: {0}".format(e))
         log.info("Retrying...")
     else:
-        log.warn("Maximum retries hit, giving up!")
+        log.warning("Maximum retries hit, giving up!")
         return 1
 
     if r.status_code >= 200 and r.status_code < 300:

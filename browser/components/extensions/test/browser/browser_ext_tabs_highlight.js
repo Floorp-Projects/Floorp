@@ -9,7 +9,7 @@ add_task(async function test_highlighted() {
       permissions: ["tabs"],
     },
 
-    background: async function() {
+    background: async function () {
       async function testHighlighted(activeIndex, highlightedIndices) {
         let tabs = await browser.tabs.query({ currentWindow: true });
         for (let { index, active, highlighted } of tabs) {

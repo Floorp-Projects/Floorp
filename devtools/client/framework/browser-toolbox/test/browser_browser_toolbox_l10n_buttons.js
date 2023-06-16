@@ -17,7 +17,7 @@ requestLongerTimeout(4);
  * localized. This test opens the browser toolbox, and checks that these buttons
  * work.
  */
-add_task(async function() {
+add_task(async function () {
   const ToolboxTask = await initBrowserToolboxTask();
   await ToolboxTask.importFunctions({ clickMeatballItem });
 

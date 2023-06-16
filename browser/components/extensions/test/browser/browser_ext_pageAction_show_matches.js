@@ -9,7 +9,7 @@ function getExtension(page_action) {
     manifest: {
       page_action,
     },
-    background: function() {
+    background: function () {
       browser.test.onMessage.addListener(
         async ({ method, param, expect, msg }) => {
           let result = await browser.pageAction[method](param);
@@ -63,7 +63,7 @@ function getId(tab) {
     Management: {
       global: { tabTracker },
     },
-  } = ChromeUtils.import("resource://gre/modules/Extension.jsm");
+  } = ChromeUtils.importESModule("resource://gre/modules/Extension.sys.mjs");
   getId = tabTracker.getId.bind(tabTracker); // eslint-disable-line no-func-assign
   return getId(tab);
 }
@@ -267,7 +267,7 @@ add_task(async function test_pageAction_restrictScheme_false() {
         hide_matches: ["*://*/*"],
       },
     },
-    background: function() {
+    background: function () {
       browser.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
         if (changeInfo.url && changeInfo.url.startsWith("about:reader")) {
           browser.test.sendMessage("readerModeEntered");
@@ -288,9 +288,8 @@ add_task(async function test_pageAction_restrictScheme_false() {
   async function expectPageAction(extension, tab, isShown) {
     await promiseAnimationFrame();
     let widgetId = makeWidgetId(extension.id);
-    let pageActionId = BrowserPageActions.urlbarButtonNodeIDForActionID(
-      widgetId
-    );
+    let pageActionId =
+      BrowserPageActions.urlbarButtonNodeIDForActionID(widgetId);
     let iconEl = document.getElementById(pageActionId);
 
     if (isShown) {

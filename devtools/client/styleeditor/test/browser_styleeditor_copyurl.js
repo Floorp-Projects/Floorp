@@ -7,7 +7,7 @@
 
 const TESTCASE_URI = TEST_BASE_HTTPS + "simple.html";
 
-add_task(async function() {
+add_task(async function () {
   const { panel, ui } = await openStyleEditorForURL(TESTCASE_URI);
 
   const doc = panel.panelWindow.document;

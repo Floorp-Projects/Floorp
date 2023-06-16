@@ -57,13 +57,13 @@ const knownUnshownImages = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   if (!AppConstants.DEBUG) {
     ok(false, "You need to run this test on a debug build.");
   }
 
-  let startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"].getService()
-    .wrappedJSObject;
+  let startupRecorder =
+    Cc["@mozilla.org/test/startuprecorder;1"].getService().wrappedJSObject;
   await startupRecorder.done;
 
   let data = Cu.cloneInto(startupRecorder.data.images, {});

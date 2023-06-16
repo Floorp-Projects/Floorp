@@ -48,7 +48,7 @@ async function checkCategory(win, category, { expectHidden, expectSelected }) {
   }
 }
 
-add_setup(async function() {
+add_setup(async function () {
   gProvider = new MockProvider();
 });
 

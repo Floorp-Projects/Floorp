@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Insert HTML containing comment nodes</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script>
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  const editor = document.querySelector("div[contenteditable]");
+  getSelection().collapse(editor.querySelector("li").firstChild, 1);
+  document.execCommand("insertHTML", false, "<!-- 1 --><!-- 2 -->b");
+  is(
+    editor.innerHTML,
+    "<ul><li>a<!-- 1 --><!-- 2 -->bc</li></ul>",
+    "The HTML fragment should be inserted as-is"
+  );
+  document.execCommand("undo");
+  is(
+    editor.innerHTML,
+    "<ul><li>ac</li></ul>",
+    "Undoing should work as expected"
+  );
+  document.execCommand("redo");
+  is(
+    editor.innerHTML,
+    "<ul><li>a<!-- 1 --><!-- 2 -->bc</li></ul>",
+    "Redoing should work as expected"
+  );
+  SimpleTest.finish();
+});
+</script>
+</head>
+<body>
+<div contenteditable><ul><li>ac</li></ul></div>
+</body>
+</html>

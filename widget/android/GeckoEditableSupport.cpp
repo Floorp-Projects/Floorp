@@ -17,6 +17,7 @@
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/java/GeckoEditableChildWrappers.h"
 #include "mozilla/java/GeckoServiceChildProcessWrappers.h"
+#include "mozilla/jni/NativesInlines.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/Preferences.h"
@@ -993,13 +994,9 @@ bool GeckoEditableSupport::DoReplaceText(int32_t aStart, int32_t aEnd,
     textChanged = true;
   }
 
-  if (StaticPrefs::
-          intl_ime_hack_on_any_apps_fire_key_events_for_composition() ||
-      mInputContext.mMayBeIMEUnaware) {
-    SendIMEDummyKeyEvent(widget, eKeyDown);
-    if (!mDispatcher || widget->Destroyed()) {
-      return false;
-    }
+  SendIMEDummyKeyEvent(widget, eKeyDown);
+  if (!mDispatcher || widget->Destroyed()) {
+    return false;
   }
 
   if (needDispatchCompositionStart) {
@@ -1033,12 +1030,9 @@ bool GeckoEditableSupport::DoReplaceText(int32_t aStart, int32_t aEnd,
     return false;
   }
 
-  if (StaticPrefs::
-          intl_ime_hack_on_any_apps_fire_key_events_for_composition() ||
-      mInputContext.mMayBeIMEUnaware) {
-    SendIMEDummyKeyEvent(widget, eKeyUp);
-    // Widget may be destroyed after dispatching the above event.
-  }
+  SendIMEDummyKeyEvent(widget, eKeyUp);
+  // Widget may be destroyed after dispatching the above event.
+
   return textChanged;
 }
 

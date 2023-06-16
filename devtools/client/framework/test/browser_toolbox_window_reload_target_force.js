@@ -11,7 +11,7 @@ const L10N = new LocalizationHelper(
 
 // Test that "forceReload" shorcuts send requests with the correct cache-control
 // header value: no-cache.
-add_task(async function() {
+add_task(async function () {
   await addTab(TEST_URL);
   const tab = gBrowser.selectedTab;
 
@@ -42,7 +42,7 @@ async function testReload(shortcut, toolbox, expectedHeader) {
   const textContent = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [],
-    function() {
+    function () {
       return content.document.body.textContent;
     }
   );

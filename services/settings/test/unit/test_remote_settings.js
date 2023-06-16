@@ -702,13 +702,8 @@ add_task(async function test_inspect_method() {
   const inspected = await RemoteSettings.inspect();
 
   // Assertion for global attributes.
-  const {
-    mainBucket,
-    serverURL,
-    defaultSigner,
-    collections,
-    serverTimestamp,
-  } = inspected;
+  const { mainBucket, serverURL, defaultSigner, collections, serverTimestamp } =
+    inspected;
   const rsSigner = "remote-settings.content-signature.mozilla.org";
   equal(mainBucket, "main");
   equal(serverURL, `http://localhost:${server.identity.primaryPort}/v1`);
@@ -1139,10 +1134,8 @@ add_task(
     // Register a client only listed in -preview...
     RemoteSettings("crash-rate");
 
-    const {
-      collections: before,
-      previewMode: previewModeBefore,
-    } = await RemoteSettings.inspect();
+    const { collections: before, previewMode: previewModeBefore } =
+      await RemoteSettings.inspect();
 
     Assert.ok(!previewModeBefore, "preview is not enabled");
 
@@ -1344,131 +1337,137 @@ ZARKjbu1TuYQHf0fs+GwID8zeLc2zJL7UzcHFwwQ6Nda9OJN4uPAuC/BKaIpxCLL
 wNuvFqc=
 -----END CERTIFICATE-----`,
     },
-    "GET:/v1/buckets/main/collections/password-fields/changeset?_expected=2000": {
-      sampleHeaders: [
-        "Access-Control-Allow-Origin: *",
-        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
-        "Content-Type: application/json; charset=UTF-8",
-        "Server: waitress",
-        'Etag: "3000"',
-      ],
-      status: { status: 200, statusText: "OK" },
-      responseBody: {
-        timestamp: 3000,
-        metadata: {
-          id: "password-fields",
-          last_modified: 1234,
-          signature: {
-            signature: "abcdef",
-            x5u: `http://localhost:${port}/fake-x5u`,
+    "GET:/v1/buckets/main/collections/password-fields/changeset?_expected=2000":
+      {
+        sampleHeaders: [
+          "Access-Control-Allow-Origin: *",
+          "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
+          "Content-Type: application/json; charset=UTF-8",
+          "Server: waitress",
+          'Etag: "3000"',
+        ],
+        status: { status: 200, statusText: "OK" },
+        responseBody: {
+          timestamp: 3000,
+          metadata: {
+            id: "password-fields",
+            last_modified: 1234,
+            signature: {
+              signature: "abcdef",
+              x5u: `http://localhost:${port}/fake-x5u`,
+            },
           },
+          changes: [
+            {
+              id: "9d500963-d80e-3a91-6e74-66f3811b99cc",
+              last_modified: 3000,
+              website: "https://some-website.com",
+              selector: "#user[password]",
+            },
+          ],
         },
-        changes: [
-          {
-            id: "9d500963-d80e-3a91-6e74-66f3811b99cc",
-            last_modified: 3000,
-            website: "https://some-website.com",
-            selector: "#user[password]",
-          },
-        ],
       },
-    },
-    "GET:/v1/buckets/main/collections/password-fields/changeset?_expected=3001&_since=%223000%22": {
-      sampleHeaders: [
-        "Access-Control-Allow-Origin: *",
-        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
-        "Content-Type: application/json; charset=UTF-8",
-        "Server: waitress",
-        'Etag: "4000"',
-      ],
-      status: { status: 200, statusText: "OK" },
-      responseBody: {
-        metadata: {
-          signature: {},
+    "GET:/v1/buckets/main/collections/password-fields/changeset?_expected=3001&_since=%223000%22":
+      {
+        sampleHeaders: [
+          "Access-Control-Allow-Origin: *",
+          "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
+          "Content-Type: application/json; charset=UTF-8",
+          "Server: waitress",
+          'Etag: "4000"',
+        ],
+        status: { status: 200, statusText: "OK" },
+        responseBody: {
+          metadata: {
+            signature: {},
+          },
+          timestamp: 4000,
+          changes: [
+            {
+              id: "aabad965-e556-ffe7-4191-074f5dee3df3",
+              last_modified: 4000,
+              website: "https://www.other.org/signin",
+              selector: "#signinpassword",
+            },
+            {
+              id: "9d500963-d80e-3a91-6e74-66f3811b99cc",
+              last_modified: 3500,
+              website: "https://some-website.com/login",
+              selector: "input#user[password]",
+            },
+          ],
         },
-        timestamp: 4000,
-        changes: [
-          {
-            id: "aabad965-e556-ffe7-4191-074f5dee3df3",
-            last_modified: 4000,
-            website: "https://www.other.org/signin",
-            selector: "#signinpassword",
-          },
-          {
-            id: "9d500963-d80e-3a91-6e74-66f3811b99cc",
-            last_modified: 3500,
-            website: "https://some-website.com/login",
-            selector: "input#user[password]",
-          },
-        ],
       },
-    },
-    "GET:/v1/buckets/main/collections/password-fields/changeset?_expected=4001&_since=%224000%22": {
-      sampleHeaders: [
-        "Access-Control-Allow-Origin: *",
-        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
-        "Content-Type: application/json; charset=UTF-8",
-        "Server: waitress",
-        'Etag: "5000"',
-      ],
-      status: { status: 200, statusText: "OK" },
-      responseBody: {
-        metadata: {
-          signature: {},
+    "GET:/v1/buckets/main/collections/password-fields/changeset?_expected=4001&_since=%224000%22":
+      {
+        sampleHeaders: [
+          "Access-Control-Allow-Origin: *",
+          "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
+          "Content-Type: application/json; charset=UTF-8",
+          "Server: waitress",
+          'Etag: "5000"',
+        ],
+        status: { status: 200, statusText: "OK" },
+        responseBody: {
+          metadata: {
+            signature: {},
+          },
+          timestamp: 5000,
+          changes: [
+            {
+              id: "aabad965-e556-ffe7-4191-074f5dee3df3",
+              deleted: true,
+            },
+          ],
         },
-        timestamp: 5000,
-        changes: [
-          {
-            id: "aabad965-e556-ffe7-4191-074f5dee3df3",
-            deleted: true,
-          },
+      },
+    "GET:/v1/buckets/main/collections/password-fields/changeset?_expected=10000&_since=%229999%22":
+      {
+        sampleHeaders: [
+          "Access-Control-Allow-Origin: *",
+          "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
+          "Content-Type: application/json; charset=UTF-8",
+          "Server: waitress",
         ],
+        status: { status: 503, statusText: "Service Unavailable" },
+        responseBody: {
+          code: 503,
+          errno: 999,
+          error: "Service Unavailable",
+        },
       },
-    },
-    "GET:/v1/buckets/main/collections/password-fields/changeset?_expected=10000&_since=%229999%22": {
-      sampleHeaders: [
-        "Access-Control-Allow-Origin: *",
-        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
-        "Content-Type: application/json; charset=UTF-8",
-        "Server: waitress",
-      ],
-      status: { status: 503, statusText: "Service Unavailable" },
-      responseBody: {
-        code: 503,
-        errno: 999,
-        error: "Service Unavailable",
-      },
-    },
-    "GET:/v1/buckets/main/collections/password-fields/changeset?_expected=10001&_since=%2210000%22": {
-      sampleHeaders: [
-        "Access-Control-Allow-Origin: *",
-        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
-        "Content-Type: application/json; charset=UTF-8",
-        "Server: waitress",
-        'Etag: "10001"',
-      ],
-      status: { status: 200, statusText: "OK" },
-      responseBody: "<invalid json",
-    },
-    "GET:/v1/buckets/main/collections/password-fields/changeset?_expected=11001&_since=%2211000%22": {
-      sampleHeaders: [
-        "Access-Control-Allow-Origin: *",
-        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
-        "Content-Type: application/json; charset=UTF-8",
-        "Server: waitress",
-      ],
-      status: { status: 503, statusText: "Service Unavailable" },
-      responseBody: {
-        changes: [
-          {
-            id: "c4f021e3-f68c-4269-ad2a-d4ba87762b35",
-            last_modified: 4000,
-            website: "https://www.eff.org",
-            selector: "#pwd",
-          },
+    "GET:/v1/buckets/main/collections/password-fields/changeset?_expected=10001&_since=%2210000%22":
+      {
+        sampleHeaders: [
+          "Access-Control-Allow-Origin: *",
+          "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
+          "Content-Type: application/json; charset=UTF-8",
+          "Server: waitress",
+          'Etag: "10001"',
         ],
+        status: { status: 200, statusText: "OK" },
+        responseBody: "<invalid json",
       },
-    },
+    "GET:/v1/buckets/main/collections/password-fields/changeset?_expected=11001&_since=%2211000%22":
+      {
+        sampleHeaders: [
+          "Access-Control-Allow-Origin: *",
+          "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
+          "Content-Type: application/json; charset=UTF-8",
+          "Server: waitress",
+        ],
+        status: { status: 503, statusText: "Service Unavailable" },
+        responseBody: {
+          changes: [
+            {
+              id: "c4f021e3-f68c-4269-ad2a-d4ba87762b35",
+              last_modified: 4000,
+              website: "https://www.eff.org",
+              selector: "#pwd",
+            },
+          ],
+        },
+      },
     "GET:/v1/buckets/main/collections/password-fields?_expected=11001": {
       sampleHeaders: [
         "Access-Control-Allow-Origin: *",
@@ -1483,82 +1482,85 @@ wNuvFqc=
         error: "Service Unavailable",
       },
     },
-    "GET:/v1/buckets/monitor/collections/changes/changeset?collection=password-fields&bucket=main&_expected=0": {
-      sampleHeaders: [
-        "Access-Control-Allow-Origin: *",
-        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
-        "Content-Type: application/json; charset=UTF-8",
-        "Server: waitress",
-        `Date: ${new Date().toUTCString()}`,
-        'Etag: "1338"',
-      ],
-      status: { status: 200, statusText: "OK" },
-      responseBody: {
-        timestamp: 1338,
-        changes: [
-          {
-            id: "fe5758d0-c67a-42d0-bb4f-8f2d75106b65",
-            bucket: "main",
-            collection: "password-fields",
-            last_modified: 1337,
-          },
+    "GET:/v1/buckets/monitor/collections/changes/changeset?collection=password-fields&bucket=main&_expected=0":
+      {
+        sampleHeaders: [
+          "Access-Control-Allow-Origin: *",
+          "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
+          "Content-Type: application/json; charset=UTF-8",
+          "Server: waitress",
+          `Date: ${new Date().toUTCString()}`,
+          'Etag: "1338"',
         ],
-      },
-    },
-    "GET:/v1/buckets/main/collections/password-fields/changeset?_expected=1337": {
-      sampleHeaders: [
-        "Access-Control-Allow-Origin: *",
-        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
-        "Content-Type: application/json; charset=UTF-8",
-        "Server: waitress",
-        'Etag: "3000"',
-      ],
-      status: { status: 200, statusText: "OK" },
-      responseBody: {
-        metadata: {
-          signature: {
-            signature: "some-sig",
-            x5u: `http://localhost:${port}/fake-x5u`,
-          },
+        status: { status: 200, statusText: "OK" },
+        responseBody: {
+          timestamp: 1338,
+          changes: [
+            {
+              id: "fe5758d0-c67a-42d0-bb4f-8f2d75106b65",
+              bucket: "main",
+              collection: "password-fields",
+              last_modified: 1337,
+            },
+          ],
         },
-        timestamp: 3000,
-        changes: [
-          {
-            id: "312cc78d-9c1f-4291-a4fa-a1be56f6cc69",
-            last_modified: 3000,
-            website: "https://some-website.com",
-            selector: "#webpage[field-pwd]",
-          },
-        ],
       },
-    },
-    "GET:/v1/buckets/main/collections/password-fields/changeset?_expected=1337&_since=%223000%22": {
-      sampleHeaders: [
-        "Access-Control-Allow-Origin: *",
-        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
-        "Content-Type: application/json; charset=UTF-8",
-        "Server: waitress",
-        'Etag: "3001"',
-      ],
-      status: { status: 200, statusText: "OK" },
-      responseBody: {
-        metadata: {
-          signature: {
-            signature: "some-sig",
-            x5u: `http://localhost:${port}/fake-x5u`,
+    "GET:/v1/buckets/main/collections/password-fields/changeset?_expected=1337":
+      {
+        sampleHeaders: [
+          "Access-Control-Allow-Origin: *",
+          "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
+          "Content-Type: application/json; charset=UTF-8",
+          "Server: waitress",
+          'Etag: "3000"',
+        ],
+        status: { status: 200, statusText: "OK" },
+        responseBody: {
+          metadata: {
+            signature: {
+              signature: "some-sig",
+              x5u: `http://localhost:${port}/fake-x5u`,
+            },
           },
+          timestamp: 3000,
+          changes: [
+            {
+              id: "312cc78d-9c1f-4291-a4fa-a1be56f6cc69",
+              last_modified: 3000,
+              website: "https://some-website.com",
+              selector: "#webpage[field-pwd]",
+            },
+          ],
         },
-        timestamp: 3001,
-        changes: [
-          {
-            id: "312cc78d-9c1f-4291-a4fa-a1be56f6cc69",
-            last_modified: 3001,
-            website: "https://some-website-2.com",
-            selector: "#webpage[field-pwd]",
-          },
-        ],
       },
-    },
+    "GET:/v1/buckets/main/collections/password-fields/changeset?_expected=1337&_since=%223000%22":
+      {
+        sampleHeaders: [
+          "Access-Control-Allow-Origin: *",
+          "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
+          "Content-Type: application/json; charset=UTF-8",
+          "Server: waitress",
+          'Etag: "3001"',
+        ],
+        status: { status: 200, statusText: "OK" },
+        responseBody: {
+          metadata: {
+            signature: {
+              signature: "some-sig",
+              x5u: `http://localhost:${port}/fake-x5u`,
+            },
+          },
+          timestamp: 3001,
+          changes: [
+            {
+              id: "312cc78d-9c1f-4291-a4fa-a1be56f6cc69",
+              last_modified: 3001,
+              website: "https://some-website-2.com",
+              selector: "#webpage[field-pwd]",
+            },
+          ],
+        },
+      },
     "GET:/v1/buckets/main/collections/language-dictionaries/changeset": {
       sampleHeaders: [
         "Access-Control-Allow-Origin: *",
@@ -1597,76 +1599,79 @@ wNuvFqc=
         ],
       },
     },
-    "GET:/v1/buckets/main/collections/with-local-fields/changeset?_expected=2000": {
-      sampleHeaders: [
-        "Access-Control-Allow-Origin: *",
-        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
-        "Content-Type: application/json; charset=UTF-8",
-        "Server: waitress",
-        'Etag: "2000"',
-      ],
-      status: { status: 200, statusText: "OK" },
-      responseBody: {
-        timestamp: 2000,
-        metadata: {
-          id: "with-local-fields",
-          last_modified: 1234,
-          signature: {
-            signature: "xyz",
-            x5u: `http://localhost:${port}/fake-x5u`,
+    "GET:/v1/buckets/main/collections/with-local-fields/changeset?_expected=2000":
+      {
+        sampleHeaders: [
+          "Access-Control-Allow-Origin: *",
+          "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
+          "Content-Type: application/json; charset=UTF-8",
+          "Server: waitress",
+          'Etag: "2000"',
+        ],
+        status: { status: 200, statusText: "OK" },
+        responseBody: {
+          timestamp: 2000,
+          metadata: {
+            id: "with-local-fields",
+            last_modified: 1234,
+            signature: {
+              signature: "xyz",
+              x5u: `http://localhost:${port}/fake-x5u`,
+            },
           },
+          changes: [
+            {
+              id: "c74279ce-fb0a-42a6-ae11-386b567a6119",
+              last_modified: 2000,
+            },
+          ],
         },
-        changes: [
-          {
-            id: "c74279ce-fb0a-42a6-ae11-386b567a6119",
-            last_modified: 2000,
-          },
-        ],
       },
-    },
-    "GET:/v1/buckets/main/collections/with-local-fields/changeset?_expected=3000&_since=%222000%22": {
-      sampleHeaders: [
-        "Access-Control-Allow-Origin: *",
-        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
-        "Content-Type: application/json; charset=UTF-8",
-        "Server: waitress",
-        'Etag: "3000"',
-      ],
-      status: { status: 200, statusText: "OK" },
-      responseBody: {
-        timestamp: 3000,
-        metadata: {
-          signature: {},
+    "GET:/v1/buckets/main/collections/with-local-fields/changeset?_expected=3000&_since=%222000%22":
+      {
+        sampleHeaders: [
+          "Access-Control-Allow-Origin: *",
+          "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
+          "Content-Type: application/json; charset=UTF-8",
+          "Server: waitress",
+          'Etag: "3000"',
+        ],
+        status: { status: 200, statusText: "OK" },
+        responseBody: {
+          timestamp: 3000,
+          metadata: {
+            signature: {},
+          },
+          changes: [
+            {
+              id: "1f5c98b9-6d93-4c13-aa26-978b38695096",
+              last_modified: 3000,
+            },
+          ],
         },
-        changes: [
-          {
-            id: "1f5c98b9-6d93-4c13-aa26-978b38695096",
-            last_modified: 3000,
-          },
-        ],
       },
-    },
-    "GET:/v1/buckets/monitor/collections/changes/changeset?collection=no-mocked-responses&bucket=main&_expected=0": {
-      sampleHeaders: [
-        "Access-Control-Allow-Origin: *",
-        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
-        "Content-Type: application/json; charset=UTF-8",
-        "Server: waitress",
-        `Date: ${new Date().toUTCString()}`,
-        'Etag: "713705"',
-      ],
-      status: { status: 200, statusText: "OK" },
-      responseBody: {
-        data: [
-          {
-            id: "07a98d1b-7c62-4344-ab18-76856b3facd8",
-            bucket: "main",
-            collection: "no-mocked-responses",
-            last_modified: 713705,
-          },
+    "GET:/v1/buckets/monitor/collections/changes/changeset?collection=no-mocked-responses&bucket=main&_expected=0":
+      {
+        sampleHeaders: [
+          "Access-Control-Allow-Origin: *",
+          "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
+          "Content-Type: application/json; charset=UTF-8",
+          "Server: waitress",
+          `Date: ${new Date().toUTCString()}`,
+          'Etag: "713705"',
         ],
+        status: { status: 200, statusText: "OK" },
+        responseBody: {
+          data: [
+            {
+              id: "07a98d1b-7c62-4344-ab18-76856b3facd8",
+              bucket: "main",
+              collection: "no-mocked-responses",
+              last_modified: 713705,
+            },
+          ],
+        },
       },
-    },
   };
   return (
     responses[`${req.method}:${req.path}?${req.queryString}`] ||

@@ -13,18 +13,18 @@ const dom = require("resource://devtools/client/shared/vendor/react-dom-factorie
 const { div, h1, h2, h3, p, a } = dom;
 
 // Localized strings for (devtools/client/locales/en-US/components.properties)
-loader.lazyGetter(this, "L10N", function() {
+loader.lazyGetter(this, "L10N", function () {
   const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
   return new LocalizationHelper(
     "devtools/client/locales/components.properties"
   );
 });
 
-loader.lazyGetter(this, "FILE_BUG_BUTTON", function() {
+loader.lazyGetter(this, "FILE_BUG_BUTTON", function () {
   return L10N.getStr("appErrorBoundary.fileBugButton");
 });
 
-loader.lazyGetter(this, "RELOAD_PAGE_INFO", function() {
+loader.lazyGetter(this, "RELOAD_PAGE_INFO", function () {
   return L10N.getStr("appErrorBoundary.reloadPanelInfo");
 });
 
@@ -119,8 +119,11 @@ class AppErrorBoundary extends Component {
   getBugLink() {
     const compStack = this.getValidInfo(this.state.errorInfo).componentStack;
     const errorMsg = this.state.errorMsg;
-    const msg = (errorMsg + compStack).replace(/\n/gi, "%0A");
-    return `${bugLink}${this.props.componentName}&comment=${msg}`;
+    const errorStack = this.state.errorStack;
+    const msg = `Error: \n${errorMsg}\n\nReact Component Stack: ${compStack}\n\nStacktrace: \n${errorStack}`;
+    return `${bugLink}${this.props.componentName}&comment=${encodeURIComponent(
+      msg
+    )}`;
   }
 
   render() {

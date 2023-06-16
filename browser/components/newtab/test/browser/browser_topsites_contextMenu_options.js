@@ -53,9 +53,8 @@ test_newtab({
     );
 
     // Don't count search topsites
-    const defaultTopSitesNumber = content.document.querySelectorAll(
-      siteSelector
-    ).length;
+    const defaultTopSitesNumber =
+      content.document.querySelectorAll(siteSelector).length;
     Assert.equal(defaultTopSitesNumber, 5, "5 top sites are loaded by default");
 
     // Skip the search topsites select the second default topsite

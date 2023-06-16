@@ -20,6 +20,7 @@
 #include "js/RegExpFlags.h"  // JS::RegExpFlag, JS::RegExpFlags
 #include "util/StringBuffer.h"
 #include "util/Unicode.h"
+#include "vm/Interpreter.h"
 #include "vm/JSContext.h"
 #include "vm/RegExpObject.h"
 #include "vm/RegExpStatics.h"
@@ -495,6 +496,24 @@ bool js::IsRegExp(JSContext* cx, HandleValue value, bool* result) {
   return true;
 }
 
+// The "lastIndex" property is non-configurable, but it can be made
+// non-writable. If CalledFromJit is true, we have emitted guards to ensure it's
+// writable.
+template <bool CalledFromJit = false>
+static bool SetLastIndex(JSContext* cx, Handle<RegExpObject*> regexp,
+                         int32_t lastIndex) {
+  MOZ_ASSERT(lastIndex >= 0);
+
+  if (CalledFromJit || MOZ_LIKELY(RegExpObject::isInitialShape(regexp)) ||
+      regexp->lookupPure(cx->names().lastIndex)->writable()) {
+    regexp->setLastIndex(cx, lastIndex);
+    return true;
+  }
+
+  Rooted<Value> val(cx, Int32Value(lastIndex));
+  return SetProperty(cx, regexp, cx->names().lastIndex, val);
+}
+
 /* ES6 B.2.5.1. */
 MOZ_ALWAYS_INLINE bool regexp_compile_impl(JSContext* cx,
                                            const CallArgs& args) {
@@ -549,15 +568,10 @@ MOZ_ALWAYS_INLINE bool regexp_compile_impl(JSContext* cx,
 
   // The final niggling bit of step 5.
   //
-  // |regexp| is user-exposed, but if its "lastIndex" property hasn't been
-  // made non-writable, we can still use a fast path to zero it.
-  if (regexp->lookupPure(cx->names().lastIndex)->writable()) {
-    regexp->zeroLastIndex(cx);
-  } else {
-    RootedValue zero(cx, Int32Value(0));
-    if (!SetProperty(cx, regexp, cx->names().lastIndex, zero)) {
-      return false;
-    }
+  // |regexp| is user-exposed, so its "lastIndex" property might be
+  // non-writable.
+  if (!SetLastIndex(cx, regexp, 0)) {
+    return false;
   }
 
   args.rval().setObject(*regexp);
@@ -1273,63 +1287,110 @@ bool js::RegExpSearcherRaw(JSContext* cx, HandleObject regexp,
   return RegExpSearcherImpl(cx, regexp, input, lastIndex, result);
 }
 
-/*
- * ES 2017 draft rev 6a13789aa9e7c6de4e96b7d3e24d9e6eba6584ad 21.2.5.2.2
- * steps 3, 9-14, except 12.a.i, 12.c.i.1.
- */
-bool js::RegExpTester(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 3);
-  MOZ_ASSERT(IsRegExpObject(args[0]));
-  MOZ_ASSERT(args[1].isString());
-  MOZ_ASSERT(args[2].isNumber());
+template <bool CalledFromJit>
+static bool RegExpBuiltinExecMatchRaw(JSContext* cx,
+                                      Handle<RegExpObject*> regexp,
+                                      HandleString input, int32_t lastIndex,
+                                      MatchPairs* maybeMatches,
+                                      MutableHandleValue output) {
+  MOZ_ASSERT(lastIndex >= 0);
+  MOZ_ASSERT(size_t(lastIndex) <= input->length());
+  MOZ_ASSERT_IF(!CalledFromJit, !maybeMatches);
 
-  RootedObject regexp(cx, &args[0].toObject());
-  RootedString string(cx, args[1].toString());
-
-  int32_t lastIndex;
-  MOZ_ALWAYS_TRUE(ToInt32(cx, args[2], &lastIndex));
-
-  /* Steps 3, 9-14, except 12.a.i, 12.c.i.1. */
-  VectorMatchPairs matches;
-  RegExpRunStatus status =
-      ExecuteRegExp(cx, regexp, string, lastIndex, &matches);
-
-  if (status == RegExpRunStatus_Error) {
-    return false;
-  }
-
-  if (status == RegExpRunStatus_Success) {
-    int32_t endIndex = matches[0].limit;
-    args.rval().setInt32(endIndex);
+  // RegExp execution was successful only if the pairs have actually been
+  // filled in. Note that IC code always passes a nullptr maybeMatches.
+  int32_t lastIndexNew = 0;
+  if (CalledFromJit && maybeMatches &&
+      maybeMatches->pairsRaw()[0] > MatchPair::NoMatch) {
+    RootedRegExpShared shared(cx, regexp->as<RegExpObject>().getShared());
+    if (!CreateRegExpMatchResult(cx, shared, input, *maybeMatches, output)) {
+      return false;
+    }
+    lastIndexNew = (*maybeMatches)[0].limit;
   } else {
-    args.rval().setInt32(-1);
+    VectorMatchPairs matches;
+    RegExpRunStatus status =
+        ExecuteRegExp(cx, regexp, input, lastIndex, &matches);
+    if (status == RegExpRunStatus_Error) {
+      return false;
+    }
+    if (status == RegExpRunStatus_Success_NotFound) {
+      output.setNull();
+      lastIndexNew = 0;
+    } else {
+      RootedRegExpShared shared(cx, regexp->as<RegExpObject>().getShared());
+      if (!CreateRegExpMatchResult(cx, shared, input, matches, output)) {
+        return false;
+      }
+      lastIndexNew = matches[0].limit;
+    }
   }
-  return true;
+
+  RegExpFlags flags = regexp->getFlags();
+  if (!flags.global() && !flags.sticky()) {
+    return true;
+  }
+
+  return SetLastIndex<CalledFromJit>(cx, regexp, lastIndexNew);
 }
 
-/*
- * Separate interface for use by the JITs.
- * This code cannot re-enter JIT code.
- */
-bool js::RegExpTesterRaw(JSContext* cx, HandleObject regexp, HandleString input,
-                         int32_t lastIndex, int32_t* endIndex) {
+bool js::RegExpBuiltinExecMatchFromJit(JSContext* cx,
+                                       Handle<RegExpObject*> regexp,
+                                       HandleString input,
+                                       MatchPairs* maybeMatches,
+                                       MutableHandleValue output) {
+  int32_t lastIndex = 0;
+  if (regexp->isGlobalOrSticky()) {
+    lastIndex = regexp->getLastIndex().toInt32();
+    MOZ_ASSERT(lastIndex >= 0);
+    if (size_t(lastIndex) > input->length()) {
+      output.setNull();
+      return SetLastIndex<true>(cx, regexp, 0);
+    }
+  }
+  return RegExpBuiltinExecMatchRaw<true>(cx, regexp, input, lastIndex,
+                                         maybeMatches, output);
+}
+
+template <bool CalledFromJit>
+static bool RegExpBuiltinExecTestRaw(JSContext* cx,
+                                     Handle<RegExpObject*> regexp,
+                                     HandleString input, int32_t lastIndex,
+                                     bool* result) {
   MOZ_ASSERT(lastIndex >= 0);
+  MOZ_ASSERT(size_t(lastIndex) <= input->length());
 
   VectorMatchPairs matches;
   RegExpRunStatus status =
       ExecuteRegExp(cx, regexp, input, lastIndex, &matches);
-
-  if (status == RegExpRunStatus_Success) {
-    *endIndex = matches[0].limit;
-    return true;
-  }
-  if (status == RegExpRunStatus_Success_NotFound) {
-    *endIndex = -1;
-    return true;
+  if (status == RegExpRunStatus_Error) {
+    return false;
   }
 
-  return false;
+  *result = (status == RegExpRunStatus_Success);
+
+  RegExpFlags flags = regexp->getFlags();
+  if (!flags.global() && !flags.sticky()) {
+    return true;
+  }
+
+  int32_t lastIndexNew = *result ? matches[0].limit : 0;
+  return SetLastIndex<CalledFromJit>(cx, regexp, lastIndexNew);
+}
+
+bool js::RegExpBuiltinExecTestFromJit(JSContext* cx,
+                                      Handle<RegExpObject*> regexp,
+                                      HandleString input, bool* result) {
+  int32_t lastIndex = 0;
+  if (regexp->isGlobalOrSticky()) {
+    lastIndex = regexp->getLastIndex().toInt32();
+    MOZ_ASSERT(lastIndex >= 0);
+    if (size_t(lastIndex) > input->length()) {
+      *result = false;
+      return SetLastIndex<true>(cx, regexp, 0);
+    }
+  }
+  return RegExpBuiltinExecTestRaw<true>(cx, regexp, input, lastIndex, result);
 }
 
 using CapturesVector = GCVector<Value, 4>;
@@ -1720,6 +1781,136 @@ static bool NeedTwoBytes(Handle<JSLinearString*> string,
   }
 
   return false;
+}
+
+// ES2024 draft rev d4927f9bc3706484c75dfef4bbcf5ba826d2632e
+//
+// 22.2.7.2 RegExpBuiltinExec ( R, S )
+// https://tc39.es/ecma262/#sec-regexpbuiltinexec
+//
+// If `forTest` is true, this is called from `RegExp.prototype.test` and we can
+// avoid allocating a result object.
+bool js::RegExpBuiltinExec(JSContext* cx, Handle<RegExpObject*> regexp,
+                           Handle<JSString*> string, bool forTest,
+                           MutableHandle<Value> rval) {
+  // Step 2.
+  uint64_t lastIndex;
+  if (MOZ_LIKELY(regexp->getLastIndex().isInt32())) {
+    lastIndex = std::max(regexp->getLastIndex().toInt32(), 0);
+  } else {
+    Rooted<Value> lastIndexVal(cx, regexp->getLastIndex());
+    if (!ToLength(cx, lastIndexVal, &lastIndex)) {
+      return false;
+    }
+  }
+
+  // Steps 3-5.
+  bool globalOrSticky = regexp->isGlobalOrSticky();
+
+  // Step 7.
+  if (!globalOrSticky) {
+    lastIndex = 0;
+  } else {
+    // Steps 1, 13.a.
+    if (lastIndex > string->length()) {
+      if (!SetLastIndex(cx, regexp, 0)) {
+        return false;
+      }
+      rval.set(forTest ? BooleanValue(false) : NullValue());
+      return true;
+    }
+  }
+
+  MOZ_ASSERT(lastIndex <= string->length());
+  static_assert(JSString::MAX_LENGTH <= INT32_MAX, "lastIndex fits in int32_t");
+
+  // Steps 6, 8-35.
+
+  if (forTest) {
+    bool result;
+    if (!RegExpBuiltinExecTestRaw<false>(cx, regexp, string, int32_t(lastIndex),
+                                         &result)) {
+      return false;
+    }
+    rval.setBoolean(result);
+    return true;
+  }
+
+  return RegExpBuiltinExecMatchRaw<false>(cx, regexp, string,
+                                          int32_t(lastIndex), nullptr, rval);
+}
+
+// ES2024 draft rev d4927f9bc3706484c75dfef4bbcf5ba826d2632e
+//
+// 22.2.7.1 RegExpExec ( R, S )
+// https://tc39.es/ecma262/#sec-regexpexec
+//
+// If `forTest` is true, this is called from `RegExp.prototype.test` and we can
+// avoid allocating a result object.
+bool js::RegExpExec(JSContext* cx, Handle<JSObject*> regexp,
+                    Handle<JSString*> string, bool forTest,
+                    MutableHandle<Value> rval) {
+  // Step 1.
+  Rooted<Value> exec(cx);
+  Rooted<PropertyKey> execKey(cx, PropertyKey::NonIntAtom(cx->names().exec));
+  if (!GetProperty(cx, regexp, regexp, execKey, &exec)) {
+    return false;
+  }
+
+  // Step 2.
+  // If exec is the original RegExp.prototype.exec, use the same, faster,
+  // path as for the case where exec isn't callable.
+  PropertyName* execName = cx->names().RegExp_prototype_Exec;
+  if (MOZ_LIKELY(IsSelfHostedFunctionWithName(exec, execName)) ||
+      !IsCallable(exec)) {
+    // Steps 3-4.
+    if (MOZ_LIKELY(regexp->is<RegExpObject>())) {
+      return RegExpBuiltinExec(cx, regexp.as<RegExpObject>(), string, forTest,
+                               rval);
+    }
+
+    // Throw an exception if it's not a wrapped RegExpObject that we can safely
+    // unwrap.
+    if (!regexp->canUnwrapAs<RegExpObject>()) {
+      Rooted<Value> thisv(cx, ObjectValue(*regexp));
+      return ReportIncompatibleSelfHostedMethod(cx, thisv);
+    }
+
+    // Call RegExpBuiltinExec in the regular expression's realm.
+    Rooted<RegExpObject*> unwrapped(cx, &regexp->unwrapAs<RegExpObject>());
+    {
+      AutoRealm ar(cx, unwrapped);
+      Rooted<JSString*> wrappedString(cx, string);
+      if (!cx->compartment()->wrap(cx, &wrappedString)) {
+        return false;
+      }
+      if (!RegExpBuiltinExec(cx, unwrapped, wrappedString, forTest, rval)) {
+        return false;
+      }
+    }
+    return cx->compartment()->wrap(cx, rval);
+  }
+
+  // Step 2.a.
+  Rooted<Value> thisv(cx, ObjectValue(*regexp));
+  FixedInvokeArgs<1> args(cx);
+  args[0].setString(string);
+  if (!js::Call(cx, exec, thisv, args, rval, CallReason::CallContent)) {
+    return false;
+  }
+
+  // Step 2.b.
+  if (!rval.isObjectOrNull()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_EXEC_NOT_OBJORNULL);
+    return false;
+  }
+
+  // Step 2.c.
+  if (forTest) {
+    rval.setBoolean(rval.isObject());
+  }
+  return true;
 }
 
 /* ES 2021 21.1.3.17.1 */

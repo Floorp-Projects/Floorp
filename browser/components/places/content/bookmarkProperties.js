@@ -50,7 +50,7 @@
  * dialog is accepted.
  */
 
-/* import-globals-from instantEditBookmark.js */
+/* import-globals-from editBookmark.js */
 
 /* Shared Places Import - change other consumers if you change this: */
 var { XPCOMUtils } = ChromeUtils.importESModule(
@@ -224,10 +224,10 @@ var BookmarkPropertiesPanel = {
    * dialog to initialize the state of the panel.
    */
   async onDialogLoad() {
-    document.addEventListener("dialogaccept", function() {
+    document.addEventListener("dialogaccept", function () {
       BookmarkPropertiesPanel.onDialogAccept();
     });
-    document.addEventListener("dialogcancel", function() {
+    document.addEventListener("dialogcancel", function () {
       BookmarkPropertiesPanel.onDialogCancel();
     });
 
@@ -469,7 +469,6 @@ var BookmarkPropertiesPanel = {
   async _promiseNewItem() {
     let [index, parentGuid] = await this._getInsertionPointDetails();
 
-    let itemGuid;
     let info = { parentGuid, index, title: this._title };
     if (this._itemType == BOOKMARK_ITEM) {
       info.url = this._uri;
@@ -485,32 +484,17 @@ var BookmarkPropertiesPanel = {
           console.error
         );
       }
-
-      itemGuid = gEditItemOverlay.delayedApplyEnabled
-        ? PlacesUtils.bookmarks.unsavedGuid
-        : await PlacesTransactions.NewBookmark(info).transact();
     } else if (this._itemType == BOOKMARK_FOLDER) {
       // NewFolder requires a url rather than uri.
       info.children = this._URIs.map(item => {
         return { url: item.uri, title: item.title };
       });
-
-      itemGuid = gEditItemOverlay.delayedApplyEnabled
-        ? PlacesUtils.bookmarks.unsavedGuid
-        : await PlacesTransactions.NewFolder(info).transact();
     } else {
       throw new Error(`unexpected value for _itemType:  ${this._itemType}`);
     }
-    const itemId = gEditItemOverlay.delayedApplyEnabled
-      ? undefined
-      : await PlacesUtils.promiseItemId(itemGuid);
-    const parentItemId = gEditItemOverlay.delayedApplyEnabled
-      ? undefined
-      : await PlacesUtils.promiseItemId(parentGuid);
     return Object.freeze({
       index,
-      itemId,
-      bookmarkGuid: itemGuid,
+      bookmarkGuid: PlacesUtils.bookmarks.unsavedGuid,
       title: this._title,
       uri: this._uri ? this._uri.spec : "",
       type:
@@ -518,7 +502,6 @@ var BookmarkPropertiesPanel = {
           ? Ci.nsINavHistoryResultNode.RESULT_TYPE_URI
           : Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER,
       parent: {
-        itemId: parentItemId,
         bookmarkGuid: parentGuid,
         type: Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER,
       },
@@ -527,7 +510,7 @@ var BookmarkPropertiesPanel = {
   },
 };
 
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
   // Content initialization is asynchronous, thus set mozSubdialogReady
   // immediately to properly wait for it.
   document.mozSubdialogReady = BookmarkPropertiesPanel.onDialogLoad()

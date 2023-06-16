@@ -54,7 +54,7 @@ async function navigateTo(browser, urls, expectedPersist) {
     browser.goForward();
     await forwardPageShow;
     // Check that the page got persisted
-    let persisted = await SpecialPowers.spawn(browser, [], async function() {
+    let persisted = await SpecialPowers.spawn(browser, [], async function () {
       return content.document.documentElement.getAttribute("persisted");
     });
     is(
@@ -75,7 +75,7 @@ async function navigateTo(browser, urls, expectedPersist) {
     await pageShowPromise;
     info(`Got pageshow event`);
     // Check that the page did not get persisted
-    let persisted = await SpecialPowers.spawn(browser, [], async function() {
+    let persisted = await SpecialPowers.spawn(browser, [], async function () {
       return content.document.documentElement.getAttribute("persisted");
     });
     is(

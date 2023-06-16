@@ -75,12 +75,8 @@ export const SponsorLabel = ({
 
 export class DSContextFooter extends React.PureComponent {
   render() {
-    const {
-      context,
-      context_type,
-      sponsor,
-      sponsored_by_override,
-    } = this.props;
+    const { context, context_type, sponsor, sponsored_by_override } =
+      this.props;
 
     const sponsorLabel = SponsorLabel({
       sponsored_by_override,

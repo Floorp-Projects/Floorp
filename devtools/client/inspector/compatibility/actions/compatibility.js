@@ -6,7 +6,7 @@
 
 const nodeConstants = require("resource://devtools/shared/dom-node-constants.js");
 
-const UserSettings = require("resource://devtools/client/inspector/shared/compatibility-user-settings.js");
+const UserSettings = require("resource://devtools/shared/compatibility/compatibility-user-settings.js");
 
 const {
   COMPATIBILITY_APPEND_NODE_START,
@@ -124,11 +124,8 @@ function updateNodes(selector) {
     dispatch({ type: COMPATIBILITY_UPDATE_NODES_START });
 
     try {
-      const {
-        selectedNode,
-        topLevelTarget,
-        targetBrowsers,
-      } = getState().compatibility;
+      const { selectedNode, topLevelTarget, targetBrowsers } =
+        getState().compatibility;
       const { walker } = await topLevelTarget.getFront("inspector");
       const nodeList = await walker.querySelectorAll(walker.rootNode, selector);
 

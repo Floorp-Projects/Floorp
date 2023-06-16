@@ -67,7 +67,8 @@ export const LoginBreaches = {
     await Services.logins.initializationPromise;
     const storageJSON =
       Services.logins.wrappedJSObject._storage.wrappedJSObject;
-    const dismissedBreachAlertsByLoginGUID = storageJSON.getBreachAlertDismissalsByLoginGUID();
+    const dismissedBreachAlertsByLoginGUID =
+      storageJSON.getBreachAlertDismissalsByLoginGUID();
 
     // Determine potentially breached logins by checking their origin and the last time
     // they were changed. It's important to note here that we are NOT considering the

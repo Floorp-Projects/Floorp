@@ -1382,8 +1382,6 @@ if (/* mozGradientsEnabled */ true) {
 
 const pathValues = {
   other_values: [
-    "path('')",
-    "path(' ')",
     "path('M 10 10 20 20 H 90 V 90 Z')",
     "path('M10 10 20,20H90V90Z')",
     "path('M 10 10 C 20 20, 40 20, 50 10')",
@@ -2884,7 +2882,7 @@ var gCSSProperties = {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: ["none"],
-    other_values: pathValues.other_values,
+    other_values: ["path('')", "path(' ')"].concat(pathValues.other_values),
     invalid_values: pathValues.invalid_values,
   },
   "-moz-float-edge": {
@@ -4620,7 +4618,7 @@ var gCSSProperties = {
       "calc(3*25px + 5em)",
     ],
     invalid_values: ["5%"],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "border-collapse": {
     domProp: "borderCollapse",
@@ -4751,7 +4749,7 @@ var gCSSProperties = {
       "calc(3*25px + 5em)",
     ],
     invalid_values: ["5%"],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "border-right": {
     domProp: "borderRight",
@@ -4832,7 +4830,7 @@ var gCSSProperties = {
       "calc(3*25px + 5em)",
     ],
     invalid_values: ["5%"],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "border-spacing": {
     domProp: "borderSpacing",
@@ -4875,7 +4873,7 @@ var gCSSProperties = {
     ],
     quirks_values: {
       "2px 5": "2px 5px",
-      "7": "7px",
+      7: "7px",
       "3 4px": "3px 4px",
     },
   },
@@ -4990,7 +4988,7 @@ var gCSSProperties = {
       "calc(3*25px + 5em)",
     ],
     invalid_values: ["5%"],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "border-width": {
     domProp: "borderWidth",
@@ -5014,7 +5012,7 @@ var gCSSProperties = {
     other_values: ["thin", "thick", "1px", "2em", "2px 0 0px 1em", "calc(2em)"],
     invalid_values: ["5%", "1px calc(nonsense)", "1px red"],
     unbalanced_values: ["1px calc("],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   bottom: {
     domProp: "bottom",
@@ -5036,7 +5034,7 @@ var gCSSProperties = {
       "calc(3*25px + 50%)",
     ],
     invalid_values: [],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "box-shadow": {
     domProp: "boxShadow",
@@ -5723,7 +5721,7 @@ var gCSSProperties = {
       "calc(-1px)",
     ],
     invalid_values: ["-2em", "-50%", "-1px"],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "font-size-adjust": {
     domProp: "fontSizeAdjust",
@@ -6140,7 +6138,7 @@ var gCSSProperties = {
       "fit-content(calc(3*25px + 50%))",
     ],
     invalid_values: ["none"],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "ime-mode": {
     domProp: "imeMode",
@@ -6170,7 +6168,7 @@ var gCSSProperties = {
       "calc(3*25px + 50%)",
     ],
     invalid_values: [],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "letter-spacing": {
     domProp: "letterSpacing",
@@ -6191,7 +6189,7 @@ var gCSSProperties = {
       "calc(-3px)",
     ],
     invalid_values: [],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "line-break": {
     domProp: "lineBreak",
@@ -6448,7 +6446,7 @@ var gCSSProperties = {
     ],
     invalid_values: ["1px calc(nonsense)", "1px red"],
     unbalanced_values: ["1px calc("],
-    quirks_values: { "5": "5px", "3px 6px 2 5px": "3px 6px 2px 5px" },
+    quirks_values: { 5: "5px", "3px 6px 2 5px": "3px 6px 2px 5px" },
   },
   "margin-bottom": {
     domProp: "marginBottom",
@@ -6469,7 +6467,7 @@ var gCSSProperties = {
       "calc(3*25px + 50%)",
     ],
     invalid_values: [],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "margin-left": {
     domProp: "marginLeft",
@@ -6514,7 +6512,7 @@ var gCSSProperties = {
       "++.7px",
       "--.4px",
     ],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "margin-right": {
     domProp: "marginRight",
@@ -6535,7 +6533,7 @@ var gCSSProperties = {
       "calc(3*25px + 50%)",
     ],
     invalid_values: [],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "margin-top": {
     domProp: "marginTop",
@@ -6556,7 +6554,7 @@ var gCSSProperties = {
       "calc(3*25px + 50%)",
     ],
     invalid_values: [],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "max-height": {
     domProp: "maxHeight",
@@ -6588,7 +6586,7 @@ var gCSSProperties = {
       "fit-content(calc(3*25px + 50%))",
     ],
     invalid_values: ["auto"],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "max-width": {
     domProp: "maxWidth",
@@ -6623,7 +6621,7 @@ var gCSSProperties = {
       "fit-content(calc(3*25px + 50%))",
     ],
     invalid_values: ["auto"],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "min-height": {
     domProp: "minHeight",
@@ -6653,7 +6651,7 @@ var gCSSProperties = {
       "fit-content(calc(3*25px + 50%))",
     ],
     invalid_values: ["none"],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "min-width": {
     domProp: "minWidth",
@@ -6686,7 +6684,7 @@ var gCSSProperties = {
       "fit-content(calc(3*25px + 50%))",
     ],
     invalid_values: ["none"],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "object-fit": {
     domProp: "objectFit",
@@ -6993,7 +6991,7 @@ var gCSSProperties = {
     other_values: ["3px 0", "2em 4px 2pt", "1em 2em 3px 4px"],
     invalid_values: ["1px calc(nonsense)", "1px red", "-1px"],
     unbalanced_values: ["1px calc("],
-    quirks_values: { "5": "5px", "3px 6px 2 5px": "3px 6px 2px 5px" },
+    quirks_values: { 5: "5px", "3px 6px 2 5px": "3px 6px 2px 5px" },
   },
   "padding-block": {
     domProp: "paddingBlock",
@@ -7041,7 +7039,7 @@ var gCSSProperties = {
       "calc(3*25px + 50%)",
     ],
     invalid_values: [],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "padding-left": {
     domProp: "paddingLeft",
@@ -7069,7 +7067,7 @@ var gCSSProperties = {
       "calc(3*25px + 50%)",
     ],
     invalid_values: [],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "padding-right": {
     domProp: "paddingRight",
@@ -7097,7 +7095,7 @@ var gCSSProperties = {
       "calc(3*25px + 50%)",
     ],
     invalid_values: [],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "padding-top": {
     domProp: "paddingTop",
@@ -7125,7 +7123,7 @@ var gCSSProperties = {
       "calc(3*25px + 50%)",
     ],
     invalid_values: [],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "page-break-after": {
     domProp: "pageBreakAfter",
@@ -7261,7 +7259,7 @@ var gCSSProperties = {
       "calc(3*25px + 50%)",
     ],
     invalid_values: [],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "ruby-align": {
     domProp: "rubyAlign",
@@ -8045,7 +8043,7 @@ var gCSSProperties = {
       "calc(3*25px + 50%)",
     ],
     invalid_values: [],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "text-overflow": {
     domProp: "textOverflow",
@@ -8182,7 +8180,7 @@ var gCSSProperties = {
       "calc(3*25px + 50%)",
     ],
     invalid_values: [],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   transition: {
     domProp: "transition",
@@ -8416,7 +8414,18 @@ var gCSSProperties = {
       "calc(3*25px + 50%)",
     ],
     invalid_values: [],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
+  },
+  "baseline-source": {
+    domProp: "baselineSource",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    applies_to_first_letter: true,
+    applies_to_first_line: true,
+    applies_to_placeholder: true,
+    initial_values: ["auto"],
+    other_values: ["first", "last"],
+    invalid_values: [],
   },
   visibility: {
     domProp: "visibility",
@@ -8565,7 +8574,7 @@ var gCSSProperties = {
       "calc(3em * (3em / 100%))",
       "calc(3em * 3em / 100%)",
     ],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "will-change": {
     domProp: "willChange",
@@ -8627,7 +8636,7 @@ var gCSSProperties = {
       "calc(-10%/2 - 1em)",
     ],
     invalid_values: [],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "overflow-wrap": {
     domProp: "overflowWrap",
@@ -8660,7 +8669,6 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     initial_values: ["none"],
     other_values: [
-      "path(evenodd, '')",
       "path(nonzero, 'M 10 10 h 100 v 100 h-100 v-100 z')",
       "path(evenodd, 'M 10 10 h 100 v 100 h-100 v-100 z')",
       "path('M10,30A20,20 0,0,1 50,30A20,20 0,0,1 90,30Q90,60 50,90Q10,60 10,30z')",
@@ -8670,9 +8678,12 @@ var gCSSProperties = {
     ]
       .concat(basicShapeSVGBoxValues)
       .concat(basicShapeOtherValues),
-    invalid_values: ["path(nonzero)", "path(abs, 'M 10 10 L 10 10 z')"].concat(
-      basicShapeInvalidValues
-    ),
+    invalid_values: [
+      "path(nonzero)",
+      "path(abs, 'M 10 10 L 10 10 z')",
+      "path(evenodd, '')",
+      "path('')",
+    ].concat(basicShapeInvalidValues),
     unbalanced_values: basicShapeUnbalancedValues,
   },
   "clip-rule": {
@@ -12023,16 +12034,14 @@ gCSSProperties["touch-action"] = {
   ],
 };
 
-if (IsCSSPropertyPrefEnabled("layout.css.named-pages.enabled")) {
-  gCSSProperties["page"] = {
-    domProp: "page",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: ["auto"],
-    other_values: ["page", "small_page", "large_page", "A4"],
-    invalid_values: ["page1 page2", "auto page", "1cm"],
-  };
-}
+gCSSProperties["page"] = {
+  domProp: "page",
+  inherited: false,
+  type: CSS_TYPE_LONGHAND,
+  initial_values: ["auto"],
+  other_values: ["page", "small_page", "large_page", "A4"],
+  invalid_values: ["page1 page2", "auto page", "1cm"],
+};
 
 gCSSProperties["text-justify"] = {
   domProp: "textJustify",
@@ -12627,14 +12636,14 @@ gCSSProperties["grid-row-end"] = {
 // The grid-column and grid-row shorthands take values of the form
 //   <grid-line> [ / <grid-line> ]?
 var gridColumnRowOtherValues = [].concat(gridLineOtherValues);
-gridLineOtherValues.concat(["auto"]).forEach(function(val) {
+gridLineOtherValues.concat(["auto"]).forEach(function (val) {
   gridColumnRowOtherValues.push(" foo / " + val);
   gridColumnRowOtherValues.push(val + "/2");
 });
 var gridColumnRowInvalidValues = ["foo, bar", "foo / bar / baz"].concat(
   gridLineInvalidValues
 );
-gridLineInvalidValues.forEach(function(val) {
+gridLineInvalidValues.forEach(function (val) {
   gridColumnRowInvalidValues.push("span 3 / " + val);
   gridColumnRowInvalidValues.push(val + " / foo");
 });
@@ -12658,7 +12667,7 @@ gCSSProperties["grid-row"] = {
 };
 
 var gridAreaOtherValues = gridLineOtherValues.slice();
-gridLineOtherValues.forEach(function(val) {
+gridLineOtherValues.forEach(function (val) {
   gridAreaOtherValues.push("foo / " + val);
   gridAreaOtherValues.push(val + "/2/3");
   gridAreaOtherValues.push("foo / bar / " + val + " / baz");
@@ -12671,7 +12680,7 @@ var gridAreaInvalidValues = [
   "foo / bar / inherit / baz",
   "foo / bar / baz / unset",
 ].concat(gridLineInvalidValues);
-gridLineInvalidValues.forEach(function(val) {
+gridLineInvalidValues.forEach(function (val) {
   gridAreaInvalidValues.push("foo / " + val);
   gridAreaInvalidValues.push("foo / bar / " + val);
   gridAreaInvalidValues.push("foo / 4 / bar / " + val);
@@ -13433,7 +13442,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
     type: CSS_TYPE_LONGHAND,
     initial_values: ["none"],
     other_values: [...pathValues.other_values],
-    invalid_values: [...pathValues.invalid_values],
+    invalid_values: ["path('')"].concat(pathValues.invalid_values),
   };
 
   if (IsCSSPropertyPrefEnabled("layout.css.motion-path-ray.enabled")) {
@@ -13512,6 +13521,7 @@ if (
     type: CSS_TYPE_LONGHAND,
     initial_values: ["auto"],
     other_values: [
+      "normal",
       "left bottom",
       "center center",
       "calc(20% + 10px) center",
@@ -13944,7 +13954,7 @@ for (var prop in gCSSProperties) {
         "prerequisites",
       ];
 
-      fieldsToCopy.forEach(function(fieldName) {
+      fieldsToCopy.forEach(function (fieldName) {
         // (Don't copy the field if the alias already has something there,
         // or if the aliased property doesn't have anything to copy.)
         if (!(fieldName in entry) && fieldName in aliasTargetEntry) {

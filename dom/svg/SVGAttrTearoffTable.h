@@ -8,6 +8,7 @@
 #define DOM_SVG_SVGATTRTEAROFFTABLE_H_
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/StaticPtr.h"
 #include "nsTHashMap.h"
 #include "nsDebug.h"
 #include "nsHashKeys.h"
@@ -27,7 +28,7 @@ class SVGAttrTearoffTable {
  public:
 #ifdef DEBUG
   ~SVGAttrTearoffTable() {
-    MOZ_ASSERT(!mTable, "Tear-off objects remain in hashtable at shutdown.");
+    NS_ASSERTION(!mTable, "Tear-off objects remain in hashtable at shutdown.");
   }
 #endif
 
@@ -41,13 +42,15 @@ class SVGAttrTearoffTable {
   using SimpleTypePtrKey = nsPtrHashKey<SimpleType>;
   using TearoffTable = nsTHashMap<SimpleTypePtrKey, TearoffType*>;
 
-  TearoffTable* mTable;
+  StaticAutoPtr<TearoffTable> mTable;
 };
 
 template <class SimpleType, class TearoffType>
 TearoffType* SVGAttrTearoffTable<SimpleType, TearoffType>::GetTearoff(
     SimpleType* aSimple) {
-  if (!mTable) return nullptr;
+  if (!mTable) {
+    return nullptr;
+  }
 
   TearoffType* tearoff = nullptr;
 
@@ -62,7 +65,7 @@ template <class SimpleType, class TearoffType>
 void SVGAttrTearoffTable<SimpleType, TearoffType>::AddTearoff(
     SimpleType* aSimple, TearoffType* aTearoff) {
   if (!mTable) {
-    mTable = new TearoffTable;
+    mTable = new TearoffTable();
   }
 
   // We shouldn't be adding a tear-off if there already is one. If that happens,
@@ -86,7 +89,6 @@ void SVGAttrTearoffTable<SimpleType, TearoffType>::RemoveTearoff(
 
   mTable->Remove(aSimple);
   if (mTable->Count() == 0) {
-    delete mTable;
     mTable = nullptr;
   }
 }

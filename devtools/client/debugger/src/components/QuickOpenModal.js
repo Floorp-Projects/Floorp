@@ -154,12 +154,8 @@ export class QuickOpenModal extends Component {
   );
 
   searchSources = query => {
-    const {
-      displayedSources,
-      tabUrls,
-      blackBoxRanges,
-      projectDirectoryRoot,
-    } = this.props;
+    const { displayedSources, tabUrls, blackBoxRanges, projectDirectoryRoot } =
+      this.props;
 
     const sources = this.formatSources(
       displayedSources,
@@ -279,11 +275,8 @@ export class QuickOpenModal extends Component {
   };
 
   onSelectResultItem = item => {
-    const {
-      selectedSource,
-      highlightLineRange,
-      clearHighlightLineRange,
-    } = this.props;
+    const { selectedSource, highlightLineRange, clearHighlightLineRange } =
+      this.props;
     if (
       selectedSource == null ||
       !this.isSymbolSearch() ||
@@ -334,11 +327,8 @@ export class QuickOpenModal extends Component {
   };
 
   onChange = e => {
-    const {
-      selectedSource,
-      selectedContentLoaded,
-      setQuickOpenQuery,
-    } = this.props;
+    const { selectedSource, selectedContentLoaded, setQuickOpenQuery } =
+      this.props;
     setQuickOpenQuery(e.target.value);
     const noSource = !selectedSource || !selectedContentLoaded;
     if ((noSource && this.isSymbolSearch()) || this.isGotoQuery()) {

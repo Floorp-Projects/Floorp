@@ -7,37 +7,46 @@
 
 <!DOCTYPE window>
 
-<window aria-describedby="description"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        xmlns:html="http://www.w3.org/1999/xhtml">
-<dialog buttons="accept,cancel"
-        defaultButton="none"
-        data-l10n-attrs="buttonlabelaccept, buttonaccesskeyaccept">
-  <linkset>
-    <html:link rel="localization" href="toolkit/global/handlerDialog.ftl"/>
-  </linkset>
+<window
+  aria-describedby="description"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+>
+  <dialog
+    buttons="accept,cancel"
+    defaultButton="none"
+    data-l10n-attrs="buttonlabelaccept, buttonaccesskeyaccept"
+  >
+    <linkset>
+      <html:link rel="localization" href="toolkit/global/handlerDialog.ftl" />
+    </linkset>
 
-  <script src="chrome://mozapps/content/handling/permissionDialog.js"
-          type="application/javascript"/>
+    <script
+      src="chrome://mozapps/content/handling/permissionDialog.js"
+      type="application/javascript"
+    />
 
+    <vbox id="description-box">
+      <description id="description"></description>
+      <label
+        id="change-app"
+        hidden="true"
+        is="text-link"
+        data-l10n-id="permission-dialog-set-change-app-link"
+      ></label>
+      <description
+        id="description-extra"
+        hidden="true"
+        data-l10n-id="permission-dialog-unset-description"
+      >
+      </description>
+    </vbox>
 
-  <vbox id="description-box">
-    <description id="description"></description>
-    <label id="change-app"
-           hidden="true"
-           is="text-link"
-           data-l10n-id="permission-dialog-set-change-app-link"></label>
-    <description id="description-extra"
-                 hidden="true"
-                 data-l10n-id="permission-dialog-unset-description">
-    </description>
-  </vbox>
-
-  <vbox id="rememberContainer">
-    <html:label class="toggle-container-with-text">
-      <html:input type="checkbox" id="remember"/>
-      <html:span id="remember-label"/>
-    </html:label>
-  </vbox>
-</dialog>
+    <vbox id="rememberContainer">
+      <html:label class="toggle-container-with-text">
+        <html:input type="checkbox" id="remember" />
+        <html:span id="remember-label" />
+      </html:label>
+    </vbox>
+  </dialog>
 </window>

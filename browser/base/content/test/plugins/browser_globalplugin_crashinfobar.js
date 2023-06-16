@@ -7,13 +7,13 @@ let { PluginManager } = ChromeUtils.importESModule(
 /**
  * Test that the notification bar for crashed GMPs works.
  */
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
       url: "about:blank",
     },
-    async function(browser) {
+    async function (browser) {
       // Ensure the parent has heard before the client.
       // In practice, this is always true for GMP crashes (but not for NPAPI ones!)
       let props = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
@@ -24,7 +24,7 @@ add_task(async function() {
       props.setPropertyAsACString("pluginDumpID", "1234");
       Services.obs.notifyObservers(props, "gmp-plugin-crash");
 
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         const GMP_CRASH_EVENT = {
           pluginID: 1,
           pluginName: "GlobalTestPlugin",

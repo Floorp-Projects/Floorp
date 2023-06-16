@@ -21,7 +21,7 @@ var supportedProps = [
   "connection",
 ];
 
-self.onmessage = function(event) {
+self.onmessage = function (event) {
   if (!event || !event.data) {
     return;
   }

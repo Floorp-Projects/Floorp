@@ -121,7 +121,7 @@ function assertStack(stack, expected) {
     }
     let frame = stack[i];
     let expectedFrame = expected[i];
-    let dumpThisFrame = function() {
+    let dumpThisFrame = function () {
       info("  Actual frame: " + stackFrameToString(i, frame));
       info(
         "Expected { symbol: " +
@@ -194,7 +194,7 @@ async function do_x64CFITest(how, expectedStack, minidumpAnalyzerArgs) {
   // Setup is run in the subprocess so we cannot use any closures.
   let setupFn = "crashType = CrashTestUtils." + how + ";";
 
-  let callbackFn = async function(minidumpFile, extra, extraFile) {
+  let callbackFn = async function (minidumpFile, extra, extraFile) {
     runMinidumpAnalyzer(minidumpFile, minidumpAnalyzerArgs);
 
     // Refresh updated extra data

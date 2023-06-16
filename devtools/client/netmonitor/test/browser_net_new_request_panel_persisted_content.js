@@ -9,7 +9,7 @@ const asyncStorage = require("resource://devtools/shared/async-storage.js");
  * Test if content is still persisted after the panel is closed
  */
 
-add_task(async function() {
+add_task(async function () {
   // Turn true the pref
   await pushPref("devtools.netmonitor.features.newEditAndResend", true);
   // Reset the storage for the persisted custom request

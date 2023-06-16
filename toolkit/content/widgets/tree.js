@@ -279,7 +279,7 @@
             );
           }
 
-          popupChild.addEventListener("command", function() {
+          popupChild.addEventListener("command", function () {
             let colindex = this.getAttribute("colindex");
             let column = tree.columns[colindex];
             if (column) {
@@ -571,7 +571,7 @@
       window.removeEventListener("mouseup", col._onDragMouseUp, true);
       // we have to wait for the click event to fire before removing
       // cancelling handler
-      var clickHandler = function(handler) {
+      var clickHandler = function (handler) {
         window.removeEventListener("click", handler, true);
       };
       window.setTimeout(clickHandler, 0, col._onDragMouseClick);
@@ -1379,10 +1379,12 @@
       let widthdiff = Math.abs(textRect.x - cellRect.x) - scrollbarWidth;
 
       input.style.left = `${left}px`;
-      input.style.height = `${textRect.height +
+      input.style.height = `${
+        textRect.height +
         topadj +
         parseInt(style.borderBottomWidth) +
-        parseInt(style.paddingBottom)}px`;
+        parseInt(style.paddingBottom)
+      }px`;
       input.style.width = `${cellRect.width - widthdiff}px`;
       input.hidden = false;
 

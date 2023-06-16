@@ -28,7 +28,7 @@ var testUrls = [
     "</script><body>Testing confirm during pagehide/beforeunload/unload</body>",
 ];
 
-add_task(async function() {
+add_task(async function () {
   for (let url of testUrls) {
     let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
     ok(true, "Loaded page " + url);

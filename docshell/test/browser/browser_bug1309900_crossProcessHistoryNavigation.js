@@ -13,7 +13,7 @@ add_task(async function runTests() {
     "about:about"
   );
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     gBrowser.removeTab(tab);
   });
 

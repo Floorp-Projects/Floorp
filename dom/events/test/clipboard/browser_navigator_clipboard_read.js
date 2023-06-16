@@ -38,7 +38,7 @@ function promiseMutatedReadResultFromContentElement(aBrowser) {
   return promiseMutatedTextContentFromContentElement(aBrowser, "readResultId");
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["dom.events.asyncClipboard.clipboardItem", true],
@@ -51,12 +51,10 @@ add_task(async function test_paste_button_position() {
   // Ensure there's text on the clipboard.
   await promiseWritingRandomTextToClipboard();
 
-  await BrowserTestUtils.withNewTab(kContentFileUrl, async function(browser) {
+  await BrowserTestUtils.withNewTab(kContentFileUrl, async function (browser) {
     const pasteButtonIsShown = promisePasteButtonIsShown();
-    const coordsOfClickInContentRelativeToScreenInDevicePixels = await promiseClickContentToTriggerClipboardRead(
-      browser,
-      false
-    );
+    const coordsOfClickInContentRelativeToScreenInDevicePixels =
+      await promiseClickContentToTriggerClipboardRead(browser, false);
     info(
       "coordsOfClickInContentRelativeToScreenInDevicePixels: " +
         coordsOfClickInContentRelativeToScreenInDevicePixels.x +
@@ -64,7 +62,8 @@ add_task(async function test_paste_button_position() {
         coordsOfClickInContentRelativeToScreenInDevicePixels.y
     );
 
-    const pasteButtonCoordsRelativeToScreenInDevicePixels = await pasteButtonIsShown;
+    const pasteButtonCoordsRelativeToScreenInDevicePixels =
+      await pasteButtonIsShown;
     info(
       "pasteButtonCoordsRelativeToScreenInDevicePixels: " +
         pasteButtonCoordsRelativeToScreenInDevicePixels.x +
@@ -72,7 +71,8 @@ add_task(async function test_paste_button_position() {
         pasteButtonCoordsRelativeToScreenInDevicePixels.y
     );
 
-    const mouseCoordsRelativeToScreenInDevicePixels = getMouseCoordsRelativeToScreenInDevicePixels();
+    const mouseCoordsRelativeToScreenInDevicePixels =
+      getMouseCoordsRelativeToScreenInDevicePixels();
     info(
       "mouseCoordsRelativeToScreenInDevicePixels: " +
         mouseCoordsRelativeToScreenInDevicePixels.x +
@@ -110,14 +110,13 @@ add_task(async function test_accepting_paste_button() {
   // Randomized text to avoid overlappings with other tests.
   const clipboardText = await promiseWritingRandomTextToClipboard();
 
-  await BrowserTestUtils.withNewTab(kContentFileUrl, async function(browser) {
+  await BrowserTestUtils.withNewTab(kContentFileUrl, async function (browser) {
     const pasteButtonIsShown = promisePasteButtonIsShown();
     await promiseClickContentToTriggerClipboardRead(browser, false);
     await pasteButtonIsShown;
     const pasteButtonIsHidden = promisePasteButtonIsHidden();
-    const mutatedReadResultFromContentElement = promiseMutatedReadResultFromContentElement(
-      browser
-    );
+    const mutatedReadResultFromContentElement =
+      promiseMutatedReadResultFromContentElement(browser);
     await promiseClickPasteButton();
     await pasteButtonIsHidden;
     await mutatedReadResultFromContentElement.then(value => {
@@ -131,14 +130,13 @@ add_task(async function test_accepting_paste_button() {
 });
 
 add_task(async function test_dismissing_paste_button() {
-  await BrowserTestUtils.withNewTab(kContentFileUrl, async function(browser) {
+  await BrowserTestUtils.withNewTab(kContentFileUrl, async function (browser) {
     const pasteButtonIsShown = promisePasteButtonIsShown();
     await promiseClickContentToTriggerClipboardRead(browser, false);
     await pasteButtonIsShown;
     const pasteButtonIsHidden = promisePasteButtonIsHidden();
-    const mutatedReadResultFromContentElement = promiseMutatedReadResultFromContentElement(
-      browser
-    );
+    const mutatedReadResultFromContentElement =
+      promiseMutatedReadResultFromContentElement(browser);
     await promiseDismissPasteButton();
     await pasteButtonIsHidden;
     await mutatedReadResultFromContentElement.then(value => {
@@ -156,31 +154,33 @@ add_task(
     // Randomized text to avoid overlappings with other tests.
     const clipboardText = await promiseWritingRandomTextToClipboard();
 
-    await BrowserTestUtils.withNewTab(kContentFileUrl, async function(browser) {
-      const pasteButtonIsShown = promisePasteButtonIsShown();
-      await promiseClickContentToTriggerClipboardRead(browser, true);
-      await pasteButtonIsShown;
-      const mutatedReadResultFromContentElement = promiseMutatedReadResultFromContentElement(
-        browser
-      );
-      const pasteButtonIsHidden = promisePasteButtonIsHidden();
-      await promiseClickPasteButton();
-      await mutatedReadResultFromContentElement.then(value => {
-        is(
-          value,
-          "Resolved 1: " + clipboardText + "; Resolved 2: " + clipboardText,
-          "Two calls of `navigator.clipboard.read()` both resolved with the expected text."
-        );
-      });
+    await BrowserTestUtils.withNewTab(
+      kContentFileUrl,
+      async function (browser) {
+        const pasteButtonIsShown = promisePasteButtonIsShown();
+        await promiseClickContentToTriggerClipboardRead(browser, true);
+        await pasteButtonIsShown;
+        const mutatedReadResultFromContentElement =
+          promiseMutatedReadResultFromContentElement(browser);
+        const pasteButtonIsHidden = promisePasteButtonIsHidden();
+        await promiseClickPasteButton();
+        await mutatedReadResultFromContentElement.then(value => {
+          is(
+            value,
+            "Resolved 1: " + clipboardText + "; Resolved 2: " + clipboardText,
+            "Two calls of `navigator.clipboard.read()` both resolved with the expected text."
+          );
+        });
 
-      // To avoid disturbing subsequent tests.
-      await pasteButtonIsHidden;
-    });
+        // To avoid disturbing subsequent tests.
+        await pasteButtonIsHidden;
+      }
+    );
   }
 );
 
 add_task(async function test_new_user_activation_shows_paste_button_again() {
-  await BrowserTestUtils.withNewTab(kContentFileUrl, async function(browser) {
+  await BrowserTestUtils.withNewTab(kContentFileUrl, async function (browser) {
     // Ensure there's text on the clipboard.
     await promiseWritingRandomTextToClipboard();
 

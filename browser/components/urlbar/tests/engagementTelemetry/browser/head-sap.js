@@ -30,7 +30,7 @@ async function doHandoffTest({ trigger, assert }) {
   await doTest(async browser => {
     BrowserTestUtils.loadURIString(browser, "about:newtab");
     await BrowserTestUtils.browserStopped(browser, "about:newtab");
-    await SpecialPowers.spawn(browser, [], function() {
+    await SpecialPowers.spawn(browser, [], function () {
       const searchInput = content.document.querySelector(".fake-editable");
       searchInput.click();
     });

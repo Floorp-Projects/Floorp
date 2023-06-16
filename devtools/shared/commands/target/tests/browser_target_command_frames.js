@@ -11,7 +11,7 @@ const SECOND_PAGE_URL = "https://example.org/document-builder.sjs?html=org";
 
 const PID_REGEXP = /^\d+$/;
 
-add_task(async function() {
+add_task(async function () {
   // Disable bfcache for Fission for now.
   // If Fission is disabled, the pref is no-op.
   await SpecialPowers.pushPrefEnv({

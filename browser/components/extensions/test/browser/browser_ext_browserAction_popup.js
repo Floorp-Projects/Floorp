@@ -88,7 +88,7 @@ async function testInArea(area) {
 
     files: {
       "popup-a.html": scriptPage("popup-a.js"),
-      "popup-a.js": function() {
+      "popup-a.js": function () {
         browser.test.onMessage.addListener(msg => {
           if (msg == "close-popup-using-window.close") {
             window.close();
@@ -103,14 +103,14 @@ async function testInArea(area) {
       },
 
       "data/popup-b.html": scriptPage("popup-b.js"),
-      "data/popup-b.js": function() {
+      "data/popup-b.js": function () {
         window.onload = () => {
           browser.test.sendMessage("from-popup", "popup-b");
         };
       },
 
       "data/popup-c.html": scriptPage("popup-c.js"),
-      "data/popup-c.js": function() {
+      "data/popup-c.js": function () {
         // Close the popup before the document is fully-loaded to make sure that
         // we handle this case sanely.
         browser.test.sendMessage("from-popup", "popup-c");

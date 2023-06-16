@@ -51,7 +51,7 @@ export function Finder(docShell) {
   );
 }
 
-Finder.isFindbarVisible = function(docShell) {
+Finder.isFindbarVisible = function (docShell) {
   return activeFinderRoots.has(docShell.browsingContext.top);
 };
 
@@ -82,7 +82,12 @@ Finder.prototype = {
       .getInterface(Ci.nsIWebProgress)
       .removeProgressListener(this, Ci.nsIWebProgress.NOTIFY_LOCATION);
     this._listeners = [];
-    this._currentFoundRange = this._fastFind = this._docShell = this._previousLink = this._highlighter = null;
+    this._currentFoundRange =
+      this._fastFind =
+      this._docShell =
+      this._previousLink =
+      this._highlighter =
+        null;
   },
 
   addResultListener(aListener) {

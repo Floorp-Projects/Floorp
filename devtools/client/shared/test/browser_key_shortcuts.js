@@ -5,7 +5,7 @@
 
 var isOSX = Services.appinfo.OS === "Darwin";
 
-add_task(async function() {
+add_task(async function () {
   const shortcuts = new KeyShortcuts({
     window,
   });
@@ -407,7 +407,7 @@ function testInvalidShortcutString(shortcuts) {
     "Passing a invalid shortcut string should return a null object"
   );
 
-  shortcuts.on("Cmmd+F", function() {});
+  shortcuts.on("Cmmd+F", function () {});
   ok(true, "on() shouldn't throw when passing invalid shortcut string");
 }
 
@@ -422,7 +422,7 @@ function testNullShortcut(shortcuts) {
   const stringified = KeyShortcuts.stringify(shortcut);
   is(stringified, "", "A null object should be stringified as an empty string");
 
-  shortcuts.on(null, function() {});
+  shortcuts.on(null, function () {});
   ok(true, "on() shouldn't throw when passing a null object");
 }
 

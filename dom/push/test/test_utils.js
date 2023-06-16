@@ -9,10 +9,10 @@ const chromeScript = SpecialPowers.loadChromeScript(url);
  * reporting, bypassing the `PushService.jsm` machinery.
  */
 async function replacePushService(mockService) {
-  chromeScript.addMessageListener("service-delivery-error", function(msg) {
+  chromeScript.addMessageListener("service-delivery-error", function (msg) {
     mockService.reportDeliveryError(msg.messageId, msg.reason);
   });
-  chromeScript.addMessageListener("service-request", function(msg) {
+  chromeScript.addMessageListener("service-request", function (msg) {
     let promise;
     try {
       let handler = mockService[msg.name];
@@ -66,7 +66,7 @@ function setupMockPushSocket(mockWebSocket) {
   currentMockSocket = mockWebSocket;
   currentMockSocket._isActive = true;
   chromeScript.sendAsyncMessage("socket-setup");
-  chromeScript.addMessageListener("socket-client-msg", function(msg) {
+  chromeScript.addMessageListener("socket-client-msg", function (msg) {
     mockWebSocket.handleMessage(msg);
   });
 }
@@ -164,7 +164,7 @@ class MockWebSocket {
 }
 
 // Remove permissions and prefs when the test finishes.
-SimpleTest.registerCleanupFunction(async function() {
+SimpleTest.registerCleanupFunction(async function () {
   await new Promise(resolve => SpecialPowers.flushPermissions(resolve));
   await SpecialPowers.flushPrefEnv();
   await restorePushService();
@@ -180,8 +180,8 @@ function setPushPermission(allow) {
     // We need to add permission for the xorigin tests. In xorigin tests, the
     // test page will be run under third-party context, so we need to use
     // partitioned principal to add the permission.
-    let partitionedPrincipal = SpecialPowers.wrap(document)
-      .partitionedPrincipal;
+    let partitionedPrincipal =
+      SpecialPowers.wrap(document).partitionedPrincipal;
 
     permissions.push({
       type: "desktop-notification",
@@ -222,7 +222,7 @@ function setupPrefsAndMockSocket(mockSocket) {
 }
 
 function injectControlledFrame(target = document.body) {
-  return new Promise(function(res, rej) {
+  return new Promise(function (res, rej) {
     var iframe = document.createElement("iframe");
     iframe.src = "/tests/dom/push/test/frame.html";
 

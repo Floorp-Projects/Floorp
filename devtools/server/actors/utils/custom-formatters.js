@@ -255,10 +255,8 @@ async function customFormatterBody(objectActor, formatter) {
 
   const targetActor = objectActor.thread._parent;
   try {
-    const {
-      customFormatterConfigDbgObj,
-      customFormatterObjectTagDepth,
-    } = objectActor.hooks;
+    const { customFormatterConfigDbgObj, customFormatterObjectTagDepth } =
+      objectActor.hooks;
 
     if (_invalidCustomFormatterHooks.has(formatter)) {
       return {
@@ -301,11 +299,12 @@ async function customFormatterBody(objectActor, formatter) {
         };
       }
 
-      const customFormatterBodyJsonMl = buildJsonMlFromCustomFormatterHookResult(
-        body.return,
-        customFormatterObjectTagDepth,
-        targetActor
-      );
+      const customFormatterBodyJsonMl =
+        buildJsonMlFromCustomFormatterHookResult(
+          body.return,
+          customFormatterObjectTagDepth,
+          targetActor
+        );
 
       return {
         customFormatterBody: customFormatterBodyJsonMl,

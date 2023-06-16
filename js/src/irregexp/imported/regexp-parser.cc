@@ -2524,6 +2524,7 @@ RegExpTree* RegExpParserImpl<CharT>::ParseClassStringDisjunction(
   }
 
   AddClassString(string, string_builder.ToRegExp(), ranges, strings, zone());
+  CharacterRange::Canonicalize(ranges);
 
   // We don't need to handle missing closing '}' here.
   // If the character class is correctly closed, ParseClassSetCharacter will
@@ -2764,6 +2765,14 @@ RegExpTree* RegExpParserImpl<CharT>::ParseClassUnion(
 
   if (is_negated && may_contain_strings) {
     return ReportError(RegExpError::kNegatedCharacterClassWithStrings);
+  }
+
+  if (operands->is_empty()) {
+    // Return empty expression if no operands were added (e.g. [\P{Any}]
+    // produces an empty range).
+    DCHECK(ranges->is_empty());
+    DCHECK(strings->empty());
+    return RegExpClassSetExpression::Empty(zone(), is_negated);
   }
 
   return zone()->template New<RegExpClassSetExpression>(

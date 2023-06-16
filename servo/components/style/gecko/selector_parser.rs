@@ -5,8 +5,6 @@
 //! Gecko-specific bits for selector-parsing.
 
 use crate::computed_value_flags::ComputedValueFlags;
-use crate::gecko_bindings::structs::RawServoSelectorList;
-use crate::gecko_bindings::sugar::ownership::{HasBoxFFI, HasFFI, HasSimpleFFI};
 use crate::invalidation::element::document_state::InvalidationMatchingData;
 use crate::properties::ComputedValues;
 use crate::selector_parser::{Direction, HorizontalDirection, SelectorParser};
@@ -17,7 +15,6 @@ use cssparser::{BasicParseError, BasicParseErrorKind, Parser};
 use cssparser::{CowRcStr, SourceLocation, ToCss, Token};
 use dom::{DocumentState, ElementState};
 use selectors::parser::SelectorParseErrorKind;
-use selectors::SelectorList;
 use std::fmt;
 use style_traits::{CssWriter, ParseError, StyleParseErrorKind, ToCss as ToCss_};
 use thin_vec::ThinVec;
@@ -29,6 +26,7 @@ pub use crate::gecko::snapshot::SnapshotMap;
 
 bitflags! {
     // See NonTSPseudoClass::is_enabled_in()
+    #[derive(Copy, Clone)]
     struct NonTSPseudoClassFlag: u8 {
         const PSEUDO_CLASS_ENABLED_IN_UA_SHEETS = 1 << 0;
         const PSEUDO_CLASS_ENABLED_IN_CHROME = 1 << 1;
@@ -314,6 +312,10 @@ impl<'a, 'i> ::selectors::Parser<'i> for SelectorParser<'a> {
     type Impl = SelectorImpl;
     type Error = StyleParseErrorKind<'i>;
 
+    fn parse_parent_selector(&self) -> bool {
+        static_prefs::pref!("layout.css.nesting.enabled")
+    }
+
     #[inline]
     fn parse_slotted(&self) -> bool {
         true
@@ -488,12 +490,6 @@ impl SelectorImpl {
         }
     }
 }
-
-unsafe impl HasFFI for SelectorList<SelectorImpl> {
-    type FFIType = RawServoSelectorList;
-}
-unsafe impl HasSimpleFFI for SelectorList<SelectorImpl> {}
-unsafe impl HasBoxFFI for SelectorList<SelectorImpl> {}
 
 // Selector and component sizes are important for matching performance.
 size_of_test!(selectors::parser::Selector<SelectorImpl>, 8);

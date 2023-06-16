@@ -9,7 +9,7 @@
 
 const TEST_ENGINE_NAME = "Test";
 
-add_setup(async function() {
+add_setup(async function () {
   await SearchTestUtils.installSearchExtension({
     name: TEST_ENGINE_NAME,
     keyword: "@test",

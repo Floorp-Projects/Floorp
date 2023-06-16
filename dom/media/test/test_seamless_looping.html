@@ -1,9 +1,9 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html>
 <head>
   <title>Test for seamless loop of HTMLAudioElements</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <script type="text/javascript" src="manifest.js"></script>
 </head>
 <body>
@@ -22,19 +22,34 @@ SimpleTest.waitForExplicitFinish();
 var DEBUG = true;
 var LOOPING_COUNT = 0;
 var MAX_LOOPING_COUNT = 10;
-var TONE_FREQUENCY = 440;
+// Test files are at 44100Hz, files are one second long, and contain therefore
+// 100 periods
+var TONE_FREQUENCY = 441;
 
 (async function testSeamlesslooping() {
-  info(`- create looping audio element -`);
-  let audio = createAudioElement();
+  let wavFileURL = {
+    name: URL.createObjectURL(new Blob([createSrcBuffer()], { type: 'audio/wav'
+                })),
+    type: "audio/wav"
+  };
 
-  info(`- start audio and analyze audio wave data to ensure looping audio without any silence or noise -`);
-  await playAudioAndStartAnalyzingWaveData(audio);
+  let testURLs = gSeamlessLoopingTests.splice(0)
+  testURLs.push(wavFileURL);
+  for (let testFile of testURLs) {
+    LOOPING_COUNT = 0;
+    info(`- create looping audio element ${testFile.name}`);
+    let audio = createAudioElement(testFile.name);
 
-  info(`- test seamless looping multiples times -`);
-  for (LOOPING_COUNT = 0; LOOPING_COUNT < MAX_LOOPING_COUNT; LOOPING_COUNT++) {
-    await once(audio, "seeked");
-    info(`- the round ${LOOPING_COUNT} of the seamless looping succeeds -`);
+    info(`- start audio and analyze audio wave data to ensure looping audio without any silence or noise -`);
+    await playAudioAndStartAnalyzingWaveData(audio);
+
+    info(`- test seamless looping multiples times -`);
+    for (LOOPING_COUNT = 0; LOOPING_COUNT < MAX_LOOPING_COUNT; LOOPING_COUNT++) {
+      await once(audio, "seeked");
+      info(`- the round ${LOOPING_COUNT} of the seamless looping succeeds -`);
+    }
+    window.audio.remove();
+    window.ac.close();
   }
 
   info(`- end of seamless looping test -`);
@@ -96,11 +111,10 @@ function createSrcBuffer() {
   return buf;
 }
 
-function createAudioElement() {
+function createAudioElement(url) {
   /* global audio */
   window.audio = document.createElement("audio");
-  audio.src = URL.createObjectURL(new Blob([createSrcBuffer()],
-                                  { type: 'audio/wav' }));
+  audio.src = url;
   audio.controls = true;
   audio.loop = true;
   document.body.appendChild(audio);
@@ -167,19 +181,19 @@ function createAudioWaveAnalyser(source) {
     let fftSize = 2 * buf.length;
     // first find a peak where we expect one.
     let binIndexTone = 1 + Math.round(TONE_FREQUENCY * fftSize / ctxSampleRate);
-    ok(buf[binIndexTone] > -25,
-       `Could not find a peak: ${buf[binIndexTone]} db at ${TONE_FREQUENCY}Hz`);
+    ok(buf[binIndexTone] > -35,
+       `Could not find a peak: ${buf[binIndexTone]} db at ${TONE_FREQUENCY}Hz
+       (${source.src})`);
 
     // check that the energy some octaves higher is very low.
     let binIndexOutsidePeak = 1 + Math.round(TONE_FREQUENCY * 4 * buf.length / ctxSampleRate);
-    ok(buf[binIndexOutsidePeak] < -110,
-       `Found unexpected high frequency content: ${buf[binIndexOutsidePeak]}db at ${TONE_FREQUENCY * 4}Hz`);
+    ok(buf[binIndexOutsidePeak] < -84,
+       `Found unexpected high frequency content: ${buf[binIndexOutsidePeak]}db
+       at ${TONE_FREQUENCY * 4}Hz (${source.src})`);
   }
 
   analyser.notifyAnalysis();
 }
-
 </script>
-</pre>
 </body>
 </html>

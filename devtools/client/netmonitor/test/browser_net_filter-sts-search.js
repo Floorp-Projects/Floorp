@@ -12,7 +12,7 @@ const REQUESTS = [
   { url: "sjs_status-codes-test-server.sjs?sts=304" },
 ];
 
-add_task(async function() {
+add_task(async function () {
   const { monitor } = await initNetMonitor(FILTERING_URL, { requestCount: 1 });
   const { document, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");

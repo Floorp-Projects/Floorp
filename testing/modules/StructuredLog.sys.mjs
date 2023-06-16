@@ -51,6 +51,10 @@ export class StructuredLogger {
       status,
     };
 
+    // handle case: known fail
+    if (expected === status && status != "SKIP") {
+      data.status = "PASS";
+    }
     if (expected != status && status != "SKIP") {
       data.expected = expected;
     }
@@ -77,6 +81,10 @@ export class StructuredLogger {
   ) {
     var data = { test: this.#testId(test), status };
 
+    // handle case: known fail
+    if (expected === status && status != "SKIP") {
+      data.status = "OK";
+    }
     if (expected != status && status != "SKIP") {
       data.expected = expected;
     }
@@ -112,7 +120,7 @@ export class StructuredLogger {
     deviceinfo = null,
     extra = null
   ) {
-    Object.keys(ids).map(function(manifest) {
+    Object.keys(ids).map(function (manifest) {
       ids[manifest] = ids[manifest].map(x => this.#testId(x));
     }, this);
     var data = { tests: ids };

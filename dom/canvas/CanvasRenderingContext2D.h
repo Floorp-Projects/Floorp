@@ -319,6 +319,11 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   void GetFontKerning(nsAString& aFontKerning);
   void SetFontKerning(const nsAString& aFontKerning);
 
+  void GetLetterSpacing(nsACString& aLetterSpacing);
+  void SetLetterSpacing(const nsACString& aLetterSpacing);
+  void GetWordSpacing(nsACString& aWordSpacing);
+  void SetWordSpacing(const nsACString& aWordSpacing);
+
   void ClosePath() override {
     EnsureWritablePath();
 
@@ -332,11 +337,17 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   void MoveTo(double aX, double aY) override {
     EnsureWritablePath();
 
+    mozilla::gfx::Point pos(ToFloat(aX), ToFloat(aY));
+    if (!pos.IsFinite()) {
+      return;
+    }
+
     if (mPathBuilder) {
-      mPathBuilder->MoveTo(mozilla::gfx::Point(ToFloat(aX), ToFloat(aY)));
+      mPathBuilder->MoveTo(pos);
     } else {
-      mDSPathBuilder->MoveTo(mTarget->GetTransform().TransformPoint(
-          mozilla::gfx::Point(ToFloat(aX), ToFloat(aY))));
+      mozilla::gfx::Point transformedPos =
+          mTarget->GetTransform().TransformPoint(pos);
+      mDSPathBuilder->MoveTo(transformedPos);
     }
   }
 
@@ -350,17 +361,25 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
                         double aY) override {
     EnsureWritablePath();
 
+    mozilla::gfx::Point cp1(ToFloat(aCpx), ToFloat(aCpy));
+    mozilla::gfx::Point cp2(ToFloat(aX), ToFloat(aY));
+    if (!cp1.IsFinite() || !cp2.IsFinite()) {
+      return;
+    }
+
     if (mPathBuilder) {
-      mPathBuilder->QuadraticBezierTo(
-          mozilla::gfx::Point(ToFloat(aCpx), ToFloat(aCpy)),
-          mozilla::gfx::Point(ToFloat(aX), ToFloat(aY)));
+      if (cp1 == mPathBuilder->CurrentPoint() && cp1 == cp2) {
+        return;
+      }
+      mPathBuilder->QuadraticBezierTo(cp1, cp2);
     } else {
       mozilla::gfx::Matrix transform = mTarget->GetTransform();
-      mDSPathBuilder->QuadraticBezierTo(
-          transform.TransformPoint(
-              mozilla::gfx::Point(ToFloat(aCpx), ToFloat(aCpy))),
-          transform.TransformPoint(
-              mozilla::gfx::Point(ToFloat(aX), ToFloat(aY))));
+      mozilla::gfx::Point transformedPos = transform.TransformPoint(cp1);
+      if (transformedPos == mDSPathBuilder->CurrentPoint() && cp1 == cp2) {
+        return;
+      }
+      mDSPathBuilder->QuadraticBezierTo(transformedPos,
+                                        transform.TransformPoint(cp2));
     }
   }
 
@@ -496,22 +515,45 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   enum class Style : uint8_t { STROKE = 0, FILL, MAX };
 
   void LineTo(const mozilla::gfx::Point& aPoint) {
+    if (!aPoint.IsFinite()) {
+      return;
+    }
     if (mPathBuilder) {
+      if (mPathBuilder->CurrentPoint() == aPoint) {
+        return;
+      }
       mPathBuilder->LineTo(aPoint);
     } else {
-      mDSPathBuilder->LineTo(mTarget->GetTransform().TransformPoint(aPoint));
+      mozilla::gfx::Point transformedPt =
+          mTarget->GetTransform().TransformPoint(aPoint);
+      if (mDSPathBuilder->CurrentPoint() == transformedPt) {
+        return;
+      }
+      mDSPathBuilder->LineTo(transformedPt);
     }
   }
 
   void BezierTo(const mozilla::gfx::Point& aCP1,
                 const mozilla::gfx::Point& aCP2,
                 const mozilla::gfx::Point& aCP3) {
+    if (!aCP1.IsFinite() || !aCP2.IsFinite() || !aCP3.IsFinite()) {
+      return;
+    }
+
     if (mPathBuilder) {
+      if (aCP1 == mPathBuilder->CurrentPoint() && aCP1 == aCP2 &&
+          aCP1 == aCP3) {
+        return;
+      }
       mPathBuilder->BezierTo(aCP1, aCP2, aCP3);
     } else {
       mozilla::gfx::Matrix transform = mTarget->GetTransform();
-      mDSPathBuilder->BezierTo(transform.TransformPoint(aCP1),
-                               transform.TransformPoint(aCP2),
+      mozilla::gfx::Point transformedPos = transform.TransformPoint(aCP1);
+      if (transformedPos == mDSPathBuilder->CurrentPoint() && aCP1 == aCP2 &&
+          aCP1 == aCP3) {
+        return;
+      }
+      mDSPathBuilder->BezierTo(transformedPos, transform.TransformPoint(aCP2),
                                transform.TransformPoint(aCP3));
     }
   }
@@ -529,6 +571,17 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void UpdateFilter();
 
  protected:
+  /**
+   * Helper to parse a value for the letterSpacing or wordSpacing attribute.
+   * If successful, returns the result in aValue, and the whitespace-normalized
+   * value string in aNormalized; if unsuccessful these are left untouched.
+   */
+  void ParseSpacing(const nsACString& aSpacing, float* aValue,
+                    nsACString& aNormalized);
+
+  already_AddRefed<const ComputedStyle> ResolveStyleForProperty(
+      nsCSSPropertyID aProperty, const nsACString& aValue);
+
   nsresult GetImageDataArray(JSContext* aCx, int32_t aX, int32_t aY,
                              uint32_t aWidth, uint32_t aHeight,
                              Maybe<nsIPrincipal*> aSubjectPrincipal,
@@ -591,6 +644,10 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   // Helper for SetFontInternal in the case where we have no PresShell.
   bool SetFontInternalDisconnected(const nsACString& aFont,
                                    mozilla::ErrorResult& aError);
+
+  // Update the resolved values for letterSpacing and wordSpacing, if present,
+  // following a potential change to font-relative dimensions.
+  void UpdateSpacing();
 
   // Clears the target and updates mOpaque based on mOpaqueAttrValue and
   // mContextAttributesHasAlpha.
@@ -960,6 +1017,11 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
     TextBaseline textBaseline = TextBaseline::ALPHABETIC;
     TextDirection textDirection = TextDirection::INHERIT;
     FontKerning fontKerning = FontKerning::AUTO;
+
+    gfx::Float letterSpacing = 0.0f;
+    gfx::Float wordSpacing = 0.0f;
+    nsCString letterSpacingStr;
+    nsCString wordSpacingStr;
 
     nscolor shadowColor = 0;
 

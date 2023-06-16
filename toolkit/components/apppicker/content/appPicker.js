@@ -18,13 +18,13 @@ AppPicker.prototype = {
   appPickerLoad: function appPickerLoad() {
     const nsILocalHandlerApp = Ci.nsILocalHandlerApp;
 
-    document.addEventListener("dialogaccept", function() {
+    document.addEventListener("dialogaccept", function () {
       g_dialog.appPickerOK();
     });
-    document.addEventListener("dialogcancel", function() {
+    document.addEventListener("dialogcancel", function () {
       g_dialog.appPickerCancel();
     });
-    document.addEventListener("dialogextra2", function() {
+    document.addEventListener("dialogextra2", function () {
       g_dialog.appPickerBrowse();
     });
 

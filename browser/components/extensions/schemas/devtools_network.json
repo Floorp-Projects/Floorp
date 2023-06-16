@@ -57,7 +57,7 @@
               {
                 "name": "harLog",
                 "type": "object",
-                "additionalProperties": {"type": "any"},
+                "additionalProperties": { "type": "any" },
                 "description": "A HAR log. See HAR specification for details."
               }
             ]

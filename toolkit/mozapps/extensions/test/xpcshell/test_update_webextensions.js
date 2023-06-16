@@ -41,7 +41,7 @@ async function promiseInstallWebExtension(aData) {
   return addon;
 }
 
-var checkUpdates = async function(
+var checkUpdates = async function (
   aData,
   aReason = AddonManager.UPDATE_WHEN_PERIODIC_UPDATE
 ) {
@@ -154,9 +154,9 @@ add_task(async function checkUpdateToWebExt() {
   let update = await checkUpdates({
     addon: { manifest: { version: "1.0" } },
     updates: {
-      "1.1": {},
-      "1.2": {},
-      "1.3": { applications: { gecko: { strict_min_version: "48" } } },
+      1.1: {},
+      1.2: {},
+      1.3: { applications: { gecko: { strict_min_version: "48" } } },
     },
   });
 

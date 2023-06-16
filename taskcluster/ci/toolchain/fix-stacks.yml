@@ -58,7 +58,7 @@ win32-fix-stacks:
         toolchain:
             - linux64-clang-toolchain
             - linux64-rust-windows-toolchain
-            - win64-vs2017
+            - vs-toolchain
 
 win64-fix-stacks:
     treeherder:
@@ -69,4 +69,4 @@ win64-fix-stacks:
         toolchain:
             - linux64-clang-toolchain
             - linux64-rust-windows-toolchain
-            - win64-vs2017
+            - vs-toolchain

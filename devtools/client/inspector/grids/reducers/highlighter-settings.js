@@ -42,7 +42,7 @@ const reducers = {
   },
 };
 
-module.exports = function(
+module.exports = function (
   highlighterSettings = INITIAL_HIGHLIGHTER_SETTINGS(),
   action
 ) {

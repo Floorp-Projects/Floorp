@@ -1,0 +1,194 @@
+{
+  "guid": "root________",
+  "title": "",
+  "index": 0,
+  "dateAdded": 1685116351936000,
+  "lastModified": 1685372151518000,
+  "id": 1,
+  "typeCode": 2,
+  "type": "text/x-moz-place-container",
+  "root": "placesRoot",
+  "children": [
+    {
+      "guid": "menu________",
+      "title": "menu",
+      "index": 0,
+      "dateAdded": 1685116351936000,
+      "lastModified": 1685116352325000,
+      "id": 2,
+      "typeCode": 2,
+      "type": "text/x-moz-place-container",
+      "root": "bookmarksMenuFolder",
+      "children": [
+        {
+          "guid": "jCs_9YrgXKq7",
+          "title": "Firefox Nightly Resources",
+          "index": 0,
+          "dateAdded": 1685116352325000,
+          "lastModified": 1685116352325000,
+          "id": 7,
+          "typeCode": 2,
+          "type": "text/x-moz-place-container",
+          "children": [
+            {
+              "guid": "xwdRLsUWYFwm",
+              "title": "Firefox Nightly blog",
+              "index": 0,
+              "dateAdded": 1685116352325000,
+              "lastModified": 1685116352325000,
+              "id": 8,
+              "typeCode": 1,
+              "iconUri": "fake-favicon-uri:https://blog.nightly.mozilla.org/",
+              "type": "text/x-moz-place",
+              "uri": "https://blog.nightly.mozilla.org/"
+            },
+            {
+              "guid": "uhdiDrWjH0-n",
+              "title": "Mozilla Bug Tracker",
+              "index": 1,
+              "dateAdded": 1685116352325000,
+              "lastModified": 1685116352325000,
+              "id": 9,
+              "typeCode": 1,
+              "iconUri": "fake-favicon-uri:https://bugzilla.mozilla.org/",
+              "type": "text/x-moz-place",
+              "uri": "https://bugzilla.mozilla.org/",
+              "keyword": "bz",
+              "postData": null
+            },
+            {
+              "guid": "zOK7d-gjJ5Vy",
+              "title": "Mozilla Developer Network",
+              "index": 2,
+              "dateAdded": 1685116352325000,
+              "lastModified": 1685116352325000,
+              "id": 10,
+              "typeCode": 1,
+              "iconUri": "fake-favicon-uri:https://developer.mozilla.org/",
+              "type": "text/x-moz-place",
+              "uri": "https://developer.mozilla.org/",
+              "keyword": "mdn",
+              "postData": null
+            },
+            {
+              "guid": "7gcb4320A_y6",
+              "title": "Nightly Tester Tools",
+              "index": 3,
+              "dateAdded": 1685116352325000,
+              "lastModified": 1685116352325000,
+              "id": 11,
+              "typeCode": 1,
+              "iconUri": "fake-favicon-uri:https://addons.mozilla.org/firefox/addon/nightly-tester-tools/",
+              "type": "text/x-moz-place",
+              "uri": "https://addons.mozilla.org/firefox/addon/nightly-tester-tools/"
+            },
+            {
+              "guid": "c4753lDvJwNE",
+              "title": "All your crashes",
+              "index": 4,
+              "dateAdded": 1685116352325000,
+              "lastModified": 1685116352325000,
+              "id": 12,
+              "typeCode": 1,
+              "iconUri": "fake-favicon-uri:about:crashes",
+              "type": "text/x-moz-place",
+              "uri": "about:crashes"
+            },
+            {
+              "guid": "IyYGIH9VCs2t",
+              "title": "Planet Mozilla",
+              "index": 5,
+              "dateAdded": 1685116352325000,
+              "lastModified": 1685116352325000,
+              "id": 13,
+              "typeCode": 1,
+              "iconUri": "fake-favicon-uri:https://planet.mozilla.org/",
+              "type": "text/x-moz-place",
+              "uri": "https://planet.mozilla.org/"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "guid": "toolbar_____",
+      "title": "toolbar",
+      "index": 1,
+      "dateAdded": 1685116351936000,
+      "lastModified": 1685372151518000,
+      "id": 3,
+      "typeCode": 2,
+      "type": "text/x-moz-place-container",
+      "root": "toolbarFolder",
+      "children": [
+        {
+          "guid": "5jN1vdzOEnHx",
+          "title": "Get Involved",
+          "index": 0,
+          "dateAdded": 1685116352413000,
+          "lastModified": 1685116352413000,
+          "id": 14,
+          "typeCode": 1,
+          "iconUri": "fake-favicon-uri:https://www.mozilla.org/contribute/?utm_medium=firefox-desktop&utm_source=bookmarks-toolbar&utm_campaign=new-users-nightly&utm_content=-global",
+          "type": "text/x-moz-place",
+          "uri": "https://www.mozilla.org/contribute/?utm_medium=firefox-desktop&utm_source=bookmarks-toolbar&utm_campaign=new-users-nightly&utm_content=-global"
+        },
+        {
+          "guid": "5RsMT9sWsmIe",
+          "title": "Why More Psychiatrists Think Mindfulness Can Help Treat ADHD",
+          "index": 1,
+          "dateAdded": 1685372143048000,
+          "lastModified": 1685372143048000,
+          "id": 15,
+          "typeCode": 1,
+          "type": "text/x-moz-place",
+          "uri": "https://getpocket.com/explore/item/why-more-psychiatrists-think-mindfulness-can-help-treat-adhd?utm_source=pocket-newtab"
+        },
+        {
+          "guid": "ejoNUqAfEMQL",
+          "title": "Your New Favorite Weeknight Recipe Is Meat-Free (and Easy, Too)",
+          "index": 2,
+          "dateAdded": 1685372148200000,
+          "lastModified": 1685372148200000,
+          "id": 16,
+          "typeCode": 1,
+          "type": "text/x-moz-place",
+          "uri": "https://getpocket.com/collections/your-new-favorite-weeknight-recipe-is-meat-free-and-easy-too?utm_source=pocket-newtab"
+        },
+        {
+          "guid": "O5QCiQ1zrqHY",
+          "title": "8 Natural Ways to Repel Insects Without Bug Spray",
+          "index": 3,
+          "dateAdded": 1685372151518000,
+          "lastModified": 1685372151518000,
+          "id": 17,
+          "typeCode": 1,
+          "type": "text/x-moz-place",
+          "uri": "https://getpocket.com/explore/item/8-natural-ways-to-repel-insects-without-bug-spray?utm_source=pocket-newtab"
+        }
+      ]
+    },
+    {
+      "guid": "unfiled_____",
+      "title": "unfiled",
+      "index": 3,
+      "dateAdded": 1685116351936000,
+      "lastModified": 1685116352272000,
+      "id": 5,
+      "typeCode": 2,
+      "type": "text/x-moz-place-container",
+      "root": "unfiledBookmarksFolder"
+    },
+    {
+      "guid": "mobile______",
+      "title": "mobile",
+      "index": 4,
+      "dateAdded": 1685116351968000,
+      "lastModified": 1685116352272000,
+      "id": 6,
+      "typeCode": 2,
+      "type": "text/x-moz-place-container",
+      "root": "mobileFolder"
+    }
+  ]
+}

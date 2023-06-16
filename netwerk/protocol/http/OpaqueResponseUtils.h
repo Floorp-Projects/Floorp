@@ -24,7 +24,6 @@
 #include "nsTArray.h"
 
 class nsIContentSniffer;
-static mozilla::LazyLogModule gORBLog("ORB");
 
 namespace mozilla::dom {
 class JSValidatorParent;
@@ -41,11 +40,28 @@ class nsHttpResponseHead;
 
 enum class OpaqueResponseBlockedReason : uint32_t {
   ALLOWED_SAFE_LISTED,
+  ALLOWED_SAFE_LISTED_SPEC_BREAKING,
   BLOCKED_BLOCKLISTED_NEVER_SNIFFED,
   BLOCKED_206_AND_BLOCKLISTED,
   BLOCKED_NOSNIFF_AND_EITHER_BLOCKLISTED_OR_TEXTPLAIN,
   BLOCKED_SHOULD_SNIFF
 };
+
+enum class OpaqueResponseBlockedTelemetryReason : uint32_t {
+  MIME_NEVER_SNIFFED,
+  RESP_206_BLCLISTED,
+  NOSNIFF_BLC_OR_TEXTP,
+  RESP_206_NO_FIRST,
+  AFTER_SNIFF_MEDIA,
+  AFTER_SNIFF_NOSNIFF,
+  AFTER_SNIFF_STA_CODE,
+  AFTER_SNIFF_CT_FAIL,
+  MEDIA_NOT_INITIAL,
+  MEDIA_INCORRECT_RESP,
+  JS_VALIDATION_FAILED
+};
+
+enum class OpaqueResponse { Block, Allow, SniffCompressed, Sniff };
 
 OpaqueResponseBlockedReason GetOpaqueResponseBlockedReason(
     const nsACString& aContentType, uint16_t aStatus, bool aNoSniff);
@@ -59,6 +75,24 @@ Result<std::tuple<int64_t, int64_t, int64_t>, nsresult>
 ParseContentRangeHeaderString(const nsAutoCString& aRangeStr);
 
 bool IsFirstPartialResponse(nsHttpResponseHead& aResponseHead);
+
+LogModule* GetORBLog();
+
+// Helper class to filter data for opaque responses destined for `Window.fetch`.
+// See https://fetch.spec.whatwg.org/#concept-filtered-response-opaque.
+class OpaqueResponseFilter final : public nsIStreamListener {
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSISTREAMLISTENER;
+
+  explicit OpaqueResponseFilter(nsIStreamListener* aNext);
+
+ private:
+  virtual ~OpaqueResponseFilter() = default;
+
+  nsCOMPtr<nsIStreamListener> mNext;
+};
 
 class OpaqueResponseBlocker final : public nsIStreamListener {
   enum class State { Sniffing, Allowed, Blocked };
@@ -74,8 +108,12 @@ class OpaqueResponseBlocker final : public nsIStreamListener {
   bool IsSniffing() const;
   void AllowResponse();
   void BlockResponse(HttpBaseChannel* aChannel, nsresult aStatus);
+  void FilterResponse();
 
   nsresult EnsureOpaqueResponseIsAllowedAfterSniff(nsIRequest* aRequest);
+
+  OpaqueResponse EnsureOpaqueResponseIsAllowedAfterJavaScriptValidation(
+      HttpBaseChannel* aChannel, bool aAllow);
 
   // The four possible results for validation. `JavaScript` and `JSON` are
   // self-explanatory. `JavaScript` is the only successful result, in the sense
@@ -100,6 +138,7 @@ class OpaqueResponseBlocker final : public nsIStreamListener {
 
   const nsCString mContentType;
   const bool mNoSniff;
+  bool mShouldFilter = false;
 
   State mState = State::Sniffing;
   nsresult mStatus = NS_OK;

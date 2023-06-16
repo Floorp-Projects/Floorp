@@ -39,10 +39,10 @@ namespace {
 const int number_of_iterations = 100;
 
 typedef void (*QuantizeFunc)(const tran_low_t *coeff, intptr_t count,
-                             const macroblock_plane *const mb_plane,
+                             const macroblock_plane *mb_plane,
                              tran_low_t *qcoeff, tran_low_t *dqcoeff,
                              const int16_t *dequant, uint16_t *eob,
-                             const struct ScanOrder *const scan_order);
+                             const struct ScanOrder *scan_order);
 typedef std::tuple<QuantizeFunc, QuantizeFunc, vpx_bit_depth_t,
                    int /*max_size*/, bool /*is_fp*/>
     QuantizeParam;

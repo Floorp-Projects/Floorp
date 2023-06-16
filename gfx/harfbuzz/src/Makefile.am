@@ -382,6 +382,7 @@ noinst_PROGRAMS = \
 	test-ot-name \
 	test-ot-glyphname \
 	test-gpos-size-params \
+	test-gsub-get-alternates \
 	test-gsub-would-substitute \
 	test-use-table \
 	$(NULL)
@@ -418,6 +419,10 @@ test_use_table_LDADD = libharfbuzz.la $(HBLIBS)
 test_gpos_size_params_SOURCES = test-gpos-size-params.cc
 test_gpos_size_params_CPPFLAGS = $(HBCFLAGS)
 test_gpos_size_params_LDADD = libharfbuzz.la $(HBLIBS)
+
+test_gsub_get_alternates_SOURCES = test-gsub-get-alternates.cc
+test_gsub_get_alternates_CPPFLAGS = $(HBCFLAGS)
+test_gsub_get_alternates_LDADD = libharfbuzz.la $(HBLIBS)
 
 test_gsub_would_substitute_SOURCES = test-gsub-would-substitute.cc
 test_gsub_would_substitute_CPPFLAGS = $(HBCFLAGS) $(FREETYPE_CFLAGS)

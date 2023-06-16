@@ -18,7 +18,7 @@
 namespace js {
 
 /* static */ MOZ_ALWAYS_INLINE ArrayObject* ArrayObject::create(
-    JSContext* cx, gc::AllocKind kind, gc::InitialHeap heap,
+    JSContext* cx, gc::AllocKind kind, gc::Heap heap,
     Handle<SharedShape*> shape, uint32_t length, uint32_t slotSpan,
     AutoSetNewObjectMetadata& metadata, gc::AllocSite* site) {
   debugCheckNewObject(shape, kind, heap);

@@ -6,7 +6,7 @@
 
 #include "LocalAccessible-inl.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
-#include "mozilla/StaticPrefs_accessibility.h"
+#include "nsAccessibilityService.h"
 #include "AccAttributes.h"
 #include "nsAccUtils.h"
 #include "nsComponentManagerUtils.h"
@@ -286,37 +286,10 @@ xpcAccessible::GetValue(nsAString& aValue) {
 }
 
 NS_IMETHODIMP
-xpcAccessible::GetHelp(nsAString& aHelp) {
-  if (!IntlGeneric()) return NS_ERROR_FAILURE;
-
-  nsAutoString help;
-  if (RemoteAccessible* proxy = IntlGeneric()->AsRemote()) {
-#if defined(XP_WIN)
-    return NS_ERROR_NOT_IMPLEMENTED;
-#else
-    proxy->Help(help);
-#endif
-  } else {
-    Intl()->Help(help);
-  }
-
-  aHelp.Assign(help);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 xpcAccessible::GetAccessKey(nsAString& aAccessKey) {
   aAccessKey.Truncate();
 
   if (!IntlGeneric()) return NS_ERROR_FAILURE;
-
-#if defined(XP_WIN)
-  if (IntlGeneric()->IsRemote() &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-#endif
 
   IntlGeneric()->AccessKey().ToString(aAccessKey);
   return NS_OK;
@@ -457,16 +430,6 @@ xpcAccessible::GroupPosition(int32_t* aGroupLevel,
   NS_ENSURE_ARG_POINTER(aSimilarItemsInGroup);
   NS_ENSURE_ARG_POINTER(aPositionInGroup);
 
-#if defined(XP_WIN)
-  if (IntlGeneric()->IsRemote() &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    *aGroupLevel = 0;
-    *aSimilarItemsInGroup = 0;
-    *aPositionInGroup = 0;
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-#endif
-
   GroupPos groupPos = IntlGeneric()->GroupPosition();
 
   *aGroupLevel = groupPos.level;
@@ -600,13 +563,6 @@ NS_IMETHODIMP
 xpcAccessible::SetSelected(bool aSelect) {
   if (!IntlGeneric()) return NS_ERROR_FAILURE;
 
-#if defined(XP_WIN)
-  if (IntlGeneric()->IsRemote() &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-#endif
-
   IntlGeneric()->SetSelected(aSelect);
 
   return NS_OK;
@@ -615,13 +571,6 @@ xpcAccessible::SetSelected(bool aSelect) {
 NS_IMETHODIMP
 xpcAccessible::TakeSelection() {
   if (!IntlGeneric()) return NS_ERROR_FAILURE;
-
-#if defined(XP_WIN)
-  if (IntlGeneric()->IsRemote() &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-#endif
 
   IntlGeneric()->TakeSelection();
 
@@ -642,13 +591,6 @@ xpcAccessible::GetActionCount(uint8_t* aActionCount) {
   *aActionCount = 0;
   if (!IntlGeneric()) return NS_ERROR_FAILURE;
 
-#if defined(XP_WIN)
-  if (IntlGeneric()->IsRemote() &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-#endif
-
   *aActionCount = IntlGeneric()->ActionCount();
 
   return NS_OK;
@@ -656,13 +598,6 @@ xpcAccessible::GetActionCount(uint8_t* aActionCount) {
 
 NS_IMETHODIMP
 xpcAccessible::GetActionName(uint8_t aIndex, nsAString& aName) {
-#if defined(XP_WIN)
-  if (IntlGeneric()->IsRemote() &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-#endif
-
   aName.Truncate();
 
   if (!IntlGeneric()) {
@@ -683,13 +618,6 @@ xpcAccessible::GetActionName(uint8_t aIndex, nsAString& aName) {
 
 NS_IMETHODIMP
 xpcAccessible::GetActionDescription(uint8_t aIndex, nsAString& aDescription) {
-#if defined(XP_WIN)
-  if (IntlGeneric()->IsRemote() &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-#endif
-
   aDescription.Truncate();
 
   if (!IntlGeneric()) {
@@ -711,13 +639,6 @@ xpcAccessible::GetActionDescription(uint8_t aIndex, nsAString& aDescription) {
 NS_IMETHODIMP
 xpcAccessible::DoAction(uint8_t aIndex) {
   if (!IntlGeneric()) return NS_ERROR_FAILURE;
-
-#if defined(XP_WIN)
-  if (IntlGeneric()->IsRemote() &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-#endif
 
   return IntlGeneric()->DoAction(aIndex) ? NS_OK : NS_ERROR_INVALID_ARG;
 }

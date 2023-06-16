@@ -537,11 +537,8 @@ function assertPaused(dbg, msg = "client is paused") {
  */
 async function waitForPaused(dbg, url) {
   info("Waiting for the debugger to pause");
-  const {
-    getSelectedScope,
-    getCurrentThread,
-    getCurrentThreadFrames,
-  } = dbg.selectors;
+  const { getSelectedScope, getCurrentThread, getCurrentThreadFrames } =
+    dbg.selectors;
 
   await waitForState(
     dbg,
@@ -948,16 +945,15 @@ async function reloadWhenPausedBeforePageLoaded(dbg, ...sources) {
   // But we can at least listen for the next DOCUMENT_EVENT's dom-loading,
   // which should be fired even if the page is pause the earliest.
   const { resourceCommand } = dbg.commands;
-  const {
-    onResource: onTopLevelDomLoading,
-  } = await resourceCommand.waitForNextResource(
-    resourceCommand.TYPES.DOCUMENT_EVENT,
-    {
-      ignoreExistingResources: true,
-      predicate: resource =>
-        resource.targetFront.isTopLevel && resource.name === "dom-loading",
-    }
-  );
+  const { onResource: onTopLevelDomLoading } =
+    await resourceCommand.waitForNextResource(
+      resourceCommand.TYPES.DOCUMENT_EVENT,
+      {
+        ignoreExistingResources: true,
+        predicate: resource =>
+          resource.targetFront.isTopLevel && resource.name === "dom-loading",
+      }
+    );
 
   gBrowser.reloadTab(gBrowser.selectedTab);
 
@@ -995,13 +991,13 @@ async function navigateToAbsoluteURL(dbg, url, ...sources) {
   return waitForSources(dbg, ...sources);
 }
 
-function getFirstBreakpointColumn(dbg, { line, sourceId }) {
-  const { getSource, getFirstBreakpointPosition } = dbg.selectors;
-  const source = getSource(sourceId);
-  const position = getFirstBreakpointPosition({
-    line,
-    sourceId,
-  });
+function getFirstBreakpointColumn(dbg, source, line) {
+  const position = dbg.selectors.getFirstBreakpointPosition(
+    createLocation({
+      line,
+      source,
+    })
+  );
 
   return getSelectedLocation(position, source).column;
 }
@@ -1066,8 +1062,7 @@ async function addBreakpointViaGutter(dbg, line) {
 }
 
 function disableBreakpoint(dbg, source, line, column) {
-  column =
-    column || getFirstBreakpointColumn(dbg, { line, sourceId: source.id });
+  column = column || getFirstBreakpointColumn(dbg, source, line);
   const location = createLocation({
     source,
     sourceUrl: source.url,
@@ -1241,7 +1236,7 @@ async function expandSourceTree(dbg) {
   // But when there is a project root, it can be directory or group items.
   // Select only expandable in order to ignore source items.
   for (const rootNode of dbg.win.document.querySelectorAll(
-    ".sources-list > .managed-tree > .tree > .tree-node[data-expandable=true]"
+    ".sources-list > .tree > .tree-node[data-expandable=true]"
   )) {
     await expandAllSourceNodes(dbg, rootNode);
   }
@@ -1264,8 +1259,13 @@ async function expandAllSourceNodes(dbg, treeNode) {
  */
 function removeBreakpoint(dbg, sourceId, line, column) {
   const source = dbg.selectors.getSource(sourceId);
-  column = column || getFirstBreakpointColumn(dbg, { line, sourceId });
-  const location = { sourceId, sourceUrl: source.url, line, column };
+  column = column || getFirstBreakpointColumn(dbg, source, line);
+  const location = createLocation({
+    source,
+    sourceUrl: source.url,
+    line,
+    column,
+  });
   const bp = getBreakpointForLocation(dbg, location);
   return dbg.actions.removeBreakpoint(getContext(dbg), bp);
 }
@@ -1314,17 +1314,19 @@ function invokeInTab(fnc, ...args) {
 function clickElementInTab(selector) {
   info(`click element ${selector} in tab`);
 
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [selector], function(
-    _selector
-  ) {
-    const element = content.document.querySelector(_selector);
-    // Run the click in another event loop in order to immediately resolve spawn's promise.
-    // Otherwise if we pause on click and navigate, the JSWindowActor used by spawn will
-    // be destroyed while its query is still pending. And this would reject the promise.
-    content.setTimeout(() => {
-      element.click();
-    });
-  });
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [selector],
+    function (_selector) {
+      const element = content.document.querySelector(_selector);
+      // Run the click in another event loop in order to immediately resolve spawn's promise.
+      // Otherwise if we pause on click and navigate, the JSWindowActor used by spawn will
+      // be destroyed while its query is still pending. And this would reject the promise.
+      content.setTimeout(() => {
+        element.click();
+      });
+    }
+  );
 }
 
 const isLinux = Services.appinfo.OS === "Linux";
@@ -1473,6 +1475,89 @@ async function getEditorLineEl(dbg, line) {
   }
 
   return el;
+}
+
+/**
+ * Opens the debugger editor context menu in either codemirror or the
+ * the debugger gutter.
+ * @param {Object} dbg
+ * @param {String} elementName
+ *                  The element to select
+ * @param {Number} line
+ *                  The line to open the context menu on.
+ */
+async function openContextMenuInDebugger(dbg, elementName, line) {
+  const waitForOpen = waitForContextMenu(dbg);
+  info(`Open ${elementName} context menu on line ${line || ""}`);
+  rightClickElement(dbg, elementName, line);
+  return waitForOpen;
+}
+
+/**
+ * Select a range of lines in the editor and open the contextmenu
+ * @param {Object} dbg
+ * @param {Object} lines
+ * @returns
+ */
+async function selectEditorLinesAndOpenContextMenu(dbg, lines) {
+  const { startLine, endLine } = lines;
+  const elementName = "line";
+  if (!endLine) {
+    await clickElement(dbg, elementName, startLine);
+  } else {
+    getCM(dbg).setSelection(
+      { line: startLine - 1, ch: 0 },
+      { line: endLine, ch: 0 }
+    );
+  }
+  return openContextMenuInDebugger(dbg, elementName, startLine);
+}
+
+/**
+ * Asserts that the styling for ignored lines are applied
+ * @param {Object} dbg
+ * @param {Object} options
+ *                 lines {null | Number[]} [lines] Line(s) to assert.
+ *                   - If null is passed, the assertion is on all the blackboxed lines
+ *                   - If an array of one item (start line) is passed, the assertion is on the specified line
+ *                   - If an array (start and end lines) is passed, the assertion is on the multiple lines seelected
+ *                 hasBlackboxedLinesClass
+ *                   If `true` assert that style exist, else assert that style does not exist
+ */
+function assertIgnoredStyleInSourceLines(
+  dbg,
+  { lines, hasBlackboxedLinesClass }
+) {
+  if (lines) {
+    let currentLine = lines[0];
+    do {
+      const element = findElement(dbg, "line", currentLine);
+      const hasStyle = hasBlackboxedLinesClass
+        ? element.parentNode.classList.contains("blackboxed-line")
+        : !element.parentNode.classList.contains("blackboxed-line");
+      ok(
+        hasStyle,
+        `Line ${currentLine} ${
+          hasBlackboxedLinesClass ? "does not have" : "has"
+        } ignored styling`
+      );
+      currentLine = currentLine + 1;
+    } while (currentLine <= lines[1]);
+  } else {
+    const codeLines = findAllElementsWithSelector(
+      dbg,
+      ".CodeMirror-code .CodeMirror-line"
+    );
+    const blackboxedLines = findAllElementsWithSelector(
+      dbg,
+      ".CodeMirror-code .blackboxed-line"
+    );
+    is(
+      hasBlackboxedLinesClass ? codeLines.length : 0,
+      blackboxedLines.length,
+      `${blackboxedLines.length} of ${codeLines.length} lines are blackboxed`
+    );
+  }
 }
 
 /**
@@ -1717,6 +1802,7 @@ const selectors = {
   sourceTreeRootNode: ".sources-panel .node .window",
   sourceTreeFolderNode: ".sources-panel .node .folder",
   excludePatternsInput: ".project-text-search .exclude-patterns-field input",
+  fileSearchInput: ".search-bar input",
 };
 
 function getSelector(elementName, ...args) {
@@ -2103,6 +2189,12 @@ async function closePreviewAtPos(dbg, line, column) {
   InspectorUtils.removePseudoClassLock(tokenEl, ":hover");
 
   const gutterEl = await getEditorLineGutter(dbg, line);
+
+  // The popup gets hidden when "mouseleave" is emitted on the tokenEl.
+  // EventUtils can't send "mouseleave" event, and since the mouse could have been moved
+  // since the tooltip was displayed, move it back to the token and then to the gutter,
+  // which should trigger a mouseleave event.
+  EventUtils.synthesizeMouseAtCenter(tokenEl, { type: "mousemove" }, dbg.win);
   EventUtils.synthesizeMouseAtCenter(gutterEl, { type: "mousemove" }, dbg.win);
   await waitUntil(() => findElement(dbg, "previewPopup") == null);
 }
@@ -2485,7 +2577,12 @@ async function toggleDebbuggerSettingsMenuItem(dbg, { className, isChecked }) {
 
   menuButton.click();
   // Waits for the debugger settings panel to appear.
-  await waitFor(() => document.querySelector("#debugger-settings-menu-list"));
+  await waitFor(() => {
+    const menuListEl = document.querySelector("#debugger-settings-menu-list");
+    // Lets check the offsetParent property to make sure the menu list is actually visible
+    // by its parents display property being no longer "none".
+    return menuListEl && menuListEl.offsetParent !== null;
+  });
 
   const menuItem = document.querySelector(className);
 
@@ -2589,4 +2686,29 @@ if (protocolHandler.hasSubstitution("testing-common")) {
   );
   PromiseTestUtils.allowMatchingRejectionsGlobally(/Connection closed/);
   this.PromiseTestUtils = PromiseTestUtils;
+}
+
+/**
+ * Selects the specific black box context menu item
+ * @param {Object} dbg
+ * @param {String} itemName
+ *                  The name of the context menu item.
+ */
+async function selectBlackBoxContextMenuItem(dbg, itemName) {
+  let wait = null;
+  if (itemName == "blackbox-line" || itemName == "blackbox-lines") {
+    wait = Promise.any([
+      waitForDispatch(dbg.store, "BLACKBOX_SOURCE_RANGES"),
+      waitForDispatch(dbg.store, "UNBLACKBOX_SOURCE_RANGES"),
+    ]);
+  } else if (itemName == "blackbox") {
+    wait = Promise.any([
+      waitForDispatch(dbg.store, "BLACKBOX_WHOLE_SOURCES"),
+      waitForDispatch(dbg.store, "UNBLACKBOX_WHOLE_SOURCES"),
+    ]);
+  }
+
+  info(`Select the ${itemName} context menu item`);
+  selectContextMenuItem(dbg, `#node-menu-${itemName}`);
+  return wait;
 }

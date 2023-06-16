@@ -652,9 +652,8 @@ class ElementStyle {
       return;
     }
 
-    const { declarationsToAdd, firstValue } = this._getValueAndExtraProperties(
-      value
-    );
+    const { declarationsToAdd, firstValue } =
+      this._getValueAndExtraProperties(value);
     const parsedValue = parseSingleValue(
       this.cssProperties.isKnown,
       firstValue

@@ -56,6 +56,7 @@
 #include "js/experimental/TypedData.h"  // JS_GetArrayBufferViewType
 #include "js/friend/ErrorMessages.h"    // js::GetErrorMessage, JSMSG_*
 #include "js/HashTable.h"
+#include "js/Printer.h"
 #include "js/PropertySpec.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
 #include "js/SourceText.h"  // JS::SourceText
@@ -79,7 +80,6 @@
 #include "vm/JSObject.h"
 #include "vm/PIC.h"
 #include "vm/PlainObject.h"  // js::PlainObject
-#include "vm/Printer.h"
 #include "vm/Realm.h"
 #include "vm/RegExpObject.h"
 #include "vm/StringType.h"
@@ -1309,6 +1309,32 @@ static bool intrinsic_TypedArrayInitFromPackedArray(JSContext* cx,
   return true;
 }
 
+template <bool ForTest>
+static bool intrinsic_RegExpBuiltinExec(JSContext* cx, unsigned argc,
+                                        Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 2);
+  MOZ_ASSERT(args[0].isObject());
+  MOZ_ASSERT(args[0].toObject().is<RegExpObject>());
+  MOZ_ASSERT(args[1].isString());
+
+  Rooted<RegExpObject*> obj(cx, &args[0].toObject().as<RegExpObject>());
+  Rooted<JSString*> string(cx, args[1].toString());
+  return RegExpBuiltinExec(cx, obj, string, ForTest, args.rval());
+}
+
+template <bool ForTest>
+static bool intrinsic_RegExpExec(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 2);
+  MOZ_ASSERT(args[0].isObject());
+  MOZ_ASSERT(args[1].isString());
+
+  Rooted<JSObject*> obj(cx, &args[0].toObject());
+  Rooted<JSString*> string(cx, args[1].toString());
+  return RegExpExec(cx, obj, string, ForTest, args.rval());
+}
+
 static bool intrinsic_RegExpCreate(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -1490,7 +1516,7 @@ bool js::IsCallSelfHostedNonGenericMethod(NativeImpl impl) {
 }
 
 bool js::ReportIncompatibleSelfHostedMethod(JSContext* cx,
-                                            const CallArgs& args) {
+                                            Handle<Value> thisValue) {
   // The contract for this function is the same as
   // CallSelfHostedNonGenericMethod. The normal ReportIncompatible function
   // doesn't work for selfhosted functions, because they always call the
@@ -1506,9 +1532,6 @@ bool js::ReportIncompatibleSelfHostedMethod(JSContext* cx,
 
   static const char* const internalNames[] = {
       "IsTypedArrayEnsuringArrayBuffer",
-      "UnwrapAndCallRegExpBuiltinExec",
-      "RegExpBuiltinExec",
-      "RegExpExec",
       "RegExpSearchSlowPath",
       "RegExpReplaceSlowPath",
       "RegExpMatchSlowPath",
@@ -1530,7 +1553,7 @@ bool js::ReportIncompatibleSelfHostedMethod(JSContext* cx,
             [funName](auto* name) { return strcmp(funName, name) != 0; })) {
       JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                                JSMSG_INCOMPATIBLE_METHOD, funName, "method",
-                               InformalValueTypeName(args.thisv()));
+                               InformalValueTypeName(thisValue));
       return false;
     }
     ++iter;
@@ -1968,8 +1991,17 @@ static const JSFunctionSpec intrinsic_functions[] = {
                     intrinsic_PossiblyWrappedTypedArrayLength, 1, 0,
                     IntrinsicPossiblyWrappedTypedArrayLength),
     JS_FN("PromiseResolve", intrinsic_PromiseResolve, 2, 0),
+    JS_INLINABLE_FN("RegExpBuiltinExec", intrinsic_RegExpBuiltinExec<false>, 2,
+                    0, IntrinsicRegExpBuiltinExec),
+    JS_INLINABLE_FN("RegExpBuiltinExecForTest",
+                    intrinsic_RegExpBuiltinExec<true>, 2, 0,
+                    IntrinsicRegExpBuiltinExecForTest),
     JS_FN("RegExpConstructRaw", regexp_construct_raw_flags, 2, 0),
     JS_FN("RegExpCreate", intrinsic_RegExpCreate, 2, 0),
+    JS_INLINABLE_FN("RegExpExec", intrinsic_RegExpExec<false>, 2, 0,
+                    IntrinsicRegExpExec),
+    JS_INLINABLE_FN("RegExpExecForTest", intrinsic_RegExpExec<true>, 2, 0,
+                    IntrinsicRegExpExecForTest),
     JS_FN("RegExpGetSubstitution", intrinsic_RegExpGetSubstitution, 5, 0),
     JS_INLINABLE_FN("RegExpInstanceOptimizable", RegExpInstanceOptimizable, 1,
                     0, RegExpInstanceOptimizable),
@@ -1977,7 +2009,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("RegExpPrototypeOptimizable", RegExpPrototypeOptimizable, 1,
                     0, RegExpPrototypeOptimizable),
     JS_INLINABLE_FN("RegExpSearcher", RegExpSearcher, 3, 0, RegExpSearcher),
-    JS_INLINABLE_FN("RegExpTester", RegExpTester, 3, 0, RegExpTester),
     JS_INLINABLE_FN("SameValue", js::obj_is, 2, 0, ObjectIs),
     JS_FN("SharedArrayBufferByteLength",
           intrinsic_ArrayBufferByteLength<SharedArrayBufferObject>, 1, 0),
@@ -2429,7 +2460,7 @@ bool JSRuntime::initSelfHostingStencil(JSContext* cx,
     if (!stencil) {
       return false;
     }
-    if (!stencil->deserializeStencils(&fc, *input, xdrCache, &decodeOk)) {
+    if (!stencil->deserializeStencils(&fc, options, xdrCache, &decodeOk)) {
       return false;
     }
 
@@ -2471,9 +2502,9 @@ bool JSRuntime::initSelfHostingStencil(JSContext* cx,
   }
   frontend::NoScopeBindingCache scopeCache;
   RefPtr<frontend::CompilationStencil> stencil =
-      frontend::CompileGlobalScriptToStencil(
-          cx, &fc, cx->stackLimitForCurrentPrincipal(), cx->tempLifoAlloc(),
-          *input, &scopeCache, srcBuf, ScopeKind::Global);
+      frontend::CompileGlobalScriptToStencil(cx, &fc, cx->tempLifoAlloc(),
+                                             *input, &scopeCache, srcBuf,
+                                             ScopeKind::Global);
   if (!stencil) {
     return false;
   }
@@ -2729,6 +2760,14 @@ void JSRuntime::assertSelfHostedFunctionHasCanonicalName(
 bool js::IsSelfHostedFunctionWithName(JSFunction* fun, JSAtom* name) {
   return fun->isSelfHostedBuiltin() && fun->isExtended() &&
          GetClonedSelfHostedFunctionName(fun) == name;
+}
+
+bool js::IsSelfHostedFunctionWithName(const Value& v, JSAtom* name) {
+  if (!v.isObject() || !v.toObject().is<JSFunction>()) {
+    return false;
+  }
+  JSFunction* fun = &v.toObject().as<JSFunction>();
+  return IsSelfHostedFunctionWithName(fun, name);
 }
 
 static_assert(

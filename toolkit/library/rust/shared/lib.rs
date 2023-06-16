@@ -16,6 +16,7 @@ extern crate bitsdownload;
 extern crate bookmark_sync;
 extern crate cascade_bloom_filter;
 extern crate cert_storage;
+extern crate crypto_hash;
 extern crate chardetng_c;
 extern crate cosec;
 #[cfg(feature = "cubeb_coreaudio_rust")]
@@ -105,6 +106,8 @@ extern crate data_encoding_ffi;
 
 extern crate binary_http;
 extern crate oblivious_http;
+
+extern crate mime_guess_ffi;
 
 #[cfg(feature = "uniffi_fixtures")]
 mod uniffi_fixtures {

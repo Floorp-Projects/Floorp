@@ -29,7 +29,7 @@ function trace(text) {
  *                       expectedStates.
  */
 function makeHandler(nameTemplate, eventName, expectedStates) {
-  return function(e) {
+  return function (e) {
     var name = nameTemplate.replace(/%1/, eventName);
     ++gState;
     trace(name + ": gState=" + gState);

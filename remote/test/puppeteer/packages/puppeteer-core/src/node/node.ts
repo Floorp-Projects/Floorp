@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-export * from './BrowserFetcher.js';
-export * from './BrowserRunner.js';
 export * from './ChromeLauncher.js';
 export * from './FirefoxLauncher.js';
 export * from './LaunchOptions.js';

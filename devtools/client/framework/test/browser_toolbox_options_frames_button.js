@@ -16,7 +16,7 @@ const TEST_URL_FRAMES =
   `<iframe src="${TEST_IFRAME_URL2}"></iframe>`;
 const FRAME_BUTTON_PREF = "devtools.command-button-frames.enabled";
 
-add_task(async function() {
+add_task(async function () {
   // Hide the button by default.
   await pushPref(FRAME_BUTTON_PREF, false);
 
@@ -87,7 +87,7 @@ add_task(async function() {
   );
 
   info("Remove this first iframe, which is currently selected");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.document.querySelector("iframe").remove();
   });
 

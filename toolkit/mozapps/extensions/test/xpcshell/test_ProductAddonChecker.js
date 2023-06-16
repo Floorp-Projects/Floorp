@@ -1,7 +1,7 @@
 "use strict";
 
-const { ProductAddonChecker } = ChromeUtils.import(
-  "resource://gre/modules/addons/ProductAddonChecker.jsm"
+const { ProductAddonChecker } = ChromeUtils.importESModule(
+  "resource://gre/modules/addons/ProductAddonChecker.sys.mjs"
 );
 
 const LocalFile = new Components.Constructor(

@@ -165,10 +165,8 @@ class ReverseSearchInput extends Component {
   }
 
   renderSearchInformation() {
-    const {
-      reverseSearchTotalResults,
-      reverseSearchResultPosition,
-    } = this.props;
+    const { reverseSearchTotalResults, reverseSearchResultPosition } =
+      this.props;
 
     if (!Number.isInteger(reverseSearchTotalResults)) {
       return null;

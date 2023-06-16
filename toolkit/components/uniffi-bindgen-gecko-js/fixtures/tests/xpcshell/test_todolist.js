@@ -1,14 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {
-  TodoList,
-  TodoEntry,
-  getDefaultList,
-  setDefaultList,
-} = ChromeUtils.import("resource://gre/modules/RustTodolist.jsm");
+const { TodoList, TodoEntry, getDefaultList, setDefaultList } =
+  ChromeUtils.importESModule("resource://gre/modules/RustTodolist.sys.mjs");
 
-add_task(async function() {
+add_task(async function () {
   const todo = await TodoList.init();
   const entry = new TodoEntry("Write bindings for strings in records");
 

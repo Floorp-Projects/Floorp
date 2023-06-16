@@ -118,7 +118,6 @@
                                                    \
   _(RegExpMatcher)                                 \
   _(RegExpSearcher)                                \
-  _(RegExpTester)                                  \
   _(IsRegExpObject)                                \
   _(IsPossiblyWrappedRegExpObject)                 \
   _(RegExpPrototypeOptimizable)                    \
@@ -205,6 +204,10 @@
   _(IntrinsicIsPossiblyWrappedTypedArray)          \
   _(IntrinsicTypedArrayLength)                     \
   _(IntrinsicPossiblyWrappedTypedArrayLength)      \
+  _(IntrinsicRegExpBuiltinExec)                    \
+  _(IntrinsicRegExpBuiltinExecForTest)             \
+  _(IntrinsicRegExpExec)                           \
+  _(IntrinsicRegExpExecForTest)                    \
   _(IntrinsicTypedArrayByteOffset)                 \
   _(IntrinsicTypedArrayElementSize)                \
                                                    \

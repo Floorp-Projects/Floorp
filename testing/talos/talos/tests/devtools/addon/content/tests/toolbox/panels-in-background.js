@@ -14,7 +14,7 @@ const {
   PAGES_BASE_URL,
 } = require("damp-test/tests/head");
 
-module.exports = async function() {
+module.exports = async function () {
   await testSetup(PAGES_BASE_URL + "custom/panels-in-background/index.html");
 
   // Make sure the Console and Network panels are initialized

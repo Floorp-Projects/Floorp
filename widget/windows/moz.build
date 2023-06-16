@@ -26,6 +26,10 @@ with Files("OSK*"):
 with Files("*TSFTextStore*"):
     BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
 
+DIRS += [
+    "filedialog",
+]
+
 TEST_DIRS += ["tests"]
 
 EXPORTS += [

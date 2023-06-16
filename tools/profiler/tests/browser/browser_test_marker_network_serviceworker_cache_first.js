@@ -45,18 +45,15 @@ add_task(async function test_network_markers_service_worker_register() {
     await SpecialPowers.spawn(
       contentBrowser,
       [serviceWorkerFileName],
-      async function(serviceWorkerFileName) {
+      async function (serviceWorkerFileName) {
         await content.wrappedJSObject.registerServiceWorkerAndWait(
           serviceWorkerFileName
         );
       }
     );
 
-    const {
-      parentThread,
-      contentThread,
-      profile,
-    } = await stopProfilerNowAndGetThreads(contentPid);
+    const { parentThread, contentThread, profile } =
+      await stopProfilerNowAndGetThreads(contentPid);
 
     // The service worker work happens in a third "thread" or process, let's try
     // to find it.

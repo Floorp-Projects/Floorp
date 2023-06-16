@@ -56,12 +56,6 @@ function update(state = initialSourcesContentState(), action) {
 
     case "REMOVE_THREAD":
       return removeThread(state, action);
-
-    case "NAVIGATE":
-      return {
-        ...initialSourcesContentState(),
-        epoch: state.epoch + 1,
-      };
   }
 
   return state;

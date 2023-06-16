@@ -8,12 +8,10 @@ var { loader, require } = ChromeUtils.importESModule(
   "resource://devtools/shared/loader/Loader.sys.mjs"
 );
 
-var {
-  useDistinctSystemPrincipalLoader,
-  releaseDistinctSystemPrincipalLoader,
-} = ChromeUtils.importESModule(
-  "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs"
-);
+var { useDistinctSystemPrincipalLoader, releaseDistinctSystemPrincipalLoader } =
+  ChromeUtils.importESModule(
+    "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs"
+  );
 
 // Require this module to setup core modules
 loader.require("resource://devtools/client/framework/devtools-browser.js");
@@ -75,7 +73,7 @@ function hideStatusMessage() {
   toggleStatusMessage(false);
 }
 
-var connect = async function() {
+var connect = async function () {
   // Initiate the connection
 
   // MOZ_BROWSER_TOOLBOX_INPUT_CONTEXT is set by the target Firefox instance
@@ -153,7 +151,7 @@ function setPrefDefaults() {
 
 window.addEventListener(
   "load",
-  async function() {
+  async function () {
     gShortcuts = new KeyShortcuts({ window });
     gShortcuts.on("CmdOrCtrl+W", onCloseCommand);
     gShortcuts.on("CmdOrCtrl+Alt+Shift+I", onDebugBrowserToolbox);

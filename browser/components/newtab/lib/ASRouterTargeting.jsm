@@ -22,8 +22,10 @@ const { ShellService } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   AttributionCode: "resource:///modules/AttributionCode.sys.mjs",
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.sys.mjs",
+  CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   ProfileAge: "resource://gre/modules/ProfileAge.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
@@ -34,17 +36,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ASRouterPreferences: "resource://activity-stream/lib/ASRouterPreferences.jsm",
-  AddonManager: "resource://gre/modules/AddonManager.jsm",
   HomePage: "resource:///modules/HomePage.jsm",
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
 });
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "CustomizableUI",
-  "resource:///modules/CustomizableUI.jsm"
-);
 
 XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
   return ChromeUtils.importESModule(
@@ -477,9 +472,10 @@ async function getAutofillRecords(data) {
   let actor;
   try {
     const win = Services.wm.getMostRecentBrowserWindow();
-    actor = win.gBrowser.selectedBrowser.browsingContext.currentWindowGlobal.getActor(
-      "FormAutofill"
-    );
+    actor =
+      win.gBrowser.selectedBrowser.browsingContext.currentWindowGlobal.getActor(
+        "FormAutofill"
+      );
   } catch (error) {
     // If the actor is not available, we can't get the records. We could import
     // the records directly from FormAutofillStorage to avoid the messiness of

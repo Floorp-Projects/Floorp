@@ -78,12 +78,13 @@ add_task(async function test_closedId_order() {
   let tab = await add_new_tab("about:firefoxview");
 
   is(
-    SessionStore.getClosedTabCount(window),
+    SessionStore.getClosedTabCountForWindow(window),
     3,
     "Closed tab count after restored session is 3"
   );
 
-  let initialClosedId = SessionStore.getClosedTabData(window)[0].closedId;
+  let initialClosedId =
+    SessionStore.getClosedTabDataForWindow(window)[0].closedId;
 
   // If this fails, that means one of the closedId's in the stubbed data in this test needs to be updated
   // to reflect what the initial closedId is when a new tab is open and closed (which may change as more tests
@@ -93,7 +94,7 @@ add_task(async function test_closedId_order() {
 
   await openAndCloseTab(window, "about:robots"); // closedId should be higher than the ones we just restored.
 
-  let closedData = SessionStore.getClosedTabData(window);
+  let closedData = SessionStore.getClosedTabDataForWindow(window);
   is(closedData.length, 4, "Should have data for 4 closed tabs.");
   is(
     new Set(closedData.map(t => t.closedId)).size,

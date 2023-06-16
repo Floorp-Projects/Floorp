@@ -9,7 +9,7 @@ const TEST_URI =
   "http://example.com/browser/devtools/client/webconsole/" +
   "test/browser/test-console-workers.html";
 
-add_task(async function() {
+add_task(async function () {
   info("Run the test with worker events dispatched to main thread");
   await pushPref("dom.worker.console.dispatch_events_to_main_thread", true);
   await testWorkerMessage();

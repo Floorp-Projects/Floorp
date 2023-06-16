@@ -13,7 +13,7 @@ var kTestNo103 =
 var kTest404 =
   "http://example.com/browser/netwerk/test/browser/103_preload_and_404.html";
 
-add_task(async function() {
+add_task(async function () {
   let hist_hints = TelemetryTestUtils.getAndClearHistogram(
     "EH_NUM_OF_HINTS_PER_PAGE"
   );
@@ -44,7 +44,7 @@ add_task(async function() {
   gBrowser.removeCurrentTab();
 });
 
-add_task(async function() {
+add_task(async function () {
   let hist_hints = TelemetryTestUtils.getAndClearHistogram(
     "EH_NUM_OF_HINTS_PER_PAGE"
   );
@@ -73,7 +73,7 @@ add_task(async function() {
   gBrowser.removeCurrentTab();
 });
 
-add_task(async function() {
+add_task(async function () {
   let hist_hints = TelemetryTestUtils.getAndClearHistogram(
     "EH_NUM_OF_HINTS_PER_PAGE"
   );

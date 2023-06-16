@@ -761,8 +761,9 @@
       'mpi',
       'ecl',
       'verified',
-      'verified/kremlin/include',
-      'verified/kremlin/kremlib/dist/minimal',
+      'verified/internal',
+      'verified/karamel/include',
+      'verified/karamel/krmllib/dist/minimal',
       'deprecated',
     ],
     'defines': [
@@ -833,6 +834,13 @@
           'MP_IS_LITTLE_ENDIAN',
          ],
       }],
+      # Poly1305_256 requires the flag to run
+      ['target_arch=="x64"', {
+        'defines':[
+          'HACL_CAN_COMPILE_VEC128',
+          'HACL_CAN_COMPILE_VEC256',
+        ],
+      }],
       # MSVC has no __int128 type. Use emulated int128 and leave
       # have_int128_support as-is for Curve25519 impl. selection.
       [ 'have_int128_support==1 and (OS!="win" or cc_is_clang==1 or cc_is_gcc==1)', {
@@ -856,6 +864,12 @@
               'PPC_GCM',
             ],
           }],
+        ],
+      }],
+      [ 'supports_vale_curve25519==1', {
+        'defines': [
+          # The Makefile does version-tests on GCC, but we're not doing that here.
+          'HACL_CAN_COMPILE_INLINE_ASM',
         ],
       }],
       [ 'OS=="linux" or OS=="android"', {
@@ -920,6 +934,11 @@
   'variables': {
     'module': 'nss',
     'conditions': [
+      [ 'target_arch=="x64" and cc_is_gcc==1', {
+        'supports_vale_curve25519%': 1,
+      }, {
+        'supports_vale_curve25519%': 0,
+      }],
       [ 'target_arch=="x64" or target_arch=="arm64" or target_arch=="aarch64"', {
         'have_int128_support%': 1,
       }, {

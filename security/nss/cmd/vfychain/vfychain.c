@@ -92,7 +92,7 @@ Usage(const char *progName)
 }
 
 /**************************************************************************
-** 
+**
 ** Error and information routines.
 **
 **************************************************************************/
@@ -789,7 +789,7 @@ breakout:
                 if (verbose) {
                     for (node = CERT_LIST_HEAD(builtChain); !CERT_LIST_END(node, builtChain);
                          node = CERT_LIST_NEXT(node), count++) {
-                        sprintf(buff, "Certificate %d Subject", count + 1);
+                        snprintf(buff, sizeof(buff), "Certificate %d Subject", count + 1);
                         SECU_PrintName(stdout, &node->cert->subject, buff, 0);
                     }
                 }

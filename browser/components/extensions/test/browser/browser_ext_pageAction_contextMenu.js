@@ -24,7 +24,7 @@ let extData = {
     `,
   },
 
-  background: function() {
+  background: function () {
     browser.contextMenus.create({
       id: "clickme-page",
       title: "Click me!",

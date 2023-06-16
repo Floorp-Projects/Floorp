@@ -10,7 +10,7 @@ const TEST_URI =
   "https://example.com/browser/devtools/client/webconsole/" +
   "test/browser/test-blank.html";
 
-add_task(async function() {
+add_task(async function () {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       content_scripts: [
@@ -22,7 +22,7 @@ add_task(async function() {
     },
 
     files: {
-      "content-script.js": function() {
+      "content-script.js": function () {
         Promise.reject("abc");
       },
     },

@@ -8,7 +8,7 @@ add_task(async function test_principal_right_click_open_link_in_new_tab() {
   const TEST_PAGE =
     getRootDirectory(gTestPath) + "file_view_image_data_navigation.html";
 
-  await BrowserTestUtils.withNewTab(TEST_PAGE, async function(browser) {
+  await BrowserTestUtils.withNewTab(TEST_PAGE, async function (browser) {
     let loadPromise = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
 
     // simulate right-click->view-image
@@ -43,7 +43,7 @@ add_task(async function test_right_click_open_bg_image() {
   const TEST_PAGE =
     getRootDirectory(gTestPath) + "file_view_bg_image_data_navigation.html";
 
-  await BrowserTestUtils.withNewTab(TEST_PAGE, async function(browser) {
+  await BrowserTestUtils.withNewTab(TEST_PAGE, async function (browser) {
     let loadPromise = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
 
     // simulate right-click->view-image

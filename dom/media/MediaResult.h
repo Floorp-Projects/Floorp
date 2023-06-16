@@ -19,6 +19,8 @@
 // MediaResult const references is recommended.
 namespace mozilla {
 
+class CDMProxy;
+
 class MediaResult {
  public:
   MediaResult() : mCode(NS_OK) {}
@@ -27,6 +29,10 @@ class MediaResult {
       : mCode(aResult), mMessage(aMessage) {}
   MediaResult(nsresult aResult, const char* aMessage)
       : mCode(aResult), mMessage(aMessage) {}
+  MediaResult(nsresult aResult, CDMProxy* aCDMProxy)
+      : mCode(aResult), mCDMProxy(aCDMProxy) {
+    MOZ_ASSERT(aResult == NS_ERROR_DOM_MEDIA_CDM_PROXY_NOT_SUPPORTED_ERR);
+  }
   MediaResult(const MediaResult& aOther) = default;
   MediaResult(MediaResult&& aOther) = default;
   MediaResult& operator=(const MediaResult& aOther) = default;
@@ -55,9 +61,13 @@ class MediaResult {
                            mMessage.IsEmpty() ? "" : " - ", mMessage.get());
   }
 
+  CDMProxy* GetCDMProxy() const { return mCDMProxy; }
+
  private:
   nsresult mCode;
   nsCString mMessage;
+  // It's used when the error is NS_ERROR_DOM_MEDIA_CDM_PROXY_NOT_SUPPORTED_ERR.
+  CDMProxy* mCDMProxy;
 };
 
 #ifdef _MSC_VER

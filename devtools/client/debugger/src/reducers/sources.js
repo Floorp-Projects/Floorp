@@ -96,6 +96,16 @@ export function initialSourcesState(state) {
      * See `createLocation` for the definition of this object.
      */
     selectedLocation: undefined,
+
+    /**
+     * By default, if we have a source-mapped source, we would automatically try
+     * to select and show the content of the original source. But, if we explicitly
+     * select a generated source, we remember this choice. That, until we explicitly
+     * select an original source.
+     * Note that selections related to non-source-mapped sources should never
+     * change this setting.
+     */
+    shouldSelectOriginalLocation: true,
   };
   /* eslint-disable sort-keys */
 }
@@ -114,7 +124,7 @@ function update(state = initialSourcesState(), action) {
     case "SET_SELECTED_LOCATION": {
       let pendingSelectedLocation = null;
 
-      if (action.source.url) {
+      if (action.location.source.url) {
         pendingSelectedLocation = createPendingSelectedLocation(
           action.location
         );
@@ -125,6 +135,7 @@ function update(state = initialSourcesState(), action) {
         ...state,
         selectedLocation: action.location,
         pendingSelectedLocation,
+        shouldSelectOriginalLocation: action.shouldSelectOriginalLocation,
       };
     }
 
@@ -177,9 +188,6 @@ function update(state = initialSourcesState(), action) {
       };
     }
 
-    case "NAVIGATE":
-      return initialSourcesState(state);
-
     case "REMOVE_THREAD": {
       return removeSourcesAndActors(state, action);
     }
@@ -223,9 +231,8 @@ function addSources(state, sources) {
     // In case of original source, maintain the mapping of generated source to original sources map.
     if (source.isOriginal) {
       const generatedSourceId = originalToGeneratedId(source.id);
-      let originalSourceIds = state.mutableOriginalSources.get(
-        generatedSourceId
-      );
+      let originalSourceIds =
+        state.mutableOriginalSources.get(generatedSourceId);
       if (!originalSourceIds) {
         originalSourceIds = [];
         state.mutableOriginalSources.set(generatedSourceId, originalSourceIds);
@@ -247,6 +254,9 @@ function removeSourcesAndActors(state, action) {
     mutableOriginalBreakableLines,
     mutableBreakpointPositions,
   } = state;
+
+  const newState = { ...state };
+
   for (const removedSource of action.sources) {
     const sourceId = removedSource.id;
 
@@ -282,6 +292,10 @@ function removeSourcesAndActors(state, action) {
     }
 
     mutableBreakpointPositions.delete(sourceId);
+
+    if (newState.selectedLocation?.source == removedSource) {
+      newState.selectedLocation = null;
+    }
   }
 
   for (const removedActor of action.actors) {
@@ -302,9 +316,13 @@ function removeSourcesAndActors(state, action) {
     if (!actorsForSource.length) {
       mutableSourceActors.delete(sourceId);
     }
+
+    if (newState.selectedLocation?.sourceActor == removedActor) {
+      newState.selectedLocation = null;
+    }
   }
 
-  return { ...state };
+  return newState;
 }
 
 function insertSourceActors(state, action) {

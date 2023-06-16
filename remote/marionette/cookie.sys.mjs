@@ -50,7 +50,7 @@ export const cookie = {
  * @throws {InvalidArgumentError}
  *     If any of the properties are invalid.
  */
-cookie.fromJSON = function(json) {
+cookie.fromJSON = function (json) {
   let newCookie = {};
 
   lazy.assert.object(json, lazy.pprint`Expected cookie object, got ${json}`);
@@ -122,7 +122,7 @@ cookie.fromJSON = function(json) {
  * @throws {UnableToSetCookieError}
  *     If an error occurred while trying to save the cookie.
  */
-cookie.add = function(
+cookie.add = function (
   newCookie,
   { restrictToHost = null, protocol = null } = {}
 ) {
@@ -233,7 +233,7 @@ cookie.add = function(
  * @param {Cookie} toDelete
  *     Cookie to remove.
  */
-cookie.remove = function(toDelete) {
+cookie.remove = function (toDelete) {
   cookie.manager.remove(
     toDelete.domain,
     toDelete.name,
@@ -256,7 +256,7 @@ cookie.remove = function(toDelete) {
  * @returns {Iterable.<Cookie>}
  *     Iterator.
  */
-cookie.iter = function*(host, currentPath = "/") {
+cookie.iter = function* (host, currentPath = "/") {
   lazy.assert.string(host, "host must be string");
   lazy.assert.string(currentPath, "currentPath must be string");
 

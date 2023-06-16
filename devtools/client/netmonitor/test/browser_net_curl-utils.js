@@ -12,7 +12,7 @@ const {
   CurlUtils,
 } = require("resource://devtools/client/shared/curl.js");
 
-add_task(async function() {
+add_task(async function () {
   const { tab, monitor } = await initNetMonitor(HTTPS_CURL_UTILS_URL, {
     requestCount: 1,
   });
@@ -31,7 +31,7 @@ add_task(async function() {
   await SpecialPowers.spawn(
     tab.linkedBrowser,
     [HTTPS_SIMPLE_SJS],
-    async function(url) {
+    async function (url) {
       content.wrappedJSObject.performRequests(url);
     }
   );

@@ -167,8 +167,9 @@ function Editor(config) {
     // - \u2066 LEFT-TO-RIGHT ISOLATE
     // - \u2067 RIGHT-TO-LEFT ISOLATE
     // - \u2069 POP DIRECTIONAL ISOLATE
-    // eslint-disable-next-line no-control-regex
-    specialChars: /[\u0000-\u001f\u007f-\u009f\u00ad\u061c\u200b-\u200f\u2028\u2029\u202d\u202e\u2066\u2067\u2069\ufeff\ufff9-\ufffc]/,
+    specialChars:
+      // eslint-disable-next-line no-control-regex
+      /[\u0000-\u001f\u007f-\u009f\u00ad\u061c\u200b-\u200f\u2028\u2029\u202d\u202e\u2066\u2067\u2069\ufeff\ufff9-\ufffc]/,
     specialCharPlaceholder: char => {
       // Use the doc provided to the setup function if we don't have a reference to a codeMirror
       // editor yet (this can happen when an Editor is being created with existing content)
@@ -184,9 +185,8 @@ function Editor(config) {
   this.config.extraKeys[Editor.keyFor("jumpToLine")] = () => this.jumpToLine();
   this.config.extraKeys[Editor.keyFor("moveLineUp", { noaccel: true })] = () =>
     this.moveLineUp();
-  this.config.extraKeys[
-    Editor.keyFor("moveLineDown", { noaccel: true })
-  ] = () => this.moveLineDown();
+  this.config.extraKeys[Editor.keyFor("moveLineDown", { noaccel: true })] =
+    () => this.moveLineDown();
   this.config.extraKeys[Editor.keyFor("toggleComment")] = "toggleComment";
 
   // Disable ctrl-[ and ctrl-] because toolbox uses those shortcuts.
@@ -748,7 +748,7 @@ Editor.prototype = {
   resetIndentUnit() {
     const cm = editors.get(this);
 
-    const iterFn = function(start, end, callback) {
+    const iterFn = function (start, end, callback) {
       cm.eachLine(start, end, line => {
         return callback(line.text);
       });
@@ -1592,7 +1592,7 @@ Editor.prototype = {
 // are mapped directly—without any changes.
 
 CM_MAPPING.forEach(name => {
-  Editor.prototype[name] = function(...args) {
+  Editor.prototype[name] = function (...args) {
     const cm = editors.get(this);
     return cm[name].apply(cm, args);
   };
@@ -1608,7 +1608,7 @@ CM_MAPPING.forEach(name => {
  * CodeMirror defines all keys with modifiers in the following
  * order: Shift - Ctrl/Cmd - Alt - Key
  */
-Editor.accel = function(key, modifiers = {}) {
+Editor.accel = function (key, modifiers = {}) {
   return (
     (modifiers.shift ? "Shift-" : "") +
     (Services.appinfo.OS == "Darwin" ? "Cmd-" : "Ctrl-") +
@@ -1623,7 +1623,7 @@ Editor.accel = function(key, modifiers = {}) {
  * platforms unless noaccel is specified in the options. Useful when overwriting
  * or disabling default shortcuts.
  */
-Editor.keyFor = function(cmd, opts = { noaccel: false }) {
+Editor.keyFor = function (cmd, opts = { noaccel: false }) {
   const key = L10N.getStr(cmd + ".commandkey");
   return opts.noaccel ? key : Editor.accel(key);
 };

@@ -4,8 +4,10 @@
 
 "use strict";
 
-const { AddonManager } = ChromeUtils.import(
-  "resource://gre/modules/AddonManager.jsm"
+const { AddonManager } = ChromeUtils.importESModule(
+  "resource://gre/modules/AddonManager.sys.mjs",
+  // AddonManager is a singleton, never create two instances of it.
+  { loadInDevToolsLoader: false }
 );
 const {
   remoteClientManager,
@@ -293,11 +295,8 @@ function requestWorkers() {
     const clientWrapper = getCurrentClient(getState().runtimes);
 
     try {
-      const {
-        otherWorkers,
-        serviceWorkers,
-        sharedWorkers,
-      } = await clientWrapper.listWorkers();
+      const { otherWorkers, serviceWorkers, sharedWorkers } =
+        await clientWrapper.listWorkers();
 
       for (const serviceWorker of serviceWorkers) {
         const { registrationFront } = serviceWorker;

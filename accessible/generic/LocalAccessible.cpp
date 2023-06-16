@@ -85,7 +85,6 @@
 #include "mozilla/Unused.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProfilerMarkers.h"
-#include "mozilla/StaticPrefs_accessibility.h"
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/dom/CanvasRenderingContext2D.h"
 #include "mozilla/dom/Element.h"
@@ -291,8 +290,7 @@ KeyBinding LocalAccessible::AccessKey() const {
 KeyBinding LocalAccessible::KeyboardShortcut() const { return KeyBinding(); }
 
 uint64_t LocalAccessible::VisibilityState() const {
-  if (IPCAccessibilityActive() &&
-      StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (IPCAccessibilityActive()) {
     // Visibility states must be calculated by RemoteAccessible, so there's no
     // point calculating them here.
     return 0;
@@ -443,8 +441,7 @@ uint64_t LocalAccessible::NativeInteractiveState() const {
   // Although ignoring visibility means IsFocusable will return true for
   // visibility: hidden, etc., this isn't a problem because we don't include
   // those hidden elements in the a11y tree anyway.
-  const bool ignoreVisibility =
-      mDoc->IPCDoc() && StaticPrefs::accessibility_cache_enabled_AtStartup();
+  const bool ignoreVisibility = mDoc->IPCDoc();
   if (frame && frame->IsFocusable(
                    /* aWithMouse */ false,
                    /* aCheckVisibility */ !ignoreVisibility)) {
@@ -904,8 +901,7 @@ nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
           }
 
 #if defined(XP_WIN)
-          if (StaticPrefs::accessibility_cache_enabled_AtStartup() &&
-              HasOwnContent() && mContent->IsMathMLElement()) {
+          if (HasOwnContent() && mContent->IsMathMLElement()) {
             // For any change in a MathML subtree, update the innerHTML cache on
             // the root math element.
             for (LocalAccessible* acc = this; acc; acc = acc->LocalParent()) {
@@ -940,24 +936,9 @@ nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
         case nsIAccessibleEvent::EVENT_TEXT_REMOVED: {
           AccTextChangeEvent* event = downcast_accEvent(aEvent);
           const nsString& text = event->ModifiedText();
-#if defined(XP_WIN)
-          // On Windows with the cache disabled, events for live region updates
-          // containing embedded objects require us to dispatch synchronous
-          // events.
-          bool sync = !StaticPrefs::accessibility_cache_enabled_AtStartup() &&
-                      text.Contains(L'\xfffc') &&
-                      nsAccUtils::IsARIALive(aEvent->GetAccessible());
-#endif
-          ipcDoc->SendTextChangeEvent(id, text, event->GetStartOffset(),
-                                      event->GetLength(),
-                                      event->IsTextInserted(),
-                                      event->IsFromUserInput()
-#if defined(XP_WIN)
-                                      // This parameter only exists on Windows.
-                                      ,
-                                      sync
-#endif
-          );
+          ipcDoc->SendTextChangeEvent(
+              id, text, event->GetStartOffset(), event->GetLength(),
+              event->IsTextInserted(), event->IsFromUserInput());
           break;
         }
         case nsIAccessibleEvent::EVENT_SELECTION:
@@ -1004,17 +985,6 @@ nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
         }
 #endif  // !defined(XP_WIN)
         case nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED: {
-#if defined(XP_WIN)
-          if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-            // On Windows, when the cache is disabled, we have to defer events
-            // until we are notified that the DocAccessibleParent has been
-            // constructed, which needs specific code for each event payload.
-            // Since we don't need a special event payload for text selection in
-            // this case anyway, just send it as a generic event.
-            ipcDoc->SendEvent(id, aEvent->GetEventType());
-            break;
-          }
-#endif  // defined(XP_WIN)
           AccTextSelChangeEvent* textSelChangeEvent = downcast_accEvent(aEvent);
           AutoTArray<TextRange, 1> ranges;
           textSelChangeEvent->SelectionRanges(&ranges);
@@ -2527,17 +2497,8 @@ void LocalAccessible::BindToParent(LocalAccessible* aParent,
       static_cast<uint32_t>((mParent->IsAlert() || mParent->IsInsideAlert())) &
       eInsideAlert;
 
-  if (TableCellAccessible* cell = AsTableCell()) {
-    if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-      CachedTableAccessible::Invalidate(this);
-    } else if (Role() == roles::COLUMNHEADER) {
-      // A new column header is being added. Invalidate the table's header
-      // cache.
-      TableAccessible* table = cell->Table();
-      if (table) {
-        table->GetHeaderCache().Clear();
-      }
-    }
+  if (IsTableCell()) {
+    CachedTableAccessible::Invalidate(this);
   }
 }
 
@@ -2545,8 +2506,7 @@ void LocalAccessible::BindToParent(LocalAccessible* aParent,
 void LocalAccessible::UnbindFromParent() {
   // We do this here to handle document shutdown and an Accessible being moved.
   // We do this for subtree removal in DocAccessible::UncacheChildrenInSubtree.
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() &&
-      (IsTable() || IsTableCell())) {
+  if (IsTable() || IsTableCell()) {
     CachedTableAccessible::Invalidate(this);
   }
 
@@ -3109,10 +3069,6 @@ AccGroupInfo* LocalAccessible::GetOrCreateGroupInfo() {
 
 void LocalAccessible::SendCache(uint64_t aCacheDomain,
                                 CacheUpdateType aUpdateType) {
-  if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    return;
-  }
-
   if (!IPCAccessibilityActive() || !Document()) {
     return;
   }
@@ -3532,10 +3488,18 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     }
   }
 
-  if (aCacheDomain & CacheDomain::ScrollPosition) {
-    nsPoint scrollPosition;
-    std::tie(scrollPosition, std::ignore) = mDoc->ComputeScrollData(this);
-    if (scrollPosition.x || scrollPosition.y) {
+  if (aCacheDomain & CacheDomain::ScrollPosition && frame) {
+    const auto [scrollPosition, scrollRange] = mDoc->ComputeScrollData(this);
+    if (scrollRange.width || scrollRange.height) {
+      // If the scroll range is 0 by 0, this acc is not scrollable. We
+      // can't simply check scrollPosition != 0, since it's valid for scrollable
+      // frames to have a (0, 0) position. We also can't check IsEmpty or
+      // ZeroArea because frames with only one scrollable dimension will return
+      // a height/width of zero for the non-scrollable dimension, yielding zero
+      // area even if the width/height for the scrollable dimension is nonzero.
+      // We also cache (0, 0) for accs with overflow:auto or overflow:scroll,
+      // even if the content is not currently large enough to be scrollable
+      // right now -- these accs have a non-zero scroll range.
       nsTArray<int32_t> positionArr(2);
       positionArr.AppendElement(scrollPosition.x);
       positionArr.AppendElement(scrollPosition.y);
@@ -3643,6 +3607,17 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       fields->SetAttribute(nsGkAtoms::position, nsGkAtoms::fixed);
     } else if (aUpdateType != CacheUpdateType::Initial) {
       fields->SetAttribute(nsGkAtoms::position, DeleteEntry());
+    }
+
+    if (frame) {
+      nsAutoCString overflow;
+      frame->Style()->GetComputedPropertyValue(eCSSProperty_overflow, overflow);
+      RefPtr<nsAtom> overflowAtom = NS_Atomize(overflow);
+      if (overflowAtom == nsGkAtoms::hidden) {
+        fields->SetAttribute(nsGkAtoms::overflow, nsGkAtoms::hidden);
+      } else if (aUpdateType != CacheUpdateType::Initial) {
+        fields->SetAttribute(nsGkAtoms::overflow, DeleteEntry());
+      }
     }
   }
 
@@ -3824,6 +3799,10 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
         fields->SetAttribute(nsGkAtoms::_moz_device_pixel_ratio,
                              appUnitsPerDevPixel);
       }
+
+      nsString mimeType;
+      AsDoc()->MimeType(mimeType);
+      fields->SetAttribute(nsGkAtoms::headerContentType, std::move(mimeType));
     }
   }
 
@@ -3839,14 +3818,30 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
 void LocalAccessible::MaybeQueueCacheUpdateForStyleChanges() {
   // mOldComputedStyle might be null if the initial cache hasn't been sent yet.
   // In that case, there is nothing to do here.
-  if (!IPCAccessibilityActive() ||
-      !StaticPrefs::accessibility_cache_enabled_AtStartup() ||
-      !mOldComputedStyle) {
+  if (!IPCAccessibilityActive() || !mOldComputedStyle) {
     return;
   }
 
   if (nsIFrame* frame = GetFrame()) {
     const ComputedStyle* newStyle = frame->Style();
+
+    nsAutoCString oldOverflow, newOverflow;
+    mOldComputedStyle->GetComputedPropertyValue(eCSSProperty_overflow,
+                                                oldOverflow);
+    newStyle->GetComputedPropertyValue(eCSSProperty_overflow, newOverflow);
+
+    if (oldOverflow != newOverflow) {
+      if (oldOverflow.Equals("hidden"_ns) || newOverflow.Equals("hidden"_ns)) {
+        mDoc->QueueCacheUpdate(this, CacheDomain::Style);
+      }
+      if (oldOverflow.Equals("auto"_ns) || newOverflow.Equals("auto"_ns) ||
+          oldOverflow.Equals("scroll"_ns) || newOverflow.Equals("scroll"_ns)) {
+        // We cache a (0,0) scroll position for frames that have overflow
+        // styling which means they _could_ become scrollable, even if the
+        // content within them doesn't currently scroll.
+        mDoc->QueueCacheUpdate(this, CacheDomain::ScrollPosition);
+      }
+    }
 
     nsAutoCString oldDisplay, newDisplay;
     mOldComputedStyle->GetComputedPropertyValue(eCSSProperty_display,
@@ -4024,22 +4019,14 @@ void LocalAccessible::StaticAsserts() const {
 }
 
 TableAccessibleBase* LocalAccessible::AsTableBase() {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() && IsTable() &&
-      !mContent->IsXULElement()) {
-    // This isn't strictly related to caching, but this new table implementation
-    // is being developed to make caching feasible. We put it behind this pref
-    // to make it easy to test while it's still under development.
+  if (IsTable() && !mContent->IsXULElement()) {
     return CachedTableAccessible::GetFrom(this);
   }
   return AsTable();
 }
 
 TableCellAccessibleBase* LocalAccessible::AsTableCellBase() {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() && IsTableCell() &&
-      !mContent->IsXULElement()) {
-    // This isn't strictly related to caching, but this new table implementation
-    // is being developed to make caching feasible. We put it behind this pref
-    // to make it easy to test while it's still under development.
+  if (IsTableCell() && !mContent->IsXULElement()) {
     return CachedTableCellAccessible::GetFrom(this);
   }
   return AsTableCell();

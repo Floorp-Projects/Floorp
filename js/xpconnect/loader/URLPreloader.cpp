@@ -17,7 +17,9 @@
 #include "mozilla/Services.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Vector.h"
+#include "mozilla/scache/StartupCache.h"
 
+#include "crc32c.h"
 #include "MainThreadUtils.h"
 #include "nsPrintfCString.h"
 #include "nsDebug.h"
@@ -44,6 +46,7 @@ bool StartsWith(const T& haystack, const T& needle) {
 }  // anonymous namespace
 
 using namespace mozilla::loader;
+using mozilla::scache::StartupCache;
 
 nsresult URLPreloader::CollectReports(nsIHandleReportCallback* aHandleReport,
                                       nsISupports* aData, bool aAnonymize) {
@@ -165,9 +168,13 @@ Result<nsCOMPtr<nsIFile>, nsresult> URLPreloader::GetCacheFile(
   return std::move(cacheFile);
 }
 
-static const uint8_t URL_MAGIC[] = "mozURLcachev002";
+static const uint8_t URL_MAGIC[] = "mozURLcachev003";
 
 Result<nsCOMPtr<nsIFile>, nsresult> URLPreloader::FindCacheFile() {
+  if (StartupCache::GetIgnoreDiskCache()) {
+    return Err(NS_ERROR_ABORT);
+  }
+
   nsCOMPtr<nsIFile> cacheFile;
   MOZ_TRY_VAR(cacheFile, GetCacheFile(u".bin"_ns));
 
@@ -235,8 +242,12 @@ Result<Ok, nsresult> URLPreloader::WriteCache() {
     uint8_t headerSize[4];
     LittleEndian::writeUint32(headerSize, buf.cursor());
 
+    uint8_t crc[4];
+    LittleEndian::writeUint32(crc, ComputeCrc32c(~0, buf.Get(), buf.cursor()));
+
     MOZ_TRY(Write(fd, URL_MAGIC, sizeof(URL_MAGIC)));
     MOZ_TRY(Write(fd, headerSize, sizeof(headerSize)));
+    MOZ_TRY(Write(fd, crc, sizeof(crc)));
     MOZ_TRY(Write(fd, buf.Get(), buf.cursor()));
   }
 
@@ -263,7 +274,8 @@ Result<Ok, nsresult> URLPreloader::ReadCache(
   auto size = cache.size();
 
   uint32_t headerSize;
-  if (size < sizeof(URL_MAGIC) + sizeof(headerSize)) {
+  uint32_t crc;
+  if (size < sizeof(URL_MAGIC) + sizeof(headerSize) + sizeof(crc)) {
     return Err(NS_ERROR_UNEXPECTED);
   }
 
@@ -278,7 +290,14 @@ Result<Ok, nsresult> URLPreloader::ReadCache(
   headerSize = LittleEndian::readUint32(data.get());
   data += sizeof(headerSize);
 
+  crc = LittleEndian::readUint32(data.get());
+  data += sizeof(crc);
+
   if (data + headerSize > end) {
+    return Err(NS_ERROR_UNEXPECTED);
+  }
+
+  if (crc != ComputeCrc32c(~0, data.get(), headerSize)) {
     return Err(NS_ERROR_UNEXPECTED);
   }
 

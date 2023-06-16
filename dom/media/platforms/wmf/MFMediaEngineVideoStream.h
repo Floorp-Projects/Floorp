@@ -39,7 +39,7 @@ class MFMediaEngineVideoStream final : public MFMediaEngineStream {
 
   void SetKnowsCompositor(layers::KnowsCompositor* aKnowsCompositor);
 
-  void SetDCompSurfaceHandle(HANDLE aDCompSurfaceHandle);
+  void SetDCompSurfaceHandle(HANDLE aDCompSurfaceHandle, gfx::IntSize aDisplay);
 
   MFMediaEngineVideoStream* AsVideoStream() override { return this; }
 

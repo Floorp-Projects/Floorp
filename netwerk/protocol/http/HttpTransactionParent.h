@@ -117,14 +117,14 @@ class HttpTransactionParent final : public PHttpTransactionParent,
   void DoNotifyListener();
   void ContinueDoNotifyListener();
   // Get event target for ODA.
-  already_AddRefed<nsIEventTarget> GetODATarget();
+  already_AddRefed<nsISerialEventTarget> GetODATarget();
   void CancelOnMainThread(nsresult aRv);
   void HandleAsyncAbort();
 
   nsCOMPtr<nsITransportEventSink> mEventsink;
   nsCOMPtr<nsIStreamListener> mChannel;
-  nsCOMPtr<nsIEventTarget> mTargetThread;
-  nsCOMPtr<nsIEventTarget> mODATarget;
+  nsCOMPtr<nsISerialEventTarget> mTargetThread;
+  nsCOMPtr<nsISerialEventTarget> mODATarget;
   Mutex mEventTargetMutex MOZ_UNANNOTATED{
       "HttpTransactionParent::EventTargetMutex"};
   nsCOMPtr<nsITransportSecurityInfo> mSecurityInfo;

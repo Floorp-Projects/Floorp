@@ -8,7 +8,7 @@
  *  Test deleting bookmarks from within tags.
  */
 
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesUtils.history.clear();
 });

@@ -9,7 +9,7 @@ function promiseTabLoadEvent(tab, url) {
 }
 
 // Load a new blank tab
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.openNewForegroundTab(gBrowser);
 
   gURLBar.focus();
@@ -27,7 +27,7 @@ add_task(async function() {
   gURLBar.focus();
 });
 
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.openNewForegroundTab(gBrowser);
 
   gURLBar.focus();
@@ -50,7 +50,7 @@ add_task(async function() {
 });
 
 // Load a tab with a subframe inside it and wait until the subframe is focused
-add_task(async function() {
+add_task(async function () {
   let tab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = tab;
 
@@ -81,7 +81,7 @@ add_task(async function() {
 });
 
 // Pass a browser to promiseFocus
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     gBaseURL + "waitForFocusPage.html"
@@ -102,7 +102,7 @@ add_task(async function() {
 
 // Tests focusing the sidebar, which is in a parent process subframe
 // and then switching the focus to another window.
-add_task(async function() {
+add_task(async function () {
   await SidebarUI.show("viewBookmarksSidebar");
 
   gURLBar.focus();

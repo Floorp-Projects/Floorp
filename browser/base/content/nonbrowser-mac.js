@@ -15,7 +15,7 @@ function OpenBrowserWindowFromDockMenu(options) {
   let win = OpenBrowserWindow(options);
   win.addEventListener(
     "load",
-    function() {
+    function () {
       let dockSupport = Cc["@mozilla.org/widget/macdocksupport;1"].getService(
         Ci.nsIMacDockSupport
       );

@@ -11,19 +11,22 @@ function AutoCompleteInput(aSearches) {
 AutoCompleteInput.prototype = Object.create(AutoCompleteInputBase.prototype);
 
 add_test(function test_handleEnter_mouse() {
-  doSearch("moz", "mozilla.com", "http://www.mozilla.com", function(
-    aController
-  ) {
-    Assert.equal(aController.input.textValue, "moz");
-    Assert.equal(
-      aController.getFinalCompleteValueAt(0),
-      "http://www.mozilla.com"
-    );
-    // Keyboard interaction is tested by test_finalCompleteValueSelectedIndex.js
-    // so here just test popup selection.
-    aController.handleEnter(true);
-    Assert.equal(aController.input.textValue, "http://www.mozilla.com");
-  });
+  doSearch(
+    "moz",
+    "mozilla.com",
+    "http://www.mozilla.com",
+    function (aController) {
+      Assert.equal(aController.input.textValue, "moz");
+      Assert.equal(
+        aController.getFinalCompleteValueAt(0),
+        "http://www.mozilla.com"
+      );
+      // Keyboard interaction is tested by test_finalCompleteValueSelectedIndex.js
+      // so here just test popup selection.
+      aController.handleEnter(true);
+      Assert.equal(aController.input.textValue, "http://www.mozilla.com");
+    }
+  );
 });
 
 function doSearch(

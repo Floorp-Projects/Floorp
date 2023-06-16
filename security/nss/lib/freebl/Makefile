@@ -568,21 +568,22 @@ ifneq ($(shell $(CC) -? 2>&1 >/dev/null </dev/null | sed -e 's/:.*//;1q'),lcc)
             HAVE_INT128_SUPPORT = 1
             DEFINES += -DHAVE_INT128_SUPPORT
     else ifeq (1,$(CC_IS_GCC))
+        SUPPORTS_VALE_CURVE25519 = 1
         ifneq (,$(filter 4.6 4.7 4.8 4.9,$(word 1,$(GCC_VERSION)).$(word 2,$(GCC_VERSION))))
             HAVE_INT128_SUPPORT = 1
             DEFINES += -DHAVE_INT128_SUPPORT
         endif
-        ifneq (,$(filter 0 1 2 3,$(word 1,$(GCC_VERSION))))
+        ifneq (,$(filter 0 1 2 3 4,$(word 1,$(GCC_VERSION))))
             NSS_DISABLE_AVX2 = 1
-        endif
-        ifeq (4,$(word 1,$(GCC_VERSION)))
-            ifeq (,$(filter 8 9,$(word 2,$(GCC_VERSION))))
-                NSS_DISABLE_AVX2 = 1
-            endif
         endif
         ifeq (,$(filter 0 1 2 3 4,$(word 1,$(GCC_VERSION))))
             HAVE_INT128_SUPPORT = 1
             DEFINES += -DHAVE_INT128_SUPPORT
+        endif
+        ifeq (,$(filter 0 1 2 3 4,$(word 1,$(GCC_VERSION))))
+            NSS_DISABLE_SSE3 = 1
+            NSS_DISABLE_SSE4_1 = 1
+            NSS_DISABLE_SSE4_2 = 1
         endif
     endif
 endif # lcc
@@ -592,12 +593,21 @@ ifndef HAVE_INT128_SUPPORT
     DEFINES += -DKRML_VERIFIED_UINT128
 endif
 
+ifdef SUPPORTS_VALE_CURVE25519
+    VERIFIED_SRCS += Hacl_Curve25519_64.c
+    DEFINES += -DHACL_CAN_COMPILE_INLINE_ASM
+endif
+
 ifndef NSS_DISABLE_CHACHAPOLY
     ifeq ($(CPU_ARCH),x86_64)
         ifndef NSS_DISABLE_AVX2
             EXTRA_SRCS += Hacl_Poly1305_256.c Hacl_Chacha20_Vec256.c Hacl_Chacha20Poly1305_256.c
+            DEFINES += -DHACL_CAN_COMPILE_VEC256
         endif # NSS_DISABLE_AVX2
-        EXTRA_SRCS += Hacl_Poly1305_128.c Hacl_Chacha20_Vec128.c Hacl_Chacha20Poly1305_128.c
+        ifndef NSS_DISABLE_SSE3
+            EXTRA_SRCS += Hacl_Poly1305_128.c Hacl_Chacha20_Vec128.c Hacl_Chacha20Poly1305_128.c
+            DEFINES += -DHACL_CAN_COMPILE_VEC128 
+        endif
     endif # x86_64
 
     VERIFIED_SRCS += Hacl_Poly1305_32.c Hacl_Chacha20.c Hacl_Chacha20Poly1305_32.c
@@ -639,7 +649,7 @@ vpath %.c mpi ecl verified deprecated
 vpath %.S mpi ecl
 vpath %.s mpi ecl
 vpath %.asm mpi ecl
-INCLUDES += -Impi -Iecl -Iverified -Iverified/kremlin/include -Iverified/kremlin/kremlib/dist/minimal -Ideprecated
+INCLUDES += -Impi -Iecl -Iverified -Iverified/internal -Iverified/karamel/include -Iverified/karamel/krmllib/dist/minimal -Ideprecated
 
 
 DEFINES += -DMP_API_COMPATIBLE
@@ -789,12 +799,12 @@ $(OBJDIR)/$(PROG_PREFIX)chacha20poly1305-ppc$(OBJ_SUFFIX): CFLAGS += -mcrypto -m
 endif
 endif
 
-$(OBJDIR)/$(PROG_PREFIX)Hacl_Chacha20_Vec128$(OBJ_SUFFIX): CFLAGS += -mssse3 -msse4.1 -msse4.2 -mavx -maes
-$(OBJDIR)/$(PROG_PREFIX)Hacl_Chacha20Poly1305_128$(OBJ_SUFFIX): CFLAGS += -mssse3 -msse4.1 -msse4.2 -mavx -maes
-$(OBJDIR)/$(PROG_PREFIX)Hacl_Poly1305_128$(OBJ_SUFFIX): CFLAGS += -mssse3 -msse4.1 -msse4.2 -mavx -maes -mpclmul
+$(OBJDIR)/$(PROG_PREFIX)Hacl_Chacha20_Vec128$(OBJ_SUFFIX): CFLAGS += -mssse3 -msse4.1 -msse4.2 -mavx
+$(OBJDIR)/$(PROG_PREFIX)Hacl_Chacha20Poly1305_128$(OBJ_SUFFIX): CFLAGS += -mssse3 -msse4.1 -msse4.2 -mavx
+$(OBJDIR)/$(PROG_PREFIX)Hacl_Poly1305_128$(OBJ_SUFFIX): CFLAGS += -mssse3 -msse4.1 -msse4.2 -mavx
 
 ifndef NSS_DISABLE_AVX2
-$(OBJDIR)/$(PROG_PREFIX)Hacl_Chacha20Poly1305_256$(OBJ_SUFFIX): CFLAGS += -mssse3 -msse4.1 -msse4.2 -mavx2 -maes
-$(OBJDIR)/$(PROG_PREFIX)Hacl_Chacha20_Vec256$(OBJ_SUFFIX): CFLAGS += -mssse3 -msse4.1 -msse4.2 -mavx -mavx2 -maes
-$(OBJDIR)/$(PROG_PREFIX)Hacl_Poly1305_256$(OBJ_SUFFIX): CFLAGS += -mssse3 -msse4.1 -msse4.2 -mavx -mavx2 -maes -mpclmul
+$(OBJDIR)/$(PROG_PREFIX)Hacl_Chacha20Poly1305_256$(OBJ_SUFFIX): CFLAGS += -mssse3 -msse4.1 -msse4.2 -mavx2
+$(OBJDIR)/$(PROG_PREFIX)Hacl_Chacha20_Vec256$(OBJ_SUFFIX): CFLAGS += -mssse3 -msse4.1 -msse4.2 -mavx -mavx2
+$(OBJDIR)/$(PROG_PREFIX)Hacl_Poly1305_256$(OBJ_SUFFIX): CFLAGS += -mssse3 -msse4.1 -msse4.2 -mavx -mavx2
 endif

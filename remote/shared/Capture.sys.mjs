@@ -65,7 +65,7 @@ capture.Format = {
  *     The canvas on which the selection from the window's framebuffer
  *     has been painted on.
  */
-capture.canvas = async function(
+capture.canvas = async function (
   win,
   browsingContext,
   left,
@@ -162,7 +162,7 @@ capture.canvas = async function(
  * @returns {string}
  *     A Base64 encoded string.
  */
-capture.toBase64 = function(canvas) {
+capture.toBase64 = function (canvas) {
   let u = canvas.toDataURL(PNG_MIME);
   return u.substring(u.indexOf(",") + 1);
 };
@@ -176,7 +176,7 @@ capture.toBase64 = function(canvas) {
  * @returns {string}
  *     A hex digest of the SHA-256 hash of the base64 encoded string.
  */
-capture.toHash = function(canvas) {
+capture.toHash = function (canvas) {
   let u = capture.toBase64(canvas);
   let buffer = new TextEncoder().encode(u);
   return crypto.subtle.digest("SHA-256", buffer).then(hash => hex(hash));

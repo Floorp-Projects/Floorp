@@ -11,7 +11,7 @@ function setOurState(data) {
 
 function getOurState() {
   var data;
-  getObjectState("bug602838", function(x) {
+  getObjectState("bug602838", function (x) {
     // x can be null if no one has set any state yet
     if (x) {
       data = x.wrappedJSObject.data;

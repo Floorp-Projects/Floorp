@@ -23,12 +23,8 @@ add_task(async function test_appid_unused() {
   await checkRpIdHash(authDataObj.rpIdHash, "example.com");
 
   // Get a new assertion.
-  let {
-    clientDataJSON,
-    authenticatorData,
-    signature,
-    extensions,
-  } = await promiseWebAuthnGetAssertion(tab, rawId, { appid });
+  let { clientDataJSON, authenticatorData, signature, extensions } =
+    await promiseWebAuthnGetAssertion(tab, rawId, { appid });
 
   ok(
     "appid" in extensions,

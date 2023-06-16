@@ -4,7 +4,7 @@
 
 "use strict";
 
-define(function(require, exports, module) {
+define(function (require, exports, module) {
   const { render } = require("devtools/client/shared/vendor/react-dom");
   const { createFactories } = require("devtools/client/shared/react-utils");
   const { MainTabbedArea } = createFactories(
@@ -184,7 +184,7 @@ define(function(require, exports, module) {
   })();
 
   const appIsReady = new Promise(resolve => {
-    render(MainTabbedArea(input), content, function() {
+    render(MainTabbedArea(input), content, function () {
       theApp = this;
       resolve();
 

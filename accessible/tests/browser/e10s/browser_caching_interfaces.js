@@ -16,7 +16,7 @@ addAccessibleTask(
     <tr><td id="cell"><a id="link" href="#">hello</a></td></tr>
   </table>
   `,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     ok(
       accDoc instanceof nsIAccessibleDocument,
       "Document has Document interface"

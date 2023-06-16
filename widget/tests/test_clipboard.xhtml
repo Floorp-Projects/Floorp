@@ -5,9 +5,9 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id=948065
 -->
 <window title="Mozilla Bug 948065"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="initAndRunTests()">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="clipboard_helper.js"/>
 
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml">
@@ -19,8 +19,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=948065
   <!-- test code goes here -->
   <script class="testbody" type="application/javascript">
   <![CDATA[
-
-  /** Test for Bug 948065 */
 
   function getLoadContext() {
     return window.docShell.QueryInterface(Ci.nsILoadContext);
@@ -48,7 +46,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=948065
     return str;
   }
 
-  function initAndRunTests() {
+  add_setup(function init() {
+    cleanupAllClipboard();
+  });
+
+  /* Test for bug 948065 */
+  add_task(function test_copy() {
     // Test copy.
     const data = "random number: " + Math.random();
     let helper = Cc['@mozilla.org/widget/clipboardhelper;1']
@@ -58,7 +61,50 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=948065
 
     Services.clipboard.emptyClipboard(Ci.nsIClipboard.kGlobalClipboard);
     is(paste(Services.clipboard), '', 'Data was successfully cleared.');
-  }
+
+    cleanupAllClipboard();
+  });
+
+  /* Tests for bug 1834073 */
+  clipboardTypes.forEach(function(clipboardType) {
+    if (clipboard.isClipboardTypeSupported(clipboardType)) {
+      add_task(function test_clipboard_apis() {
+        info(`Test clipboard apis for type ${clipboardType}`);
+
+        // Set clipboard data
+        let str;
+        try {
+          str = writeRandomStringToClipboard('text/plain', clipboardType)
+        } catch(e) {
+          ok(false, `setData should not throw error for clipboard type ${clipboardType}`);
+        }
+
+        // Test hasDataMatchingFlavors
+        try {
+          // We only support the set operation on kSelectionCache type, see
+          // bug 1835059.
+          is(clipboard.hasDataMatchingFlavors(['text/plain'], clipboardType),
+             clipboardType != clipboard.kSelectionCache,
+             `Test hasDataMatchingFlavors for clipboard type ${clipboardType}`);
+        } catch(e) {
+          ok(false, `hasDataMatchingFlavors should not throw error for clipboard type ${clipboardType}`);
+        }
+
+        // Test getData
+        let isThrow = false;
+        try {
+          is(getClipboardData('text/plain', clipboardType), str,
+             `Test getData for clipboard type ${clipboardType}`);
+        } catch(e) {
+          isThrow = true;
+        }
+        // We only support the set operation on kSelectionCache type, see
+        // bug 1835059.
+        is(isThrow, clipboardType == clipboard.kSelectionCache,
+           `Test if getData throw an error for clipboard type ${clipboardType}`);
+      });
+    }
+  });
 
   ]]>
   </script>

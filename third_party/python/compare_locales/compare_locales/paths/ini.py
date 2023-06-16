@@ -2,14 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-from six.moves.configparser import ConfigParser, NoSectionError, NoOptionError
+from configparser import ConfigParser, NoSectionError, NoOptionError
 from collections import defaultdict
 from compare_locales import util, mozpath
 from .project import ProjectConfig
 
 
-class L10nConfigParser(object):
+class L10nConfigParser:
     '''Helper class to gather application information from ini files.
 
     This class is working on synchronous open to read files or web data.
@@ -116,11 +115,9 @@ class L10nConfigParser(object):
         """Iterate over all dirs and base paths for this l10n.ini as well
         as the included ones.
         """
-        for t in self.dirsIter():
-            yield t
+        yield from self.dirsIter()
         for child in self.children:
-            for t in child.directories():
-                yield t
+            yield from child.directories()
 
     def allLocales(self):
         """Return a list of all the locales of this project"""
@@ -164,7 +161,7 @@ class SourceTreeConfigParser(L10nConfigParser):
         self.children.append(cp)
 
 
-class EnumerateApp(object):
+class EnumerateApp:
     reference = 'en-US'
 
     def __init__(self, inipath, l10nbase):

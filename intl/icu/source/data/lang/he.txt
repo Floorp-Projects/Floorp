@@ -590,6 +590,9 @@ he{
         yue{"סינית, קנטונזית"}
         zh{"סינית, מנדרינית"}
     }
+    Languages%short{
+        en_US{"אנגלית (ארה״ב)"}
+    }
     Languages%variant{
         hi_Latn{"הינגליש"}
         ps{"פושטו"}

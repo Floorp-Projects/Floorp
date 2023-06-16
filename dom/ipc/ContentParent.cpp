@@ -25,17 +25,12 @@
 #include "nsComponentManagerUtils.h"
 #include "nsIBrowserDOMWindow.h"
 
-#ifdef ACCESSIBILITY
-#  include "mozilla/a11y/PDocAccessible.h"
-#endif
 #include "GMPServiceParent.h"
 #include "HandlerServiceParent.h"
 #include "IHistory.h"
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
 #  include "mozilla/a11y/AccessibleWrap.h"
 #  include "mozilla/a11y/Compatibility.h"
-#  include "mozilla/mscom/ActCtxResource.h"
-#  include "mozilla/StaticPrefs_accessibility.h"
 #endif
 #include <map>
 #include <utility>
@@ -61,8 +56,9 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/BenchmarkStorageParent.h"
 #include "mozilla/Casting.h"
-#include "mozilla/ContentBlockingUserInteraction.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/ClipboardWriteRequestParent.h"
+#include "mozilla/ContentBlockingUserInteraction.h"
 #include "mozilla/FOGIPC.h"
 #include "mozilla/GlobalStyleSheetCache.h"
 #include "mozilla/GeckoArgs.h"
@@ -316,10 +312,6 @@
 #ifdef XP_WIN
 #  include "mozilla/widget/AudioSession.h"
 #  include "mozilla/WinDllServices.h"
-#endif
-
-#ifdef ACCESSIBILITY
-#  include "nsAccessibilityService.h"
 #endif
 
 #ifdef MOZ_CODE_COVERAGE
@@ -1695,12 +1687,10 @@ void ContentParent::Init() {
 #  if defined(XP_WIN)
     // Don't init content a11y if we detect an incompat version of JAWS in use.
     if (!mozilla::a11y::Compatibility::IsOldJAWS()) {
-      Unused << SendActivateA11y(
-          ::GetCurrentThreadId(),
-          a11y::MsaaAccessible::GetContentProcessIdFor(ChildID()));
+      Unused << SendActivateA11y();
     }
 #  else
-    Unused << SendActivateA11y(0, 0);
+    Unused << SendActivateA11y();
 #  endif
   }
 #endif  // #ifdef ACCESSIBILITY
@@ -1889,17 +1879,18 @@ bool ContentParent::ShutDownProcess(ShutDownMethod aMethod) {
     qms->AbortOperationsForProcess(mChildID);
   }
 
-  // If Close() fails with an error, we'll end up back in this function, but
-  // with aMethod = CLOSE_CHANNEL_WITH_ERROR.
-
-  if (aMethod == CLOSE_CHANNEL) {
+  if (aMethod == CLOSE_CHANNEL || aMethod == CLOSE_CHANNEL_WITH_ERROR) {
     if (!mCalledClose) {
       MaybeLogBlockShutdownDiagnostics(
           this, "ShutDownProcess: Closing channel.", __FILE__, __LINE__);
-      // Close() can only be called once: It kicks off the destruction
-      // sequence.
+      // Close()/CloseWithError() can only be called once: They kick off the
+      // destruction sequence.
       mCalledClose = true;
-      Close();
+      if (aMethod == CLOSE_CHANNEL_WITH_ERROR) {
+        CloseWithError();
+      } else {
+        Close();
+      }
     }
     result = true;
   }
@@ -2084,10 +2075,11 @@ void ContentParent::ProcessingError(Result aCode, const char* aReason) {
   if (MsgDropped == aCode) {
     return;
   }
-#ifndef FUZZING
   // Other errors are big deals.
+#ifndef FUZZING
   KillHard(aReason);
 #endif
+  ShutDownProcess(CLOSE_CHANNEL_WITH_ERROR);
 }
 
 void ContentParent::ActorDestroy(ActorDestroyReason why) {
@@ -2237,10 +2229,6 @@ void ContentParent::ActorDestroy(ActorDestroyReason why) {
   }
 
   mBlobURLs.Clear();
-
-#if defined(XP_WIN) && defined(ACCESSIBILITY)
-  a11y::MsaaAccessible::ReleaseContentProcessIdFor(ChildID());
-#endif
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   AssertNotInPool();
@@ -2654,20 +2642,6 @@ bool ContentParent::BeginSubprocessLaunch(ProcessPriority aPriority) {
   // handle and its content length, to minimize the startup time of content
   // processes.
   ::mozilla::ipc::ExportSharedJSInit(*mSubprocess, extraArgs);
-
-#if defined(XP_WIN) && defined(ACCESSIBILITY)
-  // Determining the accessibility resource ID causes problems with the sandbox,
-  // so we pass it on the command line as it is required very early in process
-  // start up. It is not required when the caching mechanism is being used.
-  if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    // The accessibility resource ID may not be set in some cases, for example
-    // in xpcshell tests.
-    auto resourceId = mscom::ActCtxResource::GetAccessibilityResourceId();
-    if (resourceId) {
-      geckoargs::sA11yResourceId.Put(resourceId, extraArgs);
-    }
-  }
-#endif
 
   // Register ContentParent as an observer for changes to any pref
   // whose prefix matches the empty string, i.e. all of them.  The
@@ -3466,16 +3440,13 @@ void ContentParent::OnVarChanged(const GfxVarUpdate& aVar) {
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvSetClipboard(
-    const IPCDataTransfer& aDataTransfer, const bool& aIsPrivateData,
-    nsIPrincipal* aRequestingPrincipal,
-    mozilla::Maybe<CookieJarSettingsArgs> aCookieJarSettingsArgs,
-    const nsContentPolicyType& aContentPolicyType,
-    nsIReferrerInfo* aReferrerInfo, const int32_t& aWhichClipboard) {
+    const IPCTransferable& aTransferable, const int32_t& aWhichClipboard) {
   // aRequestingPrincipal is allowed to be nullptr here.
 
-  if (!ValidatePrincipal(aRequestingPrincipal,
+  if (!ValidatePrincipal(aTransferable.requestingPrincipal(),
                          {ValidatePrincipalOptions::AllowNullPtr})) {
-    LogAndAssertFailedPrincipalValidationInfo(aRequestingPrincipal, __func__);
+    LogAndAssertFailedPrincipalValidationInfo(
+        aTransferable.requestingPrincipal(), __func__);
   }
 
   nsresult rv;
@@ -3486,18 +3457,10 @@ mozilla::ipc::IPCResult ContentParent::RecvSetClipboard(
       do_CreateInstance("@mozilla.org/widget/transferable;1", &rv);
   NS_ENSURE_SUCCESS(rv, IPC_OK());
   trans->Init(nullptr);
-  trans->SetReferrerInfo(aReferrerInfo);
-
-  if (aCookieJarSettingsArgs.isSome()) {
-    nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
-    net::CookieJarSettings::Deserialize(aCookieJarSettingsArgs.ref(),
-                                        getter_AddRefs(cookieJarSettings));
-    trans->SetCookieJarSettings(cookieJarSettings);
-  }
 
   rv = nsContentUtils::IPCTransferableToTransferable(
-      aDataTransfer, aIsPrivateData, aRequestingPrincipal, aContentPolicyType,
-      true /* aAddDataFlavor */, trans, true /* aFilterUnknownFlavors */);
+      aTransferable, true /* aAddDataFlavor */, trans,
+      true /* aFilterUnknownFlavors */);
   NS_ENSURE_SUCCESS(rv, IPC_OK());
 
   clipboard->SetData(trans, nullptr, aWhichClipboard);
@@ -3534,7 +3497,7 @@ static Result<nsCOMPtr<nsITransferable>, nsresult> CreateTransferable(
 
 mozilla::ipc::IPCResult ContentParent::RecvGetClipboard(
     nsTArray<nsCString>&& aTypes, const int32_t& aWhichClipboard,
-    IPCDataTransfer* aDataTransfer) {
+    IPCTransferableData* aTransferableData) {
   nsresult rv;
   // Retrieve clipboard
   nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &rv));
@@ -3552,8 +3515,8 @@ mozilla::ipc::IPCResult ContentParent::RecvGetClipboard(
   nsCOMPtr<nsITransferable> trans = result.unwrap();
   clipboard->GetData(trans, aWhichClipboard);
 
-  nsContentUtils::TransferableToIPCTransferable(
-      trans, aDataTransfer, true /* aInSyncMessage */, this);
+  nsContentUtils::TransferableToIPCTransferableData(
+      trans, aTransferableData, true /* aInSyncMessage */, this);
   return IPC_OK();
 }
 
@@ -3630,15 +3593,25 @@ mozilla::ipc::IPCResult ContentParent::RecvGetClipboardAsync(
   // Get data from clipboard
   nsCOMPtr<nsITransferable> trans = result.unwrap();
   clipboard->AsyncGetData(trans, nsIClipboard::kGlobalClipboard)
-      ->Then(GetMainThreadSerialEventTarget(), __func__,
-             [trans, aResolver, self = RefPtr{this}](
-                 GenericPromise::ResolveOrRejectValue&& aValue) {
-               IPCDataTransfer ipcDataTransfer;
-               nsContentUtils::TransferableToIPCTransferable(
-                   trans, &ipcDataTransfer, false /* aInSyncMessage */, self);
-               aResolver(std::move(ipcDataTransfer));
-             });
+      ->Then(
+          GetMainThreadSerialEventTarget(), __func__,
+          [trans, aResolver,
+           self = RefPtr{this}](GenericPromise::ResolveOrRejectValue&& aValue) {
+            IPCTransferableData ipcTransferableData;
+            nsContentUtils::TransferableToIPCTransferableData(
+                trans, &ipcTransferableData, false /* aInSyncMessage */, self);
+            aResolver(std::move(ipcTransferableData));
+          });
   return IPC_OK();
+}
+
+already_AddRefed<PClipboardWriteRequestParent>
+ContentParent::AllocPClipboardWriteRequestParent(
+    const int32_t& aClipboardType) {
+  RefPtr<ClipboardWriteRequestParent> request =
+      MakeAndAddRef<ClipboardWriteRequestParent>(this);
+  request->Init(aClipboardType);
+  return request.forget();
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvPlaySound(nsIURI* aURI) {
@@ -4080,12 +4053,10 @@ ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
       // Don't init content a11y if we detect an incompat version of JAWS in
       // use.
       if (!mozilla::a11y::Compatibility::IsOldJAWS()) {
-        Unused << SendActivateA11y(
-            ::GetCurrentThreadId(),
-            a11y::MsaaAccessible::GetContentProcessIdFor(ChildID()));
+        Unused << SendActivateA11y();
       }
 #  else
-      Unused << SendActivateA11y(0, 0);
+      Unused << SendActivateA11y();
 #  endif
     } else {
       // If possible, shut down accessibility in content process when
@@ -4546,6 +4517,7 @@ void ContentParent::KillHard(const char* aReason) {
   ProcessHandle otherProcessHandle;
   if (!base::OpenProcessHandle(OtherPid(), &otherProcessHandle)) {
     NS_ERROR("Failed to open child process when attempting kill.");
+    ShutDownProcess(CLOSE_CHANNEL_WITH_ERROR);
     return;
   }
 
@@ -4565,6 +4537,10 @@ void ContentParent::KillHard(const char* aReason) {
          mSubprocess ? (uintptr_t)mSubprocess->GetChildProcessHandle() : -1));
     mSubprocess->SetAlreadyDead();
   }
+
+  // After we've killed the remote process, also ensure we close the IPC channel
+  // with an error to immediately stop all IPC communication on this channel.
+  ShutDownProcess(CLOSE_CHANNEL_WITH_ERROR);
 
   // EnsureProcessTerminated has responsibilty for closing otherProcessHandle.
   XRE_GetIOMessageLoop()->PostTask(
@@ -5459,7 +5435,7 @@ void ContentParent::MaybeInvokeDragSession(BrowserParent* aParent) {
     nsCOMPtr<nsIDragSession> session;
     dragService->GetCurrentSession(getter_AddRefs(session));
     if (session) {
-      nsTArray<IPCDataTransfer> dataTransfers;
+      nsTArray<IPCTransferableData> ipcTransferables;
       RefPtr<DataTransfer> transfer = session->GetDataTransfer();
       if (!transfer) {
         // Pass eDrop to get DataTransfer with external
@@ -5474,8 +5450,8 @@ void ContentParent::MaybeInvokeDragSession(BrowserParent* aParent) {
       nsCOMPtr<nsILoadContext> lc =
           aParent ? aParent->GetLoadContext() : nullptr;
       nsCOMPtr<nsIArray> transferables = transfer->GetTransferables(lc);
-      nsContentUtils::TransferablesToIPCTransferables(
-          transferables, dataTransfers, false, this);
+      nsContentUtils::TransferablesToIPCTransferableDatas(
+          transferables, ipcTransferables, false, this);
       uint32_t action;
       session->GetDragAction(&action);
 
@@ -5484,7 +5460,7 @@ void ContentParent::MaybeInvokeDragSession(BrowserParent* aParent) {
       RefPtr<WindowContext> sourceTopWC;
       session->GetSourceTopWindowContext(getter_AddRefs(sourceTopWC));
       mozilla::Unused << SendInvokeDragSession(
-          sourceWC, sourceTopWC, std::move(dataTransfers), action);
+          sourceWC, sourceTopWC, std::move(ipcTransferables), action);
     }
   }
 }
@@ -6271,45 +6247,6 @@ ContentParent::RecvUnstoreAndBroadcastBlobURLUnregistration(
   BroadcastBlobURLUnregistration(aURI, aPrincipal, this);
   mBlobURLs.RemoveElement(aURI);
   return IPC_OK();
-}
-
-mozilla::ipc::IPCResult ContentParent::RecvGetA11yContentId(
-    uint32_t* aContentId) {
-#if defined(XP_WIN) && defined(ACCESSIBILITY)
-  *aContentId = a11y::MsaaAccessible::GetContentProcessIdFor(ChildID());
-  MOZ_ASSERT(*aContentId);
-  return IPC_OK();
-#else
-  return IPC_FAIL_NO_REASON(this);
-#endif
-}
-
-mozilla::ipc::IPCResult ContentParent::RecvA11yHandlerControl(
-    const uint32_t& aPid, const IHandlerControlHolder& aHandlerControl) {
-#if defined(XP_WIN) && defined(ACCESSIBILITY)
-  MOZ_ASSERT(!aHandlerControl.IsNull());
-  RefPtr<IHandlerControl> proxy(aHandlerControl.Get());
-  a11y::AccessibleWrap::SetHandlerControl(aPid, std::move(proxy));
-  return IPC_OK();
-#else
-  return IPC_FAIL_NO_REASON(this);
-#endif
-}
-
-bool ContentParent::HandleWindowsMessages(const Message& aMsg) const {
-  MOZ_ASSERT(aMsg.is_sync());
-
-#ifdef ACCESSIBILITY
-  // a11y messages can be triggered by windows messages, which means if we
-  // allow handling windows messages while we wait for the response to a sync
-  // a11y message we can reenter the ipc message sending code.
-  if (a11y::PDocAccessible::PDocAccessibleStart < aMsg.type() &&
-      a11y::PDocAccessible::PDocAccessibleEnd > aMsg.type()) {
-    return false;
-  }
-#endif
-
-  return true;
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvGetFilesRequest(
@@ -7293,8 +7230,7 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateBrowsingContext(
     return IPC_FAIL(this, "Unrelated context from child in stale group");
   }
 
-  BrowsingContext::CreateFromIPC(std::move(aInit), group, this);
-  return IPC_OK();
+  return BrowsingContext::CreateFromIPC(std::move(aInit), group, this);
 }
 
 bool ContentParent::CheckBrowsingContextEmbedder(CanonicalBrowsingContext* aBC,
@@ -7653,11 +7589,6 @@ mozilla::ipc::IPCResult ContentParent::RecvBlurToParent(
   CanonicalBrowsingContext* focusedBrowsingContext =
       aFocusedBrowsingContext.get_canonical();
 
-  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
-  if (!cpm) {
-    return IPC_OK();
-  }
-
   // If aBrowsingContextToClear and aAncestorBrowsingContextToFocusHandled
   // didn't get handled in the process that sent this IPC message and they
   // aren't in the same process as aFocusedBrowsingContext, we need to split
@@ -7675,21 +7606,25 @@ mozilla::ipc::IPCResult ContentParent::RecvBlurToParent(
        aBrowsingContextToClear.get_canonical()->OwnerProcessId())) {
     MOZ_RELEASE_ASSERT(!ancestorDifferent,
                        "This combination is not supposed to happen.");
-    ContentParent* cp = cpm->GetContentProcessById(ContentParentId(
-        aBrowsingContextToClear.get_canonical()->OwnerProcessId()));
-    Unused << cp->SendSetFocusedElement(aBrowsingContextToClear, false);
+    if (ContentParent* cp =
+            aBrowsingContextToClear.get_canonical()->GetContentParent()) {
+      Unused << cp->SendSetFocusedElement(aBrowsingContextToClear, false);
+    }
   } else if (ancestorDifferent) {
-    ContentParent* cp = cpm->GetContentProcessById(ContentParentId(
-        aAncestorBrowsingContextToFocus.get_canonical()->OwnerProcessId()));
-    Unused << cp->SendSetFocusedElement(aAncestorBrowsingContextToFocus, true);
+    if (ContentParent* cp = aAncestorBrowsingContextToFocus.get_canonical()
+                                ->GetContentParent()) {
+      Unused << cp->SendSetFocusedElement(aAncestorBrowsingContextToFocus,
+                                          true);
+    }
   }
 
-  ContentParent* cp = cpm->GetContentProcessById(
-      ContentParentId(focusedBrowsingContext->OwnerProcessId()));
-  Unused << cp->SendBlurToChild(aFocusedBrowsingContext,
-                                aBrowsingContextToClear,
-                                aAncestorBrowsingContextToFocus,
-                                aIsLeavingDocument, aAdjustWidget, aActionId);
+  if (ContentParent* cp = focusedBrowsingContext->GetContentParent()) {
+    Unused << cp->SendBlurToChild(aFocusedBrowsingContext,
+                                  aBrowsingContextToClear,
+                                  aAncestorBrowsingContextToFocus,
+                                  aIsLeavingDocument, aAdjustWidget, aActionId);
+  }
+
   return IPC_OK();
 }
 

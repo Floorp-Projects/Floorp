@@ -6,8 +6,8 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 const { PasswordFileMigrator } = ChromeUtils.importESModule(
   "resource:///modules/FileMigrators.sys.mjs"
 );
-const { LoginCSVImport } = ChromeUtils.import(
-  "resource://gre/modules/LoginCSVImport.jsm"
+const { LoginCSVImport } = ChromeUtils.importESModule(
+  "resource://gre/modules/LoginCSVImport.sys.mjs"
 );
 const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"

@@ -4,7 +4,7 @@
 "use strict";
 
 function checkForPrompt(prefVal) {
-  return async function() {
+  return async function () {
     await SpecialPowers.pushPrefEnv({
       set: [
         ["privacy.history.custom", true],

@@ -154,7 +154,7 @@ decorate_task(
     });
     sinon
       .stub(action, "chooseBranch")
-      .callsFake(async function(slug, branches) {
+      .callsFake(async function (slug, branches) {
         return branches[0];
       });
 
@@ -327,7 +327,7 @@ decorate_task(
     });
     action.chooseBranch = sinon
       .stub()
-      .callsFake(async function(slug, branches) {
+      .callsFake(async function (slug, branches) {
         return branches[0];
       });
 
@@ -454,7 +454,7 @@ decorate_task(
     const action = new PreferenceExperimentAction();
     sinon
       .stub(action, "chooseBranch")
-      .callsFake(async function(slug, branches) {
+      .callsFake(async function (slug, branches) {
         return branches[0];
       });
     await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);

@@ -32,7 +32,7 @@ inline const char* GetFunctionNameBytes(JSContext* cx, JSFunction* fun,
 
 /* static */
 inline JSFunction* JSFunction::create(JSContext* cx, js::gc::AllocKind kind,
-                                      js::gc::InitialHeap heap,
+                                      js::gc::Heap heap,
                                       js::Handle<js::SharedShape*> shape) {
   MOZ_ASSERT(kind == js::gc::AllocKind::FUNCTION ||
              kind == js::gc::AllocKind::FUNCTION_EXTENDED);

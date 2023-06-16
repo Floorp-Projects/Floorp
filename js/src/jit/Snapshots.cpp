@@ -12,7 +12,7 @@
 #endif
 #include "jit/MIR.h"
 #include "jit/Recover.h"
-#include "vm/Printer.h"
+#include "js/Printer.h"
 
 using namespace js;
 using namespace js::jit;

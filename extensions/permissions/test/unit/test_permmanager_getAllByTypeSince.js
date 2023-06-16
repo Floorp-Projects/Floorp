@@ -18,12 +18,14 @@ function check_enumerator(prefix, from, permissions) {
 add_task(async function test() {
   let pm = Services.perms;
 
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    "http://example.com"
-  );
-  let subPrincipal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    "http://sub.example.com"
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      "http://example.com"
+    );
+  let subPrincipal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      "http://sub.example.com"
+    );
 
   check_enumerator("test/", 0, []);
 

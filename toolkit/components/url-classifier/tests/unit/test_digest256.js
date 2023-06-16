@@ -26,7 +26,7 @@ function registerTableUpdate(aTable, aFilename) {
     // process an update request.
     gTables[aTable].push(redirectUrl);
 
-    gHttpServ.registerPathHandler(redirectPath, function(request, response) {
+    gHttpServ.registerPathHandler(redirectPath, function (request, response) {
       info("Mock safebrowsing server handling request for " + redirectPath);
       let contents = readFileToString(aFilename);
       response.setHeader(
@@ -59,7 +59,7 @@ function run_test() {
   gHttpServ = new HttpServer();
   gHttpServ.registerDirectory("/", do_get_cwd());
 
-  gHttpServ.registerPathHandler("/downloads", function(request, response) {
+  gHttpServ.registerPathHandler("/downloads", function (request, response) {
     let blob = processUpdateRequest();
     response.setHeader(
       "Content-Type",

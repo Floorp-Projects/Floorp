@@ -100,11 +100,11 @@ bool OngoingEarlyHints::Add(const PreloadHashKey& aKey,
 }
 
 void OngoingEarlyHints::RegisterLinksAndGetConnectArgs(
-    nsTArray<EarlyHintConnectArgs>& aOutLinks) {
+    dom::ContentParentId aCpId, nsTArray<EarlyHintConnectArgs>& aOutLinks) {
   // register all channels before returning
   for (auto& preload : mPreloaders) {
     EarlyHintConnectArgs args;
-    if (preload->Register(args)) {
+    if (preload->Register(aCpId, args)) {
       aOutLinks.AppendElement(std::move(args));
     }
   }
@@ -427,7 +427,14 @@ void EarlyHintPreloader::SetLinkHeader(const LinkHeader& aLinkHeader) {
   mConnectArgs.link() = aLinkHeader;
 }
 
-bool EarlyHintPreloader::Register(EarlyHintConnectArgs& aOut) {
+bool EarlyHintPreloader::IsFromContentParent(dom::ContentParentId aCpId) const {
+  return aCpId == mCpId;
+}
+
+bool EarlyHintPreloader::Register(dom::ContentParentId aCpId,
+                                  EarlyHintConnectArgs& aOut) {
+  mCpId = aCpId;
+
   // Set minimum delay of 1ms to always start the timer after the function call
   // completed.
   nsresult rv = NS_NewTimerWithCallback(
@@ -461,7 +468,7 @@ nsresult EarlyHintPreloader::CancelChannel(nsresult aStatus,
   }
   if (aDeleteEntry) {
     RefPtr<EarlyHintRegistrar> registrar = EarlyHintRegistrar::GetOrCreate();
-    registrar->DeleteEntry(mConnectArgs.earlyHintPreloaderId());
+    registrar->DeleteEntry(mCpId, mConnectArgs.earlyHintPreloaderId());
   }
   // clear redirect channel in case this channel is cleared between the call of
   // EarlyHintPreloader::AsyncOnChannelRedirect and
@@ -499,7 +506,7 @@ void EarlyHintPreloader::OnParentReady(nsIParentChannel* aParent) {
   }
 
   RefPtr<EarlyHintRegistrar> registrar = EarlyHintRegistrar::GetOrCreate();
-  registrar->DeleteEntry(mConnectArgs.earlyHintPreloaderId());
+  registrar->DeleteEntry(mCpId, mConnectArgs.earlyHintPreloaderId());
 
   if (mOnStartRequestCalled) {
     SetParentChannel();
@@ -740,7 +747,7 @@ EarlyHintPreloader::Notify(nsITimer* timer) {
   RefPtr<EarlyHintPreloader> deathGrip(this);
 
   RefPtr<EarlyHintRegistrar> registrar = EarlyHintRegistrar::GetOrCreate();
-  registrar->DeleteEntry(mConnectArgs.earlyHintPreloaderId());
+  registrar->DeleteEntry(mCpId, mConnectArgs.earlyHintPreloaderId());
 
   mTimer = nullptr;
   mRedirectChannel = nullptr;

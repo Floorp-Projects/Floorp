@@ -1,25 +1,60 @@
 {
   "name": "@puppeteer/browsers",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Download and launch browsers",
   "scripts": {
+    "build:docs": "wireit",
     "build": "wireit",
     "build:test": "wireit",
-    "clean": "tsc --build --clean && rimraf lib",
+    "clean": "tsc --build --clean && rm -rf lib",
     "test": "wireit"
   },
   "bin": {
-    "@puppeteer/browsers": "lib/cjs/browsers.js"
+    "@puppeteer/browsers": "lib/cjs/main-cli.js"
+  },
+  "main": "./lib/cjs/main.js",
+  "module": "./lib/esm/main.js",
+  "type": "commonjs",
+  "exports": {
+    ".": {
+      "import": "./lib/esm/main.js",
+      "require": "./lib/cjs/main.js"
+    }
   },
   "wireit": {
     "build": {
-      "command": "tsc -b",
+      "command": "tsc -b && tsx ../../tools/chmod.ts 755 lib/cjs/main-cli.js lib/esm/main-cli.js",
       "files": [
         "src/**/*.ts",
         "tsconfig.json"
       ],
+      "clean": "if-file-deleted",
       "output": [
-        "lib/**"
+        "lib/**",
+        "!lib/esm/package.json"
+      ],
+      "dependencies": [
+        "generate:package-json"
+      ]
+    },
+    "generate:package-json": {
+      "command": "tsx ../../tools/generate_module_package_json.ts lib/esm/package.json",
+      "files": [
+        "../../tools/generate_module_package_json.ts"
+      ],
+      "output": [
+        "lib/esm/package.json"
+      ]
+    },
+    "build:docs": {
+      "command": "api-extractor run --local --config \"./api-extractor.docs.json\"",
+      "files": [
+        "api-extractor.docs.json",
+        "lib/esm/main.d.ts",
+        "tsconfig.json"
+      ],
+      "dependencies": [
+        "build"
       ]
     },
     "build:test": {
@@ -32,11 +67,12 @@
         "test/build/**"
       ],
       "dependencies": [
-        "build"
+        "build",
+        "../testserver:build"
       ]
     },
     "test": {
-      "command": "mocha",
+      "command": "node tools/downloadTestBrowsers.mjs && cross-env DEBUG=puppeteer:* mocha",
       "files": [
         ".mocharc.cjs"
       ],
@@ -56,7 +92,7 @@
   "author": "The Chromium Authors",
   "license": "Apache-2.0",
   "engines": {
-    "node": ">=14.1.0"
+    "node": ">=16.0.0"
   },
   "files": [
     "lib",
@@ -70,7 +106,7 @@
     "proxy-from-env": "1.1.0",
     "tar-fs": "2.1.1",
     "unbzip2-stream": "1.4.3",
-    "yargs": "17.7.0"
+    "yargs": "17.7.1"
   },
   "devDependencies": {
     "@types/node": "^14.15.0",

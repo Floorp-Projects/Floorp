@@ -33,6 +33,7 @@ let gBrowserView;
 let gBrowserBrowser;
 let gIframeView;
 let gIframeIframe;
+let gToggle;
 
 async function openPopup() {
   let shown = BrowserTestUtils.waitForEvent(gMainView, "ViewShown");
@@ -69,7 +70,7 @@ async function expectFocusAfterKey(aKey, aFocus) {
   ok(true, aFocus.id + " focused after " + aKey + " pressed");
 }
 
-add_setup(async function() {
+add_setup(async function () {
   // This shouldn't be necessary - but it is, because we use same-process frames.
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1565276 covers improving this.
   await SpecialPowers.pushPrefEnv({
@@ -149,6 +150,9 @@ add_setup(async function() {
   gLink.innerText = "gLink";
   gLink.id = "gLink";
   gMainView.appendChild(gLink);
+  await window.ensureCustomElements("moz-toggle");
+  gToggle = document.createElement("moz-toggle");
+  gMainView.appendChild(gToggle);
 
   gMainTabOrder = [
     gMainButton1,
@@ -160,6 +164,7 @@ add_setup(async function() {
     gCheckbox,
     gNamespacedLink,
     gLink,
+    gToggle,
   ];
   gMainArrowOrder = [
     gMainButton1,
@@ -168,6 +173,7 @@ add_setup(async function() {
     gCheckbox,
     gNamespacedLink,
     gLink,
+    gToggle,
   ];
 
   gSubView = document.createXULElement("panelview");
@@ -433,7 +439,7 @@ add_task(async function testDynamicButton() {
 add_task(async function testActivation() {
   function checkActivated(elem, activationFn, reason) {
     let activated = false;
-    elem.onclick = function() {
+    elem.onclick = function () {
       activated = true;
     };
     activationFn();
@@ -467,7 +473,7 @@ add_task(async function testActivationMousedown() {
   await openPopup();
   await expectFocusAfterKey("ArrowDown", gMainButton1);
   let activated = false;
-  gMainButton1.onmousedown = function() {
+  gMainButton1.onmousedown = function () {
     activated = true;
   };
   EventUtils.synthesizeKey(" ");
@@ -534,7 +540,7 @@ add_task(async function testArowsContext() {
   await expectFocusAfterKey("ArrowDown", gMainButton1);
   let shown = BrowserTestUtils.waitForEvent(gMainContext, "popupshown");
   // There's no cross-platform way to open a context menu from the keyboard.
-  gMainContext.openPopup();
+  gMainContext.openPopup(gMainButton1);
   await shown;
   let item = gMainContext.children[0];
   ok(
@@ -556,5 +562,21 @@ add_task(async function testArowsContext() {
   let hidden = BrowserTestUtils.waitForEvent(gMainContext, "popuphidden");
   gMainContext.hidePopup();
   await hidden;
+  await hidePopup();
+});
+
+add_task(async function testMozToggle() {
+  await openPopup();
+  is(gToggle.pressed, false, "The toggle is not pressed initially.");
+  // Focus the toggle via keyboard navigation.
+  while (document.activeElement !== gToggle) {
+    EventUtils.synthesizeKey("KEY_Tab");
+  }
+  EventUtils.synthesizeKey(" ");
+  await gToggle.updateComplete;
+  is(gToggle.pressed, true, "Toggle pressed state changes via spacebar.");
+  EventUtils.synthesizeKey("KEY_Enter");
+  await gToggle.updateComplete;
+  is(gToggle.pressed, false, "Toggle pressed state changes via enter.");
   await hidePopup();
 });

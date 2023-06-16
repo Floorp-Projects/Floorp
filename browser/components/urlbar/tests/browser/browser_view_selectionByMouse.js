@@ -10,7 +10,7 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource:///modules/UrlbarProviderQuickActions.sys.mjs",
 });
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.urlbar.quickactions.enabled", true],
@@ -39,7 +39,7 @@ add_setup(async function() {
       ),
   });
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     UrlbarProviderQuickActions.removeAction("test-addons");
     UrlbarProviderQuickActions.removeAction("test-downloads");
   });

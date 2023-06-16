@@ -114,7 +114,7 @@ pub trait FidoDevice: HIDDevice {
     ) -> Result<Req::Output, HIDError> {
         debug!("sending {:?} to {:?}", msg, self);
 
-        let mut data = msg.wire_format(self)?;
+        let mut data = msg.wire_format()?;
         let mut buf: Vec<u8> = Vec::with_capacity(data.len() + 1);
         // CTAP2 command
         buf.push(Req::command() as u8);
@@ -142,7 +142,7 @@ pub trait FidoDevice: HIDDevice {
         keep_alive: &dyn Fn() -> bool,
     ) -> Result<Req::Output, HIDError> {
         debug!("sending {:?} to {:?}", msg, self);
-        let (data, add_info) = msg.ctap1_format(self)?;
+        let (data, add_info) = msg.ctap1_format()?;
 
         while keep_alive() {
             // sendrecv will not block with a CTAP1 device
@@ -221,12 +221,7 @@ pub trait FidoDevice: HIDDevice {
         } else {
             // We need to fake a blink-request, because FIDO2.0 forgot to specify one
             // See: https://fidoalliance.org/specs/fido-v2.0-ps-20190130/fido-client-to-authenticator-protocol-v2.0-ps-20190130.html#using-pinToken-in-authenticatorMakeCredential
-            let msg = match dummy_make_credentials_cmd() {
-                Ok(m) => m,
-                Err(_) => {
-                    return BlinkResult::Cancelled;
-                }
-            };
+            let msg = dummy_make_credentials_cmd();
             info!("Trying to blink: {:?}", &msg);
             // We don't care about the Ok-value, just if it is Ok or not
             self.send_msg_cancellable(&msg, keep_alive).map(|_| ())

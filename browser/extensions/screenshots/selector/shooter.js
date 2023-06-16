@@ -7,7 +7,7 @@
 
 "use strict";
 
-this.shooter = (function() {
+this.shooter = (function () {
   // eslint-disable-line no-unused-vars
   const exports = {};
   const { AbstractShot } = shot;
@@ -63,7 +63,7 @@ this.shooter = (function() {
     );
   }
 
-  exports.downloadShot = function(selectedPos, previewDataUrl, type) {
+  exports.downloadShot = function (selectedPos, previewDataUrl, type) {
     const shotPromise = previewDataUrl
       ? Promise.resolve(previewDataUrl)
       : hideUIFrame();
@@ -90,7 +90,7 @@ this.shooter = (function() {
     );
   };
 
-  exports.preview = function(selectedPos, type) {
+  exports.preview = function (selectedPos, type) {
     catcher.watchPromise(
       hideUIFrame().then(dataUrl => {
         screenshotPage(dataUrl, selectedPos, type, url => {
@@ -102,7 +102,7 @@ this.shooter = (function() {
   };
 
   let copyInProgress = null;
-  exports.copyShot = function(selectedPos, previewDataUrl, type) {
+  exports.copyShot = function (selectedPos, previewDataUrl, type) {
     // This is pretty slow. We'll ignore additional user triggered copy events
     // while it is in progress.
     if (copyInProgress) {
@@ -137,7 +137,7 @@ this.shooter = (function() {
     );
   };
 
-  exports.sendEvent = function(...args) {
+  exports.sendEvent = function (...args) {
     const maybeOptions = args[args.length - 1];
 
     if (typeof maybeOptions === "object") {

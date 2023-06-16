@@ -4,13 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 import { PrivateBrowsingUtils } from "resource://gre/modules/PrivateBrowsingUtils.sys.mjs";
-
-const { RemotePageChild } = ChromeUtils.import(
-  "resource://gre/actors/RemotePageChild.jsm"
-);
+import { RemotePageChild } from "resource://gre/actors/RemotePageChild.sys.mjs";
 
 const lazy = {};
 

@@ -10,7 +10,7 @@
 const TEST_PAGE = `<link rel="stylesheet" type="text/css" href="http://mochi.test:1234/invalid.port">`;
 const TEST_URL = `data:text/html;charset=utf8,${TEST_PAGE}`;
 
-add_task(async function() {
+add_task(async function () {
   info("Create a test tab and open the toolbox");
   const toolbox = await openNewTabAndToolbox(TEST_URL, "styleeditor");
   const doc = toolbox.doc;

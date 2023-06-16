@@ -102,8 +102,7 @@ const TEST_DATA = [
     ],
   },
   {
-    desc:
-      "Moving a child in an element that's not displayed should not refresh",
+    desc: "Moving a child in an element that's not displayed should not refresh",
     setup() {},
     async run({ walker }) {
       // Re-append #i1211 as a last child of #i2.
@@ -122,8 +121,7 @@ const TEST_DATA = [
     ],
   },
   {
-    desc:
-      "Moving an undisplayed child in a displayed element should not refresh",
+    desc: "Moving an undisplayed child in a displayed element should not refresh",
     setup() {},
     async run({ walker }) {
       // Re-append #i2 in body (move it to the end).
@@ -210,7 +208,7 @@ const TEST_DATA = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URI);
   const breadcrumbs = inspector.panelDoc.getElementById(
     "inspector-breadcrumbs"

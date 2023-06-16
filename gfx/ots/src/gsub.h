@@ -6,27 +6,26 @@
 #define OTS_GSUB_H_
 
 #include "ots.h"
+#include "layout.h"
 
 namespace ots {
 
-class OpenTypeGSUB : public Table {
+class OpenTypeGSUB : public OpenTypeLayoutTable {
  public:
   explicit OpenTypeGSUB(Font *font, uint32_t tag)
-      : Table(font, tag, tag),
-        num_lookups(0),
-        m_data(NULL),
-        m_length(0) {
-  }
+      : OpenTypeLayoutTable(font, tag, tag) { }
 
-  bool Parse(const uint8_t *data, size_t length);
-  bool Serialize(OTSStream *out);
+ private:
+  bool ValidLookupSubtableType(uint16_t lookup_type,
+                               bool extension = false) const;
+  bool ParseLookupSubtable(const uint8_t *data, const size_t length,
+                           const uint16_t lookup_type);
 
-  // Number of lookups in GPSUB table
-  uint16_t num_lookups;
-
- //private:
-  const uint8_t *m_data;
-  size_t m_length;
+  bool ParseSingleSubstitution(const uint8_t *data, const size_t length);
+  bool ParseMutipleSubstitution(const uint8_t *data, const size_t length);
+  bool ParseAlternateSubstitution(const uint8_t *data, const size_t length);
+  bool ParseLigatureSubstitution(const uint8_t *data, const size_t length);
+  bool ParseReverseChainingContextSingleSubstitution(const uint8_t *data, const size_t length);
 };
 
 }  // namespace ots

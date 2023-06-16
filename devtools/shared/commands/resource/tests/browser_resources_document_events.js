@@ -5,7 +5,7 @@
 
 // Test the ResourceCommand API around DOCUMENT_EVENT
 
-add_task(async function() {
+add_task(async function () {
   await testDocumentEventResources();
   await testDocumentEventResourcesWithIgnoreExistingResources();
   await testDomCompleteWithOverloadedConsole();
@@ -226,12 +226,14 @@ async function testIframeNavigation() {
 
   info("Navigate the iframe to another process (if fission is enabled)");
   documentEvents = [];
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [secondPageUrl], function(
-    url
-  ) {
-    const iframe = content.document.querySelector("iframe");
-    iframe.src = url;
-  });
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [secondPageUrl],
+    function (url) {
+      const iframe = content.document.querySelector("iframe");
+      iframe.src = url;
+    }
+  );
 
   // We are switching to a new target only when fission is enabled...
   if (isFissionEnabled() || isEveryFrameTargetEnabled()) {
@@ -332,12 +334,8 @@ async function testBfCacheNavigation() {
     4,
     "There is no duplicated event and only the 4 expected DOCUMENT_EVENT states"
   );
-  const [
-    willNavigateEvent,
-    loadingEvent,
-    interactiveEvent,
-    completeEvent,
-  ] = documentEvents;
+  const [willNavigateEvent, loadingEvent, interactiveEvent, completeEvent] =
+    documentEvents;
 
   is(
     willNavigateEvent.name,
@@ -443,12 +441,8 @@ async function testCrossOriginNavigation() {
     4,
     "There is no duplicated event and only the 4 expected DOCUMENT_EVENT states"
   );
-  const [
-    willNavigateEvent,
-    loadingEvent,
-    interactiveEvent,
-    completeEvent,
-  ] = documentEvents;
+  const [willNavigateEvent, loadingEvent, interactiveEvent, completeEvent] =
+    documentEvents;
 
   is(
     willNavigateEvent.name,
@@ -542,12 +536,8 @@ async function testDomCompleteWithWindowStop() {
 
   const tab = await addTab("data:text/html,foo");
 
-  const {
-    commands,
-    client,
-    resourceCommand,
-    targetCommand,
-  } = await initResourceCommand(tab);
+  const { commands, client, resourceCommand, targetCommand } =
+    await initResourceCommand(tab);
 
   info("Check that all DOCUMENT_EVENTS are fired for the already loaded page");
   let documentEvents = [];
@@ -610,12 +600,8 @@ function assertEvents({
   expectedNewURI = gBrowser.selectedBrowser.currentURI.spec,
   ignoreWillNavigateTimestamp = false,
 }) {
-  const [
-    willNavigateEvent,
-    loadingEvent,
-    interactiveEvent,
-    completeEvent,
-  ] = documentEvents;
+  const [willNavigateEvent, loadingEvent, interactiveEvent, completeEvent] =
+    documentEvents;
   if (willNavigateEvent) {
     is(willNavigateEvent.name, "will-navigate", "Received the will-navigate");
     is(

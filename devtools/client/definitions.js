@@ -583,11 +583,14 @@ exports.ToolboxButtons = [
       }
     },
   },
-  createHighlightButton("RulersHighlighter", "rulers"),
-  createHighlightButton("MeasuringToolHighlighter", "measure"),
+  createHighlightButton(
+    ["RulersHighlighter", "ViewportSizeHighlighter"],
+    "rulers"
+  ),
+  createHighlightButton(["MeasuringToolHighlighter"], "measure"),
 ];
 
-function createHighlightButton(highlighterName, id) {
+function createHighlightButton(highlighters, id) {
   return {
     id: `command-button-${id}`,
     description: l10n(`toolbox.buttons.${id}`),
@@ -595,14 +598,20 @@ function createHighlightButton(highlighterName, id) {
       toolbox.commands.descriptorFront.isTabDescriptor,
     async onClick(event, toolbox) {
       const inspectorFront = await toolbox.target.getFront("inspector");
-      const highlighter = await inspectorFront.getOrCreateHighlighterByType(
-        highlighterName
-      );
-      if (highlighter.isShown()) {
-        return highlighter.hide();
-      }
 
-      return highlighter.show();
+      await Promise.all(
+        highlighters.map(async name => {
+          const highlighter = await inspectorFront.getOrCreateHighlighterByType(
+            name
+          );
+
+          if (highlighter.isShown()) {
+            await highlighter.hide();
+          } else {
+            await highlighter.show();
+          }
+        })
+      );
     },
     isChecked(toolbox) {
       // if the inspector doesn't exist, then the highlighter has not yet been connected
@@ -615,8 +624,10 @@ function createHighlightButton(highlighterName, id) {
         // fix this properly.
         return false;
       }
-      const highlighter = inspectorFront.getKnownHighlighter(highlighterName);
-      return highlighter && highlighter.isShown();
+
+      return highlighters.every(name =>
+        inspectorFront.getKnownHighlighter(name)?.isShown()
+      );
     },
   };
 }

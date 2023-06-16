@@ -15,10 +15,14 @@ transforms:
 kind-dependencies:
     - build
     - build-signing
+    - build-mac-signing
+    - build-mac-notarization
     - repackage
     - repackage-signing
     - shippable-l10n
     - shippable-l10n-signing
+    - shippable-l10n-mac-signing
+    - shippable-l10n-mac-notarization
     - repackage-l10n
     - repackage-signing-l10n
     - partials

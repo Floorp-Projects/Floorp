@@ -6,7 +6,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger(
     "doc-gc-breakpoint-positions.html",
     "doc-gc-breakpoint-positions.html"

@@ -13,17 +13,16 @@
 #ifndef JXL_DECODE_H_
 #define JXL_DECODE_H_
 
+#include <jxl/cms_interface.h>
+#include <jxl/codestream_header.h>
+#include <jxl/color_encoding.h>
+#include <jxl/jxl_export.h>
+#include <jxl/memory_manager.h>
+#include <jxl/parallel_runner.h>
+#include <jxl/types.h>
+#include <jxl/version.h>
 #include <stddef.h>
 #include <stdint.h>
-
-#include "jxl/cms_interface.h"
-#include "jxl/codestream_header.h"
-#include "jxl/color_encoding.h"
-#include "jxl/jxl_export.h"
-#include "jxl/memory_manager.h"
-#include "jxl/parallel_runner.h"
-#include "jxl/types.h"
-#include "jxl/version.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {

@@ -227,6 +227,21 @@ kk{
         coptic{
             monthNames{
                 format{
+                    abbreviated{
+                        "Тут",
+                        "Баба",
+                        "Хатур",
+                        "Кийяк",
+                        "Туба",
+                        "Ашмир",
+                        "Барамхат",
+                        "Барамуда",
+                        "Башанс",
+                        "Ба’уна",
+                        "’абиб",
+                        "Мисра",
+                        "Наси’",
+                    }
                     narrow{
                         "1",
                         "2",
@@ -259,6 +274,21 @@ kk{
                     }
                 }
                 stand-alone{
+                    abbreviated{
+                        "Тут",
+                        "Баба",
+                        "Хатур",
+                        "Кийяк",
+                        "Туба",
+                        "Ашмир",
+                        "Барамхат",
+                        "Барамуда",
+                        "Башанс",
+                        "Ба’уна",
+                        "’абиб",
+                        "Мисра",
+                        "Наси’",
+                    }
                     wide{
                         "Тут",
                         "Баба",
@@ -288,6 +318,12 @@ kk{
                 "G dd.MM.y",
                 "GGGGG dd.MM.y",
                 "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            DateTimePatterns%atTime{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -483,6 +519,12 @@ kk{
                 "y 'ж'. dd MMM",
                 "dd.MM.yy",
                 "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            DateTimePatterns%atTime{
                 "{1}, {0}",
                 "{1}, {0}",
                 "{1}, {0}",
@@ -696,6 +738,14 @@ kk{
             }
             eras{
                 abbreviated{
+                    "б.з.д.",
+                    "б.з.",
+                }
+                narrow{
+                    "б.з.д.",
+                    "б.з.",
+                }
+                narrow%variant{
                     "б.з.д.",
                     "б.з.",
                 }
@@ -960,6 +1010,72 @@ kk{
         hebrew{
             monthNames{
                 format{
+                    abbreviated{
+                        "Тишрей",
+                        "Хешван",
+                        "Кислев",
+                        "Тевет",
+                        "Шват",
+                        "Адар I",
+                        "Адар",
+                        "Нисан",
+                        "Ияр",
+                        "Сиван",
+                        "Тамуз",
+                        "Ав",
+                        "Элул",
+                        "Адар II",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
+                        "7",
+                    }
+                    wide{
+                        "Тишрей",
+                        "Хешван",
+                        "Кислев",
+                        "Тевет",
+                        "Шват",
+                        "Адар I",
+                        "Адар",
+                        "Нисан",
+                        "Ияр",
+                        "Сиван",
+                        "Тамуз",
+                        "Ав",
+                        "Элул",
+                        "Адар II",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "Тишрей",
+                        "Хешван",
+                        "Кислев",
+                        "Тевет",
+                        "Шват",
+                        "Адар I",
+                        "Адар",
+                        "Нисан",
+                        "Ияр",
+                        "Сиван",
+                        "Тамуз",
+                        "Ав",
+                        "Элул",
+                        "Адар II",
+                    }
                     wide{
                         "Тишрей",
                         "Хешван",
@@ -982,6 +1098,64 @@ kk{
         indian{
             monthNames{
                 format{
+                    abbreviated{
+                        "Чайтра",
+                        "Вайшакха",
+                        "Джьештха",
+                        "Ашадха",
+                        "Шравана",
+                        "Бхадрапада",
+                        "Ашвина",
+                        "Картика",
+                        "Маргаширша",
+                        "Пауша",
+                        "Магха",
+                        "Пхальгуна",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
+                    wide{
+                        "Чайтра",
+                        "Вайшакха",
+                        "Джьештха",
+                        "Ашадха",
+                        "Шравана",
+                        "Бхадрапада",
+                        "Ашвина",
+                        "Картика",
+                        "Маргаширша",
+                        "Пауша",
+                        "Магха",
+                        "Пхальгуна",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "Чайтра",
+                        "Вайшакха",
+                        "Джьештха",
+                        "Ашадха",
+                        "Шравана",
+                        "Бхадрапада",
+                        "Ашвина",
+                        "Картика",
+                        "Маргаширша",
+                        "Пауша",
+                        "Магха",
+                        "Пхальгуна",
+                    }
                     wide{
                         "Чайтра",
                         "Вайшакха",
@@ -1016,6 +1190,36 @@ kk{
                         "Қар.",
                         "Жел.",
                     }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
+                    wide{
+                        "Мұхаррам",
+                        "Сафар",
+                        "Рабиғ әл-әууәл",
+                        "Рабиғ әс-сәни",
+                        "Джумада әл-әууәл",
+                        "Жумад ас-сәни",
+                        "Раджаб",
+                        "Шағбан",
+                        "Рамадан",
+                        "Шәууәл",
+                        "Зул-Қағда",
+                        "Зул-Хиджа",
+                    }
+                }
+                stand-alone{
                     wide{
                         "Мұхаррам",
                         "Сафар",
@@ -1036,6 +1240,64 @@ kk{
         persian{
             monthNames{
                 format{
+                    abbreviated{
+                        "Фарвардин",
+                        "Ордибехешт",
+                        "Хордад",
+                        "Тир",
+                        "Мордад",
+                        "Шахривар",
+                        "Мехр",
+                        "Абан",
+                        "Азар",
+                        "Дей",
+                        "Бахман",
+                        "Эсфанд",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
+                    wide{
+                        "Фарвардин",
+                        "Ордибехешт",
+                        "Хордад",
+                        "Тир",
+                        "Мордад",
+                        "Шахривар",
+                        "Мехр",
+                        "Абан",
+                        "Азар",
+                        "Дей",
+                        "Бахман",
+                        "Эсфанд",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "Фарвардин",
+                        "Ордибехешт",
+                        "Хордад",
+                        "Тир",
+                        "Мордад",
+                        "Шахривар",
+                        "Мехр",
+                        "Абан",
+                        "Азар",
+                        "Дей",
+                        "Бахман",
+                        "Эсфанд",
+                    }
                     wide{
                         "Фарвардин",
                         "Ордибехешт",
@@ -1305,6 +1567,9 @@ kk{
         }
         hour-narrow{
             dn{"сағ"}
+            relative{
+                "0"{"осы сағат"}
+            }
             relativeTime{
                 future{
                     one{"{0} сағ. кейін"}
@@ -1318,6 +1583,9 @@ kk{
         }
         hour-short{
             dn{"сағ"}
+            relative{
+                "0"{"осы сағат"}
+            }
             relativeTime{
                 future{
                     one{"{0} сағ. кейін"}
@@ -1347,6 +1615,9 @@ kk{
         }
         minute-narrow{
             dn{"мин"}
+            relative{
+                "0"{"осы минут"}
+            }
             relativeTime{
                 future{
                     one{"{0} мин. кейін"}
@@ -1360,6 +1631,9 @@ kk{
         }
         minute-short{
             dn{"мин."}
+            relative{
+                "0"{"осы минут"}
+            }
             relativeTime{
                 future{
                     one{"{0} мин. кейін"}
@@ -1496,6 +1770,11 @@ kk{
         }
         quarter-narrow{
             dn{"ш."}
+            relative{
+                "-1"{"өткен тоқсан"}
+                "0"{"осы тоқсан"}
+                "1"{"келесі тоқсан"}
+            }
             relativeTime{
                 future{
                     one{"{0} тқс. кейін"}
@@ -1509,6 +1788,11 @@ kk{
         }
         quarter-short{
             dn{"ш."}
+            relative{
+                "-1"{"өткен тоқсан"}
+                "0"{"осы тоқсан"}
+                "1"{"келесі тоқсан"}
+            }
             relativeTime{
                 future{
                     one{"{0} тқс. кейін"}
@@ -1589,6 +1873,9 @@ kk{
         }
         second-narrow{
             dn{"с"}
+            relative{
+                "0"{"қазір"}
+            }
             relativeTime{
                 future{
                     one{"{0} сек. кейін"}
@@ -1602,6 +1889,9 @@ kk{
         }
         second-short{
             dn{"с"}
+            relative{
+                "0"{"қазір"}
+            }
             relativeTime{
                 future{
                     one{"{0} сек. кейін"}
@@ -1838,6 +2128,11 @@ kk{
         }
         week-narrow{
             dn{"ап."}
+            relative{
+                "-1"{"өткен апта"}
+                "0"{"осы апта"}
+                "1"{"келесі апта"}
+            }
             relativePeriod{"{0} аптасы"}
             relativeTime{
                 future{
@@ -1852,6 +2147,11 @@ kk{
         }
         week-short{
             dn{"ап."}
+            relative{
+                "-1"{"өткен апта"}
+                "0"{"осы апта"}
+                "1"{"келесі апта"}
+            }
             relativePeriod{"{0} аптасы"}
             relativeTime{
                 future{
@@ -1911,6 +2211,11 @@ kk{
         }
         year-narrow{
             dn{"ж."}
+            relative{
+                "-1"{"былтырғы жыл"}
+                "0"{"биылғы жыл"}
+                "1"{"келесі жыл"}
+            }
             relativeTime{
                 future{
                     one{"{0} ж. кейін"}
@@ -1924,6 +2229,11 @@ kk{
         }
         year-short{
             dn{"ж."}
+            relative{
+                "-1"{"былтырғы жыл"}
+                "0"{"биылғы жыл"}
+                "1"{"келесі жыл"}
+            }
             relativeTime{
                 future{
                     one{"{0} ж. кейін"}
@@ -1952,7 +2262,25 @@ kk{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        or-narrow{
+            2{"{0} не {1}"}
+            end{"{0}, не болмаса {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        or-short{
+            2{"{0} не {1}"}
+            end{"{0}, не болмаса {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
+            2{"{0} және {1}"}
+            end{"{0}, {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-narrow{
             2{"{0} және {1}"}
             end{"{0}, {1}"}
             middle{"{0}, {1}"}
@@ -1960,6 +2288,9 @@ kk{
         }
         standard-short{
             2{"{0} және {1}"}
+            end{"{0}, {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         unit{
             2{"{0} {1}"}
@@ -2004,13 +2335,13 @@ kk{
             givenFirst-long-addressing-informal{"{given-informal}"}
             givenFirst-long-monogram-formal{"{given-monogram-allCaps}{surname-monogram-allCaps}"}
             givenFirst-long-monogram-informal{"{given-informal-monogram-allCaps}"}
-            givenFirst-long-referring-formal{"{given} {surname}"}
+            givenFirst-long-referring-formal{"{given} {surname} {generation}, {credentials}"}
             givenFirst-long-referring-informal{"{given-informal}"}
             givenFirst-medium-addressing-formal{"{surname}"}
             givenFirst-medium-addressing-informal{"{given-informal}"}
             givenFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             givenFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            givenFirst-medium-referring-formal{"{given} {surname}"}
+            givenFirst-medium-referring-formal{"{given} {surname} {generation}, {credentials}"}
             givenFirst-medium-referring-informal{"{given-informal}"}
             givenFirst-short-addressing-formal{"{surname}"}
             givenFirst-short-addressing-informal{"{given-informal}"}
@@ -2018,11 +2349,11 @@ kk{
             givenFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
             givenFirst-short-referring-formal{"{given-initial} {surname}"}
             givenFirst-short-referring-informal{"{given-informal}"}
-            sorting-long-referring-formal{"{given}"}
+            sorting-long-referring-formal{"{surname-core}, {given} {given2} {surname-prefix}"}
             sorting-long-referring-informal{"{surname}, {given-informal}"}
-            sorting-medium-referring-formal{"{given}"}
+            sorting-medium-referring-formal{"{surname-core}, {given} {surname-prefix}"}
             sorting-medium-referring-informal{"{surname}, {given-informal}"}
-            sorting-short-referring-formal{"{given-initial}"}
+            sorting-short-referring-formal{"{surname}, {given}"}
             sorting-short-referring-informal{"{surname}, {given-informal}"}
             surnameFirst-long-addressing-formal{"{surname}"}
             surnameFirst-long-addressing-informal{"{given-informal}"}

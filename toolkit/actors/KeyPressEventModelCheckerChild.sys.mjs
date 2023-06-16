@@ -85,10 +85,8 @@ export class KeyPressEventModelCheckerChild extends JSWindowActorChild {
     // instance.  So, let's check the version whether it allows conflated
     // keypress event model.
     try {
-      let {
-        author,
-        version,
-      } = new tinyMCEObject.plugins.CursorTargetPlugin().getInfo();
+      let { author, version } =
+        new tinyMCEObject.plugins.CursorTargetPlugin().getInfo();
       // If it's not Confluence, don't include it into the telemetry because
       // we just need to collect percentage of old version in all loaded
       // Confluence instances.

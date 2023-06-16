@@ -9,7 +9,7 @@ use firefox_on_glean::private::{CommonMetricData, Lifetime, MemoryUnit, TimeUnit
 use nsstring::{nsACString, nsAString, nsCString};
 use serde::Deserialize;
 use std::borrow::Cow;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::BufReader;
 use thin_vec::ThinVec;
@@ -24,7 +24,7 @@ struct ExtraMetricArgs {
     bucket_count: Option<u64>,
     histogram_type: Option<HistogramType>,
     numerators: Option<Vec<CommonMetricData>>,
-    labels: Option<Vec<Cow<'static, str>>>,
+    ordered_labels: Option<Vec<Cow<'static, str>>>,
 }
 
 /// Test-only method.
@@ -102,7 +102,7 @@ fn create_and_register_metric(
         extra_args.bucket_count,
         extra_args.histogram_type,
         extra_args.numerators,
-        extra_args.labels,
+        extra_args.ordered_labels,
     );
     extern "C" {
         fn JOG_RegisterMetric(
@@ -183,7 +183,8 @@ pub extern "C" fn jog_test_clear_registered_metrics_and_pings() {}
 
 #[derive(Default, Deserialize)]
 struct Jogfile {
-    metrics: HashMap<String, Vec<MetricDefinitionData>>,
+    // Using BTreeMap to ensure stable iteration ordering.
+    metrics: BTreeMap<String, Vec<MetricDefinitionData>>,
     pings: Vec<PingDefinitionData>,
 }
 
@@ -222,7 +223,7 @@ pub extern "C" fn jog_load_jogfile(jogfile_path: &nsAString) -> bool {
     };
     let reader = BufReader::new(f);
 
-    let mut j: Jogfile = match serde_json::from_reader(reader) {
+    let j: Jogfile = match serde_json::from_reader(reader) {
         Ok(j) => j,
         Err(e) => {
             log::error!("Boo, couldn't read jogfile because of: {:?}", e);
@@ -230,7 +231,7 @@ pub extern "C" fn jog_load_jogfile(jogfile_path: &nsAString) -> bool {
         }
     };
     log::trace!("Loaded jogfile. Registering metrics+pings.");
-    for (category, metrics) in j.metrics.drain() {
+    for (category, metrics) in j.metrics.into_iter() {
         for metric in metrics.into_iter() {
             let _ = create_and_register_metric(
                 &metric.metric_type,

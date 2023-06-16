@@ -7,7 +7,7 @@
 const BUTTONID = "test-API-created-widget-toolbar-gone";
 const TOOLBARID = "test-API-created-extra-toolbar";
 
-add_task(async function() {
+add_task(async function () {
   let toolbar = createToolbarWithPlacements(TOOLBARID, []);
   CustomizableUI.addWidgetToArea(BUTTONID, TOOLBARID);
   is(

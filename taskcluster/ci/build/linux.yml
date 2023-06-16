@@ -496,7 +496,11 @@ linux/opt:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: public
-    run-on-projects: ['mozilla-beta', 'mozilla-release', 'mozilla-esr102']
+    run-on-projects:
+        - 'mozilla-beta'
+        - 'mozilla-release'
+        - 'mozilla-esr102'
+        - 'mozilla-esr115'
     use-sccache: true
     fetches:
         toolchain:

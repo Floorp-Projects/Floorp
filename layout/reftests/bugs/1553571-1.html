@@ -9,7 +9,7 @@ function go() {
 
 function changeit() {
 	var a = document.getElementById("a");
-	a.style.transform = 'scale(' + (140.1 + Math.random()*0.01) + ')';
+	a.style.transform = 'scale(' + (256.1 + Math.random()*0.01) + ')';
 
 	if (changesLeft > 0) {
 		--changesLeft;
@@ -27,7 +27,7 @@ function changeit() {
 </script>
 </head>
 <body onload="go();">
-<div id="a" style="width: 1px; height: 1px; position: absolute; left: 100px; top: 100px;">
+<div id="a" style="width: 1px; height: 1px; position: absolute; left: 200px; top: 200px;">
 	<img style="width: 1px; height: 1px;" src="repeatable-diagonal-gradient.png">
 </div>
 </body>

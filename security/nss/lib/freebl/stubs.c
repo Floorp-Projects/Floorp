@@ -86,6 +86,10 @@
     if (ptr_##fn) {                         \
         return ptr_##fn(a1, a2, a3, a4);    \
     }
+#define STUB_SAFE_CALL5(fn, a1, a2, a3, a4, a5) \
+    if (ptr_##fn) {                             \
+        return ptr_##fn(a1, a2, a3, a4, a5);    \
+    }
 #define STUB_SAFE_CALL6(fn, a1, a2, a3, a4, a5, a6) \
     if (ptr_##fn) {                                 \
         return ptr_##fn(a1, a2, a3, a4, a5, a6);    \
@@ -177,6 +181,7 @@ STUB_DECLARE(void, SECITEM_ZfreeItem_Util, (SECItem * zap, PRBool freeit));
 STUB_DECLARE(SECOidTag, SECOID_FindOIDTag_Util, (const SECItem *oid));
 STUB_DECLARE(int, NSS_SecureMemcmp, (const void *a, const void *b, size_t n));
 STUB_DECLARE(unsigned int, NSS_SecureMemcmpZero, (const void *mem, size_t n));
+STUB_DECLARE(void, NSS_SecureSelect, (void *dest, const void *src0, const void *src1, size_t n, unsigned char b));
 
 #define PORT_ZNew_stub(type) (type *)PORT_ZAlloc_stub(sizeof(type))
 #define PORT_New_stub(type) (type *)PORT_Alloc_stub(sizeof(type))
@@ -700,6 +705,13 @@ NSS_SecureMemcmpZero_stub(const void *mem, size_t n)
     abort();
 }
 
+extern void
+NSS_SecureSelect_stub(void *dest, const void *src0, const void *src1, size_t n, unsigned char b)
+{
+    STUB_SAFE_CALL5(NSS_SecureSelect, dest, src0, src1, n, b);
+    abort();
+}
+
 #ifdef FREEBL_NO_WEAK
 
 static const char *nsprLibName = SHLIB_PREFIX "nspr4." SHLIB_SUFFIX;
@@ -753,6 +765,7 @@ freebl_InitNSSUtil(void *lib)
     STUB_FETCH_FUNCTION(SECOID_FindOIDTag_Util);
     STUB_FETCH_FUNCTION(NSS_SecureMemcmp);
     STUB_FETCH_FUNCTION(NSS_SecureMemcmpZero);
+    STUB_FETCH_FUNCTION(NSS_SecureSelect);
     return SECSuccess;
 }
 

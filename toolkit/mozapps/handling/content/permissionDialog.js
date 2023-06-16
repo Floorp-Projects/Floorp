@@ -69,8 +69,8 @@ let dialog = {
       return false;
     }
 
-    let topContentPrincipal = this._browsingContext?.top.embedderElement
-      ?.contentPrincipal;
+    let topContentPrincipal =
+      this._browsingContext?.top.embedderElement?.contentPrincipal;
     if (!topContentPrincipal) {
       return false;
     }

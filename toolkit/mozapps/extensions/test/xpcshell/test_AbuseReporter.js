@@ -2,8 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-const { AbuseReporter, AbuseReportError } = ChromeUtils.import(
-  "resource://gre/modules/AbuseReporter.jsm"
+const { AbuseReporter, AbuseReportError } = ChromeUtils.importESModule(
+  "resource://gre/modules/AbuseReporter.sys.mjs"
 );
 
 const { ClientID } = ChromeUtils.importESModule(

@@ -495,7 +495,7 @@ add_task(async function test_update() {
   let timerPrecision = Preferences.get("privacy.reduceTimerPrecision");
   Preferences.set("privacy.reduceTimerPrecision", false);
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Preferences.set("privacy.reduceTimerPrecision", timerPrecision);
   });
 

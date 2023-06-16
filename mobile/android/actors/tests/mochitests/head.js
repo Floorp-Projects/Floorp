@@ -29,6 +29,19 @@ const GleanTest = new Proxy(
                   }
                 );
               },
+              async testGetValueLabel(label) {
+                return SpecialPowers.spawnChrome(
+                  [categoryName, metricName, label],
+                  // eslint-disable-next-line no-shadow
+                  async (categoryName, metricName, label) => {
+                    await Services.fog.testFlushAllChildren();
+                    const window = this.browsingContext.topChromeWindow;
+                    return window.Glean[categoryName][metricName][
+                      label
+                    ].testGetValue();
+                  }
+                );
+              },
             };
           },
         }

@@ -4,7 +4,7 @@
 
 const kWidgetId = "test-destroy-non-removable-defaultArea";
 
-add_task(function() {
+add_task(function () {
   let spec = {
     id: kWidgetId,
     label: "Test non-removable defaultArea re-adding.",

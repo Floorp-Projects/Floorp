@@ -19,7 +19,7 @@ requestLongerTimeout(2);
 const URL =
   "data:text/html;charset=utf8,test for opening toolbox in different hosts";
 
-add_task(async function() {
+add_task(async function () {
   const win = await BrowserTestUtils.openNewBrowserWindow();
   win.gBrowser.selectedTab = BrowserTestUtils.addTab(win.gBrowser, URL);
 

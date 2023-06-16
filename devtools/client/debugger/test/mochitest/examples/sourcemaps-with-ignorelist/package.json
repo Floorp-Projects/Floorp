@@ -1,0 +1,15 @@
+{
+  "name": "sourcemaps-with-ignorelist",
+  "version": "1.0.0",
+  "description": "An example fixture used for testing sourcemaps with the ignorelist",
+  "main": "bundle.js",
+  "author": "Hubert B Manilla <hmanilla@mozilla.com>",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "rollup --config"
+  },
+  "devDependencies": {
+    "rollup": "^3.20.2"
+  }
+}

@@ -12,9 +12,8 @@ const {
   CanvasFrameAnonymousContentHelper,
 } = require("resource://devtools/server/actors/highlighters/utils/markup.js");
 const EventEmitter = require("resource://devtools/shared/event-emitter.js");
-const {
-  rgbToHsl,
-} = require("resource://devtools/shared/css/color.js").colorUtils;
+const { rgbToHsl } =
+  require("resource://devtools/shared/css/color.js").colorUtils;
 const {
   getCurrentZoom,
   getFrameOffsets,

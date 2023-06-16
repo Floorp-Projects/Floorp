@@ -52,6 +52,7 @@
 #include "mozilla/dom/nsHTTPSOnlyUtils.h"
 #include "mozilla/dom/ReferrerInfo.h"
 #include "mozilla/dom/RequestBinding.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -72,12 +73,15 @@ static inline nsAutoString GetStatusCodeAsString(nsIHttpChannel* aHttp) {
 
 static void LogBlockedRequest(nsIRequest* aRequest, const char* aProperty,
                               const char16_t* aParam, uint32_t aBlockingReason,
-                              nsIHttpChannel* aCreatingChannel) {
+                              nsIHttpChannel* aCreatingChannel,
+                              bool aIsWarning = false) {
   nsresult rv = NS_OK;
 
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
 
-  NS_SetRequestBlockingReason(channel, aBlockingReason);
+  if (!aIsWarning) {
+    NS_SetRequestBlockingReason(channel, aBlockingReason);
+  }
 
   nsCOMPtr<nsIURI> aUri;
   channel->GetURI(getter_AddRefs(aUri));
@@ -107,7 +111,7 @@ static void LogBlockedRequest(nsIRequest* aRequest, const char* aProperty,
 
   if (XRE_IsParentProcess()) {
     if (aCreatingChannel) {
-      rv = aCreatingChannel->LogBlockedCORSRequest(msg, category);
+      rv = aCreatingChannel->LogBlockedCORSRequest(msg, category, aIsWarning);
       if (NS_SUCCEEDED(rv)) {
         return;
       }
@@ -144,7 +148,8 @@ static void LogBlockedRequest(nsIRequest* aRequest, const char* aProperty,
     }
   }
   nsCORSListenerProxy::LogBlockedCORSRequest(innerWindowID, privateBrowsing,
-                                             fromChromeContext, msg, category);
+                                             fromChromeContext, msg, category,
+                                             aIsWarning);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1411,7 +1416,8 @@ nsresult nsCORSPreflightListener::CheckPreflightRequestApproved(
   Unused << http->GetResponseHeader("Access-Control-Allow-Headers"_ns,
                                     headerVal);
   nsTArray<nsCString> headers;
-  bool allowAllHeaders = false;
+  bool wildcard = false;
+  bool hasAuthorizationHeader = false;
   for (const nsACString& header :
        nsCCharSeparatedTokenizer(headerVal, ',').ToRange()) {
     if (header.IsEmpty()) {
@@ -1425,24 +1431,60 @@ nsresult nsCORSPreflightListener::CheckPreflightRequestApproved(
       return NS_ERROR_DOM_BAD_URI;
     }
     if (header.EqualsLiteral("*") && !mWithCredentials) {
-      allowAllHeaders = true;
+      wildcard = true;
     } else {
       headers.AppendElement(header);
     }
+
+    if (header.LowerCaseEqualsASCII("authorization")) {
+      hasAuthorizationHeader = true;
+    }
   }
 
-  if (!allowAllHeaders) {
-    for (uint32_t i = 0; i < mPreflightHeaders.Length(); ++i) {
-      const auto& comparator = nsCaseInsensitiveCStringArrayComparator();
-      if (!headers.Contains(mPreflightHeaders[i], comparator)) {
-        LogBlockedRequest(
-            aRequest, "CORSMissingAllowHeaderFromPreflight2",
-            NS_ConvertUTF8toUTF16(mPreflightHeaders[i]).get(),
-            nsILoadInfo::BLOCKING_REASON_CORSMISSINGALLOWHEADERFROMPREFLIGHT,
-            parentHttpChannel);
-        return NS_ERROR_DOM_BAD_URI;
+  bool authorizationInPreflightHeaders = false;
+  bool authorizationCoveredByWildcard = false;
+  for (uint32_t i = 0; i < mPreflightHeaders.Length(); ++i) {
+    // Cache the result of the authorization header.
+    bool isAuthorization =
+        mPreflightHeaders[i].LowerCaseEqualsASCII("authorization");
+    if (wildcard) {
+      if (!isAuthorization) {
+        continue;
+      } else {
+        authorizationInPreflightHeaders = true;
+        if (StaticPrefs::
+                network_cors_preflight_authorization_covered_by_wildcard() &&
+            !hasAuthorizationHeader) {
+          // When `Access-Control-Allow-Headers` is `*` and there is no
+          // `Authorization` header listed, we send a deprecation warning to the
+          // console.
+          LogBlockedRequest(aRequest, "CORSAllowHeaderFromPreflightDeprecation",
+                            nullptr, 0, parentHttpChannel, true);
+          glean::network::cors_authorization_header
+              .Get("covered_by_wildcard"_ns)
+              .Add(1);
+          authorizationCoveredByWildcard = true;
+          continue;
+        }
       }
     }
+
+    const auto& comparator = nsCaseInsensitiveCStringArrayComparator();
+    if (!headers.Contains(mPreflightHeaders[i], comparator)) {
+      LogBlockedRequest(
+          aRequest, "CORSMissingAllowHeaderFromPreflight2",
+          NS_ConvertUTF8toUTF16(mPreflightHeaders[i]).get(),
+          nsILoadInfo::BLOCKING_REASON_CORSMISSINGALLOWHEADERFROMPREFLIGHT,
+          parentHttpChannel);
+      if (isAuthorization) {
+        glean::network::cors_authorization_header.Get("disallowed"_ns).Add(1);
+      }
+      return NS_ERROR_DOM_BAD_URI;
+    }
+  }
+
+  if (authorizationInPreflightHeaders && !authorizationCoveredByWildcard) {
+    glean::network::cors_authorization_header.Get("allowed"_ns).Add(1);
   }
 
   return NS_OK;
@@ -1641,11 +1683,9 @@ nsresult nsCORSListenerProxy::StartCORSPreflight(
 }
 
 // static
-void nsCORSListenerProxy::LogBlockedCORSRequest(uint64_t aInnerWindowID,
-                                                bool aPrivateBrowsing,
-                                                bool aFromChromeContext,
-                                                const nsAString& aMessage,
-                                                const nsACString& aCategory) {
+void nsCORSListenerProxy::LogBlockedCORSRequest(
+    uint64_t aInnerWindowID, bool aPrivateBrowsing, bool aFromChromeContext,
+    const nsAString& aMessage, const nsACString& aCategory, bool aIsWarning) {
   nsresult rv = NS_OK;
 
   // Build the error object and log it to the console
@@ -1663,6 +1703,9 @@ void nsCORSListenerProxy::LogBlockedCORSRequest(uint64_t aInnerWindowID,
     return;
   }
 
+  uint32_t errorFlag =
+      aIsWarning ? nsIScriptError::warningFlag : nsIScriptError::errorFlag;
+
   // query innerWindowID and log to web console, otherwise log to
   // the error to the browser console.
   if (aInnerWindowID > 0) {
@@ -1671,16 +1714,15 @@ void nsCORSListenerProxy::LogBlockedCORSRequest(uint64_t aInnerWindowID,
                                               u""_ns,  // sourceLine
                                               0,       // lineNumber
                                               0,       // columnNumber
-                                              nsIScriptError::errorFlag,
-                                              aCategory, aInnerWindowID);
+                                              errorFlag, aCategory,
+                                              aInnerWindowID);
   } else {
     rv = scriptError->Init(aMessage,
                            u""_ns,  // sourceName
                            u""_ns,  // sourceLine
                            0,       // lineNumber
                            0,       // columnNumber
-                           nsIScriptError::errorFlag, aCategory,
-                           aPrivateBrowsing,
+                           errorFlag, aCategory, aPrivateBrowsing,
                            aFromChromeContext);  // From chrome context
   }
   if (NS_FAILED(rv)) {

@@ -70,7 +70,7 @@ function parseBooleanConfig(string, comment) {
   // Collapse whitespace around ,
   string = string.replace(/\s*,\s*/g, ",");
 
-  string.split(/\s|,+/).forEach(function(name) {
+  string.split(/\s|,+/).forEach(function (name) {
     if (!name) {
       return;
     }
@@ -646,7 +646,7 @@ module.exports = {
     let handler = new GlobalsForNode(helpers.getAbsoluteFilePath(context));
 
     for (let type of Object.keys(GlobalsForNode.prototype)) {
-      parser[type] = function(node) {
+      parser[type] = function (node) {
         if (type === "Program") {
           globalScope = context.getScope();
           helpers.addGlobals(extraHTMLGlobals, globalScope);

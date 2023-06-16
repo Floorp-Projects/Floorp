@@ -35,21 +35,15 @@
     }
 
     function getDownloadStartedPromise() {
-      if (Services.prefs.getBoolPref("browser.download.improvements_to_download_panel", false)) {
-        return Downloads.getList(Downloads.PUBLIC).then(list => {
-          return new Promise(resolve => {
-            list.addView({
-              onDownloadAdded(download) {
-                resolve(download);
-              }
-            })
-          });
+      return Downloads.getList(Downloads.PUBLIC).then(list => {
+        return new Promise(resolve => {
+          list.addView({
+            onDownloadAdded(download) {
+              resolve(download);
+            }
+          })
         });
-      }
-      return BrowserTestUtils.domWindowOpenedAndLoaded(
-        null,
-        win => win.location?.href == "chrome://mozapps/content/downloads/unknownContentType.xhtml"
-      );
+      });
     }
 
     async function downloadHandled(downloadResult) {

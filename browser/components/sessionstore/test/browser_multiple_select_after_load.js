@@ -15,7 +15,7 @@ const VALUES = ["1", "3"];
 // Tests that a document that changes a <select> element's "multiple" attribute
 // *after* the load event (eg. perhaps in response to some user action) doesn't
 // crash the browser when being restored.
-add_task(async function() {
+add_task(async function () {
   // Create new tab.
   let tab = BrowserTestUtils.addTab(gBrowser, URL);
   await promiseBrowserLoaded(tab.linkedBrowser);
@@ -37,7 +37,7 @@ add_task(async function() {
   await promiseRemoveTabAndSessionState(tab);
 
   // Verify state of the closed tab.
-  let tabData = ss.getClosedTabData(window);
+  let tabData = ss.getClosedTabDataForWindow(window);
   Assert.deepEqual(
     tabData[0].state.formdata.id.select,
     VALUES,

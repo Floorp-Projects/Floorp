@@ -6,7 +6,7 @@
 
 #include <glib.h>
 #include <cstdint>
-#include "mozilla/TypedEnumBits.h"
+#include "mozilla/a11y/HyperTextAccessibleBase.h"
 #include "nsCharTraits.h"
 #include "nsString.h"
 
@@ -57,21 +57,6 @@ gchar* Convert(const nsAString& aStr);
  */
 void AddBOMs(nsACString& aDest, const nsACString& aSource);
 
-/**
- * Replace all characters with asterisks (e.g. for password fields).
- */
-void ConvertTexttoAsterisks(nsAString& aString);
-
-/**
- * Parameterize conversion.
- */
-enum class AtkStringConvertFlags : uint32_t {
-  None = 0,
-  ConvertTextToAsterisks = 1 << 0,
-};
-
-MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(AtkStringConvertFlags)
-
 class ATKStringConverterHelper {
  public:
   ATKStringConverterHelper(void)
@@ -115,9 +100,8 @@ class ATKStringConverterHelper {
  * Get text from aAccessible, using ATKStringConverterHelper to properly
  * introduce appropriate BOMs.
  */
-template <class Accessible>
-gchar* NewATKString(Accessible* aAccessible, gint aStartOffset, gint aEndOffset,
-                    AtkStringConvertFlags aFlags) {
+inline gchar* NewATKString(HyperTextAccessibleBase* aAccessible,
+                           gint aStartOffset, gint aEndOffset) {
   gint startOffset = aStartOffset, endOffset = aEndOffset;
   ATKStringConverterHelper converter;
   converter.AdjustOffsets(&startOffset, &endOffset,
@@ -130,9 +114,6 @@ gchar* NewATKString(Accessible* aAccessible, gint aStartOffset, gint aEndOffset,
     return g_strdup("");
   }
 
-  if (aFlags & AtkStringConvertFlags::ConvertTextToAsterisks) {
-    ConvertTexttoAsterisks(str);
-  }
   return converter.ConvertAdjusted(str);
 }
 
@@ -140,8 +121,8 @@ gchar* NewATKString(Accessible* aAccessible, gint aStartOffset, gint aEndOffset,
  * Get a character from aAccessible, fetching more data as appropriate to
  * properly get non-BMP characters or a BOM as appropriate.
  */
-template <class AccessibleCharAt>
-gunichar ATKCharacter(AccessibleCharAt* aAccessible, gint aOffset) {
+inline gunichar ATKCharacter(HyperTextAccessibleBase* aAccessible,
+                             gint aOffset) {
   // char16_t is unsigned short in Mozilla, gnuichar is guint32 in glib.
   gunichar character = static_cast<gunichar>(aAccessible->CharAt(aOffset));
 

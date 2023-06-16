@@ -10,7 +10,7 @@
 const TEST_URL =
   "data:text/html;charset=utf-8," + "<p>It's going to be legen....</p>";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector, highlighterTestFront } = await openInspectorForURL(
     TEST_URL
   );

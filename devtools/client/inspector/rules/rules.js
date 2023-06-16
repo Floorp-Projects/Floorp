@@ -151,12 +151,10 @@ function CssRuleView(inspector, document, store) {
   this._onTogglePseudoClassPanel = this._onTogglePseudoClassPanel.bind(this);
   this._onTogglePseudoClass = this._onTogglePseudoClass.bind(this);
   this._onToggleClassPanel = this._onToggleClassPanel.bind(this);
-  this._onToggleLightColorSchemeSimulation = this._onToggleLightColorSchemeSimulation.bind(
-    this
-  );
-  this._onToggleDarkColorSchemeSimulation = this._onToggleDarkColorSchemeSimulation.bind(
-    this
-  );
+  this._onToggleLightColorSchemeSimulation =
+    this._onToggleLightColorSchemeSimulation.bind(this);
+  this._onToggleDarkColorSchemeSimulation =
+    this._onToggleDarkColorSchemeSimulation.bind(this);
   this._onTogglePrintSimulation = this._onTogglePrintSimulation.bind(this);
   this.highlightElementRule = this.highlightElementRule.bind(this);
   this.highlightProperty = this.highlightProperty.bind(this);
@@ -234,9 +232,8 @@ function CssRuleView(inspector, document, store) {
 
   this._handlePrefChange = this._handlePrefChange.bind(this);
   this._handleUAStylePrefChange = this._handleUAStylePrefChange.bind(this);
-  this._handleDefaultColorUnitPrefChange = this._handleDefaultColorUnitPrefChange.bind(
-    this
-  );
+  this._handleDefaultColorUnitPrefChange =
+    this._handleDefaultColorUnitPrefChange.bind(this);
   this._handleDraggablePrefChange = this._handleDraggablePrefChange.bind(this);
 
   this._prefObserver = new PrefObserver("devtools.");
@@ -430,7 +427,8 @@ CssRuleView.prototype = {
             selector = await rule.inherited.getUniqueSelector();
           } else {
             // This is an inline style from the current node.
-            selector = await this.inspector.selection.nodeFront.getUniqueSelector();
+            selector =
+              await this.inspector.selection.nodeFront.getUniqueSelector();
           }
 
           // Now that the selector was computed, we can store it in
@@ -785,7 +783,8 @@ CssRuleView.prototype = {
             this.searchData.searchPropertyMatch[1]
           )[1];
         } else {
-          this.searchData.searchPropertyName = this.searchData.searchPropertyMatch[1];
+          this.searchData.searchPropertyName =
+            this.searchData.searchPropertyMatch[1];
         }
 
         if (FILTER_STRICT_RE.test(this.searchData.searchPropertyMatch[2])) {
@@ -794,7 +793,8 @@ CssRuleView.prototype = {
             this.searchData.searchPropertyMatch[2]
           )[1];
         } else {
-          this.searchData.searchPropertyValue = this.searchData.searchPropertyMatch[2];
+          this.searchData.searchPropertyValue =
+            this.searchData.searchPropertyMatch[2];
         }
 
         // Strict search for stylesheets will match the property line regex.
@@ -1806,13 +1806,11 @@ CssRuleView.prototype = {
   },
 
   async _onToggleLightColorSchemeSimulation() {
-    const shouldSimulateLightScheme = this.colorSchemeLightSimulationButton.classList.toggle(
-      "checked"
-    );
+    const shouldSimulateLightScheme =
+      this.colorSchemeLightSimulationButton.classList.toggle("checked");
 
-    const darkColorSchemeEnabled = this.colorSchemeDarkSimulationButton.classList.contains(
-      "checked"
-    );
+    const darkColorSchemeEnabled =
+      this.colorSchemeDarkSimulationButton.classList.contains("checked");
     if (shouldSimulateLightScheme && darkColorSchemeEnabled) {
       this.colorSchemeDarkSimulationButton.classList.toggle("checked");
     }
@@ -1827,13 +1825,11 @@ CssRuleView.prototype = {
   },
 
   async _onToggleDarkColorSchemeSimulation() {
-    const shouldSimulateDarkScheme = this.colorSchemeDarkSimulationButton.classList.toggle(
-      "checked"
-    );
+    const shouldSimulateDarkScheme =
+      this.colorSchemeDarkSimulationButton.classList.toggle("checked");
 
-    const lightColorSchemeEnabled = this.colorSchemeLightSimulationButton.classList.contains(
-      "checked"
-    );
+    const lightColorSchemeEnabled =
+      this.colorSchemeLightSimulationButton.classList.contains("checked");
     if (shouldSimulateDarkScheme && lightColorSchemeEnabled) {
       this.colorSchemeLightSimulationButton.classList.toggle("checked");
     }

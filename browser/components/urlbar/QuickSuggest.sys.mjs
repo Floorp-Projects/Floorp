@@ -19,6 +19,8 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 // Quick suggest features. On init, QuickSuggest creates an instance of each and
 // keeps it in the `#features` map. See `BaseFeature`.
 const FEATURES = {
+  AddonSuggestions:
+    "resource:///modules/urlbar/private/AddonSuggestions.sys.mjs",
   AdmWikipedia: "resource:///modules/urlbar/private/AdmWikipedia.sys.mjs",
   BlockedSuggestions:
     "resource:///modules/urlbar/private/BlockedSuggestions.sys.mjs",

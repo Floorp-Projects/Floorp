@@ -22,7 +22,7 @@ const XHTML = `
 
 const TEST_URI = "data:application/xhtml+xml;charset=utf-8," + encodeURI(XHTML);
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URI);
 
   // Get and open the svg element to show its children.

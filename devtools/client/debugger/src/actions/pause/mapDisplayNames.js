@@ -28,7 +28,7 @@ function mapDisplayName(frame, { getState }) {
 }
 
 export function mapDisplayNames(cx) {
-  return function({ dispatch, getState }) {
+  return function ({ dispatch, getState }) {
     const frames = getFrames(getState(), cx.thread);
 
     if (!frames) {

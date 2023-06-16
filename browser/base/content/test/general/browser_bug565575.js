@@ -1,4 +1,4 @@
-add_task(async function() {
+add_task(async function () {
   gBrowser.selectedBrowser.focus();
 
   await BrowserTestUtils.openNewForegroundTab(

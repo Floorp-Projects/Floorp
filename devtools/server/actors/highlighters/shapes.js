@@ -1016,16 +1016,8 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    *                 before scaling
    */
   _transformCircle(transX = null) {
-    const {
-      unitX,
-      unitY,
-      unitRad,
-      valueX,
-      valueY,
-      ratioX,
-      ratioY,
-      ratioRad,
-    } = this[_dragging];
+    const { unitX, unitY, unitRad, valueX, valueY, ratioX, ratioY, ratioRad } =
+      this[_dragging];
     let { radius } = this.coordUnits;
 
     let [newCx, newCy] = apply(this.transformMatrix, [
@@ -1088,7 +1080,8 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     newCy = round(newCy * ratioY, unitY);
 
     const centerStr = `${newCx}${unitX} ${newCy}${unitY}`;
-    const ellipseDef = `ellipse(${rx} ${ry} at ${centerStr}) ${this.geometryBox}`.trim();
+    const ellipseDef =
+      `ellipse(${rx} ${ry} at ${centerStr}) ${this.geometryBox}`.trim();
     this.emit("highlighter-event", { type: "shape-change", value: ellipseDef });
   }
 
@@ -1175,9 +1168,8 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    * @param {Number} pageY the new y coordinate of the point
    */
   _handlePolygonMove(pageX, pageY) {
-    const { point, unitX, unitY, valueX, valueY, ratioX, ratioY, x, y } = this[
-      _dragging
-    ];
+    const { point, unitX, unitY, valueX, valueY, ratioX, ratioY, x, y } =
+      this[_dragging];
     const deltaX = (pageX - x) * ratioX;
     const deltaY = (pageY - y) * ratioY;
     const newX = round(valueX + deltaX, unitX);
@@ -1306,15 +1298,15 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     const { radius, cx, cy } = this.coordUnits;
 
     if (point === "center") {
-      const { unitX, unitY, valueX, valueY, ratioX, ratioY, x, y } = this[
-        _dragging
-      ];
+      const { unitX, unitY, valueX, valueY, ratioX, ratioY, x, y } =
+        this[_dragging];
       const deltaX = (pageX - x) * ratioX;
       const deltaY = (pageY - y) * ratioY;
       const newCx = `${round(valueX + deltaX, unitX)}${unitX}`;
       const newCy = `${round(valueY + deltaY, unitY)}${unitY}`;
       // if not defined by the user, geometryBox will be an empty string; trim() cleans up
-      const circleDef = `circle(${radius} at ${newCx} ${newCy}) ${this.geometryBox}`.trim();
+      const circleDef =
+        `circle(${radius} at ${newCx} ${newCy}) ${this.geometryBox}`.trim();
 
       this.emit("highlighter-event", {
         type: "shape-change",
@@ -1332,7 +1324,8 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       const delta = (newRadiusPx - origRadius) * ratio;
       const newRadius = `${round(value + delta, unit)}${unit}`;
 
-      const circleDef = `circle(${newRadius} at ${cx} ${cy}) ${this.geometryBox}`.trim();
+      const circleDef =
+        `circle(${newRadius} at ${cx} ${cy}) ${this.geometryBox}`.trim();
 
       this.emit("highlighter-event", {
         type: "shape-change",
@@ -1419,14 +1412,14 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     const { rx, ry, cx, cy } = this.coordUnits;
 
     if (point === "center") {
-      const { unitX, unitY, valueX, valueY, ratioX, ratioY, x, y } = this[
-        _dragging
-      ];
+      const { unitX, unitY, valueX, valueY, ratioX, ratioY, x, y } =
+        this[_dragging];
       const deltaX = (pageX - x) * ratioX;
       const deltaY = (pageY - y) * ratioY;
       const newCx = `${round(valueX + deltaX, unitX)}${unitX}`;
       const newCy = `${round(valueY + deltaY, unitY)}${unitY}`;
-      const ellipseDef = `ellipse(${rx} ${ry} at ${newCx} ${newCy}) ${this.geometryBox}`.trim();
+      const ellipseDef =
+        `ellipse(${rx} ${ry} at ${newCx} ${newCy}) ${this.geometryBox}`.trim();
 
       this.emit("highlighter-event", {
         type: "shape-change",
@@ -1439,7 +1432,8 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       const delta = ((newRadiusPercent / 100) * width - origRadius) * ratio;
       const newRadius = `${round(value + delta, unit)}${unit}`;
 
-      const ellipseDef = `ellipse(${newRadius} ${ry} at ${cx} ${cy}) ${this.geometryBox}`.trim();
+      const ellipseDef =
+        `ellipse(${newRadius} ${ry} at ${cx} ${cy}) ${this.geometryBox}`.trim();
 
       this.emit("highlighter-event", {
         type: "shape-change",
@@ -1452,7 +1446,8 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       const delta = ((newRadiusPercent / 100) * height - origRadius) * ratio;
       const newRadius = `${round(value + delta, unit)}${unit}`;
 
-      const ellipseDef = `ellipse(${rx} ${newRadius} at ${cx} ${cy}) ${this.geometryBox}`.trim();
+      const ellipseDef =
+        `ellipse(${rx} ${newRadius} at ${cx} ${cy}) ${this.geometryBox}`.trim();
 
       this.emit("highlighter-event", {
         type: "shape-change",
@@ -1591,18 +1586,8 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
         this.setCursor("auto");
         return;
       }
-      const {
-        nw,
-        ne,
-        sw,
-        se,
-        n,
-        w,
-        s,
-        e,
-        rotatePoint,
-        center,
-      } = this.transformedBoundingBox;
+      const { nw, ne, sw, se, n, w, s, e, rotatePoint, center } =
+        this.transformedBoundingBox;
 
       const points = [
         {
@@ -1769,18 +1754,8 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    *          to the shape.
    */
   getTransformPointAt(pageX, pageY) {
-    const {
-      nw,
-      ne,
-      sw,
-      se,
-      n,
-      w,
-      s,
-      e,
-      rotatePoint,
-      center,
-    } = this.transformedBoundingBox;
+    const { nw, ne, sw, se, n, w, s, e, rotatePoint, center } =
+      this.transformedBoundingBox;
     const { width, height } = this.currentDimensions;
     const zoom = getCurrentZoom(this.win);
     const clickRadiusX = ((BASE_MARKER_SIZE / zoom) * 100) / width;
@@ -2692,18 +2667,8 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    * @param {Number} zoom the zoom level of the window
    */
   _updateTransformMode(width, height, zoom) {
-    const {
-      nw,
-      ne,
-      sw,
-      se,
-      n,
-      w,
-      s,
-      e,
-      rotatePoint,
-      center,
-    } = this.transformedBoundingBox;
+    const { nw, ne, sw, se, n, w, s, e, rotatePoint, center } =
+      this.transformedBoundingBox;
     const boundingBox = this.getElement("bounding-box");
     const path = `M${nw.join(" ")} L${ne.join(" ")} L${se.join(" ")} L${sw.join(
       " "

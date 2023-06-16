@@ -6,7 +6,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIEventTarget;
+interface nsISerialEventTarget;
 
 /**
  * nsIThreadRetargetableRequest
@@ -31,7 +31,7 @@ interface nsIThreadRetargetableRequest : nsISupports
    * should be ready to deal with OnDataAvailable on either the main thread or
    * the new target thread.
    */
-  void retargetDeliveryTo(in nsIEventTarget aNewTarget);
+  void retargetDeliveryTo(in nsISerialEventTarget aNewTarget);
 
   /**
    * Returns the event target where OnDataAvailable events will be dispatched.
@@ -39,5 +39,5 @@ interface nsIThreadRetargetableRequest : nsISupports
    * This is only valid after OnStartRequest has been called. Any time before
    * that point, the value may be changed by `retargetDeliveryTo` calls.
    */
-  readonly attribute nsIEventTarget deliveryTarget;
+  readonly attribute nsISerialEventTarget deliveryTarget;
 };

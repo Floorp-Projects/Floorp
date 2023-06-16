@@ -37,7 +37,7 @@ add_task(async function test_mock_mute_button() {
     await toggleMute(browser, pipWin);
     ok(await isVideoMuted(browser, videoID), "The audio is muted.");
 
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       let muteButton = content.document.querySelector(".mute-button");
       ok(
         muteButton.getAttribute("isMuted"),
@@ -49,7 +49,7 @@ add_task(async function test_mock_mute_button() {
     await toggleMute(browser, pipWin);
     ok(!(await isVideoMuted(browser, videoID)), "The audio is playing.");
 
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       let muteButton = content.document.querySelector(".mute-button");
       ok(
         !muteButton.getAttribute("isMuted"),
@@ -128,7 +128,7 @@ add_task(async function test_volume_change_with_keyboard() {
     EventUtils.synthesizeKey("KEY_ArrowUp", {}, pipWin);
     ok(!(await isVideoMuted(browser, videoID)), "The audio is still playing.");
 
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       let video = content.document.querySelector("video");
       ok(!video.muted, "Video should be unmuted.");
     });
@@ -153,15 +153,14 @@ async function toggleMute(browser, pipWin) {
 }
 
 async function setupVideoListeners(browser) {
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     let video = content.document.querySelector("video");
 
     // Set a listener for "playing" event
     video.addEventListener("playing", async () => {
       info("Got playing event!");
-      let playPauseButton = content.document.querySelector(
-        ".play-pause-button"
-      );
+      let playPauseButton =
+        content.document.querySelector(".play-pause-button");
       ok(
         !playPauseButton.getAttribute("isPaused"),
         "playPauseButton does not have isPaused attribute."
@@ -171,9 +170,8 @@ async function setupVideoListeners(browser) {
     // Set a listener for "pause" event
     video.addEventListener("pause", async () => {
       info("Got pause event!");
-      let playPauseButton = content.document.querySelector(
-        ".play-pause-button"
-      );
+      let playPauseButton =
+        content.document.querySelector(".play-pause-button");
       // mock-wrapper's pause() method uses an invalid selector and should throw
       // an error. Test that the PiP wrapper uses the fallback pause() method.
       // This is to ensure PiP can handle cases where a site wrapper script is

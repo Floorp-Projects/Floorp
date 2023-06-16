@@ -166,6 +166,7 @@ pub type MozImageRect = generic::GenericMozImageRect<NumberOrPercentage, Specifi
 pub enum MozImageRect {}
 
 bitflags! {
+    #[derive(Clone, Copy)]
     struct ParseImageFlags: u8 {
         const FORBID_NONE = 1 << 0;
         const FORBID_IMAGE_SET = 1 << 1;
@@ -178,12 +179,7 @@ impl Parse for Image {
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
     ) -> Result<Image, ParseError<'i>> {
-        Image::parse_with_cors_mode(
-            context,
-            input,
-            CorsMode::None,
-            ParseImageFlags::empty()
-        )
+        Image::parse_with_cors_mode(context, input, CorsMode::None, ParseImageFlags::empty())
     }
 }
 
@@ -192,9 +188,11 @@ impl Image {
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
         cors_mode: CorsMode,
-        flags: ParseImageFlags
+        flags: ParseImageFlags,
     ) -> Result<Image, ParseError<'i>> {
-        if !flags.contains(ParseImageFlags::FORBID_NONE) && input.try_parse(|i| i.expect_ident_matching("none")).is_ok() {
+        if !flags.contains(ParseImageFlags::FORBID_NONE) &&
+            input.try_parse(|i| i.expect_ident_matching("none")).is_ok()
+        {
             return Ok(generic::Image::None);
         }
 
@@ -221,7 +219,9 @@ impl Image {
         }
 
         if cross_fade_enabled() {
-            if let Ok(cf) = input.try_parse(|input| CrossFade::parse(context, input, cors_mode, flags)) {
+            if let Ok(cf) =
+                input.try_parse(|input| CrossFade::parse(context, input, cors_mode, flags))
+            {
                 return Ok(generic::Image::CrossFade(Box::new(cf)));
             }
         }
@@ -275,7 +275,7 @@ impl Image {
             context,
             input,
             CorsMode::Anonymous,
-            ParseImageFlags::empty()
+            ParseImageFlags::empty(),
         )
     }
 
@@ -284,12 +284,7 @@ impl Image {
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
     ) -> Result<Image, ParseError<'i>> {
-        Self::parse_with_cors_mode(
-            context,
-            input,
-            CorsMode::None,
-            ParseImageFlags::FORBID_NONE
-        )
+        Self::parse_with_cors_mode(context, input, CorsMode::None, ParseImageFlags::FORBID_NONE)
     }
 
     /// Provides an alternate method for parsing, but only for urls.
@@ -301,7 +296,7 @@ impl Image {
             context,
             input,
             CorsMode::None,
-            ParseImageFlags::FORBID_NONE | ParseImageFlags::FORBID_NON_URL
+            ParseImageFlags::FORBID_NONE | ParseImageFlags::FORBID_NON_URL,
         )
     }
 }
@@ -312,11 +307,13 @@ impl CrossFade {
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
         cors_mode: CorsMode,
-        flags: ParseImageFlags
+        flags: ParseImageFlags,
     ) -> Result<Self, ParseError<'i>> {
         input.expect_function_matching("cross-fade")?;
         let elements = input.parse_nested_block(|input| {
-            input.parse_comma_separated(|input| CrossFadeElement::parse(context, input, cors_mode, flags))
+            input.parse_comma_separated(|input| {
+                CrossFadeElement::parse(context, input, cors_mode, flags)
+            })
         })?;
         let elements = crate::OwnedSlice::from(elements);
         Ok(Self { elements })
@@ -343,7 +340,7 @@ impl CrossFadeElement {
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
         cors_mode: CorsMode,
-        flags: ParseImageFlags
+        flags: ParseImageFlags,
     ) -> Result<Self, ParseError<'i>> {
         // Try and parse a leading percent sign.
         let mut percent = Self::parse_percentage(context, input);
@@ -365,12 +362,14 @@ impl CrossFadeImage {
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
         cors_mode: CorsMode,
-        flags: ParseImageFlags
+        flags: ParseImageFlags,
     ) -> Result<Self, ParseError<'i>> {
         if let Ok(image) = input.try_parse(|input| {
             Image::parse_with_cors_mode(
-                context, input, cors_mode,
-                flags | ParseImageFlags::FORBID_NONE
+                context,
+                input,
+                cors_mode,
+                flags | ParseImageFlags::FORBID_NONE,
             )
         }) {
             return Ok(Self::Image(image));
@@ -384,7 +383,7 @@ impl ImageSet {
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
         cors_mode: CorsMode,
-        flags: ParseImageFlags
+        flags: ParseImageFlags,
     ) -> Result<Self, ParseError<'i>> {
         let function = input.expect_function()?;
         match_ignore_ascii_case! { &function,
@@ -416,7 +415,7 @@ impl ImageSetItem {
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
         cors_mode: CorsMode,
-        flags: ParseImageFlags
+        flags: ParseImageFlags,
     ) -> Result<Self, ParseError<'i>> {
         let image = match input.try_parse(|i| i.expect_url_or_string()) {
             Ok(url) => Image::Url(SpecifiedImageUrl::parse_from_string(
@@ -425,8 +424,10 @@ impl ImageSetItem {
                 cors_mode,
             )),
             Err(..) => Image::parse_with_cors_mode(
-                context, input, cors_mode,
-                flags | ParseImageFlags::FORBID_NONE | ParseImageFlags::FORBID_IMAGE_SET
+                context,
+                input,
+                cors_mode,
+                flags | ParseImageFlags::FORBID_NONE | ParseImageFlags::FORBID_IMAGE_SET,
             )?,
         };
 

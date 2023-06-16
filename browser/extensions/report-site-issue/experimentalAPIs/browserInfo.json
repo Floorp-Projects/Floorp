@@ -51,6 +51,13 @@
         "description": "Gets whether a touchscreen is present",
         "parameters": [],
         "async": true
+      },
+      {
+        "name": "getAdditionalData",
+        "type": "function",
+        "description": "Gets additional info for the new reporter experiment",
+        "parameters": [],
+        "async": true
       }
     ]
   }

@@ -21,7 +21,7 @@ function test() {
 }
 
 const oldState = UIState.get();
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   await signOut();
   gSync.updateAllUI(oldState);
 });

@@ -19,7 +19,7 @@ function disableRadio() {
   }
 }
 
-addMessageListener("prepare-network", function(message) {
+addMessageListener("prepare-network", function (message) {
   connection.addEventListener("datachange", function onDataChange() {
     if (connection.data.connected) {
       connection.removeEventListener("datachange", onDataChange);
@@ -31,7 +31,7 @@ addMessageListener("prepare-network", function(message) {
   enableRadio();
 });
 
-addMessageListener("network-cleanup", function(message) {
+addMessageListener("network-cleanup", function (message) {
   connection.addEventListener("datachange", function onDataChange() {
     if (!connection.data.connected) {
       connection.removeEventListener("datachange", onDataChange);

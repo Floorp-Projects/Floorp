@@ -219,10 +219,7 @@ function isSavedFrame(obj) {
 
 function savedFrameReplacer(key, val) {
   if (isSavedFrame(val)) {
-    return `<SavedFrame '${val
-      .toString()
-      .split(/\n/g)
-      .shift()}'>`;
+    return `<SavedFrame '${val.toString().split(/\n/g).shift()}'>`;
   }
   return val;
 }

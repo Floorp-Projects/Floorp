@@ -250,10 +250,9 @@ size_t ThreadEventQueue::SizeOfExcludingThis(
     mozilla::MallocSizeOf aMallocSizeOf) {
   size_t n = 0;
 
-  n += mBaseQueue->SizeOfIncludingThis(aMallocSizeOf);
-
   {
     MutexAutoLock lock(mLock);
+    n += mBaseQueue->SizeOfIncludingThis(aMallocSizeOf);
     n += mNestedQueues.ShallowSizeOfExcludingThis(aMallocSizeOf);
     for (auto& queue : mNestedQueues) {
       n += queue.mEventTarget->SizeOfIncludingThis(aMallocSizeOf);

@@ -325,7 +325,8 @@ describe("SectionsManager", () => {
       assert.notCalled(SectionsManager._addCardTypeLinkMenuOptions);
     });
     it("should assign the correct context menu options based on the type of highlight", () => {
-      SectionsManager._addCardTypeLinkMenuOptions = addCardTypeLinkMenuOptionsOrig;
+      SectionsManager._addCardTypeLinkMenuOptions =
+        addCardTypeLinkMenuOptionsOrig;
 
       SectionsManager.updateSection("highlights", { rows: FAKE_ROWS }, false);
       const highlights = SectionsManager.sections.get("highlights").FAKE_ROWS;
@@ -378,7 +379,8 @@ describe("SectionsManager", () => {
       assert.deepEqual(highlights[0].contextMenuOptions, ["KeepMe"]);
       assert.deepEqual(highlights[1].contextMenuOptions, ["KeepMe"]);
       assert.deepEqual(highlights[2].contextMenuOptions, ["KeepMe"]);
-      SectionsManager.CONTEXT_MENU_OPTIONS_FOR_HIGHLIGHT_TYPES = contextMenuOptionsOrig;
+      SectionsManager.CONTEXT_MENU_OPTIONS_FOR_HIGHLIGHT_TYPES =
+        contextMenuOptionsOrig;
       globals.restore();
     });
   });

@@ -6,7 +6,7 @@
 
 // Test that hovering over nodes in the markup-view shows the highlighter over
 // those nodes
-add_task(async function() {
+add_task(async function () {
   info("Loading the test document and opening the inspector");
   const { inspector, highlighterTestFront } = await openInspectorForURL(
     "data:text/html;charset=utf-8,<h1>foo</h1><span>bar</span>"

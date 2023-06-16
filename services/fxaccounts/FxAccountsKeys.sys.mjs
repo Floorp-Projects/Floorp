@@ -419,11 +419,12 @@ export class FxAccountsKeys {
     // This list will probably grow in future.
     // Note that LEGACY_SCOPE_WEBEXT_SYNC is not in this list, it gets special-case handling below.
     const scopes = [SCOPE_OLD_SYNC].join(" ");
-    const scopedKeysMetadata = await this._fxai.fxAccountsClient.getScopedKeyData(
-      sessionToken,
-      FX_OAUTH_CLIENT_ID,
-      scopes
-    );
+    const scopedKeysMetadata =
+      await this._fxai.fxAccountsClient.getScopedKeyData(
+        sessionToken,
+        FX_OAUTH_CLIENT_ID,
+        scopes
+      );
     // The server may decline us permission for some of those scopes, although it really shouldn't.
     // We can live without them...except for the OLDSYNC scope, whose absence would be catastrophic.
     if (!scopedKeysMetadata.hasOwnProperty(SCOPE_OLD_SYNC)) {

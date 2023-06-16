@@ -92,13 +92,13 @@ async function testPrompt(Prompt, useLocalFile = false) {
       gBrowser,
       url: useLocalFile ? `file://${PathUtils.tempDir}` : "http://example.com",
     },
-    async function(browser) {
+    async function (browser) {
       let mockRequest = makeMockPermissionRequest(browser);
       let principal = mockRequest.principal;
       let TestPrompt = new Prompt(mockRequest);
       let { usePermissionManager, permissionKey } = TestPrompt;
 
-      registerCleanupFunction(function() {
+      registerCleanupFunction(function () {
         if (permissionKey) {
           SitePermissions.removeFromPrincipal(
             principal,

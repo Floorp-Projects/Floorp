@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 
 #include "nsCOMPtr.h"
+#include "nsISocketTransport.h"
 #include "nsString.h"
 #include "nsComponentManagerUtils.h"
 #include "../../base/nsSocketTransportService2.h"
@@ -130,6 +131,33 @@ TEST(TestSocketTransportService, PortRemappingPreferenceReading)
           ASSERT_TRUE(CheckPortRemap((uint16_t)port, (uint16_t)port));
         }
       }));
+}
+
+TEST(TestSocketTransportService, StatusValues)
+{
+  static_assert(static_cast<nsresult>(nsISocketTransport::STATUS_RESOLVING) ==
+                NS_NET_STATUS_RESOLVING_HOST);
+  static_assert(static_cast<nsresult>(nsISocketTransport::STATUS_RESOLVED) ==
+                NS_NET_STATUS_RESOLVED_HOST);
+  static_assert(
+      static_cast<nsresult>(nsISocketTransport::STATUS_CONNECTING_TO) ==
+      NS_NET_STATUS_CONNECTING_TO);
+  static_assert(
+      static_cast<nsresult>(nsISocketTransport::STATUS_CONNECTED_TO) ==
+      NS_NET_STATUS_CONNECTED_TO);
+  static_assert(static_cast<nsresult>(nsISocketTransport::STATUS_SENDING_TO) ==
+                NS_NET_STATUS_SENDING_TO);
+  static_assert(static_cast<nsresult>(nsISocketTransport::STATUS_WAITING_FOR) ==
+                NS_NET_STATUS_WAITING_FOR);
+  static_assert(
+      static_cast<nsresult>(nsISocketTransport::STATUS_RECEIVING_FROM) ==
+      NS_NET_STATUS_RECEIVING_FROM);
+  static_assert(static_cast<nsresult>(
+                    nsISocketTransport::STATUS_TLS_HANDSHAKE_STARTING) ==
+                NS_NET_STATUS_TLS_HANDSHAKE_STARTING);
+  static_assert(
+      static_cast<nsresult>(nsISocketTransport::STATUS_TLS_HANDSHAKE_ENDED) ==
+      NS_NET_STATUS_TLS_HANDSHAKE_ENDED);
 }
 
 }  // namespace net

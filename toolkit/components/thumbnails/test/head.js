@@ -2,16 +2,13 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 ChromeUtils.defineESModuleGetters(this, {
+  BackgroundPageThumbs: "resource://gre/modules/BackgroundPageThumbs.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
+  PageThumbs: "resource://gre/modules/PageThumbs.sys.mjs",
+  PageThumbsStorage: "resource://gre/modules/PageThumbs.sys.mjs",
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  BackgroundPageThumbs: "resource://gre/modules/BackgroundPageThumbs.jsm",
-  PageThumbs: "resource://gre/modules/PageThumbs.jsm",
-  PageThumbsStorage: "resource://gre/modules/PageThumbs.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -26,7 +23,7 @@ var oldEnabledPref = Services.prefs.getBoolPref(
 );
 Services.prefs.setBoolPref("browser.pagethumbnails.capturing_disabled", false);
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   while (gBrowser.tabs.length > 1) {
     gBrowser.removeTab(gBrowser.tabs[1]);
   }
@@ -165,7 +162,7 @@ function dontExpireThumbnailURLs(aURLs) {
   let dontExpireURLs = cb => cb(aURLs);
   PageThumbs.addExpirationFilter(dontExpireURLs);
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     PageThumbs.removeExpirationFilter(dontExpireURLs);
   });
 }

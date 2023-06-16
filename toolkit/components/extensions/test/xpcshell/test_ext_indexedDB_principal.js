@@ -20,23 +20,23 @@ add_task(async function test_indexedDB_principal() {
       browser.test.onMessage.addListener(async msg => {
         if (msg == "create-storage") {
           let request = window.indexedDB.open("TestDatabase");
-          request.onupgradeneeded = function(e) {
+          request.onupgradeneeded = function (e) {
             let db = e.target.result;
             db.createObjectStore("TestStore");
           };
-          request.onsuccess = function(e) {
+          request.onsuccess = function (e) {
             let db = e.target.result;
             let tx = db.transaction("TestStore", "readwrite");
             let store = tx.objectStore("TestStore");
             tx.oncomplete = () => browser.test.sendMessage("storage-created");
             store.add("foo", "bar");
-            tx.onerror = function(e) {
+            tx.onerror = function (e) {
               browser.test.fail(`Failed with error ${tx.error.message}`);
               // Don't wait for timeout
               browser.test.sendMessage("storage-created");
             };
           };
-          request.onerror = function(e) {
+          request.onerror = function (e) {
             browser.test.fail(`Failed with error ${request.error.message}`);
             // Don't wait for timeout
             browser.test.sendMessage("storage-created");
@@ -45,14 +45,14 @@ add_task(async function test_indexedDB_principal() {
         }
         if (msg == "check-storage") {
           let dbRequest = window.indexedDB.open("TestDatabase");
-          dbRequest.onupgradeneeded = function() {
+          dbRequest.onupgradeneeded = function () {
             browser.test.fail("Database should exist");
             browser.test.notifyFail("done");
           };
-          dbRequest.onsuccess = function(e) {
+          dbRequest.onsuccess = function (e) {
             let db = e.target.result;
             let transaction = db.transaction("TestStore");
-            transaction.onerror = function(e) {
+            transaction.onerror = function (e) {
               browser.test.fail(
                 `Failed with error ${transaction.error.message}`
               );
@@ -60,7 +60,7 @@ add_task(async function test_indexedDB_principal() {
             };
             let objectStore = transaction.objectStore("TestStore");
             let request = objectStore.get("bar");
-            request.onsuccess = function(event) {
+            request.onsuccess = function (event) {
               browser.test.assertEq(
                 request.result,
                 "foo",
@@ -68,12 +68,12 @@ add_task(async function test_indexedDB_principal() {
               );
               browser.test.notifyPass("done");
             };
-            request.onerror = function(e) {
+            request.onerror = function (e) {
               browser.test.fail(`Failed with error ${request.error.message}`);
               browser.test.notifyFail("done");
             };
           };
-          dbRequest.onerror = function(e) {
+          dbRequest.onerror = function (e) {
             browser.test.fail(`Failed with error ${dbRequest.error.message}`);
             browser.test.notifyFail("done");
           };

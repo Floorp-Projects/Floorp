@@ -12,7 +12,7 @@ const {
   setCensusDisplay,
 } = require("resource://devtools/client/memory/actions/census-display.js");
 
-add_task(async function() {
+add_task(async function () {
   const store = Store();
   const { getState, dispatch } = store;
 

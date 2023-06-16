@@ -2,270 +2,306 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-
 <!DOCTYPE html>
 
 <html>
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="Content-Security-Policy" content="default-src chrome:; object-src 'none'">
-        <meta name="color-scheme" content="light dark">
-        <title data-l10n-id="about-networking-title"></title>
-        <link rel="stylesheet" href="chrome://global/skin/aboutNetworking.css">
-        <script src="chrome://global/content/aboutNetworking.js"></script>
-        <link rel="localization"  href="toolkit/about/aboutNetworking.ftl">
-    </head>
-    <body id="body">
-        <div id="categories">
-            <div class="category category-no-icon" selected="true" id="category-http">
-                <span class="category-name" data-l10n-id="about-networking-http"></span>
-            </div>
-            <div class="category category-no-icon" id="category-sockets">
-                <span class="category-name" data-l10n-id="about-networking-sockets"></span>
-            </div>
-            <div class="category category-no-icon" id="category-dns">
-                <span class="category-name" data-l10n-id="about-networking-dns"></span>
-            </div>
-            <div class="category category-no-icon" id="category-websockets">
-                <span class="category-name" data-l10n-id="about-networking-websockets"></span>
-            </div>
-            <hr>
-            <div class="category category-no-icon" id="category-dnslookuptool">
-                <span class="category-name" data-l10n-id="about-networking-dns-lookup"></span>
-            </div>
-            <div class="category category-no-icon" id="category-logging">
-                <span class="category-name" data-l10n-id="about-networking-logging"></span>
-            </div>
-            <div class="category category-no-icon" id="category-rcwn">
-                <span class="category-name" data-l10n-id="about-networking-rcwn"></span>
-            </div>
-            <div class="category category-no-icon" id="category-networkid">
-                <span class="category-name" data-l10n-id="about-networking-networkid"></span>
-            </div>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src chrome:; object-src 'none'"
+    />
+    <meta name="color-scheme" content="light dark" />
+    <title data-l10n-id="about-networking-title"></title>
+    <link rel="stylesheet" href="chrome://global/skin/aboutNetworking.css" />
+    <script src="chrome://global/content/aboutNetworking.js"></script>
+    <link rel="localization" href="toolkit/about/aboutNetworking.ftl" />
+  </head>
+  <body id="body">
+    <div id="categories">
+      <div class="category category-no-icon" selected="true" id="category-http">
+        <span class="category-name" data-l10n-id="about-networking-http"></span>
+      </div>
+      <div class="category category-no-icon" id="category-sockets">
+        <span
+          class="category-name"
+          data-l10n-id="about-networking-sockets"
+        ></span>
+      </div>
+      <div class="category category-no-icon" id="category-dns">
+        <span class="category-name" data-l10n-id="about-networking-dns"></span>
+      </div>
+      <div class="category category-no-icon" id="category-websockets">
+        <span
+          class="category-name"
+          data-l10n-id="about-networking-websockets"
+        ></span>
+      </div>
+      <hr />
+      <div class="category category-no-icon" id="category-dnslookuptool">
+        <span
+          class="category-name"
+          data-l10n-id="about-networking-dns-lookup"
+        ></span>
+      </div>
+      <div class="category category-no-icon" id="category-logging">
+        <span
+          class="category-name"
+          data-l10n-id="about-networking-logging"
+        ></span>
+      </div>
+      <div class="category category-no-icon" id="category-rcwn">
+        <span class="category-name" data-l10n-id="about-networking-rcwn"></span>
+      </div>
+      <div class="category category-no-icon" id="category-networkid">
+        <span
+          class="category-name"
+          data-l10n-id="about-networking-networkid"
+        ></span>
+      </div>
+    </div>
+    <div class="main-content">
+      <div class="header">
+        <div
+          id="sectionTitle"
+          class="header-name"
+          data-l10n-id="about-networking-http"
+        ></div>
+        <div id="refreshDiv">
+          <button
+            id="refreshButton"
+            data-l10n-id="about-networking-refresh"
+          ></button>
+          <label class="toggle-container-with-text">
+            <input
+              id="autorefcheck"
+              type="checkbox"
+              name="Autorefresh"
+              role="checkbox"
+            />
+            <span data-l10n-id="about-networking-auto-refresh"></span>
+          </label>
         </div>
-        <div class="main-content">
-            <div class="header">
-                <div id="sectionTitle" class="header-name" data-l10n-id="about-networking-http"></div>
-                <div id="refreshDiv">
-                    <button id="refreshButton" data-l10n-id="about-networking-refresh"></button>
-                    <label class="toggle-container-with-text">
-                        <input id="autorefcheck" type="checkbox" name="Autorefresh" role="checkbox">
-                        <span data-l10n-id="about-networking-auto-refresh"></span>
-                    </label>
-                </div>
-            </div>
+      </div>
 
-          <div id="http" class="tab active">
-              <table>
-                  <thead>
-                      <tr>
-                          <th data-l10n-id="about-networking-hostname"></th>
-                          <th data-l10n-id="about-networking-port"></th>
-                          <th data-l10n-id="about-networking-http-version"></th>
-                          <th data-l10n-id="about-networking-ssl"></th>
-                          <th data-l10n-id="about-networking-active"></th>
-                          <th data-l10n-id="about-networking-idle"></th>
-                      </tr>
-                  </thead>
-                  <tbody id="http_content"></tbody>
-              </table>
-          </div>
+      <div id="http" class="tab active">
+        <table>
+          <thead>
+            <tr>
+              <th data-l10n-id="about-networking-hostname"></th>
+              <th data-l10n-id="about-networking-port"></th>
+              <th data-l10n-id="about-networking-http-version"></th>
+              <th data-l10n-id="about-networking-ssl"></th>
+              <th data-l10n-id="about-networking-active"></th>
+              <th data-l10n-id="about-networking-idle"></th>
+            </tr>
+          </thead>
+          <tbody id="http_content"></tbody>
+        </table>
+      </div>
 
-          <div id="sockets" class="tab" hidden="true">
-              <table>
-                  <thead>
-                      <tr>
-                          <th data-l10n-id="about-networking-host"></th>
-                          <th data-l10n-id="about-networking-port"></th>
-                          <th data-l10n-id="about-networking-type"></th>
-                          <th data-l10n-id="about-networking-active"></th>
-                          <th data-l10n-id="about-networking-sent"></th>
-                          <th data-l10n-id="about-networking-received"></th>
-                      </tr>
-                  </thead>
-                  <tbody id="sockets_content"></tbody>
-              </table>
-          </div>
+      <div id="sockets" class="tab" hidden="true">
+        <table>
+          <thead>
+            <tr>
+              <th data-l10n-id="about-networking-host"></th>
+              <th data-l10n-id="about-networking-port"></th>
+              <th data-l10n-id="about-networking-type"></th>
+              <th data-l10n-id="about-networking-active"></th>
+              <th data-l10n-id="about-networking-sent"></th>
+              <th data-l10n-id="about-networking-received"></th>
+            </tr>
+          </thead>
+          <tbody id="sockets_content"></tbody>
+        </table>
+      </div>
 
-          <div id="dns" class="tab" hidden="true">
-              <table>
-                  <thead>
-                      <tr>
-                          <th data-l10n-id="about-networking-dns-suffix"></th>
-                      </tr>
-                  </thead>
-                  <tbody id="dns_suffix_content"></tbody>
-              </table>
-              <table>
-                <thead>
-                      <tr>
-                          <th data-l10n-id="about-networking-dns-trr-url"></th>
-                          <th data-l10n-id="about-networking-dns-trr-mode"></th>
-                      </tr>
-                  </thead>
-                  <tbody id="dns_trr_url"></tbody>
-              </table>
-              <br><br>
-              <button id="clearDNSCache" data-l10n-id="about-networking-dns-clear-cache-button"></button>
-              <br><br>
-              <table>
-                  <thead>
-                      <tr>
-                          <th data-l10n-id="about-networking-hostname"></th>
-                          <th data-l10n-id="about-networking-family"></th>
-                          <th data-l10n-id="about-networking-trr"></th>
-                          <th data-l10n-id="about-networking-addresses"></th>
-                          <th data-l10n-id="about-networking-expires"></th>
-                          <th data-l10n-id="about-networking-originAttributesSuffix"></th>
-                          <th data-l10n-id="about-networking-flags"></th>
-                      </tr>
-                  </thead>
-                  <tbody id="dns_content"></tbody>
-              </table>
-          </div>
+      <div id="dns" class="tab" hidden="true">
+        <table>
+          <thead>
+            <tr>
+              <th data-l10n-id="about-networking-dns-suffix"></th>
+            </tr>
+          </thead>
+          <tbody id="dns_suffix_content"></tbody>
+        </table>
+        <table>
+          <thead>
+            <tr>
+              <th data-l10n-id="about-networking-dns-trr-url"></th>
+              <th data-l10n-id="about-networking-dns-trr-mode"></th>
+            </tr>
+          </thead>
+          <tbody id="dns_trr_url"></tbody>
+        </table>
+        <br /><br />
+        <button
+          id="clearDNSCache"
+          data-l10n-id="about-networking-dns-clear-cache-button"
+        ></button>
+        <br /><br />
+        <table>
+          <thead>
+            <tr>
+              <th data-l10n-id="about-networking-hostname"></th>
+              <th data-l10n-id="about-networking-family"></th>
+              <th data-l10n-id="about-networking-trr"></th>
+              <th data-l10n-id="about-networking-addresses"></th>
+              <th data-l10n-id="about-networking-expires"></th>
+              <th data-l10n-id="about-networking-originAttributesSuffix"></th>
+              <th data-l10n-id="about-networking-flags"></th>
+            </tr>
+          </thead>
+          <tbody id="dns_content"></tbody>
+        </table>
+      </div>
 
-          <div id="websockets" class="tab" hidden="true">
-              <table>
-                  <thead>
-                      <tr>
-                          <th data-l10n-id="about-networking-hostname"></th>
-                          <th data-l10n-id="about-networking-ssl"></th>
-                          <th data-l10n-id="about-networking-messages-sent"></th>
-                          <th data-l10n-id="about-networking-messages-received"></th>
-                          <th data-l10n-id="about-networking-bytes-sent"></th>
-                          <th data-l10n-id="about-networking-bytes-received"></th>
-                      </tr>
-                  </thead>
-                  <tbody id="websockets_content"></tbody>
-              </table>
-          </div>
+      <div id="websockets" class="tab" hidden="true">
+        <table>
+          <thead>
+            <tr>
+              <th data-l10n-id="about-networking-hostname"></th>
+              <th data-l10n-id="about-networking-ssl"></th>
+              <th data-l10n-id="about-networking-messages-sent"></th>
+              <th data-l10n-id="about-networking-messages-received"></th>
+              <th data-l10n-id="about-networking-bytes-sent"></th>
+              <th data-l10n-id="about-networking-bytes-received"></th>
+            </tr>
+          </thead>
+          <tbody id="websockets_content"></tbody>
+        </table>
+      </div>
 
-          <div id="dnslookuptool" class="tab" hidden="true">
-              <label data-l10n-id="about-networking-dns-domain"></label>
-              <input type="text" name="host" id="host">
-              <button id="dnsLookupButton" data-l10n-id="about-networking-dns-lookup-button"></button>
-              <hr>
-              <table>
-                  <thead>
-                      <tr>
-                          <th data-l10n-id="about-networking-dns-lookup-table-column"></th>
-                      </tr>
-                  </thead>
-                  <tbody id="dnslookuptool_content"></tbody>
-              </table>
-              <hr>
-              <table>
-                  <thead>
-                      <tr>
-                          <th data-l10n-id="about-networking-dns-https-rr-lookup-table-column"></th>
-                      </tr>
-                  </thead>
-                  <tbody id="https_rr_content"></tbody>
-              </table>
-          </div>
+      <div id="dnslookuptool" class="tab" hidden="true">
+        <label data-l10n-id="about-networking-dns-domain"></label>
+        <input type="text" name="host" id="host" />
+        <button
+          id="dnsLookupButton"
+          data-l10n-id="about-networking-dns-lookup-button"
+        ></button>
+        <hr />
+        <table>
+          <thead>
+            <tr>
+              <th data-l10n-id="about-networking-dns-lookup-table-column"></th>
+            </tr>
+          </thead>
+          <tbody id="dnslookuptool_content"></tbody>
+        </table>
+        <hr />
+        <table>
+          <thead>
+            <tr>
+              <th
+                data-l10n-id="about-networking-dns-https-rr-lookup-table-column"
+              ></th>
+            </tr>
+          </thead>
+          <tbody id="https_rr_content"></tbody>
+        </table>
+      </div>
 
-          <div id="rcwn" class="tab" hidden="true">
-              <table>
-                  <thead>
-                      <tr>
-                          <th data-l10n-id="about-networking-rcwn-status"></th>
-                          <th data-l10n-id="about-networking-total-network-requests"></th>
-                          <th data-l10n-id="about-networking-rcwn-cache-won-count"></th>
-                          <th data-l10n-id="about-networking-rcwn-net-won-count"></th>
-                      </tr>
-                  </thead>
-                  <tbody id="rcwn_content">
-                    <tr>
-                      <td id="rcwn_status"> </td>
-                      <td id="total_req_count"> </td>
-                      <td id="rcwn_cache_won_count"> </td>
-                      <td id="rcwn_cache_net_count"> </td>
-                    </tr>
-                  </tbody>
-              </table>
+      <div id="rcwn" class="tab" hidden="true">
+        <table>
+          <thead>
+            <tr>
+              <th data-l10n-id="about-networking-rcwn-status"></th>
+              <th data-l10n-id="about-networking-total-network-requests"></th>
+              <th data-l10n-id="about-networking-rcwn-cache-won-count"></th>
+              <th data-l10n-id="about-networking-rcwn-net-won-count"></th>
+            </tr>
+          </thead>
+          <tbody id="rcwn_content">
+            <tr>
+              <td id="rcwn_status"></td>
+              <td id="total_req_count"></td>
+              <td id="rcwn_cache_won_count"></td>
+              <td id="rcwn_cache_net_count"></td>
+            </tr>
+          </tbody>
+        </table>
 
-              <br><br>
+        <br /><br />
 
-              <table>
-                  <thead>
-                      <tr>
-                          <th data-l10n-id="about-networking-rcwn-operation"></th>
-                          <th data-l10n-id="about-networking-rcwn-avg-short"></th>
-                          <th data-l10n-id="about-networking-rcwn-avg-long"></th>
-                          <th data-l10n-id="about-networking-rcwn-std-dev-long"></th>
-                      </tr>
-                  </thead>
-                  <tbody id="cacheperf_content">
-                      <tr>
-                          <td data-l10n-id="about-networking-rcwn-perf-open"></td>
-                          <td id="rcwn_perfstats_open_avgShort"> </td>
-                          <td id="rcwn_perfstats_open_avgLong"> </td>
-                          <td id="rcwn_perfstats_open_stddevLong"> </td>
-                      </tr>
-                      <tr>
-                          <td data-l10n-id="about-networking-rcwn-perf-read"></td>
-                          <td id="rcwn_perfstats_read_avgShort"> </td>
-                          <td id="rcwn_perfstats_read_avgLong"> </td>
-                          <td id="rcwn_perfstats_read_stddevLong"> </td>
-                      </tr>
-                      <tr>
-                          <td data-l10n-id="about-networking-rcwn-perf-write"></td>
-                          <td id="rcwn_perfstats_write_avgShort"> </td>
-                          <td id="rcwn_perfstats_write_avgLong"> </td>
-                          <td id="rcwn_perfstats_write_stddevLong"> </td>
-                      </tr>
-                      <tr>
-                          <td data-l10n-id="about-networking-rcwn-perf-entry-open"></td>
-                          <td id="rcwn_perfstats_entryopen_avgShort"> </td>
-                          <td id="rcwn_perfstats_entryopen_avgLong"> </td>
-                          <td id="rcwn_perfstats_entryopen_stddevLong"> </td>
-                      </tr>
-                  </tbody>
-              </table>
+        <table>
+          <thead>
+            <tr>
+              <th data-l10n-id="about-networking-rcwn-operation"></th>
+              <th data-l10n-id="about-networking-rcwn-avg-short"></th>
+              <th data-l10n-id="about-networking-rcwn-avg-long"></th>
+              <th data-l10n-id="about-networking-rcwn-std-dev-long"></th>
+            </tr>
+          </thead>
+          <tbody id="cacheperf_content">
+            <tr>
+              <td data-l10n-id="about-networking-rcwn-perf-open"></td>
+              <td id="rcwn_perfstats_open_avgShort"></td>
+              <td id="rcwn_perfstats_open_avgLong"></td>
+              <td id="rcwn_perfstats_open_stddevLong"></td>
+            </tr>
+            <tr>
+              <td data-l10n-id="about-networking-rcwn-perf-read"></td>
+              <td id="rcwn_perfstats_read_avgShort"></td>
+              <td id="rcwn_perfstats_read_avgLong"></td>
+              <td id="rcwn_perfstats_read_stddevLong"></td>
+            </tr>
+            <tr>
+              <td data-l10n-id="about-networking-rcwn-perf-write"></td>
+              <td id="rcwn_perfstats_write_avgShort"></td>
+              <td id="rcwn_perfstats_write_avgLong"></td>
+              <td id="rcwn_perfstats_write_stddevLong"></td>
+            </tr>
+            <tr>
+              <td data-l10n-id="about-networking-rcwn-perf-entry-open"></td>
+              <td id="rcwn_perfstats_entryopen_avgShort"></td>
+              <td id="rcwn_perfstats_entryopen_avgLong"></td>
+              <td id="rcwn_perfstats_entryopen_stddevLong"></td>
+            </tr>
+          </tbody>
+        </table>
 
-              <br><br>
+        <br /><br />
 
-              <table>
-                  <thead>
-                      <tr>
-                          <th data-l10n-id="about-networking-rcwn-cache-slow"></th>
-                          <th data-l10n-id="about-networking-rcwn-cache-not-slow"></th>
-                      </tr>
-                  </thead>
-                  <tbody>
-                      <tr>
-                          <td id="rcwn_cache_slow"> </td>
-                          <td id="rcwn_cache_not_slow"> </td>
-                      </tr>
-                  </tbody>
-              </table>
-          </div>
+        <table>
+          <thead>
+            <tr>
+              <th data-l10n-id="about-networking-rcwn-cache-slow"></th>
+              <th data-l10n-id="about-networking-rcwn-cache-not-slow"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td id="rcwn_cache_slow"></td>
+              <td id="rcwn_cache_not_slow"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-          <div id="logging" class="tab" hidden="true">
-                <span data-l10n-id="about-networking-moved-about-logging">
-                  <a data-l10n-name="about-logging-url" href="about:logging"></a>
-                </span>
-          </div>
+      <div id="logging" class="tab" hidden="true">
+        <span data-l10n-id="about-networking-moved-about-logging">
+          <a data-l10n-name="about-logging-url" href="about:logging"></a>
+        </span>
+      </div>
 
-          <div id="networkid" class="tab" hidden="true">
-              <table>
-                  <thead>
-                      <tr>
-                          <th data-l10n-id="about-networking-networkid-is-up"></th>
-                          <th data-l10n-id="about-networking-networkid-status-known"></th>
-                          <th data-l10n-id="about-networking-networkid-id"></th>
-                      </tr>
-                  </thead>
-                  <tbody id="networkid_content">
-                      <tr>
-                          <td id="networkid_isUp"> </td>
-                          <td id="networkid_statusKnown"> </td>
-                          <td id="networkid_id"> </td>
-                      </tr>
-                  </tbody>
-              </table>
-          </div>
-
-        </div>
-    </body>
+      <div id="networkid" class="tab" hidden="true">
+        <table>
+          <thead>
+            <tr>
+              <th data-l10n-id="about-networking-networkid-is-up"></th>
+              <th data-l10n-id="about-networking-networkid-status-known"></th>
+              <th data-l10n-id="about-networking-networkid-id"></th>
+            </tr>
+          </thead>
+          <tbody id="networkid_content">
+            <tr>
+              <td id="networkid_isUp"></td>
+              <td id="networkid_statusKnown"></td>
+              <td id="networkid_id"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </body>
 </html>

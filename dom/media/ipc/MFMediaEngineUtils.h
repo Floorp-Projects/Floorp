@@ -74,6 +74,14 @@ const char* GUIDToStr(GUID aGUID);
 const char* MFVideoRotationFormatToStr(MFVideoRotationFormat aFormat);
 const char* MFVideoTransferFunctionToStr(MFVideoTransferFunction aFunc);
 const char* MFVideoPrimariesToStr(MFVideoPrimaries aPrimaries);
+void ByteArrayFromGUID(REFGUID aGuidIn, nsTArray<uint8_t>& aByteArrayOut);
+void GUIDFromByteArray(const nsTArray<uint8_t>& aByteArrayIn, GUID& aGuidOut);
+
+// See cdm::SubsampleEntry
+struct MediaFoundationSubsampleEntry {
+  uint32_t mClearBytes;
+  uint32_t mCipherBytes;
+};
 
 template <typename T>
 class ScopedCoMem {

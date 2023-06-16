@@ -241,6 +241,12 @@ ka{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimePatterns%atTime{
+                "{1} {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
             DateTimeSkeletons{
                 "HHmmsszzzz",
                 "HHmmssz",
@@ -1827,7 +1833,25 @@ ka{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        or-narrow{
+            2{"{0} ან {1}"}
+            end{"{0} ან {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        or-short{
+            2{"{0} ან {1}"}
+            end{"{0} ან {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
+            2{"{0} და {1}"}
+            end{"{0} და {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-narrow{
             2{"{0} და {1}"}
             end{"{0} და {1}"}
             middle{"{0}, {1}"}
@@ -1875,6 +1899,47 @@ ka{
                 "yue",
                 "zh",
             }
+        }
+        namePattern{
+            givenFirst-long-addressing-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-long-addressing-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-long-monogram-formal{"{given-monogram}{given2-monogram}{surname-monogram}"}
+            givenFirst-long-monogram-informal{"{given-informal-monogram}{surname-monogram}"}
+            givenFirst-long-referring-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-medium-addressing-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-medium-addressing-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-medium-monogram-formal{"{given-monogram}{given2-monogram}{surname-monogram}"}
+            givenFirst-medium-monogram-informal{"{given-monogram}{given2-monogram}{surname-monogram}"}
+            givenFirst-medium-referring-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-medium-referring-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-short-addressing-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-short-addressing-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-short-monogram-formal{"{given-monogram}{given2-monogram}{surname-monogram}"}
+            givenFirst-short-monogram-informal{"{given-monogram}{given2-monogram}{surname-monogram}"}
+            givenFirst-short-referring-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-short-referring-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            sorting-long-referring-informal{"{surname} {surname2}, {title} {given} {given2} {credentials}"}
+            sorting-medium-referring-formal{"{surname} {surname2}, {title} {given} {given2} {credentials}"}
+            sorting-medium-referring-informal{"{surname} {surname2}, {title} {given} {given2} {credentials}"}
+            sorting-short-referring-formal{"{surname} {surname2}, {title} {given} {given2} {credentials}"}
+            sorting-short-referring-informal{"{surname} {surname2}, {title} {given} {given2} {credentials}"}
+            surnameFirst-long-addressing-formal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
+            surnameFirst-long-addressing-informal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
+            surnameFirst-long-monogram-formal{"{surname-monogram}{given-monogram}{given2-monogram}"}
+            surnameFirst-long-monogram-informal{"{surname-monogram}{given-monogram}{given2-monogram}"}
+            surnameFirst-long-referring-informal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
+            surnameFirst-medium-addressing-formal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
+            surnameFirst-medium-addressing-informal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
+            surnameFirst-medium-monogram-formal{"{surname-monogram}{given-monogram}{given2-monogram}"}
+            surnameFirst-medium-monogram-informal{"{surname-monogram}{given-monogram}{given2-monogram}"}
+            surnameFirst-medium-referring-formal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
+            surnameFirst-medium-referring-informal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
+            surnameFirst-short-addressing-formal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
+            surnameFirst-short-addressing-informal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
+            surnameFirst-short-monogram-formal{"{surname-monogram}{given-monogram}{given2-monogram}"}
+            surnameFirst-short-monogram-informal{"{surname-monogram}{given-monogram}{given2-monogram}"}
+            surnameFirst-short-referring-formal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
+            surnameFirst-short-referring-informal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
         }
     }
 }

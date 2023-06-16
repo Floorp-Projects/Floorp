@@ -7,7 +7,7 @@ Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-addons.js", this);
 
 // Test that temporary extensions show a message about temporary ids, with a learn more
 // link.
-add_task(async function() {
+add_task(async function () {
   const EXTENSION_NAME = "Temporary web extension";
   const EXTENSION_ID = "test-devtools@mozilla.org";
 
@@ -38,7 +38,7 @@ add_task(async function() {
 });
 
 // Test that the message and the link are not displayed for a regular extension.
-add_task(async function() {
+add_task(async function () {
   const PACKAGED_EXTENSION_ID = "packaged-extension@tests";
   const PACKAGED_EXTENSION_NAME = "Packaged extension";
 

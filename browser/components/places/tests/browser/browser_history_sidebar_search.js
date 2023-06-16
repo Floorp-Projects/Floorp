@@ -26,7 +26,7 @@ add_task(async function test() {
   }
   await PlacesTestUtils.addVisits(places);
 
-  await withSidebarTree("history", function() {
+  await withSidebarTree("history", function () {
     info("Set 'by last visited' view");
     sidebar.contentDocument.getElementById("bylastvisited").doCommand();
     let tree = sidebar.contentDocument.getElementById("historyTree");

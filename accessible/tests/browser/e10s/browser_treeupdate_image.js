@@ -14,7 +14,7 @@ const ARIA_LABEL = "some-label";
 // Verify that granting alt text adds the graphic accessible.
 addAccessibleTask(
   `<img id="${IMG_ID}" src="${MOCHITESTS_DIR}/moz.png" alt=""/>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     // Test initial state; the img has empty alt text so it should not be in the tree.
     const acc = findAccessibleChildByID(accDoc, IMG_ID);
     ok(!acc, "Image has no Accessible");
@@ -37,7 +37,7 @@ addAccessibleTask(
 // Verify that the graphic accessible exists even with a missing alt attribute.
 addAccessibleTask(
   `<img id="${IMG_ID}" src="${MOCHITESTS_DIR}/moz.png"/>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     // Test initial state; the img has no alt attribute so the name is empty.
     const acc = findAccessibleChildByID(accDoc, IMG_ID);
     let tree = {
@@ -65,7 +65,7 @@ addAccessibleTask(
 // Verify that removing alt text removes the graphic accessible.
 addAccessibleTask(
   `<img id="${IMG_ID}" src="${MOCHITESTS_DIR}/moz.png" alt="${ALT_TEXT}"/>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     // Test initial state; the img has alt text so it should be in the tree.
     let acc = findAccessibleChildByID(accDoc, IMG_ID);
     let tree = {
@@ -93,7 +93,7 @@ addAccessibleTask(
 // there is no alt text.
 addAccessibleTask(
   `<img id="${IMG_ID}" src="${MOCHITESTS_DIR}/moz.png" aria-label="${ARIA_LABEL}" alt=""/>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     // Test initial state; the img has empty alt text, but it does have an
     // aria-label, so it should be in the tree.
     const acc = findAccessibleChildByID(accDoc, IMG_ID);
@@ -121,7 +121,7 @@ addAccessibleTask(
 // accessible's presence in the tree.
 addAccessibleTask(
   `<img id="${IMG_ID}" src="${MOCHITESTS_DIR}/moz.png" alt=""/>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     // Add a click listener to the img element.
     info(`Adding click listener to img id '${IMG_ID}'`);
     const shown = waitForEvent(EVENT_SHOW, IMG_ID);
@@ -146,7 +146,7 @@ addAccessibleTask(
 // Verify that the presentation role prevents creation of the graphic accessible.
 addAccessibleTask(
   `<img id="${IMG_ID}" src="${MOCHITESTS_DIR}/moz.png" role="presentation"/>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     // Test initial state; the img is presentational and should not be in the tree.
     const acc = findAccessibleChildByID(accDoc, IMG_ID);
     ok(!acc, "Image has no Accessible");
@@ -175,7 +175,7 @@ addAccessibleTask(
 // See Bug 1799208 for more info.
 addAccessibleTask(
   `<img id="${IMG_ID}" src="${MOCHITESTS_DIR}/moz.png" hidden/>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     // Test initial state; should be no accessible since img is hidden.
     const acc = findAccessibleChildByID(accDoc, IMG_ID);
     ok(!acc, "Image has no Accessible");

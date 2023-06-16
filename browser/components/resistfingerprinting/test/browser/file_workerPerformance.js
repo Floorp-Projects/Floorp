@@ -113,7 +113,7 @@ function runTimerTests(expectedPrecision) {
   finish();
 }
 
-self.onmessage = function(e) {
+self.onmessage = function (e) {
   if (e.data.type === "runTimerTests") {
     runTimerTests(e.data.precision);
   } else {

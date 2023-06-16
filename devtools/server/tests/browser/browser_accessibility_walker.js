@@ -6,15 +6,9 @@
 
 // Checks for the AccessibleWalkerActor
 
-add_task(async function() {
-  const {
-    target,
-    walker,
-    a11yWalker,
-    parentAccessibility,
-  } = await initAccessibilityFrontsForUrl(
-    MAIN_DOMAIN + "doc_accessibility.html"
-  );
+add_task(async function () {
+  const { target, walker, a11yWalker, parentAccessibility } =
+    await initAccessibilityFrontsForUrl(MAIN_DOMAIN + "doc_accessibility.html");
 
   ok(a11yWalker, "The AccessibleWalkerFront was returned");
   const rootNode = await walker.getRootNode();

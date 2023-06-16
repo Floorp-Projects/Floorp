@@ -25,11 +25,11 @@ const {
 } = require("resource://devtools/client/shared/source-map-loader/utils/index.js");
 
 class SourceMapLoader extends WorkerDispatcher {
-  #_setSourceMapForGeneratedSources = this.task(
+  #setSourceMapForGeneratedSources = this.task(
     "setSourceMapForGeneratedSources"
   );
-  #_getOriginalURLs = this.task("getOriginalURLs");
-  #_getOriginalSourceText = this.task("getOriginalSourceText");
+  #getOriginalURLs = this.task("getOriginalURLs");
+  #getOriginalSourceText = this.task("getOriginalSourceText");
 
   constructor() {
     super(SOURCE_MAP_WORKER_URL);
@@ -37,7 +37,7 @@ class SourceMapLoader extends WorkerDispatcher {
 
   async getOriginalURLs(urlInfo) {
     try {
-      return await this.#_getOriginalURLs(urlInfo);
+      return await this.#getOriginalURLs(urlInfo);
     } catch (error) {
       const message = L10N.getFormatStr(
         "toolbox.sourceMapFailure",
@@ -69,10 +69,11 @@ class SourceMapLoader extends WorkerDispatcher {
   getOriginalLocations = this.task("getOriginalLocations");
   getGeneratedRangesForOriginal = this.task("getGeneratedRangesForOriginal");
   getFileGeneratedRange = this.task("getFileGeneratedRange");
+  getSourceMapIgnoreList = this.task("getSourceMapIgnoreList");
 
   async getOriginalSourceText(originalSourceId) {
     try {
-      return await this.#_getOriginalSourceText(originalSourceId);
+      return await this.#getOriginalSourceText(originalSourceId);
     } catch (error) {
       const message = L10N.getFormatStr(
         "toolbox.sourceMapSourceFailure",
@@ -96,7 +97,7 @@ class SourceMapLoader extends WorkerDispatcher {
   getOriginalStackFrames = this.task("getOriginalStackFrames");
 
   async setSourceMapForGeneratedSources(generatedIds, sourceMap) {
-    const rv = await this.#_setSourceMapForGeneratedSources(
+    const rv = await this.#setSourceMapForGeneratedSources(
       generatedIds,
       sourceMap
     );

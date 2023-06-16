@@ -12,7 +12,7 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsITrackingDBService"
 );
 
-XPCOMUtils.defineLazyGetter(this, "TRACK_DB_PATH", function() {
+XPCOMUtils.defineLazyGetter(this, "TRACK_DB_PATH", function () {
   return PathUtils.join(PathUtils.profileDir, "protections.sqlite");
 });
 
@@ -21,8 +21,8 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource://gre/modules/ContentBlockingAllowList.sys.mjs",
 });
 
-var { UrlClassifierTestUtils } = ChromeUtils.import(
-  "resource://testing-common/UrlClassifierTestUtils.jsm"
+var { UrlClassifierTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
 );
 
 async function openProtectionsPanel(toast, win = window) {
@@ -134,7 +134,7 @@ async function waitForAboutProtectionsTab() {
 
   // When the graph is built it means the messaging has finished,
   // we can close the tab.
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     await ContentTaskUtils.waitForCondition(() => {
       let bars = content.document.querySelectorAll(".graph-bar");
       return bars.length;

@@ -58,7 +58,7 @@ async function testExecuteBrowserActionWithOptions(options = {}) {
         </html>
       `,
 
-      "popup.js": function() {
+      "popup.js": function () {
         browser.runtime.sendMessage("from-browser-action-popup");
       },
     };

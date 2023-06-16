@@ -61,7 +61,7 @@ var currentPort = 0;
 var forceReload = false;
 var anonymous = false;
 
-var Listener = function() {};
+var Listener = function () {};
 Listener.prototype.clientPort = 0;
 Listener.prototype = {
   onStartRequest: function testOnStartRequest(request) {

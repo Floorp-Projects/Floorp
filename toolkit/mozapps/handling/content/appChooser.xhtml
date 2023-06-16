@@ -8,45 +8,59 @@
 
 <!DOCTYPE window>
 
-<window persist="width height screenX screenY"
-        aria-describedby="description-text"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        xmlns:html="http://www.w3.org/1999/xhtml"
-        data-l10n-id="chooser-window"
-        data-l10n-attrs="style">
-<dialog id="handling"
-        buttons="accept,cancel"
-        defaultButton="none"
-        data-l10n-id="chooser-dialog"
-        data-l10n-attrs="buttonlabelaccept, buttonaccesskeyaccept">
-  <linkset>
-    <html:link rel="localization" href="branding/brand.ftl"/>
-    <html:link rel="localization" href="toolkit/global/handlerDialog.ftl"/>
-  </linkset>
+<window
+  persist="width height screenX screenY"
+  aria-describedby="description-text"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  data-l10n-id="chooser-window"
+  data-l10n-attrs="style"
+>
+  <dialog
+    id="handling"
+    buttons="accept,cancel"
+    defaultButton="none"
+    data-l10n-id="chooser-dialog"
+    data-l10n-attrs="buttonlabelaccept, buttonaccesskeyaccept"
+  >
+    <linkset>
+      <html:link rel="localization" href="branding/brand.ftl" />
+      <html:link rel="localization" href="toolkit/global/handlerDialog.ftl" />
+    </linkset>
 
-  <script src="chrome://mozapps/content/handling/appChooser.js"
-          type="application/javascript"/>
+    <script
+      src="chrome://mozapps/content/handling/appChooser.js"
+      type="application/javascript"
+    />
 
-  <description id="description"/>
+    <description id="description" />
 
-  <vbox id="chooser" flex="1">
-    <richlistbox id="items" flex="1"
-                 ondblclick="dialog.onDblClick();"
-                 onselect="dialog.updateAcceptButton();">
-      <richlistitem id="item-choose" orient="horizontal" selected="true">
-        <label data-l10n-id="choose-other-app-description" flex="1"/>
-        <button oncommand="dialog.chooseApplication();"
-                data-l10n-id="choose-app-btn"/>
-      </richlistitem>
-    </richlistbox>
-  </vbox>
+    <vbox id="chooser" flex="1">
+      <richlistbox
+        id="items"
+        flex="1"
+        ondblclick="dialog.onDblClick();"
+        onselect="dialog.updateAcceptButton();"
+      >
+        <richlistitem id="item-choose" orient="horizontal" selected="true">
+          <label data-l10n-id="choose-other-app-description" flex="1" />
+          <button
+            oncommand="dialog.chooseApplication();"
+            data-l10n-id="choose-app-btn"
+          />
+        </richlistitem>
+      </richlistbox>
+    </vbox>
 
-  <vbox id="rememberContainer">
-    <html:label class="toggle-container-with-text">
-      <html:input type="checkbox" id="remember"/>
-      <html:span id="remember-label"/>
-    </html:label>
-    <description id="remember-text" data-l10n-id="chooser-dialog-remember-extra"/>
-  </vbox>
-</dialog>
+    <vbox id="rememberContainer">
+      <html:label class="toggle-container-with-text">
+        <html:input type="checkbox" id="remember" />
+        <html:span id="remember-label" />
+      </html:label>
+      <description
+        id="remember-text"
+        data-l10n-id="chooser-dialog-remember-extra"
+      />
+    </vbox>
+  </dialog>
 </window>

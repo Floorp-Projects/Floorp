@@ -16,8 +16,7 @@ var settings = [
   },
   // 3rd-party no-tracker with permission
   {
-    name:
-      "Test whether 3rd-party non-tracker frame has storage access when storage permission is granted before",
+    name: "Test whether 3rd-party non-tracker frame has storage access when storage permission is granted before",
     topPage: TEST_TOP_PAGE,
     thirdPartyPage: TEST_4TH_PARTY_PAGE,
     setup: () => {
@@ -39,8 +38,7 @@ var settings = [
   },
   // 3rd-party tracker with permission
   {
-    name:
-      "Test whether 3rd-party tracker frame has storage access when storage access permission is granted before",
+    name: "Test whether 3rd-party tracker frame has storage access when storage access permission is granted before",
     topPage: TEST_TOP_PAGE,
     thirdPartyPage: TEST_3RD_PARTY_PAGE,
     setup: () => {
@@ -157,7 +155,7 @@ var testCases = [
   },
 ];
 
-(function() {
+(function () {
   settings.forEach(setting => {
     ok(true, JSON.stringify(setting));
     if (setting.setup) {
@@ -167,9 +165,8 @@ var testCases = [
     }
 
     testCases.forEach(test => {
-      let [hasStorageAccess, expectedBlockingNotifications] = test.cases[
-        settings.indexOf(setting)
-      ];
+      let [hasStorageAccess, expectedBlockingNotifications] =
+        test.cases[settings.indexOf(setting)];
       let callback = hasStorageAccess
         ? async _ => {
             /* import-globals-from storageAccessAPIHelpers.js */

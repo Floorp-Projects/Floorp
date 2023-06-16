@@ -26,6 +26,7 @@
       testRole("path", ROLE_GRAPHIC);
       testRole("image", ROLE_GRAPHIC);
       testRole("image2", ROLE_GRAPHIC);
+      testRole("a", ROLE_LINK);
 
       SimpleTest.finish();
     }
@@ -85,6 +86,7 @@
     </image>
     <image x1="25" y1="110" width="50" height="20" id="image2"
            xlink:href="../moz.png" aria-label="hello"/>
+    <a href="#" id="a"><text>a</text></a>
   </svg>
 
 </body>

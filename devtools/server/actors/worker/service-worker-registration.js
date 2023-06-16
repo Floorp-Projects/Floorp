@@ -238,12 +238,8 @@ class ServiceWorkerRegistrationActor extends Actor {
   }
 
   _createServiceWorkerActors() {
-    const {
-      evaluatingWorker,
-      installingWorker,
-      waitingWorker,
-      activeWorker,
-    } = this._registration;
+    const { evaluatingWorker, installingWorker, waitingWorker, activeWorker } =
+      this._registration;
 
     this._evaluatingWorker = new ServiceWorkerActor(
       this.conn,

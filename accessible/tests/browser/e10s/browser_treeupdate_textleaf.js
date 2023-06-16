@@ -28,7 +28,7 @@ addAccessibleTask(
   `
   <p id="p">text</p>
   <pre id="pre">text</pre>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let p = findAccessibleChildByID(accDoc, "p");
     let pre = findAccessibleChildByID(accDoc, "pre");
     await removeTextData(browser, p, "p", ROLE_PARAGRAPH);

@@ -12,7 +12,7 @@ registerCleanupFunction(() => {
 
 // Test dynamic updates in the storage inspector for cookies.
 
-add_task(async function() {
+add_task(async function () {
   await openTabAndSetupStorage(MAIN_DOMAIN_SECURED + "storage-updates.html");
 
   gUI.tree.expandAll();

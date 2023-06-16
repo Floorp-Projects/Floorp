@@ -15,8 +15,7 @@
 module.exports = {
   meta: {
     docs: {
-      url:
-        "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/balanced-listeners.html",
+      url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/balanced-listeners.html",
     },
     messages: {
       noCorresponding:
@@ -133,8 +132,8 @@ module.exports = {
         }
       },
 
-      "Program:exit": function() {
-        getUnbalancedListeners().forEach(function(listener) {
+      "Program:exit": function () {
+        getUnbalancedListeners().forEach(function (listener) {
           context.report({
             node: listener.node,
             messageId: "noCorresponding",

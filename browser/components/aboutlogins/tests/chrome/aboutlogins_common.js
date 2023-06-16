@@ -30,7 +30,7 @@ function importDependencies(templateFrame, destinationEl) {
       let clone = element.cloneNode(true);
       promises.push(
         new Promise(resolve => {
-          clone.onload = function() {
+          clone.onload = function () {
             resolve();
             clone.remove();
           };

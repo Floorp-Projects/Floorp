@@ -173,7 +173,7 @@ function handleRequest(request, response) {
 
 function parseQueryString(queryString) {
   let query = {};
-  queryString.split("&").forEach(function(val) {
+  queryString.split("&").forEach(function (val) {
     let [name, value] = val.split("=");
     query[name] = decodeURIComponent(value).replace(/[+]/g, " ");
   });

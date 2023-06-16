@@ -104,7 +104,7 @@ RecordType* RecordType::createUninitialized(JSContext* cx,
   }
 
   Rooted<RecordType*> rec(
-      cx, cx->newCell<RecordType>(NewObjectGCKind(), gc::DefaultHeap,
+      cx, cx->newCell<RecordType>(NewObjectGCKind(), gc::Heap::Default,
                                   &RecordType::class_));
   if (!rec) {
     return nullptr;

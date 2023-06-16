@@ -6,7 +6,7 @@
 // Test for the following data of abandonment telemetry.
 // - sap
 
-add_setup(async function() {
+add_setup(async function () {
   await initSapTest();
 });
 

@@ -6,7 +6,7 @@ var tests = 3;
 
 SimpleTest.waitForExplicitFinish();
 
-testDone = function(event) {
+testDone = function (event) {
   if (!--tests) {
     SimpleTest.finish();
   }
@@ -15,7 +15,7 @@ testDone = function(event) {
 // Workers don't inherit CSP
 worker = new Worker("csp_worker.js");
 worker.postMessage({ do: "eval" });
-worker.onmessage = function(event) {
+worker.onmessage = function (event) {
   is(event.data, 42, "Eval succeeded!");
   testDone();
 };
@@ -29,7 +29,7 @@ xhr.onload = e => {
   uri = URL.createObjectURL(e.target.response);
   worker = new Worker(uri);
   worker.postMessage({ do: "eval" });
-  worker.onmessage = function(event) {
+  worker.onmessage = function (event) {
     is(event.data, "EvalError: call to eval() blocked by CSP", "Eval threw");
     testDone();
   };
@@ -43,7 +43,7 @@ xhr.onload = e => {
   uri = URL.createObjectURL(e.target.response);
   worker = new Worker(uri);
   worker.postMessage({ do: "nest", uri, level: 3 });
-  worker.onmessage = function(event) {
+  worker.onmessage = function (event) {
     is(
       event.data,
       "EvalError: call to eval() blocked by CSP",

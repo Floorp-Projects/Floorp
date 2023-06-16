@@ -7,7 +7,7 @@ const TEST_PATH_HTTP = getRootDirectory(gTestPath).replace(
 
 let WEBSOCKET_DOC_URL = `${TEST_PATH_HTTP}file_websocket_exceptions.html`;
 
-add_task(async function() {
+add_task(async function () {
   // Here is a sequence of how this test works:
   // 1. Dynamically inject a localhost iframe
   // 2. Add an exemption for localhost
@@ -23,20 +23,20 @@ add_task(async function() {
     ],
   });
 
-  await BrowserTestUtils.withNewTab("about:blank", async function(browser) {
+  await BrowserTestUtils.withNewTab("about:blank", async function (browser) {
     let loaded = BrowserTestUtils.browserLoaded(browser);
 
     BrowserTestUtils.loadURIString(browser, WEBSOCKET_DOC_URL);
     await loaded;
 
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       // Part 1:
       let myIframe = content.document.createElement("iframe");
       content.document.body.appendChild(myIframe);
       myIframe.src =
         "http://localhost:9898/browser/dom/security/test/https-only/file_websocket_exceptions_iframe.html";
 
-      myIframe.onload = async function() {
+      myIframe.onload = async function () {
         // Part 2:
         await SpecialPowers.pushPermissions([
           {

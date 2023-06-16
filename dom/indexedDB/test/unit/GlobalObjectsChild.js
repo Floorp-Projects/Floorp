@@ -11,7 +11,7 @@ function ok(cond, msg) {
 }
 
 function finishTest() {
-  executeSoon(function() {
+  executeSoon(function () {
     do_test_finished();
   });
 }
@@ -27,11 +27,11 @@ function run_test() {
   ok(keyRange, "Got keyRange");
 
   let request = indexedDB.open(name, 1);
-  request.onerror = function(event) {
+  request.onerror = function (event) {
     ok(false, "indexedDB error, '" + event.target.error.name + "'");
     finishTest();
   };
-  request.onsuccess = function(event) {
+  request.onsuccess = function (event) {
     let db = event.target.result;
     ok(db, "Got database");
     finishTest();

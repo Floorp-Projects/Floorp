@@ -12,8 +12,8 @@ const TOOLKIT_MINVERSION = "42.0a1";
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "42.0a2", "42.0a2");
 
-const { AddonUpdateChecker } = ChromeUtils.import(
-  "resource://gre/modules/addons/AddonUpdateChecker.jsm"
+const { AddonUpdateChecker } = ChromeUtils.importESModule(
+  "resource://gre/modules/addons/AddonUpdateChecker.sys.mjs"
 );
 
 let testserver = createHttpServer();
@@ -337,7 +337,7 @@ add_task(async function test_type_detection() {
   ];
 
   for (let [i, test] of tests.entries()) {
-    let { messages } = await promiseConsoleOutput(async function() {
+    let { messages } = await promiseConsoleOutput(async function () {
       let id = `updatecheck-typedetection-${i}@tests.mozilla.org`;
       let updates;
       try {

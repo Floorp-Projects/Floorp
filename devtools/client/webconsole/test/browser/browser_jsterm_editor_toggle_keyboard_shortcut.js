@@ -13,7 +13,7 @@ const EDITOR_PREF = "devtools.webconsole.input.editor";
 // See Bug 1631529
 requestLongerTimeout(2);
 
-add_task(async function() {
+add_task(async function () {
   // Start with the editor turned off
   await pushPref(EDITOR_PREF, false);
   let hud = await openNewTabAndConsole(TEST_URI);

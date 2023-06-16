@@ -916,6 +916,10 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   // Outer windows only.
   void PreloadLocalStorage();
 
+  mozilla::CSSPoint ScreenEdgeSlop();
+  mozilla::CSSCoord ScreenEdgeSlopX() { return ScreenEdgeSlop().X(); }
+  mozilla::CSSCoord ScreenEdgeSlopY() { return ScreenEdgeSlop().Y(); }
+
   // Returns CSS pixels based on primary screen.  Outer windows only.
   mozilla::CSSIntPoint GetScreenXY(mozilla::dom::CallerType aCallerType,
                                    mozilla::ErrorResult& aError);

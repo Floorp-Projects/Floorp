@@ -27,6 +27,21 @@ namespace {
 static constexpr webrtc::TimeDelta kEventTimeout =
     webrtc::TimeDelta::Seconds(10);
 
+bool IsScalabilityModeSupported(
+    const std::vector<webrtc::SdpVideoFormat>& formats,
+    absl::optional<std::string> scalability_mode) {
+  if (!scalability_mode.has_value()) {
+    return true;
+  }
+  for (const auto& format : formats) {
+    for (const auto& mode : format.scalability_modes) {
+      if (ScalabilityModeToString(mode) == scalability_mode)
+        return true;
+    }
+  }
+  return false;
+}
+
 }  // namespace
 
 // Decoder.
@@ -201,6 +216,22 @@ FakeWebRtcVideoEncoderFactory::GetSupportedFormats() const {
   }
 
   return formats;
+}
+
+webrtc::VideoEncoderFactory::CodecSupport
+FakeWebRtcVideoEncoderFactory::QueryCodecSupport(
+    const webrtc::SdpVideoFormat& format,
+    absl::optional<std::string> scalability_mode) const {
+  std::vector<webrtc::SdpVideoFormat> supported_formats;
+  for (const auto& f : formats_) {
+    if (format.IsSameCodec(f))
+      supported_formats.push_back(f);
+  }
+  if (format.IsCodecInList(formats_)) {
+    return {.is_supported = IsScalabilityModeSupported(supported_formats,
+                                                       scalability_mode)};
+  }
+  return {.is_supported = false};
 }
 
 std::unique_ptr<webrtc::VideoEncoder>

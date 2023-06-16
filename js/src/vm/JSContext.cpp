@@ -696,8 +696,9 @@ JSObject* js::CreateErrorNotesArray(JSContext* cx, JSErrorReport* report) {
     }
 
     RootedValue filenameVal(cx);
-    if (note->filename) {
-      RootedString filenameStr(cx, NewStringCopyZ<CanGC>(cx, note->filename));
+    if (const char* filename = note->filename) {
+      JS::UTF8Chars utf8chars(filename, strlen(filename));
+      Rooted<JSString*> filenameStr(cx, NewStringCopyUTF8N(cx, utf8chars));
       if (!filenameStr) {
         return nullptr;
       }

@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const url =
     "http://mochi.test:8888/browser/toolkit/content/tests/browser/doggy.png";
 
@@ -12,7 +12,7 @@ add_task(async function() {
 
   clearTelemetry();
 
-  await BrowserTestUtils.withNewTab(url, async function(browser) {
+  await BrowserTestUtils.withNewTab(url, async function (browser) {
     setClipboardText("");
     is(getTextFromClipboard(), "", "The copied text is empty.");
 

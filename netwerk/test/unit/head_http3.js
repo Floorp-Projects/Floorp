@@ -38,7 +38,7 @@ function makeChan(uri) {
   return chan;
 }
 
-let CheckHttp3Listener = function() {};
+let CheckHttp3Listener = function () {};
 
 CheckHttp3Listener.prototype = {
   expectedRoute: "",

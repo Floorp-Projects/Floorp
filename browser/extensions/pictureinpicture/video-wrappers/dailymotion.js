@@ -10,7 +10,7 @@ class PictureInPictureVideoWrapper {
 
     if (container) {
       updateCaptionsFunction("");
-      const callback = function(mutationsList, observer) {
+      const callback = function (mutationsList, observer) {
         let textNodeList = container
           ?.querySelector(".subtitles")
           ?.querySelectorAll("div");

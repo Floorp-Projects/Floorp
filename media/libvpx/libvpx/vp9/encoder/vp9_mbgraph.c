@@ -98,8 +98,7 @@ static int do_16x16_motion_search(VP9_COMP *cpi, const MV *ref_mv,
   // If the current best reference mv is not centered on 0,0 then do a 0,0
   // based search as well.
   if (ref_mv->row != 0 || ref_mv->col != 0) {
-    unsigned int tmp_err;
-    MV zero_ref_mv = { 0, 0 }, tmp_mv;
+    MV zero_ref_mv = { 0, 0 };
 
     tmp_err =
         do_16x16_motion_iteration(cpi, &zero_ref_mv, &tmp_mv, mb_row, mb_col);
@@ -289,7 +288,7 @@ static void separate_arf_mbs(VP9_COMP *cpi) {
   int *arf_not_zz;
 
   CHECK_MEM_ERROR(
-      cm, arf_not_zz,
+      &cm->error, arf_not_zz,
       vpx_calloc(cm->mb_rows * cm->mb_cols * sizeof(*arf_not_zz), 1));
 
   // We are not interested in results beyond the alt ref itself.

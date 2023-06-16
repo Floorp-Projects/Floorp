@@ -13,7 +13,7 @@ add_task(async function test_spawn_shared_worker() {
     Services.obs.notifyObservers(null, "profile-after-change");
   }
 
-  const background = async function() {
+  const background = async function () {
     const worker = new SharedWorker("worker.js");
     await new Promise(resolve => {
       worker.port.onmessage = resolve;
@@ -25,7 +25,7 @@ add_task(async function test_spawn_shared_worker() {
   const extension = ExtensionTestUtils.loadExtension({
     background,
     files: {
-      "worker.js": function() {
+      "worker.js": function () {
         self.onconnect = evt => {
           const port = evt.ports[0];
           port.onmessage = () => port.postMessage("worker-reply");

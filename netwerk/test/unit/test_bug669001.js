@@ -5,7 +5,7 @@ const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 var httpServer = null;
 var path = "/bug699001";
 
-XPCOMUtils.defineLazyGetter(this, "URI", function() {
+XPCOMUtils.defineLazyGetter(this, "URI", function () {
   return "http://localhost:" + httpServer.identity.primaryPort + path;
 });
 
@@ -104,7 +104,7 @@ function nextTest() {
 
   // Give the old channel a chance to close the cache entry first.
   // XXX This is actually a race condition that might be considered a bug...
-  executeSoon(function() {
+  executeSoon(function () {
     chan.asyncOpen(new ChannelListener(checkAndShiftTest, null));
   });
 }

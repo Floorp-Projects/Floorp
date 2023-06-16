@@ -34,6 +34,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_javascript.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TextEvents.h"
@@ -64,6 +65,7 @@
 #include "nsTStringRepr.h"
 #include "nsXPCOM.h"
 
+#include "nsICookieJarSettings.h"
 #include "nsICryptoHash.h"
 #include "nsIGlobalObject.h"
 #include "nsIObserverService.h"
@@ -100,8 +102,10 @@ static constexpr uint32_t kVideoDroppedRatio = 5;
 #define RFP_DEFAULT_SPOOFING_KEYBOARD_LANG KeyboardLang::EN
 #define RFP_DEFAULT_SPOOFING_KEYBOARD_REGION KeyboardRegion::US
 
-static nsTArray<mozilla::RFPTarget> sFPPTargets = {
-    RFPTarget::IsAlwaysEnabledForPrecompute, RFPTarget::Unknown};
+// Fingerprinting protections that are enabled by default. This can be
+// overridden using the privacy.fingerprintingProtection.overrides pref.
+const uint32_t kDefaultFingerintingProtections =
+    uint32_t(RFPTarget::CanvasRandomization);
 
 // ============================================================================
 // ============================================================================
@@ -112,8 +116,9 @@ NS_IMPL_ISUPPORTS(nsRFPService, nsIObserver)
 
 static StaticRefPtr<nsRFPService> sRFPService;
 static bool sInitialized = false;
-static nsTArray<mozilla::RFPTarget> sTargetOverrideAdditions;
-static nsTArray<mozilla::RFPTarget> sTargetOverrideSubtractions;
+
+// Actually enabled fingerprinting protections.
+static Atomic<uint32_t> sEnabledFingerintingProtections;
 
 /* static */
 nsRFPService* nsRFPService::GetOrCreate() {
@@ -190,16 +195,15 @@ bool nsRFPService::IsRFPEnabledFor(RFPTarget aTarget) {
 
   if (StaticPrefs::privacy_fingerprintingProtection_DoNotUseDirectly() ||
       StaticPrefs::privacy_fingerprintingProtection_pbmode_DoNotUseDirectly()) {
-    if (sTargetOverrideAdditions.Contains(aTarget)) {
+    if (aTarget == RFPTarget::IsAlwaysEnabledForPrecompute) {
       return true;
     }
-    if (sTargetOverrideSubtractions.Contains(aTarget)) {
+    // All not yet explicitly defined targets are disabled by default (no
+    // fingerprinting protection).
+    if (aTarget == RFPTarget::Unknown) {
       return false;
     }
-    if (sFPPTargets.Contains(aTarget)) {
-      return true;
-    }
-    return false;
+    return sEnabledFingerintingProtections & uint32_t(aTarget);
   }
 
   return false;
@@ -280,32 +284,33 @@ void nsRFPService::UpdateFPPOverrideList() {
     return;
   }
 
-  sTargetOverrideAdditions.Clear();
-  sTargetOverrideSubtractions.Clear();
+  uint32_t enabled = kDefaultFingerintingProtections;
   for (const nsAString& each : targetOverrides.Split(',')) {
     Maybe<RFPTarget> mappedValue =
         nsRFPService::TextToRFPTarget(Substring(each, 1, each.Length() - 1));
     if (mappedValue.isSome()) {
-      if (each[0] == '+') {
-        sTargetOverrideAdditions.AppendElement(mappedValue.value());
-        MOZ_LOG(
-            gResistFingerprintingLog, LogLevel::Warning,
-            ("Mapped value %s (%X), to an addition, now we have %zu",
-             NS_ConvertUTF16toUTF8(each).get(), unsigned(mappedValue.value()),
-             sTargetOverrideAdditions.Length()));
+      RFPTarget target = mappedValue.value();
+      if (target == RFPTarget::IsAlwaysEnabledForPrecompute ||
+          target == RFPTarget::Unknown) {
+        MOZ_LOG(gResistFingerprintingLog, LogLevel::Warning,
+                ("RFPTarget::%s is not a valid value",
+                 NS_ConvertUTF16toUTF8(each).get()));
+      } else if (each[0] == '+') {
+        enabled |= uint32_t(target);
+        MOZ_LOG(gResistFingerprintingLog, LogLevel::Warning,
+                ("Mapped value %s (0x%08x), to an addition, now we have 0x%08x",
+                 NS_ConvertUTF16toUTF8(each).get(), unsigned(target), enabled));
       } else if (each[0] == '-') {
-        sTargetOverrideSubtractions.AppendElement(mappedValue.value());
+        enabled &= ~uint32_t(target);
         MOZ_LOG(
             gResistFingerprintingLog, LogLevel::Warning,
-            ("Mapped value %s (%X) to a subtraction, now we have %zu",
-             NS_ConvertUTF16toUTF8(each).get(), unsigned(mappedValue.value()),
-             sTargetOverrideSubtractions.Length()));
+            ("Mapped value %s (0x%08x) to a subtraction, now we have 0x%08x",
+             NS_ConvertUTF16toUTF8(each).get(), unsigned(target), enabled));
       } else {
-        MOZ_LOG(
-            gResistFingerprintingLog, LogLevel::Warning,
-            ("Mapped value %s (%X) to an RFPTarget Enum, but the first "
-             "character wasn't + or -",
-             NS_ConvertUTF16toUTF8(each).get(), unsigned(mappedValue.value())));
+        MOZ_LOG(gResistFingerprintingLog, LogLevel::Warning,
+                ("Mapped value %s (0x%08x) to an RFPTarget Enum, but the first "
+                 "character wasn't + or -",
+                 NS_ConvertUTF16toUTF8(each).get(), unsigned(target)));
       }
     } else {
       MOZ_LOG(gResistFingerprintingLog, LogLevel::Warning,
@@ -313,6 +318,8 @@ void nsRFPService::UpdateFPPOverrideList() {
                NS_ConvertUTF16toUTF8(each).get()));
     }
   }
+
+  sEnabledFingerintingProtections = enabled;
 }
 
 /* static */
@@ -913,7 +920,10 @@ uint32_t nsRFPService::GetSpoofedPresentedFrames(double aTime, uint32_t aWidth,
 static const char* GetSpoofedVersion() {
 #ifdef ANDROID
   // Return Desktop's ESR version.
-  return "102.0";
+  // When Android RFP returns an ESR version >= 120, we can remove the "rv:109"
+  // spoofing in GetSpoofedUserAgent() below and stop #including
+  // StaticPrefs_network.h.
+  return "115.0";
 #else
   return MOZILLA_UAVERSION;
 #endif
@@ -951,7 +961,17 @@ void nsRFPService::GetSpoofedUserAgent(nsACString& userAgent,
   }
 
   userAgent.AppendLiteral("; rv:");
-  userAgent.Append(spoofedVersion);
+
+  // Desktop Firefox (regular and RFP) won't need to spoof "rv:109" in versions
+  // >= 120 (bug 1806690), but Android RFP will need to continue spoofing 109
+  // as long as Android's GetSpoofedVersion() returns a version < 120 above.
+  uint32_t forceRV = mozilla::StaticPrefs::network_http_useragent_forceRVOnly();
+  if (forceRV) {
+    userAgent.Append(nsPrintfCString("%u.0", forceRV));
+  } else {
+    userAgent.Append(spoofedVersion);
+  }
+
   userAgent.AppendLiteral(") Gecko/");
 
 #if defined(ANDROID)
@@ -1285,7 +1305,8 @@ Maybe<nsTArray<uint8_t>> nsRFPService::GenerateKey(nsIURI* aTopLevelURI,
   // resistance is exempted from the normal windows. Note that we still need to
   // generate the key for exempted domains because there could be unexempted
   // sub-documents that need the key.
-  if (!nsContentUtils::ShouldResistFingerprinting("Coarse Efficiency Check") ||
+  if (!nsContentUtils::ShouldResistFingerprinting(
+          "Coarse Efficiency Check", RFPTarget::CanvasRandomization) ||
       (!aIsPrivate &&
        StaticPrefs::privacy_resistFingerprinting_testGranularityMask() &
            0x02 /* NonPBMExemptMask */)) {
@@ -1330,4 +1351,111 @@ Maybe<nsTArray<uint8_t>> nsRFPService::GenerateKey(nsIURI* aTopLevelURI,
   }
 
   return key;
+}
+
+// static
+nsresult nsRFPService::GenerateCanvasKeyFromImageData(
+    nsICookieJarSettings* aCookieJarSettings, uint8_t* aImageData,
+    uint32_t aSize, nsTArray<uint8_t>& aCanvasKey) {
+  NS_ENSURE_ARG_POINTER(aCookieJarSettings);
+
+  nsTArray<uint8_t> randomKey;
+  nsresult rv =
+      aCookieJarSettings->GetFingerprintingRandomizationKey(randomKey);
+
+  // There is no random key for this cookieJarSettings. This means that the
+  // randomization is disabled. So, we can bail out from here without doing
+  // anything.
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Generate the key for randomizing the canvas data using hMAC. The key is
+  // based on the random key of the document and the canvas data itself. So,
+  // different canvas would have different keys.
+  HMAC hmac;
+
+  rv = hmac.Begin(SEC_OID_SHA256, Span(randomKey));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = hmac.Update(aImageData, aSize);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = hmac.End(aCanvasKey);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+// static
+nsresult nsRFPService::RandomizePixels(nsICookieJarSettings* aCookieJarSettings,
+                                       uint8_t* aData, uint32_t aSize,
+                                       gfx::SurfaceFormat aSurfaceFormat) {
+  NS_ENSURE_ARG_POINTER(aData);
+
+  if (!aCookieJarSettings) {
+    return NS_OK;
+  }
+
+  if (aSize == 0) {
+    return NS_OK;
+  }
+
+  nsTArray<uint8_t> canvasKey;
+  nsresult rv = GenerateCanvasKeyFromImageData(aCookieJarSettings, aData, aSize,
+                                               canvasKey);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Calculate the number of pixels based on the given data size. One pixel uses
+  // 4 bytes that contains ARGB information.
+  uint32_t pixelCnt = aSize / 4;
+
+  // Generate random values that will decide the RGB channel and the pixel
+  // position that we are going to introduce the noises. The channel and
+  // position are predictable to ensure we have a consistant result with the
+  // same canvas in the same browsing session.
+
+  // Seed and create the first random number generator which will be used to
+  // select RGB channel and the pixel position. The seed is the first half of
+  // the canvas key.
+  non_crypto::XorShift128PlusRNG rng1(
+      *reinterpret_cast<uint64_t*>(canvasKey.Elements()),
+      *reinterpret_cast<uint64_t*>(canvasKey.Elements() + 8));
+
+  // Use the last 8 bits as the number of noises.
+  uint8_t rnd3 = canvasKey.LastElement();
+
+  // Clear the last 8 bits.
+  canvasKey.ReplaceElementAt(canvasKey.Length() - 1, 0);
+
+  // Use the remaining 120 bits to seed and create the second random number
+  // generator. The random number will be used to decided the noise bit that
+  // will be added to the lowest order bit of the channel of the pixel.
+  non_crypto::XorShift128PlusRNG rng2(
+      *reinterpret_cast<uint64_t*>(canvasKey.Elements() + 16),
+      *reinterpret_cast<uint64_t*>(canvasKey.Elements() + 24));
+
+  // Ensure at least 16 random changes may occur.
+  uint8_t numNoises = std::clamp<uint8_t>(rnd3, 15, 255);
+
+  for (uint8_t i = 0; i <= numNoises; i++) {
+    // Choose which RGB channel to add a noise. The pixel data is in either
+    // the BGRA or the ARGB format depending on the endianess. To choose the
+    // color channel we need to add the offset according the endianess.
+    uint32_t channel;
+    if (aSurfaceFormat == gfx::SurfaceFormat::B8G8R8A8) {
+      channel = rng1.next() % 3;
+    } else if (aSurfaceFormat == gfx::SurfaceFormat::A8R8G8B8) {
+      channel = rng1.next() % 3 + 1;
+    } else {
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    uint32_t idx = 4 * (rng1.next() % pixelCnt) + channel;
+    uint8_t bit = rng2.next();
+
+    aData[idx] = aData[idx] ^ (bit & 0x1);
+  }
+
+  return NS_OK;
 }

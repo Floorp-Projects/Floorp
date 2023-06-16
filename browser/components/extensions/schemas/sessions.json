@@ -8,12 +8,12 @@
     "types": [
       {
         "$extend": "OptionalPermission",
-        "choices": [{
-          "type": "string",
-          "enum": [
-            "sessions"
-          ]
-        }]
+        "choices": [
+          {
+            "type": "string",
+            "enum": ["sessions"]
+          }
+        ]
       }
     ]
   },
@@ -39,18 +39,36 @@
         "id": "Session",
         "type": "object",
         "properties": {
-          "lastModified": {"type": "integer", "description": "The time when the window or tab was closed or modified, represented in milliseconds since the epoch."},
-          "tab": {"$ref": "tabs.Tab", "optional": true, "description": "The $(ref:tabs.Tab), if this entry describes a tab. Either this or $(ref:sessions.Session.window) will be set."},
-          "window": {"$ref": "windows.Window", "optional": true, "description": "The $(ref:windows.Window), if this entry describes a window. Either this or $(ref:sessions.Session.tab) will be set."}
+          "lastModified": {
+            "type": "integer",
+            "description": "The time when the window or tab was closed or modified, represented in milliseconds since the epoch."
+          },
+          "tab": {
+            "$ref": "tabs.Tab",
+            "optional": true,
+            "description": "The $(ref:tabs.Tab), if this entry describes a tab. Either this or $(ref:sessions.Session.window) will be set."
+          },
+          "window": {
+            "$ref": "windows.Window",
+            "optional": true,
+            "description": "The $(ref:windows.Window), if this entry describes a window. Either this or $(ref:sessions.Session.tab) will be set."
+          }
         }
       },
       {
         "id": "Device",
         "type": "object",
         "properties": {
-          "info": {"type": "string"},
-          "deviceName": {"type": "string", "description": "The name of the foreign device."},
-          "sessions": {"type": "array", "items": {"$ref": "Session"}, "description": "A list of open window sessions for the foreign device, sorted from most recently to least recently modified session."}
+          "info": { "type": "string" },
+          "deviceName": {
+            "type": "string",
+            "description": "The name of the foreign device."
+          },
+          "sessions": {
+            "type": "array",
+            "items": { "$ref": "Session" },
+            "description": "A list of open window sessions for the foreign device, sorted from most recently to least recently modified session."
+          }
         }
       }
     ],
@@ -103,7 +121,10 @@
             "name": "callback",
             "parameters": [
               {
-                "name": "sessions", "type": "array", "items": { "$ref": "Session" }, "description": "The list of closed entries in reverse order that they were closed (the most recently closed tab or window will be at index <code>0</code>). The entries may contain either tabs or windows."
+                "name": "sessions",
+                "type": "array",
+                "items": { "$ref": "Session" },
+                "description": "The list of closed entries in reverse order that they were closed (the most recently closed tab or window will be at index <code>0</code>). The entries may contain either tabs or windows."
               }
             ]
           }
@@ -126,7 +147,10 @@
             "name": "callback",
             "parameters": [
               {
-                "name": "devices", "type": "array", "items": { "$ref": "Device" }, "description": "The list of $(ref:sessions.Device) objects for each synced session, sorted in order from device with most recently modified session to device with least recently modified session. $(ref:tabs.Tab) objects are sorted by recency in the $(ref:windows.Window) of the $(ref:sessions.Session) objects."
+                "name": "devices",
+                "type": "array",
+                "items": { "$ref": "Device" },
+                "description": "The list of $(ref:sessions.Device) objects for each synced session, sorted in order from device with most recently modified session to device with least recently modified session. $(ref:tabs.Tab) objects are sorted by recency in the $(ref:windows.Window) of the $(ref:sessions.Session) objects."
               }
             ]
           }

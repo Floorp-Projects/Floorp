@@ -37,7 +37,7 @@ const kPUSHHTTP2DB_STORE_NAME = "pushHttp2";
  * be send on OnStopRequest but the PushService may not be interested in these.
  * It's easier to stop listening than to have checks at specific points.
  */
-var PushSubscriptionListener = function(pushService, uri) {
+var PushSubscriptionListener = function (pushService, uri) {
   lazy.console.debug("PushSubscriptionListener()");
   this._pushService = pushService;
   this.uri = uri;
@@ -102,7 +102,7 @@ PushSubscriptionListener.prototype = {
  * The listener for pushed messages. The message data is collected in
  * OnDataAvailable and send to the app in OnStopRequest.
  */
-var PushChannelListener = function(pushSubscriptionListener) {
+var PushChannelListener = function (pushSubscriptionListener) {
   lazy.console.debug("PushChannelListener()");
   this._mainListener = pushSubscriptionListener;
   this._message = [];
@@ -169,7 +169,7 @@ function getHeaderField(aRequest, name) {
   }
 }
 
-var PushServiceDelete = function(resolve, reject) {
+var PushServiceDelete = function (resolve, reject) {
   this._resolve = resolve;
   this._reject = reject;
 };
@@ -201,7 +201,7 @@ PushServiceDelete.prototype = {
   },
 };
 
-var SubscriptionListener = function(
+var SubscriptionListener = function (
   aSubInfo,
   aResolve,
   aReject,
@@ -818,7 +818,7 @@ PushRecordHttp2.prototype = Object.create(PushRecord.prototype, {
   },
 });
 
-PushRecordHttp2.prototype.toSubscription = function() {
+PushRecordHttp2.prototype.toSubscription = function () {
   let subscription = PushRecord.prototype.toSubscription.call(this);
   subscription.pushReceiptEndpoint = this.pushReceiptEndpoint;
   return subscription;

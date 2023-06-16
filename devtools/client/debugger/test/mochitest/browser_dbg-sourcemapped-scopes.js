@@ -72,7 +72,7 @@ async function breakpointScopes(
   ok(true, `Ran tests for ${fixture} at line ${line} column ${column}`);
 }
 
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger("doc-sourcemapped.html");
   dbg.actions.toggleMapScopes();
 
@@ -223,9 +223,8 @@ async function testEvalMaps(dbg) {
     "webpack4-babel6",
     "webpack4-babel7",
   ]) {
-    const { defaultExport, rollupOptimized, maybeLineStart } = targetToFlags(
-      target
-    );
+    const { defaultExport, rollupOptimized, maybeLineStart } =
+      targetToFlags(target);
 
     await breakpointScopes(
       dbg,
@@ -1354,11 +1353,8 @@ async function testESModules(dbg) {
     "webpack4-babel6",
     "webpack4-babel7",
   ]) {
-    const {
-      defaultExport,
-      webpackImportGetter,
-      maybeLineStart,
-    } = targetToFlags(target);
+    const { defaultExport, webpackImportGetter, maybeLineStart } =
+      targetToFlags(target);
 
     await breakpointScopes(
       dbg,
@@ -1581,11 +1577,8 @@ async function testESModulesES6(dbg) {
     "webpack4-babel6",
     "webpack4-babel7",
   ]) {
-    const {
-      defaultExport,
-      webpack4ImportGetter,
-      maybeLineStart,
-    } = targetToFlags(target);
+    const { defaultExport, webpack4ImportGetter, maybeLineStart } =
+      targetToFlags(target);
 
     await breakpointScopes(
       dbg,

@@ -16,7 +16,7 @@ const PREF_MAX_SEARCH_BANNER_SHOW_COUNT =
   "browser.search.separatePrivateDefault.ui.banner.max";
 const MAX_SHOW_COUNT = 5;
 
-add_setup(async function() {
+add_setup(async function () {
   SpecialPowers.pushPrefEnv({
     set: [
       [PREF_UI_ENABLED, false],
@@ -38,7 +38,7 @@ add_task(async function test_not_shown_if_pref_off() {
 
   const { win, tab } = await openAboutPrivateBrowsing();
 
-  await SpecialPowers.spawn(tab, [], async function() {
+  await SpecialPowers.spawn(tab, [], async function () {
     await ContentTaskUtils.waitForCondition(
       () =>
         content.document.documentElement.hasAttribute(
@@ -68,7 +68,7 @@ add_task(async function test_not_shown_if_max_count_0() {
   });
   const { win, tab } = await openAboutPrivateBrowsing();
 
-  await SpecialPowers.spawn(tab, [], async function() {
+  await SpecialPowers.spawn(tab, [], async function () {
     await ContentTaskUtils.waitForCondition(
       () =>
         content.document.documentElement.hasAttribute(
@@ -107,7 +107,7 @@ add_task(async function test_show_banner_first() {
     "Should have incremented the amount of times shown."
   );
 
-  await SpecialPowers.spawn(tab, [], async function() {
+  await SpecialPowers.spawn(tab, [], async function () {
     await ContentTaskUtils.waitForCondition(
       () =>
         content.document.documentElement.hasAttribute(
@@ -126,7 +126,7 @@ add_task(async function test_show_banner_first() {
 
   const { win: win1, tab: tab1 } = await openAboutPrivateBrowsing();
 
-  await SpecialPowers.spawn(tab1, [], async function() {
+  await SpecialPowers.spawn(tab1, [], async function () {
     await ContentTaskUtils.waitForCondition(
       () =>
         content.document.documentElement.hasAttribute(
@@ -166,7 +166,7 @@ add_task(async function test_show_banner_max_times() {
       "Should have incremented the amount of times shown."
     );
 
-    await SpecialPowers.spawn(tab, [], async function() {
+    await SpecialPowers.spawn(tab, [], async function () {
       await ContentTaskUtils.waitForCondition(
         () =>
           content.document.documentElement.hasAttribute(
@@ -192,7 +192,7 @@ add_task(async function test_show_banner_max_times() {
 
   const { win, tab } = await openAboutPrivateBrowsing();
 
-  await SpecialPowers.spawn(tab, [], async function() {
+  await SpecialPowers.spawn(tab, [], async function () {
     await ContentTaskUtils.waitForCondition(
       () =>
         content.document.documentElement.hasAttribute(
@@ -219,7 +219,7 @@ add_task(async function test_show_banner_close_no_more() {
 
   const { win, tab } = await openAboutPrivateBrowsing();
 
-  await SpecialPowers.spawn(tab, [], async function() {
+  await SpecialPowers.spawn(tab, [], async function () {
     await ContentTaskUtils.waitForCondition(
       () =>
         content.document.documentElement.hasAttribute(
@@ -276,7 +276,7 @@ add_task(async function test_show_banner_open_preferences_and_no_more() {
       () => {
         tab.contentWindow.addEventListener(
           "load",
-          async function() {
+          async function () {
             await finalPrefPaneLoaded;
             resolve();
           },
@@ -287,7 +287,7 @@ add_task(async function test_show_banner_open_preferences_and_no_more() {
     );
   });
 
-  await SpecialPowers.spawn(tab, [], async function() {
+  await SpecialPowers.spawn(tab, [], async function () {
     await ContentTaskUtils.waitForCondition(
       () =>
         content.document.documentElement.hasAttribute(

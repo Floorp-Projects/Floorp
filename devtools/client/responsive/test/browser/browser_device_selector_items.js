@@ -47,10 +47,9 @@ updatePreferredDevices({
 
 addRDMTask(
   URL_ROOT,
-  async function({ ui }) {
-    const deviceSelector = ui.toolWindow.document.getElementById(
-      "device-selector"
-    );
+  async function ({ ui }) {
+    const deviceSelector =
+      ui.toolWindow.document.getElementById("device-selector");
 
     for (const testDevice of TEST_DEVICES) {
       info(`Check "${name}" device`);

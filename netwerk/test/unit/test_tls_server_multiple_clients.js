@@ -123,7 +123,7 @@ function startClient(port) {
   return Promise.all([inputDeferred.promise, outputDeferred.promise]);
 }
 
-add_task(async function() {
+add_task(async function () {
   let cert = getTestServerCertificate();
   ok(!!cert, "Got self-signed cert");
   let port = startServer(cert);

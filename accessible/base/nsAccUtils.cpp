@@ -8,7 +8,6 @@
 #include "LocalAccessible-inl.h"
 #include "AccAttributes.h"
 #include "ARIAMap.h"
-#include "nsAccessibilityService.h"
 #include "nsCoreUtils.h"
 #include "nsGenericHTMLElement.h"
 #include "DocAccessible.h"
@@ -28,7 +27,6 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ElementInternals.h"
-#include "mozilla/StaticPrefs_accessibility.h"
 #include "nsAccessibilityService.h"
 
 using namespace mozilla;
@@ -397,9 +395,6 @@ uint32_t nsAccUtils::TextLength(Accessible* aAccessible) {
       return textLeaf->Text().Length();
     }
   } else if (aAccessible->IsText()) {
-    MOZ_ASSERT(StaticPrefs::accessibility_cache_enabled_AtStartup(),
-               "Shouldn't be called on a RemoteAccessible unless the cache is "
-               "enabled");
     RemoteAccessible* remoteAcc = aAccessible->AsRemote();
     MOZ_ASSERT(remoteAcc);
     return remoteAcc->GetCachedTextLength();
@@ -525,6 +520,14 @@ void nsAccUtils::DocumentURL(Accessible* aDoc, nsAString& aURL) {
     return localAcc->AsDoc()->URL(aURL);
   }
   return aDoc->AsRemote()->AsDoc()->URL(aURL);
+}
+
+void nsAccUtils::DocumentMimeType(Accessible* aDoc, nsAString& aMimeType) {
+  MOZ_ASSERT(aDoc && aDoc->IsDoc());
+  if (LocalAccessible* localAcc = aDoc->AsLocal()) {
+    return localAcc->AsDoc()->MimeType(aMimeType);
+  }
+  return aDoc->AsRemote()->AsDoc()->MimeType(aMimeType);
 }
 
 // ARIA Accessibility Default Accessors

@@ -29,7 +29,7 @@ add_task(async function test_disable_firefox_screenshots() {
     "Screenshots pref is disabled"
   );
 
-  await BrowserTestUtils.withNewTab("data:text/html,Test", async function() {
+  await BrowserTestUtils.withNewTab("data:text/html,Test", async function () {
     await checkScreenshots(false);
   });
 });

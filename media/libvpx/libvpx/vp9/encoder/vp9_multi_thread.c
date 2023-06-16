@@ -59,7 +59,7 @@ void vp9_row_mt_alloc_rd_thresh(VP9_COMP *const cpi,
   int i;
 
   CHECK_MEM_ERROR(
-      cm, this_tile->row_base_thresh_freq_fact,
+      &cm->error, this_tile->row_base_thresh_freq_fact,
       (int *)vpx_calloc(sb_rows * BLOCK_SIZES * MAX_MODES,
                         sizeof(*(this_tile->row_base_thresh_freq_fact))));
   for (i = 0; i < sb_rows * BLOCK_SIZES * MAX_MODES; i++)
@@ -85,7 +85,7 @@ void vp9_row_mt_mem_alloc(VP9_COMP *cpi) {
   multi_thread_ctxt->allocated_tile_rows = tile_rows;
   multi_thread_ctxt->allocated_vert_unit_rows = jobs_per_tile_col;
 
-  CHECK_MEM_ERROR(cm, multi_thread_ctxt->job_queue,
+  CHECK_MEM_ERROR(&cm->error, multi_thread_ctxt->job_queue,
                   (JobQueue *)vpx_memalign(32, total_jobs * sizeof(JobQueue)));
 
 #if CONFIG_MULTITHREAD

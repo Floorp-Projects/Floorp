@@ -366,12 +366,7 @@ StyleSheetInfo::StyleSheetInfo(CORSMode aCORSMode,
       mReferrerInfo(new ReferrerInfo(nullptr)),
       mIntegrity(aIntegrity),
       mContents(Servo_StyleSheet_Empty(aParsingMode).Consume()),
-      mURLData(URLExtraData::Dummy())
-#ifdef DEBUG
-      ,
-      mPrincipalSet(false)
-#endif
-{
+      mURLData(URLExtraData::Dummy()) {
   if (!mPrincipal) {
     MOZ_CRASH("NullPrincipal::Init failed");
   }
@@ -766,7 +761,7 @@ void StyleSheet::ReplaceSync(const nsACString& aText, ErrorResult& aRv) {
   // 4. If rules contain @imports, skip them and continue parsing.
   auto* loader = mConstructorDocument->CSSLoader();
   SetURLExtraData();
-  RefPtr<const RawServoStyleSheetContents> rawContent =
+  RefPtr<const StyleStylesheetContents> rawContent =
       Servo_StyleSheet_FromUTF8Bytes(
           loader, this,
           /* load_data = */ nullptr, &aText, mParsingMode, Inner().mURLData,
@@ -1120,7 +1115,7 @@ void StyleSheet::FixUpRuleListAfterContentsChangeIfNeeded(bool aFromClone) {
     return;
   }
 
-  RefPtr<ServoCssRules> rules =
+  RefPtr<StyleLockedCssRules> rules =
       Servo_StyleSheet_GetRules(Inner().mContents.get()).Consume();
   mRuleList->SetRawContents(std::move(rules), aFromClone);
 }
@@ -1132,12 +1127,12 @@ void StyleSheet::FixUpAfterInnerClone() {
 
   FixUpRuleListAfterContentsChangeIfNeeded(/* aFromClone = */ true);
 
-  RefPtr<ServoCssRules> rules =
+  RefPtr<StyleLockedCssRules> rules =
       Servo_StyleSheet_GetRules(Inner().mContents.get()).Consume();
   uint32_t index = 0;
   while (true) {
     uint32_t line, column;  // Actually unused.
-    RefPtr<RawServoImportRule> import =
+    RefPtr<StyleLockedImportRule> import =
         Servo_CssRules_GetImportRuleAt(rules, index, &line, &column).Consume();
     if (!import) {
       // Note that only @charset rules come before @import rules, and @charset
@@ -1212,10 +1207,12 @@ RefPtr<StyleSheetParsePromise> StyleSheet::ParseSheet(
   const bool shouldRecordCounters =
       aLoader.GetDocument() && aLoader.GetDocument()->GetStyleUseCounters();
   if (!AllowParallelParse(aLoader, Inner().mURLData)) {
-    UniquePtr<StyleUseCounters> counters =
-        shouldRecordCounters ? Servo_UseCounters_Create().Consume() : nullptr;
+    UniquePtr<StyleUseCounters> counters;
+    if (shouldRecordCounters) {
+      counters.reset(Servo_UseCounters_Create());
+    }
 
-    RefPtr<RawServoStyleSheetContents> contents =
+    RefPtr<StyleStylesheetContents> contents =
         Servo_StyleSheet_FromUTF8Bytes(
             &aLoader, this, &aLoadData, &aBytes, mParsingMode, Inner().mURLData,
             aLoadData.mLineNumber, aLoadData.mCompatMode,
@@ -1235,7 +1232,7 @@ RefPtr<StyleSheetParsePromise> StyleSheet::ParseSheet(
 }
 
 void StyleSheet::FinishAsyncParse(
-    already_AddRefed<RawServoStyleSheetContents> aSheetContents,
+    already_AddRefed<StyleStylesheetContents> aSheetContents,
     UniquePtr<StyleUseCounters> aUseCounters) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mParsePromise.IsEmpty());
@@ -1411,7 +1408,7 @@ ServoCSSRuleList* StyleSheet::GetCssRulesInternal() {
     // @import rules first, see bug 1719963.
     EnsureUniqueInner();
 
-    RefPtr<ServoCssRules> rawRules =
+    RefPtr<StyleLockedCssRules> rawRules =
         Servo_StyleSheet_GetRules(Inner().mContents).Consume();
     MOZ_ASSERT(rawRules);
     mRuleList = new ServoCSSRuleList(rawRules.forget(), this, nullptr);
@@ -1478,7 +1475,7 @@ StyleOrigin StyleSheet::GetOrigin() const {
   return Servo_StyleSheet_GetOrigin(Inner().mContents);
 }
 
-void StyleSheet::SetSharedContents(const ServoCssRules* aSharedRules) {
+void StyleSheet::SetSharedContents(const StyleLockedCssRules* aSharedRules) {
   MOZ_ASSERT(!IsComplete());
 
   SetURLExtraData();
@@ -1490,8 +1487,8 @@ void StyleSheet::SetSharedContents(const ServoCssRules* aSharedRules) {
   // which we don't have.
 }
 
-const ServoCssRules* StyleSheet::ToShared(RawServoSharedMemoryBuilder* aBuilder,
-                                          nsCString& aErrorMessage) {
+const StyleLockedCssRules* StyleSheet::ToShared(
+    StyleSharedMemoryBuilder* aBuilder, nsCString& aErrorMessage) {
   // Assert some things we assume when creating a StyleSheet using shared
   // memory.
   MOZ_ASSERT(GetReferrerInfo()->ReferrerPolicy() == ReferrerPolicy::_empty);
@@ -1501,7 +1498,7 @@ const ServoCssRules* StyleSheet::ToShared(RawServoSharedMemoryBuilder* aBuilder,
   MOZ_ASSERT(Inner().mIntegrity.IsEmpty());
   MOZ_ASSERT(Principal()->IsSystemPrincipal());
 
-  const ServoCssRules* rules = Servo_SharedMemoryBuilder_AddStylesheet(
+  const StyleLockedCssRules* rules = Servo_SharedMemoryBuilder_AddStylesheet(
       aBuilder, Inner().mContents, &aErrorMessage);
 
 #ifdef DEBUG

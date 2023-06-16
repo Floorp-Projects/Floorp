@@ -9,7 +9,7 @@
 
 requestLongerTimeout(2);
 
-add_task(async function() {
+add_task(async function () {
   // NOTE: the CORS call makes the test run times inconsistent
   const dbg = await initDebugger("doc-sourcemaps.html", "entry.js");
 

@@ -11,7 +11,7 @@
  * This allows the action to create multiple actions (most likely asynchronously).
  */
 function thunk(options = {}) {
-  return function({ dispatch, getState }) {
+  return function ({ dispatch, getState }) {
     return next => action => {
       return typeof action === "function"
         ? action({ dispatch, getState, ...options })

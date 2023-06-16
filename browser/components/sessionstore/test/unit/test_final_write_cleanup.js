@@ -33,7 +33,7 @@ async function prepareWithLimit(back, fwd) {
   await SessionWriter.wipe();
 }
 
-add_setup(async function() {
+add_setup(async function () {
   registerCleanupFunction(() => SessionWriter.wipe());
 });
 

@@ -124,7 +124,7 @@ function create_directory() {
 
     SpecialPowers.wrap(fileList)
       .getFilesAndDirectories()
-      .then(function(list) {
+      .then(function (list) {
         list = SpecialPowers.unwrap(list);
         // Just a simple test
         is(list.length, 1, "This list has 1 element");
@@ -189,7 +189,7 @@ function runTests(obj) {
   );
 
   // cloning tests - everyWhere
-  new Promise(function(resolve, reject) {
+  new Promise(function (resolve, reject) {
     var clonableObjectsId = 0;
     function runClonableTest() {
       if (clonableObjectsId >= clonableObjects.length) {
@@ -224,8 +224,8 @@ function runTests(obj) {
   })
 
     // clonable same process
-    .then(function() {
-      return new Promise(function(resolve, reject) {
+    .then(function () {
+      return new Promise(function (resolve, reject) {
         var clonableObjectsId = 0;
         function runClonableTest() {
           if (clonableObjectsId >= clonableObjects.length) {
@@ -261,18 +261,18 @@ function runTests(obj) {
     })
 
     // transfering tests
-    .then(function() {
+    .then(function () {
       if (!obj.transferableObjects) {
         return;
       }
 
       // MessagePort
-      return new Promise(function(r, rr) {
+      return new Promise(function (r, rr) {
         var mc = new MessageChannel();
-        obj.send(42, [mc.port1]).then(function(received) {
+        obj.send(42, [mc.port1]).then(function (received) {
           is(received.ports.length, 1, "MessagePort has been transferred");
           mc.port2.postMessage("hello world");
-          received.ports[0].onmessage = function(e) {
+          received.ports[0].onmessage = function (e) {
             is(e.data, "hello world", "Ports are connected!");
             r();
           };
@@ -281,21 +281,21 @@ function runTests(obj) {
     })
 
     // no dup transfering
-    .then(function() {
+    .then(function () {
       if (!obj.transferableObjects) {
         return;
       }
 
       // MessagePort
-      return new Promise(function(r, rr) {
+      return new Promise(function (r, rr) {
         var mc = new MessageChannel();
         obj
           .send(42, [mc.port1, mc.port1])
           .then(
-            function(received) {
+            function (received) {
               ok(false, "Duplicate ports should throw!");
             },
-            function() {
+            function () {
               ok(true, "Duplicate ports should throw!");
             }
           )
@@ -304,13 +304,13 @@ function runTests(obj) {
     })
 
     // maintaining order of transferred ports
-    .then(function() {
+    .then(function () {
       if (!obj.transferableObjects) {
         return;
       }
 
       // MessagePort
-      return new Promise(function(r, rr) {
+      return new Promise(function (r, rr) {
         var mcs = [];
         const NPORTS = 50;
         for (let i = 0; i < NPORTS; i++) {
@@ -321,7 +321,7 @@ function runTests(obj) {
             42,
             mcs.map(channel => channel.port1)
           )
-          .then(function(received) {
+          .then(function (received) {
             is(
               received.ports.length,
               NPORTS,
@@ -331,14 +331,14 @@ function runTests(obj) {
               .fill()
               .map(
                 (_, i) =>
-                  new Promise(function(subr, subrr) {
+                  new Promise(function (subr, subrr) {
                     mcs[i].port2.postMessage(i);
                     received.ports[i].onmessage = e => subr(e.data == i);
                   })
               );
             return Promise.all(promises);
           })
-          .then(function(result) {
+          .then(function (result) {
             let in_order = 0;
             for (const correct of result) {
               if (correct) {
@@ -352,21 +352,21 @@ function runTests(obj) {
     })
 
     // non transfering tests
-    .then(function() {
+    .then(function () {
       if (obj.transferableObjects) {
         return;
       }
 
       // MessagePort
-      return new Promise(function(r, rr) {
+      return new Promise(function (r, rr) {
         var mc = new MessageChannel();
         obj
           .send(42, [mc.port1])
           .then(
-            function(received) {
+            function (received) {
               ok(false, "This object should not support port transferring");
             },
-            function() {
+            function () {
               ok(true, "This object should not support port transferring");
             }
           )
@@ -375,7 +375,7 @@ function runTests(obj) {
     })
 
     // done.
-    .then(function() {
+    .then(function () {
       obj.finished();
     });
 }

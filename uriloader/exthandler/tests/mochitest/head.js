@@ -24,7 +24,7 @@ function createMockedHandlerApp() {
   mockedHandlerApp.executable = mockedExecutable;
   mockedHandlerApp.detailedDescription = "Mocked handler app";
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     // remove the mocked executable from disk.
     if (mockedExecutable.exists()) {
       mockedExecutable.remove(true);
@@ -87,7 +87,7 @@ function createMockedObjects(createHandlerApp) {
     ]),
   };
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     // remove the mocked mime info from database.
     let mockHandlerInfo = gMimeSvc.getFromTypeAndExtension(
       "text/x-test-handler",
@@ -287,7 +287,7 @@ async function setDownloadDir() {
   );
   // Create this dir if it doesn't exist (ignores existing dirs)
   await IOUtils.makeDirectory(tmpDir);
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     Services.prefs.clearUserPref("browser.download.folderList");
     Services.prefs.clearUserPref("browser.download.dir");
     try {
@@ -304,7 +304,7 @@ async function setDownloadDir() {
 add_setup(async function test_common_initialize() {
   gDownloadDir = await setDownloadDir();
   Services.prefs.setCharPref("browser.download.loglevel", "Debug");
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.prefs.clearUserPref("browser.download.loglevel");
   });
 });

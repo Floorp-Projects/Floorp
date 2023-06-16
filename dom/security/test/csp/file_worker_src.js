@@ -1,5 +1,5 @@
 var mySharedWorker = new SharedWorker("file_spawn_shared_worker.js");
-mySharedWorker.port.onmessage = function(ev) {
+mySharedWorker.port.onmessage = function (ev) {
   parent.postMessage(
     {
       result: "shared-worker-allowed",
@@ -9,7 +9,7 @@ mySharedWorker.port.onmessage = function(ev) {
   );
   mySharedWorker.port.close();
 };
-mySharedWorker.onerror = function(evt) {
+mySharedWorker.onerror = function (evt) {
   evt.preventDefault();
   parent.postMessage(
     {
@@ -26,7 +26,7 @@ mySharedWorker.port.postMessage("foo");
 // --------------------------------------------
 
 let myWorker = new Worker("file_spawn_worker.js");
-myWorker.onmessage = function(event) {
+myWorker.onmessage = function (event) {
   parent.postMessage(
     {
       result: "worker-allowed",
@@ -35,7 +35,7 @@ myWorker.onmessage = function(event) {
     "*"
   );
 };
-myWorker.onerror = function(event) {
+myWorker.onerror = function (event) {
   parent.postMessage(
     {
       result: "worker-blocked",
@@ -49,9 +49,9 @@ myWorker.onerror = function(event) {
 
 navigator.serviceWorker
   .register("file_spawn_service_worker.js")
-  .then(function(reg) {
+  .then(function (reg) {
     // registration worked
-    reg.unregister().then(function() {
+    reg.unregister().then(function () {
       parent.postMessage(
         {
           result: "service-worker-allowed",
@@ -61,7 +61,7 @@ navigator.serviceWorker
       );
     });
   })
-  .catch(function(error) {
+  .catch(function (error) {
     // registration failed
     parent.postMessage(
       {

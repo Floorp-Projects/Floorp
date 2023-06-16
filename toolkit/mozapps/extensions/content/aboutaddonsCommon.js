@@ -12,8 +12,8 @@
  *          shouldShowPermissionsPrompt, showPermissionsPrompt,
  *          PREF_UI_LASTCATEGORY */
 
-const { AddonSettings } = ChromeUtils.import(
-  "resource://gre/modules/addons/AddonSettings.jsm"
+const { AddonSettings } = ChromeUtils.importESModule(
+  "resource://gre/modules/addons/AddonSettings.sys.mjs"
 );
 var { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
@@ -21,11 +21,9 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "Extension",
-  "resource://gre/modules/Extension.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  Extension: "resource://gre/modules/Extension.sys.mjs",
+});
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,

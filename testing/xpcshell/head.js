@@ -34,7 +34,6 @@ var _tests_pending = 0;
 var _cleanupFunctions = [];
 var _pendingTimers = [];
 var _profileInitialized = false;
-var _fastShutdownDisabled = false;
 
 // Assigned in do_load_child_test_harness.
 var _XPCSHELL_PROCESS;
@@ -66,7 +65,7 @@ var { Assert: AssertCls } = ChromeUtils.importESModule(
 );
 
 // Pass a custom report function for xpcshell-test style reporting.
-var Assert = new AssertCls(function(err, message, stack) {
+var Assert = new AssertCls(function (err, message, stack) {
   if (err) {
     do_report_result(false, err.message, err.stack);
   } else {
@@ -80,13 +79,13 @@ function record(condition, name, diag, stack) {
   do_report_result(condition, name, stack);
 }
 
-var _add_params = function(params) {
+var _add_params = function (params) {
   if (typeof _XPCSHELL_PROCESS != "undefined") {
     params.xpcshell_process = _XPCSHELL_PROCESS;
   }
 };
 
-var _dumpLog = function(raw_msg) {
+var _dumpLog = function (raw_msg) {
   dump("\n" + JSON.stringify(raw_msg) + "\n");
 };
 
@@ -427,7 +426,7 @@ function _setupDevToolsServer(breakpointFiles, callback) {
     // Or when devtools are destroyed and we should stop observing.
     "xpcshell-test-devtools-shutdown",
   ];
-  let observe = function(subject, topic, data) {
+  let observe = function (subject, topic, data) {
     if (topic === "devtools-thread-ready") {
       const threadActor = subject.wrappedJSObject;
       threadActor.setBreakpointOnLoad(breakpointFiles);
@@ -623,7 +622,7 @@ function _execute_test() {
   }
 
   // Execute all of our cleanup functions.
-  let reportCleanupError = function(ex) {
+  let reportCleanupError = function (ex) {
     let stack, filename;
     if (ex && typeof ex == "object" && "stack" in ex) {
       stack = ex.stack;
@@ -724,16 +723,6 @@ function _execute_test() {
     !_AppConstants.ASAN &&
     !_AppConstants.TSAN
   ) {
-    if (_fastShutdownDisabled) {
-      _testLogger.info("fast shutdown disabled by the test.");
-      return;
-    }
-
-    // Setting this pref is required for Cu.isInAutomation to return true.
-    _Services.prefs.setBoolPref(
-      "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer",
-      true
-    );
     Cu.exitIfInAutomation();
   }
 }
@@ -1232,14 +1221,6 @@ function do_parse_document(aPath, aType) {
  */
 function registerCleanupFunction(aFunction) {
   _cleanupFunctions.push(aFunction);
-}
-
-/**
- * Ensure the test finishes with a normal shutdown even when it could have
- * otherwise used the fast Cu.exitIfInAutomation shutdown.
- */
-function do_disable_fast_shutdown() {
-  _fastShutdownDisabled = true;
 }
 
 /**
@@ -1860,11 +1841,10 @@ try {
   // We only want to run this for local developer builds (which should have a "default" update channel).
   if (runningInParent && _AppConstants.MOZ_UPDATE_CHANNEL == "default") {
     let startTime = Cu.now();
-    let {
-      TelemetryController: _TelemetryController,
-    } = ChromeUtils.importESModule(
-      "resource://gre/modules/TelemetryController.sys.mjs"
-    );
+    let { TelemetryController: _TelemetryController } =
+      ChromeUtils.importESModule(
+        "resource://gre/modules/TelemetryController.sys.mjs"
+      );
 
     let complete = false;
     _TelemetryController.testRegisterJsProbes().finally(() => {

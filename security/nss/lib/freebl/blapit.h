@@ -228,6 +228,10 @@ typedef int __BLAPI_DEPRECATED __attribute__((deprecated));
  * to use a random value for the nonce in TLS. */
 #define GCMIV_RANDOM_BIRTHDAY_BITS 64
 
+/* flag to tell BLAPI_Verify* to rerun the post and integrity tests */
+#define BLAPI_FIPS_RERUN_FLAG '\377'        /* 0xff, 255 invalide code for UFT8/ASCII */
+#define BLAPI_FIPS_RERUN_FLAG_STRING "\377" /* The above as a C string */
+
 /***************************************************************************
 ** Opaque objects
 */

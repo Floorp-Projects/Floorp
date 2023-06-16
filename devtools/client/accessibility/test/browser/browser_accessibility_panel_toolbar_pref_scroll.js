@@ -28,8 +28,7 @@ const {
  */
 const tests = [
   {
-    desc:
-      "Check initial state. All filters are disabled (except none). Scroll into view pref disabled.",
+    desc: "Check initial state. All filters are disabled (except none). Scroll into view pref disabled.",
     expected: {
       activeToolbarFilters: [true, false, false, false],
       toolbarPrefValues: {
@@ -38,8 +37,7 @@ const tests = [
     },
   },
   {
-    desc:
-      "Toggle scroll into view checkbox to set the pref. Scroll into view pref should be enabled.",
+    desc: "Toggle scroll into view checkbox to set the pref. Scroll into view pref should be enabled.",
     setup: async ({ doc, toolbox }) => {
       await toggleMenuItem(doc, toolbox.doc, PREFS_MENU_ID, 0);
     },
@@ -51,8 +49,7 @@ const tests = [
     },
   },
   {
-    desc:
-      "Toggle off scroll into view checkbox to unset the pref. Scroll into view pref disabled.",
+    desc: "Toggle off scroll into view checkbox to unset the pref. Scroll into view pref disabled.",
     setup: async ({ doc, toolbox }) => {
       await toggleMenuItem(doc, toolbox.doc, PREFS_MENU_ID, 0);
     },

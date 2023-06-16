@@ -63,7 +63,7 @@ const MODULE_INFO = {
   },
 };
 
-add_setup(async function() {
+add_setup(async function () {
   // The blob:-URL registered above in MODULE_INFO gets loaded at
   // https://searchfox.org/mozilla-central/rev/0fec57c05d3996cc00c55a66f20dd5793a9bfb5d/toolkit/components/extensions/ExtensionCommon.jsm#1649
   Services.prefs.setBoolPref(

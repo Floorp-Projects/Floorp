@@ -356,7 +356,8 @@ NativeMenuGtk::~NativeMenuGtk() {
 RefPtr<dom::Element> NativeMenuGtk::Element() { return mMenuModel->Element(); }
 
 void NativeMenuGtk::ShowAsContextMenu(nsIFrame* aClickedFrame,
-                                      const CSSIntPoint& aPosition) {
+                                      const CSSIntPoint& aPosition,
+                                      bool aIsContextMenu) {
   if (mMenuModel->IsShowing()) {
     return;
   }

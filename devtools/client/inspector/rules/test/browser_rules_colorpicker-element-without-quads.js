@@ -20,7 +20,7 @@ const TEST_URI = `
  * returns an empty array, which is used to compute the background-color
  * contrast.
  */
-add_task(async function() {
+add_task(async function () {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
   const hasEmptyQuads = await SpecialPowers.spawn(

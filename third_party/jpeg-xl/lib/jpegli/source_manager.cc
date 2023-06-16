@@ -3,17 +3,24 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#include "lib/jpegli/source_manager.h"
-
 #include "lib/jpegli/decode.h"
 #include "lib/jpegli/error.h"
 #include "lib/jpegli/memory_manager.h"
 
 namespace jpegli {
 
-void init_source(j_decompress_ptr cinfo) {}
+void init_mem_source(j_decompress_ptr cinfo) {}
+void init_stdio_source(j_decompress_ptr cinfo) {}
 
-void skip_input_data(j_decompress_ptr cinfo, long num_bytes) {}
+void skip_input_data(j_decompress_ptr cinfo, long num_bytes) {
+  if (num_bytes <= 0) return;
+  while (num_bytes > static_cast<long>(cinfo->src->bytes_in_buffer)) {
+    num_bytes -= cinfo->src->bytes_in_buffer;
+    (*cinfo->src->fill_input_buffer)(cinfo);
+  }
+  cinfo->src->next_input_byte += num_bytes;
+  cinfo->src->bytes_in_buffer -= num_bytes;
+}
 
 void term_source(j_decompress_ptr cinfo) {}
 
@@ -47,13 +54,15 @@ struct StdioSourceManager {
 
 void jpegli_mem_src(j_decompress_ptr cinfo, const unsigned char* inbuffer,
                     unsigned long insize) {
-  if (cinfo->src != nullptr) {
-    JPEGLI_ERROR("jpeg_mem_src: source manager is already set");
+  if (cinfo->src && cinfo->src->init_source != jpegli::init_mem_source) {
+    JPEGLI_ERROR("jpegli_mem_src: a different source manager was already set");
   }
-  cinfo->src = jpegli::Allocate<jpeg_source_mgr>(cinfo, 1);
+  if (!cinfo->src) {
+    cinfo->src = jpegli::Allocate<jpeg_source_mgr>(cinfo, 1);
+  }
   cinfo->src->next_input_byte = inbuffer;
   cinfo->src->bytes_in_buffer = insize;
-  cinfo->src->init_source = jpegli::init_source;
+  cinfo->src->init_source = jpegli::init_mem_source;
   cinfo->src->fill_input_buffer = jpegli::EmitFakeEoiMarker;
   cinfo->src->skip_input_data = jpegli::skip_input_data;
   cinfo->src->resync_to_restart = jpegli_resync_to_restart;
@@ -61,19 +70,21 @@ void jpegli_mem_src(j_decompress_ptr cinfo, const unsigned char* inbuffer,
 }
 
 void jpegli_stdio_src(j_decompress_ptr cinfo, FILE* infile) {
-  if (cinfo->src != nullptr) {
-    JPEGLI_ERROR("jpeg_stdio_src: source manager is already set");
+  if (cinfo->src && cinfo->src->init_source != jpegli::init_stdio_source) {
+    JPEGLI_ERROR("jpeg_stdio_src: a different source manager was already set");
   }
-  jpegli::StdioSourceManager* src =
-      jpegli::Allocate<jpegli::StdioSourceManager>(cinfo, 1);
+  if (!cinfo->src) {
+    cinfo->src = reinterpret_cast<jpeg_source_mgr*>(
+        jpegli::Allocate<jpegli::StdioSourceManager>(cinfo, 1));
+  }
+  auto src = reinterpret_cast<jpegli::StdioSourceManager*>(cinfo->src);
   src->f = infile;
   src->buffer = jpegli::Allocate<uint8_t>(cinfo, jpegli::kStdioBufferSize);
   src->pub.next_input_byte = src->buffer;
   src->pub.bytes_in_buffer = 0;
-  src->pub.init_source = jpegli::init_source;
+  src->pub.init_source = jpegli::init_stdio_source;
   src->pub.fill_input_buffer = jpegli::StdioSourceManager::fill_input_buffer;
   src->pub.skip_input_data = jpegli::skip_input_data;
   src->pub.resync_to_restart = jpegli_resync_to_restart;
   src->pub.term_source = jpegli::term_source;
-  cinfo->src = reinterpret_cast<jpeg_source_mgr*>(src);
 }

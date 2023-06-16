@@ -1,7 +1,7 @@
 const SAVE_PER_SITE_PREF = "browser.download.lastDir.savePerSite";
 
 function test_deleted_iframe(perSitePref, windowOptions = {}) {
-  return async function() {
+  return async function () {
     await SpecialPowers.pushPrefEnv({
       set: [[SAVE_PER_SITE_PREF, perSitePref]],
     });

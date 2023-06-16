@@ -7,7 +7,7 @@
 
 const TEST_URI = `data:text/html;charset=utf8,<!DOCTYPE html>Test sidebar scroll`;
 
-add_task(async function() {
+add_task(async function () {
   // Should be removed when sidebar work is complete
   await pushPref("devtools.webconsole.sidebarToggle", true);
   const isMacOS = Services.appinfo.OS === "Darwin";
@@ -15,7 +15,7 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const onMessage = waitForMessageByType(hud, "Document", ".console-api");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.wrappedJSObject.console.log(content.wrappedJSObject.document);
   });
 

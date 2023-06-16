@@ -240,6 +240,8 @@ class StubField {
     Symbol,
     String,
     BaseScript,
+    JitCode,
+
     Id,
     AllocSite,
 

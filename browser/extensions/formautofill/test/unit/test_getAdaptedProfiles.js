@@ -5,7 +5,7 @@
 "use strict";
 
 var FormAutofillHandler;
-add_task(async function() {
+add_task(async function () {
   ({ FormAutofillHandler } = ChromeUtils.importESModule(
     "resource://gre/modules/shared/FormAutofillHandler.sys.mjs"
   ));
@@ -1260,7 +1260,7 @@ const TESTCASES = [
 ];
 
 for (let testcase of TESTCASES) {
-  add_task(async function() {
+  add_task(async function () {
     info("Starting testcase: " + testcase.description);
 
     let doc = MockDocument.createTestDocument(
@@ -1287,9 +1287,8 @@ for (let testcase of TESTCASES) {
           Assert.notEqual(expectedOption, null);
 
           let value = testcase.profileData[i][field];
-          let cache = handler.activeSection._cacheValue.matchingSelectOption.get(
-            select
-          );
+          let cache =
+            handler.activeSection._cacheValue.matchingSelectOption.get(select);
           let targetOption = cache[value] && cache[value].get();
           Assert.notEqual(targetOption, null);
 

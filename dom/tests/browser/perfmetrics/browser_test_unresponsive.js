@@ -10,21 +10,22 @@ const PAGE_URL = ROOT_URL + "/unresponsive.html";
 add_task(async function test() {
   waitForExplicitFinish();
 
-  await BrowserTestUtils.withNewTab({ gBrowser, url: PAGE_URL }, async function(
-    browser
-  ) {
-    let dataBack = 0;
-    let tabId = gBrowser.selectedBrowser.outerWindowID;
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: PAGE_URL },
+    async function (browser) {
+      let dataBack = 0;
+      let tabId = gBrowser.selectedBrowser.outerWindowID;
 
-    function exploreResults(data, filterByWindowId) {
-      for (let entry of data) {
-        if (entry.windowId == tabId && entry.host != "about:blank") {
-          dataBack += 1;
+      function exploreResults(data, filterByWindowId) {
+        for (let entry of data) {
+          if (entry.windowId == tabId && entry.host != "about:blank") {
+            dataBack += 1;
+          }
         }
       }
+      let results = await ChromeUtils.requestPerformanceMetrics();
+      exploreResults(results);
+      Assert.ok(dataBack == 0);
     }
-    let results = await ChromeUtils.requestPerformanceMetrics();
-    exploreResults(results);
-    Assert.ok(dataBack == 0);
-  });
+  );
 });

@@ -42,7 +42,7 @@ let extensionData = {
   },
   background() {
     let csp_value = undefined;
-    browser.test.onMessage.addListener(function(msg) {
+    browser.test.onMessage.addListener(function (msg) {
       csp_value = msg;
       browser.test.sendMessage("csp-set");
     });
@@ -115,7 +115,7 @@ async function test_csp({
   let contentPage = await ExtensionTestUtils.loadContentPage(
     `http://example.net/?${csp_value}`
   );
-  let results = await contentPage.spawn(null, async () => {
+  let results = await contentPage.spawn([], async () => {
     let img1 = this.content.document.getElementById("img1");
     let img3 = this.content.document.getElementById("img3");
     let cspJSON = JSON.parse(this.content.document.cspJSON);

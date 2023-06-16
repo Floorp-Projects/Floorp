@@ -23,6 +23,7 @@ job-defaults:
     index:
         product: mobile
     worker-type: b-linux-gcp
+    use-system-python: false
     worker:
         docker-image: {in-tree: android-build}
         max-run-time: 7200

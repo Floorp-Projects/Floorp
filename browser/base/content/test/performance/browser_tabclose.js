@@ -18,7 +18,7 @@ const EXPECTED_REFLOWS = [
  * This test ensures that there are no unexpected
  * uninterruptible reflows when closing new tabs.
  */
-add_task(async function() {
+add_task(async function () {
   // Force-enable tab animations
   gReduceMotionOverride = false;
 
@@ -35,13 +35,15 @@ add_task(async function() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   await TestUtils.waitForCondition(() => tab._fullyOpen);
 
-  let tabStripRect = gBrowser.tabContainer.arrowScrollbox.getBoundingClientRect();
-  let newTabButtonRect = gBrowser.tabContainer.newTabButton.getBoundingClientRect();
+  let tabStripRect =
+    gBrowser.tabContainer.arrowScrollbox.getBoundingClientRect();
+  let newTabButtonRect =
+    gBrowser.tabContainer.newTabButton.getBoundingClientRect();
   let inRange = (val, min, max) => min <= val && val <= max;
 
   // Add a reflow observer and open a new tab.
   await withPerfObserver(
-    async function() {
+    async function () {
       let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
       gBrowser.removeTab(tab, { animate: true });
       await BrowserTestUtils.waitForEvent(tab, "TabAnimationEnd");

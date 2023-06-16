@@ -1,6 +1,6 @@
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const cwdScreenshotPath = PathUtils.join(
     Services.dirsvc.get("CurWorkD", Ci.nsIFile).path,
     "screenshot.png"

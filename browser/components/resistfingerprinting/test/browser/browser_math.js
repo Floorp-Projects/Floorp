@@ -20,7 +20,7 @@ async function test_math(rfp_pref, fdlibm_pref) {
     TEST_PATH + "file_dummy.html"
   );
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     // prettier-ignore
     function test() {
       //

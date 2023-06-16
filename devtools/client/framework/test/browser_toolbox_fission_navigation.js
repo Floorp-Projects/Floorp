@@ -7,7 +7,7 @@ const EXAMPLE_COM_URI =
 const EXAMPLE_ORG_URI =
   "https://example.org/document-builder.sjs?html=<div id=org>org";
 
-add_task(async function() {
+add_task(async function () {
   const tab = await addTab(EXAMPLE_COM_URI);
 
   const toolbox = await openToolboxForTab(tab, "inspector");

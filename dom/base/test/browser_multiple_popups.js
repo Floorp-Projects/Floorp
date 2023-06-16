@@ -17,7 +17,7 @@ function promisePopups(count) {
       return;
     }
 
-    let windowObserver = function(aSubject, aTopic, aData) {
+    let windowObserver = function (aSubject, aTopic, aData) {
       if (aTopic != "domwindowopened") {
         return;
       }
@@ -94,7 +94,7 @@ function startOpeningTwoPopups(browser) {
 
 add_task(async _ => {
   info("All opened if the pref is off");
-  await withTestPage(2, async function(browser) {
+  await withTestPage(2, async function (browser) {
     await SpecialPowers.pushPrefEnv({
       set: [
         ["dom.block_multiple_popups", false],
@@ -121,7 +121,7 @@ add_task(async _ => {
     Services.perms.ALLOW_ACTION
   );
 
-  await withTestPage(2, async function(browser) {
+  await withTestPage(2, async function (browser) {
     await BrowserTestUtils.synthesizeMouseAtCenter("#openPopups", {}, browser);
   });
 
@@ -153,7 +153,7 @@ add_task(async _ => {
     Services.perms.ALLOW_ACTION
   );
 
-  await withTestPage(2, async function(browser) {
+  await withTestPage(2, async function (browser) {
     await BrowserTestUtils.synthesizeMouseAtCenter("#input", {}, browser);
   });
 
@@ -173,7 +173,7 @@ add_task(async _ => {
     "2 window.open()s in a single click event: only the first one is allowed."
   );
 
-  await withTestPage(1, async function(browser) {
+  await withTestPage(1, async function (browser) {
     let p = promisePopupsBlocked(browser, 1);
     await BrowserTestUtils.synthesizeMouseAtCenter("#openPopups", {}, browser);
     await p;
@@ -185,7 +185,7 @@ add_task(async _ => {
     "2 window.open()s in a single mouseup event: only the first one is allowed."
   );
 
-  await withTestPage(1, async function(browser) {
+  await withTestPage(1, async function (browser) {
     let p = promisePopupsBlocked(browser, 1);
     await BrowserTestUtils.synthesizeMouseAtCenter("#input", {}, browser);
     await p;
@@ -195,7 +195,7 @@ add_task(async _ => {
 add_task(async _ => {
   info("2 window.open()s by non-event code: no windows allowed.");
 
-  await withTestPage(0, { query: "?openPopups" }, async function(browser) {
+  await withTestPage(0, { query: "?openPopups" }, async function (browser) {
     let p = promisePopupsBlocked(browser, 2);
     await startOpeningTwoPopups(browser);
     await p;
@@ -216,7 +216,7 @@ add_task(async _ => {
     Services.perms.ALLOW_ACTION
   );
 
-  await withTestPage(2, { query: "?openPopups" }, async function(browser) {
+  await withTestPage(2, { query: "?openPopups" }, async function (browser) {
     await startOpeningTwoPopups(browser);
   });
 
@@ -236,7 +236,7 @@ add_task(async _ => {
     "1 window.open() executing another window.open(): only the first one is allowed."
   );
 
-  await withTestPage(1, async function(browser) {
+  await withTestPage(1, async function (browser) {
     await BrowserTestUtils.synthesizeMouseAtCenter(
       "#openNestedPopups",
       {},
@@ -248,7 +248,7 @@ add_task(async _ => {
 add_task(async _ => {
   info("window.open() and .click() on the element opening the window.");
 
-  await withTestPage(1, async function(browser) {
+  await withTestPage(1, async function (browser) {
     let p = promisePopupsBlocked(browser, 1);
 
     await BrowserTestUtils.synthesizeMouseAtCenter(
@@ -263,7 +263,7 @@ add_task(async _ => {
 
 add_task(async _ => {
   info("All opened from chrome.");
-  await withTestPage(2, { chrome: true }, async function(browser) {
+  await withTestPage(2, { chrome: true }, async function (browser) {
     await BrowserTestUtils.synthesizeMouseAtCenter("#openPopups", {}, browser);
   });
 });
@@ -273,7 +273,7 @@ add_task(async function test_bug_1685056() {
     "window.open() from a blank iframe window during an event dispatched at the parent page: window should be allowed"
   );
 
-  await withTestPage(1, async function(browser) {
+  await withTestPage(1, async function (browser) {
     await BrowserTestUtils.synthesizeMouseAtCenter(
       "#openPopupInFrame",
       {},
@@ -284,7 +284,7 @@ add_task(async function test_bug_1685056() {
 
 add_task(async function test_bug_1689853() {
   info("window.open() from a js bookmark (LOAD_FLAGS_ALLOW_POPUPS)");
-  await withTestPage(1, async function(browser) {
+  await withTestPage(1, async function (browser) {
     const URI =
       "javascript:void(window.open('empty.html', '_blank', 'width=100,height=100'));";
     window.openTrustedLinkIn(URI, "current", {

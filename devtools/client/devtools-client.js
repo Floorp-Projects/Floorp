@@ -80,7 +80,7 @@ function DevToolsClient(transport) {
 }
 
 // Expose these to save callers the trouble of importing DebuggerSocket
-DevToolsClient.socketConnect = function(options) {
+DevToolsClient.socketConnect = function (options) {
   // Defined here instead of just copying the function to allow lazy-load
   return DebuggerSocket.connect(options);
 };
@@ -634,7 +634,7 @@ DevToolsClient.prototype = {
    *        is cancelled on the server.
    */
   purgeRequests(prefix = "") {
-    const reject = function(type, request) {
+    const reject = function (type, request) {
       // Server can send packets on its own and client only pass a callback
       // to expectReply, so that there is no request object.
       let msg;
@@ -805,10 +805,17 @@ DevToolsClient.prototype = {
   /**
    * Creates an object front for this DevToolsClient and the grip in parameter,
    * @param {Object} grip: The grip to create the ObjectFront for.
+   * @param {ThreadFront} threadFront
+   * @param {Front} parentFront: Optional front that will manage the object front.
+   *                             Defaults to threadFront.
    * @returns {ObjectFront}
    */
-  createObjectFront(grip, threadFront) {
-    return new ObjectFront(this, threadFront.targetFront, threadFront, grip);
+  createObjectFront(grip, threadFront, parentFront) {
+    if (!parentFront) {
+      parentFront = threadFront;
+    }
+
+    return new ObjectFront(this, threadFront.targetFront, parentFront, grip);
   },
 
   get transport() {

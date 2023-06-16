@@ -67,15 +67,6 @@ long CreateStream(const uint8_t* aBuf, const uint32_t aBufLen,
                   IStream** aOutStream);
 
 /**
- * Creates a deep copy of a proxy contained in a stream.
- * @param aInStream Stream containing the proxy to copy. Its seek pointer must
- *                  be positioned to point at the beginning of the proxy data.
- * @param aOutStream Outparam to receive the newly created stream.
- * @return HRESULT error code.
- */
-long CopySerializedProxy(IStream* aInStream, IStream** aOutStream);
-
-/**
  * Length of a stringified GUID as formatted for the registry, i.e. including
  * curly-braces and dashes.
  */
@@ -119,19 +110,6 @@ void DiagnosticNameForIID(REFIID aIid, nsACString& aOutString);
 void GUIDToString(REFGUID aGuid,
                   wchar_t (&aOutBuf)[kGuidRegFormatCharLenInclNul]);
 #endif  // defined(MOZILLA_INTERNAL_API)
-
-#if defined(ACCESSIBILITY)
-bool IsVtableIndexFromParentInterface(REFIID aInterface,
-                                      unsigned long aVtableIndex);
-
-#  if defined(MOZILLA_INTERNAL_API)
-bool IsCallerExternalProcess();
-
-bool IsInterfaceEqualToOrInheritedFrom(REFIID aInterface, REFIID aFrom,
-                                       unsigned long aVtableIndexHint);
-#  endif  // defined(MOZILLA_INTERNAL_API)
-
-#endif  // defined(ACCESSIBILITY)
 
 /**
  * Execute cleanup code when going out of scope if a condition is met.

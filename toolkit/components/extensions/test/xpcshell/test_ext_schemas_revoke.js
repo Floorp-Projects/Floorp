@@ -2,7 +2,9 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const { Schemas } = ChromeUtils.import("resource://gre/modules/Schemas.jsm");
+const { Schemas } = ChromeUtils.importESModule(
+  "resource://gre/modules/Schemas.sys.mjs"
+);
 
 let { SchemaAPIInterface } = ExtensionCommon;
 
@@ -185,7 +187,7 @@ function ignoreError(fn) {
   }
 }
 
-add_task(async function() {
+add_task(async function () {
   let url = "data:," + JSON.stringify(json);
   await Schemas.load(url);
 

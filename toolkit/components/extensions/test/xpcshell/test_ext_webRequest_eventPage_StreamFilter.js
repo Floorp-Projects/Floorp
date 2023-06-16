@@ -49,7 +49,7 @@ async function test_idletimeout_on_streamfilter({
   requestUrlPath,
 }) {
   const extension = ExtensionTestUtils.loadExtension({
-    background: `(${async function(urlPath) {
+    background: `(${async function (urlPath) {
       browser.webRequest.onBeforeRequest.addListener(
         request => {
           browser.test.log(`webRequest request intercepted: ${request.url}`);
@@ -159,8 +159,8 @@ async function test_idletimeout_on_streamfilter({
       }
     );
   } else {
-    const { Management } = ChromeUtils.import(
-      "resource://gre/modules/Extension.jsm"
+    const { Management } = ChromeUtils.importESModule(
+      "resource://gre/modules/Extension.sys.mjs"
     );
     const promiseProxyContextUnloaded = new Promise(resolve => {
       function listener(evt, context) {
@@ -261,9 +261,8 @@ async function test_create_new_streamfilter_while_suspending({
       browser.runtime.onSuspendCanceled.addListener(async () => {
         // Once onSuspendCanceled is emitted, filterResponseData
         // is expected to don't throw.
-        const filter = browser.webRequest.filterResponseData(
-          interceptedRequestId
-        );
+        const filter =
+          browser.webRequest.filterResponseData(interceptedRequestId);
         resolvePendingWebRequest();
         filter.onstop = () => {
           filter.disconnect();

@@ -4,7 +4,7 @@
 import pathlib
 import re
 import subprocess
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import requests
 from mozperftest.system.android_startup import (
@@ -27,9 +27,9 @@ def before_iterations(kw):
         architecture = "aarch64"
     commit_info = subprocess.getoutput("hg log -l 1")
     commit_date = re.search(r"date:\s+([:\s\w]+)\s+", str(commit_info)).group(1)
-    download_date = datetime.strptime(commit_date, "%a %b %d %H:%M:%S %Y").strftime(
-        DATETIME_FORMAT
-    )
+    download_date = (
+        datetime.strptime(commit_date, "%a %b %d %H:%M:%S %Y") - timedelta(days=1)
+    ).strftime(DATETIME_FORMAT)
 
     nightly_url = BASE_URL_DICT[product].format(
         date=download_date, architecture=architecture

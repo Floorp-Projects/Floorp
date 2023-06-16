@@ -6,7 +6,7 @@
  * Test preventive maintenance runTasks.
  */
 
-add_task(async function() {
+add_task(async function () {
   let tasksStatusMap = await PlacesDBUtils.runTasks([
     PlacesDBUtils.invalidateCaches,
   ]);

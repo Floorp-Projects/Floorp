@@ -132,25 +132,6 @@ TEST(PacketArrivalMapTest, GrowsBufferAndRemoveOld) {
   EXPECT_FALSE(map.has_received(kLargeSeq + 1));
 }
 
-TEST(PacketArrivalMapTest, GrowsBufferAndRemoveOldTrimsBeginning) {
-  PacketArrivalTimeMap map;
-
-  constexpr int64_t kLargeSeq = 42 + PacketArrivalTimeMap::kMaxNumberOfPackets;
-  map.AddPacket(42, Timestamp::Millis(10));
-  // Missing: 43, 44
-  map.AddPacket(45, Timestamp::Millis(13));
-  map.AddPacket(kLargeSeq, Timestamp::Millis(12));
-
-  EXPECT_EQ(map.begin_sequence_number(), 45);
-  EXPECT_EQ(map.end_sequence_number(), kLargeSeq + 1);
-
-  EXPECT_FALSE(map.has_received(44));
-  EXPECT_TRUE(map.has_received(45));
-  EXPECT_FALSE(map.has_received(46));
-  EXPECT_TRUE(map.has_received(kLargeSeq));
-  EXPECT_FALSE(map.has_received(kLargeSeq + 1));
-}
-
 TEST(PacketArrivalMapTest, SequenceNumberJumpsDeletesAll) {
   PacketArrivalTimeMap map;
 

@@ -258,6 +258,9 @@ mk{
         "America:Chihuahua"{
             ec{"Чивава"}
         }
+        "America:Ciudad_Juarez"{
+            ec{"Сиудад Хуарез"}
+        }
         "America:Coral_Harbour"{
             ec{"Корал Харбор"}
         }

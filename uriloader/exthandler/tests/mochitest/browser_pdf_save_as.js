@@ -13,12 +13,8 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
   "https://example.com"
 );
 
-const {
-  saveToDisk,
-  alwaysAsk,
-  handleInternally,
-  useSystemDefault,
-} = Ci.nsIHandlerInfo;
+const { saveToDisk, alwaysAsk, handleInternally, useSystemDefault } =
+  Ci.nsIHandlerInfo;
 const MockFilePicker = SpecialPowers.MockFilePicker;
 MockFilePicker.init(window);
 
@@ -61,7 +57,7 @@ async function testPdfFilePicker(mimeInfo) {
   );
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.download.always_ask_before_handling_new_types", false],

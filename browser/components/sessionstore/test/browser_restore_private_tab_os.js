@@ -8,7 +8,7 @@ const TEST_URI =
   "https://example.com/" +
   "browser/browser/components/sessionstore/test/empty.html";
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       // Set the pref to true so we know exactly how many tabs should be restoring at
@@ -38,7 +38,7 @@ add_task(async function testRestore() {
 
   // Ensure that closed tabs in a private windows can be restored.
   win.gBrowser.removeTab(tab);
-  is(ss.getClosedTabCount(win), 1, "there is a single tab to restore");
+  is(ss.getClosedTabCountForWindow(win), 1, "there is a single tab to restore");
 
   tab = SessionStore.undoCloseTab(win, 0);
   info(`Undo close tab`);

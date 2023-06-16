@@ -8,13 +8,13 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
 const HTML_URI = TEST_PATH + "dummy_page.html";
 const VIEW_SRC_URI = "view-source:" + HTML_URI;
 
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.navigation.requireUserInteraction", false]],
   });
 
   info("load baseline html in new tab");
-  await BrowserTestUtils.withNewTab(HTML_URI, async function(aBrowser) {
+  await BrowserTestUtils.withNewTab(HTML_URI, async function (aBrowser) {
     is(
       gBrowser.selectedBrowser.currentURI.spec,
       HTML_URI,

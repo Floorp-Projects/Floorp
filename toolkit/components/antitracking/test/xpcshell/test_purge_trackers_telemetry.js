@@ -4,11 +4,11 @@
 const TRACKING_PAGE = "https://tracking.example.org";
 const BENIGN_PAGE = "https://example.com";
 
-const { UrlClassifierTestUtils } = ChromeUtils.import(
-  "resource://testing-common/UrlClassifierTestUtils.jsm"
+const { UrlClassifierTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
 );
-const { SiteDataTestUtils } = ChromeUtils.import(
-  "resource://testing-common/SiteDataTestUtils.jsm"
+const { SiteDataTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/SiteDataTestUtils.sys.mjs"
 );
 const { PermissionTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/PermissionTestUtils.sys.mjs"
@@ -46,7 +46,7 @@ add_task(async function setup() {
 /**
  * Test telemetry for cookie purging.
  */
-add_task(async function() {
+add_task(async function () {
   await UrlClassifierTestUtils.addTestTrackers();
 
   let FIVE_DAYS = 5 * 24 * 60 * 60 * 1000;
@@ -147,7 +147,7 @@ add_task(async function() {
 /**
  * Test counting correctly across cookies batches
  */
-add_task(async function() {
+add_task(async function () {
   await UrlClassifierTestUtils.addTestTrackers();
 
   // Enforce deleting the same origin twice by adding two cookies and setting

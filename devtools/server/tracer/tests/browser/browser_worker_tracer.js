@@ -53,7 +53,7 @@ add_task(async function testTracingWorker() {
 });
 
 function waitForWorkerDebugger(url, dbgUrl) {
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve) {
     wdm.addListener({
       onRegister(dbg) {
         if (dbg.url !== url) {

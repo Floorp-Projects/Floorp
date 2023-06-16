@@ -173,7 +173,7 @@ void SVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
     return;
   }
 
-  aContext.Save();
+  gfxClipAutoSaveRestore autoSaveClip(&aContext);
 
   if (StyleDisplay()->IsScrollableOverflow()) {
     float x, y, width, height;
@@ -183,7 +183,7 @@ void SVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
 
     gfxRect clipRect =
         SVGUtils::GetClipRectForFrame(this, 0.0f, 0.0f, width, height);
-    SVGUtils::SetClipRect(&aContext, aTransform, clipRect);
+    autoSaveClip.TransformedClip(aTransform, clipRect);
   }
 
   // SVG paints in CSS px, but normally frames paint in dev pixels. Here we
@@ -210,40 +210,12 @@ void SVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
   nsLayoutUtils::PaintFrame(&aContext, kid, nsRegion(kid->InkOverflowRect()),
                             NS_RGBA(0, 0, 0, 0),
                             nsDisplayListBuilderMode::Painting, flags);
-
-  aContext.Restore();
 }
 
 nsIFrame* SVGForeignObjectFrame::GetFrameForPoint(const gfxPoint& aPoint) {
-  NS_ASSERTION(
-      HasAnyStateBits(NS_FRAME_IS_NONDISPLAY),
-      "Only hit-testing of non-display SVG should take this code path");
-
-  if (IsDisabled() || HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
-    return nullptr;
-  }
-
-  nsIFrame* kid = PrincipalChildList().FirstChild();
-  if (!kid) {
-    return nullptr;
-  }
-
-  float x, y, width, height;
-  SVGGeometryProperty::ResolveAll<SVGT::X, SVGT::Y, SVGT::Width, SVGT::Height>(
-      static_cast<SVGElement*>(GetContent()), &x, &y, &width, &height);
-
-  if (!gfxRect(x, y, width, height).Contains(aPoint) ||
-      !SVGUtils::HitTestClip(this, aPoint)) {
-    return nullptr;
-  }
-
-  // Convert the point to app units relative to the top-left corner of the
-  // viewport that's established by the foreignObject element:
-
-  gfxPoint pt = (aPoint + gfxPoint(x, y)) * AppUnitsPerCSSPixel();
-  nsPoint point = nsPoint(NSToIntRound(pt.x), NSToIntRound(pt.y));
-
-  return nsLayoutUtils::GetFrameForPoint(RelativeTo{kid}, point);
+  MOZ_ASSERT_UNREACHABLE(
+      "A clipPath cannot contain an SVGForeignObject element");
+  return nullptr;
 }
 
 void SVGForeignObjectFrame::ReflowSVG() {

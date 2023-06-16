@@ -33,7 +33,7 @@ function recordEvent(aName) {
 
     executeSoon(
       // eslint-disable-next-line no-shadow
-      function(tab) {
+      function (tab) {
         gBrowser.removeTab(tab);
         gBrowser.removeTabsProgressListener(progressListener);
         gBrowser.tabContainer.removeEventListener("TabOpen", TabOpen);

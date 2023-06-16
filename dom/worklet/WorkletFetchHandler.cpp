@@ -21,6 +21,7 @@
 #include "mozilla/dom/worklet/WorkletModuleLoader.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/TaskQueue.h"
 #include "nsIInputStreamPump.h"
 #include "nsIThreadRetargetableRequest.h"
 
@@ -573,7 +574,9 @@ void WorkletScriptHandler::ResolvedCallback(JSContext* aCx,
   if (rr) {
     nsCOMPtr<nsIEventTarget> sts =
         do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
-    rv = rr->RetargetDeliveryTo(sts);
+    RefPtr<TaskQueue> queue = TaskQueue::Create(
+        sts.forget(), "WorkletScriptHandler STS Delivery Queue");
+    rv = rr->RetargetDeliveryTo(queue);
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to dispatch the nsIInputStreamPump to a IO thread.");
     }

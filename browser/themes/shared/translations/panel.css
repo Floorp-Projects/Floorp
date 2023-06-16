@@ -2,15 +2,91 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.translations-panel {
+.translations-panel-view {
   font: menu;
+  width: 31em;
+}
+
+:where(#translations-panel) :is(description, label, menulist) {
+  margin: 0;
+}
+
+.translations-panel-header {
+  text-align: initial;
+  padding: var(--arrowpanel-padding);
+  padding-bottom: 0;
+}
+
+image.translations-panel-gear-icon {
+  /* Override the panel-info-button with a gear icon. */
+  list-style-image: url(chrome://global/skin/icons/settings.svg);
 }
 
 .translations-panel-content {
-  display: flex;
-  flex-direction: column;
-  padding: 10px;
-  gap: 9px;
-  max-width: 300px;
-  min-width: 200px;
+  padding: var(--arrowpanel-padding);
+  gap: var(--arrowpanel-padding);
+}
+
+#translations-panel-lang-selection > label:first-child {
+  margin-block-start: 0;
+}
+
+#translations-panel-lang-selection > label {
+  margin-block: var(--arrowpanel-padding) 6px;
+}
+
+/* The default styling is to dim the default, but here override it so that it still uses
+   the primary color. */
+.translations-panel-footer > button[default][disabled="true"] {
+  color: var(--button-primary-color);
+  background-color: var(--button-primary-bgcolor);
+}
+
+#translations-panel-translate-hint-action {
+  appearance: none;
+  background-color: var(--button-bgcolor);
+  border-radius: 4px;
+  color: var(--button-color);
+  padding: 8px 16px;
+  font-size: 0.9em;
+}
+
+#translations-panel-translate-hint-action:hover {
+  background-color: var(--button-hover-bgcolor);
+}
+
+#translations-panel-translate-hint-action:hover:active {
+  background-color: var(--button-active-bgcolor);
+}
+
+#translations-panel-translate-hint-action:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-outline-offset);
+}
+
+#translations-panel-error-message-hint {
+  margin-inline-start: 21px;
+  margin-block: 8px;
+}
+
+#translations-panel-error-message {
+  font-weight: 600;
+}
+
+.translations-panel-error-icon {
+  -moz-context-properties: fill;
+  fill: currentColor;
+  list-style-image: url(chrome://global/skin/icons/error.svg);
+  margin-inline-end: 5px;
+  width: 16px;
+}
+
+.translations-panel-error-header {
+  align-items: start;
+}
+
+#translations-panel-error {
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  padding: 12px;
 }

@@ -256,15 +256,7 @@ void PictureIdTest::SetupEncoder(VideoEncoderFactory* encoder_factory,
   SendTask(
       task_queue(), [this, encoder_factory, payload_name]() {
         CreateCalls();
-
-        send_transport_.reset(new test::PacketTransport(
-            task_queue(), sender_call_.get(), observer_.get(),
-            test::PacketTransport::kSender, payload_type_map_,
-            std::make_unique<FakeNetworkPipe>(
-                Clock::GetRealTimeClock(),
-                std::make_unique<SimulatedNetwork>(
-                    BuiltInNetworkBehaviorConfig()))));
-
+        CreateSendTransport(BuiltInNetworkBehaviorConfig(), observer_.get());
         CreateSendConfig(kNumSimulcastStreams, 0, 0, send_transport_.get());
         GetVideoSendConfig()->encoder_settings.encoder_factory =
             encoder_factory;

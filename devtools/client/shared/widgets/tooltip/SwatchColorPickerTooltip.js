@@ -169,9 +169,8 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
     // Call then parent class' show function
     await super.show();
 
-    const eyeButton = this.tooltip.container.querySelector(
-      "#eyedropper-button"
-    );
+    const eyeButton =
+      this.tooltip.container.querySelector("#eyedropper-button");
     const canShowEyeDropper = await this.inspector.supportsEyeDropper();
     if (canShowEyeDropper) {
       eyeButton.disabled = false;
@@ -182,9 +181,8 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
       eyeButton.title = L10N.getStr("eyedropper.disabled.title");
     }
 
-    const learnMoreButton = this.tooltip.container.querySelector(
-      "#learn-more-button"
-    );
+    const learnMoreButton =
+      this.tooltip.container.querySelector("#learn-more-button");
     if (learnMoreButton) {
       learnMoreButton.addEventListener("click", this._openDocLink);
       learnMoreButton.addEventListener("keydown", e => e.stopPropagation());

@@ -6,9 +6,7 @@
     "targeting": "source == 'startup' && !isMajorUpgrade && !activeNotifications && totalBookmarksCount == 5"
   },
   {
-    "groups": [
-      "eco"
-    ],
+    "groups": ["eco"],
     "trigger": {
       "id": "defaultBrowserCheck"
     },

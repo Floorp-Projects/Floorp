@@ -13,7 +13,12 @@
     title: "Multistream: Two audio/video streams"
   });
 
-  runNetworkTest(function (options) {
+  runNetworkTest(async (options) => {
+    // Disable platform encodre for SW MFT encoder causes some stats
+    // exceeding the test thresholds.
+    // E.g. inbound-rtp.packetsDiscarded value=118 >= 100.
+    await matchPlatformH264CodecPrefs();
+
     const test = new PeerConnectionTest(options);
     test.setMediaConstraints([{audio: true, video: true},
                                 {audio: true, video: true}],

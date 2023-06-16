@@ -9,7 +9,7 @@ const { actions } = require("resource://devtools/client/memory/constants.js");
 
 const handlers = Object.create(null);
 
-handlers[actions.TOGGLE_RECORD_ALLOCATION_STACKS_START] = function(
+handlers[actions.TOGGLE_RECORD_ALLOCATION_STACKS_START] = function (
   state,
   action
 ) {
@@ -24,7 +24,7 @@ handlers[actions.TOGGLE_RECORD_ALLOCATION_STACKS_START] = function(
   };
 };
 
-handlers[actions.TOGGLE_RECORD_ALLOCATION_STACKS_END] = function(
+handlers[actions.TOGGLE_RECORD_ALLOCATION_STACKS_END] = function (
   state,
   action
 ) {
@@ -45,7 +45,7 @@ const DEFAULT_ALLOCATIONS_STATE = {
   togglingInProgress: false,
 };
 
-module.exports = function(state = DEFAULT_ALLOCATIONS_STATE, action) {
+module.exports = function (state = DEFAULT_ALLOCATIONS_STATE, action) {
   const handle = handlers[action.type];
   if (handle) {
     return handle(state, action);

@@ -636,7 +636,7 @@ JSObject* NewPlainObjectBaselineFallback(JSContext* cx,
 JSObject* NewPlainObjectOptimizedFallback(JSContext* cx,
                                           Handle<SharedShape*> shape,
                                           gc::AllocKind allocKind,
-                                          gc::InitialHeap initialHeap);
+                                          gc::Heap initialHeap);
 
 ArrayObject* NewArrayOperation(JSContext* cx, uint32_t length,
                                NewObjectKind newKind = GenericObject);

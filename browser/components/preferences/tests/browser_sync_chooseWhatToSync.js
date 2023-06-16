@@ -71,9 +71,8 @@ add_task(async function testDialogAccept() {
   );
 
   Assert.ok(syncWindow, "Choose what to sync window opened");
-  let syncChooseDialog = syncWindow.document.getElementById(
-    "syncChooseOptions"
-  );
+  let syncChooseDialog =
+    syncWindow.document.getElementById("syncChooseOptions");
   let syncCheckboxes = syncChooseDialog.querySelectorAll(
     "checkbox[preference]"
   );
@@ -132,9 +131,8 @@ add_task(async function testDialogCancel() {
   );
 
   ok(syncWindow, "Choose what to sync window opened");
-  let syncChooseDialog = syncWindow.document.getElementById(
-    "syncChooseOptions"
-  );
+  let syncChooseDialog =
+    syncWindow.document.getElementById("syncChooseOptions");
   let syncCheckboxes = syncChooseDialog.querySelectorAll(
     "checkbox[preference]"
   );

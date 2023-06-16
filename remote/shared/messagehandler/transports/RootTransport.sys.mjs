@@ -79,9 +79,8 @@ export class RootTransport {
 
   _broadcastCommand(command) {
     const { contextDescriptor } = command.destination;
-    const browsingContexts = this._getBrowsingContextsForDescriptor(
-      contextDescriptor
-    );
+    const browsingContexts =
+      this._getBrowsingContextsForDescriptor(contextDescriptor);
 
     return Promise.all(
       browsingContexts.map(async browsingContext => {

@@ -7,7 +7,7 @@
  * Test blocking and unblocking a request.
  */
 
-add_task(async function() {
+add_task(async function () {
   const { monitor, tab } = await initNetMonitor(HTTPS_SIMPLE_URL, {
     requestCount: 1,
   });
@@ -47,8 +47,9 @@ add_task(async function() {
       "#headers-panel .accordion-item"
     );
     normalRequestState = getSelectedRequest(store.getState());
-    normalRequestSize = firstRequest.querySelector(".requests-list-transferred")
-      .textContent;
+    normalRequestSize = firstRequest.querySelector(
+      ".requests-list-transferred"
+    ).textContent;
     normalHeadersSectionSize = headerSections.length;
     normalFirstHeaderSectionTitle = headerSections[0].querySelector(
       ".accordion-header-label"

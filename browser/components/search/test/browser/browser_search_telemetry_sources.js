@@ -3,27 +3,22 @@
 
 /*
  * Main tests for SearchSERPTelemetry - general engine visiting and link clicking.
+ *
+ * NOTE: As this test file is already fairly long-running, adding to this file
+ * will likely cause timeout errors with test-verify jobs on Treeherder.
+ * Therefore, please do not add further tasks to this file.
  */
 
 "use strict";
 
-const {
-  SearchSERPTelemetry,
-  SearchSERPTelemetryUtils,
-} = ChromeUtils.importESModule(
-  "resource:///modules/SearchSERPTelemetry.sys.mjs"
-);
-const { UrlbarTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/UrlbarTestUtils.sys.mjs"
-);
-const { SearchTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/SearchTestUtils.sys.mjs"
-);
+const { SearchSERPTelemetry, SearchSERPTelemetryUtils } =
+  ChromeUtils.importESModule("resource:///modules/SearchSERPTelemetry.sys.mjs");
 
 const TEST_PROVIDER_INFO = [
   {
     telemetryId: "example",
-    searchPageRegexp: /^https:\/\/example.com\/browser\/browser\/components\/search\/test\/browser\/searchTelemetry(?:Ad)?.html/,
+    searchPageRegexp:
+      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/searchTelemetry(?:Ad)?/,
     queryParamName: "s",
     codeParamName: "abc",
     taggedCodes: ["ff"],
@@ -40,7 +35,7 @@ const TEST_PROVIDER_INFO = [
 
 function getPageUrl(useAdPage = false) {
   let page = useAdPage ? "searchTelemetryAd.html" : "searchTelemetry.html";
-  return `https://example.com/browser/browser/components/search/test/browser/${page}`;
+  return `https://example.org/browser/browser/components/search/test/browser/${page}`;
 }
 
 /**
@@ -72,9 +67,8 @@ async function waitForIdle() {
 }
 
 SearchTestUtils.init(this);
-UrlbarTestUtils.init(this);
 
-add_setup(async function() {
+add_setup(async function () {
   SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
   await waitForIdle();
   await SpecialPowers.pushPrefEnv({
@@ -99,7 +93,7 @@ add_setup(async function() {
       search_url: getPageUrl(true),
       search_url_get_params: "s={searchTerms}&abc=ff",
       suggest_url:
-        "https://example.com/browser/browser/components/search/test/browser/searchSuggestionEngine.sjs",
+        "https://example.org/browser/browser/components/search/test/browser/searchSuggestionEngine.sjs",
       suggest_url_get_params: "query={searchTerms}",
     },
     { setAsDefault: true }
@@ -112,7 +106,7 @@ add_setup(async function() {
     Services.prefs.clearUserPref("browser.search.log");
     SearchSERPTelemetry.overrideSearchTelemetryForTests();
     Services.telemetry.canRecordExtended = oldCanRecord;
-    Services.telemetry.clearScalars();
+    resetTelemetry();
   });
 });
 
@@ -163,9 +157,7 @@ async function track_ad_click(
   await promiseAdImpressionReceived();
 
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
-    content.document.getElementById("ad1").click();
-  });
+  BrowserTestUtils.synthesizeMouseAtCenter("#ad1", {}, tab.linkedBrowser);
   await pageLoadPromise;
   await promiseWaitForAdLinkCheck();
 
@@ -244,10 +236,11 @@ add_task(async function test_source_urlbar_handoff() {
       await BrowserTestUtils.browserStopped(tab.linkedBrowser, "about:newtab");
 
       info("Focus on search input in newtab content");
-      await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
-        const searchInput = content.document.querySelector(".fake-editable");
-        searchInput.click();
-      });
+      await BrowserTestUtils.synthesizeMouseAtCenter(
+        ".fake-editable",
+        {},
+        tab.linkedBrowser
+      );
 
       info("Get suggestions");
       for (const c of "searchSuggestion".split("")) {
@@ -376,7 +369,7 @@ async function checkAboutPage(
           ],
         ],
       });
-      await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+      await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
         await ContentTaskUtils.waitForCondition(
           () => content.wrappedJSObject.gContentSearchController.defaultEngine
         );

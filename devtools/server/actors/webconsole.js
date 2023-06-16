@@ -48,14 +48,20 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  ["isCommand", "validCommands"],
-  "resource://devtools/server/actors/webconsole/commands.js",
+  ["isCommand"],
+  "resource://devtools/server/actors/webconsole/commands/parser.js",
   true
 );
 loader.lazyRequireGetter(
   this,
-  ["addWebConsoleCommands", "CONSOLE_WORKER_IDS", "WebConsoleUtils"],
+  ["CONSOLE_WORKER_IDS", "WebConsoleUtils"],
   "resource://devtools/server/actors/webconsole/utils.js",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  ["WebConsoleCommandsManager"],
+  "resource://devtools/server/actors/webconsole/commands/manager.js",
   true
 );
 loader.lazyRequireGetter(
@@ -153,9 +159,8 @@ class WebConsoleActor extends Actor {
 
     this.objectGrip = this.objectGrip.bind(this);
     this._onWillNavigate = this._onWillNavigate.bind(this);
-    this._onChangedToplevelDocument = this._onChangedToplevelDocument.bind(
-      this
-    );
+    this._onChangedToplevelDocument =
+      this._onChangedToplevelDocument.bind(this);
     this.onConsoleServiceMessage = this.onConsoleServiceMessage.bind(this);
     this.onConsoleAPICall = this.onConsoleAPICall.bind(this);
     this.onDocumentEvent = this.onDocumentEvent.bind(this);
@@ -320,13 +325,6 @@ class WebConsoleActor extends Actor {
    */
   consoleReflowListener = null;
 
-  /**
-   * The Web Console Commands names cache.
-   * @private
-   * @type array
-   */
-  _webConsoleCommandsCache = null;
-
   grip() {
     return { actor: this.actorID };
   }
@@ -347,7 +345,6 @@ class WebConsoleActor extends Actor {
       this._onChangedToplevelDocument
     );
 
-    this._webConsoleCommandsCache = null;
     this._lastConsoleInputEvaluation = null;
     this._evalGlobal = null;
     this.dbg = null;
@@ -590,10 +587,8 @@ class WebConsoleActor extends Actor {
           }
           if (this.global instanceof Ci.nsIDOMWindow) {
             if (!this.consoleFileActivityListener) {
-              this.consoleFileActivityListener = new ConsoleFileActivityListener(
-                this.global,
-                this
-              );
+              this.consoleFileActivityListener =
+                new ConsoleFileActivityListener(this.global, this);
             }
             this.consoleFileActivityListener.startMonitor();
             startedListeners.push(event);
@@ -751,8 +746,8 @@ class WebConsoleActor extends Actor {
 
           // this.global might not be a window (can be a worker global or a Sandbox),
           // and in such case performance isn't defined
-          const winStartTime = this.global?.performance?.timing
-            ?.navigationStart;
+          const winStartTime =
+            this.global?.performance?.timing?.navigationStart;
 
           const cache = this.consoleAPIListener.getCachedMessages(
             !this.parentActor.isRootActor
@@ -875,7 +870,7 @@ class WebConsoleActor extends Actor {
   }
 
   /**
-   * In order to have asynchronous commands (e.g. screenshot, top-level await, …) ,
+   * In order to support async evaluations (e.g. top-level await, …),
    * we have to be able to handle promises. This method handles waiting for the promise,
    * and then returns the result.
    *
@@ -889,41 +884,26 @@ class WebConsoleActor extends Actor {
    *         The updated response object.
    */
   async _maybeWaitForResponseResult(response) {
-    if (!response) {
+    if (!response?.awaitResult) {
       return response;
     }
 
-    const thenable = obj => obj && typeof obj.then === "function";
-    const waitForHelperResult =
-      response.helperResult && thenable(response.helperResult);
-    const waitForAwaitResult =
-      response.awaitResult && thenable(response.awaitResult);
+    let result;
+    try {
+      result = await response.awaitResult;
 
-    if (!waitForAwaitResult && !waitForHelperResult) {
-      return response;
+      // `createValueGrip` expect a debuggee value, while here we have the raw object.
+      // We need to call `makeDebuggeeValue` on it to make it work.
+      const dbgResult = this.makeDebuggeeValue(result);
+      response.result = this.createValueGrip(dbgResult);
+    } catch (e) {
+      // The promise was rejected. We let the engine handle this as it will report a
+      // `uncaught exception` error.
+      response.topLevelAwaitRejected = true;
     }
 
-    // Wait for asynchronous command completion before sending back the response
-    if (waitForHelperResult) {
-      response.helperResult = await response.helperResult;
-    } else if (waitForAwaitResult) {
-      let result;
-      try {
-        result = await response.awaitResult;
-
-        // `createValueGrip` expect a debuggee value, while here we have the raw object.
-        // We need to call `makeDebuggeeValue` on it to make it work.
-        const dbgResult = this.makeDebuggeeValue(result);
-        response.result = this.createValueGrip(dbgResult);
-      } catch (e) {
-        // The promise was rejected. We let the engine handle this as it will report a
-        // `uncaught exception` error.
-        response.topLevelAwaitRejected = true;
-      }
-
-      // Remove the promise from the response object.
-      delete response.awaitResult;
-    }
+    // Remove the promise from the response object.
+    delete response.awaitResult;
 
     return response;
   }
@@ -1029,9 +1009,8 @@ class WebConsoleActor extends Actor {
           } = exceptionStack[0];
           frame = { source, sourceId, line, column };
 
-          exceptionStack = WebConsoleUtils.removeFramesAboveDebuggerEval(
-            exceptionStack
-          );
+          exceptionStack =
+            WebConsoleUtils.removeFramesAboveDebuggerEval(exceptionStack);
         }
 
         errorMessage = String(error);
@@ -1114,9 +1093,8 @@ class WebConsoleActor extends Actor {
     let resultGrip;
     if (!awaitResult) {
       try {
-        const objectActor = this.parentActor.threadActor.getThreadLifetimeObject(
-          result
-        );
+        const objectActor =
+          this.parentActor.threadActor.getThreadLifetimeObject(result);
         if (objectActor) {
           resultGrip = this.parentActor.threadActor.createValueGrip(result);
         } else {
@@ -1205,14 +1183,9 @@ class WebConsoleActor extends Actor {
     const reqText = text.substr(0, cursor);
 
     if (isCommand(reqText)) {
-      const commandsCache = this._getWebConsoleCommandsCache();
       matchProp = reqText;
-      matches = validCommands
-        .filter(
-          c =>
-            `:${c}`.startsWith(reqText) &&
-            commandsCache.find(n => `:${n}`.startsWith(reqText))
-        )
+      matches = WebConsoleCommandsManager.getAllColonCommandNames()
+        .filter(c => `:${c}`.startsWith(reqText))
         .map(c => `:${c}`);
     } else {
       // This is the case of the paused debugger
@@ -1270,12 +1243,17 @@ class WebConsoleActor extends Actor {
       // We only return commands and keywords when we are not dealing with a property or
       // element access.
       if (matchProp && !lastNonAlphaIsDot && !isElementAccess) {
-        this._getWebConsoleCommandsCache().forEach(n => {
-          // filter out `screenshot` command as it is inaccessible without the `:` prefix
-          if (n !== "screenshot" && n.startsWith(result.matchProp)) {
-            matches.add(n);
+        const colonOnlyCommands =
+          WebConsoleCommandsManager.getColonOnlyCommandNames();
+        for (const name of WebConsoleCommandsManager.getAllCommandNames()) {
+          // Filter out commands like `screenshot` as it is inaccessible without the `:` prefix
+          if (
+            !colonOnlyCommands.includes(name) &&
+            name.startsWith(result.matchProp)
+          ) {
+            matches.add(name);
           }
-        });
+        }
 
         for (const keyword of RESERVED_JS_KEYWORDS) {
           if (keyword.startsWith(result.matchProp)) {
@@ -1353,79 +1331,6 @@ class WebConsoleActor extends Actor {
 
   // End of request handlers.
 
-  /**
-   * Create an object with the API we expose to the Web Console during
-   * JavaScript evaluation.
-   * This object inherits properties and methods from the Web Console actor.
-   *
-   * @private
-   * @param object debuggerGlobal
-   *        A Debugger.Object that wraps a content global. This is used for the
-   *        Web Console Commands.
-   * @return object
-   *         The same object as |this|, but with an added |sandbox| property.
-   *         The sandbox holds methods and properties that can be used as
-   *         bindings during JS evaluation.
-   */
-  _getWebConsoleCommands(debuggerGlobal) {
-    const helpers = {
-      window: this.evalGlobal,
-      makeDebuggeeValue: debuggerGlobal.makeDebuggeeValue.bind(debuggerGlobal),
-      createValueGrip: this.createValueGrip.bind(this),
-      preprocessDebuggerObject: this.preprocessDebuggerObject.bind(this),
-      sandbox: Object.create(null),
-      helperResult: null,
-      consoleActor: this,
-    };
-    addWebConsoleCommands(helpers);
-
-    const evalGlobal = this.evalGlobal;
-    function maybeExport(obj, name) {
-      if (typeof obj[name] != "function") {
-        return;
-      }
-
-      // By default, chrome-implemented functions that are exposed to content
-      // refuse to accept arguments that are cross-origin for the caller. This
-      // is generally the safe thing, but causes problems for certain console
-      // helpers like cd(), where we users sometimes want to pass a cross-origin
-      // window. To circumvent this restriction, we use exportFunction along
-      // with a special option designed for this purpose. See bug 1051224.
-      obj[name] = Cu.exportFunction(obj[name], evalGlobal, {
-        allowCrossOriginArguments: true,
-      });
-    }
-    for (const name in helpers.sandbox) {
-      const desc = Object.getOwnPropertyDescriptor(helpers.sandbox, name);
-
-      // Workers don't have access to Cu so won't be able to exportFunction.
-      if (!isWorker) {
-        maybeExport(desc, "get");
-        maybeExport(desc, "set");
-        maybeExport(desc, "value");
-      }
-      if (desc.value) {
-        // Make sure the helpers can be used during eval.
-        desc.value = debuggerGlobal.makeDebuggeeValue(desc.value);
-      }
-      Object.defineProperty(helpers.sandbox, name, desc);
-    }
-    return helpers;
-  }
-
-  _getWebConsoleCommandsCache() {
-    if (!this._webConsoleCommandsCache) {
-      const helpers = {
-        sandbox: Object.create(null),
-      };
-      addWebConsoleCommands(helpers);
-      this._webConsoleCommandsCache = Object.getOwnPropertyNames(
-        helpers.sandbox
-      );
-    }
-    return this._webConsoleCommandsCache;
-  }
-
   // Event handlers for various listeners.
 
   /**
@@ -1449,9 +1354,8 @@ class WebConsoleActor extends Actor {
   }
 
   getActorIdForInternalSourceId(id) {
-    const actor = this.parentActor.sourcesManager.getSourceActorByInternalSourceId(
-      id
-    );
+    const actor =
+      this.parentActor.sourcesManager.getSourceActorByInternalSourceId(id);
     return actor ? actor.actorID : null;
   }
 

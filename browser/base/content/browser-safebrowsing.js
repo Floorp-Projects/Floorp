@@ -65,10 +65,7 @@ var gSafeBrowsing = {
 
       // Remove the query to avoid including potentially sensitive data
       if (pageUri instanceof Ci.nsIURL) {
-        pageUri = pageUri
-          .mutate()
-          .setQuery("")
-          .finalize();
+        pageUri = pageUri.mutate().setQuery("").finalize();
       }
 
       reportInfo = { uri: pageUri.asciiSpec };

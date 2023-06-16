@@ -10,7 +10,7 @@ let defaultTestEngine;
 // The main search string used in tests
 const SEARCH_STRING = "chocolate cake";
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.showSearchTerms.featureGate", true]],
   });
@@ -25,7 +25,7 @@ add_setup(async function() {
   );
   defaultTestEngine = Services.search.getEngineByName("MozSearch");
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.history.clear();
   });
 });
@@ -48,7 +48,7 @@ add_task(async function history_push_state() {
   await browserLoadedPromise;
 
   let locationChangePromise = BrowserTestUtils.waitForLocationChange(gBrowser);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function () {
     let url = new URL(content.window.location);
     url.searchParams.set("pc", "fake_code_2");
     content.history.pushState({}, "", url);

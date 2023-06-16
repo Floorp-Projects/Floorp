@@ -24,7 +24,7 @@ promiseThen(onPromiseThen);
 
 </script>`;
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("javascript.options.asyncstack_capture_debuggee_only", false);
   const hud = await openNewTabAndConsole(TEST_URI);
 
@@ -81,9 +81,9 @@ async function getSimplifiedStack(messageEl) {
 
   return Array.from(framesEl)
     .map(frameEl =>
-      Array.from(
-        frameEl.querySelectorAll(".title,.location-async-cause")
-      ).map(el => el.textContent.trim())
+      Array.from(frameEl.querySelectorAll(".title,.location-async-cause")).map(
+        el => el.textContent.trim()
+      )
     )
     .flat()
     .join("\n");

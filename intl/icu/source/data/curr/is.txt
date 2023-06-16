@@ -996,6 +996,10 @@ is{
             one{"angólsk kvansa"}
             other{"angólskar kvönsur"}
         }
+        ARP{
+            one{"Argentískur pesi (1983–1985)"}
+            other{"Argentískur pesi (1983–1985)"}
+        }
         ARS{
             one{"argentínskur pesi"}
             other{"argentínskir pesar"}
@@ -1047,6 +1051,10 @@ is{
         BOB{
             one{"bólivíani"}
             other{"bólivíanar"}
+        }
+        BOP{
+            one{"Bólivískur pesi"}
+            other{"Bólivískur pesi"}
         }
         BRL{
             one{"brasilískt ríal"}
@@ -1376,6 +1384,10 @@ is{
             one{"mexíkóskur pesi"}
             other{"mexíkóskir pesar"}
         }
+        MXP{
+            one{"Mexíkóskur silfurpesi (1861–1992)"}
+            other{"Mexíkóskur silfurpesi (1861–1992)"}
+        }
         MYR{
             one{"malasískt ringit"}
             other{"malasísk ringit"}
@@ -1583,6 +1595,14 @@ is{
         USD{
             one{"Bandaríkjadalur"}
             other{"Bandaríkjadalir"}
+        }
+        USN{
+            one{"Bandaríkjadalur (næsta dag)"}
+            other{"Bandaríkjadalur (næsta dag)"}
+        }
+        USS{
+            one{"Bandaríkjadalur (sama dag)"}
+            other{"Bandaríkjadalur (sama dag)"}
         }
         UYU{
             one{"úrúgvæskur pesi"}

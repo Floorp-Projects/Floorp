@@ -8,13 +8,17 @@
 #define DOM_MEDIA_INTERVALS_H_
 
 #include <algorithm>
+#include <type_traits>
 
 #include "nsTArray.h"
+#include "nsString.h"
+#include "nsPrintfCString.h"
 
 // Specialization for nsTArray CopyChooser.
 namespace mozilla::media {
 template <class T>
 class IntervalSet;
+class TimeUnit;
 }  // namespace mozilla::media
 
 template <class E>
@@ -40,17 +44,13 @@ class Interval {
 
   template <typename StartArg, typename EndArg>
   Interval(StartArg&& aStart, EndArg&& aEnd)
-      : mStart(std::forward<StartArg>(aStart)),
-        mEnd(std::forward<EndArg>(aEnd)),
-        mFuzz() {
+      : mStart(aStart), mEnd(aEnd), mFuzz() {
     MOZ_DIAGNOSTIC_ASSERT(mStart <= mEnd, "Invalid Interval");
   }
 
   template <typename StartArg, typename EndArg, typename FuzzArg>
   Interval(StartArg&& aStart, EndArg&& aEnd, FuzzArg&& aFuzz)
-      : mStart(std::forward<StartArg>(aStart)),
-        mEnd(std::forward<EndArg>(aEnd)),
-        mFuzz(std::forward<FuzzArg>(aFuzz)) {
+      : mStart(aStart), mEnd(aEnd), mFuzz(aFuzz) {
     MOZ_DIAGNOSTIC_ASSERT(mStart <= mEnd, "Invalid Interval");
   }
 
@@ -229,11 +229,18 @@ class Interval {
     return aOther.mStart <= mStart && mStart <= aOther.mEnd;
   }
 
+  nsCString ToString() const {
+    if constexpr (std::is_same_v<T, TimeUnit>) {
+      return nsPrintfCString("[%s, %s](%s)", mStart.ToString().get(),
+                             mEnd.ToString().get(), mFuzz.ToString().get());
+    } else if constexpr (std::is_same_v<T, double>) {
+      return nsPrintfCString("[%lf, %lf](%lf)", mStart, mEnd, mFuzz);
+    }
+  }
+
   T mStart;
   T mEnd;
   T mFuzz;
-
- private:
 };
 
 // An IntervalSet in a collection of Intervals. The IntervalSet is always

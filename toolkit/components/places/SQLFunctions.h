@@ -220,6 +220,40 @@ class CalculateFrecencyFunction final : public mozIStorageFunction {
   ~CalculateFrecencyFunction() = default;
 };
 
+////////////////////////////////////////////////////////////////////////////////
+//// Alternative Frecency Calculation Function
+
+/**
+ * This function is used to calculate alternative frecency for a page.
+ *
+ * In SQL, you'd use it in when setting frecency like:
+ * SET alt_frecency = CALCULATE_ALT_FRECENCY(place_id).
+ * Optional parameters must be passed in if the page is not yet in the database,
+ * otherwise they will be fetched from it automatically.
+ *
+ * @param {int64_t} pageId
+ *        The id of the page.  Pass -1 if the page is being added right now.
+ * @param {int32_t} [useRedirectBonus]
+ *        Whether we should use the lower redirect bonus for the most recent
+ *        page visit.  If not passed in, it will use a database guess.
+ */
+class CalculateAltFrecencyFunction final : public mozIStorageFunction {
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_MOZISTORAGEFUNCTION
+
+  /**
+   * Registers the function with the specified database connection.
+   *
+   * @param aDBConn
+   *        The database connection to register with.
+   */
+  static nsresult create(mozIStorageConnection* aDBConn);
+
+ private:
+  ~CalculateAltFrecencyFunction() = default;
+};
+
 /**
  * SQL function to generate a GUID for a place or bookmark item.  This is just
  * a wrapper around GenerateGUID in Helpers.h.

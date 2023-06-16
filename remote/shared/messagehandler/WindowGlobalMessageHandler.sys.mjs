@@ -130,7 +130,7 @@ export class WindowGlobalMessageHandler extends MessageHandler {
       if (!structuredUpdates.has(moduleName)) {
         // Skip session data item if the module is not present
         // for the destination.
-        if (!this.moduleCache.hasModule(moduleName, destination)) {
+        if (!this.moduleCache.hasModuleClass(moduleName, destination)) {
           continue;
         }
         structuredUpdates.set(moduleName, new Map());
@@ -140,10 +140,7 @@ export class WindowGlobalMessageHandler extends MessageHandler {
         structuredUpdates.get(moduleName).set(category, new Set());
       }
 
-      structuredUpdates
-        .get(moduleName)
-        .get(category)
-        .add(sessionDataItem);
+      structuredUpdates.get(moduleName).get(category).add(sessionDataItem);
     }
 
     const sessionDataPromises = [];

@@ -4,7 +4,7 @@
 
 // Bug 587922: tabs don't get removed if they're hidden
 
-add_task(async function() {
+add_task(async function () {
   // Add a tab that will get removed and hidden
   let testTab = BrowserTestUtils.addTab(gBrowser, "about:blank", {
     skipAnimation: true,

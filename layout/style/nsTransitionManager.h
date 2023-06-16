@@ -67,6 +67,20 @@ class nsTransitionManager final
       const mozilla::ComputedStyle& aOldStyle,
       const mozilla::ComputedStyle& aNewStyle,
       nsCSSPropertyIDSet& aPropertiesChecked);
+
+  already_AddRefed<mozilla::dom::CSSTransition> DoCreateTransition(
+      nsCSSPropertyID aProperty, mozilla::dom::Element* aElement,
+      mozilla::PseudoStyleType aPseudoType,
+      const mozilla::ComputedStyle& aNewStyle,
+      CSSTransitionCollection*& aElementTransitions,
+      mozilla::TimingParams&& aTiming, mozilla::AnimationValue&& aStartValue,
+      mozilla::AnimationValue&& aEndValue,
+      mozilla::AnimationValue&& aStartForReversingTest, double aReversePortion);
+
+  void DoCancelTransition(mozilla::dom::Element* aElement,
+                          mozilla::PseudoStyleType aPseudoType,
+                          CSSTransitionCollection*& aElementTransitions,
+                          size_t aIndex);
 };
 
 #endif /* !defined(nsTransitionManager_h_) */

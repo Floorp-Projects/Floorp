@@ -258,6 +258,9 @@ sq{
         "America:Chihuahua"{
             ec{"Çihahua"}
         }
+        "America:Ciudad_Juarez"{
+            ec{"Siudad-Huarez"}
+        }
         "America:Coral_Harbour"{
             ec{"Atikokan"}
         }

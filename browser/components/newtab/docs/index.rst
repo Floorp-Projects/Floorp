@@ -4,16 +4,16 @@ Firefox Home (New Tab)
 
 All files related to Firefox Home, which includes content that appears on ``about:home``,
 ``about:newtab``, and ``about:welcome``, can be found in the ``browser/components/newtab`` directory.
-Some of these source files (such as ``.js``, ``.jsx``, and ``.sass``) require an additional build step.
+Some of these source files (such as ``.js``, ``.jsx``, and ``.scss``) require an additional build step.
 We are working on migrating this to work with ``mach``, but in the meantime, please
 follow the following steps if you need to make changes in this directory:
 
-For ``.jsm`` files
-------------------
+For ``.jsm`` or ``.sys.mjs`` files (system modules)
+---------------------------------------------------
 
 No build step is necessary. Use ``mach`` and run mochitests according to your regular Firefox workflow.
 
-For ``.js``, ``.jsx``, ``.sass``, or ``.css`` files
+For ``.js``, ``.jsx``, ``.scss``, or ``.css`` files
 ---------------------------------------------------
 
 Prerequisites
@@ -36,8 +36,8 @@ Which files should you edit?
 ````````````````````````````
 
 You should not make changes to ``.js`` or ``.css`` files in ``browser/components/newtab/css`` or
-``browser/components/newtab/data`` directory. Instead, you should edit the ``.jsx``, ``.js``, and ``.sass`` files
-in ``browser/components/newtab/content-src`` directory.
+``browser/components/newtab/data`` directory. Instead, you should edit the ``.jsx``, ``.js``, and ``.scss`` source files
+in ``browser/components/newtab/content-src`` directory. These files will be compiled into the ``.js`` and ``.css`` files.
 
 
 Building assets and running Firefox
@@ -62,9 +62,9 @@ Running tests
 The majority of New Tab / Messaging unit tests are written using
 `mocha <https://mochajs.org>`_, and other errors that may show up there are
 `SCSS <https://sass-lang.com/documentation/syntax>`_ issues flagged by
-`sasslint <https://github.com/sasstools/sass-lint/tree/master>`_.  These things
-are all run using ``npm test`` under the ``newtab`` slug in Treeherder/Try, so if
-that slug turns red, these tests are what is failing.  To execute them, do this:
+`stylelint <https://stylelint.io>`_.  These things are all run using
+``npm test`` under the ``newtab`` slug in Treeherder/Try, so if that slug turns
+red, these tests are what is failing.  To execute them, do this:
 
 .. code-block:: shell
 
@@ -80,7 +80,7 @@ To run newtab specific tests that aren't covered by ``mach lint`` and
 
 .. code-block:: shell
 
-  ./mach npm run lint:sasslint --prefix=browser/components/newtab
+  ./mach npm run lint:stylelint --prefix=browser/components/newtab
   ./mach npm run testmc:build --prefix=browser/components/newtab
   ./mach npm run testmc:unit --prefix=browser/components/newtab
 

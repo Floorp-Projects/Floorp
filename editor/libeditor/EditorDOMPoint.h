@@ -102,7 +102,7 @@ namespace mozilla {
 
 template <typename ParentType, typename ChildType>
 class EditorDOMPointBase final {
-  typedef EditorDOMPointBase<ParentType, ChildType> SelfType;
+  using SelfType = EditorDOMPointBase<ParentType, ChildType>;
 
  public:
   using InterlinePosition = dom::Selection::InterlinePosition;

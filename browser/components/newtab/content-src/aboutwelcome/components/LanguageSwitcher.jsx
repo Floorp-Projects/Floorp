@@ -49,12 +49,10 @@ export function useLanguageSwitcher(
       }
 
       (async () => {
-        const {
-          langPack,
-          langPackDisplayName,
-        } = await window.AWNegotiateLangPackForLanguageMismatch(
-          appAndSystemLocaleInfo
-        );
+        const { langPack, langPackDisplayName } =
+          await window.AWNegotiateLangPackForLanguageMismatch(
+            appAndSystemLocaleInfo
+          );
         if (langPack) {
           setNegotiatedLanguage({
             langPackDisplayName,
@@ -115,9 +113,8 @@ export function useLanguageSwitcher(
     [negotiatedLanguage]
   );
 
-  const [languageFilteredScreens, setLanguageFilteredScreens] = useState(
-    screens
-  );
+  const [languageFilteredScreens, setLanguageFilteredScreens] =
+    useState(screens);
   useEffect(
     function filterScreen() {
       // Remove the language screen if it exists (already removed for no live

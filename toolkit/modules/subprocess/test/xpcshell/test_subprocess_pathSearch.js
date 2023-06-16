@@ -24,7 +24,7 @@ add_task(async function test_pathSearchAbsolute() {
 
   await Assert.rejects(
     Subprocess.pathSearch(DOES_NOT_EXIST, env),
-    function(e) {
+    function (e) {
       equal(
         e.errorCode,
         Subprocess.ERROR_BAD_EXECUTABLE,
@@ -43,7 +43,7 @@ add_task(async function test_pathSearchRelative() {
 
   await Assert.rejects(
     Subprocess.pathSearch(PYTHON_BIN, env),
-    function(e) {
+    function (e) {
       equal(
         e.errorCode,
         Subprocess.ERROR_BAD_EXECUTABLE,

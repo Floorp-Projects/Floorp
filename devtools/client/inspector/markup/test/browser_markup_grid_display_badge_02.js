@@ -26,16 +26,14 @@ const TEST_URI = `
   </div>
 `;
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.gridinspector.maxHighlighters", 2);
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector } = await openLayoutView();
   const { highlighters } = inspector;
   const HIGHLIGHTER_TYPE = inspector.highlighters.TYPES.GRID;
-  const {
-    waitForHighlighterTypeShown,
-    waitForHighlighterTypeHidden,
-  } = getHighlighterTestHelpers(inspector);
+  const { waitForHighlighterTypeShown, waitForHighlighterTypeHidden } =
+    getHighlighterTestHelpers(inspector);
 
   const grid1 = await getContainerForSelector("#grid1", inspector);
   const grid2 = await getContainerForSelector("#grid2", inspector);

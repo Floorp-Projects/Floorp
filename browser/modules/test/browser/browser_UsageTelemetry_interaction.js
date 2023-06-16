@@ -448,7 +448,7 @@ add_task(async function webextension() {
           </html>
         `,
 
-        "sidebar.js": function() {
+        "sidebar.js": function () {
           browser.runtime.sendMessage("from-sidebar-action");
         },
       },

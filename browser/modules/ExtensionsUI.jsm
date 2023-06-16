@@ -15,23 +15,23 @@ const { EventEmitter } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AMTelemetry: "resource://gre/modules/AddonManager.sys.mjs",
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+  AddonManagerPrivate: "resource://gre/modules/AddonManager.sys.mjs",
   AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.sys.mjs",
+  ExtensionData: "resource://gre/modules/Extension.sys.mjs",
+  ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.sys.mjs",
+  OriginControls: "resource://gre/modules/ExtensionPermissions.sys.mjs",
 });
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AddonManager: "resource://gre/modules/AddonManager.jsm",
-  AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
-  AMTelemetry: "resource://gre/modules/AddonManager.jsm",
-  ExtensionData: "resource://gre/modules/Extension.jsm",
-  ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.jsm",
-  OriginControls: "resource://gre/modules/ExtensionPermissions.jsm",
-});
+XPCOMUtils.defineLazyGetter(
+  lazy,
+  "l10n",
+  () => new Localization(["browser/extensionsUI.ftl"], true)
+);
 
 const DEFAULT_EXTENSION_ICON =
   "chrome://mozapps/skin/extensions/extensionGeneric.svg";
-
-const BROWSER_PROPERTIES = "chrome://browser/locale/browser.properties";
-const BRAND_PROPERTIES = "chrome://branding/locale/brand.properties";
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
@@ -271,13 +271,8 @@ var ExtensionsUI = {
         }
       });
     } else if (topic == "webextension-optional-permission-prompt") {
-      let {
-        browser,
-        name,
-        icon,
-        permissions,
-        resolve,
-      } = subject.wrappedJSObject;
+      let { browser, name, icon, permissions, resolve } =
+        subject.wrappedJSObject;
       let strings = this._buildStrings({
         type: "optional",
         addon: { name },
@@ -291,35 +286,33 @@ var ExtensionsUI = {
       }
       resolve(this.showPermissionsPrompt(browser, strings, icon));
     } else if (topic == "webextension-defaultsearch-prompt") {
-      let {
-        browser,
-        name,
-        icon,
-        respond,
-        currentEngine,
-        newEngine,
-      } = subject.wrappedJSObject;
+      let { browser, name, icon, respond, currentEngine, newEngine } =
+        subject.wrappedJSObject;
 
-      let bundle = Services.strings.createBundle(BROWSER_PROPERTIES);
+      const [searchDesc, searchYes, searchNo] = lazy.l10n.formatMessagesSync([
+        {
+          id: "webext-default-search-description",
+          args: { addonName: "<>", currentEngine, newEngine },
+        },
+        "webext-default-search-yes",
+        "webext-default-search-no",
+      ]);
 
-      let strings = {};
-      strings.acceptText = bundle.GetStringFromName(
-        "webext.defaultSearchYes.label"
-      );
-      strings.acceptKey = bundle.GetStringFromName(
-        "webext.defaultSearchYes.accessKey"
-      );
-      strings.cancelText = bundle.GetStringFromName(
-        "webext.defaultSearchNo.label"
-      );
-      strings.cancelKey = bundle.GetStringFromName(
-        "webext.defaultSearchNo.accessKey"
-      );
-      strings.addonName = name;
-      strings.text = bundle.formatStringFromName(
-        "webext.defaultSearch.description",
-        ["<>", currentEngine, newEngine]
-      );
+      const strings = { addonName: name, text: searchDesc.value };
+      for (let attr of searchYes.attributes) {
+        if (attr.name === "label") {
+          strings.acceptText = attr.value;
+        } else if (attr.name === "accesskey") {
+          strings.acceptKey = attr.value;
+        }
+      }
+      for (let attr of searchNo.attributes) {
+        if (attr.name === "label") {
+          strings.cancelText = attr.value;
+        } else if (attr.name === "accesskey") {
+          strings.cancelKey = attr.value;
+        }
+      }
 
       this.showDefaultSearchPrompt(browser, strings, icon).then(respond);
     }
@@ -327,16 +320,11 @@ var ExtensionsUI = {
 
   // Create a set of formatted strings for a permission prompt
   _buildStrings(info) {
-    let bundle = Services.strings.createBundle(BROWSER_PROPERTIES);
-    let brandBundle = Services.strings.createBundle(BRAND_PROPERTIES);
-    let appName = brandBundle.GetStringFromName("brandShortName");
-    let info2 = Object.assign({ appName }, info);
-
-    let strings = lazy.ExtensionData.formatPermissionStrings(info2, bundle, {
+    const strings = lazy.ExtensionData.formatPermissionStrings(info, {
       collapseOrigins: true,
     });
     strings.addonName = info.addon.name;
-    strings.learnMore = bundle.GetStringFromName("webextPerms.learnMore2");
+    strings.learnMore = lazy.l10n.formatValueSync("webext-perms-learn-more");
     return strings;
   },
 
@@ -520,11 +508,10 @@ var ExtensionsUI = {
 
   async showInstallNotification(target, addon) {
     let { window } = getTabBrowser(target);
-    let bundle = window.gNavigatorBundle;
 
-    let message = bundle.getFormattedString("addonPostInstall.message3", [
-      "<>",
-    ]);
+    const message = await lazy.l10n.formatValue("addon-post-install-message", {
+      addonName: "<>",
+    });
     const permissionName = "internal:privateBrowsingAllowed";
     const { permissions } = await lazy.ExtensionPermissions.get(addon.id);
     const hasIncognito = permissions.includes(permissionName);
@@ -599,9 +586,6 @@ var ExtensionsUI = {
   // Populate extension toolbar popup menu with origin controls.
   originControlsMenu(popup, extensionId) {
     let policy = WebExtensionPolicy.getByID(extensionId);
-    if (!policy?.extension.originControls) {
-      return;
-    }
 
     let win = popup.ownerGlobal;
     let tab = win.gBrowser.selectedTab;
@@ -615,8 +599,17 @@ var ExtensionsUI = {
     let headerItem = doc.createXULElement("menuitem");
     headerItem.setAttribute("disabled", true);
 
+    // MV2 normally don't have controls, but we show the quarantined state.
+    if (!policy?.extension.originControls && !state.quarantined) {
+      return;
+    }
+
     if (state.noAccess) {
-      doc.l10n.setAttributes(headerItem, "origin-controls-no-access");
+      if (state.quarantined) {
+        doc.l10n.setAttributes(headerItem, "origin-controls-quarantined");
+      } else {
+        doc.l10n.setAttributes(headerItem, "origin-controls-no-access");
+      }
     } else {
       doc.l10n.setAttributes(headerItem, "origin-controls-options");
     }
@@ -663,8 +656,13 @@ var ExtensionsUI = {
       popup.querySelector(".unified-extensions-context-menu-pin-to-toolbar");
     items.forEach(item => item && popup.insertBefore(item, manageItem));
 
-    let cleanup = () => items.forEach(item => item?.remove());
-    popup.addEventListener("popuphidden", cleanup, { once: true });
+    let cleanup = e => {
+      if (e.target === popup) {
+        items.forEach(item => item?.remove());
+        popup.removeEventListener("popuphidden", cleanup);
+      }
+    };
+    popup.addEventListener("popuphidden", cleanup);
   },
 };
 

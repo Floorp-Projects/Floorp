@@ -107,6 +107,18 @@ jobs:
           - {weekday: 'Wednesday', hour: 10, minute: 30}
           - {weekday: 'Friday', hour: 10, minute: 30}
 
+    - name: custom-car-perf-testing
+      job:
+          type: decision-task
+          treeherder-symbol: ccar
+          target-tasks-method: custom-car_perf_testing
+          include-push-tasks: true
+      run-on-projects:
+          - mozilla-central
+      when:
+          by-project:
+              mozilla-central: [{hour: 18, minute: 30}]
+
     # For more context on this job, see:
     # https://github.com/mozsearch/mozsearch-mozilla#how-searchfoxorg-stays-up-to-date
     # Note that searchfox now runs on-push for mozilla-central, but continues
@@ -120,6 +132,7 @@ jobs:
           - mozilla-beta
           - mozilla-release
           - mozilla-esr102
+          - mozilla-esr115
           - elm
       # For all non m-c jobs we just run once daily matching the 10 UTC
       # nightly which is designed to align with searchfox's AWS cron
@@ -193,6 +206,7 @@ jobs:
           - mozilla-beta
           - mozilla-release
           - mozilla-esr102
+          - mozilla-esr115
       when:
           by-project:
               # No default branch
@@ -208,6 +222,7 @@ jobs:
               mozilla-esr102:
                   - {hour: 7, minute: 0}
                   - {hour: 19, minute: 0}
+              mozilla-esr115: []
 
     - name: periodic-update
       job:
@@ -219,6 +234,7 @@ jobs:
           - mozilla-beta
           - mozilla-release
           - mozilla-esr102
+          - mozilla-esr115
       when:
           - {weekday: 'Monday', hour: 8, minute: 0}
           - {weekday: 'Thursday', hour: 8, minute: 0}

@@ -345,12 +345,12 @@ bool nsINode::IsSelected(const uint32_t aStartOffset,
   nsTHashSet<Selection*> ancestorSelections;
   for (; n; n = GetClosestCommonInclusiveAncestorForRangeInSelection(
                 n->GetParentNode())) {
-    const LinkedList<nsRange>* ranges =
+    const LinkedList<AbstractRange>* ranges =
         n->GetExistingClosestCommonInclusiveAncestorRanges();
     if (!ranges) {
       continue;
     }
-    for (const nsRange* range : *ranges) {
+    for (const AbstractRange* range : *ranges) {
       MOZ_ASSERT(range->IsInAnySelection(),
                  "Why is this range registered with a node?");
       // Looks like that IsInSelection() assert fails sometimes...
@@ -1641,7 +1641,7 @@ void nsINode::InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
       mutation.mRelatedNode = this;
 
       mozAutoSubtreeModified subtree(OwnerDoc(), this);
-      (new AsyncEventDispatcher(aKid, mutation))->RunDOMEventWhenSafe();
+      AsyncEventDispatcher::RunDOMEventWhenSafe(*aKid, mutation);
     }
   }
 }
@@ -2984,12 +2984,12 @@ uint32_t nsINode::Length() const {
   }
 }
 
-const RawServoSelectorList* nsINode::ParseSelectorList(
+const StyleSelectorList* nsINode::ParseSelectorList(
     const nsACString& aSelectorString, ErrorResult& aRv) {
   Document* doc = OwnerDoc();
 
   Document::SelectorCache& cache = doc->GetSelectorCache();
-  RawServoSelectorList* list = cache.GetListOrInsertFrom(aSelectorString, [&] {
+  StyleSelectorList* list = cache.GetListOrInsertFrom(aSelectorString, [&] {
     // Note that we want to cache even if null was returned, because we
     // want to cache the "This is not a valid selector" result.
     //
@@ -2998,8 +2998,8 @@ const RawServoSelectorList* nsINode::ParseSelectorList(
     // that we'd need to key the selector cache by that.
     // ChromeRulesEnabled() gives us the same semantics as any inline
     // style associated to a document, which seems reasonable.
-    return Servo_SelectorList_Parse(&aSelectorString, doc->ChromeRulesEnabled())
-        .Consume();
+    return WrapUnique(
+        Servo_SelectorList_Parse(&aSelectorString, doc->ChromeRulesEnabled()));
   });
 
   if (!list) {
@@ -3052,7 +3052,7 @@ Element* nsINode::QuerySelector(const nsACString& aSelector,
   AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING("nsINode::QuerySelector",
                                         LAYOUT_SelectorQuery, aSelector);
 
-  const RawServoSelectorList* list = ParseSelectorList(aSelector, aResult);
+  const StyleSelectorList* list = ParseSelectorList(aSelector, aResult);
   if (!list) {
     return nullptr;
   }
@@ -3067,7 +3067,7 @@ already_AddRefed<nsINodeList> nsINode::QuerySelectorAll(
                                         LAYOUT_SelectorQuery, aSelector);
 
   RefPtr<nsSimpleContentList> contentList = new nsSimpleContentList(this);
-  const RawServoSelectorList* list = ParseSelectorList(aSelector, aResult);
+  const StyleSelectorList* list = ParseSelectorList(aSelector, aResult);
   if (!list) {
     return contentList.forget();
   }
@@ -3217,7 +3217,7 @@ nsGenericHTMLElement* nsINode::GetEffectivePopoverTargetElement() const {
   }
   if (auto* popover = nsGenericHTMLElement::FromNodeOrNull(
           formControl->GetPopoverTargetElement())) {
-    if (popover->GetPopoverState() != PopoverState::None) {
+    if (popover->GetPopoverAttributeState() != PopoverAttributeState::None) {
       return popover;
     }
   }
@@ -3230,7 +3230,8 @@ Element* nsINode::GetTopmostClickedPopover() const {
   if (!clickedPopover) {
     return invokedPopover;
   }
-  for (Element* el : Reversed(clickedPopover->OwnerDoc()->AutoPopoverList())) {
+  auto autoPopoverList = clickedPopover->OwnerDoc()->AutoPopoverList();
+  for (Element* el : Reversed(autoPopoverList)) {
     if (el == clickedPopover || el == invokedPopover) {
       return el;
     }

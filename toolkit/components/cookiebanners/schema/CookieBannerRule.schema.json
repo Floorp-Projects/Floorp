@@ -3,10 +3,7 @@
   "definitions": {
     "cookie": {
       "type": "object",
-      "required": [
-        "name",
-        "value"
-      ],
+      "required": ["name", "value"],
       "description": "JSON representation of a cookie to inject.",
       "properties": {
         "name": {
@@ -47,11 +44,7 @@
         "sameSite": {
           "title": "SameSite",
           "type": "number",
-          "enum": [
-            0,
-            1,
-            2
-          ],
+          "enum": [0, 1, 2],
           "description": "The SameSite attribute. See nsICookie.idl."
         },
         "isSession": {
@@ -73,10 +66,7 @@
     }
   },
   "title": "Cookie Banner Rule",
-  "required": [
-    "id",
-    "domains"
-  ],
+  "required": ["id", "domains"],
   "additionalProperties": false,
   "properties": {
     "id": {
@@ -134,11 +124,7 @@
         "runContext": {
           "title": "Run Context",
           "type": "string",
-          "enum": [
-            "top",
-            "child",
-            "all"
-          ],
+          "enum": ["top", "child", "all"],
           "description": "Where the click rule should be executed. Defaults to only top window. top: Only in the top window; child: Only in child frames; all: Both top window and child frames."
         },
         "hide": {
@@ -158,15 +144,9 @@
         }
       },
       "dependencies": {
-        "hide": [
-          "presence"
-        ],
-        "optOut": [
-          "presence"
-        ],
-        "optIn": [
-          "presence"
-        ]
+        "hide": ["presence"],
+        "optOut": ["presence"],
+        "optIn": ["presence"]
       }
     },
     "filter_expression": {

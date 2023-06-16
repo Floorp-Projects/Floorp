@@ -11,8 +11,8 @@ const TEST_URL = TEST_ROOT + "204.sjs";
 const BLANK_URL = TEST_ROOT + "blank.html";
 
 // Test for bug 1626362.
-add_task(async function() {
-  await BrowserTestUtils.withNewTab("about:robots", async function(aBrowser) {
+add_task(async function () {
+  await BrowserTestUtils.withNewTab("about:robots", async function (aBrowser) {
     // Get the current pid for browser for comparison later, we expect this
     // to be the parent process for about:robots.
     let browserPid = await SpecialPowers.spawn(aBrowser, [], () => {

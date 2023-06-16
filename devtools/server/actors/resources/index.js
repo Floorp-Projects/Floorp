@@ -346,9 +346,8 @@ function getParentProcessResourceTypes(resourceTypes) {
 exports.getParentProcessResourceTypes = getParentProcessResourceTypes;
 
 function getResourceTypesForTargetType(resourceTypes, targetType) {
-  const resourceDictionnary = getResourceTypeDictionaryForTargetType(
-    targetType
-  );
+  const resourceDictionnary =
+    getResourceTypeDictionaryForTargetType(targetType);
   return resourceTypes.filter(resourceType => {
     return resourceType in resourceDictionnary;
   });

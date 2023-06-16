@@ -9,7 +9,7 @@ const asyncStorage = require("resource://devtools/shared/async-storage.js");
  * Test to check the sync between URL parameters and the parameters section
  */
 
-add_task(async function() {
+add_task(async function () {
   // Turn on the pref
   await pushPref("devtools.netmonitor.features.newEditAndResend", true);
   // Reset the storage for the persisted custom request

@@ -393,36 +393,32 @@ class _RFPHelper {
       .getTabBrowser()
       .getBrowserContainer(aBrowser);
 
-    let {
-      contentWidth,
-      contentHeight,
-      containerWidth,
-      containerHeight,
-    } = await win.promiseDocumentFlushed(() => {
-      let contentWidth = aBrowser.clientWidth;
-      let contentHeight = aBrowser.clientHeight;
-      let containerWidth = browserContainer.clientWidth;
-      let containerHeight = browserContainer.clientHeight;
+    let { contentWidth, contentHeight, containerWidth, containerHeight } =
+      await win.promiseDocumentFlushed(() => {
+        let contentWidth = aBrowser.clientWidth;
+        let contentHeight = aBrowser.clientHeight;
+        let containerWidth = browserContainer.clientWidth;
+        let containerHeight = browserContainer.clientHeight;
 
-      // If the findbar or devtools are out, we need to subtract their height (plus 1
-      // for the separator) from the container height, because we need to adjust our
-      // letterboxing to account for it; however it is not included in that dimension
-      // (but rather is subtracted from the content height.)
-      let findBar = win.gFindBarInitialized ? win.gFindBar : undefined;
-      let findBarOffset =
-        findBar && !findBar.hidden ? findBar.clientHeight + 1 : 0;
-      let devtools = browserContainer.getElementsByClassName(
-        "devtools-toolbox-bottom-iframe"
-      );
-      let devtoolsOffset = devtools.length ? devtools[0].clientHeight : 0;
+        // If the findbar or devtools are out, we need to subtract their height (plus 1
+        // for the separator) from the container height, because we need to adjust our
+        // letterboxing to account for it; however it is not included in that dimension
+        // (but rather is subtracted from the content height.)
+        let findBar = win.gFindBarInitialized ? win.gFindBar : undefined;
+        let findBarOffset =
+          findBar && !findBar.hidden ? findBar.clientHeight + 1 : 0;
+        let devtools = browserContainer.getElementsByClassName(
+          "devtools-toolbox-bottom-iframe"
+        );
+        let devtoolsOffset = devtools.length ? devtools[0].clientHeight : 0;
 
-      return {
-        contentWidth,
-        contentHeight,
-        containerWidth,
-        containerHeight: containerHeight - findBarOffset - devtoolsOffset,
-      };
-    });
+        return {
+          contentWidth,
+          contentHeight,
+          containerWidth,
+          containerHeight: containerHeight - findBarOffset - devtoolsOffset,
+        };
+      });
 
     log(
       "_roundContentView[" +

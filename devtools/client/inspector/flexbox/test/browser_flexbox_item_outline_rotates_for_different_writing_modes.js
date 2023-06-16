@@ -7,7 +7,7 @@
 
 const TEST_URI = URL_ROOT + "doc_flexbox_writing_modes.html";
 
-add_task(async function() {
+add_task(async function () {
   await addTab(TEST_URI);
   const { inspector, flexboxInspector } = await openLayoutView();
   const { document: doc } = flexboxInspector;

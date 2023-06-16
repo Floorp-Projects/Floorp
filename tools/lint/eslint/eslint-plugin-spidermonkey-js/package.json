@@ -19,10 +19,8 @@
   },
   "author": "Mozilla",
   "main": "lib/index.js",
-  "dependencies": {
-  },
-  "devDependencies": {
-  },
+  "dependencies": {},
+  "devDependencies": {},
   "engines": {
     "node": ">=6.9.1"
   },

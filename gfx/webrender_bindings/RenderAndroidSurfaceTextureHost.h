@@ -24,7 +24,7 @@ class RenderAndroidSurfaceTextureHost final : public RenderTextureHostSWGL {
   explicit RenderAndroidSurfaceTextureHost(
       const java::GeckoSurfaceTexture::GlobalRef& aSurfTex, gfx::IntSize aSize,
       gfx::SurfaceFormat aFormat, bool aContinuousUpdate,
-      Maybe<gfx::Matrix4x4> aTransformOverride);
+      Maybe<gfx::Matrix4x4> aTransformOverride, bool aIsRemoteTexture);
 
   wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL) override;
   void Unlock() override;
@@ -86,6 +86,8 @@ class RenderAndroidSurfaceTextureHost final : public RenderTextureHostSWGL {
   RefPtr<gl::GLContext> mGL;
 
   RefPtr<gfx::DataSourceSurface> mReadback;
+
+  bool mIsRemoteTexture;
 };
 
 }  // namespace wr

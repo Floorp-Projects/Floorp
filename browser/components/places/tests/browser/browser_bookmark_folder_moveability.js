@@ -5,7 +5,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   let root = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     title: "",
@@ -16,7 +16,7 @@ add_task(async function() {
     await PlacesUtils.bookmarks.eraseEverything();
   });
 
-  await withSidebarTree("bookmarks", async function(tree) {
+  await withSidebarTree("bookmarks", async function (tree) {
     info("Test a regular folder");
     let folder = await PlacesUtils.bookmarks.insert({
       parentGuid: root.guid,

@@ -60,9 +60,8 @@ add_task(async function blockRepoShutdown() {
   await promiseStartupManager();
   AddonManagerPrivate.registerProvider(mockProvider);
 
-  let {
-    fetchState,
-  } = MockAsyncShutdown.profileBeforeChange.blockers[0].options;
+  let { fetchState } =
+    MockAsyncShutdown.profileBeforeChange.blockers[0].options;
 
   // Start shutting the manager down
   let managerDown = promiseShutdownManager();

@@ -13,7 +13,7 @@ const server = createTestHTTPServer();
 // Register a slow image handler so we can simulate a long time between
 // a reload and the load event firing.
 server.registerContentType("gif", "image/gif");
-server.registerPathHandler("/slow.gif", function(metadata, response) {
+server.registerPathHandler("/slow.gif", function (metadata, response) {
   info("Image has been requested");
   response.processAsync();
   setTimeout(() => {
@@ -35,7 +35,7 @@ const TEST_URL =
   "</body>" +
   "</html>";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector, tab } = await openInspectorForURL(TEST_URL);
 
   const domContentLoaded = waitForLinkedBrowserEvent(tab, "DOMContentLoaded");

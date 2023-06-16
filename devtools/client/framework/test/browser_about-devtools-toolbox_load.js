@@ -7,7 +7,7 @@
  * Test that about:devtools-toolbox shows error an page when opened with invalid
  * paramters
  */
-add_task(async function() {
+add_task(async function () {
   // test that error is shown when missing `type` param
   let { document, tab } = await openAboutToolbox({ invalid: "invalid" });
   await assertErrorIsShown(document);

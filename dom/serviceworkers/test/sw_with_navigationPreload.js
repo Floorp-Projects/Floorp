@@ -18,7 +18,7 @@ addEventListener("fetch", event => {
     );
 
     event.waitUntil(
-      (async function() {
+      (async function () {
         let preloadResponse = await event.preloadResponse;
         let text = await preloadResponse.text();
         await post_to_page(text);

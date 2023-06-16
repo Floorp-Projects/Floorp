@@ -29,8 +29,6 @@ NSS 3.36.2 release notes
 `New in NSS 3.36.2 <#new_in_nss_3.36.2>`__
 ------------------------------------------
 
-.. container::
-
 .. _new_functionality:
 
 `New Functionality <#new_functionality>`__

@@ -36,6 +36,7 @@ def executor_kwargs(test_type, test_environment, run_info_data, **kwargs):
 
     if test_type == "wdspec":
         executor_kwargs["binary"] = kwargs.get("binary")
+        executor_kwargs["binary_args"] = kwargs.get("args")
         executor_kwargs["webdriver_binary"] = kwargs.get("webdriver_binary")
         executor_kwargs["webdriver_args"] = kwargs.get("webdriver_args")
 
@@ -245,14 +246,14 @@ class TestExecutor:
     """
     __metaclass__ = ABCMeta
 
-    test_type = None  # type: ClassVar[str]
+    test_type: ClassVar[str]
     # convert_result is a class variable set to a callable converter
     # (e.g. reftest_result_converter) converting from an instance of
     # URLManifestItem (e.g. RefTest) + type-dependent results object +
     # type-dependent extra data, returning a tuple of Result and list of
     # SubtestResult. For now, any callable is accepted. TODO: Make this type
     # stricter when more of the surrounding code is annotated.
-    convert_result = None  # type: ClassVar[Callable[..., Any]]
+    convert_result: ClassVar[Callable[..., Any]]
     supports_testdriver = False
     supports_jsshell = False
     # Extra timeout to use after internal test timeout at which the harness
@@ -605,11 +606,11 @@ class RefTestImplementation:
 
 class WdspecExecutor(TestExecutor):
     convert_result = pytest_result_converter
-    protocol_cls = WdspecProtocol  # type: ClassVar[Type[Protocol]]
+    protocol_cls: ClassVar[Type[Protocol]] = WdspecProtocol
 
     def __init__(self, logger, browser, server_config, webdriver_binary,
                  webdriver_args, timeout_multiplier=1, capabilities=None,
-                 debug_info=None, **kwargs):
+                 debug_info=None, binary=None, binary_args=None, **kwargs):
         super().__init__(logger, browser, server_config,
                          timeout_multiplier=timeout_multiplier,
                          debug_info=debug_info)
@@ -617,6 +618,8 @@ class WdspecExecutor(TestExecutor):
         self.webdriver_args = webdriver_args
         self.timeout_multiplier = timeout_multiplier
         self.capabilities = capabilities
+        self.binary = binary
+        self.binary_args = binary_args
 
     def setup(self, runner):
         self.protocol = self.protocol_cls(self, self.browser)
@@ -645,6 +648,10 @@ class WdspecExecutor(TestExecutor):
                           "port": self.browser.port,
                           "capabilities": self.capabilities,
                           "timeout_multiplier": self.timeout_multiplier,
+                          "browser": {
+                              "binary": self.binary,
+                              "args": self.binary_args
+                          },
                           "webdriver": {
                               "binary": self.webdriver_binary,
                               "args": self.webdriver_args
@@ -702,7 +709,7 @@ class CallbackHandler:
     WebDriver. Things that are more different to WebDriver may need to create a
     fully custom implementation."""
 
-    unimplemented_exc = (NotImplementedError,)  # type: ClassVar[Tuple[Type[Exception], ...]]
+    unimplemented_exc: ClassVar[Tuple[Type[Exception], ...]] = (NotImplementedError,)
 
     def __init__(self, logger, protocol, test_window):
         self.protocol = protocol

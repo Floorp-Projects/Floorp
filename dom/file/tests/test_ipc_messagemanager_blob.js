@@ -7,14 +7,14 @@ const { XPCShellContentUtils } = ChromeUtils.importESModule(
 XPCShellContentUtils.init(this);
 
 function childFrameScript() {
-  addMessageListener("test:ipcClonedMessage", function(message) {
+  addMessageListener("test:ipcClonedMessage", function (message) {
     if (!Blob.isInstance(message.json)) {
       sendAsyncMessage(message.name, message.json);
       return;
     }
 
     let reader = new FileReader();
-    reader.addEventListener("load", function() {
+    reader.addEventListener("load", function () {
       let response =
         reader.result == "this is a great success!" ? message.json : "error";
       sendAsyncMessage(message.name, response);

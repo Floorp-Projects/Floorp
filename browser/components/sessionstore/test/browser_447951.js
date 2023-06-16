@@ -13,7 +13,7 @@ function test() {
   // Make sure the functionality added in bug 943339 doesn't affect the results
   Services.prefs.setIntPref("browser.sessionstore.max_serialize_back", -1);
   Services.prefs.setIntPref("browser.sessionstore.max_serialize_forward", -1);
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.prefs.clearUserPref("browser.sessionstore.max_serialize_back");
     Services.prefs.clearUserPref("browser.sessionstore.max_serialize_forward");
   });
@@ -42,7 +42,7 @@ function test() {
         is(tabState.entries[0].url, baseURL + 0, "... but not more");
 
         // visit yet another anchor (appending it to session history)
-        SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+        SpecialPowers.spawn(tab.linkedBrowser, [], function () {
           content.window.document.querySelector("a").click();
         }).then(flushAndCheck);
 

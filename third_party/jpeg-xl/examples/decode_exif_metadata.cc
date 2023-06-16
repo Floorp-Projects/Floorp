@@ -7,15 +7,14 @@
 // available at once). The example outputs the pixels and color information to a
 // floating point image and an ICC profile on disk.
 
+#include <jxl/decode.h>
+#include <jxl/decode_cxx.h>
 #include <limits.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
 #include <vector>
-
-#include "jxl/decode.h"
-#include "jxl/decode_cxx.h"
 
 bool DecodeJpegXlExif(const uint8_t* jxl, size_t size,
                       std::vector<uint8_t>* exif) {

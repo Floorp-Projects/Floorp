@@ -86,7 +86,7 @@ function promiseTestHighlighterOutput(
   return SpecialPowers.spawn(
     browser,
     [{ word, expectedResult, extraTest: extraTest.toSource() }],
-    async function({ word, expectedResult, extraTest }) {
+    async function ({ word, expectedResult, extraTest }) {
       return new Promise((resolve, reject) => {
         let stubbed = {};
         let callCounts = {
@@ -223,7 +223,7 @@ function promiseTestHighlighterOutput(
         function stub(which) {
           stubbed[which] = content.document[which + "AnonymousContent"];
           let prop = which + "Calls";
-          return function(node) {
+          return function (node) {
             callCounts[prop].push(node);
             if (which == "insert") {
               if (node.outerHTML.indexOf("outlineMask") > -1) {

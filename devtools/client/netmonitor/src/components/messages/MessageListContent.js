@@ -40,12 +40,12 @@ const {
 
 // Components
 const MessageListContextMenu = require("resource://devtools/client/netmonitor/src/components/messages/MessageListContextMenu.js");
-loader.lazyGetter(this, "MessageListHeader", function() {
+loader.lazyGetter(this, "MessageListHeader", function () {
   return createFactory(
     require("resource://devtools/client/netmonitor/src/components/messages/MessageListHeader.js")
   );
 });
-loader.lazyGetter(this, "MessageListItem", function() {
+loader.lazyGetter(this, "MessageListItem", function () {
   return createFactory(
     require("resource://devtools/client/netmonitor/src/components/messages/MessageListItem.js")
   );

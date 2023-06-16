@@ -145,15 +145,12 @@ function* testSteps() {
 
   yield undefined;
 
-  request = db
-    .transaction("foo", "readwrite")
-    .objectStore("foo")
-    .add({});
+  request = db.transaction("foo", "readwrite").objectStore("foo").add({});
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield undefined;
 
-  event.target.transaction.onabort = function(event) {
+  event.target.transaction.onabort = function (event) {
     ok(false, "Shouldn't see an abort event!");
   };
   event.target.transaction.oncomplete = grabEventAndContinueHandler;
@@ -163,10 +160,7 @@ function* testSteps() {
 
   let key;
 
-  request = db
-    .transaction("foo", "readwrite")
-    .objectStore("foo")
-    .add({});
+  request = db.transaction("foo", "readwrite").objectStore("foo").add({});
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield undefined;
@@ -174,7 +168,7 @@ function* testSteps() {
   key = event.target.result;
 
   event.target.transaction.onabort = grabEventAndContinueHandler;
-  event.target.transaction.oncomplete = function(event) {
+  event.target.transaction.oncomplete = function (event) {
     ok(false, "Shouldn't see a complete event here!");
   };
 
@@ -184,17 +178,14 @@ function* testSteps() {
 
   is(event.type, "abort", "Right kind of event");
 
-  request = db
-    .transaction("foo")
-    .objectStore("foo")
-    .get(key);
+  request = db.transaction("foo").objectStore("foo").get(key);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield undefined;
 
   is(event.target.result, undefined, "Object was removed");
 
-  executeSoon(function() {
+  executeSoon(function () {
     testGenerator.next();
   });
   yield undefined;
@@ -211,7 +202,7 @@ function* testSteps() {
   for (let i = 0; i < 10; i++) {
     request = objectStore.add({});
     request.onerror = abortErrorHandler;
-    request.onsuccess = function(event) {
+    request.onsuccess = function (event) {
       keys.push(event.target.result);
       if (keys.length == 5) {
         event.target.transaction.onabort = grabEventAndContinueHandler;
@@ -226,10 +217,7 @@ function* testSteps() {
   is(abortEventCount, 5, "Got 5 abort error events");
 
   for (let i in keys) {
-    request = db
-      .transaction("foo")
-      .objectStore("foo")
-      .get(keys[i]);
+    request = db.transaction("foo").objectStore("foo").get(keys[i]);
     request.onerror = errorHandler;
     request.onsuccess = grabEventAndContinueHandler;
     event = yield undefined;
@@ -244,10 +232,10 @@ function* testSteps() {
   objectStore.add({}, 1);
   objectStore.add({}, 2);
   request = objectStore.add({}, 1);
-  request.onsuccess = function() {
+  request.onsuccess = function () {
     ok(false, "inserting duplicate key should fail");
   };
-  request.onerror = function(event) {
+  request.onerror = function (event) {
     ok(true, "inserting duplicate key should fail");
     event.preventDefault();
   };
@@ -296,7 +284,7 @@ function* testSteps() {
 
   // During LOADING from error callback
   transaction = db.transaction("foo", "readwrite");
-  transaction.objectStore("foo").add({}, 1).onerror = function(event) {
+  transaction.objectStore("foo").add({}, 1).onerror = function (event) {
     event.preventDefault();
 
     transaction.objectStore("foo").get(1).onerror = abortErrorHandler;
@@ -315,8 +303,8 @@ function* testSteps() {
     r.onerror = abortErrorHandler;
   }
   makeNewRequest();
-  transaction.objectStore("foo").get(1).onsuccess = function(event) {
-    executeSoon(function() {
+  transaction.objectStore("foo").get(1).onsuccess = function (event) {
+    executeSoon(function () {
       transaction.abort();
       expectedAbortEventCount++;
       continueToNextStep();
@@ -326,11 +314,10 @@ function* testSteps() {
 
   // During COMMITTING
   transaction = db.transaction("foo", "readwrite");
-  transaction
-    .objectStore("foo")
-    .put({ hello: "world" }, 1).onsuccess = function(event) {
-    continueToNextStep();
-  };
+  transaction.objectStore("foo").put({ hello: "world" }, 1).onsuccess =
+    function (event) {
+      continueToNextStep();
+    };
   yield undefined;
   try {
     transaction.abort();
@@ -348,7 +335,7 @@ function* testSteps() {
   // Abort both failing and succeeding requests
   transaction = db.transaction("foo", "readwrite");
   transaction.onabort = transaction.oncomplete = grabEventAndContinueHandler;
-  transaction.objectStore("foo").add({ indexKey: "key" }).onsuccess = function(
+  transaction.objectStore("foo").add({ indexKey: "key" }).onsuccess = function (
     event
   ) {
     transaction.abort();

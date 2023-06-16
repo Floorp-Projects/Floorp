@@ -12,7 +12,7 @@ const BASE_URI =
 const TEST_URI1 = "https://example.com/" + BASE_URI;
 const TEST_URI2 = "https://example.org/" + BASE_URI;
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.webconsole.persistlog", false);
 
   const hud = await openNewTabAndConsole(TEST_URI1);

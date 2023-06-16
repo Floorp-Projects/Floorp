@@ -6,7 +6,7 @@
 
 addAccessibleTask(
   `<p id="p">abc</p>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let acc = findAccessibleChildByID(accDoc, "p");
     let onAnnounce = waitForEvent(EVENT_ANNOUNCEMENT, acc);
     acc.announce("please", nsIAccessibleAnnouncementEvent.POLITE);

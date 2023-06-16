@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   // Prevent the URL Bar to steal the focus.
   const preventUrlBarFocus = e => {
     e.preventDefault();

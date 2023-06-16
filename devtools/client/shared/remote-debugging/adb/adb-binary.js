@@ -8,12 +8,8 @@ const { dumpn } = require("resource://devtools/shared/DevToolsUtils.js");
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ExtensionParent",
-  "resource://gre/modules/ExtensionParent.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
+  ExtensionParent: "resource://gre/modules/ExtensionParent.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
 });
 ChromeUtils.defineModuleGetter(

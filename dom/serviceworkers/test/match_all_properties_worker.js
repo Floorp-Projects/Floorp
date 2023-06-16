@@ -1,13 +1,13 @@
-onfetch = function(e) {
+onfetch = function (e) {
   if (/\/clientId$/.test(e.request.url)) {
     e.respondWith(new Response(e.clientId));
     return;
   }
 };
 
-onmessage = function(e) {
+onmessage = function (e) {
   dump("MatchAllPropertiesWorker:" + e.data + "\n");
-  self.clients.matchAll().then(function(res) {
+  self.clients.matchAll().then(function (res) {
     if (!res.length) {
       dump("ERROR: no clients are currently controlled.\n");
     }

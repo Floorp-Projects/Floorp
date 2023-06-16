@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nscore.h"
-#include "plstr.h"
 #include <stdio.h>
 #include "nsString.h"
 #include <windows.h>

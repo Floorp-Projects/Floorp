@@ -20,7 +20,7 @@ async function isEmePersistentStateSupported(mode) {
   let persistentStateSupported = await SpecialPowers.spawn(
     tab.linkedBrowser,
     [],
-    async function() {
+    async function () {
       try {
         let config = [
           {

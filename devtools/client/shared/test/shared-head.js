@@ -57,6 +57,9 @@ if (DEBUG_ALLOCATIONS) {
 const { loader, require } = ChromeUtils.importESModule(
   "resource://devtools/shared/loader/Loader.sys.mjs"
 );
+const { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
 
 // When loaded from xpcshell test, this file is loaded via xpcshell.ini's head property
 // and so it loaded first before anything else and isn't having access to Services global.
@@ -162,7 +165,7 @@ if (isMochitest) {
 
 var EXPECTED_DTU_ASSERT_FAILURE_COUNT = 0;
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   if (
     DevToolsUtils.assertionFailureCount !== EXPECTED_DTU_ASSERT_FAILURE_COUNT
   ) {
@@ -631,7 +634,7 @@ async function watchForDevToolsReload(
     waitForLoad,
   });
 
-  return async function() {
+  return async function () {
     info("Wait for the toolbox to reload");
     await waitForToolboxReload();
 
@@ -655,7 +658,7 @@ async function _watchForToolboxReload(
 
   if (!toolbox) {
     // No toolbox to wait for
-    return function() {};
+    return function () {};
   }
 
   const waitForCurrentPanelReload = watchForCurrentPanelReload(toolbox);
@@ -668,7 +671,7 @@ async function _watchForToolboxReload(
     browser
   );
 
-  return async function() {
+  return async function () {
     const isTargetSwitching = checkTargetSwitching();
 
     info(`Waiting for toolbox commands to be reloaded…`);
@@ -698,7 +701,7 @@ async function _watchForResponsiveReload(
 
   if (!ui) {
     // No responsive UI to wait for
-    return function() {};
+    return function () {};
   }
 
   const onResponsiveTargetSwitch = ui.once("responsive-ui-target-switch-done");
@@ -711,7 +714,7 @@ async function _watchForResponsiveReload(
     browser
   );
 
-  return async function() {
+  return async function () {
     const isTargetSwitching = checkTargetSwitching();
 
     info(`Waiting for responsive ui commands to be reloaded…`);
@@ -762,7 +765,7 @@ function watchForLoadedPanelsReload(toolbox) {
     waitForPanels.push(_watchForPanelReload(toolbox, id));
   }
 
-  return function() {
+  return function () {
     return Promise.all(
       waitForPanels.map(async watchPanel => {
         // Wait for all panels to be reloaded.
@@ -783,7 +786,7 @@ function _watchForPanelReload(toolbox, toolId) {
     const onUpdated = panel.once("inspector-updated");
     const onReloaded = panel.once("reloaded");
 
-    return async function() {
+    return async function () {
       info("Waiting for markup view to load after navigation.");
       await markuploaded;
 
@@ -800,7 +803,7 @@ function _watchForPanelReload(toolbox, toolId) {
     ["netmonitor", "accessibility", "webconsole", "jsdebugger"].includes(toolId)
   ) {
     const onReloaded = panel.once("reloaded");
-    return async function() {
+    return async function () {
       info(`Waiting for ${toolId} updates after page reload`);
       await onReloaded;
     };
@@ -841,18 +844,18 @@ async function watchForCommandsReload(
     ? "dom-complete"
     : "dom-loading";
 
-  const {
-    onResource: onTopLevelDomEvent,
-  } = await commands.resourceCommand.waitForNextResource(
-    commands.resourceCommand.TYPES.DOCUMENT_EVENT,
-    {
-      ignoreExistingResources: true,
-      predicate: resource =>
-        resource.targetFront.isTopLevel && resource.name === documentEventName,
-    }
-  );
+  const { onResource: onTopLevelDomEvent } =
+    await commands.resourceCommand.waitForNextResource(
+      commands.resourceCommand.TYPES.DOCUMENT_EVENT,
+      {
+        ignoreExistingResources: true,
+        predicate: resource =>
+          resource.targetFront.isTopLevel &&
+          resource.name === documentEventName,
+      }
+    );
 
-  return async function(isTargetSwitching) {
+  return async function (isTargetSwitching) {
     if (typeof isTargetSwitching === "undefined") {
       throw new Error("isTargetSwitching was not provided to the wait method");
     }
@@ -889,7 +892,7 @@ async function watchForTargetSwitching(commands, browser) {
   const targetFollowsWindowLifecycle =
     commands.targetCommand.targetFront.targetForm.followWindowGlobalLifeCycle;
 
-  return function() {
+  return function () {
     // Compare the PIDs (and not the toolbox's targets) as PIDs are updated also immediately,
     // while target may be updated slightly later.
     const switchedProcess =
@@ -1247,7 +1250,7 @@ function waitUntil(predicate, interval = 10) {
     return Promise.resolve(true);
   }
   return new Promise(resolve => {
-    setTimeout(function() {
+    setTimeout(function () {
       waitUntil(predicate, interval).then(() => resolve(true));
     }, interval);
   });
@@ -1468,7 +1471,7 @@ function getCurrentTestFilePath() {
 async function unregisterAllServiceWorkers(client) {
   info("Wait until all workers have a valid registrationFront");
   let workers;
-  await asyncWaitUntil(async function() {
+  await asyncWaitUntil(async function () {
     workers = await client.mainRoot.listAllWorkers();
     const allWorkersRegistered = workers.service.every(
       worker => !!worker.registrationFront
@@ -1531,7 +1534,7 @@ async function waitUntilScreenshot({ isWindowPrivate = false } = {}) {
   );
   const list = await Downloads.getList(Downloads.ALL);
 
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve) {
     const view = {
       onDownloadAdded: async download => {
         await download.whenSucceeded();
@@ -1841,12 +1844,15 @@ async function safeSynthesizeMouseEventAtCenterInContentPage(
  * @returns {Promise}
  */
 function scrollContentPageNodeIntoView(browsingContext, selector) {
-  return SpecialPowers.spawn(browsingContext, [selector], function(
-    innerSelector
-  ) {
-    const node = content.wrappedJSObject.document.querySelector(innerSelector);
-    node.scrollIntoView();
-  });
+  return SpecialPowers.spawn(
+    browsingContext,
+    [selector],
+    function (innerSelector) {
+      const node =
+        content.wrappedJSObject.document.querySelector(innerSelector);
+      node.scrollIntoView();
+    }
+  );
 }
 
 /**
@@ -1871,16 +1877,15 @@ function setContentPageZoomLevel(zoomLevel) {
  *         is received.
  */
 async function waitForNextTopLevelDomCompleteResource(commands) {
-  const {
-    onResource: onDomCompleteResource,
-  } = await commands.resourceCommand.waitForNextResource(
-    commands.resourceCommand.TYPES.DOCUMENT_EVENT,
-    {
-      ignoreExistingResources: true,
-      predicate: resource =>
-        resource.name === "dom-complete" && resource.targetFront.isTopLevel,
-    }
-  );
+  const { onResource: onDomCompleteResource } =
+    await commands.resourceCommand.waitForNextResource(
+      commands.resourceCommand.TYPES.DOCUMENT_EVENT,
+      {
+        ignoreExistingResources: true,
+        predicate: resource =>
+          resource.name === "dom-complete" && resource.targetFront.isTopLevel,
+      }
+    );
   return { onDomCompleteResource };
 }
 
@@ -2088,7 +2093,7 @@ function createVersionizedHttpTestServer(testFolderName) {
     let fetchResponse;
 
     if (request.queryString) {
-      const url = `${URL_ROOT}${testFolderName}/v${currentVersion}${request.path}.${request.queryString}`;
+      const url = `${URL_ROOT_SSL}${testFolderName}/v${currentVersion}${request.path}.${request.queryString}`;
       try {
         fetchResponse = await fetch(url);
         // Log this only if the request succeed
@@ -2100,7 +2105,7 @@ function createVersionizedHttpTestServer(testFolderName) {
     }
 
     if (!fetchResponse) {
-      const url = `${URL_ROOT}${testFolderName}/v${currentVersion}${request.path}`;
+      const url = `${URL_ROOT_SSL}${testFolderName}/v${currentVersion}${request.path}`;
       info(`[test-http-server] serving: ${url}`);
       fetchResponse = await fetch(url);
     }
@@ -2132,4 +2137,73 @@ function createVersionizedHttpTestServer(testFolderName) {
       return `http://localhost:${port}/${path}`;
     },
   };
+}
+
+/**
+ * Fake clicking a link and return the URL we would have navigated to.
+ * This function should be used to check external links since we can't access
+ * network in tests.
+ * This can also be used to test that a click will not be fired.
+ *
+ * @param ElementNode element
+ *        The <a> element we want to simulate click on.
+ * @returns Promise
+ *          A Promise that is resolved when the link click simulation occured or
+ *          when the click is not dispatched.
+ *          The promise resolves with an object that holds the following properties
+ *          - link: url of the link or null(if event not fired)
+ *          - where: "tab" if tab is active or "tabshifted" if tab is inactive
+ *            or null(if event not fired)
+ */
+function simulateLinkClick(element) {
+  const browserWindow = Services.wm.getMostRecentWindow(
+    gDevTools.chromeWindowType
+  );
+
+  const onOpenLink = new Promise(resolve => {
+    const openLinkIn = (link, where) => resolve({ link, where });
+    sinon.replace(browserWindow, "openTrustedLinkIn", openLinkIn);
+    sinon.replace(browserWindow, "openWebLinkIn", openLinkIn);
+  });
+
+  element.click();
+
+  // Declare a timeout Promise that we can use to make sure spied methods were not called.
+  const onTimeout = new Promise(function (resolve) {
+    setTimeout(() => {
+      resolve({ link: null, where: null });
+    }, 1000);
+  });
+
+  const raceResult = Promise.race([onOpenLink, onTimeout]);
+  sinon.restore();
+  return raceResult;
+}
+
+/**
+ * Since the MDN data is updated frequently, it might happen that the properties used in
+ * this test are not in the dataset anymore/now have URLs.
+ * This function will return properties in the dataset that don't have MDN url so you
+ * can easily find a replacement.
+ */
+function logCssCompatDataPropertiesWithoutMDNUrl() {
+  const cssPropertiesCompatData = require("resource://devtools/shared/compatibility/dataset/css-properties.json");
+
+  function walk(node) {
+    for (const propertyName in node) {
+      const property = node[propertyName];
+      if (property.__compat) {
+        if (!property.__compat.mdn_url) {
+          dump(
+            `"${propertyName}" - MDN URL: ${
+              property.__compat.mdn_url || "❌"
+            } - Spec URL: ${property.__compat.spec_url || "❌"}\n`
+          );
+        }
+      } else if (typeof property == "object") {
+        walk(property);
+      }
+    }
+  }
+  walk(cssPropertiesCompatData);
 }

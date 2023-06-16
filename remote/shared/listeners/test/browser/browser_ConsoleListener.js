@@ -56,8 +56,8 @@ add_task(async function test_stacktrace() {
     stacktrace[3],
     "chrome://mochitests/content/browser/remote/shared/listeners/test/browser/head.js",
     "",
-    33,
-    27
+    34,
+    29
   );
 
   // Clear the console to avoid side effects with other tests in this file.

@@ -22,12 +22,12 @@ customElements.define("x-el", class extends HTMLElement {
 <x-el id="container" role="group"><label id="l1">label1</label></x-el>
 `;
 
-addAccessibleTask(snippet, async function(browser, accDoc) {
+addAccessibleTask(snippet, async function (browser, accDoc) {
   let container = findAccessibleChildByID(accDoc, "container");
 
   testChildrenIds(container, ["l1"]);
 
-  await contentSpawnMutation(browser, REORDER, function() {
+  await contentSpawnMutation(browser, REORDER, function () {
     let labelEl = content.document.createElement("label");
     labelEl.id = "l2";
 
@@ -53,10 +53,10 @@ customElements.define("x-el2", class extends HTMLElement {
 <div role="group" id="container"></div>
 `;
 
-addAccessibleTask(snippet2, async function(browser, accDoc) {
+addAccessibleTask(snippet2, async function (browser, accDoc) {
   let container = findAccessibleChildByID(accDoc, "container");
 
-  await contentSpawnMutation(browser, REORDER, function() {
+  await contentSpawnMutation(browser, REORDER, function () {
     content.document.getElementById("container").innerHTML = "<x-el2></x-el2>";
   });
 
@@ -80,7 +80,7 @@ addAccessibleTask(
   document.head.append(emptyScript);
 </script>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     info("Moving body and setting slot on body");
     let reordered = waitForEvent(EVENT_REORDER, docAcc);
     await invokeContentTask(browser, [], () => {

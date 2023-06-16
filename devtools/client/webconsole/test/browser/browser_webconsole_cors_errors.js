@@ -16,7 +16,7 @@ const BASE_CORS_ERROR_URL_PARAMS = new URLSearchParams({
   utm_campaign: "default",
 });
 
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   await new Promise(resolve => {
     Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
       resolve()
@@ -24,7 +24,7 @@ registerCleanupFunction(async function() {
   });
 });
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.webconsole.filter.netxhr", true);
 
   const hud = await openNewTabAndConsole(TEST_URI);

@@ -29,7 +29,7 @@ function setOurState(data) {
 
 function getOurState() {
   var data;
-  getObjectState("beacon-handler", function(x) {
+  getObjectState("beacon-handler", function (x) {
     // x can be null if no one has set any state yet
     if (x) {
       data = x.wrappedJSObject.data;

@@ -204,6 +204,11 @@ bool JSRuntime::init(JSContext* cx, uint32_t maxbytes) {
   // Also see the comment in JS::Realm::init().
   js::ResetTimeZoneInternal(ResetTimeZoneMode::DontResetIfOffsetUnchanged);
 
+  caches().megamorphicSetPropCache = MakeUnique<MegamorphicSetPropCache>();
+  if (!caches().megamorphicSetPropCache) {
+    return false;
+  }
+
   return true;
 }
 

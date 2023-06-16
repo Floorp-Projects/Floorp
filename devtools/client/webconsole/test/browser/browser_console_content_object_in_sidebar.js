@@ -18,7 +18,7 @@ const TEST_URI = `data:text/html;charset=utf8,<!DOCTYPE html><script>
   );
 </script>`;
 
-add_task(async function() {
+add_task(async function () {
   // Enable sidebar
   await pushPref("devtools.webconsole.sidebarToggle", true);
   // Show the content messages
@@ -72,8 +72,8 @@ add_task(async function() {
     });
   }
 
-  let sidebarText = hud.ui.document.querySelector(".sidebar-contents")
-    .textContent;
+  let sidebarText =
+    hud.ui.document.querySelector(".sidebar-contents").textContent;
   ok(sidebarText.includes("a: 1"), "Sidebar is shown for {a:1}");
 
   info("Showing sidebar for {a:1} again");

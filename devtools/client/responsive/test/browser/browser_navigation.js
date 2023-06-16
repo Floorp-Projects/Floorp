@@ -12,7 +12,7 @@ const DUMMY_3_URL = "https://example.com/browser/devtools/";
 
 addRDMTask(
   null,
-  async function() {
+  async function () {
     await SpecialPowers.pushPrefEnv({
       set: [["browser.navigation.requireUserInteraction", false]],
     });

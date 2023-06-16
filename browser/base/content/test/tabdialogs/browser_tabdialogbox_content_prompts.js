@@ -42,7 +42,7 @@ var commonDialogsBundle = Services.strings.createBundle(
 );
 
 // Setup.
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [[CONTENT_PROMPT_PREF, true]],
   });
@@ -52,33 +52,36 @@ add_setup(async function() {
  * Test that a manager for content prompts is added to tab dialog box.
  */
 add_task(async function test_tabdialog_content_prompts() {
-  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-  await BrowserTestUtils.withNewTab("http://example.com", async function(
-    browser
-  ) {
-    info("Open a tab prompt.");
-    let dialogBox = gBrowser.getTabDialogBox(browser);
-    dialogBox.open(TEST_DIALOG_PATH);
+  await BrowserTestUtils.withNewTab(
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+    "http://example.com",
+    async function (browser) {
+      info("Open a tab prompt.");
+      let dialogBox = gBrowser.getTabDialogBox(browser);
+      dialogBox.open(TEST_DIALOG_PATH);
 
-    info("Check the content prompt dialog is only created when needed.");
-    let contentPromptDialog = document.querySelector(".content-prompt-dialog");
-    ok(!contentPromptDialog, "Content prompt dialog should not be created.");
+      info("Check the content prompt dialog is only created when needed.");
+      let contentPromptDialog = document.querySelector(
+        ".content-prompt-dialog"
+      );
+      ok(!contentPromptDialog, "Content prompt dialog should not be created.");
 
-    info("Open a content prompt");
-    dialogBox.open(TEST_DIALOG_PATH, {
-      modalType: Ci.nsIPrompt.MODAL_TYPE_CONTENT,
-    });
+      info("Open a content prompt");
+      dialogBox.open(TEST_DIALOG_PATH, {
+        modalType: Ci.nsIPrompt.MODAL_TYPE_CONTENT,
+      });
 
-    contentPromptDialog = document.querySelector(".content-prompt-dialog");
-    ok(contentPromptDialog, "Content prompt dialog should be created.");
-    let contentPromptManager = dialogBox.getContentDialogManager();
+      contentPromptDialog = document.querySelector(".content-prompt-dialog");
+      ok(contentPromptDialog, "Content prompt dialog should be created.");
+      let contentPromptManager = dialogBox.getContentDialogManager();
 
-    is(
-      contentPromptManager._dialogs.length,
-      1,
-      "Content prompt manager should have 1 dialog box."
-    );
-  });
+      is(
+        contentPromptManager._dialogs.length,
+        1,
+        "Content prompt manager should have 1 dialog box."
+      );
+    }
+  );
 });
 
 /**
@@ -90,7 +93,7 @@ add_task(async function test_tabdialog_null_principal_title() {
     "DOMWillOpenModalDialog"
   );
 
-  await BrowserTestUtils.withNewTab(TEST_DATA_URI, async function(browser) {
+  await BrowserTestUtils.withNewTab(TEST_DATA_URI, async function (browser) {
     info("Waiting for dialog to open.");
     await dialogShown;
     await checkOriginText(browser);
@@ -110,7 +113,7 @@ add_task(async function test_tabdialog_extension_title() {
     "DOMWillOpenModalDialog"
   );
 
-  await BrowserTestUtils.withNewTab(url, async function(browser) {
+  await BrowserTestUtils.withNewTab(url, async function (browser) {
     info("Waiting for dialog to open.");
     await dialogShown;
     await checkOriginText(browser, "Test Extension");
@@ -128,7 +131,7 @@ add_task(async function test_tabdialog_page_title() {
     "DOMWillOpenModalDialog"
   );
 
-  await BrowserTestUtils.withNewTab(TEST_PAGE, async function(browser) {
+  await BrowserTestUtils.withNewTab(TEST_PAGE, async function (browser) {
     info("Waiting for dialog to open.");
     await dialogShown;
     await checkOriginText(browser, TEST_ORIGIN);

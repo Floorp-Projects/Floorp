@@ -27,10 +27,7 @@ panel-list-settings = Settings
 };
 
 const openMenu = e => {
-  e.target
-    .getRootNode()
-    .querySelector("panel-list")
-    .toggle(e);
+  e.target.getRootNode().querySelector("panel-list").toggle(e);
 };
 
 const Template = ({ isOpen, items, wideAnchor }) =>
@@ -84,9 +81,7 @@ const Template = ({ isOpen, items, wideAnchor }) =>
     >
       ${items.map(i =>
         i == "<hr>"
-          ? html`
-              <hr />
-            `
+          ? html` <hr /> `
           : html`
               <panel-item
                 icon=${i.icon ?? ""}

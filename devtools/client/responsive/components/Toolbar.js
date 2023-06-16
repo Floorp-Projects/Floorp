@@ -32,7 +32,7 @@ const ViewportDimension = createFactory(
   require("resource://devtools/client/responsive/components/ViewportDimension.js")
 );
 
-loader.lazyGetter(this, "UserAgentInput", function() {
+loader.lazyGetter(this, "UserAgentInput", function () {
   return createFactory(
     require("resource://devtools/client/responsive/components/UserAgentInput.js")
   );

@@ -429,19 +429,19 @@ with modules["NETWORK"]:
     # These are really not "results", they're statuses, used by nsITransport and
     # friends.  This is abuse of nsresult, but we'll put up with it for now.
     # nsITransport
-    errors["NS_NET_STATUS_READING"] = FAILURE(8)
-    errors["NS_NET_STATUS_WRITING"] = FAILURE(9)
+    errors["NS_NET_STATUS_READING"] = SUCCESS(8)
+    errors["NS_NET_STATUS_WRITING"] = SUCCESS(9)
 
     # nsISocketTransport
-    errors["NS_NET_STATUS_RESOLVING_HOST"] = FAILURE(3)
-    errors["NS_NET_STATUS_RESOLVED_HOST"] = FAILURE(11)
-    errors["NS_NET_STATUS_CONNECTING_TO"] = FAILURE(7)
-    errors["NS_NET_STATUS_CONNECTED_TO"] = FAILURE(4)
-    errors["NS_NET_STATUS_TLS_HANDSHAKE_STARTING"] = FAILURE(12)
-    errors["NS_NET_STATUS_TLS_HANDSHAKE_ENDED"] = FAILURE(13)
-    errors["NS_NET_STATUS_SENDING_TO"] = FAILURE(5)
-    errors["NS_NET_STATUS_WAITING_FOR"] = FAILURE(10)
-    errors["NS_NET_STATUS_RECEIVING_FROM"] = FAILURE(6)
+    errors["NS_NET_STATUS_RESOLVING_HOST"] = SUCCESS(3)
+    errors["NS_NET_STATUS_RESOLVED_HOST"] = SUCCESS(11)
+    errors["NS_NET_STATUS_CONNECTING_TO"] = SUCCESS(7)
+    errors["NS_NET_STATUS_CONNECTED_TO"] = SUCCESS(4)
+    errors["NS_NET_STATUS_TLS_HANDSHAKE_STARTING"] = SUCCESS(12)
+    errors["NS_NET_STATUS_TLS_HANDSHAKE_ENDED"] = SUCCESS(13)
+    errors["NS_NET_STATUS_SENDING_TO"] = SUCCESS(5)
+    errors["NS_NET_STATUS_WAITING_FOR"] = SUCCESS(10)
+    errors["NS_NET_STATUS_RECEIVING_FROM"] = SUCCESS(6)
 
     # nsIInterceptedChannel
     # Generic error for non-specific failures during service worker interception
@@ -1162,6 +1162,11 @@ with modules["DOM_MEDIA"]:
     errors["NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_UTILITY_ERR"] = FAILURE(17)
     errors["NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_MF_CDM_ERR"] = FAILURE(18)
 
+    # QuotaExceededError specializations
+    errors["NS_ERROR_DOM_MEDIA_KEY_QUOTA_EXCEEDED_ERR"] = FAILURE(30)
+    errors["NS_ERROR_DOM_MEDIA_SOURCE_MAX_BUFFER_QUOTA_EXCEEDED_ERR"] = FAILURE(31)
+    errors["NS_ERROR_DOM_MEDIA_SOURCE_FULL_BUFFER_QUOTA_EXCEEDED_ERR"] = FAILURE(32)
+
     # Internal CDM error
     errors["NS_ERROR_DOM_MEDIA_CDM_NO_SESSION_ERR"] = FAILURE(50)
     errors["NS_ERROR_DOM_MEDIA_CDM_SESSION_OPERATION_ERR"] = FAILURE(51)
@@ -1169,6 +1174,7 @@ with modules["DOM_MEDIA"]:
     # Internal platform-related errors
     errors["NS_ERROR_DOM_MEDIA_CUBEB_INITIALIZATION_ERR"] = FAILURE(101)
     errors["NS_ERROR_DOM_MEDIA_EXTERNAL_ENGINE_NOT_SUPPORTED_ERR"] = FAILURE(102)
+    errors["NS_ERROR_DOM_MEDIA_CDM_PROXY_NOT_SUPPORTED_ERR"] = FAILURE(103)
 
 # =======================================================================
 # 42: NS_ERROR_MODULE_URL_CLASSIFIER

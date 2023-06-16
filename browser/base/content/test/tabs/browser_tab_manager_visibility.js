@@ -11,13 +11,14 @@ const DUMMY_PAGE_PATH = "/browser/base/content/test/tabs/dummy_page.html";
 add_task(async function tab_manager_visibility_preference_on() {
   Services.prefs.setBoolPref("browser.tabs.tabmanager.enabled", true);
 
-  let newWindow = await BrowserTestUtils.openNewWindowWithFlushedCacheForMozSupports();
+  let newWindow =
+    await BrowserTestUtils.openNewWindowWithFlushedCacheForMozSupports();
   await BrowserTestUtils.withNewTab(
     {
       gBrowser: newWindow.gBrowser,
       url: TEST_HOSTNAME + DUMMY_PAGE_PATH,
     },
-    async function(browser) {
+    async function (browser) {
       await Assert.ok(
         BrowserTestUtils.is_visible(
           newWindow.document.getElementById("alltabs-button")
@@ -33,13 +34,14 @@ add_task(async function tab_manager_visibility_preference_on() {
 add_task(async function tab_manager_visibility_preference_off() {
   Services.prefs.setBoolPref("browser.tabs.tabmanager.enabled", false);
 
-  let newWindow = await BrowserTestUtils.openNewWindowWithFlushedCacheForMozSupports();
+  let newWindow =
+    await BrowserTestUtils.openNewWindowWithFlushedCacheForMozSupports();
   await BrowserTestUtils.withNewTab(
     {
       gBrowser: newWindow.gBrowser,
       url: TEST_HOSTNAME + DUMMY_PAGE_PATH,
     },
-    async function(browser) {
+    async function (browser) {
       await Assert.ok(
         BrowserTestUtils.is_hidden(
           newWindow.document.getElementById("alltabs-button")

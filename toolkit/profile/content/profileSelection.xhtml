@@ -17,54 +17,85 @@
   data-l10n-id="profile-selection-window"
   orient="vertical"
   prefwidth="min-width"
-  style="min-width: 30em;"
-  onload="startup();">
-<dialog id="profileWindow"
-  buttons="accept,cancel"
-  buttonidaccept="profile-selection-button-accept"
-  buttonidcancel="profile-selection-button-cancel">
+  style="min-width: 30em"
+  onload="startup();"
+>
+  <dialog
+    id="profileWindow"
+    buttons="accept,cancel"
+    buttonidaccept="profile-selection-button-accept"
+    buttonidcancel="profile-selection-button-cancel"
+  >
+    <linkset>
+      <html:link rel="localization" href="branding/brand.ftl" />
+      <html:link
+        rel="localization"
+        href="toolkit/global/profileSelection.ftl"
+      />
+    </linkset>
 
-  <linkset>
-    <html:link rel="localization" href="branding/brand.ftl"/>
-    <html:link rel="localization" href="toolkit/global/profileSelection.ftl"/>
-  </linkset>
+    <script src="chrome://global/content/customElements.js" />
 
-  <script src="chrome://global/content/customElements.js"/>
+    <stringbundle
+      id="bundle_profileManager"
+      src="chrome://mozapps/locale/profile/profileSelection.properties"
+    />
+    <stringbundle
+      id="bundle_brand"
+      src="chrome://branding/locale/brand.properties"
+    />
 
-  <stringbundle id="bundle_profileManager"
-                src="chrome://mozapps/locale/profile/profileSelection.properties"/>
-  <stringbundle id="bundle_brand"
-                src="chrome://branding/locale/brand.properties"/>
+    <script src="chrome://mozapps/content/profile/profileSelection.js" />
 
-  <script src="chrome://mozapps/content/profile/profileSelection.js"/>
+    <description
+      class="label"
+      data-l10n-id="profile-manager-description"
+    ></description>
 
-  <description class="label" data-l10n-id="profile-manager-description"></description>
+    <separator class="thin" />
 
-  <separator class="thin"/>
+    <hbox class="profile-box indent" flex="1">
+      <vbox id="managebuttons">
+        <button
+          id="newbutton"
+          data-l10n-id="profile-selection-new-button"
+          oncommand="CreateProfileWizard();"
+        />
+        <button
+          id="renbutton"
+          data-l10n-id="profile-selection-rename-button"
+          oncommand="RenameProfile();"
+        />
+        <button
+          id="delbutton"
+          data-l10n-id="profile-selection-delete-button"
+          oncommand="ConfirmDelete();"
+        />
+      </vbox>
 
-  <hbox class="profile-box indent" flex="1">
+      <vbox flex="1">
+        <richlistbox
+          id="profiles"
+          class="theme-listbox"
+          seltype="single"
+          ondblclick="onProfilesDblClick(event)"
+          onkeypress="onProfilesKey(event);"
+        >
+        </richlistbox>
 
-    <vbox id="managebuttons">
-      <button id="newbutton" data-l10n-id="profile-selection-new-button"
-              oncommand="CreateProfileWizard();"/>
-      <button id="renbutton" data-l10n-id="profile-selection-rename-button"
-              oncommand="RenameProfile();"/>
-      <button id="delbutton" data-l10n-id="profile-selection-delete-button"
-              oncommand="ConfirmDelete();"/>
-    </vbox>
+        <!-- Bug 257777 -->
+        <checkbox
+          id="offlineState"
+          data-l10n-id="profile-manager-work-offline"
+          native="true"
+        />
 
-    <vbox flex="1">
-      <richlistbox id="profiles" class="theme-listbox" seltype="single"
-                   ondblclick="onProfilesDblClick(event)"
-                   onkeypress="onProfilesKey(event);">
-      </richlistbox>
-
-      <!-- Bug 257777 -->
-      <checkbox id="offlineState" data-l10n-id="profile-manager-work-offline" native="true"/>
-
-      <checkbox id="autoSelectLastProfile" data-l10n-id="profile-manager-use-selected" native="true"/>
-    </vbox>
-
-  </hbox>
-</dialog>
+        <checkbox
+          id="autoSelectLastProfile"
+          data-l10n-id="profile-manager-use-selected"
+          native="true"
+        />
+      </vbox>
+    </hbox>
+  </dialog>
 </window>

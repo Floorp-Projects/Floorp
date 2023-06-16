@@ -1,10 +1,30 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`UnsupportedBrowserItem component renders the browser 1`] = `
-<li>
-  <BrowserIcon
-    id="firefox"
-    name="Firefox"
-  />
-</li>
+<Localized
+  $browsers="Firefox 113 (current)
+Firefox 114 (beta)
+Firefox 115 (release)"
+  attrs={
+    Object {
+      "title": true,
+    }
+  }
+  id="compatibility-issue-browsers-list"
+>
+  <li
+    className="compatibility-browser"
+    data-browser-id="firefox"
+  >
+    <BrowserIcon
+      id="firefox"
+      name="Firefox"
+    />
+    <span
+      className="compatibility-browser-version"
+    >
+      113
+    </span>
+  </li>
+</Localized>
 `;

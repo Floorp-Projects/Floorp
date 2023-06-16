@@ -93,9 +93,8 @@ add_task(async function corruptedFile() {
     tmpPath: TEST_STORE_FILE_PATH + ".tmp",
   });
 
-  let cis = ContextualIdentityService.createNewInstanceForTesting(
-    TEST_STORE_FILE_PATH
-  );
+  let cis =
+    ContextualIdentityService.createNewInstanceForTesting(TEST_STORE_FILE_PATH);
   ok(!!cis, "We have our instance of ContextualIdentityService");
 
   equal(

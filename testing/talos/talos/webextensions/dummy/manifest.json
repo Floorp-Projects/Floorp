@@ -14,7 +14,7 @@
     "webRequest",
     "webRequestBlocking"
   ],
-  "background": {"scripts": ["background.js"]},
+  "background": { "scripts": ["background.js"] },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],

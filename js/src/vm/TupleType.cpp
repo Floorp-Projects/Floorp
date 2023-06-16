@@ -280,7 +280,7 @@ static TupleType* allocate(JSContext* cx, gc::AllocKind allocKind) {
   }
 
   TupleType* tup =
-      cx->newCell<TupleType>(allocKind, gc::DefaultHeap, &TupleType::class_);
+      cx->newCell<TupleType>(allocKind, gc::Heap::Default, &TupleType::class_);
   if (!tup) {
     return nullptr;
   }

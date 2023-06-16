@@ -85,7 +85,7 @@ function formatInstallDate(sec) {
   return date.toLocaleString(undefined, dtOptions);
 }
 
-add_task(async function() {
+add_task(async function () {
   await openPreferencesViaOpenPreferencesAPI("general", { leaveOpen: true });
   let doc = gBrowser.selectedBrowser.contentDocument;
 

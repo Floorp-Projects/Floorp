@@ -69,6 +69,7 @@
 
 #include "mozilla/InternalMutationEvent.h"
 #include "nsDOMStringMap.h"
+#include "nsDOMString.h"
 
 #include "nsLayoutUtils.h"
 #include "mozAutoDocUpdate.h"
@@ -99,6 +100,7 @@
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "imgIContainer.h"
 #include "nsComputedDOMStyle.h"
+#include "mozilla/dom/HTMLDialogElement.h"
 #include "mozilla/dom/HTMLLabelElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/CustomElementRegistry.h"
@@ -184,12 +186,24 @@ nsresult nsGenericHTMLElement::CopyInnerTo(Element* aDst) {
 static const nsAttrValue::EnumTable kDirTable[] = {
     {"ltr", eDir_LTR}, {"rtl", eDir_RTL}, {"auto", eDir_Auto}, {nullptr, 0}};
 
+namespace {
+// See <https://html.spec.whatwg.org/#the-popover-attribute>.
+enum class PopoverAttributeKeyword : uint8_t { Auto, EmptyString, Manual };
+
+static const char* kPopoverAttributeValueAuto = "auto";
+static const char* kPopoverAttributeValueEmptyString = "";
+static const char* kPopoverAttributeValueManual = "manual";
+
 static const nsAttrValue::EnumTable kPopoverTable[] = {
-    {"auto", PopoverState::Auto},
-    {"manual", PopoverState::Manual},
+    {kPopoverAttributeValueAuto, PopoverAttributeKeyword::Auto},
+    {kPopoverAttributeValueEmptyString, PopoverAttributeKeyword::EmptyString},
+    {kPopoverAttributeValueManual, PopoverAttributeKeyword::Manual},
     {nullptr, 0}};
 
-static const nsAttrValue::EnumTable* kPopoverTableDefault = &kPopoverTable[1];
+// See <https://html.spec.whatwg.org/#the-popover-attribute>.
+static const nsAttrValue::EnumTable* kPopoverTableInvalidValueDefault =
+    &kPopoverTable[2];
+}  // namespace
 
 void nsGenericHTMLElement::AddToNameTable(nsAtom* aName) {
   MOZ_ASSERT(HasName(), "Node doesn't have name?");
@@ -653,6 +667,69 @@ void nsGenericHTMLElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                                  aNotify);
 }
 
+namespace {
+constexpr PopoverAttributeState ToPopoverAttributeState(
+    PopoverAttributeKeyword aPopoverAttributeKeyword) {
+  // See <https://html.spec.whatwg.org/#the-popover-attribute>.
+  switch (aPopoverAttributeKeyword) {
+    case PopoverAttributeKeyword::Auto:
+      return PopoverAttributeState::Auto;
+    case PopoverAttributeKeyword::EmptyString:
+      return PopoverAttributeState::Auto;
+    case PopoverAttributeKeyword::Manual:
+      return PopoverAttributeState::Manual;
+    default: {
+      MOZ_ASSERT_UNREACHABLE();
+      return PopoverAttributeState::None;
+    }
+  }
+}
+}  // namespace
+
+void nsGenericHTMLElement::AfterSetPopoverAttr() {
+  const nsAttrValue* newValue = GetParsedAttr(nsGkAtoms::popover);
+
+  const PopoverAttributeState newState = [&newValue]() {
+    if (newValue) {
+      MOZ_ASSERT(newValue->Type() == nsAttrValue::eEnum);
+      const auto popoverAttributeKeyword =
+          static_cast<PopoverAttributeKeyword>(newValue->GetEnumValue());
+      return ToPopoverAttributeState(popoverAttributeKeyword);
+    }
+
+    // The missing value default is the no popover state, see
+    // <https://html.spec.whatwg.org/multipage/popover.html#attr-popover>.
+    return PopoverAttributeState::None;
+  }();
+
+  const PopoverAttributeState oldState = GetPopoverAttributeState();
+
+  if (newState != oldState) {
+    EnsurePopoverData().SetPopoverAttributeState(newState);
+
+    HidePopoverInternal(/* aFocusPreviousElement = */ true,
+                        /* aFireEvents = */ true, IgnoreErrors());
+
+    // In case `HidePopoverInternal` changed the state, keep the corresponding
+    // changes and don't overwrite anything here.
+    if (newState == GetPopoverAttributeState()) {
+      if (newState == PopoverAttributeState::None) {
+        // `HidePopoverInternal` above didn't remove the element from the top
+        // layer, because in that call, the element's popover attribute state
+        // was already `None`. Revisit this, when the spec is corrected
+        // (bug 1835811).
+        OwnerDoc()->RemovePopoverFromTopLayer(*this);
+
+        ClearPopoverData();
+        RemoveStates(ElementState::POPOVER_OPEN);
+      } else {
+        // TODO: what if `HidePopoverInternal` called `ShowPopup()`?
+        PopoverPseudoStateUpdate(false, true);
+      }
+    }
+  }
+}
+
 void nsGenericHTMLElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                         const nsAttrValue* aValue,
                                         const nsAttrValue* aOldValue,
@@ -667,33 +744,9 @@ void nsGenericHTMLElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
       SyncEditorsOnSubtree(this);
     } else if (aName == nsGkAtoms::popover &&
                StaticPrefs::dom_element_popover_enabled()) {
-      // https://html.spec.whatwg.org/multipage/popover.html#attr-popover
-      PopoverState newState;
-      if (aValue) {
-        if (aValue->Type() == nsAttrValue::eEnum) {
-          newState = static_cast<dom::PopoverState>(aValue->GetEnumValue());
-        } else {
-          // The invalid value default is the manual state
-          newState = PopoverState::Manual;
-        }
-      } else {
-        // The missing value default is the no popover state.
-        newState = PopoverState::None;
-      }
-      PopoverState oldState = GetPopoverState();
-      if (newState != oldState) {
-        if (oldState != PopoverState::None) {
-          HidePopoverInternal(/* aFocusPreviousElement = */ true,
-                              /* aFireEvents = */ false, IgnoreErrors());
-        }
-        if (newState != PopoverState::None) {
-          EnsurePopoverData().SetPopoverState(newState);
-          PopoverPseudoStateUpdate(false, true);
-        } else {
-          ClearPopoverData();
-          RemoveStates(ElementState::POPOVER_OPEN);
-        }
-      }
+      nsContentUtils::AddScriptRunner(
+          NewRunnableMethod("nsGenericHTMLElement::AfterSetPopoverAttr", this,
+                            &nsGenericHTMLElement::AfterSetPopoverAttr));
     } else if (aName == nsGkAtoms::dir) {
       Directionality dir = eDir_LTR;
       // A boolean tracking whether we need to recompute our directionality.
@@ -948,7 +1001,7 @@ bool nsGenericHTMLElement::ParseAttribute(int32_t aNamespaceID,
     if (aAttribute == nsGkAtoms::popover &&
         StaticPrefs::dom_element_popover_enabled()) {
       return aResult.ParseEnumValue(aValue, kPopoverTable, false,
-                                    kPopoverTableDefault);
+                                    kPopoverTableInvalidValueDefault);
     }
 
     if (aAttribute == nsGkAtoms::tabindex) {
@@ -2326,6 +2379,17 @@ void nsGenericHTMLElement::HandleKeyboardActivation(
   MOZ_ASSERT(aVisitor.mEvent->HasKeyEventMessage());
   MOZ_ASSERT(aVisitor.mEvent->IsTrusted());
 
+  // If focused element is different from this element, it may be editable.
+  // In that case, associated editor for the element should handle the keyboard
+  // instead.  Therefore, if this is not the focused element, we should not
+  // handle the event here.  Note that this element may be an editing host,
+  // i.e., focused and editable.  In the case, keyboard events should be
+  // handled by the focused element instead of associated editor because
+  // Chrome handles the case so.  For compatibility with Chrome, we follow them.
+  if (nsFocusManager::GetFocusedElementStatic() != this) {
+    return;
+  }
+
   const auto message = aVisitor.mEvent->mMessage;
   const WidgetKeyboardEvent* keyEvent = aVisitor.mEvent->AsKeyboardEvent();
   if (nsEventStatus_eIgnore != aVisitor.mEventStatus) {
@@ -2831,7 +2895,7 @@ void nsGenericHTMLFormControlElementWithState::HandlePopoverTargetAction() {
   if (canHide && target->IsPopoverOpen()) {
     target->HidePopover(IgnoreErrors());
   } else if (canShow && !target->IsPopoverOpen()) {
-    target->SetHasPopoverInvoker(true);
+    target->GetPopoverData()->SetInvoker(this);
     target->ShowPopover(IgnoreErrors());
   }
 }
@@ -3172,8 +3236,17 @@ bool nsGenericHTMLElement::PopoverOpen() const {
 bool nsGenericHTMLElement::CheckPopoverValidity(
     PopoverVisibilityState aExpectedState, Document* aExpectedDocument,
     ErrorResult& aRv) {
-  if (!HasAttr(nsGkAtoms::popover)) {
-    aRv.ThrowNotSupportedError("Element does not have the popover attribute");
+  const PopoverData* data = GetPopoverData();
+  if (!data ||
+      data->GetPopoverAttributeState() == PopoverAttributeState::None) {
+    MOZ_ASSERT(!HasAttr(nsGkAtoms::popover));
+    aRv.ThrowNotSupportedError("Element is in the no popover state");
+    return false;
+  }
+
+  MOZ_ASSERT(HasAttr(nsGkAtoms::popover));
+
+  if (data->GetPopoverVisibilityState() != aExpectedState) {
     return false;
   }
 
@@ -3184,15 +3257,6 @@ bool nsGenericHTMLElement::CheckPopoverValidity(
 
   if (aExpectedDocument && aExpectedDocument != OwnerDoc()) {
     aRv.ThrowInvalidStateError("Element is moved to other document");
-    return false;
-  }
-
-  PopoverData* data = GetPopoverData();
-  if (!data) {
-    return false;
-  }
-  if (data->GetPopoverVisibilityState() != aExpectedState) {
-    aRv.ThrowInvalidStateError("Element has unexpected visibility state");
     return false;
   }
 
@@ -3209,9 +3273,9 @@ bool nsGenericHTMLElement::CheckPopoverValidity(
   return true;
 }
 
-PopoverState nsGenericHTMLElement::GetPopoverState() const {
-  return GetPopoverData() ? GetPopoverData()->GetPopoverState()
-                          : PopoverState::None;
+PopoverAttributeState nsGenericHTMLElement::GetPopoverAttributeState() const {
+  return GetPopoverData() ? GetPopoverData()->GetPopoverAttributeState()
+                          : PopoverAttributeState::None;
 }
 
 void nsGenericHTMLElement::PopoverPseudoStateUpdate(bool aOpen, bool aNotify) {
@@ -3302,10 +3366,12 @@ void nsGenericHTMLElement::ShowPopover(ErrorResult& aRv) {
     return;
   }
 
+  bool shouldRestoreFocus = false;
+  nsWeakPtr originallyFocusedElement;
   if (IsAutoPopover()) {
-    RefPtr<Element> ancestor = GetTopmostPopoverAncestor();
+    RefPtr<nsINode> ancestor = GetTopmostPopoverAncestor();
     if (!ancestor) {
-      ancestor = document->GetDocumentElement();
+      ancestor = document;
     }
     document->HideAllPopoversUntil(*ancestor, false, true);
 
@@ -3315,16 +3381,15 @@ void nsGenericHTMLElement::ShowPopover(ErrorResult& aRv) {
         !CheckPopoverValidity(PopoverVisibilityState::Hidden, document, aRv)) {
       return;
     }
-  }
 
-  const bool shouldRestoreFocus = !document->GetTopmostAutoPopover();
-  // Let originallyFocusedElement be document's focused area of the document's
-  // DOM anchor.
-  nsWeakPtr originallyFocusedElement;
-  if (nsIContent* unretargetedFocus =
-          document->GetUnretargetedFocusedContent()) {
-    originallyFocusedElement =
-        do_GetWeakReference(unretargetedFocus->AsElement());
+    shouldRestoreFocus = !document->GetTopmostAutoPopover();
+    // Let originallyFocusedElement be document's focused area of the document's
+    // DOM anchor.
+    if (nsIContent* unretargetedFocus =
+            document->GetUnretargetedFocusedContent()) {
+      originallyFocusedElement =
+          do_GetWeakReference(unretargetedFocus->AsElement());
+    }
   }
 
   document->AddPopoverToTopLayer(*this);
@@ -3334,7 +3399,8 @@ void nsGenericHTMLElement::ShowPopover(ErrorResult& aRv) {
 
   // Run the popover focusing steps given element.
   FocusPopover();
-  if (shouldRestoreFocus && GetPopoverState() != PopoverState::None) {
+  if (shouldRestoreFocus &&
+      GetPopoverAttributeState() != PopoverAttributeState::None) {
     GetPopoverData()->SetPreviouslyFocusedElement(originallyFocusedElement);
   }
 
@@ -3384,16 +3450,25 @@ void nsGenericHTMLElement::FocusPreviousElementAfterHidingPopover() {
 }
 
 // https://html.spec.whatwg.org/multipage/popover.html#dom-togglepopover
-void nsGenericHTMLElement::TogglePopover(bool force, ErrorResult& aRv) {
-  if (!force && PopoverOpen()) {
+void nsGenericHTMLElement::TogglePopover(const Optional<bool>& aForce,
+                                         ErrorResult& aRv) {
+  if (PopoverOpen() && (!aForce.WasPassed() || !aForce.Value())) {
     HidePopover(aRv);
-  } else if (force && !PopoverOpen()) {
+  } else if (!aForce.WasPassed() || aForce.Value()) {
     ShowPopover(aRv);
   }
 }
 
 // https://html.spec.whatwg.org/multipage/popover.html#popover-focusing-steps
 void nsGenericHTMLElement::FocusPopover() {
+  if (auto* dialog = HTMLDialogElement::FromNode(this)) {
+    return MOZ_KnownLive(dialog)->FocusDialog();
+  }
+
+  if (RefPtr<Document> doc = GetComposedDoc()) {
+    doc->FlushPendingNotifications(FlushType::Frames);
+  }
+
   // This diverges from the spec a bit,
   // see https://github.com/whatwg/html/pull/8998
   RefPtr<Element> control =
@@ -3483,4 +3558,11 @@ bool nsGenericHTMLElement::Translate() const {
     }
   }
   return nsGenericHTMLElementBase::Translate();
+}
+
+void nsGenericHTMLElement::GetPopover(nsString& aPopover) const {
+  GetHTMLEnumAttr(nsGkAtoms::popover, aPopover);
+  if (aPopover.IsEmpty() && !DOMStringIsNull(aPopover)) {
+    aPopover.Assign(NS_ConvertUTF8toUTF16(kPopoverAttributeValueAuto));
+  }
 }

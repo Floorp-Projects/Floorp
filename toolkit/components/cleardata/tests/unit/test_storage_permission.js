@@ -76,10 +76,8 @@ add_task(async function test_removing_storage_permission_from_principal() {
   );
 
   const anotherUri = Services.io.newURI("https://example.com");
-  const anotherPrincipal = Services.scriptSecurityManager.createContentPrincipal(
-    anotherUri,
-    {}
-  );
+  const anotherPrincipal =
+    Services.scriptSecurityManager.createContentPrincipal(anotherUri, {});
 
   Services.perms.addFromPrincipal(
     principal,
@@ -159,10 +157,8 @@ add_task(async function test_removing_storage_permission_from_base_domainl() {
   );
 
   const anotherUri = Services.io.newURI("https://example.com");
-  const anotherPrincipal = Services.scriptSecurityManager.createContentPrincipal(
-    anotherUri,
-    {}
-  );
+  const anotherPrincipal =
+    Services.scriptSecurityManager.createContentPrincipal(anotherUri, {});
 
   Services.perms.addFromPrincipal(
     principal,
@@ -285,9 +281,10 @@ add_task(async function test_deleteUserInteractionForClearingHistory() {
     Services.perms.ALLOW_ACTION
   );
 
-  let principalWithStorage = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    "https://sub.example.com"
-  );
+  let principalWithStorage =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      "https://sub.example.com"
+    );
 
   await new Promise(resolve => {
     return Services.clearData.deleteUserInteractionForClearingHistory(

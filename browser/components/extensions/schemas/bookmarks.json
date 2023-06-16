@@ -8,12 +8,12 @@
     "types": [
       {
         "$extend": "OptionalPermission",
-        "choices": [{
-          "type": "string",
-          "enum": [
-            "bookmarks"
-          ]
-        }]
+        "choices": [
+          {
+            "type": "string",
+            "enum": ["bookmarks"]
+          }
+        ]
       }
     ]
   },
@@ -174,7 +174,7 @@
               {
                 "name": "results",
                 "type": "array",
-                "items": { "$ref": "BookmarkTreeNode"}
+                "items": { "$ref": "BookmarkTreeNode" }
               }
             ]
           }

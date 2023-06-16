@@ -103,7 +103,7 @@ function mouseDownElement(el, win) {
   el.dispatchEvent(mouseEvent);
 }
 
-exports.waitForNetworkRequests = async function(
+exports.waitForNetworkRequests = async function (
   label,
   toolbox,
   minExpectedRequests,
@@ -114,7 +114,7 @@ exports.waitForNetworkRequests = async function(
   test.done();
 };
 
-exports.exportHar = async function(label, toolbox) {
+exports.exportHar = async function (label, toolbox) {
   let test = runTest(label + ".exportHar");
 
   // Export HAR from the Network panel.
@@ -123,7 +123,7 @@ exports.exportHar = async function(label, toolbox) {
   test.done();
 };
 
-exports.openResponseDetailsPanel = async function(label, toolbox) {
+exports.openResponseDetailsPanel = async function (label, toolbox) {
   const win = toolbox.getCurrentPanel().panelWin;
   const { document, store } = win;
   const monitor = document.querySelector(".monitor-panel");

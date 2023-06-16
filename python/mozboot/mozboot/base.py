@@ -349,7 +349,10 @@ class BaseBootstrapper(object):
     def install_toolchain_artifact_impl(
         self, install_dir: Path, toolchain_job, no_unpack=False
     ):
-        mach_binary = (self.srcdir / "mach").resolve()
+        if type(self.srcdir) is str:
+            mach_binary = Path(self.srcdir) / "mach"
+        else:
+            mach_binary = (self.srcdir / "mach").resolve()
         if not mach_binary.exists():
             raise ValueError(f"mach not found at {mach_binary}")
 

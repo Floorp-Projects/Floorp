@@ -90,15 +90,13 @@ Build artifacts
    #11 modules:
 
    -  ``libnssckfw.a``/``nssckfw.lib`` provides an API for writing PKCS #11 modules.
-   ..
-      -  ``libswfci.a``/``swfci.lib`` provides support for software FORTEZZA.
+   -  ``libswfci.a``/``swfci.lib`` provides support for software FORTEZZA.
 
    The following shared libraries are standalone loadable modules, not meant to
    be linked with directly:
 
-   ..
-      -  ``libfort.so``/``libfort.sl``/``fort32.dll`` provides support for hardware FORTEZZA.
-      -  ``libswft.so``/``libswft.sl``/``swft32.dll`` provides support for software FORTEZZA.
+   -  ``libfort.so``/``libfort.sl``/``fort32.dll`` provides support for hardware FORTEZZA.
+   -  ``libswft.so``/``libswft.sl``/``swft32.dll`` provides support for software FORTEZZA.
    -  ``libnssckbi.so``/``libnssckbi.sl``/``nssckbi.dll`` defines the default set
       of trusted root certificates.
 

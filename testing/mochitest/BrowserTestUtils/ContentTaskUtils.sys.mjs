@@ -201,7 +201,7 @@ export var ContentTaskUtils = {
       return Promise.resolve();
     }
     return new Promise(resolve => {
-      let obs = new subject.ownerGlobal.MutationObserver(function() {
+      let obs = new subject.ownerGlobal.MutationObserver(function () {
         if (checkFn && !checkFn()) {
           return;
         }

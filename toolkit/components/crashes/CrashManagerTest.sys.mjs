@@ -7,11 +7,6 @@
  * testing of the Crashes component (CrashManager.sys.mjs).
  */
 
-/* global OS */
-Cc["@mozilla.org/net/osfileconstantsservice;1"]
-  .getService(Ci.nsIOSFileConstantsService)
-  .init();
-
 import { CrashManager } from "resource://gre/modules/CrashManager.sys.mjs";
 
 const lazy = {};
@@ -23,7 +18,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 var loggingConfigured = false;
 
-export var configureLogging = function() {
+export var configureLogging = function () {
   if (loggingConfigured) {
     return;
   }
@@ -36,7 +31,7 @@ export var configureLogging = function() {
   loggingConfigured = true;
 };
 
-export var sleep = function(wait) {
+export var sleep = function (wait) {
   return new Promise(resolve => {
     lazy.setTimeout(() => {
       resolve();
@@ -44,7 +39,7 @@ export var sleep = function(wait) {
   });
 };
 
-export var TestingCrashManager = function(options) {
+export var TestingCrashManager = function (options) {
   CrashManager.call(this, options);
 };
 
@@ -64,17 +59,13 @@ TestingCrashManager.prototype = {
       } else {
         path = PathUtils.join(this._submittedDumpsDir, "bp-" + uuid + ".txt");
       }
-      mode =
-        OS.Constants.libc.S_IRUSR |
-        OS.Constants.libc.S_IWUSR |
-        OS.Constants.libc.S_IRGRP |
-        OS.Constants.libc.S_IROTH;
+      mode = 0o644;
     } else {
       path = PathUtils.join(this._pendingDumpsDir, uuid + ".dmp");
-      mode = OS.Constants.libc.S_IRUSR | OS.Constants.libc.S_IWUSR;
+      mode = 0o600;
     }
 
-    return (async function() {
+    return (async function () {
       await IOUtils.writeUTF8(path, "");
       await IOUtils.setPermissions(path, mode);
       await IOUtils.setModificationTime(path, date.valueOf());
@@ -93,8 +84,8 @@ TestingCrashManager.prototype = {
       path = PathUtils.join(this._pendingDumpsDir, filename);
     }
 
-    return (async function() {
-      let mode = OS.Constants.libc.S_IRUSR | OS.Constants.libc.S_IWUSR;
+    return (async function () {
+      let mode = 0o600;
       await IOUtils.writeUTF8(path, "");
       await IOUtils.setPermissions(path, mode);
       dump(`Create ignored dump file: ${path}\n`);
@@ -106,7 +97,7 @@ TestingCrashManager.prototype = {
     let dateInSecs = Math.floor(date.getTime() / 1000);
     let data = type + "\n" + dateInSecs + "\n" + id + "\n" + content;
 
-    return (async function() {
+    return (async function () {
       await IOUtils.writeUTF8(path, data);
       await IOUtils.setModificationTime(path, date.valueOf());
       await IOUtils.setAccessTime(path, date.valueOf());
@@ -116,7 +107,7 @@ TestingCrashManager.prototype = {
   deleteEventsDirs() {
     let dirs = this._eventsDirs;
 
-    return (async function() {
+    return (async function () {
       for (let dir of dirs) {
         await IOUtils.remove(dir, { recursive: true });
       }
@@ -152,13 +143,13 @@ Object.setPrototypeOf(TestingCrashManager.prototype, CrashManager.prototype);
 
 var DUMMY_DIR_COUNT = 0;
 
-export var getManager = function() {
-  return (async function() {
-    const dirMode = OS.Constants.libc.S_IRWXU;
+export var getManager = function () {
+  return (async function () {
+    const dirMode = 0o700;
     let baseFile = PathUtils.profileDir;
 
     function makeDir(create = true) {
-      return (async function() {
+      return (async function () {
         let path = PathUtils.join(baseFile, "dummy-dir-" + DUMMY_DIR_COUNT++);
 
         if (!create) {

@@ -36,7 +36,7 @@ add_task(async function test() {
   // load a 4th tab with a worker
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: WORKER_URL2 },
-    async function(browser) {
+    async function (browser) {
       // grab events..
       let workerDuration = 0;
       let workerTotal = 0;
@@ -161,7 +161,7 @@ add_task(async function test() {
       // load a tab with a setInterval, we should get counters on TaskCategory::Timer
       await BrowserTestUtils.withNewTab(
         { gBrowser, url: INTERVAL_URL },
-        async function(browser) {
+        async function (browser) {
           let tabId = gBrowser.selectedBrowser.outerWindowID;
           let previousTimerCalls = timerCalls;
           results = await ChromeUtils.requestPerformanceMetrics();
@@ -173,7 +173,7 @@ add_task(async function test() {
       // load a tab with a setTimeout, we should get counters on TaskCategory::Timer
       await BrowserTestUtils.withNewTab(
         { gBrowser, url: TIMEOUT_URL },
-        async function(browser) {
+        async function (browser) {
           let tabId = gBrowser.selectedBrowser.outerWindowID;
           let previousTimerCalls = timerCalls;
           results = await ChromeUtils.requestPerformanceMetrics();
@@ -185,7 +185,7 @@ add_task(async function test() {
       // load a tab with a sound
       await BrowserTestUtils.withNewTab(
         { gBrowser, url: SOUND_URL },
-        async function(browser) {
+        async function (browser) {
           let tabId = gBrowser.selectedBrowser.outerWindowID;
           results = await ChromeUtils.requestPerformanceMetrics();
           exploreResults(results, tabId);

@@ -20,7 +20,7 @@ add_task(async function test_check_filename_urlescape() {
   let pendingPromise;
   let pendingTest = "";
   let expectedFileName = "";
-  MockFilePicker.showCallback = function(fp) {
+  MockFilePicker.showCallback = function (fp) {
     info(`${pendingTest} - Filepicker shown, checking filename`);
     is(
       fp.defaultString,

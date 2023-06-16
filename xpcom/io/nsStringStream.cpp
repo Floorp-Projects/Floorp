@@ -18,7 +18,6 @@
 #include "nsISupportsPrimitives.h"
 #include "nsCRT.h"
 #include "prerror.h"
-#include "plstr.h"
 #include "nsIClassInfoImpl.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ipc/InputStreamUtils.h"

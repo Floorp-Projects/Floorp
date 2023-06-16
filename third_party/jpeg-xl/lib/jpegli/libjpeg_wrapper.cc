@@ -102,6 +102,11 @@ int jpeg_consume_input(j_decompress_ptr cinfo) {
   return jpegli_consume_input(cinfo);
 }
 
+#if JPEG_LIB_VERSION >= 80
+void jpeg_core_output_dimensions(j_decompress_ptr cinfo) {
+  jpegli_core_output_dimensions(cinfo);
+}
+#endif
 void jpeg_calc_output_dimensions(j_decompress_ptr cinfo) {
   jpegli_calc_output_dimensions(cinfo);
 }
@@ -162,6 +167,12 @@ void jpeg_set_linear_quality(j_compress_ptr cinfo, int scale_factor,
   jpegli_set_linear_quality(cinfo, scale_factor, force_baseline);
 }
 
+#if JPEG_LIB_VERSION >= 70
+void jpeg_default_qtables(j_compress_ptr cinfo, boolean force_baseline) {
+  jpegli_default_qtables(cinfo, force_baseline);
+}
+#endif
+
 int jpeg_quality_scaling(int quality) {
   return jpegli_quality_scaling(quality);
 }
@@ -180,6 +191,12 @@ void jpeg_simple_progression(j_compress_ptr cinfo) {
 void jpeg_suppress_tables(j_compress_ptr cinfo, boolean suppress) {
   jpegli_suppress_tables(cinfo, suppress);
 }
+
+#if JPEG_LIB_VERSION >= 70
+void jpeg_calc_jpeg_dimensions(j_compress_ptr cinfo) {
+  jpegli_calc_jpeg_dimensions(cinfo);
+}
+#endif
 
 void jpeg_copy_critical_parameters(j_decompress_ptr srcinfo,
                                    j_compress_ptr dstinfo) {
@@ -239,3 +256,5 @@ void jpeg_destroy_compress(j_compress_ptr cinfo) {
 boolean jpeg_resync_to_restart(j_decompress_ptr cinfo, int desired) {
   return jpegli_resync_to_restart(cinfo, desired);
 }
+
+void jpeg_new_colormap(j_decompress_ptr cinfo) { jpegli_new_colormap(cinfo); }

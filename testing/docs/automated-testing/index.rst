@@ -48,6 +48,7 @@ analysing the code with a linter.
    "``ES-build``", "`eslint-build </code-quality/lint/linters/eslint.html#eslint-build-es-b>`_", "All", "Extended javascript analysis that uses build artifacts."
    "``mocha(EPM)``", "`ESLint-plugin-mozilla </code-quality/lint/linters/eslint-plugin-mozilla.html>`__", "Desktop", "The ESLint plugin rules."
    "``f8``", "`flake8 </code-quality/lint/linters/flake8.html>`__", "All", "Python analyzed for style and correctness."
+   "``stylelint``", "`Stylelint </code-quality/lint/linters/stylelint.html>`__", "All", "CSS is analyzed for correctness."
    "``W``", "`wpt lint </web-platform/index.html>`__", "Desktop", "web-platform-tests analyzed for style and manifest correctness"
    "``WR(tidy)``", "`WebRender servo-tidy </testing/webrender/index.html>`__", "Desktop", "Code in gfx/wr is run through servo-tidy."
    "``A``", "`Spotless </code-quality/lint/linters/android-format.html>`_", "Android", "Java is analyzed for style and correctness."

@@ -55,9 +55,9 @@ static UOption options[]={
     UOPTION_VERBOSE,            /* 2 */
     UOPTION_ICUDATADIR,         /* 4 */
     UOPTION_COPYRIGHT,          /* 5 */
-    { "uchars", NULL, NULL, NULL, '\1', UOPT_NO_ARG, 0}, /* 6 */
-    { "bytes", NULL, NULL, NULL, '\1', UOPT_NO_ARG, 0}, /* 7 */
-    { "transform", NULL, NULL, NULL, '\1', UOPT_REQUIRES_ARG, 0}, /* 8 */
+    { "uchars", nullptr, nullptr, nullptr, '\1', UOPT_NO_ARG, 0}, /* 6 */
+    { "bytes", nullptr, nullptr, nullptr, '\1', UOPT_NO_ARG, 0}, /* 7 */
+    { "transform", nullptr, nullptr, nullptr, '\1', UOPT_REQUIRES_ARG, 0}, /* 8 */
     UOPTION_QUIET,              /* 9 */
 };
 
@@ -127,7 +127,7 @@ public:
     // it will be returned in status
     // isBytesTrie != 0 will produce a BytesTrieBuilder,
     // isBytesTrie == 0 will produce a UCharsTrieBuilder
-    DataDict(UBool isBytesTrie, UErrorCode &status) : bt(NULL), ut(NULL), 
+    DataDict(UBool isBytesTrie, UErrorCode &status) : bt(nullptr), ut(nullptr), 
         transformConstant(0), transformType(DictionaryData::TRANSFORM_NONE) {
         if (isBytesTrie) {
             bt = new BytesTrieBuilder(status);
@@ -217,16 +217,16 @@ public:
 };
 #endif
 
-static const UChar LINEFEED_CHARACTER = 0x000A;
-static const UChar CARRIAGE_RETURN_CHARACTER = 0x000D;
+static const char16_t LINEFEED_CHARACTER = 0x000A;
+static const char16_t CARRIAGE_RETURN_CHARACTER = 0x000D;
 
 static UBool readLine(UCHARBUF *f, UnicodeString &fileLine, IcuToolErrorCode &errorCode) {
     int32_t lineLength;
-    const UChar *line = ucbuf_readline(f, &lineLength, errorCode);
-    if(line == NULL || errorCode.isFailure()) { return false; }
+    const char16_t *line = ucbuf_readline(f, &lineLength, errorCode);
+    if(line == nullptr || errorCode.isFailure()) { return false; }
     // Strip trailing CR/LF, comments, and spaces.
-    const UChar *comment = u_memchr(line, 0x23, lineLength);  // '#'
-    if(comment != NULL) {
+    const char16_t *comment = u_memchr(line, 0x23, lineLength);  // '#'
+    if(comment != nullptr) {
         lineLength = (int32_t)(comment - line);
     } else {
         while(lineLength > 0 && (line[lineLength - 1] == CARRIAGE_RETURN_CHARACTER || line[lineLength - 1] == LINEFEED_CHARACTER)) { --lineLength; }
@@ -276,7 +276,7 @@ int  main(int argc, char **argv) {
         u_setDataDirectory(options[ARG_ICUDATADIR].value);
     }
 
-    const char *copyright = NULL;
+    const char *copyright = nullptr;
     if (options[ARG_COPYRIGHT].doesOccur) {
         copyright = U_COPYRIGHT_STRING;
     }
@@ -294,18 +294,18 @@ int  main(int argc, char **argv) {
     IcuToolErrorCode status("gendict/main()");
 
 #if UCONFIG_NO_BREAK_ITERATION || UCONFIG_NO_FILE_IO
-    const char* outDir=NULL;
+    const char* outDir=nullptr;
 
     UNewDataMemory *pData;
     char msg[1024];
     UErrorCode tempstatus = U_ZERO_ERROR;
 
     /* write message with just the name */ // potential for a buffer overflow here...
-    sprintf(msg, "gendict writes dummy %s because of UCONFIG_NO_BREAK_ITERATION and/or UCONFIG_NO_FILE_IO, see uconfig.h", outFileName);
+    snprintf(msg, sizeof(msg), "gendict writes dummy %s because of UCONFIG_NO_BREAK_ITERATION and/or UCONFIG_NO_FILE_IO, see uconfig.h", outFileName);
     fprintf(stderr, "%s\n", msg);
 
     /* write the dummy data file */
-    pData = udata_create(outDir, NULL, outFileName, &dataInfo, NULL, &tempstatus);
+    pData = udata_create(outDir, nullptr, outFileName, &dataInfo, nullptr, &tempstatus);
     udata_writeBlock(pData, msg, strlen(msg));
     udata_finish(pData, &tempstatus);
     return (int)tempstatus;
@@ -417,7 +417,7 @@ int  main(int argc, char **argv) {
         exit(status.reset());
     }
     if (verbose) { puts("Opening output file..."); }
-    UNewDataMemory *pData = udata_create(NULL, NULL, outFileName, &dataInfo, copyright, status);
+    UNewDataMemory *pData = udata_create(nullptr, nullptr, outFileName, &dataInfo, copyright, status);
     if (status.isFailure()) {
         fprintf(stderr, "gendict: could not open output file \"%s\", \"%s\"\n", outFileName, status.errorName());
         exit(status.reset());
@@ -463,7 +463,7 @@ int  main(int argc, char **argv) {
             printf("%s -> %i\n", s.data(), val);
         }
     } else {
-        UCharsTrie::Iterator it((const UChar *)outData, outDataSize, status);
+        UCharsTrie::Iterator it((const char16_t *)outData, outDataSize, status);
         while (it.hasNext()) {
             it.next(status);
             const UnicodeString s = it.getString();

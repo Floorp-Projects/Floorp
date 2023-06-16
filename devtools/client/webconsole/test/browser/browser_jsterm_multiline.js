@@ -40,7 +40,7 @@ const SHOULD_EXECUTE = [
   { input: "{2,}" },
 ];
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   for (const { input, shiftKey } of SHOULD_ENTER_MULTILINE) {

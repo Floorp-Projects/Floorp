@@ -318,6 +318,7 @@ function update(state = initialPauseState(), action) {
           pauseCounter: 0,
         },
         threads: {
+          ...state.threads,
           [action.mainThread.actor]: {
             ...getThreadPauseState(state, action.mainThread.actor),
             ...resumedPauseState,

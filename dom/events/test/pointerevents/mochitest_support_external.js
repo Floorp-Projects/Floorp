@@ -5,7 +5,7 @@
 // Function allows to prepare our tests after load document
 addEventListener(
   "load",
-  function(event) {
+  function (event) {
     console.log("OnLoad external document");
     prepareTest();
   },
@@ -32,7 +32,7 @@ function setImplicitPointerCapture(capture, callback) {
 var utils = SpecialPowers.Ci.nsIDOMWindowUtils;
 
 // Mouse Event Helper Object
-var MouseEventHelper = (function() {
+var MouseEventHelper = (function () {
   return {
     MOUSE_ID: utils.DEFAULT_MOUSE_POINTER_ID,
     PEN_ID: utils.DEFAULT_PEN_POINTER_ID,
@@ -231,7 +231,7 @@ function runTestInNewWindow(aFile) {
   // event is fired.
   testWindow.addEventListener(
     "DOMContentLoaded",
-    function() {
+    function () {
       var e = testWindow.document.createElement("script");
       e.type = "text/javascript";
       e.src =
@@ -242,7 +242,7 @@ function runTestInNewWindow(aFile) {
     { once: true }
   );
 
-  window.addEventListener("message", function(aEvent) {
+  window.addEventListener("message", function (aEvent) {
     switch (aEvent.data.type) {
       case "START":
         // Update constants

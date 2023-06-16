@@ -24,7 +24,7 @@
 
 namespace js {
 
-class Sprinter;
+class JS_PUBLIC_API Sprinter;
 class JSONPrinter;
 
 namespace gcstats {

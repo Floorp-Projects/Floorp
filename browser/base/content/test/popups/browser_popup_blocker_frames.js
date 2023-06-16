@@ -89,12 +89,12 @@ async function test_opening_blocked_popups(testURL) {
   }
 }
 
-add_task(async function() {
+add_task(async function () {
   // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   await test_opening_blocked_popups("http://example.com/");
 });
 
-add_task(async function() {
+add_task(async function () {
   // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   await test_opening_blocked_popups("http://w3c-test.org/");
 });

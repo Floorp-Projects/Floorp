@@ -1463,6 +1463,8 @@ struct UtilitySandboxProps {
 
   bool mUseAlternateWindowStation = true;
   bool mUseAlternateDesktop = true;
+  bool mLockdownDefaultDacl = true;
+  bool mAddRestrictingRandomSid = true;
   bool mUseWin32kLockdown = true;
   bool mUseCig = true;
 
@@ -1505,15 +1507,20 @@ struct UtilityAudioDecodingWmfSandboxProps : public UtilitySandboxProps {
 struct UtilityMfMediaEngineCdmSandboxProps : public UtilitySandboxProps {
   UtilityMfMediaEngineCdmSandboxProps() {
     mJobLevel = sandbox::JOB_INTERACTIVE;
-    mDelayedTokenLevel = sandbox::USER_RESTRICTED_NON_ADMIN;
+    mInitialTokenLevel = sandbox::USER_UNPROTECTED;
+    mDelayedTokenLevel = sandbox::USER_UNPROTECTED;
     mUseAlternateDesktop = false;
     mUseAlternateWindowStation = false;
-    // If we are using an LPAC then we can't set an integrity level and the
-    // process will default to low integrity anyway.
-    if (StaticPrefs::security_sandbox_utility_wmf_cdm_lpac_enabled()) {
-      mInitialIntegrityLevel = sandbox::INTEGRITY_LEVEL_LAST;
-      mDelayedIntegrityLevel = sandbox::INTEGRITY_LEVEL_LAST;
+    mLockdownDefaultDacl = false;
+    mAddRestrictingRandomSid = false;
 
+    // When we have an LPAC we can't set an integrity level and the process will
+    // default to low integrity anyway. Without an LPAC using low integrity
+    // causes problems with the CDMs.
+    mInitialIntegrityLevel = sandbox::INTEGRITY_LEVEL_LAST;
+    mDelayedIntegrityLevel = sandbox::INTEGRITY_LEVEL_LAST;
+
+    if (StaticPrefs::security_sandbox_utility_wmf_cdm_lpac_enabled()) {
       mPackagePrefix = u"fx.sb.cdm"_ns;
       mWellKnownCapabilites = {
           sandbox::WellKnownCapabilities::kPrivateNetworkClientServer,
@@ -1534,13 +1541,18 @@ struct UtilityMfMediaEngineCdmSandboxProps : public UtilitySandboxProps {
           L"lpacMediaFoundationCdmData",
           L"registryRead",
           kLpacFirefoxInstallFiles,
+          L"lpacDeviceAccess",
       };
-    } else {
-      mDelayedIntegrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
     }
     mUseWin32kLockdown = false;
-    mDelayedMitigations = sandbox::MITIGATION_STRICT_HANDLE_CHECKS |
-                          sandbox::MITIGATION_DLL_SEARCH_ORDER;
+    mInitialMitigations =
+        sandbox::MITIGATION_BOTTOM_UP_ASLR |
+        sandbox::MITIGATION_HEAP_TERMINATE | sandbox::MITIGATION_SEHOP |
+        sandbox::MITIGATION_EXTENSION_POINT_DISABLE |
+        sandbox::MITIGATION_DEP_NO_ATL_THUNK | sandbox::MITIGATION_DEP |
+        sandbox::MITIGATION_CET_COMPAT_MODE;
+
+    mDelayedMitigations = sandbox::MITIGATION_DLL_SEARCH_ORDER;
   }
 };
 #endif
@@ -1594,6 +1606,10 @@ void LogUtilitySandboxProps(const UtilitySandboxProps& us) {
                       us.mUseAlternateWindowStation ? "yes" : "no");
   logMsg.AppendPrintf("\tUse Alternate Desktop: %s\n",
                       us.mUseAlternateDesktop ? "yes" : "no");
+  logMsg.AppendPrintf("\tLockdown Default Dacl: %s\n",
+                      us.mLockdownDefaultDacl ? "yes" : "no");
+  logMsg.AppendPrintf("\tAdd Random Restricting SID: %s\n",
+                      us.mAddRestrictingRandomSid ? "yes" : "no");
   logMsg.AppendPrintf("\tUse Win32k Lockdown: %s\n",
                       us.mUseWin32kLockdown ? "yes" : "no");
   logMsg.AppendPrintf("\tUse CIG: %s\n", us.mUseCig ? "yes" : "no");
@@ -1656,8 +1672,12 @@ bool BuildUtilitySandbox(sandbox::TargetPolicy* policy,
     }
   }
 
-  policy->SetLockdownDefaultDacl();
-  policy->AddRestrictingRandomSid();
+  if (us.mLockdownDefaultDacl) {
+    policy->SetLockdownDefaultDacl();
+  }
+  if (us.mAddRestrictingRandomSid) {
+    policy->AddRestrictingRandomSid();
+  }
 
   result = policy->SetProcessMitigations(us.mInitialMitigations);
   SANDBOX_ENSURE_SUCCESS(result, "Invalid flags for SetProcessMitigations.");

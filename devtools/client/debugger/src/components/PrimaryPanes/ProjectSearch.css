@@ -43,7 +43,6 @@
 
 .project-text-search .result .line-number {
   grid-column: 1;
-  width: 100%;
   padding-block: 1px;
   padding-inline-start: 4px;
   padding-inline-end: 6px;
@@ -126,17 +125,17 @@
   border-bottom: none;
 }
 
-.project-text-search .managed-tree {
+.project-text-search .tree {
+  overflow-x: hidden;
   overflow-y: auto;
   height: 100%;
-}
-
-.project-text-search .managed-tree .tree {
-  height: 100%;
   display: grid;
+  min-width: 100%;
+  white-space: nowrap;
+  user-select: none;
+  align-content: start;
   /* Align the second column to the search input's text value */
   grid-template-columns: minmax(40px, auto) 1fr;
-  overflow-x: hidden;
   padding-top: 4px;
 }
 
@@ -148,7 +147,7 @@
   height: 4px;
 }
 
-.project-text-search .managed-tree .tree .tree-node {
+.project-text-search .tree .tree-node {
   display: contents;
 }
 

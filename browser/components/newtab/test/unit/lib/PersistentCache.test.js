@@ -1,5 +1,5 @@
 import { GlobalOverrider } from "test/unit/utils";
-import { PersistentCache } from "lib/PersistentCache.jsm";
+import { PersistentCache } from "lib/PersistentCache.sys.mjs";
 
 describe("PersistentCache", () => {
   let fakeIOUtils;

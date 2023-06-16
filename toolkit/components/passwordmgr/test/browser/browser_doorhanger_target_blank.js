@@ -2,7 +2,7 @@
  * Test capture popup notifications when the login form uses target="_blank"
  */
 
-add_setup(async function() {
+add_setup(async function () {
   await SimpleTest.promiseFocus(window);
 });
 
@@ -29,7 +29,7 @@ add_task(async function test_saveTargetBlank() {
       gBrowser,
       url: "http://mochi.test:8888" + DIRECTORY_PATH + url,
     },
-    async function() {
+    async function () {
       // For now the doorhanger appears in the previous tab but it should maybe
       // appear in the new tab from target="_blank"?
       BrowserTestUtils.removeTab(await submissionTabPromise);

@@ -94,7 +94,7 @@ const lazy = createLazyLoaders({
   RecordingUtils: () =>
     require("resource://devtools/shared/performance-new/recording-utils.js"),
   CustomizableUI: () =>
-    ChromeUtils.import("resource:///modules/CustomizableUI.jsm"),
+    ChromeUtils.importESModule("resource:///modules/CustomizableUI.sys.mjs"),
   PerfSymbolication: () =>
     ChromeUtils.import(
       "resource://devtools/client/performance-new/shared/symbolication.jsm.js"
@@ -383,13 +383,8 @@ async function captureProfile(pageContext) {
  * @param {PageContext} pageContext
  */
 function startProfiler(pageContext) {
-  const {
-    entries,
-    interval,
-    features,
-    threads,
-    duration,
-  } = getRecordingSettings(pageContext, Services.profiler.GetFeatures());
+  const { entries, interval, features, threads, duration } =
+    getRecordingSettings(pageContext, Services.profiler.GetFeatures());
 
   // Get the active Browser ID from browser.
   const { getActiveBrowserID } = lazy.RecordingUtils();

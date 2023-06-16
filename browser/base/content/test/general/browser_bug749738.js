@@ -17,7 +17,7 @@ add_task(async function test_bug749738() {
   // Open find bar on initial tab.
   await gFindBarPromise;
 
-  await BrowserTestUtils.withNewTab(DUMMY_PAGE, async function() {
+  await BrowserTestUtils.withNewTab(DUMMY_PAGE, async function () {
     await gFindBarPromise;
     gFindBar.onFindCommand();
     EventUtils.sendString("Dummy");

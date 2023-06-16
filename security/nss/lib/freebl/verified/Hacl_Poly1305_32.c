@@ -23,7 +23,7 @@
 
 #include "Hacl_Poly1305_32.h"
 
-uint32_t Hacl_Poly1305_32_blocklen = (uint32_t)16U;
+#include "internal/Hacl_Krmllib.h"
 
 void
 Hacl_Poly1305_32_poly1305_init(uint64_t *ctx, uint8_t *key)

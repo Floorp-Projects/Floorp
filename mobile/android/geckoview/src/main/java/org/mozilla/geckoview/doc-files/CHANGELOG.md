@@ -13,19 +13,35 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v115
+- Changed [`SessionPdfFileSaver.createResponse`][115.1] to response of saving PDF to accept two additional
+  arguments: `skipConfirmation` and `requestExternalApp`.
+- Added [`GeckoDisplay.NewSurfaceProvider`][115.2] interface, which allows Gecko to request a new rendering Surface from the application.
+  ([bug 1824083]({{bugzilla}}1824083))
+- Add [`onPrintWithStatus`][115.3] to retrieve additional printing status information.
+- Added new [`GeckoPrintException`][115.4] errors of `ERROR_NO_ACTIVITY_CONTEXT` and `ERROR_NO_ACTIVITY_CONTEXT_DELEGATE`
+- Added [`GeckoSession.ContentDelegate.onGetNimbusFeature`][115.5]
+- Added [`textContent`][115.6] to [`ContentDelegate.ContextElement`][65.21] and a new [`constructor`][115.7] to [`ContentDelegate.ContextElement`][65.21]
+- Changed [`SessionPdfFileSaver.createResponse`][115.8] to response of saving PDF to accept an url and return a [`GeckoResult<WebResponse>`].
+- ⚠️ Deprecated [`GeckoSession.PdfSaveResult`][111.7]
+
+[115.1]: {{javadoc_uri}}/SessionPdfFileSaver.html#createResponse(byte[], String, String, boolean, boolean)
+[115.2]: {{javadoc_uri}}/GeckoDisplay.NewSurfaceProvider.html
+[115.3]: {{javadoc_uri}}/GeckoSession.PrintDelegate.html#onPrintWithStatus
+[115.4]: {{javadoc_uri}}/GeckoSession.GeckoPrintException.html
+[115.5]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onGetNimbusFeature(org.mozilla.geckoview.GeckoSession)
+[115.6]: {{javadoc_uri}}/GeckoSession.ContentDelegate.ContextElement.html#textContent
+[115.7]: {{javadoc_uri}}/GeckoSession.ContentDelegate.ContextElement.html#<init>(java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String)
+[115.8]: {{javadoc_uri}}/SessionPdfFileSaver.html#createResponse(GeckoSession, String, String, String, boolean, boolean)
+
 ## v114
 - Add [`SessionPdfFileSaver.createResponse`][114.1] to response of saving PDF.
 - Added [`requestExternalApp`][114.2] and [`skipConfirmation`][114.3] with builder fields on a WebResponse to request that a downloaded file be opened in an external application or to skip a confirmation, respectively.
 - ⚠️ Removed deprecated [`CookieBannerMode.COOKIE_BANNER_MODE_DETECT_ONLY`][111.1]
-- Add [`onPrintWithStatus`][114.4] to retrieve additional printing status information.
-- Changed [`SessionPdfFileSaver.createResponse`][114.5] to response of saving PDF to accept two additional
-  arguments: `skipConfirmation` and `requestExternalApp`.
 
 [114.1]: {{javadoc_uri}}/SessionPdfFileSaver.html#createResponse(byte[], String, String)
 [114.2]: {{javadoc_uri}}/WebResponse.html#requestExternalApp
 [114.3]: {{javadoc_uri}}/WebResponse.html#skipConfirmation
-[114.4]: {{javadoc_uri}}/GeckoSession.PrintDelegate.html#onPrintWithStatus
-[114.5]: {{javadoc_uri}}/SessionPdfFileSaver.html#createResponse(byte[], String, String, boolean, boolean)
 
 ## v113
 - Add `DisplayMdoe` annotation to [`displayMode`][113.1], [`getDisplayMode`][113.2] and [`setDisplayMode`][113.3].
@@ -1360,4 +1376,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 1350b0e1b018e9a22853f486a819716b9b0ed05c
+[api-version]: aa4d7a44b1bdd7687884196affc6af0555ac7253

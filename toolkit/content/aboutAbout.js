@@ -7,7 +7,7 @@ const { AboutPagesUtils } = ChromeUtils.importESModule(
 );
 
 var gContainer;
-window.onload = function() {
+window.onload = function () {
   gContainer = document.getElementById("abouts");
   AboutPagesUtils.visibleAboutUrls.forEach(createProtocolListing);
 };

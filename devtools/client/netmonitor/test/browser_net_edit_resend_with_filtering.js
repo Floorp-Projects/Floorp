@@ -7,7 +7,7 @@
  * Tests if resending a XHR request while filtering XHR displays
  * the correct requests
  */
-add_task(async function() {
+add_task(async function () {
   if (
     Services.prefs.getBoolPref(
       "devtools.netmonitor.features.newEditAndResend",
@@ -85,7 +85,7 @@ add_task(async function() {
  * Tests if resending an XHR request while XHR filtering is on, displays
  * the correct requests
  */
-add_task(async function() {
+add_task(async function () {
   if (
     Services.prefs.getBoolPref(
       "devtools.netmonitor.features.newEditAndResend",

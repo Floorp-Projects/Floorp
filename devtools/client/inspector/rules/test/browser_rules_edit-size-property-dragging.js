@@ -32,7 +32,7 @@ const TEST_URI = `
 
 const DRAGGABLE_VALUE_CLASSNAME = "ruleview-propertyvalue-draggable";
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.inspector.draggable_properties", true);
 
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
@@ -153,8 +153,9 @@ async function testIncrementAngleValue(view) {
 
 async function testPressingEscapeWhileDragging(view) {
   info("Testing pressing escape while dragging with mouse");
-  const marginPropEditor = getTextProperty(view, 1, { "margin-bottom": "0px" })
-    .editor;
+  const marginPropEditor = getTextProperty(view, 1, {
+    "margin-bottom": "0px",
+  }).editor;
   await runIncrementTest(marginPropEditor, view, [
     {
       startValue: "0px",

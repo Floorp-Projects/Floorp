@@ -68,7 +68,7 @@ rtc::Buffer GenerateNalUnit(size_t size) {
 // Create frame consisting of nalus of given size.
 rtc::Buffer CreateFrame(std::initializer_list<size_t> nalu_sizes) {
   static constexpr int kStartCodeSize = 3;
-  rtc::Buffer frame(absl::c_accumulate(nalu_sizes, 0) +
+  rtc::Buffer frame(absl::c_accumulate(nalu_sizes, size_t{0}) +
                     kStartCodeSize * nalu_sizes.size());
   size_t offset = 0;
   for (size_t nalu_size : nalu_sizes) {

@@ -9,7 +9,7 @@
 // NOTE: Using a real file instead data: URL since the bug won't happen on data: URL
 const TEST_URI = URL_ROOT + "doc_inspector_highlighter_scroll.html";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URI);
 
   await scrollContentPageNodeIntoView(gBrowser.selectedBrowser, "a");

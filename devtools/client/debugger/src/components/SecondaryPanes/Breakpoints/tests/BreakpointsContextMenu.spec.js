@@ -69,6 +69,7 @@ function generateDefaults(disabled) {
     contextMenuEvent: { preventDefault: jest.fn() },
     selectedSource: makeMockSource(),
     setBreakpointOptions: jest.fn(),
+    checkSourceOnIgnoreList: jest.fn(),
   };
   return props;
 }

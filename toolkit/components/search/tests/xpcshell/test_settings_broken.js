@@ -83,9 +83,10 @@ add_task(async function setup() {
   enginesSettings.metaData.hash = SearchUtils.getVerificationHash(
     enginesSettings.metaData.current
   );
-  enginesSettings.metaData.visibleDefaultEnginesHash = SearchUtils.getVerificationHash(
-    enginesSettings.metaData.visibleDefaultEngines
-  );
+  enginesSettings.metaData.visibleDefaultEnginesHash =
+    SearchUtils.getVerificationHash(
+      enginesSettings.metaData.visibleDefaultEngines
+    );
   const appInfo = getAppInfo();
   enginesSettings.buildID = appInfo.platformBuildID;
   enginesSettings.appVersion = appInfo.version;

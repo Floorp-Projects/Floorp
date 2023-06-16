@@ -35,7 +35,7 @@ async function trigger401AndHandle(doConfirmPrompt, crossDomain, prefEnabled) {
   });
   let url = crossDomain ? CROSS_DOMAIN_URL : SAME_DOMAIN_URL;
   let dialogShown = waitForDialog(doConfirmPrompt, crossDomain, prefEnabled);
-  await BrowserTestUtils.withNewTab(url, async function() {
+  await BrowserTestUtils.withNewTab(url, async function () {
     await dialogShown;
   });
   await new Promise(resolve => {
@@ -177,7 +177,7 @@ async function waitForDialog(doConfirmPrompt, crossDomain, prefEnabled) {
   );
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.authPromptSpoofingProtection", true]],
   });

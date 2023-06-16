@@ -7,6 +7,7 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
   LoginBreaches: "resource:///modules/LoginBreaches.sys.mjs",
   LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
@@ -17,7 +18,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   FXA_PWDMGR_HOST: "resource://gre/modules/FxAccountsCommon.js",
   FXA_PWDMGR_REALM: "resource://gre/modules/FxAccountsCommon.js",
-  AddonManager: "resource://gre/modules/AddonManager.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
@@ -192,9 +192,8 @@ export class AboutProtectionsParent extends JSWindowActorParent {
     // if the Primary Password isn't locked.
     if (userFacingLogins && Services.logins.isLoggedIn) {
       const logins = await lazy.LoginHelper.getAllUserFacingLogins();
-      potentiallyBreachedLogins = await lazy.LoginBreaches.getPotentialBreachesByLoginGUID(
-        logins
-      );
+      potentiallyBreachedLogins =
+        await lazy.LoginBreaches.getPotentialBreachesByLoginGUID(logins);
     }
 
     let mobileDeviceConnected =
@@ -385,7 +384,8 @@ export class AboutProtectionsParent extends JSWindowActorParent {
           return dataToSend;
         }
         let sumEvents = await lazy.TrackingDBService.sumAllEvents();
-        let earliestDate = await lazy.TrackingDBService.getEarliestRecordedDate();
+        let earliestDate =
+          await lazy.TrackingDBService.getEarliestRecordedDate();
         let eventsByDate = await lazy.TrackingDBService.getEventsByDateRange(
           aMessage.data.from,
           aMessage.data.to

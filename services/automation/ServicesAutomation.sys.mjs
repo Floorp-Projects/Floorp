@@ -140,15 +140,15 @@ export var Authentication = {
     let mainWindow = Services.wm.getMostRecentWindow("navigator:browser");
     let newtab = mainWindow.gBrowser.addWebTab(uri);
     let win = mainWindow.gBrowser.getBrowserForTab(newtab);
-    win.addEventListener("load", function(e) {
+    win.addEventListener("load", function (e) {
       LOG("load");
     });
 
-    win.addEventListener("loadstart", function(e) {
+    win.addEventListener("loadstart", function (e) {
       LOG("loadstart");
     });
 
-    win.addEventListener("error", function(msg, url, lineNo, columnNo, error) {
+    win.addEventListener("error", function (msg, url, lineNo, columnNo, error) {
       var string = msg.toLowerCase();
       var substring = "script error";
       if (string.indexOf(substring) > -1) {
@@ -173,7 +173,7 @@ export var Authentication = {
         resolve();
       };
       var timer = lazy.setTimeout(handlerTimeout, 10000);
-      win.addEventListener("loadend", function() {
+      win.addEventListener("loadend", function () {
         resolve();
         lazy.clearTimeout(timer);
       });
@@ -376,7 +376,7 @@ export var Sync = {
         });
       }
 
-      entries.sort(function(a, b) {
+      entries.sort(function (a, b) {
         return b.lastModified - a.lastModified;
       });
     }

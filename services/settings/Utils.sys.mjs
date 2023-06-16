@@ -207,7 +207,7 @@ export var Utils = {
    * @returns a Response object
    */
   async fetch(input, init = {}) {
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
       const request = new ServiceRequest();
       function fallbackOrReject(err) {
         if (

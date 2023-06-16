@@ -6,7 +6,7 @@
 
 // Test dynamic updates in the storage inspector for sessionStorage.
 
-add_task(async function() {
+add_task(async function () {
   await openTabAndSetupStorage(MAIN_DOMAIN_SECURED + "storage-updates.html");
 
   gUI.tree.expandAll();
@@ -64,7 +64,7 @@ add_task(async function() {
   await findVariableViewProperties([{ name: "ss2", value: "changed=ss2" }]);
 
   // Clearing items.
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.wrappedJSObject.clear();
   });
 

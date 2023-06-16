@@ -58,8 +58,6 @@ struct UniqueIdGCPolicy {
 using UniqueIdMap = GCHashMap<Cell*, uint64_t, PointerHasher<Cell*>,
                               SystemAllocPolicy, UniqueIdGCPolicy>;
 
-extern uint64_t NextCellUniqueId(JSRuntime* rt);
-
 template <typename T>
 class ZoneAllCellIter;
 
@@ -177,18 +175,6 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   js::MainThreadOrGCTaskData<size_t> markedStrings;
   js::MainThreadOrGCTaskData<size_t> finalizedStrings;
 
-  // Flags permanently set when nursery allocation is disabled for this zone.
-  js::MainThreadData<bool> nurseryStringsDisabled;
-  js::MainThreadData<bool> nurseryBigIntsDisabled;
-
- private:
-  // Flags dynamically updated based on more than one condition, including the
-  // flags above.
-  js::MainThreadData<bool> allocNurseryObjects_;
-  js::MainThreadData<bool> allocNurseryStrings_;
-  js::MainThreadData<bool> allocNurseryBigInts_;
-
- public:
   // When true, skip calling the metadata callback. We use this:
   // - to avoid invoking the callback recursively;
   // - to avoid observing lazy prototype setup (which confuses callbacks that
@@ -198,6 +184,23 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   // And so on.
   js::MainThreadData<bool> suppressAllocationMetadataBuilder;
 
+  // Flags permanently set when nursery allocation is disabled for this zone.
+  js::MainThreadData<bool> nurseryStringsDisabled;
+  js::MainThreadData<bool> nurseryBigIntsDisabled;
+
+ private:
+  // Flags dynamically updated based on more than one condition, including the
+  // flags above.
+  js::MainThreadOrIonCompileData<bool> allocNurseryObjects_;
+  js::MainThreadOrIonCompileData<bool> allocNurseryStrings_;
+  js::MainThreadOrIonCompileData<bool> allocNurseryBigInts_;
+
+  // Minimum Heap value which results in tenured allocation.
+  js::MainThreadData<js::gc::Heap> minObjectHeapToTenure_;
+  js::MainThreadData<js::gc::Heap> minStringHeapToTenure_;
+  js::MainThreadData<js::gc::Heap> minBigintHeapToTenure_;
+
+ public:
   // Script side-tables. These used to be held by Realm, but are now placed
   // here in order to allow JSScript to access them during finalize (see bug
   // 1568245; this change in 1575350). The tables are initialized lazily by
@@ -299,7 +302,7 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 
   using KeptAliveSet =
       JS::GCHashSet<js::HeapPtr<JSObject*>,
-                    js::MovableCellHasher<js::HeapPtr<JSObject*>>,
+                    js::StableCellHasher<js::HeapPtr<JSObject*>>,
                     js::ZoneAllocPolicy>;
   friend class js::WeakRefObject;
   js::MainThreadOrGCTaskData<KeptAliveSet> keptObjects;
@@ -471,9 +474,35 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   void fixupScriptMapsAfterMovingGC(JSTracer* trc);
 
   void updateNurseryAllocFlags(const js::Nursery& nursery);
+
+  bool allocKindInNursery(JS::TraceKind kind) const {
+    switch (kind) {
+      case JS::TraceKind::Object:
+        return allocNurseryObjects_;
+      case JS::TraceKind::String:
+        return allocNurseryStrings_;
+      case JS::TraceKind::BigInt:
+        return allocNurseryBigInts_;
+      default:
+        MOZ_CRASH("Unsupported kind for nursery allocation");
+    }
+  }
   bool allocNurseryObjects() const { return allocNurseryObjects_; }
   bool allocNurseryStrings() const { return allocNurseryStrings_; }
   bool allocNurseryBigInts() const { return allocNurseryBigInts_; }
+
+  js::gc::Heap minHeapToTenure(JS::TraceKind kind) const {
+    switch (kind) {
+      case JS::TraceKind::Object:
+        return minObjectHeapToTenure_;
+      case JS::TraceKind::String:
+        return minStringHeapToTenure_;
+      case JS::TraceKind::BigInt:
+        return minBigintHeapToTenure_;
+      default:
+        MOZ_CRASH("Unsupported kind for nursery allocation");
+    }
+  }
 
   mozilla::LinkedList<detail::WeakCacheBase>& weakCaches() {
     return weakCaches_.ref();
@@ -545,31 +574,6 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   BoundPrefixCache& boundPrefixCache() { return boundPrefixCache_.ref(); }
 
   js::ShapeZone& shapeZone() { return shapeZone_.ref(); }
-
-  // Gets an existing UID in |uidp| if one exists.
-  [[nodiscard]] bool maybeGetUniqueId(js::gc::Cell* cell, uint64_t* uidp);
-
-  [[nodiscard]] bool maybeGetHashCode(js::gc::Cell* cell,
-                                      js::HashNumber* hashOut);
-
-  // Puts an existing UID in |uidp|, or creates a new UID for this Cell and
-  // puts that into |uidp|. Returns false on OOM.
-  [[nodiscard]] bool getOrCreateUniqueId(js::gc::Cell* cell, uint64_t* uidp);
-  [[nodiscard]] bool getOrCreateHashCode(js::gc::Cell* cell,
-                                         js::HashNumber* hashOut);
-
-  js::HashNumber getHashCodeInfallible(js::gc::Cell* cell);
-  uint64_t getUniqueIdInfallible(js::gc::Cell* cell);
-
-  // Return true if this cell has a UID associated with it.
-  [[nodiscard]] bool hasUniqueId(js::gc::Cell* cell);
-
-  // Transfer an id from another cell. This must only be called on behalf of a
-  // moving GC. This method is infallible.
-  void transferUniqueId(js::gc::Cell* tgt, js::gc::Cell* src);
-
-  // Remove any unique id associated with this Cell.
-  void removeUniqueId(js::gc::Cell* cell);
 
   bool keepPropMapTables() const { return keepPropMapTables_; }
   void setKeepPropMapTables(bool b) { keepPropMapTables_ = b; }

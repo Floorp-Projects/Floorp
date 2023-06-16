@@ -10,6 +10,7 @@
 
 MSG_DEF(JSSMSG_NOT_AN_ERROR,            0, JSEXN_ERR, "<Error #0 is reserved>")
 MSG_DEF(JSSMSG_CANT_OPEN,               2, JSEXN_ERR, "can't open {0}: {1}")
+MSG_DEF(JSSMSG_CANT_READ,               2, JSEXN_ERR, "can't read {0}: {1}")
 MSG_DEF(JSSMSG_LINE2PC_USAGE,           0, JSEXN_ERR, "usage: line2pc [fun] line")
 MSG_DEF(JSSMSG_FILE_SCRIPTS_ONLY,       0, JSEXN_ERR, "only works on JS scripts read from files")
 MSG_DEF(JSSMSG_UNEXPECTED_EOF,          1, JSEXN_ERR, "unexpected EOF in {0}")

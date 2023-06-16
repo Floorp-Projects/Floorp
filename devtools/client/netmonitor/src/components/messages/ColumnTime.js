@@ -33,22 +33,10 @@ class ColumnTime extends Component {
    */
   formatTime(highResTimeStamp) {
     const date = new Date(highResTimeStamp / 1000);
-    const hh = date
-      .getHours()
-      .toString()
-      .padStart(2, "0");
-    const mm = date
-      .getMinutes()
-      .toString()
-      .padStart(2, "0");
-    const ss = date
-      .getSeconds()
-      .toString()
-      .padStart(2, "0");
-    const mmm = date
-      .getMilliseconds()
-      .toString()
-      .padStart(3, "0");
+    const hh = date.getHours().toString().padStart(2, "0");
+    const mm = date.getMinutes().toString().padStart(2, "0");
+    const ss = date.getSeconds().toString().padStart(2, "0");
+    const mmm = date.getMilliseconds().toString().padStart(3, "0");
     return `${hh}:${mm}:${ss}.${mmm}`;
   }
 

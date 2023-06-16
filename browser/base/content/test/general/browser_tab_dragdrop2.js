@@ -7,7 +7,7 @@ const URI = ROOT + "browser_tab_dragdrop2_frame1.xhtml";
 // After the tests were run, tear off the tab into a new window and run popup
 // tests a second time. We don't care about tests results, exceptions and
 // crashes will be caught.
-add_task(async function() {
+add_task(async function () {
   // Open a new window.
   let args = "chrome,all,dialog=no";
   let win = window.openDialog(

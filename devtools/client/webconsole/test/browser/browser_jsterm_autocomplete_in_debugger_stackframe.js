@@ -12,7 +12,7 @@ const TEST_URI =
 
 requestLongerTimeout(20);
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm } = hud;
   const { autocompletePopup: popup } = jsterm;

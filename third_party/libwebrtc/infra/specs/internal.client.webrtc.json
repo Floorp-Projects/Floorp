@@ -489,8 +489,9 @@
       {
         "args": [
           "--write_perf_output_on_ios",
+          "--xctest",
           "--xcode-build-version",
-          "12d4e",
+          "13c100",
           "--out-dir",
           "${ISOLATED_OUTDIR}",
           "--nologs"
@@ -529,7 +530,7 @@
           "io_timeout": 10800,
           "named_caches": [
             {
-              "name": "xcode_ios_12d4e",
+              "name": "xcode_ios_13c100",
               "path": "Xcode.app"
             }
           ],

@@ -17,9 +17,8 @@ add_task(async function testRemoteClientManager() {
     const clientId = "clientId";
     const remoteId = remoteClientManager.getRemoteId(clientId, type);
 
-    const connectionType = remoteClientManager.getConnectionTypeByRemoteId(
-      remoteId
-    );
+    const connectionType =
+      remoteClientManager.getConnectionTypeByRemoteId(remoteId);
     equal(
       connectionType,
       type,
@@ -136,9 +135,8 @@ add_task(async function testRemoteClientManagerWithUnknownType() {
     "someClientId",
     "NotARealType"
   );
-  const connectionType = remoteClientManager.getConnectionTypeByRemoteId(
-    remoteId
-  );
+  const connectionType =
+    remoteClientManager.getConnectionTypeByRemoteId(remoteId);
   equal(
     connectionType,
     CONNECTION_TYPES.UNKNOWN,

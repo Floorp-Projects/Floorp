@@ -5,7 +5,7 @@
 /**
  * Test that top-level net monitor error boundary catches child errors.
  */
-add_task(async function() {
+add_task(async function () {
   const { monitor } = await initNetMonitor(SIMPLE_URL, {
     requestCount: 1,
   });

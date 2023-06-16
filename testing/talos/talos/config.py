@@ -339,7 +339,6 @@ def get_browser_config(config):
         "xperf_path": None,
         "error_filename": None,
         "no_upload_results": False,
-        "stylothreads": 0,
         "subtests": None,
         "preferences": {},
     }

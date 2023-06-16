@@ -10,7 +10,7 @@ const ID = "eye-dropper-";
 const TEST_URI =
   "data:text/html;charset=utf-8,<style>html{background:red}</style>";
 
-add_task(async function() {
+add_task(async function () {
   const helper = await openInspectorForURL(TEST_URI).then(
     getHighlighterHelperFor(HIGHLIGHTER_TYPE)
   );

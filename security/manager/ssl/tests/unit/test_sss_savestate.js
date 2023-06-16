@@ -89,7 +89,7 @@ function checkStateWritten(aSubject, aTopic, aData) {
   process_headers();
 
   // Wait a bit before finishing the test, to see if another write happens.
-  do_timeout(2000, function() {
+  do_timeout(2000, function () {
     do_test_finished();
   });
 }

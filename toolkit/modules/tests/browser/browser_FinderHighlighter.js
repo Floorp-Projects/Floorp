@@ -5,7 +5,7 @@ const kIteratorTimeout = Services.prefs.getIntPref("findbar.iteratorTimeout");
 const kPrefHighlightAll = "findbar.highlightAll";
 const kPrefModalHighlight = "findbar.modalHighlight";
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       [kPrefHighlightAll, true],
@@ -33,7 +33,7 @@ add_task(async function testModalResults() {
         insertCalls: [5, 6],
         removeCalls: [4, 5],
         // eslint-disable-next-line object-shorthand
-        extraTest: function(maskNode, outlineNode, rects) {
+        extraTest: function (maskNode, outlineNode, rects) {
           Assert.equal(
             outlineNode.getElementsByTagName("div").length,
             2,
@@ -68,7 +68,7 @@ add_task(async function testModalResults() {
     ],
   ]);
   let url = kFixtureBaseURL + "file_FinderSample.html";
-  await BrowserTestUtils.withNewTab(url, async function(browser) {
+  await BrowserTestUtils.withNewTab(url, async function (browser) {
     let findbar = await gBrowser.getFindBar();
 
     for (let [word, expectedResult] of tests) {
@@ -100,7 +100,7 @@ add_task(async function testModalResults() {
 // as expected.
 add_task(async function testModalSwitching() {
   let url = kFixtureBaseURL + "file_FinderSample.html";
-  await BrowserTestUtils.withNewTab(url, async function(browser) {
+  await BrowserTestUtils.withNewTab(url, async function (browser) {
     let findbar = await gBrowser.getFindBar();
 
     await promiseOpenFindbar(findbar);
@@ -137,7 +137,7 @@ add_task(async function testModalSwitching() {
 // Test if highlighting a dark page is detected properly.
 add_task(async function testDarkPageDetection() {
   let url = kFixtureBaseURL + "file_FinderSample.html";
-  await BrowserTestUtils.withNewTab(url, async function(browser) {
+  await BrowserTestUtils.withNewTab(url, async function (browser) {
     let findbar = await gBrowser.getFindBar();
 
     await promiseOpenFindbar(findbar);
@@ -152,7 +152,7 @@ add_task(async function testDarkPageDetection() {
       browser,
       word,
       expectedResult,
-      function(node) {
+      function (node) {
         Assert.ok(
           node.style.background.startsWith("rgba(0, 0, 0"),
           "White HTML page should have a black background color set for the mask"
@@ -165,7 +165,7 @@ add_task(async function testDarkPageDetection() {
     findbar.close(true);
   });
 
-  await BrowserTestUtils.withNewTab(url, async function(browser) {
+  await BrowserTestUtils.withNewTab(url, async function (browser) {
     let findbar = await gBrowser.getFindBar();
 
     await promiseOpenFindbar(findbar);
@@ -177,7 +177,7 @@ add_task(async function testDarkPageDetection() {
       removeCalls: [0, 1],
     };
 
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       let dwu = content.windowUtils;
       let uri =
         "data:text/css;charset=utf-8," +
@@ -211,7 +211,7 @@ add_task(async function testDarkPageDetection() {
 
 add_task(async function testHighlightAllToggle() {
   let url = kFixtureBaseURL + "file_FinderSample.html";
-  await BrowserTestUtils.withNewTab(url, async function(browser) {
+  await BrowserTestUtils.withNewTab(url, async function (browser) {
     let findbar = await gBrowser.getFindBar();
 
     await promiseOpenFindbar(findbar);
@@ -257,7 +257,7 @@ add_task(async function testXMLDocument() {
   <Title>Example</Title>
   <Error>Error</Error>
 </result>`);
-  await BrowserTestUtils.withNewTab(url, async function(browser) {
+  await BrowserTestUtils.withNewTab(url, async function (browser) {
     let findbar = await gBrowser.getFindBar();
 
     await promiseOpenFindbar(findbar);
@@ -308,7 +308,7 @@ add_task(async function testHideOnLocationChange() {
 
 add_task(async function testHideOnClear() {
   let url = kFixtureBaseURL + "file_FinderSample.html";
-  await BrowserTestUtils.withNewTab(url, async function(browser) {
+  await BrowserTestUtils.withNewTab(url, async function (browser) {
     let findbar = await gBrowser.getFindBar();
     await promiseOpenFindbar(findbar);
 
@@ -343,7 +343,7 @@ add_task(async function testRectsAndTexts() {
         "Here are a lot of words Please use find to highlight some words that wrap" +
         " across a line boundary and see what happens.</div>"
     );
-  await BrowserTestUtils.withNewTab(url, async function(browser) {
+  await BrowserTestUtils.withNewTab(url, async function (browser) {
     let findbar = await gBrowser.getFindBar();
     await promiseOpenFindbar(findbar);
 
@@ -383,11 +383,11 @@ add_task(async function testRectsAndTexts() {
 
 add_task(async function testTooLargeToggle() {
   let url = kFixtureBaseURL + "file_FinderSample.html";
-  await BrowserTestUtils.withNewTab(url, async function(browser) {
+  await BrowserTestUtils.withNewTab(url, async function (browser) {
     let findbar = await gBrowser.getFindBar();
     await promiseOpenFindbar(findbar);
 
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       let dwu = content.windowUtils;
       let uri =
         "data:text/css;charset=utf-8," +

@@ -50,7 +50,6 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_mousewheel.h"
-#include "mozilla/StaticPrefs_plugin.h"
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/StaticPrefs_zoom.h"
 
@@ -3603,7 +3602,9 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           do_QueryFrame(ComputeScrollTargetAndMayAdjustWheelEvent(
               mCurrentTarget, wheelEvent,
               COMPUTE_DEFAULT_ACTION_TARGET_WITH_AUTO_DIR));
-      if (scrollTarget) {
+      // If the wheel event was handled by APZ, APZ will perform the scroll
+      // snap.
+      if (scrollTarget && !WheelTransaction::HandledByApz()) {
         scrollTarget->ScrollSnap();
       }
     } break;
@@ -5512,11 +5513,12 @@ nsresult EventStateManager::HandleMiddleClickPaste(
   // If Control key is pressed, we should paste clipboard content as
   // quotation.  Otherwise, paste it as is.
   if (aMouseEvent->IsControl()) {
-    DebugOnly<nsresult> rv =
-        aEditorBase->PasteAsQuotationAsAction(clipboardType, false);
+    DebugOnly<nsresult> rv = aEditorBase->PasteAsQuotationAsAction(
+        clipboardType, EditorBase::DispatchPasteEvent::No);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to paste as quotation");
   } else {
-    DebugOnly<nsresult> rv = aEditorBase->PasteAsAction(clipboardType, false);
+    DebugOnly<nsresult> rv = aEditorBase->PasteAsAction(
+        clipboardType, EditorBase::DispatchPasteEvent::No);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to paste");
   }
   *aStatus = nsEventStatus_eConsumeNoDefault;
@@ -6064,15 +6066,15 @@ nsresult EventStateManager::DoContentCommandEvent(
           BrowserParent* remote = BrowserParent::GetFocused();
           if (remote) {
             nsCOMPtr<nsITransferable> transferable = aEvent->mTransferable;
-            IPCDataTransfer ipcDataTransfer;
-            nsContentUtils::TransferableToIPCTransferable(
-                transferable, &ipcDataTransfer, false, remote->Manager());
+            IPCTransferableData ipcTransferableData;
+            nsContentUtils::TransferableToIPCTransferableData(
+                transferable, &ipcTransferableData, false, remote->Manager());
             bool isPrivateData = transferable->GetIsPrivateData();
             nsCOMPtr<nsIPrincipal> requestingPrincipal =
                 transferable->GetRequestingPrincipal();
             nsContentPolicyType contentPolicyType =
                 transferable->GetContentPolicyType();
-            remote->SendPasteTransferable(std::move(ipcDataTransfer),
+            remote->SendPasteTransferable(std::move(ipcTransferableData),
                                           isPrivateData, requestingPrincipal,
                                           contentPolicyType);
             rv = NS_OK;

@@ -767,6 +767,18 @@ enum vp8e_enc_control_id {
    *
    */
   VP9E_SET_QUANTIZER_ONE_PASS,
+
+  /*!\brief Codec control to get TPL stats for the current GOP.
+   *
+   * Allocation and free of memory of size MAX_ARF_GOP_SIZE (50) *
+   * sizeof(VpxTplFrameStats) should be done by applications.
+   *
+   * VPX_CODEC_INVALID_PARAM will be returned if the pointer passed in is NULL.
+   *
+   * Supported in codecs: VP9
+   *
+   */
+  VP9E_GET_TPL_STATS,
 };
 
 /*!\brief vpx 1-D scaling mode
@@ -1097,6 +1109,8 @@ VPX_CTRL_USE_TYPE(VP8E_SET_RTC_EXTERNAL_RATECTRL, int)
 #define VPX_CTRL_VP8E_SET_RTC_EXTERNAL_RATECTRL
 VPX_CTRL_USE_TYPE(VP9E_SET_QUANTIZER_ONE_PASS, int)
 #define VPX_CTRL_VP9E_SET_QUANTIZER_ONE_PASS
+VPX_CTRL_USE_TYPE(VP9E_GET_TPL_STATS, void *)
+#define VPX_CTRL_VP9E_GET_TPL_STATS
 
 /*!\endcond */
 /*! @} - end defgroup vp8_encoder */

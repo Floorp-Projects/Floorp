@@ -9,7 +9,7 @@
 const TEST_URI =
   "http://example.com/browser/devtools/client/webconsole/test/browser/test-console.html";
 
-add_task(async function() {
+add_task(async function () {
   // Show the content messages
   await pushPref("devtools.browsertoolbox.scope", "everything");
 
@@ -21,7 +21,7 @@ add_task(async function() {
   const hud = await BrowserConsoleManager.toggleBrowserConsole();
 
   info("Log a new message from the content page");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.console.log({ hello: "world" });
   });
 

@@ -22,7 +22,7 @@ const EXPECTED = {
   text: "Math;function ga(a,b){return a.name=b}",
 };
 
-module.exports = async function() {
+module.exports = async function () {
   await testSetup(COMPLICATED_URL);
 
   let toolbox = await openDebuggerAndLog("complicated", EXPECTED);

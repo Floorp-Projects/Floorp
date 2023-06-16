@@ -117,7 +117,7 @@ const EXPRESSIONS_BY_FILE = {
   // "regexp.js",
 };
 
-add_task(async function() {
+add_task(async function () {
   const isStubsUpdate = Services.env.get(STUBS_UPDATE_ENV) == "true";
 
   const tab = await addTab(TEST_URI);
@@ -323,7 +323,7 @@ function getSerializedPacket(
 
   return JSON.stringify(
     packet,
-    function(key, value) {
+    function (key, value) {
       // The message can have fronts that we need to serialize
       if (value && value._grip) {
         return {

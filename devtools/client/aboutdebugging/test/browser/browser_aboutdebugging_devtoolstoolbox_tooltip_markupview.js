@@ -15,7 +15,7 @@ Services.scriptloader.loadSubScript(
 /**
  * Test tooltip of markup view on about:devtools-toolbox page.
  */
-add_task(async function() {
+add_task(async function () {
   info("Force all debug target panes to be expanded");
   prepareCollapsibilitiesTest();
 
@@ -24,11 +24,8 @@ add_task(async function() {
 
   const { document, tab, window } = await openAboutDebugging();
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
-  const {
-    devtoolsDocument,
-    devtoolsTab,
-    devtoolsWindow,
-  } = await openAboutDevtoolsToolbox(document, tab, window);
+  const { devtoolsDocument, devtoolsTab, devtoolsWindow } =
+    await openAboutDevtoolsToolbox(document, tab, window);
 
   info("Select inspector tool");
   const toolbox = getToolbox(devtoolsWindow);

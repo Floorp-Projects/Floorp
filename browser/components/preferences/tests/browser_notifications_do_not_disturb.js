@@ -1,13 +1,13 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   while (gBrowser.tabs[1]) {
     gBrowser.removeTab(gBrowser.tabs[1]);
   }
 });
 
-add_task(async function() {
+add_task(async function () {
   let prefs = await openPreferencesViaOpenPreferencesAPI("panePrivacy", {
     leaveOpen: true,
   });

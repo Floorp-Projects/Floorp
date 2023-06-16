@@ -49,11 +49,6 @@ def run_awsy(command_context, tests, binary=None, **kwargs):
         kwargs["perTabPause"] = 1
         kwargs["settleWaitTime"] = 1
 
-    if "single_stylo_traversal" in kwargs and kwargs["single_stylo_traversal"]:
-        os.environ["STYLO_THREADS"] = "1"
-    else:
-        os.environ["STYLO_THREADS"] = "4"
-
     runtime_testvars = {}
     for arg in (
         "webRootDir",

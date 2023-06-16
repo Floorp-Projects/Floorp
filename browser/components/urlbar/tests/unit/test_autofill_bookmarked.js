@@ -6,7 +6,7 @@
 // state of an origin. Regardless of the order of origins, we should always pick
 // the correct bookmarked status.
 
-add_task(async function() {
+add_task(async function () {
   registerCleanupFunction(async () => {
     Services.prefs.clearUserPref("browser.urlbar.suggest.searches");
     Services.prefs.clearUserPref("browser.urlbar.suggest.quickactions");

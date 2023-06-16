@@ -194,34 +194,6 @@ add_task(
     ],
   },
   async function testInstallTriggerDeprecatedFromRemoteSettings() {
-    async function setAndEmitFakeRemoteSettingsData(
-      data,
-      expectClientInitialized = true
-    ) {
-      const { AMRemoteSettings } = ChromeUtils.import(
-        "resource://gre/modules/AddonManager.jsm"
-      );
-      let client;
-      if (expectClientInitialized) {
-        ok(AMRemoteSettings.client, "Got a remote settings client");
-        ok(
-          AMRemoteSettings.onSync,
-          "Got a remote settings 'sync' event handler"
-        );
-        client = AMRemoteSettings.client;
-      } else {
-        // No client is expected to exist, and so we create one to inject the expected data
-        // into the RemoteSettings db.
-        client = new RemoteSettings(AMRemoteSettings.RS_COLLECTION);
-      }
-
-      await client.db.clear();
-      if (data.length) {
-        await client.db.importChanges({}, Date.now(), data);
-      }
-      await client.emit("sync", { data: {} });
-    }
-
     await AddonTestUtils.promiseStartupManager();
 
     // InstallTrigger is expected to be initially enabled.

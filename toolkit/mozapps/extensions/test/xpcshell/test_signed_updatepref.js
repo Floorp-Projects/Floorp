@@ -48,7 +48,7 @@ add_task(async function setup() {
 
 // Updating the pref without changing the app version won't disable add-ons
 // immediately but will after a signing check
-add_task(async function() {
+add_task(async function () {
   Services.prefs.setBoolPref(PREF_XPI_SIGNATURES_REQUIRED, false);
   await promiseStartupManager();
 
@@ -99,7 +99,7 @@ add_task(async function() {
 
 // Updating the pref with changing the app version will disable add-ons
 // immediately
-add_task(async function() {
+add_task(async function () {
   Services.prefs.setBoolPref(PREF_XPI_SIGNATURES_REQUIRED, false);
   await promiseStartupManager();
 

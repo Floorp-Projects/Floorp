@@ -60,7 +60,7 @@ div[name="page-loading"] > .buttons > button {
 
 @media not (prefers-contrast) {
   .deemphasized-text {
-    color: var(--in-content-deemphasized-text);
+    color: var(--text-color-deemphasized);
   }
 }
 
@@ -304,7 +304,7 @@ div[name="page-selection"][show-import-all] .resource-selection-details {
 @media (prefers-reduced-motion: reduce) {
   .progress-icon:not(.completed) {
     content: url("chrome://browser/skin/tabbrowser/hourglass.svg");
-    fill: var(--in-content-deemphasized-text);
+    fill: var(--text-color-deemphasized);
   }
 }
 

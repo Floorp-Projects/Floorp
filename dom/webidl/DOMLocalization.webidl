@@ -95,6 +95,24 @@ interface DOMLocalization : Localization {
   [Throws] L10nIdArgs getAttributes(Element aElement);
 
   /**
+   * A helper function which allows the user to set the l10n args for an element. This
+   * is similar to the setAttributes method, but does not require the l10n ID.
+   *
+   * Example:
+   *
+   *    <h1 data-l10n-id="key1" />
+   *
+   *    document.l10n.setArgs(h1, { emailCount: 5 });
+   *
+   *    <h1 data-l10n-id="key1" data-l10n-args="{\"emailCount\": 5}" />
+   *
+   *    document.l10n.setArgs(h1);
+   *
+   *    <h1 data-l10n-id="key1" />
+   */
+  [Throws] undefined setArgs(Element aElement, optional object? aArgs);
+
+  /**
    * Triggers translation of a subtree rooted at aNode.
    *
    * The method finds all translatable descendants of the argument and

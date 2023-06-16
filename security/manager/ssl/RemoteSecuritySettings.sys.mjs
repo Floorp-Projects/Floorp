@@ -89,9 +89,8 @@ class IssuerAndSerialRevocationState extends RevocationState {
     this.serial = serial;
   }
 }
-IssuerAndSerialRevocationState.prototype.QueryInterface = ChromeUtils.generateQI(
-  ["nsIIssuerAndSerialRevocationState"]
-);
+IssuerAndSerialRevocationState.prototype.QueryInterface =
+  ChromeUtils.generateQI(["nsIIssuerAndSerialRevocationState"]);
 
 class SubjectAndPubKeyRevocationState extends RevocationState {
   constructor(subject, pubKey, state) {
@@ -100,9 +99,8 @@ class SubjectAndPubKeyRevocationState extends RevocationState {
     this.pubKey = pubKey;
   }
 }
-SubjectAndPubKeyRevocationState.prototype.QueryInterface = ChromeUtils.generateQI(
-  ["nsISubjectAndPubKeyRevocationState"]
-);
+SubjectAndPubKeyRevocationState.prototype.QueryInterface =
+  ChromeUtils.generateQI(["nsISubjectAndPubKeyRevocationState"]);
 
 function setRevocations(certStorage, revocations) {
   return new Promise(resolve =>
@@ -147,7 +145,7 @@ function hasPriorData(dataType) {
  * @param {Array} options.data.updated
  * @param {Array} options.data.deleted
  */
-const updateCertBlocklist = async function({
+const updateCertBlocklist = async function ({
   data: { current, created, updated, deleted },
 }) {
   let items = [];

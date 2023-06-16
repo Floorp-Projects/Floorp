@@ -11,6 +11,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ContextDescriptorType:
     "chrome://remote/content/shared/messagehandler/MessageHandler.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
+  generateUUID: "chrome://remote/content/shared/UUID.sys.mjs",
   OwnershipModel: "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
   RealmType: "chrome://remote/content/shared/Realm.sys.mjs",
   setDefaultAndAssertSerializationOptions:
@@ -19,13 +20,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   WindowGlobalMessageHandler:
     "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.sys.mjs",
 });
-
-function getUUID() {
-  return Services.uuid
-    .generateUUID()
-    .toString()
-    .slice(1, -1);
-}
 
 /**
  * @typedef {string} ScriptEvaluateResultType
@@ -143,7 +137,7 @@ class ScriptModule extends Module {
       `One of the arguments has an unsupported type, only type "channel" is supported`
     )(commandArguments);
 
-    const script = getUUID();
+    const script = lazy.generateUUID();
     const preloadScript = {
       arguments: commandArguments,
       functionDeclaration,
@@ -297,9 +291,8 @@ class ScriptModule extends Module {
 
     const { contextId, realmId, sandbox } = this.#assertTarget(target);
     const context = await this.#getContextFromTarget({ contextId, realmId });
-    const serializationOptionsWithDefaults = lazy.setDefaultAndAssertSerializationOptions(
-      serializationOptions
-    );
+    const serializationOptionsWithDefaults =
+      lazy.setDefaultAndAssertSerializationOptions(serializationOptions);
     const evaluationResult = await this.messageHandler.forwardCommand({
       moduleName: "script",
       commandName: "callFunctionDeclaration",
@@ -415,9 +408,8 @@ class ScriptModule extends Module {
 
     const { contextId, realmId, sandbox } = this.#assertTarget(target);
     const context = await this.#getContextFromTarget({ contextId, realmId });
-    const serializationOptionsWithDefaults = lazy.setDefaultAndAssertSerializationOptions(
-      serializationOptions
-    );
+    const serializationOptionsWithDefaults =
+      lazy.setDefaultAndAssertSerializationOptions(serializationOptions);
     const evaluationResult = await this.messageHandler.forwardCommand({
       moduleName: "script",
       commandName: "evaluateExpression",

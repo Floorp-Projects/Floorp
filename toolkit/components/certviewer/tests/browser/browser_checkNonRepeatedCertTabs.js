@@ -22,7 +22,7 @@ add_task(async function testBadCert() {
   let loaded = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
   for (let i = 0; i < 2; i++) {
     // try opening two certificates that are the same
-    await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
       let advancedButton = content.document.getElementById("advancedButton");
       Assert.ok(advancedButton, "advancedButton found");
       Assert.equal(
@@ -54,7 +54,7 @@ add_task(async function testGoodCert() {
   let url = "https://example.com/";
 
   info(`Loading ${url}`);
-  await BrowserTestUtils.withNewTab({ gBrowser, url }, async function() {
+  await BrowserTestUtils.withNewTab({ gBrowser, url }, async function () {
     info("Opening pageinfo");
     let pageInfo = BrowserPageInfo(url, "securityTab", {});
     await BrowserTestUtils.waitForEvent(pageInfo, "load");
@@ -89,41 +89,43 @@ add_task(async function testPreferencesCert() {
   let url = "about:preferences#privacy";
 
   info(`Loading ${url}`);
-  await BrowserTestUtils.withNewTab({ gBrowser, url }, async function(browser) {
-    checkAndClickButton(browser.contentDocument, "viewCertificatesButton");
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url },
+    async function (browser) {
+      checkAndClickButton(browser.contentDocument, "viewCertificatesButton");
 
-    let certDialogLoaded = promiseLoadSubDialog(
-      "chrome://pippki/content/certManager.xhtml"
-    );
-    let dialogWin = await certDialogLoaded;
-    let doc = dialogWin.document;
-    Assert.ok(doc, "doc loaded");
+      let certDialogLoaded = promiseLoadSubDialog(
+        "chrome://pippki/content/certManager.xhtml"
+      );
+      let dialogWin = await certDialogLoaded;
+      let doc = dialogWin.document;
+      Assert.ok(doc, "doc loaded");
 
-    doc.getElementById("certmanagertabs").selectedTab = doc.getElementById(
-      "ca_tab"
-    );
-    let treeView = doc.getElementById("ca-tree").view;
-    let selectedCert;
+      doc.getElementById("certmanagertabs").selectedTab =
+        doc.getElementById("ca_tab");
+      let treeView = doc.getElementById("ca-tree").view;
+      let selectedCert;
 
-    for (let i = 0; i < treeView.rowCount; i++) {
-      treeView.selection.select(i);
-      dialogWin.getSelectedCerts();
-      let certs = dialogWin.selected_certs;
-      if (certs && certs.length == 1 && certs[0]) {
-        selectedCert = certs[0];
-        break;
+      for (let i = 0; i < treeView.rowCount; i++) {
+        treeView.selection.select(i);
+        dialogWin.getSelectedCerts();
+        let certs = dialogWin.selected_certs;
+        if (certs && certs.length == 1 && certs[0]) {
+          selectedCert = certs[0];
+          break;
+        }
       }
-    }
-    Assert.ok(selectedCert, "A cert should be selected");
-    let viewButton = doc.getElementById("ca_viewButton");
-    Assert.equal(viewButton.disabled, false, "Should enable view button");
+      Assert.ok(selectedCert, "A cert should be selected");
+      let viewButton = doc.getElementById("ca_viewButton");
+      Assert.equal(viewButton.disabled, false, "Should enable view button");
 
-    let loaded = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
-    for (let i = 0; i < 2; i++) {
-      viewButton.click();
-      await loaded;
+      let loaded = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
+      for (let i = 0; i < 2; i++) {
+        viewButton.click();
+        await loaded;
+      }
+      checkCertTabs();
     }
-    checkCertTabs();
-  });
+  );
   gBrowser.removeCurrentTab(); // closes about:certificate
 });

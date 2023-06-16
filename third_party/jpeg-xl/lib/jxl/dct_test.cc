@@ -14,7 +14,6 @@
 #include <hwy/highway.h>
 #include <hwy/tests/test_util-inl.h>
 
-#include "lib/jxl/base/thread_pool_internal.h"
 #include "lib/jxl/common.h"
 #include "lib/jxl/dct-inl.h"
 #include "lib/jxl/dct_for_test.h"
@@ -157,7 +156,7 @@ void TestIdctAccuracy(float accuracy, size_t start = 0, size_t end = N * N) {
 
 template <size_t N>
 void TestInverseT(float accuracy) {
-  ThreadPoolInternal pool(N < 32 ? 0 : 8);
+  test::ThreadPoolForTests pool(N < 32 ? 0 : 8);
   enum { kBlockSize = N * N };
   EXPECT_TRUE(RunOnPool(
       &pool, 0, kBlockSize, ThreadPool::NoInit,

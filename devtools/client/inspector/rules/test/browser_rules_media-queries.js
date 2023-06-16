@@ -7,7 +7,7 @@
 
 const TEST_URI = URL_ROOT + "doc_media_queries.html?constructed";
 
-add_task(async function() {
+add_task(async function () {
   await addTab(TEST_URI);
   const { inspector, view } = await openRuleView();
   await selectNode("div", inspector);

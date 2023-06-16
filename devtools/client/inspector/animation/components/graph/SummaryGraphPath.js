@@ -184,9 +184,8 @@ class SummaryGraphPath extends Component {
       return;
     }
 
-    const keyframesList = this.getOffsetAndEasingOnlyKeyframes(
-      animatedPropertyMap
-    );
+    const keyframesList =
+      this.getOffsetAndEasingOnlyKeyframes(animatedPropertyMap);
     const totalDuration =
       timeScale.getDuration() * Math.abs(animation.state.playbackRate);
     const durationPerPixel = totalDuration / thisEl.parentNode.clientWidth;

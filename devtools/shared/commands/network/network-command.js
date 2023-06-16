@@ -29,9 +29,8 @@ class NetworkCommand {
   async sendHTTPRequest(data) {
     // By default use the top-level target, but we might at some point
     // allow using another target.
-    const networkContentFront = await this.commands.targetCommand.targetFront.getFront(
-      "networkContent"
-    );
+    const networkContentFront =
+      await this.commands.targetCommand.targetFront.getFront("networkContent");
     const { channelId } = await networkContentFront.sendHTTPRequest(data);
     return { channelId };
   }

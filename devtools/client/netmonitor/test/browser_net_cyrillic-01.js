@@ -7,7 +7,7 @@
  * Tests if cyrillic text is rendered correctly in the source editor.
  */
 
-add_task(async function() {
+add_task(async function () {
   const { tab, monitor } = await initNetMonitor(CYRILLIC_URL, {
     requestCount: 1,
   });

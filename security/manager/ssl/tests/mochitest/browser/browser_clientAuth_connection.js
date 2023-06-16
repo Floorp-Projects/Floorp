@@ -123,7 +123,7 @@ const gClientAuthDialogs = {
   QueryInterface: ChromeUtils.generateQI(["nsIClientAuthDialogs"]),
 };
 
-add_setup(async function() {
+add_setup(async function () {
   let clientAuthDialogsCID = MockRegistrar.register(
     "@mozilla.org/nsClientAuthDialogs;1",
     gClientAuthDialogs
@@ -225,7 +225,7 @@ async function testHelper(
     let pageContent = await SpecialPowers.spawn(
       win.gBrowser.selectedBrowser,
       [],
-      async function() {
+      async function () {
         return content.document.body.textContent;
       }
     );

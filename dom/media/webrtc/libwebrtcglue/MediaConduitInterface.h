@@ -37,8 +37,9 @@
 #include "rtc_base/copy_on_write_buffer.h"
 
 namespace webrtc {
+class RtpPacketReceived;
 class VideoFrame;
-}
+}  // namespace webrtc
 
 namespace mozilla {
 namespace dom {
@@ -135,7 +136,8 @@ class MediaSessionConduit {
   // Receiving packets...
   // from an rtp-receiving pipeline
   virtual void ConnectReceiverRtpEvent(
-      MediaEventSourceExc<MediaPacket, webrtc::RTPHeader>& aEvent) = 0;
+      MediaEventSourceExc<webrtc::RtpPacketReceived, webrtc::RTPHeader>&
+          aEvent) = 0;
   // from an rtp-receiving pipeline
   virtual void ConnectReceiverRtcpEvent(
       MediaEventSourceExc<MediaPacket>& aEvent) = 0;
@@ -181,6 +183,8 @@ class MediaSessionConduit {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaSessionConduit)
 
   void GetRtpSources(nsTArray<dom::RTCRtpSourceEntry>& outSources) const;
+
+  virtual void SetJitterBufferTarget(DOMHighResTimeStamp aTargetMs) = 0;
 
   // test-only: inserts fake CSRCs and audio level data.
   // NB: fake data is only valid during the current main thread task.

@@ -213,12 +213,14 @@ do
             fi
         done
 
+        update_to_dep=false
         if [ ! -z "$override_certs" ]; then
             echo "Replacing certs in updater binary"
             cp "${updater}" "${updater}.orig"
             case ${override_certs} in
               dep)
                 overrides=${dep_overrides}
+                update_to_dep=true
                 ;;
               nightly)
                 overrides=${nightly_overrides}
@@ -254,7 +256,7 @@ do
         if [ -e ${diff_file} ]; then
           rm ${diff_file}
         fi
-        check_updates "${platform}" "downloads/${source_file}" "downloads/${target_file}" ${locale} ${use_old_updater} ${updater} ${diff_file} ${channel} ${mar_channel_IDs}
+        check_updates "${platform}" "downloads/${source_file}" "downloads/${target_file}" ${locale} ${use_old_updater} ${updater} ${diff_file} ${channel} "${mar_channel_IDs}" ${update_to_dep}
         err=$?
         if [ "$err" == "0" ]; then
           continue

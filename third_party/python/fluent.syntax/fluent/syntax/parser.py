@@ -1,12 +1,14 @@
-from __future__ import unicode_literals
 import re
+from typing import Any, Callable, List, Set, TypeVar, Union, cast
 from . import ast
-from .stream import EOF, EOL, FluentParserStream
+from .stream import EOL, FluentParserStream
 from .errors import ParseError
 
+R = TypeVar("R", bound=ast.SyntaxNode)
 
-def with_span(fn):
-    def decorated(self, ps, *args, **kwargs):
+
+def with_span(fn: Callable[..., R]) -> Callable[..., R]:
+    def decorated(self: 'FluentParser', ps: FluentParserStream, *args: Any, **kwargs: Any) -> Any:
         if not self.with_spans:
             return fn(self, ps, *args, **kwargs)
 
@@ -25,22 +27,23 @@ def with_span(fn):
     return decorated
 
 
-class FluentParser(object):
+class FluentParser:
     """This class is used to parse Fluent source content.
 
     ``with_spans`` enables source information in the form of
     :class:`.ast.Span` objects for each :class:`.ast.SyntaxNode`.
     """
-    def __init__(self, with_spans=True):
+
+    def __init__(self, with_spans: bool = True):
         self.with_spans = with_spans
 
-    def parse(self, source):
+    def parse(self, source: str) -> ast.Resource:
         """Create a :class:`.ast.Resource` from a Fluent source.
         """
         ps = FluentParserStream(source)
         ps.skip_blank_block()
 
-        entries = []
+        entries: List[ast.EntryType] = []
         last_comment = None
 
         while ps.current_char:
@@ -63,7 +66,7 @@ class FluentParser(object):
                 if isinstance(entry, (ast.Message, ast.Term)):
                     entry.comment = last_comment
                     if self.with_spans:
-                        entry.span.start = entry.comment.span.start
+                        cast(ast.Span, entry.span).start = cast(ast.Span, entry.comment.span).start
                 else:
                     entries.append(last_comment)
                 # In either case, the stashed comment has been dealt with;
@@ -79,7 +82,7 @@ class FluentParser(object):
 
         return res
 
-    def parse_entry(self, source):
+    def parse_entry(self, source: str) -> ast.EntryType:
         """Parse the first :class:`.ast.Entry` in source.
 
         Skip all encountered comments and start parsing at the first :class:`.ast.Message`
@@ -100,7 +103,7 @@ class FluentParser(object):
 
         return self.get_entry_or_junk(ps)
 
-    def get_entry_or_junk(self, ps):
+    def get_entry_or_junk(self, ps: FluentParserStream) -> ast.EntryType:
         entry_start_pos = ps.index
 
         try:
@@ -120,12 +123,12 @@ class FluentParser(object):
             junk = ast.Junk(slice)
             if self.with_spans:
                 junk.add_span(entry_start_pos, next_entry_start)
-            annot = ast.Annotation(err.code, err.args, err.message)
+            annot = ast.Annotation(err.code, list(err.args) if err.args else None, err.message)
             annot.add_span(error_index, error_index)
             junk.add_annotation(annot)
             return junk
 
-    def get_entry(self, ps):
+    def get_entry(self, ps: FluentParserStream) -> ast.EntryType:
         if ps.current_char == '#':
             return self.get_comment(ps)
 
@@ -138,7 +141,7 @@ class FluentParser(object):
         raise ParseError('E0002')
 
     @with_span
-    def get_comment(self, ps):
+    def get_comment(self, ps: FluentParserStream) -> Union[ast.Comment, ast.GroupComment, ast.ResourceComment]:
         # 0 - comment
         # 1 - group comment
         # 2 - resource comment
@@ -163,7 +166,7 @@ class FluentParser(object):
                     ch = ps.take_char(lambda x: x != EOL)
 
             if ps.is_next_line_comment(level=level):
-                content += ps.current_char
+                content += cast(str, ps.current_char)
                 ps.next()
             else:
                 break
@@ -175,8 +178,11 @@ class FluentParser(object):
         elif level == 2:
             return ast.ResourceComment(content)
 
+        # never happens if ps.current_char == '#' when called
+        return cast(ast.Comment, None)
+
     @with_span
-    def get_message(self, ps):
+    def get_message(self, ps: FluentParserStream) -> ast.Message:
         id = self.get_identifier(ps)
         ps.skip_blank_inline()
         ps.expect_char('=')
@@ -190,7 +196,7 @@ class FluentParser(object):
         return ast.Message(id, value, attrs)
 
     @with_span
-    def get_term(self, ps):
+    def get_term(self, ps: FluentParserStream) -> ast.Term:
         ps.expect_char('-')
         id = self.get_identifier(ps)
 
@@ -205,7 +211,7 @@ class FluentParser(object):
         return ast.Term(id, value, attrs)
 
     @with_span
-    def get_attribute(self, ps):
+    def get_attribute(self, ps: FluentParserStream) -> ast.Attribute:
         ps.expect_char('.')
 
         key = self.get_identifier(ps)
@@ -219,8 +225,8 @@ class FluentParser(object):
 
         return ast.Attribute(key, value)
 
-    def get_attributes(self, ps):
-        attrs = []
+    def get_attributes(self, ps: FluentParserStream) -> List[ast.Attribute]:
+        attrs: List[ast.Attribute] = []
         ps.peek_blank()
 
         while ps.is_attribute_start():
@@ -232,8 +238,11 @@ class FluentParser(object):
         return attrs
 
     @with_span
-    def get_identifier(self, ps):
+    def get_identifier(self, ps: FluentParserStream) -> ast.Identifier:
         name = ps.take_id_start()
+        if name is None:
+            raise ParseError('E0004', 'a-zA-Z')
+
         ch = ps.take_id_char()
         while ch:
             name += ch
@@ -241,10 +250,10 @@ class FluentParser(object):
 
         return ast.Identifier(name)
 
-    def get_variant_key(self, ps):
+    def get_variant_key(self, ps: FluentParserStream) -> Union[ast.Identifier, ast.NumberLiteral]:
         ch = ps.current_char
 
-        if ch is EOF:
+        if ch is None:
             raise ParseError('E0013')
 
         cc = ord(ch)
@@ -254,7 +263,7 @@ class FluentParser(object):
         return self.get_identifier(ps)
 
     @with_span
-    def get_variant(self, ps, has_default):
+    def get_variant(self, ps: FluentParserStream, has_default: bool) -> ast.Variant:
         default_index = False
 
         if ps.current_char == '*':
@@ -277,8 +286,8 @@ class FluentParser(object):
 
         return ast.Variant(key, value, default_index)
 
-    def get_variants(self, ps):
-        variants = []
+    def get_variants(self, ps: FluentParserStream) -> List[ast.Variant]:
+        variants: List[ast.Variant] = []
         has_default = False
 
         ps.skip_blank()
@@ -300,7 +309,7 @@ class FluentParser(object):
 
         return variants
 
-    def get_digits(self, ps):
+    def get_digits(self, ps: FluentParserStream) -> str:
         num = ''
 
         ch = ps.take_digit()
@@ -314,7 +323,7 @@ class FluentParser(object):
         return num
 
     @with_span
-    def get_number(self, ps):
+    def get_number(self, ps: FluentParserStream) -> ast.NumberLiteral:
         num = ''
 
         if ps.current_char == '-':
@@ -330,7 +339,7 @@ class FluentParser(object):
 
         return ast.NumberLiteral(num)
 
-    def maybe_get_pattern(self, ps):
+    def maybe_get_pattern(self, ps: FluentParserStream) -> Union[ast.Pattern, None]:
         '''Parse an inline or a block Pattern, or None
 
         maybe_get_pattern distinguishes between patterns which start on the
@@ -353,8 +362,8 @@ class FluentParser(object):
         return None
 
     @with_span
-    def get_pattern(self, ps, is_block):
-        elements = []
+    def get_pattern(self, ps: FluentParserStream, is_block: bool) -> ast.Pattern:
+        elements: List[Any] = []
         if is_block:
             # A block pattern is a pattern which starts on a new line. Measure
             # the indent of this first line for the dedentation logic.
@@ -363,7 +372,8 @@ class FluentParser(object):
             elements.append(self.Indent(first_indent, blank_start, ps.index))
             common_indent_length = len(first_indent)
         else:
-            common_indent_length = float('infinity')
+            # Should get fixed by the subsequent min() operation
+            common_indent_length = cast(int, float('infinity'))
 
         while ps.current_char:
             if ps.current_char == EOL:
@@ -384,6 +394,7 @@ class FluentParser(object):
             if ps.current_char == '}':
                 raise ParseError('E0027')
 
+            element: Union[ast.TextElement, ast.Placeable]
             if ps.current_char == '{':
                 element = self.get_placeable(ps)
             else:
@@ -395,17 +406,20 @@ class FluentParser(object):
         return ast.Pattern(dedented)
 
     class Indent(ast.SyntaxNode):
-        def __init__(self, value, start, end):
+        def __init__(self, value: str, start: int, end: int):
             super(FluentParser.Indent, self).__init__()
             self.value = value
             self.add_span(start, end)
 
-    def dedent(self, elements, common_indent):
+    def dedent(self,
+               elements: List[Union[ast.TextElement, ast.Placeable, Indent]],
+               common_indent: int
+               ) -> List[Union[ast.TextElement, ast.Placeable]]:
         '''Dedent a list of elements by removing the maximum common indent from
         the beginning of text lines. The common indent is calculated in
         get_pattern.
         '''
-        trimmed = []
+        trimmed: List[Union[ast.TextElement, ast.Placeable]] = []
 
         for element in elements:
             if isinstance(element, ast.Placeable):
@@ -423,7 +437,7 @@ class FluentParser(object):
                 # Join adjacent TextElements by replacing them with their sum.
                 sum = ast.TextElement(prev.value + element.value)
                 if self.with_spans:
-                    sum.add_span(prev.span.start, element.span.end)
+                    sum.add_span(cast(ast.Span, prev.span).start, cast(ast.Span, element.span).end)
                 trimmed[-1] = sum
                 continue
 
@@ -432,7 +446,7 @@ class FluentParser(object):
                 # TextElements, convert it into a new TextElement.
                 text_element = ast.TextElement(element.value)
                 if self.with_spans:
-                    text_element.add_span(element.span.start, element.span.end)
+                    text_element.add_span(cast(ast.Span, element.span).start, cast(ast.Span, element.span).end)
                 element = text_element
 
             trimmed.append(element)
@@ -440,14 +454,14 @@ class FluentParser(object):
         # Trim trailing whitespace from the Pattern.
         last_element = trimmed[-1] if len(trimmed) > 0 else None
         if isinstance(last_element, ast.TextElement):
-            last_element.value = last_element.value.rstrip(' \t\n\r')
+            last_element.value = last_element.value.rstrip(' \n\r')
             if last_element.value == "":
                 trimmed.pop()
 
         return trimmed
 
     @with_span
-    def get_text_element(self, ps):
+    def get_text_element(self, ps: FluentParserStream) -> ast.TextElement:
         buf = ''
 
         while ps.current_char:
@@ -464,12 +478,12 @@ class FluentParser(object):
 
         return ast.TextElement(buf)
 
-    def get_escape_sequence(self, ps):
+    def get_escape_sequence(self, ps: FluentParserStream) -> str:
         next = ps.current_char
 
         if next == '\\' or next == '"':
             ps.next()
-            return '\\{}'.format(next)
+            return f'\\{next}'
 
         if next == 'u':
             return self.get_unicode_escape_sequence(ps, next, 4)
@@ -479,19 +493,19 @@ class FluentParser(object):
 
         raise ParseError('E0025', next)
 
-    def get_unicode_escape_sequence(self, ps, u, digits):
+    def get_unicode_escape_sequence(self, ps: FluentParserStream, u: str, digits: int) -> str:
         ps.expect_char(u)
         sequence = ''
         for _ in range(digits):
             ch = ps.take_hex_digit()
             if not ch:
-                raise ParseError('E0026', '\\{}{}{}'.format(u, sequence, ps.current_char))
+                raise ParseError('E0026', f'\\{u}{sequence}{ps.current_char}')
             sequence += ch
 
-        return '\\{}{}'.format(u, sequence)
+        return f'\\{u}{sequence}'
 
     @with_span
-    def get_placeable(self, ps):
+    def get_placeable(self, ps: FluentParserStream) -> ast.Placeable:
         ps.expect_char('{')
         ps.skip_blank()
         expression = self.get_expression(ps)
@@ -499,7 +513,9 @@ class FluentParser(object):
         return ast.Placeable(expression)
 
     @with_span
-    def get_expression(self, ps):
+    def get_expression(self, ps: FluentParserStream) -> Union[ast.InlineExpression,
+                                                              ast.Placeable,
+                                                              ast.SelectExpression]:
         selector = self.get_inline_expression(ps)
 
         ps.skip_blank()
@@ -548,7 +564,7 @@ class FluentParser(object):
         return selector
 
     @with_span
-    def get_inline_expression(self, ps):
+    def get_inline_expression(self, ps: FluentParserStream) -> Union[ast.InlineExpression, ast.Placeable]:
         if ps.current_char == '{':
             return self.get_placeable(ps)
 
@@ -599,7 +615,9 @@ class FluentParser(object):
         raise ParseError('E0028')
 
     @with_span
-    def get_call_argument(self, ps):
+    def get_call_argument(self,
+                          ps: FluentParserStream
+                          ) -> Union[ast.InlineExpression, ast.NamedArgument, ast.Placeable]:
         exp = self.get_inline_expression(ps)
 
         ps.skip_blank()
@@ -617,10 +635,10 @@ class FluentParser(object):
         raise ParseError('E0009')
 
     @with_span
-    def get_call_arguments(self, ps):
-        positional = []
-        named = []
-        argument_names = set()
+    def get_call_arguments(self, ps: FluentParserStream) -> ast.CallArguments:
+        positional: List[Union[ast.InlineExpression, ast.Placeable]] = []
+        named: List[ast.NamedArgument] = []
+        argument_names: Set[str] = set()
 
         ps.expect_char('(')
         ps.skip_blank()
@@ -653,7 +671,7 @@ class FluentParser(object):
         return ast.CallArguments(positional, named)
 
     @with_span
-    def get_string(self, ps):
+    def get_string(self, ps: FluentParserStream) -> ast.StringLiteral:
         value = ''
 
         ps.expect_char('"')
@@ -675,7 +693,7 @@ class FluentParser(object):
         return ast.StringLiteral(value)
 
     @with_span
-    def get_literal(self, ps):
+    def get_literal(self, ps: FluentParserStream) -> Union[ast.NumberLiteral, ast.StringLiteral]:
         if ps.is_number_start():
             return self.get_number(ps)
         if ps.current_char == '"':

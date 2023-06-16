@@ -26,7 +26,6 @@
 #define DOM_WINDOW_FROZEN_TOPIC "dom-window-frozen"
 #define DOM_WINDOW_THAWED_TOPIC "dom-window-thawed"
 
-class nsDOMOfflineResourceList;
 class nsGlobalWindowInner;
 class nsGlobalWindowOuter;
 class nsIArray;
@@ -136,7 +135,7 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   // Returns true if the document of this window is the active document.  This
   // is identical to IsCurrentInnerWindow() now that document.open() no longer
   // creates new inner windows for the document it is called on.
-  inline bool HasActiveDocument();
+  inline bool HasActiveDocument() const;
 
   // Return true if this object is the currently-active inner window for its
   // BrowsingContext and any container document is also fully active.
@@ -613,8 +612,6 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   virtual already_AddRefed<nsICSSDeclaration> GetComputedStyle(
       mozilla::dom::Element& aElt, const nsAString& aPseudoElt,
       mozilla::ErrorResult& aError) = 0;
-
-  virtual nsDOMOfflineResourceList* GetApplicationCache() = 0;
 
   virtual bool GetFullScreen() = 0;
 

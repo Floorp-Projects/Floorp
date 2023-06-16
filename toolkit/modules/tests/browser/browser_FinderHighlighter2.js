@@ -3,7 +3,7 @@
 const kPrefHighlightAll = "findbar.highlightAll";
 const kPrefModalHighlight = "findbar.modalHighlight";
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       [kPrefHighlightAll, true],
@@ -15,7 +15,7 @@ add_setup(async function() {
 add_task(async function testIframeOffset() {
   let url = kFixtureBaseURL + "file_FinderIframeTest.html";
 
-  await BrowserTestUtils.withNewTab(url, async function(browser) {
+  await BrowserTestUtils.withNewTab(url, async function (browser) {
     let findbar = gBrowser.getFindBar();
     await promiseOpenFindbar(findbar);
 

@@ -16,13 +16,11 @@ namespace mozilla {
 namespace net {
 
 class NetworkConnectivityService;
-class ODoHService;
 class TRR;
 
 class DNSUtils final {
  private:
   friend class NetworkConnectivityService;
-  friend class ODoHService;
   friend class ObliviousHttpService;
   friend class TRR;
   static nsresult CreateChannelHelper(nsIURI* aUri, nsIChannel** aResult);

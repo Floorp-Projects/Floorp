@@ -50,6 +50,7 @@
 #include "jit/TemplateObject-inl.h"
 #include "vm/BytecodeUtil-inl.h"
 #include "vm/Interpreter-inl.h"
+#include "vm/JSObject-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -284,13 +285,13 @@ void MacroAssembler::checkAllocatorState(Label* fail) {
 }
 
 bool MacroAssembler::shouldNurseryAllocate(gc::AllocKind allocKind,
-                                           gc::InitialHeap initialHeap) {
+                                           gc::Heap initialHeap) {
   // Note that Ion elides barriers on writes to objects known to be in the
   // nursery, so any allocation that can be made into the nursery must be made
   // into the nursery, even if the nursery is disabled. At runtime these will
   // take the out-of-line path, which is required to insert a barrier for the
   // initializing writes.
-  return IsNurseryAllocable(allocKind) && initialHeap != gc::TenuredHeap;
+  return IsNurseryAllocable(allocKind) && initialHeap != gc::Heap::Tenured;
 }
 
 // Inline version of Nursery::allocateObject. If the object has dynamic slots,
@@ -300,6 +301,12 @@ void MacroAssembler::nurseryAllocateObject(Register result, Register temp,
                                            size_t nDynamicSlots, Label* fail,
                                            const AllocSiteInput& allocSite) {
   MOZ_ASSERT(IsNurseryAllocable(allocKind));
+
+  // Currently the JIT does not nursery allocate foreground finalized
+  // objects. This is allowed for objects that support this and have the
+  // JSCLASS_SKIP_NURSERY_FINALIZE class flag set. It's hard to assert that here
+  // though so disallow all foreground finalized objects for now.
+  MOZ_ASSERT(!IsForegroundFinalized(allocKind));
 
   // We still need to allocate in the nursery, per the comment in
   // shouldNurseryAllocate; however, we need to insert into the
@@ -330,9 +337,7 @@ void MacroAssembler::nurseryAllocateObject(Register result, Register temp,
   MOZ_ASSERT(totalSize < INT32_MAX);
   MOZ_ASSERT(totalSize % gc::CellAlignBytes == 0);
 
-  bumpPointerAllocate(result, temp, fail, zone,
-                      zone->addressOfNurseryPosition(),
-                      zone->addressOfNurseryCurrentEnd(), JS::TraceKind::Object,
+  bumpPointerAllocate(result, temp, fail, zone, JS::TraceKind::Object,
                       totalSize, allocSite);
 
   if (nDynamicSlots) {
@@ -341,6 +346,8 @@ void MacroAssembler::nurseryAllocateObject(Register result, Register temp,
     store32(
         Imm32(0),
         Address(result, thingSize + ObjectSlots::offsetOfDictionarySlotSpan()));
+    store64(Imm64(ObjectSlots::NoUniqueIdInDynamicSlots),
+            Address(result, thingSize + ObjectSlots::offsetOfMaybeUniqueId()));
     computeEffectiveAddress(
         Address(result, thingSize + ObjectSlots::offsetOfSlots()), temp);
     storePtr(temp, Address(result, NativeObject::offsetOfSlots()));
@@ -408,14 +415,14 @@ void MacroAssembler::callFreeStub(Register slots) {
 void MacroAssembler::allocateObject(Register result, Register temp,
                                     gc::AllocKind allocKind,
                                     uint32_t nDynamicSlots,
-                                    gc::InitialHeap initialHeap, Label* fail,
+                                    gc::Heap initialHeap, Label* fail,
                                     const AllocSiteInput& allocSite) {
   MOZ_ASSERT(gc::IsObjectAllocKind(allocKind));
 
   checkAllocatorState(fail);
 
   if (shouldNurseryAllocate(allocKind, initialHeap)) {
-    MOZ_ASSERT(initialHeap == gc::DefaultHeap);
+    MOZ_ASSERT(initialHeap == gc::Heap::Default);
     return nurseryAllocateObject(result, temp, allocKind, nDynamicSlots, fail,
                                  allocSite);
   }
@@ -432,7 +439,7 @@ void MacroAssembler::allocateObject(Register result, Register temp,
 
 void MacroAssembler::createGCObject(Register obj, Register temp,
                                     const TemplateObject& templateObj,
-                                    gc::InitialHeap initialHeap, Label* fail,
+                                    gc::Heap initialHeap, Label* fail,
                                     bool initContents /* = true */) {
   gc::AllocKind allocKind = templateObj.getAllocKind();
   MOZ_ASSERT(gc::IsObjectAllocKind(allocKind));
@@ -451,7 +458,7 @@ void MacroAssembler::createGCObject(Register obj, Register temp,
 void MacroAssembler::createPlainGCObject(
     Register result, Register shape, Register temp, Register temp2,
     uint32_t numFixedSlots, uint32_t numDynamicSlots, gc::AllocKind allocKind,
-    gc::InitialHeap initialHeap, Label* fail, const AllocSiteInput& allocSite,
+    gc::Heap initialHeap, Label* fail, const AllocSiteInput& allocSite,
     bool initContents /* = true */) {
   MOZ_ASSERT(gc::IsObjectAllocKind(allocKind));
   MOZ_ASSERT(shape != temp, "shape can overlap with temp2, but not temp");
@@ -489,8 +496,8 @@ void MacroAssembler::createPlainGCObject(
 
 void MacroAssembler::createArrayWithFixedElements(
     Register result, Register shape, Register temp, uint32_t arrayLength,
-    uint32_t arrayCapacity, gc::AllocKind allocKind,
-    gc::InitialHeap initialHeap, Label* fail, const AllocSiteInput& allocSite) {
+    uint32_t arrayCapacity, gc::AllocKind allocKind, gc::Heap initialHeap,
+    Label* fail, const AllocSiteInput& allocSite) {
   MOZ_ASSERT(gc::IsObjectAllocKind(allocKind));
   MOZ_ASSERT(shape != temp, "shape can overlap with temp2, but not temp");
   MOZ_ASSERT(result != temp);
@@ -536,10 +543,8 @@ void MacroAssembler::nurseryAllocateString(Register result, Register temp,
 
   CompileZone* zone = realm()->zone();
   size_t thingSize = gc::Arena::thingSize(allocKind);
-  bumpPointerAllocate(result, temp, fail, zone,
-                      zone->addressOfStringNurseryPosition(),
-                      zone->addressOfStringNurseryCurrentEnd(),
-                      JS::TraceKind::String, thingSize);
+  bumpPointerAllocate(result, temp, fail, zone, JS::TraceKind::String,
+                      thingSize);
 }
 
 // Inline version of Nursery::allocateBigInt.
@@ -553,15 +558,25 @@ void MacroAssembler::nurseryAllocateBigInt(Register result, Register temp,
   CompileZone* zone = realm()->zone();
   size_t thingSize = gc::Arena::thingSize(gc::AllocKind::BIGINT);
 
-  bumpPointerAllocate(result, temp, fail, zone,
-                      zone->addressOfBigIntNurseryPosition(),
-                      zone->addressOfBigIntNurseryCurrentEnd(),
-                      JS::TraceKind::BigInt, thingSize);
+  bumpPointerAllocate(result, temp, fail, zone, JS::TraceKind::BigInt,
+                      thingSize);
+}
+
+static bool IsNurseryAllocEnabled(CompileZone* zone, JS::TraceKind kind) {
+  switch (kind) {
+    case JS::TraceKind::Object:
+      return zone->allocNurseryObjects();
+    case JS::TraceKind::String:
+      return zone->allocNurseryStrings();
+    case JS::TraceKind::BigInt:
+      return zone->allocNurseryBigInts();
+    default:
+      MOZ_CRASH("Bad nursery allocation kind");
+  }
 }
 
 void MacroAssembler::bumpPointerAllocate(Register result, Register temp,
                                          Label* fail, CompileZone* zone,
-                                         void* posAddr, const void* curEndAddr,
                                          JS::TraceKind traceKind, uint32_t size,
                                          const AllocSiteInput& allocSite) {
   MOZ_ASSERT(size >= gc::MinCellSize);
@@ -570,22 +585,22 @@ void MacroAssembler::bumpPointerAllocate(Register result, Register temp,
   MOZ_ASSERT(totalSize < INT32_MAX, "Nursery allocation too large");
   MOZ_ASSERT(totalSize % gc::CellAlignBytes == 0);
 
-  // The position (allocation pointer) and the end pointer are stored
-  // very close to each other -- specifically, easily within a 32 bit offset.
-  // Use relative offsets between them, to avoid 64-bit immediate loads.
-  //
-  // I tried to optimise this further by using an extra register to avoid
-  // the final subtraction and hopefully get some more instruction
-  // parallelism, but it made no difference.
+  // We know statically whether nursery allocation is enable for a particular
+  // kind because we discard JIT code when this changes.
+  if (!IsNurseryAllocEnabled(zone, traceKind)) {
+    jump(fail);
+    return;
+  }
+
+  // Use a relative 32 bit offset to the Nursery position_ to currentEnd_ to
+  // avoid 64-bit immediate loads.
+  void* posAddr = zone->addressOfNurseryPosition();
+  int32_t endOffset = Nursery::offsetOfCurrentEndFromPosition();
+
   movePtr(ImmPtr(posAddr), temp);
   loadPtr(Address(temp, 0), result);
   addPtr(Imm32(totalSize), result);
-  CheckedInt<int32_t> endOffset =
-      (CheckedInt<uintptr_t>(uintptr_t(curEndAddr)) -
-       CheckedInt<uintptr_t>(uintptr_t(posAddr)))
-          .toChecked<int32_t>();
-  MOZ_ASSERT(endOffset.isValid(), "Position and end pointers must be nearby");
-  branchPtr(Assembler::Below, Address(temp, endOffset.value()), result, fail);
+  branchPtr(Assembler::Below, Address(temp, endOffset), result, fail);
   storePtr(result, Address(temp, 0));
   subPtr(Imm32(size), result);
 
@@ -649,14 +664,14 @@ void MacroAssembler::updateAllocSite(Register temp, Register result,
 // allocation requested but unsuccessful.
 void MacroAssembler::allocateString(Register result, Register temp,
                                     gc::AllocKind allocKind,
-                                    gc::InitialHeap initialHeap, Label* fail) {
+                                    gc::Heap initialHeap, Label* fail) {
   MOZ_ASSERT(allocKind == gc::AllocKind::STRING ||
              allocKind == gc::AllocKind::FAT_INLINE_STRING);
 
   checkAllocatorState(fail);
 
   if (shouldNurseryAllocate(allocKind, initialHeap)) {
-    MOZ_ASSERT(initialHeap == gc::DefaultHeap);
+    MOZ_ASSERT(initialHeap == gc::Heap::Default);
     return nurseryAllocateString(result, temp, allocKind, fail);
   }
 
@@ -664,23 +679,22 @@ void MacroAssembler::allocateString(Register result, Register temp,
 }
 
 void MacroAssembler::newGCString(Register result, Register temp,
-                                 gc::InitialHeap initialHeap, Label* fail) {
+                                 gc::Heap initialHeap, Label* fail) {
   allocateString(result, temp, js::gc::AllocKind::STRING, initialHeap, fail);
 }
 
 void MacroAssembler::newGCFatInlineString(Register result, Register temp,
-                                          gc::InitialHeap initialHeap,
-                                          Label* fail) {
+                                          gc::Heap initialHeap, Label* fail) {
   allocateString(result, temp, js::gc::AllocKind::FAT_INLINE_STRING,
                  initialHeap, fail);
 }
 
 void MacroAssembler::newGCBigInt(Register result, Register temp,
-                                 gc::InitialHeap initialHeap, Label* fail) {
+                                 gc::Heap initialHeap, Label* fail) {
   checkAllocatorState(fail);
 
   if (shouldNurseryAllocate(gc::AllocKind::BIGINT, initialHeap)) {
-    MOZ_ASSERT(initialHeap == gc::DefaultHeap);
+    MOZ_ASSERT(initialHeap == gc::Heap::Default);
     return nurseryAllocateBigInt(result, temp, fail);
   }
 
@@ -933,7 +947,7 @@ void MacroAssembler::initGCThing(Register obj, Register temp,
 
     // If the object has dynamic slots, the slots member has already been
     // filled in.
-    if (!ntemplate.hasDynamicSlots()) {
+    if (ntemplate.numDynamicSlots() == 0) {
       storePtr(ImmPtr(emptyObjectSlots),
                Address(obj, NativeObject::offsetOfSlots()));
     }
@@ -1762,7 +1776,7 @@ void MacroAssembler::initializeBigIntAbsolute(Register bigInt, Register val) {
 
 void MacroAssembler::copyBigIntWithInlineDigits(Register src, Register dest,
                                                 Register temp,
-                                                gc::InitialHeap initialHeap,
+                                                gc::Heap initialHeap,
                                                 Label* fail) {
   branch32(Assembler::Above, Address(src, BigInt::offsetOfLength()),
            Imm32(int32_t(BigInt::inlineDigitsLength())), fail);
@@ -2543,8 +2557,9 @@ void MacroAssembler::extractCurrentIndexAndKindFromIterator(Register iterator,
   and32(Imm32(PropertyIndex::IndexMask), outIndex);
 }
 
+template <typename IdType>
 void MacroAssembler::emitMegamorphicCachedSetSlot(
-    ValueOperand id, Register obj, Register scratch1,
+    IdType id, Register obj, Register scratch1,
 #ifndef JS_CODEGEN_X86  // See MegamorphicSetElement in LIROps.yaml
     Register scratch2, Register scratch3,
 #endif
@@ -2568,8 +2583,14 @@ void MacroAssembler::emitMegamorphicCachedSetSlot(
   rshiftPtr(Imm32(MegamorphicSetPropCache::ShapeHashShift2), scratch2);
   xorPtr(scratch2, scratch3);
 
-  loadAtomOrSymbolAndHash(id, scratch1, scratch2, &cacheMiss);
-  addPtr(scratch2, scratch3);
+  if constexpr (std::is_same<IdType, ValueOperand>::value) {
+    loadAtomOrSymbolAndHash(id, scratch1, scratch2, &cacheMiss);
+    addPtr(scratch2, scratch3);
+  } else {
+    static_assert(std::is_same<IdType, PropertyKey>::value);
+    addPtr(Imm32(HashAtomOrSymbolPropertyKey(id)), scratch3);
+    movePropertyKey(id, scratch1);
+  }
 
   // scratch3 %= MegamorphicSetPropCache::NumEntries
   constexpr size_t cacheSize = MegamorphicSetPropCache::NumEntries;
@@ -2702,6 +2723,22 @@ void MacroAssembler::emitMegamorphicCachedSetSlot(
   popValue(value);
 #endif
 }
+
+template void MacroAssembler::emitMegamorphicCachedSetSlot<PropertyKey>(
+    PropertyKey id, Register obj, Register scratch1,
+#ifndef JS_CODEGEN_X86  // See MegamorphicSetElement in LIROps.yaml
+    Register scratch2, Register scratch3,
+#endif
+    ValueOperand value, Label* cacheHit,
+    void (*emitPreBarrier)(MacroAssembler&, const Address&, MIRType));
+
+template void MacroAssembler::emitMegamorphicCachedSetSlot<ValueOperand>(
+    ValueOperand id, Register obj, Register scratch1,
+#ifndef JS_CODEGEN_X86  // See MegamorphicSetElement in LIROps.yaml
+    Register scratch2, Register scratch3,
+#endif
+    ValueOperand value, Label* cacheHit,
+    void (*emitPreBarrier)(MacroAssembler&, const Address&, MIRType));
 
 void MacroAssembler::guardNonNegativeIntPtrToInt32(Register reg, Label* fail) {
 #ifdef DEBUG
@@ -4231,6 +4268,59 @@ void MacroAssembler::branchIfNotRegExpInstanceOptimizable(Register regexp,
   branchTestObjShapeUnsafe(Assembler::NotEqual, regexp, temp, label);
 }
 
+void MacroAssembler::loadRegExpLastIndex(Register regexp, Register string,
+                                         Register lastIndex,
+                                         Label* notFoundZeroLastIndex) {
+  Address flagsSlot(regexp, RegExpObject::offsetOfFlags());
+  Address lastIndexSlot(regexp, RegExpObject::offsetOfLastIndex());
+  Address stringLength(string, JSString::offsetOfLength());
+
+  Label notGlobalOrSticky, loadedLastIndex;
+
+  branchTest32(Assembler::Zero, flagsSlot,
+               Imm32(JS::RegExpFlag::Global | JS::RegExpFlag::Sticky),
+               &notGlobalOrSticky);
+  {
+    // It's a global or sticky regular expression. Emit the following code:
+    //
+    //   lastIndex = regexp.lastIndex
+    //   if lastIndex > string.length:
+    //     jump to notFoundZeroLastIndex (skip the regexp match/test operation)
+    //
+    // The `notFoundZeroLastIndex` code should set regexp.lastIndex to 0 and
+    // treat this as a not-found result.
+    //
+    // See steps 5-8 in js::RegExpBuiltinExec.
+    //
+    // Earlier guards must have ensured regexp.lastIndex is a non-negative
+    // integer.
+#ifdef DEBUG
+    {
+      Label ok;
+      branchTestInt32(Assembler::Equal, lastIndexSlot, &ok);
+      assumeUnreachable("Expected int32 value for lastIndex");
+      bind(&ok);
+    }
+#endif
+    unboxInt32(lastIndexSlot, lastIndex);
+#ifdef DEBUG
+    {
+      Label ok;
+      branchTest32(Assembler::NotSigned, lastIndex, lastIndex, &ok);
+      assumeUnreachable("Expected non-negative lastIndex");
+      bind(&ok);
+    }
+#endif
+    branch32(Assembler::Below, stringLength, lastIndex, notFoundZeroLastIndex);
+    jump(&loadedLastIndex);
+  }
+
+  bind(&notGlobalOrSticky);
+  move32(Imm32(0), lastIndex);
+
+  bind(&loadedLastIndex);
+}
+
 // ===============================================================
 // Branch functions
 
@@ -4825,51 +4915,58 @@ void MacroAssembler::wasmCallRef(const wasm::CallSiteDesc& desc,
   bind(&done);
 }
 
-bool MacroAssembler::needScratch1ForBranchWasmGcRefType(
-    const wasm::RefType& type) {
-  return !type.isNone() &&
-         wasm::RefType::isSubTypeOf(type, wasm::RefType::eq());
+bool MacroAssembler::needScratch1ForBranchWasmGcRefType(wasm::RefType type) {
+  MOZ_ASSERT(type.isValid());
+  MOZ_ASSERT(type.isAnyHierarchy());
+  return !type.isNone() && !type.isAny();
 }
 
-bool MacroAssembler::needScratch2ForBranchWasmGcRefType(
-    const wasm::RefType& type) {
+bool MacroAssembler::needScratch2ForBranchWasmGcRefType(wasm::RefType type) {
+  MOZ_ASSERT(type.isValid());
+  MOZ_ASSERT(type.isAnyHierarchy());
   return type.isTypeRef() &&
          type.typeDef()->subTypingDepth() >= wasm::MinSuperTypeVectorLength;
 }
 
 bool MacroAssembler::needSuperSuperTypeVectorForBranchWasmGcRefType(
-    const wasm::RefType& type) {
+    wasm::RefType type) {
   return type.isTypeRef();
 }
 
 void MacroAssembler::branchWasmGcObjectIsRefType(
-    Register object, const wasm::RefType& type, Label* label, bool onSuccess,
-    Register superSuperTypeVector, Register scratch1, Register scratch2) {
-  MOZ_ASSERT(type.isValid());
-  MOZ_ASSERT_IF(needScratch1ForBranchWasmGcRefType(type),
+    Register object, wasm::RefType sourceType, wasm::RefType destType,
+    Label* label, bool onSuccess, Register superSuperTypeVector,
+    Register scratch1, Register scratch2) {
+  MOZ_ASSERT(sourceType.isValid());
+  MOZ_ASSERT(destType.isValid());
+  MOZ_ASSERT(sourceType.isAnyHierarchy());
+  MOZ_ASSERT(destType.isAnyHierarchy());
+  MOZ_ASSERT_IF(needScratch1ForBranchWasmGcRefType(destType),
                 scratch1 != Register::Invalid());
-  MOZ_ASSERT_IF(needScratch2ForBranchWasmGcRefType(type),
+  MOZ_ASSERT_IF(needScratch2ForBranchWasmGcRefType(destType),
                 scratch2 != Register::Invalid());
-  MOZ_ASSERT_IF(needSuperSuperTypeVectorForBranchWasmGcRefType(type),
+  MOZ_ASSERT_IF(needSuperSuperTypeVectorForBranchWasmGcRefType(destType),
                 superSuperTypeVector != Register::Invalid());
 
   Label fallthrough;
   Label* successLabel = onSuccess ? label : &fallthrough;
   Label* failLabel = onSuccess ? &fallthrough : label;
-  Label* nullLabel = type.isNullable() ? successLabel : failLabel;
+  Label* nullLabel = destType.isNullable() ? successLabel : failLabel;
 
   // Check for null.
-  branchTestPtr(Assembler::Zero, object, object, nullLabel);
+  if (sourceType.isNullable()) {
+    branchTestPtr(Assembler::Zero, object, object, nullLabel);
+  }
 
   // The only value that can inhabit 'none' is null. So, early out if we got
   // not-null.
-  if (type.isNone()) {
+  if (destType.isNone()) {
     jump(failLabel);
     bind(&fallthrough);
     return;
   }
 
-  if (type.isAny()) {
+  if (destType.isAny()) {
     // No further checks for 'any'
     jump(successLabel);
     bind(&fallthrough);
@@ -4879,9 +4976,11 @@ void MacroAssembler::branchWasmGcObjectIsRefType(
   // 'type' is now 'eq' or lower, which currently will always be a gc object.
   // Test for non-gc objects.
   MOZ_ASSERT(scratch1 != Register::Invalid());
-  branchTestObjectIsWasmGcObject(false, object, scratch1, failLabel);
+  if (!wasm::RefType::isSubTypeOf(sourceType, wasm::RefType::eq())) {
+    branchTestObjectIsWasmGcObject(false, object, scratch1, failLabel);
+  }
 
-  if (type.isEq()) {
+  if (destType.isEq()) {
     // No further checks for 'eq'
     jump(successLabel);
     bind(&fallthrough);
@@ -4898,10 +4997,10 @@ void MacroAssembler::branchWasmGcObjectIsRefType(
 
   loadPtr(Address(object, int32_t(WasmGcObject::offsetOfSuperTypeVector())),
           scratch1);
-  if (type.isTypeRef()) {
+  if (destType.isTypeRef()) {
     // concrete type, do superTypeVector check
     branchWasmSuperTypeVectorIsSubtype(scratch1, superSuperTypeVector, scratch2,
-                                       type.typeDef()->subTypingDepth(),
+                                       destType.typeDef()->subTypingDepth(),
                                        successLabel, true);
   } else {
     // abstract type, do kind check
@@ -4910,7 +5009,7 @@ void MacroAssembler::branchWasmGcObjectIsRefType(
             scratch1);
     load8ZeroExtend(Address(scratch1, int32_t(wasm::TypeDef::offsetOfKind())),
                     scratch1);
-    branch32(Assembler::Equal, scratch1, Imm32(int32_t(type.typeDefKind())),
+    branch32(Assembler::Equal, scratch1, Imm32(int32_t(destType.typeDefKind())),
              successLabel);
   }
 

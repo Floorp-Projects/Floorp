@@ -33,7 +33,7 @@ function makePrefTrackedFlag(exports, name, pref) {
     Services.prefs.addObserver(pref, prefObserver);
 
     // Also listen for Loader unload to unregister the pref observer and prevent leaking
-    const unloadObserver = function(subject) {
+    const unloadObserver = function (subject) {
       if (subject.wrappedJSObject == require("@loader/unload")) {
         Services.prefs.removeObserver(pref, prefObserver);
         Services.obs.removeObserver(unloadObserver, "devtools:loader:destroy");

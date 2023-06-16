@@ -549,6 +549,18 @@ float ButteraugliDistance(const extras::PackedPixelFile& a,
                              /*distmap=*/nullptr, pool);
 }
 
+float Butteraugli3Norm(const extras::PackedPixelFile& a,
+                       const extras::PackedPixelFile& b, ThreadPool* pool) {
+  CodecInOut io0;
+  JXL_CHECK(ConvertPackedPixelFileToCodecInOut(a, pool, &io0));
+  CodecInOut io1;
+  JXL_CHECK(ConvertPackedPixelFileToCodecInOut(b, pool, &io1));
+  ButteraugliParams ba;
+  ImageF distmap;
+  ButteraugliDistance(io0.frames, io1.frames, ba, GetJxlCms(), &distmap, pool);
+  return ComputeDistanceP(distmap, ba, 3);
+}
+
 float ComputeDistance2(const extras::PackedPixelFile& a,
                        const extras::PackedPixelFile& b) {
   CodecInOut io0;

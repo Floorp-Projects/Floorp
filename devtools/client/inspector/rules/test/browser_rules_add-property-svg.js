@@ -8,7 +8,7 @@
 var TEST_URL = "chrome://devtools/skin/images/alert.svg";
 var TEST_SELECTOR = "path";
 
-add_task(async function() {
+add_task(async function () {
   await addTab(TEST_URL);
   const { inspector, view } = await openRuleView();
   await selectNode(TEST_SELECTOR, inspector);

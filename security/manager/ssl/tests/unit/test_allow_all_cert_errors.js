@@ -15,7 +15,7 @@ function run_test() {
 
   add_tls_server_setup("BadCertAndPinningServer", "bad_certs");
   add_connection_test("expired.example.com", PRErrorCodeSuccess);
-  add_test(function() {
+  add_test(function () {
     certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
       false
     );

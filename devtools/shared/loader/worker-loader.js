@@ -65,7 +65,7 @@ function normalizeId(id) {
   const [, root, path] = id.match(/^(\w+:\/\/\/?|\/)?(.*)/);
 
   const stack = [];
-  path.split("/").forEach(function(component) {
+  path.split("/").forEach(function (component) {
     switch (component) {
       case "":
       case ".":
@@ -375,7 +375,7 @@ var {
   loadSubScript,
   setImmediate,
   xpcInspector,
-} = function() {
+} = function () {
   // Main thread
   if (typeof Components === "object") {
     const principal = Components.Constructor(
@@ -399,7 +399,7 @@ addDebuggerToGlobal(globalThis);
     );
     const Debugger = sandbox.Debugger;
 
-    const createSandbox = function(name, prototype) {
+    const createSandbox = function (name, prototype) {
       return Cu.Sandbox(principal, {
         invisibleToDebugger: true,
         sandboxName: name,
@@ -416,7 +416,7 @@ addDebuggerToGlobal(globalThis);
       "@mozilla.org/moz/jssubscript-loader;1"
     ].getService(Ci.mozIJSSubScriptLoader);
 
-    const loadSubScript = function(url, sandbox) {
+    const loadSubScript = function (url, sandbox) {
       subScriptLoader.loadSubScript(url, sandbox);
     };
 
@@ -424,7 +424,7 @@ addDebuggerToGlobal(globalThis);
       "resource://gre/modules/Timer.sys.mjs"
     );
 
-    const setImmediate = function(callback) {
+    const setImmediate = function (callback) {
       Timer.setTimeout(callback, 0);
     };
 

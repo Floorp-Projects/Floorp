@@ -87,8 +87,8 @@ class BaseTargetActor extends Actor {
    * @param {Array<Objects>} List of resources
    */
   overrideResourceBrowsingContextForWebExtension(resources) {
-    const browsingContextID = this.devtoolsSpawnedBrowsingContextForWebExtension
-      .id;
+    const browsingContextID =
+      this.devtoolsSpawnedBrowsingContextForWebExtension.id;
     resources.forEach(
       resource => (resource.browsingContextID = browsingContextID)
     );

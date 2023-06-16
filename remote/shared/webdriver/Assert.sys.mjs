@@ -28,7 +28,7 @@ export const assert = {};
  * @throws {InvalidSessionIDError}
  *     If session does not exist, or has an invalid id.
  */
-assert.session = function(session, msg = "") {
+assert.session = function (session, msg = "") {
   msg = msg || "WebDriver session does not exist, or is not active";
   assert.that(
     session => session && typeof session.id == "string",
@@ -46,7 +46,7 @@ assert.session = function(session, msg = "") {
  * @throws {UnsupportedOperationError}
  *     If current browser is not Firefox.
  */
-assert.firefox = function(msg = "") {
+assert.firefox = function (msg = "") {
   msg = msg || "Only supported in Firefox";
   assert.that(
     isFirefox => isFirefox,
@@ -64,7 +64,7 @@ assert.firefox = function(msg = "") {
  * @throws {UnsupportedOperationError}
  *     If current application is not running on desktop.
  */
-assert.desktop = function(msg = "") {
+assert.desktop = function (msg = "") {
   msg = msg || "Only supported in desktop applications";
   assert.that(
     isDesktop => isDesktop,
@@ -82,7 +82,7 @@ assert.desktop = function(msg = "") {
  * @throws {UnsupportedOperationError}
  *     If current application is not running on Android.
  */
-assert.mobile = function(msg = "") {
+assert.mobile = function (msg = "") {
   msg = msg || "Only supported on Android";
   assert.that(
     isAndroid => isAndroid,
@@ -105,7 +105,7 @@ assert.mobile = function(msg = "") {
  * @throws {UnsupportedOperationError}
  *     If <var>context</var> is not content.
  */
-assert.content = function(context, msg = "") {
+assert.content = function (context, msg = "") {
   msg = msg || "Only supported in content context";
   assert.that(
     c => c.toString() == "content",
@@ -128,7 +128,7 @@ assert.content = function(context, msg = "") {
  * @throws {NoSuchWindowError}
  *     If <var>browsingContext</var> is no longer open.
  */
-assert.open = function(browsingContext, msg = "") {
+assert.open = function (browsingContext, msg = "") {
   msg = msg || "Browsing context has been discarded";
   return assert.that(
     browsingContext => {
@@ -158,7 +158,7 @@ assert.open = function(browsingContext, msg = "") {
  * @throws {UnexpectedAlertOpenError}
  *     If there is a user prompt.
  */
-assert.noUserPrompt = function(dialog, msg = "") {
+assert.noUserPrompt = function (dialog, msg = "") {
   assert.that(
     d => d === null || typeof d == "undefined",
     msg,
@@ -180,7 +180,7 @@ assert.noUserPrompt = function(dialog, msg = "") {
  * @throws {InvalidArgumentError}
  *     If <var>obj</var> is not defined.
  */
-assert.defined = function(obj, msg = "") {
+assert.defined = function (obj, msg = "") {
   msg = msg || lazy.pprint`Expected ${obj} to be defined`;
   return assert.that(o => typeof o != "undefined", msg)(obj);
 };
@@ -199,7 +199,7 @@ assert.defined = function(obj, msg = "") {
  * @throws {InvalidArgumentError}
  *     If <var>obj</var> is not a number.
  */
-assert.number = function(obj, msg = "") {
+assert.number = function (obj, msg = "") {
   msg = msg || lazy.pprint`Expected ${obj} to be finite number`;
   return assert.that(Number.isFinite, msg)(obj);
 };
@@ -218,7 +218,7 @@ assert.number = function(obj, msg = "") {
  * @throws {InvalidArgumentError}
  *     If <var>obj</var> is not a positive integer.
  */
-assert.positiveNumber = function(obj, msg = "") {
+assert.positiveNumber = function (obj, msg = "") {
   assert.number(obj, msg);
   msg = msg || lazy.pprint`Expected ${obj} to be >= 0`;
   return assert.that(n => n >= 0, msg)(obj);
@@ -240,7 +240,7 @@ assert.positiveNumber = function(obj, msg = "") {
  * @throws {InvalidArgumentError}
  *     If <var>obj</var> is not a number in the specified range.
  */
-assert.numberInRange = function(obj, range, msg = "") {
+assert.numberInRange = function (obj, range, msg = "") {
   const [lower, upper] = range;
   assert.number(obj, msg);
   msg = msg || lazy.pprint`Expected ${obj} to be >= ${lower} and <= ${upper}`;
@@ -261,7 +261,7 @@ assert.numberInRange = function(obj, range, msg = "") {
  * @throws {InvalidArgumentError}
  *     If <var>obj</var> is not callable.
  */
-assert.callable = function(obj, msg = "") {
+assert.callable = function (obj, msg = "") {
   msg = msg || lazy.pprint`${obj} is not callable`;
   return assert.that(o => typeof o == "function", msg)(obj);
 };
@@ -280,7 +280,7 @@ assert.callable = function(obj, msg = "") {
  * @throws {InvalidArgumentError}
  *     If <var>obj</var> is not an unsigned short.
  */
-assert.unsignedShort = function(obj, msg = "") {
+assert.unsignedShort = function (obj, msg = "") {
   msg = msg || lazy.pprint`Expected ${obj} to be >= 0 and < 65536`;
   return assert.that(n => n >= 0 && n < 65536, msg)(obj);
 };
@@ -299,7 +299,7 @@ assert.unsignedShort = function(obj, msg = "") {
  * @throws {InvalidArgumentError}
  *     If <var>obj</var> is not an integer.
  */
-assert.integer = function(obj, msg = "") {
+assert.integer = function (obj, msg = "") {
   msg = msg || lazy.pprint`Expected ${obj} to be an integer`;
   return assert.that(Number.isSafeInteger, msg)(obj);
 };
@@ -318,7 +318,7 @@ assert.integer = function(obj, msg = "") {
  * @throws {InvalidArgumentError}
  *     If <var>obj</var> is not a positive integer.
  */
-assert.positiveInteger = function(obj, msg = "") {
+assert.positiveInteger = function (obj, msg = "") {
   assert.integer(obj, msg);
   msg = msg || lazy.pprint`Expected ${obj} to be >= 0`;
   return assert.that(n => n >= 0, msg)(obj);
@@ -340,7 +340,7 @@ assert.positiveInteger = function(obj, msg = "") {
  * @throws {InvalidArgumentError}
  *     If <var>obj</var> is not a number in the specified range.
  */
-assert.integerInRange = function(obj, range, msg = "") {
+assert.integerInRange = function (obj, range, msg = "") {
   const [lower, upper] = range;
   assert.integer(obj, msg);
   msg = msg || lazy.pprint`Expected ${obj} to be >= ${lower} and <= ${upper}`;
@@ -361,7 +361,7 @@ assert.integerInRange = function(obj, range, msg = "") {
  * @throws {InvalidArgumentError}
  *     If <var>obj</var> is not a boolean.
  */
-assert.boolean = function(obj, msg = "") {
+assert.boolean = function (obj, msg = "") {
   msg = msg || lazy.pprint`Expected ${obj} to be boolean`;
   return assert.that(b => typeof b == "boolean", msg)(obj);
 };
@@ -380,7 +380,7 @@ assert.boolean = function(obj, msg = "") {
  * @throws {InvalidArgumentError}
  *     If <var>obj</var> is not a string.
  */
-assert.string = function(obj, msg = "") {
+assert.string = function (obj, msg = "") {
   msg = msg || lazy.pprint`Expected ${obj} to be a string`;
   return assert.that(s => typeof s == "string", msg)(obj);
 };
@@ -399,7 +399,7 @@ assert.string = function(obj, msg = "") {
  * @throws {InvalidArgumentError}
  *     If <var>obj</var> is not an object.
  */
-assert.object = function(obj, msg = "") {
+assert.object = function (obj, msg = "") {
   msg = msg || lazy.pprint`Expected ${obj} to be an object`;
   return assert.that(o => {
     // unable to use instanceof because LHS and RHS may come from
@@ -428,7 +428,7 @@ assert.object = function(obj, msg = "") {
  *     Otherwise if <var>prop</var> is not in <var>obj</var>, or <var>obj</var>
  *     is not an object.
  */
-assert.in = function(prop, obj, msg = "") {
+assert.in = function (prop, obj, msg = "") {
   if (Array.isArray(obj)) {
     assert.that(p => obj.includes(p), msg)(prop);
     return prop;
@@ -453,7 +453,7 @@ assert.in = function(prop, obj, msg = "") {
  * @throws {InvalidArgumentError}
  *     If <var>obj</var> is not an Array.
  */
-assert.array = function(obj, msg = "") {
+assert.array = function (obj, msg = "") {
   msg = msg || lazy.pprint`Expected ${obj} to be an Array`;
   return assert.that(Array.isArray, msg)(obj);
 };
@@ -475,7 +475,7 @@ assert.array = function(obj, msg = "") {
  *     and which may throw <var>error</var> with <var>message</var>
  *     if <var>predicate</var> evaluates to false.
  */
-assert.that = function(
+assert.that = function (
   predicate,
   message = "",
   err = lazy.error.InvalidArgumentError

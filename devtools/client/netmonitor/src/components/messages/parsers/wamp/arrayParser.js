@@ -6,7 +6,7 @@
 
 // An implementation for WAMP messages parsing https://wamp-proto.org/
 var WampMessageType;
-(function(wampMessageTypeEnum) {
+(function (wampMessageTypeEnum) {
   wampMessageTypeEnum[(wampMessageTypeEnum.Hello = 1)] = "Hello";
   wampMessageTypeEnum[(wampMessageTypeEnum.Welcome = 2)] = "Welcome";
   wampMessageTypeEnum[(wampMessageTypeEnum.Abort = 3)] = "Abort";
@@ -148,13 +148,8 @@ class ErrorMessage extends WampMessage {
 class PublishMessage extends WampMessage {
   constructor(messageArgs) {
     super(WampMessageType.Publish);
-    [
-      this.request,
-      this.options,
-      this.topic,
-      this.arguments,
-      this.argumentsKw,
-    ] = messageArgs;
+    [this.request, this.options, this.topic, this.arguments, this.argumentsKw] =
+      messageArgs;
   }
 }
 class PublishedMessage extends WampMessage {
@@ -220,12 +215,8 @@ class CancelMessage extends WampMessage {
 class ResultMessage extends WampMessage {
   constructor(messageArgs) {
     super(WampMessageType.Result);
-    [
-      this.request,
-      this.details,
-      this.arguments,
-      this.argumentsKw,
-    ] = messageArgs;
+    [this.request, this.details, this.arguments, this.argumentsKw] =
+      messageArgs;
   }
 }
 class RegisterMessage extends WampMessage {
@@ -273,12 +264,8 @@ class InterruptMessage extends WampMessage {
 class YieldMessage extends WampMessage {
   constructor(messageArgs) {
     super(WampMessageType.Yield);
-    [
-      this.request,
-      this.options,
-      this.arguments,
-      this.argumentsKw,
-    ] = messageArgs;
+    [this.request, this.options, this.arguments, this.argumentsKw] =
+      messageArgs;
   }
 }
 

@@ -7,7 +7,25 @@
   --compatibility-cause-color: var(--theme-text-color-alt);
   --compatibility-issue-icon-size: calc(var(--compatibility-base-unit) * 3);
   --compatibility-issue-item-height: calc(var(--compatibility-base-unit) * 4);
+  --compatibility-issue-mdn-icon-fill-color: var(--grey-60);
   --compatibility-browser-icon-size: calc(var(--compatibility-base-unit) * 4);
+  --compatibility-browser-icon-fill-color: var(--theme-icon-dimmed-color);
+  --compatibility-browser-version-background-color: var(--theme-icon-error-color);
+  --compatibility-browser-version-color: white;
+}
+
+:root.theme-dark {
+  --compatibility-issue-mdn-icon-fill-color: var(--grey-40);
+  --compatibility-browser-version-color: black;
+}
+
+/*
+ * In dark mode, the tooltip background is slightly lighter than the compatibility panel
+ * background, so we need to adjust colors to have good contrast.
+ */
+:root.theme-dark .devtools-tooltip-css-compatibility {
+  --compatibility-browser-icon-fill-color: var(--theme-icon-color);
+  --compatibility-browser-version-background-color: var(--red-40-a90);
 }
 
 .compatibility-app {
@@ -111,10 +129,24 @@
   color: var(--compatibility-cause-color);
 }
 
-.compatibility-issue-item__mdn-link {
+.compatibility-issue-item__property {
   color: var(--theme-highlight-blue);
-  text-decoration: none;
   unicode-bidi: plaintext;
+  display: flex;
+  gap: var(--compatibility-base-unit);
+}
+
+.compatibility-issue-item__mdn-link::after {
+  content: "";
+  width: 12px;
+  height: 12px;
+  display: inline-block;
+  background-image: url("chrome://devtools/skin/images/mdn.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  border: 1px solid var(--compatibility-issue-mdn-icon-fill-color);
+  -moz-context-properties: fill;
+  fill: var(--compatibility-issue-mdn-icon-fill-color);
 }
 
 .compatibility-issue-item__aliases {
@@ -134,6 +166,13 @@
   padding: 0;
   column-gap: var(--compatibility-base-unit);
   display: flex;
+}
+
+.compatibility-browser {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-inline: 1px;
 }
 
 .compatibility-browser-icon {
@@ -162,8 +201,17 @@
 .compatibility-browser-icon__image {
   width: 100%;
   height: 100%;
-  fill: var(--theme-icon-dimmed-color);
+  fill: var(--compatibility-browser-icon-fill-color);
   -moz-context-properties: fill;
+}
+
+.compatibility-browser .compatibility-browser-version {
+  font-size: 9px;
+  border-radius: 2px;
+  padding: 1px 2px;
+  line-height: 1;
+  background-color: var(--compatibility-browser-version-background-color);
+  color: var(--compatibility-browser-version-color);
 }
 
 .compatibility-node-pane {
@@ -173,6 +221,7 @@
 .compatibility-node-pane__summary {
   color: var(--theme-comment);
   cursor: pointer;
+  font-variant-numeric: tabular-nums;
   padding-block-end: var(--compatibility-base-unit);
 }
 

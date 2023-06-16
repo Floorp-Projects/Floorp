@@ -16,7 +16,7 @@ function check_child_pref_info_eq(continuation) {
       'pb.prefHasUserValue("' +
       kPrefName +
       '");',
-    function(info) {
+    function (info) {
       let [value, isUser] = info.split(",");
       Assert.equal(pb.getCharPref(kPrefName), value);
       Assert.equal(pb.prefHasUserValue(kPrefName), isUser == "true");
@@ -42,7 +42,7 @@ function test_user_setting() {
   // NB: processing of the value-change notification in the child
   // process triggered by the above set happens-before the remaining
   // code here
-  check_child_pref_info_eq(function() {
+  check_child_pref_info_eq(function () {
     Assert.equal(pb.prefHasUserValue(kPrefName), true);
 
     test_cleared_is_default();
@@ -54,7 +54,7 @@ function test_cleared_is_default() {
   // NB: processing of the value-change notification in the child
   // process triggered by the above set happens-before the remaining
   // code here
-  check_child_pref_info_eq(function() {
+  check_child_pref_info_eq(function () {
     Assert.equal(pb.prefHasUserValue(kPrefName), false);
 
     clean_up();
@@ -66,7 +66,7 @@ function clean_up() {
   // NB: processing of the value-change notification in the child
   // process triggered by the above set happens-before the remaining
   // code here
-  check_child_pref_info_eq(function() {
+  check_child_pref_info_eq(function () {
     do_test_finished();
   });
 }

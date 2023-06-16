@@ -20,7 +20,7 @@ let read = pipe => {
   });
 };
 
-let readAll = async function(pipe) {
+let readAll = async function (pipe) {
   let result = [];
   let string;
   while ((string = await pipe.readString())) {
@@ -159,10 +159,7 @@ add_task(async function test_subprocess_huge() {
   // This should be large enough to fill most pipe input/output buffers.
   const MESSAGE_SIZE = 1024 * 16;
 
-  let msg =
-    Array(MESSAGE_SIZE)
-      .fill("0123456789abcdef")
-      .join("") + "\n";
+  let msg = Array(MESSAGE_SIZE).fill("0123456789abcdef").join("") + "\n";
 
   proc.stdin.write(msg);
 
@@ -370,7 +367,7 @@ add_task(async function test_subprocess_force_close() {
 
   await Assert.rejects(
     readPromise,
-    function(e) {
+    function (e) {
       equal(
         e.errorCode,
         Subprocess.ERROR_END_OF_FILE,
@@ -401,7 +398,7 @@ add_task(async function test_subprocess_eof() {
 
   await Assert.rejects(
     readPromise,
-    function(e) {
+    function (e) {
       equal(
         e.errorCode,
         Subprocess.ERROR_END_OF_FILE,
@@ -433,7 +430,7 @@ add_task(async function test_subprocess_invalid_json() {
 
   await Assert.rejects(
     readPromise,
-    function(e) {
+    function (e) {
       equal(
         e.errorCode,
         Subprocess.ERROR_INVALID_JSON,
@@ -519,7 +516,7 @@ add_task(async function test_subprocess_pathSearch() {
 
   await Assert.rejects(
     promise,
-    function(error) {
+    function (error) {
       return error.errorCode == Subprocess.ERROR_BAD_EXECUTABLE;
     },
     "Subprocess.call should fail for a bad executable"
@@ -832,7 +829,7 @@ add_task(async function test_bad_executable() {
 
   await Assert.rejects(
     promise,
-    function(error) {
+    function (error) {
       if (AppConstants.platform == "win") {
         return /Failed to create process/.test(error.message);
       }
@@ -849,7 +846,7 @@ add_task(async function test_bad_executable() {
 
   await Assert.rejects(
     promise,
-    function(error) {
+    function (error) {
       return error.errorCode == Subprocess.ERROR_BAD_EXECUTABLE;
     },
     "Subprocess.call should fail for a bad executable"

@@ -2,6 +2,15 @@
 
 exports[`XHR Breakpoints should render with 0 expressions passed from props 1`] = `
 <XHRBreakpoints
+  disableXHRBreakpoint={[Function]}
+  enableXHRBreakpoint={[Function]}
+  onXHRAdded={[Function]}
+  removeXHRBreakpoint={[Function]}
+  setXHRBreakpoint={[Function]}
+  shouldPauseOnAny={false}
+  showInput={false}
+  togglePauseOnAny={[Function]}
+  updateXHRBreakpoint={[Function]}
   xhrBreakpoints={
     Array [
       Object {
@@ -19,6 +28,7 @@ exports[`XHR Breakpoints should render with 0 expressions passed from props 1`] 
   >
     <ExceptionOption
       className="breakpoints-exceptions"
+      isChecked={false}
       label="Pause on any URL"
       onChange={[Function]}
     >
@@ -132,6 +142,15 @@ exports[`XHR Breakpoints should render with 0 expressions passed from props 1`] 
 
 exports[`XHR Breakpoints should render with 8 expressions passed from props 1`] = `
 <XHRBreakpoints
+  disableXHRBreakpoint={[Function]}
+  enableXHRBreakpoint={[Function]}
+  onXHRAdded={[Function]}
+  removeXHRBreakpoint={[Function]}
+  setXHRBreakpoint={[Function]}
+  shouldPauseOnAny={false}
+  showInput={false}
+  togglePauseOnAny={[Function]}
+  updateXHRBreakpoint={[Function]}
   xhrBreakpoints={
     Array [
       Object {
@@ -205,6 +224,7 @@ exports[`XHR Breakpoints should render with 8 expressions passed from props 1`] 
   >
     <ExceptionOption
       className="breakpoints-exceptions"
+      isChecked={false}
       label="Pause on any URL"
       onChange={[Function]}
     >

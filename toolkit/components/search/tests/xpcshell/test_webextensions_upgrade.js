@@ -146,8 +146,6 @@ add_task(async function test_upgrade_changes_name() {
 });
 
 add_task(async function test_upgrade_to_existing_name_not_allowed() {
-  consoleAllowList.push("An engine with that name already exists");
-
   let extension = await SearchTestUtils.installSearchExtension(
     {
       name: "engine",
@@ -161,8 +159,10 @@ add_task(async function test_upgrade_to_existing_name_not_allowed() {
   Assert.ok(!!engine, "Should have loaded the engine");
 
   let promise = AddonTestUtils.waitForSearchProviderStartup(extension);
+  let name = "engine1";
+  consoleAllowList.push(`An engine called ${name} already exists`);
   let manifest = SearchTestUtils.createEngineManifest({
-    name: "engine1",
+    name,
     search_url_get_params: `q={searchTerms}&version=2.0`,
     version: "2.0",
   });

@@ -195,9 +195,7 @@ union TypeErasedState {
 template <class T>
 T& ObjectInLocalStorage(TypeErasedState* const state) {
   // We launder here because the storage may be reused with the same type.
-  // Mozilla: support clang 5 with c++17 but without launder (shipped in 6)
-#if ABSL_INTERNAL_CPLUSPLUS_LANG >= 201703L && \
-    (!defined(__clang__) || ABSL_INTERNAL_HAVE_MIN_CLANG_VERSION(6, 0))
+#if ABSL_INTERNAL_CPLUSPLUS_LANG >= 201703L && __cpp_lib_launder >= 201606L
   return *std::launder(reinterpret_cast<T*>(&state->storage));
 #elif ABSL_HAVE_BUILTIN(__builtin_launder)
   return *__builtin_launder(reinterpret_cast<T*>(&state->storage));

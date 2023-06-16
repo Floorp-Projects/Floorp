@@ -50,7 +50,7 @@
     text-align: center;
     width: 100%;
 
-    @mixin full-width-styles {
+    @media (min-width: $break-point-medium) {
       align-items: flex-start;
       background-color: transparent;
       border-radius: 4px;
@@ -59,10 +59,6 @@
       padding: 0;
       text-align: inherit;
       width: 696px;
-    }
-
-    @media (min-width: $break-point-medium) {
-      @include full-width-styles;
     }
 
     @media (max-width: 865px) {
@@ -108,13 +104,9 @@
     height: 32px;
     width: 32px;
 
-    @mixin full-width-styles {
+    @media (min-width: $break-point-medium) {
       height: 24px;
       width: 24px;
-    }
-
-    @media (min-width: $break-point-medium) {
-      @include full-width-styles;
     }
 
     @media (max-width: $break-point-medium) {

@@ -9,9 +9,9 @@ function startNewWindowTestCase(aTestNumber) {
     "browser_referrer_open_link_in_window: " +
       getReferrerTestDescription(aTestNumber)
   );
-  contextMenuOpened(gTestWindow, "testlink").then(function(aContextMenu) {
-    newWindowOpened().then(function(aNewWindow) {
-      BrowserTestUtils.firstBrowserLoaded(aNewWindow, false).then(function() {
+  contextMenuOpened(gTestWindow, "testlink").then(function (aContextMenu) {
+    newWindowOpened().then(function (aNewWindow) {
+      BrowserTestUtils.firstBrowserLoaded(aNewWindow, false).then(function () {
         checkReferrerAndStartNextTest(
           aTestNumber,
           aNewWindow,
@@ -31,7 +31,7 @@ function test() {
 
   SpecialPowers.pushPrefEnv(
     { set: [["privacy.userContext.enabled", true]] },
-    function() {
+    function () {
       requestLongerTimeout(10); // slowwww shutdown on e10s
       startReferrerTest(startNewWindowTestCase, { userContextId: 1 });
     }

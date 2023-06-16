@@ -5,7 +5,7 @@ fil{
     collations{
         standard{
             Sequence{"&N<ñ<<<Ñ<ng<<<Ng<<<NG"}
-            Version{"42"}
+            Version{"43"}
         }
     }
 }

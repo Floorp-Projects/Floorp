@@ -30,7 +30,7 @@ const TEST_CASES = [
   { name: "color", value: "black" },
 ];
 
-add_task(async function() {
+add_task(async function () {
   const { linkedBrowser: browser } = await addTab(
     `data:text/html;charset=utf-8,<div style="margin:0;color:red;">Inspect me!</div>`
   );
@@ -43,19 +43,21 @@ add_task(async function() {
 
     const onStyleMutation = waitForStyleModification(inspector);
     const onRuleRefreshed = inspector.once("rule-view-refreshed");
-    await SpecialPowers.spawn(browser, [{ name, value }], async function(
-      change
-    ) {
-      content.document.querySelector("div").style[change.name] = change.value;
-    });
+    await SpecialPowers.spawn(
+      browser,
+      [{ name, value }],
+      async function (change) {
+        content.document.querySelector("div").style[change.name] = change.value;
+      }
+    );
     await Promise.all([onStyleMutation, onRuleRefreshed]);
 
     info("Getting and parsing the content of the node's style attribute");
     const markupContainer = inspector.markup.getContainer(
       inspector.selection.nodeFront
     );
-    const styleAttrValue = markupContainer.elt.querySelector(".attr-value")
-      .textContent;
+    const styleAttrValue =
+      markupContainer.elt.querySelector(".attr-value").textContent;
     const parsedStyleAttr = styleAttrValue
       .split(";")
       .filter(v => v.trim())

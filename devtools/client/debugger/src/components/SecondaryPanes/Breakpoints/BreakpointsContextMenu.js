@@ -4,6 +4,7 @@
 
 import { buildMenu, showMenu } from "../../../context-menu/menu";
 import { getSelectedLocation } from "../../../utils/selected-location";
+import { isLineBlackboxed } from "../../../utils/source";
 import { features } from "../../../utils/prefs";
 import { formatKeyShortcut } from "../../../utils/text";
 
@@ -23,6 +24,8 @@ export default function showContextMenu(props) {
     setBreakpointOptions,
     openConditionalPanel,
     contextMenuEvent,
+    blackboxedRangesForSource,
+    checkSourceOnIgnoreList,
   } = props;
 
   contextMenuEvent.preventDefault();
@@ -126,7 +129,11 @@ export default function showContextMenu(props) {
     id: "node-menu-enable-self",
     label: enableSelfLabel,
     accesskey: enableSelfKey,
-    disabled: false,
+    disabled: isLineBlackboxed(
+      blackboxedRangesForSource,
+      breakpoint.location.line,
+      checkSourceOnIgnoreList(breakpoint.location.source)
+    ),
     click: () => {
       toggleDisabledBreakpoint(cx, breakpoint);
     },
@@ -136,7 +143,11 @@ export default function showContextMenu(props) {
     id: "node-menu-enable-all",
     label: enableAllLabel,
     accesskey: enableAllKey,
-    disabled: false,
+    disabled: isLineBlackboxed(
+      blackboxedRangesForSource,
+      breakpoint.location.line,
+      checkSourceOnIgnoreList(breakpoint.location.source)
+    ),
     click: () => toggleAllBreakpoints(cx, false),
   };
 
@@ -144,7 +155,11 @@ export default function showContextMenu(props) {
     id: "node-menu-enable-others",
     label: enableOthersLabel,
     accesskey: enableOthersKey,
-    disabled: false,
+    disabled: isLineBlackboxed(
+      blackboxedRangesForSource,
+      breakpoint.location.line,
+      checkSourceOnIgnoreList(breakpoint.location.source)
+    ),
     click: () => toggleBreakpoints(cx, false, otherDisabledBreakpoints),
   };
 

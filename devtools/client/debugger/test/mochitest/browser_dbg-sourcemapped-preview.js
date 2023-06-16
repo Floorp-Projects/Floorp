@@ -7,7 +7,7 @@
 // Tests for preview through Babel's compile output.
 requestLongerTimeout(3);
 
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger("doc-sourcemapped.html");
   dbg.actions.toggleMapScopes();
 

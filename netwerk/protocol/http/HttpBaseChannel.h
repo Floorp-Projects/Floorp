@@ -10,6 +10,7 @@
 
 #include <utility>
 
+#include "OpaqueResponseUtils.h"
 #include "mozilla/AtomicBitfields.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/dom/DOMTypes.h"
@@ -41,6 +42,7 @@
 #include "nsIURI.h"
 #include "nsIUploadChannel2.h"
 #include "nsStringEnumerator.h"
+#include "nsStringFwd.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 
@@ -68,7 +70,6 @@ namespace net {
 extern mozilla::LazyLogModule gHttpLog;
 
 class OpaqueResponseBlocker;
-class OpaqueResponseBlockingInfo;
 class PreferredAlternativeDataTypeParams;
 
 enum CacheDisposition : uint8_t {
@@ -80,7 +81,9 @@ enum CacheDisposition : uint8_t {
   kCacheUnknown = 5
 };
 
-enum class OpaqueResponse { Block, Allow, SniffCompressed, Sniff };
+// These need to be kept in sync with
+// "browser.opaqueResponseBlocking.filterFetchResponse"
+enum class OpaqueResponseFilterFetch { Never, AllowedByORB, BlockedByORB, All };
 
 /*
  * This class is a partial implementation of nsIHttpChannel.  It contains code
@@ -455,7 +458,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
   [[nodiscard]] nsresult OverrideSecurityInfo(
       nsITransportSecurityInfo* aSecurityInfo);
 
-  void LogORBError(const nsAString& aReason);
+  void LogORBError(const nsAString& aReason,
+                   const OpaqueResponseBlockedTelemetryReason aTelemetryReason);
 
  public: /* Necko internal use only... */
   int64_t GetAltDataLength() { return mAltDataLength; }
@@ -557,7 +561,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
   // https://fetch.spec.whatwg.org/#concept-request-tainted-origin
   bool HasRedirectTaintedOrigin() { return LoadTaintedOriginFlag(); }
 
-  bool ChannelBlockedByOpaqueResponse() {
+  bool ChannelBlockedByOpaqueResponse() const {
     return mChannelBlockedByOpaqueResponse;
   }
   bool CachedOpaqueResponseBlockingPref() const {
@@ -649,7 +653,12 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
   nsresult ValidateMIMEType();
 
+  bool ShouldFilterOpaqueResponse(OpaqueResponseFilterFetch aFilterType) const;
   bool ShouldBlockOpaqueResponse() const;
+  OpaqueResponse BlockOrFilterOpaqueResponse(
+      OpaqueResponseBlocker* aORB, const nsAString& aReason,
+      const OpaqueResponseBlockedTelemetryReason aTelemetryReason,
+      const char* aFormat, ...);
 
   OpaqueResponse PerformOpaqueResponseSafelistCheckBeforeSniff();
 
@@ -657,7 +666,9 @@ class HttpBaseChannel : public nsHashPropertyBag,
       const nsACString& aContentType, bool aNoSniff);
 
   bool NeedOpaqueResponseAllowedCheckAfterSniff() const;
-  void BlockOpaqueResponseAfterSniff(const nsAString& aReason);
+  void BlockOpaqueResponseAfterSniff(
+      const nsAString& aReason,
+      const OpaqueResponseBlockedTelemetryReason aTelemetryReason);
   void AllowOpaqueResponseAfterSniff();
   void SetChannelBlockedByOpaqueResponse();
   bool Http3Allowed() const;

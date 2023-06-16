@@ -12,7 +12,6 @@
 #include "nscore.h"
 #include "nsCRT.h"
 #include "nsString.h"
-#include "plstr.h"
 #include "nsURLHelper.h"
 #include "nsNetCID.h"
 #include "nsIObjectInputStream.h"

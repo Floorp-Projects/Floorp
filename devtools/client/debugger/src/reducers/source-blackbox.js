@@ -24,6 +24,8 @@ export function initialSourceBlackBoxState(state) {
     blackboxedSet: state?.blackboxedRanges
       ? new Set(Object.keys(state.blackboxedRanges))
       : new Set(),
+
+    sourceMapIgnoreListUrls: [],
   };
 }
 
@@ -122,6 +124,18 @@ function update(state = initialSourceBlackBoxState(), action) {
         blackboxedRanges: currentBlackboxedRanges,
       };
     }
+
+    case "ADD_SOURCEMAP_IGNORE_LIST_SOURCES":
+      if (action.status == "done") {
+        return {
+          ...state,
+          sourceMapIgnoreListUrls: [
+            ...state.sourceMapIgnoreListUrls,
+            ...action.value,
+          ],
+        };
+      }
+      return state;
 
     case "NAVIGATE":
       return initialSourceBlackBoxState(state);

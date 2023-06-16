@@ -99,11 +99,7 @@ describe("<DSContextFooter>", () => {
     );
 
     assert.equal(
-      wrapper
-        .find(".story-sponsored-label")
-        .children()
-        .at(0)
-        .type(),
+      wrapper.find(".story-sponsored-label").children().at(0).type(),
       FluentOrText
     );
   });
@@ -116,9 +112,8 @@ describe("<DSContextFooter>", () => {
     );
     assert.isTrue(bookmarkStatusMessage.exists());
 
-    const { fluentID: removeBookmarkFluentID } = cardContextTypes[
-      removeBookmarkBadge
-    ];
+    const { fluentID: removeBookmarkFluentID } =
+      cardContextTypes[removeBookmarkBadge];
 
     wrapper.setProps({ context_type: removeBookmarkBadge });
     await wrapper.update();

@@ -5,23 +5,23 @@
 
 Services.prefs.setBoolPref("webextensions.storage.sync.kinto", true);
 
-const {
-  ExtensionStorageEngineKinto: ExtensionStorageEngine,
-} = ChromeUtils.importESModule(
-  "resource://services-sync/engines/extension-storage.sys.mjs"
-);
+const { ExtensionStorageEngineKinto: ExtensionStorageEngine } =
+  ChromeUtils.importESModule(
+    "resource://services-sync/engines/extension-storage.sys.mjs"
+  );
 const { Service } = ChromeUtils.importESModule(
   "resource://services-sync/service.sys.mjs"
 );
-const { extensionStorageSyncKinto: extensionStorageSync } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionStorageSyncKinto.jsm"
-);
+const { extensionStorageSyncKinto: extensionStorageSync } =
+  ChromeUtils.importESModule(
+    "resource://gre/modules/ExtensionStorageSyncKinto.sys.mjs"
+  );
 
 let engine;
 
 function mock(options) {
   let calls = [];
-  let ret = function() {
+  let ret = function () {
     calls.push(arguments);
     return options.returns;
   };
@@ -119,7 +119,7 @@ add_task(async function test_calling_sync_calls_ext_storage_sync() {
     returns: Promise.resolve(),
   }));
   try {
-    await withSyncContext(async function(context) {
+    await withSyncContext(async function (context) {
       // Set something so that everyone knows that we're using storage.sync
       await extensionStorageSync.set(extension, { a: "b" }, context);
       let ping = await sync_engine_and_validate_telem(engine, false);

@@ -11,7 +11,7 @@ loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
 
 addAccessibleTask(
   `<input id="textbox" value="hello"/>`,
-  async function(browser, contentDocAcc) {
+  async function (browser, contentDocAcc) {
     info(
       "Check that the IFRAME and the IFRAME document are not accessible initially."
     );

@@ -52,7 +52,7 @@ if (!window.apstag?._getSlotIdToNameMapping) {
 
   window.apstagLOADED = true;
 
-  _Q.push = function(prefix, args) {
+  _Q.push = function (prefix, args) {
     try {
       switch (prefix) {
         case "f":

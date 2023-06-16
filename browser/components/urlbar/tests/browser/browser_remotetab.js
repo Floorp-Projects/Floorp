@@ -32,7 +32,7 @@ const REMOTE_TAB = {
   ],
 };
 
-add_setup(async function() {
+add_setup(async function () {
   sandbox = sinon.createSandbox();
 
   let originalSyncedTabsInternal = SyncedTabs._internal;
@@ -76,7 +76,7 @@ add_setup(async function() {
 add_task(async function test_remotetab_opens() {
   await BrowserTestUtils.withNewTab(
     { url: "about:robots", gBrowser },
-    async function() {
+    async function () {
       await UrlbarTestUtils.promiseAutocompleteResultPopup({
         window,
         value: "Test Remote",

@@ -56,10 +56,13 @@ class ExtensionPolicyService final : public nsIAddonPolicyService,
 
   static ExtensionPolicyService& GetSingleton();
 
-  // Heper for fetching an AtomSet of restricted domains as configured by the
+  // Helper for fetching an AtomSet of restricted domains as configured by the
   // extensions.webextensions.restrictedDomains pref. Safe to call from any
   // thread.
   static RefPtr<extensions::AtomSet> RestrictedDomains();
+
+  // Thread-safe AtomSet from extensions.quarantinedDomains.list.
+  static RefPtr<extensions::AtomSet> QuarantinedDomains();
 
   static already_AddRefed<ExtensionPolicyService> GetInstance() {
     return do_AddRef(&GetSingleton());
@@ -94,6 +97,7 @@ class ExtensionPolicyService final : public nsIAddonPolicyService,
 
   bool UseRemoteExtensions() const;
   bool IsExtensionProcess() const;
+  bool GetQuarantinedDomainsEnabled() const;
 
   nsresult InjectContentScripts(WebExtensionPolicy* aExtension);
 
@@ -120,6 +124,7 @@ class ExtensionPolicyService final : public nsIAddonPolicyService,
       const nsTArray<RefPtr<extensions::WebExtensionContentScript>>& aScripts);
 
   void UpdateRestrictedDomains();
+  void UpdateQuarantinedDomains();
 
   nsRefPtrHashtable<nsPtrHashKey<const nsAtom>, WebExtensionPolicy> mExtensions;
 

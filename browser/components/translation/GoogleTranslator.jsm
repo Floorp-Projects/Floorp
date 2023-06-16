@@ -39,7 +39,7 @@ const URL = "https://translation.googleapis.com/language/translate/v2";
  * @returns {Promise}          A promise that will resolve when the translation
  *                             task is finished.
  */
-var GoogleTranslator = function(
+var GoogleTranslator = function (
   translationDocument,
   sourceLanguage,
   targetLanguage

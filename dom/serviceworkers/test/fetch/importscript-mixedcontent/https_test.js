@@ -7,7 +7,7 @@ function sendResponseToParent(response) {
   `;
 }
 
-self.addEventListener("fetch", function(event) {
+self.addEventListener("fetch", function (event) {
   if (event.request.url.includes("index.html")) {
     var response = "good";
     try {

@@ -4,7 +4,7 @@
 
 // Test that the HeapAnalyses{Client,Worker} can read heap snapshots.
 
-add_task(async function() {
+add_task(async function () {
   const client = new HeapAnalysesClient();
 
   const snapshotFilePath = saveNewHeapSnapshot();

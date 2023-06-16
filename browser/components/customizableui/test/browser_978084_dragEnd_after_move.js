@@ -10,7 +10,7 @@ var draggedItem;
  */
 
 // Drop on the palette
-add_task(async function() {
+add_task(async function () {
   draggedItem = document.createXULElement("toolbarbutton");
   draggedItem.id = "test-dragEnd-after-move1";
   draggedItem.setAttribute("label", "Test");
@@ -28,7 +28,7 @@ add_task(async function() {
 });
 
 // Drop on a customization target itself
-add_task(async function() {
+add_task(async function () {
   draggedItem = document.createXULElement("toolbarbutton");
   draggedItem.id = "test-dragEnd-after-move2";
   draggedItem.setAttribute("label", "Test");

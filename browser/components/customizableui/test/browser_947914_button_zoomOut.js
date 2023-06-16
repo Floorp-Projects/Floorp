@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   info("Check zoom out button existence and functionality");
 
   is(ZoomManager.zoom, 1, "Initial zoom factor should be 1");

@@ -1,6 +1,6 @@
 // ----------------------------------------------------------------------------
 // Test whether an InstallTrigger.enabled is working
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["extensions.InstallTrigger.enabled", true],
@@ -29,7 +29,7 @@ add_task(async function() {
     let result = await SpecialPowers.spawn(
       newtab.linkedBrowser,
       [],
-      async function() {
+      async function () {
         return content.document.getElementById("enabled").textContent == "true";
       }
     );

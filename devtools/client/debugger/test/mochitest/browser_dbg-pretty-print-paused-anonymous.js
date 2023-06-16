@@ -6,7 +6,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger("doc-minified.html");
 
   info("Evaluate an expression with scriptCommand.execute");
@@ -45,7 +45,7 @@ document.addEventListener('click', e => {
   await debuggerDone;
 
   info("Check if we can pause inside the pretty-printed source");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.document.body.click();
   });
   await waitForPaused(dbg);
@@ -53,7 +53,7 @@ document.addEventListener('click', e => {
   await resume(dbg);
 
   info("Check that pretty printing works in `eval`'d source");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.eval(
       `setTimeout(() => {debugger;document.addEventListener("click", e => { debugger; }, {once: true})}, 100)`
     );
@@ -95,7 +95,7 @@ setTimeout(
   await resume(dbg);
 
   info("Check if we can pause inside the pretty-printed eval source");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.document.body.click();
   });
   await waitForPaused(dbg);
@@ -139,7 +139,7 @@ setTimeout(
   await resume(dbg);
 
   info("Check if we can pause inside the pretty-printed eval source");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.document.body.click();
   });
   await waitForPaused(dbg);

@@ -8,8 +8,8 @@
   <p class="fallback">FAIL (fallback content)</p>
 </canvas>
 <script>
-  const offscreen_canvas = new OffscreenCanvas(200, 200);
-  const ctx = offscreen_canvas.getContext('2d');
+  const canvas = new OffscreenCanvas(200, 200);
+  const ctx = canvas.getContext('2d');
 
   ctx.fillStyle = 'rgba(0, 0, 255, 1)';
 
@@ -20,9 +20,13 @@
   ctx.globalAlpha = 0.5;
   ctx.shadowOffsetX = -10;
   ctx.shadowOffsetY = 10;
-  ctx.shadowColor = 'orange';
+  ctx.shadowColor = 'rgba(255, 165, 0, 0.5)';
 
   ctx.beginLayer();
+
+  // Enable compositing in the layer to validate that draw calls in the layer
+  // won't individually composite with the background.
+  ctx.globalCompositeOperation = 'screen';
 
   ctx.fillStyle = 'rgba(225, 0, 0, 1)';
   ctx.fillRect(50, 50, 75, 50);
@@ -31,6 +35,6 @@
 
   ctx.endLayer();
 
-  const canvas = document.getElementById("canvas");
-  canvas.getContext('2d').drawImage(offscreen_canvas, 0, 0);
+  const outputCanvas = document.getElementById("canvas");
+  outputCanvas.getContext('2d').drawImage(canvas, 0, 0);
 </script>

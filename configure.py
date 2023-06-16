@@ -8,6 +8,7 @@ import io
 import itertools
 import logging
 import os
+import pprint
 import sys
 import textwrap
 from collections.abc import Iterable
@@ -33,7 +34,6 @@ from mach.site import (
 from mozbuild.backend.configenvironment import PartialConfigEnvironment
 from mozbuild.configure import TRACE, ConfigureSandbox
 from mozbuild.pythonutil import iter_modules_in_path
-from mozbuild.util import write_indented_repr
 
 
 def main(argv):
@@ -254,7 +254,7 @@ def config_status(config, execute=True):
         )
         for k, v in sorted(six.iteritems(sanitized_config)):
             fh.write("%s = " % k)
-            write_indented_repr(fh, v)
+            pprint.pprint(v, stream=fh, indent=4)
         fh.write(
             "__all__ = ['topobjdir', 'topsrcdir', 'defines', " "'substs', 'mozconfig']"
         )

@@ -7,6 +7,23 @@
 
 # The following section contains the accessibility scalars.
 a11y:
+  use_system_colors:
+    bug_numbers:
+      - 1835194
+    description: >
+      Bool tracking if the user has system colors enabled in firefox.
+    expires: never
+    kind: boolean
+    notification_emails:
+      - accessibility@mozilla.com
+      - mreschenberg@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+    release_channel_collection: opt-out
+    keyed: false
+
   HCM_background:
     bug_numbers:
       - 1694717
@@ -6173,13 +6190,14 @@ browser.searchinit:
       - 1725501
       - 1763528
       - 1801017
+      - 1832463
     description: >
       Records the WebExtension ID of a search engine where the WebExtension
       is not installed (= 1), disabled (= 2), search engine no longer specified (= 4),
       a different name (= 5), where the submission URL is different between the
       search engine and the WebExtension (= 6). The value '3' has been replaced
       by '6' to distinguish newer entries.
-    expires: "116"
+    expires: "124"
     keyed: true
     kind: uint
     notification_emails:
@@ -6469,7 +6487,7 @@ script.preloader:
     description:
       How many times we ended up recompiling a script from the script preloader
       on the main thread.
-    expires: "116"
+    expires: "never"
     keyed: false
     kind: uint
     notification_emails:
@@ -7530,6 +7548,22 @@ urlbar.picked:
       record_in_processes:
         - main
 
+    searchsuggestion_rich:
+      bug_numbers:
+        - 1834359
+      description: >
+        Counts how many times this result type was picked at a given index.
+      expires: never
+      kind: uint
+      keyed: true
+      notification_emails:
+        - fx-search-telemetry@mozilla.com
+      release_channel_collection: opt-out
+      products:
+        - 'firefox'
+      record_in_processes:
+        - main
+
     switchtab:
       bug_numbers:
         - 1671508
@@ -7597,6 +7631,22 @@ urlbar.picked:
     trending:
       bug_numbers:
         - 1823543
+      description: >
+        Counts how many times this result type was picked at a given index.
+      expires: never
+      kind: uint
+      keyed: true
+      notification_emails:
+        - fx-search-telemetry@mozilla.com
+      release_channel_collection: opt-out
+      products:
+        - 'firefox'
+      record_in_processes:
+        - main
+
+    trending_rich:
+      bug_numbers:
+        - 1834359
       description: >
         Counts how many times this result type was picked at a given index.
       expires: never

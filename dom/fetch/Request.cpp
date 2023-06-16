@@ -34,18 +34,18 @@ NS_IMPL_RELEASE_INHERITED(Request, FetchBody<Request>)
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(Request)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(Request, FetchBody<Request>)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mReadableStreamReader)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwner)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mHeaders)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSignal)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFetchStreamReader)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(Request, FetchBody<Request>)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReadableStreamReader)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mHeaders)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSignal)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFetchStreamReader)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Request)
@@ -281,11 +281,7 @@ SafeRefPtr<Request> Request::Constructor(nsIGlobalObject* aGlobal,
     RefPtr<Request> inputReq = &aInput.GetAsRequest();
     nsCOMPtr<nsIInputStream> body;
     inputReq->GetBody(getter_AddRefs(body));
-    bool used = inputReq->GetBodyUsed(aRv);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return nullptr;
-    }
-    if (used) {
+    if (inputReq->BodyUsed()) {
       aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
       return nullptr;
     }
@@ -622,11 +618,7 @@ SafeRefPtr<Request> Request::Constructor(nsIGlobalObject* aGlobal,
 }
 
 SafeRefPtr<Request> Request::Clone(ErrorResult& aRv) {
-  bool used = GetBodyUsed(aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-  if (used) {
+  if (BodyUsed()) {
     aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
     return nullptr;
   }

@@ -20,7 +20,4 @@ RUN apt-get update && \
       wget \
       zip \
       lsb-release \
-      sudo
-
-RUN adduser worker sudo
-RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+      gperf

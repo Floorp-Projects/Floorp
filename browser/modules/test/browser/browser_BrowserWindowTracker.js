@@ -23,7 +23,7 @@ async function withOpenWindows(amount, cont) {
 }
 
 add_task(async function test_getTopWindow() {
-  await withOpenWindows(5, async function(windows) {
+  await withOpenWindows(5, async function (windows) {
     // Without options passed in.
     let window = BrowserWindowTracker.getTopWindow();
     let expectedMostRecentIndex = windows.length - 1;
@@ -96,7 +96,7 @@ add_task(async function test_getTopWindow() {
       "Window focused before the private window should be the most recent one."
     );
     let popupWindowPromise = BrowserTestUtils.waitForNewWindow();
-    SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+    SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
       let features =
         "location=no, personalbar=no, toolbar=no, scrollbars=no, menubar=no, status=no";
       content.window.open("about:blank", "_blank", features);
@@ -120,7 +120,7 @@ add_task(async function test_getTopWindow() {
 });
 
 add_task(async function test_orderedWindows() {
-  await withOpenWindows(10, async function(windows) {
+  await withOpenWindows(10, async function (windows) {
     Assert.equal(
       BrowserWindowTracker.windowCount,
       11,

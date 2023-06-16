@@ -23,7 +23,7 @@ add_task(async function test_execute_page_action_without_popup() {
       page_action: {},
     },
 
-    background: function() {
+    background: function () {
       let isShown = false;
 
       browser.commands.onCommand.addListener(commandName => {
@@ -94,12 +94,12 @@ add_task(async function test_execute_page_action_with_popup() {
 
     files: {
       "popup.html": scriptPage("popup.js"),
-      "popup.js": function() {
+      "popup.js": function () {
         browser.runtime.sendMessage("popup-opened");
       },
     },
 
-    background: function() {
+    background: function () {
       let isShown = false;
 
       browser.commands.onCommand.addListener(message => {
@@ -171,7 +171,7 @@ add_task(async function test_execute_page_action_with_matching() {
 
     files: {
       "popup.html": scriptPage("popup.js"),
-      "popup.js": function() {
+      "popup.js": function () {
         window.addEventListener(
           "load",
           () => {

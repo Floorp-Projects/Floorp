@@ -19,7 +19,7 @@ const TEST_URL = `
   </body>
 `;
 
-add_task(async function() {
+add_task(async function () {
   // Make the toolbox tall enough to show the full markup without the need
   // to manage scrolling event badges into view.
   await pushPref("devtools.toolbox.footer.height", 400);

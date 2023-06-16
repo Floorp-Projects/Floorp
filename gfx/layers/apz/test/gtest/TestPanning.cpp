@@ -217,3 +217,35 @@ TEST_F(APZCPanningTester, PanWithHistoricalTouchData) {
             velocityFromFullDataViaHistory);
   EXPECT_NE(velocityFromPartialData, velocityFromFullDataViaHistory);
 }
+
+TEST_F(APZCPanningTester, DuplicatePanEndEvents_Bug1833950) {
+  // Send a pan gesture that triggers a fling animation at the end.
+  // Note that we need at least two _PAN events to have enough samples
+  // in the velocity tracker to compute a fling velocity.
+  PanGesture(PanGestureInput::PANGESTURE_START, apzc, ScreenIntPoint(50, 80),
+             ScreenPoint(0, 2), mcc->Time());
+  mcc->AdvanceByMillis(5);
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+  PanGesture(PanGestureInput::PANGESTURE_PAN, apzc, ScreenIntPoint(50, 80),
+             ScreenPoint(0, 10), mcc->Time());
+  mcc->AdvanceByMillis(5);
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+  PanGesture(PanGestureInput::PANGESTURE_PAN, apzc, ScreenIntPoint(50, 80),
+             ScreenPoint(0, 10), mcc->Time());
+  mcc->AdvanceByMillis(5);
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+  PanGesture(PanGestureInput::PANGESTURE_END, apzc, ScreenIntPoint(50, 80),
+             ScreenPoint(0, 0), mcc->Time(), MODIFIER_NONE,
+             /*aSimulateMomentum=*/true);
+
+  // Give the fling animation a chance to start.
+  SampleAnimationOnce();
+  apzc->AssertStateIsFling();
+
+  // Send a duplicate pan-end event.
+  // This test is just intended to check that doing this doesn't
+  // trigger an assertion failure in debug mode.
+  PanGesture(PanGestureInput::PANGESTURE_END, apzc, ScreenIntPoint(50, 80),
+             ScreenPoint(0, 0), mcc->Time(), MODIFIER_NONE,
+             /*aSimulateMomentum=*/true);
+}

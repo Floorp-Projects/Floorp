@@ -11,10 +11,10 @@ function checkDataForAboutURL() {
       {}
     );
     let request = indexedDB.openForPrincipal(principal, "TestDatabase", 1);
-    request.onupgradeneeded = function(e) {
+    request.onupgradeneeded = function (e) {
       data = false;
     };
-    request.onsuccess = function(e) {
+    request.onsuccess = function (e) {
       resolve(data);
     };
   });
@@ -45,9 +45,10 @@ add_task(async function deleteStorageInAboutURL() {
   // Clean up.
   await Sanitizer.sanitize(["cookies", "offlineApps"]);
 
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    "about:newtab"
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      "about:newtab"
+    );
   await new Promise(aResolve => {
     let req = Services.qms.clearStoragesForPrincipal(principal);
     req.callback = () => {
@@ -85,9 +86,10 @@ add_task(async function deleteStorageOnlyCustomPermissionInAboutURL() {
   // Clean up.
   await Sanitizer.sanitize(["cookies", "offlineApps"]);
 
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    "about:newtab"
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      "about:newtab"
+    );
   await new Promise(aResolve => {
     let req = Services.qms.clearStoragesForPrincipal(principal);
     req.callback = () => {

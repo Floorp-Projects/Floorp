@@ -14,10 +14,10 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/widget/tests/browser/file_test_ime_state_on_focus_move.js",
   this
 );
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.withNewTab(
     "https://example.com/browser/widget/tests/browser/file_ime_state_tests.html",
-    async function(browser) {
+    async function (browser) {
       const tipWrapper = new TIPWrapper(window);
       ok(
         tipWrapper.isAvailable(),
@@ -37,9 +37,10 @@ add_task(async function() {
             browser,
             [aDescription],
             description => {
-              const runner = content.wrappedJSObject.createIMEStateWhenNoActiveElementTester(
-                description
-              );
+              const runner =
+                content.wrappedJSObject.createIMEStateWhenNoActiveElementTester(
+                  description
+                );
               return runner.run(content.document, content.window);
             }
           );
@@ -55,11 +56,12 @@ add_task(async function() {
             browser,
             [aDescription, index],
             (description, aIndex) => {
-              content.wrappedJSObject.runner = content.wrappedJSObject.createIMEStateOnFocusMoveTester(
-                description,
-                aIndex,
-                content.window
-              );
+              content.wrappedJSObject.runner =
+                content.wrappedJSObject.createIMEStateOnFocusMoveTester(
+                  description,
+                  aIndex,
+                  content.window
+                );
               return content.wrappedJSObject.runner.prepareToRun(
                 content.document.querySelector("div")
               );

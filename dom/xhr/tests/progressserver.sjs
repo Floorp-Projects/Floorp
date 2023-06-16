@@ -11,7 +11,7 @@ function setReq(req) {
 
 function getReq() {
   var req;
-  getObjectState("dom/xhr/tests/progressserver", function(v) {
+  getObjectState("dom/xhr/tests/progressserver", function (v) {
     req = v;
   });
   return req;
@@ -37,7 +37,7 @@ function handleRequest(request, response) {
     setReq(response);
 
     response.setHeader("Cache-Control", "no-cache", false);
-    pairs.forEach(function(val) {
+    pairs.forEach(function (val) {
       var [name, value] = val.split("=");
       response.setHeader(name, unescape(value), false);
     });

@@ -59,7 +59,7 @@ add_task(async function test_clicking_hamburger_edge_fitts() {
     PanelUI.panel.addEventListener("popuphidden", onPopupHidden);
     PanelUI.hide();
   }
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     PanelUI.panel.removeEventListener("popupshown", onPopupShown);
     PanelUI.panel.removeEventListener("popuphidden", onPopupHidden);
   });

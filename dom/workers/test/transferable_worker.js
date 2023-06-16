@@ -3,7 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-onmessage = function(event) {
+onmessage = function (event) {
   if ("notEmpty" in event.data && "byteLength" in event.data.notEmpty) {
     postMessage({
       event: "W: NotEmpty object received: " + event.data.notEmpty.byteLength,

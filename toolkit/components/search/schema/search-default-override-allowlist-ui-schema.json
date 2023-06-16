@@ -1,7 +1,3 @@
 {
-  "ui:order": [
-    "thirdPartyId",
-    "overridesId",
-    "urls"
-  ]
+  "ui:order": ["thirdPartyId", "overridesId", "urls"]
 }

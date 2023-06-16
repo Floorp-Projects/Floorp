@@ -1,5 +1,7 @@
 <html>
-  <head><title>MediaSessionDOMTest1</title></head>
+  <head>
+    <title>MediaSessionDOMTest1</title>
+  </head>
   <body>
     <script>
       function updatePositionState(event) {
@@ -19,8 +21,10 @@
 
       function getTrack(offset) {
         console.log("" + active.id + " " + offset);
-        const nextId = Math.min(tracks.length - 1,
-            Math.max(0, parseInt(active.id) + offset));
+        const nextId = Math.min(
+          tracks.length - 1,
+          Math.max(0, parseInt(active.id) + offset)
+        );
         return tracks[nextId];
       }
 
@@ -48,11 +52,13 @@
         title: "hoot",
         artist: "owl",
         album: "hoots",
-        artwork: [{
-          src: "images/test.gif",
-          type: "image/gif",
-          sizes: "265x199"
-        }]
+        artwork: [
+          {
+            src: "images/test.gif",
+            type: "image/gif",
+            sizes: "265x199",
+          },
+        ],
       });
       audio1.id = 0;
 
@@ -63,11 +69,13 @@
         title: "hoot2",
         artist: "stillowl",
         album: "dahoots",
-        artwork: [{
-          src: "images/test.gif",
-          type: "image/gif",
-          sizes: "265x199"
-        }]
+        artwork: [
+          {
+            src: "images/test.gif",
+            type: "image/gif",
+            sizes: "265x199",
+          },
+        ],
       });
       audio2.id = 1;
 
@@ -78,11 +86,13 @@
         title: "hoot3",
         artist: "immaowl",
         album: "mahoots",
-        artwork: [{
-          src: "images/test.gif",
-          type: "image/gif",
-          sizes: "265x199"
-        }]
+        artwork: [
+          {
+            src: "images/test.gif",
+            type: "image/gif",
+            sizes: "265x199",
+          },
+        ],
       });
       audio3.id = 2;
 

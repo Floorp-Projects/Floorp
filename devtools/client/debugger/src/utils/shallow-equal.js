@@ -2,17 +2,36 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+/**
+ * Shallow equal will consider equal:
+ *  - exact same values (strict '===' equality)
+ *  - distinct array instances having the exact same values in them (same number and strict equality).
+ *  - distinct object instances having the exact same attributes and values.
+ *
+ * It will typically consider different array and object whose values
+ * aren't strictly equal. You may consider using "deep equality" checks for this scenario.
+ */
 export function shallowEqual(value, other) {
-  return (
-    value === other ||
-    (Array.isArray(value) &&
-      Array.isArray(other) &&
-      arrayShallowEqual(value, other)) ||
-    (isObject(value) && isObject(other) && objectShallowEqual(value, other))
-  );
+  if (value === other) {
+    return true;
+  }
+
+  if (Array.isArray(value) && Array.isArray(other)) {
+    return arrayShallowEqual(value, other);
+  }
+
+  if (isObject(value) && isObject(other)) {
+    return objectShallowEqual(value, other);
+  }
+
+  return false;
 }
 
 export function arrayShallowEqual(value, other) {
+  // Redo this check in case we are called directly from the selectors.
+  if (value === other) {
+    return true;
+  }
   return value.length === other.length && value.every((k, i) => k === other[i]);
 }
 

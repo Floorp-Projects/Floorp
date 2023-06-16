@@ -104,7 +104,7 @@ nl{
             "1000000000: <%spellout-cardinal<\u00ADmiljard>%%ord-ste>;",
             "1000000000000: <%spellout-cardinal<\u00ADbiljoen>%%ord-ste>;",
             "1000000000000000: <%spellout-cardinal<\u00ADbiljard>%%ord-ste>;",
-            "1000000000000000000: =#,##0=.;",
+            "1000000000000000000: =#,##0=e;",
         }
     }
 }

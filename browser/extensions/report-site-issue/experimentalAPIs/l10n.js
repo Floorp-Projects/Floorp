@@ -6,7 +6,7 @@
 
 /* global ExtensionAPI, Services, XPCOMUtils */
 
-XPCOMUtils.defineLazyGetter(this, "l10nStrings", function() {
+XPCOMUtils.defineLazyGetter(this, "l10nStrings", function () {
   return Services.strings.createBundle(
     "chrome://report-site-issue/locale/webcompat.properties"
   );

@@ -79,7 +79,7 @@ class CSSKeyframeDeclaration : public nsDOMCSSDeclaration {
     return n;
   }
 
-  void SetRawAfterClone(RawServoKeyframe* aKeyframe) {
+  void SetRawAfterClone(StyleLockedKeyframe* aKeyframe) {
     mDecls->SetOwningRule(nullptr);
     mDecls = new DeclarationBlock(Servo_Keyframe_GetStyle(aKeyframe).Consume());
     mDecls->SetOwningRule(mRule);
@@ -107,7 +107,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMCSSDeclaration)
 // CSSKeyframeRule
 //
 
-CSSKeyframeRule::CSSKeyframeRule(already_AddRefed<RawServoKeyframe> aRaw,
+CSSKeyframeRule::CSSKeyframeRule(already_AddRefed<StyleLockedKeyframe> aRaw,
                                  StyleSheet* aSheet, css::Rule* aParentRule,
                                  uint32_t aLine, uint32_t aColumn)
     : css::Rule(aSheet, aParentRule, aLine, aColumn), mRaw(aRaw) {}
@@ -145,7 +145,7 @@ StyleCssRuleType CSSKeyframeRule::Type() const {
   return StyleCssRuleType::Keyframe;
 }
 
-void CSSKeyframeRule::SetRawAfterClone(RefPtr<RawServoKeyframe> aRaw) {
+void CSSKeyframeRule::SetRawAfterClone(RefPtr<StyleLockedKeyframe> aRaw) {
   mRaw = std::move(aRaw);
 
   if (mDeclaration) {

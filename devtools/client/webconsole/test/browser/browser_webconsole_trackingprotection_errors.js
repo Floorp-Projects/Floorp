@@ -16,11 +16,12 @@ const TEST_URI_THIRD_PARTY_ONLY =
   "https://example.com/" + TEST_FILE_THIRD_PARTY_ONLY;
 const TRACKER_URL = "https://tracking.example.org/";
 const THIRD_PARTY_URL = "https://example.org/";
-const BLOCKED_URL = `\u201c${TRACKER_URL +
-  TEST_PATH +
-  "cookieSetter.html"}\u201d`;
-const PARTITIONED_URL = `\u201c${THIRD_PARTY_URL +
-  TEST_PATH}cookieSetter.html\u201d`;
+const BLOCKED_URL = `\u201c${
+  TRACKER_URL + TEST_PATH + "cookieSetter.html"
+}\u201d`;
+const PARTITIONED_URL = `\u201c${
+  THIRD_PARTY_URL + TEST_PATH
+}cookieSetter.html\u201d`;
 
 const COOKIE_BEHAVIOR_PREF = "network.cookie.cookieBehavior";
 const COOKIE_BEHAVIORS = {
@@ -36,11 +37,11 @@ const COOKIE_BEHAVIORS = {
   PARTITION_FOREIGN: 5,
 };
 
-const { UrlClassifierTestUtils } = ChromeUtils.import(
-  "resource://testing-common/UrlClassifierTestUtils.jsm"
+const { UrlClassifierTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
 );
 
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   UrlClassifierTestUtils.cleanupTestTrackers();
 
   await new Promise(resolve => {
@@ -206,9 +207,10 @@ add_task(async function testCookieBlockedByPermissionMessage() {
   info("Test cookie blocked by permission message");
   // Turn off tracking protection and add a block permission on the URL.
   await pushPref("privacy.trackingprotection.enabled", false);
-  const p = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    TRACKER_URL
-  );
+  const p =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      TRACKER_URL
+    );
   Services.perms.addFromPrincipal(
     p,
     "cookie",

@@ -52,7 +52,7 @@ add_task(async function setup() {
   await settingsFileWritten;
 });
 
-add_task(async function() {
+add_task(async function () {
   let ss = await startup();
   Assert.ok(
     (await visibleEngines(ss)).includes("Special"),

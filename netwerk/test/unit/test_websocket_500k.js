@@ -13,7 +13,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
 });
 
-add_setup(async function() {
+add_setup(async function () {
   Services.prefs.setCharPref("network.dns.localDomains", "foo.example.com");
 
   let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(

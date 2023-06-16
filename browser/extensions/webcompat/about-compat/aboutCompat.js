@@ -8,7 +8,7 @@
 
 let availablePatches;
 
-const portToAddon = (function() {
+const portToAddon = (function () {
   let port;
 
   function connect() {
@@ -31,7 +31,7 @@ const portToAddon = (function() {
   return { send };
 })();
 
-const $ = function(sel) {
+const $ = function (sel) {
   return document.querySelector(sel);
 };
 

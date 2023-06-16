@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page will do a redirect without doing it in a top load</title>
+    <!-- <meta content="0;url=https://example.com/hello_world" http-equiv="refresh"> -->
+    <script>
+      let parentWindow = window.parent;
+      let url = "https://example.com/hello_world";
+      parentWindow.postMessage(url, "*");
+    </script>
+  </head>
+  <body>
+  </body>
+</html>

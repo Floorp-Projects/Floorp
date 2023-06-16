@@ -168,9 +168,8 @@ function autoComplete({ ed, cm }) {
       // character "b". Thus we need to calculate the width of the entered part
       // of the token ("backgr" here).
 
-      const cursorElement = cm.display.cursorDiv.querySelector(
-        ".CodeMirror-cursor"
-      );
+      const cursorElement =
+        cm.display.cursorDiv.querySelector(".CodeMirror-cursor");
       const left = suggestions[0].preLabel.length * cm.defaultCharWidth();
       popup.hidePopup();
       popup.setItems(suggestions);
@@ -197,10 +196,7 @@ function insertPopupItem(ed, popupItem) {
     .split("")
     .reverse()
     .join("");
-  const backwardsPreLabel = preLabel
-    .split("")
-    .reverse()
-    .join("");
+  const backwardsPreLabel = preLabel.split("").reverse().join("");
 
   // If there is additional text in the preLabel vs the line, then
   // just insert the entire autocomplete text.  An example:

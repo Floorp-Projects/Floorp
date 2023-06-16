@@ -7,6 +7,8 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   addDebuggerToGlobal: "resource://gre/modules/jsdebugger.sys.mjs",
+
+  generateUUID: "chrome://remote/content/shared/UUID.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "dbg", () => {
@@ -36,13 +38,6 @@ export const RealmType = {
   Worklet: "worklet",
 };
 
-function getUUID() {
-  return Services.uuid
-    .generateUUID()
-    .toString()
-    .slice(1, -1);
-}
-
 /**
  * Base class that wraps any kind of WebDriver BiDi realm.
  */
@@ -51,7 +46,7 @@ export class Realm {
   #id;
 
   constructor() {
-    this.#id = getUUID();
+    this.#id = lazy.generateUUID();
 
     // Map of unique handles (UUIDs) to objects belonging to this realm.
     this.#handleObjectMap = new Map();
@@ -118,7 +113,7 @@ export class Realm {
    * @returns {string} The unique handle created for this strong reference.
    */
   getHandleForObject(object) {
-    const handle = getUUID();
+    const handle = lazy.generateUUID();
     this.#handleObjectMap.set(handle, object);
     return handle;
   }
@@ -152,7 +147,7 @@ export class Realm {
  * Wrapper for Window realms including sandbox objects.
  */
 export class WindowRealm extends Realm {
-  #asyncStackEnabled;
+  #realmAutomationFeaturesEnabled;
   #globalObject;
   #globalObjectReference;
   #sandboxName;
@@ -180,13 +175,14 @@ export class WindowRealm extends Realm {
     this.#globalObjectReference = lazy.dbg.makeGlobalObjectReference(
       this.#globalObject
     );
-    this.#asyncStackEnabled = false;
+    this.#realmAutomationFeaturesEnabled = false;
   }
 
   destroy() {
-    if (this.#asyncStackEnabled) {
+    if (this.#realmAutomationFeaturesEnabled) {
       lazy.dbg.disableAsyncStack(this.#globalObject);
-      this.#asyncStackEnabled = false;
+      lazy.dbg.disableUnlimitedStacksCapturing(this.#globalObject);
+      this.#realmAutomationFeaturesEnabled = false;
     }
 
     this.#globalObjectReference = null;
@@ -224,10 +220,11 @@ export class WindowRealm extends Realm {
     return new Cu.Sandbox(win, opts);
   }
 
-  #enableAsyncStack() {
-    if (!this.#asyncStackEnabled) {
+  #enableRealmAutomationFeatures() {
+    if (!this.#realmAutomationFeaturesEnabled) {
       lazy.dbg.enableAsyncStack(this.#globalObject);
-      this.#asyncStackEnabled = true;
+      lazy.dbg.enableUnlimitedStacksCapturing(this.#globalObject);
+      this.#realmAutomationFeaturesEnabled = true;
     }
   }
 
@@ -259,7 +256,7 @@ export class WindowRealm extends Realm {
    *       RemoteValue if the evaluation status was "normal".
    */
   executeInGlobal(expression) {
-    this.#enableAsyncStack();
+    this.#enableRealmAutomationFeatures();
     return this.#globalObjectReference.executeInGlobal(expression, {
       url: this.#window.document.baseURI,
     });
@@ -287,7 +284,7 @@ export class WindowRealm extends Realm {
     functionArguments,
     thisParameter
   ) {
-    this.#enableAsyncStack();
+    this.#enableRealmAutomationFeatures();
     const expression = `(${functionDeclaration}).apply(__bidi_this, __bidi_args)`;
 
     const args = this.cloneIntoRealm([]);

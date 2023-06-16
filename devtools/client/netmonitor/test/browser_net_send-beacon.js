@@ -7,7 +7,7 @@
  * Tests if beacons are handled correctly.
  */
 
-add_task(async function() {
+add_task(async function () {
   const { tab, monitor } = await initNetMonitor(SEND_BEACON_URL, {
     requestCount: 1,
   });

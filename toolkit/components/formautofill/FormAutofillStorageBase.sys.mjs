@@ -1568,11 +1568,11 @@ export class AddressesBase extends AutofillRecords {
           .map(s => s.trim());
       }
       for (let i = 0; i < 3; i++) {
-        address["address-line" + (i + 1)] = streetAddress[i] || "";
+        address[`address-line${i + 1}`] = streetAddress[i] || "";
       }
       if (streetAddress.length > 3) {
         address["address-line3"] = lazy.FormAutofillUtils.toOneLineAddress(
-          streetAddress.splice(2)
+          streetAddress.slice(2)
         );
       }
       hasNewComputedFields = true;
@@ -1582,9 +1582,10 @@ export class AddressesBase extends AutofillRecords {
     if (!("country-name" in address)) {
       if (address.country) {
         try {
-          address[
-            "country-name"
-          ] = Services.intl.getRegionDisplayNames(undefined, [address.country]);
+          address["country-name"] = Services.intl.getRegionDisplayNames(
+            undefined,
+            [address.country]
+          );
         } catch (e) {
           address["country-name"] = "";
         }

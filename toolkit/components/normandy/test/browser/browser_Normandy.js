@@ -30,7 +30,7 @@ const experimentPref3 = "test.initExperimentPrefs3";
 const experimentPref4 = "test.initExperimentPrefs4";
 
 function withStubInits() {
-  return function(testFunction) {
+  return function (testFunction) {
     return decorate(
       withStub(AddonRollouts, "init"),
       withStub(AddonStudies, "init"),

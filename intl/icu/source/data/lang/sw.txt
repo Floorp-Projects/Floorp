@@ -506,6 +506,7 @@ sw{
     Languages%short{
         az{"Kiazeri"}
         en_GB{"Kiingereza (UK)"}
+        en_US{"Kiingereza (US)"}
     }
     Languages%variant{
         hi_Latn{"Kihindi chenye Kiingereza"}

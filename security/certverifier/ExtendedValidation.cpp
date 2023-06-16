@@ -497,19 +497,6 @@ static const struct EVInfo kEVInfos[] = {
     "DL4=",
   },
   {
-    // CN = E-Tugra Certification Authority, OU = E-Tugra Sertifikasyon Merkezi, O = E-Tuğra EBG Bilişim Teknolojileri ve Hizmetleri A.Ş., L = Ankara, C = TR
-    "2.16.792.3.0.4.1.1.4",
-    "ETugra EV OID",
-    { 0xB0, 0xBF, 0xD5, 0x2B, 0xB0, 0xD7, 0xD9, 0xBD, 0x92, 0xBF, 0x5D,
-      0x4D, 0xC1, 0x3D, 0xA2, 0x55, 0xC0, 0x2C, 0x54, 0x2F, 0x37, 0x83,
-      0x65, 0xEA, 0x89, 0x39, 0x11, 0xF5, 0x5E, 0x55, 0xF2, 0x3C },
-    "MIGyMQswCQYDVQQGEwJUUjEPMA0GA1UEBwwGQW5rYXJhMUAwPgYDVQQKDDdFLVR1"
-    "xJ9yYSBFQkcgQmlsacWfaW0gVGVrbm9sb2ppbGVyaSB2ZSBIaXptZXRsZXJpIEEu"
-    "xZ4uMSYwJAYDVQQLDB1FLVR1Z3JhIFNlcnRpZmlrYXN5b24gTWVya2V6aTEoMCYG"
-    "A1UEAwwfRS1UdWdyYSBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eQ==",
-    "amg+nFGby1M=",
-  },
-  {
     // CN=E-Tugra Global Root CA RSA v3,OU=E-Tugra Trust Center,O=E-Tugra EBG A.S.,L=Ankara,C=TR
     "2.23.140.1.1",
     "CA/Browser Forum EV OID",
@@ -1171,6 +1158,28 @@ static const struct EVInfo kEVInfos[] = {
     "MEgxCzAJBgNVBAYTAkRFMRUwEwYDVQQKEwxELVRydXN0IEdtYkgxIjAgBgNVBAMT"
     "GUQtVFJVU1QgRVYgUm9vdCBDQSAxIDIwMjA=",
     "XwJB13qHfEwDo6yWjfv/0A==",
+  },
+  {
+    // CN=BJCA Global Root CA1,O=BEIJING CERTIFICATE AUTHORITY,C=CN
+    "2.23.140.1.1",
+    "CA/Browser Forum EV OID",
+    { 0xF3, 0x89, 0x6F, 0x88, 0xFE, 0x7C, 0x0A, 0x88, 0x27, 0x66, 0xA7,
+      0xFA, 0x6A, 0xD2, 0x74, 0x9F, 0xB5, 0x7A, 0x7F, 0x3E, 0x98, 0xFB,
+      0x76, 0x9C, 0x1F, 0xA7, 0xB0, 0x9C, 0x2C, 0x44, 0xD5, 0xAE },
+    "MFQxCzAJBgNVBAYTAkNOMSYwJAYDVQQKDB1CRUlKSU5HIENFUlRJRklDQVRFIEFV"
+    "VEhPUklUWTEdMBsGA1UEAwwUQkpDQSBHbG9iYWwgUm9vdCBDQTE=",
+    "VW9l47TZkGobCdFsPsBsIA==",
+  },
+  {
+    // CN=BJCA Global Root CA2,O=BEIJING CERTIFICATE AUTHORITY,C=CN
+    "2.23.140.1.1",
+    "CA/Browser Forum EV OID",
+    { 0x57, 0x4D, 0xF6, 0x93, 0x1E, 0x27, 0x80, 0x39, 0x66, 0x7B, 0x72,
+      0x0A, 0xFD, 0xC1, 0x60, 0x0F, 0xC2, 0x7E, 0xB6, 0x6D, 0xD3, 0x09,
+      0x29, 0x79, 0xFB, 0x73, 0x85, 0x64, 0x87, 0x21, 0x28, 0x82 },
+    "MFQxCzAJBgNVBAYTAkNOMSYwJAYDVQQKDB1CRUlKSU5HIENFUlRJRklDQVRFIEFV"
+    "VEhPUklUWTEdMBsGA1UEAwwUQkpDQSBHbG9iYWwgUm9vdCBDQTI=",
+    "LBcIfWQqwP6FGFkGz7RK6w==",
   },
     // clang-format on
 };

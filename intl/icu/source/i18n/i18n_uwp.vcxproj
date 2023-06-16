@@ -399,6 +399,7 @@
     <ClCompile Include="hebrwcal.cpp" />
     <ClCompile Include="indiancal.cpp" />
     <ClCompile Include="islamcal.cpp" />
+    <ClCompile Include="iso8601cal.cpp" />
     <ClCompile Include="japancal.cpp" />
     <ClCompile Include="listformatter.cpp" />
     <ClCompile Include="ulistformatter.cpp" />
@@ -434,6 +435,7 @@
     <ClCompile Include="number_mapper.cpp" />
     <ClCompile Include="number_multiplier.cpp" />
     <ClCompile Include="number_currencysymbols.cpp" />
+    <ClCompile Include="number_simple.cpp" />
     <ClCompile Include="number_skeletons.cpp" />
     <ClCompile Include="number_symbolswrapper.cpp" />
     <ClCompile Include="number_capi.cpp" />
@@ -615,6 +617,7 @@
     <ClInclude Include="hebrwcal.h" />
     <ClInclude Include="indiancal.h" />
     <ClInclude Include="islamcal.h" />
+    <ClInclude Include="iso8601cal.h" />
     <ClInclude Include="japancal.h" />
     <ClInclude Include="measunit_impl.h" />
     <ClInclude Include="msgfmt_impl.h" />

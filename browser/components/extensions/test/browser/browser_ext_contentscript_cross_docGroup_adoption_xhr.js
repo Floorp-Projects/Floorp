@@ -25,12 +25,12 @@ add_task(async function test_cross_docGroup_adoption() {
 
     files: {
       "blank.html": "<html>data</html>",
-      "content-script.js": function() {
+      "content-script.js": function () {
         let xhr = new XMLHttpRequest();
         xhr.responseType = "document";
         xhr.open("GET", browser.runtime.getURL("blank.html"));
 
-        xhr.onload = function() {
+        xhr.onload = function () {
           let doc = xhr.response;
           try {
             let node = doc.body.cloneNode(true);

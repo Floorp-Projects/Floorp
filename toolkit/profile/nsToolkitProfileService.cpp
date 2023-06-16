@@ -1681,6 +1681,7 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
 
     rv = CreateDefaultProfile(getter_AddRefs(mCurrent));
     if (NS_SUCCEEDED(rv)) {
+#ifdef MOZ_CREATE_LEGACY_PROFILE
       // If there is only one profile and it isn't meant to be the profile that
       // older versions of Firefox use then we must create a default profile
       // for older versions of Firefox to avoid the existing profile being
@@ -1692,6 +1693,7 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
                       getter_AddRefs(newProfile));
         SetNormalDefault(newProfile);
       }
+#endif
 
       rv = Flush();
       NS_ENSURE_SUCCESS(rv, rv);

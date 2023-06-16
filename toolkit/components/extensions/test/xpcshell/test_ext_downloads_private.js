@@ -41,7 +41,7 @@ add_task(function setup() {
 
 add_task(async function test_private_download() {
   let pb_extension = ExtensionTestUtils.loadExtension({
-    background: async function() {
+    background: async function () {
       function promiseEvent(eventTarget, accept) {
         return new Promise(resolve => {
           eventTarget.addListener(function listener(data) {
@@ -129,7 +129,7 @@ add_task(async function test_private_download() {
       browser_specific_settings: { gecko: { id: "@not_allowed" } },
       permissions: ["downloads", "downloads.open"],
     },
-    background: async function() {
+    background: async function () {
       browser.downloads.onCreated.addListener(() => {
         browser.test.fail("download-onCreated");
       });

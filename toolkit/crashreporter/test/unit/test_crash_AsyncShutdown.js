@@ -19,7 +19,7 @@ function setup_crash() {
 
   let TOPIC = "testing-async-shutdown-crash";
   let phase = AsyncShutdown._getPhase(TOPIC);
-  phase.addBlocker("A blocker that is never satisfied", function() {
+  phase.addBlocker("A blocker that is never satisfied", function () {
     dump("Installing blocker\n");
     let deferred = PromiseUtils.defer();
     return deferred.promise;

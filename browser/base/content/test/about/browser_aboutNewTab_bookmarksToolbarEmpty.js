@@ -21,7 +21,7 @@ const bookmarksInfo = [
   },
 ];
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     // Ensure we can wait for about:newtab to load.
     set: [["browser.newtab.preload", false]],

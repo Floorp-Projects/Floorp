@@ -32,7 +32,6 @@ XPCOMUtils.defineLazyGetter(this, "UrlbarTestUtils", () => {
     "resource://testing-common/UrlbarTestUtils.sys.mjs"
   );
   module.init(this);
-  registerCleanupFunction(() => module.uninit());
   return module;
 });
 

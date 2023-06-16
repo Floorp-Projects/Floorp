@@ -42,7 +42,7 @@ class RequestError extends Error {
   }
 }
 
-add_setup(function() {
+add_setup(function () {
   do_get_profile();
 
   enableTesting();
@@ -90,8 +90,8 @@ function reset() {
 }
 
 async function requestFinished(request) {
-  await new Promise(function(resolve) {
-    request.callback = function() {
+  await new Promise(function (resolve) {
+    request.callback = function () {
       resolve();
     };
   });
@@ -125,7 +125,7 @@ function create_test_profile(zipFileName) {
     var zipentry = zipReader.getEntry(entryName);
 
     var file = profileDir.clone();
-    entryName.split(pathDelimiter).forEach(function(part) {
+    entryName.split(pathDelimiter).forEach(function (part) {
       file.append(part);
     });
 
@@ -182,7 +182,7 @@ function getRelativeFile(relativePath) {
     winFile.useDOSDevicePathSyntax = true;
   }
 
-  relativePath.split(pathDelimiter).forEach(function(component) {
+  relativePath.split(pathDelimiter).forEach(function (component) {
     if (component == "..") {
       file = file.parent;
     } else {

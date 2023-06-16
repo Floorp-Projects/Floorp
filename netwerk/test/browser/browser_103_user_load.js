@@ -18,7 +18,7 @@ const {
 const START_VALUE =
   "https://example.com/browser/netwerk/test/browser/early_hint_asset_html.sjs?as=style&hinted=1";
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.suggest.quickactions", false]],
   });

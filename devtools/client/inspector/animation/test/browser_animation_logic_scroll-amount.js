@@ -6,7 +6,7 @@
 // Test whether the scroll amount of animation and animated property re-calculate after
 // changing selected node.
 
-add_task(async function() {
+add_task(async function () {
   await addTab(URL_ROOT + "doc_simple_animation.html");
   await removeAnimatedElementsExcept([
     ".animated",
@@ -14,11 +14,8 @@ add_task(async function() {
     ".longhand",
     ".negative-delay",
   ]);
-  const {
-    animationInspector,
-    inspector,
-    panel,
-  } = await openAnimationInspector();
+  const { animationInspector, inspector, panel } =
+    await openAnimationInspector();
 
   info(
     "Set the scroll amount of animation and animated property to the bottom"

@@ -14,7 +14,7 @@ const TEST_URI = `data:text/html,<!DOCTYPE html><meta charset=utf8>Test reverse_
 const ALL_CHANNELS = Ci.nsITelemetry.DATASET_ALL_CHANNELS;
 const isMacOS = AppConstants.platform === "macosx";
 
-add_task(async function() {
+add_task(async function () {
   // Let's reset the counts.
   Services.telemetry.clearEvents();
 

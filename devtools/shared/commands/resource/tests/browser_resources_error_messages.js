@@ -15,7 +15,7 @@ httpServer.registerPathHandler(`/test_page_errors.html`, (req, res) => {
 
 const TEST_URI = `http://localhost:${httpServer.identity.primaryPort}/test_page_errors.html`;
 
-add_task(async function() {
+add_task(async function () {
   // Disable the preloaded process as it creates processes intermittently
   // which forces the emission of RDP requests we aren't correctly waiting for.
   await pushPref("dom.ipc.processPrelaunch.enabled", false);
@@ -165,14 +165,16 @@ async function triggerErrors(tab) {
       expectUncaughtException();
     }
 
-    await ContentTask.spawn(tab.linkedBrowser, expression, function frameScript(
-      expr
-    ) {
-      const document = content.document;
-      const scriptEl = document.createElement("script");
-      scriptEl.textContent = expr;
-      document.body.appendChild(scriptEl);
-    });
+    await ContentTask.spawn(
+      tab.linkedBrowser,
+      expression,
+      function frameScript(expr) {
+        const document = content.document;
+        const scriptEl = document.createElement("script");
+        scriptEl.textContent = expr;
+        document.body.appendChild(scriptEl);
+      }
+    );
 
     if (expected.isPromiseRejection) {
       // Wait a bit after an uncaught promise rejection error, as they are not emitted
@@ -192,10 +194,8 @@ function checkPageErrorResource(pageErrorResource, expected) {
       frame.filename.startsWith("resource://testing-common/content-task.js")
     );
     if (index > -1) {
-      clonedPageErrorResource.stacktrace = clonedPageErrorResource.stacktrace.slice(
-        0,
-        index
-      );
+      clonedPageErrorResource.stacktrace =
+        clonedPageErrorResource.stacktrace.slice(0, index);
     }
   }
   checkObject(clonedPageErrorResource, expected);

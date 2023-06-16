@@ -26,7 +26,7 @@ function* testSteps() {
     let event = yield undefined;
 
     let db = event.target.result;
-    db.onversionchange = function(event) {
+    db.onversionchange = function (event) {
       event.target.close();
     };
 
@@ -52,7 +52,7 @@ function* testSteps() {
     ok(event.target.result == 1 || event.target.result == 2, "Good id");
   }
 
-  executeSoon(function() {
+  executeSoon(function () {
     testGenerator.next();
   });
   yield undefined;
@@ -73,9 +73,9 @@ function* testSteps() {
 
       request = index.openCursor();
       request.onerror = errorHandler;
-      request.onsuccess = function(event) {
+      request.onsuccess = function (event) {
         is(event.target.result.value.name, "Ben", "Good object");
-        executeSoon(function() {
+        executeSoon(function () {
           testGenerator.next();
         });
       };

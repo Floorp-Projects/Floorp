@@ -258,6 +258,9 @@ te{
         "America:Chihuahua"{
             ec{"చువావా"}
         }
+        "America:Ciudad_Juarez"{
+            ec{"సియుదాద్ హ్వారెజ్"}
+        }
         "America:Coral_Harbour"{
             ec{"అటికోకన్"}
         }

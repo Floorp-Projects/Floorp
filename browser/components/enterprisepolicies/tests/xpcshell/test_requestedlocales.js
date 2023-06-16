@@ -40,7 +40,7 @@ function promiseLocaleNotChanged(requestedLocale) {
     };
     Services.obs.addObserver(localeObserver, REQ_LOC_CHANGE_EVENT);
     /* eslint-disable mozilla/no-arbitrary-setTimeout */
-    setTimeout(function() {
+    setTimeout(function () {
       Services.obs.removeObserver(localeObserver, REQ_LOC_CHANGE_EVENT);
       resolve();
     }, 100);

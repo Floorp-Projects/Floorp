@@ -5,15 +5,13 @@
 "use strict";
 
 // Test that highlighters can be configured to automatically hide after a delay.
-add_task(async function() {
+add_task(async function () {
   info("Loading the test document and opening the inspector");
   const { inspector } = await openInspectorForURL(
     "data:text/html;charset=utf-8,<p id='one'>TEST 1</p>"
   );
-  const {
-    waitForHighlighterTypeShown,
-    waitForHighlighterTypeHidden,
-  } = getHighlighterTestHelpers(inspector);
+  const { waitForHighlighterTypeShown, waitForHighlighterTypeHidden } =
+    getHighlighterTestHelpers(inspector);
 
   const HALF_SECOND = 500;
   const nodeFront = await getNodeFront("#one", inspector);

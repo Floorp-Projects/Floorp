@@ -9,7 +9,7 @@
  * after removing it and resets to its original value when it looses focus.
  */
 
-add_task(async function() {
+add_task(async function () {
   if (
     Services.prefs.getBoolPref(
       "devtools.netmonitor.features.newEditAndResend",

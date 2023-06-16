@@ -17,10 +17,10 @@
 extern "C" {
 #endif
 
-#include "jxl/jxl_export.h"
-#include "jxl/memory_manager.h"
-#include "jxl/parallel_runner.h"
-#include "jxl/types.h"
+#include <jxl/jxl_export.h>
+#include <jxl/memory_manager.h>
+#include <jxl/parallel_runner.h>
+#include <jxl/types.h>
 
 /**
  * Opaque structure that holds a butteraugli API.

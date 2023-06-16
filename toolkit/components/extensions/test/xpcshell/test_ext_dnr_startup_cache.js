@@ -3,7 +3,9 @@
 
 "use strict";
 
-const { Schemas } = ChromeUtils.import("resource://gre/modules/Schemas.jsm");
+const { Schemas } = ChromeUtils.importESModule(
+  "resource://gre/modules/Schemas.sys.mjs"
+);
 
 ChromeUtils.defineESModuleGetters(this, {
   ExtensionDNR: "resource://gre/modules/ExtensionDNR.sys.mjs",
@@ -572,9 +574,8 @@ add_task(async function test_detect_and_reschedule_save_cache_on_new_changes() {
   let promiseSaveCacheRescheduled = new Promise(resolve => {
     resolvePromiseSaveCacheRescheduled = resolve;
   });
-  const realDetectStartupCacheDataChanged = dnrStore.detectStartupCacheDataChanged.bind(
-    dnrStore
-  );
+  const realDetectStartupCacheDataChanged =
+    dnrStore.detectStartupCacheDataChanged.bind(dnrStore);
   const stubDetectCacheDataChanges = sandboxStore.stub(
     dnrStore,
     "detectStartupCacheDataChanged"

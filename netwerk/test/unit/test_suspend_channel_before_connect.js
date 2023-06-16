@@ -89,7 +89,7 @@ add_test(function testNoConnectChannelCanceledEarly() {
   });
   chan.asyncOpen(listener);
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     serv.stop();
   });
 });

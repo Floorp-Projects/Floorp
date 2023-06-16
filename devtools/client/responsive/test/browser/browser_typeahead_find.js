@@ -17,7 +17,7 @@ const TEST_URL =
   "data:text/html;charset=utf-8," +
   '<body id="body"><input id="input" type="text"/><p>text</body>';
 
-addRDMTask(TEST_URL, async function({ ui, manager }) {
+addRDMTask(TEST_URL, async function ({ ui, manager }) {
   // Turn on the pref that allows meta viewport support.
   await pushPref("accessibility.typeaheadfind", true);
 
@@ -37,7 +37,7 @@ addRDMTask(TEST_URL, async function({ ui, manager }) {
   ];
 
   for (const e of expected) {
-    await SpecialPowers.spawn(browser, [{ e }], async function(args) {
+    await SpecialPowers.spawn(browser, [{ e }], async function (args) {
       const { e: values } = args;
       const element = content.document.getElementById(values.id);
 
@@ -62,7 +62,7 @@ addRDMTask(TEST_URL, async function({ ui, manager }) {
     );
     findBar._findField.value = "";
 
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       // Clear focus.
       content.document.activeElement.blur();
     });

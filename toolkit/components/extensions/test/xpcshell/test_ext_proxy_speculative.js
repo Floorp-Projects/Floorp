@@ -1,7 +1,7 @@
 "use strict";
 
-const { ExtensionUtils } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionUtils.jsm"
+const { ExtensionUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionUtils.sys.mjs"
 );
 
 const proxy = createHttpServer();
@@ -44,7 +44,8 @@ add_task(async function test_speculative_connect() {
   Services.io.speculativeConnect(
     uri,
     Services.scriptSecurityManager.getSystemPrincipal(),
-    null
+    null,
+    false
   );
   await notificationPromise;
 

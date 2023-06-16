@@ -33,7 +33,7 @@ addAccessibleTask(
   </tbody>
 </table>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const table = findAccessibleChildByID(docAcc, "table", [
       nsIAccessibleTable,
     ]);
@@ -74,9 +74,9 @@ addAccessibleTask(
   },
   {
     chrome: true,
-    topLevel: isCacheEnabled,
-    iframe: isCacheEnabled,
-    remoteIframe: isCacheEnabled,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
   }
 );
 
@@ -91,7 +91,7 @@ addAccessibleTask(
   <tr><td id="e" headers="c f">e</td><td id="f">f</td></tr>
 </table>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const cells = {};
     for (const id of ["a", "b", "c", "d", "e", "f"]) {
       cells[id] = findAccessibleChildByID(docAcc, id, [nsIAccessibleTableCell]);
@@ -111,9 +111,9 @@ addAccessibleTask(
   },
   {
     chrome: true,
-    topLevel: isCacheEnabled,
-    iframe: isCacheEnabled,
-    remoteIframe: isCacheEnabled,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
   }
 );
 
@@ -128,7 +128,7 @@ addAccessibleTask(
   </table></th></tr>
 </table>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const outerTable = findAccessibleChildByID(docAcc, "outerTable", [
       nsIAccessibleTable,
     ]);
@@ -154,9 +154,9 @@ addAccessibleTask(
   },
   {
     chrome: true,
-    topLevel: isCacheEnabled,
-    iframe: isCacheEnabled,
-    remoteIframe: isCacheEnabled,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
   }
 );
 
@@ -177,7 +177,7 @@ addAccessibleTask(
   <tr><th>a</th></tr>
 </table>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const t1 = findAccessibleChildByID(docAcc, "t1", [nsIAccessibleTable]);
     const c1 = findAccessibleChildByID(docAcc, "c1");
     is(t1.caption, c1, "t1 caption correct");
@@ -192,9 +192,9 @@ addAccessibleTask(
   },
   {
     chrome: true,
-    topLevel: isCacheEnabled,
-    iframe: isCacheEnabled,
-    remoteIframe: isCacheEnabled,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
   }
 );
 
@@ -208,7 +208,7 @@ addAccessibleTask(
 <table id="mutate"><tr><td>a</td><td>b</td></tr></table>
 <div id="newTableContainer"></div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const layout = findAccessibleChildByID(docAcc, "layout");
     testAttrs(layout, { "layout-guess": "true" }, true);
     const data = findAccessibleChildByID(docAcc, "data");
@@ -275,19 +275,14 @@ addAccessibleTask(
   <table id="layout"><tr><td id="cell">a</td><td>b</td></tr>
   <tr><td>c</td><td>d</td></tr><tr><td>c</td><td>d</td></tr></table>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const layout = findAccessibleChildByID(docAcc, "layout");
     testAttrs(layout, { "layout-guess": "true" }, true);
     info("changing border style on table cell");
-    let styleChanged = waitForEvent(EVENT_TABLE_STYLING_CHANGED, layout);
     await invokeContentTask(browser, [], () => {
       content.document.getElementById("cell").style.border = "1px solid black";
       content.document.body.offsetTop; // Flush layout.
     });
-    if (!isCacheEnabled) {
-      // this event doesn't get fired when the cache is on, so we can't await it
-      await styleChanged;
-    }
     await untilCacheOk(() => {
       // manually verify the attribute doesn't exist, since `testAbsentAttrs`
       // has internal calls to ok() which fail if the cache hasn't yet updated
@@ -321,7 +316,7 @@ addAccessibleTask(
   </div>
 </div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const grid = findAccessibleChildByID(docAcc, "grid", [nsIAccessibleTable]);
     is(grid.rowCount, 2, "grid rowCount correct");
     is(grid.columnCount, 2, "grid columnCount correct");
@@ -350,9 +345,9 @@ addAccessibleTask(
   },
   {
     chrome: true,
-    topLevel: isCacheEnabled,
-    iframe: isCacheEnabled,
-    remoteIframe: isCacheEnabled,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
   }
 );
 
@@ -373,7 +368,7 @@ addAccessibleTask(
 </table>
 <div id="owner"></div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const table = findAccessibleChildByID(docAcc, "table", [
       nsIAccessibleTable,
     ]);
@@ -406,26 +401,19 @@ addAccessibleTask(
     await setNodeHidden(browser, "b", false);
     await reordered;
     is(table.columnCount, 2, "table columnCount correct");
-    if (isCacheEnabled) {
-      info("Moving b out of table using aria-owns");
-      reordered = waitForEvent(EVENT_REORDER, "r1");
-      await invokeContentTask(browser, [], () => {
-        content.document.getElementById("owner").setAttribute("aria-owns", "b");
-      });
-      await reordered;
-      is(table.columnCount, 1, "table columnCount correct");
-    } else {
-      todo(
-        false,
-        "CachedTableAccessible disabled, so counts broken when cell moved with aria-owns"
-      );
-    }
+    info("Moving b out of table using aria-owns");
+    reordered = waitForEvent(EVENT_REORDER, "r1");
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("owner").setAttribute("aria-owns", "b");
+    });
+    await reordered;
+    is(table.columnCount, 1, "table columnCount correct");
   },
   {
     chrome: true,
-    topLevel: isCacheEnabled,
-    iframe: isCacheEnabled,
-    remoteIframe: isCacheEnabled,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
   }
 );
 
@@ -438,7 +426,7 @@ addAccessibleTask(
   <div role="row"><div role="cell">a</div></div>
 </div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     // XXX We don't create a TableAccessible in this case (bug 1494196). For
     // now, just ensure we don't crash (bug 1793073).
     const table = findAccessibleChildByID(docAcc, "table");
@@ -451,9 +439,9 @@ addAccessibleTask(
   },
   {
     chrome: true,
-    topLevel: isCacheEnabled,
-    iframe: isCacheEnabled,
-    remoteIframe: isCacheEnabled,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
   }
 );
 
@@ -470,7 +458,7 @@ addAccessibleTask(
   </div>
 </div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const table = findAccessibleChildByID(docAcc, "table", [
       nsIAccessibleTable,
     ]);
@@ -486,9 +474,9 @@ addAccessibleTask(
   },
   {
     chrome: true,
-    topLevel: isCacheEnabled,
-    iframe: isCacheEnabled,
-    remoteIframe: isCacheEnabled,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
   }
 );
 
@@ -498,7 +486,7 @@ addAccessibleTask(
  */
 addAccessibleTask(
   `<table><tr id="tr"></tr></table>`,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     let reordered = waitForEvent(EVENT_REORDER, "tr");
     await invokeContentTask(browser, [], () => {
       const iframe = content.document.createElement("iframe");

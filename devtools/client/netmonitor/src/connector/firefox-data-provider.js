@@ -71,9 +71,8 @@ class FirefoxDataProvider {
     this.getLongString = this.getLongString.bind(this);
 
     // Event handlers
-    this.onNetworkResourceAvailable = this.onNetworkResourceAvailable.bind(
-      this
-    );
+    this.onNetworkResourceAvailable =
+      this.onNetworkResourceAvailable.bind(this);
     this.onNetworkResourceUpdated = this.onNetworkResourceUpdated.bind(this);
 
     this.onWebSocketOpened = this.onWebSocketOpened.bind(this);
@@ -81,9 +80,8 @@ class FirefoxDataProvider {
     this.onFrameSent = this.onFrameSent.bind(this);
     this.onFrameReceived = this.onFrameReceived.bind(this);
 
-    this.onEventSourceConnectionClosed = this.onEventSourceConnectionClosed.bind(
-      this
-    );
+    this.onEventSourceConnectionClosed =
+      this.onEventSourceConnectionClosed.bind(this);
     this.onEventReceived = this.onEventReceived.bind(this);
     this.setEventStreamFlag = this.setEventStreamFlag.bind(this);
   }
@@ -403,11 +401,8 @@ class FirefoxDataProvider {
 
     // Check if a stacktrace resource already exists for this network resource.
     if (this.stackTraces.has(stacktraceResourceId)) {
-      const {
-        stacktraceAvailable,
-        lastFrame,
-        targetFront,
-      } = this.stackTraces.get(stacktraceResourceId);
+      const { stacktraceAvailable, lastFrame, targetFront } =
+        this.stackTraces.get(stacktraceResourceId);
 
       resource.cause.stacktraceAvailable = stacktraceAvailable;
       resource.cause.lastFrame = lastFrame;

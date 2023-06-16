@@ -21,7 +21,7 @@ this.extension = class extends ExtensionAPI {
     };
 
     if (context.envType === "addon_child") {
-      api.getViews = function(fetchProperties) {
+      api.getViews = function (fetchProperties) {
         let result = Cu.cloneInto([], context.cloneScope);
 
         for (let view of context.extension.views) {

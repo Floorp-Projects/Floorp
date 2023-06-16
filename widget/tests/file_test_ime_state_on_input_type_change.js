@@ -234,9 +234,10 @@ class IMEStateOnInputTypeChangeTester {
 
     await this.#flushPendingIMENotifications();
 
-    const expectedIMEState = IMEStateOnInputTypeChangeTester.#getExpectedIMEEnabledState(
-      this.#mInputElement
-    );
+    const expectedIMEState =
+      IMEStateOnInputTypeChangeTester.#getExpectedIMEEnabledState(
+        this.#mInputElement
+      );
     return {
       description: IMEStateOnInputTypeChangeTester.#getDescription(
         this.#mInputElement
@@ -283,9 +284,10 @@ class IMEStateOnInputTypeChangeTester {
 
     await this.#flushPendingIMENotifications();
 
-    const expectedIMEState = IMEStateOnInputTypeChangeTester.#getExpectedIMEEnabledState(
-      this.#mInputElement
-    );
+    const expectedIMEState =
+      IMEStateOnInputTypeChangeTester.#getExpectedIMEEnabledState(
+        this.#mInputElement
+      );
     return {
       newType: this.#mNewType.type,
       expectedIMEState,

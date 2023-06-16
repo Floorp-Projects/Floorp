@@ -16,7 +16,7 @@ function test() {
   btn.label = "Hi";
   btn.setAttribute("style", "width: 20px; height: 20px; background-color: red");
   document.getElementById("nav-bar").appendChild(btn);
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     btn.remove();
   });
 

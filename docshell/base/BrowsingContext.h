@@ -54,6 +54,7 @@ class LogModule;
 
 namespace ipc {
 class IProtocol;
+class IPCResult;
 
 template <typename T>
 struct IPDLParamTraits;
@@ -263,7 +264,9 @@ struct EmbedderColorSchemes {
   /* If true, this document is embedded within a content document,  either    \
    * loaded in the parent (e.g. about:addons or the devtools toolbox), or in  \
    * a content process. */                                                    \
-  FIELD(EmbeddedInContentDocument, bool)
+  FIELD(EmbeddedInContentDocument, bool)                                      \
+  /* If true, this browsing context is within a hidden embedded document. */  \
+  FIELD(IsUnderHiddenEmbedderElement, bool)
 
 // BrowsingContext, in this context, is the cross process replicated
 // environment in which information about documents is stored. In
@@ -789,9 +792,9 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   IPCInitializer GetIPCInitializer();
 
   // Create a BrowsingContext object from over IPC.
-  static void CreateFromIPC(IPCInitializer&& aInitializer,
-                            BrowsingContextGroup* aGroup,
-                            ContentParent* aOriginProcess);
+  static mozilla::ipc::IPCResult CreateFromIPC(IPCInitializer&& aInitializer,
+                                               BrowsingContextGroup* aGroup,
+                                               ContentParent* aOriginProcess);
 
   bool IsSandboxedFrom(BrowsingContext* aTarget);
 
@@ -941,6 +944,10 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   bool IsAppTab() { return GetIsAppTab(); }
   bool HasSiblings() { return GetHasSiblings(); }
 
+  bool IsUnderHiddenEmbedderElement() const {
+    return GetIsUnderHiddenEmbedderElement();
+  }
+
  protected:
   virtual ~BrowsingContext();
   BrowsingContext(WindowContext* aParentWindow, BrowsingContextGroup* aGroup,
@@ -958,7 +965,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
                                        bool aHasPostData);
 
  private:
-  void Attach(bool aFromIPC, ContentParent* aOriginProcess);
+  mozilla::ipc::IPCResult Attach(bool aFromIPC, ContentParent* aOriginProcess);
 
   // Recomputes whether we can execute scripts in this BrowsingContext based on
   // the value of AllowJavascript() and whether scripts are allowed in the
@@ -1220,6 +1227,10 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   bool CanSet(FieldIndex<IDX_HasRestoreData>, bool aNewValue,
               ContentParent* aSource);
 
+  bool CanSet(FieldIndex<IDX_IsUnderHiddenEmbedderElement>,
+              const bool& aIsUnderHiddenEmbedderElement,
+              ContentParent* aSource);
+
   bool CanSet(FieldIndex<IDX_EmbeddedInContentDocument>, bool,
               ContentParent* aSource) {
     return CheckOnlyEmbedderCanSet(aSource);
@@ -1246,6 +1257,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   void DidSet(FieldIndex<IDX_IsInBFCache>);
 
   void DidSet(FieldIndex<IDX_SyntheticDocumentContainer>);
+
+  void DidSet(FieldIndex<IDX_IsUnderHiddenEmbedderElement>, bool aOldValue);
 
   // Allow if the process attemping to set field is the same as the owning
   // process. Deprecated. New code that might use this should generally be moved

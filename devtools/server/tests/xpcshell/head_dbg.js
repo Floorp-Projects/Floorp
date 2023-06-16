@@ -63,8 +63,8 @@ const { addDebuggerToGlobal } = ChromeUtils.importESModule(
   "resource://gre/modules/jsdebugger.sys.mjs"
 );
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+const { AddonTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
 );
 const { getAppInfo } = ChromeUtils.importESModule(
   "resource://testing-common/AppInfo.sys.mjs"
@@ -75,6 +75,31 @@ const systemPrincipal = Cc["@mozilla.org/systemprincipal;1"].createInstance(
 );
 
 var { loadSubScript, loadSubScriptWithOptions } = Services.scriptloader;
+
+/**
+ * The logic here must resemble the logic of --start-debugger-server as closely
+ * as possible. DevToolsStartup.sys.mjs uses a distinct loader that results in
+ * the existence of two isolated module namespaces. In practice, this can cause
+ * bugs such as bug 1837185.
+ */
+function getDistinctDevToolsServer() {
+  const {
+    useDistinctSystemPrincipalLoader,
+    releaseDistinctSystemPrincipalLoader,
+  } = ChromeUtils.importESModule(
+    "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs"
+  );
+  const requester = {};
+  const distinctLoader = useDistinctSystemPrincipalLoader(requester);
+  registerCleanupFunction(() => {
+    releaseDistinctSystemPrincipalLoader(requester);
+  });
+
+  const { DevToolsServer: DistinctDevToolsServer } = distinctLoader.require(
+    "resource://devtools/server/devtools-server.js"
+  );
+  return DistinctDevToolsServer;
+}
 
 /**
  * Initializes any test that needs to work with add-ons.
@@ -218,7 +243,7 @@ function findTab(tabs, title) {
 
 function waitForNewSource(threadFront, url) {
   dump("Waiting for new source with url '" + url + "'.\n");
-  return waitForEvent(threadFront, "newSource", function(packet) {
+  return waitForEvent(threadFront, "newSource", function (packet) {
     return packet.source.url === url;
   });
 }
@@ -439,7 +464,7 @@ function initTestDevToolsServer(server = DevToolsServer) {
   }
 
   // Allow incoming connections.
-  server.init(function() {
+  server.init(function () {
     return true;
   });
 }
@@ -531,9 +556,9 @@ function writeFile(fileName, content) {
 }
 
 function StubTransport() {}
-StubTransport.prototype.ready = function() {};
-StubTransport.prototype.send = function() {};
-StubTransport.prototype.close = function() {};
+StubTransport.prototype.ready = function () {};
+StubTransport.prototype.send = function () {};
+StubTransport.prototype.close = function () {};
 
 // Create async version of the object where calling each method
 // is equivalent of calling it with asyncall. Mainly useful for
@@ -569,7 +594,7 @@ function waitForEvent(front, type, predicate) {
     return front.once(type);
   }
 
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve) {
     function listener(packet) {
       if (!predicate(packet)) {
         return;
@@ -901,9 +926,8 @@ function threadFrontTest(test, options = {}) {
     // Cross the client/server boundary to retrieve the target actor & thread
     // actor instances, used by some tests.
     const rootActor = client.transport._serverConnection.rootActor;
-    const targetActor = rootActor._parameters.tabList.getTargetActorForTab(
-      "debuggee.js"
-    );
+    const targetActor =
+      rootActor._parameters.tabList.getTargetActorForTab("debuggee.js");
     const { threadActor } = targetActor;
 
     // Run the test function

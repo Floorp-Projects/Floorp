@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const Rondpoint = ChromeUtils.import(
-  "resource://gre/modules/RustRondpoint.jsm"
+const Rondpoint = ChromeUtils.importESModule(
+  "resource://gre/modules/RustRondpoint.sys.mjs"
 );
 
 const {
@@ -21,7 +21,7 @@ const {
   Optionneur,
   OptionneurDictionnaire,
 } = Rondpoint;
-add_task(async function() {
+add_task(async function () {
   const dico = new Dictionnaire(Enumeration.DEUX, true, 0, 1235);
   const copyDico = await copieDictionnaire(dico);
   Assert.deepEqual(dico, copyDico);
@@ -32,9 +32,9 @@ add_task(async function() {
     [Enumeration.UN, Enumeration.DEUX]
   );
   const obj = {
-    "0": new EnumerationAvecDonnees.Zero(),
-    "1": new EnumerationAvecDonnees.Un(1),
-    "2": new EnumerationAvecDonnees.Deux(2, "deux"),
+    0: new EnumerationAvecDonnees.Zero(),
+    1: new EnumerationAvecDonnees.Un(1),
+    2: new EnumerationAvecDonnees.Deux(2, "deux"),
   };
 
   Assert.deepEqual(await copieCarte(obj), obj);

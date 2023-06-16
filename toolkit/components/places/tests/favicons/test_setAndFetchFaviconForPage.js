@@ -55,11 +55,11 @@ let gTests = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   let faviconURI = SMALLPNG_DATA_URI;
   let faviconMimeType = "image/png";
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.bookmarks.eraseEverything();
     await PlacesUtils.history.clear();
   });

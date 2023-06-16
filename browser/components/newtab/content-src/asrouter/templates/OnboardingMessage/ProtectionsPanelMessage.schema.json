@@ -3,9 +3,7 @@
   "$id": "file:///ProtectionsPanelMessage.schema.json",
   "title": "ProtectionsPanelMessage",
   "description": "A message shown in the protections panel.",
-  "allOf": [
-    { "$ref": "file:///FxMSCommon.schema.json#/$defs/Message" }
-  ],
+  "allOf": [{ "$ref": "file:///FxMSCommon.schema.json#/$defs/Message" }],
   "type": "object",
   "properties": {
     "content": {
@@ -36,13 +34,7 @@
         "cta_where": {
           "description": "How to open the cta.",
           "type": "string",
-          "enum": [
-            "current",
-            "tabshifted",
-            "tab",
-            "save",
-            "window"
-          ]
+          "enum": ["current", "tabshifted", "tab", "save", "window"]
         }
       },
       "dependantSchemas": {
@@ -52,10 +44,7 @@
         "cta_where": ["link_text"]
       },
       "additionalProperties": false,
-      "required": [
-        "title",
-        "body"
-      ]
+      "required": ["title", "body"]
     },
     "template": {
       "type": "string",

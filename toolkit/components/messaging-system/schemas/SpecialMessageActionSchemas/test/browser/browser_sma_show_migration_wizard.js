@@ -17,7 +17,9 @@ add_setup(async () => {
 add_task(async function test_SHOW_MIGRATION_WIZARD() {
   let wizardOpened = BrowserTestUtils.waitForMigrationWizard(window);
 
-  SMATestUtils.executeAndValidateAction({ type: "SHOW_MIGRATION_WIZARD" });
+  await SMATestUtils.executeAndValidateAction({
+    type: "SHOW_MIGRATION_WIZARD",
+  });
 
   let wizard = await wizardOpened;
   ok(wizard, "Migration wizard opened");
@@ -27,7 +29,7 @@ add_task(async function test_SHOW_MIGRATION_WIZARD() {
 add_task(async function test_SHOW_MIGRATION_WIZARD_WITH_SOURCE() {
   let wizardOpened = BrowserTestUtils.waitForMigrationWizard(window);
 
-  SMATestUtils.executeAndValidateAction({
+  await SMATestUtils.executeAndValidateAction({
     type: "SHOW_MIGRATION_WIZARD",
     data: { source: "chrome" },
   });

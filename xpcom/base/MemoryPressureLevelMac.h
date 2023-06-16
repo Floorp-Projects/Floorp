@@ -9,11 +9,11 @@
 
 namespace mozilla {
 
-#if defined(XP_MACOSX)
+#if defined(XP_DARWIN)
 // An internal representation of the Mac memory-pressure level constants.
 class MacMemoryPressureLevel {
  public:
-  // Order enum values so that higher integer values respresent higher
+  // Order enum values so that higher integer values represent higher
   // memory pressure levels allowing comparison operators to be used.
   enum class Value {
     eUnset,
@@ -26,8 +26,8 @@ class MacMemoryPressureLevel {
   MacMemoryPressureLevel() : mValue(Value::eUnset) {}
   MOZ_IMPLICIT MacMemoryPressureLevel(Value aValue) : mValue(aValue) {}
 
-  bool operator==(const Value& aRhsValue) { return mValue == aRhsValue; }
-  bool operator==(const MacMemoryPressureLevel& aRhs) {
+  bool operator==(const Value& aRhsValue) const { return mValue == aRhsValue; }
+  bool operator==(const MacMemoryPressureLevel& aRhs) const {
     return mValue == aRhs.mValue;
   }
 

@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   Services.prefs.lockPref("browser.download.useDownloadDir");
 
   await openPreferencesViaOpenPreferencesAPI("general", { leaveOpen: true });

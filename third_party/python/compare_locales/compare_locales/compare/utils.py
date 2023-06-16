@@ -4,16 +4,10 @@
 
 'Mozilla l10n compare locales tool'
 
-from __future__ import absolute_import
-from __future__ import print_function
-
-import six
-from six.moves import zip
-
 from compare_locales import paths
 
 
-class Tree(object):
+class Tree:
     def __init__(self, valuetype):
         self.branches = dict()
         self.valuetype = valuetype
@@ -35,7 +29,7 @@ class Tree(object):
         old = None
         new = tuple(parts)
         t = self
-        for k, v in six.iteritems(self.branches):
+        for k, v in self.branches.items():
             for i, part in enumerate(zip(k, parts)):
                 if part[0] != part[1]:
                     i -= 1
@@ -77,8 +71,7 @@ class Tree(object):
             yield (depth, 'value', self.value)
         for key in keys:
             yield (depth, 'key', key)
-            for child in self.branches[key].getContent(depth + 1):
-                yield child
+            yield from self.branches[key].getContent(depth + 1)
 
     def toJSON(self):
         '''
@@ -87,8 +80,8 @@ class Tree(object):
         '''
         if self.value is not None:
             return self.value
-        return dict(('/'.join(key), self.branches[key].toJSON())
-                    for key in self.branches.keys())
+        return {'/'.join(key): self.branches[key].toJSON()
+                for key in self.branches.keys()}
 
     def getStrRows(self):
         def tostr(t):
@@ -102,7 +95,7 @@ class Tree(object):
         return '\n'.join(self.getStrRows())
 
 
-class AddRemove(object):
+class AddRemove:
     def __init__(self):
         self.left = self.right = None
 
@@ -118,7 +111,7 @@ class AddRemove(object):
 
     def __iter__(self):
         # order_map stores index in left and then index in right
-        order_map = dict((item, (i, -1)) for i, item in enumerate(self.left))
+        order_map = {item: (i, -1) for i, item in enumerate(self.left)}
         left_items = set(order_map)
         # as we go through the right side, keep track of which left
         # item we had in right last, and for items not in left,

@@ -6,8 +6,7 @@
 
 export default [
   {
-    info:
-      "align-content is inactive on block elements (until bug 1105571 is fixed)",
+    info: "align-content is inactive on block elements (until bug 1105571 is fixed)",
     property: "align-content",
     tagName: "div",
     rules: ["div { align-content: center; }"],

@@ -43,7 +43,7 @@ async function cutCurrentSelection(elementQueryString, property, browser) {
   await SpecialPowers.spawn(
     browser,
     [[elementQueryString, property]],
-    async function([contentElementQueryString, contentProperty]) {
+    async function ([contentElementQueryString, contentProperty]) {
       let element = content.document.querySelector(contentElementQueryString);
       is(
         element[contentProperty],
@@ -61,7 +61,7 @@ add_task(async function test_paste_transferable_plain_text() {
     "data:text/html," +
     '<textarea id="textarea">Write something here</textarea>';
 
-  await BrowserTestUtils.withNewTab(testPage, async function(browser) {
+  await BrowserTestUtils.withNewTab(testPage, async function (browser) {
     // Select all the content in your editor element.
     await BrowserTestUtils.synthesizeMouse("#textarea", 0, 0, {}, browser);
     await BrowserTestUtils.synthesizeKey("a", { accelKey: true }, browser);
@@ -72,7 +72,7 @@ add_task(async function test_paste_transferable_plain_text() {
     let DOMWindowUtils = EventUtils._getDOMWindowUtils(window);
     DOMWindowUtils.sendContentCommandEvent("pasteTransferable", trans);
 
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       let textArea = content.document.querySelector("#textarea");
       is(
         textArea.value,
@@ -95,10 +95,10 @@ add_task(async function test_paste_transferable_html() {
     "data:text/html," +
     '<div contenteditable="true"><b>Bold Text</b><i>italics</i></div>';
 
-  await BrowserTestUtils.withNewTab(testPage, async function(browser) {
+  await BrowserTestUtils.withNewTab(testPage, async function (browser) {
     // Select all the content in your editor element.
     await BrowserTestUtils.synthesizeMouse("div", 0, 0, {}, browser);
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       let element = content.document.querySelector("div");
       let selection = content.window.getSelection();
       selection.selectAllChildren(element);
@@ -110,7 +110,7 @@ add_task(async function test_paste_transferable_html() {
     let DOMWindowUtils = EventUtils._getDOMWindowUtils(window);
     DOMWindowUtils.sendContentCommandEvent("pasteTransferable", trans);
 
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       let textArea = content.document.querySelector("div");
       is(
         textArea.innerHTML,

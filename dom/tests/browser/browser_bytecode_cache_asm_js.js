@@ -3,7 +3,7 @@
 const PAGE_URL =
   "http://example.com/browser/dom/tests/browser/page_bytecode_cache_asm_js.html";
 
-add_task(async function() {
+add_task(async function () {
   // Eagerly generate bytecode cache.
   await SpecialPowers.pushPrefEnv({
     set: [

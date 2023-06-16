@@ -23,7 +23,7 @@ updateAppInfo({
 });
 
 function promise_check_exist(path, shouldExist) {
-  return (async function() {
+  return (async function () {
     info(
       "Ensuring that " + path + (shouldExist ? " exists" : " does not exist")
     );
@@ -36,7 +36,7 @@ function promise_check_exist(path, shouldExist) {
 }
 
 function promise_check_contents(path, expect) {
-  return (async function() {
+  return (async function () {
     info("Checking whether " + path + " has the right contents");
     let actual = await IOUtils.readJSON(path, {
       decompress: true,

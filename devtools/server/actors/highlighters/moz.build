@@ -26,4 +26,5 @@ DevToolsModules(
     "selector.js",
     "shapes.js",
     "tabbing-order.js",
+    "viewport-size.js",
 )

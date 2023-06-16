@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.webconsole.input.context", true);
   await pushPref("devtools.chrome.enabled", true);
   await pushPref("devtools.every-frame-target.enabled", true);
@@ -107,7 +107,7 @@ add_task(async function() {
   );
 
   // set input text so we can watch for instant evaluation result update
-  setInputValue(hud, "globalThis.location_href");
+  setInputValue(hud, "globalThis.location.href");
   await waitForEagerEvaluationResult(hud, `"${documentWithWorkerUrl}"`);
 
   info("Select the worker target");

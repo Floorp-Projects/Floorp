@@ -258,6 +258,9 @@ or{
         "America:Chihuahua"{
             ec{"ଚିହୁଆହୁଆ"}
         }
+        "America:Ciudad_Juarez"{
+            ec{"ସିଉଡାଡ୍ ଜୁଆରେଜ୍"}
+        }
         "America:Coral_Harbour"{
             ec{"ଆଟିକୋକାନ୍"}
         }

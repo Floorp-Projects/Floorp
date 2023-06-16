@@ -7,7 +7,7 @@
  * PlacesUIUtils.defaultParentGuid will return a proper default value.
  */
 
-add_task(async function() {
+add_task(async function () {
   Services.prefs.setCharPref(
     "browser.bookmarks.defaultLocation",
     "useOtherBookmarks"

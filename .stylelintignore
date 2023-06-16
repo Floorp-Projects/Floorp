@@ -1,0 +1,89 @@
+# Please DO NOT add more third party files to this file.
+# They should be added to tools/rewriting/ThirdPartyPaths.txt instead.
+#
+# Please also DO NOT add  generated files that are for some reason checked
+# into source - add them to tools/rewriting/Generated.txt instead.
+
+# This file should only be used for exclusions where we have:
+# - preprocessed files
+# - intentionally invalid files
+# - build directories and other items that we need to ignore
+
+# Always ignore node_modules.
+**/node_modules/
+
+# Always ignore crashtests - specially crafted files that originally caused a
+# crash.
+**/crashtests/
+# Also ignore reftest - specially crafted to produce expected output.
+**/reftest/
+**/reftests/
+
+# Exclude expected objdirs.
+obj*/
+
+# These files are generated in some way.
+browser/components/pocket/content/panels/css/main.compiled.css
+browser/components/newtab/**/*.css
+
+# Note that the debugger has its own stylelint setup, but that currently
+# produces errors. Bug 1831302 tracks making this better
+devtools/client/debugger/src/components/PrimaryPanes/Outline.css
+devtools/client/debugger/src/components/PrimaryPanes/Sources.css
+devtools/client/debugger/src/components/shared/AccessibleImage.css
+devtools/client/debugger/src/utils/editor/source-editor.css
+devtools/client/debugger/test/mochitest/examples/
+
+# These get their sourcemap annotations autofixed, though they produce
+# no errors at all.
+devtools/client/inspector/rules/test/doc_sourcemaps.css
+
+# Some of these produce parse errors, some have sourcemaps modified.
+# They're tests, so let's just ignore all of them:
+devtools/client/inspector/computed/test/doc_sourcemaps.css
+devtools/client/inspector/rules/test/doc_invalid_sourcemap.css
+devtools/client/shared/sourceeditor/test/css_statemachine_testcases.css
+devtools/client/webconsole/test/browser/*.css
+
+# Style editor tests check how it copes with invalid or "special" CSS,
+# so don't try to "fix" those.
+devtools/client/styleeditor/test/
+
+# These are empty or have funky charsets
+dom/base/test/bug466409-empty.css
+dom/encoding/test/file_utf16_be_bom.css
+dom/encoding/test/file_utf16_le_bom.css
+dom/security/test/cors/file_cors_logging_test.html.css
+dom/tests/mochitest/general/cssA.css
+dom/tests/mochitest/general/cssC.css
+
+# These are test-only and cause us to complain about font families or
+# similar, but we don't want to touch these tests at this point.
+dom/security/test/csp/file_CSP.css
+dom/security/test/sri/style2.css
+dom/xml/test/old/docbook.css
+dom/xml/test/old/toc/book.css
+dom/xml/test/old/toc/toc.css
+
+# Tests we don't want to modify at this point:
+layout/base/tests/bug839103.css
+layout/inspector/tests/bug856317.css
+layout/inspector/tests/chrome/test_bug467669.css
+layout/inspector/tests/chrome/test_bug708874.css
+layout/style/test/gtest/example.css
+layout/style/test/mapped2.css
+layout/style/test/unstyled-frame.css
+
+# Empty test files:
+netwerk/test/mochitests/test1.css
+netwerk/test/mochitests/test2.css
+
+# Has substitution gunk in it:
+python/mozbuild/mozbuild/test/backend/data/build/foo.css
+
+# This is third-party in a way:
+toolkit/components/pdfjs/content/web/debugger.css
+
+# Ignore web-platform tests as they are not necessarily under our control.
+testing/web-platform/tests/
+

@@ -38,10 +38,8 @@ describe("RecipeExecutor", () => {
       baz: ["one", "two", "three"],
       qux: 42,
       text: "This Is A_sentence.",
-      url:
-        "http://www.wonder.example.com/dir1/dir2a-dir2b/dir3+4?key1&key2=val2&key3&%26amp=%3D3+4",
-      url2:
-        "http://wonder.example.com/dir1/dir2a-dir2b/dir3+4?key1&key2=val2&key3&%26amp=%3D3+4",
+      url: "http://www.wonder.example.com/dir1/dir2a-dir2b/dir3+4?key1&key2=val2&key3&%26amp=%3D3+4",
+      url2: "http://wonder.example.com/dir1/dir2a-dir2b/dir3+4?key1&key2=val2&key3&%26amp=%3D3+4",
       map: {
         c: 3,
         a: 1,
@@ -874,11 +872,10 @@ describe("RecipeExecutor", () => {
     });
     it("should L2 normalize an array", () => {
       item = instance.l2Normalize(item, { field: "arr1" });
-      assert.deepEqual(item.arr1, [
-        0.3713906763541037,
-        0.5570860145311556,
-        0.7427813527082074,
-      ]);
+      assert.deepEqual(
+        item.arr1,
+        [0.3713906763541037, 0.5570860145311556, 0.7427813527082074]
+      );
     });
     it("should L2 normalize a map", () => {
       item = instance.l2Normalize(item, { field: "map" });
@@ -907,11 +904,10 @@ describe("RecipeExecutor", () => {
     });
     it("should normalize an array to sum to 1", () => {
       item = instance.probNormalize(item, { field: "arr1" });
-      assert.deepEqual(item.arr1, [
-        0.2222222222222222,
-        0.3333333333333333,
-        0.4444444444444444,
-      ]);
+      assert.deepEqual(
+        item.arr1,
+        [0.2222222222222222, 0.3333333333333333, 0.4444444444444444]
+      );
     });
     it("should normalize a map to sum to 1", () => {
       item = instance.probNormalize(item, { field: "map" });

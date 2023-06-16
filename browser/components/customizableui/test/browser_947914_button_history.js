@@ -9,7 +9,7 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
   "http://example.com"
 );
 
-add_task(async function() {
+add_task(async function () {
   info("Check history button existence and functionality");
   // The TabContextMenu initializes its strings only on a focus or mouseover event.
   // Calls focus event on the TabContextMenu early in the test.

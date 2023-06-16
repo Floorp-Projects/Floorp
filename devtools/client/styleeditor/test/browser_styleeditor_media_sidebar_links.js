@@ -15,7 +15,7 @@ loader.lazyRequireGetter(
 const TESTCASE_URI = TEST_BASE_HTTPS + "media-rules.html";
 const responsiveModeToggleClass = ".media-responsive-mode-toggle";
 
-add_task(async function() {
+add_task(async function () {
   const { ui } = await openStyleEditorForURL(TESTCASE_URI);
 
   const editor = ui.editors[1];
@@ -127,7 +127,7 @@ function waitForResizeTo(rdmUI, type, value) {
 }
 
 function promiseContentReflow(ui) {
-  return SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {
+  return SpecialPowers.spawn(ui.getViewportBrowser(), [], async function () {
     return new Promise(resolve => {
       content.window.requestAnimationFrame(() => {
         content.window.requestAnimationFrame(resolve);
@@ -138,7 +138,7 @@ function promiseContentReflow(ui) {
 
 async function getSizing(rdmUI) {
   const browser = rdmUI.getViewportBrowser();
-  const sizing = await SpecialPowers.spawn(browser, [], async function() {
+  const sizing = await SpecialPowers.spawn(browser, [], async function () {
     return {
       width: content.innerWidth,
       height: content.innerHeight,

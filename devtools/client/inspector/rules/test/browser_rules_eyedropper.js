@@ -38,7 +38,7 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.toolbox.host");
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Add the test tab, open the rule-view and select the test node");
 
   const url = "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI);

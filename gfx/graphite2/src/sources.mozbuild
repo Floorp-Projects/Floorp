@@ -44,6 +44,9 @@ graphite_defines = [
     # tell graphite2 not to export symbols, we'll be linking it directly with
     # thebes
     ('GRAPHITE2_STATIC', True),
+    # provide a custom header that overrides malloc() and friends,
+    # to ensure safe OOM handling.
+    ('GRAPHITE2_CUSTOM_HEADER', '"MozGrMalloc.h"'),
 ]
 
 # disable features we don't need in the graphite2 code, to reduce code size

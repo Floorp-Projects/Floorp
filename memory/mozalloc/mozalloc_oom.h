@@ -14,7 +14,12 @@
  * Called when memory is critically low.  Returns iff it was able to
  * remedy the critical memory situation; if not, it will abort().
  */
-MFBT_API void mozalloc_handle_oom(size_t requestedSize);
+#ifdef __wasm__
+__attribute__((import_module("env")))
+__attribute__((import_name("mozalloc_handle_oom")))
+#endif
+MFBT_API void
+mozalloc_handle_oom(size_t requestedSize);
 
 extern MFBT_DATA size_t gOOMAllocationSize;
 

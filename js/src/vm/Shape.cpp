@@ -18,7 +18,7 @@
 #include "vm/ShapeZone.h"
 #include "vm/Watchtower.h"
 
-#include "gc/Zone-inl.h"
+#include "gc/StableCellHasher-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
@@ -1012,7 +1012,7 @@ static bool SetObjectIsUsedAsPrototype(JSContext* cx, Handle<JSObject*> proto) {
 
   // Ensure the proto object has a unique id to prevent OOM crashes below.
   uint64_t unused;
-  if (!cx->zone()->getOrCreateUniqueId(proto, &unused)) {
+  if (!gc::GetOrCreateUniqueId(proto, &unused)) {
     ReportOutOfMemory(cx);
     return false;
   }

@@ -20,8 +20,8 @@ function test() {
 
   win.addEventListener(
     "load",
-    function() {
-      waitForFocus(function() {
+    function () {
+      waitForFocus(function () {
         doc = win.document;
         table = new TableWidget(doc.querySelector("box"), {
           initialColumns: {
@@ -52,7 +52,7 @@ function endTests() {
   finish();
 }
 
-var startTests = async function() {
+var startTests = async function () {
   populateTable();
   await testKeyboardInteraction();
   endTests();
@@ -146,7 +146,7 @@ function getNodeByValue(value) {
  * Tests if pressing navigation keys on the table items does the expected
  * behavior.
  */
-var testKeyboardInteraction = async function() {
+var testKeyboardInteraction = async function () {
   info("Testing keyboard interaction with the table");
   info("clicking on the row containing id2");
   const node = getNodeByValue("id2");

@@ -3,13 +3,11 @@
 const WARNING_PATTERN = [
   {
     key: "INSECURE_FORM_ACTION",
-    msg:
-      'JavaScript Warning: "Password fields present in a form with an insecure (http://) form action. This is a security risk that allows user login credentials to be stolen."',
+    msg: 'JavaScript Warning: "Password fields present in a form with an insecure (http://) form action. This is a security risk that allows user login credentials to be stolen."',
   },
   {
     key: "INSECURE_PAGE",
-    msg:
-      'JavaScript Warning: "Password fields present on an insecure (http://) page. This is a security risk that allows user login credentials to be stolen."',
+    msg: 'JavaScript Warning: "Password fields present on an insecure (http://) page. This is a security risk that allows user login credentials to be stolen."',
   },
 ];
 
@@ -41,7 +39,7 @@ add_task(async function testInsecurePasswordWarning() {
     }
   }
   Services.console.registerListener(messageHandler);
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.console.unregisterListener(messageHandler);
   });
 
@@ -86,7 +84,7 @@ add_task(async function testInsecurePasswordWarning() {
   ]) {
     let testURL = origin + DIRECTORY_PATH + testFile;
     let promiseConsoleMessages = new Promise(resolve => {
-      warningPatternHandler = function(warning, originMessage) {
+      warningPatternHandler = function (warning, originMessage) {
         Assert.ok(warning, "Handling a warning pattern");
         let fullMessage = `[${warning.msg} {file: "${testURL}" line: 0 column: 0 source: "0"}]`;
         Assert.equal(
@@ -117,7 +115,7 @@ add_task(async function testInsecurePasswordWarning() {
         gBrowser,
         url: testURL,
       },
-      function() {
+      function () {
         if (expectWarnings.length === 0) {
           info("All warnings are shown for URL:" + testURL);
           return Promise.resolve();

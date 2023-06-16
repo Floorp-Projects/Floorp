@@ -77,7 +77,7 @@ var tests = [
           waitForPopupAtAnchor(
             popup,
             customizeTarget.node,
-            function() {
+            function () {
               isnot(
                 PanelUI.panel.state,
                 "closed",
@@ -98,7 +98,7 @@ var tests = [
                 waitForPopupAtAnchor(
                   popup,
                   target.node,
-                  function() {
+                  function () {
                     isnot(
                       PanelUI.panel.state,
                       "closed",

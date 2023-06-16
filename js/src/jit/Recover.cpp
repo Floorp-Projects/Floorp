@@ -1469,28 +1469,6 @@ bool RRegExpSearcher::recover(JSContext* cx, SnapshotIterator& iter) const {
   return true;
 }
 
-bool MRegExpTester::writeRecoverData(CompactBufferWriter& writer) const {
-  MOZ_ASSERT(canRecoverOnBailout());
-  writer.writeUnsigned(uint32_t(RInstruction::Recover_RegExpTester));
-  return true;
-}
-
-RRegExpTester::RRegExpTester(CompactBufferReader& reader) {}
-
-bool RRegExpTester::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedString string(cx, iter.read().toString());
-  RootedObject regexp(cx, &iter.read().toObject());
-  int32_t lastIndex = iter.read().toInt32();
-  int32_t endIndex;
-
-  if (!js::RegExpTesterRaw(cx, regexp, string, lastIndex, &endIndex)) {
-    return false;
-  }
-
-  iter.storeInstructionResult(Int32Value(endIndex));
-  return true;
-}
-
 bool MTypeOf::writeRecoverData(CompactBufferWriter& writer) const {
   MOZ_ASSERT(canRecoverOnBailout());
   writer.writeUnsigned(uint32_t(RInstruction::Recover_TypeOf));
@@ -1616,7 +1594,7 @@ bool MNewPlainObject::writeRecoverData(CompactBufferWriter& writer) const {
 
   MOZ_ASSERT(gc::AllocKind(uint8_t(allocKind_)) == allocKind_);
   writer.writeByte(uint8_t(allocKind_));
-  MOZ_ASSERT(gc::InitialHeap(uint8_t(initialHeap_)) == initialHeap_);
+  MOZ_ASSERT(gc::Heap(uint8_t(initialHeap_)) == initialHeap_);
   writer.writeByte(uint8_t(initialHeap_));
   return true;
 }
@@ -1624,9 +1602,9 @@ bool MNewPlainObject::writeRecoverData(CompactBufferWriter& writer) const {
 RNewPlainObject::RNewPlainObject(CompactBufferReader& reader) {
   allocKind_ = gc::AllocKind(reader.readByte());
   MOZ_ASSERT(gc::IsValidAllocKind(allocKind_));
-  initialHeap_ = gc::InitialHeap(reader.readByte());
-  MOZ_ASSERT(initialHeap_ == gc::DefaultHeap ||
-             initialHeap_ == gc::TenuredHeap);
+  initialHeap_ = gc::Heap(reader.readByte());
+  MOZ_ASSERT(initialHeap_ == gc::Heap::Default ||
+             initialHeap_ == gc::Heap::Tenured);
 }
 
 bool RNewPlainObject::recover(JSContext* cx, SnapshotIterator& iter) const {
@@ -1649,23 +1627,23 @@ bool MNewArrayObject::writeRecoverData(CompactBufferWriter& writer) const {
   writer.writeUnsigned(uint32_t(RInstruction::Recover_NewArrayObject));
 
   writer.writeUnsigned(length_);
-  MOZ_ASSERT(gc::InitialHeap(uint8_t(initialHeap_)) == initialHeap_);
+  MOZ_ASSERT(gc::Heap(uint8_t(initialHeap_)) == initialHeap_);
   writer.writeByte(uint8_t(initialHeap_));
   return true;
 }
 
 RNewArrayObject::RNewArrayObject(CompactBufferReader& reader) {
   length_ = reader.readUnsigned();
-  initialHeap_ = gc::InitialHeap(reader.readByte());
-  MOZ_ASSERT(initialHeap_ == gc::DefaultHeap ||
-             initialHeap_ == gc::TenuredHeap);
+  initialHeap_ = gc::Heap(reader.readByte());
+  MOZ_ASSERT(initialHeap_ == gc::Heap::Default ||
+             initialHeap_ == gc::Heap::Tenured);
 }
 
 bool RNewArrayObject::recover(JSContext* cx, SnapshotIterator& iter) const {
   iter.read();  // Skip unused shape field.
 
   NewObjectKind kind =
-      initialHeap_ == gc::TenuredHeap ? TenuredObject : GenericObject;
+      initialHeap_ == gc::Heap::Tenured ? TenuredObject : GenericObject;
   JSObject* array = NewArrayOperation(cx, length_, kind);
   if (!array) {
     return false;

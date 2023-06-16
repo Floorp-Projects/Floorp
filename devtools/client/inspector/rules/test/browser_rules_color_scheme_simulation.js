@@ -6,7 +6,7 @@
 // Test color scheme simulation.
 const TEST_URI = URL_ROOT_SSL + "doc_media_queries.html";
 
-add_task(async function() {
+add_task(async function () {
   await addTab(TEST_URI);
   const { inspector, view, toolbox } = await openRuleView();
 

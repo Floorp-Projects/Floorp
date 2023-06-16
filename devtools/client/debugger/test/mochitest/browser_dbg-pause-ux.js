@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger("doc-scripts.html");
 
   // Make sure that we can set a breakpoint on a line out of the
@@ -25,22 +25,28 @@ add_task(async function() {
   info("2. searching should jump to the match");
   pressKey(dbg, "fileSearch");
   type(dbg, "check");
-  await waitForMatch(dbg, { matchIndex: 0, count: 2 });
+
+  const cm = getCM(dbg);
+  await waitFor(
+    () => cm.getSelection() == "check",
+    "Wait for actual selection in CodeMirror"
+  );
+  is(
+    cm.getCursor().line,
+    26,
+    "The line of first check occurence in long.js is selected (this is zero-based)"
+  );
+  // The column is the end of "check", so after 'k'
+  is(
+    cm.getCursor().ch,
+    51,
+    "The column of first check occurence in long.js is selected (this is zero-based)"
+  );
+
   const matchScrollTop = getScrollTop(dbg);
   ok(pauseScrollTop != matchScrollTop, "did not jump to debug line");
 });
 
 function getScrollTop(dbg) {
   return getCM(dbg).doc.scrollTop;
-}
-
-async function waitForMatch(dbg, { matchIndex, count }) {
-  await waitForState(
-    dbg,
-    state => {
-      const result = dbg.selectors.getFileSearchResults();
-      return result.matchIndex == matchIndex && result.count == count;
-    },
-    "wait for match"
-  );
 }

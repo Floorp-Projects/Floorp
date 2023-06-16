@@ -397,7 +397,7 @@ mozilla::RTPCallerType nsIGlobalObject::GetRTPCallerType() const {
     return RTPCallerType::SystemPrincipal;
   }
 
-  if (ShouldResistFingerprinting()) {
+  if (ShouldResistFingerprinting(RFPTarget::Unknown)) {
     return RTPCallerType::ResistFingerprinting;
   }
 
@@ -408,9 +408,8 @@ mozilla::RTPCallerType nsIGlobalObject::GetRTPCallerType() const {
   return RTPCallerType::Normal;
 }
 
-bool nsIGlobalObject::ShouldResistFingerprinting(
-    CallerType aCallerType,
-    RFPTarget aTarget /* = RFPTarget::Unknown */) const {
+bool nsIGlobalObject::ShouldResistFingerprinting(CallerType aCallerType,
+                                                 RFPTarget aTarget) const {
   return aCallerType != CallerType::System &&
          ShouldResistFingerprinting(aTarget);
 }

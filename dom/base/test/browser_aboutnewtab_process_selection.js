@@ -4,7 +4,7 @@ const PRELOADED_STATE = "preloaded";
 
 var ppmm = Services.ppmm;
 
-add_task(async function() {
+add_task(async function () {
   // We want to count processes in this test, so let's disable the pre-allocated process manager.
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -16,7 +16,7 @@ add_task(async function() {
   });
 });
 
-add_task(async function() {
+add_task(async function () {
   // This test is only relevant in e10s.
   if (!gMultiProcessBrowser) {
     return;
@@ -106,9 +106,8 @@ add_task(async function() {
 add_task(async function preloaded_state_attribute() {
   // Wait for a preloaded browser to exist, use it, and then create another one
   await BrowserTestUtils.maybeCreatePreloadedBrowser(gBrowser);
-  let preloadedTabState = gBrowser.preloadedBrowser.getAttribute(
-    "preloadedState"
-  );
+  let preloadedTabState =
+    gBrowser.preloadedBrowser.getAttribute("preloadedState");
   is(
     preloadedTabState,
     PRELOADED_STATE,

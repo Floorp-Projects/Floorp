@@ -102,7 +102,7 @@ class JitZone {
   // HashMap that maps scripts to compilations inlining those scripts.
   using InlinedScriptMap =
       GCHashMap<WeakHeapPtr<BaseScript*>, RecompileInfoVector,
-                MovableCellHasher<WeakHeapPtr<BaseScript*>>, SystemAllocPolicy>;
+                StableCellHasher<WeakHeapPtr<BaseScript*>>, SystemAllocPolicy>;
   InlinedScriptMap inlinedCompilations_;
 
   mozilla::Maybe<IonCompilationId> currentCompilationId_;

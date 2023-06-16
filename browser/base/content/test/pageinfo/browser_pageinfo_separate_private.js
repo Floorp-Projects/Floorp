@@ -3,7 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  **/
 
-add_task(async function() {
+add_task(async function () {
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "https://example.com"

@@ -4,11 +4,11 @@ function run_test() {
   do_get_profile();
 
   var storage = getCacheStorage("memory");
-  var mc = new MultipleCallbacks(3, function() {
+  var mc = new MultipleCallbacks(3, function () {
     storage.asyncEvictStorage(
-      new EvictionCallback(true, function() {
+      new EvictionCallback(true, function () {
         storage.asyncVisitStorage(
-          new VisitCallback(0, 0, [], function() {
+          new VisitCallback(0, 0, [], function () {
             var storage = getCacheStorage("disk");
 
             var expectedConsumption = 2048;
@@ -18,7 +18,7 @@ function run_test() {
                 2,
                 expectedConsumption,
                 ["http://a/", "http://b/"],
-                function() {
+                function () {
                   finish_cache2_test();
                 }
               ),
@@ -36,13 +36,13 @@ function run_test() {
     "memory",
     Ci.nsICacheStorage.OPEN_NORMALLY,
     null,
-    new OpenCallback(NEW, "m2m", "m2d", function(entry) {
+    new OpenCallback(NEW, "m2m", "m2d", function (entry) {
       asyncOpenCacheEntry(
         "http://mem1/",
         "memory",
         Ci.nsICacheStorage.OPEN_NORMALLY,
         null,
-        new OpenCallback(NORMAL, "m2m", "m2d", function(entry) {
+        new OpenCallback(NORMAL, "m2m", "m2d", function (entry) {
           mc.fired();
         })
       );
@@ -54,13 +54,13 @@ function run_test() {
     "disk",
     Ci.nsICacheStorage.OPEN_NORMALLY,
     null,
-    new OpenCallback(NEW, "a1m", "a1d", function(entry) {
+    new OpenCallback(NEW, "a1m", "a1d", function (entry) {
       asyncOpenCacheEntry(
         "http://a/",
         "disk",
         Ci.nsICacheStorage.OPEN_NORMALLY,
         null,
-        new OpenCallback(NORMAL, "a1m", "a1d", function(entry) {
+        new OpenCallback(NORMAL, "a1m", "a1d", function (entry) {
           mc.fired();
         })
       );
@@ -72,13 +72,13 @@ function run_test() {
     "disk",
     Ci.nsICacheStorage.OPEN_NORMALLY,
     null,
-    new OpenCallback(NEW, "a1m", "a1d", function(entry) {
+    new OpenCallback(NEW, "a1m", "a1d", function (entry) {
       asyncOpenCacheEntry(
         "http://b/",
         "disk",
         Ci.nsICacheStorage.OPEN_NORMALLY,
         null,
-        new OpenCallback(NORMAL, "a1m", "a1d", function(entry) {
+        new OpenCallback(NORMAL, "a1m", "a1d", function (entry) {
           mc.fired();
         })
       );

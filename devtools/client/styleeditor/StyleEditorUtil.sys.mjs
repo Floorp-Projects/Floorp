@@ -159,7 +159,7 @@ export function showFilePicker(
   const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
   const mode = toSave ? fp.modeSave : fp.modeOpen;
   const key = toSave ? "saveStyleSheet" : "importStyleSheet";
-  const fpCallback = function(result) {
+  const fpCallback = function (result) {
     if (result == Ci.nsIFilePicker.returnCancel) {
       callback(null);
     } else {

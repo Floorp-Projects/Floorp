@@ -191,9 +191,8 @@ class ResponsiveUI {
     this.browserContainerEl = gBrowser.getBrowserContainer(
       gBrowser.getBrowserForTab(this.tab)
     );
-    this.browserStackEl = this.browserContainerEl.querySelector(
-      ".browserStack"
-    );
+    this.browserStackEl =
+      this.browserContainerEl.querySelector(".browserStack");
 
     this.browserContainerEl.classList.add("responsive-mode");
 

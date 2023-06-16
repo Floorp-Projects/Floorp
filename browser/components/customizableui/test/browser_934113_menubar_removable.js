@@ -5,7 +5,7 @@
 "use strict";
 
 // Attempting to drag the menubar to the navbar shouldn't work.
-add_task(async function() {
+add_task(async function () {
   await startCustomizing();
   let menuItems = document.getElementById("menubar-items");
   let navbar = document.getElementById("nav-bar");

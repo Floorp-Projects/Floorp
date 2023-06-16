@@ -272,84 +272,88 @@ add_task(async function urlFilter_domain_anchor() {
 
 // Extreme patterns that should not be used in practice, but are not explicitly
 // documented to be disallowed.
-add_task(async function extreme_urlFilter_patterns() {
-  await runAsDNRExtension({
-    background: async dnrTestUtils => {
-      const { testMatchesRequest, DUMMY_ACTION } = dnrTestUtils;
+add_task(
+  // Stuck in ccov: https://bugzilla.mozilla.org/show_bug.cgi?id=1806494#c4
+  { skip_if: () => mozinfo.ccov },
+  async function extreme_urlFilter_patterns() {
+    await runAsDNRExtension({
+      background: async dnrTestUtils => {
+        const { testMatchesRequest, DUMMY_ACTION } = dnrTestUtils;
 
-      await browser.declarativeNetRequest.updateSessionRules({
-        addRules: [
-          {
-            id: 1,
-            condition: {
-              urlFilter: "*".repeat(1e6),
+        await browser.declarativeNetRequest.updateSessionRules({
+          addRules: [
+            {
+              id: 1,
+              condition: {
+                urlFilter: "*".repeat(1e6),
+              },
+              action: DUMMY_ACTION,
             },
-            action: DUMMY_ACTION,
-          },
-          {
-            id: 2,
-            condition: {
-              urlFilter: "^".repeat(1e6),
+            {
+              id: 2,
+              condition: {
+                urlFilter: "^".repeat(1e6),
+              },
+              action: DUMMY_ACTION,
             },
-            action: DUMMY_ACTION,
-          },
-          {
-            id: 3,
-            condition: {
-              // Note: 2 chars repeat 5e5 instead of 1e6 because newURI limits
-              // the length of the URL (to network.standard-url.max-length), so
-              // we would not be able to verify whether the URL is really that
-              // long.
-              urlFilter: "*^".repeat(5e5),
+            {
+              id: 3,
+              condition: {
+                // Note: 2 chars repeat 5e5 instead of 1e6 because newURI limits
+                // the length of the URL (to network.standard-url.max-length),
+                // so we would not be able to verify whether the URL is really
+                // that long.
+                urlFilter: "*^".repeat(5e5),
+              },
+              action: DUMMY_ACTION,
             },
-            action: DUMMY_ACTION,
-          },
-          {
-            id: 4,
-            condition: {
-              // Note: well beyond the maximum length of a URL. But as "*" can
-              // match any char (including zero length), this still matches.
-              urlFilter: "h" + "*".repeat(1e7) + "endofurl",
+            {
+              id: 4,
+              condition: {
+                // Note: well beyond the maximum length of a URL. But as "*" can
+                // match any char (including zero length), this still matches.
+                urlFilter: "h" + "*".repeat(1e7) + "endofurl",
+              },
+              action: DUMMY_ACTION,
             },
-            action: DUMMY_ACTION,
-          },
-        ],
-      });
+          ],
+        });
 
-      await testMatchesRequest(
-        { url: "http://example.com/", type: "other" },
-        [1],
-        "urlFilter with 1M wildcard chars matches any URL"
-      );
+        await testMatchesRequest(
+          { url: "http://example.com/", type: "other" },
+          [1],
+          "urlFilter with 1M wildcard chars matches any URL"
+        );
 
-      await testMatchesRequest(
-        { url: "http://example.com/" + "x".repeat(1e6), type: "other" },
-        [1],
-        "urlFilter with 1M wildcards matches, other '^' do not match alpha"
-      );
+        await testMatchesRequest(
+          { url: "http://example.com/" + "x".repeat(1e6), type: "other" },
+          [1],
+          "urlFilter with 1M wildcards matches, other '^' do not match alpha"
+        );
 
-      await testMatchesRequest(
-        { url: "http://example.com/" + "/".repeat(1e6), type: "other" },
-        [1, 2, 3],
-        "urlFilter with 1M wildcards, ^ and *^ all match URL with 1M '/' chars"
-      );
+        await testMatchesRequest(
+          { url: "http://example.com/" + "/".repeat(1e6), type: "other" },
+          [1, 2, 3],
+          "urlFilter with 1M wildcards, ^ and *^ all match URL with 1M '/' chars"
+        );
 
-      await testMatchesRequest(
-        { url: "http://example.com/" + "x/".repeat(5e5), type: "other" },
-        [1, 3],
-        "urlFilter with 1M wildcards and *^ match URL with 1M 'x/' chars"
-      );
+        await testMatchesRequest(
+          { url: "http://example.com/" + "x/".repeat(5e5), type: "other" },
+          [1, 3],
+          "urlFilter with 1M wildcards and *^ match URL with 1M 'x/' chars"
+        );
 
-      await testMatchesRequest(
-        { url: "http://example.com/endofurl", type: "other" },
-        [1, 4],
-        "urlFilter with 1M and 10M wildcards matches URL"
-      );
+        await testMatchesRequest(
+          { url: "http://example.com/endofurl", type: "other" },
+          [1, 4],
+          "urlFilter with 1M and 10M wildcards matches URL"
+        );
 
-      browser.test.notifyPass();
-    },
-  });
-});
+        browser.test.notifyPass();
+      },
+    });
+  }
+);
 
 add_task(async function test_isUrlFilterCaseSensitive() {
   await runAsDNRExtension({

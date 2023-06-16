@@ -32,12 +32,12 @@ export async function setStoragePrefs(optionalPrefsToSet) {
 export async function getUsageForOrigin(principal, fromMemory) {
   const request = SpecialPowers.Services.qms.getUsageForPrincipal(
     principal,
-    function() {},
+    function () {},
     fromMemory
   );
 
-  await new Promise(function(resolve) {
-    request.callback = SpecialPowers.wrapCallback(function() {
+  await new Promise(function (resolve) {
+    request.callback = SpecialPowers.wrapCallback(function () {
       resolve();
     });
   });
@@ -50,12 +50,11 @@ export async function getUsageForOrigin(principal, fromMemory) {
 }
 
 export async function clearStoragesForOrigin(principal) {
-  const request = SpecialPowers.Services.qms.clearStoragesForPrincipal(
-    principal
-  );
+  const request =
+    SpecialPowers.Services.qms.clearStoragesForPrincipal(principal);
 
-  await new Promise(function(resolve) {
-    request.callback = SpecialPowers.wrapCallback(function() {
+  await new Promise(function (resolve) {
+    request.callback = SpecialPowers.wrapCallback(function () {
       resolve();
     });
   });

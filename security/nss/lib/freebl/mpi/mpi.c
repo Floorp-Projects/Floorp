@@ -2520,12 +2520,6 @@ mp_read_raw(mp_int *mp, char *str, int len)
 
     mp_zero(mp);
 
-    /* Get sign from first byte */
-    if (ustr[0])
-        SIGN(mp) = NEG;
-    else
-        SIGN(mp) = ZPOS;
-
     /* Read the rest of the digits */
     for (ix = 1; ix < len; ix++) {
         if ((res = mp_mul_d(mp, 256, mp)) != MP_OKAY)
@@ -2533,6 +2527,12 @@ mp_read_raw(mp_int *mp, char *str, int len)
         if ((res = mp_add_d(mp, ustr[ix], mp)) != MP_OKAY)
             return res;
     }
+
+    /* Get sign from first byte */
+    if (ustr[0])
+        SIGN(mp) = NEG;
+    else
+        SIGN(mp) = ZPOS;
 
     return MP_OKAY;
 

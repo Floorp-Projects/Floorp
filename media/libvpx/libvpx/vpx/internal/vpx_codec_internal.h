@@ -48,6 +48,8 @@
 #include "../vpx_encoder.h"
 #include <stdarg.h>
 
+#include "vpx_config.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -426,6 +428,27 @@ struct vpx_internal_error_info {
   int setjmp;
   jmp_buf jmp;
 };
+
+#if CONFIG_DEBUG
+#define CHECK_MEM_ERROR(error, lval, expr)                                  \
+  do {                                                                      \
+    assert((error)->setjmp);                                                \
+    (lval) = (expr);                                                        \
+    if (!(lval))                                                            \
+      vpx_internal_error(error, VPX_CODEC_MEM_ERROR,                        \
+                         "Failed to allocate " #lval " at %s:%d", __FILE__, \
+                         __LINE__);                                         \
+  } while (0)
+#else
+#define CHECK_MEM_ERROR(error, lval, expr)             \
+  do {                                                 \
+    assert((error)->setjmp);                           \
+    (lval) = (expr);                                   \
+    if (!(lval))                                       \
+      vpx_internal_error(error, VPX_CODEC_MEM_ERROR,   \
+                         "Failed to allocate " #lval); \
+  } while (0)
+#endif
 
 #define CLANG_ANALYZER_NORETURN
 #if defined(__has_feature)

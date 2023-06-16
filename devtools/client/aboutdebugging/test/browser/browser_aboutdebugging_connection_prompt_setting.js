@@ -10,7 +10,7 @@ const USB_APP_NAME = "Lorem ipsum";
 /**
  * Check whether can toggle enable/disable connection prompt setting.
  */
-add_task(async function() {
+add_task(async function () {
   // enable USB devices mocks
   const mocks = new Mocks();
   const runtime = mocks.createUSBRuntime(USB_RUNTIME_ID, {

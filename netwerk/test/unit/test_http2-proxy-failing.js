@@ -80,7 +80,7 @@ function get_response(channel, flags = CL_ALLOW_UNKNOWN_CL, delay = 0) {
       flags
     );
     if (delay > 0) {
-      do_timeout(delay, function() {
+      do_timeout(delay, function () {
         channel.asyncOpen(listener);
       });
     } else {

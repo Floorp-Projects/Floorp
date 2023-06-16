@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger("doc-navigation-when-paused.html");
 
   await togglePauseOnExceptions(dbg, true, true);

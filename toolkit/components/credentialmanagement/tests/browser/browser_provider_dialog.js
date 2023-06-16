@@ -339,8 +339,7 @@ add_task(async function test_multiple_provider_show_branding() {
         branding: {
           icons: [
             {
-              url:
-                "https://example.net/browser/toolkit/components/credentialmanagement/tests/browser/custom.svg",
+              url: "https://example.net/browser/toolkit/components/credentialmanagement/tests/browser/custom.svg",
             },
           ],
         },

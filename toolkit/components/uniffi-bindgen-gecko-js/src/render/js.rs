@@ -39,7 +39,7 @@ fn render_enum_literal(typ: &Type, variant_name: &str) -> String {
 }
 
 #[derive(Template)]
-#[template(path = "js/wrapper.jsm", escape = "none")]
+#[template(path = "js/wrapper.sys.mjs", escape = "none")]
 pub struct JSBindingsTemplate<'a> {
     pub ci: &'a ComponentInterface,
     pub config: &'a Config,
@@ -66,7 +66,7 @@ impl<'a> JSBindingsTemplate<'a> {
     fn js_module_name_for_ci_namespace(&self, namespace: &str) -> String {
         // The plain namespace name is a bit too generic as a module name for m-c, so we
         // prefix it with "Rust". Later we'll probably allow this to be customized.
-        format!("Rust{}.jsm", namespace.to_upper_camel_case())
+        format!("Rust{}.sys.mjs", namespace.to_upper_camel_case())
     }
 
     fn js_module_name_for_crate_name(&self, crate_name: &str) -> String {

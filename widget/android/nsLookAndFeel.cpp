@@ -401,11 +401,14 @@ nsresult nsLookAndFeel::NativeGetFloat(FloatID aID, float& aResult) {
     case FloatID::IMEUnderlineRelativeSize:
       aResult = 1.0f;
       break;
-
     case FloatID::SpellCheckerUnderlineRelativeSize:
       aResult = 1.0f;
       break;
-
+    case FloatID::TextScaleFactor: {
+      java::GeckoRuntime::LocalRef runtime = java::GeckoRuntime::GetInstance();
+      aResult = runtime ? runtime->TextScaleFactor() : 1.0f;
+      break;
+    }
     default:
       aResult = -1.0;
       rv = NS_ERROR_FAILURE;

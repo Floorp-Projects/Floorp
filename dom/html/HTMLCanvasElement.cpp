@@ -34,6 +34,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProfilerLabels.h"
+#include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/webgpu/CanvasContext.h"
 #include "nsAttrValueInlines.h"
@@ -817,11 +818,6 @@ already_AddRefed<CanvasCaptureMediaStream> HTMLCanvasElement::CaptureStream(
   nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
   if (!window) {
     aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  if (!mCurrentContext) {
-    aRv.Throw(NS_ERROR_NOT_INITIALIZED);
     return nullptr;
   }
 

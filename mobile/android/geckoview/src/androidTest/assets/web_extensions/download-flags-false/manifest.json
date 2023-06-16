@@ -11,7 +11,5 @@
   "background": {
     "scripts": ["download.js"]
   },
-  "permissions": [
-    "downloads"
-  ]
+  "permissions": ["downloads"]
 }

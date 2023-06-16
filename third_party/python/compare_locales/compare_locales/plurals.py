@@ -170,6 +170,7 @@ CATEGORIES_BY_LOCALE = {
     'sco': 1,
     'si': 1,
     'sk': 8,
+    'skr': 1,
     'sl': 10,
     'son': 1,
     'sq': 1,

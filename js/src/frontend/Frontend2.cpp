@@ -35,7 +35,6 @@
 #include "js/HeapAPI.h"               // JS::GCCellPtr
 #include "js/RegExpFlags.h"           // JS::RegExpFlag, JS::RegExpFlags
 #include "js/RootingAPI.h"            // JS::MutableHandle
-#include "js/Stack.h"                 // JS::NativeStackLimit
 #include "js/UniquePtr.h"             // js::UniquePtr
 #include "js/Utility.h"    // JS::UniqueTwoByteChars, StringBufferArena
 #include "vm/JSScript.h"   // JSScript
@@ -265,7 +264,6 @@ bool ConvertScopeStencil(JSContext* cx, FrontendContext* fc,
 // Given the result of SmooshMonkey's parser, convert a list of RegExp data
 // into a list of RegExpStencil.
 bool ConvertRegExpData(JSContext* cx, FrontendContext* fc,
-                       JS::NativeStackLimit stackLimit,
                        const SmooshResult& result,
                        CompilationState& compilationState) {
   auto len = result.regexps.len;
@@ -325,7 +323,7 @@ bool ConvertRegExpData(JSContext* cx, FrontendContext* fc,
 
     // See Parser<FullParseHandler, Unit>::newRegExp.
 
-    if (!irregexp::CheckPatternSyntax(cx->tempLifoAlloc(), stackLimit, ts,
+    if (!irregexp::CheckPatternSyntax(cx->tempLifoAlloc(), fc->stackLimit(), ts,
                                       range, flags)) {
       return false;
     }
@@ -563,8 +561,8 @@ void ReportSmooshCompileError(JSContext* cx, FrontendContext* fc,
 
 /* static */
 bool Smoosh::tryCompileGlobalScriptToExtensibleStencil(
-    JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
-    CompilationInput& input, JS::SourceText<mozilla::Utf8Unit>& srcBuf,
+    JSContext* cx, FrontendContext* fc, CompilationInput& input,
+    JS::SourceText<mozilla::Utf8Unit>& srcBuf,
     UniquePtr<ExtensibleCompilationStencil>& stencilOut) {
   // FIXME: check info members and return with *unimplemented = true
   //        if any field doesn't match to smoosh_run.
@@ -611,7 +609,7 @@ bool Smoosh::tryCompileGlobalScriptToExtensibleStencil(
     return false;
   }
 
-  if (!ConvertRegExpData(cx, fc, stackLimit, result, compilationState)) {
+  if (!ConvertRegExpData(cx, fc, result, compilationState)) {
     return false;
   }
 

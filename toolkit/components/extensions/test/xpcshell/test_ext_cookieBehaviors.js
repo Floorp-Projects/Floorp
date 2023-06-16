@@ -1,7 +1,7 @@
 "use strict";
 
-const { UrlClassifierTestUtils } = ChromeUtils.import(
-  "resource://testing-common/UrlClassifierTestUtils.jsm"
+const { UrlClassifierTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
 );
 
 const {
@@ -195,7 +195,7 @@ add_task(async function test_ext_page_3rdparty_cookies() {
   // we would not be actually checking the cookie behavior).
   Services.prefs.setBoolPref("privacy.trackingprotection.enabled", false);
   await UrlClassifierTestUtils.addTestTrackers();
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     UrlClassifierTestUtils.cleanupTestTrackers();
     Services.prefs.clearUserPref("privacy.trackingprotection.enabled");
     Services.cookies.removeAll();
@@ -370,7 +370,7 @@ add_task(async function test_ext_page_3rdparty_cookies() {
   clearAllCookies();
 
   await extPage.spawn(
-    "http://example.com/page-with-tracker.html",
+    ["http://example.com/page-with-tracker.html"],
     async iframeURL => {
       const iframe = this.content.document.createElement("iframe");
       iframe.setAttribute("src", iframeURL);
@@ -424,7 +424,7 @@ add_task(
       }
     );
 
-    let results = await extensionPage.spawn(null, async () => {
+    let results = await extensionPage.spawn([], async () => {
       let extFrame = this.content.document.querySelector("iframe#ext");
       let webFrame = this.content.document.querySelector("iframe#web");
 
@@ -459,7 +459,7 @@ add_task(
     );
 
     results.extSubFrameContent = await contentPage.spawn(
-      extension.uuid,
+      [extension.uuid],
       uuid => {
         return new Promise(resolve => {
           let frame = this.content.document.createElement("iframe");

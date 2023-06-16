@@ -8,7 +8,7 @@ var toolbox = null;
 
 const URL = "data:text/html;charset=utf8,test for getPanelWhenReady";
 
-add_task(async function() {
+add_task(async function () {
   const tab = await addTab(URL);
   toolbox = await gDevTools.showToolboxForTab(tab);
 

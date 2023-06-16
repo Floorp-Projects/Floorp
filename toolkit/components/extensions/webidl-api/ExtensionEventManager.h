@@ -77,7 +77,7 @@ class ExtensionEventManager final : public nsISupports,
  private:
   using ListenerWrappersMap =
       JS::GCHashMap<JS::Heap<JSObject*>, RefPtr<ExtensionEventListener>,
-                    js::MovableCellHasher<JS::Heap<JSObject*>>,
+                    js::StableCellHasher<JS::Heap<JSObject*>>,
                     js::SystemAllocPolicy>;
 
   ~ExtensionEventManager();

@@ -278,9 +278,10 @@ var SessionHistoryInternal = {
     }
 
     if (shEntry.partitionedPrincipalToInherit) {
-      entry.partitionedPrincipalToInherit_base64 = lazy.E10SUtils.serializePrincipal(
-        shEntry.partitionedPrincipalToInherit
-      );
+      entry.partitionedPrincipalToInherit_base64 =
+        lazy.E10SUtils.serializePrincipal(
+          shEntry.partitionedPrincipalToInherit
+        );
     }
 
     entry.hasUserInteraction = shEntry.hasUserInteraction;
@@ -570,9 +571,10 @@ var SessionHistoryInternal = {
     // As both partitionedPrincipal and principalToInherit are both not required to load
     // it's ok to keep these undefined when we don't have a previously defined principal.
     if (entry.partitionedPrincipalToInherit_base64) {
-      shEntry.partitionedPrincipalToInherit = lazy.E10SUtils.deserializePrincipal(
-        entry.partitionedPrincipalToInherit_base64
-      );
+      shEntry.partitionedPrincipalToInherit =
+        lazy.E10SUtils.deserializePrincipal(
+          entry.partitionedPrincipalToInherit_base64
+        );
     }
     if (entry.principalToInherit_base64) {
       shEntry.principalToInherit = lazy.E10SUtils.deserializePrincipal(

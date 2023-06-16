@@ -14,11 +14,15 @@
   margin-bottom: 2em;
 }
 
-.radio-entry {
+.form-entry {
   /* Center the labels with their checkboxes */
   display: flex;
   align-items: center;
   margin: 0.3em 0;
+}
+
+:disabled + label {
+  opacity: 0.5;
 }
 
 #current-log-modules,
@@ -33,10 +37,15 @@
   font-family: monospace;
 }
 
+#profiler-configuration,
 #log-file-configuration {
   /* 16px is the size of the radio button, 6px is its margin
    * Then it's properly aligned with the text above. */
   padding-inline-start: calc(16px + 6px);
+}
+
+label {
+  line-height: 1.8em;
 }
 
 input[type=text] {

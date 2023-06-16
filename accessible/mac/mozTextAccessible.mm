@@ -172,13 +172,8 @@ inline NSString* ToNSString(id aValue) {
 
   nsString text;
   nsCocoaUtils::GetStringForNSString(value, text);
-  if (mGeckoAccessible->IsLocal()) {
-    if (HyperTextAccessible* textAcc =
-            mGeckoAccessible->AsLocal()->AsHyperText()) {
-      textAcc->ReplaceText(text);
-    }
-  } else {
-    mGeckoAccessible->AsRemote()->ReplaceText(text);
+  if (HyperTextAccessibleBase* textAcc = mGeckoAccessible->AsHyperTextBase()) {
+    textAcc->ReplaceText(text);
   }
 }
 
@@ -190,24 +185,17 @@ inline NSString* ToNSString(id aValue) {
     return;
   }
 
-  int32_t start = 0, end = 0;
-  nsString text;
-  if (mGeckoAccessible->IsLocal()) {
-    if (HyperTextAccessible* textAcc =
-            mGeckoAccessible->AsLocal()->AsHyperText()) {
-      textAcc->SelectionBoundsAt(0, &start, &end);
-      textAcc->DeleteText(start, end - start);
-      nsCocoaUtils::GetStringForNSString(stringValue, text);
-      textAcc->InsertText(text, start);
-    }
-  } else {
-    RemoteAccessible* proxy = mGeckoAccessible->AsRemote();
-    nsString data;
-    proxy->SelectionBoundsAt(0, data, &start, &end);
-    proxy->DeleteText(start, end - start);
-    nsCocoaUtils::GetStringForNSString(stringValue, text);
-    proxy->InsertText(text, start);
+  HyperTextAccessibleBase* textAcc = mGeckoAccessible->AsHyperTextBase();
+  if (!textAcc) {
+    return;
   }
+  int32_t start = 0, end = 0;
+  textAcc->SelectionBoundsAt(0, &start, &end);
+  nsString text;
+  nsCocoaUtils::GetStringForNSString(stringValue, text);
+  textAcc->SelectionBoundsAt(0, &start, &end);
+  textAcc->DeleteText(start, end - start);
+  textAcc->InsertText(text, start);
 }
 
 - (void)moxSetSelectedTextRange:(NSValue*)selectedTextRange {

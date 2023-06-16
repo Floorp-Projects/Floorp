@@ -7,7 +7,7 @@
  * Test that Security details tab shows an error message with broken connections.
  */
 
-add_task(async function() {
+add_task(async function () {
   const { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL, {
     requestCount: 1,
   });
@@ -19,7 +19,7 @@ add_task(async function() {
   info("Requesting a resource that has a certificate problem.");
 
   const requestsDone = waitForNetworkEvents(monitor, 1);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     content.wrappedJSObject.performRequests(1, "https://nocert.example.com");
   });
   await requestsDone;

@@ -16,7 +16,7 @@ const targets = {
   OUT_PROCESS_IFRAME: "out-process-frame",
 };
 
-add_task(async function() {
+add_task(async function () {
   info("Testing the top-level document");
   await testWebsocketResources(targets.TOP_LEVEL_DOCUMENT);
   info("Testing the in-process iframe");

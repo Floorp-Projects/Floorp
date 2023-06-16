@@ -6,14 +6,14 @@
 #ifndef LIB_EXTRAS_ENC_JXL_H_
 #define LIB_EXTRAS_ENC_JXL_H_
 
+#include <jxl/encode.h>
+#include <jxl/parallel_runner.h>
+#include <jxl/thread_parallel_runner.h>
+#include <jxl/types.h>
 #include <stdint.h>
 
 #include <vector>
 
-#include "jxl/encode.h"
-#include "jxl/parallel_runner.h"
-#include "jxl/thread_parallel_runner.h"
-#include "jxl/types.h"
 #include "lib/extras/packed_image.h"
 
 namespace jxl {

@@ -295,7 +295,6 @@ class ContentBlockingLog final {
     }
 
     // The entry has not been found.
-
     OriginEntry* entry = mLog.AppendElement();
     if (NS_WARN_IF(!entry || !entry->mData)) {
       return;

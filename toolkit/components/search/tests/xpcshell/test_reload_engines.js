@@ -170,9 +170,8 @@ add_task(async function test_initial_config_correct() {
 
 add_task(async function test_config_updated_engine_changes() {
   // Update the config.
-  const reloadObserved = SearchTestUtils.promiseSearchNotification(
-    "engines-reloaded"
-  );
+  const reloadObserved =
+    SearchTestUtils.promiseSearchNotification("engines-reloaded");
   const defaultEngineChanged = SearchTestUtils.promiseSearchNotification(
     SearchUtils.MODIFIED_TYPE.DEFAULT,
     SearchUtils.TOPIC_ENGINE_MODIFIED

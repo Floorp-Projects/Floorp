@@ -77,7 +77,7 @@ void Upsample2Horizontal(float* JXL_RESTRICT row,
   HWY_FULL(float) df;
   auto threefour = Set(df, 0.75f);
   auto onefour = Set(df, 0.25f);
-  const size_t len_in = len_out >> 1;
+  const size_t len_in = (len_out + 1) >> 1;
   memcpy(scratch_space, row, len_in * sizeof(row[0]));
   scratch_space[-1] = scratch_space[0];
   scratch_space[len_in] = scratch_space[len_in - 1];

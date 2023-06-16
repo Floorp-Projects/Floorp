@@ -148,9 +148,8 @@ add_task(async function test_metadata_changed() {
 });
 
 add_task(async function test_default_engine_unchanged() {
-  let currentEngineName = Services.search.wrappedJSObject._getEngineDefault(
-    false
-  ).name;
+  let currentEngineName =
+    Services.search.wrappedJSObject._getEngineDefault(false).name;
 
   Assert.equal(
     currentEngineName,

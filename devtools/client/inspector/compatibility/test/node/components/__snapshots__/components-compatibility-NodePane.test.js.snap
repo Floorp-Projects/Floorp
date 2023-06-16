@@ -1,9 +1,20 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`NodePane component renders a node 1`] = `
-<div
+<details
   className="compatibility-node-pane"
+  open={true}
 >
+  <Localized
+    $number={1}
+    id="compatibility-issue-occurrences"
+  >
+    <summary
+      className="compatibility-node-pane__summary"
+    >
+      compatibility-issue-occurrences
+    </summary>
+  </Localized>
   <NodeList
     nodes={
       Array [
@@ -16,12 +27,13 @@ exports[`NodePane component renders a node 1`] = `
       ]
     }
   />
-</div>
+</details>
 `;
 
 exports[`NodePane component renders some nodes 1`] = `
 <details
   className="compatibility-node-pane"
+  open={false}
 >
   <Localized
     $number={2}

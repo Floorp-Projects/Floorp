@@ -57,8 +57,6 @@ class PuppetWidget : public nsBaseWidget,
   typedef nsBaseWidget Base;
 
   // The width and height of the "widget" are clamped to this.
-  static const size_t kMaxDimension;
-
  public:
   explicit PuppetWidget(BrowserChild* aBrowserChild);
 
@@ -89,12 +87,6 @@ class PuppetWidget : public nsBaseWidget,
   virtual void Show(bool aState) override;
 
   virtual bool IsVisible() const override { return mVisible; }
-
-  virtual void ConstrainPosition(bool /*ignored aAllowSlop*/, int32_t* aX,
-                                 int32_t* aY) override {
-    *aX = kMaxDimension;
-    *aY = kMaxDimension;
-  }
 
   // Widget position is controlled by the parent process via BrowserChild.
   virtual void Move(double aX, double aY) override {}

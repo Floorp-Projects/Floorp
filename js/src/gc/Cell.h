@@ -12,6 +12,7 @@
 
 #include <type_traits>
 
+#include "gc/GCContext.h"
 #include "gc/Heap.h"
 #include "gc/TraceKind.h"
 #include "js/GCAnnotations.h"
@@ -24,21 +25,15 @@ enum class TraceKind;
 
 namespace js {
 
-class GenericPrinter;
+class JS_PUBLIC_API GenericPrinter;
 
 extern bool RuntimeFromMainThreadIsHeapMajorCollecting(
     JS::shadow::Zone* shadowZone);
 
 #ifdef DEBUG
-
 // Barriers can't be triggered during backend Ion compilation, which may run on
 // a helper thread.
 extern bool CurrentThreadIsIonCompiling();
-
-extern bool CurrentThreadIsGCMarking();
-extern bool CurrentThreadIsGCSweeping();
-extern bool CurrentThreadIsGCFinalizing();
-
 #endif
 
 extern void TraceManuallyBarrieredGenericPointerEdge(JSTracer* trc,

@@ -13,12 +13,11 @@ const SUBFRAME_PAGE =
 
 // Test that setting temp permissions triggers a change in the identity block.
 add_task(async function testTempPermissionChangeEvents() {
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    ORIGIN
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(ORIGIN);
   let id = "geo";
 
-  await BrowserTestUtils.withNewTab(ORIGIN, function(browser) {
+  await BrowserTestUtils.withNewTab(ORIGIN, function (browser) {
     SitePermissions.setForPrincipal(
       principal,
       id,
@@ -61,7 +60,7 @@ add_task(async function testTempPermissionSubframes() {
   );
   let id = "geo";
 
-  await BrowserTestUtils.withNewTab(SUBFRAME_PAGE, async function(browser) {
+  await BrowserTestUtils.withNewTab(SUBFRAME_PAGE, async function (browser) {
     let popupshown = BrowserTestUtils.waitForEvent(
       PopupNotifications.panel,
       "popupshown"
@@ -80,15 +79,15 @@ add_task(async function testTempPermissionSubframes() {
     });
 
     // Request a permission.
-    await SpecialPowers.spawn(browser, [uri.host], async function(host0) {
+    await SpecialPowers.spawn(browser, [uri.host], async function (host0) {
       let frame = content.document.getElementById("frame");
 
-      await content.SpecialPowers.spawn(frame, [host0], async function(host) {
+      await content.SpecialPowers.spawn(frame, [host0], async function (host) {
         const { E10SUtils } = ChromeUtils.importESModule(
           "resource://gre/modules/E10SUtils.sys.mjs"
         );
 
-        E10SUtils.wrapHandlingUserInput(this.content, true, function() {
+        E10SUtils.wrapHandlingUserInput(this.content, true, function () {
           let frameDoc = this.content.document;
 
           // Make sure that the origin of our test page is different.

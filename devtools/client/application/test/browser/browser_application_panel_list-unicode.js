@@ -12,7 +12,7 @@ const TAB_URL = (
  * Unicode characters, and not encoded URI's or punycode.
  */
 
-add_task(async function() {
+add_task(async function () {
   await enableApplicationPanel();
 
   const { panel, tab, commands } = await openNewTabAndApplicationPanel(TAB_URL);

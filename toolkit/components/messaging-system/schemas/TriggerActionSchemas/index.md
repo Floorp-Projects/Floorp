@@ -138,12 +138,26 @@ The event it reports back is one of two things:
 ### `defaultBrowserCheck`
 
 Happens at startup, when opening a newtab and when navigating to about:home.
-At startup it provides the result of running `DefaultBrowserCheck.willCheckDefaultBrowser` to follow existing behaviour if needed.
-On the newtab/homepage it reports the `source` as `newtab`.
+At startup, it reports the `source` as `startup`, and it provides a context
+attribute `willShowDefaultPrompt` that can be used in targeting to avoid showing
+a message when the built-in default browser prompt is going to be displayed.
+This is important to avoid the negative UX of showing two promts back-to-back,
+especially if both prompts offer similar affordances.
+On the newtab/homepage, it reports the `source` as `newtab`.
 
-```typescript
-let source = "newtab" | undefined;
-let willShowDefaultPrompt = boolean;
+```ts
+let source = "startup" | "newtab";
+let willShowDefaultPrompt = boolean | undefined;
+```
+
+#### Examples
+* Only trigger on startup, not on newtab/homepage
+* Don't show if the built-in prompt is going to be shown
+```js
+{
+  trigger: { id: "defaultBrowserCheck" },
+  targeting: "source == 'startup' && !willShowDefaultPrompt"
+}
 ```
 
 ### `captivePortalLogin`

@@ -9,7 +9,7 @@ waitForExplicitFinish();
 
 const TEST_URL = TEST_BASE + "doc_xulpage.xhtml";
 
-add_task(async function() {
+add_task(async function () {
   const tab = await addTab(TEST_URL);
   const toolbox = await gDevTools.showToolboxForTab(tab, {
     toolId: "styleeditor",

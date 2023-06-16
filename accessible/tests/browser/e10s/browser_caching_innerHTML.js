@@ -12,14 +12,7 @@ addAccessibleTask(
 <p id="p">test</p>
 <math id="math"><mfrac><mi>x</mi><mi>y</mi></mfrac></math>
   `,
-  async function(browser, docAcc) {
-    if (!isCacheEnabled) {
-      // Stop the harness from complaining that this file is empty when run with
-      // the cache disabled.
-      todo(false, "Cache disabled for a cache only test");
-      return;
-    }
-
+  async function (browser, docAcc) {
     const p = findAccessibleChildByID(docAcc, "p");
     let hasHtml;
     try {
@@ -49,7 +42,7 @@ addAccessibleTask(
   },
   {
     topLevel: true,
-    iframe: isCacheEnabled,
-    remoteIframe: isCacheEnabled,
+    iframe: true,
+    remoteIframe: true,
   }
 );

@@ -88,7 +88,8 @@ const TEST_CONDITIONS = {
 const TESTS = {
   // Specifying an incorrect version should stop us updating anything
   badVersion: {
-    fails: /Error: Rejecting updated system add-on set that either could not be downloaded or contained unusable add-ons./,
+    fails:
+      /Error: Rejecting updated system add-on set that either could not be downloaded or contained unusable add-ons./,
     updateList: [
       {
         id: "system2@tests.mozilla.org",
@@ -105,7 +106,8 @@ const TESTS = {
 
   // Specifying an invalid size should stop us updating anything
   badSize: {
-    fails: /Error: Rejecting updated system add-on set that either could not be downloaded or contained unusable add-ons./,
+    fails:
+      /Error: Rejecting updated system add-on set that either could not be downloaded or contained unusable add-ons./,
     updateList: [
       {
         id: "system2@tests.mozilla.org",
@@ -123,7 +125,8 @@ const TESTS = {
 
   // Specifying an incorrect hash should stop us updating anything
   badHash: {
-    fails: /Error: Rejecting updated system add-on set that either could not be downloaded or contained unusable add-ons./,
+    fails:
+      /Error: Rejecting updated system add-on set that either could not be downloaded or contained unusable add-ons./,
     updateList: [
       {
         id: "system2@tests.mozilla.org",
@@ -142,7 +145,8 @@ const TESTS = {
 
   // A bad certificate should stop updates
   badCert: {
-    fails: /Error: Rejecting updated system add-on set that either could not be downloaded or contained unusable add-ons./,
+    fails:
+      /Error: Rejecting updated system add-on set that either could not be downloaded or contained unusable add-ons./,
     // true is not system addon signed
     usePrivilegedSignatures: true,
     updateList: [
@@ -167,7 +171,7 @@ add_task(async function setup() {
   await promiseShutdownManager();
 });
 
-add_task(async function() {
+add_task(async function () {
   for (let setupName of Object.keys(TEST_CONDITIONS)) {
     for (let testName of Object.keys(TESTS)) {
       info("Running test " + setupName + " " + testName);

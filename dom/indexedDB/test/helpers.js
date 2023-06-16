@@ -135,9 +135,9 @@ function* testHarnessSteps() {
   if (testSteps.constructor.name === "AsyncFunction") {
     // Register a callback to clean up databases because it's the only way for
     // add_task() to clean them right before the SimpleTest.FinishTest
-    SimpleTest.registerCleanupFunction(async function() {
-      await new Promise(function(resolve, reject) {
-        clearAllDatabases(function(result) {
+    SimpleTest.registerCleanupFunction(async function () {
+      await new Promise(function (resolve, reject) {
+        clearAllDatabases(function (result) {
           if (result.resultCode == SpecialPowers.Cr.NS_OK) {
             resolve(result);
           } else {
@@ -156,7 +156,7 @@ function* testHarnessSteps() {
 }
 
 if (!window.runTest) {
-  window.runTest = function() {
+  window.runTest = function () {
     SimpleTest.waitForExplicitFinish();
     testHarnessGenerator.next();
   };
@@ -167,8 +167,8 @@ function finishTest() {
     testSteps.constructor.name === "GeneratorFunction",
     "Async/await tests shouldn't call finishTest()"
   );
-  SimpleTest.executeSoon(function() {
-    clearAllDatabases(function() {
+  SimpleTest.executeSoon(function () {
+    clearAllDatabases(function () {
       SimpleTest.finish();
     });
   });
@@ -185,7 +185,7 @@ function grabEventAndContinueHandler(event) {
 }
 
 function continueToNextStep() {
-  SimpleTest.executeSoon(function() {
+  SimpleTest.executeSoon(function () {
     testGenerator.next();
   });
 }
@@ -220,7 +220,7 @@ function unexpectedSuccessHandler() {
 }
 
 function expectedErrorHandler(name) {
-  return function(event) {
+  return function (event) {
     is(event.type, "error", "Got an error event");
     is(event.target.error.name, name, "Expected error was thrown.");
     event.preventDefault();
@@ -363,15 +363,15 @@ function getWasmModule(_binary_) {
 }
 
 function expectingSuccess(request) {
-  return new Promise(function(resolve, reject) {
-    request.onerror = function(event) {
+  return new Promise(function (resolve, reject) {
+    request.onerror = function (event) {
       ok(false, "indexedDB error, '" + event.target.error.name + "'");
       reject(event);
     };
-    request.onsuccess = function(event) {
+    request.onsuccess = function (event) {
       resolve(event);
     };
-    request.onupgradeneeded = function(event) {
+    request.onupgradeneeded = function (event) {
       ok(false, "Got upgrade, but did not expect it!");
       reject(event);
     };
@@ -379,15 +379,15 @@ function expectingSuccess(request) {
 }
 
 function expectingUpgrade(request) {
-  return new Promise(function(resolve, reject) {
-    request.onerror = function(event) {
+  return new Promise(function (resolve, reject) {
+    request.onerror = function (event) {
       ok(false, "indexedDB error, '" + event.target.error.name + "'");
       reject(event);
     };
-    request.onupgradeneeded = function(event) {
+    request.onupgradeneeded = function (event) {
       resolve(event);
     };
-    request.onsuccess = function(event) {
+    request.onsuccess = function (event) {
       ok(false, "Got success, but did not expect it!");
       reject(event);
     };
@@ -395,17 +395,17 @@ function expectingUpgrade(request) {
 }
 
 function expectingError(request, errorName) {
-  return new Promise(function(resolve, reject) {
-    request.onerror = function(event) {
+  return new Promise(function (resolve, reject) {
+    request.onerror = function (event) {
       is(errorName, event.target.error.name, "Correct exception type");
       event.stopPropagation();
       resolve(event);
     };
-    request.onsuccess = function(event) {
+    request.onsuccess = function (event) {
       ok(false, "Got success, but did not expect it!");
       reject(event);
     };
-    request.onupgradeneeded = function(event) {
+    request.onupgradeneeded = function (event) {
       ok(false, "Got upgrade, but did not expect it!");
       reject(event);
     };
@@ -417,7 +417,7 @@ function workerScript() {
 
   self.wasmSupported = false;
 
-  self.repr = function(_thing_) {
+  self.repr = function (_thing_) {
     if (typeof _thing_ == "undefined") {
       return "undefined";
     }
@@ -441,7 +441,7 @@ function workerScript() {
     return str;
   };
 
-  self.ok = function(_condition_, _name_, _diag_) {
+  self.ok = function (_condition_, _name_, _diag_) {
     self.postMessage({
       op: "ok",
       condition: !!_condition_,
@@ -450,19 +450,19 @@ function workerScript() {
     });
   };
 
-  self.is = function(_a_, _b_, _name_) {
+  self.is = function (_a_, _b_, _name_) {
     let pass = _a_ == _b_;
     let diag = pass ? "" : "got " + repr(_a_) + ", expected " + repr(_b_);
     ok(pass, _name_, diag);
   };
 
-  self.isnot = function(_a_, _b_, _name_) {
+  self.isnot = function (_a_, _b_, _name_) {
     let pass = _a_ != _b_;
     let diag = pass ? "" : "didn't expect " + repr(_a_) + ", but got it";
     ok(pass, _name_, diag);
   };
 
-  self.todo = function(_condition_, _name_, _diag_) {
+  self.todo = function (_condition_, _name_, _diag_) {
     self.postMessage({
       op: "todo",
       condition: !!_condition_,
@@ -471,19 +471,19 @@ function workerScript() {
     });
   };
 
-  self.info = function(_msg_) {
+  self.info = function (_msg_) {
     self.postMessage({ op: "info", msg: _msg_ });
   };
 
-  self.executeSoon = function(_fun_) {
+  self.executeSoon = function (_fun_) {
     var channel = new MessageChannel();
     channel.port1.postMessage("");
-    channel.port2.onmessage = function(event) {
+    channel.port2.onmessage = function (event) {
       _fun_();
     };
   };
 
-  self.finishTest = function() {
+  self.finishTest = function () {
     self.ok(
       testSteps.constructor.name === "GeneratorFunction",
       "Async/await tests shouldn't call finishTest()"
@@ -498,32 +498,32 @@ function workerScript() {
     self.postMessage({ op: "done" });
   };
 
-  self.grabEventAndContinueHandler = function(_event_) {
+  self.grabEventAndContinueHandler = function (_event_) {
     testGenerator.next(_event_);
   };
 
-  self.continueToNextStep = function() {
-    executeSoon(function() {
+  self.continueToNextStep = function () {
+    executeSoon(function () {
       testGenerator.next();
     });
   };
 
-  self.continueToNextStepSync = function() {
+  self.continueToNextStepSync = function () {
     testGenerator.next();
   };
 
-  self.errorHandler = function(_event_) {
+  self.errorHandler = function (_event_) {
     ok(false, "indexedDB error, '" + _event_.target.error.name + "'");
     finishTest();
   };
 
-  self.unexpectedSuccessHandler = function() {
+  self.unexpectedSuccessHandler = function () {
     ok(false, "Got success, but did not expect it!");
     finishTest();
   };
 
-  self.expectedErrorHandler = function(_name_) {
-    return function(_event_) {
+  self.expectedErrorHandler = function (_name_) {
+    return function (_event_) {
       is(_event_.type, "error", "Got an error event");
       is(_event_.target.error.name, _name_, "Expected error was thrown.");
       _event_.preventDefault();
@@ -531,7 +531,7 @@ function workerScript() {
     };
   };
 
-  self.ExpectError = function(_name_, _preventDefault_) {
+  self.ExpectError = function (_name_, _preventDefault_) {
     this._name = _name_;
     this._preventDefault = _preventDefault_;
   };
@@ -549,7 +549,7 @@ function workerScript() {
 
   // TODO this is duplicate from the global compareKeys function defined above,
   // this duplication should be avoided (bug 1565986)
-  self.compareKeys = function(_k1_, _k2_) {
+  self.compareKeys = function (_k1_, _k2_) {
     let t = typeof _k1_;
     if (t != typeof _k2_) {
       return false;
@@ -596,7 +596,7 @@ function workerScript() {
     return false;
   };
 
-  self.getRandomBuffer = function(_size_) {
+  self.getRandomBuffer = function (_size_) {
     let buffer = new ArrayBuffer(_size_);
     is(buffer.byteLength, _size_, "Correct byte length");
     let view = new Uint8Array(buffer);
@@ -607,7 +607,7 @@ function workerScript() {
   };
 
   self._expectingUncaughtException = false;
-  self.expectUncaughtException = function(_expecting_) {
+  self.expectUncaughtException = function (_expecting_) {
     self._expectingUncaughtException = !!_expecting_;
     self.postMessage({
       op: "expectUncaughtException",
@@ -616,12 +616,12 @@ function workerScript() {
   };
 
   self._clearAllDatabasesCallback = undefined;
-  self.clearAllDatabases = function(_callback_) {
+  self.clearAllDatabases = function (_callback_) {
     self._clearAllDatabasesCallback = _callback_;
     self.postMessage({ op: "clearAllDatabases" });
   };
 
-  self.onerror = function(_message_, _file_, _line_) {
+  self.onerror = function (_message_, _file_, _line_) {
     if (self._expectingUncaughtException) {
       self._expectingUncaughtException = false;
       ok(
@@ -651,21 +651,21 @@ function workerScript() {
     return true;
   };
 
-  self.isWasmSupported = function() {
+  self.isWasmSupported = function () {
     return self.wasmSupported;
   };
 
-  self.getWasmModule = function(_binary_) {
+  self.getWasmModule = function (_binary_) {
     let module = new WebAssembly.Module(_binary_);
     return module;
   };
 
-  self.verifyWasmModule = function(_module) {
+  self.verifyWasmModule = function (_module) {
     self.todo(false, "Need a verifyWasmModule implementation on workers");
     self.continueToNextStep();
   };
 
-  self.onmessage = function(_event_) {
+  self.onmessage = function (_event_) {
     let message = _event_.data;
     switch (message.op) {
       case "load":
@@ -676,7 +676,7 @@ function workerScript() {
 
       case "start":
         self.wasmSupported = message.wasmSupported;
-        executeSoon(async function() {
+        executeSoon(async function () {
           info("Worker: starting tests");
           if (testSteps.constructor.name === "AsyncFunction") {
             await testSteps();
@@ -712,32 +712,32 @@ function workerScript() {
     }
   };
 
-  self.expectingSuccess = function(_request_) {
-    return new Promise(function(_resolve_, _reject_) {
-      _request_.onerror = function(_event_) {
+  self.expectingSuccess = function (_request_) {
+    return new Promise(function (_resolve_, _reject_) {
+      _request_.onerror = function (_event_) {
         ok(false, "indexedDB error, '" + _event_.target.error.name + "'");
         _reject_(_event_);
       };
-      _request_.onsuccess = function(_event_) {
+      _request_.onsuccess = function (_event_) {
         _resolve_(_event_);
       };
-      _request_.onupgradeneeded = function(_event_) {
+      _request_.onupgradeneeded = function (_event_) {
         ok(false, "Got upgrade, but did not expect it!");
         _reject_(_event_);
       };
     });
   };
 
-  self.expectingUpgrade = function(_request_) {
-    return new Promise(function(_resolve_, _reject_) {
-      _request_.onerror = function(_event_) {
+  self.expectingUpgrade = function (_request_) {
+    return new Promise(function (_resolve_, _reject_) {
+      _request_.onerror = function (_event_) {
         ok(false, "indexedDB error, '" + _event_.target.error.name + "'");
         _reject_(_event_);
       };
-      _request_.onupgradeneeded = function(_event_) {
+      _request_.onupgradeneeded = function (_event_) {
         _resolve_(_event_);
       };
-      _request_.onsuccess = function(_event_) {
+      _request_.onsuccess = function (_event_) {
         ok(false, "Got success, but did not expect it!");
         _reject_(_event_);
       };
@@ -757,11 +757,11 @@ async function executeWorkerTestAndCleanUp(testScriptPath) {
 
   let worker;
   try {
-    await new Promise(function(resolve, reject) {
+    await new Promise(function (resolve, reject) {
       worker = new Worker(workerScriptURL);
 
       worker._expectingUncaughtException = false;
-      worker.onerror = function(event) {
+      worker.onerror = function (event) {
         if (worker._expectingUncaughtException) {
           ok(true, "Worker had an expected error: " + event.message);
           worker._expectingUncaughtException = false;
@@ -773,7 +773,7 @@ async function executeWorkerTestAndCleanUp(testScriptPath) {
         reject();
       };
 
-      worker.onmessage = function(event) {
+      worker.onmessage = function (event) {
         let message = event.data;
         switch (message.op) {
           case "ok":
@@ -812,7 +812,7 @@ async function executeWorkerTestAndCleanUp(testScriptPath) {
             break;
 
           case "clearAllDatabases":
-            clearAllDatabases(function() {
+            clearAllDatabases(function () {
               worker.postMessage({ op: "clearAllDatabasesDone" });
             });
             break;
@@ -832,7 +832,7 @@ async function executeWorkerTestAndCleanUp(testScriptPath) {
     info("Unexpected thing happened: " + e);
   }
 
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve) {
     info("Cleaning up the databases");
 
     if (worker._expectingUncaughtException) {

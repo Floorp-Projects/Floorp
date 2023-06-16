@@ -302,7 +302,8 @@ class VideoFrameConverter {
     }
 
     const webrtc::Timestamp time =
-        mTimestampMaker.ConvertMozTimeToRealtime(aFrame.mTime);
+        dom::RTCStatsTimestamp::FromMozTime(mTimestampMaker, aFrame.mTime)
+            .ToRealtime();
 
     if (mLastFrameConverted &&
         aFrame.Serial() == mLastFrameConverted->mSerial) {

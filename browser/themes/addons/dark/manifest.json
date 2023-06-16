@@ -12,7 +12,7 @@
   "author": "Mozilla",
   "version": "1.2",
 
-  "icons": {"32": "icon.svg"},
+  "icons": { "32": "icon.svg" },
 
   "theme": {
     "colors": {

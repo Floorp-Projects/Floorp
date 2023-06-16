@@ -9,7 +9,7 @@ const TESTCASE_URI = TEST_BASE_HTTPS + "simple.html";
 const LINE_NO = 5;
 const COL_NO = 3;
 
-add_task(async function() {
+add_task(async function () {
   const { ui } = await openStyleEditorForURL(TESTCASE_URI);
 
   is(ui.editors.length, 2, "Two sheets present after load.");

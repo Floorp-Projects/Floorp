@@ -10,22 +10,10 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<script>
-let nsLoginInfo = SpecialPowers.wrap(SpecialPowers.Components).Constructor("@mozilla.org/login-manager/loginInfo;1",
-                                                                           SpecialPowers.Ci.nsILoginInfo,
-                                                                           "init");
-let readyPromise = registerRunTests(1);
-</script>
 <p id="display"></p>
 
 <!-- we presumably can't hide the content for this test. -->
-<div id="content">
-  <form id="form1" action="https://autofill" onsubmit="return false;">
-    <input type="text" name="uname">
-    <input type="password" name="pword">
-    <button type="submit">Submit</button>
-  </form>
-</div>
+<div id="content"></div>
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -33,27 +21,10 @@ const { TestUtils } = SpecialPowers.ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
 
-async function prepareLogins(logins = []) {
-  await LoginManager.removeAllUserFacingLogins();
-
-  for (let login of logins) {
-    let storageAddPromise = promiseStorageChanged(["addLogin"]);
-    await LoginManager.addLogin(login);
-    await storageAddPromise;
-  }
-  let count = (await LoginManager.getAllLogins()).length;
-  is(count, logins.length, "All logins were added");
-}
-
-let origin = window.location.origin;
 const availableLogins = {
-  "exampleUser1": new nsLoginInfo(origin, "https://autofill", null,
-                              "user1", "pass1", "uname", "pword"),
-  "subdomainUser1": new nsLoginInfo("https://sub." + window.location.host,
-                              "https://autofill", null,
-                              "user1", "pass1", "uname", "pword"),
-  "emptyUsername": new nsLoginInfo(origin, "https://autofill", null,
-                              "", "pass2", "uname", "pword"),
+  "exampleUser1": [location.origin, "https://autofill", null, "user1", "pass1", "uname", "pword"],
+  "subdomainUser1": ["https://sub." + location.host, "https://autofill", null, "user1", "pass1", "uname", "pword"],
+  "emptyUsername": [location.origin, "https://autofill", null, "", "pass2", "uname", "pword"],
 }
 
 const tests = [
@@ -121,40 +92,34 @@ const tests = [
 
 add_setup(async () => {
   await SpecialPowers.pushPrefEnv({"set": [["signon.includeOtherSubdomainsInLookup", true]]});
-  ok(readyPromise, "check promise is available");
-  await readyPromise;
 });
 
 async function testResultOfTabInteractions(testData) {
-  await SimpleTest.promiseFocus(window);
-  let logins = testData.logins.map(name => availableLogins[name]);
-  await prepareLogins(logins);
+  const logins = testData.logins.map(name => availableLogins[name]);
+  await setStoredLoginsAsync(...logins);
 
-  info("recreating form");
-  let processed = promiseFormsProcessedInSameProcess();
-  recreateTree(document.getElementById("form1"));
-  info("waiting for form processed");
-  await processed;
+  const form = createLoginForm({
+    action: "https://autofill"
+  });
+  await promiseFormsProcessedInSameProcess();
+
+  await SimpleTest.promiseFocus(window);
+
   // check autofill results
   checkForm(1, testData.expectedAutofillUsername, testData.expectedAutofillPassword);
-  let pword = getFormElementByName(1, "pword");
-  let uname = getFormElementByName(1, "uname");
 
-  SpecialPowers.wrap(pword).setUserInput("");
-  SpecialPowers.wrap(uname).setUserInput("");
+  SpecialPowers.wrap(form.pword).setUserInput("");
+  SpecialPowers.wrap(form.uname).setUserInput("");
 
   info("Placing focus in the password field");
-  const shownPromise = popupBy();
-  pword.focus();
+  form.pword.focus();
   await synthesizeKey("KEY_Tab", { shiftKey: true }); // blur pw, focus un
-  await new Promise(resolve => SimpleTest.executeSoon(resolve));
 
   // moving focus shouldn't change anything
-  checkForm(1, "", "");
+  await ensureLoginFormStaysFilledWith(form.uname, "", form.pword, "");
 
-  await synthesizeKey("KEY_ArrowDown");
   info("waiting for AC results");
-  let results = await shownPromise;
+  const results = await popupByArrowDown();
   info("checking results");
   checkAutoCompleteResults(results, testData.expectedACLabels,
                            window.location.host, "Check all rows are correct");
@@ -171,27 +136,24 @@ async function testResultOfTabInteractions(testData) {
   }, "AutoComplete popup should have closed");
 
   await synthesizeKey("KEY_Tab");
-  // Filling password is performed asynchronously.  So, let's wait the value
-  // change instead of just waiting next event loop.
+
+  // wait until username and password are automatically filled in with the
+  // expected values...
+  await TestUtils.waitForCondition(() => {
+    return form.uname.value === testData.expectedTabbedUsername & form.pword.value === testData.expectedTabbedPassword;
+  }, "Username and password field should be filled");
+
+  // ...and if the value is not different from the original value in the form,
+  // make sure that the form keeps its values
   if (testData.expectedTabbedPassword === "") {
-    await new Promise(resolve => SimpleTest.executeSoon(resolve));
-  } else {
-    await TestUtils.waitForCondition(() => {
-      return pword.value === testData.expectedTabbedPassword;
-    }, "Password field should be filled");
+      await ensureLoginFormStaysFilledWith(form.uname, testData.expectedTabbedUsername, form.pword, testData.expectedTabbedPassword);
   }
 
-  ok(getFormElementByName(1, "pword").matches("input:focus"), "pword field is focused");
-  checkForm(1, testData.expectedTabbedUsername, testData.expectedTabbedPassword);
-
-  recreateTree(document.getElementById("form1"));
-  await promiseFormsProcessedInSameProcess();
-  // tidy up by closing any open AC popup
-  await synthesizeKey("KEY_Escape");
+  ok(form.pword.matches("input:focus"), "pword field is focused");
 }
 
-for (let testData of tests) {
-  let tmp = {
+for (const testData of tests) {
+  const tmp = {
     async [testData.name]() {
       await testResultOfTabInteractions(testData);
     },

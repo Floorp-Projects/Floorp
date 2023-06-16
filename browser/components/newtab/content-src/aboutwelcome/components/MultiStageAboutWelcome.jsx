@@ -183,16 +183,13 @@ export const MultiStageAboutWelcome = props => {
     })();
   }, []);
 
-  const {
-    negotiatedLanguage,
-    langPackInstallPhase,
-    languageFilteredScreens,
-  } = useLanguageSwitcher(
-    props.appAndSystemLocaleInfo,
-    screens,
-    index,
-    setScreenIndex
-  );
+  const { negotiatedLanguage, langPackInstallPhase, languageFilteredScreens } =
+    useLanguageSwitcher(
+      props.appAndSystemLocaleInfo,
+      screens,
+      index,
+      setScreenIndex
+    );
 
   useEffect(() => {
     setScreens(languageFilteredScreens);

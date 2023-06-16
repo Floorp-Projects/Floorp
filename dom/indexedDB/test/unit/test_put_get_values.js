@@ -25,22 +25,22 @@ function* testSteps() {
 
   request = objectStore.add(testString.value, testString.key);
   request.onerror = errorHandler;
-  request.onsuccess = function(event) {
+  request.onsuccess = function (event) {
     is(event.target.result, testString.key, "Got the right key");
     request = objectStore.get(testString.key);
     request.onerror = errorHandler;
-    request.onsuccess = function(event) {
+    request.onsuccess = function (event) {
       is(event.target.result, testString.value, "Got the right value");
     };
   };
 
   request = objectStore.add(testInt.value, testInt.key);
   request.onerror = errorHandler;
-  request.onsuccess = function(event) {
+  request.onsuccess = function (event) {
     is(event.target.result, testInt.key, "Got the right key");
     request = objectStore.get(testInt.key);
     request.onerror = errorHandler;
-    request.onsuccess = function(event) {
+    request.onsuccess = function (event) {
       is(event.target.result, testInt.value, "Got the right value");
     };
   };

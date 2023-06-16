@@ -8,7 +8,7 @@
  * have a title.
  */
 
-add_task(async function() {
+add_task(async function () {
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "about:mozilla"
@@ -16,7 +16,7 @@ add_task(async function() {
   await PlacesUtils.history.clear();
   const uri = "http://bug1060642.example.com/beards/are/pretty/great";
   await PlacesTestUtils.addVisits([{ uri, title: "" }]);
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.history.clear();
     BrowserTestUtils.removeTab(tab);
   });

@@ -8,7 +8,7 @@ const TESTCASE_URI = TEST_BASE_HTTP + "simple.html";
 
 const TESTCASE_CSS_SOURCE = "body{background-color:red;";
 
-add_task(async function() {
+add_task(async function () {
   const { panel, ui } = await openStyleEditorForURL(TESTCASE_URI);
 
   const editor = await createNewStyleSheet(ui, panel.panelWindow);
@@ -68,7 +68,7 @@ async function testInitialState(editor) {
 
 function typeInEditor(editor, panelWindow) {
   return new Promise(resolve => {
-    waitForFocus(function() {
+    waitForFocus(function () {
       for (const c of TESTCASE_CSS_SOURCE) {
         EventUtils.synthesizeKey(c, {}, panelWindow);
       }
@@ -88,8 +88,9 @@ function testUpdated(editor, originalHref) {
     "rule bracket has been auto-closed"
   );
 
-  const ruleCount = editor.summary.querySelector(".stylesheet-rule-count")
-    .textContent;
+  const ruleCount = editor.summary.querySelector(
+    ".stylesheet-rule-count"
+  ).textContent;
   is(parseInt(ruleCount, 10), 1, "new editor shows 1 rule after modification");
 
   is(editor.styleSheet.href, originalHref, "style sheet href did not change");

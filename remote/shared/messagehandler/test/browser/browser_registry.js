@@ -16,9 +16,8 @@ add_task(async function test_messageHandlerRegistry_API() {
 
   const rootMessageHandlerRegistry = new MessageHandlerRegistry(type);
 
-  const rootMessageHandler = rootMessageHandlerRegistry.getOrCreateMessageHandler(
-    sessionId
-  );
+  const rootMessageHandler =
+    rootMessageHandlerRegistry.getOrCreateMessageHandler(sessionId);
   ok(rootMessageHandler, "Valid ROOT MessageHandler created");
 
   const contextId = rootMessageHandler.contextId;

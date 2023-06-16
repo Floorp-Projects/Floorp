@@ -40,7 +40,7 @@ const SearchBox = createFactory(
   require("resource://devtools/client/shared/components/SearchBox.js")
 );
 
-loader.lazyGetter(this, "SourcePreview", function() {
+loader.lazyGetter(this, "SourcePreview", function () {
   return createFactory(
     require("resource://devtools/client/netmonitor/src/components/previews/SourcePreview.js")
   );
@@ -79,9 +79,8 @@ class RequestPanel extends Component {
     };
 
     this.toggleRawRequestPayload = this.toggleRawRequestPayload.bind(this);
-    this.renderRawRequestPayloadBtn = this.renderRawRequestPayloadBtn.bind(
-      this
-    );
+    this.renderRawRequestPayloadBtn =
+      this.renderRawRequestPayloadBtn.bind(this);
   }
 
   componentDidMount() {

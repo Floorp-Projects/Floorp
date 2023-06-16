@@ -172,9 +172,6 @@ class HTMLEditor final : public EditorBase,
   bool CanPaste(int32_t aClipboardType) const final;
   using EditorBase::CanPaste;
 
-  MOZ_CAN_RUN_SCRIPT nsresult PasteTransferableAsAction(
-      nsITransferable* aTransferable, nsIPrincipal* aPrincipal = nullptr) final;
-
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD DeleteNode(nsINode* aNode) final;
 
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD InsertLineBreak() final;
@@ -233,33 +230,21 @@ class HTMLEditor final : public EditorBase,
   MOZ_CAN_RUN_SCRIPT nsresult GetBackgroundColorState(bool* aMixed,
                                                       nsAString& aOutColor);
 
-  MOZ_CAN_RUN_SCRIPT NS_IMETHOD Paste(int32_t aClipboardType) final {
-    const nsresult rv = HTMLEditor::PasteAsAction(aClipboardType, true);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::PasteAsAction() failed");
-    return rv;
-  }
-
-  MOZ_CAN_RUN_SCRIPT nsresult
-  PasteAsAction(int32_t aClipboardType, bool aDispatchPasteEvent,
-                nsIPrincipal* aPrincipal = nullptr) final;
-
   /**
    * PasteNoFormattingAsAction() pastes content in clipboard without any style
    * information.
    *
-   * @param aSelectionType      nsIClipboard::kGlobalClipboard or
+   * @param aClipboardType      nsIClipboard::kGlobalClipboard or
    *                            nsIClipboard::kSelectionClipboard.
+   * @param aDispatchPasteEvent Yes if this should dispatch ePaste event
+   *                            before pasting.  Otherwise, No.
    * @param aPrincipal          Set subject principal if it may be called by
    *                            JS.  If set to nullptr, will be treated as
    *                            called by system.
    */
   MOZ_CAN_RUN_SCRIPT nsresult PasteNoFormattingAsAction(
-      int32_t aSelectionType, nsIPrincipal* aPrincipal = nullptr);
-
-  MOZ_CAN_RUN_SCRIPT nsresult
-  PasteAsQuotationAsAction(int32_t aClipboardType, bool aDispatchPasteEvent,
-                           nsIPrincipal* aPrincipal = nullptr) final;
+      int32_t aClipboardType, DispatchPasteEvent aDispatchPasteEvent,
+      nsIPrincipal* aPrincipal = nullptr);
 
   bool CanPasteTransferable(nsITransferable* aTransferable) final;
 
@@ -1883,12 +1868,19 @@ class HTMLEditor final : public EditorBase,
    *                            If yes and if it's possible to keep white-space
    *                            style, this method will set `style` attribute to
    *                            moving node or creating new <span> element.
+   * @param aRemoveIfCommentNode
+   *                            If yes, this removes a comment node instead of
+   *                            moving it to the destination.  Note that this
+   *                            does not remove comment nodes in moving nodes
+   *                            because it requires additional scan.
    */
   enum class PreserveWhiteSpaceStyle { No, Yes };
+  enum class RemoveIfCommentNode { No, Yes };
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<MoveNodeResult, nsresult>
   MoveNodeOrChildrenWithTransaction(
       nsIContent& aContentToMove, const EditorDOMPoint& aPointToInsert,
-      PreserveWhiteSpaceStyle aPreserveWhiteSpaceStyle);
+      PreserveWhiteSpaceStyle aPreserveWhiteSpaceStyle,
+      RemoveIfCommentNode aRemoveIfCommentNode);
 
   /**
    * CanMoveNodeOrChildren() returns true if
@@ -1913,11 +1905,17 @@ class HTMLEditor final : public EditorBase,
    *                            If yes and if it's possible to keep white-space
    *                            style, this method will set `style` attribute to
    *                            moving node or creating new <span> element.
+   * @param aRemoveIfCommentNode
+   *                            If yes, this removes a comment node instead of
+   *                            moving it to the destination.  Note that this
+   *                            does not remove comment nodes in moving nodes
+   *                            because it requires additional scan.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<MoveNodeResult, nsresult>
   MoveChildrenWithTransaction(Element& aElement,
                               const EditorDOMPoint& aPointToInsert,
-                              PreserveWhiteSpaceStyle aPreserveWhiteSpaceStyle);
+                              PreserveWhiteSpaceStyle aPreserveWhiteSpaceStyle,
+                              RemoveIfCommentNode aRemoveIfCommentNode);
 
   /**
    * CanMoveChildren() returns true if `MoveChildrenWithTransaction()` can move
@@ -3104,6 +3102,14 @@ class HTMLEditor final : public EditorBase,
    */
   Result<RefPtr<Element>, nsresult> GetFirstSelectedCellElementInTable() const;
 
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult HandlePaste(
+      AutoEditActionDataSetter& aEditActionData, int32_t aClipboardType) final;
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult HandlePasteAsQuotation(
+      AutoEditActionDataSetter& aEditActionData, int32_t aClipboardType) final;
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  HandlePasteTransferable(AutoEditActionDataSetter& aEditActionData,
+                          nsITransferable& aTransferable) final;
+
   /**
    * PasteInternal() pasts text with replacing selected content.
    * This tries to dispatch ePaste event first.  If its defaultPrevent() is
@@ -4184,9 +4190,9 @@ class HTMLEditor final : public EditorBase,
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   RefreshInlineTableEditingUIInternal();
 
-  typedef enum { eInserted, eAppended } InsertedOrAppended;
-  MOZ_CAN_RUN_SCRIPT void DoContentInserted(
-      nsIContent* aChild, InsertedOrAppended aInsertedOrAppended);
+  enum class ContentNodeIs { Inserted, Appended };
+  MOZ_CAN_RUN_SCRIPT void DoContentInserted(nsIContent* aChild,
+                                            ContentNodeIs aContentNodeIs);
 
   /**
    * Returns an anonymous Element of type aTag,

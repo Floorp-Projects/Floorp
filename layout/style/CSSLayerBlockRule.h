@@ -14,7 +14,7 @@ namespace mozilla::dom {
 
 class CSSLayerBlockRule final : public css::GroupRule {
  public:
-  CSSLayerBlockRule(RefPtr<RawServoLayerBlockRule> aRawRule, StyleSheet* aSheet,
+  CSSLayerBlockRule(RefPtr<StyleLayerBlockRule> aRawRule, StyleSheet* aSheet,
                     css::Rule* aParentRule, uint32_t aLine, uint32_t aColumn);
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -23,8 +23,8 @@ class CSSLayerBlockRule final : public css::GroupRule {
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;
 #endif
 
-  RawServoLayerBlockRule* Raw() const { return mRawRule; }
-  void SetRawAfterClone(RefPtr<RawServoLayerBlockRule>);
+  StyleLayerBlockRule* Raw() const { return mRawRule; }
+  void SetRawAfterClone(RefPtr<StyleLayerBlockRule>);
 
   // WebIDL interface
   StyleCssRuleType Type() const final;
@@ -38,7 +38,7 @@ class CSSLayerBlockRule final : public css::GroupRule {
  private:
   ~CSSLayerBlockRule() = default;
 
-  RefPtr<RawServoLayerBlockRule> mRawRule;
+  RefPtr<StyleLayerBlockRule> mRawRule;
 };
 
 }  // namespace mozilla::dom

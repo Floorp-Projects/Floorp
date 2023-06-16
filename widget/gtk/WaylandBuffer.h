@@ -15,6 +15,7 @@
 #include "mozilla/Mutex.h"
 #include "nsTArray.h"
 #include "nsWaylandDisplay.h"
+#include "base/shared_memory.h"
 
 namespace mozilla::widget {
 
@@ -27,16 +28,16 @@ class WaylandShmPool {
                                        int aSize);
 
   wl_shm_pool* GetShmPool() { return mShmPool; };
-  void* GetImageData() { return mImageData; };
+  void* GetImageData();
 
  private:
-  explicit WaylandShmPool(int aSize);
+  WaylandShmPool() = default;
   ~WaylandShmPool();
 
-  wl_shm_pool* mShmPool;
-  int mShmPoolFd;
-  int mAllocatedSize;
-  void* mImageData;
+  wl_shm_pool* mShmPool = nullptr;
+  void* mImageData = nullptr;
+  UniquePtr<base::SharedMemory> mShm;
+  int mSize = 0;
 };
 
 class WaylandBuffer {

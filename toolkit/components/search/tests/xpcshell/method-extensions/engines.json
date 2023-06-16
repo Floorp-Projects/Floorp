@@ -14,10 +14,12 @@
           { "name": "suggest", "value": "{searchTerms}" }
         ]
       },
-      "appliesTo": [{
-        "included": { "everywhere": true },
-        "default": "yes"
-      }]
+      "appliesTo": [
+        {
+          "included": { "everywhere": true },
+          "default": "yes"
+        }
+      ]
     },
     {
       "webExtension": {
@@ -33,9 +35,11 @@
           { "name": "suggest", "value": "{searchTerms}" }
         ]
       },
-      "appliesTo": [{
-        "included": { "everywhere": true }
-      }]
+      "appliesTo": [
+        {
+          "included": { "everywhere": true }
+        }
+      ]
     }
   ]
 }

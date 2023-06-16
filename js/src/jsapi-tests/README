@@ -142,7 +142,7 @@ Before executing each test, the test framework calls the tests' init() member
 function, which populates the rt, cx, and global member variables.
 
 A test can customize the test setup process by overloading virtual member
-functions from the JSAPITest class, like this:
+functions from the JSAPIRuntimeTest class, like this:
 
     const JSClass globalClassWithResolve = { ... };
 

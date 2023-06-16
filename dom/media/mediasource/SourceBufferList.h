@@ -79,7 +79,7 @@ class SourceBufferList final : public DOMEventTargetHelper {
   void Ended();
 
   // Returns the highest end time of any of the Sourcebuffers.
-  double GetHighestBufferedEndTime();
+  media::TimeUnit GetHighestBufferedEndTime();
 
   // Append a SourceBuffer to the list. No event is fired.
   void AppendSimple(SourceBuffer* aSourceBuffer);
@@ -88,8 +88,8 @@ class SourceBufferList final : public DOMEventTargetHelper {
   //  No event is fired and no action is performed on the sourcebuffers.
   void ClearSimple();
 
-  double HighestStartTime();
-  double HighestEndTime();
+  media::TimeUnit HighestStartTime();
+  media::TimeUnit HighestEndTime();
 
  private:
   ~SourceBufferList();

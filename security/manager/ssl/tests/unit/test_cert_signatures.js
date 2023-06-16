@@ -96,7 +96,7 @@ function tamperWithSerialNumberAndEnsureVerificationFailure(certificatePath) {
   );
 }
 
-add_task(async function() {
+add_task(async function () {
   addCertFromFile(certdb, "test_cert_signatures/ca-rsa.pem", "CTu,,");
   addCertFromFile(certdb, "test_cert_signatures/ca-secp384r1.pem", "CTu,,");
 

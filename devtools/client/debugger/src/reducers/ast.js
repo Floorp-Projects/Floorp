@@ -83,10 +83,6 @@ function update(state = initialASTState(), action) {
       return { ...state };
     }
 
-    case "NAVIGATE": {
-      return initialASTState();
-    }
-
     default: {
       return state;
     }

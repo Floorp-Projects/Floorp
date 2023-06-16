@@ -116,9 +116,7 @@ for help on Matrix in the
 `#introduction:mozilla.org <https://riot.im/app/#/room/#introduction:mozilla.org>`_
 or
 `#developers:mozilla.org <https://chat.mozilla.org/#/room/#developers:mozilla.org>`_
-channels, or contact `Mike
-Hoye <mailto:mhoye@mozilla.com?subject=Code%20Review%20Request%20&body=URL%3A%20%20%5Bplease%20paste%20a%20link%20to%20your%20patch%20here.%5D>`_
-directly.
+channels.
 
 Don't hesitate to contact your mentor as well if this isn't moving.
 

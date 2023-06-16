@@ -48,8 +48,7 @@ var gTests = [];
 // Bug 462662 - Pressing Enter to select tag from autocomplete closes bookmarks properties dialog
 
 gTests.push({
-  desc:
-    "Bug 462662 - Pressing Enter to select tag from autocomplete closes bookmarks properties dialog",
+  desc: "Bug 462662 - Pressing Enter to select tag from autocomplete closes bookmarks properties dialog",
   sidebar: SIDEBAR_BOOKMARKS_ID,
   action: ACTION_EDIT,
   itemType: null,
@@ -89,7 +88,7 @@ gTests.push({
     let unloadPromise = new Promise(resolve => {
       this.window.addEventListener(
         "unload",
-        function(event) {
+        function (event) {
           tagsField.popup.removeEventListener(
             "popuphidden",
             popupListener,
@@ -99,7 +98,7 @@ gTests.push({
             self._cleanShutdown,
             "Dialog window should not be closed by pressing Enter on the autocomplete popup"
           );
-          executeSoon(function() {
+          executeSoon(function () {
             resolve();
           });
         },
@@ -177,8 +176,7 @@ gTests.push({
 // Bug 476020 - Pressing Esc while having the tag autocomplete open closes the bookmarks panel
 
 gTests.push({
-  desc:
-    "Bug 476020 - Pressing Esc while having the tag autocomplete open closes the bookmarks panel",
+  desc: "Bug 476020 - Pressing Esc while having the tag autocomplete open closes the bookmarks panel",
   sidebar: SIDEBAR_BOOKMARKS_ID,
   action: ACTION_EDIT,
   itemType: null,
@@ -218,7 +216,7 @@ gTests.push({
     let hiddenPromise = new Promise(resolve => {
       this.window.addEventListener(
         "unload",
-        function(event) {
+        function (event) {
           tagsField.popup.removeEventListener(
             "popuphidden",
             popupListener,
@@ -228,7 +226,7 @@ gTests.push({
             self._cleanShutdown,
             "Dialog window should not be closed by pressing Escape on the autocomplete popup"
           );
-          executeSoon(function() {
+          executeSoon(function () {
             resolve();
           });
         },
@@ -303,86 +301,66 @@ gTests.push({
 // ------------------------------------------------------------------------------
 //  Bug 491269 - Test that editing folder name in bookmarks properties dialog does not accept the dialog
 
-for (const delayedApply of [false, true]) {
-  const prefDesc = delayedApply ? "Delayed Apply" : "Instant Apply";
-  gTests.push({
-    desc: `Bug 491269 (${prefDesc}) - Test that editing folder name in bookmarks properties dialog does not accept the dialog`,
-    sidebar: SIDEBAR_HISTORY_ID,
-    dialogUrl: DIALOG_URL,
-    action: ACTION_ADD,
-    historyView: SIDEBAR_HISTORY_BYLASTVISITED_VIEW,
-    window: null,
+gTests.push({
+  desc: `Bug 491269 - Test that editing folder name in bookmarks properties dialog does not accept the dialog`,
+  sidebar: SIDEBAR_HISTORY_ID,
+  dialogUrl: DIALOG_URL,
+  action: ACTION_ADD,
+  historyView: SIDEBAR_HISTORY_BYLASTVISITED_VIEW,
+  window: null,
 
-    async setup() {
-      await SpecialPowers.pushPrefEnv({
-        set: [
-          ["browser.bookmarks.editDialog.delayedApply.enabled", delayedApply],
-        ],
-      });
+  async setup() {
+    // Add a visit.
+    await PlacesTestUtils.addVisits(TEST_URL);
+  },
 
-      // Add a visit.
-      await PlacesTestUtils.addVisits(TEST_URL);
-      if (!delayedApply) {
-        this._addObserver = PlacesTestUtils.waitForNotification(
-          "bookmark-added",
-          null
-        );
-      }
-    },
+  selectNode(tree) {
+    var visitNode = tree.view.nodeForTreeIndex(0);
+    tree.selectNode(visitNode);
+    Assert.equal(
+      tree.selectedNode.uri,
+      TEST_URL,
+      "The correct visit has been selected"
+    );
+    Assert.equal(
+      tree.selectedNode.itemId,
+      -1,
+      "The selected node is not bookmarked"
+    );
+  },
 
-    selectNode(tree) {
-      var visitNode = tree.view.nodeForTreeIndex(0);
-      tree.selectNode(visitNode);
-      Assert.equal(
-        tree.selectedNode.uri,
-        TEST_URL,
-        "The correct visit has been selected"
+  async run() {
+    // Open folder selector.
+    var foldersExpander = this.window.document.getElementById(
+      "editBMPanel_foldersExpander"
+    );
+    var folderTree = this.window.gEditItemOverlay._folderTree;
+    var self = this;
+
+    let unloadPromise = new Promise(resolve => {
+      this.window.addEventListener(
+        "unload",
+        event => {
+          Assert.ok(
+            self._cleanShutdown,
+            "Dialog window should not be closed by pressing ESC in folder name textbox"
+          );
+          executeSoon(() => {
+            resolve();
+          });
+        },
+        { capture: true, once: true }
       );
-      Assert.equal(
-        tree.selectedNode.itemId,
-        -1,
-        "The selected node is not bookmarked"
-      );
-    },
+    });
 
-    async run() {
-      // Open folder selector.
-      var foldersExpander = this.window.document.getElementById(
-        "editBMPanel_foldersExpander"
-      );
-      var folderTree = this.window.gEditItemOverlay._folderTree;
-      var self = this;
-
-      let unloadPromise = new Promise(resolve => {
-        this.window.addEventListener(
-          "unload",
-          event => {
-            Assert.ok(
-              self._cleanShutdown,
-              "Dialog window should not be closed by pressing ESC in folder name textbox"
-            );
-            executeSoon(() => {
-              resolve();
-            });
-          },
-          { capture: true, once: true }
-        );
-      });
-
-      folderTree.addEventListener("DOMAttrModified", function onDOMAttrModified(
-        event
-      ) {
+    folderTree.addEventListener(
+      "DOMAttrModified",
+      function onDOMAttrModified(event) {
         if (event.attrName != "place") {
           return;
         }
         folderTree.removeEventListener("DOMAttrModified", onDOMAttrModified);
-        executeSoon(async function() {
-          if (!delayedApply) {
-            await self._addObserver;
-            let bookmark = await PlacesUtils.bookmarks.fetch({ url: TEST_URL });
-            self._bookmarkGuid = bookmark.guid;
-          }
-
+        executeSoon(async function () {
           // Create a new folder.
           var newFolderButton = self.window.document.getElementById(
             "editBMPanel_newFolderButton"
@@ -403,37 +381,27 @@ for (const delayedApply of [false, true]) {
           );
 
           self._cleanShutdown = true;
-          if (!delayedApply) {
-            self._removeObserver = PlacesTestUtils.waitForNotification(
-              "bookmark-removed",
-              events => events.some(eve => eve.guid == self._bookmarkGuid)
-            );
-          }
 
           self.window.document
             .getElementById("bookmarkpropertiesdialog")
             .cancelDialog();
         });
-      });
-      foldersExpander.doCommand();
-      await unloadPromise;
-    },
-
-    finish() {
-      SidebarUI.hide();
-    },
-
-    async cleanup() {
-      if (!delayedApply) {
-        await this._removeObserver;
-        delete this._removeObserver;
       }
-      await PlacesTestUtils.promiseAsyncUpdates();
+    );
+    foldersExpander.doCommand();
+    await unloadPromise;
+  },
 
-      await PlacesUtils.history.clear();
-    },
-  });
-}
+  finish() {
+    SidebarUI.hide();
+  },
+
+  async cleanup() {
+    await PlacesTestUtils.promiseAsyncUpdates();
+
+    await PlacesUtils.history.clear();
+  },
+});
 
 // ------------------------------------------------------------------------------
 
@@ -467,7 +435,7 @@ function execute_test_in_sidebar(test) {
     var sidebar = document.getElementById("sidebar");
     sidebar.addEventListener(
       "load",
-      function() {
+      function () {
         // Need to executeSoon since the tree is initialized on sidebar load.
         executeSoon(async () => {
           await open_properties_dialog(test);

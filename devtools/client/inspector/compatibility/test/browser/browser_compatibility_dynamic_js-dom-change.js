@@ -16,8 +16,8 @@ const {
 
 const ISSUE_OUTLINE_RADIUS = {
   type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY,
-  property: "-moz-outline-radius",
-  url: "https://developer.mozilla.org/docs/Web/CSS/-moz-outline-radius",
+  property: "-moz-user-input",
+  url: "https://developer.mozilla.org/docs/Web/CSS/-moz-user-input",
   deprecated: true,
   experimental: false,
 };
@@ -34,23 +34,20 @@ const ISSUE_HYPHENS = {
 const TEST_URI = `
   <style>
     .child {
-      -moz-outline-radius: 25px;
+      -moz-user-input: none;
     }
   </style>
   <body></body>
 `;
 
-add_task(async function() {
+add_task(async function () {
   info("Testing dynamic DOM mutation using JavaScript");
   const tab = await addTab(
     "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI)
   );
 
-  const {
-    allElementsPane,
-    inspector,
-    selectedElementPane,
-  } = await openCompatibilityView();
+  const { allElementsPane, inspector, selectedElementPane } =
+    await openCompatibilityView();
 
   info("Check initial issues");
   await assertIssueList(selectedElementPane, []);
@@ -66,7 +63,7 @@ add_task(async function() {
     allElementsPane,
     [ISSUE_OUTLINE_RADIUS],
     [ISSUE_HYPHENS, ISSUE_OUTLINE_RADIUS],
-    async function() {
+    async function () {
       const doc = content.document;
       const parent = doc.querySelector("body");
 
@@ -94,7 +91,7 @@ add_task(async function() {
     allElementsPane,
     [ISSUE_HYPHENS],
     [ISSUE_HYPHENS],
-    async function() {
+    async function () {
       const doc = content.document;
       const parent = doc.querySelector(".parent");
       parent.remove();
@@ -111,7 +108,7 @@ add_task(async function() {
     allElementsPane,
     [],
     [],
-    async function() {
+    async function () {
       const doc = content.document;
       const issueElement = doc.querySelector("div");
       issueElement.remove();

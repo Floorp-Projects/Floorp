@@ -143,7 +143,6 @@ class nsFrameLoader final : public nsStubMutationObserver,
     return mChildMessageManager;
   }
   nsresult UpdatePositionAndSize(nsSubDocumentFrame* aIFrame);
-  void SendIsUnderHiddenEmbedderElement(bool aIsUnderHiddenEmbedderElement);
   void PropagateIsUnderHiddenEmbedderElement(
       bool aIsUnderHiddenEmbedderElement);
 

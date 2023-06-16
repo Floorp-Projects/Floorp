@@ -86,6 +86,7 @@ hebrwcal.cpp
 indiancal.cpp
 inputext.cpp
 islamcal.cpp
+iso8601cal.cpp
 japancal.cpp
 listformatter.cpp
 measfmt.cpp
@@ -121,6 +122,7 @@ number_patternmodifier.cpp
 number_patternstring.cpp
 number_rounding.cpp
 number_scientific.cpp
+number_simple.cpp
 number_skeletons.cpp
 number_symbolswrapper.cpp
 number_usageprefs.cpp

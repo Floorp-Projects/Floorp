@@ -21,7 +21,7 @@ const TEST_URI = `
   </ul>
 `;
 
-add_task(async function() {
+add_task(async function () {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, view } = await openRuleView();
   const HIGHLIGHTER_TYPE = inspector.highlighters.TYPES.FLEXBOX;
@@ -37,8 +37,11 @@ add_task(async function() {
   const flexboxToggle = container.querySelector(
     ".js-toggle-flexbox-highlighter"
   );
-  const overriddenContainer = getRuleViewProperty(view, "div, ul", "display")
-    .valueSpan;
+  const overriddenContainer = getRuleViewProperty(
+    view,
+    "div, ul",
+    "display"
+  ).valueSpan;
   const overriddenFlexboxToggle = overriddenContainer.querySelector(
     ".js-toggle-flexbox-highlighter"
   );

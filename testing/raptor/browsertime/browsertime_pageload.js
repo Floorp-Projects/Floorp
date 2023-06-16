@@ -224,7 +224,7 @@ async function multi_page_login(login_info, context, commands) {
 
   await password_field.sendKeys(login_info.password);
 
-  return async function() {
+  return async function () {
     password_field.sendKeys(webdriver.Key.ENTER);
     await commands.wait.byTime(5000);
   };
@@ -333,7 +333,7 @@ async function perform_live_login(context, commands) {
   await login(context, commands, final_button);
 }
 
-module.exports = async function(context, commands) {
+module.exports = async function (context, commands) {
   context.log.info("Starting a browsertime pageload");
   let test_url = context.options.browsertime.url;
   let secondary_url = context.options.browsertime.secondary_url;

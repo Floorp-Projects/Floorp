@@ -3,7 +3,7 @@
 
 let gDownloadDir;
 
-add_setup(async function() {
+add_setup(async function () {
   await task_resetState();
 
   if (!gDownloadDir) {
@@ -26,7 +26,7 @@ add_setup(async function() {
       ),
     },
   ]);
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await task_resetState();
     await PlacesUtils.history.clear();
   });

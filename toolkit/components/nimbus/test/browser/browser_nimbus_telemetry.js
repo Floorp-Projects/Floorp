@@ -1,9 +1,7 @@
 "use strict";
 
-const {
-  ExperimentAPI,
-  _ExperimentFeature: ExperimentFeature,
-} = ChromeUtils.importESModule("resource://nimbus/ExperimentAPI.sys.mjs");
+const { ExperimentAPI, _ExperimentFeature: ExperimentFeature } =
+  ChromeUtils.importESModule("resource://nimbus/ExperimentAPI.sys.mjs");
 const { ExperimentManager } = ChromeUtils.importESModule(
   "resource://nimbus/lib/ExperimentManager.sys.mjs"
 );
@@ -20,7 +18,7 @@ const TELEMETRY_OBJECT = "nimbus_experiment";
 const EXPERIMENT_TYPE = "nimbus";
 const EVENT_FILTER = { category: TELEMETRY_CATEGORY };
 
-add_setup(async function() {
+add_setup(async function () {
   let sandbox = sinon.createSandbox();
   // stub the `observe` method to make sure the Experiment Manager
   // pref listener doesn't trigger and cause side effects

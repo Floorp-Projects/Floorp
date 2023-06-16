@@ -14,12 +14,8 @@ const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"
 );
 
-const {
-  MODE_DISABLED,
-  MODE_REJECT,
-  MODE_REJECT_OR_ACCEPT,
-  MODE_UNSET,
-} = Ci.nsICookieBannerService;
+const { MODE_DISABLED, MODE_REJECT, MODE_REJECT_OR_ACCEPT, MODE_UNSET } =
+  Ci.nsICookieBannerService;
 
 const exampleRules = JSON.stringify([
   {

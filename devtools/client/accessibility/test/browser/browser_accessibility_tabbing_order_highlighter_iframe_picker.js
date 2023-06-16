@@ -45,9 +45,10 @@ add_task(async () => {
   await waitUntilState(store, state => state.ui.tabbingOrderDisplayed === true);
 
   is(tabbingOrderCheckbox.checked, true, "Checkbox is checked");
-  let tabbingOrderHighlighterData = await topLevelFrameHighlighterTestFront.getTabbingOrderHighlighterData(
-    topLevelAccessibilityFrontActorID
-  );
+  let tabbingOrderHighlighterData =
+    await topLevelFrameHighlighterTestFront.getTabbingOrderHighlighterData(
+      topLevelAccessibilityFrontActorID
+    );
   if (isFissionEnabled()) {
     // ⚠️ We don't get the highlighter for the <html> node of the iframe when Fission is enabled.
     // This should be fix as part of Bug 1740509.
@@ -57,9 +58,10 @@ add_task(async () => {
       "Tabbing order is visible for the top level target after clicking the checkbox"
     );
 
-    const iframeTabingOrderHighlighterData = await iframeHighlighterTestFront.getTabbingOrderHighlighterData(
-      iframeAccessibilityFrontActorID
-    );
+    const iframeTabingOrderHighlighterData =
+      await iframeHighlighterTestFront.getTabbingOrderHighlighterData(
+        iframeAccessibilityFrontActorID
+      );
 
     is(
       JSON.stringify(iframeTabingOrderHighlighterData),
@@ -109,9 +111,10 @@ add_task(async () => {
     "Checkbox is unchecked after selecting an iframe"
   );
 
-  tabbingOrderHighlighterData = await topLevelFrameHighlighterTestFront.getTabbingOrderHighlighterData(
-    topLevelAccessibilityFrontActorID
-  );
+  tabbingOrderHighlighterData =
+    await topLevelFrameHighlighterTestFront.getTabbingOrderHighlighterData(
+      topLevelAccessibilityFrontActorID
+    );
   is(
     tabbingOrderHighlighterData.length,
     0,
@@ -124,9 +127,10 @@ add_task(async () => {
   tabbingOrderCheckbox.click();
   await waitUntilState(store, state => state.ui.tabbingOrderDisplayed === true);
 
-  tabbingOrderHighlighterData = await topLevelFrameHighlighterTestFront.getTabbingOrderHighlighterData(
-    topLevelAccessibilityFrontActorID
-  );
+  tabbingOrderHighlighterData =
+    await topLevelFrameHighlighterTestFront.getTabbingOrderHighlighterData(
+      topLevelAccessibilityFrontActorID
+    );
   if (isFissionEnabled() || isEveryFrameTargetEnabled()) {
     is(
       tabbingOrderHighlighterData.length,
@@ -134,9 +138,10 @@ add_task(async () => {
       "There's no highlighter displayed on the top level target when focused on specific iframe"
     );
 
-    const iframeTabingOrderHighlighterData = await iframeHighlighterTestFront.getTabbingOrderHighlighterData(
-      iframeAccessibilityFrontActorID
-    );
+    const iframeTabingOrderHighlighterData =
+      await iframeHighlighterTestFront.getTabbingOrderHighlighterData(
+        iframeAccessibilityFrontActorID
+      );
 
     is(
       JSON.stringify(iframeTabingOrderHighlighterData),
@@ -168,14 +173,16 @@ add_task(async () => {
     state => state.ui.tabbingOrderDisplayed === false
   );
 
-  tabbingOrderHighlighterData = await topLevelFrameHighlighterTestFront.getTabbingOrderHighlighterData(
-    topLevelAccessibilityFrontActorID
-  );
+  tabbingOrderHighlighterData =
+    await topLevelFrameHighlighterTestFront.getTabbingOrderHighlighterData(
+      topLevelAccessibilityFrontActorID
+    );
 
   if (isFissionEnabled() || isEveryFrameTargetEnabled()) {
-    const iframeTabingOrderHighlighterData = await iframeHighlighterTestFront.getTabbingOrderHighlighterData(
-      iframeAccessibilityFrontActorID
-    );
+    const iframeTabingOrderHighlighterData =
+      await iframeHighlighterTestFront.getTabbingOrderHighlighterData(
+        iframeAccessibilityFrontActorID
+      );
 
     is(
       iframeTabingOrderHighlighterData.length,

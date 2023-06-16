@@ -41,14 +41,16 @@
     },
     "section_title_url": {
       "allOf": [
-        {"$ref": "#/definitions/link_url"},
-        {"description": "A url, section_title_text links to this"}
+        { "$ref": "#/definitions/link_url" },
+        { "description": "A url, section_title_text links to this" }
       ]
     },
     "scene2_text": {
       "allOf": [
-        {"$ref": "#/definitions/richText"},
-        {"description": "Main body text of snippet. HTML subset allowed: i, b, u, strong, em, br"}
+        { "$ref": "#/definitions/richText" },
+        {
+          "description": "Main body text of snippet. HTML subset allowed: i, b, u, strong, em, br"
+        }
       ]
     },
     "form_action": {
@@ -110,8 +112,10 @@
     },
     "retry_button_label": {
       "allOf": [
-        {"$ref": "#/definitions/plainText"},
-        {"description": "Text for the button in the event of a submission error/failure."}
+        { "$ref": "#/definitions/plainText" },
+        {
+          "description": "Text for the button in the event of a submission error/failure."
+        }
       ],
       "default": "Try again"
     },
@@ -143,8 +147,8 @@
       "additionalProperties": {
         "url": {
           "allOf": [
-            {"$ref": "#/definitions/link_url"},
-            {"description": "The url where the link points to."}
+            { "$ref": "#/definitions/link_url" },
+            { "description": "The url where the link points to." }
           ]
         },
         "metric": {

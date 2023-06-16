@@ -1,38 +1,144 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8" />
   <title>Test that decoder delay is handled</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<pre id="test">
-<script class="testbody" type="text/javascript">
+  <script class="testbody" type="text/javascript">
+    SimpleTest.waitForExplicitFinish();
+    const {AppConstants} =
+      SpecialPowers.ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
-SimpleTest.waitForExplicitFinish();
+    var tests_half_a_second = [
+      "half-a-second-1ch-44100-aac.mp4",
+      "half-a-second-1ch-44100-flac.flac",
+      "half-a-second-1ch-44100-libmp3lame.mp3",
+      "half-a-second-1ch-44100-libopus.opus",
+      "half-a-second-1ch-44100-libopus.webm",
+      "half-a-second-1ch-44100-libvorbis.ogg",
+      "half-a-second-1ch-44100.wav",
+      "half-a-second-1ch-48000-aac.mp4",
+      "half-a-second-1ch-48000-flac.flac",
+      "half-a-second-1ch-48000-libmp3lame.mp3",
+      "half-a-second-1ch-48000-libopus.opus",
+      "half-a-second-1ch-48000-libopus.webm",
+      "half-a-second-1ch-48000-libvorbis.ogg",
+      "half-a-second-1ch-48000.wav",
+      "half-a-second-2ch-44100-aac.mp4",
+      "half-a-second-2ch-44100-flac.flac",
+      "half-a-second-2ch-44100-libmp3lame.mp3",
+      "half-a-second-2ch-44100-libopus.opus",
+      "half-a-second-2ch-44100-libopus.webm",
+      "half-a-second-2ch-44100-libvorbis.ogg",
+      "half-a-second-2ch-44100.wav",
+      "half-a-second-2ch-48000-aac.mp4",
+      "half-a-second-2ch-48000-flac.flac",
+      "half-a-second-2ch-48000-libmp3lame.mp3",
+      "half-a-second-2ch-48000-libopus.opus",
+      "half-a-second-2ch-48000-libopus.webm",
+      "half-a-second-2ch-48000-libvorbis.ogg",
+      "half-a-second-2ch-48000.wav",
+    ];
 
-var tests = [
-  "half-a-second-8000.mp3",
-  "half-a-second-48000.mp3",
-];
+    // Those files are almost exactly half a second, but don't have enough pre-roll/padding
+    // information in the container, or the container isn't parsed properly, so
+    // aren't trimmed appropriately.
+    // vorbis webm, opus mp4, aac adts
+    var tests_adts = [
+      "half-a-second-1ch-44100-aac.aac",
+      "half-a-second-1ch-44100-libopus.mp4",
+      "half-a-second-1ch-44100-libvorbis.webm",
+      "half-a-second-1ch-48000-aac.aac",
+      "half-a-second-1ch-48000-libopus.mp4",
+      "half-a-second-1ch-48000-libvorbis.webm",
+      "half-a-second-2ch-44100-aac.aac",
+      "half-a-second-2ch-44100-libopus.mp4",
+      "half-a-second-2ch-44100-libvorbis.webm",
+      "half-a-second-2ch-48000-aac.aac",
+      "half-a-second-2ch-48000-libopus.mp4",
+      "half-a-second-2ch-48000-libvorbis.webm",
+    ];
 
-async function doit(t) {
-  var count = 0;
-  var context = new OfflineAudioContext(1, 128, 48000);
-  tests.forEach(async testfile => {
-    var response = await fetch(testfile);
-    var buffer = await response.arrayBuffer();
-    var decoded = await context.decodeAudioData(buffer);
-    is(decoded.duration, 0.5, "The file is half a second.");
-    if (++count == tests.length) {
-      SimpleTest.finish();
+    // Other files that have interesting characteristics.
+    var tests_others = [
+      {
+        // Very short VBR file, 16 frames of audio at 44100. Padding spanning two
+        // packets.
+        "path": "sixteen-frames.mp3",
+        "frameCount": 16,
+        "samplerate": 44100,
+        "fuzz": {}
+      },
+      {
+        // This is incorrect (the duration should be 0.5s exactly)
+        // This is tracked in https://github.com/mozilla/mp4parse-rust/issues/404
+        "path":"half-a-second-1ch-44100-aac-afconvert.mp4",
+        "frameCount": 22464,
+        "samplerate": 44100,
+        "fuzz": {
+          "android": 2
+        }
+      }
+    ];
+
+    var all_tests = [tests_half_a_second, tests_adts, tests_others].flat();
+
+    var count = 0;
+    function checkDone() {
+      if (++count == all_tests.length) {
+        SimpleTest.finish();
+      }
     }
-  });
-}
 
-doit();
+    async function doit() {
+      var context = new OfflineAudioContext(1, 128, 48000);
+      tests_half_a_second.forEach(async testfile => {
+        var response = await fetch(testfile);
+        var buffer = await response.arrayBuffer();
+        var decoded = await context.decodeAudioData(buffer);
+        is(
+          decoded.duration,
+          0.5,
+          "The file " + testfile + " is half a second."
+        );
+        // Value found empirically after looking at the files. The initial
+        // amplitude should be 0 at phase 0 because those files are sine wave.
+        // The compression is sometimes lossy and the first sample is not always
+        // exactly 0.0.
+        ok(
+          Math.abs(decoded.getChannelData(0)[0]) <= 0.022,
+          `The start point for ${testfile} is correct ${ decoded.getChannelData(0)[0] }`
+        );
+        checkDone();
+      });
+      tests_adts.forEach(async testfile => {
+        var response = await fetch(testfile);
+        var buffer = await response.arrayBuffer();
+        var decoded = await context.decodeAudioData(buffer);
+        // Value found empirically after looking at the files. ADTS containers
+        // don't have encoder delay / padding info so we can't trim correctly.
+        ok(
+          Math.abs(decoded.duration - 0.5) < 0.02,
+          `The ADTS file ${testfile} is about half a second (${decoded.duration}, error: ${Math.abs(decoded.duration-0.5)}).`
+        );
+        checkDone();
+      });
+      tests_others.forEach(async test => {
+        // Get an context at a specific rate to avoid duration changes due to resampling.
+        var contextAtRate = new OfflineAudioContext(1, 128, test.samplerate);
+        var response = await fetch(test.path);
+        var buffer = await response.arrayBuffer();
+        var decoded = await contextAtRate.decodeAudioData(buffer);
+        const fuzz = test.fuzz[AppConstants.platform] ?? 0;
+        ok(Math.abs(decoded.length - test.frameCount) <= fuzz, `${test.path} is ${decoded.length} frames long`);
+        checkDone();
+      });
+    }
 
-</script>
-</pre>
+    doit();
+  </script>
 </body>
 </html>

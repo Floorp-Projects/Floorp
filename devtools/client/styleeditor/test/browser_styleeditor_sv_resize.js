@@ -9,7 +9,7 @@ const TESTCASE_URI = TEST_BASE_HTTP + "simple.html";
 
 const { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
 
-add_task(async function() {
+add_task(async function () {
   const { toolbox, ui } = await openStyleEditorForURL(TESTCASE_URI);
 
   is(ui.editors.length, 2, "There are 2 style sheets initially");

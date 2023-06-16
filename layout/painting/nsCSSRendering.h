@@ -297,36 +297,6 @@ struct nsCSSRendering {
   static mozilla::ComputedStyle* FindRootFrameBackground(nsIFrame* aForFrame);
 
   /**
-   * Returns background style information for the canvas.
-   *
-   * @param aForFrame
-   *   the frame used to represent the canvas, in the CSS sense (i.e.
-   *   aForFrame->IsCanvasFrame() must be true)
-   * @param aRootElementFrame
-   *   the frame representing the root element of the document
-   * @param aBackground
-   *   contains background style information for the canvas on return
-   */
-
-  static nsIFrame* FindCanvasBackgroundFrame(const nsIFrame* aForFrame,
-                                             nsIFrame* aRootElementFrame) {
-    MOZ_ASSERT(aForFrame->IsCanvasFrame(), "not a canvas frame");
-    if (aRootElementFrame) {
-      return FindBackgroundStyleFrame(aRootElementFrame);
-    }
-
-    // This should always give transparent, so we'll fill it in with the
-    // default color if needed.  This seems to happen a bit while a page is
-    // being loaded.
-    return const_cast<nsIFrame*>(aForFrame);
-  }
-
-  static mozilla::ComputedStyle* FindCanvasBackground(
-      nsIFrame* aForFrame, nsIFrame* aRootElementFrame) {
-    return FindCanvasBackgroundFrame(aForFrame, aRootElementFrame)->Style();
-  }
-
-  /**
    * Find a non-transparent background color on an ancestor, for various
    * contrast checks. Note that this only accounts for background-color and
    * might stop at themed frames (depending on the argument), so it might not be

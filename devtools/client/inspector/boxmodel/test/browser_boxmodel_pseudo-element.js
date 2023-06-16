@@ -96,7 +96,7 @@ const res1 = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, boxmodel } = await openLayoutView();
   const node = await getNodeFront("div", inspector);

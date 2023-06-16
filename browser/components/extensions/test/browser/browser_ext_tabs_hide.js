@@ -1,14 +1,11 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
+  ExtensionControlledPopup:
+    "resource:///modules/ExtensionControlledPopup.sys.mjs",
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
   TabStateFlusher: "resource:///modules/sessionstore/TabStateFlusher.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  this,
-  "ExtensionControlledPopup",
-  "resource:///modules/ExtensionControlledPopup.jsm"
-);
 
 const triggeringPrincipal_base64 = E10SUtils.SERIALIZED_SYSTEMPRINCIPAL;
 
@@ -59,7 +56,7 @@ async function doorhangerTest(testFn) {
 }
 
 add_task(function test_doorhanger_keep() {
-  return doorhangerTest(async function(extension) {
+  return doorhangerTest(async function (extension) {
     is(gBrowser.visibleTabs.length, 3, "There are 3 visible tabs");
 
     // Hide the first tab, expect the doorhanger.
@@ -96,7 +93,7 @@ add_task(function test_doorhanger_keep() {
 });
 
 add_task(function test_doorhanger_disable() {
-  return doorhangerTest(async function(extension) {
+  return doorhangerTest(async function (extension) {
     is(gBrowser.visibleTabs.length, 3, "There are 3 visible tabs");
 
     // Hide the first tab, expect the doorhanger.

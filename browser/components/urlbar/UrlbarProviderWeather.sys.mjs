@@ -290,7 +290,7 @@ class ProviderWeather extends UrlbarProvider {
       commands.push({
         name: RESULT_MENU_COMMAND.SHOW_LESS_FREQUENTLY,
         l10n: {
-          id: "firefox-suggest-weather-command-show-less-frequently",
+          id: "firefox-suggest-command-show-less-frequently",
         },
       });
     }
@@ -298,19 +298,19 @@ class ProviderWeather extends UrlbarProvider {
     commands.push(
       {
         l10n: {
-          id: "firefox-suggest-weather-command-dont-show-this",
+          id: "firefox-suggest-command-dont-show-this",
         },
         children: [
           {
             name: RESULT_MENU_COMMAND.NOT_RELEVANT,
             l10n: {
-              id: "firefox-suggest-weather-command-not-relevant",
+              id: "firefox-suggest-command-not-relevant",
             },
           },
           {
             name: RESULT_MENU_COMMAND.NOT_INTERESTED,
             l10n: {
-              id: "firefox-suggest-weather-command-not-interested",
+              id: "firefox-suggest-command-not-interested",
             },
           },
         ],

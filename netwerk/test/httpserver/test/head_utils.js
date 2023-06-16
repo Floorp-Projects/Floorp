@@ -392,7 +392,7 @@ function RawTest(host, port, data, responseCheck) {
   }
 
   if (
-    !data.every(function(v) {
+    !data.every(function (v) {
       // eslint-disable-next-line no-control-regex
       return /^[\x00-\xff]*$/.test(v);
     })
@@ -423,8 +423,8 @@ function runRawTests(testArray, done, beforeTestCallback) {
     Ci.nsISocketTransportService
   );
 
-  var currentThread = Cc["@mozilla.org/thread-manager;1"].getService()
-    .currentThread;
+  var currentThread =
+    Cc["@mozilla.org/thread-manager;1"].getService().currentThread;
 
   /** Kicks off running the next test in the array. */
   function performNextTest() {

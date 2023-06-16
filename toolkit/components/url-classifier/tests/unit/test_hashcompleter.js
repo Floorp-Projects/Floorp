@@ -432,7 +432,7 @@ function finish() {
   );
 
   Assert.equal(expectedMaxServerCompletionSet, maxServerCompletionSet);
-  server.stop(function() {
+  server.stop(function () {
     do_test_finished();
   });
 }

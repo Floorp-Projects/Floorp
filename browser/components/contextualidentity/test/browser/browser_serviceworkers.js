@@ -21,7 +21,7 @@ function openTabInUserContext(uri, userContextId) {
   return tab;
 }
 
-add_setup(async function() {
+add_setup(async function () {
   // make sure userContext is enabled.
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -89,7 +89,7 @@ function allRegistered() {
 }
 
 function promiseAllRegistered() {
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve) {
     let listener = {
       onRegister() {
         if (allRegistered()) {
@@ -103,7 +103,7 @@ function promiseAllRegistered() {
 }
 
 function promiseUnregister(info) {
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve) {
     swm.unregister(
       info.principal,
       {

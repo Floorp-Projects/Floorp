@@ -2,10 +2,19 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 root{
-    Version{"42"}
+    Version{"43"}
     zoneStrings{
         "Africa:Asmera"{
             ec{"Asmara"}
+        }
+        "America:Bahia_Banderas"{
+            ec{"Bahía de Banderas"}
+        }
+        "America:Cancun"{
+            ec{"Cancún"}
+        }
+        "America:Ciudad_Juarez"{
+            ec{"Ciudad Juárez"}
         }
         "America:Coral_Harbour"{
             ec{"Atikokan"}
@@ -39,6 +48,9 @@ root{
         }
         "America:Lower_Princes"{
             ec{"Lower Prince’s Quarter"}
+        }
+        "America:Merida"{
+            ec{"Mérida"}
         }
         "America:North_Dakota:Beulah"{
             ec{"Beulah, North Dakota"}

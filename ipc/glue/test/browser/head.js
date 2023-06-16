@@ -218,7 +218,7 @@ async function play(
 
 async function stop(tab) {
   let browser = tab.linkedBrowser;
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     let audio = content.document.querySelector("audio");
     audio.pause();
   });

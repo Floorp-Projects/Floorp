@@ -6,9 +6,12 @@
 
 dictionary WebrtcGlobalStatisticsReport {
   sequence<RTCStatsReportInternal> reports = [];
+  sequence<RTCSdpHistoryInternal> sdpHistories = [];
 };
 
 callback WebrtcGlobalStatisticsCallback = undefined (WebrtcGlobalStatisticsReport reports);
+callback WebrtcGlobalStatisticsHistoryPcIdsCallback = undefined (sequence<DOMString> pcIds);
+callback WebrtcGlobalStatisticsHistoryCallback = undefined (WebrtcGlobalStatisticsReport reports);
 callback WebrtcGlobalLoggingCallback = undefined (sequence<DOMString> logMessages);
 
 [ChromeOnly, Exposed=Window]
@@ -17,6 +20,15 @@ namespace WebrtcGlobalInformation {
   [Throws]
   undefined getAllStats(WebrtcGlobalStatisticsCallback callback,
                         optional DOMString pcIdFilter);
+
+  [Throws]
+  undefined getStatsHistoryPcIds(WebrtcGlobalStatisticsHistoryPcIdsCallback callback);
+
+  [Throws]
+  undefined getStatsHistorySince(WebrtcGlobalStatisticsHistoryCallback callback,
+                                 DOMString pcIdFilter,
+                                 optional DOMHighResTimeStamp after,
+                                 optional DOMHighResTimeStamp sdpAfter);
 
   undefined clearAllStats();
 

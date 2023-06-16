@@ -63,7 +63,7 @@ class VideoBridgeChild final : public PVideoBridgeChild,
   static void Open(Endpoint<PVideoBridgeChild>&& aEndpoint);
 
  protected:
-  void HandleFatalError(const char* aMsg) const override;
+  void HandleFatalError(const char* aMsg) override;
   bool DispatchAllocShmemInternal(size_t aSize, mozilla::ipc::Shmem* aShmem,
                                   bool aUnsafe);
   void ProxyAllocShmemNow(SynchronousTask* aTask, size_t aSize,

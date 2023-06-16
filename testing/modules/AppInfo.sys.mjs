@@ -26,7 +26,7 @@ let origRuntime = Cc["@mozilla.org/xre/app-info;1"].getService(
  *
  *   crashReporter:   nsICrashReporter interface is implemented if true
  */
-export var newAppInfo = function(options = {}) {
+export var newAppInfo = function (options = {}) {
   let appInfo = {
     // nsIXULAppInfo
     vendor: "Mozilla",
@@ -81,7 +81,7 @@ export var newAppInfo = function(options = {}) {
 
   // nsICrashReporter
   appInfo.annotations = {};
-  appInfo.annotateCrashReport = function(key, data) {
+  appInfo.annotateCrashReport = function (key, data) {
     if (options.crashReporter) {
       this.annotations[key] = data;
     } else {
@@ -99,7 +99,7 @@ var currentAppInfo = newAppInfo();
 /**
  * Obtain a reference to the current object used to define XULAppInfo.
  */
-export var getAppInfo = function() {
+export var getAppInfo = function () {
   return currentAppInfo;
 };
 
@@ -111,7 +111,7 @@ export var getAppInfo = function() {
  * To change the current XULAppInfo, simply call this function. If there was
  * a previously registered app info object, it will be unloaded and replaced.
  */
-export var updateAppInfo = function(options) {
+export var updateAppInfo = function (options) {
   currentAppInfo = newAppInfo(options);
 
   let id = Components.ID("{fbfae60b-64a4-44ef-a911-08ceb70b9f31}");

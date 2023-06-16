@@ -195,9 +195,6 @@ already_AddRefed<Promise> BodyStream::PullCallback(
   MOZ_ASSERT(!mPullPromise);
   mPullPromise = Promise::CreateInfallible(aController.GetParentObject());
 
-  // Reading the stream, let's mark it as such
-  mStreamHolder->MarkAsRead();
-
   if (!mInputStream) {
     // This is the first use of the stream. Let's convert the
     // mOriginalInputStream into an nsIAsyncInputStream.
@@ -275,26 +272,11 @@ void BodyStream::WriteIntoReadRequestBuffer(JSContext* aCx,
     return;
   }
 
-  // Subscribe WAIT_CLOSURE_ONLY so that OnInputStreamReady can be called when
-  // mInputStream is closed.
-  rv = mInputStream->AsyncWait(this, nsIAsyncInputStream::WAIT_CLOSURE_ONLY, 0,
-                               mOwningEventTarget);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    ErrorPropagation(aCx, aStream, rv);
-    return;
-  }
-  mAsyncWaitWorkerRef = mWorkerRef;
-
   // All good.
 }
 
 void BodyStream::CloseInputAndReleaseObjects() {
   MOZ_DIAGNOSTIC_ASSERT(mOwningEventTarget->IsOnCurrentThread());
-
-  if (mStreamHolder) {
-    // Being closed means someone touched the stream, let's mark it as read.
-    mStreamHolder->MarkAsRead();
-  }
 
   if (mInputStream) {
     mInputStream->CloseWithStatus(NS_BASE_STREAM_CLOSED);
@@ -357,16 +339,11 @@ void BodyStream::ErrorPropagation(JSContext* aCx, ReadableStream* aStream,
     NS_WARNING_ASSERTION(!rv.Failed(), "Failed to error BodyStream");
   }
 
-  if (mStreamHolder) {
-    // Being errored means someone touched the stream, let's mark it as read.
-    mStreamHolder->MarkAsRead();
-  }
-
   if (mInputStream) {
     mInputStream->CloseWithStatus(NS_BASE_STREAM_CLOSED);
   }
 
-  ReleaseObjects();
+  MOZ_ASSERT(IsClosed());
 }
 
 // https://fetch.spec.whatwg.org/#concept-bodyinit-extract
@@ -412,6 +389,19 @@ void BodyStream::EnqueueChunkWithSizeIntoStream(JSContext* aCx,
   JS::Rooted<JS::Value> chunkValue(aCx);
   chunkValue.setObject(*chunk);
   aStream->EnqueueNative(aCx, chunkValue, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  // Subscribe WAIT_CLOSURE_ONLY so that OnInputStreamReady can be called when
+  // mInputStream is closed.
+  nsresult rv = mInputStream->AsyncWait(
+      this, nsIAsyncInputStream::WAIT_CLOSURE_ONLY, 0, mOwningEventTarget);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
+  mAsyncWaitWorkerRef = mWorkerRef;
 }
 
 NS_IMETHODIMP
@@ -425,12 +415,6 @@ BodyStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
     return NS_OK;
   }
 
-  // Perform a microtask checkpoint after all actions are completed.  Note that
-  // |mMutex| *must not* be held when the checkpoint occurs -- hence, far down,
-  // the |lock.reset()|.  (|MutexAutoUnlock| as RAII wouldn't work for this task
-  // because its destructor would reacquire |mMutex| before these objects'
-  // destructors run.)
-  nsAutoMicroTask mt;
   AutoEntryScript aes(mGlobal, "fetch body data available");
 
   MOZ_DIAGNOSTIC_ASSERT(mInputStream);
@@ -469,11 +453,15 @@ BodyStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
     return NS_OK;
   }
 
-  // The previous call can execute JS (even up to running a nested event
-  // loop, including calling this OnInputStreamReady again before it ends, see
-  // the above nsAutoMicroTask), so |mPullPromise| can't be asserted to have any
-  // particular value, even if the previous call succeeds.
-  MOZ_ASSERT_IF(!mPullPromise, IsClosed());
+  // Enqueuing triggers read request chunk steps which may execute JS, but:
+  // 1. The nsIAsyncInputStream should hold the reference of `this` so it should
+  // be safe from cycle collection
+  // 2. AsyncWait is called after enqueuing and thus OnInputStreamReady can't be
+  // synchronously called again
+  //
+  // That said, it's generally good to be cautious as there's no guarantee that
+  // the interface is implemented in a safest way.
+  MOZ_DIAGNOSTIC_ASSERT(mPullPromise);
   if (mPullPromise) {
     mPullPromise->MaybeResolveWithUndefined();
     mPullPromise = nullptr;
@@ -563,7 +551,6 @@ void BodyStream::ReleaseObjects() {
   mPullPromise = nullptr;
 
   RefPtr<BodyStream> self = mStreamHolder->TakeBodyStream();
-  mStreamHolder->NullifyStream();
   mStreamHolder = nullptr;
 }
 
@@ -580,7 +567,7 @@ BodyStream::Observe(nsISupports* aSubject, const char* aTopic,
 
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(mGlobal);
   if (SameCOMIdentity(aSubject, window)) {
-    Close();
+    CloseInputAndReleaseObjects();
   }
 
   return NS_OK;

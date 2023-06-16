@@ -187,6 +187,11 @@ class BasicSourceMapConsumer extends SourceMapConsumer {
       const sourcesContent = util.getArg(sourceMap, "sourcesContent", null);
       const mappings = util.getArg(sourceMap, "mappings");
       const file = util.getArg(sourceMap, "file", null);
+      const x_google_ignoreList = util.getArg(
+        sourceMap,
+        "x_google_ignoreList",
+        null
+      );
 
       // Once again, Sass deviates from the spec and supplies the version as a
       // string rather than a number, so we use loose equality checking here.
@@ -215,6 +220,7 @@ class BasicSourceMapConsumer extends SourceMapConsumer {
       that._mappings = mappings;
       that._sourceMapURL = aSourceMapURL;
       that.file = file;
+      that.x_google_ignoreList = x_google_ignoreList;
 
       that._computedColumnSpans = false;
       that._mappingsPtr = 0;
@@ -301,7 +307,9 @@ class BasicSourceMapConsumer extends SourceMapConsumer {
     const aStr = this._mappings;
     const size = aStr.length;
 
-    const mappingsBufPtr = this._wasm.exports.allocate_mappings(size);
+    // Interpret signed result of allocate_mappings as unsigned, otherwise
+    // addresses higher than 2GB will be negative.
+    const mappingsBufPtr = this._wasm.exports.allocate_mappings(size) >>> 0;
     const mappingsBuf = new Uint8Array(
       this._wasm.exports.memory.buffer,
       mappingsBufPtr,

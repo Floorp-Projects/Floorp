@@ -724,11 +724,6 @@ mozilla::Maybe<nsUXThemeClass> nsNativeThemeWin::GetThemeClass(
     case StyleAppearance::SpinnerUpbutton:
     case StyleAppearance::SpinnerDownbutton:
       return Some(eUXSpin);
-    case StyleAppearance::Statusbar:
-    case StyleAppearance::Statusbarpanel:
-    case StyleAppearance::Resizerpanel:
-    case StyleAppearance::Resizer:
-      return Some(eUXStatus);
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistButton:
     case StyleAppearance::MozMenulistArrowButton:
@@ -1026,8 +1021,7 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
     case StyleAppearance::Toolbox:
     case StyleAppearance::MozWinMediaToolbox:
     case StyleAppearance::MozWinCommunicationsToolbox:
-    case StyleAppearance::MozWinBrowsertabbarToolbox:
-    case StyleAppearance::Statusbar: {
+    case StyleAppearance::MozWinBrowsertabbarToolbox: {
       aState = 0;
       aPart = RP_BACKGROUND;
       return NS_OK;
@@ -1046,26 +1040,6 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
           aState = 1;
         }
       }
-      return NS_OK;
-    }
-    case StyleAppearance::Statusbarpanel:
-    case StyleAppearance::Resizerpanel:
-    case StyleAppearance::Resizer: {
-      switch (aAppearance) {
-        case StyleAppearance::Statusbarpanel:
-          aPart = 1;
-          break;
-        case StyleAppearance::Resizerpanel:
-          aPart = 2;
-          break;
-        case StyleAppearance::Resizer:
-          aPart = 3;
-          break;
-        default:
-          MOZ_ASSERT_UNREACHABLE("Oops, we're missing a case");
-          aPart = 1;  // just something valid
-      }
-      aState = TS_NORMAL;
       return NS_OK;
     }
     case StyleAppearance::Treeview:
@@ -1657,8 +1631,7 @@ RENDER_AGAIN:
                         IsFrameRTL(aFrame));
   }
   // The following widgets need to be RTL-aware
-  else if (aAppearance == StyleAppearance::Resizer ||
-           aAppearance == StyleAppearance::MozMenulistArrowButton) {
+  else if (aAppearance == StyleAppearance::MozMenulistArrowButton) {
     DrawThemeBGRTLAware(theme, hdc, part, state, &widgetRect, &clipRect,
                         IsFrameRTL(aFrame));
   } else if (aAppearance == StyleAppearance::NumberInput ||
@@ -1783,8 +1756,6 @@ LayoutDeviceIntMargin nsNativeThemeWin::GetWidgetBorder(
       aAppearance == StyleAppearance::MozWinMediaToolbox ||
       aAppearance == StyleAppearance::MozWinCommunicationsToolbox ||
       aAppearance == StyleAppearance::MozWinBrowsertabbarToolbox ||
-      aAppearance == StyleAppearance::Statusbar ||
-      aAppearance == StyleAppearance::Resizer ||
       aAppearance == StyleAppearance::Tabpanel ||
       aAppearance == StyleAppearance::Menuitem ||
       aAppearance == StyleAppearance::Checkmenuitem ||
@@ -2059,7 +2030,6 @@ LayoutDeviceIntSize nsNativeThemeWin::GetMinimumWidgetSize(
     case StyleAppearance::MozWinCommunicationsToolbox:
     case StyleAppearance::MozWinBrowsertabbarToolbox:
     case StyleAppearance::Toolbar:
-    case StyleAppearance::Statusbar:
     case StyleAppearance::Progresschunk:
     case StyleAppearance::Tabpanels:
     case StyleAppearance::Tabpanel:
@@ -2114,9 +2084,6 @@ LayoutDeviceIntSize nsNativeThemeWin::GetMinimumWidgetSize(
       // themes. We want these widgets to be able to really shrink
       // down, so use the min-size request value (of 0).
       sizeReq = TS_MIN;
-      break;
-
-    case StyleAppearance::Resizer:
       break;
 
     case StyleAppearance::RangeThumb: {
@@ -2233,9 +2200,6 @@ nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame,
       aAppearance == StyleAppearance::MozWinCommunicationsToolbox ||
       aAppearance == StyleAppearance::MozWinBrowsertabbarToolbox ||
       aAppearance == StyleAppearance::Toolbar ||
-      aAppearance == StyleAppearance::Statusbar ||
-      aAppearance == StyleAppearance::Statusbarpanel ||
-      aAppearance == StyleAppearance::Resizerpanel ||
       aAppearance == StyleAppearance::Progresschunk ||
       aAppearance == StyleAppearance::ProgressBar ||
       aAppearance == StyleAppearance::Tabpanels ||
@@ -2314,9 +2278,7 @@ bool nsNativeThemeWin::ThemeSupportsWidget(nsPresContext* aPresContext,
   else
     theme = GetTheme(aAppearance);
 
-  if (theme && aAppearance == StyleAppearance::Resizer) return true;
-
-  if ((theme) || (!theme && ClassicThemeSupportsWidget(aFrame, aAppearance)))
+  if (theme || ClassicThemeSupportsWidget(aFrame, aAppearance))
     // turn off theming for some HTML widgets styled by the page
     return (!IsWidgetStyled(aPresContext, aFrame, aAppearance));
 
@@ -2424,13 +2386,6 @@ nsITheme::Transparency nsNativeThemeWin::GetWidgetTransparency(
 bool nsNativeThemeWin::ClassicThemeSupportsWidget(nsIFrame* aFrame,
                                                   StyleAppearance aAppearance) {
   switch (aAppearance) {
-    case StyleAppearance::Resizer: {
-      // The classic native resizer has an opaque grey background which doesn't
-      // match the usually white background of the scrollable container, so
-      // only support the native resizer if not in a scrollframe.
-      nsIFrame* parentFrame = aFrame->GetParent();
-      return !parentFrame || !parentFrame->IsScrollFrame();
-    }
     case StyleAppearance::Menubar:
     case StyleAppearance::Menupopup:
       // Classic non-flat menus are handled almost entirely through CSS.
@@ -2452,9 +2407,6 @@ bool nsNativeThemeWin::ClassicThemeSupportsWidget(nsIFrame* aFrame,
     case StyleAppearance::SpinnerDownbutton:
     case StyleAppearance::Listbox:
     case StyleAppearance::Treeview:
-    case StyleAppearance::Statusbar:
-    case StyleAppearance::Statusbarpanel:
-    case StyleAppearance::Resizerpanel:
     case StyleAppearance::ProgressBar:
     case StyleAppearance::Progresschunk:
     case StyleAppearance::Tab:
@@ -2490,10 +2442,6 @@ LayoutDeviceIntMargin nsNativeThemeWin::ClassicGetWidgetBorder(
     case StyleAppearance::Button:
       result.top = result.left = result.bottom = result.right = 2;
       break;
-    case StyleAppearance::Statusbar:
-      result.bottom = result.left = result.right = 0;
-      result.top = 2;
-      break;
     case StyleAppearance::Listbox:
     case StyleAppearance::Treeview:
     case StyleAppearance::Menulist:
@@ -2504,14 +2452,6 @@ LayoutDeviceIntMargin nsNativeThemeWin::ClassicGetWidgetBorder(
     case StyleAppearance::Textarea:
       result.top = result.left = result.bottom = result.right = 2;
       break;
-    case StyleAppearance::Statusbarpanel:
-    case StyleAppearance::Resizerpanel: {
-      result.top = 1;
-      result.left = 1;
-      result.bottom = 1;
-      result.right = aFrame->GetNextSibling() ? 3 : 1;
-      break;
-    }
     case StyleAppearance::ProgressBar:
       result.top = result.left = result.bottom = result.right = 1;
       break;
@@ -2608,9 +2548,6 @@ LayoutDeviceIntSize nsNativeThemeWin::ClassicGetMinimumWidgetSize(
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
     case StyleAppearance::Textarea:
-    case StyleAppearance::Statusbar:
-    case StyleAppearance::Statusbarpanel:
-    case StyleAppearance::Resizerpanel:
     case StyleAppearance::Progresschunk:
     case StyleAppearance::ProgressBar:
     case StyleAppearance::Tab:
@@ -2618,15 +2555,6 @@ LayoutDeviceIntSize nsNativeThemeWin::ClassicGetMinimumWidgetSize(
     case StyleAppearance::Tabpanels:
       // no minimum widget size
       break;
-    case StyleAppearance::Resizer: {
-      NONCLIENTMETRICS nc;
-      nc.cbSize = sizeof(nc);
-      if (SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(nc), &nc, 0))
-        result.width = result.height = abs(nc.lfStatusFont.lfHeight) + 4;
-      else
-        result.width = result.height = 15;
-      break;
-    }
     case StyleAppearance::Menuseparator: {
       result.width = 0;
       result.height = 10;
@@ -2804,9 +2732,6 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(
     case StyleAppearance::MenulistButton:
     case StyleAppearance::Range:
     case StyleAppearance::RangeThumb:
-    case StyleAppearance::Statusbar:
-    case StyleAppearance::Statusbarpanel:
-    case StyleAppearance::Resizerpanel:
     case StyleAppearance::Progresschunk:
     case StyleAppearance::ProgressBar:
     case StyleAppearance::Tab:
@@ -2878,11 +2803,6 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(
 
       return NS_OK;
     }
-    case StyleAppearance::Resizer:
-      aPart = DFC_SCROLL;
-      aState =
-          (IsFrameRTL(aFrame)) ? DFCS_SCROLLSIZEGRIPRIGHT : DFCS_SCROLLSIZEGRIP;
-      return NS_OK;
     case StyleAppearance::Menuseparator:
       aPart = 0;
       aState = 0;
@@ -3137,8 +3057,7 @@ RENDER_AGAIN:
     case StyleAppearance::Radio:
     case StyleAppearance::SpinnerUpbutton:
     case StyleAppearance::SpinnerDownbutton:
-    case StyleAppearance::MozMenulistArrowButton:
-    case StyleAppearance::Resizer: {
+    case StyleAppearance::MozMenulistArrowButton: {
       int32_t oldTA;
       // setup DC to make DrawFrameControl draw correctly
       oldTA = ::SetTextAlign(hdc, TA_TOP | TA_LEFT | TA_NOUPDATECP);
@@ -3187,20 +3106,8 @@ RENDER_AGAIN:
       ::DrawEdge(hdc, &widgetRect, BDR_SUNKENOUTER, BF_RECT | BF_MIDDLE);
       InflateRect(&widgetRect, -1, -1);
       [[fallthrough]];
-    case StyleAppearance::Tabpanel:
-    case StyleAppearance::Statusbar:
-    case StyleAppearance::Resizerpanel: {
+    case StyleAppearance::Tabpanel: {
       ::FillRect(hdc, &widgetRect, (HBRUSH)(COLOR_BTNFACE + 1));
-
-      break;
-    }
-    // Draw 3D inset statusbar panel
-    case StyleAppearance::Statusbarpanel: {
-      if (aFrame->GetNextSibling())
-        widgetRect.right -= 2;  // space between sibling status panels
-
-      ::DrawEdge(hdc, &widgetRect, BDR_SUNKENOUTER, BF_RECT | BF_MIDDLE);
-
       break;
     }
     case StyleAppearance::RangeThumb: {

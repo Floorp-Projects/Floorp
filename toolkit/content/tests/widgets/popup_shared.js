@@ -267,7 +267,7 @@ function goNextStep() {
 function goNext() {
   // We want to continue after the next animation frame so that
   // we're in a stable state and don't get spurious mouse events at unexpected targets.
-  window.requestAnimationFrame(function() {
+  window.requestAnimationFrame(function () {
     setTimeout(goNextStepSync, 0);
   });
 }

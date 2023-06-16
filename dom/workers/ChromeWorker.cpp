@@ -18,7 +18,7 @@ namespace mozilla::dom {
 /* static */
 already_AddRefed<ChromeWorker> ChromeWorker::Constructor(
     const GlobalObject& aGlobal, const nsAString& aScriptURL,
-    ErrorResult& aRv) {
+    const WorkerOptions& aOptions, ErrorResult& aRv) {
   // Dump the JS stack if somebody's creating a ChromeWorker after shutdown has
   // begun.  See bug 1813353.
   if (xpc::IsInAutomation() &&
@@ -32,7 +32,7 @@ already_AddRefed<ChromeWorker> ChromeWorker::Constructor(
 
   RefPtr<WorkerPrivate> workerPrivate = WorkerPrivate::Constructor(
       cx, aScriptURL, true /* aIsChromeWorker */, WorkerKindDedicated,
-      RequestCredentials::Omit, WorkerType::Classic, u""_ns, VoidCString(),
+      RequestCredentials::Omit, aOptions.mType, aOptions.mName, VoidCString(),
       nullptr /*aLoadInfo */, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;

@@ -1,7 +1,7 @@
 /* eslint max-len: ["error", 80] */
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+const { AddonTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
 );
 
 AddonTestUtils.initMochitest(this);
@@ -33,7 +33,7 @@ function waitForThemeChange(list) {
 
 let mockProvider;
 
-add_setup(async function() {
+add_setup(async function () {
   mockProvider = new MockProvider(["extension", "sitepermission"]);
   promptService = mockPromptService();
 });

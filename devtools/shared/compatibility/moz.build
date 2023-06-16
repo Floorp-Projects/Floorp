@@ -8,5 +8,11 @@ DIRS += [
     "dataset",
 ]
 
+DevToolsModules(
+    "compatibility-user-settings.js",
+    "constants.js",
+    "helpers.js",
+)
+
 with Files("**"):
     BUG_COMPONENT = ("DevTools", "Inspector: Compatibility")

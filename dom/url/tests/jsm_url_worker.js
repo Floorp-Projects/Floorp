@@ -1,9 +1,9 @@
 /* eslint-env worker */
 
-onmessage = function(event) {
+onmessage = function (event) {
   if (event.data != 0) {
     var worker = new Worker("jsm_url_worker.js");
-    worker.onmessage = function(ev) {
+    worker.onmessage = function (ev) {
       postMessage(ev.data);
     };
 

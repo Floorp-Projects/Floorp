@@ -20,10 +20,14 @@ const {
  *                            in the output.
  *          - {Boolean} stacktrace: If true, wait for a stacktrace element to be rendered.
  */
-exports.reloadConsoleAndLog = async function(label, toolbox, expectedMessages) {
+exports.reloadConsoleAndLog = async function (
+  label,
+  toolbox,
+  expectedMessages
+) {
   const webConsole = toolbox.getPanel("webconsole");
   const onWebConsoleReload = webConsole.once("reloaded");
-  const onReload = async function() {
+  const onReload = async function () {
     const { hud } = webConsole;
     const expected =
       typeof expectedMessages === "number"
@@ -114,7 +118,8 @@ async function waitForConsoleOutputChildListChange(hud, predicate) {
     { childList: true, subtree: true }
   );
 }
-exports.waitForConsoleOutputChildListChange = waitForConsoleOutputChildListChange;
+exports.waitForConsoleOutputChildListChange =
+  waitForConsoleOutputChildListChange;
 
 /**
  * Return the webconsole output element from the hud.

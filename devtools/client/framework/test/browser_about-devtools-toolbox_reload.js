@@ -7,7 +7,7 @@
  * Test that about:devtools-toolbox is reloaded correctly when reusing the same debugger
  * client instance.
  */
-add_task(async function() {
+add_task(async function () {
   const devToolsClient = await createLocalClient();
 
   info(

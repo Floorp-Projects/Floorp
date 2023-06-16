@@ -9,7 +9,7 @@ add_task(async function test_loadURI_persists_postData() {
   waitForExplicitFinish();
 
   let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser));
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     gBrowser.removeTab(tab);
   });
 

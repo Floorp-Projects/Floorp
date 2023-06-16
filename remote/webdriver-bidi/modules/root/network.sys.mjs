@@ -223,13 +223,8 @@ class NetworkModule extends Module {
   };
 
   #onResponseEvent = (name, data) => {
-    const {
-      contextId,
-      requestData,
-      responseData,
-      timestamp,
-      redirectCount,
-    } = data;
+    const { contextId, requestData, responseData, timestamp, redirectCount } =
+      data;
 
     const baseParameters = {
       context: contextId,

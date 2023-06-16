@@ -8,7 +8,7 @@ const TEST_URI =
   "http://example.com/browser/devtools/client/webconsole/" +
   "test/browser/test-local-session-storage.html";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
   const messages = await logMessages(hud);
   const objectInspectors = messages.map(node => node.querySelector(".tree"));

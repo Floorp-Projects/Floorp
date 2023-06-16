@@ -85,57 +85,12 @@ const TEST_REFERRER_URL = "https://www.example.com/referrer.html";
 const TEST_DATA_SHORT = "This test string is downloaded.";
 // Generate using gzipCompressString in TelemetryController.sys.mjs.
 const TEST_DATA_SHORT_GZIP_ENCODED_FIRST = [
-  31,
-  139,
-  8,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  3,
-  11,
-  201,
-  200,
-  44,
-  86,
-  40,
-  73,
-  45,
-  46,
-  81,
-  40,
-  46,
-  41,
-  202,
-  204,
+  31, 139, 8, 0, 0, 0, 0, 0, 0, 3, 11, 201, 200, 44, 86, 40, 73, 45, 46, 81, 40,
+  46, 41, 202, 204,
 ];
 const TEST_DATA_SHORT_GZIP_ENCODED_SECOND = [
-  75,
-  87,
-  0,
-  114,
-  83,
-  242,
-  203,
-  243,
-  114,
-  242,
-  19,
-  83,
-  82,
-  83,
-  244,
-  0,
-  151,
-  222,
-  109,
-  43,
-  31,
-  0,
-  0,
-  0,
+  75, 87, 0, 114, 83, 242, 203, 243, 114, 242, 19, 83, 82, 83, 244, 0, 151, 222,
+  109, 43, 31, 0, 0, 0,
 ];
 const TEST_DATA_SHORT_GZIP_ENCODED = TEST_DATA_SHORT_GZIP_ENCODED_FIRST.concat(
   TEST_DATA_SHORT_GZIP_ENCODED_SECOND
@@ -340,7 +295,7 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
 
   return new Promise(resolve => {
     Downloads.getList(Downloads.ALL)
-      .then(function(aList) {
+      .then(function (aList) {
         // Temporarily register a view that will get notified when the download we
         // are controlling becomes visible in the list of downloads.
         aList
@@ -423,7 +378,7 @@ function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
 
   return new Promise(resolve => {
     Downloads.getList(Downloads.PUBLIC)
-      .then(function(aList) {
+      .then(function (aList) {
         // Temporarily register a view that will get notified when the download we
         // are controlling becomes visible in the list of downloads.
         aList
@@ -496,7 +451,7 @@ function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
 function promiseDownloadMidway(aDownload) {
   return new Promise(resolve => {
     // Wait for the download to reach half of its progress.
-    let onchange = function() {
+    let onchange = function () {
       if (
         !aDownload.stopped &&
         !aDownload.canceled &&
@@ -527,7 +482,7 @@ function promiseDownloadMidway(aDownload) {
 function promiseDownloadStarted(aDownload) {
   return new Promise(resolve => {
     // Wait for the download to transfer some amount of bytes.
-    let onchange = function() {
+    let onchange = function () {
       if (
         !aDownload.stopped &&
         !aDownload.canceled &&
@@ -558,7 +513,7 @@ function promiseDownloadStarted(aDownload) {
 function promiseDownloadFinished(aDownload) {
   return new Promise(resolve => {
     // Wait for the download to finish.
-    let onchange = function() {
+    let onchange = function () {
       if (aDownload.succeeded || aDownload.error) {
         aDownload.onchange = null;
         resolve();
@@ -644,7 +599,7 @@ async function promiseVerifyContents(aPath, aExpectedContents) {
   await new Promise(resolve => {
     NetUtil.asyncFetch(
       { uri: NetUtil.newURI(file), loadUsingSystemPrincipal: true },
-      function(aInputStream, aStatus) {
+      function (aInputStream, aStatus) {
         Assert.ok(Components.isSuccessCode(aStatus));
         let contents = NetUtil.readInputStreamToString(
           aInputStream,
@@ -889,7 +844,7 @@ function continueResponses() {
  *        the server, when the continueResponses function is called.
  */
 function registerInterruptibleHandler(aPath, aFirstPartFn, aSecondPartFn) {
-  gHttpServer.registerPathHandler(aPath, function(aRequest, aResponse) {
+  gHttpServer.registerPathHandler(aPath, function (aRequest, aResponse) {
     info("Interruptible request started.");
 
     // Process the first part of the response.
@@ -984,7 +939,7 @@ add_setup(function test_common_initialize() {
     gHttpServer.identity.primaryPort
   );
   Services.prefs.setCharPref("network.dns.localDomains", "www.example.com");
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.prefs.clearUserPref("network.dns.localDomains");
   });
 
@@ -992,7 +947,7 @@ add_setup(function test_common_initialize() {
   // this may block tests that use the interruptible handlers.
   Services.prefs.setBoolPref("browser.cache.disk.enable", false);
   Services.prefs.setBoolPref("browser.cache.memory.enable", false);
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.prefs.clearUserPref("browser.cache.disk.enable");
     Services.prefs.clearUserPref("browser.cache.memory.enable");
   });
@@ -1002,7 +957,7 @@ add_setup(function test_common_initialize() {
     "network.http.referer.disallowCrossSiteRelaxingDefault",
     false
   );
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.prefs.clearUserPref(
       "network.http.referer.disallowCrossSiteRelaxingDefault"
     );
@@ -1108,7 +1063,7 @@ add_setup(function test_common_initialize() {
 
   gHttpServer.registerPathHandler(
     "/shorter-than-content-length-http-1-1.txt",
-    function(aRequest, aResponse) {
+    function (aRequest, aResponse) {
       aResponse.processAsync();
       aResponse.setStatusLine("1.1", 200, "OK");
       aResponse.setHeader("Content-Type", "text/plain", false);
@@ -1122,14 +1077,14 @@ add_setup(function test_common_initialize() {
     }
   );
 
-  gHttpServer.registerPathHandler("/busy.txt", function(aRequest, aResponse) {
+  gHttpServer.registerPathHandler("/busy.txt", function (aRequest, aResponse) {
     aResponse.setStatusLine("1.1", 504, "Gateway Timeout");
     aResponse.setHeader("Content-Type", "text/plain", false);
     aResponse.setHeader("Content-Length", "" + TEST_DATA_SHORT.length, false);
     aResponse.write(TEST_DATA_SHORT);
   });
 
-  gHttpServer.registerPathHandler("/redirect", function(aRequest, aResponse) {
+  gHttpServer.registerPathHandler("/redirect", function (aRequest, aResponse) {
     aResponse.setStatusLine("1.1", 301, "Moved Permanently");
     aResponse.setHeader("Location", httpUrl("busy.txt"), false);
     aResponse.setHeader("Content-Type", "text/javascript", false);
@@ -1137,34 +1092,34 @@ add_setup(function test_common_initialize() {
   });
 
   // This URL will emulate being blocked by Windows Parental controls
-  gHttpServer.registerPathHandler("/parentalblocked.zip", function(
-    aRequest,
-    aResponse
-  ) {
-    aResponse.setStatusLine(
-      aRequest.httpVersion,
-      450,
-      "Blocked by Windows Parental Controls"
-    );
-  });
+  gHttpServer.registerPathHandler(
+    "/parentalblocked.zip",
+    function (aRequest, aResponse) {
+      aResponse.setStatusLine(
+        aRequest.httpVersion,
+        450,
+        "Blocked by Windows Parental Controls"
+      );
+    }
+  );
 
   // This URL sends some data followed by an RST packet
-  gHttpServer.registerPathHandler("/netreset.txt", function(
-    aRequest,
-    aResponse
-  ) {
-    info("Starting response that will be aborted.");
-    aResponse.processAsync();
-    aResponse.setHeader("Content-Type", "text/plain", false);
-    aResponse.write(TEST_DATA_SHORT);
-    promiseExecuteSoon()
-      .then(() => {
-        aResponse.abort(null, true);
-        aResponse.finish();
-        info("Aborting response with network reset.");
-      })
-      .then(null, console.error);
-  });
+  gHttpServer.registerPathHandler(
+    "/netreset.txt",
+    function (aRequest, aResponse) {
+      info("Starting response that will be aborted.");
+      aResponse.processAsync();
+      aResponse.setHeader("Content-Type", "text/plain", false);
+      aResponse.write(TEST_DATA_SHORT);
+      promiseExecuteSoon()
+        .then(() => {
+          aResponse.abort(null, true);
+          aResponse.finish();
+          info("Aborting response with network reset.");
+        })
+        .then(null, console.error);
+    }
+  );
 
   // During unit tests, most of the functions that require profile access or
   // operating system features will be disabled. Individual tests may override

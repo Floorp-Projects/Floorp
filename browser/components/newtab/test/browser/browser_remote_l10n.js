@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { RemoteL10n } = ChromeUtils.import(
-  "resource://activity-stream/lib/RemoteL10n.jsm"
+const { RemoteL10n } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/RemoteL10n.sys.mjs"
 );
 
 const ID = "remote_l10n_test_string";
@@ -29,7 +29,7 @@ add_setup(async () => {
   });
 
   // Remove any cached l10n resources, "cfr" is the cache key
-  // used for strings from the remote `asrouter.ftl` see RemoteL10n.jsm
+  // used for strings from the remote `asrouter.ftl` see RemoteL10n.sys.mjs
   RemoteL10n.reloadL10n();
   if (l10nRegistryInstance.hasSource("cfr")) {
     l10nRegistryInstance.removeSources(["cfr"]);

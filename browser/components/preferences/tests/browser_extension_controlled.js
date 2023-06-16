@@ -7,11 +7,10 @@ const URL_OVERRIDES_TYPE = "url_overrides";
 const NEW_TAB_KEY = "newTabURL";
 const PREF_SETTING_TYPE = "prefs";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "ExtensionSettingsStore",
-  "resource://gre/modules/ExtensionSettingsStore.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  ExtensionSettingsStore:
+    "resource://gre/modules/ExtensionSettingsStore.sys.mjs",
+});
 
 ChromeUtils.defineModuleGetter(
   this,
@@ -21,13 +20,13 @@ ChromeUtils.defineModuleGetter(
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "proxyType", PROXY_PREF);
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+const { AddonTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
 );
 AddonTestUtils.initMochitest(this);
 
-const { ExtensionPreferencesManager } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionPreferencesManager.jsm"
+const { ExtensionPreferencesManager } = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionPreferencesManager.sys.mjs"
 );
 
 const TEST_DIR = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
@@ -90,7 +89,7 @@ function waitForMessageContent(messageId, l10nId, doc) {
 async function openNotificationsPermissionDialog() {
   let dialogOpened = promiseLoadSubDialog(PERMISSIONS_URL);
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     let doc = content.document;
     let settingsButton = doc.getElementById("notificationSettingsButton");
     settingsButton.click();
@@ -1088,12 +1087,10 @@ add_task(async function testExtensionControlledPasswordManager() {
       !isControlled,
       "Password manager pref is set to the expected value."
     );
-    let controlledLabel = gBrowser.contentDocument.getElementById(
-      CONTROLLED_LABEL_ID
-    );
-    let controlledButton = gBrowser.contentDocument.getElementById(
-      CONTROLLED_BUTTON_ID
-    );
+    let controlledLabel =
+      gBrowser.contentDocument.getElementById(CONTROLLED_LABEL_ID);
+    let controlledButton =
+      gBrowser.contentDocument.getElementById(CONTROLLED_BUTTON_ID);
     is(
       controlledLabel.hidden,
       !isControlled,

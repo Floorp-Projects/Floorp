@@ -9,17 +9,17 @@ html {
 }
 
 body,
-#root { // sass-lint:disable-line no-ids
+#root {
   min-height: 100vh;
 }
 
-#root { // sass-lint:disable-line no-ids
+#root {
   position: relative;
 }
 
 body {
   background-color: var(--newtab-background-color);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Ubuntu', 'Helvetica Neue', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Ubuntu, 'Helvetica Neue', sans-serif;
   font-size: 16px;
 }
 
@@ -30,10 +30,6 @@ body {
 h1,
 h2 {
   font-weight: normal;
-}
-
-a {
-  text-decoration: none;
 }
 
 .inner-border {
@@ -130,6 +126,7 @@ input {
 }
 
 // Components
+// stylelint-disable no-invalid-position-at-import-rule
 @import '../components/A11yLinkButton/A11yLinkButton';
 @import '../components/Base/Base';
 @import '../components/Background/Background';
@@ -178,3 +175,4 @@ input {
 @import '../asrouter/templates/SimpleSnippet/SimpleSnippet';
 @import '../asrouter/templates/SubmitFormSnippet/SubmitFormSnippet';
 @import '../asrouter/templates/EOYSnippet/EOYSnippet';
+// stylelint-enable no-invalid-position-at-import-rule

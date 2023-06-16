@@ -50,7 +50,7 @@
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/StaticPrefs_accessibility.h"
+#include "nsAccessibilityService.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/dom/AncestorIterator.h"
 #include "mozilla/dom/BrowserChild.h"
@@ -369,7 +369,7 @@ void DocAccessible::DocType(nsAString& aType) const {
 
 void DocAccessible::QueueCacheUpdate(LocalAccessible* aAcc,
                                      uint64_t aNewDomain) {
-  if (!mIPCDoc || !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (!mIPCDoc) {
     return;
   }
   uint64_t& domain = mQueuedCacheUpdates.LookupOrInsert(aAcc, 0);
@@ -379,8 +379,8 @@ void DocAccessible::QueueCacheUpdate(LocalAccessible* aAcc,
 
 void DocAccessible::QueueCacheUpdateForDependentRelations(
     LocalAccessible* aAcc) {
-  if (!mIPCDoc || !StaticPrefs::accessibility_cache_enabled_AtStartup() ||
-      !aAcc || !aAcc->Elm() || !aAcc->IsInDocument() || aAcc->IsDefunct()) {
+  if (!mIPCDoc || !aAcc || !aAcc->Elm() || !aAcc->IsInDocument() ||
+      aAcc->IsDefunct()) {
     return;
   }
   nsAutoString ID;
@@ -1383,10 +1383,6 @@ bool DocAccessible::PruneOrInsertSubtree(nsIContent* aRoot) {
     if (acc->IsTable() || acc->IsTableRow() || acc->IsTableCell()) {
       LocalAccessible* table = nsAccUtils::TableFor(acc);
       if (table && table->IsTable()) {
-        if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-          FireDelayedEvent(nsIAccessibleEvent::EVENT_TABLE_STYLING_CHANGED,
-                           table);
-        }
         QueueCacheUpdate(table, CacheDomain::Table);
       }
     }
@@ -1497,10 +1493,6 @@ void DocAccessible::ProcessInvalidationList() {
 }
 
 void DocAccessible::ProcessQueuedCacheUpdates() {
-  if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    return;
-  }
-
   AUTO_PROFILER_MARKER_TEXT("DocAccessible::ProcessQueuedCacheUpdates", A11Y,
                             {}, ""_ns);
   // DO NOT ADD CODE ABOVE THIS BLOCK: THIS CODE IS MEASURING TIMINGS.
@@ -1631,33 +1623,12 @@ void DocAccessible::DoInitialUpdate() {
           // top level DocAccessibleChild, so set that as early as possible.
           browserChild->SetTopLevelDocAccessibleChild(ipcDoc);
 
-#if defined(XP_WIN)
-          IAccessibleHolder holder;
-          int32_t childID;
-          if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-            childID = 0;
-          } else {
-            holder = CreateHolderFromAccessible(WrapNotNull(this));
-            MOZ_ASSERT(!holder.IsNull());
-            childID = MsaaAccessible::GetChildIDFor(this);
-          }
-#else
-          int32_t holder = 0, childID = 0;
-#endif
           browserChild->SendPDocAccessibleConstructor(
-              ipcDoc, nullptr, 0, mDocumentNode->GetBrowsingContext(), childID,
-              holder);
+              ipcDoc, nullptr, 0, mDocumentNode->GetBrowsingContext());
 #if !defined(XP_WIN)
           ipcDoc->SendPDocAccessiblePlatformExtConstructor();
 #endif
         }
-#if !defined(XP_WIN)
-        // It's safe for us to mark top level documents as constructed in the
-        // parent process without receiving an explicit message, since we can
-        // never get queries for this document or descendants before parent
-        // process construction is complete.
-        ipcDoc->SetConstructedInParentProcess();
-#endif
       }
     }
   }
@@ -1694,12 +1665,10 @@ void DocAccessible::DoInitialUpdate() {
     DocAccessibleChild* ipcDoc = IPCDoc();
     MOZ_ASSERT(ipcDoc);
     if (ipcDoc) {
-      if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-        // If we're caching, we should send an initial update for this document
-        // and its attributes. Each acc contained in this doc will have its
-        // initial update sent in `InsertIntoIpcTree`.
-        SendCache(CacheDomain::All, CacheUpdateType::Initial);
-      }
+      // Send an initial update for this document and its attributes. Each acc
+      // contained in this doc will have its initial update sent in
+      // `InsertIntoIpcTree`.
+      SendCache(CacheDomain::All, CacheUpdateType::Initial);
 
       for (auto idx = 0U; idx < mChildren.Length(); idx++) {
         ipcDoc->InsertIntoIpcTree(this, mChildren.ElementAt(idx), idx, true);
@@ -2591,8 +2560,7 @@ void DocAccessible::UncacheChildrenInSubtree(LocalAccessible* aRoot) {
   // The parent of the removed subtree is about to be cleared, so we must do
   // this here rather than in LocalAccessible::UnbindFromParent because we need
   // the ancestry for this to work.
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() &&
-      (aRoot->IsTable() || aRoot->IsTableCell())) {
+  if (aRoot->IsTable() || aRoot->IsTableCell()) {
     CachedTableAccessible::Invalidate(aRoot);
   }
 

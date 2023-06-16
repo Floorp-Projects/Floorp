@@ -36,7 +36,7 @@ export function initialSourcesTreeState() {
     // This should be all but Source Tree Items.
     expanded: new Set(),
 
-    // `uniquePath` of the currently focused Tree Item.
+    // Reference to the currently focused Tree Item.
     // It can be any type of Tree Item.
     focusedItem: null,
 
@@ -132,35 +132,42 @@ export default function update(state = initialSourcesTreeState(), action) {
       return state;
     }
 
-    case "NAVIGATE":
-      state = initialSourcesTreeState();
-      // WebExtension is being special. A navigation is notified when reloading the add-on,
-      // but the top level target is not being destroyed/re-created. It stays up.
-      // So here, we ensure re-registering the thread so that its related sources keep
-      // being displayed.
-      if (action.mainThread.isWebExtension) {
-        addThread(state, action.mainThread);
-      }
-      return state;
-
     case "INSERT_THREAD":
       state = { ...state };
       addThread(state, action.newThread);
       return state;
 
     case "REMOVE_THREAD": {
+      const { threadActorID } = action;
       const index = state.threadItems.findIndex(item => {
-        return item.threadActorID == action.threadActorID;
+        return item.threadActorID == threadActorID;
       });
 
       if (index == -1) {
         return state;
       }
+
+      // Also clear focusedItem and expanded items related
+      // to this thread. These fields store uniquePath which starts
+      // with the thread actor ID.
+      let { focusedItem } = state;
+      if (focusedItem && focusedItem.uniquePath.startsWith(threadActorID)) {
+        focusedItem = null;
+      }
+      const expanded = new Set();
+      for (const path of state.expanded) {
+        if (!path.startsWith(threadActorID)) {
+          expanded.add(path);
+        }
+      }
+
       const threadItems = [...state.threadItems];
       threadItems.splice(index, 1);
       return {
         ...state,
         threadItems,
+        focusedItem,
+        expanded,
       };
     }
 

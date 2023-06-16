@@ -7,7 +7,7 @@
 
 const TEST_URI = "data:text/html,<!DOCTYPE html><meta charset=utf8>";
 
-add_task(async function() {
+add_task(async function () {
   // We open the console and an empty tab, as we only want to evaluate something.
   const hud = await openNewTabAndConsole(TEST_URI);
   // We execute `console.timeStamp('test')` from the console input.

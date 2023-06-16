@@ -14,7 +14,7 @@ const CONTAINER_PAGE =
 
 const TPC_PREF = "network.cookie.cookieBehavior";
 
-add_setup(async function() {
+add_setup(async function () {
   await UrlClassifierTestUtils.addTestTrackers();
 
   registerCleanupFunction(() => {
@@ -156,7 +156,7 @@ async function assertSitesListed(testCase) {
   let change = waitForContentBlockingEvent();
   let timeoutPromise = new Promise(resolve => setTimeout(resolve, 1000));
 
-  await SpecialPowers.spawn(browser, [], function() {
+  await SpecialPowers.spawn(browser, [], function () {
     content.postMessage("third-party-cookie", "*");
   });
 
@@ -215,7 +215,7 @@ async function assertSitesListed(testCase) {
   change = waitForSecurityChange();
   timeoutPromise = new Promise(resolve => setTimeout(resolve, 1000));
 
-  await SpecialPowers.spawn(browser, [], function() {
+  await SpecialPowers.spawn(browser, [], function () {
     content.postMessage("first-party-cookie", "*");
   });
 
@@ -287,10 +287,11 @@ add_task(async function testCookiesSubViewAllowed() {
     TPC_PREF,
     Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER
   );
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-    "http://trackertest.org/"
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+      "http://trackertest.org/"
+    );
   Services.perms.addFromPrincipal(
     principal,
     "cookie",
@@ -371,16 +372,18 @@ add_task(async function testCookiesSubViewAllowedHeuristic() {
     TPC_PREF,
     Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER
   );
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-    "http://not-tracking.example.com/"
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+      "http://not-tracking.example.com/"
+    );
 
   // Pretend that the tracker has already been interacted with
-  let trackerPrincipal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-    "http://trackertest.org/"
-  );
+  let trackerPrincipal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+      "http://trackertest.org/"
+    );
   Services.perms.addFromPrincipal(
     trackerPrincipal,
     "storageAccessAPI",
@@ -412,7 +415,7 @@ add_task(async function testCookiesSubViewAllowedHeuristic() {
     );
   });
 
-  await SpecialPowers.spawn(browser, [], function() {
+  await SpecialPowers.spawn(browser, [], function () {
     content.postMessage("window-open", "*");
   });
   await Promise.all([windowCreated, permChanged]);
@@ -470,7 +473,7 @@ add_task(async function testCookiesSubViewAllowedHeuristic() {
   );
   ok(!listItem.classList.contains("allowed"), "Has removed the allowed class");
 
-  await SpecialPowers.spawn(browser, [], function() {
+  await SpecialPowers.spawn(browser, [], function () {
     content.postMessage("window-close", "*");
   });
 

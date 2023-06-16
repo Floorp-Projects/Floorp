@@ -366,7 +366,7 @@ if (!isWorker) {
 
   // Also listen for Loader unload to unregister the pref observer and
   // prevent leaking
-  const unloadObserver = function(subject) {
+  const unloadObserver = function (subject) {
     if (subject.wrappedJSObject == require("@loader/unload")) {
       Services.prefs.removeObserver("devtools.dump.emit", observer);
       Services.obs.removeObserver(unloadObserver, "devtools:loader:destroy");

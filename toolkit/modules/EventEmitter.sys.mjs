@@ -24,7 +24,7 @@ Services.prefs.addObserver("toolkit.dump.emit", {
  *        Bind all public methods of EventEmitter to
  *        the objectToDecorate object.
  */
-EventEmitter.decorate = function(objectToDecorate) {
+EventEmitter.decorate = function (objectToDecorate) {
   let emitter = new EventEmitter();
   objectToDecorate.on = emitter.on.bind(emitter);
   objectToDecorate.off = emitter.off.bind(emitter);

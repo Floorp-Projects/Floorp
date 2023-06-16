@@ -53,7 +53,7 @@ function test() {
 
   SpecialPowers.pushPrefEnv(
     { set: [["security.mixed_content.block_active_content", true]] },
-    function() {
+    function () {
       runTests();
     }
   );

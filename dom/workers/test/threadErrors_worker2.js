@@ -3,6 +3,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 // Bad function error
-onmessage = function(event) {
+onmessage = function (event) {
   foopy();
 };

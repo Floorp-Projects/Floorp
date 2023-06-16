@@ -2,15 +2,15 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+const { AddonTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
 );
 
 AddonTestUtils.initMochitest(this);
 
 add_task(async function testExecuteScript() {
-  let { MessageChannel } = ChromeUtils.import(
-    "resource://testing-common/MessageChannel.jsm"
+  let { MessageChannel } = ChromeUtils.importESModule(
+    "resource://testing-common/MessageChannel.sys.mjs"
   );
 
   // When the first extension is started, ProxyMessenger.init adds MessageChannel
@@ -272,7 +272,7 @@ add_task(async function test_csscode_cleanup_on_closed_windows() {
       // destroyed and any removeSheet error already collected (if it has been
       // raised during the content scripts cleanup).
       await browser.tabs.executeScript({
-        code: `(${function() {
+        code: `(${function () {
           const { maxWidth, minWidth } = window.getComputedStyle(document.body);
           browser.test.sendMessage("body-styles", { maxWidth, minWidth });
           browser.runtime.connect();

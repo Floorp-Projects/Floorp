@@ -5,7 +5,7 @@
 
 const TEST_JSON_URL = URL_ROOT_SSL + "chunked_json.sjs";
 
-add_task(async function() {
+add_task(async function () {
   info("Test chunked JSON started");
 
   await addJsonViewTab(TEST_JSON_URL, {

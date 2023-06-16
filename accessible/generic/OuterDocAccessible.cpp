@@ -31,12 +31,6 @@ OuterDocAccessible::OuterDocAccessible(nsIContent* aContent,
     : AccessibleWrap(aContent, aDoc) {
   mType = eOuterDocType;
 
-#ifdef XP_WIN
-  if (DocAccessibleParent* remoteDoc = RemoteChildDoc()) {
-    remoteDoc->SendParentCOMProxy(this);
-  }
-#endif
-
   if (IPCAccessibilityActive()) {
     auto bridge = dom::BrowserBridgeChild::GetFrom(aContent);
     if (bridge) {
@@ -62,11 +56,7 @@ void OuterDocAccessible::SendEmbedderAccessible(
   DocAccessibleChild* ipcDoc = mDoc->IPCDoc();
   if (ipcDoc) {
     uint64_t id = reinterpret_cast<uintptr_t>(UniqueID());
-#if defined(XP_WIN)
-    ipcDoc->SetEmbedderOnBridge(aBridge, id);
-#else
     aBridge->SetEmbedderAccessible(ipcDoc, id);
-#endif
   }
 }
 

@@ -73,7 +73,7 @@ add_task(async function modifiedPreferences() {
     "network.proxy.troubleshoot",
     "print.print_to_filename",
   ];
-  prefs.forEach(function(p) {
+  prefs.forEach(function (p) {
     Services.prefs.setBoolPref(p, true);
     is(Services.prefs.getBoolPref(p), true, "The pref should be set: " + p);
   });
@@ -128,7 +128,7 @@ add_task(async function printingPreferences() {
     "print.print_bgimages",
     "print.print_to_filename",
   ];
-  prefs.forEach(function(p) {
+  prefs.forEach(function (p) {
     Services.prefs.setBoolPref(p, true);
     is(Services.prefs.getBoolPref(p), true, "The pref should be set: " + p);
   });

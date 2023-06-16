@@ -77,11 +77,27 @@ const gfxFontEntry::ScriptRange gfxPlatformFontList::sComplexScriptRanges[] = {
     // want to mask the basic Arabic block here?
     // This affects the arabic-fallback-*.html reftests, which rely on
     // loading a font that *doesn't* have any GSUB table.
-    {0x0600, 0x06FF, 1, {TRUETYPE_TAG('a', 'r', 'a', 'b'), 0, 0}},
+    {0x0600, 0x060B, 1, {TRUETYPE_TAG('a', 'r', 'a', 'b'), 0, 0}},
+    // skip 060C Arabic comma, also used by N'Ko etc
+    {0x060D, 0x061A, 1, {TRUETYPE_TAG('a', 'r', 'a', 'b'), 0, 0}},
+    // skip 061B Arabic semicolon, also used by N'Ko etc
+    {0x061C, 0x061E, 1, {TRUETYPE_TAG('a', 'r', 'a', 'b'), 0, 0}},
+    // skip 061F Arabic question mark, also used by N'Ko etc
+    {0x0620, 0x063F, 1, {TRUETYPE_TAG('a', 'r', 'a', 'b'), 0, 0}},
+    // skip 0640 Arabic tatweel (for syriac, adlam, etc)
+    {0x0641, 0x06D3, 1, {TRUETYPE_TAG('a', 'r', 'a', 'b'), 0, 0}},
+    // skip 06D4 Arabic full stop (for hanifi rohingya)
+    {0x06D5, 0x06FF, 1, {TRUETYPE_TAG('a', 'r', 'a', 'b'), 0, 0}},
     {0x0700, 0x074F, 1, {TRUETYPE_TAG('s', 'y', 'r', 'c'), 0, 0}},
     {0x0750, 0x077F, 1, {TRUETYPE_TAG('a', 'r', 'a', 'b'), 0, 0}},
     {0x08A0, 0x08FF, 1, {TRUETYPE_TAG('a', 'r', 'a', 'b'), 0, 0}},
     {0x0900,
+     0x0963,
+     2,
+     {TRUETYPE_TAG('d', 'e', 'v', '2'), TRUETYPE_TAG('d', 'e', 'v', 'a'), 0}},
+    // skip 0964 DEVANAGARI DANDA and 0965 DEVANAGARI DOUBLE DANDA, shared by
+    // various other Indic writing systems
+    {0x0966,
      0x097F,
      2,
      {TRUETYPE_TAG('d', 'e', 'v', '2'), TRUETYPE_TAG('d', 'e', 'v', 'a'), 0}},

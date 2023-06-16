@@ -27,8 +27,8 @@ add_task(
       Assert.ok(packet.isPending);
       Assert.equal(false, "actualLocation" in packet);
 
-      packet = await executeOnNextTickAndWaitForPause(function() {
-        reload(targetFront).then(function() {
+      packet = await executeOnNextTickAndWaitForPause(function () {
+        reload(targetFront).then(function () {
           loadSubScriptWithOptions(SOURCE_URL, {
             target: debuggee,
             ignoreCache: true,

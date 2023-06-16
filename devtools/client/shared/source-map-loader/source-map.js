@@ -47,10 +47,13 @@ const {
 
 async function getOriginalURLs(generatedSource) {
   await fetchSourceMap(generatedSource);
-
   const data = await getSourceMapWithMetadata(generatedSource.id);
-
   return data ? data.sources : null;
+}
+
+async function getSourceMapIgnoreList(generatedSourceId) {
+  const data = await getSourceMapWithMetadata(generatedSourceId);
+  return data ? data.ignoreListUrls : [];
 }
 
 const COMPUTED_SPANS = new WeakSet();
@@ -170,13 +173,13 @@ async function getGeneratedRanges(location) {
 
 async function getGeneratedLocation(location) {
   if (!isOriginalId(location.sourceId)) {
-    return location;
+    return null;
   }
 
   const generatedSourceId = originalToGeneratedId(location.sourceId);
   const data = await getSourceMapWithMetadata(generatedSourceId);
   if (!data) {
-    return location;
+    return null;
   }
   const { urlsById, map } = data;
 
@@ -224,9 +227,7 @@ async function getOriginalLocations(locations, options = {}) {
       maps[location.sourceId] = map || null;
     }
 
-    results.push(
-      map ? getOriginalLocationSync(map, location, options) : location
-    );
+    results.push(map ? getOriginalLocationSync(map, location, options) : null);
   }
   return results;
 }
@@ -259,7 +260,7 @@ function getOriginalLocationSync(map, location, { search } = {}) {
   const { source: sourceUrl, line, column } = match;
   if (sourceUrl == null) {
     // No url means the location didn't map.
-    return location;
+    return null;
   }
 
   return {
@@ -272,12 +273,12 @@ function getOriginalLocationSync(map, location, { search } = {}) {
 
 async function getOriginalLocation(location, options = {}) {
   if (!isGeneratedId(location.sourceId)) {
-    return location;
+    return null;
   }
 
   const map = await getSourceMap(location.sourceId);
   if (!map) {
-    return location;
+    return null;
   }
 
   return getOriginalLocationSync(map, location, options);
@@ -514,6 +515,7 @@ module.exports = {
   getOriginalSourceText,
   getGeneratedRangesForOriginal,
   getFileGeneratedRange,
+  getSourceMapIgnoreList,
   setSourceMapForGeneratedSources,
   clearSourceMaps,
 };

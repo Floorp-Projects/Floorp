@@ -89,12 +89,7 @@ describe("Badges component:", () => {
     expect(wrapper.html()).toMatchSnapshot();
     expect(wrapper.find(Badge).length).toBe(1);
     expect(wrapper.find(ContrastBadge).length).toBe(1);
-    expect(
-      wrapper
-        .find(ContrastBadge)
-        .first()
-        .props()
-    ).toMatchObject(CONTRAST);
+    expect(wrapper.find(ContrastBadge).first().props()).toMatchObject(CONTRAST);
   });
 
   it("contrast ratio fail range render", () => {
@@ -114,11 +109,6 @@ describe("Badges component:", () => {
     expect(wrapper.html()).toMatchSnapshot();
     expect(wrapper.find(Badge).length).toBe(1);
     expect(wrapper.find(ContrastBadge).length).toBe(1);
-    expect(
-      wrapper
-        .find(ContrastBadge)
-        .first()
-        .props()
-    ).toMatchObject(CONTRAST);
+    expect(wrapper.find(ContrastBadge).first().props()).toMatchObject(CONTRAST);
   });
 });

@@ -10,7 +10,8 @@ const BinaryInputStream = CC(
 );
 
 function handleRequest(request, response) {
-  var body = "<html>\
+  var body =
+    "<html>\
     <body>\
     Outer POST data: ";
 

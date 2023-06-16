@@ -77,7 +77,7 @@ file will also need to be signed. These kinds include ``repackage-signing``,
 ``release-source-signing`` and ``partials-signing`` sign the release source tarball
 and partial update MARs.
 
-**Mac signing and notarization**: For mac, we have ``*-notarization-part-1``, which signs the app and pkg and submits them to Apple for notarization, ``*-notarization-poller``, which polls Apple until it finds a successful notarization status, and the ``*-signing`` task downloads the signed app and pkg from the ``part-1`` task and staples the notarization to them.
+**Mac signing and notarization**: For mac, we have ``*-mac-signing``, which signs the app and pkg, ``*-mac-notarization`` submits to Apple and staples the resulting ticket to the binaries.
 
 We generate signed checksums at the top of the releases directories, like
 in `60.0`_. To generate these, we have the checksums signing kinds, including
@@ -168,8 +168,7 @@ Mozilla Releng is able to make breaking changes on this pool without affecting
 any other team.
 
 Similarly, we have the `mac-depsigning`_ and `mac-signing`_ pools, which handle
-CI and nightly/release signing, respectively. The `mac-notarization-poller`_
-pool consists of lightweight workers that poll Apple for status.
+CI and nightly/release signing, respectively.
 
 .. _60.0: https://archive.mozilla.org/pub/firefox/releases/60.0/
 .. _addonscript: https://github.com/mozilla-releng/addonscript/
@@ -184,7 +183,6 @@ pool consists of lightweight workers that poll Apple for status.
 .. _linux-signing: https://firefox-ci-tc.services.mozilla.com/provisioners/scriptworker-k8s/worker-types/gecko-3-signing
 .. _mac-depsigning: https://firefox-ci-tc.services.mozilla.com/provisioners/scriptworker-prov-v1/worker-types/depsigning-mac-v1
 .. _mac-signing: https://firefox-ci-tc.services.mozilla.com/provisioners/scriptworker-prov-v1/worker-types/signing-mac-v1
-.. _mac-notarization-poller: https://firefox-ci-tc.services.mozilla.com/provisioners/scriptworker-prov-v1/worker-types/mac-notarization-poller
 .. _signtool: https://github.com/mozilla-releng/signtool
 .. _Scriptworker: https://github.com/mozilla-releng/scriptworker/
 .. _widevine site: https://www.widevine.com/wv_drm.html

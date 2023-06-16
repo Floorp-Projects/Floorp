@@ -5,7 +5,7 @@
 
 // Test whether the scrubber was working in case of negative playback rate.
 
-add_task(async function() {
+add_task(async function () {
   await addTab(URL_ROOT + "doc_negative_playback_rate.html");
   await removeAnimatedElementsExcept([".normal"]);
   const { animationInspector, panel } = await openAnimationInspector();

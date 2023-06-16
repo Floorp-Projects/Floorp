@@ -74,7 +74,7 @@ function getBrowserWindowsCount() {
   return { open, winstates };
 }
 
-add_setup(async function() {
+add_setup(async function () {
   // Make sure we've only got one browser window to start with
   let { open, winstates } = getBrowserWindowsCount();
   is(open, 1, "Should only be one open window");
@@ -114,7 +114,7 @@ add_setup(async function() {
  * @returns Promise
  *        Resolves once the test has been cleaned up.
  */
-let setupTest = async function(options, testFunction) {
+let setupTest = async function (options, testFunction) {
   await pushPrefs(
     ["browser.startup.page", 3],
     ["browser.tabs.warnOnClose", false]
@@ -224,7 +224,7 @@ add_task(async function test_open_close_normal() {
     return;
   }
 
-  await setupTest({ denyFirst: true }, async function(newWin, obs) {
+  await setupTest({ denyFirst: true }, async function (newWin, obs) {
     let closed = await closeWindowForRestoration(newWin);
     ok(!closed, "First close request should have been denied");
 
@@ -277,7 +277,7 @@ add_task(async function test_open_close_private_browsing() {
     return;
   }
 
-  await setupTest({}, async function(newWin, obs) {
+  await setupTest({}, async function (newWin, obs) {
     let closed = await closeWindowForRestoration(newWin);
     ok(closed, "Should be able to close the window");
 
@@ -338,7 +338,7 @@ add_task(async function test_open_close_only_popup() {
     return;
   }
 
-  await setupTest({}, async function(newWin, obs) {
+  await setupTest({}, async function (newWin, obs) {
     // We actually don't care about the initial window in this test.
     await BrowserTestUtils.closeWindow(newWin);
 
@@ -415,7 +415,7 @@ add_task(async function test_open_close_restore_from_popup() {
     return;
   }
 
-  await setupTest({}, async function(newWin, obs) {
+  await setupTest({}, async function (newWin, obs) {
     let newWin2 = await promiseNewWindowLoaded();
     await injectTestTabs(newWin2);
 
@@ -467,7 +467,7 @@ add_task(async function test_mac_notifications() {
     return;
   }
 
-  await setupTest({ denyFirst: true }, async function(newWin, obs) {
+  await setupTest({ denyFirst: true }, async function (newWin, obs) {
     let closed = await closeWindowForRestoration(newWin);
     ok(!closed, "First close attempt should be denied");
     closed = await closeWindowForRestoration(newWin);

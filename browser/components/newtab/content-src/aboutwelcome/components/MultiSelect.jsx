@@ -34,7 +34,7 @@ export const MultiSelect = props => {
   return (
     <div className="multi-select-container">
       {props.content.tiles.data.map(({ label, id }) => (
-        <div key={id + label} className="checkbox-container">
+        <div key={id + label} className="checkbox-container multi-select-item">
           <input
             type="checkbox"
             id={id}

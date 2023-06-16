@@ -7,7 +7,7 @@
 // * make animations to pause/resume by spacebar
 // * combination with other UI components
 
-add_task(async function() {
+add_task(async function () {
   await addTab(URL_ROOT + "doc_custom_playback_rate.html");
   const { animationInspector, panel } = await openAnimationInspector();
 

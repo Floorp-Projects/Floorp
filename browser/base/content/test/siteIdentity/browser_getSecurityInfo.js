@@ -5,7 +5,7 @@ const MOZILLA_PKIX_ERROR_BASE = Ci.nsINSSErrorsService.MOZILLA_PKIX_ERROR_BASE;
 const MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT = MOZILLA_PKIX_ERROR_BASE + 14;
 
 add_task(async function test() {
-  await BrowserTestUtils.withNewTab("about:blank", async function(browser) {
+  await BrowserTestUtils.withNewTab("about:blank", async function (browser) {
     let loaded = BrowserTestUtils.waitForErrorPage(browser);
     BrowserTestUtils.loadURIString(browser, "https://self-signed.example.com");
     await loaded;

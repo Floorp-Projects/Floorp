@@ -26,7 +26,7 @@ const TEST_URI = `
   </div>
 `;
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.gridinspector.maxHighlighters", 2);
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, gridInspector } = await openLayoutView();
@@ -34,10 +34,8 @@ add_task(async function() {
   const { document: doc } = gridInspector;
   const { highlighters } = inspector;
   const HIGHLIGHTER_TYPE = inspector.highlighters.TYPES.GRID;
-  const {
-    waitForHighlighterTypeShown,
-    waitForHighlighterTypeHidden,
-  } = getHighlighterTestHelpers(inspector);
+  const { waitForHighlighterTypeShown, waitForHighlighterTypeHidden } =
+    getHighlighterTestHelpers(inspector);
 
   await selectNode("#grid1", inspector);
   const gridList = doc.getElementById("grid-list");

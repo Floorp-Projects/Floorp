@@ -22,8 +22,8 @@ for (var i = 0; i < 30; i++) {
   str += i % 2 ? "b" : "a";
 }
 
-onmessage = function(event) {
-  data.forEach(function(string) {
+onmessage = function (event) {
+  data.forEach(function (string) {
     var encoded = btoa(string);
     postMessage({ type: "btoa", value: encoded });
     postMessage({ type: "atob", value: atob(encoded) });

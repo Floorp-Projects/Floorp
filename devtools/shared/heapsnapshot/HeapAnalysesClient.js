@@ -20,7 +20,7 @@ var workerCounter = 0;
  * HeapAnalysesClient owns the worker, and terminating the worker is done by
  * terminating the client (see the `destroy` method).
  */
-const HeapAnalysesClient = (module.exports = function() {
+const HeapAnalysesClient = (module.exports = function () {
   this._worker = new DevToolsWorker(WORKER_URL, {
     name: `HeapAnalyses-${workerCounter++}`,
     verbose: DevToolsUtils.dumpv.wantVerbose,
@@ -32,7 +32,7 @@ const HeapAnalysesClient = (module.exports = function() {
  * snapshots it has deserialized and read into memory). The client is no longer
  * usable after calling this method.
  */
-HeapAnalysesClient.prototype.destroy = function() {
+HeapAnalysesClient.prototype.destroy = function () {
   this._worker.destroy();
   this._worker = null;
 };
@@ -50,7 +50,7 @@ HeapAnalysesClient.prototype.destroy = function() {
  *          does not happen, eg due to a bad file path or malformed heap
  *          snapshot file.
  */
-HeapAnalysesClient.prototype.readHeapSnapshot = function(snapshotFilePath) {
+HeapAnalysesClient.prototype.readHeapSnapshot = function (snapshotFilePath) {
   return this._worker.performTask("readHeapSnapshot", { snapshotFilePath });
 };
 
@@ -61,7 +61,7 @@ HeapAnalysesClient.prototype.readHeapSnapshot = function(snapshotFilePath) {
  * @param {String} snapshotFilePath
  * @return Promise<undefined>
  */
-HeapAnalysesClient.prototype.deleteHeapSnapshot = function(snapshotFilePath) {
+HeapAnalysesClient.prototype.deleteHeapSnapshot = function (snapshotFilePath) {
   return this._worker.performTask("deleteHeapSnapshot", { snapshotFilePath });
 };
 
@@ -75,7 +75,7 @@ HeapAnalysesClient.prototype.deleteHeapSnapshot = function(snapshotFilePath) {
  *        The unix timestamp of the creation time of the snapshot, or null if
  *        snapshot does not exist.
  */
-HeapAnalysesClient.prototype.getCreationTime = function(snapshotFilePath) {
+HeapAnalysesClient.prototype.getCreationTime = function (snapshotFilePath) {
   return this._worker.performTask("getCreationTime", snapshotFilePath);
 };
 
@@ -116,7 +116,7 @@ HeapAnalysesClient.prototype.getCreationTime = function(snapshotFilePath) {
  *            The result of calling CensusUtils.createParentMap on the generated
  *            report. Only exists if asTreeNode or asInvertedTreeNode are set.
  */
-HeapAnalysesClient.prototype.takeCensus = function(
+HeapAnalysesClient.prototype.takeCensus = function (
   snapshotFilePath,
   censusOptions,
   requestOptions = {}
@@ -153,7 +153,7 @@ HeapAnalysesClient.prototype.takeCensus = function(
  *            retained size.
  *
  */
-HeapAnalysesClient.prototype.getCensusIndividuals = function(opts) {
+HeapAnalysesClient.prototype.getCensusIndividuals = function (opts) {
   return this._worker.performTask("getCensusIndividuals", opts);
 };
 
@@ -194,7 +194,7 @@ HeapAnalysesClient.prototype.getCensusIndividuals = function(opts) {
  *            The result of calling CensusUtils.createParentMap on the generated
  *            delta. Only exists if asTreeNode or asInvertedTreeNode are set.
  */
-HeapAnalysesClient.prototype.takeCensusDiff = function(
+HeapAnalysesClient.prototype.takeCensusDiff = function (
   firstSnapshotFilePath,
   secondSnapshotFilePath,
   censusOptions,
@@ -218,7 +218,9 @@ HeapAnalysesClient.prototype.takeCensusDiff = function(
  *
  * @returns {Promise<DominatorTreeId>}
  */
-HeapAnalysesClient.prototype.computeDominatorTree = function(snapshotFilePath) {
+HeapAnalysesClient.prototype.computeDominatorTree = function (
+  snapshotFilePath
+) {
   return this._worker.performTask("computeDominatorTree", snapshotFilePath);
 };
 
@@ -242,7 +244,7 @@ HeapAnalysesClient.prototype.computeDominatorTree = function(snapshotFilePath) {
  *
  * @returns {Promise<DominatorTreeNode>}
  */
-HeapAnalysesClient.prototype.getDominatorTree = function(opts) {
+HeapAnalysesClient.prototype.getDominatorTree = function (opts) {
   return this._worker.performTask("getDominatorTree", opts);
 };
 
@@ -278,6 +280,6 @@ HeapAnalysesClient.prototype.getDominatorTree = function(opts) {
  *            The path through the tree from the root to these node's parent, eg
  *            [root's id, child of root's id, child of child of root's id, ..., `nodeId`].
  */
-HeapAnalysesClient.prototype.getImmediatelyDominated = function(opts) {
+HeapAnalysesClient.prototype.getImmediatelyDominated = function (opts) {
   return this._worker.performTask("getImmediatelyDominated", opts);
 };

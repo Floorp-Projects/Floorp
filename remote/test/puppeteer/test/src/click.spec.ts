@@ -22,7 +22,7 @@ import {
   setupTestBrowserHooks,
   setupTestPageAndContextHooks,
 } from './mocha-utils.js';
-import utils from './utils.js';
+import {attachFrame} from './utils.js';
 
 describe('Page.click', function () {
   setupTestBrowserHooks();
@@ -95,7 +95,7 @@ describe('Page.click', function () {
       () => {}
     );
   });
-  it('should click the button after navigation ', async () => {
+  it('should click the button after navigation', async () => {
     const {page, server} = getTestState();
 
     await page.goto(server.PREFIX + '/input/button.html');
@@ -113,6 +113,18 @@ describe('Page.click', function () {
 
     await page.setJavaScriptEnabled(false);
     await page.goto(server.PREFIX + '/wrappedlink.html');
+    await Promise.all([page.click('a'), page.waitForNavigation()]);
+    expect(page.url()).toBe(server.PREFIX + '/wrappedlink.html#clicked');
+  });
+  it('should scroll and click with disabled javascript', async () => {
+    const {page, server} = getTestState();
+
+    await page.setJavaScriptEnabled(false);
+    await page.goto(server.PREFIX + '/wrappedlink.html');
+    const body = await page.waitForSelector('body');
+    await body!.evaluate(el => {
+      el.style.paddingTop = '3000px';
+    });
     await Promise.all([page.click('a'), page.waitForNavigation()]);
     expect(page.url()).toBe(server.PREFIX + '/wrappedlink.html#clicked');
   });
@@ -143,9 +155,18 @@ describe('Page.click', function () {
     const text =
       "This is the text that we are going to try to select. Let's see how it goes.";
     await page.keyboard.type(text);
-    await page.click('textarea');
-    await page.click('textarea', {clickCount: 2});
-    await page.click('textarea', {clickCount: 3});
+    await page.evaluate(() => {
+      (window as any).clicks = [];
+      window.addEventListener('click', event => {
+        return (window as any).clicks.push(event.detail);
+      });
+    });
+    await page.click('textarea', {count: 3});
+    expect(
+      await page.evaluate(() => {
+        return (window as any).clicks;
+      })
+    ).toMatchObject({0: 1, 1: 2, 2: 3});
     expect(
       await page.evaluate(() => {
         const textarea = document.querySelector('textarea');
@@ -316,7 +337,7 @@ describe('Page.click', function () {
       });
     });
     const button = (await page.$('button'))!;
-    await button!.click({clickCount: 2});
+    await button!.click({count: 2});
     expect(await page.evaluate('double')).toBe(true);
     expect(await page.evaluate('result')).toBe('Clicked');
   });
@@ -405,7 +426,7 @@ describe('Page.click', function () {
 
     await page.goto(server.EMPTY_PAGE);
     await page.setContent('<div style="width:100px;height:100px">spacer</div>');
-    await utils.attachFrame(
+    await attachFrame(
       page,
       'button-test',
       server.PREFIX + '/input/button.html'
@@ -428,7 +449,7 @@ describe('Page.click', function () {
     await page.setContent(
       '<div style="width:100px;height:2000px">spacer</div>'
     );
-    await utils.attachFrame(
+    await attachFrame(
       page,
       'button-test',
       server.CROSS_PROCESS_PREFIX + '/input/button.html'
@@ -454,7 +475,7 @@ describe('Page.click', function () {
       })
     ).toBe(5);
     await page.setContent('<div style="width:100px;height:100px">spacer</div>');
-    await utils.attachFrame(
+    await attachFrame(
       page,
       'button-test',
       server.PREFIX + '/input/button.html'

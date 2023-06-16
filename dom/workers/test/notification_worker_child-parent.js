@@ -8,16 +8,16 @@ function is(a, b, message) {
 
 if (self.Notification) {
   var child = new Worker("notification_worker_child-child.js");
-  child.onerror = function(e) {
+  child.onerror = function (e) {
     ok(false, "Error loading child worker " + e);
     postMessage({ type: "finish" });
   };
 
-  child.onmessage = function(e) {
+  child.onmessage = function (e) {
     postMessage(e.data);
   };
 
-  onmessage = function(e) {
+  onmessage = function (e) {
     child.postMessage("start");
   };
 } else {

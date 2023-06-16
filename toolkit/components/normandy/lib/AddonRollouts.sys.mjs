@@ -205,7 +205,7 @@ export const AddonRollouts = {
    * data for testing.
    */
   withTestMock() {
-    return function(testFunction) {
+    return function (testFunction) {
       return async function inner(...args) {
         let db = await getDatabase();
         const oldData = await getStore(db, "readonly").getAll();

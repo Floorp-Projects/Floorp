@@ -14,18 +14,18 @@ let principal = Services.scriptSecurityManager.createContentPrincipal(
   TEST_URI,
   {}
 );
-let principalPrivateBrowsing = Services.scriptSecurityManager.createContentPrincipal(
-  TEST_URI,
-  { privateBrowsingId: 1 }
-);
-let principalUserContext1 = Services.scriptSecurityManager.createContentPrincipal(
-  TEST_URI,
-  { userContextId: 1 }
-);
-let principalUserContext2 = Services.scriptSecurityManager.createContentPrincipal(
-  TEST_URI,
-  { userContextId: 2 }
-);
+let principalPrivateBrowsing =
+  Services.scriptSecurityManager.createContentPrincipal(TEST_URI, {
+    privateBrowsingId: 1,
+  });
+let principalUserContext1 =
+  Services.scriptSecurityManager.createContentPrincipal(TEST_URI, {
+    userContextId: 1,
+  });
+let principalUserContext2 =
+  Services.scriptSecurityManager.createContentPrincipal(TEST_URI, {
+    userContextId: 2,
+  });
 
 function testOAIsolation(permIsolateUserContext, permIsolatePrivateBrowsing) {
   info(

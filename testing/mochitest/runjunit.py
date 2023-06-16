@@ -520,8 +520,8 @@ class JunitArgumentParser(argparse.ArgumentParser):
             action="store",
             type=int,
             dest="max_time",
-            default="2400",
-            help="Max time in seconds to wait for tests (default 2400s).",
+            default="3000",
+            help="Max time in seconds to wait for tests (default 3000s).",
         )
         self.add_argument(
             "--runner",

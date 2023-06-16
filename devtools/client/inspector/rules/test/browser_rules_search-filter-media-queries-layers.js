@@ -40,7 +40,7 @@ const TEST_URI = `
     </style>
     <h1>Hello Mochi</h1>`;
 
-add_task(async function() {
+add_task(async function () {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, view } = await openRuleView();
   await selectNode("h1", inspector);
@@ -167,8 +167,9 @@ async function checkRuleView(view, { rules }) {
 
   for (let i = 0; i < rulesInView.length; i++) {
     const rule = rulesInView[i];
-    const selector = rule.querySelector(".ruleview-selectorcontainer")
-      .innerText;
+    const selector = rule.querySelector(
+      ".ruleview-selectorcontainer"
+    ).innerText;
     is(selector, rules[i]?.selector, `Expected selector at index ${i}`);
 
     const highlightedElements = Array.from(

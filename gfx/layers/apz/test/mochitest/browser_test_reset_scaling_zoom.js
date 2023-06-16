@@ -16,14 +16,14 @@ add_task(async function test_main() {
 
   const pageUrl = httpURL("helper_test_reset_scaling_zoom.html");
 
-  await BrowserTestUtils.withNewTab(pageUrl, async function(browser) {
-    let getResolution = function() {
+  await BrowserTestUtils.withNewTab(pageUrl, async function (browser) {
+    let getResolution = function () {
       return content.window.SpecialPowers.getDOMWindowUtils(
         content.window
       ).getResolution();
     };
 
-    let doZoomIn = async function() {
+    let doZoomIn = async function () {
       await content.window.wrappedJSObject.doZoomIn();
     };
 

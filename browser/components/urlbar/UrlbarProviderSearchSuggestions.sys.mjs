@@ -265,7 +265,7 @@ class ProviderSearchSuggestions extends UrlbarProvider {
     if (aliasEngine) {
       engine = aliasEngine.engine;
     } else if (queryContext.searchMode?.engineName) {
-      engine = Services.search.getEngineByName(
+      engine = lazy.UrlbarSearchUtils.getEngineByName(
         queryContext.searchMode.engineName
       );
     } else {
@@ -436,13 +436,6 @@ class ProviderSearchSuggestions extends UrlbarProvider {
         continue;
       }
 
-      if (entry.tail && entry.tailOffsetIndex < 0) {
-        this.logger.error(
-          `Error in tail suggestion parsing. Value: ${entry.value}, tail: ${entry.tail}.`
-        );
-        continue;
-      }
-
       let tail = entry.tail;
       let tailPrefix = entry.matchPrefix;
 
@@ -474,8 +467,10 @@ class ProviderSearchSuggestions extends UrlbarProvider {
                   UrlbarUtils.HIGHLIGHT.TYPED,
                 ],
                 trending: entry.trending,
+                isRichSuggestion: !!entry.icon,
+                description: entry.description || undefined,
                 query: [searchString.trim(), UrlbarUtils.HIGHLIGHT.NONE],
-                icon: !entry.value ? engine.iconURI?.spec : undefined,
+                icon: !entry.value ? engine.iconURI?.spec : entry.icon,
               }
             )
           )

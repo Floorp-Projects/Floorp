@@ -46,7 +46,7 @@ const TESTDATA = {
   ],
 };
 
-add_task(async function() {
+add_task(async function () {
   const { commands } = await openTabAndSetupStorage(
     MAIN_DOMAIN + "storage-cookies-same-name.html"
   );
@@ -71,9 +71,8 @@ add_task(async function() {
             // For indexed DB, we have some values, the database names. Other are empty arrays.
             const hostValues = resource.hosts[host];
             data[resourceType].hosts[host].push(...hostValues);
-            data[resourceType].dataByHost[
-              host
-            ] = await resource.getStoreObjects(host, null, { sessionString });
+            data[resourceType].dataByHost[host] =
+              await resource.getStoreObjects(host, null, { sessionString });
           }
         }
       },
@@ -97,7 +96,7 @@ function testCookies({ hosts, dataByHost }) {
   return testCookiesObjects(0, hosts, dataByHost);
 }
 
-var testCookiesObjects = async function(index, hosts, dataByHost) {
+var testCookiesObjects = async function (index, hosts, dataByHost) {
   const host = Object.keys(hosts)[index];
   const data = dataByHost[host];
   is(

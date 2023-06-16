@@ -24,7 +24,7 @@ let VULNERABLE_TEST_LOGIN2 = new nsLoginInfo(
   "password"
 );
 
-add_setup(async function() {
+add_setup(async function () {
   TEST_LOGIN1 = await addLogin(TEST_LOGIN1);
   VULNERABLE_TEST_LOGIN2 = await addLogin(VULNERABLE_TEST_LOGIN2);
   TEST_LOGIN3 = await addLogin(TEST_LOGIN3);
@@ -52,9 +52,8 @@ add_task(async function test_added_login_shows_breach_warning() {
         "Waiting for login-list to get populated"
       );
       let { listItem: regularListItem } = loginList._logins[regularLoginGuid];
-      let { listItem: vulnerableListItem } = loginList._logins[
-        vulnerableLoginGuid
-      ];
+      let { listItem: vulnerableListItem } =
+        loginList._logins[vulnerableLoginGuid];
       let { listItem: breachedListItem } = loginList._logins[breachedLoginGuid];
       await ContentTaskUtils.waitForCondition(() => {
         return (
@@ -163,9 +162,8 @@ add_task(async function test_added_login_shows_breach_warning() {
       );
 
       let { listItem: breachedListItem } = loginList._logins[breachedLoginGuid];
-      let { listItem: vulnerableListItem } = loginList._logins[
-        vulnerableLoginGuid
-      ];
+      let { listItem: vulnerableListItem } =
+        loginList._logins[vulnerableLoginGuid];
       Assert.ok(
         !breachedListItem.classList.contains("breached") &&
           !breachedListItem.classList.contains("vulnerable"),

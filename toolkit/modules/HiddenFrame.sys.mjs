@@ -12,7 +12,7 @@ let cleanupRegistered = false;
 function ensureCleanupRegistered() {
   if (!cleanupRegistered) {
     cleanupRegistered = true;
-    Services.obs.addObserver(function() {
+    Services.obs.addObserver(function () {
       for (let hiddenFrame of gAllHiddenFrames) {
         hiddenFrame.destroy();
       }

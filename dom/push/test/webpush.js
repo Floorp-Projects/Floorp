@@ -12,7 +12,7 @@
  * use PushCrypto directly is easier said than done.)
  */
 
-(function(g) {
+(function (g) {
   "use strict";
 
   var P256DH = {
@@ -114,7 +114,7 @@
       ["sign"]
     );
   }
-  hmac.prototype.hash = function(input) {
+  hmac.prototype.hash = function (input) {
     return this.keyPromise.then(k => webCrypto.sign("HMAC", k, input));
   };
 
@@ -122,7 +122,7 @@
     this.prkhPromise = new hmac(salt).hash(ikm).then(prk => new hmac(prk));
   }
 
-  hkdf.prototype.generate = function(info, len) {
+  hkdf.prototype.generate = function (info, len) {
     var input = bsConcat([info, new Uint8Array([1])]);
     return this.prkhPromise
       .then(prkh => prkh.hash(input))

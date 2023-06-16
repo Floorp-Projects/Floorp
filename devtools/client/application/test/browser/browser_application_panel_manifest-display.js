@@ -7,7 +7,7 @@
  * Check that the manifest is being properly shown
  */
 
-add_task(async function() {
+add_task(async function () {
   info("Test that we are displaying correctly a valid manifest");
   const url = URL_ROOT + "resources/manifest/load-ok.html";
 
@@ -35,7 +35,7 @@ add_task(async function() {
   await BrowserTestUtils.removeTab(tab);
 });
 
-add_task(async function() {
+add_task(async function () {
   info(
     "Test that we are displaying correctly a manifest with validation warnings"
   );
@@ -58,9 +58,9 @@ add_task(async function() {
   const issuesEl = doc.querySelector(".js-manifest-issues");
   ok(issuesEl !== null, "Validation issues are displayed");
 
-  const warningEl = [
-    ...issuesEl.querySelectorAll(".js-manifest-issue"),
-  ].find(x => x.textContent.includes("background_color"));
+  const warningEl = [...issuesEl.querySelectorAll(".js-manifest-issue")].find(
+    x => x.textContent.includes("background_color")
+  );
   ok(warningEl !== null, "A warning about background_color is displayed");
 
   // close the tab
@@ -68,7 +68,7 @@ add_task(async function() {
   await BrowserTestUtils.removeTab(tab);
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test that we are displaying correctly a manifest with JSON errors");
   const url = URL_ROOT + "resources/manifest/load-ok-json-error.html";
 
@@ -95,7 +95,7 @@ add_task(async function() {
   await BrowserTestUtils.removeTab(tab);
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test that we are displaying correctly a manifest with icons");
   const url = URL_ROOT + "resources/manifest/load-ok-icons.html";
 
@@ -119,8 +119,9 @@ add_task(async function() {
     URL_ROOT + "resources/manifest/icon.svg",
     "The icon image has the the icon url as source"
   );
-  const iconTextContent = iconEl.querySelector(".js-manifest-item-content")
-    .textContent;
+  const iconTextContent = iconEl.querySelector(
+    ".js-manifest-item-content"
+  ).textContent;
   ok(iconTextContent.includes("any"), "Purpose is being displayed");
 
   // close the tab

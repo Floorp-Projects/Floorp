@@ -14,7 +14,7 @@ const EXAMPLE_COM_URI =
 const EXAMPLE_ORG_URI =
   "https://example.org/document-builder.sjs?headers=Cross-Origin-Opener-Policy:same-origin&html=<div id=org>org</div>";
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.browsertoolbox.scope", "everything");
 
   const topWindow = Services.wm.getMostRecentWindow("navigator:browser");

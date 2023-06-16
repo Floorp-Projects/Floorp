@@ -37,7 +37,7 @@ function initTab() {
 
     if (id) {
       let button = contentDocument.createElement("button");
-      button.addEventListener("click", function() {
+      button.addEventListener("click", function () {
         canvas.toDataURL();
       });
       button.setAttribute("id", "clickme");
@@ -336,8 +336,8 @@ async function withNewTabInput(
   await SpecialPowers.spawn(browser, [], initTab);
   await enableResistFingerprinting(randomDataOnCanvasExtract, true);
   let popupShown = promisePopupShown();
-  await SpecialPowers.spawn(browser, [], function(host) {
-    E10SUtils.wrapHandlingUserInput(content, true, function() {
+  await SpecialPowers.spawn(browser, [], function (host) {
+    E10SUtils.wrapHandlingUserInput(content, true, function () {
       var button = content.document.getElementById("clickme");
       button.click();
     });

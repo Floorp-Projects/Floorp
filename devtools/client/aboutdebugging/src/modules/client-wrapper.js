@@ -160,11 +160,8 @@ class ClientWrapper {
   }
 
   async listWorkers() {
-    const {
-      other,
-      service,
-      shared,
-    } = await this.client.mainRoot.listAllWorkers();
+    const { other, service, shared } =
+      await this.client.mainRoot.listAllWorkers();
 
     return {
       otherWorkers: other,

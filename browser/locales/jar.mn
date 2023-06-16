@@ -13,12 +13,11 @@
   preview/interventions.ftl                        (../components/urlbar/content/interventions.ftl)
   preview/firefoxSuggest.ftl                       (../components/urlbar/content/firefoxSuggest.ftl)
   preview/identityCredentialNotification.ftl       (../components/credentialmanager/identityCredentialNotification.ftl)
-  locales-preview/translations.ftl                  (../locales-preview/translations.ftl)
+  preview/stripOnShare.ftl                         (../components/urlbar/content/stripOnShare.ftl)
   browser                                          (%browser/**/*.ftl)
 
 @AB_CD@.jar:
 % locale browser @AB_CD@ %locale/browser/
-    locale/browser/accounts.properties             (%chrome/browser/accounts.properties)
     locale/browser/browser.properties              (%chrome/browser/browser.properties)
     locale/browser/customizableui/customizableWidgets.properties (%chrome/browser/customizableui/customizableWidgets.properties)
     locale/browser/uiDensity.properties            (%chrome/browser/uiDensity.properties)

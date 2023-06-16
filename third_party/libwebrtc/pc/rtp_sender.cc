@@ -383,6 +383,14 @@ void RtpSenderBase::SetParametersAsync(const RtpParameters& parameters,
       false);
 }
 
+void RtpSenderBase::set_stream_ids(const std::vector<std::string>& stream_ids) {
+  stream_ids_.clear();
+  absl::c_copy_if(stream_ids, std::back_inserter(stream_ids_),
+                  [this](const std::string& stream_id) {
+                    return !absl::c_linear_search(stream_ids_, stream_id);
+                  });
+}
+
 void RtpSenderBase::SetStreams(const std::vector<std::string>& stream_ids) {
   set_stream_ids(stream_ids);
   if (set_streams_observer_)
@@ -795,7 +803,7 @@ RTCError VideoRtpSender::GenerateKeyFrame(
     const std::vector<std::string>& rids) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   if (video_media_channel() && ssrc_ && !stopped_) {
-    auto parameters = GetParameters();
+    const auto parameters = GetParametersInternal();
     for (const auto& rid : rids) {
       if (rid.empty()) {
         LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,

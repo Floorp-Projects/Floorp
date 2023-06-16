@@ -56,6 +56,17 @@ using namespace mozilla::gl;
 using namespace mozilla::layers;
 using namespace mozilla::gfx;
 
+#ifdef MOZ_LOGGING
+#  include "mozilla/Logging.h"
+#  include "nsTArray.h"
+#  include "Units.h"
+static LazyLogModule gDmabufRefLog("DmabufRef");
+#  define LOGDMABUFREF(args) \
+    MOZ_LOG(gDmabufRefLog, mozilla::LogLevel::Debug, args)
+#else
+#  define LOGDMABUFREF(args)
+#endif /* MOZ_LOGGING */
+
 #define BUFFER_FLAGS 0
 
 static RefPtr<GLContext> sSnapshotContext;
@@ -104,12 +115,14 @@ bool DMABufSurface::IsGlobalRefSet() const {
 }
 
 void DMABufSurface::GlobalRefRelease() {
-  LOGDMABUF(("DMABufSurface::GlobalRefRelease UID %d", mUID));
+  if (!mGlobalRefCountFd) {
+    return;
+  }
+  LOGDMABUFREF(("DMABufSurface::GlobalRefRelease UID %d", mUID));
   uint64_t counter;
-  MOZ_ASSERT(mGlobalRefCountFd);
   if (read(mGlobalRefCountFd, &counter, sizeof(counter)) != sizeof(counter)) {
     if (errno == EAGAIN) {
-      LOGDMABUF(
+      LOGDMABUFREF(
           ("  GlobalRefRelease failed: already zero reference! UID %d", mUID));
     }
     // EAGAIN means the refcount is already zero. It happens when we release
@@ -123,8 +136,8 @@ void DMABufSurface::GlobalRefRelease() {
 }
 
 void DMABufSurface::GlobalRefAdd() {
-  LOGDMABUF(("DMABufSurface::GlobalRefAdd UID %d", mUID));
-  MOZ_ASSERT(mGlobalRefCountFd);
+  LOGDMABUFREF(("DMABufSurface::GlobalRefAdd UID %d", mUID));
+  MOZ_DIAGNOSTIC_ASSERT(mGlobalRefCountFd);
   uint64_t counter = 1;
   if (write(mGlobalRefCountFd, &counter, sizeof(counter)) != sizeof(counter)) {
     NS_WARNING(nsPrintfCString("Failed to ref dmabuf global ref count: %s",
@@ -134,7 +147,8 @@ void DMABufSurface::GlobalRefAdd() {
 }
 
 void DMABufSurface::GlobalRefCountCreate() {
-  MOZ_ASSERT(!mGlobalRefCountFd);
+  LOGDMABUFREF(("DMABufSurface::GlobalRefCountCreate UID %d", mUID));
+  MOZ_DIAGNOSTIC_ASSERT(!mGlobalRefCountFd);
   // Create global ref count initialized to 0,
   // i.e. is not referenced after create.
   mGlobalRefCountFd = eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK | EFD_SEMAPHORE);
@@ -148,18 +162,25 @@ void DMABufSurface::GlobalRefCountCreate() {
 }
 
 void DMABufSurface::GlobalRefCountImport(int aFd) {
-  MOZ_ASSERT(!mGlobalRefCountFd);
   mGlobalRefCountFd = aFd;
   if (mGlobalRefCountFd) {
+    LOGDMABUFREF(("DMABufSurface::GlobalRefCountImport UID %d", mUID));
     GlobalRefAdd();
   }
 }
 
-int DMABufSurface::GlobalRefCountExport() { return mGlobalRefCountFd; }
+int DMABufSurface::GlobalRefCountExport() {
+#ifdef MOZ_LOGGING
+  if (mGlobalRefCountFd) {
+    LOGDMABUFREF(("DMABufSurface::GlobalRefCountExport UID %d", mUID));
+  }
+#endif
+  return mGlobalRefCountFd;
+}
 
 void DMABufSurface::GlobalRefCountDelete() {
   if (mGlobalRefCountFd) {
-    GlobalRefRelease();
+    LOGDMABUFREF(("DMABufSurface::GlobalRefCountDelete UID %d", mUID));
     close(mGlobalRefCountFd);
     mGlobalRefCountFd = 0;
   }
@@ -193,7 +214,7 @@ DMABufSurface::DMABufSurface(SurfaceType aSurfaceType)
       mMappedRegion(),
       mMappedRegionStride(),
       mSyncFd(-1),
-      mSync(0),
+      mSync(nullptr),
       mGlobalRefCountFd(0),
       mUID(gNewSurfaceUID++),
       mSurfaceLock("DMABufSurface") {
@@ -207,6 +228,7 @@ DMABufSurface::DMABufSurface(SurfaceType aSurfaceType)
 
 DMABufSurface::~DMABufSurface() {
   FenceDelete();
+  GlobalRefRelease();
   GlobalRefCountDelete();
 }
 
@@ -402,12 +424,12 @@ bool DMABufSurfaceRGBA::Create(int aWidth, int aHeight,
   mDrmFormats[0] = mGmbFormat->mFormat;
 
   bool useModifiers = (aDMABufSurfaceFlags & DMABUF_USE_MODIFIERS) &&
-                      mGmbFormat->mModifiersCount > 0;
+                      !mGmbFormat->mModifiers.IsEmpty();
   if (useModifiers) {
     LOGDMABUF(("    Creating with modifiers\n"));
     mGbmBufferObject[0] = GbmLib::CreateWithModifiers(
         GetDMABufDevice()->GetGbmDevice(), mWidth, mHeight, mDrmFormats[0],
-        mGmbFormat->mModifiers, mGmbFormat->mModifiersCount);
+        mGmbFormat->mModifiers.Elements(), mGmbFormat->mModifiers.Length());
     if (mGbmBufferObject[0]) {
       mBufferModifiers[0] = GbmLib::GetModifier(mGbmBufferObject[0]);
     }
@@ -1030,15 +1052,18 @@ bool DMABufSurfaceYUV::ImportPRIMESurfaceDescriptor(
   mBufferPlaneCount = aDesc.num_layers;
 
   for (unsigned int i = 0; i < aDesc.num_layers; i++) {
+    // All supported formats have 4:2:0 chroma sub-sampling.
+    unsigned int subsample = i == 0 ? 0 : 1;
+
     unsigned int object = aDesc.layers[i].object_index[0];
     mBufferModifiers[i] = aDesc.objects[object].drm_format_modifier;
     mDrmFormats[i] = aDesc.layers[i].drm_format;
     mOffsets[i] = aDesc.layers[i].offset[0];
     mStrides[i] = aDesc.layers[i].pitch[0];
-    mWidthAligned[i] = aDesc.width >> i;
-    mHeightAligned[i] = aDesc.height >> i;
-    mWidth[i] = aWidth >> i;
-    mHeight[i] = aHeight >> i;
+    mWidthAligned[i] = aDesc.width >> subsample;
+    mHeightAligned[i] = aDesc.height >> subsample;
+    mWidth[i] = aWidth >> subsample;
+    mHeight[i] = aHeight >> subsample;
     LOGDMABUF(("    plane %d size %d x %d format %x", i, mWidth[i], mHeight[i],
                mDrmFormats[i]));
   }
@@ -1605,3 +1630,25 @@ DMABufSurfaceYUV::GetAsSourceSurface() {
 
   return source.forget();
 }
+
+#if 0
+void DMABufSurfaceYUV::ClearPlane(int aPlane) {
+  if (!MapInternal(0, 0, mWidth[aPlane], mHeight[aPlane], nullptr,
+                   GBM_BO_TRANSFER_WRITE, aPlane)) {
+    return;
+  }
+  if ((int)mMappedRegionStride[aPlane] < mWidth[aPlane]) {
+    return;
+  }
+  memset((char*)mMappedRegion[aPlane], 0,
+         mMappedRegionStride[aPlane] * mHeight[aPlane]);
+  Unmap(aPlane);
+}
+
+#  include "gfxUtils.h"
+
+void DMABufSurfaceYUV::DumpToFile(const char* aFile) {
+  RefPtr<gfx::DataSourceSurface> surf = GetAsSourceSurface();
+  gfxUtils::WriteAsPNG(surf, aFile);
+}
+#endif

@@ -1,4 +1,4 @@
-addEventListener("install", function(evt) {
+addEventListener("install", function (evt) {
   evt.waitUntil(self.skipWaiting());
 });
 
@@ -24,9 +24,8 @@ self.addEventListener("fetch", event => {
         // This works even if there wasn't a body explicitly associated with the
         // request.  We just get a zero-length string in that case.
         const requestBodyContents = await event.request.text();
-        const blobContents = extractBlobFromMultipartFormData(
-          requestBodyContents
-        );
+        const blobContents =
+          extractBlobFromMultipartFormData(requestBodyContents);
 
         return new Response(
           `<!DOCTYPE HTML><head><meta charset="utf-8"/></head><body>

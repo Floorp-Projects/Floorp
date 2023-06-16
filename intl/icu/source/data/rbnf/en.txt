@@ -181,7 +181,7 @@ en{
             "1000000000: <%spellout-numbering< billion>%%th>;",
             "1000000000000: <%spellout-numbering< trillion>%%th>;",
             "1000000000000000: <%spellout-numbering< quadrillion>%%th>;",
-            "1000000000000000000: =#,##0=.;",
+            "1000000000000000000: =#,##0=$(ordinal,one{st}two{nd}few{rd}other{th})$;",
             "%%and-o:",
             "0: th;",
             "1: ' and =%spellout-ordinal-verbose=;",
@@ -204,7 +204,7 @@ en{
             "1000000000: <%spellout-numbering-verbose< billion>%%commas-o>;",
             "1000000000000: <%spellout-numbering-verbose< trillion>%%commas-o>;",
             "1000000000000000: <%spellout-numbering-verbose< quadrillion>%%commas-o>;",
-            "1000000000000000000: =#,##0=.;",
+            "1000000000000000000: =#,##0=$(ordinal,one{st}two{nd}few{rd}other{th})$;",
         }
     }
 }

@@ -11,7 +11,7 @@ Services.scriptloader.loadSubScript(
 
 // Test that internal DBs are hidden in the regular toolbox,but visible in the
 // Browser Toolbox
-add_task(async function() {
+add_task(async function () {
   await openTabAndSetupStorage(
     MAIN_DOMAIN_SECURED + "storage-empty-objectstores.html"
   );

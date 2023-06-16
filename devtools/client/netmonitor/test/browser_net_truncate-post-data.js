@@ -7,7 +7,7 @@
  * Bug 1542172 -
  * Verifies that requests with large post data are truncated and error is displayed.
  */
-add_task(async function() {
+add_task(async function () {
   const { monitor, tab } = await initNetMonitor(POST_JSON_URL, {
     requestCount: 1,
   });
@@ -71,7 +71,7 @@ add_task(async function() {
 
 async function performRequestsAndWait(monitor, tab) {
   const wait = waitForNetworkEvents(monitor, 1);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     content.wrappedJSObject.performLargePostDataRequest();
   });
   await wait;

@@ -14,13 +14,13 @@ EXTRA_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES += [
-    "ExtensionBrowsingData.jsm",
-    "ExtensionControlledPopup.jsm",
-    "ExtensionPopups.jsm",
+    "ExtensionBrowsingData.sys.mjs",
+    "ExtensionControlledPopup.sys.mjs",
+    "ExtensionPopups.sys.mjs",
 ]
 
 TESTING_JS_MODULES += [
-    "test/AppUiTestDelegate.jsm",
+    "test/AppUiTestDelegate.sys.mjs",
 ]
 
 DIRS += ["schemas"]

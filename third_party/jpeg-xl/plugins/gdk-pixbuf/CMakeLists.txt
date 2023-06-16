@@ -6,6 +6,8 @@
 find_package(PkgConfig)
 pkg_check_modules(Gdk-Pixbuf IMPORTED_TARGET gdk-pixbuf-2.0>=2.36)
 
+include(GNUInstallDirs)
+
 if (NOT Gdk-Pixbuf_FOUND)
   message(WARNING "GDK Pixbuf development libraries not found, \
                    the Gdk-Pixbuf plugin will not be built")
@@ -23,7 +25,7 @@ set_target_properties(pixbufloader-jxl PROPERTIES
 
 # Note: This only needs the decoder library, but we don't install the decoder
 # shared library.
-target_link_libraries(pixbufloader-jxl jxl jxl_threads skcms-interface PkgConfig::Gdk-Pixbuf)
+target_link_libraries(pixbufloader-jxl jxl jxl_threads lcms2 PkgConfig::Gdk-Pixbuf)
 
 execute_process(COMMAND ${PKG_CONFIG_EXECUTABLE} gdk-pixbuf-2.0 --variable gdk_pixbuf_moduledir --define-variable=prefix=${CMAKE_INSTALL_PREFIX} OUTPUT_VARIABLE GDK_PIXBUF_MODULEDIR OUTPUT_STRIP_TRAILING_WHITESPACE)
 install(TARGETS pixbufloader-jxl DESTINATION "${GDK_PIXBUF_MODULEDIR}")
@@ -31,7 +33,7 @@ install(TARGETS pixbufloader-jxl DESTINATION "${GDK_PIXBUF_MODULEDIR}")
 # Instead of the following, we might instead add the
 # mime type image/jxl to
 # /usr/share/thumbnailers/gdk-pixbuf-thumbnailer.thumbnailer
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/jxl.thumbnailer DESTINATION share/thumbnailers/)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/jxl.thumbnailer DESTINATION "${CMAKE_INSTALL_DATADIR}/thumbnailers/")
 
 if(BUILD_TESTING AND NOT CMAKE_CROSSCOMPILING)
   pkg_check_modules(Gdk IMPORTED_TARGET gdk-2.0)

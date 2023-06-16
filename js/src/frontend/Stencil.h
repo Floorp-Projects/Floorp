@@ -109,18 +109,76 @@ using ParserPositionalFormalParameterIter =
 //   * StencilModuleMetadata
 //
 //
-// CompilationStencil
-// ------------------
+// CompilationStencil / ExtensibleCompilationStencil
+// -------------------------------------------------
 // Parsing a single JavaScript file may generate a tree of `ScriptStencil` that
-// we then package up into the `CompilationStencil` type. This contains a series
-// of vectors segregated by stencil type for fast processing. Delazifying a
-// function will generate its bytecode but some fields remain unchanged from the
-// initial lazy parse.
+// we then package up into the `ExtensibleCompilationStencil` type or
+// `CompilationStencil`. They contain a series of vectors/spans segregated by
+// data type for fast processing (a.k.a Data Oriented Design).
 //
-// When we delazify a function that was lazily parsed, we generate a new Stencil
-// at the point too. These delazifications can be merged into the Stencil of
-// the initial parse.
+// `ExtensibleCompilationStencil` is mutable type used during parsing, and
+// can be allocated either on stack or heap.
+// `ExtensibleCompilationStencil` holds vectors of stencils.
 //
+// `CompilationStencil` is immutable type used for caching the compilation
+// result, and is allocated on heap with refcount.
+// `CompilationStencil` holds spans of stencils, and it can point either
+// owned data or borrowed data.
+// The borrowed data can be from other `ExtensibleCompilationStencil` or
+// from serialized stencil (XDR) on memory or mmap.
+//
+// Delazifying a function will generate its bytecode but some fields remain
+// unchanged from the initial lazy parse.
+// When we delazify a function that was lazily parsed, we generate a new
+// Stencil at the point too. These delazifications can be merged into the
+// Stencil of the initial parse by using `CompilationStencilMerger`.
+//
+// Conversion from ExtensibleCompilationStencil to CompilationStencil
+// ------------------------------------------------------------------
+// There are multiple ways to convert from `ExtensibleCompilationStencil` to
+// `CompilationStencil`:
+//
+// 1. Temporarily borrow `ExtensibleCompilationStencil` content and call
+// function that takes `CompilationStencil` reference, and keep using the
+// `ExtensibleCompilationStencil` after that:
+//
+//   ExtensibleCompilationStencil extensible = ...;
+//   {
+//     BorrowingCompilationStencil stencil(extensible);
+//     // Use `stencil reference.
+//   }
+//
+// 2. Take the ownership of an on-heap ExtensibleCompilationStencil. This makes
+// the `CompilationStencil` self-contained and it's useful for caching:
+//
+//   UniquePtr<ExtensibleCompilationStencil> extensible = ...;
+//   CompilationStencil stencil(std::move(extensible));
+//
+// Conversion from CompilationStencil to ExtensibleCompilationStencil
+// ------------------------------------------------------------------
+// In the same way, there are multiple ways to convert from
+// `CompilationStencil` to `ExtensibleCompilationStencil`:
+//
+// 1. Take the ownership of `CompilationStencil`'s underlying data, Only when
+// stencil owns the data and the refcount is 1:
+//
+//   RefPtr<CompilationStencil> stencil = ...;
+//   ExtensibleCompilationStencil extensible(...);
+//   // NOTE: This is equivalent to cloneFrom below if `stencil` has refcount
+//   //       more than 2, or it doesn't own the data.
+//   extensible.steal(fc, std::move(stencil));
+//
+// 2. Clone the underlying data. This is slow but safe operation:
+//
+//   CompilationStencil stencil = ...;
+//   ExtensibleCompilationStencil extensible(...);
+//   extensible.cloneFrom(fc, stencil);
+//
+// 3. Take the ownership back from the `CompilationStencil` which is created by
+// taking the ownership of an on-heap `ExtensibleCompilationStencil`:
+//
+//   CompilationStencil stencil = ...;
+//   ExtensibleCompilationStencil* extensible = stencil.takeOwnedBorrow();
 //
 // CompilationGCOutput
 // -------------------

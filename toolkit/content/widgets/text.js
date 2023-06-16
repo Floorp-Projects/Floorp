@@ -312,9 +312,8 @@
       var uri = null;
       try {
         const nsISSM = Ci.nsIScriptSecurityManager;
-        const secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(
-          nsISSM
-        );
+        const secMan =
+          Cc["@mozilla.org/scriptsecuritymanager;1"].getService(nsISSM);
 
         uri = Services.io.newURI(href);
 

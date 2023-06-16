@@ -85,9 +85,8 @@ async function runPromptCombinations(window, testFunc) {
 class PromptTestUtil {
   constructor(window) {
     this.window = window;
-    this.browsingContext = SpecialPowers.wrap(
-      window
-    ).windowGlobalChild.browsingContext;
+    this.browsingContext =
+      SpecialPowers.wrap(window).windowGlobalChild.browsingContext;
     this.promptService = SpecialPowers.Services.prompt;
     this.nsPrompt = Cc["@mozilla.org/prompter;1"]
       .getService(Ci.nsIPromptFactory)
@@ -165,7 +164,7 @@ function onloadPromiseFor(id) {
   return new Promise(resolve => {
     iframe.addEventListener(
       "load",
-      function(e) {
+      function (e) {
         resolve(true);
       },
       { once: true }
@@ -398,11 +397,13 @@ function PrompterProxy(chromeScript) {
               outParams = [];
               break;
             }
-            case "promptPassword": {
+            case "promptPassword":
+            case "asyncPromptPassword": {
               outParams = [/* pwd */ 4];
               break;
             }
-            case "promptUsernameAndPassword": {
+            case "promptUsernameAndPassword":
+            case "asyncPromptUsernameAndPassword": {
               outParams = [/* user */ 4, /* pwd */ 5];
               break;
             }

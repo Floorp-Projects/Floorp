@@ -5,7 +5,7 @@
 // Test that depending where the user last clicked in the inspector, the right search
 // field is focused when ctrl+F is pressed.
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(
     "data:text/html;charset=utf-8,Search!"
   );

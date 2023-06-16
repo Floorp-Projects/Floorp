@@ -338,7 +338,7 @@ async function test_contextmenu(selector, menuItems, options = {}) {
     await SpecialPowers.spawn(
       gBrowser.selectedBrowser,
       [[lastElementSelector, selector]],
-      async function([contentLastElementSelector, contentSelector]) {
+      async function ([contentLastElementSelector, contentSelector]) {
         if (contentLastElementSelector) {
           let contentLastElement = content.document.querySelector(
             contentLastElementSelector
@@ -363,7 +363,7 @@ async function test_contextmenu(selector, menuItems, options = {}) {
     await SpecialPowers.spawn(
       gBrowser.selectedBrowser,
       [selector],
-      async function(contentSelector) {
+      async function (contentSelector) {
         let { onSpellCheck } = ChromeUtils.importESModule(
           "resource://testing-common/AsyncSpellCheckTestHelper.sys.mjs"
         );

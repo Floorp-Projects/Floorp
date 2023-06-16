@@ -114,16 +114,6 @@ def create_suite(
     if extra_opts:
         opts.extend(extra_opts)
 
-    # The stylo attributes override each other.
-    stylo_opt = None
-    if "STYLO_FORCE_ENABLED" in os.environ and os.environ["STYLO_FORCE_ENABLED"]:
-        stylo_opt = "stylo"
-    if "STYLO_THREADS" in os.environ and os.environ["STYLO_THREADS"] == "1":
-        stylo_opt = "stylo-sequential"
-
-    if stylo_opt:
-        opts.append(stylo_opt)
-
     if "DMD" in os.environ and os.environ["DMD"]:
         opts.append("dmd")
 

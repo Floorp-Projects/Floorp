@@ -10,7 +10,7 @@ function handleRequest(request, response) {
 
   // Get the desired file
   var file;
-  getObjectState("SERVER_ROOT", function(serverRoot) {
+  getObjectState("SERVER_ROOT", function (serverRoot) {
     file = serverRoot.getFile(fileRoot);
   });
 

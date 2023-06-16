@@ -13,7 +13,7 @@ const {
   TreeWidget,
 } = require("resource://devtools/client/shared/widgets/TreeWidget.js");
 
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["security.allow_unsafe_parent_loads", true]],
   });

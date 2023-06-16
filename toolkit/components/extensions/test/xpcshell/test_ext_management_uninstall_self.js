@@ -2,8 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const { AddonManager } = ChromeUtils.import(
-  "resource://gre/modules/AddonManager.jsm"
+const { AddonManager } = ChromeUtils.importESModule(
+  "resource://gre/modules/AddonManager.sys.mjs"
 );
 const { MockRegistrar } = ChromeUtils.importESModule(
   "resource://testing-common/MockRegistrar.sys.mjs"
@@ -38,7 +38,7 @@ const waitForUninstalled = () =>
 let promptService = {
   _response: null,
   QueryInterface: ChromeUtils.generateQI(["nsIPromptService"]),
-  confirmEx: function(...args) {
+  confirmEx: function (...args) {
     this._confirmExArgs = args;
     return this._response;
   },

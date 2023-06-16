@@ -22,7 +22,7 @@ const { gDevTools } = require("devtools/client/framework/devtools");
 
 const TEST_URL = PAGES_BASE_URL + "custom/inspector/index.html";
 
-module.exports = async function() {
+module.exports = async function () {
   const tab = await testSetup(TEST_URL, { disableCache: true });
 
   const domReference = await getContentDOMReference("#initial-node", tab);
@@ -58,7 +58,7 @@ async function getContentDOMReference(selector, tab) {
       resolve(domReference);
     });
 
-    const contentMethod = function(_selector) {
+    const contentMethod = function (_selector) {
       const { ContentDOMReference } = ChromeUtils.importESModule(
         "resource://gre/modules/ContentDOMReference.sys.mjs"
       );

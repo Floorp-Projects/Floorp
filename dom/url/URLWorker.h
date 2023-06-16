@@ -35,8 +35,8 @@ class URLWorker final {
   static void RevokeObjectURL(const GlobalObject& aGlobal,
                               const nsAString& aUrl, ErrorResult& aRv);
 
-  static bool IsValidURL(const GlobalObject& aGlobal, const nsAString& aUrl,
-                         ErrorResult& aRv);
+  static bool IsValidObjectURL(const GlobalObject& aGlobal,
+                               const nsAString& aUrl, ErrorResult& aRv);
 };
 
 }  // namespace dom

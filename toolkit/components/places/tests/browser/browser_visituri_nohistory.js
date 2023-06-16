@@ -20,7 +20,7 @@ function promiseObserve(name) {
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({ set: [["places.history.enabled", false]] });
 
   let visitUriPromise = promiseObserve("uri-visit-saved");

@@ -3,7 +3,7 @@
   "name": "permissions",
   "browser_specific_settings": {
     "gecko": {
-        "id": "permissions@example.com"
+      "id": "permissions@example.com"
     }
   },
   "version": "1.0",

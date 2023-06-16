@@ -9,7 +9,7 @@ const TEST_URI =
 // Test is slow on Linux EC2 instances - Bug 962931
 requestLongerTimeout(4);
 
-add_task(async function() {
+add_task(async function () {
   let toolbox;
   const getFluentString = await getFluentStringHelper([
     "devtools/client/toolbox.ftl",

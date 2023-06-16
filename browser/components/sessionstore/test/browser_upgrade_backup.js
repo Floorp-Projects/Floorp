@@ -36,7 +36,7 @@ async function getUpgradeBackups() {
   return children.filter(path => path.startsWith(Paths.upgradeBackupPrefix));
 }
 
-add_setup(async function() {
+add_setup(async function () {
   // Wait until initialization is complete
   await SessionStore.promiseInitialized;
 });
@@ -140,7 +140,7 @@ add_task(async function test_upgrade_backup_removal() {
 
   // find all backups that were created during the last call to `SessionFile.write("");`
   // ie, filter out all the backups that have already been present before the call
-  newBackups = newBackups.filter(function(backup) {
+  newBackups = newBackups.filter(function (backup) {
     return !backups.includes(backup);
   });
 

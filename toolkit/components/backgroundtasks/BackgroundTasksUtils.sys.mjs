@@ -372,11 +372,8 @@ export var BackgroundTasksUtils = {
       lazy.log.debug(`FxMS invoked ${tag}: ${JSON.stringify(args)}`);
     }
 
-    let {
-      messageHandler,
-      router,
-      createStorage,
-    } = lazy.ASRouterDefaultConfig();
+    let { messageHandler, router, createStorage } =
+      lazy.ASRouterDefaultConfig();
 
     if (!router.initialized) {
       const storage = await createStorage();

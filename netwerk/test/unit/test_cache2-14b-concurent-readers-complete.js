@@ -8,7 +8,7 @@ function run_test() {
     "disk",
     Ci.nsICacheStorage.OPEN_NORMALLY,
     null,
-    new OpenCallback(NEW, "x1m", "x1d", function(entry) {
+    new OpenCallback(NEW, "x1m", "x1d", function (entry) {
       // nothing to do here, we expect concurent callbacks to get
       // all notified, then the test finishes
     })
@@ -27,7 +27,7 @@ function run_test() {
       NORMAL | COMPLETE | NOTIFYBEFOREREAD,
       "x1m",
       "x1d",
-      function(entry, beforeReading) {
+      function (entry, beforeReading) {
         if (beforeReading) {
           ++order;
           Assert.equal(order, 3);
@@ -42,7 +42,7 @@ function run_test() {
     "disk",
     Ci.nsICacheStorage.OPEN_NORMALLY,
     null,
-    new OpenCallback(NORMAL | NOTIFYBEFOREREAD, "x1m", "x1d", function(
+    new OpenCallback(NORMAL | NOTIFYBEFOREREAD, "x1m", "x1d", function (
       entry,
       beforeReading
     ) {
@@ -59,7 +59,7 @@ function run_test() {
     "disk",
     Ci.nsICacheStorage.OPEN_NORMALLY,
     null,
-    new OpenCallback(NORMAL | NOTIFYBEFOREREAD, "x1m", "x1d", function(
+    new OpenCallback(NORMAL | NOTIFYBEFOREREAD, "x1m", "x1d", function (
       entry,
       beforeReading
     ) {

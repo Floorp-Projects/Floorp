@@ -33,8 +33,9 @@
 #include "util/CompleteFile.h"     // js::FileContents, js::ReadCompleteFile
 #include "util/StringBuffer.h"     // js::StringBuffer
 #include "vm/EnvironmentObject.h"  // js::CreateNonSyntacticEnvironmentChain
-#include "vm/Interpreter.h"        // js::Execute
-#include "vm/JSContext.h"          // JSContext
+#include "vm/ErrorReporting.h"  // js::ErrorMetadata, js::ReportCompileErrorLatin1
+#include "vm/Interpreter.h"     // js::Execute
+#include "vm/JSContext.h"       // JSContext
 
 #include "vm/JSContext-inl.h"  // JSContext::check
 
@@ -56,6 +57,28 @@ JS_PUBLIC_API void JS::detail::ReportSourceTooLong(JSContext* cx) {
                             JSMSG_SOURCE_TOO_LONG);
 }
 
+static void ReportSourceTooLongImpl(JS::FrontendContext* fc, ...) {
+  va_list args;
+  va_start(args, fc);
+
+  js::ErrorMetadata metadata;
+  metadata.filename = "<unknown>";
+  metadata.lineNumber = 0;
+  metadata.columnNumber = 0;
+  metadata.lineLength = 0;
+  metadata.tokenOffset = 0;
+  metadata.isMuted = false;
+
+  js::ReportCompileErrorLatin1(fc, std::move(metadata), nullptr,
+                               JSMSG_SOURCE_TOO_LONG, &args);
+
+  va_end(args);
+}
+
+JS_PUBLIC_API void JS::detail::ReportSourceTooLong(JS::FrontendContext* fc) {
+  ReportSourceTooLongImpl(fc);
+}
+
 template <typename Unit>
 static JSScript* CompileSourceBuffer(JSContext* cx,
                                      const ReadOnlyCompileOptions& options,
@@ -70,9 +93,7 @@ static JSScript* CompileSourceBuffer(JSContext* cx,
   JS::Rooted<JSScript*> script(cx);
   {
     AutoReportFrontendContext fc(cx);
-    script = frontend::CompileGlobalScript(cx, &fc,
-                                           cx->stackLimitForCurrentPrincipal(),
-                                           options, srcBuf, scopeKind);
+    script = frontend::CompileGlobalScript(cx, &fc, options, srcBuf, scopeKind);
   }
   return script;
 }
@@ -186,10 +207,10 @@ JS_PUBLIC_API bool JS_Utf8BufferIsCompilableUnit(JSContext* cx,
     return false;
   }
 
-  Parser<FullParseHandler, char16_t> parser(
-      &fc, cx->stackLimitForCurrentPrincipal(), options, chars.get(), length,
-      /* foldConstants = */ true, compilationState,
-      /* syntaxParser = */ nullptr);
+  Parser<FullParseHandler, char16_t> parser(&fc, options, chars.get(), length,
+                                            /* foldConstants = */ true,
+                                            compilationState,
+                                            /* syntaxParser = */ nullptr);
   if (!parser.checkOptions() || !parser.parse()) {
     // We ran into an error. If it was because we ran out of source, we
     // return false so our caller knows to try to collect more buffered
@@ -526,9 +547,8 @@ static bool EvaluateSourceBuffer(JSContext* cx, ScopeKind scopeKind,
   options.setIsRunOnce(true);
 
   AutoReportFrontendContext fc(cx);
-  RootedScript script(cx, frontend::CompileGlobalScript(
-                              cx, &fc, cx->stackLimitForCurrentPrincipal(),
-                              options, srcBuf, scopeKind));
+  RootedScript script(
+      cx, frontend::CompileGlobalScript(cx, &fc, options, srcBuf, scopeKind));
   if (!script) {
     return false;
   }

@@ -72,6 +72,20 @@ de_CH{
                 other{"{0} Kubikfuss"}
             }
             gallon-imperial{
+                case{
+                    accusative{
+                        one{"{0} gal Imp."}
+                        other{"{0} gal Imp."}
+                    }
+                    dative{
+                        one{"{0} gal Imp."}
+                        other{"{0} gal Imp."}
+                    }
+                    genitive{
+                        one{"{0} gal Imp."}
+                        other{"{0} gal Imp."}
+                    }
+                }
                 one{"{0} gal Imp."}
                 other{"{0} gal Imp."}
                 per{"{0}/gal Imp."}
@@ -81,7 +95,8 @@ de_CH{
     unitsNarrow{
         volume{
             jigger{
-                dnam{"Jigger"}
+                one{"Schuss"}
+                other{"{0} Schuss"}
             }
         }
     }

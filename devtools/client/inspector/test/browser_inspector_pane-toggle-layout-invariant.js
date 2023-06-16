@@ -9,13 +9,13 @@
 const TEST_URL = URL_ROOT + "doc_inspector_pane-toggle-layout-invariant.html";
 
 async function getInvariantRect() {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     const invariant = content.document.getElementById("invariant");
     return invariant.getBoundingClientRect();
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   await addTab(TEST_URL);
 
   // Get the initial position of the "invariant" element. We'll later check it

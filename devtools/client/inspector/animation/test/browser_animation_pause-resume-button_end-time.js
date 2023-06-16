@@ -6,7 +6,7 @@
 // Test whether the animation can rewind if the current time is over end time when
 // the resume button clicked.
 
-add_task(async function() {
+add_task(async function () {
   await addTab(URL_ROOT + "doc_simple_animation.html");
   await removeAnimatedElementsExcept([
     ".animated",

@@ -40,7 +40,7 @@ if (!window.FB) {
     return Array.from(v, c => c.toString(16)).join("");
   }
 
-  const sendMessageToAddon = (function() {
+  const sendMessageToAddon = (function () {
     const shimId = "FacebookSDK";
     const pendingMessages = new Map();
     const channel = new MessageChannel();
@@ -63,7 +63,7 @@ if (!window.FB) {
     }
     window.addEventListener("ShimHelperReady", reconnect);
     reconnect();
-    return function(message) {
+    return function (message) {
       const messageId = getGUID();
       return new Promise(resolve => {
         const payload = { message, messageId, shimId };
@@ -245,7 +245,7 @@ if (!window.FB) {
 
   if (needPopup) {
     const oldWindowOpen = window.open;
-    window.open = function(href, name, params) {
+    window.open = function (href, name, params) {
       try {
         const url = new URL(href, window.location.href);
         if (
@@ -369,7 +369,7 @@ if (!window.FB) {
     for (const key in obj) {
       const value = obj[key];
       if (typeof value === "function") {
-        shim[key] = function() {
+        shim[key] = function () {
           if (haveUnshimmed) {
             return window.FB[key].apply(window.FB, arguments);
           }

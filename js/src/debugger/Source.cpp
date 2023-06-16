@@ -301,8 +301,9 @@ class DebuggerSourceGetURLMatcher {
   ReturnType match(Handle<ScriptSourceObject*> sourceObject) {
     ScriptSource* ss = sourceObject->source();
     MOZ_ASSERT(ss);
-    if (ss->filename()) {
-      JSString* str = NewStringCopyZ<CanGC>(cx_, ss->filename());
+    if (const char* filename = ss->filename()) {
+      JS::UTF8Chars utf8chars(filename, strlen(filename));
+      JSString* str = NewStringCopyUTF8N(cx_, utf8chars);
       return Some(str);
     }
     return Nothing();

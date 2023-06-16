@@ -3197,7 +3197,7 @@ nsIFrame* SVGTextFrame::GetFrameForPoint(const gfxPoint& aPoint) {
   nsIFrame* hit = nullptr;
   for (TextRenderedRun run = it.Current(); run.mFrame; run = it.Next()) {
     uint16_t hitTestFlags = SVGUtils::GetGeometryHitTestFlags(run.mFrame);
-    if (!(hitTestFlags & (SVG_HIT_TEST_FILL | SVG_HIT_TEST_STROKE))) {
+    if (!hitTestFlags) {
       continue;
     }
 

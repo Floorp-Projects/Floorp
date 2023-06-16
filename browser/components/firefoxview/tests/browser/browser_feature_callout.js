@@ -13,7 +13,7 @@ const { BuiltInThemes } = ChromeUtils.importESModule(
 const featureTourPref = "browser.firefox-view.feature-tour";
 const defaultPrefValue = getPrefValueByScreen(1);
 
-add_setup(async function() {
+add_setup(async function () {
   requestLongerTimeout(2);
   registerCleanupFunction(() => ASRouter.resetMessageState());
 });
@@ -373,9 +373,8 @@ add_task(
     );
     const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
 
-    const expectedUrl = await fxAccounts.constructor.config.promiseConnectAccountURI(
-      "fx-view"
-    );
+    const expectedUrl =
+      await fxAccounts.constructor.config.promiseConnectAccountURI("fx-view");
     info(`Expected FxA URL: ${expectedUrl}`);
 
     await BrowserTestUtils.withNewTab(

@@ -1,5 +1,3 @@
-# coding=utf8
-
 import os
 import logging
 import argparse
@@ -8,7 +6,6 @@ import importlib
 import sys
 
 import hglib
-import six
 
 from fluent.migrate.context import MigrationContext
 from fluent.migrate.errors import MigrationError
@@ -24,7 +21,7 @@ def dont_write_bytecode():
     sys.dont_write_bytecode = _dont_write_bytecode
 
 
-class Migrator(object):
+class Migrator:
     def __init__(self, locale, reference_dir, localization_dir, dry_run):
         self.locale = locale
         self.reference_dir = reference_dir
@@ -95,9 +92,9 @@ class Migrator(object):
 
     def serialize_changeset(self, snapshot):
         '''Write serialized FTL files to disk.'''
-        for path, content in six.iteritems(snapshot):
+        for path, content in snapshot.items():
             fullpath = os.path.join(self.localization_dir, path)
-            print('  Writing to {}'.format(fullpath))
+            print(f'  Writing to {fullpath}')
             if not self.dry_run:
                 fulldir = os.path.dirname(fullpath)
                 if not os.path.isdir(fulldir):
@@ -114,7 +111,7 @@ class Migrator(object):
             author=author
         )
 
-        print('  Committing changeset: {}'.format(message))
+        print(f'  Committing changeset: {message}')
         if self.dry_run:
             return
         try:
@@ -122,7 +119,7 @@ class Migrator(object):
                 message, user=author.encode('utf-8'), addremove=True
             )
         except hglib.error.CommandError as err:
-            print('    WARNING: hg commit failed ({})'.format(err))
+            print(f'    WARNING: hg commit failed ({err})')
 
 
 def main(locale, reference_dir, localization_dir, migrations, dry_run):

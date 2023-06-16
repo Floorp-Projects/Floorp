@@ -86,7 +86,7 @@ MFCDMParent::MFCDMParent(const nsAString& aKeySystem,
       mKeyChangeEvents(aManagerThread),
       mExpirationEvents(aManagerThread) {
   // TODO: check Widevine too when it's ready.
-  MOZ_ASSERT(IsPlayReadyKeySystem(aKeySystem));
+  MOZ_ASSERT(IsPlayReadyKeySystemAndSupported(aKeySystem));
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(aManagerThread);
   MOZ_ASSERT(XRE_IsUtilityProcess());
@@ -170,8 +170,8 @@ mozilla::ipc::IPCResult MFCDMParent::RecvGetCapabilities(
 
   MFCDMCapabilitiesIPDL capabilities;
 
-  // TODO: check HW CDM creation
-
+  // TODO : check HW CDM creation
+  // TODO : add HEVC support?
   static nsTArray<KeySystemConfig::EMECodecString> kVideoCodecs({
       KeySystemConfig::EME_CODEC_H264,
       KeySystemConfig::EME_CODEC_VP8,

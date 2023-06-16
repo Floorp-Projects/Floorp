@@ -71,8 +71,8 @@ if (Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
 // - Add the preference to `geckoinstance.py`
 // - If the preference has to be set before startup:
 //   - Add the preference to `prefs.rs`
-//   - Add the preference `FirefoxLauncher.ts`
-//   - Create a PR to upstream the change on `FirefoxLauncher.ts` to puppeteer
+//   - Add the preference `browser-data/firefox.ts` in the puppeteer folder
+//   - Create a PR to upstream the change on `browser-data/firefox.ts` to puppeteer
 // - Otherwise, if the preference can be set after startup:
 //   - Add the preference to `RecommendedPreferences.sys.mjs`
 const COMMON_PREFERENCES = new Map([
@@ -204,13 +204,6 @@ const COMMON_PREFERENCES = new Map([
 
   // Disable popup-blocker
   ["dom.disable_open_during_load", false],
-
-  // Bug 1821733:
-  // Do not bind wheel event targets to the current wheel transaction. This
-  // can interfere with tests that run wheel events on different targets
-  // within a short period of time and without another action between wheel
-  // actions.
-  ["dom.event.wheel-event-groups.enabled", false],
 
   // Enabling the support for File object creation in the content process
   ["dom.file.createInChild", true],

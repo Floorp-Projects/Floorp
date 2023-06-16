@@ -16,9 +16,9 @@
 #ifndef JXL_RESIZABLE_PARALLEL_RUNNER_CXX_H_
 #define JXL_RESIZABLE_PARALLEL_RUNNER_CXX_H_
 
-#include <memory>
+#include <jxl/resizable_parallel_runner.h>
 
-#include "jxl/resizable_parallel_runner.h"
+#include <memory>
 
 #if !(defined(__cplusplus) || defined(c_plusplus))
 #error \

@@ -9,7 +9,7 @@ const TEST_URL = "https://example.com/";
 add_task(async function test_concurrent_identity_credential() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
-  let requestCredential = async function() {
+  let requestCredential = async function () {
     let promise = content.navigator.credentials.get({
       identity: {
         providers: [

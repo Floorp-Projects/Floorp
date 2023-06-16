@@ -11,6 +11,7 @@
 #include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/CompactPair.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/dom/Selection.h"
@@ -101,10 +102,6 @@ enum class PeekOffsetOption : uint8_t {
   // If true, the offset has to end up in an editable node, otherwise we'll keep
   // searching.
   ForceEditableRegion,
-
-  // If set, the result's native anonymous subtree root may be different from
-  // the scan start content's root.
-  AllowContentInDifferentNativeAnonymousSubtreeRoot,
 };
 
 using PeekOffsetOptions = EnumSet<PeekOffsetOption>;
@@ -987,7 +984,8 @@ class nsFrameSelection final {
       mDomSelections[sizeof(mozilla::kPresentSelectionTypes) /
                      sizeof(mozilla::SelectionType)];
 
-  nsTHashMap<RefPtr<const nsAtom>, RefPtr<mozilla::dom::Selection>>
+  nsTArray<mozilla::CompactPair<RefPtr<const nsAtom>,
+                                RefPtr<mozilla::dom::Selection>>>
       mHighlightSelections;
 
   struct TableSelection {

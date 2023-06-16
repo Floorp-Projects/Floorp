@@ -22,6 +22,15 @@ var subtests = [
   // disabled, and so needs to be tested separately for both.
   {"file": "helper_drag_root_scrollbar.html", "prefs": [["apz.allow_zooming", false]]},
   {"file": "helper_drag_root_scrollbar.html", "prefs": [["apz.allow_zooming", true]]},
+  {"file": "helper_drag_scrollbar_hittest.html", "prefs": [
+    // The test applies a scaling zoom to the page.
+    ["apz.allow_zooming", true],
+    // The test uses hitTest(), these two prefs are required for it.
+    ["test.events.async.enabled", true],
+    ["apz.test.logging_enabled", true],
+    // The test performs scrollbar dragging, avoid auto-hiding scrollbars.
+    ["ui.useOverlayScrollbars", false]
+  ]},
   // Test for dragging on a fake-scrollbar element that scrolls the page
   {"file": "helper_drag_scroll.html"},
   // Test for dragging the scrollbar with a fixed-pos element overlaying it

@@ -268,6 +268,11 @@ pref("media.videocontrols.picture-in-picture.video-toggle.has-used", false);
 pref("media.videocontrols.picture-in-picture.display-text-tracks.toggle.enabled", true);
 pref("media.videocontrols.picture-in-picture.display-text-tracks.size", "medium");
 pref("media.videocontrols.picture-in-picture.improved-video-controls.enabled", true);
+#ifdef NIGHTLY_BUILD
+  pref("media.videocontrols.picture-in-picture.respect-disablePictureInPicture", true);
+#else
+  pref("media.videocontrols.picture-in-picture.respect-disablePictureInPicture", false);
+#endif
 pref("media.videocontrols.keyboard-tab-to-all-controls", true);
 
 #ifdef MOZ_WEBRTC
@@ -870,7 +875,6 @@ pref("dom.popup_allowed_events", "change click dblclick auxclick mousedown mouse
 
 pref("dom.serviceWorkers.disable_open_click_delay", 1000);
 
-pref("dom.storage.enabled", true);
 pref("dom.storage.shadow_writes", false);
 pref("dom.storage.snapshot_prefill", 16384);
 pref("dom.storage.snapshot_gradual_prefill", 4096);
@@ -1947,12 +1951,11 @@ pref("extensions.manifestV3.enabled", true);
 pref("extensions.install_origins.enabled", false);
 
 // browser_style deprecation - bug 1827910.
-// TODO bug 1830711: set to false (after bug 1830710).
+// TODO bug 1830711: set to false.
 // TODO bug 1830712: remove pref.
 pref("extensions.browser_style_mv3.supported", true);
-// TODO bug 1830710: set to false.
 // TODO bug 1830712: remove pref.
-pref("extensions.browser_style_mv3.same_as_mv2", true);
+pref("extensions.browser_style_mv3.same_as_mv2", false);
 
 // Middle-mouse handling
 pref("middlemouse.paste", false);
@@ -2054,20 +2057,6 @@ pref("plugins.navigator.hidden_ctp_plugin", "");
 
 // The default value for nsIPluginTag.enabledState (STATE_ENABLED = 2)
 pref("plugin.default.state", 2);
-
-// This pref can take 3 possible string values:
-// "always"     - always use favor fallback mode
-// "follow-ctp" - activate if ctp is active for the given
-//                plugin object (could be due to a plugin-wide
-//                setting or a site-specific setting)
-// "never"      - never use favor fallback mode
-pref("plugins.favorfallback.mode", "never");
-
-// A comma-separated list of rules to follow when deciding
-// whether an object has been provided with good fallback content.
-// The valid values can be found at nsObjectLoadingContent::HasGoodFallback.
-pref("plugins.favorfallback.rules", "");
-
 
 // Set IPC timeouts for plugins and tabs, except in leak-checking and
 // dynamic analysis builds.  (NS_FREE_PERMANENT_DATA is C++ only, so
@@ -3199,12 +3188,10 @@ pref("signon.showAutoCompleteFooter",             false);
 pref("signon.firefoxRelay.base_url", "https://relay.firefox.com/api/v1/");
 pref("signon.firefoxRelay.learn_more_url", "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/firefox-relay-integration");
 pref("signon.firefoxRelay.manage_url", "https://relay.firefox.com");
+pref("signon.firefoxRelay.terms_of_service_url", "https://www.mozilla.org/%LOCALE%/about/legal/terms/subscription-services/");
+pref("signon.firefoxRelay.privacy_policy_url", "https://www.mozilla.org/%LOCALE%/privacy/subscription-services/");
 pref("signon.signupDetection.confidenceThreshold",     "0.75");
-#ifdef NIGHTLY_BUILD
-  pref("signon.signupDetection.enabled", true);
-#else
-  pref("signon.signupDetection.enabled", false);
-#endif
+pref("signon.signupDetection.enabled", true);
 
 // Satchel (Form Manager) prefs
 pref("browser.formfill.debug",            false);
@@ -3259,7 +3246,6 @@ pref("network.tcp.keepalive.idle_time", 600); // seconds; 10 mins
 pref("network.psl.onUpdate_notify", false);
 
 #ifdef MOZ_WIDGET_GTK
-  pref("widget.content.gtk-theme-override", "");
   pref("widget.disable-workspace-management", false);
   pref("widget.titlebar-x11-use-shape-mask", false);
 #endif
@@ -3319,6 +3305,10 @@ pref("extensions.webextensions.keepUuidOnUninstall", false);
 // Redirect basedomain used by identity api
 pref("extensions.webextensions.identity.redirectDomain", "extensions.allizom.org");
 pref("extensions.webextensions.restrictedDomains", "accounts-static.cdn.mozilla.net,accounts.firefox.com,addons.cdn.mozilla.net,addons.mozilla.org,api.accounts.firefox.com,content.cdn.mozilla.net,discovery.addons.mozilla.org,install.mozilla.org,oauth.accounts.firefox.com,profile.accounts.firefox.com,support.mozilla.org,sync.services.mozilla.com");
+
+// Extensions are prevented from accessing Quarantined Domains by default.
+pref("extensions.quarantinedDomains.enabled", true);
+pref("extensions.quarantinedDomains.list", "");
 
 // Whether or not the moz-extension resource loads are remoted. For debugging
 // purposes only. Setting this to false will break moz-extension URI loading
@@ -3784,17 +3774,22 @@ pref("browser.storageManager.pressureNotification.usageThresholdGB", 5);
 
 pref("browser.sanitizer.loglevel", "Warn");
 
-// Enable Firefox translations based on Bergamot[1]. This project is in-development and
-// an effort to integrate the Firefox Translations[2] project direcly into Gecko.
-// See Bug 971044.
-//
-// [1]: https://browser.mt/
-// [2]: https://github.com/mozilla/firefox-translations
+// Enable Firefox translations powered by the Bergamot translations
+// engine https://browser.mt/. See Bug 971044. Note that this pref can be turned
+// on in different apps like Firefox Desktop, even if it's disabled by default here.
 pref("browser.translations.enable", false);
+
 // Set to "All" to see all logs, which are useful for debugging. Set to "Info" to see
 // the application logic logs, and not all of the translated messages, which can be
 // slow and overwhelming.
 pref("browser.translations.logLevel", "Error");
+// A comma-separated list of BCP-47 language tags that affect the behavior of translations.
+// Languages listed in the alwaysTranslateLanguages list will trigger auto-translate on page load.
+pref("browser.translations.alwaysTranslateLanguages", "");
+// A comma-separated list of BCP-47 language tags that affect the behavior of translations.
+// Languages listed in the neverTranslateLanguages list will signal that the translations button
+// and menus should not be displayed automatically when visiting pages in those languages.
+pref("browser.translations.neverTranslateLanguages", "");
 // By default the translations engine on about:translations uses text for translation,
 // and the full page translations uses HTML. Set this pref to true to use the HTML
 // translation behavior on about:translations. Requires a page refresh.
@@ -3806,7 +3801,12 @@ pref("browser.translations.autoTranslate", false);
 // Simulate the behavior of using a device that does not support the translations engine.
 // Requires restart.
 pref("browser.translations.simulateUnsupportedEngine", false);
-
+// The translations code relies on asynchronous network request. Chaos mode simulates
+// flaky and slow network connections, so that the UI may be manually tested. The
+// "chaos.errors" makes network requests fail, while "timeoutMS" randomly times out
+// between 0ms and the timeoutMS provided.
+pref("browser.translations.chaos.errors", false);
+pref("browser.translations.chaos.timeoutMS", 0);
 
 // When a user cancels this number of authentication dialogs coming from
 // a single web page in a row, all following authentication dialogs will
@@ -4112,8 +4112,8 @@ pref("devtools.remote.adb.extensionURL", "https://ftp.mozilla.org/pub/labs/devto
 // Enable Inactive CSS detection; used both by the client and the server.
 pref("devtools.inspector.inactive.css.enabled", true);
 
-// The F12 experiment aims at disabling f12 on selected profiles.
-pref("devtools.experiment.f12.shortcut_disabled", false);
+// Should F12 open the Developer Tools toolbox.
+pref("devtools.f12_enabled", true);
 
 #if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION)
 // Define in StaticPrefList.yaml and override here since StaticPrefList.yaml

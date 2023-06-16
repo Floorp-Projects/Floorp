@@ -225,12 +225,10 @@ class StyleRuleActor extends Actor {
 
       const sheet = this._parentSheet;
       const inspectorActor = this.pageStyle.inspector;
-      const resourceId = this.pageStyle.styleSheetsManager.getStyleSheetResourceId(
-        sheet
-      );
-      const styleSheetIndex = this.pageStyle.styleSheetsManager.getStyleSheetIndex(
-        resourceId
-      );
+      const resourceId =
+        this.pageStyle.styleSheetsManager.getStyleSheetResourceId(sheet);
+      const styleSheetIndex =
+        this.pageStyle.styleSheetsManager.getStyleSheetIndex(resourceId);
       data.source = {
         // Inline stylesheets have a null href; Use window URL instead.
         type: sheet.href ? "stylesheet" : "inline",
@@ -308,9 +306,10 @@ class StyleRuleActor extends Actor {
     }
 
     if (this._parentSheet) {
-      form.parentStyleSheet = this.pageStyle.styleSheetsManager.getStyleSheetResourceId(
-        this._parentSheet
-      );
+      form.parentStyleSheet =
+        this.pageStyle.styleSheetsManager.getStyleSheetResourceId(
+          this._parentSheet
+        );
 
       if (this._parentSheet.ownerRule) {
         // If the rule is in a imported stylesheet with a specified layer, put it at the top
@@ -324,11 +323,22 @@ class StyleRuleActor extends Actor {
 
         // If the rule is in a imported stylesheet with specified media conditions,
         // put them at the top of the ancestor data array.
-        // XXX We should also handle `supports()` when it gets implemented (See Bug 1827886).
-        if (this._parentSheet.ownerRule.media?.mediaText) {
+        if (
+          this._parentSheet.ownerRule.media?.mediaText ||
+          this._parentSheet.ownerRule.supportsText
+        ) {
+          const parts = [];
+          if (this._parentSheet.ownerRule.supportsText) {
+            parts.push(`supports(${this._parentSheet.ownerRule.supportsText})`);
+          }
+
+          if (this._parentSheet.ownerRule.media?.mediaText) {
+            parts.push(this._parentSheet.ownerRule.media.mediaText);
+          }
+
           form.ancestorData.unshift({
             type: "import",
-            value: this._parentSheet.ownerRule.media.mediaText,
+            value: parts.join(" "),
           });
         }
       }
@@ -597,9 +607,10 @@ class StyleRuleActor extends Actor {
       return Promise.resolve(this.authoredText);
     }
 
-    const resourceId = this.pageStyle.styleSheetsManager.getStyleSheetResourceId(
-      this._parentSheet
-    );
+    const resourceId =
+      this.pageStyle.styleSheetsManager.getStyleSheetResourceId(
+        this._parentSheet
+      );
     const cssText = await this.pageStyle.styleSheetsManager.getText(resourceId);
     const { text } = getRuleText(cssText, this.line, this.column);
 
@@ -638,9 +649,10 @@ class StyleRuleActor extends Actor {
       // Get the rule's authored text and skip any cached value.
       ruleBodyText = await this.getAuthoredCssText(true);
 
-      const resourceId = this.pageStyle.styleSheetsManager.getStyleSheetResourceId(
-        this._parentSheet
-      );
+      const resourceId =
+        this.pageStyle.styleSheetsManager.getStyleSheetResourceId(
+          this._parentSheet
+        );
       const stylesheetText = await this.pageStyle.styleSheetsManager.getText(
         resourceId
       );
@@ -690,9 +702,10 @@ class StyleRuleActor extends Actor {
       // For element style rules, set the node's style attribute.
       this.rawNode.setAttributeDevtools("style", newText);
     } else {
-      const resourceId = this.pageStyle.styleSheetsManager.getStyleSheetResourceId(
-        this._parentSheet
-      );
+      const resourceId =
+        this.pageStyle.styleSheetsManager.getStyleSheetResourceId(
+          this._parentSheet
+        );
       let cssText = await this.pageStyle.styleSheetsManager.getText(resourceId);
 
       const { offset, text } = getRuleText(cssText, this.line, this.column);
@@ -811,9 +824,10 @@ class StyleRuleActor extends Actor {
         return null;
       }
 
-      const resourceId = this.pageStyle.styleSheetsManager.getStyleSheetResourceId(
-        this._parentSheet
-      );
+      const resourceId =
+        this.pageStyle.styleSheetsManager.getStyleSheetResourceId(
+          this._parentSheet
+        );
       let authoredText = await this.pageStyle.styleSheetsManager.getText(
         resourceId
       );

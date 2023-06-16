@@ -12,16 +12,13 @@
  * resources (in case those are emitted from the target instead of the watcher).
  * See Bug 1663896.
  */
-add_task(async function() {
+add_task(async function () {
   // Disable the preloaded process as it creates processes intermittently
   // which forces the emission of RDP requests we aren't correctly waiting for.
   await pushPref("dom.ipc.processPrelaunch.enabled", false);
 
-  const {
-    client,
-    resourceCommand,
-    targetCommand,
-  } = await initMultiProcessResourceCommand();
+  const { client, resourceCommand, targetCommand } =
+    await initMultiProcessResourceCommand();
 
   const expectedPlatformMessage = "expectedMessage";
 
@@ -46,15 +43,14 @@ add_task(async function() {
   );
 
   // `waitForNextResource` will trigger another call to `watchResources`.
-  const {
-    onResource: onMessageReceived,
-  } = await resourceCommand.waitForNextResource(
-    resourceCommand.TYPES.PLATFORM_MESSAGE,
-    {
-      ignoreExistingResources: false,
-      predicate: r => r.message === expectedPlatformMessage,
-    }
-  );
+  const { onResource: onMessageReceived } =
+    await resourceCommand.waitForNextResource(
+      resourceCommand.TYPES.PLATFORM_MESSAGE,
+      {
+        ignoreExistingResources: false,
+        predicate: r => r.message === expectedPlatformMessage,
+      }
+    );
 
   info("Waiting for the expected message to be received");
   await onMessageReceived;

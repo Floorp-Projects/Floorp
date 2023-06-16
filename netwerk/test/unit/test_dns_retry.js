@@ -11,16 +11,16 @@ let CC_IPV4 = "example_cc_ipv4.com";
 let CC_IPV6 = "example_cc_ipv6.com";
 Services.prefs.clearUserPref("network.dns.native-is-localhost");
 
-XPCOMUtils.defineLazyGetter(this, "URL_CC_IPV4", function() {
+XPCOMUtils.defineLazyGetter(this, "URL_CC_IPV4", function () {
   return `http://${CC_IPV4}:${httpServerIPv4.identity.primaryPort}${testpath}`;
 });
-XPCOMUtils.defineLazyGetter(this, "URL_CC_IPV6", function() {
+XPCOMUtils.defineLazyGetter(this, "URL_CC_IPV6", function () {
   return `http://${CC_IPV6}:${httpServerIPv6.identity.primaryPort}${testpath}`;
 });
-XPCOMUtils.defineLazyGetter(this, "URL6a", function() {
+XPCOMUtils.defineLazyGetter(this, "URL6a", function () {
   return `http://example6a.com:${httpServerIPv6.identity.primaryPort}${testpath}`;
 });
-XPCOMUtils.defineLazyGetter(this, "URL6b", function() {
+XPCOMUtils.defineLazyGetter(this, "URL6b", function () {
   return `http://example6b.com:${httpServerIPv6.identity.primaryPort}${testpath}`;
 });
 
@@ -127,7 +127,7 @@ async function registerDoHAnswers(ipv4, ipv6) {
   Services.dns.clearCache(true);
 }
 
-let StatusCounter = function() {
+let StatusCounter = function () {
   this._statusCount = {};
 };
 StatusCounter.prototype = {
@@ -146,7 +146,7 @@ StatusCounter.prototype = {
   },
 };
 
-let HttpListener = function(finish, succeeded) {
+let HttpListener = function (finish, succeeded) {
   this.finish = finish;
   this.succeeded = succeeded;
 };
@@ -164,7 +164,7 @@ HttpListener.prototype = {
   },
 };
 
-function promiseObserverNotification(topic, matchFunc) {
+function promiseObserverNotification(aTopic, matchFunc) {
   return new Promise((resolve, reject) => {
     Services.obs.addObserver(function observe(subject, topic, data) {
       let matches = typeof matchFunc != "function" || matchFunc(subject, data);
@@ -173,7 +173,7 @@ function promiseObserverNotification(topic, matchFunc) {
       }
       Services.obs.removeObserver(observe, topic);
       resolve({ subject, data });
-    }, topic);
+    }, aTopic);
   });
 }
 
@@ -187,12 +187,12 @@ async function make_request(uri, check_events, succeeded) {
 
   if (check_events) {
     equal(
-      statusCounter._statusCount[0x804b000b] || 0,
+      statusCounter._statusCount[0x4b000b] || 0,
       1,
       "Expecting only one instance of NS_NET_STATUS_RESOLVED_HOST"
     );
     equal(
-      statusCounter._statusCount[0x804b0007] || 0,
+      statusCounter._statusCount[0x4b0007] || 0,
       1,
       "Expecting only one instance of NS_NET_STATUS_CONNECTING_TO"
     );

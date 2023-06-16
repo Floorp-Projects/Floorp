@@ -12,13 +12,13 @@ function testModeSameOrigin() {
   // Fetch spec Section 4, step 4, "request's mode is same-origin".
   var req = new Request("http://example.com", { mode: "same-origin" });
   return fetch(req).then(
-    function(res) {
+    function (res) {
       ok(
         false,
         "Attempting to fetch a resource from a different origin with mode same-origin should fail."
       );
     },
-    function(e) {
+    function (e) {
       ok(
         e instanceof TypeError,
         "Attempting to fetch a resource from a different origin with mode same-origin should fail."
@@ -80,28 +80,21 @@ function testNoCorsCtor() {
 
 var corsServerPath =
   "/tests/dom/security/test/cors/file_CrossSiteXHR_server.sjs?";
-function testModeNoCors(withoutORB) {
+function testModeNoCors() {
   // Fetch spec, section 4, step 4, response tainting should be set opaque, so
   // that fetching leads to an opaque filtered response in step 8.
   var r = new Request("http://example.com" + corsServerPath + "status=200", {
     mode: "no-cors",
   });
   return fetch(r).then(
-    function(res) {
-      ok(
-        withoutORB,
-        "no-cors Request fetch with invalid javascript content should be blocked when ORB is enabled"
-      );
+    function (res) {
       ok(
         isOpaqueResponse(res),
         "no-cors Request fetch should result in opaque response"
       );
     },
-    function(e) {
-      ok(
-        !withoutORB,
-        "no-cors Request fetch with invalid javascript content should not be blocked when ORB is not enabled"
-      );
+    function (e) {
+      ok(false, "no-cors Request fetch should not error");
     }
   );
 }
@@ -138,7 +131,7 @@ function testSameOriginCredentials() {
   ];
 
   var finalPromiseResolve, finalPromiseReject;
-  var finalPromise = new Promise(function(res, rej) {
+  var finalPromise = new Promise(function (res, rej) {
     finalPromiseResolve = res;
     finalPromiseReject = rej;
   });
@@ -174,7 +167,7 @@ function testSameOriginCredentials() {
     ok(test.pass, "Expected test to pass " + JSON.stringify(test));
     is(res.status, 200, "wrong status in test for " + JSON.stringify(test));
     is(res.statusText, "OK", "wrong status text for " + JSON.stringify(test));
-    return res.text().then(function(v) {
+    return res.text().then(function (v) {
       is(
         v,
         "<res>hello pass</res>\n",
@@ -188,8 +181,8 @@ function testSameOriginCredentials() {
     var request = makeRequest(test);
     console.log(request.url);
     fetch(request).then(
-      function(res) {
-        testResponse(res, test).then(function() {
+      function (res) {
+        testResponse(res, test).then(function () {
           if (i < tests.length - 1) {
             runATest(tests, i + 1);
           } else {
@@ -197,7 +190,7 @@ function testSameOriginCredentials() {
           }
         });
       },
-      function(e) {
+      function (e) {
         ok(!test.pass, "Expected test to fail " + JSON.stringify(test));
         ok(e instanceof TypeError, "Test should fail " + JSON.stringify(test));
         if (i < tests.length - 1) {
@@ -849,8 +842,8 @@ function testModeCors() {
     }
 
     fetches.push(
-      (function(test) {
-        return new Promise(function(resolve) {
+      (function (test) {
+        return new Promise(function (resolve) {
           resolve(
             new Request(req.url, {
               method: req.method,
@@ -860,10 +853,10 @@ function testModeCors() {
             })
           );
         })
-          .then(function(request) {
+          .then(function (request) {
             return fetch(request);
           })
-          .then(function(res) {
+          .then(function (res) {
             ok(test.pass, "Expected test to pass for " + JSON.stringify(test));
             if (test.status) {
               is(
@@ -914,7 +907,7 @@ function testModeCors() {
 
             return res.text();
           })
-          .then(function(v) {
+          .then(function (v) {
             if (test.method !== "HEAD") {
               is(
                 v,
@@ -929,7 +922,7 @@ function testModeCors() {
               );
             }
           })
-          .catch(function(e) {
+          .catch(function (e) {
             ok(!test.pass, "Expected test failure for " + JSON.stringify(test));
             ok(
               e instanceof TypeError,
@@ -1108,7 +1101,7 @@ function testCrossOriginCredentials() {
   var origin = "http://mochi.test:8888";
 
   var finalPromiseResolve, finalPromiseReject;
-  var finalPromise = new Promise(function(res, rej) {
+  var finalPromise = new Promise(function (res, rej) {
     finalPromiseResolve = res;
     finalPromiseReject = rej;
   });
@@ -1163,7 +1156,7 @@ function testCrossOriginCredentials() {
     ok(test.pass, "Expected test to pass for " + JSON.stringify(test));
     is(res.status, 200, "wrong status in test for " + JSON.stringify(test));
     is(res.statusText, "OK", "wrong status text for " + JSON.stringify(test));
-    return res.text().then(function(v) {
+    return res.text().then(function (v) {
       is(
         v,
         "<res>hello pass</res>\n",
@@ -1176,8 +1169,8 @@ function testCrossOriginCredentials() {
     var test = tests[i];
     var request = makeRequest(test);
     fetch(request).then(
-      function(res) {
-        testResponse(res, test).then(function() {
+      function (res) {
+        testResponse(res, test).then(function () {
           if (i < tests.length - 1) {
             runATest(tests, i + 1);
           } else {
@@ -1185,7 +1178,7 @@ function testCrossOriginCredentials() {
           }
         });
       },
-      function(e) {
+      function (e) {
         ok(!test.pass, "Expected test failure for " + JSON.stringify(test));
         ok(
           e instanceof TypeError,
@@ -1204,45 +1197,44 @@ function testCrossOriginCredentials() {
   return finalPromise;
 }
 
-function testModeNoCorsCredentials(withoutORB) {
+function testModeNoCorsCredentials() {
   var cookieStr = "type=chocolatechip";
   var tests = [
     {
       // Initialize by setting a cookie.
-      pass: withoutORB,
+      pass: 1,
       setCookie: cookieStr,
       withCred: "include",
-      bypassORB: true,
     },
     {
-      pass: withoutORB,
+      pass: 1,
       noCookie: 1,
       withCred: "omit",
     },
     {
-      pass: withoutORB,
+      pass: 1,
       noCookie: 1,
       withCred: "same-origin",
     },
     {
-      pass: withoutORB,
+      pass: 1,
       cookie: cookieStr,
       withCred: "include",
     },
     {
-      pass: withoutORB,
+      pass: 1,
       cookie: cookieStr,
       withCred: "omit",
       status: 500,
     },
     {
-      pass: withoutORB,
+      pass: 1,
       cookie: cookieStr,
       withCred: "same-origin",
       status: 500,
     },
     {
-      pass: withoutORB,
+      pass: 1,
       noCookie: 1,
       withCred: "include",
       status: 500,
@@ -1250,7 +1242,7 @@ function testModeNoCorsCredentials(withoutORB) {
   ];
 
   var finalPromiseResolve, finalPromiseReject;
-  var finalPromise = new Promise(function(res, rej) {
+  var finalPromise = new Promise(function (res, rej) {
     finalPromiseResolve = res;
     finalPromiseReject = rej;
   });
@@ -1291,13 +1283,16 @@ function testModeNoCorsCredentials(withoutORB) {
       status,
       "wrong status in test for " + JSON.stringify(test)
     );
-    return unfiltered.text().then(function(v) {
-      if (status === 200) {
-        is(
-          v,
-          "<res>hello pass</res>\n",
-          "wrong text in test for " + JSON.stringify(test)
-        );
+
+    return unfiltered.text().then(function (v) {
+      if (test.status === 200) {
+        const expected =
+          SpecialPowers.getIntPref(
+            "browser.opaqueResponseBlocking.filterFetchResponse"
+          ) > 0
+            ? ""
+            : "<res>hello pass</res>\n";
+        is(v, expected, "wrong text in test for " + JSON.stringify(test));
       }
     });
   }
@@ -1311,9 +1306,9 @@ function testModeNoCorsCredentials(withoutORB) {
     var test = tests[i];
     var request = makeRequest(test);
     fetch(request).then(
-      function(res) {
+      function (res) {
         ok(test.pass, "Expected test to pass " + JSON.stringify(test));
-        testResponse(res, test).then(function() {
+        testResponse(res, test).then(function () {
           if (i < tests.length - 1) {
             runATest(tests, i + 1);
           } else {
@@ -1321,7 +1316,7 @@ function testModeNoCorsCredentials(withoutORB) {
           }
         });
       },
-      function(e) {
+      function (e) {
         ok(!test.pass, "Expected test to fail " + JSON.stringify(test));
         ok(e instanceof TypeError, "Test should fail " + JSON.stringify(test));
         if (i < tests.length - 1) {
@@ -1651,9 +1646,9 @@ function testCORSRedirects() {
       body: req.body,
     });
     fetches.push(
-      (function(request, test) {
+      (function (request, test) {
         return fetch(request).then(
-          function(res) {
+          function (res) {
             ok(test.pass, "Expected test to pass for " + JSON.stringify(test));
             is(
               res.status,
@@ -1689,7 +1684,7 @@ function testCORSRedirects() {
                 "Response URL should be redirected URL"
               );
             }
-            return res.text().then(function(v) {
+            return res.text().then(function (v) {
               is(
                 v,
                 "<res>hello pass</res>\n",
@@ -1697,7 +1692,7 @@ function testCORSRedirects() {
               );
             });
           },
-          function(e) {
+          function (e) {
             ok(!test.pass, "Expected test failure for " + JSON.stringify(test));
             ok(
               e instanceof TypeError,
@@ -1712,29 +1707,25 @@ function testCORSRedirects() {
   return Promise.all(fetches);
 }
 
-function testNoCORSRedirects(withoutORB) {
+function testNoCORSRedirects() {
   var origin = "http://mochi.test:8888";
 
   var tests = [
+    { pass: 1, method: "GET", hops: [{ server: "http://example.com" }] },
     {
-      pass: withoutORB,
-      method: "GET",
-      hops: [{ server: "http://example.com" }],
-    },
-    {
-      pass: withoutORB,
+      pass: 1,
       method: "GET",
       hops: [{ server: origin }, { server: "http://example.com" }],
     },
     {
-      pass: withoutORB,
+      pass: 1,
       method: "GET",
       // Must use a simple header due to no-cors header restrictions.
       headers: { "accept-language": "en-us" },
       hops: [{ server: origin }, { server: "http://example.com" }],
     },
     {
-      pass: withoutORB,
+      pass: 1,
       method: "GET",
       hops: [
         { server: origin },
@@ -1743,7 +1734,7 @@ function testNoCORSRedirects(withoutORB) {
       ],
     },
     {
-      pass: withoutORB,
+      pass: 1,
       method: "POST",
       body: "upload body here",
       hops: [{ server: origin }, { server: "http://example.com" }],
@@ -1779,8 +1770,8 @@ function testNoCORSRedirects(withoutORB) {
     }
 
     fetches.push(
-      (function(req, test) {
-        return new Promise(function(resolve, reject) {
+      (function (req, test) {
+        return new Promise(function (resolve, reject) {
           resolve(
             new Request(req.url, {
               mode: "no-cors",
@@ -1790,11 +1781,11 @@ function testNoCORSRedirects(withoutORB) {
             })
           );
         })
-          .then(function(request) {
+          .then(function (request) {
             return fetch(request);
           })
           .then(
-            function(res) {
+            function (res) {
               ok(
                 test.pass,
                 "Expected test to pass for " + JSON.stringify(test)
@@ -1818,7 +1809,7 @@ function testNoCORSRedirects(withoutORB) {
                 "wrong status text for " + JSON.stringify(test)
               );
               is(res.url, "", "wrong response url for " + JSON.stringify(test));
-              return res.text().then(function(v) {
+              return res.text().then(function (v) {
                 is(
                   v,
                   "",
@@ -1826,7 +1817,7 @@ function testNoCORSRedirects(withoutORB) {
                 );
               });
             },
-            function(e) {
+            function (e) {
               ok(
                 !test.pass,
                 "Expected test failure for " + JSON.stringify(test)
@@ -1858,11 +1849,11 @@ function testReferrer() {
   return fetch(
     corsServerPath + "headers=" + encodeURIComponent(JSON.stringify(dict))
   ).then(
-    function(res) {
+    function (res) {
       is(res.status, 200, "expected correct referrer header to be sent");
       dump(res.statusText);
     },
-    function(e) {
+    function (e) {
       ok(false, "expected correct referrer header to be sent");
     }
   );
@@ -1880,41 +1871,13 @@ function runTest() {
 
   return promise
     .then(testModeSameOrigin)
+    .then(testModeNoCors)
     .then(testModeCors)
     .then(testSameOriginCredentials)
     .then(testCrossOriginCredentials)
+    .then(testModeNoCorsCredentials)
     .then(testCORSRedirects)
-    .then(function() {
-      return SpecialPowers.pushPrefEnv({
-        set: [["browser.opaqueResponseBlocking", false]],
-      });
-    })
-    .then(() => {
-      return testModeNoCorsCredentials(1); // Without ORB
-    })
-    .then(function() {
-      return testModeNoCors(1); // Without ORB
-    })
-    .then(function() {
-      return testNoCORSRedirects(1); // Without ORB
-    })
-    .then(function() {
-      return SpecialPowers.pushPrefEnv({
-        set: [
-          ["browser.opaqueResponseBlocking", true],
-          ["browser.opaqueResponseBlocking.javascriptValidator", true],
-        ],
-      });
-    })
-    .then(() => {
-      return testModeNoCorsCredentials(0); // With ORB
-    })
-    .then(function() {
-      return testModeNoCors(0); // With ORB
-    })
-    .then(() => {
-      return testNoCORSRedirects(0); // With ORB
-    })
+    .then(testNoCORSRedirects)
     .then(testReferrer);
   // Put more promise based tests here.
 }

@@ -1,0 +1,100 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Test that the scrollbar thumb remains under the cursor during scrollbar dragging</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="text/javascript">
+
+const utils = SpecialPowers.getDOMWindowUtils(window);
+
+async function test() {
+  // This test largely attempts to replicate the STR from bug 1826947
+  // (which demonstrates the same issue as bug 1818721 but with a more
+  // reduced test case).
+
+  is(await getResolution(), 1.0, "should not be zoomed");
+
+  // Zoom in. This is part of the bug 1826947 STR.
+  let resolution = 5.0;
+  utils.setResolutionAndScaleTo(resolution);
+  await promiseApzFlushedRepaints();
+
+  // Scroll horizontally to the middle of the visual viewport. This was
+  // determined empirically to be needed to reproduce the bug (and also
+  // is what happens automatically if you pinch-zoom in using an actual
+  // gesture rather than setResolutionAndScaleTo()).
+  utils.scrollToVisual(document.scrollingElement.clientWidth / 2,
+                       0,
+                       utils.UPDATE_TYPE_MAIN_THREAD,
+                       utils.SCROLL_MODE_INSTANT);
+  await promiseApzFlushedRepaints();
+
+  // Install a scroll event listener. This is part of the usage of
+  // promiseVerticalScrollbarDrag(), we need to wait for a scroll event
+  // before awaiting dragFinisher().
+  // In this test, since the scroll range comes from zooming in, we need
+  // to listen for a *visual viewport* scroll event.
+  let visualScrollPromise = new Promise(resolve => {
+    window.visualViewport.addEventListener("scroll", resolve, {once: true});
+  });
+
+  // Start the animation in the SVG document. This is needed to reproduce
+  // the bug. (See below for why we do it dynamically.)
+  document.getElementsByTagName("animateTransform")[0].setAttribute("repeatCount", "indefinite");
+  document.getElementsByTagName("animateTransform")[0].beginElement();
+
+  // Drag the vertical scrollbar thumb downward.
+  // Do the scroll in one increment so that when the scroll event fires
+  // we're done all the scrolling we're going to do.
+  let distance = 20;
+  let increment = distance;
+  var dragFinisher = await promiseVerticalScrollbarDrag(window, distance, increment);
+  await visualScrollPromise;
+  await dragFinisher();
+
+  // Check that at the end of the drag, the thumb is still under the cursor.
+  // This is done using hitTest(). To compute the point to pass to hitTest(),
+  // use scrollbarDragStart() to compute the ending mouse position of the
+  // drag the way promiseVerticalScrollbarDrag() does.
+  // However, since we are passing the point to hitTest() which expects
+  // coordinates relative to the layout viewport (whereas scrollbarDragStart()
+  // returns coordinates relative to the visual viewport), we need to translate
+  // by the relative offset.
+  let dragStartPoint = await scrollbarDragStart(window, 1);
+  let hitTestPoint = {x: dragStartPoint.x, y: dragStartPoint.y + distance};
+  const relativeOffset = getRelativeViewportOffset(window);
+  hitTestPoint.x += relativeOffset.x;
+  hitTestPoint.y += relativeOffset.y;
+  let result = hitTest(hitTestPoint);
+  ok((result.hitInfo & APZHitResultFlags.SCROLLBAR_THUMB) != 0,
+      "Thumb should be under the cursor");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+</head>
+<body>
+  <!--
+    This is the testcase from bug 1826947 comment 0, except that the animation's
+    repeatCount is initially set to 0, and only changed to "indefinite" dynamically
+    during the test. This is to prevent an issue where the promiseAllPaintsDone()
+    call in waitUntilApzStable() can get into an infinite loop if we schedule
+    new frames of the animation faster than we paint them.
+  -->
+  <svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 100 100">
+	<filter id="THE_FILTER" x="0" y="0" width="10" height="100">
+		<feTurbulence id="turbulence" baseFrequency="10" numOctaves="5"/>
+	</filter>
+	<rect x="0" y="0" width="1" height="1" style="filter: url(#THE_FILTER);">
+		 <animateTransform attributeName="transform" type="rotate" from="360" to="340" dur="5s" repeatCount="0"/>
+	</rect>
+  </svg>
+</body>
+</html>

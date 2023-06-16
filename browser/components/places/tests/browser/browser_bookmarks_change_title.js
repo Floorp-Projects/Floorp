@@ -17,7 +17,7 @@ function getToolbarNodeForItemGuid(aItemGuid) {
 }
 
 // Setup.
-add_setup(async function() {
+add_setup(async function () {
   let toolbar = document.getElementById("PersonalToolbar");
   let wasCollapsed = toolbar.collapsed;
 
@@ -35,11 +35,7 @@ add_setup(async function() {
   });
 });
 
-async function test_change_title_from_BookmarkStar(delayedApply) {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.bookmarks.editDialog.delayedApply.enabled", delayedApply]],
-  });
-
+add_task(async function test_change_title_from_BookmarkStar() {
   let originalBm = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: TEST_URL,
@@ -58,11 +54,6 @@ async function test_change_title_from_BookmarkStar(delayedApply) {
     await BrowserTestUtils.closeWindow(win);
   });
 
-  Assert.equal(
-    win.gEditItemOverlay.delayedApplyEnabled,
-    delayedApply,
-    "Sanity check: delayedApply preference value is correct."
-  );
   win.StarUI._createPanelIfNeeded();
   let bookmarkPanel = win.document.getElementById("editBookmarkPanel");
   let shownPromise = promisePopupShown(bookmarkPanel);
@@ -106,14 +97,6 @@ async function test_change_title_from_BookmarkStar(delayedApply) {
     "Should have updated the bookmark title in the database"
   );
   await PlacesUtils.bookmarks.remove(originalBm.guid);
-}
-
-add_task(async function test_change_title_from_BookmarkStar_instant_apply() {
-  await test_change_title_from_BookmarkStar(false);
-});
-
-add_task(async function test_change_title_from_BookmarkStar_delayed_apply() {
-  await test_change_title_from_BookmarkStar(true);
 });
 
 add_task(async function test_change_title_from_Toolbar() {
@@ -152,9 +135,8 @@ add_task(async function test_change_title_from_Toolbar() {
         "editBMPanel_namePicker"
       );
 
-      let editBookmarkDialogTitle = dialogWin.document.getElementById(
-        "titleText"
-      );
+      let editBookmarkDialogTitle =
+        dialogWin.document.getElementById("titleText");
       let bundle = dialogWin.document.getElementById("stringBundle");
 
       Assert.equal(
@@ -201,7 +183,7 @@ add_task(async function test_change_title_from_Sidebar() {
     bookmarks.push(bm)
   );
 
-  await withSidebarTree("bookmarks", async function(tree) {
+  await withSidebarTree("bookmarks", async function (tree) {
     tree.selectItems([bookmarks[0].guid]);
 
     await withBookmarksDialog(
@@ -252,22 +234,16 @@ add_task(async function test_change_title_from_Sidebar() {
   });
 });
 
-async function test_change_title_from_Library(delayedApply) {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.bookmarks.editDialog.delayedApply.enabled", delayedApply]],
-  });
-
+add_task(async function test_change_title_from_Library() {
   info("Open library and select the bookmark.");
   const library = await promiseLibrary("BookmarksToolbar");
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await promiseLibraryClosed(library);
   });
   library.ContentTree.view.selectNode(
     library.ContentTree.view.view.nodeForTreeIndex(0)
   );
-  const newTitle = delayedApply
-    ? "Library Delayed Apply"
-    : "Library Instant Apply";
+  const newTitle = "Library";
   const promiseTitleChange = PlacesTestUtils.waitForNotification(
     "bookmark-title-changed",
     events => events.some(e => e.title === newTitle)
@@ -277,12 +253,4 @@ async function test_change_title_from_Library(delayedApply) {
   await promiseTitleChange;
   info("The bookmark's title was updated.");
   await promiseLibraryClosed(library);
-}
-
-add_task(async function test_change_title_from_Library_instant_apply() {
-  await test_change_title_from_Library(false);
-});
-
-add_task(async function test_change_title_from_Library_delayed_apply() {
-  await test_change_title_from_Library(true);
 });

@@ -62,8 +62,8 @@ export class AboutMessagePreviewParent extends JSWindowActorParent {
       );
     }
 
-    const browser = this.browsingContext.topChromeWindow.gBrowser
-      .selectedBrowser;
+    const browser =
+      this.browsingContext.topChromeWindow.gBrowser.selectedBrowser;
     switch (message.template) {
       case "infobar":
         this.showInfoBar(message, browser);

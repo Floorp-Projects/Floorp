@@ -209,7 +209,8 @@ add_task(async function test_migratePrefs() {
     "datareporting.policy.dataSubmissionPolicyAccepted": true,
     "datareporting.policy.dataSubmissionPolicyBypassAcceptance": true,
     "datareporting.policy.dataSubmissionPolicyResponseType": "foxyeah",
-    "datareporting.policy.dataSubmissionPolicyResponseTime": Date.now().toString(),
+    "datareporting.policy.dataSubmissionPolicyResponseTime":
+      Date.now().toString(),
   };
 
   // Make sure the preferences are set before setting up the policy.

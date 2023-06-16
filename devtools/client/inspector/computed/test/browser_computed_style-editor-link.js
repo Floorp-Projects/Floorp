@@ -48,7 +48,7 @@ const DOCUMENT_URL =
    </html>`
   );
 
-add_task(async function() {
+add_task(async function () {
   await addTab(DOCUMENT_URL);
   const { toolbox, inspector, view } = await openComputedView();
   await selectNode("span", inspector);

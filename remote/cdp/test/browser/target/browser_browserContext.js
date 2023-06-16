@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function({ CDP }) {
+add_task(async function ({ CDP }) {
   // Connect to the server
   const { webSocketDebuggerUrl } = await CDP.Version();
   const client = await CDP({ target: webSocketDebuggerUrl });
@@ -13,9 +13,8 @@ add_task(async function({ CDP }) {
   await getDiscoveredTargets(Target);
 
   // Test if Target.getBrowserContexts is empty before creatinga ny
-  const {
-    browserContextIds: browserContextIdsBefore,
-  } = await Target.getBrowserContexts();
+  const { browserContextIds: browserContextIdsBefore } =
+    await Target.getBrowserContexts();
 
   is(
     browserContextIdsBefore.length,
@@ -59,9 +58,8 @@ add_task(async function({ CDP }) {
   await Target.disposeBrowserContext({ browserContextId });
 
   // Test if Target.getBrowserContexts now is empty
-  const {
-    browserContextIds: browserContextIdsAfter,
-  } = await Target.getBrowserContexts();
+  const { browserContextIds: browserContextIdsAfter } =
+    await Target.getBrowserContexts();
 
   is(
     browserContextIdsAfter.length,

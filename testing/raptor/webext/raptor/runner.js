@@ -202,7 +202,7 @@ async function sleep(delay) {
 }
 
 async function startScenarioTimer() {
-  setTimeout(function() {
+  setTimeout(function () {
     isScenarioPending = false;
     results.measurements.scenario = [1];
   }, scenarioTestTime);
@@ -418,8 +418,9 @@ async function nextCycle() {
   if (isBackgroundTest) {
     await postToControlServer(
       "end_background",
-      `bringing app to foreground, pausing for ${foregroundDelay /
-        1000} seconds`
+      `bringing app to foreground, pausing for ${
+        foregroundDelay / 1000
+      } seconds`
     );
     // wait a bit to be sure the app is in foreground before starting
     // new test, or finishing test
@@ -719,8 +720,9 @@ async function raptorRunner() {
 
   // create new empty tab, which starts the test; we want to
   // wait some time for the browser to settle before beginning
-  const text = `* pausing ${postStartupDelay /
-    1000} seconds to let browser settle... *`;
+  const text = `* pausing ${
+    postStartupDelay / 1000
+  } seconds to let browser settle... *`;
   await postToControlServer("status", text);
   await sleep(postStartupDelay);
 
@@ -766,10 +768,7 @@ async function init() {
   } catch (e) {
     const regex = /(Chrome)\/([\w\.]+)/;
     const userAgent = window.navigator.userAgent;
-    results.browser = regex
-      .exec(userAgent)
-      .splice(1, 2)
-      .join(" ");
+    results.browser = regex.exec(userAgent).splice(1, 2).join(" ");
 
     ext = chrome;
   }

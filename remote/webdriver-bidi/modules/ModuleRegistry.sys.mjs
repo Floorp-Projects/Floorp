@@ -25,8 +25,7 @@ ChromeUtils.defineESModuleGetters(modules.root, {
 ChromeUtils.defineESModuleGetters(modules["windowglobal-in-root"], {
   browsingContext:
     "chrome://remote/content/webdriver-bidi/modules/windowglobal-in-root/browsingContext.sys.mjs",
-  log:
-    "chrome://remote/content/webdriver-bidi/modules/windowglobal-in-root/log.sys.mjs",
+  log: "chrome://remote/content/webdriver-bidi/modules/windowglobal-in-root/log.sys.mjs",
   script:
     "chrome://remote/content/webdriver-bidi/modules/windowglobal-in-root/script.sys.mjs",
 });
@@ -37,8 +36,7 @@ ChromeUtils.defineESModuleGetters(modules.windowglobal, {
     "chrome://remote/content/webdriver-bidi/modules/windowglobal/browsingContext.sys.mjs",
   input:
     "chrome://remote/content/webdriver-bidi/modules/windowglobal/input.sys.mjs",
-  log:
-    "chrome://remote/content/webdriver-bidi/modules/windowglobal/log.sys.mjs",
+  log: "chrome://remote/content/webdriver-bidi/modules/windowglobal/log.sys.mjs",
   script:
     "chrome://remote/content/webdriver-bidi/modules/windowglobal/script.sys.mjs",
 });

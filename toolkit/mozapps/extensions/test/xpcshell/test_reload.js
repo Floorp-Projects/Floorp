@@ -18,8 +18,8 @@ const ADDONS = {
         },
       },
       icons: {
-        "48": "icon48.png",
-        "64": "icon64.png",
+        48: "icon48.png",
+        64: "icon64.png",
       },
     },
     "chrome.manifest": "content webex ./\n",

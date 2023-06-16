@@ -795,10 +795,10 @@ urlbar:
       selType: >
         type of the selected result in the urlbar panel. One of:
           "autofill", "visit", "bookmark", "history", "keyword", "search",
-          "searchsuggestion", "switchtab", "remotetab", "extension", "oneoff",
-          "keywordoffer", "canonized", "tip", "tiphelp", "formhistory",
-          "tabtosearch", "quicksuggest", "weather", "dynamic-wikipedia",
-          "navigational", "none"
+          "searchsuggestion", "searchsuggestion_rich", "switchtab",
+          "remotetab", "extension", "oneoff", "keywordoffer", "canonized",
+          "tip", "tiphelp", "formhistory", "tabtosearch", "quicksuggest",
+          "weather", "dynamic-wikipedia", "navigational", "none"
       provider: The name of the provider that presented the result.
   abandonment:
     objects: ["blur"]
@@ -1149,6 +1149,8 @@ browser.migration:
         "1" if passwords was selected. "0" otherwise.
       bookmarks: >
         "1" if bookmarks were selected. "0" otherwise.
+      payment_methods: >
+        "1" if payment methods were selected. "0" otherwise.
       other: A count of the number of other resource types that were selected.
       configured: >
         "1" if Variant 2 of the new Migration Wizard was being used, and the list of
@@ -1205,6 +1207,8 @@ browser.migration:
         "1" if passwords are being migrated. "0" otherwise.
       bookmarks: >
         "1" if bookmarks are being migrated. "0" otherwise.
+      payment_methods: >
+        "1" if payment methods are being migrated. "0" otherwise.
       other: A count of the number of other resource types that are being migrated.
   migration_finished:
     objects: ["legacy_wizard", "wizard"]
@@ -1229,6 +1233,8 @@ browser.migration:
         "1" if passwords were migrated. "0" otherwise.
       bookmarks: >
         "1" if bookmarks were migrated. "0" otherwise.
+      payment_methods: >
+        "1" if payment methods were migrated. "0" otherwise.
       other: A count of the number of other resource types that were migrated.
 
 pwmgr:
@@ -2900,11 +2906,12 @@ pictureinpicture:
     expiry_version: "never"
     release_channel_collection: opt-out
   opened_method:
-    objects: ["toggle", "contextMenu", "urlBar"]
+    objects: ["toggle", "contextMenu", "urlBar", "shortcut"]
     description: >
       Records the method for opening the Picture-in-Picture window.
     extra_keys:
       firstTimeToggle: If the user has used Picture-in-Picture before
+      disableDialog: True when urlbar button opens the disable PiP dialog
     notification_emails:
       - mconley@mozilla.com
     products:
@@ -2912,10 +2919,11 @@ pictureinpicture:
     record_in_processes: ["main", "content"]
     bug_numbers:
       - 1749585
+      - 1834554
     expiry_version: "never"
     release_channel_collection: opt-out
   closed_method:
-    objects: ["closeButton", "unpip", "pagehide", "fullscreen", "setupFailure", "closePlayerShortcut", "contextMenu", "videoElRemove", "videoElEmptied", "urlBar"]
+    objects: ["closeButton", "unpip", "pagehide", "fullscreen", "setupFailure", "closePlayerShortcut", "contextMenu", "videoElRemove", "videoElEmptied", "urlBar", "shortcut"]
     description: >
       Records the method for closing the Picture-in-Picture window.
     notification_emails:
@@ -2928,6 +2936,7 @@ pictureinpicture:
       - "main"
     bug_numbers:
       - 1756703
+      - 1834554
     expiry_version: "never"
     release_channel_collection: opt-out
   subtitles_shown:
@@ -2947,81 +2956,6 @@ pictureinpicture:
       - 1772546
     expiry_version: "never"
     release_channel_collection: opt-out
-  backward:
-    objects: ["player"]
-    description: >
-      Recorded when the user clicks the seek backward button
-    notification_emails:
-      - mconley@mozilla.com
-      - mhowell@mozilla.com
-    products:
-      - "firefox"
-    record_in_processes:
-      - "main"
-    bug_numbers:
-      - 1822395
-    expiry_version: "116"
-    release_channel_collection: opt-out
-  backward_sequence:
-    objects: ["player"]
-    description: >
-      Recorded when the user clicks the seek backward button 3 times in a 2 second interval
-    notification_emails:
-      - mconley@mozilla.com
-      - mhowell@mozilla.com
-    products:
-      - "firefox"
-    record_in_processes:
-      - "main"
-    bug_numbers:
-      - 1822395
-    expiry_version: "116"
-    release_channel_collection: opt-out
-  forward:
-    objects: ["player"]
-    description: >
-      Recorded when the user clicks the seek forward button
-    notification_emails:
-      - mconley@mozilla.com
-      - mhowell@mozilla.com
-    products:
-      - "firefox"
-    record_in_processes:
-      - "main"
-    bug_numbers:
-      - 1822395
-    expiry_version: "116"
-    release_channel_collection: opt-out
-  forward_sequence:
-    objects: ["player"]
-    description: >
-      Recorded when the user clicks the seek forward button 3 times in a 2 second interval
-    notification_emails:
-      - mconley@mozilla.com
-      - mhowell@mozilla.com
-    products:
-      - "firefox"
-    record_in_processes:
-      - "main"
-    bug_numbers:
-      - 1822395
-    expiry_version: "116"
-    release_channel_collection: opt-out
-  seek:
-    objects: ["player"]
-    description: >
-      Recorded when the user interacts with the seek bar
-    notification_emails:
-      - mconley@mozilla.com
-      - mhowell@mozilla.com
-    products:
-      - "firefox"
-    record_in_processes:
-      - "main"
-    bug_numbers:
-      - 1822395
-    expiry_version: "116"
-    release_channel_collection: opt-out
   fullscreen:
     objects: ["player"]
     extra_keys:
@@ -3037,6 +2971,21 @@ pictureinpicture:
       - "main"
     bug_numbers:
       - 1822395
+    expiry_version: "never"
+    release_channel_collection: opt-out
+  disrespect_disable:
+    objects: ["urlBar"]
+    description: >
+      Recorded when the user chooses to enable PiP anyway on a PiP disabled video
+    notification_emails:
+      - mconley@mozilla.com
+      - mhowell@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - "main"
+    bug_numbers:
+      - 1834554
     expiry_version: "never"
     release_channel_collection: opt-out
 

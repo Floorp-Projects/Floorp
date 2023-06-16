@@ -133,8 +133,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-ares6**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
 
 
    .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
@@ -175,8 +175,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-ares6**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
       * - **browsertime-benchmark-safari-ares6**
         - ❌
         - ❌
@@ -378,8 +378,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-assorted-dom**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
 
 
    .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
@@ -420,8 +420,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-assorted-dom**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
       * - **browsertime-benchmark-safari-assorted-dom**
         - ❌
         - ❌
@@ -624,8 +624,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-jetstream2**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
 
 
    .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
@@ -666,8 +666,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-jetstream2**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
       * - **browsertime-benchmark-safari-jetstream2**
         - ❌
         - ❌
@@ -870,8 +870,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-matrix-react-bench**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
 
 
    .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
@@ -912,8 +912,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-matrix-react-bench**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -1106,8 +1106,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-motionmark-animometer**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
 
 
    .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
@@ -1148,8 +1148,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-motionmark-animometer**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
       * - **browsertime-benchmark-safari-motionmark-animometer**
         - ❌
         - ❌
@@ -1347,8 +1347,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-motionmark-htmlsuite**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
 
 
    .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
@@ -1389,8 +1389,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-motionmark-htmlsuite**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
       * - **browsertime-benchmark-safari-motionmark-htmlsuite**
         - ❌
         - ❌
@@ -1786,6 +1786,11 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ❌
         - ❌
         - ❌
+      * - **browsertime-benchmark-custom-car-speedometer**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-benchmark-firefox-speedometer**
         - ✅
         - ✅
@@ -2072,6 +2077,11 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ❌
         - ❌
       * - **browsertime-benchmark-chromium-speedometer**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-benchmark-custom-car-speedometer**
         - ❌
         - ❌
         - ❌
@@ -2380,6 +2390,11 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ❌
         - ❌
         - ❌
+      * - **browsertime-benchmark-custom-car-speedometer3**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-benchmark-firefox-speedometer3**
         - ✅
         - ✅
@@ -2679,6 +2694,11 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ❌
         - ❌
         - ❌
+      * - **browsertime-benchmark-custom-car-speedometer3**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-benchmark-firefox-speedometer3**
         - ✅
         - ✅
@@ -2700,7 +2720,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **gecko profile interval**: 1
    * **lower is better**: false
    * **page cycles**: 5
-   * **page timeout**: 120000
+   * **page timeout**: 140000
    * **subtest lower is better**: true
    * **subtest unit**: ms
    * **test url**: `<http://\<host\>:\<port\>/StyleBench/index.html?raptor>`__
@@ -2778,8 +2798,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-stylebench**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
 
 
    .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
@@ -2820,8 +2840,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-stylebench**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
       * - **browsertime-benchmark-safari-stylebench**
         - ❌
         - ❌
@@ -3019,8 +3039,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-sunspider**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
 
 
    .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
@@ -3061,8 +3081,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-sunspider**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
       * - **browsertime-benchmark-safari-sunspider**
         - ❌
         - ❌
@@ -3256,8 +3276,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-twitch-animation**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
 
 
    .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
@@ -3288,8 +3308,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-twitch-animation**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -5312,8 +5332,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-webaudio**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
 
 
    .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
@@ -5354,8 +5374,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-webaudio**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -8871,6 +8891,239 @@ Browsertime tests that use a custom pageload test script. These use the pageload
 
 
 
+.. dropdown:: upload-h3
+   :class-container: anchor-id-upload-h3-c
+
+   **Owner**: Network Team
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium, safari
+   * **browser cycles**: 1
+   * **browsertime args**: --browsertime.upload_iterations=10 --firefox.preference=network.http.http3.enable:true
+   * **custom data**: true
+   * **expected**: pass
+   * **gecko profile entries**: 14000000
+   * **gecko profile interval**: 1
+   * **lower is better**: false
+   * **output timeout**: 2000000
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **subtest lower is better**: false
+   * **subtest name filters**: tests/,iterations/
+   * **subtest unit**: mbps
+   * **test script**: upload.js
+   * **test url**: `<None>`__
+   * **type**: pageload
+   * **unit**: mbps
+   * **use live sites**: true
+   * **Test Task**:
+
+   .. list-table:: **test-linux1804-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-upload-firefox-upload-h3**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-upload-firefox-upload-h3**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-upload-chrome-upload-h3**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-upload-chromium-upload-h3**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-upload-firefox-upload-h3**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-upload-firefox-upload-h3**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-upload-chrome-upload-h3**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-upload-chromium-upload-h3**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-upload-firefox-upload-h3**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **browsertime-upload-safari-upload-h3**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-upload-firefox-upload-h3**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-upload-chrome-upload-h3**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-upload-chromium-upload-h3**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-upload-firefox-upload-h3**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-upload-firefox-upload-h3**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-upload-firefox-upload-h3**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-upload-chrome-upload-h3**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-upload-chromium-upload-h3**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-upload-firefox-upload-h3**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+
 .. dropdown:: welcome
    :class-container: anchor-id-welcome-c
 
@@ -9208,11 +9461,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-amazon**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-amazon**
         - ❌
         - ❌
@@ -9239,11 +9487,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-amazon**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-amazon**
         - ❌
         - ❌
@@ -9266,11 +9509,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - mozilla-release
         - mozilla-beta
       * - **browsertime-tp6-bytecode-firefox-amazon**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-amazon**
         - ❌
         - ❌
         - ❌
@@ -9357,11 +9595,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-amazon**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-amazon**
         - ❌
         - ❌
@@ -9394,11 +9627,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
       * - **browsertime-tp6-essential-chromium-amazon**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-amazon**
         - ❌
         - ❌
         - ❌
@@ -9449,11 +9677,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-amazon**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-amazon**
         - ❌
         - ❌
@@ -9486,11 +9709,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
       * - **browsertime-tp6-essential-chromium-amazon**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-amazon**
         - ❌
         - ❌
         - ❌
@@ -9531,11 +9749,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-amazon**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-amazon**
         - ❌
         - ❌
@@ -9558,11 +9771,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - mozilla-release
         - mozilla-beta
       * - **browsertime-tp6-bytecode-firefox-amazon**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-amazon**
         - ❌
         - ❌
         - ❌
@@ -9669,11 +9877,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-bing-search**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-bing-search**
         - ❌
         - ❌
@@ -9700,11 +9903,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-bing-search**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-bing-search**
         - ❌
         - ❌
@@ -9727,11 +9925,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - mozilla-release
         - mozilla-beta
       * - **browsertime-tp6-bytecode-firefox-bing-search**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-bing-search**
         - ❌
         - ❌
         - ❌
@@ -9813,11 +10006,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-bing-search**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-bing-search**
         - ❌
         - ❌
@@ -9850,11 +10038,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
       * - **browsertime-tp6-essential-chromium-bing-search**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-bing-search**
         - ❌
         - ❌
         - ❌
@@ -9900,11 +10083,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-bing-search**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-bing-search**
         - ❌
         - ❌
@@ -9937,11 +10115,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
       * - **browsertime-tp6-essential-chromium-bing-search**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-bing-search**
         - ❌
         - ❌
         - ❌
@@ -9982,11 +10155,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-bing-search**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-bing-search**
         - ❌
         - ❌
@@ -10009,11 +10177,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - mozilla-release
         - mozilla-beta
       * - **browsertime-tp6-bytecode-firefox-bing-search**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-bing-search**
         - ❌
         - ❌
         - ❌
@@ -10470,11 +10633,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-cnn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-cnn**
         - ❌
         - ❌
@@ -10501,11 +10659,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-cnn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-cnn**
         - ❌
         - ❌
@@ -10528,11 +10681,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - mozilla-release
         - mozilla-beta
       * - **browsertime-tp6-bytecode-firefox-cnn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-cnn**
         - ❌
         - ❌
         - ❌
@@ -10604,11 +10752,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-cnn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-cnn**
         - ❌
         - ❌
@@ -10645,11 +10788,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-cnn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-cnn**
         - ✅
         - ✅
@@ -10672,11 +10810,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - mozilla-release
         - mozilla-beta
       * - **browsertime-tp6-bytecode-firefox-cnn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-cnn**
         - ❌
         - ❌
         - ❌
@@ -10717,11 +10850,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-cnn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-cnn**
         - ❌
         - ❌
@@ -10748,11 +10876,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-cnn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-cnn**
         - ❌
         - ❌
@@ -10775,11 +10898,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - mozilla-release
         - mozilla-beta
       * - **browsertime-tp6-bytecode-firefox-cnn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-cnn**
         - ❌
         - ❌
         - ❌
@@ -12235,11 +12353,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-fandom**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-fandom**
         - ❌
         - ❌
@@ -12266,11 +12379,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-fandom**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-fandom**
         - ❌
         - ❌
@@ -12293,11 +12401,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - mozilla-release
         - mozilla-beta
       * - **browsertime-tp6-bytecode-firefox-fandom**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-fandom**
         - ❌
         - ❌
         - ❌
@@ -12379,11 +12482,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-fandom**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-fandom**
         - ❌
         - ❌
@@ -12416,11 +12514,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
       * - **browsertime-tp6-essential-chromium-fandom**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-fandom**
         - ❌
         - ❌
         - ❌
@@ -12461,11 +12554,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-fandom**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-fandom**
         - ❌
         - ❌
@@ -12498,11 +12586,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
       * - **browsertime-tp6-essential-chromium-fandom**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-fandom**
         - ❌
         - ❌
         - ❌
@@ -12543,11 +12626,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-fandom**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-fandom**
         - ❌
         - ❌
@@ -12570,11 +12648,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - mozilla-release
         - mozilla-beta
       * - **browsertime-tp6-bytecode-firefox-fandom**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-fandom**
         - ❌
         - ❌
         - ❌
@@ -13702,11 +13775,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-google-slides**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-google-slides**
         - ❌
         - ❌
@@ -13733,11 +13801,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-google-slides**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-google-slides**
         - ❌
         - ❌
@@ -13760,11 +13823,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - mozilla-release
         - mozilla-beta
       * - **browsertime-tp6-bytecode-firefox-google-slides**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-google-slides**
         - ❌
         - ❌
         - ❌
@@ -13846,11 +13904,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-google-slides**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-google-slides**
         - ❌
         - ❌
@@ -13883,11 +13936,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
       * - **browsertime-tp6-essential-chromium-google-slides**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-google-slides**
         - ❌
         - ❌
         - ❌
@@ -13933,11 +13981,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-google-slides**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-google-slides**
         - ❌
         - ❌
@@ -13970,11 +14013,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
       * - **browsertime-tp6-essential-chromium-google-slides**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-google-slides**
         - ❌
         - ❌
         - ❌
@@ -14015,11 +14053,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-google-slides**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-google-slides**
         - ❌
         - ❌
@@ -14042,11 +14075,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - mozilla-release
         - mozilla-beta
       * - **browsertime-tp6-bytecode-firefox-google-slides**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-google-slides**
         - ❌
         - ❌
         - ❌
@@ -15028,11 +15056,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-instagram**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-instagram**
         - ❌
         - ❌
@@ -15054,11 +15077,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-instagram**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-instagram**
         - ❌
         - ❌
@@ -15076,11 +15094,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - mozilla-release
         - mozilla-beta
       * - **browsertime-tp6-bytecode-firefox-instagram**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-instagram**
         - ❌
         - ❌
         - ❌
@@ -15142,11 +15155,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-instagram**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-instagram**
         - ❌
         - ❌
@@ -15178,11 +15186,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-instagram**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-instagram**
         - ✅
         - ✅
@@ -15200,11 +15203,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - mozilla-release
         - mozilla-beta
       * - **browsertime-tp6-bytecode-firefox-instagram**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-instagram**
         - ❌
         - ❌
         - ❌
@@ -15240,11 +15238,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-instagram**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-instagram**
         - ❌
         - ❌
@@ -15266,11 +15259,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-instagram**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-instagram**
         - ❌
         - ❌
@@ -15288,11 +15276,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - mozilla-release
         - mozilla-beta
       * - **browsertime-tp6-bytecode-firefox-instagram**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-instagram**
         - ❌
         - ❌
         - ❌
@@ -19089,11 +19072,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-twitter**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-twitter**
         - ❌
         - ❌
@@ -19120,11 +19098,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-twitter**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-twitter**
         - ❌
         - ❌
@@ -19147,11 +19120,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - mozilla-release
         - mozilla-beta
       * - **browsertime-tp6-bytecode-firefox-twitter**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-twitter**
         - ❌
         - ❌
         - ❌
@@ -19233,11 +19201,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-twitter**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-twitter**
         - ❌
         - ❌
@@ -19270,11 +19233,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
       * - **browsertime-tp6-essential-chromium-twitter**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-twitter**
         - ❌
         - ❌
         - ❌
@@ -19320,11 +19278,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-twitter**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-twitter**
         - ❌
         - ❌
@@ -19357,11 +19310,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
       * - **browsertime-tp6-essential-chromium-twitter**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-twitter**
         - ❌
         - ❌
         - ❌
@@ -19402,11 +19350,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-twitter**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-twitter**
         - ❌
         - ❌
@@ -19429,11 +19372,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - mozilla-release
         - mozilla-beta
       * - **browsertime-tp6-bytecode-firefox-twitter**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-twitter**
         - ❌
         - ❌
         - ❌
@@ -19890,11 +19828,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-wikipedia**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-wikipedia**
         - ❌
         - ❌
@@ -19921,11 +19854,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-wikipedia**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-wikipedia**
         - ❌
         - ❌
@@ -19948,11 +19876,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - mozilla-release
         - mozilla-beta
       * - **browsertime-tp6-bytecode-firefox-wikipedia**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-wikipedia**
         - ❌
         - ❌
         - ❌
@@ -20034,11 +19957,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-wikipedia**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-wikipedia**
         - ❌
         - ❌
@@ -20071,11 +19989,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
       * - **browsertime-tp6-essential-chromium-wikipedia**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-wikipedia**
         - ❌
         - ❌
         - ❌
@@ -20121,11 +20034,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-wikipedia**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-wikipedia**
         - ❌
         - ❌
@@ -20158,11 +20066,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
       * - **browsertime-tp6-essential-chromium-wikipedia**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-wikipedia**
         - ❌
         - ❌
         - ❌
@@ -20203,11 +20106,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-wikipedia**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-wikipedia**
         - ❌
         - ❌
@@ -20230,11 +20128,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - mozilla-release
         - mozilla-beta
       * - **browsertime-tp6-bytecode-firefox-wikipedia**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-wikipedia**
         - ❌
         - ❌
         - ❌
@@ -20341,11 +20234,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-yahoo-mail**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-yahoo-mail**
         - ❌
         - ❌
@@ -20372,11 +20260,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-yahoo-mail**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-yahoo-mail**
         - ❌
         - ❌
@@ -20399,11 +20282,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - mozilla-release
         - mozilla-beta
       * - **browsertime-tp6-bytecode-firefox-yahoo-mail**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-yahoo-mail**
         - ❌
         - ❌
         - ❌
@@ -20485,11 +20363,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-yahoo-mail**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-yahoo-mail**
         - ❌
         - ❌
@@ -20522,11 +20395,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
       * - **browsertime-tp6-essential-chromium-yahoo-mail**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-yahoo-mail**
         - ❌
         - ❌
         - ❌
@@ -20567,11 +20435,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-yahoo-mail**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-yahoo-mail**
         - ❌
         - ❌
@@ -20604,11 +20467,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
       * - **browsertime-tp6-essential-chromium-yahoo-mail**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-yahoo-mail**
         - ❌
         - ❌
         - ❌
@@ -20649,11 +20507,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-yahoo-mail**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-yahoo-mail**
         - ❌
         - ❌
@@ -20676,11 +20529,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - mozilla-release
         - mozilla-beta
       * - **browsertime-tp6-bytecode-firefox-yahoo-mail**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-yahoo-mail**
         - ❌
         - ❌
         - ❌
@@ -22635,11 +22483,6 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-cnn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-cnn**
         - ❌
         - ❌
@@ -22666,11 +22509,6 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-cnn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-cnn**
         - ❌
         - ❌
@@ -22693,11 +22531,6 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - mozilla-release
         - mozilla-beta
       * - **browsertime-tp6-bytecode-firefox-cnn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-cnn**
         - ❌
         - ❌
         - ❌
@@ -22769,11 +22602,6 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-cnn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-cnn**
         - ❌
         - ❌
@@ -22810,11 +22638,6 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-cnn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-cnn**
         - ✅
         - ✅
@@ -22837,11 +22660,6 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - mozilla-release
         - mozilla-beta
       * - **browsertime-tp6-bytecode-firefox-cnn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-cnn**
         - ❌
         - ❌
         - ❌
@@ -22882,11 +22700,6 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-cnn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-cnn**
         - ❌
         - ❌
@@ -22913,11 +22726,6 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-cnn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-cnn**
         - ❌
         - ❌
@@ -22940,11 +22748,6 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - mozilla-release
         - mozilla-beta
       * - **browsertime-tp6-bytecode-firefox-cnn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-cnn**
         - ❌
         - ❌
         - ❌
@@ -24676,11 +24479,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-amazon**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-amazon**
         - ❌
         - ❌
@@ -24707,11 +24505,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-amazon**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-amazon**
         - ❌
         - ❌
@@ -24734,11 +24527,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - mozilla-release
         - mozilla-beta
       * - **browsertime-tp6-bytecode-firefox-amazon**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-amazon**
         - ❌
         - ❌
         - ❌
@@ -24825,11 +24613,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-amazon**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-amazon**
         - ❌
         - ❌
@@ -24862,11 +24645,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6-essential-chromium-amazon**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-amazon**
         - ❌
         - ❌
         - ❌
@@ -24917,11 +24695,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-amazon**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-amazon**
         - ❌
         - ❌
@@ -24954,11 +24727,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6-essential-chromium-amazon**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-amazon**
         - ❌
         - ❌
         - ❌
@@ -24999,11 +24767,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-amazon**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-amazon**
         - ❌
         - ❌
@@ -25026,11 +24789,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - mozilla-release
         - mozilla-beta
       * - **browsertime-tp6-bytecode-firefox-amazon**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-amazon**
         - ❌
         - ❌
         - ❌
@@ -25727,11 +25485,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-cnn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-cnn**
         - ❌
         - ❌
@@ -25758,11 +25511,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-cnn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-cnn**
         - ❌
         - ❌
@@ -25785,11 +25533,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - mozilla-release
         - mozilla-beta
       * - **browsertime-tp6-bytecode-firefox-cnn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-cnn**
         - ❌
         - ❌
         - ❌
@@ -25861,11 +25604,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-cnn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-cnn**
         - ❌
         - ❌
@@ -25902,11 +25640,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-cnn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-cnn**
         - ✅
         - ✅
@@ -25929,11 +25662,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - mozilla-release
         - mozilla-beta
       * - **browsertime-tp6-bytecode-firefox-cnn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-cnn**
         - ❌
         - ❌
         - ❌
@@ -25974,11 +25702,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-cnn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-cnn**
         - ❌
         - ❌
@@ -26005,11 +25728,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-cnn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-cnn**
         - ❌
         - ❌
@@ -26032,11 +25750,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - mozilla-release
         - mozilla-beta
       * - **browsertime-tp6-bytecode-firefox-cnn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-cnn**
         - ❌
         - ❌
         - ❌
@@ -28415,11 +28128,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-instagram**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-instagram**
         - ❌
         - ❌
@@ -28441,11 +28149,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-instagram**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-instagram**
         - ❌
         - ❌
@@ -28463,11 +28166,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - mozilla-release
         - mozilla-beta
       * - **browsertime-tp6-bytecode-firefox-instagram**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-instagram**
         - ❌
         - ❌
         - ❌
@@ -28529,11 +28227,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-instagram**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-instagram**
         - ❌
         - ❌
@@ -28565,11 +28258,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-instagram**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-instagram**
         - ✅
         - ✅
@@ -28587,11 +28275,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - mozilla-release
         - mozilla-beta
       * - **browsertime-tp6-bytecode-firefox-instagram**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-instagram**
         - ❌
         - ❌
         - ❌
@@ -28627,11 +28310,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-instagram**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-instagram**
         - ❌
         - ❌
@@ -28653,11 +28331,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-instagram**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-instagram**
         - ❌
         - ❌
@@ -28675,11 +28348,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - mozilla-release
         - mozilla-beta
       * - **browsertime-tp6-bytecode-firefox-instagram**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-instagram**
         - ❌
         - ❌
         - ❌
@@ -29777,11 +29445,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-wikipedia**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-wikipedia**
         - ❌
         - ❌
@@ -29808,11 +29471,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-wikipedia**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-wikipedia**
         - ❌
         - ❌
@@ -29835,11 +29493,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - mozilla-release
         - mozilla-beta
       * - **browsertime-tp6-bytecode-firefox-wikipedia**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-wikipedia**
         - ❌
         - ❌
         - ❌
@@ -29921,11 +29574,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-wikipedia**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-wikipedia**
         - ❌
         - ❌
@@ -29958,11 +29606,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6-essential-chromium-wikipedia**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-wikipedia**
         - ❌
         - ❌
         - ❌
@@ -30008,11 +29651,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-wikipedia**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-wikipedia**
         - ❌
         - ❌
@@ -30045,11 +29683,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6-essential-chromium-wikipedia**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-wikipedia**
         - ❌
         - ❌
         - ❌
@@ -30090,11 +29723,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-wikipedia**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-wikipedia**
         - ❌
         - ❌
@@ -30117,11 +29745,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - mozilla-release
         - mozilla-beta
       * - **browsertime-tp6-bytecode-firefox-wikipedia**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-wikipedia**
         - ❌
         - ❌
         - ❌
@@ -30919,11 +30542,6 @@ These tests aren't used in standard testing, they are only used in the Raptor un
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-amazon**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-amazon**
         - ❌
         - ❌
@@ -30950,11 +30568,6 @@ These tests aren't used in standard testing, they are only used in the Raptor un
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-amazon**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-amazon**
         - ❌
         - ❌
@@ -30977,11 +30590,6 @@ These tests aren't used in standard testing, they are only used in the Raptor un
         - mozilla-release
         - mozilla-beta
       * - **browsertime-tp6-bytecode-firefox-amazon**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-amazon**
         - ❌
         - ❌
         - ❌
@@ -31068,11 +30676,6 @@ These tests aren't used in standard testing, they are only used in the Raptor un
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-amazon**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-amazon**
         - ❌
         - ❌
@@ -31105,11 +30708,6 @@ These tests aren't used in standard testing, they are only used in the Raptor un
         - ❌
         - ❌
       * - **browsertime-tp6-essential-chromium-amazon**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-amazon**
         - ❌
         - ❌
         - ❌
@@ -31160,11 +30758,6 @@ These tests aren't used in standard testing, they are only used in the Raptor un
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-amazon**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-amazon**
         - ❌
         - ❌
@@ -31197,11 +30790,6 @@ These tests aren't used in standard testing, they are only used in the Raptor un
         - ❌
         - ❌
       * - **browsertime-tp6-essential-chromium-amazon**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-amazon**
         - ❌
         - ❌
         - ❌
@@ -31242,11 +30830,6 @@ These tests aren't used in standard testing, they are only used in the Raptor un
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-essential-custom-car-amazon**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-essential-firefox-amazon**
         - ❌
         - ❌
@@ -31269,11 +30852,6 @@ These tests aren't used in standard testing, they are only used in the Raptor un
         - mozilla-release
         - mozilla-beta
       * - **browsertime-tp6-bytecode-firefox-amazon**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-essential-custom-car-amazon**
         - ❌
         - ❌
         - ❌

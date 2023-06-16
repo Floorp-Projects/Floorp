@@ -374,5 +374,5 @@ class Input(BidiModule):
         return params
 
 
-def get_element_origin(element: Any):
+def get_element_origin(element: Any) -> Mapping[str, Any]:
     return {"type": "element", "element": {"sharedId": element["sharedId"]}}

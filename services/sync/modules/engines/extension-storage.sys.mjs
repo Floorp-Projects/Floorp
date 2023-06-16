@@ -18,12 +18,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Observers: "resource://services-common/observers.sys.mjs",
   SCORE_INCREMENT_MEDIUM: "resource://services-sync/constants.sys.mjs",
   Svc: "resource://services-sync/util.sys.mjs",
-});
+  extensionStorageSync: "resource://gre/modules/ExtensionStorageSync.sys.mjs",
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  extensionStorageSync: "resource://gre/modules/ExtensionStorageSync.jsm",
   extensionStorageSyncKinto:
-    "resource://gre/modules/ExtensionStorageSyncKinto.jsm",
+    "resource://gre/modules/ExtensionStorageSyncKinto.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetter(

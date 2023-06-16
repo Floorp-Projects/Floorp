@@ -7,7 +7,7 @@
 
 const TEST_URI = "data:text/html;charset=utf-8,<!DOCTYPE html>Cache Test";
 
-add_task(async function() {
+add_task(async function () {
   info("Test whether multiple listener can get same cached resources");
 
   const tab = await addTab(TEST_URI);
@@ -51,7 +51,7 @@ add_task(async function() {
   await client.close();
 });
 
-add_task(async function() {
+add_task(async function () {
   info(
     "Test whether the cache is reflecting existing resources and additional resources"
   );
@@ -113,7 +113,7 @@ add_task(async function() {
   await client.close();
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test whether the cache is cleared when navigation");
 
   const tab = await addTab(TEST_URI);
@@ -152,7 +152,7 @@ add_task(async function() {
   await client.close();
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test with multiple resource types");
 
   const tab = await addTab(TEST_URI);
@@ -210,7 +210,7 @@ add_task(async function() {
   await client.close();
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test multiple listeners with/without ignoreExistingResources");
   await testIgnoreExistingResources(true);
   await testIgnoreExistingResources(false);
@@ -279,7 +279,7 @@ async function testIgnoreExistingResources(isFirstListenerIgnoreExisting) {
   await client.close();
 }
 
-add_task(async function() {
+add_task(async function () {
   info("Test that onAvailable is not called with an empty resources array");
 
   const tab = await addTab(TEST_URI);

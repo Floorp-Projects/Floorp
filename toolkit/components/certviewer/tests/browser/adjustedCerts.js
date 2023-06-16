@@ -76,8 +76,7 @@ const adjustedCerts = [
           { labelId: "exponent", info: 65537 },
           {
             labelId: "modulus",
-            info:
-              "C6:3C:AA:F2:3C:97:0C:3A:C1:4F:28:AD:72:70:7D:D3:CE:B9:B5:60:73:A4:74:9B:8A:77:46:FD:7A:98:42:4C:C5:30:19:57:9A:A9:33:0B:E1:5D:4D:10:58:CA:77:99:C3:93:F3:F9:75:90:BC:BF:BB:E0:95:BA:2E:C5:8D:73:61:05:D3:10:84:A8:B3:89:B8:2F:73:8C:F0:2A:6E:BE:EE:AE:83:4B:82:11:B1:61:FD:77:61:DA:9B:1B:9A:23:FF:8C:7E:A2:01:06:DD:D1:7F:53:96:08:C1:5A:FA:E7:C0:CA:C8:44:8C:57:A7:A8:61:5F:66:0D:57:D3:B8:96:AC:B6:4A:9C:C1:EA:E8:FB:96:40:29:F6:15:30:B5:04:B0:CC:05:B6:84:C3:24:59:95:7F:A2:65:90:E5:B0:B3:1A:75:59:C4:3F:31:14:0A:D5:CC:AA:3A:85:05:52:06:32:96:07:61:DF:27:82:0C:F7:85:DB:60:31:F0:09:50:C5:B7:1A:23:E1:B0:7D:02:F5:14:1E:C9:CB:E8:7E:2A:33:04:F6:51:3F:52:98:15:E9:0B:76:47:5C:4D:4A:6B:C5:08:15:AE:F8:D1:57:E9:EA:70:14:FF:C9:45:B9:0C:7C:BC:F4:6D:E6:05:52:F9:8C:80:BB:70:56:91:0F:4B",
+            info: "C6:3C:AA:F2:3C:97:0C:3A:C1:4F:28:AD:72:70:7D:D3:CE:B9:B5:60:73:A4:74:9B:8A:77:46:FD:7A:98:42:4C:C5:30:19:57:9A:A9:33:0B:E1:5D:4D:10:58:CA:77:99:C3:93:F3:F9:75:90:BC:BF:BB:E0:95:BA:2E:C5:8D:73:61:05:D3:10:84:A8:B3:89:B8:2F:73:8C:F0:2A:6E:BE:EE:AE:83:4B:82:11:B1:61:FD:77:61:DA:9B:1B:9A:23:FF:8C:7E:A2:01:06:DD:D1:7F:53:96:08:C1:5A:FA:E7:C0:CA:C8:44:8C:57:A7:A8:61:5F:66:0D:57:D3:B8:96:AC:B6:4A:9C:C1:EA:E8:FB:96:40:29:F6:15:30:B5:04:B0:CC:05:B6:84:C3:24:59:95:7F:A2:65:90:E5:B0:B3:1A:75:59:C4:3F:31:14:0A:D5:CC:AA:3A:85:05:52:06:32:96:07:61:DF:27:82:0C:F7:85:DB:60:31:F0:09:50:C5:B7:1A:23:E1:B0:7D:02:F5:14:1E:C9:CB:E8:7E:2A:33:04:F6:51:3F:52:98:15:E9:0B:76:47:5C:4D:4A:6B:C5:08:15:AE:F8:D1:57:E9:EA:70:14:FF:C9:45:B9:0C:7C:BC:F4:6D:E6:05:52:F9:8C:80:BB:70:56:91:0F:4B",
           },
         ],
         Critical: false,
@@ -106,8 +105,7 @@ const adjustedCerts = [
         sectionItems: [
           {
             labelId: "sha-256",
-            info:
-              "31:11:50:0C:4A:66:01:2C:DA:E3:33:EC:3F:CA:1C:9D:DE:45:C9:54:44:0E:7E:E4:13:71:6B:FF:36:63:C0:74",
+            info: "31:11:50:0C:4A:66:01:2C:DA:E3:33:EC:3F:CA:1C:9D:DE:45:C9:54:44:0E:7E:E4:13:71:6B:FF:36:63:C0:74",
           },
           {
             labelId: "sha-1",
@@ -185,8 +183,7 @@ const adjustedCerts = [
           },
           {
             labelId: "location",
-            info:
-              "http://cacerts.digicert.com/DigiCertSHA2ExtendedValidationServerCA.crt",
+            info: "http://cacerts.digicert.com/DigiCertSHA2ExtendedValidationServerCA.crt",
           },
           { labelId: "method", info: "CA Issuers" },
         ],
@@ -215,8 +212,7 @@ const adjustedCerts = [
         sectionItems: [
           {
             labelId: "logid",
-            info:
-              "A4:B9:09:90:B4:18:58:14:87:BB:13:A2:CC:67:70:0A:3C:35:98:04:F9:1B:DF:B8:E3:77:CD:0E:C8:0D:DC:10",
+            info: "A4:B9:09:90:B4:18:58:14:87:BB:13:A2:CC:67:70:0A:3C:35:98:04:F9:1B:DF:B8:E3:77:CD:0E:C8:0D:DC:10",
           },
           { labelId: "name", info: "Google “Pilot”" },
           { labelId: "signaturealgorithm", info: "SHA-256 ECDSA" },
@@ -230,8 +226,7 @@ const adjustedCerts = [
           },
           {
             labelId: "logid",
-            info:
-              "56:14:06:9A:2F:D7:C2:EC:D3:F5:E1:BD:44:B2:3E:C7:46:76:B9:BC:99:11:5C:C0:EF:94:98:55:D6:89:D0:DD",
+            info: "56:14:06:9A:2F:D7:C2:EC:D3:F5:E1:BD:44:B2:3E:C7:46:76:B9:BC:99:11:5C:C0:EF:94:98:55:D6:89:D0:DD",
           },
           { labelId: "name", info: "DigiCert Server" },
           { labelId: "signaturealgorithm", info: "SHA-256 ECDSA" },
@@ -245,8 +240,7 @@ const adjustedCerts = [
           },
           {
             labelId: "logid",
-            info:
-              "BB:D9:DF:BC:1F:8A:71:B5:93:94:23:97:AA:92:7B:47:38:57:95:0A:AB:52:E8:1A:90:96:64:36:8E:1E:D1:85",
+            info: "BB:D9:DF:BC:1F:8A:71:B5:93:94:23:97:AA:92:7B:47:38:57:95:0A:AB:52:E8:1A:90:96:64:36:8E:1E:D1:85",
           },
           { labelId: "name", info: "Google “Skydiver”" },
           { labelId: "signaturealgorithm", info: "SHA-256 ECDSA" },

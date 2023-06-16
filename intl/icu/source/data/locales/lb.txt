@@ -291,23 +291,23 @@ lb{
                     M{"M.–M."}
                 }
                 MEd{
-                    M{"E, dd.MM. – E, dd.MM."}
-                    d{"E, dd.MM. – E, dd.MM."}
+                    M{"E, dd.MM. – E, dd.MM."}
+                    d{"E, dd.MM. – E, dd.MM."}
                 }
                 MMM{
                     M{"MMM–MMM"}
                 }
                 MMMEd{
                     M{"E, d. MMM – E, d. MMM"}
-                    d{"E, d. – E, d. MMM"}
+                    d{"E, d. – E, d. MMM"}
                 }
                 MMMd{
                     M{"d. MMM – d. MMM"}
                     d{"d.–d. MMM"}
                 }
                 Md{
-                    M{"dd.MM. – dd.MM."}
-                    d{"dd.MM. – dd.MM."}
+                    M{"dd.MM. – dd.MM."}
+                    d{"dd.MM. – dd.MM."}
                 }
                 d{
                     d{"d.–d."}
@@ -331,7 +331,7 @@ lb{
                 }
                 yMMMEd{
                     M{"E, d. MMM – E, d. MMM y G"}
-                    d{"E, d. – E, d. MMM y G"}
+                    d{"E, d. – E, d. MMM y G"}
                     y{"E, d. MMM y – E, d. MMM y G"}
                 }
                 yMMMM{
@@ -539,23 +539,23 @@ lb{
                     M{"M.–M."}
                 }
                 MEd{
-                    M{"E, dd.MM. – E, dd.MM."}
-                    d{"E, dd.MM. – E, dd.MM."}
+                    M{"E, dd.MM. – E, dd.MM."}
+                    d{"E, dd.MM. – E, dd.MM."}
                 }
                 MMM{
                     M{"MMM–MMM"}
                 }
                 MMMEd{
                     M{"E, d. MMM – E, d. MMM"}
-                    d{"E, d. – E, d. MMM"}
+                    d{"E, d. – E, d. MMM"}
                 }
                 MMMd{
                     M{"d. MMM – d. MMM"}
                     d{"d.–d. MMM"}
                 }
                 Md{
-                    M{"dd.MM. – dd.MM."}
-                    d{"dd.MM. – dd.MM."}
+                    M{"dd.MM. – dd.MM."}
+                    d{"dd.MM. – dd.MM."}
                 }
                 d{
                     d{"d.–d."}
@@ -597,7 +597,7 @@ lb{
                 }
                 yMMMEd{
                     M{"E, d. MMM – E, d. MMM y"}
-                    d{"E, d. – E, d. MMM y"}
+                    d{"E, d. – E, d. MMM y"}
                     y{"E, d. MMM y – E, d. MMM y"}
                 }
                 yMMMM{

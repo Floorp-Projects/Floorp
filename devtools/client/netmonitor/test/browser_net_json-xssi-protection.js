@@ -8,7 +8,7 @@
  * are handled correctly.
  */
 
-add_task(async function() {
+add_task(async function () {
   const { tab, monitor } = await initNetMonitor(JSON_XSSI_PROTECTION_URL, {
     requestCount: 1,
   });

@@ -258,6 +258,9 @@ am{
         "America:Chihuahua"{
             ec{"ቺሁዋውአ"}
         }
+        "America:Ciudad_Juarez"{
+            ec{"ሳዮዳድ ሁዋሬዝ"}
+        }
         "America:Coral_Harbour"{
             ec{"አቲኮካን"}
         }

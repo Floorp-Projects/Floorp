@@ -15,6 +15,7 @@
 #include "builtin/BigInt.h"
 #include "builtin/MapObject.h"
 #include "builtin/TestingFunctions.h"
+#include "frontend/FrontendContext.h"  // FrontendContext
 #include "gc/PublicIterators.h"
 #include "gc/WeakMap.h"
 #include "js/experimental/CodeCoverage.h"
@@ -359,6 +360,11 @@ js::AutoCheckRecursionLimit::stackKindForCurrentPrincipal(JSContext* cx) const {
 JS_PUBLIC_API void js::AutoCheckRecursionLimit::assertMainThread(
     JSContext* cx) const {
   MOZ_ASSERT(cx->isMainThreadContext());
+}
+
+JS::NativeStackLimit AutoCheckRecursionLimit::getStackLimit(
+    FrontendContext* fc) const {
+  return fc->stackLimit();
 }
 
 JS_PUBLIC_API JSFunction* js::DefineFunctionWithReserved(

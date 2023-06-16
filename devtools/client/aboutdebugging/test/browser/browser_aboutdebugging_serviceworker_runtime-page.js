@@ -21,7 +21,7 @@ const SW_URL = URL_ROOT_SSL + "resources/service-workers/push-sw.js";
  * Test that service workers appear and dissapear from the runtime page when they
  * are registered / unregistered.
  */
-add_task(async function() {
+add_task(async function () {
   prepareCollapsibilitiesTest();
   await enableServiceWorkerDebugging();
   const { document, tab, window } = await openAboutDebugging({

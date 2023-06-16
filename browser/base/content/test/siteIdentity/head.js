@@ -413,7 +413,7 @@ async function loadBadCertPage(url) {
   BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, url);
   await loaded;
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     content.document.getElementById("exceptionDialogButton").click();
   });
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);

@@ -10,7 +10,7 @@ addAccessibleTask(
     <option id="o1">hello</option>
     <option id="o2">world</option>
   </select>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     const select = findAccessibleChildByID(accDoc, "select");
     ok(
       isAccessible(select.firstChild, [nsIAccessibleSelectable]),
@@ -21,7 +21,7 @@ addAccessibleTask(
       "select should be on screen and visible"
     );
 
-    if (!isCacheEnabled || !browser.isRemoteBrowser) {
+    if (!browser.isRemoteBrowser) {
       await untilCacheOk(
         () => testVisibility(select.firstChild, false, true),
         "combobox list should be on screen and invisible"

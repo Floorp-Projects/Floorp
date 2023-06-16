@@ -37,7 +37,6 @@ interface nsIAuthPrompt : nsISupports
 
     /**
      * Puts up a username/password dialog with OK and Cancel buttons.
-     * Puts up a password dialog with OK and Cancel buttons.
      * @param  dialogText    The title for the dialog.
      * @param  text          The text to display in the dialog.
      * @param  passwordRealm The "realm" the password belongs to: e.g.
@@ -49,6 +48,25 @@ interface nsIAuthPrompt : nsISupports
      * @return true for OK, false for Cancel
      */
     boolean promptUsernameAndPassword(in wstring dialogTitle,
+                                      in wstring text,
+                                      in wstring passwordRealm,
+                                      in uint32_t savePassword,
+                                      inout wstring user,
+                                      inout wstring pwd);
+
+    /**
+     * Puts up an async username/password dialog with OK and Cancel buttons.
+     * @param  dialogText    The title for the dialog.
+     * @param  text          The text to display in the dialog.
+     * @param  passwordRealm The "realm" the password belongs to: e.g.
+     *                       ldap://localhost/dc=test
+     * @param  savePassword  One of the SAVE_PASSWORD_* options above.
+     * @param  user          The username entered in the dialog.
+     * @param  pwd           The password entered by the user if OK was
+     *                       selected.
+     * @return promise resolving to true for OK, false for Cancel
+     */
+    Promise asyncPromptUsernameAndPassword(in wstring dialogTitle,
                                       in wstring text,
                                       in wstring passwordRealm,
                                       in uint32_t savePassword,
@@ -73,6 +91,29 @@ interface nsIAuthPrompt : nsISupports
      * @return true for OK, false for Cancel
      */
     boolean promptPassword(in wstring dialogTitle,
+                           in wstring text,
+                           in wstring passwordRealm,
+                           in uint32_t savePassword,
+                           inout wstring pwd);
+
+    /**
+     * Puts up an async password dialog with OK and Cancel buttons.
+     * @param  dialogText    The title for the dialog.
+     * @param  text          The text to display in the dialog.
+     * @param  passwordRealm The "realm" the password belongs to: e.g.
+     *                       ldap://localhost/dc=test. If a username is
+     *                       specified (http://user@site.com) it will be used
+     *                       when matching existing logins or saving new ones.
+     *                       If no username is specified, only password-only
+     *                       logins will be matched or saved.
+     *                       Note: if a username is specified, the username
+     *                       should be escaped.
+     * @param  savePassword  One of the SAVE_PASSWORD_* options above.
+     * @param  pwd           The password entered by the user if OK was
+     *                       selected.
+     * @return promise resolving to true for OK, false for Cancel
+     */
+    Promise asyncPromptPassword(in wstring dialogTitle,
                            in wstring text,
                            in wstring passwordRealm,
                            in uint32_t savePassword,

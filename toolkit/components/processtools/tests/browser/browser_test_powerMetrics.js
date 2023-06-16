@@ -21,13 +21,15 @@ const kNS_PER_MS = 1000000;
 
 function printProcInfo(procInfo) {
   info(
-    `  pid: ${procInfo.pid}, type = parent, cpu time = ${procInfo.cpuTime /
-      kNS_PER_MS}ms`
+    `  pid: ${procInfo.pid}, type = parent, cpu time = ${
+      procInfo.cpuTime / kNS_PER_MS
+    }ms`
   );
   for (let child of procInfo.children) {
     info(
-      `  pid: ${child.pid}, type = ${child.type}, cpu time = ${child.cpuTime /
-        kNS_PER_MS}ms`
+      `  pid: ${child.pid}, type = ${child.type}, cpu time = ${
+        child.cpuTime / kNS_PER_MS
+      }ms`
     );
   }
 }
@@ -109,12 +111,10 @@ add_task(async () => {
   let cpuTimeByType = {},
     gpuTimeByType = {};
   for (let label of kGleanProcessTypeLabels) {
-    cpuTimeByType[label] = Glean.power.cpuTimePerProcessTypeMs[
-      label
-    ].testGetValue();
-    gpuTimeByType[label] = Glean.power.gpuTimePerProcessTypeMs[
-      label
-    ].testGetValue();
+    cpuTimeByType[label] =
+      Glean.power.cpuTimePerProcessTypeMs[label].testGetValue();
+    gpuTimeByType[label] =
+      Glean.power.gpuTimePerProcessTypeMs[label].testGetValue();
   }
   let totalCpuTime = Glean.power.totalCpuTimeMs.testGetValue();
   let totalGpuTime = Glean.power.totalGpuTimeMs.testGetValue();

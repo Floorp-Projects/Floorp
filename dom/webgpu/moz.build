@@ -44,6 +44,7 @@ h_and_cpp = [
     "SupportedLimits",
     "Texture",
     "TextureView",
+    "Utility",
     "ValidationError",
 ]
 EXPORTS.mozilla.webgpu += [x + ".h" for x in h_and_cpp]

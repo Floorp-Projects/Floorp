@@ -1,0 +1,62 @@
+Metadata-Version: 2.1
+Name: fluent.migrate
+Version: 0.12.0
+Summary: Toolchain to migrate legacy translation to Fluent.
+Home-page: https://github.com/mozilla/fluent-migrate
+Author: Mozilla
+Author-email: l10n-drivers@mozilla.org
+License: APL 2
+Keywords: fluent,localization,l10n
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Operating System :: POSIX
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: compare-locales (<10.0,>=9.0.1)
+Requires-Dist: fluent.syntax (<0.20,>=0.19.0)
+Provides-Extra: hg
+Requires-Dist: python-hglib ; extra == 'hg'
+
+Fluent Migration Tools
+======================
+
+Programmatically create Fluent files from existing content in both legacy
+and Fluent formats. Use recipes written in Python to migrate content for each
+of your localizations.
+
+`migrate-l10n` is a CLI script which uses the `fluent.migrate` module under
+the hood to run migrations on existing translations.
+
+`validate-l10n-recipe` is a CLI script to test a migration recipe for common
+errors, without trying to apply it.
+
+Installation
+------------
+
+Install from PyPI:
+
+    pip install fluent.migrate[hg]
+
+If you only want to use the `MigrationContext` API, you can drop the
+requirement on `python-hglib`:
+
+    pip install fluent.migrate
+
+Usage
+-----
+
+Migrations consist of _recipes_, which are applied to a _localization repository_, based on _template files_.
+You can find recipes for Firefox in `mozilla-central/python/l10n/fluent_migrations/`,
+the reference repository is [gecko-strings](https://hg.mozilla.org/l10n/gecko-strings/) or _quarantine_.
+You apply those migrations to l10n repositories in [l10n-central](https://hg.mozilla.org/l10n-central/), or to `gecko-strings` for testing.
+
+The migrations are run as python modules, so you need to have their file location in `PYTHONPATH`.
+
+An example would look like
+
+    $ migrate-l10n --lang it --reference-dir gecko-strings --localization-dir l10n-central/it bug_1451992_preferences_sitedata bug_1451992_preferences_translation

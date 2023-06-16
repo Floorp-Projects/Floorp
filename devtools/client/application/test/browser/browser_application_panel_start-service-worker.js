@@ -8,7 +8,7 @@ const TAB_URL = URL_ROOT + "resources/service-workers/simple.html";
 /**
  * Tests that the Start button works for service workers who can be debugged
  */
-add_task(async function() {
+add_task(async function () {
   await enableApplicationPanel(); // this also enables SW debugging
 
   // Setting a low idle_timeout and idle_extended_timeout will allow the service worker

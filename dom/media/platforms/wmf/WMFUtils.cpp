@@ -622,5 +622,11 @@ HRESULT MFSerializeAttributesToStream(IMFAttributes* pAttr, DWORD dwOptions,
   return (MFSerializeAttributesToStreamPtr)(pAttr, dwOptions, pStm);
 }
 
+HRESULT MFWrapMediaType(IMFMediaType* pOrig, REFGUID MajorType, REFGUID SubType,
+                        IMFMediaType** ppWrap) {
+  ENSURE_FUNCTION_PTR(MFWrapMediaType, mfplat.dll);
+  return (MFWrapMediaTypePtr)(pOrig, MajorType, SubType, ppWrap);
+}
+
 }  // end namespace wmf
 }  // end namespace mozilla

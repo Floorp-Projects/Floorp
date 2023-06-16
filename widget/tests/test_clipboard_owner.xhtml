@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1812078
+-->
+<window title="Mozilla Bug 1812078"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+<script type="application/javascript" src="clipboard_helper.js"/>
+
+<!-- test results are displayed in the html:body -->
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+
+<!-- test code goes here -->
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+function testClipboardOwner(aClipboardType, aAsync) {
+  let losingOwnership = false;
+  const clipboardOwner = {
+    QueryInterface: ChromeUtils.generateQI(["nsIClipboardOwner"]),
+    // nsIClipboardOwner
+    LosingOwnership(aTransferable) {
+      losingOwnership = true;
+    },
+  };
+
+  add_task(function test_clipboard_owner() {
+    info(`Test clipboard owner for type ${aClipboardType} ${aAsync ? "async" : ""}`);
+
+    // Setup clipboard owner.
+    writeRandomStringToClipboard("text/plain", aClipboardType, clipboardOwner, aAsync);
+
+    // Test should not lose ownership.
+    clipboardTypes.forEach(function(otherType) {
+      losingOwnership = false;
+      if (aClipboardType != otherType && clipboard.isClipboardTypeSupported(otherType)) {
+        // Test setting clipboard data.
+        writeRandomStringToClipboard("text/plain", otherType);
+        ok(!losingOwnership, `Should not lose ownership while setting data to type ${otherType}`);
+
+        // Test async setting clipboard data.
+        writeRandomStringToClipboard("text/plain", otherType, null, true);
+        ok(!losingOwnership, `Should not lose ownership while async setting data to type ${otherType}`);
+      }
+    });
+
+    // Test whether should lose ownership.
+    losingOwnership = false;
+    writeRandomStringToClipboard("text/plain", aClipboardType, clipboardOwner);
+    ok(losingOwnership, `Should lose ownership while setting data to type ${aClipboardType}`);
+
+    losingOwnership = false;
+    writeRandomStringToClipboard("text/plain", aClipboardType, null, true);
+    ok(losingOwnership, `Should lose ownership while async setting data to type ${aClipboardType}`);
+
+    // Clean clipboard data.
+    cleanupAllClipboard();
+  });
+}
+
+/** Test for Bug 1812078 */
+clipboardTypes.forEach(function(testType) {
+  if (clipboard.isClipboardTypeSupported(testType)) {
+    // Test sync set clipboard data.
+    testClipboardOwner(testType, false);
+
+    // Test async set clipboard data.
+    testClipboardOwner(testType, true);
+  }
+});
+
+]]>
+</script>
+</window>

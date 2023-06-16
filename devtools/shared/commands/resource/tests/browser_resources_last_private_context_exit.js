@@ -9,7 +9,7 @@ const NON_PRIVATE_TEST_URI =
   "data:text/html;charset=utf8,<!DOCTYPE html>Not private";
 const PRIVATE_TEST_URI = `data:text/html;charset=utf8,<!DOCTYPE html>Test in private windows`;
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.browsertoolbox.scope", "everything");
   const { commands } = await initMultiProcessResourceCommand();
   const { resourceCommand } = commands;

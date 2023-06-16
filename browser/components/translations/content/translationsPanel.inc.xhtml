@@ -10,80 +10,136 @@
        noautofocus="true"
        aria-labelledby="translations-panel-main-header-label"
        orient="vertical">
-
-  <panelmultiview id="translations-panel-multiview">
-    <!-- Dual language selection view -->
-    <panelview id="translations-panel-view-dual"
-               class="PanelUI-subView"
+  <panelmultiview id="translations-panel-multiview"
+                  mainViewId="translations-panel-view-default">
+    <panelview id="translations-panel-view-default"
+               class="PanelUI-subView translations-panel-view"
                role="document"
                showheader="true">
-      <hbox class="panel-header">
-        <html:h1 id="translations-panel-main-header-label">
-          <html:span data-l10n-id="translations-panel-dual-header"></html:span>
+      <hbox class="panel-header translations-panel-header">
+        <html:h1>
+          <html:span id="translations-panel-header"></html:span>
         </html:h1>
+        <toolbarbutton id="translations-panel-settings" class="panel-info-button"
+                       data-l10n-id="translations-panel-settings-button"
+                       closemenu="none"
+                       oncommand="TranslationsPanel.openSettingsPopup(this)">
+          <image class="translations-panel-gear-icon" />
+          <menupopup>
+            <menuitem class="always-translate-language-menuitem"
+                      data-l10n-id="translations-panel-settings-always-translate-unknown-language"
+                      type="checkbox"
+                      checked="false"
+                      autocheck="false"
+                      oncommand="TranslationsPanel.onAlwaysTranslateLanguage()"/>
+            <menuitem class="never-translate-language-menuitem"
+                      data-l10n-id="translations-panel-settings-never-translate-unknown-language"
+                      type="checkbox"
+                      checked="false"
+                      autocheck="false"
+                      oncommand="TranslationsPanel.onNeverTranslateLanguage()"/>
+            <menuitem class="never-translate-site-menuitem"
+                      data-l10n-id="translations-panel-settings-never-translate-site"
+                      type="checkbox"
+                      checked="false"
+                      autocheck="false"
+                      oncommand="TranslationsPanel.onNeverTranslateSite()"/>
+            <menuseparator/>
+            <menuitem data-l10n-id="translations-panel-settings-manage-languages"
+                      oncommand="TranslationsPanel.openManageLanguages()"/>
+          </menupopup>
+        </toolbarbutton>
       </hbox>
 
-      <toolbarseparator/>
-
       <vbox class="translations-panel-content">
-        <label data-l10n-id="translations-panel-dual-from-label"></label>
-        <menulist id="translations-panel-from"
-                  flex="1"
-                  value="detect"
-                  size="large"
-                  class="translations-panel-menulist">
-          <menupopup id="translations-panel-from-menupopup">
-            <!-- The list of <menuitem> will be dynamically inserted. -->
-          </menupopup>
-        </menulist>
+        <vbox id="translations-panel-lang-selection">
+          <label data-l10n-id="translations-panel-from-label"></label>
+          <menulist id="translations-panel-from"
+                    flex="1"
+                    value="detect"
+                    size="large"
+                    oncommand="TranslationsPanel.onChangeLanguages(event)">
+            <menupopup id="translations-panel-from-menupopup"
+                      class="translations-panel-language-menupopup-from">
+              <menuitem data-l10n-id="translations-panel-choose-language" value=""></menuitem>
+              <!-- The list of <menuitem> will be dynamically inserted. -->
+            </menupopup>
+          </menulist>
 
-        <label data-l10n-id="translations-panel-dual-to-label"></label>
-        <menulist id="translations-panel-to"
-                  flex="1"
-                  value="detect"
-                  size="large"
-                  class="translations-panel-menulist">
-          <menupopup id="translations-panel-to-menupopup">
-            <!-- The list of <menuitem> will be dynamically inserted. -->
-          </menupopup>
-        </menulist>
+          <label data-l10n-id="translations-panel-to-label"></label>
+          <menulist id="translations-panel-to"
+                    flex="1"
+                    value="detect"
+                    size="large"
+                    oncommand="TranslationsPanel.onChangeLanguages(event)">
+            <menupopup id="translations-panel-to-menupopup"
+                      class="translations-panel-language-menupopup-to">
+              <menuitem data-l10n-id="translations-panel-choose-language" value=""></menuitem>
+              <!-- The list of <menuitem> will be dynamically inserted. -->
+            </menupopup>
+          </menulist>
+        </vbox>
+
+        <vbox id="translations-panel-error">
+          <hbox class="translations-panel-error-header">
+            <image class="translations-panel-error-icon translations-panel-error-header-icon" />
+            <description id="translations-panel-error-message"></description>
+          </hbox>
+          <hbox id="translations-panel-error-message-hint"></hbox>
+          <hbox pack="end">
+            <button id="translations-panel-translate-hint-action" />
+          </hbox>
+        </vbox>
       </vbox>
 
-      <hbox class="panel-footer">
-        <button default="true"
+      <hbox class="panel-footer translations-panel-footer">
+        <button id="translations-panel-restore-button"
+                class="subviewbutton panel-subview-footer-button"
+                oncommand="TranslationsPanel.onRestore(event);"
+                data-l10n-id="translations-panel-restore-button"
+                tabindex="0">
+        </button>
+        <button id="translations-panel-not-now"
+                class="subviewbutton panel-subview-footer-button"
+                oncommand="TranslationsPanel.onCancel(event);"
+                data-l10n-id="translations-panel-translate-cancel"
+                tabindex="0">
+        </button>
+        <button id="translations-panel-translate"
                 class="subviewbutton panel-subview-footer-button"
                 oncommand="TranslationsPanel.onTranslate(event);"
-                data-l10n-id="translations-panel-dual-translate-button"
+                data-l10n-id="translations-panel-translate-button"
+                default="true"
                 tabindex="0">
         </button>
       </hbox>
     </panelview>
 
-    <!-- Restore page -->
-    <panelview id="translations-panel-view-restore"
-               class="PanelUI-subView"
+    <panelview id="translations-panel-view-unsupported-language"
+               class="PanelUI-subView translations-panel-view"
                role="document"
                showheader="true">
-      <hbox class="panel-header">
-        <html:h1 id="translations-panel-main-header-label">
-          <html:span data-l10n-id="translations-panel-restore-header"></html:span>
+      <hbox class="panel-header translations-panel-header">
+        <image class="translations-panel-error-icon" />
+        <html:h1>
+          <html:span data-l10n-id="translations-panel-error-unsupported"></html:span>
         </html:h1>
       </hbox>
 
-      <toolbarseparator/>
-
       <vbox class="translations-panel-content">
-        <label id="translations-panel-restore-label"
-               data-l10n-id="translations-panel-restore-label"
-               data-l10n-args='{"fromLanguage": "", "toLanguage": ""}'>
-        </label>
+        <description id="translations-panel-error-unsupported-hint"></description>
       </vbox>
 
-      <hbox class="panel-footer">
-        <button default="true"
-                class="subviewbutton panel-subview-footer-button"
-                oncommand="TranslationsPanel.onRestore(event);"
-                data-l10n-id="translations-panel-restore-button"
+      <hbox class="panel-footer translations-panel-footer">
+        <button class="subviewbutton panel-subview-footer-button"
+                oncommand="TranslationsPanel.onChangeSourceLanguage(event);"
+                data-l10n-id="translations-panel-error-change-button"
+                tabindex="0">
+        </button>
+        <button class="subviewbutton panel-subview-footer-button"
+                oncommand="TranslationsPanel.onCancel(event);"
+                data-l10n-id="translations-panel-error-dismiss-button"
+                default="true"
                 tabindex="0">
         </button>
       </hbox>

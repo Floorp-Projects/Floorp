@@ -258,6 +258,9 @@ zh{
         "America:Chihuahua"{
             ec{"奇瓦瓦"}
         }
+        "America:Ciudad_Juarez"{
+            ec{"华雷斯城"}
+        }
         "America:Coral_Harbour"{
             ec{"阿蒂科肯"}
         }

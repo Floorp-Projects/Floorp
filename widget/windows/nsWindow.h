@@ -185,7 +185,7 @@ class nsWindow final : public nsBaseWidget {
 
   void Show(bool aState) override;
   bool IsVisible() const override;
-  void ConstrainPosition(bool aAllowSlop, int32_t* aX, int32_t* aY) override;
+  void ConstrainPosition(DesktopIntPoint&) override;
   void SetSizeConstraints(const SizeConstraints& aConstraints) override;
   void LockAspectRatio(bool aShouldLock) override;
   const SizeConstraints GetSizeConstraints() override;
@@ -223,7 +223,6 @@ class nsWindow final : public nsBaseWidget {
                   bool aIncludeChildren = false);
   void Invalidate(const LayoutDeviceIntRect& aRect) override;
   void* GetNativeData(uint32_t aDataType) override;
-  void SetNativeData(uint32_t aDataType, uintptr_t aVal) override;
   void FreeNativeData(void* data, uint32_t aDataType) override;
   nsresult SetTitle(const nsAString& aTitle) override;
   void SetIcon(const nsAString& aIconSpec) override;
@@ -332,6 +331,8 @@ class nsWindow final : public nsBaseWidget {
   static void SetIsRestoringSession(const bool aIsRestoringSession) {
     sIsRestoringSession = aIsRestoringSession;
   }
+
+  bool IsRTL() const { return mIsRTL; }
 
   /**
    * AssociateDefaultIMC() associates or disassociates the default IMC for

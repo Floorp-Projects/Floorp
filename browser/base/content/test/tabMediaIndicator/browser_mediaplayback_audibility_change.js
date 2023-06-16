@@ -207,7 +207,8 @@ function initMediaPlaybackDocument(
 function initMediaStreamPlaybackDocument(tab) {
   return SpecialPowers.spawn(tab.linkedBrowser, [], async _ => {
     content.media = content.document.createElement("audio");
-    content.media.srcObject = new content.AudioContext().createMediaStreamDestination().stream;
+    content.media.srcObject =
+      new content.AudioContext().createMediaStreamDestination().stream;
   });
 }
 

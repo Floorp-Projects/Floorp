@@ -829,9 +829,6 @@ class Talos(
         if self.obj_path is not None:
             env["MOZ_DEVELOPER_OBJ_DIR"] = self.obj_path
 
-        # TODO: consider getting rid of this as we should be default to stylo now
-        env["STYLO_FORCE_ENABLED"] = "1"
-
         # sets a timeout for how long talos should run without output
         output_timeout = self.config.get("talos_output_timeout", 3600)
         # run talos tests

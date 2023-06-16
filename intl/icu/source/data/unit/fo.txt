@@ -53,6 +53,11 @@ fo{
                 one{"{0} ekra"}
                 other{"{0} ekrur"}
             }
+            dunam{
+                dnam{"dunam"}
+                one{"{0} dunam"}
+                other{"{0} dunam"}
+            }
             hectare{
                 dnam{"hektarar"}
                 one{"{0} hektari"}
@@ -153,6 +158,7 @@ fo{
                     }
                 }
             }
+            times{"{0}⋅{1}"}
         }
         concentr{
             karat{
@@ -169,6 +175,11 @@ fo{
                 dnam{"millimol fyri hvønn litur"}
                 one{"{0} millimol fyri hvønn litur"}
                 other{"{0} millimol fyri hvønn litur"}
+            }
+            mole{
+                dnam{"mol"}
+                one{"{0} mol"}
+                other{"{0} mol"}
             }
             percent{
                 dnam{"prosent"}
@@ -467,6 +478,8 @@ fo{
             }
             em{
                 dnam{"prent em"}
+                one{"{0} em"}
+                other{"{0} em"}
             }
             megapixel{
                 dnam{"megaskíggjadeplar"}
@@ -644,6 +657,11 @@ fo{
                 one{"{0} jarðmassi"}
                 other{"{0} jarðmassar"}
             }
+            grain{
+                dnam{"grain"}
+                one{"{0} grain"}
+                other{"{0} grain"}
+            }
             gram{
                 dnam{"gramm"}
                 one{"{0} gramm"}
@@ -741,6 +759,11 @@ fo{
                 dnam{"lufttrýst"}
                 one{"{0} lufttrýst"}
                 other{"{0} lufttrýst"}
+            }
+            bar{
+                dnam{"bar"}
+                one{"{0} bar"}
+                other{"{0} bar"}
             }
             hectopascal{
                 dnam{"hektopascal"}
@@ -1053,8 +1076,60 @@ fo{
             }
         }
         compound{
+            1024p1{"Ki{0}"}
+            1024p2{"Mi{0}"}
+            1024p3{"Gi{0}"}
+            1024p4{"Ti{0}"}
+            1024p5{"Pi{0}"}
+            1024p6{"Ei{0}"}
+            1024p7{"Zi{0}"}
+            1024p8{"Yi{0}"}
+            10p-1{"d{0}"}
+            10p-12{"p{0}"}
+            10p-15{"f{0}"}
+            10p-18{"a{0}"}
+            10p-2{"c{0}"}
+            10p-21{"z{0}"}
+            10p-24{"y{0}"}
+            10p-3{"m{0}"}
+            10p-6{"μ{0}"}
+            10p-9{"n{0}"}
             10p1{"dam{0}"}
+            10p12{"T{0}"}
+            10p15{"P{0}"}
+            10p18{"E{0}"}
+            10p2{"h{0}"}
+            10p21{"Z{0}"}
+            10p24{"Y{0}"}
+            10p3{"k{0}"}
+            10p6{"M{0}"}
+            10p9{"G{0}"}
             per{"{0}/{1}"}
+            power2{
+                one{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+            }
+            power3{
+                one{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+            }
+            times{"{0}⋅{1}"}
         }
         concentr{
             percent{
@@ -1257,6 +1332,10 @@ fo{
                 one{"{0} ekra"}
                 other{"{0} ekrur"}
             }
+            dunam{
+                one{"{0} dunam"}
+                other{"{0} dunam"}
+            }
             hectare{
                 dnam{"ha"}
                 one{"{0} ha"}
@@ -1306,6 +1385,30 @@ fo{
         compound{
             10p1{"dam{0}"}
             per{"{0}/{1}"}
+            power2{
+                one{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+            }
+            power3{
+                one{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+            }
         }
         concentr{
             karat{
@@ -1322,6 +1425,10 @@ fo{
                 dnam{"mmol/l"}
                 one{"{0} mmol/l"}
                 other{"{0} mmol/l"}
+            }
+            mole{
+                one{"{0} mol"}
+                other{"{0} mol"}
             }
             percent{
                 dnam{"prosent"}
@@ -1413,6 +1520,10 @@ fo{
                 dnam{"MB"}
                 one{"{0} MB"}
                 other{"{0} MB"}
+            }
+            petabyte{
+                one{"{0} PB"}
+                other{"{0} PB"}
             }
             terabit{
                 dnam{"Tb"}
@@ -1519,6 +1630,8 @@ fo{
         energy{
             british-thermal-unit{
                 dnam{"bretskar hitaeindir"}
+                one{"{0} Btu"}
+                other{"{0} Btu"}
             }
             calorie{
                 dnam{"kal."}
@@ -1527,6 +1640,8 @@ fo{
             }
             electronvolt{
                 dnam{"elektronvolt"}
+                one{"{0} eV"}
+                other{"{0} eV"}
             }
             foodcalorie{
                 dnam{"kostkaloriur"}
@@ -1562,6 +1677,12 @@ fo{
         force{
             newton{
                 dnam{"newton"}
+                one{"{0} N"}
+                other{"{0} N"}
+            }
+            pound-force{
+                one{"{0} lbf"}
+                other{"{0} lbf"}
             }
         }
         frequency{
@@ -1592,11 +1713,37 @@ fo{
                 one{"{0} punkt"}
                 other{"{0} punkt"}
             }
+            dot-per-centimeter{
+                dnam{"ppcm"}
+                one{"{0} ppcm"}
+                other{"{0} ppcm"}
+            }
+            dot-per-inch{
+                dnam{"ppi"}
+                one{"{0} ppi"}
+                other{"{0} ppi"}
+            }
+            em{
+                one{"{0} em"}
+                other{"{0} em"}
+            }
             megapixel{
                 dnam{"megaskíggjadeplar"}
+                one{"{0} MP"}
+                other{"{0} MP"}
             }
             pixel{
                 dnam{"skíggjadeplar"}
+                one{"{0} px"}
+                other{"{0} px"}
+            }
+            pixel-per-centimeter{
+                one{"{0} ppcm"}
+                other{"{0} ppcm"}
+            }
+            pixel-per-inch{
+                one{"{0} ppi"}
+                other{"{0} ppi"}
             }
         }
         length{
@@ -1615,6 +1762,10 @@ fo{
                 dnam{"dm"}
                 one{"{0} dm"}
                 other{"{0} dm"}
+            }
+            earth-radius{
+                one{"{0} R⊕"}
+                other{"{0} R⊕"}
             }
             fathom{
                 dnam{"favnar"}
@@ -1702,6 +1853,8 @@ fo{
             }
             solar-radius{
                 dnam{"sólarradii"}
+                one{"{0} R☉"}
+                other{"{0} R☉"}
             }
             yard{
                 dnam{"yd"}
@@ -1710,6 +1863,14 @@ fo{
             }
         }
         light{
+            candela{
+                one{"{0} cd"}
+                other{"{0} cd"}
+            }
+            lumen{
+                one{"{0} lm"}
+                other{"{0} lm"}
+            }
             lux{
                 dnam{"luks"}
                 one{"{0} lx"}
@@ -1717,6 +1878,8 @@ fo{
             }
             solar-luminosity{
                 dnam{"sólarljósmegi"}
+                one{"{0} L☉"}
+                other{"{0} L☉"}
             }
         }
         mass{
@@ -1727,9 +1890,17 @@ fo{
             }
             dalton{
                 dnam{"dalton"}
+                one{"{0} Da"}
+                other{"{0} Da"}
             }
             earth-mass{
                 dnam{"jarðmassi"}
+                one{"{0} M⊕"}
+                other{"{0} M⊕"}
+            }
+            grain{
+                one{"{0} grain"}
+                other{"{0} grain"}
             }
             gram{
                 dnam{"gramm"}
@@ -1772,6 +1943,8 @@ fo{
             }
             solar-mass{
                 dnam{"sólarmassi"}
+                one{"{0} M☉"}
+                other{"{0} M☉"}
             }
             stone{
                 dnam{"stones"}
@@ -1827,6 +2000,10 @@ fo{
                 one{"{0} lufttrýst"}
                 other{"{0} lufttrýst"}
             }
+            bar{
+                one{"{0} bar"}
+                other{"{0} bar"}
+            }
             hectopascal{
                 dnam{"hPa"}
                 one{"{0} hPa"}
@@ -1836,6 +2013,14 @@ fo{
                 dnam{"inHg"}
                 one{"{0} inHg"}
                 other{"{0} inHg"}
+            }
+            kilopascal{
+                one{"{0} kPa"}
+                other{"{0} kPa"}
+            }
+            megapascal{
+                one{"{0} MPa"}
+                other{"{0} MPa"}
             }
             millibar{
                 dnam{"mb"}
@@ -1849,6 +2034,8 @@ fo{
             }
             pascal{
                 dnam{"Pa"}
+                one{"{0} Pa"}
+                other{"{0} Pa"}
             }
             pound-force-per-square-inch{
                 dnam{"psi"}
@@ -1898,6 +2085,16 @@ fo{
                 dnam{"K"}
                 one{"{0} K"}
                 other{"{0} K"}
+            }
+        }
+        torque{
+            newton-meter{
+                one{"{0} N⋅m"}
+                other{"{0} N⋅m"}
+            }
+            pound-force-foot{
+                one{"{0} lbf⋅ft"}
+                other{"{0} lbf⋅ft"}
             }
         }
         volume{

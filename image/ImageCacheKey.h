@@ -18,6 +18,9 @@
 class nsIURI;
 
 namespace mozilla {
+
+enum CORSMode : uint8_t;
+
 namespace image {
 
 /**
@@ -30,8 +33,7 @@ namespace image {
  */
 class ImageCacheKey final {
  public:
-  ImageCacheKey(nsIURI* aURI, const OriginAttributes& aAttrs,
-                dom::Document* aDocument);
+  ImageCacheKey(nsIURI*, CORSMode, const OriginAttributes&, dom::Document*);
 
   ImageCacheKey(const ImageCacheKey& aOther);
   ImageCacheKey(ImageCacheKey&& aOther);
@@ -47,14 +49,13 @@ class ImageCacheKey final {
   /// A weak pointer to the URI.
   nsIURI* URI() const { return mURI; }
 
+  CORSMode GetCORSMode() const { return mCORSMode; }
+
   const OriginAttributes& OriginAttributesRef() const {
     return mOriginAttributes;
   }
 
   const nsCString& IsolationKeyRef() const { return mIsolationKey; }
-
-  /// Is this cache entry for a chrome image?
-  bool IsChrome() const { return mIsChrome; }
 
   /// A token indicating which service worker controlled document this entry
   /// belongs to, if any.
@@ -73,11 +74,11 @@ class ImageCacheKey final {
   void EnsureHash() const;
 
   nsCOMPtr<nsIURI> mURI;
-  OriginAttributes mOriginAttributes;
+  const OriginAttributes mOriginAttributes;
   void* mControlledDocument;
   nsCString mIsolationKey;
   mutable Maybe<PLDHashNumber> mHash;
-  bool mIsChrome;
+  const CORSMode mCORSMode;
 };
 
 }  // namespace image

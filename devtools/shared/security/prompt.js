@@ -63,7 +63,7 @@ Client.defaultSendOOB = ({ authResult, oob }) => {
       const win = xulWindow.docShell.domWindow;
       win.addEventListener(
         "load",
-        function() {
+        function () {
           if (
             win.document.documentElement.getAttribute("id") != "commonDialog"
           ) {
@@ -191,10 +191,7 @@ Server.defaultReceiveOOB = () => {
   // Re-create original object from token
   input = input.value.trim();
   let sha256 = input.substring(0, 64);
-  sha256 = sha256
-    .replace(/\w{2}/g, "$&:")
-    .slice(0, -1)
-    .toUpperCase();
+  sha256 = sha256.replace(/\w{2}/g, "$&:").slice(0, -1).toUpperCase();
   const k = input.substring(64);
   return { sha256, k };
 };

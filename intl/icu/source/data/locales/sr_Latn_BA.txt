@@ -314,6 +314,7 @@ sr_Latn_BA{
             }
         }
         month-narrow{
+            dn{"mjes."}
             relative{
                 "-1"{"prošlog mjes."}
                 "0"{"ovog mjes."}
@@ -668,6 +669,7 @@ sr_Latn_BA{
             }
         }
         week-narrow{
+            dn{"sedm."}
             relative{
                 "-1"{"prošle s."}
                 "0"{"ove s."}

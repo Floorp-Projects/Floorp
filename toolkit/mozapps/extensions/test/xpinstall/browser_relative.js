@@ -43,7 +43,7 @@ function install_ended(install, addon) {
   return addon.uninstall();
 }
 
-const finish_test = async function(count) {
+const finish_test = async function (count) {
   is(count, 1, "1 Add-on should have been successfully installed");
 
   PermissionTestUtils.remove("http://example.com", "install");

@@ -54,9 +54,8 @@ bool testCompile() {
                      JS::SourceOwnership::Borrowed));
 
     JS::CompilationStorage compileStorage;
-    RefPtr<JS::Stencil> stencil = CompileGlobalScriptToStencil(
-        fc, options, cx->stackLimitForCurrentPrincipal(), buf16,
-        compileStorage);
+    RefPtr<JS::Stencil> stencil =
+        CompileGlobalScriptToStencil(fc, options, buf16, compileStorage);
     CHECK(stencil);
     CHECK(stencil->scriptExtra.size() == 1);
     CHECK(stencil->scriptExtra[0].extent.sourceStart == 0);
@@ -73,8 +72,8 @@ bool testCompile() {
         buf8.init(cx, src.data(), src.length(), JS::SourceOwnership::Borrowed));
 
     JS::CompilationStorage compileStorage;
-    RefPtr<JS::Stencil> stencil = CompileGlobalScriptToStencil(
-        fc, options, cx->stackLimitForCurrentPrincipal(), buf8, compileStorage);
+    RefPtr<JS::Stencil> stencil =
+        CompileGlobalScriptToStencil(fc, options, buf8, compileStorage);
     CHECK(stencil);
     CHECK(stencil->scriptExtra.size() == 1);
     CHECK(stencil->scriptExtra[0].extent.sourceStart == 0);
@@ -92,9 +91,8 @@ bool testCompile() {
                       JS::SourceOwnership::Borrowed));
 
     JS::CompilationStorage compileStorage;
-    RefPtr<JS::Stencil> stencil = CompileGlobalScriptToStencil(
-        fc, options, cx->stackLimitForCurrentPrincipal(), srcBuf,
-        compileStorage);
+    RefPtr<JS::Stencil> stencil =
+        CompileGlobalScriptToStencil(fc, options, srcBuf, compileStorage);
     CHECK(!stencil);
     CHECK(fc->maybeError().isSome());
     const js::CompileError& error = fc->maybeError().ref();
@@ -123,8 +121,8 @@ bool testNonsyntacticCompile() {
       mozilla::MakeScopeExit([fc] { JS::DestroyFrontendContext(fc); });
 
   JS::CompilationStorage compileStorage;
-  RefPtr<JS::Stencil> stencil = CompileGlobalScriptToStencil(
-      fc, options, cx->stackLimitForCurrentPrincipal(), srcBuf, compileStorage);
+  RefPtr<JS::Stencil> stencil =
+      CompileGlobalScriptToStencil(fc, options, srcBuf, compileStorage);
   CHECK(stencil);
 
   JS::InstantiateOptions instantiateOptions(options);
@@ -156,9 +154,8 @@ bool testCompileModule() {
                      JS::SourceOwnership::Borrowed));
 
     JS::CompilationStorage compileStorage;
-    RefPtr<JS::Stencil> stencil = CompileModuleScriptToStencil(
-        fc, options, cx->stackLimitForCurrentPrincipal(), buf16,
-        compileStorage);
+    RefPtr<JS::Stencil> stencil =
+        CompileModuleScriptToStencil(fc, options, buf16, compileStorage);
     CHECK(stencil);
     CHECK(stencil->isModule());
     CHECK(stencil->scriptExtra.size() == 1);
@@ -176,8 +173,8 @@ bool testCompileModule() {
         buf8.init(cx, src.data(), src.length(), JS::SourceOwnership::Borrowed));
 
     JS::CompilationStorage compileStorage;
-    RefPtr<JS::Stencil> stencil = CompileModuleScriptToStencil(
-        fc, options, cx->stackLimitForCurrentPrincipal(), buf8, compileStorage);
+    RefPtr<JS::Stencil> stencil =
+        CompileModuleScriptToStencil(fc, options, buf8, compileStorage);
     CHECK(stencil);
     CHECK(stencil->scriptExtra.size() == 1);
     CHECK(stencil->scriptExtra[0].extent.sourceStart == 0);
@@ -195,9 +192,8 @@ bool testCompileModule() {
                       JS::SourceOwnership::Borrowed));
 
     JS::CompilationStorage compileStorage;
-    RefPtr<JS::Stencil> stencil = CompileModuleScriptToStencil(
-        fc, options, cx->stackLimitForCurrentPrincipal(), srcBuf,
-        compileStorage);
+    RefPtr<JS::Stencil> stencil =
+        CompileModuleScriptToStencil(fc, options, srcBuf, compileStorage);
     CHECK(!stencil);
     CHECK(fc->maybeError().isSome());
     const js::CompileError& error = fc->maybeError().ref();
@@ -225,8 +221,8 @@ bool testPrepareForInstantiate() {
       mozilla::MakeScopeExit([fc] { JS::DestroyFrontendContext(fc); });
 
   JS::CompilationStorage compileStorage;
-  RefPtr<JS::Stencil> stencil = CompileGlobalScriptToStencil(
-      fc, options, cx->stackLimitForCurrentPrincipal(), buf16, compileStorage);
+  RefPtr<JS::Stencil> stencil =
+      CompileGlobalScriptToStencil(fc, options, buf16, compileStorage);
   CHECK(stencil);
   CHECK(stencil->scriptData.size() == 2);
   CHECK(stencil->scopeData.size() == 1);       // function f

@@ -1,5 +1,5 @@
-onmessage = function(e) {
-  self.clients.matchAll().then(function(res) {
+onmessage = function (e) {
+  self.clients.matchAll().then(function (res) {
     if (!res.length) {
       dump("Error: no clients are currently controlled.\n");
       return;

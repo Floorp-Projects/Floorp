@@ -11,11 +11,9 @@ const {
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ManifestObtainer",
-  "resource://gre/modules/ManifestObtainer.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  ManifestObtainer: "resource://gre/modules/ManifestObtainer.sys.mjs",
+});
 
 /**
  * An actor for a Web Manifest

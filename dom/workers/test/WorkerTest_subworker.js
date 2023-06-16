@@ -2,7 +2,7 @@
  * Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
-onmessage = function(event) {
+onmessage = function (event) {
   let chromeURL = event.data.replace(
     "test_chromeWorkerJSM.xhtml",
     "WorkerTest_badworker.js"

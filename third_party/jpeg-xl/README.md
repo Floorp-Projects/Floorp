@@ -40,8 +40,9 @@ On MacOS, you can use [Homebrew](https://brew.sh/): `brew install jpeg-xl`.
 
 [![libjxl packaging status](https://repology.org/badge/vertical-allrepos/libjxl.svg?exclude_unsupported=1&columns=3&exclude_sources=modules,site&header=libjxl%20packaging%20status)](https://repology.org/project/libjxl/versions)
 
-
-For Windows, binaries can be downloaded from the [releases page](https://github.com/libjxl/libjxl/releases/).
+From the [releases page](https://github.com/libjxl/libjxl/releases/) the following can be downloaded:
+ - Windows binaries 
+ - Debian and Ubuntu .deb packages 
 
 Of course you can also [build libjxl from sources](BUILDING.md).
 

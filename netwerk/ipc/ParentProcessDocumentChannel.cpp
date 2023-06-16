@@ -203,13 +203,16 @@ NS_IMETHODIMP ParentProcessDocumentChannel::AsyncOpen(
   promise->Then(
       GetCurrentSerialEventTarget(), __func__,
       [self](DocumentLoadListener::OpenPromiseSucceededType&& aResolveValue) {
+        self->mDocumentLoadListener->CancelEarlyHintPreloads();
+        nsTArray<EarlyHintConnectArgs> earlyHints;
+
         // The DLL is waiting for us to resolve the
         // RedirectToRealChannelPromise given as parameter.
         RefPtr<RedirectToRealChannelPromise> p =
             self->RedirectToRealChannel(
                     std::move(aResolveValue.mStreamFilterEndpoints),
                     aResolveValue.mRedirectFlags, aResolveValue.mLoadFlags,
-                    aResolveValue.mEarlyHints)
+                    earlyHints)
                 ->Then(
                     GetCurrentSerialEventTarget(), __func__,
                     [self](RedirectToRealChannelPromise::ResolveOrRejectValue&&

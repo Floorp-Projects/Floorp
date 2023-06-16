@@ -88,7 +88,7 @@ export var FileTestUtils = {
 XPCOMUtils.defineLazyGetter(
   FileTestUtils,
   "_globalTemporaryDirectory",
-  function() {
+  function () {
     // While previous test runs should have deleted their temporary directories,
     // on Windows they might still be pending deletion on the physical file
     // system. This makes a simple nsIFile.createUnique call unreliable, and we

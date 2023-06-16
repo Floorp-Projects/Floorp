@@ -63,8 +63,8 @@ wae{
                     d{"E, d. MMM – E, d. MMM"}
                 }
                 MMMd{
-                    M{"d. – d. MMM"}
-                    d{"d. – d. MMM"}
+                    M{"d. – d. MMM"}
+                    d{"d. – d. MMM"}
                 }
                 Md{
                     M{"d. MMM – d. MMM"}
@@ -248,8 +248,8 @@ wae{
                     d{"E, d. MMM – E, d. MMM"}
                 }
                 MMMd{
-                    M{"d. – d. MMM"}
-                    d{"d. – d. MMM"}
+                    M{"d. – d. MMM"}
+                    d{"d. – d. MMM"}
                 }
                 Md{
                     M{"d. MMM – d. MMM"}
@@ -295,7 +295,7 @@ wae{
                 }
                 yMMMEd{
                     M{"E, d. MMM – E, d. MMM y"}
-                    d{"E, d. – E, d. MMM y"}
+                    d{"E, d. – E, d. MMM y"}
                     y{"E, d. MMM y – E, d. MMM y"}
                 }
                 yMMMM{
@@ -304,7 +304,7 @@ wae{
                 }
                 yMMMd{
                     M{"d. MMM – d. MMM y"}
-                    d{"d. – d. MMM y"}
+                    d{"d. – d. MMM y"}
                     y{"d. MMM y – d. MMM y"}
                 }
                 yMd{
@@ -501,8 +501,8 @@ wae{
                     d{"E, d. MMM – E, d. MMM"}
                 }
                 MMMd{
-                    M{"d. – d. MMM"}
-                    d{"d. – d. MMM"}
+                    M{"d. – d. MMM"}
+                    d{"d. – d. MMM"}
                 }
                 Md{
                     M{"d. MMM – d. MMM"}
@@ -548,7 +548,7 @@ wae{
                 }
                 yMMMEd{
                     M{"E, d. MMM – E, d. MMM y"}
-                    d{"E, d. – E, d. MMM y"}
+                    d{"E, d. – E, d. MMM y"}
                     y{"E, d. MMM y – E, d. MMM y"}
                 }
                 yMMMM{
@@ -557,7 +557,7 @@ wae{
                 }
                 yMMMd{
                     M{"d. MMM – d. MMM y"}
-                    d{"d. – d. MMM y"}
+                    d{"d. – d. MMM y"}
                     y{"d. MMM y – d. MMM y"}
                 }
                 yMd{

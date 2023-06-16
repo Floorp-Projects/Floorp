@@ -9,7 +9,6 @@
 #include "nsError.h"
 #include "nsIOService.h"
 #include "DataChannelChild.h"
-#include "plstr.h"
 #include "nsSimpleURI.h"
 #include "mozilla/dom/MimeType.h"
 #include "mozilla/StaticPrefs_network.h"

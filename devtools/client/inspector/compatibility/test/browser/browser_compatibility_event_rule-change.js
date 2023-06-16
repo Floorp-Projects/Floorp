@@ -12,7 +12,7 @@ const TEST_URI = `
     ruby-align: center;
   }
   div {
-    font-variant-alternates: historical-forms;
+    scrollbar-width: thin;
   }
   </style>
   <div class="test-class">test class</div>
@@ -22,8 +22,14 @@ const TEST_URI = `
 const TEST_DATA_SELECTED = {
   fullRule: {
     expectedProperties: [
-      { property: "ruby-align" },
-      { property: "font-variant-alternates" },
+      {
+        property: "ruby-align",
+        url: "https://developer.mozilla.org/docs/Web/CSS/ruby-align",
+      },
+      {
+        property: "scrollbar-width",
+        url: "https://developer.mozilla.org/docs/Web/CSS/scrollbar-width",
+      },
     ],
     expectedNodes: [
       {
@@ -31,13 +37,18 @@ const TEST_DATA_SELECTED = {
         nodes: [],
       },
       {
-        property: "font-variant-alternates",
+        property: "scrollbar-width",
         nodes: [],
       },
     ],
   },
   classRule: {
-    expectedProperties: [{ property: "ruby-align" }],
+    expectedProperties: [
+      {
+        property: "ruby-align",
+        url: "https://developer.mozilla.org/docs/Web/CSS/ruby-align",
+      },
+    ],
     expectedNodes: [
       {
         property: "ruby-align",
@@ -46,10 +57,15 @@ const TEST_DATA_SELECTED = {
     ],
   },
   elementRule: {
-    expectedProperties: [{ property: "font-variant-alternates" }],
+    expectedProperties: [
+      {
+        property: "scrollbar-width",
+        url: "https://developer.mozilla.org/docs/Web/CSS/scrollbar-width",
+      },
+    ],
     expectedNodes: [
       {
-        property: "font-variant-alternates",
+        property: "scrollbar-width",
         nodes: [],
       },
     ],
@@ -59,8 +75,14 @@ const TEST_DATA_SELECTED = {
 const TEST_DATA_ALL = {
   fullRule: {
     expectedProperties: [
-      { property: "ruby-align" },
-      { property: "font-variant-alternates" },
+      {
+        property: "ruby-align",
+        url: "https://developer.mozilla.org/docs/Web/CSS/ruby-align",
+      },
+      {
+        property: "scrollbar-width",
+        url: "https://developer.mozilla.org/docs/Web/CSS/scrollbar-width",
+      },
     ],
     expectedNodes: [
       {
@@ -68,13 +90,18 @@ const TEST_DATA_ALL = {
         nodes: ["div.test-class"],
       },
       {
-        property: "font-variant-alternates",
+        property: "scrollbar-width",
         nodes: ["div.test-class", "div"],
       },
     ],
   },
   classRule: {
-    expectedProperties: [{ property: "ruby-align" }],
+    expectedProperties: [
+      {
+        property: "ruby-align",
+        url: "https://developer.mozilla.org/docs/Web/CSS/ruby-align",
+      },
+    ],
     expectedNodes: [
       {
         property: "ruby-align",
@@ -83,10 +110,15 @@ const TEST_DATA_ALL = {
     ],
   },
   elementRule: {
-    expectedProperties: [{ property: "font-variant-alternates" }],
+    expectedProperties: [
+      {
+        property: "scrollbar-width",
+        url: "https://developer.mozilla.org/docs/Web/CSS/scrollbar-width",
+      },
+    ],
     expectedNodes: [
       {
-        property: "font-variant-alternates",
+        property: "scrollbar-width",
         nodes: ["div.test-class", "div"],
       },
     ],
@@ -97,17 +129,14 @@ const {
   COMPATIBILITY_UPDATE_NODES_COMPLETE,
 } = require("resource://devtools/client/inspector/compatibility/actions/index.js");
 
-add_task(async function() {
+add_task(async function () {
   info("Enable 3 pane mode");
   await pushPref("devtools.inspector.three-pane-enabled", true);
 
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
-  const {
-    allElementsPane,
-    inspector,
-    selectedElementPane,
-  } = await openCompatibilityView();
+  const { allElementsPane, inspector, selectedElementPane } =
+    await openCompatibilityView();
   await selectNode(".test-class", inspector);
 
   info("Check the initial issue");

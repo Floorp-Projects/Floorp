@@ -3,7 +3,7 @@ _(
 );
 
 function run_test() {
-  let base = function() {};
+  let base = function () {};
   base.prototype = {
     dst: {},
 

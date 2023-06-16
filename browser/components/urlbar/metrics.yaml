@@ -73,10 +73,11 @@ urlbar:
           the user. The groups may be repeated, since the list will match 1:1
           the results list, so we can link each result to a group. The possible
           group names are: `heuristic`, `adaptive_history`, `search_history`,
-          `search_suggest`, `trending_search`, `top_pick`, `top_site`,
-          `remote_tab`, `addon`, `general`, `suggest`, `about_page` and
-          `suggested_index`. If the group did not fall into any of these, this
-          will be `unknown` and a bug should be filed to investigate it.
+          `search_suggest`, `search_suggest_rich`, `trending_search`,
+          `trending_search_rich`, `top_pick`, `top_site`, `remote_tab`,
+          `addon`, `general`, `suggest`, `about_page` and `suggested_index`. If
+          the group did not fall into any of these, this will be `unknown` and
+          a bug should be filed to investigate it.
         type: string
       results:
         description: >
@@ -100,6 +101,7 @@ urlbar:
           `keyword`,
           `merino_adm_nonsponsored`,
           `merino_adm_sponsored`,
+          `merino_amo`,
           `merino_top_picks`,
           `merino_wikipedia`,
           `remote_tab`,
@@ -108,6 +110,7 @@ urlbar:
           `search_engine`,
           `search_history`,
           `search_suggest`,
+          `search_suggest_rich`,
           `suggest_non_sponsor`,
           `suggest_sponsor`,
           `tab`,
@@ -119,6 +122,7 @@ urlbar:
           `tip_unknown`,
           `top_site`,
           `trending_search`,
+          `trending_search_rich`,
           `unit`,
           `url`,
           `weather`
@@ -213,6 +217,7 @@ urlbar:
           `keyword`,
           `merino_adm_nonsponsored`,
           `merino_adm_sponsored`,
+          `merino_amo`,
           `merino_top_picks`,
           `merino_wikipedia`,
           `remote_tab`,
@@ -222,6 +227,7 @@ urlbar:
           `search_history`,
           `search_shortcut_button`,
           `search_suggest`,
+          `search_suggest_rich`,
           `site_specific_contextual_search`,
           `suggest_non_sponsor`,
           `suggest_sponsor`,
@@ -234,6 +240,7 @@ urlbar:
           `tip_unknown`,
           `top_site`,
           `trending_search`,
+          `trending_search_rich`,
           `unit`,
           `url`,
           `weather`
@@ -285,12 +292,13 @@ urlbar:
           the user. The groups may be repeated, since the list will match 1:1
           the results list, so we can link each result to a group. The possible
           group names are: `heuristic`, `adaptive_history`, `search_history`,
-          `search_suggest`, `trending_search`, `top_pick`, `top_site`,
-          `remote_tab`, `addon`, `general`, `suggest`, `about_page` and
-          `suggested_index`. If the group did not fall into any of these, this
-          will be `unknown` and a bug should be filed to investigate it. If
-          engagement_type is `drop_go` or `paste_go`, this will be empty string
-          because no results are shown.
+          `search_suggest`, `search_suggest_rich`, `trending_search`,
+          `trending_search_rich`, `top_pick`, `top_site`, `remote_tab`, 
+          `addon`, `general`, `suggest`, `about_page` and `suggested_index`. 
+          If the group did not fall into any of these, this will be `unknown`
+          and a bug should be filed to investigate it. If engagement_type is
+          `drop_go` or `paste_go`, this will be empty string because no results
+          are shown.
         type: string
       results:
         description: >
@@ -314,6 +322,7 @@ urlbar:
           `keyword`,
           `merino_adm_nonsponsored`,
           `merino_adm_sponsored`,
+          `merino_amo`,
           `merino_top_picks`,
           `merino_wikipedia`,
           `remote_tab`,
@@ -322,6 +331,7 @@ urlbar:
           `search_engine`,
           `search_history`,
           `search_suggest`,
+          `search_suggest_rich`,
           `suggest_non_sponsor`,
           `suggest_sponsor`,
           `tab`,
@@ -333,6 +343,7 @@ urlbar:
           `tip_unknown`,
           `top_site`,
           `trending_search`,
+          `trending_search_rich`,
           `unit`,
           `url`,
           `weather`
@@ -413,10 +424,11 @@ urlbar:
           the user. The groups may be repeated, since the list will match 1:1
           the results list, so we can link each result to a group. The possible
           group names are: `heuristic`, `adaptive_history`, `search_history`,
-          `search_suggest`, `trending_search`, `top_pick`, `top_site`,
-          `remote_tab`, `addon`, `general`, `suggest`, `about_page` and
-          `suggested_index`. If the group did not fall into any of these, this
-          will be `unknown` and a bug should be filed to investigate it.
+          `search_suggest`, `search_suggest_rich`, `trending_search`,
+          `trending_search_rich`, `top_pick`, `top_site`, `remote_tab`,
+          `addon`, `general`, `suggest`, `about_page` and `suggested_index`. If
+          the group did not fall into any of these, this will be `unknown` and
+          a bug should be filed to investigate it.
         type: string
       results:
         description: >
@@ -440,6 +452,7 @@ urlbar:
           `keyword`,
           `merino_adm_nonsponsored`,
           `merino_adm_sponsored`,
+          `merino_amo`,
           `merino_top_picks`,
           `merino_wikipedia`,
           `remote_tab`,
@@ -448,6 +461,7 @@ urlbar:
           `search_engine`,
           `search_history`,
           `search_suggest`,
+          `search_suggest_rich`,
           `suggest_non_sponsor`,
           `suggest_sponsor`,
           `tab`,
@@ -459,6 +473,7 @@ urlbar:
           `tip_unknown`,
           `top_site`,
           `trending_search`,
+          `trending_search_rich`,
           `unit`,
           `url`,
           `weather`

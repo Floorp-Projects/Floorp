@@ -15,7 +15,7 @@
 
 const BASE_URL = "http://mochi.test:8888/browser/dom/base/test/";
 
-add_task(async function() {
+add_task(async function () {
   // On Linux, in our test automation, the mouse cursor floats over
   // the first tab, which causes it to be warmed up when tab warming
   // is enabled. The TabSwitchDone event doesn't fire until the warmed

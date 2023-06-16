@@ -5,7 +5,7 @@ const { OSKeyStore } = ChromeUtils.importESModule(
   "resource://gre/modules/OSKeyStore.sys.mjs"
 );
 
-add_task(async function() {
+add_task(async function () {
   let prefs = await openPreferencesViaOpenPreferencesAPI("panePrivacy", {
     leaveOpen: true,
   });

@@ -144,7 +144,7 @@ add_task(async function test_iframe_upgrade() {
       "https://example.com"
     ) + "some_content_framed.html";
   await BrowserTestUtils.openNewForegroundTab(gBrowser, framedUrl);
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     await ContentTaskUtils.waitForCondition(() => {
       let frame = content.document.getElementById("frame");
       if (frame) {
@@ -185,7 +185,7 @@ add_task(async function see_hsts_header_in_framed_first_party_context() {
       "https://example.com"
     ) + "hsts_headers_framed.html";
   await BrowserTestUtils.openNewForegroundTab(gBrowser, framedUrl);
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     await ContentTaskUtils.waitForCondition(() => {
       return content.document.getElementById("done");
     });
@@ -214,7 +214,7 @@ add_task(async function see_hsts_header_in_third_party_context() {
       "https://example.com"
     ) + "hsts_headers_framed.html?third-party";
   await BrowserTestUtils.openNewForegroundTab(gBrowser, framedUrl);
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     await ContentTaskUtils.waitForCondition(() => {
       return content.document.getElementById("done");
     });

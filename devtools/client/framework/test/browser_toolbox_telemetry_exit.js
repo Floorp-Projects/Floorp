@@ -78,7 +78,7 @@ const DATA = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   // Let's reset the counts.
   Services.telemetry.clearEvents();
 

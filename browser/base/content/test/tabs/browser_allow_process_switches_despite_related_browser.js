@@ -6,16 +6,16 @@ const DATA_URI = "data:text/html,Hi";
 const DATA_URI_SOURCE = "view-source:" + DATA_URI;
 
 // Test for bug 1328829.
-add_task(async function() {
+add_task(async function () {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, DATA_URI);
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     BrowserTestUtils.removeTab(tab);
   });
 
   let promiseTab = BrowserTestUtils.waitForNewTab(gBrowser, DATA_URI_SOURCE);
   BrowserViewSource(tab.linkedBrowser);
   let viewSourceTab = await promiseTab;
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     BrowserTestUtils.removeTab(viewSourceTab);
   });
 

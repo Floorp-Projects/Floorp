@@ -7,7 +7,7 @@
  * Tests if JSON responses with property 'type' are correctly rendered.
  * (Reps rendering JSON responses should use `noGrip=true`).
  */
-add_task(async function() {
+add_task(async function () {
   const { tab, monitor } = await initNetMonitor(
     JSON_BASIC_URL + "?name=nogrip",
     { requestCount: 1 }

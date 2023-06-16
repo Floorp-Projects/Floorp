@@ -32,7 +32,7 @@ async function disableCookies() {
 }
 
 async function ensureCookieNotSet(aBrowser) {
-  await SpecialPowers.spawn(aBrowser, [], async function() {
+  await SpecialPowers.spawn(aBrowser, [], async function () {
     content.document.cookie = "key=value; SameSite=None; Secure;";
     Assert.equal(
       content.document.cookie,
@@ -67,7 +67,7 @@ async function enableCookies() {
 }
 
 async function ensureCookieSet(aBrowser) {
-  await SpecialPowers.spawn(aBrowser, [], function() {
+  await SpecialPowers.spawn(aBrowser, [], function () {
     content.document.cookie = "key=value; SameSite=None; Secure;";
     Assert.equal(
       content.document.cookie,

@@ -20,7 +20,7 @@ function openTabInUserContext(uri, userContextId) {
   return tab;
 }
 
-add_setup(async function() {
+add_setup(async function () {
   // make sure userContext is enabled.
   await SpecialPowers.pushPrefEnv({
     set: [

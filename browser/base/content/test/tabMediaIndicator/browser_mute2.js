@@ -21,7 +21,7 @@ function test_on_browser2(browser) {
   ok(!browser.audioMuted, "Audio should not be muted by default");
 }
 
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,

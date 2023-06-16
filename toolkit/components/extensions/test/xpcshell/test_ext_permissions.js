@@ -1,10 +1,13 @@
 "use strict";
 
-const { AddonManager } = ChromeUtils.import(
-  "resource://gre/modules/AddonManager.jsm"
+const { AddonManager } = ChromeUtils.importESModule(
+  "resource://gre/modules/AddonManager.sys.mjs"
 );
-const { ExtensionPermissions } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionPermissions.jsm"
+const { permissionToL10nId } = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionPermissionMessages.sys.mjs"
+);
+const { ExtensionPermissions } = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionPermissions.sys.mjs"
 );
 
 Services.prefs.setBoolPref("extensions.manifestV3.enabled", true);
@@ -14,13 +17,17 @@ Services.prefs.setBoolPref("extensions.manifestV3.enabled", true);
 // will not be returning the version set by AddonTestUtils.createAppInfo and this test will
 // fail on non-nightly builds (because the cached appinfo.version will be undefined and
 // AddonManager startup will fail).
-ChromeUtils.defineModuleGetter(
-  this,
-  "ExtensionParent",
-  "resource://gre/modules/ExtensionParent.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  ExtensionParent: "resource://gre/modules/ExtensionParent.sys.mjs",
+});
 
-const BROWSER_PROPERTIES = "chrome://browser/locale/browser.properties";
+const l10n = new Localization([
+  "toolkit/global/extensions.ftl",
+  "toolkit/global/extensionPermissions.ftl",
+  "branding/brand.ftl",
+]);
+// Localization resources need to be first iterated outside a test
+l10n.formatValue("webext-perms-sideload-text");
 
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
@@ -677,7 +684,7 @@ const GRANTED_WITHOUT_USER_PROMPT = [
   "webRequestFilterResponse.serviceWorkerScript",
 ];
 
-add_task(function test_permissions_have_localization_strings() {
+add_task(async function test_permissions_have_localization_strings() {
   let noPromptNames = Schemas.getPermissionNames([
     "PermissionNoPrompt",
     "OptionalPermissionNoPrompt",
@@ -689,14 +696,12 @@ add_task(function test_permissions_have_localization_strings() {
     "List of no-prompt permissions is correct."
   );
 
-  const bundle = Services.strings.createBundle(BROWSER_PROPERTIES);
-
   for (const perm of Schemas.getPermissionNames()) {
-    try {
-      const str = bundle.GetStringFromName(`webextPerms.description.${perm}`);
-
+    const permId = permissionToL10nId(perm);
+    if (permId) {
+      const str = await l10n.formatValue(permId);
       ok(str.length, `Found localization string for '${perm}' permission`);
-    } catch (e) {
+    } else {
       ok(
         GRANTED_WITHOUT_USER_PROMPT.includes(perm),
         `Permission '${perm}' intentionally granted without prompting the user`

@@ -36,8 +36,8 @@ async function test_image_preload_hint_request_loaded(
       url: requestUrl,
       waitForLoad: true,
     },
-    async function(browser) {
-      let imageLoaded = await ContentTask.spawn(browser, [], function() {
+    async function (browser) {
+      let imageLoaded = await ContentTask.spawn(browser, [], function () {
         let image = content.document.getElementById("test_image");
         return image && image.complete && image.naturalHeight !== 0;
       });

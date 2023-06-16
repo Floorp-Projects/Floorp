@@ -12,7 +12,7 @@ Services.scriptloader.loadSubScript(
 /**
  * Test whether the focus transfers to a tab which is already inspected .
  */
-add_task(async function() {
+add_task(async function () {
   info("Force all debug target panes to be expanded");
   prepareCollapsibilitiesTest();
 

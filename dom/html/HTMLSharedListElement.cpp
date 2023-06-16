@@ -27,7 +27,6 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(HTMLSharedListElement,
 
 NS_IMPL_ELEMENT_CLONE(HTMLSharedListElement)
 
-// Shared with nsHTMLSharedElement.cpp
 nsAttrValue::EnumTable kListTypeTable[] = {
     {"none", ListStyle::None},
     {"disc", ListStyle::Disc},

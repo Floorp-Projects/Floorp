@@ -1,4 +1,4 @@
-import { CFRMessageProvider } from "lib/CFRMessageProvider.jsm";
+import { CFRMessageProvider } from "lib/CFRMessageProvider.sys.mjs";
 
 const REGULAR_IDS = [
   "FACEBOOK_CONTAINER",

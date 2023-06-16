@@ -39,6 +39,12 @@ loader.lazyRequireGetter(
   true
 );
 
+const MDN_LINK_PARAMS = new URLSearchParams({
+  utm_source: "devtools",
+  utm_medium: "inspector-compatibility",
+  utm_campaign: "default",
+});
+
 class IssueItem extends PureComponent {
   static get propTypes() {
     return {
@@ -54,15 +60,15 @@ class IssueItem extends PureComponent {
   }
 
   _onLinkClicked(e) {
-    const { url } = this.props;
-
     e.preventDefault();
     e.stopPropagation();
 
-    openDocLink(
-      url +
-        "?utm_source=devtools&utm_medium=inspector-compatibility&utm_campaign=default"
-    );
+    const isMacOS = Services.appinfo.OS === "Darwin";
+
+    openDocLink(e.target.href, {
+      relatedToCurrent: true,
+      inBackground: isMacOS ? e.metaKey : e.ctrlKey,
+    });
   }
 
   _getTestDataAttributes() {
@@ -148,22 +154,36 @@ class IssueItem extends PureComponent {
     );
   }
 
-  _renderDescription() {
-    const { property, url } = this.props;
+  _renderPropertyEl() {
+    const { property, url, specUrl } = this.props;
+    const baseCls = "compatibility-issue-item__property devtools-monospace";
+    if (!url && !specUrl) {
+      return dom.span({ className: baseCls }, property);
+    }
 
+    const href = url ? `${url}?${MDN_LINK_PARAMS}` : specUrl;
+
+    return dom.a(
+      {
+        className: `${baseCls} ${
+          url
+            ? "compatibility-issue-item__mdn-link"
+            : "compatibility-issue-item__spec-link"
+        }`,
+        href,
+        title: href,
+        onClick: e => this._onLinkClicked(e),
+      },
+      property
+    );
+  }
+
+  _renderDescription() {
     return dom.div(
       {
         className: "compatibility-issue-item__description",
       },
-      dom.a(
-        {
-          className: "compatibility-issue-item__mdn-link devtools-monospace",
-          href: url,
-          title: url,
-          onClick: e => this._onLinkClicked(e),
-        },
-        property
-      ),
+      this._renderPropertyEl(),
       this._renderCauses(),
       this._renderUnsupportedBrowserList()
     );
@@ -192,12 +212,8 @@ class IssueItem extends PureComponent {
   }
 
   render() {
-    const {
-      deprecated,
-      experimental,
-      property,
-      unsupportedBrowsers,
-    } = this.props;
+    const { deprecated, experimental, property, unsupportedBrowsers } =
+      this.props;
 
     const classes = ["compatibility-issue-item"];
 

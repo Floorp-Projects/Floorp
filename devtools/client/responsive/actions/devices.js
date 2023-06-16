@@ -91,7 +91,7 @@ module.exports = {
   updatePreferredDevices,
 
   addCustomDevice(device) {
-    return async function({ dispatch }) {
+    return async function ({ dispatch }) {
       // Add custom device to device storage
       await addDevice(device, "custom");
       dispatch({
@@ -118,7 +118,7 @@ module.exports = {
   },
 
   editCustomDevice(viewport, oldDevice, newDevice) {
-    return async function({ dispatch }) {
+    return async function ({ dispatch }) {
       // Edit custom device in storage
       await editDevice(oldDevice, newDevice, "custom");
       // Notify the window that the device should be updated in the device selector.
@@ -145,7 +145,7 @@ module.exports = {
   },
 
   removeCustomDevice(device) {
-    return async function({ dispatch }) {
+    return async function ({ dispatch }) {
       // Remove custom device from device storage
       await removeDevice(device, "custom");
       dispatch({
@@ -166,7 +166,7 @@ module.exports = {
   },
 
   loadDevices() {
-    return async function({ dispatch }) {
+    return async function ({ dispatch }) {
       dispatch({ type: LOAD_DEVICE_LIST_START });
       const preferredDevices = loadPreferredDevices();
       let deviceByTypes;
@@ -206,7 +206,7 @@ module.exports = {
   },
 
   restoreDeviceState() {
-    return async function({ dispatch, getState }) {
+    return async function ({ dispatch, getState }) {
       const deviceState = await asyncStorage.getItem(
         "devtools.responsive.deviceState"
       );

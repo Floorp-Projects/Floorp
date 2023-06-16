@@ -496,6 +496,16 @@ bool GLContextEGL::RenewSurface(CompositorWidget* aWidget) {
 
   EGLNativeWindowType nativeWindow =
       GET_NATIVE_WINDOW_FROM_COMPOSITOR_WIDGET(aWidget);
+#ifdef MOZ_WAYLAND
+  // In case we're missing native window on Wayland CompositorWidget is hidden.
+  // Don't create a fallback EGL surface but fails here.
+  // We need to repeat RenewSurface() when native window is available
+  // (CompositorWidget becomes visible).
+  if (GdkIsWaylandDisplay()) {
+    NS_WARNING("Failed to get native window");
+    return false;
+  }
+#endif
   if (nativeWindow) {
     mSurface = mozilla::gl::CreateSurfaceFromNativeWindow(*mEgl, nativeWindow,
                                                           mSurfaceConfig);

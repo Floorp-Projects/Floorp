@@ -7,7 +7,7 @@
  * Check that the manifest is being properly shown
  */
 
-add_task(async function() {
+add_task(async function () {
   info("Test that we are displaying correctly the sidebar");
 
   await enableApplicationPanel();
@@ -27,7 +27,7 @@ add_task(async function() {
   await BrowserTestUtils.removeTab(tab);
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test that we are displaying correctly the selected page - manifest");
 
   await enableApplicationPanel();
@@ -52,7 +52,7 @@ add_task(async function() {
   await BrowserTestUtils.removeTab(tab);
 });
 
-add_task(async function() {
+add_task(async function () {
   info(
     "Test that we are displaying correctly the selected page - service workers"
   );

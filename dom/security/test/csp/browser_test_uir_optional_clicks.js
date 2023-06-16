@@ -9,13 +9,13 @@ const TEST_PATH_HTTPS = getRootDirectory(gTestPath).replace(
   "https://example.com"
 );
 
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.security.https_first", false]],
   });
   await BrowserTestUtils.withNewTab(
     TEST_PATH_HTTPS + "file_csp_meta_uir.html",
-    async function(browser) {
+    async function (browser) {
       let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
       BrowserTestUtils.synthesizeMouse(
         "#mylink",

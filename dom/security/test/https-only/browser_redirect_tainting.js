@@ -18,8 +18,8 @@ async function do_test() {
       url: requestUrl,
       waitForLoad: true,
     },
-    async function(browser) {
-      let imageLoaded = await SpecialPowers.spawn(browser, [], function() {
+    async function (browser) {
+      let imageLoaded = await SpecialPowers.spawn(browser, [], function () {
         let image = content.document.getElementById("test_image");
         return image && image.complete && image.naturalHeight !== 0;
       });

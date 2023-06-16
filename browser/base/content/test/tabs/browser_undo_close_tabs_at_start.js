@@ -58,7 +58,7 @@ add_task(async function replaceEmptyTabs() {
 
   is(
     SessionStore.getLastClosedTabCount(win),
-    SessionStore.getClosedTabCount(win) ? 1 : 0,
+    SessionStore.getClosedTabCountForWindow(win) ? 1 : 0,
     "LastClosedTabCount should be reset"
   );
 

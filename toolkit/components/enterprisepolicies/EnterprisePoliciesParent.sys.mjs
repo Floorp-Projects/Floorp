@@ -188,12 +188,10 @@ EnterprisePoliciesManager.prototype = {
         continue;
       }
 
-      let {
-        valid: parametersAreValid,
-        parsedValue: parsedParameters,
-      } = lazy.JsonSchemaValidator.validate(policyParameters, policySchema, {
-        allowExtraProperties: true,
-      });
+      let { valid: parametersAreValid, parsedValue: parsedParameters } =
+        lazy.JsonSchemaValidator.validate(policyParameters, policySchema, {
+          allowExtraProperties: true,
+        });
 
       if (!parametersAreValid) {
         lazy.log.error(`Invalid parameters specified for ${policyName}.`);
@@ -458,8 +456,9 @@ EnterprisePoliciesManager.prototype = {
       return false;
     }
     let { hostname } = urlObject;
-    let exemptArray = this.getActivePolicies()
-      ?.ExemptDomainFileTypePairsFromFileTypeDownloadWarnings;
+    let exemptArray =
+      this.getActivePolicies()
+        ?.ExemptDomainFileTypePairsFromFileTypeDownloadWarnings;
     if (!hostname || !extension || !exemptArray) {
       return false;
     }
@@ -542,12 +541,8 @@ class JSONPoliciesProvider {
     let configFile = null;
 
     if (AppConstants.platform == "linux" && AppConstants.MOZ_SYSTEM_POLICIES) {
-      let systemConfigFile = Cc["@mozilla.org/file/local;1"].createInstance(
-        Ci.nsIFile
-      );
-      systemConfigFile.initWithPath(
-        "/etc/" + Services.appinfo.name.toLowerCase() + "/policies"
-      );
+      let systemConfigFile = Services.dirsvc.get("SysConfD", Ci.nsIFile);
+      systemConfigFile.append("policies");
       systemConfigFile.append(POLICIES_FILENAME);
       if (systemConfigFile.exists()) {
         return systemConfigFile;

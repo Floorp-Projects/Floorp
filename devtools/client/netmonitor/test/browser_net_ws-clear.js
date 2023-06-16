@@ -7,7 +7,7 @@
  * Test that WS connection is established successfully and clearing messages works correctly.
  */
 
-add_task(async function() {
+add_task(async function () {
   const { tab, monitor } = await initNetMonitor(WS_PAGE_URL, {
     requestCount: 1,
   });

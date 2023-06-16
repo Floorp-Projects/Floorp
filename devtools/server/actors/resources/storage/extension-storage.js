@@ -13,17 +13,26 @@ const {
 const {
   LongStringActor,
 } = require("resource://devtools/server/actors/string.js");
+// Use loadInDevToolsLoader: false for these extension modules, because these
+// are singletons with shared state, and we must not create a new instance if a
+// dedicated loader was used to load this module.
 loader.lazyGetter(this, "ExtensionParent", () => {
-  return ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm")
-    .ExtensionParent;
+  return ChromeUtils.importESModule(
+    "resource://gre/modules/ExtensionParent.sys.mjs",
+    { loadInDevToolsLoader: false }
+  ).ExtensionParent;
 });
 loader.lazyGetter(this, "ExtensionProcessScript", () => {
-  return ChromeUtils.import("resource://gre/modules/ExtensionProcessScript.jsm")
-    .ExtensionProcessScript;
+  return ChromeUtils.importESModule(
+    "resource://gre/modules/ExtensionProcessScript.sys.mjs",
+    { loadInDevToolsLoader: false }
+  ).ExtensionProcessScript;
 });
 loader.lazyGetter(this, "ExtensionStorageIDB", () => {
-  return ChromeUtils.import("resource://gre/modules/ExtensionStorageIDB.jsm")
-    .ExtensionStorageIDB;
+  return ChromeUtils.importESModule(
+    "resource://gre/modules/ExtensionStorageIDB.sys.mjs",
+    { loadInDevToolsLoader: false }
+  ).ExtensionStorageIDB;
 });
 
 /**
@@ -37,9 +46,7 @@ class ExtensionStorageActor extends BaseStorageActor {
 
     // Retrieve the base moz-extension url for the extension
     // (and also remove the final '/' from it).
-    this.extensionHostURL = this.getExtensionPolicy()
-      .getURL()
-      .slice(0, -1);
+    this.extensionHostURL = this.getExtensionPolicy().getURL().slice(0, -1);
 
     // Map<host, ExtensionStorageIDB db connection>
     // Bug 1542038, 1542039: Each storage area will need its own
@@ -210,10 +217,8 @@ class ExtensionStorageActor extends BaseStorageActor {
 
   async getStoragePrincipal() {
     const { extension } = this.getExtensionPolicy();
-    const {
-      backendEnabled,
-      storagePrincipal,
-    } = await ExtensionStorageIDB.selectBackend({ extension });
+    const { backendEnabled, storagePrincipal } =
+      await ExtensionStorageIDB.selectBackend({ extension });
 
     if (!backendEnabled) {
       // IDB backend disabled; give up.

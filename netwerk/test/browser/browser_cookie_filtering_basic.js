@@ -25,7 +25,7 @@ const {
 // 2. runs the test gamut
 // 3. cleans up the content process
 async function runSuiteWithContentListener(name, triggerSuiteFunc, expected) {
-  return async function(browser) {
+  return async function (browser) {
     info("Running content suite: " + name);
     await SpecialPowers.spawn(browser, [expected, name], checkExpectedCookies);
     await triggerSuiteFunc();

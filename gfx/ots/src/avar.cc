@@ -6,6 +6,8 @@
 
 #include "fvar.h"
 
+#include "variations.h"
+
 namespace ots {
 
 // -----------------------------------------------------------------------------
@@ -20,17 +22,28 @@ bool OpenTypeAVAR::Parse(const uint8_t* data, size_t length) {
       !table.ReadU16(&this->axisCount)) {
     return Drop("Failed to read table header");
   }
-  if (this->majorVersion != 1) {
+  if (this->majorVersion > 2) {
     return Drop("Unknown table version");
   }
-  if (this->minorVersion > 0) {
-    // we only know how to serialize version 1.0
-    Warning("Downgrading minor version to 0");
-    this->minorVersion = 0;
-  }
-  if (this->reserved != 0) {
-    Warning("Expected reserved=0");
-    this->reserved = 0;
+  if (this->majorVersion == 1) {
+    // We can fix table
+    if (this->minorVersion > 0) {
+      // we only know how to serialize version 1.0
+      Warning("Downgrading minor version to 0");
+      this->minorVersion = 0;
+    }
+    if (this->reserved != 0) {
+      Warning("Expected reserved=0");
+      this->reserved = 0;
+    }
+  } else {
+    // We serialize data unchanged, so drop even for minor errors
+    if (this->minorVersion > 0) {
+      return Drop("Unknown minor table version");
+    }
+    if (this->reserved != 0) {
+      return Drop("Expected reserved=0");
+    }
   }
 
   OpenTypeFVAR* fvar = static_cast<OpenTypeFVAR*>(
@@ -79,10 +92,52 @@ bool OpenTypeAVAR::Parse(const uint8_t* data, size_t length) {
     }
   }
 
+  if (this->majorVersion < 2)
+    return true;
+
+  uint32_t axisIndexMapOffset;
+  uint32_t varStoreOffset;
+
+  if (!table.ReadU32(&axisIndexMapOffset) ||
+      !table.ReadU32(&varStoreOffset)) {
+    return Drop("Failed to read version 2 offsets");
+  }
+
+  Font *font = GetFont();
+  uint32_t headerSize = table.offset();
+
+  if (axisIndexMapOffset) {
+    if (axisIndexMapOffset < headerSize || axisIndexMapOffset >= length) {
+      return Drop("Bad delta set index offset in table header");
+    }
+    if (!ParseDeltaSetIndexMap(font, data + axisIndexMapOffset, length - axisIndexMapOffset)) {
+      return Drop("Failed to parse delta set index map");
+    }
+  }
+
+  if (varStoreOffset) {
+    if (varStoreOffset < headerSize || varStoreOffset >= length) {
+      return Drop("Bad item variation store offset in table header");
+    }
+    if (!ParseItemVariationStore(font, data + varStoreOffset, length - varStoreOffset)) {
+      return Drop("Failed to parse item variation store");
+    }
+  }
+
+  this->m_data = data;
+  this->m_length = length;
+
   return true;
 }
 
 bool OpenTypeAVAR::Serialize(OTSStream* out) {
+  if (this->majorVersion >= 2) {
+    if (!out->Write(this->m_data, this->m_length)) {
+      return Error("Failed to write table");
+    }
+    return true;
+  }
+
   if (!out->WriteU16(this->majorVersion) ||
       !out->WriteU16(this->minorVersion) ||
       !out->WriteU16(this->reserved) ||

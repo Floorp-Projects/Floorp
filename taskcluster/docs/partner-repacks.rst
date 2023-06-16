@@ -164,7 +164,7 @@ archives, simplifying the repack process by avoiding dmg and exe. Windows produc
 Signing
 ^^^^^^^
 
-* kinds: ``release-partner-repack-notarization-part-1`` ``release-partner-repack-notarization-poller`` ``release-partner-repack-signing``
+* kinds: ``release-partner-repack-mac-signing`` ``release-partner-repack-mac-notarization``
 * platforms: Mac
 * upstreams: ``release-partner-repack`` ``release-eme-free-repack``
 
@@ -172,9 +172,8 @@ We chunk the single partner repack task out to a signing task with 5 artifacts e
 example, EME-free will become 19 tasks. We collect the target.tar.gz from the
 upstream, and return a signed target.tar.gz. We use a ``target.dmg`` artifact for
 nightlies/regular releases, but this is converted to ``target.tar.gz`` by the signing
-scriptworker before sending it to the signing server, so partners are equivalent. The ``part-1`` task
-uploads the binaries to apple, while the ``poller`` task waits for their approval, then
-``release-partner-repack-signing`` staples on the notarization ticket.
+scriptworker before sending it to the signing server, so partners are equivalent. The ``mac-signing`` task
+signs the binary, and then ``mac-notarization`` submits it to Apple and staples the ticket to it.
 
 Repackage
 ^^^^^^^^^

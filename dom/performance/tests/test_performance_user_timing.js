@@ -1,6 +1,6 @@
 var steps = [
   // Test single mark addition
-  function() {
+  function () {
     ok(true, "Running mark addition test");
     performance.mark("test");
     var marks = performance.getEntriesByType("mark");
@@ -12,7 +12,7 @@ var steps = [
     is(mark.duration, 0, "mark duration should be 0");
   },
   // Test multiple mark addition
-  function() {
+  function () {
     ok(true, "Running multiple mark with same name addition test");
     performance.mark("test");
     performance.mark("test");
@@ -29,8 +29,8 @@ var steps = [
     var times = [];
     // This also tests the chronological ordering specified as
     // required for getEntries in the performance timeline spec.
-    marks_name.forEach(function(s) {
-      times.forEach(function(time) {
+    marks_name.forEach(function (s) {
+      times.forEach(function (time) {
         ok(
           s.startTime >= time.startTime,
           "Times should be equal or increasing between similarly named marks: " +
@@ -43,7 +43,7 @@ var steps = [
     });
   },
   // Test all marks removal
-  function() {
+  function () {
     ok(true, "Running all mark removal test");
     performance.mark("test");
     performance.mark("test2");
@@ -54,7 +54,7 @@ var steps = [
     is(marks.length, 0, "number of marks after all removal");
   },
   // Test single mark removal
-  function() {
+  function () {
     ok(true, "Running removal test (0 'test' marks with other marks)");
     performance.mark("test2");
     var marks = performance.getEntriesByType("mark");
@@ -64,7 +64,7 @@ var steps = [
     is(marks.length, 1, "number of marks after all removal");
   },
   // Test single mark removal
-  function() {
+  function () {
     ok(true, "Running removal test (0 'test' marks with no other marks)");
     var marks = performance.getEntriesByType("mark");
     is(marks.length, 0, "number of marks before all removal");
@@ -72,7 +72,7 @@ var steps = [
     marks = performance.getEntriesByType("mark");
     is(marks.length, 0, "number of marks after all removal");
   },
-  function() {
+  function () {
     ok(true, "Running removal test (1 'test' mark with other marks)");
     performance.mark("test");
     performance.mark("test2");
@@ -82,7 +82,7 @@ var steps = [
     marks = performance.getEntriesByType("mark");
     is(marks.length, 1, "number of marks after all removal");
   },
-  function() {
+  function () {
     ok(true, "Running removal test (1 'test' mark with no other marks)");
     performance.mark("test");
     var marks = performance.getEntriesByType("mark");
@@ -91,7 +91,7 @@ var steps = [
     marks = performance.getEntriesByType("mark");
     is(marks.length, 0, "number of marks after all removal");
   },
-  function() {
+  function () {
     ok(true, "Running removal test (2 'test' marks with other marks)");
     performance.mark("test");
     performance.mark("test");
@@ -102,7 +102,7 @@ var steps = [
     marks = performance.getEntriesByType("mark");
     is(marks.length, 1, "number of marks after all removal");
   },
-  function() {
+  function () {
     ok(true, "Running removal test (2 'test' marks with no other marks)");
     performance.mark("test");
     performance.mark("test");
@@ -113,7 +113,7 @@ var steps = [
     is(marks.length, 0, "number of marks after all removal");
   },
   // Test mark name being same as navigation timing parameter
-  function() {
+  function () {
     ok(true, "Running mark name collision test");
     for (n in performance.timing) {
       try {
@@ -142,7 +142,7 @@ var steps = [
     }
   },
   // Test measure
-  function() {
+  function () {
     ok(true, "Running measure addition with no start/end time test");
     performance.measure("test");
     var measures = performance.getEntriesByType("measure");
@@ -153,7 +153,7 @@ var steps = [
     is(measure.startTime, 0, "measure start time should be zero");
     ok(measure.duration >= 0, "measure duration should not be negative");
   },
-  function() {
+  function () {
     ok(true, "Running measure addition with only start time test");
     performance.mark("test1");
     performance.measure("test", "test1", undefined);
@@ -168,7 +168,7 @@ var steps = [
     );
     ok(measure.duration >= 0, "measure duration should not be negative");
   },
-  function() {
+  function () {
     ok(true, "Running measure addition with only end time test");
     performance.mark("test1");
     performance.measure("test", undefined, "test1");
@@ -179,7 +179,7 @@ var steps = [
     ok(measure.duration >= 0, "measure duration should not be negative");
   },
   // Test measure picking latest version of similarly named tags
-  function() {
+  function () {
     ok(true, "Running multiple mark with same name addition test");
     performance.mark("test");
     performance.mark("test");
@@ -208,7 +208,7 @@ var steps = [
         ") should be difference between two marks"
     );
   },
-  function() {
+  function () {
     // We don't have navigationStart in workers.
     if ("window" in self) {
       ok(true, "Running measure addition with no start/end time test");
@@ -223,7 +223,7 @@ var steps = [
     }
   },
   // Test all measure removal
-  function() {
+  function () {
     ok(true, "Running all measure removal test");
     performance.measure("test");
     performance.measure("test2");
@@ -234,7 +234,7 @@ var steps = [
     is(measures.length, 0, "measure entries should be length 0");
   },
   // Test single measure removal
-  function() {
+  function () {
     ok(true, "Running all measure removal test");
     performance.measure("test");
     performance.measure("test2");
@@ -245,7 +245,7 @@ var steps = [
     is(measures.length, 1, "measure entries should be length 1");
   },
   // Test measure with invalid start time mark name
-  function() {
+  function () {
     ok(true, "Running measure invalid start test");
     try {
       performance.measure("test", "notamark");
@@ -260,7 +260,7 @@ var steps = [
     }
   },
   // Test measure with invalid end time mark name
-  function() {
+  function () {
     ok(true, "Running measure invalid end test");
     try {
       performance.measure("test", undefined, "notamark");
@@ -275,7 +275,7 @@ var steps = [
     }
   },
   // Test measure name being same as navigation timing parameter
-  function() {
+  function () {
     ok(true, "Running measure name collision test");
     for (n in performance.timing) {
       if (n == "toJSON") {
@@ -287,7 +287,7 @@ var steps = [
     }
   },
   // Test measure mark being a reserved name
-  function() {
+  function () {
     ok(true, "Create measures using all reserved names");
     for (n in performance.timing) {
       try {

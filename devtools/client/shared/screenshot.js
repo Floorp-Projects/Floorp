@@ -83,13 +83,8 @@ async function captureScreenshot(targetFront, args) {
 
   // Call the content-process on the server to retrieve informations that will be needed
   // by the parent process.
-  const {
-    rect,
-    windowDpr,
-    windowZoom,
-    messages,
-    error,
-  } = await screenshotContentFront.prepareCapture(args);
+  const { rect, windowDpr, windowZoom, messages, error } =
+    await screenshotContentFront.prepareCapture(args);
 
   if (error) {
     return { error, messages };

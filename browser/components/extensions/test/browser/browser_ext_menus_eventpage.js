@@ -26,7 +26,8 @@ add_task(async function test_menu_create_id() {
     SimpleTest.monitorConsole(resolve, [
       // Callback exists, lastError is checked, so we should not see this logged.
       {
-        message: /Unchecked lastError value: Error: menus.create requires an id for non-persistent background scripts./,
+        message:
+          /Unchecked lastError value: Error: menus.create requires an id for non-persistent background scripts./,
         forbid: true,
       },
     ]);
@@ -218,7 +219,8 @@ add_task(async function test_menu_create_id_reuse() {
     SimpleTest.monitorConsole(resolve, [
       // Callback exists, lastError is checked, so we should not see this logged.
       {
-        message: /Unchecked lastError value: Error: menus.create requires an id for non-persistent background scripts./,
+        message:
+          /Unchecked lastError value: Error: menus.create requires an id for non-persistent background scripts./,
         forbid: true,
       },
     ]);

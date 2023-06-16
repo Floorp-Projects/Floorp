@@ -1,0 +1,10 @@
+Source: ${DEB_PKG_NAME}
+Maintainer: Mozilla Releng <release@mozilla.com>
+Priority: optional
+Section: web
+Build-Depends: debhelper (>= 9)
+
+Package: ${DEB_PKG_NAME}
+Architecture: ${DEB_ARCH_NAME}
+Depends: ${DEB_DEPENDS}
+Description: ${DEB_DESCRIPTION}

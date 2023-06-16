@@ -77,8 +77,7 @@ add_task(async function signed_xpi_initially_unblocked() {
     await Blocklist.getAddonBlocklistEntry(addon),
     {
       state: Ci.nsIBlocklistService.STATE_BLOCKED,
-      url:
-        "https://addons.mozilla.org/en-US/xpcshell/blocked-addon/webext_implicit_id@tests.mozilla.org/1.0/",
+      url: "https://addons.mozilla.org/en-US/xpcshell/blocked-addon/webext_implicit_id@tests.mozilla.org/1.0/",
     },
     "Blocked addon should have blocked entry"
   );

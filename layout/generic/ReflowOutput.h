@@ -129,11 +129,11 @@ struct nsCollapsingMargin {
 
   nsCollapsingMargin(const nsCollapsingMargin& aOther) = default;
 
-  bool operator==(const nsCollapsingMargin& aOther) {
+  bool operator==(const nsCollapsingMargin& aOther) const {
     return mMostPos == aOther.mMostPos && mMostNeg == aOther.mMostNeg;
   }
 
-  bool operator!=(const nsCollapsingMargin& aOther) {
+  bool operator!=(const nsCollapsingMargin& aOther) const {
     return !(*this == aOther);
   }
 

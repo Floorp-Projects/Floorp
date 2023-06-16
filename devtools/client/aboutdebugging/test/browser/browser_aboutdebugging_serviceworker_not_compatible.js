@@ -36,11 +36,8 @@ const TEST_DATA = [
  */
 add_task(async function testLocalRuntime() {
   for (const testData of TEST_DATA) {
-    const {
-      serviceWorkersEnabled,
-      privateBrowsingEnabled,
-      expectedMessage,
-    } = testData;
+    const { serviceWorkersEnabled, privateBrowsingEnabled, expectedMessage } =
+      testData;
 
     info(
       `Test warning message on this-firefox ` +
@@ -80,11 +77,8 @@ add_task(async function testRemoteRuntime() {
   });
 
   for (const testData of TEST_DATA) {
-    const {
-      serviceWorkersEnabled,
-      privateBrowsingEnabled,
-      expectedMessage,
-    } = testData;
+    const { serviceWorkersEnabled, privateBrowsingEnabled, expectedMessage } =
+      testData;
 
     info(
       `Test warning message on mocked USB runtime ` +

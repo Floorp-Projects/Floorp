@@ -5,7 +5,7 @@
 add_task(async function test_eventMatchesKey() {
   let eventMatchResult;
   let key;
-  let checkEvent = function(e) {
+  let checkEvent = function (e) {
     e.stopPropagation();
     e.preventDefault();
     eventMatchResult = eventMatchesKey(e, key);

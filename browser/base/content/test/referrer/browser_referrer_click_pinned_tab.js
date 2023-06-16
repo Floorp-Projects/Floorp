@@ -64,7 +64,7 @@ async function startClickPinnedTabTestCase(aTestNumber) {
   let browser = gTestWindow.gBrowser;
 
   browser.pinTab(browser.selectedTab);
-  someTabLoaded(gTestWindow).then(function(aNewTab) {
+  someTabLoaded(gTestWindow).then(function (aNewTab) {
     checkReferrerAndStartNextTest(
       aTestNumber,
       null,

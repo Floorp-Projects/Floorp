@@ -17,7 +17,7 @@
  * @return {Function} The debounced function, which has a `cancel` method that the
  *                    consumer can call to cancel any pending setTimeout callback.
  */
-exports.debounce = function(func, wait, scope) {
+exports.debounce = function (func, wait, scope) {
   let timer = null;
 
   function clearTimer(resetTimer = false) {
@@ -29,11 +29,11 @@ exports.debounce = function(func, wait, scope) {
     }
   }
 
-  const debouncedFunction = function() {
+  const debouncedFunction = function () {
     clearTimer();
 
     const args = arguments;
-    timer = setTimeout(function() {
+    timer = setTimeout(function () {
       timer = null;
       func.apply(scope, args);
     }, wait);

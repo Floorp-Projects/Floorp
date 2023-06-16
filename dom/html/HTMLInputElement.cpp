@@ -1035,7 +1035,7 @@ HTMLInputElement::HTMLInputElement(already_AddRefed<dom::NodeInfo>&& aNodeInfo,
   // until someone calls UpdateEditableState on us, apparently!  Also
   // by default we don't have to show validity UI and so forth.
   AddStatesSilently(ElementState::ENABLED | ElementState::OPTIONAL_ |
-                    ElementState::VALID);
+                    ElementState::VALID | ElementState::VALUE_EMPTY);
   UpdateApzAwareFlag();
 }
 
@@ -1371,12 +1371,11 @@ void HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
         // If original target is this and not the inner text control, we should
         // pass the focus to the inner text control.
         if (Element* dateTimeBoxElement = GetDateTimeBoxElement()) {
-          AsyncEventDispatcher* dispatcher = new AsyncEventDispatcher(
-              dateTimeBoxElement,
+          AsyncEventDispatcher::RunDOMEventWhenSafe(
+              *dateTimeBoxElement,
               aName == nsGkAtoms::value ? u"MozDateTimeValueChanged"_ns
                                         : u"MozDateTimeAttributeChanged"_ns,
               CanBubble::eNo, ChromeOnlyDispatch::eNo);
-          dispatcher->RunDOMEventWhenSafe();
         }
       }
     }
@@ -1570,17 +1569,6 @@ void HTMLInputElement::GetNonFileValueInternal(nsAString& aValue) const {
       }
       return;
   }
-}
-
-bool HTMLInputElement::IsValueEmpty() const {
-  if (GetValueMode() == VALUE_MODE_VALUE && IsSingleLineTextControl(false)) {
-    return !mInputData.mState->HasNonEmptyValue();
-  }
-
-  nsAutoString value;
-  GetNonFileValueInternal(value);
-
-  return value.IsEmpty();
 }
 
 void HTMLInputElement::ClearFiles(bool aSetValueChanged) {
@@ -2707,14 +2695,13 @@ nsresult HTMLInputElement::SetValueInternal(
         } else if (CreatesDateTimeWidget() &&
                    !aOptions.contains(ValueSetterOption::BySetUserInputAPI)) {
           if (Element* dateTimeBoxElement = GetDateTimeBoxElement()) {
-            AsyncEventDispatcher* dispatcher = new AsyncEventDispatcher(
-                dateTimeBoxElement, u"MozDateTimeValueChanged"_ns,
+            AsyncEventDispatcher::RunDOMEventWhenSafe(
+                *dateTimeBoxElement, u"MozDateTimeValueChanged"_ns,
                 CanBubble::eNo, ChromeOnlyDispatch::eNo);
-            dispatcher->RunDOMEventWhenSafe();
           }
         }
         if (mDoneCreating) {
-          OnValueChanged(ValueChangeKind::Internal);
+          OnValueChanged(ValueChangeKind::Internal, value.IsEmpty(), &value);
         }
         // else DoneCreatingElement calls us again once mDoneCreating is true
       }
@@ -2727,15 +2714,6 @@ nsresult HTMLInputElement::SetValueInternal(
           colorControlFrame->UpdateColor();
         }
       }
-
-      // This call might be useless in some situations because if the element is
-      // a single line text control, TextControlState::SetValue will call
-      // nsHTMLInputElement::OnValueChanged which is going to call UpdateState()
-      // if the element is focused. This bug 665547.
-      if (PlaceholderApplies() && HasAttr(nsGkAtoms::placeholder)) {
-        UpdateState(true);
-      }
-
       return NS_OK;
     }
 
@@ -2769,9 +2747,9 @@ nsresult HTMLInputElement::SetValueInternal(
   return NS_OK;
 }
 
-nsresult HTMLInputElement::SetValueChanged(bool aValueChanged) {
+void HTMLInputElement::SetValueChanged(bool aValueChanged) {
   if (mValueChanged == aValueChanged) {
-    return NS_OK;
+    return;
   }
   mValueChanged = aValueChanged;
   UpdateTooLongValidityState();
@@ -2779,7 +2757,6 @@ nsresult HTMLInputElement::SetValueChanged(bool aValueChanged) {
   // We need to do this unconditionally because the validity ui bits depend on
   // this.
   UpdateState(true);
-  return NS_OK;
 }
 
 void HTMLInputElement::SetLastValueChangeWasInteractive(bool aWasInteractive) {
@@ -3656,25 +3633,6 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
     }
   }
 
-  if ((aVisitor.mItemFlags & NS_IN_SUBMIT_CLICK)) {
-    nsCOMPtr<nsIContent> content(do_QueryInterface(aVisitor.mItemData));
-    RefPtr<HTMLFormElement> form = HTMLFormElement::FromNodeOrNull(content);
-    MOZ_ASSERT(form);
-
-    switch (oldType) {
-      case FormControlType::InputSubmit:
-      case FormControlType::InputImage:
-        // tell the form that we are about to exit a click handler
-        // so the form knows not to defer subsequent submissions
-        // the pending ones that were created during the handler
-        // will be flushed or forgotten.
-        form->OnSubmitClickEnd();
-        break;
-      default:
-        break;
-    }
-  }
-
   bool preventDefault =
       aVisitor.mEventStatus == nsEventStatus_eConsumeNoDefault;
   if (IsDisabled() && oldType != FormControlType::InputCheckbox &&
@@ -4031,21 +3989,6 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
       }
 
       if (outerActivateEvent) {
-        if ((oldType == FormControlType::InputSubmit ||
-             oldType == FormControlType::InputImage)) {
-          if (mType != FormControlType::InputSubmit &&
-              mType != FormControlType::InputImage &&
-              aVisitor.mItemFlags & NS_IN_SUBMIT_CLICK) {
-            nsCOMPtr<nsIContent> content(do_QueryInterface(aVisitor.mItemData));
-            RefPtr<HTMLFormElement> form =
-                HTMLFormElement::FromNodeOrNull(content);
-            MOZ_ASSERT(form);
-            // If the type has changed to a non-submit type, then we want to
-            // flush the stored submission if there is one (as if the submit()
-            // was allowed to succeed)
-            form->FlushPendingSubmission();
-          }
-        }
         switch (mType) {
           case FormControlType::InputReset:
           case FormControlType::InputSubmit:
@@ -4059,19 +4002,6 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
                 form->MaybeSubmit(this);
               }
               aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
-            } else if ((aVisitor.mItemFlags & NS_IN_SUBMIT_CLICK) &&
-                       (oldType == FormControlType::InputSubmit ||
-                        oldType == FormControlType::InputImage)) {
-              // We are here mostly because the event handler removed us from
-              // the document (mForm is null). In this case, the event doesn't
-              // trigger a submission, so tell the form to flush a possible
-              // pending submission.
-              nsCOMPtr<nsIContent> content(
-                  do_QueryInterface(aVisitor.mItemData));
-              RefPtr<HTMLFormElement> form =
-                  HTMLFormElement::FromNodeOrNull(content);
-              MOZ_ASSERT(form);
-              form->FlushPendingSubmission();
             }
             break;
 
@@ -4082,19 +4012,25 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
           HandlePopoverTargetAction();
         }
       }  // click or outer activate event
-    } else if ((aVisitor.mItemFlags & NS_IN_SUBMIT_CLICK) &&
-               (oldType == FormControlType::InputSubmit ||
-                oldType == FormControlType::InputImage)) {
-      nsCOMPtr<nsIContent> content(do_QueryInterface(aVisitor.mItemData));
-      RefPtr<HTMLFormElement> form = HTMLFormElement::FromNodeOrNull(content);
-      MOZ_ASSERT(form);
-      // tell the form to flush a possible pending submission.
-      // the reason is that the script returned false (the event was
-      // not ignored) so if there is a stored submission, it needs to
-      // be submitted immediately.
-      form->FlushPendingSubmission();
     }
   }  // if
+  if ((aVisitor.mItemFlags & NS_IN_SUBMIT_CLICK) &&
+      (oldType == FormControlType::InputSubmit ||
+       oldType == FormControlType::InputImage)) {
+    nsCOMPtr<nsIContent> content(do_QueryInterface(aVisitor.mItemData));
+    RefPtr<HTMLFormElement> form = HTMLFormElement::FromNodeOrNull(content);
+    MOZ_ASSERT(form);
+    // Tell the form that we are about to exit a click handler,
+    // so the form knows not to defer subsequent submissions.
+    // The pending ones that were created during the handler
+    // will be flushed or forgotten.
+    form->OnSubmitClickEnd();
+    // tell the form to flush a possible pending submission.
+    // the reason is that the script returned false (the event was
+    // not ignored) so if there is a stored submission, it needs to
+    // be submitted immediately.
+    form->FlushPendingSubmission();
+  }
 
   if (NS_SUCCEEDED(rv) && mType == FormControlType::InputRange) {
     PostHandleEventForRangeThumb(aVisitor);
@@ -4356,48 +4292,18 @@ void HTMLInputElement::UnbindFromTree(bool aNullParent) {
   UpdateState(false);
 }
 
-namespace {
-class TypeChangeSelectionRangeFlagDeterminer {
- public:
-  using ValueSetterOption = TextControlState::ValueSetterOption;
-  using ValueSetterOptions = TextControlState::ValueSetterOptions;
-
-  // @param aOldType InputElementTypes
-  // @param aNewType InputElementTypes
-  TypeChangeSelectionRangeFlagDeterminer(FormControlType aOldType,
-                                         FormControlType aNewType)
-      : mOldType(aOldType), mNewType(aNewType) {}
-
-  // @return TextControlState::ValueSetterOptions
-  ValueSetterOptions GetValueSetterOptions() const {
-    const bool previouslySelectable = DoesSetRangeTextApply(mOldType);
-    const bool nowSelectable = DoesSetRangeTextApply(mNewType);
-    const bool moveCursorToBeginAndSetDirectionForward =
-        !previouslySelectable && nowSelectable;
-    if (moveCursorToBeginAndSetDirectionForward) {
-      return {ValueSetterOption::MoveCursorToBeginSetSelectionDirectionForward};
-    }
-    return {};
-  }
-
- private:
-  /**
-   * @param aType InputElementTypes
-   * @return true, iff SetRangeText applies to aType as specified at
-   * https://html.spec.whatwg.org/multipage/input.html#concept-input-apply.
-   */
-  static bool DoesSetRangeTextApply(FormControlType aType) {
-    return aType == FormControlType::InputText ||
-           aType == FormControlType::InputSearch ||
-           aType == FormControlType::InputUrl ||
-           aType == FormControlType::InputTel ||
-           aType == FormControlType::InputPassword;
-  }
-
-  const FormControlType mOldType;
-  const FormControlType mNewType;
-};
-}  // anonymous namespace
+/**
+ * @param aType InputElementTypes
+ * @return true, iff SetRangeText applies to aType as specified at
+ * https://html.spec.whatwg.org/#concept-input-apply.
+ */
+static bool SetRangeTextApplies(FormControlType aType) {
+  return aType == FormControlType::InputText ||
+         aType == FormControlType::InputSearch ||
+         aType == FormControlType::InputUrl ||
+         aType == FormControlType::InputTel ||
+         aType == FormControlType::InputPassword;
+}
 
 void HTMLInputElement::HandleTypeChange(FormControlType aNewType,
                                         bool aNotify) {
@@ -4434,13 +4340,12 @@ void HTMLInputElement::HandleTypeChange(FormControlType aNewType,
     CancelRangeThumbDrag(false);
   }
 
-  ValueModeType aOldValueMode = GetValueMode();
-  nsAutoString aOldValue;
-
-  if (aOldValueMode == VALUE_MODE_VALUE) {
+  const ValueModeType oldValueMode = GetValueMode();
+  nsAutoString oldValue;
+  if (oldValueMode == VALUE_MODE_VALUE) {
     // Doesn't matter what caller type we pass here, since we know we're not a
     // file input anyway.
-    GetValue(aOldValue, CallerType::NonSystem);
+    GetValue(oldValue, CallerType::NonSystem);
   }
 
   TextControlState::SelectionProperties sp;
@@ -4463,47 +4368,64 @@ void HTMLInputElement::HandleTypeChange(FormControlType aNewType,
     }
   }
 
-  /**
-   * The following code is trying to reproduce the algorithm described here:
-   * http://www.whatwg.org/specs/web-apps/current-work/complete.html#input-type-change
-   */
+  // https://html.spec.whatwg.org/#input-type-change
   switch (GetValueMode()) {
     case VALUE_MODE_DEFAULT:
     case VALUE_MODE_DEFAULT_ON:
-      // If the previous value mode was value, we need to set the value content
-      // attribute to the previous value.
-      // There is no value sanitizing algorithm for elements in this mode.
-      if (aOldValueMode == VALUE_MODE_VALUE && !aOldValue.IsEmpty()) {
-        SetAttr(kNameSpaceID_None, nsGkAtoms::value, aOldValue, true);
+      // 1. If the previous state of the element's type attribute put the value
+      //    IDL attribute in the value mode, and the element's value is not the
+      //    empty string, and the new state of the element's type attribute puts
+      //    the value IDL attribute in either the default mode or the default/on
+      //    mode, then set the element's value content attribute to the
+      //    element's value.
+      if (oldValueMode == VALUE_MODE_VALUE && !oldValue.IsEmpty()) {
+        SetAttr(kNameSpaceID_None, nsGkAtoms::value, oldValue, true);
       }
       break;
-    case VALUE_MODE_VALUE:
-      // If the previous value mode wasn't value, we have to set the value to
-      // the value content attribute.
-      // SetValueInternal is going to sanitize the value.
-      {
+    case VALUE_MODE_VALUE: {
+      ValueSetterOptions options{ValueSetterOption::ByInternalAPI};
+      if (!SetRangeTextApplies(oldType) && SetRangeTextApplies(mType)) {
+        options +=
+            ValueSetterOption::MoveCursorToBeginSetSelectionDirectionForward;
+      }
+      if (oldValueMode != VALUE_MODE_VALUE) {
+        // 2. Otherwise, if the previous state of the element's type attribute
+        //    put the value IDL attribute in any mode other than the value
+        //    mode, and the new state of the element's type attribute puts the
+        //    value IDL attribute in the value mode, then set the value of the
+        //    element to the value of the value content attribute, if there is
+        //    one, or the empty string otherwise, and then set the control's
+        //    dirty value flag to false.
         nsAutoString value;
-        if (aOldValueMode != VALUE_MODE_VALUE) {
-          GetAttr(kNameSpaceID_None, nsGkAtoms::value, value);
-        } else {
-          value = aOldValue;
-        }
-
-        const TypeChangeSelectionRangeFlagDeterminer flagDeterminer(oldType,
-                                                                    mType);
-        ValueSetterOptions options(flagDeterminer.GetValueSetterOptions());
-        options += ValueSetterOption::ByInternalAPI;
-
+        GetAttr(nsGkAtoms::value, value);
+        SetValueInternal(value, options);
+        SetValueChanged(false);
+      } else if (mValueChanged) {
+        // We're both in the "value" mode state, we need to make no change per
+        // spec, but due to how we store the value internally we need to call
+        // SetValueInternal, if our value had changed at all.
         // TODO: What should we do if SetValueInternal fails?  (The allocation
         // may potentially be big, but most likely we've failed to allocate
         // before the type change.)
-        SetValueInternal(value, options);
+        SetValueInternal(oldValue, options);
+      } else {
+        // The value dirty flag is not set, so our value is based on our default
+        // value. But our default value might be dependent on the type. Make
+        // sure to set it so that state is consistent.
+        SetDefaultValueAsValue();
       }
       break;
+    }
     case VALUE_MODE_FILENAME:
     default:
-      // We don't care about the value.
-      // There is no value sanitizing algorithm for elements in this mode.
+      // 3. Otherwise, if the previous state of the element's type attribute
+      //    put the value IDL attribute in any mode other than the filename
+      //    mode, and the new state of the element's type attribute puts the
+      //    value IDL attribute in the filename mode, then set the value of the
+      //    element to the empty string.
+      //
+      // Setting the attribute to the empty string is basically calling
+      // ClearFiles, but there can't be any files.
       break;
   }
 
@@ -5774,12 +5696,25 @@ nsresult HTMLInputElement::SetDefaultValueAsValue() {
   return SetValueInternal(resetVal, ValueSetterOption::ByInternalAPI);
 }
 
-void HTMLInputElement::SetDirectionFromValue(bool aNotify) {
-  if (IsSingleLineTextControl(true)) {
-    nsAutoString value;
-    GetValue(value, CallerType::System);
-    SetDirectionalityFromValue(this, value, aNotify);
+void HTMLInputElement::SetDirectionFromValue(bool aNotify,
+                                             const nsAString* aKnownValue) {
+  // FIXME(emilio): https://html.spec.whatwg.org/#the-directionality says this
+  // applies to Text, Search, Telephone, URL, or Email state, but the check
+  // below doesn't filter out week/month/number.
+  if (!IsSingleLineTextControl(true)) {
+    return;
   }
+  nsAutoString value;
+  if (!aKnownValue) {
+    // It's unclear if per spec we should use the sanitized or unsanitized
+    // value to set the directionality, but aKnownValue is unsanitized, so be
+    // consistent. Using what the user is seeing to determine directionality
+    // instead of the sanitized (empty if invalid) value probably makes more
+    // sense.
+    GetValueInternal(value, CallerType::System);
+    aKnownValue = &value;
+  }
+  SetDirectionalityFromValue(this, *aKnownValue, aNotify);
 }
 
 NS_IMETHODIMP
@@ -5933,7 +5868,7 @@ HTMLInputElement::SubmitNamesValues(FormData* aFormData) {
 static nsTArray<FileContentData> SaveFileContentData(
     const nsTArray<OwningFileOrDirectory>& aArray) {
   nsTArray<FileContentData> res(aArray.Length());
-  for (auto& it : aArray) {
+  for (const auto& it : aArray) {
     if (it.IsFile()) {
       RefPtr<BlobImpl> impl = it.GetAsFile()->Impl();
       res.AppendElement(std::move(impl));
@@ -6042,17 +5977,17 @@ void HTMLInputElement::DoneCreatingElement() {
 
   // Sanitize the value and potentially set mFocusedValue.
   if (GetValueMode() == VALUE_MODE_VALUE) {
-    nsAutoString aValue;
-    GetValue(aValue, CallerType::System);
+    nsAutoString value;
+    GetValue(value, CallerType::System);
     // TODO: What should we do if SetValueInternal fails?  (The allocation
     // may potentially be big, but most likely we've failed to allocate
     // before the type change.)
-    SetValueInternal(aValue, ValueSetterOption::ByInternalAPI);
+    SetValueInternal(value, ValueSetterOption::ByInternalAPI);
 
     if (CreatesDateTimeWidget()) {
       // mFocusedValue has to be set here, so that `FireChangeEventIfNeeded` can
       // fire a change event if necessary.
-      mFocusedValue = aValue;
+      mFocusedValue = value;
     }
   }
 
@@ -6134,11 +6069,9 @@ ElementState HTMLInputElement::IntrinsicState() const {
     }
   }
 
-  if (mType != FormControlType::InputFile && IsValueEmpty()) {
-    state |= ElementState::VALUE_EMPTY;
-    if (PlaceholderApplies() && HasAttr(nsGkAtoms::placeholder)) {
-      state |= ElementState::PLACEHOLDER_SHOWN;
-    }
+  if (IsValueEmpty() && PlaceholderApplies() &&
+      HasAttr(nsGkAtoms::placeholder)) {
+    state |= ElementState::PLACEHOLDER_SHOWN;
   }
 
   return state;
@@ -6147,7 +6080,7 @@ ElementState HTMLInputElement::IntrinsicState() const {
 static nsTArray<OwningFileOrDirectory> RestoreFileContentData(
     nsPIDOMWindowInner* aWindow, const nsTArray<FileContentData>& aData) {
   nsTArray<OwningFileOrDirectory> res(aData.Length());
-  for (auto& it : aData) {
+  for (const auto& it : aData) {
     if (it.type() == FileContentData::TBlobImpl) {
       if (!it.get_BlobImpl()) {
         // Serialization failed, skip this file.
@@ -6823,8 +6756,7 @@ int32_t HTMLInputElement::GetWrapCols() {
 int32_t HTMLInputElement::GetRows() { return DEFAULT_ROWS; }
 
 void HTMLInputElement::GetDefaultValueFromContent(nsAString& aValue) {
-  TextControlState* state = GetEditorState();
-  if (state) {
+  if (GetEditorState()) {
     GetDefaultValue(aValue);
     // This is called by the frame to show the value.
     // We have to sanitize it when needed.
@@ -6856,19 +6788,27 @@ void HTMLInputElement::InitializeKeyboardEventListeners() {
   }
 }
 
-void HTMLInputElement::OnValueChanged(ValueChangeKind aKind) {
+void HTMLInputElement::OnValueChanged(ValueChangeKind aKind,
+                                      bool aNewValueEmpty,
+                                      const nsAString* aKnownNewValue) {
+  MOZ_ASSERT_IF(aKnownNewValue, aKnownNewValue->IsEmpty() == aNewValueEmpty);
   if (aKind != ValueChangeKind::Internal) {
     mLastValueChangeWasInteractive = aKind == ValueChangeKind::UserInteraction;
+  }
+
+  if (aNewValueEmpty) {
+    AddStates(ElementState::VALUE_EMPTY);
+  } else {
+    RemoveStates(ElementState::VALUE_EMPTY);
   }
 
   UpdateAllValidityStates(true);
 
   if (HasDirAuto()) {
-    SetDirectionFromValue(true);
+    SetDirectionFromValue(true, aKnownNewValue);
   }
 
-  // :placeholder-shown and value-empty pseudo-class may change when the value
-  // changes.
+  // :placeholder-shown pseudo-class may change when the value changes.
   UpdateState(true);
 }
 
@@ -7287,10 +7227,9 @@ void HTMLInputElement::MaybeFireInputPasswordRemoved() {
     return;
   }
 
-  RefPtr<AsyncEventDispatcher> asyncDispatcher =
-      new AsyncEventDispatcher(this, u"DOMInputPasswordRemoved"_ns,
-                               CanBubble::eNo, ChromeOnlyDispatch::eYes);
-  asyncDispatcher->RunDOMEventWhenSafe();
+  AsyncEventDispatcher::RunDOMEventWhenSafe(
+      *this, u"DOMInputPasswordRemoved"_ns, CanBubble::eNo,
+      ChromeOnlyDispatch::eYes);
 }
 
 }  // namespace mozilla::dom

@@ -11,6 +11,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
   DialogHandler:
     "chrome://remote/content/cdp/domains/parent/page/DialogHandler.sys.mjs",
+  generateUUID: "chrome://remote/content/shared/UUID.sys.mjs",
   PollPromise: "chrome://remote/content/shared/Sync.sys.mjs",
   print: "chrome://remote/content/shared/PDF.sys.mjs",
   streamRegistry: "chrome://remote/content/cdp/domains/parent/IO.sys.mjs",
@@ -100,8 +101,7 @@ export class Page extends Domain {
     let networkLessLoaderId;
     if (!hitsNetwork) {
       // This navigation will not hit the network, use a randomly generated id.
-      const uuid = Services.uuid.generateUUID().toString();
-      networkLessLoaderId = uuid.substring(1, uuid.length - 1);
+      networkLessLoaderId = lazy.generateUUID();
 
       // Update the content process map of loader ids.
       await this.executeInChild("_updateLoaderId", {
@@ -136,7 +136,7 @@ export class Page extends Domain {
         return;
       }
       let navigationRequestId, redirectedRequestId;
-      const _onNavigationRequest = function(_type, _ch, data) {
+      const _onNavigationRequest = function (_type, _ch, data) {
         const {
           url: requestURL,
           requestId,
@@ -153,7 +153,7 @@ export class Page extends Domain {
         }
       };
 
-      const _onRequestFinished = function(_type, _ch, data) {
+      const _onRequestFinished = function (_type, _ch, data) {
         const { requestId, errorCode } = data;
         if (
           redirectedRequestId !== requestId ||
@@ -252,12 +252,8 @@ export class Page extends Domain {
       // If no specific clipping region has been specified,
       // fallback to the layout (fixed) viewport, and the
       // default pixel ratio.
-      const {
-        pageX,
-        pageY,
-        clientWidth,
-        clientHeight,
-      } = await this.executeInChild("_layoutViewport");
+      const { pageX, pageY, clientWidth, clientHeight } =
+        await this.executeInChild("_layoutViewport");
 
       rect = new DOMRect(pageX, pageY, clientWidth, clientHeight);
     }

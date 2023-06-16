@@ -430,7 +430,7 @@ nsresult OpusTrackEncoder::Encode(AudioSegment* aSegment) {
 
     // timestamp should be the time of the first sample
     mEncodedDataQueue.Push(MakeAndAddRef<EncodedFrame>(
-        FramesToTimeUnit(mNumOutputFrames + mLookahead, mOutputSampleRate),
+        media::TimeUnit(mNumOutputFrames + mLookahead, mOutputSampleRate),
         static_cast<uint64_t>(framesInPCM) * kOpusSamplingRate /
             mOutputSampleRate,
         kOpusSamplingRate, EncodedFrame::OPUS_AUDIO_FRAME,
@@ -438,7 +438,7 @@ nsresult OpusTrackEncoder::Encode(AudioSegment* aSegment) {
 
     mNumOutputFrames += NumOutputFramesPerPacket();
     LOG("[Opus] mOutputTimeStamp %.3f.",
-        FramesToTimeUnit(mNumOutputFrames, mOutputSampleRate).ToSeconds());
+        media::TimeUnit(mNumOutputFrames, mOutputSampleRate).ToSeconds());
 
     if (isFinalPacket) {
       LOG("[Opus] Done encoding.");

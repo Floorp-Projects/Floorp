@@ -1,10 +1,10 @@
 /* eslint max-len: ["error", 80] */
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+const { AddonTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
 );
-const { ExtensionParent } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionParent.jsm"
+const { ExtensionParent } = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionParent.sys.mjs"
 );
 
 AddonTestUtils.initMochitest(this);
@@ -298,9 +298,7 @@ add_task(async function testRemovedOnDisable() {
 
   // Opens the prefs page.
   let loaded = waitForViewLoad(win);
-  getAddonCard(win, id)
-    .querySelector("[action=preferences]")
-    .click();
+  getAddonCard(win, id).querySelector("[action=preferences]").click();
   await loaded;
 
   let inlineOptions = doc.querySelector("inline-options-browser");
@@ -477,8 +475,9 @@ async function testSelectPosition(optionsBrowser, zoom) {
   let popupShownPromise = BrowserTestUtils.waitForSelectPopupShown(window);
   await BrowserTestUtils.synthesizeMouseAtCenter("select", {}, optionsBrowser);
   let popup = await popupShownPromise;
-  let popupLeft = popup.shadowRoot.querySelector(".menupopup-arrowscrollbox")
-    .screenX;
+  let popupLeft = popup.shadowRoot.querySelector(
+    ".menupopup-arrowscrollbox"
+  ).screenX;
   let browserLeft = optionsBrowser.screenX * zoom;
   ok(
     Math.abs(popupLeft - browserLeft) <= 1,
@@ -512,7 +511,7 @@ async function testOptionsZoom(type = "full") {
         </body>
       `,
       "options.js": () => {
-        window.addEventListener("load", function() {
+        window.addEventListener("load", function () {
           browser.test.sendMessage("options-loaded");
         });
       },

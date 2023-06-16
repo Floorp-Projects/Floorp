@@ -1,6 +1,13 @@
 const PREF_SIGNATURES_GENERAL = "xpinstall.signatures.required";
 const PREF_SIGNATURES_LANGPACKS = "extensions.langpacks.signatures.required";
 
+// Disable "xpc::IsInAutomation()", since it would override the behavior
+// we're testing for.
+Services.prefs.setBoolPref(
+  "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer",
+  false
+);
+
 // Try to install the given XPI file, and assert that the install
 // succeeds.  Uninstalls before returning.
 async function installShouldSucceed(file) {
@@ -25,7 +32,7 @@ async function installShouldFail(file) {
 // Test that the preference controlling langpack signing works properly
 // (and that the general preference for addon signing does not affect
 // language packs).
-add_task(async function() {
+add_task(async function () {
   AddonTestUtils.useRealCertChecks = true;
 
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");

@@ -25,15 +25,11 @@ const {
   },
 } = require("resource://devtools/shared/constants.js");
 
-add_task(async function() {
-  const {
-    target,
-    walker,
-    parentAccessibility,
-    a11yWalker,
-  } = await initAccessibilityFrontsForUrl(
-    `${MAIN_DOMAIN}doc_accessibility_keyboard_audit.html`
-  );
+add_task(async function () {
+  const { target, walker, parentAccessibility, a11yWalker } =
+    await initAccessibilityFrontsForUrl(
+      `${MAIN_DOMAIN}doc_accessibility_keyboard_audit.html`
+    );
 
   const tests = [
     [

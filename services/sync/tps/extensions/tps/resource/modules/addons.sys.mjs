@@ -2,9 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { AddonManager } = ChromeUtils.import(
-  "resource://gre/modules/AddonManager.jsm"
-);
+import { AddonManager } from "resource://gre/modules/AddonManager.sys.mjs";
 import { AddonUtils } from "resource://services-sync/addonutils.sys.mjs";
 import { Logger } from "resource://tps/logger.sys.mjs";
 

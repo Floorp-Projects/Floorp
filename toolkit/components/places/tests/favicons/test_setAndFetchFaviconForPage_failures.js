@@ -10,8 +10,8 @@
 let faviconURI = Services.io.newURI(
   "http://example.org/tests/toolkit/components/places/tests/browser/favicon-normal16.png"
 );
-add_task(async function() {
-  registerCleanupFunction(async function() {
+add_task(async function () {
+  registerCleanupFunction(async function () {
     await PlacesUtils.bookmarks.eraseEverything();
     await PlacesUtils.history.clear();
   });

@@ -1814,7 +1814,7 @@ void ProfileBuffer::StreamCountersToJSON(
     EntryGetter e(*aReader, aWriter.SourceFailureLatch(),
                   std::move(aProgressLogger));
 
-    enum Schema : uint32_t { TIME = 0, NUMBER = 1, COUNT = 2 };
+    enum Schema : uint32_t { TIME = 0, COUNT = 1, NUMBER = 2 };
 
     // Stream all counters. We skip other entries, because we process them in
     // StreamSamplesToJSON()/etc.
@@ -1920,16 +1920,25 @@ void ProfileBuffer::StreamCountersToJSON(
           continue;
         }
 
+        bool hasNumber = false;
+        for (size_t i = 0; i < size; i++) {
+          if (samples[i].mNumber != 0) {
+            hasNumber = true;
+            break;
+          }
+        }
+
         aWriter.StartObjectElement();
         {
           aWriter.IntProperty("id", static_cast<int64_t>(key));
           aWriter.StartObjectProperty("samples");
           {
-            // XXX Can we assume a missing count means 0?
             JSONSchemaWriter schema(aWriter);
             schema.WriteField("time");
-            schema.WriteField("number");
             schema.WriteField("count");
+            if (hasNumber) {
+              schema.WriteField("number");
+            }
           }
 
           aWriter.StartArrayProperty("data");
@@ -1970,14 +1979,18 @@ void ProfileBuffer::StreamCountersToJSON(
                 // The deltas are effectively zeroes, since no change happened
                 // between the last actually-written sample and the last skipped
                 // one.
-                writer.IntElement(NUMBER, 0);
                 writer.IntElement(COUNT, 0);
+                if (hasNumber) {
+                  writer.IntElement(NUMBER, 0);
+                }
               }
 
               AutoArraySchemaWriter writer(aWriter);
               writer.TimeMsElement(TIME, samples[i].mTime);
-              writer.IntElement(NUMBER, numberDelta);
               writer.IntElement(COUNT, countDelta);
+              if (hasNumber) {
+                writer.IntElement(NUMBER, numberDelta);
+              }
 
               previousSkippedTime = 0.0;
               previousNumber = samples[i].mNumber;

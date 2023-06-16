@@ -16,7 +16,7 @@ function test() {
   var pbWin = OpenBrowserWindow({ private: true });
   pbWin.addEventListener(
     "load",
-    function() {
+    function () {
       doTest();
     },
     { once: true }

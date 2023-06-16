@@ -39,7 +39,7 @@
     a {
       &:hover,
       &:active {
-        text-decoration: underline;
+        text-decoration: none;
       }
 
       &:active {
@@ -57,7 +57,7 @@
     float: inline-end;
 
     &:hover {
-      text-decoration: underline;
+      text-decoration: none;
     }
   }
 

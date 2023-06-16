@@ -7,7 +7,7 @@ const ReferrerInfo = Components.Constructor(
   "init"
 );
 
-XPCOMUtils.defineLazyGetter(this, "URL", function() {
+XPCOMUtils.defineLazyGetter(this, "URL", function () {
   return "http://localhost:" + httpServer.identity.primaryPort;
 });
 

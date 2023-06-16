@@ -6317,6 +6317,7 @@ cs{
                 other{"{0} atm"}
             }
             bar{
+                dnam{"bar"}
                 few{"{0} bar"}
                 many{"{0} bar"}
                 one{"{0} bar"}

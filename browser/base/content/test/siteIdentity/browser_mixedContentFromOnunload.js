@@ -27,9 +27,9 @@ const HTTPS_TEST_ROOT_2 = getRootDirectory(gTestPath).replace(
   "https://test2.example.com"
 );
 
-add_task(async function() {
+add_task(async function () {
   let url = HTTP_TEST_ROOT_1 + "file_mixedContentFromOnunload.html";
-  await BrowserTestUtils.withNewTab(url, async function(browser) {
+  await BrowserTestUtils.withNewTab(url, async function (browser) {
     await SpecialPowers.pushPrefEnv({
       set: [
         ["security.mixed_content.block_active_content", true],

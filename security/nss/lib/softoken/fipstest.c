@@ -690,11 +690,11 @@ static PRBool sftk_self_tests_success = PR_FALSE;
  * This function is called at dll load time, the code tha makes this
  * happen is platform specific on defined above.
  */
-static void
-sftk_startup_tests(void)
+void
+sftk_startup_tests_with_rerun(PRBool rerun)
 {
     SECStatus rv;
-    const char *libraryName = SOFTOKEN_LIB_NAME;
+    const char *libraryName = rerun ? BLAPI_FIPS_RERUN_FLAG_STRING SOFTOKEN_LIB_NAME : SOFTOKEN_LIB_NAME;
 
     PORT_Assert(!sftk_self_tests_ran);
     PORT_Assert(!sftk_self_tests_success);
@@ -752,13 +752,19 @@ sftk_startup_tests(void)
     sftk_self_tests_success = PR_TRUE;
 }
 
+static void
+sftk_startup_tests(void)
+{
+    sftk_startup_tests_with_rerun(PR_FALSE);
+}
+
 /*
  * this is called from nsc_Common_Initizialize entry points that gates access
  * to * all other pkcs11 functions. This prevents softoken operation if our
  * power on selftest failed.
  */
 CK_RV
-sftk_FIPSEntryOK()
+sftk_FIPSEntryOK(PRBool rerun)
 {
 #ifdef NSS_NO_INIT_SUPPORT
     /* this should only be set on platforms that can't handle one of the INIT
@@ -771,6 +777,11 @@ sftk_FIPSEntryOK()
         sftk_startup_tests();
     }
 #endif
+    if (rerun) {
+        sftk_self_tests_ran = PR_FALSE;
+        sftk_self_tests_success = PR_FALSE;
+        sftk_startup_tests_with_rerun(PR_TRUE);
+    }
     if (!sftk_self_tests_success) {
         return CKR_DEVICE_ERROR;
     }

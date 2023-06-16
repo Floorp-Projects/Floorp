@@ -17,7 +17,7 @@
  */
 module.exports = function defer() {
   let resolve, reject;
-  const promise = new Promise(function(res, rej) {
+  const promise = new Promise(function (res, rej) {
     resolve = res;
     reject = rej;
   });

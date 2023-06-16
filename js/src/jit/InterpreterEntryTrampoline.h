@@ -63,8 +63,8 @@ class EntryTrampoline {
 };
 
 using JSScriptToTrampolineMap =
-    HashMap<HeapPtr<JSScript*>, EntryTrampoline,
-            DefaultHasher<HeapPtr<JSScript*>>, SystemAllocPolicy>;
+    HashMap<HeapPtr<BaseScript*>, EntryTrampoline,
+            DefaultHasher<HeapPtr<BaseScript*>>, SystemAllocPolicy>;
 class EntryTrampolineMap : public JSScriptToTrampolineMap {
  public:
   void traceTrampolineCode(JSTracer* trc);

@@ -34,9 +34,9 @@ nsresult nsDragServiceProxy::InvokeDragSessionImpl(
   NS_ENSURE_STATE(mSourceDocument->GetDocShell());
   BrowserChild* child = BrowserChild::GetFrom(mSourceDocument->GetDocShell());
   NS_ENSURE_STATE(child);
-  nsTArray<mozilla::dom::IPCDataTransfer> dataTransfers;
-  nsContentUtils::TransferablesToIPCTransferables(
-      aArrayTransferables, dataTransfers, false, nullptr);
+  nsTArray<mozilla::dom::IPCTransferableData> transferables;
+  nsContentUtils::TransferablesToIPCTransferableDatas(
+      aArrayTransferables, transferables, false, nullptr);
 
   nsCOMPtr<nsIPrincipal> principal;
   if (mSourceNode) {
@@ -78,7 +78,7 @@ nsresult nsDragServiceProxy::InvokeDragSessionImpl(
         }
 
         mozilla::Unused << child->SendInvokeDragSession(
-            std::move(dataTransfers), aActionType, std::move(surfaceData),
+            std::move(transferables), aActionType, std::move(surfaceData),
             stride, dataSurface->GetFormat(), dragRect, principal, csp, csArgs,
             mSourceWindowContext, mSourceTopWindowContext);
         StartDragSession();
@@ -88,7 +88,7 @@ nsresult nsDragServiceProxy::InvokeDragSessionImpl(
   }
 
   mozilla::Unused << child->SendInvokeDragSession(
-      std::move(dataTransfers), aActionType, Nothing(), 0,
+      std::move(transferables), aActionType, Nothing(), 0,
       static_cast<SurfaceFormat>(0), dragRect, principal, csp, csArgs,
       mSourceWindowContext, mSourceTopWindowContext);
   StartDragSession();

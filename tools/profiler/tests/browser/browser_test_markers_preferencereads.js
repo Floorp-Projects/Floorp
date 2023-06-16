@@ -18,7 +18,7 @@ function countPrefReadsInThread(pref, thread) {
 
 async function waitForPaintAfterLoad() {
   return SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-    return new Promise(function(resolve) {
+    return new Promise(function (resolve) {
       function listener() {
         if (content.document.readyState == "complete") {
           content.requestAnimationFrame(() => content.setTimeout(resolve, 0));

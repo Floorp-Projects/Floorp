@@ -3,7 +3,7 @@
 
 var MockFilePicker = SpecialPowers.MockFilePicker;
 MockFilePicker.init(window);
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   MockFilePicker.cleanup();
 });
 
@@ -11,7 +11,7 @@ registerCleanupFunction(function() {
  * TestCase for bug 789550
  * <https://bugzilla.mozilla.org/show_bug.cgi?id=789550>
  */
-add_task(async function() {
+add_task(async function () {
   const DATA_AUDIO_URL = await fetch(
     getRootDirectory(gTestPath) + "audio_file.txt"
   ).then(async response => response.text());
@@ -20,7 +20,7 @@ add_task(async function() {
       gBrowser,
       url: DATA_AUDIO_URL,
     },
-    async function(browser) {
+    async function (browser) {
       let popupShownPromise = BrowserTestUtils.waitForEvent(
         document,
         "popupshown"
@@ -38,7 +38,7 @@ add_task(async function() {
       await popupShownPromise;
 
       let showFilePickerPromise = new Promise(resolve => {
-        MockFilePicker.showCallback = function(fp) {
+        MockFilePicker.showCallback = function (fp) {
           is(
             fp.defaultString.startsWith("Untitled"),
             true,
@@ -69,7 +69,7 @@ add_task(async function() {
  * TestCase for bug 789550
  * <https://bugzilla.mozilla.org/show_bug.cgi?id=789550>
  */
-add_task(async function() {
+add_task(async function () {
   const DATA_AUDIO_URL = await fetch(
     getRootDirectory(gTestPath) + "audio_file.txt"
   ).then(async response => response.text());
@@ -78,9 +78,9 @@ add_task(async function() {
       gBrowser,
       url: DATA_AUDIO_URL,
     },
-    async function(browser) {
+    async function (browser) {
       let showFilePickerPromise = new Promise(resolve => {
-        MockFilePicker.showCallback = function(fp) {
+        MockFilePicker.showCallback = function (fp) {
           is(
             fp.defaultString.startsWith("Untitled"),
             true,

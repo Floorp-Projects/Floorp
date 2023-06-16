@@ -9,7 +9,7 @@ const ReferrerInfo = Components.Constructor(
 
 const TEST_REFERRER = "https://example.com/";
 
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   await task_resetState();
   await PlacesUtils.history.clear();
 });
@@ -58,7 +58,7 @@ add_task(async function test_go_to_download_page() {
   await task_openPanel();
 
   let win = await openLibrary("Downloads");
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     win.close();
   });
 

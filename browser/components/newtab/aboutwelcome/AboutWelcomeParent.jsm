@@ -13,24 +13,21 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
   BuiltInThemes: "resource:///modules/BuiltInThemes.sys.mjs",
   FxAccounts: "resource://gre/modules/FxAccounts.sys.mjs",
+  LangPackMatcher: "resource://gre/modules/LangPackMatcher.sys.mjs",
   ShellService: "resource:///modules/ShellService.sys.mjs",
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AddonManager: "resource://gre/modules/AddonManager.jsm",
-
   AboutWelcomeTelemetry:
     "resource://activity-stream/aboutwelcome/lib/AboutWelcomeTelemetry.jsm",
-
   AboutWelcomeDefaults:
     "resource://activity-stream/aboutwelcome/lib/AboutWelcomeDefaults.jsm",
-
-  LangPackMatcher: "resource://gre/modules/LangPackMatcher.jsm",
   AWScreenUtils: "resource://activity-stream/lib/AWScreenUtils.jsm",
 });
 
@@ -185,13 +182,14 @@ class AboutWelcomeParent extends JSWindowActorParent {
         lazy.Telemetry.sendTelemetry(data);
         break;
       case "AWPage:GET_ATTRIBUTION_DATA":
-        let attributionData = await lazy.AboutWelcomeDefaults.getAttributionContent();
+        let attributionData =
+          await lazy.AboutWelcomeDefaults.getAttributionContent();
         return attributionData;
       case "AWPage:SELECT_THEME":
         await lazy.BuiltInThemes.ensureBuiltInThemes();
-        return lazy.AddonManager.getAddonByID(
-          LIGHT_WEIGHT_THEMES[data]
-        ).then(addon => addon.enable());
+        return lazy.AddonManager.getAddonByID(LIGHT_WEIGHT_THEMES[data]).then(
+          addon => addon.enable()
+        );
       case "AWPage:GET_SELECTED_THEME":
         let themes = await lazy.AddonManager.getAddonsByTypes(["theme"]);
         let activeTheme = themes.find(addon => addon.isActive);

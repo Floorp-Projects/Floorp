@@ -145,7 +145,7 @@ MarkupElementContainer.prototype = extend(MarkupContainer.prototype, {
     }
 
     // Fetch the preview from the server.
-    this.tooltipDataPromise = async function() {
+    this.tooltipDataPromise = async function () {
       const maxDim = Services.prefs.getIntPref(PREVIEW_MAX_DIM_PREF);
       const preview = await this.node.getImageData(maxDim);
       const data = await preview.data.string();

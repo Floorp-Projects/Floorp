@@ -5,7 +5,7 @@
 
 loadTestSubscript("head_abuse_report.js");
 
-add_setup(async function() {
+add_setup(async function () {
   await AbuseReportTestUtils.setup();
 });
 
@@ -104,9 +104,8 @@ add_task(async function test_abusereport_submitpanel() {
   await AbuseReportTestUtils.clickPanelButton(abuseReportEl._btnGoBack);
   await onceUpdated;
 
-  const onceReportClosed = AbuseReportTestUtils.promiseReportClosed(
-    abuseReportEl
-  );
+  const onceReportClosed =
+    AbuseReportTestUtils.promiseReportClosed(abuseReportEl);
   await AbuseReportTestUtils.clickPanelButton(abuseReportEl._btnCancel);
   await onceReportClosed;
 
@@ -175,9 +174,8 @@ add_task(async function test_abusereport_submit() {
     }
   );
 
-  const onceReportClosed = AbuseReportTestUtils.promiseReportClosed(
-    abuseReportEl
-  );
+  const onceReportClosed =
+    AbuseReportTestUtils.promiseReportClosed(abuseReportEl);
 
   const onMessageBarsCreated = AbuseReportTestUtils.promiseMessageBars(2);
 
@@ -425,9 +423,8 @@ add_task(async function test_abusereport_messagebars() {
   ) {
     await openAboutAddons();
     const expectedLength = expectedMessageBarIds.length;
-    const onMessageBarsCreated = AbuseReportTestUtils.promiseMessageBars(
-      expectedLength
-    );
+    const onMessageBarsCreated =
+      AbuseReportTestUtils.promiseMessageBars(expectedLength);
     // Reset the timestamp of the last report between tests.
     AbuseReporter._lastReportTimestamp = null;
     await testSetup();
@@ -731,7 +728,7 @@ add_task(async function test_abusereport_from_browserAction_remove() {
     report: true,
   });
 
-  await BrowserTestUtils.withNewTab("about:blank", async function() {
+  await BrowserTestUtils.withNewTab("about:blank", async function () {
     info(`Open browserAction context menu in toolbar context menu`);
     let promiseMenu = reportFromContextMenuRemove();
 
@@ -901,8 +898,9 @@ add_task(async function test_abusereport_open_author_url() {
   let waitForConsole = new Promise(resolve => {
     SimpleTest.monitorConsole(resolve, [
       {
-        // eslint-disable-next-line max-len
-        message: /Security Error: Content at moz-nullprincipal:{.*} may not load or link to about:config/,
+        message:
+          // eslint-disable-next-line max-len
+          /Security Error: Content at moz-nullprincipal:{.*} may not load or link to about:config/,
       },
     ]);
   });

@@ -29,8 +29,6 @@ NSS 3.22 release notes
 `New in NSS 3.22 <#new_in_nss_3.22>`__
 --------------------------------------
 
-.. container::
-
 .. _new_functionality:
 
 `New Functionality <#new_functionality>`__

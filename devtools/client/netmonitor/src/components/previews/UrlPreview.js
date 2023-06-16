@@ -23,7 +23,7 @@ const TreeRow = createFactory(
   require("resource://devtools/client/shared/components/tree/TreeRow.js")
 );
 
-loader.lazyGetter(this, "MODE", function() {
+loader.lazyGetter(this, "MODE", function () {
   return require("resource://devtools/client/shared/components/reps/index.js")
     .MODE;
 });

@@ -1,10 +1,11 @@
-add_task(async function() {
+add_task(async function () {
   // test that nodes inserted by incremental update for bookmarks of all types
   // have the extra bookmark properties (bookmarkGuid, dateAdded, lastModified).
 
   // getFolderContents opens the root node.
-  let root = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.toolbarGuid)
-    .root;
+  let root = PlacesUtils.getFolderContents(
+    PlacesUtils.bookmarks.toolbarGuid
+  ).root;
 
   async function insertAndTest(bmInfo) {
     bmInfo = await PlacesUtils.bookmarks.insert(bmInfo);

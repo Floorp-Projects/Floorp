@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const URL1 = buildURLWithContent(
     "example.com",
     `<h1>example.com</h1>` +
@@ -43,7 +43,7 @@ add_task(async function() {
 
   // clear up the cache before navigating
   info("Cleaning up cache…");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     const win = content.wrappedJSObject;
     await win.clear();
   });

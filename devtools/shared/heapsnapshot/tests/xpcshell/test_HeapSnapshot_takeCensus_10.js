@@ -4,6 +4,9 @@
 
 // Check byte counts produced by takeCensus.
 //
+// Note that tracking allocation sites adds unique IDs to objects which
+// increases their size, making it hard to test reported sizes exactly.
+//
 // Ported from js/src/jit-test/tests/debug/Memory-take Census-10.js
 
 function run_test() {
@@ -18,7 +21,7 @@ function run_test() {
     breakdown: { by: "objectClass" },
   });
   equal(census.AllocationMarker.count, 1);
-  equal(census.AllocationMarker.bytes, sizeOfAM);
+  equal(census.AllocationMarker.bytes >= sizeOfAM, true);
   g.hold = null;
 
   g.eval(`                                  // 1
@@ -45,13 +48,13 @@ function run_test() {
     switch (k.line) {
       case 4:
         equal(v.count, 1);
-        equal(v.bytes, sizeOfAM);
+        equal(v.bytes >= sizeOfAM, true);
         seen++;
         break;
 
       case 6:
         equal(v.count, 10);
-        equal(v.bytes, 10 * sizeOfAM);
+        equal(v.bytes >= 10 * sizeOfAM, true);
         seen++;
         break;
 

@@ -2,7 +2,7 @@ import { CONTENT_MESSAGE_TYPE } from "common/Actions.sys.mjs";
 import { ActivityStream, PREFS_CONFIG } from "lib/ActivityStream.jsm";
 import { GlobalOverrider } from "test/unit/utils";
 
-import { DEFAULT_SITES } from "lib/DefaultSites.jsm";
+import { DEFAULT_SITES } from "lib/DefaultSites.sys.mjs";
 import { AboutPreferences } from "lib/AboutPreferences.jsm";
 import { DefaultPrefs } from "lib/ActivityStreamPrefs.jsm";
 import { NewTabInit } from "lib/NewTabInit.jsm";
@@ -18,8 +18,8 @@ import { TopStoriesFeed } from "lib/TopStoriesFeed.jsm";
 import { HighlightsFeed } from "lib/HighlightsFeed.jsm";
 import { DiscoveryStreamFeed } from "lib/DiscoveryStreamFeed.jsm";
 
-import { LinksCache } from "lib/LinksCache.jsm";
-import { PersistentCache } from "lib/PersistentCache.jsm";
+import { LinksCache } from "lib/LinksCache.sys.mjs";
+import { PersistentCache } from "lib/PersistentCache.sys.mjs";
 import { DownloadsManager } from "lib/DownloadsManager.jsm";
 
 describe("ActivityStream", () => {

@@ -24,14 +24,14 @@ let extData = {
       </body></html>
     `,
 
-    "sidebar.js": function() {
+    "sidebar.js": function () {
       window.onload = () => {
         browser.test.sendMessage("sidebar");
       };
     },
   },
 
-  background: function() {
+  background: function () {
     browser.contextMenus.create({
       id: "clickme-page",
       title: "Click me!",

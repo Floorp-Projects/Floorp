@@ -4,6 +4,7 @@ $ds-width: 936px;
   $columns: 12;
   --gridColumnGap: 48px;
   --gridRowGap: 24px;
+
   grid-template-columns: repeat($columns, 1fr);
   grid-column-gap: var(--gridColumnGap);
   grid-row-gap: var(--gridRowGap);
@@ -59,7 +60,7 @@ $ds-width: 936px;
       font-weight: 500;
 
       &:is(:focus, :hover) {
-        text-decoration: underline;
+        text-decoration: none;
       }
     }
   }

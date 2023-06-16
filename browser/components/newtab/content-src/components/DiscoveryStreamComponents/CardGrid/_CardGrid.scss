@@ -14,6 +14,7 @@ $col4-header-font-size: 14;
     @include dark-theme-only {
       background: var(--newtab-background-color-secondary);
     }
+
     border-radius: $border-radius-new;
     box-shadow: $shadow-card;
 
@@ -29,12 +30,15 @@ $col4-header-font-size: 14;
 .ds-onboarding-container {
   padding-inline-start: 16px;
   padding-inline-end: 16px;
+
   @media (min-width: $break-point-medium) {
     padding-inline-end: 48px;
   }
+
   @media (min-width: $break-point-large) {
     padding-inline-end: 56px;
   }
+
   margin-bottom: 24px;
   // This is to position the dismiss button to the right most of this element.
   position: relative;
@@ -53,13 +57,16 @@ $col4-header-font-size: 14;
     @include dark-theme-only {
       color: var(--newtab-background-color-primary);
     }
+
     display: flex;
     margin: 32px 0 8px;
+
     @media (min-width: $break-point-medium) {
       margin: 16px 0 8px;
       display: block;
       height: 24px;
     }
+
     font-size: 17px;
     line-height: 23.8px;
     font-weight: 600;
@@ -89,6 +96,7 @@ $col4-header-font-size: 14;
     height: 22px;
     width: 22px;
     background-image: url('chrome://global/skin/icons/pocket.svg');
+
     @media (min-width: $break-point-medium) {
       margin-top: -5px;
       margin-inline-start: -2px;
@@ -96,14 +104,17 @@ $col4-header-font-size: 14;
       height: 30px;
       width: 30px;
     }
+
     background-size: contain;
   }
 
   .ds-onboarding-graphic {
     background-image: url('chrome://activity-stream/content/data/content/assets/pocket-onboarding.avif');
+
     @media (min-resolution: 2x) {
       background-image: url('chrome://activity-stream/content/data/content/assets/pocket-onboarding@2x.avif');
     }
+
     border-radius: 8px;
     background-size: contain;
     background-repeat: no-repeat;
@@ -143,6 +154,7 @@ $col4-header-font-size: 14;
 
   .ds-card-link:focus {
     @include ds-focus;
+
     transition: none;
     border-radius: $border-radius-new;
   }
@@ -282,6 +294,7 @@ $col4-header-font-size: 14;
 
       @media (min-width: $break-point-widest) and (max-height: 964px) {
         @include small-cards;
+
         grid-template-columns: repeat(4, 1fr);
       }
     }

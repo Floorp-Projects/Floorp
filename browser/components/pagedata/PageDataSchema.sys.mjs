@@ -14,7 +14,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   TwitterPageData: "resource:///modules/pagedata/TwitterPageData.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "logConsole", function() {
+XPCOMUtils.defineLazyGetter(lazy, "logConsole", function () {
   return console.createInstance({
     prefix: "PageData",
     maxLogLevel: Services.prefs.getBoolPref("browser.pagedata.log", false)
@@ -35,7 +35,7 @@ XPCOMUtils.defineLazyGetter(lazy, "logConsole", function() {
  * The data returned need not be valid, collectors should return whatever they
  * can and then we drop anything that is invalid once all data is joined.
  */
-XPCOMUtils.defineLazyGetter(lazy, "DATA_COLLECTORS", function() {
+XPCOMUtils.defineLazyGetter(lazy, "DATA_COLLECTORS", function () {
   return [lazy.SchemaOrgPageData, lazy.OpenGraphPageData, lazy.TwitterPageData];
 });
 

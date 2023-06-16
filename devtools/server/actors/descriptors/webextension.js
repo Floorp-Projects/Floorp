@@ -25,16 +25,18 @@ const {
 } = require("resource://devtools/server/actors/watcher/session-context.js");
 
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AddonManager",
-  "resource://gre/modules/AddonManager.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ExtensionParent",
-  "resource://gre/modules/ExtensionParent.jsm"
-);
+loader.lazyGetter(lazy, "AddonManager", () => {
+  return ChromeUtils.importESModule(
+    "resource://gre/modules/AddonManager.sys.mjs",
+    { loadInDevToolsLoader: false }
+  ).AddonManager;
+});
+loader.lazyGetter(lazy, "ExtensionParent", () => {
+  return ChromeUtils.importESModule(
+    "resource://gre/modules/ExtensionParent.sys.mjs",
+    { loadInDevToolsLoader: false }
+  ).ExtensionParent;
+});
 loader.lazyRequireGetter(
   this,
   "WatcherActor",
@@ -81,9 +83,8 @@ class WebExtensionDescriptorActor extends Actor {
   form() {
     const { addonId } = this;
     const policy = lazy.ExtensionParent.WebExtensionPolicy.getByID(addonId);
-    const persistentBackgroundScript = lazy.ExtensionParent.DebugUtils.hasPersistentBackgroundScript(
-      addonId
-    );
+    const persistentBackgroundScript =
+      lazy.ExtensionParent.DebugUtils.hasPersistentBackgroundScript(addonId);
     const backgroundScriptStatus = this._getBackgroundScriptStatus();
 
     return {
@@ -161,9 +162,8 @@ class WebExtensionDescriptorActor extends Actor {
       return this._form;
     }
 
-    this._browser = await lazy.ExtensionParent.DebugUtils.getExtensionProcessBrowser(
-      this
-    );
+    this._browser =
+      await lazy.ExtensionParent.DebugUtils.getExtensionProcessBrowser(this);
 
     const policy = lazy.ExtensionParent.WebExtensionPolicy.getByID(
       this.addonId

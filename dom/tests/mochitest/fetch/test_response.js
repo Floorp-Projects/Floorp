@@ -43,7 +43,7 @@ function testClone() {
   var clone2 = null;
   return orig
     .text()
-    .then(function(body) {
+    .then(function (body) {
       origBody = body;
       is(origBody, "This is a body", "Original body string matches");
       ok(orig.bodyUsed, "Original body is consumed.");
@@ -63,7 +63,7 @@ function testClone() {
       clone2 = clone.clone();
       return clone.text();
     })
-    .then(function(body) {
+    .then(function (body) {
       is(body, origBody, "Clone body matches original body.");
       ok(clone.bodyUsed, "Clone body is consumed.");
 
@@ -80,7 +80,7 @@ function testClone() {
 
       return clone2.text();
     })
-    .then(function(body) {
+    .then(function (body) {
       is(body, origBody, "Clone body matches original body.");
       ok(clone2.bodyUsed, "Clone body is consumed.");
 
@@ -97,59 +97,35 @@ function testClone() {
     });
 }
 
-function testCloneUnfiltered(orbEnabled) {
+function testCloneUnfiltered() {
   var url =
     "http://example.com/tests/dom/security/test/cors/file_CrossSiteXHR_server.sjs?status=200";
+  return fetch(url, { mode: "no-cors" }).then(function (response) {
+    // By default the chrome-only function should not be available.
+    is(response.type, "opaque", "response should be opaque");
+    is(
+      response.cloneUnfiltered,
+      undefined,
+      "response.cloneUnfiltered should be undefined"
+    );
 
-  // Due to the test step and the fact this script is imported by worker,
-  // so we had to do some extra parsing to get whether orbEnabled has
-  // been provided.
-  // location.search could be something like: ?script=test_response.js?orbEnabled
-  var isORBEnabled;
-  if (orbEnabled !== undefined) {
-    // Window Context
-    isORBEnabled = orbEnabled;
-  } else {
-    // Worker Context
-    const params = new URLSearchParams(location.search);
-    isORBEnabled = params.has("orbEnabled");
-  }
+    // When the test is run in a worker context we can't actually try to use
+    // the chrome-only function.  SpecialPowers is not defined.
+    if (typeof SpecialPowers !== "object") {
+      return;
+    }
 
-  return fetch(url, { mode: "no-cors" })
-    .then(function(response) {
-      // By default the chrome-only function should not be available.
-      ok(!isORBEnabled, "This request should be blocked when ORB is enabled");
-      is(response.type, "opaque", "response should be opaque");
-      is(
-        response.cloneUnfiltered,
-        undefined,
-        "response.cloneUnfiltered should be undefined"
-      );
-
-      // When the test is run in a worker context we can't actually try to use
-      // the chrome-only function.  SpecialPowers is not defined.
-      if (typeof SpecialPowers !== "object") {
-        return;
-      }
-
-      // With a chrome code, however, should be able to get an unfiltered response.
-      var chromeResponse = SpecialPowers.wrap(response);
-      is(
-        typeof chromeResponse.cloneUnfiltered,
-        "function",
-        "chromeResponse.cloneFiltered should be a function"
-      );
-      var unfiltered = chromeResponse.cloneUnfiltered();
-      is(unfiltered.type, "default", "unfiltered response should be default");
-      is(unfiltered.status, 200, "unfiltered response should have 200 status");
-    })
-    .catch(function(e) {
-      ok(
-        isORBEnabled,
-        "This request should not be blocked when ORB is disabled"
-      );
-      is(e.name, "TypeError", "ORB should throw TypeError");
-    });
+    // With a chrome code, however, should be able to get an unfiltered response.
+    var chromeResponse = SpecialPowers.wrap(response);
+    is(
+      typeof chromeResponse.cloneUnfiltered,
+      "function",
+      "chromeResponse.cloneFiltered should be a function"
+    );
+    var unfiltered = chromeResponse.cloneUnfiltered();
+    is(unfiltered.type, "default", "unfiltered response should be default");
+    is(unfiltered.status, 200, "unfiltered response should have 200 status");
+  });
 }
 
 function testError() {
@@ -238,23 +214,23 @@ function testBodyUsed() {
 function testBodyCreation() {
   var text = "κόσμε";
   var res1 = new Response(text);
-  var p1 = res1.text().then(function(v) {
+  var p1 = res1.text().then(function (v) {
     ok(typeof v === "string", "Should resolve to string");
     is(text, v, "Extracted string should match");
   });
 
   var res2 = new Response(new Uint8Array([72, 101, 108, 108, 111]));
-  var p2 = res2.text().then(function(v) {
+  var p2 = res2.text().then(function (v) {
     is("Hello", v, "Extracted string should match");
   });
 
   var res2b = new Response(new Uint8Array([72, 101, 108, 108, 111]).buffer);
-  var p2b = res2b.text().then(function(v) {
+  var p2b = res2b.text().then(function (v) {
     is("Hello", v, "Extracted string should match");
   });
 
   var resblob = new Response(new Blob([text]));
-  var pblob = resblob.text().then(function(v) {
+  var pblob = resblob.text().then(function (v) {
     is(v, text, "Extracted string should match");
   });
 
@@ -263,7 +239,7 @@ function testBodyCreation() {
   params.append("feature", "stickyfeet");
   params.append("quantity", "700");
   var res3 = new Response(params);
-  var p3 = res3.text().then(function(v) {
+  var p3 = res3.text().then(function (v) {
     var extracted = new URLSearchParams(v);
     is(extracted.get("item"), "Geckos", "Param should match");
     is(extracted.get("feature"), "stickyfeet", "Param should match");
@@ -275,41 +251,41 @@ function testBodyCreation() {
 
 function testBodyExtraction() {
   var text = "κόσμε";
-  var newRes = function() {
+  var newRes = function () {
     return new Response(text);
   };
   return newRes()
     .text()
-    .then(function(v) {
+    .then(function (v) {
       ok(typeof v === "string", "Should resolve to string");
       is(text, v, "Extracted string should match");
     })
-    .then(function() {
+    .then(function () {
       return newRes()
         .blob()
-        .then(function(v) {
+        .then(function (v) {
           ok(v instanceof Blob, "Should resolve to Blob");
-          return readAsText(v).then(function(result) {
+          return readAsText(v).then(function (result) {
             is(result, text, "Decoded Blob should match original");
           });
         });
     })
-    .then(function() {
+    .then(function () {
       return newRes()
         .json()
         .then(
-          function(v) {
+          function (v) {
             ok(false, "Invalid json should reject");
           },
-          function(e) {
+          function (e) {
             ok(true, "Invalid json should reject");
           }
         );
     })
-    .then(function() {
+    .then(function () {
       return newRes()
         .arrayBuffer()
-        .then(function(v) {
+        .then(function (v) {
           ok(v instanceof ArrayBuffer, "Should resolve to ArrayBuffer");
           var dec = new TextDecoder();
           is(
@@ -322,7 +298,7 @@ function testBodyExtraction() {
 }
 
 function testNullBodyStatus() {
-  [204, 205, 304].forEach(function(status) {
+  [204, 205, 304].forEach(function (status) {
     try {
       var res = new Response(new Blob(), { status });
       ok(
@@ -334,7 +310,7 @@ function testNullBodyStatus() {
     }
   });
 
-  [204, 205, 304].forEach(function(status) {
+  [204, 205, 304].forEach(function (status) {
     try {
       var res = new Response(undefined, { status });
       ok(true, "Response body provided but status code does not permit a body");
@@ -360,35 +336,9 @@ function runTest() {
       .then(testBodyUsed)
       .then(testBodyExtraction)
       .then(testClone)
-      .then(async function() {
-        const inWindowContext = typeof SpecialPowers === "object";
-        // We want to use SpecialPowers to flip the prefs directly
-        // if we are in window context.
-        if (inWindowContext) {
-          return SpecialPowers.pushPrefEnv({
-            set: [
-              ["browser.opaqueResponseBlocking", true],
-              ["browser.opaqueResponseBlocking.javascriptValidator", true],
-            ],
-          })
-            .then(function() {
-              return testCloneUnfiltered(true);
-            })
-            .then(function() {
-              return SpecialPowers.pushPrefEnv({
-                set: [["browser.opaqueResponseBlocking", false]],
-              });
-            })
-            .then(function() {
-              return testCloneUnfiltered(false);
-            });
-        }
-        // Worker Context uses query strings to determine the
-        // status of ORB.
-        return testCloneUnfiltered();
-      })
+      .then(testCloneUnfiltered)
       // Put more promise based tests here.
-      .catch(function(e) {
+      .catch(function (e) {
         dump("### ### " + e + "\n");
         ok(false, "got unexpected error!");
       })

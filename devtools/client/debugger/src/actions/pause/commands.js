@@ -14,7 +14,6 @@ import { selectLocation } from "../sources";
 import { fetchScopes } from "./fetchScopes";
 import { fetchFrames } from "./fetchFrames";
 import { recordEvent } from "../../utils/telemetry";
-import { features } from "../../utils/prefs";
 import assert from "../../utils/assert";
 
 export function selectThread(cx, thread) {
@@ -66,7 +65,7 @@ export function command(type) {
     // For now, all commands are by default against the currently selected thread
     const thread = getCurrentThread(getState());
 
-    const frame = features.frameStep && getSelectedFrame(getState(), thread);
+    const frame = getSelectedFrame(getState(), thread);
 
     return dispatch({
       type: "COMMAND",

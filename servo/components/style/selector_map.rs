@@ -40,7 +40,7 @@ impl Default for PrecomputedHasher {
 ///
 /// We can avoid selector-matching those global rules for all elements without
 /// these pseudo-class states.
-const RARE_PSEUDO_CLASS_STATES: ElementState = ElementState::from_bits_truncate(
+const RARE_PSEUDO_CLASS_STATES: ElementState = ElementState::from_bits_retain(
     ElementState::FULLSCREEN.bits() |
         ElementState::VISITED_OR_UNVISITED.bits() |
         ElementState::URLTARGET.bits() |
@@ -682,6 +682,11 @@ impl<'a> Bucket<'a> {
     }
 
     #[inline]
+    fn more_or_equally_specific_than(&self, other: &Self) -> bool {
+        self.specificity() >= other.specificity()
+    }
+
+    #[inline]
     fn more_specific_than(&self, other: &Self) -> bool {
         self.specificity() > other.specificity()
     }
@@ -784,7 +789,9 @@ fn find_bucket<'a>(
     loop {
         for ss in &mut iter {
             let new_bucket = specific_bucket_for(ss, disjoint_buckets, bucket_attributes);
-            if new_bucket.more_specific_than(&current_bucket) {
+            // NOTE: When presented with the choice of multiple specific selectors, use the
+            // rightmost, on the assumption that that's less common, see bug 1829540.
+            if new_bucket.more_or_equally_specific_than(&current_bucket) {
                 current_bucket = new_bucket;
             }
         }

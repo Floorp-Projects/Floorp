@@ -50,9 +50,7 @@ add_task(async function test_support_backgrounds_position() {
     );
     Assert.equal(
       toolboxCS.backgroundImage,
-      Array(3)
-        .fill(toolboxBgImage)
-        .join(", "),
+      Array(3).fill(toolboxBgImage).join(", "),
       "The backgroundImage should use face2.png three times."
     );
     Assert.equal(

@@ -26,7 +26,7 @@ const TYPED_VISIT_BONUS = Services.prefs.getIntPref(
 // of idle-daily).
 Services.prefs.setCharPref("places.frecency.decayRate", "1.0");
 
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   Services.prefs.clearUserPref("places.frecency.decayRate");
   await PlacesUtils.history.clear();
 });
@@ -74,7 +74,7 @@ add_task(async function test_multiple_redirect() {
       gBrowser,
       url: REDIRECT_URI.spec,
     },
-    async function() {
+    async function () {
       info("Waiting for onVisits");
       let redirectNotified = await visitedPromise;
       ok(redirectNotified, "The redirect should have been notified");
@@ -102,7 +102,7 @@ add_task(async function test_multiple_redirect_typed() {
       gBrowser,
       url: REDIRECT_URI.spec,
     },
-    async function() {
+    async function () {
       info("Waiting for onVisits");
       let redirectNotified = await visitedPromise;
       ok(redirectNotified, "The redirect should have been notified");
@@ -130,7 +130,7 @@ add_task(async function test_second_typed_visit() {
       gBrowser,
       url: REDIRECT_URI.spec,
     },
-    async function() {
+    async function () {
       info("Waiting for onVisits");
       let redirectNotified = await visitedPromise;
       ok(redirectNotified, "The redirect should have been notified");
@@ -157,7 +157,7 @@ add_task(async function test_subsequent_link_visit() {
       gBrowser,
       url: REDIRECT_URI.spec,
     },
-    async function() {
+    async function () {
       info("Waiting for onVisits");
       let redirectNotified = await visitedPromise;
       ok(redirectNotified, "The redirect should have been notified");

@@ -149,13 +149,28 @@ bool RegExpObject::isOriginalFlagGetter(JSNative native, RegExpFlags* mask) {
   return false;
 }
 
+static bool FinishRegExpClassInit(JSContext* cx, JS::HandleObject ctor,
+                                  JS::HandleObject proto) {
+#ifdef DEBUG
+  // Assert RegExp.prototype.exec is usually stored in a dynamic slot. The
+  // optimization in InlinableNativeIRGenerator::tryAttachIntrinsicRegExpExec
+  // depends on this.
+  Handle<NativeObject*> nproto = proto.as<NativeObject>();
+  auto prop = nproto->lookupPure(cx->names().exec);
+  MOZ_ASSERT(prop->isDataProperty());
+  MOZ_ASSERT(!nproto->isFixedSlot(prop->slot()));
+#endif
+  return true;
+}
+
 static const ClassSpec RegExpObjectClassSpec = {
     GenericCreateConstructor<js::regexp_construct, 2, gc::AllocKind::FUNCTION>,
     GenericCreatePrototype<RegExpObject>,
     nullptr,
     js::regexp_static_props,
     js::regexp_methods,
-    js::regexp_properties};
+    js::regexp_properties,
+    FinishRegExpClassInit};
 
 const JSClass RegExpObject::class_ = {
     js_RegExp_str,

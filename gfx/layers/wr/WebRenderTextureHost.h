@@ -61,7 +61,10 @@ class WebRenderTextureHost : public TextureHost {
     return mWrappedTextureHost->AsRemoteTextureHostWrapper();
   }
 
-  bool IsWrappingBufferTextureHost() override;
+  BufferTextureHost* AsBufferTextureHost() override {
+    return mWrappedTextureHost->AsBufferTextureHost();
+  }
+
   bool IsWrappingSurfaceTextureHost() override;
 
   virtual void PrepareForUse() override;

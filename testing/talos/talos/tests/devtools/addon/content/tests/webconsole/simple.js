@@ -17,7 +17,7 @@ const {
 
 const EXPECTED_MESSAGES = 1;
 
-module.exports = async function() {
+module.exports = async function () {
   await testSetup(SIMPLE_URL);
 
   let toolbox = await openToolboxAndLog("simple.webconsole", "webconsole");

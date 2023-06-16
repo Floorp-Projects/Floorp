@@ -36,7 +36,7 @@
 }
 
 .message {
-  color: var(--in-content-deemphasized-text);
+  color: var(--text-color-deemphasized);
   margin-bottom: 0;
 }
 

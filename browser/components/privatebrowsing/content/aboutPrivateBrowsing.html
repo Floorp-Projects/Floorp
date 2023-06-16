@@ -7,37 +7,63 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml" class="private">
   <head>
-    <meta charset="utf-8"/>
-    <meta http-equiv="Content-Security-Policy" content="default-src chrome: blob:; object-src 'none'"/>
-    <meta name="color-scheme" content="light dark"/>
-    <link rel="icon" href="chrome://browser/skin/privatebrowsing/favicon.svg"/>
-    <link rel="stylesheet" href="chrome://browser/content/aboutPrivateBrowsing.css" media="all"/>
-    <link rel="stylesheet" href="chrome://browser/skin/privatebrowsing/aboutPrivateBrowsing.css" media="all"/>
-    <link rel="localization" href="branding/brand.ftl"/>
-    <link rel="localization" href="toolkit/branding/brandings.ftl"/>
-    <link rel="localization" href="browser/aboutPrivateBrowsing.ftl"/>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src chrome: blob:; object-src 'none'"
+    />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="chrome://browser/skin/privatebrowsing/favicon.svg" />
+    <link
+      rel="stylesheet"
+      href="chrome://browser/content/aboutPrivateBrowsing.css"
+      media="all"
+    />
+    <link
+      rel="stylesheet"
+      href="chrome://browser/skin/privatebrowsing/aboutPrivateBrowsing.css"
+      media="all"
+    />
+    <link rel="localization" href="branding/brand.ftl" />
+    <link rel="localization" href="toolkit/branding/brandings.ftl" />
+    <link rel="localization" href="browser/aboutPrivateBrowsing.ftl" />
     <script src="chrome://browser/content/aboutPrivateBrowsing.js"></script>
     <script src="chrome://browser/content/contentSearchHandoffUI.js"></script>
   </head>
 
   <body>
     <p class="showNormal" data-l10n-id="about-private-browsing-not-private"></p>
-    <button id="startPrivateBrowsing"
-            class="showNormal" data-l10n-id="privatebrowsingpage-open-private-window-label"></button>
-    <div id="search-banner" class="search-banner"
-         hidden="true">
-      <button id="search-banner-close-button"
-              class="search-banner-close-button"
-              data-l10n-id="about-private-browsing-search-banner-close-button">
-        <img class="search-banner-close-image" src="chrome://global/skin/icons/close.svg"/>
+    <button
+      id="startPrivateBrowsing"
+      class="showNormal"
+      data-l10n-id="privatebrowsingpage-open-private-window-label"
+    ></button>
+    <div id="search-banner" class="search-banner" hidden="true">
+      <button
+        id="search-banner-close-button"
+        class="search-banner-close-button"
+        data-l10n-id="about-private-browsing-search-banner-close-button"
+      >
+        <img
+          class="search-banner-close-image"
+          src="chrome://global/skin/icons/close.svg"
+        />
       </button>
       <div class="banner-body">
-        <h1 id="about-private-browsing-search-banner-title"
-            data-l10n-id="about-private-browsing-search-banner-title"
-            data-l10n-args='{"engineName": ""}'></h1>
-        <p id="about-private-browsing-search-banner-description"
-           data-l10n-id="about-private-browsing-search-banner-description">
-          <a href="" id="open-search-options-link" data-l10n-name="link-options"></a>
+        <h1
+          id="about-private-browsing-search-banner-title"
+          data-l10n-id="about-private-browsing-search-banner-title"
+          data-l10n-args='{"engineName": ""}'
+        ></h1>
+        <p
+          id="about-private-browsing-search-banner-description"
+          data-l10n-id="about-private-browsing-search-banner-description"
+        >
+          <a
+            href=""
+            id="open-search-options-link"
+            data-l10n-name="link-options"
+          ></a>
         </p>
       </div>
     </div>
@@ -47,9 +73,19 @@
         <div class="wordmark"></div>
       </div>
       <div class="search-inner-wrapper">
-        <button id="search-handoff-button" class="search-handoff-button" tabindex="-1" aria-hidden="true">
+        <button
+          id="search-handoff-button"
+          class="search-handoff-button"
+          tabindex="-1"
+          aria-hidden="true"
+        >
           <div class="fake-textbox"></div>
-          <input id="fake-editable" class="fake-editable" tabindex="-1" aria-hidden="true" />
+          <input
+            id="fake-editable"
+            class="fake-editable"
+            tabindex="-1"
+            aria-hidden="true"
+          />
           <div class="fake-caret"></div>
         </button>
       </div>
@@ -68,13 +104,20 @@
         <h1 id="promo-header"></h1>
         <p id="private-browsing-promo-text" class="vpn-promo"></p>
         <div class="promo-cta">
-          <button id="private-browsing-promo-link" class="vpn-promo primary"></button>
+          <button
+            id="private-browsing-promo-link"
+            class="vpn-promo primary"
+          ></button>
           <div class="promo-image-small">
             <img src="" alt="" />
           </div>
         </div>
       </div>
-      <button data-l10n-id="about-private-browsing-promo-close-button" id="dismiss-btn" class="promo-dismiss"></button>
+      <button
+        data-l10n-id="about-private-browsing-promo-close-button"
+        id="dismiss-btn"
+        class="promo-dismiss"
+      ></button>
     </div>
   </body>
 </html>

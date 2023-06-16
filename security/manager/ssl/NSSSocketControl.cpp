@@ -696,6 +696,5 @@ void NSSSocketControl::SetPreliminaryHandshakeInfo(
 NS_IMETHODIMP NSSSocketControl::Claim() {
   COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
   mClaimed = true;
-  MaybeDispatchSelectClientAuthCertificate();
   return NS_OK;
 }

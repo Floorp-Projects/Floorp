@@ -7,7 +7,7 @@
 
 requestLongerTimeout(2);
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(
     `${URL_ROOT_ORG_SSL}doc_inspector_search-iframes.html`
   );
@@ -63,7 +63,7 @@ add_task(async function() {
   await checkCorrectButton(inspector, ["#iframe-1"]);
 });
 
-const checkCorrectButton = async function(inspector, frameSelector) {
+const checkCorrectButton = async function (inspector, frameSelector) {
   const nodeFrontInfo = await getSelectedNodeFrontInfo(inspector);
   is(nodeFrontInfo.nodeFront.id, "b1", "The selected node is #b1");
   is(

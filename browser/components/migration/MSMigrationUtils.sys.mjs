@@ -16,18 +16,12 @@ ChromeUtils.defineESModuleGetters(lazy, {
 const EDGE_FAVORITES = "AC\\MicrosoftEdge\\User\\Default\\Favorites";
 const FREE_CLOSE_FAILED = 0;
 const INTERNET_EXPLORER_EDGE_GUID = [
-  0x3ccd5499,
-  0x4b1087a8,
-  0x886015a2,
-  0x553bdd88,
+  0x3ccd5499, 0x4b1087a8, 0x886015a2, 0x553bdd88,
 ];
 const RESULT_SUCCESS = 0;
 const VAULT_ENUMERATE_ALL_ITEMS = 512;
 const WEB_CREDENTIALS_VAULT_ID = [
-  0x4bf4c442,
-  0x41a09b8a,
-  0x4add80b3,
-  0x28db4d70,
+  0x4bf4c442, 0x41a09b8a, 0x4add80b3, 0x28db4d70,
 ];
 
 const wintypes = {
@@ -431,10 +425,8 @@ Bookmarks.prototype = {
             let folderGuid = lazy.PlacesUtils.bookmarks.toolbarGuid;
             await this._migrateFolder(entry, folderGuid);
           } else if (entry.isReadable()) {
-            let {
-              bookmarks: childBookmarks,
-              favicons: childFavicons,
-            } = await this._getBookmarksInFolder(entry);
+            let { bookmarks: childBookmarks, favicons: childFavicons } =
+              await this._getBookmarksInFolder(entry);
             favicons = favicons.concat(childFavicons);
             rv.push({
               type: lazy.PlacesUtils.bookmarks.TYPE_FOLDER,
@@ -650,7 +642,8 @@ WindowsVaultFormPasswords.prototype = {
           if (!_isIEOrEdgePassword(item.contents.schemaId.id)) {
             continue;
           }
-          let url = item.contents.pResourceElement.contents.itemValue.readString();
+          let url =
+            item.contents.pResourceElement.contents.itemValue.readString();
           let realURL;
           try {
             realURL = Services.io.newURI(url);
@@ -667,7 +660,8 @@ WindowsVaultFormPasswords.prototype = {
           if (aOnlyCheckExists) {
             return true;
           }
-          let username = item.contents.pIdentityElement.contents.itemValue.readString();
+          let username =
+            item.contents.pIdentityElement.contents.itemValue.readString();
           // the current login credential object
           let credential = new ctypesVaultHelpers._structs.VAULT_ELEMENT.ptr();
           error = ctypesVaultHelpers._functions.VaultGetItem(
@@ -684,7 +678,8 @@ WindowsVaultFormPasswords.prototype = {
             throw new Error("Unable to get item: " + error);
           }
 
-          let password = credential.contents.pAuthenticatorElement.contents.itemValue.readString();
+          let password =
+            credential.contents.pAuthenticatorElement.contents.itemValue.readString();
           let creation = Date.now();
           try {
             // login manager wants time in milliseconds since epoch, so convert

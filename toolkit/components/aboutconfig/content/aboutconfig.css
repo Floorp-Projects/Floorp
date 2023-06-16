@@ -159,7 +159,7 @@
 
 #prefs > tr.deleted > th > span {
   font-weight: bold;
-  color: var(--in-content-deemphasized-text);
+  color: var(--text-color-deemphasized);
 }
 
 #prefs > tr > td.cell-edit,

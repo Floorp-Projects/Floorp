@@ -8,7 +8,7 @@ ChromeUtils.defineESModuleGetters(this, {
   Region: "resource://gre/modules/Region.sys.mjs",
 });
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.contentblocking.report.monitor.enabled", false],
@@ -18,14 +18,14 @@ add_setup(async function() {
   });
 });
 
-add_task(async function() {
+add_task(async function () {
   let tab = await BrowserTestUtils.openNewForegroundTab({
     url: "about:protections",
     gBrowser,
   });
 
   info("Secure Proxy card should be hidden by default");
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     await ContentTaskUtils.waitForCondition(() => {
       const proxyCard = content.document.querySelector(".proxy-card");
       return !proxyCard["data-enabled"];
@@ -94,7 +94,7 @@ async function checkProxyCardVisibility(tab, shouldBeHidden) {
   await SpecialPowers.spawn(
     tab.linkedBrowser,
     [{ _shouldBeHidden: shouldBeHidden }],
-    async function({ _shouldBeHidden }) {
+    async function ({ _shouldBeHidden }) {
       await ContentTaskUtils.waitForCondition(() => {
         const proxyCard = content.document.querySelector(".proxy-card");
         return ContentTaskUtils.is_hidden(proxyCard) === _shouldBeHidden;

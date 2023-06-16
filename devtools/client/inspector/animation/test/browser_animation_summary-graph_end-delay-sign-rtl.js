@@ -5,7 +5,7 @@
 
 /* import-globals-from summary-graph_end-delay-sign_head.js */
 
-add_task(async function() {
+add_task(async function () {
   Services.scriptloader.loadSubScript(
     CHROME_URL_ROOT + "summary-graph_end-delay-sign_head.js",
     this

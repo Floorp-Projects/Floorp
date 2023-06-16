@@ -28,7 +28,7 @@ add_task(async function run_test() {
     },
 
     func() {
-      return this._lock("Test utils lock", async function() {
+      return this._lock("Test utils lock", async function () {
         rightThis = this == obj;
         didCall = true;
         return 5;
@@ -36,7 +36,7 @@ add_task(async function run_test() {
     },
 
     throwy() {
-      return this._lock("Test utils lock throwy", async function() {
+      return this._lock("Test utils lock throwy", async function () {
         rightThis = this == obj;
         didCall = true;
         return this.throwy();

@@ -10,7 +10,7 @@ const TRACKERS_BLOCKED_COUNT = "contentblocking.trackers_blocked_count";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyGetter(lazy, "DB_PATH", function() {
+XPCOMUtils.defineLazyGetter(lazy, "DB_PATH", function () {
   return PathUtils.join(PathUtils.profileDir, "protections.sqlite");
 });
 
@@ -194,7 +194,10 @@ TrackingDBService.prototype = {
       }
       if (blocked) {
         if (
-          state & Ci.nsIWebProgressListener.STATE_BLOCKED_FINGERPRINTING_CONTENT
+          state &
+            Ci.nsIWebProgressListener.STATE_BLOCKED_FINGERPRINTING_CONTENT ||
+          state &
+            Ci.nsIWebProgressListener.STATE_REPLACED_FINGERPRINTING_CONTENT
         ) {
           result = Ci.nsITrackingDBService.FINGERPRINTERS_ID;
         } else if (

@@ -1,1 +1,2 @@
 grizzly-framework==0.16.2
+-r ../../../build/psutil_requirements.txt

@@ -14,7 +14,7 @@ function titleUpdate(pageUrl) {
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   registerCleanupFunction(PlacesUtils.history.clear);
   const FIRST_URL = PREFIX + "-1.html";
   const SECOND_URL = PREFIX + "-2.html";

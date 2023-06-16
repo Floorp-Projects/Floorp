@@ -535,14 +535,14 @@ class TRRProxyCode {
     // connections when shutting down the proxy.
     global.proxy.socketIndex = 0;
     global.proxy.socketMap = {};
-    global.proxy.on("connection", function(socket) {
+    global.proxy.on("connection", function (socket) {
       let index = global.proxy.socketIndex++;
       global.proxy.socketMap[index] = socket;
-      socket.on("close", function() {
+      socket.on("close", function () {
         delete global.proxy.socketMap[index];
       });
     });
-    global.proxy.closeSockets = function() {
+    global.proxy.closeSockets = function () {
       for (let i in global.proxy.socketMap) {
         global.proxy.socketMap[i].destroy();
       }

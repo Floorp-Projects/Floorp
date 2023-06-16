@@ -8,7 +8,7 @@ const TEST_PAGE =
 const SCRIPT_WORKER_BLOBIFY = "worker_blobify.js";
 
 function page_blobify(browser, input) {
-  return SpecialPowers.spawn(browser, [input], function(contentInput) {
+  return SpecialPowers.spawn(browser, [input], function (contentInput) {
     return {
       blobURL: content.URL.createObjectURL(new content.Blob([contentInput])),
     };
@@ -16,46 +16,48 @@ function page_blobify(browser, input) {
 }
 
 function page_deblobify(browser, blobURL) {
-  return SpecialPowers.spawn(browser, [blobURL], async function(
-    contentBlobURL
-  ) {
-    if ("error" in contentBlobURL) {
-      return contentBlobURL;
-    }
-    contentBlobURL = contentBlobURL.blobURL;
+  return SpecialPowers.spawn(
+    browser,
+    [blobURL],
+    async function (contentBlobURL) {
+      if ("error" in contentBlobURL) {
+        return contentBlobURL;
+      }
+      contentBlobURL = contentBlobURL.blobURL;
 
-    function blobURLtoBlob(aBlobURL) {
-      return new content.Promise(function(resolve) {
-        let xhr = new content.XMLHttpRequest();
-        xhr.open("GET", aBlobURL, true);
-        xhr.onload = function() {
-          resolve(xhr.response);
-        };
-        xhr.onerror = function() {
-          resolve("xhr error");
-        };
-        xhr.responseType = "blob";
-        xhr.send();
-      });
-    }
+      function blobURLtoBlob(aBlobURL) {
+        return new content.Promise(function (resolve) {
+          let xhr = new content.XMLHttpRequest();
+          xhr.open("GET", aBlobURL, true);
+          xhr.onload = function () {
+            resolve(xhr.response);
+          };
+          xhr.onerror = function () {
+            resolve("xhr error");
+          };
+          xhr.responseType = "blob";
+          xhr.send();
+        });
+      }
 
-    function blobToString(blob) {
-      return new content.Promise(function(resolve) {
-        let fileReader = new content.FileReader();
-        fileReader.onload = function() {
-          resolve(fileReader.result);
-        };
-        fileReader.readAsText(blob);
-      });
-    }
+      function blobToString(blob) {
+        return new content.Promise(function (resolve) {
+          let fileReader = new content.FileReader();
+          fileReader.onload = function () {
+            resolve(fileReader.result);
+          };
+          fileReader.readAsText(blob);
+        });
+      }
 
-    let blob = await blobURLtoBlob(contentBlobURL);
-    if (blob == "xhr error") {
-      return "xhr error";
-    }
+      let blob = await blobURLtoBlob(contentBlobURL);
+      if (blob == "xhr error") {
+        return "xhr error";
+      }
 
-    return blobToString(blob);
-  });
+      return blobToString(blob);
+    }
+  );
 }
 
 function workerIO(browser, what, message) {
@@ -67,12 +69,12 @@ function workerIO(browser, what, message) {
         message: { message, what },
       },
     ],
-    function(args) {
+    function (args) {
       if (!content.worker) {
         content.worker = new content.Worker(args.scriptFile);
       }
-      let promise = new content.Promise(function(resolve) {
-        let listenFunction = function(event) {
+      let promise = new content.Promise(function (resolve) {
+        let listenFunction = function (event) {
           content.worker.removeEventListener("message", listenFunction);
           resolve(event.data);
         };
@@ -90,7 +92,7 @@ let worker_deblobify = (browser, blobURL) =>
 
 function doTest(blobify, deblobify) {
   let blobURL = null;
-  return async function(browser) {
+  return async function (browser) {
     if (blobURL === null) {
       let input = Math.random().toString();
       blobURL = await blobify(browser, input);

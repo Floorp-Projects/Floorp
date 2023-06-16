@@ -26,7 +26,7 @@ add_task(async function test_aboutPreferences() {
   );
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: PAGE_PREFS },
-    async function(browser) {
+    async function (browser) {
       await finalPrefPaneLoaded;
       await SpecialPowers.spawn(browser, [SELECTORS], selectors => {
         is(
@@ -48,7 +48,7 @@ add_task(async function test_aboutPreferencesPrivacy() {
   );
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: PAGE_PRIVACY },
-    async function(browser) {
+    async function (browser) {
       await finalPrefPaneLoaded;
       await SpecialPowers.spawn(browser, [SELECTORS], selectors => {
         is(
@@ -92,7 +92,7 @@ add_task(async function test_openManageAutofillDialogs() {
   );
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: PAGE_PRIVACY },
-    async function(browser) {
+    async function (browser) {
       await finalPrefPaneLoaded;
       const args = [
         SELECTORS,
@@ -135,7 +135,7 @@ add_task(async function test_autofillCheckboxes() {
   // Checkbox should be unchecked when form autofill addresses and credit cards are disabled.
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: PAGE_PRIVACY },
-    async function(browser) {
+    async function (browser) {
       await finalPrefPaneLoaded;
       await SpecialPowers.spawn(browser, [SELECTORS], selectors => {
         is(
@@ -201,7 +201,7 @@ add_task(async function test_creditCardNotAvailable() {
   );
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: PAGE_PRIVACY },
-    async function(browser) {
+    async function (browser) {
       await finalPrefPaneLoaded;
       await SpecialPowers.spawn(browser, [SELECTORS], selectors => {
         is(
@@ -232,7 +232,7 @@ add_task(async function test_reauth() {
   );
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: PAGE_PRIVACY },
-    async function(browser) {
+    async function (browser) {
       await finalPrefPaneLoaded;
       await SpecialPowers.spawn(
         browser,
@@ -263,7 +263,7 @@ add_task(async function test_addressAutofillNotAvailable() {
   );
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: PAGE_PRIVACY },
-    async function(browser) {
+    async function (browser) {
       await finalPrefPaneLoaded;
       await SpecialPowers.spawn(browser, [SELECTORS], selectors => {
         is(
@@ -344,7 +344,7 @@ add_task(async function test_addressAutofillNotAvailableViaRegion() {
   );
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: PAGE_PRIVACY },
-    async function(browser) {
+    async function (browser) {
       await finalPrefPaneLoaded;
       await SpecialPowers.spawn(browser, [SELECTORS], selectors => {
         is(
@@ -408,7 +408,7 @@ add_task(async function test_addressAutofillNotAvailableViaRegion() {
 add_task(async function test_aboutPreferencesPrivacy() {
   Services.prefs.lockPref(ENABLED_AUTOFILL_ADDRESSES_PREF);
   Services.prefs.lockPref(ENABLED_AUTOFILL_CREDITCARDS_PREF);
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.prefs.unlockPref(ENABLED_AUTOFILL_ADDRESSES_PREF);
     Services.prefs.unlockPref(ENABLED_AUTOFILL_CREDITCARDS_PREF);
   });
@@ -418,7 +418,7 @@ add_task(async function test_aboutPreferencesPrivacy() {
   );
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: PAGE_PRIVACY },
-    async function(browser) {
+    async function (browser) {
       await finalPrefPaneLoaded;
       await SpecialPowers.spawn(browser, [SELECTORS], selectors => {
         is(

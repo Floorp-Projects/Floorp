@@ -192,8 +192,9 @@ class RequestListColumnWaterfall extends Component {
         {
           className: "requests-list-timings",
           style: {
-            paddingInlineStart: `${(startedMs - firstRequestStartedMs) *
-              scale}px`,
+            paddingInlineStart: `${
+              (startedMs - firstRequestStartedMs) * scale
+            }px`,
           },
           onMouseDown: onWaterfallMouseDown,
         },

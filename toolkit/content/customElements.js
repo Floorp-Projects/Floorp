@@ -32,7 +32,7 @@
   // to modify the class so we can instrument function calls in local development:
   if (instrumentClasses) {
     let define = window.customElements.define;
-    window.customElements.define = function(name, c, opts) {
+    window.customElements.define = function (name, c, opts) {
       instrumentCustomElementClass(c);
       return define.call(this, name, c, opts);
     };
@@ -45,7 +45,7 @@
     );
   }
 
-  MozElements.printInstrumentation = function(collapsed) {
+  MozElements.printInstrumentation = function (collapsed) {
     let summaries = [];
     let totalCalls = 0;
     let totalTime = 0;
@@ -113,7 +113,7 @@
     let data = { instances: 0 };
 
     function wrapFunction(name, fn) {
-      return function() {
+      return function () {
         if (!data[name]) {
           data[name] = { time: 0, calls: 0 };
         }
@@ -364,9 +364,8 @@
 
         for (let [selector, newAttr] of list) {
           if (!(selector in this._inheritedElements)) {
-            this._inheritedElements[
-              selector
-            ] = this.getElementForAttrInheritance(selector);
+            this._inheritedElements[selector] =
+              this.getElementForAttrInheritance(selector);
           }
           let el = this._inheritedElements[selector];
           if (el) {
@@ -641,18 +640,17 @@
         cls.prototype.customInterfaces = ifaces;
 
         cls.prototype.QueryInterface = ChromeUtils.generateQI(ifaces);
-        cls.prototype.getCustomInterfaceCallback = function getCustomInterfaceCallback(
-          ifaceToCheck
-        ) {
-          if (
-            cls.prototype.customInterfaces.some(iface =>
-              iface.equals(ifaceToCheck)
-            )
-          ) {
-            return getInterfaceProxy(this);
-          }
-          return null;
-        };
+        cls.prototype.getCustomInterfaceCallback =
+          function getCustomInterfaceCallback(ifaceToCheck) {
+            if (
+              cls.prototype.customInterfaces.some(iface =>
+                iface.equals(ifaceToCheck)
+              )
+            ) {
+              return getInterfaceProxy(this);
+            }
+            return null;
+          };
       }
     };
 
@@ -681,7 +679,7 @@
             if (MozQueryInterface.isInstance(propOrMethod)) {
               return Reflect.get(target, prop, receiver);
             }
-            return function(...args) {
+            return function (...args) {
               return propOrMethod.apply(target, args);
             };
           }
@@ -790,31 +788,6 @@
     document.documentURI == "chrome://geckoview/content/geckoview.xhtml"
   );
   if (loadExtraCustomElements) {
-    for (let script of [
-      "chrome://global/content/elements/arrowscrollbox.js",
-      "chrome://global/content/elements/dialog.js",
-      "chrome://global/content/elements/general.js",
-      "chrome://global/content/elements/button.js",
-      "chrome://global/content/elements/checkbox.js",
-      "chrome://global/content/elements/menu.js",
-      "chrome://global/content/elements/menupopup.js",
-      "chrome://global/content/elements/moz-input-box.js",
-      "chrome://global/content/elements/notificationbox.js",
-      "chrome://global/content/elements/panel.js",
-      "chrome://global/content/elements/popupnotification.js",
-      "chrome://global/content/elements/radio.js",
-      "chrome://global/content/elements/richlistbox.js",
-      "chrome://global/content/elements/autocomplete-popup.js",
-      "chrome://global/content/elements/autocomplete-richlistitem.js",
-      "chrome://global/content/elements/tabbox.js",
-      "chrome://global/content/elements/text.js",
-      "chrome://global/content/elements/toolbarbutton.js",
-      "chrome://global/content/elements/tree.js",
-      "chrome://global/content/elements/wizard.js",
-    ]) {
-      Services.scriptloader.loadSubScript(script, window);
-    }
-
     for (let [tag, script] of [
       ["button-group", "chrome://global/content/elements/named-deck.js"],
       ["findbar", "chrome://global/content/elements/findbar.js"],
@@ -862,12 +835,37 @@
     This function explicitly returns null so that there is no confusion
     about which custom elements from ES Modules have been loaded.
     */
-    window.ensureCustomElements = function(...elementNames) {
+    window.ensureCustomElements = function (...elementNames) {
       return Promise.all(
         elementNames
           .filter(name => !customElements.get(name))
           .map(name => importCustomElementFromESModule(name))
       ).then(() => null);
     };
+
+    for (let script of [
+      "chrome://global/content/elements/arrowscrollbox.js",
+      "chrome://global/content/elements/dialog.js",
+      "chrome://global/content/elements/general.js",
+      "chrome://global/content/elements/button.js",
+      "chrome://global/content/elements/checkbox.js",
+      "chrome://global/content/elements/menu.js",
+      "chrome://global/content/elements/menupopup.js",
+      "chrome://global/content/elements/moz-input-box.js",
+      "chrome://global/content/elements/notificationbox.js",
+      "chrome://global/content/elements/panel.js",
+      "chrome://global/content/elements/popupnotification.js",
+      "chrome://global/content/elements/radio.js",
+      "chrome://global/content/elements/richlistbox.js",
+      "chrome://global/content/elements/autocomplete-popup.js",
+      "chrome://global/content/elements/autocomplete-richlistitem.js",
+      "chrome://global/content/elements/tabbox.js",
+      "chrome://global/content/elements/text.js",
+      "chrome://global/content/elements/toolbarbutton.js",
+      "chrome://global/content/elements/tree.js",
+      "chrome://global/content/elements/wizard.js",
+    ]) {
+      Services.scriptloader.loadSubScript(script, window);
+    }
   }
 })();

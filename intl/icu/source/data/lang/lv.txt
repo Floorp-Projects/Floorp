@@ -210,6 +210,7 @@ lv{
         hax{"dienvidhaidu"}
         he{"ivrits"}
         hi{"hindi"}
+        hi_Latn{"hindi (latīņu)"}
         hil{"hiligainonu"}
         hit{"hetu"}
         hmn{"hmongu"}
@@ -584,6 +585,9 @@ lv{
     Languages%menu{
         yue{"ķīniešu (kantoniešu)"}
         zh{"ķīniešu (mandarīnu)"}
+    }
+    Languages%short{
+        en_US{"angļu (ASV)"}
     }
     Languages%variant{
         ckb{"sorani kurdu"}

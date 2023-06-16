@@ -9,8 +9,8 @@ AddonTestUtils.createAppInfo(
   "42"
 );
 
-const { ExtensionData } = ChromeUtils.import(
-  "resource://gre/modules/Extension.jsm"
+const { ExtensionData } = ChromeUtils.importESModule(
+  "resource://gre/modules/Extension.sys.mjs"
 );
 
 async function generateAddon(data) {
@@ -153,7 +153,7 @@ add_task(async function testExtractLocalizedManifest() {
       name: "__MSG_extensionName__",
       default_locale: "en_US",
       icons: {
-        "16": "__MSG_extensionIcon__",
+        16: "__MSG_extensionIcon__",
       },
     },
 

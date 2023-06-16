@@ -23,7 +23,7 @@ const ResourceCommand = require("resource://devtools/shared/commands/resource/re
  * - isBlackBoxed {Boolean}: Specifying whether the source actor's 'black-boxed' flag is set.
  * - extensionName {null|String}: If the source comes from an add-on, the add-on name.
  */
-module.exports = async function({ targetCommand, targetFront, onAvailable }) {
+module.exports = async function ({ targetCommand, targetFront, onAvailable }) {
   const isBrowserToolbox =
     targetCommand.descriptorFront.isBrowserProcessDescriptor;
   const isNonTopLevelFrameTarget =

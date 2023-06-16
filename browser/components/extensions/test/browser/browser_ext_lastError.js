@@ -48,7 +48,8 @@ add_task(async function testLastError() {
   waitForConsole = new Promise(resolve => {
     SimpleTest.monitorConsole(resolve, [
       {
-        message: /Unchecked lastError value: Error: runtime.sendMessage's message argument is missing/,
+        message:
+          /Unchecked lastError value: Error: runtime.sendMessage's message argument is missing/,
       },
     ]);
   });

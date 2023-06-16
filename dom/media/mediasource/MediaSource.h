@@ -118,7 +118,7 @@ class MediaSource final : public DOMEventTargetHelper,
   already_AddRefed<Promise> MozDebugReaderData(ErrorResult& aRv);
 
   bool HasLiveSeekableRange() const { return mLiveSeekableRange.isSome(); }
-  media::TimeInterval LiveSeekableRange() const {
+  media::TimeRanges LiveSeekableRange() const {
     return mLiveSeekableRange.value();
   }
 
@@ -139,10 +139,11 @@ class MediaSource final : public DOMEventTargetHelper,
   void DispatchSimpleEvent(const char* aName);
   void QueueAsyncSimpleEvent(const char* aName);
 
+  void DurationChange(const media::TimeUnit& aNewDuration, ErrorResult& aRv);
   void DurationChange(double aNewDuration, ErrorResult& aRv);
 
   // SetDuration with no checks.
-  void SetDuration(double aDuration);
+  void SetDuration(const media::TimeUnit& aDuration);
 
   typedef MozPromise<bool, MediaResult, /* IsExclusive = */ true>
       ActiveCompletionPromise;
@@ -167,7 +168,7 @@ class MediaSource final : public DOMEventTargetHelper,
 
   MediaSourceReadyState mReadyState;
 
-  Maybe<media::TimeInterval> mLiveSeekableRange;
+  Maybe<media::TimeRanges> mLiveSeekableRange;
   nsTArray<MozPromiseHolder<ActiveCompletionPromise>> mCompletionPromises;
 };
 

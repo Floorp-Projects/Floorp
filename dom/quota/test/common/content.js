@@ -48,8 +48,8 @@ function getSimpleDatabase() {
 }
 
 async function requestFinished(request) {
-  await new Promise(function(resolve) {
-    request.callback = SpecialPowers.wrapCallback(function() {
+  await new Promise(function (resolve) {
+    request.callback = SpecialPowers.wrapCallback(function () {
       resolve();
     });
   });

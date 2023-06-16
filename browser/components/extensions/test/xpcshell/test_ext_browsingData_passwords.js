@@ -10,7 +10,7 @@ const NEW_HOST = "http://mozilla.com";
 const FXA_HOST = "chrome://FirefoxAccounts";
 
 function checkLoginExists(host, shouldExist) {
-  let logins = Services.logins.findLogins(host, "", null);
+  const logins = Services.logins.findLogins(host, "", null);
   equal(
     logins.length,
     shouldExist ? 1 : 0,
@@ -18,7 +18,7 @@ function checkLoginExists(host, shouldExist) {
   );
 }
 
-function addLogin(host, timestamp) {
+async function addLogin(host, timestamp) {
   checkLoginExists(host, false);
   let login = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(
     Ci.nsILoginInfo
@@ -26,15 +26,15 @@ function addLogin(host, timestamp) {
   login.init(host, "", null, LOGIN_USERNAME, LOGIN_PASSWORD);
   login.QueryInterface(Ci.nsILoginMetaInfo);
   login.timePasswordChanged = timestamp;
-  Services.logins.addLogin(login);
+  await Services.logins.addLoginAsync(login);
   checkLoginExists(host, true);
 }
 
 async function setupPasswords() {
   Services.logins.removeAllUserFacingLogins();
-  addLogin(FXA_HOST, REFERENCE_DATE);
-  addLogin(NEW_HOST, REFERENCE_DATE);
-  addLogin(OLD_HOST, REFERENCE_DATE - 10000);
+  await addLogin(FXA_HOST, REFERENCE_DATE);
+  await addLogin(NEW_HOST, REFERENCE_DATE);
+  await addLogin(OLD_HOST, REFERENCE_DATE - 10000);
 }
 
 add_task(async function testPasswords() {
@@ -49,7 +49,7 @@ add_task(async function testPasswords() {
     });
   }
 
-  let extension = ExtensionTestUtils.loadExtension({
+  const extension = ExtensionTestUtils.loadExtension({
     background,
     manifest: {
       permissions: ["browsingData"],

@@ -31,9 +31,8 @@ const { ENABLED_AUTOFILL_CREDITCARDS_PREF } = FormAutofill;
 const GetStringFromName = FormAutofillUtils.stringBundle.GetStringFromName;
 const formatStringFromName =
   FormAutofillUtils.stringBundle.formatStringFromName;
-const brandShortName = FormAutofillUtils.brandBundle.GetStringFromName(
-  "brandShortName"
-);
+const brandShortName =
+  FormAutofillUtils.brandBundle.GetStringFromName("brandShortName");
 let changeAutofillOptsKey = "changeAutofillOptions";
 let autofillOptsKey = "autofillOptionsLink";
 if (AppConstants.platform == "macosx") {
@@ -192,9 +191,8 @@ const CONTENT = {
             : null;
         },
         callback(event) {
-          let { secondaryButton, menubutton } = event.target.closest(
-            "popupnotification"
-          );
+          let { secondaryButton, menubutton } =
+            event.target.closest("popupnotification");
           let checked = event.target.checked;
           Services.prefs.setBoolPref(
             "services.sync.engine.creditcards",

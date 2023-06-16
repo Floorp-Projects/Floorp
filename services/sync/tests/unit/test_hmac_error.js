@@ -7,9 +7,9 @@ const { Service } = ChromeUtils.importESModule(
 
 // Track HMAC error counts.
 var hmacErrorCount = 0;
-(function() {
+(function () {
   let hHE = Service.handleHMACEvent;
-  Service.handleHMACEvent = async function() {
+  Service.handleHMACEvent = async function () {
     hmacErrorCount++;
     return hHE.call(Service);
   };
@@ -50,19 +50,13 @@ async function shared_setup() {
 
 add_task(async function hmac_error_during_404() {
   _("Attempt to replicate the HMAC error setup.");
-  let [
-    engine,
-    rotaryColl,
-    clientsColl,
-    keysWBO,
-    global,
-    tracker,
-  ] = await shared_setup();
+  let [engine, rotaryColl, clientsColl, keysWBO, global, tracker] =
+    await shared_setup();
 
   // Hand out 404s for crypto/keys.
   let keysHandler = keysWBO.handler();
   let key404Counter = 0;
-  let keys404Handler = function(request, response) {
+  let keys404Handler = function (request, response) {
     if (key404Counter > 0) {
       let body = "Not Found";
       response.setStatusLine(request.httpVersion, 404, body);
@@ -115,14 +109,8 @@ add_task(async function hmac_error_during_404() {
 
 add_task(async function hmac_error_during_node_reassignment() {
   _("Attempt to replicate an HMAC error during node reassignment.");
-  let [
-    engine,
-    rotaryColl,
-    clientsColl,
-    keysWBO,
-    global,
-    tracker,
-  ] = await shared_setup();
+  let [engine, rotaryColl, clientsColl, keysWBO, global, tracker] =
+    await shared_setup();
 
   let collectionsHelper = track_collections_helper();
   let upd = collectionsHelper.with_updated_collection;
@@ -143,7 +131,7 @@ add_task(async function hmac_error_during_node_reassignment() {
 
   let should401 = false;
   function upd401(coll, handler) {
-    return function(request, response) {
+    return function (request, response) {
       if (should401 && request.method != "DELETE") {
         on401();
         should401 = false;
@@ -179,7 +167,7 @@ add_task(async function hmac_error_during_node_reassignment() {
   function onSyncError() {
     do_throw("Should not get a sync error!");
   }
-  let onSyncFinished = function() {};
+  let onSyncFinished = function () {};
   let obs = {
     observe: function observe(subject, topic, data) {
       switch (topic) {
@@ -213,10 +201,10 @@ add_task(async function hmac_error_during_node_reassignment() {
 
   _("Make sure that syncing again causes recovery.");
   let callbacksPromise = new Promise(resolve => {
-    onSyncFinished = function() {
+    onSyncFinished = function () {
       _("== First sync done.");
       _("---------------------------");
-      onSyncFinished = function() {
+      onSyncFinished = function () {
         _("== Second (automatic) sync done.");
         let hasData = rotaryColl.wbo("flying") || rotaryColl.wbo("scotsman");
         let hasKeys = keysWBO.modified;
@@ -234,7 +222,7 @@ add_task(async function hmac_error_during_node_reassignment() {
           await engine.setLastSync(0);
           hmacErrorCount = 0;
 
-          onSyncFinished = async function() {
+          onSyncFinished = async function () {
             // Two rotary items, one client record... no errors.
             Assert.equal(hmacErrorCount, 0);
 

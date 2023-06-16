@@ -24,7 +24,7 @@ add_task(async function findbar_test() {
   await gFindBarPromise;
   gFindBar.open();
 
-  await new ContentTask.spawn(newTab.linkedBrowser, null, async function() {
+  await new ContentTask.spawn(newTab.linkedBrowser, null, async function () {
     let iframe = content.document.getElementById("iframe");
     let awaitLoad = ContentTaskUtils.waitForEvent(iframe, "load", false);
     iframe.src = "https://example.org/";

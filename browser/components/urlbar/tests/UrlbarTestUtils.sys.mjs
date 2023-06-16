@@ -13,6 +13,7 @@ import {
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonTestUtils: "resource://testing-common/AddonTestUtils.sys.mjs",
   BrowserTestUtils: "resource://testing-common/BrowserTestUtils.sys.mjs",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
   ExperimentFakes: "resource://testing-common/NimbusTestUtils.sys.mjs",
@@ -31,7 +32,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
   BrowserUIUtils: "resource:///modules/BrowserUIUtils.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
 });
@@ -53,32 +53,40 @@ export var UrlbarTestUtils = {
     rightClickEnter: 5,
   },
 
+  // Fallback to the console.
+  info: console.log,
+
   /**
    * Running this init allows helpers to access test scope helpers, like Assert
    * and SimpleTest. Note this initialization is not enforced, thus helpers
-   * should always check _testScope and provide a fallback path.
+   * should always check the properties set here and provide a fallback path.
    *
    * @param {object} scope The global scope where tests are being run.
    */
   init(scope) {
-    this._testScope = scope;
-    if (scope) {
-      this.Assert = scope.Assert;
-      this.EventUtils = scope.EventUtils;
-      this.info = scope.info;
+    if (!scope) {
+      throw new Error("Must initialize UrlbarTestUtils with a test scope");
     }
     // If you add other properties to `this`, null them in uninit().
-  },
+    this.Assert = scope.Assert;
+    this.info = scope.info;
+    this.registerCleanupFunction = scope.registerCleanupFunction;
 
-  /**
-   * If tests initialize UrlbarTestUtils, they may need to call this function in
-   * their cleanup callback, or else their scope will affect subsequent tests.
-   * This is usually only required for tests outside browser/components/urlbar.
-   */
-  uninit() {
-    this._testScope = null;
-    this.Assert = null;
-    this.EventUtils = null;
+    if (Services.env.exists("XPCSHELL_TEST_PROFILE_DIR")) {
+      this.initXPCShellDependencies();
+    } else {
+      // xpcshell doesn't support EventUtils.
+      this.EventUtils = scope.EventUtils;
+      this.SimpleTest = scope.SimpleTest;
+    }
+
+    this.registerCleanupFunction(() => {
+      this.Assert = null;
+      this.info = console.log;
+      this.registerCleanupFunction = null;
+      this.EventUtils = null;
+      this.SimpleTest = null;
+    });
   },
 
   /**
@@ -122,8 +130,8 @@ export var UrlbarTestUtils = {
     selectionStart = -1,
     selectionEnd = -1,
   } = {}) {
-    if (this._testScope) {
-      await this._testScope.SimpleTest.promiseFocus(window);
+    if (this.SimpleTest) {
+      await this.SimpleTest.promiseFocus(window);
     } else {
       await new Promise(resolve => waitForFocus(resolve, window));
     }
@@ -226,7 +234,7 @@ export var UrlbarTestUtils = {
     let container = this.getResultsContainer(win);
     let attr = "disable-resultmenu-autohide";
     container.toggleAttribute(attr, true);
-    this._testScope?.registerCleanupFunction(() => {
+    this.registerCleanupFunction?.(() => {
       container.toggleAttribute(attr, false);
     });
   },
@@ -262,19 +270,19 @@ export var UrlbarTestUtils = {
       "popupshown"
     );
     if (byMouse) {
-      this._testScope?.info(
+      this.info(
         `synthesizing mousemove on row to make the menu button visible`
       );
       await this.EventUtils.promiseElementReadyForUserInput(
         menuButton.closest(".urlbarView-row"),
         win,
-        this._testScope?.info
+        this.info
       );
-      this._testScope?.info(`got mousemove, now clicking the menu button`);
+      this.info(`got mousemove, now clicking the menu button`);
       this.EventUtils.synthesizeMouseAtCenter(menuButton, {}, win);
-      this._testScope?.info(`waiting for the menu popup to open via mouse`);
+      this.info(`waiting for the menu popup to open via mouse`);
     } else {
-      this._testScope?.info(`selecting the result at index ${resultIndex}`);
+      this.info(`selecting the result at index ${resultIndex}`);
       while (win.gURLBar.view.selectedRowIndex != resultIndex) {
         this.EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
       }
@@ -287,9 +295,7 @@ export var UrlbarTestUtils = {
         `selected the menu button at result index ${resultIndex}`
       );
       this.EventUtils.synthesizeKey(activationKey, {}, win);
-      this._testScope?.info(
-        `waiting for ${activationKey} to open the menu popup`
-      );
+      this.info(`waiting for ${activationKey} to open the menu popup`);
     }
     await promiseMenuOpen;
     this.Assert?.equal(
@@ -338,15 +344,25 @@ export var UrlbarTestUtils = {
         throw new Error("Submenu item not found for selector: " + selector);
       }
 
-      this._testScope?.info("Clicking submenu item with selector: " + selector);
       let promisePopup = lazy.BrowserTestUtils.waitForEvent(
         window.gURLBar.view.resultMenu,
         "popupshown"
       );
-      this.EventUtils.synthesizeMouseAtCenter(menuitem, {}, window);
-      this._testScope?.info("Waiting for submenu popupshown event");
+
+      if (AppConstants.platform == "macosx") {
+        // Synthesized clicks don't work in the native Mac menu.
+        this.info(
+          "Calling openMenu() on submenu item with selector: " + selector
+        );
+        menuitem.openMenu(true);
+      } else {
+        this.info("Clicking submenu item with selector: " + selector);
+        this.EventUtils.synthesizeMouseAtCenter(menuitem, {}, window);
+      }
+
+      this.info("Waiting for submenu popupshown event");
       await promisePopup;
-      this._testScope?.info("Got the submenu popupshown event");
+      this.info("Got the submenu popupshown event");
     }
 
     // Now get the item.
@@ -389,24 +405,34 @@ export var UrlbarTestUtils = {
       openByMouse = false,
     } = {}
   ) {
-    await this.openResultMenuAndGetItem({
+    let menuitem = await this.openResultMenuAndGetItem({
       accesskey,
       resultIndex,
       openByMouse,
       window: win,
     });
+    if (!menuitem) {
+      throw new Error("Menu item not found for accesskey: " + accesskey);
+    }
 
-    this._testScope?.info(
-      `pressing access key (${accesskey}) to activate menu item`
-    );
     let promiseCommand = lazy.BrowserTestUtils.waitForEvent(
       win.gURLBar.view.resultMenu,
       "command"
     );
-    this.EventUtils.synthesizeKey(accesskey, {}, win);
-    this._testScope?.info("waiting for command event");
+
+    if (AppConstants.platform == "macosx") {
+      // The native Mac menu doesn't support access keys.
+      this.info("calling doCommand() to activate menu item");
+      menuitem.doCommand();
+      win.gURLBar.view.resultMenu.hidePopup(true);
+    } else {
+      this.info(`pressing access key (${accesskey}) to activate menu item`);
+      this.EventUtils.synthesizeKey(accesskey, {}, win);
+    }
+
+    this.info("waiting for command event");
     await promiseCommand;
-    this._testScope?.info("got the command event");
+    this.info("got the command event");
   },
 
   /**
@@ -451,15 +477,24 @@ export var UrlbarTestUtils = {
       throw new Error("Menu item not found for command: " + command);
     }
 
-    this._testScope?.info("Clicking menu item with command: " + command);
     let promiseCommand = lazy.BrowserTestUtils.waitForEvent(
       win.gURLBar.view.resultMenu,
       "command"
     );
-    this.EventUtils.synthesizeMouseAtCenter(menuitem, {}, win);
-    this._testScope?.info("Waiting for command event");
+
+    if (AppConstants.platform == "macosx") {
+      // Synthesized clicks don't work in the native Mac menu.
+      this.info("calling doCommand() to activate menu item");
+      menuitem.doCommand();
+      win.gURLBar.view.resultMenu.hidePopup(true);
+    } else {
+      this.info("Clicking menu item with command: " + command);
+      this.EventUtils.synthesizeMouseAtCenter(menuitem, {}, win);
+    }
+
+    this.info("Waiting for command event");
     await promiseCommand;
-    this._testScope?.info("Got the command event");
+    this.info("Got the command event");
   },
 
   /**
@@ -492,9 +527,8 @@ export var UrlbarTestUtils = {
     details.source = result.source;
     details.heuristic = result.heuristic;
     details.autofill = !!result.autofill;
-    details.image = element.getElementsByClassName(
-      "urlbarView-favicon"
-    )[0]?.src;
+    details.image =
+      element.getElementsByClassName("urlbarView-favicon")[0]?.src;
     details.title = result.title;
     details.tags = "tags" in result.payload ? result.payload.tags : [];
     details.isSponsored = result.payload.isSponsored;
@@ -668,7 +702,7 @@ export var UrlbarTestUtils = {
     if (win.gURLBar.view.isOpen) {
       return;
     }
-    this._testScope?.info("Awaiting for the urlbar panel to open");
+    this.info("Awaiting for the urlbar panel to open");
     await new Promise(resolve => {
       win.gURLBar.controller.addQueryListener({
         onViewOpen() {
@@ -677,7 +711,7 @@ export var UrlbarTestUtils = {
         },
       });
     });
-    this._testScope?.info("Urlbar panel opened");
+    this.info("Urlbar panel opened");
   },
 
   /**
@@ -697,7 +731,7 @@ export var UrlbarTestUtils = {
     if (!win.gURLBar.view.isOpen) {
       return;
     }
-    this._testScope?.info("Awaiting for the urlbar panel to close");
+    this.info("Awaiting for the urlbar panel to close");
     await new Promise(resolve => {
       win.gURLBar.controller.addQueryListener({
         onViewClose() {
@@ -706,7 +740,7 @@ export var UrlbarTestUtils = {
         },
       });
     });
-    this._testScope?.info("Urlbar panel closed");
+    this.info("Urlbar panel closed");
   },
 
   /**
@@ -831,7 +865,7 @@ export var UrlbarTestUtils = {
     let ignoreProperties = ["icon", "pref", "restrict", "telemetryLabel"];
     for (let prop of ignoreProperties) {
       if (prop in expectedSearchMode && !(prop in window.gURLBar.searchMode)) {
-        this._testScope?.info(
+        this.info(
           `Ignoring unimportant property '${prop}' in expected search mode`
         );
         delete expectedSearchMode[prop];
@@ -919,9 +953,8 @@ export var UrlbarTestUtils = {
           let engine = Services.search.getEngineByName(
             expectedSearchMode.engineName
           );
-          let engineRootDomain = lazy.UrlbarSearchUtils.getRootDomainFromEngine(
-            engine
-          );
+          let engineRootDomain =
+            lazy.UrlbarSearchUtils.getRootDomainFromEngine(engine);
           let resultUrl = new URL(result.url);
           this.Assert.ok(
             resultUrl.hostname.includes(engineRootDomain),
@@ -945,7 +978,7 @@ export var UrlbarTestUtils = {
    *   UrlbarInput.setSearchMode.  If not given, the first one-off is clicked.
    */
   async enterSearchMode(window, searchMode = null) {
-    this._testScope?.info(`Enter Search Mode ${JSON.stringify(searchMode)}`);
+    this.info(`Enter Search Mode ${JSON.stringify(searchMode)}`);
 
     // Ensure any pending query is complete.
     await this.promiseSearchComplete(window);
@@ -1167,29 +1200,29 @@ export var UrlbarTestUtils = {
     feature = "urlbar",
     enrollmentType = "rollout"
   ) {
-    this.info?.("initNimbusFeature awaiting ExperimentManager.onStartup");
+    this.info("initNimbusFeature awaiting ExperimentManager.onStartup");
     await lazy.ExperimentManager.onStartup();
 
-    this.info?.("initNimbusFeature awaiting ExperimentAPI.ready");
+    this.info("initNimbusFeature awaiting ExperimentAPI.ready");
     await lazy.ExperimentAPI.ready();
 
     let method =
       enrollmentType == "rollout"
         ? "enrollWithRollout"
         : "enrollWithFeatureConfig";
-    this.info?.(`initNimbusFeature awaiting ExperimentFakes.${method}`);
+    this.info(`initNimbusFeature awaiting ExperimentFakes.${method}`);
     let doCleanup = await lazy.ExperimentFakes[method]({
       featureId: lazy.NimbusFeatures[feature].featureId,
       value: { enabled: true, ...value },
     });
 
-    this.info?.("initNimbusFeature done");
+    this.info("initNimbusFeature done");
 
-    this.registerCleanupFunction?.(() => {
+    this.registerCleanupFunction?.(async () => {
       // If `doCleanup()` has already been called (i.e., by the caller), it will
       // throw an error here.
       try {
-        doCleanup();
+        await doCleanup();
       } catch (error) {}
     });
 

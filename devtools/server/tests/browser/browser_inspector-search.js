@@ -13,7 +13,7 @@ Services.scriptloader.loadSubScript(
 // coming back as expected.
 // See also test_inspector-search-front.html.
 
-add_task(async function() {
+add_task(async function () {
   const { walker } = await initInspectorFront(
     MAIN_DOMAIN + "inspector-search-data.html"
   );
@@ -21,7 +21,7 @@ add_task(async function() {
   await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [[walker.actorID]],
-    async function(actorID) {
+    async function (actorID) {
       const { require } = ChromeUtils.importESModule(
         "resource://devtools/shared/loader/Loader.sys.mjs"
       );
@@ -132,8 +132,7 @@ add_task(async function() {
           ],
         },
         {
-          desc:
-            "Search with multiple matches in a single tag expecting a single result",
+          desc: "Search with multiple matches in a single tag expecting a single result",
           search: "💩",
           expected: [
             { node: inspectee.getElementById("💩"), type: "attributeValue" },

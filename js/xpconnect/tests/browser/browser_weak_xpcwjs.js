@@ -6,14 +6,14 @@
 // Some basic tests of the lifetime of an XPCWJS with a weak reference.
 
 // Create a weak reference, with a single-element weak map.
-let make_weak_ref = function(obj) {
+let make_weak_ref = function (obj) {
   let m = new WeakMap();
   m.set(obj, {});
   return m;
 };
 
 // Check to see if a weak reference is dead.
-let weak_ref_dead = function(r) {
+let weak_ref_dead = function (r) {
   return !SpecialPowers.nondeterministicGetWeakMapKeys(r).length;
 };
 

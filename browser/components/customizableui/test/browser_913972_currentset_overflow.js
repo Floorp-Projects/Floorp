@@ -11,7 +11,7 @@ registerCleanupFunction(async function asyncCleanup() {
 });
 
 // Resize to a small window, resize back, shouldn't affect default state.
-add_task(async function() {
+add_task(async function () {
   let originalWindowWidth = window.outerWidth;
   ok(
     !navbar.hasAttribute("overflowing"),
@@ -76,7 +76,7 @@ add_task(async function() {
 });
 
 // Enter and exit customization mode, check that default state is correct.
-add_task(async function() {
+add_task(async function () {
   ok(CustomizableUI.inDefaultState, "Should start in default state.");
   await startCustomizing();
   ok(

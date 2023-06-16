@@ -10,13 +10,11 @@ function getSelectRect() {
     let x = rect.left;
     let y = rect.top;
 
-    const offsetX = {};
-    const offsetY = {};
-    SpecialPowers.getDOMWindowUtils(window).getVisualViewportOffsetRelativeToLayoutViewport(offsetX, offsetY);
+    const relativeOffset = getRelativeViewportOffset(window);
 
     let resolution = SpecialPowers.getDOMWindowUtils(window).getResolution();
-    x = resolution * (x - offsetX.value);
-    y = resolution * (y - offsetY.value);
+    x = resolution * (x - relativeOffset.x);
+    y = resolution * (y - relativeOffset.y);
 
     let fullZoom = SpecialPowers.getFullZoom(window);
     rect = {

@@ -38,7 +38,7 @@ struct NotificationActivities {
 };
 
 NotificationActivities MaybeShowNotification(
-    const DefaultBrowserInfo& browserInfo, const wchar_t* aumi);
+    const DefaultBrowserInfo& browserInfo, const wchar_t* aumi, bool force);
 
 // These take enum values and get strings suitable for telemetry
 std::string GetStringForNotificationType(NotificationType type);

@@ -26,6 +26,7 @@
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmJS.h"
 
+#include "gc/StableCellHasher-inl.h"
 #include "wasm/WasmInstance-inl.h"
 
 using namespace js;

@@ -30,7 +30,6 @@ void jpegli_destroy(j_common_ptr cinfo) {
     delete reinterpret_cast<j_decompress_ptr>(cinfo)->master;
   } else {
     cinfo->global_state = jpegli::kEncNull;
-    delete reinterpret_cast<j_compress_ptr>(cinfo)->master;
   }
 }
 

@@ -485,6 +485,6 @@ addMessageListener(
   checkCrossOriginTopLevelPrincipalHandler
 );
 
-addMessageListener("teardown", function() {
+addMessageListener("teardown", function () {
   sendAsyncMessage("teardown-complete");
 });

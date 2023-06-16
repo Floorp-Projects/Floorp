@@ -4,73 +4,123 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -->
-<!DOCTYPE html [
-  <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-  %htmlDTD;
-]>
+<!DOCTYPE html [ <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+%htmlDTD; ]>
 
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<html
+  xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+>
   <head>
-    <meta http-equiv="Content-Security-Policy" content="default-src chrome: resource:; img-src chrome: resource: data:; object-src 'none'" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src chrome: resource:; img-src chrome: resource: data:; object-src 'none'"
+    />
     <meta name="color-scheme" content="light dark" />
     <title data-l10n-id="welcome-back-tab-title"></title>
-    <link rel="stylesheet" href="chrome://global/skin/in-content/info-pages.css" media="all"/>
-    <link rel="stylesheet" href="chrome://browser/skin/aboutWelcomeBack.css" media="all"/>
-    <link rel="icon" href="chrome://global/skin/icons/info-filled.svg"/>
-    <link rel="localization" href="browser/aboutSessionRestore.ftl"/>
-    <link rel="localization" href="branding/brand.ftl"/>
-    <script src="chrome://browser/content/aboutSessionRestore.js"/>
-     <script type="module" src="chrome://global/content/elements/moz-support-link.mjs"/>
+    <link
+      rel="stylesheet"
+      href="chrome://global/skin/in-content/info-pages.css"
+      media="all"
+    />
+    <link
+      rel="stylesheet"
+      href="chrome://browser/skin/aboutWelcomeBack.css"
+      media="all"
+    />
+    <link rel="icon" href="chrome://global/skin/icons/info-filled.svg" />
+    <link rel="localization" href="browser/aboutSessionRestore.ftl" />
+    <link rel="localization" href="branding/brand.ftl" />
+    <script src="chrome://browser/content/aboutSessionRestore.js" />
+    <script
+      type="module"
+      src="chrome://global/content/elements/moz-support-link.mjs"
+    />
   </head>
 
   <body>
-
     <div class="container tab-list-tree-container">
       <div class="description-wrapper">
-
         <div class="title">
           <h1 class="title-text" data-l10n-id="welcome-back-page-title"></h1>
         </div>
 
         <div class="description">
-
           <p data-l10n-id="welcome-back-page-info"></p>
-          <p data-l10n-id="welcome-back-page-info-link"><a is="moz-support-link" id="linkMoreTroubleshooting" target="_blank" data-l10n-name="link-more" support-page="troubleshooting"/></p>
+          <p data-l10n-id="welcome-back-page-info-link">
+            <a
+              is="moz-support-link"
+              id="linkMoreTroubleshooting"
+              target="_blank"
+              data-l10n-name="link-more"
+              support-page="troubleshooting"
+            />
+          </p>
           <div>
-
             <label class="radioRestoreContainer radio-container-with-text">
-              <input class="radioRestoreButton" id="radioRestoreAll" type="radio"
-                     name="restore" checked="checked"/>
-              <span class="radioRestoreLabel" data-l10n-id="welcome-back-restore-all-label"></span>
+              <input
+                class="radioRestoreButton"
+                id="radioRestoreAll"
+                type="radio"
+                name="restore"
+                checked="checked"
+              />
+              <span
+                class="radioRestoreLabel"
+                data-l10n-id="welcome-back-restore-all-label"
+              ></span>
             </label>
 
             <label class="radioRestoreContainer radio-container-with-text">
-              <input class="radioRestoreButton" id="radioRestoreChoose" type="radio"
-                     name="restore"/>
-              <span class="radioRestoreLabel" data-l10n-id="welcome-back-restore-some-label"></span>
+              <input
+                class="radioRestoreButton"
+                id="radioRestoreChoose"
+                type="radio"
+                name="restore"
+              />
+              <span
+                class="radioRestoreLabel"
+                data-l10n-id="welcome-back-restore-some-label"
+              ></span>
             </label>
           </div>
         </div>
-
       </div>
 
-      <xul:tree id="tabList" flex="1" seltype="single" hidecolumnpicker="true" hidden="true">
+      <xul:tree
+        id="tabList"
+        flex="1"
+        seltype="single"
+        hidecolumnpicker="true"
+        hidden="true"
+      >
         <xul:treecols>
-          <xul:treecol cycler="true" id="restore" type="checkbox" data-l10n-id="restore-page-restore-header"/>
-          <xul:splitter class="tree-splitter"/>
-          <xul:treecol primary="true" id="title" data-l10n-id="restore-page-list-header" flex="1"/>
+          <xul:treecol
+            cycler="true"
+            id="restore"
+            type="checkbox"
+            data-l10n-id="restore-page-restore-header"
+          />
+          <xul:splitter class="tree-splitter" />
+          <xul:treecol
+            primary="true"
+            id="title"
+            data-l10n-id="restore-page-list-header"
+            flex="1"
+          />
         </xul:treecols>
-        <xul:treechildren flex="1"/>
+        <xul:treechildren flex="1" />
       </xul:tree>
 
       <div class="button-container">
-        <xul:button class="primary"
-                    id="errorTryAgain"
-                    data-l10n-id="welcome-back-restore-button"/>
+        <xul:button
+          class="primary"
+          id="errorTryAgain"
+          data-l10n-id="welcome-back-restore-button"
+        />
       </div>
 
-      <input type="text" id="sessionData" hidden="true"/>
-
+      <input type="text" id="sessionData" hidden="true" />
     </div>
   </body>
 </html>

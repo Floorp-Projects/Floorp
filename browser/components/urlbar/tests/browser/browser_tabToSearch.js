@@ -18,7 +18,7 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource:///modules/UrlbarProviderTabToSearch.sys.mjs",
 });
 
-add_setup(async function() {
+add_setup(async function () {
   await PlacesUtils.history.clear();
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -297,7 +297,7 @@ add_task(async function tab_key_race() {
     }
     let provider = new ListeningTestProvider();
     UrlbarProvidersManager.registerProvider(provider);
-    registerCleanupFunction(async function() {
+    registerCleanupFunction(async function () {
       UrlbarProvidersManager.unregisterProvider(provider);
     });
   });
@@ -370,29 +370,26 @@ add_task(async function onboard() {
     "The onboarding element set the selected attribute."
   );
 
-  let [
-    titleOnboarding,
-    actionOnboarding,
-    descriptionOnboarding,
-  ] = await document.l10n.formatValues([
-    {
-      id: "urlbar-result-action-search-w-engine",
-      args: {
-        engine: onboardingElement.result.payload.engine,
+  let [titleOnboarding, actionOnboarding, descriptionOnboarding] =
+    await document.l10n.formatValues([
+      {
+        id: "urlbar-result-action-search-w-engine",
+        args: {
+          engine: onboardingElement.result.payload.engine,
+        },
       },
-    },
-    {
-      id: Services.search.getEngineByName(
-        onboardingElement.result.payload.engine
-      ).isGeneralPurposeEngine
-        ? "urlbar-result-action-tabtosearch-web"
-        : "urlbar-result-action-tabtosearch-other-engine",
-      args: { engine: onboardingElement.result.payload.engine },
-    },
-    {
-      id: "urlbar-tabtosearch-onboard",
-    },
-  ]);
+      {
+        id: Services.search.getEngineByName(
+          onboardingElement.result.payload.engine
+        ).isGeneralPurposeEngine
+          ? "urlbar-result-action-tabtosearch-web"
+          : "urlbar-result-action-tabtosearch-other-engine",
+        args: { engine: onboardingElement.result.payload.engine },
+      },
+      {
+        id: "urlbar-tabtosearch-onboard",
+      },
+    ]);
   let onboardingDetails = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
   Assert.equal(
     onboardingDetails.displayed.title,

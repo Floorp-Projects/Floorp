@@ -6,7 +6,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-add_setup(async function() {
+add_setup(async function () {
   // Always on top mode mess up with toolbox focus and openStoragePanelForAddon would timeout
   // waiting for toolbox focus.
   await pushPref("devtools.toolbox.alwaysOnTop", false);

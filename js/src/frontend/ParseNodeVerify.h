@@ -8,7 +8,6 @@
 #define frontend_ParseNodeVerify_h
 
 #include "frontend/SyntaxParseHandler.h"  // SyntaxParseHandler::Node
-#include "js/Stack.h"                     // JS::NativeStackLimit
 
 namespace js {
 
@@ -28,11 +27,9 @@ class ParseNode;
 
 #ifdef DEBUG
 [[nodiscard]] extern bool CheckParseTree(FrontendContext* fc,
-                                         JS::NativeStackLimit stackLimit,
                                          const LifoAlloc& alloc, ParseNode* pn);
 #else
 [[nodiscard]] inline bool CheckParseTree(FrontendContext* fc,
-                                         JS::NativeStackLimit stackLimit,
                                          const LifoAlloc& alloc,
                                          ParseNode* pn) {
   return true;
@@ -40,7 +37,6 @@ class ParseNode;
 #endif
 
 [[nodiscard]] inline bool CheckParseTree(FrontendContext* fc,
-                                         JS::NativeStackLimit stackLimit,
                                          const LifoAlloc& alloc,
                                          SyntaxParseHandler::Node pn) {
   return true;

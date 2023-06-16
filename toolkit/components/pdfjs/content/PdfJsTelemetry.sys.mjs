@@ -14,7 +14,7 @@
  */
 /* eslint max-len: ["error", 100] */
 
-export var PdfJsTelemetry = {
+export const PdfJsTelemetry = {
   onViewerIsUsed() {
     Glean.pdfjs.used.add(1);
   },
@@ -28,5 +28,8 @@ export var PdfJsTelemetry = {
   },
   onButtons(id) {
     Glean.pdfjs.buttons[id].add(1);
+  },
+  onGeckoview(id) {
+    Glean.pdfjs.geckoview[id].add(1);
   },
 };

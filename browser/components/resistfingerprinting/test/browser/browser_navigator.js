@@ -130,7 +130,7 @@ const rvVersion =
     Services.prefs.getIntPref("network.http.useragent.forceRVOnly", 0),
     0
   ) || appVersion;
-const spoofedVersion = AppConstants.platform == "android" ? "102" : appVersion;
+const spoofedVersion = AppConstants.platform == "android" ? "115" : appVersion;
 
 const LEGACY_UA_GECKO_TRAIL = "20100101";
 
@@ -159,7 +159,7 @@ async function testUserAgentHeader() {
     TEST_TARGET_URL
   );
 
-  let result = await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+  let result = await SpecialPowers.spawn(tab.linkedBrowser, [], function () {
     return content.document.body.textContent;
   });
 
@@ -179,7 +179,7 @@ async function testNavigator() {
     TEST_PATH + "file_navigator.html"
   );
 
-  let result = await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+  let result = await SpecialPowers.spawn(tab.linkedBrowser, [], function () {
     return content.document.getElementById("result").innerHTML;
   });
 
@@ -267,14 +267,14 @@ async function testWorkerNavigator() {
   let result = await SpecialPowers.spawn(
     tab.linkedBrowser,
     [],
-    async function() {
+    async function () {
       let worker = new content.SharedWorker(
         "file_navigatorWorker.js",
         "WorkerNavigatorTest"
       );
 
       let res = await new Promise(resolve => {
-        worker.port.onmessage = function(e) {
+        worker.port.onmessage = function (e) {
           resolve(e.data);
         };
       });
@@ -414,11 +414,11 @@ add_task(async function setupResistFingerprinting() {
 
   let spoofedUserAgentNavigator = `Mozilla/5.0 (${
     SPOOFED_UA_NAVIGATOR_OS[AppConstants.platform]
-  }; rv:${spoofedVersion}.0) Gecko/${spoofedGeckoTrail} Firefox/${spoofedVersion}.0`;
+  }; rv:${rvVersion}.0) Gecko/${spoofedGeckoTrail} Firefox/${appVersion}.0`;
 
   let spoofedUserAgentHeader = `Mozilla/5.0 (${
     SPOOFED_UA_HTTPHEADER_OS[AppConstants.platform]
-  }; rv:${spoofedVersion}.0) Gecko/${spoofedGeckoTrail} Firefox/${spoofedVersion}.0`;
+  }; rv:${rvVersion}.0) Gecko/${spoofedGeckoTrail} Firefox/${appVersion}.0`;
 
   expectedResults = {
     testDesc: "spoofed",

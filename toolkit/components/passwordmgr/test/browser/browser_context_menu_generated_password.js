@@ -18,7 +18,7 @@ registerCleanupFunction(async function cleanup_resetPrefs() {
   await SpecialPowers.popPrefEnv();
 });
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["signon.generation.available", true],
@@ -44,7 +44,7 @@ add_task(async function test_hidden_by_prefs() {
       gBrowser,
       url: TEST_ORIGIN + FORM_PAGE_PATH,
     },
-    async function(browser) {
+    async function (browser) {
       await SimpleTest.promiseFocus(browser.ownerGlobal);
 
       await openPasswordContextMenu(browser, passwordInputSelector);
@@ -72,7 +72,7 @@ add_task(async function test_fill_hidden_by_login_saving_disabled() {
       gBrowser,
       url: TEST_ORIGIN + FORM_PAGE_PATH,
     },
-    async function(browser) {
+    async function (browser) {
       await SimpleTest.promiseFocus(browser.ownerGlobal);
 
       await openPasswordContextMenu(browser, passwordInputSelector);
@@ -101,7 +101,7 @@ add_task(async function test_fill_hidden_by_locked_primary_password() {
       gBrowser,
       url: TEST_ORIGIN + FORM_PAGE_PATH,
     },
-    async function(browser) {
+    async function (browser) {
       await SimpleTest.promiseFocus(browser.ownerGlobal);
 
       await openPasswordContextMenu(
@@ -135,7 +135,7 @@ add_task(async function fill_generated_password_empty_field() {
       gBrowser,
       url: TEST_ORIGIN + FORM_PAGE_PATH,
     },
-    async function(browser) {
+    async function (browser) {
       await SimpleTest.promiseFocus(browser.ownerGlobal);
       await SpecialPowers.spawn(
         browser,
@@ -201,7 +201,7 @@ add_task(async function fill_generated_password_nonempty_field() {
       gBrowser,
       url: TEST_ORIGIN + FORM_PAGE_PATH,
     },
-    async function(browser) {
+    async function (browser) {
       await SimpleTest.promiseFocus(browser.ownerGlobal);
       await changeContentFormValues(browser, {
         [passwordInputSelector]: "aa",
@@ -260,7 +260,7 @@ add_task(async function fill_generated_password_with_matching_logins() {
     "passwordmgr-storage-changed",
     (_, data) => data == "addLogin"
   );
-  Services.logins.addLogin(login);
+  await Services.logins.addLoginAsync(login);
   await storageChangedPromised;
 
   let formFilled = listenForTestNotification("FormProcessed");
@@ -270,7 +270,7 @@ add_task(async function fill_generated_password_with_matching_logins() {
       gBrowser,
       url: TEST_ORIGIN + FORM_PAGE_PATH,
     },
-    async function(browser) {
+    async function (browser) {
       await SimpleTest.promiseFocus(browser.ownerGlobal);
       await formFilled;
       await SpecialPowers.spawn(
@@ -316,7 +316,7 @@ add_task(async function fill_generated_password_with_matching_logins() {
       let passwordChangedPromise = ContentTask.spawn(
         browser,
         null,
-        async function() {
+        async function () {
           let passwordInput = content.document.getElementById(
             "form-basic-password"
           );
@@ -325,9 +325,8 @@ add_task(async function fill_generated_password_with_matching_logins() {
       );
 
       let popupMenu = document.getElementById("fill-login-popup");
-      let firstLoginItem = popupMenu.getElementsByClassName(
-        "context-login-item"
-      )[0];
+      let firstLoginItem =
+        popupMenu.getElementsByClassName("context-login-item")[0];
       firstLoginItem.doCommand();
 
       await passwordChangedPromise;
@@ -386,7 +385,7 @@ add_task(async function test_edited_generated_password_in_new_tab() {
       gBrowser,
       url: TEST_ORIGIN + FORM_PAGE_PATH,
     },
-    async function(browser) {
+    async function (browser) {
       await SimpleTest.promiseFocus(browser.ownerGlobal);
       await SpecialPowers.spawn(
         browser,
@@ -450,7 +449,7 @@ add_task(async function test_edited_generated_password_in_new_tab() {
       gBrowser,
       url: TEST_ORIGIN + FORM_PAGE_PATH,
     },
-    async function(browser) {
+    async function (browser) {
       await SimpleTest.promiseFocus(browser.ownerGlobal);
 
       await doFillGeneratedPasswordContextMenuItem(

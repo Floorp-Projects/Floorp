@@ -60,7 +60,7 @@ class BodyConsumer final : public nsIObserver,
    * @param aRv An ErrorResult.
    */
   static already_AddRefed<Promise> Create(
-      nsIGlobalObject* aGlobal, nsIEventTarget* aMainThreadEventTarget,
+      nsIGlobalObject* aGlobal, nsISerialEventTarget* aMainThreadEventTarget,
       nsIInputStream* aBodyStream, AbortSignalImpl* aSignalImpl,
       ConsumeType aType, const nsACString& aBodyBlobURISpec,
       const nsAString& aBodyLocalPath, const nsACString& aBodyMimeType,
@@ -94,7 +94,7 @@ class BodyConsumer final : public nsIObserver,
   void RunAbortAlgorithm() override;
 
  private:
-  BodyConsumer(nsIEventTarget* aMainThreadEventTarget,
+  BodyConsumer(nsISerialEventTarget* aMainThreadEventTarget,
                nsIGlobalObject* aGlobalObject, nsIInputStream* aBodyStream,
                Promise* aPromise, ConsumeType aType,
                const nsACString& aBodyBlobURISpec,
@@ -109,7 +109,7 @@ class BodyConsumer final : public nsIObserver,
   void AssertIsOnTargetThread() const;
 
   nsCOMPtr<nsIThread> mTargetThread;
-  nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
+  nsCOMPtr<nsISerialEventTarget> mMainThreadEventTarget;
 
   // This is nullified when the consuming of the body starts.
   nsCOMPtr<nsIInputStream> mBodyStream;

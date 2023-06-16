@@ -31,7 +31,7 @@ add_task(async function connect_from_tab_to_bg_and_crash_tab() {
     },
 
     files: {
-      "contentscript.js": function() {
+      "contentscript.js": function () {
         let port = browser.runtime.connect({ name: "tab_to_bg" });
         port.onDisconnect.addListener(() => {
           browser.test.fail("Unexpected onDisconnect event in content script");
@@ -82,7 +82,7 @@ add_task(async function connect_from_bg_to_tab_and_crash_tab() {
     },
 
     files: {
-      "contentscript.js": function() {
+      "contentscript.js": function () {
         browser.runtime.onConnect.addListener(port => {
           browser.test.assertEq("bg_to_tab", port.name, "expected port");
           port.onDisconnect.addListener(() => {

@@ -155,8 +155,7 @@ async function promptNoDelegateScreenSharing(aThirdPartyOrgin) {
 
 var gTests = [
   {
-    desc:
-      "'Always Allow' enabled on third party pages, when origin is explicitly allowed",
+    desc: "'Always Allow' enabled on third party pages, when origin is explicitly allowed",
     run: async function checkNoAlwaysOnThirdParty() {
       // Initially set both permissions to 'prompt'.
       const uri = gBrowser.selectedBrowser.documentURI;
@@ -209,8 +208,7 @@ var gTests = [
     },
   },
   {
-    desc:
-      "'Always Allow' disabled when sharing screen in third party iframes, when origin is explicitly allowed",
+    desc: "'Always Allow' disabled when sharing screen in third party iframes, when origin is explicitly allowed",
     run: async function checkScreenSharing() {
       const observerPromise = expectObserverCalled("getUserMedia:request");
       const promise = promisePopupNotificationShown("webRTC-shareDevices");
@@ -602,8 +600,7 @@ var gTests = [
     },
   },
   {
-    desc:
-      "Don't reprompt while actively sharing in maybe unsafe permission delegation",
+    desc: "Don't reprompt while actively sharing in maybe unsafe permission delegation",
     run: async function checkNoRepromptNoDelegate() {
       // Change location to ensure that we're treated as potentially unsafe.
       await promiseChangeLocationFrame(
@@ -667,8 +664,7 @@ var gTests = [
     },
   },
   {
-    desc:
-      "Change location, prompt and display both first party and third party origin in maybe unsafe permission delegation",
+    desc: "Change location, prompt and display both first party and third party origin in maybe unsafe permission delegation",
     run: async function checkPromptNoDelegateChangeLoxation() {
       await promiseChangeLocationFrame(
         "frame4",
@@ -678,8 +674,7 @@ var gTests = [
     },
   },
   {
-    desc:
-      "Change location, prompt and display both first party and third party origin when sharing screen in unsafe permission delegation",
+    desc: "Change location, prompt and display both first party and third party origin when sharing screen in unsafe permission delegation",
     run: async function checkPromptNoDelegateScreenSharingChangeLocation() {
       await promiseChangeLocationFrame(
         "frame4",
@@ -689,8 +684,7 @@ var gTests = [
     },
   },
   {
-    desc:
-      "Prompt and display both first party and third party origin and temporary deny in frame does not change permission scope",
+    desc: "Prompt and display both first party and third party origin and temporary deny in frame does not change permission scope",
     skipObserverVerification: true,
     run: async function checkPromptBothOriginsTempDenyFrame() {
       // Change location to ensure that we're treated as potentially unsafe.

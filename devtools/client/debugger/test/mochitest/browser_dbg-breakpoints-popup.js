@@ -23,7 +23,7 @@ const POPUP_DEBUGGER_STATEMENT_URL = `https://example.com/document-builder.sjs?h
 `)}`;
 
 function isPopupPaused(popupBrowsingContext) {
-  return SpecialPowers.spawn(popupBrowsingContext, [], function(url) {
+  return SpecialPowers.spawn(popupBrowsingContext, [], function (url) {
     return content.wrappedJSObject.paused;
   });
 }
@@ -36,7 +36,7 @@ async function openPopup(popupUrl, browser = gBrowser.selectedBrowser) {
   const popupBrowsingContext = await SpecialPowers.spawn(
     browser,
     [popupUrl],
-    function(url) {
+    function (url) {
       const popup = content.open(url);
       return popup.browsingContext;
     }
@@ -55,7 +55,7 @@ async function closePopup(browsingContext) {
     gBrowser.tabContainer,
     "TabSelect"
   );
-  await SpecialPowers.spawn(browsingContext, [], function() {
+  await SpecialPowers.spawn(browsingContext, [], function () {
     content.close();
   });
   await onPreviousTabSelected;

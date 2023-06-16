@@ -26,11 +26,8 @@ export class SimpleSnippet extends React.PureComponent {
         id: this.props.UISurface,
       });
     }
-    const {
-      button_url,
-      button_entrypoint_value,
-      button_entrypoint_name,
-    } = this.props.content;
+    const { button_url, button_entrypoint_value, button_entrypoint_name } =
+      this.props.content;
     // If button_url is defined handle it as OPEN_URL action
     const type = this.props.content.button_action || (button_url && "OPEN_URL");
     // Assign the snippet referral for the action
@@ -124,7 +121,7 @@ export class SimpleSnippet extends React.PureComponent {
   }
 
   wrapSectionHeader(url) {
-    return function(children) {
+    return function (children) {
       return <a href={url}>{children}</a>;
     };
   }

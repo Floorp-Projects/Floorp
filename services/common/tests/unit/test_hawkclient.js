@@ -242,12 +242,12 @@ add_task(async function test_offset_in_hawk_header() {
   let method = "GET";
 
   let server = httpd_setup({
-    "/first": function(request, response) {
+    "/first": function (request, response) {
       response.setStatusLine(request.httpVersion, 200, "OK");
       response.bodyOutputStream.write(message, message.length);
     },
 
-    "/second": function(request, response) {
+    "/second": function (request, response) {
       // We see a better date now in the ts component of the header
       let delta = getTimestampDelta(request.getHeader("Authorization"));
 
@@ -315,7 +315,7 @@ add_task(async function test_retry_request_on_fail() {
   let method = "GET";
 
   let server = httpd_setup({
-    "/maybe": function(request, response) {
+    "/maybe": function (request, response) {
       // This path should be hit exactly twice; once with a bad timestamp, and
       // again when the client retries the request with a corrected timestamp.
       attempts += 1;
@@ -368,7 +368,7 @@ add_task(async function test_multiple_401_retry_once() {
   let method = "GET";
 
   let server = httpd_setup({
-    "/maybe": function(request, response) {
+    "/maybe": function (request, response) {
       // This path should be hit exactly twice; once with a bad timestamp, and
       // again when the client retries the request with a corrected timestamp.
       attempts += 1;
@@ -413,7 +413,7 @@ add_task(async function test_500_no_retry() {
   let method = "GET";
 
   let server = httpd_setup({
-    "/no-shutup": function(request, response) {
+    "/no-shutup": function (request, response) {
       let message = "Cannot get ye flask.";
       response.setStatusLine(request.httpVersion, 500, "Internal server error");
       response.bodyOutputStream.write(message, message.length);
@@ -452,7 +452,7 @@ add_task(async function test_401_then_500() {
   let method = "GET";
 
   let server = httpd_setup({
-    "/maybe": function(request, response) {
+    "/maybe": function (request, response) {
       // This path should be hit exactly twice; once with a bad timestamp, and
       // again when the client retries the request with a corrected timestamp.
       attempts += 1;

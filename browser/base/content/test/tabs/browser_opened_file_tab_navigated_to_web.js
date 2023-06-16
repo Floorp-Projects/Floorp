@@ -6,7 +6,7 @@ const TEST_FILE = "dummy_page.html";
 const WEB_ADDRESS = "http://example.org/";
 
 // Test for bug 1321020.
-add_task(async function() {
+add_task(async function () {
   let dir = getChromeDir(getResolvedURI(gTestPath));
   dir.append(TEST_FILE);
 
@@ -19,7 +19,7 @@ add_task(async function() {
 
   // Open first file:// page.
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, uriString);
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     BrowserTestUtils.removeTab(tab);
   });
 
@@ -34,7 +34,7 @@ add_task(async function() {
   });
 
   let openedTab = await promiseTabOpened;
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     BrowserTestUtils.removeTab(openedTab);
   });
 

@@ -32,6 +32,7 @@
 #include "vm/Scope.h"                 // for ScopeKind, ScopeKindString
 #include "vm/StringType.h"            // for JSAtom
 
+#include "gc/StableCellHasher-inl.h"
 #include "vm/Compartment-inl.h"        // for Compartment::wrap
 #include "vm/EnvironmentObject-inl.h"  // for JSObject::enclosingEnvironment
 #include "vm/JSObject-inl.h"  // for IsInternalFunctionObject, NewObjectWithGivenProtoAndKind

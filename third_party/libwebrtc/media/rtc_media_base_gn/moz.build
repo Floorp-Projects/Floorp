@@ -31,8 +31,6 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
-    "/third_party/libwebrtc/media/base/codec.cc",
-    "/third_party/libwebrtc/media/base/media_constants.cc",
     "/third_party/libwebrtc/media/base/video_adapter.cc",
     "/third_party/libwebrtc/media/base/video_broadcaster.cc",
     "/third_party/libwebrtc/media/base/video_common.cc",
@@ -94,7 +92,6 @@ if CONFIG["OS_TARGET"] == "Linux":
     DEFINES["__STDC_FORMAT_MACROS"] = True
 
     OS_LIBS += [
-        "dl",
         "rt"
     ]
 

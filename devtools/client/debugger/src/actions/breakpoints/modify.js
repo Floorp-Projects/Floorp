@@ -4,7 +4,7 @@
 
 import { createBreakpoint } from "../../client/firefox/create";
 import {
-  makeBreakpointLocation,
+  makeBreakpointServerLocation,
   makeBreakpointId,
 } from "../../utils/breakpoint";
 import {
@@ -15,6 +15,9 @@ import {
   getBreakpointsList,
   getPendingBreakpointList,
   isMapScopesEnabled,
+  getBlackBoxRanges,
+  isSourceMapIgnoreListEnabled,
+  isSourceOnSourceMapIgnoreList,
 } from "../../selectors";
 
 import { setBreakpointPositions } from "./breakpointPositions";
@@ -23,7 +26,7 @@ import { setSkipPausing } from "../pause/skipPausing";
 import { PROMISE } from "../utils/middleware/promise";
 import { recordEvent } from "../../utils/telemetry";
 import { comparePosition } from "../../utils/location";
-import { getTextAtPosition } from "../../utils/source";
+import { getTextAtPosition, isLineBlackboxed } from "../../utils/source";
 import { getMappedScopesForLocation } from "../pause/mapScopes";
 import { validateNavigateContext } from "../../utils/context";
 
@@ -57,7 +60,7 @@ async function clientSetBreakpoint(
   { getState, dispatch },
   breakpoint
 ) {
-  const breakpointLocation = makeBreakpointLocation(
+  const breakpointServerLocation = makeBreakpointServerLocation(
     getState(),
     breakpoint.generatedLocation
   );
@@ -69,19 +72,35 @@ async function clientSetBreakpoint(
   if (shouldMapBreakpointExpressions) {
     breakpoint = await dispatch(updateBreakpointSourceMapping(cx, breakpoint));
   }
-  return client.setBreakpoint(breakpointLocation, breakpoint.options);
+  return client.setBreakpoint(breakpointServerLocation, breakpoint.options);
 }
 
 function clientRemoveBreakpoint(client, state, generatedLocation) {
-  const breakpointLocation = makeBreakpointLocation(state, generatedLocation);
-  return client.removeBreakpoint(breakpointLocation);
+  const breakpointServerLocation = makeBreakpointServerLocation(
+    state,
+    generatedLocation
+  );
+  return client.removeBreakpoint(breakpointServerLocation);
 }
 
 export function enableBreakpoint(cx, initialBreakpoint) {
   return thunkArgs => {
     const { dispatch, getState, client } = thunkArgs;
-    const breakpoint = getBreakpoint(getState(), initialBreakpoint.location);
-    if (!breakpoint || !breakpoint.disabled) {
+    const state = getState();
+    const breakpoint = getBreakpoint(state, initialBreakpoint.location);
+    const blackboxedRanges = getBlackBoxRanges(state);
+    const isSourceOnIgnoreList =
+      isSourceMapIgnoreListEnabled(state) &&
+      isSourceOnSourceMapIgnoreList(state, breakpoint.location.source);
+    if (
+      !breakpoint ||
+      !breakpoint.disabled ||
+      isLineBlackboxed(
+        blackboxedRanges[breakpoint.location.source.url],
+        breakpoint.location.line,
+        isSourceOnIgnoreList
+      )
+    ) {
       return null;
     }
 
@@ -109,8 +128,7 @@ export function addBreakpoint(
     await dispatch(
       setBreakpointPositions({
         cx,
-        sourceId: initialLocation.source.id,
-        line: initialLocation.line,
+        location: initialLocation,
       })
     );
 
@@ -147,7 +165,6 @@ export function addBreakpoint(
     const id = makeBreakpointId(location);
     const breakpoint = createBreakpoint({
       id,
-      thread: generatedLocation.source.thread,
       disabled,
       options,
       location,
@@ -210,8 +227,8 @@ export function removeBreakpoint(cx, initialBreakpoint) {
  * Remove all installed, pending, and client breakpoints associated with a
  * target generated location.
  *
- * @memberof actions/breakpoints
- * @static
+ * @param {Object} target
+ *        Location object where to remove breakpoints.
  */
 export function removeBreakpointAtGeneratedLocation(cx, target) {
   return ({ dispatch, getState, client }) => {
@@ -240,8 +257,8 @@ export function removeBreakpointAtGeneratedLocation(cx, target) {
 
     // Remove any remaining pending breakpoints matching the generated location.
     const pending = getPendingBreakpointList(getState());
-    for (const breakpoint of pending) {
-      const { generatedLocation } = breakpoint;
+    for (const pendingBreakpoint of pending) {
+      const { generatedLocation } = pendingBreakpoint;
       if (
         generatedLocation.sourceUrl == target.sourceUrl &&
         comparePosition(generatedLocation, target)
@@ -249,7 +266,7 @@ export function removeBreakpointAtGeneratedLocation(cx, target) {
         dispatch({
           type: "REMOVE_PENDING_BREAKPOINT",
           cx,
-          breakpoint,
+          pendingBreakpoint,
         });
       }
     }

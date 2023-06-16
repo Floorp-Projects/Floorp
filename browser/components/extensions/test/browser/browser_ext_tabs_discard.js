@@ -9,7 +9,7 @@ add_task(async function test_discarded() {
       permissions: ["tabs"],
     },
 
-    background: async function() {
+    background: async function () {
       let tabs = await browser.tabs.query({ currentWindow: true });
       tabs.sort((tab1, tab2) => tab1.index - tab2.index);
 
@@ -52,7 +52,7 @@ add_task(async function test_discarded() {
         browser.test.notifyPass("test-finished");
       }
 
-      browser.tabs.onUpdated.addListener(async function(tabId, updatedInfo) {
+      browser.tabs.onUpdated.addListener(async function (tabId, updatedInfo) {
         if ("discarded" in updatedInfo) {
           browser.test.assertEq(
             tabId,

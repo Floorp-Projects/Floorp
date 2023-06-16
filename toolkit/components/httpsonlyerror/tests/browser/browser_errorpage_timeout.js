@@ -23,7 +23,7 @@ const TIMEOUT_PAGE_URI_HTTPS =
   TEST_PATH_HTTPS + "file_errorpage_timeout_server.sjs";
 
 add_task(async function avoid_timeout_and_show_https_only_error_page() {
-  await BrowserTestUtils.withNewTab("about:blank", async function(browser) {
+  await BrowserTestUtils.withNewTab("about:blank", async function (browser) {
     let loaded = BrowserTestUtils.browserLoaded(
       browser,
       false, // includeSubFrames = false, no need to includeSubFrames
@@ -33,7 +33,7 @@ add_task(async function avoid_timeout_and_show_https_only_error_page() {
     BrowserTestUtils.loadURIString(browser, TIMEOUT_PAGE_URI_HTTP);
     await loaded;
 
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       const doc = content.document;
       let errorPage = doc.body.innerHTML;
       // It's possible that fluent has not been translated when running in

@@ -18,7 +18,7 @@ add_task(async function copy_toolbar_shortcut() {
 
   library.PlacesOrganizer.selectLeftPaneBuiltIn("BookmarksToolbar");
 
-  await promiseClipboard(function() {
+  await promiseClipboard(function () {
     library.PlacesOrganizer._places.controller.copy();
   }, PlacesUtils.TYPE_X_MOZ_PLACE);
 
@@ -60,7 +60,7 @@ add_task(async function copy_mobile_shortcut() {
     PlacesUtils.bookmarks.virtualMobileGuid,
   ]);
 
-  await promiseClipboard(function() {
+  await promiseClipboard(function () {
     library.PlacesOrganizer._places.controller.copy();
   }, PlacesUtils.TYPE_X_MOZ_PLACE);
 
@@ -89,7 +89,7 @@ add_task(async function copy_history_query() {
 
   library.PlacesOrganizer.selectLeftPaneBuiltIn("History");
 
-  await promiseClipboard(function() {
+  await promiseClipboard(function () {
     library.PlacesOrganizer._places.controller.copy();
   }, PlacesUtils.TYPE_X_MOZ_PLACE);
 

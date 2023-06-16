@@ -182,11 +182,11 @@ const HELPER_SHEET =
 exports.DEFAULT_VALUE_SUMMARY_LENGTH = 50;
 var gValueSummaryLength = exports.DEFAULT_VALUE_SUMMARY_LENGTH;
 
-exports.getValueSummaryLength = function() {
+exports.getValueSummaryLength = function () {
   return gValueSummaryLength;
 };
 
-exports.setValueSummaryLength = function(val) {
+exports.setValueSummaryLength = function (val) {
   gValueSummaryLength = val;
 };
 
@@ -2458,7 +2458,17 @@ class WalkerActor extends Actor {
    * document fragment
    */
   _isInDOMTree(rawNode) {
-    const walker = this.getDocumentWalker(rawNode);
+    let walker;
+    try {
+      walker = this.getDocumentWalker(rawNode);
+    } catch (e) {
+      // The DocumentWalker may throw NS_ERROR_ILLEGAL_VALUE when the node isn't found as a legit children of its parent
+      // ex: <iframe> manually added as immediate child of another <iframe>
+      if (e.name == "NS_ERROR_ILLEGAL_VALUE") {
+        return false;
+      }
+      throw e;
+    }
     let current = walker.currentNode;
 
     // Reaching the top of tree

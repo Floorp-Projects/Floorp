@@ -455,7 +455,7 @@ const TEST_DATA = [
   },
 ];
 
-add_task(function() {
+add_task(function () {
   // Enable unit conversion.
   Services.prefs.setBoolPref("browser.urlbar.unitConversion.enabled", true);
   registerCleanupFunction(() => {

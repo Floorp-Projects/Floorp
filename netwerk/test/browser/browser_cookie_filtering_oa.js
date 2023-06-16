@@ -41,8 +41,8 @@ async function test_origin_attributes() {
   // open a tab with altered OA: userContextId
   let t4 = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
-    opening: (function() {
-      return function() {
+    opening: (function () {
+      return function () {
         // info("calling addTab from lambda");
         gBrowser.selectedTab = BrowserTestUtils.addTab(
           gBrowser,
@@ -103,10 +103,11 @@ async function test_private() {
   let privateBrowserWindow = await BrowserTestUtils.openNewBrowserWindow({
     private: true,
   });
-  let privateTab = (privateBrowserWindow.gBrowser.selectedTab = BrowserTestUtils.addTab(
-    privateBrowserWindow.gBrowser,
-    browserTestPath(HTTPS_EXAMPLE_COM)
-  ));
+  let privateTab = (privateBrowserWindow.gBrowser.selectedTab =
+    BrowserTestUtils.addTab(
+      privateBrowserWindow.gBrowser,
+      browserTestPath(HTTPS_EXAMPLE_COM)
+    ));
   let testStruct5 = {
     name: "private example.com",
     browser: privateBrowserWindow.gBrowser.getBrowserForTab(privateTab),

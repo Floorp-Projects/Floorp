@@ -3,7 +3,7 @@
 const INSTALL_PAGE = `${BASE}/file_install_extensions.html`;
 const INSTALL_XPI = `${BASE}/browser_webext_permissions.xpi`;
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["extensions.webapi.testing", true],
@@ -29,7 +29,7 @@ add_task(async function test_tab_switch_dismiss() {
     AddonManager.addInstallListener(listener);
   });
 
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [INSTALL_XPI], function(url) {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [INSTALL_XPI], function (url) {
     content.wrappedJSObject.installMozAM(url);
   });
 
@@ -70,7 +70,7 @@ add_task(async function test_add_tab_by_user_and_switch() {
   };
   AddonManager.addInstallListener(listener);
 
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [INSTALL_XPI], function(url) {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [INSTALL_XPI], function (url) {
     content.wrappedJSObject.installMozAM(url);
   });
 

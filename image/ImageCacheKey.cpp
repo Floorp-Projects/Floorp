@@ -29,17 +29,14 @@ using namespace dom;
 
 namespace image {
 
-ImageCacheKey::ImageCacheKey(nsIURI* aURI, const OriginAttributes& aAttrs,
+ImageCacheKey::ImageCacheKey(nsIURI* aURI, CORSMode aCORSMode,
+                             const OriginAttributes& aAttrs,
                              Document* aDocument)
     : mURI(aURI),
       mOriginAttributes(aAttrs),
       mControlledDocument(GetSpecialCaseDocumentToken(aDocument)),
       mIsolationKey(GetIsolationKey(aDocument, aURI)),
-      mIsChrome(false) {
-  if (mURI->SchemeIs("chrome")) {
-    mIsChrome = true;
-  }
-}
+      mCORSMode(aCORSMode) {}
 
 ImageCacheKey::ImageCacheKey(const ImageCacheKey& aOther)
     : mURI(aOther.mURI),
@@ -47,7 +44,7 @@ ImageCacheKey::ImageCacheKey(const ImageCacheKey& aOther)
       mControlledDocument(aOther.mControlledDocument),
       mIsolationKey(aOther.mIsolationKey),
       mHash(aOther.mHash),
-      mIsChrome(aOther.mIsChrome) {}
+      mCORSMode(aOther.mCORSMode) {}
 
 ImageCacheKey::ImageCacheKey(ImageCacheKey&& aOther)
     : mURI(std::move(aOther.mURI)),
@@ -55,7 +52,7 @@ ImageCacheKey::ImageCacheKey(ImageCacheKey&& aOther)
       mControlledDocument(aOther.mControlledDocument),
       mIsolationKey(aOther.mIsolationKey),
       mHash(aOther.mHash),
-      mIsChrome(aOther.mIsChrome) {}
+      mCORSMode(aOther.mCORSMode) {}
 
 bool ImageCacheKey::operator==(const ImageCacheKey& aOther) const {
   // Don't share the image cache between a controlled document and anything
@@ -71,6 +68,10 @@ bool ImageCacheKey::operator==(const ImageCacheKey& aOther) const {
   }
   // The origin attributes always have to match.
   if (mOriginAttributes != aOther.mOriginAttributes) {
+    return false;
+  }
+
+  if (mCORSMode != aOther.mCORSMode) {
     return false;
   }
 

@@ -12,7 +12,7 @@
 // eslint-disable-next-line no-undef
 _profileInitialized = true;
 
-add_task(async function() {
+add_task(async function () {
   const testFile = do_get_file("xpcshell_debugging_script.js");
 
   // _setupDevToolsServer is from xpcshell-test's head.js

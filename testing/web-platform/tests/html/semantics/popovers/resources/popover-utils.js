@@ -18,7 +18,7 @@ async function clickOn(element) {
 async function sendTab() {
   await waitForRender();
   const kTab = '\uE004';
-  await new test_driver.send_keys(document.body,kTab);
+  await new test_driver.send_keys(document.documentElement,kTab);
   await waitForRender();
 }
 // Waiting for crbug.com/893480:
@@ -36,35 +36,66 @@ async function sendTab() {
 // }
 async function sendEscape() {
   await waitForRender();
-  await new test_driver.send_keys(document.body,'\uE00C'); // Escape
+  await new test_driver.send_keys(document.documentElement,'\uE00C'); // Escape
   await waitForRender();
 }
 async function sendEnter() {
   await waitForRender();
-  await new test_driver.send_keys(document.body,'\uE007'); // Enter
+  await new test_driver.send_keys(document.documentElement,'\uE007'); // Enter
   await waitForRender();
 }
 function isElementVisible(el) {
   return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
 }
+function isTopLayer(el) {
+  // A bit of a hack. Just test a few properties of the ::backdrop pseudo
+  // element that change when in the top layer.
+  const properties = ['right','background'];
+  const testEl = document.createElement('div');
+  document.body.appendChild(testEl);
+  const computedStyle = getComputedStyle(testEl, '::backdrop');
+  const nonTopLayerValues = properties.map(p => computedStyle[p]);
+  testEl.remove();
+  for(let i=0;i<properties.length;++i) {
+    if (getComputedStyle(el,'::backdrop')[properties[i]] !== nonTopLayerValues[i]) {
+      return true;
+    }
+  }
+  return false;
+}
 async function finishAnimations(popover) {
   popover.getAnimations({subtree: true}).forEach(animation => animation.finish());
   await waitForRender();
 }
-let mouseOverStarted;
+let mousemoveInfo;
 function mouseOver(element) {
-  mouseOverStarted = performance.now();
+  mousemoveInfo?.controller?.abort();
+  const controller = new AbortController();
+  mousemoveInfo = {element, controller, moved: false, started: performance.now()};
   return (new test_driver.Actions())
     .pointerMove(0, 0, {origin: element})
-    .send();
+    .send()
+    .then(() => {
+      document.addEventListener("mousemove", (e) => {mousemoveInfo.moved = true;}, {signal: controller.signal});
+    })
 }
 function msSinceMouseOver() {
-  return performance.now() - mouseOverStarted;
+  return performance.now() - mousemoveInfo.started;
+}
+function assertMouseStillOver(element) {
+  assert_equals(mousemoveInfo.element, element, 'Broken test harness');
+  assert_false(mousemoveInfo.moved,'Broken test harness');
 }
 async function waitForHoverTime(hoverWaitTimeMs) {
   await new Promise(resolve => step_timeout(resolve,hoverWaitTimeMs));
   await waitForRender();
 };
+async function mouseHover(element,hoverWaitTimeMs) {
+  await mouseOver(element);
+  await waitForHoverTime(hoverWaitTimeMs);
+  assertMouseStillOver(element);
+}
+
 async function blessTopLayer(visibleElement) {
   // The normal "bless" function doesn't work well when there are top layer
   // elements blocking clicks. Additionally, since the normal test_driver.bless
@@ -137,10 +168,10 @@ function assertIsFunctionalPopover(popover, checkVisibility) {
   assertPopoverVisibility(popover, /*isPopover*/true, /*expectedVisibility*/false, 'A popover should start out hidden');
   popover.showPopover();
   if (checkVisibility) assertPopoverVisibility(popover, /*isPopover*/true, /*expectedVisibility*/true, 'After showPopover(), a popover should be visible');
-  assert_throws_dom("InvalidStateError",() => popover.showPopover(),'Calling showPopover on a showing popover should throw InvalidStateError');
+  popover.showPopover(); // Calling showPopover on a showing popover should not throw.
   popover.hidePopover();
   if (checkVisibility) assertPopoverVisibility(popover, /*isPopover*/true, /*expectedVisibility*/false, 'After hidePopover(), a popover should be hidden');
-  assert_throws_dom("InvalidStateError",() => popover.hidePopover(),'Calling hidePopover on a hidden popover should throw InvalidStateError');
+  popover.hidePopover(); // Calling hidePopover on a hidden popover should not throw.
   popover.togglePopover();
   if (checkVisibility) assertPopoverVisibility(popover, /*isPopover*/true, /*expectedVisibility*/true, 'After togglePopover() on hidden popover, it should be visible');
   popover.togglePopover();
@@ -156,7 +187,7 @@ function assertIsFunctionalPopover(popover, checkVisibility) {
   const parent = popover.parentElement;
   popover.remove();
   assert_throws_dom("InvalidStateError",() => popover.showPopover(),'Calling showPopover on a disconnected popover should throw InvalidStateError');
-  assert_throws_dom("InvalidStateError",() => popover.hidePopover(),'Calling hidePopover on a disconnected popover should throw InvalidStateError');
+  popover.hidePopover(); // Calling hidePopover on a disconnected popover should not throw.
   assert_throws_dom("InvalidStateError",() => popover.togglePopover(),'Calling hidePopover on a disconnected popover should throw InvalidStateError');
   parent.appendChild(popover);
 }

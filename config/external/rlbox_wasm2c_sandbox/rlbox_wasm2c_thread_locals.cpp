@@ -8,6 +8,8 @@
 // For MOZ_CRASH_UNSAFE_PRINTF
 #  include "mozilla/Assertions.h"
 
+#  include "mozilla/mozalloc_oom.h"
+
 // Load general firefox configuration of RLBox
 #  include "mozilla/rlbox/rlbox_config.h"
 #  include "mozilla/rlbox/rlbox_wasm2c_tls.hpp"
@@ -33,6 +35,13 @@ void moz_wasm2c_trap_handler(wasm_rt_trap_t code) {
 void moz_wasm2c_memgrow_failed() {
   CrashReporter::AnnotateCrashReport(
       CrashReporter::Annotation::WasmLibrarySandboxMallocFailed, true);
+}
+
+// This function is called when mozalloc_handle_oom is called from within
+// the sandbox. We redirect to that function, ignoring the ctx argument, which
+// is the sandbox itself.
+void w2c_env_mozalloc_handle_oom(void* ctx, uint32_t size) {
+  mozalloc_handle_oom(size);
 }
 }
 

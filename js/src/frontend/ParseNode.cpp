@@ -16,7 +16,7 @@
 #include "frontend/Parser.h"      // ParserBase
 #include "frontend/ParserAtom.h"  // ParserAtomsTable, TaggedParserAtomIndex
 #include "frontend/SharedContext.h"
-#include "vm/Printer.h"
+#include "js/Printer.h"
 #include "vm/Scope.h"  // GetScopeDataTrailingNames
 
 using namespace js;

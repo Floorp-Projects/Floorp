@@ -7,8 +7,8 @@
 
 "use strict";
 
-const { SiteDataTestUtils } = ChromeUtils.import(
-  "resource://testing-common/SiteDataTestUtils.jsm"
+const { SiteDataTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/SiteDataTestUtils.sys.mjs"
 );
 
 // Ensure iframe.src in storage-dfpi.html starts with PREFIX.
@@ -25,7 +25,7 @@ function listOrigins() {
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   await pushPref(
     "network.cookie.cookieBehavior",
     Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN

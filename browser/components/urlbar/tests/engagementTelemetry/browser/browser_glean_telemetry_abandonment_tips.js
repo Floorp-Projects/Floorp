@@ -10,7 +10,7 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-add_setup(async function() {
+add_setup(async function () {
   Services.fog.setMetricsFeatureConfig(
     JSON.stringify({ "urlbar.abandonment": false })
   );
@@ -22,8 +22,7 @@ add_setup(async function() {
     ],
   });
   const engine = await SearchTestUtils.promiseNewSearchEngine({
-    url:
-      "chrome://mochitests/content/browser/browser/components/urlbar/tests/browser/searchSuggestionEngine.xml",
+    url: "chrome://mochitests/content/browser/browser/components/urlbar/tests/browser/searchSuggestionEngine.xml",
   });
   const originalDefaultEngine = await Services.search.getDefault();
   await Services.search.setDefault(
@@ -32,7 +31,7 @@ add_setup(async function() {
   );
   await Services.search.moveEngine(engine, 0);
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     Services.fog.setMetricsFeatureConfig("{}");
     await SpecialPowers.popPrefEnv();
     await Services.search.setDefault(

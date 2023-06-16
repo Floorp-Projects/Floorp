@@ -271,6 +271,15 @@ const startupPhases = {
       condition: WIN,
       stat: 1,
     },
+    {
+      // bug 1833104 has context - this is artifact-only so doesn't affect
+      // any real users, will just show up for developer builds and
+      // artifact trypushes so we include it here.
+      path: "GreD:jogfile.json",
+      condition:
+        WIN && Services.prefs.getBoolPref("telemetry.fog.artifact_build"),
+      stat: 1,
+    },
   ],
 
   // We reach this phase right after showing the first browser window.
@@ -303,8 +312,16 @@ const startupPhases = {
     {
       // We only hit this for new profiles.
       path: "XREAppDist:distribution.ini",
-      condition: WIN,
+      // check we're not msix to disambiguate from the next entry...
+      condition: WIN && !Services.sysinfo.getProperty("hasWinPackageId"),
       stat: 1,
+    },
+    {
+      // On MSIX, we actually read this file - bug 1833341.
+      path: "XREAppDist:distribution.ini",
+      condition: WIN && Services.sysinfo.getProperty("hasWinPackageId"),
+      stat: 1,
+      read: 1,
     },
     {
       // bug 1545139
@@ -390,6 +407,34 @@ const startupPhases = {
       close: 1,
     },
     {
+      path: "XREAppFeat:webcompat-reporter@mozilla.org.xpi",
+      condition: !WIN,
+      ignoreIfUnused: true,
+      stat: 1,
+      close: 1,
+    },
+    {
+      // Bug 1660582 - access while running on windows10 hardware.
+      path: "ProfD:wmfvpxvideo.guard",
+      condition: WIN,
+      ignoreIfUnused: true,
+      stat: 1,
+      close: 1,
+    },
+    {
+      // Bug 1649590
+      path: "ProfD:extensions",
+      ignoreIfUnused: true,
+      condition: WIN,
+      stat: 1,
+    },
+  ],
+
+  // Things that are expected to be completely out of the startup path
+  // and loaded lazily when used for the first time by the user should
+  // be listed here.
+  "before becoming idle": [
+    {
       // bug 1370516 - NSS should be initialized off main thread.
       path: `ProfD:cert9.db`,
       condition: WIN,
@@ -418,49 +463,21 @@ const startupPhases = {
       // bug 1370516 - NSS should be initialized off main thread.
       path: `ProfD:key4.db`,
       condition: WIN,
-      read: 8,
+      read: 10,
       stat: AppConstants.NIGHTLY_BUILD ? 5 : 4,
     },
     {
       // bug 1370516 - NSS should be initialized off main thread.
       path: `ProfD:key4.db-journal`,
       condition: WIN,
-      stat: 5,
+      stat: 7,
     },
     {
       // bug 1370516 - NSS should be initialized off main thread.
       path: `ProfD:key4.db-wal`,
       condition: WIN,
-      stat: 5,
+      stat: 7,
     },
-    {
-      path: "XREAppFeat:webcompat-reporter@mozilla.org.xpi",
-      condition: !WIN,
-      ignoreIfUnused: true,
-      stat: 1,
-      close: 1,
-    },
-    {
-      // Bug 1660582 - access while running on windows10 hardware.
-      path: "ProfD:wmfvpxvideo.guard",
-      condition: WIN,
-      ignoreIfUnused: true,
-      stat: 1,
-      close: 1,
-    },
-    {
-      // Bug 1649590
-      path: "ProfD:extensions",
-      ignoreIfUnused: true,
-      condition: WIN,
-      stat: 1,
-    },
-  ],
-
-  // Things that are expected to be completely out of the startup path
-  // and loaded lazily when used for the first time by the user should
-  // be listed here.
-  "before becoming idle": [
     {
       path: "XREAppFeat:screenshots@mozilla.org.xpi",
       ignoreIfUnused: true,
@@ -539,16 +556,6 @@ const startupPhases = {
       read: 8,
       stat: 4,
       write: 1300,
-    },
-    {
-      path: `ProfD:key4.db-journal`,
-      condition: WIN,
-      stat: 2,
-    },
-    {
-      path: `ProfD:key4.db-wal`,
-      condition: WIN,
-      stat: 2,
     },
     {
       path: "ProfD:",
@@ -630,7 +637,7 @@ function pathMatches(path, filename) {
   );
 }
 
-add_task(async function() {
+add_task(async function () {
   if (
     !AppConstants.NIGHTLY_BUILD &&
     !AppConstants.MOZ_DEV_EDITION &&
@@ -646,8 +653,8 @@ add_task(async function() {
 
   TestUtils.assertPackagedBuild();
 
-  let startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"].getService()
-    .wrappedJSObject;
+  let startupRecorder =
+    Cc["@mozilla.org/test/startuprecorder;1"].getService().wrappedJSObject;
   await startupRecorder.done;
 
   // Add system add-ons to the list of known IO dynamically.
@@ -684,9 +691,8 @@ add_task(async function() {
     for (let m of profile.markers.data) {
       let markerName = profile.stringTable[m[nameCol]];
       if (markerName.startsWith("startupRecorder:")) {
-        phases[
-          markerName.split("startupRecorder:")[1]
-        ] = markersForCurrentPhase;
+        phases[markerName.split("startupRecorder:")[1]] =
+          markersForCurrentPhase;
         markersForCurrentPhase = [];
         continue;
       }

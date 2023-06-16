@@ -17,7 +17,7 @@ Services.scriptloader.loadSubScript(
 const TAB_URL_1 = "data:text/html,<title>TAB1</title>";
 const TAB_URL_2 = "data:text/html,<title>TAB2</title>";
 
-add_task(async function() {
+add_task(async function () {
   info("Force all debug target panes to be expanded");
   prepareCollapsibilitiesTest();
 
@@ -34,9 +34,8 @@ add_task(async function() {
     thisFirefoxString,
     document
   );
-  const thisFirefoxLink = thisFirefoxSidebarItem.querySelector(
-    ".qa-sidebar-link"
-  );
+  const thisFirefoxLink =
+    thisFirefoxSidebarItem.querySelector(".qa-sidebar-link");
   ok(thisFirefoxSidebarItem, "Found the ThisFirefox sidebar item");
   ok(
     isSidebarItemSelected(thisFirefoxSidebarItem),

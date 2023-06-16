@@ -8,12 +8,12 @@
 
 let MockFilePicker = SpecialPowers.MockFilePicker;
 MockFilePicker.init(window);
-add_task(async function() {
+add_task(async function () {
   // This URL will redirect to doggy.png.
   const URL_FIREBIRD =
     "http://mochi.test:8888/browser/toolkit/content/tests/browser/firebird.png";
 
-  await BrowserTestUtils.withNewTab(URL_FIREBIRD, async function(browser) {
+  await BrowserTestUtils.withNewTab(URL_FIREBIRD, async function (browser) {
     // Click image to show context menu.
     let popupShownPromise = BrowserTestUtils.waitForEvent(
       document,
@@ -30,7 +30,7 @@ add_task(async function() {
     let showFilePickerPromise = new Promise(resolve => {
       MockFilePicker.showCallback = fp => resolve(fp.defaultString);
     });
-    registerCleanupFunction(function() {
+    registerCleanupFunction(function () {
       MockFilePicker.cleanup();
     });
 

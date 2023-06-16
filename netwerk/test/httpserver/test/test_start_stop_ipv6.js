@@ -8,11 +8,11 @@
  * Tests for correct behavior of the server start_ipv6() and stop() methods.
  */
 
-XPCOMUtils.defineLazyGetter(this, "PORT", function() {
+XPCOMUtils.defineLazyGetter(this, "PORT", function () {
   return srv.identity.primaryPort;
 });
 
-XPCOMUtils.defineLazyGetter(this, "PREPATH", function() {
+XPCOMUtils.defineLazyGetter(this, "PREPATH", function () {
   return "http://localhost:" + PORT;
 });
 
@@ -40,7 +40,7 @@ function run_test() {
   }
 
   do_test_pending();
-  srv.stop(function() {
+  srv.stop(function () {
     try {
       do_test_pending();
       run_test_2();
@@ -91,7 +91,7 @@ function run_test_3() {
 
   do_test_pending();
   try {
-    srv.stop().then(function() {
+    srv.stop().then(function () {
       try {
         do_test_pending();
         run_test_4();
@@ -139,10 +139,10 @@ function handle(request, response) {
   dumpn("*** stopping server...");
   srv.stop(serverStopped);
 
-  callLater(INTERVAL, function() {
+  callLater(INTERVAL, function () {
     Assert.ok(!stopped);
 
-    callLater(INTERVAL, function() {
+    callLater(INTERVAL, function () {
       Assert.ok(!stopped);
       response.finish();
 

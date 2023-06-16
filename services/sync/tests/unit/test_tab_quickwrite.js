@@ -70,7 +70,7 @@ add_task(async function test_tab_bad_status() {
   // Store the original lock to reset it back after this test
   let lock = engine.lock;
   // Arrange for this test to fail if it tries to take the lock.
-  engine.lock = function() {
+  engine.lock = function () {
     throw new Error("this test should abort syncing before locking");
   };
   let quickWrite = engine.quickWrite.bind(engine); // lol javascript.
@@ -180,7 +180,7 @@ add_task(async function test_tab_quickWrite_telemetry() {
   telem.payloads = [];
   let oldSubmit = telem.submit;
   let submitPromise = new Promise((resolve, reject) => {
-    telem.submit = function(ping) {
+    telem.submit = function (ping) {
       telem.submit = oldSubmit;
       resolve(ping);
     };

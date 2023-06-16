@@ -26,7 +26,7 @@ function* testSteps() {
     request = objectStore.add({});
     request.onerror = errorHandler;
     if (!i) {
-      request.onsuccess = function(event) {
+      request.onsuccess = function (event) {
         firstKey = event.target.result;
       };
     }
@@ -37,12 +37,9 @@ function* testSteps() {
 
   let seenEntryCount = 0;
 
-  request = db
-    .transaction("foo")
-    .objectStore("foo")
-    .openCursor();
+  request = db.transaction("foo").objectStore("foo").openCursor();
   request.onerror = errorHandler;
-  request.onsuccess = function(event) {
+  request.onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       seenEntryCount++;
@@ -56,18 +53,13 @@ function* testSteps() {
   is(seenEntryCount, entryCount, "Correct entry count");
 
   try {
-    db.transaction("foo")
-      .objectStore("foo")
-      .clear();
+    db.transaction("foo").objectStore("foo").clear();
     ok(false, "clear should throw on READ_ONLY transactions");
   } catch (e) {
     ok(true, "clear should throw on READ_ONLY transactions");
   }
 
-  request = db
-    .transaction("foo", "readwriteflush")
-    .objectStore("foo")
-    .clear();
+  request = db.transaction("foo", "readwriteflush").objectStore("foo").clear();
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield undefined;
@@ -76,12 +68,9 @@ function* testSteps() {
   ok(request.result === undefined, "Correct request.result");
   ok(request === event.target, "Correct event.target");
 
-  request = db
-    .transaction("foo")
-    .objectStore("foo")
-    .openCursor();
+  request = db.transaction("foo").objectStore("foo").openCursor();
   request.onerror = errorHandler;
-  request.onsuccess = function(event) {
+  request.onsuccess = function (event) {
     let cursor = request.result;
     if (cursor) {
       ok(false, "Shouldn't have any entries");
@@ -90,10 +79,7 @@ function* testSteps() {
   };
   yield undefined;
 
-  request = db
-    .transaction("foo", "readwrite")
-    .objectStore("foo")
-    .add({});
+  request = db.transaction("foo", "readwrite").objectStore("foo").add({});
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield undefined;

@@ -16,7 +16,7 @@ XPCOMUtils.defineLazyGetter(this, "oneOffSearchButtons", () => {
   return UrlbarTestUtils.getOneOffSearchButtons(window);
 });
 
-add_setup(async function() {
+add_setup(async function () {
   gMaxResults = Services.prefs.getIntPref("browser.urlbar.maxRichResults");
 
   // Add a search suggestion engine and move it to the front so that it appears
@@ -34,7 +34,7 @@ add_setup(async function() {
     ],
   });
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.history.clear();
     await UrlbarTestUtils.formHistory.clear();
   });

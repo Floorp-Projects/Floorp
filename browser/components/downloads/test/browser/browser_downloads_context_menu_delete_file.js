@@ -35,7 +35,7 @@ async function createDownloadFiles() {
 
 add_setup(startServer);
 
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   await task_resetState();
   await PlacesUtils.history.clear();
 });
@@ -43,7 +43,6 @@ registerCleanupFunction(async function() {
 add_task(async function test_download_deleteFile() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.download.improvements_to_download_panel", true],
       ["browser.download.always_ask_before_handling_new_types", false],
       ["browser.download.alwaysOpenPanel", false],
       ["browser.download.clearHistoryOnDelete", 2],
@@ -211,7 +210,7 @@ add_task(async function test_about_downloads_deleteFile_for_history_download() {
   await Promise.all([promiseFileAnnotation, promiseMetaAnnotation]);
 
   let win = await openLibrary("Downloads");
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     win?.close();
   });
 

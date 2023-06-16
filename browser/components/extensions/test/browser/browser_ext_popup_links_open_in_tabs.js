@@ -23,7 +23,7 @@ add_task(async function test_popup_links_open_tabs() {
             <a href="https://example.com/popup-page-link">popup page link</a>
           </body>
         </html>`,
-      "popup.js": function() {
+      "popup.js": function () {
         window.onload = () => {
           browser.test.sendMessage("from-popup", "popup-a");
         };

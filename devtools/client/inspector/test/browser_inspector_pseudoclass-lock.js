@@ -18,14 +18,10 @@ const TEST_URL =
   "  </div>" +
   "</body>";
 
-add_task(async function() {
+add_task(async function () {
   info("Creating the test tab and opening the rule-view");
-  let {
-    tab,
-    toolbox,
-    inspector,
-    highlighterTestFront,
-  } = await openInspectorForURL(TEST_URL);
+  let { tab, toolbox, inspector, highlighterTestFront } =
+    await openInspectorForURL(TEST_URL);
 
   info("Selecting the ruleview sidebar");
   inspector.sidebar.select("ruleview");

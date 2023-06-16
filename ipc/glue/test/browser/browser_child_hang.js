@@ -17,14 +17,14 @@
 // [*] Also sanitizer and code coverage builds.
 //
 
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
       url: "https://example.com/",
       forceNewProcess: true,
     },
-    async function(browser) {
+    async function (browser) {
       // browser.frameLoader.remoteTab.osPid is the child pid; once we
       // have a way to get notifications about child process termination
       // events, that could be useful.

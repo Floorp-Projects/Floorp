@@ -2,11 +2,13 @@
   "data": [
     {
       "webExtension": {
-        "id":"telemetrySearchIdentifier@search.mozilla.org"
+        "id": "telemetrySearchIdentifier@search.mozilla.org"
       },
-      "appliesTo": [{
-        "included": { "everywhere": true }
-      }]
+      "appliesTo": [
+        {
+          "included": { "everywhere": true }
+        }
+      ]
     }
   ]
 }

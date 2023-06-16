@@ -71,7 +71,7 @@ class GeolocationTest : BaseSessionTest() {
         sessionRule.delegateDuringNextWait(object : GeckoSession.PermissionDelegate {
             override fun onContentPermissionRequest(
                 session: GeckoSession,
-                perm: GeckoSession.PermissionDelegate.ContentPermission
+                perm: GeckoSession.PermissionDelegate.ContentPermission,
             ):
                 GeckoResult<Int> {
                 return GeckoResult.fromValue(GeckoSession.PermissionDelegate.ContentPermission.VALUE_ALLOW)
@@ -79,7 +79,7 @@ class GeolocationTest : BaseSessionTest() {
             override fun onAndroidPermissionsRequest(
                 session: GeckoSession,
                 permissions: Array<out String>?,
-                callback: GeckoSession.PermissionDelegate.Callback
+                callback: GeckoSession.PermissionDelegate.Callback,
             ) {
                 callback.grant()
             }
@@ -98,7 +98,7 @@ class GeolocationTest : BaseSessionTest() {
                         error => reject(error.code),
                         {maximumAge: $maximumAge,
                          timeout: $timeout,
-                         enableHighAccuracy: $enableHighAccuracy }))"""
+                         enableHighAccuracy: $enableHighAccuracy }))""",
         ).value as JSONObject
     }
 
@@ -111,7 +111,7 @@ class GeolocationTest : BaseSessionTest() {
                         position => resolve(
                             {latitude: position.coords.latitude, longitude:  position.coords.longitude})),
                         error => reject(error.code)
-                }, "750"))"""
+                }, "750"))""",
         ).value as JSONObject
     }
 

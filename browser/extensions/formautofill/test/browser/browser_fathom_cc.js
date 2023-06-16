@@ -62,8 +62,8 @@ async function run_test(path, dirs) {
         browser,
         [{ eligibleElementSelector, file }],
         obj => {
-          const { FieldScanner } = ChromeUtils.importESModule(
-            "resource://gre/modules/shared/FieldScanner.sys.mjs"
+          const { FormAutofillHeuristics } = ChromeUtils.importESModule(
+            "resource://gre/modules/shared/FormAutofillHeuristics.sys.mjs"
           );
           const { FormAutofillUtils } = ChromeUtils.importESModule(
             "resource://gre/modules/shared/FormAutofillUtils.sys.mjs"
@@ -81,12 +81,10 @@ async function run_test(path, dirs) {
           let failedFields = [];
 
           info("Running CC fathom model");
-          let nativeConfidencesKeyedByType = ChromeUtils.getFormAutofillConfidences(
-            eligibleFields
-          );
-          let jsConfidencesKeyedByType = FieldScanner.getFormAutofillConfidences(
-            eligibleFields
-          );
+          let nativeConfidencesKeyedByType =
+            ChromeUtils.getFormAutofillConfidences(eligibleFields);
+          let jsConfidencesKeyedByType =
+            FormAutofillHeuristics.getFormAutofillConfidences(eligibleFields);
 
           if (eligibleFields.length != nativeConfidencesKeyedByType.length) {
             ok(
@@ -129,9 +127,12 @@ async function run_test(path, dirs) {
             )) {
               // Fix to 10 digit to ignore rounding error between js and c++.
               let nativeConfidence = confidence.toFixed(10);
-              let jsConfidence = jsConfidencesKeyedByType[i][
-                FormAutofillUtils.formAutofillConfidencesKeyToCCFieldType(type)
-              ].toFixed(10);
+              let jsConfidence =
+                jsConfidencesKeyedByType[i][
+                  FormAutofillUtils.formAutofillConfidencesKeyToCCFieldType(
+                    type
+                  )
+                ].toFixed(10);
               if (jsConfidence != nativeConfidence) {
                 info(
                   `${obj.file}: Element(id=${eligibleFields[i].id} doesn't have the same confidence value when rule type is ${type}`

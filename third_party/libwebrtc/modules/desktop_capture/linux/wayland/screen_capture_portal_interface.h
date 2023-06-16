@@ -35,7 +35,7 @@ using SessionClosedSignalHandler = void (*)(GDBusConnection*,
 // Note: downstream clients inherit from this class so it is advisable to
 // provide a default implementation of any new virtual methods that may be added
 // to this class.
-class ScreenCapturePortalInterface {
+class RTC_EXPORT ScreenCapturePortalInterface {
  public:
   virtual ~ScreenCapturePortalInterface() {}
   // Gets details about the session such as session handle.

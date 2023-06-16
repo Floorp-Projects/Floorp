@@ -7,7 +7,7 @@
  * Bug 863102 - Automatically scroll down upon new network requests.
  * edited to account for changes made to fix Bug 1360457
  */
-add_task(async function() {
+add_task(async function () {
   requestLongerTimeout(4);
 
   const { tab, monitor } = await initNetMonitor(INFINITE_GET_URL, {
@@ -67,7 +67,7 @@ add_task(async function() {
   is(requestsContainer.scrollTop, headersHeight, "Did not scroll.");
 
   // Stop doing requests.
-  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function () {
     content.wrappedJSObject.stopRequests();
   });
 

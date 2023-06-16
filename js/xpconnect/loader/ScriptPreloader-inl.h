@@ -135,7 +135,7 @@ class HashElemIter {
       return *this;
     }
 
-    bool operator!=(Elem& other) {
+    bool operator!=(Elem& other) const {
       return done_ != other.done_ || this->get() != other.get();
     }
   };

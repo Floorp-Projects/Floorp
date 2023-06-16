@@ -391,14 +391,7 @@ void TextureHost::RecycleTexture(TextureFlags aFlags) {
   mFlags = aFlags;
 }
 
-void TextureHost::PrepareForUse() {
-  if ((mFlags & TextureFlags::REMOTE_TEXTURE) && AsSurfaceTextureHost()) {
-    MOZ_ASSERT(mExternalImageId.isSome());
-    // Call PrepareForUse on render thread.
-    // See RenderAndroidSurfaceTextureHostOGL::PrepareForUse.
-    wr::RenderThread::Get()->PrepareForUse(*mExternalImageId);
-  }
-}
+void TextureHost::PrepareForUse() {}
 
 void TextureHost::NotifyNotUsed() {
   if (!mActor) {

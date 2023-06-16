@@ -21,7 +21,7 @@ const RULERS_MAX_Y_AXIS = 15000;
 // currently the unit is in pixel.
 const RULERS_TEXT_STEP = 100;
 
-add_task(async function() {
+add_task(async function () {
   const { inspector, highlighterTestFront } = await openInspectorForURL(
     TEST_URL
   );

@@ -25,6 +25,11 @@ interface nsIURLQueryStringStripper : nsISupports {
   // have been stripped or the feature is disabled.
   uint32_t strip(in nsIURI aURI, in bool aIsPBM, out nsIURI aOutput);
 
+  // Strip the query parameters that are in the stripForCopy/Share strip list.
+  // Returns ether the stripped URI or null if no query parameters have been stripped
+  // Thorws NS_ERROR_NOT_AVAILABLE if the feature is disabled.
+  [must_use] nsIURI stripForCopyOrShare(in nsIURI aURI);
+
   // Test-only method to get the current strip list.
   ACString testGetStripList();
 };

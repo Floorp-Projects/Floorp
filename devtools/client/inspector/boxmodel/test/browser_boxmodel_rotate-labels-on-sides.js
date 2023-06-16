@@ -31,7 +31,7 @@ const TEST_URI = encodeURIComponent(
 );
 const LONG_TEXT_ROTATE_LIMIT = 3;
 
-add_task(async function() {
+add_task(async function () {
   await addTab("data:text/html," + TEST_URI);
   const { inspector, boxmodel } = await openLayoutView();
   await selectNode("div", inspector);

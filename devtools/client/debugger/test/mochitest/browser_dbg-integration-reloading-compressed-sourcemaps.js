@@ -12,7 +12,7 @@
 
 requestLongerTimeout(10);
 
-add_task(async function() {
+add_task(async function () {
   const testFolder = "sourcemaps-reload-compressed";
   const isCompressed = true;
 

@@ -3,14 +3,10 @@
     "BlockAboutProfiles": true,
     "DontCheckDefaultBrowser": true,
 
-    "FlashPlugin": {
-      "Allow": [
-        "https://www.example.com"
-      ],
+    "InstallAddonsPermission": {
+      "Allow": ["https://www.example.com"],
 
-      "Block": [
-        "https://www.example.org"
-      ]
+      "Block": ["https://www.example.org"]
     },
 
     "CreateMasterPassword": false

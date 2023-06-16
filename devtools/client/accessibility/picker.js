@@ -16,12 +16,10 @@ class Picker {
 
     this.onPickerAccessibleHovered = this.onPickerAccessibleHovered.bind(this);
     this.onPickerAccessiblePicked = this.onPickerAccessiblePicked.bind(this);
-    this.onPickerAccessiblePreviewed = this.onPickerAccessiblePreviewed.bind(
-      this
-    );
-    this.onPickerAccessibleCanceled = this.onPickerAccessibleCanceled.bind(
-      this
-    );
+    this.onPickerAccessiblePreviewed =
+      this.onPickerAccessiblePreviewed.bind(this);
+    this.onPickerAccessibleCanceled =
+      this.onPickerAccessibleCanceled.bind(this);
   }
 
   get toolbox() {

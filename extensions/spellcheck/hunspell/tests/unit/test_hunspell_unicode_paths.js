@@ -17,7 +17,7 @@ const nsFile = Components.Constructor(
   "initWithPath"
 );
 
-add_task(async function() {
+add_task(async function () {
   let prof = do_get_profile();
 
   let basePath = PathUtils.join(prof.path, "\u263a", "dictionaries");

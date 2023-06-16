@@ -33,7 +33,7 @@ function attachConsoleToWorker(listeners) {
   return _attachConsole(listeners, true, true);
 }
 
-var _attachConsole = async function(listeners, attachToTab, attachToWorker) {
+var _attachConsole = async function (listeners, attachToTab, attachToWorker) {
   try {
     function waitForMessage(target) {
       return new Promise(resolve => {
@@ -123,7 +123,7 @@ function checkConsoleAPICalls(consoleCalls, expectedConsoleCalls) {
     expectedConsoleCalls.length,
     "received correct number of console calls"
   );
-  expectedConsoleCalls.forEach(function(message, index) {
+  expectedConsoleCalls.forEach(function (message, index) {
     info("checking received console call #" + index);
     checkConsoleAPICall(consoleCalls[index], expectedConsoleCalls[index]);
   });

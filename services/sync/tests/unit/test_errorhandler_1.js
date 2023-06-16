@@ -12,7 +12,7 @@ const fakeServer = new SyncServer();
 fakeServer.start();
 const fakeServerUrl = "http://localhost:" + fakeServer.port;
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   return promiseStopServer(fakeServer).finally(() => {
     Svc.Prefs.resetBranch("");
   });
@@ -284,13 +284,13 @@ add_task(async function test_info_collections_login_server_maintenance_error() {
   await configureIdentity({ username: "broken.info" }, server);
 
   let backoffInterval;
-  Svc.Obs.add("weave:service:backoff:interval", function observe(
-    subject,
-    data
-  ) {
-    Svc.Obs.remove("weave:service:backoff:interval", observe);
-    backoffInterval = subject;
-  });
+  Svc.Obs.add(
+    "weave:service:backoff:interval",
+    function observe(subject, data) {
+      Svc.Obs.remove("weave:service:backoff:interval", observe);
+      backoffInterval = subject;
+    }
+  );
 
   Assert.ok(!Status.enforceBackoff);
   Assert.equal(Status.service, STATUS_OK);
@@ -316,13 +316,13 @@ add_task(async function test_meta_global_login_server_maintenance_error() {
   await configureIdentity({ username: "broken.meta" }, server);
 
   let backoffInterval;
-  Svc.Obs.add("weave:service:backoff:interval", function observe(
-    subject,
-    data
-  ) {
-    Svc.Obs.remove("weave:service:backoff:interval", observe);
-    backoffInterval = subject;
-  });
+  Svc.Obs.add(
+    "weave:service:backoff:interval",
+    function observe(subject, data) {
+      Svc.Obs.remove("weave:service:backoff:interval", observe);
+      backoffInterval = subject;
+    }
+  );
 
   Assert.ok(!Status.enforceBackoff);
   Assert.equal(Status.service, STATUS_OK);

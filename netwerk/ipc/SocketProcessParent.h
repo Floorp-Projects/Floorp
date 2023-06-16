@@ -98,8 +98,6 @@ class SocketProcessParent final
       nsIURI* aPushedURL, OriginAttributes&& aOriginAttributes,
       nsCString&& aRequestString, CachePushCheckResolver&& aResolver);
 
-  mozilla::ipc::IPCResult RecvODoHServiceActivated(const bool& aActivated);
-
   mozilla::ipc::IPCResult RecvExcludeHttp2OrHttp3(
       const HttpConnectionInfoCloneArgs& aArgs);
   mozilla::ipc::IPCResult RecvOnConsoleMessage(const nsString& aMessage);

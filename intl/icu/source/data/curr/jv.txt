@@ -641,6 +641,7 @@ jv{
         }
     }
     Currencies%narrow{
+        BYN{"BYN"}
         VEF{"Bs"}
     }
     CurrencyPlurals{
@@ -913,6 +914,9 @@ jv{
         }
         MNT{
             other{"Tugrik Mongol"}
+        }
+        MOP{
+            other{"Pataca Macau"}
         }
         MRO{
             other{"Ouguiya Mauritania (1973 - 2017)"}

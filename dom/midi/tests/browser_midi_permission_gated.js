@@ -12,14 +12,22 @@ const PAGE_WITH_IFRAMES_URL = `https://example.org/document-builder.sjs?html=
     'https://example.net/document-builder.sjs?html=CrossOrigin"'
   )}"></iframe>`;
 
-const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
-ChromeUtils.defineModuleGetter(
-  this,
-  "AddonTestUtils",
-  "resource://testing-common/AddonTestUtils.jsm"
+const l10n = new Localization(
+  [
+    "browser/addonNotifications.ftl",
+    "toolkit/global/extensions.ftl",
+    "toolkit/global/extensionPermissions.ftl",
+    "branding/brand.ftl",
+  ],
+  true
 );
 
-add_setup(async function() {
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+ChromeUtils.defineESModuleGetters(this, {
+  AddonTestUtils: "resource://testing-common/AddonTestUtils.sys.mjs",
+});
+
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["midi.prompt.testing", false]],
   });
@@ -84,20 +92,18 @@ add_task(async function testRequestMIDIAccess() {
 
   info("Deny site permission addon install in first popup");
   let addonInstallPanel = await onAddonInstallBlockedNotification;
-  const [
-    installPopupHeader,
-    installPopupMessage,
-  ] = addonInstallPanel.querySelectorAll(
-    "description.popup-notification-description"
-  );
+  const [installPopupHeader, installPopupMessage] =
+    addonInstallPanel.querySelectorAll(
+      "description.popup-notification-description"
+    );
   is(
     installPopupHeader.textContent,
-    gNavigatorBundle.getString("sitePermissionInstallFirstPrompt.midi.header"),
+    l10n.formatValueSync("site-permission-install-first-prompt-midi-header"),
     "First popup has expected header text"
   );
   is(
     installPopupMessage.textContent,
-    gNavigatorBundle.getString("sitePermissionInstallFirstPrompt.midi.message"),
+    l10n.formatValueSync("site-permission-install-first-prompt-midi-message"),
     "First popup has expected message"
   );
 
@@ -143,19 +149,16 @@ add_task(async function testRequestMIDIAccess() {
   let installDialog = await dialogPromise;
   is(
     installDialog.querySelector(".popup-notification-description").textContent,
-    gNavigatorBundle.getFormattedString(
-      "webextSitePerms.headerWithGatedPerms.midi-sysex",
-      [testPageHost]
+    l10n.formatValueSync(
+      "webext-site-perms-header-with-gated-perms-midi-sysex",
+      { hostname: testPageHost }
     ),
     "Install dialog has expected header text"
   );
   is(
     installDialog.querySelector("popupnotificationcontent description")
       .textContent,
-    gNavigatorBundle.getFormattedString(
-      "webextSitePerms.descriptionGatedPerms.midi",
-      [testPageHost]
-    ),
+    l10n.formatValueSync("webext-site-perms-description-gated-perms-midi"),
     "Install dialog has expected description"
   );
 
@@ -267,7 +270,8 @@ add_task(async function testRequestMIDIAccess() {
     "addon-install-blocked"
   );
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-    content.midiNoSysexAccessRequestPromise = content.navigator.requestMIDIAccess();
+    content.midiNoSysexAccessRequestPromise =
+      content.navigator.requestMIDIAccess();
   });
 
   info("Accept site permission addon install");
@@ -289,19 +293,15 @@ add_task(async function testRequestMIDIAccess() {
 
   is(
     installDialog.querySelector(".popup-notification-description").textContent,
-    gNavigatorBundle.getFormattedString(
-      "webextSitePerms.headerWithGatedPerms.midi",
-      [testPageHost]
-    ),
+    l10n.formatValueSync("webext-site-perms-header-with-gated-perms-midi", {
+      hostname: testPageHost,
+    }),
     "Install dialog has expected header text"
   );
   is(
     installDialog.querySelector("popupnotificationcontent description")
       .textContent,
-    gNavigatorBundle.getFormattedString(
-      "webextSitePerms.descriptionGatedPerms.midi",
-      [testPageHost]
-    ),
+    l10n.formatValueSync("webext-site-perms-description-gated-perms-midi"),
     "Install dialog has expected description"
   );
 
@@ -410,8 +410,9 @@ add_task(async function testRequestMIDIAccess() {
   let denyIntervalElapsed = performance.now() - denyIntervalStart;
   ok(
     denyIntervalElapsed >= 3000,
-    `Rejection should be delayed by a randomized interval no less than 3 seconds (got ${denyIntervalElapsed /
-      1000} seconds)`
+    `Rejection should be delayed by a randomized interval no less than 3 seconds (got ${
+      denyIntervalElapsed / 1000
+    } seconds)`
   );
 
   // Invoking getAMTelemetryEvents resets the mocked event array, and we want
@@ -581,7 +582,7 @@ add_task(async function testIframeRequestMIDIAccess() {
 add_task(async function testRequestMIDIAccessLocalhost() {
   const httpServer = new HttpServer();
   httpServer.start(-1);
-  httpServer.registerPathHandler(`/test`, function(request, response) {
+  httpServer.registerPathHandler(`/test`, function (request, response) {
     response.setStatusLine(request.httpVersion, 200, "OK");
     response.write(`
       <!DOCTYPE html>

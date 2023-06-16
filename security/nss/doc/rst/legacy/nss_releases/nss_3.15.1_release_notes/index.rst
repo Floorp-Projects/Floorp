@@ -28,8 +28,6 @@ NSS 3.15.1 release notes
 `New in NSS 3.15.1 <#new_in_nss_3.15.1>`__
 ------------------------------------------
 
-.. container::
-
 .. _new_functionality:
 
 `New Functionality <#new_functionality>`__

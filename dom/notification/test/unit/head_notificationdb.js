@@ -31,7 +31,7 @@ var calendarNotification = getNotificationObject(
 
 // Helper to start the NotificationDB
 function startNotificationDB() {
-  ChromeUtils.import("resource://gre/modules/NotificationDB.jsm");
+  ChromeUtils.importESModule("resource://gre/modules/NotificationDB.sys.mjs");
 }
 
 // Helper function to add a listener, send message and treat the reply

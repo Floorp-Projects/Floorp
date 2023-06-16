@@ -108,9 +108,18 @@ MOZ_END_EXTERN_C
 
 #ifdef __cplusplus
 
-/* NB: This is defined just to silence vacuous warnings about symbol
- * visibility on OS X/gcc. These symbols are force-inline and not
- * exported. */
+/* NB: This is defined with MFBT_API just to silence vacuous warnings
+ * about symbol visibility on OS X/gcc.
+ * These symbols are force-inline mainly for performance reasons, and
+ * not exported. While the standard doesn't allow that, we are in a
+ * controlled environment where the issues the standard tries to
+ * prevent don't apply, and we can't end up in situations where
+ * operator new and operator delete are inconsistent. */
+#  ifdef __clang__
+#    pragma clang diagnostic push
+#    pragma clang diagnostic ignored "-Winline-new-delete"
+#  endif
+
 #  if defined(XP_MACOSX)
 #    define MOZALLOC_EXPORT_NEW MFBT_API MOZ_ALWAYS_INLINE_EVEN_DEBUG
 #  else
@@ -118,6 +127,9 @@ MOZ_END_EXTERN_C
 #  endif
 
 #  include "mozilla/cxxalloc.h"
+#  ifdef __clang__
+#    pragma clang diagnostic pop
+#  endif
 
 /*
  * This policy is identical to MallocAllocPolicy, except it uses

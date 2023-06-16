@@ -1002,22 +1002,8 @@ void PresShell::Init(nsPresContext* aPresContext, nsViewManager* aViewManager) {
   }
 
   if (nsCOMPtr<nsIDocShell> docShell = mPresContext->GetDocShell()) {
-    BrowsingContext* bc = docShell->GetBrowsingContext();
-    bool embedderFrameIsHidden = true;
-    if (Element* embedderElement = bc->GetEmbedderElement()) {
-      if (auto embedderFrame = embedderElement->GetPrimaryFrame()) {
-        embedderFrameIsHidden = !embedderFrame->StyleVisibility()->IsVisible();
-      }
-    }
-
-    if (BrowsingContext* parent = bc->GetParent()) {
-      if (nsCOMPtr<nsIDocShell> parentDocShell = parent->GetDocShell()) {
-        if (PresShell* parentPresShell = parentDocShell->GetPresShell()) {
-          mUnderHiddenEmbedderElement =
-              parentPresShell->IsUnderHiddenEmbedderElement() ||
-              embedderFrameIsHidden;
-        }
-      }
+    if (BrowsingContext* bc = docShell->GetBrowsingContext()) {
+      mUnderHiddenEmbedderElement = bc->IsUnderHiddenEmbedderElement();
     }
   }
 }
@@ -5288,15 +5274,6 @@ void AddDisplayItemToBottom(nsDisplayListBuilder* aBuilder,
   aList->AppendToTop(&list);
 }
 
-void PresShell::AddPrintPreviewBackgroundItem(nsDisplayListBuilder* aBuilder,
-                                              nsDisplayList* aList,
-                                              nsIFrame* aFrame,
-                                              const nsRect& aBounds) {
-  nsDisplayItem* item = MakeDisplayItem<nsDisplaySolidColor>(
-      aBuilder, aFrame, aBounds, NS_RGB(115, 115, 115));
-  AddDisplayItemToBottom(aBuilder, aList, item);
-}
-
 static bool AddCanvasBackgroundColor(const nsDisplayList* aList,
                                      nsIFrame* aCanvasFrame, nscolor aColor,
                                      bool aCSSBackgroundColor) {
@@ -5366,16 +5343,25 @@ void PresShell::AddCanvasBackgroundColorItem(
   // With async scrolling, we'd like to have two instances of the background
   // color: one that scrolls with the content (for the reasons stated above),
   // and one underneath which does not scroll with the content, but which can
-  // be shown during checkerboarding and overscroll.
+  // be shown during checkerboarding and overscroll and the dynamic toolbar
+  // movement.
   // We can only do that if the color is opaque.
   bool forceUnscrolledItem =
       nsLayoutUtils::UsesAsyncScrolling(aFrame) && NS_GET_A(bgcolor) == 255;
 
   if (!addedScrollingBackgroundColor || forceUnscrolledItem) {
+    const bool isRootContentDocumentCrossProcess =
+        mPresContext->IsRootContentDocumentCrossProcess();
+    MOZ_ASSERT_IF(
+        !aFrame->GetParent() && isRootContentDocumentCrossProcess &&
+            mPresContext->HasDynamicToolbar(),
+        aBounds.Size() ==
+            nsLayoutUtils::ExpandHeightForDynamicToolbar(
+                mPresContext, aFrame->InkOverflowRectRelativeToSelf().Size()));
+
     nsDisplaySolidColor* item = MakeDisplayItem<nsDisplaySolidColor>(
         aBuilder, aFrame, aBounds, bgcolor);
-    if (addedScrollingBackgroundColor &&
-        mPresContext->IsRootContentDocumentCrossProcess()) {
+    if (addedScrollingBackgroundColor && isRootContentDocumentCrossProcess) {
       item->SetIsCheckerboardBackground();
     }
     AddDisplayItemToBottom(aBuilder, aList, item);
@@ -5442,33 +5428,28 @@ PresShell::CanvasBackground PresShell::ComputeCanvasBackground() const {
   // If we have a frame tree and it has style information that
   // specifies the background color of the canvas, update our local
   // cache of that color.
-  nsIFrame* rootStyleFrame = FrameConstructor()->GetRootElementStyleFrame();
-  if (!rootStyleFrame) {
+  nsIFrame* canvas = GetCanvasFrame();
+  if (!canvas) {
     // If the root element of the document (ie html) has style 'display: none'
     // then the document's background color does not get drawn; return the color
     // we actually draw.
     return {GetDefaultBackgroundColorToDraw(), false};
   }
 
-  const ComputedStyle* bgStyle =
-      nsCSSRendering::FindRootFrameBackground(rootStyleFrame);
-  // XXX We should really be passing the canvasframe, not the root element
-  // style frame but we don't have access to the canvasframe here. It isn't
-  // a problem because only a few frames can return something other than true
-  // and none of them would be a canvas frame or root element style frame.
+  const nsIFrame* bgFrame = nsCSSRendering::FindBackgroundFrame(canvas);
   nscolor color = NS_RGBA(0, 0, 0, 0);
   bool drawBackgroundImage = false;
   bool drawBackgroundColor = false;
-  const nsStyleDisplay* disp = rootStyleFrame->StyleDisplay();
+  const nsStyleDisplay* disp = bgFrame->StyleDisplay();
   StyleAppearance appearance = disp->EffectiveAppearance();
-  if (rootStyleFrame->IsThemed(disp) &&
+  if (bgFrame->IsThemed(disp) &&
       appearance != StyleAppearance::MozWinBorderlessGlass) {
     // Ignore the CSS background-color if -moz-appearance is used and it is
     // not one of the glass values. (Windows 7 Glass has traditionally not
     // overridden background colors, so we preserve that behavior for now.)
   } else {
     color = nsCSSRendering::DetermineBackgroundColor(
-        mPresContext, bgStyle, rootStyleFrame, drawBackgroundImage,
+        mPresContext, bgFrame->Style(), canvas, drawBackgroundImage,
         drawBackgroundColor);
   }
   if (!IsTransparentContainerElement()) {
@@ -8614,7 +8595,8 @@ nsresult PresShell::EventHandler::DispatchEventToDOM(
     }
   }
   if (eventTarget) {
-    if (eventTarget->OwnerDoc()->ShouldResistFingerprinting() &&
+    if (eventTarget->OwnerDoc()->ShouldResistFingerprinting(
+            RFPTarget::Unknown) &&
         aEvent->IsBlockedForFingerprintingResistance()) {
       aEvent->mFlags.mOnlySystemGroupDispatchInContent = true;
     } else if (aEvent->mMessage == eKeyPress) {
@@ -9639,9 +9621,9 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
   // height was unconstrained to start with.
   nsRect boundsRelativeToTarget =
       nsRect(0, 0, desiredSize.Width(), desiredSize.Height());
-  NS_ASSERTION((isRoot && size.BSize(wm) == NS_UNCONSTRAINEDSIZE) ||
-                   (desiredSize.ISize(wm) == size.ISize(wm) &&
-                    desiredSize.BSize(wm) == size.BSize(wm)),
+  const bool isBSizeLimitReflow =
+      isRoot && size.BSize(wm) == NS_UNCONSTRAINEDSIZE;
+  NS_ASSERTION(isBSizeLimitReflow || desiredSize.Size(wm) == size,
                "non-root frame's desired size changed during an "
                "incremental reflow");
   NS_ASSERTION(status.IsEmpty(), "reflow roots should never split");
@@ -9665,7 +9647,7 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
     ScrollAnchorContainer* container = ScrollAnchorContainer::FindFor(target);
     PostPendingScrollAnchorAdjustment(container);
   }
-  if (isRoot && size.BSize(wm) == NS_UNCONSTRAINEDSIZE) {
+  if (MOZ_UNLIKELY(isBSizeLimitReflow)) {
     mPresContext->SetVisibleArea(boundsRelativeToTarget);
   }
 
@@ -11392,20 +11374,6 @@ nsSize PresShell::GetVisualViewportSizeUpdatedByDynamicToolbar() const {
 
 void PresShell::RecomputeFontSizeInflationEnabled() {
   mFontSizeInflationEnabled = DetermineFontSizeInflationState();
-
-  // Divide by 100 to convert the pref from a percentage to a fraction.
-  float fontScale = StaticPrefs::font_size_systemFontScale() / 100.0f;
-  if (fontScale == 0.0f) {
-    return;
-  }
-
-  MOZ_ASSERT(mDocument);
-  MOZ_ASSERT(mPresContext);
-  if (mFontSizeInflationEnabled || mDocument->IsSyntheticDocument()) {
-    mPresContext->SetSystemFontScale(1.0f);
-  } else {
-    mPresContext->SetSystemFontScale(fontScale);
-  }
 }
 
 bool PresShell::DetermineFontSizeInflationState() {
@@ -11626,52 +11594,6 @@ void PresShell::NotifyStyleSheetServiceSheetRemoved(StyleSheet* aSheet,
                                                     uint32_t aSheetType) {
   StyleSet()->RemoveStyleSheet(*aSheet);
   mDocument->ApplicableStylesChanged();
-}
-
-void PresShell::SetIsUnderHiddenEmbedderElement(
-    bool aUnderHiddenEmbedderElement) {
-  if (mUnderHiddenEmbedderElement == aUnderHiddenEmbedderElement) {
-    return;
-  }
-
-  mUnderHiddenEmbedderElement = aUnderHiddenEmbedderElement;
-
-  if (nsCOMPtr<nsIDocShell> docShell = mPresContext->GetDocShell()) {
-    BrowsingContext* bc = docShell->GetBrowsingContext();
-
-    // Propagate to children.
-    for (BrowsingContext* child : bc->Children()) {
-      Element* embedderElement = child->GetEmbedderElement();
-      if (!embedderElement) {
-        // TODO: We shouldn't need to null check here since `child` and the
-        // element returned by `child->GetEmbedderElement()` are in our
-        // process (the actual browsing context represented by `child` may not
-        // be, but that doesn't matter).  However, there are currently a very
-        // small number of crashes due to `embedderElement` being null, somehow
-        // - see bug 1551241.  For now we wallpaper the crash.
-        continue;
-      }
-
-      bool embedderFrameIsHidden = true;
-      if (auto embedderFrame = embedderElement->GetPrimaryFrame()) {
-        embedderFrameIsHidden = !embedderFrame->StyleVisibility()->IsVisible();
-      }
-
-      if (nsIDocShell* childDocShell = child->GetDocShell()) {
-        PresShell* presShell = childDocShell->GetPresShell();
-        if (!presShell) {
-          continue;
-        }
-        presShell->SetIsUnderHiddenEmbedderElement(
-            aUnderHiddenEmbedderElement || embedderFrameIsHidden);
-      } else {
-        BrowserBridgeChild* bridgeChild =
-            BrowserBridgeChild::GetFrom(embedderElement);
-        bridgeChild->SetIsUnderHiddenEmbedderElement(
-            aUnderHiddenEmbedderElement || embedderFrameIsHidden);
-      }
-    }
-  }
 }
 
 nsIContent* PresShell::EventHandler::GetOverrideClickTarget(

@@ -5,7 +5,7 @@
 "use strict";
 
 const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html>Test that eager evaluation can't log warnings in the output`;
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   setInputValue(hud, `document.getElementById("")`);

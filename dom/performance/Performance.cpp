@@ -6,6 +6,8 @@
 
 #include "Performance.h"
 
+#include <sstream>
+
 #include "GeckoProfiler.h"
 #include "nsRFPService.h"
 #include "PerformanceEntry.h"
@@ -26,6 +28,7 @@
 #include "mozilla/dom/PerformanceNavigationTiming.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/WorkerScope.h"
@@ -100,7 +103,8 @@ Performance::Performance(nsIGlobalObject* aGlobal)
       mPendingResourceTimingBufferFullEvent(false),
       mRTPCallerType(aGlobal->GetRTPCallerType()),
       mCrossOriginIsolated(aGlobal->CrossOriginIsolated()),
-      mShouldResistFingerprinting(aGlobal->ShouldResistFingerprinting()) {}
+      mShouldResistFingerprinting(
+          aGlobal->ShouldResistFingerprinting(RFPTarget::Unknown)) {}
 
 Performance::~Performance() = default;
 
@@ -567,6 +571,71 @@ DOMHighResTimeStamp Performance::ResolveStartTimeForMeasure(
   return startTime;
 }
 
+static std::string GetMarkerFilename() {
+  std::stringstream s;
+#ifdef XP_WIN
+  s << "marker-" << GetCurrentProcessId() << ".txt";
+#else
+  s << "marker-" << getpid() << ".txt";
+#endif
+  return s.str();
+}
+
+// This emits markers to an external marker-[pid].txt file for use by an
+// external profiler like samply or etw-gecko
+void Performance::MaybeEmitExternalProfilerMarker(
+    const nsAString& aName, Maybe<const PerformanceMeasureOptions&> aOptions,
+    Maybe<const nsAString&> aStartMark, const Optional<nsAString>& aEndMark) {
+  ErrorResult rv;
+  static FILE* markerFile = getenv("MOZ_USE_PERFORMANCE_MARKER_FILE")
+                                ? fopen(GetMarkerFilename().c_str(), "w+")
+                                : nullptr;
+  if (!markerFile) {
+    return;
+  }
+
+  const DOMHighResTimeStamp unclampedStartTime = ResolveStartTimeForMeasure(
+      aStartMark, aOptions, rv, /* aReturnUnclamped */ true);
+  if (NS_WARN_IF(rv.Failed())) {
+    return;
+  }
+  const DOMHighResTimeStamp unclampedEndTime =
+      ResolveEndTimeForMeasure(aEndMark, aOptions, rv, /* aReturnUnclamped */
+                               true);
+  if (NS_WARN_IF(rv.Failed())) {
+    return;
+  }
+
+  TimeStamp startTimeStamp =
+      CreationTimeStamp() + TimeDuration::FromMilliseconds(unclampedStartTime);
+  TimeStamp endTimeStamp =
+      CreationTimeStamp() + TimeDuration::FromMilliseconds(unclampedEndTime);
+
+#ifdef XP_LINUX
+  uint64_t rawStart = startTimeStamp.RawClockMonotonicNanosecondsSinceBoot();
+  uint64_t rawEnd = endTimeStamp.RawClockMonotonicNanosecondsSinceBoot();
+#elif XP_WIN
+  uint64_t rawStart = startTimeStamp.RawQueryPerformanceCounterValue().value();
+  uint64_t rawEnd = endTimeStamp.RawQueryPerformanceCounterValue().value();
+#elif XP_MACOSX
+  uint64_t rawStart = startTimeStamp.RawMachAbsoluteTimeValue();
+  uint64_t rawEnd = endTimeStamp.RawMachAbsoluteTimeValue();
+#else
+  uint64_t rawStart = 0;
+  uint64_t rawEnd = 0;
+  MOZ_CRASH("no timestamp");
+#endif
+  // Write a line for this measure to the marker file. The marker file uses a
+  // text-based format where every line is one marker, and each line has the
+  // format:
+  // `<raw_start_timestamp> <raw_end_timestamp> <measure_name>`
+  //
+  // The timestamp value is OS specific.
+  fprintf(markerFile, "%" PRIu64 " %" PRIu64 " %s\n", rawStart, rawEnd,
+          NS_ConvertUTF16toUTF8(aName).get());
+  fflush(markerFile);
+}
+
 already_AddRefed<PerformanceMeasure> Performance::Measure(
     JSContext* aCx, const nsAString& aName,
     const StringOrPerformanceMeasureOptions& aStartOrMeasureOptions,
@@ -642,6 +711,8 @@ already_AddRefed<PerformanceMeasure> Performance::Measure(
   RefPtr<PerformanceMeasure> performanceMeasure = new PerformanceMeasure(
       GetParentObject(), aName, startTime, endTime, detail);
   InsertUserEntry(performanceMeasure);
+
+  MaybeEmitExternalProfilerMarker(aName, options, startMark, aEndMark);
 
   if (profiler_thread_is_being_profiled_for_markers()) {
     const DOMHighResTimeStamp unclampedStartTime = ResolveStartTimeForMeasure(
@@ -954,7 +1025,10 @@ void Performance::QueueEntry(PerformanceEntry* aEntry) {
   }
 }
 
-void Performance::MemoryPressure() { mUserEntries.Clear(); }
+// We could clear User entries here, but doing so could break sites that call
+// performance.measure() if the marks disappeared without warning.   Chrome
+// allows "infinite" entries.
+void Performance::MemoryPressure() {}
 
 size_t Performance::SizeOfUserEntries(
     mozilla::MallocSizeOf aMallocSizeOf) const {

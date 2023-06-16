@@ -192,7 +192,7 @@ FxAccountsWebChannel.prototype = {
     const { command, data } = message;
     let shouldCheckRemoteType =
       lazy.separatePrivilegedMozillaWebContentProcess &&
-      lazy.separatedMozillaDomains.some(function(val) {
+      lazy.separatedMozillaDomains.some(function (val) {
         return (
           lazy.accountServer.asciiHost == val ||
           lazy.accountServer.asciiHost.endsWith("." + val)
@@ -254,7 +254,8 @@ FxAccountsWebChannel.prototype = {
               replaceQueryString: true,
               adoptIntoActiveWindow: true,
               ignoreFragment: "whenComparing",
-              triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+              triggeringPrincipal:
+                Services.scriptSecurityManager.getSystemPrincipal(),
             }
           );
           // close the tab
@@ -502,9 +503,8 @@ FxAccountsWebChannelHelpers.prototype = {
     }
 
     let browser = sendingContext.browsingContext.top.embedderElement;
-    const isPrivateBrowsing = this._privateBrowsingUtils.isBrowserPrivate(
-      browser
-    );
+    const isPrivateBrowsing =
+      this._privateBrowsingUtils.isBrowserPrivate(browser);
     log.debug("is private browsing", isPrivateBrowsing);
     return isPrivateBrowsing;
   },

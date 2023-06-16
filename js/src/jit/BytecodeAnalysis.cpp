@@ -238,46 +238,20 @@ void BytecodeAnalysis::checkWarpSupport(JSOp op) {
   }
 }
 
-IonBytecodeInfo js::jit::AnalyzeBytecodeForIon(JSContext* cx,
-                                               JSScript* script) {
-  IonBytecodeInfo result;
-
+bool js::jit::ScriptUsesEnvironmentChain(JSScript* script) {
   if (script->isModule() || script->initialEnvironmentShape() ||
       (script->function() &&
        script->function()->needsSomeEnvironmentObject())) {
-    result.usesEnvironmentChain = true;
+    return true;
   }
 
   AllBytecodesIterable iterator(script);
 
   for (const BytecodeLocation& location : iterator) {
-    switch (location.getOp()) {
-      case JSOp::SetArg:
-        result.modifiesArguments = true;
-        break;
-
-      case JSOp::GetName:
-      case JSOp::BindName:
-      case JSOp::BindVar:
-      case JSOp::SetName:
-      case JSOp::StrictSetName:
-      case JSOp::DelName:
-      case JSOp::GetAliasedVar:
-      case JSOp::SetAliasedVar:
-      case JSOp::Lambda:
-      case JSOp::PushLexicalEnv:
-      case JSOp::PopLexicalEnv:
-      case JSOp::PushVarEnv:
-      case JSOp::ImplicitThis:
-      case JSOp::FunWithProto:
-      case JSOp::GlobalOrEvalDeclInstantiation:
-        result.usesEnvironmentChain = true;
-        break;
-
-      default:
-        break;
+    if (OpUsesEnvironmentChain(location.getOp())) {
+      return true;
     }
   }
 
-  return result;
+  return false;
 }

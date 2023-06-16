@@ -180,33 +180,30 @@ LogicalSize nsTextControlFrame::CalcIntrinsicSize(
   LogicalSize intrinsicSize(aWM);
   RefPtr<nsFontMetrics> fontMet =
       nsLayoutUtils::GetFontMetricsForFrame(this, aFontSizeInflation);
-  nscoord lineHeight =
+  const nscoord lineHeight =
       ReflowInput::CalcLineHeight(*Style(), PresContext(), GetContent(),
                                   NS_UNCONSTRAINEDSIZE, aFontSizeInflation);
-  // Get leading and the Average/MaxAdvance char width
-  nscoord charWidth = fontMet->AveCharWidth();
-  nscoord charMaxAdvance = fontMet->MaxAdvance();
+  // Use the larger of the font's "average" char width or the width of the
+  // zero glyph (if present) as the basis for resolving the size attribute.
+  const nscoord charWidth =
+      std::max(fontMet->ZeroOrAveCharWidth(), fontMet->AveCharWidth());
+  const nscoord charMaxAdvance = fontMet->MaxAdvance();
 
-  // Set the width equal to the width in characters
-  int32_t cols = GetCols();
+  // Initialize based on the width in characters.
+  const int32_t cols = GetCols();
   intrinsicSize.ISize(aWM) = cols * charWidth;
 
-  // To better match IE, take the maximum character width(in twips) and remove
-  // 4 pixels add this on as additional padding(internalPadding). But only do
-  // this if we think we have a fixed-width font.
-  if (mozilla::Abs(charWidth - charMaxAdvance) >
-      (unsigned)nsPresContext::CSSPixelsToAppUnits(1)) {
+  // If we do not have what appears to be a fixed-width font, add a "slop"
+  // amount based on the max advance of the font (clamped to twice charWidth,
+  // because some fonts have a few extremely-wide outliers that would result
+  // in excessive width here; e.g. the triple-emdash ligature in SFNS Text),
+  // minus 4px. This helps avoid input fields becoming unusably narrow with
+  // small size values.
+  if (charMaxAdvance - charWidth > AppUnitsPerCSSPixel()) {
     nscoord internalPadding =
-        std::max(0, charMaxAdvance - nsPresContext::CSSPixelsToAppUnits(4));
-    nscoord t = nsPresContext::CSSPixelsToAppUnits(1);
-    // Round to a multiple of t
-    nscoord rest = internalPadding % t;
-    if (rest < t - rest) {
-      internalPadding -= rest;
-    } else {
-      internalPadding += t - rest;
-    }
-    // Now add the extra padding on (so that small input sizes work well)
+        std::max(0, std::min(charMaxAdvance, charWidth * 2) -
+                        nsPresContext::CSSPixelsToAppUnits(4));
+    internalPadding = RoundToMultiple(internalPadding, AppUnitsPerCSSPixel());
     intrinsicSize.ISize(aWM) += internalPadding;
   } else {
     // This is to account for the anonymous <br> having a 1 twip width

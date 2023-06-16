@@ -24,7 +24,7 @@ add_task(async function test_permission_prompt_for_request() {
       gBrowser,
       url: "http://example.com/",
     },
-    async function(browser) {
+    async function (browser) {
       const kTestNotificationID = "test-notification";
       const kTestMessage = "Test message";
       let mainAction = {
@@ -118,7 +118,7 @@ add_task(async function test_permission_prompt_for_popupOptions() {
       gBrowser,
       url: "http://example.com/",
     },
-    async function(browser) {
+    async function (browser) {
       const kTestNotificationID = "test-notification";
       const kTestMessage = "Test message";
       let mainAction = {
@@ -187,7 +187,7 @@ add_task(async function test_with_permission_key() {
       gBrowser,
       url: "http://example.com",
     },
-    async function(browser) {
+    async function (browser) {
       const kTestNotificationID = "test-notification";
       const kTestMessage = "Test message";
       const kTestPermissionKey = "test-permission-key";
@@ -214,7 +214,7 @@ add_task(async function test_with_permission_key() {
 
       let mockRequest = makeMockPermissionRequest(browser);
       let principal = mockRequest.principal;
-      registerCleanupFunction(function() {
+      registerCleanupFunction(function () {
         PermissionTestUtils.remove(principal.URI, kTestPermissionKey);
       });
       class TestPrompt extends PermissionUI.PermissionPromptForRequest {
@@ -401,7 +401,7 @@ add_task(async function test_on_before_show() {
       gBrowser,
       url: "http://example.com",
     },
-    async function(browser) {
+    async function (browser) {
       const kTestNotificationID = "test-notification";
       const kTestMessage = "Test message";
 
@@ -471,7 +471,7 @@ add_task(async function test_no_request() {
       gBrowser,
       url: "http://example.com",
     },
-    async function(browser) {
+    async function (browser) {
       const kTestNotificationID = "test-notification";
       let allowed = false;
       let mainAction = {
@@ -597,7 +597,7 @@ add_task(async function test_window_swap() {
       gBrowser,
       url: "http://example.com",
     },
-    async function(browser) {
+    async function (browser) {
       const kTestNotificationID = "test-notification";
       const kTestMessage = "Test message";
 

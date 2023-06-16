@@ -48,8 +48,8 @@ async function installRegularExtension(pathOrFile) {
  * Will use a mock file picker to select the file.
  */
 async function installTemporaryExtension(pathOrFile, name, document) {
-  const { Management } = ChromeUtils.import(
-    "resource://gre/modules/Extension.jsm"
+  const { Management } = ChromeUtils.importESModule(
+    "resource://gre/modules/Extension.sys.mjs"
   );
 
   info("Install temporary extension named " + name);
@@ -76,8 +76,8 @@ async function installTemporaryExtension(pathOrFile, name, document) {
 /* exported installTemporaryExtension */
 
 function createTemporaryXPI(xpiData) {
-  const { ExtensionTestCommon } = ChromeUtils.import(
-    "resource://testing-common/ExtensionTestCommon.jsm"
+  const { ExtensionTestCommon } = ChromeUtils.importESModule(
+    "resource://testing-common/ExtensionTestCommon.sys.mjs"
   );
 
   const { background, files, id, name, extraProperties } = xpiData;
@@ -186,8 +186,8 @@ function prepareMockFilePicker(pathOrFile) {
 /* exported prepareMockFilePicker */
 
 function promiseBackgroundContextEvent(extensionId, eventName) {
-  const { Management } = ChromeUtils.import(
-    "resource://gre/modules/Extension.jsm"
+  const { Management } = ChromeUtils.importESModule(
+    "resource://gre/modules/Extension.sys.mjs"
   );
 
   return new Promise(resolve => {

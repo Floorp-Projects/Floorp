@@ -6,14 +6,14 @@ const UPDATE_BEGIN = "safebrowsing-update-begin";
 const UPDATE_FINISH = "safebrowsing-update-finished";
 const JSLOG_PREF = "browser.safebrowsing.debug";
 
-window.onunload = function() {
+window.onunload = function () {
   Search.uninit();
   Provider.uninit();
   Cache.uninit();
   Debug.uninit();
 };
 
-window.onload = function() {
+window.onload = function () {
   Search.init();
   Provider.init();
   Cache.init();
@@ -429,7 +429,7 @@ var Cache = {
   createCacheEntries() {
     function createRow(tds, body, cols) {
       let tr = document.createElement("tr");
-      tds.forEach(function(v, i, a) {
+      tds.forEach(function (v, i, a) {
         let td = document.createElement("td");
         if (i == 0 && tds.length != cols) {
           td.setAttribute("colspan", cols - tds.length + 1);

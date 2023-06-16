@@ -64,7 +64,7 @@ function checkIntermediate(cert, expectedResult) {
   );
 }
 
-add_task(async function() {
+add_task(async function () {
   loadCertWithTrust("ca", "CTu,,");
 
   // Section for CAs lacking the basicConstraints extension entirely:

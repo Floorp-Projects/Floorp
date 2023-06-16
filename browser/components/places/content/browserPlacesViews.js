@@ -267,7 +267,8 @@ class PlacesViewBase {
         aPopup.triggerNode.id === "PlacesToolbarItems" ||
         aPopup.triggerNode.parentNode.id === "PlacesToolbarItems"
       ) {
-        let otherBookmarksMenuItem = BookmarkingUI.buildShowOtherBookmarksMenuItem();
+        let otherBookmarksMenuItem =
+          BookmarkingUI.buildShowOtherBookmarksMenuItem();
 
         if (otherBookmarksMenuItem) {
           aPopup.insertBefore(otherBookmarksMenuItem, menu.nextElementSibling);
@@ -891,9 +892,9 @@ class PlacesToolbar extends PlacesViewBase {
       ["_dropIndicator", "PlacesToolbarDropIndicator"],
       ["_chevron", "PlacesChevron"],
       ["_chevronPopup", "PlacesChevronPopup"],
-    ].forEach(function(elementGlobal) {
+    ].forEach(function (elementGlobal) {
       let [name, id] = elementGlobal;
-      thisView.__defineGetter__(name, function() {
+      thisView.__defineGetter__(name, function () {
         let element = document.getElementById(id);
         if (!element) {
           return null;
@@ -961,6 +962,10 @@ class PlacesToolbar extends PlacesViewBase {
 
   _openedMenuButton = null;
   _allowPopupShowing = true;
+
+  promiseRebuilt() {
+    return this._rebuilding?.promise;
+  }
 
   get _isAlive() {
     return this._resultNode && this._rootElt;
@@ -1036,12 +1041,12 @@ class PlacesToolbar extends PlacesViewBase {
       for (let i = startIndex; i < limit; ++i) {
         this._insertNewItem(this._resultNode.getChild(i), fragment);
       }
-      window.requestAnimationFrame(() => {
-        if (this._isAlive) {
-          this._rootElt.appendChild(fragment);
-          this.updateNodesVisibility();
-        }
-      });
+      await new Promise(resolve => window.requestAnimationFrame(resolve));
+      if (!this._isAlive) {
+        return;
+      }
+      this._rootElt.appendChild(fragment);
+      this.updateNodesVisibility();
     }
 
     if (this._chevronPopup.hasAttribute("type")) {
@@ -1055,7 +1060,7 @@ class PlacesToolbar extends PlacesViewBase {
     let otherBookmarks = document.getElementById("OtherBookmarks");
     otherBookmarks?.remove();
 
-    BookmarkingUI.maybeShowOtherBookmarksFolder();
+    BookmarkingUI.maybeShowOtherBookmarksFolder().catch(console.error);
   }
 
   _insertNewItem(aChild, aInsertionNode, aBefore = null) {
@@ -1494,7 +1499,18 @@ class PlacesToolbar extends PlacesViewBase {
 
     if (elt == this._rootElt) {
       // Container is the toolbar itself.
-      this._rebuild().catch(console.error);
+      let instance = (this._rebuildingInstance = {});
+      if (!this._rebuilding) {
+        this._rebuilding = PromiseUtils.defer();
+      }
+      this._rebuild()
+        .catch(console.error)
+        .finally(() => {
+          if (instance == this._rebuildingInstance) {
+            this._rebuilding.resolve();
+            this._rebuilding = null;
+          }
+        });
       return;
     }
 
@@ -1802,12 +1818,13 @@ class PlacesToolbar extends PlacesViewBase {
         translateX = 0 - this._rootElt.getBoundingClientRect().right - halfInd;
         if (this._rootElt.firstElementChild) {
           if (dropPoint.beforeIndex == -1) {
-            translateX += this._rootElt.lastElementChild.getBoundingClientRect()
-              .left;
+            translateX +=
+              this._rootElt.lastElementChild.getBoundingClientRect().left;
           } else {
-            translateX += this._rootElt.children[
-              dropPoint.beforeIndex
-            ].getBoundingClientRect().right;
+            translateX +=
+              this._rootElt.children[
+                dropPoint.beforeIndex
+              ].getBoundingClientRect().right;
           }
         }
       } else {
@@ -1815,12 +1832,13 @@ class PlacesToolbar extends PlacesViewBase {
         translateX = 0 - this._rootElt.getBoundingClientRect().left + halfInd;
         if (this._rootElt.firstElementChild) {
           if (dropPoint.beforeIndex == -1) {
-            translateX += this._rootElt.lastElementChild.getBoundingClientRect()
-              .right;
+            translateX +=
+              this._rootElt.lastElementChild.getBoundingClientRect().right;
           } else {
-            translateX += this._rootElt.children[
-              dropPoint.beforeIndex
-            ].getBoundingClientRect().left;
+            translateX +=
+              this._rootElt.children[
+                dropPoint.beforeIndex
+              ].getBoundingClientRect().left;
           }
         }
       }

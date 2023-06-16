@@ -357,7 +357,7 @@ export var NetworkHelper = {
     const cookies = header.split(";");
     const result = [];
 
-    cookies.forEach(function(cookie) {
+    cookies.forEach(function (cookie) {
       const equal = cookie.indexOf("=");
       const name = cookie.substr(0, equal);
       const value = cookie.substr(equal + 1);
@@ -398,7 +398,7 @@ export var NetworkHelper = {
     for (const header of headers) {
       const rawCookies = header.split(/\r\n|\n|\r/);
 
-      rawCookies.forEach(function(cookie) {
+      rawCookies.forEach(function (cookie) {
         const equal = cookie.indexOf("=");
         const name = unescape(cookie.substr(0, equal).trim());
         const parts = cookie.substr(equal + 1).split(";");
@@ -406,7 +406,7 @@ export var NetworkHelper = {
 
         cookie = { name, value };
 
-        parts.forEach(function(part) {
+        parts.forEach(function (part) {
           part = part.trim();
           if (part.toLowerCase() == "secure") {
             cookie.secure = true;

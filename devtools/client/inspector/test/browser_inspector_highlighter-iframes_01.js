@@ -24,7 +24,7 @@ const TEST_URI =
   OUTER_FRAME_SRC +
   '" />';
 
-add_task(async function() {
+add_task(async function () {
   const { toolbox, inspector } = await openInspectorForURL(TEST_URI);
   const outerFrameMainSelector = ["iframe", "main"];
   const innerFrameSectionSelector = ["iframe", "iframe", "section"];

@@ -10,7 +10,7 @@
 const TEST_URI =
   "data:text/html;charset=utf-8,<!DOCTYPE html>Web Console test for executing input selection";
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.webconsole.input.editor", true);
   const hud = await openNewTabAndConsole(TEST_URI);
 

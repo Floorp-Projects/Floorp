@@ -1,4 +1,4 @@
-add_task(async function() {
+add_task(async function () {
   info("Starting test");
 
   await SpecialPowers.flushPrefEnv();
@@ -28,7 +28,7 @@ add_task(async function() {
   let browser = tab.linkedBrowser;
 
   info("Verify the number of script nodes found");
-  await ContentTask.spawn(browser, [], async function(obj) {
+  await ContentTask.spawn(browser, [], async function (obj) {
     // Need to wait a bit for cross-process postMessage...
     await ContentTaskUtils.waitForCondition(
       () => content.document.documentElement.getAttribute("count") !== null,

@@ -23,8 +23,8 @@ function evalCode() {
     const ugh = [];
     let i = 0;
 
-    (function() {
-      (function() {
+    (function () {
+      (function () {
         ugh.push(i++);
         debugger;
       })();
@@ -34,7 +34,7 @@ function evalCode() {
   });
 }
 
-const testObjectGroup = async function() {
+const testObjectGroup = async function () {
   let packet = await executeOnNextTickAndWaitForPause(evalCode, gThreadFront);
 
   const environment = await packet.frame.getEnvironment();

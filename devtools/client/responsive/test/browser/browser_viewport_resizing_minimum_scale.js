@@ -11,7 +11,7 @@ const TEST_URL =
   'minimum-scale=1.0, width=device-width"></head>' +
   '<div style="width:100%;background-color:green">test</div>' +
   "</body>";
-addRDMTask(TEST_URL, async function({ ui, manager }) {
+addRDMTask(TEST_URL, async function ({ ui, manager }) {
   info("--- Starting viewport test output ---");
 
   // We're going to take a 300,600 viewport (before) and resize it

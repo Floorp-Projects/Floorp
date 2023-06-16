@@ -25,7 +25,6 @@
 #include "nsMathUtils.h"
 #include "nsThreadUtils.h"
 #include "prdtoa.h"
-#include "plstr.h"
 #include "prtime.h"
 #include "nsString.h"
 #include "nsCharSeparatedTokenizer.h"

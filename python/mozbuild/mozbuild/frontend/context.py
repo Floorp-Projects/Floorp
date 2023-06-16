@@ -767,6 +767,7 @@ class WasmFlags(TargetCompileFlags):
                 context.config.substs.get("MOZ_FILE_PREFIX_MAP_FLAGS"),
                 ("WASM_CFLAGS", "WASM_CXXFLAGS"),
             ),
+            ("STL", context.config.substs.get("STL_FLAGS"), ("WASM_CXXFLAGS",)),
         )
 
         TargetCompileFlags.__init__(self, context)

@@ -9,12 +9,8 @@ export class GeckoViewMediaControl extends GeckoViewModule {
     debug`onInit`;
   }
 
-  onEnable() {
-    debug`onEnable`;
-
-    if (this.controller.isActive) {
-      this.handleActivated();
-    }
+  onInitBrowser() {
+    debug`onInitBrowser`;
 
     const options = {
       mozSystemGroup: true,
@@ -27,6 +23,25 @@ export class GeckoViewMediaControl extends GeckoViewModule {
     this.controller.addEventListener("positionstatechange", this, options);
     this.controller.addEventListener("metadatachange", this, options);
     this.controller.addEventListener("playbackstatechange", this, options);
+  }
+
+  onDestroyBrowser() {
+    debug`onDestroyBrowser`;
+
+    this.controller.removeEventListener("activated", this);
+    this.controller.removeEventListener("deactivated", this);
+    this.controller.removeEventListener("supportedkeyschange", this);
+    this.controller.removeEventListener("positionstatechange", this);
+    this.controller.removeEventListener("metadatachange", this);
+    this.controller.removeEventListener("playbackstatechange", this);
+  }
+
+  onEnable() {
+    debug`onEnable`;
+
+    if (this.controller.isActive) {
+      this.handleActivated();
+    }
 
     this.registerListener([
       "GeckoView:MediaSession:Play",
@@ -44,13 +59,6 @@ export class GeckoViewMediaControl extends GeckoViewModule {
 
   onDisable() {
     debug`onDisable`;
-
-    this.controller.removeEventListener("activated", this);
-    this.controller.removeEventListener("deactivated", this);
-    this.controller.removeEventListener("supportedkeyschange", this);
-    this.controller.removeEventListener("positionstatechange", this);
-    this.controller.removeEventListener("metadatachange", this);
-    this.controller.removeEventListener("playbackstatechange", this);
 
     this.unregisterListener();
   }

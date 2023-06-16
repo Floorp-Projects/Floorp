@@ -10,7 +10,7 @@ let defaultTestEngine;
 // The main search string used in tests
 const SEARCH_STRING = "chocolate cake";
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.showSearchTerms.featureGate", true]],
   });
@@ -25,7 +25,7 @@ add_setup(async function() {
   );
   defaultTestEngine = Services.search.getEngineByName("MozSearch");
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.history.clear();
   });
 });
@@ -224,9 +224,9 @@ add_task(async function focus_after_top_sites() {
     }
   }
 
-  let changedPromise = TestUtils.topicObserved(
-    "newtab-top-sites-changed"
-  ).then(() => info("Observed newtab-top-sites-changed"));
+  let changedPromise = TestUtils.topicObserved("newtab-top-sites-changed").then(
+    () => info("Observed newtab-top-sites-changed")
+  );
   await updateTopSites(sites => sites?.length == N_TOP_SITES);
   await changedPromise;
 

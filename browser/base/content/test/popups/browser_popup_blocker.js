@@ -15,7 +15,7 @@ function clearAllPermissionsByPrefix(aPrefix) {
   }
 }
 
-add_setup(async function() {
+add_setup(async function () {
   // Enable the popup blocker.
   await SpecialPowers.pushPrefEnv({
     set: [["dom.disable_open_during_load", true]],

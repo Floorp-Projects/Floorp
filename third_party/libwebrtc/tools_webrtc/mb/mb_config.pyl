@@ -11,6 +11,9 @@
 # configurations source-side instead of in the buildbot scripts. That makes it
 # easy to try different configurations of GN args in tryjob patches.
 
+# TODO(b/245249582): clean up after completing reclient migration.
+# - replace use_goma=true with use_remoteexec=true.
+# - remove '*_reclient' configs.
 {
   # This is a map of buildbot builder group names -> buildbot builder names ->
   # config names (where each config name is a key in the 'configs' dict,
@@ -99,11 +102,9 @@
       'Win64 Release (Clang)': 'win_clang_release_bot_x64',
 
       # iOS
+      'iOS Debug (simulator)': 'ios_debug_bot_x64',
       'iOS64 Debug': 'ios_debug_bot_arm64',
       'iOS64 Release': 'ios_release_bot_arm64',
-      'iOS64 Sim Debug (iOS 12)': 'ios_debug_bot_x64',
-      'iOS64 Sim Debug (iOS 13)': 'ios_debug_bot_x64',
-      'iOS64 Sim Debug (iOS 14)': 'ios_debug_bot_x64',
     },
     'client.webrtc.fyi': {
       # Android
@@ -124,11 +125,8 @@
       # build anything).
       # TODO(http://crbug.com/1029452): Nuke these and isolate on builder
       # instead?
-      'Perf Android32 (M AOSP Nexus6)': 'release_bot_x64',
-      'Perf Android32 (M Nexus5)': 'release_bot_x64',
       'Perf Android32 (O Pixel2)': 'release_bot_x64',
       'Perf Android32 (R Pixel5)': 'release_bot_x64',
-      'Perf Android64 (M Nexus5X)': 'release_bot_x64',
       'Perf Android64 (O Pixel2)': 'release_bot_x64',
       'Perf Android64 (R Pixel5)': 'release_bot_x64',
       'Perf Fuchsia': 'release_bot_x64_fuchsia',
@@ -155,7 +153,6 @@
         'rtti_no_sctp': 'rtti_no_sctp_android_arm',
       },
       'android_arm_rel': 'android_release_bot_arm',
-      'android_arm_rel_reclient': 'android_release_bot_arm_reclient',
       'android_compile_arm64_dbg': 'android_debug_static_bot_arm64',
       'android_compile_arm64_rel': 'android_pure_release_bot_arm64',
       'android_compile_arm_dbg': 'android_debug_static_bot_arm',
@@ -171,10 +168,7 @@
       # iOS
       'ios_compile_arm64_dbg': 'ios_debug_bot_arm64',
       'ios_compile_arm64_rel': 'ios_release_bot_arm64',
-      'ios_compile_arm64_rel_reclient': 'ios_release_bot_arm64_reclient',
-      'ios_sim_x64_dbg_ios12': 'ios_debug_bot_x64',
-      'ios_sim_x64_dbg_ios13': 'ios_debug_bot_x64',
-      'ios_sim_x64_dbg_ios14': 'ios_debug_bot_x64',
+      'ios_dbg_simulator': 'ios_debug_bot_x64',
 
       # Linux
       'linux_asan': 'asan_lsan_clang_release_bot_x64',
@@ -188,7 +182,7 @@
       'linux_compile_x86_rel': 'pure_release_bot_x86',
       'linux_coverage': 'code_coverage_bot_x64',
       'linux_dbg': 'debug_bot_x64',
-      'linux_libfuzzer_rel': 'libfuzzer_asan_release_bot_x64',
+      'linux_libfuzzer_rel': 'libfuzzer_asan_release_bot_x64_reclient',
       'linux_more_configs': {
         'bwe_test_logging': 'bwe_test_logging_x64',
         'dummy_audio_file_devices_no_protobuf':
@@ -197,7 +191,6 @@
       },
       'linux_msan': 'msan_clang_release_bot_x64',
       'linux_rel': 'release_bot_x64',
-      'linux_rel_reclient': 'release_bot_x64_reclient',
       'linux_tsan2': 'tsan_clang_release_bot_x64',
       'linux_ubsan': 'ubsan_clang_release_bot_x64',
       'linux_ubsan_vptr': 'ubsan_vptr_clang_release_bot_x64',
@@ -212,14 +205,11 @@
       'mac_dbg_m1': 'debug_bot_arm64',
       'mac_rel': 'release_bot_x64',
       'mac_rel_m1': 'release_bot_arm64',
-      'mac_rel_reclient': 'release_bot_x64_reclient',
 
       # Windows
       'win_asan': 'win_asan_clang_release_bot_x64',
       'win_compile_x64_clang_dbg': 'win_clang_debug_bot_x64',
       'win_compile_x64_clang_rel': 'win_clang_release_bot_x64',
-      'win_compile_x64_clang_rel_reclient':
-        'win_clang_release_bot_x64_reclient',
       'win_compile_x86_clang_dbg': 'win_clang_debug_bot_x86',
       'win_compile_x86_clang_rel': 'win_clang_release_bot_x86',
       'win_x64_clang_dbg': 'win_clang_debug_bot_x64',
@@ -295,14 +285,6 @@
     'ios_release_bot_arm64': [
       'ios', 'release_bot', 'arm64', 'no_ios_code_signing', 'xctest',
     ],
-    'ios_release_bot_arm64_reclient': [
-      'ios', 'release_bot', 'arm64', 'no_ios_code_signing', 'xctest',
-      'no_goma', 'reclient',
-    ],
-    'libfuzzer_asan_release_bot_x64': [
-      'libfuzzer', 'asan', 'optimize_for_fuzzing', 'openh264',
-      'pure_release_bot', 'x64'
-    ],
     'libfuzzer_asan_release_bot_x64_reclient': [
       'libfuzzer', 'asan', 'optimize_for_fuzzing', 'openh264',
       'pure_release_bot_reclient', 'x64'
@@ -370,14 +352,6 @@
       'openh264',
       'release_bot',
       'x64',
-    ],
-    'win_clang_release_bot_x64_reclient': [
-      'clang',
-      'openh264',
-      'release_bot',
-      'x64',
-      'no_goma',
-      'reclient',
     ],
     'win_clang_release_bot_x86': [
       'clang',
@@ -457,9 +431,6 @@
     'msan': {
       'gn_args': 'is_msan=true msan_track_origins=2'
                  ' instrumented_libraries_release = "xenial"',
-    },
-    'no_goma': {
-      'gn_args': 'use_goma=false',
     },
     'no_ios_code_signing': {
       'gn_args': 'ios_enable_code_signing=false',

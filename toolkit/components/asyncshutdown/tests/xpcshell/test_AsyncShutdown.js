@@ -44,10 +44,19 @@ add_task(async function test_phase_various_failures() {
       );
     }
 
+    if (kind == "xpcom-barrier") {
+      const blocker = () => true;
+      lock.addBlocker("Test 3", blocker);
+      Assert.throws(
+        () => lock.addBlocker("Test 3", blocker),
+        /We have already registered the blocker \(Test 3\)/
+      );
+    }
+
     // Attempting to add a blocker after we are done waiting
     Assert.ok(!lock.isClosed, "Barrier is open");
     await lock.wait();
-    Assert.throws(() => lock.addBlocker("Test 3", () => true), /is finished/);
+    Assert.throws(() => lock.addBlocker("Test 4", () => true), /is finished/);
     Assert.ok(lock.isClosed, "Barrier is closed");
   }
 });
@@ -84,7 +93,7 @@ add_task(async function test_reentrant() {
     // event loop before calling `lock.wait()`, which we do by forcing
     // a Promise.resolve().
     //
-    let promiseSteps = (async function() {
+    let promiseSteps = (async function () {
       await Promise.resolve();
 
       info("Waiting until we have entered the outer blocker");
@@ -125,7 +134,7 @@ add_task(async function test_phase_removeBlocker() {
     };
 
     lock.addBlocker("Wait forever", blocker);
-    let do_remove_blocker = function(aLock, aBlocker, aShouldRemove) {
+    let do_remove_blocker = function (aLock, aBlocker, aShouldRemove) {
       info(
         "Attempting to remove blocker " +
           aBlocker +
@@ -187,6 +196,65 @@ add_task(async function test_phase_removeBlocker() {
   }
 });
 
+add_task(async function test_addBlocker_noDistinctNamesConstraint() {
+  info("Testing that we can add two distinct blockers with identical names");
+
+  for (let kind of [
+    "phase",
+    "barrier",
+    "xpcom-barrier",
+    "xpcom-barrier-unwrapped",
+  ]) {
+    info("Switching to kind " + kind);
+    let lock = makeLock(kind);
+    let deferred1 = PromiseUtils.defer();
+    let resolved1 = false;
+    let deferred2 = PromiseUtils.defer();
+    let resolved2 = false;
+    let blocker1 = () => {
+      info("Entering blocker1");
+      return deferred1.promise;
+    };
+    let blocker2 = () => {
+      info("Entering blocker2");
+      return deferred2.promise;
+    };
+
+    info("Attempt to add two distinct blockers with identical names");
+    lock.addBlocker("Blocker", blocker1);
+    lock.addBlocker("Blocker", blocker2);
+
+    // Note that phase-style locks spin the event loop and do not return from
+    // `lock.wait()` until after all blockers have been resolved. Therefore,
+    // to be able to test them, we need to dispatch the following steps to the
+    // event loop before calling `lock.wait()`, which we do by forcing
+    // a Promise.resolve().
+    //
+    let promiseSteps = (async () => {
+      info("Waiting for an event-loop spin");
+      await Promise.resolve();
+
+      info("Resolving blocker1");
+      deferred1.resolve();
+      resolved1 = true;
+
+      info("Waiting for an event-loop spin");
+      await Promise.resolve();
+
+      info("Resolving blocker2");
+      deferred2.resolve();
+      resolved2 = true;
+    })();
+
+    info("Waiting for lock");
+    await lock.wait();
+
+    Assert.ok(resolved1);
+    Assert.ok(resolved2);
+    await promiseSteps;
+  }
+});
+
 add_task(async function test_state() {
   info("Testing information contained in `state`");
 
@@ -197,7 +265,7 @@ add_task(async function test_state() {
   let barrier = new AsyncShutdown.Barrier("test_filename");
   let deferred = PromiseUtils.defer();
   let { filename, lineNumber } = Components.stack;
-  barrier.client.addBlocker(BLOCKER_NAME, function() {
+  barrier.client.addBlocker(BLOCKER_NAME, function () {
     return deferred.promise;
   });
 
@@ -275,6 +343,6 @@ add_task(async function test_multistate() {
   await promiseDone;
 });
 
-add_task(async function() {
+add_task(async function () {
   Services.prefs.clearUserPref("toolkit.asyncshutdown.testing");
 });

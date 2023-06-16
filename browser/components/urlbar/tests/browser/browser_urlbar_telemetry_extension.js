@@ -70,7 +70,7 @@ function assertTelemetryResults(histograms, type, index, method) {
   );
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       // Disable search suggestions in the urlbar.
@@ -96,7 +96,7 @@ add_setup(async function() {
   await PlacesUtils.bookmarks.eraseEverything();
 
   // Make sure to restore the engine once we're done.
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     Services.telemetry.canRecordExtended = oldCanRecord;
     await PlacesUtils.history.clear();
     await PlacesUtils.bookmarks.eraseEverything();

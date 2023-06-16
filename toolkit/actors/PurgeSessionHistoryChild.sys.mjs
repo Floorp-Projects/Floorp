@@ -8,8 +8,9 @@ export class PurgeSessionHistoryChild extends JSWindowActorChild {
     if (message.name != "Browser:PurgeSessionHistory") {
       return;
     }
-    let sessionHistory = this.docShell.QueryInterface(Ci.nsIWebNavigation)
-      .sessionHistory;
+    let sessionHistory = this.docShell.QueryInterface(
+      Ci.nsIWebNavigation
+    ).sessionHistory;
     if (!sessionHistory) {
       return;
     }

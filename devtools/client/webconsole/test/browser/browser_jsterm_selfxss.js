@@ -12,11 +12,11 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/widget/clipboardhelper;1",
   "nsIClipboardHelper"
 );
-const WebConsoleUtils = require("resource://devtools/client/webconsole/utils.js")
-  .Utils;
+const WebConsoleUtils =
+  require("resource://devtools/client/webconsole/utils.js").Utils;
 const stringToCopy = "EvilCommand";
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.chrome.enabled", false);
   await pushPref("devtools.selfxss.count", 0);
   const hud = await openNewTabAndConsole(TEST_URI);

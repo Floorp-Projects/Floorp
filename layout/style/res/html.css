@@ -396,7 +396,7 @@ table[rules][rules="groups"] > tbody {
   border-block-start-width: thin;
   border-block-end-width: thin;
   border-block-start-style: solid;
-  border-block-start-style: solid;
+  border-block-end-style: solid;
 }
 
 

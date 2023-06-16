@@ -2,12 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-// Make Cu.isInAutomation true.
-Services.prefs.setBoolPref(
-  "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer",
-  true
-);
-
 // Tests that extensions installed through the registry work as expected
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 

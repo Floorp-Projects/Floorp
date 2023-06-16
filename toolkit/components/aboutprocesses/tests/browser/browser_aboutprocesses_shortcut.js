@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   // Wait for the browser to be ready to receive keyboard events.
   if (!gBrowser.selectedBrowser.hasLayers) {
     await BrowserTestUtils.waitForEvent(window, "MozLayerTreeReady");

@@ -18,7 +18,7 @@ function leakHunt(root) {
 
   try {
     const output = leakHunt.inner(root, path, seen);
-    output.forEach(function(line) {
+    output.forEach(function (line) {
       dump(line + "\n");
     });
   } catch (ex) {
@@ -26,7 +26,7 @@ function leakHunt(root) {
   }
 }
 
-leakHunt.inner = function(root, path, seen) {
+leakHunt.inner = function (root, path, seen) {
   const prefix = new Array(path.length).join("  ");
 
   const reply = [];
@@ -85,7 +85,7 @@ leakHunt.noRecurse = [
   /^ChromeWindow$/,
 ];
 
-leakHunt.digProperty = function(prop, data, path, seen, direct, log) {
+leakHunt.digProperty = function (prop, data, path, seen, direct, log) {
   const newPath = path.slice();
   newPath.push(prop);
   const prefix = new Array(newPath.length).join("  ");
@@ -122,7 +122,7 @@ leakHunt.digProperty = function(prop, data, path, seen, direct, log) {
       }
     } else {
       log(prefix + prop + " = " + message + " {");
-      lines.forEach(function(line) {
+      lines.forEach(function (line) {
         log(line);
       });
       log(prefix + "}");
@@ -132,9 +132,9 @@ leakHunt.digProperty = function(prop, data, path, seen, direct, log) {
   }
 };
 
-leakHunt.matchesAnyPattern = function(str, patterns) {
+leakHunt.matchesAnyPattern = function (str, patterns) {
   let match = false;
-  patterns.forEach(function(pattern) {
+  patterns.forEach(function (pattern) {
     if (str.match(pattern)) {
       match = true;
     }
@@ -142,7 +142,7 @@ leakHunt.matchesAnyPattern = function(str, patterns) {
   return match;
 };
 
-leakHunt.getType = function(data) {
+leakHunt.getType = function (data) {
   if (data === null) {
     return "null";
   }
@@ -158,7 +158,7 @@ leakHunt.getType = function(data) {
   return type;
 };
 
-leakHunt.getCtorName = function(obj) {
+leakHunt.getCtorName = function (obj) {
   try {
     if (obj.constructor && obj.constructor.name) {
       return obj.constructor.name;

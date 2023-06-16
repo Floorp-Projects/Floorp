@@ -258,6 +258,9 @@ jv{
         "America:Chihuahua"{
             ec{"Chihuahua"}
         }
+        "America:Ciudad_Juarez"{
+            ec{"Ciudad Juáres"}
+        }
         "America:Coral_Harbour"{
             ec{"Atikokan"}
         }

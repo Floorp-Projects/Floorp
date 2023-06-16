@@ -203,7 +203,7 @@ const reducers = {
   },
 };
 
-module.exports = function(viewports = INITIAL_VIEWPORTS, action) {
+module.exports = function (viewports = INITIAL_VIEWPORTS, action) {
   const reducer = reducers[action.type];
   if (!reducer) {
     return viewports;

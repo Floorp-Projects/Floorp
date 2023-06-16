@@ -45,7 +45,7 @@ add_task(async function test_restoring_tabless_window() {
     "Should have found the new URL"
   );
 
-  let closedTabData = SessionStore.getClosedTabData(newWin);
+  let closedTabData = SessionStore.getClosedTabDataForWindow(newWin);
   is(closedTabData.length, 1, "Should have found 1 closed tab");
   is(
     closedTabData[0]?.state.entries[0].url,

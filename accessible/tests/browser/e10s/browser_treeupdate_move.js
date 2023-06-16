@@ -28,7 +28,7 @@ addAccessibleTask(
   <iframe id="iframe" src="https://example.com/"></iframe>
 </div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const textbox = findAccessibleChildByID(docAcc, "textbox");
     const heading = findAccessibleChildByID(docAcc, "heading");
     const para = findAccessibleChildByID(docAcc, "para");
@@ -74,7 +74,7 @@ addAccessibleTask(
   <div aria-owns="iframe"></div>
 </div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const container = findAccessibleChildByID(docAcc, "container");
     testAccessibleTree(container, {
       SECTION: [{ SECTION: [{ INTERNAL_FRAME: [{ DOCUMENT: [] }] }] }],

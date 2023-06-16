@@ -16,7 +16,7 @@ ExtensionTestUtils.mockAppInfo();
 // 4. Force GC and check that the weak reference has been invalidated.
 
 async function reloadTopContext(contentPage) {
-  await contentPage.spawn(null, async () => {
+  await contentPage.legacySpawn(null, async () => {
     let { TestUtils } = ChromeUtils.importESModule(
       "resource://testing-common/TestUtils.sys.mjs"
     );
@@ -29,7 +29,7 @@ async function reloadTopContext(contentPage) {
 }
 
 async function assertContextReleased(contentPage, description) {
-  await contentPage.spawn(description, async assertionDescription => {
+  await contentPage.legacySpawn(description, async assertionDescription => {
     // Force GC, see https://searchfox.org/mozilla-central/rev/b0275bc977ad7fda615ef34b822bba938f2b16fd/testing/talos/talos/tests/devtools/addon/content/damp.js#84-98
     // and https://searchfox.org/mozilla-central/rev/33c21c060b7f3a52477a73d06ebcb2bf313c4431/xpcom/base/nsMemoryReporterManager.cpp#2574-2585,2591-2594
     let gcCount = 0;
@@ -83,9 +83,9 @@ add_task(async function test_ContentScriptContextChild_in_child_frame() {
   );
   await extension.awaitMessage("contentScriptLoaded");
 
-  await contentPage.spawn(extension.id, async extensionId => {
-    const { ExtensionContent } = ChromeUtils.import(
-      "resource://gre/modules/ExtensionContent.jsm"
+  await contentPage.legacySpawn(extension.id, async extensionId => {
+    const { ExtensionContent } = ChromeUtils.importESModule(
+      "resource://gre/modules/ExtensionContent.sys.mjs"
     );
     let frame = this.content.document.querySelector(
       "iframe[src*='file_iframe.html']"
@@ -135,9 +135,9 @@ add_task(async function test_ContentScriptContextChild_in_toplevel() {
   );
   await extension.awaitMessage("contentScriptLoaded");
 
-  await contentPage.spawn(extension.id, async extensionId => {
-    const { ExtensionContent } = ChromeUtils.import(
-      "resource://gre/modules/ExtensionContent.jsm"
+  await contentPage.legacySpawn(extension.id, async extensionId => {
+    const { ExtensionContent } = ChromeUtils.importESModule(
+      "resource://gre/modules/ExtensionContent.sys.mjs"
     );
     let context = ExtensionContent.getContextByExtensionId(
       extensionId,
@@ -187,9 +187,9 @@ add_task(async function test_ExtensionPageContextChild_in_child_frame() {
   );
   await extension.awaitMessage("extensionPageLoaded");
 
-  await contentPage.spawn(extension.id, async extensionId => {
-    let { ExtensionPageChild } = ChromeUtils.import(
-      "resource://gre/modules/ExtensionPageChild.jsm"
+  await contentPage.legacySpawn(extension.id, async extensionId => {
+    let { ExtensionPageChild } = ChromeUtils.importESModule(
+      "resource://gre/modules/ExtensionPageChild.sys.mjs"
     );
 
     let frame = this.content.document.querySelector(
@@ -237,9 +237,9 @@ add_task(async function test_ExtensionPageContextChild_in_toplevel() {
   );
   await extension.awaitMessage("extensionPageLoaded");
 
-  await contentPage.spawn(extension.id, async extensionId => {
-    let { ExtensionPageChild } = ChromeUtils.import(
-      "resource://gre/modules/ExtensionPageChild.jsm"
+  await contentPage.legacySpawn(extension.id, async extensionId => {
+    let { ExtensionPageChild } = ChromeUtils.importESModule(
+      "resource://gre/modules/ExtensionPageChild.sys.mjs"
     );
 
     let innerWindowID = this.content.windowGlobalChild.innerWindowId;
@@ -254,7 +254,7 @@ add_task(async function test_ExtensionPageContextChild_in_toplevel() {
   await extension.awaitMessage("extensionPageLoaded");
   // For some unknown reason, the context cannot forcidbly be released by the
   // garbage collector unless we wait for a short while.
-  await contentPage.spawn(null, async () => {
+  await contentPage.spawn([], async () => {
     let start = Date.now();
     // The treshold was found after running this subtest only, 300 times
     // in a release build (100 of xpcshell, xpcshell-e10s and xpcshell-remote).

@@ -113,6 +113,7 @@ WheelHandlingUtils::GetDisregardedWheelScrollDirection(const nsIFrame* aFrame) {
 
 AutoWeakFrame WheelTransaction::sScrollTargetFrame(nullptr);
 AutoWeakFrame WheelTransaction::sEventTargetFrame(nullptr);
+bool WheelTransaction::sHandledByApz(false);
 uint32_t WheelTransaction::sTime = 0;
 uint32_t WheelTransaction::sMouseMoved = 0;
 nsITimer* WheelTransaction::sTimer = nullptr;
@@ -149,6 +150,10 @@ void WheelTransaction::BeginTransaction(nsIFrame* aScrollTargetFrame,
     // not be overridden by the current wheel transaction, but will be computed
     // from the input coordinates.
     sEventTargetFrame = aEventTargetFrame;
+    // If the wheel events will be handled by APZ, set a flag here. We can use
+    // this later to determine if we need to scroll snap at the end of the
+    // wheel operation.
+    sHandledByApz = aEvent->mFlags.mHandledByAPZ;
   }
 
   sScrollSeriesCounter = 0;
@@ -208,6 +213,7 @@ void WheelTransaction::EndTransaction() {
   sScrollTargetFrame = nullptr;
   sEventTargetFrame = nullptr;
   sScrollSeriesCounter = 0;
+  sHandledByApz = false;
   if (sOwnScrollbars) {
     sOwnScrollbars = false;
     ScrollbarsForWheel::OwnWheelTransaction(false);

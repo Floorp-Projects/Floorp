@@ -1,14 +1,14 @@
 const workerURL =
   "http://mochi.test:8888/tests/dom/workers/test/importScripts_3rdParty_worker.js";
 
-onmessage = function(a) {
+onmessage = function (a) {
   if (a.data.nested) {
     var worker = new Worker(workerURL);
-    worker.onmessage = function(event) {
+    worker.onmessage = function (event) {
       postMessage(event.data);
     };
 
-    worker.onerror = function(event) {
+    worker.onerror = function (event) {
       event.preventDefault();
       postMessage({
         error: event instanceof ErrorEvent && event.filename == workerURL,
@@ -70,7 +70,7 @@ onmessage = function(a) {
   }
 
   if (a.data.test == "eventListener") {
-    addEventListener("error", function(event) {
+    addEventListener("error", function (event) {
       event.preventDefault();
       postMessage({
         result: event instanceof ErrorEvent && event.filename == workerURL,
@@ -79,7 +79,7 @@ onmessage = function(a) {
   }
 
   if (a.data.test == "onerror") {
-    onerror = function(...args) {
+    onerror = function (...args) {
       postMessage({ result: args[1] == workerURL });
     };
   }

@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { AddonManager } = ChromeUtils.import(
-  "resource://gre/modules/AddonManager.jsm"
+const { AddonManager } = ChromeUtils.importESModule(
+  "resource://gre/modules/AddonManager.sys.mjs"
 );
 
 function promiseAddonEvent(event) {
@@ -21,8 +21,8 @@ function promiseAddonEvent(event) {
 }
 
 function promiseWebExtensionStartup() {
-  const { Management } = ChromeUtils.import(
-    "resource://gre/modules/Extension.jsm"
+  const { Management } = ChromeUtils.importESModule(
+    "resource://gre/modules/Extension.sys.mjs"
   );
 
   return new Promise(resolve => {

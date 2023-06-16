@@ -35,13 +35,16 @@
       }
     }
   },
-  'hammerhead': {
-    'swarming': {
-      'dimensions': {
-        'device_type': 'hammerhead',
-        'os': 'Android'
-      }
-    }
+  # Hack to use the test-launcher-summary-output flag + emulator folders for gtest-output
+  # but it's currently the only way to get the file out of the emulator.
+  'fuchsia-gtest-output': {
+    '$mixin_append': {
+      'args': [
+        '--test-launcher-summary-output=${ISOLATED_OUTDIR}/gtest_output.json',
+        '--test-arg=--gtest_output=json:/custom_artifacts/gtest_output.json',
+        '--test-arg=--undefok=test_launcher_summary_output'
+      ],
+    },
   },
   'ios-device-15.7': {
     'swarming': {
@@ -61,59 +64,13 @@
       },
     },
   },
-  'ios-simulator-12.4': {
-    '$mixin_append': {
-      'args': [
-        '--platform',
-        'iPhone X',
-        '--version',
-        '12.4',
-      ],
-      'swarming': {
-        'named_caches': [
-          {
-            'name': 'runtime_ios_12_4',
-            'path': 'Runtime-ios-12.4',
-          },
-        ],
-      },
-    }
-  },
-  'ios-simulator-13.6': {
-    '$mixin_append': {
-      'args': [
-        '--platform',
-        'iPhone X',
-        '--version',
-        '13.6',
-      ],
-      'swarming': {
-        'named_caches': [
-          {
-            'name': 'runtime_ios_13_6',
-            'path': 'Runtime-ios-13.6',
-          },
-        ],
-      },
-    }
-  },
-  'ios-simulator-14.5': {
-    '$mixin_append': {
-      'args': [
-        '--platform',
-        'iPhone X',
-        '--version',
-        '14.5',
-      ],
-      'swarming': {
-        'named_caches': [
-          {
-            'name': 'runtime_ios_14_5',
-            'path': 'Runtime-ios-14.5',
-          },
-        ],
-      },
-    }
+  'limited-capacity': {
+    # Sometimes there are multiple tests that can be run only on one machine.
+    # We need to increase timeouts so the tests dont expire before the machine is freed.
+    # Using 3h expiration timeout to align with `timeout-3h` mixin used for per tests.
+    'swarming': {
+      'expiration': 10800,
+    },
   },
   'mac-m1-cpu': {
     'swarming': {
@@ -129,20 +86,16 @@
       }
     }
   },
-  'marshmallow_generic': {
-    'swarming': {
-      'dimensions': {
-        'device_os': 'M'
-      }
-    }
-  },
   'perf-fuchsia-perf-tests': {
     'merge': {
       'script': '//tools_webrtc/perf/process_perf_results.py',
       'args': ['--test-suite', 'fuchsia_perf_tests'],
     },
     '$mixin_append': {
-      'args': ['--nologs'],
+      'args': [
+        '--nologs',
+        '--isolated-script-test-perf-output=${ISOLATED_OUTDIR}/perftest-output.json',
+      ],
     },
   },
   'perf-low-bandwidth-audio-perf-test': {
@@ -220,14 +173,6 @@
       'result_format': 'json'
     }
   },
-  'shamu': {
-    'swarming': {
-      'dimensions': {
-        'device_type': 'shamu',
-        'os': 'Android',
-      },
-    },
-  },
   'shards-2': {
     'swarming': {
       'shards': 2,
@@ -262,16 +207,12 @@
       ],
     },
   },
-  'xcode_12d4e': {
-    '$mixin_append': {
-      'args': ['--xcode-build-version', '12d4e'],
-      'swarming': {
-        'named_caches': [{
-          'name': 'xcode_ios_12d4e',
-          'path': 'Xcode.app'
-        }]
-      }
-    }
+  'win10-override': {
+    'swarming': {
+      'dimensions': {
+        'os': 'Windows-10-19042|Windows-10-19045'
+      },
+    },
   },
   'xcode_13_main': {
     '$mixin_append': {

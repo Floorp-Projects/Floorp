@@ -13,12 +13,15 @@
 #include <memory>
 #include <utility>
 
+#include "api/media_types.h"
 #include "api/rtc_event_log/rtc_event_log.h"
 #include "api/rtc_event_log/rtc_event_log_factory.h"
 #include "api/transport/network_types.h"
 #include "call/call.h"
 #include "call/rtp_transport_controller_send_factory.h"
 #include "modules/audio_mixer/audio_mixer_impl.h"
+#include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
+#include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "modules/rtp_rtcp/source/rtp_util.h"
 
 namespace webrtc {
@@ -289,16 +292,44 @@ void CallClient::UpdateBitrateConstraints(
   });
 }
 
+void CallClient::SetAudioReceiveRtpHeaderExtensions(
+    rtc::ArrayView<RtpExtension> extensions) {
+  SendTask([this, &extensions]() {
+    audio_extensions_ = RtpHeaderExtensionMap(extensions);
+  });
+}
+
+void CallClient::SetVideoReceiveRtpHeaderExtensions(
+    rtc::ArrayView<RtpExtension> extensions) {
+  SendTask([this, &extensions]() {
+    video_extensions_ = RtpHeaderExtensionMap(extensions);
+  });
+}
+
 void CallClient::OnPacketReceived(EmulatedIpPacket packet) {
   MediaType media_type = MediaType::ANY;
   if (IsRtpPacket(packet.data)) {
     media_type = ssrc_media_types_[ParseRtpSsrc(packet.data)];
+    task_queue_.PostTask([this, media_type,
+                          packet = std::move(packet)]() mutable {
+      RtpHeaderExtensionMap& extension_map = media_type == MediaType::AUDIO
+                                                 ? audio_extensions_
+                                                 : video_extensions_;
+      RtpPacketReceived received_packet(&extension_map, packet.arrival_time);
+      RTC_CHECK(received_packet.Parse(packet.data));
+      call_->Receiver()->DeliverRtpPacket(media_type, received_packet,
+                                          /*undemuxable_packet_handler=*/
+                                          [](const RtpPacketReceived& packet) {
+                                            RTC_CHECK_NOTREACHED();
+                                            return false;
+                                          });
+    });
+  } else {
+    task_queue_.PostTask(
+        [call = call_.get(), packet = std::move(packet)]() mutable {
+          call->Receiver()->DeliverRtcpPacket(packet.data);
+        });
   }
-  task_queue_.PostTask(
-      [call = call_.get(), media_type, packet = std::move(packet)]() mutable {
-        call->Receiver()->DeliverPacket(media_type, packet.data,
-                                        packet.arrival_time.us());
-      });
 }
 
 std::unique_ptr<RtcEventLogOutput> CallClient::GetLogWriter(std::string name) {

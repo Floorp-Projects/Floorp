@@ -121,12 +121,12 @@ function grab_artifacts () {
 function check_hazards () {
     (
     set +e
-    NUM_HAZARDS=$(grep -c 'Function.*has unrooted.*live across GC call' "$1"/rootingHazards.txt)
+    NUM_HAZARDS=$(grep -c 'Function.*has unrooted.*live across GC call' "$1"/hazards.txt)
     NUM_UNSAFE=$(grep -c '^Function.*takes unsafe address of unrooted' "$1"/refs.txt)
     NUM_UNNECESSARY=$(grep -c '^Function.* has unnecessary root' "$1"/unnecessary.txt)
     NUM_DROPPED=$(grep -c '^Dropped CFG' "$1"/build_xgill.log)
     NUM_WRITE_HAZARDS=$(perl -lne 'print $1 if m!found (\d+)/\d+ allowed errors!' "$1"/heapWriteHazards.txt)
-    NUM_MISSING=$(grep -c '^Function.*expected hazard.*but none were found' "$1"/rootingHazards.txt)
+    NUM_MISSING=$(grep -c '^Function.*expected hazard.*but none were found' "$1"/hazards.txt)
 
     set +x
     echo "TinderboxPrint: rooting hazards<br/>$NUM_HAZARDS"

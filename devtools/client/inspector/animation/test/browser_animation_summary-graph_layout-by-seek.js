@@ -5,7 +5,7 @@
 
 // Test whether the layout of graphs were broken by seek and resume.
 
-add_task(async function() {
+add_task(async function () {
   await addTab(URL_ROOT + "doc_multi_timings.html");
   await removeAnimatedElementsExcept([
     ".delay-positive",

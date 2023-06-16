@@ -1,4 +1,0 @@
-[console_scripts]
-compare-locales = compare_locales.commands:CompareLocales.call
-moz-l10n-lint = compare_locales.lint.cli:main
-

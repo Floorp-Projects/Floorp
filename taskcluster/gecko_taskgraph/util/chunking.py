@@ -218,11 +218,16 @@ class DefaultLoader(BaseManifestLoader):
         # Compute all tests for the given suite/subsuite.
         tests = self.get_tests(suite)
 
+        # TODO: the only exception here is we schedule webgpu as that is a --tag
         if "web-platform-tests" in suite:
             manifests = set()
             for t in tests:
                 manifests.add(t["manifest"])
-            return {"active": list(manifests), "skipped": []}
+            return {
+                "active": list(manifests),
+                "skipped": [],
+                "other_dirs": dict.fromkeys(manifests, ""),
+            }
 
         manifests = {chunk_by_runtime.get_manifest(t) for t in tests}
 

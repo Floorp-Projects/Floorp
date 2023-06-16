@@ -33,7 +33,7 @@ const SW_REL_SW_SCRIPT = "sw_with_navigationPreload.js";
  *         result.
  * Step 4. Unregister the ServiceWorker and cleanup the environment.
  */
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["dom.serviceWorkers.enabled", true],
@@ -52,7 +52,7 @@ add_task(async function() {
   await SpecialPowers.spawn(
     topTab.linkedBrowser,
     [{ sw: SW_REL_SW_SCRIPT }],
-    async function({ sw }) {
+    async function ({ sw }) {
       // Waive the xray to use the content utils.js script functions.
       dump(`register serviceworker...\n`);
       await content.wrappedJSObject.registerAndWaitForActive(sw);
@@ -71,7 +71,7 @@ add_task(async function() {
   let result = await SpecialPowers.spawn(
     topTab.linkedBrowser,
     [{ url: SW_IFRAME_PAGE }],
-    async function({ url }) {
+    async function ({ url }) {
       async function waitForNavigationPreload() {
         return new Promise(resolve => {
           content.wrappedJSObject.navigator.serviceWorker.addEventListener(
@@ -106,7 +106,7 @@ add_task(async function() {
   BrowserTestUtils.loadURIString(topTab.linkedBrowser, SW_REGISTER_PAGE);
   await browserLoadedPromise;
 
-  await SpecialPowers.spawn(topTab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(topTab.linkedBrowser, [], async function () {
     await content.wrappedJSObject.unregisterAll();
   });
 

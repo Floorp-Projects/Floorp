@@ -37,7 +37,7 @@
  *        is called with an object holding the action and the state
  */
 function createPerformanceMarkerMiddleware(cases) {
-  return function(store) {
+  return function (store) {
     return next => action => {
       const condition = cases[action.type];
       const shouldAddProfileMarker = !!condition;

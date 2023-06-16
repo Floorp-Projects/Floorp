@@ -45,7 +45,7 @@ add_task(async function init() {
   );
 });
 
-var promiseShutdownDurationData = async function() {
+var promiseShutdownDurationData = async function () {
   // Wait until PATH exists.
   // Timeout if it is never created.
   while (true) {
@@ -63,7 +63,7 @@ var promiseShutdownDurationData = async function() {
 
 var currentPhase = 0;
 
-var advancePhase = async function() {
+var advancePhase = async function () {
   let key = "terminator-test-" + KEYS[currentPhase];
   let msDuration = 200 + HEARTBEAT_MS * currentPhase;
 

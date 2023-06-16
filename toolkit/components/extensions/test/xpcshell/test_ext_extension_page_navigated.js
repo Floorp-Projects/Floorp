@@ -36,7 +36,7 @@ function createTestExtPage({ script }) {
 }
 
 function createTestExtPageScript(name) {
-  return `(${async function(pageName) {
+  return `(${async function (pageName) {
     browser.webRequest.onBeforeRequest.addListener(
       details => {
         browser.test.log(
@@ -56,9 +56,9 @@ function createTestExtPageScript(name) {
   }})("${name}");`;
 }
 
-const getExtensionContextIdAndURL = ([extensionId]) => {
-  const { ExtensionProcessScript } = ChromeUtils.import(
-    "resource://gre/modules/ExtensionProcessScript.jsm"
+const getExtensionContextIdAndURL = extensionId => {
+  const { ExtensionProcessScript } = ChromeUtils.importESModule(
+    "resource://gre/modules/ExtensionProcessScript.sys.mjs"
   );
   let extWindow = this.content.window;
   let extChild = ExtensionProcessScript.getExtensionChild(extensionId);
@@ -78,12 +78,12 @@ const getExtensionContextIdAndURL = ([extensionId]) => {
   return { contextIds, contextURLs };
 };
 
-const getExtensionContextStatusByContextId = ([
+const getExtensionContextStatusByContextId = (
   extensionId,
-  extPageContextId,
-]) => {
-  const { ExtensionProcessScript } = ChromeUtils.import(
-    "resource://gre/modules/ExtensionProcessScript.jsm"
+  extPageContextId
+) => {
+  const { ExtensionProcessScript } = ChromeUtils.importESModule(
+    "resource://gre/modules/ExtensionProcessScript.sys.mjs"
   );
   let extChild = ExtensionProcessScript.getExtensionChild(extensionId);
 
@@ -195,14 +195,16 @@ add_task(async function test_extension_page_sameprocess_navigation() {
           // We should not have tried to deserialize the event data for the extension page
           // that got moved into the BFCache (See Bug 1499129).
           {
-            message: /StructureCloneHolder.deserialize: Argument 1 is not an object/,
+            message:
+              /StructureCloneHolder.deserialize: Argument 1 is not an object/,
           },
         ],
         expected: [
           // If the extension page is expected to be in the BFCache, then we expect to see
           // a warning message logged for the ignored listener.
           {
-            message: /Ignored listener for inactive context .* path=webRequest.onBeforeRequest/,
+            message:
+              /Ignored listener for inactive context .* path=webRequest.onBeforeRequest/,
           },
         ],
       },
@@ -218,7 +220,7 @@ add_task(async function test_extension_page_context_navigated_to_web_page() {
   const extension = ExtensionTestUtils.loadExtension({
     files: {
       "extpage.html": createTestExtPage({ script: "extpage.js" }),
-      "extpage.js": function() {
+      "extpage.js": function () {
         dump("loaded extension page\n");
         window.addEventListener(
           "pageshow",

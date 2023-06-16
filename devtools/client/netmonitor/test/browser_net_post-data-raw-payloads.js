@@ -7,7 +7,7 @@
  * Tests if the POST requests display the correct information in the UI,
  * for raw payloads with attached content-type headers.
  */
-add_task(async function() {
+add_task(async function () {
   const {
     L10N,
   } = require("resource://devtools/client/netmonitor/src/utils/l10n.js");

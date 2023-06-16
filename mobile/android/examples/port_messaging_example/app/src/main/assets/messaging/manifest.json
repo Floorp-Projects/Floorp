@@ -11,8 +11,5 @@
   "background": {
     "scripts": ["background.js"]
   },
-  "permissions": [
-    "nativeMessaging",
-    "geckoViewAddons"
-  ]
+  "permissions": ["nativeMessaging", "geckoViewAddons"]
 }

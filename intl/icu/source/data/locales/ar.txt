@@ -2344,6 +2344,11 @@ ar{
         }
         month-narrow{
             dn{"الشهر"}
+            relative{
+                "-1"{"الشهر الماضي"}
+                "0"{"هذا الشهر"}
+                "1"{"الشهر القادم"}
+            }
             relativeTime{
                 future{
                     few{"خلال {0} أشهر"}
@@ -2365,6 +2370,11 @@ ar{
         }
         month-short{
             dn{"الشهر"}
+            relative{
+                "-1"{"الشهر الماضي"}
+                "0"{"هذا الشهر"}
+                "1"{"الشهر القادم"}
+            }
             relativeTime{
                 future{
                     few{"خلال {0} أشهر"}
@@ -2932,6 +2942,11 @@ ar{
         }
         week-narrow{
             dn{"الأسبوع"}
+            relative{
+                "-1"{"الأسبوع الماضي"}
+                "0"{"هذا الأسبوع"}
+                "1"{"الأسبوع القادم"}
+            }
             relativePeriod{"أسبوع {0}"}
             relativeTime{
                 future{
@@ -2954,6 +2969,11 @@ ar{
         }
         week-short{
             dn{"الأسبوع"}
+            relative{
+                "-1"{"الأسبوع الماضي"}
+                "0"{"هذا الأسبوع"}
+                "1"{"الأسبوع القادم"}
+            }
             relativePeriod{"أسبوع {0}"}
             relativeTime{
                 future{
@@ -3029,6 +3049,11 @@ ar{
         }
         year-narrow{
             dn{"السنة"}
+            relative{
+                "-1"{"السنة الماضية"}
+                "0"{"السنة الحالية"}
+                "1"{"السنة القادمة"}
+            }
             relativeTime{
                 future{
                     few{"خلال {0} سنوات"}
@@ -3050,6 +3075,11 @@ ar{
         }
         year-short{
             dn{"السنة"}
+            relative{
+                "-1"{"السنة الماضية"}
+                "0"{"السنة الحالية"}
+                "1"{"السنة القادمة"}
+            }
             relativeTime{
                 future{
                     few{"خلال {0} سنوات"}
@@ -3090,10 +3120,16 @@ ar{
             start{"{0} أو {1}"}
         }
         or-narrow{
+            2{"{0} أو {1}"}
+            end{"{0} أو {1}"}
+            middle{"{0} أو {1}"}
             start{"{0} أو {1}"}
         }
         or-short{
+            2{"{0} أو {1}"}
+            end{"{0} أو {1}"}
             middle{"{0} أو {1}"}
+            start{"{0} أو {1}"}
         }
         standard{
             2{"{0} و{1}"}
@@ -3102,6 +3138,7 @@ ar{
             start{"{0} و{1}"}
         }
         standard-narrow{
+            2{"{0} و{1}"}
             end{"{0} و{1}"}
             middle{"{0} و{1}"}
             start{"{0} و{1}"}
@@ -3119,6 +3156,7 @@ ar{
             start{"{0}، و{1}"}
         }
         unit-narrow{
+            2{"{0} و{1}"}
             end{"{0} و{1}"}
             middle{"{0} و{1}"}
             start{"{0} و{1}"}
@@ -3153,8 +3191,8 @@ ar{
     personNames{
         foreignSpaceReplacement{" "}
         initialPattern{
-            initial{"{0}"}
-            initialSequence{"{0}. {1}."}
+            initial{"{0}."}
+            initialSequence{"{0} {1}"}
         }
         nameOrderLocales{
             givenFirst{
@@ -3169,25 +3207,26 @@ ar{
             }
         }
         namePattern{
-            givenFirst-long-addressing-formal{"{prefix} {surname}"}
+            givenFirst-long-addressing-formal{"{title} {surname}"}
             givenFirst-long-addressing-informal{"{given-informal}"}
             givenFirst-long-monogram-formal{
                 "{given-monogram-allCaps}.{given2-monogram-allCaps}.{surname-monogram"
                 "-allCaps}"
             }
             givenFirst-long-monogram-informal{"{given-informal-monogram-allCaps}.{surname-monogram-allCaps}"}
-            givenFirst-long-referring-formal{"{prefix} {given} {given2} {surname}"}
+            givenFirst-long-referring-formal{"{title} {given} {given2} {surname} {generation}، {credentials}"}
             givenFirst-long-referring-informal{"{given-informal} {surname}"}
-            givenFirst-medium-addressing-formal{"{prefix} {surname}"}
+            givenFirst-medium-addressing-formal{"{title} {surname}"}
             givenFirst-medium-addressing-informal{"{given-informal}"}
             givenFirst-medium-monogram-formal{"{given-monogram-allCaps}.{surname-monogram-allCaps}"}
             givenFirst-medium-monogram-informal{"{given-monogram-allCaps}.{surname-monogram-allCaps}"}
-            givenFirst-medium-referring-formal{"{prefix} {given} {given2-initial} {surname}"}
+            givenFirst-medium-referring-formal{"{title} {given} {given2-initial} {surname}"}
             givenFirst-medium-referring-informal{"{given-informal} {surname}"}
-            givenFirst-short-addressing-formal{"{prefix} {surname}"}
+            givenFirst-short-addressing-formal{"{title} {surname}"}
             givenFirst-short-addressing-informal{"{given-informal}"}
+            givenFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             givenFirst-short-monogram-informal{"{given-monogram-allCaps}.{surname-monogram-allCaps}"}
-            givenFirst-short-referring-formal{"{prefix} {given-initial} {surname}"}
+            givenFirst-short-referring-formal{"{title} {given-initial} {surname}"}
             givenFirst-short-referring-informal{"{given-informal-initial}. {surname}"}
             sorting-long-referring-formal{"{surname-prefix} {surname-core}، {given} {given2}"}
             sorting-long-referring-informal{"{surname}، {given-informal}"}
@@ -3195,7 +3234,7 @@ ar{
             sorting-medium-referring-informal{"{surname}، {given-informal}"}
             sorting-short-referring-formal{"{surname-prefix} {surname-core}، {given} {given2-initial}"}
             sorting-short-referring-informal{"{surname}، {given-informal}"}
-            surnameFirst-long-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-long-addressing-formal{"{title} {surname}"}
             surnameFirst-long-addressing-informal{"{given-informal}"}
             surnameFirst-long-monogram-formal{
                 "{surname-monogram-allCaps}.{given-monogram-allCaps}.{given2-monogram"
@@ -3204,17 +3243,17 @@ ar{
             surnameFirst-long-monogram-informal{"{surname-monogram-allCaps}.{given-informal-monogram-allCaps}"}
             surnameFirst-long-referring-formal{"{surname}، {given} {given2}"}
             surnameFirst-long-referring-informal{"{surname} {given-informal}"}
-            surnameFirst-medium-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-medium-addressing-formal{"{title} {surname}"}
             surnameFirst-medium-addressing-informal{"{given-informal}"}
-            surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}."}
-            surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}."}
+            surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
+            surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
             surnameFirst-medium-referring-formal{"{surname}، {given} {given2-initial}"}
             surnameFirst-medium-referring-informal{"{surname} {given-informal}"}
-            surnameFirst-short-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-short-addressing-formal{"{title} {surname}"}
             surnameFirst-short-addressing-informal{"{given-informal}"}
-            surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}."}
-            surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}."}
-            surnameFirst-short-referring-formal{"{surname}، {given-initial}"}
+            surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
+            surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
+            surnameFirst-short-referring-formal{"{surname}، {given-initial} {given2-initial}"}
             surnameFirst-short-referring-informal{"{surname} {given-initial}"}
         }
     }

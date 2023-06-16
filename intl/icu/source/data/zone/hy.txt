@@ -258,6 +258,9 @@ hy{
         "America:Chihuahua"{
             ec{"Չիուաուա"}
         }
+        "America:Ciudad_Juarez"{
+            ec{"Սյուդադ Խուարես"}
+        }
         "America:Coral_Harbour"{
             ec{"Ատիկոկան"}
         }

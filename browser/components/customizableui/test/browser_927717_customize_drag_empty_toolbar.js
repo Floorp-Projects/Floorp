@@ -7,7 +7,7 @@
 const kTestToolbarId = "test-empty-drag";
 
 // Attempting to drag an item to an empty container should work.
-add_task(async function() {
+add_task(async function () {
   await createToolbarWithPlacements(kTestToolbarId, []);
   await startCustomizing();
   let libraryButton = document.getElementById("library-button");

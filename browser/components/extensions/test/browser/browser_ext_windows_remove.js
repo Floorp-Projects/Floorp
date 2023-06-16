@@ -7,7 +7,7 @@ add_task(async function testWindowRemove() {
     async background() {
       async function closeWindow(id) {
         let window = await browser.windows.get(id);
-        return new Promise(function(resolve) {
+        return new Promise(function (resolve) {
           browser.windows.onRemoved.addListener(async function listener(
             windowId
           ) {

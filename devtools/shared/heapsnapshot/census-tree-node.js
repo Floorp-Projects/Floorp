@@ -73,7 +73,7 @@ CensusTreeNodeCacheValue.prototype = null;
  * @returns {String}
  *          The unique string that can be used as a key in a CensusTreeNodeCache.
  */
-CensusTreeNodeCache.hashFrame = function(frame) {
+CensusTreeNodeCache.hashFrame = function (frame) {
   // eslint-disable-next-line max-len
   return `FRAME,${frame.functionDisplayName},${frame.source},${frame.line},${frame.column},${frame.asyncCause}`;
 };
@@ -89,7 +89,7 @@ CensusTreeNodeCache.hashFrame = function(frame) {
  * @returns {String}
  *          The unique string that can be used as a key in a CensusTreeNodeCache.
  */
-CensusTreeNodeCache.hashNode = function(node) {
+CensusTreeNodeCache.hashNode = function (node) {
   return isSavedFrame(node.name)
     ? CensusTreeNodeCache.hashFrame(node.name)
     : `NODE,${node.name}`;
@@ -102,7 +102,7 @@ CensusTreeNodeCache.hashNode = function(node) {
  * @param {CensusTreeNodeCache} cache
  * @param {CensusTreeNodeCacheValue} value
  */
-CensusTreeNodeCache.insertFrame = function(cache, value) {
+CensusTreeNodeCache.insertFrame = function (cache, value) {
   cache[CensusTreeNodeCache.hashFrame(value.node.name)] = value;
 };
 
@@ -112,7 +112,7 @@ CensusTreeNodeCache.insertFrame = function(cache, value) {
  * @param {CensusTreeNodeCache} cache
  * @param {CensusTreeNodeCacheValue} value
  */
-CensusTreeNodeCache.insertNode = function(cache, value) {
+CensusTreeNodeCache.insertNode = function (cache, value) {
   if (isSavedFrame(value.node.name)) {
     CensusTreeNodeCache.insertFrame(cache, value);
   } else {
@@ -128,7 +128,7 @@ CensusTreeNodeCache.insertNode = function(cache, value) {
  *
  * @returns {undefined|CensusTreeNodeCacheValue}
  */
-CensusTreeNodeCache.lookupFrame = function(cache, frame) {
+CensusTreeNodeCache.lookupFrame = function (cache, frame) {
   return cache[CensusTreeNodeCache.hashFrame(frame)];
 };
 
@@ -140,7 +140,7 @@ CensusTreeNodeCache.lookupFrame = function(cache, frame) {
  *
  * @returns {undefined|CensusTreeNodeCacheValue}
  */
-CensusTreeNodeCache.lookupNode = function(cache, node) {
+CensusTreeNodeCache.lookupNode = function (cache, node) {
   return isSavedFrame(node.name)
     ? CensusTreeNodeCache.lookupFrame(cache, node.name)
     : cache[CensusTreeNodeCache.hashNode(node)];
@@ -296,7 +296,7 @@ CensusTreeNodeVisitor.prototype = Object.create(Visitor);
  *
  * @overrides Visitor.prototype.enter
  */
-CensusTreeNodeVisitor.prototype.enter = function(breakdown, report, edge) {
+CensusTreeNodeVisitor.prototype.enter = function (breakdown, report, edge) {
   this._index++;
 
   const cache = this._cacheStack[this._cacheStack.length - 1];
@@ -332,7 +332,7 @@ function isNonEmpty(node) {
  *
  * @overrides Visitor.prototype.exit
  */
-CensusTreeNodeVisitor.prototype.exit = function(breakdown, report, edge) {
+CensusTreeNodeVisitor.prototype.exit = function (breakdown, report, edge) {
   // Ensure all children are sorted and have their counts/bytes aggregated. We
   // only need to consider cache children here, because other children
   // correspond to other sub-reports and we already fixed them up in an earlier
@@ -370,7 +370,7 @@ CensusTreeNodeVisitor.prototype.exit = function(breakdown, report, edge) {
 /**
  * @overrides Visitor.prototype.count
  */
-CensusTreeNodeVisitor.prototype.count = function(breakdown, report, edge) {
+CensusTreeNodeVisitor.prototype.count = function (breakdown, report, edge) {
   const node = this._nodeStack[this._nodeStack.length - 1];
   node.reportLeafIndex = this._index;
 
@@ -388,7 +388,7 @@ CensusTreeNodeVisitor.prototype.count = function(breakdown, report, edge) {
  *
  * @returns {CensusTreeNode}
  */
-CensusTreeNodeVisitor.prototype.root = function() {
+CensusTreeNodeVisitor.prototype.root = function () {
   if (!this._root) {
     throw new Error(
       "Attempt to get the root before walking the census report!"
@@ -669,7 +669,7 @@ function filter(tree, predicate) {
  * @returns {Function}
  */
 function makeFilterPredicate(filterString) {
-  return function(node) {
+  return function (node) {
     if (!node.name) {
       return false;
     }
@@ -716,7 +716,7 @@ function makeFilterPredicate(filterString) {
  *
  * @returns {CensusTreeNode}
  */
-exports.censusReportToCensusTreeNode = function(
+exports.censusReportToCensusTreeNode = function (
   breakdown,
   report,
   options = {

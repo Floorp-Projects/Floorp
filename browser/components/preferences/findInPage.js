@@ -73,8 +73,8 @@ var gSearchResultsPane = {
    */
   fixInputPosition() {
     let innerContainer = document.querySelector(".sticky-inner-container");
-    let width = window.windowUtils.getBoundsWithoutFlushing(innerContainer)
-      .width;
+    let width =
+      window.windowUtils.getBoundsWithoutFlushing(innerContainer).width;
     innerContainer.style.maxWidth = width + "px";
   },
 

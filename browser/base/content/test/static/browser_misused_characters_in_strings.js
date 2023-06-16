@@ -167,7 +167,7 @@ add_task(async function checkAllTheProperties() {
   }
 });
 
-var checkDTD = async function(aURISpec) {
+var checkDTD = async function (aURISpec) {
   let rawContents = await fetchFile(aURISpec);
   // The regular expression below is adapted from:
   // https://hg.mozilla.org/mozilla-central/file/68c0b7d6f16ce5bb023e08050102b5f2fe4aacd8/python/compare-locales/compare_locales/parser.py#l233

@@ -6,7 +6,7 @@
  * Redux actions for the sources state
  * @module actions/sources
  */
-
+import { PROMISE } from "../utils/middleware/promise";
 import { insertSourceActors } from "../../actions/source-actors";
 import {
   makeSourceId,
@@ -15,9 +15,10 @@ import {
   createSourceActor,
 } from "../../client/firefox/create";
 import { toggleBlackBox } from "./blackbox";
-import { syncBreakpoint } from "../breakpoints";
+import { syncPendingBreakpoint } from "../breakpoints";
 import { loadSourceText } from "./loadSourceText";
 import { togglePrettyPrint } from "./prettyPrint";
+import { toggleSourceMapIgnoreList } from "../ui";
 import { selectLocation, setBreakableLines } from "../sources";
 
 import { getRawSourceURL, isPrettyURL } from "../../utils/source";
@@ -38,7 +39,7 @@ import sourceQueue from "../../utils/source-queue";
 import { validateNavigateContext, ContextError } from "../../utils/context";
 
 function loadSourceMaps(cx, sources) {
-  return async function({ dispatch }) {
+  return async function ({ dispatch }) {
     try {
       const sourceList = await Promise.all(
         sources.map(async sourceActor => {
@@ -54,14 +55,12 @@ function loadSourceMaps(cx, sources) {
       );
 
       await sourceQueue.flush();
-
       return sourceList.flat();
     } catch (error) {
       if (!(error instanceof ContextError)) {
         throw error;
       }
     }
-
     return [];
   };
 }
@@ -71,7 +70,7 @@ function loadSourceMaps(cx, sources) {
  * @static
  */
 function loadSourceMap(cx, sourceActor) {
-  return async function({ dispatch, getState, sourceMapLoader }) {
+  return async function ({ dispatch, getState, sourceMapLoader }) {
     if (!prefs.clientSourceMapsEnabled || !sourceActor.sourceMapURL) {
       return [];
     }
@@ -90,6 +89,10 @@ function loadSourceMap(cx, sourceActor) {
           sourceMapBaseURL: sourceActor.sourceMapBaseURL || "",
           sourceMapURL: sourceActor.sourceMapURL || "",
           isWasm: sourceActor.introductionType === "wasm",
+        });
+        dispatch({
+          type: "ADD_SOURCEMAP_IGNORE_LIST_SOURCES",
+          [PROMISE]: sourceMapLoader.getSourceMapIgnoreList(source.id),
         });
       }
     } catch (e) {
@@ -169,11 +172,13 @@ function checkPendingBreakpoints(cx, source, sourceActor) {
 
     // load the source text if there is a pending breakpoint for it
     await dispatch(loadSourceText(cx, source, sourceActor));
-    await dispatch(setBreakableLines(cx, source, sourceActor));
+    await dispatch(
+      setBreakableLines(cx, createLocation({ source, sourceActor }))
+    );
 
     await Promise.all(
-      pendingBreakpoints.map(bp => {
-        return dispatch(syncBreakpoint(cx, source.id, bp));
+      pendingBreakpoints.map(pendingBp => {
+        return dispatch(syncPendingBreakpoint(cx, source.id, pendingBp));
       })
     );
   };
@@ -193,6 +198,10 @@ function restoreBlackBoxedSources(cx, sources) {
         // If the ranges is an empty then the whole source was blackboxed.
         await dispatch(toggleBlackBox(cx, source, true, ranges));
       }
+    }
+
+    if (prefs.sourceMapIgnoreListEnabled) {
+      await dispatch(toggleSourceMapIgnoreList(cx, true));
     }
   };
 }
@@ -323,7 +332,10 @@ export function newGeneratedSources(sourceResources) {
         // will request breakable lines for that particular source actor.
         if (sourceActor.sourceObject.isHTML) {
           await dispatch(
-            setBreakableLines(cx, sourceActor.sourceObject, sourceActor)
+            setBreakableLines(
+              cx,
+              createLocation({ source: sourceActor.sourceObject, sourceActor })
+            )
           );
         }
         dispatch(

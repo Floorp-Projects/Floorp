@@ -209,7 +209,6 @@
 #include "nsCycleCollectionNoteChild.h"
 #include "nsCycleCollectionTraversalCallback.h"
 #include "nsDOMNavigationTiming.h"
-#include "nsDOMOfflineResourceList.h"
 #include "nsDebug.h"
 #include "nsDeviceContext.h"
 #include "nsDocShell.h"
@@ -1181,12 +1180,6 @@ void nsGlobalWindowInner::FreeInnerObjects() {
   // Remove our reference to the document and the document principal.
   mFocusedElement = nullptr;
 
-  if (mApplicationCache) {
-    static_cast<nsDOMOfflineResourceList*>(mApplicationCache.get())
-        ->Disconnect();
-    mApplicationCache = nullptr;
-  }
-
   if (mIndexedDB) {
     mIndexedDB->DisconnectFromGlobal(this);
     mIndexedDB = nullptr;
@@ -1408,7 +1401,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindowInner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSharedWorkers)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLocalStorage)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSessionStorage)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mApplicationCache)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIndexedDB)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentPrincipal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentCookiePrincipal)
@@ -1520,11 +1512,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowInner)
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mLocalStorage)
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSessionStorage)
-  if (tmp->mApplicationCache) {
-    static_cast<nsDOMOfflineResourceList*>(tmp->mApplicationCache.get())
-        ->Disconnect();
-    NS_IMPL_CYCLE_COLLECTION_UNLINK(mApplicationCache)
-  }
   if (tmp->mIndexedDB) {
     tmp->mIndexedDB->DisconnectFromGlobal(tmp);
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mIndexedDB)
@@ -3338,38 +3325,6 @@ bool nsGlobalWindowInner::CachesEnabled(JSContext* aCx, JSObject*) {
   return true;
 }
 
-nsDOMOfflineResourceList* nsGlobalWindowInner::GetApplicationCache(
-    ErrorResult& aError) {
-  if (!mApplicationCache) {
-    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetDocShell()));
-    if (!webNav || !mDoc) {
-      aError.Throw(NS_ERROR_FAILURE);
-      return nullptr;
-    }
-
-    nsCOMPtr<nsIURI> uri;
-    aError = webNav->GetCurrentURI(getter_AddRefs(uri));
-    if (aError.Failed()) {
-      return nullptr;
-    }
-
-    nsCOMPtr<nsIURI> manifestURI;
-    nsContentUtils::GetOfflineAppManifest(mDoc, getter_AddRefs(manifestURI));
-
-    RefPtr<nsDOMOfflineResourceList> applicationCache =
-        new nsDOMOfflineResourceList(manifestURI, uri, mDoc->NodePrincipal(),
-                                     this);
-
-    mApplicationCache = applicationCache;
-  }
-
-  return mApplicationCache;
-}
-
-nsDOMOfflineResourceList* nsGlobalWindowInner::GetApplicationCache() {
-  return GetApplicationCache(IgnoreErrors());
-}
-
 Crypto* nsGlobalWindowInner::GetCrypto(ErrorResult& aError) {
   if (!mCrypto) {
     mCrypto = new Crypto(this);
@@ -3591,6 +3546,14 @@ void nsGlobalWindowInner::SetOuterHeight(JSContext* aCx,
                             "outerHeight", aCallerType, aError);
 }
 
+double nsGlobalWindowInner::ScreenEdgeSlopX() const {
+  FORWARD_TO_OUTER(ScreenEdgeSlopX, (), 0);
+}
+
+double nsGlobalWindowInner::ScreenEdgeSlopY() const {
+  FORWARD_TO_OUTER(ScreenEdgeSlopY, (), 0);
+}
+
 int32_t nsGlobalWindowInner::GetScreenX(CallerType aCallerType,
                                         ErrorResult& aError) {
   FORWARD_TO_OUTER_OR_THROW(GetScreenXOuter, (aCallerType, aError), aError, 0);
@@ -3641,7 +3604,8 @@ double nsGlobalWindowInner::GetDevicePixelRatio(CallerType aCallerType,
     return 1.0;
   }
 
-  if (nsIGlobalObject::ShouldResistFingerprinting(aCallerType)) {
+  if (nsIGlobalObject::ShouldResistFingerprinting(aCallerType,
+                                                  RFPTarget::Unknown)) {
     // Spoofing the DevicePixelRatio causes blurriness in some situations
     // on HiDPI displays. pdf.js is a non-system caller; but it can't
     // expose the fingerprintable information, so we can safely disable
@@ -5439,18 +5403,6 @@ nsresult nsGlobalWindowInner::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
   }
 
-  if (!nsCRT::strcmp(aTopic, "offline-cache-update-added")) {
-    if (mApplicationCache) return NS_OK;
-
-    // Instantiate the application object now. It observes update belonging to
-    // this window's document and correctly updates the applicationCache object
-    // state.
-    nsCOMPtr<nsIObserver> observer = GetApplicationCache();
-    if (observer) observer->Observe(aSubject, aTopic, aData);
-
-    return NS_OK;
-  }
-
   if (!nsCRT::strcmp(aTopic, PERMISSION_CHANGED_TOPIC)) {
     nsCOMPtr<nsIPermission> perm(do_QueryInterface(aSubject));
     if (!perm) {
@@ -6143,11 +6095,6 @@ StorageAccess nsGlobalWindowInner::GetStorageAccess() {
 }
 
 nsresult nsGlobalWindowInner::FireDelayedDOMEvents(bool aIncludeSubWindows) {
-  if (mApplicationCache) {
-    static_cast<nsDOMOfflineResourceList*>(mApplicationCache.get())
-        ->FirePendingEvents();
-  }
-
   // Fires an offline status event if the offline status has changed
   FireOfflineStatusEventIfChanged();
 
@@ -7467,7 +7414,8 @@ void nsGlobalWindowInner::InitWasOffline() { mWasOffline = NS_IsOffline(); }
 int16_t nsGlobalWindowInner::Orientation(CallerType aCallerType) {
   // GetOrientationAngle() returns 0, 90, 180 or 270.
   // window.orientation returns -90, 0, 90 or 180.
-  if (nsIGlobalObject::ShouldResistFingerprinting(aCallerType)) {
+  if (nsIGlobalObject::ShouldResistFingerprinting(
+          aCallerType, RFPTarget::ScreenOrientation)) {
     return 0;
   }
   nsScreen* s = GetScreen(IgnoreErrors());

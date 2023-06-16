@@ -17,7 +17,7 @@ const TEST_VALUES = [
   "document.location",
 ];
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm } = hud;
 

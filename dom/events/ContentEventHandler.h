@@ -259,6 +259,8 @@ class MOZ_STACK_CLASS ContentEventHandler {
   static uint32_t GetNativeTextLength(const dom::Text& aTextNode,
                                       uint32_t aMaxLength = UINT32_MAX);
 
+  static uint32_t GetNativeTextLength(const nsAString& aText);
+
  protected:
   // Get the text length of aTextNode.
   static uint32_t GetTextLength(const dom::Text& aTextNode,

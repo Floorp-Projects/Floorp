@@ -11,7 +11,7 @@ const TEST_URI =
 // opened we make use of setTimeout() to create tool active times.
 const TOOL_DELAY = 1000;
 
-add_task(async function() {
+add_task(async function () {
   await addTab(TEST_URI);
   startTelemetry();
 

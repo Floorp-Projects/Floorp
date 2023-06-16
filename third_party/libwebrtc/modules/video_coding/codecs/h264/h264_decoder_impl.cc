@@ -39,10 +39,10 @@ namespace webrtc {
 
 namespace {
 
-constexpr std::array<AVPixelFormat, 8> kPixelFormatsSupported = {
-    AV_PIX_FMT_YUV420P,     AV_PIX_FMT_YUV422P,    AV_PIX_FMT_YUV444P,
-    AV_PIX_FMT_YUVJ420P,    AV_PIX_FMT_YUVJ422P,   AV_PIX_FMT_YUVJ444P,
-    AV_PIX_FMT_YUV420P10LE, AV_PIX_FMT_YUV422P10LE};
+constexpr std::array<AVPixelFormat, 9> kPixelFormatsSupported = {
+    AV_PIX_FMT_YUV420P,     AV_PIX_FMT_YUV422P,     AV_PIX_FMT_YUV444P,
+    AV_PIX_FMT_YUVJ420P,    AV_PIX_FMT_YUVJ422P,    AV_PIX_FMT_YUVJ444P,
+    AV_PIX_FMT_YUV420P10LE, AV_PIX_FMT_YUV422P10LE, AV_PIX_FMT_YUV444P10LE};
 const size_t kYPlaneIndex = 0;
 const size_t kUPlaneIndex = 1;
 const size_t kVPlaneIndex = 2;
@@ -120,6 +120,7 @@ int H264DecoderImpl::AVGetBuffer2(AVCodecContext* context,
   rtc::scoped_refptr<I422Buffer> i422_buffer;
   rtc::scoped_refptr<I010Buffer> i010_buffer;
   rtc::scoped_refptr<I210Buffer> i210_buffer;
+  rtc::scoped_refptr<I410Buffer> i410_buffer;
   int bytes_per_pixel = 1;
   switch (context->pix_fmt) {
     case AV_PIX_FMT_YUV420P:
@@ -192,6 +193,22 @@ int H264DecoderImpl::AVGetBuffer2(AVCodecContext* context,
           reinterpret_cast<uint8_t*>(i210_buffer->MutableDataV());
       av_frame->linesize[kVPlaneIndex] = i210_buffer->StrideV() * 2;
       frame_buffer = i210_buffer;
+      bytes_per_pixel = 2;
+      break;
+    case AV_PIX_FMT_YUV444P10LE:
+      i410_buffer =
+          decoder->ffmpeg_buffer_pool_.CreateI410Buffer(width, height);
+      // Set `av_frame` members as required by FFmpeg.
+      av_frame->data[kYPlaneIndex] =
+          reinterpret_cast<uint8_t*>(i410_buffer->MutableDataY());
+      av_frame->linesize[kYPlaneIndex] = i410_buffer->StrideY() * 2;
+      av_frame->data[kUPlaneIndex] =
+          reinterpret_cast<uint8_t*>(i410_buffer->MutableDataU());
+      av_frame->linesize[kUPlaneIndex] = i410_buffer->StrideU() * 2;
+      av_frame->data[kVPlaneIndex] =
+          reinterpret_cast<uint8_t*>(i410_buffer->MutableDataV());
+      av_frame->linesize[kVPlaneIndex] = i410_buffer->StrideV() * 2;
+      frame_buffer = i410_buffer;
       bytes_per_pixel = 2;
       break;
     default:
@@ -424,6 +441,11 @@ int32_t H264DecoderImpl::Decode(const EncodedImage& input_image,
       planar_yuv16_buffer = reinterpret_cast<const webrtc::PlanarYuv16BBuffer*>(
           planar_yuv_buffer);
       break;
+    case VideoFrameBuffer::Type::kI410:
+      planar_yuv_buffer = frame_buffer->GetI410();
+      planar_yuv16_buffer = reinterpret_cast<const webrtc::PlanarYuv16BBuffer*>(
+          planar_yuv_buffer);
+      break;
     default:
       // If this code is changed to allow other video frame buffer type,
       // make sure that the code below which wraps I420/I422/I444 buffer and
@@ -469,7 +491,8 @@ int32_t H264DecoderImpl::Decode(const EncodedImage& input_image,
       break;
     }
     case VideoFrameBuffer::Type::kI010:
-    case VideoFrameBuffer::Type::kI210: {
+    case VideoFrameBuffer::Type::kI210:
+    case VideoFrameBuffer::Type::kI410: {
       RTC_DCHECK_GE(
           av_frame_->data[kYPlaneIndex],
           reinterpret_cast<const uint8_t*>(planar_yuv16_buffer->DataY()));
@@ -552,6 +575,18 @@ int32_t H264DecoderImpl::Decode(const EncodedImage& input_image,
       break;
     case VideoFrameBuffer::Type::kI210:
       cropped_buffer = WrapI210Buffer(
+          av_frame_->width, av_frame_->height,
+          reinterpret_cast<const uint16_t*>(av_frame_->data[kYPlaneIndex]),
+          av_frame_->linesize[kYPlaneIndex] / 2,
+          reinterpret_cast<const uint16_t*>(av_frame_->data[kUPlaneIndex]),
+          av_frame_->linesize[kUPlaneIndex] / 2,
+          reinterpret_cast<const uint16_t*>(av_frame_->data[kVPlaneIndex]),
+          av_frame_->linesize[kVPlaneIndex] / 2,
+          // To keep reference alive.
+          [frame_buffer] {});
+      break;
+    case VideoFrameBuffer::Type::kI410:
+      cropped_buffer = WrapI410Buffer(
           av_frame_->width, av_frame_->height,
           reinterpret_cast<const uint16_t*>(av_frame_->data[kYPlaneIndex]),
           av_frame_->linesize[kYPlaneIndex] / 2,

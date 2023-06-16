@@ -17,7 +17,7 @@ function* testSteps() {
   let request = indexedDB.open(name, 1);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
-  request.onupgradeneeded = function(event) {
+  request.onupgradeneeded = function (event) {
     info("Got upgradeneeded event for db 1");
   };
   let event = yield undefined;
@@ -25,7 +25,7 @@ function* testSteps() {
   is(event.type, "success", "Got success event for db 1");
 
   let db = event.target.result;
-  db.onversionchange = function(event) {
+  db.onversionchange = function (event) {
     info("Got versionchange event for db 1");
     event.target.close();
   };
@@ -36,7 +36,7 @@ function* testSteps() {
   request = indexedDB.open(name, 2);
   request.onerror = grabEventAndContinueHandler;
   request.onsuccess = unexpectedSuccessHandler;
-  request.onupgradeneeded = function(event) {
+  request.onupgradeneeded = function (event) {
     info("Got upgradeneeded event for db 2");
     expectUncaughtException(true);
     // eslint-disable-next-line no-undef

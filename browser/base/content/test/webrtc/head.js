@@ -72,7 +72,7 @@ function promiseIndicatorWindow() {
     Services.obs.addObserver(function obs(win) {
       win.addEventListener(
         "load",
-        function() {
+        function () {
           if (win.location.href !== INDICATOR_PATH) {
             info("ignoring a window with this url: " + win.location.href);
             return;
@@ -355,23 +355,24 @@ function promiseMessage(
   browser = gBrowser.selectedBrowser
 ) {
   let startTime = performance.now();
-  let promise = ContentTask.spawn(browser, [aMessage, aCount], async function([
-    expectedMessage,
-    expectedCount,
-  ]) {
-    return new Promise(resolve => {
-      function listenForMessage({ data }) {
-        if (
-          (!expectedMessage || data == expectedMessage) &&
-          --expectedCount == 0
-        ) {
-          content.removeEventListener("message", listenForMessage);
-          resolve(data);
+  let promise = ContentTask.spawn(
+    browser,
+    [aMessage, aCount],
+    async function ([expectedMessage, expectedCount]) {
+      return new Promise(resolve => {
+        function listenForMessage({ data }) {
+          if (
+            (!expectedMessage || data == expectedMessage) &&
+            --expectedCount == 0
+          ) {
+            content.removeEventListener("message", listenForMessage);
+            resolve(data);
+          }
         }
-      }
-      content.addEventListener("message", listenForMessage);
-    });
-  });
+        content.addEventListener("message", listenForMessage);
+      });
+    }
+  );
   if (aAction) {
     aAction();
   }
@@ -390,7 +391,7 @@ function promisePopupNotificationShown(aName, aAction, aWindow = window) {
   return new Promise(resolve => {
     aWindow.PopupNotifications.panel.addEventListener(
       "popupshown",
-      function() {
+      function () {
         ok(
           !!aWindow.PopupNotifications.getNotification(aName),
           aName + " notification shown"
@@ -505,7 +506,7 @@ async function getMediaCaptureState() {
   for (let bc of gatherBrowsingContexts(
     gBrowser.selectedBrowser.browsingContext
   )) {
-    let state = await SpecialPowers.spawn(bc, [], async function() {
+    let state = await SpecialPowers.spawn(bc, [], async function () {
       let mediaManagerService = Cc[
         "@mozilla.org/mediaManagerService;1"
       ].getService(Ci.nsIMediaManagerService);
@@ -689,7 +690,7 @@ async function promiseRequestDevice(
   return SpecialPowers.spawn(
     bc,
     [{ aRequestAudio, aRequestVideo, aType, aBadDevice }],
-    async function(args) {
+    async function (args) {
       let global = content.wrappedJSObject;
       global.requestDevice(
         args.aRequestAudio,
@@ -704,7 +705,7 @@ async function promiseRequestDevice(
 async function promiseRequestAudioOutput(options) {
   info("requesting audio output");
   const bc = gBrowser.selectedBrowser;
-  return SpecialPowers.spawn(bc, [options], async function(opts) {
+  return SpecialPowers.spawn(bc, [options], async function (opts) {
     const global = content.wrappedJSObject;
     global.requestAudioOutput(Cu.cloneInto(opts, content));
   });
@@ -748,7 +749,7 @@ async function stopTracks(
   }
 
   info(`Stopping all ${aKind} tracks`);
-  await SpecialPowers.spawn(frameBC, [aKind], async function(kind) {
+  await SpecialPowers.spawn(frameBC, [aKind], async function (kind) {
     content.wrappedJSObject.stopTracks(kind);
   });
 
@@ -798,7 +799,7 @@ async function closeStream(
   }
 
   info("closing the stream");
-  await SpecialPowers.spawn(frameBC, [], async function() {
+  await SpecialPowers.spawn(frameBC, [], async function () {
     content.wrappedJSObject.closeStream();
   });
 
@@ -885,9 +886,8 @@ function checkDeviceSelectors(aExpectedTypes, aWindow = window) {
       ok(label.hidden, `${type} selector label should be hidden.`);
     }
   }
-  let ariaDescribedby = aWindow.PopupNotifications.panel.getAttribute(
-    "aria-describedby"
-  );
+  let ariaDescribedby =
+    aWindow.PopupNotifications.panel.getAttribute("aria-describedby");
   is(ariaDescribedby, expectedDescribedBy, "aria-describedby");
 
   let screenSelector = document.getElementById("webRTC-selectWindowOrScreen");
@@ -1079,7 +1079,7 @@ async function promiseReloadFrame(aFrameId, aBrowsingContext) {
       gBrowser.selectedBrowser.browsingContext,
       aFrameId
     ));
-  await SpecialPowers.spawn(bc, [], async function() {
+  await SpecialPowers.spawn(bc, [], async function () {
     content.location.reload();
   });
   return loadedPromise;
@@ -1089,7 +1089,7 @@ function promiseChangeLocationFrame(aFrameId, aNewLocation) {
   return SpecialPowers.spawn(
     gBrowser.selectedBrowser.browsingContext,
     [{ aFrameId, aNewLocation }],
-    async function(args) {
+    async function (args) {
       let frame = content.wrappedJSObject.document.getElementById(
         args.aFrameId
       );

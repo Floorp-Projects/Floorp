@@ -4,13 +4,13 @@
 async function waitForCondition(condition) {
   return new Promise(resolve => {
     var tries = 0;
-    var interval = setInterval(function() {
+    var interval = setInterval(function () {
       if (condition() || tries >= 60) {
         moveOn();
       }
       tries++;
     }, 100);
-    var moveOn = function() {
+    var moveOn = function () {
       clearInterval(interval);
       resolve();
     };
@@ -37,7 +37,8 @@ function nsDoTestsForEditorWithAutoComplete(
 
   this._target.focus();
 
-  this._DefaultCompleteDefaultIndex = this._controller.input.completeDefaultIndex;
+  this._DefaultCompleteDefaultIndex =
+    this._controller.input.completeDefaultIndex;
 }
 
 nsDoTestsForEditorWithAutoComplete.prototype = {
@@ -87,7 +88,8 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
       this._target.removeEventListener("input", onInput);
       this._checkResult(test, beforeInputEvents, inputEvents);
     }
-    this._controller.input.completeDefaultIndex = this._DefaultCompleteDefaultIndex;
+    this._controller.input.completeDefaultIndex =
+      this._DefaultCompleteDefaultIndex;
   },
 
   _checkResult(aTest, aBeforeInputEvents, aInputEvents) {

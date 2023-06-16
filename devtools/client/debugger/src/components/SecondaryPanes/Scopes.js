@@ -21,6 +21,7 @@ import {
 } from "../../selectors";
 import { getScopes } from "../../utils/pause/scopes";
 import { getScopeItemPath } from "../../utils/pause/scopes/utils";
+import { clientCommands } from "../../client/firefox";
 
 import { objectInspector } from "devtools/client/shared/components/reps/index";
 
@@ -30,12 +31,8 @@ const { ObjectInspector } = objectInspector;
 
 class Scopes extends PureComponent {
   constructor(props) {
-    const {
-      why,
-      selectedFrame,
-      originalFrameScopes,
-      generatedFrameScopes,
-    } = props;
+    const { why, selectedFrame, originalFrameScopes, generatedFrameScopes } =
+      props;
 
     super(props);
 
@@ -208,6 +205,7 @@ class Scopes extends PureComponent {
       highlightDomElement,
       unHighlightDomElement,
       mapScopesEnabled,
+      selectedFrame,
       setExpandedScope,
       expandedScopes,
     } = this.props;
@@ -227,8 +225,12 @@ class Scopes extends PureComponent {
             roots={scopes}
             autoExpandAll={false}
             autoExpandDepth={1}
+            client={clientCommands}
+            createElement={tagName => document.createElement(tagName)}
             disableWrap={true}
             dimTopLevelWindow={true}
+            frame={selectedFrame}
+            mayUseCustomFormatter={true}
             openLink={openLink}
             onDOMNodeClick={grip => openElementInInspector(grip)}
             onInspectIconClick={grip => openElementInInspector(grip)}
@@ -270,23 +272,19 @@ const mapStateToProps = state => {
   const selectedFrame = getSelectedFrame(state, cx.thread);
   const selectedSource = getSelectedSource(state);
 
-  const {
-    scope: originalFrameScopes,
-    pending: originalPending,
-  } = getOriginalFrameScope(
-    state,
-    cx.thread,
-    selectedSource?.id,
-    selectedFrame?.id
-  ) || { scope: null, pending: false };
+  const { scope: originalFrameScopes, pending: originalPending } =
+    getOriginalFrameScope(
+      state,
+      cx.thread,
+      selectedSource?.id,
+      selectedFrame?.id
+    ) || { scope: null, pending: false };
 
-  const {
-    scope: generatedFrameScopes,
-    pending: generatedPending,
-  } = getGeneratedFrameScope(state, cx.thread, selectedFrame?.id) || {
-    scope: null,
-    pending: false,
-  };
+  const { scope: generatedFrameScopes, pending: generatedPending } =
+    getGeneratedFrameScope(state, cx.thread, selectedFrame?.id) || {
+      scope: null,
+      pending: false,
+    };
 
   return {
     cx,

@@ -9,7 +9,7 @@
  */
 addAccessibleTask(
   '<div id="div"></div>',
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     const div = findAccessibleChildByID(accDoc, "div");
     const accUniqueID = await invokeContentTask(browser, [], () => {
       const accService = Cc["@mozilla.org/accessibilityService;1"].getService(

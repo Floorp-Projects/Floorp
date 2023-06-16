@@ -15,10 +15,7 @@
       "type": "array",
       "items": {
         "type": "string",
-        "enum": [
-          "firefox-desktop",
-          "firefox-desktop-background-task"
-        ]
+        "enum": ["firefox-desktop", "firefox-desktop-background-task"]
       },
       "minItems": 1
     },
@@ -48,10 +45,7 @@
           "description": "The path to the schema file relative to the repository root"
         }
       },
-      "required": [
-        "uri",
-        "path"
-      ]
+      "required": ["uri", "path"]
     },
     "variables": {
       "additionalProperties": false,
@@ -62,12 +56,7 @@
           "properties": {
             "type": {
               "type": "string",
-              "enum": [
-                "json",
-                "boolean",
-                "int",
-                "string"
-              ]
+              "enum": ["json", "boolean", "int", "string"]
             },
             "fallbackPref": {
               "type": "string",
@@ -85,10 +74,7 @@
               "description": "Explain how this value is being used"
             }
           },
-          "required": [
-            "type",
-            "description"
-          ],
+          "required": ["type", "description"],
           "additionalProperties": false,
           "dependentSchemas": {
             "fallbackPref": {
@@ -112,10 +98,7 @@
       }
     }
   },
-  "required": [
-    "description",
-    "hasExposure"
-  ],
+  "required": ["description", "hasExposure"],
   "if": {
     "properties": {
       "hasExposure": {
@@ -124,8 +107,6 @@
     }
   },
   "then": {
-    "required": [
-      "exposureDescription"
-    ]
+    "required": ["exposureDescription"]
   }
 }

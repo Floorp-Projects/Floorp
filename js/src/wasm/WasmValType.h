@@ -396,6 +396,8 @@ class RefType {
     return RefType(ptc_.withIsNullable(nullable));
   }
 
+  bool isRefBottom() const { return isNone() || isNoFunc() || isNoExtern(); }
+
   // These methods are defined in WasmTypeDef.h to avoid a cycle while allowing
   // inlining.
   inline RefTypeHierarchy hierarchy() const;
@@ -404,6 +406,7 @@ class RefType {
   inline bool isExternHierarchy() const;
   inline bool isAnyHierarchy() const;
   static bool isSubTypeOf(RefType subType, RefType superType);
+  static bool castPossible(RefType sourceType, RefType destType);
 
   // Gets the top of the given type's hierarchy, e.g. Any for structs and
   // arrays, and Func for funcs

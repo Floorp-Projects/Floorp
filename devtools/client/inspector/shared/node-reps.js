@@ -4,16 +4,16 @@
 
 "use strict";
 
-loader.lazyGetter(this, "MODE", function() {
+loader.lazyGetter(this, "MODE", function () {
   return require("resource://devtools/client/shared/components/reps/index.js")
     .MODE;
 });
 
-loader.lazyGetter(this, "ElementNode", function() {
+loader.lazyGetter(this, "ElementNode", function () {
   return require("resource://devtools/client/shared/components/reps/reps/element-node.js");
 });
 
-loader.lazyGetter(this, "TextNode", function() {
+loader.lazyGetter(this, "TextNode", function () {
   return require("resource://devtools/client/shared/components/reps/reps/text-node.js");
 });
 

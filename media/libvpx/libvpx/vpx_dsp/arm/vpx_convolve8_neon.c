@@ -31,7 +31,7 @@
 // instructions. This optimization is much faster in speed unit test, but slowed
 // down the whole decoder by 5%.
 
-#if defined(__aarch64__) && \
+#if VPX_ARCH_AARCH64 && \
     (defined(__ARM_FEATURE_DOTPROD) || defined(__ARM_FEATURE_MATMUL_INT8))
 
 DECLARE_ALIGNED(16, static const uint8_t, dot_prod_permute_tbl[48]) = {
@@ -1261,7 +1261,7 @@ void vpx_convolve8_avg_vert_neon(const uint8_t *src, ptrdiff_t src_stride,
 
 #endif  // defined(__ARM_FEATURE_MATMUL_INT8)
 
-#else  // !(defined(__aarch64__) &&
+#else  // !(VPX_ARCH_AARCH64 &&
        //   (defined(__ARM_FEATURE_DOTPROD) ||
        //    defined(__ARM_FEATURE_MATMUL_INT8)))
 
@@ -2105,6 +2105,6 @@ void vpx_convolve8_avg_vert_neon(const uint8_t *src, ptrdiff_t src_stride,
   }
 }
 
-#endif  // #if defined(__aarch64__) &&
+#endif  // #if VPX_ARCH_AARCH64 &&
         //     (defined(__ARM_FEATURE_DOTPROD) ||
         //      defined(__ARM_FEATURE_MATMUL_INT8))

@@ -1,5 +1,5 @@
 /*eslint max-nested-callbacks: ["error", 10]*/
-import { ASRouterNewTabHook } from "lib/ASRouterNewTabHook.jsm";
+import { ASRouterNewTabHook } from "lib/ASRouterNewTabHook.sys.mjs";
 
 describe("ASRouterNewTabHook", () => {
   let sandbox = null;
@@ -28,9 +28,8 @@ describe("ASRouterNewTabHook", () => {
     describe("getInstance", () => {
       it("awaits createInstance and router init before returning instance", async () => {
         const getInstanceCall = sandbox.spy();
-        const waitForInstance = ASRouterNewTabHook.getInstance().then(
-          getInstanceCall
-        );
+        const waitForInstance =
+          ASRouterNewTabHook.getInstance().then(getInstanceCall);
         await ASRouterNewTabHook.createInstance(initParams);
         await waitForInstance;
         assert.callOrder(initParams.router.init, getInstanceCall);

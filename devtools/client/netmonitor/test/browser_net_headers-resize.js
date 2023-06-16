@@ -6,7 +6,7 @@
 /**
  * Tests resizing of columns in NetMonitor.
  */
-add_task(async function() {
+add_task(async function () {
   await testForGivenDir("ltr");
 
   await testForGivenDir("rtl");
@@ -243,7 +243,7 @@ function checkSumOfVisibleColumns(columnsData, visibleColumns) {
 }
 
 function getWidthFromPref(columnsData, column) {
-  const widthInPref = columnsData.find(function(element) {
+  const widthInPref = columnsData.find(function (element) {
     return element.name === column;
   }).width;
   return widthInPref;

@@ -9,7 +9,7 @@ const PAGE = WEB_ROOT + "page_style_sample.html";
  * Tests that the Page Style menu shows the currently
  * selected Page Style after a new one has been selected.
  */
-add_task(async function() {
+add_task(async function () {
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "about:blank",

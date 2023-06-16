@@ -6,15 +6,16 @@ function test() {
 
   // Adding one fake site so that the SiteDataManager would run.
   // Otherwise, without any site then it would just return so we would end up in not testing SiteDataManager.
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    "https://www.foo.com"
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      "https://www.foo.com"
+    );
   Services.perms.addFromPrincipal(
     principal,
     "persistent-storage",
     Ci.nsIPermissionManager.ALLOW_ACTION
   );
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.perms.removeFromPrincipal(principal, "persistent-storage");
   });
 

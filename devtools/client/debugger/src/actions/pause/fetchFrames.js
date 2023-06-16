@@ -5,7 +5,7 @@
 import { isValidThreadContext } from "../../utils/context";
 
 export function fetchFrames(cx) {
-  return async function({ dispatch, client, getState }) {
+  return async function ({ dispatch, client, getState }) {
     const { thread } = cx;
     let frames;
     try {

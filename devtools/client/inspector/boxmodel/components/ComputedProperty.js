@@ -40,9 +40,8 @@ class ComputedProperty extends PureComponent {
   constructor(props) {
     super(props);
 
-    this.renderReferenceElementPreview = this.renderReferenceElementPreview.bind(
-      this
-    );
+    this.renderReferenceElementPreview =
+      this.renderReferenceElementPreview.bind(this);
   }
 
   renderReferenceElementPreview() {

@@ -6,7 +6,7 @@
 const WORKER1_URL = URL_ROOT + "resources/service-workers/simple.html";
 const WORKER2_URL = URL_ROOT + "resources/service-workers/debug.html";
 
-add_task(async function() {
+add_task(async function () {
   await enableApplicationPanel();
 
   await openTabAndWaitForWorker(WORKER1_URL);

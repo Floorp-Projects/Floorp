@@ -9,7 +9,7 @@
 const TEST_URI =
   "data:text/html;charset=utf8,<!DOCTYPE html>Test browser console clear cache";
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.browsertoolbox.scope", "everything");
 
   await addTab(TEST_URI);
@@ -41,7 +41,7 @@ add_task(async function() {
 
 function logTextInContentAndWaitForMessage(hud, text) {
   const onMessage = waitForMessageByType(hud, text, ".console-api");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [text], function(str) {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [text], function (str) {
     content.wrappedJSObject.console.log(str);
   });
   return onMessage;

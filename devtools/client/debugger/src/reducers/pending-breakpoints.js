@@ -3,33 +3,36 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 /**
- * Pending breakpoints reducer
- * @module reducers/pending-breakpoints
+ * Pending breakpoints reducer.
+ *
+ * Pending breakpoints are a more lightweight version compared to regular breakpoints objects.
+ * They are meant to be persisted across Firefox restarts and stored into async-storage.
+ * This reducer data is saved into asyncStore from bootstrap.js and restored from main.js.
+ *
+ * The main difference with pending breakpoints is that we only save breakpoints
+ * against source with an URL as only them can be restored. (source IDs are different across reloads).
+ * The second difference is that we don't store the whole source object but only the source URL.
  */
 
-import {
-  createPendingBreakpoint,
-  makePendingLocationId,
-} from "../utils/breakpoint";
-
 import { isPrettyURL } from "../utils/source";
+import assert from "../utils/assert";
 
 function update(state = {}, action) {
   switch (action.type) {
     case "SET_BREAKPOINT":
       if (action.status === "start") {
-        return setBreakpoint(state, action);
+        return setBreakpoint(state, action.breakpoint);
       }
       return state;
 
     case "REMOVE_BREAKPOINT":
       if (action.status === "start") {
-        return removeBreakpoint(state, action);
+        return removeBreakpoint(state, action.breakpoint);
       }
       return state;
 
     case "REMOVE_PENDING_BREAKPOINT":
-      return removeBreakpoint(state, action);
+      return removePendingBreakpoint(state, action.pendingBreakpoint);
 
     case "CLEAR_BREAKPOINTS": {
       return {};
@@ -39,35 +42,94 @@ function update(state = {}, action) {
   return state;
 }
 
-/**
- * Return a location id representing a breakpoint's original location, or for
- * pretty-printed sources, its generated location.
- * @param {{ location: Location, originalLocation?: Location }} breakpoint
- */
-function makePendingLocationIdFromBreakpoint(breakpoint) {
-  const location =
-    !breakpoint.location.sourceUrl || isPrettyURL(breakpoint.location.sourceUrl)
-      ? breakpoint.generatedLocation
-      : breakpoint.location;
-  return makePendingLocationId(location);
+function shouldBreakpointBePersisted(breakpoint) {
+  // We only save breakpoint for source with URL.
+  // Source without URL can only be identified via their source actor ID
+  // which isn't persisted across reloads.
+  return !breakpoint.options.hidden && breakpoint.location.source.url;
 }
 
-function setBreakpoint(state, { breakpoint }) {
-  if (breakpoint.options.hidden) {
+function setBreakpoint(state, breakpoint) {
+  if (!shouldBreakpointBePersisted(breakpoint)) {
     return state;
   }
-  const locationId = makePendingLocationIdFromBreakpoint(breakpoint);
+
+  const id = makeIdFromBreakpoint(breakpoint);
   const pendingBreakpoint = createPendingBreakpoint(breakpoint);
 
-  return { ...state, [locationId]: pendingBreakpoint };
+  return { ...state, [id]: pendingBreakpoint };
 }
 
-function removeBreakpoint(state, { breakpoint }) {
-  const locationId = makePendingLocationIdFromBreakpoint(breakpoint);
+function removeBreakpoint(state, breakpoint) {
+  if (!shouldBreakpointBePersisted(breakpoint)) {
+    return state;
+  }
+
+  const id = makeIdFromBreakpoint(breakpoint);
   state = { ...state };
 
-  delete state[locationId];
+  delete state[id];
   return state;
+}
+
+function removePendingBreakpoint(state, pendingBreakpoint) {
+  const id = makeIdFromPendingBreakpoint(pendingBreakpoint);
+  state = { ...state };
+
+  delete state[id];
+  return state;
+}
+
+/**
+ * Return a unique identifier for a given breakpoint,
+ * using its original location, or for pretty-printed sources,
+ * its generated location.
+ *
+ * @param {Object} breakpoint
+ */
+function makeIdFromBreakpoint(breakpoint) {
+  const location = isPrettyURL(breakpoint.location.sourceUrl)
+    ? breakpoint.generatedLocation
+    : breakpoint.location;
+
+  const { sourceUrl, line, column } = location;
+  const sourceUrlString = sourceUrl || "";
+  const columnString = column || "";
+
+  return `${sourceUrlString}:${line}:${columnString}`;
+}
+
+function makeIdFromPendingBreakpoint(pendingBreakpoint) {
+  const { sourceUrl, line, column } = pendingBreakpoint.location;
+  const sourceUrlString = sourceUrl || "";
+  const columnString = column || "";
+
+  return `${sourceUrlString}:${line}:${columnString}`;
+}
+
+/**
+ * Convert typical debugger frontend location (created via location.js:createLocation)
+ * to a more lightweight flavor of it which will be stored in async storage.
+ */
+function createPendingLocation(location) {
+  assert(location.hasOwnProperty("line"), "location must have a line");
+  assert(location.hasOwnProperty("column"), "location must have a column");
+
+  const { sourceUrl, line, column } = location;
+  assert(sourceUrl !== undefined, "pending location must have a source url");
+  return { sourceUrl, line, column };
+}
+
+/**
+ * Create a new pending breakpoint, which is a more lightweight version of the regular breakpoint object.
+ */
+function createPendingBreakpoint(bp) {
+  return {
+    options: bp.options,
+    disabled: bp.disabled,
+    location: createPendingLocation(bp.location),
+    generatedLocation: createPendingLocation(bp.generatedLocation),
+  };
 }
 
 export default update;

@@ -21,7 +21,7 @@ const TEST_DATA = [
   "[dir=rtl] > span",
 ];
 
-add_task(async function() {
+add_task(async function () {
   info("Loading the test document and opening the inspector");
   const { inspector, highlighterTestFront } = await openInspectorForURL(
     TEST_URL

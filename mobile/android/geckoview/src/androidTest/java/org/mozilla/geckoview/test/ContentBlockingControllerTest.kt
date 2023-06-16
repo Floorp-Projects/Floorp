@@ -32,7 +32,7 @@ class ContentBlockingControllerTest : BaseSessionTest() {
         assertThat(
             "Expected number of default providers",
             contentBlocking.safeBrowsingProviders.size,
-            equalTo(2)
+            equalTo(2),
         )
         assertThat("Google legacy provider is present", google, notNullValue())
         assertThat("Google provider is present", google4, notNullValue())
@@ -41,50 +41,50 @@ class ContentBlockingControllerTest : BaseSessionTest() {
         assertThat(
             "Default provider values are sensible",
             google.getHashUrl,
-            containsString("/safebrowsing-dummy/")
+            containsString("/safebrowsing-dummy/"),
         )
         assertThat(
             "Default provider values are sensible",
             google.advisoryUrl,
-            startsWith("https://developers.google.com/")
+            startsWith("https://developers.google.com/"),
         )
         assertThat(
             "Default provider values are sensible",
             google4.getHashUrl,
-            containsString("/safebrowsing4-dummy/")
+            containsString("/safebrowsing4-dummy/"),
         )
         assertThat(
             "Default provider values are sensible",
             google4.updateUrl,
-            containsString("/safebrowsing4-dummy/")
+            containsString("/safebrowsing4-dummy/"),
         )
         assertThat(
             "Default provider values are sensible",
             google4.dataSharingUrl,
-            startsWith("https://safebrowsing.googleapis.com/")
+            startsWith("https://safebrowsing.googleapis.com/"),
         )
 
         // Checks that the pref value is also consistent with the runtime settings
         val originalPrefs = sessionRule.getPrefs(
             "browser.safebrowsing.provider.google4.updateURL",
             "browser.safebrowsing.provider.google4.gethashURL",
-            "browser.safebrowsing.provider.google4.lists"
+            "browser.safebrowsing.provider.google4.lists",
         )
 
         assertThat(
             "Initial prefs value is correct",
             originalPrefs[0] as String,
-            equalTo(google4.updateUrl)
+            equalTo(google4.updateUrl),
         )
         assertThat(
             "Initial prefs value is correct",
             originalPrefs[1] as String,
-            equalTo(google4.getHashUrl)
+            equalTo(google4.getHashUrl),
         )
         assertThat(
             "Initial prefs value is correct",
             originalPrefs[2] as String,
-            equalTo(google4.lists.joinToString(","))
+            equalTo(google4.lists.joinToString(",")),
         )
 
         // Makes sure we can override a default value
@@ -105,28 +105,28 @@ class ContentBlockingControllerTest : BaseSessionTest() {
         assertThat(
             "Override value is correct",
             override.updateUrl,
-            equalTo("http://test-update-url.com")
+            equalTo("http://test-update-url.com"),
         )
         assertThat(
             "Override value is correct",
             override.getHashUrl,
-            equalTo("http://test-get-hash-url.com")
+            equalTo("http://test-get-hash-url.com"),
         )
 
         assertThat(
             "Custom provider value is correct",
             custom.updateUrl,
-            equalTo("http://test-custom-update-url.com")
+            equalTo("http://test-custom-update-url.com"),
         )
         assertThat(
             "Custom provider value is correct",
             custom.getHashUrl,
-            equalTo("http://test-custom-get-hash-url.com")
+            equalTo("http://test-custom-get-hash-url.com"),
         )
         assertThat(
             "Custom provider value is correct",
             custom.lists,
-            equalTo(arrayOf("a", "b", "c"))
+            equalTo(arrayOf("a", "b", "c")),
         )
 
         contentBlocking.setSafeBrowsingProviders(override, custom)
@@ -136,33 +136,33 @@ class ContentBlockingControllerTest : BaseSessionTest() {
             "browser.safebrowsing.provider.google4.gethashURL",
             "browser.safebrowsing.provider.custom-provider.updateURL",
             "browser.safebrowsing.provider.custom-provider.gethashURL",
-            "browser.safebrowsing.provider.custom-provider.lists"
+            "browser.safebrowsing.provider.custom-provider.lists",
         )
 
         assertThat(
             "Pref value is set correctly",
             prefs[0] as String,
-            equalTo("http://test-update-url.com")
+            equalTo("http://test-update-url.com"),
         )
         assertThat(
             "Pref value is set correctly",
             prefs[1] as String,
-            equalTo("http://test-get-hash-url.com")
+            equalTo("http://test-get-hash-url.com"),
         )
         assertThat(
             "Pref value is set correctly",
             prefs[2] as String,
-            equalTo("http://test-custom-update-url.com")
+            equalTo("http://test-custom-update-url.com"),
         )
         assertThat(
             "Pref value is set correctly",
             prefs[3] as String,
-            equalTo("http://test-custom-get-hash-url.com")
+            equalTo("http://test-custom-get-hash-url.com"),
         )
         assertThat(
             "Pref value is set correctly",
             prefs[4] as String,
-            equalTo("a,b,c")
+            equalTo("a,b,c"),
         )
 
         // Restore defaults
@@ -172,23 +172,23 @@ class ContentBlockingControllerTest : BaseSessionTest() {
         val restoredPrefs = sessionRule.getPrefs(
             "browser.safebrowsing.provider.google4.updateURL",
             "browser.safebrowsing.provider.google4.gethashURL",
-            "browser.safebrowsing.provider.google4.lists"
+            "browser.safebrowsing.provider.google4.lists",
         )
 
         assertThat(
             "Restored prefs value is correct",
             restoredPrefs[0] as String,
-            equalTo(originalPrefs[0])
+            equalTo(originalPrefs[0]),
         )
         assertThat(
             "Restored prefs value is correct",
             restoredPrefs[1] as String,
-            equalTo(originalPrefs[1])
+            equalTo(originalPrefs[1]),
         )
         assertThat(
             "Restored prefs value is correct",
             restoredPrefs[2] as String,
-            equalTo(originalPrefs[2])
+            equalTo(originalPrefs[2]),
         )
     }
 
@@ -203,7 +203,7 @@ class ContentBlockingControllerTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onContentBlocked(
                 session: GeckoSession,
-                event: ContentBlocking.BlockEvent
+                event: ContentBlocking.BlockEvent,
             ) {
             }
         })
@@ -217,13 +217,13 @@ class ContentBlockingControllerTest : BaseSessionTest() {
                         assertThat(
                             "Category must match",
                             it.category,
-                            equalTo(ContentBlockingController.Event.BLOCKED_TRACKING_CONTENT)
+                            equalTo(ContentBlockingController.Event.BLOCKED_TRACKING_CONTENT),
                         )
                         assertThat("Blocked must be true", it.blocked, equalTo(true))
                         assertThat("Count must be at least 1", it.count, not(0))
                     }
                 }
-            }
+            },
         )
     }
 
@@ -236,18 +236,18 @@ class ContentBlockingControllerTest : BaseSessionTest() {
         assertThat(
             "Expect correct default value which is off",
             contentBlocking.cookieBannerMode,
-            equalTo(CookieBannerMode.COOKIE_BANNER_MODE_DISABLED)
+            equalTo(CookieBannerMode.COOKIE_BANNER_MODE_DISABLED),
         )
         assertThat(
             "Expect correct default value for private browsing",
             contentBlocking.cookieBannerModePrivateBrowsing,
-            equalTo(CookieBannerMode.COOKIE_BANNER_MODE_REJECT)
+            equalTo(CookieBannerMode.COOKIE_BANNER_MODE_REJECT),
         )
 
         // Checks that the pref value is also consistent with the runtime settings
         val originalPrefs = sessionRule.getPrefs(
             "cookiebanners.service.mode",
-            "cookiebanners.service.mode.privateBrowsing"
+            "cookiebanners.service.mode.privateBrowsing",
         )
 
         assertThat("Initial value is correct", originalPrefs[0] as Int, equalTo(contentBlocking.cookieBannerMode))
@@ -258,7 +258,7 @@ class ContentBlockingControllerTest : BaseSessionTest() {
 
         val actualPrefs = sessionRule.getPrefs(
             "cookiebanners.service.mode",
-            "cookiebanners.service.mode.privateBrowsing"
+            "cookiebanners.service.mode.privateBrowsing",
         )
 
         assertThat("Initial value is correct", actualPrefs[0] as Int, equalTo(contentBlocking.cookieBannerMode))
@@ -273,30 +273,30 @@ class ContentBlockingControllerTest : BaseSessionTest() {
         assertThat(
             "Expect correct default value which is off",
             contentBlocking.cookieBannerDetectOnlyMode,
-            equalTo(false)
+            equalTo(false),
         )
 
         // Checks that the pref value is also consistent with the runtime settings
         val originalPrefs = sessionRule.getPrefs(
-            "cookiebanners.service.detectOnly"
+            "cookiebanners.service.detectOnly",
         )
 
         assertThat(
             "Initial value is correct",
             originalPrefs[0] as Boolean,
-            equalTo(contentBlocking.cookieBannerDetectOnlyMode)
+            equalTo(contentBlocking.cookieBannerDetectOnlyMode),
         )
 
         contentBlocking.cookieBannerDetectOnlyMode = true
 
         val actualPrefs = sessionRule.getPrefs(
-            "cookiebanners.service.detectOnly"
+            "cookiebanners.service.detectOnly",
         )
 
         assertThat(
             "Initial value is correct",
             actualPrefs[0] as Boolean,
-            equalTo(contentBlocking.cookieBannerDetectOnlyMode)
+            equalTo(contentBlocking.cookieBannerDetectOnlyMode),
         )
     }
 }

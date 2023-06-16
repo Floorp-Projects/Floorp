@@ -58,7 +58,7 @@ async function run_test_in_worker(script) {
   await runTestInWorker(script, base, listener);
 }
 
-add_setup(async function() {
+add_setup(async function () {
   const {
     setStoragePrefs,
     clearStoragePrefs,
@@ -75,7 +75,7 @@ add_setup(async function() {
 
   setStoragePrefs(optionalPrefsToSet);
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     const principal = Cc["@mozilla.org/systemprincipal;1"].createInstance(
       Ci.nsIPrincipal
     );

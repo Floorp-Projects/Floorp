@@ -5,7 +5,7 @@
 
 const TEST_JSON_URL = URL_ROOT + "simple_json.json";
 
-add_task(async function() {
+add_task(async function () {
   info("Test copy JSON started");
 
   await addJsonViewTab(TEST_JSON_URL);
@@ -19,7 +19,7 @@ add_task(async function() {
   is(text, 'name"value"', "There must be proper JSON displayed");
 
   // Verify JSON copy into the clipboard.
-  const value = '{"name": "value"}\n';
+  const value = '{ "name": "value" }\n';
   const browser = gBrowser.selectedBrowser;
   const selector = ".jsonPanelBox .toolbar button.copy";
   await waitForClipboardPromise(

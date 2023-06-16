@@ -25,6 +25,8 @@
  *       "timeLastUsed": 1262304000000,
  *       "timePasswordChanged": 1262476800000,
  *       "timesUsed": 1
+ *        // only present if other clients had fields we didn't know about
+ *       "encryptedUnknownFields: "...",
  *     },
  *     {
  *       "id": 4,
@@ -83,7 +85,7 @@ export function LoginStore(aPath, aBackupPath = "") {
 LoginStore.prototype = Object.create(JSONFile.prototype);
 LoginStore.prototype.constructor = LoginStore;
 
-LoginStore.prototype._save = async function() {
+LoginStore.prototype._save = async function () {
   await JSONFile.prototype._save.call(this);
   // Notify tests that writes to the login store is complete.
   Services.obs.notifyObservers(null, "password-storage-updated");
@@ -99,7 +101,7 @@ LoginStore.prototype._save = async function() {
  * Note that if the user has a fxa key stored as a login, we just update the
  * backup to only store the key when the last saved user facing login is removed.
  */
-LoginStore.prototype._backupHandler = async function() {
+LoginStore.prototype._backupHandler = async function () {
   const logins = this._data.logins;
   // Return early if more than one login is stored because the backup won't need
   // updating in this case.
@@ -133,7 +135,7 @@ LoginStore.prototype._backupHandler = async function() {
 /**
  * Synchronously work on the data just loaded into memory.
  */
-LoginStore.prototype._dataPostProcessor = function(data) {
+LoginStore.prototype._dataPostProcessor = function (data) {
   if (data.nextId === undefined) {
     data.nextId = 1;
   }

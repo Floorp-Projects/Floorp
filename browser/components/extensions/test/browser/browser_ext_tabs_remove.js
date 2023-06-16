@@ -10,7 +10,7 @@ add_task(async function undoCloseAfterExtRemovesOneTab() {
       permissions: ["tabs"],
     },
 
-    background: async function() {
+    background: async function () {
       let tabs = await browser.tabs.query({});
 
       browser.test.assertEq(3, tabs.length, "Should have 3 tabs");
@@ -81,7 +81,7 @@ add_task(async function undoCloseAfterExtRemovesMultipleTabs() {
       permissions: ["tabs"],
     },
 
-    background: async function() {
+    background: async function () {
       let tabIds = (await browser.tabs.query({})).map(tab => tab.id);
 
       browser.test.assertEq(
@@ -221,7 +221,7 @@ add_task(async function closeWindowIfExtClosesAllTabs() {
   });
 
   let extension = ExtensionTestUtils.loadExtension({
-    background: async function() {
+    background: async function () {
       let tabsToRemove = await browser.tabs.query({ currentWindow: true });
 
       let currentWindowId = tabsToRemove[0].windowId;

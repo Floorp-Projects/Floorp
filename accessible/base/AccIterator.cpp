@@ -12,7 +12,6 @@
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/dom/DocumentOrShadowRoot.h"
 #include "mozilla/dom/HTMLLabelElement.h"
-#include "mozilla/StaticPrefs_accessibility.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -350,12 +349,6 @@ LocalAccessible* XULTreeItemIterator::Next() {
 ////////////////////////////////////////////////////////////////////////////////
 // RemoteAccIterator
 ////////////////////////////////////////////////////////////////////////////////
-
-RemoteAccIterator::RemoteAccIterator(nsTArray<uint64_t>&& aIds,
-                                     DocAccessibleParent* aDoc)
-    : mOwnedIds(std::move(aIds)), mIds(mOwnedIds), mDoc(aDoc), mIndex(0) {
-  MOZ_ASSERT(!StaticPrefs::accessibility_cache_enabled_AtStartup());
-}
 
 Accessible* RemoteAccIterator::Next() {
   while (mIndex < mIds.Length()) {

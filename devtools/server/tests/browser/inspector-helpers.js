@@ -10,7 +10,7 @@ function serverOwnershipTree(walkerArg) {
   return SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [[walkerArg.actorID]],
-    function(actorID) {
+    function (actorID) {
       const { require } = ChromeUtils.importESModule(
         "resource://devtools/shared/loader/Loader.sys.mjs"
       );

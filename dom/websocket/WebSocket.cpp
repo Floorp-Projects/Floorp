@@ -111,7 +111,7 @@ class WebSocketImpl final : public nsIInterfaceRequestor,
                             public nsIWebSocketListener,
                             public nsIObserver,
                             public nsIRequest,
-                            public nsIEventTarget,
+                            public nsISerialEventTarget,
                             public nsIWebSocketImpl {
  public:
   NS_DECL_NSIINTERFACEREQUESTOR
@@ -255,7 +255,7 @@ class WebSocketImpl final : public nsIInterfaceRequestor,
   nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
 
   // For dispatching runnables to main thread.
-  nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
+  nsCOMPtr<nsISerialEventTarget> mMainThreadEventTarget;
 
   RefPtr<WebSocketImplProxy> mImplProxy;
 
@@ -294,7 +294,8 @@ WebSocketImplProxy::SendMessage(const nsAString& aMessage) {
 }
 
 NS_IMPL_ISUPPORTS(WebSocketImpl, nsIInterfaceRequestor, nsIWebSocketListener,
-                  nsIObserver, nsIRequest, nsIEventTarget, nsIWebSocketImpl)
+                  nsIObserver, nsIRequest, nsIEventTarget, nsISerialEventTarget,
+                  nsIWebSocketImpl)
 
 class CallDispatchConnectionCloseEvents final : public DiscardableRunnable {
  public:
@@ -2826,6 +2827,8 @@ NS_IMETHODIMP_(bool)
 WebSocketImpl::IsOnCurrentThreadInfallible() { return IsTargetThread(); }
 
 bool WebSocketImpl::IsTargetThread() const {
+  // FIXME: This should also check if we're on the worker thread. Code using
+  // `IsOnCurrentThread` could easily misbehave here!
   return NS_IsMainThread() == mIsMainThread;
 }
 

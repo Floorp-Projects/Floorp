@@ -7,7 +7,7 @@ const TEST_URL = "data:text/html;charset=utf-8,";
 
 addRDMTask(
   TEST_URL,
-  async function({ ui, manager }) {
+  async function ({ ui, manager }) {
     const store = ui.toolWindow.store;
 
     // Wait until the viewport has been added

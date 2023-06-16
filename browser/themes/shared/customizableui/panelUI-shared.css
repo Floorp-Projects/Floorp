@@ -754,14 +754,14 @@ toolbarbutton[constrain-size="true"][cui-areatype="panel"] > .toolbarbutton-badg
 }
 
 #fxa-menu-header-description {
-  color: var(--panel-description-color);
+  color: var(--text-color-deemphasized);
   font-weight: 600;
 }
 
 #PanelUI-appMenu-fxa-label-last-synced {
   font-size: 10px;
   font-style: italic;
-  color: var(--panel-description-color);
+  color: var(--text-color-deemphasized);
 }
 
 #PanelUI-fxa-menu-send-button {
@@ -893,7 +893,7 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
 }
 
 .PanelUI-remotetabs-notabsforclient-label {
-  color: var(--panel-description-color);
+  color: var(--text-color-deemphasized);
   /* This margin is to line this label up with the labels in toolbarbuttons. */
   margin-inline-start: 28px;
 }
@@ -948,7 +948,7 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
 }
 
 .PanelUI-remotetabs-clientcontainer > label[itemtype="client"] {
-  color: var(--panel-description-color);
+  color: var(--text-color-deemphasized);
 }
 
 /* Collapse the non-active vboxes in the remotetabs deck to use only the
@@ -988,7 +988,7 @@ panelview .toolbarbutton-1,
 .subview-subheader {
   font-size: 11px;
   font-weight: inherit;
-  color: var(--panel-description-color);
+  color: var(--text-color-deemphasized);
   padding-block: 4px;
   box-sizing: border-box;
 }
@@ -1264,22 +1264,6 @@ panelview .toolbarbutton-1 {
   box-shadow: 0 1px 0 hsla(210,4%,10%,.03) inset;
 }
 
-#widget-overflow-mainView > toolbarseparator,
-#widget-overflow-mainView > .panel-subview-body > toolbarseparator,
-.PanelUI-subView toolbarseparator,
-#unified-extensions-panel toolbarseparator,
-#permission-popup-mainView > toolbarseparator,
-#editBookmarkPanel toolbarseparator,
-#downloadsFooterButtons > toolbarseparator,
-.cui-widget-panel toolbarseparator {
-  appearance: none;
-  min-height: 0;
-  border-top: 1px solid var(--panel-separator-color);
-  border-bottom: none;
-  margin: var(--panel-separator-margin);
-  padding: 0;
-}
-
 .PanelUI-subView toolbarseparator.proton-zap {
   border-image: var(--panel-separator-zap-gradient, none) 1;
 }
@@ -1475,7 +1459,7 @@ radiogroup:focus-visible > .subviewradio[focused="true"] > .radio-label-box {
 }
 
 #PanelUI-panic-actionlist-main-label {
-  color: var(--panel-description-color);
+  color: var(--text-color-deemphasized);
   font-size: 0.9em;
 }
 
@@ -1937,7 +1921,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 #PanelUI-profiler-content-description {
   margin-block: 4px;
   font-size: .9em;
-  color: var(--panel-description-color);
+  color: var(--text-color-deemphasized);
 }
 
 #PanelUI-profiler-content-recording:not([hidden]) {

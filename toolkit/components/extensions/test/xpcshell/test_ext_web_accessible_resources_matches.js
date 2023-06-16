@@ -9,8 +9,9 @@ let image = atob(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAA" +
     "ACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII="
 );
-const IMAGE_ARRAYBUFFER = Uint8Array.from(image, byte => byte.charCodeAt(0))
-  .buffer;
+const IMAGE_ARRAYBUFFER = Uint8Array.from(image, byte =>
+  byte.charCodeAt(0)
+).buffer;
 
 add_task(async function test_web_accessible_resources_matching() {
   let extension = ExtensionTestUtils.loadExtension({
@@ -536,7 +537,8 @@ add_task(async function test_web_accessible_resources_unknown_property() {
   AddonTestUtils.checkMessages(messages, {
     expected: [
       {
-        message: /Reading manifest: Warning processing web_accessible_resources.0.idk: An unexpected property was found in the WebExtension manifest./,
+        message:
+          /Reading manifest: Warning processing web_accessible_resources.0.idk: An unexpected property was found in the WebExtension manifest./,
       },
     ],
   });

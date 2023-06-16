@@ -16,18 +16,18 @@
 #include "vpx_dsp/arm/mem_neon.h"
 #include "vpx_dsp/arm/sum_neon.h"
 
-uint32_t vpx_highbd_avg_4x4_neon(const uint8_t *a, int a_stride) {
-  const uint16_t *a_ptr = CONVERT_TO_SHORTPTR(a);
-  const uint16x8_t a0 = load_unaligned_u16q(a_ptr + 0 * a_stride, a_stride);
-  const uint16x8_t a1 = load_unaligned_u16q(a_ptr + 2 * a_stride, a_stride);
+uint32_t vpx_highbd_avg_4x4_neon(const uint8_t *s8, int p) {
+  const uint16_t *a_ptr = CONVERT_TO_SHORTPTR(s8);
+  const uint16x8_t a0 = load_unaligned_u16q(a_ptr + 0 * p, p);
+  const uint16x8_t a1 = load_unaligned_u16q(a_ptr + 2 * p, p);
   return (horizontal_add_uint16x8(vaddq_u16(a0, a1)) + (1 << 3)) >> 4;
 }
 
-uint32_t vpx_highbd_avg_8x8_neon(const uint8_t *a, int a_stride) {
-  const uint16_t *a_ptr = CONVERT_TO_SHORTPTR(a);
+uint32_t vpx_highbd_avg_8x8_neon(const uint8_t *s8, int p) {
+  const uint16_t *a_ptr = CONVERT_TO_SHORTPTR(s8);
   uint16x8_t sum, a0, a1, a2, a3, a4, a5, a6, a7;
 
-  load_u16_8x8(a_ptr, a_stride, &a0, &a1, &a2, &a3, &a4, &a5, &a6, &a7);
+  load_u16_8x8(a_ptr, p, &a0, &a1, &a2, &a3, &a4, &a5, &a6, &a7);
 
   sum = vaddq_u16(a0, a1);
   sum = vaddq_u16(sum, a2);
@@ -63,29 +63,28 @@ int vpx_highbd_satd_neon(const tran_low_t *coeff, int length) {
   return (int)horizontal_add_int64x2(vaddq_s64(sum_s64[0], sum_s64[1]));
 }
 
-void vpx_highbd_minmax_8x8_neon(const uint8_t *a, int a_stride,
-                                const uint8_t *b, int b_stride, int *min,
-                                int *max) {
-  const uint16_t *a_ptr = CONVERT_TO_SHORTPTR(a);
-  const uint16_t *b_ptr = CONVERT_TO_SHORTPTR(b);
+void vpx_highbd_minmax_8x8_neon(const uint8_t *s8, int p, const uint8_t *d8,
+                                int dp, int *min, int *max) {
+  const uint16_t *a_ptr = CONVERT_TO_SHORTPTR(s8);
+  const uint16_t *b_ptr = CONVERT_TO_SHORTPTR(d8);
 
-  const uint16x8_t a0 = vld1q_u16(a_ptr + 0 * a_stride);
-  const uint16x8_t a1 = vld1q_u16(a_ptr + 1 * a_stride);
-  const uint16x8_t a2 = vld1q_u16(a_ptr + 2 * a_stride);
-  const uint16x8_t a3 = vld1q_u16(a_ptr + 3 * a_stride);
-  const uint16x8_t a4 = vld1q_u16(a_ptr + 4 * a_stride);
-  const uint16x8_t a5 = vld1q_u16(a_ptr + 5 * a_stride);
-  const uint16x8_t a6 = vld1q_u16(a_ptr + 6 * a_stride);
-  const uint16x8_t a7 = vld1q_u16(a_ptr + 7 * a_stride);
+  const uint16x8_t a0 = vld1q_u16(a_ptr + 0 * p);
+  const uint16x8_t a1 = vld1q_u16(a_ptr + 1 * p);
+  const uint16x8_t a2 = vld1q_u16(a_ptr + 2 * p);
+  const uint16x8_t a3 = vld1q_u16(a_ptr + 3 * p);
+  const uint16x8_t a4 = vld1q_u16(a_ptr + 4 * p);
+  const uint16x8_t a5 = vld1q_u16(a_ptr + 5 * p);
+  const uint16x8_t a6 = vld1q_u16(a_ptr + 6 * p);
+  const uint16x8_t a7 = vld1q_u16(a_ptr + 7 * p);
 
-  const uint16x8_t b0 = vld1q_u16(b_ptr + 0 * b_stride);
-  const uint16x8_t b1 = vld1q_u16(b_ptr + 1 * b_stride);
-  const uint16x8_t b2 = vld1q_u16(b_ptr + 2 * b_stride);
-  const uint16x8_t b3 = vld1q_u16(b_ptr + 3 * b_stride);
-  const uint16x8_t b4 = vld1q_u16(b_ptr + 4 * b_stride);
-  const uint16x8_t b5 = vld1q_u16(b_ptr + 5 * b_stride);
-  const uint16x8_t b6 = vld1q_u16(b_ptr + 6 * b_stride);
-  const uint16x8_t b7 = vld1q_u16(b_ptr + 7 * b_stride);
+  const uint16x8_t b0 = vld1q_u16(b_ptr + 0 * dp);
+  const uint16x8_t b1 = vld1q_u16(b_ptr + 1 * dp);
+  const uint16x8_t b2 = vld1q_u16(b_ptr + 2 * dp);
+  const uint16x8_t b3 = vld1q_u16(b_ptr + 3 * dp);
+  const uint16x8_t b4 = vld1q_u16(b_ptr + 4 * dp);
+  const uint16x8_t b5 = vld1q_u16(b_ptr + 5 * dp);
+  const uint16x8_t b6 = vld1q_u16(b_ptr + 6 * dp);
+  const uint16x8_t b7 = vld1q_u16(b_ptr + 7 * dp);
 
   const uint16x8_t abs_diff0 = vabdq_u16(a0, b0);
   const uint16x8_t abs_diff1 = vabdq_u16(a1, b1);
@@ -114,7 +113,7 @@ void vpx_highbd_minmax_8x8_neon(const uint8_t *a, int a_stride,
   const uint16x8_t min4567 = vminq_u16(min45, min67);
   const uint16x8_t min07 = vminq_u16(min0123, min4567);
 
-#if defined(__aarch64__)
+#if VPX_ARCH_AARCH64
   *min = *max = 0;  // Clear high bits
   *((uint16_t *)max) = vmaxvq_u16(max07);
   *((uint16_t *)min) = vminvq_u16(min07);

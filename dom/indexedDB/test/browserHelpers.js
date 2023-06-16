@@ -37,7 +37,7 @@ function errorHandler(event) {
 }
 
 function continueToNextStep() {
-  SimpleTest.executeSoon(function() {
+  SimpleTest.executeSoon(function () {
     testGenerator.next();
   });
 }

@@ -8,7 +8,7 @@
 
 const TEST_URI = URL_ROOT + "doc_subgrid.html";
 
-add_task(async function() {
+add_task(async function () {
   await addTab(TEST_URI);
   const { gridInspector, inspector } = await openLayoutView();
   const { document: doc } = gridInspector;

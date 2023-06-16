@@ -61,7 +61,7 @@ function* testSteps() {
   for (let i in objectStoreData) {
     request = objectStore.add(objectStoreData[i].value, objectStoreData[i].key);
     request.onerror = errorHandler;
-    request.onsuccess = function(event) {
+    request.onsuccess = function (event) {
       if (++addedData == objectStoreData.length) {
         testGenerator.next(event);
       }
@@ -104,7 +104,7 @@ function* testSteps() {
 
   request = objectStore.index("type").openKeyCursor();
   request.onerror = errorHandler;
-  request.onsuccess = function(event) {
+  request.onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       is(
@@ -148,7 +148,7 @@ function* testSteps() {
 
   request = objectStore.index("length").openKeyCursor(null, "next");
   request.onerror = errorHandler;
-  request.onsuccess = function(event) {
+  request.onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       is(

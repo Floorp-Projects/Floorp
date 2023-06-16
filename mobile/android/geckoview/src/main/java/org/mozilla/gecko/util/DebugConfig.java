@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.mozilla.gecko.annotation.ReflectionTarget;
+import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.TypeDescription;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
@@ -51,7 +52,8 @@ public class DebugConfig {
       throw new ConfigException("Config version is only supported for SDK_INT >= 21.");
     }
 
-    final Constructor constructor = new Constructor(DebugConfig.class);
+    final LoaderOptions options = new LoaderOptions();
+    final Constructor constructor = new Constructor(DebugConfig.class, options);
     final TypeDescription description = new TypeDescription(DebugConfig.class);
     description.putMapPropertyType("prefs", String.class, Object.class);
     description.putMapPropertyType("env", String.class, String.class);

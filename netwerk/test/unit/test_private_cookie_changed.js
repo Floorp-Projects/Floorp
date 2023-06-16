@@ -26,10 +26,10 @@ function run_test() {
 
   let publicNotifications = 0;
   let privateNotifications = 0;
-  Services.obs.addObserver(function() {
+  Services.obs.addObserver(function () {
     publicNotifications++;
   }, "cookie-changed");
-  Services.obs.addObserver(function() {
+  Services.obs.addObserver(function () {
     privateNotifications++;
   }, "private-cookie-changed");
 

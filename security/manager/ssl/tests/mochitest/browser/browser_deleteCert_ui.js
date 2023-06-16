@@ -95,7 +95,7 @@ function openDeleteCertConfirmDialog(tabID) {
   return new Promise((resolve, reject) => {
     win.addEventListener(
       "load",
-      function() {
+      function () {
         executeSoon(() => resolve([win, retVals]));
       },
       { once: true }
@@ -103,7 +103,7 @@ function openDeleteCertConfirmDialog(tabID) {
   });
 }
 
-add_setup(async function() {
+add_setup(async function () {
   for (let testCase of TEST_CASES) {
     let cert = null;
     if (testCase.certFilename) {

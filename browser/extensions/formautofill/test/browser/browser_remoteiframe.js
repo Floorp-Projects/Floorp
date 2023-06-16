@@ -39,7 +39,7 @@ add_task(async function test_iframe_autocomplete() {
   EventUtils.synthesizeKey("VK_RETURN", {});
 
   let onLoaded = BrowserTestUtils.browserLoaded(browser, true);
-  await SpecialPowers.spawn(iframeBC, [], async function() {
+  await SpecialPowers.spawn(iframeBC, [], async function () {
     await ContentTaskUtils.waitForCondition(() => {
       return (
         content.document.getElementById("street-address").value ==
@@ -82,7 +82,7 @@ add_task(async function test_iframe_autocomplete() {
   await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, iframeBC);
   EventUtils.synthesizeKey("VK_RETURN", {});
 
-  await SpecialPowers.spawn(iframeBC, [], async function() {
+  await SpecialPowers.spawn(iframeBC, [], async function () {
     await ContentTaskUtils.waitForCondition(() => {
       return (
         content.document.getElementById("street-address").value == "" &&

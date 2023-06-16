@@ -22,7 +22,7 @@ export function FxAccountsStorageManagerCanStoreField(fieldName) {
 }
 
 // The storage manager object.
-export var FxAccountsStorageManager = function(options = {}) {
+export var FxAccountsStorageManager = function (options = {}) {
   this.options = {
     filename: options.filename || DEFAULT_STORAGE_FILENAME,
     baseDir: options.baseDir || Services.dirsvc.get("ProfD", Ci.nsIFile).path,
@@ -562,7 +562,7 @@ LoginManagerStorage.prototype = {
       if (existingLogins.length) {
         Services.logins.modifyLogin(existingLogins[0], login);
       } else {
-        Services.logins.addLogin(login);
+        await Services.logins.addLoginAsync(login);
       }
       log.trace("finished write of user data to the login manager");
     } catch (ex) {

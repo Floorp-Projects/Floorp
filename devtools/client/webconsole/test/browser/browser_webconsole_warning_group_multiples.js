@@ -27,11 +27,11 @@ const STORAGE_BLOCKED_GROUP_LABEL =
   "was blocked because we are blocking all third-party storage access requests and " +
   "content blocking is enabled.";
 
-const { UrlClassifierTestUtils } = ChromeUtils.import(
-  "resource://testing-common/UrlClassifierTestUtils.jsm"
+const { UrlClassifierTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
 );
 UrlClassifierTestUtils.addTestTrackers();
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   UrlClassifierTestUtils.cleanupTestTrackers();
 });
 
@@ -82,9 +82,8 @@ add_task(async function testContentBlockingMessage() {
     ".warn"
   );
   emitContentBlockingMessage(hud);
-  const {
-    node: contentBlockedWarningGroupNode,
-  } = await onContentBlockedWarningGroupMessage;
+  const { node: contentBlockedWarningGroupNode } =
+    await onContentBlockedWarningGroupMessage;
   is(
     contentBlockedWarningGroupNode.querySelector(".warning-group-badge")
       .textContent,
@@ -135,9 +134,8 @@ add_task(async function testContentBlockingMessage() {
     ".warn"
   );
   emitStorageAccessBlockedMessage(hud);
-  const {
-    node: storageBlockedWarningGroupNode,
-  } = await onStorageBlockedWarningGroupMessage;
+  const { node: storageBlockedWarningGroupNode } =
+    await onStorageBlockedWarningGroupMessage;
   is(
     storageBlockedWarningGroupNode.querySelector(".warning-group-badge")
       .textContent,
@@ -289,7 +287,7 @@ const now = Date.now();
  */
 function emitContentBlockingMessage() {
   const url = `${CONTENT_BLOCKED_URL}?${++cpt}-${now}`;
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [url], function(innerURL) {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [url], function (innerURL) {
     content.wrappedJSObject.loadImage(innerURL);
   });
 }
@@ -300,7 +298,7 @@ function emitContentBlockingMessage() {
  */
 function emitStorageAccessBlockedMessage() {
   const url = `${STORAGE_BLOCKED_URL}?${++cpt}-${now}`;
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [url], function(innerURL) {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [url], function (innerURL) {
     content.wrappedJSObject.loadImage(innerURL);
   });
 }
@@ -313,7 +311,7 @@ function emitStorageAccessBlockedMessage() {
  */
 function logString(hud, str) {
   const onMessage = waitForMessageByType(hud, str, ".console-api");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [str], function(arg) {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [str], function (arg) {
     content.console.log(arg);
   });
   return onMessage;

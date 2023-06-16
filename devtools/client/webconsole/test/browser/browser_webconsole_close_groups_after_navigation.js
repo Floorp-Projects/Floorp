@@ -4,7 +4,7 @@
 "use strict";
 const TEST_URI = `data:text/html;charset=utf8,<!DOCTYPE html><script>console.group('hello')</script>`;
 
-add_task(async function() {
+add_task(async function () {
   // Enable persist logs
   await pushPref("devtools.webconsole.persistlog", true);
 

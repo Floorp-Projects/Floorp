@@ -7,64 +7,84 @@
 
 <!DOCTYPE wizard>
 
-<window id="createProfileWizard"
-        data-l10n-id="create-profile-window2"
-        xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="initWizard();"
-        data-l10n-attrs="style"
-        >
+<window
+  id="createProfileWizard"
+  data-l10n-id="create-profile-window2"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="initWizard();"
+  data-l10n-attrs="style"
+>
+  <linkset>
+    <html:link rel="localization" href="branding/brand.ftl" />
+    <html:link
+      rel="localization"
+      href="toolkit/global/createProfileWizard.ftl"
+    />
+  </linkset>
 
-<linkset>
-  <html:link rel="localization" href="branding/brand.ftl"/>
-  <html:link rel="localization" href="toolkit/global/createProfileWizard.ftl"/>
-</linkset>
+  <script src="chrome://global/content/customElements.js" />
+  <script src="chrome://global/content/globalOverlay.js" />
+  <script src="chrome://global/content/editMenuOverlay.js" />
+  <script src="chrome://mozapps/content/profile/createProfileWizard.js" />
 
-<script src="chrome://global/content/customElements.js"/>
-<script src="chrome://global/content/globalOverlay.js"/>
-<script src="chrome://global/content/editMenuOverlay.js"/>
-<script src="chrome://mozapps/content/profile/createProfileWizard.js"/>
+  <wizard>
+    <stringbundle
+      id="bundle_profileManager"
+      src="chrome://mozapps/locale/profile/profileSelection.properties"
+    />
 
-<wizard>
-  <stringbundle id="bundle_profileManager"
-                src="chrome://mozapps/locale/profile/profileSelection.properties"/>
+    <wizardpage
+      id="explanation"
+      data-header-label-id="create-profile-first-page-header2"
+    >
+      <description data-l10n-id="profile-creation-explanation-1"></description>
+      <description data-l10n-id="profile-creation-explanation-2"></description>
+      <description data-l10n-id="profile-creation-explanation-3"></description>
+      <spacer flex="1" />
+      <description data-l10n-id="profile-creation-explanation-4"></description>
+    </wizardpage>
 
-  <wizardpage id="explanation" data-header-label-id="create-profile-first-page-header2">
-    <description data-l10n-id="profile-creation-explanation-1"></description>
-    <description data-l10n-id="profile-creation-explanation-2"></description>
-    <description data-l10n-id="profile-creation-explanation-3"></description>
-    <spacer flex="1"/>
-    <description data-l10n-id="profile-creation-explanation-4"></description>
-  </wizardpage>
+    <wizardpage
+      id="createProfile"
+      data-header-label-id="create-profile-last-page-header2"
+    >
+      <description data-l10n-id="profile-creation-intro"></description>
 
-  <wizardpage id="createProfile" data-header-label-id="create-profile-last-page-header2">
-    <description data-l10n-id="profile-creation-intro"></description>
+      <label data-l10n-id="profile-prompt" control="ProfileName"></label>
+      <html:input
+        id="profileName"
+        data-l10n-id="profile-default-name"
+        data-l10n-attrs="value"
+        oninput="updateProfileName(this.value);"
+      />
 
-    <label data-l10n-id="profile-prompt" control="ProfileName"></label>
-    <html:input id="profileName" data-l10n-id="profile-default-name"
-                data-l10n-attrs="value" oninput="updateProfileName(this.value);"/>
+      <separator />
 
-    <separator/>
+      <description data-l10n-id="profile-directory-explanation"></description>
 
-    <description data-l10n-id="profile-directory-explanation"></description>
+      <vbox class="indent" flex="1" style="overflow: auto">
+        <description id="profileDisplay">*</description>
+      </vbox>
 
-    <vbox class="indent" flex="1" style="overflow: auto;">
-      <description id="profileDisplay">*</description>
-    </vbox>
+      <hbox>
+        <button
+          data-l10n-id="create-profile-choose-folder"
+          oncommand="chooseProfileFolder();"
+        />
 
-    <hbox>
-      <button data-l10n-id="create-profile-choose-folder" oncommand="chooseProfileFolder();"/>
+        <button
+          id="useDefault"
+          data-l10n-id="create-profile-use-default"
+          oncommand="setDisplayToDefaultFolder(); updateProfileDisplay();"
+          disabled="true"
+        />
+      </hbox>
 
-      <button id="useDefault" data-l10n-id="create-profile-use-default"
-              oncommand="setDisplayToDefaultFolder(); updateProfileDisplay();"
-              disabled="true"/>
-    </hbox>
+      <separator />
 
-    <separator/>
-
-    <description id="finishText">*</description>
-  </wizardpage>
-
-</wizard>
+      <description id="finishText">*</description>
+    </wizardpage>
+  </wizard>
 </window>

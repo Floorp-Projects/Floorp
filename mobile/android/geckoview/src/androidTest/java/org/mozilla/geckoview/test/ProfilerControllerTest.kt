@@ -22,7 +22,7 @@ class ProfilerControllerTest : BaseSessionTest() {
         assertThat(
             "Header of byte array should be the same as the GZIP one",
             head,
-            equalTo(GZIPInputStream.GZIP_MAGIC)
+            equalTo(GZIPInputStream.GZIP_MAGIC),
         )
 
         val profileString = StringBuilder()
@@ -39,7 +39,7 @@ class ProfilerControllerTest : BaseSessionTest() {
         assertThat(
             "profile JSON object must not be empty",
             json.length(),
-            greaterThan(0)
+            greaterThan(0),
         )
     }
 }

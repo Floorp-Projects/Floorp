@@ -32,14 +32,14 @@ const {
 } = require("resource://devtools/server/actors/watcher/session-context.js");
 
 var gTestGlobals = new Set();
-DevToolsServer.addTestGlobal = function(global) {
+DevToolsServer.addTestGlobal = function (global) {
   gTestGlobals.add(global);
 };
-DevToolsServer.removeTestGlobal = function(global) {
+DevToolsServer.removeTestGlobal = function (global) {
   gTestGlobals.delete(global);
 };
 
-DevToolsServer.getTestGlobal = function(name) {
+DevToolsServer.getTestGlobal = function (name) {
   for (const g of gTestGlobals) {
     if (g.__name == name) {
       return g;
@@ -50,10 +50,10 @@ DevToolsServer.getTestGlobal = function(name) {
 };
 
 var gAllowNewThreadGlobals = false;
-DevToolsServer.allowNewThreadGlobals = function() {
+DevToolsServer.allowNewThreadGlobals = function () {
   gAllowNewThreadGlobals = true;
 };
-DevToolsServer.disallowNewThreadGlobals = function() {
+DevToolsServer.disallowNewThreadGlobals = function () {
   gAllowNewThreadGlobals = false;
 };
 

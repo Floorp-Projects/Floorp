@@ -1281,7 +1281,7 @@ export class StyleEditorUI extends EventEmitter {
    *         Editor to update sidebar of
    */
   #updateAtRulesList = editor => {
-    (async function() {
+    (async function () {
       const details = await this.getEditorDetails(editor);
       const list = details.querySelector(".stylesheet-at-rules-list");
 
@@ -1362,9 +1362,9 @@ export class StyleEditorUI extends EventEmitter {
       sidebar.hidden = !showSidebar || !inSource;
 
       this.emit("at-rules-list-changed", editor);
-    }
+    })
       .bind(this)()
-      .catch(console.error));
+      .catch(console.error);
   };
 
   /**

@@ -36,7 +36,7 @@
 function MutationEventChecker() {
   this.expectedEvents = [];
 
-  this.watchAttr = function(element, attr) {
+  this.watchAttr = function (element, attr) {
     if (this.attr) {
       this.finish();
     }
@@ -51,7 +51,7 @@ function MutationEventChecker() {
     this.element.addEventListener("DOMAttrModified", this._listener);
   };
 
-  this.expect = function() {
+  this.expect = function () {
     if (this.giveUp) {
       return;
     }
@@ -90,7 +90,7 @@ function MutationEventChecker() {
   };
 
   // Temporarily disable event checking
-  this.ignoreEvents = function() {
+  this.ignoreEvents = function () {
     // Check all events have been received
     ok(
       this.giveUp || !this.expectedEvents.length,
@@ -103,7 +103,7 @@ function MutationEventChecker() {
     this.ignore = true;
   };
 
-  this.finish = function() {
+  this.finish = function () {
     // Check all events have been received
     ok(
       this.giveUp || !this.expectedEvents.length,
@@ -117,7 +117,7 @@ function MutationEventChecker() {
     this.attr = "";
   };
 
-  this._receiveEvent = function(e) {
+  this._receiveEvent = function (e) {
     if (this.giveUp || this.ignore) {
       this.oldValue = e.newValue;
       return;
@@ -223,7 +223,7 @@ function MutationEventChecker() {
   };
   this._listener = this._receiveEvent.bind(this);
 
-  this._stillExpecting = function() {
+  this._stillExpecting = function () {
     if (!this.expectedEvents.length) {
       return "(nothing)";
     }
@@ -234,7 +234,7 @@ function MutationEventChecker() {
     return eventNames.join(", ");
   };
 
-  this._eventToName = function(evtId) {
+  this._eventToName = function (evtId) {
     switch (evtId) {
       case MutationEvent.MODIFICATION:
         return "modification";
@@ -246,7 +246,7 @@ function MutationEventChecker() {
     return "Unknown MutationEvent Type";
   };
 
-  this._argToEventId = function(arg) {
+  this._argToEventId = function (arg) {
     if (typeof arg === "number") {
       return arg;
     }

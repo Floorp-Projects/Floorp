@@ -38,25 +38,7 @@ use xpcom::interfaces::{
 };
 use xpcom::{xpcom_method, RefPtr};
 
-fn make_register_prompt(tid: u64, origin: &str, browsing_context_id: u64) -> String {
-    format!(
-        r#"{{"is_ctap2":true,"action":"register","tid":{tid},"origin":"{origin}","browsingContextId":{browsing_context_id},"device_selected":true}}"#,
-    )
-}
-
-fn make_sign_prompt(tid: u64, origin: &str, browsing_context_id: u64) -> String {
-    format!(
-        r#"{{"is_ctap2":true,"action":"sign","tid":{tid},"origin":"{origin}","browsingContextId":{browsing_context_id},"device_selected":true}}"#,
-    )
-}
-
-fn make_select_device_prompt(tid: u64, origin: &str, browsing_context_id: u64) -> String {
-    format!(
-        r#"{{"is_ctap2":true,"action":"select-device","tid":{tid},"origin":"{origin}","browsingContextId":{browsing_context_id}}}"#,
-    )
-}
-
-fn make_pin_error_prompt(action: &str, tid: u64, origin: &str, browsing_context_id: u64) -> String {
+fn make_prompt(action: &str, tid: u64, origin: &str, browsing_context_id: u64) -> String {
     format!(
         r#"{{"is_ctap2":true,"action":"{action}","tid":{tid},"origin":"{origin}","browsingContextId":{browsing_context_id}}}"#,
     )
@@ -84,6 +66,7 @@ fn authrs_to_nserror(e: &AuthenticatorError) -> nsresult {
         AuthenticatorError::PinError(PinError::PinAuthBlocked) => NS_ERROR_DOM_OPERATION_ERR,
         AuthenticatorError::PinError(PinError::PinBlocked) => NS_ERROR_DOM_OPERATION_ERR,
         AuthenticatorError::PinError(PinError::PinNotSet) => NS_ERROR_DOM_OPERATION_ERR,
+        AuthenticatorError::CredentialExcluded => NS_ERROR_DOM_OPERATION_ERR,
         _ => NS_ERROR_DOM_UNKNOWN_ERR,
     }
 }
@@ -294,11 +277,6 @@ impl Controller {
     }
 }
 
-enum EventType {
-    Register,
-    Sign,
-}
-
 // The state machine creates a Sender<Pin>/Receiver<Pin> channel in ask_user_for_pin. It passes the
 // Sender through status_callback, which stores the Sender in the pin_receiver field of an
 // AuthrsTransport. The u64 in PinReceiver is a transaction ID, which the AuthrsTransport uses the
@@ -311,7 +289,6 @@ fn status_callback(
     origin: &String,
     browsing_context_id: u64,
     controller: Controller,
-    event_type: EventType,
     pin_receiver: Arc<Mutex<PinReceiver>>, /* Shared with an AuthrsTransport */
 ) {
     loop {
@@ -327,15 +304,16 @@ fn status_callback(
             }
             Ok(StatusUpdate::SelectDeviceNotice) => {
                 debug!("STATUS: Please select a device by touching one of them.");
-                let notification_str = make_select_device_prompt(tid, origin, browsing_context_id);
+                let notification_str =
+                    make_prompt("select-device", tid, origin, browsing_context_id);
                 controller.send_prompt(tid, &notification_str);
             }
             Ok(StatusUpdate::DeviceSelected(dev_info)) => {
                 debug!("STATUS: Continuing with device: {}", dev_info);
-                let notification_str = match event_type {
-                    EventType::Register => make_register_prompt(tid, origin, browsing_context_id),
-                    EventType::Sign => make_sign_prompt(tid, origin, browsing_context_id),
-                };
+            }
+            Ok(StatusUpdate::PresenceRequired) => {
+                debug!("STATUS: Waiting for user presence");
+                let notification_str = make_prompt("presence", tid, origin, browsing_context_id);
                 controller.send_prompt(tid, &notification_str);
             }
             Ok(StatusUpdate::PinUvError(StatusPinUv::PinRequired(sender))) => {
@@ -367,17 +345,16 @@ fn status_callback(
             }
             Ok(StatusUpdate::PinUvError(StatusPinUv::PinAuthBlocked)) => {
                 let notification_str =
-                    make_pin_error_prompt("pin-auth-blocked", tid, origin, browsing_context_id);
+                    make_prompt("pin-auth-blocked", tid, origin, browsing_context_id);
                 controller.send_prompt(tid, &notification_str);
             }
             Ok(StatusUpdate::PinUvError(StatusPinUv::PinBlocked)) => {
                 let notification_str =
-                    make_pin_error_prompt("device-blocked", tid, origin, browsing_context_id);
+                    make_prompt("device-blocked", tid, origin, browsing_context_id);
                 controller.send_prompt(tid, &notification_str);
             }
             Ok(StatusUpdate::PinUvError(StatusPinUv::PinNotSet)) => {
-                let notification_str =
-                    make_pin_error_prompt("pin-not-set", tid, origin, browsing_context_id);
+                let notification_str = make_prompt("pin-not-set", tid, origin, browsing_context_id);
                 controller.send_prompt(tid, &notification_str);
             }
             Ok(StatusUpdate::PinUvError(e)) => {
@@ -563,7 +540,6 @@ impl AuthrsTransport {
                     &status_origin,
                     browsing_context_id,
                     controller,
-                    EventType::Register,
                     pin_receiver,
                 )
             },
@@ -572,6 +548,7 @@ impl AuthrsTransport {
         .dispatch_background_task()?;
 
         let controller = self.controller.clone();
+        let callback_origin = origin.to_string();
         let state_callback = StateCallback::<Result<RegisterResult, AuthenticatorError>>::new(
             Box::new(move |result| {
                 let result = match result {
@@ -586,6 +563,16 @@ impl AuthrsTransport {
                             attestation_object.att_statement = AttestationStatement::None;
                         }
                         Ok(RegisterResult::CTAP2(attestation_object))
+                    }
+                    Err(e @ AuthenticatorError::CredentialExcluded) => {
+                        let notification_str = make_prompt(
+                            "already-registered",
+                            tid,
+                            &callback_origin,
+                            browsing_context_id,
+                        );
+                        controller.send_prompt(tid, &notification_str);
+                        Err(e)
                     }
                     Err(e) => Err(e),
                 };
@@ -665,7 +652,6 @@ impl AuthrsTransport {
                 &status_origin,
                 browsing_context_id,
                 controller,
-                EventType::Sign,
                 pin_receiver,
             )
         })
@@ -704,6 +690,12 @@ impl AuthrsTransport {
                 let _ = controller.finish_sign(tid, result);
             }));
 
+        // Bug 1834771 - Pre-filtering allowlists broke AppID support. As a temporary
+        // workaround, we will fallback to CTAP1 when the request includes the AppID
+        // extension and the allowlist is non-empty.
+        let use_ctap1_fallback = static_prefs::pref!("security.webauthn.ctap2") == false
+            || (alternate_rp_id.is_some() && !allow_list.is_empty());
+
         let info = SignArgs {
             client_data_hash: client_data_hash_arr,
             relying_party_id: relying_party_id.to_string(),
@@ -714,7 +706,7 @@ impl AuthrsTransport {
             extensions: Default::default(),
             pin: None,
             alternate_rp_id,
-            use_ctap1_fallback: static_prefs::pref!("security.webauthn.ctap2") == false,
+            use_ctap1_fallback,
         };
 
         self.auth_service

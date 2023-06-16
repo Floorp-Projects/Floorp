@@ -15,14 +15,13 @@ deb11-mercurial:
         using: debian-package
         dist: bullseye
         tarball:
-            url: https://www.mercurial-scm.org/release/mercurial-5.8.1.tar.gz
-            sha256: 81baa3fe2087bdda2dd119d7ea948f6badebaeb7b528a7d18b277e2ceb22b19b
+            url: https://www.mercurial-scm.org/release/mercurial-6.4.3.tar.gz
+            sha256: a77fb62d325934a83a00b2fc6db109f44c67b86768fc40490366f513640c7f64
         pre-build-command: >-
             cp -r contrib/packaging/debian debian &&
             sed -i -e "s/__VERSION__/$(awk -F\" '$2 {print $2}' mercurial/__version__.py)-1.deb11moz1/" \
                          -e "s/__DATE__/$(date --rfc-2822)/" \
                          -e "s/__CODENAME__/bullseye/" debian/changelog
-        patch: mercurial-timeout.diff
 
 deb11-cmake:
     description: "cmake"
@@ -57,10 +56,10 @@ deb11-python-zstandard:
         pre-build-command: debchange -v 0.19.0-1.deb11moz --distribution bullseye "Mozilla backport for buster"
         name: python-zstandard
 
-deb8-gcc-7:
-    description: "gcc 7 for Debian jessie"
+deb8-gcc-8:
+    description: "gcc 8 for Debian jessie"
     treeherder:
-        symbol: Deb8(gcc-7)
+        symbol: Deb8(gcc-8)
     worker:
         max-run-time: 3600
         env:
@@ -71,8 +70,8 @@ deb8-gcc-7:
         using: debian-package
         dist: jessie
         dsc:
-            url: http://snapshot.debian.org/archive/debian/20200323T214010Z/pool/main/g/gcc-7/gcc-7_7.5.0-6.dsc
-            sha256: 94f2c35ddcf84a62ae152f2f290be2bba1263157b3970776d0c8b43dec4e6fd5
+            url: http://snapshot.debian.org/archive/debian/20210202T150504Z/pool/main/g/gcc-8/gcc-8_8.4.0-7.dsc
+            sha256: b93f13bc67f5a8f16e837fbb543d00d3475d5c95777a1b0b5a448fa2310a98c5
         # autoconf2.64 and quilt necessary to run the `debian/rules control` command to
         # generate an updated debian/control.
         # uncommenting `with_common_libs` makes the packaging create the libstdc++6 package.
@@ -91,10 +90,10 @@ deb8-gcc-7:
             echo OFFLOAD_BUILD_DEP= >> debian/rules.conf &&
             debian/rules control NT=
 
-deb8-32-gcc-7:
-    description: "gcc 7 for Debian jessie"
+deb8-32-gcc-8:
+    description: "gcc 8 for Debian jessie"
     treeherder:
-        symbol: Deb8-32(gcc-7)
+        symbol: Deb8-32(gcc-8)
     worker:
         max-run-time: 3600
         env:
@@ -105,8 +104,8 @@ deb8-32-gcc-7:
         using: debian-package
         dist: jessie
         dsc:
-            url: http://snapshot.debian.org/archive/debian/20200323T214010Z/pool/main/g/gcc-7/gcc-7_7.5.0-6.dsc
-            sha256: 94f2c35ddcf84a62ae152f2f290be2bba1263157b3970776d0c8b43dec4e6fd5
+            url: http://snapshot.debian.org/archive/debian/20210202T150504Z/pool/main/g/gcc-8/gcc-8_8.4.0-7.dsc
+            sha256: b93f13bc67f5a8f16e837fbb543d00d3475d5c95777a1b0b5a448fa2310a98c5
         pre-build-command: >-
             apt install autoconf2.64 quilt &&
             sed -i 's/#with_common_libs/with_common_libs/' debian/rules.defs &&

@@ -8,7 +8,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger("doc-event-handler.html");
 
   invokeInTab("synthesizeClick");

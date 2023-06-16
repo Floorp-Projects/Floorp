@@ -71,7 +71,7 @@ var pushService = Cc["@mozilla.org/push/Service;1"].getService(
 var mockSocket;
 var serverMsgs = [];
 
-addMessageListener("socket-setup", function() {
+addMessageListener("socket-setup", function () {
   pushService.replaceServiceBackend({
     serverURI: "wss://push.example.org/",
     makeWebSocket(uri) {
@@ -85,7 +85,7 @@ addMessageListener("socket-setup", function() {
   });
 });
 
-addMessageListener("socket-teardown", function(msg) {
+addMessageListener("socket-teardown", function (msg) {
   pushService
     .restoreServiceBackend()
     .then(_ => {
@@ -101,7 +101,7 @@ addMessageListener("socket-teardown", function(msg) {
     });
 });
 
-addMessageListener("socket-server-msg", function(msg) {
+addMessageListener("socket-server-msg", function (msg) {
   if (mockSocket) {
     mockSocket.serverSendMsg(msg);
   } else {
@@ -176,7 +176,7 @@ async function replaceService(service) {
   await pushService.service.init();
 }
 
-addMessageListener("service-replace", function() {
+addMessageListener("service-replace", function () {
   replaceService(MockService)
     .then(_ => {
       sendAsyncMessage("service-replaced");
@@ -186,7 +186,7 @@ addMessageListener("service-replace", function() {
     });
 });
 
-addMessageListener("service-restore", function() {
+addMessageListener("service-restore", function () {
   replaceService(null)
     .then(_ => {
       sendAsyncMessage("service-restored");
@@ -196,6 +196,6 @@ addMessageListener("service-restore", function() {
     });
 });
 
-addMessageListener("service-response", function(response) {
+addMessageListener("service-response", function (response) {
   MockService.handleResponse(response);
 });

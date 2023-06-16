@@ -4,8 +4,8 @@
 
 "use strict";
 
-const { BasePromiseWorker } = ChromeUtils.import(
-  "resource://gre/modules/PromiseWorker.jsm"
+const { BasePromiseWorker } = ChromeUtils.importESModule(
+  "resource://gre/modules/PromiseWorker.sys.mjs"
 );
 const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs"
@@ -17,7 +17,7 @@ const { setTimeout } = ChromeUtils.importESModule(
 var WORKER_SOURCE_URI = "chrome://promiseworker/content/worker.js";
 do_load_manifest("data/chrome.manifest");
 var worker = new BasePromiseWorker(WORKER_SOURCE_URI);
-worker.log = function(...args) {
+worker.log = function (...args) {
   info("Controller: " + args.join(" "));
 };
 

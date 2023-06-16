@@ -5,7 +5,7 @@
 // test the built-in page actions; browser_page_action_menu.js does that.
 
 // Initialization.  Must run first.
-add_setup(async function() {
+add_setup(async function () {
   await initPageActionsTest();
 });
 

@@ -31,7 +31,7 @@
 #include "js/GCHashTable.h"    // GCHashMap, GCHashSet
 #include "js/GCVector.h"       // GCVector
 #include "js/PropertySpec.h"   // JSPropertySpec, JSFunctionSpec
-#include "js/RootingAPI.h"     // MovableCellHasher
+#include "js/RootingAPI.h"     // StableCellHasher
 #include "js/SweepingAPI.h"    // JS::WeakCache
 #include "js/TypeDecls.h"  // HandleValue, HandleObject, MutableHandleObject, MutableHandleFunction
 #include "js/Vector.h"  // JS::Vector
@@ -379,7 +379,7 @@ class WasmMemoryObject : public NativeObject {
 
   using InstanceSet = JS::WeakCache<GCHashSet<
       WeakHeapPtr<WasmInstanceObject*>,
-      MovableCellHasher<WeakHeapPtr<WasmInstanceObject*>>, CellAllocPolicy>>;
+      StableCellHasher<WeakHeapPtr<WasmInstanceObject*>>, CellAllocPolicy>>;
   bool hasObservers() const;
   InstanceSet& observers() const;
   InstanceSet* getOrCreateObservers(JSContext* cx);

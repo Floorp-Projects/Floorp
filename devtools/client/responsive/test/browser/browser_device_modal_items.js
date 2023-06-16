@@ -17,7 +17,7 @@ const L10N = new LocalizationHelper(
 );
 addRDMTask(
   TEST_URL,
-  async function({ ui }) {
+  async function ({ ui }) {
     const { toolWindow } = ui;
     const { store, document } = toolWindow;
 

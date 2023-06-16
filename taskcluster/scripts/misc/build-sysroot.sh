@@ -5,7 +5,6 @@ set -e
 
 arch=$1
 shift
-SNAPSHOT=20210208T213147Z
 
 sysroot=$(basename $TOOLCHAIN_ARTIFACT)
 sysroot=${sysroot%%.*}
@@ -21,7 +20,7 @@ case "$arch" in
 i386|amd64)
   dist=jessie
   if [ -n "$PACKAGES_TASKS" ]; then
-    gcc_version=7
+    gcc_version=8
   else
     gcc_version=4.9
   fi
@@ -38,12 +37,21 @@ arm64)
   ;;
 esac
 
+case "$dist" in
+jessie)
+  repo_url=https://archive.debian.org/debian
+  ;;
+*)
+  SNAPSHOT=20210208T213147Z
+  repo_url=http://snapshot.debian.org/archive/debian/$SNAPSHOT
+  ;;
+esac
+
 packages="
   linux-libc-dev
   libasound2-dev
   libstdc++-${gcc_version}-dev
   libdbus-glib-1-dev
-  libdrm-dev
   libfontconfig1-dev
   libfreetype6-dev
   libgconf2-dev
@@ -63,7 +71,7 @@ packages="
 # useful to build.
 queue_base="$TASKCLUSTER_ROOT_URL/api/queue/v1"
 (
-  echo "deb http://snapshot.debian.org/archive/debian/$SNAPSHOT $dist main"
+  echo "deb $repo_url $dist main"
   for task in $PACKAGES_TASKS; do
     echo "deb [trusted=yes] $queue_base/task/$task/artifacts/public/build/ apt/"
   done

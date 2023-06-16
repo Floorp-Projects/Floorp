@@ -8,7 +8,7 @@ const TEST_URI =
 const HELP_URL =
   "https://firefox-source-docs.mozilla.org/devtools-user/web_console/helpers/";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   let openedLinks = 0;

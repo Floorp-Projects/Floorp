@@ -56,14 +56,8 @@ def generate_specifications_of_artifacts_to_sign(
     # signed at after this stage of the release
     elif "macosx" in build_platform:
         langpack_formats = []
-        if is_notarization_kind(dep_kind) or is_mac_signing_king(dep_kind):
-            # This task is notarization part 3: download signed bits,
-            #   and staple notarization.
-            # OR dep kind is mac-signing
-            formats = []
-            if config.kind.endswith("-mac-notarization"):
-                # If task is a mac-notarization kind, then notarize
-                formats = ["apple_notarization"]
+        if is_notarization_kind(config.kind):
+            formats = ["apple_notarization"]
             artifacts_specifications = [
                 {
                     "artifacts": [
@@ -74,9 +68,7 @@ def generate_specifications_of_artifacts_to_sign(
                 }
             ]
         else:
-            # This task is either depsigning, or notarization part 1:
-            # download unsigned bits, and sign. If notarization part 1,
-            # submit for notarization and create a uuid_manifest.json
+            # This task is mac-signing
             if is_partner_kind(kind):
                 extension = "tar.gz"
             else:

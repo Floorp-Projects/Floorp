@@ -113,7 +113,7 @@ async function promiseImportExport(aWindow) {
   });
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await promisePlacesInitComplete();
   await PlacesUtils.bookmarks.eraseEverything();
   await generateTestBookmarks();

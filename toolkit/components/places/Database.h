@@ -18,7 +18,7 @@
 
 // This is the schema version. Update it at any schema change and add a
 // corresponding migrateVxx method below.
-#define DATABASE_SCHEMA_VERSION 73
+#define DATABASE_SCHEMA_VERSION 74
 
 // Fired after Places inited.
 #define TOPIC_PLACES_INIT_COMPLETE "places-init-complete"
@@ -42,8 +42,7 @@ class mozIStorageService;
 class nsIAsyncShutdownClient;
 class nsIRunnable;
 
-namespace mozilla {
-namespace places {
+namespace mozilla::places {
 
 enum JournalMode {
   // Default SQLite journal mode.
@@ -64,9 +63,9 @@ class ClientsShutdownBlocker;
 class ConnectionShutdownBlocker;
 
 class Database final : public nsIObserver, public nsSupportsWeakReference {
-  typedef mozilla::storage::StatementCache<mozIStorageStatement> StatementCache;
-  typedef mozilla::storage::StatementCache<mozIStorageAsyncStatement>
-      AsyncStatementCache;
+  using StatementCache = mozilla::storage::StatementCache<mozIStorageStatement>;
+  using AsyncStatementCache =
+      mozilla::storage::StatementCache<mozIStorageAsyncStatement>;
 
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -319,6 +318,7 @@ class Database final : public nsIObserver, public nsSupportsWeakReference {
   nsresult MigrateV71Up();
   nsresult MigrateV72Up();
   nsresult MigrateV73Up();
+  nsresult MigrateV74Up();
 
   void MigrateV52OriginFrecencies();
 
@@ -384,7 +384,6 @@ class Database final : public nsIObserver, public nsSupportsWeakReference {
   int64_t mMobileRootId;
 };
 
-}  // namespace places
-}  // namespace mozilla
+}  // namespace mozilla::places
 
 #endif  // mozilla_places_Database_h_

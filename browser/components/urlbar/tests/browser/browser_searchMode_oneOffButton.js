@@ -9,7 +9,7 @@
 
 const TEST_ENGINE_NAME = "test engine";
 
-add_setup(async function() {
+add_setup(async function () {
   await SearchTestUtils.installSearchExtension({
     name: TEST_ENGINE_NAME,
     keyword: "@test",
@@ -45,7 +45,7 @@ add_task(async function test() {
   ok(!oneOffs.selectedButton, "There is no selected one-off button");
 });
 
-add_task(async function() {
+add_task(async function () {
   info(
     "Test the status of the selected one-off button when exiting search mode with backspace"
   );
@@ -76,7 +76,7 @@ add_task(async function() {
   ok(!oneOffs.selectedButton, "There is no any selected one-off button");
 });
 
-add_task(async function() {
+add_task(async function () {
   info(
     "Test the status of the selected one-off button when exiting search mode with clicking close button"
   );

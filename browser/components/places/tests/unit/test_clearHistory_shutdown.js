@@ -17,7 +17,9 @@ const URIS = [
 
 const FTP_URL = "ftp://localhost/clearHistoryOnShutdown/";
 
-const { Sanitizer } = ChromeUtils.import("resource:///modules/Sanitizer.jsm");
+const { Sanitizer } = ChromeUtils.importESModule(
+  "resource:///modules/Sanitizer.sys.mjs"
+);
 
 // Send the profile-after-change notification to the form history component to ensure
 // that it has been initialized.
@@ -86,7 +88,7 @@ add_task(async function test_execute() {
   );
 
   try {
-    URIS.forEach(function(aUrl) {
+    URIS.forEach(function (aUrl) {
       stmt.params.page_url = aUrl;
       Assert.ok(!stmt.executeStep());
       stmt.reset();

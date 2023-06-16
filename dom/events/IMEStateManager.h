@@ -315,6 +315,11 @@ class IMEStateManager {
    */
   static IMEContentObserver* GetActiveContentObserver();
 
+  /**
+   * Return focused element which was notified by a OnChangeFocus() call.
+   */
+  static dom::Element* GetFocusedElement();
+
  protected:
   MOZ_CAN_RUN_SCRIPT static nsresult OnChangeFocusInternal(
       nsPresContext* aPresContext, dom::Element* aElement,

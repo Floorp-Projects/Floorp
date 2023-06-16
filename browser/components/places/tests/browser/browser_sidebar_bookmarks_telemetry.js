@@ -4,13 +4,13 @@
 
 "use strict";
 
-const { TelemetryTestUtils } = ChromeUtils.import(
-  "resource://testing-common/TelemetryTestUtils.jsm"
+const { TelemetryTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
 let bookmarks;
 let folder;
 
-add_setup(async function() {
+add_setup(async function () {
   folder = await PlacesUtils.bookmarks.insert({
     title: "Sidebar Test Folder",
     type: PlacesUtils.bookmarks.TYPE_FOLDER,

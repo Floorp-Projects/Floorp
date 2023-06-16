@@ -24,8 +24,8 @@ const { ExperimentFakes } = ChromeUtils.importESModule(
 const { RecipeRunner } = ChromeUtils.importESModule(
   "resource://normandy/lib/RecipeRunner.sys.mjs"
 );
-const { RemoteSettings } = ChromeUtils.import(
-  "resource://services-settings/remote-settings.js"
+const { RemoteSettings } = ChromeUtils.importESModule(
+  "resource://services-settings/remote-settings.sys.mjs"
 );
 
 const SURVEY = {

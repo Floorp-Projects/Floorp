@@ -61,7 +61,7 @@ const startupPhases = {
         "resource:///modules/ContentCrashHandlers.jsm",
         "resource:///modules/ShellService.sys.mjs",
         "resource://gre/modules/NewTabUtils.sys.mjs",
-        "resource://gre/modules/PageThumbs.jsm",
+        "resource://gre/modules/PageThumbs.sys.mjs",
         "resource://gre/modules/PlacesUtils.sys.mjs",
         "resource://gre/modules/Preferences.sys.mjs",
         "resource://gre/modules/SearchService.sys.mjs",
@@ -77,7 +77,7 @@ const startupPhases = {
   "before handling user events": {
     denylist: {
       modules: new Set([
-        "resource://gre/modules/Blocklist.jsm",
+        "resource://gre/modules/Blocklist.sys.mjs",
         // Bug 1391495 - BrowserWindowTracker.jsm is intermittently used.
         // "resource:///modules/BrowserWindowTracker.jsm",
         "resource://gre/modules/BookmarkHTMLUtils.sys.mjs",
@@ -127,7 +127,7 @@ if (AppConstants.MOZ_CRASHREPORTER) {
   );
 }
 
-add_task(async function() {
+add_task(async function () {
   if (
     !AppConstants.NIGHTLY_BUILD &&
     !AppConstants.MOZ_DEV_EDITION &&
@@ -141,8 +141,8 @@ add_task(async function() {
     return;
   }
 
-  let startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"].getService()
-    .wrappedJSObject;
+  let startupRecorder =
+    Cc["@mozilla.org/test/startuprecorder;1"].getService().wrappedJSObject;
   await startupRecorder.done;
 
   let data = Cu.cloneInto(startupRecorder.data.code, {});

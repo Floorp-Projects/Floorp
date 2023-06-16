@@ -23,7 +23,7 @@ const TEST_URIs = [
 ];
 
 async function setup() {
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     // Clean up any leftover stubs.
     sinon.restore();
   });
@@ -152,9 +152,8 @@ async function testForgetAboutThisSite(
 
   let pageRemovedEventPromise;
   if (shouldForget) {
-    pageRemovedEventPromise = PlacesTestUtils.waitForNotification(
-      "page-removed"
-    );
+    pageRemovedEventPromise =
+      PlacesTestUtils.waitForNotification("page-removed");
   }
 
   // Execute the delete command.
@@ -227,7 +226,7 @@ function promisePopupShown(popup) {
   return new Promise(resolve => {
     popup.addEventListener(
       "popupshown",
-      function() {
+      function () {
         resolve();
       },
       { capture: true, once: true }

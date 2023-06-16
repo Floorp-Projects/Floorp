@@ -212,9 +212,8 @@ function displayNetworkID() {
     let networkID = gNetLinkSvc.networkID;
 
     document.getElementById("networkid_isUp").innerText = linkIsUp;
-    document.getElementById(
-      "networkid_statusKnown"
-    ).innerText = linkStatusKnown;
+    document.getElementById("networkid_statusKnown").innerText =
+      linkStatusKnown;
     document.getElementById("networkid_id").innerText = networkID;
   } catch (e) {
     document.getElementById("networkid_isUp").innerText = "<unknown>";
@@ -247,7 +246,7 @@ function init() {
     setAutoRefreshInterval(autoRefresh);
   }
 
-  autoRefresh.addEventListener("click", function() {
+  autoRefresh.addEventListener("click", function () {
     let refrButton = document.getElementById("refreshButton");
     if (this.checked) {
       setAutoRefreshInterval(this);
@@ -273,12 +272,12 @@ function init() {
   });
 
   let dnsLookupButton = document.getElementById("dnsLookupButton");
-  dnsLookupButton.addEventListener("click", function() {
+  dnsLookupButton.addEventListener("click", function () {
     doLookup();
   });
 
   let clearDNSCache = document.getElementById("clearDNSCache");
-  clearDNSCache.addEventListener("click", function() {
+  clearDNSCache.addEventListener("click", function () {
     Services.dns.clearCache(true);
   });
 
@@ -321,7 +320,7 @@ function show(button) {
 
 function setAutoRefreshInterval(checkBox) {
   let active_tab = document.querySelector(".active");
-  checkBox.interval = setInterval(function() {
+  checkBox.interval = setInterval(function () {
     requestNetworkingDataForTab(active_tab.id);
   }, REFRESH_INTERVAL_MS);
 }
@@ -330,7 +329,7 @@ function setAutoRefreshInterval(checkBox) {
 // the page is loaded via session-restore/bfcache. In such cases we need to call
 // init() to keep the page behaviour consistent with the ticked checkboxes.
 // Mostly the issue is with the autorefresh checkbox.
-window.addEventListener("pageshow", function() {
+window.addEventListener("pageshow", function () {
   init();
 });
 

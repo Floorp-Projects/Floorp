@@ -11,7 +11,7 @@ const TAB_2_URL =
 // Check that the list of tabs in about:debugging is updated when a page
 // navigates. This indirectly checks that the tabListChanged event is correctly
 // fired from the root actor.
-add_task(async function() {
+add_task(async function () {
   const { document, tab, window } = await openAboutDebugging();
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
 

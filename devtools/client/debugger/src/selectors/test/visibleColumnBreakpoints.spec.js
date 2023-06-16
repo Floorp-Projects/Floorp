@@ -2,12 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import {
-  actions,
-  selectors,
-  createStore,
-  makeSource,
-} from "../../utils/test-head";
+import { actions, createStore, makeSource } from "../../utils/test-head";
+import { createLocation } from "../../utils/location";
 
 import {
   getColumnBreakpoints,
@@ -123,19 +119,23 @@ describe("getFirstBreakpointPosition", () => {
     const store = createStore();
     const { dispatch, getState } = store;
 
-    await dispatch(actions.newGeneratedSource(makeSource("foo1")));
+    const fooSource = await dispatch(
+      actions.newGeneratedSource(makeSource("foo1"))
+    );
 
-    const fooSource = selectors.getSourceFromId(getState(), "foo1");
     dispatch({
       type: "ADD_BREAKPOINT_POSITIONS",
       positions: [pp(1, 5), pp(1, 3)],
       source: fooSource,
     });
 
-    const position = getFirstBreakpointPosition(getState(), {
-      line: 1,
-      sourceId: fooSource.id,
-    });
+    const position = getFirstBreakpointPosition(
+      getState(),
+      createLocation({
+        line: 1,
+        source: fooSource,
+      })
+    );
 
     if (!position) {
       throw new Error("There should be a position");

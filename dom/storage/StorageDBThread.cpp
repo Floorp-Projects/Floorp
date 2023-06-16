@@ -701,20 +701,12 @@ nsresult StorageDBThread::ConfigureWALBehavior() {
 
   // Set the threshold for auto-checkpointing the WAL.
   // We don't want giant logs slowing down reads & shutdown.
+  // Note there is a default journal_size_limit set by mozStorage.
   int32_t thresholdInPages =
       static_cast<int32_t>(MAX_WAL_SIZE_BYTES / pageSize);
   nsAutoCString thresholdPragma("PRAGMA wal_autocheckpoint = ");
   thresholdPragma.AppendInt(thresholdInPages);
   rv = mWorkerConnection->ExecuteSimpleSQL(thresholdPragma);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Set the maximum WAL log size to reduce footprint on mobile (large empty
-  // WAL files will be truncated)
-  nsAutoCString journalSizePragma("PRAGMA journal_size_limit = ");
-  // bug 600307: mak recommends setting this to 3 times the auto-checkpoint
-  // threshold
-  journalSizePragma.AppendInt(MAX_WAL_SIZE_BYTES * 3);
-  rv = mWorkerConnection->ExecuteSimpleSQL(journalSizePragma);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

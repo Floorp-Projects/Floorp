@@ -12,7 +12,7 @@ add_task(async function testPageActionPopupResize() {
         browser_style: true,
       },
     },
-    background: function() {
+    background: function () {
       browser.tabs.query({ active: true, currentWindow: true }, tabs => {
         const tabId = tabs[0].id;
 
@@ -124,7 +124,7 @@ add_task(async function testPageActionPopupReflow() {
         browser_style: true,
       },
     },
-    background: function() {
+    background: function () {
       browser.tabs.query({ active: true, currentWindow: true }, tabs => {
         const tabId = tabs[0].id;
 

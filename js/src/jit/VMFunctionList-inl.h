@@ -246,17 +246,20 @@ namespace jit {
   _(PushLexicalEnv, js::jit::PushLexicalEnv)                                   \
   _(PushVarEnv, js::jit::PushVarEnv)                                           \
   _(RecreateLexicalEnv, js::jit::RecreateLexicalEnv)                           \
+  _(RegExpBuiltinExecMatchFromJit, js::RegExpBuiltinExecMatchFromJit)          \
+  _(RegExpBuiltinExecTestFromJit, js::RegExpBuiltinExecTestFromJit)            \
   _(RegExpMatcherRaw, js::RegExpMatcherRaw)                                    \
   _(RegExpSearcherRaw, js::RegExpSearcherRaw)                                  \
-  _(RegExpTesterRaw, js::RegExpTesterRaw)                                      \
   _(SameValue, js::SameValue)                                                  \
   _(SetArrayLength, js::jit::SetArrayLength)                                   \
-  _(SetElementMegamorphic, js::jit::SetElementMegamorphic)                     \
-  _(SetElementMegamorphicCached, js::jit::SetElementMegamorphicCached)         \
+  _(SetElementMegamorphicNoCache, js::jit::SetElementMegamorphic<false>)       \
+  _(SetElementMegamorphicYesCache, js::jit::SetElementMegamorphic<true>)       \
   _(SetElementSuper, js::SetElementSuper)                                      \
   _(SetFunctionName, js::SetFunctionName)                                      \
   _(SetIntrinsicOperation, js::SetIntrinsicOperation)                          \
   _(SetObjectHas, js::jit::SetObjectHas)                                       \
+  _(SetPropertyMegamorphicNoCache, js::jit::SetPropertyMegamorphic<false>)     \
+  _(SetPropertyMegamorphicYesCache, js::jit::SetPropertyMegamorphic<true>)     \
   _(SetPropertySuper, js::SetPropertySuper)                                    \
   _(StartDynamicModuleImport, js::StartDynamicModuleImport)                    \
   _(StringBigIntGreaterThanOrEqual,                                            \

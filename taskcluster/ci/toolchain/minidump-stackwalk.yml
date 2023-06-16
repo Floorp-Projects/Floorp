@@ -60,7 +60,7 @@ win32-minidump-stackwalk:
         toolchain:
             - linux64-clang-toolchain
             - linux64-rust-windows-toolchain
-            - win64-vs2017
+            - vs-toolchain
 
 win64-minidump-stackwalk:
     treeherder:
@@ -71,7 +71,7 @@ win64-minidump-stackwalk:
         toolchain:
             - linux64-clang-toolchain
             - linux64-rust-windows-toolchain
-            - win64-vs2017
+            - vs-toolchain
 
 # This is a totally different thing but it used to share common code with
 # minidump-stackwalk, so it lives here for historical reasons.

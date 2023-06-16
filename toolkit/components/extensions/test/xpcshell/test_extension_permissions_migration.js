@@ -5,7 +5,9 @@ const {
   OLD_JSON_FILENAME,
   OLD_RKV_DIRNAME,
   RKV_DIRNAME,
-} = ChromeUtils.import("resource://gre/modules/ExtensionPermissions.jsm");
+} = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionPermissions.sys.mjs"
+);
 
 const GOOD_JSON_FILE = {
   "wikipedia@search.mozilla.org": {

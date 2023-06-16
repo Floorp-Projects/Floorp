@@ -452,6 +452,17 @@ TEST_F(FOGFixture, TestCppUrlWorks) {
                    .get());
 }
 
+TEST_F(FOGFixture, TestCppTextWorks) {
+  auto kValue =
+      "République is a French-inspired bakery, café, bar and formal dining room located in the Mid-city neighborhood of Los Angeles, set in a historic 1928 space ..."_ns;
+  mozilla::glean::test_only_ipc::a_text.Set(kValue);
+  ASSERT_STREQ(kValue.get(),
+               mozilla::glean::test_only_ipc::a_text.TestGetValue()
+                   .unwrap()
+                   .value()
+                   .get());
+}
+
 extern "C" void Rust_TestRustInGTest();
 TEST_F(FOGFixture, TestRustInGTest) { Rust_TestRustInGTest(); }
 

@@ -12,15 +12,6 @@ $icon-width: 54px; // width of primary icon + margin
     background: var(--newtab-text-emphasis-background);
   }
 
-  &.bold,
-  &.takeover {
-    .donation-form-url,
-    .donation-amount {
-      padding-top: 8px;
-      padding-bottom: 8px;
-    }
-  }
-
   &.bold {
     height: 176px;
 
@@ -81,8 +72,13 @@ $icon-width: 54px; // width of primary icon + margin
     margin-inline-end: 20px;
   }
 
-  &.takeover,
-  &.bold {
+  &.bold,
+  &.takeover {
+    .donation-form-url,
+    .donation-amount {
+      padding-block: 8px;
+    }
+
     .icon {
       margin-inline-end: 20px;
     }

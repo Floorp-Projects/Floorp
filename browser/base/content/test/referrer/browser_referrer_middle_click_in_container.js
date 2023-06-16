@@ -5,7 +5,7 @@ function startMiddleClickTestCase(aTestNumber) {
   info(
     "browser_referrer_middle_click: " + getReferrerTestDescription(aTestNumber)
   );
-  someTabLoaded(gTestWindow).then(function(aNewTab) {
+  someTabLoaded(gTestWindow).then(function (aNewTab) {
     BrowserTestUtils.switchTab(gTestWindow.gBrowser, aNewTab).then(() => {
       checkReferrerAndStartNextTest(
         aTestNumber,
@@ -25,7 +25,7 @@ function test() {
 
   SpecialPowers.pushPrefEnv(
     { set: [["privacy.userContext.enabled", true]] },
-    function() {
+    function () {
       requestLongerTimeout(10); // slowwww shutdown on e10s
       startReferrerTest(startMiddleClickTestCase, { userContextId: 3 });
     }

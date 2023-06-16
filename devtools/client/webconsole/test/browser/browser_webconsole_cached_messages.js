@@ -26,7 +26,7 @@ const TEST_URI = `data:text/html,<!DOCTYPE html><meta charset=utf8><h1>Test cach
     }
   </script>`;
 
-add_task(async function() {
+add_task(async function () {
   // On e10s, the exception is triggered in child process
   // and is ignored by test harness
   if (!Services.appinfo.browserTabsRemoteAutostart) {
@@ -74,7 +74,7 @@ add_task(async function() {
 });
 
 async function logMessages() {
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
     const wait = () =>
       new Promise(res => content.wrappedJSObject.setTimeout(res, 100));

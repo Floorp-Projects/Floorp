@@ -20,7 +20,7 @@ function listenForCrash(win) {
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   let win = await BrowserTestUtils.openNewBrowserWindow({
     fission: true,
     private: true,

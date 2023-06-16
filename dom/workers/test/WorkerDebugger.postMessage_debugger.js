@@ -1,6 +1,6 @@
 "use strict";
 
-this.onmessage = function(event) {
+this.onmessage = function (event) {
   switch (event.data) {
     case "ping":
       postMessage("pong");

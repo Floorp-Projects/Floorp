@@ -9,7 +9,7 @@ const { RetVal } = protocol;
 // Test invalid response specs throw when generating the Actor specification.
 
 // Test top level array response
-add_task(async function() {
+add_task(async function () {
   Assert.throws(() => {
     protocol.generateActorSpec({
       typeName: "invalidArrayResponse",
@@ -35,7 +35,7 @@ add_task(async function() {
 });
 
 // Test response with several placeholders
-add_task(async function() {
+add_task(async function () {
   Assert.throws(() => {
     protocol.generateActorSpec({
       typeName: "tooManyPlaceholdersResponse",

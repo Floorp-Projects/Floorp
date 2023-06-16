@@ -27,7 +27,7 @@ function* testSteps() {
   let db = event.target.result;
   is(db.version, 1, "Database has correct version");
 
-  db.onupgradeneeded = function() {
+  db.onupgradeneeded = function () {
     ok(
       false,
       "our ongoing VERSION_CHANGE transaction should exclude any others!"
@@ -64,7 +64,7 @@ function* testSteps() {
   is(event.type, "success", "Expect a success event");
   is(event.target.result, db, "Same database");
 
-  db.onversionchange = function() {
+  db.onversionchange = function () {
     ok(true, "next setVersion was unblocked appropriately");
     db.close();
   };

@@ -79,116 +79,117 @@ add_task(async function test() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function(newTabBrowser) {
+    async function (newTabBrowser) {
       await waitForPdfJS(
         newTabBrowser,
         TESTROOT + "file_pdfjs_test.pdf#zoom=100"
       );
 
-      await SpecialPowers.spawn(newTabBrowser, [TESTS], async function(
-        contentTESTS
-      ) {
-        let document = content.document;
+      await SpecialPowers.spawn(
+        newTabBrowser,
+        [TESTS],
+        async function (contentTESTS) {
+          let document = content.document;
 
-        function waitForRender() {
-          return new Promise(resolve => {
-            document.addEventListener(
-              "pagerendered",
-              function onPageRendered(e) {
-                if (e.detail.pageNumber !== 1) {
-                  return;
-                }
+          function waitForRender() {
+            return new Promise(resolve => {
+              document.addEventListener(
+                "pagerendered",
+                function onPageRendered(e) {
+                  if (e.detail.pageNumber !== 1) {
+                    return;
+                  }
 
-                document.removeEventListener(
-                  "pagerendered",
-                  onPageRendered,
-                  true
-                );
-                resolve();
-              },
-              true
-            );
-          });
-        }
-
-        // check that PDF is opened with internal viewer
-        Assert.ok(
-          content.document.querySelector("div#viewer"),
-          "document content has viewer UI"
-        );
-
-        let initialWidth, previousWidth;
-        initialWidth = previousWidth = parseInt(
-          content.getComputedStyle(
-            content.document.querySelector("div.page[data-page-number='1']")
-          ).width
-        );
-
-        for (let subTest of contentTESTS) {
-          // We zoom using an UI element
-          var ev;
-          if (subTest.action.selector) {
-            // Get the element and trigger the action for changing the zoom
-            var el = document.querySelector(subTest.action.selector);
-            Assert.ok(
-              el,
-              "Element '" + subTest.action.selector + "' has been found"
-            );
-
-            if (subTest.action.index) {
-              el.selectedIndex = subTest.action.index;
-            }
-
-            // Dispatch the event for changing the zoom
-            ev = new content.Event(subTest.action.event);
-          } else {
-            // We zoom using keyboard
-            // Simulate key press
-            ev = new content.KeyboardEvent("keydown", {
-              key: subTest.action.event,
-              keyCode: subTest.action.keyCode,
-              ctrlKey: true,
+                  document.removeEventListener(
+                    "pagerendered",
+                    onPageRendered,
+                    true
+                  );
+                  resolve();
+                },
+                true
+              );
             });
-            el = content;
           }
 
-          el.dispatchEvent(ev);
-          await waitForRender();
-
-          var pageZoomScale = content.document.querySelector(
-            "select#scaleSelect"
+          // check that PDF is opened with internal viewer
+          Assert.ok(
+            content.document.querySelector("div#viewer"),
+            "document content has viewer UI"
           );
 
-          // The zoom value displayed in the zoom select
-          var zoomValue =
-            pageZoomScale.options[pageZoomScale.selectedIndex].innerHTML;
-
-          let pageContainer = content.document.querySelector(
-            "div.page[data-page-number='1']"
-          );
-          let actualWidth = parseInt(
-            content.getComputedStyle(pageContainer).width
+          let initialWidth, previousWidth;
+          initialWidth = previousWidth = parseInt(
+            content.getComputedStyle(
+              content.document.querySelector("div.page[data-page-number='1']")
+            ).width
           );
 
-          // the actual zoom of the PDF document
-          let computedZoomValue =
-            parseInt((actualWidth / initialWidth).toFixed(2) * 100) + "%";
-          Assert.equal(
-            computedZoomValue,
-            zoomValue,
-            "Content has correct zoom"
-          );
+          for (let subTest of contentTESTS) {
+            // We zoom using an UI element
+            var ev;
+            if (subTest.action.selector) {
+              // Get the element and trigger the action for changing the zoom
+              var el = document.querySelector(subTest.action.selector);
+              Assert.ok(
+                el,
+                "Element '" + subTest.action.selector + "' has been found"
+              );
 
-          // Check that document zooms in the expected way (in/out)
-          let zoom = (actualWidth - previousWidth) * subTest.expectedZoom;
-          Assert.ok(zoom > 0, subTest.message);
+              if (subTest.action.index) {
+                el.selectedIndex = subTest.action.index;
+              }
 
-          previousWidth = actualWidth;
+              // Dispatch the event for changing the zoom
+              ev = new content.Event(subTest.action.event);
+            } else {
+              // We zoom using keyboard
+              // Simulate key press
+              ev = new content.KeyboardEvent("keydown", {
+                key: subTest.action.event,
+                keyCode: subTest.action.keyCode,
+                ctrlKey: true,
+              });
+              el = content;
+            }
+
+            el.dispatchEvent(ev);
+            await waitForRender();
+
+            var pageZoomScale =
+              content.document.querySelector("select#scaleSelect");
+
+            // The zoom value displayed in the zoom select
+            var zoomValue =
+              pageZoomScale.options[pageZoomScale.selectedIndex].innerHTML;
+
+            let pageContainer = content.document.querySelector(
+              "div.page[data-page-number='1']"
+            );
+            let actualWidth = parseInt(
+              content.getComputedStyle(pageContainer).width
+            );
+
+            // the actual zoom of the PDF document
+            let computedZoomValue =
+              parseInt((actualWidth / initialWidth).toFixed(2) * 100) + "%";
+            Assert.equal(
+              computedZoomValue,
+              zoomValue,
+              "Content has correct zoom"
+            );
+
+            // Check that document zooms in the expected way (in/out)
+            let zoom = (actualWidth - previousWidth) * subTest.expectedZoom;
+            Assert.ok(zoom > 0, subTest.message);
+
+            previousWidth = actualWidth;
+          }
+
+          var viewer = content.wrappedJSObject.PDFViewerApplication;
+          await viewer.close();
         }
-
-        var viewer = content.wrappedJSObject.PDFViewerApplication;
-        await viewer.close();
-      });
+      );
     }
   );
 });
@@ -201,7 +202,7 @@ function waitForRoundTrip(browser) {
 }
 
 async function waitForRenderAndGetWidth(newTabBrowser) {
-  return SpecialPowers.spawn(newTabBrowser, [], async function() {
+  return SpecialPowers.spawn(newTabBrowser, [], async function () {
     function waitForRender(document) {
       return new Promise(resolve => {
         document.addEventListener(
@@ -237,7 +238,7 @@ async function waitForRenderAndGetWidth(newTabBrowser) {
 add_task(async function test_browser_zoom() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function(newTabBrowser) {
+    async function (newTabBrowser) {
       await waitForPdfJS(newTabBrowser, TESTROOT + "file_pdfjs_test.pdf");
 
       const initialWidth = await waitForRenderAndGetWidth(newTabBrowser);
@@ -267,7 +268,7 @@ add_task(async function test_browser_zoom() {
       );
 
       // Clean-up after the PDF viewer.
-      await SpecialPowers.spawn(newTabBrowser, [], function() {
+      await SpecialPowers.spawn(newTabBrowser, [], function () {
         const viewer = content.wrappedJSObject.PDFViewerApplication;
         return viewer.close();
       });

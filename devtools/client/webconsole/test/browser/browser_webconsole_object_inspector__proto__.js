@@ -7,12 +7,12 @@
 const TEST_URI =
   "data:text/html;charset=utf8,<!DOCTYPE html><h1>test Object Inspector __proto__</h1>";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   logAllStoreChanges(hud);
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     const obj = Object.create(null);
     // eslint-disable-next-line no-proto
     obj.__proto__ = [];

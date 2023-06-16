@@ -20,12 +20,8 @@ import { Subprocess } from "resource://gre/modules/Subprocess.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "BackgroundTasksUtils",
-  "resource://gre/modules/BackgroundTasksUtils.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
+  BackgroundTasksUtils: "resource://gre/modules/BackgroundTasksUtils.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
 });
 
@@ -465,7 +461,7 @@ const prefObserver = {
   },
 };
 Services.prefs.addObserver("devtools.debugger.log", prefObserver);
-const unloadObserver = function(subject) {
+const unloadObserver = function (subject) {
   if (subject.wrappedJSObject == require("@loader/unload")) {
     Services.prefs.removeObserver("devtools.debugger.log", prefObserver);
     Services.obs.removeObserver(unloadObserver, "devtools:loader:destroy");

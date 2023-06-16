@@ -10,8 +10,8 @@ const SAVE_PER_SITE_PREF = SAVE_PER_SITE_PREF_BRANCH + ".savePerSite";
 let { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs"
 );
-let { DownloadLastDir } = ChromeUtils.import(
-  "resource://gre/modules/DownloadLastDir.jsm"
+let { DownloadLastDir } = ChromeUtils.importESModule(
+  "resource://gre/modules/DownloadLastDir.sys.mjs"
 );
 
 add_task(

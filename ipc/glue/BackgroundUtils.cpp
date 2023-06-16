@@ -569,7 +569,7 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
       aLoadInfo->GetAllowListFutureDocumentsCreatedFromThisRedirectChain(),
       aLoadInfo->GetNeedForCheckingAntiTrackingHeuristic(), cspNonce,
       aLoadInfo->GetSkipContentSniffing(), aLoadInfo->GetHttpsOnlyStatus(),
-      aLoadInfo->GetHasValidUserGestureActivation(),
+      aLoadInfo->GetHstsStatus(), aLoadInfo->GetHasValidUserGestureActivation(),
       aLoadInfo->GetAllowDeprecatedSystemRequests(),
       aLoadInfo->GetIsInDevToolsContext(), aLoadInfo->GetParserCreatedScript(),
       aLoadInfo->GetIsFromProcessingFrameAttributes(),
@@ -858,7 +858,7 @@ nsresult LoadInfoArgsToLoadInfo(
       loadInfoArgs.allowListFutureDocumentsCreatedFromThisRedirectChain(),
       loadInfoArgs.needForCheckingAntiTrackingHeuristic(),
       loadInfoArgs.cspNonce(), loadInfoArgs.skipContentSniffing(),
-      loadInfoArgs.httpsOnlyStatus(),
+      loadInfoArgs.httpsOnlyStatus(), loadInfoArgs.hstsStatus(),
       loadInfoArgs.hasValidUserGestureActivation(),
       loadInfoArgs.allowDeprecatedSystemRequests(),
       loadInfoArgs.isInDevToolsContext(), loadInfoArgs.parserCreatedScript(),
@@ -926,7 +926,7 @@ void LoadInfoToParentLoadInfoForwarder(
   *aForwarderArgsOut = ParentLoadInfoForwarderArgs(
       aLoadInfo->GetAllowInsecureRedirectToDataURI(), ipcController, tainting,
       aLoadInfo->GetSkipContentSniffing(), aLoadInfo->GetHttpsOnlyStatus(),
-      aLoadInfo->GetHasValidUserGestureActivation(),
+      aLoadInfo->GetHstsStatus(), aLoadInfo->GetHasValidUserGestureActivation(),
       aLoadInfo->GetAllowDeprecatedSystemRequests(),
       aLoadInfo->GetIsInDevToolsContext(), aLoadInfo->GetParserCreatedScript(),
       aLoadInfo->GetTriggeringSandboxFlags(),
@@ -964,6 +964,9 @@ nsresult MergeParentLoadInfoForwarder(
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = aLoadInfo->SetHttpsOnlyStatus(aForwarderArgs.httpsOnlyStatus());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aLoadInfo->SetHstsStatus(aForwarderArgs.hstsStatus());
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = aLoadInfo->SetTriggeringSandboxFlags(

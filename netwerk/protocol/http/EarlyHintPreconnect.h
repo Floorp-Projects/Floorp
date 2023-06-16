@@ -12,7 +12,7 @@ namespace mozilla::net {
 class EarlyHintPreconnect final {
  public:
   static void MaybePreconnect(const LinkHeader& aHeader, nsIURI* aBaseURI,
-                              nsIPrincipal* aPrincipal);
+                              OriginAttributes&& aOriginAttributes);
 
   EarlyHintPreconnect() = delete;
   EarlyHintPreconnect(const EarlyHintPreconnect&) = delete;

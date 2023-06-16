@@ -11,7 +11,7 @@ const TEST_PREFLIGHT_IFRAME_PAGE =
 const TEST_PREFLIGHT_PAGE =
   "http://example.net/browser/toolkit/components/antitracking/test/browser/browser_staticPartition_CORS_preflight.sjs";
 
-add_task(async function() {
+add_task(async function () {
   let uuidGenerator = Services.uuid;
 
   for (let networkIsolation of [true, false]) {

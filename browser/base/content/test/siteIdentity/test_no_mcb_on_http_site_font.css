@@ -2,6 +2,7 @@
   font-family: testFont;
   src: url(http://example.com/browser/devtools/client/fontinspector/test/browser_font.woff);
 }
+/* stylelint-disable font-family-no-missing-generic-family-keyword */
 body {
   font-family: Arial;
 }

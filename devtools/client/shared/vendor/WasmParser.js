@@ -13,8 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.bytesToString = exports.BinaryReader = exports.Int64 = exports.ElementMode = exports.DataMode = exports.BinaryReaderState = exports.NameType = exports.LinkingType = exports.RelocType = exports.Type = exports.TypeKind = exports.ExternalKind = exports.OperatorCodeNames = exports.OperatorCode = exports.SectionCode = void 0;
+exports.bytesToString = exports.BinaryReader = exports.Int64 = exports.TagAttribute = exports.ElementMode = exports.DataMode = exports.BinaryReaderState = exports.NameType = exports.LinkingType = exports.RelocType = exports.RefType = exports.Type = exports.FuncDef = exports.FieldDef = exports.TypeKind = exports.ExternalKind = exports.OperatorCodeNames = exports.OperatorCode = exports.SectionCode = void 0;
 // See https://github.com/WebAssembly/design/blob/master/BinaryEncoding.md
 var WASM_MAGIC_NUMBER = 0x6d736100;
 var WASM_SUPPORTED_EXPERIMENTAL_VERSION = 0xd;
@@ -34,7 +49,8 @@ var SectionCode;
     SectionCode[SectionCode["Element"] = 9] = "Element";
     SectionCode[SectionCode["Code"] = 10] = "Code";
     SectionCode[SectionCode["Data"] = 11] = "Data";
-    SectionCode[SectionCode["Event"] = 13] = "Event";
+    SectionCode[SectionCode["DataCount"] = 12] = "DataCount";
+    SectionCode[SectionCode["Tag"] = 13] = "Tag";
 })(SectionCode = exports.SectionCode || (exports.SectionCode = {}));
 var OperatorCode;
 (function (OperatorCode) {
@@ -94,8 +110,8 @@ var OperatorCode;
     OperatorCode[OperatorCode["i64_store8"] = 60] = "i64_store8";
     OperatorCode[OperatorCode["i64_store16"] = 61] = "i64_store16";
     OperatorCode[OperatorCode["i64_store32"] = 62] = "i64_store32";
-    OperatorCode[OperatorCode["current_memory"] = 63] = "current_memory";
-    OperatorCode[OperatorCode["grow_memory"] = 64] = "grow_memory";
+    OperatorCode[OperatorCode["memory_size"] = 63] = "memory_size";
+    OperatorCode[OperatorCode["memory_grow"] = 64] = "memory_grow";
     OperatorCode[OperatorCode["i32_const"] = 65] = "i32_const";
     OperatorCode[OperatorCode["i64_const"] = 66] = "i64_const";
     OperatorCode[OperatorCode["f32_const"] = 67] = "f32_const";
@@ -259,9 +275,9 @@ var OperatorCode;
     OperatorCode[OperatorCode["br_on_null"] = 212] = "br_on_null";
     OperatorCode[OperatorCode["ref_eq"] = 213] = "ref_eq";
     OperatorCode[OperatorCode["br_on_non_null"] = 214] = "br_on_non_null";
-    OperatorCode[OperatorCode["atomic_notify"] = 65024] = "atomic_notify";
-    OperatorCode[OperatorCode["i32_atomic_wait"] = 65025] = "i32_atomic_wait";
-    OperatorCode[OperatorCode["i64_atomic_wait"] = 65026] = "i64_atomic_wait";
+    OperatorCode[OperatorCode["memory_atomic_notify"] = 65024] = "memory_atomic_notify";
+    OperatorCode[OperatorCode["memory_atomic_wait32"] = 65025] = "memory_atomic_wait32";
+    OperatorCode[OperatorCode["memory_atomic_wait64"] = 65026] = "memory_atomic_wait64";
     OperatorCode[OperatorCode["atomic_fence"] = 65027] = "atomic_fence";
     OperatorCode[OperatorCode["i32_atomic_load"] = 65040] = "i32_atomic_load";
     OperatorCode[OperatorCode["i64_atomic_load"] = 65041] = "i64_atomic_load";
@@ -562,7 +578,7 @@ var OperatorCode;
     OperatorCode[OperatorCode["i32x4_trunc_sat_f64x2_u_zero"] = 65021] = "i32x4_trunc_sat_f64x2_u_zero";
     OperatorCode[OperatorCode["f64x2_convert_low_i32x4_s"] = 65022] = "f64x2_convert_low_i32x4_s";
     OperatorCode[OperatorCode["f64x2_convert_low_i32x4_u"] = 65023] = "f64x2_convert_low_i32x4_u";
-    // GC proposal.
+    // GC proposal (milestone 6).
     OperatorCode[OperatorCode["struct_new_with_rtt"] = 64257] = "struct_new_with_rtt";
     OperatorCode[OperatorCode["struct_new_default_with_rtt"] = 64258] = "struct_new_default_with_rtt";
     OperatorCode[OperatorCode["struct_get"] = 64259] = "struct_get";
@@ -571,18 +587,22 @@ var OperatorCode;
     OperatorCode[OperatorCode["struct_set"] = 64262] = "struct_set";
     OperatorCode[OperatorCode["struct_new"] = 64263] = "struct_new";
     OperatorCode[OperatorCode["struct_new_default"] = 64264] = "struct_new_default";
+    OperatorCode[OperatorCode["array_fill"] = 64271] = "array_fill";
     OperatorCode[OperatorCode["array_new_with_rtt"] = 64273] = "array_new_with_rtt";
     OperatorCode[OperatorCode["array_new_default_with_rtt"] = 64274] = "array_new_default_with_rtt";
     OperatorCode[OperatorCode["array_get"] = 64275] = "array_get";
     OperatorCode[OperatorCode["array_get_s"] = 64276] = "array_get_s";
     OperatorCode[OperatorCode["array_get_u"] = 64277] = "array_get_u";
     OperatorCode[OperatorCode["array_set"] = 64278] = "array_set";
-    OperatorCode[OperatorCode["array_len"] = 64279] = "array_len";
+    OperatorCode[OperatorCode["array_len_"] = 64279] = "array_len_";
+    OperatorCode[OperatorCode["array_len"] = 64281] = "array_len";
     OperatorCode[OperatorCode["array_copy"] = 64280] = "array_copy";
-    OperatorCode[OperatorCode["array_init"] = 64281] = "array_init";
-    OperatorCode[OperatorCode["array_init_static"] = 64282] = "array_init_static";
+    OperatorCode[OperatorCode["array_new_fixed"] = 64282] = "array_new_fixed";
     OperatorCode[OperatorCode["array_new"] = 64283] = "array_new";
     OperatorCode[OperatorCode["array_new_default"] = 64284] = "array_new_default";
+    OperatorCode[OperatorCode["array_new_data"] = 64285] = "array_new_data";
+    OperatorCode[OperatorCode["array_init_from_data"] = 64286] = "array_init_from_data";
+    OperatorCode[OperatorCode["array_new_elem"] = 64287] = "array_new_elem";
     OperatorCode[OperatorCode["i31_new"] = 64288] = "i31_new";
     OperatorCode[OperatorCode["i31_get_s"] = 64289] = "i31_get_s";
     OperatorCode[OperatorCode["i31_get_u"] = 64290] = "i31_get_u";
@@ -590,25 +610,40 @@ var OperatorCode;
     OperatorCode[OperatorCode["rtt_sub"] = 64305] = "rtt_sub";
     OperatorCode[OperatorCode["rtt_fresh_sub"] = 64306] = "rtt_fresh_sub";
     OperatorCode[OperatorCode["ref_test"] = 64320] = "ref_test";
-    OperatorCode[OperatorCode["ref_test_static"] = 64324] = "ref_test_static";
     OperatorCode[OperatorCode["ref_cast"] = 64321] = "ref_cast";
-    OperatorCode[OperatorCode["ref_cast_static"] = 64325] = "ref_cast_static";
-    OperatorCode[OperatorCode["br_on_cast"] = 64322] = "br_on_cast";
-    OperatorCode[OperatorCode["br_on_cast_static"] = 64326] = "br_on_cast_static";
-    OperatorCode[OperatorCode["br_on_cast_fail"] = 64323] = "br_on_cast_fail";
-    OperatorCode[OperatorCode["br_on_cast_static_fail"] = 64327] = "br_on_cast_static_fail";
-    OperatorCode[OperatorCode["ref_is_func"] = 64336] = "ref_is_func";
-    OperatorCode[OperatorCode["ref_is_data"] = 64337] = "ref_is_data";
-    OperatorCode[OperatorCode["ref_is_i31"] = 64338] = "ref_is_i31";
-    OperatorCode[OperatorCode["ref_as_func"] = 64344] = "ref_as_func";
-    OperatorCode[OperatorCode["ref_as_data"] = 64345] = "ref_as_data";
-    OperatorCode[OperatorCode["ref_as_i31"] = 64346] = "ref_as_i31";
-    OperatorCode[OperatorCode["br_on_func"] = 64352] = "br_on_func";
-    OperatorCode[OperatorCode["br_on_data"] = 64353] = "br_on_data";
-    OperatorCode[OperatorCode["br_on_i31"] = 64354] = "br_on_i31";
-    OperatorCode[OperatorCode["br_on_non_func"] = 64355] = "br_on_non_func";
-    OperatorCode[OperatorCode["br_on_non_data"] = 64356] = "br_on_non_data";
-    OperatorCode[OperatorCode["br_on_non_i31"] = 64357] = "br_on_non_i31";
+    OperatorCode[OperatorCode["br_on_cast_"] = 64322] = "br_on_cast_";
+    OperatorCode[OperatorCode["br_on_cast_fail_"] = 64323] = "br_on_cast_fail_";
+    OperatorCode[OperatorCode["ref_test_"] = 64324] = "ref_test_";
+    OperatorCode[OperatorCode["ref_cast_"] = 64325] = "ref_cast_";
+    OperatorCode[OperatorCode["br_on_cast__"] = 64326] = "br_on_cast__";
+    OperatorCode[OperatorCode["br_on_cast_fail__"] = 64327] = "br_on_cast_fail__";
+    OperatorCode[OperatorCode["ref_test_null"] = 64328] = "ref_test_null";
+    OperatorCode[OperatorCode["ref_cast_null"] = 64329] = "ref_cast_null";
+    OperatorCode[OperatorCode["br_on_cast_null_"] = 64330] = "br_on_cast_null_";
+    OperatorCode[OperatorCode["br_on_cast_fail_null_"] = 64331] = "br_on_cast_fail_null_";
+    OperatorCode[OperatorCode["ref_cast_nop"] = 64332] = "ref_cast_nop";
+    OperatorCode[OperatorCode["br_on_cast"] = 64334] = "br_on_cast";
+    OperatorCode[OperatorCode["br_on_cast_fail"] = 64335] = "br_on_cast_fail";
+    OperatorCode[OperatorCode["ref_is_func_"] = 64336] = "ref_is_func_";
+    OperatorCode[OperatorCode["ref_is_data_"] = 64337] = "ref_is_data_";
+    OperatorCode[OperatorCode["ref_is_i31_"] = 64338] = "ref_is_i31_";
+    OperatorCode[OperatorCode["ref_is_array_"] = 64339] = "ref_is_array_";
+    OperatorCode[OperatorCode["array_init_data"] = 64340] = "array_init_data";
+    OperatorCode[OperatorCode["array_init_elem"] = 64341] = "array_init_elem";
+    OperatorCode[OperatorCode["ref_as_func_"] = 64344] = "ref_as_func_";
+    OperatorCode[OperatorCode["ref_as_data_"] = 64345] = "ref_as_data_";
+    OperatorCode[OperatorCode["ref_as_i31_"] = 64346] = "ref_as_i31_";
+    OperatorCode[OperatorCode["ref_as_array_"] = 64347] = "ref_as_array_";
+    OperatorCode[OperatorCode["br_on_func_"] = 64352] = "br_on_func_";
+    OperatorCode[OperatorCode["br_on_data_"] = 64353] = "br_on_data_";
+    OperatorCode[OperatorCode["br_on_i31_"] = 64354] = "br_on_i31_";
+    OperatorCode[OperatorCode["br_on_non_func_"] = 64355] = "br_on_non_func_";
+    OperatorCode[OperatorCode["br_on_non_data_"] = 64356] = "br_on_non_data_";
+    OperatorCode[OperatorCode["br_on_non_i31_"] = 64357] = "br_on_non_i31_";
+    OperatorCode[OperatorCode["br_on_array_"] = 64358] = "br_on_array_";
+    OperatorCode[OperatorCode["br_on_non_array_"] = 64359] = "br_on_non_array_";
+    OperatorCode[OperatorCode["extern_internalize"] = 64368] = "extern_internalize";
+    OperatorCode[OperatorCode["extern_externalize"] = 64369] = "extern_externalize";
 })(OperatorCode = exports.OperatorCode || (exports.OperatorCode = {}));
 exports.OperatorCodeNames = [
     "unreachable",
@@ -674,7 +709,7 @@ exports.OperatorCodeNames = [
     "i64.store8",
     "i64.store16",
     "i64.store32",
-    "current_memory",
+    "memory.size",
     "memory.grow",
     "i32.const",
     "i64.const",
@@ -1151,9 +1186,9 @@ exports.OperatorCodeNames = [
     exports.OperatorCodeNames[0xfd00 | i] = s;
 });
 [
-    "atomic.notify",
-    "i32.atomic.wait",
-    "i64.atomic.wait",
+    "memory.atomic.notify",
+    "memory.atomic.wait32",
+    "memory.atomic.wait64",
     "atomic.fence",
     undefined,
     undefined,
@@ -1241,18 +1276,22 @@ exports.OperatorCodeNames[0xfb05] = "struct.get_u";
 exports.OperatorCodeNames[0xfb06] = "struct.set";
 exports.OperatorCodeNames[0xfb07] = "struct.new";
 exports.OperatorCodeNames[0xfb08] = "struct.new_default";
+exports.OperatorCodeNames[0xfb0f] = "array.fill";
 exports.OperatorCodeNames[0xfb11] = "array.new_with_rtt";
 exports.OperatorCodeNames[0xfb12] = "array.new_default_with_rtt";
 exports.OperatorCodeNames[0xfb13] = "array.get";
 exports.OperatorCodeNames[0xfb14] = "array.get_s";
 exports.OperatorCodeNames[0xfb15] = "array.get_u";
 exports.OperatorCodeNames[0xfb16] = "array.set";
-exports.OperatorCodeNames[0xfb17] = "array.len";
+exports.OperatorCodeNames[0xfb17] = "array.len"; // TODO remove
 exports.OperatorCodeNames[0xfb18] = "array.copy";
-exports.OperatorCodeNames[0xfb19] = "array.init";
-exports.OperatorCodeNames[0xfb1a] = "array.init_static";
+exports.OperatorCodeNames[0xfb19] = "array.len";
+exports.OperatorCodeNames[0xfb1a] = "array.new_fixed";
 exports.OperatorCodeNames[0xfb1b] = "array.new";
 exports.OperatorCodeNames[0xfb1c] = "array.new_default";
+exports.OperatorCodeNames[0xfb1d] = "array.new_data";
+exports.OperatorCodeNames[0xfb1e] = "array.init_from_data";
+exports.OperatorCodeNames[0xfb1f] = "array.new_elem";
 exports.OperatorCodeNames[0xfb20] = "i31.new";
 exports.OperatorCodeNames[0xfb21] = "i31.get_s";
 exports.OperatorCodeNames[0xfb22] = "i31.get_u";
@@ -1267,25 +1306,40 @@ exports.OperatorCodeNames[0xfb44] = "ref.test_static";
 exports.OperatorCodeNames[0xfb45] = "ref.cast_static";
 exports.OperatorCodeNames[0xfb46] = "br_on_cast_static";
 exports.OperatorCodeNames[0xfb47] = "br_on_cast_static_fail";
+exports.OperatorCodeNames[0xfb48] = "ref.test_null";
+exports.OperatorCodeNames[0xfb49] = "ref.cast_null";
+exports.OperatorCodeNames[0xfb4a] = "br_on_cast_null";
+exports.OperatorCodeNames[0xfb4b] = "br_on_cast_fail_null";
+exports.OperatorCodeNames[0xfb4c] = "ref.cast_nop";
+exports.OperatorCodeNames[0xfb4e] = "br_on_cast";
+exports.OperatorCodeNames[0xfb4f] = "br_on_cast_fail";
 exports.OperatorCodeNames[0xfb50] = "ref.is_func";
 exports.OperatorCodeNames[0xfb51] = "ref.is_data";
 exports.OperatorCodeNames[0xfb52] = "ref.is_i31";
+exports.OperatorCodeNames[0xfb53] = "ref.is_array";
+exports.OperatorCodeNames[0xfb54] = "array.init_data";
+exports.OperatorCodeNames[0xfb55] = "array.init_elem";
 exports.OperatorCodeNames[0xfb58] = "ref.as_func";
 exports.OperatorCodeNames[0xfb59] = "ref.as_data";
 exports.OperatorCodeNames[0xfb5a] = "ref.as_i31";
+exports.OperatorCodeNames[0xfb5b] = "ref.as_array";
 exports.OperatorCodeNames[0xfb60] = "br_on_func";
 exports.OperatorCodeNames[0xfb61] = "br_on_data";
 exports.OperatorCodeNames[0xfb62] = "br_on_i31";
 exports.OperatorCodeNames[0xfb63] = "br_on_non_func";
 exports.OperatorCodeNames[0xfb64] = "br_on_non_data";
 exports.OperatorCodeNames[0xfb65] = "br_on_non_i31";
+exports.OperatorCodeNames[0xfb66] = "br_on_array";
+exports.OperatorCodeNames[0xfb67] = "br_on_non_array";
+exports.OperatorCodeNames[0xfb70] = "extern.internalize";
+exports.OperatorCodeNames[0xfb71] = "extern.externalize";
 var ExternalKind;
 (function (ExternalKind) {
     ExternalKind[ExternalKind["Function"] = 0] = "Function";
     ExternalKind[ExternalKind["Table"] = 1] = "Table";
     ExternalKind[ExternalKind["Memory"] = 2] = "Memory";
     ExternalKind[ExternalKind["Global"] = 3] = "Global";
-    ExternalKind[ExternalKind["Event"] = 4] = "Event";
+    ExternalKind[ExternalKind["Tag"] = 4] = "Tag";
 })(ExternalKind = exports.ExternalKind || (exports.ExternalKind = {}));
 var TypeKind;
 (function (TypeKind) {
@@ -1301,50 +1355,85 @@ var TypeKind;
     TypeKind[TypeKind["externref"] = -17] = "externref";
     TypeKind[TypeKind["anyref"] = -18] = "anyref";
     TypeKind[TypeKind["eqref"] = -19] = "eqref";
-    TypeKind[TypeKind["optref"] = -20] = "optref";
+    TypeKind[TypeKind["ref_null"] = -20] = "ref_null";
     TypeKind[TypeKind["ref"] = -21] = "ref";
     TypeKind[TypeKind["i31ref"] = -22] = "i31ref";
-    TypeKind[TypeKind["rtt_d"] = -23] = "rtt_d";
-    TypeKind[TypeKind["rtt"] = -24] = "rtt";
-    TypeKind[TypeKind["dataref"] = -25] = "dataref";
+    TypeKind[TypeKind["nullexternref"] = -23] = "nullexternref";
+    TypeKind[TypeKind["nullfuncref"] = -24] = "nullfuncref";
+    TypeKind[TypeKind["structref"] = -25] = "structref";
+    TypeKind[TypeKind["arrayref"] = -26] = "arrayref";
+    TypeKind[TypeKind["nullref"] = -27] = "nullref";
     TypeKind[TypeKind["func"] = -32] = "func";
     TypeKind[TypeKind["struct"] = -33] = "struct";
     TypeKind[TypeKind["array"] = -34] = "array";
-    TypeKind[TypeKind["func_subtype"] = -35] = "func_subtype";
-    TypeKind[TypeKind["struct_subtype"] = -36] = "struct_subtype";
-    TypeKind[TypeKind["array_subtype"] = -37] = "array_subtype";
+    TypeKind[TypeKind["subtype"] = -48] = "subtype";
+    TypeKind[TypeKind["rec_group"] = -49] = "rec_group";
+    TypeKind[TypeKind["subtype_final"] = -50] = "subtype_final";
     TypeKind[TypeKind["empty_block_type"] = -64] = "empty_block_type";
 })(TypeKind = exports.TypeKind || (exports.TypeKind = {}));
-var Type = /** @class */ (function () {
-    function Type(kind, index, depth) {
-        if (index === void 0) { index = -1; }
-        if (depth === void 0) { depth = -1; }
-        if (kind < 0 || (kind === 0 && index >= 0)) {
-            // all good
-        }
-        else {
-            throw new Error("invalid type: " + kind + "/" + index + "/" + depth);
-        }
-        this.kind = kind;
-        this.index = index;
-        this.depth = depth;
-        // Canonicalize (ref any) to (anyref) etc.
-        if ((index === -16 /* funcref */ && kind === -20 /* optref */) ||
-            (index === -17 /* externref */ && kind === -20 /* optref */) ||
-            (index === -18 /* anyref */ && kind === -20 /* optref */) ||
-            (index === -19 /* eqref */ && kind === -20 /* optref */) ||
-            (index === -22 /* i31ref */ && kind === -21 /* ref */) ||
-            (index === -25 /* dataref */ && kind === -21 /* ref */)) {
-            this.kind = index;
-            this.index = -1;
-        }
+var FieldDef = /** @class */ (function () {
+    function FieldDef() {
     }
+    return FieldDef;
+}());
+exports.FieldDef = FieldDef;
+var FuncDef = /** @class */ (function () {
+    function FuncDef() {
+    }
+    return FuncDef;
+}());
+exports.FuncDef = FuncDef;
+var Type = exports.Type = /** @class */ (function () {
+    function Type(code) {
+        this.code = code;
+    }
+    Object.defineProperty(Type.prototype, "isIndex", {
+        get: function () {
+            return this.code >= 0;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Type.prototype, "kind", {
+        get: function () {
+            return this.code >= 0 ? 0 /* TypeKind.unspecified */ : this.code;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Type.prototype, "index", {
+        get: function () {
+            return this.code < 0 ? -1 : this.code;
+        },
+        enumerable: false,
+        configurable: true
+    });
     // Convenience singletons.
-    Type.funcref = new Type(-16 /* funcref */);
-    Type.externref = new Type(-17 /* externref */);
+    Type.funcref = new Type(-16 /* TypeKind.funcref */);
+    Type.externref = new Type(-17 /* TypeKind.externref */);
     return Type;
 }());
-exports.Type = Type;
+var RefType = /** @class */ (function (_super) {
+    __extends(RefType, _super);
+    function RefType(kind, ref_index) {
+        var _this = this;
+        if (kind != -21 /* TypeKind.ref */ && kind !== -20 /* TypeKind.ref_null */) {
+            throw new Error("Unexpected type kind: ".concat(kind, "}"));
+        }
+        _this = _super.call(this, kind) || this;
+        _this.ref_index = ref_index;
+        return _this;
+    }
+    Object.defineProperty(RefType.prototype, "isNullable", {
+        get: function () {
+            return this.kind == -20 /* TypeKind.ref_null */;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    return RefType;
+}(Type));
+exports.RefType = RefType;
 var RelocType;
 (function (RelocType) {
     RelocType[RelocType["FunctionIndex_LEB"] = 0] = "FunctionIndex_LEB";
@@ -1365,12 +1454,15 @@ var NameType;
     NameType[NameType["Module"] = 0] = "Module";
     NameType[NameType["Function"] = 1] = "Function";
     NameType[NameType["Local"] = 2] = "Local";
-    NameType[NameType["Event"] = 3] = "Event";
+    NameType[NameType["Label"] = 3] = "Label";
     NameType[NameType["Type"] = 4] = "Type";
     NameType[NameType["Table"] = 5] = "Table";
     NameType[NameType["Memory"] = 6] = "Memory";
     NameType[NameType["Global"] = 7] = "Global";
+    NameType[NameType["Elem"] = 8] = "Elem";
+    NameType[NameType["Data"] = 9] = "Data";
     NameType[NameType["Field"] = 10] = "Field";
+    NameType[NameType["Tag"] = 11] = "Tag";
 })(NameType = exports.NameType || (exports.NameType = {}));
 var BinaryReaderState;
 (function (BinaryReaderState) {
@@ -1395,7 +1487,7 @@ var BinaryReaderState;
     BinaryReaderState[BinaryReaderState["ELEMENT_SECTION_ENTRY"] = 20] = "ELEMENT_SECTION_ENTRY";
     BinaryReaderState[BinaryReaderState["LINKING_SECTION_ENTRY"] = 21] = "LINKING_SECTION_ENTRY";
     BinaryReaderState[BinaryReaderState["START_SECTION_ENTRY"] = 22] = "START_SECTION_ENTRY";
-    BinaryReaderState[BinaryReaderState["EVENT_SECTION_ENTRY"] = 23] = "EVENT_SECTION_ENTRY";
+    BinaryReaderState[BinaryReaderState["TAG_SECTION_ENTRY"] = 23] = "TAG_SECTION_ENTRY";
     BinaryReaderState[BinaryReaderState["BEGIN_INIT_EXPRESSION_BODY"] = 25] = "BEGIN_INIT_EXPRESSION_BODY";
     BinaryReaderState[BinaryReaderState["INIT_EXPRESSION_OPERATOR"] = 26] = "INIT_EXPRESSION_OPERATOR";
     BinaryReaderState[BinaryReaderState["END_INIT_EXPRESSION_BODY"] = 27] = "END_INIT_EXPRESSION_BODY";
@@ -1418,6 +1510,9 @@ var BinaryReaderState;
     BinaryReaderState[BinaryReaderState["BEGIN_OFFSET_EXPRESSION_BODY"] = 44] = "BEGIN_OFFSET_EXPRESSION_BODY";
     BinaryReaderState[BinaryReaderState["OFFSET_EXPRESSION_OPERATOR"] = 45] = "OFFSET_EXPRESSION_OPERATOR";
     BinaryReaderState[BinaryReaderState["END_OFFSET_EXPRESSION_BODY"] = 46] = "END_OFFSET_EXPRESSION_BODY";
+    BinaryReaderState[BinaryReaderState["BEGIN_REC_GROUP"] = 47] = "BEGIN_REC_GROUP";
+    BinaryReaderState[BinaryReaderState["END_REC_GROUP"] = 48] = "END_REC_GROUP";
+    BinaryReaderState[BinaryReaderState["DATA_COUNT_SECTION_ENTRY"] = 49] = "DATA_COUNT_SECTION_ENTRY";
 })(BinaryReaderState = exports.BinaryReaderState || (exports.BinaryReaderState = {}));
 var DataSegmentType;
 (function (DataSegmentType) {
@@ -1427,8 +1522,8 @@ var DataSegmentType;
 })(DataSegmentType || (DataSegmentType = {}));
 function isActiveDataSegmentType(segmentType) {
     switch (segmentType) {
-        case 0 /* Active */:
-        case 2 /* ActiveWithMemoryIndex */:
+        case 0 /* DataSegmentType.Active */:
+        case 2 /* DataSegmentType.ActiveWithMemoryIndex */:
             return true;
         default:
             return false;
@@ -1452,10 +1547,10 @@ var ElementSegmentType;
 })(ElementSegmentType || (ElementSegmentType = {}));
 function isActiveElementSegmentType(segmentType) {
     switch (segmentType) {
-        case 0 /* LegacyActiveFuncrefExternval */:
-        case 2 /* ActiveExternval */:
-        case 4 /* LegacyActiveFuncrefElemexpr */:
-        case 6 /* ActiveElemexpr */:
+        case 0 /* ElementSegmentType.LegacyActiveFuncrefExternval */:
+        case 2 /* ElementSegmentType.ActiveExternval */:
+        case 4 /* ElementSegmentType.LegacyActiveFuncrefElemexpr */:
+        case 6 /* ElementSegmentType.ActiveElemexpr */:
             return true;
         default:
             return false;
@@ -1463,10 +1558,10 @@ function isActiveElementSegmentType(segmentType) {
 }
 function isExternvalElementSegmentType(segmentType) {
     switch (segmentType) {
-        case 0 /* LegacyActiveFuncrefExternval */:
-        case 1 /* PassiveExternval */:
-        case 2 /* ActiveExternval */:
-        case 3 /* DeclaredExternval */:
+        case 0 /* ElementSegmentType.LegacyActiveFuncrefExternval */:
+        case 1 /* ElementSegmentType.PassiveExternval */:
+        case 2 /* ElementSegmentType.ActiveExternval */:
+        case 3 /* ElementSegmentType.DeclaredExternval */:
             return true;
         default:
             return false;
@@ -1489,6 +1584,10 @@ var DataRange = /** @class */ (function () {
     };
     return DataRange;
 }());
+var TagAttribute;
+(function (TagAttribute) {
+    TagAttribute[TagAttribute["Exception"] = 0] = "Exception";
+})(TagAttribute = exports.TagAttribute || (exports.TagAttribute = {}));
 var Int64 = /** @class */ (function () {
     function Int64(data) {
         this._data = data || new Uint8Array(8);
@@ -1568,15 +1667,16 @@ var BinaryReader = /** @class */ (function () {
         this._pos = 0;
         this._length = 0;
         this._eof = false;
-        this.state = 0 /* INITIAL */;
+        this.state = 0 /* BinaryReaderState.INITIAL */;
         this.result = null;
         this.error = null;
         this._sectionEntriesLeft = 0;
-        this._sectionId = -1 /* Unknown */;
+        this._sectionId = -1 /* SectionCode.Unknown */;
         this._sectionRange = null;
         this._functionRange = null;
         this._segmentType = 0;
         this._segmentEntriesLeft = 0;
+        this._recGroupTypesLeft = 0;
     }
     Object.defineProperty(BinaryReader.prototype, "data", {
         get: function () {
@@ -1708,48 +1808,54 @@ var BinaryReader = /** @class */ (function () {
     // Reads any "s33" (signed 33-bit integer) value correctly; no guarantees
     // outside that range.
     BinaryReader.prototype.readHeapType = function () {
-        var result = 0;
-        var shift = 0;
-        var byte;
-        while (true) {
-            byte = this.readUint8();
-            if (shift === 28) {
-                var signed = (byte << 25) >> 25;
-                return signed * Math.pow(2, 28) + result;
-            }
-            result |= (byte & 0x7f) << shift;
-            shift += 7;
-            if ((byte & 0x80) === 0)
-                break;
+        var lsb = this.readUint8();
+        if (lsb & 0x80) {
+            // Has more data than one byte.
+            var tail = this.readVarInt32();
+            return (tail - 1) * 128 + lsb;
         }
-        shift = 32 - shift;
-        return (result << shift) >> shift;
-    };
-    BinaryReader.prototype.readTypeInternal = function (kind) {
-        if (kind === -21 /* ref */ ||
-            kind === -20 /* optref */ ||
-            kind === -24 /* rtt */) {
-            var index = this.readHeapType();
-            return new Type(kind, index);
+        else {
+            return (lsb << 25) >> 25;
         }
-        if (kind === -23 /* rtt_d */) {
-            var index = this.readHeapType();
-            var depth = this.readVarUint32();
-            return new Type(kind, index, depth);
-        }
-        return new Type(kind);
     };
     BinaryReader.prototype.readType = function () {
-        var kind = this.readVarInt7();
-        return this.readTypeInternal(kind);
-    };
-    BinaryReader.prototype.readBlockType = function () {
-        var block_type = this.readHeapType();
-        if (block_type < 0) {
-            return this.readTypeInternal(block_type);
+        var kind = this.readHeapType();
+        if (kind >= 0) {
+            return new Type(kind);
         }
-        var func_index = block_type;
-        return new Type(0 /* unspecified */, func_index);
+        switch (kind) {
+            case -20 /* TypeKind.ref_null */:
+            case -21 /* TypeKind.ref */:
+                var index = this.readHeapType();
+                return new RefType(kind, index);
+            case -1 /* TypeKind.i32 */:
+            case -2 /* TypeKind.i64 */:
+            case -3 /* TypeKind.f32 */:
+            case -4 /* TypeKind.f64 */:
+            case -5 /* TypeKind.v128 */:
+            case -6 /* TypeKind.i8 */:
+            case -7 /* TypeKind.i16 */:
+            case -16 /* TypeKind.funcref */:
+            case -17 /* TypeKind.externref */:
+            case -18 /* TypeKind.anyref */:
+            case -19 /* TypeKind.eqref */:
+            case -22 /* TypeKind.i31ref */:
+            case -23 /* TypeKind.nullexternref */:
+            case -24 /* TypeKind.nullfuncref */:
+            case -25 /* TypeKind.structref */:
+            case -26 /* TypeKind.arrayref */:
+            case -27 /* TypeKind.nullref */:
+            case -32 /* TypeKind.func */:
+            case -33 /* TypeKind.struct */:
+            case -34 /* TypeKind.array */:
+            case -48 /* TypeKind.subtype */:
+            case -49 /* TypeKind.rec_group */:
+            case -50 /* TypeKind.subtype_final */:
+            case -64 /* TypeKind.empty_block_type */:
+                return new Type(kind);
+            default:
+                throw new Error("Unknown type kind: ".concat(kind));
+        }
     };
     BinaryReader.prototype.readStringBytes = function () {
         var length = this.readVarUint32();
@@ -1780,20 +1886,38 @@ var BinaryReader = /** @class */ (function () {
         var paramTypes = new Array(paramCount);
         for (var i = 0; i < paramCount; i++)
             paramTypes[i] = this.readType();
-        var returnCount = this.readVarUint1();
+        var returnCount = this.readVarUint32();
         var returnTypes = new Array(returnCount);
         for (var i = 0; i < returnCount; i++)
             returnTypes[i] = this.readType();
         return {
-            form: -32 /* func */,
+            form: -32 /* TypeKind.func */,
             params: paramTypes,
             returns: returnTypes,
         };
     };
-    BinaryReader.prototype.readFuncSubtype = function () {
-        var result = this.readFuncType();
-        result.form = -35 /* func_subtype */;
-        result.supertype = this.readHeapType();
+    BinaryReader.prototype.readBaseType = function () {
+        var form = this.readVarInt7();
+        switch (form) {
+            case -32 /* TypeKind.func */:
+                return this.readFuncType();
+            case -33 /* TypeKind.struct */:
+                return this.readStructType();
+            case -34 /* TypeKind.array */:
+                return this.readArrayType();
+            default:
+                throw new Error("Unknown type kind: ".concat(form));
+        }
+    };
+    BinaryReader.prototype.readSubtype = function (final) {
+        var supertypesCount = this.readVarUint32();
+        var supertypes = new Array(supertypesCount);
+        for (var i = 0; i < supertypesCount; i++) {
+            supertypes[i] = this.readHeapType();
+        }
+        var result = this.readBaseType();
+        result.supertypes = supertypes;
+        result.final = final;
         return result;
     };
     BinaryReader.prototype.readStructType = function () {
@@ -1805,31 +1929,19 @@ var BinaryReader = /** @class */ (function () {
             fieldMutabilities[i] = !!this.readVarUint1();
         }
         return {
-            form: -33 /* struct */,
+            form: -33 /* TypeKind.struct */,
             fields: fieldTypes,
             mutabilities: fieldMutabilities,
         };
-    };
-    BinaryReader.prototype.readStructSubtype = function () {
-        var result = this.readStructType();
-        result.form = -36 /* struct_subtype */;
-        result.supertype = this.readHeapType();
-        return result;
     };
     BinaryReader.prototype.readArrayType = function () {
         var elementType = this.readType();
         var mutability = !!this.readVarUint1();
         return {
-            form: -34 /* array */,
+            form: -34 /* TypeKind.array */,
             elementType: elementType,
             mutability: mutability,
         };
-    };
-    BinaryReader.prototype.readArraySubtype = function () {
-        var result = this.readArrayType();
-        result.form = -37 /* array_subtype */;
-        result.supertype = this.readHeapType();
-        return result;
     };
     BinaryReader.prototype.readResizableLimits = function (maxPresent) {
         var initial = this.readVarUint32();
@@ -1866,7 +1978,7 @@ var BinaryReader = /** @class */ (function () {
         var mutability = this.readVarUint1();
         return { contentType: contentType, mutability: mutability };
     };
-    BinaryReader.prototype.readEventType = function () {
+    BinaryReader.prototype.readTagType = function () {
         var attribute = this.readVarUint32();
         var typeIndex = this.readVarUint32();
         return {
@@ -1874,36 +1986,72 @@ var BinaryReader = /** @class */ (function () {
             typeIndex: typeIndex,
         };
     };
+    BinaryReader.prototype.readTypeEntryCommon = function (form) {
+        switch (form) {
+            case -32 /* TypeKind.func */:
+                this.result = this.readFuncType();
+                break;
+            case -48 /* TypeKind.subtype */:
+                this.result = this.readSubtype(false);
+                break;
+            case -50 /* TypeKind.subtype_final */:
+                this.result = this.readSubtype(true);
+                break;
+            case -33 /* TypeKind.struct */:
+                this.result = this.readStructType();
+                break;
+            case -34 /* TypeKind.array */:
+                this.result = this.readArrayType();
+                break;
+            case -1 /* TypeKind.i32 */:
+            case -2 /* TypeKind.i64 */:
+            case -3 /* TypeKind.f32 */:
+            case -4 /* TypeKind.f64 */:
+            case -5 /* TypeKind.v128 */:
+            case -6 /* TypeKind.i8 */:
+            case -7 /* TypeKind.i16 */:
+            case -16 /* TypeKind.funcref */:
+            case -17 /* TypeKind.externref */:
+            case -18 /* TypeKind.anyref */:
+            case -19 /* TypeKind.eqref */:
+                this.result = {
+                    form: form,
+                };
+                break;
+            default:
+                throw new Error("Unknown type kind: ".concat(form));
+        }
+    };
     BinaryReader.prototype.readTypeEntry = function () {
         if (this._sectionEntriesLeft === 0) {
             this.skipSection();
             return this.read();
         }
-        this.state = 11 /* TYPE_SECTION_ENTRY */;
         var form = this.readVarInt7();
-        switch (form) {
-            case -32 /* func */:
-                this.result = this.readFuncType();
-                break;
-            case -35 /* func_subtype */:
-                this.result = this.readFuncSubtype();
-                break;
-            case -33 /* struct */:
-                this.result = this.readStructType();
-                break;
-            case -36 /* struct_subtype */:
-                this.result = this.readStructSubtype();
-                break;
-            case -34 /* array */:
-                this.result = this.readArrayType();
-                break;
-            case -37 /* array_subtype */:
-                this.result = this.readArraySubtype();
-                break;
-            default:
-                throw new Error("Unknown type kind: " + form);
+        if (form == -49 /* TypeKind.rec_group */) {
+            this.state = 47 /* BinaryReaderState.BEGIN_REC_GROUP */;
+            this.result = null;
+            this._recGroupTypesLeft = this.readVarUint32();
         }
-        this._sectionEntriesLeft--;
+        else {
+            this.state = 11 /* BinaryReaderState.TYPE_SECTION_ENTRY */;
+            this.readTypeEntryCommon(form);
+            this._sectionEntriesLeft--;
+        }
+        return true;
+    };
+    BinaryReader.prototype.readRecGroupEntry = function () {
+        if (this._recGroupTypesLeft === 0) {
+            this.state = 48 /* BinaryReaderState.END_REC_GROUP */;
+            this.result = null;
+            this._sectionEntriesLeft--;
+            this._recGroupTypesLeft = -1;
+            return true;
+        }
+        this.state = 11 /* BinaryReaderState.TYPE_SECTION_ENTRY */;
+        var form = this.readVarInt7();
+        this.readTypeEntryCommon(form);
+        this._recGroupTypesLeft--;
         return true;
     };
     BinaryReader.prototype.readImportEntry = function () {
@@ -1911,27 +2059,27 @@ var BinaryReader = /** @class */ (function () {
             this.skipSection();
             return this.read();
         }
-        this.state = 12 /* IMPORT_SECTION_ENTRY */;
+        this.state = 12 /* BinaryReaderState.IMPORT_SECTION_ENTRY */;
         var module = this.readStringBytes();
         var field = this.readStringBytes();
         var kind = this.readUint8();
         var funcTypeIndex;
         var type;
         switch (kind) {
-            case 0 /* Function */:
+            case 0 /* ExternalKind.Function */:
                 funcTypeIndex = this.readVarUint32();
                 break;
-            case 1 /* Table */:
+            case 1 /* ExternalKind.Table */:
                 type = this.readTableType();
                 break;
-            case 2 /* Memory */:
+            case 2 /* ExternalKind.Memory */:
                 type = this.readMemoryType();
                 break;
-            case 3 /* Global */:
+            case 3 /* ExternalKind.Global */:
                 type = this.readGlobalType();
                 break;
-            case 4 /* Event */:
-                type = this.readEventType();
+            case 4 /* ExternalKind.Tag */:
+                type = this.readTagType();
                 break;
         }
         this.result = {
@@ -1952,7 +2100,7 @@ var BinaryReader = /** @class */ (function () {
         var field = this.readStringBytes();
         var kind = this.readUint8();
         var index = this.readVarUint32();
-        this.state = 17 /* EXPORT_SECTION_ENTRY */;
+        this.state = 17 /* BinaryReaderState.EXPORT_SECTION_ENTRY */;
         this.result = { field: field, kind: kind, index: index };
         this._sectionEntriesLeft--;
         return true;
@@ -1963,7 +2111,7 @@ var BinaryReader = /** @class */ (function () {
             return this.read();
         }
         var typeIndex = this.readVarUint32();
-        this.state = 13 /* FUNCTION_SECTION_ENTRY */;
+        this.state = 13 /* BinaryReaderState.FUNCTION_SECTION_ENTRY */;
         this.result = { typeIndex: typeIndex };
         this._sectionEntriesLeft--;
         return true;
@@ -1973,7 +2121,7 @@ var BinaryReader = /** @class */ (function () {
             this.skipSection();
             return this.read();
         }
-        this.state = 14 /* TABLE_SECTION_ENTRY */;
+        this.state = 14 /* BinaryReaderState.TABLE_SECTION_ENTRY */;
         this.result = this.readTableType();
         this._sectionEntriesLeft--;
         return true;
@@ -1983,18 +2131,18 @@ var BinaryReader = /** @class */ (function () {
             this.skipSection();
             return this.read();
         }
-        this.state = 15 /* MEMORY_SECTION_ENTRY */;
+        this.state = 15 /* BinaryReaderState.MEMORY_SECTION_ENTRY */;
         this.result = this.readMemoryType();
         this._sectionEntriesLeft--;
         return true;
     };
-    BinaryReader.prototype.readEventEntry = function () {
+    BinaryReader.prototype.readTagEntry = function () {
         if (this._sectionEntriesLeft === 0) {
             this.skipSection();
             return this.read();
         }
-        this.state = 23 /* EVENT_SECTION_ENTRY */;
-        this.result = this.readEventType();
+        this.state = 23 /* BinaryReaderState.TAG_SECTION_ENTRY */;
+        this.result = this.readTagType();
         this._sectionEntriesLeft--;
         return true;
     };
@@ -2005,10 +2153,10 @@ var BinaryReader = /** @class */ (function () {
         }
         var globalType = this.readGlobalType();
         if (!globalType) {
-            this.state = 16 /* GLOBAL_SECTION_ENTRY */;
+            this.state = 16 /* BinaryReaderState.GLOBAL_SECTION_ENTRY */;
             return false;
         }
-        this.state = 39 /* BEGIN_GLOBAL_SECTION_ENTRY */;
+        this.state = 39 /* BinaryReaderState.BEGIN_GLOBAL_SECTION_ENTRY */;
         this.result = {
             type: globalType,
         };
@@ -2022,39 +2170,39 @@ var BinaryReader = /** @class */ (function () {
         }
         var pos = this._pos;
         if (!this.hasMoreBytes()) {
-            this.state = 20 /* ELEMENT_SECTION_ENTRY */;
+            this.state = 20 /* BinaryReaderState.ELEMENT_SECTION_ENTRY */;
             return false;
         }
         var segmentType = this.readUint8();
         var mode, tableIndex;
         switch (segmentType) {
-            case 0 /* LegacyActiveFuncrefExternval */:
-            case 4 /* LegacyActiveFuncrefElemexpr */:
-                mode = 0 /* Active */;
+            case 0 /* ElementSegmentType.LegacyActiveFuncrefExternval */:
+            case 4 /* ElementSegmentType.LegacyActiveFuncrefElemexpr */:
+                mode = 0 /* ElementMode.Active */;
                 tableIndex = 0;
                 break;
-            case 1 /* PassiveExternval */:
-            case 5 /* PassiveElemexpr */:
-                mode = 1 /* Passive */;
+            case 1 /* ElementSegmentType.PassiveExternval */:
+            case 5 /* ElementSegmentType.PassiveElemexpr */:
+                mode = 1 /* ElementMode.Passive */;
                 break;
-            case 2 /* ActiveExternval */:
-            case 6 /* ActiveElemexpr */:
-                mode = 0 /* Active */;
+            case 2 /* ElementSegmentType.ActiveExternval */:
+            case 6 /* ElementSegmentType.ActiveElemexpr */:
+                mode = 0 /* ElementMode.Active */;
                 if (!this.hasVarIntBytes()) {
-                    this.state = 20 /* ELEMENT_SECTION_ENTRY */;
+                    this.state = 20 /* BinaryReaderState.ELEMENT_SECTION_ENTRY */;
                     this._pos = pos;
                     return false;
                 }
                 tableIndex = this.readVarUint32();
                 break;
-            case 3 /* DeclaredExternval */:
-            case 7 /* DeclaredElemexpr */:
-                mode = 2 /* Declarative */;
+            case 3 /* ElementSegmentType.DeclaredExternval */:
+            case 7 /* ElementSegmentType.DeclaredElemexpr */:
+                mode = 2 /* ElementMode.Declarative */;
                 break;
             default:
-                throw new Error("Unsupported element segment type " + segmentType);
+                throw new Error("Unsupported element segment type ".concat(segmentType));
         }
-        this.state = 33 /* BEGIN_ELEMENT_SECTION_ENTRY */;
+        this.state = 33 /* BinaryReaderState.BEGIN_ELEMENT_SECTION_ENTRY */;
         this.result = { mode: mode, tableIndex: tableIndex };
         this._sectionEntriesLeft--;
         this._segmentType = segmentType;
@@ -2063,30 +2211,30 @@ var BinaryReader = /** @class */ (function () {
     BinaryReader.prototype.readElementEntryBody = function () {
         var elementType = Type.funcref;
         switch (this._segmentType) {
-            case 1 /* PassiveExternval */:
-            case 2 /* ActiveExternval */:
-            case 3 /* DeclaredExternval */:
+            case 1 /* ElementSegmentType.PassiveExternval */:
+            case 2 /* ElementSegmentType.ActiveExternval */:
+            case 3 /* ElementSegmentType.DeclaredExternval */:
                 if (!this.hasMoreBytes())
                     return false;
                 // We just skip the 0x00 byte, the `elemkind` byte
                 // is reserved for future versions of WebAssembly.
                 this.skipBytes(1);
                 break;
-            case 5 /* PassiveElemexpr */:
-            case 6 /* ActiveElemexpr */:
-            case 7 /* DeclaredElemexpr */:
+            case 5 /* ElementSegmentType.PassiveElemexpr */:
+            case 6 /* ElementSegmentType.ActiveElemexpr */:
+            case 7 /* ElementSegmentType.DeclaredElemexpr */:
                 if (!this.hasMoreBytes())
                     return false;
                 elementType = this.readType();
                 break;
-            case 0 /* LegacyActiveFuncrefExternval */:
-            case 4 /* LegacyActiveFuncrefElemexpr */:
+            case 0 /* ElementSegmentType.LegacyActiveFuncrefExternval */:
+            case 4 /* ElementSegmentType.LegacyActiveFuncrefElemexpr */:
                 // The element type is implicitly `funcref`.
                 break;
             default:
-                throw new Error("Unsupported element segment type " + this._segmentType);
+                throw new Error("Unsupported element segment type ".concat(this._segmentType));
         }
-        this.state = 34 /* ELEMENT_SECTION_ENTRY_BODY */;
+        this.state = 34 /* BinaryReaderState.ELEMENT_SECTION_ENTRY_BODY */;
         this.result = { elementType: elementType };
         return true;
     };
@@ -2097,54 +2245,64 @@ var BinaryReader = /** @class */ (function () {
         }
         var pos = this._pos;
         if (!this.hasVarIntBytes()) {
-            this.state = 18 /* DATA_SECTION_ENTRY */;
+            this.state = 18 /* BinaryReaderState.DATA_SECTION_ENTRY */;
             return false;
         }
         var segmentType = this.readVarUint32();
         var mode, memoryIndex;
         switch (segmentType) {
-            case 0 /* Active */:
-                mode = 0 /* Active */;
+            case 0 /* DataSegmentType.Active */:
+                mode = 0 /* DataMode.Active */;
                 memoryIndex = 0;
                 break;
-            case 1 /* Passive */:
-                mode = 1 /* Passive */;
+            case 1 /* DataSegmentType.Passive */:
+                mode = 1 /* DataMode.Passive */;
                 break;
-            case 2 /* ActiveWithMemoryIndex */:
-                mode = 0 /* Active */;
+            case 2 /* DataSegmentType.ActiveWithMemoryIndex */:
+                mode = 0 /* DataMode.Active */;
                 if (!this.hasVarIntBytes()) {
                     this._pos = pos;
-                    this.state = 18 /* DATA_SECTION_ENTRY */;
+                    this.state = 18 /* BinaryReaderState.DATA_SECTION_ENTRY */;
                     return false;
                 }
                 memoryIndex = this.readVarUint32();
                 break;
             default:
-                throw new Error("Unsupported data segment type " + segmentType);
+                throw new Error("Unsupported data segment type ".concat(segmentType));
         }
-        this.state = 36 /* BEGIN_DATA_SECTION_ENTRY */;
+        this.state = 36 /* BinaryReaderState.BEGIN_DATA_SECTION_ENTRY */;
         this.result = { mode: mode, memoryIndex: memoryIndex };
         this._sectionEntriesLeft--;
         this._segmentType = segmentType;
+        return true;
+    };
+    BinaryReader.prototype.readDataCountEntry = function () {
+        if (this._sectionEntriesLeft === 0) {
+            this.skipSection();
+            return this.read();
+        }
+        this.state = 49 /* BinaryReaderState.DATA_COUNT_SECTION_ENTRY */;
+        this.result = this.readVarUint32();
+        this._sectionEntriesLeft--;
         return true;
     };
     BinaryReader.prototype.readDataEntryBody = function () {
         if (!this.hasStringBytes()) {
             return false;
         }
-        this.state = 37 /* DATA_SECTION_ENTRY_BODY */;
+        this.state = 37 /* BinaryReaderState.DATA_SECTION_ENTRY_BODY */;
         this.result = {
             data: this.readStringBytes(),
         };
         return true;
     };
     BinaryReader.prototype.readInitExpressionBody = function () {
-        this.state = 25 /* BEGIN_INIT_EXPRESSION_BODY */;
+        this.state = 25 /* BinaryReaderState.BEGIN_INIT_EXPRESSION_BODY */;
         this.result = null;
         return true;
     };
     BinaryReader.prototype.readOffsetExpressionBody = function () {
-        this.state = 44 /* BEGIN_OFFSET_EXPRESSION_BODY */;
+        this.state = 44 /* BinaryReaderState.BEGIN_OFFSET_EXPRESSION_BODY */;
         this.result = null;
         return true;
     };
@@ -2183,24 +2341,24 @@ var BinaryReader = /** @class */ (function () {
         }
         var result;
         switch (type) {
-            case 0 /* Module */:
+            case 0 /* NameType.Module */:
                 result = {
                     type: type,
                     moduleName: this.readStringBytes(),
                 };
                 break;
-            case 1 /* Function */:
-            case 3 /* Event */:
-            case 4 /* Type */:
-            case 5 /* Table */:
-            case 6 /* Memory */:
-            case 7 /* Global */:
+            case 1 /* NameType.Function */:
+            case 11 /* NameType.Tag */:
+            case 4 /* NameType.Type */:
+            case 5 /* NameType.Table */:
+            case 6 /* NameType.Memory */:
+            case 7 /* NameType.Global */:
                 result = {
                     type: type,
                     names: this.readNameMap(),
                 };
                 break;
-            case 2 /* Local */:
+            case 2 /* NameType.Local */:
                 var funcsLength = this.readVarUint32();
                 var funcs = [];
                 for (var i = 0; i < funcsLength; i++) {
@@ -2215,7 +2373,7 @@ var BinaryReader = /** @class */ (function () {
                     funcs: funcs,
                 };
                 break;
-            case 10 /* Field */:
+            case 10 /* NameType.Field */:
                 var typesLength = this.readVarUint32();
                 var types = [];
                 for (var i = 0; i < typesLength; i++) {
@@ -2236,7 +2394,7 @@ var BinaryReader = /** @class */ (function () {
                 this.skipBytes(payloadLength);
                 return this.read();
         }
-        this.state = 19 /* NAME_SECTION_ENTRY */;
+        this.state = 19 /* BinaryReaderState.NAME_SECTION_ENTRY */;
         this.result = result;
         return true;
     };
@@ -2248,14 +2406,14 @@ var BinaryReader = /** @class */ (function () {
         var pos = this._pos;
         var sectionId = this.readVarUint7();
         var sectionName;
-        if (sectionId === 0 /* Custom */) {
+        if (sectionId === 0 /* SectionCode.Custom */) {
             if (!this.hasStringBytes()) {
                 this._pos = pos;
                 return false;
             }
             sectionName = this.readStringBytes();
         }
-        this.state = 41 /* RELOC_SECTION_HEADER */;
+        this.state = 41 /* BinaryReaderState.RELOC_SECTION_HEADER */;
         this.result = {
             id: sectionId,
             name: sectionName,
@@ -2273,7 +2431,7 @@ var BinaryReader = /** @class */ (function () {
         var type = this.readVarUint32();
         var index;
         switch (type) {
-            case 1 /* StackPointer */:
+            case 1 /* LinkingType.StackPointer */:
                 if (!this.hasVarIntBytes()) {
                     this._pos = pos;
                     return false;
@@ -2281,11 +2439,11 @@ var BinaryReader = /** @class */ (function () {
                 index = this.readVarUint32();
                 break;
             default:
-                this.error = new Error("Bad linking type: " + type);
-                this.state = -1 /* ERROR */;
+                this.error = new Error("Bad linking type: ".concat(type));
+                this.state = -1 /* BinaryReaderState.ERROR */;
                 return true;
         }
-        this.state = 21 /* LINKING_SECTION_ENTRY */;
+        this.state = 21 /* BinaryReaderState.LINKING_SECTION_ENTRY */;
         this.result = { type: type, index: index };
         this._sectionEntriesLeft--;
         return true;
@@ -2294,7 +2452,7 @@ var BinaryReader = /** @class */ (function () {
         if (!this.hasStringBytes())
             return false;
         var url = this.readStringBytes();
-        this.state = 43 /* SOURCE_MAPPING_URL */;
+        this.state = 43 /* BinaryReaderState.SOURCE_MAPPING_URL */;
         this.result = { url: url };
         return true;
     };
@@ -2319,15 +2477,15 @@ var BinaryReader = /** @class */ (function () {
         var index = this.readVarUint32();
         var addend;
         switch (type) {
-            case 0 /* FunctionIndex_LEB */:
-            case 1 /* TableIndex_SLEB */:
-            case 2 /* TableIndex_I32 */:
-            case 6 /* TypeIndex_LEB */:
-            case 7 /* GlobalIndex_LEB */:
+            case 0 /* RelocType.FunctionIndex_LEB */:
+            case 1 /* RelocType.TableIndex_SLEB */:
+            case 2 /* RelocType.TableIndex_I32 */:
+            case 6 /* RelocType.TypeIndex_LEB */:
+            case 7 /* RelocType.GlobalIndex_LEB */:
                 break;
-            case 3 /* GlobalAddr_LEB */:
-            case 4 /* GlobalAddr_SLEB */:
-            case 5 /* GlobalAddr_I32 */:
+            case 3 /* RelocType.GlobalAddr_LEB */:
+            case 4 /* RelocType.GlobalAddr_SLEB */:
+            case 5 /* RelocType.GlobalAddr_I32 */:
                 if (!this.hasVarIntBytes()) {
                     this._pos = pos;
                     return false;
@@ -2335,11 +2493,11 @@ var BinaryReader = /** @class */ (function () {
                 addend = this.readVarUint32();
                 break;
             default:
-                this.error = new Error("Bad relocation type: " + type);
-                this.state = -1 /* ERROR */;
+                this.error = new Error("Bad relocation type: ".concat(type));
+                this.state = -1 /* BinaryReaderState.ERROR */;
                 return true;
         }
-        this.state = 42 /* RELOC_SECTION_ENTRY */;
+        this.state = 42 /* BinaryReaderState.RELOC_SECTION_ENTRY */;
         this.result = {
             type: type,
             offset: offset,
@@ -2356,77 +2514,86 @@ var BinaryReader = /** @class */ (function () {
         if (!this._eof && !this.hasBytes(MAX_CODE_OPERATOR_0XFB_SIZE)) {
             return false;
         }
-        var code, brDepth, refType, srcType, fieldIndex;
+        var code, brDepth, refType, srcType, fieldIndex, segmentIndex, len, literal;
         code = this._data[this._pos++] | 0xfb00;
         switch (code) {
-            case 64322 /* br_on_cast */:
-            case 64323 /* br_on_cast_fail */:
-            case 64352 /* br_on_func */:
-            case 64355 /* br_on_non_func */:
-            case 64353 /* br_on_data */:
-            case 64356 /* br_on_non_data */:
-            case 64354 /* br_on_i31 */:
-            case 64357 /* br_on_non_i31 */:
+            case 64334 /* OperatorCode.br_on_cast */:
+            case 64335 /* OperatorCode.br_on_cast_fail */:
+                literal = this.readUint8();
                 brDepth = this.readVarUint32();
-                break;
-            case 64326 /* br_on_cast_static */:
-            case 64327 /* br_on_cast_static_fail */:
-                brDepth = this.readVarUint32();
-                refType = this.readHeapType();
-                break;
-            case 64275 /* array_get */:
-            case 64276 /* array_get_s */:
-            case 64277 /* array_get_u */:
-            case 64279 /* array_len */:
-            case 64278 /* array_set */:
-            case 64283 /* array_new */:
-            case 64273 /* array_new_with_rtt */:
-            case 64284 /* array_new_default */:
-            case 64274 /* array_new_default_with_rtt */:
-            case 64263 /* struct_new */:
-            case 64257 /* struct_new_with_rtt */:
-            case 64264 /* struct_new_default */:
-            case 64258 /* struct_new_default_with_rtt */:
-            case 64304 /* rtt_canon */:
-            case 64305 /* rtt_sub */:
-            case 64306 /* rtt_fresh_sub */:
-            case 64324 /* ref_test_static */:
-            case 64325 /* ref_cast_static */:
-                refType = this.readHeapType();
-                break;
-            case 64280 /* array_copy */:
-                refType = this.readHeapType();
                 srcType = this.readHeapType();
-                break;
-            case 64259 /* struct_get */:
-            case 64260 /* struct_get_s */:
-            case 64261 /* struct_get_u */:
-            case 64262 /* struct_set */:
                 refType = this.readHeapType();
+                break;
+            case 64322 /* OperatorCode.br_on_cast_ */:
+            case 64323 /* OperatorCode.br_on_cast_fail_ */:
+                brDepth = this.readVarUint32();
+                refType = this.readHeapType();
+                break;
+            case 64326 /* OperatorCode.br_on_cast__ */:
+            case 64327 /* OperatorCode.br_on_cast_fail__ */:
+                brDepth = this.readVarUint32();
+                refType = this.readVarUint32();
+                break;
+            case 64275 /* OperatorCode.array_get */:
+            case 64276 /* OperatorCode.array_get_s */:
+            case 64277 /* OperatorCode.array_get_u */:
+            case 64279 /* OperatorCode.array_len_ */:
+            case 64278 /* OperatorCode.array_set */:
+            case 64283 /* OperatorCode.array_new */:
+            case 64273 /* OperatorCode.array_new_with_rtt */:
+            case 64284 /* OperatorCode.array_new_default */:
+            case 64274 /* OperatorCode.array_new_default_with_rtt */:
+            case 64263 /* OperatorCode.struct_new */:
+            case 64257 /* OperatorCode.struct_new_with_rtt */:
+            case 64264 /* OperatorCode.struct_new_default */:
+            case 64258 /* OperatorCode.struct_new_default_with_rtt */:
+            case 64304 /* OperatorCode.rtt_canon */:
+            case 64305 /* OperatorCode.rtt_sub */:
+            case 64306 /* OperatorCode.rtt_fresh_sub */:
+                refType = this.readVarUint32();
+                break;
+            case 64282 /* OperatorCode.array_new_fixed */:
+                refType = this.readVarUint32();
+                len = this.readVarUint32();
+                break;
+            case 64280 /* OperatorCode.array_copy */:
+                refType = this.readVarUint32();
+                srcType = this.readVarUint32();
+                break;
+            case 64259 /* OperatorCode.struct_get */:
+            case 64260 /* OperatorCode.struct_get_s */:
+            case 64261 /* OperatorCode.struct_get_u */:
+            case 64262 /* OperatorCode.struct_set */:
+                refType = this.readVarUint32();
                 fieldIndex = this.readVarUint32();
                 break;
-            case 64281 /* array_init */:
-            case 64282 /* array_init_static */:
-                refType = this.readHeapType();
-                // This really is the "length" value. Overload "brDepth" to keep the
-                // IOperatorInformation interface a little leaner.
-                brDepth = this.readVarUint32();
+            case 64285 /* OperatorCode.array_new_data */:
+            case 64287 /* OperatorCode.array_new_elem */:
+            case 64340 /* OperatorCode.array_init_data */:
+            case 64341 /* OperatorCode.array_init_elem */:
+                refType = this.readVarUint32();
+                segmentIndex = this.readVarUint32();
                 break;
-            case 64336 /* ref_is_func */:
-            case 64337 /* ref_is_data */:
-            case 64338 /* ref_is_i31 */:
-            case 64344 /* ref_as_func */:
-            case 64345 /* ref_as_data */:
-            case 64346 /* ref_as_i31 */:
-            case 64320 /* ref_test */:
-            case 64321 /* ref_cast */:
-            case 64288 /* i31_new */:
-            case 64289 /* i31_get_s */:
-            case 64290 /* i31_get_u */:
+            case 64320 /* OperatorCode.ref_test */:
+            case 64328 /* OperatorCode.ref_test_null */:
+            case 64321 /* OperatorCode.ref_cast */:
+            case 64329 /* OperatorCode.ref_cast_null */:
+                refType = this.readHeapType();
+                break;
+            case 64324 /* OperatorCode.ref_test_ */:
+            case 64325 /* OperatorCode.ref_cast_ */:
+                refType = this.readVarUint32();
+                break;
+            case 64281 /* OperatorCode.array_len */:
+            case 64369 /* OperatorCode.extern_externalize */:
+            case 64368 /* OperatorCode.extern_internalize */:
+            case 64288 /* OperatorCode.i31_new */:
+            case 64289 /* OperatorCode.i31_get_s */:
+            case 64290 /* OperatorCode.i31_get_u */:
                 break;
             default:
-                this.error = new Error("Unknown operator: 0x" + code.toString(16).padStart(4, "0"));
-                this.state = -1 /* ERROR */;
+                this.error = new Error("Unknown operator: 0x".concat(code.toString(16).padStart(4, "0")));
+                this.state = -1 /* BinaryReaderState.ERROR */;
                 return true;
         }
         this.result = {
@@ -2443,9 +2610,10 @@ var BinaryReader = /** @class */ (function () {
             globalIndex: undefined,
             fieldIndex: fieldIndex,
             memoryAddress: undefined,
-            literal: undefined,
-            segmentIndex: undefined,
+            literal: literal,
+            segmentIndex: segmentIndex,
             destinationIndex: undefined,
+            len: len,
             lines: undefined,
             lineIndex: undefined,
         };
@@ -2458,47 +2626,47 @@ var BinaryReader = /** @class */ (function () {
         var code = this.readVarUint32() | 0xfc00;
         var reserved, segmentIndex, destinationIndex, tableIndex;
         switch (code) {
-            case 64512 /* i32_trunc_sat_f32_s */:
-            case 64513 /* i32_trunc_sat_f32_u */:
-            case 64514 /* i32_trunc_sat_f64_s */:
-            case 64515 /* i32_trunc_sat_f64_u */:
-            case 64516 /* i64_trunc_sat_f32_s */:
-            case 64517 /* i64_trunc_sat_f32_u */:
-            case 64518 /* i64_trunc_sat_f64_s */:
-            case 64519 /* i64_trunc_sat_f64_u */:
+            case 64512 /* OperatorCode.i32_trunc_sat_f32_s */:
+            case 64513 /* OperatorCode.i32_trunc_sat_f32_u */:
+            case 64514 /* OperatorCode.i32_trunc_sat_f64_s */:
+            case 64515 /* OperatorCode.i32_trunc_sat_f64_u */:
+            case 64516 /* OperatorCode.i64_trunc_sat_f32_s */:
+            case 64517 /* OperatorCode.i64_trunc_sat_f32_u */:
+            case 64518 /* OperatorCode.i64_trunc_sat_f64_s */:
+            case 64519 /* OperatorCode.i64_trunc_sat_f64_u */:
                 break;
-            case 64522 /* memory_copy */:
+            case 64522 /* OperatorCode.memory_copy */:
                 // Currently memory index must be zero.
                 reserved = this.readVarUint1();
                 reserved = this.readVarUint1();
                 break;
-            case 64523 /* memory_fill */:
+            case 64523 /* OperatorCode.memory_fill */:
                 reserved = this.readVarUint1();
                 break;
-            case 64524 /* table_init */:
+            case 64524 /* OperatorCode.table_init */:
                 segmentIndex = this.readVarUint32();
                 tableIndex = this.readVarUint32();
                 break;
-            case 64526 /* table_copy */:
+            case 64526 /* OperatorCode.table_copy */:
                 tableIndex = this.readVarUint32();
                 destinationIndex = this.readVarUint32();
                 break;
-            case 64527 /* table_grow */:
-            case 64528 /* table_size */:
-            case 64529 /* table_fill */:
+            case 64527 /* OperatorCode.table_grow */:
+            case 64528 /* OperatorCode.table_size */:
+            case 64529 /* OperatorCode.table_fill */:
                 tableIndex = this.readVarUint32();
                 break;
-            case 64520 /* memory_init */:
+            case 64520 /* OperatorCode.memory_init */:
                 segmentIndex = this.readVarUint32();
                 reserved = this.readVarUint1();
                 break;
-            case 64521 /* data_drop */:
-            case 64525 /* elem_drop */:
+            case 64521 /* OperatorCode.data_drop */:
+            case 64525 /* OperatorCode.elem_drop */:
                 segmentIndex = this.readVarUint32();
                 break;
             default:
-                this.error = new Error("Unknown operator: 0x" + code.toString(16).padStart(4, "0"));
-                this.state = -1 /* ERROR */;
+                this.error = new Error("Unknown operator: 0x".concat(code.toString(16).padStart(4, "0")));
+                this.state = -1 /* BinaryReaderState.ERROR */;
                 return true;
         }
         this.result = {
@@ -2519,6 +2687,7 @@ var BinaryReader = /** @class */ (function () {
             literal: undefined,
             segmentIndex: segmentIndex,
             destinationIndex: destinationIndex,
+            len: undefined,
             lines: undefined,
             lineIndex: undefined,
         };
@@ -2539,250 +2708,250 @@ var BinaryReader = /** @class */ (function () {
         var lineIndex;
         var lines;
         switch (code) {
-            case 64768 /* v128_load */:
-            case 64769 /* i16x8_load8x8_s */:
-            case 64770 /* i16x8_load8x8_u */:
-            case 64771 /* i32x4_load16x4_s */:
-            case 64772 /* i32x4_load16x4_u */:
-            case 64773 /* i64x2_load32x2_s */:
-            case 64774 /* i64x2_load32x2_u */:
-            case 64775 /* v8x16_load_splat */:
-            case 64776 /* v16x8_load_splat */:
-            case 64777 /* v32x4_load_splat */:
-            case 64778 /* v64x2_load_splat */:
-            case 64779 /* v128_store */:
-            case 64860 /* v128_load32_zero */:
-            case 64861 /* v128_load64_zero */:
+            case 64768 /* OperatorCode.v128_load */:
+            case 64769 /* OperatorCode.i16x8_load8x8_s */:
+            case 64770 /* OperatorCode.i16x8_load8x8_u */:
+            case 64771 /* OperatorCode.i32x4_load16x4_s */:
+            case 64772 /* OperatorCode.i32x4_load16x4_u */:
+            case 64773 /* OperatorCode.i64x2_load32x2_s */:
+            case 64774 /* OperatorCode.i64x2_load32x2_u */:
+            case 64775 /* OperatorCode.v8x16_load_splat */:
+            case 64776 /* OperatorCode.v16x8_load_splat */:
+            case 64777 /* OperatorCode.v32x4_load_splat */:
+            case 64778 /* OperatorCode.v64x2_load_splat */:
+            case 64779 /* OperatorCode.v128_store */:
+            case 64860 /* OperatorCode.v128_load32_zero */:
+            case 64861 /* OperatorCode.v128_load64_zero */:
                 memoryAddress = this.readMemoryImmediate();
                 break;
-            case 64780 /* v128_const */:
+            case 64780 /* OperatorCode.v128_const */:
                 literal = this.readBytes(16);
                 break;
-            case 64781 /* i8x16_shuffle */:
+            case 64781 /* OperatorCode.i8x16_shuffle */:
                 lines = new Uint8Array(16);
                 for (var i = 0; i < lines.length; i++) {
                     lines[i] = this.readUint8();
                 }
                 break;
-            case 64789 /* i8x16_extract_lane_s */:
-            case 64790 /* i8x16_extract_lane_u */:
-            case 64791 /* i8x16_replace_lane */:
-            case 64792 /* i16x8_extract_lane_s */:
-            case 64793 /* i16x8_extract_lane_u */:
-            case 64794 /* i16x8_replace_lane */:
-            case 64795 /* i32x4_extract_lane */:
-            case 64796 /* i32x4_replace_lane */:
-            case 64797 /* i64x2_extract_lane */:
-            case 64798 /* i64x2_replace_lane */:
-            case 64799 /* f32x4_extract_lane */:
-            case 64800 /* f32x4_replace_lane */:
-            case 64801 /* f64x2_extract_lane */:
-            case 64802 /* f64x2_replace_lane */:
+            case 64789 /* OperatorCode.i8x16_extract_lane_s */:
+            case 64790 /* OperatorCode.i8x16_extract_lane_u */:
+            case 64791 /* OperatorCode.i8x16_replace_lane */:
+            case 64792 /* OperatorCode.i16x8_extract_lane_s */:
+            case 64793 /* OperatorCode.i16x8_extract_lane_u */:
+            case 64794 /* OperatorCode.i16x8_replace_lane */:
+            case 64795 /* OperatorCode.i32x4_extract_lane */:
+            case 64796 /* OperatorCode.i32x4_replace_lane */:
+            case 64797 /* OperatorCode.i64x2_extract_lane */:
+            case 64798 /* OperatorCode.i64x2_replace_lane */:
+            case 64799 /* OperatorCode.f32x4_extract_lane */:
+            case 64800 /* OperatorCode.f32x4_replace_lane */:
+            case 64801 /* OperatorCode.f64x2_extract_lane */:
+            case 64802 /* OperatorCode.f64x2_replace_lane */:
                 lineIndex = this.readUint8();
                 break;
-            case 64782 /* i8x16_swizzle */:
-            case 64783 /* i8x16_splat */:
-            case 64784 /* i16x8_splat */:
-            case 64785 /* i32x4_splat */:
-            case 64786 /* i64x2_splat */:
-            case 64787 /* f32x4_splat */:
-            case 64788 /* f64x2_splat */:
-            case 64803 /* i8x16_eq */:
-            case 64804 /* i8x16_ne */:
-            case 64805 /* i8x16_lt_s */:
-            case 64806 /* i8x16_lt_u */:
-            case 64807 /* i8x16_gt_s */:
-            case 64808 /* i8x16_gt_u */:
-            case 64809 /* i8x16_le_s */:
-            case 64810 /* i8x16_le_u */:
-            case 64811 /* i8x16_ge_s */:
-            case 64812 /* i8x16_ge_u */:
-            case 64813 /* i16x8_eq */:
-            case 64814 /* i16x8_ne */:
-            case 64815 /* i16x8_lt_s */:
-            case 64816 /* i16x8_lt_u */:
-            case 64817 /* i16x8_gt_s */:
-            case 64818 /* i16x8_gt_u */:
-            case 64819 /* i16x8_le_s */:
-            case 64820 /* i16x8_le_u */:
-            case 64821 /* i16x8_ge_s */:
-            case 64822 /* i16x8_ge_u */:
-            case 64823 /* i32x4_eq */:
-            case 64824 /* i32x4_ne */:
-            case 64825 /* i32x4_lt_s */:
-            case 64826 /* i32x4_lt_u */:
-            case 64827 /* i32x4_gt_s */:
-            case 64828 /* i32x4_gt_u */:
-            case 64829 /* i32x4_le_s */:
-            case 64830 /* i32x4_le_u */:
-            case 64831 /* i32x4_ge_s */:
-            case 64832 /* i32x4_ge_u */:
-            case 64833 /* f32x4_eq */:
-            case 64834 /* f32x4_ne */:
-            case 64835 /* f32x4_lt */:
-            case 64836 /* f32x4_gt */:
-            case 64837 /* f32x4_le */:
-            case 64838 /* f32x4_ge */:
-            case 64839 /* f64x2_eq */:
-            case 64840 /* f64x2_ne */:
-            case 64841 /* f64x2_lt */:
-            case 64842 /* f64x2_gt */:
-            case 64843 /* f64x2_le */:
-            case 64844 /* f64x2_ge */:
-            case 64845 /* v128_not */:
-            case 64846 /* v128_and */:
-            case 64847 /* v128_andnot */:
-            case 64848 /* v128_or */:
-            case 64849 /* v128_xor */:
-            case 64850 /* v128_bitselect */:
-            case 64851 /* v128_any_true */:
-            case 64862 /* f32x4_demote_f64x2_zero */:
-            case 64863 /* f64x2_promote_low_f32x4 */:
-            case 64864 /* i8x16_abs */:
-            case 64865 /* i8x16_neg */:
-            case 64866 /* i8x16_popcnt */:
-            case 64867 /* i8x16_all_true */:
-            case 64868 /* i8x16_bitmask */:
-            case 64869 /* i8x16_narrow_i16x8_s */:
-            case 64870 /* i8x16_narrow_i16x8_u */:
-            case 64871 /* f32x4_ceil */:
-            case 64872 /* f32x4_floor */:
-            case 64873 /* f32x4_trunc */:
-            case 64874 /* f32x4_nearest */:
-            case 64875 /* i8x16_shl */:
-            case 64876 /* i8x16_shr_s */:
-            case 64877 /* i8x16_shr_u */:
-            case 64878 /* i8x16_add */:
-            case 64879 /* i8x16_add_sat_s */:
-            case 64880 /* i8x16_add_sat_u */:
-            case 64881 /* i8x16_sub */:
-            case 64882 /* i8x16_sub_sat_s */:
-            case 64883 /* i8x16_sub_sat_u */:
-            case 64884 /* f64x2_ceil */:
-            case 64885 /* f64x2_floor */:
-            case 64886 /* i8x16_min_s */:
-            case 64887 /* i8x16_min_u */:
-            case 64888 /* i8x16_max_s */:
-            case 64889 /* i8x16_max_u */:
-            case 64890 /* f64x2_trunc */:
-            case 64891 /* i8x16_avgr_u */:
-            case 64892 /* i16x8_extadd_pairwise_i8x16_s */:
-            case 64893 /* i16x8_extadd_pairwise_i8x16_u */:
-            case 64894 /* i32x4_extadd_pairwise_i16x8_s */:
-            case 64895 /* i32x4_extadd_pairwise_i16x8_u */:
-            case 64896 /* i16x8_abs */:
-            case 64897 /* i16x8_neg */:
-            case 64898 /* i16x8_q15mulr_sat_s */:
-            case 64899 /* i16x8_all_true */:
-            case 64900 /* i16x8_bitmask */:
-            case 64901 /* i16x8_narrow_i32x4_s */:
-            case 64902 /* i16x8_narrow_i32x4_u */:
-            case 64903 /* i16x8_extend_low_i8x16_s */:
-            case 64904 /* i16x8_extend_high_i8x16_s */:
-            case 64905 /* i16x8_extend_low_i8x16_u */:
-            case 64906 /* i16x8_extend_high_i8x16_u */:
-            case 64907 /* i16x8_shl */:
-            case 64908 /* i16x8_shr_s */:
-            case 64909 /* i16x8_shr_u */:
-            case 64910 /* i16x8_add */:
-            case 64911 /* i16x8_add_sat_s */:
-            case 64912 /* i16x8_add_sat_u */:
-            case 64913 /* i16x8_sub */:
-            case 64914 /* i16x8_sub_sat_s */:
-            case 64915 /* i16x8_sub_sat_u */:
-            case 64916 /* f64x2_nearest */:
-            case 64917 /* i16x8_mul */:
-            case 64918 /* i16x8_min_s */:
-            case 64919 /* i16x8_min_u */:
-            case 64920 /* i16x8_max_s */:
-            case 64921 /* i16x8_max_u */:
-            case 64923 /* i16x8_avgr_u */:
-            case 64924 /* i16x8_extmul_low_i8x16_s */:
-            case 64925 /* i16x8_extmul_high_i8x16_s */:
-            case 64926 /* i16x8_extmul_low_i8x16_u */:
-            case 64927 /* i16x8_extmul_high_i8x16_u */:
-            case 64928 /* i32x4_abs */:
-            case 64929 /* i32x4_neg */:
-            case 64931 /* i32x4_all_true */:
-            case 64932 /* i32x4_bitmask */:
-            case 64935 /* i32x4_extend_low_i16x8_s */:
-            case 64936 /* i32x4_extend_high_i16x8_s */:
-            case 64937 /* i32x4_extend_low_i16x8_u */:
-            case 64938 /* i32x4_extend_high_i16x8_u */:
-            case 64939 /* i32x4_shl */:
-            case 64940 /* i32x4_shr_s */:
-            case 64941 /* i32x4_shr_u */:
-            case 64942 /* i32x4_add */:
-            case 64945 /* i32x4_sub */:
-            case 64949 /* i32x4_mul */:
-            case 64950 /* i32x4_min_s */:
-            case 64951 /* i32x4_min_u */:
-            case 64952 /* i32x4_max_s */:
-            case 64953 /* i32x4_max_u */:
-            case 64954 /* i32x4_dot_i16x8_s */:
-            case 64956 /* i32x4_extmul_low_i16x8_s */:
-            case 64957 /* i32x4_extmul_high_i16x8_s */:
-            case 64958 /* i32x4_extmul_low_i16x8_u */:
-            case 64959 /* i32x4_extmul_high_i16x8_u */:
-            case 64960 /* i64x2_abs */:
-            case 64961 /* i64x2_neg */:
-            case 64963 /* i64x2_all_true */:
-            case 64964 /* i64x2_bitmask */:
-            case 64967 /* i64x2_extend_low_i32x4_s */:
-            case 64968 /* i64x2_extend_high_i32x4_s */:
-            case 64969 /* i64x2_extend_low_i32x4_u */:
-            case 64970 /* i64x2_extend_high_i32x4_u */:
-            case 64971 /* i64x2_shl */:
-            case 64972 /* i64x2_shr_s */:
-            case 64973 /* i64x2_shr_u */:
-            case 64974 /* i64x2_add */:
-            case 64977 /* i64x2_sub */:
-            case 64981 /* i64x2_mul */:
-            case 64982 /* i64x2_eq */:
-            case 64983 /* i64x2_ne */:
-            case 64984 /* i64x2_lt_s */:
-            case 64985 /* i64x2_gt_s */:
-            case 64986 /* i64x2_le_s */:
-            case 64987 /* i64x2_ge_s */:
-            case 64988 /* i64x2_extmul_low_i32x4_s */:
-            case 64989 /* i64x2_extmul_high_i32x4_s */:
-            case 64988 /* i64x2_extmul_low_i32x4_s */:
-            case 64989 /* i64x2_extmul_high_i32x4_s */:
-            case 64992 /* f32x4_abs */:
-            case 64992 /* f32x4_abs */:
-            case 64993 /* f32x4_neg */:
-            case 64995 /* f32x4_sqrt */:
-            case 64996 /* f32x4_add */:
-            case 64997 /* f32x4_sub */:
-            case 64998 /* f32x4_mul */:
-            case 64999 /* f32x4_div */:
-            case 65000 /* f32x4_min */:
-            case 65001 /* f32x4_max */:
-            case 65002 /* f32x4_pmin */:
-            case 65003 /* f32x4_pmax */:
-            case 65004 /* f64x2_abs */:
-            case 65005 /* f64x2_neg */:
-            case 65007 /* f64x2_sqrt */:
-            case 65008 /* f64x2_add */:
-            case 65009 /* f64x2_sub */:
-            case 65010 /* f64x2_mul */:
-            case 65011 /* f64x2_div */:
-            case 65012 /* f64x2_min */:
-            case 65013 /* f64x2_max */:
-            case 65014 /* f64x2_pmin */:
-            case 65015 /* f64x2_pmax */:
-            case 65016 /* i32x4_trunc_sat_f32x4_s */:
-            case 65017 /* i32x4_trunc_sat_f32x4_u */:
-            case 65018 /* f32x4_convert_i32x4_s */:
-            case 65019 /* f32x4_convert_i32x4_u */:
-            case 65020 /* i32x4_trunc_sat_f64x2_s_zero */:
-            case 65021 /* i32x4_trunc_sat_f64x2_u_zero */:
-            case 65022 /* f64x2_convert_low_i32x4_s */:
-            case 65023 /* f64x2_convert_low_i32x4_u */:
+            case 64782 /* OperatorCode.i8x16_swizzle */:
+            case 64783 /* OperatorCode.i8x16_splat */:
+            case 64784 /* OperatorCode.i16x8_splat */:
+            case 64785 /* OperatorCode.i32x4_splat */:
+            case 64786 /* OperatorCode.i64x2_splat */:
+            case 64787 /* OperatorCode.f32x4_splat */:
+            case 64788 /* OperatorCode.f64x2_splat */:
+            case 64803 /* OperatorCode.i8x16_eq */:
+            case 64804 /* OperatorCode.i8x16_ne */:
+            case 64805 /* OperatorCode.i8x16_lt_s */:
+            case 64806 /* OperatorCode.i8x16_lt_u */:
+            case 64807 /* OperatorCode.i8x16_gt_s */:
+            case 64808 /* OperatorCode.i8x16_gt_u */:
+            case 64809 /* OperatorCode.i8x16_le_s */:
+            case 64810 /* OperatorCode.i8x16_le_u */:
+            case 64811 /* OperatorCode.i8x16_ge_s */:
+            case 64812 /* OperatorCode.i8x16_ge_u */:
+            case 64813 /* OperatorCode.i16x8_eq */:
+            case 64814 /* OperatorCode.i16x8_ne */:
+            case 64815 /* OperatorCode.i16x8_lt_s */:
+            case 64816 /* OperatorCode.i16x8_lt_u */:
+            case 64817 /* OperatorCode.i16x8_gt_s */:
+            case 64818 /* OperatorCode.i16x8_gt_u */:
+            case 64819 /* OperatorCode.i16x8_le_s */:
+            case 64820 /* OperatorCode.i16x8_le_u */:
+            case 64821 /* OperatorCode.i16x8_ge_s */:
+            case 64822 /* OperatorCode.i16x8_ge_u */:
+            case 64823 /* OperatorCode.i32x4_eq */:
+            case 64824 /* OperatorCode.i32x4_ne */:
+            case 64825 /* OperatorCode.i32x4_lt_s */:
+            case 64826 /* OperatorCode.i32x4_lt_u */:
+            case 64827 /* OperatorCode.i32x4_gt_s */:
+            case 64828 /* OperatorCode.i32x4_gt_u */:
+            case 64829 /* OperatorCode.i32x4_le_s */:
+            case 64830 /* OperatorCode.i32x4_le_u */:
+            case 64831 /* OperatorCode.i32x4_ge_s */:
+            case 64832 /* OperatorCode.i32x4_ge_u */:
+            case 64833 /* OperatorCode.f32x4_eq */:
+            case 64834 /* OperatorCode.f32x4_ne */:
+            case 64835 /* OperatorCode.f32x4_lt */:
+            case 64836 /* OperatorCode.f32x4_gt */:
+            case 64837 /* OperatorCode.f32x4_le */:
+            case 64838 /* OperatorCode.f32x4_ge */:
+            case 64839 /* OperatorCode.f64x2_eq */:
+            case 64840 /* OperatorCode.f64x2_ne */:
+            case 64841 /* OperatorCode.f64x2_lt */:
+            case 64842 /* OperatorCode.f64x2_gt */:
+            case 64843 /* OperatorCode.f64x2_le */:
+            case 64844 /* OperatorCode.f64x2_ge */:
+            case 64845 /* OperatorCode.v128_not */:
+            case 64846 /* OperatorCode.v128_and */:
+            case 64847 /* OperatorCode.v128_andnot */:
+            case 64848 /* OperatorCode.v128_or */:
+            case 64849 /* OperatorCode.v128_xor */:
+            case 64850 /* OperatorCode.v128_bitselect */:
+            case 64851 /* OperatorCode.v128_any_true */:
+            case 64862 /* OperatorCode.f32x4_demote_f64x2_zero */:
+            case 64863 /* OperatorCode.f64x2_promote_low_f32x4 */:
+            case 64864 /* OperatorCode.i8x16_abs */:
+            case 64865 /* OperatorCode.i8x16_neg */:
+            case 64866 /* OperatorCode.i8x16_popcnt */:
+            case 64867 /* OperatorCode.i8x16_all_true */:
+            case 64868 /* OperatorCode.i8x16_bitmask */:
+            case 64869 /* OperatorCode.i8x16_narrow_i16x8_s */:
+            case 64870 /* OperatorCode.i8x16_narrow_i16x8_u */:
+            case 64871 /* OperatorCode.f32x4_ceil */:
+            case 64872 /* OperatorCode.f32x4_floor */:
+            case 64873 /* OperatorCode.f32x4_trunc */:
+            case 64874 /* OperatorCode.f32x4_nearest */:
+            case 64875 /* OperatorCode.i8x16_shl */:
+            case 64876 /* OperatorCode.i8x16_shr_s */:
+            case 64877 /* OperatorCode.i8x16_shr_u */:
+            case 64878 /* OperatorCode.i8x16_add */:
+            case 64879 /* OperatorCode.i8x16_add_sat_s */:
+            case 64880 /* OperatorCode.i8x16_add_sat_u */:
+            case 64881 /* OperatorCode.i8x16_sub */:
+            case 64882 /* OperatorCode.i8x16_sub_sat_s */:
+            case 64883 /* OperatorCode.i8x16_sub_sat_u */:
+            case 64884 /* OperatorCode.f64x2_ceil */:
+            case 64885 /* OperatorCode.f64x2_floor */:
+            case 64886 /* OperatorCode.i8x16_min_s */:
+            case 64887 /* OperatorCode.i8x16_min_u */:
+            case 64888 /* OperatorCode.i8x16_max_s */:
+            case 64889 /* OperatorCode.i8x16_max_u */:
+            case 64890 /* OperatorCode.f64x2_trunc */:
+            case 64891 /* OperatorCode.i8x16_avgr_u */:
+            case 64892 /* OperatorCode.i16x8_extadd_pairwise_i8x16_s */:
+            case 64893 /* OperatorCode.i16x8_extadd_pairwise_i8x16_u */:
+            case 64894 /* OperatorCode.i32x4_extadd_pairwise_i16x8_s */:
+            case 64895 /* OperatorCode.i32x4_extadd_pairwise_i16x8_u */:
+            case 64896 /* OperatorCode.i16x8_abs */:
+            case 64897 /* OperatorCode.i16x8_neg */:
+            case 64898 /* OperatorCode.i16x8_q15mulr_sat_s */:
+            case 64899 /* OperatorCode.i16x8_all_true */:
+            case 64900 /* OperatorCode.i16x8_bitmask */:
+            case 64901 /* OperatorCode.i16x8_narrow_i32x4_s */:
+            case 64902 /* OperatorCode.i16x8_narrow_i32x4_u */:
+            case 64903 /* OperatorCode.i16x8_extend_low_i8x16_s */:
+            case 64904 /* OperatorCode.i16x8_extend_high_i8x16_s */:
+            case 64905 /* OperatorCode.i16x8_extend_low_i8x16_u */:
+            case 64906 /* OperatorCode.i16x8_extend_high_i8x16_u */:
+            case 64907 /* OperatorCode.i16x8_shl */:
+            case 64908 /* OperatorCode.i16x8_shr_s */:
+            case 64909 /* OperatorCode.i16x8_shr_u */:
+            case 64910 /* OperatorCode.i16x8_add */:
+            case 64911 /* OperatorCode.i16x8_add_sat_s */:
+            case 64912 /* OperatorCode.i16x8_add_sat_u */:
+            case 64913 /* OperatorCode.i16x8_sub */:
+            case 64914 /* OperatorCode.i16x8_sub_sat_s */:
+            case 64915 /* OperatorCode.i16x8_sub_sat_u */:
+            case 64916 /* OperatorCode.f64x2_nearest */:
+            case 64917 /* OperatorCode.i16x8_mul */:
+            case 64918 /* OperatorCode.i16x8_min_s */:
+            case 64919 /* OperatorCode.i16x8_min_u */:
+            case 64920 /* OperatorCode.i16x8_max_s */:
+            case 64921 /* OperatorCode.i16x8_max_u */:
+            case 64923 /* OperatorCode.i16x8_avgr_u */:
+            case 64924 /* OperatorCode.i16x8_extmul_low_i8x16_s */:
+            case 64925 /* OperatorCode.i16x8_extmul_high_i8x16_s */:
+            case 64926 /* OperatorCode.i16x8_extmul_low_i8x16_u */:
+            case 64927 /* OperatorCode.i16x8_extmul_high_i8x16_u */:
+            case 64928 /* OperatorCode.i32x4_abs */:
+            case 64929 /* OperatorCode.i32x4_neg */:
+            case 64931 /* OperatorCode.i32x4_all_true */:
+            case 64932 /* OperatorCode.i32x4_bitmask */:
+            case 64935 /* OperatorCode.i32x4_extend_low_i16x8_s */:
+            case 64936 /* OperatorCode.i32x4_extend_high_i16x8_s */:
+            case 64937 /* OperatorCode.i32x4_extend_low_i16x8_u */:
+            case 64938 /* OperatorCode.i32x4_extend_high_i16x8_u */:
+            case 64939 /* OperatorCode.i32x4_shl */:
+            case 64940 /* OperatorCode.i32x4_shr_s */:
+            case 64941 /* OperatorCode.i32x4_shr_u */:
+            case 64942 /* OperatorCode.i32x4_add */:
+            case 64945 /* OperatorCode.i32x4_sub */:
+            case 64949 /* OperatorCode.i32x4_mul */:
+            case 64950 /* OperatorCode.i32x4_min_s */:
+            case 64951 /* OperatorCode.i32x4_min_u */:
+            case 64952 /* OperatorCode.i32x4_max_s */:
+            case 64953 /* OperatorCode.i32x4_max_u */:
+            case 64954 /* OperatorCode.i32x4_dot_i16x8_s */:
+            case 64956 /* OperatorCode.i32x4_extmul_low_i16x8_s */:
+            case 64957 /* OperatorCode.i32x4_extmul_high_i16x8_s */:
+            case 64958 /* OperatorCode.i32x4_extmul_low_i16x8_u */:
+            case 64959 /* OperatorCode.i32x4_extmul_high_i16x8_u */:
+            case 64960 /* OperatorCode.i64x2_abs */:
+            case 64961 /* OperatorCode.i64x2_neg */:
+            case 64963 /* OperatorCode.i64x2_all_true */:
+            case 64964 /* OperatorCode.i64x2_bitmask */:
+            case 64967 /* OperatorCode.i64x2_extend_low_i32x4_s */:
+            case 64968 /* OperatorCode.i64x2_extend_high_i32x4_s */:
+            case 64969 /* OperatorCode.i64x2_extend_low_i32x4_u */:
+            case 64970 /* OperatorCode.i64x2_extend_high_i32x4_u */:
+            case 64971 /* OperatorCode.i64x2_shl */:
+            case 64972 /* OperatorCode.i64x2_shr_s */:
+            case 64973 /* OperatorCode.i64x2_shr_u */:
+            case 64974 /* OperatorCode.i64x2_add */:
+            case 64977 /* OperatorCode.i64x2_sub */:
+            case 64981 /* OperatorCode.i64x2_mul */:
+            case 64982 /* OperatorCode.i64x2_eq */:
+            case 64983 /* OperatorCode.i64x2_ne */:
+            case 64984 /* OperatorCode.i64x2_lt_s */:
+            case 64985 /* OperatorCode.i64x2_gt_s */:
+            case 64986 /* OperatorCode.i64x2_le_s */:
+            case 64987 /* OperatorCode.i64x2_ge_s */:
+            case 64988 /* OperatorCode.i64x2_extmul_low_i32x4_s */:
+            case 64989 /* OperatorCode.i64x2_extmul_high_i32x4_s */:
+            case 64988 /* OperatorCode.i64x2_extmul_low_i32x4_s */:
+            case 64989 /* OperatorCode.i64x2_extmul_high_i32x4_s */:
+            case 64992 /* OperatorCode.f32x4_abs */:
+            case 64992 /* OperatorCode.f32x4_abs */:
+            case 64993 /* OperatorCode.f32x4_neg */:
+            case 64995 /* OperatorCode.f32x4_sqrt */:
+            case 64996 /* OperatorCode.f32x4_add */:
+            case 64997 /* OperatorCode.f32x4_sub */:
+            case 64998 /* OperatorCode.f32x4_mul */:
+            case 64999 /* OperatorCode.f32x4_div */:
+            case 65000 /* OperatorCode.f32x4_min */:
+            case 65001 /* OperatorCode.f32x4_max */:
+            case 65002 /* OperatorCode.f32x4_pmin */:
+            case 65003 /* OperatorCode.f32x4_pmax */:
+            case 65004 /* OperatorCode.f64x2_abs */:
+            case 65005 /* OperatorCode.f64x2_neg */:
+            case 65007 /* OperatorCode.f64x2_sqrt */:
+            case 65008 /* OperatorCode.f64x2_add */:
+            case 65009 /* OperatorCode.f64x2_sub */:
+            case 65010 /* OperatorCode.f64x2_mul */:
+            case 65011 /* OperatorCode.f64x2_div */:
+            case 65012 /* OperatorCode.f64x2_min */:
+            case 65013 /* OperatorCode.f64x2_max */:
+            case 65014 /* OperatorCode.f64x2_pmin */:
+            case 65015 /* OperatorCode.f64x2_pmax */:
+            case 65016 /* OperatorCode.i32x4_trunc_sat_f32x4_s */:
+            case 65017 /* OperatorCode.i32x4_trunc_sat_f32x4_u */:
+            case 65018 /* OperatorCode.f32x4_convert_i32x4_s */:
+            case 65019 /* OperatorCode.f32x4_convert_i32x4_u */:
+            case 65020 /* OperatorCode.i32x4_trunc_sat_f64x2_s_zero */:
+            case 65021 /* OperatorCode.i32x4_trunc_sat_f64x2_u_zero */:
+            case 65022 /* OperatorCode.f64x2_convert_low_i32x4_s */:
+            case 65023 /* OperatorCode.f64x2_convert_low_i32x4_u */:
                 break;
             default:
-                this.error = new Error("Unknown operator: 0x" + code.toString(16).padStart(4, "0"));
-                this.state = -1 /* ERROR */;
+                this.error = new Error("Unknown operator: 0x".concat(code.toString(16).padStart(4, "0")));
+                this.state = -1 /* BinaryReaderState.ERROR */;
                 return true;
         }
         this.result = {
@@ -2802,6 +2971,7 @@ var BinaryReader = /** @class */ (function () {
             literal: literal,
             segmentIndex: undefined,
             destinationIndex: undefined,
+            len: undefined,
             lines: lines,
             lineIndex: lineIndex,
         };
@@ -2819,86 +2989,86 @@ var BinaryReader = /** @class */ (function () {
         var code = this.readVarUint32() | 0xfe00;
         var memoryAddress;
         switch (code) {
-            case 65024 /* atomic_notify */:
-            case 65025 /* i32_atomic_wait */:
-            case 65026 /* i64_atomic_wait */:
-            case 65040 /* i32_atomic_load */:
-            case 65041 /* i64_atomic_load */:
-            case 65042 /* i32_atomic_load8_u */:
-            case 65043 /* i32_atomic_load16_u */:
-            case 65044 /* i64_atomic_load8_u */:
-            case 65045 /* i64_atomic_load16_u */:
-            case 65046 /* i64_atomic_load32_u */:
-            case 65047 /* i32_atomic_store */:
-            case 65048 /* i64_atomic_store */:
-            case 65049 /* i32_atomic_store8 */:
-            case 65050 /* i32_atomic_store16 */:
-            case 65051 /* i64_atomic_store8 */:
-            case 65052 /* i64_atomic_store16 */:
-            case 65053 /* i64_atomic_store32 */:
-            case 65054 /* i32_atomic_rmw_add */:
-            case 65055 /* i64_atomic_rmw_add */:
-            case 65056 /* i32_atomic_rmw8_add_u */:
-            case 65057 /* i32_atomic_rmw16_add_u */:
-            case 65058 /* i64_atomic_rmw8_add_u */:
-            case 65059 /* i64_atomic_rmw16_add_u */:
-            case 65060 /* i64_atomic_rmw32_add_u */:
-            case 65061 /* i32_atomic_rmw_sub */:
-            case 65062 /* i64_atomic_rmw_sub */:
-            case 65063 /* i32_atomic_rmw8_sub_u */:
-            case 65064 /* i32_atomic_rmw16_sub_u */:
-            case 65065 /* i64_atomic_rmw8_sub_u */:
-            case 65066 /* i64_atomic_rmw16_sub_u */:
-            case 65067 /* i64_atomic_rmw32_sub_u */:
-            case 65068 /* i32_atomic_rmw_and */:
-            case 65069 /* i64_atomic_rmw_and */:
-            case 65070 /* i32_atomic_rmw8_and_u */:
-            case 65071 /* i32_atomic_rmw16_and_u */:
-            case 65072 /* i64_atomic_rmw8_and_u */:
-            case 65073 /* i64_atomic_rmw16_and_u */:
-            case 65074 /* i64_atomic_rmw32_and_u */:
-            case 65075 /* i32_atomic_rmw_or */:
-            case 65076 /* i64_atomic_rmw_or */:
-            case 65077 /* i32_atomic_rmw8_or_u */:
-            case 65078 /* i32_atomic_rmw16_or_u */:
-            case 65079 /* i64_atomic_rmw8_or_u */:
-            case 65080 /* i64_atomic_rmw16_or_u */:
-            case 65081 /* i64_atomic_rmw32_or_u */:
-            case 65082 /* i32_atomic_rmw_xor */:
-            case 65083 /* i64_atomic_rmw_xor */:
-            case 65084 /* i32_atomic_rmw8_xor_u */:
-            case 65085 /* i32_atomic_rmw16_xor_u */:
-            case 65086 /* i64_atomic_rmw8_xor_u */:
-            case 65087 /* i64_atomic_rmw16_xor_u */:
-            case 65088 /* i64_atomic_rmw32_xor_u */:
-            case 65089 /* i32_atomic_rmw_xchg */:
-            case 65090 /* i64_atomic_rmw_xchg */:
-            case 65091 /* i32_atomic_rmw8_xchg_u */:
-            case 65092 /* i32_atomic_rmw16_xchg_u */:
-            case 65093 /* i64_atomic_rmw8_xchg_u */:
-            case 65094 /* i64_atomic_rmw16_xchg_u */:
-            case 65095 /* i64_atomic_rmw32_xchg_u */:
-            case 65096 /* i32_atomic_rmw_cmpxchg */:
-            case 65097 /* i64_atomic_rmw_cmpxchg */:
-            case 65098 /* i32_atomic_rmw8_cmpxchg_u */:
-            case 65099 /* i32_atomic_rmw16_cmpxchg_u */:
-            case 65100 /* i64_atomic_rmw8_cmpxchg_u */:
-            case 65101 /* i64_atomic_rmw16_cmpxchg_u */:
-            case 65102 /* i64_atomic_rmw32_cmpxchg_u */:
+            case 65024 /* OperatorCode.memory_atomic_notify */:
+            case 65025 /* OperatorCode.memory_atomic_wait32 */:
+            case 65026 /* OperatorCode.memory_atomic_wait64 */:
+            case 65040 /* OperatorCode.i32_atomic_load */:
+            case 65041 /* OperatorCode.i64_atomic_load */:
+            case 65042 /* OperatorCode.i32_atomic_load8_u */:
+            case 65043 /* OperatorCode.i32_atomic_load16_u */:
+            case 65044 /* OperatorCode.i64_atomic_load8_u */:
+            case 65045 /* OperatorCode.i64_atomic_load16_u */:
+            case 65046 /* OperatorCode.i64_atomic_load32_u */:
+            case 65047 /* OperatorCode.i32_atomic_store */:
+            case 65048 /* OperatorCode.i64_atomic_store */:
+            case 65049 /* OperatorCode.i32_atomic_store8 */:
+            case 65050 /* OperatorCode.i32_atomic_store16 */:
+            case 65051 /* OperatorCode.i64_atomic_store8 */:
+            case 65052 /* OperatorCode.i64_atomic_store16 */:
+            case 65053 /* OperatorCode.i64_atomic_store32 */:
+            case 65054 /* OperatorCode.i32_atomic_rmw_add */:
+            case 65055 /* OperatorCode.i64_atomic_rmw_add */:
+            case 65056 /* OperatorCode.i32_atomic_rmw8_add_u */:
+            case 65057 /* OperatorCode.i32_atomic_rmw16_add_u */:
+            case 65058 /* OperatorCode.i64_atomic_rmw8_add_u */:
+            case 65059 /* OperatorCode.i64_atomic_rmw16_add_u */:
+            case 65060 /* OperatorCode.i64_atomic_rmw32_add_u */:
+            case 65061 /* OperatorCode.i32_atomic_rmw_sub */:
+            case 65062 /* OperatorCode.i64_atomic_rmw_sub */:
+            case 65063 /* OperatorCode.i32_atomic_rmw8_sub_u */:
+            case 65064 /* OperatorCode.i32_atomic_rmw16_sub_u */:
+            case 65065 /* OperatorCode.i64_atomic_rmw8_sub_u */:
+            case 65066 /* OperatorCode.i64_atomic_rmw16_sub_u */:
+            case 65067 /* OperatorCode.i64_atomic_rmw32_sub_u */:
+            case 65068 /* OperatorCode.i32_atomic_rmw_and */:
+            case 65069 /* OperatorCode.i64_atomic_rmw_and */:
+            case 65070 /* OperatorCode.i32_atomic_rmw8_and_u */:
+            case 65071 /* OperatorCode.i32_atomic_rmw16_and_u */:
+            case 65072 /* OperatorCode.i64_atomic_rmw8_and_u */:
+            case 65073 /* OperatorCode.i64_atomic_rmw16_and_u */:
+            case 65074 /* OperatorCode.i64_atomic_rmw32_and_u */:
+            case 65075 /* OperatorCode.i32_atomic_rmw_or */:
+            case 65076 /* OperatorCode.i64_atomic_rmw_or */:
+            case 65077 /* OperatorCode.i32_atomic_rmw8_or_u */:
+            case 65078 /* OperatorCode.i32_atomic_rmw16_or_u */:
+            case 65079 /* OperatorCode.i64_atomic_rmw8_or_u */:
+            case 65080 /* OperatorCode.i64_atomic_rmw16_or_u */:
+            case 65081 /* OperatorCode.i64_atomic_rmw32_or_u */:
+            case 65082 /* OperatorCode.i32_atomic_rmw_xor */:
+            case 65083 /* OperatorCode.i64_atomic_rmw_xor */:
+            case 65084 /* OperatorCode.i32_atomic_rmw8_xor_u */:
+            case 65085 /* OperatorCode.i32_atomic_rmw16_xor_u */:
+            case 65086 /* OperatorCode.i64_atomic_rmw8_xor_u */:
+            case 65087 /* OperatorCode.i64_atomic_rmw16_xor_u */:
+            case 65088 /* OperatorCode.i64_atomic_rmw32_xor_u */:
+            case 65089 /* OperatorCode.i32_atomic_rmw_xchg */:
+            case 65090 /* OperatorCode.i64_atomic_rmw_xchg */:
+            case 65091 /* OperatorCode.i32_atomic_rmw8_xchg_u */:
+            case 65092 /* OperatorCode.i32_atomic_rmw16_xchg_u */:
+            case 65093 /* OperatorCode.i64_atomic_rmw8_xchg_u */:
+            case 65094 /* OperatorCode.i64_atomic_rmw16_xchg_u */:
+            case 65095 /* OperatorCode.i64_atomic_rmw32_xchg_u */:
+            case 65096 /* OperatorCode.i32_atomic_rmw_cmpxchg */:
+            case 65097 /* OperatorCode.i64_atomic_rmw_cmpxchg */:
+            case 65098 /* OperatorCode.i32_atomic_rmw8_cmpxchg_u */:
+            case 65099 /* OperatorCode.i32_atomic_rmw16_cmpxchg_u */:
+            case 65100 /* OperatorCode.i64_atomic_rmw8_cmpxchg_u */:
+            case 65101 /* OperatorCode.i64_atomic_rmw16_cmpxchg_u */:
+            case 65102 /* OperatorCode.i64_atomic_rmw32_cmpxchg_u */:
                 memoryAddress = this.readMemoryImmediate();
                 break;
-            case 65027 /* atomic_fence */: {
+            case 65027 /* OperatorCode.atomic_fence */: {
                 var consistency_model = this.readUint8();
                 if (consistency_model != 0) {
                     this.error = new Error("atomic.fence consistency model must be 0");
-                    this.state = -1 /* ERROR */;
+                    this.state = -1 /* BinaryReaderState.ERROR */;
                     return true;
                 }
                 break;
             }
             default:
-                this.error = new Error("Unknown operator: 0x" + code.toString(16).padStart(4, "0"));
-                this.state = -1 /* ERROR */;
+                this.error = new Error("Unknown operator: 0x".concat(code.toString(16).padStart(4, "0")));
+                this.state = -1 /* BinaryReaderState.ERROR */;
                 return true;
         }
         this.result = {
@@ -2918,6 +3088,7 @@ var BinaryReader = /** @class */ (function () {
             literal: undefined,
             segmentIndex: undefined,
             destinationIndex: undefined,
+            len: undefined,
             lines: undefined,
             lineIndex: undefined,
         };
@@ -2925,43 +3096,43 @@ var BinaryReader = /** @class */ (function () {
     };
     BinaryReader.prototype.readCodeOperator = function () {
         switch (this.state) {
-            case 30 /* CODE_OPERATOR */:
+            case 30 /* BinaryReaderState.CODE_OPERATOR */:
                 if (this._pos >= this._functionRange.end) {
                     this.skipFunctionBody();
                     return this.read();
                 }
                 break;
-            case 26 /* INIT_EXPRESSION_OPERATOR */:
+            case 26 /* BinaryReaderState.INIT_EXPRESSION_OPERATOR */:
                 if (this.result &&
-                    this.result.code === 11 /* end */) {
-                    this.state = 27 /* END_INIT_EXPRESSION_BODY */;
+                    this.result.code === 11 /* OperatorCode.end */) {
+                    this.state = 27 /* BinaryReaderState.END_INIT_EXPRESSION_BODY */;
                     this.result = null;
                     return true;
                 }
                 break;
-            case 45 /* OFFSET_EXPRESSION_OPERATOR */:
+            case 45 /* BinaryReaderState.OFFSET_EXPRESSION_OPERATOR */:
                 if (this.result &&
-                    this.result.code === 11 /* end */) {
-                    this.state = 46 /* END_OFFSET_EXPRESSION_BODY */;
+                    this.result.code === 11 /* OperatorCode.end */) {
+                    this.state = 46 /* BinaryReaderState.END_OFFSET_EXPRESSION_BODY */;
                     this.result = null;
                     return true;
                 }
                 break;
         }
-        var code, blockType, selectType, refType, brDepth, brTable, relativeDepth, funcIndex, typeIndex, tableIndex, localIndex, globalIndex, eventIndex, memoryAddress, literal, reserved;
-        if (this.state === 26 /* INIT_EXPRESSION_OPERATOR */ &&
-            this._sectionId === 9 /* Element */ &&
+        var code, blockType, selectType, refType, brDepth, brTable, relativeDepth, funcIndex, typeIndex, tableIndex, localIndex, globalIndex, tagIndex, memoryAddress, literal, reserved;
+        if (this.state === 26 /* BinaryReaderState.INIT_EXPRESSION_OPERATOR */ &&
+            this._sectionId === 9 /* SectionCode.Element */ &&
             isExternvalElementSegmentType(this._segmentType)) {
             // We are reading a `vec(funcidx)` here, which is a dense encoding
             // for a sequence of `((ref.func y) end)` instructions.
             if (this.result &&
-                this.result.code === 210 /* ref_func */) {
-                code = 11 /* end */;
+                this.result.code === 210 /* OperatorCode.ref_func */) {
+                code = 11 /* OperatorCode.end */;
             }
             else {
                 if (!this.hasVarIntBytes())
                     return false;
-                code = 210 /* ref_func */;
+                code = 210 /* OperatorCode.ref_func */;
                 funcIndex = this.readVarUint32();
             }
         }
@@ -2973,19 +3144,19 @@ var BinaryReader = /** @class */ (function () {
             }
             code = this._data[this._pos++];
             switch (code) {
-                case 2 /* block */:
-                case 3 /* loop */:
-                case 4 /* if */:
-                case 6 /* try */:
-                    blockType = this.readBlockType();
+                case 2 /* OperatorCode.block */:
+                case 3 /* OperatorCode.loop */:
+                case 4 /* OperatorCode.if */:
+                case 6 /* OperatorCode.try */:
+                    blockType = this.readType();
                     break;
-                case 12 /* br */:
-                case 13 /* br_if */:
-                case 212 /* br_on_null */:
-                case 214 /* br_on_non_null */:
+                case 12 /* OperatorCode.br */:
+                case 13 /* OperatorCode.br_if */:
+                case 212 /* OperatorCode.br_on_null */:
+                case 214 /* OperatorCode.br_on_non_null */:
                     brDepth = this.readVarUint32();
                     break;
-                case 14 /* br_table */:
+                case 14 /* OperatorCode.br_table */:
                     var tableCount = this.readVarUint32();
                     if (!this.hasBytes(tableCount + 1)) {
                         // We need at least (tableCount + 1) bytes
@@ -3002,260 +3173,262 @@ var BinaryReader = /** @class */ (function () {
                         brTable.push(this.readVarUint32());
                     }
                     break;
-                case 9 /* rethrow */:
-                case 24 /* delegate */:
+                case 9 /* OperatorCode.rethrow */:
+                case 24 /* OperatorCode.delegate */:
                     relativeDepth = this.readVarUint32();
                     break;
-                case 7 /* catch */:
-                case 8 /* throw */:
-                    eventIndex = this.readVarInt32();
+                case 7 /* OperatorCode.catch */:
+                case 8 /* OperatorCode.throw */:
+                    tagIndex = this.readVarInt32();
                     break;
-                case 208 /* ref_null */:
+                case 208 /* OperatorCode.ref_null */:
                     refType = this.readHeapType();
                     break;
-                case 16 /* call */:
-                case 18 /* return_call */:
-                case 210 /* ref_func */:
+                case 16 /* OperatorCode.call */:
+                case 18 /* OperatorCode.return_call */:
+                case 210 /* OperatorCode.ref_func */:
                     funcIndex = this.readVarUint32();
                     break;
-                case 17 /* call_indirect */:
-                case 19 /* return_call_indirect */:
+                case 17 /* OperatorCode.call_indirect */:
+                case 19 /* OperatorCode.return_call_indirect */:
                     typeIndex = this.readVarUint32();
                     reserved = this.readVarUint1();
                     break;
-                case 32 /* local_get */:
-                case 33 /* local_set */:
-                case 34 /* local_tee */:
+                case 32 /* OperatorCode.local_get */:
+                case 33 /* OperatorCode.local_set */:
+                case 34 /* OperatorCode.local_tee */:
                     localIndex = this.readVarUint32();
                     break;
-                case 35 /* global_get */:
-                case 36 /* global_set */:
+                case 35 /* OperatorCode.global_get */:
+                case 36 /* OperatorCode.global_set */:
                     globalIndex = this.readVarUint32();
                     break;
-                case 37 /* table_get */:
-                case 38 /* table_set */:
+                case 37 /* OperatorCode.table_get */:
+                case 38 /* OperatorCode.table_set */:
                     tableIndex = this.readVarUint32();
                     break;
-                case 40 /* i32_load */:
-                case 41 /* i64_load */:
-                case 42 /* f32_load */:
-                case 43 /* f64_load */:
-                case 44 /* i32_load8_s */:
-                case 45 /* i32_load8_u */:
-                case 46 /* i32_load16_s */:
-                case 47 /* i32_load16_u */:
-                case 48 /* i64_load8_s */:
-                case 49 /* i64_load8_u */:
-                case 50 /* i64_load16_s */:
-                case 51 /* i64_load16_u */:
-                case 52 /* i64_load32_s */:
-                case 53 /* i64_load32_u */:
-                case 54 /* i32_store */:
-                case 55 /* i64_store */:
-                case 56 /* f32_store */:
-                case 57 /* f64_store */:
-                case 58 /* i32_store8 */:
-                case 59 /* i32_store16 */:
-                case 60 /* i64_store8 */:
-                case 61 /* i64_store16 */:
-                case 62 /* i64_store32 */:
+                case 20 /* OperatorCode.call_ref */:
+                case 21 /* OperatorCode.return_call_ref */:
+                    typeIndex = this.readHeapType();
+                    break;
+                case 40 /* OperatorCode.i32_load */:
+                case 41 /* OperatorCode.i64_load */:
+                case 42 /* OperatorCode.f32_load */:
+                case 43 /* OperatorCode.f64_load */:
+                case 44 /* OperatorCode.i32_load8_s */:
+                case 45 /* OperatorCode.i32_load8_u */:
+                case 46 /* OperatorCode.i32_load16_s */:
+                case 47 /* OperatorCode.i32_load16_u */:
+                case 48 /* OperatorCode.i64_load8_s */:
+                case 49 /* OperatorCode.i64_load8_u */:
+                case 50 /* OperatorCode.i64_load16_s */:
+                case 51 /* OperatorCode.i64_load16_u */:
+                case 52 /* OperatorCode.i64_load32_s */:
+                case 53 /* OperatorCode.i64_load32_u */:
+                case 54 /* OperatorCode.i32_store */:
+                case 55 /* OperatorCode.i64_store */:
+                case 56 /* OperatorCode.f32_store */:
+                case 57 /* OperatorCode.f64_store */:
+                case 58 /* OperatorCode.i32_store8 */:
+                case 59 /* OperatorCode.i32_store16 */:
+                case 60 /* OperatorCode.i64_store8 */:
+                case 61 /* OperatorCode.i64_store16 */:
+                case 62 /* OperatorCode.i64_store32 */:
                     memoryAddress = this.readMemoryImmediate();
                     break;
-                case 63 /* current_memory */:
-                case 64 /* grow_memory */:
+                case 63 /* OperatorCode.memory_size */:
+                case 64 /* OperatorCode.memory_grow */:
                     reserved = this.readVarUint1();
                     break;
-                case 65 /* i32_const */:
+                case 65 /* OperatorCode.i32_const */:
                     literal = this.readVarInt32();
                     break;
-                case 66 /* i64_const */:
+                case 66 /* OperatorCode.i64_const */:
                     literal = this.readVarInt64();
                     break;
-                case 67 /* f32_const */:
+                case 67 /* OperatorCode.f32_const */:
                     literal = new DataView(this._data.buffer, this._data.byteOffset).getFloat32(this._pos, true);
                     this._pos += 4;
                     break;
-                case 68 /* f64_const */:
+                case 68 /* OperatorCode.f64_const */:
                     literal = new DataView(this._data.buffer, this._data.byteOffset).getFloat64(this._pos, true);
                     this._pos += 8;
                     break;
-                case 28 /* select_with_type */:
+                case 28 /* OperatorCode.select_with_type */:
                     var num_types = this.readVarInt32();
                     // Only 1 is a valid value currently.
                     if (num_types == 1) {
                         selectType = this.readType();
                     }
                     break;
-                case 251 /* prefix_0xfb */:
+                case 251 /* OperatorCode.prefix_0xfb */:
                     if (this.readCodeOperator_0xfb()) {
                         return true;
                     }
                     this._pos = pos;
                     return false;
-                case 252 /* prefix_0xfc */:
+                case 252 /* OperatorCode.prefix_0xfc */:
                     if (this.readCodeOperator_0xfc()) {
                         return true;
                     }
                     this._pos = pos;
                     return false;
-                case 253 /* prefix_0xfd */:
+                case 253 /* OperatorCode.prefix_0xfd */:
                     if (this.readCodeOperator_0xfd()) {
                         return true;
                     }
                     this._pos = pos;
                     return false;
-                case 254 /* prefix_0xfe */:
+                case 254 /* OperatorCode.prefix_0xfe */:
                     if (this.readCodeOperator_0xfe()) {
                         return true;
                     }
                     this._pos = pos;
                     return false;
-                case 0 /* unreachable */:
-                case 1 /* nop */:
-                case 5 /* else */:
-                case 10 /* unwind */:
-                case 11 /* end */:
-                case 15 /* return */:
-                case 25 /* catch_all */:
-                case 26 /* drop */:
-                case 27 /* select */:
-                case 69 /* i32_eqz */:
-                case 70 /* i32_eq */:
-                case 71 /* i32_ne */:
-                case 72 /* i32_lt_s */:
-                case 73 /* i32_lt_u */:
-                case 74 /* i32_gt_s */:
-                case 75 /* i32_gt_u */:
-                case 76 /* i32_le_s */:
-                case 77 /* i32_le_u */:
-                case 78 /* i32_ge_s */:
-                case 79 /* i32_ge_u */:
-                case 80 /* i64_eqz */:
-                case 81 /* i64_eq */:
-                case 82 /* i64_ne */:
-                case 83 /* i64_lt_s */:
-                case 84 /* i64_lt_u */:
-                case 85 /* i64_gt_s */:
-                case 86 /* i64_gt_u */:
-                case 87 /* i64_le_s */:
-                case 88 /* i64_le_u */:
-                case 89 /* i64_ge_s */:
-                case 90 /* i64_ge_u */:
-                case 91 /* f32_eq */:
-                case 92 /* f32_ne */:
-                case 93 /* f32_lt */:
-                case 94 /* f32_gt */:
-                case 95 /* f32_le */:
-                case 96 /* f32_ge */:
-                case 97 /* f64_eq */:
-                case 98 /* f64_ne */:
-                case 99 /* f64_lt */:
-                case 100 /* f64_gt */:
-                case 101 /* f64_le */:
-                case 102 /* f64_ge */:
-                case 103 /* i32_clz */:
-                case 104 /* i32_ctz */:
-                case 105 /* i32_popcnt */:
-                case 106 /* i32_add */:
-                case 107 /* i32_sub */:
-                case 108 /* i32_mul */:
-                case 109 /* i32_div_s */:
-                case 110 /* i32_div_u */:
-                case 111 /* i32_rem_s */:
-                case 112 /* i32_rem_u */:
-                case 113 /* i32_and */:
-                case 114 /* i32_or */:
-                case 115 /* i32_xor */:
-                case 116 /* i32_shl */:
-                case 117 /* i32_shr_s */:
-                case 118 /* i32_shr_u */:
-                case 119 /* i32_rotl */:
-                case 120 /* i32_rotr */:
-                case 121 /* i64_clz */:
-                case 122 /* i64_ctz */:
-                case 123 /* i64_popcnt */:
-                case 124 /* i64_add */:
-                case 125 /* i64_sub */:
-                case 126 /* i64_mul */:
-                case 127 /* i64_div_s */:
-                case 128 /* i64_div_u */:
-                case 129 /* i64_rem_s */:
-                case 130 /* i64_rem_u */:
-                case 131 /* i64_and */:
-                case 132 /* i64_or */:
-                case 133 /* i64_xor */:
-                case 134 /* i64_shl */:
-                case 135 /* i64_shr_s */:
-                case 136 /* i64_shr_u */:
-                case 137 /* i64_rotl */:
-                case 138 /* i64_rotr */:
-                case 139 /* f32_abs */:
-                case 140 /* f32_neg */:
-                case 141 /* f32_ceil */:
-                case 142 /* f32_floor */:
-                case 143 /* f32_trunc */:
-                case 144 /* f32_nearest */:
-                case 145 /* f32_sqrt */:
-                case 146 /* f32_add */:
-                case 147 /* f32_sub */:
-                case 148 /* f32_mul */:
-                case 149 /* f32_div */:
-                case 150 /* f32_min */:
-                case 151 /* f32_max */:
-                case 152 /* f32_copysign */:
-                case 153 /* f64_abs */:
-                case 154 /* f64_neg */:
-                case 155 /* f64_ceil */:
-                case 156 /* f64_floor */:
-                case 157 /* f64_trunc */:
-                case 158 /* f64_nearest */:
-                case 159 /* f64_sqrt */:
-                case 160 /* f64_add */:
-                case 161 /* f64_sub */:
-                case 162 /* f64_mul */:
-                case 163 /* f64_div */:
-                case 164 /* f64_min */:
-                case 165 /* f64_max */:
-                case 166 /* f64_copysign */:
-                case 167 /* i32_wrap_i64 */:
-                case 168 /* i32_trunc_f32_s */:
-                case 169 /* i32_trunc_f32_u */:
-                case 170 /* i32_trunc_f64_s */:
-                case 171 /* i32_trunc_f64_u */:
-                case 172 /* i64_extend_i32_s */:
-                case 173 /* i64_extend_i32_u */:
-                case 174 /* i64_trunc_f32_s */:
-                case 175 /* i64_trunc_f32_u */:
-                case 176 /* i64_trunc_f64_s */:
-                case 177 /* i64_trunc_f64_u */:
-                case 178 /* f32_convert_i32_s */:
-                case 179 /* f32_convert_i32_u */:
-                case 180 /* f32_convert_i64_s */:
-                case 181 /* f32_convert_i64_u */:
-                case 182 /* f32_demote_f64 */:
-                case 183 /* f64_convert_i32_s */:
-                case 184 /* f64_convert_i32_u */:
-                case 185 /* f64_convert_i64_s */:
-                case 186 /* f64_convert_i64_u */:
-                case 187 /* f64_promote_f32 */:
-                case 188 /* i32_reinterpret_f32 */:
-                case 189 /* i64_reinterpret_f64 */:
-                case 190 /* f32_reinterpret_i32 */:
-                case 191 /* f64_reinterpret_i64 */:
-                case 192 /* i32_extend8_s */:
-                case 193 /* i32_extend16_s */:
-                case 194 /* i64_extend8_s */:
-                case 195 /* i64_extend16_s */:
-                case 196 /* i64_extend32_s */:
-                case 20 /* call_ref */:
-                case 21 /* return_call_ref */:
-                case 209 /* ref_is_null */:
-                case 211 /* ref_as_non_null */:
-                case 213 /* ref_eq */:
+                case 0 /* OperatorCode.unreachable */:
+                case 1 /* OperatorCode.nop */:
+                case 5 /* OperatorCode.else */:
+                case 10 /* OperatorCode.unwind */:
+                case 11 /* OperatorCode.end */:
+                case 15 /* OperatorCode.return */:
+                case 25 /* OperatorCode.catch_all */:
+                case 26 /* OperatorCode.drop */:
+                case 27 /* OperatorCode.select */:
+                case 69 /* OperatorCode.i32_eqz */:
+                case 70 /* OperatorCode.i32_eq */:
+                case 71 /* OperatorCode.i32_ne */:
+                case 72 /* OperatorCode.i32_lt_s */:
+                case 73 /* OperatorCode.i32_lt_u */:
+                case 74 /* OperatorCode.i32_gt_s */:
+                case 75 /* OperatorCode.i32_gt_u */:
+                case 76 /* OperatorCode.i32_le_s */:
+                case 77 /* OperatorCode.i32_le_u */:
+                case 78 /* OperatorCode.i32_ge_s */:
+                case 79 /* OperatorCode.i32_ge_u */:
+                case 80 /* OperatorCode.i64_eqz */:
+                case 81 /* OperatorCode.i64_eq */:
+                case 82 /* OperatorCode.i64_ne */:
+                case 83 /* OperatorCode.i64_lt_s */:
+                case 84 /* OperatorCode.i64_lt_u */:
+                case 85 /* OperatorCode.i64_gt_s */:
+                case 86 /* OperatorCode.i64_gt_u */:
+                case 87 /* OperatorCode.i64_le_s */:
+                case 88 /* OperatorCode.i64_le_u */:
+                case 89 /* OperatorCode.i64_ge_s */:
+                case 90 /* OperatorCode.i64_ge_u */:
+                case 91 /* OperatorCode.f32_eq */:
+                case 92 /* OperatorCode.f32_ne */:
+                case 93 /* OperatorCode.f32_lt */:
+                case 94 /* OperatorCode.f32_gt */:
+                case 95 /* OperatorCode.f32_le */:
+                case 96 /* OperatorCode.f32_ge */:
+                case 97 /* OperatorCode.f64_eq */:
+                case 98 /* OperatorCode.f64_ne */:
+                case 99 /* OperatorCode.f64_lt */:
+                case 100 /* OperatorCode.f64_gt */:
+                case 101 /* OperatorCode.f64_le */:
+                case 102 /* OperatorCode.f64_ge */:
+                case 103 /* OperatorCode.i32_clz */:
+                case 104 /* OperatorCode.i32_ctz */:
+                case 105 /* OperatorCode.i32_popcnt */:
+                case 106 /* OperatorCode.i32_add */:
+                case 107 /* OperatorCode.i32_sub */:
+                case 108 /* OperatorCode.i32_mul */:
+                case 109 /* OperatorCode.i32_div_s */:
+                case 110 /* OperatorCode.i32_div_u */:
+                case 111 /* OperatorCode.i32_rem_s */:
+                case 112 /* OperatorCode.i32_rem_u */:
+                case 113 /* OperatorCode.i32_and */:
+                case 114 /* OperatorCode.i32_or */:
+                case 115 /* OperatorCode.i32_xor */:
+                case 116 /* OperatorCode.i32_shl */:
+                case 117 /* OperatorCode.i32_shr_s */:
+                case 118 /* OperatorCode.i32_shr_u */:
+                case 119 /* OperatorCode.i32_rotl */:
+                case 120 /* OperatorCode.i32_rotr */:
+                case 121 /* OperatorCode.i64_clz */:
+                case 122 /* OperatorCode.i64_ctz */:
+                case 123 /* OperatorCode.i64_popcnt */:
+                case 124 /* OperatorCode.i64_add */:
+                case 125 /* OperatorCode.i64_sub */:
+                case 126 /* OperatorCode.i64_mul */:
+                case 127 /* OperatorCode.i64_div_s */:
+                case 128 /* OperatorCode.i64_div_u */:
+                case 129 /* OperatorCode.i64_rem_s */:
+                case 130 /* OperatorCode.i64_rem_u */:
+                case 131 /* OperatorCode.i64_and */:
+                case 132 /* OperatorCode.i64_or */:
+                case 133 /* OperatorCode.i64_xor */:
+                case 134 /* OperatorCode.i64_shl */:
+                case 135 /* OperatorCode.i64_shr_s */:
+                case 136 /* OperatorCode.i64_shr_u */:
+                case 137 /* OperatorCode.i64_rotl */:
+                case 138 /* OperatorCode.i64_rotr */:
+                case 139 /* OperatorCode.f32_abs */:
+                case 140 /* OperatorCode.f32_neg */:
+                case 141 /* OperatorCode.f32_ceil */:
+                case 142 /* OperatorCode.f32_floor */:
+                case 143 /* OperatorCode.f32_trunc */:
+                case 144 /* OperatorCode.f32_nearest */:
+                case 145 /* OperatorCode.f32_sqrt */:
+                case 146 /* OperatorCode.f32_add */:
+                case 147 /* OperatorCode.f32_sub */:
+                case 148 /* OperatorCode.f32_mul */:
+                case 149 /* OperatorCode.f32_div */:
+                case 150 /* OperatorCode.f32_min */:
+                case 151 /* OperatorCode.f32_max */:
+                case 152 /* OperatorCode.f32_copysign */:
+                case 153 /* OperatorCode.f64_abs */:
+                case 154 /* OperatorCode.f64_neg */:
+                case 155 /* OperatorCode.f64_ceil */:
+                case 156 /* OperatorCode.f64_floor */:
+                case 157 /* OperatorCode.f64_trunc */:
+                case 158 /* OperatorCode.f64_nearest */:
+                case 159 /* OperatorCode.f64_sqrt */:
+                case 160 /* OperatorCode.f64_add */:
+                case 161 /* OperatorCode.f64_sub */:
+                case 162 /* OperatorCode.f64_mul */:
+                case 163 /* OperatorCode.f64_div */:
+                case 164 /* OperatorCode.f64_min */:
+                case 165 /* OperatorCode.f64_max */:
+                case 166 /* OperatorCode.f64_copysign */:
+                case 167 /* OperatorCode.i32_wrap_i64 */:
+                case 168 /* OperatorCode.i32_trunc_f32_s */:
+                case 169 /* OperatorCode.i32_trunc_f32_u */:
+                case 170 /* OperatorCode.i32_trunc_f64_s */:
+                case 171 /* OperatorCode.i32_trunc_f64_u */:
+                case 172 /* OperatorCode.i64_extend_i32_s */:
+                case 173 /* OperatorCode.i64_extend_i32_u */:
+                case 174 /* OperatorCode.i64_trunc_f32_s */:
+                case 175 /* OperatorCode.i64_trunc_f32_u */:
+                case 176 /* OperatorCode.i64_trunc_f64_s */:
+                case 177 /* OperatorCode.i64_trunc_f64_u */:
+                case 178 /* OperatorCode.f32_convert_i32_s */:
+                case 179 /* OperatorCode.f32_convert_i32_u */:
+                case 180 /* OperatorCode.f32_convert_i64_s */:
+                case 181 /* OperatorCode.f32_convert_i64_u */:
+                case 182 /* OperatorCode.f32_demote_f64 */:
+                case 183 /* OperatorCode.f64_convert_i32_s */:
+                case 184 /* OperatorCode.f64_convert_i32_u */:
+                case 185 /* OperatorCode.f64_convert_i64_s */:
+                case 186 /* OperatorCode.f64_convert_i64_u */:
+                case 187 /* OperatorCode.f64_promote_f32 */:
+                case 188 /* OperatorCode.i32_reinterpret_f32 */:
+                case 189 /* OperatorCode.i64_reinterpret_f64 */:
+                case 190 /* OperatorCode.f32_reinterpret_i32 */:
+                case 191 /* OperatorCode.f64_reinterpret_i64 */:
+                case 192 /* OperatorCode.i32_extend8_s */:
+                case 193 /* OperatorCode.i32_extend16_s */:
+                case 194 /* OperatorCode.i64_extend8_s */:
+                case 195 /* OperatorCode.i64_extend16_s */:
+                case 196 /* OperatorCode.i64_extend32_s */:
+                case 209 /* OperatorCode.ref_is_null */:
+                case 211 /* OperatorCode.ref_as_non_null */:
+                case 213 /* OperatorCode.ref_eq */:
                     break;
                 default:
-                    this.error = new Error("Unknown operator: " + code);
-                    this.state = -1 /* ERROR */;
+                    this.error = new Error("Unknown operator: ".concat(code));
+                    this.state = -1 /* BinaryReaderState.ERROR */;
                     return true;
             }
         }
@@ -3274,11 +3447,12 @@ var BinaryReader = /** @class */ (function () {
             localIndex: localIndex,
             globalIndex: globalIndex,
             fieldIndex: undefined,
-            eventIndex: eventIndex,
+            tagIndex: tagIndex,
             memoryAddress: memoryAddress,
             literal: literal,
             segmentIndex: undefined,
             destinationIndex: undefined,
+            len: undefined,
             lines: undefined,
             lineIndex: undefined,
         };
@@ -3314,7 +3488,7 @@ var BinaryReader = /** @class */ (function () {
             locals.push({ count: count, type: type });
         }
         var bodyStart = this._pos;
-        this.state = 28 /* BEGIN_FUNCTION_BODY */;
+        this.state = 28 /* BinaryReaderState.BEGIN_FUNCTION_BODY */;
         this.result = {
             locals: locals,
         };
@@ -3324,20 +3498,20 @@ var BinaryReader = /** @class */ (function () {
     };
     BinaryReader.prototype.readSectionHeader = function () {
         if (this._pos >= this._length && this._eof) {
-            this._sectionId = -1 /* Unknown */;
+            this._sectionId = -1 /* SectionCode.Unknown */;
             this._sectionRange = null;
             this.result = null;
-            this.state = 2 /* END_WASM */;
+            this.state = 2 /* BinaryReaderState.END_WASM */;
             return true;
         }
         // TODO: Handle _eof.
         if (this._pos < this._length - 4) {
             var magicNumber = this.peekInt32();
             if (magicNumber === WASM_MAGIC_NUMBER) {
-                this._sectionId = -1 /* Unknown */;
+                this._sectionId = -1 /* SectionCode.Unknown */;
                 this._sectionRange = null;
                 this.result = null;
-                this.state = 2 /* END_WASM */;
+                this.state = 2 /* BinaryReaderState.END_WASM */;
                 return true;
             }
         }
@@ -3362,7 +3536,7 @@ var BinaryReader = /** @class */ (function () {
         this.result = { id: id, name: name };
         this._sectionId = id;
         this._sectionRange = new DataRange(this._pos, payloadEnd);
-        this.state = 3 /* BEGIN_SECTION */;
+        this.state = 3 /* BinaryReaderState.BEGIN_SECTION */;
         return true;
     };
     BinaryReader.prototype.readSectionRawData = function () {
@@ -3370,84 +3544,90 @@ var BinaryReader = /** @class */ (function () {
         if (!this.hasBytes(payloadLength)) {
             return false;
         }
-        this.state = 7 /* SECTION_RAW_DATA */;
+        this.state = 7 /* BinaryReaderState.SECTION_RAW_DATA */;
         this.result = this.readBytes(payloadLength);
         return true;
     };
     BinaryReader.prototype.readSectionBody = function () {
         if (this._pos >= this._sectionRange.end) {
             this.result = null;
-            this.state = 4 /* END_SECTION */;
-            this._sectionId = -1 /* Unknown */;
+            this.state = 4 /* BinaryReaderState.END_SECTION */;
+            this._sectionId = -1 /* SectionCode.Unknown */;
             this._sectionRange = null;
             return true;
         }
         var currentSection = this.result;
         switch (currentSection.id) {
-            case 1 /* Type */:
+            case 1 /* SectionCode.Type */:
                 if (!this.hasSectionPayload())
                     return false;
                 this._sectionEntriesLeft = this.readVarUint32();
+                this._recGroupTypesLeft = -1;
                 return this.readTypeEntry();
-            case 2 /* Import */:
+            case 2 /* SectionCode.Import */:
                 if (!this.hasSectionPayload())
                     return false;
                 this._sectionEntriesLeft = this.readVarUint32();
                 return this.readImportEntry();
-            case 7 /* Export */:
+            case 7 /* SectionCode.Export */:
                 if (!this.hasSectionPayload())
                     return false;
                 this._sectionEntriesLeft = this.readVarUint32();
                 return this.readExportEntry();
-            case 3 /* Function */:
+            case 3 /* SectionCode.Function */:
                 if (!this.hasSectionPayload())
                     return false;
                 this._sectionEntriesLeft = this.readVarUint32();
                 return this.readFunctionEntry();
-            case 4 /* Table */:
+            case 4 /* SectionCode.Table */:
                 if (!this.hasSectionPayload())
                     return false;
                 this._sectionEntriesLeft = this.readVarUint32();
                 return this.readTableEntry();
-            case 5 /* Memory */:
+            case 5 /* SectionCode.Memory */:
                 if (!this.hasSectionPayload())
                     return false;
                 this._sectionEntriesLeft = this.readVarUint32();
                 return this.readMemoryEntry();
-            case 6 /* Global */:
+            case 6 /* SectionCode.Global */:
                 if (!this.hasVarIntBytes())
                     return false;
                 this._sectionEntriesLeft = this.readVarUint32();
                 return this.readGlobalEntry();
-            case 8 /* Start */:
+            case 8 /* SectionCode.Start */:
                 if (!this.hasVarIntBytes())
                     return false;
-                this.state = 22 /* START_SECTION_ENTRY */;
+                this.state = 22 /* BinaryReaderState.START_SECTION_ENTRY */;
                 this.result = { index: this.readVarUint32() };
                 return true;
-            case 10 /* Code */:
+            case 10 /* SectionCode.Code */:
                 if (!this.hasVarIntBytes())
                     return false;
                 this._sectionEntriesLeft = this.readVarUint32();
-                this.state = 29 /* READING_FUNCTION_HEADER */;
+                this.state = 29 /* BinaryReaderState.READING_FUNCTION_HEADER */;
                 return this.readFunctionBody();
-            case 9 /* Element */:
+            case 9 /* SectionCode.Element */:
                 if (!this.hasVarIntBytes())
                     return false;
                 this._sectionEntriesLeft = this.readVarUint32();
                 return this.readElementEntry();
-            case 11 /* Data */:
+            case 11 /* SectionCode.Data */:
                 if (!this.hasVarIntBytes())
                     return false;
                 this._sectionEntriesLeft = this.readVarUint32();
                 return this.readDataEntry();
-            case 13 /* Event */:
+            case 12 /* SectionCode.DataCount */:
                 if (!this.hasVarIntBytes())
                     return false;
                 this._sectionEntriesLeft = this.readVarUint32();
-                return this.readEventEntry();
-            case 0 /* Custom */:
-                var customSectionName = exports.bytesToString(currentSection.name);
+                return this.readDataCountEntry();
+            case 13 /* SectionCode.Tag */:
+                if (!this.hasVarIntBytes())
+                    return false;
+                this._sectionEntriesLeft = this.readVarUint32();
+                return this.readTagEntry();
+            case 0 /* SectionCode.Custom */:
+                var customSectionName = (0, exports.bytesToString)(currentSection.name);
                 if (customSectionName === "name") {
                     return this.readNameEntry();
                 }
@@ -3465,86 +3645,93 @@ var BinaryReader = /** @class */ (function () {
                 }
                 return this.readSectionRawData();
             default:
-                this.error = new Error("Unsupported section: " + this._sectionId);
-                this.state = -1 /* ERROR */;
+                this.error = new Error("Unsupported section: ".concat(this._sectionId));
+                this.state = -1 /* BinaryReaderState.ERROR */;
                 return true;
         }
     };
     BinaryReader.prototype.read = function () {
         switch (this.state) {
-            case 0 /* INITIAL */:
+            case 0 /* BinaryReaderState.INITIAL */:
                 if (!this.hasBytes(8))
                     return false;
                 var magicNumber = this.readUint32();
                 if (magicNumber != WASM_MAGIC_NUMBER) {
                     this.error = new Error("Bad magic number");
-                    this.state = -1 /* ERROR */;
+                    this.state = -1 /* BinaryReaderState.ERROR */;
                     return true;
                 }
                 var version = this.readUint32();
                 if (version != WASM_SUPPORTED_VERSION &&
                     version != WASM_SUPPORTED_EXPERIMENTAL_VERSION) {
-                    this.error = new Error("Bad version number " + version);
-                    this.state = -1 /* ERROR */;
+                    this.error = new Error("Bad version number ".concat(version));
+                    this.state = -1 /* BinaryReaderState.ERROR */;
                     return true;
                 }
                 this.result = { magicNumber: magicNumber, version: version };
-                this.state = 1 /* BEGIN_WASM */;
+                this.state = 1 /* BinaryReaderState.BEGIN_WASM */;
                 return true;
-            case 2 /* END_WASM */:
+            case 2 /* BinaryReaderState.END_WASM */:
                 this.result = null;
-                this.state = 1 /* BEGIN_WASM */;
+                this.state = 1 /* BinaryReaderState.BEGIN_WASM */;
                 if (this.hasMoreBytes()) {
-                    this.state = 0 /* INITIAL */;
+                    this.state = 0 /* BinaryReaderState.INITIAL */;
                     return this.read();
                 }
                 return false;
-            case -1 /* ERROR */:
+            case -1 /* BinaryReaderState.ERROR */:
                 return true;
-            case 1 /* BEGIN_WASM */:
-            case 4 /* END_SECTION */:
+            case 1 /* BinaryReaderState.BEGIN_WASM */:
+            case 4 /* BinaryReaderState.END_SECTION */:
                 return this.readSectionHeader();
-            case 3 /* BEGIN_SECTION */:
+            case 3 /* BinaryReaderState.BEGIN_SECTION */:
                 return this.readSectionBody();
-            case 5 /* SKIPPING_SECTION */:
+            case 5 /* BinaryReaderState.SKIPPING_SECTION */:
                 if (!this.hasSectionPayload()) {
                     return false;
                 }
-                this.state = 4 /* END_SECTION */;
+                this.state = 4 /* BinaryReaderState.END_SECTION */;
                 this._pos = this._sectionRange.end;
-                this._sectionId = -1 /* Unknown */;
+                this._sectionId = -1 /* SectionCode.Unknown */;
                 this._sectionRange = null;
                 this.result = null;
                 return true;
-            case 32 /* SKIPPING_FUNCTION_BODY */:
-                this.state = 31 /* END_FUNCTION_BODY */;
+            case 32 /* BinaryReaderState.SKIPPING_FUNCTION_BODY */:
+                this.state = 31 /* BinaryReaderState.END_FUNCTION_BODY */;
                 this._pos = this._functionRange.end;
                 this._functionRange = null;
                 this.result = null;
                 return true;
-            case 11 /* TYPE_SECTION_ENTRY */:
+            case 11 /* BinaryReaderState.TYPE_SECTION_ENTRY */:
+                if (this._recGroupTypesLeft >= 0) {
+                    return this.readRecGroupEntry();
+                }
                 return this.readTypeEntry();
-            case 12 /* IMPORT_SECTION_ENTRY */:
+            case 47 /* BinaryReaderState.BEGIN_REC_GROUP */:
+                return this.readRecGroupEntry();
+            case 48 /* BinaryReaderState.END_REC_GROUP */:
+                return this.readTypeEntry();
+            case 12 /* BinaryReaderState.IMPORT_SECTION_ENTRY */:
                 return this.readImportEntry();
-            case 17 /* EXPORT_SECTION_ENTRY */:
+            case 17 /* BinaryReaderState.EXPORT_SECTION_ENTRY */:
                 return this.readExportEntry();
-            case 13 /* FUNCTION_SECTION_ENTRY */:
+            case 13 /* BinaryReaderState.FUNCTION_SECTION_ENTRY */:
                 return this.readFunctionEntry();
-            case 14 /* TABLE_SECTION_ENTRY */:
+            case 14 /* BinaryReaderState.TABLE_SECTION_ENTRY */:
                 return this.readTableEntry();
-            case 15 /* MEMORY_SECTION_ENTRY */:
+            case 15 /* BinaryReaderState.MEMORY_SECTION_ENTRY */:
                 return this.readMemoryEntry();
-            case 23 /* EVENT_SECTION_ENTRY */:
-                return this.readEventEntry();
-            case 16 /* GLOBAL_SECTION_ENTRY */:
-            case 40 /* END_GLOBAL_SECTION_ENTRY */:
+            case 23 /* BinaryReaderState.TAG_SECTION_ENTRY */:
+                return this.readTagEntry();
+            case 16 /* BinaryReaderState.GLOBAL_SECTION_ENTRY */:
+            case 40 /* BinaryReaderState.END_GLOBAL_SECTION_ENTRY */:
                 return this.readGlobalEntry();
-            case 39 /* BEGIN_GLOBAL_SECTION_ENTRY */:
+            case 39 /* BinaryReaderState.BEGIN_GLOBAL_SECTION_ENTRY */:
                 return this.readInitExpressionBody();
-            case 20 /* ELEMENT_SECTION_ENTRY */:
-            case 35 /* END_ELEMENT_SECTION_ENTRY */:
+            case 20 /* BinaryReaderState.ELEMENT_SECTION_ENTRY */:
+            case 35 /* BinaryReaderState.END_ELEMENT_SECTION_ENTRY */:
                 return this.readElementEntry();
-            case 33 /* BEGIN_ELEMENT_SECTION_ENTRY */:
+            case 33 /* BinaryReaderState.BEGIN_ELEMENT_SECTION_ENTRY */:
                 if (isActiveElementSegmentType(this._segmentType)) {
                     return this.readOffsetExpressionBody();
                 }
@@ -3552,20 +3739,22 @@ var BinaryReader = /** @class */ (function () {
                     // passive or declared element segment
                     return this.readElementEntryBody();
                 }
-            case 34 /* ELEMENT_SECTION_ENTRY_BODY */:
+            case 34 /* BinaryReaderState.ELEMENT_SECTION_ENTRY_BODY */:
                 if (!this.hasVarIntBytes())
                     return false;
                 this._segmentEntriesLeft = this.readVarUint32();
                 if (this._segmentEntriesLeft === 0) {
-                    this.state = 35 /* END_ELEMENT_SECTION_ENTRY */;
+                    this.state = 35 /* BinaryReaderState.END_ELEMENT_SECTION_ENTRY */;
                     this.result = null;
                     return true;
                 }
                 return this.readInitExpressionBody();
-            case 18 /* DATA_SECTION_ENTRY */:
-            case 38 /* END_DATA_SECTION_ENTRY */:
+            case 49 /* BinaryReaderState.DATA_COUNT_SECTION_ENTRY */:
+                return this.readDataCountEntry();
+            case 18 /* BinaryReaderState.DATA_SECTION_ENTRY */:
+            case 38 /* BinaryReaderState.END_DATA_SECTION_ENTRY */:
                 return this.readDataEntry();
-            case 36 /* BEGIN_DATA_SECTION_ENTRY */:
+            case 36 /* BinaryReaderState.BEGIN_DATA_SECTION_ENTRY */:
                 if (isActiveDataSegmentType(this._segmentType)) {
                     return this.readOffsetExpressionBody();
                 }
@@ -3573,103 +3762,103 @@ var BinaryReader = /** @class */ (function () {
                     // passive data segment
                     return this.readDataEntryBody();
                 }
-            case 37 /* DATA_SECTION_ENTRY_BODY */:
-                this.state = 38 /* END_DATA_SECTION_ENTRY */;
+            case 37 /* BinaryReaderState.DATA_SECTION_ENTRY_BODY */:
+                this.state = 38 /* BinaryReaderState.END_DATA_SECTION_ENTRY */;
                 this.result = null;
                 return true;
-            case 27 /* END_INIT_EXPRESSION_BODY */:
+            case 27 /* BinaryReaderState.END_INIT_EXPRESSION_BODY */:
                 switch (this._sectionId) {
-                    case 6 /* Global */:
-                        this.state = 40 /* END_GLOBAL_SECTION_ENTRY */;
+                    case 6 /* SectionCode.Global */:
+                        this.state = 40 /* BinaryReaderState.END_GLOBAL_SECTION_ENTRY */;
                         return true;
-                    case 9 /* Element */:
+                    case 9 /* SectionCode.Element */:
                         if (--this._segmentEntriesLeft > 0) {
                             return this.readInitExpressionBody();
                         }
-                        this.state = 35 /* END_ELEMENT_SECTION_ENTRY */;
+                        this.state = 35 /* BinaryReaderState.END_ELEMENT_SECTION_ENTRY */;
                         this.result = null;
                         return true;
                 }
-                this.error = new Error("Unexpected section type: " + this._sectionId);
-                this.state = -1 /* ERROR */;
+                this.error = new Error("Unexpected section type: ".concat(this._sectionId));
+                this.state = -1 /* BinaryReaderState.ERROR */;
                 return true;
-            case 46 /* END_OFFSET_EXPRESSION_BODY */:
-                if (this._sectionId === 11 /* Data */) {
+            case 46 /* BinaryReaderState.END_OFFSET_EXPRESSION_BODY */:
+                if (this._sectionId === 11 /* SectionCode.Data */) {
                     return this.readDataEntryBody();
                 }
                 else {
                     return this.readElementEntryBody();
                 }
-            case 19 /* NAME_SECTION_ENTRY */:
+            case 19 /* BinaryReaderState.NAME_SECTION_ENTRY */:
                 return this.readNameEntry();
-            case 41 /* RELOC_SECTION_HEADER */:
+            case 41 /* BinaryReaderState.RELOC_SECTION_HEADER */:
                 if (!this.hasVarIntBytes())
                     return false;
                 this._sectionEntriesLeft = this.readVarUint32();
                 return this.readRelocEntry();
-            case 21 /* LINKING_SECTION_ENTRY */:
+            case 21 /* BinaryReaderState.LINKING_SECTION_ENTRY */:
                 return this.readLinkingEntry();
-            case 43 /* SOURCE_MAPPING_URL */:
-                this.state = 4 /* END_SECTION */;
+            case 43 /* BinaryReaderState.SOURCE_MAPPING_URL */:
+                this.state = 4 /* BinaryReaderState.END_SECTION */;
                 this.result = null;
                 return true;
-            case 42 /* RELOC_SECTION_ENTRY */:
+            case 42 /* BinaryReaderState.RELOC_SECTION_ENTRY */:
                 return this.readRelocEntry();
-            case 29 /* READING_FUNCTION_HEADER */:
-            case 31 /* END_FUNCTION_BODY */:
+            case 29 /* BinaryReaderState.READING_FUNCTION_HEADER */:
+            case 31 /* BinaryReaderState.END_FUNCTION_BODY */:
                 return this.readFunctionBody();
-            case 28 /* BEGIN_FUNCTION_BODY */:
-                this.state = 30 /* CODE_OPERATOR */;
+            case 28 /* BinaryReaderState.BEGIN_FUNCTION_BODY */:
+                this.state = 30 /* BinaryReaderState.CODE_OPERATOR */;
                 return this.readCodeOperator();
-            case 25 /* BEGIN_INIT_EXPRESSION_BODY */:
-                this.state = 26 /* INIT_EXPRESSION_OPERATOR */;
+            case 25 /* BinaryReaderState.BEGIN_INIT_EXPRESSION_BODY */:
+                this.state = 26 /* BinaryReaderState.INIT_EXPRESSION_OPERATOR */;
                 return this.readCodeOperator();
-            case 44 /* BEGIN_OFFSET_EXPRESSION_BODY */:
-                this.state = 45 /* OFFSET_EXPRESSION_OPERATOR */;
+            case 44 /* BinaryReaderState.BEGIN_OFFSET_EXPRESSION_BODY */:
+                this.state = 45 /* BinaryReaderState.OFFSET_EXPRESSION_OPERATOR */;
                 return this.readCodeOperator();
-            case 30 /* CODE_OPERATOR */:
-            case 26 /* INIT_EXPRESSION_OPERATOR */:
-            case 45 /* OFFSET_EXPRESSION_OPERATOR */:
+            case 30 /* BinaryReaderState.CODE_OPERATOR */:
+            case 26 /* BinaryReaderState.INIT_EXPRESSION_OPERATOR */:
+            case 45 /* BinaryReaderState.OFFSET_EXPRESSION_OPERATOR */:
                 return this.readCodeOperator();
-            case 6 /* READING_SECTION_RAW_DATA */:
+            case 6 /* BinaryReaderState.READING_SECTION_RAW_DATA */:
                 return this.readSectionRawData();
-            case 22 /* START_SECTION_ENTRY */:
-            case 7 /* SECTION_RAW_DATA */:
-                this.state = 4 /* END_SECTION */;
+            case 22 /* BinaryReaderState.START_SECTION_ENTRY */:
+            case 7 /* BinaryReaderState.SECTION_RAW_DATA */:
+                this.state = 4 /* BinaryReaderState.END_SECTION */;
                 this.result = null;
                 return true;
             default:
-                this.error = new Error("Unsupported state: " + this.state);
-                this.state = -1 /* ERROR */;
+                this.error = new Error("Unsupported state: ".concat(this.state));
+                this.state = -1 /* BinaryReaderState.ERROR */;
                 return true;
         }
     };
     BinaryReader.prototype.skipSection = function () {
-        if (this.state === -1 /* ERROR */ ||
-            this.state === 0 /* INITIAL */ ||
-            this.state === 4 /* END_SECTION */ ||
-            this.state === 1 /* BEGIN_WASM */ ||
-            this.state === 2 /* END_WASM */)
+        if (this.state === -1 /* BinaryReaderState.ERROR */ ||
+            this.state === 0 /* BinaryReaderState.INITIAL */ ||
+            this.state === 4 /* BinaryReaderState.END_SECTION */ ||
+            this.state === 1 /* BinaryReaderState.BEGIN_WASM */ ||
+            this.state === 2 /* BinaryReaderState.END_WASM */)
             return;
-        this.state = 5 /* SKIPPING_SECTION */;
+        this.state = 5 /* BinaryReaderState.SKIPPING_SECTION */;
     };
     BinaryReader.prototype.skipFunctionBody = function () {
-        if (this.state !== 28 /* BEGIN_FUNCTION_BODY */ &&
-            this.state !== 30 /* CODE_OPERATOR */)
+        if (this.state !== 28 /* BinaryReaderState.BEGIN_FUNCTION_BODY */ &&
+            this.state !== 30 /* BinaryReaderState.CODE_OPERATOR */)
             return;
-        this.state = 32 /* SKIPPING_FUNCTION_BODY */;
+        this.state = 32 /* BinaryReaderState.SKIPPING_FUNCTION_BODY */;
     };
     BinaryReader.prototype.skipInitExpression = function () {
-        while (this.state === 26 /* INIT_EXPRESSION_OPERATOR */)
+        while (this.state === 26 /* BinaryReaderState.INIT_EXPRESSION_OPERATOR */)
             this.readCodeOperator();
     };
     BinaryReader.prototype.fetchSectionRawData = function () {
-        if (this.state !== 3 /* BEGIN_SECTION */) {
-            this.error = new Error("Unsupported state: " + this.state);
-            this.state = -1 /* ERROR */;
+        if (this.state !== 3 /* BinaryReaderState.BEGIN_SECTION */) {
+            this.error = new Error("Unsupported state: ".concat(this.state));
+            this.state = -1 /* BinaryReaderState.ERROR */;
             return;
         }
-        this.state = 6 /* READING_SECTION_RAW_DATA */;
+        this.state = 6 /* BinaryReaderState.READING_SECTION_RAW_DATA */;
     };
     return BinaryReader;
 }());

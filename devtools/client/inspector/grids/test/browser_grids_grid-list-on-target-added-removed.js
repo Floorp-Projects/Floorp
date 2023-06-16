@@ -6,7 +6,7 @@
 // Tests that the list of grids does refresh when targets are added or removed (e.g. when
 // there's a navigation and iframe are added or removed)
 
-add_task(async function() {
+add_task(async function () {
   await addTab(getDocumentBuilderUrl("example.com", "top-level-com-grid"));
   const { gridInspector } = await openLayoutView();
   const { document: doc } = gridInspector;

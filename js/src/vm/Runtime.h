@@ -66,6 +66,7 @@ class AutoAssertNoContentJS;
 class Debugger;
 class EnterDebuggeeNoExecute;
 class FrontendContext;
+class PlainObject;
 class StaticStrings;
 
 }  // namespace js

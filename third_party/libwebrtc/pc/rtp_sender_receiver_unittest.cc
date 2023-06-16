@@ -130,6 +130,11 @@ class RtpSenderReceiverTest
 
     RTC_CHECK(voice_media_channel());
     RTC_CHECK(video_media_channel());
+    // Create sender channel objects
+    voice_send_channel_ =
+        std::make_unique<cricket::VoiceMediaSendChannel>(voice_media_channel());
+    video_send_channel_ =
+        std::make_unique<cricket::VideoMediaSendChannel>(video_media_channel());
 
     // Create streams for predefined SSRCs. Streams need to exist in order
     // for the senders and receievers to apply parameters to them.
@@ -204,7 +209,7 @@ class RtpSenderReceiverTest
     ASSERT_TRUE(audio_rtp_sender_->SetTrack(audio_track_.get()));
     EXPECT_CALL(*set_streams_observer, OnSetStreams());
     audio_rtp_sender_->SetStreams({local_stream_->id()});
-    audio_rtp_sender_->SetMediaChannel(voice_media_channel()->AsSendChannel());
+    audio_rtp_sender_->SetMediaChannel(voice_send_channel_.get());
     audio_rtp_sender_->SetSsrc(kAudioSsrc);
     VerifyVoiceChannelInput();
   }
@@ -520,6 +525,8 @@ class RtpSenderReceiverTest
   cricket::FakeCall fake_call_;
   std::unique_ptr<cricket::FakeVoiceMediaChannel> voice_media_channel_;
   std::unique_ptr<cricket::FakeVideoMediaChannel> video_media_channel_;
+  std::unique_ptr<cricket::VoiceMediaSendChannel> voice_send_channel_;
+  std::unique_ptr<cricket::VideoMediaSendChannel> video_send_channel_;
   rtc::scoped_refptr<AudioRtpSender> audio_rtp_sender_;
   rtc::scoped_refptr<VideoRtpSender> video_rtp_sender_;
   rtc::scoped_refptr<AudioRtpReceiver> audio_rtp_receiver_;
@@ -1879,6 +1886,15 @@ TEST_F(RtpSenderReceiverTest,
   video_rtp_sender_->SetParametersInternal(new_parameters, nullptr, true);
   parameters.encodings[0].active = false;
   EXPECT_TRUE(video_rtp_sender_->SetParameters(parameters).ok());
+}
+
+// Checks that the senders SetStreams eliminates duplicate stream ids.
+TEST_F(RtpSenderReceiverTest, SenderSetStreamsEliminatesDuplicateIds) {
+  AddVideoTrack();
+  video_rtp_sender_ =
+      VideoRtpSender::Create(worker_thread_, video_track_->id(), nullptr);
+  video_rtp_sender_->SetStreams({"1", "2", "1"});
+  EXPECT_EQ(video_rtp_sender_->stream_ids().size(), 2u);
 }
 
 // Helper method for syntactic sugar for accepting a vector with '{}' notation.

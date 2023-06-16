@@ -15,7 +15,7 @@ var gTab1, gTab2, gLevel1;
 function test() {
   waitForExplicitFinish();
 
-  (async function() {
+  (async function () {
     gTab1 = BrowserTestUtils.addTab(gBrowser);
     gTab2 = BrowserTestUtils.addTab(gBrowser);
 
@@ -26,7 +26,7 @@ function test() {
 }
 
 function zoomTab1() {
-  (async function() {
+  (async function () {
     is(gBrowser.selectedTab, gTab1, "Tab 1 is selected");
 
     // Reset zoom level if we run this test > 1 time in same browser session.
@@ -57,7 +57,7 @@ function zoomTab1() {
 }
 
 function zoomTab2() {
-  (async function() {
+  (async function () {
     is(gBrowser.selectedTab, gTab2, "Tab 2 is selected");
 
     FullZoom.reduce();
@@ -82,7 +82,7 @@ function zoomTab2() {
 }
 
 function testNavigation() {
-  (async function() {
+  (async function () {
     await FullZoomHelper.load(gTab1, TEST_VIDEO);
     FullZoomHelper.zoomTest(
       gTab1,
@@ -114,7 +114,7 @@ function waitForNextTurn() {
 
 var finishTestStarted = false;
 function finishTest() {
-  (async function() {
+  (async function () {
     ok(!finishTestStarted, "finishTest called more than once");
     finishTestStarted = true;
 

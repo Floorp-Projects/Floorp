@@ -18,7 +18,7 @@ add_task(async function test_focus_browser() {
       url: PAGE,
       gBrowser,
     },
-    async function(browser) {
+    async function (browser) {
       let newWinPromise = BrowserTestUtils.domWindowOpenedAndLoaded(null);
       let delayedStartupPromise = BrowserTestUtils.waitForNewWindow();
 
@@ -58,7 +58,7 @@ add_task(async function test_no_steal_focus() {
       url: PAGE,
       gBrowser,
     },
-    async function(browser) {
+    async function (browser) {
       let newWinPromise = BrowserTestUtils.domWindowOpenedAndLoaded(null);
       let delayedStartupPromise = BrowserTestUtils.waitForNewWindow();
 

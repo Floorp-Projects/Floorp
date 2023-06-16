@@ -43,7 +43,6 @@
 #include "mozilla/SharedStyleSheetCache.h"
 #include "mozilla/SimpleEnumerator.h"
 #include "mozilla/SpinEventLoopUntil.h"
-#include "mozilla/StaticPrefs_accessibility.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_fission.h"
@@ -602,13 +601,7 @@ ContentChild* ContentChild::sSingleton;
 StaticAutoPtr<ContentChild::ShutdownCanary> ContentChild::sShutdownCanary;
 
 ContentChild::ContentChild()
-    : mID(uint64_t(-1))
-#if defined(XP_WIN) && defined(ACCESSIBILITY)
-      ,
-      mMainChromeTid(0),
-      mMsaaID(0)
-#endif
-      ,
+    : mID(uint64_t(-1)),
       mIsForBrowser(false),
       mIsAlive(true),
       mShuttingDown(false) {
@@ -772,9 +765,6 @@ void ContentChild::Init(mozilla::ipc::UntypedEndpoint&& aEndpoint,
   // If communications with the parent have broken down, take the process
   // down so it's not hanging around.
   GetIPCChannel()->SetAbortOnError(true);
-#if defined(XP_WIN) && defined(ACCESSIBILITY)
-  GetIPCChannel()->SetChannelFlags(MessageChannel::REQUIRE_A11Y_REENTRY);
-#endif
 
   // This must be checked before any IPDL message, which may hit sentinel
   // errors due to parent and content processes having different
@@ -2553,18 +2543,8 @@ mozilla::ipc::IPCResult ContentChild::RecvFlushMemory(const nsString& reason) {
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentChild::RecvActivateA11y(
-    const uint32_t& aMainChromeTid, const uint32_t& aMsaaID) {
+mozilla::ipc::IPCResult ContentChild::RecvActivateA11y() {
 #ifdef ACCESSIBILITY
-#  ifdef XP_WIN
-  MOZ_ASSERT(aMainChromeTid != 0);
-  mMainChromeTid = aMainChromeTid;
-
-  MOZ_ASSERT(StaticPrefs::accessibility_cache_enabled_AtStartup() ? !aMsaaID
-                                                                  : aMsaaID);
-  mMsaaID = aMsaaID;
-#  endif  // XP_WIN
-
   // Start accessibility in content process if it's running in chrome
   // process.
   GetOrCreateAccService(nsAccessibilityService::eMainProcess);
@@ -2835,7 +2815,7 @@ mozilla::ipc::IPCResult ContentChild::RecvNotifyProcessPriorityChanged(
   if (StaticPrefs::threads_use_low_power_enabled() &&
       StaticPrefs::threads_lower_mainthread_priority_in_background_enabled()) {
     if (PriorityUsesLowPowerMainThread(aPriority)) {
-      pthread_set_qos_class_self_np(QOS_CLASS_BACKGROUND, 0);
+      pthread_set_qos_class_self_np(QOS_CLASS_UTILITY, 0);
     } else if (PriorityUsesLowPowerMainThread(mProcessPriority)) {
       pthread_set_qos_class_self_np(QOS_CLASS_USER_INTERACTIVE, 0);
     }
@@ -2850,9 +2830,9 @@ mozilla::ipc::IPCResult ContentChild::RecvNotifyProcessPriorityChanged(
           dom_memory_foreground_content_processes_have_larger_page_cache()) {
     if (mProcessPriority >= hal::PROCESS_PRIORITY_FOREGROUND) {
       // Note: keep this in sync with the JS shell (js/src/shell/js.cpp).
-      moz_set_max_dirty_page_modifier(3);
+      moz_set_max_dirty_page_modifier(4);
     } else if (mProcessPriority == hal::PROCESS_PRIORITY_BACKGROUND) {
-      moz_set_max_dirty_page_modifier(-1);
+      moz_set_max_dirty_page_modifier(-2);
     } else {
       moz_set_max_dirty_page_modifier(0);
     }
@@ -3228,7 +3208,7 @@ bool ContentChild::DeallocPWebBrowserPersistDocumentChild(
 mozilla::ipc::IPCResult ContentChild::RecvInvokeDragSession(
     const MaybeDiscarded<WindowContext>& aSourceWindowContext,
     const MaybeDiscarded<WindowContext>& aSourceTopWindowContext,
-    nsTArray<IPCDataTransfer>&& aTransfers, const uint32_t& aAction) {
+    nsTArray<IPCTransferableData>&& aTransferables, const uint32_t& aAction) {
   nsCOMPtr<nsIDragService> dragService =
       do_GetService("@mozilla.org/widget/dragservice;1");
   if (dragService) {
@@ -3243,11 +3223,11 @@ mozilla::ipc::IPCResult ContentChild::RecvInvokeDragSession(
       // Check if we are receiving any file objects. If we are we will want
       // to hide any of the other objects coming in from content.
       bool hasFiles = false;
-      for (uint32_t i = 0; i < aTransfers.Length() && !hasFiles; ++i) {
-        auto& items = aTransfers[i].items();
+      for (uint32_t i = 0; i < aTransferables.Length() && !hasFiles; ++i) {
+        auto& items = aTransferables[i].items();
         for (uint32_t j = 0; j < items.Length() && !hasFiles; ++j) {
           if (items[j].data().type() ==
-              IPCDataTransferData::TIPCDataTransferBlob) {
+              IPCTransferableDataType::TIPCTransferableDataBlob) {
             hasFiles = true;
           }
         }
@@ -3256,13 +3236,13 @@ mozilla::ipc::IPCResult ContentChild::RecvInvokeDragSession(
       // Add the entries from the IPC to the new DataTransfer
       nsCOMPtr<DataTransfer> dataTransfer =
           new DataTransfer(nullptr, eDragStart, false, -1);
-      for (uint32_t i = 0; i < aTransfers.Length(); ++i) {
-        auto& items = aTransfers[i].items();
+      for (uint32_t i = 0; i < aTransferables.Length(); ++i) {
+        auto& items = aTransferables[i].items();
         for (uint32_t j = 0; j < items.Length(); ++j) {
-          const IPCDataTransferItem& item = items[j];
+          const IPCTransferableDataItem& item = items[j];
           RefPtr<nsVariantCC> variant = new nsVariantCC();
           nsresult rv =
-              nsContentUtils::IPCTransferableItemToVariant(item, variant);
+              nsContentUtils::IPCTransferableDataItemToVariant(item, variant);
           if (NS_FAILED(rv)) {
             continue;
           }
@@ -3270,8 +3250,8 @@ mozilla::ipc::IPCResult ContentChild::RecvInvokeDragSession(
           // We should hide this data from content if we have a file, and we
           // aren't a file.
           bool hidden =
-              hasFiles &&
-              item.data().type() != IPCDataTransferData::TIPCDataTransferBlob;
+              hasFiles && item.data().type() !=
+                              IPCTransferableDataType::TIPCTransferableDataBlob;
           dataTransfer->SetDataWithPrincipalFromOtherProcess(
               NS_ConvertUTF8toUTF16(item.flavor()), variant, i,
               nsContentUtils::GetSystemPrincipal(), hidden);
@@ -3368,12 +3348,6 @@ mozilla::ipc::IPCResult ContentChild::RecvBlobURLUnregistration(
       /* aBroadcastToOtherProcesses = */ false);
   return IPC_OK();
 }
-
-#if defined(XP_WIN) && defined(ACCESSIBILITY)
-bool ContentChild::SendGetA11yContentId() {
-  return PContentChild::SendGetA11yContentId(&mMsaaID);
-}
-#endif  // defined(XP_WIN) && defined(ACCESSIBILITY)
 
 void ContentChild::CreateGetFilesRequest(const nsAString& aDirectoryPath,
                                          bool aRecursiveFlag, nsID& aUUID,
@@ -3816,8 +3790,7 @@ mozilla::ipc::IPCResult ContentChild::RecvCreateBrowsingContext(
 
   RefPtr<BrowsingContextGroup> group =
       BrowsingContextGroup::GetOrCreate(aGroupId);
-  BrowsingContext::CreateFromIPC(std::move(aInit), group, nullptr);
-  return IPC_OK();
+  return BrowsingContext::CreateFromIPC(std::move(aInit), group, nullptr);
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvDiscardBrowsingContext(

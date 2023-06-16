@@ -3,7 +3,7 @@
 import { CFRPageActions, PageAction } from "lib/CFRPageActions.jsm";
 import { FAKE_RECOMMENDATION } from "./constants";
 import { GlobalOverrider } from "test/unit/utils";
-import { CFRMessageProvider } from "lib/CFRMessageProvider.jsm";
+import { CFRMessageProvider } from "lib/CFRMessageProvider.sys.mjs";
 
 describe("CFRPageActions", () => {
   let sandbox;
@@ -358,7 +358,11 @@ describe("CFRPageActions", () => {
         pageAction._sendTelemetry(fakePing);
         assert.calledWith(dispatchStub, {
           type: "DOORHANGER_TELEMETRY",
-          data: { action: "cfr_user_event", source: "CFR", message_id: 42 },
+          data: {
+            action: "cfr_user_event",
+            source: "CFR",
+            message_id: 42,
+          },
         });
       });
     });
@@ -636,9 +640,8 @@ describe("CFRPageActions", () => {
       it("should set the secondary action correctly", async () => {
         await pageAction._cfrUrlbarButtonClick();
         // eslint-disable-next-line prefer-destructuring
-        const [
-          secondaryAction,
-        ] = global.PopupNotifications.show.firstCall.args[5];
+        const [secondaryAction] =
+          global.PopupNotifications.show.firstCall.args[5];
 
         assert.deepEqual(secondaryAction.label, {
           value: "Secondary Button",
@@ -736,6 +739,8 @@ describe("CFRPageActions", () => {
             persistent: false,
             persistWhileVisible: false,
             popupIconClass: fakeRecommendation.content.icon_class,
+            recordTelemetryInPrivateBrowsing:
+              fakeRecommendation.content.show_in_private_browsing,
             name: {
               string_id: "cfr-doorhanger-extension-author",
               args: { name: fakeRecommendation.content.addon.author },
@@ -993,6 +998,35 @@ describe("CFRPageActions", () => {
         );
         assert.isFalse(CFRPageActions.RecommendationMap.has(fakeBrowser));
       });
+      it("should successfully add a private browsing recommendation and send correct telemetry", async () => {
+        global.PrivateBrowsingUtils.isWindowPrivate.returns(true);
+        fakeRecommendation.content.show_in_private_browsing = true;
+        assert.isTrue(
+          await CFRPageActions.addRecommendation(
+            fakeBrowser,
+            fakeHost,
+            fakeRecommendation,
+            dispatchStub
+          )
+        );
+        assert.isTrue(CFRPageActions.RecommendationMap.has(fakeBrowser));
+
+        const pageAction = CFRPageActions.PageActionMap.get(
+          fakeBrowser.ownerGlobal
+        );
+        await pageAction.showAddressBarNotifier(fakeRecommendation, true);
+        assert.calledWith(dispatchStub, {
+          type: "DOORHANGER_TELEMETRY",
+          data: {
+            action: "cfr_user_event",
+            source: "CFR",
+            is_private: true,
+            message_id: fakeRecommendation.id,
+            bucket_id: fakeRecommendation.content.bucket_id,
+            event: "IMPRESSION",
+          },
+        });
+      });
       it("should fail and not add a recommendation if the browser is not the selected browser", async () => {
         global.gBrowser.selectedBrowser = {}; // Some other browser
         assert.isFalse(
@@ -1063,9 +1097,8 @@ describe("CFRPageActions", () => {
           fakeRecommendation,
           dispatchStub
         );
-        const recommendation = CFRPageActions.RecommendationMap.get(
-          fakeBrowser
-        );
+        const recommendation =
+          CFRPageActions.RecommendationMap.get(fakeBrowser);
 
         // sanity check - just go through some of the rest of the attributes to make sure they were untouched
         assert.equal(recommendation.id, fakeRecommendation.id);

@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   info("Test ignored charset parameter started");
 
   const encodedChar = "%E2%9D%A4"; // In UTF-8 this is a heavy black heart

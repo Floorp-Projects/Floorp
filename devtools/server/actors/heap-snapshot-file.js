@@ -46,9 +46,8 @@ exports.HeapSnapshotFileActor = class HeapSnapshotFileActor extends Actor {
    * @see MemoryFront.prototype.transferHeapSnapshot
    */
   async transferHeapSnapshot(snapshotId) {
-    const snapshotFilePath = HeapSnapshotFileUtils.getHeapSnapshotTempFilePath(
-      snapshotId
-    );
+    const snapshotFilePath =
+      HeapSnapshotFileUtils.getHeapSnapshotTempFilePath(snapshotId);
     if (!snapshotFilePath) {
       throw new Error(`No heap snapshot with id: ${snapshotId}`);
     }

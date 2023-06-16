@@ -7,6 +7,7 @@ import argparse
 import os
 import site
 import subprocess
+import sys
 from glob import glob
 
 scriptdir = os.path.abspath(os.path.dirname(__file__))
@@ -42,7 +43,8 @@ parser.add_argument("--cxx", default=os.environ.get("CXX"), help="Path to g++")
 parser.add_argument(
     "--verbose",
     "-v",
-    action="store_true",
+    default=0,
+    action="count",
     help="Display verbose output, including commands executed",
 )
 ALL_TESTS = [
@@ -64,7 +66,7 @@ parser.add_argument(
 cfg = parser.parse_args()
 
 if not cfg.js:
-    exit("Must specify JS binary through environment variable or --js option")
+    sys.exit("Must specify JS binary through environment variable or --js option")
 if not cfg.cc:
     if cfg.gccdir:
         cfg.cc = os.path.join(cfg.gccdir, "bin", "gcc")
@@ -118,8 +120,8 @@ if len(tests) == 0:
 
 failed = set()
 passed = set()
-for name in tests:
-    name = os.path.basename(name)
+for path in tests:
+    name = os.path.basename(path)
     indir = os.path.join(testdir, name)
     outdir = os.path.join(outroot, name)
     make_dir(outdir)

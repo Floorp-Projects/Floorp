@@ -11,7 +11,7 @@
 const TEST_URI =
   "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-logs-exceptions-order.html";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
   await checkConsoleOutput(hud);
 

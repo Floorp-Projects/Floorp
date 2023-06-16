@@ -23,6 +23,7 @@
 #include "mozilla/dom/Response.h"
 #include "mozilla/dom/ServiceWorkerBinding.h"  // ServiceWorkerState
 #include "mozilla/Result.h"
+#include "mozilla/TaskQueue.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/WorkerScope.h"
@@ -477,7 +478,9 @@ void CacheLoadHandler::ResolvedCallback(JSContext* aCx,
   if (rr) {
     nsCOMPtr<nsIEventTarget> sts =
         do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
-    rv = rr->RetargetDeliveryTo(sts);
+    RefPtr<TaskQueue> queue =
+        TaskQueue::Create(sts.forget(), "CacheLoadHandler STS Delivery Queue");
+    rv = rr->RetargetDeliveryTo(queue);
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to dispatch the nsIInputStreamPump to a IO thread.");
     }

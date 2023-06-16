@@ -29,8 +29,9 @@ const { X509 } = ChromeUtils.importESModule(
   "resource://gre/modules/psm/X509.sys.mjs"
 );
 
-const isDebugBuild = Cc["@mozilla.org/xpcom/debug;1"].getService(Ci.nsIDebug2)
-  .isDebugBuild;
+const isDebugBuild = Cc["@mozilla.org/xpcom/debug;1"].getService(
+  Ci.nsIDebug2
+).isDebugBuild;
 
 // The test EV roots are only enabled in debug builds as a security measure.
 const gEVExpected = isDebugBuild;
@@ -173,7 +174,7 @@ function pemToBase64(pem) {
 
 function build_cert_chain(certNames, testDirectory = "bad_certs") {
   let certList = [];
-  certNames.forEach(function(certName) {
+  certNames.forEach(function (certName) {
     let cert = constructCertFromFile(`${testDirectory}/${certName}.pem`);
     certList.push(cert);
   });
@@ -469,7 +470,7 @@ function run_test() {
 */
 
 function add_tls_server_setup(serverBinName, certsPath, addDefaultRoot = true) {
-  add_test(function() {
+  add_test(function () {
     _setupTLSServerTest(serverBinName, certsPath, addDefaultRoot);
   });
 }
@@ -511,7 +512,7 @@ function add_connection_test(
   /* optional */ aOriginAttributes,
   /* optional */ aEchConfig
 ) {
-  add_test(function() {
+  add_test(function () {
     if (aBeforeConnect) {
       aBeforeConnect();
     }
@@ -621,7 +622,7 @@ async function asyncConnectTo(
     return connection.go();
   }
 
-  return connectTo(aHost).then(async function(conn) {
+  return connectTo(aHost).then(async function (conn) {
     info("handling " + aHost);
     let expectedNSResult =
       aExpectedResult == PRErrorCodeSuccess
@@ -700,18 +701,18 @@ async function asyncStartTLSTestServer(
 
   let httpServer = new HttpServer();
   let serverReady = new Promise(resolve => {
-    httpServer.registerPathHandler("/", function handleServerCallback(
-      aRequest,
-      aResponse
-    ) {
-      aResponse.setStatusLine(aRequest.httpVersion, 200, "OK");
-      aResponse.setHeader("Content-Type", "text/plain");
-      let responseBody = "OK!";
-      aResponse.bodyOutputStream.write(responseBody, responseBody.length);
-      executeSoon(function() {
-        httpServer.stop(resolve);
-      });
-    });
+    httpServer.registerPathHandler(
+      "/",
+      function handleServerCallback(aRequest, aResponse) {
+        aResponse.setStatusLine(aRequest.httpVersion, 200, "OK");
+        aResponse.setHeader("Content-Type", "text/plain");
+        let responseBody = "OK!";
+        aResponse.bodyOutputStream.write(responseBody, responseBody.length);
+        executeSoon(function () {
+          httpServer.stop(resolve);
+        });
+      }
+    );
     httpServer.start(CALLBACK_PORT);
   });
 
@@ -724,7 +725,7 @@ async function asyncStartTLSTestServer(
   // Using "sql:" causes the SQL DB to be used so we can run tests on Android.
   process.run(false, ["sql:" + certDir.path, Services.appinfo.processID], 2);
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     process.kill();
   });
 
@@ -771,11 +772,11 @@ function generateOCSPResponses(ocspRespArray, nssDBlocation) {
 // serverIdentities.
 function getFailingHttpServer(serverPort, serverIdentities) {
   let httpServer = new HttpServer();
-  httpServer.registerPrefixHandler("/", function(request, response) {
+  httpServer.registerPrefixHandler("/", function (request, response) {
     Assert.ok(false, "HTTP responder should not have been queried");
   });
   httpServer.identity.setPrimary("http", serverIdentities.shift(), serverPort);
-  serverIdentities.forEach(function(identity) {
+  serverIdentities.forEach(function (identity) {
     httpServer.identity.add("http", identity, serverPort);
   });
   httpServer.start(serverPort);
@@ -815,7 +816,7 @@ function startOCSPResponder(
   expectedResponseTypes,
   responseHeaderPairs = []
 ) {
-  let ocspResponseGenerationArgs = expectedCertNames.map(function(
+  let ocspResponseGenerationArgs = expectedCertNames.map(function (
     expectedNick
   ) {
     let responseType = "good";
@@ -829,37 +830,37 @@ function startOCSPResponder(
     nssDBLocation
   );
   let httpServer = new HttpServer();
-  httpServer.registerPrefixHandler("/", function handleServerCallback(
-    aRequest,
-    aResponse
-  ) {
-    info("got request for: " + aRequest.path);
-    let basePath = aRequest.path.slice(1).split("/")[0];
-    if (expectedBasePaths.length >= 1) {
-      Assert.equal(
-        basePath,
-        expectedBasePaths.shift(),
-        "Actual and expected base path should match"
+  httpServer.registerPrefixHandler(
+    "/",
+    function handleServerCallback(aRequest, aResponse) {
+      info("got request for: " + aRequest.path);
+      let basePath = aRequest.path.slice(1).split("/")[0];
+      if (expectedBasePaths.length >= 1) {
+        Assert.equal(
+          basePath,
+          expectedBasePaths.shift(),
+          "Actual and expected base path should match"
+        );
+      }
+      Assert.ok(
+        expectedCertNames.length >= 1,
+        "expectedCertNames should contain >= 1 entries"
       );
+      if (expectedMethods && expectedMethods.length >= 1) {
+        Assert.equal(
+          aRequest.method,
+          expectedMethods.shift(),
+          "Actual and expected fetch method should match"
+        );
+      }
+      aResponse.setStatusLine(aRequest.httpVersion, 200, "OK");
+      aResponse.setHeader("Content-Type", "application/ocsp-response");
+      for (let headerPair of responseHeaderPairs) {
+        aResponse.setHeader(headerPair[0], headerPair[1]);
+      }
+      aResponse.write(ocspResponses.shift());
     }
-    Assert.ok(
-      expectedCertNames.length >= 1,
-      "expectedCertNames should contain >= 1 entries"
-    );
-    if (expectedMethods && expectedMethods.length >= 1) {
-      Assert.equal(
-        aRequest.method,
-        expectedMethods.shift(),
-        "Actual and expected fetch method should match"
-      );
-    }
-    aResponse.setStatusLine(aRequest.httpVersion, 200, "OK");
-    aResponse.setHeader("Content-Type", "application/ocsp-response");
-    for (let headerPair of responseHeaderPairs) {
-      aResponse.setHeader(headerPair[0], headerPair[1]);
-    }
-    aResponse.write(ocspResponses.shift());
-  });
+  );
   httpServer.identity.setPrimary("http", identity, serverPort);
   httpServer.start(serverPort);
   return {

@@ -68,7 +68,7 @@ function waitFor(host, type) {
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   for (let networkIsolation of [true, false]) {
     for (let partitionPerSite of [true, false]) {
       await SpecialPowers.pushPrefEnv({

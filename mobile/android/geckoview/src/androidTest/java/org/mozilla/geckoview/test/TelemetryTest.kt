@@ -21,7 +21,7 @@ class TelemetryTest : BaseSessionTest() {
     fun testOnTelemetryReceived() {
         // Let's make sure we batch the telemetry calls.
         sessionRule.setPrefsUntilTestEnd(
-            mapOf("toolkit.telemetry.geckoview.batchDurationMS" to 100000)
+            mapOf("toolkit.telemetry.geckoview.batchDurationMS" to 100000),
         )
 
         val expectedHistograms = listOf<Long>(401, 12, 1, 109, 2000)
@@ -45,7 +45,7 @@ class TelemetryTest : BaseSessionTest() {
                     assertThat(
                         "The histogram should not be categorical",
                         metric.isCategorical,
-                        equalTo(false)
+                        equalTo(false),
                     )
 
                     receivedHistograms.addAll(metric.value.toList())
@@ -64,7 +64,7 @@ class TelemetryTest : BaseSessionTest() {
                     assertThat(
                         "Metric value should match",
                         metric.value,
-                        equalTo("test scalar")
+                        equalTo("test scalar"),
                     )
 
                     stringScalar.complete(null)
@@ -79,7 +79,7 @@ class TelemetryTest : BaseSessionTest() {
                     assertThat(
                         "Metric value should match",
                         metric.value,
-                        equalTo(true)
+                        equalTo(true),
                     )
 
                     booleanScalar.complete(null)
@@ -94,12 +94,12 @@ class TelemetryTest : BaseSessionTest() {
                     assertThat(
                         "Metric value should match",
                         metric.value,
-                        equalTo(1234L)
+                        equalTo(1234L),
                     )
 
                     longScalar.complete(null)
                 }
-            }
+            },
         )
 
         sessionRule.addHistogram("TELEMETRY_TEST_STREAMING", expectedHistograms[0])
@@ -113,7 +113,7 @@ class TelemetryTest : BaseSessionTest() {
 
         // Forces flushing telemetry data at next histogram.
         sessionRule.setPrefsUntilTestEnd(
-            mapOf("toolkit.telemetry.geckoview.batchDurationMS" to 0)
+            mapOf("toolkit.telemetry.geckoview.batchDurationMS" to 0),
         )
         sessionRule.addHistogram("TELEMETRY_TEST_STREAMING", expectedHistograms[4])
 
@@ -125,7 +125,7 @@ class TelemetryTest : BaseSessionTest() {
         assertThat(
             "Metric values should match",
             receivedHistograms,
-            equalTo(expectedHistograms)
+            equalTo(expectedHistograms),
         )
     }
 }

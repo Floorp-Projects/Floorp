@@ -10,7 +10,7 @@
 
 #include "video_engine/desktop_capture_impl.h"
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <memory>
 #include <string>
 
@@ -31,14 +31,17 @@
 #include "modules/desktop_capture/desktop_and_cursor_composer.h"
 #include "modules/desktop_capture/desktop_frame.h"
 #include "modules/desktop_capture/desktop_capture_options.h"
+#include "modules/desktop_capture/desktop_capturer_differ_wrapper.h"
 #include "modules/video_capture/video_capture.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/TimeStamp.h"
 #include "nsThreadUtils.h"
+#include "tab_capturer.h"
 
 using mozilla::NewRunnableMethod;
+using mozilla::TabCapturerWebrtc;
 using mozilla::TimeDuration;
 using mozilla::camera::CaptureDeviceType;
 using mozilla::camera::CaptureEngine;
@@ -382,74 +385,94 @@ static DesktopCaptureOptions CreateDesktopCaptureOptions() {
   return options;
 }
 
-int32_t DesktopCaptureImpl::EnsureCapturer() {
-  MOZ_DIAGNOSTIC_ASSERT(mControlThread->IsOnCurrentThread());
-
-  if (mCapturer) {
-    // Already initialized
-
-    return 0;
+static std::unique_ptr<DesktopCapturer> CreateTabCapturer(
+    const DesktopCaptureOptions& options, DesktopCapturer::SourceId aSourceId,
+    nsCOMPtr<nsISerialEventTarget> aCaptureThread) {
+  std::unique_ptr<DesktopCapturer> capturer =
+      TabCapturerWebrtc::Create(aSourceId, std::move(aCaptureThread));
+  if (capturer && options.detect_updated_region()) {
+    capturer.reset(new DesktopCapturerDifferWrapper(std::move(capturer)));
   }
 
-  DesktopCaptureOptions options = CreateDesktopCaptureOptions();
+  return capturer;
+}
 
+static bool UsePipewire() {
 #if defined(WEBRTC_USE_PIPEWIRE)
-  if ((mDeviceType == CaptureDeviceType::Screen ||
-       mDeviceType == CaptureDeviceType::Window) &&
-      mozilla::StaticPrefs::media_webrtc_capture_allow_pipewire() &&
-      webrtc::DesktopCapturer::IsRunningUnderWayland()) {
-    std::unique_ptr<DesktopCapturer> capturer =
-        DesktopCapturer::CreateGenericCapturer(options);
-    if (!capturer) {
-      return -1;
-    }
-
-    mCapturer = std::make_unique<DesktopAndCursorComposer>(std::move(capturer),
-                                                           options);
-
-    return 0;
-  }
+  return mozilla::StaticPrefs::media_webrtc_capture_allow_pipewire() &&
+         webrtc::DesktopCapturer::IsRunningUnderWayland();
+#else
+  return false;
 #endif
+}
 
-  if (mDeviceType == CaptureDeviceType::Screen) {
-    std::unique_ptr<DesktopCapturer> screenCapturer =
-        DesktopCapturer::CreateScreenCapturer(options);
-    if (!screenCapturer) {
-      return -1;
+static std::unique_ptr<DesktopCapturer> CreateDesktopCapturerAndThread(
+    CaptureDeviceType aDeviceType, DesktopCapturer::SourceId aSourceId,
+    nsIThread** aOutThread) {
+  DesktopCaptureOptions options = CreateDesktopCaptureOptions();
+  std::unique_ptr<DesktopCapturer> capturer;
+
+  auto ensureThread = [&]() {
+    if (*aOutThread) {
+      return *aOutThread;
     }
 
-    DesktopCapturer::SourceId sourceId = atoi(mDeviceUniqueId.c_str());
-    screenCapturer->SelectSource(sourceId);
+    nsIThreadManager::ThreadCreationOptions threadOptions;
+#if defined(XP_WIN) || defined(XP_MACOSX)
+    // Windows desktop capture needs a UI thread.
+    // Mac screen capture needs a thread with a CFRunLoop.
+    threadOptions.isUiThread = true;
+#endif
+    NS_NewNamedThread("DesktopCapture", aOutThread, nullptr, threadOptions);
+    return *aOutThread;
+  };
 
-    mCapturer = std::make_unique<DesktopAndCursorComposer>(
-        std::move(screenCapturer), options);
-  } else if (mDeviceType == CaptureDeviceType::Window) {
+  if ((aDeviceType == CaptureDeviceType::Screen ||
+       aDeviceType == CaptureDeviceType::Window) &&
+      UsePipewire()) {
+    capturer = DesktopCapturer::CreateGenericCapturer(options);
+    if (!capturer) {
+      return capturer;
+    }
+
+    capturer = std::make_unique<DesktopAndCursorComposer>(std::move(capturer),
+                                                          options);
+  } else if (aDeviceType == CaptureDeviceType::Screen) {
+    capturer = DesktopCapturer::CreateScreenCapturer(options);
+    if (!capturer) {
+      return capturer;
+    }
+
+    capturer->SelectSource(aSourceId);
+
+    capturer = std::make_unique<DesktopAndCursorComposer>(std::move(capturer),
+                                                          options);
+  } else if (aDeviceType == CaptureDeviceType::Window) {
 #if defined(RTC_ENABLE_WIN_WGC)
     options.set_allow_wgc_capturer_fallback(true);
 #endif
-    std::unique_ptr<DesktopCapturer> windowCapturer =
-        DesktopCapturer::CreateWindowCapturer(options);
-    if (!windowCapturer) {
-      return -1;
+    capturer = DesktopCapturer::CreateWindowCapturer(options);
+    if (!capturer) {
+      return capturer;
     }
 
-    DesktopCapturer::SourceId sourceId = atoi(mDeviceUniqueId.c_str());
-    windowCapturer->SelectSource(sourceId);
+    capturer->SelectSource(aSourceId);
 
-    mCapturer = std::make_unique<DesktopAndCursorComposer>(
-        std::move(windowCapturer), options);
-  } else if (mDeviceType == CaptureDeviceType::Browser) {
+    capturer = std::make_unique<DesktopAndCursorComposer>(std::move(capturer),
+                                                          options);
+  } else if (aDeviceType == CaptureDeviceType::Browser) {
     // XXX We don't capture cursors, so avoid the extra indirection layer. We
     // could also pass null for the pMouseCursorMonitor.
-    mCapturer = DesktopCapturer::CreateTabCapturer(options);
-    if (!mCapturer) {
-      return -1;
-    }
-
-    DesktopCapturer::SourceId sourceId = atoi(mDeviceUniqueId.c_str());
-    mCapturer->SelectSource(sourceId);
+    capturer = CreateTabCapturer(options, aSourceId, ensureThread());
+  } else {
+    MOZ_ASSERT(!capturer);
+    return capturer;
   }
-  return 0;
+
+  MOZ_ASSERT(capturer);
+  ensureThread();
+
+  return capturer;
 }
 
 DesktopCaptureImpl::DesktopCaptureImpl(const int32_t aId, const char* aUniqueId,
@@ -472,10 +495,12 @@ DesktopCaptureImpl::DesktopCaptureImpl(const int32_t aId, const char* aUniqueId,
       mDeviceType(aType),
       mControlThread(mozilla::GetCurrentSerialEventTarget()),
       mNextFrameMinimumTime(Timestamp::Zero()),
-      mRunning(false),
       mCallbacks("DesktopCaptureImpl::mCallbacks") {}
 
-DesktopCaptureImpl::~DesktopCaptureImpl() { MOZ_ASSERT(!mCaptureThread); }
+DesktopCaptureImpl::~DesktopCaptureImpl() {
+  MOZ_ASSERT(!mCaptureThread);
+  MOZ_ASSERT(!mRequestedCapability);
+}
 
 void DesktopCaptureImpl::RegisterCaptureDataCallback(
     rtc::VideoSinkInterface<VideoFrame>* aDataCallback) {
@@ -511,61 +536,69 @@ bool DesktopCaptureImpl::SetApplyRotation(bool aEnable) { return true; }
 
 int32_t DesktopCaptureImpl::StartCapture(
     const VideoCaptureCapability& aCapability) {
-  MOZ_DIAGNOSTIC_ASSERT(mControlThread->IsOnCurrentThread());
+  RTC_DCHECK_RUN_ON(&mControlThreadChecker);
 
-  if (mRunning) {
+  if (mRequestedCapability) {
+    // Already initialized
+    MOZ_ASSERT(*mRequestedCapability == aCapability);
+
     return 0;
   }
 
-  if (int32_t err = EnsureCapturer(); err) {
-    return err;
+  MOZ_ASSERT(!mCaptureThread);
+
+  DesktopCapturer::SourceId sourceId = std::stoi(mDeviceUniqueId);
+  std::unique_ptr capturer = CreateDesktopCapturerAndThread(
+      mDeviceType, sourceId, getter_AddRefs(mCaptureThread));
+
+  MOZ_ASSERT(!capturer == !mCaptureThread);
+  if (!capturer) {
+    return -1;
   }
 
-  mRequestedCapability = aCapability;
-
-  MOZ_DIAGNOSTIC_ASSERT(!mCaptureThread);
+  mRequestedCapability = mozilla::Some(aCapability);
   mCaptureThreadChecker.Detach();
-  nsIThreadManager::ThreadCreationOptions options;
-#ifdef XP_WIN
-  // Windows desktop capture needs a UI thread
-  options.isUiThread = true;
-#endif
-  NS_NewNamedThread(
-      "DesktopCapture", getter_AddRefs(mCaptureThread),
-      NS_NewRunnableFunction(
-          "DesktopCaptureImpl::InitOnThread",
-          [this, self = RefPtr(this),
-           maxFps = std::max(aCapability.maxFPS, 1)] { InitOnThread(maxFps); }),
-      options);
 
-  mRunning = true;
+  MOZ_ALWAYS_SUCCEEDS(mCaptureThread->Dispatch(NS_NewRunnableFunction(
+      "DesktopCaptureImpl::InitOnThread",
+      [this, self = RefPtr(this), capturer = std::move(capturer),
+       maxFps = std::max(aCapability.maxFPS, 1)]() mutable {
+        InitOnThread(std::move(capturer), maxFps);
+      })));
 
   return 0;
 }
 
 bool DesktopCaptureImpl::FocusOnSelectedSource() {
-  MOZ_DIAGNOSTIC_ASSERT(mControlThread->IsOnCurrentThread());
-  if (uint32_t err = EnsureCapturer(); err) {
+  RTC_DCHECK_RUN_ON(&mControlThreadChecker);
+  if (!mCaptureThread) {
+    MOZ_ASSERT_UNREACHABLE(
+        "FocusOnSelectedSource must be called after StartCapture");
     return false;
   }
 
-  return mCapturer->FocusOnSelectedSource();
+  bool success = false;
+  MOZ_ALWAYS_SUCCEEDS(mozilla::SyncRunnable::DispatchToThread(
+      mCaptureThread, NS_NewRunnableFunction(__func__, [&] {
+        RTC_DCHECK_RUN_ON(&mCaptureThreadChecker);
+        MOZ_ASSERT(mCapturer);
+        success = mCapturer && mCapturer->FocusOnSelectedSource();
+      })));
+  return success;
 }
 
 int32_t DesktopCaptureImpl::StopCapture() {
-  MOZ_DIAGNOSTIC_ASSERT(mControlThread->IsOnCurrentThread());
-  if (mCaptureThread) {
+  RTC_DCHECK_RUN_ON(&mControlThreadChecker);
+  if (mRequestedCapability) {
     // Sync-cancel the capture timer so no CaptureFrame calls will come in after
     // we return.
     MOZ_ALWAYS_SUCCEEDS(mozilla::SyncRunnable::DispatchToThread(
         mCaptureThread,
         NewRunnableMethod(__func__, this,
                           &DesktopCaptureImpl::ShutdownOnThread)));
-  }
 
-  // Capturer dtor blocks until fully shut down. TabCapturerWebrtc needs the
-  // capture thread to be alive.
-  mCapturer = nullptr;
+    mRequestedCapability = mozilla::Nothing();
+  }
 
   if (mCaptureThread) {
     // CaptureThread shutdown.
@@ -573,7 +606,6 @@ int32_t DesktopCaptureImpl::StopCapture() {
     mCaptureThread = nullptr;
   }
 
-  mRunning = false;
   return 0;
 }
 
@@ -589,7 +621,7 @@ int32_t DesktopCaptureImpl::CaptureSettings(VideoCaptureCapability& aSettings) {
 
 void DesktopCaptureImpl::OnCaptureResult(DesktopCapturer::Result aResult,
                                          std::unique_ptr<DesktopFrame> aFrame) {
-  MOZ_ASSERT(mCaptureThreadChecker.IsCurrent());
+  RTC_DCHECK_RUN_ON(&mCaptureThreadChecker);
   if (!aFrame) {
     return;
   }
@@ -674,7 +706,7 @@ void DesktopCaptureImpl::OnCaptureResult(DesktopCapturer::Result aResult,
 }
 
 void DesktopCaptureImpl::NotifyOnFrame(const VideoFrame& aFrame) {
-  MOZ_ASSERT(mCaptureThreadChecker.IsCurrent());
+  RTC_DCHECK_RUN_ON(&mCaptureThreadChecker);
   MOZ_ASSERT(Timestamp::Millis(aFrame.render_time_ms()) >
              mNextFrameMinimumTime);
   // Set the next frame's minimum time to ensure two consecutive frames don't
@@ -687,8 +719,11 @@ void DesktopCaptureImpl::NotifyOnFrame(const VideoFrame& aFrame) {
   }
 }
 
-void DesktopCaptureImpl::InitOnThread(int aFramerate) {
-  MOZ_DIAGNOSTIC_ASSERT(mCaptureThreadChecker.IsCurrent());
+void DesktopCaptureImpl::InitOnThread(
+    std::unique_ptr<DesktopCapturer> aCapturer, int aFramerate) {
+  RTC_DCHECK_RUN_ON(&mCaptureThreadChecker);
+
+  mCapturer = std::move(aCapturer);
 
   // We need to call Start on the same thread we call CaptureFrame on.
   mCapturer->Start(this);
@@ -701,21 +736,21 @@ void DesktopCaptureImpl::InitOnThread(int aFramerate) {
 }
 
 void DesktopCaptureImpl::ShutdownOnThread() {
-  MOZ_DIAGNOSTIC_ASSERT(mCaptureThreadChecker.IsCurrent());
+  RTC_DCHECK_RUN_ON(&mCaptureThreadChecker);
   if (mCaptureTimer) {
     mCaptureTimer->Cancel();
     mCaptureTimer = nullptr;
   }
+
+  // DesktopCapturer dtor blocks until fully shut down. TabCapturerWebrtc needs
+  // the capture thread to be alive.
+  mCapturer = nullptr;
+
   mRequestedCaptureInterval = mozilla::Nothing();
 }
 
 void DesktopCaptureImpl::CaptureFrameOnThread() {
-  MOZ_DIAGNOSTIC_ASSERT(mCaptureThreadChecker.IsCurrent());
-
-#if defined(WEBRTC_MAC)
-  // Give cycles to the RunLoop so frame callbacks can happen
-  CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.01, true);
-#endif
+  RTC_DCHECK_RUN_ON(&mCaptureThreadChecker);
 
   auto start = mozilla::TimeStamp::Now();
   mCapturer->CaptureFrame();

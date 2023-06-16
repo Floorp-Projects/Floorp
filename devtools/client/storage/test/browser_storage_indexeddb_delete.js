@@ -6,14 +6,13 @@
 
 // Test deleting indexedDB database from the tree using context menu
 
-add_task(async function() {
+add_task(async function () {
   await openTabAndSetupStorage(
     MAIN_DOMAIN_SECURED + "storage-empty-objectstores.html"
   );
 
-  const contextMenu = gPanelWindow.document.getElementById(
-    "storage-tree-popup"
-  );
+  const contextMenu =
+    gPanelWindow.document.getElementById("storage-tree-popup");
   const menuDeleteDb = contextMenu.querySelector("#storage-tree-popup-delete");
 
   info("test state before delete");

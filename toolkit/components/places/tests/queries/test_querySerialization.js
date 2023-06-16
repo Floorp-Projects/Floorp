@@ -86,11 +86,11 @@ const querySwitches = [
     desc: "nsINavHistoryQuery.hasBeginTime",
     matches: flagSwitchMatches,
     runs: [
-      function(aQuery, aQueryOptions) {
+      function (aQuery, aQueryOptions) {
         aQuery.beginTime = Date.now() * 1000;
         aQuery.beginTimeReference = Ci.nsINavHistoryQuery.TIME_RELATIVE_EPOCH;
       },
-      function(aQuery, aQueryOptions) {
+      function (aQuery, aQueryOptions) {
         aQuery.beginTime = Date.now() * 1000;
         aQuery.beginTimeReference = Ci.nsINavHistoryQuery.TIME_RELATIVE_TODAY;
       },
@@ -103,11 +103,11 @@ const querySwitches = [
     desc: "nsINavHistoryQuery.hasEndTime",
     matches: flagSwitchMatches,
     runs: [
-      function(aQuery, aQueryOptions) {
+      function (aQuery, aQueryOptions) {
         aQuery.endTime = Date.now() * 1000;
         aQuery.endTimeReference = Ci.nsINavHistoryQuery.TIME_RELATIVE_EPOCH;
       },
-      function(aQuery, aQueryOptions) {
+      function (aQuery, aQueryOptions) {
         aQuery.endTime = Date.now() * 1000;
         aQuery.endTimeReference = Ci.nsINavHistoryQuery.TIME_RELATIVE_TODAY;
       },
@@ -120,10 +120,10 @@ const querySwitches = [
     desc: "nsINavHistoryQuery.hasSearchTerms",
     matches: flagSwitchMatches,
     runs: [
-      function(aQuery, aQueryOptions) {
+      function (aQuery, aQueryOptions) {
         aQuery.searchTerms = "shrimp and white wine";
       },
-      function(aQuery, aQueryOptions) {
+      function (aQuery, aQueryOptions) {
         aQuery.searchTerms = "";
       },
     ],
@@ -135,15 +135,15 @@ const querySwitches = [
     desc: "nsINavHistoryQuery.hasDomain",
     matches: flagSwitchMatches,
     runs: [
-      function(aQuery, aQueryOptions) {
+      function (aQuery, aQueryOptions) {
         aQuery.domain = "mozilla.com";
         aQuery.domainIsHost = false;
       },
-      function(aQuery, aQueryOptions) {
+      function (aQuery, aQueryOptions) {
         aQuery.domain = "www.mozilla.com";
         aQuery.domainIsHost = true;
       },
-      function(aQuery, aQueryOptions) {
+      function (aQuery, aQueryOptions) {
         aQuery.domain = "";
       },
     ],
@@ -155,7 +155,7 @@ const querySwitches = [
     desc: "nsINavHistoryQuery.hasUri",
     matches: flagSwitchMatches,
     runs: [
-      function(aQuery, aQueryOptions) {
+      function (aQuery, aQueryOptions) {
         aQuery.uri = uri("http://mozilla.com");
       },
     ],
@@ -167,11 +167,11 @@ const querySwitches = [
     desc: "nsINavHistoryQuery.hasAnnotation",
     matches: flagSwitchMatches,
     runs: [
-      function(aQuery, aQueryOptions) {
+      function (aQuery, aQueryOptions) {
         aQuery.annotation = "bookmarks/toolbarFolder";
         aQuery.annotationIsNot = false;
       },
-      function(aQuery, aQueryOptions) {
+      function (aQuery, aQueryOptions) {
         aQuery.annotation = "bookmarks/toolbarFolder";
         aQuery.annotationIsNot = true;
       },
@@ -184,7 +184,7 @@ const querySwitches = [
     desc: "nsINavHistoryQuery.minVisits",
     matches: simplePropertyMatches,
     runs: [
-      function(aQuery, aQueryOptions) {
+      function (aQuery, aQueryOptions) {
         aQuery.minVisits = 0x7fffffff; // 2^31 - 1
       },
     ],
@@ -195,7 +195,7 @@ const querySwitches = [
     desc: "nsINavHistoryQuery.maxVisits",
     matches: simplePropertyMatches,
     runs: [
-      function(aQuery, aQueryOptions) {
+      function (aQuery, aQueryOptions) {
         aQuery.maxVisits = 0x7fffffff; // 2^31 - 1
       },
     ],
@@ -206,7 +206,7 @@ const querySwitches = [
     desc: "nsINavHistoryQuery.onlyBookmarked",
     matches: simplePropertyMatches,
     runs: [
-      function(aQuery, aQueryOptions) {
+      function (aQuery, aQueryOptions) {
         aQuery.onlyBookmarked = true;
       },
     ],
@@ -233,13 +233,13 @@ const querySwitches = [
       return true;
     },
     runs: [
-      function(aQuery, aQueryOptions) {
+      function (aQuery, aQueryOptions) {
         aQuery.setParents([]);
       },
-      function(aQuery, aQueryOptions) {
+      function (aQuery, aQueryOptions) {
         aQuery.setParents([PlacesUtils.bookmarks.rootGuid]);
       },
-      function(aQuery, aQueryOptions) {
+      function (aQuery, aQueryOptions) {
         aQuery.setParents([
           PlacesUtils.bookmarks.rootGuid,
           PlacesUtils.bookmarks.tagsGuid,
@@ -272,13 +272,13 @@ const querySwitches = [
       return true;
     },
     runs: [
-      function(aQuery, aQueryOptions) {
+      function (aQuery, aQueryOptions) {
         aQuery.tags = [];
       },
-      function(aQuery, aQueryOptions) {
+      function (aQuery, aQueryOptions) {
         aQuery.tags = [""];
       },
-      function(aQuery, aQueryOptions) {
+      function (aQuery, aQueryOptions) {
         aQuery.tags = [
           "foo",
           "七難",
@@ -291,7 +291,7 @@ const querySwitches = [
           "あいうえお",
         ];
       },
-      function(aQuery, aQueryOptions) {
+      function (aQuery, aQueryOptions) {
         aQuery.tags = [
           "foo",
           "七難",
@@ -329,13 +329,13 @@ const querySwitches = [
       return true;
     },
     runs: [
-      function(aQuery, aQueryOptions) {
+      function (aQuery, aQueryOptions) {
         aQuery.setTransitions([]);
       },
-      function(aQuery, aQueryOptions) {
+      function (aQuery, aQueryOptions) {
         aQuery.setTransitions([Ci.nsINavHistoryService.TRANSITION_DOWNLOAD]);
       },
-      function(aQuery, aQueryOptions) {
+      function (aQuery, aQueryOptions) {
         aQuery.setTransitions([
           Ci.nsINavHistoryService.TRANSITION_TYPED,
           Ci.nsINavHistoryService.TRANSITION_BOOKMARK,
@@ -357,7 +357,7 @@ const queryOptionSwitches = [
       return false;
     },
     runs: [
-      function(aQuery, aQueryOptions) {
+      function (aQuery, aQueryOptions) {
         aQueryOptions.sortingMode = aQueryOptions.SORT_BY_DATE_ASCENDING;
       },
     ],
@@ -369,7 +369,7 @@ const queryOptionSwitches = [
     desc: "nsINavHistoryQueryOptions.resultType",
     matches: simplePropertyMatches,
     runs: [
-      function(aQuery, aQueryOptions) {
+      function (aQuery, aQueryOptions) {
         aQueryOptions.resultType = aQueryOptions.RESULTS_AS_URI;
       },
     ],
@@ -380,7 +380,7 @@ const queryOptionSwitches = [
     desc: "nsINavHistoryQueryOptions.excludeItems",
     matches: simplePropertyMatches,
     runs: [
-      function(aQuery, aQueryOptions) {
+      function (aQuery, aQueryOptions) {
         aQueryOptions.excludeItems = true;
       },
     ],
@@ -391,7 +391,7 @@ const queryOptionSwitches = [
     desc: "nsINavHistoryQueryOptions.excludeQueries",
     matches: simplePropertyMatches,
     runs: [
-      function(aQuery, aQueryOptions) {
+      function (aQuery, aQueryOptions) {
         aQueryOptions.excludeQueries = true;
       },
     ],
@@ -402,7 +402,7 @@ const queryOptionSwitches = [
     desc: "nsINavHistoryQueryOptions.expandQueries",
     matches: simplePropertyMatches,
     runs: [
-      function(aQuery, aQueryOptions) {
+      function (aQuery, aQueryOptions) {
         aQueryOptions.expandQueries = true;
       },
     ],
@@ -413,7 +413,7 @@ const queryOptionSwitches = [
     desc: "nsINavHistoryQueryOptions.includeHidden",
     matches: simplePropertyMatches,
     runs: [
-      function(aQuery, aQueryOptions) {
+      function (aQuery, aQueryOptions) {
         aQueryOptions.includeHidden = true;
       },
     ],
@@ -424,7 +424,7 @@ const queryOptionSwitches = [
     desc: "nsINavHistoryQueryOptions.maxResults",
     matches: simplePropertyMatches,
     runs: [
-      function(aQuery, aQueryOptions) {
+      function (aQuery, aQueryOptions) {
         aQueryOptions.maxResults = 0xffffffff; // 2^32 - 1
       },
     ],
@@ -435,10 +435,10 @@ const queryOptionSwitches = [
     desc: "nsINavHistoryQueryOptions.queryType",
     matches: simplePropertyMatches,
     runs: [
-      function(aQuery, aQueryOptions) {
+      function (aQuery, aQueryOptions) {
         aQueryOptions.queryType = aQueryOptions.QUERY_TYPE_HISTORY;
       },
-      function(aQuery, aQueryOptions) {
+      function (aQuery, aQueryOptions) {
         aQueryOptions.queryType = aQueryOptions.QUERY_TYPE_UNIFIED;
       },
     ],
@@ -665,13 +665,13 @@ function runQuerySequences(aHowManyLo, aHowManyHi) {
     print("CHOOSING " + howMany + " SWITCHES");
 
     // Choose all subsets of size howMany from allSwitches.
-    choose(allSwitches, howMany, function(chosenSwitches) {
+    choose(allSwitches, howMany, function (chosenSwitches) {
       print(numIters);
       numIters++;
 
       // Collect the runs.
       // runs = [ [runs from switch 1], ..., [runs from switch howMany] ]
-      var runs = chosenSwitches.map(function(s) {
+      var runs = chosenSwitches.map(function (s) {
         if (s.desc) {
           print("  " + s.desc);
         }
@@ -687,7 +687,7 @@ function runQuerySequences(aHowManyLo, aHowManyHi) {
       //   ...,
       //   [switch 1 run N, switch 2 run N, ..., switch howMany run N ],
       // ]
-      cartProd(runs, function(runSet) {
+      cartProd(runs, function (runSet) {
         // Create a new query, apply the switches in runSet, and test it.
         var query = PlacesUtils.history.getNewQuery();
         var opts = PlacesUtils.history.getNewQueryOptions();

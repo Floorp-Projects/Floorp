@@ -2,7 +2,7 @@
  * Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
-onmessage = function(event) {
+onmessage = function (event) {
   var n = parseInt(event.data);
 
   if (n < 2) {
@@ -13,7 +13,7 @@ onmessage = function(event) {
   var results = [];
   for (var i = 1; i <= 2; i++) {
     var worker = new Worker("fibonacci_worker.js");
-    worker.onmessage = function(msg) {
+    worker.onmessage = function (msg) {
       results.push(parseInt(msg.data));
       if (results.length == 2) {
         postMessage(results[0] + results[1]);

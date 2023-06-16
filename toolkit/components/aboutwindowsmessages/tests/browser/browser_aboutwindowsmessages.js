@@ -14,9 +14,8 @@ async function resizeWindow(windowToResize, width, height) {
 
 add_task(async () => {
   const TEST_LINK = "https://example.com/";
-  let originalBrowserWindow = Services.wm.getMostRecentWindow(
-    "navigator:browser"
-  );
+  let originalBrowserWindow =
+    Services.wm.getMostRecentWindow("navigator:browser");
   let originalBrowser = originalBrowserWindow.gBrowser;
   // Resize this window so we can check for WM_NCCALCSIZE events below
   await resizeWindow(originalBrowserWindow, 500, 400);
@@ -25,7 +24,7 @@ add_task(async () => {
   let newWindow = await BrowserTestUtils.openNewBrowserWindow({
     url: TEST_LINK,
   });
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await BrowserTestUtils.closeWindow(newWindow);
   });
   await BrowserTestUtils.withNewTab(

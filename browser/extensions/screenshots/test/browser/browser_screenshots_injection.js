@@ -32,7 +32,7 @@ add_task(async function test_inject_srcdoc() {
         return new Promise(resolve => {
           // We can't pass `resolve` directly because of sandboxing.
           // `responseHandler` gets invoked from the content page.
-          content.wrappedJSObject.responseHandler = Cu.exportFunction(function(
+          content.wrappedJSObject.responseHandler = Cu.exportFunction(function (
             arg
           ) {
             resolve(arg);

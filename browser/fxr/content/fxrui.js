@@ -81,7 +81,7 @@ function setupBrowser() {
     browser.classList.add("browser_instance");
     document.getElementById("eBrowserContainer").appendChild(browser);
 
-    browser.loadUrlWithSystemPrincipal = function(url) {
+    browser.loadUrlWithSystemPrincipal = function (url) {
       this.loadURI(url, { triggeringPrincipal: gSystemPrincipal });
     };
 
@@ -191,7 +191,7 @@ function setupNavButtons() {
 
 function setupUrlBar() {
   // Navigate to new value when the user presses "Enter"
-  urlInput.addEventListener("keypress", async function(e) {
+  urlInput.addEventListener("keypress", async function (e) {
     if (e.key == "Enter") {
       // Use the URL Fixup Service in case the user wants to search instead
       // of directly navigating to a location.
@@ -215,7 +215,7 @@ function setupUrlBar() {
   });
 
   // Upon focus, highlight the whole URL
-  urlInput.addEventListener("focus", function() {
+  urlInput.addEventListener("focus", function () {
     urlInput.select();
   });
 }

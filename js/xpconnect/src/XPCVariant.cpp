@@ -20,6 +20,7 @@
 
 using namespace JS;
 using namespace mozilla;
+using namespace xpc;
 
 NS_IMPL_CLASSINFO(XPCVariant, nullptr, 0, XPCVARIANT_CID)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(XPCVariant)
@@ -49,7 +50,7 @@ XPCVariant::XPCVariant(JSContext* cx, const Value& aJSVal) : mJSVal(aJSVal) {
 
     JSObject* unwrapped =
         js::CheckedUnwrapDynamic(obj, cx, /* stopAtWindowProxy = */ false);
-    mReturnRawObject = !(unwrapped && IS_WN_REFLECTOR(unwrapped));
+    mReturnRawObject = !(unwrapped && IsWrappedNativeReflector(unwrapped));
   } else {
     mReturnRawObject = false;
   }

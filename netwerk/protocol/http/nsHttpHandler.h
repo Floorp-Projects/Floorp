@@ -778,8 +778,9 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
 
  private:
   [[nodiscard]] nsresult SpeculativeConnectInternal(
-      nsIURI* aURI, nsIPrincipal* aPrincipal, nsIInterfaceRequestor* aCallbacks,
-      bool anonymous);
+      nsIURI* aURI, nsIPrincipal* aPrincipal,
+      Maybe<OriginAttributes>&& aOriginAttributes,
+      nsIInterfaceRequestor* aCallbacks, bool anonymous);
   void ExcludeHttp2OrHttp3Internal(const nsHttpConnectionInfo* ci);
 
   // State for generating channelIds
@@ -857,7 +858,29 @@ class nsHttpsHandler : public nsIHttpProtocolHandler,
   NS_DECL_NSIPROTOCOLHANDLER
   NS_FORWARD_NSIPROXIEDPROTOCOLHANDLER(gHttpHandler->)
   NS_FORWARD_NSIHTTPPROTOCOLHANDLER(gHttpHandler->)
-  NS_FORWARD_NSISPECULATIVECONNECT(gHttpHandler->)
+
+  NS_IMETHOD SpeculativeConnect(nsIURI* aURI, nsIPrincipal* aPrincipal,
+                                nsIInterfaceRequestor* aCallbacks,
+                                bool aAnonymous) override {
+    return gHttpHandler->SpeculativeConnect(aURI, aPrincipal, aCallbacks,
+                                            aAnonymous);
+  }
+
+  NS_IMETHOD SpeculativeConnectWithOriginAttributes(
+      nsIURI* aURI, JS::Handle<JS::Value> originAttributes,
+      nsIInterfaceRequestor* aCallbacks, bool aAnonymous,
+      JSContext* cx) override {
+    return gHttpHandler->SpeculativeConnectWithOriginAttributes(
+        aURI, originAttributes, aCallbacks, aAnonymous, cx);
+  }
+
+  NS_IMETHOD_(void)
+  SpeculativeConnectWithOriginAttributesNative(
+      nsIURI* aURI, mozilla::OriginAttributes&& originAttributes,
+      nsIInterfaceRequestor* aCallbacks, bool aAnonymous) override {
+    gHttpHandler->SpeculativeConnectWithOriginAttributesNative(
+        aURI, std::move(originAttributes), aCallbacks, aAnonymous);
+  }
 
   nsHttpsHandler() = default;
 

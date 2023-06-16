@@ -16,8 +16,9 @@ class CSSKeyframeList;
 
 class CSSKeyframesRule final : public css::Rule {
  public:
-  CSSKeyframesRule(RefPtr<RawServoKeyframesRule> aRawRule, StyleSheet* aSheet,
-                   css::Rule* aParentRule, uint32_t aLine, uint32_t aColumn);
+  CSSKeyframesRule(RefPtr<StyleLockedKeyframesRule> aRawRule,
+                   StyleSheet* aSheet, css::Rule* aParentRule, uint32_t aLine,
+                   uint32_t aColumn);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CSSKeyframesRule, css::Rule)
@@ -32,8 +33,8 @@ class CSSKeyframesRule final : public css::Rule {
 
   // WebIDL interface
   StyleCssRuleType Type() const final;
-  const RawServoKeyframesRule* Raw() const { return mRawRule.get(); }
-  void SetRawAfterClone(RefPtr<RawServoKeyframesRule>);
+  const StyleLockedKeyframesRule* Raw() const { return mRawRule.get(); }
+  void SetRawAfterClone(RefPtr<StyleLockedKeyframesRule>);
 
   void GetCssText(nsACString& aCssText) const final;
   void GetName(nsAString& aName) const;
@@ -60,7 +61,7 @@ class CSSKeyframesRule final : public css::Rule {
 
   virtual ~CSSKeyframesRule();
 
-  RefPtr<RawServoKeyframesRule> mRawRule;
+  RefPtr<StyleLockedKeyframesRule> mRawRule;
   RefPtr<CSSKeyframeList> mKeyframeList;  // lazily constructed
 };
 

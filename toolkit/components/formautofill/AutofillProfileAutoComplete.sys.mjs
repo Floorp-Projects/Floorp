@@ -62,9 +62,8 @@ AutocompleteFactory.prototype = {
     let proto = targetConstructor.prototype;
     this._classID = proto.classID;
 
-    let factory = lazy.ComponentUtils.generateSingletonFactory(
-      targetConstructor
-    );
+    let factory =
+      lazy.ComponentUtils.generateSingletonFactory(targetConstructor);
     this._factory = factory;
 
     let registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);

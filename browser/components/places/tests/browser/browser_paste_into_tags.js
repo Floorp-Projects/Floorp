@@ -7,7 +7,7 @@
 const TEST_URL = Services.io.newURI("http://example.com/");
 const MOZURISPEC = Services.io.newURI("http://mozilla.com/");
 
-add_task(async function() {
+add_task(async function () {
   let organizer = await promiseLibrary();
 
   ok(PlacesUtils, "PlacesUtils in scope");

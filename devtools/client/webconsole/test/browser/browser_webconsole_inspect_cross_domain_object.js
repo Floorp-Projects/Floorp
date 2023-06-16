@@ -10,7 +10,7 @@ const TEST_URI =
   "https://example.com/browser/devtools/client/webconsole/" +
   "test/browser/test-inspect-cross-domain-objects-top.html";
 
-add_task(async function() {
+add_task(async function () {
   requestLongerTimeout(2);
 
   // Bug 1518138: GC heuristics are broken for this test, so that the test

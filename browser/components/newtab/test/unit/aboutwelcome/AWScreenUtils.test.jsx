@@ -90,9 +90,8 @@ describe("AWScreenUtils", () => {
           },
         };
       });
-      const evaluatedStrings = await AWScreenUtils.evaluateTargetingAndRemoveScreens(
-        screens
-      );
+      const evaluatedStrings =
+        await AWScreenUtils.evaluateTargetingAndRemoveScreens(screens);
       assert.deepEqual(evaluatedStrings, expectedScreens);
     });
     it("should not remove screens with no targeting", async () => {
@@ -119,9 +118,8 @@ describe("AWScreenUtils", () => {
           }
           return targeting;
         });
-      const evaluatedStrings = await AWScreenUtils.evaluateTargetingAndRemoveScreens(
-        screens
-      );
+      const evaluatedStrings =
+        await AWScreenUtils.evaluateTargetingAndRemoveScreens(screens);
       assert.deepEqual(evaluatedStrings, expectedScreens);
     });
   });

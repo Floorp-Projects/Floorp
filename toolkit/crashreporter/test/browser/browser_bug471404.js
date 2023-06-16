@@ -1,5 +1,5 @@
 function check_clear_visible(browser, aVisible) {
-  return SpecialPowers.spawn(browser, [aVisible], function(aVisible) {
+  return SpecialPowers.spawn(browser, [aVisible], function (aVisible) {
     const doc = content.document;
     let visible = false;
     const reportListSubmitted = doc.getElementById("reportListSubmitted");
@@ -42,7 +42,7 @@ add_task(async function test() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function(browser) {
+    async function (browser) {
       for (let test of _tests) {
         // Run setup before loading about:crashes.
         if (test.setup) {

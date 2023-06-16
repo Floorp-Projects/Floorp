@@ -311,7 +311,8 @@ async function watchServiceWorkerTargets({
     "Set targetCommand.destroyServiceWorkersOnNavigation to " +
       destroyServiceWorkersOnNavigation
   );
-  targetCommand.destroyServiceWorkersOnNavigation = destroyServiceWorkersOnNavigation;
+  targetCommand.destroyServiceWorkersOnNavigation =
+    destroyServiceWorkersOnNavigation;
   await targetCommand.startListening();
 
   // Setup onAvailable & onDestroyed callbacks so that we can check how many
@@ -355,7 +356,7 @@ async function unregisterServiceWorker(tab, expectedPageUrl) {
  */
 async function waitForRegistrationReady(tab, expectedPageUrl) {
   await asyncWaitUntil(() =>
-    SpecialPowers.spawn(tab.linkedBrowser, [expectedPageUrl], function(_url) {
+    SpecialPowers.spawn(tab.linkedBrowser, [expectedPageUrl], function (_url) {
       try {
         const win = content.wrappedJSObject;
         const isExpectedUrl = win.location.href === _url;

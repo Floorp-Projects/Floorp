@@ -74,7 +74,7 @@ add_task(async function test_openPopup_requires_user_interaction() {
       <script src="panel.js"></script>
       </body></html>
       `,
-      "tab.js": function() {
+      "tab.js": function () {
         document.getElementById("openPageAction").addEventListener(
           "click",
           () => {
@@ -104,7 +104,7 @@ add_task(async function test_openPopup_requires_user_interaction() {
           });
         /* eslint-enable mozilla/balanced-listeners */
       },
-      "panel.js": function() {
+      "panel.js": function () {
         browser.runtime.sendMessage("from-panel");
       },
     },

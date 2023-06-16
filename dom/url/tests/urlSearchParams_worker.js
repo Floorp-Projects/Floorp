@@ -35,7 +35,7 @@ function runTest() {
   test();
 }
 
-onmessage = function() {
+onmessage = function () {
   let status = false;
   try {
     if (URLSearchParams instanceof Object) {

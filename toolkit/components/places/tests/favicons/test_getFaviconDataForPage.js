@@ -17,19 +17,17 @@ add_task(async function test_normal() {
       FAVICON_URI,
       true,
       PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
-      function() {
-        PlacesUtils.favicons.getFaviconDataForPage(pageURI, function(
-          aURI,
-          aDataLen,
-          aData,
-          aMimeType
-        ) {
-          Assert.ok(aURI.equals(FAVICON_URI));
-          Assert.equal(FAVICON_DATA.length, aDataLen);
-          Assert.ok(compareArrays(FAVICON_DATA, aData));
-          Assert.equal(FAVICON_MIMETYPE, aMimeType);
-          resolve();
-        });
+      function () {
+        PlacesUtils.favicons.getFaviconDataForPage(
+          pageURI,
+          function (aURI, aDataLen, aData, aMimeType) {
+            Assert.ok(aURI.equals(FAVICON_URI));
+            Assert.equal(FAVICON_DATA.length, aDataLen);
+            Assert.ok(compareArrays(FAVICON_DATA, aData));
+            Assert.equal(FAVICON_MIMETYPE, aMimeType);
+            resolve();
+          }
+        );
       },
       Services.scriptSecurityManager.getSystemPrincipal()
     );
@@ -40,19 +38,17 @@ add_task(async function test_missing() {
   let pageURI = NetUtil.newURI("http://example.com/missing");
 
   await new Promise(resolve => {
-    PlacesUtils.favicons.getFaviconDataForPage(pageURI, function(
-      aURI,
-      aDataLen,
-      aData,
-      aMimeType
-    ) {
-      // Check also the expected data types.
-      Assert.ok(aURI === null);
-      Assert.ok(aDataLen === 0);
-      Assert.ok(aData.length === 0);
-      Assert.ok(aMimeType === "");
-      resolve();
-    });
+    PlacesUtils.favicons.getFaviconDataForPage(
+      pageURI,
+      function (aURI, aDataLen, aData, aMimeType) {
+        // Check also the expected data types.
+        Assert.ok(aURI === null);
+        Assert.ok(aDataLen === 0);
+        Assert.ok(aData.length === 0);
+        Assert.ok(aMimeType === "");
+        resolve();
+      }
+    );
   });
 });
 

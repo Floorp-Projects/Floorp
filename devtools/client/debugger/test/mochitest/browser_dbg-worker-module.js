@@ -6,7 +6,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger("doc-module-worker.html");
   // reload the page
   await navigate(dbg, "doc-module-worker.html", "doc-module-worker.html");

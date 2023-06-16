@@ -159,8 +159,9 @@ class SessionHistoryListener extends Handler {
   }
 
   uninit() {
-    const sessionHistory = this.mm.docShell.QueryInterface(Ci.nsIWebNavigation)
-      .sessionHistory;
+    const sessionHistory = this.mm.docShell.QueryInterface(
+      Ci.nsIWebNavigation
+    ).sessionHistory;
     if (sessionHistory) {
       sessionHistory.legacySHistory.removeSHistoryListener(this);
     }

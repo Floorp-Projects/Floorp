@@ -929,7 +929,7 @@ fn apply_remote_items(db: &Conn, driver: &Driver, controller: &AbortController) 
     controller.err_if_aborted()?;
     db.exec(
         "UPDATE moz_places SET
-           recalc_frecency = 1
+           recalc_frecency = 1, recalc_alt_frecency = 1
          WHERE frecency <> 0 AND (
            id IN (
              SELECT oldPlaceId FROM itemsToApply
@@ -997,7 +997,7 @@ fn remove_local_items(
     debug!(driver, "Recalculating frecencies for removed bookmark URLs");
     let mut frecency_statement = db.prepare(format!(
         "UPDATE moz_places SET
-            recalc_frecency = 1
+            recalc_frecency = 1, recalc_alt_frecency = 1
          WHERE id IN (SELECT b.fk FROM moz_bookmarks b
                       WHERE b.guid IN ({})) AND
                frecency <> 0",

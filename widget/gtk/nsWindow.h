@@ -156,7 +156,7 @@ class nsWindow final : public nsBaseWidget {
   void SetModal(bool aModal) override;
   bool IsVisible() const override;
   bool IsMapped() const override;
-  void ConstrainPosition(bool aAllowSlop, int32_t* aX, int32_t* aY) override;
+  void ConstrainPosition(DesktopIntPoint&) override;
   void SetSizeConstraints(const SizeConstraints& aConstraints) override;
   void LockAspectRatio(bool aShouldLock) override;
   void Move(double aX, double aY) override;
@@ -177,6 +177,7 @@ class nsWindow final : public nsBaseWidget {
   LayoutDeviceIntRect GetClientBounds() override;
   LayoutDeviceIntSize GetClientSize() override;
   LayoutDeviceIntPoint GetClientOffset() override { return mClientOffset; }
+  LayoutDeviceIntPoint GetScreenEdgeSlop() override;
 
   // Recomputes the client offset according to our current window position.
   // If aNotify is true, NotifyWindowMoved will be called on client offset
@@ -672,6 +673,7 @@ class nsWindow final : public nsBaseWidget {
   bool mIsTransparent : 1;
   // We can expect at least one size-allocate event after early resizes.
   bool mHasReceivedSizeAllocate : 1;
+  bool mWidgetCursorLocked : 1;
 
   /*  Gkt creates popup in two incarnations - wl_subsurface and xdg_popup.
    *  Kind of popup is choosen before GdkWindow is mapped so we can change

@@ -9,7 +9,7 @@ const TEST_URL = `data:text/html;charset=utf-8,
   </video>
   <video id="no-children" controls></video>`;
 
-add_task(async function() {
+add_task(async function () {
   info("Test a <video> element with no children, showAllAnonymousContent=true");
   const { inspector, markup } = await setup({ showAllAnonymousContent: true });
 
@@ -29,7 +29,7 @@ add_task(async function() {
   assertContainerHasText(shadowRootContainer, "#shadow-root");
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test a <video> element with children, showAllAnonymousContent=true");
   const { inspector, markup } = await setup({ showAllAnonymousContent: true });
 
@@ -52,7 +52,7 @@ add_task(async function() {
   assertContainerHasText(divContainer, "some content");
 });
 
-add_task(async function() {
+add_task(async function () {
   info(
     "Test a <video> element with no children, showAllAnonymousContent=false"
   );
@@ -70,7 +70,7 @@ add_task(async function() {
   );
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test a <video> element with children, showAllAnonymousContent=false");
   const { inspector, markup } = await setup({
     showAllAnonymousContent: false,

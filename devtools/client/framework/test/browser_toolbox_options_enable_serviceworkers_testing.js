@@ -12,7 +12,7 @@ const TEST_URI =
   "browser_toolbox_options_enable_serviceworkers_testing.html";
 const ELEMENT_ID = "devtools-enable-serviceWorkersTesting";
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("dom.serviceWorkers.exemptFromPerDomainMax", true);
   await pushPref("dom.serviceWorkers.enabled", true);
   await pushPref("dom.serviceWorkers.testing.enabled", false);
@@ -55,7 +55,7 @@ function sendMessage(name) {
     return new Promise(resolve => {
       const channel = new content.MessageChannel();
       content.postMessage(nameChild, "*", [channel.port2]);
-      channel.port1.onmessage = function(msg) {
+      channel.port1.onmessage = function (msg) {
         resolve(msg.data);
         channel.port1.close();
       };

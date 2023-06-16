@@ -4,7 +4,7 @@
  * Bug 1325014 - Adding tab related to current tab inherits current tab's container usercontextid unless otherwise specified
  */
 
-add_task(async function() {
+add_task(async function () {
   let tab = BrowserTestUtils.addTab(gBrowser, "about:blank", {
     userContextId: 1,
   });

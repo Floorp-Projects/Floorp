@@ -7,7 +7,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   // Ensures the end panel is wide enough to show the inspector icon
   await pushPref("devtools.debugger.end-panel-size", 600);
   // Disable 3-pane inspector as it might trigger unwanted server communication.
@@ -103,7 +103,7 @@ add_task(async function() {
   );
 });
 
-add_task(async function() {
+add_task(async function () {
   // Disable 3-pane inspector as it might trigger unwanted server communication.
   await pushPref("devtools.inspector.three-pane-enabled", false);
 

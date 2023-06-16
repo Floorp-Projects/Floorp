@@ -147,7 +147,7 @@ TooltipTextProvider.prototype = {
     }
 
     return [titleText, XLinkTitleText, SVGTitleText, XULtooltiptextText].some(
-      function(t) {
+      function (t) {
         if (t && /\S/.test(t)) {
           // Make CRLF and CR render one line break each.
           textOut.value = t.replace(/\r\n?/g, "\n");

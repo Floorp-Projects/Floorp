@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   info("Check private browsing button existence and functionality");
   CustomizableUI.addWidgetToArea(
     "privatebrowsing-button",
@@ -26,7 +26,7 @@ add_task(async function() {
         privateWindow = aSubject;
         privateWindow.addEventListener(
           "load",
-          function() {
+          function () {
             is(
               privateWindow.location.href,
               AppConstants.BROWSER_CHROME_URL,

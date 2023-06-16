@@ -12,20 +12,15 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
   "https://example.com"
 );
 
-const {
-  handleInternally,
-  useHelperApp,
-  useSystemDefault,
-  saveToDisk,
-} = Ci.nsIHandlerInfo;
+const { handleInternally, useHelperApp, useSystemDefault, saveToDisk } =
+  Ci.nsIHandlerInfo;
 
 let MockFilePicker = SpecialPowers.MockFilePicker;
 MockFilePicker.init(window);
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.download.improvements_to_download_panel", true],
       ["browser.download.always_ask_before_handling_new_types", false],
       ["browser.download.useDownloadDir", false],
     ],
@@ -55,7 +50,7 @@ add_task(async function aDownloadSavedToDiskPromptsForFolder() {
     await publicList.removeFinished();
   });
   let filePickerShownPromise = new Promise(resolve => {
-    MockFilePicker.showCallback = function(fp) {
+    MockFilePicker.showCallback = function (fp) {
       setTimeout(resolve, 0);
       return Ci.nsIFilePicker.returnCancel;
     };
@@ -86,7 +81,7 @@ add_task(async function testFilesHandledInternally() {
   );
 
   let filePickerShown = false;
-  MockFilePicker.showCallback = function(fp) {
+  MockFilePicker.showCallback = function (fp) {
     filePickerShown = true;
     return Ci.nsIFilePicker.returnCancel;
   };
@@ -125,7 +120,7 @@ add_task(async function testFilesHandledBySystemDefaultApp() {
   ensureMIMEState({ preferredAction: useSystemDefault });
 
   let filePickerShown = false;
-  MockFilePicker.showCallback = function(fp) {
+  MockFilePicker.showCallback = function (fp) {
     filePickerShown = true;
     return Ci.nsIFilePicker.returnCancel;
   };
@@ -183,7 +178,7 @@ add_task(async function testFilesHandledByHelperApp() {
   });
 
   let filePickerShown = false;
-  MockFilePicker.showCallback = function(fp) {
+  MockFilePicker.showCallback = function (fp) {
     filePickerShown = true;
     return Ci.nsIFilePicker.returnCancel;
   };
@@ -239,7 +234,7 @@ async function setupFilePickerDirectory() {
 
   MockFilePicker.displayDirectory = saveDir;
   MockFilePicker.returnValue = MockFilePicker.returnOK;
-  MockFilePicker.showCallback = function(fp) {
+  MockFilePicker.showCallback = function (fp) {
     let file = saveDir.clone();
     file.append(fp.defaultString);
     MockFilePicker.setFiles([file]);

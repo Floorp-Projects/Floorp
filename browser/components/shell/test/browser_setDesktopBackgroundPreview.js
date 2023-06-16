@@ -6,7 +6,7 @@
  * correctly, without stretching
  */
 
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,

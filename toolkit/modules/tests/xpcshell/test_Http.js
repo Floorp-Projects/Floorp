@@ -53,7 +53,7 @@ function getDataChecker(
   aExpectedData,
   aExpectedMimeType = null
 ) {
-  return function(aRequest, aResponse) {
+  return function (aRequest, aResponse) {
     let body = new BinaryInputStream(aRequest.bodyInputStream);
     let bytes = [];
     let avail;
@@ -268,8 +268,8 @@ function run_test() {
   run_next_test();
 
   // Teardown.
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.prefs.clearUserPref(PREF);
-    server.stop(function() {});
+    server.stop(function () {});
   });
 }

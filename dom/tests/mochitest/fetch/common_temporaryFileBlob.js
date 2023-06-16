@@ -23,7 +23,7 @@ function test_fetch_basic() {
 
       var fr = new FileReader();
       fr.readAsText(blob);
-      fr.onload = function() {
+      fr.onload = function () {
         is(fr.result, data, "Data content matches");
         next();
       };
@@ -42,7 +42,7 @@ function test_xhr_basic() {
   xhr.open("POST", "/tests/dom/xhr/tests/temporaryFileBlob.sjs");
   xhr.send(data);
 
-  xhr.onreadystatechange = function() {
+  xhr.onreadystatechange = function () {
     if (xhr.readyState == 4) {
       let blob = xhr.response;
 
@@ -58,7 +58,7 @@ function test_xhr_basic() {
 
       var fr = new FileReader();
       fr.readAsText(blob);
-      fr.onload = function() {
+      fr.onload = function () {
         is(fr.result, data, "Data content matches");
         next();
       };
@@ -87,7 +87,7 @@ function test_response_basic() {
 
     var fr = new FileReader();
     fr.readAsText(blob);
-    fr.onload = function() {
+    fr.onload = function () {
       is(fr.result, data, "Data content matches");
       next();
     };
@@ -115,7 +115,7 @@ function test_request_basic() {
 
     var fr = new FileReader();
     fr.readAsText(blob);
-    fr.onload = function() {
+    fr.onload = function () {
       is(fr.result, data, "Data content matches");
       next();
     };
@@ -130,7 +130,7 @@ function generic_worker_test(title, what) {
   info(title);
 
   var w = new Worker("worker_temporaryFileBlob.js");
-  w.onmessage = function(e) {
+  w.onmessage = function (e) {
     if (e.data.type == "info") {
       info(e.data.msg);
     } else if (e.data.type == "check") {

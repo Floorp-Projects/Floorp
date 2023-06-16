@@ -6,13 +6,13 @@
 const TEST_URI =
   "http://example.com/browser/devtools/client/webconsole/test/browser/test-console.html";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Test that console.log with a string argument does not include quotes");
   let receivedMessages = waitForMessageByType(hud, "stringLog", ".console-api");
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.wrappedJSObject.stringLog();
   });
   await receivedMessages;
@@ -27,7 +27,7 @@ add_task(async function() {
     ".console-api"
   );
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
     const name = "";
     content.wrappedJSObject.console.log("hello", name);
   });
@@ -43,7 +43,7 @@ add_task(async function() {
     ".console-api"
   );
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
     content.wrappedJSObject.console.log({ a: "" });
   });
   await receivedMessages;

@@ -41,7 +41,7 @@ async function check_has_prior_cert_data(certStorage, expectedResult) {
   );
 }
 
-add_task(async function() {
+add_task(async function () {
   // Create an invalid database.
   let fileToCopy = do_get_file("test_cert_storage_broken_db.js");
   let dbDirectory = do_get_profile();

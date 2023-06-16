@@ -15,7 +15,7 @@ function modifySelection(s) {
   a.selectNode(d);
   g.removeAllRanges();
   g.addRange(a);
-  window.setTimeout(function() {
+  window.setTimeout(function () {
     e.remove();
     g.removeAllRanges();
     g.addRange(l);
@@ -144,10 +144,7 @@ async function testCopyPaste(isXHTML) {
   }
   function testSelectionToString(expected) {
     is(
-      window
-        .getSelection()
-        .toString()
-        .replace(/\r\n/g, "\n"),
+      window.getSelection().toString().replace(/\r\n/g, "\n"),
       expected,
       "Selection.toString"
     );

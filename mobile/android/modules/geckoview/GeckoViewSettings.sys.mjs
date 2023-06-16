@@ -7,20 +7,20 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyGetter(lazy, "MOBILE_USER_AGENT", function() {
+XPCOMUtils.defineLazyGetter(lazy, "MOBILE_USER_AGENT", function () {
   return Cc["@mozilla.org/network/protocol;1?name=http"].getService(
     Ci.nsIHttpProtocolHandler
   ).userAgent;
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "DESKTOP_USER_AGENT", function() {
+XPCOMUtils.defineLazyGetter(lazy, "DESKTOP_USER_AGENT", function () {
   return lazy.MOBILE_USER_AGENT.replace(
     /Android \d.+?; [a-zA-Z]+/,
     "X11; Linux x86_64"
   ).replace(/Gecko\/[0-9\.]+/, "Gecko/20100101");
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "VR_USER_AGENT", function() {
+XPCOMUtils.defineLazyGetter(lazy, "VR_USER_AGENT", function () {
   return lazy.MOBILE_USER_AGENT.replace(/Mobile/, "Mobile VR");
 });
 

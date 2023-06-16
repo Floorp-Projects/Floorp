@@ -1,5 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
-	"http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <!--
   vim:sw=4:ts=4:et:
  This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,283 +6,315 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -->
 <html lang="en-US">
-<head>
-<meta charset="UTF-8" />
-<title>Leak Gauge</title>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Leak Gauge</title>
 
-<style type="text/css">
-pre { margin: 0; }
-pre.output { border: medium solid; padding: 1em; margin: 1em; }
-</style>
-<script>
+    <style type="text/css">
+      pre {
+        margin: 0;
+      }
+      pre.output {
+        border: medium solid;
+        padding: 1em;
+        margin: 1em;
+      }
+    </style>
+    <script>
+      function runfile(file) {
+        var result = "Results of processing log " + file.fileName + " :\n";
 
-function runfile(file) {
-  var result = "Results of processing log " + file.fileName + " :\n";
+        var fileReader = new FileReader();
+        fileReader.onload = function (e) {
+          runContents(result, e.target.result);
+        };
+        fileReader.readAsText(file, "iso-8859-1");
+      }
 
-  var fileReader = new FileReader();
-  fileReader.onload = function(e) {
-    runContents(result, e.target.result);
-  };
-  fileReader.readAsText(file, "iso-8859-1");
-}
-
-function runContents(result, contents) {
-    // A hash of objects (keyed by the first word of the line in the log)
-    // that have two public methods, handle_line and dump (to be called using
-    // call, above), along with any private data they need.
-    var handlers = {
-        "DOMWINDOW": {
+      function runContents(result, contents) {
+        // A hash of objects (keyed by the first word of the line in the log)
+        // that have two public methods, handle_line and dump (to be called using
+        // call, above), along with any private data they need.
+        var handlers = {
+          DOMWINDOW: {
             count: 0,
             windows: {},
             handle_line(line) {
-                var match = line.match(/^([0-9a-f]*) (\S*)(.*)/);
-                if (match) {
-                    var addr = match[1];
-                    var verb = match[2];
-                    var rest = match[3];
-                    if (verb == "created") {
-                        let m = rest.match(/ outer=([0-9a-f]*)$/);
-                        if (!m)
-                            throw new Error("outer expected");
-                        this.windows[addr] = { outer: m[1] };
-                        ++this.count;
-                    } else if (verb == "destroyed") {
-                        delete this.windows[addr];
-                    } else if (verb == "SetNewDocument") {
-                        let m = rest.match(/^ (.*)$/);
-                        if (!m)
-                            throw new Error("URI expected");
-                        this.windows[addr][m[1]] = true;
-                    }
+              var match = line.match(/^([0-9a-f]*) (\S*)(.*)/);
+              if (match) {
+                var addr = match[1];
+                var verb = match[2];
+                var rest = match[3];
+                if (verb == "created") {
+                  let m = rest.match(/ outer=([0-9a-f]*)$/);
+                  if (!m) throw new Error("outer expected");
+                  this.windows[addr] = { outer: m[1] };
+                  ++this.count;
+                } else if (verb == "destroyed") {
+                  delete this.windows[addr];
+                } else if (verb == "SetNewDocument") {
+                  let m = rest.match(/^ (.*)$/);
+                  if (!m) throw new Error("URI expected");
+                  this.windows[addr][m[1]] = true;
                 }
+              }
             },
             dump() {
-                for (var addr in this.windows) {
-                    var winobj = this.windows[addr];
-                    var outer = winobj.outer;
-                    delete winobj.outer;
-                    result += "Leaked " + (outer == "0" ? "outer" : "inner") +
-                              " window " + addr + " " +
-                              (outer == "0" ? "" : "(outer " + outer + ") ") +
-                              "at address " + addr + ".\n";
-                    for (var uri in winobj) {
-                        result += " ... with URI \"" + uri + "\".\n";
-                    }
+              for (var addr in this.windows) {
+                var winobj = this.windows[addr];
+                var outer = winobj.outer;
+                delete winobj.outer;
+                result +=
+                  "Leaked " +
+                  (outer == "0" ? "outer" : "inner") +
+                  " window " +
+                  addr +
+                  " " +
+                  (outer == "0" ? "" : "(outer " + outer + ") ") +
+                  "at address " +
+                  addr +
+                  ".\n";
+                for (var uri in winobj) {
+                  result += ' ... with URI "' + uri + '".\n';
                 }
+              }
             },
             summary() {
-                result += "Leaked " + Object.keys(this.windows).length + " out of " +
-                          this.count + " DOM Windows\n";
+              result +=
+                "Leaked " +
+                Object.keys(this.windows).length +
+                " out of " +
+                this.count +
+                " DOM Windows\n";
             },
-        },
-        "DOCUMENT": {
+          },
+          DOCUMENT: {
             count: 0,
             docs: {},
             handle_line(line) {
-                var match = line.match(/^([0-9a-f]*) (\S*)(.*)/);
-                if (match) {
-                    var addr = match[1];
-                    var verb = match[2];
-                    var rest = match[3];
-                    if (verb == "created") {
-                        this.docs[addr] = {};
-                        ++this.count;
-                    } else if (verb == "destroyed") {
-                        delete this.docs[addr];
-                    } else if (verb == "ResetToURI" ||
-                               verb == "StartDocumentLoad") {
-                        var m = rest.match(/^ (.*)$/);
-                        if (!m)
-                            throw new Error("URI expected");
-                        var uri = m[1];
-                        var doc_info = this.docs[addr];
-                        doc_info[uri] = true;
-                        if ("nim" in doc_info) {
-                            doc_info.nim[uri] = true;
-                        }
-                    }
+              var match = line.match(/^([0-9a-f]*) (\S*)(.*)/);
+              if (match) {
+                var addr = match[1];
+                var verb = match[2];
+                var rest = match[3];
+                if (verb == "created") {
+                  this.docs[addr] = {};
+                  ++this.count;
+                } else if (verb == "destroyed") {
+                  delete this.docs[addr];
+                } else if (
+                  verb == "ResetToURI" ||
+                  verb == "StartDocumentLoad"
+                ) {
+                  var m = rest.match(/^ (.*)$/);
+                  if (!m) throw new Error("URI expected");
+                  var uri = m[1];
+                  var doc_info = this.docs[addr];
+                  doc_info[uri] = true;
+                  if ("nim" in doc_info) {
+                    doc_info.nim[uri] = true;
+                  }
                 }
+              }
             },
             dump() {
-                for (var addr in this.docs) {
-                    var doc = this.docs[addr];
-                    result += "Leaked document at address " + addr + ".\n";
-                    for (var uri in doc) {
-                        if (uri != "nim") {
-                            result += " ... with URI \"" + uri + "\".\n";
-                        }
-                    }
+              for (var addr in this.docs) {
+                var doc = this.docs[addr];
+                result += "Leaked document at address " + addr + ".\n";
+                for (var uri in doc) {
+                  if (uri != "nim") {
+                    result += ' ... with URI "' + uri + '".\n';
+                  }
                 }
+              }
             },
             summary() {
-                result += "Leaked " + Object.keys(this.docs).length + " out of " +
-                          this.count + " documents\n";
+              result +=
+                "Leaked " +
+                Object.keys(this.docs).length +
+                " out of " +
+                this.count +
+                " documents\n";
             },
-        },
-        "DOCSHELL": {
+          },
+          DOCSHELL: {
             count: 0,
             shells: {},
             handle_line(line) {
-                var match = line.match(/^([0-9a-f]*) (\S*)(.*)/);
-                if (match) {
-                    var addr = match[1];
-                    var verb = match[2];
-                    var rest = match[3];
-                    if (verb == "created") {
-                        this.shells[addr] = {};
-                        ++this.count;
-                    } else if (verb == "destroyed") {
-                        delete this.shells[addr];
-                    } else if (verb == "InternalLoad" ||
-                               verb == "SetCurrentURI") {
-                        var m = rest.match(/^ (.*)$/);
-                        if (!m)
-                            throw new Error("URI expected");
-                        this.shells[addr][m[1]] = true;
-                    }
+              var match = line.match(/^([0-9a-f]*) (\S*)(.*)/);
+              if (match) {
+                var addr = match[1];
+                var verb = match[2];
+                var rest = match[3];
+                if (verb == "created") {
+                  this.shells[addr] = {};
+                  ++this.count;
+                } else if (verb == "destroyed") {
+                  delete this.shells[addr];
+                } else if (verb == "InternalLoad" || verb == "SetCurrentURI") {
+                  var m = rest.match(/^ (.*)$/);
+                  if (!m) throw new Error("URI expected");
+                  this.shells[addr][m[1]] = true;
                 }
+              }
             },
             dump() {
-                for (var addr in this.shells) {
-                    var doc = this.shells[addr];
-                    result += "Leaked docshell at address " + addr + ".\n";
-                    for (var uri in doc) {
-                        result += " ... which loaded URI \"" + uri + "\".\n";
-                    }
+              for (var addr in this.shells) {
+                var doc = this.shells[addr];
+                result += "Leaked docshell at address " + addr + ".\n";
+                for (var uri in doc) {
+                  result += ' ... which loaded URI "' + uri + '".\n';
                 }
+              }
             },
             summary() {
-                result += "Leaked " + Object.keys(this.shells).length + " out of " +
-                          this.count + " docshells\n";
+              result +=
+                "Leaked " +
+                Object.keys(this.shells).length +
+                " out of " +
+                this.count +
+                " docshells\n";
             },
-        },
-        "NODEINFOMANAGER": {
+          },
+          NODEINFOMANAGER: {
             count: 0,
             nims: {},
             handle_line(line) {
-                var match = line.match(/^([0-9a-f]*) (\S*)(.*)/);
-                if (match) {
-                    var addr = match[1];
-                    var verb = match[2];
-                    var rest = match[3];
-                    if (verb == "created") {
-                        this.nims[addr] = {};
-                        ++this.count;
-                    } else if (verb == "destroyed") {
-                        delete this.nims[addr];
-                    } else if (verb == "Init") {
-                        var m = rest.match(/^ document=(.*)$/);
-                        if (!m)
-                            throw new Error("document pointer expected");
-                        var nim_info = this.nims[addr];
-                        var doc = m[1];
-                        if (doc != "0") {
-                            var doc_info = handlers.DOCUMENT.docs[doc];
-                            for (var uri in doc_info) {
-                                nim_info[uri] = true;
-                            }
-                            doc_info.nim = nim_info;
-                        }
+              var match = line.match(/^([0-9a-f]*) (\S*)(.*)/);
+              if (match) {
+                var addr = match[1];
+                var verb = match[2];
+                var rest = match[3];
+                if (verb == "created") {
+                  this.nims[addr] = {};
+                  ++this.count;
+                } else if (verb == "destroyed") {
+                  delete this.nims[addr];
+                } else if (verb == "Init") {
+                  var m = rest.match(/^ document=(.*)$/);
+                  if (!m) throw new Error("document pointer expected");
+                  var nim_info = this.nims[addr];
+                  var doc = m[1];
+                  if (doc != "0") {
+                    var doc_info = handlers.DOCUMENT.docs[doc];
+                    for (var uri in doc_info) {
+                      nim_info[uri] = true;
                     }
+                    doc_info.nim = nim_info;
+                  }
                 }
+              }
             },
             dump() {
-                for (var addr in this.nims) {
-                    var nim = this.nims[addr];
-                    result += "Leaked content nodes associated with node info manager at address " + addr + ".\n";
-                    for (var uri in nim) {
-                        result += " ... with document URI \"" + uri + "\".\n";
-                    }
+              for (var addr in this.nims) {
+                var nim = this.nims[addr];
+                result +=
+                  "Leaked content nodes associated with node info manager at address " +
+                  addr +
+                  ".\n";
+                for (var uri in nim) {
+                  result += ' ... with document URI "' + uri + '".\n';
                 }
+              }
             },
             summary() {
-                result += "Leaked content nodes in " + Object.keys(this.nims).length + " out of " +
-                          this.count + " documents\n";
+              result +=
+                "Leaked content nodes in " +
+                Object.keys(this.nims).length +
+                " out of " +
+                this.count +
+                " documents\n";
             },
-        },
-    };
+          },
+        };
 
-    var lines = contents.split(/[\r\n]+/);
-    for (var j in lines) {
-        var line = lines[j];
-        // strip off initial "-", thread id, and thread pointer; separate
-        // first word and rest
-        var matches = line.match(/^\-?[0-9]*\[[0-9a-f]*\]: (\S*) (.*)$/);
-        if (matches) {
+        var lines = contents.split(/[\r\n]+/);
+        for (var j in lines) {
+          var line = lines[j];
+          // strip off initial "-", thread id, and thread pointer; separate
+          // first word and rest
+          var matches = line.match(/^\-?[0-9]*\[[0-9a-f]*\]: (\S*) (.*)$/);
+          if (matches) {
             let handler = matches[1];
             var data = matches[2];
-            if (typeof(handlers[handler]) != "undefined") {
-                handlers[handler].handle_line(data);
+            if (typeof handlers[handler] != "undefined") {
+              handlers[handler].handle_line(data);
             }
+          }
         }
-    }
 
-    for (let handler in handlers)
-        handlers[handler].dump();
-    if (result.length)
+        for (let handler in handlers) handlers[handler].dump();
+        if (result.length) result += "\n";
+        result += "Summary:\n";
+        for (let handler in handlers) handlers[handler].summary();
         result += "\n";
-    result += "Summary:\n";
-    for (let handler in handlers)
-        handlers[handler].summary();
-    result += "\n";
 
-    var out = document.createElement("pre");
-    out.className = "output";
-    out.appendChild(document.createTextNode(result));
-    document.body.appendChild(out);
-}
+        var out = document.createElement("pre");
+        out.className = "output";
+        out.appendChild(document.createTextNode(result));
+        document.body.appendChild(out);
+      }
 
-function run() {
-    var input = document.getElementById("fileinput");
-    var files = input.files;
-    for (var i = 0; i < files.length; ++i)
-        runfile(files[i]);
-    // So the user can process the same filename again (after
-    // overwriting the log), clear the value on the form input so we
-    // will always get an onchange event.
-    input.value = "";
-}
+      function run() {
+        var input = document.getElementById("fileinput");
+        var files = input.files;
+        for (var i = 0; i < files.length; ++i) runfile(files[i]);
+        // So the user can process the same filename again (after
+        // overwriting the log), clear the value on the form input so we
+        // will always get an onchange event.
+        input.value = "";
+      }
+    </script>
+  </head>
+  <body>
+    <h1>Leak Gauge</h1>
 
-</script>
-</head>
-<body>
+    <pre>
+$Id: leak-gauge.html,v 1.8 2008/02/08 19:55:34 dbaron%dbaron.org Exp $</pre
+    >
 
-<h1>Leak Gauge</h1>
+    <p>
+      This script is designed to help testers isolate and simplify testcases for
+      many classes of leaks (those that involve large graphs of core data
+      structures) in Mozilla-based browsers. It is designed to print information
+      about what has leaked by processing a log taken while running the browser.
+      Such a log can be taken over a long session of normal browsing and then
+      the log can be processed to find sites that leak. Once a site is known to
+      leak, the logging can then be repeated to figure out under what conditions
+      the leak occurs.
+    </p>
 
-<pre>$Id: leak-gauge.html,v 1.8 2008/02/08 19:55:34 dbaron%dbaron.org Exp $</pre>
-
-<p>This script is designed to help testers isolate and simplify testcases
-for many classes of leaks (those that involve large graphs of core
-data structures) in Mozilla-based browsers.  It is designed to print
-information about what has leaked by processing a log taken while
-running the browser.  Such a log can be taken over a long session of
-normal browsing and then the log can be processed to find sites that
-leak.  Once a site is known to leak, the logging can then be repeated
-to figure out under what conditions the leak occurs.</p>
-
-<p>The way to create this log is to set the environment variables:</p>
-<pre>  MOZ_LOG=DOMLeak:5,DocumentLeak:5,nsDocShellLeak:5,NodeInfoManagerLeak:5
+    <p>The way to create this log is to set the environment variables:</p>
+    <pre>  MOZ_LOG=DOMLeak:5,DocumentLeak:5,nsDocShellLeak:5,NodeInfoManagerLeak:5
   MOZ_LOG_FILE=nspr.log     <i>(or any other filename of your choice)</i></pre>
-<p>in your shell and then run the program.</p>
-<ul>
-<li>In a Windows command prompt, set environment variables with
-<pre>    set VAR=value</pre></li>
-<li> In an sh-based shell such as bash, set environment variables with
-<pre>    export VAR=value</pre></li>
-<li>In a csh-based shell such as tcsh, set environment variables with
-<pre>    setenv VAR value</pre></li>
-</ul>
+    <p>in your shell and then run the program.</p>
+    <ul>
+      <li>
+        In a Windows command prompt, set environment variables with
+        <pre>    set VAR=value</pre>
+      </li>
+      <li>
+        In an sh-based shell such as bash, set environment variables with
+        <pre>    export VAR=value</pre>
+      </li>
+      <li>
+        In a csh-based shell such as tcsh, set environment variables with
+        <pre>    setenv VAR value</pre>
+      </li>
+    </ul>
 
-<p>Once you have this log from a complete run of the browser (you have
-to exit; otherwise it will look like everything leaked), you can load
-this page (be careful not to overwrite the log when starting the browser
-to load this page) and enter the filename of the log:</p>
+    <p>
+      Once you have this log from a complete run of the browser (you have to
+      exit; otherwise it will look like everything leaked), you can load this
+      page (be careful not to overwrite the log when starting the browser to
+      load this page) and enter the filename of the log:
+    </p>
 
-<p><input type="file" id="fileinput" onchange="run()"></p>
+    <p><input type="file" id="fileinput" onchange="run()" /></p>
 
-<p>Then you'll see the output below, which will tell you which of
-certain core objects leaked and the URLs associated with those
-objects.</p>
-
-</body>
+    <p>
+      Then you'll see the output below, which will tell you which of certain
+      core objects leaked and the URLs associated with those objects.
+    </p>
+  </body>
 </html>

@@ -509,7 +509,7 @@ nsresult nsComputedDOMStyle::GetPropertyValue(
 
   MOZ_ASSERT(entry->mGetter == &nsComputedDOMStyle::DummyGetter);
   Servo_GetResolvedValue(mComputedStyle, aPropID,
-                         mPresShell->StyleSet()->RawSet(), mElement, &aReturn);
+                         mPresShell->StyleSet()->RawData(), mElement, &aReturn);
   return NS_OK;
 }
 
@@ -1149,7 +1149,7 @@ void nsComputedDOMStyle::UpdateCurrentStyleSources(nsCSSPropertyID aPropID) {
   MOZ_ASSERT(!mExposeVisitedStyle || nsContentUtils::IsCallerChrome(),
              "mExposeVisitedStyle set incorrectly");
   if (mExposeVisitedStyle && mComputedStyle->RelevantLinkVisited()) {
-    if (ComputedStyle* styleIfVisited = mComputedStyle->GetStyleIfVisited()) {
+    if (const auto* styleIfVisited = mComputedStyle->GetStyleIfVisited()) {
       mComputedStyle = styleIfVisited;
     }
   }
@@ -1357,7 +1357,7 @@ already_AddRefed<nsROCSSPrimitiveValue> nsComputedDOMStyle::MatrixToCSSValue(
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMozOsxFontSmoothing() {
   if (nsContentUtils::ShouldResistFingerprinting(
-          mPresShell->GetPresContext()->GetDocShell())) {
+          mPresShell->GetPresContext()->GetDocShell(), RFPTarget::Unknown)) {
     return nullptr;
   }
 

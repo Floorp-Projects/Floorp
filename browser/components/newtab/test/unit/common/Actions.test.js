@@ -18,12 +18,7 @@ describe("Actions", () => {
 
 describe("ActionTypes", () => {
   it("should be in alpha order", () => {
-    assert.equal(
-      Object.keys(at).join(", "),
-      Object.keys(at)
-        .sort()
-        .join(", ")
-    );
+    assert.equal(Object.keys(at).join(", "), Object.keys(at).sort().join(", "));
   });
 });
 

@@ -45,7 +45,7 @@ add_task(async function checkReturnToAboutHome() {
       gBrowser,
       "about:home"
     );
-    await SpecialPowers.spawn(bc, [useFrame], async function(subFrame) {
+    await SpecialPowers.spawn(bc, [useFrame], async function (subFrame) {
       let returnButton = content.document.getElementById("returnButton");
       if (!subFrame) {
         if (!Services.focus.focusedElement == returnButton) {
@@ -121,7 +121,7 @@ add_task(async function checkReturnToPreviousPage() {
       "pageshow",
       true
     );
-    await SpecialPowers.spawn(bc, [useFrame], async function(subFrame) {
+    await SpecialPowers.spawn(bc, [useFrame], async function (subFrame) {
       let returnButton = content.document.getElementById("returnButton");
       returnButton.click();
     });
@@ -161,7 +161,7 @@ add_task(async function checkAdvancedDetails() {
       bc = bc.children[0];
     }
 
-    let message = await SpecialPowers.spawn(bc, [], async function() {
+    let message = await SpecialPowers.spawn(bc, [], async function () {
       let doc = content.document;
 
       const shortDesc = doc.getElementById("errorShortDesc");
@@ -202,7 +202,7 @@ add_task(async function checkAdvancedDetails() {
     );
     is(message.tagName, "a", "Error message is a link");
 
-    message = await SpecialPowers.spawn(bc, [], async function() {
+    message = await SpecialPowers.spawn(bc, [], async function () {
       let doc = content.document;
       let errorCode = doc.getElementById("errorCode");
       errorCode.click();
@@ -212,9 +212,10 @@ add_task(async function checkAdvancedDetails() {
         content.getComputedStyle(div).display !== "none",
         "Debug information is visible"
       );
-      let failedCertChain = content.docShell.failedChannel.securityInfo.failedCertChain.map(
-        cert => cert.getBase64DERString()
-      );
+      let failedCertChain =
+        content.docShell.failedChannel.securityInfo.failedCertChain.map(cert =>
+          cert.getBase64DERString()
+        );
       return {
         divDisplay: content.getComputedStyle(div).display,
         text: text.textContent,
@@ -255,7 +256,7 @@ add_task(async function checkAdvancedDetailsForHSTS() {
       bc = bc.children[0];
     }
 
-    let message = await SpecialPowers.spawn(bc, [], async function() {
+    let message = await SpecialPowers.spawn(bc, [], async function () {
       let doc = content.document;
       let advancedButton = doc.getElementById("advancedButton");
       advancedButton.click();
@@ -287,15 +288,16 @@ add_task(async function checkAdvancedDetailsForHSTS() {
     is(message.cdlTextContent, url, "Correct cert_domain_link contents found");
     is(message.cdlTagName, "a", "cert_domain_link is a link");
 
-    message = await SpecialPowers.spawn(bc, [], async function() {
+    message = await SpecialPowers.spawn(bc, [], async function () {
       let doc = content.document;
       let errorCode = doc.getElementById("errorCode");
       errorCode.click();
       let div = doc.getElementById("certificateErrorDebugInformation");
       let text = doc.getElementById("certificateErrorText");
-      let failedCertChain = content.docShell.failedChannel.securityInfo.failedCertChain.map(
-        cert => cert.getBase64DERString()
-      );
+      let failedCertChain =
+        content.docShell.failedChannel.securityInfo.failedCertChain.map(cert =>
+          cert.getBase64DERString()
+        );
       return {
         divDisplay: content.getComputedStyle(div).display,
         text: text.textContent,
@@ -338,7 +340,7 @@ add_task(async function checkUnknownIssuerLearnMoreLink() {
       bc = bc.children[0];
     }
 
-    let href = await SpecialPowers.spawn(bc, [], async function() {
+    let href = await SpecialPowers.spawn(bc, [], async function () {
       let learnMoreLink = content.document.getElementById("learnMoreLink");
       return learnMoreLink.href;
     });
@@ -364,7 +366,7 @@ add_task(async function checkViewCertificate() {
     }
 
     let loaded = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
-    await SpecialPowers.spawn(bc, [], async function() {
+    await SpecialPowers.spawn(bc, [], async function () {
       let viewCertificate = content.document.getElementById("viewCertificate");
       viewCertificate.click();
     });
@@ -379,15 +381,14 @@ add_task(async function checkViewCertificate() {
     await SpecialPowers.spawn(
       gBrowser.selectedTab.linkedBrowser,
       [],
-      async function() {
+      async function () {
         let doc = content.document;
         let certificateSection = await ContentTaskUtils.waitForCondition(() => {
           return doc.querySelector("certificate-section");
         }, "Certificate section found");
 
-        let infoGroup = certificateSection.shadowRoot.querySelector(
-          "info-group"
-        );
+        let infoGroup =
+          certificateSection.shadowRoot.querySelector("info-group");
         Assert.ok(infoGroup, "infoGroup found");
 
         let items = infoGroup.shadowRoot.querySelectorAll("info-item");
@@ -400,9 +401,8 @@ add_task(async function checkViewCertificate() {
           "The correct item was selected"
         );
 
-        let commonnameValue = items[items.length - 1].shadowRoot.querySelector(
-          ".info"
-        ).textContent;
+        let commonnameValue =
+          items[items.length - 1].shadowRoot.querySelector(".info").textContent;
         Assert.equal(
           commonnameValue,
           "self-signed.example.com",
@@ -450,7 +450,7 @@ add_task(async function checkSandboxedIframe() {
   let browser = tab.linkedBrowser;
 
   let bc = browser.browsingContext.children[0];
-  await SpecialPowers.spawn(bc, [], async function() {
+  await SpecialPowers.spawn(bc, [], async function () {
     let doc = content.document;
 
     const titleText = doc.querySelector(".title-text");
@@ -486,7 +486,7 @@ add_task(async function checkViewSource() {
   let tab = await openErrorPage(uri);
   let browser = tab.linkedBrowser;
 
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     let doc = content.document;
 
     const errorLabel = doc.querySelector(
@@ -518,7 +518,7 @@ add_task(async function checkViewSource() {
 
   let loaded = BrowserTestUtils.browserLoaded(browser, false, uri);
   info("Clicking the exceptionDialogButton in advanced panel");
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     let doc = content.document;
     let exceptionButton = doc.getElementById("exceptionDialogButton");
     exceptionButton.click();
@@ -527,7 +527,7 @@ add_task(async function checkViewSource() {
   info("Loading the url after adding exception");
   await loaded;
 
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     let doc = content.document;
     ok(
       !doc.documentURI.startsWith("about:certerror"),

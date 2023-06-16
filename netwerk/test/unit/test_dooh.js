@@ -104,13 +104,13 @@ add_setup(async function setup() {
   ohttpServer = ohttp.server();
 
   httpServer = new HttpServer();
-  httpServer.registerPathHandler("/relay", function(request, response) {
+  httpServer.registerPathHandler("/relay", function (request, response) {
     response.processAsync();
     forwardToTRR(request, response).then(() => {
       response.finish();
     });
   });
-  httpServer.registerPathHandler("/config", function(request, response) {
+  httpServer.registerPathHandler("/config", function (request, response) {
     response.setStatusLine(request.httpVersion, 200, "OK");
     response.setHeader("Content-Type", "application/ohttp-keys", false);
     response.write(ohttpEncodedConfig);

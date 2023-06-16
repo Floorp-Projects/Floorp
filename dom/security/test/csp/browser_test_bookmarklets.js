@@ -49,7 +49,7 @@ add_task(async function openKeywordBookmarkWithWindowOpen() {
   });
   await Promise.all([tabOpened, bookmarkCreated]);
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     return Promise.all([
       PlacesUtils.bookmarks.remove(bookmarkInfo),
       PlacesUtils.keywords.remove(keywordForBM),

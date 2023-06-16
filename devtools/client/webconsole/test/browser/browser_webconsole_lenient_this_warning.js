@@ -17,13 +17,13 @@ const TEST_URI = `data:text/html;charset=utf8,<!DOCTYPE html>${encodeURI(`
       }
     </script>`)}`;
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const expectedWarningMessageText =
     "Ignoring get or set of property that has [LenientThis] ";
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     const global = content.wrappedJSObject;
     global.console.log(global.htmlDivElementProto);
   });
@@ -40,7 +40,7 @@ add_task(async function() {
   info(
     "Call a LenientThis getter with the wrong `this` to trigger a warning message"
   );
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.wrappedJSObject.triggerLenientThisWarning();
   });
 
@@ -56,7 +56,7 @@ add_task(async function() {
     "Clear the console and call the LenientThis getter with an unexpected `this` again"
   );
   await clearOutput(hud);
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.wrappedJSObject.triggerLenientThisWarning();
   });
   info("Wait for a bit so any warning message could be displayed");

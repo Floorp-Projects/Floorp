@@ -15,7 +15,7 @@ function do_run_generator(generator) {
 
 // Helper to finish a generator function test.
 function do_finish_generator_test(generator) {
-  executeSoon(function() {
+  executeSoon(function () {
     generator.return();
     do_test_finished();
   });

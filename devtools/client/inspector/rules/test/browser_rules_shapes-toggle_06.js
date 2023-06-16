@@ -19,15 +19,18 @@ const TEST_URI = `
   <div class="shape" id="shape2"></div>
 `;
 
-add_task(async function() {
+add_task(async function () {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, view } = await openRuleView();
   const highlighters = view.highlighters;
 
   info("Selecting the first shapes container.");
   await selectNode("#shape1", inspector);
-  let clipPathContainer = getRuleViewProperty(view, ".shape", "clip-path")
-    .valueSpan;
+  let clipPathContainer = getRuleViewProperty(
+    view,
+    ".shape",
+    "clip-path"
+  ).valueSpan;
   let clipPathShapeToggle = clipPathContainer.querySelector(
     ".ruleview-shapeswatch"
   );
@@ -74,13 +77,19 @@ add_task(async function() {
 
   info("Selecting the second shapes container.");
   await selectNode("#shape2", inspector);
-  clipPathContainer = getRuleViewProperty(view, ".shape", "clip-path")
-    .valueSpan;
+  clipPathContainer = getRuleViewProperty(
+    view,
+    ".shape",
+    "clip-path"
+  ).valueSpan;
   clipPathShapeToggle = clipPathContainer.querySelector(
     ".ruleview-shapeswatch"
   );
-  shapeOutsideContainer = getRuleViewProperty(view, ".shape", "shape-outside")
-    .valueSpan;
+  shapeOutsideContainer = getRuleViewProperty(
+    view,
+    ".shape",
+    "shape-outside"
+  ).valueSpan;
   shapeOutsideToggle = shapeOutsideContainer.querySelector(
     ".ruleview-shapeswatch"
   );

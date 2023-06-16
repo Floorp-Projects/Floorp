@@ -280,7 +280,7 @@ nsDOMAttributeMap* Element::Attributes() {
 }
 
 void Element::SetPointerCapture(int32_t aPointerId, ErrorResult& aError) {
-  if (OwnerDoc()->ShouldResistFingerprinting() &&
+  if (OwnerDoc()->ShouldResistFingerprinting(RFPTarget::Unknown) &&
       aPointerId != PointerEventHandler::GetSpoofedPointerIdForRFP()) {
     aError.ThrowNotFoundError("Invalid pointer id");
     return;
@@ -309,7 +309,7 @@ void Element::SetPointerCapture(int32_t aPointerId, ErrorResult& aError) {
 }
 
 void Element::ReleasePointerCapture(int32_t aPointerId, ErrorResult& aError) {
-  if (OwnerDoc()->ShouldResistFingerprinting() &&
+  if (OwnerDoc()->ShouldResistFingerprinting(RFPTarget::Unknown) &&
       aPointerId != PointerEventHandler::GetSpoofedPointerIdForRFP()) {
     aError.ThrowNotFoundError("Invalid pointer id");
     return;
@@ -2555,7 +2555,7 @@ nsresult Element::SetAttrAndNotify(
     const nsAttrValue* aOldValue, nsAttrValue& aParsedValue,
     nsIPrincipal* aSubjectPrincipal, uint8_t aModType, bool aFireMutation,
     bool aNotify, bool aCallAfterSetAttr, Document* aComposedDocument,
-    const mozAutoDocUpdate&) {
+    const mozAutoDocUpdate& aGuard) {
   nsresult rv;
   nsMutationGuard::DidMutate();
 
@@ -2690,7 +2690,7 @@ nsresult Element::SetAttrAndNotify(
     mutation.mAttrChange = aModType;
 
     mozAutoSubtreeModified subtree(OwnerDoc(), this);
-    (new AsyncEventDispatcher(this, mutation))->RunDOMEventWhenSafe();
+    AsyncEventDispatcher::RunDOMEventWhenSafe(*this, mutation);
   }
 
   return NS_OK;
@@ -2953,7 +2953,7 @@ nsresult Element::UnsetAttr(int32_t aNameSpaceID, nsAtom* aName, bool aNotify) {
     mutation.mAttrChange = MutationEvent_Binding::REMOVAL;
 
     mozAutoSubtreeModified subtree(OwnerDoc(), this);
-    (new AsyncEventDispatcher(this, mutation))->RunDOMEventWhenSafe();
+    AsyncEventDispatcher::RunDOMEventWhenSafe(*this, mutation);
   }
 
   return NS_OK;
@@ -3003,12 +3003,12 @@ void Element::List(FILE* out, int32_t aIndent, const nsCString& aPrefix) const {
           static_cast<unsigned long long>(State().GetInternalValue()));
   fprintf(out, " flags=[%08x]", static_cast<unsigned int>(GetFlags()));
   if (IsClosestCommonInclusiveAncestorForRangeInSelection()) {
-    const LinkedList<nsRange>* ranges =
+    const LinkedList<AbstractRange>* ranges =
         GetExistingClosestCommonInclusiveAncestorRanges();
     int32_t count = 0;
     if (ranges) {
       // Can't use range-based iteration on a const LinkedList, unfortunately.
-      for (const nsRange* r = ranges->getFirst(); r; r = r->getNext()) {
+      for (const AbstractRange* r = ranges->getFirst(); r; r = r->getNext()) {
         ++count;
       }
     }
@@ -3262,7 +3262,7 @@ nsresult Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor) {
             nsCOMPtr<nsISpeculativeConnect> sc =
                 do_QueryInterface(nsContentUtils::GetIOService());
             nsCOMPtr<nsIInterfaceRequestor> ir = do_QueryInterface(shell);
-            sc->SpeculativeConnect(absURI, NodePrincipal(), ir);
+            sc->SpeculativeConnect(absURI, NodePrincipal(), ir, false);
           }
         }
       }
@@ -3406,7 +3406,7 @@ nsresult Element::CopyInnerTo(Element* aDst, ReparseAttributes aReparse) {
 Element* Element::Closest(const nsACString& aSelector, ErrorResult& aResult) {
   AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING("Element::Closest",
                                         LAYOUT_SelectorQuery, aSelector);
-  const RawServoSelectorList* list = ParseSelectorList(aSelector, aResult);
+  const StyleSelectorList* list = ParseSelectorList(aSelector, aResult);
   if (!list) {
     return nullptr;
   }
@@ -3417,7 +3417,7 @@ Element* Element::Closest(const nsACString& aSelector, ErrorResult& aResult) {
 bool Element::Matches(const nsACString& aSelector, ErrorResult& aResult) {
   AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING("Element::Matches",
                                         LAYOUT_SelectorQuery, aSelector);
-  const RawServoSelectorList* list = ParseSelectorList(aSelector, aResult);
+  const StyleSelectorList* list = ParseSelectorList(aSelector, aResult);
   if (!list) {
     return false;
   }
@@ -3919,7 +3919,9 @@ void Element::InsertAdjacentHTML(const nsAString& aPosition,
     destination = this;
   }
 
-  Document* doc = OwnerDoc();
+  // mozAutoDocUpdate keeps the owner document alive.  Therefore, using a raw
+  // pointer here is safe.
+  Document* const doc = OwnerDoc();
 
   // Needed when insertAdjacentHTML is used in combination with contenteditable
   mozAutoDocUpdate updateBatch(doc, true);
@@ -4246,22 +4248,10 @@ void Element::ClearServoData(Document* aDoc) {
   }
 }
 
-bool Element::HasPopoverInvoker() const {
-  auto* popoverData = GetPopoverData();
-  return popoverData && popoverData->HasPopoverInvoker();
-}
-
-void Element::SetHasPopoverInvoker(bool aHasInvoker) {
-  if (aHasInvoker) {
-    EnsurePopoverData().SetHasPopoverInvoker(true);
-  } else if (auto* popoverData = GetPopoverData()) {
-    popoverData->SetHasPopoverInvoker(false);
-  }
-}
-
 bool Element::IsAutoPopover() const {
   const auto* htmlElement = nsGenericHTMLElement::FromNode(this);
-  return htmlElement && htmlElement->GetPopoverState() == PopoverState::Auto;
+  return htmlElement &&
+         htmlElement->GetPopoverAttributeState() == PopoverAttributeState::Auto;
 }
 
 bool Element::IsPopoverOpen() const {
@@ -4302,8 +4292,9 @@ Element* Element::GetTopmostPopoverAncestor() const {
 
   checkAncestor(newPopover->GetFlattenedTreeParentElement());
 
-  // TODO: To handle the button invokers
   // https://github.com/whatwg/html/issues/9160
+  RefPtr<Element> invoker = newPopover->GetPopoverData()->GetInvoker();
+  checkAncestor(invoker);
 
   return topmostPopoverAncestor;
 }
@@ -4812,7 +4803,6 @@ void Element::RegUnRegAccessKey(bool aDoReg) {
 
 void Element::SetHTML(const nsAString& aInnerHTML,
                       const SetHTMLOptions& aOptions, ErrorResult& aError) {
-  FragmentOrElement* target = this;
   // Throw for disallowed elements
   if (IsHTMLElement(nsGkAtoms::script)) {
     aError.ThrowTypeError("This does not work on <script> elements");
@@ -4827,6 +4817,10 @@ void Element::SetHTML(const nsAString& aInnerHTML,
     return;
   }
 
+  // Keep "this" alive should be guaranteed by the caller, and also the content
+  // of a template element (if this is one) should never been released from this
+  // during this call.  Therefore, using raw pointer here is safe.
+  FragmentOrElement* target = this;
   // Handle template case.
   if (target->IsTemplateElement()) {
     DocumentFragment* frag =
@@ -4838,7 +4832,9 @@ void Element::SetHTML(const nsAString& aInnerHTML,
   // TODO: Avoid parsing and implement a fast-path for non-markup input,
   // Filed as bug 1731215.
 
-  Document* doc = target->OwnerDoc();
+  // mozAutoSubtreeModified keeps the owner document alive.  Therefore, using a
+  // raw pointer here is safe.
+  Document* const doc = target->OwnerDoc();
 
   // Batch possible DOMSubtreeModified events.
   mozAutoSubtreeModified subtree(doc, nullptr);

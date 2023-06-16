@@ -31,7 +31,7 @@
 
 class JSObject2WrappedJSMap {
   using Map = js::HashMap<JS::Heap<JSObject*>, nsXPCWrappedJS*,
-                          js::MovableCellHasher<JS::Heap<JSObject*>>,
+                          js::StableCellHasher<JS::Heap<JSObject*>>,
                           InfallibleAllocPolicy>;
 
  public:
@@ -340,7 +340,7 @@ class NativeSetMap {
 
 class JSObject2JSObjectMap {
   using Map = JS::GCHashMap<JS::Heap<JSObject*>, JS::Heap<JSObject*>,
-                            js::MovableCellHasher<JS::Heap<JSObject*>>,
+                            js::StableCellHasher<JS::Heap<JSObject*>>,
                             js::SystemAllocPolicy>;
 
  public:

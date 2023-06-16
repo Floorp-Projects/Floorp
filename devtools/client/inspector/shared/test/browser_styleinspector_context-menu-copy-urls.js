@@ -16,7 +16,7 @@ const ERROR_MESSAGE = STYLE_INSPECTOR_L10N.getStr(
   "styleinspector.copyImageDataUrlError"
 );
 
-add_task(async function() {
+add_task(async function () {
   const TEST_URI = `<style type="text/css">
       .valid-background {
         background-image: url(${TEST_DATA_URI});
@@ -110,7 +110,7 @@ async function testCopyUrlToClipboard(
     "Retrieve background-image link for selected node in current " +
       "styleinspector view"
   );
-  const property = getBackgroundImageProperty(view, selector);
+  const property = await getBackgroundImageProperty(view, selector);
   const imageLink = property.valueSpan.querySelector(".theme-link");
   ok(imageLink, "Background-image link element found");
 
@@ -149,10 +149,12 @@ async function testCopyUrlToClipboard(
   info("Hide context menu");
 }
 
-function getBackgroundImageProperty(view, selector) {
+async function getBackgroundImageProperty(view, selector) {
   const isRuleView = view instanceof CssRuleView;
   if (isRuleView) {
-    return getRuleViewProperty(view, selector, "background-image");
+    return getRuleViewProperty(view, selector, "background-image", {
+      wait: true,
+    });
   }
   return getComputedViewProperty(view, "background-image");
 }

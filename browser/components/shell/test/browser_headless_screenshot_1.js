@@ -1,6 +1,6 @@
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   // Test all four basic variations of the "screenshot" argument
   // when a file path is specified.
   await testFileCreationPositive(

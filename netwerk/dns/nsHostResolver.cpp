@@ -28,7 +28,6 @@
 #include "prtime.h"
 #include "mozilla/Logging.h"
 #include "PLDHashTable.h"
-#include "plstr.h"
 #include "nsQueryObject.h"
 #include "nsURLHelper.h"
 #include "nsThreadUtils.h"
@@ -37,7 +36,6 @@
 #include "TRR.h"
 #include "TRRQuery.h"
 #include "TRRService.h"
-#include "ODoHService.h"
 
 #include "mozilla/Atomics.h"
 #include "mozilla/HashFunctions.h"
@@ -934,9 +932,7 @@ nsresult nsHostResolver::TrrLookup(nsHostRecord* aRec,
   MaybeRenewHostRecordLocked(rec, aLock);
 
   RefPtr<TRRQuery> query = new TRRQuery(this, rec);
-  bool useODoH = gODoHService->Enabled() &&
-                 !((rec->flags & nsIDNSService::RESOLVE_DISABLE_ODOH));
-  nsresult rv = query->DispatchLookup(pushedTRR, useODoH);
+  nsresult rv = query->DispatchLookup(pushedTRR);
   if (NS_FAILED(rv)) {
     rec->RecordReason(TRRSkippedReason::TRR_DID_NOT_MAKE_QUERY);
     return rv;
@@ -1053,6 +1049,16 @@ void nsHostResolver::ComputeEffectiveTRRMode(nsHostRecord* aRec) {
 
   if ((requestMode == nsIRequest::TRR_DEFAULT_MODE &&
        resolverMode == nsIDNSService::MODE_NATIVEONLY)) {
+    if (StaticPrefs::network_trr_display_fallback_warning()) {
+      TRRSkippedReason heuristicResult =
+          TRRService::Get()->GetHeuristicDetectionResult();
+      if (heuristicResult != TRRSkippedReason::TRR_UNSET &&
+          heuristicResult != TRRSkippedReason::TRR_OK) {
+        aRec->RecordReason(heuristicResult);
+        aRec->mEffectiveTRRMode = nsIRequest::TRR_DISABLED_MODE;
+        return;
+      }
+    }
     aRec->RecordReason(TRRSkippedReason::TRR_MODE_NOT_ENABLED);
     aRec->mEffectiveTRRMode = nsIRequest::TRR_DISABLED_MODE;
     return;
@@ -1096,15 +1102,6 @@ nsresult nsHostResolver::NameLookup(nsHostRecord* rec,
 
   ComputeEffectiveTRRMode(rec);
 
-  // We only keep store a heuristicResult (other than
-  // TRRSkippedReason::TRR_UNSET) if the native fallback warning is enabled and
-  // we are in nsIRequest::TRR_FIRST_MODE.
-  TRRSkippedReason heuristicResult = TRRSkippedReason::TRR_UNSET;
-  if (StaticPrefs::network_trr_display_fallback_warning() &&
-      rec->mEffectiveTRRMode == nsIRequest::TRR_FIRST_MODE) {
-    heuristicResult = TRRService::Get()->GetHeuristicDetectionResult();
-  }
-
   if (!rec->mTrrServer.IsEmpty()) {
     LOG(("NameLookup: %s use trr:%s", rec->host.get(), rec->mTrrServer.get()));
     if (rec->mEffectiveTRRMode != nsIRequest::TRR_ONLY_MODE) {
@@ -1129,12 +1126,7 @@ nsresult nsHostResolver::NameLookup(nsHostRecord* rec,
 
   if (rec->mEffectiveTRRMode != nsIRequest::TRR_DISABLED_MODE &&
       !((rec->flags & nsIDNSService::RESOLVE_DISABLE_TRR)) &&
-      !serviceNotReady &&
-      // Only perform a TRR lookup if the heuristic result is unset or ok.
-      // (If the native fallback warning is enabled, a tripped heuristic result
-      // may be set.)
-      (heuristicResult == TRRSkippedReason::TRR_UNSET ||
-       heuristicResult == TRRSkippedReason::TRR_OK)) {
+      !serviceNotReady) {
     rv = TrrLookup(rec, aLock);
   }
 
@@ -1155,23 +1147,18 @@ nsresult nsHostResolver::NameLookup(nsHostRecord* rec,
 #endif
 
     // We did not lookup via TRR - don't fallback to native if the
-    // network.trr.display_fallback_warning pref is set and we are in TRR first
-    // mode.
+    // network.trr.display_fallback_warning pref is set and either
+    // 1. we are in TRR first mode and confirmation failed
+    // 2. the record has trr_disabled and a heuristic skip reason
     if (StaticPrefs::network_trr_display_fallback_warning() &&
-        rec->mEffectiveTRRMode == nsIRequest::TRR_FIRST_MODE) {
-      if (heuristicResult != TRRSkippedReason::TRR_UNSET &&
-          heuristicResult != TRRSkippedReason::TRR_OK) {
-        rec->mTRRSkippedReason = heuristicResult;
-      }
-
-      LOG(("NameLookup: %s heuristicResult: %d ", rec->host.get(),
-           heuristicResult));
-
-      if ((rec->mTRRSkippedReason == TRRSkippedReason::TRR_NOT_CONFIRMED ||
-           (rec->mTRRSkippedReason >=
-                nsITRRSkipReason::TRR_HEURISTIC_TRIPPED_GOOGLE_SAFESEARCH &&
-            rec->mTRRSkippedReason <=
-                nsITRRSkipReason::TRR_HEURISTIC_TRIPPED_NRPT))) {
+        rec->mEffectiveTRRMode != nsIRequest::TRR_ONLY_MODE) {
+      if ((rec->mEffectiveTRRMode == nsIRequest::TRR_FIRST_MODE &&
+           rec->mTRRSkippedReason == TRRSkippedReason::TRR_NOT_CONFIRMED) ||
+          (rec->mEffectiveTRRMode == nsIRequest::TRR_DISABLED_MODE &&
+           rec->mTRRSkippedReason >=
+               nsITRRSkipReason::TRR_HEURISTIC_TRIPPED_GOOGLE_SAFESEARCH &&
+           rec->mTRRSkippedReason <=
+               nsITRRSkipReason::TRR_HEURISTIC_TRIPPED_NRPT)) {
         LOG((
             "NameLookup: ResolveHostComplete with status NS_ERROR_UNKNOWN_HOST "
             "for: %s effectiveTRRmode: "
@@ -1302,7 +1289,7 @@ void nsHostResolver::PrepareRecordExpirationAddrRecord(
   unsigned int grace = mDefaultGracePeriod;
 
   unsigned int ttl = mDefaultCacheLifetime;
-  if (sGetTtlEnabled || rec->addr_info->IsTRROrODoH()) {
+  if (sGetTtlEnabled || rec->addr_info->IsTRR()) {
     if (rec->addr_info && rec->addr_info->TTL() != AddrInfo::NO_TTL_DATA) {
       ttl = rec->addr_info->TTL();
     }
@@ -1614,7 +1601,7 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookupLocked(
   bool hasNativeResult = false;
   {
     MutexAutoLock lock(addrRec->addr_info_lock);
-    if (addrRec->addr_info && !addrRec->addr_info->IsTRROrODoH()) {
+    if (addrRec->addr_info && !addrRec->addr_info->IsTRR()) {
       hasNativeResult = true;
     }
   }
@@ -1909,7 +1896,7 @@ void nsHostResolver::GetDNSCacheEntries(nsTArray<DNSCacheEntries>* args) {
           info.hostaddr.AppendElement(buf);
         }
       }
-      info.TRR = addrRec->addr_info->IsTRROrODoH();
+      info.TRR = addrRec->addr_info->IsTRR();
     }
 
     info.originAttributesSuffix = recordEntry.GetKey().originSuffix;

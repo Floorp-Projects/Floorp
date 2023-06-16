@@ -143,7 +143,7 @@ function TestCoreBehavior(headers, name) {
   headers.delete(name);
 
   shouldThrow(
-    function() {
+    function () {
       headers.append("foo,", "bam");
     },
     TypeError,
@@ -151,7 +151,7 @@ function TestCoreBehavior(headers, name) {
   );
 
   shouldThrow(
-    function() {
+    function () {
       headers.append(name, "ba\nm");
     },
     TypeError,
@@ -159,7 +159,7 @@ function TestCoreBehavior(headers, name) {
   );
 
   shouldThrow(
-    function() {
+    function () {
       headers.append(name, "ba\rm");
     },
     TypeError,
@@ -224,7 +224,7 @@ function TestFilledHeaders() {
   TestCoreBehavior(filled, "xwv");
 
   shouldThrow(
-    function() {
+    function () {
       filled = new Headers([
         ["zxy", "987", "654"],
         ["uts", "321"],
@@ -235,7 +235,7 @@ function TestFilledHeaders() {
   );
 
   shouldThrow(
-    function() {
+    function () {
       filled = new Headers([["zxy"], ["uts", "321"]]);
     },
     TypeError,

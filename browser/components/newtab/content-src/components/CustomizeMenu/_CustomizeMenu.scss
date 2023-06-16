@@ -163,6 +163,7 @@
       fill: var(--newtab-primary-element-text-color);
       background: url('chrome://global/skin/icons/check.svg') center no-repeat;
       background-color: var(--newtab-primary-action-background);
+
       @media (forced-colors: active) {
         fill: $black;
       }
@@ -288,6 +289,7 @@
     background-size: 16px;
     padding-inline-start: 21px;
     margin-bottom: 20px;
+    text-decoration: underline;
 
     @media (forced-colors: active) {
       padding: 8px 10px;
@@ -300,7 +302,7 @@
   }
 
   .external-link:hover {
-    text-decoration: underline;
+    text-decoration: none;
   }
 }
 

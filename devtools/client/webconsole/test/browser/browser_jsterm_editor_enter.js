@@ -10,12 +10,12 @@
 const TEST_URI =
   "data:text/html;charset=utf-8,<!DOCTYPE html>Web Console test for bug 1519314";
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.webconsole.input.editor", true);
   await performEditorEnabledTests();
 });
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.webconsole.input.editor", false);
   await performEditorDisabledTests();
 });

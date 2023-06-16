@@ -1,4 +1,4 @@
-onmessage = function(event) {
+onmessage = function (event) {
   var xhr = new XMLHttpRequest();
 
   xhr.open("GET", event.data, false);

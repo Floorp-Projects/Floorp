@@ -57,9 +57,10 @@ async function checkAccessibleObjectSelection(
   const expectedNode = isText
     ? inspector.selection.nodeFront.inlineTextChild
     : inspector.selection.nodeFront;
-  const expectedSelected = await panel.accessibilityProxy.accessibilityFront.accessibleWalkerFront.getAccessibleFor(
-    expectedNode
-  );
+  const expectedSelected =
+    await panel.accessibilityProxy.accessibilityFront.accessibleWalkerFront.getAccessibleFor(
+      expectedNode
+    );
   is(selected, expectedSelected, "Accessible front selected correctly");
 
   const doc = panel.panelWin.document;

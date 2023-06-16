@@ -14,7 +14,7 @@ const TEST_URI = `http://example.org/document-builder.sjs?html=<meta charset=utf
 
 const { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
 
-add_task(async function() {
+add_task(async function () {
   // Disable bfcache for Fission for now.
   // If Fission is disabled, the pref is no-op.
   await SpecialPowers.pushPrefEnv({
@@ -49,7 +49,7 @@ add_task(async function() {
   );
 
   info("Add another error so we have a different count");
-  ContentTask.spawn(tab.linkedBrowser, null, function() {
+  ContentTask.spawn(tab.linkedBrowser, null, function () {
     content.console.error("Live Error1");
   });
 

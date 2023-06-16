@@ -188,9 +188,10 @@ class nsIOService final : public nsIIOService,
                                                    nsILoadInfo* aLoadInfo,
                                                    nsIChannel** result);
 
-  nsresult SpeculativeConnectInternal(nsIURI* aURI, nsIPrincipal* aPrincipal,
-                                      nsIInterfaceRequestor* aCallbacks,
-                                      bool aAnonymous);
+  nsresult SpeculativeConnectInternal(
+      nsIURI* aURI, nsIPrincipal* aPrincipal,
+      Maybe<OriginAttributes>&& aOriginAttributes,
+      nsIInterfaceRequestor* aCallbacks, bool aAnonymous);
 
   void DestroySocketProcess();
 

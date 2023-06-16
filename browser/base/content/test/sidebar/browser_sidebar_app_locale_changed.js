@@ -20,8 +20,8 @@ async function testLiveReloading(sidebarName) {
   await SidebarUI.show(sidebarName);
 
   function getTreeChildren() {
-    const sidebarDoc = document.querySelector("#sidebar").contentWindow
-      .document;
+    const sidebarDoc =
+      document.querySelector("#sidebar").contentWindow.document;
     return sidebarDoc.querySelector(".sidebar-placesTreechildren");
   }
 
@@ -74,7 +74,7 @@ add_task(async function test_ext_sidebar_panel_reloaded_on_locale_changes() {
             A Test Sidebar
           </body>
         </html>`,
-      "sidebar.js": function() {
+      "sidebar.js": function () {
         const { browser } = this;
         window.onload = () => {
           browser.test.sendMessage("sidebar");

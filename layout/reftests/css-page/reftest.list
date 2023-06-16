@@ -1,5 +1,3 @@
-defaults pref(layout.css.named-pages.enabled,true)
-
 == page-name-abspos-001.html page-name-abspos-001-ref.html
 == page-name-abspos-002.html page-name-abspos-002-ref.html
 == page-name-abspos-003.html page-name-abspos-003-ref.html

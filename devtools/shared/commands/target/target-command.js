@@ -58,9 +58,8 @@ class TargetCommand extends EventEmitter {
     // Name of the store used when calling createProvider.
     this.storeId = "target-store";
 
-    this._updateBrowserToolboxScope = this._updateBrowserToolboxScope.bind(
-      this
-    );
+    this._updateBrowserToolboxScope =
+      this._updateBrowserToolboxScope.bind(this);
 
     Services.prefs.addObserver(
       BROWSERTOOLBOX_SCOPE_PREF,
@@ -68,9 +67,8 @@ class TargetCommand extends EventEmitter {
     );
     // Until Watcher actor notify about new top level target when navigating to another process
     // we have to manually switch to a new target from the client side
-    this.onLocalTabRemotenessChange = this.onLocalTabRemotenessChange.bind(
-      this
-    );
+    this.onLocalTabRemotenessChange =
+      this.onLocalTabRemotenessChange.bind(this);
     if (this.descriptorFront.isTabDescriptor) {
       this.descriptorFront.on(
         "remoteness-change",
@@ -1008,17 +1006,16 @@ class TargetCommand extends EventEmitter {
     // Wait for waitForNextResource completion before reloading, otherwise we might miss the dom-complete event.
     // This can happen if `ResourceCommand.watchResources` made by `waitForNextResource` is still pending
     // while the reload already started and finished loading the document early.
-    const {
-      onResource: onReloaded,
-    } = await this.commands.resourceCommand.waitForNextResource(
-      this.commands.resourceCommand.TYPES.DOCUMENT_EVENT,
-      {
-        ignoreExistingResources: true,
-        predicate(resource) {
-          return resource.name == "dom-complete";
-        },
-      }
-    );
+    const { onResource: onReloaded } =
+      await this.commands.resourceCommand.waitForNextResource(
+        this.commands.resourceCommand.TYPES.DOCUMENT_EVENT,
+        {
+          ignoreExistingResources: true,
+          predicate(resource) {
+            return resource.name == "dom-complete";
+          },
+        }
+      );
 
     await this.descriptorFront.reloadDescriptor({ bypassCache });
 

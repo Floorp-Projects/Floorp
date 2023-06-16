@@ -44,6 +44,14 @@ class RenderTextureHost {
  public:
   RenderTextureHost();
 
+  virtual gfx::SurfaceFormat GetFormat() const {
+    return gfx::SurfaceFormat::UNKNOWN;
+  }
+
+  virtual gfx::YUVRangedColorSpace GetYUVColorSpace() const {
+    return gfx::YUVRangedColorSpace::Default;
+  }
+
   virtual wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL);
 
   virtual void Unlock() {}

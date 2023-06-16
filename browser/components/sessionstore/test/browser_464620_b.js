@@ -22,7 +22,7 @@ function test() {
       }
       this.removeEventListener("load", loadListener, true);
 
-      executeSoon(function() {
+      executeSoon(function () {
         frameCount = 0;
         let tab2 = gBrowser.duplicateTab(tab);
         tab2.linkedBrowser.addEventListener(
@@ -33,8 +33,8 @@ function test() {
 
             // let form restoration complete and take into account the
             // setTimeout(..., 0) in sss_restoreDocument_proxy
-            executeSoon(function() {
-              setTimeout(function() {
+            executeSoon(function () {
+              setTimeout(function () {
                 let win = tab2.linkedBrowser.contentWindow;
                 isnot(
                   win.frames[1].document.location,

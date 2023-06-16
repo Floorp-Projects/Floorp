@@ -317,7 +317,10 @@
   result_type: WordSized
   num_temps: 1
 
-- name: WasmGcObjectIsSubtypeOfAndBranch
+- name: WasmGcObjectIsSubtypeOfConcreteAndBranch
+  gen_boilerplate: false
+
+- name: WasmGcObjectIsSubtypeOfAbstractAndBranch
   gen_boilerplate: false
 
 - name: WasmReinterpret
@@ -1491,13 +1494,22 @@
   call_instruction: true
   mir_op: true
 
-- name: RegExpTester
+- name: RegExpExecMatch
+  result_type: BoxedValue
+  operands:
+    regexp: WordSized
+    string: WordSized
+  call_instruction: true
+  num_temps: 0
+  mir_op: true
+
+- name: RegExpExecTest
   result_type: WordSized
   operands:
     regexp: WordSized
     string: WordSized
-    lastIndex: WordSized
   call_instruction: true
+  num_temps: 0
   mir_op: true
 
 - name: RegExpPrototypeOptimizable
@@ -2645,7 +2657,11 @@
   operands:
     object: WordSized
     rhs: BoxedValue
+#ifdef JS_CODEGEN_X86
+  num_temps: 1
+#else
   num_temps: 3
+#endif
   call_instruction: true
   mir_op: true
 

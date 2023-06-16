@@ -43,7 +43,7 @@ addAccessibleTask(
   `
   <iframe id="iframe" src="${iframeSrc}"></iframe>
   <input id="checkbox" type="checkbox" />`,
-  async function(browser) {
+  async function (browser) {
     // Test state change
     let onStateChange = waitForEvent(EVENT_STATE_CHANGE, "checkbox");
     // Set checked for a checkbox.

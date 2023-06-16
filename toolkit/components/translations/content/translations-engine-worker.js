@@ -61,13 +61,8 @@ async function handleInitializationMessage({ data }) {
   }
 
   try {
-    const {
-      fromLanguage,
-      toLanguage,
-      enginePayload,
-      logLevel,
-      innerWindowId,
-    } = data;
+    const { fromLanguage, toLanguage, enginePayload, logLevel, innerWindowId } =
+      data;
 
     if (!fromLanguage) {
       throw new Error('Worker initialization missing "fromLanguage"');
@@ -82,7 +77,10 @@ async function handleInitializationMessage({ data }) {
     }
 
     let engine;
-    if (enginePayload) {
+    if (enginePayload.isMocked) {
+      // The engine is testing mode, and no Bergamot wasm is available.
+      engine = new MockedEngine(fromLanguage, toLanguage);
+    } else {
       const { bergamotWasmArrayBuffer, languageModelFiles } = enginePayload;
       const bergamot = await BergamotUtils.initializeWasm(
         bergamotWasmArrayBuffer
@@ -93,9 +91,6 @@ async function handleInitializationMessage({ data }) {
         bergamot,
         languageModelFiles
       );
-    } else {
-      // The engine is testing mode, and no Bergamot wasm is available.
-      engine = new MockedEngine(fromLanguage, toLanguage);
     }
 
     ChromeUtils.addProfilerMarker(
@@ -420,17 +415,11 @@ class BergamotUtils {
   ) {
     log(`Constructing translation model.`);
 
-    const {
-      model,
-      lex,
-      vocab,
-      qualityModel,
-      srcvocab,
-      trgvocab,
-    } = BergamotUtils.allocateModelMemory(
-      bergamot,
-      languageTranslationModelFiles
-    );
+    const { model, lex, vocab, qualityModel, srcvocab, trgvocab } =
+      BergamotUtils.allocateModelMemory(
+        bergamot,
+        languageTranslationModelFiles
+      );
 
     // Transform the bytes to mb, like "10.2mb"
     const getMemory = memory => `${Math.floor(memory.size() / 100_000) / 10}mb`;
@@ -471,11 +460,10 @@ class BergamotUtils {
       "cpu-threads": "0",
       quiet: "true",
       "quiet-translation": "true",
-      "gemm-precision": languageTranslationModelFiles.model.record.name.endsWith(
-        "intgemm8.bin"
-      )
-        ? "int8shiftAll"
-        : "int8shiftAlphaAll",
+      "gemm-precision":
+        languageTranslationModelFiles.model.record.name.endsWith("intgemm8.bin")
+          ? "int8shiftAll"
+          : "int8shiftAlphaAll",
       alignment: "soft",
     });
 

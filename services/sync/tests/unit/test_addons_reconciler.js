@@ -3,13 +3,10 @@
 
 "use strict";
 
-const {
-  AddonsReconciler,
-  CHANGE_INSTALLED,
-  CHANGE_UNINSTALLED,
-} = ChromeUtils.importESModule(
-  "resource://services-sync/addonsreconciler.sys.mjs"
-);
+const { AddonsReconciler, CHANGE_INSTALLED, CHANGE_UNINSTALLED } =
+  ChromeUtils.importESModule(
+    "resource://services-sync/addonsreconciler.sys.mjs"
+  );
 const { AddonsEngine } = ChromeUtils.importESModule(
   "resource://services-sync/engines/addons.sys.mjs"
 );

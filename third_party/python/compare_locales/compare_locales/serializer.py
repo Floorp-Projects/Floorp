@@ -22,7 +22,7 @@ we also prune whitespace once more.`
 '''
 
 from codecs import encode
-import six
+from functools import reduce
 
 from compare_locales.merge import merge_resources, serialize_legacy_resource
 from compare_locales.parser import getParser
@@ -52,7 +52,7 @@ def serialize(filename, reference, old_l10n, new_data):
         parser = getParser(filename)
     except UserWarning:
         raise SerializationNotSupportedError(
-            'Unsupported file format ({}).'.format(filename))
+            f'Unsupported file format ({filename}).')
     # create template, whitespace and all
     placeholders = [
         placeholder(entry)
@@ -69,7 +69,7 @@ def serialize(filename, reference, old_l10n, new_data):
     # create new Entities
     # .val can just be "", merge_channels doesn't need that
     new_l10n = []
-    for key, new_raw_val in six.iteritems(new_data):
+    for key, new_raw_val in new_data.items():
         if new_raw_val is None or key not in ref_mapping:
             continue
         ref_ent = ref_mapping[key]
@@ -134,4 +134,4 @@ def prune_placeholders(entries):
         acc.append(entity)
         return acc
 
-    return six.moves.reduce(prune_whitespace, pruned, [])
+    return reduce(prune_whitespace, pruned, [])

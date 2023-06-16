@@ -18,7 +18,7 @@ add_task(async function test_autodetect_credit_not_set() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
-    async function(browser) {
+    async function (browser) {
       let promiseShown = waitForPopupShown();
       await focusUpdateSubmitForm(browser, {
         focusSelector: "#cc-name",
@@ -68,7 +68,7 @@ add_task(async function test_autodetect_credit_overwrite() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
-    async function(browser) {
+    async function (browser) {
       let promiseShown = waitForPopupShown();
       await focusUpdateSubmitForm(browser, {
         focusSelector: "#cc-name",

@@ -44,15 +44,12 @@ static nsIThread* gWebAuthnBackgroundThread;
 }  // namespace
 
 // Data for WebAuthn UI prompt notifications.
-static const char16_t kRegisterPromptNotification[] =
-    u"{\"is_ctap2\":true,\"action\":\"register\",\"tid\":%llu,"
-    u"\"origin\":\"%s\",\"browsingContextId\":%llu,\"device_selected\":%s}";
+static const char16_t kPresencePromptNotification[] =
+    u"{\"is_ctap2\":true,\"action\":\"presence\",\"tid\":%llu,"
+    u"\"origin\":\"%s\",\"browsingContextId\":%llu}";
 static const char16_t kRegisterDirectPromptNotification[] =
     u"{\"is_ctap2\":true,\"action\":\"register-direct\",\"tid\":%llu,"
     u"\"origin\":\"%s\",\"browsingContextId\":%llu}";
-static const char16_t kSignPromptNotification[] =
-    u"{\"is_ctap2\":true,\"action\":\"sign\",\"tid\":%llu,\"origin\":\"%s\","
-    u"\"browsingContextId\":%llu,\"device_selected\":%s}";
 static const char16_t kCancelPromptNotification[] =
     u"{\"is_ctap2\":true,\"action\":\"cancel\",\"tid\":%llu}";
 static const char16_t kSelectSignResultNotification[] =
@@ -277,13 +274,11 @@ void WebAuthnController::Register(
 // On Android, let's always reject direct attestations until we have a
 // mechanism to solicit user consent, from Bug 1550164
 #ifndef MOZ_WIDGET_ANDROID
-  const auto& extra = aInfo.Extra().ref();
-
   // The default attestation type is "none", so set
   // noneAttestationRequested=false only if the RP's preference matches one of
   // the other known types. This needs to be reviewed if values are added to
   // the AttestationConveyancePreference enum.
-  const nsString& attestation = extra.attestationConveyancePreference();
+  const nsString& attestation = aInfo.attestationConveyancePreference();
   static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 2);
   if (attestation.EqualsLiteral(
           MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_DIRECT) ||
@@ -322,7 +317,7 @@ void WebAuthnController::DoRegister(const WebAuthnMakeCredentialInfo& aInfo,
 
   // Show a prompt that lets the user cancel the ongoing transaction.
   NS_ConvertUTF16toUTF8 origin(aInfo.Origin());
-  SendPromptNotification(kRegisterPromptNotification,
+  SendPromptNotification(kPresencePromptNotification,
                          mTransaction.ref().mTransactionId, origin.get(),
                          aInfo.BrowsingContextId(), "false");
 
@@ -437,9 +432,8 @@ void WebAuthnController::RunFinishRegister(
   }
 
   nsTArray<WebAuthnExtensionResult> extensions;
-  nsTArray<uint8_t> regData; /* Only used in U2F */
   WebAuthnMakeCredentialResult result(clientDataJson, attObj, credentialId,
-                                      regData, extensions);
+                                      extensions);
 
   Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
                        u"CTAPRegisterFinish"_ns, 1);
@@ -475,12 +469,9 @@ void WebAuthnController::Sign(PWebAuthnTransactionParent* aTransactionParent,
   }
 
   Maybe<nsTArray<uint8_t>> appIdHash = Nothing();
-  if (aInfo.Extra().isSome()) {
-    const auto& extra = aInfo.Extra().ref();
-    for (const WebAuthnExtension& ext : extra.Extensions()) {
-      if (ext.type() == WebAuthnExtension::TWebAuthnExtensionAppId) {
-        appIdHash = Some(ext.get_WebAuthnExtensionAppId().AppId().Clone());
-      }
+  for (const WebAuthnExtension& ext : aInfo.Extensions()) {
+    if (ext.type() == WebAuthnExtension::TWebAuthnExtensionAppId) {
+      appIdHash = Some(ext.get_WebAuthnExtensionAppId().AppId().Clone());
     }
   }
 
@@ -490,10 +481,9 @@ void WebAuthnController::Sign(PWebAuthnTransactionParent* aTransactionParent,
 
   mPendingSignInfo = Some(aInfo);
 
-  NS_ConvertUTF16toUTF8 origin(aInfo.Origin());
-
   // Show a prompt that lets the user cancel the ongoing transaction.
-  SendPromptNotification(kSignPromptNotification,
+  NS_ConvertUTF16toUTF8 origin(aInfo.Origin());
+  SendPromptNotification(kPresencePromptNotification,
                          mTransaction.ref().mTransactionId, origin.get(),
                          aInfo.BrowsingContextId(), "false");
 
@@ -679,10 +669,9 @@ void WebAuthnController::RunResumeWithSelectedSignResult(
     extensions.AppendElement(WebAuthnExtensionResultAppId(usedAppId));
   }
 
-  nsTArray<uint8_t> signatureData;  // Only used in U2F
   WebAuthnGetAssertionResult result(mTransaction.ref().mClientDataJSON,
                                     credentialId, signature, authenticatorData,
-                                    extensions, signatureData, userHandle);
+                                    extensions, userHandle);
 
   Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
                        u"CTAPSignFinish"_ns, 1);

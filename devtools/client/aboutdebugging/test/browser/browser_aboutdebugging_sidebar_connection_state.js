@@ -15,7 +15,7 @@ const CONNECTION_CANCEL_DELAY = 2000;
 // * Connect button label and state will change during connecting.
 // * Show error message if connection failed.
 // * Show warninng if connection has been taken time.
-add_task(async function() {
+add_task(async function () {
   await setupPreferences();
 
   const mocks = new Mocks();
@@ -35,9 +35,8 @@ add_task(async function() {
     RUNTIME_DEVICE_NAME,
     document
   );
-  const connectButton = usbRuntimeSidebarItem.querySelector(
-    ".qa-connect-button"
-  );
+  const connectButton =
+    usbRuntimeSidebarItem.querySelector(".qa-connect-button");
 
   info("Simulate to happen connection error");
   mocks.runtimeClientFactoryMock.createClientForRuntime = async runtime => {
@@ -104,7 +103,7 @@ add_task(async function() {
 
 // Test whether the status of all will be reverted after a certain period of time during
 // waiting connection.
-add_task(async function() {
+add_task(async function () {
   await setupPreferences();
 
   const mocks = new Mocks();
@@ -124,9 +123,8 @@ add_task(async function() {
     RUNTIME_DEVICE_NAME,
     document
   );
-  const connectButton = usbRuntimeSidebarItem.querySelector(
-    ".qa-connect-button"
-  );
+  const connectButton =
+    usbRuntimeSidebarItem.querySelector(".qa-connect-button");
 
   let resumeConnection;
   const resumeConnectionPromise = new Promise(r => {

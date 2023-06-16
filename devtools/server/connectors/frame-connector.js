@@ -69,7 +69,7 @@ function connectToFrame(
     // Compute the same prefix that's used by DevToolsServerConnection
     const connPrefix = prefix + "/";
 
-    const onActorCreated = DevToolsUtils.makeInfallible(function(msg) {
+    const onActorCreated = DevToolsUtils.makeInfallible(function (msg) {
       if (msg.json.prefix != prefix) {
         return;
       }
@@ -92,7 +92,7 @@ function connectToFrame(
       resolve(actor);
     });
 
-    const destroy = DevToolsUtils.makeInfallible(function() {
+    const destroy = DevToolsUtils.makeInfallible(function () {
       EventEmitter.off(connection, "closed", destroy);
       Services.obs.removeObserver(
         onMessageManagerClose,
@@ -149,7 +149,7 @@ function connectToFrame(
     trackMessageManager();
 
     // Listen for app process exit
-    const onMessageManagerClose = function(subject, topic, data) {
+    const onMessageManagerClose = function (subject, topic, data) {
       if (subject == mm) {
         destroy();
       }

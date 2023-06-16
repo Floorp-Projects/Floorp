@@ -17,7 +17,7 @@ function triggerSave(aWindow, aCallback) {
     "http://mochi.test:8888/browser/browser/base/content/test/general/bug792517-2.html";
   BrowserTestUtils.loadURIString(testBrowser, testURI);
   BrowserTestUtils.browserLoaded(testBrowser, false, testURI).then(() => {
-    waitForFocus(function() {
+    waitForFocus(function () {
       info("register to handle popupshown");
       aWindow.document.addEventListener("popupshown", contextMenuOpened);
 
@@ -39,7 +39,7 @@ function triggerSave(aWindow, aCallback) {
     var destFile = destDir.clone();
 
     MockFilePicker.displayDirectory = destDir;
-    MockFilePicker.showCallback = function(fp) {
+    MockFilePicker.showCallback = function (fp) {
       info("showCallback");
       fileName = fp.defaultString;
       info("fileName: " + fileName);
@@ -49,7 +49,7 @@ function triggerSave(aWindow, aCallback) {
       info("done showCallback");
     };
 
-    mockTransferCallback = function(downloadSuccess) {
+    mockTransferCallback = function (downloadSuccess) {
       info("mockTransferCallback");
       onTransferComplete(aWindow, downloadSuccess, destDir);
       destDir.remove(true);
@@ -109,7 +109,7 @@ function test() {
 
   mockTransferRegisterer.register();
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     info("Running the cleanup code");
     mockTransferRegisterer.unregister();
     MockFilePicker.cleanup();
@@ -181,14 +181,14 @@ function test() {
   Services.obs.addObserver(observer, "http-on-modify-request");
   Services.obs.addObserver(observer, "http-on-examine-response");
 
-  testOnWindow(undefined, function(win) {
+  testOnWindow(undefined, function (win) {
     // The first save from a regular window sets a cookie.
-    triggerSave(win, function() {
+    triggerSave(win, function () {
       is(gNumSet, 1, "1 cookie should be set");
 
       // The second save from a private window also sets a cookie.
-      testOnWindow({ private: true }, function(win2) {
-        triggerSave(win2, function() {
+      testOnWindow({ private: true }, function (win2) {
+        triggerSave(win2, function () {
           is(gNumSet, 2, "2 cookies should be set");
           finish();
         });

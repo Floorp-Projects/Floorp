@@ -1,7 +1,3 @@
-# coding=utf8
-from __future__ import unicode_literals
-from __future__ import absolute_import
-
 import logging
 
 import fluent.syntax.ast as FTL
@@ -54,7 +50,7 @@ class MigrationContext(InternalContext):
     def __init__(
         self, locale, reference_dir, localization_dir, enforce_translated=False
     ):
-        super(MigrationContext, self).__init__(
+        super().__init__(
             locale, reference_dir, localization_dir,
             enforce_translated=enforce_translated
         )
@@ -131,7 +127,7 @@ class MigrationContext(InternalContext):
         # may fail but a single missing legacy resource doesn't mean that the
         # migration can't succeed.
         for dependencies in self.dependencies.values():
-            for path in set(path for path, _ in dependencies):
+            for path in {path for path, _ in dependencies}:
                 expected_paths.add(path)
                 self.maybe_add_localization(path)
 

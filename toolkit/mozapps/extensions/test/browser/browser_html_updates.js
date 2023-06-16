@@ -1,7 +1,7 @@
 /* eslint max-len: ["error", 80] */
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+const { AddonTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
 );
 
 AddonTestUtils.initMochitest(this);
@@ -13,7 +13,7 @@ registerCleanupFunction(() => {
   AddonManager.autoUpdateDefault = initialAutoUpdate;
 });
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.checkUpdateSecurity", false]],
   });
@@ -130,7 +130,7 @@ async function setupExtensionWithUpdate(
 
   let baseManifest = {
     name: "Updates",
-    icons: { "48": "an-icon.png" },
+    icons: { 48: "an-icon.png" },
     browser_specific_settings: {
       gecko: {
         id,

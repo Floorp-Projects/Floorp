@@ -206,7 +206,7 @@ static ParentLayerRect GetClipRectForPartialPrerender(
 void CompositorAnimationStorage::StoreAnimatedValue(
     nsCSSPropertyID aProperty, uint64_t aId,
     const std::unique_ptr<AnimationStorageData>& aAnimationStorageData,
-    const AutoTArray<RefPtr<RawServoAnimationValue>, 1>& aAnimationValues,
+    const AutoTArray<RefPtr<StyleAnimationValue>, 1>& aAnimationValues,
     const MutexAutoLock& aProofOfMapLock, const RefPtr<APZSampler>& aApzSampler,
     AnimatedValue* aAnimatedValueEntry,
     JankedAnimationMap& aJankedAnimationMap) {
@@ -310,7 +310,7 @@ bool CompositorAnimationStorage::SampleAnimations(
       const nsCSSPropertyID lastPropertyAnimationGroupProperty =
           animationStorageData->mAnimation.LastElement().mProperty;
       isAnimating = true;
-      AutoTArray<RefPtr<RawServoAnimationValue>, 1> animationValues;
+      AutoTArray<RefPtr<StyleAnimationValue>, 1> animationValues;
       AnimatedValue* previousValue = GetAnimatedValue(iter.first);
       AnimationHelper::SampleResult sampleResult =
           AnimationHelper::SampleAnimationForEachNode(

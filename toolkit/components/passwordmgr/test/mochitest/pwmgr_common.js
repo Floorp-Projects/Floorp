@@ -20,10 +20,8 @@ const { LoginHelper } = SpecialPowers.ChromeUtils.importESModule(
   "resource://gre/modules/LoginHelper.sys.mjs"
 );
 
-const {
-  LENGTH: GENERATED_PASSWORD_LENGTH,
-  REGEX: GENERATED_PASSWORD_REGEX,
-} = LoginTestUtils.generation;
+const { LENGTH: GENERATED_PASSWORD_LENGTH, REGEX: GENERATED_PASSWORD_REGEX } =
+  LoginTestUtils.generation;
 const LOGIN_FIELD_UTILS = LoginTestUtils.loginField;
 const TESTS_DIR = "/tests/toolkit/components/passwordmgr/test/";
 
@@ -183,6 +181,117 @@ function getPasswordEditedMessage() {
 }
 
 /**
+ * Create a login form and insert into contents dom (identified by id
+ * `content`). If the form (identified by its number) is already present in the
+ * dom, it gets replaced.
+ *
+ * @param {number} [num = 1] - number of the form, used as id, eg `form1`
+ * @param {string} [action = ""] - action attribute of the form
+ * @param {string} [autocomplete  = null] - forms autocomplete attribute. Default is none
+ * @param {object} [username = {}] - object describing attributes to the username field:
+ * @param {string} [username.id = null] - id of the field
+ * @param {string} [username.name = "uname"] - name attribute
+ * @param {string} [username.type = "text"] - type of the field
+ * @param {string} [username.value = null] - initial value of the field
+ * @param {string} [username.autocomplete = null] - autocomplete attribute
+ * @param {object} [password = {}] - an object describing attributes to the password field. If falsy, do not create a password field
+ * @param {string} [password.id = null] - id of the field
+ * @param {string} [password.name = "pword"] - name attribute
+ * @param {string} [password.type = "password"] - type of the field
+ * @param {string} [password.value = null] - initial value of the field
+ * @param {string} [password.label = null] - if present, wrap field in a label containing its value
+ * @param {string} [password.autocomplete = null] - autocomplete attribute
+ *
+ * @return {HTMLDomElement} the form
+ */
+function createLoginForm({
+  num = 1,
+  action = "",
+  autocomplete = null,
+  username = {},
+  password = {},
+} = {}) {
+  username.id ||= null;
+  username.name ||= "uname";
+  username.type ||= "text";
+  username.value ||= null;
+  username.autocomplete ||= null;
+  password.id ||= null;
+  password.name ||= "pword";
+  password.type ||= "password";
+  password.value ||= null;
+  password.label ||= null;
+  password.autocomplete ||= null;
+
+  info(
+    `Creating login form ${JSON.stringify({ num, action, username, password })}`
+  );
+
+  const form = document.createElement("form");
+  form.id = `form${num}`;
+  form.action = action;
+  form.onsubmit = () => false;
+
+  if (autocomplete != null) {
+    form.setAttribute("autocomplete", autocomplete);
+  }
+
+  const usernameInput = document.createElement("input");
+  if (username.id != null) {
+    usernameInput.id = username.id;
+  }
+  usernameInput.type = username.type;
+  usernameInput.name = username.name;
+  if (username.value != null) {
+    usernameInput.value = username.value;
+  }
+  if (username.autocomplete != null) {
+    usernameInput.setAttribute("autocomplete", username.autocomplete);
+  }
+  form.appendChild(usernameInput);
+
+  if (password) {
+    const passwordInput = document.createElement("input");
+    if (password.id != null) {
+      passwordInput.id = password.id;
+    }
+    passwordInput.type = password.type;
+    passwordInput.name = password.name;
+    if (password.value != null) {
+      passwordInput.value = password.value;
+    }
+    if (password.autocomplete != null) {
+      passwordInput.setAttribute("autocomplete", password.autocomplete);
+    }
+    if (password.label != null) {
+      const passwordLabel = document.createElement("label");
+      passwordLabel.innerText = password.label;
+      passwordLabel.appendChild(passwordInput);
+      form.appendChild(passwordLabel);
+    } else {
+      form.appendChild(passwordInput);
+    }
+  }
+
+  const submitButton = document.createElement("button");
+  submitButton.type = "submit";
+  submitButton.name = "submit";
+  submitButton.innerText = "Submit";
+  form.appendChild(submitButton);
+
+  const content = document.getElementById("content");
+
+  const oldForm = document.getElementById(form.id);
+  if (oldForm) {
+    content.replaceChild(form, oldForm);
+  } else {
+    content.appendChild(form);
+  }
+
+  return form;
+}
+
+/**
  * Check for expected username/password in form.
  * @see `checkForm` below for a similar function.
  */
@@ -205,6 +314,67 @@ function checkLoginForm(
   );
 }
 
+/**
+ * Check repeatedly for a while to see if a particular condition still applies.
+ * This function checks the return value of `condition` repeatedly until either
+ * the condition has a falsy return value, or `retryTimes` is exceeded.
+ */
+
+function ensureCondition(
+  condition,
+  errorMsg = "Condition did not last.",
+  retryTimes = 10
+) {
+  return new Promise((resolve, reject) => {
+    let tries = 0;
+    let conditionFailed = false;
+    let interval = setInterval(async function () {
+      try {
+        const conditionPassed = await condition();
+        conditionFailed ||= !conditionPassed;
+      } catch (e) {
+        ok(false, e + "\n" + e.stack);
+        conditionFailed = true;
+      }
+      if (conditionFailed || tries >= retryTimes) {
+        ok(!conditionFailed, errorMsg);
+        clearInterval(interval);
+        if (conditionFailed) {
+          reject(errorMsg);
+        } else {
+          resolve();
+        }
+      }
+      tries++;
+    }, 100);
+  });
+}
+
+/**
+ * Wait a while to ensure login form stays filled with username and password
+ * @see `checkLoginForm` below for a similar function.
+ * @returns a promise, resolving when done
+ *
+ * TODO: eventually get rid of this time based check, and transition to an
+ * event based approach. See Bug 1811142.
+ * Filling happens by `_fillForm()` which can report it's decision and we can
+ * wait for it. One of the options is to have `didFillFormAsync()` from
+ * https://phabricator.services.mozilla.com/D167214#change-3njWgUgqswws
+ */
+function ensureLoginFormStaysFilledWith(
+  usernameField,
+  expectedUsername,
+  passwordField,
+  expectedPassword
+) {
+  return ensureCondition(() => {
+    return (
+      Object.is(usernameField.value, expectedUsername) &&
+      Object.is(passwordField.value, expectedPassword)
+    );
+  }, `Ensuring form ${usernameField.parentNode.id} stays filled with "${expectedUsername}:${expectedPassword}"`);
+}
+
 function checkLoginFormInFrame(
   iframeBC,
   usernameFieldId,
@@ -221,12 +391,10 @@ function checkLoginFormInFrame(
       passwordFieldIdF,
       expectedPasswordF
     ) => {
-      let usernameField = this.content.document.getElementById(
-        usernameFieldIdF
-      );
-      let passwordField = this.content.document.getElementById(
-        passwordFieldIdF
-      );
+      let usernameField =
+        this.content.document.getElementById(usernameFieldIdF);
+      let passwordField =
+        this.content.document.getElementById(passwordFieldIdF);
 
       let formID = usernameField.parentNode.id;
       Assert.equal(
@@ -454,7 +622,11 @@ function registerRunTests(existingPasswordFieldsCount = 0) {
       form.appendChild(password);
 
       let foundForcer = false;
-      var observer = SpecialPowers.wrapCallback(function(subject, topic, data) {
+      var observer = SpecialPowers.wrapCallback(function (
+        subject,
+        topic,
+        data
+      ) {
         if (data === "observerforcer") {
           foundForcer = true;
         } else {
@@ -544,13 +716,16 @@ function promiseFormsProcessedInSameProcess(expectedCount = 1) {
  * This works across processes.
  */
 async function promiseFormsProcessed(expectedCount = 1) {
+  info(`waiting for ${expectedCount} forms to be processed`);
   var processedCount = 0;
   return new Promise(resolve => {
     PWMGR_COMMON_PARENT.addMessageListener(
       "formProcessed",
       function formProcessed() {
         processedCount++;
+        info(`processed form ${processedCount} of ${expectedCount}`);
         if (processedCount == expectedCount) {
+          info(`processing of ${expectedCount} forms complete`);
           PWMGR_COMMON_PARENT.removeMessageListener(
             "formProcessed",
             formProcessed
@@ -562,11 +737,11 @@ async function promiseFormsProcessed(expectedCount = 1) {
   });
 }
 
-async function loadFormIntoWindow(origin, html, win, task) {
+async function loadFormIntoWindow(origin, html, win, expectedCount = 1, task) {
   let loadedPromise = new Promise(resolve => {
     win.addEventListener(
       "load",
-      function(event) {
+      function (event) {
         if (event.target.location.href.endsWith("blank.html")) {
           resolve();
         }
@@ -575,28 +750,29 @@ async function loadFormIntoWindow(origin, html, win, task) {
     );
   });
 
-  let processedPromise = promiseFormsProcessed();
+  let processedPromise = promiseFormsProcessed(expectedCount);
   win.location =
     origin + "/tests/toolkit/components/passwordmgr/test/mochitest/blank.html";
   info(`Waiting for window to load for origin: ${origin}`);
   await loadedPromise;
 
-  await SpecialPowers.spawn(win, [html, task?.toString()], function(
-    contentHtml,
-    contentTask = null
-  ) {
-    // eslint-disable-next-line no-unsanitized/property
-    this.content.document.documentElement.innerHTML = contentHtml;
-    // Similar to the invokeContentTask helper in accessible/tests/browser/shared-head.js
-    if (contentTask) {
-      // eslint-disable-next-line no-eval
-      const runnableTask = eval(`
+  await SpecialPowers.spawn(
+    win,
+    [html, task?.toString()],
+    function (contentHtml, contentTask = null) {
+      // eslint-disable-next-line no-unsanitized/property
+      this.content.document.documentElement.innerHTML = contentHtml;
+      // Similar to the invokeContentTask helper in accessible/tests/browser/shared-head.js
+      if (contentTask) {
+        // eslint-disable-next-line no-eval
+        const runnableTask = eval(`
       (() => {
         return (${contentTask});
       })();`);
-      runnableTask.call(this);
+        runnableTask.call(this);
+      }
     }
-  });
+  );
 
   info("Waiting for the form to be processed");
   await processedPromise;
@@ -703,31 +879,52 @@ function runInParent(aFunctionOrURL) {
   return chromeScript;
 }
 
-/** Initialize with a list of logins. The logins are added within the parent chrome process.
- * @param {array} aLogins - a list of logins to add. Each login is an array of the arguments
- *                          that would be passed to nsLoginInfo.init().
- */
-function addLoginsInParent(...aLogins) {
-  let script = runInParent(function addLoginsInParentInner() {
+/** Manage logins in parent chrome process.
+ * */
+function manageLoginsInParent() {
+  return runInParent(function addLoginsInParentInner() {
     /* eslint-env mozilla/chrome-script */
-    addMessageListener("addLogins", logins => {
+    addMessageListener("removeAllUserFacingLogins", () => {
+      Services.logins.removeAllUserFacingLogins();
+    });
+
+    /* eslint-env mozilla/chrome-script */
+    addMessageListener("addLogins", async logins => {
       let nsLoginInfo = Components.Constructor(
         "@mozilla.org/login-manager/loginInfo;1",
         Ci.nsILoginInfo,
         "init"
       );
 
-      for (let login of logins) {
-        let loginInfo = new nsLoginInfo(...login);
-        try {
-          Services.logins.addLogin(loginInfo);
-        } catch (e) {
-          assert.ok(false, "addLogin threw: " + e);
-        }
+      const loginInfos = logins.map(login => new nsLoginInfo(...login));
+      try {
+        await Services.logins.addLogins(loginInfos);
+      } catch (e) {
+        assert.ok(false, "addLogins threw: " + e);
       }
     });
   });
-  script.sendQuery("addLogins", aLogins);
+}
+
+/** Initialize with a list of logins. The logins are added within the parent chrome process.
+ * @param {array} aLogins - a list of logins to add. Each login is an array of the arguments
+ *                          that would be passed to nsLoginInfo.init().
+ */
+async function addLoginsInParent(...aLogins) {
+  const script = manageLoginsInParent();
+  await script.sendQuery("addLogins", aLogins);
+  return script;
+}
+
+/** Initialize with a list of logins, after removing all user facing logins.
+ * The logins are added within the parent chrome process.
+ * @param {array} aLogins - a list of logins to add. Each login is an array of the arguments
+ *                          that would be passed to nsLoginInfo.init().
+ */
+async function setStoredLoginsAsync(...aLogins) {
+  const script = manageLoginsInParent();
+  script.sendQuery("removeAllUserFacingLogins");
+  await script.sendQuery("addLogins", aLogins);
   return script;
 }
 

@@ -37,7 +37,7 @@ function run_test() {
       s.QueryInterface(Ci[iface]);
     }
 
-    let okName = function(name) {
+    let okName = function (name) {
       info(`Checking if function is okay to test: ${name}`);
       let func = s[name];
 

@@ -22,7 +22,7 @@
  */
 function runAddAttributesTests(tests, nodeOrSelector, inspector) {
   info("Running " + tests.length + " add-attributes tests");
-  return (async function() {
+  return (async function () {
     info("Selecting the test node");
     await selectNode("div", inspector);
 
@@ -93,7 +93,7 @@ async function runAddAttributesTest(test, selector, inspector) {
  */
 function runEditAttributesTests(tests, inspector) {
   info("Running " + tests.length + " edit-attributes tests");
-  return (async function() {
+  return (async function () {
     info("Expanding all nodes in the markup-view");
     await inspector.markup.expandAll();
 

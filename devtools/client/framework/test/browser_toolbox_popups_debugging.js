@@ -8,7 +8,7 @@ const POPUP_URL = "data:text/html,popup";
 
 const POPUP_DEBUG_PREF = "devtools.popups.debug";
 
-add_task(async function() {
+add_task(async function () {
   const isPopupDebuggingEnabled = Services.prefs.getBoolPref(POPUP_DEBUG_PREF);
 
   info("Open a tab and debug it");

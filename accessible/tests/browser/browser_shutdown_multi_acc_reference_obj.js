@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   // Create a11y service.
   const [a11yInitObserver, a11yInit] = initAccService();
   await a11yInitObserver;

@@ -36,6 +36,13 @@ constexpr NativeStackLimit NativeStackLimitMin = UINTPTR_MAX;
 constexpr NativeStackLimit NativeStackLimitMax = 0;
 #endif
 
+#ifdef __wasi__
+// We build with the "stack-first" wasm-ld option, so the stack grows downward
+// toward zero. Let's set a limit just a bit above this so that we catch an
+// overflow before a Wasm trap occurs.
+constexpr NativeStackLimit WASINativeStackLimit = 1024;
+#endif  // __wasi__
+
 inline NativeStackLimit GetNativeStackLimit(NativeStackBase base,
                                             NativeStackSize size) {
 #if JS_STACK_GROWTH_DIRECTION > 0

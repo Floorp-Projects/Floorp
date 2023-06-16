@@ -4,7 +4,7 @@
  * Tests that the identity-box shows the chromeUI styling
  * when viewing such a page in a new window.
  */
-add_task(async function() {
+add_task(async function () {
   let homepage = "about:preferences";
   await SpecialPowers.pushPrefEnv({
     set: [

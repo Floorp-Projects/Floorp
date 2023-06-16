@@ -11,8 +11,5 @@
   "background": {
     "scripts": ["background.js"]
   },
-  "permissions": [
-    "tabs",
-    "cookies"
-  ]
+  "permissions": ["tabs", "cookies"]
 }

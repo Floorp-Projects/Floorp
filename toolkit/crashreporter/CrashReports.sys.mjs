@@ -33,7 +33,8 @@ export var CrashReports = {
     }
 
     if (this.pendingDir.exists() && this.pendingDir.isDirectory()) {
-      let uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      let uuidRegex =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       let entries = this.pendingDir.directoryEntries;
       while (entries.hasMoreElements()) {
         let file = entries.nextFile;

@@ -7,7 +7,7 @@ const BUILDER = "http://mochi.test:8888/document-builder.sjs?html=";
 const PAGE_1 = BUILDER + encodeURIComponent(`<html><body>Page 1</body></html>`);
 const PAGE_2 = BUILDER + encodeURIComponent(`<html><body>Page 2</body></html>`);
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.history.collectWireframes", true]],
   });
@@ -17,7 +17,7 @@ add_setup(async function() {
  * Test that capturing wireframes on nsISHEntriy's in the parent process
  * happens at the right times.
  */
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.withNewTab(PAGE_1, async browser => {
     let sh = browser.browsingContext.sessionHistory;
     Assert.equal(

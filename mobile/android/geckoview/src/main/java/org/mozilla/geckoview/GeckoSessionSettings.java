@@ -206,10 +206,13 @@ public final class GeckoSessionSettings implements Parcelable {
   // This needs to match GeckoViewSettings.jsm
   /** "browser" value of the display member in Web App Manifests */
   public static final int DISPLAY_MODE_BROWSER = 0;
+
   /** "minimal-ui" value of the display member in Web App Manifests */
   public static final int DISPLAY_MODE_MINIMAL_UI = 1;
+
   /** "standalone" value of the display member in Web App Manifests */
   public static final int DISPLAY_MODE_STANDALONE = 2;
+
   /** "fullscreen" value of the display member in Web App Manifests */
   public static final int DISPLAY_MODE_FULLSCREEN = 3;
 
@@ -225,8 +228,10 @@ public final class GeckoSessionSettings implements Parcelable {
   // This needs to match GeckoViewSettingsChild.js and GeckoViewSettings.jsm
   /** The user agent mode is mobile device */
   public static final int USER_AGENT_MODE_MOBILE = 0;
+
   /** The user agent mobe is desktop device */
   public static final int USER_AGENT_MODE_DESKTOP = 1;
+
   /** The user agent mode is VR device */
   public static final int USER_AGENT_MODE_VR = 2;
 
@@ -270,6 +275,7 @@ public final class GeckoSessionSettings implements Parcelable {
    */
   private static final Key<String> CHROME_URI =
       new Key<String>("chromeUri", /* initOnly */ true, /* values */ null);
+
   /** Key to set the window screen ID, or 0 to use default ID. Read-only once session is open. */
   private static final Key<Integer> SCREEN_ID =
       new Key<Integer>("screenId", /* initOnly */ true, /* values */ null);
@@ -277,6 +283,7 @@ public final class GeckoSessionSettings implements Parcelable {
   /** Key to enable and disable tracking protection. */
   private static final Key<Boolean> USE_TRACKING_PROTECTION =
       new Key<Boolean>("useTrackingProtection");
+
   /** Key to enable and disable private mode browsing. Read-only once session is open. */
   private static final Key<Boolean> USE_PRIVATE_MODE =
       new Key<Boolean>("usePrivateMode", /* initOnly */ true, /* values */ null);
@@ -318,6 +325,7 @@ public final class GeckoSessionSettings implements Parcelable {
   /** Key to specify if JavaScript should be allowed on this session. */
   private static final Key<Boolean> ALLOW_JAVASCRIPT =
       new Key<Boolean>("allowJavascript", /* initOnly */ false, /* values */ null);
+
   /** Key to specify if entire accessible tree should be exposed with no caching. */
   private static final Key<Boolean> FULL_ACCESSIBILITY_TREE =
       new Key<Boolean>("fullAccessibilityTree", /* initOnly */ false, /* values */ null);

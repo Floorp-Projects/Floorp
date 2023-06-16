@@ -15,7 +15,7 @@ const TEST_URI = `https://example.com/document-builder.sjs?html=${encodeURICompo
   </html>
 `)}`;
 
-add_task(async function() {
+add_task(async function () {
   // Enable the context selector and the frames button.
   await pushPref("devtools.webconsole.input.context", true);
   await pushPref("devtools.command-button-frames.enabled", true);

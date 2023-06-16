@@ -12,6 +12,7 @@
 #include "NamespaceImports.h"
 
 #include "gc/Cell.h"
+#include "gc/GCContext.h"
 #include "gc/StoreBuffer.h"
 #include "js/ComparisonOperators.h"     // JS::detail::DefineComparisonOps
 #include "js/experimental/TypedData.h"  // js::EnableIfABOVType
@@ -59,7 +60,7 @@
  *
  * PreBarriered  Provides a pre-barrier but not a post-barrier. Necessary when
  *               generational GC updates are handled manually, e.g. for hash
- *               table keys that don't use MovableCellHasher.
+ *               table keys that don't use StableCellHasher.
  *
  * HeapSlot      Provides pre and post-barriers, optimised for use in JSObject
  *               slots and elements.
@@ -77,7 +78,7 @@
  *               handles cycle collector concerns. Most external clients should
  *               use this.
  *
- * TenuredHeap   Like Heap but doesn't allow nursery pointers. Allows storing
+ * Heap::Tenured   Like Heap but doesn't allow nursery pointers. Allows storing
  *               flags in unused lower bits of the pointer.
  *
  * Which class to use?
@@ -103,7 +104,7 @@
  *   No, it's external =>
  *     Can your pointer refer to nursery objects?
  *       Yes => Use JS::Heap<T>
- *       Never => Use JS::TenuredHeap<T> (optimization)
+ *       Never => Use JS::Heap::Tenured<T> (optimization)
  *
  * If in doubt, use HeapPtr<T>.
  *
@@ -1125,63 +1126,63 @@ struct RemoveBarrier<WeakHeapPtr<T>> {
 };
 
 #if MOZ_IS_GCC
-template struct JS_PUBLIC_API MovableCellHasher<JSObject*>;
+template struct JS_PUBLIC_API StableCellHasher<JSObject*>;
 #endif
 
 template <typename T>
-struct MovableCellHasher<PreBarriered<T>> {
+struct StableCellHasher<PreBarriered<T>> {
   using Key = PreBarriered<T>;
   using Lookup = T;
 
   static bool maybeGetHash(const Lookup& l, HashNumber* hashOut) {
-    return MovableCellHasher<T>::maybeGetHash(l, hashOut);
+    return StableCellHasher<T>::maybeGetHash(l, hashOut);
   }
   static bool ensureHash(const Lookup& l, HashNumber* hashOut) {
-    return MovableCellHasher<T>::ensureHash(l, hashOut);
+    return StableCellHasher<T>::ensureHash(l, hashOut);
   }
   static HashNumber hash(const Lookup& l) {
-    return MovableCellHasher<T>::hash(l);
+    return StableCellHasher<T>::hash(l);
   }
   static bool match(const Key& k, const Lookup& l) {
-    return MovableCellHasher<T>::match(k, l);
+    return StableCellHasher<T>::match(k, l);
   }
 };
 
 template <typename T>
-struct MovableCellHasher<HeapPtr<T>> {
+struct StableCellHasher<HeapPtr<T>> {
   using Key = HeapPtr<T>;
   using Lookup = T;
 
   static bool maybeGetHash(const Lookup& l, HashNumber* hashOut) {
-    return MovableCellHasher<T>::maybeGetHash(l, hashOut);
+    return StableCellHasher<T>::maybeGetHash(l, hashOut);
   }
   static bool ensureHash(const Lookup& l, HashNumber* hashOut) {
-    return MovableCellHasher<T>::ensureHash(l, hashOut);
+    return StableCellHasher<T>::ensureHash(l, hashOut);
   }
   static HashNumber hash(const Lookup& l) {
-    return MovableCellHasher<T>::hash(l);
+    return StableCellHasher<T>::hash(l);
   }
   static bool match(const Key& k, const Lookup& l) {
-    return MovableCellHasher<T>::match(k, l);
+    return StableCellHasher<T>::match(k, l);
   }
 };
 
 template <typename T>
-struct MovableCellHasher<WeakHeapPtr<T>> {
+struct StableCellHasher<WeakHeapPtr<T>> {
   using Key = WeakHeapPtr<T>;
   using Lookup = T;
 
   static bool maybeGetHash(const Lookup& l, HashNumber* hashOut) {
-    return MovableCellHasher<T>::maybeGetHash(l, hashOut);
+    return StableCellHasher<T>::maybeGetHash(l, hashOut);
   }
   static bool ensureHash(const Lookup& l, HashNumber* hashOut) {
-    return MovableCellHasher<T>::ensureHash(l, hashOut);
+    return StableCellHasher<T>::ensureHash(l, hashOut);
   }
   static HashNumber hash(const Lookup& l) {
-    return MovableCellHasher<T>::hash(l);
+    return StableCellHasher<T>::hash(l);
   }
   static bool match(const Key& k, const Lookup& l) {
-    return MovableCellHasher<T>::match(k.unbarrieredGet(), l);
+    return StableCellHasher<T>::match(k.unbarrieredGet(), l);
   }
 };
 

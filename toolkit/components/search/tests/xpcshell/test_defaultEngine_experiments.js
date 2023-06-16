@@ -34,9 +34,12 @@ add_setup(async () => {
     true
   );
 
-  sinon.spy(NimbusFeatures.search, "onUpdate");
-  sinon.stub(NimbusFeatures.search, "ready").resolves();
-  getVariableStub = sinon.stub(NimbusFeatures.search, "getVariable");
+  sinon.spy(NimbusFeatures.searchConfiguration, "onUpdate");
+  sinon.stub(NimbusFeatures.searchConfiguration, "ready").resolves();
+  getVariableStub = sinon.stub(
+    NimbusFeatures.searchConfiguration,
+    "getVariable"
+  );
   getVariableStub.callsFake(defaultGetVariable);
 
   do_get_profile();
@@ -52,9 +55,8 @@ add_setup(async () => {
 });
 
 async function switchExperiment(newExperiment) {
-  let promiseReloaded = SearchTestUtils.promiseSearchNotification(
-    "engines-reloaded"
-  );
+  let promiseReloaded =
+    SearchTestUtils.promiseSearchNotification("engines-reloaded");
   let promiseSaved = promiseSaveSettingsData();
 
   // Stub getVariable to populate the cache with our expected data
@@ -64,7 +66,7 @@ async function switchExperiment(newExperiment) {
     }
     return defaultGetVariable(name);
   });
-  for (let call of NimbusFeatures.search.onUpdate.getCalls()) {
+  for (let call of NimbusFeatures.searchConfiguration.onUpdate.getCalls()) {
     call.args[0]();
   }
 
@@ -222,9 +224,8 @@ add_task(async function test_experiment_setting_user_changed_back_during() {
 });
 
 add_task(async function test_experiment_setting_user_changed_back_private() {
-  Services.search.defaultPrivateEngine = Services.search.getEngineByName(
-    "engine1"
-  );
+  Services.search.defaultPrivateEngine =
+    Services.search.getEngineByName("engine1");
 
   Assert.equal(
     Services.search.defaultPrivateEngine.name,
@@ -252,9 +253,8 @@ add_task(async function test_experiment_setting_user_changed_back_private() {
   );
 
   // User resets to the original default engine.
-  Services.search.defaultPrivateEngine = Services.search.getEngineByName(
-    "engine1"
-  );
+  Services.search.defaultPrivateEngine =
+    Services.search.getEngineByName("engine1");
   Assert.equal(
     Services.search.defaultPrivateEngine.name,
     "engine1",

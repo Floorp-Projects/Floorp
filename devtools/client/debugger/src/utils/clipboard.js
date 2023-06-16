@@ -8,7 +8,7 @@
  */
 
 export function copyToTheClipboard(string) {
-  const doCopy = function(e) {
+  const doCopy = function (e) {
     e.clipboardData.setData("text/plain", string);
     e.preventDefault();
   };

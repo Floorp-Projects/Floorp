@@ -310,11 +310,7 @@
           return aItem.id;
         };
         state +=
-          " " +
-          [...this.selectedItems]
-            .filter(getId)
-            .map(getId)
-            .join(" ");
+          " " + [...this.selectedItems].filter(getId).map(getId).join(" ");
       }
       if (state) {
         this.setAttribute("last-selected", state);
@@ -876,7 +872,9 @@
   /**
    * XUL:richlistitem element.
    */
-  MozElements.MozRichlistitem = class MozRichlistitem extends MozElements.BaseText {
+  MozElements.MozRichlistitem = class MozRichlistitem extends (
+    MozElements.BaseText
+  ) {
     constructor() {
       super();
 

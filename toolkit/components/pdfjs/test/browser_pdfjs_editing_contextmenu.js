@@ -71,13 +71,15 @@ async function getContextMenuItems(browser, box) {
  * @returns {Map<string,HTMLElement>} the pdfjs menu entries.
  */
 async function getContextMenuItemsOn(browser, selector) {
-  const box = await SpecialPowers.spawn(browser, [selector], async function(
-    selector
-  ) {
-    const element = content.document.querySelector(selector);
-    const { x, y, width, height } = element.getBoundingClientRect();
-    return { x, y, width, height };
-  });
+  const box = await SpecialPowers.spawn(
+    browser,
+    [selector],
+    async function (selector) {
+      const element = content.document.querySelector(selector);
+      const { x, y, width, height } = element.getBoundingClientRect();
+      return { x, y, width, height };
+    }
+  );
   return getContextMenuItems(browser, box);
 }
 
@@ -159,7 +161,7 @@ add_task(async function test() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function(browser) {
+    async function (browser) {
       SpecialPowers.clipboardCopyString("");
 
       await SpecialPowers.pushPrefEnv({
@@ -362,7 +364,7 @@ add_task(async function test() {
         "All the FreeText editors must have been deleted"
       );
 
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         var viewer = content.wrappedJSObject.PDFViewerApplication;
         await viewer.close();
       });

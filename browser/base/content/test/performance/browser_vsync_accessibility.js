@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   await TestUtils.waitForCondition(
     () => !ChromeUtils.vsyncEnabled(),
     "wait for vsync to be disabled at the start of the test"

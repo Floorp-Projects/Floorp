@@ -42,9 +42,8 @@ add_task(async function testInHTTPSURIContainingPrivateThings() {
     "https://username:password@example.com/browser/toolkit/content/tests/browser/file_empty.html?query=some#ref";
   const kURLWithoutUserPass =
     "https://example.com/browser/toolkit/content/tests/browser/file_empty.html?query=some#ref";
-  const waitForDocumentLoadComplete = promiseEventDocumentLoadComplete(
-    kURLWithoutUserPass
-  );
+  const waitForDocumentLoadComplete =
+    promiseEventDocumentLoadComplete(kURLWithoutUserPass);
   await BrowserTestUtils.withNewTab(kURL, async browser => {
     is(
       (await waitForDocumentLoadComplete).URL,

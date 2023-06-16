@@ -27,9 +27,10 @@ async function openTabAndSetupStorage(url) {
   await addTab(url);
 
   // Setup the async storages in main window and for all its iframes
-  const browsingContexts = gBrowser.selectedBrowser.browsingContext.getAllBrowsingContextsInSubtree();
+  const browsingContexts =
+    gBrowser.selectedBrowser.browsingContext.getAllBrowsingContextsInSubtree();
   for (const browsingContext of browsingContexts) {
-    await SpecialPowers.spawn(browsingContext, [], async function() {
+    await SpecialPowers.spawn(browsingContext, [], async function () {
       if (content.wrappedJSObject.setup) {
         await content.wrappedJSObject.setup();
       }
@@ -44,9 +45,10 @@ async function openTabAndSetupStorage(url) {
 }
 
 async function clearStorage() {
-  const browsingContexts = gBrowser.selectedBrowser.browsingContext.getAllBrowsingContextsInSubtree();
+  const browsingContexts =
+    gBrowser.selectedBrowser.browsingContext.getAllBrowsingContextsInSubtree();
   for (const browsingContext of browsingContexts) {
-    await SpecialPowers.spawn(browsingContext, [], async function() {
+    await SpecialPowers.spawn(browsingContext, [], async function () {
       if (content.wrappedJSObject.clear) {
         await content.wrappedJSObject.clear();
       }

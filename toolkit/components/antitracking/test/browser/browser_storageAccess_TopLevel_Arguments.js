@@ -71,9 +71,8 @@ add_task(async function testArgumentInCompleteStorageAccessRequest() {
   let browser = tab.linkedBrowser;
   await SpecialPowers.spawn(browser, [], async _ => {
     SpecialPowers.wrap(content.document).notifyUserGestureActivation();
-    var p = content.document.completeStorageAccessRequestFromSite(
-      "blob://test"
-    );
+    var p =
+      content.document.completeStorageAccessRequestFromSite("blob://test");
     try {
       await p;
       ok(false, "Blob URLs must be rejected.");

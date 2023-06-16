@@ -536,7 +536,7 @@ MediaConduitErrorCode WebrtcAudioConduit::GetAudioFrame(
 }
 
 // Transport Layer Callbacks
-void WebrtcAudioConduit::OnRtpReceived(MediaPacket&& aPacket,
+void WebrtcAudioConduit::OnRtpReceived(webrtc::RtpPacketReceived&& aPacket,
                                        webrtc::RTPHeader&& aHeader) {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
 
@@ -547,21 +547,32 @@ void WebrtcAudioConduit::OnRtpReceived(MediaPacket&& aPacket,
   }
 
   CSFLogVerbose(LOGTAG, "%s: seq# %u, Len %zu, SSRC %u (0x%x) ", __FUNCTION__,
-                (uint16_t)ntohs(((uint16_t*)aPacket.data())[1]), aPacket.len(),
-                (uint32_t)ntohl(((uint32_t*)aPacket.data())[2]),
-                (uint32_t)ntohl(((uint32_t*)aPacket.data())[2]));
+                aPacket.SequenceNumber(), aPacket.size(), aPacket.Ssrc(),
+                aPacket.Ssrc());
 
   mRtpPacketEvent.Notify();
-  DeliverPacket(rtc::CopyOnWriteBuffer(aPacket.data(), aPacket.len()),
-                PacketType::RTP);
+  if (mCall->Call()) {
+    mCall->Call()->Receiver()->DeliverRtpPacket(
+        webrtc::MediaType::AUDIO, std::move(aPacket),
+        [self = RefPtr<WebrtcAudioConduit>(this)](
+            const webrtc::RtpPacketReceived& packet) {
+          CSFLogVerbose(
+              LOGTAG,
+              "AudioConduit %p: failed demuxing packet, ssrc: %u seq: %u",
+              self.get(), packet.Ssrc(), packet.SequenceNumber());
+          return false;
+        });
+  }
 }
 
 void WebrtcAudioConduit::OnRtcpReceived(MediaPacket&& aPacket) {
   CSFLogDebug(LOGTAG, "%s", __FUNCTION__);
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
 
-  DeliverPacket(rtc::CopyOnWriteBuffer(aPacket.data(), aPacket.len()),
-                PacketType::RTCP);
+  if (mCall->Call()) {
+    mCall->Call()->Receiver()->DeliverRtcpPacket(
+        rtc::CopyOnWriteBuffer(aPacket.data(), aPacket.len()));
+  }
 }
 
 Maybe<uint16_t> WebrtcAudioConduit::RtpSendBaseSeqFor(uint32_t aSsrc) const {
@@ -907,25 +918,28 @@ void WebrtcAudioConduit::CreateRecvStream() {
   }
 
   mRecvStream = mCall->Call()->CreateAudioReceiveStream(mRecvStreamConfig);
+  // Ensure that we set the jitter buffer target on this stream.
+  mRecvStream->SetBaseMinimumPlayoutDelayMs(mJitterBufferTargetMs);
+}
+
+void WebrtcAudioConduit::SetJitterBufferTarget(DOMHighResTimeStamp aTargetMs) {
+  MOZ_RELEASE_ASSERT(aTargetMs <= std::numeric_limits<uint16_t>::max());
+  MOZ_RELEASE_ASSERT(aTargetMs >= 0);
+
+  MOZ_ALWAYS_SUCCEEDS(mCallThread->Dispatch(NS_NewRunnableFunction(
+      __func__,
+      [this, self = RefPtr<WebrtcAudioConduit>(this), targetMs = aTargetMs] {
+        mJitterBufferTargetMs = static_cast<uint16_t>(targetMs);
+        if (mRecvStream) {
+          mRecvStream->SetBaseMinimumPlayoutDelayMs(targetMs);
+        }
+      })));
 }
 
 void WebrtcAudioConduit::DeliverPacket(rtc::CopyOnWriteBuffer packet,
                                        PacketType type) {
-  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
-
-  if (!mCall->Call()) {
-    return;
-  }
-
-  // Bug 1499796 - we need to get passed the time the packet was received
-  webrtc::PacketReceiver::DeliveryStatus status =
-      mCall->Call()->Receiver()->DeliverPacket(webrtc::MediaType::AUDIO,
-                                               std::move(packet), -1);
-
-  if (status != webrtc::PacketReceiver::DELIVERY_OK) {
-    CSFLogError(LOGTAG, "%s DeliverPacket Failed for %s packet, %d",
-                __FUNCTION__, type == PacketType::RTP ? "RTP" : "RTCP", status);
-  }
+  // Currently unused.
+  MOZ_ASSERT(false);
 }
 
 Maybe<int> WebrtcAudioConduit::ActiveSendPayloadType() const {

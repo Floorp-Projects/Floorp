@@ -66,7 +66,6 @@ else
       sleep 2
     esac
     AC_PROG_CXX
-    AC_CHECK_PROGS(OTOOL, otool, :)
 fi
 
 MOZ_TOOL_VARIABLES
@@ -99,9 +98,11 @@ case "$target" in
 
         AC_DEFINE(_CRT_SECURE_NO_WARNINGS)
         AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
-        AC_DEFINE(_USE_MATH_DEFINES) # Otherwise MSVC's math.h doesn't #define M_PI.
 
         MSVC_C_RUNTIME_DLL=vcruntime140.dll
+        if test -n "$IS_VS2019_OR_MORE" -a "$CPU_ARCH" != "x86"; then
+            MSVC_C_RUNTIME_1_DLL=vcruntime140_1.dll
+        fi
         MSVC_CXX_RUNTIME_DLL=msvcp140.dll
 
         # -Zc:sizedDealloc- disables C++14 global sized deallocation (see bug 1160146)
@@ -115,6 +116,7 @@ case "$target" in
         fi
 
         AC_SUBST(MSVC_C_RUNTIME_DLL)
+        AC_SUBST(MSVC_C_RUNTIME_1_DLL)
         AC_SUBST(MSVC_CXX_RUNTIME_DLL)
 
         AC_DEFINE(HAVE_SEH_EXCEPTIONS)
@@ -145,6 +147,8 @@ case "$target" in
         # causing problems with local implementations with the same name.
         AC_DEFINE(STRSAFE_NO_DEPRECATE)
     fi # !GNU_CC
+
+    AC_DEFINE(_USE_MATH_DEFINES) # Otherwise Windows' math.h doesn't #define M_PI.
 
     CFLAGS="$CFLAGS -D_HAS_EXCEPTIONS=0"
     CXXFLAGS="$CXXFLAGS -D_HAS_EXCEPTIONS=0"
@@ -1337,21 +1341,6 @@ AC_SUBST(MOZ_DEV_EDITION)
 if test -n "$MOZ_DEV_EDITION"; then
     AC_DEFINE(MOZ_DEV_EDITION)
 fi
-
-dnl Windows AccessibilityHandler
-dnl ========================================================
-
-if test -z "$MOZ_HANDLER_CLSID"; then
-    MOZ_HANDLER_CLSID="4a195748-dca2-45fb-9295-0a139e76a9e7"
-    MOZ_IHANDLERCONTROL_IID="3316ce35-f892-4832-97c5-06c52c03cdba"
-    MOZ_ASYNCIHANDLERCONTROL_IID="15b48b76-ad38-4ad3-bd1a-d3c48a5a9947"
-    MOZ_IGECKOBACKCHANNEL_IID="dd2e4a89-999e-4d65-8b65-440c923ddb61"
-fi
-
-AC_SUBST(MOZ_HANDLER_CLSID)
-AC_SUBST(MOZ_IHANDLERCONTROL_IID)
-AC_SUBST(MOZ_ASYNCIHANDLERCONTROL_IID)
-AC_SUBST(MOZ_IGECKOBACKCHANNEL_IID)
 
 dnl Spit out some output
 dnl ========================================================

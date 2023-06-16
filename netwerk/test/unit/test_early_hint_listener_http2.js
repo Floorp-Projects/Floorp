@@ -16,7 +16,7 @@ var earlyhintspath = "/103_response";
 var hint1 = "</style.css>; rel=preload; as=style";
 var hint2 = "</img.png>; rel=preload; as=image";
 
-let EarlyHintsListener = function() {};
+let EarlyHintsListener = function () {};
 
 EarlyHintsListener.prototype = {
   _expected_hints: "",

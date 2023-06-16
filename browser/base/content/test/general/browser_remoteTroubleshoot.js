@@ -47,7 +47,7 @@ function promiseNewChannelResponse(uri) {
     });
 }
 
-add_task(async function() {
+add_task(async function () {
   // We haven't set a permission yet - so even the "good" URI should fail.
   let got = await promiseNewChannelResponse(TEST_URI_GOOD);
   // Should return an error.

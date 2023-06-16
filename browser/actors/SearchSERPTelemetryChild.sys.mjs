@@ -57,23 +57,8 @@ class SearchProviders {
       .filter(p => "extraAdServersRegexps" in p)
       // Pre-build the regular expressions.
       .map(p => {
-        if (p.components) {
-          p.components.forEach(component => {
-            if (component.included?.regexps) {
-              component.included.regexps = component.included.regexps.map(
-                r => new RegExp(r)
-              );
-            }
-            if (component.excluded?.regexps) {
-              component.excluded.regexps = component.excluded.regexps.map(
-                r => new RegExp(r)
-              );
-            }
-            return component;
-          });
-        }
         p.adServerAttributes = p.adServerAttributes ?? [];
-        if (p.shoppingTab?.regexp) {
+        if (p.shoppingTab?.inspectRegexpInSERP) {
           p.shoppingTab.regexp = new RegExp(p.shoppingTab.regexp);
         }
         return {
@@ -82,9 +67,6 @@ class SearchProviders {
           extraAdServersRegexps: p.extraAdServersRegexps.map(
             r => new RegExp(r)
           ),
-          nonAdsLinkRegexps: p.nonAdsLinkRegexps?.length
-            ? p.nonAdsLinkRegexps.map(r => new RegExp(r))
-            : [],
         };
       });
 
@@ -139,35 +121,9 @@ class SearchAdImpression {
   #elementToAdDataMap = new Map();
 
   /**
-   * Height of the inner window in the browser.
-   */
-  #innerWindowHeight = 0;
-
-  set innerWindowHeight(height) {
-    this.#innerWindowHeight = height;
-  }
-
-  /**
-   * An array containing RegExps that wouldn't be caught in
-   * lists of ad expressions.
-   */
-  #nonAdRegexps = [];
-
-  /**
    * An array of components to do a top-down search.
    */
   #topDownComponents = [];
-
-  /**
-   * Top level URL being viewed.
-   *
-   * @type {URL | null}
-   */
-  #pageUrl = null;
-
-  set pageUrl(url) {
-    this.#pageUrl = url;
-  }
 
   /**
    * A reference the providerInfo for this SERP.
@@ -184,7 +140,6 @@ class SearchAdImpression {
     this.#providerInfo = providerInfo;
 
     // Reset values.
-    this.#nonAdRegexps = [];
     this.#topDownComponents = [];
 
     for (let component of this.#providerInfo.components) {
@@ -192,26 +147,10 @@ class SearchAdImpression {
         this.#defaultComponent = component;
         continue;
       }
-      if (component.nonAd && component.included?.regexps) {
-        this.#nonAdRegexps = this.#nonAdRegexps.concat(
-          component.included.regexps
-        );
-      }
       if (component.topDown) {
         this.#topDownComponents.push(component);
       }
     }
-  }
-
-  /**
-   * The callback that should fire when an element is interacted with.
-   *
-   * @type {function}
-   */
-  #eventCallback = null;
-
-  set eventCallback(callback) {
-    this.#eventCallback = callback;
   }
 
   /**
@@ -226,19 +165,32 @@ class SearchAdImpression {
       return false;
     }
 
-    let selector = this.#providerInfo.shoppingTab.selector;
-    let regexp = this.#providerInfo.shoppingTab.regexp;
-
-    let elements = document.querySelectorAll(selector);
-    for (let element of elements) {
-      let href = element.getAttribute("href");
-      if (href && regexp.test(href)) {
-        this.#recordElementData(element, {
-          type: "shopping_tab",
-          count: 1,
-        });
-        return true;
+    // If a provider has the inspectRegexpInSERP, we assume there must be an
+    // associated regexp that must be used on any hrefs matched by the elements
+    // found using the selector. If inspectRegexpInSERP is false, then check if
+    // the number of items found using the selector matches exactly one element
+    // to ensure we've used a fine-grained search.
+    let elements = document.querySelectorAll(
+      this.#providerInfo.shoppingTab.selector
+    );
+    if (this.#providerInfo.shoppingTab.inspectRegexpInSERP) {
+      let regexp = this.#providerInfo.shoppingTab.regexp;
+      for (let element of elements) {
+        let href = element.getAttribute("href");
+        if (href && regexp.test(href)) {
+          this.#recordElementData(element, {
+            type: "shopping_tab",
+            count: 1,
+          });
+          return true;
+        }
       }
+    } else if (elements.length == 1) {
+      this.#recordElementData(elements[0], {
+        type: "shopping_tab",
+        count: 1,
+      });
+      return true;
     }
     return false;
   }
@@ -265,14 +217,20 @@ class SearchAdImpression {
    *  adsVisible, and adsHidden within the component.
    */
   categorize(anchors, document) {
+    // Used for various functions to make relative URLs absolute.
+    let origin = new URL(document.documentURI).origin;
+
     // Bottom up approach.
-    this.#categorizeAnchors(anchors);
+    this.#categorizeAnchors(anchors, origin);
 
     // Top down approach.
     this.#categorizeDocument(document);
 
     let componentToVisibilityMap = new Map();
     let hrefToComponentMap = new Map();
+
+    let innerWindowHeight = document.ownerGlobal.innerHeight;
+
     // Iterate over the results:
     // - If it's searchbox add event listeners.
     // - If it is a non_ads_link, map its href to component type.
@@ -290,13 +248,13 @@ class SearchAdImpression {
       }
       if (data.childElements.length) {
         for (let child of data.childElements) {
-          let href = this.#extractHref(child);
+          let href = this.#extractHref(child, origin);
           if (href) {
             hrefToComponentMap.set(href, data.type);
           }
         }
       } else {
-        let href = this.#extractHref(element);
+        let href = this.#extractHref(element, origin);
         if (href) {
           hrefToComponentMap.set(href, data.type);
         }
@@ -319,7 +277,8 @@ class SearchAdImpression {
       let count = this.#countVisibleAndHiddenAds(
         element,
         data.adsLoaded,
-        childElements
+        childElements,
+        innerWindowHeight
       );
       if (componentToVisibilityMap.has(data.type)) {
         let componentInfo = componentToVisibilityMap.get(data.type);
@@ -343,18 +302,24 @@ class SearchAdImpression {
 
   /**
    * Given an element, find the href that is most likely to make the request if
-   * the element is clicked. The initial value of the anchor is an href if the
-   * attribute exists, otherwise it is a blank string. Then, if the element
-   * contains a specific data attribute known to contain hrefs, it will be
-   * used instead.
+   * the element is clicked. If the element contains a specific data attribute
+   * known to contain the url used to make the initial request, use it,
+   * otherwise use its href. Specific character conversions are done to mimic
+   * conversions likely to take place when urls are observed in network
+   * activity.
    *
    * @param {Element} element
    *  The element to inspect.
+   * @param {string} origin
+   *  The origin for relative urls.
    * @returns {string}
    *   The href of the element.
    */
-  #extractHref(element) {
-    let href = element.getAttribute("href") ?? "";
+  #extractHref(element, origin) {
+    let href;
+    // Prioritize the href from a known data attribute value instead of
+    // its href property, as the former is the initial url the page will
+    // navigate to before being re-directed to the href.
     for (let name of this.#providerInfo.adServerAttributes) {
       if (
         element.dataset[name] &&
@@ -366,19 +331,23 @@ class SearchAdImpression {
         break;
       }
     }
-    // Some hrefs might be using relative URLs.
-    if (href?.startsWith("/")) {
-      href = this.#pageUrl.origin + href;
+    // If a data attribute value was not found, fallback to the href.
+    href = href ?? element.getAttribute("href");
+    if (!href) {
+      return "";
     }
-    // Some reserved characters are converted into percent-encoded strings by
-    // the time they are observed in the network.
+    // Hrefs can be relative.
+    if (!href.startsWith("https://") && !href.startsWith("http://")) {
+      href = origin + href;
+    }
+    // Per Bug 376844, apostrophes in query params are escaped, and thus, are
+    // percent-encoded by the time they are observed in the network. Even
+    // though it's more comprehensive, we avoid using newURI because its more
+    // expensive and conversions should be the exception.
     // e.g. /path'?q=Mozilla's -> /path'?q=Mozilla%27s
-    if (href) {
-      try {
-        href = Services.io.newURI(href)?.spec;
-      } catch {
-        return "";
-      }
+    let arr = href.split("?");
+    if (arr.length == 2 && arr[1].includes("'")) {
+      href = arr[0] + "?" + arr[1].replaceAll("'", "%27");
     }
     return href;
   }
@@ -398,10 +367,12 @@ class SearchAdImpression {
    *
    * @param {HTMLCollectionOf<HTMLAnchorElement>} anchors
    *  The list of anchors to inspect.
+   * @param {string} origin
+   *  The origin of the document the anchors belong to.
    */
-  #categorizeAnchors(anchors) {
+  #categorizeAnchors(anchors, origin) {
     for (let anchor of anchors) {
-      if (this.#shouldInspectAnchor(anchor)) {
+      if (this.#shouldInspectAnchor(anchor, origin)) {
         let result = this.#findDataForAnchor(anchor);
         if (result) {
           this.#recordElementData(result.element, {
@@ -414,13 +385,6 @@ class SearchAdImpression {
         if (result.relatedElements?.length) {
           this.#addEventListenerToElements(result.relatedElements, result.type);
         }
-        // If an anchor doesn't match any component, and it doesn't have a non
-        // ads link regexp, cache the anchor so the parent process can observe
-        // them.
-      } else if (!this.#providerInfo.nonAdsLinkRegexps.length) {
-        this.#recordElementData(anchor, {
-          type: "non_ads_link",
-        });
       }
     }
   }
@@ -481,28 +445,33 @@ class SearchAdImpression {
    * regular expressions on either its href or specified data-attribute values.
    *
    * @param {HTMLAnchorElement} anchor
+   * @param {string} origin
    * @returns {boolean}
    */
-  #shouldInspectAnchor(anchor) {
-    if (!anchor.href) {
+  #shouldInspectAnchor(anchor, origin) {
+    let href = anchor.getAttribute("href");
+    if (!href) {
       return false;
     }
+
+    // Some hrefs might be relative.
+    if (!href.startsWith("https://") && !href.startsWith("http://")) {
+      href = origin + href;
+    }
+
     let regexps = this.#providerInfo.extraAdServersRegexps;
     // Anchors can contain ad links in a data-attribute.
     for (let name of this.#providerInfo.adServerAttributes) {
+      let attributeValue = anchor.dataset[name];
       if (
-        anchor.dataset[name] &&
-        regexps.some(regexp => regexp.test(anchor.dataset[name]))
+        attributeValue &&
+        regexps.some(regexp => regexp.test(attributeValue))
       ) {
         return true;
       }
     }
     // Anchors can contain ad links in a specific href.
-    if (regexps.some(regexp => regexp.test(anchor.href))) {
-      return true;
-    }
-    // Anchors can contain hrefs matching non-ad regular expressions.
-    if (this.#nonAdRegexps.some(regexp => regexp.test(anchor.href))) {
+    if (regexps.some(regexp => regexp.test(href))) {
       return true;
     }
     return false;
@@ -571,32 +540,18 @@ class SearchAdImpression {
         continue;
       }
 
-      // The anchor shouldn't belong to an excluded parent component.
-      if (anchor.closest(component.excluded?.parent?.selector)) {
-        continue;
-      }
-
-      // The anchor should not belong to an excluded regexp (if provided).
-      if (component.excluded?.regexps?.some(r => r.test(anchor.href))) {
-        continue;
-      }
-
-      // The anchor should belong to an included regexp (if provided).
+      // The anchor shouldn't belong to an excluded parent component if one
+      // is provided.
       if (
-        component.included.regexps &&
-        !component.included.regexps.some(r => r.test(anchor.href))
+        component.excluded?.parent?.selector &&
+        anchor.closest(component.excluded.parent.selector)
       ) {
         continue;
       }
 
-      // If no parent was provided, but it passed a previous regular
-      // expression check, return the anchor. This might be because there
-      // was no clear parent for the anchor to match against.
-      if (!component.included.parent && component.included?.regexps) {
-        return {
-          element: anchor,
-          type: component.type,
-        };
+      // All components with included should have a parent entry.
+      if (!component.included.parent) {
+        continue;
       }
 
       // Find the parent of the anchor.
@@ -685,12 +640,20 @@ class SearchAdImpression {
    *  Number of ads initially determined to be loaded for this element.
    * @param {Array<Element>} childElements
    *  List of children belonging to element.
+   * @param {number} innerWindowHeight
+   *  Current height of the window containing the elements.
    * @returns {object}
    *  Contains adsVisible which is the number of ads shown for the element
    *  and adsHidden, the number of ads not visible to the user.
    */
-  #countVisibleAndHiddenAds(element, adsLoaded, childElements) {
-    let elementRect = element.getBoundingClientRect();
+  #countVisibleAndHiddenAds(
+    element,
+    adsLoaded,
+    childElements,
+    innerWindowHeight
+  ) {
+    let elementRect =
+      element.ownerGlobal.windowUtils.getBoundsWithoutFlushing(element);
 
     // If the element lacks a dimension, assume all ads that
     // were contained within it are hidden.
@@ -704,7 +667,7 @@ class SearchAdImpression {
     // Since the parent element has dimensions but no child elements we want
     // to inspect, check the parent itself is within the viewable area.
     if (!childElements || !childElements.length) {
-      if (this.#innerWindowHeight < elementRect.y + elementRect.height) {
+      if (innerWindowHeight < elementRect.y + elementRect.height) {
         return {
           adsVisible: 0,
           adsHidden: 0,
@@ -719,7 +682,8 @@ class SearchAdImpression {
     let adsVisible = 0;
     let adsHidden = 0;
     for (let child of childElements) {
-      let itemRect = child.getBoundingClientRect();
+      let itemRect =
+        child.ownerGlobal.windowUtils.getBoundsWithoutFlushing(child);
 
       // If the child element we're inspecting has no dimension, it is hidden.
       if (itemRect.height == 0 || itemRect.width == 0) {
@@ -737,7 +701,7 @@ class SearchAdImpression {
       }
 
       // If the child element is too far down, skip it.
-      if (this.#innerWindowHeight < itemRect.y + itemRect.height) {
+      if (innerWindowHeight < itemRect.y + itemRect.height) {
         continue;
       }
       ++adsVisible;
@@ -781,9 +745,8 @@ class SearchAdImpression {
     if (this.#elementToAdDataMap.has(element)) {
       let recordedValues = this.#elementToAdDataMap.get(element);
       if (childElements.length) {
-        recordedValues.childElements = recordedValues.childElements.concat(
-          childElements
-        );
+        recordedValues.childElements =
+          recordedValues.childElements.concat(childElements);
       }
     } else {
       this.#elementToAdDataMap.set(element, {
@@ -830,32 +793,48 @@ class SearchAdImpression {
         }
         break;
     }
+
+    let document = elements[0].ownerGlobal.document;
+    let url = document.documentURI;
+    let callback = documentToEventCallbackMap.get(document);
+
     for (let element of elements) {
       let clickCallback = () => {
-        this.#eventCallback(type, clickAction);
+        callback({
+          type,
+          url,
+          action: clickAction,
+        });
       };
       element.addEventListener("click", clickCallback);
 
       let keydownCallback = event => {
         if (event.key == "Enter") {
-          this.#eventCallback(type, keydownEnterAction);
+          callback({
+            type,
+            url,
+            action: keydownEnterAction,
+          });
         }
       };
       element.addEventListener("keydown", keydownCallback);
 
-      searchAdImpressionListeners.set(element, {
-        clicked: clickCallback,
-        keydown: keydownCallback,
-      });
-      searchAdImpressionElements.add(element);
+      document.ownerGlobal.addEventListener(
+        "pagehide",
+        () => {
+          element.removeEventListener("click", clickCallback);
+          element.removeEventListener("keydown", keydownCallback);
+        },
+        { once: true }
+      );
     }
   }
 }
 
 const searchProviders = new SearchProviders();
 const searchAdImpression = new SearchAdImpression();
-const searchAdImpressionListeners = new WeakMap();
-const searchAdImpressionElements = new WeakSet();
+
+const documentToEventCallbackMap = new WeakMap();
 
 /**
  * SearchTelemetryChild monitors for pages that are partner searches, and
@@ -930,34 +909,46 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
 
     if (
       lazy.serpEventsEnabled &&
-      providerInfo?.components &&
+      providerInfo.components?.length &&
       (eventType == "load" || eventType == "pageshow")
     ) {
-      searchAdImpression.pageUrl = new URL(url);
-      searchAdImpression.providerInfo = providerInfo;
-      searchAdImpression.innerWindowHeight = this.contentWindow.innerHeight;
-      searchAdImpression.eventCallback = (type, action) => {
+      // Start performance measurements.
+      let start = Cu.now();
+      let timerId = Glean.serp.categorizationDuration.start();
+
+      let pageActionCallback = info => {
         this.sendAsyncMessage("SearchTelemetry:Action", {
-          type,
-          url: this.document.documentURI,
-          action,
+          type: info.type,
+          url: info.url,
+          action: info.action,
         });
       };
-      let start = Cu.now();
-      let {
-        componentToVisibilityMap,
-        hrefToComponentMap,
-      } = searchAdImpression.categorize(anchors, doc);
-      ChromeUtils.addProfilerMarker(
-        "SearchSERPTelemetryChild._checkForAdLink",
-        start,
-        "Checked anchors for visibility"
-      );
-      this.sendAsyncMessage("SearchTelemetry:AdImpressions", {
-        adImpressions: componentToVisibilityMap,
-        hrefToComponentMap,
-        url,
-      });
+      documentToEventCallbackMap.set(this.document, pageActionCallback);
+
+      let componentToVisibilityMap, hrefToComponentMap;
+      try {
+        let result = searchAdImpression.categorize(anchors, doc);
+        componentToVisibilityMap = result.componentToVisibilityMap;
+        hrefToComponentMap = result.hrefToComponentMap;
+      } catch (e) {
+        // Cancel the timer if an error encountered.
+        Glean.serp.categorizationDuration.cancel(timerId);
+      }
+
+      if (componentToVisibilityMap && hrefToComponentMap) {
+        // End measurements.
+        ChromeUtils.addProfilerMarker(
+          "SearchSERPTelemetryChild._checkForAdLink",
+          start,
+          "Checked anchors for visibility"
+        );
+        Glean.serp.categorizationDuration.stopAndAccumulate(timerId);
+        this.sendAsyncMessage("SearchTelemetry:AdImpressions", {
+          adImpressions: componentToVisibilityMap,
+          hrefToComponentMap,
+          url,
+        });
+      }
     }
   }
 
@@ -968,19 +959,20 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
   #checkForPageImpressionComponents() {
     let url = this.document.documentURI;
     let providerInfo = this._getProviderInfoForUrl(url);
-    searchAdImpression.providerInfo = providerInfo;
-
-    let start = Cu.now();
-    let hasShoppingTab = searchAdImpression.hasShoppingTab(this.document);
-    ChromeUtils.addProfilerMarker(
-      "SearchSERPTelemetryChild.#recordImpression",
-      start,
-      "Checked for shopping tab"
-    );
-    this.sendAsyncMessage("SearchTelemetry:PageImpression", {
-      url,
-      hasShoppingTab,
-    });
+    if (providerInfo.components?.length) {
+      searchAdImpression.providerInfo = providerInfo;
+      let start = Cu.now();
+      let hasShoppingTab = searchAdImpression.hasShoppingTab(this.document);
+      ChromeUtils.addProfilerMarker(
+        "SearchSERPTelemetryChild.#recordImpression",
+        start,
+        "Checked for shopping tab"
+      );
+      this.sendAsyncMessage("SearchTelemetry:PageImpression", {
+        url,
+        hasShoppingTab,
+      });
+    }
   }
 
   /**
@@ -989,7 +981,7 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
    * @param {object} event The event details.
    */
   handleEvent(event) {
-    if (!this._getProviderInfoForUrl(this.document.documentURI)) {
+    if (!this.#urlIsSERP(this.document.documentURI)) {
       return;
     }
     switch (event.type) {
@@ -1024,31 +1016,25 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
       }
       case "pagehide": {
         this.#cancelCheck();
-        if (lazy.serpEventsEnabled) {
-          this.#clearListeners();
-        }
         break;
       }
     }
   }
 
-  #clearListeners() {
-    let start = Cu.now();
-    for (let element of ChromeUtils.nondeterministicGetWeakSetKeys(
-      searchAdImpressionElements
-    )) {
-      let listeners = searchAdImpressionListeners.get(element);
-      if (listeners) {
-        element.removeEventListener("clicked", listeners.clicked);
-        element.removeEventListener("keydown", listeners.keydown);
+  #urlIsSERP(url) {
+    let provider = this._getProviderInfoForUrl(this.document.documentURI);
+    if (provider) {
+      // Some URLs can match provider info but also be the provider's homepage
+      // instead of a SERP.
+      // e.g. https://example.com/ vs. https://example.com/?foo=bar
+      // To check this, we look for the presence of the query parameter
+      // that contains a search term.
+      let queries = new URLSearchParams(url.split("#")[0].split("?")[1]);
+      if (queries.has(provider.queryParamName)) {
+        return true;
       }
-      searchAdImpressionListeners.delete(element);
     }
-    ChromeUtils.addProfilerMarker(
-      "SearchSERPTelemetryChild.#clearListeners",
-      start,
-      "Removed event listeners."
-    );
+    return false;
   }
 
   #cancelCheck() {

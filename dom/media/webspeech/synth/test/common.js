@@ -27,8 +27,8 @@ function synthTestQueue(aTestArgs, aEndFunc) {
 
     u.addEventListener(
       "start",
-      (function(expectedUri) {
-        return function(e) {
+      (function (expectedUri) {
+        return function (e) {
           if (expectedUri) {
             var chosenVoice = SpecialPowers.wrap(e).target.chosenVoiceURI;
             is(chosenVoice, expectedUri, "Incorrect URI is used");
@@ -42,7 +42,7 @@ function synthTestQueue(aTestArgs, aEndFunc) {
 
     u.addEventListener(
       "error",
-      (function(expectedError) {
+      (function (expectedError) {
         return function onerror_handler(e) {
           ok(
             expectedError,
@@ -61,9 +61,9 @@ function synthTestQueue(aTestArgs, aEndFunc) {
 }
 
 function loadFrame(frameId) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     var frame = document.getElementById(frameId);
-    frame.addEventListener("load", function(e) {
+    frame.addEventListener("load", function (e) {
       frame.contentWindow.document.title = frameId;
       resolve(frame);
     });

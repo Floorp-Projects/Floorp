@@ -6,7 +6,7 @@
  * it should be downsized until it can be stored, rather than thrown away.
  */
 
-add_task(async function() {
+add_task(async function () {
   let file = do_get_file("noise.png");
   let icon = {
     file,

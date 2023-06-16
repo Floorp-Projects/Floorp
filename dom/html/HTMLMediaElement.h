@@ -353,7 +353,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // redirects.
   bool HadCrossOriginRedirects();
 
-  bool ShouldResistFingerprinting() const override;
+  bool ShouldResistFingerprinting(RFPTarget aTarget) const override;
 
   // Principal of the currently playing video resource. Anything accessing the
   // image container of this element must have a principal that subsumes this
@@ -371,13 +371,10 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // Update the visual size of the media. Called from the decoder on the
   // main thread when/if the size changes.
   virtual void UpdateMediaSize(const nsIntSize& aSize);
-  // Like UpdateMediaSize, but only updates the size if no size has yet
-  // been set.
-  void UpdateInitialMediaSize(const nsIntSize& aSize);
 
-  void Invalidate(bool aImageSizeChanged,
+  void Invalidate(ImageSizeChanged aImageSizeChanged,
                   const Maybe<nsIntSize>& aNewIntrinsicSize,
-                  bool aForceInvalidate) override;
+                  ForceInvalidate aForceInvalidate) override;
 
   // Returns the CanPlayStatus indicating if we can handle the
   // full MIME type including the optional codecs parameter.

@@ -11,6 +11,7 @@
 
 #include "FFmpegDataDecoder.h"
 #include "FFmpegLog.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/TaskQueue.h"
 #include "prsystem.h"
 #include "VideoUtils.h"
@@ -24,7 +25,7 @@ FFmpegDataDecoder<LIBAV_VER>::FFmpegDataDecoder(FFmpegLibWrapper* aLib,
     : mLib(aLib),
       mCodecContext(nullptr),
       mCodecParser(nullptr),
-      mFrame(NULL),
+      mFrame(nullptr),
       mExtraData(nullptr),
       mCodecID(aCodecID),
       mTaskQueue(TaskQueue::Create(
@@ -76,16 +77,25 @@ MediaResult FFmpegDataDecoder<LIBAV_VER>::InitDecoder() {
 
   AVCodec* codec = FindAVCodec(mLib, mCodecID);
   if (!codec) {
-    FFMPEG_LOG("  unable to find codec");
+    FFMPEG_LOG("  couldn't find ffmpeg decoder for codec id %d", mCodecID);
     return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                        RESULT_DETAIL("unable to find codec"));
+  }
+  // openh264 has broken decoding of some h264 videos so
+  // don't use it unless explicitly allowed for now.
+  if (!strcmp(codec->name, "libopenh264") &&
+      !StaticPrefs::media_ffmpeg_allow_openh264()) {
+    FFMPEG_LOG("  unable to find codec (openh264 disabled by pref)");
+    return MediaResult(
+        NS_ERROR_DOM_MEDIA_FATAL_ERR,
+        RESULT_DETAIL("unable to find codec (openh264 disabled by pref)"));
   }
   FFMPEG_LOG("  codec %s : %s", codec->name, codec->long_name);
 
   StaticMutexAutoLock mon(sMutex);
 
   if (!(mCodecContext = mLib->avcodec_alloc_context3(codec))) {
-    FFMPEG_LOG("  couldn't init ffmpeg context");
+    FFMPEG_LOG("  couldn't allocate ffmpeg context for codec %s", codec->name);
     return MediaResult(NS_ERROR_OUT_OF_MEMORY,
                        RESULT_DETAIL("Couldn't init ffmpeg context"));
   }
@@ -102,7 +112,8 @@ MediaResult FFmpegDataDecoder<LIBAV_VER>::InitDecoder() {
   InitCodecContext();
   MediaResult ret = AllocateExtraData();
   if (NS_FAILED(ret)) {
-    FFMPEG_LOG("  failed to allocate extra data");
+    FFMPEG_LOG("  couldn't allocate ffmpeg extra data for codec %s",
+               codec->name);
     mLib->av_freep(&mCodecContext);
     return ret;
   }
@@ -222,9 +233,11 @@ RefPtr<MediaDataDecoder::FlushPromise>
 FFmpegDataDecoder<LIBAV_VER>::ProcessFlush() {
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
   if (mCodecContext) {
+    FFMPEG_LOG("FFmpegDataDecoder: flushing buffers");
     mLib->avcodec_flush_buffers(mCodecContext);
   }
   if (mCodecParser) {
+    FFMPEG_LOG("FFmpegDataDecoder: reinitializing parser");
     mLib->av_parser_close(mCodecParser);
     mCodecParser = mLib->av_parser_init(mCodecID);
   }
@@ -236,6 +249,7 @@ void FFmpegDataDecoder<LIBAV_VER>::ProcessShutdown() {
   StaticMutexAutoLock mon(sMutex);
 
   if (mCodecContext) {
+    FFMPEG_LOG("FFmpegDataDecoder: shutdown");
     if (mCodecContext->extradata) {
       mLib->av_freep(&mCodecContext->extradata);
     }

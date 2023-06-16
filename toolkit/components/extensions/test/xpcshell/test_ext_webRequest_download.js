@@ -13,7 +13,7 @@ add_task(async function testDownload() {
         "https://example.com/*",
       ],
     },
-    background: async function() {
+    background: async function () {
       browser.webRequest.onBeforeRequest.addListener(
         details => {
           browser.test.sendMessage("request_intercepted");

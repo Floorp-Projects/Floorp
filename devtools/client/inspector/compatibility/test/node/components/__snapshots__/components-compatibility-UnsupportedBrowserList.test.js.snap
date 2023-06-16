@@ -1,37 +1,118 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`UnsupportedBrowserList component renders the browsers 1`] = `
-<Localized
-  $browsers="Firefox 69 (beta)
-Firefox 70 (nightly)
-Test Browser 1
-Test Browser 2
-Sample Browser 100"
-  attrs={
-    Object {
-      "title": true,
-    }
-  }
-  id="compatibility-issue-browsers-list"
+exports[`UnsupportedBrowserList component does not show ESR version if newer version is not supported 1`] = `
+<ul
+  className="compatibility-unsupported-browser-list"
 >
-  <ul
-    className="compatibility-unsupported-browser-list"
-  >
-    <UnsupportedBrowserItem
-      id="firefox"
-      key="firefox"
-      name="Firefox"
-    />
-    <UnsupportedBrowserItem
-      id="test-browser"
-      key="test-browser"
-      name="Test Browser"
-    />
-    <UnsupportedBrowserItem
-      id="sample-browser"
-      key="sample-browser"
-      name="Sample Browser"
-    />
-  </ul>
-</Localized>
+  <UnsupportedBrowserItem
+    id="firefox"
+    key="firefox"
+    name="Firefox"
+    unsupportedVersions={
+      Array [
+        Object {
+          "status": "esr",
+          "version": "102",
+        },
+        Object {
+          "status": "current",
+          "version": "112",
+        },
+      ]
+    }
+    version="112"
+  />
+</ul>
+`;
+
+exports[`UnsupportedBrowserList component renders the browsers 1`] = `
+<ul
+  className="compatibility-unsupported-browser-list"
+>
+  <UnsupportedBrowserItem
+    id="firefox"
+    key="firefox"
+    name="Firefox"
+    unsupportedVersions={
+      Array [
+        Object {
+          "status": "beta",
+          "version": "69",
+        },
+        Object {
+          "status": "nightly",
+          "version": "70",
+        },
+      ]
+    }
+    version="69"
+  />
+  <UnsupportedBrowserItem
+    id="test-browser"
+    key="test-browser"
+    name="Test Browser"
+    unsupportedVersions={
+      Array [
+        Object {
+          "status": undefined,
+          "version": "1",
+        },
+        Object {
+          "status": undefined,
+          "version": "2",
+        },
+      ]
+    }
+    version="1"
+  />
+  <UnsupportedBrowserItem
+    id="sample-browser"
+    key="sample-browser"
+    name="Sample Browser"
+    unsupportedVersions={
+      Array [
+        Object {
+          "status": undefined,
+          "version": "100",
+        },
+      ]
+    }
+    version="100"
+  />
+</ul>
+`;
+
+exports[`UnsupportedBrowserList component shows ESR version if newer version is supported 1`] = `
+<ul
+  className="compatibility-unsupported-browser-list"
+>
+  <UnsupportedBrowserItem
+    id="firefox"
+    key="firefox"
+    name="Firefox"
+    unsupportedVersions={
+      Array [
+        Object {
+          "status": "esr",
+          "version": "102",
+        },
+      ]
+    }
+    version="102"
+  />
+  <UnsupportedBrowserItem
+    id="test-browser"
+    key="test-browser"
+    name="Test Browser"
+    unsupportedVersions={
+      Array [
+        Object {
+          "status": undefined,
+          "version": "1",
+        },
+      ]
+    }
+    version="1"
+  />
+</ul>
 `;

@@ -104,7 +104,7 @@ function getConfigData(testInput) {
 
 const engineSelector = new SearchEngineSelector();
 
-add_task(async function() {
+add_task(async function () {
   const settings = await RemoteSettings(SearchUtils.SETTINGS_KEY);
   const getStub = sinon.stub(settings, "get");
 
@@ -115,13 +115,11 @@ add_task(async function() {
     delete engineSelector._configuration;
     getStub.returns(getConfigData(test.input));
 
-    const {
-      engines,
-      privateDefault,
-    } = await engineSelector.fetchEngineConfiguration({
-      locale: "en-US",
-      region: "us",
-    });
+    const { engines, privateDefault } =
+      await engineSelector.fetchEngineConfiguration({
+        locale: "en-US",
+        region: "us",
+      });
 
     let names = engines.map(obj => obj.engineName);
     Assert.deepEqual(

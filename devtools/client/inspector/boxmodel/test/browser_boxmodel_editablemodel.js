@@ -17,7 +17,7 @@ const TEST_URI =
   "<div id='div1'></div><div id='div2'></div>" +
   "<div id='div3'></div><div id='div4'></div>";
 
-add_task(async function() {
+add_task(async function () {
   // Make sure the toolbox is tall enough to have empty space below the
   // boxmodel-container.
   await pushPref("devtools.toolbox.footer.height", 500);

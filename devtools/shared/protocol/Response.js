@@ -17,7 +17,7 @@ var { types } = require("resource://devtools/shared/protocol/types.js");
  *    The response template.
  * @construcor
  */
-var Response = function(template = {}) {
+var Response = function (template = {}) {
   this.template = template;
   if (this.template instanceof RetVal && this.template.isArrayType()) {
     throw Error("Arrays should be wrapped in objects");
@@ -89,10 +89,10 @@ exports.Response = Response;
  * @param type type
  *    The return value should be marshalled as this type.
  */
-var RetVal = function(type) {
+var RetVal = function (type) {
   this._type = type;
   // Prevent force loading all RetVal types by accessing it only when needed
-  loader.lazyGetter(this, "type", function() {
+  loader.lazyGetter(this, "type", function () {
     return types.getType(type);
   });
 };
@@ -114,6 +114,6 @@ RetVal.prototype = {
 };
 
 // Outside of protocol.js, RetVal is called as factory method, without the new keyword.
-exports.RetVal = function(type) {
+exports.RetVal = function (type) {
   return new RetVal(type);
 };

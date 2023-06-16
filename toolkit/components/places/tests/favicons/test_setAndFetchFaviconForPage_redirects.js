@@ -22,7 +22,7 @@ add_task(async function same_host_redirect() {
     url: srcUrl,
   });
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.bookmarks.eraseEverything();
     await PlacesUtils.history.clear();
   });

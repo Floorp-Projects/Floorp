@@ -24,7 +24,7 @@ function testPrefStateMatchesLockedState() {
   gBrowser.removeCurrentTab();
 }
 
-add_setup(function() {
+add_setup(function () {
   registerCleanupFunction(function resetPreferences() {
     Services.prefs.unlockPref("privacy.sanitize.sanitizeOnShutdown");
     Services.prefs.clearUserPref("privacy.history.custom");

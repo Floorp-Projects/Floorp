@@ -10,8 +10,8 @@ var EXPORTED_SYMBOLS = [
   "MacOSWebRTCStatusbarIndicator",
 ];
 
-const { EventEmitter } = ChromeUtils.import(
-  "resource:///modules/syncedtabs/EventEmitter.jsm"
+const { EventEmitter } = ChromeUtils.importESModule(
+  "resource:///modules/syncedtabs/EventEmitter.sys.mjs"
 );
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
@@ -26,11 +26,9 @@ ChromeUtils.defineModuleGetter(
   "BrowserWindowTracker",
   "resource:///modules/BrowserWindowTracker.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "SitePermissions",
-  "resource:///modules/SitePermissions.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  SitePermissions: "resource:///modules/SitePermissions.sys.mjs",
+});
 XPCOMUtils.defineLazyGetter(
   lazy,
   "syncL10n",
@@ -704,9 +702,8 @@ var webrtcUI = {
       return;
     }
 
-    let actor = sharingState.browsingContext.currentWindowGlobal.getActor(
-      "WebRTC"
-    );
+    let actor =
+      sharingState.browsingContext.currentWindowGlobal.getActor("WebRTC");
 
     // Delete activePerms for all outerWindowIds under the current browser. We
     // need to do this prior to sending the stopSharing message, so WebRTCParent
@@ -778,8 +775,8 @@ var webrtcUI = {
     if (AppConstants.platform == "macosx" && !Services.focus.activeWindow) {
       browserWindow.addEventListener(
         "activate",
-        function() {
-          Services.tm.dispatchToMainThread(function() {
+        function () {
+          Services.tm.dispatchToMainThread(function () {
             browserWindow.gPermissionPanel.openPopup(aEvent);
           });
         },

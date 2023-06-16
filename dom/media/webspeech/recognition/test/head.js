@@ -58,8 +58,8 @@ function EventManager(sr) {
 
   // register default handlers
   for (var i = 0; i < allEvents.length; i++) {
-    (function(eventName) {
-      sr["on" + eventName] = function(evt) {
+    (function (eventName) {
+      sr["on" + eventName] = function (evt) {
         var message = "unexpected event: " + eventName;
         if (eventName == "error") {
           message += " -- " + evt.message;
@@ -77,7 +77,7 @@ function EventManager(sr) {
   self.expect = function EventManager_expect(eventName, cb) {
     nEventsExpected++;
 
-    sr["on" + eventName] = function(evt) {
+    sr["on" + eventName] = function (evt) {
       self.eventsReceived.push(eventName);
       ok(true, "received event " + eventName);
 
@@ -107,7 +107,7 @@ function EventManager(sr) {
     audioTag.src = self.audioSampleFile;
 
     var stream = audioTag.mozCaptureStreamUntilEnded();
-    audioTag.addEventListener("ended", function() {
+    audioTag.addEventListener("ended", function () {
       info("Sample stream ended, requesting queued events");
       isSendingAudioData = false;
       while (queuedEventRequests.length) {
@@ -142,13 +142,13 @@ function EventManager(sr) {
 }
 
 function buildResultCallback(transcript) {
-  return function(evt) {
+  return function (evt) {
     is(evt.results[0][0].transcript, transcript, "expect correct transcript");
   };
 }
 
 function buildErrorCallback(errcode) {
-  return function(err) {
+  return function (err) {
     is(err.error, errcode, "expect correct error code");
   };
 }
@@ -161,7 +161,7 @@ function performTest(options) {
     ["media.webspeech.test.enable", true]
   );
 
-  SpecialPowers.pushPrefEnv({ set: prefs }, function() {
+  SpecialPowers.pushPrefEnv({ set: prefs }, function () {
     var sr;
     if (!options.webkit) {
       sr = new SpeechRecognition();
@@ -179,7 +179,7 @@ function performTest(options) {
       em.expect(eventName, cb);
     }
 
-    em.doneFunc = function() {
+    em.doneFunc = function () {
       em.requestTestEnd();
       if (options.doneFunc) {
         options.doneFunc();

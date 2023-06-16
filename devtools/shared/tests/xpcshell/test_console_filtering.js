@@ -13,7 +13,7 @@ const {
 var seenMessages = 0;
 var seenTypes = 0;
 
-var onConsoleAPICall = function(message) {
+var onConsoleAPICall = function (message) {
   if (message.consoleID && message.consoleID == "addon/foo") {
     Assert.equal(message.level, "warn");
     Assert.equal(message.arguments[0], "Warning from foo");

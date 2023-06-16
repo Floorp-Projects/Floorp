@@ -7,7 +7,7 @@ const TEST_URL =
   'data:text/html;charset=utf-8,<iframe id="subframe" ' +
   'width="200" height="200"></iframe>';
 
-addRDMTask(TEST_URL, async function({ ui, manager }) {
+addRDMTask(TEST_URL, async function ({ ui, manager }) {
   ok(ui, "An instance of the RDM should be attached to the tab.");
   await setViewportSizeAndAwaitReflow(ui, manager, 110, 500);
 
@@ -86,12 +86,8 @@ async function setViewportSizeWithInputKeys(ui) {
 }
 
 async function doInitialChecks(ui, expectedInnerWidth) {
-  const {
-    innerWidth,
-    matchesMedia,
-    outerHeight,
-    outerWidth,
-  } = await grabContentInfo(ui);
+  const { innerWidth, matchesMedia, outerHeight, outerWidth } =
+    await grabContentInfo(ui);
   is(innerWidth, expectedInnerWidth, "inner width should be as expected");
   is(outerWidth, 110, "device's outerWidth should be 110px");
   is(outerHeight, 500, "device's outerHeight should be 500px");
@@ -140,7 +136,7 @@ async function checkSubframeProps(ui) {
 }
 
 function grabContentInfo(ui) {
-  return SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {
+  return SpecialPowers.spawn(ui.getViewportBrowser(), [], async function () {
     return {
       screen: {
         width: content.screen.width,
@@ -155,7 +151,7 @@ function grabContentInfo(ui) {
 }
 
 function grabContentSubframeInfo(ui) {
-  return SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {
+  return SpecialPowers.spawn(ui.getViewportBrowser(), [], async function () {
     const subframe = content.document.getElementById("subframe");
     const win = subframe.contentWindow;
     return {

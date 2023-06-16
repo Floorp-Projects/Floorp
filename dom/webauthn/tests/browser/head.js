@@ -45,7 +45,7 @@ function arrivingHereIsBad(aResult) {
 
 function expectError(aType) {
   let expected = `${aType}Error`;
-  return function(aResult) {
+  return function (aResult) {
     is(
       aResult.slice(0, expected.length),
       expected,

@@ -8,7 +8,7 @@ add_task(async function test_disabled() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "http://example.com" },
-    async function() {
+    async function () {
       const menu = new HelpMenuHelper();
       await menu.open();
       is(
@@ -24,7 +24,7 @@ add_task(async function test_disabled() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "http://example.com" },
-    async function() {
+    async function () {
       const menu = new HelpMenuHelper();
       await menu.open();
       is(

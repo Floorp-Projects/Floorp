@@ -13,7 +13,7 @@ const TEST_URI =
   "test/browser/" +
   "test-mixedcontent-securityerrors.html";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
   info("console opened");
 

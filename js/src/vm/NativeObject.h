@@ -31,7 +31,10 @@
 namespace js {
 
 class PropertyResult;
+
+namespace gc {
 class TenuringTracer;
+}  // namespace gc
 
 #ifdef ENABLE_RECORD_TUPLE
 // Defined in vm/RecordTupleShared.{h,cpp}. We cannot include that file
@@ -252,7 +255,7 @@ class ObjectElements {
   friend class ::JSObject;
   friend class ArrayObject;
   friend class NativeObject;
-  friend class TenuringTracer;
+  friend class gc::TenuringTracer;
 #ifdef ENABLE_RECORD_TUPLE
   friend class TupleType;
 #endif
@@ -445,9 +448,15 @@ static_assert(ObjectElements::VALUES_PER_HEADER * sizeof(HeapSlot) ==
 class alignas(HeapSlot) ObjectSlots {
   uint32_t capacity_;
   uint32_t dictionarySlotSpan_;
+  uint64_t maybeUniqueId_;
 
  public:
-  static constexpr size_t VALUES_PER_HEADER = 1;
+  // Special values for maybeUniqueId_ to indicate no unique ID is present.
+  static constexpr uint64_t NoUniqueIdInDynamicSlots = 0;
+  static constexpr uint64_t NoUniqueIdInSharedEmptySlots = 1;
+  static constexpr uint64_t LastNoUniqueIdValue = NoUniqueIdInSharedEmptySlots;
+
+  static constexpr size_t VALUES_PER_HEADER = 2;
 
   static inline size_t allocCount(size_t slotCount) {
     static_assert(sizeof(ObjectSlots) ==
@@ -471,16 +480,35 @@ class alignas(HeapSlot) ObjectSlots {
   static constexpr size_t offsetOfDictionarySlotSpan() {
     return offsetof(ObjectSlots, dictionarySlotSpan_);
   }
+  static constexpr size_t offsetOfMaybeUniqueId() {
+    return offsetof(ObjectSlots, maybeUniqueId_);
+  }
   static constexpr size_t offsetOfSlots() { return sizeof(ObjectSlots); }
-  static constexpr int32_t offsetOfDictionarySlotSpanFromSlots() {
-    return int32_t(offsetOfDictionarySlotSpan()) - int32_t(offsetOfSlots());
+
+  constexpr explicit ObjectSlots(uint32_t capacity, uint32_t dictionarySlotSpan,
+                                 uint64_t maybeUniqueId);
+
+  constexpr uint32_t capacity() const { return capacity_; }
+
+  constexpr uint32_t dictionarySlotSpan() const { return dictionarySlotSpan_; }
+
+  bool isSharedEmptySlots() const {
+    return maybeUniqueId_ == NoUniqueIdInSharedEmptySlots;
   }
 
-  constexpr explicit ObjectSlots(uint32_t capacity, uint32_t dictionarySlotSpan)
-      : capacity_(capacity), dictionarySlotSpan_(dictionarySlotSpan) {}
-
-  uint32_t capacity() const { return capacity_; }
-  uint32_t dictionarySlotSpan() const { return dictionarySlotSpan_; }
+  constexpr bool hasUniqueId() const {
+    return maybeUniqueId_ > LastNoUniqueIdValue;
+  }
+  uint64_t uniqueId() const {
+    MOZ_ASSERT(hasUniqueId());
+    return maybeUniqueId_;
+  }
+  uintptr_t maybeUniqueId() const { return hasUniqueId() ? maybeUniqueId_ : 0; }
+  void setUniqueId(uint64_t uid) {
+    MOZ_ASSERT(uid > LastNoUniqueIdValue);
+    MOZ_ASSERT(!isSharedEmptySlots());
+    maybeUniqueId_ = uid;
+  }
 
   void setDictionarySlotSpan(uint32_t span) { dictionarySlotSpan_ = span; }
 
@@ -698,8 +726,7 @@ class NativeObject : public JSObject {
   inline bool isInWholeCellBuffer() const;
 
   static inline NativeObject* create(JSContext* cx, gc::AllocKind kind,
-                                     gc::InitialHeap heap,
-                                     Handle<SharedShape*> shape,
+                                     gc::Heap heap, Handle<SharedShape*> shape,
                                      gc::AllocSite* site = nullptr);
 
 #ifdef DEBUG
@@ -725,7 +752,7 @@ class NativeObject : public JSObject {
 
   inline void setDictionaryModeSlotSpan(uint32_t span);
 
-  friend class TenuringTracer;
+  friend class gc::TenuringTracer;
 
   // Given a slot range from |start| to |end| exclusive, call |fun| with
   // pointers to the corresponding fixed slot and/or dynamic slot ranges.
@@ -813,6 +840,12 @@ class NativeObject : public JSObject {
    * since they normally don't have a lot of slots.
    */
   static const uint32_t SLOT_CAPACITY_MIN = 8 - ObjectSlots::VALUES_PER_HEADER;
+
+  /*
+   * Minimum size for dynamically allocated elements in normal Objects.
+   */
+  static const uint32_t ELEMENT_CAPACITY_MIN =
+      8 - ObjectElements::VALUES_PER_HEADER;
 
   HeapSlot* fixedSlots() const {
     return reinterpret_cast<HeapSlot*>(uintptr_t(this) + sizeof(NativeObject));
@@ -936,7 +969,13 @@ class NativeObject : public JSObject {
    */
   static bool addDenseElementPure(JSContext* cx, NativeObject* obj);
 
-  bool hasDynamicSlots() const { return getSlotsHeader()->capacity(); }
+  /*
+   * Indicates whether this object has an ObjectSlots allocation attached. The
+   * capacity of this can be zero if it is only used to hold a unique ID.
+   */
+  bool hasDynamicSlots() const {
+    return !getSlotsHeader()->isSharedEmptySlots();
+  }
 
   /* Compute the number of dynamic slots required for this object. */
   MOZ_ALWAYS_INLINE uint32_t calculateDynamicSlots() const;
@@ -1181,6 +1220,14 @@ class NativeObject : public JSObject {
     }
     return UndefinedValue();
   }
+
+  [[nodiscard]] bool setUniqueId(JSContext* cx, uint64_t uid);
+  inline bool hasUniqueId() const { return getSlotsHeader()->hasUniqueId(); }
+  inline uint64_t uniqueId() const { return getSlotsHeader()->uniqueId(); }
+  inline uint64_t maybeUniqueId() const {
+    return getSlotsHeader()->maybeUniqueId();
+  }
+  bool setOrUpdateUniqueId(JSContext* cx, uint64_t uid);
 
   // MAX_FIXED_SLOTS is the biggest number of fixed slots our GC
   // size classes will give an object.

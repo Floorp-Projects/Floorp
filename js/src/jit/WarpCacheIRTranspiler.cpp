@@ -166,11 +166,11 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   NativeIteratorListHead* nativeIteratorListHeadStubField(uint32_t offset) {
     return reinterpret_cast<NativeIteratorListHead*>(readStubWord(offset));
   }
-  gc::InitialHeap allocSiteInitialHeapField(uint32_t offset) {
+  gc::Heap allocSiteInitialHeapField(uint32_t offset) {
     uintptr_t word = readStubWord(offset);
-    MOZ_ASSERT(word == uintptr_t(gc::DefaultHeap) ||
-               word == uintptr_t(gc::TenuredHeap));
-    return gc::InitialHeap(word);
+    MOZ_ASSERT(word == uintptr_t(gc::Heap::Default) ||
+               word == uintptr_t(gc::Heap::Tenured));
+    return gc::Heap(word);
   }
   const void* rawPointerField(uint32_t offset) {
     return reinterpret_cast<const void*>(readStubWord(offset));
@@ -190,7 +190,9 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   Value valueStubField(uint32_t offset) {
     uint64_t raw =
         static_cast<uint64_t>(stubInfo_->getStubRawInt64(stubData_, offset));
-    return Value::fromRawBits(raw);
+    Value val = Value::fromRawBits(raw);
+    MOZ_ASSERT_IF(val.isGCThing(), val.toGCThing()->isTenured());
+    return val;
   }
   double doubleStubField(uint32_t offset) {
     uint64_t raw =
@@ -699,13 +701,14 @@ bool WarpCacheIRTranspiler::emitMegamorphicLoadSlotByValueResult(
 }
 
 bool WarpCacheIRTranspiler::emitMegamorphicStoreSlot(ObjOperandId objId,
-                                                     uint32_t nameOffset,
-                                                     ValOperandId rhsId) {
+                                                     uint32_t idOffset,
+                                                     ValOperandId rhsId,
+                                                     bool strict) {
   MDefinition* obj = getOperand(objId);
-  PropertyName* name = stringStubField(nameOffset)->asAtom().asPropertyName();
+  jsid id = idStubField(idOffset);
   MDefinition* rhs = getOperand(rhsId);
 
-  auto* ins = MMegamorphicStoreSlot::New(alloc(), obj, rhs, name);
+  auto* ins = MMegamorphicStoreSlot::New(alloc(), obj, rhs, id, strict);
   addEffectful(ins);
 
   return resumeAfter(ins);
@@ -874,7 +877,6 @@ bool WarpCacheIRTranspiler::emitGuardDynamicSlotValue(ObjOperandId objId,
 
   size_t offset = int32StubField(offsetOffset);
   Value val = valueStubField(valOffset);
-  MOZ_ASSERT(val.isPrivateGCThing());
 
   size_t slotIndex = NativeObject::getDynamicSlotIndexFromOffset(offset);
 
@@ -3446,7 +3448,7 @@ bool WarpCacheIRTranspiler::emitPackedArraySliceResult(
   MDefinition* end = getOperand(endId);
 
   // TODO: support pre-tenuring.
-  gc::InitialHeap heap = gc::DefaultHeap;
+  gc::Heap heap = gc::Heap::Default;
 
   auto* ins = MArraySlice::New(alloc(), array, begin, end, templateObj, heap);
   addEffectful(ins);
@@ -3465,7 +3467,7 @@ bool WarpCacheIRTranspiler::emitArgumentsSliceResult(
   MDefinition* end = getOperand(endId);
 
   // TODO: support pre-tenuring.
-  gc::InitialHeap heap = gc::DefaultHeap;
+  gc::Heap heap = gc::Heap::Default;
 
   auto* ins =
       MArgumentsSlice::New(alloc(), args, begin, end, templateObj, heap);
@@ -3488,8 +3490,8 @@ bool WarpCacheIRTranspiler::emitHasClassResult(ObjOperandId objId,
 }
 
 bool WarpCacheIRTranspiler::emitCallRegExpMatcherResult(
-    ObjOperandId regexpId, StringOperandId inputId,
-    Int32OperandId lastIndexId) {
+    ObjOperandId regexpId, StringOperandId inputId, Int32OperandId lastIndexId,
+    uint32_t stubOffset) {
   MDefinition* regexp = getOperand(regexpId);
   MDefinition* input = getOperand(inputId);
   MDefinition* lastIndex = getOperand(lastIndexId);
@@ -3502,8 +3504,8 @@ bool WarpCacheIRTranspiler::emitCallRegExpMatcherResult(
 }
 
 bool WarpCacheIRTranspiler::emitCallRegExpSearcherResult(
-    ObjOperandId regexpId, StringOperandId inputId,
-    Int32OperandId lastIndexId) {
+    ObjOperandId regexpId, StringOperandId inputId, Int32OperandId lastIndexId,
+    uint32_t stubOffset) {
   MDefinition* regexp = getOperand(regexpId);
   MDefinition* input = getOperand(inputId);
   MDefinition* lastIndex = getOperand(lastIndexId);
@@ -3515,18 +3517,28 @@ bool WarpCacheIRTranspiler::emitCallRegExpSearcherResult(
   return resumeAfter(searcher);
 }
 
-bool WarpCacheIRTranspiler::emitCallRegExpTesterResult(
-    ObjOperandId regexpId, StringOperandId inputId,
-    Int32OperandId lastIndexId) {
+bool WarpCacheIRTranspiler::emitRegExpBuiltinExecMatchResult(
+    ObjOperandId regexpId, StringOperandId inputId, uint32_t stubOffset) {
   MDefinition* regexp = getOperand(regexpId);
   MDefinition* input = getOperand(inputId);
-  MDefinition* lastIndex = getOperand(lastIndexId);
 
-  auto* tester = MRegExpTester::New(alloc(), regexp, input, lastIndex);
-  addEffectful(tester);
-  pushResult(tester);
+  auto* ins = MRegExpExecMatch::New(alloc(), regexp, input);
+  addEffectful(ins);
+  pushResult(ins);
 
-  return resumeAfter(tester);
+  return resumeAfter(ins);
+}
+
+bool WarpCacheIRTranspiler::emitRegExpBuiltinExecTestResult(
+    ObjOperandId regexpId, StringOperandId inputId, uint32_t stubOffset) {
+  MDefinition* regexp = getOperand(regexpId);
+  MDefinition* input = getOperand(inputId);
+
+  auto* ins = MRegExpExecTest::New(alloc(), regexp, input);
+  addEffectful(ins);
+  pushResult(ins);
+
+  return resumeAfter(ins);
 }
 
 MInstruction* WarpCacheIRTranspiler::convertToBoolean(MDefinition* input) {
@@ -3890,7 +3902,7 @@ bool WarpCacheIRTranspiler::emitObjectCreateResult(
   auto* templateConst = constant(ObjectValue(*templateObj));
 
   // TODO: support pre-tenuring.
-  gc::InitialHeap heap = gc::DefaultHeap;
+  gc::Heap heap = gc::Heap::Default;
   auto* obj =
       MNewObject::New(alloc(), templateConst, heap, MNewObject::ObjectCreate);
   addEffectful(obj);
@@ -3905,7 +3917,7 @@ bool WarpCacheIRTranspiler::emitNewArrayFromLengthResult(
   MDefinition* length = getOperand(lengthId);
 
   // TODO: support pre-tenuring.
-  gc::InitialHeap heap = gc::DefaultHeap;
+  gc::Heap heap = gc::Heap::Default;
 
   if (length->isConstant()) {
     int32_t lenInt32 = length->toConstant()->toInt32();
@@ -3942,7 +3954,7 @@ bool WarpCacheIRTranspiler::emitNewTypedArrayFromLengthResult(
   MDefinition* length = getOperand(lengthId);
 
   // TODO: support pre-tenuring.
-  gc::InitialHeap heap = gc::DefaultHeap;
+  gc::Heap heap = gc::Heap::Default;
 
   if (length->isConstant()) {
     int32_t len = length->toConstant()->toInt32();
@@ -3972,7 +3984,7 @@ bool WarpCacheIRTranspiler::emitNewTypedArrayFromArrayBufferResult(
   MDefinition* length = getOperand(lengthId);
 
   // TODO: support pre-tenuring.
-  gc::InitialHeap heap = gc::DefaultHeap;
+  gc::Heap heap = gc::Heap::Default;
 
   auto* obj = MNewTypedArrayFromArrayBuffer::New(alloc(), buffer, byteOffset,
                                                  length, templateObj, heap);
@@ -3988,7 +4000,7 @@ bool WarpCacheIRTranspiler::emitNewTypedArrayFromArrayResult(
   MDefinition* array = getOperand(arrayId);
 
   // TODO: support pre-tenuring.
-  gc::InitialHeap heap = gc::DefaultHeap;
+  gc::Heap heap = gc::Heap::Default;
 
   auto* obj = MNewTypedArrayFromArray::New(alloc(), array, templateObj, heap);
   addEffectful(obj);
@@ -5541,7 +5553,7 @@ bool WarpCacheIRTranspiler::emitMetaScriptedThisShape(
   add(shapeConst);
 
   // TODO: support pre-tenuring.
-  gc::InitialHeap heap = gc::DefaultHeap;
+  gc::Heap heap = gc::Heap::Default;
 
   uint32_t numFixedSlots = shape->numFixedSlots();
   uint32_t numDynamicSlots = NativeObject::calculateDynamicSlots(shape);
@@ -5631,7 +5643,7 @@ bool WarpCacheIRTranspiler::emitNewPlainObjectResult(uint32_t numFixedSlots,
                                                      uint32_t shapeOffset,
                                                      uint32_t siteOffset) {
   Shape* shape = shapeStubField(shapeOffset);
-  gc::InitialHeap heap = allocSiteInitialHeapField(siteOffset);
+  gc::Heap heap = allocSiteInitialHeapField(siteOffset);
 
   auto* shapeConstant = MConstant::NewShape(alloc(), shape);
   add(shapeConstant);
@@ -5648,7 +5660,7 @@ bool WarpCacheIRTranspiler::emitNewArrayObjectResult(uint32_t length,
                                                      uint32_t shapeOffset,
                                                      uint32_t siteOffset) {
   Shape* shape = shapeStubField(shapeOffset);
-  gc::InitialHeap heap = allocSiteInitialHeapField(siteOffset);
+  gc::Heap heap = allocSiteInitialHeapField(siteOffset);
 
   auto* shapeConstant = MConstant::NewShape(alloc(), shape);
   add(shapeConstant);

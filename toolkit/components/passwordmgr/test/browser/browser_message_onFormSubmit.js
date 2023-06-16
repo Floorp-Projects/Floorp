@@ -27,7 +27,7 @@ add_task(async function test_login_save_disable() {
         "https://example.com/browser/toolkit/components/" +
         "passwordmgr/test/browser/form_basic.html",
     },
-    async function(browser) {
+    async function (browser) {
       await SimpleTest.promiseFocus(browser.ownerGlobal);
       await changeContentFormValues(browser, {
         "#form-basic-username": "username",
@@ -35,7 +35,7 @@ add_task(async function test_login_save_disable() {
       });
 
       let promise = waitForFormSubmissionDetected();
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         let doc = this.content.document;
         doc.getElementById("form-basic").submit();
       });
@@ -58,7 +58,7 @@ add_task(async function test_login_save_enable() {
         "https://example.com/browser/toolkit/components/" +
         "passwordmgr/test/browser/form_basic.html",
     },
-    async function(browser) {
+    async function (browser) {
       await SimpleTest.promiseFocus(browser.ownerGlobal);
 
       await changeContentFormValues(browser, {
@@ -70,7 +70,7 @@ add_task(async function test_login_save_enable() {
       // event and "passwordmgr-form-submission-detected" event
       let p1 = waitForFormSubmissionDetected();
       let p2 = listenForTestNotification("ShowDoorhanger");
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         let doc = this.content.document;
         doc.getElementById("form-basic").submit();
       });

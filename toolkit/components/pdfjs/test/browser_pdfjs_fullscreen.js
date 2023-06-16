@@ -54,13 +54,13 @@ add_task(async function test() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function(browser) {
+    async function (browser) {
       // check that PDF is opened with internal viewer
       await waitForPdfJSCanvas(browser, `${TESTROOT}file_pdfjs_test.pdf`);
 
       const fullscreenPromise = waitForFullScreenState(browser, true);
 
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         const { ContentTaskUtils } = ChromeUtils.importESModule(
           "resource://testing-common/ContentTaskUtils.sys.mjs"
         );
@@ -75,7 +75,7 @@ add_task(async function test() {
       await fullscreenPromise;
       ok(true, "Should be in fullscreen");
 
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         const viewer = content.wrappedJSObject.PDFViewerApplication;
         await viewer.close();
       });

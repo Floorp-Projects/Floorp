@@ -129,7 +129,7 @@ add_task(async function setup() {
   // Create and configure the HTTP server.
   AddonTestUtils.registerJSON(testserver, "/update.json", UPDATE_JSON);
   testserver.registerDirectory("/data/", do_get_file("data"));
-  testserver.registerPathHandler("/redirect", function(aRequest, aResponse) {
+  testserver.registerPathHandler("/redirect", function (aRequest, aResponse) {
     aResponse.setStatusLine(null, 301, "Moved Permanently");
     let url = aRequest.host + ":" + aRequest.port + aRequest.queryString;
     aResponse.setHeader("Location", "http://" + url);

@@ -5,12 +5,12 @@ const TEST_FILE = fileURL("dummy_page.html");
 const TEST_HTTP = httpURL("tab_that_closes.html");
 
 // Test for Bug 1632441
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.allow_scripts_to_close_windows", false]],
   });
 
-  await BrowserTestUtils.withNewTab(TEST_FILE, async function(fileBrowser) {
+  await BrowserTestUtils.withNewTab(TEST_FILE, async function (fileBrowser) {
     info("Tab ready");
 
     // The request will open a new tab, capture the new tab and the load in it.

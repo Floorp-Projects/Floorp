@@ -13,7 +13,7 @@
  * Otherwise this test checks the basic behavior of the resource when reloading
  * an empty page.
  */
-add_task(async function() {
+add_task(async function () {
   // Open a test tab
   const tab = await addTab("data:text/html,Root Node tests");
 

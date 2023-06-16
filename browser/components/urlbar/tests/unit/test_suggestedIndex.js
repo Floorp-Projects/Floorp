@@ -259,40 +259,35 @@ add_task(async function suggestedIndex() {
       expected: indexes([0, 4], [5, 1], [4, 1]),
     },
     {
-      desc:
-        "{ suggestedIndex: 0, resultSpan: 2 }, { suggestedIndex: -1 }, resultCount < max",
+      desc: "{ suggestedIndex: 0, resultSpan: 2 }, { suggestedIndex: -1 }, resultCount < max",
       suggestedIndexes: [0, -1],
       spansByIndex: { 5: 2 },
       resultCount: 5,
       expected: indexes([5, 1], [0, 5], [6, 1]),
     },
     {
-      desc:
-        "{ suggestedIndex: 1, resultSpan: 2 }, { suggestedIndex: -1 }, resultCount < max",
+      desc: "{ suggestedIndex: 1, resultSpan: 2 }, { suggestedIndex: -1 }, resultCount < max",
       suggestedIndexes: [1, -1],
       spansByIndex: { 5: 2 },
       resultCount: 5,
       expected: indexes([0, 1], [5, 1], [1, 4], [6, 1]),
     },
     {
-      desc:
-        "{ suggestedIndex: 0, resultSpan: 2 }, { suggestedIndex: -2 }, resultCount < max",
+      desc: "{ suggestedIndex: 0, resultSpan: 2 }, { suggestedIndex: -2 }, resultCount < max",
       suggestedIndexes: [0, -2],
       spansByIndex: { 5: 2 },
       resultCount: 5,
       expected: indexes([5, 1], [0, 4], [6, 1], [4, 1]),
     },
     {
-      desc:
-        "{ suggestedIndex: 0 }, { suggestedIndex: -1, resultSpan: 2 }, resultCount < max",
+      desc: "{ suggestedIndex: 0 }, { suggestedIndex: -1, resultSpan: 2 }, resultCount < max",
       suggestedIndexes: [0, -1],
       spansByIndex: { 6: 2 },
       resultCount: 5,
       expected: indexes([5, 1], [0, 5], [6, 1]),
     },
     {
-      desc:
-        "{ suggestedIndex: 0 }, { suggestedIndex: -2, resultSpan: 2 }, resultCount < max",
+      desc: "{ suggestedIndex: 0 }, { suggestedIndex: -2, resultSpan: 2 }, resultCount < max",
       suggestedIndexes: [0, -2],
       spansByIndex: { 6: 2 },
       resultCount: 5,
@@ -301,108 +296,93 @@ add_task(async function suggestedIndex() {
 
     // two suggestedIndexes with result span > 1
     {
-      desc:
-        "{ suggestedIndex: 0, resultSpan: 2 }, { suggestedIndex: -1, resultSpan: 2 }",
+      desc: "{ suggestedIndex: 0, resultSpan: 2 }, { suggestedIndex: -1, resultSpan: 2 }",
       suggestedIndexes: [0, -1],
       spansByIndex: { 10: 2, 11: 2 },
       expected: indexes([10, 1], [0, 6], [11, 1]),
     },
     {
-      desc:
-        "{ suggestedIndex: 0, resultSpan: 3 }, { suggestedIndex: -1, resultSpan: 2 }",
+      desc: "{ suggestedIndex: 0, resultSpan: 3 }, { suggestedIndex: -1, resultSpan: 2 }",
       suggestedIndexes: [0, -1],
       spansByIndex: { 10: 3, 11: 2 },
       expected: indexes([10, 1], [0, 5], [11, 1]),
     },
     {
-      desc:
-        "{ suggestedIndex: 0, resultSpan: 2 }, { suggestedIndex: -1, resultSpan: 3 }",
+      desc: "{ suggestedIndex: 0, resultSpan: 2 }, { suggestedIndex: -1, resultSpan: 3 }",
       suggestedIndexes: [0, -1],
       spansByIndex: { 10: 2, 11: 3 },
       expected: indexes([10, 1], [0, 5], [11, 1]),
     },
     {
-      desc:
-        "{ suggestedIndex: 1, resultSpan: 2 }, { suggestedIndex: -1, resultSpan: 2 }",
+      desc: "{ suggestedIndex: 1, resultSpan: 2 }, { suggestedIndex: -1, resultSpan: 2 }",
       suggestedIndexes: [1, -1],
       spansByIndex: { 10: 2, 11: 2 },
       expected: indexes([0, 1], [10, 1], [1, 5], [11, 1]),
     },
     {
-      desc:
-        "{ suggestedIndex: 1, resultSpan: 3 }, { suggestedIndex: -1, resultSpan: 2 }",
+      desc: "{ suggestedIndex: 1, resultSpan: 3 }, { suggestedIndex: -1, resultSpan: 2 }",
       suggestedIndexes: [1, -1],
       spansByIndex: { 10: 3, 11: 2 },
       expected: indexes([0, 1], [10, 1], [1, 4], [11, 1]),
     },
     {
-      desc:
-        "{ suggestedIndex: 1, resultSpan: 2 }, { suggestedIndex: -1, resultSpan: 3 }",
+      desc: "{ suggestedIndex: 1, resultSpan: 2 }, { suggestedIndex: -1, resultSpan: 3 }",
       suggestedIndexes: [1, -1],
       spansByIndex: { 10: 2, 11: 3 },
       expected: indexes([0, 1], [10, 1], [1, 4], [11, 1]),
     },
     {
-      desc:
-        "{ suggestedIndex: 0, resultSpan: 2 }, { suggestedIndex: -2, resultSpan: 2 }",
+      desc: "{ suggestedIndex: 0, resultSpan: 2 }, { suggestedIndex: -2, resultSpan: 2 }",
       suggestedIndexes: [0, -2],
       spansByIndex: { 10: 2, 11: 2 },
       expected: indexes([10, 1], [0, 5], [11, 1], [5, 1]),
     },
     {
-      desc:
-        "{ suggestedIndex: 0, resultSpan: 3 }, { suggestedIndex: -2, resultSpan: 2 }",
+      desc: "{ suggestedIndex: 0, resultSpan: 3 }, { suggestedIndex: -2, resultSpan: 2 }",
       suggestedIndexes: [0, -2],
       spansByIndex: { 10: 3, 11: 2 },
       expected: indexes([10, 1], [0, 4], [11, 1], [4, 1]),
     },
     {
-      desc:
-        "{ suggestedIndex: 0, resultSpan: 2 }, { suggestedIndex: -2, resultSpan: 3 }",
+      desc: "{ suggestedIndex: 0, resultSpan: 2 }, { suggestedIndex: -2, resultSpan: 3 }",
       suggestedIndexes: [0, -2],
       spansByIndex: { 10: 2, 11: 3 },
       expected: indexes([10, 1], [0, 4], [11, 1], [4, 1]),
     },
     {
-      desc:
-        "{ suggestedIndex: 1, resultSpan: 2 }, { suggestedIndex: -2, resultSpan: 2 }",
+      desc: "{ suggestedIndex: 1, resultSpan: 2 }, { suggestedIndex: -2, resultSpan: 2 }",
       suggestedIndexes: [1, -2],
       spansByIndex: { 10: 2, 11: 2 },
       expected: indexes([0, 1], [10, 1], [1, 4], [11, 1], [5, 1]),
     },
     {
-      desc:
-        "{ suggestedIndex: 1, resultSpan: 3 }, { suggestedIndex: -2, resultSpan: 2 }",
+      desc: "{ suggestedIndex: 1, resultSpan: 3 }, { suggestedIndex: -2, resultSpan: 2 }",
       suggestedIndexes: [1, -2],
       spansByIndex: { 10: 3, 11: 2 },
       expected: indexes([0, 1], [10, 1], [1, 3], [11, 1], [4, 1]),
     },
     {
-      desc:
-        "{ suggestedIndex: 1, resultSpan: 2 }, { suggestedIndex: -2, resultSpan: 3 }",
+      desc: "{ suggestedIndex: 1, resultSpan: 2 }, { suggestedIndex: -2, resultSpan: 3 }",
       suggestedIndexes: [1, -2],
       spansByIndex: { 10: 2, 11: 3 },
       expected: indexes([0, 1], [10, 1], [1, 3], [11, 1], [4, 1]),
     },
     {
-      desc:
-        "{ suggestedIndex: 0, resultSpan: 2 }, { suggestedIndex: -1, resultSpan: 2 }, resultCount < max",
+      desc: "{ suggestedIndex: 0, resultSpan: 2 }, { suggestedIndex: -1, resultSpan: 2 }, resultCount < max",
       suggestedIndexes: [0, -1],
       spansByIndex: { 5: 2, 6: 2 },
       resultCount: 5,
       expected: indexes([5, 1], [0, 5], [6, 1]),
     },
     {
-      desc:
-        "{ suggestedIndex: 1, resultSpan: 2 }, { suggestedIndex: -1, resultSpan: 2 }, resultCount < max",
+      desc: "{ suggestedIndex: 1, resultSpan: 2 }, { suggestedIndex: -1, resultSpan: 2 }, resultCount < max",
       suggestedIndexes: [1, -1],
       spansByIndex: { 5: 2, 6: 2 },
       resultCount: 5,
       expected: indexes([0, 1], [5, 1], [1, 4], [6, 1]),
     },
     {
-      desc:
-        "{ suggestedIndex: 0, resultSpan: 2 }, { suggestedIndex: -2, resultSpan: 2 }, resultCount < max",
+      desc: "{ suggestedIndex: 0, resultSpan: 2 }, { suggestedIndex: -2, resultSpan: 2 }, resultCount < max",
       suggestedIndexes: [0, -2],
       spansByIndex: { 5: 2, 6: 2 },
       resultCount: 5,

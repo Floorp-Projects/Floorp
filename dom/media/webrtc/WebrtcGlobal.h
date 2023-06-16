@@ -119,8 +119,8 @@ struct ParamTraits<mozilla::dom::RTCStatsCollection> {
 
 DEFINE_IPC_SERIALIZER_WITH_SUPER_CLASS_AND_FIELDS(
     mozilla::dom::RTCStatsReportInternal, mozilla::dom::RTCStatsCollection,
-    mClosed, mLocalSdp, mSdpHistory, mPcid, mBrowserId, mRemoteSdp, mTimestamp,
-    mCallDurationMs, mIceRestarts, mIceRollbacks, mOfferer, mConfiguration);
+    mClosed, mSdpHistory, mPcid, mBrowserId, mTimestamp, mCallDurationMs,
+    mIceRestarts, mIceRollbacks, mOfferer, mConfiguration);
 
 typedef mozilla::dom::RTCStats RTCStats;
 

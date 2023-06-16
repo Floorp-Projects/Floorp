@@ -14,7 +14,7 @@ Services.scriptloader.loadSubScript(
 const TEST_URL =
   URL_ROOT + "doc_markup_shadowdom_open_debugger_pretty_printed.html";
 
-add_task(async function() {
+add_task(async function () {
   info("Open inspector.");
   await clearDebuggerPreferences();
   const { inspector, toolbox } = await openInspectorForURL(TEST_URL);

@@ -28,7 +28,7 @@ this.dns = class extends ExtensionAPI {
   getAPI(context) {
     return {
       dns: {
-        resolve: function(hostname, flags) {
+        resolve: function (hostname, flags) {
           let dnsFlags = flags.reduce(
             (mask, flag) => mask | dnssFlags[flag],
             0
@@ -40,7 +40,7 @@ this.dns = class extends ExtensionAPI {
               addresses: [],
             };
             let listener = {
-              onLookupComplete: function(inRequest, inRecord, inStatus) {
+              onLookupComplete: function (inRequest, inRecord, inStatus) {
                 if (inRequest === request) {
                   if (!Components.isSuccessCode(inStatus)) {
                     return reject({ message: getErrorString(inStatus) });

@@ -21,7 +21,7 @@ add_test(function test_handleEnterWithDirectMatchCompleteSelectedIndex() {
     "mozilla.com",
     "http://www.mozilla.com",
     { forceComplete: true, completeSelectedIndex: true },
-    function(aController) {
+    function (aController) {
       Assert.equal(aController.input.textValue, "moz");
       Assert.equal(
         aController.getFinalCompleteValueAt(0),
@@ -40,7 +40,7 @@ add_test(function test_handleEnterWithDirectMatch() {
     "mozilla.com",
     "http://www.mozilla.com",
     { forceComplete: true, completeDefaultIndex: true },
-    function(aController) {
+    function (aController) {
       // Should autocomplete the search string to a suggestion.
       Assert.equal(aController.input.textValue, "mozilla.com");
       Assert.equal(
@@ -60,7 +60,7 @@ add_test(function test_handleEnterWithNoMatch() {
     "mozilla.com",
     "http://www.mozilla.com",
     { forceComplete: true, completeDefaultIndex: true },
-    function(aController) {
+    function (aController) {
       // Should autocomplete the search string to a suggestion.
       Assert.equal(aController.input.textValue, "mozilla.com");
       Assert.equal(
@@ -83,7 +83,7 @@ add_test(function test_handleEnterWithIndirectMatch() {
     "mozilla.com",
     "http://www.mozilla.com",
     { forceComplete: true, completeDefaultIndex: true },
-    function(aController) {
+    function (aController) {
       // Should autocomplete the search string to a suggestion.
       Assert.equal(aController.input.textValue, "com >> mozilla.com");
       Assert.equal(

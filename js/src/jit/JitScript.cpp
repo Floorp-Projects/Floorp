@@ -454,7 +454,7 @@ bool JitScript::ensureHasCachedBaselineJitData(JSContext* cx,
 bool JitScript::ensureHasCachedIonData(JSContext* cx, HandleScript script) {
   MOZ_ASSERT(script->jitScript() == this);
 
-  if (cachedIonBytecodeInfo_.isSome()) {
+  if (usesEnvironmentChain_.isSome()) {
     return true;
   }
 
@@ -462,7 +462,7 @@ bool JitScript::ensureHasCachedIonData(JSContext* cx, HandleScript script) {
     return false;
   }
 
-  cachedIonBytecodeInfo_.emplace(AnalyzeBytecodeForIon(cx, script));
+  usesEnvironmentChain_.emplace(ScriptUsesEnvironmentChain(script));
   return true;
 }
 
@@ -667,8 +667,8 @@ bool JitScript::resetAllocSites(bool resetNurserySites,
   bool anyReset = false;
 
   for (gc::AllocSite* site : allocSites_) {
-    if ((resetNurserySites && site->initialHeap() == gc::DefaultHeap) ||
-        (resetPretenuredSites && site->initialHeap() == gc::TenuredHeap)) {
+    if ((resetNurserySites && site->initialHeap() == gc::Heap::Default) ||
+        (resetPretenuredSites && site->initialHeap() == gc::Heap::Tenured)) {
       if (site->maybeResetState()) {
         anyReset = true;
       }

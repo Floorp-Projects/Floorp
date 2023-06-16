@@ -7,7 +7,7 @@
  * Ensure that static frames of framesets are serialized but dynamically
  * inserted iframes are ignored.
  */
-add_task(async function() {
+add_task(async function () {
   // allow top level data: URI navigations, otherwise clicking a data: link fails
   await SpecialPowers.pushPrefEnv({
     set: [["security.data_uri.block_toplevel_data_uri_navigations", false]],
@@ -58,7 +58,7 @@ add_task(async function() {
  * dynamically inserted iframes are ignored. Navigating a subframe should
  * create a second root entry that doesn't contain any dynamic children either.
  */
-add_task(async function() {
+add_task(async function () {
   // allow top level data: URI navigations, otherwise clicking a data: link fails
   await SpecialPowers.pushPrefEnv({
     set: [["security.data_uri.block_toplevel_data_uri_navigations", false]],

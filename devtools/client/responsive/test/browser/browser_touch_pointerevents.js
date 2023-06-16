@@ -10,7 +10,7 @@ const TEST_URL =
   '<div style="width:100px;height:100px;background-color:red"></div>' +
   "</body>";
 
-addRDMTask(TEST_URL, async function({ ui }) {
+addRDMTask(TEST_URL, async function ({ ui }) {
   info("Toggling on touch simulation.");
   reloadOnTouchChange(true);
   await toggleTouchSimulation(ui);
@@ -24,7 +24,7 @@ addRDMTask(TEST_URL, async function({ ui }) {
 
 async function testPointerEvents(ui) {
   info("Test that pointer events are from touch events");
-  await SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {
+  await SpecialPowers.spawn(ui.getViewportBrowser(), [], async function () {
     const div = content.document.querySelector("div");
 
     div.addEventListener("pointermove", () => {

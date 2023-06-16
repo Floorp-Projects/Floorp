@@ -14,7 +14,9 @@ struct SomeClass : public DoublyLinkedListElement<SomeClass> {
   unsigned int mValue;
   explicit SomeClass(int aValue) : mValue(aValue) {}
   void incr() { ++mValue; }
-  bool operator==(const SomeClass& other) { return mValue == other.mValue; }
+  bool operator==(const SomeClass& other) const {
+    return mValue == other.mValue;
+  }
 };
 
 template <typename ListType, size_t N>

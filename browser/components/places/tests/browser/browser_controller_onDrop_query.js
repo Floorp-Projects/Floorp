@@ -5,11 +5,11 @@
 
 const TEST_URL = "about:buildconfig";
 
-add_setup(async function() {
+add_setup(async function () {
   // Clean before and after so we don't have anything in the folders.
   await PlacesUtils.bookmarks.eraseEverything();
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.bookmarks.eraseEverything();
   });
 });
@@ -23,7 +23,7 @@ async function simulateDrop(
   targetGuid,
   isVirtualRoot = false
 ) {
-  await withSidebarTree("bookmarks", async function(tree) {
+  await withSidebarTree("bookmarks", async function (tree) {
     for (let target of selectTargets) {
       tree.selectItems([target]);
       if (tree.selectedNode instanceof Ci.nsINavHistoryContainerResultNode) {

@@ -7,7 +7,7 @@
 const kWidgetId = "test-892955-remove-widget";
 
 // Removing a destroyed widget should work.
-add_task(async function() {
+add_task(async function () {
   let widgetSpec = {
     id: kWidgetId,
     defaultArea: CustomizableUI.AREA_NAVBAR,

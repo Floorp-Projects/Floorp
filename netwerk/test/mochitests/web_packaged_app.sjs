@@ -9,8 +9,7 @@ var octetStreamData = {
   content: [
     {
       headers: ["Content-Location: /index.html", "Content-Type: text/html"],
-      data:
-        "<html>\r\n  <head>\r\n    <script> alert('OK: hello'); alert('DONE'); </script>\r\n</head>\r\n  Web Packaged App Index\r\n</html>\r\n",
+      data: "<html>\r\n  <head>\r\n    <script> alert('OK: hello'); alert('DONE'); </script>\r\n</head>\r\n  Web Packaged App Index\r\n</html>\r\n",
       type: "text/html",
     },
     {

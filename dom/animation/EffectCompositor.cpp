@@ -389,7 +389,7 @@ class EffectCompositeOrderComparator {
 static void ComposeSortedEffects(
     const nsTArray<KeyframeEffect*>& aSortedEffects,
     const EffectSet* aEffectSet, EffectCompositor::CascadeLevel aCascadeLevel,
-    RawServoAnimationValueMap* aAnimationValues) {
+    StyleAnimationValueMap* aAnimationValues) {
   const bool isTransition =
       aCascadeLevel == EffectCompositor::CascadeLevel::Transitions;
   nsCSSPropertyIDSet propertiesToSkip;
@@ -420,7 +420,7 @@ static void ComposeSortedEffects(
 
 bool EffectCompositor::GetServoAnimationRule(
     const dom::Element* aElement, PseudoStyleType aPseudoType,
-    CascadeLevel aCascadeLevel, RawServoAnimationValueMap* aAnimationValues) {
+    CascadeLevel aCascadeLevel, StyleAnimationValueMap* aAnimationValues) {
   MOZ_ASSERT(aAnimationValues);
   // Gecko_GetAnimationRule should have already checked this
   MOZ_ASSERT(nsContentUtils::GetPresShellForContent(aElement),
@@ -466,7 +466,7 @@ bool EffectCompositor::GetServoAnimationRule(
 
 bool EffectCompositor::ComposeServoAnimationRuleForEffect(
     KeyframeEffect& aEffect, CascadeLevel aCascadeLevel,
-    RawServoAnimationValueMap* aAnimationValues) {
+    StyleAnimationValueMap* aAnimationValues) {
   MOZ_ASSERT(aAnimationValues);
   MOZ_ASSERT(mPresContext && mPresContext->IsDynamic(),
              "Should not be in print preview");

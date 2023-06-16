@@ -25,7 +25,7 @@ const { createLazyLoaders } = ChromeUtils.import(
 
 const lazy = createLazyLoaders({
   PanelMultiView: () =>
-    ChromeUtils.import("resource:///modules/PanelMultiView.jsm"),
+    ChromeUtils.importESModule("resource:///modules/PanelMultiView.sys.mjs"),
   Background: () =>
     ChromeUtils.import(
       "resource://devtools/client/performance-new/shared/background.jsm.js"
@@ -73,9 +73,9 @@ function selectElementsInPanelview(panelview) {
     presetsEditSettings: getElementById(
       "PanelUI-profiler-content-edit-settings"
     ),
-    presetsMenuList: /** @type {MenuListElement} */ (getElementById(
-      "PanelUI-profiler-presets"
-    )),
+    presetsMenuList: /** @type {MenuListElement} */ (
+      getElementById("PanelUI-profiler-presets")
+    ),
     header: getElementById("PanelUI-profiler-header"),
     info: getElementById("PanelUI-profiler-info"),
     menupopup: getElementById("PanelUI-profiler-presets-menupopup"),
@@ -235,12 +235,8 @@ function initializeView(state, elements, view) {
  * @param {ViewController} view
  */
 function addPopupEventHandlers(state, elements, view) {
-  const {
-    changePreset,
-    startProfiler,
-    stopProfiler,
-    captureProfile,
-  } = lazy.Background();
+  const { changePreset, startProfiler, stopProfiler, captureProfile } =
+    lazy.Background();
 
   /**
    * Adds a handler that automatically is removed once the panel is hidden.

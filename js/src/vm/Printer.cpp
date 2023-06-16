@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "vm/Printer.h"
+#include "js/Printer.h"
 
 #include "mozilla/PodOperations.h"
 #include "mozilla/Printf.h"
@@ -268,8 +268,9 @@ static const char JSONEscapeMap[] = {
 };
 
 template <QuoteTarget target, typename CharT>
-bool QuoteString(Sprinter* sp, const mozilla::Range<const CharT> chars,
-                 char quote) {
+JS_PUBLIC_API bool QuoteString(Sprinter* sp,
+                               const mozilla::Range<const CharT> chars,
+                               char quote) {
   MOZ_ASSERT_IF(target == QuoteTarget::JSON, quote == '\0');
 
   using CharPtr = mozilla::RangedPtr<const CharT>;
@@ -354,19 +355,20 @@ bool QuoteString(Sprinter* sp, const mozilla::Range<const CharT> chars,
   return true;
 }
 
-template bool QuoteString<QuoteTarget::String, Latin1Char>(
+template JS_PUBLIC_API bool QuoteString<QuoteTarget::String, Latin1Char>(
     Sprinter* sp, const mozilla::Range<const Latin1Char> chars, char quote);
 
-template bool QuoteString<QuoteTarget::String, char16_t>(
+template JS_PUBLIC_API bool QuoteString<QuoteTarget::String, char16_t>(
     Sprinter* sp, const mozilla::Range<const char16_t> chars, char quote);
 
-template bool QuoteString<QuoteTarget::JSON, Latin1Char>(
+template JS_PUBLIC_API bool QuoteString<QuoteTarget::JSON, Latin1Char>(
     Sprinter* sp, const mozilla::Range<const Latin1Char> chars, char quote);
 
-template bool QuoteString<QuoteTarget::JSON, char16_t>(
+template JS_PUBLIC_API bool QuoteString<QuoteTarget::JSON, char16_t>(
     Sprinter* sp, const mozilla::Range<const char16_t> chars, char quote);
 
-bool QuoteString(Sprinter* sp, JSString* str, char quote /*= '\0' */) {
+JS_PUBLIC_API bool QuoteString(Sprinter* sp, JSString* str,
+                               char quote /*= '\0' */) {
   MOZ_ASSERT(sp->maybeCx);
   JSLinearString* linear = str->ensureLinear(sp->maybeCx);
   if (!linear) {
@@ -380,7 +382,8 @@ bool QuoteString(Sprinter* sp, JSString* str, char quote /*= '\0' */) {
                                         sp, linear->twoByteRange(nogc), quote);
 }
 
-UniqueChars QuoteString(JSContext* cx, JSString* str, char quote /* = '\0' */) {
+JS_PUBLIC_API UniqueChars QuoteString(JSContext* cx, JSString* str,
+                                      char quote /* = '\0' */) {
   Sprinter sprinter(cx);
   if (!sprinter.init()) {
     return nullptr;
@@ -391,7 +394,7 @@ UniqueChars QuoteString(JSContext* cx, JSString* str, char quote /* = '\0' */) {
   return sprinter.release();
 }
 
-bool JSONQuoteString(Sprinter* sp, JSString* str) {
+JS_PUBLIC_API bool JSONQuoteString(Sprinter* sp, JSString* str) {
   MOZ_ASSERT(sp->maybeCx);
   JSLinearString* linear = str->ensureLinear(sp->maybeCx);
   if (!linear) {

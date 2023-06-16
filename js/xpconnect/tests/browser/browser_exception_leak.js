@@ -15,7 +15,7 @@ add_task(async function test() {
   let stackTraceEmpty = await ContentTask.spawn(
     browser,
     { innerWindowId },
-    async function(args) {
+    async function (args) {
       let { TestUtils } = ChromeUtils.importESModule(
         "resource://testing-common/TestUtils.sys.mjs"
       );

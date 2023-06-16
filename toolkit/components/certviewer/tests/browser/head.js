@@ -45,9 +45,8 @@ function promiseLoadSubDialog(aURL) {
         is_element_visible(aEvent.detail.dialog._overlay, "Overlay is visible");
 
         // Check that stylesheets were injected
-        let expectedStyleSheetURLs = aEvent.detail.dialog._injectedStyleSheets.slice(
-          0
-        );
+        let expectedStyleSheetURLs =
+          aEvent.detail.dialog._injectedStyleSheets.slice(0);
         for (let styleSheet of aEvent.detail.dialog._frame.contentDocument
           .styleSheets) {
           let i = expectedStyleSheetURLs.indexOf(styleSheet.href);
@@ -74,7 +73,7 @@ function injectErrorPageFrame(tab, src) {
   return SpecialPowers.spawn(
     tab.linkedBrowser,
     [{ frameSrc: src }],
-    async function({ frameSrc }) {
+    async function ({ frameSrc }) {
       let loaded = ContentTaskUtils.waitForEvent(
         content.wrappedJSObject,
         "DOMFrameContentLoaded"

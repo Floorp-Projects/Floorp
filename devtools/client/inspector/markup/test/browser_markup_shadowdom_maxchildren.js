@@ -27,7 +27,7 @@ const TEST_URL = `data:text/html;charset=utf-8,
 
 const MAX_CHILDREN = 5;
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.markup.pagesize", MAX_CHILDREN);
 
   const { inspector } = await openInspectorForURL(TEST_URL);

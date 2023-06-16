@@ -39,7 +39,7 @@ function closeAllNotifications() {
 
   return new Promise(resolve => {
     for (let notification of gNotificationBox.allNotifications) {
-      waitForNotificationClose(notification, function() {
+      waitForNotificationClose(notification, function () {
         if (gNotificationBox.allNotifications.length === 0) {
           resolve();
         }
@@ -67,8 +67,8 @@ function openToolbarCustomizationUI(aCallback, aBrowserWin) {
 
   aBrowserWin.gNavToolbox.addEventListener(
     "customizationready",
-    function() {
-      executeSoon(function() {
+    function () {
+      executeSoon(function () {
         aCallback(aBrowserWin);
       });
     },
@@ -79,7 +79,7 @@ function openToolbarCustomizationUI(aCallback, aBrowserWin) {
 function closeToolbarCustomizationUI(aCallback, aBrowserWin) {
   aBrowserWin.gNavToolbox.addEventListener(
     "aftercustomization",
-    function() {
+    function () {
       executeSoon(aCallback);
     },
     { once: true }
@@ -91,7 +91,7 @@ function closeToolbarCustomizationUI(aCallback, aBrowserWin) {
 function waitForCondition(condition, nextTest, errorMsg, retryTimes) {
   retryTimes = typeof retryTimes !== "undefined" ? retryTimes : 30;
   var tries = 0;
-  var interval = setInterval(function() {
+  var interval = setInterval(function () {
     if (tries >= retryTimes) {
       ok(false, errorMsg);
       moveOn();
@@ -108,7 +108,7 @@ function waitForCondition(condition, nextTest, errorMsg, retryTimes) {
     }
     tries++;
   }, 100);
-  var moveOn = function() {
+  var moveOn = function () {
     clearInterval(interval);
     nextTest();
   };
@@ -183,7 +183,7 @@ function promiseOpenAndLoadWindow(aOptions, aWaitForDelayedStartup = false) {
     } else {
       win.addEventListener(
         "load",
-        function() {
+        function () {
           resolve(win);
         },
         { once: true }
@@ -340,7 +340,7 @@ async function loadBadCertPage(url) {
   BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, url);
   await loaded;
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     content.document.getElementById("exceptionDialogButton").click();
   });
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);

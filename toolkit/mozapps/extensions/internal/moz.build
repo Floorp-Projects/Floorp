@@ -5,11 +5,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXTRA_JS_MODULES.addons += [
-    "AddonRepository.jsm",
-    "AddonSettings.jsm",
-    "AddonUpdateChecker.jsm",
+    "AddonRepository.sys.mjs",
+    "AddonSettings.sys.mjs",
+    "AddonUpdateChecker.sys.mjs",
     "crypto-utils.sys.mjs",
-    "ProductAddonChecker.jsm",
+    "ProductAddonChecker.sys.mjs",
     "siteperms-addon-utils.sys.mjs",
     "XPIDatabase.jsm",
     "XPIInstall.jsm",
@@ -24,5 +24,5 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
     ]
 
 TESTING_JS_MODULES += [
-    "AddonTestUtils.jsm",
+    "AddonTestUtils.sys.mjs",
 ]

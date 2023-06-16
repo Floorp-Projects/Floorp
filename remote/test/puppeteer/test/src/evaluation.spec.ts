@@ -21,9 +21,7 @@ import {
   setupTestBrowserHooks,
   setupTestPageAndContextHooks,
 } from './mocha-utils.js';
-import utils from './utils.js';
-
-const bigint = typeof BigInt !== 'undefined';
+import {attachFrame} from './utils.js';
 
 describe('Evaluation specs', function () {
   setupTestBrowserHooks();
@@ -38,7 +36,7 @@ describe('Evaluation specs', function () {
       });
       expect(result).toBe(21);
     });
-    (bigint ? it : it.skip)('should transfer BigInt', async () => {
+    it('should transfer BigInt', async () => {
       const {page} = getTestState();
 
       const result = await page.evaluate((a: bigint) => {
@@ -259,7 +257,7 @@ describe('Evaluation specs', function () {
       expect(result).not.toBe(object);
       expect(result).toEqual(object);
     });
-    (bigint ? it : it.skip)('should return BigInt', async () => {
+    it('should return BigInt', async () => {
       const {page} = getTestState();
 
       const result = await page.evaluate(() => {
@@ -420,7 +418,7 @@ describe('Evaluation specs', function () {
     it('should throw if elementHandles are from other frames', async () => {
       const {page, server} = getTestState();
 
-      await utils.attachFrame(page, 'frame1', server.EMPTY_PAGE);
+      await attachFrame(page, 'frame1', server.EMPTY_PAGE);
       const bodyHandle = await page.frames()[1]!.$('body');
       let error!: Error;
       await page
@@ -476,6 +474,7 @@ describe('Evaluation specs', function () {
       expect(result).toEqual([42]);
     });
     it('should transfer 100Mb of data from page to node.js', async function () {
+      this.timeout(25_000);
       const {page} = getTestState();
 
       const a = await page.evaluate(() => {
@@ -545,8 +544,8 @@ describe('Evaluation specs', function () {
       const {page, server} = getTestState();
 
       await page.goto(server.EMPTY_PAGE);
-      await utils.attachFrame(page, 'frame1', server.EMPTY_PAGE);
-      expect(page.frames().length).toBe(2);
+      await attachFrame(page, 'frame1', server.EMPTY_PAGE);
+      expect(page.frames()).toHaveLength(2);
       await page.frames()[0]!.evaluate(() => {
         return ((globalThis as any).FOO = 'foo');
       });
@@ -568,7 +567,7 @@ describe('Evaluation specs', function () {
       const {page, server} = getTestState();
 
       await page.goto(server.PREFIX + '/frames/one-frame.html');
-      expect(page.frames().length).toBe(2);
+      expect(page.frames()).toHaveLength(2);
       expect(
         await page.frames()[0]!.evaluate(() => {
           return document.body.textContent!.trim();

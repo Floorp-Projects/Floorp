@@ -9,7 +9,7 @@ function advance_clock(milliseconds) {
 }
 
 // Test-element creation/destruction and event checking
-(function() {
+(function () {
   var gElem;
   var gEventsReceived = [];
 
@@ -114,7 +114,7 @@ function advance_clock(milliseconds) {
     }
   }
 
-  [new_div, new_element, listen, check_events, done_element].forEach(function(
+  [new_div, new_element, listen, check_events, done_element].forEach(function (
     fn
   ) {
     window[fn.name] = fn;
@@ -177,7 +177,7 @@ function step_start(nsteps) {
 
 var gTF = {
   ease: bezier(0.25, 0.1, 0.25, 1),
-  linear: function(x) {
+  linear: function (x) {
     return x;
   },
   ease_in: bezier(0.42, 0, 1, 1),
@@ -196,7 +196,7 @@ function is_approx(float1, float2, error, desc) {
 
 function findKeyframesRule(name) {
   for (var i = 0; i < document.styleSheets.length; i++) {
-    var match = [].find.call(document.styleSheets[i].cssRules, function(rule) {
+    var match = [].find.call(document.styleSheets[i].cssRules, function (rule) {
       return rule.type == CSSRule.KEYFRAMES_RULE && rule.name == name;
     });
     if (match) {
@@ -235,7 +235,7 @@ function runOMTATest(aTestFunction, aOnSkip, specialPowersForPrefs) {
     specialPowersForPrefs.getBoolPref(OMTAPrefKey);
 
   isOMTAWorking()
-    .then(function(isWorking) {
+    .then(function (isWorking) {
       if (expectOMTA) {
         if (isWorking) {
           aTestFunction();
@@ -255,7 +255,7 @@ function runOMTATest(aTestFunction, aOnSkip, specialPowersForPrefs) {
         aOnSkip();
       }
     })
-    .catch(function(err) {
+    .catch(function (err) {
       ok(false, err);
       aOnSkip();
     });
@@ -281,7 +281,7 @@ function runOMTATest(aTestFunction, aOnSkip, specialPowersForPrefs) {
     div.style.backgroundColor = "white";
 
     // Common clean up code
-    var cleanUp = function() {
+    var cleanUp = function () {
       div.remove();
       style.remove();
       if (utils.isTestControllingRefreshes) {
@@ -291,7 +291,7 @@ function runOMTATest(aTestFunction, aOnSkip, specialPowersForPrefs) {
 
     return waitForDocumentLoad()
       .then(loadPaintListener)
-      .then(function() {
+      .then(function () {
         // Put refresh driver under test control and flush all pending style,
         // layout and paint to avoid the situation that waitForPaintsFlush()
         // receives unexpected MozAfterpaint event for those pending
@@ -299,24 +299,24 @@ function runOMTATest(aTestFunction, aOnSkip, specialPowersForPrefs) {
         utils.advanceTimeAndRefresh(0);
         return waitForPaintsFlushed();
       })
-      .then(function() {
+      .then(function () {
         div.style.animation = animationName + " 10s";
 
         return waitForPaintsFlushed();
       })
-      .then(function() {
+      .then(function () {
         var opacity = utils.getOMTAStyle(div, "opacity");
         cleanUp();
         return Promise.resolve(opacity == 0.5);
       })
-      .catch(function(err) {
+      .catch(function (err) {
         cleanUp();
         return Promise.reject(err);
       });
   }
 
   function waitForDocumentLoad() {
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
       if (document.readyState === "complete") {
         resolve();
       } else {
@@ -326,11 +326,11 @@ function runOMTATest(aTestFunction, aOnSkip, specialPowersForPrefs) {
   }
 
   function loadPaintListener() {
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
       if (typeof window.waitForAllPaints !== "function") {
         var script = document.createElement("script");
         script.onload = resolve;
-        script.onerror = function() {
+        script.onerror = function () {
           reject(new Error("Failed to load paint listener"));
         };
         script.src = "/tests/SimpleTest/paint_listener.js";
@@ -354,19 +354,19 @@ function runOMTATest(aTestFunction, aOnSkip, specialPowersForPrefs) {
 //    });
 //    runAllAsyncAnimTests().then(SimpleTest.finish());
 //
-(function() {
+(function () {
   var tests = [];
 
-  window.addAsyncAnimTest = function(generator) {
+  window.addAsyncAnimTest = function (generator) {
     tests.push(generator);
   };
 
   // Returns a promise when all tests have run
-  window.runAllAsyncAnimTests = function(aOnAbort) {
+  window.runAllAsyncAnimTests = function (aOnAbort) {
     // runAsyncAnimTest returns a Promise that is resolved when the
     // test is finished so we can chain them together
-    return tests.reduce(function(sequence, test) {
-      return sequence.then(function() {
+    return tests.reduce(function (sequence, test) {
+      return sequence.then(function () {
         return runAsyncAnimTest(test, aOnAbort);
       });
     }, Promise.resolve() /* the start of the sequence */);
@@ -396,7 +396,7 @@ function runOMTATest(aTestFunction, aOnSkip, specialPowersForPrefs) {
       if (next.done) {
         return Promise.resolve(next.value);
       }
-      return Promise.resolve(next.value).then(step, function(err) {
+      return Promise.resolve(next.value).then(step, function (err) {
         throw err;
       });
     }
@@ -411,13 +411,13 @@ function runOMTATest(aTestFunction, aOnSkip, specialPowersForPrefs) {
       promise = step();
     }
     return promise
-      .catch(function(err) {
+      .catch(function (err) {
         ok(false, err.message);
         if (typeof aOnAbort == "function") {
           aOnAbort();
         }
       })
-      .then(function() {
+      .then(function () {
         // Restore clock
         SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
       });
@@ -443,8 +443,8 @@ const ExpectComparisonTo = {
   Fail: 2,
 };
 
-(function() {
-  window.omta_todo_is = function(
+(function () {
+  window.omta_todo_is = function (
     elem,
     property,
     expected,
@@ -464,7 +464,14 @@ const ExpectComparisonTo = {
     );
   };
 
-  window.omta_is = function(elem, property, expected, runningOn, desc, pseudo) {
+  window.omta_is = function (
+    elem,
+    property,
+    expected,
+    runningOn,
+    desc,
+    pseudo
+  ) {
     return omta_is_approx(
       elem,
       property,
@@ -479,7 +486,7 @@ const ExpectComparisonTo = {
 
   // Many callers of this method will pass 'undefined' for
   // expectedComparisonResult.
-  window.omta_is_approx = function(
+  window.omta_is_approx = function (
     elem,
     property,
     expected,
@@ -520,7 +527,7 @@ const ExpectComparisonTo = {
       case "scale":
         if (runningOn == RunningOn.MainThread) {
           normalize = value => value;
-          compare = function(a, b, error) {
+          compare = function (a, b, error) {
             return a == b;
           };
           break;
@@ -533,13 +540,13 @@ const ExpectComparisonTo = {
         break;
       case "opacity":
         normalize = parseFloat;
-        compare = function(a, b, error) {
+        compare = function (a, b, error) {
           return Math.abs(a - b) <= error;
         };
         break;
       default:
         normalize = value => value;
-        compare = function(a, b, error) {
+        compare = function (a, b, error) {
           return a == b;
         };
         break;
@@ -691,7 +698,7 @@ const ExpectComparisonTo = {
     }
   };
 
-  window.matricesRoughlyEqual = function(a, b, tolerance) {
+  window.matricesRoughlyEqual = function (a, b, tolerance) {
     // Error handle if a or b is invalid.
     if (!a || !b) {
       return false;
@@ -716,7 +723,7 @@ const ExpectComparisonTo = {
   //  "matrix3d(...)"
   //  [ 1, 0, 0, ... ]
   //  { a: 1, ty: 23 } etc.
-  window.convertTo3dMatrix = function(matrixLike) {
+  window.convertTo3dMatrix = function (matrixLike) {
     if (typeof matrixLike == "string") {
       return convertStringTo3dMatrix(matrixLike);
     } else if (Array.isArray(matrixLike)) {
@@ -729,7 +736,7 @@ const ExpectComparisonTo = {
 
   // In future most of these methods should be able to be replaced
   // with DOMMatrix
-  window.isInvertible = function(matrix) {
+  window.isInvertible = function (matrix) {
     return getDeterminant(matrix) != 0;
   };
 
@@ -748,7 +755,7 @@ const ExpectComparisonTo = {
       str
         .substring(result[0].length, str.length - 1)
         .split(",")
-        .map(function(component) {
+        .map(function (component) {
           return Number(component);
         })
     );
@@ -827,7 +834,7 @@ const ExpectComparisonTo = {
     return (
       "matrix3d(" +
       matrix
-        .reduce(function(outer, inner) {
+        .reduce(function (outer, inner) {
           return outer.concat(inner);
         })
         .join(", ") +
@@ -892,14 +899,14 @@ const ExpectComparisonTo = {
 
 // Returns a Promise that resolves once all paints have completed
 function waitForPaints() {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     waitForAllPaints(resolve);
   });
 }
 
 // As with waitForPaints but also flushes pending style changes before waiting
 function waitForPaintsFlushed() {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     waitForAllPaintsFlushed(resolve);
   });
 }
@@ -920,7 +927,7 @@ function waitForVisitedLinkColoring(visitedLink, waitProperty, waitValue) {
       setTimeout(checkLink, 0, resolve);
     }
   }
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     checkLink(resolve);
   });
 }

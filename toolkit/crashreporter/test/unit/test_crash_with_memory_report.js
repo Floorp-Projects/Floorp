@@ -11,7 +11,7 @@ add_task(async function run_test() {
   // within the crasher subprocess.
 
   await do_crash(
-    function() {
+    function () {
       // Delay crashing so that the memory report has time to complete.
       shouldDelay = true;
 
@@ -41,7 +41,7 @@ add_task(async function run_test() {
 
       crashReporter.saveMemoryReport();
     },
-    function(mdump, extra, extrafile, memoryfile) {
+    function (mdump, extra, extrafile, memoryfile) {
       Assert.ok(memoryfile.exists());
     },
     true

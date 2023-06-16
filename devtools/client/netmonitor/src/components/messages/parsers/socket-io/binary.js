@@ -21,7 +21,7 @@
  * @api public
  */
 
-exports.reconstructPacket = function(packet, buffers) {
+exports.reconstructPacket = function (packet, buffers) {
   packet.data = _reconstructPacket(packet.data, buffers);
   packet.attachments = undefined; // no longer useful
   return packet;

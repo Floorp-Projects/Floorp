@@ -33,7 +33,7 @@ add_task(async function telemetry_updatePing_ready() {
   // an update, so let's make sure to have one before moving on with validation.
   let updatePing;
   await TestUtils.waitForCondition(
-    async function() {
+    async function () {
       // Check that the ping made it into the Telemetry archive.
       // The test data is defined in ../data/sharedUpdateXML.js
       updatePing = await archiveChecker.promiseFindPing("update", [

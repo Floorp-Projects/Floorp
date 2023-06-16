@@ -8,7 +8,7 @@
 
 requestLongerTimeout(2);
 
-add_task(async function() {
+add_task(async function () {
   // NOTE: the CORS call makes the test run times inconsistent
 
   // - non-existant-map.js has a reference to source map file which doesn't exists.

@@ -43,6 +43,9 @@ replaced_variables = """
 
 #define WABT_DEBUG 0
 
+/* We don't require color printing of wasm2c errors on any platform */
+#define HAVE_WIN32_VT100 0
+
 #ifdef _WIN32
   // Ignore whatever is set in mozilla-config.h wrt alloca because it is
   // wrong when cross-compiling on Windows.
@@ -51,12 +54,9 @@ replaced_variables = """
   #define HAVE_SSIZE_T 0
   /* Whether strcasecmp is defined by strings.h */
   #define HAVE_STRCASECMP 0
-  /* Whether ENABLE_VIRTUAL_TERMINAL_PROCESSING is defined by windows.h */
-  #define HAVE_WIN32_VT100 1
 #else
   #define HAVE_SSIZE_T 1
   #define HAVE_STRCASECMP 1
-  #define HAVE_WIN32_VT100 0
 #endif
 
 #if defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__) && defined(__ORDER_BIG_ENDIAN__)

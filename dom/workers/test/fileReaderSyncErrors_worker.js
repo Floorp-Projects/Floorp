@@ -62,7 +62,7 @@ function fileReaderJunkArgument(blob) {
   }
 }
 
-onmessage = function(event) {
+onmessage = function (event) {
   var file = event.data;
 
   // Test read only properties.

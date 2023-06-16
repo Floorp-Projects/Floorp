@@ -164,18 +164,18 @@ smn{
                     M{"L.–L."}
                 }
                 MEd{
-                    M{"E d.M. – E d.M."}
-                    d{"E d. – E d.M."}
+                    M{"E d.M. – E d.M."}
+                    d{"E d. – E d.M."}
                 }
                 MMM{
                     M{"LLL–LLLL"}
                 }
                 MMMEd{
-                    M{"MMMM E d. – MMMM E d."}
-                    d{"MMMM E d. – E d."}
+                    M{"MMMM E d. – MMMM E d."}
+                    d{"MMMM E d. – E d."}
                 }
                 MMMd{
-                    M{"MMMM d. – MMMM d."}
+                    M{"MMMM d. – MMMM d."}
                     d{"MMMM d.–d."}
                 }
                 Md{
@@ -203,8 +203,8 @@ smn{
                     y{"LLLL y – LLLL y G"}
                 }
                 yMMMEd{
-                    M{"MMMM E d. – MMMM E d. y G"}
-                    d{"MMMM E d. – E d. y G"}
+                    M{"MMMM E d. – MMMM E d. y G"}
+                    d{"MMMM E d. – E d. y G"}
                     y{"MMMM E d. y – MMMM E d. y G"}
                 }
                 yMMMM{
@@ -212,7 +212,7 @@ smn{
                     y{"LLLL y – LLLL y G"}
                 }
                 yMMMd{
-                    M{"MMMM d. – MMMM d. y G"}
+                    M{"MMMM d. – MMMM d. y G"}
                     d{"MMMM d.–d. y G"}
                     y{"MMMM d. y – MMMM d. y G"}
                 }
@@ -452,18 +452,18 @@ smn{
                     M{"L.–L."}
                 }
                 MEd{
-                    M{"E d.M. – E d.M."}
-                    d{"E d. – E d.M."}
+                    M{"E d.M. – E d.M."}
+                    d{"E d. – E d.M."}
                 }
                 MMM{
                     M{"LLL–LLLL"}
                 }
                 MMMEd{
-                    M{"MMMM E d. – MMMM E d."}
-                    d{"MMMM E d. – E d."}
+                    M{"MMMM E d. – MMMM E d."}
+                    d{"MMMM E d. – E d."}
                 }
                 MMMd{
-                    M{"MMM d. – MMM d."}
+                    M{"MMM d. – MMM d."}
                     d{"MMM d.–d."}
                 }
                 Md{
@@ -509,8 +509,8 @@ smn{
                     y{"LLLL y – LLLL y"}
                 }
                 yMMMEd{
-                    M{"MMMM E d. – MMMM E d. y"}
-                    d{"MMMM E d. – E d. y"}
+                    M{"MMMM E d. – MMMM E d. y"}
+                    d{"MMMM E d. – E d. y"}
                     y{"MMMM E d. y – MMMM E d. y"}
                 }
                 yMMMM{
@@ -518,13 +518,13 @@ smn{
                     y{"LLLL y – LLLL y"}
                 }
                 yMMMd{
-                    M{"MMMM d. – MMMM d. y"}
+                    M{"MMMM d. – MMMM d. y"}
                     d{"MMMM d.–d. y"}
                     y{"MMMM d. y – MMMM d. y"}
                 }
                 yMd{
                     M{"d.M.–d.M.y"}
-                    d{"d. – d.M.y"}
+                    d{"d. – d.M.y"}
                     y{"d.M.y–d.M.y"}
                 }
             }

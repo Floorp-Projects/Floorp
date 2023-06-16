@@ -3,9 +3,7 @@
   "$id": "file:///UpdateAction.schema.json",
   "title": "UpdateActionMessage",
   "description": "A template for messages that execute predetermined actions.",
-  "allOf": [
-    { "$ref": "file:///FxMSCommon.schema.json#/$defs/Message" }
-  ],
+  "allOf": [{ "$ref": "file:///FxMSCommon.schema.json#/$defs/Message" }],
   "type": "object",
   "properties": {
     "content": {

@@ -7,7 +7,7 @@
  * Tests the url preview expanded state is persisted across requests selections.
  */
 
-add_task(async function() {
+add_task(async function () {
   const { monitor, tab } = await initNetMonitor(PARAMS_URL, {
     requestCount: 1,
   });
@@ -76,7 +76,7 @@ add_task(async function() {
  *  Checks if the query parameter arrays are formatted as we expected.
  */
 
-add_task(async function() {
+add_task(async function () {
   const { monitor } = await initNetMonitor(PARAMS_URL, {
     requestCount: 1,
   });

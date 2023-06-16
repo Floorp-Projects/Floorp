@@ -109,3 +109,35 @@ firefoxview-collapse-button-show =
 
 firefoxview-collapse-button-hide =
   .title = Hide list
+
+firefoxview-overview-nav = Recent browsing
+  .title = Recent browsing
+
+## History in this context refers to browser history
+
+firefoxview-history-nav = History
+  .title = History
+firefoxview-history-header = History
+
+## Open Tabs in this context refers to all open tabs in the browser
+
+firefoxview-opentabs-nav = Open tabs
+  .title = Open tabs
+firefoxview-opentabs-header = Open tabs
+
+## Recently closed tabs in this context refers to recently closed tabs from all windows
+
+firefoxview-recently-closed-nav = Recently closed tabs
+  .title = Recently closed tabs
+firefoxview-recently-closed-header = Recently closed tabs
+
+## Tabs from other devices refers in this context refers to synced tabs from other devices
+
+firefoxview-synced-tabs-nav = Tabs from other devices
+  .title = Tabs from other devices
+firefoxview-synced-tabs-header = Tabs from other devices
+
+##
+
+# Used for a link in collapsible cards, in the 'Recent browsing' page of Firefox View
+firefoxview-view-all-link = View all

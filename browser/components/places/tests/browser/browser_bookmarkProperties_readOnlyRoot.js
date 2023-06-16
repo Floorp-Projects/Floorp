@@ -2,7 +2,7 @@
 
 add_task(async function test_dialog() {
   info("Bug 479348 - Properties dialog on a root should be read-only.");
-  await withSidebarTree("bookmarks", async function(tree) {
+  await withSidebarTree("bookmarks", async function (tree) {
     tree.selectItems([PlacesUtils.bookmarks.unfiledGuid]);
     Assert.ok(
       !tree.controller.isCommandEnabled("placesCmd_show:info"),
@@ -42,7 +42,7 @@ add_task(async function test_dialog() {
 add_task(async function test_library() {
   info("Bug 479348 - Library info pane on a root should be read-only.");
   let library = await promiseLibrary("UnfiledBookmarks");
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await promiseLibraryClosed(library);
   });
   let PlacesOrganizer = library.PlacesOrganizer;

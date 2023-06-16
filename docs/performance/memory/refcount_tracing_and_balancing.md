@@ -121,13 +121,16 @@ and also improves the performance.
 
     perl -w tools/rb/filter-log.pl --object 0x00253ab0 < ./refcounts.log > my-leak.log
 
-### Linux Users
+### Symbolicating stacks
 
-The log file generated on Linux system often lack function names, file
-names and line numbers. Linux users need to run a script to fix the call
+The log files often lack function names, file
+names and line numbers. You'll need to run a script to fix the call
 stack.
 
-    python tools/rb/fix_stacks.py < ./refcounts.log > fixed_stack.log
+    python3 tools/rb/fix_stacks.py < ./refcounts.log > fixed_stack.log
+
+Also, it is possible to [locally symbolicate](/contributing/debugging/local_symbols.rst)
+logs generated on TreeHerder.
 
 ## **Post-processing step 3: building the balance tree**
 

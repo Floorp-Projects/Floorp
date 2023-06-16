@@ -71,9 +71,8 @@ class RecommendationProvider {
 
   get modelKeys() {
     if (!this._modelKeys) {
-      this._modelKeys = this.store.getState().Prefs.values[
-        PREF_PERSONALIZATION_MODEL_KEYS
-      ];
+      this._modelKeys =
+        this.store.getState().Prefs.values[PREF_PERSONALIZATION_MODEL_KEYS];
     }
 
     return this._modelKeys;

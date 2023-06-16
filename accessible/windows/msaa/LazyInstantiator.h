@@ -8,7 +8,6 @@
 #define mozilla_a11y_LazyInstantiator_h
 
 #include "IUnknownImpl.h"
-#include "mozilla/mscom/Ptr.h"
 #include "mozilla/RefPtr.h"
 #include "nsString.h"
 

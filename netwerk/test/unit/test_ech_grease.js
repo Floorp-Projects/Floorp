@@ -262,7 +262,7 @@ add_task(async function GreaseNConservativeN() {
   server.close();
 });
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   Services.prefs.clearUserPref("security.tls.version.max");
   Services.prefs.clearUserPref("network.dns.localDomains");
   Services.prefs.clearUserPref("security.tls.ech.grease_probability");

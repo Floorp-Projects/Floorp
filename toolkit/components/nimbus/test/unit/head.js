@@ -53,3 +53,34 @@ function onFinalizeCalled(spyOrCallArgs, ...expectedArgs) {
 
   return false;
 }
+
+/**
+ * Assert the store has no active experiments or rollouts.
+ */
+async function assertEmptyStore(store, { cleanup = false } = {}) {
+  Assert.deepEqual(
+    store
+      .getAll()
+      .filter(e => e.active)
+      .map(e => e.slug),
+    [],
+    "Store should have no active enrollments"
+  );
+
+  Assert.deepEqual(
+    store
+      .getAll()
+      .filter(e => e.inactive)
+      .map(e => e.slug),
+    [],
+    "Store should have no inactive enrollments"
+  );
+
+  if (cleanup) {
+    // We need to call finalize first to ensure that any pending saves from
+    // JSONFile.saveSoon overwrite files on disk.
+    store._store.saveSoon();
+    await store._store.finalize();
+    await IOUtils.remove(store._store.path);
+  }
+}

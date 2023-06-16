@@ -31,7 +31,7 @@ function promiseTouchTapContent(aBrowser, aContentElementId) {
       let promise = new Promise(resolve => {
         contentElement.addEventListener(
           "click",
-          function(e) {
+          function (e) {
             resolve({ x: e.screenX, y: e.screenY });
           },
           { once: true }
@@ -45,7 +45,7 @@ function promiseTouchTapContent(aBrowser, aContentElementId) {
   );
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["dom.events.asyncClipboard.readText", true],
@@ -58,12 +58,10 @@ add_task(async function test_paste_button_position_touch() {
   // Ensure there's text on the clipboard.
   await promiseWritingRandomTextToClipboard();
 
-  await BrowserTestUtils.withNewTab(kContentFileUrl, async function(browser) {
+  await BrowserTestUtils.withNewTab(kContentFileUrl, async function (browser) {
     const pasteButtonIsShown = promisePasteButtonIsShown();
-    const coordsOfClickInContentRelativeToScreenInDevicePixels = await promiseTouchTapContent(
-      browser,
-      "invokeReadTextOnceId"
-    );
+    const coordsOfClickInContentRelativeToScreenInDevicePixels =
+      await promiseTouchTapContent(browser, "invokeReadTextOnceId");
     info(
       "coordsOfClickInContentRelativeToScreenInDevicePixels: " +
         coordsOfClickInContentRelativeToScreenInDevicePixels.x +
@@ -71,7 +69,8 @@ add_task(async function test_paste_button_position_touch() {
         coordsOfClickInContentRelativeToScreenInDevicePixels.y
     );
 
-    const pasteButtonCoordsRelativeToScreenInDevicePixels = await pasteButtonIsShown;
+    const pasteButtonCoordsRelativeToScreenInDevicePixels =
+      await pasteButtonIsShown;
     info(
       "pasteButtonCoordsRelativeToScreenInDevicePixels: " +
         pasteButtonCoordsRelativeToScreenInDevicePixels.x +
@@ -79,7 +78,8 @@ add_task(async function test_paste_button_position_touch() {
         pasteButtonCoordsRelativeToScreenInDevicePixels.y
     );
 
-    const mouseCoordsRelativeToScreenInDevicePixels = getMouseCoordsRelativeToScreenInDevicePixels();
+    const mouseCoordsRelativeToScreenInDevicePixels =
+      getMouseCoordsRelativeToScreenInDevicePixels();
     info(
       "mouseCoordsRelativeToScreenInDevicePixels: " +
         mouseCoordsRelativeToScreenInDevicePixels.x +

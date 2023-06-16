@@ -3,7 +3,7 @@
 
 const MAX_PLACEABLE_LENGTH = 2500;
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["test.aboutconfig.added", "=".repeat(MAX_PLACEABLE_LENGTH)],
@@ -13,7 +13,7 @@ add_setup(async function() {
 });
 
 add_task(async function test_accessible_value() {
-  await AboutConfigTest.withNewTab(async function() {
+  await AboutConfigTest.withNewTab(async function () {
     for (let [name, expectHasUserValue] of [
       [PREF_BOOLEAN_DEFAULT_TRUE, false],
       [PREF_BOOLEAN_USERVALUE_TRUE, true],

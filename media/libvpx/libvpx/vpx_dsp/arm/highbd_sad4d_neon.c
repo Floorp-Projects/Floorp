@@ -213,10 +213,11 @@ static INLINE void highbd_sad32xhx4d_neon(const uint8_t *src_ptr,
 }
 
 #define HBD_SAD_WXH_4D_NEON(w, h)                                            \
-  void vpx_highbd_sad##w##x##h##x4d_neon(const uint8_t *src, int src_stride, \
-                                         const uint8_t *const ref[4],        \
-                                         int ref_stride, uint32_t res[4]) {  \
-    highbd_sad##w##xhx4d_neon(src, src_stride, ref, ref_stride, res, (h));   \
+  void vpx_highbd_sad##w##x##h##x4d_neon(                                    \
+      const uint8_t *src, int src_stride, const uint8_t *const ref_array[4], \
+      int ref_stride, uint32_t sad_array[4]) {                               \
+    highbd_sad##w##xhx4d_neon(src, src_stride, ref_array, ref_stride,        \
+                              sad_array, (h));                               \
   }
 
 HBD_SAD_WXH_4D_NEON(4, 4)
@@ -236,3 +237,37 @@ HBD_SAD_WXH_4D_NEON(32, 64)
 
 HBD_SAD_WXH_4D_NEON(64, 32)
 HBD_SAD_WXH_4D_NEON(64, 64)
+
+#undef HBD_SAD_WXH_4D_NEON
+
+#define HBD_SAD_SKIP_WXH_4D_NEON(w, h)                                        \
+  void vpx_highbd_sad_skip_##w##x##h##x4d_neon(                               \
+      const uint8_t *src, int src_stride, const uint8_t *const ref_array[4],  \
+      int ref_stride, uint32_t sad_array[4]) {                                \
+    highbd_sad##w##xhx4d_neon(src, 2 * src_stride, ref_array, 2 * ref_stride, \
+                              sad_array, ((h) >> 1));                         \
+    sad_array[0] <<= 1;                                                       \
+    sad_array[1] <<= 1;                                                       \
+    sad_array[2] <<= 1;                                                       \
+    sad_array[3] <<= 1;                                                       \
+  }
+
+HBD_SAD_SKIP_WXH_4D_NEON(4, 4)
+HBD_SAD_SKIP_WXH_4D_NEON(4, 8)
+
+HBD_SAD_SKIP_WXH_4D_NEON(8, 4)
+HBD_SAD_SKIP_WXH_4D_NEON(8, 8)
+HBD_SAD_SKIP_WXH_4D_NEON(8, 16)
+
+HBD_SAD_SKIP_WXH_4D_NEON(16, 8)
+HBD_SAD_SKIP_WXH_4D_NEON(16, 16)
+HBD_SAD_SKIP_WXH_4D_NEON(16, 32)
+
+HBD_SAD_SKIP_WXH_4D_NEON(32, 16)
+HBD_SAD_SKIP_WXH_4D_NEON(32, 32)
+HBD_SAD_SKIP_WXH_4D_NEON(32, 64)
+
+HBD_SAD_SKIP_WXH_4D_NEON(64, 32)
+HBD_SAD_SKIP_WXH_4D_NEON(64, 64)
+
+#undef HBD_SAD_SKIP_WXH_4D_NEON

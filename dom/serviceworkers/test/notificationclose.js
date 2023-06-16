@@ -1,21 +1,21 @@
 // Any copyright is dedicated to the Public Domain.
 // http://creativecommons.org/publicdomain/zero/1.0/
 //
-onnotificationclose = function(e) {
+onnotificationclose = function (e) {
   e.waitUntil(
-    (async function() {
+    (async function () {
       let windowOpened = true;
       await clients.openWindow("hello.html").catch(err => {
         windowOpened = false;
       });
 
-      self.clients.matchAll().then(function(clients) {
+      self.clients.matchAll().then(function (clients) {
         if (clients.length === 0) {
           dump("*** CLIENTS LIST EMPTY! Test will timeout! ***\n");
           return;
         }
 
-        clients.forEach(function(client) {
+        clients.forEach(function (client) {
           client.postMessage({
             result:
               e.notification.data &&

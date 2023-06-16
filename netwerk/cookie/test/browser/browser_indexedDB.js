@@ -34,7 +34,7 @@ CookiePolicyHelper.runTest("IndexedDB in workers", {
     ok(worker, "Worker has been created");
 
     await new w.Promise((resolve, reject) => {
-      worker.onmessage = function(e) {
+      worker.onmessage = function (e) {
         if (e.data) {
           resolve();
         } else {
@@ -42,7 +42,7 @@ CookiePolicyHelper.runTest("IndexedDB in workers", {
         }
       };
 
-      worker.onerror = function(e) {
+      worker.onerror = function (e) {
         reject();
       };
     });
@@ -68,7 +68,7 @@ CookiePolicyHelper.runTest("IndexedDB in workers", {
     ok(worker, "Worker has been created");
 
     await new w.Promise((resolve, reject) => {
-      worker.onmessage = function(e) {
+      worker.onmessage = function (e) {
         if (e.data) {
           resolve();
         } else {
@@ -76,7 +76,7 @@ CookiePolicyHelper.runTest("IndexedDB in workers", {
         }
       };
 
-      worker.onerror = function(e) {
+      worker.onerror = function (e) {
         reject();
       };
     });

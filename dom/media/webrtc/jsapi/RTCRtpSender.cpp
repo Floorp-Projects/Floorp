@@ -210,10 +210,12 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> RTCRtpSender::GetStatsInternal(
                 remoteId = u"outbound_rtcp_"_ns + idstr + u"_"_ns;
                 remoteId.AppendInt(ssrc);
                 aRemote.mTimestamp.Construct(
-                    pipeline->GetTimestampMaker().ConvertNtpToDomTime(
+                    RTCStatsTimestamp::FromNtp(
+                        pipeline->GetTimestampMaker(),
                         webrtc::Timestamp::Micros(
                             aRtcpData.report_block_timestamp_utc_us()) +
-                        webrtc::TimeDelta::Seconds(webrtc::kNtpJan1970)));
+                            webrtc::TimeDelta::Seconds(webrtc::kNtpJan1970))
+                        .ToDom());
                 aRemote.mId.Construct(remoteId);
                 aRemote.mType.Construct(RTCStatsType::Remote_inbound_rtp);
                 aRemote.mSsrc = ssrc;
@@ -238,7 +240,7 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> RTCRtpSender::GetStatsInternal(
               [&](RTCOutboundRtpStreamStats& aLocal) {
                 aLocal.mSsrc = ssrc;
                 aLocal.mTimestamp.Construct(
-                    pipeline->GetTimestampMaker().GetNow());
+                    pipeline->GetTimestampMaker().GetNow().ToDom());
                 aLocal.mId.Construct(localId);
                 aLocal.mType.Construct(RTCStatsType::Outbound_rtp);
                 aLocal.mKind = kind;
@@ -441,7 +443,7 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> RTCRtpSender::GetStatsInternal(
             [&](RTCMediaSourceStats& aStats) {
               nsString id = u"mediasource_"_ns + idstr + trackName;
               aStats.mTimestamp.Construct(
-                  pipeline->GetTimestampMaker().GetNow());
+                  pipeline->GetTimestampMaker().GetNow().ToDom());
               aStats.mId.Construct(id);
               aStats.mType.Construct(RTCStatsType::Media_source);
               aStats.mTrackIdentifier = trackName;
@@ -462,7 +464,7 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> RTCRtpSender::GetStatsInternal(
   if (!aSkipIceStats && GetJsepTransceiver().mTransport.mComponents) {
     promises.AppendElement(mTransportHandler->GetIceStats(
         GetJsepTransceiver().mTransport.mTransportId,
-        mPipeline->GetTimestampMaker().GetNow()));
+        mPipeline->GetTimestampMaker().GetNow().ToDom()));
   }
 
   return promises;
@@ -481,6 +483,10 @@ void RTCRtpSender::WarnAboutBadSetParameters(const nsCString& aError) {
       "for your patience and support. The specific error was: ");
   warning += aError;
   mPc->SendWarningToConsole(warning);
+}
+
+nsCString RTCRtpSender::GetEffectiveTLDPlus1() const {
+  return mPc->GetEffectiveTLDPlus1();
 }
 
 already_AddRefed<Promise> RTCRtpSender::SetParameters(
@@ -520,6 +526,11 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
         mHaveWarnedBecauseNoGetParameters = true;
         mozilla::glean::rtcrtpsender_setparameters::warn_no_getparameters
             .AddToNumerator(1);
+#ifdef EARLY_BETA_OR_EARLIER
+        mozilla::glean::rtcrtpsender_setparameters::blame_no_getparameters
+            .Get(GetEffectiveTLDPlus1())
+            .Add(1);
+#endif
       }
       WarnAboutBadSetParameters(error);
     } else {
@@ -564,6 +575,7 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
   // If any of the following conditions are met,
   // return a promise rejected with a newly created InvalidModificationError:
 
+  bool pendingRidChangeFromCompatMode = false;
   // encodings.length is different from N.
   if (paramsCopy.mEncodings.Length() != oldParams->mEncodings.Length()) {
     nsCString error("Cannot change the number of encodings with setParameters");
@@ -578,12 +590,17 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
     }
     // Make sure we don't use the old rids in SyncToJsep while we wait for the
     // queued task below to update mParameters.
-    mPendingRidChangeFromCompatMode = true;
+    pendingRidChangeFromCompatMode = true;
     mSimulcastEnvelopeSet = true;
     if (!mHaveWarnedBecauseEncodingCountChange) {
       mHaveWarnedBecauseEncodingCountChange = true;
       mozilla::glean::rtcrtpsender_setparameters::warn_length_changed
           .AddToNumerator(1);
+#ifdef EARLY_BETA_OR_EARLIER
+      mozilla::glean::rtcrtpsender_setparameters::blame_length_changed
+          .Get(GetEffectiveTLDPlus1())
+          .Add(1);
+#endif
     }
     WarnAboutBadSetParameters(error);
   } else {
@@ -621,6 +638,11 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
       mHaveWarnedBecauseNoTransactionId = true;
       mozilla::glean::rtcrtpsender_setparameters::warn_no_transactionid
           .AddToNumerator(1);
+#ifdef EARLY_BETA_OR_EARLIER
+      mozilla::glean::rtcrtpsender_setparameters::blame_no_transactionid
+          .Get(GetEffectiveTLDPlus1())
+          .Add(1);
+#endif
     }
     WarnAboutBadSetParameters(error);
   } else if (oldParams->mTransactionId != paramsCopy.mTransactionId) {
@@ -644,6 +666,11 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
       mHaveWarnedBecauseStaleTransactionId = true;
       mozilla::glean::rtcrtpsender_setparameters::warn_stale_transactionid
           .AddToNumerator(1);
+#ifdef EARLY_BETA_OR_EARLIER
+      mozilla::glean::rtcrtpsender_setparameters::blame_stale_transactionid
+          .Get(GetEffectiveTLDPlus1())
+          .Add(1);
+#endif
     }
     WarnAboutBadSetParameters(error);
   }
@@ -717,6 +744,7 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
   // This also allows PeerConnectionImpl to detect when there is a pending
   // setParameters, which has implcations for the handling of
   // setRemoteDescription.
+  mPendingRidChangeFromCompatMode = pendingRidChangeFromCompatMode;
   mPendingParameters = Some(paramsCopy);
   uint32_t serialNumber = ++mNumSetParametersCalls;
   MaybeUpdateConduit();

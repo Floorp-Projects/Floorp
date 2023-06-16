@@ -18,12 +18,12 @@ const {
 } = require("resource://devtools/client/netmonitor/src/selectors/index.js");
 
 // Components
-loader.lazyGetter(this, "CustomRequestPanel", function() {
+loader.lazyGetter(this, "CustomRequestPanel", function () {
   return createFactory(
     require("resource://devtools/client/netmonitor/src/components/CustomRequestPanel.js")
   );
 });
-loader.lazyGetter(this, "TabboxPanel", function() {
+loader.lazyGetter(this, "TabboxPanel", function () {
   return createFactory(
     require("resource://devtools/client/netmonitor/src/components/TabboxPanel.js")
   );

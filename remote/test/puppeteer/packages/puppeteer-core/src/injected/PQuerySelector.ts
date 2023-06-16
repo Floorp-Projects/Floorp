@@ -1,13 +1,46 @@
+/**
+ * Copyright 2023 Google Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import type {AwaitableIterable} from '../common/types.js';
 import {AsyncIterableUtil} from '../util/AsyncIterableUtil.js';
-import {isErrorLike} from '../util/ErrorLike.js';
 
 import {ariaQuerySelectorAll} from './ARIAQuerySelector.js';
 import {customQuerySelectors} from './CustomQuerySelector.js';
-import {parsePSelectors, PSelector} from './PSelectorParser.js';
+import {
+  ComplexPSelector,
+  ComplexPSelectorList,
+  CompoundPSelector,
+  CSSSelector,
+  parsePSelectors,
+  PCombinator,
+  PPseudoSelector,
+} from './PSelectorParser.js';
 import {textQuerySelectorAll} from './TextQuerySelector.js';
-import {deepChildren, deepDescendents} from './util.js';
+import {pierce, pierceAll} from './util.js';
 import {xpathQuerySelectorAll} from './XPathQuerySelector.js';
+
+const IDENT_TOKEN_START = /[-\w\P{ASCII}*]/;
+
+interface QueryableNode extends Node {
+  querySelectorAll: typeof Document.prototype.querySelectorAll;
+}
+
+const isQueryableNode = (node: Node): node is QueryableNode => {
+  return 'querySelectorAll' in node;
+};
 
 class SelectorError extends Error {
   constructor(selector: string, message: string) {
@@ -18,50 +51,17 @@ class SelectorError extends Error {
 class PQueryEngine {
   #input: string;
 
-  #deepShadowSelectors: PSelector[][][];
-  #shadowSelectors: PSelector[][];
-  #selectors: PSelector[];
-  #selector: PSelector | undefined;
+  #complexSelector: ComplexPSelector;
+  #compoundSelector: CompoundPSelector = [];
+  #selector: CSSSelector | PPseudoSelector | undefined = undefined;
 
   elements: AwaitableIterable<Node>;
 
-  constructor(element: Node, selector: string) {
-    this.#input = selector.trim();
-
-    if (this.#input.length === 0) {
-      throw new SelectorError(this.#input, 'The provided selector is empty.');
-    }
-
-    try {
-      this.#deepShadowSelectors = parsePSelectors(this.#input);
-    } catch (error) {
-      if (!isErrorLike(error)) {
-        throw new SelectorError(this.#input, String(error));
-      }
-      throw new SelectorError(this.#input, error.message);
-    }
-
-    // If there are any empty elements, then this implies the selector has
-    // contiguous combinators (e.g. `>>> >>>>`) or starts/ends with one which we
-    // treat as illegal, similar to existing behavior.
-    if (
-      this.#deepShadowSelectors.some(shadowSelectors => {
-        return shadowSelectors.some(selectors => {
-          return selectors.length === 0;
-        });
-      })
-    ) {
-      throw new SelectorError(
-        this.#input,
-        'Multiple deep combinators found in sequence.'
-      );
-    }
-
-    this.#shadowSelectors = this.#deepShadowSelectors.shift() as PSelector[][];
-    this.#selectors = this.#shadowSelectors.shift() as PSelector[];
-    this.#selector = this.#selectors.shift();
-
+  constructor(element: Node, input: string, complexSelector: ComplexPSelector) {
     this.elements = [element];
+    this.#input = input;
+    this.#complexSelector = complexSelector;
+    this.#next();
   }
 
   async run(): Promise<void> {
@@ -76,106 +76,220 @@ class PQueryEngine {
           // are used right after so we treat this selector specially.
           this.#next();
           break;
-        default:
-          /**
-           * We add the space since `.foo` will interpolate incorrectly (see
-           * {@link PQueryAllEngine.query}). This is always equivalent.
-           */
-          this.#selector = ` ${this.#selector}`;
-          break;
       }
     }
 
     for (; this.#selector !== undefined; this.#next()) {
       const selector = this.#selector;
       const input = this.#input;
-      this.elements = AsyncIterableUtil.flatMap(
-        this.elements,
-        async function* (element) {
-          if (typeof selector === 'string') {
-            if (!element.parentElement) {
-              yield* (element as Element).querySelectorAll(selector);
-              return;
-            }
-
-            let index = 0;
-            for (const child of element.parentElement.children) {
-              ++index;
-              if (child === element) {
-                break;
+      if (typeof selector === 'string') {
+        // The regular expression tests if the selector is a type/universal
+        // selector. Any other case means we want to apply the selector onto
+        // the element itself (e.g. `element.class`, `element>div`,
+        // `element:hover`, etc.).
+        if (selector[0] && IDENT_TOKEN_START.test(selector[0])) {
+          this.elements = AsyncIterableUtil.flatMap(
+            this.elements,
+            async function* (element) {
+              if (isQueryableNode(element)) {
+                yield* element.querySelectorAll(selector);
               }
             }
-            yield* element.parentElement.querySelectorAll(
-              `:scope > :nth-child(${index})${selector}`
-            );
-            return;
-          }
-
-          switch (selector.name) {
-            case 'text':
-              yield* textQuerySelectorAll(element, selector.value);
-              break;
-            case 'xpath':
-              yield* xpathQuerySelectorAll(element, selector.value);
-              break;
-            case 'aria':
-              yield* ariaQuerySelectorAll(element, selector.value);
-              break;
-            default:
-              const querySelector = customQuerySelectors.get(selector.name);
-              if (!querySelector) {
-                throw new SelectorError(
-                  input,
-                  `Unknown selector type: ${selector.name}`
-                );
+          );
+        } else {
+          this.elements = AsyncIterableUtil.flatMap(
+            this.elements,
+            async function* (element) {
+              if (!element.parentElement) {
+                if (!isQueryableNode(element)) {
+                  return;
+                }
+                yield* element.querySelectorAll(selector);
+                return;
               }
-              yield* querySelector.querySelectorAll(element, selector.value);
-          }
+
+              let index = 0;
+              for (const child of element.parentElement.children) {
+                ++index;
+                if (child === element) {
+                  break;
+                }
+              }
+              yield* element.parentElement.querySelectorAll(
+                `:scope>:nth-child(${index})${selector}`
+              );
+            }
+          );
         }
-      );
+      } else {
+        this.elements = AsyncIterableUtil.flatMap(
+          this.elements,
+          async function* (element) {
+            switch (selector.name) {
+              case 'text':
+                yield* textQuerySelectorAll(element, selector.value);
+                break;
+              case 'xpath':
+                yield* xpathQuerySelectorAll(element, selector.value);
+                break;
+              case 'aria':
+                yield* ariaQuerySelectorAll(element, selector.value);
+                break;
+              default:
+                const querySelector = customQuerySelectors.get(selector.name);
+                if (!querySelector) {
+                  throw new SelectorError(
+                    input,
+                    `Unknown selector type: ${selector.name}`
+                  );
+                }
+                yield* querySelector.querySelectorAll(element, selector.value);
+            }
+          }
+        );
+      }
     }
   }
 
   #next() {
-    if (this.#selectors.length === 0) {
-      if (this.#shadowSelectors.length === 0) {
-        if (this.#deepShadowSelectors.length === 0) {
-          this.#selector = undefined;
-          return;
-        }
-        this.elements = AsyncIterableUtil.flatMap(
-          this.elements,
-          function* (element) {
-            yield* deepDescendents(element);
-          }
-        );
-        this.#shadowSelectors =
-          this.#deepShadowSelectors.shift() as PSelector[][];
-      }
-      this.elements = AsyncIterableUtil.flatMap(
-        this.elements,
-        function* (element) {
-          yield* deepChildren(element);
-        }
-      );
-      this.#selectors = this.#shadowSelectors.shift() as PSelector[];
+    if (this.#compoundSelector.length !== 0) {
+      this.#selector = this.#compoundSelector.shift();
+      return;
     }
-    this.#selector = this.#selectors.shift() as PSelector;
+    if (this.#complexSelector.length === 0) {
+      this.#selector = undefined;
+      return;
+    }
+    const selector = this.#complexSelector.shift();
+    switch (selector) {
+      case PCombinator.Child: {
+        this.elements = AsyncIterableUtil.flatMap(this.elements, pierce);
+        this.#next();
+        break;
+      }
+      case PCombinator.Descendent: {
+        this.elements = AsyncIterableUtil.flatMap(this.elements, pierceAll);
+        this.#next();
+        break;
+      }
+      default:
+        this.#compoundSelector = selector as CompoundPSelector;
+        this.#next();
+        break;
+    }
   }
 }
+
+class DepthCalculator {
+  #cache = new WeakMap<Node, number[]>();
+
+  calculate(node: Node | null, depth: number[] = []): number[] {
+    if (node === null) {
+      return depth;
+    }
+    if (node instanceof ShadowRoot) {
+      node = node.host;
+    }
+
+    const cachedDepth = this.#cache.get(node);
+    if (cachedDepth) {
+      return [...cachedDepth, ...depth];
+    }
+
+    let index = 0;
+    for (
+      let prevSibling = node.previousSibling;
+      prevSibling;
+      prevSibling = prevSibling.previousSibling
+    ) {
+      ++index;
+    }
+
+    const value = this.calculate(node.parentNode, [index]);
+    this.#cache.set(node, value);
+    return [...value, ...depth];
+  }
+}
+
+const compareDepths = (a: number[], b: number[]): -1 | 0 | 1 => {
+  if (a.length + b.length === 0) {
+    return 0;
+  }
+  const [i = -1, ...otherA] = a;
+  const [j = -1, ...otherB] = b;
+  if (i === j) {
+    return compareDepths(otherA, otherB);
+  }
+  return i < j ? -1 : 1;
+};
+
+const domSort = async function* (elements: AwaitableIterable<Node>) {
+  const results = new Set<Node>();
+  for await (const element of elements) {
+    results.add(element);
+  }
+  const calculator = new DepthCalculator();
+  yield* [...results.values()]
+    .map(result => {
+      return [result, calculator.calculate(result)] as const;
+    })
+    .sort(([, a], [, b]) => {
+      return compareDepths(a, b);
+    })
+    .map(([result]) => {
+      return result;
+    });
+};
 
 /**
  * Queries the given node for all nodes matching the given text selector.
  *
  * @internal
  */
-export const pQuerySelectorAll = async function* (
+export const pQuerySelectorAll = function (
   root: Node,
   selector: string
 ): AwaitableIterable<Node> {
-  const query = new PQueryEngine(root, selector);
-  query.run();
-  yield* query.elements;
+  let selectors: ComplexPSelectorList;
+  let isPureCSS: boolean;
+  try {
+    [selectors, isPureCSS] = parsePSelectors(selector);
+  } catch (error) {
+    return (root as unknown as QueryableNode).querySelectorAll(selector);
+  }
+
+  if (isPureCSS) {
+    return (root as unknown as QueryableNode).querySelectorAll(selector);
+  }
+  // If there are any empty elements, then this implies the selector has
+  // contiguous combinators (e.g. `>>> >>>>`) or starts/ends with one which we
+  // treat as illegal, similar to existing behavior.
+  if (
+    selectors.some(parts => {
+      let i = 0;
+      return parts.some(parts => {
+        if (typeof parts === 'string') {
+          ++i;
+        } else {
+          i = 0;
+        }
+        return i > 1;
+      });
+    })
+  ) {
+    throw new SelectorError(
+      selector,
+      'Multiple deep combinators found in sequence.'
+    );
+  }
+
+  return domSort(
+    AsyncIterableUtil.flatMap(selectors, selectorParts => {
+      const query = new PQueryEngine(root, selector, selectorParts);
+      void query.run();
+      return query.elements;
+    })
+  );
 };
 
 /**

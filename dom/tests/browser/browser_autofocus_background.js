@@ -1,4 +1,4 @@
-add_task(async function() {
+add_task(async function () {
   const URL =
     "data:text/html,<!DOCTYPE html><html><body><input autofocus id='target'></body></html>";
   const foregroundTab = gBrowser.selectedTab;
@@ -24,7 +24,7 @@ add_task(async function() {
   let tagName = await SpecialPowers.spawn(
     backgroundTab.linkedBrowser,
     [],
-    async function() {
+    async function () {
       // Spec asks us to flush autofocus candidates in the
       // `update-the-rendering` step, so we need to wait
       // for a rAF to ensure autofocus candidates are

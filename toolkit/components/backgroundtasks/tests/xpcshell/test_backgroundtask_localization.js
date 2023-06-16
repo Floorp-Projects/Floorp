@@ -4,6 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// Disable `xpc::IsInAutomation()` so that we don't generate fatal
+// Localization errors.
+Services.prefs.setBoolPref(
+  "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer",
+  false
+);
+
 async function doOne(resource, id) {
   let l10n = new Localization([resource], true);
   let value = await l10n.formatValue(id);

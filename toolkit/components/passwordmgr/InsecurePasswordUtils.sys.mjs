@@ -145,9 +145,8 @@ export const InsecurePasswordUtils = {
       }
     }
 
-    let { isFormSubmitSecure, isFormSubmitHTTP } = this._checkFormSecurity(
-      aForm
-    );
+    let { isFormSubmitSecure, isFormSubmitHTTP } =
+      this._checkFormSecurity(aForm);
 
     return isSafePage && (isFormSubmitSecure || !isFormSubmitHTTP);
   },
@@ -168,9 +167,8 @@ export const InsecurePasswordUtils = {
     let domDoc = aForm.ownerDocument;
     let isSafePage = domDoc.defaultView.isSecureContext;
 
-    let { isFormSubmitHTTP, isFormSubmitSecure } = this._checkFormSecurity(
-      aForm
-    );
+    let { isFormSubmitHTTP, isFormSubmitSecure } =
+      this._checkFormSecurity(aForm);
 
     if (!isSafePage) {
       if (domDoc.defaultView == domDoc.defaultView.parent) {

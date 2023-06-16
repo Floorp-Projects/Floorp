@@ -81,7 +81,7 @@ add_task(async function testIdentityIndication() {
   const promiseIdentityBoxExtension = waitForIndentityBoxMutation({
     expectExtensionIcon: true,
   });
-  await BrowserTestUtils.withNewTab({ gBrowser, url }, async function() {
+  await BrowserTestUtils.withNewTab({ gBrowser, url }, async function () {
     await promiseIdentityBoxExtension;
     confirmExtensionPage();
   });
@@ -125,7 +125,7 @@ add_task(async function testIdentityIndicationNewTab() {
   const promiseIdentityBoxExtension = waitForIndentityBoxMutation({
     expectExtensionIcon: true,
   });
-  await BrowserTestUtils.withNewTab({ gBrowser, url }, async function() {
+  await BrowserTestUtils.withNewTab({ gBrowser, url }, async function () {
     await promiseIdentityBoxExtension;
     confirmExtensionPage();
     is(gURLBar.value, "", "The URL bar is blank");

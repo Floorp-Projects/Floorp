@@ -159,20 +159,75 @@ bool nsID::Parse(const char* aIDStr) {
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
 
-static const char gIDFormat[] =
-    "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}";
-
 /*
  * Returns a managed string in {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}
  * format.
  */
 nsIDToCString nsID::ToString() const { return nsIDToCString(*this); }
 
+static const char sHexChars[256 * 2 + 1] =
+    "000102030405060708090a0b0c0d0e0f"
+    "101112131415161718191a1b1c1d1e1f"
+    "202122232425262728292a2b2c2d2e2f"
+    "303132333435363738393a3b3c3d3e3f"
+    "404142434445464748494a4b4c4d4e4f"
+    "505152535455565758595a5b5c5d5e5f"
+    "606162636465666768696a6b6c6d6e6f"
+    "707172737475767778797a7b7c7d7e7f"
+    "808182838485868788898a8b8c8d8e8f"
+    "909192939495969798999a9b9c9d9e9f"
+    "a0a1a2a3a4a5a6a7a8a9aaabacadaeaf"
+    "b0b1b2b3b4b5b6b7b8b9babbbcbdbebf"
+    "c0c1c2c3c4c5c6c7c8c9cacbcccdcecf"
+    "d0d1d2d3d4d5d6d7d8d9dadbdcdddedf"
+    "e0e1e2e3e4e5e6e7e8e9eaebecedeeef"
+    "f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff";
+
+// Writes a zero-padded 8-bit integer as lowercase hex into aDest[0..2]
+static void ToHex8Bit(uint8_t aValue, char* aDest) {
+  aDest[0] = sHexChars[2 * aValue];
+  aDest[1] = sHexChars[2 * aValue + 1];
+}
+
+// Writes a zero-padded 16-bit integer as lowercase hex into aDest[0..4]
+static void ToHex16Bit(uint16_t aValue, char* aDest) {
+  const uint8_t hi = (aValue >> 8);
+  const uint8_t lo = aValue;
+  ToHex8Bit(hi, &aDest[0]);
+  ToHex8Bit(lo, &aDest[2]);
+}
+
+// Writes a zero-padded 32-bit integer as lowercase hex into aDest[0..8]
+static void ToHex32Bit(uint32_t aValue, char* aDest) {
+  const uint16_t hi = (aValue >> 16);
+  const uint16_t lo = aValue;
+  ToHex16Bit(hi, &aDest[0]);
+  ToHex16Bit(lo, &aDest[4]);
+}
+
 void nsID::ToProvidedString(char (&aDest)[NSID_LENGTH]) const {
-  SprintfLiteral(aDest, gIDFormat, m0, (uint32_t)m1, (uint32_t)m2,
-                 (uint32_t)m3[0], (uint32_t)m3[1], (uint32_t)m3[2],
-                 (uint32_t)m3[3], (uint32_t)m3[4], (uint32_t)m3[5],
-                 (uint32_t)m3[6], (uint32_t)m3[7]);
+  // Stringify manually, for best performance.
+  //
+  // "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}"
+  // "{ecc35fd2-9029-4287-a826-b0a241d48d31}"
+  aDest[0] = '{';
+  ToHex32Bit(m0, &aDest[1]);
+  aDest[9] = '-';
+  ToHex16Bit(m1, &aDest[10]);
+  aDest[14] = '-';
+  ToHex16Bit(m2, &aDest[15]);
+  aDest[19] = '-';
+  ToHex8Bit(m3[0], &aDest[20]);
+  ToHex8Bit(m3[1], &aDest[22]);
+  aDest[24] = '-';
+  ToHex8Bit(m3[2], &aDest[25]);
+  ToHex8Bit(m3[3], &aDest[27]);
+  ToHex8Bit(m3[4], &aDest[29]);
+  ToHex8Bit(m3[5], &aDest[31]);
+  ToHex8Bit(m3[6], &aDest[33]);
+  ToHex8Bit(m3[7], &aDest[35]);
+  aDest[37] = '}';
+  aDest[38] = '\0';
 }
 
 #endif  // XPCOM_GLUE_AVOID_NSPR

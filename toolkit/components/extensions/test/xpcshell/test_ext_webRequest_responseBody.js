@@ -3,8 +3,8 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 /* eslint-disable no-shadow */
 
-const { ExtensionTestCommon } = ChromeUtils.import(
-  "resource://testing-common/ExtensionTestCommon.jsm"
+const { ExtensionTestCommon } = ChromeUtils.importESModule(
+  "resource://testing-common/ExtensionTestCommon.sys.mjs"
 );
 
 const HOSTS = new Set(["example.com"]);
@@ -539,7 +539,7 @@ function serializeTest(test, num) {
   return `{url: ${JSON.stringify(url)}, task: ${task}}`;
 }
 
-add_task(async function() {
+add_task(async function () {
   function background(TASKS) {
     async function runTest(test, num, details) {
       browser.test.log(`Running test #${num}: ${details.url}`);

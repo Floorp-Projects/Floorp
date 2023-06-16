@@ -14,7 +14,7 @@ function run_test() {
     "disk",
     Ci.nsICacheStorage.OPEN_NORMALLY,
     null,
-    new OpenCallback(NEW, "m", "d", function(entry) {
+    new OpenCallback(NEW, "m", "d", function (entry) {
       var now1 = NowSeconds();
       Assert.equal(entry.fetchCount, 1);
       do_check_time(entry.lastFetched, now1);
@@ -26,7 +26,7 @@ function run_test() {
           "disk",
           Ci.nsICacheStorage.OPEN_SECRETLY,
           null,
-          new OpenCallback(NORMAL, "m", "d", function(entry) {
+          new OpenCallback(NORMAL, "m", "d", function (entry) {
             Assert.equal(entry.fetchCount, 1);
             do_check_time(entry.lastFetched, now1);
             do_check_time(entry.lastModified, now1);

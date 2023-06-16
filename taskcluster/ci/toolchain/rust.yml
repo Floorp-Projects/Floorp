@@ -23,8 +23,21 @@ linux64-rust-1.65:
             '--target', 'wasm32-wasi',
         ]
         toolchain-alias:
-            - linux64-rust-base
             - linux64-rust-toolchain
+
+linux64-rust-1.66:
+    treeherder:
+        symbol: TL(rust-1.66)
+    run:
+        arguments: [
+            '--channel', '1.66.0',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'i686-unknown-linux-gnu',
+            '--target', 'wasm32-wasi',
+        ]
+        toolchain-alias:
+            - linux64-rust-base
 
 linux64-rust-1.69:
     treeherder:
@@ -37,29 +50,8 @@ linux64-rust-1.69:
             '--target', 'i686-unknown-linux-gnu',
             '--target', 'aarch64-unknown-linux-gnu',
             '--target', 'wasm32-wasi',
-            '--compiler-builtins-hack',
         ]
         toolchain-alias: linux64-rust
-    fetches:
-        toolchain:
-            - linux64-clang-toolchain
-
-linux64-rust-beta:
-    treeherder:
-        symbol: TL(rust-beta)
-    run:
-        arguments: [
-            '--channel', '1.69.0',
-            '--host', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-unknown-linux-gnu',
-            '--target', 'i686-unknown-linux-gnu',
-            '--target', 'aarch64-unknown-linux-gnu',
-            '--target', 'wasm32-wasi',
-            '--compiler-builtins-hack',
-        ]
-    fetches:
-        toolchain:
-            - linux64-clang-toolchain
 
 # A patched rust toolchain that allows us to use sanitizers in our vendored
 # build environment. See the rust fetch's comments for more details.
@@ -190,12 +182,8 @@ linux64-rust-android-1.69:
             '--target', 'aarch64-linux-android',
             '--target', 'i686-linux-android',
             '--target', 'x86_64-linux-android',
-            '--compiler-builtins-hack',
         ]
         toolchain-alias: linux64-rust-android
-    fetches:
-        toolchain:
-            - linux64-clang-toolchain
 
 linux64-rust-windows-1.65:
     description: "rust repack with windows-cross support"

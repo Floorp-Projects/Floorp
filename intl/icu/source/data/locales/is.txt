@@ -307,6 +307,53 @@ is{
                 }
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h–h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm–h:mm B"}
+                    m{"h:mm–h:mm B"}
+                }
+                Gy{
+                    G{"y G – y G"}
+                    y{"y–y G"}
+                }
+                GyM{
+                    G{"MM.y GGGGG – MM.y GGGGG"}
+                    M{"MM.y – MM.y GGGGG"}
+                    y{"MM.y – MM.y GGGGG"}
+                }
+                GyMEd{
+                    G{"E, dd.MM.y GGGGG – E, dd.MM.y GGGGG"}
+                    M{"E, dd.MM.y – E, dd.MM.y GGGGG"}
+                    d{"E, dd.MM.y – E, dd.MM.y GGGGG"}
+                    y{"E, dd.MM.y – E, dd.MM.y GGGGG"}
+                }
+                GyMMM{
+                    G{"MMM y G – MMM y G"}
+                    M{"MMM–MMM y G"}
+                    y{"MMM y – MMM y G"}
+                }
+                GyMMMEd{
+                    G{"E, d. MMM y G – E, d. MMM y G"}
+                    M{"E, d. MMM – E, d. MMM y G"}
+                    d{"E, d. MMM – E, d. MMM y G"}
+                    y{"E, d. MMM y – E, d. MMM y G"}
+                }
+                GyMMMd{
+                    G{"d. MMM y G – d. MMM y G"}
+                    M{"d. MMM – d MMM y G"}
+                    d{"d.–d. MMM y G"}
+                    y{"d. MMM y – d. MMM y G"}
+                }
+                GyMd{
+                    G{"dd.MM.y GGGGG – dd.MM.y GGGGG"}
+                    M{"dd.MM.y – dd.MM.y GGGGG"}
+                    d{"dd.MM.y – dd.MM.y GGGGG"}
+                    y{"dd.MM.y – dd.MM.y GGGGG"}
+                }
                 H{
                     H{"HH–HH"}
                 }
@@ -325,15 +372,15 @@ is{
                     M{"M.–M."}
                 }
                 MEd{
-                    M{"E, d.M. – E, d.M."}
-                    d{"E, d. – E, d.M."}
+                    M{"E, d.M. – E, d.M."}
+                    d{"E, d. – E, d.M."}
                 }
                 MMM{
                     M{"MMM–MMM"}
                 }
                 MMMEd{
                     M{"E, d. MMM – E, d. MMM"}
-                    d{"E, d. – E, d. MMM"}
+                    d{"E, d. – E, d. MMM"}
                 }
                 MMMM{
                     M{"MMMM–MMMM"}
@@ -376,8 +423,8 @@ is{
                     y{"M.y–M.y G"}
                 }
                 yMEd{
-                    M{"E, d.M. – E, d.M.y G"}
-                    d{"E, d. – E, d.M.y G"}
+                    M{"E, d.M. – E, d.M.y G"}
+                    d{"E, d. – E, d.M.y G"}
                     y{"E, d.M.y – E, d.M.y G"}
                 }
                 yMMM{
@@ -386,7 +433,7 @@ is{
                 }
                 yMMMEd{
                     M{"E, d. MMM – E, d. MMM y G"}
-                    d{"E, d. – E, d. MMM y G"}
+                    d{"E, d. – E, d. MMM y G"}
                     y{"E, d. MMM y – E, d. MMM y G"}
                 }
                 yMMMM{
@@ -498,15 +545,15 @@ is{
                     M{"M.–M."}
                 }
                 MEd{
-                    M{"E, d.M. – E, d.M."}
-                    d{"E, d. – E, d.M."}
+                    M{"E, d.M. – E, d.M."}
+                    d{"E, d. – E, d.M."}
                 }
                 MMM{
                     M{"MMM–MMM"}
                 }
                 MMMEd{
                     M{"E, d. MMM – E, d. MMM"}
-                    d{"E, d. – E, d. MMM"}
+                    d{"E, d. – E, d. MMM"}
                 }
                 MMMM{
                     M{"MMMM–MMMM"}
@@ -549,8 +596,8 @@ is{
                     y{"M.y–M.y G"}
                 }
                 yMEd{
-                    M{"E, d.M. – E, d.M.y G"}
-                    d{"E, d. – E, d.M.y G"}
+                    M{"E, d.M. – E, d.M.y G"}
+                    d{"E, d. – E, d.M.y G"}
                     y{"E, d.M.y – E, d.M.y G"}
                 }
                 yMMM{
@@ -559,7 +606,7 @@ is{
                 }
                 yMMMEd{
                     M{"E, d. MMM – E, d. MMM y G"}
-                    d{"E, d. – E, d. MMM y G"}
+                    d{"E, d. – E, d. MMM y G"}
                     y{"E, d. MMM y – E, d. MMM y G"}
                 }
                 yMMMM{
@@ -767,15 +814,15 @@ is{
                     M{"M.–M."}
                 }
                 MEd{
-                    M{"E, d.M. – E, d.M."}
-                    d{"E, d. – E, d.M."}
+                    M{"E, d.M. – E, d.M."}
+                    d{"E, d. – E, d.M."}
                 }
                 MMM{
                     M{"MMM–MMM"}
                 }
                 MMMEd{
                     M{"E, d. MMM – E, d. MMM"}
-                    d{"E, d. – E, d. MMM"}
+                    d{"E, d. – E, d. MMM"}
                 }
                 MMMM{
                     M{"MMMM–MMMM"}
@@ -818,8 +865,8 @@ is{
                     y{"M.y–M.y G"}
                 }
                 yMEd{
-                    M{"E, d.M. – E, d.M.y G"}
-                    d{"E, d. – E, d.M.y G"}
+                    M{"E, d.M. – E, d.M.y G"}
+                    d{"E, d. – E, d.M.y G"}
                     y{"E, d.M.y – E, d.M.y G"}
                 }
                 yMMM{
@@ -828,7 +875,7 @@ is{
                 }
                 yMMMEd{
                     M{"E, d. MMM – E, d. MMM y G"}
-                    d{"E, d. – E, d. MMM y G"}
+                    d{"E, d. – E, d. MMM y G"}
                     y{"E, d. MMM y – E, d. MMM y G"}
                 }
                 yMMMM{
@@ -1090,15 +1137,15 @@ is{
                     M{"M.–M."}
                 }
                 MEd{
-                    M{"E, d.M. – E, d.M."}
-                    d{"E, d. – E, d.M."}
+                    M{"E, d.M. – E, d.M."}
+                    d{"E, d. – E, d.M."}
                 }
                 MMM{
                     M{"MMM–MMM"}
                 }
                 MMMEd{
                     M{"E, d. MMM – E, d. MMM"}
-                    d{"E, d. – E, d. MMM"}
+                    d{"E, d. – E, d. MMM"}
                 }
                 MMMM{
                     M{"MMMM–MMMM"}
@@ -1141,8 +1188,8 @@ is{
                     y{"M.y–M.y G"}
                 }
                 yMEd{
-                    M{"E, d.M. – E, d.M.y G"}
-                    d{"E, d. – E, d.M.y G"}
+                    M{"E, d.M. – E, d.M.y G"}
+                    d{"E, d. – E, d.M.y G"}
                     y{"E, d.M.y – E, d.M.y G"}
                 }
                 yMMM{
@@ -1151,7 +1198,7 @@ is{
                 }
                 yMMMEd{
                     M{"E, d. MMM – E, d. MMM y G"}
-                    d{"E, d. – E, d. MMM y G"}
+                    d{"E, d. – E, d. MMM y G"}
                     y{"E, d. MMM y – E, d. MMM y G"}
                 }
                 yMMMM{
@@ -1494,15 +1541,15 @@ is{
                     M{"M.–M."}
                 }
                 MEd{
-                    M{"E, d.M. – E, d.M."}
-                    d{"E, d.M. – E, d.M."}
+                    M{"E, d.M. – E, d.M."}
+                    d{"E, d.M. – E, d.M."}
                 }
                 MMM{
                     M{"MMM–MMM"}
                 }
                 MMMEd{
                     M{"E, d. MMM – E, d. MMM"}
-                    d{"E, d. – E, d. MMM"}
+                    d{"E, d. – E, d. MMM"}
                 }
                 MMMM{
                     M{"LLLL–LLLL"}
@@ -1555,7 +1602,7 @@ is{
                 }
                 yMMMEd{
                     M{"E, d. MMM – E, d. MMM y"}
-                    d{"E, d. – E, d. MMM y"}
+                    d{"E, d. – E, d. MMM y"}
                     y{"E, d. MMM y – E, d. MMM y"}
                 }
                 yMMMM{
@@ -1796,15 +1843,15 @@ is{
                     M{"M.–M."}
                 }
                 MEd{
-                    M{"E, d.M. – E, d.M."}
-                    d{"E, d. – E, d.M."}
+                    M{"E, d.M. – E, d.M."}
+                    d{"E, d. – E, d.M."}
                 }
                 MMM{
                     M{"MMM–MMM"}
                 }
                 MMMEd{
                     M{"E, d. MMM – E, d. MMM"}
-                    d{"E, d. – E, d. MMM"}
+                    d{"E, d. – E, d. MMM"}
                 }
                 MMMM{
                     M{"MMMM–MMMM"}
@@ -1847,8 +1894,8 @@ is{
                     y{"M.y–M.y G"}
                 }
                 yMEd{
-                    M{"E, d.M. – E, d.M.y G"}
-                    d{"E, d. – E, d.M.y G"}
+                    M{"E, d.M. – E, d.M.y G"}
+                    d{"E, d. – E, d.M.y G"}
                     y{"E, d.M.y – E, d.M.y G"}
                 }
                 yMMM{
@@ -1857,7 +1904,7 @@ is{
                 }
                 yMMMEd{
                     M{"E, d. MMM – E, d. MMM y G"}
-                    d{"E, d. – E, d. MMM y G"}
+                    d{"E, d. – E, d. MMM y G"}
                     y{"E, d. MMM y – E, d. MMM y G"}
                 }
                 yMMMM{
@@ -2068,15 +2115,15 @@ is{
                     M{"M.–M."}
                 }
                 MEd{
-                    M{"E, d.M. – E, d.M."}
-                    d{"E, d. – E, d.M."}
+                    M{"E, d.M. – E, d.M."}
+                    d{"E, d. – E, d.M."}
                 }
                 MMM{
                     M{"MMM–MMM"}
                 }
                 MMMEd{
                     M{"E, d. MMM – E, d. MMM"}
-                    d{"E, d. – E, d. MMM"}
+                    d{"E, d. – E, d. MMM"}
                 }
                 MMMM{
                     M{"MMMM–MMMM"}
@@ -2119,8 +2166,8 @@ is{
                     y{"M.y–M.y G"}
                 }
                 yMEd{
-                    M{"E, d.M. – E, d.M.y G"}
-                    d{"E, d. – E, d.M.y G"}
+                    M{"E, d.M. – E, d.M.y G"}
+                    d{"E, d. – E, d.M.y G"}
                     y{"E, d.M.y – E, d.M.y G"}
                 }
                 yMMM{
@@ -2129,7 +2176,7 @@ is{
                 }
                 yMMMEd{
                     M{"E, d. MMM – E, d. MMM y G"}
-                    d{"E, d. – E, d. MMM y G"}
+                    d{"E, d. – E, d. MMM y G"}
                     y{"E, d. MMM y – E, d. MMM y G"}
                 }
                 yMMMM{
@@ -2328,15 +2375,15 @@ is{
                     M{"M.–M."}
                 }
                 MEd{
-                    M{"E, d.M. – E, d.M."}
-                    d{"E, d. – E, d.M."}
+                    M{"E, d.M. – E, d.M."}
+                    d{"E, d. – E, d.M."}
                 }
                 MMM{
                     M{"MMM–MMM"}
                 }
                 MMMEd{
                     M{"E, d. MMM – E, d. MMM"}
-                    d{"E, d. – E, d. MMM"}
+                    d{"E, d. – E, d. MMM"}
                 }
                 MMMM{
                     M{"MMMM–MMMM"}
@@ -2379,8 +2426,8 @@ is{
                     y{"M.y–M.y G"}
                 }
                 yMEd{
-                    M{"E, d.M. – E, d.M.y G"}
-                    d{"E, d. – E, d.M.y G"}
+                    M{"E, d.M. – E, d.M.y G"}
+                    d{"E, d. – E, d.M.y G"}
                     y{"E, d.M.y – E, d.M.y G"}
                 }
                 yMMM{
@@ -2389,7 +2436,7 @@ is{
                 }
                 yMMMEd{
                     M{"E, d. MMM – E, d. MMM y G"}
-                    d{"E, d. – E, d. MMM y G"}
+                    d{"E, d. – E, d. MMM y G"}
                     y{"E, d. MMM y – E, d. MMM y G"}
                 }
                 yMMMM{
@@ -2577,15 +2624,15 @@ is{
                     M{"M.–M."}
                 }
                 MEd{
-                    M{"E, d.M. – E, d.M."}
-                    d{"E, d. – E, d.M."}
+                    M{"E, d.M. – E, d.M."}
+                    d{"E, d. – E, d.M."}
                 }
                 MMM{
                     M{"MMM–MMM"}
                 }
                 MMMEd{
                     M{"E, d. MMM – E, d. MMM"}
-                    d{"E, d. – E, d. MMM"}
+                    d{"E, d. – E, d. MMM"}
                 }
                 MMMM{
                     M{"MMMM–MMMM"}
@@ -2628,8 +2675,8 @@ is{
                     y{"M.y–M.y G"}
                 }
                 yMEd{
-                    M{"E, d.M. – E, d.M.y G"}
-                    d{"E, d. – E, d.M.y G"}
+                    M{"E, d.M. – E, d.M.y G"}
+                    d{"E, d. – E, d.M.y G"}
                     y{"E, d.M.y – E, d.M.y G"}
                 }
                 yMMM{
@@ -2638,7 +2685,7 @@ is{
                 }
                 yMMMEd{
                     M{"E, d. MMM – E, d. MMM y G"}
-                    d{"E, d. – E, d. MMM y G"}
+                    d{"E, d. – E, d. MMM y G"}
                     y{"E, d. MMM y – E, d. MMM y G"}
                 }
                 yMMMM{
@@ -2747,15 +2794,15 @@ is{
                     M{"M.–M."}
                 }
                 MEd{
-                    M{"E, d.M. – E, d.M."}
-                    d{"E, d. – E, d.M."}
+                    M{"E, d.M. – E, d.M."}
+                    d{"E, d. – E, d.M."}
                 }
                 MMM{
                     M{"MMM–MMM"}
                 }
                 MMMEd{
                     M{"E, d. MMM – E, d. MMM"}
-                    d{"E, d. – E, d. MMM"}
+                    d{"E, d. – E, d. MMM"}
                 }
                 MMMM{
                     M{"MMMM–MMMM"}
@@ -2798,8 +2845,8 @@ is{
                     y{"M.y–M.y G"}
                 }
                 yMEd{
-                    M{"E, d.M. – E, d.M.y G"}
-                    d{"E, d. – E, d.M.y G"}
+                    M{"E, d.M. – E, d.M.y G"}
+                    d{"E, d. – E, d.M.y G"}
                     y{"E, d.M.y – E, d.M.y G"}
                 }
                 yMMM{
@@ -2808,7 +2855,7 @@ is{
                 }
                 yMMMEd{
                     M{"E, d. MMM – E, d. MMM y G"}
-                    d{"E, d. – E, d. MMM y G"}
+                    d{"E, d. – E, d. MMM y G"}
                     y{"E, d. MMM y – E, d. MMM y G"}
                 }
                 yMMMM{
@@ -3010,15 +3057,15 @@ is{
                     M{"M.–M."}
                 }
                 MEd{
-                    M{"E, d.M. – E, d.M."}
-                    d{"E, d. – E, d.M."}
+                    M{"E, d.M. – E, d.M."}
+                    d{"E, d. – E, d.M."}
                 }
                 MMM{
                     M{"MMM–MMM"}
                 }
                 MMMEd{
                     M{"E, d. MMM – E, d. MMM"}
-                    d{"E, d. – E, d. MMM"}
+                    d{"E, d. – E, d. MMM"}
                 }
                 MMMM{
                     M{"MMMM–MMMM"}
@@ -3061,8 +3108,8 @@ is{
                     y{"M.y–M.y G"}
                 }
                 yMEd{
-                    M{"E, d.M. – E, d.M.y G"}
-                    d{"E, d. – E, d.M.y G"}
+                    M{"E, d.M. – E, d.M.y G"}
+                    d{"E, d. – E, d.M.y G"}
                     y{"E, d.M.y – E, d.M.y G"}
                 }
                 yMMM{
@@ -3071,7 +3118,7 @@ is{
                 }
                 yMMMEd{
                     M{"E, d. MMM – E, d. MMM y G"}
-                    d{"E, d. – E, d. MMM y G"}
+                    d{"E, d. – E, d. MMM y G"}
                     y{"E, d. MMM y – E, d. MMM y G"}
                 }
                 yMMMM{
@@ -3214,6 +3261,16 @@ is{
                 "0"{"í dag"}
                 "1"{"á morgun"}
                 "2"{"eftir tvo daga"}
+            }
+            relativeTime{
+                future{
+                    one{"eftir {0} dag"}
+                    other{"eftir {0} daga"}
+                }
+                past{
+                    one{"fyrir {0} degi"}
+                    other{"fyrir {0} dögum"}
+                }
             }
         }
         day-short{
@@ -3898,6 +3955,17 @@ is{
                 "0"{"í þessari viku"}
                 "1"{"í næstu viku"}
             }
+            relativePeriod{"vika {0}"}
+            relativeTime{
+                future{
+                    one{"eftir {0} viku"}
+                    other{"eftir {0} vikur"}
+                }
+                past{
+                    one{"fyrir {0} viku"}
+                    other{"fyrir {0} vikum"}
+                }
+            }
         }
         week-short{
             dn{"vika"}
@@ -4016,6 +4084,18 @@ is{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        or-narrow{
+            2{"{0} eða {1}"}
+            end{"{0} eða {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        or-short{
+            2{"{0} eða {1}"}
+            end{"{0} eða {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} og {1}"}
             end{"{0} og {1}"}
@@ -4025,6 +4105,7 @@ is{
         standard-narrow{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
+            middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
         standard-short{
@@ -4099,18 +4180,18 @@ is{
             }
         }
         namePattern{
-            givenFirst-long-addressing-formal{"{prefix} {given} {given2} {surname}"}
+            givenFirst-long-addressing-formal{"{title} {given} {given2} {surname}"}
             givenFirst-long-addressing-informal{"{given-informal}"}
             givenFirst-long-monogram-informal{"{given-informal-monogram-allCaps}{surname-monogram-allCaps}"}
-            givenFirst-long-referring-formal{"{given} {given2} {surname}, {suffix}"}
+            givenFirst-long-referring-formal{"{given} {given2} {surname}, {credentials}"}
             givenFirst-long-referring-informal{"{given-informal} {surname}"}
-            givenFirst-medium-addressing-formal{"{prefix} {surname}"}
+            givenFirst-medium-addressing-formal{"{title} {surname}"}
             givenFirst-medium-addressing-informal{"{given-informal}"}
             givenFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             givenFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname}, {suffix}"}
+            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname} {generation}, {credentials}"}
             givenFirst-medium-referring-informal{"{given-informal} {surname}"}
-            givenFirst-short-addressing-formal{"{prefix} {given-initial} {surname}"}
+            givenFirst-short-addressing-formal{"{title} {given-initial} {surname}"}
             givenFirst-short-addressing-informal{"{given-informal}"}
             givenFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             givenFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
@@ -4122,22 +4203,18 @@ is{
             sorting-medium-referring-informal{"{given-informal} {surname}"}
             sorting-short-referring-formal{"{given} {given2-initial} {surname-prefix} {surname-core}"}
             sorting-short-referring-informal{"{given-informal} {surname}"}
-            surnameFirst-long-addressing-formal{"{surname}, {prefix} {given} {given2}"}
+            surnameFirst-long-addressing-formal{"{title} {surname}"}
             surnameFirst-long-addressing-informal{"{given-informal}"}
-            surnameFirst-long-monogram-formal{
-                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
-                "llCaps}"
-            }
             surnameFirst-long-monogram-informal{"{surname-monogram-allCaps}{given-informal-monogram-allCaps}"}
-            surnameFirst-long-referring-formal{"{surname}, {given} {given2}, {suffix}"}
+            surnameFirst-long-referring-formal{"{surname} {title} {given} {given2} {generation}, {credentials}"}
             surnameFirst-long-referring-informal{"{surname}, {given-informal}"}
-            surnameFirst-medium-addressing-formal{"{surname}, {prefix} {given} {given2-initial}"}
+            surnameFirst-medium-addressing-formal{"{title} {surname}"}
             surnameFirst-medium-addressing-informal{"{given-informal}"}
             surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            surnameFirst-medium-referring-formal{"{surname}, {given} {given2-initial}, {suffix}"}
+            surnameFirst-medium-referring-formal{"{surname}, {given} {given2-initial}, {credentials}"}
             surnameFirst-medium-referring-informal{"{surname}, {given-informal}"}
-            surnameFirst-short-addressing-formal{"{surname}, {prefix} {given-initial} {given2-initial}"}
+            surnameFirst-short-addressing-formal{"{surname}, {title} {given-initial} {given2-initial}"}
             surnameFirst-short-addressing-informal{"{given-informal}"}
             surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}

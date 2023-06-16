@@ -119,7 +119,7 @@ async function test4(browser, accessible) {
 
 addAccessibleTask(
   "e10s/doc_treeupdate_visibility.html",
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let t3Container = findAccessibleChildByID(accDoc, "t3_container");
     let t4Container = findAccessibleChildByID(accDoc, "t4_container");
 

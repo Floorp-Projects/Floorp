@@ -15,7 +15,7 @@ function is(a, b, msg) {
 }
 
 // eslint-disable-next-line complexity
-onmessage = function() {
+onmessage = function () {
   let status = false;
   try {
     if (URL instanceof Object) {
@@ -167,8 +167,7 @@ onmessage = function() {
       search: "",
     },
     {
-      url:
-        "http://auser:apassword@www.abc.com:90/apath/afile.txt?asearch#ahash",
+      url: "http://auser:apassword@www.abc.com:90/apath/afile.txt?asearch#ahash",
       base: undefined,
       error: false,
       protocol: "http:",

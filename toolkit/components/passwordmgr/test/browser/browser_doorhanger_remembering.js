@@ -51,7 +51,7 @@ let login2B = new nsLoginInfo(
 
 requestLongerTimeout(2);
 
-add_setup(async function() {
+add_setup(async function () {
   // Load recipes for this test.
   let recipeParent = await LoginManagerParent.recipeParentPromise;
   await recipeParent.load({
@@ -68,7 +68,7 @@ add_setup(async function() {
 add_task(async function test_remember_opens() {
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_1.html",
-    async function(fieldValues) {
+    async function (fieldValues) {
       Assert.equal(
         fieldValues.username,
         "notifyu1",
@@ -90,7 +90,7 @@ add_task(async function test_remember_opens() {
 add_task(async function test_clickNever() {
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_1.html",
-    async function(fieldValues) {
+    async function (fieldValues) {
       Assert.equal(
         fieldValues.username,
         "notifyu1",
@@ -123,28 +123,29 @@ add_task(async function test_clickNever() {
   );
 
   info("Make sure Never took effect");
-  await testSubmittingLoginFormHTTP("subtst_notifications_1.html", function(
-    fieldValues
-  ) {
-    Assert.equal(
-      fieldValues.username,
-      "notifyu1",
-      "Checking submitted username"
-    );
-    Assert.equal(
-      fieldValues.password,
-      "notifyp1",
-      "Checking submitted password"
-    );
-    let notif = getCaptureDoorhanger("password-save");
-    Assert.ok(!notif, "checking for no notification popup");
-    Assert.equal(
-      false,
-      Services.logins.getLoginSavingEnabled("http://example.com"),
-      "Checking for login saving disabled"
-    );
-    Services.logins.setLoginSavingEnabled("http://example.com", true);
-  });
+  await testSubmittingLoginFormHTTP(
+    "subtst_notifications_1.html",
+    function (fieldValues) {
+      Assert.equal(
+        fieldValues.username,
+        "notifyu1",
+        "Checking submitted username"
+      );
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
+      let notif = getCaptureDoorhanger("password-save");
+      Assert.ok(!notif, "checking for no notification popup");
+      Assert.equal(
+        false,
+        Services.logins.getLoginSavingEnabled("http://example.com"),
+        "Checking for login saving disabled"
+      );
+      Services.logins.setLoginSavingEnabled("http://example.com", true);
+    }
+  );
 
   Assert.equal(
     Services.logins.getAllLogins().length,
@@ -156,7 +157,7 @@ add_task(async function test_clickNever() {
 add_task(async function test_clickRemember() {
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_1.html",
-    async function(fieldValues) {
+    async function (fieldValues) {
       Assert.equal(
         fieldValues.username,
         "notifyu1",
@@ -205,23 +206,24 @@ add_task(async function test_clickRemember() {
   info(
     "Make sure Remember took effect and we don't prompt for an existing login"
   );
-  await testSubmittingLoginFormHTTP("subtst_notifications_1.html", function(
-    fieldValues
-  ) {
-    // form login matches a saved login, we don't expect a notification on change or submit
-    Assert.equal(
-      fieldValues.username,
-      "notifyu1",
-      "Checking submitted username"
-    );
-    Assert.equal(
-      fieldValues.password,
-      "notifyp1",
-      "Checking submitted password"
-    );
-    let notif = getCaptureDoorhanger("password-save");
-    Assert.ok(!notif, "checking for no notification popup");
-  });
+  await testSubmittingLoginFormHTTP(
+    "subtst_notifications_1.html",
+    function (fieldValues) {
+      // form login matches a saved login, we don't expect a notification on change or submit
+      Assert.equal(
+        fieldValues.username,
+        "notifyu1",
+        "Checking submitted username"
+      );
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
+      let notif = getCaptureDoorhanger("password-save");
+      Assert.ok(!notif, "checking for no notification popup");
+    }
+  );
 
   logins = Services.logins.getAllLogins();
   Assert.equal(logins.length, 1, "Should only have 1 login");
@@ -243,22 +245,23 @@ add_task(async function test_rememberSignonsFalse() {
   info("Make sure we don't prompt with rememberSignons=false");
   Services.prefs.setBoolPref("signon.rememberSignons", false);
 
-  await testSubmittingLoginFormHTTP("subtst_notifications_1.html", function(
-    fieldValues
-  ) {
-    Assert.equal(
-      fieldValues.username,
-      "notifyu1",
-      "Checking submitted username"
-    );
-    Assert.equal(
-      fieldValues.password,
-      "notifyp1",
-      "Checking submitted password"
-    );
-    let notif = getCaptureDoorhanger("password-save");
-    Assert.ok(!notif, "checking for no notification popup");
-  });
+  await testSubmittingLoginFormHTTP(
+    "subtst_notifications_1.html",
+    function (fieldValues) {
+      Assert.equal(
+        fieldValues.username,
+        "notifyu1",
+        "Checking submitted username"
+      );
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
+      let notif = getCaptureDoorhanger("password-save");
+      Assert.ok(!notif, "checking for no notification popup");
+    }
+  );
 
   Assert.equal(
     Services.logins.getAllLogins().length,
@@ -273,7 +276,7 @@ add_task(async function test_rememberSignonsTrue() {
 
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_1.html",
-    async function(fieldValues) {
+    async function (fieldValues) {
       Assert.equal(
         fieldValues.username,
         "notifyu1",
@@ -307,7 +310,7 @@ add_task(async function test_autocompleteOffUsername() {
 
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_2.html",
-    async function(fieldValues) {
+    async function (fieldValues) {
       Assert.equal(
         fieldValues.username,
         "notifyu1",
@@ -339,7 +342,7 @@ add_task(async function test_autocompleteOffPassword() {
 
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_3.html",
-    async function(fieldValues) {
+    async function (fieldValues) {
       Assert.equal(
         fieldValues.username,
         "notifyu1",
@@ -369,7 +372,7 @@ add_task(async function test_autocompleteOffForm() {
 
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_4.html",
-    async function(fieldValues) {
+    async function (fieldValues) {
       Assert.equal(
         fieldValues.username,
         "notifyu1",
@@ -397,18 +400,19 @@ add_task(async function test_autocompleteOffForm() {
 add_task(async function test_noPasswordField() {
   info("Check for no notification popup when no password field present");
 
-  await testSubmittingLoginFormHTTP("subtst_notifications_5.html", function(
-    fieldValues
-  ) {
-    Assert.equal(
-      fieldValues.username,
-      "notifyu1",
-      "Checking submitted username"
-    );
-    Assert.equal(fieldValues.password, "null", "Checking submitted password");
-    let notif = getCaptureDoorhanger("password-save");
-    Assert.ok(!notif, "checking for no notification popup");
-  });
+  await testSubmittingLoginFormHTTP(
+    "subtst_notifications_5.html",
+    function (fieldValues) {
+      Assert.equal(
+        fieldValues.username,
+        "notifyu1",
+        "Checking submitted username"
+      );
+      Assert.equal(fieldValues.password, "null", "Checking submitted password");
+      let notif = getCaptureDoorhanger("password-save");
+      Assert.ok(!notif, "checking for no notification popup");
+    }
+  );
 
   Assert.equal(
     Services.logins.getAllLogins().length,
@@ -419,10 +423,10 @@ add_task(async function test_noPasswordField() {
 
 add_task(async function test_pwOnlyNewLoginMatchesUPForm() {
   info("Check for update popup when new existing pw-only login matches form.");
-  Services.logins.addLogin(login2);
+  await Services.logins.addLoginAsync(login2);
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_1.html",
-    async function(fieldValues) {
+    async function (fieldValues) {
       Assert.equal(
         fieldValues.username,
         "notifyu1",
@@ -473,7 +477,7 @@ add_task(async function test_pwOnlyNewLoginMatchesUPForm() {
 
 add_task(async function test_pwOnlyOldLoginMatchesUPForm() {
   info("Check for update popup when old existing pw-only login matches form.");
-  Services.logins.addLogin(login2);
+  await Services.logins.addLoginAsync(login2);
 
   // Change the timePasswordChanged to be old so that the password won't be
   // revealed in the doorhanger.
@@ -489,7 +493,7 @@ add_task(async function test_pwOnlyOldLoginMatchesUPForm() {
 
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_1.html",
-    async function(fieldValues) {
+    async function (fieldValues) {
       Assert.equal(
         fieldValues.username,
         "notifyu1",
@@ -542,20 +546,21 @@ add_task(async function test_pwOnlyFormMatchesLogin() {
   info(
     "Check for no notification popup when pw-only form matches existing login."
   );
-  Services.logins.addLogin(login1);
+  await Services.logins.addLoginAsync(login1);
 
-  await testSubmittingLoginFormHTTP("subtst_notifications_6.html", function(
-    fieldValues
-  ) {
-    Assert.equal(fieldValues.username, "null", "Checking submitted username");
-    Assert.equal(
-      fieldValues.password,
-      "notifyp1",
-      "Checking submitted password"
-    );
-    let notif = getCaptureDoorhanger("password-save");
-    Assert.ok(!notif, "checking for no notification popup");
-  });
+  await testSubmittingLoginFormHTTP(
+    "subtst_notifications_6.html",
+    function (fieldValues) {
+      Assert.equal(fieldValues.username, "null", "Checking submitted username");
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
+      let notif = getCaptureDoorhanger("password-save");
+      Assert.ok(!notif, "checking for no notification popup");
+    }
+  );
 
   let logins = Services.logins.getAllLogins();
   Assert.equal(logins.length, 1, "Should only have 1 login");
@@ -571,11 +576,11 @@ add_task(async function test_pwOnlyFormDoesntMatchExisting() {
   info(
     "Check for notification popup when pw-only form doesn't match existing login."
   );
-  Services.logins.addLogin(login1B);
+  await Services.logins.addLoginAsync(login1B);
 
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_6.html",
-    async function(fieldValues) {
+    async function (fieldValues) {
       Assert.equal(fieldValues.username, "null", "Checking submitted username");
       Assert.equal(
         fieldValues.password,
@@ -601,11 +606,11 @@ add_task(async function test_pwOnlyFormDoesntMatchExisting() {
 
 add_task(async function test_changeUPLoginOnUPForm_dont() {
   info("Check for change-password popup, u+p login on u+p form. (not changed)");
-  Services.logins.addLogin(login1);
+  await Services.logins.addLoginAsync(login1);
 
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_8.html",
-    async function(fieldValues) {
+    async function (fieldValues) {
       Assert.equal(
         fieldValues.username,
         "notifyu1",
@@ -642,11 +647,11 @@ add_task(async function test_changeUPLoginOnUPForm_dont() {
 
 add_task(async function test_changeUPLoginOnUPForm_remove() {
   info("Check for change-password popup, u+p login on u+p form. (remove)");
-  Services.logins.addLogin(login1);
+  await Services.logins.addLoginAsync(login1);
 
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_8.html",
-    async function(fieldValues, browser) {
+    async function (fieldValues, browser) {
       Assert.equal(
         fieldValues.username,
         "notifyu1",
@@ -683,11 +688,11 @@ add_task(async function test_changeUPLoginOnUPForm_remove() {
 
 add_task(async function test_changeUPLoginOnUPForm_change() {
   info("Check for change-password popup, u+p login on u+p form.");
-  Services.logins.addLogin(login1);
+  await Services.logins.addLoginAsync(login1);
 
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_8.html",
-    async function(fieldValues) {
+    async function (fieldValues) {
       Assert.equal(
         fieldValues.username,
         "notifyu1",
@@ -739,11 +744,11 @@ add_task(async function test_changeUPLoginOnUPForm_change() {
 
 add_task(async function test_changePLoginOnUPForm() {
   info("Check for change-password popup, p-only login on u+p form (empty u).");
-  Services.logins.addLogin(login2);
+  await Services.logins.addLoginAsync(login2);
 
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_9.html",
-    async function(fieldValues) {
+    async function (fieldValues) {
       Assert.equal(fieldValues.username, "", "Checking submitted username");
       Assert.equal(
         fieldValues.password,
@@ -784,7 +789,7 @@ add_task(async function test_changePLoginOnPForm() {
 
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_10.html",
-    async function(fieldValues) {
+    async function (fieldValues) {
       Assert.equal(fieldValues.username, "null", "Checking submitted username");
       Assert.equal(
         fieldValues.password,
@@ -825,7 +830,7 @@ add_task(async function test_checkUPSaveText() {
 
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_1.html",
-    async function(fieldValues) {
+    async function (fieldValues) {
       Assert.equal(
         fieldValues.username,
         "notifyu1",
@@ -863,7 +868,7 @@ add_task(async function test_checkPSaveText() {
 
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_6.html",
-    async function(fieldValues) {
+    async function (fieldValues) {
       Assert.equal(fieldValues.username, "null", "Checking submitted username");
       Assert.equal(
         fieldValues.password,
@@ -900,7 +905,7 @@ add_task(async function test_capture2pw0un() {
 
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_2pw_0un.html",
-    async function(fieldValues) {
+    async function (fieldValues) {
       Assert.equal(fieldValues.username, "null", "Checking submitted username");
       Assert.equal(
         fieldValues.password,
@@ -927,11 +932,11 @@ add_task(async function test_change2pw0unExistingDifferentUP() {
       "is submitted and there is a saved login with a username and different password."
   );
 
-  Services.logins.addLogin(login1B);
+  await Services.logins.addLoginAsync(login1B);
 
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_2pw_0un.html",
-    async function(fieldValues) {
+    async function (fieldValues) {
       Assert.equal(fieldValues.username, "null", "Checking submitted username");
       Assert.equal(
         fieldValues.password,
@@ -961,11 +966,11 @@ add_task(async function test_change2pw0unExistingDifferentP() {
       "is submitted and there is a saved login with no username and different password."
   );
 
-  Services.logins.addLogin(login2B);
+  await Services.logins.addLoginAsync(login2B);
 
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_2pw_0un.html",
-    async function(fieldValues) {
+    async function (fieldValues) {
       Assert.equal(fieldValues.username, "null", "Checking submitted username");
       Assert.equal(
         fieldValues.password,
@@ -995,11 +1000,11 @@ add_task(async function test_change2pw0unExistingWithSameP() {
       "is submitted and there is a saved login with a username and the same password."
   );
 
-  Services.logins.addLogin(login2);
+  await Services.logins.addLoginAsync(login2);
 
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_2pw_0un.html",
-    function(fieldValues) {
+    function (fieldValues) {
       Assert.equal(fieldValues.username, "null", "Checking submitted username");
       Assert.equal(
         fieldValues.password,
@@ -1025,11 +1030,11 @@ add_task(async function test_change2pw0unExistingWithSameP() {
 
 add_task(async function test_changeUPLoginOnPUpdateForm() {
   info("Check for change-password popup, u+p login on password update form.");
-  Services.logins.addLogin(login1);
+  await Services.logins.addLoginAsync(login1);
 
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_change_p.html",
-    async function(fieldValues) {
+    async function (fieldValues) {
       Assert.equal(fieldValues.username, "null", "Checking submitted username");
       Assert.equal(
         fieldValues.password,
@@ -1072,7 +1077,7 @@ add_task(async function test_recipeCaptureFields_NewLogin() {
 
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_2pw_1un_1text.html",
-    async function(fieldValues) {
+    async function (fieldValues) {
       Assert.equal(
         fieldValues.username,
         "notifyu1",
@@ -1113,7 +1118,7 @@ add_task(async function test_recipeCaptureFields_ExistingLogin() {
 
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_2pw_1un_1text.html",
-    function(fieldValues) {
+    function (fieldValues) {
       Assert.equal(
         fieldValues.username,
         "notifyu1",
@@ -1151,7 +1156,7 @@ add_task(async function test_saveUsingEnter() {
     info("Waiting for form submit and doorhanger interaction");
     await testSubmittingLoginFormHTTP(
       "subtst_notifications_1.html",
-      async function(fieldValues) {
+      async function (fieldValues) {
         Assert.equal(
           fieldValues.username,
           "notifyu1",
@@ -1206,7 +1211,7 @@ add_task(async function test_noShowPasswordOnDismissal() {
 
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_1.html",
-    async function(fieldValues) {
+    async function (fieldValues) {
       info("Opening popup");
       let notif = await getCaptureDoorhangerThatMayOpen("password-save");
       Assert.ok(!notif.dismissed, "doorhanger is not dismissed");
@@ -1240,7 +1245,7 @@ add_task(async function test_showPasswordOn1stOpenOfDismissedByDefault() {
 
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_1.html",
-    async function(fieldValues) {
+    async function (fieldValues) {
       info("Opening popup");
       let notif = await getCaptureDoorhangerThatMayOpen("password-save");
       Assert.ok(!notif.dismissed, "doorhanger is not dismissed");

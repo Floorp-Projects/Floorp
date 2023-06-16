@@ -10,20 +10,12 @@
       {
         "id": "TemplateType",
         "type": "string",
-        "enum": [
-          "basic",
-          "image",
-          "list",
-          "progress"
-        ]
+        "enum": ["basic", "image", "list", "progress"]
       },
       {
         "id": "PermissionLevel",
         "type": "string",
-        "enum": [
-          "granted",
-          "denied"
-        ]
+        "enum": ["granted", "denied"]
       },
       {
         "id": "NotificationItem",
@@ -316,7 +308,7 @@
               {
                 "name": "notifications",
                 "type": "object",
-                "additionalProperties": {"$ref": "CreateNotificationOptions"},
+                "additionalProperties": { "$ref": "CreateNotificationOptions" },
                 "description": "The set of notifications currently in the system."
               }
             ]
@@ -409,8 +401,7 @@
         "unsupported": true,
         "type": "function",
         "description": "Fired when the user clicked on a link for the app's notification settings.",
-        "parameters": [
-        ]
+        "parameters": []
       },
       {
         "name": "onShown",

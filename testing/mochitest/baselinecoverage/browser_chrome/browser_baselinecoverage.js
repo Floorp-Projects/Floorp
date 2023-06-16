@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   requestLongerTimeout(2);
   ok(true, "Collecting baseline coverage for javascript (.js) file types.");
   await new Promise(c => setTimeout(c, 30 * 1000));

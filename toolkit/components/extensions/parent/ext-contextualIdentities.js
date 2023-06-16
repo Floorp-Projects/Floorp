@@ -14,8 +14,8 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "privacy.userContext.enabled"
 );
 
-var { ExtensionPreferencesManager } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionPreferencesManager.jsm"
+var { ExtensionPreferencesManager } = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionPreferencesManager.sys.mjs"
 );
 
 var { ExtensionError } = ExtensionUtils;
@@ -178,9 +178,8 @@ this.contextualIdentities = class extends ExtensionAPIPersistent {
             );
           }
 
-          let identity = ContextualIdentityService.getPublicIdentityFromId(
-            containerId
-          );
+          let identity =
+            ContextualIdentityService.getPublicIdentityFromId(containerId);
           return convertIdentity(identity);
         },
 
@@ -225,9 +224,8 @@ this.contextualIdentities = class extends ExtensionAPIPersistent {
             );
           }
 
-          let identity = ContextualIdentityService.getPublicIdentityFromId(
-            containerId
-          );
+          let identity =
+            ContextualIdentityService.getPublicIdentityFromId(containerId);
           if (!identity) {
             throw new ExtensionError(
               `Invalid contextual identity: ${cookieStoreId}`
@@ -273,9 +271,8 @@ this.contextualIdentities = class extends ExtensionAPIPersistent {
             );
           }
 
-          let identity = ContextualIdentityService.getPublicIdentityFromId(
-            containerId
-          );
+          let identity =
+            ContextualIdentityService.getPublicIdentityFromId(containerId);
           if (!identity) {
             throw new ExtensionError(
               `Invalid contextual identity: ${cookieStoreId}`

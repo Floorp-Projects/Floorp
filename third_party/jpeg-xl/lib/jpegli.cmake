@@ -8,7 +8,6 @@ include(jxl_lists.cmake)
 
 set(JPEGLI_INTERNAL_LIBS
   hwy
-  jxl-static
   Threads::Threads
   ${ATOMICS_LIBRARIES}
 )
@@ -55,6 +54,7 @@ foreach (TESTFILE IN LISTS JPEGXL_INTERNAL_JPEGLI_TESTS)
     GTest::Main
     ${JPEG_LIBRARIES}
   )
+  set_target_properties(${TESTNAME} PROPERTIES LINK_FLAGS "${JPEGXL_COVERAGE_LINK_FLAGS}")
   # Output test targets in the test directory.
   set_target_properties(${TESTNAME} PROPERTIES PREFIX "tests/")
   if (WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -69,21 +69,6 @@ endif()
 #
 
 if (JPEGXL_ENABLE_JPEGLI_LIBJPEG AND NOT APPLE AND NOT WIN32 AND NOT JPEGXL_EMSCRIPTEN)
-set(JPEGLI_LIBJPEG_MAJOR_VERSION 62)
-set(JPEGLI_LIBJPEG_MINOR_VERSION 3)
-set(JPEGLI_LIBJPEG_PATCH_VERSION 0)
-set(JPEGLI_LIBJPEG_LIBRARY_VERSION
-    "${JPEGLI_LIBJPEG_MAJOR_VERSION}.${JPEGLI_LIBJPEG_MINOR_VERSION}.${JPEGLI_LIBJPEG_PATCH_VERSION}"
-)
-
-set(JPEGLI_LIBJPEG_LIBRARY_SOVERSION "${JPEGLI_LIBJPEG_MAJOR_VERSION}")
-
-set(JPEGLI_LIBJPEG_OBJ_COMPILE_DEFINITIONS
-  JPEGLI_LIBJPEG_MAJOR_VERSION=${JPEGLI_LIBJPEG_MAJOR_VERSION}
-  JPEGLI_LIBJPEG_MINOR_VERSION=${JPEGLI_LIBJPEG_MINOR_VERSION}
-  JPEGLI_LIBJPEG_PATCH_VERSION=${JPEGLI_LIBJPEG_PATCH_VERSION}
-)
-
 add_library(jpegli-libjpeg-obj OBJECT "${JPEGXL_INTERNAL_JPEGLI_WRAPPER_SOURCES}")
 target_compile_options(jpegli-libjpeg-obj PRIVATE ${JPEGXL_INTERNAL_FLAGS})
 target_compile_options(jpegli-libjpeg-obj PUBLIC ${JPEGXL_COVERAGE_FLAGS})
@@ -107,9 +92,9 @@ set_target_properties(jpeg PROPERTIES
 # Add a jpeg.version file as a version script to tag symbols with the
 # appropriate version number.
 set_target_properties(jpeg PROPERTIES
-  LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/jpegli/jpeg.version)
+  LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/jpegli/jpeg.version.${JPEGLI_LIBJPEG_LIBRARY_SOVERSION})
 set_property(TARGET jpeg APPEND_STRING PROPERTY
-  LINK_FLAGS " -Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/jpegli/jpeg.version")
+  LINK_FLAGS " -Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/jpegli/jpeg.version.${JPEGLI_LIBJPEG_LIBRARY_SOVERSION}")
 
 # This hides the default visibility symbols from static libraries bundled into
 # the shared library. In particular this prevents exposing symbols from hwy

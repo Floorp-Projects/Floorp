@@ -106,6 +106,8 @@ void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm,
   // |    ^--- Entry Frame (CppToJSJit or WasmToJSJit)
   // |
   // ^--- Entry Frame (CppToJSJit or WasmToJSJit)
+  // |
+  // ^--- Entry Frame (BaselineInterpreter)
   //
   // NOTE: Keep this in sync with JSJitProfilingFrameIterator::moveToNextFrame!
 
@@ -162,6 +164,11 @@ void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm,
                 &handle_BaselineStub);
   masm.branch32(Assembler::Equal, scratch, Imm32(FrameType::Rectifier),
                 &handle_Rectifier);
+  if (JitOptions.emitInterpreterEntryTrampoline) {
+    masm.branch32(Assembler::Equal, scratch,
+                  Imm32(FrameType::BaselineInterpreterEntry),
+                  &handle_Rectifier);  // Handle this similarly to rectifier.
+  }
   masm.branch32(Assembler::Equal, scratch, Imm32(FrameType::CppToJSJit),
                 &handle_Entry);
   masm.branch32(Assembler::Equal, scratch, Imm32(FrameType::BaselineJS),

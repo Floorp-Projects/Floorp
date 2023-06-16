@@ -44,7 +44,7 @@ add_task(async function testExecuteScript() {
     background,
 
     files: {
-      "script.js": function() {
+      "script.js": function () {
         this.bar = "baz";
       },
 

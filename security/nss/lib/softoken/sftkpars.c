@@ -253,3 +253,16 @@ sftk_freeParams(sftk_parameters *params)
     FREE_CLEAR(params->updatedir);
     FREE_CLEAR(params->updateID);
 }
+
+PRBool
+sftk_RawArgHasFlag(const char *entry, const char *flag, const void *pReserved)
+{
+    CK_C_INITIALIZE_ARGS *init_args = (CK_C_INITIALIZE_ARGS *)pReserved;
+
+    /* if we don't have any params, the flag isn't set */
+    if ((!init_args || !init_args->LibraryParameters)) {
+        return PR_FALSE;
+    }
+
+    return NSSUTIL_ArgHasFlag(entry, flag, (const char *)init_args->LibraryParameters);
+}

@@ -1017,6 +1017,7 @@ Handle<HeapObject> SMRegExpMacroAssembler::GetCode(Handle<String> source) {
  *         - Scratch registers
  *       --- frame alignment ---
  *       - Saved register area
+ *  fp-> - Frame pointer
  *       - Return address
  */
 void SMRegExpMacroAssembler::createStackFrame() {
@@ -1034,23 +1035,22 @@ void SMRegExpMacroAssembler::createStackFrame() {
   masm_.initPseudoStackPtr();
 #endif
 
+  masm_.Push(js::jit::FramePointer);
+  masm_.moveStackPtrTo(js::jit::FramePointer);
+
   // Push non-volatile registers which might be modified by jitcode.
-  size_t pushedNonVolatileRegisters = 0;
   for (GeneralRegisterForwardIterator iter(savedRegisters_); iter.more();
        ++iter) {
     masm_.Push(*iter);
-    pushedNonVolatileRegisters++;
   }
 
   // The pointer to InputOutputData is passed as the first argument.
   // On x86 we have to load it off the stack into temp0_.
   // On other platforms it is already in a register.
 #ifdef JS_CODEGEN_X86
-  Address ioDataAddr(masm_.getStackPointer(),
-                     (pushedNonVolatileRegisters + 1) * sizeof(void*));
+  Address ioDataAddr(js::jit::FramePointer, 2 * sizeof(void*));
   masm_.loadPtr(ioDataAddr, temp0_);
 #else
-  (void)pushedNonVolatileRegisters;
   if (js::jit::IntArgReg0 != temp0_) {
     masm_.movePtr(js::jit::IntArgReg0, temp0_);
   }
@@ -1225,6 +1225,8 @@ void SMRegExpMacroAssembler::exitHandler() {
     masm_.Pop(*iter);
   }
 
+  masm_.Pop(js::jit::FramePointer);
+
 #ifdef JS_CODEGEN_ARM64
   // Now restore the value that was in the PSP register on entry, and return.
 
@@ -1288,7 +1290,7 @@ void SMRegExpMacroAssembler::stackOverflowHandler() {
   volatileRegs.takeUnchecked(temp1_);
   masm_.PushRegsInMask(volatileRegs);
 
-  using Fn = bool (*)(RegExpStack * regexp_stack);
+  using Fn = bool (*)(RegExpStack* regexp_stack);
   masm_.setupUnalignedABICall(temp0_);
   masm_.passABIArg(temp1_);
   masm_.callWithABI<Fn, ::js::irregexp::GrowBacktrackStack>();

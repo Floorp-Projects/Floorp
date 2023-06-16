@@ -333,6 +333,7 @@ class TextProperty {
       property: rootProperty,
       deprecated,
       experimental,
+      specUrl,
       url,
       unsupportedBrowsers,
     } = compatibilityIssues[indexOfProperty];
@@ -358,6 +359,7 @@ class TextProperty {
       property,
       rootProperty,
       msgId,
+      specUrl,
       url,
       unsupportedBrowsers,
     };

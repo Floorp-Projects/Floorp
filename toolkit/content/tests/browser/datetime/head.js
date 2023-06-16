@@ -26,7 +26,7 @@ class DateTimeTestHelper {
     this.tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
     let bc = gBrowser.selectedBrowser;
     if (inFrame) {
-      await SpecialPowers.spawn(bc, [], async function() {
+      await SpecialPowers.spawn(bc, [], async function () {
         const iframe = content.document.querySelector("iframe");
         // Ensure the iframe's position is correct before doing any
         // other operations
@@ -34,7 +34,7 @@ class DateTimeTestHelper {
       });
       bc = bc.browsingContext.children[0];
     }
-    await SpecialPowers.spawn(bc, [], async function() {
+    await SpecialPowers.spawn(bc, [], async function () {
       // Ensure that screen coordinates are ok.
       await SpecialPowers.contentTransformsReceived(content);
     });
@@ -48,7 +48,7 @@ class DateTimeTestHelper {
         shadowRoot.getElementById("calendar-button").click();
       });
     } else if (openMethod === "showPicker") {
-      await SpecialPowers.spawn(bc, [], function() {
+      await SpecialPowers.spawn(bc, [], function () {
         content.document.notifyUserGestureActivation();
         content.document.querySelector("input").showPicker();
       });
@@ -407,7 +407,7 @@ async function verifyPickerPosition(browsingContext, inputId) {
   let inputRect = await SpecialPowers.spawn(
     browsingContext,
     [inputId],
-    async function(inputIdChild) {
+    async function (inputIdChild) {
       let rect = content.document
         .getElementById(inputIdChild)
         .getBoundingClientRect();

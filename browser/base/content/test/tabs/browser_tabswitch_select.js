@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   let tab1 = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "about:support"

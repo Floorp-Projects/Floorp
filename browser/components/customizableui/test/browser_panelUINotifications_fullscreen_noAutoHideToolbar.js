@@ -11,7 +11,7 @@ const { AppMenuNotifications } = ChromeUtils.importESModule(
 );
 
 function waitForDocshellActivated() {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     // Setting docshell activated/deactivated will trigger visibility state
     // changes to relevant state ("visible" or "hidden"). AFAIK, there is no
     // such event notifying docshell is being activated, so I use

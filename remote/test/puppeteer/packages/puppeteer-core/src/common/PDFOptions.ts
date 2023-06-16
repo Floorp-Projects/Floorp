@@ -83,12 +83,12 @@ export type PaperFormat =
 export interface PDFOptions {
   /**
    * Scales the rendering of the web page. Amount must be between `0.1` and `2`.
-   * @defaultValue 1
+   * @defaultValue `1`
    */
   scale?: number;
   /**
    * Whether to show the header and footer.
-   * @defaultValue false
+   * @defaultValue `false`
    */
   displayHeaderFooter?: boolean;
   /**
@@ -108,17 +108,17 @@ export interface PDFOptions {
   headerTemplate?: string;
   /**
    * HTML template for the print footer. Has the same constraints and support
-   * for special classes as {@link PDFOptions.headerTemplate}.
+   * for special classes as {@link PDFOptions | PDFOptions.headerTemplate}.
    */
   footerTemplate?: string;
   /**
    * Set to `true` to print background graphics.
-   * @defaultValue false
+   * @defaultValue `false`
    */
   printBackground?: boolean;
   /**
    * Whether to print in landscape orientation.
-   * @defaultValue = false
+   * @defaultValue `false`
    */
   landscape?: boolean;
   /**
@@ -148,7 +148,7 @@ export interface PDFOptions {
   preferCSSPageSize?: boolean;
   /**
    * Set the PDF margins.
-   * @defaultValue no margins are set.
+   * @defaultValue `undefined` no margins are set.
    */
   margin?: PDFMargin;
   /**
@@ -158,17 +158,17 @@ export interface PDFOptions {
    *
    * If the path is relative, it's resolved relative to the current working directory.
    *
-   * @defaultValue the empty string, which means the PDF will not be written to disk.
+   * @defaultValue `undefined`, which means the PDF will not be written to disk.
    */
   path?: string;
   /**
    * Hides default white background and allows generating pdfs with transparency.
-   * @defaultValue false
+   * @defaultValue `false`
    */
   omitBackground?: boolean;
   /**
    * Timeout in milliseconds. Pass `0` to disable timeout.
-   * @defaultValue 30000
+   * @defaultValue `30_000`
    */
   timeout?: number;
 }
@@ -184,19 +184,38 @@ export interface PaperFormatDimensions {
 /**
  * @internal
  */
-export const _paperFormats: Record<
-  LowerCasePaperFormat,
-  PaperFormatDimensions
-> = {
-  letter: {width: 8.5, height: 11},
-  legal: {width: 8.5, height: 14},
-  tabloid: {width: 11, height: 17},
-  ledger: {width: 17, height: 11},
-  a0: {width: 33.1, height: 46.8},
-  a1: {width: 23.4, height: 33.1},
-  a2: {width: 16.54, height: 23.4},
-  a3: {width: 11.7, height: 16.54},
-  a4: {width: 8.27, height: 11.7},
-  a5: {width: 5.83, height: 8.27},
-  a6: {width: 4.13, height: 5.83},
-} as const;
+export interface ParsedPDFOptionsInterface {
+  width: number;
+  height: number;
+  margin: {
+    top: number;
+    bottom: number;
+    left: number;
+    right: number;
+  };
+}
+
+/**
+ * @internal
+ */
+export type ParsedPDFOptions = Required<
+  Omit<PDFOptions, 'path' | 'format'> & ParsedPDFOptionsInterface
+>;
+
+/**
+ * @internal
+ */
+export const paperFormats: Record<LowerCasePaperFormat, PaperFormatDimensions> =
+  {
+    letter: {width: 8.5, height: 11},
+    legal: {width: 8.5, height: 14},
+    tabloid: {width: 11, height: 17},
+    ledger: {width: 17, height: 11},
+    a0: {width: 33.1, height: 46.8},
+    a1: {width: 23.4, height: 33.1},
+    a2: {width: 16.54, height: 23.4},
+    a3: {width: 11.7, height: 16.54},
+    a4: {width: 8.27, height: 11.7},
+    a5: {width: 5.83, height: 8.27},
+    a6: {width: 4.13, height: 5.83},
+  } as const;

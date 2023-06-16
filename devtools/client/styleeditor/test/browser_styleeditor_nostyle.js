@@ -7,7 +7,7 @@
 
 const TESTCASE_URI = TEST_BASE_HTTP + "nostyle.html";
 
-add_task(async function() {
+add_task(async function () {
   // Make enough room for the "append style sheet" link to not wrap,
   // as it messes up with EvenEventUtils.synthesizeMouse
   await pushPref("devtools.styleeditor.navSidebarWidth", 500);
@@ -29,9 +29,8 @@ add_task(async function() {
   );
   ok(!importButton.hasAttribute("disabled"), "import button is enabled");
 
-  const emptyPlaceHolderEl = getRootElement(panel).querySelector(
-    ".empty.placeholder"
-  );
+  const emptyPlaceHolderEl =
+    getRootElement(panel).querySelector(".empty.placeholder");
   isnot(
     emptyPlaceHolderEl.ownerGlobal.getComputedStyle(emptyPlaceHolderEl).display,
     "none",

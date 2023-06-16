@@ -46,7 +46,7 @@ NS_IMETHODIMP nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMETyp
 }
 
 NS_IMETHODIMP
-nsOSHelperAppService::GetProtocolHandlerInfoFromOS(const char* aScheme, bool* found,
+nsOSHelperAppService::GetProtocolHandlerInfoFromOS(const nsACString& aScheme, bool* found,
                                                    nsIHandlerInfo** _retval) {
   *found = false;
   return NS_OK;

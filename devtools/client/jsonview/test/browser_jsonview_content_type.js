@@ -25,7 +25,7 @@ const contentTypes = {
   ],
 };
 
-add_task(async function() {
+add_task(async function () {
   info("Test JSON content types started");
 
   // Prevent saving files to disk.
@@ -61,7 +61,7 @@ add_task(async function() {
   }
 
   // Restore old pref
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     MockFilePicker.cleanup();
     SpecialPowers.setBoolPref(
       "browser.download.useDownloadDir",
@@ -73,22 +73,24 @@ add_task(async function() {
 function testType(isValid, type, params = "") {
   const TEST_JSON_URL = "data:" + type + params + ",[1,2,3]";
   return addJsonViewTab(TEST_JSON_URL).then(
-    async function() {
+    async function () {
       ok(isValid, "The JSON Viewer should only load for valid content types.");
-      await SpecialPowers.spawn(gBrowser.selectedBrowser, [type], function(
-        contentType
-      ) {
-        is(
-          content.document.contentType,
-          contentType,
-          "Got the right content type"
-        );
-      });
+      await SpecialPowers.spawn(
+        gBrowser.selectedBrowser,
+        [type],
+        function (contentType) {
+          is(
+            content.document.contentType,
+            contentType,
+            "Got the right content type"
+          );
+        }
+      );
 
       const count = await getElementCount(".jsonPanelBox .treeTable .treeRow");
       is(count, 3, "There must be expected number of rows");
     },
-    function() {
+    function () {
       ok(
         !isValid,
         "The JSON Viewer should only not load for invalid content types."

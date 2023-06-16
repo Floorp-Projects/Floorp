@@ -9,7 +9,7 @@ function startSimpleClickTestCase(aTestNumber) {
     gTestWindow.gBrowser.selectedBrowser,
     false,
     url => url.endsWith("file_referrer_testserver.sjs")
-  ).then(function() {
+  ).then(function () {
     checkReferrerAndStartNextTest(
       aTestNumber,
       null,

@@ -33,6 +33,7 @@
 
 #include "nsPrintfCString.h"
 
+#include "nsRFPService.h"
 #include "nsReadableUtils.h"
 
 #include "nsColor.h"
@@ -989,6 +990,10 @@ CanvasRenderingContext2D::ContextState::ContextState(const ContextState& aOther)
       textBaseline(aOther.textBaseline),
       textDirection(aOther.textDirection),
       fontKerning(aOther.fontKerning),
+      letterSpacing(aOther.letterSpacing),
+      wordSpacing(aOther.wordSpacing),
+      letterSpacingStr(aOther.letterSpacingStr),
+      wordSpacingStr(aOther.wordSpacingStr),
       shadowColor(aOther.shadowColor),
       transform(aOther.transform),
       shadowOffset(aOther.shadowOffset),
@@ -1867,6 +1872,13 @@ UniquePtr<uint8_t[]> CanvasRenderingContext2D::GetImageBuffer(
 
   mBufferProvider->ReturnSnapshot(snapshot.forget());
 
+  if (ret && ShouldResistFingerprinting(RFPTarget::CanvasRandomization)) {
+    nsRFPService::RandomizePixels(
+        GetCookieJarSettings(), ret.get(),
+        out_imageSize->width * out_imageSize->height * 4,
+        SurfaceFormat::A8R8G8B8_UINT32);
+  }
+
   return ret;
 }
 
@@ -2351,13 +2363,13 @@ void CanvasRenderingContext2D::SetShadowColor(const nsACString& aShadowColor) {
 // filters
 //
 
-static already_AddRefed<RawServoDeclarationBlock> CreateDeclarationForServo(
+static already_AddRefed<StyleLockedDeclarationBlock> CreateDeclarationForServo(
     nsCSSPropertyID aProperty, const nsACString& aPropertyValue,
     Document* aDocument) {
   ServoCSSParser::ParsingEnvironment env{aDocument->DefaultStyleAttrURLData(),
                                          aDocument->GetCompatibilityMode(),
                                          aDocument->CSSLoader()};
-  RefPtr<RawServoDeclarationBlock> servoDeclarations =
+  RefPtr<StyleLockedDeclarationBlock> servoDeclarations =
       ServoCSSParser::ParseProperty(aProperty, aPropertyValue, env);
 
   if (!servoDeclarations) {
@@ -2378,15 +2390,15 @@ static already_AddRefed<RawServoDeclarationBlock> CreateDeclarationForServo(
   return servoDeclarations.forget();
 }
 
-static already_AddRefed<RawServoDeclarationBlock> CreateFontDeclarationForServo(
-    const nsACString& aFont, Document* aDocument) {
+static already_AddRefed<StyleLockedDeclarationBlock>
+CreateFontDeclarationForServo(const nsACString& aFont, Document* aDocument) {
   return CreateDeclarationForServo(eCSSProperty_font, aFont, aDocument);
 }
 
 static already_AddRefed<const ComputedStyle> GetFontStyleForServo(
     Element* aElement, const nsACString& aFont, PresShell* aPresShell,
     nsACString& aOutUsedFont, ErrorResult& aError) {
-  RefPtr<RawServoDeclarationBlock> declarations =
+  RefPtr<StyleLockedDeclarationBlock> declarations =
       CreateFontDeclarationForServo(aFont, aPresShell->GetDocument());
   if (!declarations) {
     // We got a syntax error.  The spec says this value must be ignored.
@@ -2415,7 +2427,7 @@ static already_AddRefed<const ComputedStyle> GetFontStyleForServo(
     }
   }
   if (!parentStyle) {
-    RefPtr<RawServoDeclarationBlock> declarations =
+    RefPtr<StyleLockedDeclarationBlock> declarations =
         CreateFontDeclarationForServo("10px sans-serif"_ns,
                                       aPresShell->GetDocument());
     MOZ_ASSERT(declarations);
@@ -2451,7 +2463,7 @@ static already_AddRefed<const ComputedStyle> GetFontStyleForServo(
   return sc.forget();
 }
 
-static already_AddRefed<RawServoDeclarationBlock>
+static already_AddRefed<StyleLockedDeclarationBlock>
 CreateFilterDeclarationForServo(const nsACString& aFilter,
                                 Document* aDocument) {
   return CreateDeclarationForServo(eCSSProperty_filter, aFilter, aDocument);
@@ -2460,7 +2472,7 @@ CreateFilterDeclarationForServo(const nsACString& aFilter,
 static already_AddRefed<const ComputedStyle> ResolveFilterStyleForServo(
     const nsACString& aFilterString, const ComputedStyle* aParentStyle,
     PresShell* aPresShell, ErrorResult& aError) {
-  RefPtr<RawServoDeclarationBlock> declarations =
+  RefPtr<StyleLockedDeclarationBlock> declarations =
       CreateFilterDeclarationForServo(aFilterString, aPresShell->GetDocument());
   if (!declarations) {
     // Refuse to accept the filter, but do not throw an error.
@@ -2521,6 +2533,98 @@ void CanvasRenderingContext2D::SetFilter(const nsACString& aFilter,
       UpdateFilter();
     }
   }
+}
+
+static already_AddRefed<const ComputedStyle> ResolveStyleForServo(
+    nsCSSPropertyID aProperty, const nsACString& aString,
+    const ComputedStyle* aParentStyle, PresShell* aPresShell,
+    ErrorResult& aError) {
+  RefPtr<StyleLockedDeclarationBlock> declarations =
+      CreateDeclarationForServo(aProperty, aString, aPresShell->GetDocument());
+  if (!declarations) {
+    return nullptr;
+  }
+
+  // In addition to unparseable values, reject 'inherit' and 'initial'.
+  if (Servo_DeclarationBlock_HasCSSWideKeyword(declarations, aProperty)) {
+    return nullptr;
+  }
+
+  ServoStyleSet* styleSet = aPresShell->StyleSet();
+  return styleSet->ResolveForDeclarations(aParentStyle, declarations);
+}
+
+already_AddRefed<const ComputedStyle>
+CanvasRenderingContext2D::ResolveStyleForProperty(nsCSSPropertyID aProperty,
+                                                  const nsACString& aValue) {
+  RefPtr<PresShell> presShell = GetPresShell();
+  if (NS_WARN_IF(!presShell)) {
+    return nullptr;
+  }
+
+  nsAutoCString usedFont;
+  IgnoredErrorResult err;
+  RefPtr<const ComputedStyle> parentStyle =
+      GetFontStyleForServo(mCanvasElement, GetFont(), presShell, usedFont, err);
+  if (!parentStyle) {
+    return nullptr;
+  }
+
+  return ResolveStyleForServo(aProperty, aValue, parentStyle, presShell, err);
+}
+
+void CanvasRenderingContext2D::GetLetterSpacing(nsACString& aLetterSpacing) {
+  if (CurrentState().letterSpacingStr.IsEmpty()) {
+    aLetterSpacing.AssignLiteral("0px");
+  } else {
+    aLetterSpacing = CurrentState().letterSpacingStr;
+  }
+}
+
+void CanvasRenderingContext2D::SetLetterSpacing(
+    const nsACString& aLetterSpacing) {
+  ParseSpacing(aLetterSpacing, &CurrentState().letterSpacing,
+               CurrentState().letterSpacingStr);
+}
+
+void CanvasRenderingContext2D::GetWordSpacing(nsACString& aWordSpacing) {
+  if (CurrentState().wordSpacingStr.IsEmpty()) {
+    aWordSpacing.AssignLiteral("0px");
+  } else {
+    aWordSpacing = CurrentState().wordSpacingStr;
+  }
+}
+
+void CanvasRenderingContext2D::SetWordSpacing(const nsACString& aWordSpacing) {
+  ParseSpacing(aWordSpacing, &CurrentState().wordSpacing,
+               CurrentState().wordSpacingStr);
+}
+
+void CanvasRenderingContext2D::ParseSpacing(const nsACString& aSpacing,
+                                            float* aValue,
+                                            nsACString& aNormalized) {
+  // Normalize whitespace in the string before trying to parse it, as we want
+  // to store it in normalized form, and this allows a simple check against the
+  // 'normal' keyword, which is not accepted.
+  nsAutoCString normalized(aSpacing);
+  normalized.CompressWhitespace(true, true);
+  if (normalized.Equals("normal", nsCaseInsensitiveCStringComparator)) {
+    return;
+  }
+  float value;
+  if (!Servo_ParseAbsoluteLength(&normalized, &value)) {
+    if (!GetPresShell()) {
+      return;
+    }
+    RefPtr<const ComputedStyle> style =
+        ResolveStyleForProperty(eCSSProperty_letter_spacing, aSpacing);
+    if (!style) {
+      return;
+    }
+    value = style->StyleText()->mLetterSpacing.ToCSSPixels();
+  }
+  aNormalized = normalized;
+  *aValue = value;
 }
 
 class CanvasUserSpaceMetrics : public UserSpaceMetricsWithSize {
@@ -2851,7 +2955,7 @@ void CanvasRenderingContext2D::BeginPath() {
 void CanvasRenderingContext2D::Fill(const CanvasWindingRule& aWinding) {
   EnsureUserSpacePath(aWinding);
 
-  if (!mPath) {
+  if (!mPath || mPath->IsEmpty()) {
     return;
   }
 
@@ -2887,7 +2991,7 @@ void CanvasRenderingContext2D::Fill(const CanvasPath& aPath,
   }
 
   RefPtr<gfx::Path> gfxpath = aPath.GetPath(aWinding, mTarget);
-  if (!gfxpath) {
+  if (!gfxpath || gfxpath->IsEmpty()) {
     return;
   }
 
@@ -2918,7 +3022,7 @@ void CanvasRenderingContext2D::Fill(const CanvasPath& aPath,
 void CanvasRenderingContext2D::Stroke() {
   EnsureUserSpacePath();
 
-  if (!mPath) {
+  if (!mPath || mPath->IsEmpty()) {
     return;
   }
 
@@ -2961,7 +3065,7 @@ void CanvasRenderingContext2D::Stroke(const CanvasPath& aPath) {
   RefPtr<gfx::Path> gfxpath =
       aPath.GetPath(CanvasWindingRule::Nonzero, mTarget);
 
-  if (!gfxpath) {
+  if (!gfxpath || gfxpath->IsEmpty()) {
     return;
   }
 
@@ -3115,6 +3219,10 @@ void CanvasRenderingContext2D::ArcTo(double aX1, double aY1, double aX2,
   Point p1(aX1, aY1);
   Point p2(aX2, aY2);
 
+  if (!p1.IsFinite() || !p2.IsFinite() || !std::isfinite(aRadius)) {
+    return;
+  }
+
   // Execute these calculations in double precision to avoid cumulative
   // rounding errors.
   double dir, a2, b2, c2, cosx, sinx, d, anx, any, bnx, bny, x3, y3, x4, y4, cx,
@@ -3122,7 +3230,7 @@ void CanvasRenderingContext2D::ArcTo(double aX1, double aY1, double aX2,
   bool anticlockwise;
 
   if (p0 == p1 || p1 == p2 || aRadius == 0) {
-    LineTo(p1.x, p1.y);
+    LineTo(p1);
     return;
   }
 
@@ -3130,7 +3238,7 @@ void CanvasRenderingContext2D::ArcTo(double aX1, double aY1, double aX2,
   dir = (p2.x.value - p1.x.value) * (p0.y.value - p1.y.value) +
         (p2.y.value - p1.y.value) * (p1.x.value - p0.x.value);
   if (dir == 0) {
-    LineTo(p1.x, p1.y);
+    LineTo(p1);
     return;
   }
 
@@ -3181,8 +3289,16 @@ void CanvasRenderingContext2D::Rect(double aX, double aY, double aW,
                                     double aH) {
   EnsureWritablePath();
 
+  if (!std::isfinite(aX) || !std::isfinite(aY) || !std::isfinite(aW) ||
+      !std::isfinite(aH)) {
+    return;
+  }
+
   if (mPathBuilder) {
     mPathBuilder->MoveTo(Point(aX, aY));
+    if (aW == 0 && aH == 0) {
+      return;
+    }
     mPathBuilder->LineTo(Point(aX + aW, aY));
     mPathBuilder->LineTo(Point(aX + aW, aY + aH));
     mPathBuilder->LineTo(Point(aX, aY + aH));
@@ -3190,6 +3306,9 @@ void CanvasRenderingContext2D::Rect(double aX, double aY, double aW,
   } else {
     mDSPathBuilder->MoveTo(
         mTarget->GetTransform().TransformPoint(Point(aX, aY)));
+    if (aW == 0 && aH == 0) {
+      return;
+    }
     mDSPathBuilder->LineTo(
         mTarget->GetTransform().TransformPoint(Point(aX + aW, aY)));
     mDSPathBuilder->LineTo(
@@ -3519,6 +3638,13 @@ void CanvasRenderingContext2D::TransformWillUpdate() {
 void CanvasRenderingContext2D::SetFont(const nsACString& aFont,
                                        ErrorResult& aError) {
   SetFontInternal(aFont, aError);
+  if (aError.Failed()) {
+    return;
+  }
+
+  // If letterSpacing or wordSpacing is present, recompute to account for
+  // changes to font-relative dimensions.
+  UpdateSpacing();
 }
 
 bool CanvasRenderingContext2D::SetFontInternal(const nsACString& aFont,
@@ -3720,6 +3846,16 @@ bool CanvasRenderingContext2D::SetFontInternalDisconnected(
   return true;
 }
 
+void CanvasRenderingContext2D::UpdateSpacing() {
+  auto state = CurrentState();
+  if (!state.letterSpacingStr.IsEmpty()) {
+    SetLetterSpacing(state.letterSpacingStr);
+  }
+  if (!state.wordSpacingStr.IsEmpty()) {
+    SetWordSpacing(state.wordSpacingStr);
+  }
+}
+
 void CanvasRenderingContext2D::SetTextAlign(const nsAString& aTextAlign) {
   if (aTextAlign.EqualsLiteral("start"))
     CurrentState().textAlign = TextAlign::START;
@@ -3889,16 +4025,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
     : public nsBidiPresUtils::BidiProcessor {
   using Style = CanvasRenderingContext2D::Style;
 
-  CanvasBidiProcessor()
-      : nsBidiPresUtils::BidiProcessor(),
-        mCtx(nullptr),
-        mFontgrp(nullptr),
-        mAppUnitsPerDevPixel(0),
-        mOp(CanvasRenderingContext2D::TextDrawOperation::FILL),
-        mTextRunFlags(),
-        mSetTextCount(0),
-        mDoMeasureBoundingBox(false),
-        mIgnoreSetText(false) {
+  CanvasBidiProcessor() : nsBidiPresUtils::BidiProcessor() {
     if (StaticPrefs::gfx_missing_fonts_notify()) {
       mMissingFonts = MakeUnique<gfxMissingFontRecorder>();
     }
@@ -3910,6 +4037,73 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
       mMissingFonts->Flush();
     }
   }
+
+  class PropertyProvider : public gfxTextRun::PropertyProvider {
+   public:
+    explicit PropertyProvider(const CanvasBidiProcessor& aProcessor)
+        : mProcessor(aProcessor) {}
+
+    void GetSpacing(gfxTextRun::Range aRange,
+                    gfxFont::Spacing* aSpacing) const {
+      for (auto i = aRange.start; i < aRange.end; ++i) {
+        auto* charGlyphs = mProcessor.mTextRun->GetCharacterGlyphs();
+        if (i == mProcessor.mTextRun->GetLength() - 1 ||
+            (charGlyphs[i + 1].IsClusterStart() &&
+             charGlyphs[i + 1].IsLigatureGroupStart())) {
+          // Currently we add all the letterspacing to the right of the glyph,
+          // which is similar to Chrome's behavior, though the LTR vs RTL
+          // asymmetry seems unfortunate.
+          if (mProcessor.mTextRun->IsRightToLeft()) {
+            aSpacing->mAfter = 0;
+            aSpacing->mBefore = mProcessor.mLetterSpacing;
+          } else {
+            aSpacing->mBefore = 0;
+            aSpacing->mAfter = mProcessor.mLetterSpacing;
+          }
+        } else {
+          aSpacing->mBefore = 0;
+          aSpacing->mAfter = 0;
+        }
+        if (charGlyphs[i].CharIsSpace()) {
+          if (mProcessor.mTextRun->IsRightToLeft()) {
+            aSpacing->mBefore += mProcessor.mWordSpacing;
+          } else {
+            aSpacing->mAfter += mProcessor.mWordSpacing;
+          }
+        }
+        aSpacing++;
+      }
+    }
+
+    mozilla::StyleHyphens GetHyphensOption() const {
+      return mozilla::StyleHyphens::None;
+    }
+
+    // Methods only used when hyphenation is active, not relevant to canvas2d:
+    void GetHyphenationBreaks(gfxTextRun::Range aRange,
+                              gfxTextRun::HyphenType* aBreakBefore) const {
+      MOZ_ASSERT_UNREACHABLE("no hyphenation in canvas2d text!");
+    }
+    gfxFloat GetHyphenWidth() const {
+      MOZ_ASSERT_UNREACHABLE("no hyphenation in canvas2d text!");
+      return 0.0;
+    }
+    already_AddRefed<DrawTarget> GetDrawTarget() const {
+      MOZ_ASSERT_UNREACHABLE("no hyphenation in canvas2d text!");
+      return nullptr;
+    }
+    uint32_t GetAppUnitsPerDevUnit() const {
+      MOZ_ASSERT_UNREACHABLE("no hyphenation in canvas2d text!");
+      return 60;
+    }
+    gfx::ShapedTextFlags GetShapedTextFlags() const {
+      MOZ_ASSERT_UNREACHABLE("no hyphenation in canvas2d text!");
+      return gfx::ShapedTextFlags();
+    }
+
+   private:
+    const CanvasBidiProcessor& mProcessor;
+  };
 
   using ContextState = CanvasRenderingContext2D::ContextState;
 
@@ -3941,10 +4135,11 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
   }
 
   nscoord GetWidth() override {
+    PropertyProvider provider(*this);
     gfxTextRun::Metrics textRunMetrics = mTextRun->MeasureText(
         mDoMeasureBoundingBox ? gfxFont::TIGHT_INK_EXTENTS
                               : gfxFont::LOOSE_INK_EXTENTS,
-        mDrawTarget);
+        mDrawTarget, &provider);
 
     // this only measures the height; the total width is gotten from the
     // the return value of ProcessText.
@@ -4025,6 +4220,8 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
     float& inlineCoord = verticalRun ? point.y.value : point.x.value;
     inlineCoord += aXOffset;
 
+    PropertyProvider provider(*this);
+
     // offset is given in terms of left side of string
     if (rtl) {
       // Bug 581092 - don't use rounded pixel width to advance to
@@ -4035,7 +4232,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
       gfxTextRun::Metrics textRunMetrics = mTextRun->MeasureText(
           mDoMeasureBoundingBox ? gfxFont::TIGHT_INK_EXTENTS
                                 : gfxFont::LOOSE_INK_EXTENTS,
-          mDrawTarget);
+          mDrawTarget, &provider);
       inlineCoord += textRunMetrics.mAdvanceWidth;
       // old code was:
       //   point.x += width * mAppUnitsPerDevPixel;
@@ -4109,6 +4306,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
     }
 
     params.drawOpts = &drawOpts;
+    params.provider = &provider;
 
     if (style == Style::STROKE) {
       strokeOpts.mLineWidth = state.lineWidth;
@@ -4134,38 +4332,43 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
   RefPtr<DrawTarget> mDrawTarget;
 
   // Pointer to the draw target we should fill our text to
-  CanvasRenderingContext2D* mCtx;
+  CanvasRenderingContext2D* mCtx = nullptr;
 
   // position of the left side of the string, alphabetic baseline
   gfx::Point mPt;
 
   // current font
-  gfxFontGroup* mFontgrp;
+  gfxFontGroup* mFontgrp = nullptr;
+
+  // spacing adjustments to be applied
+  gfx::Float mLetterSpacing = 0.0f;
+  gfx::Float mWordSpacing = 0.0f;
 
   // to record any unsupported characters found in the text,
   // and notify front-end if it is interested
   UniquePtr<gfxMissingFontRecorder> mMissingFonts;
 
   // dev pixel conversion factor
-  int32_t mAppUnitsPerDevPixel;
+  int32_t mAppUnitsPerDevPixel = 0;
 
   // operation (fill or stroke)
-  CanvasRenderingContext2D::TextDrawOperation mOp;
+  CanvasRenderingContext2D::TextDrawOperation mOp =
+      CanvasRenderingContext2D::TextDrawOperation::FILL;
 
   // union of bounding boxes of all runs, needed for shadows
   gfxRect mBoundingBox;
 
   // flags to use when creating textrun, based on CSS style
-  gfx::ShapedTextFlags mTextRunFlags;
+  gfx::ShapedTextFlags mTextRunFlags = gfx::ShapedTextFlags();
 
   // Count of how many times SetText has been called on this processor.
-  uint32_t mSetTextCount;
+  uint32_t mSetTextCount = 0;
 
   // true iff the bounding box should be measured
-  bool mDoMeasureBoundingBox;
+  bool mDoMeasureBoundingBox = false;
 
   // true if future SetText calls should be ignored
-  bool mIgnoreSetText;
+  bool mIgnoreSetText = false;
 };
 
 TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
@@ -4291,6 +4494,17 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
                                     !mIsEntireFrameInvalid ||
                                     aOp == TextDrawOperation::MEASURE;
   processor.mFontgrp = currentFontStyle;
+
+  if (state.letterSpacing != 0.0 || state.wordSpacing != 0.0) {
+    processor.mLetterSpacing =
+        state.letterSpacing * processor.mAppUnitsPerDevPixel;
+    processor.mWordSpacing = state.wordSpacing * processor.mAppUnitsPerDevPixel;
+    processor.mTextRunFlags |= gfx::ShapedTextFlags::TEXT_ENABLE_SPACING;
+    if (state.letterSpacing != 0.0) {
+      processor.mTextRunFlags |=
+          gfx::ShapedTextFlags::TEXT_DISABLE_OPTIONAL_LIGATURES;
+    }
+  }
 
   nscoord totalWidthCoord;
 
@@ -4659,8 +4873,8 @@ bool CanvasRenderingContext2D::IsPointInPath(
                                                aSubjectPrincipal)) {
       return false;
     }
-  } else if (mOffscreenCanvas &&
-             mOffscreenCanvas->ShouldResistFingerprinting()) {
+  } else if (mOffscreenCanvas && mOffscreenCanvas->ShouldResistFingerprinting(
+                                     RFPTarget::CanvasImageExtractionPrompt)) {
     return false;
   }
 
@@ -4722,8 +4936,8 @@ bool CanvasRenderingContext2D::IsPointInStroke(
                                                aSubjectPrincipal)) {
       return false;
     }
-  } else if (mOffscreenCanvas &&
-             mOffscreenCanvas->ShouldResistFingerprinting()) {
+  } else if (mOffscreenCanvas && mOffscreenCanvas->ShouldResistFingerprinting(
+                                     RFPTarget::CanvasImageExtractionPrompt)) {
     return false;
   }
 
@@ -4741,6 +4955,7 @@ bool CanvasRenderingContext2D::IsPointInStroke(
   if (mPathTransformWillUpdate) {
     return mPath->StrokeContainsPoint(strokeOptions, Point(aX, aY), mPathToDS);
   }
+
   return mPath->StrokeContainsPoint(strokeOptions, Point(aX, aY),
                                     mTarget->GetTransform());
 }
@@ -5630,11 +5845,6 @@ nsresult CanvasRenderingContext2D::GetImageDataArray(
   RefPtr<DataSourceSurface> readback = snapshot->GetDataSurface();
   mBufferProvider->ReturnSnapshot(snapshot.forget());
 
-  DataSourceSurface::MappedSurface rawData;
-  if (!readback || !readback->Map(DataSourceSurface::READ, &rawData)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   // Check for site-specific permission.  This check is not needed if the
   // canvas was created with a docshell (that is only done for special
   // internal uses).
@@ -5644,7 +5854,26 @@ nsresult CanvasRenderingContext2D::GetImageDataArray(
     usePlaceholder = !CanvasUtils::IsImageExtractionAllowed(ownerDoc, aCx,
                                                             aSubjectPrincipal);
   } else if (mOffscreenCanvas) {
-    usePlaceholder = mOffscreenCanvas->ShouldResistFingerprinting();
+    usePlaceholder = mOffscreenCanvas->ShouldResistFingerprinting(
+        RFPTarget::CanvasImageExtractionPrompt);
+  }
+
+  // Clone the data source surface if canvas randomization is enabled. We need
+  // to do this because we don't want to alter the actual image buffer.
+  // Otherwise, we will provide inconsistent image data with multiple calls.
+  //
+  // Note that we don't need to clone if we will use the place holder because
+  // the place holder doesn't use actual image data.
+  bool needRandomizePixels = false;
+  if (!usePlaceholder &&
+      ShouldResistFingerprinting(RFPTarget::CanvasRandomization)) {
+    needRandomizePixels = true;
+    readback = CreateDataSourceSurfaceByCloning(readback);
+  }
+
+  DataSourceSurface::MappedSurface rawData;
+  if (!readback || !readback->Map(DataSourceSurface::READ, &rawData)) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   do {
@@ -5654,6 +5883,15 @@ nsresult CanvasRenderingContext2D::GetImageDataArray(
       // service) after we call JS_GetUint8ClampedArrayData, we will
       // pre-generate the randomness required for GeneratePlaceholderCanvasData.
       randomData = TryToGenerateRandomDataForPlaceholderCanvasData();
+    } else if (needRandomizePixels) {
+      // Apply the random noises if canvan randomization is enabled. We don't
+      // need to calculate random noises if we are going to use the place
+      // holder.
+
+      const IntSize size = readback->GetSize();
+      nsRFPService::RandomizePixels(GetCookieJarSettings(), rawData.mData,
+                                    size.height * size.width * 4,
+                                    SurfaceFormat::A8R8G8B8_UINT32);
     }
 
     JS::AutoCheckCannotGC nogc;
@@ -6087,21 +6325,30 @@ void CanvasPath::ClosePath() {
 void CanvasPath::MoveTo(double aX, double aY) {
   EnsurePathBuilder();
 
-  mPathBuilder->MoveTo(Point(ToFloat(aX), ToFloat(aY)));
+  Point pos(ToFloat(aX), ToFloat(aY));
+  if (!pos.IsFinite()) {
+    return;
+  }
+
+  mPathBuilder->MoveTo(pos);
 }
 
 void CanvasPath::LineTo(double aX, double aY) {
-  EnsurePathBuilder();
-
-  mPathBuilder->LineTo(Point(ToFloat(aX), ToFloat(aY)));
+  LineTo(Point(ToFloat(aX), ToFloat(aY)));
 }
 
 void CanvasPath::QuadraticCurveTo(double aCpx, double aCpy, double aX,
                                   double aY) {
   EnsurePathBuilder();
 
-  mPathBuilder->QuadraticBezierTo(gfx::Point(ToFloat(aCpx), ToFloat(aCpy)),
-                                  gfx::Point(ToFloat(aX), ToFloat(aY)));
+  Point cp1(ToFloat(aCpx), ToFloat(aCpy));
+  Point cp2(ToFloat(aX), ToFloat(aY));
+  if (!cp1.IsFinite() || !cp2.IsFinite() ||
+      (cp1 == mPathBuilder->CurrentPoint() && cp1 == cp2)) {
+    return;
+  }
+
+  mPathBuilder->QuadraticBezierTo(cp1, cp2);
 }
 
 void CanvasPath::BezierCurveTo(double aCp1x, double aCp1y, double aCp2x,
@@ -6124,6 +6371,10 @@ void CanvasPath::ArcTo(double aX1, double aY1, double aX2, double aY2,
   Point p1(aX1, aY1);
   Point p2(aX2, aY2);
 
+  if (!p1.IsFinite() || !p2.IsFinite() || !std::isfinite(aRadius)) {
+    return;
+  }
+
   // Execute these calculations in double precision to avoid cumulative
   // rounding errors.
   double dir, a2, b2, c2, cosx, sinx, d, anx, any, bnx, bny, x3, y3, x4, y4, cx,
@@ -6131,7 +6382,7 @@ void CanvasPath::ArcTo(double aX1, double aY1, double aX2, double aY2,
   bool anticlockwise;
 
   if (p0 == p1 || p1 == p2 || aRadius == 0) {
-    LineTo(p1.x, p1.y);
+    LineTo(p1);
     return;
   }
 
@@ -6139,7 +6390,7 @@ void CanvasPath::ArcTo(double aX1, double aY1, double aX2, double aY2,
   dir = (p2.x.value - p1.x.value) * (p0.y.value - p1.y.value) +
         (p2.y.value - p1.y.value) * (p1.x.value - p0.x.value);
   if (dir == 0) {
-    LineTo(p1.x, p1.y);
+    LineTo(p1);
     return;
   }
 
@@ -6174,7 +6425,17 @@ void CanvasPath::ArcTo(double aX1, double aY1, double aX2, double aY2,
 }
 
 void CanvasPath::Rect(double aX, double aY, double aW, double aH) {
+  EnsurePathBuilder();
+
+  if (!std::isfinite(aX) || !std::isfinite(aY) || !std::isfinite(aW) ||
+      !std::isfinite(aH)) {
+    return;
+  }
+
   MoveTo(aX, aY);
+  if (aW == 0 && aH == 0) {
+    return;
+  }
   LineTo(aX + aW, aY);
   LineTo(aX + aW, aY + aH);
   LineTo(aX, aY + aH);
@@ -6220,12 +6481,21 @@ void CanvasPath::Ellipse(double x, double y, double radiusX, double radiusY,
 void CanvasPath::LineTo(const gfx::Point& aPoint) {
   EnsurePathBuilder();
 
+  if (!aPoint.IsFinite() || aPoint == mPathBuilder->CurrentPoint()) {
+    return;
+  }
+
   mPathBuilder->LineTo(aPoint);
 }
 
 void CanvasPath::BezierTo(const gfx::Point& aCP1, const gfx::Point& aCP2,
                           const gfx::Point& aCP3) {
   EnsurePathBuilder();
+
+  if (!aCP1.IsFinite() || !aCP2.IsFinite() || !aCP3.IsFinite() ||
+      (aCP1 == mPathBuilder->CurrentPoint() && aCP1 == aCP2 && aCP1 == aCP3)) {
+    return;
+  }
 
   mPathBuilder->BezierTo(aCP1, aCP2, aCP3);
 }

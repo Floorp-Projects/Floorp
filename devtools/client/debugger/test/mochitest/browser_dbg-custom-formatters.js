@@ -5,8 +5,11 @@
 
 // Check display of custom formatters in debugger.
 const TEST_FILENAME = `doc_dbg-custom-formatters.html`;
+const TEST_FUNCTION_NAME = "pauseWithCustomFormattedObject";
+const CUSTOM_FORMATTED_BODY = "customFormattedBody";
+const VARIABLE_NAME = "xyz";
 
-add_task(async function() {
+add_task(async function () {
   // TODO: This preference can be removed once the custom formatters feature is stable enough
   await pushPref("devtools.custom-formatters", true);
   await pushPref("devtools.custom-formatters.enabled", true);
@@ -23,9 +26,8 @@ add_task(async function() {
 
   const customFormattedElement = expressionsElements[0];
 
-  const headerJsonMlNode = customFormattedElement.querySelector(
-    ".objectBox-jsonml"
-  );
+  const headerJsonMlNode =
+    customFormattedElement.querySelector(".objectBox-jsonml");
   is(
     headerJsonMlNode.innerText,
     "CUSTOM",
@@ -37,9 +39,8 @@ add_task(async function() {
     null,
     "The expression is not expandable…"
   );
-  const customFormattedElementArrow = customFormattedElement.querySelector(
-    ".collapse-button"
-  );
+  const customFormattedElementArrow =
+    customFormattedElement.querySelector(".collapse-button");
   ok(customFormattedElementArrow, "… but the custom formatter is");
 
   info("Expanding the Object");
@@ -65,4 +66,93 @@ add_task(async function() {
   );
   ok(bodyJsonMlNode, "The body is custom formatted");
   is(bodyJsonMlNode?.textContent, "body", "The body text is correct");
+
+  info("Check that custom formatters are displayed in Scopes panel");
+
+  // The function has a debugger statement that will pause the debugger
+  invokeInTab(TEST_FUNCTION_NAME);
+
+  info("Wait for the debugger to be paused");
+  await waitForPaused(dbg);
+
+  info(
+    `Check that '${VARIABLE_NAME}' is in the scopes panel and custom formatted`
+  );
+  const index = 4;
+  is(
+    getScopeLabel(dbg, index),
+    VARIABLE_NAME,
+    `Got '${VARIABLE_NAME}' at the expected position`
+  );
+  const scopeXElement = findElement(dbg, "scopeValue", index);
+  is(
+    scopeXElement.innerText,
+    "CUSTOM",
+    `'${VARIABLE_NAME}' is custom formatted in the scopes panel`
+  );
+  const xArrow = scopeXElement.querySelector(".collapse-button");
+  ok(xArrow, `'${VARIABLE_NAME}' is expandable`);
+
+  info(`Expanding '${VARIABLE_NAME}'`);
+  const onScopeBodyRendered = waitFor(
+    () =>
+      !!scopeXElement.querySelector(
+        ".objectBox-jsonml-body-wrapper .objectBox-jsonml"
+      )
+  );
+
+  xArrow.click();
+  await onScopeBodyRendered;
+  const scopeXBodyJsonMlNode = scopeXElement.querySelector(
+    ".objectBox-jsonml-body-wrapper > .objectBox-jsonml"
+  );
+  ok(scopeXBodyJsonMlNode, "The scope item body is custom formatted");
+  is(
+    scopeXBodyJsonMlNode?.textContent,
+    CUSTOM_FORMATTED_BODY,
+    "The scope item body text is correct"
+  );
+
+  await resume(dbg);
+
+  info("Check that custom formatters are displayed in the Debugger tooltip");
+
+  // The function has a debugger statement that will pause the debugger
+  invokeInTab(TEST_FUNCTION_NAME);
+  await waitForPaused(dbg);
+
+  await assertPreviewTextValue(dbg, 26, 16, {
+    expression: VARIABLE_NAME,
+    text: "CUSTOM",
+  });
+
+  const tooltipPopup = findElement(dbg, "previewPopup");
+
+  const tooltipArrow = tooltipPopup.querySelector(".collapse-button");
+  ok(tooltipArrow, `'${VARIABLE_NAME}' is expandable`);
+
+  info(`Expanding '${VARIABLE_NAME}'`);
+  const onTooltipBodyRendered = waitFor(
+    () =>
+      !!tooltipPopup.querySelector(
+        ".objectBox-jsonml-body-wrapper .objectBox-jsonml"
+      )
+  );
+
+  tooltipArrow.click();
+  await onTooltipBodyRendered;
+  const tooltipBodyJsonMlNode = tooltipPopup.querySelector(
+    ".objectBox-jsonml-body-wrapper > .objectBox-jsonml"
+  );
+  ok(tooltipBodyJsonMlNode, "The tooltip variable body is custom formatted");
+  is(
+    tooltipBodyJsonMlNode?.textContent,
+    CUSTOM_FORMATTED_BODY,
+    "The tooltip variable body text is correct"
+  );
+
+  info("Close tooltip");
+  dbg.actions.clearPreview(getContext(dbg));
+
+  await resume(dbg);
 });

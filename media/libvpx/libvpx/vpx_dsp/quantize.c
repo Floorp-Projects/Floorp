@@ -211,10 +211,10 @@ void vpx_highbd_quantize_b_c(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
 #endif
 
 void vpx_quantize_b_32x32_c(const tran_low_t *coeff_ptr,
-                            const struct macroblock_plane *const mb_plane,
+                            const struct macroblock_plane *mb_plane,
                             tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr,
                             const int16_t *dequant_ptr, uint16_t *eob_ptr,
-                            const struct ScanOrder *const scan_order) {
+                            const struct ScanOrder *scan_order) {
   const int n_coeffs = 32 * 32;
   const int zbins[2] = { ROUND_POWER_OF_TWO(mb_plane->zbin[0], 1),
                          ROUND_POWER_OF_TWO(mb_plane->zbin[1], 1) };

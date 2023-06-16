@@ -18,7 +18,7 @@ const TEST_GENERATED_URI =
   TEST_ROOT + "test-click-function-to-source.unmapped.min.js";
 const TEST_PRETTYPRINTED_URI = TEST_GENERATED_URI + ":formatted";
 
-add_task(async function() {
+add_task(async function () {
   await clearDebuggerPreferences();
 
   info("Open the console");

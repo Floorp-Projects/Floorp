@@ -162,11 +162,7 @@ describe("<DiscoveryStreamBase>", () => {
     });
 
     assert.equal(
-      wrapper
-        .find(".ds-column-grid div")
-        .children()
-        .at(0)
-        .type(),
+      wrapper.find(".ds-column-grid div").children().at(0).type(),
       HorizontalRule
     );
   });
@@ -177,11 +173,7 @@ describe("<DiscoveryStreamBase>", () => {
     });
 
     assert.equal(
-      wrapper
-        .find(".ds-column-grid div")
-        .children()
-        .at(0)
-        .type(),
+      wrapper.find(".ds-column-grid div").children().at(0).type(),
       CardGrid
     );
   });
@@ -192,11 +184,7 @@ describe("<DiscoveryStreamBase>", () => {
     });
 
     assert.equal(
-      wrapper
-        .find(".ds-column-grid div")
-        .children()
-        .at(0)
-        .type(),
+      wrapper.find(".ds-column-grid div").children().at(0).type(),
       Navigation
     );
   });
@@ -220,11 +208,7 @@ describe("<DiscoveryStreamBase>", () => {
     });
 
     assert.equal(
-      wrapper
-        .find(".ds-column-grid div")
-        .children()
-        .at(0)
-        .type(),
+      wrapper.find(".ds-column-grid div").children().at(0).type(),
       DSMessage
     );
   });
@@ -241,20 +225,8 @@ describe("<DiscoveryStreamBase>", () => {
       ],
     });
 
-    assert.equal(
-      wrapper
-        .children()
-        .at(0)
-        .type(),
-      CollapsibleSection
-    );
-    assert.equal(
-      wrapper
-        .children()
-        .at(0)
-        .props().eventSource,
-      "CARDGRID"
-    );
+    assert.equal(wrapper.children().at(0).type(), CollapsibleSection);
+    assert.equal(wrapper.children().at(0).props().eventSource, "CARDGRID");
   });
 
   it("should render a Message component", () => {
@@ -270,11 +242,7 @@ describe("<DiscoveryStreamBase>", () => {
     });
 
     assert.equal(
-      wrapper
-        .find(".ds-column-grid div")
-        .children()
-        .at(0)
-        .type(),
+      wrapper.find(".ds-column-grid div").children().at(0).type(),
       DSMessage
     );
   });
@@ -285,11 +253,7 @@ describe("<DiscoveryStreamBase>", () => {
     });
 
     assert.equal(
-      wrapper
-        .find(".ds-column-grid div")
-        .children()
-        .at(0)
-        .type(),
+      wrapper.find(".ds-column-grid div").children().at(0).type(),
       SectionTitle
     );
   });

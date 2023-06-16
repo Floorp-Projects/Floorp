@@ -60,7 +60,7 @@ const TESTCASES = [
 ];
 
 TESTCASES.forEach(testcase => {
-  add_task(async function() {
+  add_task(async function () {
     info("Starting testcase: " + testcase.description);
     LabelUtils._labelStrings = new WeakMap();
 

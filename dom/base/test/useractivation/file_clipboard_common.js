@@ -13,10 +13,10 @@ function testLoc() {
 // Listen for cut & copy events
 var gCopyCount = 0,
   gCutCount = 0;
-document.addEventListener("copy", function() {
+document.addEventListener("copy", function () {
   gCopyCount++;
 });
-document.addEventListener("cut", function() {
+document.addEventListener("cut", function () {
   gCutCount++;
 });
 
@@ -35,7 +35,7 @@ function selectNode(aSelector, aCb) {
 function selectInputNode(aSelector, aCb) {
   var dn = document.querySelector(aSelector);
   synthesizeMouse(dn, 10, 10, {});
-  SimpleTest.executeSoon(function() {
+  SimpleTest.executeSoon(function () {
     synthesizeKey("A", { accelKey: true });
     // Clear the user activation state which is set from synthesized mouse and
     // key event.
@@ -46,7 +46,7 @@ function selectInputNode(aSelector, aCb) {
 
 // Callback functions for attaching to the button
 function execCommand(aCommand, aShouldSucceed, aAsync = false) {
-  var cb = function(e) {
+  var cb = function (e) {
     e.preventDefault();
     document.removeEventListener("keydown", cb);
 
@@ -149,7 +149,7 @@ function cutCopyAll(
         selectNode("span");
         waitForClipboard(
           "span text",
-          function() {
+          function () {
             aDoCopy(true);
           },
           nextStep
@@ -164,7 +164,7 @@ function cutCopyAll(
 
         waitForClipboard(
           "span text",
-          function() {
+          function () {
             aDoCut(execCommandAlwaysSucceed);
           },
           nextStep,
@@ -182,8 +182,8 @@ function cutCopyAll(
       case 3:
         waitForClipboard(
           "text text",
-          function() {
-            selectInputNode("input[type=text]", function() {
+          function () {
+            selectInputNode("input[type=text]", function () {
               aDoCopy(true);
             });
           },
@@ -201,7 +201,7 @@ function cutCopyAll(
       case 5:
         waitForClipboard(
           "text text",
-          function() {
+          function () {
             aDoCut(true);
           },
           nextStep
@@ -218,7 +218,7 @@ function cutCopyAll(
       case 7:
         waitForClipboard(
           null,
-          function() {
+          function () {
             aDoCopy(execCommandAlwaysSucceed);
           },
           nextStep,
@@ -236,7 +236,7 @@ function cutCopyAll(
       case 9:
         waitForClipboard(
           null,
-          function() {
+          function () {
             aDoCut(execCommandAlwaysSucceed);
           },
           nextStep,
@@ -254,7 +254,7 @@ function cutCopyAll(
       case 11:
         waitForClipboard(
           "textarea text",
-          function() {
+          function () {
             aDoCopy(true);
           },
           nextStep
@@ -271,7 +271,7 @@ function cutCopyAll(
       case 13:
         waitForClipboard(
           "textarea text",
-          function() {
+          function () {
             aDoCut(true);
           },
           nextStep
@@ -286,7 +286,7 @@ function cutCopyAll(
 
         waitForClipboard(
           null,
-          function() {
+          function () {
             aDoCopy(true);
           },
           nextStep,
@@ -300,7 +300,7 @@ function cutCopyAll(
         // cut on no selection
         waitForClipboard(
           null,
-          function() {
+          function () {
             aDoCut(execCommandAlwaysSucceed);
           },
           nextStep,
@@ -322,8 +322,8 @@ function cutCopyAll(
         // copy on contenteditable selection
         waitForClipboard(
           "contenteditable text",
-          function() {
-            selectNode("div[contentEditable=true]", function() {
+          function () {
+            selectNode("div[contentEditable=true]", function () {
               aDoCopy(true);
             });
           },
@@ -339,8 +339,8 @@ function cutCopyAll(
         // cut on contenteditable selection
         waitForClipboard(
           "contenteditable text",
-          function() {
-            selectNode("div[contentEditable=true]", function() {
+          function () {
+            selectNode("div[contentEditable=true]", function () {
               aDoCut(true);
             });
           },
@@ -357,7 +357,7 @@ function cutCopyAll(
         return;
     }
 
-    SimpleTest.executeSoon(function() {
+    SimpleTest.executeSoon(function () {
       step(n + 1);
     });
   }
@@ -471,7 +471,7 @@ function allMechanisms(aCb, aClipOverride, aNegateAll) {
 // Run the tests
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestLongerTimeout(5); // On the emulator - this times out occasionally
-SimpleTest.waitForFocus(function() {
+SimpleTest.waitForFocus(function () {
   function justCancel(aEvent) {
     aEvent.preventDefault();
   }
@@ -481,12 +481,12 @@ SimpleTest.waitForFocus(function() {
     aEvent.preventDefault();
   }
 
-  allMechanisms(function() {
+  allMechanisms(function () {
     gTestN0 = 1;
     document.addEventListener("cut", override);
     document.addEventListener("copy", override);
 
-    allMechanisms(function() {
+    allMechanisms(function () {
       gTestN0 = 2;
       document.removeEventListener("cut", override);
       document.removeEventListener("copy", override);
@@ -494,7 +494,7 @@ SimpleTest.waitForFocus(function() {
       document.addEventListener("copy", justCancel);
 
       allMechanisms(
-        function() {
+        function () {
           SimpleTest.finish();
         },
         null,

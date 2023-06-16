@@ -68,8 +68,23 @@ const elemRenderer = new Proxy(new Renderer(), {
   },
 });
 
-const graphData = [];
+let graphData = [];
+let mostRecentReports = {};
+let sdpHistories = [];
+let historyTsMemoForPcid = {};
+let sdpHistoryTsMemoForPcid = {};
+
+function clearStatsHistory() {
+  graphData = [];
+  mostRecentReports = {};
+  sdpHistories = [];
+  historyTsMemoForPcid = {};
+  sdpHistoryTsMemoForPcid = {};
+}
+
 function appendReportToHistory(report) {
+  appendSdpHistory(report);
+  mostRecentReports[report.pcid] = report;
   if (graphData[report.pcid] === undefined) {
     graphData[report.pcid] ??= new GraphDb(report);
   } else {
@@ -77,14 +92,69 @@ function appendReportToHistory(report) {
   }
 }
 
+function appendSdpHistory({ pcid, sdpHistory: newHistory }) {
+  sdpHistories[pcid] ??= [];
+  let storedHistory = sdpHistories[pcid];
+  newHistory.forEach(entry => {
+    const { timestamp } = entry;
+    if (!storedHistory.length || storedHistory.at(-1).timestamp < timestamp) {
+      storedHistory.push(entry);
+      sdpHistoryTsMemoForPcid[pcid] = timestamp;
+    }
+  });
+}
+
+function recentStats() {
+  return Object.values(mostRecentReports);
+}
+
+// Returns the sdpHistory for a given stats report
+function getSdpHistory({ pcid, timestamp: a }) {
+  sdpHistories[pcid] ??= [];
+  return sdpHistories[pcid].filter(({ timestamp: b }) => a >= b);
+}
+
 function appendStats(allStats) {
   allStats.forEach(appendReportToHistory);
 }
 
-async function getStats() {
-  const { reports } = await new Promise(r => WGI.getAllStats(r));
-  appendStats(reports);
-  return [...reports].sort((a, b) => b.timestamp - a.timestamp);
+function getAndUpdateStatsTsMemoForPcid(pcid) {
+  historyTsMemoForPcid[pcid] = mostRecentReports[pcid]?.timestamp;
+  return historyTsMemoForPcid[pcid] || null;
+}
+
+function getSdpTsMemoForPcid(pcid) {
+  return sdpHistoryTsMemoForPcid[pcid] || null;
+}
+
+const REQUEST_FULL_REFRESH = true;
+async function getStats(requestFullRefresh) {
+  if (
+    requestFullRefresh ||
+    !Services.prefs.getBoolPref("media.aboutwebrtc.hist.enabled")
+  ) {
+    const { reports } = await new Promise(r => WGI.getAllStats(r));
+    appendStats(reports);
+    return reports.sort((a, b) => b.timestamp - a.timestamp);
+  }
+  const pcids = await new Promise(r => WGI.getStatsHistoryPcIds(r));
+  await Promise.all(
+    [...pcids].map(pcid =>
+      new Promise(r =>
+        WGI.getStatsHistorySince(
+          r,
+          pcid,
+          getAndUpdateStatsTsMemoForPcid(pcid),
+          getSdpTsMemoForPcid(pcid)
+        )
+      ).then(r => {
+        appendStats(r.reports);
+        r.sdpHistories.forEach(hist => appendSdpHistory(hist));
+      })
+    )
+  );
+  let recent = recentStats();
+  return recent.sort((a, b) => b.timestamp - a.timestamp);
 }
 
 const getLog = () => new Promise(r => WGI.getLogging("", r));
@@ -335,7 +405,8 @@ class ShowTab extends Control {
             className: "no-print",
             onclick: async () => {
               WGI.clearAllStats();
-              reports = await getStats();
+              clearStatsHistory();
+              reports = await getStats(REQUEST_FULL_REFRESH);
               refresh();
             },
           },
@@ -510,7 +581,7 @@ const renderSDPHistoryTab = (rndr, hist, props) => {
         timestamp,
         "relative-timestamp": timestamp - first,
       }),
-      ...(errs.length ? errorsSubSect() : []),
+      ...(errs && errs.length ? errorsSubSect() : []),
       rndr.text_pre(trimNewlines(sdp)),
     ];
 
@@ -551,10 +622,13 @@ const renderSDPHistoryTab = (rndr, hist, props) => {
   ]);
 };
 
-function renderSDPStats(
-  rndr,
-  { offerer, localSdp, remoteSdp, sdpHistory, pcid }
-) {
+function renderSDPStats(rndr, { offerer, pcid, timestamp }) {
+  // Get the most recent (as of timestamp) local and remote SDPs from the
+  // history
+  const sdpEntries = getSdpHistory({ pcid, timestamp });
+  const localSdp = sdpEntries.findLast(({ isLocal }) => isLocal)?.sdp || "";
+  const remoteSdp = sdpEntries.findLast(({ isLocal }) => !isLocal)?.sdp || "";
+
   const sdps = offerer
     ? { offer: localSdp, answer: remoteSdp }
     : { offer: remoteSdp, answer: localSdp };
@@ -578,7 +652,11 @@ function renderSDPStats(
   const panes = {
     answer: renderSDPTab(rndr, sdps.answer, tabPaneProps("answer")),
     offer: renderSDPTab(rndr, sdps.offer, tabPaneProps("offer")),
-    history: renderSDPHistoryTab(rndr, sdpHistory, tabPaneProps("history")),
+    history: renderSDPHistoryTab(
+      rndr,
+      getSdpHistory({ pcid, timestamp }),
+      tabPaneProps("history")
+    ),
   };
 
   // Creates the properties and l10n label for tab buttons
@@ -1292,6 +1370,7 @@ function renderUserPrefs() {
     return "";
   };
   const prefs = [
+    "media.aboutwebrtc",
     "media.peerconnection",
     "media.navigator",
     "media.getusermedia",

@@ -1,22 +1,25 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-add_setup(async function() {
+add_setup(async function () {
   let storageChangedPromised = TestUtils.topicObserved(
     "passwordmgr-storage-changed",
     (_, data) => data == "addLogin"
   );
-  TEST_LOGIN1 = Services.logins.addLogin(TEST_LOGIN1);
+  TEST_LOGIN1 = await Services.logins.addLoginAsync(TEST_LOGIN1);
   await storageChangedPromised;
   storageChangedPromised = TestUtils.topicObserved(
     "passwordmgr-storage-changed",
     (_, data) => data == "addLogin"
   );
-  TEST_LOGIN2 = Services.logins.addLogin(TEST_LOGIN2);
+  TEST_LOGIN2 = await Services.logins.addLoginAsync(TEST_LOGIN2);
   await storageChangedPromised;
   let tabOpenedPromise = BrowserTestUtils.waitForNewTab(
     gBrowser,
-    "about:logins?filter=" + encodeURIComponent(TEST_LOGIN1.origin),
+    url =>
+      url.includes(
+        `about:logins?filter=${encodeURIComponent(TEST_LOGIN1.origin)}`
+      ),
     true
   );
   LoginHelper.openPasswordManager(window, {
@@ -44,12 +47,15 @@ add_task(async function test_query_parameter_filter() {
       return loginList._loginGuidsSortedOrder.length == 2;
     }, "Waiting for logins to be cached");
 
+    await ContentTaskUtils.waitForCondition(() => {
+      const selectedLoginItem = Cu.waiveXrays(
+        loginList.shadowRoot.querySelector("li[aria-selected='true']")
+      );
+      return selectedLoginItem.dataset.guid === logins[0].guid;
+    }, "Waiting for TEST_LOGIN1 to be selected for the login-item view");
+
     const loginItem = Cu.waiveXrays(
       content.document.querySelector("login-item")
-    );
-    await ContentTaskUtils.waitForCondition(
-      () => loginItem._login.guid == logins[0].guid,
-      "Waiting for TEST_LOGIN1 to be selected for the login-item view"
     );
 
     Assert.ok(
@@ -120,7 +126,10 @@ add_task(async function test_query_parameter_filter_no_logins_for_site() {
   const HOSTNAME_WITH_NO_LOGINS = "xxx-no-logins-for-site-xxx";
   let tabOpenedPromise = BrowserTestUtils.waitForNewTab(
     gBrowser,
-    "about:logins?filter=" + encodeURIComponent(HOSTNAME_WITH_NO_LOGINS),
+    url =>
+      url.includes(
+        `about:logins?filter=${encodeURIComponent(HOSTNAME_WITH_NO_LOGINS)}`
+      ),
     true
   );
   LoginHelper.openPasswordManager(window, {

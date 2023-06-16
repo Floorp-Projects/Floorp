@@ -18,7 +18,7 @@ add_task(async function run_test() {
     is_win7_or_newer = true;
   }
 
-  await do_content_crash(null, function(mdump, extra) {
+  await do_content_crash(null, function (mdump, extra) {
     Assert.ok(mdump.exists());
     Assert.ok(mdump.fileSize > 0);
     if (is_win7_or_newer) {

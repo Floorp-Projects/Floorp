@@ -36,7 +36,6 @@ class ChildDNSService final : public DNSServiceBase, public nsPIDNSService {
   void NotifyRequestDone(DNSRequestSender* aDnsRequest);
 
   void SetTRRDomain(const nsACString& aTRRDomain);
-  void GetTRRDomainKey(nsACString& aTRRDomain);
   void SetTRRModeInChild(nsIDNSService::ResolverMode mode,
                          nsIDNSService::ResolverMode modeFromPref);
 
@@ -60,8 +59,6 @@ class ChildDNSService final : public DNSServiceBase, public nsPIDNSService {
       nsIDNSService::DNSFlags aFlags, nsIDNSAdditionalInfo* aInfo,
       nsIDNSListener* aListener, nsresult aReason,
       const OriginAttributes& aOriginAttributes);
-
-  bool mODoHActivated = false;
 
   // We need to remember pending dns requests to be able to cancel them.
   nsClassHashtable<nsCStringHashKey, nsTArray<RefPtr<DNSRequestSender>>>

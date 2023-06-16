@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger("doc-scroll-run-to-completion.html");
   invokeInTab("pauseOnce", "doc-scroll-run-to-completion.html");
   await waitForPaused(dbg);

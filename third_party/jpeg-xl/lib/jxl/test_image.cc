@@ -19,7 +19,6 @@
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/color_encoding_internal.h"
-#include "lib/jxl/size_constraints.h"
 
 namespace jxl {
 namespace test {
@@ -226,8 +225,8 @@ TestImage& TestImage::DecodeFromBytes(const PaddedBytes& bytes) {
       ConvertExternalToInternalColorEncoding(ppf_.color_encoding, &c_enc));
   extras::ColorHints color_hints;
   color_hints.Add("color_space", Description(c_enc));
-  JXL_CHECK(extras::DecodeBytes(Span<const uint8_t>(bytes), color_hints,
-                                SizeConstraints(), &ppf_));
+  JXL_CHECK(
+      extras::DecodeBytes(Span<const uint8_t>(bytes), color_hints, &ppf_));
   return *this;
 }
 

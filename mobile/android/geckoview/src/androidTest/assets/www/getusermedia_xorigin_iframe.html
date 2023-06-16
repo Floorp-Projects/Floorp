@@ -1,6 +1,6 @@
 <html>
   <head>
-    <meta charset="utf-8">
+    <meta charset="utf-8" />
     <title>GetUserMedia from cross-origin iframe: the iframe document</title>
   </head>
   <body>
@@ -8,25 +8,28 @@
       "use strict";
 
       let stream;
-      window.addEventListener("message", async ({data: {name, gen, constraints}}) => {
-        if (name == "start") {
-          try {
-            stream = await navigator.mediaDevices.getUserMedia(constraints);
-            Send({gen, result: "ok"});
-          } catch(e) {
-            Send({gen, result: `${e}`});
-          }
-        } else if (name == "stop") {
-          const result = !!stream;
-          if (stream) {
-            for (const t of stream.getTracks()) {
-              t.stop();
+      window.addEventListener(
+        "message",
+        async ({ data: { name, gen, constraints } }) => {
+          if (name == "start") {
+            try {
+              stream = await navigator.mediaDevices.getUserMedia(constraints);
+              Send({ gen, result: "ok" });
+            } catch (e) {
+              Send({ gen, result: `${e}` });
             }
-            stream = undefined;
+          } else if (name == "stop") {
+            const result = !!stream;
+            if (stream) {
+              for (const t of stream.getTracks()) {
+                t.stop();
+              }
+              stream = undefined;
+            }
+            Send({ gen, result });
           }
-          Send({gen, result});
         }
-      });
+      );
 
       function Send(obj) {
         window.parent.postMessage(obj, "http://localhost:4245");

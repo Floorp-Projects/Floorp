@@ -6,7 +6,7 @@ ar{
         OrdinalRules{
             "%digits-ordinal:",
             "-x: \u2212>>;",
-            "0: =#,##0=.;",
+            "0: =#,##0=;",
         }
         SpelloutRules{
             "%spellout-numbering-year:",

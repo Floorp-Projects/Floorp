@@ -14,7 +14,7 @@ const { DevToolsSocketStatus } = ChromeUtils.importESModule(
   "resource://devtools/shared/security/DevToolsSocketStatus.sys.mjs"
 );
 
-add_task(async function() {
+add_task(async function () {
   Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
   Services.prefs.setBoolPref("devtools.debugger.prompt-connection", false);
 

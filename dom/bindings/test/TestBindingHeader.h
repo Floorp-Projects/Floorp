@@ -24,6 +24,7 @@ namespace mozilla {
 namespace dom {
 class DocGroup;
 class TestExternalInterface;
+class TestUnionArguments;
 class Promise;
 }  // namespace dom
 }  // namespace mozilla
@@ -582,7 +583,7 @@ class TestInterface : public nsISupports, public nsWrapperCache {
       TestNullableTypedArrayReturn&, TestSequenceReturn&,
       TestNullableSequenceReturn&, TestIntegerArguments&,
       TestInterfaceArguments&, TestStringEnumArguments&, TestObjectArguments&,
-      TestOptionalArguments&, TestUndefinedConstruction&,
+      TestOptionalArguments&, TestUnionArguments&, TestUndefinedConstruction&,
       TestIntegerConstruction&, TestBooleanConstruction&,
       TestFloatConstruction&, TestStringConstruction&, TestEnumConstruction&,
       TestInterfaceConstruction&, TestExternalInterfaceConstruction&,

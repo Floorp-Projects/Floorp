@@ -19,7 +19,7 @@ addAccessibleTask(
   </style>
   <div id="container1"></div>
   <div id="container2"><div id="container2_child">text</div></div>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     const id1 = "container1";
     const id2 = "container2";
     let container1 = findAccessibleChildByID(accDoc, id1);

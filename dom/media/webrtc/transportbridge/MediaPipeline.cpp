@@ -357,7 +357,7 @@ void MediaPipeline::GetContributingSourceStats(
   ASSERT_ON_THREAD(mStsThread);
   // Get the expiry from now
   DOMHighResTimeStamp expiry =
-      RtpCSRCStats::GetExpiryFromTime(GetTimestampMaker().GetNow());
+      RtpCSRCStats::GetExpiryFromTime(GetTimestampMaker().GetNow().ToDom());
   for (auto info : mCsrcStats) {
     if (!info.second.Expired(expiry)) {
       RTCRTPContributingSourceStats stats;
@@ -535,28 +535,25 @@ void MediaPipeline::RtpPacketReceived(const MediaPacket& packet) {
 
   webrtc::RTPHeader header;
   rtc::CopyOnWriteBuffer packet_buffer(packet.data(), packet.len());
-  webrtc::RtpPacketReceived pktHeader(mRtpHeaderExtensionMap.get());
-  if (!pktHeader.Parse(packet_buffer)) {
+  webrtc::RtpPacketReceived parsedPacket(mRtpHeaderExtensionMap.get());
+  if (!parsedPacket.Parse(packet_buffer)) {
     return;
   }
-  pktHeader.GetHeader(&header);
+  parsedPacket.GetHeader(&header);
 
   if (mFilter && !mFilter->Filter(header)) {
     return;
   }
 
-  // Make sure to only get the time once, and only if we need it by
-  // using getTimestamp() for access
-  DOMHighResTimeStamp now = 0.0;
-  bool hasTime = false;
+  auto now = GetTimestampMaker().GetNow();
+  parsedPacket.set_arrival_time(now.ToRealtime());
+  if (IsVideo()) {
+    parsedPacket.set_payload_type_frequency(webrtc::kVideoPayloadTypeFrequency);
+  }
 
   // Remove expired RtpCSRCStats
   if (!mCsrcStats.empty()) {
-    if (!hasTime) {
-      now = GetTimestampMaker().GetNow();
-      hasTime = true;
-    }
-    auto expiry = RtpCSRCStats::GetExpiryFromTime(now);
+    auto expiry = RtpCSRCStats::GetExpiryFromTime(now.ToDom());
     for (auto p = mCsrcStats.begin(); p != mCsrcStats.end();) {
       if (p->second.Expired(expiry)) {
         p = mCsrcStats.erase(p);
@@ -569,16 +566,13 @@ void MediaPipeline::RtpPacketReceived(const MediaPacket& packet) {
   // Add new RtpCSRCStats
   if (header.numCSRCs) {
     for (auto i = 0; i < header.numCSRCs; i++) {
-      if (!hasTime) {
-        now = GetTimestampMaker().GetNow();
-        hasTime = true;
-      }
       auto csrcInfo = mCsrcStats.find(header.arrOfCSRCs[i]);
       if (csrcInfo == mCsrcStats.end()) {
-        mCsrcStats.insert(std::make_pair(
-            header.arrOfCSRCs[i], RtpCSRCStats(header.arrOfCSRCs[i], now)));
+        mCsrcStats.insert(
+            std::make_pair(header.arrOfCSRCs[i],
+                           RtpCSRCStats(header.arrOfCSRCs[i], now.ToDom())));
       } else {
-        csrcInfo->second.SetTimestamp(now);
+        csrcInfo->second.SetTimestamp(now.ToDom());
       }
     }
   }
@@ -597,7 +591,7 @@ void MediaPipeline::RtpPacketReceived(const MediaPacket& packet) {
   mPacketDumper->Dump(mLevel, dom::mozPacketDumpType::Rtp, false, packet.data(),
                       packet.len());
 
-  mRtpReceiveEvent.Notify(packet.Clone(), header);
+  mRtpReceiveEvent.Notify(std::move(parsedPacket), header);
 }
 
 void MediaPipeline::RtcpPacketReceived(const MediaPacket& packet) {

@@ -49,11 +49,12 @@ loader.lazyRequireGetter(
   true
 );
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AddonManager",
-  "resource://gre/modules/AddonManager.jsm"
-);
+loader.lazyGetter(lazy, "AddonManager", () => {
+  return ChromeUtils.importESModule(
+    "resource://gre/modules/AddonManager.sys.mjs",
+    { loadInDevToolsLoader: false }
+  ).AddonManager;
+});
 
 /**
  * Browser-specific actors.
@@ -225,7 +226,7 @@ function BrowserTabList(connection) {
 
 BrowserTabList.prototype.constructor = BrowserTabList;
 
-BrowserTabList.prototype.destroy = function() {
+BrowserTabList.prototype.destroy = function () {
   this._actorByBrowser.clear();
   this.onListChanged = null;
 };
@@ -240,7 +241,7 @@ BrowserTabList.prototype.destroy = function() {
  *         browser window might not be loaded yet - the function will return
  *         |null| in such cases.
  */
-BrowserTabList.prototype._getSelectedBrowser = function(window) {
+BrowserTabList.prototype._getSelectedBrowser = function (window) {
   return window.gBrowser ? window.gBrowser.selectedBrowser : null;
 };
 
@@ -248,7 +249,7 @@ BrowserTabList.prototype._getSelectedBrowser = function(window) {
  * Produces an iterable (in this case a generator) to enumerate all available
  * browser tabs.
  */
-BrowserTabList.prototype._getBrowsers = function*() {
+BrowserTabList.prototype._getBrowsers = function* () {
   // Iterate over all navigator:browser XUL windows.
   for (const win of Services.wm.getEnumerator(
     DevToolsServer.chromeWindowType
@@ -261,7 +262,7 @@ BrowserTabList.prototype._getBrowsers = function*() {
   }
 };
 
-BrowserTabList.prototype._getChildren = function(window) {
+BrowserTabList.prototype._getChildren = function (window) {
   if (!window.gBrowser) {
     return [];
   }
@@ -277,7 +278,7 @@ BrowserTabList.prototype._getChildren = function(window) {
   });
 };
 
-BrowserTabList.prototype.getList = async function() {
+BrowserTabList.prototype.getList = async function () {
   // As a sanity check, make sure all the actors presently in our map get
   // picked up when we iterate over all windows' tabs.
   const initialMapSize = this._actorByBrowser.size;
@@ -310,7 +311,7 @@ BrowserTabList.prototype.getList = async function() {
   return actors;
 };
 
-BrowserTabList.prototype._getActorForBrowser = async function(browser) {
+BrowserTabList.prototype._getActorForBrowser = async function (browser) {
   // Do we have an existing actor for this browser? If not, create one.
   let actor = this._actorByBrowser.get(browser);
   if (actor) {
@@ -331,7 +332,7 @@ BrowserTabList.prototype._getActorForBrowser = async function(browser) {
  *
  * @param {Number} browserId: use to match any tab
  */
-BrowserTabList.prototype.getTab = function({ browserId }) {
+BrowserTabList.prototype.getTab = function ({ browserId }) {
   if (typeof browserId == "number") {
     const browsingContext = BrowsingContext.getCurrentTopByBrowserId(browserId);
     if (!browsingContext) {
@@ -384,7 +385,7 @@ Object.defineProperty(BrowserTabList.prototype, "onListChanged", {
  * The set of tabs has changed somehow. Call our onListChanged handler, if
  * one is set, and if we haven't already called it since the last iteration.
  */
-BrowserTabList.prototype._notifyListChanged = function() {
+BrowserTabList.prototype._notifyListChanged = function () {
   if (!this._onListChanged) {
     return;
   }
@@ -398,7 +399,7 @@ BrowserTabList.prototype._notifyListChanged = function() {
  * Exit |actor|, belonging to |browser|, and notify the onListChanged
  * handle if needed.
  */
-BrowserTabList.prototype._handleActorClose = function(actor, browser) {
+BrowserTabList.prototype._handleActorClose = function (actor, browser) {
   if (this._testing) {
     if (this._actorByBrowser.get(browser) !== actor) {
       throw new Error(
@@ -422,7 +423,7 @@ BrowserTabList.prototype._handleActorClose = function(actor, browser) {
  * the browser, as appropriate. Other than setting up newly created XUL
  * windows, all listener / observer management should happen here.
  */
-BrowserTabList.prototype._checkListening = function() {
+BrowserTabList.prototype._checkListening = function () {
   /*
    * If we have an onListChanged handler that we haven't sent an announcement
    * to since the last iteration, we need to watch for tab creation as well as
@@ -479,7 +480,7 @@ BrowserTabList.prototype._checkListening = function() {
  * @param eventNames array of strings
  *    An array of event names.
  */
-BrowserTabList.prototype._listenForEventsIf = function(
+BrowserTabList.prototype._listenForEventsIf = function (
   shouldListen,
   guard,
   eventNames,
@@ -501,7 +502,7 @@ BrowserTabList.prototype._listenForEventsIf = function(
 /*
  * Event listener for pagetitlechanged event.
  */
-BrowserTabList.prototype._onPageTitleChangedEvent = function(event) {
+BrowserTabList.prototype._onPageTitleChangedEvent = function (event) {
   switch (event.type) {
     case "pagetitlechanged": {
       const browser = event.target;
@@ -515,7 +516,7 @@ BrowserTabList.prototype._onPageTitleChangedEvent = function(event) {
  * Handle "DOMTitleChanged" event.
  */
 BrowserTabList.prototype._onDOMTitleChanged = DevToolsUtils.makeInfallible(
-  function(browser) {
+  function (browser) {
     const actor = this._actorByBrowser.get(browser);
     if (actor) {
       this._notifyListChanged();
@@ -527,7 +528,7 @@ BrowserTabList.prototype._onDOMTitleChanged = DevToolsUtils.makeInfallible(
 /**
  * Implement nsIDOMEventListener.
  */
-BrowserTabList.prototype.handleEvent = DevToolsUtils.makeInfallible(function(
+BrowserTabList.prototype.handleEvent = DevToolsUtils.makeInfallible(function (
   event
 ) {
   // If event target has `linkedBrowser`, the event target can be assumed <tab> element.
@@ -574,7 +575,7 @@ BrowserTabList.prototype.handleEvent = DevToolsUtils.makeInfallible(function(
  * If |shouldListen| is true, ensure we've registered a listener with the
  * window mediator. Otherwise, ensure we haven't registered a listener.
  */
-BrowserTabList.prototype._listenToMediatorIf = function(shouldListen) {
+BrowserTabList.prototype._listenToMediatorIf = function (shouldListen) {
   if (!shouldListen !== !this._listeningToMediator) {
     const op = shouldListen ? "addListener" : "removeListener";
     Services.wm[op](this);
@@ -591,7 +592,7 @@ BrowserTabList.prototype._listenToMediatorIf = function(shouldListen) {
  * An nsIWindowMediatorListener's methods get passed all sorts of windows; we
  * only care about the tab containers. Those have 'gBrowser' members.
  */
-BrowserTabList.prototype.onOpenWindow = DevToolsUtils.makeInfallible(function(
+BrowserTabList.prototype.onOpenWindow = DevToolsUtils.makeInfallible(function (
   window
 ) {
   const handleLoad = DevToolsUtils.makeInfallible(() => {
@@ -635,7 +636,7 @@ BrowserTabList.prototype.onOpenWindow = DevToolsUtils.makeInfallible(function(
 },
 "BrowserTabList.prototype.onOpenWindow");
 
-BrowserTabList.prototype.onCloseWindow = DevToolsUtils.makeInfallible(function(
+BrowserTabList.prototype.onCloseWindow = DevToolsUtils.makeInfallible(function (
   window
 ) {
   if (window instanceof Ci.nsIAppWindow) {
@@ -676,7 +677,7 @@ function BrowserAddonList(connection) {
   this._onListChanged = null;
 }
 
-BrowserAddonList.prototype.getList = async function() {
+BrowserAddonList.prototype.getList = async function () {
   const addons = await lazy.AddonManager.getAllAddons();
   for (const addon of addons) {
     let actor = this._actorByAddonId.get(addon.id);
@@ -709,58 +710,58 @@ Object.defineProperty(BrowserAddonList.prototype, "onListChanged", {
 /**
  * AddonManager listener must implement onDisabled.
  */
-BrowserAddonList.prototype.onDisabled = function(addon) {
+BrowserAddonList.prototype.onDisabled = function (addon) {
   this._onAddonManagerUpdated();
 };
 
 /**
  * AddonManager listener must implement onEnabled.
  */
-BrowserAddonList.prototype.onEnabled = function(addon) {
+BrowserAddonList.prototype.onEnabled = function (addon) {
   this._onAddonManagerUpdated();
 };
 
 /**
  * AddonManager listener must implement onInstalled.
  */
-BrowserAddonList.prototype.onInstalled = function(addon) {
+BrowserAddonList.prototype.onInstalled = function (addon) {
   this._onAddonManagerUpdated();
 };
 
 /**
  * AddonManager listener must implement onOperationCancelled.
  */
-BrowserAddonList.prototype.onOperationCancelled = function(addon) {
+BrowserAddonList.prototype.onOperationCancelled = function (addon) {
   this._onAddonManagerUpdated();
 };
 
 /**
  * AddonManager listener must implement onUninstalling.
  */
-BrowserAddonList.prototype.onUninstalling = function(addon) {
+BrowserAddonList.prototype.onUninstalling = function (addon) {
   this._onAddonManagerUpdated();
 };
 
 /**
  * AddonManager listener must implement onUninstalled.
  */
-BrowserAddonList.prototype.onUninstalled = function(addon) {
+BrowserAddonList.prototype.onUninstalled = function (addon) {
   this._actorByAddonId.delete(addon.id);
   this._onAddonManagerUpdated();
 };
 
-BrowserAddonList.prototype._onAddonManagerUpdated = function(addon) {
+BrowserAddonList.prototype._onAddonManagerUpdated = function (addon) {
   this._notifyListChanged();
   this._adjustListener();
 };
 
-BrowserAddonList.prototype._notifyListChanged = function() {
+BrowserAddonList.prototype._notifyListChanged = function () {
   if (this._onListChanged) {
     this._onListChanged();
   }
 };
 
-BrowserAddonList.prototype._adjustListener = function() {
+BrowserAddonList.prototype._adjustListener = function () {
   if (this._onListChanged) {
     // As long as the callback exists, we need to listen for changes
     // so we can notify about add-on changes.

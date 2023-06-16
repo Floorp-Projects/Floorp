@@ -5,9 +5,9 @@
 add_task(async function test_displayURI_geo() {
   await BrowserTestUtils.withNewTab(
     "https://test1.example.com/",
-    async function(browser) {
+    async function (browser) {
       let popupShownPromise = waitForNotificationPanel();
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         content.navigator.geolocation.getCurrentPosition(() => {});
       });
       await popupShownPromise;

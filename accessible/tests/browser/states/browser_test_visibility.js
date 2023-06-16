@@ -76,9 +76,8 @@ async function runTest(browser, accDoc) {
     () => testVisibility(getAcc("frame"), true, false),
     "iframe outer doc should now be off screen"
   );
-  // See bug 1792256
   await untilCacheOk(
-    () => !isCacheEnabled || testVisibility(iframeDoc, true, false),
+    () => testVisibility(iframeDoc, true, false),
     "iframe inner doc should now be off screen"
   );
   await untilCacheOk(
@@ -98,9 +97,8 @@ async function runTest(browser, accDoc) {
     () => testVisibility(getAcc("frame"), true, false),
     "iframe outer doc should still be off screen"
   );
-  // See bug 1792256
   await untilCacheOk(
-    () => !isCacheEnabled || testVisibility(iframeDoc, true, false),
+    () => testVisibility(iframeDoc, true, false),
     "iframe inner doc should still be off screen"
   );
   await untilCacheOk(
@@ -122,7 +120,7 @@ addAccessibleTask(
   <iframe id="frame"></iframe>
   `,
   runTest,
-  { chrome: !isCacheEnabled, iframe: true, remoteIframe: true }
+  { iframe: true, remoteIframe: true }
 );
 
 /**
@@ -133,7 +131,7 @@ addAccessibleTask(
   `
   <div id="outer" style="width:200vw; background: green; overflow:scroll;"><div id="inner"><div style="display:inline-block; width:100vw; background:red;" id="on">on screen</div><div style="background:blue; display:inline;" id="off">offscreen</div></div></div>
   `,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     const outer = findAccessibleChildByID(accDoc, "outer");
     const inner = findAccessibleChildByID(accDoc, "inner");
     const on = findAccessibleChildByID(accDoc, "on");
@@ -162,7 +160,7 @@ addAccessibleTask(
 // test dynamic translation
 addAccessibleTask(
   `<div id="container" style="position: absolute; left: -300px; top: 100px;">Hello</div><button id="b" onclick="container.style.transform = 'translateX(400px)'">Move</button>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     const container = findAccessibleChildByID(accDoc, "container");
     await untilCacheOk(
       () => testVisibility(container, true, false),

@@ -15,6 +15,13 @@ user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
 
+[[publisher.atomic]]
+version = "0.4.6"
+when = "2020-07-05"
+user-id = 2915
+user-login = "Amanieu"
+user-name = "Amanieu d'Antras"
+
 [[publisher.audio_thread_priority]]
 version = "0.26.1"
 when = "2022-03-22"
@@ -23,8 +30,8 @@ user-login = "padenot"
 user-name = "Paul Adenot"
 
 [[publisher.authenticator]]
-version = "0.4.0-alpha.14"
-when = "2023-05-02"
+version = "0.4.0-alpha.15"
+when = "2023-05-15"
 user-id = 175410
 user-login = "jschanck"
 user-name = "John Schanck"
@@ -42,6 +49,13 @@ when = "2021-03-10"
 user-id = 189
 user-login = "BurntSushi"
 user-name = "Andrew Gallant"
+
+[[publisher.bytes]]
+version = "1.4.0"
+when = "2023-01-31"
+user-id = 6741
+user-login = "Darksonn"
+user-name = "Alice Ryhl"
 
 [[publisher.cexpr]]
 version = "0.6.0"
@@ -85,6 +99,13 @@ user-id = 5946
 user-login = "jrmuizel"
 user-name = "Jeff Muizelaar"
 
+[[publisher.dogear]]
+version = "0.4.0"
+when = "2019-09-16"
+user-id = 27901
+user-login = "linabutler"
+user-name = "Lina Butler"
+
 [[publisher.dtoa]]
 version = "0.4.8"
 when = "2021-03-29"
@@ -105,6 +126,27 @@ when = "2022-04-04"
 user-id = 1281
 user-login = "nical"
 user-name = "Nicolas Silva"
+
+[[publisher.flate2]]
+version = "1.0.24"
+when = "2022-05-28"
+user-id = 4333
+user-login = "joshtriplett"
+user-name = "Josh Triplett"
+
+[[publisher.freetype]]
+version = "0.7.0"
+when = "2020-07-14"
+user-id = 2396
+user-login = "jdm"
+user-name = "Josh Matthews"
+
+[[publisher.gleam]]
+version = "0.15.0"
+when = "2023-04-21"
+user-id = 5946
+user-login = "jrmuizel"
+user-name = "Jeff Muizelaar"
 
 [[publisher.glean]]
 version = "52.7.0"
@@ -141,6 +183,13 @@ user-id = 359
 user-login = "seanmonstar"
 user-name = "Sean McArthur"
 
+[[publisher.indexmap]]
+version = "1.9.2"
+when = "2022-11-17"
+user-id = 539
+user-login = "cuviper"
+user-name = "Josh Stone"
+
 [[publisher.inherent]]
 version = "1.0.4"
 when = "2023-02-15"
@@ -148,12 +197,40 @@ user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
 
+[[publisher.iovec]]
+version = "0.1.4"
+when = "2019-10-09"
+user-id = 10
+user-login = "carllerche"
+user-name = "Carl Lerche"
+
 [[publisher.itoa]]
 version = "1.0.5"
 when = "2022-12-17"
 user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
+
+[[publisher.jobserver]]
+version = "0.1.25"
+when = "2022-09-23"
+user-id = 1
+user-login = "alexcrichton"
+user-name = "Alex Crichton"
+
+[[publisher.libc]]
+version = "0.2.132"
+when = "2022-08-16"
+user-id = 2915
+user-login = "Amanieu"
+user-name = "Amanieu d'Antras"
+
+[[publisher.lock_api]]
+version = "0.4.9"
+when = "2022-09-20"
+user-id = 2915
+user-login = "Amanieu"
+user-name = "Amanieu d'Antras"
 
 [[publisher.memchr]]
 version = "2.5.0"
@@ -169,6 +246,13 @@ user-id = 359
 user-login = "seanmonstar"
 user-name = "Sean McArthur"
 
+[[publisher.mio]]
+version = "0.6.21"
+when = "2019-11-27"
+user-id = 10
+user-login = "carllerche"
+user-name = "Carl Lerche"
+
 [[publisher.num_cpus]]
 version = "1.15.0"
 when = "2022-12-20"
@@ -182,6 +266,27 @@ when = "2023-02-23"
 user-id = 128763
 user-login = "martinthomson"
 user-name = "Martin Thomson"
+
+[[publisher.ordered-float]]
+version = "3.4.0"
+when = "2022-11-06"
+user-id = 2017
+user-login = "mbrubeck"
+user-name = "Matt Brubeck"
+
+[[publisher.parking_lot]]
+version = "0.11.2"
+when = "2021-08-27"
+user-id = 2915
+user-login = "Amanieu"
+user-name = "Amanieu d'Antras"
+
+[[publisher.parking_lot_core]]
+version = "0.8.6"
+when = "2022-12-12"
+user-id = 2915
+user-login = "Amanieu"
+user-name = "Amanieu d'Antras"
 
 [[publisher.paste]]
 version = "1.0.11"
@@ -232,6 +337,13 @@ user-id = 189
 user-login = "BurntSushi"
 user-name = "Andrew Gallant"
 
+[[publisher.scopeguard]]
+version = "1.1.0"
+when = "2020-02-16"
+user-id = 2915
+user-login = "Amanieu"
+user-name = "Amanieu d'Antras"
+
 [[publisher.serde]]
 version = "1.0.152"
 when = "2022-12-26"
@@ -274,6 +386,13 @@ user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
 
+[[publisher.smallvec]]
+version = "1.10.0"
+when = "2022-10-02"
+user-id = 2017
+user-login = "mbrubeck"
+user-name = "Matt Brubeck"
+
 [[publisher.syn]]
 version = "1.0.107"
 when = "2022-12-18"
@@ -308,6 +427,27 @@ when = "2022-12-17"
 user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
+
+[[publisher.tokio-macros]]
+version = "1.8.0"
+when = "2022-06-04"
+user-id = 6741
+user-login = "Darksonn"
+user-name = "Alice Ryhl"
+
+[[publisher.tokio-util]]
+version = "0.7.2"
+when = "2022-05-15"
+user-id = 6741
+user-login = "Darksonn"
+user-name = "Alice Ryhl"
+
+[[publisher.toml]]
+version = "0.5.7"
+when = "2020-10-11"
+user-id = 1
+user-login = "alexcrichton"
+user-name = "Alex Crichton"
 
 [[publisher.unicode-ident]]
 version = "1.0.6"
@@ -344,12 +484,33 @@ user-id = 189
 user-login = "BurntSushi"
 user-name = "Andrew Gallant"
 
+[[publisher.warp]]
+version = "0.3.3"
+when = "2022-09-27"
+user-id = 359
+user-login = "seanmonstar"
+user-name = "Sean McArthur"
+
+[[publisher.wasi]]
+version = "0.11.0+wasi-snapshot-preview1"
+when = "2022-01-19"
+user-id = 1
+user-login = "alexcrichton"
+user-name = "Alex Crichton"
+
 [[publisher.winapi-util]]
 version = "0.1.5"
 when = "2020-04-20"
 user-id = 189
 user-login = "BurntSushi"
 user-name = "Andrew Gallant"
+
+[[publisher.zeitstempel]]
+version = "0.1.1"
+when = "2021-03-18"
+user-id = 48
+user-login = "badboy"
+user-name = "Jan-Erik Rediger"
 
 [[audits.bytecode-alliance.audits.arbitrary]]
 who = "Nick Fitzgerald <fitzgen@gmail.com>"
@@ -373,16 +534,6 @@ version = "0.7.2"
 notes = """
 Well documented invariants, good assertions for those invariants in unsafe code,
 and tested with MIRI to boot. LGTM.
-"""
-
-[[audits.bytecode-alliance.audits.atty]]
-who = "Alex Crichton <alex@alexcrichton.com>"
-criteria = "safe-to-deploy"
-version = "0.2.14"
-notes = """
-Contains only unsafe code for what this crate's purpose is and only accesses
-the environment's terminal information when asked. Does its stated purpose and
-no more.
 """
 
 [[audits.bytecode-alliance.audits.base64]]
@@ -631,15 +782,23 @@ criteria = "safe-to-deploy"
 version = "0.2.2"
 notes = "Inspected it and is a tiny crate with just type definitions"
 
-[[audits.embark-studios.audits.serial_test]]
+[[audits.embark-studios.audits.derive_more]]
 who = "Johan Andersson <opensource@embark-studios.com>"
-criteria = "safe-to-run"
-version = "0.6.0"
+criteria = "safe-to-deploy"
+version = "0.99.17"
+notes = "No unsafe usage or ambient capabilities"
 
-[[audits.embark-studios.audits.serial_test_derive]]
+[[audits.embark-studios.audits.epaint]]
 who = "Johan Andersson <opensource@embark-studios.com>"
-criteria = "safe-to-run"
-version = "0.6.0"
+criteria = "safe-to-deploy"
+violation = "<0.20.0"
+notes = "Specified crate license does not include licenses of embedded fonts if using default features or the `default_fonts` feature. Tracked in: https://github.com/emilk/egui/issues/2321"
+
+[[audits.embark-studios.audits.ident_case]]
+who = "Johan Andersson <opensource@embark-studios.com>"
+criteria = "safe-to-deploy"
+version = "1.0.1"
+notes = "No unsafe usage or ambient capabilities"
 
 [[audits.google.audits.ash]]
 who = "David Koloski <dkoloski@google.com>"
@@ -656,6 +815,12 @@ notes = """
 `does-not-implement-crypto` is certified because this crate explicitly says
 that the RNG here is not cryptographically secure.
 """
+aggregated-from = "https://chromium.googlesource.com/chromiumos/third_party/rust_crates/+/refs/heads/main/cargo-vet/audits.toml?format=TEXT"
+
+[[audits.google.audits.glob]]
+who = "George Burgess IV <gbiv@google.com>"
+criteria = "safe-to-deploy"
+version = "0.3.1"
 aggregated-from = "https://chromium.googlesource.com/chromiumos/third_party/rust_crates/+/refs/heads/main/cargo-vet/audits.toml?format=TEXT"
 
 [[audits.google.audits.h2]]
@@ -771,6 +936,15 @@ aggregated-from = "https://chromium.googlesource.com/chromiumos/third_party/rust
 who = "David Cook <dcook@divviup.org>"
 criteria = "safe-to-deploy"
 version = "0.9.0"
+
+[[audits.mozilla.wildcard-audits.zeitstempel]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 48 # Jan-Erik Rediger (badboy)
+start = "2021-03-03"
+end = "2024-05-10"
+notes = "Maintained by me"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
 
 [[audits.mozilla.audits.either]]
 who = "Nika Layzell <nika@thelayzells.com>"

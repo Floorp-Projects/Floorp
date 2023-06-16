@@ -42,7 +42,7 @@ class MockResponse {
 }
 
 function withServer(server) {
-  return function(testFunction) {
+  return function (testFunction) {
     return NormandyTestUtils.decorate(
       NormandyTestUtils.withMockPreferences(),
       async function inner({ mockPreferences, ...args }) {
@@ -76,7 +76,7 @@ function makeMockApiServer(directory) {
   const server = new HttpServer();
   server.registerDirectory("/", directory);
 
-  server.setIndexHandler(async function(request, response) {
+  server.setIndexHandler(async function (request, response) {
     response.processAsync();
     const dir = request.getProperty("directory");
     const index = dir.clone();

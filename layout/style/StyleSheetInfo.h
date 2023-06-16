@@ -15,18 +15,18 @@
 
 class nsIPrincipal;
 class nsIURI;
-struct RawServoStyleSheetContents;
-struct StyleUseCounters;
 
 namespace mozilla {
 class StyleSheet;
+struct StyleUseCounters;
+struct StyleStylesheetContents;
 struct URLExtraData;
 
 /**
  * Struct for data common to CSSStyleSheetInner and ServoStyleSheet.
  */
 struct StyleSheetInfo final {
-  typedef dom::ReferrerPolicy ReferrerPolicy;
+  using ReferrerPolicy = dom::ReferrerPolicy;
 
   StyleSheetInfo(CORSMode aCORSMode, const dom::SRIMetadata& aIntegrity,
                  css::SheetParsingMode aParsingMode);
@@ -49,7 +49,7 @@ struct StyleSheetInfo final {
   nsCOMPtr<nsIURI> mOriginalSheetURI;  // for GetHref.  Can be null.
   nsCOMPtr<nsIURI> mBaseURI;           // for resolving relative URIs
   nsCOMPtr<nsIPrincipal> mPrincipal;
-  CORSMode mCORSMode;
+  const CORSMode mCORSMode;
   // The ReferrerInfo of a stylesheet is used for its child sheets and loads
   // come from this stylesheet, so it is stored here.
   nsCOMPtr<nsIReferrerInfo> mReferrerInfo;
@@ -77,7 +77,7 @@ struct StyleSheetInfo final {
   // in the style sheet.
   nsString mSourceURL;
 
-  RefPtr<const RawServoStyleSheetContents> mContents;
+  RefPtr<const StyleStylesheetContents> mContents;
 
   UniquePtr<StyleUseCounters> mUseCounters;
 
@@ -91,7 +91,7 @@ struct StyleSheetInfo final {
   RefPtr<URLExtraData> mURLData;
 
 #ifdef DEBUG
-  bool mPrincipalSet;
+  bool mPrincipalSet = false;
 #endif
 };
 

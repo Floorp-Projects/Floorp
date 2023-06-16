@@ -208,14 +208,14 @@ export class GeckoViewNavigation extends GeckoViewModule {
             // Always use the system principal as the triggering principal
             // for user-initiated (ie. no referrer session and not external)
             // loads. See discussion in bug 1573860.
-            triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+            triggeringPrincipal =
+              Services.scriptSecurityManager.getSystemPrincipal();
           }
         }
 
         if (!triggeringPrincipal) {
-          triggeringPrincipal = Services.scriptSecurityManager.createNullPrincipal(
-            {}
-          );
+          triggeringPrincipal =
+            Services.scriptSecurityManager.createNullPrincipal({});
         }
 
         let additionalHeaders = null;
@@ -231,9 +231,8 @@ export class GeckoViewNavigation extends GeckoViewModule {
           }
 
           if (additionalHeaders != "") {
-            additionalHeaders = lazy.E10SUtils.makeInputStream(
-              additionalHeaders
-            );
+            additionalHeaders =
+              lazy.E10SUtils.makeInputStream(additionalHeaders);
           } else {
             additionalHeaders = null;
           }
@@ -278,9 +277,9 @@ export class GeckoViewNavigation extends GeckoViewModule {
         this.browser.purgeSessionHistory();
         break;
       case "GeckoView:DotPrintFinish":
-        this.moduleManager
-          .getActor("GeckoViewPrintDelegate")
-          .clearStaticClone();
+        var printActor = this.moduleManager.getActor("GeckoViewPrintDelegate");
+        printActor.clearStaticClone();
+        printActor.telemetryDotPrintPdfCompleted(aData);
         break;
     }
   }

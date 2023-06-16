@@ -384,9 +384,8 @@ export var Sanitizer = {
         // On shutdown we clear by principal to be able to honor the users exceptions
         if (clearHonoringExceptions) {
           progress.step = "getAllPrincipals";
-          let principalsForShutdownClearing = await gPrincipalsCollector.getAllPrincipals(
-            progress
-          );
+          let principalsForShutdownClearing =
+            await gPrincipalsCollector.getAllPrincipals(progress);
           await maybeSanitizeSessionPrincipals(
             progress,
             principalsForShutdownClearing,
@@ -407,9 +406,8 @@ export var Sanitizer = {
         // On shutdown we clear by principal to be able to honor the users exceptions
         if (clearHonoringExceptions) {
           progress.step = "getAllPrincipals";
-          let principalsForShutdownClearing = await gPrincipalsCollector.getAllPrincipals(
-            progress
-          );
+          let principalsForShutdownClearing =
+            await gPrincipalsCollector.getAllPrincipals(progress);
           await maybeSanitizeSessionPrincipals(
             progress,
             principalsForShutdownClearing,
@@ -628,7 +626,7 @@ export var Sanitizer = {
 
         let onFullScreen = null;
         if (AppConstants.platform == "macosx") {
-          onFullScreen = function(e) {
+          onFullScreen = function (e) {
             newWindow.removeEventListener("fullscreen", onFullScreen);
             let docEl = newWindow.document.documentElement;
             let sizemode = docEl.getAttribute("sizemode");
@@ -651,7 +649,7 @@ export var Sanitizer = {
           // closes) and/or run too late (and not have a fully-formed window yet
           // in existence). See bug 1088137.
           let newWindowOpened = false;
-          let onWindowOpened = function(subject, topic, data) {
+          let onWindowOpened = function (subject, topic, data) {
             if (subject != newWindow) {
               return;
             }
@@ -672,7 +670,7 @@ export var Sanitizer = {
           };
 
           let numWindowsClosing = windowList.length;
-          let onWindowClosed = function() {
+          let onWindowClosed = function () {
             numWindowsClosing--;
             if (numWindowsClosing == 0) {
               Services.obs.removeObserver(

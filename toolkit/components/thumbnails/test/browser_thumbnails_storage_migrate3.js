@@ -73,7 +73,7 @@ function changeLocation(aLocation, aNewDir) {
   Services.dirsvc.undefine(aLocation);
   Services.dirsvc.set(aLocation, aNewDir);
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.dirsvc.undefine(aLocation);
     Services.dirsvc.set(aLocation, oldDir);
   });

@@ -9,11 +9,8 @@ AddonTestUtils.createAppInfo(
   "43"
 );
 
-let {
-  promiseRestartManager,
-  promiseShutdownManager,
-  promiseStartupManager,
-} = AddonTestUtils;
+let { promiseRestartManager, promiseShutdownManager, promiseStartupManager } =
+  AddonTestUtils;
 
 let nonProxiedRequests = 0;
 const nonProxiedServer = createHttpServer({ hosts: ["example.com"] });

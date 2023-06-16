@@ -37,6 +37,7 @@ enum class PseudoStyleType : uint8_t;
 enum class PointerCapabilities : uint8_t;
 enum class UpdateAnimationsTasks : uint8_t;
 struct Keyframe;
+struct StyleStylesheetContents;
 
 namespace css {
 class LoaderReusableStyleSheets;
@@ -119,20 +120,21 @@ NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::css::SheetLoadDataHolder,
 
 void Gecko_StyleSheet_FinishAsyncParse(
     mozilla::css::SheetLoadDataHolder* data,
-    mozilla::StyleStrong<RawServoStyleSheetContents> sheet_contents,
-    mozilla::StyleOwnedOrNull<StyleUseCounters> use_counters);
+    mozilla::StyleStrong<mozilla::StyleStylesheetContents> sheet_contents,
+    mozilla::StyleUseCounters* use_counters);
 
 mozilla::StyleSheet* Gecko_LoadStyleSheet(
     mozilla::css::Loader* loader, mozilla::StyleSheet* parent,
     mozilla::css::SheetLoadData* parent_load_data,
     mozilla::css::LoaderReusableStyleSheets* reusable_sheets,
     const mozilla::StyleCssUrl* url,
-    mozilla::StyleStrong<RawServoMediaList> media_list);
+    mozilla::StyleStrong<mozilla::StyleLockedMediaList> media_list);
 
-void Gecko_LoadStyleSheetAsync(mozilla::css::SheetLoadDataHolder* parent_data,
-                               const mozilla::StyleCssUrl* url,
-                               mozilla::StyleStrong<RawServoMediaList>,
-                               mozilla::StyleStrong<RawServoImportRule>);
+void Gecko_LoadStyleSheetAsync(
+    mozilla::css::SheetLoadDataHolder* parent_data,
+    const mozilla::StyleCssUrl* url,
+    mozilla::StyleStrong<mozilla::StyleLockedMediaList>,
+    mozilla::StyleStrong<mozilla::StyleLockedImportRule>);
 
 // Selector Matching.
 uint64_t Gecko_ElementState(const mozilla::dom::Element*);
@@ -179,26 +181,26 @@ SERVO_DECLARE_ELEMENT_ATTR_MATCHING_FUNCTIONS(
 #undef SERVO_DECLARE_ELEMENT_ATTR_MATCHING_FUNCTIONS
 
 // Style attributes.
-const mozilla::StyleStrong<RawServoDeclarationBlock>*
-Gecko_GetStyleAttrDeclarationBlock(const mozilla::dom::Element* element);
+const mozilla::StyleLockedDeclarationBlock* Gecko_GetStyleAttrDeclarationBlock(
+    const mozilla::dom::Element* element);
 
 void Gecko_UnsetDirtyStyleAttr(const mozilla::dom::Element* element);
 
-const mozilla::StyleStrong<RawServoDeclarationBlock>*
+const mozilla::StyleLockedDeclarationBlock*
 Gecko_GetHTMLPresentationAttrDeclarationBlock(
     const mozilla::dom::Element* element);
 
-const mozilla::StyleStrong<RawServoDeclarationBlock>*
+const mozilla::StyleLockedDeclarationBlock*
 Gecko_GetExtraContentStyleDeclarations(const mozilla::dom::Element* element);
 
-const mozilla::StyleStrong<RawServoDeclarationBlock>*
+const mozilla::StyleLockedDeclarationBlock*
 Gecko_GetUnvisitedLinkAttrDeclarationBlock(
     const mozilla::dom::Element* element);
 
-const mozilla::StyleStrong<RawServoDeclarationBlock>*
+const mozilla::StyleLockedDeclarationBlock*
 Gecko_GetVisitedLinkAttrDeclarationBlock(const mozilla::dom::Element* element);
 
-const mozilla::StyleStrong<RawServoDeclarationBlock>*
+const mozilla::StyleLockedDeclarationBlock*
 Gecko_GetActiveLinkAttrDeclarationBlock(const mozilla::dom::Element* element);
 
 // Visited handling.
@@ -210,7 +212,7 @@ bool Gecko_VisitedStylesEnabled(const mozilla::dom::Document*);
 bool Gecko_GetAnimationRule(
     const mozilla::dom::Element* aElementOrPseudo,
     mozilla::EffectCompositor::CascadeLevel aCascadeLevel,
-    RawServoAnimationValueMap* aAnimationValues);
+    mozilla::StyleAnimationValueMap* aAnimationValues);
 
 bool Gecko_StyleAnimationsEquals(
     const nsStyleAutoArray<mozilla::StyleAnimation>*,
@@ -252,7 +254,7 @@ size_t Gecko_ElementTransitions_Length(
 nsCSSPropertyID Gecko_ElementTransitions_PropertyAt(
     const mozilla::dom::Element* aElementOrPseudo, size_t aIndex);
 
-const RawServoAnimationValue* Gecko_ElementTransitions_EndValueAt(
+const mozilla::StyleAnimationValue* Gecko_ElementTransitions_EndValueAt(
     const mozilla::dom::Element* aElementOrPseudo, size_t aIndex);
 
 double Gecko_GetProgressFromComputedTiming(const mozilla::ComputedTiming*);
@@ -262,10 +264,10 @@ double Gecko_GetPositionInSegment(const mozilla::AnimationPropertySegment*,
 
 // Get servo's AnimationValue for |aProperty| from the cached base style
 // |aBaseStyles|.
-// |aBaseStyles| is nsRefPtrHashtable<nsUint32HashKey, RawServoAnimationValue>.
+// |aBaseStyles| is nsRefPtrHashtable<nsUint32HashKey, StyleAnimationValue>.
 // We use RawServoAnimationValueTableBorrowed to avoid exposing
 // nsRefPtrHashtable in FFI.
-const RawServoAnimationValue* Gecko_AnimationGetBaseStyle(
+const mozilla::StyleAnimationValue* Gecko_AnimationGetBaseStyle(
     const RawServoAnimationValueTable* aBaseStyles, nsCSSPropertyID aProperty);
 
 void Gecko_StyleTransition_SetUnsupportedProperty(

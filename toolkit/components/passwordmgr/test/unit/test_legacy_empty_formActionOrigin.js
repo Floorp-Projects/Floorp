@@ -41,24 +41,27 @@
  * Adds a login with an empty formActionOrigin, then it verifies that no other
  * form logins can be added for the same host.
  */
-add_task(function test_addLogin_wildcard() {
+add_task(async function test_addLogin_wildcard() {
   let loginInfo = TestData.formLogin({
     origin: "http://any.example.com",
     formActionOrigin: "",
   });
-  Services.logins.addLogin(loginInfo);
+  await Services.logins.addLoginAsync(loginInfo);
 
   // Normal form logins cannot be added anymore.
   loginInfo = TestData.formLogin({ origin: "http://any.example.com" });
-  Assert.throws(() => Services.logins.addLogin(loginInfo), /already exists/);
+  await Assert.rejects(
+    Services.logins.addLoginAsync(loginInfo),
+    /already exists/
+  );
 
   // Authentication logins can still be added.
   loginInfo = TestData.authLogin({ origin: "http://any.example.com" });
-  Services.logins.addLogin(loginInfo);
+  await Services.logins.addLoginAsync(loginInfo);
 
   // Form logins can be added for other hosts.
   loginInfo = TestData.formLogin({ origin: "http://other.example.com" });
-  Services.logins.addLogin(loginInfo);
+  await Services.logins.addLoginAsync(loginInfo);
 });
 
 /**

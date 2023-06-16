@@ -81,7 +81,7 @@ add_task(async function check_devtools_separator() {
   );
 });
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   for (let el of tempElements) {
     el.remove();
   }

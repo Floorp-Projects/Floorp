@@ -10,21 +10,6 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<script>
-const chromeScript = runChecksAfterCommonInit(false);
-
-let origin = "http://" + window.location.host;
-let secureOrigin = "https://" + window.location.host;
-
-addLoginsInParent(
-  // We have two actual HTTPS to avoid autofill before the schemeUpgrades pref flips to true.
-  [secureOrigin, secureOrigin, null, "name", "pass", "uname", "pword"],
-  [secureOrigin, secureOrigin, null, "name1", "pass1", "uname", "pword"],
-  // Same as above but HTTP instead of HTTPS (to test de-duping)
-  [origin, origin, null, "name1", "pass1", "uname", "pword"],
-  // Different HTTP login to upgrade with secure formActionOrigin
-  [origin, secureOrigin, null, "name2", "passHTTPtoHTTPS", "uname", "pword"]);
-</script>
 <p id="display"></p>
 
 <!-- we presumably can't hide the content for this test. -->
@@ -34,7 +19,9 @@ addLoginsInParent(
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
-let iframe = document.getElementsByTagName("iframe")[0];
+const origin = "http://" + window.location.host;
+const secureOrigin = "https://" + window.location.host;
+const iframe = document.getElementsByTagName("iframe")[0];
 let iframeDoc, hostname;
 let uname;
 let pword;
@@ -50,6 +37,18 @@ function restoreForm() {
 }
 
 const HTTP_FORM_URL = origin + "/tests/toolkit/components/passwordmgr/test/mochitest/form_basic.html";
+
+add_setup(async () => {
+  await setStoredLoginsAsync(
+    // We have two actual HTTPS to avoid autofill before the schemeUpgrades pref flips to true.
+    [secureOrigin, secureOrigin, null, "name", "pass", "uname", "pword"],
+    [secureOrigin, secureOrigin, null, "name1", "pass1", "uname", "pword"],
+    // Same as above but HTTP instead of HTTPS (to test de-duping)
+    [origin, origin, null, "name1", "pass1", "uname", "pword"],
+    // Different HTTP login to upgrade with secure formActionOrigin
+    [origin, secureOrigin, null, "name2", "passHTTPtoHTTPS", "uname", "pword"]
+  );
+});
 
 async function setup(formUrl) {
   await SpecialPowers.pushPrefEnv({"set": [["signon.schemeUpgrades", true]]});

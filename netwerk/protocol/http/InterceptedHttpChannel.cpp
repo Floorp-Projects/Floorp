@@ -621,7 +621,8 @@ InterceptedHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
 
 NS_IMETHODIMP
 InterceptedHttpChannel::LogBlockedCORSRequest(const nsAString& aMessage,
-                                              const nsACString& aCategory) {
+                                              const nsACString& aCategory,
+                                              bool aIsWarning) {
   // Synthetic responses should not trigger CORS blocking.
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1195,7 +1196,7 @@ InterceptedHttpChannel::OnDataAvailable(nsIRequest* aRequest,
 }
 
 NS_IMETHODIMP
-InterceptedHttpChannel::RetargetDeliveryTo(nsIEventTarget* aNewTarget) {
+InterceptedHttpChannel::RetargetDeliveryTo(nsISerialEventTarget* aNewTarget) {
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_ARG(aNewTarget);
 
@@ -1214,7 +1215,7 @@ InterceptedHttpChannel::RetargetDeliveryTo(nsIEventTarget* aNewTarget) {
 }
 
 NS_IMETHODIMP
-InterceptedHttpChannel::GetDeliveryTarget(nsIEventTarget** aEventTarget) {
+InterceptedHttpChannel::GetDeliveryTarget(nsISerialEventTarget** aEventTarget) {
   if (!mPump) {
     return NS_ERROR_NOT_AVAILABLE;
   }

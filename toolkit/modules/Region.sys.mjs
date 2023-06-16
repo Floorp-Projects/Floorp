@@ -11,11 +11,8 @@ import { RemoteSettings } from "resource://services-settings/remote-settings.sys
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  LocationHelper: "resource://gre/modules/LocationHelper.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  LocationHelper: "resource://gre/modules/LocationHelper.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -767,7 +764,7 @@ class RegionDetector {
     this.wifiService = Cc["@mozilla.org/wifi/monitor;1"].getService(
       Ci.nsIWifiMonitor
     );
-    this.wifiService.startWatching(this);
+    this.wifiService.startWatching(this, false);
 
     return new Promise(resolve => {
       this._wifiDataPromise = resolve;

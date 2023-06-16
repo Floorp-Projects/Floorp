@@ -235,7 +235,7 @@ function wasmRunWithDebugger(wast, lib, init, done) {
     let dbg = new Debugger(g);
 
     g.eval(`
-var wasm = wasmTextToBinary('${wast}');
+var wasm = wasmTextToBinary(\`${wast}\`);
 var lib = ${lib || 'undefined'};
 var m = new WebAssembly.Instance(new WebAssembly.Module(wasm), lib);`);
 

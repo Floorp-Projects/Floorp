@@ -1,1 +1,1 @@
-{ id: "test JSON data", myArray: [ "foo", "bar", "baz", "biff" ] }
+{ "id": "test JSON data", "myArray": ["foo", "bar", "baz", "biff"] }

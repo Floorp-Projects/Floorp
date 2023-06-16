@@ -9,7 +9,7 @@
 
 const TEST_URL = `http://${TEST_HOST}/browser/devtools/client/styleeditor/test/test_private.html`;
 
-add_task(async function() {
+add_task(async function () {
   info("Opening a new private window");
   const win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
 

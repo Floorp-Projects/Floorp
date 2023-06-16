@@ -24,7 +24,7 @@ add_task(async function testPageActionTelemetry() {
         browser_style: true,
       },
     },
-    background: function() {
+    background: function () {
       browser.tabs.query({ active: true, currentWindow: true }, tabs => {
         const tabId = tabs[0].id;
 
@@ -58,9 +58,8 @@ add_task(async function testPageActionTelemetry() {
   });
 
   let histogram = Services.telemetry.getHistogramById(HISTOGRAM);
-  let histogramKeyed = Services.telemetry.getKeyedHistogramById(
-    HISTOGRAM_KEYED
-  );
+  let histogramKeyed =
+    Services.telemetry.getKeyedHistogramById(HISTOGRAM_KEYED);
 
   histogram.clear();
   histogramKeyed.clear();

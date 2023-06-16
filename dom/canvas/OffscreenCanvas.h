@@ -22,6 +22,7 @@ struct JSContext;
 namespace mozilla {
 class CancelableRunnable;
 class ErrorResult;
+enum class RFPTarget : unsigned;
 
 namespace gfx {
 class SourceSurface;
@@ -153,7 +154,7 @@ class OffscreenCanvas final : public DOMEventTargetHelper,
     return mCompositorBackendType;
   }
 
-  bool ShouldResistFingerprinting() const;
+  bool ShouldResistFingerprinting(mozilla::RFPTarget aTarget) const;
 
   bool IsTransferredFromElement() const { return !!mDisplay; }
 

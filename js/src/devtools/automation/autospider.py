@@ -495,6 +495,23 @@ def run_test_command(command, **kwargs):
     return status
 
 
+def run_jsapitests(args):
+    jsapi_test_binary = os.path.join(OBJDIR, "dist", "bin", "jsapi-tests")
+    test_env = env.copy()
+    test_env["TOPSRCDIR"] = DIR.source
+    if use_minidump and platform.system() == "Linux":
+        test_env["LD_PRELOAD"] = injector_lib
+    st = run_test_command([jsapi_test_binary] + args, env=test_env)
+    if st < 0:
+        print(
+            "PROCESS-CRASH | {} | application crashed".format(
+                " ".join(["jsapi-tests"] + args)
+            )
+        )
+        print("Return code: {}".format(st))
+    return st
+
+
 default_test_suites = frozenset(["jstests", "jittest", "jsapitests", "checks"])
 nondefault_test_suites = frozenset(["gdb"])
 all_test_suites = default_test_suites | nondefault_test_suites
@@ -530,21 +547,30 @@ test_suites -= set(normalize_tests(args.skip_tests.split(",")))
 if "all" in args.skip_tests.split(","):
     test_suites = []
 
-# Bug 1391877 - Windows test runs are getting mysterious timeouts when run
-# through taskcluster, but only when running multiple jit-test jobs in
-# parallel. Work around them for now.
-if platform.system() == "Windows":
-    env["JITTEST_EXTRA_ARGS"] = "-j1 " + env.get("JITTEST_EXTRA_ARGS", "")
-
 # Bug 1557130 - Atomics tests can create many additional threads which can
 # lead to resource exhaustion, resulting in intermittent failures. This was
 # only seen on beefy machines (> 32 cores), so limit the number of parallel
 # workers for now.
+#
+# Bug 1391877 - Windows test runs are getting mysterious timeouts when run
+# through taskcluster, but only when running many jit-test jobs in parallel.
+# Even at 16, some tests can overflow the paging file.
+worker_max = multiprocessing.cpu_count()
+jstest_workers = worker_max
+jittest_workers = worker_max
 if platform.system() == "Windows":
-    worker_count = min(multiprocessing.cpu_count(), 16)
-    env["JSTESTS_EXTRA_ARGS"] = "-j{} ".format(worker_count) + env.get(
+    jstest_workers = min(worker_max, 16)
+    env["JSTESTS_EXTRA_ARGS"] = "-j{} ".format(jstest_workers) + env.get(
         "JSTESTS_EXTRA_ARGS", ""
     )
+    jittest_workers = min(worker_max, 8)
+    env["JITTEST_EXTRA_ARGS"] = "-j{} ".format(jittest_workers) + env.get(
+        "JITTEST_EXTRA_ARGS", ""
+    )
+print(
+    f"using {jstest_workers}/{worker_max} workers for jstests, "
+    f"{jittest_workers}/{worker_max} for jittest"
+)
 
 if use_minidump:
     # Set up later js invocations to run with the breakpad injector loaded.
@@ -565,15 +591,9 @@ if "checks" in test_suites:
 if "jittest" in test_suites:
     results.append(("make check-jit-test", run_test_command([MAKE, "check-jit-test"])))
 if "jsapitests" in test_suites:
-    jsapi_test_binary = os.path.join(OBJDIR, "dist", "bin", "jsapi-tests")
-    test_env = env.copy()
-    test_env["TOPSRCDIR"] = DIR.source
-    if use_minidump and platform.system() == "Linux":
-        test_env["LD_PRELOAD"] = injector_lib
-    st = run_test_command([jsapi_test_binary], env=test_env)
-    if st < 0:
-        print("PROCESS-CRASH | jsapi-tests | application crashed")
-        print("Return code: {}".format(st))
+    st = run_jsapitests([])
+    if st == 0:
+        st = run_jsapitests(["--frontend-only"])
     results.append(("jsapi-tests", st))
 if "jstests" in test_suites:
     results.append(("jstests", run_test_command([MAKE, "check-jstests"])))

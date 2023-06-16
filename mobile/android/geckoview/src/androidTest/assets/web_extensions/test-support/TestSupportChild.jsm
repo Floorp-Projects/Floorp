@@ -58,11 +58,12 @@ class TestSupportChild extends GeckoViewActorChild {
         if (!element) {
           throw new Error("No element for " + selector);
         }
-        const color = this.contentWindow.windowUtils.getVisitedDependentComputedStyle(
-          element,
-          "",
-          "color"
-        );
+        const color =
+          this.contentWindow.windowUtils.getVisitedDependentComputedStyle(
+            element,
+            "",
+            "color"
+          );
         return color;
       }
       case "SetResolutionAndScaleTo": {

@@ -24,8 +24,7 @@ TEST(CodecPGXTest, Test8bits) {
   PackedPixelFile ppf;
   ThreadPool* pool = nullptr;
 
-  EXPECT_TRUE(DecodeImagePGX(MakeSpan(pgx.c_str()), ColorHints(),
-                             SizeConstraints(), &ppf));
+  EXPECT_TRUE(DecodeImagePGX(MakeSpan(pgx.c_str()), ColorHints(), &ppf));
   CodecInOut io;
   EXPECT_TRUE(ConvertPackedPixelFileToCodecInOut(ppf, pool, &io));
 
@@ -52,8 +51,7 @@ TEST(CodecPGXTest, Test16bits) {
   PackedPixelFile ppf;
   ThreadPool* pool = nullptr;
 
-  EXPECT_TRUE(DecodeImagePGX(MakeSpan(pgx.c_str()), ColorHints(),
-                             SizeConstraints(), &ppf));
+  EXPECT_TRUE(DecodeImagePGX(MakeSpan(pgx.c_str()), ColorHints(), &ppf));
   CodecInOut io;
   EXPECT_TRUE(ConvertPackedPixelFileToCodecInOut(ppf, pool, &io));
 

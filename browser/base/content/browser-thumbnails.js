@@ -44,7 +44,7 @@ var gBrowserThumbnails = {
       this.PREF_DISK_CACHE_SSL
     );
 
-    this._tabEvents.forEach(function(aEvent) {
+    this._tabEvents.forEach(function (aEvent) {
       gBrowser.tabContainer.addEventListener(aEvent, this);
     }, this);
 
@@ -60,7 +60,7 @@ var gBrowserThumbnails = {
       this._topSiteURLsRefreshTimer = null;
     }
 
-    this._tabEvents.forEach(function(aEvent) {
+    this._tabEvents.forEach(function (aEvent) {
       gBrowser.tabContainer.removeEventListener(aEvent, this);
     }, this);
   },

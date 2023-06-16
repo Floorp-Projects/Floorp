@@ -43,7 +43,7 @@ const SPONSORED_RESULT = REMOTE_SETTINGS_RESULTS[0];
 // Spy for the custom impression/click sender
 let spy;
 
-add_setup(async function() {
+add_setup(async function () {
   ({ spy } = QuickSuggestTestUtils.createTelemetryPingSpy());
 
   await PlacesUtils.history.clear();
@@ -57,7 +57,12 @@ add_setup(async function() {
   await SearchTestUtils.installSearchExtension({}, { setAsDefault: true });
 
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
-    remoteSettingsResults: REMOTE_SETTINGS_RESULTS,
+    remoteSettingsResults: [
+      {
+        type: "data",
+        attachment: REMOTE_SETTINGS_RESULTS,
+      },
+    ],
   });
 });
 

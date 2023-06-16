@@ -13,17 +13,14 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineESModuleGetters(this, {
   DownloadPaths: "resource://gre/modules/DownloadPaths.sys.mjs",
+  ExtensionControlledPopup:
+    "resource:///modules/ExtensionControlledPopup.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  this,
-  "ExtensionControlledPopup",
-  "resource:///modules/ExtensionControlledPopup.jsm"
-);
 
-XPCOMUtils.defineLazyGetter(this, "strBundle", function() {
+XPCOMUtils.defineLazyGetter(this, "strBundle", function () {
   return Services.strings.createBundle(
     "chrome://global/locale/extensions.properties"
   );
@@ -602,15 +599,16 @@ this.tabs = class extends ExtensionAPIPersistent {
       // that it may not otherwise have access to, we set the triggering
       // principal to the url that is being opened.  This is used for newtab,
       // about: and moz-extension: protocols.
-      options.triggeringPrincipal = Services.scriptSecurityManager.createContentPrincipal(
-        Services.io.newURI(url),
-        {
-          userContextId: options.userContextId,
-          privateBrowsingId: PrivateBrowsingUtils.isBrowserPrivate(browser)
-            ? 1
-            : 0,
-        }
-      );
+      options.triggeringPrincipal =
+        Services.scriptSecurityManager.createContentPrincipal(
+          Services.io.newURI(url),
+          {
+            userContextId: options.userContextId,
+            privateBrowsingId: PrivateBrowsingUtils.isBrowserPrivate(browser)
+              ? 1
+              : 0,
+          }
+        );
     }
 
     let tabsApi = {
@@ -1364,7 +1362,7 @@ this.tabs = class extends ExtensionAPIPersistent {
           picker.defaultString = filename;
 
           return new Promise(resolve => {
-            picker.open(function(retval) {
+            picker.open(function (retval) {
               if (retval == 0 || retval == 2) {
                 // OK clicked (retval == 0) or replace confirmed (retval == 2)
 

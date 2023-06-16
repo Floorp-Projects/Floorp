@@ -82,7 +82,7 @@ exports.SourceLocation = SourceLocation;
  *          The decorated method.
  */
 function expectState(expectedState, methodFunc, activity) {
-  return function(...args) {
+  return function (...args) {
     if (this.state !== expectedState) {
       const msg =
         `Wrong state while ${activity}:` +
@@ -103,7 +103,7 @@ exports.expectState = expectState;
  * to an instance of this class.
  */
 function actorBridgeWithSpec(methodName) {
-  return function() {
+  return function () {
     return this.bridge[methodName].apply(this.bridge, arguments);
   };
 }

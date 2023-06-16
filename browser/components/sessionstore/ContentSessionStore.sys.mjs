@@ -146,8 +146,9 @@ class SessionHistoryListener extends Handler {
   }
 
   uninit() {
-    let sessionHistory = this.mm.docShell.QueryInterface(Ci.nsIWebNavigation)
-      .sessionHistory;
+    let sessionHistory = this.mm.docShell.QueryInterface(
+      Ci.nsIWebNavigation
+    ).sessionHistory;
     if (sessionHistory) {
       sessionHistory.legacySHistory.removeSHistoryListener(this); // OK in non-geckoview
     }
@@ -363,9 +364,8 @@ class MessageQueue extends Handler {
           );
           break;
         case PREF_INTERVAL:
-          this._timeoutWaitIdlePeriodMs = Services.prefs.getIntPref(
-            PREF_INTERVAL
-          );
+          this._timeoutWaitIdlePeriodMs =
+            Services.prefs.getIntPref(PREF_INTERVAL);
           break;
         default:
           console.error("received unknown message '" + data + "'");

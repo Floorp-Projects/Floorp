@@ -128,7 +128,7 @@ add_task(async function empty_array_tags_tagsAreNot() {
   checkQueryURI([], true);
 });
 
-add_task(async function() {
+add_task(async function () {
   info(
     "Setting some tags and setting tagsAreNot should result in " +
       "correct query URI"
@@ -151,7 +151,7 @@ add_task(async function() {
 
 add_task(async function tag() {
   info("Querying on tag associated with a URI should return that URI");
-  await task_doWithBookmark(["foo", "bar", "baz"], function(aURI) {
+  await task_doWithBookmark(["foo", "bar", "baz"], function (aURI) {
     var [query, opts] = makeQuery(["foo"]);
     executeAndCheckQueryResults(query, opts, [aURI.spec]);
     [query, opts] = makeQuery(["bar"]);
@@ -163,7 +163,7 @@ add_task(async function tag() {
 
 add_task(async function many_tags() {
   info("Querying on many tags associated with a URI should return that URI");
-  await task_doWithBookmark(["foo", "bar", "baz"], function(aURI) {
+  await task_doWithBookmark(["foo", "bar", "baz"], function (aURI) {
     var [query, opts] = makeQuery(["foo", "bar"]);
     executeAndCheckQueryResults(query, opts, [aURI.spec]);
     [query, opts] = makeQuery(["foo", "baz"]);
@@ -177,7 +177,7 @@ add_task(async function many_tags() {
 
 add_task(async function repeated_tag() {
   info("Specifying the same tag multiple times should not matter");
-  await task_doWithBookmark(["foo", "bar", "baz"], function(aURI) {
+  await task_doWithBookmark(["foo", "bar", "baz"], function (aURI) {
     var [query, opts] = makeQuery(["foo", "foo"]);
     executeAndCheckQueryResults(query, opts, [aURI.spec]);
     [query, opts] = makeQuery(["foo", "foo", "foo", "bar", "bar", "baz"]);
@@ -190,7 +190,7 @@ add_task(async function many_tags_no_bookmark() {
     "Querying on many tags associated with a URI and tags not associated " +
       "with that URI should not return that URI"
   );
-  await task_doWithBookmark(["foo", "bar", "baz"], function(aURI) {
+  await task_doWithBookmark(["foo", "bar", "baz"], function (aURI) {
     var [query, opts] = makeQuery(["foo", "bogus"]);
     executeAndCheckQueryResults(query, opts, []);
     [query, opts] = makeQuery(["foo", "bar", "bogus"]);
@@ -202,7 +202,7 @@ add_task(async function many_tags_no_bookmark() {
 
 add_task(async function nonexistent_tags() {
   info("Querying on nonexistent tag should return no results");
-  await task_doWithBookmark(["foo", "bar", "baz"], function(aURI) {
+  await task_doWithBookmark(["foo", "bar", "baz"], function (aURI) {
     var [query, opts] = makeQuery(["bogus"]);
     executeAndCheckQueryResults(query, opts, []);
     [query, opts] = makeQuery(["bogus", "gnarly"]);
@@ -372,7 +372,7 @@ add_task(async function tag_casing() {
     "Querying on associated tags should return " +
       "correct results irrespective of casing of tags."
   );
-  await task_doWithBookmark(["fOo", "bAr"], function(aURI) {
+  await task_doWithBookmark(["fOo", "bAr"], function (aURI) {
     let [query, opts] = makeQuery(["Foo"]);
     executeAndCheckQueryResults(query, opts, [aURI.spec]);
     [query, opts] = makeQuery(["Foo", "Bar"]);
@@ -390,18 +390,24 @@ add_task(async function tag_casing_l10n() {
       "correct results irrespective of casing of tags with international strings."
   );
   // \u041F is a lowercase \u043F
-  await task_doWithBookmark(["\u041F\u0442\u0438\u0446\u044B"], function(aURI) {
-    let [query, opts] = makeQuery(["\u041F\u0442\u0438\u0446\u044B"]);
-    executeAndCheckQueryResults(query, opts, [aURI.spec]);
-    [query, opts] = makeQuery(["\u043F\u0442\u0438\u0446\u044B"]);
-    executeAndCheckQueryResults(query, opts, [aURI.spec]);
-  });
-  await task_doWithBookmark(["\u043F\u0442\u0438\u0446\u044B"], function(aURI) {
-    let [query, opts] = makeQuery(["\u041F\u0442\u0438\u0446\u044B"]);
-    executeAndCheckQueryResults(query, opts, [aURI.spec]);
-    [query, opts] = makeQuery(["\u043F\u0442\u0438\u0446\u044B"]);
-    executeAndCheckQueryResults(query, opts, [aURI.spec]);
-  });
+  await task_doWithBookmark(
+    ["\u041F\u0442\u0438\u0446\u044B"],
+    function (aURI) {
+      let [query, opts] = makeQuery(["\u041F\u0442\u0438\u0446\u044B"]);
+      executeAndCheckQueryResults(query, opts, [aURI.spec]);
+      [query, opts] = makeQuery(["\u043F\u0442\u0438\u0446\u044B"]);
+      executeAndCheckQueryResults(query, opts, [aURI.spec]);
+    }
+  );
+  await task_doWithBookmark(
+    ["\u043F\u0442\u0438\u0446\u044B"],
+    function (aURI) {
+      let [query, opts] = makeQuery(["\u041F\u0442\u0438\u0446\u044B"]);
+      executeAndCheckQueryResults(query, opts, [aURI.spec]);
+      [query, opts] = makeQuery(["\u043F\u0442\u0438\u0446\u044B"]);
+      executeAndCheckQueryResults(query, opts, [aURI.spec]);
+    }
+  );
 });
 
 add_task(async function tag_special_char() {
@@ -409,7 +415,7 @@ add_task(async function tag_special_char() {
     "Querying on associated tags should return " +
       "correct results even if tags contain special characters."
   );
-  await task_doWithBookmark(["Space ☺️ Between"], function(aURI) {
+  await task_doWithBookmark(["Space ☺️ Between"], function (aURI) {
     let [query, opts] = makeQuery(["Space ☺️ Between"]);
     executeAndCheckQueryResults(query, opts, [aURI.spec]);
     [query, opts] = makeQuery(["Space ☺️ Between"], true);
@@ -548,7 +554,7 @@ function makeQuery(aTags, aTagsAreNot) {
   if (aTags) {
     query.tags = aTags;
     var uniqueTags = [];
-    aTags.forEach(function(t) {
+    aTags.forEach(function (t) {
       if (typeof t === "string" && !uniqueTags.includes(t)) {
         uniqueTags.push(t);
       }

@@ -90,7 +90,7 @@ function generateKeyInfo(aData) {
   return keyInfo;
 }
 
-add_setup(async function() {
+add_setup(async function () {
   // Make sure userContext is enabled.
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -116,7 +116,7 @@ add_task(async function test() {
   let result = await SpecialPowers.spawn(
     defaultContainer.browser,
     [keyInfo],
-    async function(aKeyInfo) {
+    async function (aKeyInfo) {
       let access = await content.navigator.requestMediaKeySystemAccess(
         "org.w3.clearkey",
         [
@@ -134,7 +134,7 @@ add_task(async function test() {
 
       // Insert the media key.
       await new Promise(resolve => {
-        session.addEventListener("message", function(event) {
+        session.addEventListener("message", function (event) {
           session
             .update(aKeyInfo.keyObj)
             .then(() => {
@@ -185,7 +185,7 @@ add_task(async function test() {
   await SpecialPowers.spawn(
     personalContainer.browser,
     [keyInfo],
-    async function(aKeyInfo) {
+    async function (aKeyInfo) {
       let access = await content.navigator.requestMediaKeySystemAccess(
         "org.w3.clearkey",
         [

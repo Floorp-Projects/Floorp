@@ -22,6 +22,7 @@ import {
   setupTestBrowserHooks,
   setupTestPageAndContextHooks,
 } from './mocha-utils.js';
+import {waitEvent} from './utils.js';
 
 describe('Chromium-Specific Launcher tests', function () {
   describe('Puppeteer.launch |browserURL| option', function () {
@@ -54,7 +55,7 @@ describe('Chromium-Specific Launcher tests', function () {
         })
       ).toBe(56);
       browser2.disconnect();
-      originalBrowser.close();
+      await originalBrowser.close();
     });
     it('should throw when using both browserWSEndpoint and browserURL', async () => {
       const {defaultBrowserOptions, puppeteer} = getTestState();
@@ -79,7 +80,7 @@ describe('Chromium-Specific Launcher tests', function () {
         'Exactly one of browserWSEndpoint, browserURL or transport'
       );
 
-      originalBrowser.close();
+      await originalBrowser.close();
     });
     it('should throw when trying to connect to non-existing browser', async () => {
       const {defaultBrowserOptions, puppeteer} = getTestState();
@@ -98,7 +99,7 @@ describe('Chromium-Specific Launcher tests', function () {
       expect(error.message).toContain(
         'Failed to fetch browser webSocket URL from'
       );
-      originalBrowser.close();
+      await originalBrowser.close();
     });
   });
 
@@ -107,7 +108,7 @@ describe('Chromium-Specific Launcher tests', function () {
       const {defaultBrowserOptions, puppeteer} = getTestState();
       const options = Object.assign({pipe: true}, defaultBrowserOptions);
       const browser = await puppeteer.launch(options);
-      expect((await browser.pages()).length).toBe(1);
+      expect(await browser.pages()).toHaveLength(1);
       expect(browser.wsEndpoint()).toBe('');
       const page = await browser.newPage();
       expect(await page.evaluate('11 * 11')).toBe(121);
@@ -129,9 +130,7 @@ describe('Chromium-Specific Launcher tests', function () {
       const {defaultBrowserOptions, puppeteer} = getTestState();
       const options = Object.assign({pipe: true}, defaultBrowserOptions);
       const browser = await puppeteer.launch(options);
-      const disconnectedEventPromise = new Promise(resolve => {
-        return browser.once('disconnected', resolve);
-      });
+      const disconnectedEventPromise = waitEvent(browser, 'disconnected');
       // Emulate user exiting browser.
       browser.process()!.kill();
       await disconnectedEventPromise;

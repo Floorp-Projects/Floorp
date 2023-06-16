@@ -70,8 +70,9 @@ bool ParamTraits<JSStructuredCloneData>::Read(MessageReader* aReader,
   }
 
   MOZ_ASSERT(read == length);
-  *aResult = JSStructuredCloneData(std::move(buffers),
-                                   JS::StructuredCloneScope::DifferentProcess);
+  *aResult = JSStructuredCloneData(
+      std::move(buffers), JS::StructuredCloneScope::DifferentProcess,
+      OwnTransferablePolicy::IgnoreTransferablesIfAny);
   return true;
 }
 

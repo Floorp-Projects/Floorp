@@ -8,12 +8,18 @@ Array [
       "generatedLocation": Object {
         "column": 1,
         "line": 1,
+        "source": Object {
+          "id": "foo",
+        },
         "sourceId": "foo",
       },
       "id": "breakpoint",
       "location": Object {
         "column": 1,
         "line": 1,
+        "source": Object {
+          "id": "foo",
+        },
         "sourceId": "foo",
       },
       "options": Object {},
@@ -37,12 +43,18 @@ Array [
       "generatedLocation": Object {
         "column": 1,
         "line": 1,
+        "source": Object {
+          "id": "foo",
+        },
         "sourceId": "foo",
       },
       "id": "breakpoint",
       "location": Object {
         "column": 1,
         "line": 1,
+        "source": Object {
+          "id": "foo",
+        },
         "sourceId": "foo",
       },
       "options": Object {},
@@ -74,12 +86,18 @@ Array [
       "generatedLocation": Object {
         "column": 1,
         "line": 1,
+        "source": Object {
+          "id": "foo",
+        },
         "sourceId": "foo",
       },
       "id": "breakpoint",
       "location": Object {
         "column": 1,
         "line": 1,
+        "source": Object {
+          "id": "foo",
+        },
         "sourceId": "foo",
       },
       "options": Object {},
@@ -111,12 +129,18 @@ Array [
       "generatedLocation": Object {
         "column": 1,
         "line": 1,
+        "source": Object {
+          "id": "foo",
+        },
         "sourceId": "foo",
       },
       "id": "breakpoint",
       "location": Object {
         "column": 1,
         "line": 1,
+        "source": Object {
+          "id": "foo",
+        },
         "sourceId": "foo",
       },
       "options": Object {},

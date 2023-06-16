@@ -15,6 +15,6 @@
 }
 
 .option-description {
-  color: var(--in-content-deemphasized-text);
+  color: var(--text-color-deemphasized);
   margin-top: -0.5em !important;
 }

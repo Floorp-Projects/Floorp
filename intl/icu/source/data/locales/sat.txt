@@ -7,6 +7,9 @@ sat{
     NumberElements{
         default{"olck"}
         latn{
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+            }
             patternsShort{
                 currencyFormat{
                     1000{
@@ -127,6 +130,15 @@ sat{
                         "ᱡ",
                         "ᱧ",
                     }
+                    wide{
+                        "ᱥᱤᱸᱜᱮ",
+                        "ᱚᱛᱮ",
+                        "ᱵᱟᱞᱮ",
+                        "ᱥᱟᱹᱜᱩᱱ",
+                        "ᱥᱟᱹᱨᱫᱤ",
+                        "ᱡᱟᱹᱨᱩᱢ",
+                        "ᱧᱩᱦᱩᱢ",
+                    }
                 }
             }
             eras{
@@ -209,6 +221,20 @@ sat{
                         "ᱱ",
                         "ᱫ",
                     }
+                    wide{
+                        "ᱡᱟᱱᱣᱟᱨᱤ",
+                        "ᱯᱷᱟᱨᱣᱟᱨᱤ",
+                        "ᱢᱟᱨᱪ",
+                        "ᱟᱯᱨᱮᱞ",
+                        "ᱢᱮ",
+                        "ᱡᱩᱱ",
+                        "ᱡᱩᱞᱟᱭ",
+                        "ᱟᱜᱟᱥᱛ",
+                        "ᱥᱮᱯᱴᱮᱢᱵᱟᱨ",
+                        "ᱚᱠᱴᱚᱵᱟᱨ",
+                        "ᱱᱟᱣᱟᱢᱵᱟᱨ",
+                        "ᱫᱤᱥᱟᱢᱵᱟᱨ",
+                    }
                 }
             }
             quarters{
@@ -233,6 +259,12 @@ sat{
                     }
                 }
                 stand-alone{
+                    abbreviated{
+                        "᱑ᱟᱜ ᱯᱮ ᱪᱟᱸᱫᱚᱠᱤᱭᱟᱹ",
+                        "᱒ᱟᱜ ᱯᱮ ᱪᱟᱸᱫᱚᱠᱤᱭᱟᱹ",
+                        "᱓ᱭᱟᱜ ᱯᱮ ᱪᱟᱸᱫᱚᱠᱤᱭᱟᱹ",
+                        "᱔ᱟᱜ ᱯᱮ ᱪᱟᱸᱫᱚᱠᱤᱭᱟᱹ",
+                    }
                     narrow{
                         "᱑",
                         "᱒",
@@ -278,9 +310,19 @@ sat{
         }
         day-narrow{
             dn{"ᱢᱟᱦᱟ"}
+            relative{
+                "-1"{"ᱦᱚᱞᱟ"}
+                "0"{"ᱛᱮᱦᱮᱧ"}
+                "1"{"ᱜᱟᱯᱟ"}
+            }
         }
         day-short{
             dn{"ᱢᱟᱦᱟ"}
+            relative{
+                "-1"{"ᱦᱚᱞᱟ"}
+                "0"{"ᱛᱮᱦᱮᱧ"}
+                "1"{"ᱜᱟᱯᱟ"}
+            }
         }
         dayOfYear{
             dn{"ᱥᱮᱨᱢᱟ ᱨᱮᱭᱟᱠ ᱢᱟᱦᱟ"}
@@ -292,6 +334,12 @@ sat{
             dn{"ᱥᱮᱨᱢᱟ ᱨᱮᱭᱟᱠ ᱢᱟᱦᱟ"}
         }
         dayperiod{
+            dn{"ᱥᱮᱛᱟᱜ/ᱟᱹᱭᱩᱵ"}
+        }
+        dayperiod-narrow{
+            dn{"ᱥᱮᱛᱟᱜ/ᱟᱹᱭᱩᱵ"}
+        }
+        dayperiod-short{
             dn{"ᱥᱮᱛᱟᱜ/ᱟᱹᱭᱩᱵ"}
         }
         era{
@@ -306,7 +354,19 @@ sat{
         hour{
             dn{"ᱴᱟᱲᱟᱝ"}
         }
+        hour-narrow{
+            dn{"ᱴᱟᱲᱟᱝ"}
+        }
+        hour-short{
+            dn{"ᱴᱟᱲᱟᱝ"}
+        }
         minute{
+            dn{"ᱴᱤᱯᱤᱡ"}
+        }
+        minute-narrow{
+            dn{"ᱴᱤᱯᱤᱡ"}
+        }
+        minute-short{
             dn{"ᱴᱤᱯᱤᱡ"}
         }
         month{
@@ -364,14 +424,26 @@ sat{
         weekday{
             dn{"ᱦᱟᱯᱛᱟ ᱨᱮᱭᱟᱜ ᱢᱟᱦᱟ"}
         }
+        weekday-narrow{
+            dn{"ᱦᱟᱯᱛᱟ ᱨᱮᱭᱟᱜ ᱢᱟᱦᱟ"}
+        }
+        weekday-short{
+            dn{"ᱦᱟᱯᱛᱟ ᱨᱮᱭᱟᱜ ᱢᱟᱦᱟ"}
+        }
         weekdayOfMonth{
             dn{"ᱪᱟᱸᱫᱚ ᱨᱮᱭᱟᱠ ᱢᱟᱦᱟ"}
         }
         weekdayOfMonth-narrow{
             dn{"ᱪᱟᱸᱫᱚ ᱨᱮᱭᱟᱠ ᱢᱟᱦᱟ"}
         }
+        weekdayOfMonth-short{
+            dn{"ᱪᱟᱸᱫᱚ ᱨᱮᱭᱟᱠ ᱢᱟᱦᱟ"}
+        }
         year{
             dn{"ᱥᱮᱨᱢᱟ/ᱵᱚᱪᱷᱚᱞᱨ"}
+        }
+        year-narrow{
+            dn{"ᱥᱮᱨᱢᱟ"}
         }
         year-short{
             dn{"ᱥᱮᱨᱢᱟ"}

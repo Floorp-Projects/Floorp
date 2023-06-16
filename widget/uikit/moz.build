@@ -16,6 +16,8 @@ SOURCES += [
     "nsWindow.mm",
 ]
 
+include("/ipc/chromium/chromium-config.mozbuild")
+
 FINAL_LIBRARY = "xul"
 LOCAL_INCLUDES += [
     "/widget",

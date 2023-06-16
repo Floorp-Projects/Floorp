@@ -6,7 +6,7 @@
 // Enable web manifest processing.
 Services.prefs.setBoolPref("dom.manifest.enabled", true);
 
-add_task(async function() {
+add_task(async function () {
   info("Testing fetching a valid manifest");
   const response = await fetchManifest("application-manifest-basic.html");
 
@@ -16,7 +16,7 @@ add_task(async function() {
   );
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Testing fetching an existing manifest with invalid values");
   const response = await fetchManifest("application-manifest-warnings.html");
 
@@ -34,7 +34,7 @@ add_task(async function() {
   );
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Testing fetching a manifest in a page that does not have one");
   const response = await fetchManifest("application-manifest-no-manifest.html");
 
@@ -42,7 +42,7 @@ add_task(async function() {
   ok(!response.errorMessage, "Does not return an error message");
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Testing an error happening fetching a manifest");
   // the page that we are testing contains an invalid URL for the manifest
   const response = await fetchManifest(
@@ -57,7 +57,7 @@ add_task(async function() {
   );
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Testing a validation error when fetching a manifest with invalid JSON");
   const response = await fetchManifest(
     "application-manifest-invalid-json.html"

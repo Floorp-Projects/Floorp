@@ -9,7 +9,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger(
     "doc-reload-link.html",
     "doc-reload-link.html"
@@ -24,7 +24,7 @@ add_task(async function() {
     info(
       "Reload via a link, this causes special race condition different from F5"
     );
-    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
       const reloadLink = content.document.querySelector("a");
       reloadLink.click();
     });

@@ -40,7 +40,7 @@ async function fetchWithXHR(uri) {
     const xhr = new XMLHttpRequest();
     xhr.open("GET", uri, true);
     xhr.responseType = "arraybuffer";
-    xhr.addEventListener("load", function() {
+    xhr.addEventListener("load", function () {
       is(
         xhr.status,
         200,
@@ -117,8 +117,9 @@ async function loadSegment(sb, typedArrayOrArrayBuffer) {
       ? new Uint8Array(typedArrayOrArrayBuffer)
       : typedArrayOrArrayBuffer;
   info(
-    `Loading buffer: [${typedArray.byteOffset}, ${typedArray.byteOffset +
-      typedArray.byteLength})`
+    `Loading buffer: [${typedArray.byteOffset}, ${
+      typedArray.byteOffset + typedArray.byteLength
+    })`
   );
   const beforeBuffered = timeRangeToString(sb.buffered);
   const p = once(sb, "update");
@@ -148,8 +149,9 @@ function loadSegmentAsync(sb, typedArrayOrArrayBuffer) {
       ? new Uint8Array(typedArrayOrArrayBuffer)
       : typedArrayOrArrayBuffer;
   info(
-    `Loading buffer2: [${typedArray.byteOffset}, ${typedArray.byteOffset +
-      typedArray.byteLength})`
+    `Loading buffer2: [${typedArray.byteOffset}, ${
+      typedArray.byteOffset + typedArray.byteLength
+    })`
   );
   const beforeBuffered = timeRangeToString(sb.buffered);
   return sb.appendBufferAsync(typedArray).then(() => {
@@ -173,7 +175,7 @@ function fetchAndLoadAsync(sb, prefix, chunks, suffix) {
   }
 
   // Load them in series, as required per spec.
-  return Promise.all(fetches).then(function() {
+  return Promise.all(fetches).then(function () {
     let rv = Promise.resolve();
     for (const chunk of chunks) {
       rv = rv.then(loadSegmentAsync.bind(null, sb, buffers[chunk]));
@@ -183,7 +185,7 @@ function fetchAndLoadAsync(sb, prefix, chunks, suffix) {
 }
 
 // Register timeout function to dump debugging logs.
-SimpleTest.registerTimeoutFunction(async function() {
+SimpleTest.registerTimeoutFunction(async function () {
   for (const v of document.getElementsByTagName("video")) {
     console.log(await SpecialPowers.wrap(v).mozRequestDebugInfo());
   }

@@ -2248,7 +2248,39 @@ sftk_AttributeToFlags(CK_ATTRIBUTE_TYPE op)
     return flags;
 }
 
+/*
+ * ******************** Hash Utilities **************************
+ */
+/*
+ * Utility function for converting PSS/OAEP parameter types into
+ * HASH_HashTypes. Note: Only SHA family functions are defined in RFC 3447.
+ */
+HASH_HashType
+sftk_GetHashTypeFromMechanism(CK_MECHANISM_TYPE mech)
+{
+    switch (mech) {
+        case CKM_SHA_1:
+        case CKG_MGF1_SHA1:
+            return HASH_AlgSHA1;
+        case CKM_SHA224:
+        case CKG_MGF1_SHA224:
+            return HASH_AlgSHA224;
+        case CKM_SHA256:
+        case CKG_MGF1_SHA256:
+            return HASH_AlgSHA256;
+        case CKM_SHA384:
+        case CKG_MGF1_SHA384:
+            return HASH_AlgSHA384;
+        case CKM_SHA512:
+        case CKG_MGF1_SHA512:
+            return HASH_AlgSHA512;
+        default:
+            return HASH_AlgNULL;
+    }
+}
+
 #ifdef NSS_HAS_FIPS_INDICATORS
+/**************** FIPS Indicator Utilities *************************/
 /* sigh, we probably need a version of this in secutil so that both
  * softoken and NSS can use it */
 static SECOidTag
@@ -2383,6 +2415,29 @@ sftk_handleSpecial(SFTKSlot *slot, CK_MECHANISM *mech,
                 return PR_TRUE;
             }
             return PR_FALSE;
+        }
+        case SFTKFIPSRSAPSS: {
+            /* PSS salt must not be longer than the  underlying hash.
+             * We verify that the underlying hash of the
+             * parameters matches Hash of the combined hash mechanisms, so
+             * we don't need to look at the specific PSS mechanism */
+            CK_RSA_PKCS_PSS_PARAMS *pss = (CK_RSA_PKCS_PSS_PARAMS *)
+                                              mech->pParameter;
+            const SECHashObject *hashObj = NULL;
+            if (mech->ulParameterLen != sizeof(*pss)) {
+                return PR_FALSE;
+            }
+            /* we use the existing hash utilities to find the length of
+             * the hash */
+            hashObj = HASH_GetRawHashObject(sftk_GetHashTypeFromMechanism(
+                pss->hashAlg));
+            if (hashObj == NULL) {
+                return PR_FALSE;
+            }
+            if (pss->sLen > hashObj->length) {
+                return PR_FALSE;
+            }
+            return PR_TRUE;
         }
         default:
             break;

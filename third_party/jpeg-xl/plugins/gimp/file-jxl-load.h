@@ -6,8 +6,6 @@
 #ifndef PLUGINS_GIMP_FILE_JXL_LOAD_H_
 #define PLUGINS_GIMP_FILE_JXL_LOAD_H_
 
-#include "jxl/decode.h"
-#include "jxl/decode_cxx.h"
 #include "plugins/gimp/common.h"
 
 namespace jxl {

@@ -45,7 +45,7 @@ async function test_coop(
       url: start,
       waitForStateStop: true,
     },
-    async function(_browser) {
+    async function (_browser) {
       info(`test_coop: Test tab ready: ${start}`);
 
       let browser = gBrowser.selectedBrowser;
@@ -149,7 +149,7 @@ async function cleanupDownloads(downloadList) {
 }
 
 async function test_download_from(initCoop, downloadCoop) {
-  return BrowserTestUtils.withNewTab("about:blank", async function(_browser) {
+  return BrowserTestUtils.withNewTab("about:blank", async function (_browser) {
     info(`test_download: Test tab ready`);
 
     let start = httpURL(
@@ -208,7 +208,7 @@ add_task(async function test_multiple_nav_process_switches() {
       url: httpURL("coop_header.sjs", "https://example.org"),
       waitForStateStop: true,
     },
-    async function(browser) {
+    async function (browser) {
       let prevBC = browser.browsingContext;
 
       let target = httpURL("coop_header.sjs?.", "https://example.org");

@@ -29,7 +29,7 @@ add_task(async function test_contentscript_exportHelpers() {
     exportFunction(pi => results.push(pi), window, { defineAs: "reportPi" });
 
     let s = document.createElement("script");
-    s.textContent = `(${function() {
+    s.textContent = `(${function () {
       let result1 = "unknown 1";
       let result2 = "unknown 2";
       try {

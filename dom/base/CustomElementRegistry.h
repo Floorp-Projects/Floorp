@@ -496,7 +496,7 @@ class CustomElementRegistry final : public nsISupports, public nsWrapperCache {
                            nsTHashSet<RefPtr<nsIWeakReference>>>
       CandidateMap;
   typedef JS::GCHashMap<JS::Heap<JSObject*>, RefPtr<nsAtom>,
-                        js::MovableCellHasher<JS::Heap<JSObject*>>,
+                        js::StableCellHasher<JS::Heap<JSObject*>>,
                         js::SystemAllocPolicy>
       ConstructorMap;
 

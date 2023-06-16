@@ -33,7 +33,7 @@ const HTML = `
 
 const TEST_URI = "data:text/html;charset=utf-8," + encodeURI(HTML);
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URI);
 
   info("Select node in shadow DOM");

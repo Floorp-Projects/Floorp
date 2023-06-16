@@ -28,24 +28,13 @@
 extern "C" {
 #endif
 
-#include "libintvector.h"
-#include "kremlin/internal/types.h"
-#include "kremlin/lowstar_endianness.h"
 #include <string.h>
-#include <stdbool.h>
+#include "krml/internal/types.h"
+#include "krml/lowstar_endianness.h"
+#include "krml/internal/target.h"
 
-#include "Hacl_Kremlib.h"
-
-void
-Hacl_Impl_Poly1305_Field32xN_256_load_acc4(Lib_IntVector_Intrinsics_vec256 *acc, uint8_t *b);
-
-void
-Hacl_Impl_Poly1305_Field32xN_256_fmul_r4_normalize(
-    Lib_IntVector_Intrinsics_vec256 *out,
-    Lib_IntVector_Intrinsics_vec256 *p);
-
-extern uint32_t Hacl_Poly1305_256_blocklen;
-
+#include "Hacl_Krmllib.h"
+#include "libintvector.h"
 typedef Lib_IntVector_Intrinsics_vec256 *Hacl_Poly1305_256_poly1305_ctx;
 
 void Hacl_Poly1305_256_poly1305_init(Lib_IntVector_Intrinsics_vec256 *ctx, uint8_t *key);

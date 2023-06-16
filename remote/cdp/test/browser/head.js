@@ -59,12 +59,12 @@ setup and teardown described above.
 
 const add_plain_task = add_task.bind(this);
 
-this.add_task = function(taskFn, opts = {}) {
+this.add_task = function (taskFn, opts = {}) {
   const {
     createTab = true, // By default run each test in its own tab
   } = opts;
 
-  const fn = async function() {
+  const fn = async function () {
     let client, tab, target;
 
     try {

@@ -5,11 +5,13 @@
 #include "mozilla/BackgroundTasks.h"
 
 #include "nsIBackgroundTasksManager.h"
+#include "nsICommandLine.h"
 #include "nsIFile.h"
 #include "nsImportModule.h"
 #include "nsPrintfCString.h"
 #include "nsProfileLock.h"
 #include "nsTSubstring.h"
+#include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 #include "prenv.h"
 #include "prtime.h"
@@ -185,6 +187,28 @@ bool BackgroundTasks::IsEphemeralProfile() {
   return sSingleton && sSingleton->mIsEphemeralProfile && sSingleton->mProfD;
 }
 
+class BackgroundTaskLaunchRunnable : public Runnable {
+ public:
+  explicit BackgroundTaskLaunchRunnable(nsIBackgroundTasksManager* aManager,
+                                        const char* aTaskName,
+                                        nsICommandLine* aCmdLine)
+      : Runnable("BackgroundTaskLaunchRunnable"),
+        mManager(aManager),
+        mTaskName(aTaskName),
+        mCmdLine(aCmdLine) {}
+
+  // MOZ_CAN_RUN_SCRIPT_BOUNDARY until Runnable::Run is MOZ_CAN_RUN_SCRIPT.  See
+  // bug 1535398.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override {
+    return mManager->RunBackgroundTaskNamed(mTaskName, mCmdLine);
+  }
+
+ private:
+  nsCOMPtr<nsIBackgroundTasksManager> mManager;
+  NS_ConvertASCIItoUTF16 mTaskName;
+  nsCOMPtr<nsICommandLine> mCmdLine;
+};
+
 nsresult BackgroundTasks::RunBackgroundTask(nsICommandLine* aCmdLine) {
   Maybe<nsCString> task = GetBackgroundTasks();
   if (task.isNothing()) {
@@ -196,10 +220,11 @@ nsresult BackgroundTasks::RunBackgroundTask(nsICommandLine* aCmdLine) {
 
   MOZ_RELEASE_ASSERT(manager, "Could not get background tasks manager service");
 
-  NS_ConvertASCIItoUTF16 name(task.ref().get());
-  Unused << manager->RunBackgroundTaskNamed(name, aCmdLine);
-
-  return NS_OK;
+  // Give the initial storm of startup runnables a chance to run before our
+  // payload is going to potentially block the main thread for a while.
+  auto r = MakeRefPtr<BackgroundTaskLaunchRunnable>(manager, task.ref().get(),
+                                                    aCmdLine);
+  return GetCurrentSerialEventTarget()->DelayedDispatch(r.forget(), 100);
 }
 
 bool BackgroundTasks::IsUpdatingTaskName(const nsCString& aName) {

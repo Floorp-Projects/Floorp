@@ -5,7 +5,6 @@
 import { createSelector } from "reselect";
 import { getSelectedSource } from "./sources";
 import { getBreakpointsList } from "./breakpoints";
-import { getBlackBoxRanges } from "./source-blackbox";
 import { getFilename } from "../utils/source";
 import { getSelectedLocation } from "../utils/selected-location";
 
@@ -18,8 +17,7 @@ import { getSelectedLocation } from "../utils/selected-location";
 export const getBreakpointSources = createSelector(
   getBreakpointsList,
   getSelectedSource,
-  getBlackBoxRanges,
-  (breakpoints, selectedSource, blackBoxRanges) => {
+  (breakpoints, selectedSource) => {
     const visibleBreakpoints = breakpoints.filter(
       bp =>
         !bp.options.hidden &&
@@ -32,11 +30,6 @@ export const getBreakpointSources = createSelector(
       // location of the given selected source.
       const location = getSelectedLocation(breakpoint, selectedSource);
       const { source } = location;
-
-      // Ignore any blackboxed sources.
-      if (blackBoxRanges[source.url]) {
-        continue;
-      }
 
       // We may have more than one breakpoint per source,
       // so use the map to have a unique entry per source.

@@ -33,9 +33,9 @@
 #include <new>
 #include <vector>
 
-#if PROFILER_ENABLED
+#if JXL_PROFILER_ENABLED
 #include <chrono>
-#endif  // PROFILER_ENABLED
+#endif  // JXL_PROFILER_ENABLED
 
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "lib/jxl/butteraugli/butteraugli.cc"
@@ -322,14 +322,14 @@ template <class D, class V>
 HWY_INLINE void XybLowFreqToVals(const D d, const V& x, const V& y,
                                  const V& b_arg, V* HWY_RESTRICT valx,
                                  V* HWY_RESTRICT valy, V* HWY_RESTRICT valb) {
-  static const double xmuli = 33.832837186260;
-  static const double ymuli = 14.458268100570;
-  static const double bmuli = 49.87984651440;
-  static const double y_to_b_muli = -0.362267051518;
-  const V xmul = Set(d, xmuli);
-  const V ymul = Set(d, ymuli);
-  const V bmul = Set(d, bmuli);
-  const V y_to_b_mul = Set(d, y_to_b_muli);
+  static const double xmul_scalar = 33.832837186260;
+  static const double ymul_scalar = 14.458268100570;
+  static const double bmul_scalar = 49.87984651440;
+  static const double y_to_b_mul_scalar = -0.362267051518;
+  const V xmul = Set(d, xmul_scalar);
+  const V ymul = Set(d, ymul_scalar);
+  const V bmul = Set(d, bmul_scalar);
+  const V y_to_b_mul = Set(d, y_to_b_mul_scalar);
   const V b = MulAdd(y_to_b_mul, y, b_arg);
   *valb = Mul(b, bmul);
   *valx = Mul(x, xmul);
@@ -1868,13 +1868,13 @@ bool ButteraugliInterface(const Image3F& rgb0, const Image3F& rgb1,
 bool ButteraugliInterface(const Image3F& rgb0, const Image3F& rgb1,
                           const ButteraugliParams& params, ImageF& diffmap,
                           double& diffvalue) {
-#if PROFILER_ENABLED
+#if JXL_PROFILER_ENABLED
   auto trace_start = std::chrono::steady_clock::now();
 #endif
   if (!ButteraugliDiffmap(rgb0, rgb1, params, diffmap)) {
     return false;
   }
-#if PROFILER_ENABLED
+#if JXL_PROFILER_ENABLED
   auto trace_end = std::chrono::steady_clock::now();
   std::chrono::duration<double> elapsed = trace_end - trace_start;
   const size_t mp = rgb0.xsize() * rgb0.ysize();

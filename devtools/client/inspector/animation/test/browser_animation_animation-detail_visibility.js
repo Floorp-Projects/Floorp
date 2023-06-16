@@ -5,13 +5,10 @@
 
 // Test that whether animations detail could be displayed if there is selected animation.
 
-add_task(async function() {
+add_task(async function () {
   await addTab(URL_ROOT + "doc_custom_playback_rate.html");
-  const {
-    animationInspector,
-    inspector,
-    panel,
-  } = await openAnimationInspector();
+  const { animationInspector, inspector, panel } =
+    await openAnimationInspector();
 
   info("Checking animation detail visibility if animation was unselected");
   const detailEl = panel.querySelector("#animation-container .controlled");

@@ -111,7 +111,7 @@ function getPlaybackRates(basePlaybackRate, animations) {
   ];
 }
 
-module.exports = function(state = INITIAL_STATE, action) {
+module.exports = function (state = INITIAL_STATE, action) {
   const reducer = reducers[action.type];
   return reducer ? reducer(state, action) : state;
 };

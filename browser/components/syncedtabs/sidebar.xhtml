@@ -4,17 +4,23 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<html
+  xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+>
   <head>
-    <script src="chrome://browser/content/syncedtabs/sidebar.js"/>
-    <script src="chrome://browser/content/utilityOverlay.js"/>
-    <script src="chrome://browser/content/contentTheme.js"/>
+    <script src="chrome://browser/content/syncedtabs/sidebar.js" />
+    <script src="chrome://browser/content/utilityOverlay.js" />
+    <script src="chrome://browser/content/contentTheme.js" />
 
-    <link rel="stylesheet" media="all" href="chrome://browser/skin/syncedtabs/sidebar.css"/>
-    <link rel="localization" href="browser/syncedTabs.ftl"/>
-    <link rel="localization" href="toolkit/branding/accounts.ftl"/>
-    <title data-l10n-id="synced-tabs-sidebar-title"/>
+    <link
+      rel="stylesheet"
+      media="all"
+      href="chrome://browser/skin/syncedtabs/sidebar.css"
+    />
+    <link rel="localization" href="browser/syncedTabs.ftl" />
+    <link rel="localization" href="toolkit/branding/accounts.ftl" />
+    <title data-l10n-id="synced-tabs-sidebar-title" />
   </head>
 
   <body role="application">
@@ -39,7 +45,10 @@
           <div class="item empty" role="option" tabindex="-1">
             <div class="item-title-container">
               <div class="item-icon-container"></div>
-              <p class="item-title" data-l10n-id="synced-tabs-sidebar-notabs"></p>
+              <p
+                class="item-title"
+                data-l10n-id="synced-tabs-sidebar-notabs"
+              ></p>
             </div>
           </div>
         </div>
@@ -68,32 +77,59 @@
         <div class="notAuthedInfo sync-state">
           <div class="syncIllustration"></div>
           <p class="instructions" data-l10n-id="synced-tabs-sidebar-intro"></p>
-          <button class="button sync-prefs" data-l10n-id="synced-tabs-fxa-sign-in"></button>
+          <button
+            class="button sync-prefs"
+            data-l10n-id="synced-tabs-fxa-sign-in"
+          ></button>
         </div>
         <div class="syncDisabled sync-state">
           <div class="syncIllustration"></div>
           <p class="instructions" data-l10n-id="synced-tabs-sidebar-intro"></p>
-          <button class="button sync-prefs" data-l10n-id="synced-tabs-turn-on-sync"></button>
+          <button
+            class="button sync-prefs"
+            data-l10n-id="synced-tabs-turn-on-sync"
+          ></button>
         </div>
         <div class="reauth sync-state">
           <div class="syncIllustrationIssue"></div>
           <p class="instructions" data-l10n-id="synced-tabs-sidebar-intro"></p>
-          <button class="button sync-prefs" data-l10n-id="synced-tabs-fxa-sign-in"></button>
+          <button
+            class="button sync-prefs"
+            data-l10n-id="synced-tabs-fxa-sign-in"
+          ></button>
         </div>
         <div class="unverified sync-state">
           <div class="syncIllustrationIssue"></div>
-          <p class="instructions" data-l10n-id="synced-tabs-sidebar-unverified"></p>
-          <button class="button sync-prefs" data-l10n-id="synced-tabs-sidebar-open-settings"></button>
+          <p
+            class="instructions"
+            data-l10n-id="synced-tabs-sidebar-unverified"
+          ></p>
+          <button
+            class="button sync-prefs"
+            data-l10n-id="synced-tabs-sidebar-open-settings"
+          ></button>
         </div>
         <div class="singleDeviceInfo sync-state">
           <div class="syncIllustrationIssue"></div>
-          <p class="instructions" data-l10n-id="synced-tabs-sidebar-noclients-subtitle"></p>
-          <button class="button connect-device" data-l10n-id="synced-tabs-sidebar-connect-another-device"></button>
+          <p
+            class="instructions"
+            data-l10n-id="synced-tabs-sidebar-noclients-subtitle"
+          ></p>
+          <button
+            class="button connect-device"
+            data-l10n-id="synced-tabs-sidebar-connect-another-device"
+          ></button>
         </div>
         <div class="tabs-disabled sync-state">
           <div class="syncIllustrationIssue"></div>
-          <p class="instructions" data-l10n-id="synced-tabs-sidebar-tabsnotsyncing"></p>
-          <button class="button sync-prefs" data-l10n-id="synced-tabs-sidebar-open-settings"></button>
+          <p
+            class="instructions"
+            data-l10n-id="synced-tabs-sidebar-tabsnotsyncing"
+          ></p>
+          <button
+            class="button sync-prefs"
+            data-l10n-id="synced-tabs-sidebar-open-settings"
+          ></button>
         </div>
       </div>
     </template>
@@ -102,15 +138,20 @@
       <!-- the non-scrollable header -->
       <div class="content-header">
         <div class="sidebar-search-container tabs-container sync-state">
-          <xul:search-textbox class="tabsFilter"
-                              tabindex="1"
-                              data-l10n-id="synced-tabs-sidebar-search"
-                              data-l10n-attrs="placeholder"/>
+          <xul:search-textbox
+            class="tabsFilter"
+            tabindex="1"
+            data-l10n-id="synced-tabs-sidebar-search"
+            data-l10n-attrs="placeholder"
+          />
         </div>
       </div>
       <!-- the scrollable content area where our templates are inserted -->
-      <div id="template-container" class="content-scrollable" tabindex="-1">
-      </div>
+      <div
+        id="template-container"
+        class="content-scrollable"
+        tabindex="-1"
+      ></div>
     </div>
   </body>
 </html>

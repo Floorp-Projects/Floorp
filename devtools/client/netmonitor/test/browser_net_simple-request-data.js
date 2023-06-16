@@ -25,11 +25,8 @@ function test() {
       const { EVENTS, TEST_EVENTS } = windowRequire(
         "devtools/client/netmonitor/src/constants"
       );
-      const {
-        getDisplayedRequests,
-        getSelectedRequest,
-        getSortedRequests,
-      } = windowRequire("devtools/client/netmonitor/src/selectors/index");
+      const { getDisplayedRequests, getSelectedRequest, getSortedRequests } =
+        windowRequire("devtools/client/netmonitor/src/selectors/index");
 
       const promiseList = [];
       promiseList.push(waitForNetworkEvents(monitor, 1));
@@ -319,9 +316,8 @@ function test() {
 
         const requestListItem = document.querySelector(".request-list-item");
         requestListItem.scrollIntoView();
-        const requestsListStatus = requestListItem.querySelector(
-          ".status-code"
-        );
+        const requestsListStatus =
+          requestListItem.querySelector(".status-code");
         EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
         await waitUntil(() => requestsListStatus.title);
         await waitForDOMIfNeeded(

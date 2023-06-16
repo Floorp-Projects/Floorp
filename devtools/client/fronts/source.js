@@ -66,7 +66,7 @@ class SourceFront extends FrontClassWithSpec(sourceSpec) {
   _onSourceResponse(response) {
     const { contentType, source } = response;
     if (source instanceof ArrayBufferFront) {
-      return source.slice(0, source.length).then(function(resp) {
+      return source.slice(0, source.length).then(function (resp) {
         if (resp.error) {
           return resp;
         }
@@ -84,7 +84,7 @@ class SourceFront extends FrontClassWithSpec(sourceSpec) {
       });
     }
 
-    return source.substring(0, source.length).then(function(resp) {
+    return source.substring(0, source.length).then(function (resp) {
       if (resp.error) {
         return resp;
       }

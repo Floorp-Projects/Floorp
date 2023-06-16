@@ -20,17 +20,17 @@ const ToolboxTab = createFactory(
   require("resource://devtools/client/framework/components/ToolboxTab.js")
 );
 
-loader.lazyGetter(this, "MenuButton", function() {
+loader.lazyGetter(this, "MenuButton", function () {
   return createFactory(
     require("resource://devtools/client/shared/components/menu/MenuButton.js")
   );
 });
-loader.lazyGetter(this, "MenuItem", function() {
+loader.lazyGetter(this, "MenuItem", function () {
   return createFactory(
     require("resource://devtools/client/shared/components/menu/MenuItem.js")
   );
 });
-loader.lazyGetter(this, "MenuList", function() {
+loader.lazyGetter(this, "MenuList", function () {
   return createFactory(
     require("resource://devtools/client/shared/components/menu/MenuList.js")
   );
@@ -206,9 +206,8 @@ class ToolboxTabs extends Component {
         visibleTabs.length
       ) {
         const removingToolId = visibleTabs.pop();
-        const removingToolWidth = this._cachedToolTabsWidthMap.get(
-          removingToolId
-        );
+        const removingToolWidth =
+          this._cachedToolTabsWidthMap.get(removingToolId);
         sumWidth -= removingToolWidth;
       }
 

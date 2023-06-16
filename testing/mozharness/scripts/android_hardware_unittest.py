@@ -25,7 +25,7 @@ from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_opt
 
 SUITE_DEFAULT_E10S = ["geckoview-junit", "mochitest", "reftest"]
 SUITE_NO_E10S = ["cppunittest", "gtest", "jittest"]
-SUITE_REPEATABLE = ["mochitest", "reftest"]
+SUITE_REPEATABLE = ["mochitest", "reftest", "xpcshell"]
 
 
 class AndroidHardwareTest(

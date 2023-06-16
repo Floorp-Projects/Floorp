@@ -62,15 +62,15 @@ add_task(async () => {
     ""
   );
 
-  do_check_throws(function() {
+  do_check_throws(function () {
     Services.cookies.removeAll();
   }, Cr.NS_ERROR_NOT_AVAILABLE);
 
-  do_check_throws(function() {
+  do_check_throws(function () {
     Services.cookies.cookies;
   }, Cr.NS_ERROR_NOT_AVAILABLE);
 
-  do_check_throws(function() {
+  do_check_throws(function () {
     Services.cookies.add(
       "foo.com",
       "",
@@ -86,19 +86,19 @@ add_task(async () => {
     );
   }, Cr.NS_ERROR_NOT_AVAILABLE);
 
-  do_check_throws(function() {
+  do_check_throws(function () {
     Services.cookies.remove("foo.com", "", "oh4", {});
   }, Cr.NS_ERROR_NOT_AVAILABLE);
 
-  do_check_throws(function() {
+  do_check_throws(function () {
     Services.cookies.cookieExists(cookie.host, cookie.path, cookie.name, {});
   }, Cr.NS_ERROR_NOT_AVAILABLE);
 
-  do_check_throws(function() {
+  do_check_throws(function () {
     Services.cookies.countCookiesFromHost("foo.com");
   }, Cr.NS_ERROR_NOT_AVAILABLE);
 
-  do_check_throws(function() {
+  do_check_throws(function () {
     Services.cookies.getCookiesFromHost("foo.com", {});
   }, Cr.NS_ERROR_NOT_AVAILABLE);
 

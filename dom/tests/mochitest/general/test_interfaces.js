@@ -32,8 +32,8 @@
 // channel/OS) or one of the is* constants below (in cases when
 // exposure is affected by channel or OS in a nontrivial way).
 
-const { AppConstants } = SpecialPowers.ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 
 const isNightly = AppConstants.NIGHTLY_BUILD;
@@ -58,7 +58,8 @@ const isCrossOriginIsolated = window.crossOriginIsolated;
 let wasmGlobalEntry = {
   name: "WebAssembly",
   insecureContext: true,
-  disabled: !SpecialPowers.Cu.getJSTestingFunctions().wasmIsSupportedByHardware(),
+  disabled:
+    !SpecialPowers.Cu.getJSTestingFunctions().wasmIsSupportedByHardware(),
 };
 let wasmGlobalInterfaces = [
   { name: "Module", insecureContext: true },
@@ -892,12 +893,6 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "OfflineAudioContext", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  {
-    name: "OfflineResourceList",
-    insecureContext: false,
-    disabled: isEarlyBetaOrEarlier,
-  },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "OffscreenCanvas", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "OffscreenCanvasRenderingContext2D", insecureContext: true },
@@ -1493,12 +1488,6 @@ let interfaceNamesInGlobalScope = [
   { name: "XSLTProcessor", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "alert", insecureContext: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  {
-    name: "applicationCache",
-    insecureContext: false,
-    disabled: isEarlyBetaOrEarlier,
-  },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "atob", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!

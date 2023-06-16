@@ -1,10 +1,10 @@
 function getLastEventDetails(browser) {
-  return SpecialPowers.spawn(browser, [], async function() {
+  return SpecialPowers.spawn(browser, [], async function () {
     return content.document.getElementById("out").textContent;
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   let onClickEvt =
     'document.getElementById("out").textContent = event.target.localName + "," + event.clientX + "," + event.clientY;';
   const url =
@@ -236,7 +236,7 @@ add_task(async function mouse_in_iframe() {
   gBrowser.removeTab(tab);
 });
 
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.registerAboutPage(
     registerCleanupFunction,
     "about-pages-are-cool",

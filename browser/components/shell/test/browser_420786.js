@@ -8,7 +8,7 @@ const GS_IMAGE_KEY = "picture-uri";
 const GS_OPTION_KEY = "picture-options";
 const GS_DRAW_BG_KEY = "draw-background";
 
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -65,7 +65,7 @@ add_task(async function() {
         const prevOption = gsettings.getString(GS_OPTION_KEY);
         const prevDrawBG = gsettings.getBoolean(GS_DRAW_BG_KEY);
 
-        checkWallpaper = function(position, expectedGSettingsPosition) {
+        checkWallpaper = function (position, expectedGSettingsPosition) {
           shell.setDesktopBackground(image, position, "");
           ok(wpFile.exists(), "Wallpaper was written to disk");
           is(
@@ -80,7 +80,7 @@ add_task(async function() {
           );
         };
 
-        restoreSettings = function() {
+        restoreSettings = function () {
           gsettings.setString(GS_IMAGE_KEY, prevImage);
           gsettings.setString(GS_OPTION_KEY, prevOption);
           gsettings.setBoolean(GS_DRAW_BG_KEY, prevDrawBG);

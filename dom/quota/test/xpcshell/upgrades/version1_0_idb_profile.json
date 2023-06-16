@@ -25,7 +25,7 @@
                     ]
                   },
                   { "name": ".metadata", "dir": false },
-                  { "name": ".metadata-v2", "dir":false }
+                  { "name": ".metadata-v2", "dir": false }
                 ]
               }
             ]
@@ -59,7 +59,7 @@
                     ]
                   },
                   { "name": ".metadata", "dir": false },
-                  { "name": ".metadata-v2", "dir":false }
+                  { "name": ".metadata-v2", "dir": false }
                 ]
               }
             ]

@@ -1,7 +1,7 @@
 check_updates () {
-  # called with 9 args - platform, source package, target package, update package, old updater boolean,
+  # called with 10 args - platform, source package, target package, update package, old updater boolean,
   # a path to the updater binary to use for the tests, a file to write diffs to, the update channel,
-  # and (sometimes) update-settings.ini values
+  # update-settings.ini values, and a flag to indicate the target is dep-signed
   update_platform=$1
   source_package=$2
   target_package=$3
@@ -11,6 +11,7 @@ check_updates () {
   diff_file=$7
   channel=$8
   mar_channel_IDs=$9
+  update_to_dep=${10}
 
   # cleanup
   rm -rf source/*
@@ -99,7 +100,16 @@ check_updates () {
   fi
   cd ../..
 
-  ../compare-directories.py source/${platform_dirname} target/${platform_dirname}  ${channel} > "${diff_file}"
+  # If we are testing an OSX mar to update from a production-signed/notarized
+  # build to a dep-signed one, ignore Contents/CodeResources which won't be
+  # present in the target, to avoid spurious failures
+  if ${update_to_dep}; then
+    ignore_coderesources=--ignore-missing=Contents/CodeResources
+  else
+    ignore_coderesources=
+  fi
+
+  ../compare-directories.py source/${platform_dirname} target/${platform_dirname} ${channel} ${ignore_coderesources} > "${diff_file}"
   diffErr=$?
   cat "${diff_file}"
   if [ $diffErr == 2 ]

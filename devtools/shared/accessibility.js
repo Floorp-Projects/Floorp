@@ -157,10 +157,8 @@ function getContrastRatioAgainstBackground(
     };
   }
 
-  let {
-    min: backgroundColorMin,
-    max: backgroundColorMax,
-  } = backgroundColorData;
+  let { min: backgroundColorMin, max: backgroundColorMax } =
+    backgroundColorData;
   let min = colorUtils.calculateContrastRatio(backgroundColorMin, color);
   let max = colorUtils.calculateContrastRatio(backgroundColorMax, color);
 

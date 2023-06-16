@@ -20,7 +20,7 @@ const TEST_URL =
   "</body>" +
   "</html>";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
 
   inspector.markup._frame.focus();

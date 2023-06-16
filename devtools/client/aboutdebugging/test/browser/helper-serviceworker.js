@@ -31,18 +31,23 @@ async function enableServiceWorkerDebugging() {
  */
 function onServiceWorkerMessage(tab, message) {
   info("Make the test page notify us when the service worker sends a message.");
-  return SpecialPowers.spawn(tab.linkedBrowser, [message], function(
-    messageChild
-  ) {
-    return new Promise(resolve => {
-      const win = content.wrappedJSObject;
-      win.navigator.serviceWorker.addEventListener("message", function(event) {
-        if (event.data == messageChild) {
-          resolve();
-        }
+  return SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [message],
+    function (messageChild) {
+      return new Promise(resolve => {
+        const win = content.wrappedJSObject;
+        win.navigator.serviceWorker.addEventListener(
+          "message",
+          function (event) {
+            if (event.data == messageChild) {
+              resolve();
+            }
+          }
+        );
       });
-    });
-  });
+    }
+  );
 }
 /* exported onServiceWorkerMessage */
 
@@ -76,7 +81,7 @@ async function waitForRegistration(tab) {
   info("Wait until the registration appears on the window");
   const swBrowser = tab.linkedBrowser;
   await asyncWaitUntil(async () =>
-    SpecialPowers.spawn(swBrowser, [], async function() {
+    SpecialPowers.spawn(swBrowser, [], async function () {
       return !!(await content.wrappedJSObject.getRegistration());
     })
   );
@@ -92,7 +97,7 @@ async function waitForRegistration(tab) {
  *        The tab on which the service worker should be removed.
  */
 async function unregisterServiceWorker(tab) {
-  return SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+  return SpecialPowers.spawn(tab.linkedBrowser, [], function () {
     const win = content.wrappedJSObject;
     // Check that the content page defines getRegistration.
     is(

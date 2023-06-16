@@ -265,11 +265,8 @@ if (searchParams.has("filter")) {
 }
 
 if (searchParamsChanged) {
-  let newURL = protocol + pathname;
-  let params = searchParams.toString();
-  if (params) {
-    newURL += "?" + params;
-  }
+  const paramsPart = searchParams.toString() ? `?${searchParams}` : "";
+  const newURL = protocol + pathname + paramsPart + document.location.hash;
   // This redirect doesn't stop this script from running so ensure you guard
   // later code if it shouldn't run before and after the redirect.
   window.location.replace(newURL);
@@ -280,6 +277,12 @@ if (searchParamsChanged) {
 }
 
 if (!searchParamsChanged) {
+  if (document.location.hash) {
+    const loginDomainOrGuid = decodeURIComponent(
+      document.location.hash.slice(1)
+    );
+    gElements.loginList.selectLoginByDomainOrGuid(loginDomainOrGuid);
+  }
   gElements.loginFilter.focus();
   document.dispatchEvent(new CustomEvent("AboutLoginsInit", { bubbles: true }));
 }

@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
 /**
@@ -15,8 +19,8 @@ console.info(
 );
 
 Object.defineProperty(window.wrappedJSObject, "InstallTrigger", {
-  get: exportFunction(function() {
+  get: exportFunction(function () {
     return "This property has been shimed for Web Compatibility reasons.";
   }, window),
-  set: exportFunction(function(_) {}, window),
+  set: exportFunction(function (_) {}, window),
 });

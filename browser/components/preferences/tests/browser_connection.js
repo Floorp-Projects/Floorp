@@ -9,7 +9,7 @@ function test() {
   // network.proxy.type needs to be backed up and restored because mochitest
   // changes this setting from the default
   let oldNetworkProxyType = Services.prefs.getIntPref("network.proxy.type");
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.prefs.setIntPref("network.proxy.type", oldNetworkProxyType);
     Services.prefs.clearUserPref("network.proxy.no_proxies_on");
     // On accepting the dialog, we also write TRR values, so we need to clear

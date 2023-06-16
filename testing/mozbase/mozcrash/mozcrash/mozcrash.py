@@ -136,7 +136,8 @@ def check_for_crashes(
                 )
             signature = info.signature if info.signature else "unknown top frame"
 
-            output = "PROCESS-CRASH | {name} | application crashed [{sig}]\n{out}\n{err}".format(
+            output = "PROCESS-CRASH | {reason} [{sig}] | {name}\n{out}\n{err}".format(
+                reason=info.reason,
                 name=test_name,
                 sig=signature,
                 out="\n".join(stackwalk_output),

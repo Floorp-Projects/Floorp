@@ -6,27 +6,72 @@
 // This file is loaded into the browser window scope.
 /* eslint-env mozilla/browser-window */
 
+var { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
+
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ExtensionParent",
-  "resource://gre/modules/ExtensionParent.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "OriginControls",
-  "resource://gre/modules/ExtensionPermissions.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ExtensionPermissions",
-  "resource://gre/modules/ExtensionPermissions.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
+  ExtensionParent: "resource://gre/modules/ExtensionParent.sys.mjs",
+  ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.sys.mjs",
+  OriginControls: "resource://gre/modules/ExtensionPermissions.sys.mjs",
   SITEPERMS_ADDON_TYPE:
     "resource://gre/modules/addons/siteperms-addon-utils.sys.mjs",
 });
+XPCOMUtils.defineLazyGetter(lazy, "l10n", function () {
+  return new Localization(
+    ["browser/addonNotifications.ftl", "branding/brand.ftl"],
+    true
+  );
+});
+
+/**
+ * Mapping of error code -> [error-id, local-error-id]
+ *
+ * error-id is used for errors in DownloadedAddonInstall,
+ * local-error-id for errors in LocalAddonInstall.
+ *
+ * The error codes are defined in AddonManager's _errors Map.
+ * Not all error codes listed there are translated,
+ * since errors that are only triggered during updates
+ * will never reach this code.
+ */
+const ERROR_L10N_IDS = new Map([
+  [
+    -1,
+    [
+      "addon-install-error-network-failure",
+      "addon-local-install-error-network-failure",
+    ],
+  ],
+  [
+    -2,
+    [
+      "addon-install-error-incorrect-hash",
+      "addon-local-install-error-incorrect-hash",
+    ],
+  ],
+  [
+    -3,
+    [
+      "addon-install-error-corrupt-file",
+      "addon-local-install-error-corrupt-file",
+    ],
+  ],
+  [
+    -4,
+    [
+      "addon-install-error-file-access",
+      "addon-local-install-error-file-access",
+    ],
+  ],
+  [
+    -5,
+    ["addon-install-error-not-signed", "addon-local-install-error-not-signed"],
+  ],
+  [-8, ["addon-install-error-invalid-domain"]],
+]);
 
 customElements.define(
   "addon-progress-notification",
@@ -47,7 +92,7 @@ customElements.define(
         return;
       }
 
-      this.notification.options.installs.forEach(function(aInstall) {
+      this.notification.options.installs.forEach(function (aInstall) {
         aInstall.addListener(this);
       }, this);
 
@@ -71,7 +116,7 @@ customElements.define(
       if (!this.notification) {
         return;
       }
-      this.notification.options.installs.forEach(function(aInstall) {
+      this.notification.options.installs.forEach(function (aInstall) {
         aInstall.removeListener(this);
       }, this);
 
@@ -128,7 +173,7 @@ customElements.define(
 
     cancel() {
       let installs = this.notification.options.installs;
-      installs.forEach(function(aInstall) {
+      installs.forEach(function (aInstall) {
         try {
           aInstall.cancel();
         } catch (e) {
@@ -148,7 +193,7 @@ customElements.define(
       let progress = 0;
       let maxProgress = 0;
 
-      this.notification.options.installs.forEach(function(aInstall) {
+      this.notification.options.installs.forEach(function (aInstall) {
         if (aInstall.maxProgress == -1) {
           maxProgress = -1;
         }
@@ -164,7 +209,7 @@ customElements.define(
       if (downloadingCount == 0) {
         this.destroy();
         this.progressmeter.removeAttribute("value");
-        let status = gNavigatorBundle.getString("addonDownloadVerifying");
+        const status = lazy.l10n.formatValueSync("addon-download-verifying");
         this.progresstext.setAttribute("value", status);
         this.progresstext.setAttribute("tooltiptext", status);
       } else {
@@ -218,6 +263,22 @@ function removeNotificationOnEnd(notification, installs) {
       onInstallEnded: maybeRemove,
     });
   }
+}
+
+function buildNotificationAction(msg, callback) {
+  let label = "";
+  let accessKey = "";
+  for (let { name, value } of msg.attributes) {
+    switch (name) {
+      case "label":
+        label = value;
+        break;
+      case "accesskey":
+        accessKey = value;
+        break;
+    }
+  }
+  return { label, accessKey, callback };
 }
 
 var gXPInstallObserver = {
@@ -354,9 +415,9 @@ var gXPInstallObserver = {
               install.addon.signedState <= AddonManager.SIGNEDSTATE_MISSING
             ) {
               let unsignedLabel = document.createXULElement("label");
-              unsignedLabel.setAttribute(
-                "value",
-                gNavigatorBundle.getString("addonInstall.unsigned")
+              document.l10n.setAttributes(
+                unsignedLabel,
+                "popup-notification-addon-install-unsigned"
               );
               unsignedLabel.setAttribute(
                 "class",
@@ -375,54 +436,36 @@ var gXPInstallObserver = {
       "app.support.baseURL"
     );
 
-    let messageString;
+    let msgId;
     let notification = document.getElementById(
       "addon-install-confirmation-notification"
     );
     if (unsigned.length == installInfo.installs.length) {
       // None of the add-ons are verified
-      messageString = gNavigatorBundle.getString(
-        "addonConfirmInstallUnsigned.message"
-      );
+      msgId = "addon-confirm-install-unsigned-message";
       notification.setAttribute("warning", "true");
       options.learnMoreURL += "unsigned-addons";
     } else if (!unsigned.length) {
       // All add-ons are verified or don't need to be verified
-      messageString = gNavigatorBundle.getString("addonConfirmInstall.message");
+      msgId = "addon-confirm-install-message";
       notification.removeAttribute("warning");
       options.learnMoreURL += "find-and-install-add-ons";
     } else {
       // Some of the add-ons are unverified, the list of names will indicate
       // which
-      messageString = gNavigatorBundle.getString(
-        "addonConfirmInstallSomeUnsigned.message"
-      );
+      msgId = "addon-confirm-install-some-unsigned-message";
       notification.setAttribute("warning", "true");
       options.learnMoreURL += "unsigned-addons";
     }
+    const addonCount = installInfo.installs.length;
+    const messageString = lazy.l10n.formatValueSync(msgId, { addonCount });
 
-    let brandBundle = document.getElementById("bundle_brand");
-    let brandShortName = brandBundle.getString("brandShortName");
-
-    messageString = PluralForm.get(installInfo.installs.length, messageString);
-    messageString = messageString.replace("#1", brandShortName);
-    messageString = messageString.replace("#2", installInfo.installs.length);
-
-    let action = {
-      label: gNavigatorBundle.getString("addonInstall.acceptButton2.label"),
-      accessKey: gNavigatorBundle.getString(
-        "addonInstall.acceptButton2.accesskey"
-      ),
-      callback: acceptInstallation,
-    };
-
-    let secondaryAction = {
-      label: gNavigatorBundle.getString("addonInstall.cancelButton.label"),
-      accessKey: gNavigatorBundle.getString(
-        "addonInstall.cancelButton.accesskey"
-      ),
-      callback: () => {},
-    };
+    const [acceptMsg, cancelMsg] = lazy.l10n.formatMessagesSync([
+      "addon-install-accept-button",
+      "addon-install-cancel-button",
+    ]);
+    const action = buildNotificationAction(acceptMsg, acceptInstallation);
+    const secondaryAction = buildNotificationAction(cancelMsg, () => {});
 
     if (height) {
       notification.style.minHeight = height + "px";
@@ -484,8 +527,8 @@ var gXPInstallObserver = {
     let consoleMsg = Cc["@mozilla.org/scripterror;1"].createInstance(
       Ci.nsIScriptError
     );
-    let message = gBrowserBundle.GetStringFromName(
-      "addonInstallFullScreenBlocked"
+    const message = lazy.l10n.formatValueSync(
+      "addon-install-full-screen-blocked"
     );
     consoleMsg.initWithWindowID(
       message,
@@ -501,7 +544,6 @@ var gXPInstallObserver = {
   },
 
   async observe(aSubject, aTopic, aData) {
-    var brandBundle = document.getElementById("bundle_brand");
     var installInfo = aSubject.wrappedJSObject;
     var browser = installInfo.browser;
 
@@ -510,10 +552,6 @@ var gXPInstallObserver = {
       return;
     }
 
-    var messageString, action;
-    var brandShortName = brandBundle.getString("brandShortName");
-
-    var notificationID = aTopic;
     // Make notifications persistent
     var options = {
       displayURI: installInfo.originatingURI,
@@ -527,45 +565,27 @@ var gXPInstallObserver = {
 
     switch (aTopic) {
       case "addon-install-disabled": {
-        notificationID = "xpinstall-disabled";
-        let secondaryActions = null;
-
+        let msgId, action, secondaryActions;
         if (Services.prefs.prefIsLocked("xpinstall.enabled")) {
-          messageString = gNavigatorBundle.getString(
-            "xpinstallDisabledMessageLocked"
-          );
+          msgId = "xpinstall-disabled-locked";
+          action = null;
+          secondaryActions = null;
         } else {
-          messageString = gNavigatorBundle.getString(
-            "xpinstallDisabledMessage"
-          );
-
-          action = {
-            label: gNavigatorBundle.getString("xpinstallDisabledButton"),
-            accessKey: gNavigatorBundle.getString(
-              "xpinstallDisabledButton.accesskey"
-            ),
-            callback: function editPrefs() {
-              Services.prefs.setBoolPref("xpinstall.enabled", true);
-            },
-          };
-
-          secondaryActions = [
-            {
-              label: gNavigatorBundle.getString(
-                "addonInstall.cancelButton.label"
-              ),
-              accessKey: gNavigatorBundle.getString(
-                "addonInstall.cancelButton.accesskey"
-              ),
-              callback: () => {},
-            },
-          ];
+          msgId = "xpinstall-disabled";
+          const [disabledMsg, cancelMsg] = await lazy.l10n.formatMessages([
+            "xpinstall-disabled-button",
+            "addon-install-cancel-button",
+          ]);
+          action = buildNotificationAction(disabledMsg, () => {
+            Services.prefs.setBoolPref("xpinstall.enabled", true);
+          });
+          secondaryActions = [buildNotificationAction(cancelMsg, () => {})];
         }
 
         PopupNotifications.show(
           browser,
-          notificationID,
-          messageString,
+          "xpinstall-disabled",
+          await lazy.l10n.formatValue(msgId),
           gUnifiedExtensions.getPopupAnchorID(browser, window),
           action,
           secondaryActions,
@@ -581,17 +601,11 @@ var gXPInstallObserver = {
       case "addon-install-webapi-blocked":
       case "addon-install-policy-blocked":
       case "addon-install-origin-blocked": {
-        if (aTopic == "addon-install-policy-blocked") {
-          messageString = gNavigatorBundle.getString(
-            "addonDomainBlockedByPolicy"
-          );
-        } else {
-          messageString = gNavigatorBundle.getFormattedString(
-            "xpinstallPromptMessage",
-            [brandShortName]
-          );
-        }
-
+        const msgId =
+          aTopic == "addon-install-policy-blocked"
+            ? "addon-domain-blocked-by-policy"
+            : "xpinstall-prompt";
+        let messageString = await lazy.l10n.formatValue(msgId);
         if (Services.policies) {
           let extensionSettings = Services.policies.getExtensionSettings("*");
           if (
@@ -611,7 +625,7 @@ var gXPInstallObserver = {
         );
         let popup = PopupNotifications.show(
           browser,
-          notificationID,
+          aTopic,
           messageString,
           gUnifiedExtensions.getPopupAnchorID(browser, window),
           null,
@@ -640,27 +654,31 @@ var gXPInstallObserver = {
         let isSitePermissionAddon = installInfo.installs.every(
           ({ addon }) => addon?.type === lazy.SITEPERMS_ADDON_TYPE
         );
-        let hasHost = !!options.displayURI;
-
+        let hasHost = false;
+        let headerId, msgId;
         if (isSitePermissionAddon) {
           // At present, WebMIDI is the only consumer of the site permission
           // add-on infrastructure, and so we can hard-code a midi string here.
           // If and when we use it for other things, we'll need to plumb that
           // information through. See bug 1826747.
-          messageString = gNavigatorBundle.getString(
-            "sitePermissionInstallFirstPrompt.midi.header"
-          );
-        } else if (hasHost) {
-          messageString = gNavigatorBundle.getFormattedString(
-            "xpinstallPromptMessage.header",
-            ["<>"]
-          );
+          headerId = "site-permission-install-first-prompt-midi-header";
+          msgId = "site-permission-install-first-prompt-midi-message";
+        } else if (options.displayURI) {
+          // PopupNotifications.show replaces <> with options.name.
+          headerId = { id: "xpinstall-prompt-header", args: { host: "<>" } };
+          // BrowserUIUtils.getLocalizedFragment replaces %1$S with options.name.
+          msgId = { id: "xpinstall-prompt-message", args: { host: "%1$S" } };
           options.name = options.displayURI.displayHost;
+          hasHost = true;
         } else {
-          messageString = gNavigatorBundle.getString(
-            "xpinstallPromptMessage.header.unknown"
-          );
+          headerId = "xpinstall-prompt-header-unknown";
+          msgId = "xpinstall-prompt-message-unknown";
         }
+        const [headerString, msgString] = await lazy.l10n.formatValues([
+          headerId,
+          msgId,
+        ]);
+
         // displayURI becomes it's own label, so we unset it for this panel. It will become part of the
         // messageString above.
         let displayURI = options.displayURI;
@@ -677,22 +695,17 @@ var gXPInstallObserver = {
             message.firstChild.remove();
           }
 
-          if (isSitePermissionAddon) {
-            message.textContent = gNavigatorBundle.getString(
-              "sitePermissionInstallFirstPrompt.midi.message"
-            );
-          } else if (hasHost) {
-            let text = gNavigatorBundle.getString(
-              "xpinstallPromptMessage.message"
-            );
+          if (!hasHost) {
+            message.textContent = msgString;
+          } else {
             let b = doc.createElementNS("http://www.w3.org/1999/xhtml", "b");
             b.textContent = options.name;
-            let fragment = BrowserUIUtils.getLocalizedFragment(doc, text, b);
-            message.appendChild(fragment);
-          } else {
-            message.textContent = gNavigatorBundle.getString(
-              "xpinstallPromptMessage.message.unknown"
+            let fragment = BrowserUIUtils.getLocalizedFragment(
+              doc,
+              msgString,
+              b
             );
+            message.appendChild(fragment);
           }
 
           let article = isSitePermissionAddon
@@ -703,37 +716,31 @@ var gXPInstallObserver = {
         };
 
         let secHistogram = Services.telemetry.getHistogramById("SECURITY_UI");
-        action = {
-          label: gNavigatorBundle.getString("xpinstallPromptMessage.install"),
-          accessKey: gNavigatorBundle.getString(
-            "xpinstallPromptMessage.install.accesskey"
-          ),
-          callback() {
-            secHistogram.add(
-              Ci.nsISecurityUITelemetry
-                .WARNING_ADDON_ASKING_PREVENTED_CLICK_THROUGH
-            );
-            installInfo.install();
-          },
-        };
-        let dontAllowAction = {
-          label: gNavigatorBundle.getString("xpinstallPromptMessage.dontAllow"),
-          accessKey: gNavigatorBundle.getString(
-            "xpinstallPromptMessage.dontAllow.accesskey"
-          ),
-          callback: () => {
-            for (let install of installInfo.installs) {
-              if (install.state != AddonManager.STATE_CANCELLED) {
-                install.cancel();
-              }
-            }
-            if (installInfo.cancel) {
-              installInfo.cancel();
-            }
-          },
-        };
+        secHistogram.add(
+          Ci.nsISecurityUITelemetry.WARNING_ADDON_ASKING_PREVENTED
+        );
 
-        let neverAllowCallback = () => {
+        const [
+          installMsg,
+          dontAllowMsg,
+          neverAllowMsg,
+          neverAllowAndReportMsg,
+        ] = await lazy.l10n.formatMessages([
+          "xpinstall-prompt-install",
+          "xpinstall-prompt-dont-allow",
+          "xpinstall-prompt-never-allow",
+          "xpinstall-prompt-never-allow-and-report",
+        ]);
+
+        const action = buildNotificationAction(installMsg, () => {
+          secHistogram.add(
+            Ci.nsISecurityUITelemetry
+              .WARNING_ADDON_ASKING_PREVENTED_CLICK_THROUGH
+          );
+          installInfo.install();
+        });
+
+        const neverAllowCallback = () => {
           SitePermissions.setForPrincipal(
             browser.contentPrincipal,
             "install",
@@ -749,49 +756,40 @@ var gXPInstallObserver = {
           }
         };
 
-        let neverAllowAction = {
-          label: gNavigatorBundle.getString(
-            "xpinstallPromptMessage.neverAllow"
-          ),
-          accessKey: gNavigatorBundle.getString(
-            "xpinstallPromptMessage.neverAllow.accesskey"
-          ),
-          callback: neverAllowCallback,
-        };
+        const declineActions = [
+          buildNotificationAction(dontAllowMsg, () => {
+            for (let install of installInfo.installs) {
+              if (install.state != AddonManager.STATE_CANCELLED) {
+                install.cancel();
+              }
+            }
+            if (installInfo.cancel) {
+              installInfo.cancel();
+            }
+          }),
+          buildNotificationAction(neverAllowMsg, neverAllowCallback),
+        ];
 
-        let neverAllowAndReportAction = {
-          label: gNavigatorBundle.getString(
-            "xpinstallPromptMessage.neverAllowAndReport"
-          ),
-          accessKey: gNavigatorBundle.getString(
-            "xpinstallPromptMessage.neverAllowAndReport.accesskey"
-          ),
-          callback: () => {
-            AMTelemetry.recordEvent({
-              method: "reportSuspiciousSite",
-              object: "suspiciousSite",
-              value: displayURI?.displayHost ?? "(unknown)",
-              extra: {},
-            });
-            neverAllowCallback();
-          },
-        };
-
-        secHistogram.add(
-          Ci.nsISecurityUITelemetry.WARNING_ADDON_ASKING_PREVENTED
-        );
-
-        let declineActions = [dontAllowAction, neverAllowAction];
         if (isSitePermissionAddon) {
           // Restrict this to site permission add-ons for now pending a decision
           // from product about how to approach this for extensions.
-          declineActions.push(neverAllowAndReportAction);
+          declineActions.push(
+            buildNotificationAction(neverAllowAndReportMsg, () => {
+              AMTelemetry.recordEvent({
+                method: "reportSuspiciousSite",
+                object: "suspiciousSite",
+                value: displayURI?.displayHost ?? "(unknown)",
+                extra: {},
+              });
+              neverAllowCallback();
+            })
+          );
         }
 
         let popup = PopupNotifications.show(
           browser,
-          notificationID,
-          messageString,
+          aTopic,
+          headerString,
           gUnifiedExtensions.getPopupAnchorID(browser, window),
           action,
           declineActions,
@@ -801,30 +799,24 @@ var gXPInstallObserver = {
         break;
       }
       case "addon-install-started": {
-        let needsDownload = function needsDownload(aInstall) {
-          return aInstall.state != AddonManager.STATE_DOWNLOADED;
-        };
         // If all installs have already been downloaded then there is no need to
         // show the download progress
-        if (!installInfo.installs.some(needsDownload)) {
+        if (
+          installInfo.installs.every(
+            aInstall => aInstall.state == AddonManager.STATE_DOWNLOADED
+          )
+        ) {
           return;
         }
-        notificationID = "addon-progress";
-        messageString = gNavigatorBundle.getString(
-          "addonDownloadingAndVerifying"
-        );
-        messageString = PluralForm.get(
-          installInfo.installs.length,
-          messageString
-        );
-        messageString = messageString.replace(
-          "#1",
-          installInfo.installs.length
+
+        const messageString = lazy.l10n.formatValueSync(
+          "addon-downloading-and-verifying",
+          { addonCount: installInfo.installs.length }
         );
         options.installs = installInfo.installs;
         options.contentWindow = browser.contentWindow;
         options.sourceURI = browser.currentURI;
-        options.eventCallback = function(aEvent) {
+        options.eventCallback = function (aEvent) {
           switch (aEvent) {
             case "removed":
               options.contentWindow = null;
@@ -832,30 +824,26 @@ var gXPInstallObserver = {
               break;
           }
         };
-        action = {
-          label: gNavigatorBundle.getString("addonInstall.acceptButton2.label"),
-          accessKey: gNavigatorBundle.getString(
-            "addonInstall.acceptButton2.accesskey"
-          ),
-          disabled: true,
-          callback: () => {},
-        };
-        let secondaryAction = {
-          label: gNavigatorBundle.getString("addonInstall.cancelButton.label"),
-          accessKey: gNavigatorBundle.getString(
-            "addonInstall.cancelButton.accesskey"
-          ),
-          callback: () => {
-            for (let install of installInfo.installs) {
-              if (install.state != AddonManager.STATE_CANCELLED) {
-                install.cancel();
-              }
+
+        const [acceptMsg, cancelMsg] = lazy.l10n.formatMessagesSync([
+          "addon-install-accept-button",
+          "addon-install-cancel-button",
+        ]);
+
+        const action = buildNotificationAction(acceptMsg, () => {});
+        action.disabled = true;
+
+        const secondaryAction = buildNotificationAction(cancelMsg, () => {
+          for (let install of installInfo.installs) {
+            if (install.state != AddonManager.STATE_CANCELLED) {
+              install.cancel();
             }
-          },
-        };
+          }
+        });
+
         let notification = PopupNotifications.show(
           browser,
-          notificationID,
+          "addon-progress",
           messageString,
           gUnifiedExtensions.getPopupAnchorID(browser, window),
           action,
@@ -885,46 +873,41 @@ var gXPInstallObserver = {
               install.sourceURI.host;
           }
 
-          // Construct the l10n ID for the error, e.g. "addonInstallError-3"
-          let error =
-            host || install.error == 0
-              ? "addonInstallError"
-              : "addonLocalInstallError";
-          let args;
-          if (install.error < 0) {
-            // Append the error code for the installation failure to get the
-            // matching translation of the error. The error code is defined in
-            // AddonManager's _errors Map. Not all error codes listed there are
-            // translated, since errors that are only triggered during updates
-            // will never reach this code.
-            error += install.error;
-            args = [brandShortName, install.name];
-          } else if (
-            install.addon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED
-          ) {
-            error += "Blocklisted";
-            args = [install.name];
-          } else {
-            error += "Incompatible";
-            args = [brandShortName, Services.appinfo.version, install.name];
-          }
-
+          let messageString;
           if (
             install.addon &&
             !Services.policies.mayInstallAddon(install.addon)
           ) {
-            error = "addonInstallBlockedByPolicy";
+            messageString = lazy.l10n.formatValueSync(
+              "addon-install-blocked-by-policy",
+              { addonName: install.name, addonId: install.addon.id }
+            );
             let extensionSettings = Services.policies.getExtensionSettings(
               install.addon.id
             );
-            let message = "";
             if (
               extensionSettings &&
               "blocked_install_message" in extensionSettings
             ) {
-              message = " " + extensionSettings.blocked_install_message;
+              messageString += " " + extensionSettings.blocked_install_message;
             }
-            args = [install.name, install.addon.id, message];
+          } else {
+            // TODO bug 1834484: simplify computation of isLocal.
+            const isLocal = !host;
+            let errorId = ERROR_L10N_IDS.get(install.error)?.[isLocal ? 1 : 0];
+            const args = { addonName: install.name };
+            if (!errorId) {
+              if (
+                install.addon.blocklistState ==
+                Ci.nsIBlocklistService.STATE_BLOCKED
+              ) {
+                errorId = "addon-install-error-blocklisted";
+              } else {
+                errorId = "addon-install-error-incompatible";
+                args.appVersion = Services.appinfo.version;
+              }
+            }
+            messageString = lazy.l10n.formatValueSync(errorId, args);
           }
 
           // Add Learn More link when refusing to install an unsigned add-on
@@ -934,14 +917,12 @@ var gXPInstallObserver = {
               "unsigned-addons";
           }
 
-          messageString = gNavigatorBundle.getFormattedString(error, args);
-
           PopupNotifications.show(
             browser,
-            notificationID,
+            aTopic,
             messageString,
             gUnifiedExtensions.getPopupAnchorID(browser, window),
-            action,
+            null,
             null,
             options
           );
@@ -1022,14 +1003,15 @@ var gExtensionsNotifications = {
     ExtensionsUI.off("change", this.boundUpdate);
   },
 
-  _createAddonButton(text, icon, callback) {
+  _createAddonButton(l10nId, addon, callback) {
+    let text = lazy.l10n.formatValueSync(l10nId, { addonName: addon.name });
     let button = document.createXULElement("toolbarbutton");
     button.setAttribute("wrap", "true");
     button.setAttribute("label", text);
     button.setAttribute("tooltiptext", text);
     const DEFAULT_EXTENSION_ICON =
       "chrome://mozapps/skin/extensions/extensionGeneric.svg";
-    button.setAttribute("image", icon || DEFAULT_EXTENSION_ICON);
+    button.setAttribute("image", addon.iconURL || DEFAULT_EXTENSION_ICON);
     button.className = "addon-banner-item subviewbutton";
 
     button.addEventListener("command", callback);
@@ -1051,30 +1033,20 @@ var gExtensionsNotifications = {
       if (++items > 4) {
         break;
       }
-      let text = gNavigatorBundle.getFormattedString(
-        "webextPerms.updateMenuItem",
-        [update.addon.name]
+      this._createAddonButton(
+        "webext-perms-update-menu-item",
+        update.addon,
+        evt => {
+          ExtensionsUI.showUpdate(gBrowser, update);
+        }
       );
-      this._createAddonButton(text, update.addon.iconURL, evt => {
-        ExtensionsUI.showUpdate(gBrowser, update);
-      });
     }
 
-    let appName;
     for (let addon of sideloaded) {
       if (++items > 4) {
         break;
       }
-      if (!appName) {
-        let brandBundle = document.getElementById("bundle_brand");
-        appName = brandBundle.getString("brandShortName");
-      }
-
-      let text = gNavigatorBundle.getFormattedString(
-        "webextPerms.sideloadMenuItem",
-        [addon.name, appName]
-      );
-      this._createAddonButton(text, addon.iconURL, evt => {
+      this._createAddonButton("webext-perms-sideload-menu-item", addon, evt => {
         // We need to hide the main menu manually because the toolbarbutton is
         // removed immediately while processing this event, and PanelUI is
         // unable to identify which panel should be closed automatically.
@@ -1088,11 +1060,16 @@ var gExtensionsNotifications = {
 var BrowserAddonUI = {
   async promptRemoveExtension(addon) {
     let { name } = addon;
-    let title = await document.l10n.formatValue("addon-removal-title", {
-      name,
-    });
-    let { getFormattedString, getString } = gNavigatorBundle;
-    let btnTitle = getString("webext.remove.confirmation.button");
+    let [title, btnTitle, message] = await lazy.l10n.formatValues([
+      { id: "addon-removal-title", args: { name } },
+      { id: "addon-removal-button" },
+      { id: "addon-removal-message", args: { name } },
+    ]);
+
+    if (Services.prefs.getBoolPref("prompts.windowPromptSubDialog", false)) {
+      message = null;
+    }
+
     let {
       BUTTON_TITLE_IS_STRING: titleString,
       BUTTON_TITLE_CANCEL: titleCancel,
@@ -1101,30 +1078,21 @@ var BrowserAddonUI = {
       confirmEx,
     } = Services.prompt;
     let btnFlags = BUTTON_POS_0 * titleString + BUTTON_POS_1 * titleCancel;
-    let checkboxState = { value: false };
-    let checkboxMessage = null;
 
     // Enable abuse report checkbox in the remove extension dialog,
     // if enabled by the about:config prefs and the addon type
     // is currently supported.
+    let checkboxMessage = null;
     if (
       gAddonAbuseReportEnabled &&
       ["extension", "theme"].includes(addon.type)
     ) {
-      checkboxMessage = await document.l10n.formatValue(
+      checkboxMessage = await lazy.l10n.formatValue(
         "addon-removal-abuse-report-checkbox"
       );
     }
 
-    let message = null;
-
-    if (!Services.prefs.getBoolPref("prompts.windowPromptSubDialog", false)) {
-      message = getFormattedString("webext.remove.confirmation.message", [
-        name,
-        document.getElementById("bundle_brand").getString("brandShorterName"),
-      ]);
-    }
-
+    let checkboxState = { value: false };
     let result = confirmEx(
       window,
       title,
@@ -1370,12 +1338,43 @@ var gUnifiedExtensions = {
     // Only add extensions that do not have a browser action in this list since
     // the extensions with browser action have CUI widgets and will appear in
     // the panel (or toolbar) via the CUI mechanism.
-    const policies = this.getActivePolicies(/* all */ false);
-
-    for (const policy of policies) {
+    for (const policy of this.getActivePolicies(/* all */ false)) {
       const item = document.createElement("unified-extensions-item");
       item.setExtension(policy.extension);
       list.appendChild(item);
+    }
+
+    const isQuarantinedDomain = this.getActivePolicies().some(
+      policy =>
+        lazy.OriginControls.getState(policy, window.gBrowser.selectedTab)
+          .quarantined
+    );
+    const container = panelview.querySelector(
+      "#unified-extensions-messages-container"
+    );
+
+    if (isQuarantinedDomain) {
+      if (!this._messageBarQuarantinedDomain) {
+        this._messageBarQuarantinedDomain = this._makeMessageBar({
+          titleFluentId: "unified-extensions-mb-quarantined-domain-title",
+          messageFluentId: "unified-extensions-mb-quarantined-domain-message",
+          supportPage: "quarantined-domains",
+          dismissable: false,
+        });
+        this._messageBarQuarantinedDomain
+          .querySelector("a")
+          .addEventListener("click", () => {
+            this.togglePanel();
+          });
+      }
+
+      container.appendChild(this._messageBarQuarantinedDomain);
+    } else if (
+      !isQuarantinedDomain &&
+      this._messageBarQuarantinedDomain &&
+      container.contains(this._messageBarQuarantinedDomain)
+    ) {
+      container.removeChild(this._messageBarQuarantinedDomain);
     }
   },
 
@@ -1873,5 +1872,47 @@ var gUnifiedExtensions = {
       menuButton.classList.toggle("subviewbutton-iconic", inPanel);
       menuButton.classList.toggle("toolbarbutton-1", !inPanel);
     }
+  },
+
+  _makeMessageBar({
+    messageFluentId,
+    titleFluentId = null,
+    supportPage = null,
+    type = "warning",
+  }) {
+    const messageBar = document.createElement("message-bar");
+    messageBar.setAttribute("type", type);
+    messageBar.classList.add("unified-extensions-message-bar");
+
+    if (titleFluentId) {
+      const titleEl = document.createElement("strong");
+      titleEl.setAttribute("id", titleFluentId);
+      document.l10n.setAttributes(titleEl, titleFluentId);
+      messageBar.append(titleEl);
+    }
+
+    const messageEl = document.createElement("span");
+    messageEl.setAttribute("id", messageFluentId);
+    document.l10n.setAttributes(messageEl, messageFluentId);
+    messageBar.append(messageEl);
+
+    if (supportPage) {
+      window.ensureCustomElements("moz-support-link");
+
+      const supportUrl = document.createElement("a", {
+        is: "moz-support-link",
+      });
+      supportUrl.setAttribute("support-page", supportPage);
+      if (titleFluentId) {
+        supportUrl.setAttribute("aria-labelledby", titleFluentId);
+        supportUrl.setAttribute("aria-describedby", messageFluentId);
+      } else {
+        supportUrl.setAttribute("aria-labelledby", messageFluentId);
+      }
+
+      messageBar.append(supportUrl);
+    }
+
+    return messageBar;
   },
 };

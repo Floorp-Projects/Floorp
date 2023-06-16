@@ -11,7 +11,7 @@ const PREF = "devtools.source-map.client-service.enabled";
 const SCSS_LOC = "doc_sourcemaps.scss:4";
 const CSS_LOC = "doc_sourcemaps.css:1";
 
-add_task(async function() {
+add_task(async function () {
   info("Turning the pref " + PREF + " on");
   Services.prefs.setBoolPref(PREF, true);
 

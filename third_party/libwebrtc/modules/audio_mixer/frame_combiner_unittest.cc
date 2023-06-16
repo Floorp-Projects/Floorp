@@ -38,8 +38,6 @@ using ::testing::ElementsAreArray;
 using ::testing::IsEmpty;
 using ::testing::UnorderedElementsAreArray;
 
-using LimiterType = FrameCombiner::LimiterType;
-
 struct FrameCombinerConfig {
   bool use_limiter;
   int sample_rate_hz;

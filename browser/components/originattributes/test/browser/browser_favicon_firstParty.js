@@ -192,11 +192,13 @@ async function assignCookiesUnderFirstParty(aURL, aFirstParty, aCookieValue) {
   let tabInfo = await openTabInFirstParty(aURL, aFirstParty);
 
   // Add cookies into the iframe.
-  await SpecialPowers.spawn(tabInfo.browser, [aCookieValue], async function(
-    value
-  ) {
-    content.document.cookie = value + "; SameSite=None; Secure;";
-  });
+  await SpecialPowers.spawn(
+    tabInfo.browser,
+    [aCookieValue],
+    async function (value) {
+      content.document.cookie = value + "; SameSite=None; Secure;";
+    }
+  );
 
   BrowserTestUtils.removeTab(tabInfo.tab);
 }
@@ -374,7 +376,7 @@ async function doTestForAllTabsFavicon(
   tabBrowser.removeAttribute("overflow");
 }
 
-add_setup(async function() {
+add_setup(async function () {
   // Make sure first party isolation is enabled.
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.firstparty.isolate", true]],

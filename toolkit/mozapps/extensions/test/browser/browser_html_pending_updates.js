@@ -1,7 +1,7 @@
 /* eslint max-len: ["error", 80] */
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+const { AddonTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
 );
 
 AddonTestUtils.initMochitest(this);
@@ -12,7 +12,7 @@ const LOCALE_ADDON_ID = "postponed-langpack@mochi.test";
 
 let gProvider;
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.checkUpdateSecurity", false]],
   });
@@ -111,9 +111,8 @@ async function promiseUpdateAvailable(extension) {
 function expectUpdatesAvailableBadgeCount({ win, expectedNumber }) {
   const categoriesSidebar = win.document.querySelector("categories-box");
   ok(categoriesSidebar, "Found the categories-box element");
-  const availableButton = categoriesSidebar.getButtonByName(
-    "available-updates"
-  );
+  const availableButton =
+    categoriesSidebar.getButtonByName("available-updates");
   is(
     availableButton.badgeCount,
     1,

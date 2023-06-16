@@ -9,7 +9,7 @@ loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
 
 addAccessibleTask(
   '<span id="parent"><span id="child"></span></span>',
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     is(
       findAccessibleChildByID(accDoc, "parent"),
       null,

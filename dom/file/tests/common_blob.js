@@ -76,7 +76,7 @@ function testBlob(file, contents, testName) {
       .then(() => {
         return new Promise(resolve => {
           let xhr = new XMLHttpRequest();
-          xhr.onload = function(event) {
+          xhr.onload = function (event) {
             checkMPSubmission(JSON.parse(event.target.responseText), [
               { name: "hello", value: "world" },
               {
@@ -104,7 +104,7 @@ function testBlob(file, contents, testName) {
           let xhr = new XMLHttpRequest();
           xhr.open("POST", "../../../dom/xhr/tests/file_XHRSendData.sjs");
 
-          xhr.onload = function(event) {
+          xhr.onload = function (event) {
             is(
               event.target.getResponseHeader("Result-Content-Type"),
               file.type ? file.type : null,

@@ -23,7 +23,7 @@ async function addCookieToOrigin(origin) {
     fetchRequestURL
   );
 
-  await SpecialPowers.spawn(addcookieTab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(addcookieTab.linkedBrowser, [], async function () {
     content.document.cookie = "coep=credentialless; SameSite=None; Secure";
   });
   await BrowserTestUtils.removeTab(addcookieTab);
@@ -71,7 +71,7 @@ async function testOrigin(
       GET_STATE_URL,
       expectedCookieResult,
     ],
-    async function(
+    async function (
       sharedArrayBufferEnabled,
       fetchRequestURL,
       fetchRequestMode,
@@ -125,7 +125,7 @@ async function doTest(
   }
 }
 
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.tabs.remote.coep.credentialless", false],

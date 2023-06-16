@@ -3,7 +3,7 @@
 const OPT_OUT_PREF = "app.shield.optoutstudies.enabled";
 
 function withPrivacyPrefs() {
-  return function(testFunc) {
+  return function (testFunc) {
     return async args =>
       BrowserTestUtils.withNewTab("about:preferences#privacy", async browser =>
         testFunc({ ...args, browser })
@@ -89,17 +89,18 @@ decorate_task(
   }
 );
 
-decorate_task(withPrivacyPrefs(), async function testViewStudiesLink({
-  browser,
-}) {
-  browser.contentDocument.getElementById("viewShieldStudies").click();
-  await BrowserTestUtils.waitForLocationChange(gBrowser);
+decorate_task(
+  withPrivacyPrefs(),
+  async function testViewStudiesLink({ browser }) {
+    browser.contentDocument.getElementById("viewShieldStudies").click();
+    await BrowserTestUtils.waitForLocationChange(gBrowser);
 
-  is(
-    gBrowser.currentURI.spec,
-    "about:studies",
-    "Clicking the view studies link opens about:studies in a new tab."
-  );
+    is(
+      gBrowser.currentURI.spec,
+      "about:studies",
+      "Clicking the view studies link opens about:studies in a new tab."
+    );
 
-  gBrowser.removeCurrentTab();
-});
+    gBrowser.removeCurrentTab();
+  }
+);

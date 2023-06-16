@@ -42,7 +42,7 @@ TestStreamListener.prototype = {
   onStateChanged() {
     if (!this._deferred) {
       let resolve, reject;
-      const promise = new Promise(function(res, rej) {
+      const promise = new Promise(function (res, rej) {
         resolve = res;
         reject = rej;
       });
@@ -78,7 +78,7 @@ TestChannel.prototype = {
   },
 };
 
-add_task(async function() {
+add_task(async function () {
   const throttler = new NetworkThrottleManager({
     latencyMean: 1,
     latencyMax: 1,

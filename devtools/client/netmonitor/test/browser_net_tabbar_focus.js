@@ -6,7 +6,7 @@
 /**
  * Tests if selecting a tab in a tab bar makes it visible
  */
-add_task(async function() {
+add_task(async function () {
   Services.prefs.clearUserPref(
     "devtools.netmonitor.panes-network-details-width"
   );
@@ -17,8 +17,9 @@ add_task(async function() {
   info("Starting test... ");
 
   const { document, store, windowRequire } = monitor.panelWin;
-  const topMostDocument = DevToolsUtils.getTopWindow(document.defaultView)
-    .document;
+  const topMostDocument = DevToolsUtils.getTopWindow(
+    document.defaultView
+  ).document;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
   const networkEvent = waitForNetworkEvents(monitor, 1);

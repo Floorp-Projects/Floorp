@@ -5,6 +5,6 @@ function fib(n) {
   return fib(n - 1) + fib(n - 2);
 }
 
-onmessage = function(e) {
+onmessage = function (e) {
   self.postMessage(fib(Number(e.data)));
 };

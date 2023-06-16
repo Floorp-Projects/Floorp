@@ -97,6 +97,7 @@ class SdpHelper {
       SdpMediaSection* localMsection);
 
   bool SdpMatch(const Sdp& sdp1, const Sdp& sdp2);
+  nsresult ValidateTransportAttributes(const Sdp& aSdp, sdp::SdpType aType);
 
  private:
   std::string& mLastError;

@@ -23,7 +23,6 @@
 #include "lib/jxl/image_test_utils.h"
 #include "lib/jxl/jpeg/enc_jpeg_data.h"
 #include "lib/jxl/render_pipeline/test_render_pipeline_stages.h"
-#include "lib/jxl/size_constraints.h"
 #include "lib/jxl/test_utils.h"
 #include "lib/jxl/testing.h"
 
@@ -42,9 +41,6 @@ Status DecodeFile(const Span<const uint8_t> file, bool use_slow_pipeline,
     io->metadata.transform_data.nonserialized_xyb_encoded =
         io->metadata.m.xyb_encoded;
     JXL_RETURN_IF_ERROR(Bundle::Read(&reader, &io->metadata.transform_data));
-    size_t xsize = io->metadata.xsize();
-    size_t ysize = io->metadata.ysize();
-    JXL_RETURN_IF_ERROR(VerifyDimensions(&io->constraints, xsize, ysize));
     if (io->metadata.m.color_encoding.WantICC()) {
       PaddedBytes icc;
       JXL_RETURN_IF_ERROR(ReadICC(&reader, &icc));

@@ -13,7 +13,7 @@ var { Preferences } = ChromeUtils.importESModule(
 
 let searchIcon;
 
-add_setup(async function() {
+add_setup(async function () {
   let searchbar = await gCUITestUtils.addSearchBar();
   registerCleanupFunction(() => {
     gCUITestUtils.removeSearchBar();

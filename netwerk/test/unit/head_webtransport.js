@@ -6,7 +6,7 @@
 
 /* import-globals-from head_cookies.js */
 
-let WebTransportListener = function() {};
+let WebTransportListener = function () {};
 
 WebTransportListener.prototype = {
   onSessionReady(sessionId) {

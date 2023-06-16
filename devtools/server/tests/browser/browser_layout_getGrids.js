@@ -112,7 +112,7 @@ const GRID_FRAGMENT_DATA = {
   },
 };
 
-add_task(async function() {
+add_task(async function () {
   const { target, walker, layout } = await initLayoutFrontForUrl(
     MAIN_DOMAIN + "grid.html"
   );

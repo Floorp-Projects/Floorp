@@ -82,7 +82,7 @@ function getStars(notice) {
   return notice.buttonContainer.querySelectorAll(".star-x");
 }
 
-add_setup(async function() {
+add_setup(async function () {
   let win = await BrowserTestUtils.openNewBrowserWindow();
   // Open a new tab to keep the window open.
   await BrowserTestUtils.openNewForegroundTab(
@@ -95,7 +95,7 @@ add_setup(async function() {
 // into three batches.
 
 /* Batch #1 - General UI, Stars, and telemetry data */
-add_task(async function() {
+add_task(async function () {
   const targetWindow = Services.wm.getMostRecentWindow("navigator:browser");
   const notificationBox = targetWindow.gNotificationBox;
 
@@ -174,7 +174,7 @@ add_task(async function() {
 });
 
 // Batch #2 - Engagement buttons
-add_task(async function() {
+add_task(async function () {
   const targetWindow = Services.wm.getMostRecentWindow("navigator:browser");
   const notificationBox = targetWindow.gNotificationBox;
   const hb = new Heartbeat(targetWindow, {
@@ -238,7 +238,7 @@ add_task(async function() {
 });
 
 // Batch 3 - Closing the window while heartbeat is open
-add_task(async function() {
+add_task(async function () {
   const targetWindow = await BrowserTestUtils.openNewBrowserWindow();
 
   const hb = new Heartbeat(targetWindow, {

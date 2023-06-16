@@ -58,3 +58,14 @@ assertEqArray(rv, [
 
   "call", "from", "defineProperty", "join",
 ]);
+
+rv = [];
+gdbg.executeInGlobal(`
+var origExec = RegExp.prototype.exec;
+RegExp.prototype.exec = dateNow;
+try {
+  (/a.b/).test("abc");
+} catch (e) {} // Throws not-object-or-null.
+RegExp.prototype.exec = origExec;
+`);
+assertEqArray(rv, ["test", "dateNow"]);

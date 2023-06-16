@@ -4,7 +4,7 @@
 // Tests that history initialization correctly handles a request to forcibly
 // replace the current database.
 
-add_task(async function() {
+add_task(async function () {
   await createCorruptDb("places.sqlite");
 
   let count = Services.telemetry

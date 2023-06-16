@@ -1,6 +1,8 @@
 "use strict";
 
-const { Manifests } = ChromeUtils.import("resource://gre/modules/Manifest.jsm");
+const { Manifests } = ChromeUtils.importESModule(
+  "resource://gre/modules/Manifest.sys.mjs"
+);
 
 const defaultURL = new URL(
   "http://example.org/browser/dom/manifest/test/resource.sjs"
@@ -21,10 +23,10 @@ function makeTestURL() {
   return url.href;
 }
 
-add_task(async function() {
+add_task(async function () {
   const tabOptions = { gBrowser, url: makeTestURL() };
 
-  await BrowserTestUtils.withNewTab(tabOptions, async function(browser) {
+  await BrowserTestUtils.withNewTab(tabOptions, async function (browser) {
     let manifest = await Manifests.getManifest(browser, manifestUrl);
     is(manifest.installed, false, "We haven't installed this manifest yet");
 

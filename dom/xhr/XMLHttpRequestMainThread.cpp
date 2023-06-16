@@ -215,7 +215,6 @@ XMLHttpRequestMainThread::XMLHttpRequestMainThread(
       mLoadTransferred(0),
       mIsSystem(false),
       mIsAnon(false),
-      mInLoadProgressEvent(false),
       mResultJSON(JS::UndefinedValue()),
       mArrayBufferBuilder(new ArrayBufferBuilder()),
       mResultArrayBuffer(nullptr),
@@ -1267,10 +1266,6 @@ void XMLHttpRequestMainThread::DispatchProgressEvent(
     aTotal = -1;
   }
 
-  if (aType == ProgressEventType::progress) {
-    mInLoadProgressEvent = true;
-  }
-
   ProgressEventInit init;
   init.mBubbles = false;
   init.mCancelable = false;
@@ -1284,10 +1279,6 @@ void XMLHttpRequestMainThread::DispatchProgressEvent(
   event->SetTrusted(true);
 
   DispatchOrStoreEvent(aTarget, event);
-
-  if (aType == ProgressEventType::progress) {
-    mInLoadProgressEvent = false;
-  }
 
   // If we're sending a load, error, timeout or abort event, then
   // also dispatch the subsequent loadend event.

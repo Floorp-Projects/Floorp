@@ -14,7 +14,7 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-add_task(async function() {
+add_task(async function () {
   info("Creating a test document with 2 iframes containing animated nodes");
 
   const { inspector, target } = await initAnimationsFrontForUrl(

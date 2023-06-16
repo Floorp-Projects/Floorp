@@ -73,7 +73,6 @@ void MultiStreamTester::RunTest() {
     sender_transport = CreateSendTransport(task_queue.get(), sender_call.get());
     receiver_transport =
         CreateReceiveTransport(task_queue.get(), receiver_call.get());
-
     sender_transport->SetReceiver(receiver_call->Receiver());
     receiver_transport->SetReceiver(sender_call->Receiver());
 
@@ -158,22 +157,24 @@ void MultiStreamTester::UpdateReceiveConfig(
 std::unique_ptr<test::DirectTransport> MultiStreamTester::CreateSendTransport(
     TaskQueueBase* task_queue,
     Call* sender_call) {
+  std::vector<RtpExtension> extensions = {};
   return std::make_unique<test::DirectTransport>(
       task_queue,
       std::make_unique<FakeNetworkPipe>(
           Clock::GetRealTimeClock(),
           std::make_unique<SimulatedNetwork>(BuiltInNetworkBehaviorConfig())),
-      sender_call, payload_type_map_);
+      sender_call, payload_type_map_, extensions, extensions);
 }
 
 std::unique_ptr<test::DirectTransport>
 MultiStreamTester::CreateReceiveTransport(TaskQueueBase* task_queue,
                                           Call* receiver_call) {
+  std::vector<RtpExtension> extensions = {};
   return std::make_unique<test::DirectTransport>(
       task_queue,
       std::make_unique<FakeNetworkPipe>(
           Clock::GetRealTimeClock(),
           std::make_unique<SimulatedNetwork>(BuiltInNetworkBehaviorConfig())),
-      receiver_call, payload_type_map_);
+      receiver_call, payload_type_map_, extensions, extensions);
 }
 }  // namespace webrtc

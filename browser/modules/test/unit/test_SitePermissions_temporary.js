@@ -3,8 +3,8 @@
  */
 "use strict";
 
-const { SitePermissions } = ChromeUtils.import(
-  "resource:///modules/SitePermissions.jsm"
+const { SitePermissions } = ChromeUtils.importESModule(
+  "resource:///modules/SitePermissions.sys.mjs"
 );
 
 const TemporaryPermissions = SitePermissions._temporaryPermissions;
@@ -40,10 +40,11 @@ function navigateDummyBrowser(browser, uri) {
     uri = Services.io.newURI(uri);
   }
   browser.currentURI = uri;
-  browser.contentPrincipal = Services.scriptSecurityManager.createContentPrincipal(
-    browser.currentURI,
-    {}
-  );
+  browser.contentPrincipal =
+    Services.scriptSecurityManager.createContentPrincipal(
+      browser.currentURI,
+      {}
+    );
 }
 
 /**

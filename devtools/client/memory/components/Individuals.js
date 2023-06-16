@@ -34,12 +34,8 @@ class Individuals extends Component {
   }
 
   render() {
-    const {
-      individuals,
-      dominatorTree,
-      onViewSourceInDebugger,
-      onFocus,
-    } = this.props;
+    const { individuals, dominatorTree, onViewSourceInDebugger, onFocus } =
+      this.props;
 
     return Tree({
       key: "individuals-tree",

@@ -172,8 +172,7 @@ extern TypedArrayObject* NewTypedArrayWithTemplateAndBuffer(
     HandleValue byteOffset, HandleValue length);
 
 extern TypedArrayObject* NewUint8ArrayWithLength(
-    JSContext* cx, int32_t len,
-    gc::InitialHeap heap = gc::InitialHeap::DefaultHeap);
+    JSContext* cx, int32_t len, gc::Heap heap = gc::Heap::Default);
 
 inline bool IsTypedArrayClass(const JSClass* clasp) {
   return &TypedArrayObject::classes[0] <= clasp &&

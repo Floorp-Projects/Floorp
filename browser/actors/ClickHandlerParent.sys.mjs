@@ -9,12 +9,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+  WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "WebNavigationFrames",
-  "resource://gre/modules/WebNavigationFrames.jsm"
-);
 
 let gContentClickListeners = new Set();
 

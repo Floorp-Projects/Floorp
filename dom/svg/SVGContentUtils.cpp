@@ -383,7 +383,7 @@ float SVGContentUtils::GetFontSize(const ComputedStyle* aComputedStyle,
   MOZ_ASSERT(aPresContext);
 
   return aComputedStyle->StyleFont()->mSize.ToCSSPixels() /
-         aPresContext->EffectiveTextZoom();
+         aPresContext->TextZoom();
 }
 
 float SVGContentUtils::GetFontXHeight(const Element* aElement) {
@@ -431,7 +431,7 @@ float SVGContentUtils::GetFontXHeight(const ComputedStyle* aComputedStyle,
 
   nscoord xHeight = fontMetrics->XHeight();
   return nsPresContext::AppUnitsToFloatCSSPixels(xHeight) /
-         aPresContext->EffectiveTextZoom();
+         aPresContext->TextZoom();
 }
 nsresult SVGContentUtils::ReportToConsole(const Document* doc,
                                           const char* aWarning,

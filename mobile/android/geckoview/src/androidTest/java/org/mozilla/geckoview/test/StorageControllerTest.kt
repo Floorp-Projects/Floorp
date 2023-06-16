@@ -30,59 +30,59 @@ class StorageControllerTest : BaseSessionTest() {
             """
             localStorage.setItem('ctx', 'test');
             document.cookie = 'ctx=test';
-        """
+        """,
         )
 
         var localStorage = mainSession.evaluateJS(
             """
             localStorage.getItem('ctx') || 'null'
-        """
+        """,
         ) as String
 
         var cookie = mainSession.evaluateJS(
             """
             document.cookie || 'null'
-        """
+        """,
         ) as String
 
         assertThat(
             "Local storage value should match",
             localStorage,
-            equalTo("test")
+            equalTo("test"),
         )
         assertThat(
             "Cookie value should match",
             cookie,
-            equalTo("ctx=test")
+            equalTo("ctx=test"),
         )
 
         sessionRule.waitForResult(
             sessionRule.runtime.storageController.clearData(
-                StorageController.ClearFlags.ALL
-            )
+                StorageController.ClearFlags.ALL,
+            ),
         )
 
         localStorage = mainSession.evaluateJS(
             """
             localStorage.getItem('ctx') || 'null'
-        """
+        """,
         ) as String
 
         cookie = mainSession.evaluateJS(
             """
             document.cookie || 'null'
-        """
+        """,
         ) as String
 
         assertThat(
             "Local storage value should match",
             localStorage,
-            equalTo("null")
+            equalTo("null"),
         )
         assertThat(
             "Cookie value should match",
             cookie,
-            equalTo("null")
+            equalTo("null"),
         )
     }
 
@@ -94,48 +94,48 @@ class StorageControllerTest : BaseSessionTest() {
             """
             localStorage.setItem('ctx', 'test');
             document.cookie = 'ctx=test';
-        """
+        """,
         )
 
         var localStorage = mainSession.evaluateJS(
             """
             localStorage.getItem('ctx') || 'null'
-        """
+        """,
         ) as String
 
         var cookie = mainSession.evaluateJS(
             """
             document.cookie || 'null'
-        """
+        """,
         ) as String
 
         assertThat(
             "Local storage value should match",
             localStorage,
-            equalTo("test")
+            equalTo("test"),
         )
         assertThat(
             "Cookie value should match",
             cookie,
-            equalTo("ctx=test")
+            equalTo("ctx=test"),
         )
 
         sessionRule.waitForResult(
             sessionRule.runtime.storageController.clearData(
-                StorageController.ClearFlags.COOKIES
-            )
+                StorageController.ClearFlags.COOKIES,
+            ),
         )
 
         localStorage = mainSession.evaluateJS(
             """
             localStorage.getItem('ctx') || 'null'
-        """
+        """,
         ) as String
 
         cookie = mainSession.evaluateJS(
             """
             document.cookie || 'null'
-        """
+        """,
         ) as String
 
         // With LSNG disabled, storage is also cleared when cookies are,
@@ -144,90 +144,90 @@ class StorageControllerTest : BaseSessionTest() {
             assertThat(
                 "Local storage value should match",
                 localStorage,
-                equalTo("test")
+                equalTo("test"),
             )
         } else {
             assertThat(
                 "Local storage value should match",
                 localStorage,
-                equalTo("null")
+                equalTo("null"),
             )
         }
 
         assertThat(
             "Cookie value should match",
             cookie,
-            equalTo("null")
+            equalTo("null"),
         )
 
         mainSession.evaluateJS(
             """
             document.cookie = 'ctx=test';
-        """
+        """,
         )
 
         sessionRule.waitForResult(
             sessionRule.runtime.storageController.clearData(
-                StorageController.ClearFlags.DOM_STORAGES
-            )
+                StorageController.ClearFlags.DOM_STORAGES,
+            ),
         )
 
         localStorage = mainSession.evaluateJS(
             """
             localStorage.getItem('ctx') || 'null'
-        """
+        """,
         ) as String
 
         cookie = mainSession.evaluateJS(
             """
             document.cookie || 'null'
-        """
+        """,
         ) as String
 
         assertThat(
             "Local storage value should match",
             localStorage,
-            equalTo("null")
+            equalTo("null"),
         )
         assertThat(
             "Cookie value should match",
             cookie,
-            equalTo("ctx=test")
+            equalTo("ctx=test"),
         )
 
         mainSession.evaluateJS(
             """
             localStorage.setItem('ctx', 'test');
-        """
+        """,
         )
 
         sessionRule.waitForResult(
             sessionRule.runtime.storageController.clearData(
-                StorageController.ClearFlags.SITE_DATA
-            )
+                StorageController.ClearFlags.SITE_DATA,
+            ),
         )
 
         localStorage = mainSession.evaluateJS(
             """
             localStorage.getItem('ctx') || 'null'
-        """
+        """,
         ) as String
 
         cookie = mainSession.evaluateJS(
             """
             document.cookie || 'null'
-        """
+        """,
         ) as String
 
         assertThat(
             "Local storage value should match",
             localStorage,
-            equalTo("null")
+            equalTo("null"),
         )
         assertThat(
             "Cookie value should match",
             cookie,
-            equalTo("null")
+            equalTo("null"),
         )
     }
 
@@ -239,90 +239,90 @@ class StorageControllerTest : BaseSessionTest() {
             """
             localStorage.setItem('ctx', 'test');
             document.cookie = 'ctx=test';
-        """
+        """,
         )
 
         var localStorage = mainSession.evaluateJS(
             """
             localStorage.getItem('ctx') || 'null'
-        """
+        """,
         ) as String
 
         var cookie = mainSession.evaluateJS(
             """
             document.cookie || 'null'
-        """
+        """,
         ) as String
 
         assertThat(
             "Local storage value should match",
             localStorage,
-            equalTo("test")
+            equalTo("test"),
         )
         assertThat(
             "Cookie value should match",
             cookie,
-            equalTo("ctx=test")
+            equalTo("ctx=test"),
         )
 
         sessionRule.waitForResult(
             sessionRule.runtime.storageController.clearDataFromHost(
                 "test.com",
-                StorageController.ClearFlags.ALL
-            )
+                StorageController.ClearFlags.ALL,
+            ),
         )
 
         localStorage = mainSession.evaluateJS(
             """
             localStorage.getItem('ctx') || 'null'
-        """
+        """,
         ) as String
 
         cookie = mainSession.evaluateJS(
             """
             document.cookie || 'null'
-        """
+        """,
         ) as String
 
         assertThat(
             "Local storage value should match",
             localStorage,
-            equalTo("test")
+            equalTo("test"),
         )
         assertThat(
             "Cookie value should match",
             cookie,
-            equalTo("ctx=test")
+            equalTo("ctx=test"),
         )
 
         sessionRule.waitForResult(
             sessionRule.runtime.storageController.clearDataFromHost(
                 "example.com",
-                StorageController.ClearFlags.ALL
-            )
+                StorageController.ClearFlags.ALL,
+            ),
         )
 
         localStorage = mainSession.evaluateJS(
             """
             localStorage.getItem('ctx') || 'null'
-        """
+        """,
         ) as String
 
         cookie = mainSession.evaluateJS(
             """
             document.cookie || 'null'
-        """
+        """,
         ) as String
 
         assertThat(
             "Local storage value should match",
             localStorage,
-            equalTo("null")
+            equalTo("null"),
         )
         assertThat(
             "Cookie value should match",
             cookie,
-            equalTo("null")
+            equalTo("null"),
         )
     }
 
@@ -338,30 +338,30 @@ class StorageControllerTest : BaseSessionTest() {
                 """
                 localStorage.setItem('ctx', 'test');
                 document.cookie = 'ctx=test';
-            """
+            """,
             )
 
             var localStorage = mainSession.evaluateJS(
                 """
                 localStorage.getItem('ctx') || 'null'
-            """
+            """,
             ) as String
 
             var cookie = mainSession.evaluateJS(
                 """
                 document.cookie || 'null'
-            """
+            """,
             ) as String
 
             assertThat(
                 "Local storage value should match",
                 localStorage,
-                equalTo("test")
+                equalTo("test"),
             )
             assertThat(
                 "Cookie value should match",
                 cookie,
-                equalTo("ctx=test")
+                equalTo("ctx=test"),
             )
         }
 
@@ -370,8 +370,8 @@ class StorageControllerTest : BaseSessionTest() {
         sessionRule.waitForResult(
             sessionRule.runtime.storageController.clearDataFromBaseDomain(
                 "test.com",
-                StorageController.ClearFlags.ALL
-            )
+                StorageController.ClearFlags.ALL,
+            ),
         )
 
         for (domain in domains) {
@@ -381,24 +381,24 @@ class StorageControllerTest : BaseSessionTest() {
             var localStorage = mainSession.evaluateJS(
                 """
                 localStorage.getItem('ctx') || 'null'
-            """
+            """,
             ) as String
 
             var cookie = mainSession.evaluateJS(
                 """
                 document.cookie || 'null'
-            """
+            """,
             ) as String
 
             assertThat(
                 "Local storage value should match",
                 localStorage,
-                equalTo("test")
+                equalTo("test"),
             )
             assertThat(
                 "Cookie value should match",
                 cookie,
-                equalTo("ctx=test")
+                equalTo("ctx=test"),
             )
         }
 
@@ -407,8 +407,8 @@ class StorageControllerTest : BaseSessionTest() {
         sessionRule.waitForResult(
             sessionRule.runtime.storageController.clearDataFromBaseDomain(
                 "example.com",
-                StorageController.ClearFlags.ALL
-            )
+                StorageController.ClearFlags.ALL,
+            ),
         )
 
         for (domain in domains) {
@@ -418,24 +418,24 @@ class StorageControllerTest : BaseSessionTest() {
             var localStorage = mainSession.evaluateJS(
                 """
                 localStorage.getItem('ctx') || 'null'
-            """
+            """,
             ) as String
 
             var cookie = mainSession.evaluateJS(
                 """
                 document.cookie || 'null'
-            """
+            """,
             ) as String
 
             assertThat(
                 "Local storage value should match",
                 localStorage,
-                equalTo("null")
+                equalTo("null"),
             )
             assertThat(
                 "Cookie value should match",
                 cookie,
-                equalTo("null")
+                equalTo("null"),
             )
         }
     }
@@ -444,7 +444,7 @@ class StorageControllerTest : BaseSessionTest() {
         val session1 = sessionRule.createOpenSession(
             GeckoSessionSettings.Builder(baseSettings)
                 .contextId("1")
-                .build()
+                .build(),
         )
         session1.loadUri("https://example.com")
         session1.waitForPageStop()
@@ -452,19 +452,19 @@ class StorageControllerTest : BaseSessionTest() {
         session1.evaluateJS(
             """
             localStorage.setItem('ctx', '1');
-        """
+        """,
         )
 
         var localStorage = session1.evaluateJS(
             """
             localStorage.getItem('ctx') || 'null'
-        """
+        """,
         ) as String
 
         assertThat(
             "Local storage value should match",
             localStorage,
-            equalTo("1")
+            equalTo("1"),
         )
 
         session1.reload()
@@ -473,19 +473,19 @@ class StorageControllerTest : BaseSessionTest() {
         localStorage = session1.evaluateJS(
             """
             localStorage.getItem('ctx') || 'null'
-        """
+        """,
         ) as String
 
         assertThat(
             "Local storage value should match",
             localStorage,
-            equalTo("1")
+            equalTo("1"),
         )
 
         val session2 = sessionRule.createOpenSession(
             GeckoSessionSettings.Builder(baseSettings)
                 .contextId("2")
-                .build()
+                .build(),
         )
 
         session2.loadUri("https://example.com")
@@ -494,31 +494,31 @@ class StorageControllerTest : BaseSessionTest() {
         localStorage = session2.evaluateJS(
             """
             localStorage.getItem('ctx') || 'null'
-        """
+        """,
         ) as String
 
         assertThat(
             "Local storage value should be null",
             localStorage,
-            equalTo("null")
+            equalTo("null"),
         )
 
         session2.evaluateJS(
             """
             localStorage.setItem('ctx', '2');
-        """
+        """,
         )
 
         localStorage = session2.evaluateJS(
             """
             localStorage.getItem('ctx') || 'null'
-        """
+        """,
         ) as String
 
         assertThat(
             "Local storage value should match",
             localStorage,
-            equalTo("2")
+            equalTo("2"),
         )
 
         session1.loadUri("https://example.com")
@@ -527,19 +527,19 @@ class StorageControllerTest : BaseSessionTest() {
         localStorage = session1.evaluateJS(
             """
             localStorage.getItem('ctx') || 'null'
-        """
+        """,
         ) as String
 
         assertThat(
             "Local storage value should match",
             localStorage,
-            equalTo("1")
+            equalTo("1"),
         )
 
         val session3 = sessionRule.createOpenSession(
             GeckoSessionSettings.Builder(baseSettings)
                 .contextId("2")
-                .build()
+                .build(),
         )
 
         session3.loadUri("https://example.com")
@@ -548,13 +548,13 @@ class StorageControllerTest : BaseSessionTest() {
         localStorage = session3.evaluateJS(
             """
             localStorage.getItem('ctx') || 'null'
-        """
+        """,
         ) as String
 
         assertThat(
             "Local storage value should match",
             localStorage,
-            equalTo("2")
+            equalTo("2"),
         )
     }
 
@@ -566,7 +566,7 @@ class StorageControllerTest : BaseSessionTest() {
         testSessionContext(
             GeckoSessionSettings.Builder(mainSession.settings)
                 .usePrivateMode(true)
-                .build()
+                .build(),
         )
     }
 
@@ -574,7 +574,7 @@ class StorageControllerTest : BaseSessionTest() {
         val session1 = sessionRule.createOpenSession(
             GeckoSessionSettings.Builder(mainSession.settings)
                 .contextId("1")
-                .build()
+                .build(),
         )
         session1.loadUri("https://example.com")
         session1.waitForPageStop()
@@ -582,19 +582,19 @@ class StorageControllerTest : BaseSessionTest() {
         session1.evaluateJS(
             """
             localStorage.setItem('ctx', '1');
-        """
+        """,
         )
 
         var localStorage = session1.evaluateJS(
             """
             localStorage.getItem('ctx') || 'null'
-        """
+        """,
         ) as String
 
         assertThat(
             "Local storage value should match",
             localStorage,
-            equalTo("1")
+            equalTo("1"),
         )
 
         session1.close()
@@ -602,7 +602,7 @@ class StorageControllerTest : BaseSessionTest() {
         val session2 = sessionRule.createOpenSession(
             GeckoSessionSettings.Builder(mainSession.settings)
                 .contextId("2")
-                .build()
+                .build(),
         )
 
         session2.loadUri("https://example.com")
@@ -611,19 +611,19 @@ class StorageControllerTest : BaseSessionTest() {
         session2.evaluateJS(
             """
             localStorage.setItem('ctx', '2');
-        """
+        """,
         )
 
         localStorage = session2.evaluateJS(
             """
             localStorage.getItem('ctx') || 'null'
-        """
+        """,
         ) as String
 
         assertThat(
             "Local storage value should match",
             localStorage,
-            equalTo("2")
+            equalTo("2"),
         )
 
         session2.close()
@@ -633,7 +633,7 @@ class StorageControllerTest : BaseSessionTest() {
         val session3 = sessionRule.createOpenSession(
             GeckoSessionSettings.Builder(mainSession.settings)
                 .contextId("1")
-                .build()
+                .build(),
         )
 
         session3.loadUri("https://example.com")
@@ -642,19 +642,19 @@ class StorageControllerTest : BaseSessionTest() {
         localStorage = session3.evaluateJS(
             """
             localStorage.getItem('ctx') || 'null'
-        """
+        """,
         ) as String
 
         assertThat(
             "Local storage value should match",
             localStorage,
-            equalTo("null")
+            equalTo("null"),
         )
 
         val session4 = sessionRule.createOpenSession(
             GeckoSessionSettings.Builder(mainSession.settings)
                 .contextId("2")
-                .build()
+                .build(),
         )
 
         session4.loadUri("https://example.com")
@@ -663,13 +663,13 @@ class StorageControllerTest : BaseSessionTest() {
         localStorage = session4.evaluateJS(
             """
             localStorage.getItem('ctx') || 'null'
-        """
+        """,
         ) as String
 
         assertThat(
             "Local storage value should match",
             localStorage,
-            equalTo("2")
+            equalTo("2"),
         )
     }
 
@@ -680,7 +680,7 @@ class StorageControllerTest : BaseSessionTest() {
         val session = sessionRule.createOpenSession(
             GeckoSessionSettings.Builder(mainSession.settings)
                 .contextId("1")
-                .build()
+                .build(),
         )
         session.loadUri("https://example.com")
         session.waitForPageStop()
@@ -688,35 +688,35 @@ class StorageControllerTest : BaseSessionTest() {
         var mode = sessionRule.waitForResult(
             storageController.getCookieBannerModeForDomain(
                 "https://example.com",
-                false
-            )
+                false,
+            ),
         )
 
         assertThat(
             "Cookie banner mode should match",
             mode,
-            equalTo(COOKIE_BANNER_MODE_REJECT)
+            equalTo(COOKIE_BANNER_MODE_REJECT),
         )
 
         sessionRule.waitForResult(
             storageController.setCookieBannerModeForDomain(
                 "https://example.com",
                 COOKIE_BANNER_MODE_REJECT_OR_ACCEPT,
-                false
-            )
+                false,
+            ),
         )
 
         mode = sessionRule.waitForResult(
             storageController.getCookieBannerModeForDomain(
                 "https://example.com",
-                false
-            )
+                false,
+            ),
         )
 
         assertThat(
             "Cookie banner mode should match",
             mode,
-            equalTo(COOKIE_BANNER_MODE_REJECT_OR_ACCEPT)
+            equalTo(COOKIE_BANNER_MODE_REJECT_OR_ACCEPT),
         )
     }
 
@@ -729,7 +729,7 @@ class StorageControllerTest : BaseSessionTest() {
             GeckoSessionSettings.Builder(mainSession.settings)
                 .contextId("1")
                 .usePrivateMode(true)
-                .build()
+                .build(),
         )
         session.loadUri("https://example.com")
         session.waitForPageStop()
@@ -737,34 +737,34 @@ class StorageControllerTest : BaseSessionTest() {
         var mode = sessionRule.waitForResult(
             storageController.getCookieBannerModeForDomain(
                 "https://example.com",
-                true
-            )
+                true,
+            ),
         )
 
         assertThat(
             "Cookie banner mode should match",
             mode,
-            equalTo(COOKIE_BANNER_MODE_REJECT)
+            equalTo(COOKIE_BANNER_MODE_REJECT),
         )
 
         sessionRule.waitForResult(
             storageController.setCookieBannerModeAndPersistInPrivateBrowsingForDomain(
                 "https://example.com",
-                COOKIE_BANNER_MODE_REJECT_OR_ACCEPT
-            )
+                COOKIE_BANNER_MODE_REJECT_OR_ACCEPT,
+            ),
         )
 
         mode = sessionRule.waitForResult(
             storageController.getCookieBannerModeForDomain(
                 "https://example.com",
-                true
-            )
+                true,
+            ),
         )
 
         assertThat(
             "Cookie banner mode should match",
             mode,
-            equalTo(COOKIE_BANNER_MODE_REJECT_OR_ACCEPT)
+            equalTo(COOKIE_BANNER_MODE_REJECT_OR_ACCEPT),
         )
 
         session.close()
@@ -772,14 +772,14 @@ class StorageControllerTest : BaseSessionTest() {
         mode = sessionRule.waitForResult(
             storageController.getCookieBannerModeForDomain(
                 "https://example.com",
-                true
-            )
+                true,
+            ),
         )
 
         assertThat(
             "Cookie banner mode should match",
             mode,
-            equalTo(COOKIE_BANNER_MODE_REJECT_OR_ACCEPT)
+            equalTo(COOKIE_BANNER_MODE_REJECT_OR_ACCEPT),
         )
     }
 
@@ -791,7 +791,7 @@ class StorageControllerTest : BaseSessionTest() {
         val session = sessionRule.createOpenSession(
             GeckoSessionSettings.Builder(mainSession.settings)
                 .contextId("1")
-                .build()
+                .build(),
         )
         session.loadUri("https://example.com")
         session.waitForPageStop()
@@ -800,19 +800,19 @@ class StorageControllerTest : BaseSessionTest() {
             val mode = sessionRule.waitForResult(
                 storageController.getCookieBannerModeForDomain(
                     "https://example.com",
-                    false
-                )
+                    false,
+                ),
             )
             assertThat(
                 "Cookie banner mode should match",
                 mode,
-                equalTo(COOKIE_BANNER_MODE_DISABLED)
+                equalTo(COOKIE_BANNER_MODE_DISABLED),
             )
         } catch (e: Exception) {
             assertThat(
                 "Cookie banner mode should match",
                 e.message,
-                containsString("The cookie banner handling service is not available")
+                containsString("The cookie banner handling service is not available"),
             )
         }
     }
@@ -825,7 +825,7 @@ class StorageControllerTest : BaseSessionTest() {
         val session = sessionRule.createOpenSession(
             GeckoSessionSettings.Builder(mainSession.settings)
                 .contextId("1")
-                .build()
+                .build(),
         )
         session.loadUri("https://example.com")
         session.waitForPageStop()
@@ -834,41 +834,41 @@ class StorageControllerTest : BaseSessionTest() {
             storageController.setCookieBannerModeForDomain(
                 "https://example.com",
                 COOKIE_BANNER_MODE_REJECT_OR_ACCEPT,
-                true
-            )
+                true,
+            ),
         )
 
         var mode = sessionRule.waitForResult(
             storageController.getCookieBannerModeForDomain(
                 "https://example.com",
-                true
-            )
+                true,
+            ),
         )
 
         assertThat(
             "Cookie banner mode should match $COOKIE_BANNER_MODE_REJECT_OR_ACCEPT but it is $mode",
             mode,
-            equalTo(COOKIE_BANNER_MODE_REJECT_OR_ACCEPT)
+            equalTo(COOKIE_BANNER_MODE_REJECT_OR_ACCEPT),
         )
 
         sessionRule.waitForResult(
             storageController.removeCookieBannerModeForDomain(
                 "https://example.com",
-                true
-            )
+                true,
+            ),
         )
 
         mode = sessionRule.waitForResult(
             storageController.getCookieBannerModeForDomain(
                 "https://example.com",
-                true
-            )
+                true,
+            ),
         )
 
         assertThat(
             "Cookie banner mode should match $COOKIE_BANNER_MODE_REJECT but it is $mode",
             mode,
-            equalTo(COOKIE_BANNER_MODE_REJECT)
+            equalTo(COOKIE_BANNER_MODE_REJECT),
         )
     }
 }

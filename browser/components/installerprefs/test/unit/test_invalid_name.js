@@ -7,7 +7,7 @@
  * Test that using prefs with invalid names is not allowed.
  */
 
-add_task(function() {
+add_task(function () {
   const PREFS_LIST = [
     "the.wrong.branch",
     "installer.the.right.branch",

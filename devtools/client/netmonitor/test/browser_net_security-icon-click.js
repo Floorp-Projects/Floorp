@@ -7,7 +7,7 @@
  * Test that clicking on the security indicator opens the security details tab.
  */
 
-add_task(async function() {
+add_task(async function () {
   const { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL, {
     requestCount: 1,
   });
@@ -47,11 +47,13 @@ add_task(async function() {
 
   async function performRequestAndWait(url) {
     const wait = waitForNetworkEvents(monitor, 1);
-    await SpecialPowers.spawn(tab.linkedBrowser, [{ url }], async function(
-      args
-    ) {
-      content.wrappedJSObject.performRequests(1, args.url);
-    });
+    await SpecialPowers.spawn(
+      tab.linkedBrowser,
+      [{ url }],
+      async function (args) {
+        content.wrappedJSObject.performRequests(1, args.url);
+      }
+    );
     return wait;
   }
 

@@ -27,6 +27,7 @@ struct JpegSettings {
   bool use_adaptive_quantization = true;
   bool use_std_quant_tables = false;
   int progressive_level = 2;
+  bool optimize_coding = true;
   std::string chroma_subsampling;
   int libjpeg_quality = 0;
   std::string libjpeg_chroma_subsampling;

@@ -33,7 +33,7 @@ EventUtils.synthesizeClick = element =>
   new Promise(resolve => {
     element.addEventListener(
       "click",
-      function() {
+      function () {
         resolve();
       },
       { once: true }
@@ -63,7 +63,7 @@ try {
   EventUtils = null;
 }
 
-addMessageListener("content-task:spawn", async function(msg) {
+addMessageListener("content-task:spawn", async function (msg) {
   let id = msg.data.id;
   let source = msg.data.runnable || "()=>{}";
 

@@ -7,7 +7,7 @@
 
 const TEST_URL = `${URL_ROOT}hover.html`;
 
-addRDMTask(TEST_URL, async function({ ui }) {
+addRDMTask(TEST_URL, async function ({ ui }) {
   reloadOnTouchChange(true);
 
   await toggleTouchSimulation(ui);
@@ -29,7 +29,7 @@ async function testButtonHoverState(ui, expected) {
   await SpecialPowers.spawn(
     ui.getViewportBrowser(),
     [{ expected }],
-    async function(args) {
+    async function (args) {
       let button = content.document.querySelector("button");
       const { expected: contentExpected } = args;
 
@@ -55,7 +55,7 @@ async function testDropDownHoverState(ui, expected) {
   await SpecialPowers.spawn(
     ui.getViewportBrowser(),
     [{ expected }],
-    async function(args) {
+    async function (args) {
       const dropDownMenu = content.document.querySelector(".drop-down-menu");
       const { expected: contentExpected } = args;
 

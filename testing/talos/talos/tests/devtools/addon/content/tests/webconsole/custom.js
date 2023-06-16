@@ -19,7 +19,7 @@ const {
 
 const TEST_URL = PAGES_BASE_URL + "custom/console/index.html";
 
-module.exports = async function() {
+module.exports = async function () {
   // These numbers controls the number of console api calls we do in the test
   const sync = 500,
     stream = 250,

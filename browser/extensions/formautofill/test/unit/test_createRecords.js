@@ -495,7 +495,7 @@ const TESTCASES = [
 ];
 
 for (let testcase of TESTCASES) {
-  add_task(async function() {
+  add_task(async function () {
     info("Starting testcase: " + testcase.description);
 
     let doc = MockDocument.createTestDocument(

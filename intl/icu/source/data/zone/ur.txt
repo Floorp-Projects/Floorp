@@ -258,6 +258,9 @@ ur{
         "America:Chihuahua"{
             ec{"چیہوآہوآ"}
         }
+        "America:Ciudad_Juarez"{
+            ec{"سیوداد جیوریز"}
+        }
         "America:Coral_Harbour"{
             ec{"اٹیکوکن"}
         }

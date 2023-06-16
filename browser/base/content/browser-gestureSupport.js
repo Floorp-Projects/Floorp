@@ -272,8 +272,8 @@ var gGestureSupport = {
     this._doEnd = function GS__doEnd(aEvent) {
       gHistorySwipeAnimation.swipeEndEventReceived();
 
-      this._doUpdate = function() {};
-      this._doEnd = function() {};
+      this._doUpdate = function () {};
+      this._doEnd = function () {};
     };
   },
 
@@ -290,7 +290,7 @@ var gGestureSupport = {
     let num = 1 << aArray.length;
     while (--num >= 0) {
       // Only select array elements where the current bit is set
-      yield aArray.reduce(function(aPrev, aCurr, aIndex) {
+      yield aArray.reduce(function (aPrev, aCurr, aIndex) {
         if (num & (1 << aIndex)) {
           aPrev.push(aCurr);
         }
@@ -459,13 +459,11 @@ var gGestureSupport = {
    * @param aDir
    *        The direction for the swipe event
    */
-  _coordinateSwipeEventWithAnimation: function GS__coordinateSwipeEventWithAnimation(
-    aEvent,
-    aDir
-  ) {
-    gHistorySwipeAnimation.stopAnimation();
-    this.processSwipeEvent(aEvent, aDir);
-  },
+  _coordinateSwipeEventWithAnimation:
+    function GS__coordinateSwipeEventWithAnimation(aEvent, aDir) {
+      gHistorySwipeAnimation.stopAnimation();
+      this.processSwipeEvent(aEvent, aDir);
+    },
 
   /**
    * Get a gesture preference or use a default if it doesn't exist
@@ -612,8 +610,8 @@ var gGestureSupport = {
     }
 
     let contentElement = window.content.document.body.firstElementChild;
-    let transformValue = window.content.window.getComputedStyle(contentElement)
-      .transform;
+    let transformValue =
+      window.content.window.getComputedStyle(contentElement).transform;
 
     if (transformValue == "none") {
       this.rotation = 0;
@@ -622,10 +620,7 @@ var gGestureSupport = {
 
     // transformValue is a rotation matrix--split it and do mathemagic to
     // obtain the real rotation value
-    transformValue = transformValue
-      .split("(")[1]
-      .split(")")[0]
-      .split(",");
+    transformValue = transformValue.split("(")[1].split(")")[0].split(",");
     this.rotation = Math.round(
       Math.atan2(transformValue[1], transformValue[0]) * (180 / Math.PI)
     );

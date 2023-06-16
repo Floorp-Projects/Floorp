@@ -86,22 +86,27 @@ add_task(async function test_safari_permissions() {
 
     // Let's just choose "Bookmarks" for now.
     let resourceTypeList = shadow.querySelector("#resource-type-list");
-    let node = resourceTypeList.querySelector(
-      `label[data-resource-type="${MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS}"]`
+    let resourceNodes = resourceTypeList.querySelectorAll(
+      `label[data-resource-type]`
     );
-    node.control.checked = true;
+    for (let resourceNode of resourceNodes) {
+      resourceNode.control.checked =
+        resourceNode.dataset.resourceType ==
+        MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS;
+    }
 
     let deck = shadow.querySelector("#wizard-deck");
-    let switchedToSafariPermissionPage = BrowserTestUtils.waitForMutationCondition(
-      deck,
-      { attributeFilter: ["selected-view"] },
-      () => {
-        return (
-          deck.getAttribute("selected-view") ==
-          "page-" + MigrationWizardConstants.PAGES.SAFARI_PERMISSION
-        );
-      }
-    );
+    let switchedToSafariPermissionPage =
+      BrowserTestUtils.waitForMutationCondition(
+        deck,
+        { attributeFilter: ["selected-view"] },
+        () => {
+          return (
+            deck.getAttribute("selected-view") ==
+            "page-" + MigrationWizardConstants.PAGES.SAFARI_PERMISSION
+          );
+        }
+      );
 
     let importButton = shadow.querySelector("#import");
     importButton.click();

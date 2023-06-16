@@ -11,7 +11,7 @@ const StringInputStream = Components.Constructor(
 );
 
 function run_test() {
-  add_task(async function() {
+  add_task(async function () {
     await test_delimited_read("0123:", "0123:");
     await test_delimited_read("0123:4567:", "0123:");
     await test_delimited_read("012345678901:", "0123456789");

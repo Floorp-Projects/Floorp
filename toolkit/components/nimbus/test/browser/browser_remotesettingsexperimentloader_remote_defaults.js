@@ -93,7 +93,7 @@ const REMOTE_CONFIGURATION_BAR = ExperimentFakes.recipe("bar-rollout", {
 
 const SYNC_DEFAULTS_PREF_BRANCH = "nimbus.syncdefaultsstore.";
 
-add_setup(function() {
+add_setup(function () {
   const client = RemoteSettings("nimbus-desktop-experiments");
   sinon.stub(client, "get").resolves([]);
 

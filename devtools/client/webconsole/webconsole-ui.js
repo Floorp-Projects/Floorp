@@ -61,9 +61,8 @@ class WebConsoleUI {
     this.window = this.hud.iframeWindow;
 
     this._onPanelSelected = this._onPanelSelected.bind(this);
-    this._onChangeSplitConsoleState = this._onChangeSplitConsoleState.bind(
-      this
-    );
+    this._onChangeSplitConsoleState =
+      this._onChangeSplitConsoleState.bind(this);
     this._onTargetAvailable = this._onTargetAvailable.bind(this);
     this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
     this._onResourceAvailable = this._onResourceAvailable.bind(this);

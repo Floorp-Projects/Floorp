@@ -179,6 +179,36 @@ HBD_SAD_WXH_NEON(32, 64)
 HBD_SAD_WXH_NEON(64, 32)
 HBD_SAD_WXH_NEON(64, 64)
 
+#undef HBD_SAD_WXH_NEON
+
+#define HBD_SAD_SKIP_WXH_NEON(w, h)                             \
+  unsigned int vpx_highbd_sad_skip_##w##x##h##_neon(            \
+      const uint8_t *src, int src_stride, const uint8_t *ref,   \
+      int ref_stride) {                                         \
+    return 2 * highbd_sad##w##xh_neon(src, 2 * src_stride, ref, \
+                                      2 * ref_stride, (h) / 2); \
+  }
+
+HBD_SAD_SKIP_WXH_NEON(4, 4)
+HBD_SAD_SKIP_WXH_NEON(4, 8)
+
+HBD_SAD_SKIP_WXH_NEON(8, 4)
+HBD_SAD_SKIP_WXH_NEON(8, 8)
+HBD_SAD_SKIP_WXH_NEON(8, 16)
+
+HBD_SAD_SKIP_WXH_NEON(16, 8)
+HBD_SAD_SKIP_WXH_NEON(16, 16)
+HBD_SAD_SKIP_WXH_NEON(16, 32)
+
+HBD_SAD_SKIP_WXH_NEON(32, 16)
+HBD_SAD_SKIP_WXH_NEON(32, 32)
+HBD_SAD_SKIP_WXH_NEON(32, 64)
+
+HBD_SAD_SKIP_WXH_NEON(64, 32)
+HBD_SAD_SKIP_WXH_NEON(64, 64)
+
+#undef HBD_SAD_SKIP_WXH_NEON
+
 static INLINE uint32_t highbd_sad4xh_avg_neon(const uint8_t *src_ptr,
                                               int src_stride,
                                               const uint8_t *ref_ptr,

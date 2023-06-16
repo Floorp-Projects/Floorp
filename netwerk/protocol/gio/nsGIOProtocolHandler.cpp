@@ -31,7 +31,6 @@
 #include "nsIInputStream.h"
 #include "nsIProtocolHandler.h"
 #include "mozilla/Monitor.h"
-#include "plstr.h"
 #include "prtime.h"
 #include <gio/gio.h>
 #include <algorithm>

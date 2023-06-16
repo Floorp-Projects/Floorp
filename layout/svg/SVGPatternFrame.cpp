@@ -595,6 +595,9 @@ gfxRect SVGPatternFrame::GetPatternRect(uint16_t aPatternUnits,
     width = SVGUtils::ObjectSpace(aTargetBBox, tmpWidth);
     height = SVGUtils::ObjectSpace(aTargetBBox, tmpHeight);
   } else {
+    if (aTarget->IsTextFrame()) {
+      aTarget = aTarget->GetParent();
+    }
     float scale = MaxExpansion(aTargetCTM);
     x = SVGUtils::UserSpace(aTarget, tmpX) * scale;
     y = SVGUtils::UserSpace(aTarget, tmpY) * scale;
@@ -611,8 +614,11 @@ gfxMatrix SVGPatternFrame::ConstructCTM(const SVGAnimatedViewBox& aViewBox,
                                         const gfxRect& callerBBox,
                                         const Matrix& callerCTM,
                                         nsIFrame* aTarget) {
-  SVGViewportElement* ctx = nullptr;
+  if (aTarget->IsTextFrame()) {
+    aTarget = aTarget->GetParent();
+  }
   nsIContent* targetContent = aTarget->GetContent();
+  SVGViewportElement* ctx = nullptr;
   gfxFloat scaleX, scaleY;
 
   // The objectBoundingBox conversion must be handled in the CTM:

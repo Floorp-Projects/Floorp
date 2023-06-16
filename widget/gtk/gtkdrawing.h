@@ -231,26 +231,14 @@ enum WidgetNodeType : int {
   MOZ_GTK_TREE_HEADER_SORTARROW,
   /* Paints an expander for a GtkTreeView */
   MOZ_GTK_TREEVIEW_EXPANDER,
-  /* Paints the background of the menu bar. */
-  MOZ_GTK_MENUBAR,
   /* Paints the background of menus, context menus. */
   MOZ_GTK_MENUPOPUP,
   /* Paints the arrow of menuitems that contain submenus */
   MOZ_GTK_MENUARROW,
   /* Paints an arrow in a toolbar button. flags is a GtkArrowType. */
   MOZ_GTK_TOOLBARBUTTON_ARROW,
-  /* Paints items of menubar. */
-  MOZ_GTK_MENUBARITEM,
   /* Paints items of popup menus. */
   MOZ_GTK_MENUITEM,
-  /* Paints a menuitem with check indicator, or the gets the style context for
-     a menuitem that contains a checkbox. */
-  MOZ_GTK_CHECKMENUITEM,
-  /* Gets the style context for a checkbox in a check menuitem. */
-  MOZ_GTK_CHECKMENUITEM_INDICATOR,
-  MOZ_GTK_RADIOMENUITEM,
-  MOZ_GTK_RADIOMENUITEM_INDICATOR,
-  MOZ_GTK_MENUSEPARATOR,
   /* GtkVPaned base class */
   MOZ_GTK_SPLITTER_HORIZONTAL,
   /* GtkHPaned base class */
@@ -312,8 +300,6 @@ enum WidgetNodeType : int {
   /* Client-side window decoration node. Available on GTK 3.20+. */
   MOZ_GTK_WINDOW_DECORATION,
   MOZ_GTK_WINDOW_DECORATION_SOLID,
-
-  MOZ_GTK_MENUPOPUP_DECORATION,
 
   MOZ_GTK_WIDGET_NODE_COUNT
 };
@@ -419,16 +405,6 @@ const ToggleGTKMetrics* GetToggleMetrics(WidgetNodeType aWidgetType);
  */
 gint moz_gtk_radio_get_metrics(gint* indicator_size, gint* indicator_spacing);
 
-/** Get the horizontal padding for the menuitem widget or checkmenuitem widget.
- * horizontal_padding: [OUT] The left and right padding of the menuitem or
- * checkmenuitem
- *
- * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
- */
-gint moz_gtk_menuitem_get_horizontal_padding(gint* horizontal_padding);
-
-gint moz_gtk_checkmenuitem_get_horizontal_padding(gint* horizontal_padding);
-
 /**
  * Some GTK themes draw their indication for the default button outside
  * the button (e.g. the glow in New Wave). This gets the extra space necessary.
@@ -523,14 +499,6 @@ gint moz_gtk_get_expander_size(gint* size);
  * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
  */
 gint moz_gtk_get_treeview_expander_size(gint* size);
-
-/**
- * Get the desired height of a menu separator
- * size:    [OUT] the desired height
- *
- * returns: MOZ_GTK_SUCCESS if there was no error, an error code otherwise
- */
-gint moz_gtk_get_menu_separator_height(gint* size);
 
 /**
  * Get the desired size of a splitter

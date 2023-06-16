@@ -1,1 +1,8 @@
-[["warning", "return type 'const int' is 'const'-qualified at the top level, which may reduce code readability without improving const correctness", "readability-const-return-type"], {"reliability": "high"}]
+[
+  [
+    "warning",
+    "return type 'const int' is 'const'-qualified at the top level, which may reduce code readability without improving const correctness",
+    "readability-const-return-type"
+  ],
+  { "reliability": "high" }
+]

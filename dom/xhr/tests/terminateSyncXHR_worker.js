@@ -3,13 +3,13 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-onmessage = function(event) {
+onmessage = function (event) {
   throw new Error("No messages should reach me!");
 };
 
 var xhr = new XMLHttpRequest();
 xhr.open("GET", "worker_testXHR.txt", false);
-xhr.addEventListener("loadstart", function() {
+xhr.addEventListener("loadstart", function () {
   // Tell the parent to terminate us.
   postMessage("TERMINATE");
   // And wait for it to do so.

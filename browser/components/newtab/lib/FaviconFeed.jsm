@@ -6,8 +6,8 @@
 const { actionTypes: at } = ChromeUtils.importESModule(
   "resource://activity-stream/common/Actions.sys.mjs"
 );
-const { getDomain } = ChromeUtils.import(
-  "resource://activity-stream/lib/TippyTopProvider.jsm"
+const { getDomain } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/TippyTopProvider.sys.mjs"
 );
 const { RemoteSettings } = ChromeUtils.importESModule(
   "resource://services-settings/remote-settings.sys.mjs"
@@ -83,13 +83,11 @@ async function fetchVisitPaths(url) {
     FROM path
   `;
 
-  const visits = await lazy.NewTabUtils.activityStreamProvider.executePlacesQuery(
-    query,
-    {
+  const visits =
+    await lazy.NewTabUtils.activityStreamProvider.executePlacesQuery(query, {
       columns: ["visit_id", "url"],
       params: { url },
-    }
-  );
+    });
   return visits;
 }
 
@@ -148,10 +146,7 @@ class FaviconFeed {
 
     let iconUri = Services.io.newURI(site.image_url);
     // The #tippytop is to be able to identify them for telemetry.
-    iconUri = iconUri
-      .mutate()
-      .setRef("tippytop")
-      .finalize();
+    iconUri = iconUri.mutate().setRef("tippytop").finalize();
     lazy.PlacesUtils.favicons.setAndFetchFaviconForPage(
       Services.io.newURI(url),
       iconUri,

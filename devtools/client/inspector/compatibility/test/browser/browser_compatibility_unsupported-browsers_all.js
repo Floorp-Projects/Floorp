@@ -14,7 +14,7 @@ const TEST_URI = `
   <body></body>
 `;
 
-add_task(async function() {
+add_task(async function () {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, selectedElementPane } = await openCompatibilityView();
 
@@ -26,6 +26,7 @@ add_task(async function() {
     {
       property: "user-modify",
       unsupportedBrowsers: targetBrowsers,
+      url: "https://developer.mozilla.org/docs/Web/CSS/user-modify",
     },
   ];
   await assertIssueList(selectedElementPane, expectedIssues);

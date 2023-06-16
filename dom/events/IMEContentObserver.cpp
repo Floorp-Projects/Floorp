@@ -126,8 +126,6 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(IMEContentObserver)
 IMEContentObserver::IMEContentObserver()
     : mESM(nullptr),
       mIMENotificationRequests(nullptr),
-      mSuppressNotifications(0),
-      mPreCharacterDataChangeLength(-1),
       mSendingNotification(NOTIFY_IME_OF_NOTHING),
       mIsObserving(false),
       mIMEHasFocus(false),
@@ -271,6 +269,12 @@ bool IMEContentObserver::InitWithEditor(nsPresContext& aPresContext,
 
   if (mEditorBase->IsTextEditor()) {
     mRootElement = mEditorBase->GetRoot();  // The anonymous <div>
+    MOZ_ASSERT(mRootElement);
+    MOZ_ASSERT(mRootElement->GetFirstChild());
+    if (auto* text = Text::FromNodeOrNull(
+            mRootElement ? mRootElement->GetFirstChild() : nullptr)) {
+      mTextControlValueLength = ContentEventHandler::GetNativeTextLength(*text);
+    }
   } else if (const nsRange* selRange = mSelection->GetRangeAt(0)) {
     if (NS_WARN_IF(!selRange->GetStartContainer())) {
       return false;
@@ -1148,6 +1152,15 @@ void IMEContentObserver::MaybeNotifyIMEOfAddedTextDuringDocumentChange() {
   ClearAddedNodesDuringDocumentChange();
 }
 
+void IMEContentObserver::OnTextControlValueChangedDuringNoFrame(
+    const nsAString& aNewValue) {
+  MOZ_ASSERT(mEditorBase);
+  MOZ_ASSERT(mEditorBase->IsTextEditor());
+  uint32_t newLength = ContentEventHandler::GetNativeTextLength(aNewValue);
+  TextChangeData data(0, mTextControlValueLength, newLength, false, false);
+  MaybeNotifyIMEOfTextChange(data);
+}
+
 void IMEContentObserver::BeginDocumentUpdate() {
   MOZ_LOG(sIMECOLog, LogLevel::Debug,
           ("0x%p BeginDocumentUpdate(), HasAddedNodesDuringDocumentChange()=%s",
@@ -1259,6 +1272,13 @@ void IMEContentObserver::MaybeNotifyIMEOfTextChange(
   MOZ_LOG(sIMECOLog, LogLevel::Debug,
           ("0x%p MaybeNotifyIMEOfTextChange(aTextChangeData=%s)", this,
            ToString(aTextChangeData).c_str()));
+
+  if (mEditorBase && mEditorBase->IsTextEditor()) {
+    MOZ_DIAGNOSTIC_ASSERT(static_cast<int64_t>(mTextControlValueLength) +
+                              aTextChangeData.Difference() >=
+                          0);
+    mTextControlValueLength += aTextChangeData.Difference();
+  }
 
   mTextChangeData += aTextChangeData;
   PostTextChangeNotification();

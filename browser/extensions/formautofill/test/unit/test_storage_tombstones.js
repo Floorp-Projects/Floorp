@@ -44,7 +44,7 @@ let do_check_tombstone_record = profile => {
 
 // Like add_task, but actually adds 2 - one for addresses and one for cards.
 function add_storage_task(test_function) {
-  add_task(async function() {
+  add_task(async function () {
     let path = getTempFile(TEST_STORE_FILE_NAME).path;
     let profileStorage = new FormAutofillStorage(path);
     let testCC1 = Object.assign({}, TEST_CC_1);

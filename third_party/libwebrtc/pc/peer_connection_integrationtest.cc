@@ -1326,8 +1326,8 @@ TEST_F(PeerConnectionIntegrationTestUnifiedPlan,
 }
 
 // Test that the new GetStats() returns stats for all outgoing/incoming streams
-// with the correct track IDs if there are more than one audio and more than one
-// video senders/receivers.
+// with the correct track identifiers if there are more than one audio and more
+// than one video senders/receivers.
 TEST_P(PeerConnectionIntegrationTest, NewGetStatsManyAudioAndManyVideoStreams) {
   ASSERT_TRUE(CreatePeerConnectionWrappers());
   ConnectFakeSignaling();
@@ -1362,12 +1362,12 @@ TEST_P(PeerConnectionIntegrationTest, NewGetStatsManyAudioAndManyVideoStreams) {
       ASSERT_TRUE(stat->frames_encoded.is_defined());
       EXPECT_GE(*stat->frames_encoded, *stat->key_frames_encoded);
     }
-    ASSERT_TRUE(stat->track_id.is_defined());
-    const auto* track_stat =
-        caller_report->GetAs<webrtc::DEPRECATED_RTCMediaStreamTrackStats>(
-            *stat->track_id);
-    ASSERT_TRUE(track_stat);
-    outbound_track_ids.push_back(*track_stat->track_identifier);
+    ASSERT_TRUE(stat->media_source_id.is_defined());
+    const RTCMediaSourceStats* media_source =
+        static_cast<const RTCMediaSourceStats*>(
+            caller_report->Get(*stat->media_source_id));
+    ASSERT_TRUE(media_source);
+    outbound_track_ids.push_back(*media_source->track_identifier);
   }
   EXPECT_THAT(outbound_track_ids, UnorderedElementsAreArray(track_ids));
 
@@ -1387,12 +1387,7 @@ TEST_P(PeerConnectionIntegrationTest, NewGetStatsManyAudioAndManyVideoStreams) {
       ASSERT_TRUE(stat->frames_decoded.is_defined());
       EXPECT_GE(*stat->frames_decoded, *stat->key_frames_decoded);
     }
-    ASSERT_TRUE(stat->track_id.is_defined());
-    const auto* track_stat =
-        callee_report->GetAs<webrtc::DEPRECATED_RTCMediaStreamTrackStats>(
-            *stat->track_id);
-    ASSERT_TRUE(track_stat);
-    inbound_track_ids.push_back(*track_stat->track_identifier);
+    inbound_track_ids.push_back(*stat->track_identifier);
   }
   EXPECT_THAT(inbound_track_ids, UnorderedElementsAreArray(track_ids));
 }
@@ -1467,11 +1462,11 @@ TEST_P(PeerConnectionIntegrationTest,
       callee()->NewGetStats();
   ASSERT_NE(nullptr, report);
 
-  auto media_stats =
-      report->GetStatsOfType<webrtc::DEPRECATED_RTCMediaStreamTrackStats>();
-  auto audio_index = FindFirstMediaStatsIndexByKind("audio", media_stats);
-  ASSERT_GE(audio_index, 0);
-  EXPECT_TRUE(media_stats[audio_index]->audio_level.is_defined());
+  auto inbound_rtps =
+      report->GetStatsOfType<webrtc::RTCInboundRTPStreamStats>();
+  auto index = FindFirstMediaStatsIndexByKind("audio", inbound_rtps);
+  ASSERT_GE(index, 0);
+  EXPECT_TRUE(inbound_rtps[index]->audio_level.is_defined());
 }
 
 // Helper for test below.
@@ -2761,6 +2756,92 @@ TEST_P(PeerConnectionIntegrationTest, GetSourcesVideo) {
   EXPECT_EQ(webrtc::RtpSourceType::SSRC, sources[0].source_type());
 }
 
+TEST_P(PeerConnectionIntegrationTest, UnsignaledSsrcGetSourcesAudio) {
+  ASSERT_TRUE(CreatePeerConnectionWrappers());
+  ConnectFakeSignaling();
+  caller()->AddAudioTrack();
+  callee()->SetReceivedSdpMunger(RemoveSsrcsAndMsids);
+  caller()->CreateAndSetAndSignalOffer();
+  ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
+  ASSERT_EQ(callee()->pc()->GetReceivers().size(), 1u);
+  auto receiver = callee()->pc()->GetReceivers()[0];
+  std::vector<RtpSource> sources;
+  EXPECT_TRUE_WAIT(([&receiver, &sources]() {
+                     sources = receiver->GetSources();
+                     return !sources.empty();
+                   })(),
+                   kDefaultTimeout);
+  ASSERT_GT(sources.size(), 0u);
+  EXPECT_EQ(webrtc::RtpSourceType::SSRC, sources[0].source_type());
+}
+
+TEST_P(PeerConnectionIntegrationTest, UnsignaledSsrcGetSourcesVideo) {
+  ASSERT_TRUE(CreatePeerConnectionWrappers());
+  ConnectFakeSignaling();
+  caller()->AddVideoTrack();
+  callee()->SetReceivedSdpMunger(RemoveSsrcsAndMsids);
+  caller()->CreateAndSetAndSignalOffer();
+  ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
+  ASSERT_EQ(callee()->pc()->GetReceivers().size(), 1u);
+  auto receiver = callee()->pc()->GetReceivers()[0];
+  std::vector<RtpSource> sources;
+  EXPECT_TRUE_WAIT(([&receiver, &sources]() {
+                     sources = receiver->GetSources();
+                     return !sources.empty();
+                   })(),
+                   kDefaultTimeout);
+  ASSERT_GT(sources.size(), 0u);
+  EXPECT_EQ(webrtc::RtpSourceType::SSRC, sources[0].source_type());
+}
+
+TEST_P(PeerConnectionIntegrationTest, UnsignaledSsrcGetParametersAudio) {
+  ASSERT_TRUE(CreatePeerConnectionWrappers());
+  ConnectFakeSignaling();
+  caller()->AddAudioTrack();
+  callee()->SetReceivedSdpMunger(RemoveSsrcsAndMsids);
+  caller()->CreateAndSetAndSignalOffer();
+  ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
+  ASSERT_EQ(callee()->pc()->GetReceivers().size(), 1u);
+  auto receiver = callee()->pc()->GetReceivers()[0];
+  RtpParameters parameters;
+  EXPECT_TRUE_WAIT(([&receiver, &parameters]() {
+                     parameters = receiver->GetParameters();
+                     return !parameters.encodings.empty() &&
+                            parameters.encodings[0].ssrc.has_value();
+                   })(),
+                   kDefaultTimeout);
+  ASSERT_EQ(parameters.encodings.size(), 1u);
+  EXPECT_TRUE(parameters.encodings[0].ssrc.has_value());
+}
+
+TEST_P(PeerConnectionIntegrationTest, UnsignaledSsrcGetParametersVideo) {
+  ASSERT_TRUE(CreatePeerConnectionWrappers());
+  ConnectFakeSignaling();
+  caller()->AddVideoTrack();
+  callee()->SetReceivedSdpMunger(RemoveSsrcsAndMsids);
+  caller()->CreateAndSetAndSignalOffer();
+  ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
+  ASSERT_EQ(callee()->pc()->GetReceivers().size(), 1u);
+  auto receiver = callee()->pc()->GetReceivers()[0];
+  RtpParameters parameters;
+  EXPECT_TRUE_WAIT(([&receiver, &parameters]() {
+                     parameters = receiver->GetParameters();
+                     return !parameters.encodings.empty() &&
+                            parameters.encodings[0].ssrc.has_value();
+                   })(),
+                   kDefaultTimeout);
+  ASSERT_EQ(parameters.encodings.size(), 1u);
+  EXPECT_TRUE(parameters.encodings[0].ssrc.has_value());
+}
+
+TEST_P(PeerConnectionIntegrationTest,
+       GetParametersHasEncodingsBeforeNegotiation) {
+  ASSERT_TRUE(CreatePeerConnectionWrappers());
+  auto sender = caller()->AddTrack(caller()->CreateLocalVideoTrack());
+  auto parameters = sender->GetParameters();
+  EXPECT_EQ(parameters.encodings.size(), 1u);
+}
+
 // Test that if a track is removed and added again with a different stream ID,
 // the new stream ID is successfully communicated in SDP and media continues to
 // flow end-to-end.
@@ -2882,22 +2963,14 @@ TEST_P(PeerConnectionIntegrationTest, DisableAndEnableAudioPlayout) {
 
 double GetAudioEnergyStat(PeerConnectionIntegrationWrapper* pc) {
   auto report = pc->NewGetStats();
-  auto track_stats_list =
-      report->GetStatsOfType<webrtc::DEPRECATED_RTCMediaStreamTrackStats>();
-  const webrtc::DEPRECATED_RTCMediaStreamTrackStats* remote_track_stats =
-      nullptr;
-  for (const auto* track_stats : track_stats_list) {
-    if (track_stats->remote_source.is_defined() &&
-        *track_stats->remote_source) {
-      remote_track_stats = track_stats;
-      break;
-    }
-  }
-
-  if (!remote_track_stats->total_audio_energy.is_defined()) {
+  auto inbound_rtps =
+      report->GetStatsOfType<webrtc::RTCInboundRTPStreamStats>();
+  RTC_CHECK(!inbound_rtps.empty());
+  auto* inbound_rtp = inbound_rtps[0];
+  if (!inbound_rtp->total_audio_energy.is_defined()) {
     return 0.0;
   }
-  return *remote_track_stats->total_audio_energy;
+  return *inbound_rtp->total_audio_energy;
 }
 
 // Test that if audio playout is disabled via the SetAudioPlayout() method, then
@@ -3343,6 +3416,28 @@ TEST_F(PeerConnectionIntegrationTestUnifiedPlan,
     caller()->UpdateDelayStats("caller reception", current_size);
     callee()->UpdateDelayStats("callee reception", current_size);
   }
+}
+
+TEST_F(PeerConnectionIntegrationTestUnifiedPlan,
+       GetParametersHasEncodingsBeforeNegotiation) {
+  ASSERT_TRUE(CreatePeerConnectionWrappers());
+  auto result = caller()->pc()->AddTransceiver(cricket::MEDIA_TYPE_VIDEO);
+  auto transceiver = result.MoveValue();
+  auto parameters = transceiver->sender()->GetParameters();
+  EXPECT_EQ(parameters.encodings.size(), 1u);
+}
+
+TEST_F(PeerConnectionIntegrationTestUnifiedPlan,
+       GetParametersHasInitEncodingsBeforeNegotiation) {
+  ASSERT_TRUE(CreatePeerConnectionWrappers());
+  RtpTransceiverInit init;
+  init.send_encodings.push_back({});
+  init.send_encodings[0].max_bitrate_bps = 12345;
+  auto result = caller()->pc()->AddTransceiver(cricket::MEDIA_TYPE_VIDEO, init);
+  auto transceiver = result.MoveValue();
+  auto parameters = transceiver->sender()->GetParameters();
+  ASSERT_EQ(parameters.encodings.size(), 1u);
+  EXPECT_EQ(parameters.encodings[0].max_bitrate_bps, 12345);
 }
 
 INSTANTIATE_TEST_SUITE_P(

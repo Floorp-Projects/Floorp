@@ -17,9 +17,9 @@ const index = 1;
 const position = index + 1;
 
 const { TELEMETRY_SCALARS: WEATHER_SCALARS } = UrlbarProviderWeather;
-const { WEATHER_SUGGESTION: suggestion } = MerinoTestUtils;
+const { WEATHER_SUGGESTION: suggestion, WEATHER_RS_DATA } = MerinoTestUtils;
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       // Make sure quick actions are disabled because showing them in the top
@@ -30,12 +30,18 @@ add_setup(async function() {
 
   await setUpTelemetryTest({
     suggestions: [],
+    remoteSettingsResults: [
+      {
+        type: "weather",
+        weather: WEATHER_RS_DATA,
+      },
+    ],
   });
   await MerinoTestUtils.initWeather();
   await updateTopSitesAndAwaitChanged();
 });
 
-add_task(async function() {
+add_task(async function () {
   await doTelemetryTest({
     index,
     suggestion,
@@ -138,9 +144,9 @@ async function updateTopSitesAndAwaitChanged() {
   }
 
   info("Updating top sites and awaiting newtab-top-sites-changed");
-  let changedPromise = TestUtils.topicObserved(
-    "newtab-top-sites-changed"
-  ).then(() => info("Observed newtab-top-sites-changed"));
+  let changedPromise = TestUtils.topicObserved("newtab-top-sites-changed").then(
+    () => info("Observed newtab-top-sites-changed")
+  );
   await updateTopSites(sites => sites?.length);
   await changedPromise;
 }

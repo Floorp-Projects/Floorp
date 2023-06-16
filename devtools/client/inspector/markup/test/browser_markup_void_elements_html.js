@@ -6,7 +6,7 @@
 // Test void element display in the markupview.
 const TEST_URL = URL_ROOT + "doc_markup_void_elements.html";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
   const { win } = inspector.markup;
 

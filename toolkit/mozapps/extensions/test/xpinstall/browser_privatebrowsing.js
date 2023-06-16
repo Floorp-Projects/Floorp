@@ -4,8 +4,8 @@
 
 "use strict";
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+const { AddonTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
 );
 
 let gDidSeeChannel = false;
@@ -92,7 +92,7 @@ function install_ended(install, addon) {
   return addon.uninstall();
 }
 
-const finish_test = async function(count) {
+const finish_test = async function (count) {
   ok(
     gDidSeeChannel,
     "Should have seen the request for the XPI and verified it was sent the right way."

@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   info("Check that toggleable toolbars dropdown in always shown");
 
   info("Remove all possible custom toolbars");

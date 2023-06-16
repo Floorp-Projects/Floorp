@@ -61,7 +61,7 @@ function listenForEventsOnSocket(socket, socketType) {
   let pendingResolve = null;
   let receivedEvents = [];
   let receivedData = null;
-  let handleGenericEvent = function(event) {
+  let handleGenericEvent = function (event) {
     dump("(" + socketType + " event: " + event.type + ")\n");
     if (pendingResolve && wantDataLength === null) {
       pendingResolve(event);
@@ -74,7 +74,7 @@ function listenForEventsOnSocket(socket, socketType) {
   socket.onopen = handleGenericEvent;
   socket.ondrain = handleGenericEvent;
   socket.onerror = handleGenericEvent;
-  socket.onclose = function(event) {
+  socket.onclose = function (event) {
     if (!wantDataAndClose) {
       handleGenericEvent(event);
     } else if (pendingResolve) {
@@ -84,7 +84,7 @@ function listenForEventsOnSocket(socket, socketType) {
       wantDataAndClose = false;
     }
   };
-  socket.ondata = function(event) {
+  socket.ondata = function (event) {
     dump(
       "(" +
         socketType +
@@ -129,7 +129,7 @@ function listenForEventsOnSocket(socket, socketType) {
       }
 
       dump("(" + socketType + " waiting for event)\n");
-      return new Promise(function(resolve, reject) {
+      return new Promise(function (resolve, reject) {
         pendingResolve = resolve;
       });
     },
@@ -149,7 +149,7 @@ function listenForEventsOnSocket(socket, socketType) {
         return promise;
       }
       dump("(" + socketType + " waiting for " + length + " bytes)\n");
-      return new Promise(function(resolve, reject) {
+      return new Promise(function (resolve, reject) {
         pendingResolve = resolve;
         wantDataLength = length;
       });
@@ -159,7 +159,7 @@ function listenForEventsOnSocket(socket, socketType) {
         throw new Error("only one wait allowed at a time.");
       }
 
-      return new Promise(function(resolve, reject) {
+      return new Promise(function (resolve, reject) {
         pendingResolve = resolve;
         // we may receive no data before getting close, in which case we want to
         // return an empty array
@@ -177,14 +177,14 @@ function listenForEventsOnSocket(socket, socketType) {
  * to add the event listener during the connection.
  */
 function waitForConnection(listeningServer) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     // Because of the event model of sockets, we can't use the
     // listenForEventsOnSocket mechanism; we need to hook up listeners during
     // the connect event.
-    listeningServer.onconnect = function(event) {
+    listeningServer.onconnect = function (event) {
       // Clobber the listener to get upset if it receives any more connections
       // after this.
-      listeningServer.onconnect = function() {
+      listeningServer.onconnect = function () {
         ok(false, "Received a connection when not expecting one.");
       };
       ok(true, "Listening server accepted socket");
@@ -198,7 +198,7 @@ function waitForConnection(listeningServer) {
 
 function defer() {
   var deferred = {};
-  deferred.promise = new Promise(function(resolve, reject) {
+  deferred.promise = new Promise(function (resolve, reject) {
     deferred.resolve = resolve;
     deferred.reject = reject;
   });

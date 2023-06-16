@@ -1,14 +1,13 @@
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
-      url:
-        "http://mochi.test:8888/browser/toolkit/components/tooltiptext/tests/title_test.svg",
+      url: "http://mochi.test:8888/browser/toolkit/components/tooltiptext/tests/title_test.svg",
     },
-    async function(browser) {
-      await SpecialPowers.spawn(browser, [""], function() {
+    async function (browser) {
+      await SpecialPowers.spawn(browser, [""], function () {
         let tttp = Cc[
           "@mozilla.org/embedcomp/default-tooltiptextprovider;1"
         ].getService(Ci.nsITooltipTextProvider);

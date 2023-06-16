@@ -11,6 +11,12 @@ bs_Cyrl{
                 one{"{0} акра"}
                 other{"{0} акри"}
             }
+            dunam{
+                dnam{"dunam"}
+                few{"{0} dunam"}
+                one{"{0} dunam"}
+                other{"{0} dunam"}
+            }
             hectare{
                 dnam{"хектари"}
                 few{"{0} хектара"}
@@ -26,9 +32,16 @@ bs_Cyrl{
             }
             square-foot{
                 dnam{"квадратне стопе"}
+                few{"{0} ft²"}
+                one{"{0} ft²"}
+                other{"{0} ft²"}
             }
             square-inch{
                 dnam{"квадратни инчи"}
+                few{"{0} in²"}
+                one{"{0} in²"}
+                other{"{0} in²"}
+                per{"{0}/in²"}
             }
             square-kilometer{
                 dnam{"квадратни километри"}
@@ -142,15 +155,45 @@ bs_Cyrl{
         graphics{
             dot-per-centimeter{
                 dnam{"тачке по центиметру"}
+                few{"{0} ppcm"}
+                one{"{0} ppcm"}
+                other{"{0} ppcm"}
             }
             dot-per-inch{
                 dnam{"тачке по инчу"}
+                few{"{0} ppi"}
+                one{"{0} ppi"}
+                other{"{0} ppi"}
+            }
+            em{
+                dnam{"em"}
+                few{"{0} em"}
+                one{"{0} em"}
+                other{"{0} em"}
             }
             megapixel{
                 dnam{"мегапиксели"}
+                few{"{0} MP"}
+                one{"{0} MP"}
+                other{"{0} MP"}
             }
             pixel{
                 dnam{"пиксели"}
+                few{"{0} px"}
+                one{"{0} px"}
+                other{"{0} px"}
+            }
+            pixel-per-centimeter{
+                dnam{"ppcm"}
+                few{"{0} ppcm"}
+                one{"{0} ppcm"}
+                other{"{0} ppcm"}
+            }
+            pixel-per-inch{
+                dnam{"ppi"}
+                few{"{0} ppi"}
+                one{"{0} ppi"}
+                other{"{0} ppi"}
             }
         }
         length{
@@ -172,6 +215,20 @@ bs_Cyrl{
                 few{"{0} дециметра"}
                 one{"{0} дециметар"}
                 other{"{0} дециметара"}
+            }
+            foot{
+                dnam{"ft"}
+                few{"{0} ft"}
+                one{"{0} ft"}
+                other{"{0} ft"}
+                per{"{0}/ft"}
+            }
+            inch{
+                dnam{"in"}
+                few{"{0} in"}
+                one{"{0} in"}
+                other{"{0} in"}
+                per{"{0}/in"}
             }
             kilometer{
                 dnam{"километри"}
@@ -205,6 +262,12 @@ bs_Cyrl{
                 one{"{0} миља"}
                 other{"{0} миља"}
             }
+            mile-scandinavian{
+                dnam{"smi"}
+                few{"{0} smi"}
+                one{"{0} smi"}
+                other{"{0} smi"}
+            }
             millimeter{
                 dnam{"милиметри"}
                 few{"{0} милиметра"}
@@ -223,11 +286,29 @@ bs_Cyrl{
                 one{"{0} наутичка миља"}
                 other{"{0} наутичких миља"}
             }
+            parsec{
+                dnam{"pc"}
+                few{"{0} pc"}
+                one{"{0} pc"}
+                other{"{0} pc"}
+            }
+            picometer{
+                dnam{"pm"}
+                few{"{0} pm"}
+                one{"{0} pm"}
+                other{"{0} pm"}
+            }
             point{
                 dnam{"тачке"}
                 few{"{0} тачке"}
                 one{"{0} тачка"}
                 other{"{0} тачака"}
+            }
+            solar-radius{
+                dnam{"R☉"}
+                few{"{0} R☉"}
+                one{"{0} R☉"}
+                other{"{0} R☉"}
             }
             yard{
                 dnam{"јарди"}
@@ -237,23 +318,108 @@ bs_Cyrl{
             }
         }
         volume{
+            centiliter{
+                dnam{"cL"}
+                few{"{0} cL"}
+                one{"{0} cL"}
+                other{"{0} cL"}
+            }
             cubic-centimeter{
                 dnam{"кубни центиметри"}
+                few{"{0} cm³"}
+                one{"{0} cm³"}
+                other{"{0} cm³"}
+                per{"{0}/cm³"}
+            }
+            cubic-foot{
+                dnam{"ft³"}
+                few{"{0} ft³"}
+                one{"{0} ft³"}
+                other{"{0} ft³"}
+            }
+            cubic-inch{
+                dnam{"in³"}
+                few{"{0} in³"}
+                one{"{0} in³"}
+                other{"{0} in³"}
+            }
+            cubic-kilometer{
+                dnam{"km³"}
+                few{"{0} km³"}
+                one{"{0} km³"}
+                other{"{0} km³"}
             }
             cubic-meter{
                 dnam{"кубни метри"}
+                few{"{0} m³"}
+                one{"{0} m³"}
+                other{"{0} m³"}
+                per{"{0}/m³"}
+            }
+            cubic-mile{
+                dnam{"mi³"}
+                few{"{0} mi³"}
+                one{"{0} mi³"}
+                other{"{0} mi³"}
+            }
+            cubic-yard{
+                dnam{"yd³"}
+                few{"{0} yd³"}
+                one{"{0} yd³"}
+                other{"{0} yd³"}
+            }
+            deciliter{
+                dnam{"dL"}
+                few{"{0} dL"}
+                one{"{0} dL"}
+                other{"{0} dL"}
+            }
+            hectoliter{
+                dnam{"hL"}
+                few{"{0} hL"}
+                one{"{0} hL"}
+                other{"{0} hL"}
             }
             liter{
                 dnam{"литри"}
+                few{"{0} l"}
+                one{"{0} l"}
+                other{"{0} l"}
+                per{"{0}/l"}
+            }
+            megaliter{
+                dnam{"ML"}
+                few{"{0} ML"}
+                one{"{0} ML"}
+                other{"{0} ML"}
             }
         }
     }
     unitsNarrow{
         duration{
+            day{
+                dnam{"дани"}
+                few{"{0} дана"}
+                one{"{0} дан"}
+                other{"{0} дан"}
+            }
             hour{
+                dnam{"сати"}
                 few{"{0} сата"}
                 one{"{0} сат"}
                 other{"{0} сати"}
+            }
+            millisecond{
+                dnam{"мс"}
+                few{"{0} мс"}
+                one{"{0} мс"}
+                other{"{0} мс"}
+            }
+            minute{
+                dnam{"минут"}
+                few{"{0} мин."}
+                one{"{0} мин."}
+                other{"{0} мин."}
             }
             month{
                 dnam{"мјесец"}
@@ -261,11 +427,57 @@ bs_Cyrl{
                 one{"{0} мјес."}
                 other{"{0} мјес."}
             }
+            second{
+                dnam{"секунде"}
+                few{"{0} сек."}
+                one{"{0} сек."}
+                other{"{0} сек."}
+            }
             week{
                 dnam{"седмица"}
                 few{"{0} сед."}
                 one{"{0} сед."}
                 other{"{0} сед."}
+            }
+            year{
+                dnam{"година"}
+                few{"{0} год"}
+                one{"{0} год"}
+                other{"{0} год"}
+            }
+        }
+        length{
+            centimeter{
+                dnam{"cm"}
+                few{"{0} cm"}
+                one{"{0} cm"}
+                other{"{0} cm"}
+            }
+            kilometer{
+                dnam{"km"}
+                few{"{0} km"}
+                one{"{0} km"}
+                other{"{0} km"}
+            }
+            meter{
+                dnam{"m"}
+                few{"{0} m"}
+                one{"{0} m"}
+                other{"{0} m"}
+            }
+            millimeter{
+                dnam{"mm"}
+                few{"{0} mm"}
+                one{"{0} mm"}
+                other{"{0} mm"}
+            }
+        }
+        volume{
+            liter{
+                dnam{"liter"}
+                few{"{0} l"}
+                one{"{0} l"}
+                other{"{0} l"}
             }
         }
     }
@@ -273,9 +485,55 @@ bs_Cyrl{
         area{
             acre{
                 dnam{"акре"}
+                few{"{0} ac"}
+                one{"{0} ac"}
+                other{"{0} ac"}
+            }
+            dunam{
+                few{"{0} dunam"}
+                one{"{0} dunam"}
+                other{"{0} dunam"}
             }
             hectare{
                 dnam{"хектари"}
+                few{"{0} ha"}
+                one{"{0} ha"}
+                other{"{0} ha"}
+            }
+            square-centimeter{
+                few{"{0} cm²"}
+                one{"{0} cm²"}
+                other{"{0} cm²"}
+            }
+            square-foot{
+                few{"{0} ft²"}
+                one{"{0} ft²"}
+                other{"{0} ft²"}
+            }
+            square-inch{
+                few{"{0} in²"}
+                one{"{0} in²"}
+                other{"{0} in²"}
+            }
+            square-kilometer{
+                few{"{0} km²"}
+                one{"{0} km²"}
+                other{"{0} km²"}
+            }
+            square-meter{
+                few{"{0} m²"}
+                one{"{0} m²"}
+                other{"{0} m²"}
+            }
+            square-mile{
+                few{"{0} mi²"}
+                one{"{0} mi²"}
+                other{"{0} mi²"}
+            }
+            square-yard{
+                few{"{0} yd²"}
+                one{"{0} yd²"}
+                other{"{0} yd²"}
             }
         }
         duration{
@@ -305,6 +563,11 @@ bs_Cyrl{
                 other{"{0} сати"}
                 per{"{0} по сату"}
             }
+            microsecond{
+                few{"{0} μs"}
+                one{"{0} μs"}
+                other{"{0} μs"}
+            }
             millisecond{
                 dnam{"мс"}
                 few{"{0} мс"}
@@ -324,6 +587,11 @@ bs_Cyrl{
                 one{"{0} мјес."}
                 other{"{0} мјес."}
                 per{"{0} мјесеч."}
+            }
+            nanosecond{
+                few{"{0} ns"}
+                one{"{0} ns"}
+                other{"{0} ns"}
             }
             second{
                 dnam{"секунде"}
@@ -347,9 +615,203 @@ bs_Cyrl{
                 per{"{0} годиш."}
             }
         }
+        graphics{
+            dot-per-centimeter{
+                dnam{"ppcm"}
+                few{"{0} ppcm"}
+                one{"{0} ppcm"}
+                other{"{0} ppcm"}
+            }
+            dot-per-inch{
+                dnam{"ppi"}
+                few{"{0} ppi"}
+                one{"{0} ppi"}
+                other{"{0} ppi"}
+            }
+            em{
+                few{"{0} em"}
+                one{"{0} em"}
+                other{"{0} em"}
+            }
+            megapixel{
+                few{"{0} MP"}
+                one{"{0} MP"}
+                other{"{0} MP"}
+            }
+            pixel{
+                few{"{0} px"}
+                one{"{0} px"}
+                other{"{0} px"}
+            }
+            pixel-per-centimeter{
+                few{"{0} ppcm"}
+                one{"{0} ppcm"}
+                other{"{0} ppcm"}
+            }
+            pixel-per-inch{
+                few{"{0} ppi"}
+                one{"{0} ppi"}
+                other{"{0} ppi"}
+            }
+        }
         length{
+            astronomical-unit{
+                few{"{0} au"}
+                one{"{0} au"}
+                other{"{0} au"}
+            }
+            centimeter{
+                few{"{0} cm"}
+                one{"{0} cm"}
+                other{"{0} cm"}
+            }
+            decimeter{
+                few{"{0} dm"}
+                one{"{0} dm"}
+                other{"{0} dm"}
+            }
+            foot{
+                few{"{0} ft"}
+                one{"{0} ft"}
+                other{"{0} ft"}
+            }
+            inch{
+                few{"{0} in"}
+                one{"{0} in"}
+                other{"{0} in"}
+            }
+            kilometer{
+                few{"{0} km"}
+                one{"{0} km"}
+                other{"{0} km"}
+            }
+            light-year{
+                few{"{0} ly"}
+                one{"{0} ly"}
+                other{"{0} ly"}
+            }
             meter{
                 dnam{"m"}
+                few{"{0} m"}
+                one{"{0} m"}
+                other{"{0} m"}
+            }
+            micrometer{
+                few{"{0} μm"}
+                one{"{0} μm"}
+                other{"{0} μm"}
+            }
+            mile{
+                few{"{0} mi"}
+                one{"{0} mi"}
+                other{"{0} mi"}
+            }
+            mile-scandinavian{
+                few{"{0} smi"}
+                one{"{0} smi"}
+                other{"{0} smi"}
+            }
+            millimeter{
+                few{"{0} mm"}
+                one{"{0} mm"}
+                other{"{0} mm"}
+            }
+            nanometer{
+                few{"{0} nm"}
+                one{"{0} nm"}
+                other{"{0} nm"}
+            }
+            nautical-mile{
+                few{"{0} nmi"}
+                one{"{0} nmi"}
+                other{"{0} nmi"}
+            }
+            parsec{
+                few{"{0} pc"}
+                one{"{0} pc"}
+                other{"{0} pc"}
+            }
+            picometer{
+                few{"{0} pm"}
+                one{"{0} pm"}
+                other{"{0} pm"}
+            }
+            point{
+                few{"{0} pt"}
+                one{"{0} pt"}
+                other{"{0} pt"}
+            }
+            solar-radius{
+                few{"{0} R☉"}
+                one{"{0} R☉"}
+                other{"{0} R☉"}
+            }
+            yard{
+                few{"{0} yd"}
+                one{"{0} yd"}
+                other{"{0} yd"}
+            }
+        }
+        volume{
+            centiliter{
+                few{"{0} cL"}
+                one{"{0} cL"}
+                other{"{0} cL"}
+            }
+            cubic-centimeter{
+                few{"{0} cm³"}
+                one{"{0} cm³"}
+                other{"{0} cm³"}
+            }
+            cubic-foot{
+                few{"{0} ft³"}
+                one{"{0} ft³"}
+                other{"{0} ft³"}
+            }
+            cubic-inch{
+                few{"{0} in³"}
+                one{"{0} in³"}
+                other{"{0} in³"}
+            }
+            cubic-kilometer{
+                few{"{0} km³"}
+                one{"{0} km³"}
+                other{"{0} km³"}
+            }
+            cubic-meter{
+                few{"{0} m³"}
+                one{"{0} m³"}
+                other{"{0} m³"}
+            }
+            cubic-mile{
+                few{"{0} mi³"}
+                one{"{0} mi³"}
+                other{"{0} mi³"}
+            }
+            cubic-yard{
+                few{"{0} yd³"}
+                one{"{0} yd³"}
+                other{"{0} yd³"}
+            }
+            deciliter{
+                few{"{0} dL"}
+                one{"{0} dL"}
+                other{"{0} dL"}
+            }
+            hectoliter{
+                few{"{0} hL"}
+                one{"{0} hL"}
+                other{"{0} hL"}
+            }
+            liter{
+                few{"{0} l"}
+                one{"{0} l"}
+                other{"{0} l"}
+            }
+            megaliter{
+                few{"{0} ML"}
+                one{"{0} ML"}
+                other{"{0} ML"}
             }
         }
     }

@@ -1,4 +1,4 @@
-self.addEventListener("message", function(event) {
+self.addEventListener("message", function (event) {
   let timeStampCodes = event.data;
 
   let timeStamps = [];

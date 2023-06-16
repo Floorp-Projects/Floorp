@@ -15,8 +15,8 @@ const {
 
 const ISSUE_OUTLINE_RADIUS = {
   type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY,
-  property: "-moz-outline-radius",
-  url: "https://developer.mozilla.org/docs/Web/CSS/-moz-outline-radius",
+  property: "-moz-user-input",
+  url: "https://developer.mozilla.org/docs/Web/CSS/-moz-user-input",
   deprecated: true,
   experimental: false,
 };
@@ -33,7 +33,7 @@ const ISSUE_HYPHENS = {
 const TEST_URI = `
   <style>
     .issue {
-      -moz-outline-radius: 25px;
+      -moz-user-input: none;
     }
   </style>
   <body>
@@ -41,17 +41,14 @@ const TEST_URI = `
   </body>
 `;
 
-add_task(async function() {
+add_task(async function () {
   info("Testing dynamic style change using JavaScript");
   const tab = await addTab(
     "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI)
   );
 
-  const {
-    allElementsPane,
-    inspector,
-    selectedElementPane,
-  } = await openCompatibilityView();
+  const { allElementsPane, inspector, selectedElementPane } =
+    await openCompatibilityView();
 
   info("Testing inline style change due to JavaScript execution");
   const onPanelUpdate = waitForUpdateSelectedNodeAction(inspector.store);
@@ -71,7 +68,7 @@ add_task(async function() {
     allElementsPane,
     [ISSUE_HYPHENS],
     [ISSUE_HYPHENS],
-    async function() {
+    async function () {
       content.document.querySelector(".test").style.hyphens = "none";
     }
   );
@@ -84,7 +81,7 @@ add_task(async function() {
     allElementsPane,
     [ISSUE_HYPHENS, ISSUE_OUTLINE_RADIUS],
     [ISSUE_HYPHENS, ISSUE_OUTLINE_RADIUS],
-    async function() {
+    async function () {
       content.document.querySelector(".test").classList.add("issue");
     }
   );
@@ -97,7 +94,7 @@ add_task(async function() {
     allElementsPane,
     [ISSUE_HYPHENS],
     [ISSUE_HYPHENS],
-    async function() {
+    async function () {
       content.document.querySelector(".test").classList.remove("issue");
     }
   );

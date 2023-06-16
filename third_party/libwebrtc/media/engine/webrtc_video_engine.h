@@ -31,8 +31,8 @@
 #include "call/flexfec_receive_stream.h"
 #include "call/video_receive_stream.h"
 #include "call/video_send_stream.h"
+#include "media/base/media_channel_impl.h"
 #include "media/base/media_engine.h"
-#include "media/engine/unhandled_packets_buffer.h"
 #include "rtc_base/network_route.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/system/no_unique_address.h"
@@ -59,36 +59,6 @@ class WebRtcVideoChannel;
 std::map<uint32_t, webrtc::VideoSendStream::StreamStats>
 MergeInfoAboutOutboundRtpSubstreamsForTesting(
     const std::map<uint32_t, webrtc::VideoSendStream::StreamStats>& substreams);
-
-class UnsignalledSsrcHandler {
- public:
-  enum Action {
-    kDropPacket,
-    kDeliverPacket,
-  };
-  virtual Action OnUnsignalledSsrc(WebRtcVideoChannel* channel,
-                                   uint32_t ssrc,
-                                   absl::optional<uint32_t> rtx_ssrc) = 0;
-  virtual ~UnsignalledSsrcHandler() = default;
-};
-
-// TODO(pbos): Remove, use external handlers only.
-class DefaultUnsignalledSsrcHandler : public UnsignalledSsrcHandler {
- public:
-  DefaultUnsignalledSsrcHandler();
-  Action OnUnsignalledSsrc(WebRtcVideoChannel* channel,
-                           uint32_t ssrc,
-                           absl::optional<uint32_t> rtx_ssrc) override;
-
-  rtc::VideoSinkInterface<webrtc::VideoFrame>* GetDefaultSink() const;
-  void SetDefaultSink(WebRtcVideoChannel* channel,
-                      rtc::VideoSinkInterface<webrtc::VideoFrame>* sink);
-
-  virtual ~DefaultUnsignalledSsrcHandler() = default;
-
- private:
-  rtc::VideoSinkInterface<webrtc::VideoFrame>* default_sink_;
-};
 
 // WebRtcVideoEngine is used for the new native WebRTC Video API (webrtc:1667).
 class WebRtcVideoEngine : public VideoEngineInterface {
@@ -165,6 +135,7 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   bool AddRecvStream(const StreamParams& sp, bool default_stream);
   bool RemoveRecvStream(uint32_t ssrc) override;
   void ResetUnsignaledRecvStream() override;
+  absl::optional<uint32_t> GetUnsignaledSsrc() const override;
   void OnDemuxerCriteriaUpdatePending() override;
   void OnDemuxerCriteriaUpdateComplete() override;
   bool SetSink(uint32_t ssrc,
@@ -172,10 +143,10 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   void SetDefaultSink(
       rtc::VideoSinkInterface<webrtc::VideoFrame>* sink) override;
   void FillBitrateInfo(BandwidthEstimationInfo* bwe_info) override;
-  bool GetStats(VideoMediaInfo* info) override;
+  bool GetSendStats(VideoMediaSendInfo* info) override;
+  bool GetReceiveStats(VideoMediaReceiveInfo* info) override;
 
-  void OnPacketReceived(rtc::CopyOnWriteBuffer packet,
-                        int64_t packet_time_us) override;
+  void OnPacketReceived(const webrtc::RtpPacketReceived& packet) override;
   void OnPacketSent(const rtc::SentPacket& sent_packet) override;
   void OnReadyToSend(bool ready) override;
   void OnNetworkRouteChanged(absl::string_view transport_name,
@@ -215,8 +186,6 @@ class WebRtcVideoChannel : public VideoMediaChannel,
     return sending_;
   }
 
-  absl::optional<uint32_t> GetDefaultReceiveStreamSsrc();
-
   StreamParams unsignaled_stream_params() {
     RTC_DCHECK_RUN_ON(&thread_checker_);
     return unsignaled_stream_params_;
@@ -234,10 +203,6 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   static constexpr int kDefaultQpMax = 56;
 
   std::vector<webrtc::RtpSource> GetSources(uint32_t ssrc) const override;
-
-  // Take the buffered packets for `ssrcs` and feed them into DeliverPacket.
-  // This method does nothing unless unknown_ssrc_packet_buffer_ is configured.
-  void BackfillBufferedPackets(rtc::ArrayView<const uint32_t> ssrcs);
 
   // Implements webrtc::EncoderSwitchRequestCallback.
   void RequestEncoderFallback() override;
@@ -287,7 +252,7 @@ class WebRtcVideoChannel : public VideoMediaChannel,
     webrtc::UlpfecConfig ulpfec;
     int flexfec_payload_type;  // -1 if absent.
     int rtx_payload_type;      // -1 if absent.
-    int rtx_time;              // -1 if absent.
+    absl::optional<int> rtx_time;
   };
 
   struct ChangedSendParameters {
@@ -320,6 +285,14 @@ class WebRtcVideoChannel : public VideoMediaChannel,
                                 ChangedRecvParameters* changed_params) const
       RTC_EXCLUSIVE_LOCKS_REQUIRED(thread_checker_);
 
+  // Expected to be invoked once per packet that belongs to this channel that
+  // can not be demuxed.
+  // Returns true if a new default stream has been created.
+  bool MaybeCreateDefaultReceiveStream(
+      const webrtc::RtpPacketReceived& parsed_packet)
+      RTC_EXCLUSIVE_LOCKS_REQUIRED(thread_checker_);
+  void ReCreateDefaulReceiveStream(uint32_t ssrc,
+                                   absl::optional<uint32_t> rtx_ssrc);
   void ConfigureReceiverRtp(
       webrtc::VideoReceiveStreamInterface::Config* config,
       webrtc::FlexfecReceiveStream::Config* flexfec_config,
@@ -469,7 +442,6 @@ class WebRtcVideoChannel : public VideoMediaChannel,
       : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
    public:
     WebRtcVideoReceiveStream(
-        WebRtcVideoChannel* channel,
         webrtc::Call* call,
         const StreamParams& sp,
         webrtc::VideoReceiveStreamInterface::Config config,
@@ -492,9 +464,8 @@ class WebRtcVideoChannel : public VideoMediaChannel,
     // TODO(deadbeef): Move these feedback parameters into the recv parameters.
     void SetFeedbackParameters(bool lntf_enabled,
                                bool nack_enabled,
-                               bool transport_cc_enabled,
                                webrtc::RtcpMode rtcp_mode,
-                               int rtx_time);
+                               absl::optional<int> rtx_time);
     void SetRecvParameters(const ChangedRecvParameters& recv_params);
 
     void OnFrame(const webrtc::VideoFrame& frame) override;
@@ -537,7 +508,6 @@ class WebRtcVideoChannel : public VideoMediaChannel,
     // were applied.
     bool ReconfigureCodecs(const std::vector<VideoCodecSettings>& recv_codecs);
 
-    WebRtcVideoChannel* const channel_;
     webrtc::Call* const call_;
     const StreamParams stream_params_;
 
@@ -552,10 +522,6 @@ class WebRtcVideoChannel : public VideoMediaChannel,
 
     webrtc::Mutex sink_lock_;
     rtc::VideoSinkInterface<webrtc::VideoFrame>* sink_
-        RTC_GUARDED_BY(sink_lock_);
-    // Expands remote RTP timestamps to int64_t to be able to estimate how long
-    // the stream has been running.
-    rtc::TimestampWrapAroundHandler timestamp_wraparound_handler_
         RTC_GUARDED_BY(sink_lock_);
     int64_t first_frame_timestamp_ RTC_GUARDED_BY(sink_lock_);
     // Start NTP time is estimated as current remote NTP time (estimated from
@@ -585,14 +551,16 @@ class WebRtcVideoChannel : public VideoMediaChannel,
       std::vector<VideoCodecSettings> before,
       std::vector<VideoCodecSettings> after);
 
-  void FillSenderStats(VideoMediaInfo* info, bool log_stats)
+  void FillSenderStats(VideoMediaSendInfo* info, bool log_stats)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(thread_checker_);
-  void FillReceiverStats(VideoMediaInfo* info, bool log_stats)
+  void FillReceiverStats(VideoMediaReceiveInfo* info, bool log_stats)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(thread_checker_);
   void FillBandwidthEstimationStats(const webrtc::Call::Stats& stats,
                                     VideoMediaInfo* info)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(thread_checker_);
-  void FillSendAndReceiveCodecStats(VideoMediaInfo* video_media_info)
+  void FillSendCodecStats(VideoMediaSendInfo* video_media_info)
+      RTC_EXCLUSIVE_LOCKS_REQUIRED(thread_checker_);
+  void FillReceiveCodecStats(VideoMediaReceiveInfo* video_media_info)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(thread_checker_);
 
   webrtc::TaskQueueBase* const worker_thread_;
@@ -604,9 +572,7 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   bool sending_ RTC_GUARDED_BY(thread_checker_);
   webrtc::Call* const call_;
 
-  DefaultUnsignalledSsrcHandler default_unsignalled_ssrc_handler_
-      RTC_GUARDED_BY(thread_checker_);
-  UnsignalledSsrcHandler* const unsignalled_ssrc_handler_
+  rtc::VideoSinkInterface<webrtc::VideoFrame>* default_sink_
       RTC_GUARDED_BY(thread_checker_);
 
   // Delay for unsignaled streams, which may be set before the stream exists.
@@ -655,6 +621,8 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   webrtc::VideoBitrateAllocatorFactory* const bitrate_allocator_factory_
       RTC_GUARDED_BY(thread_checker_);
   std::vector<VideoCodecSettings> recv_codecs_ RTC_GUARDED_BY(thread_checker_);
+  webrtc::RtpHeaderExtensionMap recv_rtp_extension_map_
+      RTC_GUARDED_BY(thread_checker_);
   std::vector<webrtc::RtpExtension> recv_rtp_extensions_
       RTC_GUARDED_BY(thread_checker_);
   // See reason for keeping track of the FlexFEC payload type separately in
@@ -680,10 +648,6 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   // Optional frame transformer set on unsignaled streams.
   rtc::scoped_refptr<webrtc::FrameTransformerInterface>
       unsignaled_frame_transformer_ RTC_GUARDED_BY(thread_checker_);
-
-  // Buffer for unhandled packets.
-  std::unique_ptr<UnhandledPacketsBuffer> unknown_ssrc_packet_buffer_
-      RTC_GUARDED_BY(thread_checker_);
 
   // TODO(bugs.webrtc.org/11341): Remove this and relevant PC API. Presence
   // of multiple negotiated codecs allows generic encoder fallback on failures.

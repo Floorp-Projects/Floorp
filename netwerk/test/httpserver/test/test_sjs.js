@@ -26,7 +26,7 @@ var tests = [];
 
 function bytesToString(bytes) {
   return bytes
-    .map(function(v) {
+    .map(function (v) {
       return String.fromCharCode(v);
     })
     .join("");

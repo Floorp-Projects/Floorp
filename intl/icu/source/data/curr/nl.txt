@@ -899,9 +899,13 @@ nl{
             "SKK",
             "Slowaakse koruna",
         }
+        SLE{
+            "SLE",
+            "Sierra Leoonse leone",
+        }
         SLL{
             "SLL",
-            "Sierraleoonse leone",
+            "Sierraleoonse leone (1964—2022)",
         }
         SOS{
             "SOS",
@@ -1046,6 +1050,10 @@ nl{
         VEB{
             "VEB",
             "Venezolaanse bolivar (1871–2008)",
+        }
+        VED{
+            "VED",
+            "Bolívar Soberano",
         }
         VEF{
             "VEF",
@@ -2217,9 +2225,13 @@ nl{
             one{"Slowaakse koruna"}
             other{"Slowaakse koruna"}
         }
+        SLE{
+            one{"Sierra Leoonse leone"}
+            other{"Sierra Leoonse leone"}
+        }
         SLL{
-            one{"Sierraleoonse leone"}
-            other{"Sierraleoonse leone"}
+            one{"Sierraleoonse leone (1964—2022)"}
+            other{"Sierraleoonse leone (1964—2022)"}
         }
         SOS{
             one{"Somalische shilling"}
@@ -2364,6 +2376,10 @@ nl{
         VEB{
             one{"Venezolaanse bolivar (1871–2008)"}
             other{"Venezolaanse bolivar (1871–2008)"}
+        }
+        VED{
+            one{"Bolívar Soberano"}
+            other{"Bolívar Soberanos"}
         }
         VEF{
             one{"Venezolaanse bolivar (2008–2018)"}

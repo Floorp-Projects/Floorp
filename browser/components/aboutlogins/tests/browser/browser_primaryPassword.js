@@ -17,7 +17,7 @@ function waitForLoginCountToReach(browser, loginCount) {
   );
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await addLogin(TEST_LOGIN1);
   registerCleanupFunction(() => {
     Services.logins.removeAllUserFacingLogins();
@@ -93,7 +93,7 @@ add_task(async function test() {
 
   // Show MP dialog when Copy Password button clicked
   mpDialogShown = forceAuthTimeoutAndWaitForMPDialog("cancel");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     let loginItem = content.document.querySelector("login-item");
     let copyButton = loginItem.shadowRoot.querySelector(
       ".copy-password-button"
@@ -104,7 +104,7 @@ add_task(async function test() {
   info("Primary Password dialog shown and canceled");
   mpDialogShown = forceAuthTimeoutAndWaitForMPDialog("authenticate");
   info("Clicking copy password button again");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     let loginItem = content.document.querySelector("login-item");
     let copyButton = loginItem.shadowRoot.querySelector(
       ".copy-password-button"
@@ -113,7 +113,7 @@ add_task(async function test() {
   });
   await mpDialogShown;
   info("Primary Password dialog shown and authenticated");
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     let loginItem = content.document.querySelector("login-item");
     let copyButton = loginItem.shadowRoot.querySelector(
       ".copy-password-button"
@@ -126,7 +126,7 @@ add_task(async function test() {
 
   // Show MP dialog when Reveal Password checkbox is checked if not on a new login
   mpDialogShown = forceAuthTimeoutAndWaitForMPDialog("cancel");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     let loginItem = content.document.querySelector("login-item");
     let revealCheckbox = loginItem.shadowRoot.querySelector(
       ".reveal-password-checkbox"
@@ -135,7 +135,7 @@ add_task(async function test() {
   });
   await mpDialogShown;
   info("Primary Password dialog shown and canceled");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     let loginItem = content.document.querySelector("login-item");
     let revealCheckbox = loginItem.shadowRoot.querySelector(
       ".reveal-password-checkbox"
@@ -146,7 +146,7 @@ add_task(async function test() {
     );
   });
   mpDialogShown = forceAuthTimeoutAndWaitForMPDialog("authenticate");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     let loginItem = content.document.querySelector("login-item");
     let revealCheckbox = loginItem.shadowRoot.querySelector(
       ".reveal-password-checkbox"
@@ -155,7 +155,7 @@ add_task(async function test() {
   });
   await mpDialogShown;
   info("Primary Password dialog shown and authenticated");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     let loginItem = content.document.querySelector("login-item");
     let revealCheckbox = loginItem.shadowRoot.querySelector(
       ".reveal-password-checkbox"
@@ -194,7 +194,7 @@ add_task(async function test() {
     cancelButton.click();
   });
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     const loginList = Cu.waiveXrays(
       content.document.querySelector("login-list")
     );
@@ -220,7 +220,7 @@ add_task(async function test() {
     );
   });
   LoginTestUtils.primaryPassword.disable();
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     Cu.waiveXrays(content).AboutLoginsUtils.primaryPasswordEnabled = false;
     const loginList = Cu.waiveXrays(
       content.document.querySelector("login-list")
@@ -269,7 +269,7 @@ add_task(async function test_login_item_after_successful_auth() {
     1,
     "Logins should be displayed when MP is set and authenticated"
   );
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     let loginItem = content.document.querySelector("login-item");
     Assert.ok(
       !loginItem.classList.contains("no-logins"),

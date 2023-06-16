@@ -7,6 +7,7 @@
 #ifndef _CacheConstants_h_
 #define _CacheConstants_h_
 
+#include "nsGkAtoms.h"
 #include "RelationType.h"
 
 namespace mozilla {

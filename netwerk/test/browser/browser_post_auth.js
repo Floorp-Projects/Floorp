@@ -9,7 +9,7 @@ const FOLDER = getRootDirectory(gTestPath).replace(
   "http://mochi.test:8888/"
 );
 
-add_task(async function() {
+add_task(async function () {
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "about:blank"
@@ -28,7 +28,7 @@ add_task(async function() {
     `${FOLDER}auth_post.sjs`
   );
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     let file = new content.File(
       [new content.Blob(["1234".repeat(1024 * 500)], { type: "text/plain" })],
       "test-name"
@@ -50,7 +50,7 @@ add_task(async function() {
 
   await finalLoadPromise;
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     Assert.ok(content.location.href.includes("auth_post.sjs"));
     Assert.ok(content.document.body.innerHTML.includes("1234"));
   });

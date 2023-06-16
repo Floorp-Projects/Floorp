@@ -74,7 +74,7 @@ class HTMLTextAreaElement final : public TextControlElement,
   void SetLastValueChangeWasInteractive(bool);
 
   // TextControlElement
-  nsresult SetValueChanged(bool aValueChanged) override;
+  void SetValueChanged(bool aValueChanged) override;
   bool IsSingleLineTextControl() const override;
   bool IsTextArea() const override;
   bool IsPasswordTextControl() const override;
@@ -97,7 +97,8 @@ class HTMLTextAreaElement final : public TextControlElement,
   void EnablePreview() override;
   bool IsPreviewEnabled() override;
   void InitializeKeyboardEventListeners() override;
-  void OnValueChanged(ValueChangeKind) override;
+  void OnValueChanged(ValueChangeKind, bool aNewValueEmpty,
+                      const nsAString* aKnownNewValue) override;
   void GetValueFromSetRangeText(nsAString& aValue) override;
   MOZ_CAN_RUN_SCRIPT nsresult
   SetValueFromSetRangeText(const nsAString& aValue) override;
@@ -346,6 +347,9 @@ class HTMLTextAreaElement final : public TextControlElement,
                     const nsAttrValue* aValue, const nsAttrValue* aOldValue,
                     nsIPrincipal* aSubjectPrincipal, bool aNotify) override;
 
+  void SetDirectionFromValue(bool aNotify,
+                             const nsAString* aKnownValue = nullptr);
+
   /**
    * Return if an element should have a specific validity UI
    * (with :-moz-ui-invalid and :-moz-ui-valid pseudo-classes).
@@ -377,7 +381,9 @@ class HTMLTextAreaElement final : public TextControlElement,
    *
    * @return whether the current value is the empty string.
    */
-  bool IsValueEmpty() const;
+  bool IsValueEmpty() const {
+    return State().HasState(ElementState::VALUE_EMPTY);
+  }
 
   /**
    * A helper to get the current selection range.  Will throw on the ErrorResult

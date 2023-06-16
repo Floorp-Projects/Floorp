@@ -26,41 +26,35 @@ ruleTester.run("use-static-import", rule, {
   valid: [
     {
       // Already converted, no issues.
-      code:
-        'import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";',
+      code: 'import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";',
       filename: "test.sys.mjs",
     },
     {
       // Inside an if statement.
-      code:
-        'if (foo) { const { XPCOMUtils } = ChromeUtils.importESModule("resource://gre/modules/XPCOMUtils.sys.mjs") }',
+      code: 'if (foo) { const { XPCOMUtils } = ChromeUtils.importESModule("resource://gre/modules/XPCOMUtils.sys.mjs") }',
       filename: "test.sys.mjs",
     },
     {
       // Inside a function.
-      code:
-        'function foo() { const { XPCOMUtils } = ChromeUtils.importESModule("resource://gre/modules/XPCOMUtils.sys.mjs") }',
+      code: 'function foo() { const { XPCOMUtils } = ChromeUtils.importESModule("resource://gre/modules/XPCOMUtils.sys.mjs") }',
       filename: "test.sys.mjs",
     },
     {
       // importESModule with two args cannot be converted.
-      code:
-        'const { f } = ChromeUtils.importESModule("some/module.sys.mjs", { loadInDevToolsLoader : true });',
+      code: 'const { f } = ChromeUtils.importESModule("some/module.sys.mjs", { loadInDevToolsLoader : true });',
       filename: "test.sys.mjs",
     },
     {
       // A non-system file attempting to import a system file should not be
       // converted.
-      code:
-        'const { XPCOMUtils } = ChromeUtils.importESModule("resource://gre/modules/XPCOMUtils.sys.mjs")',
+      code: 'const { XPCOMUtils } = ChromeUtils.importESModule("resource://gre/modules/XPCOMUtils.sys.mjs")',
       filename: "test.mjs",
     },
   ],
   invalid: [
     {
       // Simple import in system module should be converted.
-      code:
-        'const { XPCOMUtils } = ChromeUtils.importESModule("resource://gre/modules/XPCOMUtils.sys.mjs")',
+      code: 'const { XPCOMUtils } = ChromeUtils.importESModule("resource://gre/modules/XPCOMUtils.sys.mjs")',
       errors: callError(),
       filename: "test.sys.mjs",
       output:
@@ -68,8 +62,7 @@ ruleTester.run("use-static-import", rule, {
     },
     {
       // Should handle rewritten variables as well.
-      code:
-        'const { XPCOMUtils: foo } = ChromeUtils.importESModule("resource://gre/modules/XPCOMUtils.sys.mjs")',
+      code: 'const { XPCOMUtils: foo } = ChromeUtils.importESModule("resource://gre/modules/XPCOMUtils.sys.mjs")',
       errors: callError(),
       filename: "test.sys.mjs",
       output:
@@ -77,8 +70,7 @@ ruleTester.run("use-static-import", rule, {
     },
     {
       // Should handle multiple variables.
-      code:
-        'const { foo, XPCOMUtils } = ChromeUtils.importESModule("resource://gre/modules/XPCOMUtils.sys.mjs")',
+      code: 'const { foo, XPCOMUtils } = ChromeUtils.importESModule("resource://gre/modules/XPCOMUtils.sys.mjs")',
       errors: callError(),
       filename: "test.sys.mjs",
       output:

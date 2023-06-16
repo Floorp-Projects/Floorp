@@ -18,7 +18,7 @@ const TEST_URI = `data:text/html;charset=utf8,<!DOCTYPE html><p>test [ completio
     }));
   </script>`;
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.editor.autoclosebrackets", false);
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm } = hud;

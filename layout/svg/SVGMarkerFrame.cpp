@@ -123,11 +123,11 @@ void SVGMarkerFrame::PaintMark(gfxContext& aContext,
   gfxMatrix markTM = ThebesMatrix(viewBoxTM) * ThebesMatrix(mMarkerTM) *
                      aToMarkedFrameUserSpace;
 
+  gfxClipAutoSaveRestore autoSaveClip(&aContext);
   if (StyleDisplay()->IsScrollableOverflow()) {
-    aContext.Save();
     gfxRect clipRect = SVGUtils::GetClipRectForFrame(
         this, viewBox.x, viewBox.y, viewBox.width, viewBox.height);
-    SVGUtils::SetClipRect(&aContext, markTM, clipRect);
+    autoSaveClip.TransformedClip(markTM, clipRect);
   }
 
   nsIFrame* kid = GetAnonymousChildFrame(this);
@@ -141,8 +141,6 @@ void SVGMarkerFrame::PaintMark(gfxContext& aContext,
   AutoSetRestoreSVGContextPaint autoSetRestore(contextPaint,
                                                marker->OwnerDoc());
   SVGUtils::PaintFrameWithEffects(kid, aContext, markTM, aImgParams);
-
-  if (StyleDisplay()->IsScrollableOverflow()) aContext.Restore();
 }
 
 SVGBBox SVGMarkerFrame::GetMarkBBoxContribution(const Matrix& aToBBoxUserspace,

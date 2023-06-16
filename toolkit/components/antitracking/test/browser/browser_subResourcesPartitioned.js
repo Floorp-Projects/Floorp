@@ -7,7 +7,7 @@ async function runTests(topPage, limitForeignContexts) {
   await BrowserTestUtils.browserLoaded(browser);
 
   info("Loading scripts and images");
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     // Let's load the script twice here.
     {
       let src = content.document.createElement("script");
@@ -87,10 +87,10 @@ async function runTests(topPage, limitForeignContexts) {
         nonBlockingCallback: (async _ => {}).toString(),
       },
     ],
-    async function(obj) {
+    async function (obj) {
       await new content.Promise(resolve => {
         let ifr = content.document.createElement("iframe");
-        ifr.onload = function() {
+        ifr.onload = function () {
           info("Sending code to the 3rd party content");
           ifr.contentWindow.postMessage(obj, "*");
         };
@@ -122,7 +122,7 @@ async function runTests(topPage, limitForeignContexts) {
   );
 
   info("Loading scripts and images again");
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     // Let's load the script twice here.
     {
       let src = content.document.createElement("script");
@@ -258,7 +258,7 @@ async function runTests(topPage, limitForeignContexts) {
   BrowserTestUtils.removeTab(tab);
 }
 
-add_task(async function() {
+add_task(async function () {
   info("Starting subResources test");
 
   await SpecialPowers.flushPrefEnv();
@@ -298,7 +298,7 @@ add_task(async function() {
   SpecialPowers.clearUserPref("network.cookie.sameSite.laxByDefault");
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Cleaning up.");
   await new Promise(resolve => {
     Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>

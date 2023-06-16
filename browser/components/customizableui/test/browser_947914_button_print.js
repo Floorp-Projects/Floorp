@@ -6,7 +6,7 @@
 
 const isOSX = Services.appinfo.OS === "Darwin";
 
-add_task(async function() {
+add_task(async function () {
   CustomizableUI.addWidgetToArea(
     "print-button",
     CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
@@ -17,7 +17,7 @@ add_task(async function() {
       gBrowser,
       url: "http://example.com/",
     },
-    async function() {
+    async function () {
       info("Check print button existence and functionality");
 
       await waitForOverflowButtonShown();

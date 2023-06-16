@@ -5,8 +5,8 @@
 // TODO(Bug 1789718): adapt to synthetic addon type implemented by the SitePermAddonProvider
 // or remove if redundant, after the deprecated XPIProvider-based implementation is also removed.
 
-const { AddonManager } = ChromeUtils.import(
-  "resource://gre/modules/AddonManager.jsm"
+const { AddonManager } = ChromeUtils.importESModule(
+  "resource://gre/modules/AddonManager.sys.mjs"
 );
 const { TestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TestUtils.sys.mjs"
@@ -28,18 +28,19 @@ AddonTestUtils.createAppInfo(
   "42"
 );
 
-const BROWSER_PROPERTIES =
-  AppConstants.MOZ_APP_NAME == "thunderbird"
-    ? "chrome://messenger/locale/addons.properties"
-    : "chrome://browser/locale/browser.properties";
+const l10n = new Localization([
+  "toolkit/global/extensions.ftl",
+  "toolkit/global/extensionPermissions.ftl",
+  "branding/brand.ftl",
+]);
+// Localization resources need to be first iterated outside a test
+l10n.formatValue("webext-perms-sideload-text");
 
 // Lazily import ExtensionParent to allow AddonTestUtils.createAppInfo to
 // override Services.appinfo.
-ChromeUtils.defineModuleGetter(
-  this,
-  "ExtensionParent",
-  "resource://gre/modules/ExtensionParent.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  ExtensionParent: "resource://gre/modules/ExtensionParent.sys.mjs",
+});
 
 async function _test_manifest(manifest, expectedError) {
   ExtensionTestUtils.failOnSchemaWarnings(false);
@@ -371,13 +372,10 @@ add_task(async function test_site_permissions_have_localization_strings() {
   ]);
   ok(SCHEMA_SITE_PERMISSIONS.length, "we have site permissions");
 
-  const bundle = Services.strings.createBundle(BROWSER_PROPERTIES);
-
   for (const perm of SCHEMA_SITE_PERMISSIONS) {
+    const l10nId = `webext-site-perms-${perm}`;
     try {
-      const str = bundle.GetStringFromName(
-        `webextSitePerms.description.${perm}`
-      );
+      const str = await l10n.formatValue(l10nId);
 
       ok(str.length, `Found localization string for '${perm}' site permission`);
     } catch (e) {

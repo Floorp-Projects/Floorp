@@ -28,8 +28,8 @@ const CSS_BLOCKS = { "(": ")", "[": "]", "{": "}" };
 // When commenting out a declaration, we put this character into the
 // comment opener so that future parses of the commented text know to
 // bypass the property name validity heuristic.
-const COMMENT_PARSING_HEURISTIC_BYPASS_CHAR = (exports.COMMENT_PARSING_HEURISTIC_BYPASS_CHAR =
-  "!");
+const COMMENT_PARSING_HEURISTIC_BYPASS_CHAR =
+  (exports.COMMENT_PARSING_HEURISTIC_BYPASS_CHAR = "!");
 
 /**
  * A generator function that lexes a CSS source string, yielding the

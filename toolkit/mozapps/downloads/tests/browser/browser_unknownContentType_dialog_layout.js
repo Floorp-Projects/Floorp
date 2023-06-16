@@ -13,8 +13,7 @@ const UCT_URI = "chrome://mozapps/content/downloads/unknownContentType.xhtml";
 let tests = [
   {
     // This URL will trigger the simple UI, where only the Save an Cancel buttons are available
-    url:
-      "http://mochi.test:8888/browser/toolkit/mozapps/downloads/tests/browser/unknownContentType_dialog_layout_data.pif",
+    url: "http://mochi.test:8888/browser/toolkit/mozapps/downloads/tests/browser/unknownContentType_dialog_layout_data.pif",
     elements: {
       basicBox: { collapsed: false },
       normalBox: { collapsed: true },
@@ -22,8 +21,7 @@ let tests = [
   },
   {
     // This URL will trigger the full UI
-    url:
-      "http://mochi.test:8888/browser/toolkit/mozapps/downloads/tests/browser/unknownContentType_dialog_layout_data.txt",
+    url: "http://mochi.test:8888/browser/toolkit/mozapps/downloads/tests/browser/unknownContentType_dialog_layout_data.txt",
     elements: {
       basicBox: { collapsed: true },
       normalBox: { collapsed: false },
@@ -49,7 +47,7 @@ add_task(async function test_unknownContentType_dialog_layout() {
               "load",
               function onLoad(event) {
                 // Let the dialog initialize
-                SimpleTest.executeSoon(function() {
+                SimpleTest.executeSoon(function () {
                   UCTObserver.opened.resolve(win);
                 });
               },
@@ -74,7 +72,7 @@ add_task(async function test_unknownContentType_dialog_layout() {
         waitForLoad: false,
         waitForStateStop: true,
       },
-      async function() {
+      async function () {
         let uctWindow = await UCTObserver.opened.promise;
 
         for (let [id, props] of Object.entries(test.elements)) {

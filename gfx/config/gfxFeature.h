@@ -48,8 +48,10 @@ namespace gfx {
   _(REUSE_DECODER_DEVICE, Feature, "Reuse decoder device")                   \
   _(BACKDROP_FILTER, Feature, "Backdrop filter")                             \
   _(CANVAS_RENDERER_THREAD, Feature, "canvas renderer thread")               \
-  _(ACCELERATED_CANVAS2D, Feature, "Accelerated Canvas2D")
-/* Add new entries above this comment */
+  _(ACCELERATED_CANVAS2D, Feature, "Accelerated Canvas2D")                   \
+  _(H264_HW_DECODE, Feature, "H.264 hardware decoding")                      \
+  _(AV1_HW_DECODE, Feature, "AV1 hardware decoding")                         \
+  /* Add new entries above this comment */
 
 enum class Feature : uint32_t {
 #define MAKE_ENUM(name, type, desc) name,

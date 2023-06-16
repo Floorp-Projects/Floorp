@@ -7,7 +7,7 @@
 const TEST_COM_URI = `${URL_ROOT_COM_SSL}examples/doc_dbg-fission-frame-sources.html`;
 
 // Testing project search for remote frames.
-add_task(async function() {
+add_task(async function () {
   // Load page and wait for sources. simple.js is loaded from
   // the top-level document in the dot com domain, while simple2.js
   // is loaded from the remote frame in the dot org domain

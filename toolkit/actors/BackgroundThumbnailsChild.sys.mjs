@@ -5,11 +5,9 @@
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PageThumbUtils",
-  "resource://gre/modules/PageThumbUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PageThumbUtils: "resource://gre/modules/PageThumbUtils.sys.mjs",
+});
 
 // NOTE: Copied from nsSandboxFlags.h
 /**
@@ -72,7 +70,8 @@ export class BackgroundThumbnailsChild extends JSWindowActorChild {
 
         let loadURIOptions = {
           // Bug 1498603 verify usages of systemPrincipal here
-          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+          triggeringPrincipal:
+            Services.scriptSecurityManager.getSystemPrincipal(),
           loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT,
         };
         try {

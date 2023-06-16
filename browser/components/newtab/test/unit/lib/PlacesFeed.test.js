@@ -181,9 +181,8 @@ describe("PlacesFeed", () => {
       assert.calledWith(global.Services.obs.addObserver, feed, BLOCKED_EVENT);
     });
     it("should remove bookmark, history, places, blocked observers, and timers on UNINIT", () => {
-      feed.placesChangedTimer = global.Cc[
-        "@mozilla.org/timer;1"
-      ].createInstance();
+      feed.placesChangedTimer =
+        global.Cc["@mozilla.org/timer;1"].createInstance();
       let spy = feed.placesChangedTimer.cancel;
       feed.onAction({ type: at.UNINIT });
 

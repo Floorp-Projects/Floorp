@@ -19,7 +19,7 @@ const expectedText = `
   }
   `;
 
-add_task(async function() {
+add_task(async function () {
   const URIs = [TESTCASE_URI, TESTCASE_URI_WITH_CSP];
 
   for (const URI of URIs) {

@@ -23,9 +23,9 @@
 #include "frontend/CompilationStencil.h"  // CompilationStencil, CompilationGCOutput
 #include "frontend/FrontendContext.h"
 #include "js/CompileOptions.h"
-#include "js/experimental/JSStencil.h"
+#include "js/experimental/CompileScript.h"  // JS::CompilationStorage
+#include "js/experimental/JSStencil.h"      // JS::InstantiationStorage
 #include "js/HelperThreadAPI.h"
-#include "js/Stack.h"  // JS::NativeStackLimit
 #include "js/TypeDecls.h"
 #include "threading/ConditionVariable.h"
 #include "vm/HelperThreads.h"
@@ -502,7 +502,6 @@ struct MOZ_RAII AutoSetContextRuntime {
 struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
                    public JS::OffThreadToken,
                    public HelperThreadTask {
-  JS::NativeStackLimit stackLimit;
   ParseTaskKind kind;
   JS::OwningCompileOptions options;
 
@@ -522,12 +521,12 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
   mozilla::Vector<RefPtr<JS::Stencil>> stencils;
 
   // The input of the compilation.
-  UniquePtr<frontend::CompilationInput> stencilInput_;
+  JS::CompilationStorage compileStorage_;
 
   // The output of the compilation/decode task.
   RefPtr<frontend::CompilationStencil> stencil_;
 
-  UniquePtr<frontend::CompilationGCOutput> gcOutput_;
+  JS::InstantiationStorage instantiationStorage_;
 
   // Record any errors happening while parsing or generating bytecode.
   FrontendContext fc_;
@@ -538,12 +537,12 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
 
   bool init(JSContext* cx, const JS::ReadOnlyCompileOptions& options);
 
-  void moveGCOutputInto(JS::InstantiationStorage& storage);
+  void moveInstantiationStorageInto(JS::InstantiationStorage& storage);
 
   void activate(JSRuntime* rt);
   void deactivate(JSRuntime* rt);
 
-  virtual void parse(JSContext* cx, FrontendContext* fc) = 0;
+  virtual void parse(FrontendContext* fc) = 0;
 
   bool runtimeMatches(JSRuntime* rt) { return runtime == rt; }
 
@@ -650,7 +649,6 @@ struct LargeFirstDelazification final : public DelazifyStrategy {
 // to remove the memory held by the DelazifyTask.
 struct DelazifyTask : public mozilla::LinkedListElement<DelazifyTask>,
                       public HelperThreadTask {
-  JS::NativeStackLimit stackLimit;
   // HelperThreads are shared between all runtimes in the process so explicitly
   // track which one we are associated with.
   JSRuntime* runtime = nullptr;

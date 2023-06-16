@@ -16,7 +16,7 @@ const TEST_URI = `
   <div id="flex2" class="flex"></div>
 `;
 
-add_task(async function() {
+add_task(async function () {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, view } = await openRuleView();
   const HIGHLIGHTER_TYPE = inspector.highlighters.TYPES.FLEXBOX;
@@ -76,9 +76,8 @@ add_task(async function() {
 
   info("Selecting the second flexbox container.");
   await selectNode("#flex2", inspector);
-  const firstFlexboxHighterShown = getNodeForActiveHighlighter(
-    HIGHLIGHTER_TYPE
-  );
+  const firstFlexboxHighterShown =
+    getNodeForActiveHighlighter(HIGHLIGHTER_TYPE);
   container = getRuleViewProperty(view, ".flex", "display").valueSpan;
   flexboxToggle = container.querySelector(".js-toggle-flexbox-highlighter");
 

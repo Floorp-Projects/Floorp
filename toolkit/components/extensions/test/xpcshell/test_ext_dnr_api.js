@@ -117,13 +117,16 @@ add_task(
     AddonTestUtils.checkMessages(messages, {
       expected: [
         {
-          message: /Reading manifest: Invalid extension permission: declarativeNetRequest$/,
+          message:
+            /Reading manifest: Invalid extension permission: declarativeNetRequest$/,
         },
         {
-          message: /Reading manifest: Invalid extension permission: declarativeNetRequestFeedback/,
+          message:
+            /Reading manifest: Invalid extension permission: declarativeNetRequestFeedback/,
         },
         {
-          message: /Reading manifest: Invalid extension permission: declarativeNetRequestWithHostAccess/,
+          message:
+            /Reading manifest: Invalid extension permission: declarativeNetRequestWithHostAccess/,
         },
       ],
     });
@@ -151,13 +154,16 @@ add_task(async function dnr_feedback_apis_disabled_by_default() {
   AddonTestUtils.checkMessages(messages, {
     forbidden: [
       {
-        message: /Reading manifest: Invalid extension permission: declarativeNetRequest$/,
+        message:
+          /Reading manifest: Invalid extension permission: declarativeNetRequest$/,
       },
       {
-        message: /Reading manifest: Invalid extension permission: declarativeNetRequestFeedback/,
+        message:
+          /Reading manifest: Invalid extension permission: declarativeNetRequestFeedback/,
       },
       {
-        message: /Reading manifest: Invalid extension permission: declarativeNetRequestWithHostAccess/,
+        message:
+          /Reading manifest: Invalid extension permission: declarativeNetRequestWithHostAccess/,
       },
     ],
   });

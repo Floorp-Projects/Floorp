@@ -4,7 +4,7 @@ const REFERRER1 = "http://example.org/?" + Date.now();
 const REFERRER2 = "http://example.org/?" + Math.random();
 const REFERRER3 = "http://example.org/?" + Math.random();
 
-add_task(async function() {
+add_task(async function () {
   function getExpectedReferrer(referrer) {
     let defaultPolicy = Services.prefs.getIntPref(
       "network.http.referer.defaultPolicy"
@@ -23,7 +23,7 @@ add_task(async function() {
     await SpecialPowers.spawn(
       gBrowser.selectedBrowser,
       [{ referrer, msg }],
-      async function(args) {
+      async function (args) {
         Assert.equal(content.document.referrer, args.referrer, args.msg);
       }
     );
@@ -71,9 +71,8 @@ add_task(async function() {
     Services.io.newURI(REFERRER2)
   );
 
-  tabState.entries[0].referrerInfo = E10SUtils.serializeReferrerInfo(
-    referrerInfo2
-  );
+  tabState.entries[0].referrerInfo =
+    E10SUtils.serializeReferrerInfo(referrerInfo2);
   await promiseTabState(tab, tabState);
 
   await checkDocumentReferrer(

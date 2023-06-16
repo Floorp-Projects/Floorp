@@ -156,12 +156,10 @@ var whitelist = [
   // browser/components/preferences/moreFromMozilla.js
   // These files URLs are constructed programatically at run time.
   {
-    file:
-      "chrome://browser/content/preferences/more-from-mozilla-qr-code-simple.svg",
+    file: "chrome://browser/content/preferences/more-from-mozilla-qr-code-simple.svg",
   },
   {
-    file:
-      "chrome://browser/content/preferences/more-from-mozilla-qr-code-simple-cn.svg",
+    file: "chrome://browser/content/preferences/more-from-mozilla-qr-code-simple-cn.svg",
   },
 
   { file: "resource://gre/greprefs.js" },
@@ -175,48 +173,39 @@ var whitelist = [
 
   // The l10n build system can't package string files only for some platforms.
   {
-    file:
-      "resource://gre/chrome/en-US/locale/en-US/global-platform/mac/accessible.properties",
+    file: "resource://gre/chrome/en-US/locale/en-US/global-platform/mac/accessible.properties",
     platforms: ["linux", "win"],
   },
   {
-    file:
-      "resource://gre/chrome/en-US/locale/en-US/global-platform/mac/intl.properties",
+    file: "resource://gre/chrome/en-US/locale/en-US/global-platform/mac/intl.properties",
     platforms: ["linux", "win"],
   },
   {
-    file:
-      "resource://gre/chrome/en-US/locale/en-US/global-platform/mac/platformKeys.properties",
+    file: "resource://gre/chrome/en-US/locale/en-US/global-platform/mac/platformKeys.properties",
     platforms: ["linux", "win"],
   },
   {
-    file:
-      "resource://gre/chrome/en-US/locale/en-US/global-platform/unix/accessible.properties",
+    file: "resource://gre/chrome/en-US/locale/en-US/global-platform/unix/accessible.properties",
     platforms: ["macosx", "win"],
   },
   {
-    file:
-      "resource://gre/chrome/en-US/locale/en-US/global-platform/unix/intl.properties",
+    file: "resource://gre/chrome/en-US/locale/en-US/global-platform/unix/intl.properties",
     platforms: ["macosx", "win"],
   },
   {
-    file:
-      "resource://gre/chrome/en-US/locale/en-US/global-platform/unix/platformKeys.properties",
+    file: "resource://gre/chrome/en-US/locale/en-US/global-platform/unix/platformKeys.properties",
     platforms: ["macosx", "win"],
   },
   {
-    file:
-      "resource://gre/chrome/en-US/locale/en-US/global-platform/win/accessible.properties",
+    file: "resource://gre/chrome/en-US/locale/en-US/global-platform/win/accessible.properties",
     platforms: ["linux", "macosx"],
   },
   {
-    file:
-      "resource://gre/chrome/en-US/locale/en-US/global-platform/win/intl.properties",
+    file: "resource://gre/chrome/en-US/locale/en-US/global-platform/win/intl.properties",
     platforms: ["linux", "macosx"],
   },
   {
-    file:
-      "resource://gre/chrome/en-US/locale/en-US/global-platform/win/platformKeys.properties",
+    file: "resource://gre/chrome/en-US/locale/en-US/global-platform/win/platformKeys.properties",
     platforms: ["linux", "macosx"],
   },
 
@@ -244,7 +233,7 @@ var whitelist = [
   // Bug 1348559
   { file: "chrome://pippki/content/resetpassword.xhtml" },
   // Bug 1337345
-  { file: "resource://gre/modules/Manifest.jsm" },
+  { file: "resource://gre/modules/Manifest.sys.mjs" },
   // Bug 1494170
   // (The references to these files are dynamically generated, so the test can't
   // find the references)
@@ -278,8 +267,7 @@ var whitelist = [
 
   // tookit/mozapps/update/BackgroundUpdate.jsm
   {
-    file:
-      "resource://gre/localization/en-US/toolkit/updates/backgroundupdate.ftl",
+    file: "resource://gre/localization/en-US/toolkit/updates/backgroundupdate.ftl",
   },
   // Bug 1713242 - referenced by aboutThirdParty.html which is only for Windows
   {
@@ -288,8 +276,7 @@ var whitelist = [
   },
   // Bug 1973834 - referenced by aboutWindowsMessages.html which is only for Windows
   {
-    file:
-      "resource://gre/localization/en-US/toolkit/about/aboutWindowsMessages.ftl",
+    file: "resource://gre/localization/en-US/toolkit/about/aboutWindowsMessages.ftl",
     platforms: ["linux", "macosx"],
   },
   // Bug 1721741:
@@ -300,9 +287,6 @@ var whitelist = [
   // toolkit/xre/MacRunFromDmgUtils.mm
   { file: "resource://gre/localization/en-US/toolkit/global/run-from-dmg.ftl" },
 
-  // References to esm generated from jsm programmatically
-  { file: "resource://gre/modules/LangPackMatcher.sys.mjs" },
-
   // Referenced by screenshots extension
   { file: "chrome://browser/content/screenshots/cancel.svg" },
   { file: "chrome://browser/content/screenshots/copy.svg" },
@@ -312,11 +296,15 @@ var whitelist = [
   // Bug 1824826 - Implement a view of history in Firefox View
   { file: "resource://gre/modules/PlacesQuery.sys.mjs" },
 
-  // Should be removed in bug 1824826 when moz-tab-list is used in Firefox View
-  { file: "resource://app/localization/en-US/browser/mozTabList.ftl" },
-  { file: "chrome://browser/content/moz-tab-list.css" },
-  { file: "chrome://browser/content/moz-tab-list.mjs" },
-  { file: "chrome://browser/content/moz-tab-row.css" },
+  // Should be removed in bug 1824826 when fxview-tab-list is used in Firefox View
+  { file: "resource://app/localization/en-US/browser/fxviewTabList.ftl" },
+  { file: "chrome://browser/content/firefoxview/fxview-tab-list.css" },
+  { file: "chrome://browser/content/firefoxview/fxview-tab-list.mjs" },
+  { file: "chrome://browser/content/firefoxview/fxview-tab-row.css" },
+
+  // Bug 1834176 - Imports of NetUtil can't be converted until hostutils is
+  // updated.
+  { file: "resource://gre/modules/NetUtil.sys.mjs" },
 ];
 
 if (AppConstants.NIGHTLY_BUILD && AppConstants.platform != "win") {

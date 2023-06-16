@@ -10,7 +10,7 @@
 
 const TEST_URL = `${TEST_BASE_URL}dummy_page.html`;
 
-add_task(async function() {
+add_task(async function () {
   let normalWindow = await BrowserTestUtils.openNewBrowserWindow();
   let privateWindow = await BrowserTestUtils.openNewBrowserWindow({
     private: true,
@@ -53,11 +53,12 @@ async function runTest(aSourceWindow, aDestWindow, aExpectSwitch, aCallback) {
 
   // Ensure that this tab has no history entries
   let sessionHistoryCount = await new Promise(resolve => {
-    SessionStore.getSessionHistory(gBrowser.selectedTab, function(
-      sessionHistory
-    ) {
-      resolve(sessionHistory.entries.length);
-    });
+    SessionStore.getSessionHistory(
+      gBrowser.selectedTab,
+      function (sessionHistory) {
+        resolve(sessionHistory.entries.length);
+      }
+    );
   });
 
   ok(
@@ -71,7 +72,7 @@ async function runTest(aSourceWindow, aDestWindow, aExpectSwitch, aCallback) {
     "The test tab is on about:blank"
   );
   // Ensure that this tab's document has no child nodes
-  await SpecialPowers.spawn(testTab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(testTab.linkedBrowser, [], async function () {
     ok(
       !content.document.body.hasChildNodes(),
       "The test tab has no child nodes"

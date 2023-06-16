@@ -23,19 +23,21 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   ClientID: "resource://gre/modules/ClientID.sys.mjs",
+  CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
+  DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   ProvenanceData: "resource:///modules/ProvenanceData.sys.mjs",
   SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.sys.mjs",
   SearchSERPTelemetryUtils: "resource:///modules/SearchSERPTelemetry.sys.mjs",
+
   WindowsInstallsInfo:
     "resource://gre/modules/components-utils/WindowsInstallsInfo.sys.mjs",
+
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
-  DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  CustomizableUI: "resource:///modules/CustomizableUI.jsm",
   PageActions: "resource:///modules/PageActions.jsm",
 });
 
@@ -245,8 +247,9 @@ function getPinnedTabsCount() {
   let pinnedTabs = 0;
 
   for (let win of Services.wm.getEnumerator("navigator:browser")) {
-    pinnedTabs += [...win.ownerGlobal.gBrowser.tabs].filter(t => t.pinned)
-      .length;
+    pinnedTabs += [...win.ownerGlobal.gBrowser.tabs].filter(
+      t => t.pinned
+    ).length;
   }
 
   return pinnedTabs;
@@ -839,9 +842,8 @@ let BrowserUsageTelemetry = {
 
     // Find the actual element we're interested in.
     let node = sourceEvent.target;
-    const isAboutPreferences = node.ownerDocument.URL.startsWith(
-      "about:preferences"
-    );
+    const isAboutPreferences =
+      node.ownerDocument.URL.startsWith("about:preferences");
     while (
       !UI_TARGET_ELEMENTS.includes(node.localName) &&
       !node.classList?.contains("wants-telemetry") &&
@@ -926,9 +928,8 @@ let BrowserUsageTelemetry = {
 
       if (newPos == "nav-bar") {
         let { position } = lazy.CustomizableUI.getPlacementOfWidget(widgetId);
-        let {
-          position: urlPosition,
-        } = lazy.CustomizableUI.getPlacementOfWidget("urlbar-container");
+        let { position: urlPosition } =
+          lazy.CustomizableUI.getPlacementOfWidget("urlbar-container");
         newPos = newPos + (urlPosition > position ? "-start" : "-end");
       }
 
@@ -997,8 +998,9 @@ let BrowserUsageTelemetry = {
       action = "remove";
     }
 
-    let key = `${telemetryId(widgetId, false)}_${action}_${oldPos ??
-      "na"}_${newPos ?? "na"}_${reason}`;
+    let key = `${telemetryId(widgetId, false)}_${action}_${oldPos ?? "na"}_${
+      newPos ?? "na"
+    }_${reason}`;
     Services.telemetry.keyedScalarAdd("browser.ui.customized_widgets", key, 1);
 
     if (newPos) {
@@ -1175,8 +1177,15 @@ let BrowserUsageTelemetry = {
 
   // Reports the number of Firefox profiles on this machine to telemetry.
   async reportProfileCount() {
-    if (AppConstants.platform != "win") {
+    if (
+      AppConstants.platform != "win" ||
+      !AppConstants.MOZ_TELEMETRY_REPORTING
+    ) {
       // This is currently a windows-only feature.
+      // Also, this function writes directly to disk, without using the usual
+      // telemetry recording functions. So we excplicitly check if telemetry
+      // reporting was disabled at compile time, and we do not do anything in
+      // case.
       return;
     }
 
@@ -1227,7 +1236,8 @@ let BrowserUsageTelemetry = {
     }
 
     let writeError = false;
-    let currentTelemetryId = await BrowserUsageTelemetry.Policy.getTelemetryClientId();
+    let currentTelemetryId =
+      await BrowserUsageTelemetry.Policy.getTelemetryClientId();
     // Don't add our telemetry ID to the file if we've already reached the
     // largest bucket. This prevents the file size from growing forever.
     if (

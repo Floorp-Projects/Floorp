@@ -92,7 +92,7 @@ function KeyShortcuts({ window, target }) {
  *        The shortcut string to parse, following this document:
  *        https://github.com/electron/electron/blob/master/docs/api/accelerator.md
  */
-KeyShortcuts.parseElectronKey = function(window, str) {
+KeyShortcuts.parseElectronKey = function (window, str) {
   // If a localized string is found but has no value in the properties file,
   // getStr will return `null`. See Bug 1569572.
   if (typeof str !== "string") {
@@ -168,7 +168,7 @@ KeyShortcuts.parseElectronKey = function(window, str) {
   return shortcut;
 };
 
-KeyShortcuts.stringify = function(shortcut) {
+KeyShortcuts.stringify = function (shortcut) {
   if (shortcut === null) {
     // parseElectronKey might return null in several situations.
     return "";
@@ -200,7 +200,7 @@ KeyShortcuts.stringify = function(shortcut) {
 /*
  * Parse an xul-like key string and return an electron-like string.
  */
-KeyShortcuts.parseXulKey = function(modifiers, shortcut) {
+KeyShortcuts.parseXulKey = function (modifiers, shortcut) {
   modifiers = modifiers
     .split(",")
     .map(mod => {

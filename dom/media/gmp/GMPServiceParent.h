@@ -264,9 +264,10 @@ class GMPServiceParent final : public PGMPServiceParent {
   ipc::IPCResult RecvLaunchGMP(
       const NodeIdVariant& aNodeIdVariant, const nsACString& aAPI,
       nsTArray<nsCString>&& aTags, nsTArray<ProcessId>&& aAlreadyBridgedTo,
-      uint32_t* aOutPluginId, ProcessId* aOutProcessId,
-      nsCString* aOutDisplayName, Endpoint<PGMPContentParent>* aOutEndpoint,
-      nsresult* aOutRv, nsCString* aOutErrorDescription) override;
+      uint32_t* aOutPluginId, GMPPluginType* aOutPluginType,
+      ProcessId* aOutProcessId, nsCString* aOutDisplayName,
+      Endpoint<PGMPContentParent>* aOutEndpoint, nsresult* aOutRv,
+      nsCString* aOutErrorDescription) override;
 
  private:
   ~GMPServiceParent();

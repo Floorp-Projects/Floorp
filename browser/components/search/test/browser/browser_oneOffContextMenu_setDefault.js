@@ -20,7 +20,7 @@ async function resetEngines() {
 
 registerCleanupFunction(resetEngines);
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.search.separatePrivateDefault.ui.enabled", true],

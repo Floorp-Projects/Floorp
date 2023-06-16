@@ -834,7 +834,7 @@ add_task(async function minus_one_results_requested() {
 
 add_task(async function test_userContextId() {
   let controller = new SearchSuggestionController();
-  controller._fetchRemote = function(
+  controller._fetchRemote = function (
     searchTerm,
     engine,
     privateMode,

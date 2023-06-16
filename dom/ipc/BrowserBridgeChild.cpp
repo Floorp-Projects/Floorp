@@ -78,11 +78,6 @@ void BrowserBridgeChild::Deactivate(bool aWindowLowering, uint64_t aActionId) {
   Unused << SendDeactivate(aWindowLowering, aActionId);
 }
 
-void BrowserBridgeChild::SetIsUnderHiddenEmbedderElement(
-    bool aIsUnderHiddenEmbedderElement) {
-  Unused << SendSetIsUnderHiddenEmbedderElement(aIsUnderHiddenEmbedderElement);
-}
-
 /*static*/
 BrowserBridgeChild* BrowserBridgeChild::GetFrom(nsFrameLoader* aFrameLoader) {
   if (!aFrameLoader) {
@@ -137,16 +132,6 @@ mozilla::ipc::IPCResult BrowserBridgeChild::RecvMoveFocus(
                  : static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_BACKWARD));
   fm->MoveFocus(nullptr, owner, type, nsIFocusManager::FLAG_BYKEY,
                 getter_AddRefs(dummy));
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-BrowserBridgeChild::RecvSetEmbeddedDocAccessibleCOMProxy(
-    const a11y::IDispatchHolder& aCOMProxy) {
-#if defined(ACCESSIBILITY) && defined(XP_WIN)
-  MOZ_ASSERT(!aCOMProxy.IsNull());
-  mEmbeddedDocAccessible = aCOMProxy.Get();
-#endif
   return IPC_OK();
 }
 

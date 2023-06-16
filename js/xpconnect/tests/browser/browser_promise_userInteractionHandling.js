@@ -9,10 +9,7 @@ add_task(async function test_explicit_object_prototype() {
   const url =
     "http://mochi.test:8888/browser/js/xpconnect/tests/browser/browser_promise_userInteractionHandling.html";
   await BrowserTestUtils.withNewTab(url, async browser => {
-    await ContentTask.spawn(browser, {}, async () => {
-      const { EventUtils } = ChromeUtils.importESModule(
-        "resource://specialpowers/SpecialPowersEventUtils.sys.mjs"
-      );
+    await SpecialPowers.spawn(browser, [], async () => {
       const DOMWindowUtils = EventUtils._getDOMWindowUtils(content.window);
       is(
         DOMWindowUtils.isHandlingUserInput,

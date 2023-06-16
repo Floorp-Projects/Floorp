@@ -41,10 +41,11 @@ async function openTabInUserContext(aURL, aUserContextId) {
     userContextId: aUserContextId,
   };
   info("Create triggeringPrincipal.");
-  let triggeringPrincipal = Services.scriptSecurityManager.createContentPrincipal(
-    makeURI(aURL),
-    originAttributes
-  );
+  let triggeringPrincipal =
+    Services.scriptSecurityManager.createContentPrincipal(
+      makeURI(aURL),
+      originAttributes
+    );
   // Open the tab in the correct userContextId.
   info("Open the tab and wait for it to be loaded.");
   let tab = BrowserTestUtils.addTab(gBrowser, aURL, {
@@ -126,7 +127,7 @@ async function openTabInFirstParty(
       targetBrowsingContext = await SpecialPowers.spawn(
         targetBrowsingContext,
         [frameURL],
-        async function(aFrameURL) {
+        async function (aFrameURL) {
           // Add a frameset which carries the frame element.
           let frameSet = content.document.createElement("frameset");
           frameSet.cols = "50%,50%";
@@ -143,7 +144,7 @@ async function openTabInFirstParty(
           await new Promise(done => {
             frame.addEventListener(
               "load",
-              function() {
+              function () {
                 done();
               },
               { capture: true, once: true }
@@ -160,7 +161,7 @@ async function openTabInFirstParty(
       targetBrowsingContext = await SpecialPowers.spawn(
         targetBrowsingContext,
         [frameURL],
-        async function(aFrameURL) {
+        async function (aFrameURL) {
           // Add an iframe.
           let frame = content.document.createElement("iframe");
           content.document.body.appendChild(frame);
@@ -169,7 +170,7 @@ async function openTabInFirstParty(
           await new Promise(done => {
             frame.addEventListener(
               "load",
-              function() {
+              function () {
                 done();
               },
               { capture: true, once: true }
@@ -235,7 +236,7 @@ this.IsolationTestTools = {
       return;
     }
 
-    add_task(async function() {
+    add_task(async function () {
       info(`Starting the test for ${TEST_MODE_NAMES[aMode]}.`);
 
       // Before run this task, reset the preferences first.
@@ -358,7 +359,7 @@ this.IsolationTestTools = {
           { firstPartyDomain: "http://example.org", userContextId: 2 },
         ];
 
-    this._add_task(async function(aMode) {
+    this._add_task(async function (aMode) {
       let tabSettingA = 0;
 
       for (let tabSettingB of [0, 1]) {

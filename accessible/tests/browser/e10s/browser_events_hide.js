@@ -17,7 +17,7 @@ addAccessibleTask(
     <div id="to-hide"></div>
     <div id="next"></div>
   </div>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let acc = findAccessibleChildByID(accDoc, "to-hide");
     let onHide = waitForEvent(EVENT_HIDE, acc);
     await invokeSetStyle(browser, "to-hide", "visibility", "hidden");

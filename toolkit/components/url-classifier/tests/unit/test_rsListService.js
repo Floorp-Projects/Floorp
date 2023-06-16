@@ -9,8 +9,8 @@
 const { RemoteSettings } = ChromeUtils.importESModule(
   "resource://services-settings/remote-settings.sys.mjs"
 );
-const { SBRS_UPDATE_MINIMUM_DELAY } = ChromeUtils.import(
-  "resource://gre/modules/UrlClassifierRemoteSettingsService.jsm"
+const { SBRS_UPDATE_MINIMUM_DELAY } = ChromeUtils.importESModule(
+  "resource://gre/modules/UrlClassifierRemoteSettingsService.sys.mjs"
 );
 
 const COLLECTION_NAME = "tracking-protection-lists";
@@ -75,7 +75,7 @@ let gDbService = Cc["@mozilla.org/url-classifier/dbservice;1"].getService(
 
 class UpdateEvent extends EventTarget {}
 function waitForEvent(element, eventName) {
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve) {
     element.addEventListener(eventName, e => resolve(e.detail), { once: true });
   });
 }

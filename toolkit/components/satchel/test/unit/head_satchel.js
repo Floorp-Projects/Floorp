@@ -118,7 +118,7 @@ function addEntry(name, value, then) {
 
 function promiseCountEntries(name, value, checkFn = () => {}) {
   return new Promise(resolve => {
-    countEntries(name, value, function(result) {
+    countEntries(name, value, function (result) {
       checkFn(result);
       resolve(result);
     });

@@ -414,9 +414,8 @@ VariablesView.prototype = {
     const document = this.document;
     const ownerNode = this._parent.parentNode;
 
-    const container = (this._searchboxContainer = document.createXULElement(
-      "hbox"
-    ));
+    const container = (this._searchboxContainer =
+      document.createXULElement("hbox"));
     container.className = "devtools-toolbar devtools-input-toolbar";
 
     // Hide the variables searchbox container if there are no variables or
@@ -1056,7 +1055,7 @@ VariablesView.NON_SORTABLE_CLASSES = [
  * @param string aClassName
  *        The class of the object.
  */
-VariablesView.isSortable = function(aClassName) {
+VariablesView.isSortable = function (aClassName) {
   return !VariablesView.NON_SORTABLE_CLASSES.includes(aClassName);
 };
 
@@ -1072,7 +1071,7 @@ VariablesView.isSortable = function(aClassName) {
  * @return string
  *         The string to be evaluated.
  */
-VariablesView.simpleValueEvalMacro = function(
+VariablesView.simpleValueEvalMacro = function (
   aItem,
   aCurrentString,
   aPrefix = ""
@@ -1093,7 +1092,7 @@ VariablesView.simpleValueEvalMacro = function(
  * @return string
  *         The string to be evaluated.
  */
-VariablesView.overrideValueEvalMacro = function(
+VariablesView.overrideValueEvalMacro = function (
   aItem,
   aCurrentString,
   aPrefix = ""
@@ -1132,7 +1131,7 @@ VariablesView.overrideValueEvalMacro = function(
  * @return string
  *         The string to be evaluated.
  */
-VariablesView.getterOrSetterEvalMacro = function(
+VariablesView.getterOrSetterEvalMacro = function (
   aItem,
   aCurrentString,
   aPrefix = ""
@@ -1242,7 +1241,7 @@ VariablesView.getterOrSetterEvalMacro = function(
  * @param Property aItem
  *        The current getter or setter property.
  */
-VariablesView.getterOrSetterDeleteCallback = function(aItem) {
+VariablesView.getterOrSetterDeleteCallback = function (aItem) {
   aItem._disable();
 
   // Make sure the right getter/setter to value override macro is applied
@@ -2629,9 +2628,8 @@ Variable.prototype = extend(Scope.prototype, {
     const document = this.document;
     const descriptor = this._initialDescriptor;
 
-    const separatorLabel = (this._separatorLabel = document.createXULElement(
-      "label"
-    ));
+    const separatorLabel = (this._separatorLabel =
+      document.createXULElement("label"));
     separatorLabel.className = "plain separator";
     separatorLabel.setAttribute("value", this.separatorStr + " ");
 
@@ -2692,27 +2690,24 @@ Variable.prototype = extend(Scope.prototype, {
     const descriptor = this._initialDescriptor;
 
     if ((ownerView.eval && this.getter) || this.setter) {
-      const editNode = (this._editNode = this.document.createXULElement(
-        "toolbarbutton"
-      ));
+      const editNode = (this._editNode =
+        this.document.createXULElement("toolbarbutton"));
       editNode.className = "plain variables-view-edit";
       editNode.addEventListener("mousedown", this._onEdit.bind(this));
       this._title.insertBefore(editNode, this._spacer);
     }
 
     if (ownerView.delete) {
-      const deleteNode = (this._deleteNode = this.document.createXULElement(
-        "toolbarbutton"
-      ));
+      const deleteNode = (this._deleteNode =
+        this.document.createXULElement("toolbarbutton"));
       deleteNode.className = "plain variables-view-delete";
       deleteNode.addEventListener("click", this._onDelete.bind(this));
       this._title.appendChild(deleteNode);
     }
 
     if (ownerView.new) {
-      const addPropertyNode = (this._addPropertyNode = this.document.createXULElement(
-        "toolbarbutton"
-      ));
+      const addPropertyNode = (this._addPropertyNode =
+        this.document.createXULElement("toolbarbutton"));
       addPropertyNode.className = "plain variables-view-add-property";
       addPropertyNode.addEventListener(
         "mousedown",
@@ -2896,7 +2891,7 @@ Variable.prototype = extend(Scope.prototype, {
 
     event && event.stopPropagation();
 
-    return async function() {
+    return async function () {
       let nodeFront = this._nodeFront;
       if (!nodeFront) {
         const inspectorFront = await this.toolbox.target.getFront("inspector");
@@ -3240,19 +3235,19 @@ Property.prototype = extend(Variable.prototype, {
 /**
  * A generator-iterator over the VariablesView, Scopes, Variables and Properties.
  */
-VariablesView.prototype[Symbol.iterator] = Scope.prototype[
-  Symbol.iterator
-] = Variable.prototype[Symbol.iterator] = Property.prototype[
-  Symbol.iterator
-] = function*() {
-  yield* this._store;
-};
+VariablesView.prototype[Symbol.iterator] =
+  Scope.prototype[Symbol.iterator] =
+  Variable.prototype[Symbol.iterator] =
+  Property.prototype[Symbol.iterator] =
+    function* () {
+      yield* this._store;
+    };
 
 /**
  * Forget everything recorded about added scopes, variables or properties.
  * @see VariablesView.commitHierarchy
  */
-VariablesView.prototype.clearHierarchy = function() {
+VariablesView.prototype.clearHierarchy = function () {
   this._prevHierarchy.clear();
   this._currHierarchy.clear();
 };
@@ -3266,7 +3261,7 @@ VariablesView.prototype.clearHierarchy = function() {
  *   - reopens the items which were previously expanded
  *   - flashes the items whose values changed
  */
-VariablesView.prototype.commitHierarchy = function() {
+VariablesView.prototype.commitHierarchy = function () {
   for (const [, currItem] of this._currHierarchy) {
     // Avoid performing expensive operations.
     if (this.commitHierarchyIgnoredItems[currItem._nameString]) {
@@ -3307,7 +3302,7 @@ VariablesView.prototype.commitHierarchyIgnoredItems = extend(null, {
  * @return boolean
  *         Whether the item was expanded.
  */
-VariablesView.prototype.wasExpanded = function(aItem) {
+VariablesView.prototype.wasExpanded = function (aItem) {
   if (!(aItem instanceof Scope)) {
     return false;
   }
@@ -3326,7 +3321,7 @@ VariablesView.prototype.wasExpanded = function(aItem) {
  * @return boolean
  *         Whether the item has changed.
  */
-VariablesView.prototype.hasChanged = function(aItem) {
+VariablesView.prototype.hasChanged = function (aItem) {
   // Only analyze Variables and Properties for displayed value changes.
   // Scopes are just collections of Variables and Properties and
   // don't have a "value", so they can't change.
@@ -3346,7 +3341,7 @@ VariablesView.prototype.hasChanged = function(aItem) {
  * @return boolean
  *         Whether the item was expanded.
  */
-VariablesView.prototype.isOverridden = function(aItem) {
+VariablesView.prototype.isOverridden = function (aItem) {
   // Only analyze Variables for being overridden in different Scopes.
   if (!(aItem instanceof Variable) || aItem instanceof Property) {
     return false;
@@ -3371,7 +3366,7 @@ VariablesView.prototype.isOverridden = function(aItem) {
  * @param object aDescriptor
  *        The variable's descriptor.
  */
-VariablesView.isPrimitive = function(aDescriptor) {
+VariablesView.isPrimitive = function (aDescriptor) {
   // For accessor property descriptors, the getter and setter need to be
   // contained in 'get' and 'set' properties.
   const getter = aDescriptor.get;
@@ -3412,7 +3407,7 @@ VariablesView.isPrimitive = function(aDescriptor) {
  * @param object aDescriptor
  *        The variable's descriptor.
  */
-VariablesView.isUndefined = function(aDescriptor) {
+VariablesView.isUndefined = function (aDescriptor) {
   // For accessor property descriptors, the getter and setter need to be
   // contained in 'get' and 'set' properties.
   const getter = aDescriptor.get;
@@ -3442,7 +3437,7 @@ VariablesView.isUndefined = function(aDescriptor) {
  * @param object aDescriptor
  *        The variable's descriptor.
  */
-VariablesView.isFalsy = function(aDescriptor) {
+VariablesView.isFalsy = function (aDescriptor) {
   // As described in the remote debugger protocol, the value grip
   // must be contained in a 'value' property.
   const grip = aDescriptor.value;
@@ -3465,7 +3460,7 @@ VariablesView.isFalsy = function(aDescriptor) {
  * @param any aValue
  *        The value to test.
  */
-VariablesView.isVariable = function(aValue) {
+VariablesView.isVariable = function (aValue) {
   return aValue instanceof Variable;
 };
 
@@ -3477,7 +3472,7 @@ VariablesView.isVariable = function(aValue) {
  * @return any
  *         The value's grip.
  */
-VariablesView.getGrip = function(aValue) {
+VariablesView.getGrip = function (aValue) {
   switch (typeof aValue) {
     case "boolean":
     case "string":
@@ -3611,7 +3606,7 @@ function getObjectClassName(object) {
  * @return string
  *         The formatted property string.
  */
-VariablesView.getString = function(aGrip, aOptions = {}) {
+VariablesView.getString = function (aGrip, aOptions = {}) {
   if (aGrip && typeof aGrip == "object") {
     switch (aGrip.type) {
       case "undefined":
@@ -4096,7 +4091,7 @@ VariablesView.stringifiers.byObjectKind = {
  * @param number aNumber
  * @return string
  */
-VariablesView.stringifiers._getNMoreString = function(aNumber) {
+VariablesView.stringifiers._getNMoreString = function (aNumber) {
   const str = L10N.getStr("variablesViewMoreObjects");
   return PluralForm.get(aNumber, str).replace("#1", aNumber);
 };
@@ -4109,7 +4104,7 @@ VariablesView.stringifiers._getNMoreString = function(aNumber) {
  * @return string
  *         The custom class style.
  */
-VariablesView.getClass = function(aGrip) {
+VariablesView.getClass = function (aGrip) {
   if (aGrip && typeof aGrip == "object") {
     if (aGrip.preview) {
       switch (aGrip.preview.kind) {
@@ -4153,15 +4148,10 @@ VariablesView.getClass = function(aGrip) {
  * @return number
  *         A unique id.
  */
-var generateId = (function() {
+var generateId = (function () {
   let count = 0;
-  return function(aName = "") {
-    return (
-      aName
-        .toLowerCase()
-        .trim()
-        .replace(/\s+/g, "-") + ++count
-    );
+  return function (aName = "") {
+    return aName.toLowerCase().trim().replace(/\s+/g, "-") + ++count;
   };
 })();
 
@@ -4219,7 +4209,7 @@ function Editable(aVariable, aOptions) {
   this._onCleanup = aOptions.onCleanup;
 }
 
-Editable.create = function(aVariable, aOptions, aEvent) {
+Editable.create = function (aVariable, aOptions, aEvent) {
   const editable = new this(aVariable, aOptions);
   editable.activate(aEvent);
   return editable;

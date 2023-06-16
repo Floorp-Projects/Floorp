@@ -22,7 +22,7 @@ const HTML = `
 
 const TEST_URI = "data:text/html;charset=utf-8," + encodeURI(HTML);
 
-add_task(async function() {
+add_task(async function () {
   const tab = await addTab(TEST_URI);
   await testToolboxInitialization(tab);
   await testContextMenuInitialization();

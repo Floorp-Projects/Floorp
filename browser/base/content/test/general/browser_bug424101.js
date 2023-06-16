@@ -1,6 +1,6 @@
 /* Make sure that the context menu appears on form elements */
 
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.openNewForegroundTab(gBrowser, "data:text/html,test");
 
   let contentAreaContextMenu = document.getElementById(
@@ -28,7 +28,7 @@ add_task(async function() {
     await SpecialPowers.spawn(
       gBrowser.selectedBrowser,
       [{ element: test.element, type: test.type, index }],
-      async function(arg) {
+      async function (arg) {
         let element = content.document.createElement(arg.element);
         element.id = "element" + arg.index;
         if (arg.type) {

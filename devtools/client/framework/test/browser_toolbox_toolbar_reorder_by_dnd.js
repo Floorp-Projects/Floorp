@@ -125,7 +125,7 @@ const TEST_DATA = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   // Enable the Application panel (atm it's only available on Nightly)
   await pushPref("devtools.application.enabled", true);
 
@@ -140,10 +140,8 @@ add_task(async function() {
     "devtools.toolbox.tabsOrder"
   );
   const win = getWindow(toolbox);
-  const {
-    outerWidth: originalWindowWidth,
-    outerHeight: originalWindowHeight,
-  } = win;
+  const { outerWidth: originalWindowWidth, outerHeight: originalWindowHeight } =
+    win;
   registerCleanupFunction(() => {
     Services.prefs.setCharPref(
       "devtools.toolbox.tabsOrder",

@@ -12,7 +12,7 @@ async function testTabsCreateInvalidURL(tabsCreateURL) {
       permissions: ["tabs"],
     },
 
-    background: function() {
+    background: function () {
       browser.test.sendMessage("ready");
       browser.test.onMessage.addListener((msg, tabsCreateURL) => {
         browser.tabs.create({ url: tabsCreateURL }, tab => {
@@ -48,7 +48,7 @@ async function testTabsCreateInvalidURL(tabsCreateURL) {
   await extension.unload();
 }
 
-add_task(async function() {
+add_task(async function () {
   info("Start testing tabs.create on invalid URLs");
 
   let dataURLPage = `data:text/html,

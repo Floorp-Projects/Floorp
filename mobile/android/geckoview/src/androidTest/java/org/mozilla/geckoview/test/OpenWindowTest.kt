@@ -42,7 +42,7 @@ class OpenWindowTest : BaseSessionTest() {
         assertThat(
             "Permission should be granted",
             result as String,
-            equalTo("granted")
+            equalTo("granted"),
         )
 
         val notificationResult = GeckoResult<Void>()

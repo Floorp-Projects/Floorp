@@ -16,7 +16,7 @@ async function draw(window, src) {
   const promise = new Promise((resolve, reject) => {
     const img = new Image();
 
-    img.onload = function() {
+    img.onload = function () {
       // Create a new offscreen canvas
       const canvas = document.createElementNS(
         "http://www.w3.org/1999/xhtml",
@@ -31,7 +31,7 @@ async function draw(window, src) {
       resolve(canvas);
     };
 
-    img.onerror = function() {
+    img.onerror = function () {
       reject(`error loading image ${src}`);
     };
 

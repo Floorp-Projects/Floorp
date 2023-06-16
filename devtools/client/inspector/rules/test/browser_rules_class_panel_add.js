@@ -48,7 +48,7 @@ const TEST_ARRAY = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   await addTab("data:text/html;charset=utf-8,");
   const { inspector, view } = await openRuleView();
 

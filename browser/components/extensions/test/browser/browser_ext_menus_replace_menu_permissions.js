@@ -20,7 +20,8 @@ add_task(async function overrideContext_permissions() {
     const CONTEXT_OPTIONS_BOOKMARK = { context: "bookmark", bookmarkId: "x" };
 
     const E_PERM_TAB = /The "tab" context requires the "tabs" permission/;
-    const E_PERM_BOOKMARK = /The "bookmark" context requires the "bookmarks" permission/;
+    const E_PERM_BOOKMARK =
+      /The "bookmark" context requires the "bookmarks" permission/;
 
     function assertAllowed(contextOptions) {
       try {
@@ -69,7 +70,7 @@ add_task(async function overrideContext_permissions() {
     // The menus.overrideContext method can only be called during a
     // "contextmenu" event. So we use a generator to run tests, and yield
     // before we call overrideContext after an asynchronous operation.
-    let testGenerator = (async function*() {
+    let testGenerator = (async function* () {
       browser.test.assertEq(
         undefined,
         browser.menus.overrideContext,
@@ -191,8 +192,8 @@ add_task(async function overrideContext_permissions() {
     SidebarUI.browser.contentDocument.getElementById("webext-panels-browser"),
     [],
     () => {
-      const { ExtensionCommon } = ChromeUtils.import(
-        "resource://gre/modules/ExtensionCommon.jsm"
+      const { ExtensionCommon } = ChromeUtils.importESModule(
+        "resource://gre/modules/ExtensionCommon.sys.mjs"
       );
       Cu.exportFunction(
         fn => {

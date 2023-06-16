@@ -21,6 +21,8 @@
 #include "js/TraceKind.h"
 #include "vm/JSContext.h"
 
+#include "gc/StableCellHasher-inl.h"
+
 namespace js {
 namespace gc {
 

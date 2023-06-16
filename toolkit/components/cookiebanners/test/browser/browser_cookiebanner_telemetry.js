@@ -3,16 +3,12 @@
 
 "use strict";
 
-const { SiteDataTestUtils } = ChromeUtils.import(
-  "resource://testing-common/SiteDataTestUtils.jsm"
+const { SiteDataTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/SiteDataTestUtils.sys.mjs"
 );
 
-const {
-  MODE_DISABLED,
-  MODE_REJECT,
-  MODE_REJECT_OR_ACCEPT,
-  MODE_UNSET,
-} = Ci.nsICookieBannerService;
+const { MODE_DISABLED, MODE_REJECT, MODE_REJECT_OR_ACCEPT, MODE_UNSET } =
+  Ci.nsICookieBannerService;
 
 const TEST_MODES = [
   MODE_DISABLED,
@@ -122,7 +118,7 @@ async function openLookUpTelemetryTestPage(browser, testInTop, page, domain) {
   await clickFinishPromise;
 }
 
-add_setup(async function() {
+add_setup(async function () {
   // Clear telemetry before starting telemetry test.
   Services.fog.testResetFOG();
 

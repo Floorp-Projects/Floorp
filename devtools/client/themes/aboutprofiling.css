@@ -61,7 +61,7 @@ h2 {
 .perf-toggle-description {
   font-size: 13px;
   line-height: 1.8;
-  color: var(--in-content-deemphasized-text);
+  color: var(--text-color-deemphasized);
   grid-column: 2;
 }
 

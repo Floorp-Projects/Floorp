@@ -60,6 +60,13 @@ add_task(async () => {
 
     var testCanvasContext = document.createElement("canvas").getContext("2d");
 
+    var objWithNativeGetter = {};
+    Object.defineProperty(objWithNativeGetter, "print", { get: print });
+    Object.defineProperty(objWithNativeGetter, "Element", { get: Element });
+    Object.defineProperty(objWithNativeGetter, "setAttribute", { get: Element.prototype.setAttribute });
+    Object.defineProperty(objWithNativeGetter, "setClassName", { get: Object.getOwnPropertyDescriptor(Element.prototype, "className").set });
+    Object.defineProperty(objWithNativeGetter, "requestPermission", { get: Notification.requestPermission });
+
     async function testAsync() { return 10; }
     async function testAsyncAwait() { await 1; return 10; }
     async function * testAsyncGen() { return 10; }
@@ -89,6 +96,7 @@ add_task(async () => {
   await doEagerEvalWithSideEffectMonkeyPatched(commands);
   await doEagerEvalESGetters(commands);
   await doEagerEvalDOMGetters(commands);
+  await doEagerEvalOtherNativeGetters(commands);
   await doEagerEvalAsyncFunctions(commands);
 
   await commands.destroy();
@@ -172,7 +180,7 @@ async function doEvalLongString(commands) {
   const str = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [],
-    function() {
+    function () {
       return content.wrappedJSObject.foobarObject.omgstr;
     }
   );
@@ -369,26 +377,18 @@ async function doSimpleEagerEval(commands) {
     },
     {
       code: "testArray.toReversed().join()",
-      // Change array by copy is only available on Nightly
-      skip: typeof Array.prototype.toReversed !== "function",
       result: "3,2,1",
     },
     {
       code: "testArray.toSorted().join()",
-      // Change array by copy is only available on Nightly
-      skip: typeof Array.prototype.toSorted !== "function",
       result: "1,2,3",
     },
     {
       code: "testArray.toSpliced(0,1).join()",
-      // Change array by copy is only available on Nightly
-      skip: typeof Array.prototype.toSpliced !== "function",
       result: "2,3",
     },
     {
       code: "testArray.with(1, 'b').join()",
-      // Change array by copy is only available on Nightly
-      skip: typeof Array.prototype.with !== "function",
       result: "1,b,3",
     },
 
@@ -783,8 +783,10 @@ async function doEagerEvalESGetters(commands) {
 }
 
 async function doEagerEvalDOMGetters(commands) {
+  // Getters explicitly marked no-side-effect.
+  //
   // [code, expectedResult]
-  const testData = [
+  const testDataExplicit = [
     // DOMTokenList
     ["document.documentElement.classList.length", 1],
     ["document.documentElement.classList.value", "class1"],
@@ -884,10 +886,10 @@ async function doEagerEvalDOMGetters(commands) {
   ];
   if (typeof Scheduler === "function") {
     // Scheduler is behind a pref.
-    testData.push(["window.scheduler.constructor.name", "Scheduler"]);
+    testDataExplicit.push(["window.scheduler.constructor.name", "Scheduler"]);
   }
 
-  for (const [code, expectedResult] of testData) {
+  for (const [code, expectedResult] of testDataExplicit) {
     const response = await commands.scriptCommand.execute(code, {
       eager: true,
     });
@@ -904,42 +906,84 @@ async function doEagerEvalDOMGetters(commands) {
     ok(!response.helperResult, "no helper result");
   }
 
-  const testDataWithSideEffect = [
+  // Getters not-explicitly marked no-side-effect.
+  // All DOM getters are considered no-side-effect in eager evaluation context.
+  const testDataImplicit = [
     // NOTE: This is not an exhaustive list.
     // Document
-    `document.implementation`,
-    `document.domain`,
-    `document.referrer`,
-    `document.cookie`,
-    `document.lastModified`,
-    `document.readyState`,
-    `document.designMode`,
-    `document.onbeforescriptexecute`,
-    `document.onafterscriptexecute`,
+    [`document.implementation.constructor.name`, "DOMImplementation"],
+    [`typeof document.domain`, "string"],
+    [`typeof document.referrer`, "string"],
+    [`typeof document.cookie`, "string"],
+    [`typeof document.lastModified`, "string"],
+    [`typeof document.readyState`, "string"],
+    [`typeof document.designMode`, "string"],
+    [`typeof document.onbeforescriptexecute`, "object"],
+    [`typeof document.onafterscriptexecute`, "object"],
 
     // Element
-    `document.documentElement.scrollTop`,
-    `document.documentElement.scrollLeft`,
-    `document.documentElement.scrollWidth`,
-    `document.documentElement.scrollHeight`,
+    [`typeof document.documentElement.scrollTop`, "number"],
+    [`typeof document.documentElement.scrollLeft`, "number"],
+    [`typeof document.documentElement.scrollWidth`, "number"],
+    [`typeof document.documentElement.scrollHeight`, "number"],
 
     // Performance
-    `performance.onresourcetimingbufferfull`,
+    [`typeof performance.onresourcetimingbufferfull`, "object"],
 
     // window
-    `window.name`,
-    `window.history`,
-    `window.customElements`,
-    `window.locationbar`,
-    `window.menubar`,
-    `window.status`,
-    `window.closed`,
+    [`typeof window.name`, "string"],
+    [`window.history.constructor.name`, "History"],
+    [`window.customElements.constructor.name`, "CustomElementRegistry"],
+    [`window.locationbar.constructor.name`, "BarProp"],
+    [`window.menubar.constructor.name`, "BarProp"],
+    [`typeof window.status`, "string"],
+    [`window.closed`, false],
 
     // CanvasRenderingContext2D / CanvasCompositing
-    `testCanvasContext.globalAlpha`,
+    [`testCanvasContext.globalAlpha`, 1],
   ];
 
-  for (const code of testDataWithSideEffect) {
+  for (const [code, expectedResult] of testDataImplicit) {
+    const response = await commands.scriptCommand.execute(code, {
+      eager: true,
+    });
+    checkObject(
+      response,
+      {
+        input: code,
+        result: expectedResult,
+      },
+      code
+    );
+
+    ok(!response.exception, "no eval exception");
+    ok(!response.helperResult, "no helper result");
+  }
+}
+
+async function doEagerEvalOtherNativeGetters(commands) {
+  // DOM getter functions are allowed to be eagerly-evaluated.
+  // Test the situation where non-DOM-getter function is called by accessing
+  // getter.
+  //
+  // "being a DOM getter" is tested by checking if the native function has
+  // JSJitInfo and it's marked as getter.
+  const testData = [
+    // Has no JitInfo.
+    "objWithNativeGetter.print",
+    "objWithNativeGetter.Element",
+
+    // Not marked as getter, but method.
+    "objWithNativeGetter.getAttribute",
+
+    // Not marked as getter, but setter.
+    "objWithNativeGetter.setClassName",
+
+    // Not marked as getter, but static method.
+    "objWithNativeGetter.requestPermission",
+  ];
+
+  for (const code of testData) {
     const response = await commands.scriptCommand.execute(code, {
       eager: true,
     });

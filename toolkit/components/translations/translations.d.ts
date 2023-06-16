@@ -258,6 +258,7 @@ type LanguageTranslationModelFilesAligned = {
 interface TranslationsEnginePayload {
   bergamotWasmArrayBuffer: ArrayBuffer,
   languageModelFiles: LanguageTranslationModelFiles[]
+  isMocked: boolean,
 }
 
 /**
@@ -268,16 +269,8 @@ interface TranslationsEnginePayload {
 interface LanguageIdEnginePayload {
   wasmBuffer: ArrayBuffer,
   modelBuffer: ArrayBuffer,
-}
-
-/**
- * These are the values which a LanguageIdEngine returns after identifying a language.
- * These values are pre-determined when creating a mocked language-identification engine
- * and the mocked engine will always return those values.
- */
-interface LanguageIdEngineMockedPayload {
-  confidence: number,
-  langTag: string,
+  mockedConfidence: null | number,
+  mockedLangTag: null | string,
 }
 
 /**
@@ -289,8 +282,9 @@ export type NodeVisibility = "in-viewport" | "out-of-viewport" | "hidden";
  * Used to decide how to translate a page for full page translations.
  */
 export interface LangTags {
-  appLangTag: string,
-  docLangTag: string,
+  isDocLangTagSupported: boolean,
+  docLangTag: string | null,
+  userLangTag: string | null,
 }
 
 export interface LanguagePair { fromLang: string, toLang: string };
@@ -304,3 +298,5 @@ export interface SupportedLanguages {
   fromLanguages: Array<{ langTag: string, isBeta: boolean, displayName: string, }>,
   toLanguages: Array<{ langTag: string, isBeta: boolean, displayName: string }>,
 }
+
+export type TranslationErrors = "engine-load-error";

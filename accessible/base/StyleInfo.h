@@ -8,9 +8,16 @@
 #define _mozilla_a11y_style_h_
 
 #include "mozilla/gfx/Types.h"
-#include "mozilla/ComputedStyle.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "nsStringFwd.h"
+#include "nsColor.h"
+
+class nsAtom;
 
 namespace mozilla {
+
+enum class StyleTextDecorationStyle : uint8_t;
+
 namespace dom {
 class Element;
 }  // namespace dom

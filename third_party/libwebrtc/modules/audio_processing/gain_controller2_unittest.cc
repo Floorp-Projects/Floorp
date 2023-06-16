@@ -455,74 +455,26 @@ TEST(GainController2, CheckFinalGainWithAdaptiveDigitalController) {
   EXPECT_NEAR(applied_gain_db, kExpectedGainDb, kToleranceDb);
 }
 
-// Processes a test audio file and checks that the injected speech probability
-// is ignored when the internal VAD is used.
-TEST(GainController2,
-     CheckInjectedVadProbabilityNotUsedWithAdaptiveDigitalController) {
+#if RTC_DCHECK_IS_ON && GTEST_HAS_DEATH_TEST && !defined(WEBRTC_ANDROID)
+// Checks that `GainController2` crashes in debug mode if it runs its internal
+// VAD and the speech probability values are provided by the caller.
+TEST(GainController2DeathTest,
+     DebugCrashIfUseInternalVadAndSpeechProbabilityGiven) {
   constexpr int kSampleRateHz = AudioProcessing::kSampleRate48kHz;
   constexpr int kStereo = 2;
-
-  // Create AGC2 enabling only the adaptive digital controller.
-  Agc2Config config;
-  config.fixed_digital.gain_db = 0.0f;
-  config.adaptive_digital.enabled = true;
-  GainController2 agc2(config, /*input_volume_controller_config=*/{},
-                       kSampleRateHz, kStereo,
-                       /*use_internal_vad=*/true);
-  GainController2 agc2_reference(config, /*input_volume_controller_config=*/{},
-                                 kSampleRateHz, kStereo,
-                                 /*use_internal_vad=*/true);
-
-  test::InputAudioFile input_file(
-      test::GetApmCaptureTestVectorFileName(kSampleRateHz),
-      /*loop_at_end=*/true);
-  const StreamConfig stream_config(kSampleRateHz, kStereo);
-
-  // Init buffers.
-  constexpr int kFrameDurationMs = 10;
-  std::vector<float> frame(kStereo * stream_config.num_frames());
   AudioBuffer audio_buffer(kSampleRateHz, kStereo, kSampleRateHz, kStereo,
                            kSampleRateHz, kStereo);
-  AudioBuffer audio_buffer_reference(kSampleRateHz, kStereo, kSampleRateHz,
-                                     kStereo, kSampleRateHz, kStereo);
+  // Create AGC2 so that the interval VAD is also created.
+  GainController2 agc2(/*config=*/{.adaptive_digital = {.enabled = true}},
+                       /*input_volume_controller_config=*/{}, kSampleRateHz,
+                       kStereo,
+                       /*use_internal_vad=*/true);
 
-  // Simulate.
-  constexpr float kGainDb = -6.0f;
-  const float gain = std::pow(10.0f, kGainDb / 20.0f);
-  constexpr int kDurationMs = 10000;
-  constexpr int kNumFramesToProcess = kDurationMs / kFrameDurationMs;
-  constexpr float kSpeechProbabilities[] = {1.0f, 0.3f};
-  constexpr float kEpsilon = 0.0001f;
-  bool all_samples_zero = true;
-  for (int i = 0, j = 0; i < kNumFramesToProcess; ++i, j = 1 - j) {
-    ReadFloatSamplesFromStereoFile(stream_config.num_frames(),
-                                   stream_config.num_channels(), &input_file,
-                                   frame);
-    // Apply a fixed gain to the input audio.
-    for (float& x : frame) {
-      x *= gain;
-    }
-    test::CopyVectorToAudioBuffer(stream_config, frame, &audio_buffer);
-    agc2.Process(kSpeechProbabilities[j], /*input_volume_changed=*/false,
-                 &audio_buffer);
-    test::CopyVectorToAudioBuffer(stream_config, frame,
-                                  &audio_buffer_reference);
-    agc2_reference.Process(/*speech_probability=*/absl::nullopt,
-                           /*input_volume_changed=*/false,
-                           &audio_buffer_reference);
-
-    // Check the output buffers.
-    for (int i = 0; i < kStereo; ++i) {
-      for (int j = 0; j < static_cast<int>(audio_buffer.num_frames()); ++j) {
-        all_samples_zero &=
-            fabs(audio_buffer.channels_const()[i][j]) < kEpsilon;
-        EXPECT_FLOAT_EQ(audio_buffer.channels_const()[i][j],
-                        audio_buffer_reference.channels_const()[i][j]);
-      }
-    }
-  }
-  EXPECT_FALSE(all_samples_zero);
+  EXPECT_DEATH(agc2.Process(/*speech_probability=*/0.123f,
+                            /*input_volume_changed=*/false, &audio_buffer),
+               "");
 }
+#endif
 
 // Processes a test audio file and checks that the injected speech probability
 // is not ignored when the internal VAD is not used.

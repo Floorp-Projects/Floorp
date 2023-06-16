@@ -64,13 +64,8 @@ class Preview extends PureComponent {
   }
 
   onTokenEnter = ({ target, tokenPos }) => {
-    const {
-      cx,
-      editor,
-      updatePreview,
-      highlightedCalls,
-      setExceptionPreview,
-    } = this.props;
+    const { cx, editor, updatePreview, highlightedCalls, setExceptionPreview } =
+      this.props;
 
     const isTargetException = target.classList.contains(EXCEPTION_MARKER);
 

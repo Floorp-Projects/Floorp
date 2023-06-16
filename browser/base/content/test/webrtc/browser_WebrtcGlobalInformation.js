@@ -53,6 +53,16 @@ let getStatsReports = async (filter = "") => {
   return reports;
 };
 
+const getStatsHistoryPcIds = async () => {
+  return new Promise(r => WebrtcGlobalInformation.getStatsHistoryPcIds(r));
+};
+
+const getStatsHistorySince = async (pcid, after, sdpAfter) => {
+  return new Promise(r =>
+    WebrtcGlobalInformation.getStatsHistorySince(r, pcid, after, sdpAfter)
+  );
+};
+
 let getLogging = async () => {
   let logs = await new Promise(r => WebrtcGlobalInformation.getLogging("", r));
   ok(Array.isArray(logs), "|logs| is an array");
@@ -271,5 +281,204 @@ add_task(async () => {
   BrowserTestUtils.removeTab(tab);
   await checkStatsReportCount(1);
   await checkLoggingNonEmpty();
+  await clearAndCheck();
+});
+
+const set_int_pref_returning_unsetter = (pref, num) => {
+  const value = Services.prefs.getIntPref(pref);
+  Services.prefs.setIntPref(pref, num);
+  return () => Services.prefs.setIntPref(pref, value);
+};
+
+const stats_history_is_enabled = () => {
+  return Services.prefs.getBoolPref("media.aboutwebrtc.hist.enabled");
+};
+
+const set_max_histories_to_retain = num =>
+  set_int_pref_returning_unsetter(
+    "media.aboutwebrtc.hist.closed_stats_to_retain",
+    num
+  );
+
+const set_history_storage_window_s = num =>
+  set_int_pref_returning_unsetter(
+    "media.aboutwebrtc.hist.storage_window_s",
+    num
+  );
+
+add_task(async () => {
+  if (!stats_history_is_enabled()) {
+    return;
+  }
+  info(
+    "Test that stats history is available after close until clearLongTermStats is called"
+  );
+  await clearAndCheck();
+  const pc = new RTCPeerConnection();
+
+  const ids = await getStatsHistoryPcIds();
+  is(ids.length, 1, "There is a single PeerConnection Id for stats history.");
+
+  let firstLen = 0;
+  // I "don't love" this but we don't have a anything we can await on ... yet.
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(r => setTimeout(r, 2000));
+  {
+    const history = await getStatsHistorySince(ids[0]);
+    firstLen = history.reports.length;
+    ok(
+      history.reports.length,
+      "There is at least a single PeerConnection stats history before close."
+    );
+  }
+  // I "don't love" this but we don't have a anything we can await on ... yet.
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(r => setTimeout(r, 2000));
+  {
+    const history = await getStatsHistorySince(ids[0]);
+    const secondLen = history.reports.length;
+    ok(
+      secondLen > firstLen,
+      "After waiting there are more history entries available."
+    );
+  }
+  pc.close();
+  // After close for final stats and pc teardown to settle
+  // I "don't love" this but we don't have a anything we can await on ... yet.
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(r => setTimeout(r, 2000));
+  {
+    const history = await getStatsHistorySince(ids[0]);
+    ok(
+      history.reports.length,
+      "There is at least a single PeerConnection stats history after close."
+    );
+  }
+  await clearAndCheck();
+  {
+    const history = await getStatsHistorySince(ids[0]);
+    is(
+      history.reports.length,
+      0,
+      "After PC.close and clearing the stats there are no history reports"
+    );
+  }
+  {
+    const ids1 = await getStatsHistoryPcIds();
+    is(
+      ids1.length,
+      0,
+      "After PC.close and clearing the stats there are no history pcids"
+    );
+  }
+  {
+    const pc2 = new RTCPeerConnection();
+    const pc3 = new RTCPeerConnection();
+    let idsN = await getStatsHistoryPcIds();
+    is(
+      idsN.length,
+      2,
+      "There are two pcIds after creating two PeerConnections"
+    );
+    pc2.close();
+    // After close for final stats and pc teardown to settle
+    // I "don't love" this but we don't have a anything we can await on ... yet.
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+    await new Promise(r => setTimeout(r, 2000));
+    await WebrtcGlobalInformation.clearAllStats();
+    idsN = await getStatsHistoryPcIds();
+    is(
+      idsN.length,
+      1,
+      "There is one pcIds after closing one of two PeerConnections and clearing stats"
+    );
+    pc3.close();
+    // After close for final stats and pc teardown to settle
+    // I "don't love" this but we don't have a anything we can await on ... yet.
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+    await new Promise(r => setTimeout(r, 2000));
+  }
+});
+
+add_task(async () => {
+  if (!stats_history_is_enabled()) {
+    return;
+  }
+  const restoreHistRetainPref = set_max_histories_to_retain(7);
+  info("Test that the proper number of pcIds are available");
+  await clearAndCheck();
+  const pc01 = new RTCPeerConnection();
+  const pc02 = new RTCPeerConnection();
+  const pc03 = new RTCPeerConnection();
+  const pc04 = new RTCPeerConnection();
+  const pc05 = new RTCPeerConnection();
+  const pc06 = new RTCPeerConnection();
+  const pc07 = new RTCPeerConnection();
+  const pc08 = new RTCPeerConnection();
+  const pc09 = new RTCPeerConnection();
+  const pc10 = new RTCPeerConnection();
+  const pc11 = new RTCPeerConnection();
+  const pc12 = new RTCPeerConnection();
+  const pc13 = new RTCPeerConnection();
+  // I "don't love" this but we don't have a anything we can await on ... yet.
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(r => setTimeout(r, 2000));
+  {
+    const ids = await getStatsHistoryPcIds();
+    is(ids.length, 13, "There is are 13 PeerConnection Ids for stats history.");
+  }
+  pc01.close();
+  pc02.close();
+  pc03.close();
+  pc04.close();
+  pc05.close();
+  pc06.close();
+  pc07.close();
+  pc08.close();
+  pc09.close();
+  pc10.close();
+  pc11.close();
+  pc12.close();
+  pc13.close();
+  // I "don't love" this but we don't have a anything we can await on ... yet.
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(r => setTimeout(r, 5000));
+  {
+    const ids = await getStatsHistoryPcIds();
+    is(
+      ids.length,
+      7,
+      "After closing 13 PCs there are no more than the max closed (7) PeerConnection Ids for stats history."
+    );
+  }
+  restoreHistRetainPref();
+  await clearAndCheck();
+});
+
+add_task(async () => {
+  if (!stats_history_is_enabled()) {
+    return;
+  }
+  // If you change this, please check if the setTimeout should be updated.
+  // NOTE: the unit here is _integer_ seconds.
+  const STORAGE_WINDOW_S = 1;
+  const restoreStorageWindowPref =
+    set_history_storage_window_s(STORAGE_WINDOW_S);
+  info("Test that history items are being aged out");
+  await clearAndCheck();
+  const pc = new RTCPeerConnection();
+  // I "don't love" this but we don't have a anything we can await on ... yet.
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(r => setTimeout(r, STORAGE_WINDOW_S * 2 * 1000));
+  const ids = await getStatsHistoryPcIds();
+  const { reports } = await getStatsHistorySince(ids[0]);
+  const first = reports[0];
+  const last = reports.at(-1);
+  ok(
+    last.timestamp - first.timestamp <= STORAGE_WINDOW_S * 1000,
+    "History reports should be aging out according to the storage window pref"
+  );
+  pc.close();
+  restoreStorageWindowPref();
   await clearAndCheck();
 });

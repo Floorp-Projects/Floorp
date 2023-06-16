@@ -11,14 +11,13 @@
 </canvas>
 <script id='myWorker' type='text/worker'>
   self.onmessage = function(e) {
-    const oc = new OffscreenCanvas(500, 500);
-    const ctx = oc.getContext('2d');
+    const canvas = new OffscreenCanvas(500, 500);
+    const ctx = canvas.getContext('2d');
 
     ctx.fillStyle = 'rgba(0, 0, 255, 1)';
     ctx.fillRect(50, 50, 95, 70);
 
     ctx.globalAlpha = 0.5;
-    ctx.filter = 'sepia(0.5)';
     ctx.shadowOffsetX = -10;
     ctx.shadowOffsetY = 10;
     ctx.shadowColor = 'orange';
@@ -35,7 +34,7 @@
       ctx.endLayer();
     }
 
-    const bitmap = oc.transferToImageBitmap();
+    const bitmap = canvas.transferToImageBitmap();
     self.postMessage(bitmap, bitmap);
   };
 </script>

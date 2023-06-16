@@ -34,7 +34,7 @@ function test() {
   // Make the third tab hidden and then restore the modified state object
   tabs[2].hidden = true;
 
-  observeOneRestore(function() {
+  observeOneRestore(function () {
     is(gBrowser.visibleTabs.length, 1, "only restored 1 visible tab");
     let restoredTabs = gBrowser.tabs;
 

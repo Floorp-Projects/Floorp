@@ -8,7 +8,7 @@ const TEST_URI_REPLACED =
 const TEST_URI_NOT_REPLACED =
   "data:text/html;charset=utf8,<!DOCTYPE html><script>console.log('foo')</script>";
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.webconsole.timestampMessages", true);
   await pushPref("devtools.webconsole.persistlog", true);
 

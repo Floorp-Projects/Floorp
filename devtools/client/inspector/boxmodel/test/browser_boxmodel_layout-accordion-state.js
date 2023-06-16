@@ -20,7 +20,7 @@ const BOXMODEL_OPENED_PREF = "devtools.layout.boxmodel.opened";
 const ACCORDION_HEADER_SELECTOR = ".accordion-header";
 const ACCORDION_CONTENT_SELECTOR = ".accordion-content";
 
-add_task(async function() {
+add_task(async function () {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, boxmodel, toolbox } = await openLayoutView();
   const { document: doc } = boxmodel;

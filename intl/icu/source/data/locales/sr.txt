@@ -328,6 +328,12 @@ sr{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimePatterns%atTime{
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
             DateTimeSkeletons{
                 "HHmmsszzzz",
                 "HHmmssz",
@@ -502,6 +508,12 @@ sr{
                 "d. M. y.",
                 "d.M.yy.",
                 "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            DateTimePatterns%atTime{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -1014,6 +1026,50 @@ sr{
             }
         }
         islamic{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d. MMMM y. G",
+                "d. MMMM y. G",
+                "d.MM.y. G",
+                "d.M.y. GGGGG",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                E{"ccc"}
+                Ed{"E d."}
+                Gy{"y. G"}
+                GyMMM{"MMM y. G"}
+                GyMMMEd{"E, d. MMM y. G"}
+                GyMMMd{"d. MMM y. G"}
+                GyMd{"d.M.y. GGGGG"}
+                M{"L"}
+                MEd{"E, d.M."}
+                MMM{"LLL"}
+                MMMEd{"E, d. MMM"}
+                MMMMEd{"E, d. MMMM"}
+                MMMMd{"d. MMMM"}
+                MMMd{"d. MMM"}
+                Md{"d.M."}
+                d{"d"}
+                y{"y. G"}
+                yyyy{"y. G"}
+                yyyyM{"M.y. GGGGG"}
+                yyyyMEd{"E, d.M.y. GGGGG"}
+                yyyyMMM{"MMM y. G"}
+                yyyyMMMEd{"E, d. MMM y. G"}
+                yyyyMMMM{"MMMM y. G"}
+                yyyyMMMd{"d. MMM y. G"}
+                yyyyMd{"d.M.y. GGGGG"}
+                yyyyQQQ{"QQQ, y. G"}
+                yyyyQQQQ{"QQQQ y. G"}
+            }
             eras{
                 abbreviated{
                     "АХ",
@@ -1035,6 +1091,20 @@ sr{
                         "Зул-к.",
                         "Зул-х.",
                     }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
                     wide{
                         "Мухарем",
                         "Сафар",
@@ -1051,6 +1121,20 @@ sr{
                     }
                 }
                 stand-alone{
+                    abbreviated{
+                        "Мух.",
+                        "Саф.",
+                        "Реб. 1",
+                        "Реб. 2",
+                        "Џум. 1",
+                        "Џум. 2",
+                        "Реџ.",
+                        "Ша.",
+                        "Рам.",
+                        "Ше.",
+                        "Зул-к.",
+                        "Зул-х.",
+                    }
                     wide{
                         "Мухарем",
                         "Сафер",
@@ -1784,6 +1868,12 @@ sr{
             }
         }
         month-narrow{
+            dn{"мес."}
+            relative{
+                "-1"{"прошлог мес."}
+                "0"{"овог мес."}
+                "1"{"следећег мес."}
+            }
             relativeTime{
                 future{
                     few{"за {0} м."}
@@ -2232,6 +2322,7 @@ sr{
             }
         }
         week-narrow{
+            dn{"нед."}
             relative{
                 "-1"{"прошле н."}
                 "0"{"ове н."}
@@ -2376,7 +2467,25 @@ sr{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        or-narrow{
+            2{"{0} или {1}"}
+            end{"{0} или {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        or-short{
+            2{"{0} или {1}"}
+            end{"{0} или {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
+            2{"{0} и {1}"}
+            end{"{0} и {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-narrow{
             2{"{0} и {1}"}
             end{"{0} и {1}"}
             middle{"{0}, {1}"}
@@ -2454,18 +2563,17 @@ sr{
             }
         }
         namePattern{
-            givenFirst-long-addressing-formal{"{prefix} {surname}"}
+            givenFirst-long-addressing-formal{"{title} {surname}"}
             givenFirst-long-addressing-informal{"{given-informal}"}
             givenFirst-long-monogram-informal{"{given-informal-monogram-allCaps}{surname-monogram-allCaps}"}
-            givenFirst-long-referring-formal{"{given} {given2} {surname}, {suffix}"}
             givenFirst-long-referring-informal{"{given-informal} {surname}"}
-            givenFirst-medium-addressing-formal{"{prefix} {surname}"}
+            givenFirst-medium-addressing-formal{"{title} {surname}"}
             givenFirst-medium-addressing-informal{"{given-informal}"}
             givenFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             givenFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname}, {suffix}"}
+            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname} {generation}, {credentials}"}
             givenFirst-medium-referring-informal{"{given-informal} {surname}"}
-            givenFirst-short-addressing-formal{"{prefix} {surname}"}
+            givenFirst-short-addressing-formal{"{title} {surname}"}
             givenFirst-short-addressing-informal{"{given-informal}"}
             givenFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             givenFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
@@ -2477,18 +2585,18 @@ sr{
             sorting-medium-referring-informal{"{surname}, {given-informal}"}
             sorting-short-referring-formal{"{surname-core}, {given-initial} {given2-initial} {surname-prefix}"}
             sorting-short-referring-informal{"{surname}, {given-informal}"}
-            surnameFirst-long-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-long-addressing-formal{"{title} {surname}"}
             surnameFirst-long-addressing-informal{"{given-informal}"}
             surnameFirst-long-monogram-informal{"{surname-monogram-allCaps}{given-informal-monogram-allCaps}"}
-            surnameFirst-long-referring-formal{"{surname} {given} {given2}, {suffix}"}
+            surnameFirst-long-referring-formal{"{surname} {title} {given} {given2} {generation}, {credentials}"}
             surnameFirst-long-referring-informal{"{surname} {given-informal}"}
-            surnameFirst-medium-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-medium-addressing-formal{"{title} {surname}"}
             surnameFirst-medium-addressing-informal{"{given-informal}"}
             surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            surnameFirst-medium-referring-formal{"{surname} {given} {given2-initial}, {suffix}"}
+            surnameFirst-medium-referring-formal{"{surname} {given} {given2-initial} {generation}, {credentials}"}
             surnameFirst-medium-referring-informal{"{surname} {given-informal}"}
-            surnameFirst-short-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-short-addressing-formal{"{title} {surname}"}
             surnameFirst-short-addressing-informal{"{given-informal}"}
             surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}

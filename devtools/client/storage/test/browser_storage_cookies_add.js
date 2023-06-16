@@ -6,7 +6,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const TEST_URL = MAIN_DOMAIN + "storage-cookies.html";
   await openTabAndSetupStorage(TEST_URL);
   showAllColumns(true);

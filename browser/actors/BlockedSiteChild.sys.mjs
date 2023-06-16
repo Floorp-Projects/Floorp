@@ -5,11 +5,9 @@
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "SafeBrowsing",
-  "resource://gre/modules/SafeBrowsing.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  SafeBrowsing: "resource://gre/modules/SafeBrowsing.sys.mjs",
+});
 
 function getSiteBlockedErrorDetails(docShell) {
   let blockedInfo = {};
@@ -26,10 +24,7 @@ function getSiteBlockedErrorDetails(docShell) {
 
       // Remove the query to avoid leaking sensitive data
       if (reportUri instanceof Ci.nsIURL) {
-        reportUri = reportUri
-          .mutate()
-          .setQuery("")
-          .finalize();
+        reportUri = reportUri.mutate().setQuery("").finalize();
       }
 
       let triggeringPrincipal = docShell.failedChannel.loadInfo

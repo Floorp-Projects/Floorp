@@ -11,11 +11,7 @@ const svc = Cc["@mozilla.org/win-task-scheduler-service;1"].getService(
 
 function randomName() {
   return (
-    "moz-taskschd-test-" +
-    Services.uuid
-      .generateUUID()
-      .toString()
-      .slice(1, -1)
+    "moz-taskschd-test-" + Services.uuid.generateUUID().toString().slice(1, -1)
   );
 }
 

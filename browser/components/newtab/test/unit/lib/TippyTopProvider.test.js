@@ -1,5 +1,5 @@
 import { GlobalOverrider } from "test/unit/utils";
-import { TippyTopProvider } from "lib/TippyTopProvider.jsm";
+import { TippyTopProvider } from "lib/TippyTopProvider.sys.mjs";
 
 describe("TippyTopProvider", () => {
   let instance;

@@ -34,8 +34,7 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  AddressComparison: "resource://autofill/AddressComponent.sys.mjs",
-  AddressComponent: "resource://autofill/AddressComponent.sys.mjs",
+  AddressComponent: "resource://gre/modules/shared/AddressComponent.sys.mjs",
   FormAutofillPreferences:
     "resource://autofill/FormAutofillPreferences.sys.mjs",
   FormAutofillPrompter: "resource://autofill/FormAutofillPrompter.sys.mjs",
@@ -50,15 +49,11 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () =>
   FormAutofill.defineLogGetter(lazy, "FormAutofillParent")
 );
 
-const {
-  ENABLED_AUTOFILL_ADDRESSES_PREF,
-  ENABLED_AUTOFILL_CREDITCARDS_PREF,
-} = FormAutofill;
+const { ENABLED_AUTOFILL_ADDRESSES_PREF, ENABLED_AUTOFILL_CREDITCARDS_PREF } =
+  FormAutofill;
 
-const {
-  ADDRESSES_COLLECTION_NAME,
-  CREDITCARDS_COLLECTION_NAME,
-} = FormAutofillUtils;
+const { ADDRESSES_COLLECTION_NAME, CREDITCARDS_COLLECTION_NAME } =
+  FormAutofillUtils;
 
 let gMessageObservers = new Set();
 
@@ -183,11 +178,13 @@ export let FormAutofillStatus = {
     lazy.log.debug("updateSavedFieldNames");
 
     let savedFieldNames;
-    const addressNames = await lazy.gFormAutofillStorage.addresses.getSavedFieldNames();
+    const addressNames =
+      await lazy.gFormAutofillStorage.addresses.getSavedFieldNames();
 
     // Don't access the credit cards store unless it is enabled.
     if (FormAutofill.isAutofillCreditCardsAvailable) {
-      const creditCardNames = await lazy.gFormAutofillStorage.creditCards.getSavedFieldNames();
+      const creditCardNames =
+        await lazy.gFormAutofillStorage.creditCards.getSavedFieldNames();
       savedFieldNames = new Set([...addressNames, ...creditCardNames]);
     } else {
       savedFieldNames = addressNames;
@@ -457,9 +454,7 @@ export class FormAutofillParent extends JSWindowActorParent {
 
       if (
         lcSearchString &&
-        !String(fieldValue)
-          .toLowerCase()
-          .startsWith(lcSearchString)
+        !String(fieldValue).toLowerCase().startsWith(lcSearchString)
       ) {
         continue;
       }
@@ -475,36 +470,52 @@ export class FormAutofillParent extends JSWindowActorParent {
     // Make sure record is normalized before comparing with records in the storage
     storage._normalizeRecord(address.record);
 
-    const newAddress = new lazy.AddressComponent(address.record);
+    const newAddress = new lazy.AddressComponent(
+      address.record,
+      // Invalid address fields in the address form will not be captured.
+      { ignoreInvalid: true }
+    );
 
     let mergeableRecord = null;
     let mergeableFields = [];
 
     // Exams all stored record to determine whether to show the prompt or not.
     for (const record of await storage.getAll()) {
-      const oldAddress = new lazy.AddressComponent(record);
-      const result = new lazy.AddressComparison(newAddress, oldAddress);
+      const savedAddress = new lazy.AddressComponent(record);
+      // filter invalid field
+      const result = newAddress.compare(savedAddress);
 
-      // If the record alreay exists in the storage, don't bother showing the prompt
-      if (result.isDuplicate()) {
+      // If any of the fields in the new address are different from the corresponding fields
+      // in the saved address, the two addresses are considered different. For example, if
+      // the name, email, country are the same but the street address is different, the two
+      // addresses are not considered the same.
+      if (Object.values(result).includes("different")) {
+        continue;
+        // If every field of the new address is either the same or is subset of the corresponding
+        // field in the saved address, the new address is duplicated. We don't need capture
+        // the new address.
+      } else if (
+        Object.values(result).every(r => ["same", "subset"].includes(r))
+      ) {
         lazy.log.debug(
           "A duplicated address record is found, do not show the prompt"
         );
         storage.notifyUsed(record.guid);
         return false;
-      } else if (result.isMergeable()) {
+        // If the new address is neither a duplicate of the saved address nor a different address.
+        // There must be at least one field we can merge, show the update doorhanger
+      } else {
         lazy.log.debug(
           "A mergeable address record is found, show the update prompt"
         );
-        // If we find multiple mergeable records, choose the record with fewest mergeable
-        // fields.
-        // TODO: Add a testcase
-        if (
-          !mergeableFields.length ||
-          mergeableFields.length > result.getMergeableFields().length
-        ) {
+        // If we find multiple mergeable records, choose the record with fewest mergeable fields.
+        // TODO: Bug 1830841. Add a testcase
+        let fields = Object.entries(result)
+          .filter(v => ["superset", "similar"].includes(v[1]))
+          .map(v => v[0]);
+        if (!mergeableFields.length || mergeableFields.length > fields.length) {
           mergeableRecord = record;
-          mergeableFields = result.getMergeableFields();
+          mergeableFields = fields;
         }
       }
     }

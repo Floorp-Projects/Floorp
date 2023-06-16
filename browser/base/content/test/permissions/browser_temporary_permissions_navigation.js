@@ -6,12 +6,11 @@
 // Test that temporary permissions are removed on user initiated reload only.
 add_task(async function testTempPermissionOnReload() {
   let origin = "https://example.com/";
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    origin
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(origin);
   let id = "geo";
 
-  await BrowserTestUtils.withNewTab(origin, async function(browser) {
+  await BrowserTestUtils.withNewTab(origin, async function (browser) {
     SitePermissions.setForPrincipal(
       principal,
       id,
@@ -120,12 +119,11 @@ add_task(async function testTempPermissionOnReload() {
 // Test that temporary permissions are not removed when reloading all tabs.
 add_task(async function testTempPermissionOnReloadAllTabs() {
   let origin = "https://example.com/";
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    origin
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(origin);
   let id = "geo";
 
-  await BrowserTestUtils.withNewTab(origin, async function(browser) {
+  await BrowserTestUtils.withNewTab(origin, async function (browser) {
     SitePermissions.setForPrincipal(
       principal,
       id,
@@ -174,12 +172,11 @@ add_task(async function testTempPermissionOnReloadAllTabs() {
 // Test that temporary permissions are persisted through navigation in a tab.
 add_task(async function testTempPermissionOnNavigation() {
   let origin = "https://example.com/";
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    origin
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(origin);
   let id = "geo";
 
-  await BrowserTestUtils.withNewTab(origin, async function(browser) {
+  await BrowserTestUtils.withNewTab(origin, async function (browser) {
     SitePermissions.setForPrincipal(
       principal,
       id,

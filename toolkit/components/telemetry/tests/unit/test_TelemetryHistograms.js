@@ -129,8 +129,10 @@ add_task(async function test_noSerialization() {
   // Instantiate the storage for this histogram and make sure it doesn't
   // get reflected into JS, as it has no interesting data in it.
   Telemetry.getHistogramById("NEWTAB_PAGE_PINNED_SITES_COUNT");
-  let histograms = Telemetry.getSnapshotForHistograms("main", false /* clear */)
-    .parent;
+  let histograms = Telemetry.getSnapshotForHistograms(
+    "main",
+    false /* clear */
+  ).parent;
   Assert.equal(false, "NEWTAB_PAGE_PINNED_SITES_COUNT" in histograms);
 });
 
@@ -286,9 +288,8 @@ add_task(async function test_add_error_behaviour() {
 
   // Check that |add| doesn't throw for plain histograms.
   for (let hist of PLAIN_HISTOGRAMS_TO_TEST) {
-    const returnValue = Telemetry.getHistogramById(hist).add(
-      "unexpected-value"
-    );
+    const returnValue =
+      Telemetry.getHistogramById(hist).add("unexpected-value");
     Assert.strictEqual(
       returnValue,
       undefined,
@@ -986,8 +987,10 @@ add_task(async function test_keyed_keys() {
   Assert.ok(!("not-allowed" in snap), "'not-allowed' must not be recorded.");
 
   // Check that these failures were correctly tracked.
-  const parentScalars = Telemetry.getSnapshotForKeyedScalars("main", false)
-    .parent;
+  const parentScalars = Telemetry.getSnapshotForKeyedScalars(
+    "main",
+    false
+  ).parent;
   const scalarName = "telemetry.accumulate_unknown_histogram_keys";
   Assert.ok(
     scalarName in parentScalars,
@@ -1332,8 +1335,10 @@ add_task(async function test_productsOverride() {
   multiproduct_histo.add(1);
   mobile_histo.add(1);
 
-  let histograms = Telemetry.getSnapshotForHistograms("main", false /* clear */)
-    .parent;
+  let histograms = Telemetry.getSnapshotForHistograms(
+    "main",
+    false /* clear */
+  ).parent;
 
   Assert.ok(
     DEFAULT_PRODUCTS_HISTOGRAM in histograms,
@@ -1368,16 +1373,20 @@ add_task(
     let snapshot;
 
     // The first snapshot should be empty, nothing recorded.
-    snapshot = Telemetry.getSnapshotForHistograms("main", false /* clear */)
-      .parent;
+    snapshot = Telemetry.getSnapshotForHistograms(
+      "main",
+      false /* clear */
+    ).parent;
     Assert.ok(!(COUNT in snapshot));
 
     // After recording into a histogram, the data should be in the snapshot. Don't delete it.
     h.add(1);
 
     Assert.equal(h.snapshot().sum, 1);
-    snapshot = Telemetry.getSnapshotForHistograms("main", false /* clear */)
-      .parent;
+    snapshot = Telemetry.getSnapshotForHistograms(
+      "main",
+      false /* clear */
+    ).parent;
     Assert.ok(COUNT in snapshot);
     Assert.equal(snapshot[COUNT].sum, 1);
 
@@ -1386,15 +1395,19 @@ add_task(
     h.add(41);
 
     Assert.equal(h.snapshot().sum, 42);
-    snapshot = Telemetry.getSnapshotForHistograms("main", true /* clear */)
-      .parent;
+    snapshot = Telemetry.getSnapshotForHistograms(
+      "main",
+      true /* clear */
+    ).parent;
     Assert.ok(COUNT in snapshot);
     Assert.equal(snapshot[COUNT].sum, 42);
 
     // Finally, no data should be in the snapshot.
     Assert.equal(h.snapshot().sum, 0);
-    snapshot = Telemetry.getSnapshotForHistograms("main", false /* clear */)
-      .parent;
+    snapshot = Telemetry.getSnapshotForHistograms(
+      "main",
+      false /* clear */
+    ).parent;
     Assert.ok(!(COUNT in snapshot));
   }
 );
@@ -1434,8 +1447,10 @@ add_task(async function test_valid_os_smoketest() {
   let h = Telemetry.getHistogramById(existingProbe);
   h.clear();
   h.add(1);
-  let snapshot = Telemetry.getSnapshotForHistograms("main", false /* clear */)
-    .parent;
+  let snapshot = Telemetry.getSnapshotForHistograms(
+    "main",
+    false /* clear */
+  ).parent;
   Assert.ok(
     existingProbe in snapshot,
     `${existingProbe} should be recorded on ${AppConstants.platform}`
@@ -1579,8 +1594,10 @@ add_task(async function test_multistore_main_snapshot() {
   Assert.ok(!(id in snapshot), `${id} should not be in a main store snapshot`);
 
   // Data should still be in, getting snapshot and clearing
-  snapshot = Telemetry.getSnapshotForHistograms("main", /* clear */ true)
-    .parent;
+  snapshot = Telemetry.getSnapshotForHistograms(
+    "main",
+    /* clear */ true
+  ).parent;
   id = "TELEMETRY_TEST_MAIN_ONLY";
   Assert.ok(id in snapshot, `${id} should be in a main store snapshot`);
   id = "TELEMETRY_TEST_MULTIPLE_STORES";
@@ -1589,8 +1606,10 @@ add_task(async function test_multistore_main_snapshot() {
   Assert.ok(!(id in snapshot), `${id} should not be in a main store snapshot`);
 
   // Should be empty after clearing
-  snapshot = Telemetry.getSnapshotForHistograms("main", /* clear */ false)
-    .parent;
+  snapshot = Telemetry.getSnapshotForHistograms(
+    "main",
+    /* clear */ false
+  ).parent;
   id = "TELEMETRY_TEST_MAIN_ONLY";
   Assert.ok(!(id in snapshot), `${id} should not be in a main store snapshot`);
   id = "TELEMETRY_TEST_MULTIPLE_STORES";
@@ -1617,16 +1636,20 @@ add_task(async function test_multistore_main_snapshot() {
   Assert.ok(!(id in snapshot), `${id} should not be in a main store snapshot`);
 
   // Data should still be in, getting snapshot and clearing
-  snapshot = Telemetry.getSnapshotForKeyedHistograms("main", /* clear */ true)
-    .parent;
+  snapshot = Telemetry.getSnapshotForKeyedHistograms(
+    "main",
+    /* clear */ true
+  ).parent;
   id = "TELEMETRY_TEST_KEYED_MULTIPLE_STORES";
   Assert.ok(id in snapshot, `${id} should be in a main store snapshot`);
   id = "TELEMETRY_TEST_KEYED_SYNC_ONLY";
   Assert.ok(!(id in snapshot), `${id} should not be in a main store snapshot`);
 
   // Should be empty after clearing
-  snapshot = Telemetry.getSnapshotForKeyedHistograms("main", /* clear */ false)
-    .parent;
+  snapshot = Telemetry.getSnapshotForKeyedHistograms(
+    "main",
+    /* clear */ false
+  ).parent;
   id = "TELEMETRY_TEST_KEYED_MULTIPLE_STORES";
   Assert.ok(!(id in snapshot), `${id} should not be in a main store snapshot`);
   id = "TELEMETRY_TEST_KEYED_SYNC_ONLY";
@@ -1805,8 +1828,10 @@ add_task(async function test_multistore_sync_snapshot() {
   hist.add(1);
 
   // Getting snapshot and clearing
-  snapshot = Telemetry.getSnapshotForHistograms("main", /* clear */ true)
-    .parent;
+  snapshot = Telemetry.getSnapshotForHistograms(
+    "main",
+    /* clear */ true
+  ).parent;
   id = "TELEMETRY_TEST_MAIN_ONLY";
   Assert.ok(id in snapshot, `${id} should be in a main store snapshot`);
   id = "TELEMETRY_TEST_MULTIPLE_STORES";
@@ -1814,8 +1839,10 @@ add_task(async function test_multistore_sync_snapshot() {
   id = "TELEMETRY_TEST_SYNC_ONLY";
   Assert.ok(!(id in snapshot), `${id} should not be in a main store snapshot`);
 
-  snapshot = Telemetry.getSnapshotForHistograms("sync", /* clear */ true)
-    .parent;
+  snapshot = Telemetry.getSnapshotForHistograms(
+    "sync",
+    /* clear */ true
+  ).parent;
   id = "TELEMETRY_TEST_MAIN_ONLY";
   Assert.ok(!(id in snapshot), `${id} should not be in a sync store snapshot`);
   id = "TELEMETRY_TEST_MULTIPLE_STORES";
@@ -1850,8 +1877,10 @@ add_task(async function test_multistore_keyed_sync_snapshot() {
   hist.add("key-1", 1);
 
   // Getting snapshot and clearing
-  snapshot = Telemetry.getSnapshotForKeyedHistograms("main", /* clear */ true)
-    .parent;
+  snapshot = Telemetry.getSnapshotForKeyedHistograms(
+    "main",
+    /* clear */ true
+  ).parent;
   id = "TELEMETRY_TEST_KEYED_LINEAR";
   Assert.ok(id in snapshot, `${id} should be in a main store snapshot`);
   id = "TELEMETRY_TEST_KEYED_MULTIPLE_STORES";
@@ -1859,8 +1888,10 @@ add_task(async function test_multistore_keyed_sync_snapshot() {
   id = "TELEMETRY_TEST_KEYED_SYNC_ONLY";
   Assert.ok(!(id in snapshot), `${id} should not be in a main store snapshot`);
 
-  snapshot = Telemetry.getSnapshotForKeyedHistograms("sync", /* clear */ true)
-    .parent;
+  snapshot = Telemetry.getSnapshotForKeyedHistograms(
+    "sync",
+    /* clear */ true
+  ).parent;
   id = "TELEMETRY_TEST_KEYED_LINEAR";
   Assert.ok(!(id in snapshot), `${id} should not be in a sync store snapshot`);
   id = "TELEMETRY_TEST_KEYED_MULTIPLE_STORES";

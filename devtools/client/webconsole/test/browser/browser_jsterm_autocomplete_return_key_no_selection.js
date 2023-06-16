@@ -18,7 +18,7 @@ const {
   getHistoryEntries,
 } = require("resource://devtools/client/webconsole/selectors/history.js");
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm, ui } = hud;
 

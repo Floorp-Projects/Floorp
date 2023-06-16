@@ -26,9 +26,10 @@ AntiTracking.runTest(
 
           // We should use the principal of the TEST_DOMAIN since the storage
           // permission is saved under it.
-          let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-            "http://example.net/"
-          );
+          let principal =
+            Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+              "http://example.net/"
+            );
 
           for (let perm of Services.perms.getAllForPrincipal(principal)) {
             // Ignore permissions other than storage access
@@ -65,9 +66,10 @@ AntiTracking.runTest(
       // so we don't check it.
       if (!SpecialPowers.useRemoteSubframes) {
         let Services = SpecialPowers.Services;
-        let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-          "http://example.net/"
-        );
+        let principal =
+          Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+            "http://example.net/"
+          );
 
         for (let perm of Services.perms.getAllForPrincipal(principal)) {
           // Ignore permissions other than storage access

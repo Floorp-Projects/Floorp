@@ -16,7 +16,7 @@ add_task(async function initialState() {
         ["signon.firefoxRelay.feature", "available"],
         ["signon.rememberSignons", true],
       ],
-      expected: "unchecked",
+      expected: "checked",
     },
     {
       initialPrefs: [
@@ -44,7 +44,7 @@ add_task(async function initialState() {
         ["signon.firefoxRelay.feature", "available"],
         ["signon.rememberSignons", false],
       ],
-      expected: "unchecked",
+      expected: "checked",
     },
     {
       initialPrefs: [
@@ -73,7 +73,7 @@ add_task(async function initialState() {
         gBrowser,
         url: "about:preferences#privacy",
       },
-      async function(browser) {
+      async function (browser) {
         const doc = browser.contentDocument;
         const relayGroup = doc.getElementById("relayIntegrationBox");
         const checkbox = doc.getElementById("relayIntegration");
@@ -117,7 +117,7 @@ add_task(async function initialState() {
 add_task(async function toggleRelayIntegration() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["signon.firefoxRelay.feature", "available"],
+      ["signon.firefoxRelay.feature", "enabled"],
       ["signon.rememberSignons", true],
     ],
   });
@@ -138,7 +138,7 @@ add_task(async function toggleRelayIntegration() {
       Assert.equal(doc.activeElement, relayCheckbox, "checkbox is focused");
       Assert.equal(
         relayCheckbox.checked,
-        false,
+        true,
         "#relayIntegration checkbox is not checked"
       );
 
@@ -167,19 +167,19 @@ add_task(async function toggleRelayIntegration() {
       }
 
       await clickOnFeatureCheckbox(
-        "enabled",
-        true,
-        'Turn integration on from "available" feature state (first time)'
-      );
-      await clickOnFeatureCheckbox(
         "disabled",
         false,
         'Turn integration off from "enabled" feature state'
       );
       await clickOnFeatureCheckbox(
-        "enabled",
+        "available",
         true,
-        'Turn integration on from "disabled" feature state'
+        'Turn integration on from "enabled" feature state'
+      );
+      await clickOnFeatureCheckbox(
+        "disabled",
+        false,
+        'Turn integration off from "enabled" feature state'
       );
     }
   );
@@ -200,7 +200,7 @@ add_task(async function toggleRememberSignon() {
       gBrowser,
       url: "about:preferences#privacy",
     },
-    async function(browser) {
+    async function (browser) {
       const doc = browser.contentDocument;
       const checkbox = doc.getElementById("savePasswords");
       const relayCheckbox = doc.getElementById("relayIntegration");

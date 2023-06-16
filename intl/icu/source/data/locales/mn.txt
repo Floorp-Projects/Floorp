@@ -20,7 +20,399 @@ mn{
     }
     MoreInformation{"?"}
     NumberElements{
+        adlm{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        arab{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"#,##0.00 ¤"}
+                accountingFormat%noCurrency{"#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                scientificFormat{"#E0"}
+            }
+        }
+        arabext{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        bali{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        beng{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        brah{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        cakm{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        cham{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
         default{"latn"}
+        deva{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        fullwide{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        gong{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        gonm{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        gujr{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        guru{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        hanidec{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        java{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        kali{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        khmr{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        knda{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        lana{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        lanatham{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        laoo{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
         latn{
             miscPatterns{
                 approximately{"~{0}"}
@@ -228,6 +620,42 @@ mn{
                 timeSeparator{":"}
             }
         }
+        lepc{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        limb{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
         minimalPairs{
             ordinal{
                 other{"{0}-р баруун эргэлтээр орно уу"}
@@ -238,9 +666,679 @@ mn{
             }
         }
         minimumGroupingDigits{"1"}
+        mlym{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        mong{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        mtei{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        mymr{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        mymrshan{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
         native{"latn"}
+        nkoo{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        olck{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        orya{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        osma{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        rohg{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        saur{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        shrd{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        sora{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        sund{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        takr{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        talu{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        tamldec{
+            miscPatterns{
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        telu{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        thai{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        tibt{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
+        vaii{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"≥{0}"}
+                atMost{"≤{0}"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
     }
     calendar{
+        buddhist{
+            DateTimePatterns{
+                "HH:mm:ss (zzzz)",
+                "HH:mm:ss (z)",
+                "HH:mm:ss",
+                "HH:mm",
+                "G y 'оны' MMMM'ын' d. cccc 'гараг'",
+                "G y 'оны' MM 'сарын' dd",
+                "G y 'оны' MMM'ын' d",
+                "GGGGG y.MM.dd",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            DateTimePatterns%atTime{
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                E{"ccc"}
+                Ed{"dd. E"}
+                Gy{"G y"}
+                GyMMM{"G y 'оны' MMM"}
+                GyMMMEd{"G y 'оны' MMM'ын' d. E"}
+                GyMMMd{"G y 'оны' MMM'ын' d"}
+                GyMd{"GGGGG y.MM.dd"}
+                M{"LLLLL"}
+                MEd{"MMMMM/dd. E"}
+                MMM{"LLL"}
+                MMMEd{"MMM'ын' d. E"}
+                MMMMd{"MMMM'ын' d"}
+                MMMd{"MMM'ын' d"}
+                Md{"MMMMM/dd"}
+                d{"d"}
+                y{"G y"}
+                yyyy{"G y"}
+                yyyyM{"GGGGG y MMMMM"}
+                yyyyMEd{"GGGGG y.MM.dd. E"}
+                yyyyMMM{"G y 'оны' MMM"}
+                yyyyMMMEd{"G y 'оны' MMM'ын' d. E"}
+                yyyyMMMM{"G y 'оны' MMMM"}
+                yyyyMMMd{"G y 'оны' MMM'ын' d"}
+                yyyyMd{"GGGGG y.MM.dd"}
+                yyyyQQQ{"G y 'оны' QQQ"}
+                yyyyQQQQ{"G y 'оны' QQQQ"}
+            }
+            eras{
+                narrow{
+                    "BE",
+                }
+                wide{
+                    "BE",
+                }
+            }
+            intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h–h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm–h:mm B"}
+                    m{"h:mm–h:mm B"}
+                }
+                Gy{
+                    G{"G y – G y"}
+                    y{"G y–y"}
+                }
+                GyM{
+                    G{"GGGGG y-MM – GGGGG y-MM"}
+                    M{"GGGGG y-MM – y-MM"}
+                    y{"GGGGG y-MM – y-MM"}
+                }
+                GyMEd{
+                    G{"GGGGG y-MM-dd, E – GGGGG y-MM-dd, E"}
+                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                }
+                GyMMM{
+                    G{"G y MMM – G y MMM"}
+                    M{"G y MMM–MMM"}
+                    y{"G y MMM – y MMM"}
+                }
+                GyMMMEd{
+                    G{"G y MMM d, E – G y MMM d, E"}
+                    M{"G y MMM d, E – MMM d, E"}
+                    d{"G y MMM d, E – MMM d, E"}
+                    y{"G y MMM d, E – y MMM d, E"}
+                }
+                GyMMMd{
+                    G{"G y MMM d – G y MMM d"}
+                    M{"G y MMM d – MMM d"}
+                    d{"G y MMM d–d"}
+                    y{"G y MMM d – y MMM d"}
+                }
+                GyMd{
+                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
+                    M{"GGGGG y-MM-dd – y-MM-dd"}
+                    d{"GGGGG y-MM-dd – y-MM-dd"}
+                    y{"GGGGG y-MM-dd – y-MM-dd"}
+                }
+                H{
+                    H{"HH–HH"}
+                }
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm–HH:mm v"}
+                    m{"HH:mm–HH:mm v"}
+                }
+                Hv{
+                    H{"HH–HH v"}
+                }
+                M{
+                    M{"MMMMM – MMMMM 'сар'"}
+                }
+                MEd{
+                    M{"MMMMM/d E – MMMMM/d E"}
+                    d{"MMMMM/d E – MMMMM/d E"}
+                }
+                MMM{
+                    M{"MMMMM – MMMMM 'сар'"}
+                }
+                MMMEd{
+                    M{"MMMMM/d E – MMMMM/d E"}
+                    d{"MMMMM/d E – MMMMM/d E"}
+                }
+                MMMd{
+                    M{"MMMMM/d – MMMMM/d"}
+                    d{"MMMMM/d – d"}
+                }
+                Md{
+                    M{"MMMMM/d – MMMMM/d"}
+                    d{"MMMMM/d – MMMMM/d"}
+                }
+                d{
+                    d{"d – d"}
+                }
+                fallback{"{0} – {1}"}
+                h{
+                    a{"h a – h a"}
+                    h{"h–h a"}
+                }
+                hm{
+                    a{"h:mm a – h:mm a"}
+                    h{"h:mm–h:mm a"}
+                    m{"h:mm–h:mm a"}
+                }
+                hmv{
+                    a{"h:mm a – h:mm a v"}
+                    h{"h:mm–h:mm a v"}
+                    m{"h:mm–h:mm a v"}
+                }
+                hv{
+                    a{"h a – h a v"}
+                    h{"h–h a v"}
+                }
+                y{
+                    y{"G y–y"}
+                }
+                yM{
+                    M{"GGGGG y 'оны' MMMMM–MMMMM 'сар'"}
+                    y{"GGGGG y 'оны' MMMMM 'сар' – y 'оны' MMMMM 'сар'"}
+                }
+                yMEd{
+                    M{"GGGGG y 'оны' MMMMM/dd E – MMMMM/dd E"}
+                    d{"GGGGG y 'оны' MMMMM/dd E – MMMMM/dd E"}
+                    y{"GGGGG y 'оны' MMMMM/dd E – y 'оны' MMMMM/dd E"}
+                }
+                yMMM{
+                    M{"G y 'оны' MMMMM – MMMMM 'сар'"}
+                    y{"G y 'оны' MMMMM 'сар' – y 'оны' MMMMM 'сар'"}
+                }
+                yMMMEd{
+                    M{"G y 'оны' MMMMM/dd E – MMMMM/dd E"}
+                    d{"G y 'оны' MMMMM/dd E – MMMMM/dd E"}
+                    y{"G y 'оны' MMMMM/dd E – y 'оны' MMMMM/dd E"}
+                }
+                yMMMM{
+                    M{"G y 'оны' MMMMM – MMMMM 'сар'"}
+                    y{"G y 'оны' MMMMM 'сар' – y 'оны' MMMMM 'сар'"}
+                }
+                yMMMd{
+                    M{"G y 'оны' MMMMM/dd – MMMMM/dd"}
+                    d{"G y 'оны' MMMMM/dd – dd"}
+                    y{"G y 'оны' MMMMM/dd – y 'оны' MMMMM/dd"}
+                }
+                yMd{
+                    M{"GGGGG y 'оны' MMMMM/dd – MMMMM/dd"}
+                    d{"GGGGG y 'оны' MMMMM/dd – MMMMM/dd"}
+                    y{"GGGGG y 'оны' MMMMM/dd – y 'оны' MMMMM/dd"}
+                }
+            }
+        }
+        chinese{
+            DateTimePatterns{
+                "HH:mm:ss (zzzz)",
+                "HH:mm:ss (z)",
+                "HH:mm:ss",
+                "HH:mm",
+                "r(U) 'оны' MM 'сарын' d, EEEE",
+                "r(U) 'оны' MM-'р' 'сарын' d",
+                "r.MM.d",
+                "r-MM-dd",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "1-р сар",
+                        "2-р сар",
+                        "3-р сар",
+                        "4-р сар",
+                        "5-р сар",
+                        "6-р сар",
+                        "7-р сар",
+                        "8-р сар",
+                        "9-р сар",
+                        "10-р сар",
+                        "11-р сар",
+                        "12-р сар",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
+                    wide{
+                        "1-р сар",
+                        "2-р сар",
+                        "3-р сар",
+                        "4-р сар",
+                        "5-р сар",
+                        "6-р сар",
+                        "7-р сар",
+                        "8-р сар",
+                        "9-р сар",
+                        "10-р сар",
+                        "11-р сар",
+                        "12-р сар",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "1-р сар",
+                        "2-р сар",
+                        "3-р сар",
+                        "4-р сар",
+                        "5-р сар",
+                        "6-р сар",
+                        "7-р сар",
+                        "8-р сар",
+                        "9-р сар",
+                        "10-р сар",
+                        "11-р сар",
+                        "12-р сар",
+                    }
+                    wide{
+                        "1-р сар",
+                        "2-р сар",
+                        "3-р сар",
+                        "4-р сар",
+                        "5-р сар",
+                        "6-р сар",
+                        "7-р сар",
+                        "8-р сар",
+                        "9-р сар",
+                        "10-р сар",
+                        "11-р сар",
+                        "12-р сар",
+                    }
+                }
+            }
+        }
         generic{
             DateTimePatterns{
                 "HH:mm:ss (zzzz)",
@@ -252,6 +1350,12 @@ mn{
                 "G y 'оны' MMM'ын' d",
                 "GGGGG y.MM.dd",
                 "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            DateTimePatterns%atTime{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -430,6 +1534,12 @@ mn{
                 "y 'оны' MMM'ын' d",
                 "y.MM.dd",
                 "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            DateTimePatterns%atTime{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -652,6 +1762,10 @@ mn{
                 narrow{
                     "МЭӨ",
                     "МЭ",
+                }
+                narrow%variant{
+                    "НТӨ",
+                    "НТ",
                 }
                 wide{
                     "манай эриний өмнөх",
@@ -1011,6 +2125,13 @@ mn{
         }
         day-narrow{
             dn{"өдөр"}
+            relative{
+                "-1"{"өчигдөр"}
+                "-2"{"уржигдар"}
+                "0"{"өнөөдөр"}
+                "1"{"маргааш"}
+                "2"{"нөгөөдөр"}
+            }
             relativeTime{
                 future{
                     one{"{0} өдрийн дараа"}
@@ -1024,6 +2145,13 @@ mn{
         }
         day-short{
             dn{"өдөр"}
+            relative{
+                "-1"{"өчигдөр"}
+                "-2"{"уржигдар"}
+                "0"{"өнөөдөр"}
+                "1"{"маргааш"}
+                "2"{"нөгөөдөр"}
+            }
             relativeTime{
                 future{
                     one{"{0} өдрийн дараа"}
@@ -1131,6 +2259,9 @@ mn{
         }
         hour-narrow{
             dn{"ц"}
+            relative{
+                "0"{"энэ цаг"}
+            }
             relativeTime{
                 future{
                     one{"{0} ц дараа"}
@@ -1144,6 +2275,9 @@ mn{
         }
         hour-short{
             dn{"ц"}
+            relative{
+                "0"{"энэ цаг"}
+            }
             relativeTime{
                 future{
                     one{"{0} ц дараа"}
@@ -1173,6 +2307,9 @@ mn{
         }
         minute-narrow{
             dn{"мин"}
+            relative{
+                "0"{"энэ минут"}
+            }
             relativeTime{
                 future{
                     one{"{0} мин дараа"}
@@ -1186,6 +2323,9 @@ mn{
         }
         minute-short{
             dn{"мин"}
+            relative{
+                "0"{"энэ минут"}
+            }
             relativeTime{
                 future{
                     one{"{0} мин дараа"}
@@ -1268,6 +2408,11 @@ mn{
         }
         month-narrow{
             dn{"сар"}
+            relative{
+                "-1"{"өнгөрсөн сар"}
+                "0"{"энэ сар"}
+                "1"{"ирэх сар"}
+            }
             relativeTime{
                 future{
                     one{"{0} сарын дараа"}
@@ -1281,6 +2426,11 @@ mn{
         }
         month-short{
             dn{"сар"}
+            relative{
+                "-1"{"өнгөрсөн сар"}
+                "0"{"энэ сар"}
+                "1"{"ирэх сар"}
+            }
             relativeTime{
                 future{
                     one{"{0} сарын дараа"}
@@ -1312,6 +2462,11 @@ mn{
         }
         quarter-narrow{
             dn{"улирал"}
+            relative{
+                "-1"{"өнгөрсөн улирал"}
+                "0"{"энэ улирал"}
+                "1"{"дараагийн улирал"}
+            }
             relativeTime{
                 future{
                     one{"{0} улирлын дараа"}
@@ -1325,6 +2480,11 @@ mn{
         }
         quarter-short{
             dn{"улирал"}
+            relative{
+                "-1"{"өнгөрсөн улирал"}
+                "0"{"энэ улирал"}
+                "1"{"дараагийн улирал"}
+            }
             relativeTime{
                 future{
                     one{"{0} улирлын дараа"}
@@ -1405,6 +2565,9 @@ mn{
         }
         second-narrow{
             dn{"сек"}
+            relative{
+                "0"{"одоо"}
+            }
             relativeTime{
                 future{
                     one{"{0} сек дараа"}
@@ -1418,6 +2581,9 @@ mn{
         }
         second-short{
             dn{"сек"}
+            relative{
+                "0"{"одоо"}
+            }
             relativeTime{
                 future{
                     one{"{0} сек дараа"}
@@ -1737,6 +2903,11 @@ mn{
         }
         year-narrow{
             dn{"жил"}
+            relative{
+                "-1"{"өнгөрсөн жил"}
+                "0"{"энэ жил"}
+                "1"{"ирэх жил"}
+            }
             relativeTime{
                 future{
                     one{"{0} жилийн дараа"}
@@ -1750,6 +2921,11 @@ mn{
         }
         year-short{
             dn{"жил"}
+            relative{
+                "-1"{"өнгөрсөн жил"}
+                "0"{"энэ жил"}
+                "1"{"ирэх жил"}
+            }
             relativeTime{
                 future{
                     one{"{0} жилийн дараа"}
@@ -1779,10 +2955,16 @@ mn{
             start{"{0}, {1}"}
         }
         or-narrow{
+            2{"{0} эсвэл {1}"}
             end{"{0}, {1} зэргийн аль нэг"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         or-short{
+            2{"{0} эсвэл {1}"}
             end{"{0}, {1} зэргийн аль нэг"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         standard{
             2{"{0}, {1}"}
@@ -1793,6 +2975,14 @@ mn{
         standard-narrow{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-short{
+            2{"{0}, {1}"}
+            end{"{0}, {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         unit{
             2{"{0} {1}"}
@@ -1820,6 +3010,10 @@ mn{
     }
     personNames{
         nameOrderLocales{
+            givenFirst{
+                "und",
+                "en",
+            }
             surnameFirst{
                 "hu",
                 "ja",
@@ -1831,50 +3025,48 @@ mn{
             }
         }
         namePattern{
-            givenFirst-long-addressing-formal{"{prefix} {surname}"}
+            givenFirst-long-addressing-formal{"{title} {surname}"}
             givenFirst-long-addressing-informal{"{given-informal}"}
             givenFirst-long-monogram-informal{"{given-informal-monogram-allCaps}{surname-monogram-allCaps}"}
-            givenFirst-long-referring-formal{"{given} {given2} {surname} {suffix}"}
             givenFirst-long-referring-informal{"{given-informal} {surname}"}
-            givenFirst-medium-addressing-formal{"{prefix} {given}"}
+            givenFirst-medium-addressing-formal{"{title} {surname}"}
             givenFirst-medium-addressing-informal{"{given-informal}"}
             givenFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             givenFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            givenFirst-medium-referring-formal{"{suffix} {given} {given2-initial} {surname}"}
+            givenFirst-medium-referring-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
             givenFirst-medium-referring-informal{"{given-informal} {surname}"}
-            givenFirst-short-addressing-formal{"{prefix} {surname}"}
+            givenFirst-short-addressing-formal{"{title} {surname}"}
             givenFirst-short-addressing-informal{"{given-informal}"}
             givenFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             givenFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
             givenFirst-short-referring-formal{"{given-initial} {given2-initial} {surname}"}
             givenFirst-short-referring-informal{"{given-informal} {surname-initial}"}
             sorting-long-referring-formal{"{surname-core}, {given} {given2} {surname-prefix}"}
-            sorting-long-referring-informal{"{surname} {given-informal}"}
+            sorting-long-referring-informal{"{surname}, {given-informal}"}
             sorting-medium-referring-formal{"{surname-core}, {given} {given2-initial} {surname-prefix}"}
-            sorting-medium-referring-informal{"{surname} {given-informal}"}
+            sorting-medium-referring-informal{"{surname}, {given-informal}"}
             sorting-short-referring-formal{"{surname-core}, {given-initial} {given2-initial} {surname-prefix}"}
-            sorting-short-referring-informal{"{surname} {given-informal}"}
-            surnameFirst-long-addressing-formal{"{prefix} {surname}"}
+            sorting-short-referring-informal{"{surname}, {given-informal}"}
+            surnameFirst-long-addressing-formal{"{title} {surname}"}
             surnameFirst-long-addressing-informal{"{given-informal}"}
             surnameFirst-long-monogram-formal{
                 "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
                 "llCaps}"
             }
             surnameFirst-long-monogram-informal{"{surname-monogram-allCaps}{given-informal-monogram-allCaps}"}
-            surnameFirst-long-referring-formal{"{suffix} {surname} {given} {given2}"}
             surnameFirst-long-referring-informal{"{surname} {given-informal}"}
-            surnameFirst-medium-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-medium-addressing-formal{"{title} {surname}"}
             surnameFirst-medium-addressing-informal{"{given-informal}"}
             surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            surnameFirst-medium-referring-formal{"{suffix} {surname} {given} {given2-initial}"}
+            surnameFirst-medium-referring-formal{"{surname} {given} {given2-initial} {generation}, {credentials}"}
             surnameFirst-medium-referring-informal{"{surname} {given-informal}"}
-            surnameFirst-short-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-short-addressing-formal{"{title} {surname}"}
             surnameFirst-short-addressing-informal{"{given-informal}"}
             surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
-            surnameFirst-short-referring-formal{"{surname-initial} {given}"}
-            surnameFirst-short-referring-informal{"{surname-initial} {given}"}
+            surnameFirst-short-referring-formal{"{surname} {given-initial} {given2-initial}"}
+            surnameFirst-short-referring-informal{"{surname} {given-initial}"}
         }
     }
 }

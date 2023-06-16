@@ -38,7 +38,7 @@
 /* global require */
 /* exported require */
 
-(function(exports) {
+(function (exports) {
   "use strict";
 
   if (exports.require) {
@@ -47,7 +47,7 @@
   }
 
   // Simple implementation of |require|
-  let require = (function() {
+  let require = (function () {
     /**
      * Mapping from module URI to module exports.
      *

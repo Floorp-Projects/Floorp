@@ -7,7 +7,7 @@
  * Test blocking and unblocking a request.
  */
 
-add_task(async function() {
+add_task(async function () {
   class DataTransfer {
     constructor() {
       this.BLOCKING_URL =
@@ -75,8 +75,9 @@ add_task(async function() {
     EventUtils.sendMouseEvent({ type: "mousedown" }, firstRequest);
     await waitForHeaders;
     normalRequestState = getSelectedRequest(store.getState());
-    normalRequestSize = firstRequest.querySelector(".requests-list-transferred")
-      .textContent;
+    normalRequestSize = firstRequest.querySelector(
+      ".requests-list-transferred"
+    ).textContent;
     info("Captured normal request");
 
     // Drag and drop the list item

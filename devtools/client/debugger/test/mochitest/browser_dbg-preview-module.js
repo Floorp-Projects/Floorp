@@ -7,7 +7,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger("doc-scripts.html");
 
   const onNavigated = navigate(dbg, "doc-on-load.html");

@@ -231,7 +231,7 @@ function* testSteps() {
 
   let count = 0;
 
-  objectStore.openCursor().onsuccess = function(event) {
+  objectStore.openCursor().onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -246,7 +246,7 @@ function* testSteps() {
 
   count = 0;
 
-  objectStore.openCursor(null).onsuccess = function(event) {
+  objectStore.openCursor(null).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -261,7 +261,7 @@ function* testSteps() {
 
   count = 0;
 
-  objectStore.openCursor(undefined).onsuccess = function(event) {
+  objectStore.openCursor(undefined).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -276,7 +276,7 @@ function* testSteps() {
 
   count = 0;
 
-  objectStore.openCursor(data[2].ssn).onsuccess = function(event) {
+  objectStore.openCursor(data[2].ssn).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -291,7 +291,7 @@ function* testSteps() {
 
   count = 0;
 
-  objectStore.openCursor("foo").onsuccess = function(event) {
+  objectStore.openCursor("foo").onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -307,7 +307,7 @@ function* testSteps() {
   count = 0;
   keyRange = IDBKeyRange.only(data[2].ssn);
 
-  objectStore.openCursor(keyRange).onsuccess = function(event) {
+  objectStore.openCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -323,7 +323,7 @@ function* testSteps() {
   count = 0;
   keyRange = IDBKeyRange.lowerBound(data[2].ssn);
 
-  objectStore.openCursor(keyRange).onsuccess = function(event) {
+  objectStore.openCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -339,7 +339,7 @@ function* testSteps() {
   count = 0;
   keyRange = IDBKeyRange.lowerBound(data[2].ssn, true);
 
-  objectStore.openCursor(keyRange).onsuccess = function(event) {
+  objectStore.openCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -355,7 +355,7 @@ function* testSteps() {
   count = 0;
   keyRange = IDBKeyRange.lowerBound("foo");
 
-  objectStore.openCursor(keyRange).onsuccess = function(event) {
+  objectStore.openCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -371,7 +371,7 @@ function* testSteps() {
   count = 0;
   keyRange = IDBKeyRange.bound(data[2].ssn, data[3].ssn);
 
-  objectStore.openCursor(keyRange).onsuccess = function(event) {
+  objectStore.openCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -387,7 +387,7 @@ function* testSteps() {
   count = 0;
   keyRange = IDBKeyRange.bound(data[2].ssn, data[3].ssn, true);
 
-  objectStore.openCursor(keyRange).onsuccess = function(event) {
+  objectStore.openCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -403,7 +403,7 @@ function* testSteps() {
   count = 0;
   keyRange = IDBKeyRange.bound(data[2].ssn, data[3].ssn, true, true);
 
-  objectStore.openCursor(keyRange).onsuccess = function(event) {
+  objectStore.openCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -420,7 +420,7 @@ function* testSteps() {
 
   count = 0;
 
-  index.openKeyCursor().onsuccess = function(event) {
+  index.openKeyCursor().onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -439,7 +439,7 @@ function* testSteps() {
 
   count = 0;
 
-  index.openKeyCursor(null).onsuccess = function(event) {
+  index.openKeyCursor(null).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -458,7 +458,7 @@ function* testSteps() {
 
   count = 0;
 
-  index.openKeyCursor(undefined).onsuccess = function(event) {
+  index.openKeyCursor(undefined).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -477,7 +477,7 @@ function* testSteps() {
 
   count = 0;
 
-  index.openKeyCursor(data[0].weight).onsuccess = function(event) {
+  index.openKeyCursor(data[0].weight).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -492,7 +492,7 @@ function* testSteps() {
 
   count = 0;
 
-  index.openKeyCursor("foo").onsuccess = function(event) {
+  index.openKeyCursor("foo").onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -508,7 +508,7 @@ function* testSteps() {
   count = 0;
   keyRange = IDBKeyRange.only("foo");
 
-  index.openKeyCursor(keyRange).onsuccess = function(event) {
+  index.openKeyCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -528,7 +528,7 @@ function* testSteps() {
   count = 0;
   keyRange = IDBKeyRange.only(data[0].weight);
 
-  index.openKeyCursor(keyRange).onsuccess = function(event) {
+  index.openKeyCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -544,7 +544,7 @@ function* testSteps() {
   count = 0;
   keyRange = IDBKeyRange.lowerBound(data[weightSort[0]].weight);
 
-  index.openKeyCursor(keyRange).onsuccess = function(event) {
+  index.openKeyCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -564,7 +564,7 @@ function* testSteps() {
   count = 0;
   keyRange = IDBKeyRange.lowerBound(data[weightSort[0]].weight, true);
 
-  index.openKeyCursor(keyRange).onsuccess = function(event) {
+  index.openKeyCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -584,7 +584,7 @@ function* testSteps() {
   count = 0;
   keyRange = IDBKeyRange.lowerBound("foo");
 
-  index.openKeyCursor(keyRange).onsuccess = function(event) {
+  index.openKeyCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -604,7 +604,7 @@ function* testSteps() {
   count = 0;
   keyRange = IDBKeyRange.upperBound(data[weightSort[0]].weight);
 
-  index.openKeyCursor(keyRange).onsuccess = function(event) {
+  index.openKeyCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -624,7 +624,7 @@ function* testSteps() {
   count = 0;
   keyRange = IDBKeyRange.upperBound(data[weightSort[0]].weight, true);
 
-  index.openKeyCursor(keyRange).onsuccess = function(event) {
+  index.openKeyCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -646,7 +646,7 @@ function* testSteps() {
     data[weightSort[weightSort.length - 1]].weight
   );
 
-  index.openKeyCursor(keyRange).onsuccess = function(event) {
+  index.openKeyCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -669,7 +669,7 @@ function* testSteps() {
     true
   );
 
-  index.openKeyCursor(keyRange).onsuccess = function(event) {
+  index.openKeyCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -689,7 +689,7 @@ function* testSteps() {
   count = 0;
   keyRange = IDBKeyRange.upperBound("foo");
 
-  index.openKeyCursor(keyRange).onsuccess = function(event) {
+  index.openKeyCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -709,7 +709,7 @@ function* testSteps() {
   count = 0;
   keyRange = IDBKeyRange.upperBound(0);
 
-  index.openKeyCursor(keyRange).onsuccess = function(event) {
+  index.openKeyCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -732,7 +732,7 @@ function* testSteps() {
     data[weightSort[weightSort.length - 1]].weight
   );
 
-  index.openKeyCursor(keyRange).onsuccess = function(event) {
+  index.openKeyCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -756,7 +756,7 @@ function* testSteps() {
     true
   );
 
-  index.openKeyCursor(keyRange).onsuccess = function(event) {
+  index.openKeyCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -781,7 +781,7 @@ function* testSteps() {
     true
   );
 
-  index.openKeyCursor(keyRange).onsuccess = function(event) {
+  index.openKeyCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -804,7 +804,7 @@ function* testSteps() {
     data[weightSort[weightSort.length - 1]].weight + 1
   );
 
-  index.openKeyCursor(keyRange).onsuccess = function(event) {
+  index.openKeyCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -827,7 +827,7 @@ function* testSteps() {
     data[weightSort[0]].weight - 1
   );
 
-  index.openKeyCursor(keyRange).onsuccess = function(event) {
+  index.openKeyCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -846,7 +846,7 @@ function* testSteps() {
     data[weightSort[2]].weight
   );
 
-  index.openKeyCursor(keyRange).onsuccess = function(event) {
+  index.openKeyCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -861,7 +861,7 @@ function* testSteps() {
 
   count = 0;
 
-  index.openCursor().onsuccess = function(event) {
+  index.openCursor().onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -880,7 +880,7 @@ function* testSteps() {
 
   count = 0;
 
-  index.openCursor(null).onsuccess = function(event) {
+  index.openCursor(null).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -899,7 +899,7 @@ function* testSteps() {
 
   count = 0;
 
-  index.openCursor(undefined).onsuccess = function(event) {
+  index.openCursor(undefined).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -918,7 +918,7 @@ function* testSteps() {
 
   count = 0;
 
-  index.openCursor(data[0].weight).onsuccess = function(event) {
+  index.openCursor(data[0].weight).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -933,7 +933,7 @@ function* testSteps() {
 
   count = 0;
 
-  index.openCursor("foo").onsuccess = function(event) {
+  index.openCursor("foo").onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -949,7 +949,7 @@ function* testSteps() {
   count = 0;
   keyRange = IDBKeyRange.only("foo");
 
-  index.openCursor(keyRange).onsuccess = function(event) {
+  index.openCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -969,7 +969,7 @@ function* testSteps() {
   count = 0;
   keyRange = IDBKeyRange.only(data[0].weight);
 
-  index.openCursor(keyRange).onsuccess = function(event) {
+  index.openCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -985,7 +985,7 @@ function* testSteps() {
   count = 0;
   keyRange = IDBKeyRange.lowerBound(data[weightSort[0]].weight);
 
-  index.openCursor(keyRange).onsuccess = function(event) {
+  index.openCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -1005,7 +1005,7 @@ function* testSteps() {
   count = 0;
   keyRange = IDBKeyRange.lowerBound(data[weightSort[0]].weight, true);
 
-  index.openCursor(keyRange).onsuccess = function(event) {
+  index.openCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -1025,7 +1025,7 @@ function* testSteps() {
   count = 0;
   keyRange = IDBKeyRange.lowerBound("foo");
 
-  index.openCursor(keyRange).onsuccess = function(event) {
+  index.openCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -1041,7 +1041,7 @@ function* testSteps() {
   count = 0;
   keyRange = IDBKeyRange.upperBound(data[weightSort[0]].weight);
 
-  index.openCursor(keyRange).onsuccess = function(event) {
+  index.openCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -1057,7 +1057,7 @@ function* testSteps() {
   count = 0;
   keyRange = IDBKeyRange.upperBound(data[weightSort[0]].weight, true);
 
-  index.openCursor(keyRange).onsuccess = function(event) {
+  index.openCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -1075,7 +1075,7 @@ function* testSteps() {
     data[weightSort[weightSort.length - 1]].weight
   );
 
-  index.openCursor(keyRange).onsuccess = function(event) {
+  index.openCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -1098,7 +1098,7 @@ function* testSteps() {
     true
   );
 
-  index.openCursor(keyRange).onsuccess = function(event) {
+  index.openCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -1118,7 +1118,7 @@ function* testSteps() {
   count = 0;
   keyRange = IDBKeyRange.upperBound("foo");
 
-  index.openCursor(keyRange).onsuccess = function(event) {
+  index.openCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -1138,7 +1138,7 @@ function* testSteps() {
   count = 0;
   keyRange = IDBKeyRange.upperBound(0);
 
-  index.openCursor(keyRange).onsuccess = function(event) {
+  index.openCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -1157,7 +1157,7 @@ function* testSteps() {
     data[weightSort[weightSort.length - 1]].weight
   );
 
-  index.openCursor(keyRange).onsuccess = function(event) {
+  index.openCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -1181,7 +1181,7 @@ function* testSteps() {
     true
   );
 
-  index.openCursor(keyRange).onsuccess = function(event) {
+  index.openCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -1206,7 +1206,7 @@ function* testSteps() {
     true
   );
 
-  index.openCursor(keyRange).onsuccess = function(event) {
+  index.openCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -1229,7 +1229,7 @@ function* testSteps() {
     data[weightSort[weightSort.length - 1]].weight + 1
   );
 
-  index.openCursor(keyRange).onsuccess = function(event) {
+  index.openCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -1252,7 +1252,7 @@ function* testSteps() {
     data[weightSort[0]].weight - 1
   );
 
-  index.openCursor(keyRange).onsuccess = function(event) {
+  index.openCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -1271,7 +1271,7 @@ function* testSteps() {
     data[weightSort[2]].weight
   );
 
-  index.openCursor(keyRange).onsuccess = function(event) {
+  index.openCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -1534,7 +1534,7 @@ function* testSteps() {
 
   count = 0;
 
-  index.openKeyCursor().onsuccess = function(event) {
+  index.openKeyCursor().onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -1553,7 +1553,7 @@ function* testSteps() {
 
   count = 0;
 
-  index.openKeyCursor(null).onsuccess = function(event) {
+  index.openKeyCursor(null).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -1572,7 +1572,7 @@ function* testSteps() {
 
   count = 0;
 
-  index.openKeyCursor(undefined).onsuccess = function(event) {
+  index.openKeyCursor(undefined).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -1591,7 +1591,7 @@ function* testSteps() {
 
   count = 0;
 
-  index.openKeyCursor(data[weightSort[0]].weight).onsuccess = function(event) {
+  index.openKeyCursor(data[weightSort[0]].weight).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -1606,7 +1606,7 @@ function* testSteps() {
 
   count = 0;
 
-  index.openKeyCursor("foo").onsuccess = function(event) {
+  index.openKeyCursor("foo").onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -1626,7 +1626,7 @@ function* testSteps() {
   count = 0;
   keyRange = IDBKeyRange.only(data[weightSort[0]].weight);
 
-  index.openKeyCursor(keyRange).onsuccess = function(event) {
+  index.openKeyCursor(keyRange).onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -1723,9 +1723,8 @@ function* testSteps() {
     );
   }
 
-  index.mozGetAll(
-    data[weightSort[0]].weight
-  ).onsuccess = grabEventAndContinueHandler;
+  index.mozGetAll(data[weightSort[0]].weight).onsuccess =
+    grabEventAndContinueHandler;
   event = yield undefined;
 
   is(event.target.result instanceof Array, true, "Got an array");
@@ -1774,9 +1773,8 @@ function* testSteps() {
     is(event.target.result[i], data[weightSort[i]].ssn, "Got correct value");
   }
 
-  index.mozGetAllKeys(
-    data[weightSort[0]].weight
-  ).onsuccess = grabEventAndContinueHandler;
+  index.mozGetAllKeys(data[weightSort[0]].weight).onsuccess =
+    grabEventAndContinueHandler;
   event = yield undefined;
 
   is(event.target.result instanceof Array, true, "Got an array");

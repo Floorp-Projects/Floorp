@@ -384,7 +384,10 @@ add_task(async function test_remove_rollouts() {
     "Called to set the rollout as !active"
   );
   Assert.ok(
-    manager.store.updateExperiment.calledWith(rollout.slug, { active: false }),
+    manager.store.updateExperiment.calledWith(rollout.slug, {
+      active: false,
+      unenrollReason: "some-reason",
+    }),
     "Called with expected parameters"
   );
 });
