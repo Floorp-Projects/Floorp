@@ -98,9 +98,9 @@ function continueResponses() {
  * Creates a download, which could be interrupted in the middle of it's progress.
  */
 function promiseInterruptibleDownload(extension = ".txt") {
-  let interruptibleFile = FileUtils.getFile("TmpD", [
-    `interruptible${extension}`,
-  ]);
+  let interruptibleFile = new FileUtils.File(
+    PathUtils.join(PathUtils.tempDir, `interruptible${extension}`)
+  );
   interruptibleFile.createUnique(
     Ci.nsIFile.NORMAL_FILE_TYPE,
     FileUtils.PERMS_FILE
