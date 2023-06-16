@@ -623,3 +623,73 @@ PartitionedStorageHelper.runTest(
     ["privacy.partition.serviceWorkers", true],
   ]
 );
+
+PartitionedStorageHelper.runTest(
+  "ServiceWorkers - Private Browsing with partitioning disabled",
+  async (win3rdParty, win1stParty, allowed) => {
+    // Partitioned serviceWorkers are disabled in third-party context.
+    ok(
+      !win3rdParty.navigator.serviceWorker,
+      "ServiceWorker should not be available"
+    );
+    ok(
+      !win1stParty.navigator.serviceWorker,
+      "ServiceWorker should not be available"
+    );
+  },
+
+  async _ => {
+    await new Promise(resolve => {
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+        resolve()
+      );
+    });
+  },
+
+  [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.ipc.processCount", 1],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true],
+    ["privacy.partition.serviceWorkers", false],
+  ],
+
+  {
+    runInPrivateWindow: true,
+  }
+);
+
+PartitionedStorageHelper.runTest(
+  "ServiceWorkers - Private Browsing with partitioning enabled",
+  async (win3rdParty, win1stParty, allowed) => {
+    // Partitioned serviceWorkers are disabled in third-party context.
+    ok(
+      !win3rdParty.navigator.serviceWorker,
+      "ServiceWorker should not be available"
+    );
+    ok(
+      !win1stParty.navigator.serviceWorker,
+      "ServiceWorker should not be available"
+    );
+  },
+
+  async _ => {
+    await new Promise(resolve => {
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+        resolve()
+      );
+    });
+  },
+
+  [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.ipc.processCount", 1],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true],
+    ["privacy.partition.serviceWorkers", true],
+  ],
+
+  {
+    runInPrivateWindow: true,
+  }
+);
