@@ -857,6 +857,17 @@ var TranslationsPanel = new (class {
    * @param {Event} event
    */
   async open(event) {
+    event.stopPropagation();
+    if (
+      (event.type == "click" && event.button != 0) ||
+      (event.type == "keypress" &&
+        event.charCode != KeyEvent.DOM_VK_SPACE &&
+        event.keyCode != KeyEvent.DOM_VK_RETURN)
+    ) {
+      // Allow only left click, space, or enter.
+      return;
+    }
+
     const { panel, button } = this.elements;
 
     await this.#ensureLangListsBuilt();
