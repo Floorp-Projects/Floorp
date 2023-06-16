@@ -327,6 +327,13 @@ export default class LoginItem extends HTMLElement {
         break;
       }
       case "blur": {
+        // TODO(Bug 1838494): Remove this if block
+        // This is a temporary fix until Bug 1750072 lands
+        const focusCheckboxNext = event.relatedTarget === this._revealCheckbox;
+        if (focusCheckboxNext) {
+          return;
+        }
+
         if (this.dataset.editing && event.target === this._passwordInput) {
           this._revealCheckbox.checked = false;
           this._updatePasswordRevealState();
@@ -350,9 +357,18 @@ export default class LoginItem extends HTMLElement {
         break;
       }
       case "focus": {
-        const { target } = event;
+        // TODO(Bug 1838494): Remove this if block
+        // This is a temporary fix until Bug 1750072 lands
+        const focusFromCheckbox = event.relatedTarget === this._revealCheckbox;
+        const isEditingMode = this.dataset.editing || this.dataset.isNewLogin;
+        if (focusFromCheckbox && isEditingMode) {
+          this._passwordInput.type = this._revealCheckbox.checked
+            ? "text"
+            : "password";
+          return;
+        }
 
-        if (target === this._passwordDisplayInput) {
+        if (event.target === this._passwordDisplayInput) {
           this._revealCheckbox.checked = !!this.dataset.editing;
           this._updatePasswordRevealState();
         }
@@ -362,6 +378,14 @@ export default class LoginItem extends HTMLElement {
       case "click": {
         let classList = event.currentTarget.classList;
         if (classList.contains("reveal-password-checkbox")) {
+          // TODO(Bug 1838494): Remove this if block
+          // This is a temporary fix until Bug 1750072 lands
+          if (this.dataset.editing || this.dataset.isNewLogin) {
+            this._passwordDisplayInput.replaceWith(this._passwordInput);
+            this._passwordInput.type = "text";
+            this._passwordInput.focus();
+            return;
+          }
           // We prompt for the primary password when entering edit mode already.
           if (this._revealCheckbox.checked && !this.dataset.editing) {
             let primaryPasswordAuth = await promptForPrimaryPassword(
