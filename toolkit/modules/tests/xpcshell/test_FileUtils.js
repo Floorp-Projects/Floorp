@@ -23,42 +23,6 @@ function do_check_throws(f, result, stack) {
 
 const gProfD = do_get_profile();
 
-add_test(function test_getFile() {
-  let file = FileUtils.getFile("ProfD", ["foobar"]);
-  Assert.ok(file instanceof Ci.nsIFile);
-  Assert.ok(!file.exists());
-
-  let other = gProfD.clone();
-  other.append("foobar");
-  Assert.ok(file.equals(other));
-
-  run_next_test();
-});
-
-add_test(function test_getFile_nonexistentDir() {
-  do_check_throws(function () {
-    FileUtils.getFile("NonexistentD", ["foobar"]);
-  }, Cr.NS_ERROR_FAILURE);
-
-  run_next_test();
-});
-
-add_test(function test_getFile_createDirs() {
-  let file = FileUtils.getFile("ProfD", ["a", "b", "foobar"]);
-  Assert.ok(file instanceof Ci.nsIFile);
-  Assert.ok(!file.exists());
-
-  let other = gProfD.clone();
-  other.append("a");
-  Assert.ok(other.isDirectory());
-  other.append("b");
-  Assert.ok(other.isDirectory());
-  other.append("foobar");
-  Assert.ok(file.equals(other));
-
-  run_next_test();
-});
-
 add_test(function test_getDir() {
   let dir = FileUtils.getDir("ProfD", ["foodir"]);
   Assert.ok(dir instanceof Ci.nsIFile);
@@ -97,7 +61,9 @@ add_test(function test_getDir_shouldCreate() {
 });
 
 var openFileOutputStream_defaultFlags = function (aKind, aFileName) {
-  let file = FileUtils.getFile("ProfD", [aFileName]);
+  let file = new FileUtils.File(
+    PathUtils.join(PathUtils.profileDir, aFileName)
+  );
   let fos;
   Assert.ok(aKind == "atomic" || aKind == "safe" || aKind == "");
   if (aKind == "atomic") {
@@ -133,7 +99,9 @@ var openFileOutputStream_defaultFlags = function (aKind, aFileName) {
 };
 
 var openFileOutputStream_modeFlags = function (aKind, aFileName) {
-  let file = FileUtils.getFile("ProfD", [aFileName]);
+  let file = new FileUtils.File(
+    PathUtils.join(PathUtils.profileDir, aFileName)
+  );
   let fos;
   Assert.ok(aKind == "atomic" || aKind == "safe" || aKind == "");
   if (aKind == "atomic") {
@@ -153,7 +121,9 @@ var openFileOutputStream_modeFlags = function (aKind, aFileName) {
 };
 
 var closeFileOutputStream = function (aKind, aFileName) {
-  let file = FileUtils.getFile("ProfD", [aFileName]);
+  let file = new FileUtils.File(
+    PathUtils.join(PathUtils.profileDir, aFileName)
+  );
   let fos;
   Assert.ok(aKind == "atomic" || aKind == "safe");
   if (aKind == "atomic") {
@@ -217,7 +187,9 @@ add_test(function test_closeSafeFileOutputStream() {
 });
 
 add_test(function test_newFile() {
-  let testfile = FileUtils.getFile("ProfD", ["test"]);
+  let testfile = new FileUtils.File(
+    PathUtils.join(PathUtils.profileDir, "test")
+  );
   let testpath = testfile.path;
   let file = new FileUtils.File(testpath);
   Assert.ok(file instanceof Ci.nsIFile);
