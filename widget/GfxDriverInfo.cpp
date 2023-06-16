@@ -748,6 +748,7 @@ const nsAString& GfxDriverInfo::GetDriverVendor(DriverVendor id) {
     DECLARE_DRIVER_VENDOR_ID(SoftwareMesaAll, "mesa/sw-all");
     DECLARE_DRIVER_VENDOR_ID(MesaNonIntelNvidiaAtiAll,
                              "mesa/non-intel-nvidia-ati-all");
+    DECLARE_DRIVER_VENDOR_ID(MesaVM, "mesa/vmwgfx");
     case DriverVendor::Max:  // Suppress a warning.
       DECLARE_DRIVER_VENDOR_ID(All, "");
   }

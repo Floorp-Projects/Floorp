@@ -242,6 +242,8 @@ enum DriverVendor : uint8_t {
   SoftwareMesaAll,
   // Wildcard for all non-Intel/NVIDIA/ATI Mesa drivers.
   MesaNonIntelNvidiaAtiAll,
+  // Running in VM.
+  MesaVM,
 
   Max
 };
