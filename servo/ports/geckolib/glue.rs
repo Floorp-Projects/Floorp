@@ -10,6 +10,7 @@ use cssparser::{Parser, ParserInput, SourceLocation, UnicodeRange};
 use dom::{DocumentState, ElementState};
 use malloc_size_of::MallocSizeOfOps;
 use nsstring::{nsCString, nsString};
+use selectors::matching::IgnoreNthChildForInvalidation;
 use selectors::NthIndexCache;
 use servo_arc::{Arc, ArcBorrow};
 use smallvec::SmallVec;
@@ -2516,6 +2517,7 @@ pub extern "C" fn Servo_StyleRule_SelectorMatchesElement(
             visited_mode,
             quirks_mode,
             NeedsSelectorFlags::No,
+            IgnoreNthChildForInvalidation::No,
         );
         ctx.with_shadow_host(host, |ctx| {
             matches_selector(selector, 0, None, &element, ctx)

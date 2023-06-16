@@ -16,8 +16,10 @@ use crate::rule_tree::StrongRuleNode;
 use crate::selector_parser::{PseudoElement, SelectorImpl};
 use crate::stylist::RuleInclusion;
 use log::Level::Trace;
-use selectors::matching::{MatchingContext, NeedsSelectorFlags, RelativeSelectorMatchingState};
-use selectors::matching::{MatchingMode, VisitedHandlingMode};
+use selectors::matching::{
+    IgnoreNthChildForInvalidation, MatchingContext, MatchingMode, NeedsSelectorFlags,
+    RelativeSelectorMatchingState, VisitedHandlingMode,
+};
 use servo_arc::Arc;
 
 /// Whether pseudo-elements should be resolved or not.
@@ -471,6 +473,7 @@ where
             visited_handling,
             self.context.shared.quirks_mode(),
             NeedsSelectorFlags::Yes,
+            IgnoreNthChildForInvalidation::No,
         );
 
         let stylist = &self.context.shared.stylist;
@@ -565,6 +568,7 @@ where
             visited_handling,
             self.context.shared.quirks_mode(),
             NeedsSelectorFlags::Yes,
+            IgnoreNthChildForInvalidation::No,
         );
         matching_context.extra_data.originating_element_style = Some(originating_element_style);
 

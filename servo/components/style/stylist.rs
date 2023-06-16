@@ -48,8 +48,8 @@ use malloc_size_of::MallocSizeOf;
 use malloc_size_of::{MallocShallowSizeOf, MallocSizeOfOps, MallocUnconditionalShallowSizeOf};
 use selectors::attr::{CaseSensitivity, NamespaceConstraint};
 use selectors::bloom::BloomFilter;
-use selectors::matching::VisitedHandlingMode;
 use selectors::matching::{matches_selector, MatchingContext, MatchingMode, NeedsSelectorFlags};
+use selectors::matching::{IgnoreNthChildForInvalidation, VisitedHandlingMode};
 use selectors::parser::{
     AncestorHashes, Combinator, Component, Selector, SelectorIter, SelectorList,
 };
@@ -1116,6 +1116,7 @@ impl Stylist {
             &mut nth_index_cache,
             self.quirks_mode,
             needs_selector_flags,
+            IgnoreNthChildForInvalidation::No,
         );
 
         matching_context.pseudo_element_matching_fn = matching_fn;
@@ -1150,6 +1151,7 @@ impl Stylist {
                 VisitedHandlingMode::RelevantLinkVisited,
                 self.quirks_mode,
                 needs_selector_flags,
+                IgnoreNthChildForInvalidation::No,
             );
             matching_context.pseudo_element_matching_fn = matching_fn;
             matching_context.extra_data.originating_element_style = Some(originating_element_style);
@@ -1368,6 +1370,7 @@ impl Stylist {
             nth_index_cache,
             self.quirks_mode,
             needs_selector_flags,
+            IgnoreNthChildForInvalidation::No,
         );
 
         // Note that, by the time we're revalidating, we're guaranteed that the
