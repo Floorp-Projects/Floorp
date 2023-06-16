@@ -12,6 +12,7 @@
         }
         */
 
+        /* Test for AMO
         {
             "matches": ["*://addons.mozilla.org/*/firefox/*"],
             "js": [
@@ -22,6 +23,7 @@
             ],
             "platforms": ["win", "mac", "linux", "android"]
         },
+        */
     ]
 
     let REGISTED_CONTENT_SCRIPTS = [];
