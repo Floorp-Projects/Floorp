@@ -13,6 +13,9 @@ from mozbuild.base import MachCommandConditions as conditions
 from mozbuild.base import MozbuildObject
 from six import iteritems
 
+here = os.path.abspath(os.path.dirname(__file__))
+INTEROP_REQUIREMENTS_PATH = os.path.join(here, "interop_requirements.txt")
+
 
 class WebPlatformTestsRunnerSetup(MozbuildObject):
     default_log_type = "mach"
@@ -428,6 +431,18 @@ def create_parser_fission_regressions():
     return fissionregressions.get_parser()
 
 
+def create_parser_fetch_logs():
+    import interop
+
+    return interop.get_parser_fetch_logs()
+
+
+def create_parser_interop_score():
+    import interop
+
+    return interop.get_parser_interop_score()
+
+
 def create_parser_testpaths():
     import argparse
 
@@ -646,4 +661,32 @@ def wpt_test_paths(command_context, **params):
 def wpt_fission_regressions(command_context, **params):
     runner = command_context._spawn(WebPlatformTestsFissionRegressionsRunner)
     runner.run(**params)
+    return 0
+
+
+@Command(
+    "wpt-fetch-logs",
+    category="testing",
+    description="Fetch wptreport.json logs from taskcluster",
+    parser=create_parser_fetch_logs,
+    virtualenv_name="wpt-interop",
+)
+def wpt_fetch_logs(command_context, **params):
+    import interop
+
+    interop.fetch_logs(**params)
+    return 0
+
+
+@Command(
+    "wpt-interop-score",
+    category="testing",
+    description="Score a run according to Interop 2023",
+    parser=create_parser_interop_score,
+    virtualenv_name="wpt-interop",
+)
+def wpt_interop_score(command_context, **params):
+    import interop
+
+    interop.score_runs(**params)
     return 0
