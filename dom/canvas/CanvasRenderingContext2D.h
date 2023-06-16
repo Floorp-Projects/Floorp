@@ -324,6 +324,17 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   void GetWordSpacing(nsACString& aWordSpacing);
   void SetWordSpacing(const nsACString& aWordSpacing);
 
+  void EnsureCapped() {
+    if (mPathPruned) {
+      if (mPathBuilder) {
+        mPathBuilder->LineTo(mPathBuilder->CurrentPoint());
+      } else {
+        mDSPathBuilder->LineTo(mDSPathBuilder->CurrentPoint());
+      }
+      mPathPruned = false;
+    }
+  }
+
   void ClosePath() override {
     EnsureWritablePath();
 
@@ -332,6 +343,7 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
     } else {
       mDSPathBuilder->Close();
     }
+    mPathPruned = false;
   }
 
   void MoveTo(double aX, double aY) override {
@@ -342,6 +354,7 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
       return;
     }
 
+    EnsureCapped();
     if (mPathBuilder) {
       mPathBuilder->MoveTo(pos);
     } else {
@@ -369,6 +382,7 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
 
     if (mPathBuilder) {
       if (cp1 == mPathBuilder->CurrentPoint() && cp1 == cp2) {
+        mPathPruned = true;
         return;
       }
       mPathBuilder->QuadraticBezierTo(cp1, cp2);
@@ -376,11 +390,13 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
       mozilla::gfx::Matrix transform = mTarget->GetTransform();
       mozilla::gfx::Point transformedPos = transform.TransformPoint(cp1);
       if (transformedPos == mDSPathBuilder->CurrentPoint() && cp1 == cp2) {
+        mPathPruned = true;
         return;
       }
       mDSPathBuilder->QuadraticBezierTo(transformedPos,
                                         transform.TransformPoint(cp2));
     }
+    mPathPruned = false;
   }
 
   void BezierCurveTo(double aCp1x, double aCp1y, double aCp2x, double aCp2y,
@@ -520,6 +536,7 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
     }
     if (mPathBuilder) {
       if (mPathBuilder->CurrentPoint() == aPoint) {
+        mPathPruned = true;
         return;
       }
       mPathBuilder->LineTo(aPoint);
@@ -527,10 +544,12 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
       mozilla::gfx::Point transformedPt =
           mTarget->GetTransform().TransformPoint(aPoint);
       if (mDSPathBuilder->CurrentPoint() == transformedPt) {
+        mPathPruned = true;
         return;
       }
       mDSPathBuilder->LineTo(transformedPt);
     }
+    mPathPruned = false;
   }
 
   void BezierTo(const mozilla::gfx::Point& aCP1,
@@ -543,6 +562,7 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
     if (mPathBuilder) {
       if (aCP1 == mPathBuilder->CurrentPoint() && aCP1 == aCP2 &&
           aCP1 == aCP3) {
+        mPathPruned = true;
         return;
       }
       mPathBuilder->BezierTo(aCP1, aCP2, aCP3);
@@ -551,11 +571,13 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
       mozilla::gfx::Point transformedPos = transform.TransformPoint(aCP1);
       if (transformedPos == mDSPathBuilder->CurrentPoint() && aCP1 == aCP2 &&
           aCP1 == aCP3) {
+        mPathPruned = true;
         return;
       }
       mDSPathBuilder->BezierTo(transformedPos, transform.TransformPoint(aCP2),
                                transform.TransformPoint(aCP3));
     }
+    mPathPruned = false;
   }
 
   virtual UniquePtr<uint8_t[]> GetImageBuffer(
@@ -873,6 +895,7 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   RefPtr<mozilla::gfx::PathBuilder> mPathBuilder;
   bool mPathTransformWillUpdate;
   mozilla::gfx::Matrix mPathToDS;
+  bool mPathPruned = false;
 
   /**
    * Number of times we've invalidated before calling redraw

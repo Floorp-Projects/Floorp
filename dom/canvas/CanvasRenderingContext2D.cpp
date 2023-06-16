@@ -2950,6 +2950,7 @@ void CanvasRenderingContext2D::BeginPath() {
   mPathBuilder = nullptr;
   mDSPathBuilder = nullptr;
   mPathTransformWillUpdate = false;
+  mPathPruned = false;
 }
 
 void CanvasRenderingContext2D::Fill(const CanvasWindingRule& aWinding) {
@@ -3278,11 +3279,16 @@ void CanvasRenderingContext2D::Arc(double aX, double aY, double aR,
   if (aR < 0.0) {
     return aError.ThrowIndexSizeError("Negative radius");
   }
+  if (aStartAngle == aEndAngle) {
+    mPathPruned = true;
+    return;
+  }
 
   EnsureWritablePath();
 
   ArcToBezier(this, Point(aX, aY), Size(aR, aR), aStartAngle, aEndAngle,
               aAnticlockwise);
+  mPathPruned = false;
 }
 
 void CanvasRenderingContext2D::Rect(double aX, double aY, double aW,
@@ -3294,6 +3300,7 @@ void CanvasRenderingContext2D::Rect(double aX, double aY, double aW,
     return;
   }
 
+  EnsureCapped();
   if (mPathBuilder) {
     mPathBuilder->MoveTo(Point(aX, aY));
     if (aW == 0 && aH == 0) {
@@ -3506,6 +3513,7 @@ void CanvasRenderingContext2D::RoundRect(
     transform = Some(mTarget->GetTransform());
   }
 
+  EnsureCapped();
   RoundRectImpl(builder, transform, aX, aY, aW, aH, aRadii, aError);
 }
 
@@ -3517,11 +3525,16 @@ void CanvasRenderingContext2D::Ellipse(double aX, double aY, double aRadiusX,
   if (aRadiusX < 0.0 || aRadiusY < 0.0) {
     return aError.ThrowIndexSizeError("Negative radius");
   }
+  if (aStartAngle == aEndAngle) {
+    mPathPruned = true;
+    return;
+  }
 
   EnsureWritablePath();
 
   ArcToBezier(this, Point(aX, aY), Size(aRadiusX, aRadiusY), aStartAngle,
               aEndAngle, aAnticlockwise, aRotation);
+  mPathPruned = false;
 }
 
 void CanvasRenderingContext2D::EnsureWritablePath() {
@@ -3576,6 +3589,7 @@ void CanvasRenderingContext2D::EnsureUserSpacePath(
   }
 
   if (mPathBuilder) {
+    EnsureCapped();
     mPath = mPathBuilder->Finish();
     mPathBuilder = nullptr;
   }
@@ -3588,6 +3602,7 @@ void CanvasRenderingContext2D::EnsureUserSpacePath(
 
   if (mDSPathBuilder) {
     RefPtr<Path> dsPath;
+    EnsureCapped();
     dsPath = mDSPathBuilder->Finish();
     mDSPathBuilder = nullptr;
 
@@ -6320,6 +6335,16 @@ void CanvasPath::ClosePath() {
   EnsurePathBuilder();
 
   mPathBuilder->Close();
+  mPruned = false;
+}
+
+inline void CanvasPath::EnsureCapped() const {
+  // If there were zero-length segments emitted that were pruned, we need to
+  // emit a LineTo to ensure that caps are generated for the segment.
+  if (mPruned) {
+    mPathBuilder->LineTo(mPathBuilder->CurrentPoint());
+    mPruned = false;
+  }
 }
 
 void CanvasPath::MoveTo(double aX, double aY) {
@@ -6330,6 +6355,7 @@ void CanvasPath::MoveTo(double aX, double aY) {
     return;
   }
 
+  EnsureCapped();
   mPathBuilder->MoveTo(pos);
 }
 
@@ -6343,12 +6369,16 @@ void CanvasPath::QuadraticCurveTo(double aCpx, double aCpy, double aX,
 
   Point cp1(ToFloat(aCpx), ToFloat(aCpy));
   Point cp2(ToFloat(aX), ToFloat(aY));
-  if (!cp1.IsFinite() || !cp2.IsFinite() ||
-      (cp1 == mPathBuilder->CurrentPoint() && cp1 == cp2)) {
+  if (!cp1.IsFinite() || !cp2.IsFinite()) {
+    return;
+  }
+  if (cp1 == mPathBuilder->CurrentPoint() && cp1 == cp2) {
+    mPruned = true;
     return;
   }
 
   mPathBuilder->QuadraticBezierTo(cp1, cp2);
+  mPruned = false;
 }
 
 void CanvasPath::BezierCurveTo(double aCp1x, double aCp1y, double aCp2x,
@@ -6449,6 +6479,7 @@ void CanvasPath::RoundRect(
     ErrorResult& aError) {
   EnsurePathBuilder();
 
+  EnsureCapped();
   RoundRectImpl(mPathBuilder, Nothing(), aX, aY, aW, aH, aRadii, aError);
 }
 
@@ -6458,11 +6489,16 @@ void CanvasPath::Arc(double aX, double aY, double aRadius, double aStartAngle,
   if (aRadius < 0.0) {
     return aError.ThrowIndexSizeError("Negative radius");
   }
+  if (aStartAngle == aEndAngle) {
+    mPruned = true;
+    return;
+  }
 
   EnsurePathBuilder();
 
   ArcToBezier(this, Point(aX, aY), Size(aRadius, aRadius), aStartAngle,
               aEndAngle, aAnticlockwise);
+  mPruned = false;
 }
 
 void CanvasPath::Ellipse(double x, double y, double radiusX, double radiusY,
@@ -6471,33 +6507,47 @@ void CanvasPath::Ellipse(double x, double y, double radiusX, double radiusY,
   if (radiusX < 0.0 || radiusY < 0.0) {
     return aError.ThrowIndexSizeError("Negative radius");
   }
+  if (startAngle == endAngle) {
+    mPruned = true;
+    return;
+  }
 
   EnsurePathBuilder();
 
   ArcToBezier(this, Point(x, y), Size(radiusX, radiusY), startAngle, endAngle,
               anticlockwise, rotation);
+  mPruned = false;
 }
 
 void CanvasPath::LineTo(const gfx::Point& aPoint) {
   EnsurePathBuilder();
 
-  if (!aPoint.IsFinite() || aPoint == mPathBuilder->CurrentPoint()) {
+  if (!aPoint.IsFinite()) {
+    return;
+  }
+  if (aPoint == mPathBuilder->CurrentPoint()) {
+    mPruned = true;
     return;
   }
 
   mPathBuilder->LineTo(aPoint);
+  mPruned = false;
 }
 
 void CanvasPath::BezierTo(const gfx::Point& aCP1, const gfx::Point& aCP2,
                           const gfx::Point& aCP3) {
   EnsurePathBuilder();
 
-  if (!aCP1.IsFinite() || !aCP2.IsFinite() || !aCP3.IsFinite() ||
-      (aCP1 == mPathBuilder->CurrentPoint() && aCP1 == aCP2 && aCP1 == aCP3)) {
+  if (!aCP1.IsFinite() || !aCP2.IsFinite() || !aCP3.IsFinite()) {
+    return;
+  }
+  if (aCP1 == mPathBuilder->CurrentPoint() && aCP1 == aCP2 && aCP1 == aCP3) {
+    mPruned = true;
     return;
   }
 
   mPathBuilder->BezierTo(aCP1, aCP2, aCP3);
+  mPruned = false;
 }
 
 void CanvasPath::AddPath(CanvasPath& aCanvasPath, const DOMMatrix2DInit& aInit,
@@ -6526,6 +6576,7 @@ void CanvasPath::AddPath(CanvasPath& aCanvasPath, const DOMMatrix2DInit& aInit,
   }
 
   EnsurePathBuilder();  // in case a path is added to itself
+  EnsureCapped();
   tempPath->StreamToSink(mPathBuilder);
 }
 
@@ -6545,6 +6596,7 @@ already_AddRefed<gfx::Path> CanvasPath::GetPath(
   if (!mPath) {
     // if there is no path, there must be a pathbuilder
     MOZ_ASSERT(mPathBuilder);
+    EnsureCapped();
     mPath = mPathBuilder->Finish();
     if (!mPath) {
       RefPtr<gfx::Path> path(mPath);
