@@ -600,6 +600,7 @@ class MigrationUtils {
         "browser.migrate.content-modal.enabled",
         false
       ) &&
+      !aOptions?.isStartupMigration &&
       !aboutWelcomeLegacyBehavior
     ) {
       let entrypoint =
