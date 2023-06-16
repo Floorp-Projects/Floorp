@@ -2946,6 +2946,8 @@ class nsLayoutUtils {
 
   static nsRect ComputeHTMLReferenceRect(const nsIFrame*, StyleGeometryBox);
 
+  static StyleGeometryBox CoordBoxToGeometryBox(mozilla::StyleCoordBox);
+
   static nsRect ComputeGeometryBox(nsIFrame*, StyleGeometryBox);
 
   static nsRect ComputeGeometryBox(nsIFrame*,
