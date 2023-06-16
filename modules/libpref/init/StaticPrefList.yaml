@@ -6564,11 +6564,6 @@
   mirror: once
 
 #ifdef XP_WIN
-  # Whether or not to fallback from WebRender to Software WebRender + D3D11.
--   name: gfx.webrender.fallback.software-d3d11
-    type: bool
-    value: true
-    mirror: once
   # Whether to use a video overlay layers with DirectComposition
 -   name: gfx.webrender.dcomp-video-overlay-win
     type: bool
