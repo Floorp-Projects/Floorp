@@ -1,4 +1,4 @@
-use super::Pin;
+use super::{u2ftypes, Pin};
 use crate::ctap2::commands::get_info::AuthenticatorInfo;
 use serde::{Deserialize, Serialize as DeriveSer, Serializer};
 use std::sync::mpsc::Sender;
@@ -55,15 +55,30 @@ pub enum StatusPinUv {
 
 #[derive(Debug)]
 pub enum StatusUpdate {
+    /// Device found
+    DeviceAvailable { dev_info: u2ftypes::U2FDeviceInfo },
+    /// Device got removed
+    DeviceUnavailable { dev_info: u2ftypes::U2FDeviceInfo },
     /// We're waiting for the user to touch their token
     PresenceRequired,
+    /// We successfully finished the register or sign request
+    Success { dev_info: u2ftypes::U2FDeviceInfo },
     /// Sent if a PIN is needed (or was wrong), or some other kind of PIN-related
     /// error occurred. The Sender is for sending back a PIN (if needed).
     PinUvError(StatusPinUv),
     /// Sent, if multiple devices are found and the user has to select one
     SelectDeviceNotice,
+    /// Sent, once a device was selected (either automatically or by user-interaction)
+    /// and the register or signing process continues with this device
+    DeviceSelected(u2ftypes::U2FDeviceInfo),
     /// Sent when a token was selected for interactive management
-    InteractiveManagement((Sender<InteractiveRequest>, Option<AuthenticatorInfo>)),
+    InteractiveManagement(
+        (
+            Sender<InteractiveRequest>,
+            u2ftypes::U2FDeviceInfo,
+            Option<AuthenticatorInfo>,
+        ),
+    ),
 }
 
 pub(crate) fn send_status(status: &Sender<StatusUpdate>, msg: StatusUpdate) {

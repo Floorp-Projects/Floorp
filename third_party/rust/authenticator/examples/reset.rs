@@ -105,6 +105,9 @@ fn main() {
                 manager.cancel().unwrap();
                 return;
             }
+            Ok(StatusUpdate::DeviceSelected(dev_info)) => {
+                println!("STATUS: Continuing with device: {dev_info}");
+            }
             Ok(StatusUpdate::PresenceRequired) => {
                 println!("STATUS: waiting for user presence");
                 break;
