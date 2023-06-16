@@ -1,7 +1,7 @@
 use super::{Command, CommandError, RequestCtap2, StatusCode};
 use crate::ctap2::commands::get_assertion::GetAssertionResponse;
 use crate::transport::errors::HIDError;
-use crate::transport::{FidoDevice, VirtualFidoDevice};
+use crate::u2ftypes::U2FDevice;
 use serde_cbor::{de::from_slice, Value};
 
 #[derive(Debug)]
@@ -18,11 +18,14 @@ impl RequestCtap2 for GetNextAssertion {
         Ok(Vec::new())
     }
 
-    fn handle_response_ctap2<Dev: FidoDevice>(
+    fn handle_response_ctap2<Dev>(
         &self,
         _dev: &mut Dev,
         input: &[u8],
-    ) -> Result<Self::Output, HIDError> {
+    ) -> Result<Self::Output, HIDError>
+    where
+        Dev: U2FDevice,
+    {
         if input.is_empty() {
             return Err(CommandError::InputTooSmall.into());
         }
@@ -43,12 +46,5 @@ impl RequestCtap2 for GetNextAssertion {
         } else {
             Err(CommandError::StatusCode(status, None).into())
         }
-    }
-
-    fn send_to_virtual_device<Dev: VirtualFidoDevice>(
-        &self,
-        _dev: &mut Dev,
-    ) -> Result<Self::Output, HIDError> {
-        unimplemented!()
     }
 }

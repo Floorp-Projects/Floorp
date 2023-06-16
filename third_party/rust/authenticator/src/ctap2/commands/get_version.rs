@@ -1,7 +1,6 @@
 use super::{CommandError, RequestCtap1, Retryable};
 use crate::consts::U2F_VERSION;
 use crate::transport::errors::{ApduErrorStatus, HIDError};
-use crate::transport::VirtualFidoDevice;
 use crate::u2ftypes::CTAP1RequestAPDU;
 
 #[allow(non_camel_case_types)]
@@ -45,27 +44,19 @@ impl RequestCtap1 for GetVersion {
         let data = CTAP1RequestAPDU::serialize(cmd, flags, &[])?;
         Ok((data, ()))
     }
-
-    fn send_to_virtual_device<Dev: VirtualFidoDevice>(
-        &self,
-        dev: &mut Dev,
-    ) -> Result<Self::Output, HIDError> {
-        dev.get_version(self)
-    }
 }
 
 #[cfg(test)]
 pub mod tests {
     use crate::consts::{Capability, HIDCmd, CID_BROADCAST, SW_NO_ERROR};
     use crate::transport::device_selector::Device;
-    use crate::transport::{hid::HIDDevice, FidoDevice, FidoProtocol};
+    use crate::transport::{hid::HIDDevice, FidoDevice, Nonce};
+    use crate::u2ftypes::U2FDevice;
     use rand::{thread_rng, RngCore};
 
     #[test]
     fn test_get_version_ctap1_only() {
         let mut device = Device::new("commands/get_version").unwrap();
-        device.downgrade_to_ctap1();
-        assert_eq!(device.get_protocol(), FidoProtocol::CTAP1);
         let nonce = [0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01];
 
         // channel id
@@ -104,7 +95,9 @@ pub mod tests {
         msg.extend(SW_NO_ERROR);
         device.add_read(&msg, 0);
 
-        device.init().expect("Failed to init device");
+        device
+            .init(Nonce::Use(nonce))
+            .expect("Failed to init device");
 
         assert_eq!(device.get_cid(), &cid);
 
