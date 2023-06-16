@@ -3,71 +3,43 @@
 
 "use strict";
 
-async function runTest(expectUtility) {
-  info(
-    `Running tests with decoding from Utility or RDD: expectUtility=${expectUtility}`
+/* import-globals-from head-multiple.js */
+
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/ipc/glue/test/browser/head-multiple.js",
+  this
+);
+
+add_setup(async function checkAudioDecodingNonUtility() {
+  const isAudioDecodingNonUtilityAllowed = await SpecialPowers.getBoolPref(
+    "media.allow-audio-non-utility"
   );
-
-  // Utility should now be the default, so dont toggle the pref unless we test
-  // RDD
-  if (!expectUtility) {
-    await SpecialPowers.pushPrefEnv({
-      set: [["media.utility-process.enabled", expectUtility]],
-    });
-  }
-
-  const platform = Services.appinfo.OS;
-
-  for (let { src, expectations } of audioTestData()) {
-    if (!(platform in expectations)) {
-      info(`Skipping ${src} for ${platform}`);
-      continue;
-    }
-
-    const expectation = expectations[platform];
-
-    info(`Add media tabs: ${src}`);
-    let tabs = [await addMediaTab(src), await addMediaTab(src)];
-    let playback = [];
-
-    info("Play tabs");
-    for (let tab of tabs) {
-      playback.push(
-        play(
-          tab,
-          expectUtility ? expectation.process : "RDD",
-          expectation.decoder
-        )
-      );
-    }
-
-    info("Wait all playback");
-    await Promise.all(playback);
-
-    let allstop = [];
-    info("Stop tabs");
-    for (let tab of tabs) {
-      allstop.push(stop(tab));
-    }
-
-    info("Wait all stop");
-    await Promise.all(allstop);
-
-    let remove = [];
-    info("Remove tabs");
-    for (let tab of tabs) {
-      remove.push(BrowserTestUtils.removeTab(tab));
-    }
-
-    info("Wait all tabs to be removed");
-    await Promise.all(remove);
-  }
-}
-
-add_task(async function testAudioDecodingInUtility() {
-  await runTest(true);
+  ok(
+    !isAudioDecodingNonUtilityAllowed,
+    "Audio decoding should not be allowed in non utility by default"
+  );
 });
 
-add_task(async function testAudioDecodingInRDD() {
-  await runTest(false);
+add_task(async function testAudioDecodingInUtility() {
+  await runTest({ expectUtility: true });
+});
+
+add_task(async function testFailureAudioDecodingInRDD() {
+  await runTest({ expectUtility: false, expectError: true });
+});
+
+add_task(async function testFailureAudioDecodingInContent() {
+  const platform = Services.appinfo.OS;
+  if (platform === "WINNT") {
+    ok(
+      true,
+      "Manually skippig on Windows because of gfx killing us, cf browser.ini"
+    );
+    return;
+  }
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["media.rdd-process.enabled", false]],
+  });
+  await runTest({ expectUtility: false, expectRDD: false, expectError: true });
 });

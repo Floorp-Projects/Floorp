@@ -20,7 +20,7 @@ SimpleTest.waitForExplicitFinish();
     }
 
     try {
-      await runMochitestUtilityAudio(src, { expectUtility: "", expectDecoder: expectations[platform].decoder, expectContent: true, expectJava: false });
+      await runMochitestUtilityAudio(src, { expectUtility: "", expectDecoder: expectations[platform].decoder, expectContent: true, expectJava: false, expectError: true });
     } catch (ex) {
       ok(false, "Failure");
     }
@@ -30,7 +30,7 @@ SimpleTest.waitForExplicitFinish();
     "small-shot.m4a",
   ]) {
     try {
-      await runMochitestUtilityAudio(src, { expectUtility: "", expectDecoder: "android decoder", expectContent: false, expectJava: true });
+      await runMochitestUtilityAudio(src, { expectUtility: "", expectDecoder: "android decoder", expectContent: false, expectJava: true, expectError: false });
     } catch (ex) {
       ok(false, `Failure ${ex}`);
     }
