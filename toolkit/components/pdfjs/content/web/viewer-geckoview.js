@@ -443,7 +443,7 @@ document.mozL10n.setExternalLocalizerServices({
     if (element.dataset.l10nArgs) {
       try {
         args = JSON.parse(element.dataset.l10nArgs);
-      } catch (e) {
+      } catch {
         console.warn("[l10n] could not parse arguments for #" + key + "");
       }
     }
@@ -1038,7 +1038,7 @@ const PDFViewerApplication = {
     if (!title) {
       try {
         title = decodeURIComponent((0, _pdfjsLib.getFilenameFromUrl)(url)) || url;
-      } catch (ex) {
+      } catch {
         title = url;
       }
     }
@@ -1173,7 +1173,7 @@ const PDFViewerApplication = {
         type: "application/pdf"
       });
       await this.downloadManager.download(blob, url, filename, options);
-    } catch (reason) {
+    } catch {
       await this.downloadManager.downloadUrl(url, filename, options);
     }
   },
@@ -3851,7 +3851,7 @@ class PDFLinkService {
         if (!Array.isArray(dest)) {
           dest = dest.toString();
         }
-      } catch (ex) {}
+      } catch {}
       if (typeof dest === "string" || PDFLinkService.#isValidExplicitDestination(dest)) {
         this.goToDestination(dest);
         return;
@@ -5977,7 +5977,7 @@ class PDFScriptingManager {
     this._pdfDocument = null;
     try {
       await this._scripting.destroySandbox();
-    } catch (ex) {}
+    } catch {}
     for (const [name, listener] of this._internalEvents) {
       this._eventBus._off(name, listener);
     }
@@ -6084,7 +6084,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = _ui_utils.TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = '3.8.58';
+    const viewerVersion = '3.8.83';
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -9627,8 +9627,8 @@ var _ui_utils = __webpack_require__(4);
 var _app_options = __webpack_require__(6);
 var _pdf_link_service = __webpack_require__(8);
 var _app = __webpack_require__(3);
-const pdfjsVersion = '3.8.58';
-const pdfjsBuild = '9af50dc35';
+const pdfjsVersion = '3.8.83';
+const pdfjsBuild = '46b8f9e2f';
 const AppConstants = null;
 exports.PDFViewerApplicationConstants = AppConstants;
 window.PDFViewerApplication = _app.PDFViewerApplication;

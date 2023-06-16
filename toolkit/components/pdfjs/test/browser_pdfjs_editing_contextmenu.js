@@ -199,7 +199,8 @@ add_task(async function test() {
 
       await TestUtils.waitForTick();
 
-      Assert.equal(await countElements(browser, ".freeTextEditor"), 1);
+      // The PDF already has a text annotation.
+      Assert.equal(await countElements(browser, ".freeTextEditor"), 2);
 
       // Unselect.
       await escape(browser);
@@ -219,28 +220,31 @@ add_task(async function test() {
       await clickOnItem(browser, menuitems, "context-pdfjs-undo");
 
       await BrowserTestUtils.waitForCondition(
-        async () => (await countElements(browser, ".freeTextEditor")) !== 1
+        async () => (await countElements(browser, ".freeTextEditor")) !== 2
       );
 
       Assert.equal(
         await countElements(browser, ".freeTextEditor"),
-        0,
+        1,
         "The FreeText editor must have been removed"
       );
 
       menuitems = await getContextMenuItems(browser, spanBox);
 
       // The editor removed thanks to "undo" is now redoable
-      assertMenuitems(menuitems, ["context-pdfjs-redo"]);
+      assertMenuitems(menuitems, [
+        "context-pdfjs-redo",
+        "context-pdfjs-selectall",
+      ]);
       await clickOnItem(browser, menuitems, "context-pdfjs-redo");
 
       await BrowserTestUtils.waitForCondition(
-        async () => (await countElements(browser, ".freeTextEditor")) !== 0
+        async () => (await countElements(browser, ".freeTextEditor")) !== 1
       );
 
       Assert.equal(
         await countElements(browser, ".freeTextEditor"),
-        1,
+        2,
         "The FreeText editor must have been added back"
       );
 
@@ -261,27 +265,31 @@ add_task(async function test() {
       await clickOnItem(browser, menuitems, "context-pdfjs-cut");
 
       await BrowserTestUtils.waitForCondition(
-        async () => (await countElements(browser, ".freeTextEditor")) !== 1
-      );
-
-      Assert.equal(
-        await countElements(browser, ".freeTextEditor"),
-        0,
-        "The FreeText editor must have been cut"
-      );
-
-      menuitems = await getContextMenuItems(browser, spanBox);
-      assertMenuitems(menuitems, ["context-pdfjs-undo", "context-pdfjs-paste"]);
-
-      await clickOnItem(browser, menuitems, "context-pdfjs-paste");
-
-      await BrowserTestUtils.waitForCondition(
-        async () => (await countElements(browser, ".freeTextEditor")) !== 0
+        async () => (await countElements(browser, ".freeTextEditor")) !== 2
       );
 
       Assert.equal(
         await countElements(browser, ".freeTextEditor"),
         1,
+        "The FreeText editor must have been cut"
+      );
+
+      menuitems = await getContextMenuItems(browser, spanBox);
+      assertMenuitems(menuitems, [
+        "context-pdfjs-undo",
+        "context-pdfjs-paste",
+        "context-pdfjs-selectall",
+      ]);
+
+      await clickOnItem(browser, menuitems, "context-pdfjs-paste");
+
+      await BrowserTestUtils.waitForCondition(
+        async () => (await countElements(browser, ".freeTextEditor")) !== 1
+      );
+
+      Assert.equal(
+        await countElements(browser, ".freeTextEditor"),
+        2,
         "The FreeText editor must have been pasted"
       );
 
@@ -303,12 +311,12 @@ add_task(async function test() {
       await clickOnItem(browser, menuitems, "context-pdfjs-delete");
 
       await BrowserTestUtils.waitForCondition(
-        async () => (await countElements(browser, ".freeTextEditor")) !== 1
+        async () => (await countElements(browser, ".freeTextEditor")) !== 2
       );
 
       Assert.equal(
         await countElements(browser, ".freeTextEditor"),
-        0,
+        1,
         "The FreeText editor must have been deleted"
       );
 
@@ -316,12 +324,12 @@ add_task(async function test() {
       await clickOnItem(browser, menuitems, "context-pdfjs-paste");
 
       await BrowserTestUtils.waitForCondition(
-        async () => (await countElements(browser, ".freeTextEditor")) !== 0
+        async () => (await countElements(browser, ".freeTextEditor")) !== 1
       );
 
       Assert.equal(
         await countElements(browser, ".freeTextEditor"),
-        1,
+        2,
         "The FreeText editor must have been pasted"
       );
 
@@ -340,12 +348,12 @@ add_task(async function test() {
       await clickOnItem(browser, menuitems, "context-pdfjs-paste");
 
       await BrowserTestUtils.waitForCondition(
-        async () => (await countElements(browser, ".freeTextEditor")) !== 1
+        async () => (await countElements(browser, ".freeTextEditor")) !== 2
       );
 
       Assert.equal(
         await countElements(browser, ".freeTextEditor"),
-        2,
+        3,
         "The FreeText editor must have been pasted"
       );
 
@@ -355,7 +363,7 @@ add_task(async function test() {
       await clickOnItem(browser, menuitems, "context-pdfjs-delete");
 
       await BrowserTestUtils.waitForCondition(
-        async () => (await countElements(browser, ".freeTextEditor")) !== 2
+        async () => (await countElements(browser, ".freeTextEditor")) !== 3
       );
 
       Assert.equal(
