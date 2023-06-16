@@ -14,11 +14,17 @@
 namespace mozilla::dom::fs {
 
 struct SchemaVersion001 {
+  static nsresult CreateTables(ResultConnection& aConn, const Origin& aOrigin);
+
   static Result<DatabaseVersion, QMResult> InitializeConnection(
       ResultConnection& aConn, const Origin& aOrigin);
 
-  static const DatabaseVersion sVersion = 1;
+  static constexpr DatabaseVersion sVersion = 1;
 };
+
+nsresult SetEncoding(ResultConnection& aConn);
+
+Result<bool, QMResult> CheckIfEmpty(ResultConnection& aConn);
 
 }  // namespace mozilla::dom::fs
 
