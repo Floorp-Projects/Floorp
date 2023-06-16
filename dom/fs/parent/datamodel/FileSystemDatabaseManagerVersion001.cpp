@@ -273,13 +273,9 @@ nsresult PerformRename(const FileSystemConnection& aConnection,
   QM_TRY_UNWRAP(ResultStatement stmt,
                 ResultStatement::Create(aConnection, aNameUpdateQuery)
                     .mapErr(toNSResult));
-  QM_TRY(QM_OR_ELSE_WARN_IF(
-      // Expression
-      MOZ_TO_RESULT(stmt.BindContentTypeByName("type"_ns, aNewType)),
-      // Predicate
-      IsSpecificError<NS_ERROR_ILLEGAL_VALUE>,
-      // Fallback
-      ErrToDefaultOk<>));
+  if (!aNewType.IsVoid()) {
+    QM_TRY(MOZ_TO_RESULT(stmt.BindContentTypeByName("type"_ns, aNewType)));
+  }
   QM_TRY(MOZ_TO_RESULT(stmt.BindNameByName("name"_ns, aNewName)));
   QM_TRY(MOZ_TO_RESULT(stmt.BindEntryIdByName("handle"_ns, aHandle.entryId())));
   QM_TRY(MOZ_TO_RESULT(stmt.Execute()));
@@ -296,21 +292,27 @@ nsresult PerformRenameDirectory(const FileSystemConnection& aConnection,
       "WHERE handle = :handle "
       ";"_ns;
 
-  return PerformRename(aConnection, aHandle, aNewName, /* dummy type */ ""_ns,
+  return PerformRename(aConnection, aHandle, aNewName, VoidCString(),
                        updateDirectoryNameQuery);
 }
 
 nsresult PerformRenameFile(const FileSystemConnection& aConnection,
                            const FileSystemEntryMetadata& aHandle,
                            const Name& aNewName, const ContentType& aNewType) {
+  const nsLiteralCString updateFileTypeAndNameQuery =
+      "UPDATE Files SET type = :type, name = :name "
+      "WHERE handle = :handle ;"_ns;
+
   const nsLiteralCString updateFileNameQuery =
-      "UPDATE Files "
-      "SET type = :type, name = :name "
-      "WHERE handle = :handle "
-      ";"_ns;
+      "UPDATE Files SET name = :name WHERE handle = :handle ;"_ns;
+
+  if (aNewType.IsVoid()) {
+    return PerformRename(aConnection, aHandle, aNewName, aNewType,
+                         updateFileNameQuery);
+  }
 
   return PerformRename(aConnection, aHandle, aNewName, aNewType,
-                       updateFileNameQuery);
+                       updateFileTypeAndNameQuery);
 }
 
 template <class HandlerType>
@@ -831,8 +833,7 @@ FileSystemDatabaseManagerVersion001::GetOrCreateDirectory(
 }
 
 Result<EntryId, QMResult> FileSystemDatabaseManagerVersion001::GetOrCreateFile(
-    const FileSystemChildMetadata& aHandle, const ContentType& aType,
-    bool aCreate) {
+    const FileSystemChildMetadata& aHandle, bool aCreate) {
   MOZ_ASSERT(!aHandle.parentId().IsEmpty());
 
   const auto& name = aHandle.childName();
@@ -877,8 +878,7 @@ Result<EntryId, QMResult> FileSystemDatabaseManagerVersion001::GetOrCreateFile(
   QM_TRY_INSPECT(const EntryId& entryId, GetEntryId(aHandle));
   MOZ_ASSERT(!entryId.IsEmpty());
 
-  const ContentType& type =
-      aType.IsVoid() ? FileSystemContentTypeGuess::FromPath(name) : aType;
+  const ContentType type = FileSystemContentTypeGuess::FromPath(name);
 
   mozStorageTransaction transaction(
       mConnection.get(), false, mozIStorageConnection::TRANSACTION_IMMEDIATE);

@@ -93,8 +93,7 @@ class FileSystemDatabaseManager {
    * @return Result<bool, QMResult> File identifier or error
    */
   virtual Result<EntryId, QMResult> GetOrCreateFile(
-      const FileSystemChildMetadata& aHandle, const ContentType& aType,
-      bool aCreate) = 0;
+      const FileSystemChildMetadata& aHandle, bool aCreate) = 0;
 
   /**
    * @brief Returns the properties of a file corresponding to a file handle
