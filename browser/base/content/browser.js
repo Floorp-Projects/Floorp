@@ -8163,24 +8163,12 @@ function AddKeywordForSearchField() {
 function restoreLastClosedTabOrWindowOrSession() {
   let lastActionTaken = SessionStore.popLastClosedAction();
 
-  if (lastActionTaken) {
-    switch (lastActionTaken.type) {
-      case SessionStore.LAST_ACTION_CLOSED_TAB: {
-        undoCloseTab();
-        break;
-      }
-      case SessionStore.LAST_ACTION_CLOSED_WINDOW: {
-        undoCloseWindow();
-        break;
-      }
-    }
-  } else {
-    let closedTabCount = SessionStore.getLastClosedTabCount(window);
-    if (closedTabCount) {
-      undoCloseTab();
-    } else if (SessionStore.canRestoreLastSession) {
-      SessionStore.restoreLastSession();
-    }
+  if (!lastActionTaken && SessionStore.canRestoreLastSession) {
+    SessionStore.restoreLastSession();
+  } else if (lastActionTaken?.type == SessionStore.LAST_ACTION_CLOSED_TAB) {
+    this.undoCloseTab();
+  } else if (lastActionTaken?.type == SessionStore.LAST_ACTION_CLOSED_WINDOW) {
+    this.undoCloseWindow();
   }
 }
 
