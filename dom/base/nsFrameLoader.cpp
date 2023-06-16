@@ -2387,7 +2387,7 @@ nsresult nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI) {
   mDepthTooGreat = false;
   RefPtr<BrowsingContext> parentBC(
       mOwnerContent->OwnerDoc()->GetBrowsingContext());
-  MOZ_ASSERT(parentBC, "How can we not have a parent here?");
+  NS_ENSURE_STATE(parentBC);
 
   if (!parentBC->IsContent()) {
     return NS_OK;
