@@ -76,11 +76,11 @@ class ResultStatement {
 
   inline nsresult BindContentTypeByName(const nsACString& aField,
                                         const ContentType& aValue) {
-    if (0u == aValue.Length()) {  // Otherwise empty string becomes null
-      return mStmt->BindUTF8StringByName(aField, aValue);
+    if (aValue.IsVoid()) {
+      return mStmt->BindNullByName(aField);
     }
 
-    return mStmt->BindUTF8StringAsBlobByName(aField, aValue);
+    return mStmt->BindUTF8StringByName(aField, aValue);
   }
 
   inline nsresult BindNameByName(const nsACString& aField, const Name& aValue) {
