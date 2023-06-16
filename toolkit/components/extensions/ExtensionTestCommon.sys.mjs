@@ -468,7 +468,9 @@ ExtensionTestCommon = class ExtensionTestCommon {
     );
     let zipW = new ZipWriter();
 
-    let file = lazy.FileUtils.getFile("TmpD", [baseName]);
+    let file = new lazy.FileUtils.File(
+      PathUtils.join(PathUtils.tempDir, baseName)
+    );
     file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, lazy.FileUtils.PERMS_FILE);
 
     const MODE_WRONLY = 0x02;

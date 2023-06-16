@@ -205,16 +205,23 @@ async function buildPrefilledUpdatesDir() {
   xpi.copyTo(dir, "system3@tests.mozilla.org.xpi");
 
   // Mark these in the past so the startup file scan notices when files have changed properly
-  FileUtils.getFile("ProfD", [
-    "features",
-    "prefilled",
-    "system2@tests.mozilla.org.xpi",
-  ]).lastModifiedTime -= 10000;
-  FileUtils.getFile("ProfD", [
-    "features",
-    "prefilled",
-    "system3@tests.mozilla.org.xpi",
-  ]).lastModifiedTime -= 10000;
+  {
+    let toModify = await IOUtils.getFile(
+      PathUtils.profileDir,
+      "features",
+      "prefilled",
+      "system2@tests.mozilla.org.xpi"
+    );
+    toModify.lastModifiedTime -= 10000;
+
+    toModify = await IOUtils.getFile(
+      PathUtils.profileDir,
+      "features",
+      "prefilled",
+      "system3@tests.mozilla.org.xpi"
+    );
+    toModify.lastModifiedTime -= 10000;
+  }
 
   Services.prefs.setCharPref(
     PREF_SYSTEM_ADDON_SET,

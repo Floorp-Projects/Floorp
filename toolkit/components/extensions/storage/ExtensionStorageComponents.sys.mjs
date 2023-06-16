@@ -58,8 +58,12 @@ export function StorageSyncService() {
     return StorageSyncService._singleton;
   }
 
-  let file = lazy.FileUtils.getFile("ProfD", ["storage-sync-v2.sqlite"]);
-  let kintoFile = lazy.FileUtils.getFile("ProfD", ["storage-sync.sqlite"]);
+  let file = new lazy.FileUtils.File(
+    PathUtils.join(PathUtils.profileDir, "storage-sync-v2.sqlite")
+  );
+  let kintoFile = new lazy.FileUtils.File(
+    PathUtils.join(PathUtils.profileDir, "storage-sync.sqlite")
+  );
   this._storageArea = new StorageSyncArea(file, kintoFile);
 
   // Register a blocker to close the storage connection on shutdown.

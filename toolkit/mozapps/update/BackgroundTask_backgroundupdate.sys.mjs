@@ -16,7 +16,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AppUpdater: "resource://gre/modules/AppUpdater.sys.mjs",
   BackgroundTasksUtils: "resource://gre/modules/BackgroundTasksUtils.sys.mjs",
   ExtensionUtils: "resource://gre/modules/ExtensionUtils.sys.mjs",
-  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
 });
 
@@ -320,16 +319,19 @@ export async function runBackgroundTask(commandLine) {
   // time we might send (built-in) pings.
   await BackgroundUpdate.recordUpdateEnvironment();
 
-  // The final leaf is for the benefit of `FileUtils`.  To help debugging, use
-  // the `GLEAN_LOG_PINGS` and `GLEAN_DEBUG_VIEW_TAG` environment variables: see
+  // To help debugging, use the `GLEAN_LOG_PINGS` and `GLEAN_DEBUG_VIEW_TAG`
+  // environment variables: see
   // https://mozilla.github.io/glean/book/user/debugging/index.html.
-  let gleanRoot = lazy.FileUtils.getFile("UpdRootD", [
+  let gleanRoot = await IOUtils.getDirectory(
+    Services.dirsvc.get("UpdRootD", Ci.nsIFile).path,
     "backgroundupdate",
     "datareporting",
-    "glean",
-    "__dummy__",
-  ]).parent.path;
-  Services.fog.initializeFOG(gleanRoot, "firefox.desktop.background.update");
+    "glean"
+  );
+  Services.fog.initializeFOG(
+    gleanRoot.path,
+    "firefox.desktop.background.update"
+  );
 
   // For convenience, mirror our loglevel.
   let logLevel = Services.prefs.getCharPref(

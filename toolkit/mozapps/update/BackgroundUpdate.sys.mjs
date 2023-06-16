@@ -12,7 +12,6 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   BackgroundTasksUtils: "resource://gre/modules/BackgroundTasksUtils.sys.mjs",
-  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
   TaskScheduler: "resource://gre/modules/TaskScheduler.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
@@ -89,16 +88,17 @@ export var BackgroundUpdate = {
    * @returns {boolean} - true if this installation has an App and a GRE omnijar.
    */
   async _hasOmnijar() {
-    const appOmniJar = lazy.FileUtils.getFile("XCurProcD", [
-      AppConstants.OMNIJAR_NAME,
-    ]);
-    const greOmniJar = lazy.FileUtils.getFile("GreD", [
-      AppConstants.OMNIJAR_NAME,
-    ]);
+    const appOmniJar = PathUtils.join(
+      Services.dirsvc.get("XCurProcD", Ci.nsIFile).path,
+      AppConstants.OMNIJAR_NAME
+    );
+    const greOmniJar = PathUtils.join(
+      Services.dirsvc.get("GreD", Ci.nsIFile).path,
+      AppConstants.OMNIJAR_NAME
+    );
 
     let bothExist =
-      (await IOUtils.exists(appOmniJar.path)) &&
-      (await IOUtils.exists(greOmniJar.path));
+      (await IOUtils.exists(appOmniJar)) && (await IOUtils.exists(greOmniJar));
 
     return bothExist;
   },
@@ -289,7 +289,10 @@ export var BackgroundUpdate = {
       // The full path might hit command line length limits, but also makes it
       // much easier to find the relevant log file when starting from the
       // Windows Task Scheduler UI.
-      lazy.FileUtils.getFile("UpdRootD", ["backgroundupdate.moz_log"]).path,
+      PathUtils.join(
+        Services.dirsvc.get("UpdRootD", Ci.nsIFile).path,
+        "backgroundupdate.moz_log"
+      ),
       "--backgroundtask",
       "backgroundupdate",
     ];
@@ -550,23 +553,37 @@ export var BackgroundUpdate = {
           // put a log file in the specified location. But just to be safe,
           // we'll do some cleanup when we re-register the task to make sure
           // that no log file is hanging around in the old location.
-          let oldUpdateDir = lazy.FileUtils.getDir("OldUpdRootD", []);
-          let oldLog = oldUpdateDir.clone();
-          oldLog.append("backgroundupdate.moz_log");
+          let oldUpdateDir = Services.dirsvc.get(
+            "OldUpdRootD",
+            Ci.nsIFile
+          ).path;
+          let oldLog = PathUtils.join(oldUpdateDir, "backgroundupdate.moz_log");
 
-          if (oldLog.exists()) {
-            oldLog.remove(false);
-            // We may have created some directories in order to put this log
-            // file in this location. Clean them up if they are empty.
-            // (If we pass false for the recurse parameter, directories with
-            // contents will not be removed)
-            //
-            // Potentially removes "C:\ProgramData\Mozilla\updates\<hash>"
-            oldUpdateDir.remove(false);
-            // Potentially removes "C:\ProgramData\Mozilla\updates"
-            oldUpdateDir.parent.remove(false);
-            // Potentially removes "C:\ProgramData\Mozilla"
-            oldUpdateDir.parent.parent.remove(false);
+          if (await IOUtils.exists(oldLog)) {
+            try {
+              await IOUtils.remove(oldLog);
+              // We may have created some directories in order to put this log
+              // file in this location. Clean them up if they are empty.
+              //
+              // Potentially removes "C:\ProgramData\Mozilla\updates\<hash>"
+              await IOUtils.remove(oldUpdateDir);
+              // Potentially removes "C:\ProgramData\Mozilla\updates"
+              await IOUtils.remove(PathUtils.parent(oldUpdateDir));
+              // Potentially removes "C:\ProgramData\Mozilla"
+              await IOUtils.remove(PathUtils.parent(oldUpdateDir, 2));
+            } catch (e) {
+              if (
+                !(
+                  DOMException.isInstance(e) &&
+                  e.name === "OperationError" &&
+                  e.message.includes(
+                    "Could not remove the non-empty directory at"
+                  )
+                )
+              ) {
+                throw e;
+              }
+            }
           }
         } catch (ex) {
           lazy.log.warn(
