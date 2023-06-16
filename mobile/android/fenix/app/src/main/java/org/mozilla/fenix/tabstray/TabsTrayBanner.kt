@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -56,6 +55,7 @@ import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.theme.FirefoxTheme
 
 private val ICON_SIZE = 24.dp
+private const val MAX_WIDTH_TAB_ROW_PERCENT = 0.5f
 
 /**
  * Top-level UI for displaying the banner in [TabsTray].
@@ -167,7 +167,7 @@ private fun SingleSelectBanner(
             CompositionLocalProvider(LocalRippleTheme provides DisabledRippleTheme) {
                 TabRow(
                     selectedTabIndex = selectedPage.ordinal,
-                    modifier = Modifier.width(180.dp),
+                    modifier = Modifier.fillMaxWidth(MAX_WIDTH_TAB_ROW_PERCENT),
                     backgroundColor = Color.Transparent,
                     contentColor = selectedColor,
                     divider = {},
