@@ -14,7 +14,7 @@
 namespace mozilla {
 namespace layers {
 
-static const int32_t kCheckpointEventType = -1;
+static const uint8_t kCheckpointEventType = -1;
 static const uint32_t kMaxSpinCount = 200;
 
 static const TimeDuration kTimeout = TimeDuration::FromMilliseconds(100);
@@ -335,8 +335,8 @@ bool CanvasEventRingBuffer::WaitForDataToRead(TimeDuration aTimeout,
   return false;
 }
 
-int32_t CanvasEventRingBuffer::ReadNextEvent() {
-  int32_t nextEvent;
+uint8_t CanvasEventRingBuffer::ReadNextEvent() {
+  uint8_t nextEvent;
   ReadElement(*this, nextEvent);
   while (nextEvent == kCheckpointEventType && good()) {
     ReadElement(*this, nextEvent);

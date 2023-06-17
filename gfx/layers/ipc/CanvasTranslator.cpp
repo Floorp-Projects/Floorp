@@ -242,7 +242,7 @@ void CanvasTranslator::Deactivate() {
 bool CanvasTranslator::TranslateRecording() {
   MOZ_ASSERT(CanvasThreadHolder::IsInCanvasWorker());
 
-  int32_t eventType = mStream->ReadNextEvent();
+  uint8_t eventType = mStream->ReadNextEvent();
   while (mStream->good()) {
     bool success = RecordedEvent::DoWithEventFromStream(
         *mStream, static_cast<RecordedEvent::EventType>(eventType),
