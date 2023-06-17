@@ -5,19 +5,14 @@
 "use strict";
 
 class PictureInPictureVideoWrapper {
-  constructor(video) {
-    this.player = video.closest("#movie_player")?.wrappedJSObject;
-  }
   isLive(video) {
     return !!document.querySelector(".ytp-live");
   }
   setMuted(video, shouldMute) {
-    if (this.player) {
-      if (shouldMute) {
-        this.player.mute();
-      } else {
-        this.player.unMute();
-      }
+    let muteButton = document.querySelector("#player .ytp-mute-button");
+
+    if (video.muted !== shouldMute && muteButton) {
+      muteButton.click();
     } else {
       video.muted = shouldMute;
     }
@@ -64,19 +59,6 @@ class PictureInPictureVideoWrapper {
   }
   shouldHideToggle(video) {
     return !!video.closest(".ytd-video-preview");
-  }
-  setVolume(video, volume) {
-    if (this.player) {
-      this.player.setVolume(volume * 100);
-    } else {
-      video.volume = volume;
-    }
-  }
-  getVolume(video) {
-    if (this.player) {
-      return this.player.getVolume() / 100;
-    }
-    return video.volume;
   }
 }
 
