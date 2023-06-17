@@ -107,15 +107,9 @@ pref("extensions.manifestV2.actionsPopupURLRestricted", true);
 pref("extensions.autoDisableScopes", 15);
 
 pref("extensions.enabledScopes", 5);
-pref("extensions.autoupdate.enabled", true);
-pref("extensions.autoupdate.interval", 86400);
 pref("extensions.update.enabled", true);
 pref("extensions.update.interval", 86400);
-pref("extensions.dss.enabled", false);
-pref("extensions.ignoreMTimeChanges", false);
 pref("extensions.logging.enabled", false);
-pref("extensions.hideInstallButton", true);
-pref("extensions.hideUpdateButton", false);
 pref("extensions.strictCompatibility", false);
 pref("extensions.minCompatibleAppVersion", "11.0");
 
@@ -128,10 +122,6 @@ pref("extensions.getAddons.search.browseURL", "https://addons.mozilla.org/%LOCAL
 pref("extensions.getAddons.browseAddons", "https://addons.mozilla.org/%LOCALE%/android/collections/4757633/mob/?page=1&collection_sort=-popularity");
 pref("extensions.getAddons.get.url", "https://services.addons.mozilla.org/api/v4/addons/search/?guid=%IDS%&lang=%LOCALE%");
 pref("extensions.getAddons.langpacks.url", "https://services.addons.mozilla.org/api/v4/addons/language-tools/?app=android&type=language&appversion=%VERSION%");
-
-/* preference for the locale picker */
-pref("extensions.getLocales.get.url", "");
-pref("extensions.compatability.locales.buildid", "0");
 
 /* Don't let XPIProvider install distribution add-ons; we do our own thing on mobile. */
 pref("extensions.installDistroAddons", false);
