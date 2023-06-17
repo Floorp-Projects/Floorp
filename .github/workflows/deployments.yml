@@ -387,15 +387,17 @@ jobs:
         run: |
          export MOZ_CHROME_MULTILOCALE="ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW"
          for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
+         ./mach build
+         ./mach package
          AB_CD=multi ./mach package
-         mkdir -p linux-x86_64-artifact
-         cp obj-x86_64-pc-linux-gnu/dist/*.tar.bz2 ./linux-x86_64-artifact
+         mkdir -p output
+         cp obj-x86_64-pc-linux-gnu/dist/*.tar.bz2 ./output
 
       - name: Publish 🎁
         uses: actions/upload-artifact@v1
         with:
          name: floorp-linux-x64
-         path: ./linux-x86_64-artifact/*
+         path: ./output
 
 ################################################################ ↑ Linux x86_64 Build ####################################################################################
 
@@ -498,15 +500,17 @@ jobs:
         run: |
           export MOZ_CHROME_MULTILOCALE="ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW"
           for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
+          ./mach build
+          ./mach package
           AB_CD=multi ./mach package
-          mkdir -p linux-aarch64-artifact
-          cp obj-aarch64-unknown-linux-gnu/dist/*.tar.bz2 ./linux-aarch64-artifact
+          mkdir -p output
+          cp obj-aarch64-unknown-linux-gnu/dist/*.tar.bz2 ./output
 
       - name: Publish 🎁
         uses: actions/upload-artifact@v1
         with:
           name: floorp-linux-aarch64
-          path: linux-aarch64-artifact/*
+          path: output
 
 ################################################ ↑ Linux AArch64 Build ################################################
 
