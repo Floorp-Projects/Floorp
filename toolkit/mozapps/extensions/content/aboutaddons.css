@@ -819,6 +819,7 @@ section:not(:empty) ~ #empty-addons-message {
 .permission-header > .addon-sitepermissions-host {
   font-weight: bolder;
 }
+
 .back-button {
   margin-left: -20px;
 }
