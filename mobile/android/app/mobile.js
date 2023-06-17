@@ -305,8 +305,6 @@ pref("urlclassifier.malwareTable", "goog-harmful-proto,goog-unwanted-proto,mozte
 pref("browser.dom.window.dump.enabled", true);
 pref("devtools.console.stdout.chrome", true);
 
-pref("media.realtime_decoder.enabled", true);
-
 pref("full-screen-api.enabled", true);
 
 // Transmit UDP busy-work to the LAN when anticipating low latency
@@ -315,15 +313,6 @@ pref("network.tickle-wifi.enabled", true);
 
 // Mobile manages state by autodetection
 pref("network.manage-offline-status", true);
-
-// Media plugins for libstagefright playback on android
-pref("media.plugins.enabled", true);
-
-// Stagefright's OMXCodec::CreationFlags. The interesting flag values are:
-//  0 = Let Stagefright choose hardware or software decoding (default)
-//  8 = Force software decoding
-// 16 = Force hardware decoding
-pref("media.stagefright.omxcodec.flags", 0);
 
 // Hide common parts of URLs like "www." or "http://"
 pref("browser.urlbar.trimURLs", true);
@@ -400,8 +389,6 @@ pref("dom.push.debug", false);
 pref("dom.push.maxRecentMessageIDsPerSubscription", 0);
 
 pref("dom.audiochannel.mediaControl", true);
-
-pref("media.openUnsupportedTypeWithExternalApp", true);
 
 // Ask for permission when enumerating WebRTC devices.
 pref("media.navigator.permission.device", true);
