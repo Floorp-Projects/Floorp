@@ -44,7 +44,7 @@ bool PrintTranslator::TranslateRecording(PRFileDescStream& aRecording) {
     return false;
   }
 
-  int32_t eventType;
+  uint8_t eventType;
   ReadElement(aRecording, eventType);
   while (aRecording.good()) {
     bool success = RecordedEvent::DoWithEventFromStream(
