@@ -16,22 +16,13 @@ pref("toolkit.defaultChromeURI", "chrome://geckoview/content/geckoview.xhtml");
 
 pref("toolkit.zoomManager.zoomValues", ".2,.3,.5,.67,.8,.9,1,1.1,1.2,1.33,1.5,1.7,2,2.4,3,4");
 
-// The default fallback zoom level to render pages at. Set to -1 to fit page; otherwise
-// the value is divided by 1000 and clamped to hard-coded min/max scale values.
-pref("browser.viewport.defaultZoom", -1);
-
 // Show/Hide scrollbars when active/inactive
 pref("ui.useOverlayScrollbars", 1);
 pref("ui.scrollbarFadeBeginDelay", 450);
 pref("ui.scrollbarFadeDuration", 0);
 
-pref("browser.cache.memory_limit", 5120); // 5 MB
-
 /* image cache prefs */
 pref("image.cache.size", 1048576); // bytes
-
-/* offline cache prefs */
-pref("browser.cache.offline.capacity", 5120); // kilobytes
 
 /* disable some protocol warnings */
 pref("network.protocol-handler.warn-external.tel", false);
@@ -65,19 +56,14 @@ pref("network.mdns.use_js_fallback", false);
 // CookieBehavior setting for the private browsing.
 pref("network.cookie.cookieBehavior.pbmode", 4);
 
-/* How many times should have passed before the remote tabs list is refreshed */
-pref("browser.display.remotetabs.timeout", 10);
-
 /* session history */
 pref("browser.sessionhistory.max_total_viewers", -1);
 pref("browser.sessionhistory.max_entries", 50);
 pref("browser.sessionhistory.contentViewerTimeout", 360);
-pref("browser.sessionhistory.bfcacheIgnoreMemoryPressure", false);
 
 /* session store */
 pref("browser.sessionstore.resume_from_crash", true);
 pref("browser.sessionstore.interval", 10000); // milliseconds
-pref("browser.sessionstore.backupInterval", 120000); // milliseconds -> 2 minutes
 pref("browser.sessionstore.max_tabs_undo", 10);
 pref("browser.sessionstore.max_resumed_crashes", 2);
 pref("browser.sessionstore.privacy_level", 0); // saving data: 0 = all, 1 = unencrypted sites, 2 = never
@@ -187,13 +173,9 @@ pref("browser.search.update", false);
 
 // disable search suggestions by default
 pref("browser.search.suggest.enabled", false);
-pref("browser.search.suggest.prompted", false);
 
 // tell the search service that we don't really expose the "current engine"
 pref("browser.search.noCurrentEngine", true);
-
-// Control media casting & mirroring features
-pref("browser.casting.enabled", true);
 
 // Enable sparse localization by setting a few package locale overrides
 pref("chrome.override_package.global", "browser");
@@ -204,15 +186,9 @@ pref("chrome.override_package.passwordmgr", "browser");
 pref("dom.disable_window_move_resize", true);
 
 // open in tab preferences
-// 0=default window, 1=current window/tab, 2=new window, 3=new tab in most window
-pref("browser.link.open_external", 3);
 pref("browser.link.open_newwindow", 3);
 // 0=force all new windows to tabs, 1=don't force, 2=only force those with no features set
 pref("browser.link.open_newwindow.restriction", 0);
-
-// show images option
-// 0=never, 1=always, 2=cellular-only
-pref("browser.image_blocking", 1);
 
 // controls which bits of private data to clear. by default we clear them all.
 pref("privacy.item.cache", true);
@@ -245,10 +221,6 @@ pref("devtools.debugger.unix-domain-socket", "@ANDROID_PACKAGE_NAME@/firefox-deb
 
 pref("devtools.remote.usb.enabled", false);
 pref("devtools.remote.wifi.enabled", false);
-
-// Maximum distance from the point where the user pressed where we still
-// look for text to select
-pref("browser.ui.selection.distance", 250);
 
 // plugins
 pref("plugin.disable", true);
@@ -408,9 +380,6 @@ pref("media.plugins.enabled", true);
 // 16 = Force hardware decoding
 pref("media.stagefright.omxcodec.flags", 0);
 
-// Location Bar AutoComplete.
-pref("browser.urlbar.autocomplete.enabled", true);
-
 // Hide common parts of URLs like "www." or "http://"
 pref("browser.urlbar.trimURLs", true);
 
@@ -421,9 +390,6 @@ pref("dom.phonenumber.substringmatching.CO", 10);
 pref("dom.phonenumber.substringmatching.VE", 7);
 
 pref("gfx.canvas.azure.backends", "skia");
-
-// When true, phone number linkification is enabled.
-pref("browser.ui.linkify.phone", false);
 
 // The mode of home provider syncing.
 // 0: Sync always
