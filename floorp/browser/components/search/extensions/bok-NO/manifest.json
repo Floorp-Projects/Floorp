@@ -1,0 +1,26 @@
+{
+  "name": "Ordbok",
+  "description": "Norske ordbøker",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "bok-NO@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.png"
+  },
+  "web_accessible_resources": [
+    "favicon.png"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "Ordbok",
+      "search_url": "https://ordbok.uib.no/perl/ordbok.cgi",
+      "search_form": "https://ordbok.uib.no/",
+      "search_url_get_params": "OPP={searchTerms}&sourceid=Mozilla-search"
+    }
+  }
+}

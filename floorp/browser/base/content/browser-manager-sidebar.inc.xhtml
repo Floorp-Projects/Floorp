@@ -1,0 +1,16 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+    <vbox id="sidebar2-box" style="min-width: 25em;" class="browser-sidebar2 chromeclass-extrachrome" >
+      <box id="sidebar2-header" style="min-height: 2.5em" align="center">
+        <toolbarbutton id="sidebar2-back" class="sidebar2-icon" style="margin-left: 0.5em;" data-l10n-id="sidebar-back-button"  oncommand="bmsController.eventFunctions.sidebarButtons(0);"/>
+        <toolbarbutton id="sidebar2-forward" class="sidebar2-icon" style="margin-left: 1em;" data-l10n-id="sidebar-forward-button"  oncommand="bmsController.eventFunctions.sidebarButtons(1);"/>
+        <toolbarbutton id="sidebar2-reload" class="sidebar2-icon" style="margin-left: 1em;" data-l10n-id="sidebar-reload-button"  oncommand="bmsController.eventFunctions.sidebarButtons(2);"/>
+        <toolbarbutton id="sidebar2-go-index" class="sidebar2-icon" style="margin-left: 1em;" data-l10n-id="sidebar-go-index-button"  oncommand="bmsController.eventFunctions.sidebarButtons(3);"/>
+        <spacer flex="1"/>
+        <toolbarbutton id="sidebar2-keeppanelwidth" context="width-size-context" class="sidebar2-icon" style="margin-right: 0.5em;" data-l10n-id="sidebar-keepWidth-button"  oncommand="bmsController.eventFunctions.keepWidth();"/>
+        <toolbarbutton id="sidebar2-close" class="sidebar2-icon" style="margin-right: 0.5em;" data-l10n-id="sidebar2-close-button"  oncommand="bmsController.controllFunctions.changeVisibleWenpanel();"/>
+        </box>
+    </vbox>
+<splitter id="sidebar-splitter2" class="browser-sidebar2 chromeclass-extrachrome"  hidden="false"/>

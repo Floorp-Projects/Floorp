@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<window title="Testing OS.File on a chrome worker thread"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="test();">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/WorkerHandler.js"/>
+  <script type="application/javascript">
+  <![CDATA[
+
+let worker;
+
+function test() {
+  ok(true, "test_osfile.xul: Starting test");
+  if (navigator.platform.includes("Win")) {
+    ok(true, "test_osfile.xul: Using Windows test suite");
+    worker = new ChromeWorker("worker_test_osfile_win.js");
+  } else {
+    ok(true, "test_osfile.xul: Using Unix test suite");
+    worker = new ChromeWorker("worker_test_osfile_unix.js");
+  }
+  SimpleTest.waitForExplicitFinish();
+  ok(true, "test_osfile.xul: Chrome worker created");
+  dump("MAIN: go\n");
+  listenForTests(worker);
+  worker.postMessage(0);
+  ok(true, "test_osfile.xul: Test in progress");
+};
+]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+  </body>
+  <label id="test-result"/>
+</window>

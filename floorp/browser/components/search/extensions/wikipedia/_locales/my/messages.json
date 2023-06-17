@@ -1,0 +1,20 @@
+{
+  "extensionName": {
+    "message": "Wikipedia (my)"
+  },
+  "extensionDescription": {
+    "message": "အခမဲ့လွတ်လပ်စွယ်စုံကျမ်း"
+  },
+  "searchUrl": {
+    "message": "https://my.wikipedia.org/wiki/Special:Search"
+  },
+  "searchForm": {
+    "message": "https://my.wikipedia.org/wiki/Special:Search?search={searchTerms}&sourceid=Mozilla-search"
+  },
+  "suggestUrl": {
+    "message": "https://my.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"
+  },
+  "searchUrlGetParams": {
+    "message": "search={searchTerms}&sourceid=Mozilla-search"
+  }
+}

@@ -3693,17 +3693,10 @@ already_AddRefed<Preferences> Preferences::GetInstanceForService() {
 #endif
 
   } else {
-    // Check if there is a deployment configuration file. If so, set up the
-    // pref config machinery, which will actually read the file.
-    nsAutoCString lockFileName;
-    nsresult rv = Preferences::GetCString("general.config.filename",
-                                          lockFileName, PrefValueKind::User);
-    if (NS_SUCCEEDED(rv)) {
-      NS_CreateServicesFromCategory(
+    NS_CreateServicesFromCategory(
           "pref-config-startup",
           static_cast<nsISupports*>(static_cast<void*>(sPreferences)),
           "pref-config-startup");
-    }
 
     nsCOMPtr<nsIObserverService> observerService =
         services::GetObserverService();

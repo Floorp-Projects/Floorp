@@ -26,7 +26,7 @@ void RemoveSecureOutputFiles(LPCWSTR patchDirPath);
 #ifdef MOZ_MAINTENANCE_SERVICE
 #  define SVC_NAME L"MozillaMaintenance"
 
-#  define BASE_SERVICE_REG_KEY L"SOFTWARE\\Mozilla\\MaintenanceService"
+#  define BASE_SERVICE_REG_KEY L"SOFTWARE\\Ablaze\\MaintenanceService"
 
 // The test only fallback key, as its name implies, is only present on machines
 // that will use automated tests.  Since automated tests always run from a
