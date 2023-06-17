@@ -12,18 +12,15 @@ Services.scriptloader.loadSubScript(
 
 add_setup(async function testNoTelemetry() {
   await Telemetry.clearScalars();
-  await SpecialPowers.pushPrefEnv({
-    set: [["media.allow-audio-non-utility", true]],
-  });
 });
 
 add_task(async function testAudioDecodingInContent() {
   await runTest({ expectUtility: false, expectRDD: false });
 });
 
-add_task(async function testContentTelemetry() {
+add_task(async function testUtilityTelemetry() {
   const codecs = ["vorbis", "mp3", "aac", "flac"];
-  const extraKey = ",rdd-disabled,utility-disabled,allow-non-utility";
+  const extraKey = ",rdd-disabled,utility-disabled";
   await verifyTelemetryForProcess("tab", codecs, extraKey);
 
   const platform = Services.appinfo.OS;
