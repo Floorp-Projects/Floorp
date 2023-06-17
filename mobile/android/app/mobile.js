@@ -78,9 +78,6 @@ pref("browser.helperApps.deleteTempFileOnExit", false);
 
 /* password manager */
 pref("signon.firefoxRelay.feature", "not available");
-pref("signon.rememberSignons", true);
-pref("signon.expireMasterPassword", false);
-pref("signon.debug", false);
 
 /* form helper (scroll to and optionally zoom into editable fields)  */
 pref("formhelper.autozoom", true);
