@@ -940,3 +940,13 @@ section:not(:empty) ~ #empty-addons-message {
   position: relative;
   right: 0.6em;
 }
+
+.category[selected]::before {
+  content: "";
+  position: absolute !important;
+  left: 12px;
+  border-left: 3px solid;
+  position: inherit;
+  height: 20px;
+  color: var(--in-content-accent-color) !important;
+}
