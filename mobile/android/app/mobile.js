@@ -305,8 +305,6 @@ pref("urlclassifier.malwareTable", "goog-harmful-proto,goog-unwanted-proto,mozte
 pref("browser.dom.window.dump.enabled", true);
 pref("devtools.console.stdout.chrome", true);
 
-// controls if we want camera support
-pref("device.camera.enabled", true);
 pref("media.realtime_decoder.enabled", true);
 
 pref("full-screen-api.enabled", true);
@@ -345,9 +343,6 @@ pref("home.sync.updateMode", 0);
 
 // How frequently to check if we should sync home provider data.
 pref("home.sync.checkIntervalSecs", 3600);
-
-// Enable device storage API
-pref("device.storage.enabled", true);
 
 // Enable meta-viewport support for font inflation code
 pref("dom.meta-viewport.enabled", true);
