@@ -3,6 +3,7 @@
 // Make sure Shield doesn't hit the network.
 user_pref("app.normandy.api_url", "https://localhost/selfsupport-dummy/");
 user_pref("app.update.staging.enabled", false);
+user_pref("app.update.url.android", "");
 user_pref("browser.safebrowsing.blockedURIs.enabled", false);
 user_pref("browser.safebrowsing.downloads.enabled", false);
 user_pref("browser.safebrowsing.downloads.remote.url", "http://127.0.0.1/safebrowsing-dummy/gethash");
@@ -61,6 +62,7 @@ user_pref("layout.testing.overlay-scrollbars.always-visible", true);
 // way to guarantee it's loaded by the time we take the reftest screenshot.
 user_pref("layout.image.eager_broken_image_icon", true);
 user_pref("media.gmp-manager.url.override", "http://localhost/dummy-gmp-manager.xml");
+user_pref("media.openUnsupportedTypeWithExternalApp", false);
 // Reftests load a lot of URLs very quickly. This puts avoidable and
 // unnecessary I/O pressure on the Places DB (measured to be in the
 // gigabytes).
