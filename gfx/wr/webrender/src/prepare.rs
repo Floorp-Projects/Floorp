@@ -108,9 +108,22 @@ pub fn prepare_primitives(
 fn can_use_clip_chain_for_quad_path(
     clip_chain: &ClipChainInstance,
     prim_spatial_node_index: SpatialNodeIndex,
+    raster_spatial_node_index: SpatialNodeIndex,
     clip_store: &ClipStore,
     data_stores: &DataStores,
+    spatial_tree: &SpatialTree,
 ) -> bool {
+    let map_prim_to_surface = spatial_tree.get_relative_transform(
+        prim_spatial_node_index,
+        raster_spatial_node_index,
+    );
+    if map_prim_to_surface.is_perspective() {
+        return false;
+    }
+
+    // TODO(gw): Temporarily disable the new clip-mask rendering path for now, while
+    //           investigating a driver-specific shader optimization regression.
+
     if !clip_chain.needs_mask {
         return true;
     }
@@ -293,8 +306,10 @@ fn prepare_prim_for_render(
                 *use_legacy_path = !can_use_clip_chain_for_quad_path(
                     &prim_instance.vis.clip_chain,
                     cluster.spatial_node_index,
+                    pic_context.raster_spatial_node_index,
                     frame_state.clip_store,
                     data_stores,
+                    frame_context.spatial_tree,
                 );
 
                 *use_legacy_path
@@ -706,8 +721,7 @@ fn prepare_interned_prim_for_render(
                 if is_opaque {
                     quad_flags |= QuadFlags::IS_OPAQUE;
                 }
-                let needs_scissor = !prim_is_2d_axis_aligned || map_prim_to_surface.is_perspective();
-                if !needs_scissor {
+                if prim_is_2d_axis_aligned {
                     quad_flags |= QuadFlags::APPLY_DEVICE_CLIP;
                 }
 
@@ -780,7 +794,7 @@ fn prepare_interned_prim_for_render(
                             aa_flags,
                             quad_flags,
                             device_pixel_scale,
-                            needs_scissor,
+                            !prim_is_2d_axis_aligned,
                             frame_state,
                         );
 
@@ -863,7 +877,7 @@ fn prepare_interned_prim_for_render(
                                     aa_flags,
                                     quad_flags,
                                     device_pixel_scale,
-                                    needs_scissor,
+                                    !prim_is_2d_axis_aligned,
                                     frame_state,
                                 );
                                 scratch.quad_segments.push(segment);
