@@ -183,20 +183,6 @@ pref("browser.link.open_newwindow", 3);
 // 0=force all new windows to tabs, 1=don't force, 2=only force those with no features set
 pref("browser.link.open_newwindow.restriction", 0);
 
-// controls which bits of private data to clear. by default we clear them all.
-pref("privacy.item.cache", true);
-pref("privacy.item.cookies", true);
-pref("privacy.item.offlineApps", true);
-pref("privacy.item.history", true);
-pref("privacy.item.searchHistory", true);
-pref("privacy.item.formdata", true);
-pref("privacy.item.downloads", true);
-pref("privacy.item.passwords", true);
-pref("privacy.item.sessions", true);
-pref("privacy.item.geolocation", true);
-pref("privacy.item.siteSettings", true);
-pref("privacy.item.syncAccount", true);
-
 // content sink control -- controls responsiveness during page load
 // see https://bugzilla.mozilla.org/show_bug.cgi?id=481566#c9
 //pref("content.sink.enable_perf_mode",  2); // 0 - switch, 1 - interactive, 2 - perf
