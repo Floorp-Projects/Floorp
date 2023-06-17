@@ -46,13 +46,6 @@ pref("network.http.http3.default-qpack-table-size", 0);
 pref("network.buffer.cache.count", 24);
 pref("network.buffer.cache.size",  16384);
 
-// predictive actions
-pref("network.predictor.max-db-size", 2097152); // bytes
-pref("network.predictor.preserve", 50); // percentage of predictor data to keep when cleaning up
-
-// Use JS mDNS as a fallback
-pref("network.mdns.use_js_fallback", false);
-
 // CookieBehavior setting for the private browsing.
 pref("network.cookie.cookieBehavior.pbmode", 4);
 
