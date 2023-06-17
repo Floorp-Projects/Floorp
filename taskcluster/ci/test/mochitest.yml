@@ -645,7 +645,7 @@ mochitest-media:
                 by-test-platform:
                     android.*: []
                     windows.*ccov.*: []
-                    linux.*64(-shippable|-asan)?-qr/opt: ['autoland', 'mozilla-central']  # linux.*-tsan disabled until Bug 1835935
+                    linux.*64(-shippable|-asan|-tsan)?-qr/opt: ['autoland', 'mozilla-central']
                     macosx.*64(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central']
                     windows1.*(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central']
                     windows.*-asan-qr/opt: ['autoland', 'mozilla-central']
@@ -662,7 +662,7 @@ mochitest-media:
                     android.*: []
                     windows.*ccov.*: []
                     linux.*64(-asan|-devedition|-shippable)?-qr/(opt|debug): built-projects
-                    linux.*64-tsan-qr/opt: []  # Linux TSAN disabled until Bug 1835935
+                    linux.*64-tsan-qr/opt: ['autoland', 'mozilla-central']
                     macosx.*-64(-devedition|-shippable)?-qr/(opt|debug): built-projects
                     windows1.*(-devedition|-shippable)?-qr/(opt|debug): built-projects
                     windows.*-asan-qr/opt: ['autoland', 'mozilla-central']
@@ -704,7 +704,6 @@ mochitest-media:
                     android.*: built-projects
                     linux.*(asan|ccov)/opt: []
                     .*(ccov/|asan/|-32).*: built-projects
-                    linux.*64-tsan.*: []  # linux.*-tsan disabled until Bug 1835935
                     (android|linux|windows10-64-2009|windows11-64-2009|macos)(?!.*-qr).*: []
                     default: built-projects
     loopback-video: true
