@@ -299,13 +299,14 @@ const workspaceFunctions = {
     },
 
     renameWorkspace(label) {
+      label = label.replace(/\s+/g, "-");
       if (label == defaultWorkspaceName) {
         return;
       }
       let prompts = Services.prompt;
       let l10n = new Localization(["browser/floorp.ftl"], true);
       let check = { value: false };
-      let pattern = /^[\p{L}\p{N}]+$/u;
+      let pattern = /^[\p{L}\p{N}\s]+$/u;
       let input = { value: "" };
       let result = prompts.prompt(
         null,
@@ -325,6 +326,8 @@ const workspaceFunctions = {
         input.value != l10n.formatValueSync("workspace-default") &&
         pattern.test(input.value)
       ) {
+
+        input.value = input.value.replace(/\s+/g, "-");
         let workspaceAll = Services.prefs
           .getStringPref(WORKSPACE_ALL_PREF)
           .split(",");
@@ -385,7 +388,7 @@ const workspaceFunctions = {
       let l10n = new Localization(["browser/floorp.ftl"], true);
       prompts = Services.prompt;
       let check = { value: false };
-      let pattern = /^[\p{L}\p{N}]+$/u;
+      const pattern = /^[\p{L}\p{N}\s]+$/u;
       let input = { value: "" };
       let result = prompts.prompt(
         null,
@@ -407,6 +410,8 @@ const workspaceFunctions = {
         pattern.test(input.value)
       ) {
         let label = input.value;
+        label = label.replace(/\s+/g, "-");
+
         let workspaceAll = Services.prefs
           .getStringPref(WORKSPACE_ALL_PREF)
           .split(",");
@@ -471,7 +476,7 @@ const workspaceFunctions = {
         if (currentWorkspace != l10n.formatValueSync("workspace-default")) {
           document
             .getElementById("workspace-button")
-            .setAttribute("label", currentWorkspace);
+            .setAttribute("label", currentWorkspace.replace(/-/g, " "));
           document.querySelector(
             "#workspace-button > .toolbarbutton-text"
           ).style.display = "inherit";
@@ -716,11 +721,12 @@ const workspaceFunctions = {
 
   WorkspaceContextMenu: {
     addWorkspaceElemToMenu(label, nextElem) {
+      let labelDisplay = label.replace(/-/g, " ");
       let workspaceItemElem = window.MozXULElement.parseXULToFragment(`
 
       <vbox id="workspace-box-${label}" class="workspace-label-box">
        <hbox id="workspace-${label}" class="workspace-item-box">
-         <toolbarbutton id="workspace-label" label="${label}"
+         <toolbarbutton id="workspace-label" label="${labelDisplay}"
                    class="toolbarbutton-1 workspace-item" workspace="${label}"
                    context="workspace-item-context" oncommand="workspaceFunctions.manageWorkspaceFunctions.changeWorkspace('${label}')"/>
        </hbox>
