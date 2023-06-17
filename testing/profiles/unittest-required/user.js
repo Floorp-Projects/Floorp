@@ -12,7 +12,6 @@ user_pref("app.normandy.api_url", "");
 // Make sure the notification permission migration test doesn't hit the network.
 user_pref("app.support.baseURL", "http://{server}/support-dummy/");
 user_pref("app.update.staging.enabled", false);
-user_pref("app.update.url.android", "");
 // Increase the APZ content response timeout in tests to 1 minute.
 // This is to accommodate the fact that test environments tends to be slower
 // than production environments (with the b2g emulator being the slowest of them
