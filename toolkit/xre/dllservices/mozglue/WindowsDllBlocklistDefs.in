@@ -264,6 +264,9 @@ ALL_PROCESSES += [
 
     # Cylance, bug 1756190 and bug 1799562
     DllBlocklistEntry("CylanceMemDef64.dll", ALL_VERSIONS),
+
+    # ESET security (bug 1833793)
+    DllBlocklistEntry("eoppbrowser.dll", (1, 0, 88, 0), BLOCK_WIN7_AND_OLDER),
 ]
 
 ALL_PROCESSES_TESTS += [
