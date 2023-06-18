@@ -20,4 +20,5 @@ data class ShareInternetResourceState(
     val contentType: String? = null,
     val private: Boolean = false,
     val response: Response? = null,
+    val referrerUrl: String? = null,
 )

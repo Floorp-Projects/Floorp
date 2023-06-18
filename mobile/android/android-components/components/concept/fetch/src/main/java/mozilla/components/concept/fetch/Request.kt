@@ -49,6 +49,7 @@ data class Request(
     val cookiePolicy: CookiePolicy = CookiePolicy.INCLUDE,
     val useCaches: Boolean = true,
     val private: Boolean = false,
+    val referrerUrl: String? = null,
 ) {
     /**
      * A [Body] to be send with the [Request].
