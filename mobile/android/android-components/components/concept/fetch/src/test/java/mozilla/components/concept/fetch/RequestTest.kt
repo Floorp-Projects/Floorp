@@ -48,6 +48,7 @@ class RequestTest {
             redirect = Request.Redirect.MANUAL,
             cookiePolicy = Request.CookiePolicy.INCLUDE,
             useCaches = true,
+            referrerUrl = "https://mozilla.org",
         )
 
         assertEquals("https://www.mozilla.org", request.url)
@@ -63,6 +64,7 @@ class RequestTest {
         assertEquals(Request.Redirect.MANUAL, request.redirect)
         assertEquals(Request.CookiePolicy.INCLUDE, request.cookiePolicy)
         assertEquals(true, request.useCaches)
+        assertEquals("https://mozilla.org", request.referrerUrl)
 
         val headers = request.headers!!
         assertEquals(3, headers.size)

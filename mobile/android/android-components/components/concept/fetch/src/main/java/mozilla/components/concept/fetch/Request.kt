@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit
  * sent with the request, defaults to [CookiePolicy.INCLUDE]
  * @property useCaches Whether caches should be used or a network request
  * should be forced, defaults to true (use caches).
-* @property private Whether the request should be performed in a private context, defaults to false.
+ * @property private Whether the request should be performed in a private context, defaults to false.
  * The feature is not support in all [Client]s, check support before using.
  * @see [Headers.Names]
  * @see [Headers.Values]
@@ -50,6 +50,28 @@ data class Request(
     val useCaches: Boolean = true,
     val private: Boolean = false,
 ) {
+    var referrerUrl: String? = null
+
+    /**
+     * Create a Request for Backward compatibility.
+     * @property referrerUrl An optional url of the referrer.
+     */
+    constructor(
+        url: String,
+        method: Method = Method.GET,
+        headers: MutableHeaders? = MutableHeaders(),
+        connectTimeout: Pair<Long, TimeUnit>? = null,
+        readTimeout: Pair<Long, TimeUnit>? = null,
+        body: Body? = null,
+        redirect: Redirect = Redirect.FOLLOW,
+        cookiePolicy: CookiePolicy = CookiePolicy.INCLUDE,
+        useCaches: Boolean = true,
+        private: Boolean = false,
+        referrerUrl: String? = null,
+    ) : this(url, method, headers, connectTimeout, readTimeout, body, redirect, cookiePolicy, useCaches, private) {
+        this.referrerUrl = referrerUrl
+    }
+
     /**
      * A [Body] to be send with the [Request].
      *
