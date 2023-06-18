@@ -154,6 +154,7 @@ private fun fetch(
         if (response.isSuccess) {
             response.body.useStream { it.readBytes() }
         } else {
+            response.close()
             null
         }
     } catch (e: IOException) {

@@ -207,7 +207,7 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
             return try {
                 val response = client.fetch(request)
                 // Close the response stream to ensure the body is closed correctly. See https://bugzilla.mozilla.org/show_bug.cgi?id=1603114.
-                response.body.close()
+                response.close()
 
                 response.status < VALID_RESPONSE_CODE_UPPER_BOUND
             } catch (e: IOException) {

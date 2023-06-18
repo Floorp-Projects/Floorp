@@ -79,6 +79,7 @@ class WallpaperDownloader(
         return@withContext Result.runCatching {
             val response = client.fetch(request)
             if (!response.isSuccess) {
+                response.close()
                 throw IllegalStateException()
             }
             localFile.parentFile?.mkdirs()

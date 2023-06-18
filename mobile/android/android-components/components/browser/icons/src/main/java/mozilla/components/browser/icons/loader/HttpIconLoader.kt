@@ -65,6 +65,7 @@ open class HttpIconLoader(
             if (response.isSuccess) {
                 response.toIconLoaderResult()
             } else {
+                response.close()
                 failureCache.rememberFailure(resource.url)
                 IconLoader.Result.NoResult
             }

@@ -168,6 +168,7 @@ private fun Client.fetchRegion(regionServiceUrl: String): LocationService.Region
 
 private fun Response.toRegion(): LocationService.Region? {
     if (!isSuccess) {
+        close()
         return null
     }
 

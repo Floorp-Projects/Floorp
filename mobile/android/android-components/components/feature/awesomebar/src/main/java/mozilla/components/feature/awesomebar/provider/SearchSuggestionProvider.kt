@@ -267,6 +267,7 @@ class SearchSuggestionProvider private constructor(
 
                 val response = fetchClient.fetch(request)
                 if (!response.isSuccess) {
+                    response.close()
                     return null
                 }
 

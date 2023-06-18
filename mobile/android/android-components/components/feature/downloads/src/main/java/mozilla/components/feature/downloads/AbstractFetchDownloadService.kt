@@ -730,6 +730,7 @@ abstract class AbstractFetchDownloadService : Service() {
         if (response.status != PARTIAL_CONTENT_STATUS && response.status != OK_STATUS ||
             (isResumingDownload && !response.headers.contains(CONTENT_RANGE))
         ) {
+            response.close()
             // We experienced a problem trying to fetch the file, send a failure notification
             currentDownloadJobState.currentBytesCopied = 0
             currentDownloadJobState.state = currentDownloadJobState.state.copy(currentBytesCopied = 0)

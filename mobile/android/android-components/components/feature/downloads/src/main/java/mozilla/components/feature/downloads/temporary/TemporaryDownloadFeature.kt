@@ -90,6 +90,7 @@ abstract class TemporaryDownloadFeature(
         }
 
         if (response.status != Response.SUCCESS) {
+            response.close()
             // We experienced a problem trying to fetch the file, nothing more we can do.
             throw (RuntimeException("Resource is not available to download"))
         }

@@ -68,6 +68,7 @@ class StatementApi(private val httpClient: Client) : StatementListFetcher {
             if (contentTypes.any { it.contains(CONTENT_TYPE_APPLICATION_JSON, ignoreCase = true) }) {
                 res
             } else {
+                res.close()
                 null
             }
         }
