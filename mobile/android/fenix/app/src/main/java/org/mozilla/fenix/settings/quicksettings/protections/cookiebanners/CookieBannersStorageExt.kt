@@ -39,7 +39,7 @@ suspend fun CookieBannersStorage.getCookieBannerUIMode(
         }
 
         if (hasException) {
-            CookieBannerUIMode.DISABLE
+            CookieBannerUIMode.SITE_NOT_SUPPORTED
         } else {
             withContext(Dispatchers.Main) {
                 tab.isCookieBannerSupported()
