@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { TabUnloader } = ChromeUtils.import(
-  "resource:///modules/TabUnloader.jsm"
+const { TabUnloader } = ChromeUtils.importESModule(
+  "resource:///modules/TabUnloader.sys.mjs"
 );
 
 async function refreshData() {

@@ -8,21 +8,14 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
-const { showStreamSharingMenu, webrtcUI } = ChromeUtils.import(
-  "resource:///modules/webrtcUI.jsm"
+const { showStreamSharingMenu, webrtcUI } = ChromeUtils.importESModule(
+  "resource:///modules/webrtcUI.sys.mjs"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "MacOSWebRTCStatusbarIndicator",
-  "resource:///modules/webrtcUI.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "BrowserWindowTracker",
-  "resource:///modules/BrowserWindowTracker.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
+  MacOSWebRTCStatusbarIndicator: "resource:///modules/webrtcUI.sys.mjs",
+});
 
 XPCOMUtils.defineLazyServiceGetter(
   this,

@@ -10,19 +10,14 @@
  * the result types.
  */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  BrowserUIUtils: "resource:///modules/BrowserUIUtils.sys.mjs",
   JsonSchemaValidator:
     "resource://gre/modules/components-utils/JsonSchemaValidator.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  BrowserUIUtils: "resource:///modules/BrowserUIUtils.jsm",
 });
 
 /**

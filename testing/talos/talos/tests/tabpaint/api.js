@@ -21,13 +21,9 @@
  */
 
 ChromeUtils.defineESModuleGetters(this, {
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   TalosParentProfiler: "resource://talos-powers/TalosParentProfiler.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  this,
-  "BrowserWindowTracker",
-  "resource:///modules/BrowserWindowTracker.jsm"
-);
 
 const REDUCE_MOTION_PREF = "ui.prefersReducedMotion";
 const MULTI_OPT_OUT_PREF = "dom.ipc.multiOptOut";

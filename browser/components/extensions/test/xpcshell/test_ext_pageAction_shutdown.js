@@ -3,11 +3,9 @@
 "use strict";
 
 // Load lazy so we create the app info first.
-ChromeUtils.defineModuleGetter(
-  this,
-  "PageActions",
-  "resource:///modules/PageActions.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  PageActions: "resource:///modules/PageActions.sys.mjs",
+});
 
 const { AddonTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/AddonTestUtils.sys.mjs"

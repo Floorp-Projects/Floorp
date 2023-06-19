@@ -12,7 +12,9 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
 );
 
 ChromeUtils.defineESModuleGetters(this, {
+  AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   ContextualIdentityService:
     "resource://gre/modules/ContextualIdentityService.sys.mjs",
   ExtensionSettingsStore:
@@ -20,11 +22,6 @@ ChromeUtils.defineESModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   ShellService: "resource:///modules/ShellService.sys.mjs",
   URILoadingHelper: "resource:///modules/URILoadingHelper.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  AboutNewTab: "resource:///modules/AboutNewTab.jsm",
-  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "ReferrerInfo", () =>

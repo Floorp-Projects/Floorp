@@ -9,8 +9,8 @@ const { Spotlight } = ChromeUtils.import(
 const { PanelTestProvider } = ChromeUtils.importESModule(
   "resource://activity-stream/lib/PanelTestProvider.sys.mjs"
 );
-const { BrowserWindowTracker } = ChromeUtils.import(
-  "resource:///modules/BrowserWindowTracker.jsm"
+const { BrowserWindowTracker } = ChromeUtils.importESModule(
+  "resource:///modules/BrowserWindowTracker.sys.mjs"
 );
 const { SpecialMessageActions } = ChromeUtils.importESModule(
   "resource://messaging-system/lib/SpecialMessageActions.sys.mjs"

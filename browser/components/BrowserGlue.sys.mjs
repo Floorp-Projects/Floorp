@@ -10,6 +10,7 @@ const lazy = {};
 // Ignore unused lazy property for PluginManager.
 // eslint-disable-next-line mozilla/valid-lazy
 ChromeUtils.defineESModuleGetters(lazy, {
+  AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
   ASRouterNewTabHook:
     "resource://activity-stream/lib/ASRouterNewTabHook.sys.mjs",
   ActorManagerParent: "resource://gre/modules/ActorManagerParent.sys.mjs",
@@ -20,18 +21,24 @@ ChromeUtils.defineESModuleGetters(lazy, {
   BookmarkHTMLUtils: "resource://gre/modules/BookmarkHTMLUtils.sys.mjs",
   BookmarkJSONUtils: "resource://gre/modules/BookmarkJSONUtils.sys.mjs",
   BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.sys.mjs",
+  BrowserUIUtils: "resource:///modules/BrowserUIUtils.sys.mjs",
+  BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.sys.mjs",
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   BuiltInThemes: "resource:///modules/BuiltInThemes.sys.mjs",
   ContextualIdentityService:
     "resource://gre/modules/ContextualIdentityService.sys.mjs",
   Corroborate: "resource://gre/modules/Corroborate.sys.mjs",
   DAPTelemetrySender: "resource://gre/modules/DAPTelemetrySender.sys.mjs",
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
+  Discovery: "resource:///modules/Discovery.sys.mjs",
   DoHController: "resource:///modules/DoHController.sys.mjs",
   DownloadsViewableInternally:
     "resource:///modules/DownloadsViewableInternally.sys.mjs",
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
+  ExtensionsUI: "resource:///modules/ExtensionsUI.sys.mjs",
   FeatureGate: "resource://featuregates/FeatureGate.sys.mjs",
   FxAccounts: "resource://gre/modules/FxAccounts.sys.mjs",
+  HomePage: "resource:///modules/HomePage.sys.mjs",
   Integration: "resource://gre/modules/Integration.sys.mjs",
   Interactions: "resource:///modules/Interactions.sys.mjs",
   Log: "resource://gre/modules/Log.sys.mjs",
@@ -42,6 +49,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   Normandy: "resource://normandy/Normandy.sys.mjs",
   OsEnvironment: "resource://gre/modules/OsEnvironment.sys.mjs",
+  PageActions: "resource:///modules/PageActions.sys.mjs",
   PageDataService: "resource:///modules/pagedata/PageDataService.sys.mjs",
   PageThumbs: "resource://gre/modules/PageThumbs.sys.mjs",
   PdfJs: "resource://pdf.js/PdfJs.sys.mjs",
@@ -52,6 +60,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   PluginManager: "resource:///actors/PluginParent.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+  ProcessHangMonitor: "resource:///modules/ProcessHangMonitor.sys.mjs",
   ProvenanceData: "resource:///modules/ProvenanceData.sys.mjs",
   PublicSuffixList:
     "resource://gre/modules/netwerk-dns/PublicSuffixList.sys.mjs",
@@ -72,6 +81,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
   TRRRacer: "resource:///modules/TRRPerformance.sys.mjs",
+  TabCrashHandler: "resource:///modules/ContentCrashHandlers.sys.mjs",
+  TabUnloader: "resource:///modules/TabUnloader.sys.mjs",
   TelemetryUtils: "resource://gre/modules/TelemetryUtils.sys.mjs",
   UIState: "resource://services-sync/UIState.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
@@ -82,22 +93,11 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AboutNewTab: "resource:///modules/AboutNewTab.jsm",
   ASRouterDefaultConfig:
     "resource://activity-stream/lib/ASRouterDefaultConfig.jsm",
   ASRouter: "resource://activity-stream/lib/ASRouter.jsm",
-  BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
-  BrowserUIUtils: "resource:///modules/BrowserUIUtils.jsm",
-  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  Discovery: "resource:///modules/Discovery.jsm",
-  ExtensionsUI: "resource:///modules/ExtensionsUI.jsm",
-  HomePage: "resource:///modules/HomePage.jsm",
   OnboardingMessageProvider:
     "resource://activity-stream/lib/OnboardingMessageProvider.jsm",
-  PageActions: "resource:///modules/PageActions.jsm",
-  ProcessHangMonitor: "resource:///modules/ProcessHangMonitor.jsm",
-  TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
-  TabUnloader: "resource:///modules/TabUnloader.jsm",
 });
 
 if (AppConstants.MOZ_UPDATER) {
@@ -820,8 +820,8 @@ XPCOMUtils.defineLazyGetter(
 );
 
 if (AppConstants.MOZ_CRASHREPORTER) {
-  XPCOMUtils.defineLazyModuleGetters(lazy, {
-    UnsubmittedCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
+  ChromeUtils.defineESModuleGetters(lazy, {
+    UnsubmittedCrashHandler: "resource:///modules/ContentCrashHandlers.sys.mjs",
   });
 }
 
@@ -2563,8 +2563,8 @@ BrowserGlue.prototype = {
             WINTASKBAR_CONTRACTID in Cc &&
             Cc[WINTASKBAR_CONTRACTID].getService(Ci.nsIWinTaskbar).available
           ) {
-            const { WinTaskbarJumpList } = ChromeUtils.import(
-              "resource:///modules/WindowsJumpLists.jsm"
+            const { WinTaskbarJumpList } = ChromeUtils.importESModule(
+              "resource:///modules/WindowsJumpLists.sys.mjs"
             );
             WinTaskbarJumpList.startup();
           }

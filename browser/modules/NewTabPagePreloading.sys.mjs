@@ -12,13 +12,10 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AboutNewTab: "resource:///modules/AboutNewTab.jsm",
-  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
 });
 
 export let NewTabPagePreloading = {

@@ -8,16 +8,13 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
 );
 
 ChromeUtils.defineESModuleGetters(this, {
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   Downloads: "resource://gre/modules/Downloads.sys.mjs",
   DownloadsCommon: "resource:///modules/DownloadsCommon.sys.mjs",
   DownloadsViewUI: "resource:///modules/DownloadsViewUI.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
 });
 
 /**

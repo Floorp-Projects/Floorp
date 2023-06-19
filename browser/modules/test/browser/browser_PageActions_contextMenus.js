@@ -1,6 +1,6 @@
 "use strict";
 
-// This is a test for PageActions.jsm, specifically the context menus.
+// This is a test for PageActions.sys.mjs, specifically the context menus.
 
 ChromeUtils.defineESModuleGetters(this, {
   ExtensionCommon: "resource://gre/modules/ExtensionCommon.sys.mjs",

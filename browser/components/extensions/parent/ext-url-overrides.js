@@ -9,16 +9,12 @@ var { ExtensionParent } = ChromeUtils.importESModule(
 );
 
 ChromeUtils.defineESModuleGetters(this, {
+  AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
   ExtensionControlledPopup:
     "resource:///modules/ExtensionControlledPopup.sys.mjs",
   ExtensionSettingsStore:
     "resource://gre/modules/ExtensionSettingsStore.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  this,
-  "AboutNewTab",
-  "resource:///modules/AboutNewTab.jsm"
-);
 
 const STORE_TYPE = "url_overrides";
 const NEW_TAB_SETTING_NAME = "newTabURL";

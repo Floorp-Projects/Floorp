@@ -579,7 +579,7 @@ var DiscoveryAPI = {
   },
 
   get clientIdDiscoveryEnabled() {
-    // These prefs match Discovery.jsm for enabling clientId cookies.
+    // These prefs match Discovery.sys.mjs for enabling clientId cookies.
     return (
       Services.prefs.getBoolPref(PREF_RECOMMENDATION_ENABLED, false) &&
       Services.prefs.getBoolPref(PREF_TELEMETRY_ENABLED, false) &&

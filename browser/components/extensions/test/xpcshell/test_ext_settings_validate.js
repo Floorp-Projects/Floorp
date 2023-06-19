@@ -10,8 +10,8 @@ const { AddonManager } = ChromeUtils.importESModule(
   "resource://gre/modules/AddonManager.sys.mjs"
 );
 
-const { AboutNewTab } = ChromeUtils.import(
-  "resource:///modules/AboutNewTab.jsm"
+const { AboutNewTab } = ChromeUtils.importESModule(
+  "resource:///modules/AboutNewTab.sys.mjs"
 );
 
 // Lazy load to avoid having Services.appinfo cached first.
@@ -19,7 +19,9 @@ ChromeUtils.defineESModuleGetters(this, {
   ExtensionParent: "resource://gre/modules/ExtensionParent.sys.mjs",
 });
 
-const { HomePage } = ChromeUtils.import("resource:///modules/HomePage.jsm");
+const { HomePage } = ChromeUtils.importESModule(
+  "resource:///modules/HomePage.sys.mjs"
+);
 
 AddonTestUtils.init(this);
 

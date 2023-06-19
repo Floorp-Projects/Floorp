@@ -8,15 +8,10 @@ const NEW_TAB_KEY = "newTabURL";
 const PREF_SETTING_TYPE = "prefs";
 
 ChromeUtils.defineESModuleGetters(this, {
+  AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
   ExtensionSettingsStore:
     "resource://gre/modules/ExtensionSettingsStore.sys.mjs",
 });
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "AboutNewTab",
-  "resource:///modules/AboutNewTab.jsm"
-);
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "proxyType", PROXY_PREF);
 

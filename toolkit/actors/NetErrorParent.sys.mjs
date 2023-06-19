@@ -18,13 +18,8 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
+  HomePage: "resource:///modules/HomePage.sys.mjs",
 });
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "HomePage",
-  "resource:///modules/HomePage.jsm"
-);
 
 class CaptivePortalObserver {
   constructor(actor) {

@@ -9,13 +9,9 @@ var { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "SiteDataManager",
-  "resource:///modules/SiteDataManager.jsm"
-);
 ChromeUtils.defineESModuleGetters(this, {
   DownloadUtils: "resource://gre/modules/DownloadUtils.sys.mjs",
+  SiteDataManager: "resource:///modules/SiteDataManager.sys.mjs",
 });
 
 let gSiteDataSettings = {

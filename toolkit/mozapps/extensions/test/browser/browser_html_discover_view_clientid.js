@@ -44,7 +44,7 @@ function isNoticeVisible(win) {
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
-      // Enable clientid - see Discovery.jsm for the first two prefs.
+      // Enable clientid - see Discovery.sys.mjs for the first two prefs.
       ["browser.discovery.enabled", true],
       // Enabling the Data Upload pref may upload data.
       // Point data reporting services to localhost so the data doesn't escape.

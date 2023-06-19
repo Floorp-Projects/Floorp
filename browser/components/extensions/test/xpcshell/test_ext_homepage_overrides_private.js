@@ -5,7 +5,9 @@
 const { AddonTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/AddonTestUtils.sys.mjs"
 );
-const { HomePage } = ChromeUtils.import("resource:///modules/HomePage.jsm");
+const { HomePage } = ChromeUtils.importESModule(
+  "resource:///modules/HomePage.sys.mjs"
+);
 const { ExtensionPermissions } = ChromeUtils.importESModule(
   "resource://gre/modules/ExtensionPermissions.sys.mjs"
 );

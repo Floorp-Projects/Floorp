@@ -2001,8 +2001,8 @@ History::VisitURI(nsIWidget* aWidget, nsIURI* aURI, nsIURI* aLastVisitedURI,
   }
 
   nsCOMPtr<nsIBrowserWindowTracker> bwt =
-      do_ImportModule("resource:///modules/BrowserWindowTracker.jsm",
-                      "BrowserWindowTracker", &rv);
+      do_ImportESModule("resource:///modules/BrowserWindowTracker.sys.mjs",
+                        "BrowserWindowTracker", &rv);
   if (NS_SUCCEEDED(rv)) {
     // Only if it is running on Firefox, continue to process the followings.
     nsCOMPtr<nsISupports> browser;

@@ -6,12 +6,8 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "BrowserUIUtils",
-  "resource:///modules/BrowserUIUtils.jsm"
-);
 ChromeUtils.defineESModuleGetters(this, {
+  BrowserUIUtils: "resource:///modules/BrowserUIUtils.sys.mjs",
   DownloadPaths: "resource://gre/modules/DownloadPaths.sys.mjs",
   ExtensionControlledPopup:
     "resource:///modules/ExtensionControlledPopup.sys.mjs",
