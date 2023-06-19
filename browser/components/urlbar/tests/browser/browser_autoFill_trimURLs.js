@@ -34,13 +34,7 @@ add_setup(async function () {
 });
 
 async function promiseSearch(searchtext) {
-  gURLBar.focus();
-  await UrlbarTestUtils.inputIntoURLBar(
-    window,
-    searchtext.substr(0, searchtext.length - 1),
-    { replaceContent: true }
-  );
-  EventUtils.sendString(searchtext.substr(-1, 1));
+  await UrlbarTestUtils.inputIntoURLBar(window, searchtext);
   await UrlbarTestUtils.promiseSearchComplete(window);
 }
 

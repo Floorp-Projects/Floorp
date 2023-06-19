@@ -1236,18 +1236,24 @@ export var UrlbarTestUtils = {
    *   The browser window containing target gURLBar.
    * @param {string} text
    *   The text to be input.
-   * @param {boolean} [replaceContent=false]
-   *   When set to true the content of gURLBar is erased, before inserting new content.
    */
-  async inputIntoURLBar(win, text, { replaceContent = false } = {}) {
-    this.EventUtils.synthesizeMouseAtCenter(win.gURLBar.inputField, {}, win);
-    await lazy.BrowserTestUtils.waitForCondition(
-      () => win.document.activeElement === win.gURLBar.inputField
-    );
-    if (replaceContent === true) {
-      win.gURLBar.value = "";
+  async inputIntoURLBar(win, text) {
+    if (win.gURLBar.focused) {
+      win.gURLBar.select();
+    } else {
+      this.EventUtils.synthesizeMouseAtCenter(win.gURLBar.inputField, {}, win);
+      await lazy.TestUtils.waitForCondition(() => win.gURLBar.focused);
     }
-    this.EventUtils.sendString(text, win);
+    if (text.length > 1) {
+      // Set most of the string directly instead of going through sendString,
+      // so that we don't make life unnecessarily hard for consumers by
+      // possibly starting multiple searches.
+      win.gURLBar._setValue(
+        text.substr(0, text.length - 1),
+        false /* allowTrim = */
+      );
+    }
+    this.EventUtils.sendString(text.substr(-1, 1), win);
   },
 };
 
