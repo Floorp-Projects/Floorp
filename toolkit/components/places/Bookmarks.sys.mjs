@@ -276,10 +276,8 @@ export var Bookmarks = Object.freeze({
       }
 
       let item = await insertBookmark(insertInfo, parent);
-
-      // We need the itemId to notify, though once the switch to guids is
-      // complete we may stop using it.
-      let itemId = await lazy.PlacesUtils.promiseItemId(item.guid);
+      let itemDetailMap = await getBookmarkDetailMap([item.guid]);
+      let itemDetail = itemDetailMap.get(item.guid);
 
       // Pass tagging information for the observers to skip over these notifications when needed.
       let isTagging = parent._parentId == lazy.PlacesUtils.tagsFolderId;
@@ -291,7 +289,7 @@ export var Bookmarks = Object.freeze({
 
       const notifications = [
         new PlacesBookmarkAddition({
-          id: itemId,
+          id: itemDetail.id,
           url,
           itemType: item.type,
           parentId: parent._id,
@@ -302,6 +300,11 @@ export var Bookmarks = Object.freeze({
           parentGuid: item.parentGuid,
           source: item.source,
           isTagging: isTagging || isTagsFolder,
+          tags: itemDetail.tags,
+          frecency: itemDetail.frecency,
+          hidden: itemDetail.hidden,
+          visitCount: itemDetail.visitCount,
+          lastVisitDate: itemDetail.lastVisitDate,
         }),
       ];
 
@@ -576,16 +579,16 @@ export var Bookmarks = Object.freeze({
           insertInfo.index += rootIndex++;
         }
       }
-      // We need the itemIds to notify, though once the switch to guids is
-      // complete we may stop using them.
-      let itemIdMap = await lazy.PlacesUtils.promiseManyItemIds(
+
+      let itemDetailMap = await getBookmarkDetailMap(
         insertInfos.map(info => info.guid)
       );
 
       let notifications = [];
       for (let i = 0; i < insertInfos.length; i++) {
         let item = insertInfos[i];
-        let itemId = itemIdMap.get(item.guid);
+        let itemDetail = itemDetailMap.get(item.guid);
+
         // For sub-folders, we need to make sure their children have the correct parent ids.
         let parentId;
         if (item.parentGuid === treeParent.guid) {
@@ -595,7 +598,7 @@ export var Bookmarks = Object.freeze({
         } else {
           // This is a parent folder that's been updated, so we need to
           // use the new item id.
-          parentId = itemIdMap.get(item.parentGuid);
+          parentId = itemDetail.parentId;
         }
 
         let url = "";
@@ -605,7 +608,7 @@ export var Bookmarks = Object.freeze({
 
         notifications.push(
           new PlacesBookmarkAddition({
-            id: itemId,
+            id: itemDetail.id,
             url,
             itemType: item.type,
             parentId,
@@ -616,11 +619,16 @@ export var Bookmarks = Object.freeze({
             parentGuid: item.parentGuid,
             source: item.source,
             isTagging: false,
+            tags: itemDetail.tags,
+            frecency: itemDetail.frecency,
+            hidden: itemDetail.hidden,
+            visitCount: itemDetail.visitCount,
+            lastVisitDate: itemDetail.lastVisitDate,
           })
         );
 
         try {
-          await handleBookmarkItemSpecialData(itemId, item);
+          await handleBookmarkItemSpecialData(itemDetail.id, item);
         } catch (ex) {
           // This is not critical, regardless the bookmark has been created
           // and we should continue notifying the next ones.
@@ -3260,5 +3268,67 @@ async function retrieveFullBookmarkPath(guid, options = {}) {
   return lazy.PlacesUtils.withConnectionWrapper(
     "Bookmarks.jsm: retrieveFullBookmarkPath",
     query
+  );
+}
+
+/**
+ * Get detail of bookmarks of given GUID as Map.
+ *
+ * @param {Array} aGuids An array of item GUIDs.
+ * @return {Promise}
+ * @resolves to Map of bookmark details. The key is guid.
+ */
+async function getBookmarkDetailMap(aGuids) {
+  return lazy.PlacesUtils.withConnectionWrapper(
+    "Bookmarks.geBookmarkDetails",
+    async db => {
+      const rows = await db.executeCached(
+        `
+          SELECT
+            b.guid,
+            b.id,
+            b.parent,
+            IFNULL(h.frecency, 0),
+            IFNULL(h.hidden, 0),
+            IFNULL(h.visit_count, 0),
+            h.last_visit_date,
+            (
+              SELECT GROUP_CONCAT(t.title, ',')
+              FROM moz_bookmarks t
+              LEFT JOIN moz_bookmarks ref ON ref.fk = h.id
+              WHERE t.id = +ref.parent
+                AND t.parent = (
+                  SELECT id FROM moz_bookmarks
+                  WHERE guid = '${Bookmarks.tagsGuid}'
+                )
+            )
+          FROM moz_bookmarks b
+          LEFT JOIN moz_places h ON h.id = b.fk
+          WHERE b.guid IN (${lazy.PlacesUtils.sqlBindPlaceholders(aGuids)})
+          `,
+        aGuids
+      );
+
+      return new Map(
+        rows.map(row => {
+          const lastVisitDate = row.getResultByIndex(6);
+
+          return [
+            row.getResultByIndex(0),
+            {
+              id: row.getResultByIndex(1),
+              parentId: row.getResultByIndex(2),
+              frecency: row.getResultByIndex(3),
+              hidden: row.getResultByIndex(4),
+              visitCount: row.getResultByIndex(5),
+              lastVisitDate: lastVisitDate
+                ? lazy.PlacesUtils.toDate(lastVisitDate).getTime()
+                : null,
+              tags: row.getResultByIndex(7) ?? "",
+            },
+          ];
+        })
+      );
+    }
   );
 }

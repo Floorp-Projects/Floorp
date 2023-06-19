@@ -203,14 +203,9 @@ class nsNavHistory final : public nsSupportsWeakReference,
                             const nsACString& aURI, const nsACString& aTitle,
                             uint32_t aAccessCount, PRTime aTime,
                             nsNavHistoryResultNode** aNode);
-
   nsresult VisitIdToResultNode(int64_t visitId,
                                nsNavHistoryQueryOptions* aOptions,
                                nsNavHistoryResultNode** aResult);
-
-  nsresult BookmarkIdToResultNode(int64_t aBookmarkId,
-                                  nsNavHistoryQueryOptions* aOptions,
-                                  nsNavHistoryResultNode** aResult);
   nsresult URIToResultNode(nsIURI* aURI, nsNavHistoryQueryOptions* aOptions,
                            nsNavHistoryResultNode** aResult);
 
