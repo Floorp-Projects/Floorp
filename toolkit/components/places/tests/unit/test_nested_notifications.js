@@ -115,7 +115,12 @@ function notifyPlacesEvent(guid) {
       parentId: -2,
       source: 0,
       title: guid,
+      tags: "tags",
       url: `http://example.com/${guid}`,
+      frecency: 0,
+      hidden: false,
+      visitCount: 0,
+      lastVisitDate: 0,
     }),
   ]);
 }
