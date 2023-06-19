@@ -204,6 +204,7 @@ pub trait CaseSensitivityExt {
 }
 
 impl CaseSensitivityExt for selectors::attr::CaseSensitivity {
+    #[inline]
     fn eq_atom(self, a: &WeakAtom, b: &WeakAtom) -> bool {
         match self {
             selectors::attr::CaseSensitivity::CaseSensitive => a == b,
