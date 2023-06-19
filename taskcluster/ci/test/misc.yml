@@ -33,7 +33,10 @@ telemetry-tests-client:
     description: "Telemetry tests client run"
     suite: telemetry-tests-client
     treeherder-symbol: tt(c)
-    run-on-projects: built-projects
+    run-on-projects:
+        by-test-platform:
+            .*wayland.*: []
+            default: built-projects
     max-run-time: 1200
     tier: default
     mozharness:
@@ -58,8 +61,8 @@ test-verify:
         by-variant:
             no-fission:
                 by-test-platform:
-                    # do not run on ccov or asan or shippable
-                    .*(-ccov|-asan|-shippable).*: []
+                    # do not run on ccov or asan or shippable or wayland
+                    .*(-ccov|-asan|-shippable|-wayland).*: []
                     # we prefer -qr platforms with fis, no need to run on both
                     (?!.*(-ccov|-asan|-shippable))(?!.*-qr).*: []
                     # do not run on mozilla-central, beta or release: usually just confirms earlier results
@@ -67,8 +70,8 @@ test-verify:
                     default: []
             default:
                 by-test-platform:
-                    # do not run on ccov or asan or shippable
-                    .*(-ccov|-asan|-shippable).*: []
+                    # do not run on ccov or asan or shippable or wayland
+                    .*(-ccov|-asan|-shippable|-wayland).*: []
                     # we prefer -qr platforms with fis, no need to run on both
                     (?!.*(-ccov|-asan|-shippable))(?!.*-qr).*: []
                     # do not run on mozilla-central, beta or release: usually just confirms earlier results
@@ -140,10 +143,8 @@ test-verify-gpu:
     allow-software-gl-layers: false
     run-on-projects:
         by-test-platform:
-            # do not run on ccov or asan
-            .*-ccov.*/.*: []
-            .*-asan/.*: []
-            .*shippable.*: []
+            # do not run on ccov or asan or shippable or wayland
+            .*(-ccov|-asan|-shippable|-wayland).*: []
             # do not run on mozilla-central, beta or release: usually just confirms earlier results
             linux.*: ['integration']
             default: []

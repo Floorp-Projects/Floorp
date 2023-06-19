@@ -95,6 +95,7 @@ web-platform-tests:
             default:
                 by-test-platform:
                     android.*: []
+                    .*wayland.*: []
                     default: built-projects
     mozharness:
         chunked: true
@@ -131,6 +132,7 @@ web-platform-tests-backlog:
             default:
                 by-test-platform:
                     android.*: []
+                    .*wayland.*: []
                     default: ['mozilla-central']
     test-manifest-loader: null  # don't load tests in the taskgraph
     tier: 2
@@ -193,6 +195,7 @@ web-platform-tests-reftest:
             default:
                 by-test-platform:
                     android.*: []
+                    .*wayland.*: []
                     default: built-projects
     tier:
         by-test-platform:
@@ -217,6 +220,7 @@ web-platform-tests-webgpu:
         by-test-platform:
             android.*: []
             macos.*: []
+            .*wayland.*: []
             default: built-projects
     mozharness:
         chunked: true
@@ -242,6 +246,7 @@ web-platform-tests-reftest-backlog:
             default:
                 by-test-platform:
                     android.*: []
+                    .*wayland.*: []
                     default: ['mozilla-central']
     test-manifest-loader: null  # don't load tests in the taskgraph
     tier: 2
@@ -293,6 +298,7 @@ web-platform-tests-wdspec:
             headless:
                 by-test-platform:
                     android.*: []
+                    .*wayland.*: []
                     default: built-projects
             no-fission:
                 by-test-platform:
@@ -307,6 +313,7 @@ web-platform-tests-wdspec:
             default:
                 by-test-platform:
                     android.*: []
+                    .*wayland.*: []
                     default: built-projects
     tier: default
     fetches:
@@ -388,6 +395,7 @@ web-platform-tests-crashtest:
                 by-test-platform:
                     android.*: []
                     android-em-7.0-x86_64-qr/debug: built-projects
+                    .*wayland.*: []
                     default: built-projects
     tier: default
 
@@ -426,6 +434,7 @@ web-platform-tests-print-reftest:
             default:
                 by-test-platform:
                     android.*: []
+                    .*wayland.*: []
                     default: built-projects
     mozharness:
         extra-options:
@@ -440,10 +449,8 @@ test-verify-wpt:
     max-run-time: 10800
     run-on-projects:
         by-test-platform:
-            # do not run on ccov or asan
-            .*-ccov.*/.*: []
-            .*-asan.*/.*: []
-            .*shippable.*: []
+            # do not run on asan, ccov, shippable or wayland
+            .*-(asan|ccov|shippable|wayland).*/.*: []
             # do not run on beta or release: usually just confirms earlier results
             default: ['integration']
     built-projects-only: true
