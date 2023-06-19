@@ -27,7 +27,7 @@ except Exception:
 import mozfile
 import mozpack.path as mozpath
 from mach.mixin.logging import LoggingMixin
-from mach.util import get_state_dir
+from mach.util import get_state_dir, get_virtualenv_base_dir
 from mozsystemmonitor.resourcemonitor import SystemResourceMonitor
 from mozterm.widgets import Footer
 
@@ -1132,7 +1132,6 @@ class BuildDriver(MozbuildObject):
         keep_going=False,
         mach_context=None,
         append_env=None,
-        virtualenv_topobjdir=None,
     ):
         """Invoke the build backend.
 
@@ -1209,7 +1208,6 @@ class BuildDriver(MozbuildObject):
                     buildstatus_messages=True,
                     line_handler=output.on_line,
                     append_env=append_env,
-                    virtualenv_topobjdir=virtualenv_topobjdir,
                 )
 
                 if config_rc != 0:
@@ -1585,7 +1583,6 @@ class BuildDriver(MozbuildObject):
         buildstatus_messages=False,
         line_handler=None,
         append_env=None,
-        virtualenv_topobjdir=None,
     ):
         # Disable indexing in objdir because it is not necessary and can slow
         # down builds.
@@ -1609,12 +1606,11 @@ class BuildDriver(MozbuildObject):
                 if eq == "=":
                     append_env[k] = v
 
-        virtualenv_topobjdir = virtualenv_topobjdir or self.topobjdir
         build_site = CommandSiteManager.from_environment(
             self.topsrcdir,
             lambda: get_state_dir(specific_to_topsrcdir=True, topsrcdir=self.topsrcdir),
             "build",
-            os.path.join(virtualenv_topobjdir, "_virtualenvs"),
+            get_virtualenv_base_dir(self.topsrcdir),
         )
         build_site.ensure()
 

@@ -317,7 +317,6 @@ def _activate_build_virtualenv():
     # virtualenv), so we should activate the build virtualenv as expected by the rest of
     # configure.
 
-    topobjdir = os.path.realpath(".")
     topsrcdir = os.path.realpath(os.path.dirname(__file__))
 
     mach_site = MachSiteManager(
@@ -328,11 +327,14 @@ def _activate_build_virtualenv():
         SitePackagesSource.NONE,
     )
     mach_site.activate()
+
+    from mach.util import get_virtualenv_base_dir
+
     build_site = CommandSiteManager.from_environment(
         topsrcdir,
         None,
         "build",
-        os.path.join(topobjdir, "_virtualenvs"),
+        get_virtualenv_base_dir(topsrcdir),
     )
     if not build_site.ensure():
         print("Created Python 3 virtualenv")
