@@ -46,7 +46,6 @@ export var newAppInfo = function (options = {}) {
     OS: options.OS ?? "XPCShell",
     XPCOMABI: "noarch-spidermonkey",
     invalidateCachesOnRestart() {},
-    shouldBlockIncompatJaws: false,
     processType: origRuntime.processType,
     uniqueProcessID: origRuntime.uniqueProcessID,
 

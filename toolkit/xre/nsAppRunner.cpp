@@ -1489,15 +1489,6 @@ nsXULAppInfo::GetAccessibilityInstantiator(nsAString& aInstantiator) {
 }
 
 NS_IMETHODIMP
-nsXULAppInfo::GetShouldBlockIncompatJaws(bool* aResult) {
-  *aResult = false;
-#if defined(ACCESSIBILITY) && defined(XP_WIN)
-  *aResult = mozilla::a11y::Compatibility::IsOldJAWS();
-#endif
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXULAppInfo::GetIs64Bit(bool* aResult) {
 #ifdef HAVE_64BIT_BUILD
   *aResult = true;
