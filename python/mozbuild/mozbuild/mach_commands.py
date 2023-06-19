@@ -548,10 +548,26 @@ def clobber(command_context, what, full=False):
                 "-delete",
             ]
         ret = subprocess.call(cmd, cwd=command_context.topsrcdir)
+
+        # We'll keep this around to delete the legacy "_virtualenv" dir folders
+        # so that people don't get confused if they see it and try to manipulate
+        # it but it has no effect.
         shutil.rmtree(
             mozpath.join(command_context.topobjdir, "_virtualenvs"),
             ignore_errors=True,
         )
+        from mach.util import get_virtualenv_base_dir
+
+        virtualenv_dir = Path(get_virtualenv_base_dir(command_context.topsrcdir))
+
+        for specific_venv in virtualenv_dir.iterdir():
+            if specific_venv.name == "mach":
+                # We can't delete the "mach" virtualenv with clobber
+                # since it's the one doing the clobbering. It always
+                # has to be removed manually.
+                pass
+            else:
+                shutil.rmtree(specific_venv, ignore_errors=True)
 
     if "gradle" in what:
         shutil.rmtree(
