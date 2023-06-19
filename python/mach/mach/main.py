@@ -598,7 +598,7 @@ To see more help for a specific command, run:
     def _print_error_header(self, argv, fh):
         fh.write("Error running mach:\n\n")
         fh.write("    ")
-        fh.write(repr(argv))
+        fh.write("mach " + " ".join(argv))
         fh.write("\n\n")
 
     def _print_exception(self, fh, exc_type, exc_value, stack, sentry_event_id=None):
