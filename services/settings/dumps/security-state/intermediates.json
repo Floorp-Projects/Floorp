@@ -1,6 +1,42 @@
 {
   "data": [
     {
+      "schema": 1686865674359,
+      "derHash": "V+CzNQTbr28poJXLiil6Sr7BIc4RZA76/BdZQJj2yqk=",
+      "subject": "CN=GeoTrust Global G3 TLS EUR ECC P384 SHA384 2023 CA1,O=DigiCert Ireland Limited,C=IE",
+      "subjectDN": "MG4xCzAJBgNVBAYTAklFMSEwHwYDVQQKExhEaWdpQ2VydCBJcmVsYW5kIExpbWl0ZWQxPDA6BgNVBAMTM0dlb1RydXN0IEdsb2JhbCBHMyBUTFMgRVVSIEVDQyBQMzg0IFNIQTM4NCAyMDIzIENBMQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "78fc77d32d467cd24f9d8717785abbd462ce13fc39da01fcf054dec153d767b4",
+        "size": 1293,
+        "filename": "OARxnIfvxPIaORCkZB98Bydt_L4YbRHQaE4Ydz2AEwY=.pem",
+        "location": "security-state-staging/intermediates/5da833d4-65e3-4e3b-ae96-d00b6fc7aa60.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "OARxnIfvxPIaORCkZB98Bydt/L4YbRHQaE4Ydz2AEwY=",
+      "crlite_enrolled": false,
+      "id": "525736bb-757a-4f47-962f-9346ce93913a",
+      "last_modified": 1686866223473
+    },
+    {
+      "schema": 1686865674778,
+      "derHash": "nn4xAwPtpob8xfVfdQaJWxX/BceA7ureq50BbbZy87o=",
+      "subject": "CN=GeoTrust Global G2 TLS EUR RSA4096 SHA384 2023 CA1,O=DigiCert Ireland Limited,C=IE",
+      "subjectDN": "MG0xCzAJBgNVBAYTAklFMSEwHwYDVQQKExhEaWdpQ2VydCBJcmVsYW5kIExpbWl0ZWQxOzA5BgNVBAMTMkdlb1RydXN0IEdsb2JhbCBHMiBUTFMgRVVSIFJTQTQwOTYgU0hBMzg0IDIwMjMgQ0Ex",
+      "whitelist": false,
+      "attachment": {
+        "hash": "caed1499c39787f250f8b35dfb3002a9c729eeebac8a56f3a2e9c16b972df6d7",
+        "size": 2093,
+        "filename": "t0Ep5M3U_19atoKfvx6RONUWKeAJxyn66OnfjuOeKl4=.pem",
+        "location": "security-state-staging/intermediates/15c14052-c343-49a2-a5e8-430b2ac2ca0b.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "t0Ep5M3U/19atoKfvx6RONUWKeAJxyn66OnfjuOeKl4=",
+      "crlite_enrolled": false,
+      "id": "6cf0041d-ca89-4b2c-88f6-36603395ff46",
+      "last_modified": 1686866223470
+    },
+    {
       "schema": 1686304095720,
       "derHash": "iarednt7pD+N3o6edKL8u+pA1XFV9+HyJZyIg1YB+u0=",
       "subject": "CN=Microsoft Azure ECC TLS Issuing CA 08,O=Microsoft Corporation,C=US",
@@ -1315,60 +1351,6 @@
       "last_modified": 1674831423067
     },
     {
-      "schema": 1674787704399,
-      "derHash": "fXQDQbUZP1PmdeOh47SxCV5gJQn2Wl+nV2sOOlRw+cY=",
-      "subject": "CN=GTS Y1,O=Google Trust Services LLC,C=US",
-      "subjectDN": "MEIxCzAJBgNVBAYTAlVTMSIwIAYDVQQKExlHb29nbGUgVHJ1c3QgU2VydmljZXMgTExDMQ8wDQYDVQQDEwZHVFMgWTE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "639a1475e5dc0801f220279c12f2a7afd908a3c78a3734cd6f1be16127a0c9d7",
-        "size": 1906,
-        "filename": "V7Wxjz1qgqxtHdP2QmPdLItv2zRjJ79Zl1N6X7TYHVA=.pem",
-        "location": "security-state-staging/intermediates/3d7c6c33-2992-4273-abc3-d340cc09e904.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "V7Wxjz1qgqxtHdP2QmPdLItv2zRjJ79Zl1N6X7TYHVA=",
-      "crlite_enrolled": false,
-      "id": "09afd445-0d6a-4a32-911f-aaf947abcb1f",
-      "last_modified": 1674788223262
-    },
-    {
-      "schema": 1674787702650,
-      "derHash": "02gLTj+I2x9bud3b+2v/MZx4Dj2fRO4k7BmVq0LWkU8=",
-      "subject": "CN=GIAG4x,O=Google Trust Services LLC,C=US",
-      "subjectDN": "MEIxCzAJBgNVBAYTAlVTMSIwIAYDVQQKExlHb29nbGUgVHJ1c3QgU2VydmljZXMgTExDMQ8wDQYDVQQDEwZHSUFHNHg=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "7863677df584a77841650e5ad47e7ef8f7c42807c9d69969881133b275b19a50",
-        "size": 1991,
-        "filename": "AAGolo0N1iZa5uuvm02csZnkuZs8hvI-HRLhAHtNhqk=.pem",
-        "location": "security-state-staging/intermediates/e653ac73-2a44-4cf2-a0dd-085d990af883.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "AAGolo0N1iZa5uuvm02csZnkuZs8hvI+HRLhAHtNhqk=",
-      "crlite_enrolled": false,
-      "id": "590d8d13-89e7-4e1e-a3bb-72c583579d7a",
-      "last_modified": 1674788223254
-    },
-    {
-      "schema": 1674787703543,
-      "derHash": "yvOiKdRUWX8mKTnwfhBWg6cf3PkWRvxgoyr2s1T+Uq4=",
-      "subject": "CN=GIAG4 ECC,O=Google Trust Services LLC,C=US",
-      "subjectDN": "MEUxCzAJBgNVBAYTAlVTMSIwIAYDVQQKExlHb29nbGUgVHJ1c3QgU2VydmljZXMgTExDMRIwEAYDVQQDEwlHSUFHNCBFQ0M=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "d250d9ee687cf9e4246b82644cb5630d09a6b047ffbc09e2710c262db5258086",
-        "size": 1033,
-        "filename": "BZc_5XFEr4iNHxqv9J30g896n5jT5IJLYZJnXyqUkIU=.pem",
-        "location": "security-state-staging/intermediates/b1facc0e-29f8-46fb-aa78-793969728b53.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "BZc/5XFEr4iNHxqv9J30g896n5jT5IJLYZJnXyqUkIU=",
-      "crlite_enrolled": false,
-      "id": "56a051c1-fed1-4386-b35d-bf1955952093",
-      "last_modified": 1674788223247
-    },
-    {
       "schema": 1674787701762,
       "derHash": "I+ywPuwXM4xOM6a0ikHcPNoSKBu8P/gTwFidbMI4dSI=",
       "subject": "CN=GTS CA 1C3,O=Google Trust Services LLC,C=US",
@@ -1403,60 +1385,6 @@
       "crlite_enrolled": false,
       "id": "ea3a64a9-15b0-4050-98b9-d20a4a168573",
       "last_modified": 1674788223231
-    },
-    {
-      "schema": 1674787699185,
-      "derHash": "GB3Ivn6R7fFj5mzD+tFNl5ptrlO1Vtruj33KDhFMFPY=",
-      "subject": "CN=GTS Y3,O=Google Trust Services LLC,C=US",
-      "subjectDN": "MEIxCzAJBgNVBAYTAlVTMSIwIAYDVQQKExlHb29nbGUgVHJ1c3QgU2VydmljZXMgTExDMQ8wDQYDVQQDEwZHVFMgWTM=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "f539ab8855770bc8a9e8f1286baa54629b8813ded2d2972aa64a9f3e37d83152",
-        "size": 1065,
-        "filename": "LbcjaXDdzSbOmLRKWKuGWSqd6T4QuNVJwnA_RYD9a1k=.pem",
-        "location": "security-state-staging/intermediates/21cba999-1957-49a3-bd3f-714261c4714b.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "LbcjaXDdzSbOmLRKWKuGWSqd6T4QuNVJwnA/RYD9a1k=",
-      "crlite_enrolled": false,
-      "id": "de26b52b-81c4-4c97-9438-3113fb6f3fd5",
-      "last_modified": 1674788223224
-    },
-    {
-      "schema": 1674787697466,
-      "derHash": "KGdiAMQV2C0QJR9Senc+fnrJkCIy+rpD4aaMWtO32H0=",
-      "subject": "CN=GTS Y4,O=Google Trust Services LLC,C=US",
-      "subjectDN": "MEIxCzAJBgNVBAYTAlVTMSIwIAYDVQQKExlHb29nbGUgVHJ1c3QgU2VydmljZXMgTExDMQ8wDQYDVQQDEwZHVFMgWTQ=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "486ab74ff1c4972cd1baab20287fa21027e8baa01565310ad4a6b2ba09b0db74",
-        "size": 1069,
-        "filename": "HS03mRwbGwWTfk-g79L17_0GMn7Rd5Xac10BclJV8_Q=.pem",
-        "location": "security-state-staging/intermediates/1001dd20-646a-4264-89d0-3b37a434957d.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "HS03mRwbGwWTfk+g79L17/0GMn7Rd5Xac10BclJV8/Q=",
-      "crlite_enrolled": false,
-      "id": "76dcbcc6-803e-4285-80a3-42f64c04fbe6",
-      "last_modified": 1674788223216
-    },
-    {
-      "schema": 1674787696592,
-      "derHash": "nDBRZJbhJbPQkx9Jh14pUW2dwlRz5dahBsH8+GbTBts=",
-      "subject": "CN=GTS Y2,O=Google Trust Services LLC,C=US",
-      "subjectDN": "MEIxCzAJBgNVBAYTAlVTMSIwIAYDVQQKExlHb29nbGUgVHJ1c3QgU2VydmljZXMgTExDMQ8wDQYDVQQDEwZHVFMgWTI=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "e8c95c6e8334db472dd4dd81fc9057a756258573b6b2c815af66cdf0e960c6a0",
-        "size": 1906,
-        "filename": "zYGIkpoNQj_A8MrSV7BzubZdDqEk9LkLgAj8t8_U_ns=.pem",
-        "location": "security-state-staging/intermediates/1d17c147-7074-4238-a5f3-2afbfe4c0bd9.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "zYGIkpoNQj/A8MrSV7BzubZdDqEk9LkLgAj8t8/U/ns=",
-      "crlite_enrolled": false,
-      "id": "587a02fb-6fac-4b80-b5d7-04b72bf36446",
-      "last_modified": 1674788223208
     },
     {
       "schema": 1674787698322,
@@ -9397,24 +9325,6 @@
       "last_modified": 1666727869559
     },
     {
-      "schema": 1666727447944,
-      "derHash": "bVWNIt3W7UyhPucS/UKvIpTyycbXATwyRxD/uNjzb6k=",
-      "subject": "CN=Quantum Secure Site OV TLS RSA R1,O=Quantum CA Limited,C=GB",
-      "subjectDN": "MFYxCzAJBgNVBAYTAkdCMRswGQYDVQQKDBJRdWFudHVtIENBIExpbWl0ZWQxKjAoBgNVBAMMIVF1YW50dW0gU2VjdXJlIFNpdGUgT1YgVExTIFJTQSBSMQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "33acb8df4a866365481dbe0618f722c848b48a4b8fac420fc46dddca21788181",
-        "size": 2389,
-        "filename": "hLf9YhON-ykf9-ab3rrdyhkLe63PWjIvsvghrHEnILA=.pem",
-        "location": "security-state-staging/intermediates/0e6a8c52-a7e7-48f9-83c5-067cac6aaae2.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "hLf9YhON+ykf9+ab3rrdyhkLe63PWjIvsvghrHEnILA=",
-      "crlite_enrolled": false,
-      "id": "a0a69d08-4cd8-4dc6-ad7b-165d86930a41",
-      "last_modified": 1666727869545
-    },
-    {
       "schema": 1666727436626,
       "derHash": "ks5+p0JLPnosFMJuDVcq29VW4F4rKovTdhxpUlQlWFY=",
       "subject": "CN=AnsonNet TLS Issuing RSA CA R1,O=Anson Network Limited,L=London,ST=London,C=GB",
@@ -9541,24 +9451,6 @@
       "last_modified": 1666727869444
     },
     {
-      "schema": 1666727445351,
-      "derHash": "ApHPAoSRMvcU6BDJ0LJNs3uuq/jMkXgebDOOFBdnw5s=",
-      "subject": "CN=Quantum Secure Site EV Pro TLS CN RSA R1,O=Quantum CA Limited,C=GB",
-      "subjectDN": "MF0xCzAJBgNVBAYTAkdCMRswGQYDVQQKDBJRdWFudHVtIENBIExpbWl0ZWQxMTAvBgNVBAMMKFF1YW50dW0gU2VjdXJlIFNpdGUgRVYgUHJvIFRMUyBDTiBSU0EgUjE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "97436852f20e6782c6aafcca3da7ca445a2e4d0745a5c6b23e2c3b5ab652e827",
-        "size": 2422,
-        "filename": "GbKybScGsOQC8iThcKBmo7l9NYxxnn03eDuKF6Ai7x4=.pem",
-        "location": "security-state-staging/intermediates/f6808bab-ffe5-4ca3-85ef-617f2b3fd1ba.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "GbKybScGsOQC8iThcKBmo7l9NYxxnn03eDuKF6Ai7x4=",
-      "crlite_enrolled": false,
-      "id": "ea5dfb4a-ad79-4323-ba60-f315521c205d",
-      "last_modified": 1666727869428
-    },
-    {
       "schema": 1666727411011,
       "derHash": "co2vQG/ans1NVV3BLyfWfW3kRSRpVGShIGaSAPILKEs=",
       "subject": "CN=AgID CA1,OU=Area Soluzioni per la Pubblica Amministrazione,O=Agenzia per l'Italia Digitale,L=Roma,C=IT",
@@ -9629,42 +9521,6 @@
       "crlite_enrolled": false,
       "id": "6430f852-d358-4b1a-b2c9-577cf8cf4f97",
       "last_modified": 1666727869373
-    },
-    {
-      "schema": 1666727360991,
-      "derHash": "5Hft8R61T28u3VaYez2/ivprhVB655KsY81BzkGsE5c=",
-      "subject": "CN=Quantum Secure Site DV TLS CN RSA R1,O=Quantum CA Limited,C=GB",
-      "subjectDN": "MFkxCzAJBgNVBAYTAkdCMRswGQYDVQQKDBJRdWFudHVtIENBIExpbWl0ZWQxLTArBgNVBAMMJFF1YW50dW0gU2VjdXJlIFNpdGUgRFYgVExTIENOIFJTQSBSMQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "09479337fead5bb6b53bc3c1f22a9e50156875a0faf1fe6164f94329102251d3",
-        "size": 2398,
-        "filename": "iZz0oapRjKvmsylcqDwbwcsBGfrjtSeUvrbqeWauFlo=.pem",
-        "location": "security-state-staging/intermediates/1feacbaa-23ae-47c4-984d-ba39c4056251.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "iZz0oapRjKvmsylcqDwbwcsBGfrjtSeUvrbqeWauFlo=",
-      "crlite_enrolled": false,
-      "id": "dc50d329-247e-491a-94cd-ca722b0293ee",
-      "last_modified": 1666727869359
-    },
-    {
-      "schema": 1666727407869,
-      "derHash": "6DbBNWYZAeCEDoh69u5RbFZVDWRJkMV7+mDil8FRf/o=",
-      "subject": "CN=Quantum Secure Site EV TLS RSA R1,O=Quantum CA Limited,C=GB",
-      "subjectDN": "MFYxCzAJBgNVBAYTAkdCMRswGQYDVQQKDBJRdWFudHVtIENBIExpbWl0ZWQxKjAoBgNVBAMMIVF1YW50dW0gU2VjdXJlIFNpdGUgRVYgVExTIFJTQSBSMQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "1b552cdfcd3c94302ac4718b19aec2dfaccfc5139e188f715670713036f04640",
-        "size": 2410,
-        "filename": "8Jyn3_0NrvWytC50AlQrPNYf8SsCahxp8t5a-G8yfCM=.pem",
-        "location": "security-state-staging/intermediates/2100d177-5e5a-4f0c-b89b-ad0b707cc55b.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "8Jyn3/0NrvWytC50AlQrPNYf8SsCahxp8t5a+G8yfCM=",
-      "crlite_enrolled": false,
-      "id": "6961d354-9556-4eb9-8bae-cbfdef33990a",
-      "last_modified": 1666727869345
     },
     {
       "schema": 1666727357771,
@@ -9793,24 +9649,6 @@
       "last_modified": 1666727869229
     },
     {
-      "schema": 1666727358116,
-      "derHash": "/M986IpkKHTRwQf00QxqfdM0eXY5upgTBFRWLDA68XA=",
-      "subject": "CN=Quantum Basic TLS DV RSA R1,O=Quantum CA Limited,C=GB",
-      "subjectDN": "MFAxCzAJBgNVBAYTAkdCMRswGQYDVQQKDBJRdWFudHVtIENBIExpbWl0ZWQxJDAiBgNVBAMMG1F1YW50dW0gQmFzaWMgVExTIERWIFJTQSBSMQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "3b4c6c6d6f9716683ea68bd1379533e334f90b8c81afdeb1ae12798eb110f5ca",
-        "size": 2381,
-        "filename": "OB3HSFDxykZYkZCziJA-6l6iHYbsqNrhFIrMg_L45mU=.pem",
-        "location": "security-state-staging/intermediates/2efff537-0765-4106-8dd9-d82b2b77c90c.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "OB3HSFDxykZYkZCziJA+6l6iHYbsqNrhFIrMg/L45mU=",
-      "crlite_enrolled": false,
-      "id": "2643ffc4-c984-407d-9aa1-60ed4e3c561d",
-      "last_modified": 1666727869216
-    },
-    {
       "schema": 1666727368224,
       "derHash": "RkiQCwQnJiirey2C3fdM1beNd/hlLVu/KCS7ZN0Xhlk=",
       "subject": "CN=AgID CA1,OU=Area Soluzioni per la Pubblica Amministrazione,O=Agenzia per l'Italia Digitale,L=Roma,C=IT",
@@ -9845,24 +9683,6 @@
       "crlite_enrolled": false,
       "id": "ee8a3125-cbbe-46c1-9629-b23356d4abd2",
       "last_modified": 1666727869189
-    },
-    {
-      "schema": 1666727409446,
-      "derHash": "NtGanN5gKdFNpNlRc1GQu0zG2yBtZD9kdNdzlHSRIpk=",
-      "subject": "CN=Quantum Secure Site OV Pro TLS CN RSA R1,O=Quantum CA Limited,C=GB",
-      "subjectDN": "MF0xCzAJBgNVBAYTAkdCMRswGQYDVQQKDBJRdWFudHVtIENBIExpbWl0ZWQxMTAvBgNVBAMMKFF1YW50dW0gU2VjdXJlIFNpdGUgT1YgUHJvIFRMUyBDTiBSU0EgUjE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "a472586d92db90ca48fe5c1d3f0859f50ebfb2db1c60a7da28ff078d15722187",
-        "size": 2402,
-        "filename": "wmkhucJk0k_u-vh155sN1sgtdzW537s_eYqcbeYm4PU=.pem",
-        "location": "security-state-staging/intermediates/78f08ad0-c036-4664-9057-71c308c46fa1.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "wmkhucJk0k/u+vh155sN1sgtdzW537s/eYqcbeYm4PU=",
-      "crlite_enrolled": false,
-      "id": "9622f9fe-88e7-4add-a03a-8015fd0a1ff8",
-      "last_modified": 1666727869176
     },
     {
       "schema": 1666727394928,
@@ -27865,5 +27685,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1686304623481
+  "timestamp": 1686952623664
 }
