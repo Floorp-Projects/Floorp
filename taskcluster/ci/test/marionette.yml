@@ -38,7 +38,7 @@ job-defaults:
                     default: []
             default:
                 by-test-platform:
-                    .*tsan.*: []
+                    .*(tsan|wayland).*: []
                     default: built-projects
     virtualization: virtual
 

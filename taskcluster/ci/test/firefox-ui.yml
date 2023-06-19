@@ -7,7 +7,10 @@ job-defaults:
         category: firefox-ui
     max-run-time: 5400
     test-manifest-loader: null  # don't load tests in the taskgraph
-    run-on-projects: built-projects
+    run-on-projects:
+        by-test-platform:
+            .*wayland.*: []
+            default: built-projects
     mozharness:
         script: firefox_ui_tests.py
         config:
