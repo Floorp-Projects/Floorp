@@ -12,11 +12,9 @@ import { CustomizableUI } from "resource:///modules/CustomizableUI.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "BrowserUsageTelemetry",
-  "resource:///modules/BrowserUsageTelemetry.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.sys.mjs",
+});
 
 const WIDGET_ID = "search-container";
 const PREF_NAME = "browser.search.widget.inNavBar";

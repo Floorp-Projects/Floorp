@@ -13,12 +13,10 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AttributionCode: "resource:///modules/AttributionCode.sys.mjs",
   ClientID: "resource://gre/modules/ClientID.sys.mjs",
+  PingCentre: "resource:///modules/PingCentre.sys.mjs",
   TelemetrySession: "resource://gre/modules/TelemetrySession.sys.mjs",
 });
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  PingCentre: "resource:///modules/PingCentre.jsm",
-});
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "structuredIngestionEndpointBase",

@@ -11,15 +11,12 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   AddonManagerPrivate: "resource://gre/modules/AddonManager.sys.mjs",
+  BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.sys.mjs",
   CustomizableWidgets: "resource:///modules/CustomizableWidgets.sys.mjs",
+  HomePage: "resource:///modules/HomePage.sys.mjs",
   PanelMultiView: "resource:///modules/PanelMultiView.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
-  HomePage: "resource:///modules/HomePage.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "gWidgetsBundle", function () {

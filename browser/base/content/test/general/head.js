@@ -1,17 +1,9 @@
-ChromeUtils.defineModuleGetter(
-  this,
-  "AboutNewTab",
-  "resource:///modules/AboutNewTab.jsm"
-);
 ChromeUtils.defineESModuleGetters(this, {
+  AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  TabCrashHandler: "resource:///modules/ContentCrashHandlers.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  this,
-  "TabCrashHandler",
-  "resource:///modules/ContentCrashHandlers.jsm"
-);
 
 /**
  * Wait for a <notification> to be closed then call the specified callback.

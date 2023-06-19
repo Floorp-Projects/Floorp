@@ -3,8 +3,8 @@
  */
 "use strict";
 
-const { SiteDataManager } = ChromeUtils.import(
-  "resource:///modules/SiteDataManager.jsm"
+const { SiteDataManager } = ChromeUtils.importESModule(
+  "resource:///modules/SiteDataManager.sys.mjs"
 );
 const { SiteDataTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/SiteDataTestUtils.sys.mjs"

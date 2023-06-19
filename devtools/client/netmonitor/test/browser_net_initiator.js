@@ -98,13 +98,13 @@ const EXPECTED_REQUESTS = [
     url: HTTPS_EXAMPLE_URL + "favicon_request",
     causeType: "img",
     causeUri: INITIATOR_URL,
-    // the favicon request is triggered in FaviconLoader.jsm module, it should
+    // the favicon request is triggered in FaviconLoader.sys.mjs module, it should
     // NOT be shown in the stack (bug 1280266).  For now we intentionally
     // specify the file and the line number to be properly sorted.
     // NOTE: The line number can be an arbitrary number greater than 0.
     stack: [
       {
-        file: "resource:///modules/FaviconLoader.jsm",
+        file: "resource:///modules/FaviconLoader.sys.mjs",
         line: Number.MAX_SAFE_INTEGER,
       },
     ],

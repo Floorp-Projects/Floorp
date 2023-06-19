@@ -3,8 +3,8 @@
  */
 "use strict";
 
-const { BrowserUsageTelemetry } = ChromeUtils.import(
-  "resource:///modules/BrowserUsageTelemetry.jsm"
+const { BrowserUsageTelemetry } = ChromeUtils.importESModule(
+  "resource:///modules/BrowserUsageTelemetry.sys.mjs"
 );
 const { TelemetryTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryTestUtils.sys.mjs"

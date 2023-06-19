@@ -228,8 +228,10 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.sys.mjs",
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
+  HomePage: "resource:///modules/HomePage.sys.mjs",
   PrivacyFilter: "resource://gre/modules/sessionstore/PrivacyFilter.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   RunState: "resource:///modules/sessionstore/RunState.sys.mjs",
@@ -239,16 +241,11 @@ ChromeUtils.defineESModuleGetters(lazy, {
   SessionSaver: "resource:///modules/sessionstore/SessionSaver.sys.mjs",
   SessionStartup: "resource:///modules/sessionstore/SessionStartup.sys.mjs",
   TabAttributes: "resource:///modules/sessionstore/TabAttributes.sys.mjs",
+  TabCrashHandler: "resource:///modules/ContentCrashHandlers.sys.mjs",
   TabState: "resource:///modules/sessionstore/TabState.sys.mjs",
   TabStateCache: "resource:///modules/sessionstore/TabStateCache.sys.mjs",
   TabStateFlusher: "resource:///modules/sessionstore/TabStateFlusher.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  HomePage: "resource:///modules/HomePage.jsm",
-  TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "blankURI", () => {

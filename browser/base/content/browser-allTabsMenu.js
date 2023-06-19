@@ -5,11 +5,9 @@
 // This file is loaded into the browser window scope.
 /* eslint-env mozilla/browser-window */
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "TabsPanel",
-  "resource:///modules/TabsList.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  TabsPanel: "resource:///modules/TabsList.sys.mjs",
+});
 
 var gTabsPanel = {
   kElements: {

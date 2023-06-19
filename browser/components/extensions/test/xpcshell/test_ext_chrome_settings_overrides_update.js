@@ -8,13 +8,10 @@ const { AddonTestUtils } = ChromeUtils.importESModule(
 
 ChromeUtils.defineESModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+  HomePage: "resource:///modules/HomePage.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  HomePage: "resource:///modules/HomePage.jsm",
 });
 
 AddonTestUtils.init(this);

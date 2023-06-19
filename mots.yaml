@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-06-09T10:15:24.617281'
+updated_at: '2023-06-19T09:07:40.159871'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -3537,11 +3537,11 @@ modules:
           - browser/base/content/browser-allTabsMenu.js
           - browser/base/content/browser-ctrlTab.js
           - browser/base/content/browser-fullZoom.js
-          - browser/modules/AsyncTabSwitcher.jsm
-          - browser/modules/NewTabPagePreloading.jsm
-          - browser/modules/OpenInTabsUtils.jsm
-          - browser/modules/TabsList.jsm
-          - browser/modules/TabUnloader.jsm
+          - browser/modules/AsyncTabSwitcher.sys.mjs
+          - browser/modules/NewTabPagePreloading.sys.mjs
+          - browser/modules/OpenInTabsUtils.sys.mjs
+          - browser/modules/TabsList.sys.mjs
+          - browser/modules/TabUnloader.sys.mjs
         meta:
           components:
             - Firefox::Tabbed Browser
@@ -4117,5 +4117,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: d220ff5dcf799396f98ef05325e1ce8344b67350
-  export: f0c50155c0767448866f6242caa6ff78308ec562
+  config: 0f55f5e8b59c13c353b90041bc3385976b25767c
+  export: 9523d238f1810a9bd317c3768a7726f013164c38

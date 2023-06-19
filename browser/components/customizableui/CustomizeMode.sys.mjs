@@ -26,15 +26,11 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+  BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.sys.mjs",
   DragPositionManager: "resource:///modules/DragPositionManager.sys.mjs",
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
   URILoadingHelper: "resource:///modules/URILoadingHelper.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "BrowserUsageTelemetry",
-  "resource:///modules/BrowserUsageTelemetry.jsm"
-);
 XPCOMUtils.defineLazyGetter(lazy, "gWidgetsBundle", function () {
   const kUrl =
     "chrome://browser/locale/customizableui/customizableWidgets.properties";

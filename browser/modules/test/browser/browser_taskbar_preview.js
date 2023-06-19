@@ -16,8 +16,8 @@ function test() {
 
   const ENABLE_PREF_NAME = "browser.taskbar.previews.enable";
 
-  let { AeroPeek } = ChromeUtils.import(
-    "resource:///modules/WindowsPreviewPerTab.jsm"
+  let { AeroPeek } = ChromeUtils.importESModule(
+    "resource:///modules/WindowsPreviewPerTab.sys.mjs"
   );
 
   waitForExplicitFinish();

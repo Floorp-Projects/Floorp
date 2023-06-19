@@ -43,9 +43,9 @@
       // available, in which case we return null. We replace this getter
       // when the module becomes available (should be on delayed startup
       // when the first browser window loads, via BrowserGlue.sys.mjs).
-      const kURL = "resource:///modules/ProcessHangMonitor.jsm";
-      if (Cu.isModuleLoaded(kURL)) {
-        let { ProcessHangMonitor } = ChromeUtils.import(kURL);
+      const kURL = "resource:///modules/ProcessHangMonitor.sys.mjs";
+      if (Cu.isESModuleLoaded(kURL)) {
+        let { ProcessHangMonitor } = ChromeUtils.importESModule(kURL);
         // eslint-disable-next-line mozilla/valid-lazy
         Object.defineProperty(lazy, "ProcessHangMonitor", {
           value: ProcessHangMonitor,

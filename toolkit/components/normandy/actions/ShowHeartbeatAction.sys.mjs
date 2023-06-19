@@ -7,12 +7,9 @@ import { BaseAction } from "resource://normandy/actions/BaseAction.sys.mjs";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-});
-
 ChromeUtils.defineESModuleGetters(lazy, {
   ActionSchemas: "resource://normandy/actions/schemas/index.sys.mjs",
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.sys.mjs",
   Heartbeat: "resource://normandy/lib/Heartbeat.sys.mjs",
   NormandyUtils: "resource://normandy/lib/NormandyUtils.sys.mjs",

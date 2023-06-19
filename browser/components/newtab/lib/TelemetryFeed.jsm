@@ -23,22 +23,15 @@ const { classifySite } = ChromeUtils.import(
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AboutNewTab",
-  "resource:///modules/AboutNewTab.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PingCentre",
-  "resource:///modules/PingCentre.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
+  AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
   ClientID: "resource://gre/modules/ClientID.sys.mjs",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
   ExtensionSettingsStore:
     "resource://gre/modules/ExtensionSettingsStore.sys.mjs",
+  HomePage: "resource:///modules/HomePage.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
+  PingCentre: "resource:///modules/PingCentre.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
   TelemetrySession: "resource://gre/modules/TelemetrySession.sys.mjs",
@@ -46,11 +39,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
   pktApi: "chrome://pocket/content/pktApi.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "HomePage",
-  "resource:///modules/HomePage.jsm"
-);
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AboutWelcomeTelemetry:
     "resource://activity-stream/aboutwelcome/lib/AboutWelcomeTelemetry.jsm",

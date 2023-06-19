@@ -3,11 +3,9 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "HomePage",
-  "resource:///modules/HomePage.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  HomePage: "resource:///modules/HomePage.sys.mjs",
+});
 
 const kPrefHomePage = "browser.startup.homepage";
 const kPrefExtensionControlled =
