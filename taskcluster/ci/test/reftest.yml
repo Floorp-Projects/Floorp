@@ -78,6 +78,7 @@ crashtest:
             default:
                 by-test-platform:
                     android.*: []
+                    .*wayland.*: []
                     default: built-projects
     max-run-time: 3600
     tier:
@@ -140,6 +141,7 @@ jsreftest:
             default:
                 by-test-platform:
                     android.*/.*: []
+                    .*wayland.*: []
                     default: built-projects
     virtualization: virtual
 
@@ -201,6 +203,7 @@ reftest:
             default:
                 by-test-platform:
                     android.*/.*: []
+                    .*wayland.*: []
                     linux.*asan/opt: []
                     default: built-projects
     max-run-time:

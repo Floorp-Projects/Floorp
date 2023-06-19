@@ -206,7 +206,10 @@ mochitest-a11y:
                     android-em-7.0-x86_64-qr/debug: built-projects
                     linux.*64-qr/debug: built-projects
                     default: []
-            1proc: built-projects
+            1proc:
+                by-test-platform:
+                    .*wayland.*: []
+                    default: built-projects
             editor-legacy-direction:
                 by-test-platform:
                     linux1804-64-qr/debug: ['mozilla-central']
@@ -317,6 +320,7 @@ mochitest-browser-a11y:
     run-on-projects:
         by-test-platform:
             android.*: []
+            .*wayland.*: []
             default: built-projects
     tier: default
     max-run-time:
@@ -357,6 +361,7 @@ mochitest-browser-media:
             default:
                 by-test-platform:
                     android.*: []
+                    .*wayland.*: []
                     default: built-projects
     tier: default
     max-run-time:
@@ -414,7 +419,10 @@ mochitest-chrome:
                 by-test-platform:
                     linux1804-64-qr/debug: ['mozilla-central']
                     default: []
-            1proc: built-projects
+            1proc:
+                by-test-platform:
+                    .*wayland.*: []
+                    default: built-projects
     chunks:
         by-test-platform:
             .*tsan.*/opt: 6
@@ -468,6 +476,7 @@ mochitest-devtools-chrome:
             default:
                 by-test-platform:
                     android.*: []
+                    .*wayland.*: []
                     linux.*64-ccov-qr/opt: []
                     default: built-projects
     tier: default
@@ -550,13 +559,14 @@ mochitest-plain-gpu:
                     linux.*64-ccov-qr/opt: []
                     linux1804-32.*: []
                     .*-tsan-qr/opt: []
+                    .*wayland.*: []
                     linux.*: ['trunk']  # linux opt/debug/asan
                     android.*: built-projects
                     default: []
             default:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
-                    android.*: built-projects
+                    .*wayland.*: []
                     default: built-projects
     virtualization: virtual-with-gpu
     tier:
@@ -600,6 +610,7 @@ mochitest-chrome-gpu:
             1proc:
                 by-test-platform:
                     android.*/.*: []
+                    .*wayland.*: []
                     default: built-projects
     tier: default
     mozharness:
@@ -777,8 +788,7 @@ mochitest-webgl1-core:
         by-variant:
             webgl-ipc:
                 by-test-platform:
-                    .*-ccov.*: []
-                    .*-tsan.*: []
+                    .*-(ccov|tsan|wayland).*: []
                     linux.*-64.*: ["trunk"]
                     mac.*: ["trunk"]
                     win.*: ["trunk"]
@@ -802,7 +812,7 @@ mochitest-webgl1-core:
             default:
                 by-test-platform:
                     android.*: []
-                    .*-tsan.*: []
+                    .*-(tsan|wayland).*: []
                     default: built-projects
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
@@ -833,8 +843,7 @@ mochitest-webgl1-ext:
         by-variant:
             webgl-ipc:
                 by-test-platform:
-                    .*-ccov.*: []
-                    .*-tsan.*: []
+                    .*-(ccov|tsan|wayland).*: []
                     linux.*-64.*: built-projects
                     mac.*: ["trunk"]
                     windows.*-64.*: built-projects
@@ -858,7 +867,7 @@ mochitest-webgl1-ext:
             default:
                 by-test-platform:
                     android.*: []
-                    .*-tsan.*: []
+                    .*-(tsan|wayland).*: []
                     default: built-projects
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
@@ -890,8 +899,7 @@ mochitest-webgl2-core:
         by-variant:
             webgl-ipc:
                 by-test-platform:
-                    .*-ccov.*/.*: []
-                    .*-tsan.*: []
+                    .*-(ccov|tsan|wayland).*/.*: []
                     android.*: []
                     linux.*-64.*: ["trunk"]
                     mac.*: ["trunk"]
@@ -916,7 +924,7 @@ mochitest-webgl2-core:
             default:
                 by-test-platform:
                     android.*: []
-                    .*-tsan.*: []
+                    .*-(tsan|wayland).*: []
                     default: built-projects
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
@@ -938,8 +946,7 @@ mochitest-webgl2-ext:
         by-variant:
             webgl-ipc:
                 by-test-platform:
-                    .*ccov.*/.*: []
-                    .*-tsan.*: []
+                    .*(ccov|tsan|wayland).*/.*: []
                     linux.*-64.*: ["trunk"]
                     mac.*: ["trunk"]
                     win.*: ["trunk"]
@@ -961,7 +968,7 @@ mochitest-webgl2-ext:
             default:
                 by-test-platform:
                     android.*: []
-                    .*-tsan.*: []
+                    .*-(tsan|wayland).*: []
                     default: built-projects
     chunks: 4
     test-manifest-loader: null  # don't load tests in the taskgraph
@@ -1071,6 +1078,7 @@ mochitest-remote:
             default:
                 by-test-platform:
                     android.*: []
+                    .*wayland.*: []
                     default: built-projects
     tier: default
     max-run-time: 5400

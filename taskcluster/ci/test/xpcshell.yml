@@ -83,6 +83,7 @@ xpcshell:
             default:
                 by-test-platform:
                     android.*: []
+                    .*wayland.*: []
                     windows.*-asan-qr/opt: []  # No XPCShell on ASAN yet
                     default: built-projects
     chunks:
