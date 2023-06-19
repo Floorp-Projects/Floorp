@@ -904,6 +904,13 @@ slot {
   }
 }
 
+@media print {
+  input, textarea, select, button, details {
+    -moz-user-input: none !important;
+    pointer-events: none !important;
+  }
+}
+
 /* Popover UA style, https://html.spec.whatwg.org/#flow-content-3 */
 @media (-moz-popover-enabled) {
   [popover]:not(:popover-open):not(dialog[open]) {
