@@ -1157,9 +1157,6 @@ BrowserGlue.prototype = {
     this._firstWindowReady = new Promise(
       resolve => (this._firstWindowLoaded = resolve)
     );
-    if (AppConstants.platform == "win") {
-      JawsScreenReaderVersionCheck.init();
-    }
   },
 
   // cleanup (called on application shutdown)
@@ -2628,14 +2625,6 @@ BrowserGlue.prototype = {
             "@mozilla.org/uriloader/handler-service;1"
           ].getService(Ci.nsIHandlerService);
           handlerService.asyncInit();
-        },
-      },
-
-      {
-        name: "JawsScreenReaderVersionCheck.onWindowsRestored",
-        condition: AppConstants.platform == "win",
-        task: () => {
-          JawsScreenReaderVersionCheck.onWindowsRestored();
         },
       },
 
@@ -5476,102 +5465,6 @@ export var DefaultBrowserCheck = {
     }
 
     return willPrompt;
-  },
-};
-
-/*
- * Prompts users who have an outdated JAWS screen reader informing
- * them they need to update JAWS or switch to esr. Can be removed
- * 12/31/2018.
- */
-var JawsScreenReaderVersionCheck = {
-  _prompted: false,
-
-  init() {
-    Services.obs.addObserver(this, "a11y-init-or-shutdown", true);
-  },
-
-  QueryInterface: ChromeUtils.generateQI([
-    "nsIObserver",
-    "nsISupportsWeakReference",
-  ]),
-
-  observe(subject, topic, data) {
-    if (topic == "a11y-init-or-shutdown" && data == "1") {
-      Services.tm.dispatchToMainThread(() => this._checkVersionAndPrompt());
-    }
-  },
-
-  onWindowsRestored() {
-    Services.tm.dispatchToMainThread(() => this._checkVersionAndPrompt());
-  },
-
-  _checkVersionAndPrompt() {
-    // Make sure we only prompt for versions of JAWS we do not
-    // support and never prompt if e10s is disabled or if we're on
-    // nightly.
-    if (
-      !Services.appinfo.shouldBlockIncompatJaws ||
-      !Services.appinfo.browserTabsRemoteAutostart ||
-      AppConstants.NIGHTLY_BUILD
-    ) {
-      return;
-    }
-
-    let win = lazy.BrowserWindowTracker.getTopWindow();
-    if (!win || !win.gBrowser || !win.gBrowser.selectedBrowser) {
-      Services.console.logStringMessage(
-        "Content access support for older versions of JAWS is disabled " +
-          "due to compatibility issues with this version of Firefox."
-      );
-      this._prompted = false;
-      return;
-    }
-
-    // Only prompt once per session
-    if (this._prompted) {
-      return;
-    }
-    this._prompted = true;
-
-    let browser = win.gBrowser.selectedBrowser;
-
-    // Prompt JAWS users to let them know they need to update
-    let promptMessage = win.gNavigatorBundle.getFormattedString(
-      "e10s.accessibilityNotice.jawsMessage",
-      [lazy.gBrandBundle.GetStringFromName("brandShortName")]
-    );
-    let notification;
-    // main option: an Ok button, keeps running with content accessibility disabled
-    let mainAction = {
-      label: win.gNavigatorBundle.getString(
-        "e10s.accessibilityNotice.acceptButton.label"
-      ),
-      accessKey: win.gNavigatorBundle.getString(
-        "e10s.accessibilityNotice.acceptButton.accesskey"
-      ),
-      callback() {
-        // If the user invoked the button option remove the notification,
-        // otherwise keep the alert icon around in the address bar.
-        notification.remove();
-      },
-    };
-    let options = {
-      popupIconURL: "chrome://browser/skin/e10s-64@2x.png",
-      persistWhileVisible: true,
-      persistent: true,
-      persistence: 100,
-    };
-
-    notification = win.PopupNotifications.show(
-      browser,
-      "e10s_enabled_with_incompat_jaws",
-      promptMessage,
-      null,
-      mainAction,
-      null,
-      options
-    );
   },
 };
 

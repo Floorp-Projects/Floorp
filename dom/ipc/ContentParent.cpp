@@ -28,10 +28,6 @@
 #include "GMPServiceParent.h"
 #include "HandlerServiceParent.h"
 #include "IHistory.h"
-#if defined(XP_WIN) && defined(ACCESSIBILITY)
-#  include "mozilla/a11y/AccessibleWrap.h"
-#  include "mozilla/a11y/Compatibility.h"
-#endif
 #include <map>
 #include <utility>
 
@@ -1684,14 +1680,7 @@ void ContentParent::Init() {
   // If accessibility is running in chrome process then start it in content
   // process.
   if (GetAccService()) {
-#  if defined(XP_WIN)
-    // Don't init content a11y if we detect an incompat version of JAWS in use.
-    if (!mozilla::a11y::Compatibility::IsOldJAWS()) {
-      Unused << SendActivateA11y();
-    }
-#  else
     Unused << SendActivateA11y();
-#  endif
   }
 #endif  // #ifdef ACCESSIBILITY
 
@@ -4078,15 +4067,7 @@ ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
     if (*aData == '1') {
       // Make sure accessibility is running in content process when
       // accessibility gets initiated in chrome process.
-#  if defined(XP_WIN)
-      // Don't init content a11y if we detect an incompat version of JAWS in
-      // use.
-      if (!mozilla::a11y::Compatibility::IsOldJAWS()) {
-        Unused << SendActivateA11y();
-      }
-#  else
       Unused << SendActivateA11y();
-#  endif
     } else {
       // If possible, shut down accessibility in content process when
       // accessibility gets shutdown in chrome process.
