@@ -14,8 +14,8 @@ add_task(async function () {
   info("Hovers over the inline exception mark text.");
   await assertPreviewTextValue(dbg, 85, 10, {
     text: 'TypeError: "abc".push is not a function',
+    expression: "push",
   });
-  await closePreviewAtPos(dbg, 85, 10);
 
   const excLineEls = findAllElementsWithSelector(dbg, ".line-exception");
   const excTextMarkEls = findAllElementsWithSelector(

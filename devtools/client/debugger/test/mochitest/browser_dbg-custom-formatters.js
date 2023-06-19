@@ -124,6 +124,7 @@ add_task(async function () {
   await assertPreviewTextValue(dbg, 26, 16, {
     expression: VARIABLE_NAME,
     text: "CUSTOM",
+    doNotClose: true,
   });
 
   const tooltipPopup = findElement(dbg, "previewPopup");

@@ -2080,12 +2080,13 @@ async function getTokenFromPosition(dbg, { line, column = 0 }) {
   // Pass "ch=-1" when there is no column argument passed.
   const cmPosition = { line: line - 1, ch: column - 1 };
 
+  const onScrolled = waitForScrolling(cm);
   cm.scrollIntoView(cmPosition, 0);
 
   // Ensure the line is visible with margin because the bar at the bottom of
   // the editor overlaps into what the editor thinks is its own space, blocking
   // the click event below.
-  await waitForScrolling(cm);
+  await onScrolled;
 
   const { left, top } = getCoordsFromPosition(cm, cmPosition);
 
@@ -2093,6 +2094,7 @@ async function getTokenFromPosition(dbg, { line, column = 0 }) {
   // https://github.com/firefox-devtools/debugger/pull/7934
   const lineHeightOffset = 3;
 
+  // Note that we might end up retrieving any popup if one is still shown over the expected token
   return dbg.win.document.elementFromPoint(left, top + lineHeightOffset);
 }
 
@@ -2171,79 +2173,155 @@ async function hoverAtPos(dbg, pos) {
     return;
   }
 
-  info(`Hovering on token ${tokenEl.innerText}`);
-  tokenEl.dispatchEvent(
-    new MouseEvent("mouseover", {
-      bubbles: true,
-      cancelable: true,
-      view: dbg.win,
-    })
-  );
-
-  InspectorUtils.addPseudoClassLock(tokenEl, ":hover");
+  hoverToken(tokenEl);
 }
 
-async function closePreviewAtPos(dbg, line, column) {
-  const tokenEl = await getTokenFromPosition(dbg, { line, column });
+function hoverToken(tokenEl) {
+  info(`Hovering on token "${tokenEl.innerText}"`);
 
-  if (!tokenEl) {
-    return;
-  }
+  // This first event helps utils/editor/token-events.js to receive the right mouseover event
+  EventUtils.synthesizeMouseAtCenter(
+    tokenEl,
+    {
+      type: "mouseover",
+    },
+    tokenEl.ownerGlobal
+  );
 
-  InspectorUtils.removePseudoClassLock(tokenEl, ":hover");
+  // This second event helps Popover to have :hover pseudoclass set on the token element
+  EventUtils.synthesizeMouseAtCenter(
+    tokenEl,
+    {
+      type: "mousemove",
+    },
+    tokenEl.ownerGlobal
+  );
+}
 
-  const gutterEl = await getEditorLineGutter(dbg, line);
+/**
+ * Helper to close a variable preview popup.
+ *
+ * @param {Object} dbg
+ * @param {DOM Element} tokenEl
+ *        The DOM element on which we hovered to display the popup.
+ * @param {String} previewType
+ *        Based on the actual JS value being hovered we may have two different kinds
+ *        of popups: popup (for js objects) or previewPopup (for primitives)
+ */
+async function closePreviewForToken(
+  dbg,
+  tokenEl,
+  previewType = "previewPopup"
+) {
+  ok(
+    findElement(dbg, previewType),
+    "A preview was opened before trying to close it"
+  );
 
-  // The popup gets hidden when "mouseleave" is emitted on the tokenEl.
-  // EventUtils can't send "mouseleave" event, and since the mouse could have been moved
-  // since the tooltip was displayed, move it back to the token and then to the gutter,
-  // which should trigger a mouseleave event.
-  EventUtils.synthesizeMouseAtCenter(tokenEl, { type: "mousemove" }, dbg.win);
-  EventUtils.synthesizeMouseAtCenter(gutterEl, { type: "mousemove" }, dbg.win);
-  await waitUntil(() => findElement(dbg, "previewPopup") == null);
+  // Force "mousing out" from all elements.
+  //
+  // This helps utils/editor/token-events.js to receive the right mouseleave event.
+  // This is super important as it will then allow re-emitting a tokenenter event if you try to re-preview the same token!
+  EventUtils.synthesizeMouseAtCenter(
+    tokenEl,
+    {
+      type: "mouseout",
+    },
+    tokenEl.ownerGlobal
+  );
+
+  // This second event helps Popover to have :hover pseudoclass removed on the token element
+  //
+  // For some unexplained reason, the precise element onto which we emit mousemove is actually important.
+  // Emitting it on documentElement, or random other element within CodeMirror would cause
+  // a "mousemove" event to be emitted on preview-popup element instead and wouldn't cause :hover
+  // pseudoclass to be dropped.
+  const element = tokenEl.ownerDocument.querySelector(
+    ".debugger-settings-menu-button"
+  );
+  EventUtils.synthesizeMouseAtCenter(
+    element,
+    {
+      type: "mousemove",
+    },
+    element.ownerGlobal
+  );
+
+  await waitUntil(() => findElement(dbg, previewType) == null);
+  info("Preview closed");
 }
 
 // tryHovering will hover at a position every second until we
 // see a preview element (popup, tooltip) appear. Once it appears,
 // it considers it a success.
-function tryHovering(dbg, line, column, elementName) {
-  return new Promise((resolve, reject) => {
-    const element = waitForElement(dbg, elementName);
-    let count = 0;
+async function tryHovering(dbg, line, column, elementName) {
+  ok(
+    !findElement(dbg, elementName),
+    "The expected preview element on hover should not exist beforehand"
+  );
 
-    element.then(() => {
-      clearInterval(interval);
-      resolve(element);
-    });
+  const tokenEl = await getTokenFromPosition(dbg, { line, column });
+  hoverToken(tokenEl);
 
-    const interval = setInterval(() => {
-      if (count++ == 5) {
-        clearInterval(interval);
-        reject("failed to preview");
-      }
+  // Wait for the preview element to be created
+  const element = await waitForElement(dbg, elementName);
 
-      hoverAtPos(dbg, { line, column });
-    }, 1000);
-  });
+  return { element, tokenEl };
 }
 
-async function assertPreviewTextValue(dbg, line, column, { text, expression }) {
-  const previewEl = await tryHovering(dbg, line, column, "previewPopup");
+async function assertPreviewTextValue(
+  dbg,
+  line,
+  column,
+  { text, expression, doNotClose = false }
+) {
+  const { element: previewEl, tokenEl } = await tryHovering(
+    dbg,
+    line,
+    column,
+    "previewPopup"
+  );
 
-  ok(previewEl.innerText.includes(text), "Preview text shown to user");
+  ok(
+    tokenEl.innerText.includes(expression),
+    "Popup preview hovered expression is correct. Got: " +
+      tokenEl.innerText +
+      " Expected: " +
+      expression
+  );
 
-  const preview = dbg.selectors.getPreview();
-  is(preview.expression, expression, "Preview.expression");
+  ok(
+    previewEl.innerText.includes(text),
+    "Popup preview text shown to user. Got: " +
+      previewEl.innerText +
+      " Expected: " +
+      text
+  );
+
+  if (!doNotClose) {
+    await closePreviewForToken(dbg, tokenEl);
+  }
 }
 
 async function assertPreviewTooltip(dbg, line, column, { result, expression }) {
-  const previewEl = await tryHovering(dbg, line, column, "tooltip");
+  const { element: previewEl, tokenEl } = await tryHovering(
+    dbg,
+    line,
+    column,
+    "tooltip"
+  );
 
-  is(previewEl.innerText, result, "Preview text shown to user");
+  ok(
+    tokenEl.innerText.includes(expression),
+    "Tooltip preview hovered expression is correct. Got: " +
+      tokenEl.innerText +
+      " Expected: " +
+      expression
+  );
 
-  const preview = dbg.selectors.getPreview();
-  is(`${preview.resultGrip}`, result, "Preview.result");
-  is(preview.expression, expression, "Preview.expression");
+  is(previewEl.innerText, result, "Tooltip preview text shown to user");
+
+  await closePreviewForToken(dbg, tokenEl);
 }
 
 async function assertPreviews(dbg, previews) {
@@ -2252,8 +2330,14 @@ async function assertPreviews(dbg, previews) {
       throw new Error("Invalid test fixture");
     }
 
+    info(" # Assert preview on " + line + ":" + column);
     if (fields) {
-      const popupEl = await tryHovering(dbg, line, column, "popup");
+      const { element: popupEl, tokenEl } = await tryHovering(
+        dbg,
+        line,
+        column,
+        "popup"
+      );
       const oiNodes = Array.from(
         popupEl.querySelectorAll(".preview-popup .node")
       );
@@ -2272,16 +2356,14 @@ async function assertPreviews(dbg, previews) {
           );
         }
       }
+
+      await closePreviewForToken(dbg, tokenEl, "popup");
     } else {
       await assertPreviewTextValue(dbg, line, column, {
         expression,
         text: result,
       });
     }
-
-    const { target } = dbg.selectors.getPreview(getContext(dbg));
-    InspectorUtils.removePseudoClassLock(target, ":hover");
-    dbg.actions.clearPreview(getContext(dbg));
   }
 }
 

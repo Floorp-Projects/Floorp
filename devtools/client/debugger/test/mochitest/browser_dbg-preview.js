@@ -7,11 +7,14 @@
 
 "use strict";
 
+// Showing/hiding the preview tooltip can be slow as we wait for CodeMirror scroll...
+requestLongerTimeout(2);
+
 add_task(async function () {
   const dbg = await initDebugger("doc-preview.html", "preview.js");
 
   await testPreviews(dbg, "testInline", [
-    { line: 17, column: 16, expression: "obj?.prop", result: 2 },
+    { line: 17, column: 16, expression: "prop", result: 2 },
   ]);
 
   await selectSource(dbg, "preview.js");
@@ -26,7 +29,7 @@ add_task(async function () {
 
   await testPreviews(dbg, "objects", [
     { line: 27, column: 10, expression: "empty", result: "No properties" },
-    { line: 28, column: 22, expression: "obj?.foo", result: 1 },
+    { line: 28, column: 22, expression: "foo", result: 1 },
   ]);
 
   await testPreviews(dbg, "smalls", [
@@ -42,8 +45,8 @@ add_task(async function () {
   ]);
 
   await testPreviews(dbg, "classPreview", [
-    { line: 50, column: 20, expression: "this.x", result: 1 },
-    { line: 50, column: 29, expression: "this.#privateVar", result: 2 },
+    { line: 50, column: 20, expression: "x", result: 1 },
+    { line: 50, column: 29, expression: "#privateVar", result: 2 },
     {
       line: 50,
       column: 47,
@@ -62,7 +65,7 @@ add_task(async function () {
         ["#privateVar", "2"],
       ],
     },
-    { line: 51, column: 39, expression: "this.#privateVar", result: 2 },
+    { line: 51, column: 39, expression: "#privateVar", result: 2 },
   ]);
 
   info(
@@ -79,10 +82,9 @@ add_task(async function () {
       fields: [["hello", "{…}"]],
     },
   ]);
-  await closePreviewAtPos(dbg, 60, 7);
 
   info("Display the popup again and try to expand a property");
-  const popupEl = await tryHovering(dbg, 60, 7, "popup");
+  const { element: popupEl, tokenEl } = await tryHovering(dbg, 60, 7, "popup");
   const nodes = popupEl.querySelectorAll(".preview-popup .node");
   const initialNodesLength = nodes.length;
   nodes[0].querySelector(".arrow").click();
@@ -92,6 +94,7 @@ add_task(async function () {
       initialNodesLength
   );
   ok(true, `"hello" was expanded`);
+  await closePreviewForToken(dbg, tokenEl, "popup");
   await resume(dbg);
 });
 
@@ -108,16 +111,32 @@ async function testPreviews(dbg, fnName, previews) {
 async function testBucketedArray(dbg) {
   invokeInTab("largeArray");
   await waitForPaused(dbg);
-  await tryHovering(dbg, 34, 10, "popup");
-  const preview = dbg.selectors.getPreview();
+  const { element: popupEl, tokenEl } = await tryHovering(dbg, 34, 10, "popup");
 
-  is(
-    preview.properties.map(p => p.name).join(" "),
-    "[0…99] [100…100] length <prototype>",
-    "Popup properties are bucketed"
+  const oiNodes = Array.from(popupEl.querySelectorAll(".preview-popup .node"));
+
+  const displayedPropertyNames = oiNodes.map(
+    oiNode => oiNode.querySelector(".object-label")?.textContent
   );
+  Assert.deepEqual(displayedPropertyNames, [
+    "[0…99]",
+    "[100…100]",
+    "length",
+    "<prototype>",
+  ]);
+  const node = oiNodes.find(
+    oiNode => oiNode.querySelector(".object-label")?.textContent === "length"
+  );
+  if (!node) {
+    ok(false, `The "length" property is not displayed in the popup`);
+  } else {
+    is(
+      node.querySelector(".objectBox").textContent,
+      "101",
+      `The "length" property has the expected value`
+    );
+  }
+  await closePreviewForToken(dbg, tokenEl, "popup");
 
-  is(preview.properties[0].meta.endIndex, 99, "first bucket ends at 99");
-  is(preview.properties[2].contents.value, 101, "length is 101");
   await resume(dbg);
 }
