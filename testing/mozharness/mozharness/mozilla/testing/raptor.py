@@ -833,6 +833,7 @@ class Raptor(
             chromium_release: {
                 linux: ["chromium", "Default", "chrome"],
                 win: ["chromium", "Default", "chrome.exe"],
+                mac: ["chromium", "Chromium.app", "Contents", "MacOS", "chromium"],
             },
         }
 
