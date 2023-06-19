@@ -74,7 +74,7 @@ fn run(args: CliArgs) -> miette::Result<()> {
     let gecko_ckt = {
         let failed_find_hg_err = || {
             miette!(
-                "failed to find a Mercurial repository (`.hgrc`) in any of current working \
+                "failed to find a Mercurial repository (`.hg`) in any of current working \
                 directory and its parent directories"
             )
         };
