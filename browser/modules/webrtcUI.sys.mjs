@@ -2,24 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { EventEmitter } from "resource:///modules/syncedtabs/EventEmitter.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
-var EXPORTED_SYMBOLS = [
-  "webrtcUI",
-  "showStreamSharingMenu",
-  "MacOSWebRTCStatusbarIndicator",
-];
-
-const { EventEmitter } = ChromeUtils.importESModule(
-  "resource:///modules/syncedtabs/EventEmitter.sys.mjs"
-);
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
 const lazy = {};
 ChromeUtils.defineModuleGetter(
   lazy,
@@ -96,7 +82,7 @@ const MEDIA_SOURCE_L10NID_BY_TYPE = new Map([
   ["audioCapture", "webrtc-item-audio-capture"],
 ]);
 
-var webrtcUI = {
+export var webrtcUI = {
   initialized: false,
 
   peerConnectionBlockers: new Set(),
@@ -1035,7 +1021,7 @@ function getGlobalIndicator() {
  * @param {Event} event - The popupshowing event for the <menu>.
  * @param {boolean} inclWindow - Should the window stream be included in the active streams.
  */
-function showStreamSharingMenu(win, event, inclWindow = false) {
+export function showStreamSharingMenu(win, event, inclWindow = false) {
   win.MozXULElement.insertFTLIfNeeded("browser/webrtcIndicator.ftl");
   const doc = win.document;
   const menu = event.target;
@@ -1108,7 +1094,7 @@ function showStreamSharingMenu(win, event, inclWindow = false) {
  * WebRTC global sharing indicator, because the MacOSWebRTCStatusbarIndicator
  * acts as the indicator when in the legacy indicator configuration.
  */
-class MacOSWebRTCStatusbarIndicator {
+export class MacOSWebRTCStatusbarIndicator {
   constructor() {
     this._camera = null;
     this._microphone = null;
