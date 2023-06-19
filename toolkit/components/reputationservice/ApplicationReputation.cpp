@@ -228,10 +228,11 @@ const char* const ApplicationReputationService::kBinaryFileExtensions[] = {
     ".definition",  // Automator action
     ".desktop",     // A shortcut that runs other files
     //".der", exec  // Signed certificate
-    ".dex",         // Android
-    ".dht",         // HTML
-    ".dhtm",        // HTML
-    ".dhtml",       // HTML
+    ".dex",    // Android
+    ".dht",    // HTML
+    ".dhtm",   // HTML
+    ".dhtml",  // HTML
+    //".diagcab", exec // Executable windows archive, like .cab
     ".diskcopy42",  // Apple DiskCopy Image
     ".dll",         // Windows executable
     ".dmg",         // Mac disk image
