@@ -44,15 +44,21 @@ function waitForState(dbg, predicate, msg) {
   });
 }
 
-function waitForDispatch(dbg, type) {
+function waitForDispatch(dbg, type, count = 1) {
   return new Promise(resolve => {
     dbg.store.dispatch({
       type: "@@service/waitUntil",
       predicate: action => {
-        if (action.type === type) {
-          return action.status
-            ? action.status === "done" || action.status === "error"
-            : true;
+        if (
+          action.type === type &&
+          (!action.status ||
+            action.status === "done" ||
+            action.status === "error")
+        ) {
+          --count;
+          if (count === 0) {
+            return true;
+          }
         }
         return false;
       },
@@ -139,6 +145,16 @@ function waitForSource(dbg, sourceURL) {
   return waitForState(dbg, hasSource, `has source ${sourceURL}`);
 }
 exports.waitForSource = waitForSource;
+
+function waitForThreadCount(dbg, count) {
+  const { selectors } = dbg;
+  function threadCount(state) {
+    // getThreads doesn't count the main thread
+    // and don't use getAllThreads as it does useless expensive computations.
+    return selectors.getThreads(state).length + 1 == count;
+  }
+  return waitForState(dbg, threadCount, `has source ${count} threads`);
+}
 
 async function waitForPaused(dbg) {
   const onLoadedScope = waitForLoadedScopes(dbg);
@@ -240,6 +256,7 @@ exports.evalInFrame = evalInFrame;
 async function openDebuggerAndLog(label, expected) {
   const onLoad = async (toolbox, panel) => {
     const dbg = await createContext(panel);
+    await waitForThreadCount(dbg, expected.threadsCount);
     await waitForSource(dbg, expected.sourceURL);
     await selectSource(dbg, expected.file);
     await waitForText(dbg, expected.text);
@@ -259,8 +276,13 @@ async function reloadDebuggerAndLog(label, toolbox, expected) {
   const onReload = async () => {
     const panel = await toolbox.getPanelWhenReady("jsdebugger");
     const dbg = await createContext(panel);
-    await waitForDispatch(dbg, "NAVIGATE");
-    await waitForDispatch(dbg, "REMOVE_THREAD");
+
+    // First wait for all previous page threads to be removed
+    await waitForDispatch(dbg, "REMOVE_THREAD", expected.threadsCount);
+    // Only after that wait for all new threads to be registered before doing more assertions
+    // Otherwise we may resolve too soon on previous page sources.
+    await waitForThreadCount(dbg, expected.threadsCount);
+
     await waitForSources(dbg, expected.sources);
     await waitForSource(dbg, expected.sourceURL);
     await waitForText(dbg, expected.text);

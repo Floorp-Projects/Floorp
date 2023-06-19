@@ -17,6 +17,7 @@ const EXPECTED = {
   file: "simple.html",
   sourceURL: SIMPLE_URL,
   text: "This is a simple page",
+  threadsCount: 1,
 };
 
 module.exports = async function () {

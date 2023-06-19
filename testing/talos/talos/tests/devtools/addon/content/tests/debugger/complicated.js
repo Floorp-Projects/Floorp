@@ -20,6 +20,7 @@ const EXPECTED = {
   file: "ga.js",
   sourceURL: COMPLICATED_URL,
   text: "Math;function ga(a,b){return a.name=b}",
+  threadsCount: 7,
 };
 
 module.exports = async function () {
