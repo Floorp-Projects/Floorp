@@ -11,28 +11,15 @@ ChromeUtils.defineLazyGetter(this, "UrlbarTestUtils", () => {
 });
 
 add_task(async function test() {
-  waitForExplicitFinish();
-  ok(true, "Starting up");
-
   gBrowser.selectedBrowser.focus();
-  gURLBar.addEventListener(
-    "focus",
-    function () {
-      ok(true, "Invoked onfocus handler");
-      EventUtils.synthesizeKey("VK_RETURN", { shiftKey: true });
-
-      // javscript: URIs are evaluated async.
-      SimpleTest.executeSoon(function () {
-        ok(true, "Evaluated without crashing");
-        finish();
-      });
-    },
-    { once: true }
-  );
   await UrlbarTestUtils.inputIntoURLBar(
     window,
-    "javascript: var foo = '11111111'; ",
-    { replaceContent: true }
+    "javascript: var foo = '11111111'; "
   );
-  gURLBar.focus();
+  ok(gURLBar.focused, "Address bar is focused");
+  EventUtils.synthesizeKey("VK_RETURN");
+
+  // javscript: URIs are evaluated async.
+  await new Promise(resolve => SimpleTest.executeSoon(resolve));
+  ok(true, "Evaluated without crashing");
 });

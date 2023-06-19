@@ -61,11 +61,7 @@ add_task(async function checkCtrlWorks() {
       undefined,
       true
     );
-    win.gURLBar.focus();
-    await UrlbarTestUtils.inputIntoURLBar(win, inputValue.slice(0, -1), {
-      replaceContent: true,
-    });
-    EventUtils.sendString(inputValue.slice(-1), win);
+    await UrlbarTestUtils.inputIntoURLBar(win, inputValue);
     EventUtils.synthesizeKey("KEY_Enter", options, win);
     await Promise.all([promiseLoad, promiseStopped]);
   }
