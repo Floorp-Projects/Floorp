@@ -7,6 +7,8 @@ sysroot=${artifact%.tar.*}
 # Make the wasi compiler-rt available to clang.
 env UPLOAD_DIR= $GECKO_PATH/taskcluster/scripts/misc/repack-clang.sh
 
+patch -d $MOZ_FETCHES_DIR/wasi-sdk -p1 < $(dirname $0)/wasi-sdk.patch
+
 cd $MOZ_FETCHES_DIR/wasi-sdk
 LLVM_PROJ_DIR=$MOZ_FETCHES_DIR/llvm-project
 
