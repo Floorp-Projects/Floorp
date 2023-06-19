@@ -4199,7 +4199,7 @@
 
 - name: dom.textMetrics.fontBoundingBox.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 # Time (in ms) that it takes to regenerate 1ms.
