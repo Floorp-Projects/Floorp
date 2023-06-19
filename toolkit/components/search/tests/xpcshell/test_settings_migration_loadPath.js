@@ -33,10 +33,6 @@ add_task(async function setup() {
   );
   policies.observe(null, "policies-startup", null);
 
-  Services.prefs
-    .getDefaultBranch(SearchUtils.BROWSER_SEARCH_PREF + "param.")
-    .setCharPref("test", "expected");
-
   await SearchTestUtils.useTestEngines("data1");
   await AddonTestUtils.promiseStartupManager();
   await EnterprisePolicyTesting.setupPolicyEngineWithJson(enterprisePolicy);
