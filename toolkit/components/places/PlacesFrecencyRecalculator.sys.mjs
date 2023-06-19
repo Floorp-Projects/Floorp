@@ -479,6 +479,9 @@ class AlternativeFrecencyHelper {
     lazy.logger.trace(
       `Recalculate ${chunkSize} alternative pages frecency values`
     );
+    // Since it takes a long period of time to recalculate frecency of all the
+    // pages, due to the high number of them, we artificially increase the
+    // chunk size here.
     let db = await lazy.PlacesUtils.promiseUnsafeWritableDBConnection();
     let affected = await db.executeCached(
       `UPDATE moz_places
@@ -488,7 +491,7 @@ class AlternativeFrecencyHelper {
         SELECT id FROM moz_places
           WHERE recalc_alt_frecency = 1
           ORDER BY frecency DESC
-          LIMIT ${chunkSize}
+          LIMIT ${chunkSize * 2}
       )
       RETURNING id`
     );
