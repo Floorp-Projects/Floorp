@@ -455,14 +455,20 @@ class nsIContent : public nsINode {
    */
   static inline bool RequiresDoneCreatingElement(int32_t aNamespace,
                                                  nsAtom* aName) {
-    if (aNamespace == kNameSpaceID_XHTML &&
-        (aName == nsGkAtoms::input || aName == nsGkAtoms::button ||
-         aName == nsGkAtoms::audio || aName == nsGkAtoms::video)) {
-      MOZ_ASSERT(
-          !RequiresDoneAddingChildren(aNamespace, aName),
-          "Both DoneCreatingElement and DoneAddingChildren on a same element "
-          "isn't supported.");
-      return true;
+    if (aNamespace == kNameSpaceID_XHTML) {
+      if (aName == nsGkAtoms::input || aName == nsGkAtoms::button ||
+          aName == nsGkAtoms::audio || aName == nsGkAtoms::video) {
+        MOZ_ASSERT(!RequiresDoneAddingChildren(aNamespace, aName),
+                   "Both DoneCreatingElement and DoneAddingChildren on a "
+                   "same element isn't supported.");
+        return true;
+      }
+      if (aName->IsDynamic()) {
+        // This could be a form-associated custom element, so check if its
+        // name includes a -.
+        nsDependentString name(aName->GetUTF16String());
+        return name.Contains('-');
+      }
     }
     return false;
   }
