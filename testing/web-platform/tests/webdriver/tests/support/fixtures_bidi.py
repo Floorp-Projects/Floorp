@@ -1,7 +1,7 @@
 import base64
 
+from tests.support.asserts import assert_pdf
 from tests.support.image import cm_to_px, png_dimensions, ImageDifference
-from tests.support.pdf import assert_pdf
 from typing import Any, Mapping
 
 import pytest

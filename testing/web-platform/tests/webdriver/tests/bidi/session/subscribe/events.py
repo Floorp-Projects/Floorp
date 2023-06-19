@@ -1,5 +1,3 @@
-import asyncio
-
 import pytest
 
 # The basic use case of subscribing globally for a single event
@@ -14,7 +12,7 @@ async def test_subscribe_to_module(bidi_session, subscribe_events, wait_for_even
     # Track all received browsing context events in the events array
     events = []
 
-    async def on_event(method, data):
+    async def on_event(method, _):
         events.append(method)
 
     remove_listener_contextCreated = bidi_session.add_event_listener(
