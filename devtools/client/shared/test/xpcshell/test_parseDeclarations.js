@@ -16,28 +16,60 @@ const TEST_DATA = [
   // Simple test
   {
     input: "p:v;",
-    expected: [{ name: "p", value: "v", priority: "", offsets: [0, 4] }],
+    expected: [
+      {
+        name: "p",
+        value: "v",
+        priority: "",
+        offsets: [0, 4],
+        declarationText: "p:v;",
+      },
+    ],
   },
   // Simple test
   {
     input: "this:is;a:test;",
     expected: [
-      { name: "this", value: "is", priority: "", offsets: [0, 8] },
-      { name: "a", value: "test", priority: "", offsets: [8, 15] },
+      {
+        name: "this",
+        value: "is",
+        priority: "",
+        offsets: [0, 8],
+        declarationText: "this:is;",
+      },
+      {
+        name: "a",
+        value: "test",
+        priority: "",
+        offsets: [8, 15],
+        declarationText: "a:test;",
+      },
     ],
   },
   // Test a single declaration with semi-colon
   {
     input: "name:value;",
     expected: [
-      { name: "name", value: "value", priority: "", offsets: [0, 11] },
+      {
+        name: "name",
+        value: "value",
+        priority: "",
+        offsets: [0, 11],
+        declarationText: "name:value;",
+      },
     ],
   },
   // Test a single declaration without semi-colon
   {
     input: "name:value",
     expected: [
-      { name: "name", value: "value", priority: "", offsets: [0, 10] },
+      {
+        name: "name",
+        value: "value",
+        priority: "",
+        offsets: [0, 10],
+        declarationText: "name:value",
+      },
     ],
   },
   // Test multiple declarations separated by whitespaces and carriage
@@ -45,59 +77,139 @@ const TEST_DATA = [
   {
     input: "p1 : v1 ; \t\t  \n p2:v2;   \n\n\n\n\t  p3    :   v3;",
     expected: [
-      { name: "p1", value: "v1", priority: "", offsets: [0, 9] },
-      { name: "p2", value: "v2", priority: "", offsets: [16, 22] },
-      { name: "p3", value: "v3", priority: "", offsets: [32, 45] },
+      {
+        name: "p1",
+        value: "v1",
+        priority: "",
+        offsets: [0, 9],
+        declarationText: "p1 : v1 ;",
+      },
+      {
+        name: "p2",
+        value: "v2",
+        priority: "",
+        offsets: [16, 22],
+        declarationText: "p2:v2;",
+      },
+      {
+        name: "p3",
+        value: "v3",
+        priority: "",
+        offsets: [32, 45],
+        declarationText: "p3    :   v3;",
+      },
     ],
   },
   // Test simple priority
   {
     input: "p1: v1; p2: v2 !important;",
     expected: [
-      { name: "p1", value: "v1", priority: "", offsets: [0, 7] },
-      { name: "p2", value: "v2", priority: "important", offsets: [8, 26] },
+      {
+        name: "p1",
+        value: "v1",
+        priority: "",
+        offsets: [0, 7],
+        declarationText: "p1: v1;",
+      },
+      {
+        name: "p2",
+        value: "v2",
+        priority: "important",
+        offsets: [8, 26],
+        declarationText: "p2: v2 !important;",
+      },
     ],
   },
   // Test simple priority
   {
     input: "p1: v1 !important; p2: v2",
     expected: [
-      { name: "p1", value: "v1", priority: "important", offsets: [0, 18] },
-      { name: "p2", value: "v2", priority: "", offsets: [19, 25] },
+      {
+        name: "p1",
+        value: "v1",
+        priority: "important",
+        offsets: [0, 18],
+        declarationText: "p1: v1 !important;",
+      },
+      {
+        name: "p2",
+        value: "v2",
+        priority: "",
+        offsets: [19, 25],
+        declarationText: "p2: v2",
+      },
     ],
   },
   // Test simple priority
   {
     input: "p1: v1 !  important; p2: v2 ! important;",
     expected: [
-      { name: "p1", value: "v1", priority: "important", offsets: [0, 20] },
-      { name: "p2", value: "v2", priority: "important", offsets: [21, 40] },
+      {
+        name: "p1",
+        value: "v1",
+        priority: "important",
+        offsets: [0, 20],
+        declarationText: "p1: v1 !  important;",
+      },
+      {
+        name: "p2",
+        value: "v2",
+        priority: "important",
+        offsets: [21, 40],
+        declarationText: "p2: v2 ! important;",
+      },
     ],
   },
   // Test simple priority
   {
     input: "p1: v1 !/*comment*/important;",
     expected: [
-      { name: "p1", value: "v1", priority: "important", offsets: [0, 29] },
+      {
+        name: "p1",
+        value: "v1",
+        priority: "important",
+        offsets: [0, 29],
+        declarationText: "p1: v1 !/*comment*/important;",
+      },
     ],
   },
   // Test priority without terminating ";".
   {
     input: "p1: v1 !important",
     expected: [
-      { name: "p1", value: "v1", priority: "important", offsets: [0, 17] },
+      {
+        name: "p1",
+        value: "v1",
+        priority: "important",
+        offsets: [0, 17],
+        declarationText: "p1: v1 !important",
+      },
     ],
   },
   // Test trailing "!" without terminating ";".
   {
     input: "p1: v1 !",
-    expected: [{ name: "p1", value: "v1 !", priority: "", offsets: [0, 8] }],
+    expected: [
+      {
+        name: "p1",
+        value: "v1 !",
+        priority: "",
+        offsets: [0, 8],
+        declarationText: "p1: v1 !",
+      },
+    ],
   },
   // Test invalid priority
   {
     input: "p1: v1 important;",
     expected: [
-      { name: "p1", value: "v1 important", priority: "", offsets: [0, 17] },
+      {
+        name: "p1",
+        value: "v1 important",
+        priority: "",
+        offsets: [0, 17],
+        declarationText: "p1: v1 important;",
+      },
     ],
   },
   // Test invalid priority (in the middle of the declaration).
@@ -105,7 +217,13 @@ const TEST_DATA = [
   {
     input: "p1: v1 !important v2;",
     expected: [
-      { name: "p1", value: "v1 !important v2", priority: "", offsets: [0, 21] },
+      {
+        name: "p1",
+        value: "v1 !important v2",
+        priority: "",
+        offsets: [0, 21],
+        declarationText: "p1: v1 !important v2;",
+      },
     ],
   },
   {
@@ -116,6 +234,7 @@ const TEST_DATA = [
         value: "v1 ! important v2",
         priority: "",
         offsets: [0, 25],
+        declarationText: "p1: v1 !    important v2;",
       },
     ],
   },
@@ -127,6 +246,7 @@ const TEST_DATA = [
         value: "v1 ! important v2",
         priority: "",
         offsets: [0, 36],
+        declarationText: "p1: v1 !  /*comment*/  important v2;",
       },
     ],
   },
@@ -138,6 +258,7 @@ const TEST_DATA = [
         value: "v1 ! important v2",
         priority: "",
         offsets: [0, 27],
+        declarationText: "p1: v1 !/*hi*/important v2;",
       },
     ],
   },
@@ -150,6 +271,7 @@ const TEST_DATA = [
         value: "url(../../relative/image.png)",
         priority: "",
         offsets: [0, 47],
+        declarationText: "background-image: url(../../relative/image.png)",
       },
     ],
   },
@@ -161,6 +283,7 @@ const TEST_DATA = [
         value: "url(http://site.com/test.png)",
         priority: "",
         offsets: [0, 47],
+        declarationText: "background-image: url(http://site.com/test.png)",
       },
     ],
   },
@@ -172,6 +295,7 @@ const TEST_DATA = [
         value: "url(wow.gif)",
         priority: "",
         offsets: [0, 30],
+        declarationText: "background-image: url(wow.gif)",
       },
     ],
   },
@@ -188,6 +312,9 @@ const TEST_DATA = [
           "repeat top right",
         priority: "",
         offsets: [0, 78],
+        declarationText:
+          'background: red url("http://site.com/image{}:;.png?id=4#wat") ' +
+          "repeat top right",
       },
     ],
   },
@@ -209,6 +336,7 @@ const TEST_DATA = [
         value: '";color:red;}selector{color:yellow;"',
         priority: "",
         offsets: [0, 45],
+        declarationText: 'content: ";color:red;}selector{color:yellow;"',
       },
     ],
   },
@@ -237,7 +365,13 @@ const TEST_DATA = [
   {
     input: "background: red;;;;;",
     expected: [
-      { name: "background", value: "red", priority: "", offsets: [0, 16] },
+      {
+        name: "background",
+        value: "red",
+        priority: "",
+        offsets: [0, 16],
+        declarationText: "background: red;",
+      },
     ],
   },
   {
@@ -257,7 +391,13 @@ const TEST_DATA = [
   {
     input: "color:blue;font",
     expected: [
-      { name: "color", value: "blue", priority: "", offsets: [0, 11] },
+      {
+        name: "color",
+        value: "blue",
+        priority: "",
+        offsets: [0, 11],
+        declarationText: "color:blue;",
+      },
       { name: "font", value: "", priority: "", offsets: [11, 15] },
     ],
   },
@@ -265,7 +405,13 @@ const TEST_DATA = [
   {
     input: "color:blue;font:",
     expected: [
-      { name: "color", value: "blue", priority: "", offsets: [0, 11] },
+      {
+        name: "color",
+        value: "blue",
+        priority: "",
+        offsets: [0, 11],
+        declarationText: "color:blue;",
+      },
       { name: "font", value: "", priority: "", offsets: [11, 16] },
     ],
   },
@@ -274,25 +420,51 @@ const TEST_DATA = [
     input: "Arial;color:blue;",
     expected: [
       { name: "", value: "Arial", priority: "", offsets: [0, 6] },
-      { name: "color", value: "blue", priority: "", offsets: [6, 17] },
+      {
+        name: "color",
+        value: "blue",
+        priority: "",
+        offsets: [6, 17],
+        declarationText: "color:blue;",
+      },
     ],
   },
   // Test hex colors
   {
     input: "color: #333",
     expected: [
-      { name: "color", value: "#333", priority: "", offsets: [0, 11] },
+      {
+        name: "color",
+        value: "#333",
+        priority: "",
+        offsets: [0, 11],
+        declarationText: "color: #333",
+      },
     ],
   },
   {
     input: "color: #456789",
     expected: [
-      { name: "color", value: "#456789", priority: "", offsets: [0, 14] },
+      {
+        name: "color",
+        value: "#456789",
+        priority: "",
+        offsets: [0, 14],
+        declarationText: "color: #456789",
+      },
     ],
   },
   {
     input: "wat: #XYZ",
-    expected: [{ name: "wat", value: "#XYZ", priority: "", offsets: [0, 9] }],
+    expected: [
+      {
+        name: "wat",
+        value: "#XYZ",
+        priority: "",
+        offsets: [0, 9],
+        declarationText: "wat: #XYZ",
+      },
+    ],
   },
   // Test string/url quotes escaping
   {
@@ -303,6 +475,7 @@ const TEST_DATA = [
         value: "\"this is a 'string'\"",
         priority: "",
         offsets: [0, 29],
+        declarationText: "content: \"this is a 'string'\"",
       },
     ],
   },
@@ -314,6 +487,7 @@ const TEST_DATA = [
         value: '"this is a \\"string\\""',
         priority: "",
         offsets: [0, 31],
+        declarationText: 'content: "this is a \\"string\\""',
       },
     ],
   },
@@ -325,6 +499,7 @@ const TEST_DATA = [
         value: "'this is a \"string\"'",
         priority: "",
         offsets: [0, 29],
+        declarationText: "content: 'this is a \"string\"'",
       },
     ],
   },
@@ -336,6 +511,7 @@ const TEST_DATA = [
         value: "'this is a \\'string\\''",
         priority: "",
         offsets: [0, 31],
+        declarationText: "content: 'this is a \\'string\\''",
       },
     ],
   },
@@ -347,6 +523,7 @@ const TEST_DATA = [
         value: "'this \\' is a \" really strange string'",
         priority: "",
         offsets: [0, 47],
+        declarationText: "content: 'this \\' is a \" really strange string'",
       },
     ],
   },
@@ -358,6 +535,7 @@ const TEST_DATA = [
         value: '"a not s\\          o very long title"',
         priority: "",
         offsets: [0, 46],
+        declarationText: 'content: "a not s\\          o very long title"',
       },
     ],
   },
@@ -370,6 +548,7 @@ const TEST_DATA = [
         value: "calc((100% - 3em) / 2)",
         priority: "",
         offsets: [0, 29],
+        declarationText: "width: calc((100% - 3em) / 2)",
       },
     ],
   },
@@ -379,15 +558,28 @@ const TEST_DATA = [
     parseComments: true,
     input: "width: 5; /* background: green; */ background: red;",
     expected: [
-      { name: "width", value: "5", priority: "", offsets: [0, 9] },
+      {
+        name: "width",
+        value: "5",
+        priority: "",
+        offsets: [0, 9],
+        declarationText: "width: 5;",
+      },
       {
         name: "background",
         value: "green",
         priority: "",
         offsets: [13, 31],
+        declarationText: "background: green;",
         commentOffsets: [10, 34],
       },
-      { name: "background", value: "red", priority: "", offsets: [35, 51] },
+      {
+        name: "background",
+        value: "red",
+        priority: "",
+        offsets: [35, 51],
+        declarationText: "background: red;",
+      },
     ],
   },
 
@@ -396,8 +588,20 @@ const TEST_DATA = [
     parseComments: true,
     input: "width: 5; /* background something: green; */ background: red;",
     expected: [
-      { name: "width", value: "5", priority: "", offsets: [0, 9] },
-      { name: "background", value: "red", priority: "", offsets: [45, 61] },
+      {
+        name: "width",
+        value: "5",
+        priority: "",
+        offsets: [0, 9],
+        declarationText: "width: 5;",
+      },
+      {
+        name: "background",
+        value: "red",
+        priority: "",
+        offsets: [45, 61],
+        declarationText: "background: red;",
+      },
     ],
   },
 
@@ -406,7 +610,13 @@ const TEST_DATA = [
     parseComments: true,
     input: "width: 5; /* background: */ background: red;",
     expected: [
-      { name: "width", value: "5", priority: "", offsets: [0, 9] },
+      {
+        name: "width",
+        value: "5",
+        priority: "",
+        offsets: [0, 9],
+        declarationText: "width: 5;",
+      },
       {
         name: "background",
         value: "",
@@ -414,7 +624,13 @@ const TEST_DATA = [
         offsets: [13, 24],
         commentOffsets: [10, 27],
       },
-      { name: "background", value: "red", priority: "", offsets: [28, 44] },
+      {
+        name: "background",
+        value: "red",
+        priority: "",
+        offsets: [28, 44],
+        declarationText: "background: red;",
+      },
     ],
   },
 
@@ -424,15 +640,28 @@ const TEST_DATA = [
     parseComments: true,
     input: "width: 5; /* background: yellow */ background: red;",
     expected: [
-      { name: "width", value: "5", priority: "", offsets: [0, 9] },
+      {
+        name: "width",
+        value: "5",
+        priority: "",
+        offsets: [0, 9],
+        declarationText: "width: 5;",
+      },
       {
         name: "background",
         value: "yellow",
         priority: "",
         offsets: [13, 31],
+        declarationText: "background: yellow",
         commentOffsets: [10, 34],
       },
-      { name: "background", value: "red", priority: "", offsets: [35, 51] },
+      {
+        name: "background",
+        value: "red",
+        priority: "",
+        offsets: [35, 51],
+        declarationText: "background: red;",
+      },
     ],
   },
 
@@ -447,6 +676,7 @@ const TEST_DATA = [
         value: "'*/'",
         priority: "",
         offsets: [3, 18],
+        declarationText: "content: '*\\/';",
         commentOffsets: [0, 21],
       },
     ],
@@ -464,6 +694,7 @@ const TEST_DATA = [
         value: "'*/'",
         priority: "",
         offsets: [3, 17],
+        declarationText: "content: '*\\/'",
         commentOffsets: [0, 20],
       },
     ],
@@ -479,6 +710,7 @@ const TEST_DATA = [
         value: "red",
         priority: "",
         offsets: [3, 30],
+        declarationText: "color: /\\* comment *\\/ red;",
         commentOffsets: [0, 33],
       },
     ],
@@ -511,6 +743,7 @@ const TEST_DATA = [
         value: "zebra",
         priority: "",
         offsets: [4, 18],
+        declarationText: "walrus: zebra;",
         commentOffsets: [0, 21],
       },
     ],
@@ -525,6 +758,7 @@ const TEST_DATA = [
         value: "blue \\9 no_need",
         priority: "",
         offsets: [0, 23],
+        declarationText: "color: blue \\9 no\\_need",
       },
     ],
   },
@@ -539,6 +773,7 @@ const TEST_DATA = [
         value: "1 2",
         priority: "",
         offsets: [0, 39],
+        declarationText: "stroke-dasharray: 1/*ThisIsAComment*/2;",
       },
     ],
   },
@@ -554,6 +789,7 @@ const TEST_DATA = [
         value: "top",
         priority: "",
         offsets: [0, 20],
+        declarationText: "\u00a0vertical-align: top",
       },
     ],
   },
@@ -659,7 +895,7 @@ function run_basic_tests() {
       }
     }
     if (output) {
-      assertOutput(output, test.expected);
+      assertOutput(test.input, output, test.expected);
     }
   }
 }
@@ -733,7 +969,7 @@ function run_named_tests() {
   }
 }
 
-function assertOutput(actual, expected) {
+function assertOutput(input, actual, expected) {
   if (actual.length === expected.length) {
     for (let i = 0; i < expected.length; i++) {
       Assert.ok(!!actual[i]);
@@ -747,6 +983,13 @@ function assertOutput(actual, expected) {
       deepEqual(expected[i].offsets, actual[i].offsets);
       if ("commentOffsets" in expected[i]) {
         deepEqual(expected[i].commentOffsets, actual[i].commentOffsets);
+      }
+
+      if (expected[i].declarationText) {
+        Assert.equal(
+          input.substring(expected[i].offsets[0], expected[i].offsets[1]),
+          expected[i].declarationText
+        );
       }
     }
   } else {
