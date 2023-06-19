@@ -71,10 +71,10 @@ connection-proxy-reload =
     .label = Reload
     .accesskey = e
 
-connection-proxy-autologin =
+connection-proxy-autologin-checkbox =
     .label = Do not prompt for authentication if password is saved
     .accesskey = i
-    .tooltip = This option silently authenticates you to proxies when you have saved credentials for them. You will be prompted if authentication fails.
+    .tooltiptext = This option silently authenticates you to proxies when you have saved credentials for them. You will be prompted if authentication fails.
 
 connection-proxy-socks-remote-dns =
     .label = Proxy DNS when using SOCKS v5
