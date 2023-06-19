@@ -12,6 +12,7 @@ permalink: /changelog/
 
 * **support-base**
   * Adds `NotificationManangerCompat` extension functions `areNotificationsEnabledSafe()` and  `isNotificationChannelEnabled()`.
+  * Removes deprecated `BackHandler`, use `UserInteractionHandler` instead.
   
 * **feature-pwa**
   * Adds `WebAppContentFeature` to set the "display" mode from the web app manifest on the `EngineSession`.
