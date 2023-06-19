@@ -14,7 +14,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.AccountShareListItemBinding
 import org.mozilla.fenix.share.ShareToAccountDevicesInteractor
 import org.mozilla.fenix.share.listadapters.SyncShareOption
-import org.mozilla.fenix.utils.Do
 
 class AccountDeviceViewHolder(
     itemView: View,
@@ -31,7 +30,7 @@ class AccountDeviceViewHolder(
 
     private fun bindClickListeners(option: SyncShareOption) {
         itemView.setOnClickListener {
-            Do exhaustive when (option) {
+            when (option) {
                 SyncShareOption.SignIn -> interactor.onSignIn()
                 SyncShareOption.AddNewDevice -> interactor.onAddNewDevice()
                 is SyncShareOption.SendAll -> interactor.onShareToAllDevices(option.devices)

@@ -17,7 +17,6 @@ import org.mozilla.fenix.library.history.HistoryFragmentState
 import org.mozilla.fenix.library.history.HistoryInteractor
 import org.mozilla.fenix.library.history.HistoryItemTimeGroup
 import org.mozilla.fenix.selection.SelectionHolder
-import org.mozilla.fenix.utils.Do
 
 class HistoryListItemViewHolder(
     view: View,
@@ -67,7 +66,7 @@ class HistoryListItemViewHolder(
 
         binding.historyLayout.titleView.text = item.title
 
-        binding.historyLayout.urlView.text = Do exhaustive when (item) {
+        binding.historyLayout.urlView.text = when (item) {
             is History.Regular -> item.url
             is History.Metadata -> item.url
             is History.Group -> {

@@ -49,7 +49,6 @@ import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.ext.openSetDefaultBrowserOption
 import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
-import org.mozilla.fenix.utils.Do
 import org.mozilla.fenix.utils.Settings
 
 /**
@@ -95,7 +94,7 @@ class DefaultBrowserToolbarMenuController(
         val customTabUseCases = activity.components.useCases.customTabsUseCases
         trackToolbarItemInteraction(item)
 
-        Do exhaustive when (item) {
+        when (item) {
             // TODO: These can be removed for https://github.com/mozilla-mobile/fenix/issues/17870
             // todo === Start ===
             is ToolbarMenu.Item.InstallPwaToHomeScreen -> {

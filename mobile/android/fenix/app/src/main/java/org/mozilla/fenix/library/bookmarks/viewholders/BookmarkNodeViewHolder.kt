@@ -23,7 +23,6 @@ import org.mozilla.fenix.library.bookmarks.BookmarkItemMenu
 import org.mozilla.fenix.library.bookmarks.BookmarkPayload
 import org.mozilla.fenix.library.bookmarks.BookmarkViewInteractor
 import org.mozilla.fenix.library.bookmarks.inRoots
-import org.mozilla.fenix.utils.Do
 
 /**
  * Base class for bookmark node view holders.
@@ -39,7 +38,7 @@ class BookmarkNodeViewHolder(
     init {
         menu = BookmarkItemMenu(containerView.context) { menuItem ->
             val item = this.item ?: return@BookmarkItemMenu
-            Do exhaustive when (menuItem) {
+            when (menuItem) {
                 BookmarkItemMenu.Item.Edit -> interactor.onEditPressed(item)
                 BookmarkItemMenu.Item.Copy -> interactor.onCopyPressed(item)
                 BookmarkItemMenu.Item.Share -> interactor.onSharePressed(item)

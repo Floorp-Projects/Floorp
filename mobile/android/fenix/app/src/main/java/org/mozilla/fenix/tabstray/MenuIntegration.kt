@@ -9,7 +9,6 @@ import androidx.annotation.VisibleForTesting
 import com.google.android.material.tabs.TabLayout
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.state.store.BrowserStore
-import org.mozilla.fenix.utils.Do
 
 /**
  * A wrapper class that building the tabs tray menu that handles item clicks.
@@ -40,7 +39,7 @@ class MenuIntegration(
 
     @VisibleForTesting
     internal fun handleMenuClicked(item: TabsTrayMenu.Item) {
-        Do exhaustive when (item) {
+        when (item) {
             is TabsTrayMenu.Item.ShareAllTabs ->
                 navigationInteractor.onShareTabsOfTypeClicked(isPrivateMode)
             is TabsTrayMenu.Item.OpenAccountSettings ->

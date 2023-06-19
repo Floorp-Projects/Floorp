@@ -8,7 +8,6 @@ import android.content.Context
 import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
-import org.mozilla.fenix.utils.Do
 
 class SelectionMenuIntegration(
     private val context: Context,
@@ -25,7 +24,7 @@ class SelectionMenuIntegration(
 
     @VisibleForTesting
     internal fun handleMenuClicked(item: SelectionMenu.Item) {
-        Do exhaustive when (item) {
+        when (item) {
             is SelectionMenu.Item.BookmarkTabs -> {
                 interactor.onBookmarkSelectedTabsClicked()
             }

@@ -9,7 +9,6 @@ import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.BookmarksManagement
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
-import org.mozilla.fenix.utils.Do
 
 /**
  * Interactor for the Bookmarks screen.
@@ -113,7 +112,7 @@ class BookmarkFragmentInteractor(
     }
 
     override fun open(item: BookmarkNode) {
-        Do exhaustive when (item.type) {
+        when (item.type) {
             BookmarkNodeType.ITEM -> {
                 bookmarksController.handleBookmarkTapped(item)
                 BookmarksManagement.open.record(NoExtras())
