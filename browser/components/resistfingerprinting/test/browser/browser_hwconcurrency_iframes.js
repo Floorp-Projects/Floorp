@@ -46,7 +46,7 @@ const allSpoofed = {
   hardwareConcurrency: SPOOFED_HW_CONCURRENCY,
 };
 
-const uri = `https://${FRAMER_DOMAIN}/browser/browser/components/resistfingerprinting/test/browser/file_hwconcurrency_iframer.html?mode=iframe`;
+const uri = `https://${FRAMER_DOMAIN}/browser/browser/components/resistfingerprinting/test/browser/file_hwconcurrency_iframer.html`;
 
 requestLongerTimeout(2);
 

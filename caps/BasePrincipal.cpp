@@ -1108,25 +1108,6 @@ BasePrincipal::IsURIInList(const nsACString& aList, bool* aResult) {
 }
 
 NS_IMETHODIMP
-BasePrincipal::IsContentAccessibleAboutURI(bool* aResult) {
-  *aResult = false;
-
-  if (NS_FAILED(SchemeIs("about", aResult)) || !aResult) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIURI> prinURI;
-
-  nsresult rv = GetURI(getter_AddRefs(prinURI));
-  if (NS_FAILED(rv) || !prinURI) {
-    return NS_OK;
-  }
-
-  *aResult = NS_IsContentAccessibleAboutURI(prinURI);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 BasePrincipal::GetIsOriginPotentiallyTrustworthy(bool* aResult) {
   AssertIsOnMainThread();
   *aResult = false;
