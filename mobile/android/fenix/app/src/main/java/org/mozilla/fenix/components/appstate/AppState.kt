@@ -12,6 +12,7 @@ import mozilla.components.lib.state.State
 import mozilla.components.service.pocket.PocketStory
 import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
+import org.mozilla.fenix.browser.StandardSnackbarError
 import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.home.Mode
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
@@ -71,4 +72,5 @@ data class AppState(
     val messaging: MessagingState = MessagingState(),
     val pendingDeletionHistoryItems: Set<PendingDeletionHistory> = emptySet(),
     val wallpaperState: WallpaperState = WallpaperState.default,
+    val standardSnackbarError: StandardSnackbarError? = null,
 ) : State

@@ -227,6 +227,10 @@ internal object AppStoreReducer {
         is AppAction.AppLifecycleAction.PauseAction -> {
             state.copy(isForeground = false)
         }
+
+        is AppAction.UpdateStandardSnackbarErrorAction -> state.copy(
+            standardSnackbarError = action.standardSnackbarError,
+        )
     }
 }
 

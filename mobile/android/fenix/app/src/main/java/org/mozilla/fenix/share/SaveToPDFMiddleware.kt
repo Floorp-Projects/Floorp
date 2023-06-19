@@ -16,11 +16,13 @@ import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
-import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.StandardSnackbarError
+import org.mozilla.fenix.components.appstate.AppAction
+import org.mozilla.fenix.ext.components
 import org.mozilla.gecko.util.ThreadUtils
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.GeckoPrintException.ERROR_NO_ACTIVITY_CONTEXT
@@ -30,7 +32,6 @@ import org.mozilla.geckoview.GeckoSession.GeckoPrintException.ERROR_PRINT_SETTIN
 import org.mozilla.geckoview.GeckoSession.GeckoPrintException.ERROR_UNABLE_TO_CREATE_PRINT_SETTINGS
 import org.mozilla.geckoview.GeckoSession.GeckoPrintException.ERROR_UNABLE_TO_RETRIEVE_CANONICAL_BROWSING_CONTEXT
 import java.io.IOException
-import java.lang.Exception
 
 /**
  * [BrowserAction] middleware reacting in response to Save to PDF related [Action]s.
@@ -58,12 +59,13 @@ class SaveToPDFMiddleware(
             }
 
             is EngineAction.SaveToPdfExceptionAction -> {
-                // See https://github.com/mozilla-mobile/fenix/issues/27649 for more details,
-                // why a Toast is used here.
-                ThreadUtils.runOnUiThread {
-                    Toast.makeText(context, R.string.unable_to_save_to_pdf_error, LENGTH_LONG).show()
-                }
-
+                context.components.appStore.dispatch(
+                    AppAction.UpdateStandardSnackbarErrorAction(
+                        StandardSnackbarError(
+                            context.getString(R.string.unable_to_save_to_pdf_error),
+                        ),
+                    ),
+                )
                 postTelemetryFailed(ctx.state.findTab(action.tabId), action.throwable, isPrint = false)
             }
 

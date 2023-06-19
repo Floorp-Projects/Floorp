@@ -12,6 +12,7 @@ import mozilla.components.service.nimbus.messaging.Message
 import mozilla.components.service.nimbus.messaging.MessageSurfaceId
 import mozilla.components.service.pocket.PocketStory
 import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
+import org.mozilla.fenix.browser.StandardSnackbarError
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.home.Mode
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
@@ -208,4 +209,11 @@ sealed class AppAction : Action {
          */
         object PauseAction : AppLifecycleAction()
     }
+
+    /**
+     * State of standard error snackBar has changed.
+     */
+    data class UpdateStandardSnackbarErrorAction(
+        val standardSnackbarError: StandardSnackbarError?,
+    ) : AppAction()
 }

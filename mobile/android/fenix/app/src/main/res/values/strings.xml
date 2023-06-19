@@ -1158,8 +1158,10 @@
     <string name="share_button_content_description">Share</string>
     <!-- Text for the Save to PDF feature in the share menu -->
     <string name="share_save_to_pdf">Save as PDF</string>
-    <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
+    <!-- Text for error message when generating a PDF file Text. -->
     <string name="unable_to_save_to_pdf_error">Unable to generate PDF</string>
+    <!-- Text for standard error snackbar dismiss button. -->
+    <string name="standard_snackbar_error_dismiss">Dismiss</string>
     <!-- Text for error message when printing a page and it fails. -->
     <string name="unable_to_print_error">Unable to print</string>
     <!-- Text for the print feature in the share and browser menu -->

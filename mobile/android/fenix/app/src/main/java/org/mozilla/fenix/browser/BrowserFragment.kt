@@ -62,6 +62,8 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
     private val windowFeature = ViewBoundFeatureWrapper<WindowFeature>()
     private val openInAppOnboardingObserver = ViewBoundFeatureWrapper<OpenInAppOnboardingObserver>()
+    private val standardSnackbarErrorBinding =
+        ViewBoundFeatureWrapper<StandardSnackbarErrorBinding>()
     private val reviewQualityCheckFeature = ViewBoundFeatureWrapper<ReviewQualityCheckFeature>()
 
     private var readerModeAvailable = false
@@ -188,6 +190,14 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         if (!context.settings().shouldUseCookieBanner && !context.settings().userOptOutOfReEngageCookieBannerDialog) {
             observeCookieBannerHandlingState(context.components.core.store)
         }
+        standardSnackbarErrorBinding.set(
+            feature = StandardSnackbarErrorBinding(
+                requireActivity(),
+                requireActivity().components.appStore,
+            ),
+            owner = viewLifecycleOwner,
+            view = binding.root,
+        )
     }
 
     private fun initReviewQualityCheck(context: Context, view: View) {
