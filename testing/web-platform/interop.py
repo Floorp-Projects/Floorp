@@ -6,6 +6,8 @@ import argparse
 import math
 import os
 import re
+import shutil
+import tempfile
 from typing import Callable, Iterable, List, Mapping, Optional, Tuple
 
 repos = ["autoland", "mozilla-central", "try", "mozilla-central", "mozilla-beta", "wpt"]
@@ -171,18 +173,29 @@ def score_runs(
     if not task_filters:
         task_filters = default_interop_task_filters
 
-    run_logs = []
-    for repo, commit in runs:
-        log_paths = get_wptreports(repo, commit, task_filters, log_dir, check_complete)
-        run_logs.append(log_paths)
+    temp_dir = None
+    if log_dir is None:
+        temp_dir = tempfile.mkdtemp()
+        log_dir = temp_dir
 
-    include_total = category_filters is None
-    if category_filters is None:
-        category_filters = [f"-{year}-"]
+    try:
+        run_logs = []
+        for repo, commit in runs:
+            log_paths = get_wptreports(
+                repo, commit, task_filters, log_dir, check_complete
+            )
+            run_logs.append(log_paths)
 
-    category_filter = get_category_filter(category_filters)
+        include_total = category_filters is None
+        if category_filters is None:
+            category_filters = [f"-{year}-"]
 
-    scores = score.score_wptreports(
-        run_logs, year=year, category_filter=category_filter
-    )
-    print_scores(runs, scores, include_total)
+        category_filter = get_category_filter(category_filters)
+
+        scores = score.score_wptreports(
+            run_logs, year=year, category_filter=category_filter
+        )
+        print_scores(runs, scores, include_total)
+    finally:
+        if temp_dir is not None:
+            shutil.rmtree(temp_dir, True)
