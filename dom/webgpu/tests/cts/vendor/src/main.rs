@@ -183,7 +183,7 @@ fn run(args: CliArgs) -> miette::Result<()> {
             ensure!(
                 git_status_porcelain_output.is_empty(),
                 "expected a clean CTS working tree and index, but {}'s output was not empty; \
-                    for reference, it was:\n\n{}",
+                for reference, it was:\n\n{}",
                 git_status_porcelain_cmd,
                 git_status_porcelain_output,
             );
@@ -226,7 +226,7 @@ fn run(args: CliArgs) -> miette::Result<()> {
                         ensure!(
                             files.remove(path),
                             "failed to remove {} from list of files to vendor; does it still \
-                                exist?",
+                            exist?",
                             cts_ckt.child(path)
                         );
                     }
