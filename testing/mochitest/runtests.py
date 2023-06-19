@@ -2230,8 +2230,8 @@ toolbar#nav-bar {
 
     def findFreePort(self, type):
         with closing(socket.socket(socket.AF_INET, type)) as s:
-            s.bind(("127.0.0.1", 0))
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            s.bind(("127.0.0.1", 0))
             return s.getsockname()[1]
 
     def proxy(self, options):
