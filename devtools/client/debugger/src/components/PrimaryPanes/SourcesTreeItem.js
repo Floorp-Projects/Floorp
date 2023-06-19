@@ -19,6 +19,7 @@ import actions from "../../actions";
 
 import { sourceTypes } from "../../utils/source";
 import { createLocation } from "../../utils/location";
+import { safeDecodeItemName } from "../../utils/sources-tree/utils";
 
 const classnames = require("devtools/client/shared/classnames.js");
 
@@ -135,11 +136,11 @@ class SourceTreeItem extends Component {
       );
     }
     if (item.type == "group") {
-      return decodeURI(item.groupName);
+      return safeDecodeItemName(item.groupName);
     }
     if (item.type == "directory") {
       const parentItem = this.props.getParent(item);
-      return decodeURI(
+      return safeDecodeItemName(
         item.path.replace(parentItem.path, "").replace(/^\//, "")
       );
     }
@@ -147,7 +148,7 @@ class SourceTreeItem extends Component {
       const { displayURL } = item.source;
       const name =
         displayURL.filename + (displayURL.search ? displayURL.search : "");
-      return decodeURI(name);
+      return safeDecodeItemName(name);
     }
 
     return null;
