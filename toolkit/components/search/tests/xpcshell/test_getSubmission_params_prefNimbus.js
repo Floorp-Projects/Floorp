@@ -46,10 +46,9 @@ add_task(async function test_pref_initial_value() {
   );
 
   const engine = Services.search.getEngineByName("engine-pref");
-  const base = baseURL + "&code=";
   Assert.equal(
     engine.getSubmission("foo").uri.spec,
-    base + "good%26id%3Dunique",
+    baseURL + "&code=good%26id%3Dunique",
     "Should have got the submission URL with the correct code"
   );
 });
@@ -67,10 +66,9 @@ add_task(async function test_pref_updated() {
   updateStub.firstCall.args[0]();
 
   const engine = Services.search.getEngineByName("engine-pref");
-  const base = baseURL + "&code=";
   Assert.equal(
     engine.getSubmission("foo").uri.spec,
-    base + "supergood%26id%3Dunique123456",
+    baseURL + "&code=supergood%26id%3Dunique123456",
     "Should have got the submission URL with the updated code"
   );
 });

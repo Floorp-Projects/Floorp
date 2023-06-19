@@ -15,7 +15,7 @@ const defaultBranch = Services.prefs.getDefaultBranch(
 );
 const baseURL = "https://www.google.com/search?q=foo";
 
-add_task(async function setup() {
+add_setup(async function () {
   // The test engines used in this test need to be recognized as 'default'
   // engines, or their MozParams will be ignored.
   await SearchTestUtils.useTestEngines();
@@ -38,10 +38,9 @@ add_task(async function test_pref_initial_value() {
   await Services.search.init();
 
   const engine = Services.search.getEngineByName("engine-pref");
-  const base = baseURL + "&code=";
   Assert.equal(
     engine.getSubmission("foo").uri.spec,
-    base + "good%26id%3Dunique",
+    baseURL + "&code=good%26id%3Dunique",
     "Should have got the submission URL with the correct code"
   );
 
@@ -58,10 +57,9 @@ add_task(async function test_pref_updated() {
   defaultBranch.setCharPref("param.code", "supergood&id=unique123456");
 
   const engine = Services.search.getEngineByName("engine-pref");
-  const base = baseURL + "&code=";
   Assert.equal(
     engine.getSubmission("foo").uri.spec,
-    base + "supergood%26id%3Dunique123456",
+    baseURL + "&code=supergood%26id%3Dunique123456",
     "Should have got the submission URL with the updated code"
   );
 });
