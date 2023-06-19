@@ -9,6 +9,11 @@
 
 // Enable logging all platform events this module listen to
 const DEBUG_PLATFORM_EVENTS = false;
+// Enables defining criteria to filter the logs
+const DEBUG_PLATFORM_EVENTS_FILTER = (eventName, channel) => {
+  // e.g return eventName == "HTTP_TRANSACTION:REQUEST_HEADER" && channel.URI.spec == "http://foo.com";
+  return true;
+};
 
 const lazy = {};
 
@@ -38,7 +43,11 @@ function logPlatformEvent(eventName, channel, message = "") {
   if (!DEBUG_PLATFORM_EVENTS) {
     return;
   }
-  dump(`[netmonitor] ${channel.channelId} - ${eventName} ${message}\n`);
+  if (DEBUG_PLATFORM_EVENTS_FILTER(eventName, channel)) {
+    dump(
+      `[netmonitor] ${channel.channelId} - ${eventName} ${message} - ${channel.URI.spec}\n`
+    );
+  }
 }
 
 // The maximum uint32 value.
