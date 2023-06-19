@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["FaviconLoader"];
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -601,7 +597,7 @@ class IconLoader {
   }
 }
 
-class FaviconLoader {
+export class FaviconLoader {
   constructor(actor) {
     this.actor = actor;
     this.iconInfos = [];

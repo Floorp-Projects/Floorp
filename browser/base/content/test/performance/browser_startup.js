@@ -56,9 +56,9 @@ const startupPhases = {
   "before first paint": {
     denylist: {
       modules: new Set([
-        "resource:///modules/AboutNewTab.jsm",
-        "resource:///modules/BrowserUsageTelemetry.jsm",
-        "resource:///modules/ContentCrashHandlers.jsm",
+        "resource:///modules/AboutNewTab.sys.mjs",
+        "resource:///modules/BrowserUsageTelemetry.sys.mjs",
+        "resource:///modules/ContentCrashHandlers.sys.mjs",
         "resource:///modules/ShellService.sys.mjs",
         "resource://gre/modules/NewTabUtils.sys.mjs",
         "resource://gre/modules/PageThumbs.sys.mjs",
@@ -78,8 +78,8 @@ const startupPhases = {
     denylist: {
       modules: new Set([
         "resource://gre/modules/Blocklist.sys.mjs",
-        // Bug 1391495 - BrowserWindowTracker.jsm is intermittently used.
-        // "resource:///modules/BrowserWindowTracker.jsm",
+        // Bug 1391495 - BrowserWindowTracker.sys.mjs is intermittently used.
+        // "resource:///modules/BrowserWindowTracker.sys.mjs",
         "resource://gre/modules/BookmarkHTMLUtils.sys.mjs",
         "resource://gre/modules/Bookmarks.sys.mjs",
         "resource://gre/modules/ContextualIdentityService.sys.mjs",

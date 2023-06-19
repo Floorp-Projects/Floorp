@@ -2,13 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["OpenInTabsUtils"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -23,7 +17,7 @@ XPCOMUtils.defineLazyGetter(lazy, "l10n", () => {
  * Utility functions that can be used when opening multiple tabs, that can be
  * called without any tabbrowser instance.
  */
-const OpenInTabsUtils = {
+export const OpenInTabsUtils = {
   /**
    * Gives the user a chance to cancel loading lots of tabs at once.
    */

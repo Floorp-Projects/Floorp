@@ -2,16 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = [
-  "PageActions",
-  // PageActions.Action
-  // PageActions.ACTION_ID_BOOKMARK
-  // PageActions.ACTION_ID_BUILT_IN_SEPARATOR
-  // PageActions.ACTION_ID_TRANSIENT_SEPARATOR
-];
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -33,7 +23,7 @@ function escapeCSSURL(url) {
   return `url("${url.replace(/[\\\s"]/g, encodeURIComponent)}")`;
 }
 
-var PageActions = {
+export var PageActions = {
   /**
    * Initializes PageActions.
    *

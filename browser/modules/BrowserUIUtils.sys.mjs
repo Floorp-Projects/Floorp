@@ -3,15 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-var { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
-var EXPORTED_SYMBOLS = ["BrowserUIUtils"];
-
-var BrowserUIUtils = {
+export var BrowserUIUtils = {
   /**
    * Check whether a page can be considered as 'empty', that its URI
    * reflects its origin, and that if it's loaded in a tab, that tab
