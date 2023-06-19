@@ -231,9 +231,7 @@ export class Popup extends Component {
   }
 
   onMouseOut = () => {
-    const { clearPreview, cx } = this.props;
-
-    clearPreview(cx);
+    this.props.clearPreview();
   };
 
   onMouseOutException = (shouldClearOnMouseout, isExceptionStactraceOpen) => {
@@ -243,14 +241,12 @@ export class Popup extends Component {
     // We want to prevent closing the popup when the stacktrace
     // is expanded and the mouse leaves either the Popover element
     // or the ExceptionPopup element.
-    const { clearPreview, cx } = this.props;
-
     if (shouldClearOnMouseout) {
       this.isExceptionStactraceOpen = isExceptionStactraceOpen;
     }
 
     if (!this.isExceptionStactraceOpen) {
-      clearPreview(cx);
+      this.props.clearPreview();
     }
   };
 
@@ -366,7 +362,6 @@ const {
   openElementInInspectorCommand,
   highlightDomElement,
   unHighlightDomElement,
-  clearPreview,
 } = actions;
 
 const mapDispatchToProps = {
@@ -376,7 +371,6 @@ const mapDispatchToProps = {
   openElementInInspector: openElementInInspectorCommand,
   highlightDomElement,
   unHighlightDomElement,
-  clearPreview,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(Popup);

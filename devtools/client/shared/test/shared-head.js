@@ -76,6 +76,8 @@ const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
 
 const KeyShortcuts = require("resource://devtools/client/shared/key-shortcuts.js");
 
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
+
 loader.lazyRequireGetter(
   this,
   "ResponsiveUIManager",

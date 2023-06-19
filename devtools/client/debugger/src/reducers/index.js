@@ -18,7 +18,6 @@ import pendingBreakpoints from "./pending-breakpoints";
 import pause, { initialPauseState } from "./pause";
 import ui, { initialUIState } from "./ui";
 import ast, { initialASTState } from "./ast";
-import preview, { initialPreviewState } from "./preview";
 import projectTextSearch, {
   initialProjectTextSearchState,
 } from "./project-text-search";
@@ -56,7 +55,6 @@ export function initialState() {
     threads: initialThreadsState(),
     objectInspector: objectInspector.reducer.initialOIState(),
     eventListenerBreakpoints: initialEventListenerState(),
-    preview: initialPreviewState(),
     exceptions: initialExceptionsState(),
   };
 }
@@ -79,6 +77,5 @@ export default {
   threads,
   objectInspector: objectInspector.reducer.default,
   eventListenerBreakpoints,
-  preview,
   exceptions,
 };

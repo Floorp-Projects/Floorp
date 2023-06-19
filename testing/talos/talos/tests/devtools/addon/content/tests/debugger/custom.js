@@ -161,7 +161,6 @@ async function testPreview(dbg, tab, testFunction) {
   let test = runTest("custom.jsdebugger.preview.DAMP");
   await pauseDebugger(dbg, tab, testFunction, pauseLocation);
   await hoverOnToken(dbg, cx, "window.hitBreakpoint", "window");
-  dbg.actions.clearPreview(cx);
   test.done();
 
   await removeBreakpoints(dbg);

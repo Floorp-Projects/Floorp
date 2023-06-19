@@ -350,11 +350,7 @@ async function hoverOnToken(dbg, cx, textToWaitFor, textToHover) {
   await waitForText(dbg, textToWaitFor);
   const tokenElement = [
     ...dbg.win.document.querySelectorAll(".CodeMirror span"),
-  ].find(el => el.textContent === "window");
-
-  // Set the :hover state on the token Element, otherwise the preview popup
-  // will not be displayed.
-  InspectorUtils.addPseudoClassLock(tokenElement, ":hover", true);
+  ].find(el => el.textContent === textToHover);
 
   const mouseOverEvent = new dbg.win.MouseEvent("mouseover", {
     bubbles: true,
@@ -362,13 +358,46 @@ async function hoverOnToken(dbg, cx, textToWaitFor, textToHover) {
     view: dbg.win,
   });
   tokenElement.dispatchEvent(mouseOverEvent);
+  const mouseMoveEvent = new dbg.win.MouseEvent("mousemove", {
+    bubbles: true,
+    cancelable: true,
+    view: dbg.win,
+  });
+  tokenElement.dispatchEvent(mouseMoveEvent);
 
-  const setPreviewDispatch = waitForDispatch(dbg, "SET_PREVIEW");
-  const tokenPosition = { line: 21, column: 3 };
-  dbg.actions.updatePreview(cx, tokenElement, tokenPosition, getCM(dbg));
-  await setPreviewDispatch;
+  // Unfortunately, dispatching mouseover/mousemove manually via MouseEvent
+  // isn't enough to toggle the :hover, so manually toggle it.
+  // (For some reason, the EventUtils helpers used by mochitests help)
+  InspectorUtils.addPseudoClassLock(tokenElement, ":hover", true);
 
-  // Remove the :hover state.
+  dump("Waiting for the preview popup to show\n");
+  await waitUntil(() =>
+    tokenElement.ownerDocument.querySelector(".preview-popup")
+  );
+
+  const mouseOutEvent = new dbg.win.MouseEvent("mouseout", {
+    bubbles: true,
+    cancelable: true,
+    view: dbg.win,
+  });
+  tokenElement.dispatchEvent(mouseOutEvent);
+
+  const mouseMoveOutEvent = new dbg.win.MouseEvent("mousemove", {
+    bubbles: true,
+    cancelable: true,
+    view: dbg.win,
+  });
+  // See shared-head file, for why picking this element
+  const element = tokenElement.ownerDocument.querySelector(
+    ".debugger-settings-menu-button"
+  );
+  element.dispatchEvent(mouseMoveOutEvent);
+
   InspectorUtils.removePseudoClassLock(tokenElement, ":hover");
+
+  dump("Waiting for the preview popup to hide\n");
+  await waitUntil(
+    () => !tokenElement.ownerDocument.querySelector(".preview-popup")
+  );
 }
 exports.hoverOnToken = hoverOnToken;

@@ -6,11 +6,6 @@
 
 "use strict";
 
-const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
-const L10N = new LocalizationHelper(
-  "devtools/client/locales/debugger.properties"
-);
-
 const httpServer = createTestHTTPServer();
 httpServer.registerContentType("html", "text/html");
 httpServer.registerContentType("js", "application/javascript");
@@ -75,7 +70,11 @@ add_task(async () => {
   info(" - Test HTML source");
   const htmlSource = findSource(dbg, "doc-prettyprint-sourcemap.html");
   await selectSource(dbg, htmlSource);
-  assertPrettyPrintButton(dbg, L10N.getStr("sourceTabs.prettyPrint"), false);
+  assertPrettyPrintButton(
+    dbg,
+    DEBUGGER_L10N.getStr("sourceTabs.prettyPrint"),
+    false
+  );
 
   info(" - Test source with sourceMappingURL but sourcemap does not exist");
   const source1 = findSource(dbg, "js1.min.js");
@@ -88,7 +87,11 @@ add_task(async () => {
     "Wait for the selector to report the source to be source-map less"
   );
 
-  assertPrettyPrintButton(dbg, L10N.getStr("sourceTabs.prettyPrint"), false);
+  assertPrettyPrintButton(
+    dbg,
+    DEBUGGER_L10N.getStr("sourceTabs.prettyPrint"),
+    false
+  );
 
   info(
     " - Test source with sourceMappingURL and sourcemap but no original files"
@@ -96,7 +99,11 @@ add_task(async () => {
   const source2 = findSource(dbg, "js2.min.js");
   await selectSource(dbg, source2);
 
-  assertPrettyPrintButton(dbg, L10N.getStr("sourceTabs.prettyPrint"), false);
+  assertPrettyPrintButton(
+    dbg,
+    DEBUGGER_L10N.getStr("sourceTabs.prettyPrint"),
+    false
+  );
 
   info(" - Test an already pretty-printed source");
   info("Pretty print the script");
@@ -105,7 +112,7 @@ add_task(async () => {
   await waitForSelectedSource(dbg, "js2.min.js:formatted");
   assertPrettyPrintButton(
     dbg,
-    L10N.getStr("sourceFooter.prettyPrint.isPrettyPrintedMessage"),
+    DEBUGGER_L10N.getStr("sourceFooter.prettyPrint.isPrettyPrintedMessage"),
     true
   );
 });
@@ -125,7 +132,7 @@ add_task(async () => {
 
   assertPrettyPrintButton(
     dbg,
-    L10N.getStr("sourceFooter.prettyPrint.hasSourceMapMessage"),
+    DEBUGGER_L10N.getStr("sourceFooter.prettyPrint.hasSourceMapMessage"),
     true
   );
 
@@ -135,7 +142,7 @@ add_task(async () => {
 
   assertPrettyPrintButton(
     dbg,
-    L10N.getStr("sourceFooter.prettyPrint.isOriginalMessage"),
+    DEBUGGER_L10N.getStr("sourceFooter.prettyPrint.isOriginalMessage"),
     true
   );
 });

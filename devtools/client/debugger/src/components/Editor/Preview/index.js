@@ -8,11 +8,7 @@ import { connect } from "../../../utils/connect";
 
 import Popup from "./Popup";
 
-import {
-  getPreview,
-  getThreadContext,
-  getIsCurrentThreadPaused,
-} from "../../../selectors";
+import { getThreadContext, getIsCurrentThreadPaused } from "../../../selectors";
 import actions from "../../../actions";
 
 const EXCEPTION_MARKER = "mark-text-exception";
@@ -26,14 +22,11 @@ class Preview extends PureComponent {
 
   static get propTypes() {
     return {
-      clearPreview: PropTypes.func.isRequired,
       cx: PropTypes.object.isRequired,
       editor: PropTypes.object.isRequired,
       editorRef: PropTypes.object.isRequired,
       isPaused: PropTypes.bool.isRequired,
-      preview: PropTypes.object,
-      setExceptionPreview: PropTypes.func.isRequired,
-      updatePreview: PropTypes.func.isRequired,
+      getExceptionPreview: PropTypes.func.isRequired,
     };
   }
 
@@ -60,19 +53,36 @@ class Preview extends PureComponent {
     codeMirrorWrapper.addEventListener("mousedown", this.onMouseDown);
   }
 
-  onTokenEnter = ({ target, tokenPos }) => {
-    const { cx, editor, updatePreview, setExceptionPreview } = this.props;
+  // Note that these events are emitted by utils/editor/token-events.js
+  onTokenEnter = async ({ target, tokenPos }) => {
+    // Use a temporary object to uniquely identify the asynchronous processing of this user event
+    // and bail out if we started hovering another token.
+    const tokenId = {};
+    this.currentTokenId = tokenId;
+
+    const { cx, editor, getPreview, getExceptionPreview } = this.props;
 
     const isTargetException = target.classList.contains(EXCEPTION_MARKER);
 
+    let preview;
     if (isTargetException) {
-      setExceptionPreview(cx, target, tokenPos, editor.codeMirror);
-      return;
+      preview = await getExceptionPreview(
+        cx,
+        target,
+        tokenPos,
+        editor.codeMirror
+      );
     }
 
-    if (this.props.isPaused && !this.state.selecting && !isTargetException) {
-      updatePreview(cx, target, tokenPos, editor.codeMirror);
+    if (this.props.isPaused && !this.state.selecting) {
+      preview = await getPreview(cx, target, tokenPos, editor.codeMirror);
     }
+
+    // Prevent modifying state and showing this preview if we started hovering another token
+    if (!preview || this.currentTokenId !== tokenId) {
+      return;
+    }
+    this.setState({ preview });
   };
 
   onMouseUp = () => {
@@ -89,12 +99,16 @@ class Preview extends PureComponent {
 
   onScroll = () => {
     if (this.props.isPaused) {
-      this.props.clearPreview(this.props.cx);
+      this.clearPreview();
     }
   };
 
+  clearPreview = () => {
+    this.setState({ preview: null });
+  };
+
   render() {
-    const { preview } = this.props;
+    const { preview } = this.state;
     if (!preview || this.state.selecting) {
       return null;
     }
@@ -104,6 +118,7 @@ class Preview extends PureComponent {
         preview={preview}
         editor={this.props.editor}
         editorRef={this.props.editorRef}
+        clearPreview={this.clearPreview}
       />
     );
   }
@@ -112,14 +127,12 @@ class Preview extends PureComponent {
 const mapStateToProps = state => {
   return {
     cx: getThreadContext(state),
-    preview: getPreview(state),
     isPaused: getIsCurrentThreadPaused(state),
   };
 };
 
 export default connect(mapStateToProps, {
-  clearPreview: actions.clearPreview,
   addExpression: actions.addExpression,
-  updatePreview: actions.updatePreview,
-  setExceptionPreview: actions.setExceptionPreview,
+  getPreview: actions.getPreview,
+  getExceptionPreview: actions.getExceptionPreview,
 })(Preview);

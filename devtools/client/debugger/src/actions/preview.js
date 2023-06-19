@@ -6,10 +6,8 @@ import { isConsole } from "../utils/preview";
 import { findBestMatchExpression } from "../utils/ast";
 import { getGrip, getFront } from "../utils/evaluation-result";
 import { getExpressionFromCoords } from "../utils/editor/get-expression";
-import { isNodeTest } from "../utils/environment";
 
 import {
-  getPreview,
   isLineInScope,
   isSelectedFrameVisible,
   getSelectedSource,
@@ -17,7 +15,6 @@ import {
   getSelectedFrame,
   getSymbols,
   getCurrentThread,
-  getPreviewCount,
   getSelectedException,
 } from "../selectors";
 
@@ -40,64 +37,41 @@ function findExpressionMatch(state, codeMirror, tokenPos) {
   return match;
 }
 
-export function updatePreview(cx, target, tokenPos, codeMirror) {
-  return ({ dispatch, getState }) => {
-    const cursorPos = target.getBoundingClientRect();
-
+export function getPreview(cx, target, tokenPos, codeMirror) {
+  return async ({ dispatch, getState, client }) => {
     if (
       !isSelectedFrameVisible(getState()) ||
       !isLineInScope(getState(), tokenPos.line)
     ) {
-      return;
-    }
-
-    const match = findExpressionMatch(getState(), codeMirror, tokenPos);
-    if (!match) {
-      return;
-    }
-
-    const { expression, location } = match;
-
-    if (isConsole(expression)) {
-      return;
-    }
-
-    dispatch(setPreview(cx, expression, location, tokenPos, cursorPos, target));
-  };
-}
-
-export function setPreview(
-  cx,
-  expression,
-  location,
-  tokenPos,
-  cursorPos,
-  target
-) {
-  return async ({ dispatch, getState, client }) => {
-    dispatch({ type: "START_PREVIEW" });
-    const previewCount = getPreviewCount(getState());
-    if (getPreview(getState())) {
-      dispatch(clearPreview(cx));
+      return null;
     }
 
     const source = getSelectedSource(getState());
     if (!source) {
-      return;
+      return null;
     }
-
     const thread = getCurrentThread(getState());
     const selectedFrame = getSelectedFrame(getState(), thread);
+    if (!selectedFrame) {
+      return null;
+    }
+
+    const match = findExpressionMatch(getState(), codeMirror, tokenPos);
+    if (!match) {
+      return null;
+    }
+
+    let { expression, location } = match;
+
+    if (isConsole(expression)) {
+      return null;
+    }
 
     if (location && source.isOriginal) {
       const mapResult = await dispatch(getMappedExpression(expression));
       if (mapResult) {
         expression = mapResult.expression;
       }
-    }
-
-    if (!selectedFrame) {
-      return;
     }
 
     const { result } = await client.evaluate(expression, {
@@ -111,7 +85,7 @@ export function setPreview(
     // Accommodating for null allows us to show preview for falsy values
     // line "", false, null, Nan, and more
     if (resultGrip === null) {
-      return;
+      return null;
     }
 
     // Handle cases where the result is invisible to the debugger
@@ -122,7 +96,7 @@ export function setPreview(
       typeof resultGrip.class === "string" &&
       resultGrip.class.includes("InvisibleToDebugger")
     ) {
-      return;
+      return null;
     }
 
     const root = {
@@ -134,56 +108,23 @@ export function setPreview(
     };
     const properties = await client.loadObjectProperties(root, thread);
 
-    // The first time a popup is rendered, the mouse should be hovered
-    // on the token. If it happens to be hovered on whitespace, it should
-    // not render anything
-    if (!target.matches(":hover") && !isNodeTest()) {
-      return;
-    }
-
-    // Don't finish dispatching if another setPreview was started
-    if (previewCount != getPreviewCount(getState())) {
-      return;
-    }
-
-    dispatch({
-      type: "SET_PREVIEW",
-      cx,
-      value: {
-        expression,
-        resultGrip,
-        properties,
-        root,
-        location,
-        tokenPos,
-        cursorPos,
-        target,
-      },
-    });
+    return {
+      target,
+      tokenPos,
+      cursorPos: target.getBoundingClientRect(),
+      expression,
+      root,
+      resultGrip,
+      properties,
+    };
   };
 }
 
-export function clearPreview(cx) {
-  return ({ dispatch, getState, client }) => {
-    const currentSelection = getPreview(getState());
-    if (!currentSelection) {
-      return null;
-    }
-
-    return dispatch({
-      type: "CLEAR_PREVIEW",
-      cx,
-    });
-  };
-}
-
-export function setExceptionPreview(cx, target, tokenPos, codeMirror) {
+export function getExceptionPreview(cx, target, tokenPos, codeMirror) {
   return async ({ dispatch, getState }) => {
-    const cursorPos = target.getBoundingClientRect();
-
     const match = findExpressionMatch(getState(), codeMirror, tokenPos);
     if (!match) {
-      return;
+      return null;
     }
 
     const tokenColumnStart = match.location.start.column + 1;
@@ -193,19 +134,14 @@ export function setExceptionPreview(cx, target, tokenPos, codeMirror) {
       tokenColumnStart
     );
     if (!exception) {
-      return;
+      return null;
     }
 
-    dispatch({
-      type: "SET_PREVIEW",
-      cx,
-      value: {
-        exception,
-        location: match.location,
-        tokenPos,
-        cursorPos,
-        target,
-      },
-    });
+    return {
+      target,
+      tokenPos,
+      cursorPos: target.getBoundingClientRect(),
+      exception,
+    };
   };
 }
