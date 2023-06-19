@@ -64,10 +64,6 @@ mochitest-plain:
         - headless+socketprocess_networking
         - http3
         - editor-legacy-direction
-    worker-type:
-        by-test-platform:
-            linux2204-64-wayland.*: t-linux-wayland
-            default: default
     run-on-projects:
         by-variant:
             conditioned_profile:

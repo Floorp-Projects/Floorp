@@ -174,7 +174,9 @@ def set_worker_type(config, tasks):
         elif test_platform.startswith("android-em-7.0-x86"):
             task["worker-type"] = "t-linux-kvm"
         elif test_platform.startswith("linux") or test_platform.startswith("android"):
-            if task.get("suite", "") in ["talos", "raptor"] and not task[
+            if "wayland" in test_platform:
+                task["worker-type"] = "t-linux-wayland"
+            elif task.get("suite", "") in ["talos", "raptor"] and not task[
                 "build-platform"
             ].startswith("linux64-ccov"):
                 task["worker-type"] = "t-linux-talos-1804"
