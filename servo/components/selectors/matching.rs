@@ -16,7 +16,6 @@ use crate::parser::{
 use crate::tree::Element;
 use smallvec::SmallVec;
 use std::borrow::Borrow;
-use std::iter;
 
 pub use crate::context::*;
 
@@ -781,42 +780,11 @@ where
     } else {
         None
     };
-
-    // Handle some common cases first.
-    // We may want to get rid of this at some point if we can make the
-    // generic case fast enough.
-    let mut selector = selector_iter.next();
-    if let Some(&Component::LocalName(ref local_name)) = selector {
-        if !matches_local_name(element, local_name) {
-            return false;
-        }
-        selector = selector_iter.next();
-    }
-    let class_and_id_case_sensitivity = context.classes_and_ids_case_sensitivity();
-    if let Some(&Component::ID(ref id)) = selector {
-        if !element.has_id(id, class_and_id_case_sensitivity) {
-            return false;
-        }
-        selector = selector_iter.next();
-    }
-    while let Some(&Component::Class(ref class)) = selector {
-        if !element.has_class(class, class_and_id_case_sensitivity) {
-            return false;
-        }
-        selector = selector_iter.next();
-    }
-    let selector = match selector {
-        Some(s) => s,
-        None => return true,
-    };
-
     let mut local_context = LocalMatchingContext {
         shared: context,
         quirks_data,
     };
-    iter::once(selector)
-        .chain(selector_iter)
-        .all(|simple| matches_simple_selector(simple, element, &mut local_context))
+    selector_iter.all(|simple| matches_simple_selector(simple, element, &mut local_context))
 }
 
 /// Determines whether the given element matches the given single selector.
