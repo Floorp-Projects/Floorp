@@ -492,7 +492,10 @@
 
 
 
-  <string name="error_hostLookup_title">Сервер табылмады</string>
+  <!-- Snackbar that will be displayed after a website has been added to shortcuts. -->
+    <string name="snackbar_added_to_shortcuts">Ярлыкларга өстәлде!</string>
+
+    <string name="error_hostLookup_title">Сервер табылмады</string>
 
 
 

@@ -327,7 +327,7 @@
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Haqqında</string>
     <!-- Preference category for settings related to changing the default search engine -->
-    <string name="preferences_category_select_default_search_engine" tools:ignore="UnusedResources">Tańlań</string>
+    <string name="preferences_category_select_default_search_engine">Tańlań</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">Standart izlew sısteması</string>
     <!-- Preference for settings related to Search -->
@@ -378,6 +378,8 @@
     <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">Biykarlaw</string>
     <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button" moz:RemovedIn="115" tools:ignore="UnusedResources">Qollap-quwatlawdı soraw</string>
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button_2">Soraw jiberiw</string>
     <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_title" moz:RemovedIn="114" tools:ignore="UnusedResources">Cookie haqqındaǵı xabarlamalardı qısqartıw</string>
     <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
@@ -1796,7 +1798,7 @@
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Izlew sistemasın qosıw</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
-    <string name="search_engine_add_custom_search_engine_button_content_description" tools:ignore="UnusedResources">Jańa izlew sistemasın qosıw</string>
+    <string name="search_engine_add_custom_search_engine_button_content_description">Jańa izlew sistemasın qosıw</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Izlew sistemasına ózgeris kirgiziw</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
@@ -1811,12 +1813,12 @@
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
     <string name="search_add_custom_engine_label_other">Basqa</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
-    <string name="search_add_custom_engine_name_label" tools:ignore="UnusedResources">Ataması</string>
+    <string name="search_add_custom_engine_name_label">Ataması</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Atı</string>
 
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
-    <string name="search_add_custom_engine_name_hint_2" tools:ignore="UnusedResources">Izlew sistemasınıń ataması</string>
+    <string name="search_add_custom_engine_name_hint_2">Izlew sistemasınıń ataması</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Paydalanıw ushın izlew qatarı</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
@@ -1826,7 +1828,7 @@
     <string name="search_add_custom_engine_form_description">Arnawlı izlew sisteması haqqında maǵlıwmatlar</string>
 
     <!-- The text for the "Save" button for saving a custom search engine -->
-    <string name="search_custom_engine_save_button" tools:ignore="UnusedResources">Saqlaw</string>
+    <string name="search_custom_engine_save_button">Saqlaw</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Izlew sistemasınıń atın kirgiziń</string>
