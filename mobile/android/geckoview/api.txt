@@ -1278,6 +1278,7 @@ package org.mozilla.geckoview {
     method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onLoginSelect(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.AutocompleteRequest<Autocomplete.LoginSelectOption>);
     method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onPopupPrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.PopupPrompt);
     method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onRepostConfirmPrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.RepostConfirmPrompt);
+    method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onSelectIdentityCredentialAccount(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.IdentityCredential.AccountSelectorPrompt);
     method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onSelectIdentityCredentialProvider(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.IdentityCredential.ProviderSelectorPrompt);
     method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onSharePrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.SharePrompt);
     method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onTextPrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.TextPrompt);
@@ -1457,6 +1458,27 @@ package org.mozilla.geckoview {
 
   public static final class GeckoSession.PromptDelegate.IdentityCredential {
     ctor public IdentityCredential();
+  }
+
+  public static class GeckoSession.PromptDelegate.IdentityCredential.AccountSelectorPrompt extends GeckoSession.PromptDelegate.BasePrompt {
+    ctor public AccountSelectorPrompt(@NonNull String, @NonNull GeckoSession.PromptDelegate.IdentityCredential.AccountSelectorPrompt.Account[], GeckoSession.PromptDelegate.BasePrompt.Observer);
+    method @NonNull @UiThread public GeckoSession.PromptDelegate.PromptResponse confirm(@NonNull int);
+    field @NonNull public final GeckoSession.PromptDelegate.IdentityCredential.AccountSelectorPrompt.Account[] accounts;
+  }
+
+  public static class GeckoSession.PromptDelegate.IdentityCredential.AccountSelectorPrompt.Account {
+    ctor public Account(int, @NonNull String, @NonNull String, @Nullable String);
+    field @NonNull public final String email;
+    field @Nullable public final String icon;
+    field public final int id;
+    field @NonNull public final String name;
+  }
+
+  public static class GeckoSession.PromptDelegate.IdentityCredential.AccountSelectorPrompt.ProviderAccounts {
+    ctor public ProviderAccounts(int, @Nullable String, @NonNull GeckoSession.PromptDelegate.IdentityCredential.AccountSelectorPrompt.Account[]);
+    field @NonNull public final GeckoSession.PromptDelegate.IdentityCredential.AccountSelectorPrompt.Account[] accounts;
+    field public final int id;
+    field @Nullable public final String provider;
   }
 
   public static class GeckoSession.PromptDelegate.IdentityCredential.ProviderSelectorPrompt extends GeckoSession.PromptDelegate.BasePrompt {

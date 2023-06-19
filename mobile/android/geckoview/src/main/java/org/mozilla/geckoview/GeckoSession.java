@@ -82,6 +82,7 @@ import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.IntentUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.geckoview.GeckoDisplay.SurfaceInfo;
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.IdentityCredential.AccountSelectorPrompt;
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.IdentityCredential.ProviderSelectorPrompt;
 
 public class GeckoSession {
@@ -4540,14 +4541,14 @@ public class GeckoSession {
        * the user to select the identity credential provider they would like to use.
        */
       public static class ProviderSelectorPrompt extends BasePrompt {
-        /** The providers from which the user could the select. */
+        /** The providers from which the user could select. */
         public final @NonNull Provider[] providers;
 
         /**
          * Creates a new {@link ProviderSelectorPrompt} with the given parameters.
          *
          * @param id The identification for this prompt.
-         * @param providers The providers from which the user could the select.
+         * @param providers The providers from which the user could select.
          * @param observer A callback to notify when the prompt has been completed.
          */
         protected ProviderSelectorPrompt(
@@ -4602,6 +4603,127 @@ public class GeckoSession {
             final String icon = bundle.getString("icon");
             final String name = bundle.getString("name");
             return new Provider(id, name, icon);
+          }
+        }
+      }
+
+      /**
+       * AccountSelectorPrompt contains the information necessary to represent a prompt that allows
+       * the user to select the account they would like to use.
+       */
+      public static class AccountSelectorPrompt extends BasePrompt {
+        /** The accounts from which the user could select. */
+        public final @NonNull Account[] accounts;
+
+        /**
+         * Creates a new {@link AccountSelectorPrompt} with the given parameters.
+         *
+         * @param id The identification for this prompt.
+         * @param accounts The accounts from which the user could select.
+         * @param observer A callback to notify when the prompt has been completed.
+         */
+        public AccountSelectorPrompt(
+            @NonNull final String id, @NonNull final Account[] accounts, final Observer observer) {
+          super(id, null, observer);
+          this.accounts = accounts;
+        }
+
+        /**
+         * Confirms the prompt and passes the account index back to content.
+         *
+         * @param accountIndex An integer representing the index of the account chosen by the user
+         *     to be returned to content.
+         * @return A {@link PromptResponse} which can be used to complete the {@link GeckoResult}
+         *     associated with this prompt.
+         */
+        @UiThread
+        public @NonNull PromptResponse confirm(@NonNull final int accountIndex) {
+          ensureResult().putInt("accountIndex", accountIndex);
+          return super.confirm();
+        }
+
+        /** A representation of an Identity Credential Provider Accounts. */
+        public static class ProviderAccounts {
+          /** The name of the provider. */
+          public final @Nullable String provider;
+
+          /** The accounts available for this provider. */
+          public final @NonNull Account[] accounts;
+
+          /** The id of this prompt. */
+          public final int id;
+
+          /**
+           * Creates a new {@link ProviderAccounts} with the given parameters
+           *
+           * @param id The identification for this prompt.
+           * @param provider The name of the provider.
+           * @param accounts The list of {@link Account}s available for this provider.
+           */
+          public ProviderAccounts(
+              final int id, @Nullable final String provider, @NonNull final Account[] accounts) {
+            this.id = id;
+            this.provider = provider;
+            this.accounts = accounts;
+          }
+
+          /* package */
+          static @NonNull ProviderAccounts fromBundle(final @NonNull GeckoBundle bundle) {
+            final int id = bundle.getInt("accountIndex");
+            final String provider = bundle.getString("provider");
+            final GeckoBundle[] accountsBundle = bundle.getBundleArray("accounts");
+            if (accountsBundle == null) {
+              return new ProviderAccounts(id, provider, new Account[0]);
+            }
+
+            final Account[] accounts = new Account[accountsBundle.length];
+            for (int i = 0; i < accountsBundle.length; i++) {
+              accounts[i] = Account.fromBundle(accountsBundle[i]);
+            }
+            return new ProviderAccounts(id, provider, accounts);
+          }
+        }
+
+        /** A representation of an Identity Credential Account. */
+        public static class Account {
+          /** The id of the account. */
+          public final int id;
+
+          /** The email associated to this account. */
+          public final @NonNull String email;
+
+          /** The name of this account. */
+          public final @NonNull String name;
+
+          /** A base64 string for given icon for the account; may be null. */
+          public final @Nullable String icon;
+
+          /**
+           * Creates a new {@link Account} with the given parameters.
+           *
+           * @param id The identification for this account.
+           * @param email The email of this account.
+           * @param name The name of this account.
+           * @param icon A string base64 icon.
+           */
+          public Account(
+              final int id,
+              @NonNull final String email,
+              @NonNull final String name,
+              @Nullable final String icon) {
+            this.email = email;
+            this.name = name;
+            this.icon = icon;
+            this.id = id;
+          }
+
+          /* package */
+          static @NonNull Account fromBundle(final @NonNull GeckoBundle bundle) {
+            final int id = bundle.getInt("id");
+            final String icon = bundle.getString("icon");
+            final String name = bundle.getString("name");
+            final String email = bundle.getString("email");
+            return new Account(id, email, name, icon);
           }
         }
       }
@@ -5664,6 +5786,21 @@ public class GeckoSession {
     @UiThread
     default @Nullable GeckoResult<PromptResponse> onSelectIdentityCredentialProvider(
         @NonNull final GeckoSession session, @NonNull final ProviderSelectorPrompt prompt) {
+      return null;
+    }
+
+    /**
+     * Handle an Identity Credential Account selection prompt request. This is triggered by the user
+     * focusing on selecting a provider for authenticating.
+     *
+     * @param session The {@link GeckoSession} that triggered the request.
+     * @param prompt The {@link ProviderSelectorPrompt} containing the request details.
+     * @return A {@link GeckoResult} resolving to a {@link PromptResponse} which includes all
+     *     necessary information to resolve the prompt.
+     */
+    @UiThread
+    default @Nullable GeckoResult<PromptResponse> onSelectIdentityCredentialAccount(
+        @NonNull final GeckoSession session, @NonNull final AccountSelectorPrompt prompt) {
       return null;
     }
 
