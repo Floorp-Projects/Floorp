@@ -17,7 +17,7 @@ import mozilla.components.concept.sync.SyncableStore
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.utils.logElapsedTime
 import java.io.File
-import mozilla.appservices.remotetabs.InternalException as RemoteTabProviderException
+import mozilla.appservices.remotetabs.TabsApiException as RemoteTabProviderException
 import mozilla.appservices.remotetabs.TabsStore as RemoteTabsProvider
 
 private const val TABS_DB_NAME = "tabs.sqlite"
