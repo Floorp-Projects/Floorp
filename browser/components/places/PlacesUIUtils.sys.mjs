@@ -1064,14 +1064,13 @@ export var PlacesUIUtils = {
   openNodeWithEvent: function PUIU_openNodeWithEvent(aNode, aEvent) {
     let window = aEvent.target.ownerGlobal;
 
-    let browserWindow = getBrowserWindow(window);
-
     let where = window.whereToOpenLink(aEvent, false, true);
     if (this.loadBookmarksInTabs && lazy.PlacesUtils.nodeIsBookmark(aNode)) {
       if (where == "current" && !aNode.uri.startsWith("javascript:")) {
         where = "tab";
       }
-      if (where == "tab" && browserWindow.gBrowser.selectedTab.isEmpty) {
+      let browserWindow = getBrowserWindow(window);
+      if (where == "tab" && browserWindow?.gBrowser.selectedTab.isEmpty) {
         where = "current";
       }
     }
