@@ -4,11 +4,8 @@
 
 /* eslint no-shadow: error, mozilla/no-aArgs: error */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
-
-import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -2270,9 +2267,7 @@ export class SearchService {
     let searchEngineSelectorProperties = {
       locale: Services.locale.appLocaleAsBCP47,
       region: lazy.Region.home || "default",
-      channel: AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr")
-        ? "esr"
-        : AppConstants.MOZ_UPDATE_CHANNEL,
+      channel: lazy.SearchUtils.MODIFIED_APP_CHANNEL,
       experiment:
         lazy.NimbusFeatures.searchConfiguration.getVariable("experiment") ?? "",
       distroID: lazy.SearchUtils.distroID ?? "",

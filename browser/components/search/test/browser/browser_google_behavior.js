@@ -31,14 +31,14 @@ let region = Services.prefs.getCharPref("browser.search.region");
 let code = "";
 switch (region) {
   case "US":
-    if (AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr")) {
+    if (SearchUtils.MODIFIED_APP_CHANNEL == "esr") {
       code = "firefox-b-1-e";
     } else {
       code = "firefox-b-1-d";
     }
     break;
   case "DE":
-    if (AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr")) {
+    if (SearchUtils.MODIFIED_APP_CHANNEL == "esr") {
       code = "firefox-b-e";
     } else {
       code = "firefox-b-d";

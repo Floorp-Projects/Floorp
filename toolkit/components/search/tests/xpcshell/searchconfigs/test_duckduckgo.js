@@ -18,8 +18,10 @@ const test = new SearchConfigTest({
     {
       included: [{}],
       domain: "duckduckgo.com",
-      telemetryId: AppConstants.IS_ESR ? "ddg-esr" : "ddg",
-      searchUrlCode: AppConstants.IS_ESR ? "t=ftsa" : "t=ffab",
+      telemetryId:
+        SearchUtils.MODIFIED_APP_CHANNEL == "esr" ? "ddg-esr" : "ddg",
+      searchUrlCode:
+        SearchUtils.MODIFIED_APP_CHANNEL == "esr" ? "t=ftsa" : "t=ffab",
     },
   ],
 });
