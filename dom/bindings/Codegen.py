@@ -11544,15 +11544,18 @@ class CGMemberJITInfo(CGThing):
             )
             return initializer.rstrip()
 
-        slotAssert = fill(
-            """
-            static_assert(${slotIndex} <= JSJitInfo::maxSlotIndex, "We won't fit");
-            static_assert(${slotIndex} < ${classReservedSlots}, "There is no slot for us");
-            """,
-            slotIndex=slotIndex,
-            classReservedSlots=INSTANCE_RESERVED_SLOTS
-            + self.descriptor.interface.totalMembersInSlots,
-        )
+        if alwaysInSlot or lazilyInSlot:
+            slotAssert = fill(
+                """
+                static_assert(${slotIndex} <= JSJitInfo::maxSlotIndex, "We won't fit");
+                static_assert(${slotIndex} < ${classReservedSlots}, "There is no slot for us");
+                """,
+                slotIndex=slotIndex,
+                classReservedSlots=INSTANCE_RESERVED_SLOTS
+                + self.descriptor.interface.totalMembersInSlots,
+            )
+        else:
+            slotAssert = ""
         if args is not None:
             argTypes = "%s_argTypes" % infoName
             args = [CGMemberJITInfo.getJSArgType(arg.type) for arg in args]
