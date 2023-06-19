@@ -91,15 +91,9 @@ class DeadObjectProxy : public BaseProxyHandler {
 
 bool IsDeadProxyObject(const JSObject* obj);
 
-JS::Value DeadProxyTargetValue(ProxyObject* obj);
+JS::Value DeadProxyTargetValue(JSObject* obj);
 
 JSObject* NewDeadProxyObject(JSContext* cx, JSObject* origObj = nullptr);
-
-enum class IsCallableFlag : bool { False, True };
-enum class IsConstructorFlag : bool { False, True };
-
-JSObject* NewDeadProxyObject(JSContext* cx, IsCallableFlag isCallable,
-                             IsConstructorFlag isConstructor);
 
 } /* namespace js */
 

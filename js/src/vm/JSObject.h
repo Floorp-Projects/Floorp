@@ -440,6 +440,8 @@ class JSObject
   MOZ_ALWAYS_INLINE JSNative callHook() const;
   MOZ_ALWAYS_INLINE JSNative constructHook() const;
 
+  bool isBackgroundFinalized() const;
+
   MOZ_ALWAYS_INLINE void finalize(JS::GCContext* gcx);
 
  public:

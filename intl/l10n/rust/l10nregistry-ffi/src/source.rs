@@ -199,7 +199,7 @@ pub extern "C" fn l10nfilesource_new_mock(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn l10nfilesource_addref(source: &FileSource) {
+pub unsafe extern "C" fn l10nfilesource_addref(source: *const FileSource) {
     let raw = Rc::from_raw(source);
     mem::forget(Rc::clone(&raw));
     mem::forget(raw);

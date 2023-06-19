@@ -28,7 +28,7 @@ pub extern "C" fn fluent_resource_new(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn fluent_resource_addref(res: &FluentResource) {
+pub unsafe extern "C" fn fluent_resource_addref(res: *const FluentResource) {
     let raw = ManuallyDrop::new(Rc::from_raw(res));
     mem::forget(Rc::clone(&raw));
 }
