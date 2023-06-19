@@ -55,12 +55,6 @@
               "name": "channel",
               "value": "rcs",
               "purpose": "contextmenu"
-            },
-            {
-              "name": "myparam",
-              "mozparam": true,
-              "condition": "pref",
-              "pref": "test"
             }
           ]
         }
