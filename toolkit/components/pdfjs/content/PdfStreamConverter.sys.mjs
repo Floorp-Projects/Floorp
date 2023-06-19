@@ -14,7 +14,6 @@
  */
 
 const PDFJS_EVENT_ID = "pdf.js.message";
-const PREF_PREFIX = "pdfjs";
 const PDF_VIEWER_ORIGIN = "resource://pdf.js";
 const PDF_VIEWER_WEB_PAGE = "resource://pdf.js/web/viewer.html";
 const MAX_NUMBER_OF_PREFS = 50;
@@ -64,7 +63,7 @@ XPCOMUtils.defineLazyGetter(lazy, "gOurBinary", () => {
 });
 
 function log(aMsg) {
-  if (!Services.prefs.getBoolPref(PREF_PREFIX + ".pdfBugEnabled", false)) {
+  if (!Services.prefs.getBoolPref("pdfjs.pdfBugEnabled", false)) {
     return;
   }
   var msg = "PdfStreamConverter.js: " + (aMsg.join ? aMsg.join("") : aMsg);
@@ -222,7 +221,7 @@ class ChromeActions {
       return res;
     }
 
-    if (!Services.prefs.getBoolPref(PREF_PREFIX + ".enableScripting", false)) {
+    if (!Services.prefs.getBoolPref("pdfjs.enableScripting", false)) {
       return sendResp(false);
     }
 
@@ -457,9 +456,8 @@ class ChromeActions {
   }
 
   setPreferences(prefs, sendResponse) {
-    var defaultBranch = Services.prefs.getDefaultBranch(PREF_PREFIX + ".");
+    var defaultBranch = Services.prefs.getDefaultBranch("pdfjs.");
     var numberOfPrefs = 0;
-    var prefValue, prefName;
     for (var key in prefs) {
       if (++numberOfPrefs > MAX_NUMBER_OF_PREFS) {
         log(
@@ -470,8 +468,8 @@ class ChromeActions {
       } else if (!defaultBranch.getPrefType(key)) {
         continue;
       }
-      prefValue = prefs[key];
-      prefName = PREF_PREFIX + "." + key;
+      const prefName = `pdfjs.${key}`,
+        prefValue = prefs[key];
       switch (typeof prefValue) {
         case "boolean":
           lazy.AsyncPrefs.set(prefName, prefValue);
@@ -497,10 +495,9 @@ class ChromeActions {
   }
 
   getPreferences(prefs, sendResponse) {
-    var defaultBranch = Services.prefs.getDefaultBranch(PREF_PREFIX + ".");
+    var defaultBranch = Services.prefs.getDefaultBranch("pdfjs.");
     var currentPrefs = {},
       numberOfPrefs = 0;
-    var prefValue, prefName;
     for (var key in prefs) {
       if (++numberOfPrefs > MAX_NUMBER_OF_PREFS) {
         log(
@@ -511,8 +508,8 @@ class ChromeActions {
       } else if (!defaultBranch.getPrefType(key)) {
         continue;
       }
-      prefValue = prefs[key];
-      prefName = PREF_PREFIX + "." + key;
+      const prefName = `pdfjs.${key}`,
+        prefValue = prefs[key];
       switch (typeof prefValue) {
         case "boolean":
           currentPrefs[key] = Services.prefs.getBoolPref(prefName, prefValue);
@@ -983,7 +980,7 @@ PdfStreamConverter.prototype = {
       if (
         !isPDF ||
         !toplevelOctetStream ||
-        !Services.prefs.getBoolPref(PREF_PREFIX + ".handleOctetStream", false)
+        !Services.prefs.getBoolPref("pdfjs.handleOctetStream", false)
       ) {
         throw new Components.Exception(
           "Ignore PDF.js for this download.",
@@ -1062,19 +1059,19 @@ PdfStreamConverter.prototype = {
 
       var hash = aRequest.URI.ref;
       const isPDFBugEnabled = Services.prefs.getBoolPref(
-        PREF_PREFIX + ".pdfBugEnabled",
+        "pdfjs.pdfBugEnabled",
         false
       );
       rangeRequest =
         contentEncoding === "identity" &&
         acceptRanges === "bytes" &&
         aRequest.contentLength >= 0 &&
-        !Services.prefs.getBoolPref(PREF_PREFIX + ".disableRange", false) &&
+        !Services.prefs.getBoolPref("pdfjs.disableRange", false) &&
         (!isPDFBugEnabled || !hash.toLowerCase().includes("disablerange=true"));
       streamRequest =
         contentEncoding === "identity" &&
         aRequest.contentLength >= 0 &&
-        !Services.prefs.getBoolPref(PREF_PREFIX + ".disableStream", false) &&
+        !Services.prefs.getBoolPref("pdfjs.disableStream", false) &&
         (!isPDFBugEnabled ||
           !hash.toLowerCase().includes("disablestream=true"));
     }
