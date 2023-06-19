@@ -12,13 +12,10 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AboutReaderParent: "resource:///actors/AboutReaderParent.sys.mjs",
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
+  EveryWindow: "resource:///modules/EveryWindow.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  EveryWindow: "resource:///modules/EveryWindow.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {

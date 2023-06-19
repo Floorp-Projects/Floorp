@@ -7,11 +7,8 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  PingCentre: "resource:///modules/PingCentre.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  PingCentre: "resource:///modules/PingCentre.jsm",
 });
 
 // Endpoint base URL for Structured Ingestion

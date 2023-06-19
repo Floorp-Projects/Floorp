@@ -12,15 +12,12 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   DownloadUtils: "resource://gre/modules/DownloadUtils.sys.mjs",
   Downloads: "resource://gre/modules/Downloads.sys.mjs",
   DownloadsCommon: "resource:///modules/DownloadsCommon.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(

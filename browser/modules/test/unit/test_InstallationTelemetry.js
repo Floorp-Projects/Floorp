@@ -9,8 +9,8 @@ const { AppConstants } = ChromeUtils.importESModule(
 const { AttributionIOUtils } = ChromeUtils.importESModule(
   "resource:///modules/AttributionCode.sys.mjs"
 );
-const { BrowserUsageTelemetry } = ChromeUtils.import(
-  "resource:///modules/BrowserUsageTelemetry.jsm"
+const { BrowserUsageTelemetry } = ChromeUtils.importESModule(
+  "resource:///modules/BrowserUsageTelemetry.sys.mjs"
 );
 const { TelemetryTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryTestUtils.sys.mjs"

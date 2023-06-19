@@ -7,19 +7,11 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
+  BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.sys.mjs",
   ExtensionTelemetry: "resource://gre/modules/ExtensionTelemetry.sys.mjs",
+  PageActions: "resource:///modules/PageActions.sys.mjs",
   PanelPopup: "resource:///modules/ExtensionPopups.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  this,
-  "PageActions",
-  "resource:///modules/PageActions.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "BrowserUsageTelemetry",
-  "resource:///modules/BrowserUsageTelemetry.jsm"
-);
 
 var { DefaultWeakMap } = ExtensionUtils;
 

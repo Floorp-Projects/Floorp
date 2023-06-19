@@ -80,15 +80,11 @@
 
   window._gBrowser = {
     init() {
-      ChromeUtils.defineModuleGetter(
-        this,
-        "AsyncTabSwitcher",
-        "resource:///modules/AsyncTabSwitcher.jsm"
-      );
       ChromeUtils.defineESModuleGetters(this, {
+        AsyncTabSwitcher: "resource:///modules/AsyncTabSwitcher.sys.mjs",
+        PictureInPicture: "resource://gre/modules/PictureInPicture.sys.mjs",
         UrlbarProviderOpenTabs:
           "resource:///modules/UrlbarProviderOpenTabs.sys.mjs",
-        PictureInPicture: "resource://gre/modules/PictureInPicture.sys.mjs",
       });
       XPCOMUtils.defineLazyServiceGetters(this, {
         MacSharingService: [
@@ -104,11 +100,9 @@
       });
 
       if (AppConstants.MOZ_CRASHREPORTER) {
-        ChromeUtils.defineModuleGetter(
-          this,
-          "TabCrashHandler",
-          "resource:///modules/ContentCrashHandlers.jsm"
-        );
+        ChromeUtils.defineESModuleGetters(this, {
+          TabCrashHandler: "resource:///modules/ContentCrashHandlers.sys.mjs",
+        });
       }
 
       Services.obs.addObserver(this, "contextual-identity-updated");

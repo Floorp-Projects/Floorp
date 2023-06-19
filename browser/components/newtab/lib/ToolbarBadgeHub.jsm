@@ -10,6 +10,7 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  EveryWindow: "resource:///modules/EveryWindow.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   requestIdleCallback: "resource://gre/modules/Timer.sys.mjs",
@@ -17,7 +18,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  EveryWindow: "resource:///modules/EveryWindow.jsm",
   ToolbarPanelHub: "resource://activity-stream/lib/ToolbarPanelHub.jsm",
 });
 

@@ -1,21 +1,21 @@
 XPCOMUtils.defineLazyModuleGetters(this, {
-  AboutNewTab: "resource:///modules/AboutNewTab.jsm",
   ASRouterTargeting: "resource://activity-stream/lib/ASRouterTargeting.jsm",
-  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  HomePage: "resource:///modules/HomePage.jsm",
   QueryCache: "resource://activity-stream/lib/ASRouterTargeting.jsm",
 });
 ChromeUtils.defineESModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   AddonTestUtils: "resource://testing-common/AddonTestUtils.sys.mjs",
+  AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
   AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
   AttributionCode: "resource:///modules/AttributionCode.sys.mjs",
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   BuiltInThemes: "resource:///modules/BuiltInThemes.sys.mjs",
   CFRMessageProvider:
     "resource://activity-stream/lib/CFRMessageProvider.sys.mjs",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
   ExperimentFakes: "resource://testing-common/NimbusTestUtils.sys.mjs",
   FxAccounts: "resource://gre/modules/FxAccounts.sys.mjs",
+  HomePage: "resource:///modules/HomePage.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",

@@ -381,7 +381,7 @@ function prompt(
   // then chose to just build their own prompting mechanism instead.
   //
   // So, what you are looking at here is not a real nsIContentPermissionRequest, but
-  // something that looks really similar and will be transmitted to webrtcUI.jsm
+  // something that looks really similar and will be transmitted to webrtcUI.sys.mjs
   // for showing the prompt.
   // Note that we basically do the permission delegate check in
   // nsIContentPermissionRequest, but because webrtc uses their own prompting

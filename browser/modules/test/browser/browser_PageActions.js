@@ -1,6 +1,6 @@
 "use strict";
 
-// This is a test for PageActions.jsm, specifically the generalized parts that
+// This is a test for PageActions.sys.mjs, specifically the generalized parts that
 // add and remove page actions and toggle them in the urlbar.  This does not
 // test the built-in page actions; browser_page_action_menu.js does that.
 

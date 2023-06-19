@@ -30,8 +30,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 let BrowserWindowTracker;
 try {
-  BrowserWindowTracker = ChromeUtils.import(
-    "resource:///modules/BrowserWindowTracker.jsm"
+  BrowserWindowTracker = ChromeUtils.importESModule(
+    "resource:///modules/BrowserWindowTracker.sys.mjs"
   ).BrowserWindowTracker;
 } catch (e) {
   // BrowserWindowTracker is used to determine devicePixelRatio in

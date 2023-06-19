@@ -11,13 +11,9 @@
  */
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "webrtcUI",
-  "resource:///modules/webrtcUI.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+  webrtcUI: "resource:///modules/webrtcUI.sys.mjs",
 });
 
 // If there are only this many or fewer tabs open, just sort by weight, and close

@@ -1428,7 +1428,7 @@ export var PictureInPicture = {
   },
 
   /**
-   * This is used in AsyncTabSwitcher.jsm and tabbrowser.js to check if the browser
+   * This is used in AsyncTabSwitcher.sys.mjs and tabbrowser.js to check if the browser
    * currently has a PiP window.
    * If the browser has a PiP window we want to keep the browser in an active state because
    * the browser is still partially visible.

@@ -13,11 +13,8 @@ const lazy = {};
 
 // BrowserWindowTracker and PrivateBrowsingUtils are only used when opening downloaded files into a browser window
 ChromeUtils.defineESModuleGetters(lazy, {
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(

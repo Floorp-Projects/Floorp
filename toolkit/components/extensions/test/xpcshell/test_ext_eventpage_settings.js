@@ -1,6 +1,7 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
+  AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
   Preferences: "resource://gre/modules/Preferences.sys.mjs",
 });
 
@@ -15,12 +16,6 @@ AddonTestUtils.createAppInfo(
 );
 
 Services.prefs.setBoolPref("extensions.eventPages.enabled", true);
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "AboutNewTab",
-  "resource:///modules/AboutNewTab.jsm"
-);
 
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();

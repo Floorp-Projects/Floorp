@@ -9,9 +9,9 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AboutNewTab: "resource:///modules/AboutNewTab.jsm",
-  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "ReferrerInfo", () =>
