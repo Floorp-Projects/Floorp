@@ -13,13 +13,11 @@
  * limitations under the License.
  */
 
-const PREF_PREFIX = "pdfjs";
-const PREF_DISABLED = PREF_PREFIX + ".disabled";
-const PREF_MIGRATION_VERSION = PREF_PREFIX + ".migrationVersion";
-const PREF_PREVIOUS_ACTION = PREF_PREFIX + ".previousHandler.preferredAction";
-const PREF_PREVIOUS_ASK =
-  PREF_PREFIX + ".previousHandler.alwaysAskBeforeHandling";
-const PREF_ISDEFAULT_CACHE_STATE = PREF_PREFIX + ".enabledCache.state";
+const PREF_DISABLED = "pdfjs.disabled";
+const PREF_MIGRATION_VERSION = "pdfjs.migrationVersion";
+const PREF_PREVIOUS_ACTION = "pdfjs.previousHandler.preferredAction";
+const PREF_PREVIOUS_ASK = "pdfjs.previousHandler.alwaysAskBeforeHandling";
+const PREF_ISDEFAULT_CACHE_STATE = "pdfjs.enabledCache.state";
 const TOPIC_PDFJS_HANDLER_CHANGED = "pdfjs:handlerChanged";
 const PDF_CONTENT_TYPE = "application/pdf";
 
@@ -44,7 +42,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 function initializeDefaultPreferences() {
-  var defaultBranch = Services.prefs.getDefaultBranch(PREF_PREFIX + ".");
+  var defaultBranch = Services.prefs.getDefaultBranch("pdfjs.");
   var defaultValue;
   for (var key in lazy.PdfJsDefaultPreferences) {
     // Skip prefs that are already defined, so we can enable/disable things
@@ -142,7 +140,7 @@ export var PdfJs = {
     }
     if (currentVersion < 2) {
       // cleaning up of unused database preference (see #3994)
-      Services.prefs.clearUserPref(PREF_PREFIX + ".database");
+      Services.prefs.clearUserPref("pdfjs.database");
     }
     Services.prefs.setIntPref(PREF_MIGRATION_VERSION, VERSION);
   },
