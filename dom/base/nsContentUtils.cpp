@@ -150,7 +150,6 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/CustomElementRegistryBinding.h"
-#include "mozilla/dom/CustomElementTypes.h"
 #include "mozilla/dom/DOMArena.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMExceptionBinding.h"
@@ -169,10 +168,8 @@
 #include "mozilla/dom/FileBlobImpl.h"
 #include "mozilla/dom/FileSystemSecurity.h"
 #include "mozilla/dom/FilteredNodeIterator.h"
-#include "mozilla/dom/FormData.h"
 #include "mozilla/dom/FragmentOrElement.h"
 #include "mozilla/dom/FromParser.h"
-#include "mozilla/dom/HTMLElement.h"
 #include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
@@ -9941,97 +9938,6 @@ void nsContentUtils::EnqueueLifecycleCallback(
 
   CustomElementRegistry::EnqueueLifecycleCallback(aType, aCustomElement, aArgs,
                                                   aDefinition);
-}
-
-/* static */
-CustomElementFormValue nsContentUtils::ConvertToCustomElementFormValue(
-    const OwningFileOrUSVStringOrFormData& aState) {
-  if (aState.IsFile()) {
-    RefPtr<BlobImpl> impl = aState.GetAsFile()->Impl();
-    return {std::move(impl)};
-  }
-  if (aState.IsUSVString()) {
-    return aState.GetAsUSVString();
-  }
-  nsTArray<FormDataTuple> array;
-  aState.GetAsFormData()->ForEach(
-      [&array](const nsString& aName,
-               const OwningBlobOrDirectoryOrUSVString& aValue) {
-        FormDataTuple data;
-        data.name() = aName;
-
-        if (aValue.IsBlob()) {
-          FormDataValue value(WrapNotNull(aValue.GetAsBlob()->Impl()));
-          data.value() = std::move(value);
-        } else if (aValue.IsUSVString()) {
-          data.value() = aValue.GetAsUSVString();
-        } else {
-          MOZ_ASSERT_UNREACHABLE("Can't save FormData entry Directory value!");
-        }
-
-        array.AppendElement(data);
-        return true;
-      });
-  return std::move(array);
-}
-
-/* static */
-Nullable<OwningFileOrUSVStringOrFormData>
-nsContentUtils::ExtractFormAssociatedCustomElementValue(
-    mozilla::dom::HTMLElement* aElement,
-    const mozilla::dom::CustomElementFormValue& aCEValue) {
-  OwningFileOrUSVStringOrFormData value;
-  switch (aCEValue.type()) {
-    case CustomElementFormValue::TBlobImpl: {
-      nsPIDOMWindowInner* window = aElement->OwnerDoc()->GetInnerWindow();
-      if (!window) {
-        return {};
-      }
-      RefPtr<File> file =
-          File::Create(window->AsGlobal(), aCEValue.get_BlobImpl());
-      if (NS_WARN_IF(!file)) {
-        return {};
-      }
-      value.SetAsFile() = file;
-    } break;
-
-    case CustomElementFormValue::TnsString:
-      value.SetAsUSVString() = aCEValue.get_nsString();
-      break;
-
-    case CustomElementFormValue::TArrayOfFormDataTuple: {
-      const auto& array = aCEValue.get_ArrayOfFormDataTuple();
-      auto formData = MakeRefPtr<FormData>();
-
-      for (auto i = 0ul; i < array.Length(); ++i) {
-        const auto& item = array.ElementAt(i);
-        switch (item.value().type()) {
-          case FormDataValue::TnsString:
-            formData->AddNameValuePair(item.name(),
-                                       item.value().get_nsString());
-            break;
-
-          case FormDataValue::TBlobImpl: {
-            auto blobImpl = item.value().get_BlobImpl();
-            auto* blob = Blob::Create(
-                aElement->GetComposedDoc()->GetOwnerGlobal(), blobImpl);
-            formData->AddNameBlobPair(item.name(), blob);
-          } break;
-
-          default:
-            continue;
-        }
-      }
-
-      value.SetAsFormData() = formData;
-    } break;
-    case CustomElementFormValue::Tvoid_t:
-      return {};
-    default:
-      NS_WARNING("Invalid CustomElementContentData type!");
-      return {};
-  }
-  return value;
 }
 
 /* static */
