@@ -244,7 +244,7 @@ ALL_EVENTS = OrderedDict(
         )),
         ("EQUALS", OrderedDict(
             [
-                ("code", "NumpadEqual"),
+                ("code", ""),
                 ("ctrl", False),
                 ("key", "="),
                 ("location", 0),
@@ -442,7 +442,7 @@ ALL_EVENTS = OrderedDict(
         )),
         ("META", OrderedDict(
             [
-                ("code", "MetaLeft"),
+                ("code", "OSLeft"),
                 ("ctrl", False),
                 ("key", "Meta"),
                 ("location", 1),
@@ -607,7 +607,7 @@ ALL_EVENTS = OrderedDict(
         )),
         ("PAUSE", OrderedDict(
             [
-                ("code", "Pause"),
+                ("code", ""),
                 ("ctrl", False),
                 ("key", "Pause"),
                 ("location", 0),
@@ -750,7 +750,7 @@ ALL_EVENTS = OrderedDict(
         )),
         ("R_META", OrderedDict(
             [
-                ("code", "MetaRight"),
+                ("code", "OSRight"),
                 ("ctrl", False),
                 ("key", "Meta"),
                 ("location", 2),
