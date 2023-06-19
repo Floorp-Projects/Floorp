@@ -30,3 +30,4 @@ add_CET_STRICT_MODE.patch
 broker_complex_line_breaks.patch
 allow_reparse_points.patch
 derive_sid_from_name.patch
+add_loongarch_defines.patch
