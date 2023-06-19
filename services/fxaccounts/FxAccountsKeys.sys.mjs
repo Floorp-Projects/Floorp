@@ -11,21 +11,39 @@ import { CryptoUtils } from "resource://services-crypto/utils.sys.mjs";
 const {
   LEGACY_DERIVED_KEYS_NAMES,
   SCOPE_OLD_SYNC,
-  LEGACY_SCOPE_WEBEXT_SYNC,
   DEPRECATED_SCOPE_ECOSYSTEM_TELEMETRY,
   FX_OAUTH_CLIENT_ID,
   log,
   logPII,
 } = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 
+// The following top-level fields have since been deprecated and exist here purely
+// to be removed from the account state when seen. After a reasonable period of time
+// has passed, where users have been migrated away from those keys they should be safe to be removed
+const DEPRECATED_DERIVED_KEYS_NAMES = [
+  "kExtSync",
+  "kExtKbHash",
+  "ecosystemUserId",
+  "ecosystemAnonId",
+];
+
+// This scope and its associated key material were used by the old Kinto webextension
+// storage backend, but has since been decommissioned. It's here entirely so that we
+// remove the corresponding key from storage if present. We should be safe to remove it
+// after some sensible period of time has elapsed to allow most clients to update.
+const DEPRECATED_SCOPE_WEBEXT_SYNC = "sync:addon_storage";
+
 // These are the scopes that correspond to new storage for the `LEGACY_DERIVED_KEYS_NAMES`.
 // We will, if necessary, migrate storage for those keys so that it's associated with
 // these scopes.
-const LEGACY_DERIVED_KEY_SCOPES = [SCOPE_OLD_SYNC, LEGACY_SCOPE_WEBEXT_SYNC];
+const LEGACY_DERIVED_KEY_SCOPES = [SCOPE_OLD_SYNC];
 
 // These are scopes that we used to store, but are no longer using,
 // and hence should be deleted from storage if present.
-const DEPRECATED_KEY_SCOPES = [DEPRECATED_SCOPE_ECOSYSTEM_TELEMETRY];
+const DEPRECATED_KEY_SCOPES = [
+  DEPRECATED_SCOPE_ECOSYSTEM_TELEMETRY,
+  DEPRECATED_SCOPE_WEBEXT_SYNC,
+];
 
 /**
  * Utilities for working with key material linked to the user's account.
@@ -80,11 +98,6 @@ export class FxAccountsKeys {
       // For sync-related scopes, we might have stored the keys in a legacy format.
       if (scope == SCOPE_OLD_SYNC) {
         if (userData.kSync && userData.kXCS) {
-          return true;
-        }
-      }
-      if (scope == LEGACY_SCOPE_WEBEXT_SYNC) {
-        if (userData.kExtSync && userData.kExtKbHash) {
           return true;
         }
       }
@@ -180,8 +193,6 @@ export class FxAccountsKeys {
    *          scopedKeys: Object mapping OAuth scopes to corresponding derived keys
    *          kSync: An encryption key for Sync
    *          kXCS: A key hash of kB for the X-Client-State header
-   *          kExtSync: An encryption key for WebExtensions syncing
-   *          kExtKbHash: A key hash of kB for WebExtensions syncing
    *          verified: email verification status
    *        }
    * @throws If there is no user signed in.
@@ -201,6 +212,9 @@ export class FxAccountsKeys {
             ) &&
             !DEPRECATED_KEY_SCOPES.some(scope =>
               userData.scopedKeys.hasOwnProperty(scope)
+            ) &&
+            !DEPRECATED_DERIVED_KEYS_NAMES.some(keyName =>
+              userData.hasOwnProperty(keyName)
             )
           ) {
             return userData;
@@ -237,30 +251,19 @@ export class FxAccountsKeys {
    *
    */
   async _migrateOrFetchKeys(currentState, userData) {
-    // Bug 1697596 - delete any deprecated scoped keys from storage.
-    // If any of the deprecated keys are present, then we know that we've
-    // previously applied all the other migrations below, otherwise there
-    // would not be any `scopedKeys` field.
-    if (userData.scopedKeys) {
-      const toRemove = DEPRECATED_KEY_SCOPES.filter(scope =>
+    // If the required scopes are present in `scopedKeys`, then we know that we've
+    // previously applied all the other migrations below
+    // so we are safe to delete deprecated fields that older migrations
+    // might have depended on.
+    if (
+      userData.scopedKeys &&
+      LEGACY_DERIVED_KEY_SCOPES.every(scope =>
         userData.scopedKeys.hasOwnProperty(scope)
-      );
-      if (toRemove.length) {
-        for (const scope of toRemove) {
-          delete userData.scopedKeys[scope];
-        }
-        await currentState.updateUserAccountData({
-          scopedKeys: userData.scopedKeys,
-          // Prior to deprecating SCOPE_ECOSYSTEM_TELEMETRY, this file had some
-          // special code to store it as a top-level user data field. So, this
-          // file also gets to delete it as part of the deprecation.
-          ecosystemUserId: null,
-          ecosystemAnonId: null,
-        });
-        userData = await currentState.getUserAccountData();
-        return userData;
-      }
+      )
+    ) {
+      return this._removeDeprecatedKeys(currentState, userData);
     }
+
     // Bug 1661407 - migrate from legacy storage of keys as top-level account
     // data fields, to storing them as scoped keys in the `scopedKeys` object.
     if (
@@ -309,6 +312,44 @@ export class FxAccountsKeys {
       userData.sessionToken,
       userData.keyFetchToken
     );
+  }
+
+  /**
+   * Removes deprecated keys from storage and returns an
+   * updated user data object
+   */
+  async _removeDeprecatedKeys(currentState, userData) {
+    // Bug 1838708: Delete any deprecated high level keys from storage
+    const keysToRemove = DEPRECATED_DERIVED_KEYS_NAMES.filter(keyName =>
+      userData.hasOwnProperty(keyName)
+    );
+    if (keysToRemove.length) {
+      const removedKeys = {};
+      for (const keyName of keysToRemove) {
+        removedKeys[keyName] = null;
+      }
+      await currentState.updateUserAccountData({
+        ...removedKeys,
+      });
+      userData = await currentState.getUserAccountData();
+    }
+    // Bug 1697596 - delete any deprecated scoped keys from storage.
+    const scopesToRemove = DEPRECATED_KEY_SCOPES.filter(scope =>
+      userData.scopedKeys.hasOwnProperty(scope)
+    );
+    if (scopesToRemove.length) {
+      const updatedScopedKeys = {
+        ...userData.scopedKeys,
+      };
+      for (const scope of scopesToRemove) {
+        delete updatedScopedKeys[scope];
+      }
+      await currentState.updateUserAccountData({
+        scopedKeys: updatedScopedKeys,
+      });
+      userData = await currentState.getUserAccountData();
+    }
+    return userData;
   }
 
   /**
@@ -417,7 +458,6 @@ export class FxAccountsKeys {
   async _fetchScopedKeysMetadata(sessionToken) {
     // Hard-coded list of scopes that we know about.
     // This list will probably grow in future.
-    // Note that LEGACY_SCOPE_WEBEXT_SYNC is not in this list, it gets special-case handling below.
     const scopes = [SCOPE_OLD_SYNC].join(" ");
     const scopedKeysMetadata =
       await this._fxai.fxAccountsClient.getScopedKeyData(
@@ -436,15 +476,6 @@ export class FxAccountsKeys {
         "The FxA server did not grant Firefox the `oldsync` scope"
       );
     }
-    // Firefox Desktop invented its own special scope for legacy webextension syncing,
-    // with its own special key. Rather than teach the rest of FxA about this scope
-    // that will never be used anywhere else, just give it the same metadata as
-    // the main sync scope. This can go away once legacy webext sync is removed.
-    // (ref Bug 1637465 for tracking that removal)
-    scopedKeysMetadata[LEGACY_SCOPE_WEBEXT_SYNC] = {
-      ...scopedKeysMetadata[SCOPE_OLD_SYNC],
-      identifier: LEGACY_SCOPE_WEBEXT_SYNC,
-    };
     return scopedKeysMetadata;
   }
 
@@ -474,12 +505,6 @@ export class FxAccountsKeys {
       kXCS: scopedKeys[SCOPE_OLD_SYNC]
         ? this.kidAsHex(scopedKeys[SCOPE_OLD_SYNC])
         : CommonUtils.bytesAsHex(await this._deriveXClientState(kBbytes)),
-      kExtSync: scopedKeys[LEGACY_SCOPE_WEBEXT_SYNC]
-        ? this.keyAsHex(scopedKeys[LEGACY_SCOPE_WEBEXT_SYNC])
-        : CommonUtils.bytesAsHex(await this._deriveWebExtSyncStoreKey(kBbytes)),
-      kExtKbHash: scopedKeys[LEGACY_SCOPE_WEBEXT_SYNC]
-        ? this.kidAsHex(scopedKeys[LEGACY_SCOPE_WEBEXT_SYNC])
-        : CommonUtils.bytesAsHex(await this._deriveWebExtKbHash(uid, kBbytes)),
     };
   }
 
@@ -521,7 +546,7 @@ export class FxAccountsKeys {
    *
    * This is a backwards-compatibility convenience for users who are already signed in to Firefox
    * and have legacy fields like `kSync` and `kXCS` in their top-level account data, but do not have
-   * the newer `scopedKeys` field. We populate it with the scoped keys for sync and webext-sync.
+   * the newer `scopedKeys` field. We populate it with the scoped keys for sync.
    *
    */
   async _deriveScopedKeysFromAccountData(userData) {
@@ -534,8 +559,6 @@ export class FxAccountsKeys {
         let kid, key;
         if (scope == SCOPE_OLD_SYNC) {
           ({ kXCS: kid, kSync: key } = userData);
-        } else if (scope == LEGACY_SCOPE_WEBEXT_SYNC) {
-          ({ kExtKbHash: kid, kExtSync: key } = userData);
         } else {
           // Should never happen, but a nice internal consistency check.
           throw new Error(`Unexpected legacy key-bearing scope: ${scope}`);
@@ -656,9 +679,6 @@ export class FxAccountsKeys {
     if (scope == SCOPE_OLD_SYNC) {
       kid = await this._deriveXClientState(kBbytes);
       key = await this._deriveSyncKey(kBbytes);
-    } else if (scope == LEGACY_SCOPE_WEBEXT_SYNC) {
-      kid = await this._deriveWebExtKbHash(uid, kBbytes);
-      key = await this._deriveWebExtSyncStoreKey(kBbytes);
     } else {
       throw new Error(`Unexpected legacy key-bearing scope: ${scope}`);
     }
@@ -711,29 +731,6 @@ export class FxAccountsKeys {
    */
   async _deriveXClientState(kBbytes) {
     return this._sha256(kBbytes).slice(0, 16);
-  }
-
-  /**
-   * Derive the WebExtensions Sync Storage Key given the byte string kB.
-   *
-   * @returns Promise<HKDF(kB, undefined, "identity.mozilla.com/picl/v1/chrome.storage.sync", 64)>
-   */
-  async _deriveWebExtSyncStoreKey(kBbytes) {
-    return CryptoUtils.hkdfLegacy(
-      kBbytes,
-      undefined,
-      "identity.mozilla.com/picl/v1/chrome.storage.sync",
-      2 * 32
-    );
-  }
-
-  /**
-   * Derive the WebExtensions kbHash given the byte string kB.
-   *
-   * @returns Promise<SHA256(uid + kB)>
-   */
-  async _deriveWebExtKbHash(uid, kBbytes) {
-    return this._sha256(uid + kBbytes);
   }
 
   _sha256(bytes) {

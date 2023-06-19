@@ -599,12 +599,10 @@ add_task(async function test_getKeysErrorWithBackoff() {
   _("Arrange for a 503 with a X-Backoff header.");
 
   let config = makeIdentityConfig();
-  // We want no kSync, kXCS, kExtSync or kExtKbHash so we attempt to fetch them.
+  // We want no kSync or kXCS so we attempt to fetch them.
   delete config.fxaccount.user.scopedKeys;
   delete config.fxaccount.user.kSync;
   delete config.fxaccount.user.kXCS;
-  delete config.fxaccount.user.kExtSync;
-  delete config.fxaccount.user.kExtKbHash;
   config.fxaccount.user.keyFetchToken = "keyfetchtoken";
   await initializeIdentityWithHAWKResponseFactory(
     config,
@@ -641,12 +639,10 @@ add_task(async function test_getKeysErrorWithRetry() {
   _("Arrange for a 503 with a Retry-After header.");
 
   let config = makeIdentityConfig();
-  // We want no kSync, kXCS, kExtSync or kExtKbHash so we attempt to fetch them.
+  // We want no kSync or kXCS so we attempt to fetch them.
   delete config.fxaccount.user.scopedKeys;
   delete config.fxaccount.user.kSync;
   delete config.fxaccount.user.kXCS;
-  delete config.fxaccount.user.kExtSync;
-  delete config.fxaccount.user.kExtKbHash;
   config.fxaccount.user.keyFetchToken = "keyfetchtoken";
   await initializeIdentityWithHAWKResponseFactory(
     config,
@@ -735,12 +731,10 @@ add_task(async function test_getGetKeysFailing401() {
 
   _("Arrange for a 401 - Sync should reflect an auth error.");
   let config = makeIdentityConfig();
-  // We want no kSync, kXCS, kExtSync or kExtKbHash so we attempt to fetch them.
+  // We want no kSync or kXCS, so we attempt to fetch them.
   delete config.fxaccount.user.scopedKeys;
   delete config.fxaccount.user.kSync;
   delete config.fxaccount.user.kXCS;
-  delete config.fxaccount.user.kExtSync;
-  delete config.fxaccount.user.kExtKbHash;
   config.fxaccount.user.keyFetchToken = "keyfetchtoken";
   await initializeIdentityWithHAWKResponseFactory(
     config,
@@ -762,12 +756,10 @@ add_task(async function test_getGetKeysFailing503() {
 
   _("Arrange for a 503 - Sync should reflect a network error.");
   let config = makeIdentityConfig();
-  // We want no kSync, kXCS, kExtSync or kExtKbHash so we attempt to fetch them.
+  // We want no kSync or kXCS so we attempt to fetch them.
   delete config.fxaccount.user.scopedKeys;
   delete config.fxaccount.user.kSync;
   delete config.fxaccount.user.kXCS;
-  delete config.fxaccount.user.kExtSync;
-  delete config.fxaccount.user.kExtKbHash;
   config.fxaccount.user.keyFetchToken = "keyfetchtoken";
   await initializeIdentityWithHAWKResponseFactory(
     config,
@@ -795,13 +787,11 @@ add_task(async function test_getKeysMissing() {
 
   let syncAuthManager = new SyncAuthManager();
   let identityConfig = makeIdentityConfig();
-  // our mock identity config already has kSync, kXCS, kExtSync and kExtKbHash - remove them or we never
+  // our mock identity config already has kSync and kXCS remove them or we never
   // try and fetch them.
   delete identityConfig.fxaccount.user.scopedKeys;
   delete identityConfig.fxaccount.user.kSync;
   delete identityConfig.fxaccount.user.kXCS;
-  delete identityConfig.fxaccount.user.kExtSync;
-  delete identityConfig.fxaccount.user.kExtKbHash;
   identityConfig.fxaccount.user.keyFetchToken = "keyFetchToken";
 
   configureFxAccountIdentity(syncAuthManager, identityConfig);
@@ -842,13 +832,11 @@ add_task(async function test_getKeysUnexpecedError() {
 
   let syncAuthManager = new SyncAuthManager();
   let identityConfig = makeIdentityConfig();
-  // our mock identity config already has kSync, kXCS, kExtSync and kExtKbHash - remove them or we never
+  // our mock identity config already has kSync and kXCS - remove them or we never
   // try and fetch them.
   delete identityConfig.fxaccount.user.scopedKeys;
   delete identityConfig.fxaccount.user.kSync;
   delete identityConfig.fxaccount.user.kXCS;
-  delete identityConfig.fxaccount.user.kExtSync;
-  delete identityConfig.fxaccount.user.kExtKbHash;
   identityConfig.fxaccount.user.keyFetchToken = "keyFetchToken";
 
   configureFxAccountIdentity(syncAuthManager, identityConfig);
@@ -892,8 +880,6 @@ add_task(async function test_signedInUserMissing() {
   delete globalIdentityConfig.fxaccount.user.scopedKeys;
   delete globalIdentityConfig.fxaccount.user.kSync;
   delete globalIdentityConfig.fxaccount.user.kXCS;
-  delete globalIdentityConfig.fxaccount.user.kExtSync;
-  delete globalIdentityConfig.fxaccount.user.kExtKbHash;
   delete globalIdentityConfig.fxaccount.user.keyFetchToken;
 
   configureFxAccountIdentity(syncAuthManager, globalIdentityConfig);

@@ -83,8 +83,6 @@ add_task(async function test_simple() {
     sessionToken: "sessionToken",
     kSync: "the kSync value",
     kXCS: "the kXCS value",
-    kExtSync: "the kExtSync value",
-    kExtKbHash: "the kExtKbHash value",
     verified: true,
   };
   await fxa._internal.setSignedInUser(creds);
@@ -112,14 +110,6 @@ add_task(async function test_simple() {
 
   Assert.ok(!("kSync" in data.accountData), "kSync not stored in clear text");
   Assert.ok(!("kXCS" in data.accountData), "kXCS not stored in clear text");
-  Assert.ok(
-    !("kExtSync" in data.accountData),
-    "kExtSync not stored in clear text"
-  );
-  Assert.ok(
-    !("kExtKbHash" in data.accountData),
-    "kExtKbHash not stored in clear text"
-  );
 
   let login = getLoginMgrData();
   Assert.strictEqual(login.username, creds.uid, "uid used for username");
@@ -138,16 +128,6 @@ add_task(async function test_simple() {
     loginData.accountData.kXCS,
     creds.kXCS,
     "correct kXCS in the login mgr"
-  );
-  Assert.strictEqual(
-    loginData.accountData.kExtSync,
-    creds.kExtSync,
-    "correct kExtSync in the login mgr"
-  );
-  Assert.strictEqual(
-    loginData.accountData.kExtKbHash,
-    creds.kExtKbHash,
-    "correct kExtKbHash in the login mgr"
   );
 
   Assert.ok(!("email" in loginData), "email not stored in the login mgr json");
@@ -177,8 +157,6 @@ add_task(async function test_MPLocked() {
     sessionToken: "sessionToken",
     kSync: "the kSync value",
     kXCS: "the kXCS value",
-    kExtSync: "the kExtSync value",
-    kExtKbHash: "the kExtKbHash value",
     verified: true,
   };
 
@@ -210,14 +188,6 @@ add_task(async function test_MPLocked() {
 
   Assert.ok(!("kSync" in data.accountData), "kSync not stored in clear text");
   Assert.ok(!("kXCS" in data.accountData), "kXCS not stored in clear text");
-  Assert.ok(
-    !("kExtSync" in data.accountData),
-    "kExtSync not stored in clear text"
-  );
-  Assert.ok(
-    !("kExtKbHash" in data.accountData),
-    "kExtKbHash not stored in clear text"
-  );
 
   Assert.strictEqual(getLoginMgrData(), null, "login mgr data doesn't exist");
   await fxa.signOut(/* localOnly = */ true);
@@ -234,8 +204,6 @@ add_task(async function test_consistentWithMPEdgeCases() {
     sessionToken: "sessionToken",
     kSync: "the kSync value",
     kXCS: "the kXCS value",
-    kExtSync: "the kExtSync value",
-    kExtKbHash: "the kExtKbHash value",
     verified: true,
   };
 
@@ -245,8 +213,6 @@ add_task(async function test_consistentWithMPEdgeCases() {
     sessionToken: "sessionToken2",
     kSync: "the kSync value2",
     kXCS: "the kXCS value2",
-    kExtSync: "the kExtSync value2",
-    kExtKbHash: "the kExtKbHash value2",
     verified: false,
   };
 

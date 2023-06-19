@@ -179,8 +179,6 @@ add_storage_task(async function checkEverythingRead(sm) {
     verified: true,
     kSync: "kSync",
     kXCS: "kXCS",
-    kExtSync: "kExtSync",
-    kExtKbHash: "kExtKbHash",
     device: {
       id: "wibble",
       registrationVersion: DEVICE_REGISTRATION_VERSION,
@@ -189,8 +187,6 @@ add_storage_task(async function checkEverythingRead(sm) {
   accountData = await sm.getAccountData();
   Assert.equal(accountData.kSync, "kSync");
   Assert.equal(accountData.kXCS, "kXCS");
-  Assert.equal(accountData.kExtSync, "kExtSync");
-  Assert.equal(accountData.kExtKbHash, "kExtKbHash");
   Assert.deepEqual(accountData.device, {
     id: "wibble",
     registrationVersion: DEVICE_REGISTRATION_VERSION,
@@ -204,13 +200,9 @@ add_storage_task(async function checkEverythingRead(sm) {
   });
   // derive keys are secure
   if (sm.secureStorage) {
-    Assert.equal(sm.secureStorage.data.accountData.kExtKbHash, "kExtKbHash");
-    Assert.equal(sm.secureStorage.data.accountData.kExtSync, "kExtSync");
     Assert.equal(sm.secureStorage.data.accountData.kXCS, "kXCS");
     Assert.equal(sm.secureStorage.data.accountData.kSync, "kSync");
   } else {
-    Assert.equal(sm.plainStorage.data.accountData.kExtKbHash, "kExtKbHash");
-    Assert.equal(sm.plainStorage.data.accountData.kExtSync, "kExtSync");
     Assert.equal(sm.plainStorage.data.accountData.kXCS, "kXCS");
     Assert.equal(sm.plainStorage.data.accountData.kSync, "kSync");
   }
@@ -241,8 +233,6 @@ add_storage_task(async function checkNullUpdatesRemovedUnlocked(sm) {
     sm.secureStorage = new MockedSecureStorage({
       kSync: "kSync",
       kXCS: "kXCS",
-      kExtSync: "kExtSync",
-      kExtKbHash: "kExtKbHash",
     });
   } else {
     sm.plainStorage = new MockedPlainStorage({
@@ -250,8 +240,6 @@ add_storage_task(async function checkNullUpdatesRemovedUnlocked(sm) {
       email: "someone@somewhere.com",
       kSync: "kSync",
       kXCS: "kXCS",
-      kExtSync: "kExtSync",
-      kExtKbHash: "kExtKbHash",
     });
   }
   await sm.initialize();
@@ -296,8 +284,6 @@ add_storage_task(async function checkDelete(sm) {
     sm.secureStorage = new MockedSecureStorage({
       kSync: "kSync",
       kXCS: "kXCS",
-      kExtSync: "kExtSync",
-      kExtKbHash: "kExtKbHash",
     });
   } else {
     sm.plainStorage = new MockedPlainStorage({
@@ -305,8 +291,6 @@ add_storage_task(async function checkDelete(sm) {
       email: "someone@somewhere.com",
       kSync: "kSync",
       kXCS: "kXCS",
-      kExtSync: "kExtSync",
-      kExtKbHash: "kExtKbHash",
     });
   }
   await sm.initialize();
@@ -331,8 +315,6 @@ add_task(async function checkNullUpdatesRemovedLocked() {
   sm.secureStorage = new MockedSecureStorage({
     kSync: "kSync",
     kXCS: "kXCS",
-    kExtSync: "kExtSync",
-    kExtKbHash: "kExtKbHash",
   });
   sm.secureStorage.locked = true;
   await sm.initialize();

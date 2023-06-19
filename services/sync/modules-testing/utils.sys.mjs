@@ -20,7 +20,7 @@ import {
 } from "resource://gre/modules/FxAccounts.sys.mjs";
 import { FxAccountsClient } from "resource://gre/modules/FxAccountsClient.sys.mjs";
 
-const { SCOPE_OLD_SYNC, LEGACY_SCOPE_WEBEXT_SYNC } = ChromeUtils.import(
+const { SCOPE_OLD_SYNC } = ChromeUtils.import(
   "resource://gre/modules/FxAccountsCommon.js"
 );
 
@@ -122,17 +122,10 @@ export var makeIdentityConfig = function (overrides) {
         email: "foo",
         kSync: "a".repeat(128),
         kXCS: "b".repeat(32),
-        kExtSync: "c".repeat(128),
-        kExtKbHash: "d".repeat(64),
         scopedKeys: {
           [SCOPE_OLD_SYNC]: {
             kid: "1234567890123-u7u7u7u7u7u7u7u7u7u7uw",
             k: "qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqg",
-            kty: "oct",
-          },
-          [LEGACY_SCOPE_WEBEXT_SYNC]: {
-            kid: "1234567890123-3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d0",
-            k: "zMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzA",
             kty: "oct",
           },
         },

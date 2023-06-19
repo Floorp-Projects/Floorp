@@ -126,8 +126,6 @@ async function createMockFxA() {
     sessionToken: "dead",
     kSync: "beef",
     kXCS: "cafe",
-    kExtSync: "bacon",
-    kExtKbHash: "cheese",
     verified: true,
   };
   await fxa._internal.setSignedInUser(credentials);
