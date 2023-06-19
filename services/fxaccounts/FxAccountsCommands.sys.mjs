@@ -38,11 +38,6 @@ export class FxAccountsCommands {
   }
 
   async availableCommands() {
-    if (
-      !Services.prefs.getBoolPref("identity.fxaccounts.commands.enabled", true)
-    ) {
-      return {};
-    }
     const encryptedSendTabKeys = await this.sendTab.getEncryptedSendTabKeys();
     if (!encryptedSendTabKeys) {
       // This will happen if the account is not verified yet.
@@ -100,11 +95,6 @@ export class FxAccountsCommands {
     // Whether the call to `pollDeviceCommands` was initiated by a Push message from the FxA
     // servers in response to a message being received or simply scheduled in order
     // to fetch missed messages.
-    if (
-      !Services.prefs.getBoolPref("identity.fxaccounts.commands.enabled", true)
-    ) {
-      return false;
-    }
     log.info(`Polling device commands.`);
     await this._fxai.withCurrentAccountState(async state => {
       const { device } = await state.getUserAccountData(["device"]);
@@ -290,12 +280,7 @@ export class SendTab {
   // Returns true if the target device is compatible with FxA Commands Send tab.
   isDeviceCompatible(device) {
     return (
-      Services.prefs.getBoolPref(
-        "identity.fxaccounts.commands.enabled",
-        true
-      ) &&
-      device.availableCommands &&
-      device.availableCommands[COMMAND_SENDTAB]
+      device.availableCommands && device.availableCommands[COMMAND_SENDTAB]
     );
   }
 
