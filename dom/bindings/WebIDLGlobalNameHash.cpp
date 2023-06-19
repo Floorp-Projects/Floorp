@@ -50,7 +50,7 @@ static JSObject* FindNamedConstructorForXray(
     }
   }
 
-  // None of the named constructors match, so the caller must want the
+  // None of the legacy factory functions match, so the caller must want the
   // interface object itself.
   return interfaceObject;
 }

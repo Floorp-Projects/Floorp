@@ -23,7 +23,7 @@
 #define DOM_INSTANCE_RESERVED_SLOTS 1
 
 // Interface objects store a number of reserved slots equal to
-// DOM_INTERFACE_SLOTS_BASE + number of named constructors.
+// DOM_INTERFACE_SLOTS_BASE + number of legacy factory functions.
 #define DOM_INTERFACE_SLOTS_BASE 0
 
 // Interface prototype objects store a number of reserved slots equal to

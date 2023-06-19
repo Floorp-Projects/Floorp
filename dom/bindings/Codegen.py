@@ -2290,9 +2290,9 @@ class CGLegacyFactoryFunctions(CGThing):
         else:
             constructorID += "_ID_Count"
 
-        namedConstructors = ""
+        legacyFactoryFunctions = ""
         for n in self.descriptor.interface.legacyFactoryFunctions:
-            namedConstructors += (
+            legacyFactoryFunctions += (
                 '{ "%s", { %s, &sLegacyFactoryFunctionNativePropertyHooks }, %i },\n'
                 % (n.identifier.name, LegacyFactoryFunctionName(n), methodLength(n))
             )
@@ -2310,14 +2310,14 @@ class CGLegacyFactoryFunctions(CGThing):
                 nullptr
             };
 
-            static const LegacyFactoryFunction namedConstructors[] = {
-              $*{namedConstructors}
+            static const LegacyFactoryFunction legacyFactoryFunctions[] = {
+              $*{legacyFactoryFunctions}
               { nullptr, { nullptr, nullptr }, 0 }
             };
             """,
             name=self.descriptor.name,
             constructorID=constructorID,
-            namedConstructors=namedConstructors,
+            legacyFactoryFunctions=legacyFactoryFunctions,
         )
 
 
@@ -3584,9 +3584,9 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             constructArgs = 0
             isConstructorChromeOnly = False
         if len(self.descriptor.interface.legacyFactoryFunctions) > 0:
-            namedConstructors = "namedConstructors"
+            legacyFactoryFunctions = "legacyFactoryFunctions"
         else:
-            namedConstructors = "nullptr"
+            legacyFactoryFunctions = "nullptr"
 
         if needInterfacePrototypeObject:
             protoClass = "&sPrototypeClass.mBase"
@@ -3643,7 +3643,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             JS::Heap<JSObject*>* interfaceCache = ${interfaceCache};
             dom::CreateInterfaceObjects(aCx, aGlobal, ${parentProto},
                                         ${protoClass}, protoCache,
-                                        ${constructorProto}, ${interfaceClass}, ${constructArgs}, ${isConstructorChromeOnly}, ${namedConstructors},
+                                        ${constructorProto}, ${interfaceClass}, ${constructArgs}, ${isConstructorChromeOnly}, ${legacyFactoryFunctions},
                                         interfaceCache,
                                         ${properties},
                                         ${chromeProperties},
@@ -3660,7 +3660,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             interfaceClass=interfaceClass,
             constructArgs=constructArgs,
             isConstructorChromeOnly=toStringBool(isConstructorChromeOnly),
-            namedConstructors=namedConstructors,
+            legacyFactoryFunctions=legacyFactoryFunctions,
             interfaceCache=interfaceCache,
             properties=properties,
             chromeProperties=chromeProperties,
@@ -19935,7 +19935,7 @@ class CGJSImplMethod(CGJSImplMember):
         assert self.descriptor.interface.isJSImplemented()
         if self.name != "Constructor":
             raise TypeError(
-                "Named constructors are not supported for JS implemented WebIDL. See bug 851287."
+                "Legacy factory functions are not supported for JS implemented WebIDL."
             )
         if len(self.signature[1]) != 0:
             # The first two arguments to the constructor implementation are not
