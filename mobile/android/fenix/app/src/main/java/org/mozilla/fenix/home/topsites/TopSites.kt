@@ -27,6 +27,7 @@ import androidx.compose.material.Card
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,7 +35,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -48,6 +54,8 @@ import org.mozilla.fenix.compose.Favicon
 import org.mozilla.fenix.compose.MenuItem
 import org.mozilla.fenix.compose.PagerIndicator
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
+import org.mozilla.fenix.ext.bitmapForUrl
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.theme.FirefoxTheme
 import kotlin.math.ceil
@@ -240,23 +248,65 @@ private fun TopSiteFaviconCard(topSite: TopSite) {
                 shape = RoundedCornerShape(4.dp),
             ) {
                 val drawableForUrl = getDrawableForUrl(topSite.url)
+                when {
+                    drawableForUrl != null -> {
+                        FaviconImage(painterResource(drawableForUrl))
+                    }
 
-                if (drawableForUrl != null) {
-                    Image(
-                        painter = painterResource(id = drawableForUrl),
-                        contentDescription = null,
-                        modifier = Modifier.size(TOP_SITES_FAVICON_SIZE.dp),
-                        contentScale = ContentScale.Crop,
-                    )
-                } else {
-                    Favicon(
-                        url = topSite.url,
-                        size = TOP_SITES_FAVICON_SIZE.dp,
-                    )
+                    topSite is TopSite.Provided -> {
+                        FaviconBitmap(topSite)
+                    }
+
+                    else -> {
+                        FaviconDefault(topSite.url)
+                    }
                 }
             }
         }
     }
+}
+
+@Composable
+private fun FaviconImage(painter: Painter) {
+    Image(
+        painter = painter,
+        contentDescription = null,
+        modifier = Modifier.size(TOP_SITES_FAVICON_SIZE.dp),
+        contentScale = ContentScale.Crop,
+    )
+}
+
+@Composable
+private fun FaviconBitmap(topSite: TopSite.Provided) {
+    var faviconBitmapUiState by remember { mutableStateOf<FaviconBitmapUiState>(FaviconBitmapUiState.Loading) }
+
+    val client = LocalContext.current.components.core.client
+
+    LaunchedEffect(topSite.imageUrl) {
+        val bitmapForUrl = client.bitmapForUrl(topSite.imageUrl)
+
+        faviconBitmapUiState = if (bitmapForUrl == null) {
+            FaviconBitmapUiState.Error
+        } else {
+            FaviconBitmapUiState.Data(bitmapForUrl.asImageBitmap())
+        }
+    }
+
+    when (val uiState = faviconBitmapUiState) {
+        is FaviconBitmapUiState.Loading, FaviconBitmapUiState.Error -> FaviconDefault(topSite.url)
+        is FaviconBitmapUiState.Data -> FaviconImage(BitmapPainter(uiState.imageBitmap))
+    }
+}
+
+private sealed class FaviconBitmapUiState {
+    data class Data(val imageBitmap: ImageBitmap) : FaviconBitmapUiState()
+    object Loading : FaviconBitmapUiState()
+    object Error : FaviconBitmapUiState()
+}
+
+@Composable
+private fun FaviconDefault(url: String) {
+    Favicon(url = url, size = TOP_SITES_FAVICON_SIZE.dp)
 }
 
 private fun getDrawableForUrl(url: String) =
