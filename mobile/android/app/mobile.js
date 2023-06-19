@@ -32,7 +32,6 @@ pref("network.protocol-handler.warn-external.vnd.youtube", false);
 
 /* http prefs */
 pref("network.http.keep-alive.timeout", 109);
-pref("network.http.max-persistent-connections-per-server", 6);
 pref("network.http.max-persistent-connections-per-proxy", 20);
 
 // spdy
@@ -43,14 +42,12 @@ pref("network.http.http2.default-hpack-buffer", 4096); // 4k
 pref("network.http.http3.default-qpack-table-size", 0);
 
 // See bug 545869 for details on why these are set the way they are
-pref("network.buffer.cache.count", 24);
 pref("network.buffer.cache.size",  16384);
 
 // CookieBehavior setting for the private browsing.
 pref("network.cookie.cookieBehavior.pbmode", 4);
 
 /* session history */
-pref("browser.sessionhistory.max_total_viewers", -1);
 pref("browser.sessionhistory.max_entries", 50);
 pref("browser.sessionhistory.contentViewerTimeout", 360);
 
@@ -73,17 +70,11 @@ pref("browser.download.useDownloadDir", true);
 pref("browser.download.folderList", 1); // Default to ~/Downloads
 pref("browser.download.manager.addToRecentDocs", true);
 
-/* download helper */
-pref("browser.helperApps.deleteTempFileOnExit", false);
-
 /* password manager */
 pref("signon.firefoxRelay.feature", "not available");
 
 /* form helper (scroll to and optionally zoom into editable fields)  */
 pref("formhelper.autozoom", true);
-
-/* autocomplete */
-pref("browser.formfill.enable", true);
 
 /* spellcheck */
 pref("layout.spellcheckDefault", 0);
@@ -141,9 +132,7 @@ pref("accessibility.typeaheadfind", false);
 pref("accessibility.typeaheadfind.timeout", 5000);
 pref("accessibility.typeaheadfind.flashBar", 1);
 pref("accessibility.typeaheadfind.linksonly", false);
-pref("accessibility.typeaheadfind.casesensitive", 0);
 pref("accessibility.browsewithcaret_shortcut.enabled", false);
-pref("findbar.matchdiacritics", 0);
 
 // SSL error page behaviour
 pref("browser.xul.error_pages.expert_bad_cert", false);
@@ -303,9 +292,6 @@ pref("full-screen-api.enabled", true);
 // network reads and on wifi to mitigate 802.11 Power Save Polling delays
 pref("network.tickle-wifi.enabled", true);
 
-// Mobile manages state by autodetection
-pref("network.manage-offline-status", true);
-
 // Hide common parts of URLs like "www." or "http://"
 pref("browser.urlbar.trimURLs", true);
 
@@ -314,8 +300,6 @@ pref("browser.urlbar.trimURLs", true);
 pref("dom.phonenumber.substringmatching.BR", 8);
 pref("dom.phonenumber.substringmatching.CO", 10);
 pref("dom.phonenumber.substringmatching.VE", 7);
-
-pref("gfx.canvas.azure.backends", "skia");
 
 // The mode of home provider syncing.
 // 0: Sync always
@@ -388,7 +372,3 @@ pref("media.navigator.permission.device", true);
 // Allow system add-on updates
 pref("extensions.systemAddon.update.url", "https://aus5.mozilla.org/update/3/SystemAddons/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml");
 pref("extensions.systemAddon.update.enabled", true);
-
-// E10s stuff. We don't support 'privileged' process types.
-pref("browser.tabs.remote.separatePrivilegedContentProcess", false);
-pref("browser.tabs.remote.enforceRemoteTypeRestrictions", false);
