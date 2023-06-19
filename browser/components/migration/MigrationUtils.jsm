@@ -75,7 +75,7 @@ let gUndoData = null;
 XPCOMUtils.defineLazyGetter(this, "gAvailableMigratorKeys", function() {
   if (AppConstants.platform == "win") {
     return [
-      "firefox",
+      "floorp",
       "edge",
       "ie",
       "brave",
@@ -86,11 +86,12 @@ XPCOMUtils.defineLazyGetter(this, "gAvailableMigratorKeys", function() {
       "chromium",
       "chromium-360se",
       "canary",
+      "vivaldi",
     ];
   }
   if (AppConstants.platform == "macosx") {
     return [
-      "firefox",
+      "floorp",
       "safari",
       "brave",
       "chrome",
@@ -98,16 +99,18 @@ XPCOMUtils.defineLazyGetter(this, "gAvailableMigratorKeys", function() {
       "chromium-edge-beta",
       "chromium",
       "canary",
+      "vivaldi",
     ];
   }
   if (AppConstants.XP_UNIX) {
     return [
-      "firefox",
+      "floorp",
       "brave",
       "chrome",
       "chrome-beta",
       "chrome-dev",
       "chromium",
+      "vivaldi",
     ];
   }
   return [];
@@ -219,7 +222,7 @@ var MigratorPrototype = {
 
   /**
    * OVERRIDE IF AND ONLY IF the migrator is a startup-only migrator (For now,
-   * that is just the Firefox migrator, see bug 737381).  Default: false.
+   * that is just the Floorp migrator, see bug 737381).  Default: false.
    *
    * Startup-only migrators are different in two ways:
    * - they may only be used during startup.
@@ -444,7 +447,7 @@ var MigratorPrototype = {
     ) {
       MigrationUtils.profileStartup.doStartup();
       // First import the default bookmarks.
-      // Note: We do not need to do so for the Firefox migrator
+      // Note: We do not need to do so for the Floorp migrator
       // (=startupOnlyMigrator), as it just copies over the places database
       // from another profile.
       (async function() {
@@ -770,14 +773,16 @@ var MigrationUtils = Object.seal({
       "Internet Explorer": "ie",
       "Microsoft Edge": "edge",
       Safari: "safari",
-      Firefox: "firefox",
-      Nightly: "firefox",
+      Firefox: "floorp",
+      Nightly: "floorp",
       "Brave Web Browser": "brave", // Windows, Linux
       Brave: "brave", // OS X
       "Google Chrome": "chrome", // Windows, Linux
       Chrome: "chrome", // OS X
       Chromium: "chromium", // Windows, OS X
       "Chromium Web Browser": "chromium", // Linux
+      "Vivaldi Web Browser": "vivaldi", // Windows, Linux
+      Vivaldi: "vivaldi", // OS X
       "360\u5b89\u5168\u6d4f\u89c8\u5668": "chromium-360se",
     };
 
@@ -787,19 +792,19 @@ var MigrationUtils = Object.seal({
         .getService(Ci.nsIExternalProtocolService)
         .getApplicationDescription("http");
       key = APP_DESC_TO_KEY[browserDesc] || "";
-      // Handle devedition, as well as "FirefoxNightly" on OS X.
-      if (!key && browserDesc.startsWith("Firefox")) {
-        key = "firefox";
+      // Handle devedition, as well as "FloorpNightly" on OS X.
+      if (!key && browserDesc.startsWith("Floorp")) {
+        key = "floorp";
       }
     } catch (ex) {
       Cu.reportError("Could not detect default browser: " + ex);
     }
 
-    // "firefox" is the least useful entry here, and might just be because we've set
+    // "floorp" is the least useful entry here, and might just be because we've set
     // ourselves as the default (on Windows 7 and below). In that case, check if we
     // have a registry key that tells us where to go:
     if (
-      key == "firefox" &&
+      key == "floorp" &&
       AppConstants.isPlatformAndVersionAtMost("win", "6.2")
     ) {
       // Because we remove the registry key, reading the registry key only works once.
@@ -809,7 +814,7 @@ var MigrationUtils = Object.seal({
         key = gPreviousDefaultBrowserKey;
       } else {
         // We didn't have a saved value, so check the registry.
-        const kRegPath = "Software\\Mozilla\\Firefox";
+        const kRegPath = "Software\\Ablaze\\Floorp";
         let oldDefault = WindowsRegistry.readRegKey(
           Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
           kRegPath,
@@ -1256,7 +1261,7 @@ var MigrationUtils = Object.seal({
 
   _sourceNameToIdMapping: {
     nothing: 1,
-    firefox: 2,
+    floorp: 2,
     edge: 3,
     ie: 4,
     chrome: 5,
@@ -1269,6 +1274,7 @@ var MigrationUtils = Object.seal({
     "chromium-edge": 10,
     "chromium-edge-beta": 10,
     brave: 11,
+    vivalldi: 12,
   },
   getSourceIdForTelemetry(sourceName) {
     return this._sourceNameToIdMapping[sourceName] || 0;

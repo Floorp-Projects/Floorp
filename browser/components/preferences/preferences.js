@@ -8,6 +8,7 @@
 /* import-globals-from search.js */
 /* import-globals-from containers.js */
 /* import-globals-from privacy.js */
+/* import-globals-from lepton-preferences.js */
 /* import-globals-from sync.js */
 /* import-globals-from experimental.js */
 /* import-globals-from moreFromMozilla.js */
@@ -191,6 +192,8 @@ function init_all() {
   register_module("paneHome", gHomePane);
   register_module("paneSearch", gSearchPane);
   register_module("panePrivacy", gPrivacyPane);
+  register_module("paneLepton", gLeptonPane);
+  register_module("paneBSB", gBSBPane);
   register_module("paneContainers", gContainersPane);
   if (Services.prefs.getBoolPref("browser.preferences.experimental")) {
     // Set hidden based on previous load's hidden value.
@@ -529,16 +532,19 @@ async function confirmRestartPrompt(
     noRestartButtonText,
     restartLaterButtonText,
   ] = await document.l10n.formatValues([
-    {
-      id: aRestartToEnable
-        ? "feature-enable-requires-restart"
-        : "feature-disable-requires-restart",
-    },
+{
+  id: aRestartToEnable === null
+    ? "feature-requires-restart"
+    : aRestartToEnable
+    ? "feature-enable-requires-restart"
+    : "feature-disable-requires-restart",
+},
     { id: "should-restart-title" },
     { id: "should-restart-ok" },
     { id: "cancel-no-restart-button" },
     { id: "restart-later" },
   ]);
+
 
   // Set up the first (index 0) button:
   let buttonFlags =

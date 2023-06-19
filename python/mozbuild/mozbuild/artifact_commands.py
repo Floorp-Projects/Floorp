@@ -471,7 +471,7 @@ def artifact_toolchain(
     for f in from_task or ():
         task_id, colon, name = f.partition(":")
         if not colon:
-            self.log(
+            command_context.log(
                 logging.ERROR,
                 "artifact",
                 {},

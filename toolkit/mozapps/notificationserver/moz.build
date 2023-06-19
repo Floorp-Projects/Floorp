@@ -1,0 +1,27 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Toolkit", "Notifications and Alerts")
+
+SharedLibrary("notificationserver")
+
+UNIFIED_SOURCES = [
+    "NotificationCallback.cpp",
+    "NotificationComServer.cpp",
+    "NotificationFactory.cpp",
+]
+
+DEFFILE = "notificationserver.def"
+
+DEFINES["MOZ_APP_NAME"] = '"%s"' % CONFIG["MOZ_APP_NAME"]
+
+OS_LIBS += [
+    "advapi32",
+]
+
+LIBRARY_DEFINES["MOZ_NO_MOZALLOC"] = True
+DisableStlWrapping()

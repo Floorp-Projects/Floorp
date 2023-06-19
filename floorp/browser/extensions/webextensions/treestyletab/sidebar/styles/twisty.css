@@ -1,0 +1,77 @@
+@charset "UTF-8";
+/*
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+*/
+
+tab-item tab-twisty {
+  display: inline-block;
+  font-size: var(--favicon-size);
+  height: var(--favicon-size);
+  margin: 0;
+  max-height: var(--favicon-size);
+  max-width: var(--favicon-size);
+  min-height: var(--favicon-size);
+  min-width: var(--favicon-size);
+  padding: 0;
+  position: relative;
+  transform-origin: 50% 50%;
+  white-space: pre;
+  width: var(--favicon-size);
+  z-index: var(--tab-ui-z-index);
+}
+
+:root.animation tab-item:not(.collapsed) tab-twisty {
+  transition: transform 0.2s ease-out,
+              opacity 0.15s ease-out;
+}
+
+tab-item:not([data-child-ids]) tab-twisty,
+tab-item.pinned tab-twisty,
+tab-item.collapsed tab-twisty {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+tab-item:not(.collapsed) tab-twisty::before {
+  -moz-context-properties: fill;
+  background: url("./icons/ArrowheadDown.svg") no-repeat center / 60%;
+  content: "";
+  display: inline-block;
+  fill: var(--tab-text);
+  height: var(--svg-small-icon-size);
+  line-height: 1;
+  margin-top: calc((var(--favicon-size) - var(--svg-small-icon-size)) / 2);
+  max-height: var(--favicon-size);
+  max-width: var(--favicon-size);
+  width: var(--svg-small-icon-size);
+}
+:root.simulate-svg-context-fill tab-item:not(.collapsed) tab-twisty::before {
+  background: var(--tab-text);
+  mask: url("./icons/ArrowheadDown.svg") no-repeat center / 60%;
+}
+
+tab-item:not(.collapsed).subtree-collapsed
+  tab-twisty {
+  opacity: 0.9;
+  transform: rotatez(-90deg);
+}
+:root.right
+  tab-item:not(.collapsed).subtree-collapsed
+  tab-twisty {
+  transform: rotatez(90deg);
+}
+
+tab-item:not(.collapsed).subtree-collapsed
+  tab-twisty:hover {
+  opacity: 1;
+}
+
+tab-item:not(.collapsed):not(.subtree-collapsed) tab-twisty {
+  opacity: 0.9;
+  transform: rotatez(0);
+}
+tab-item:not(.collapsed):not(.subtree-collapsed) tab-twisty:hover {
+  opacity: 1;
+}

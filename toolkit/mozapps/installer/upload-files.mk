@@ -65,10 +65,10 @@ ifndef MOZ_SYSTEM_NSPR
 endif # MOZ_SYSTEM_NSPR
 
 ifdef MSVC_C_RUNTIME_DLL
-  JSSHELL_BINS += $(MSVC_C_RUNTIME_DLL)
+  JSSHELL_BINS += $(notdir $(wildcard $(DIST)/bin/$(MSVC_C_RUNTIME_DLL)))
 endif
 ifdef MSVC_CXX_RUNTIME_DLL
-  JSSHELL_BINS += $(MSVC_CXX_RUNTIME_DLL)
+  JSSHELL_BINS += $(notdir $(wildcard $(DIST)/bin/$(MSVC_CXX_RUNTIME_DLL)))
 endif
 
 ifdef WIN_UCRT_REDIST_DIR

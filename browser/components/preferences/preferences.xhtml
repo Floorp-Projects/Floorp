@@ -55,6 +55,8 @@
   <link rel="localization" href="security/certificates/certManager.ftl"/>
   <link rel="localization" href="preview/firefoxSuggest.ftl"/>
 
+  <link rel="localization" href="browser/floorp.ftl"/>
+
   <link rel="shortcut icon" href="chrome://global/skin/icons/settings.svg"/>
 
   <script src="chrome://browser/content/utilityOverlay.js"/>
@@ -129,6 +131,18 @@
           <label class="category-name" flex="1" data-l10n-id="pane-privacy-title"></label>
         </richlistitem>
 
+        <richlistitem id="category-lepton"
+                      class="category"
+                      value="paneLepton"
+                      helpTopic="prefs-lepton"
+                      style="display:none;"/>
+
+        <richlistitem id="category-BSB"
+                      class="category"
+                      value="paneBSB"
+                      helpTopic="prefs-BSB"
+                      style="display:none;"/>
+
         <richlistitem id="category-sync"
                       class="category"
                       hidden="true"
@@ -167,13 +181,21 @@
       <spacer flex="1"/>
 
       <vbox class="sidebar-footer-list">
-        <html:a id="addonsButton" class="sidebar-footer-link" href="about:addons">
+        <html:a id="ProfilesButton" class="sidebar-footer-link" href="about:profiles" target="_blank">
+          <image class="sidebar-footer-icon profiles-icon"/>
+          <label class="sidebar-footer-label" flex="1" data-l10n-id="profiles-button-label"></label>
+        </html:a>
+        <html:a id="addonsButton" class="sidebar-footer-link" href="about:addons" target="_blank" >
           <image class="sidebar-footer-icon addons-icon"/>
           <label class="sidebar-footer-label" flex="1" data-l10n-id="addons-button-label"></label>
         </html:a>
-        <html:a id="helpButton" class="sidebar-footer-link" target="_blank">
+        <html:a id="helpButton" style="display: none" class="sidebar-footer-link" target="_blank">
           <image class="sidebar-footer-icon help-icon"/>
           <label class="sidebar-footer-label" flex="1" data-l10n-id="help-button-label"></label>
+        </html:a>
+        <html:a id="AblazehelpButton" class="sidebar-footer-link" href="https://support.ablaze.one" target="_blank">
+          <image class="sidebar-footer-icon help-icon"/>
+          <label class="sidebar-footer-label" flex="1" data-l10n-id="floorp-help-button-label"></label>
         </html:a>
       </vbox>
     </vbox>
@@ -207,6 +229,8 @@
 #include home.inc.xhtml
 #include search.inc.xhtml
 #include privacy.inc.xhtml
+#include ../../../floorp/browser/components/preferences/lepton.inc.xhtml
+#include ../../../floorp/browser/components/preferences/bsb.inc.xhtml
 #include containers.inc.xhtml
 #include sync.inc.xhtml
 #include experimental.inc.xhtml

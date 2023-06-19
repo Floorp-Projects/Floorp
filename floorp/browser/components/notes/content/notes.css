@@ -1,0 +1,101 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root {
+  --memo-list-sidebar-width: 250px;
+  --main-content-padding-to-sidebar: 25px;
+  font: message-box;
+  appearance: none;
+  background-color: var(--in-content-page-background);
+  color: var(--in-content-page-color);
+}
+
+body, html {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  overflow: hidden !important;
+  flex-direction: unset !important;
+  box-sizing: unset !important;
+  padding: 0 !important;
+  align-items: unset !important;
+  justify-content: unset !important;
+}
+
+#memo-title-input {
+   display: inherit;
+   width: 18em;
+   margin-bottom: 25px;
+}
+
+#memo-contents{
+   padding-left: var(--main-content-padding-to-sidebar);
+}
+
+.memo-list-item {
+   margin: 0px;
+   border-bottom: solid 1px gray;
+   padding: 15px;
+   text-align: left;
+}
+
+#memo-lists-sidebar {
+   width: var(--memo-list-sidebar-width);
+   min-width: var(--memo-list-sidebar-width);
+   height: 100%;
+   border-right: 1px solid gray;
+}
+
+#memo-input {
+   width: 65vh;
+   height: 75vh;
+   resize: none;
+}
+
+#memo-list {
+   overflow: scroll;
+   height: 100%;
+}
+
+#memo-add {
+   padding-inline: 10px;
+}
+
+#button-box {
+   padding-inline: 5em;
+   border-bottom: solid 1px gray;
+   padding-bottom: 10px;
+   padding-top: 10px;
+}
+
+#memo-delete {
+   background-image: url("chrome://global/skin/icons/delete.svg");
+   padding-inline-start: 30px;
+   background-repeat: no-repeat;
+   background-position: 8px;
+   -moz-context-properties: fill;
+   fill: currentColor;
+   min-width: auto;
+   flex: 0 0 auto;
+   height: 2.5em;
+   display: block;
+   margin-left: auto;
+   margin-right: 20px;
+}
+
+#titleAndDelete {
+   display: flex;
+}
+
+#beta {
+   margin: auto 10px 10px;
+   font-style: italic;
+   color: gray;
+}
+
+#title-box {
+   display: flex;
+   border-bottom: solid 0.1px gray;
+   margin-bottom: 15px;
+}

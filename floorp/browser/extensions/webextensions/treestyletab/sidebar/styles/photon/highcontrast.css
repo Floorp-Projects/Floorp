@@ -1,0 +1,126 @@
+/*
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+*/
+
+@import url("base.css");
+
+:root {
+  --tab-like-surface: ButtonFace;
+  --tab-surface-regular: var(--tab-like-surface);
+  --tab-surface-active: Highlight;
+  --tab-surface-hover: var(--tab-like-surface);
+  --tab-text-regular: ButtonText;
+  --tab-text-active: HighlightText;
+  --tab-text-hover: ButtonText;
+  --tab-text-inverted: CaptionText;
+  --tab-border: ButtonShadow;
+  --tab-dropmarker: ButtonText;
+}
+
+
+/* Tab Bar */
+
+:root,
+#background {
+  background: AppWorkspace;
+}
+
+#background::after {
+  background: GrayText;
+  opacity: 0.5;
+
+  bottom: 0;
+  content: "";
+  left: 0;
+  margin: 0;
+  overflow: hidden;
+  padding: 0;
+  position: fixed;
+  right: 0;
+  top: 0;
+  z-index: 20;
+}
+
+
+/* Tab */
+
+tab-item-substance,
+.after-tabs button,
+.after-tabs [role="button"] {
+  background: var(--tab-surface);
+  color: var(--tab-text);
+}
+
+tab-item * {
+  color: var(--tab-text);
+}
+
+tab-item:not(.collapsed) tab-item-substance:hover,
+.after-tabs button:hover,
+.after-tabs [role="button"]:hover,
+#subpanel-selector-anchor:hover {
+  opacity: 0.7;
+  /*mix-blend-mode: multiply;*/
+}
+
+tab-item.active {
+  --throbber-color: HighlightText;
+  --tab-border: Highlight;
+  --tab-surface: var(--tab-surface-active);
+  --tab-text: var(--tab-text-active);
+  --tab-text-inverted: var(--tab-surface-active);
+}
+
+tab-item:not(.active) {
+  --throbber-color: Highlight;
+}
+
+.newtab-button-box {
+  border-color: var(--tab-border);
+  border-style: solid;
+  border-width: 1px;
+}
+
+
+/* tab-closebox */
+
+tab-item tab-closebox:hover {
+  --tab-text: HighlightText;
+  opacity: 0.75;
+}
+tab-item tab-closebox:hover::before {
+  --tab-text: Highlight;
+  border-radius: 0;
+  height: calc(var(--svg-small-icon-size) + 0.3em);
+  margin-left: -0.15em;
+  margin-top: -0.15em;
+  opacity: 1;
+  width: calc(var(--svg-small-icon-size) + 0.3em);
+}
+
+tab-item.active tab-closebox:hover {
+  --tab-text: Highlight;
+  opacity: 0.5;
+}
+tab-item.active tab-closebox:hover::before {
+  --tab-text: HighlightText;
+}
+
+
+/* hide regular active tab marker */
+tab-item:not(.bundled-active) .highlighter::before {
+  display: none !important;
+}
+
+tab-item.bundled-active:not(.highlighted) .highlighter::before {
+  opacity: 1;
+}
+
+
+tab-item.active tab-label {
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 0.25em;
+}

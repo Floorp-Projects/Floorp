@@ -1,0 +1,14 @@
+{
+    "manifest_version": 2,
+    "name": "Gesturefy",
+    "version": "1.0.0",
+  
+    "hidden": true,
+  
+    "applications": {
+      "gecko": {
+        "id": "{506e023c-7f2b-40a3-8066-bc5deb40aebe}"
+     }
+    }
+  }
+  

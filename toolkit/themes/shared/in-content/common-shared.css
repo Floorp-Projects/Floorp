@@ -2,513 +2,513 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@namespace html "http://www.w3.org/1999/xhtml";
-@namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
-:host,
-:root {
-  --in-content-page-color: rgb(21, 20, 26);
-  --in-content-page-background: #fff;
-  --in-content-text-color: var(--in-content-page-color);
-  --in-content-deemphasized-text: rgb(91, 91, 102);
-  --in-content-box-background: #fff;
-  --in-content-box-background-odd: rgba(12, 12, 13, 0.05); /* grey 90 a05 */
-  --in-content-box-border-color: color-mix(in srgb, currentColor 41%, transparent);
-  --in-content-box-info-background: #f0f0f4;
-  --in-content-item-hover: color-mix(in srgb, var(--in-content-primary-button-background) 20%, transparent);
-  --in-content-item-hover-text: var(--in-content-page-color);
-  --in-content-item-selected: var(--in-content-primary-button-background);
-  --in-content-item-selected-text: var(--in-content-primary-button-text-color);
-  --in-content-icon-color: rgb(91,91,102);
-  --in-content-accent-color: #0a84ff;
-  --in-content-accent-color-active: #0060df;
-  --in-content-border-hover: var(--grey-90-a50);
-  --in-content-border-invalid: var(--red-50);
-  --in-content-border-color: #d7d7db;
-  --in-content-error-text-color: #c50042;
-  --in-content-link-color: var(--blue-60);
-  --in-content-link-color-hover: var(--blue-70);
-  --in-content-link-color-active: var(--blue-80);
-  --in-content-link-color-visited: var(--blue-60);
-   /* button background states are also used for checkboxes and radiobuttons */
-  --in-content-button-text-color: var(--in-content-text-color);
-  --in-content-button-text-color-hover: var(--in-content-text-color);
-  --in-content-button-text-color-active: var(--in-content-button-text-color-hover);
-  --in-content-button-background: rgba(207,207,216,.33);
-  --in-content-button-background-hover: rgba(207,207,216,.66);
-  --in-content-button-background-active: rgb(207,207,216);
-  --in-content-button-border-color: transparent;
-  --in-content-button-border-color-hover: transparent;
-  --in-content-button-border-color-active: var(--in-content-button-border-color-hover);
-  --in-content-primary-button-text-color: rgb(251,251,254);
-  --in-content-primary-button-text-color-hover: var(--in-content-primary-button-text-color);
-  --in-content-primary-button-background: #0061e0;
-  --in-content-primary-button-background-hover: #0250bb;
-  --in-content-primary-button-background-active: #053e94;
-  --in-content-primary-button-border-color: transparent;
-  --in-content-primary-button-border-hover: transparent;
-  --in-content-danger-button-background: #e22850;
-  --in-content-danger-button-background-hover: #c50042;
-  --in-content-danger-button-background-active: #810220;
-  --in-content-focus-outline-color: var(--in-content-primary-button-background);
-
-  --in-content-table-background: #f8f8fa;
-  --in-content-table-border-color: var(--in-content-box-border-color);
-  --in-content-table-header-background: var(--in-content-primary-button-background);
-  --in-content-table-header-color: var(--in-content-primary-button-text-color);
-  --in-content-sidebar-width: 240px;
-
-  --dialog-warning-text-color: var(--red-60);
-
-  --checkbox-border-color: var(--in-content-box-border-color);
-  --checkbox-unchecked-bgcolor: var(--in-content-button-background);
-  --checkbox-unchecked-hover-bgcolor: var(--in-content-button-background-hover);
-  --checkbox-unchecked-active-bgcolor: var(--in-content-button-background-active);
-  --checkbox-checked-bgcolor: var(--in-content-primary-button-background);
-  --checkbox-checked-color: var(--in-content-primary-button-text-color);
-  --checkbox-checked-border-color: transparent;
-  --checkbox-checked-hover-bgcolor: var(--in-content-primary-button-background-hover);
-  --checkbox-checked-active-bgcolor: var(--in-content-primary-button-background-active);
-
-  --blue-40: #45a1ff;
-  --blue-50: #0a84ff;
-  --blue-60: #0060df;
-  --blue-70: #003eaa;
-  --blue-80: #002275;
-  --grey-30: #d7d7db;
-  --grey-60: #4a4a4f;
-  --grey-90-a10: rgba(12, 12, 13, 0.1);
-  --grey-90-a20: rgba(12, 12, 13, 0.2);
-  --grey-90-a30: rgba(12, 12, 13, 0.3);
-  --grey-90-a50: rgba(12, 12, 13, 0.5);
-  --grey-90-a60: rgba(12, 12, 13, 0.6);
-  --green-50: #30e60b;
-  --green-60: #12bc00;
-  --green-70: #058b00;
-  --green-80: #006504;
-  --green-90: #003706;
-  --orange-50: #ff9400;
-  --red-40: #ff4f5e;
-  --red-50: #ff0039;
-  --red-60: #d70022;
-  --red-70: #a4000f;
-  --red-80: #5a0002;
-  --red-90: #3e0200;
-  --yellow-50: #ffe900;
-  --yellow-60: #d7b600;
-  --yellow-60-a30: rgba(215, 182, 0, 0.3);
-  --yellow-70: #a47f00;
-  --yellow-80: #715100;
-  --yellow-90: #3e2800;
-
-  --shadow-10: 0 1px 4px var(--grey-90-a10);
-  --shadow-30: 0 4px 16px var(--grey-90-a10);
-
-  --card-padding: 16px;
-  --card-shadow: var(--shadow-10);
-  --card-outline-color: var(--grey-30);
-  --card-shadow-hover: var(--card-shadow), 0 0 0 5px var(--card-outline-color);
-
-  accent-color: var(--in-content-accent-color);
-  color-scheme: light dark;
-}
-
-@media (prefers-color-scheme: dark) {
-  :host,
-  :root {
-    /* Keep these in sync with:
-     *
-     *  * nsXPLookAndFeel::GenericDarkColor
-     *  * The default value of browser.display.foreground_color.dark and
-     *    browser.display.background_color.dark
-     *
-     * TODO (emilio): Once color-scheme support is complete, perhaps we can
-     * just replace most of these for system colors and remove all this
-     * duplication (assuming we honor the preferred color scheme for
-     * in-content privileged pages and plain-text documents). */
-    --in-content-page-background: rgb(28,27,34);
-    --in-content-page-color: rgb(251,251,254);
-    --in-content-deemphasized-text: rgb(191,191,201);
-
-    --in-content-box-background: rgb(35, 34, 43);
-    --in-content-box-background-odd: rgba(249,249,250,0.05);
-    --in-content-box-info-background: rgba(249,249,250,0.15);
-
-    --in-content-border-color: rgba(249,249,250,0.2);
-    --in-content-border-hover: rgba(249,249,250,0.3);
-    --in-content-border-invalid: rgb(255,132,139);
-
-    --in-content-error-text-color: #FF9AA2;
-
-    --in-content-button-background: rgb(43,42,51);
-    --in-content-button-background-hover: rgb(82,82,94);
-    --in-content-button-background-active: rgb(91,91,102);
-    --in-content-icon-color: rgb(251,251,254);
-
-    --in-content-primary-button-text-color: rgb(43,42,51);
-    --in-content-primary-button-background: rgb(0,221,255);
-    --in-content-primary-button-background-hover: rgb(128,235,255);
-    --in-content-primary-button-background-active: rgb(170,242,255);
-
-    --in-content-danger-button-background: #ff848b;
-    --in-content-danger-button-background-hover: #ffbdc5;
-    --in-content-danger-button-background-active: #ffdfe7;
-
-    --in-content-table-background: rgb(35, 34, 43);
-
-    --in-content-accent-color: var(--in-content-primary-button-background);
-    --in-content-accent-color-active: var(--in-content-primary-button-background-hover);
-    --in-content-link-color: var(--in-content-primary-button-background);
-    --in-content-link-color-hover: var(--in-content-primary-button-background-hover);
-    --in-content-link-color-active: var(--in-content-primary-button-background-active);
-    --in-content-link-color-visited: var(--in-content-link-color);
-
-    --card-outline-color: var(--grey-60);
-
-    --dialog-warning-text-color: var(--red-40);
-
-    scrollbar-color: rgba(249,249,250,.4) rgba(20,20,25,.3);
-  }
-
-  /* For dialogs, use a different background colour. We don't do
-   * this in High Contrast mode, as we should be using system colours then.
-   */
-  @media not (prefers-contrast) {
-    :root[dialogroot],
-    /* Also need this on dialog :hosts, or the rule above will override the
-     * value for this custom property again in the shadow DOM. */
-    :host(dialog) {
-      --in-content-page-background: #42414d;
-    }
-  }
-}
-
-@media (prefers-contrast) {
-  :host,
-  :root {
-    --in-content-page-color: WindowText;
-    --in-content-page-background: Window;
-    --in-content-deemphasized-text: GrayText;
-
-    --in-content-box-background: -moz-Dialog;
-    --in-content-box-background-odd: -moz-Dialog;
-    --in-content-box-border-color: -moz-DialogText;
-    --in-content-box-info-background: -moz-Dialog;
-
-    --in-content-item-hover: SelectedItem;
-    --in-content-item-hover-text: SelectedItemText;
-    --in-content-item-selected: SelectedItem;
-    --in-content-item-selected-text: SelectedItemText;
-    --in-content-icon-color: -moz-DialogText;
-
-    --in-content-accent-color: -moz-DialogText;
-    --in-content-accent-color-active: -moz-DialogText;
-
-    --in-content-border-hover: ThreeDShadow;
-    /* This is not great, but there is no suitable keyword for this.
-     * In theory, we shouldn't be conveying invalid state just with a colour
-     * change... */
-    --in-content-border-invalid: ThreeDShadow;
-    --in-content-border-color: ThreeDShadow;
-
-    --in-content-link-color: -moz-nativehyperlinktext;
-    --in-content-link-color-hover: -moz-nativehyperlinktext;
-    --in-content-link-color-active: -moz-nativehyperlinktext;
-    --in-content-link-color-visited: -moz-nativehyperlinktext;
-
-    --in-content-button-text-color-hover: ButtonFace;
-    --in-content-button-background: ButtonFace;
-    --in-content-button-text-color: ButtonText;
-    --in-content-button-background-hover: ButtonText;
-    --in-content-button-background-active: ButtonText;
-    --in-content-button-border-color: ButtonText;
-
-    --in-content-primary-button-text-color: ButtonFace;
-    --in-content-primary-button-text-color-hover: ButtonText;
-    --in-content-primary-button-background: ButtonText;
-    --in-content-primary-button-background-hover: ButtonFace;
-    --in-content-primary-button-background-active: ButtonFace;
-    --in-content-primary-button-border-hover: ButtonText;
-
-    --in-content-danger-button-background: var(--in-content-primary-button-background);
-    --in-content-danger-button-background-hover: var(--in-content-primary-button-background-hover);
-    --in-content-danger-button-background-active: var(--in-content-primary-button-background-active);
-
-    --in-content-table-border-color: ThreeDDarkShadow;
-    --in-content-table-background: -moz-Dialog;
-    --in-content-table-header-background: -moz-Dialog;
-    --in-content-table-header-color: -moz-DialogText;
-
-    --dialog-warning-text-color: -moz-FieldText;
-
-    --checkbox-border-color: ThreeDShadow;
-    --checkbox-unchecked-bgcolor: -moz-Field;
-    --checkbox-unchecked-hover-bgcolor: -moz-Field;
-    --checkbox-unchecked-active-bgcolor: -moz-Field;
-    --checkbox-checked-bgcolor: SelectedItem;
-    --checkbox-checked-color: SelectedItemText;
-    --checkbox-checked-border-color: SelectedItem;
-    --checkbox-checked-hover-bgcolor: -moz-Field;
-    --checkbox-checked-active-bgcolor: -moz-Field;
-  }
-}
-
-:root {
-  font: message-box;
-  appearance: none;
-  background-color: var(--in-content-page-background);
-  color: var(--in-content-page-color);
-}
-
-html|body {
-  font-size: 15px;
-  font-weight: normal;
-  margin: 0;
-}
-
-html|h1 {
-  font-size: 2.5em;
-  font-weight: lighter;
-  line-height: 1.2;
-  color: var(--in-content-text-color);
-  margin: 0;
-  margin-bottom: .5em;
-}
-
-html|hr {
-  border-style: solid none none none;
-  border-color: var(--in-content-border-color);
-}
-
-html|h2 {
-  font-weight: 600;
-  line-height: 1.4em;
-}
-
-.main-content {
-  padding: 40px 28px;
-  overflow: auto;
-}
-
-/* tabpanels and tabs */
-
-xul|tabpanels {
-  appearance: none;
-  border: none;
-  padding: 0;
-  background-color: transparent;
-  color: inherit;
-  color-scheme: unset;
-}
-
-xul|tabs {
-  margin-bottom: 10px;
-  border-bottom: 1px solid var(--in-content-border-color);
-  background-color: transparent;
-  color: inherit;
-}
-
-xul|tab {
-  appearance: none;
-  margin-top: 0;
-  padding: 2px 20px 0;
-  min-height: 44px;
-  color: inherit;
-  background-color: transparent;
-  border-bottom: 2px solid transparent;
-  transition: background-color 50ms ease 0s;
-  color-scheme: unset;
-}
-
-xul|tab:hover {
-  border-bottom-color: var(--in-content-border-color);
-  background-color: var(--in-content-button-background-hover);
-  color: var(--in-content-button-text-color-hover);
-}
-
-xul|tab[selected] {
-  color: var(--in-content-accent-color) !important; /* override macOS tabbox.css */
-  border-bottom-color: currentColor;
-}
-
-/* html buttons */
-
-html|button {
-  font: inherit;
-}
-
-/* xul buttons and menulists */
-
-button,
-html|select,
-html|input[type="color"],
-xul|menulist {
-  appearance: none;
-  min-height: 32px;
-  color: var(--in-content-button-text-color);
-  border: 1px solid var(--in-content-button-border-color);
-  border-radius: 4px;
-  background-color: var(--in-content-button-background);
-  font-weight: 400;
-  padding: 7px 15px;
-  text-decoration: none;
-  margin: 4px 8px;
-  /* Ensure font-size isn't overridden by widget styling (e.g. in forms.css) */
-  font-size: 1em;
-}
-
-button {
-  font-weight: 600;
-}
-
-/* Small buttons get sized to 6/12px padding (when adding the 1px border) */
-button.small-button {
-  padding: 5px 11px;
-  min-height: 24px;
-  font-size: 0.9em;
-}
-
-/* Remove margin added by button.css */
-xul|button > .button-box > .button-text {
-  margin: 0;
-}
-
-xul|button,
-html|button {
-  /* Use the same margin of other elements for the alignment */
-  margin-inline: 4px;
-}
-
-::-moz-focus-inner {
-  border: none;
-}
-
-button:-moz-focusring,
-html|select:-moz-focusring,
-html|input:is([type="checkbox"], [type="color"], [type="radio"]):-moz-focusring,
-xul|menulist:-moz-focusring,
-xul|checkbox:not([native]):-moz-focusring > .checkbox-check, /* :not([native]) to win specificity over checkbox.css */
-xul|radio[focused="true"] > .radio-check,
-xul|tab:-moz-focusring > .tab-middle > .tab-text {
-  box-shadow: none;
-  outline: 2px solid var(--in-content-focus-outline-color);
-  outline-offset: 2px;
-}
-
-html|select:not([size], [multiple]) {
-  background-image: url("chrome://global/skin/icons/arrow-down-12.svg");
-  background-position: right 3px center;
-  background-repeat: no-repeat;
-  background-size: auto 12px;
-  -moz-context-properties: fill;
-  fill: currentColor;
-  font-size: inherit;
-  line-height: 2.1;
-  padding-inline: 5px 24px;
-  text-overflow: ellipsis;
-}
-
-html|select:not([size], [multiple]):dir(rtl) {
-  background-position-x: left 3px;
-}
-
-html|select:not([size], [multiple]) > html|option {
-  background-color: var(--in-content-box-background);
-  color: var(--in-content-text-color);
-}
-
-html|button:enabled:hover,
-html|select:not([size], [multiple]):enabled:hover,
-html|input[type="color"]:hover,
-xul|button:not([disabled="true"]):hover,
-xul|menulist:not([disabled="true"]):hover {
-  background-color: var(--in-content-button-background-hover);
-  color: var(--in-content-button-text-color-hover);
-  border-color: var(--in-content-button-border-color-hover);
-}
-
-html|button:enabled:hover:active,
-html|select:not([size], [multiple]):enabled:hover:active,
-html|input[type="color"]:enabled:hover:active,
-xul|button:not([disabled="true"]):hover:active,
-xul|button[open],
-xul|button[open]:hover,
-xul|menulist[open="true"]:not([disabled="true"]) {
-  background-color: var(--in-content-button-background-active);
-  color: var(--in-content-button-text-color-active);
-  border-color: var(--in-content-button-border-color-active);
-}
-
-html|button:disabled,
-html|select:disabled,
-html|input[type="color"]:disabled,
-xul|button[disabled="true"],
-xul|menulist[disabled="true"] {
-  opacity: 0.4;
-}
-
-html|button[autofocus],
-html|button[type="submit"],
-xul|button[default],
-button.primary {
-  background-color: var(--in-content-primary-button-background);
-  color: var(--in-content-primary-button-text-color);
-  border-color: var(--in-content-primary-button-border-color);
-}
-
-html|button[autofocus]:enabled:hover,
-html|button[type="submit"]:enabled:hover,
-html|button.primary:enabled:hover,
-xul|button[default]:not([disabled="true"]):hover,
-xul|button.primary:not([disabled="true"]):hover {
-  background-color: var(--in-content-primary-button-background-hover);
-  color: var(--in-content-primary-button-text-color-hover);
-  border-color: var(--in-content-primary-button-border-hover);
-}
-
-html|button[autofocus]:enabled:hover:active,
-html|button[type="submit"]:enabled:hover:active,
-html|button.primary:enabled:hover:active,
-xul|button[default]:not([disabled="true"]):hover:active,
-xul|button.primary:not([disabled="true"]):hover:active {
-  background-color: var(--in-content-primary-button-background-active);
-}
-
-@media not (prefers-contrast) {
-  html|button.semi-transparent:not(.ghost-button, .primary):enabled {
-    background-color: color-mix(in srgb, currentColor 10%, transparent);
-  }
-
-  html|button.semi-transparent:not(.primary):enabled:hover {
-    background-color: color-mix(in srgb, currentColor 20%, transparent);
-  }
-
-  html|button.semi-transparent:not(.primary):enabled:hover:active {
-    background-color: color-mix(in srgb, currentColor 30%, transparent);
-  }
-}
-
-.danger-button {
-  --in-content-primary-button-background: var(--in-content-danger-button-background);
-  --in-content-primary-button-background-hover: var(--in-content-danger-button-background-hover);
-  --in-content-primary-button-background-active: var(--in-content-danger-button-background-active);
-  --in-content-focus-outline-color: var(--in-content-danger-button-background);
-}
-
-html|button.ghost-button {
-  background-color: transparent;
-}
-
-html|button.ghost-button:not(.semi-transparent):enabled:hover {
-  background-color: var(--in-content-button-background-hover);
-  color: var(--in-content-button-text-color-hover);
-}
-
-html|button.ghost-button:not(.semi-transparent):enabled:hover:active {
-  background-color: var(--in-content-button-background-active);
-}
-
-html|button.ghost-button.icon-button {
+ @namespace html "http://www.w3.org/1999/xhtml";
+ @namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+ 
+ :host,
+ :root {
+   --in-content-page-color: rgb(21, 20, 26);
+   --in-content-page-background: #fff;
+   --in-content-text-color: var(--in-content-page-color);
+   --in-content-deemphasized-text: rgb(91, 91, 102);
+   --in-content-box-background: #fff;
+   --in-content-box-background-odd: rgba(12, 12, 13, 0.05); /* grey 90 a05 */
+   --in-content-box-border-color: color-mix(in srgb, currentColor 41%, transparent);
+   --in-content-box-info-background: #f0f0f4;
+   --in-content-item-hover: color-mix(in srgb, var(--in-content-primary-button-background) 20%, transparent);
+   --in-content-item-hover-text: var(--in-content-page-color);
+   --in-content-item-selected: var(--in-content-primary-button-background);
+   --in-content-item-selected-text: var(--in-content-primary-button-text-color);
+   --in-content-icon-color: rgb(91,91,102);
+   --in-content-accent-color: #0a84ff;
+   --in-content-accent-color-active: #0060df;
+   --in-content-border-hover: var(--grey-90-a50);
+   --in-content-border-invalid: var(--red-50);
+   --in-content-border-color: #d7d7db;
+   --in-content-error-text-color: #c50042;
+   --in-content-link-color: var(--blue-60);
+   --in-content-link-color-hover: var(--blue-70);
+   --in-content-link-color-active: var(--blue-80);
+   --in-content-link-color-visited: var(--blue-60);
+    /* button background states are also used for checkboxes and radiobuttons */
+   --in-content-button-text-color: var(--in-content-text-color);
+   --in-content-button-text-color-hover: var(--in-content-text-color);
+   --in-content-button-text-color-active: var(--in-content-button-text-color-hover);
+   --in-content-button-background: rgba(207,207,216,.33);
+   --in-content-button-background-hover: rgba(207,207,216,.66);
+   --in-content-button-background-active: rgb(207,207,216);
+   --in-content-button-border-color: transparent;
+   --in-content-button-border-color-hover: transparent;
+   --in-content-button-border-color-active: var(--in-content-button-border-color-hover);
+   --in-content-primary-button-text-color: rgb(251,251,254);
+   --in-content-primary-button-text-color-hover: var(--in-content-primary-button-text-color);
+   --in-content-primary-button-background: #58c1ff;
+   --in-content-primary-button-background-hover: #0250bb;
+   --in-content-primary-button-background-active: #053e94;
+   --in-content-primary-button-border-color: transparent;
+   --in-content-primary-button-border-hover: transparent;
+   --in-content-danger-button-background: #e22850;
+   --in-content-danger-button-background-hover: #c50042;
+   --in-content-danger-button-background-active: #810220;
+   --in-content-focus-outline-color: var(--in-content-primary-button-background);
+ 
+   --in-content-table-background: #f8f8fa;
+   --in-content-table-border-color: var(--in-content-box-border-color);
+   --in-content-table-header-background: var(--in-content-primary-button-background);
+   --in-content-table-header-color: var(--in-content-primary-button-text-color);
+   --in-content-sidebar-width: 240px;
+ 
+   --dialog-warning-text-color: var(--red-60);
+ 
+   --checkbox-border-color: var(--in-content-box-border-color);
+   --checkbox-unchecked-bgcolor: var(--in-content-button-background);
+   --checkbox-unchecked-hover-bgcolor: var(--in-content-button-background-hover);
+   --checkbox-unchecked-active-bgcolor: var(--in-content-button-background-active);
+   --checkbox-checked-bgcolor: var(--in-content-primary-button-background);
+   --checkbox-checked-color: var(--in-content-primary-button-text-color);
+   --checkbox-checked-border-color: transparent;
+   --checkbox-checked-hover-bgcolor: var(--in-content-primary-button-background-hover);
+   --checkbox-checked-active-bgcolor: var(--in-content-primary-button-background-active);
+ 
+   --blue-40: #45a1ff;
+   --blue-50: #0a84ff;
+   --blue-60: #0060df;
+   --blue-70: #003eaa;
+   --blue-80: #002275;
+   --grey-30: #d7d7db;
+   --grey-60: #4a4a4f;
+   --grey-90-a10: rgba(12, 12, 13, 0.1);
+   --grey-90-a20: rgba(12, 12, 13, 0.2);
+   --grey-90-a30: rgba(12, 12, 13, 0.3);
+   --grey-90-a50: rgba(12, 12, 13, 0.5);
+   --grey-90-a60: rgba(12, 12, 13, 0.6);
+   --green-50: #30e60b;
+   --green-60: #12bc00;
+   --green-70: #058b00;
+   --green-80: #006504;
+   --green-90: #003706;
+   --orange-50: #ff9400;
+   --red-40: #ff4f5e;
+   --red-50: #ff0039;
+   --red-60: #d70022;
+   --red-70: #a4000f;
+   --red-80: #5a0002;
+   --red-90: #3e0200;
+   --yellow-50: #ffe900;
+   --yellow-60: #d7b600;
+   --yellow-60-a30: rgba(215, 182, 0, 0.3);
+   --yellow-70: #a47f00;
+   --yellow-80: #715100;
+   --yellow-90: #3e2800;
+ 
+   --shadow-10: 0 1px 4px var(--grey-90-a10);
+   --shadow-30: 0 4px 16px var(--grey-90-a10);
+ 
+   --card-padding: 16px;
+   --card-shadow: var(--shadow-10);
+   --card-outline-color: var(--grey-30);
+   --card-shadow-hover: var(--card-shadow), 0 0 0 5px var(--card-outline-color);
+ 
+   accent-color: var(--in-content-accent-color);
+   color-scheme: light dark;
+ }
+ 
+ @media (prefers-color-scheme: dark) {
+   :host,
+   :root {
+     /* Keep these in sync with:
+      *
+      *  * nsXPLookAndFeel::GenericDarkColor
+      *  * The default value of browser.display.foreground_color.dark and
+      *    browser.display.background_color.dark
+      *
+      * TODO (emilio): Once color-scheme support is complete, perhaps we can
+      * just replace most of these for system colors and remove all this
+      * duplication (assuming we honor the preferred color scheme for
+      * in-content privileged pages and plain-text documents). */
+     --in-content-page-background:#333333;
+     --in-content-page-color: rgb(251,251,254);
+     --in-content-deemphasized-text: rgb(191,191,201);
+ 
+     --in-content-box-background: rgb(53, 53, 53);
+     --in-content-box-background-odd: rgba(249,249,250,0.05);
+     --in-content-box-info-background: rgba(249,249,250,0.15);
+ 
+     --in-content-border-color: rgba(249,249,250,0.2);
+     --in-content-border-hover: rgba(249,249,250,0.3);
+     --in-content-border-invalid: rgb(255,132,139);
+ 
+     --in-content-error-text-color: #FF9AA2;
+ 
+     --in-content-button-background: rgb(77, 77, 77);
+     --in-content-button-background-hover: rgb(82,82,94);
+     --in-content-button-background-active: rgb(91,91,102);
+     --in-content-icon-color: rgb(251,251,254);
+ 
+     --in-content-primary-button-text-color: rgb(43,42,51);
+     --in-content-primary-button-background: #58c1ff;
+     --in-content-primary-button-background-hover: rgb(128,235,255);
+     --in-content-primary-button-background-active: rgb(170,242,255);
+ 
+     --in-content-danger-button-background: #ff848b;
+     --in-content-danger-button-background-hover: #ffbdc5;
+     --in-content-danger-button-background-active: #ffdfe7;
+ 
+     --in-content-table-background: rgb(45,45,45);
+ 
+     --in-content-accent-color: var(--in-content-primary-button-background);
+     --in-content-accent-color-active: var(--in-content-primary-button-background-hover);
+     --in-content-link-color: var(--in-content-primary-button-background);
+     --in-content-link-color-hover: var(--in-content-primary-button-background-hover);
+     --in-content-link-color-active: var(--in-content-primary-button-background-active);
+     --in-content-link-color-visited: var(--in-content-link-color);
+ 
+     --card-outline-color: var(--grey-60);
+ 
+     --dialog-warning-text-color: var(--red-40);
+ 
+     scrollbar-color: rgba(249,249,250,.4) rgba(20,20,25,.3);
+   }
+ 
+   /* For dialogs, use a different background colour. We don't do
+    * this in High Contrast mode, as we should be using system colours then.
+    */
+   @media not (prefers-contrast) {
+     :root[dialogroot],
+     /* Also need this on dialog :hosts, or the rule above will override the
+      * value for this custom property again in the shadow DOM. */
+     :host(dialog) {
+       --in-content-page-background:#333333
+     }
+   }
+ }
+ 
+ @media (prefers-contrast) {
+   :host,
+   :root {
+     --in-content-page-color: WindowText;
+     --in-content-page-background: Window;
+     --in-content-deemphasized-text: GrayText;
+ 
+     --in-content-box-background: -moz-Dialog;
+     --in-content-box-background-odd: -moz-Dialog;
+     --in-content-box-border-color: -moz-DialogText;
+     --in-content-box-info-background: -moz-Dialog;
+ 
+     --in-content-item-hover: SelectedItem;
+     --in-content-item-hover-text: SelectedItemText;
+     --in-content-item-selected: SelectedItem;
+     --in-content-item-selected-text: SelectedItemText;
+     --in-content-icon-color: -moz-DialogText;
+ 
+     --in-content-accent-color: -moz-DialogText;
+     --in-content-accent-color-active: -moz-DialogText;
+ 
+     --in-content-border-hover: ThreeDShadow;
+     /* This is not great, but there is no suitable keyword for this.
+      * In theory, we shouldn't be conveying invalid state just with a colour
+      * change... */
+     --in-content-border-invalid: ThreeDShadow;
+     --in-content-border-color: ThreeDShadow;
+ 
+     --in-content-link-color: -moz-nativehyperlinktext;
+     --in-content-link-color-hover: -moz-nativehyperlinktext;
+     --in-content-link-color-active: -moz-nativehyperlinktext;
+     --in-content-link-color-visited: -moz-nativehyperlinktext;
+ 
+     --in-content-button-text-color-hover: ButtonFace;
+     --in-content-button-background: ButtonFace;
+     --in-content-button-text-color: ButtonText;
+     --in-content-button-background-hover: ButtonText;
+     --in-content-button-background-active: ButtonText;
+     --in-content-button-border-color: ButtonText;
+ 
+     --in-content-primary-button-text-color: ButtonFace;
+     --in-content-primary-button-text-color-hover: ButtonText;
+     --in-content-primary-button-background: ButtonText;
+     --in-content-primary-button-background-hover: ButtonFace;
+     --in-content-primary-button-background-active: ButtonFace;
+     --in-content-primary-button-border-hover: ButtonText;
+ 
+     --in-content-danger-button-background: var(--in-content-primary-button-background);
+     --in-content-danger-button-background-hover: var(--in-content-primary-button-background-hover);
+     --in-content-danger-button-background-active: var(--in-content-primary-button-background-active);
+ 
+     --in-content-table-border-color: ThreeDDarkShadow;
+     --in-content-table-background: -moz-Dialog;
+     --in-content-table-header-background: -moz-Dialog;
+     --in-content-table-header-color: -moz-DialogText;
+ 
+     --dialog-warning-text-color: -moz-FieldText;
+ 
+     --checkbox-border-color: ThreeDShadow;
+     --checkbox-unchecked-bgcolor: -moz-Field;
+     --checkbox-unchecked-hover-bgcolor: -moz-Field;
+     --checkbox-unchecked-active-bgcolor: -moz-Field;
+     --checkbox-checked-bgcolor: SelectedItem;
+     --checkbox-checked-color: SelectedItemText;
+     --checkbox-checked-border-color: SelectedItem;
+     --checkbox-checked-hover-bgcolor: -moz-Field;
+     --checkbox-checked-active-bgcolor: -moz-Field;
+   }
+ }
+ 
+ :root {
+   font: message-box;
+   appearance: none;
+   background-color: var(--in-content-page-background);;
+   color: var(--in-content-page-color);
+ }
+ 
+ html|body {
+   font-size: 15px;
+   font-weight: normal;
+   margin: 0;
+ }
+ 
+ html|h1 {
+   font-size: 2.5em;
+   font-weight: lighter;
+   line-height: 1.2;
+   color: var(--in-content-text-color);
+   margin: 0;
+   margin-bottom: .5em;
+ }
+ 
+ html|hr {
+   border-style: solid none none none;
+   border-color: var(--in-content-border-color);
+ }
+ 
+ html|h2 {
+   font-weight: 600;
+   line-height: 1.4em;
+ }
+ 
+ .main-content {
+   padding: 40px 28px;
+   overflow: auto;
+ }
+ 
+ /* tabpanels and tabs */
+ 
+ xul|tabpanels {
+   appearance: none;
+   border: none;
+   padding: 0;
+   background-color: transparent;
+   color: inherit;
+   color-scheme: unset;
+ }
+ 
+ xul|tabs {
+   margin-bottom: 10px;
+   border-bottom: 1px solid var(--in-content-border-color);
+   background-color: transparent;
+   color: inherit;
+ }
+ 
+ xul|tab {
+   appearance: none;
+   margin-top: 0;
+   padding: 2px 20px 0;
+   min-height: 44px;
+   color: inherit;
+   background-color: transparent;
+   border-bottom: 2px solid transparent;
+   transition: background-color 50ms ease 0s;
+   color-scheme: unset;
+ }
+ 
+ xul|tab:hover {
+   border-bottom-color: var(--in-content-border-color);
+   background-color: var(--in-content-button-background-hover);
+   color: var(--in-content-button-text-color-hover);
+ }
+ 
+ xul|tab[selected] {
+   color: var(--in-content-accent-color) !important; /* override macOS tabbox.css */
+   border-bottom-color: currentColor;
+ }
+ 
+ /* html buttons */
+ 
+ html|button {
+   font: inherit;
+ }
+ 
+ /* xul buttons and menulists */
+ 
+ button,
+ html|select,
+ html|input[type="color"],
+ xul|menulist {
+   appearance: none;
+   min-height: 32px;
+   color: var(--in-content-button-text-color);
+   border: 1px solid var(--in-content-button-border-color);
+   border-radius: 4px;
+   background-color: var(--in-content-button-background);
+   font-weight: 400;
+   padding: 7px 15px;
+   text-decoration: none;
+   margin: 4px 8px;
+   /* Ensure font-size isn't overridden by widget styling (e.g. in forms.css) */
+   font-size: 1em;
+ }
+ 
+ button {
+   font-weight: 600;
+ }
+ 
+ /* Small buttons get sized to 6/12px padding (when adding the 1px border) */
+ button.small-button {
+   padding: 5px 11px;
+   min-height: 24px;
+   font-size: 0.9em;
+ }
+ 
+ /* Remove margin added by button.css */
+ xul|button > .button-box > .button-text {
+   margin: 0;
+ }
+ 
+ xul|button,
+ html|button {
+   /* Use the same margin of other elements for the alignment */
+   margin-inline: 4px;
+ }
+ 
+ ::-moz-focus-inner {
+   border: none;
+ }
+ 
+ button:-moz-focusring,
+ html|select:-moz-focusring,
+ html|input:is([type="checkbox"], [type="color"], [type="radio"]):-moz-focusring,
+ xul|menulist:-moz-focusring,
+ xul|checkbox:not([native]):-moz-focusring > .checkbox-check, /* :not([native]) to win specificity over checkbox.css */
+ xul|radio[focused="true"] > .radio-check,
+ xul|tab:-moz-focusring > .tab-middle > .tab-text {
+   box-shadow: none;
+   outline: 2px solid var(--in-content-focus-outline-color);
+   outline-offset: 2px;
+ }
+ 
+ html|select:not([size], [multiple]) {
+   background-image: url("chrome://global/skin/icons/arrow-down-12.svg");
+   background-position: right 3px center;
+   background-repeat: no-repeat;
+   background-size: auto 12px;
+   -moz-context-properties: fill;
+   fill: currentColor;
+   font-size: inherit;
+   line-height: 2.1;
+   padding-inline: 5px 24px;
+   text-overflow: ellipsis;
+ }
+ 
+ html|select:not([size], [multiple]):dir(rtl) {
+   background-position-x: left 3px;
+ }
+ 
+ html|select:not([size], [multiple]) > html|option {
+   background-color: var(--in-content-box-background);
+   color: var(--in-content-text-color);
+ }
+ 
+ html|button:enabled:hover,
+ html|select:not([size], [multiple]):enabled:hover,
+ html|input[type="color"]:hover,
+ xul|button:not([disabled="true"]):hover,
+ xul|menulist:not([disabled="true"]):hover {
+   background-color: var(--in-content-button-background-hover);
+   color: var(--in-content-button-text-color-hover);
+   border-color: var(--in-content-button-border-color-hover);
+ }
+ 
+ html|button:enabled:hover:active,
+ html|select:not([size], [multiple]):enabled:hover:active,
+ html|input[type="color"]:enabled:hover:active,
+ xul|button:not([disabled="true"]):hover:active,
+ xul|button[open],
+ xul|button[open]:hover,
+ xul|menulist[open="true"]:not([disabled="true"]) {
+   background-color: var(--in-content-button-background-active);
+   color: var(--in-content-button-text-color-active);
+   border-color: var(--in-content-button-border-color-active);
+ }
+ 
+ html|button:disabled,
+ html|select:disabled,
+ html|input[type="color"]:disabled,
+ xul|button[disabled="true"],
+ xul|menulist[disabled="true"] {
+   opacity: 0.4;
+ }
+ 
+ html|button[autofocus],
+ html|button[type="submit"],
+ xul|button[default],
+ button.primary {
+   background-color: var(--in-content-primary-button-background);
+   color: var(--in-content-primary-button-text-color);
+   border-color: var(--in-content-primary-button-border-color);
+ }
+ 
+ html|button[autofocus]:enabled:hover,
+ html|button[type="submit"]:enabled:hover,
+ html|button.primary:enabled:hover,
+ xul|button[default]:not([disabled="true"]):hover,
+ xul|button.primary:not([disabled="true"]):hover {
+   background-color: var(--in-content-primary-button-background-hover);
+   color: var(--in-content-primary-button-text-color-hover);
+   border-color: var(--in-content-primary-button-border-hover);
+ }
+ 
+ html|button[autofocus]:enabled:hover:active,
+ html|button[type="submit"]:enabled:hover:active,
+ html|button.primary:enabled:hover:active,
+ xul|button[default]:not([disabled="true"]):hover:active,
+ xul|button.primary:not([disabled="true"]):hover:active {
+   background-color: var(--in-content-primary-button-background-active);
+ }
+ 
+ @media not (prefers-contrast) {
+   html|button.semi-transparent:not(.ghost-button, .primary):enabled {
+     background-color: color-mix(in srgb, currentColor 10%, transparent);
+   }
+ 
+   html|button.semi-transparent:not(.primary):enabled:hover {
+     background-color: color-mix(in srgb, currentColor 20%, transparent);
+   }
+ 
+   html|button.semi-transparent:not(.primary):enabled:hover:active {
+     background-color: color-mix(in srgb, currentColor 30%, transparent);
+   }
+ }
+ 
+ .danger-button {
+   --in-content-primary-button-background: var(--in-content-danger-button-background);
+   --in-content-primary-button-background-hover: var(--in-content-danger-button-background-hover);
+   --in-content-primary-button-background-active: var(--in-content-danger-button-background-active);
+   --in-content-focus-outline-color: var(--in-content-danger-button-background);
+ }
+ 
+ html|button.ghost-button {
+   background-color: transparent;
+ }
+ 
+ html|button.ghost-button:not(.semi-transparent):enabled:hover {
+   background-color: var(--in-content-button-background-hover);
+   color: var(--in-content-button-text-color-hover);
+ }
+ 
+ html|button.ghost-button:not(.semi-transparent):enabled:hover:active {
+   background-color: var(--in-content-button-background-active);
+ }
+
+ html|button.ghost-button.icon-button {
   height: 16px;
   width: 16px;
   min-width: auto;
@@ -519,871 +519,872 @@ html|button.ghost-button.icon-button {
   -moz-context-properties: fill;
 }
 
-html|input[type="color"] {
-  padding: 6px;
-  width: 50px;
-}
-
-xul|menulist[image]::part(icon) {
-  margin-inline-end: 5px;
-}
-
-xul|menulist::part(dropmarker) {
-  appearance: none;
-  margin-inline-end: 4px;
-  padding: 0;
-  border: none;
-  background-color: transparent;
-  list-style-image: url("chrome://global/skin/icons/arrow-down-12.svg");
-  -moz-context-properties: fill;
-  fill: currentColor;
-}
-
-xul|menulist::part(dropmarker-icon) {
-  width: 12px;
-  height: 12px;
-}
-
-xul|menulist > xul|menupopup {
-  appearance: none;
-
-  /* Reset native styles on Windows and macOS */
-  border: none;
-  background-color: transparent;
-
-  --panel-border-color: var(--in-content-box-border-color);
-  --panel-border-radius: 2px;
-  --panel-background: var(--in-content-box-background);
-  --panel-color: var(--in-content-text-color);
-  --panel-padding: 0;
-}
-
-xul|menulist > xul|menupopup xul|menu,
-xul|menulist > xul|menupopup xul|menuitem {
-  appearance: none;
-  font-size: 1em;
-  padding-block: 0.2em;
-  padding-inline: 10px 30px;
-}
-
-xul|menulist > xul|menupopup > xul|menu:not([disabled="true"])[_moz-menuactive="true"],
-xul|menulist > xul|menupopup > xul|menuitem:not([disabled="true"])[_moz-menuactive="true"] {
-  color: var(--in-content-item-hover-text);
-  background-color: var(--in-content-item-hover);
-}
-
-xul|menulist > xul|menupopup > xul|menu:not([disabled="true"])[selected="true"],
-xul|menulist > xul|menupopup > xul|menuitem:not([disabled="true"])[selected="true"] {
-  color: var(--in-content-item-selected-text);
-  background-color: var(--in-content-item-selected);
-}
-
-xul|menulist > xul|menupopup > xul|menu[disabled="true"],
-xul|menulist > xul|menupopup > xul|menuitem[disabled="true"] {
-  color: #999;
-  /* override the [_moz-menuactive="true"] background color from
-     global/menu.css */
-  background-color: transparent;
-}
-
-xul|menulist > xul|menupopup xul|menuseparator {
-  appearance: none;
-  margin: 0;
-  padding: 0;
-  border-top: 1px solid var(--in-content-box-border-color);
-  border-bottom: none;
-}
-
-/* textboxes */
-
-html|input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]),
-html|textarea,
-xul|search-textbox {
-  appearance: none;
-  border: 1px solid var(--in-content-box-border-color);
-  border-radius: 4px;
-  color: inherit;
-  background-color: var(--in-content-box-background);
-}
-
-xul|search-textbox {
-  min-height: 32px;
-  padding-inline: 8px;
-}
-
-html|input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]),
-html|textarea {
-  font-family: inherit;
-  font-size: inherit;
-  padding: 8px;
-  margin: 2px 4px;
-}
-
-html|input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]):focus,
-html|textarea:focus,
-xul|search-textbox[focused],
-xul|tree:focus-visible,
-xul|richlistbox:focus-visible {
-  border-color: transparent;
-  outline: 2px solid var(--in-content-focus-outline-color);
-  outline-offset: -1px; /* Prevents antialising around the corners */
-}
-
-html|input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]):-moz-ui-invalid,
-html|textarea:-moz-ui-invalid {
-  border-color: transparent;
-  outline: 2px solid var(--in-content-border-invalid);
-  outline-offset: -1px; /* Prevents antialising around the corners */
-}
-
-html|input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]):disabled,
-html|textarea:disabled,
-xul|search-textbox[disabled="true"] {
-  opacity: 0.4;
-}
-
-/* Links */
-
-html|a,
-.text-link {
-  color: var(--in-content-link-color);
-  text-decoration: none;
-}
-
-html|a:hover,
-.text-link:hover,
-button.text-link:is(:not([disabled="true"]), :enabled):hover {
-  color: var(--in-content-link-color-hover);
-  text-decoration: underline;
-}
-
-html|a:visited {
-  color: var(--in-content-link-color-visited);
-}
-
-html|a:hover:active,
-.text-link:hover:active,
-button.text-link:is(:not([disabled="true"]), :enabled):hover:active {
-  color: var(--in-content-link-color-active);
-  text-decoration: none;
-}
-
-html|a:-moz-focusring,
-.text-link:-moz-focusring {
-  outline: 2px solid var(--in-content-focus-outline-color);
-  outline-offset: 1px;
-  border-radius: 4px;
-}
-
-button.text-link {
-  background-color: transparent !important; /* override hover related background changes */
-  padding: 0;
-  border: 0;
-  font-weight: normal;
-  min-height: 0;
-  min-width: 0;
-}
-
-/* Checkboxes and radio buttons */
-
-/* Add invisible vertical click-target */
-xul|*.checkbox-check,
-html|input[type="checkbox"] {
-  margin-block: 2px;
-}
-
-html|input[type="checkbox"] {
-  appearance: none;
-  height: 16px;
-  width: 16px;
-  border: 1px solid var(--checkbox-border-color);
-  background-color: var(--checkbox-unchecked-bgcolor);
-  border-radius: 2px;
-  margin-inline: 0 6px;
-  flex-shrink: 0; /* avoid shrinking inside flex container */
-}
-
-html|input[type="checkbox"]:enabled:hover {
-  background-color: var(--checkbox-unchecked-hover-bgcolor);
-}
-
-html|input[type="checkbox"]:enabled:hover:active {
-  background-color: var(--checkbox-unchecked-active-bgcolor);
-}
-
-html|input[type="checkbox"]:checked {
-  border-color: var(--checkbox-checked-border-color);
-  background-color: var(--checkbox-checked-bgcolor);
-  background-image: url("chrome://global/skin/icons/check.svg");
-  background-position: center;
-  background-repeat: no-repeat;
-  -moz-context-properties: fill;
-  fill: currentColor;
-  color: var(--checkbox-checked-color);
-  /* Style the button also when printing with "Print Backgrounds" unchecked */
-  color-adjust: exact;
-}
-
-html|input[type="checkbox"]:enabled:checked:hover {
-  background-color: var(--checkbox-checked-hover-bgcolor);
-}
-
-html|input[type="checkbox"]:enabled:checked:hover:active {
-  background-color: var(--checkbox-checked-active-bgcolor);
-}
-
-@media (prefers-contrast) {
-  html|input[type="checkbox"] {
-    /* Normalize the border-color to the in-content version following color */
-    border-color: currentColor;
-    color: var(--checkbox-border-color);
-  }
-
-  html|input[type="checkbox"]:not(:checked):enabled:hover {
-    /* color sets the border color in HCM in-content */
-    color: var(--checkbox-checked-border-color);
-  }
-
-  html|input[type="checkbox"]:checked:enabled {
-    /* color sets the border color in HCM in-content */
-    color: var(--checkbox-checked-bgcolor);
-    fill: var(--checkbox-checked-color);
-  }
-
-  html|input[type="checkbox"]:checked:enabled:hover {
-    fill: var(--checkbox-checked-bgcolor);
-  }
-}
-
-xul|richlistitem > xul|*.checkbox-check {
-  margin: 3px 6px;
-}
-
-html|*.radio-container-with-text,
-html|*.toggle-container-with-text {
-  display: flex;
-  align-items: center;
-}
-
-xul|radio {
-  margin-inline-start: 0;
-  appearance: none;
-}
-
-html|input[type="radio"],
-xul|*.radio-check {
-  appearance: none;
-  width: 16px;
-  height: 16px;
-  padding: 0;
-  border: 1px solid var(--in-content-box-border-color);
-  border-radius: 100%;
-  margin-block: 2px; /* extend the vertical clicktarget */
-  margin-inline: 0 6px;
-  background-color: var(--in-content-button-background);
-  background-position: center;
-  flex-shrink: 0; /* avoid shrinking inside flex container */
-}
-
-html|input[type="radio"]:enabled:hover,
-xul|radio:not([disabled="true"]):hover > xul|*.radio-check {
-  background-color: var(--in-content-button-background-hover);
-  color: var(--in-content-button-text-color-hover);
-}
-
-html|input[type="radio"]:enabled:hover:active,
-xul|radio:not([disabled="true"]):hover:active > xul|*.radio-check {
-  background-color: var(--in-content-button-background-active);
-}
-
-html|input[type="radio"]:checked,
-xul|*.radio-check[selected] {
-  -moz-context-properties: fill;
-  fill: currentColor;
-  color: var(--in-content-primary-button-text-color);
-  background-color: var(--in-content-primary-button-background);
-  background-image: url("chrome://global/skin/icons/radio.svg");
-  border-color: var(--in-content-primary-button-border-color);
-
-  /* Style the button also when printing with "Print Backgrounds" unchecked */
-  color-adjust: exact;
-}
-
-html|input[type="radio"]:enabled:checked:hover,
-xul|radio:not([disabled="true"])[selected]:hover > xul|*.radio-check {
-  background-color: var(--in-content-primary-button-background-hover);
-  color: var(--in-content-primary-button-text-color-hover);
-  border-color: var(--in-content-primary-button-border-hover);
-}
-
-html|input[type="radio"]:enabled:checked:hover:active,
-xul|radio:not([disabled="true"])[selected]:hover:active > xul|*.radio-check {
-  background-color: var(--in-content-primary-button-background-active);
-}
-
-xul|*.radio-label-box {
-  margin-inline: 0 8px;
-  padding-inline-start: 0;
-}
-
-/* Disabled checkboxes, radios and labels */
-
-xul|checkbox[disabled="true"],
-xul|radio[disabled="true"],
-xul|label[disabled="true"] {
-  color: inherit;
-}
-
-html|input[type="checkbox"]:disabled,
-html|input[type="radio"]:disabled,
-xul|checkbox[disabled="true"],
-xul|radio[disabled="true"],
-xul|label[disabled="true"] {
-  opacity: 0.5;
-}
-
-/* Category List */
-
-#categories {
-  appearance: none;
-  background-color: initial; /* override the background-color set on all richlistboxes in common.inc.css */
-  margin: 70px 0 0;
-  border-width: 0;
-  width: var(--in-content-sidebar-width);
-  outline: none;
-}
-
-@media print {
-  #categories {
-    display: none;
-  }
-}
-
-html|*#categories {
-  box-sizing: border-box;
-  padding: 1px;
-}
-
-#categories > .category {
-  border-radius: 4px;
-  min-height: 48px;
-  appearance: none;
-  color: inherit;
-  margin-inline-start: 34px;
-  padding-inline: 10px;
-  transition: background-color 150ms;
-}
-
-html|*#categories > html|*.category {
-  border: 0;
-  background-color: initial;
-  background-size: 24px;
-  background-repeat: no-repeat;
-  background-position-x: 10px;
-  background-position-y: 12px;
-  margin-inline-end: 0;
-  min-width: auto;
-  padding-inline-start: 34px;
-  text-align: start;
-  -moz-context-properties: fill, fill-opacity;
-  fill: currentColor;
-}
-
-html|*#categories > html|*.category:dir(rtl) {
-  background-position-x: right 10px;
-}
-
-#categories > .category:hover {
-  background-color: var(--in-content-button-background-hover);
-  color: var(--in-content-button-text-color-hover);
-}
-
-#categories > .category:hover:active {
-  background-color: var(--in-content-button-background-active);
-}
-
-#categories > .category[selected],
-#categories > .category.selected {
-  color: var(--in-content-accent-color);
-}
-
-#categories > .category[selected]:not(:hover) {
-  /* override richlistitem selected style while letting hover style above apply */
-  background-color: transparent;
-}
-
-#categories > .category[selected]:hover:active,
-#categories > .category.selected:hover:active {
-  color: var(--in-content-accent-color-active);
-}
-
-@media (prefers-contrast) {
-  #categories > .category {
-    /* The transition causes issues with the text getting a background while
-     * transitioning and it looks weird. */
-    transition: none;
-  }
-
-  #categories > .category[selected]:hover,
-  #categories > .category[selected]:hover:active,
-  #categories > .category.selected:hover,
-  #categories > .category.selected:hover:active,
-  #categories > .category[selected]:not(:hover),
-  #categories > .category.selected:not(:hover) {
-    background-color: var(--in-content-button-background-hover);
-    color: var(--in-content-button-text-color-hover);
-  }
-}
-
-#categories[keyboard-navigation="true"]:-moz-focusring > .category[current],
-#categories > .category:-moz-focusring {
-  outline: 2px solid var(--in-content-focus-outline-color);
-  outline-offset: -2px;
-}
-
-html|*#categories[last-input-type="mouse"] > html|button.category:-moz-focusring {
-  outline: none;
-}
-
-.category-name {
-  font-size: 1.07em;
-  line-height: 1.4em;
-  padding-inline-start: 9px;
-  margin: 0;
-  user-select: none;
-}
-
-.category-icon {
-  width: 24px;
-  height: 24px;
-  -moz-context-properties: fill, fill-opacity;
-  fill: currentColor;
-}
-
-.category[selected] > .category-icon,
-.category.selected > .category-icon {
-  fill-opacity: 1;
-}
-
-@media (max-width: 830px) {
-  :root {
-    --in-content-sidebar-width: 118px;
-  }
-
-  html|*.category:not(.category-no-icon) > html|*.category-name,
-  .category-icon + .category-name {
-    display: none;
-  }
-
-  #categories > .category {
-    padding-inline-start: 12px; /* make category icons align center */
-    margin-inline-end: 33px;
-  }
-
-  html|*#categories > html|*.category {
-    width: 48px;
-    min-width: auto;
-    box-sizing: border-box;
-  }
-
-  html|*#categories > html|*.category,
-  /* We need to override the full-width RTL rule, so explicitly specify RTL. */
-  html|*#categories > html|*.category:dir(rtl) {
-    background-position: center;
-  }
-
-  .main-content {
-    padding-inline: 0;
-  }
-
-  .pane-container {
-    margin-inline-end: 10px;
-  }
-}
-
-/* header */
-
-.header {
-  margin-inline-end: 4px; /* add the 4px end-margin of other elements */
-  margin-bottom: 15px;
-  padding-bottom: 15px;
-  -moz-box-align: baseline;
-}
-
-.header-name {
-  font-size: 1.46em;
-  font-weight: 300;
-  line-height: 1.3em;
-  margin: 0;
-}
-
-/* List boxes */
-
-html|select[size][multiple],
-xul|listheader,
-xul|richlistbox {
-  appearance: none;
-  margin-inline: 0;
-  background-color: var(--in-content-box-background);
-  border: 1px solid var(--in-content-box-border-color);
-  border-radius: 4px;
-  color: var(--in-content-text-color);
-}
-
-xul|listheader {
-  border-bottom: none;
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-  padding-bottom: 1px;
-  box-shadow: inset 0 -1px var(--in-content-border-color);
-  overflow: clip; /* Clip border-radius */
-}
-
-xul|listheader + xul|richlistbox {
-  margin-top: 0;
-  border-top: none;
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-}
-
-html|select[size][multiple] > html|option,
-xul|treechildren::-moz-tree-row {
-  padding: 0.3em;
-  margin: 0;
-  border: none;
-  border-radius: 0;
-  background-image: none;
-}
-
-xul|treechildren::-moz-tree-row(multicol, odd) {
-  background-color: var(--in-content-box-background-odd);
-}
-
-html|select[size][multiple] > html|option:hover,
-xul|treechildren::-moz-tree-row(hover) {
-  background-color: var(--in-content-item-hover);
-  color: var(--in-content-item-hover-text);
-}
-
-xul|richlistbox > xul|richlistitem[selected],
-xul|treechildren::-moz-tree-row(selected) {
-  background-color: var(--in-content-item-selected);
-  color: var(--in-content-item-selected-text);
-}
-
-xul|richlistbox:not(#categories) > xul|richlistitem[selected] {
-  /* Ensure buttons/menulists inside richlistitems (containers, applications) look OK */
-  --in-content-button-background: color-mix(in srgb, currentColor 15%, transparent);
-  --in-content-button-background-hover: color-mix(in srgb, currentColor 30%, transparent);
-  --in-content-button-background-active: color-mix(in srgb, currentColor 45%, transparent);
-  --in-content-button-text-color: var(--in-content-item-selected-text);
-  --in-content-button-text-color-hover: var(--in-content-item-selected-text);
-  --in-content-button-text-color-active: var(--in-content-button-text-color-hover);
-  --in-content-focus-outline-color: var(--in-content-item-selected-text);
-}
-
-xul|richlistitem[selected] xul|menulist:focus-visible {
-  outline-offset: -2px;
-}
-
-/* Use a 2px border so that selected row highlight is still visible behind
-    an existing high-contrast border that uses the background color */
-@media (prefers-contrast) {
-  xul|treechildren::-moz-tree-row(selected) {
-     border: 2px solid currentColor;
-     border-radius: 4px;
-  }
-}
-
-xul|panel[type="autocomplete-richlistbox"] {
-  background-color: var(--in-content-box-background);
-  border: 1px solid var(--in-content-box-border-color);
-  color: var(--in-content-text-color);
-}
-
-/* Trees */
-
-xul|tree {
-  appearance: none;
-  font-size: 1em;
-  border: 1px solid var(--in-content-box-border-color);
-  border-radius: 4px;
-  background-color: var(--in-content-box-background);
-  color: inherit;
-  margin: 0;
-}
-
-xul|treecols {
-  appearance: none;
-  border: none;
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
-  border-bottom: 1px solid var(--in-content-border-color);
-  overflow: clip; /* Clip border-radius */
-  padding: 0;
-}
-
-xul|treecol:not([hideheader="true"]),
-xul|treecolpicker {
-  appearance: none;
-  border: none;
-  background-color: var(--in-content-button-background);
-  color: var(--in-content-button-text-color, inherit);
-  padding: 5px 10px;
-}
-
-xul|treecol:not([hideheader="true"], [sortable="false"]):hover,
-xul|treecolpicker:hover {
-  background-color: var(--in-content-button-background-hover);
-  color: var(--in-content-button-text-color-hover);
-}
-
-xul|treecol:not([hideheader="true"], [sortable="false"]):hover:active,
-xul|treecolpicker:hover:active {
-  background-color: var(--in-content-button-background-active);
-}
-
-xul|treecol:not([hideheader="true"], :first-child),
-xul|treecolpicker {
-  border-inline-start-width: 1px;
-  border-inline-start-style: solid;
-  border-image: linear-gradient(transparent 0%, transparent 20%, var(--in-content-box-border-color) 20%, var(--in-content-box-border-color) 80%, transparent 80%, transparent 100%) 1 1;
-}
-
-xul|treecol[sortDirection]:not([hideheader="true"]) > xul|*.treecol-sortdirection {
-  list-style-image: url("chrome://global/skin/icons/sort-arrow.svg");
-  -moz-context-properties: fill;
-  fill: currentColor;
-  width: 18px;
-  height: 18px;
-}
-
-xul|treecol[sortDirection="ascending"]:not([hideheader="true"]) > xul|*.treecol-sortdirection {
-  transform: scaleY(-1);
-}
-
-/* This is the only way to increase the height of a tree row unfortunately */
-xul|treechildren::-moz-tree-row {
-  min-height: 2em;
-}
-
-xul|treechildren::-moz-tree-cell-text(hover),
-xul|treechildren::-moz-tree-twisty(hover),
-xul|treechildren::-moz-tree-image(hover) {
-  color: var(--in-content-item-hover-text);
-}
-
-xul|treechildren::-moz-tree-cell-text(selected),
-xul|treechildren::-moz-tree-twisty(selected),
-xul|treechildren::-moz-tree-image(selected) {
-  color: var(--in-content-item-selected-text);
-}
-
-/* Message bars */
-.message-bar {
-  background-color: var(--in-content-box-info-background);
-  border-radius: 4px;
-  min-height: 32px;
-  -moz-box-align: center;
-  padding: 4px;
-}
-
-.message-bar-description {
-  margin: 2px 0;
-  line-height: 1.25;
-}
-
-.message-bar-description.rtl-locale {
-  direction: rtl;
-  text-align: match-parent;
-}
-
-/* The message-bar-button styles have extra specificity to override
- * the defaults for buttons. */
-.message-bar-content > .message-bar-button {
-  background-color: var(--grey-90-a10);
-  border: none;
-  border-radius: 2px;
-  height: 24px;
-  margin-inline-start: 8px;
-  padding: 0 8px;
-}
-
-.message-bar-content > .message-bar-button:hover {
-  background-color: var(--grey-90-a20);
-}
-
-.message-bar-content > .message-bar-button:hover:active {
-  background-color: var(--grey-90-a30);
-}
-
-.message-bar-icon {
-  list-style-image: url("chrome://global/skin/icons/info.svg");
-  width: 24px;
-  height: 24px;
-  padding: 4px;
-  margin-inline-end: 4px;
-  -moz-context-properties: fill;
-  fill: currentColor;
-}
-
-/* Warning styles */
-.message-bar-warning {
-  background-color: var(--yellow-50);
-  color: var(--yellow-90);
-}
-
-.message-bar-warning > .message-bar-icon {
-  list-style-image: url("chrome://global/skin/icons/warning.svg");
-}
-
-input[type="text"][warning]:enabled:not(:focus) {
-  border-color: var(--yellow-60);
-  box-shadow: 0 0 0 1px var(--yellow-60), 0 0 0 4px var(--yellow-60-a30);
-}
-
-/* Cards */
-
-.card {
-  background: var(--in-content-box-background);
-  /* Needed for high-contrast where the border will appear. */
-  border: 1px solid transparent;
-  border-radius: 4px;
-  box-shadow: var(--card-shadow);
-  margin: 0 0 8px;
-  /* Remove the border from the overall padding. */
-  padding: calc(var(--card-padding) - 1px);
-  transition: box-shadow 150ms;
-}
-
-.card:not(.card-no-hover):hover {
-  box-shadow: var(--card-shadow-hover);
-}
-
-.card-heading-image {
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
-  margin: -16px -16px 16px;
-}
-
-.card-heading-image:dir(rtl) {
-  transform: scaleX(-1);
-}
-
-/* Sidebar footer links */
-
-.sidebar-footer-list {
-  list-style-type: none;
-  margin-block: 0 36px;
-  margin-inline: 34px 0;
-  padding: 0;
-}
-
-.sidebar-footer-link {
-  height: 36px;
-  cursor: default;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-}
-
-.sidebar-footer-link,
-.sidebar-footer-link:visited {
-  /* Override link style for :hover and :hover:active states */
-  text-decoration: none !important;
-  color: inherit;
-}
-
-xul|*.sidebar-footer-link {
-  display: -moz-box;
-  -moz-box-align: center;
-}
-
-.sidebar-footer-link:hover {
-  background-color: var(--in-content-button-background-hover);
-  color: var(--in-content-button-text-color-hover);
-}
-
-.sidebar-footer-link:hover:active:not([disabled]) {
-  background-color: var(--in-content-button-background-active);
-  color: var(--in-content-button-text-color-hover);
-}
-
-.sidebar-footer-link:-moz-focusring {
-  outline: 2px solid var(--in-content-focus-outline-color);
-  outline-offset: -2px;
-}
-
-.sidebar-footer-icon {
-  -moz-context-properties: fill, fill-opacity;
-  fill: currentColor;
-  width: 16px;
-  height: 16px;
-  margin: 10px;
-  margin-inline-start: 13px;
-}
-
-.sidebar-footer-label {
-  font-size: .9em;
-  margin: 0 4px;
-  user-select: none;
-}
-
-@media (max-width: 830px) {
-  .sidebar-footer-list {
-    margin-inline-start: 40px;
-    -moz-box-align: start;
-  }
-
-  .sidebar-footer-link {
-    width: 36px;
-    height: 36px;
-    padding-inline-start: 0;
-    margin-inline-start: 1px;
-  }
-
-  .sidebar-footer-icon {
-    margin-inline-start: 10px;
-  }
-
-  .sidebar-footer-label {
-    display: none;
-  }
-}
-
-/* Icon helper classes */
-
-xul|*.help-icon {
-  list-style-image: url("chrome://global/skin/icons/help.svg");
-}
-
-xul|*.addons-icon {
-  list-style-image: url("chrome://mozapps/skin/extensions/extension.svg");
-}
-
-/* Back button */
-
-.back-button {
-  -moz-context-properties: fill;
-  fill: currentColor;
-  background-image: url("chrome://global/skin/icons/arrow-left.svg");
-  background-repeat: no-repeat;
-  background-position: center;
-  min-width: auto;
-  width: 32px;
-  margin-block: 0;
-  margin-inline-start: 0;
-}
-
-.back-button:-moz-locale-dir(rtl),
-.back-button:dir(rtl) {
-  transform: scaleX(-1);
-}
-
-/* Adjust vertical margins for buttons in dialogs. We do this here because
- * this sheet gets inserted into the Shadow DOM for the button box in the dialog,
- * so can actually affect the button styling that way.  */
-:host(dialog[subdialog]) .dialog-button-box > button {
-  margin: 0 4px;
-  min-width: auto;
-}
+ html|input[type="color"] {
+   padding: 6px;
+   width: 50px;
+ }
+ 
+ xul|menulist[image]::part(icon) {
+   margin-inline-end: 5px;
+ }
+ 
+ xul|menulist::part(dropmarker) {
+   appearance: none;
+   margin-inline-end: 4px;
+   padding: 0;
+   border: none;
+   background-color: transparent;
+   list-style-image: url("chrome://global/skin/icons/arrow-down-12.svg");
+   -moz-context-properties: fill;
+   fill: currentColor;
+ }
+ 
+ xul|menulist::part(dropmarker-icon) {
+   width: 12px;
+   height: 12px;
+ }
+ 
+ xul|menulist > xul|menupopup {
+   appearance: none;
+ 
+   /* Reset native styles on Windows and macOS */
+   border: none;
+   background-color: transparent;
+ 
+   --panel-border-color: var(--in-content-box-border-color);
+   --panel-border-radius: 2px;
+   --panel-background: var(--in-content-box-background);
+   --panel-color: var(--in-content-text-color);
+   --panel-padding: 0;
+ }
+ 
+ xul|menulist > xul|menupopup xul|menu,
+ xul|menulist > xul|menupopup xul|menuitem {
+   appearance: none;
+   font-size: 1em;
+   padding-block: 0.2em;
+   padding-inline: 10px 30px;
+ }
+ 
+ xul|menulist > xul|menupopup > xul|menu:not([disabled="true"])[_moz-menuactive="true"],
+ xul|menulist > xul|menupopup > xul|menuitem:not([disabled="true"])[_moz-menuactive="true"] {
+   color: var(--in-content-item-hover-text);
+   background-color: var(--in-content-item-hover);
+ }
+ 
+ xul|menulist > xul|menupopup > xul|menu:not([disabled="true"])[selected="true"],
+ xul|menulist > xul|menupopup > xul|menuitem:not([disabled="true"])[selected="true"] {
+   color: var(--in-content-item-selected-text);
+   background-color: var(--in-content-item-selected);
+ }
+ 
+ xul|menulist > xul|menupopup > xul|menu[disabled="true"],
+ xul|menulist > xul|menupopup > xul|menuitem[disabled="true"] {
+   color: #999;
+   /* override the [_moz-menuactive="true"] background color from
+      global/menu.css */
+   background-color: transparent;
+ }
+ 
+ xul|menulist > xul|menupopup xul|menuseparator {
+   appearance: none;
+   margin: 0;
+   padding: 0;
+   border-top: 1px solid var(--in-content-box-border-color);
+   border-bottom: none;
+ }
+ 
+ /* textboxes */
+ 
+ html|input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]),
+ html|textarea,
+ xul|search-textbox {
+   appearance: none;
+   border: 1px solid var(--in-content-box-border-color);
+   border-radius: 4px;
+   color: inherit;
+   background-color: var(--in-content-box-background);
+ }
+ 
+ xul|search-textbox {
+   min-height: 32px;
+   padding-inline: 8px;
+ }
+ 
+ html|input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]),
+ html|textarea {
+   font-family: inherit;
+   font-size: inherit;
+   padding: 8px;
+   margin: 2px 4px;
+ }
+ 
+ html|input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]):focus,
+ html|textarea:focus,
+ xul|search-textbox[focused],
+ xul|tree:focus-visible,
+ xul|richlistbox:focus-visible {
+   border-color: transparent;
+   outline: 2px solid var(--in-content-focus-outline-color);
+   outline-offset: -1px; /* Prevents antialising around the corners */
+ }
+ 
+ html|input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]):-moz-ui-invalid,
+ html|textarea:-moz-ui-invalid {
+   border-color: transparent;
+   outline: 2px solid var(--in-content-border-invalid);
+   outline-offset: -1px; /* Prevents antialising around the corners */
+ }
+ 
+ html|input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]):disabled,
+ html|textarea:disabled,
+ xul|search-textbox[disabled="true"] {
+   opacity: 0.4;
+ }
+ 
+ /* Links */
+ 
+ html|a,
+ .text-link {
+   color: var(--in-content-link-color);
+   text-decoration: none;
+ }
+ 
+ html|a:hover,
+ .text-link:hover,
+ button.text-link:is(:not([disabled="true"]), :enabled):hover {
+   color: var(--in-content-link-color-hover);
+   text-decoration: underline;
+ }
+ 
+ html|a:visited {
+   color: var(--in-content-link-color-visited);
+ }
+ 
+ html|a:hover:active,
+ .text-link:hover:active,
+ button.text-link:is(:not([disabled="true"]), :enabled):hover:active {
+   color: var(--in-content-link-color-active);
+   text-decoration: none;
+ }
+ 
+ html|a:-moz-focusring,
+ .text-link:-moz-focusring {
+   outline: 2px solid var(--in-content-focus-outline-color);
+   outline-offset: 1px;
+   border-radius: 4px;
+ }
+ 
+ button.text-link {
+   background-color: transparent !important; /* override hover related background changes */
+   padding: 0;
+   border: 0;
+   font-weight: normal;
+   min-height: 0;
+   min-width: 0;
+ }
+ 
+ /* Checkboxes and radio buttons */
+ 
+ /* Add invisible vertical click-target */
+ xul|*.checkbox-check,
+ html|input[type="checkbox"] {
+   margin-block: 2px;
+ }
+ 
+ html|input[type="checkbox"] {
+   appearance: none;
+   height: 16px;
+   width: 16px;
+   border: 1px solid var(--checkbox-border-color);
+   background-color: var(--checkbox-unchecked-bgcolor);
+   border-radius: 2px;
+   margin-inline: 0 6px;
+   flex-shrink: 0; /* avoid shrinking inside flex container */
+ }
+ 
+ html|input[type="checkbox"]:enabled:hover {
+   background-color: var(--checkbox-unchecked-hover-bgcolor);
+ }
+ 
+ html|input[type="checkbox"]:enabled:hover:active {
+   background-color: var(--checkbox-unchecked-active-bgcolor);
+ }
+ 
+ html|input[type="checkbox"]:checked {
+   border-color: var(--checkbox-checked-border-color);
+   background-color: var(--checkbox-checked-bgcolor);
+   background-image: url("chrome://global/skin/icons/check.svg");
+   background-position: center;
+   background-repeat: no-repeat;
+   -moz-context-properties: fill;
+   fill: currentColor;
+   color: var(--checkbox-checked-color);
+   /* Style the button also when printing with "Print Backgrounds" unchecked */
+   color-adjust: exact;
+ }
+ 
+ html|input[type="checkbox"]:enabled:checked:hover {
+   background-color: var(--checkbox-checked-hover-bgcolor);
+ }
+ 
+ html|input[type="checkbox"]:enabled:checked:hover:active {
+   background-color: var(--checkbox-checked-active-bgcolor);
+ }
+ 
+ @media (prefers-contrast) {
+   html|input[type="checkbox"] {
+     /* Normalize the border-color to the in-content version following color */
+     border-color: currentColor;
+     color: var(--checkbox-border-color);
+   }
+ 
+   html|input[type="checkbox"]:not(:checked):enabled:hover {
+     /* color sets the border color in HCM in-content */
+     color: var(--checkbox-checked-border-color);
+   }
+ 
+   html|input[type="checkbox"]:checked:enabled {
+     /* color sets the border color in HCM in-content */
+     color: var(--checkbox-checked-bgcolor);
+     fill: var(--checkbox-checked-color);
+   }
+ 
+   html|input[type="checkbox"]:checked:enabled:hover {
+     fill: var(--checkbox-checked-bgcolor);
+   }
+ }
+ 
+ xul|richlistitem > xul|*.checkbox-check {
+   margin: 3px 6px;
+ }
+ 
+ html|*.radio-container-with-text,
+ html|*.toggle-container-with-text {
+   display: flex;
+   align-items: center;
+ }
+ 
+ xul|radio {
+   margin-inline-start: 0;
+   appearance: none;
+ }
+ 
+ html|input[type="radio"],
+ xul|*.radio-check {
+   appearance: none;
+   width: 16px;
+   height: 16px;
+   padding: 0;
+   border: 1px solid var(--in-content-box-border-color);
+   border-radius: 100%;
+   margin-block: 2px; /* extend the vertical clicktarget */
+   margin-inline: 0 6px;
+   background-color: var(--in-content-button-background);
+   background-position: center;
+   flex-shrink: 0; /* avoid shrinking inside flex container */
+ }
+ 
+ html|input[type="radio"]:enabled:hover,
+ xul|radio:not([disabled="true"]):hover > xul|*.radio-check {
+   background-color: var(--in-content-button-background-hover);
+   color: var(--in-content-button-text-color-hover);
+ }
+ 
+ html|input[type="radio"]:enabled:hover:active,
+ xul|radio:not([disabled="true"]):hover:active > xul|*.radio-check {
+   background-color: var(--in-content-button-background-active);
+ }
+ 
+ html|input[type="radio"]:checked,
+ xul|*.radio-check[selected] {
+   -moz-context-properties: fill;
+   fill: currentColor;
+   color: var(--in-content-primary-button-text-color);
+   background-color: var(--in-content-primary-button-background);
+   background-image: url("chrome://global/skin/icons/radio.svg");
+   border-color: var(--in-content-primary-button-border-color);
+ 
+   /* Style the button also when printing with "Print Backgrounds" unchecked */
+   color-adjust: exact;
+ }
+ 
+ html|input[type="radio"]:enabled:checked:hover,
+ xul|radio:not([disabled="true"])[selected]:hover > xul|*.radio-check {
+   background-color: var(--in-content-primary-button-background-hover);
+   color: var(--in-content-primary-button-text-color-hover);
+   border-color: var(--in-content-primary-button-border-hover);
+ }
+ 
+ html|input[type="radio"]:enabled:checked:hover:active,
+ xul|radio:not([disabled="true"])[selected]:hover:active > xul|*.radio-check {
+   background-color: var(--in-content-primary-button-background-active);
+ }
+ 
+ xul|*.radio-label-box {
+   margin-inline: 0 8px;
+   padding-inline-start: 0;
+ }
+ 
+ /* Disabled checkboxes, radios and labels */
+ 
+ xul|checkbox[disabled="true"],
+ xul|radio[disabled="true"],
+ xul|label[disabled="true"] {
+   color: inherit;
+ }
+ 
+ html|input[type="checkbox"]:disabled,
+ html|input[type="radio"]:disabled,
+ xul|checkbox[disabled="true"],
+ xul|radio[disabled="true"],
+ xul|label[disabled="true"] {
+   opacity: 0.5;
+ }
+ 
+ /* Category List */
+ 
+ #categories {
+   appearance: none;
+   background-color: initial; /* override the background-color set on all richlistboxes in common.inc.css */
+   margin: 70px 0 0;
+   border-width: 0;
+   width: var(--in-content-sidebar-width);
+   outline: none;
+ }
+ 
+ @media print {
+   #categories {
+     display: none;
+   }
+ }
+ 
+ html|*#categories {
+   box-sizing: border-box;
+   padding: 1px;
+ }
+ 
+ #categories > .category {
+   border-radius: 4px;
+   min-height: 48px;
+   appearance: none;
+   color: inherit;
+   margin-inline-start: 34px;
+   padding-inline: 10px;
+   transition: background-color 150ms;
+ }
+ 
+ html|*#categories > html|*.category {
+   border: 0;
+   background-color: initial;
+   background-size: 24px;
+   background-repeat: no-repeat;
+   background-position-x: 10px;
+   background-position-y: 12px;
+   margin-inline-end: 0;
+   min-width: auto;
+   padding-inline-start: 34px;
+   text-align: start;
+   -moz-context-properties: fill, fill-opacity;
+   fill: currentColor;
+ }
+ 
+ html|*#categories > html|*.category:dir(rtl) {
+   background-position-x: right 10px;
+ }
+ 
+ #categories > .category:hover {
+   background-color: var(--in-content-button-background-hover);
+   color: var(--in-content-button-text-color-hover);
+ }
+ 
+ #categories > .category:hover:active {
+   background-color: var(--in-content-button-background-active);
+ }
+ 
+ #categories > .category[selected],
+ #categories > .category.selected {
+   color: var(--in-content-accent-color);
+ }
+ 
+ #categories > .category[selected]:not(:hover) {
+   /* override richlistitem selected style while letting hover style above apply */
+   background-color: transparent;
+ }
+ 
+ #categories > .category[selected]:hover:active,
+ #categories > .category.selected:hover:active {
+   color: var(--in-content-accent-color-active);
+ }
+ 
+ @media (prefers-contrast) {
+   #categories > .category {
+     /* The transition causes issues with the text getting a background while
+      * transitioning and it looks weird. */
+     transition: none;
+   }
+ 
+   #categories > .category[selected]:hover,
+   #categories > .category[selected]:hover:active,
+   #categories > .category.selected:hover,
+   #categories > .category.selected:hover:active,
+   #categories > .category[selected]:not(:hover),
+   #categories > .category.selected:not(:hover) {
+     background-color: var(--in-content-button-background-hover);
+     color: var(--in-content-button-text-color-hover);
+   }
+ }
+ 
+ #categories[keyboard-navigation="true"]:-moz-focusring > .category[current],
+ #categories > .category:-moz-focusring {
+   outline: 2px solid var(--in-content-focus-outline-color);
+   outline-offset: -2px;
+ }
+ 
+ html|*#categories[last-input-type="mouse"] > html|button.category:-moz-focusring {
+   outline: none;
+ }
+ 
+ .category-name {
+   font-size: 1.07em;
+   line-height: 1.4em;
+   padding-inline-start: 9px;
+   margin: 0;
+   user-select: none;
+ }
+ 
+ .category-icon {
+   width: 24px;
+   height: 24px;
+   -moz-context-properties: fill, fill-opacity;
+   fill: currentColor;
+ }
+ 
+ .category[selected] > .category-icon,
+ .category.selected > .category-icon {
+   fill-opacity: 1;
+ }
+ 
+ @media (max-width: 830px) {
+   :root {
+     --in-content-sidebar-width: 118px;
+   }
+ 
+   html|*.category:not(.category-no-icon) > html|*.category-name,
+   .category-icon + .category-name {
+     display: none;
+   }
+ 
+   #categories > .category {
+     padding-inline-start: 12px; /* make category icons align center */
+     margin-inline-end: 33px;
+   }
+ 
+   html|*#categories > html|*.category {
+     width: 48px;
+     min-width: auto;
+     box-sizing: border-box;
+   }
+ 
+   html|*#categories > html|*.category,
+   /* We need to override the full-width RTL rule, so explicitly specify RTL. */
+   html|*#categories > html|*.category:dir(rtl) {
+     background-position: center;
+   }
+ 
+   .main-content {
+     padding-inline: 0;
+   }
+ 
+   .pane-container {
+     margin-inline-end: 10px;
+   }
+ }
+ 
+ /* header */
+ 
+ .header {
+   margin-inline-end: 4px; /* add the 4px end-margin of other elements */
+   margin-bottom: 15px;
+   padding-bottom: 15px;
+   -moz-box-align: baseline;
+ }
+ 
+ .header-name {
+   font-size: 1.46em;
+   font-weight: 300;
+   line-height: 1.3em;
+   margin: 0;
+ }
+ 
+ /* List boxes */
+ 
+ html|select[size][multiple],
+ xul|listheader,
+ xul|richlistbox {
+   appearance: none;
+   margin-inline: 0;
+   background-color: var(--in-content-box-background);
+   border: 1px solid var(--in-content-box-border-color);
+   border-radius: 4px;
+   color: var(--in-content-text-color);
+ }
+ 
+ xul|listheader {
+   border-bottom: none;
+   border-bottom-left-radius: 0;
+   border-bottom-right-radius: 0;
+   padding-bottom: 1px;
+   box-shadow: inset 0 -1px var(--in-content-border-color);
+   overflow: clip; /* Clip border-radius */
+ }
+ 
+ xul|listheader + xul|richlistbox {
+   margin-top: 0;
+   border-top: none;
+   border-top-left-radius: 0;
+   border-top-right-radius: 0;
+ }
+ 
+ html|select[size][multiple] > html|option,
+ xul|treechildren::-moz-tree-row {
+   padding: 0.3em;
+   margin: 0;
+   border: none;
+   border-radius: 0;
+   background-image: none;
+ }
+ 
+ xul|treechildren::-moz-tree-row(multicol, odd) {
+   background-color: var(--in-content-box-background-odd);
+ }
+ 
+ html|select[size][multiple] > html|option:hover,
+ xul|treechildren::-moz-tree-row(hover) {
+   background-color: var(--in-content-item-hover);
+   color: var(--in-content-item-hover-text);
+ }
+ 
+ xul|richlistbox > xul|richlistitem[selected],
+ xul|treechildren::-moz-tree-row(selected) {
+   background-color: var(--in-content-item-selected);
+   color: var(--in-content-item-selected-text);
+ }
+ 
+ xul|richlistbox:not(#categories) > xul|richlistitem[selected] {
+   /* Ensure buttons/menulists inside richlistitems (containers, applications) look OK */
+   --in-content-button-background: color-mix(in srgb, currentColor 15%, transparent);
+   --in-content-button-background-hover: color-mix(in srgb, currentColor 30%, transparent);
+   --in-content-button-background-active: color-mix(in srgb, currentColor 45%, transparent);
+   --in-content-button-text-color: var(--in-content-item-selected-text);
+   --in-content-button-text-color-hover: var(--in-content-item-selected-text);
+   --in-content-button-text-color-active: var(--in-content-button-text-color-hover);
+   --in-content-focus-outline-color: var(--in-content-item-selected-text);
+ }
+ 
+ xul|richlistitem[selected] xul|menulist:focus-visible {
+   outline-offset: -2px;
+ }
+ 
+ /* Use a 2px border so that selected row highlight is still visible behind
+     an existing high-contrast border that uses the background color */
+ @media (prefers-contrast) {
+   xul|treechildren::-moz-tree-row(selected) {
+      border: 2px solid currentColor;
+      border-radius: 4px;
+   }
+ }
+ 
+ xul|panel[type="autocomplete-richlistbox"] {
+   background-color: var(--in-content-box-background);
+   border: 1px solid var(--in-content-box-border-color);
+   color: var(--in-content-text-color);
+ }
+ 
+ /* Trees */
+ 
+ xul|tree {
+   appearance: none;
+   font-size: 1em;
+   border: 1px solid var(--in-content-box-border-color);
+   border-radius: 4px;
+   background-color: var(--in-content-box-background);
+   color: inherit;
+   margin: 0;
+ }
+ 
+ xul|treecols {
+   appearance: none;
+   border: none;
+   border-top-left-radius: 4px;
+   border-top-right-radius: 4px;
+   border-bottom: 1px solid var(--in-content-border-color);
+   overflow: clip; /* Clip border-radius */
+   padding: 0;
+ }
+ 
+ xul|treecol:not([hideheader="true"]),
+ xul|treecolpicker {
+   appearance: none;
+   border: none;
+   background-color: var(--in-content-button-background);
+   color: var(--in-content-button-text-color, inherit);
+   padding: 5px 10px;
+ }
+ 
+ xul|treecol:not([hideheader="true"], [sortable="false"]):hover,
+ xul|treecolpicker:hover {
+   background-color: var(--in-content-button-background-hover);
+   color: var(--in-content-button-text-color-hover);
+ }
+ 
+ xul|treecol:not([hideheader="true"], [sortable="false"]):hover:active,
+ xul|treecolpicker:hover:active {
+   background-color: var(--in-content-button-background-active);
+ }
+ 
+ xul|treecol:not([hideheader="true"], :first-child),
+ xul|treecolpicker {
+   border-inline-start-width: 1px;
+   border-inline-start-style: solid;
+   border-image: linear-gradient(transparent 0%, transparent 20%, var(--in-content-box-border-color) 20%, var(--in-content-box-border-color) 80%, transparent 80%, transparent 100%) 1 1;
+ }
+ 
+ xul|treecol[sortDirection]:not([hideheader="true"]) > xul|*.treecol-sortdirection {
+   list-style-image: url("chrome://global/skin/icons/sort-arrow.svg");
+   -moz-context-properties: fill;
+   fill: currentColor;
+   width: 18px;
+   height: 18px;
+ }
+ 
+ xul|treecol[sortDirection="ascending"]:not([hideheader="true"]) > xul|*.treecol-sortdirection {
+   transform: scaleY(-1);
+ }
+ 
+ /* This is the only way to increase the height of a tree row unfortunately */
+ xul|treechildren::-moz-tree-row {
+   min-height: 2em;
+ }
+ 
+ xul|treechildren::-moz-tree-cell-text(hover),
+ xul|treechildren::-moz-tree-twisty(hover),
+ xul|treechildren::-moz-tree-image(hover) {
+   color: var(--in-content-item-hover-text);
+ }
+ 
+ xul|treechildren::-moz-tree-cell-text(selected),
+ xul|treechildren::-moz-tree-twisty(selected),
+ xul|treechildren::-moz-tree-image(selected) {
+   color: var(--in-content-item-selected-text);
+ }
+ 
+ /* Message bars */
+ .message-bar {
+   background-color: var(--in-content-box-info-background);
+   border-radius: 4px;
+   min-height: 32px;
+   -moz-box-align: center;
+   padding: 4px;
+ }
+ 
+ .message-bar-description {
+   margin: 2px 0;
+   line-height: 1.25;
+ }
+ 
+ .message-bar-description.rtl-locale {
+   direction: rtl;
+   text-align: match-parent;
+ }
+ 
+ /* The message-bar-button styles have extra specificity to override
+  * the defaults for buttons. */
+ .message-bar-content > .message-bar-button {
+   background-color: var(--grey-90-a10);
+   border: none;
+   border-radius: 2px;
+   height: 24px;
+   margin-inline-start: 8px;
+   padding: 0 8px;
+ }
+ 
+ .message-bar-content > .message-bar-button:hover {
+   background-color: var(--grey-90-a20);
+ }
+ 
+ .message-bar-content > .message-bar-button:hover:active {
+   background-color: var(--grey-90-a30);
+ }
+ 
+ .message-bar-icon {
+   list-style-image: url("chrome://global/skin/icons/info.svg");
+   width: 24px;
+   height: 24px;
+   padding: 4px;
+   margin-inline-end: 4px;
+   -moz-context-properties: fill;
+   fill: currentColor;
+ }
+ 
+ /* Warning styles */
+ .message-bar-warning {
+   background-color: var(--yellow-50);
+   color: var(--yellow-90);
+ }
+ 
+ .message-bar-warning > .message-bar-icon {
+   list-style-image: url("chrome://global/skin/icons/warning.svg");
+ }
+ 
+ input[type="text"][warning]:enabled:not(:focus) {
+   border-color: var(--yellow-60);
+   box-shadow: 0 0 0 1px var(--yellow-60), 0 0 0 4px var(--yellow-60-a30);
+ }
+ 
+ /* Cards */
+ 
+ .card {
+   background: var(--in-content-box-background);
+   /* Needed for high-contrast where the border will appear. */
+   border: 1px solid transparent;
+   border-radius: 4px;
+   box-shadow: var(--card-shadow);
+   margin: 0 0 8px;
+   /* Remove the border from the overall padding. */
+   padding: calc(var(--card-padding) - 1px);
+   transition: box-shadow 150ms;
+ }
+ 
+ .card:not(.card-no-hover):hover {
+   box-shadow: var(--card-shadow-hover);
+ }
+ 
+ .card-heading-image {
+   border-top-left-radius: 4px;
+   border-top-right-radius: 4px;
+   margin: -16px -16px 16px;
+ }
+ 
+ .card-heading-image:dir(rtl) {
+   transform: scaleX(-1);
+ }
+ 
+ /* Sidebar footer links */
+ 
+ .sidebar-footer-list {
+   list-style-type: none;
+   margin-block: 0 36px;
+   margin-inline: 34px 0;
+   padding: 0;
+ }
+ 
+ .sidebar-footer-link {
+   height: 36px;
+   cursor: default;
+   border-radius: 4px;
+   display: flex;
+   align-items: center;
+ }
+ 
+ .sidebar-footer-link,
+ .sidebar-footer-link:visited {
+   /* Override link style for :hover and :hover:active states */
+   text-decoration: none !important;
+   color: inherit;
+ }
+ 
+ xul|*.sidebar-footer-link {
+   display: -moz-box;
+   -moz-box-align: center;
+ }
+ 
+ .sidebar-footer-link:hover {
+   background-color: var(--in-content-button-background-hover);
+   color: var(--in-content-button-text-color-hover);
+ }
+ 
+ .sidebar-footer-link:hover:active:not([disabled]) {
+   background-color: var(--in-content-button-background-active);
+   color: var(--in-content-button-text-color-hover);
+ }
+ 
+ .sidebar-footer-link:-moz-focusring {
+   outline: 2px solid var(--in-content-focus-outline-color);
+   outline-offset: -2px;
+ }
+ 
+ .sidebar-footer-icon {
+   -moz-context-properties: fill, fill-opacity;
+   fill: currentColor;
+   width: 16px;
+   height: 16px;
+   margin: 10px;
+   margin-inline-start: 13px;
+ }
+ 
+ .sidebar-footer-label {
+   font-size: .9em;
+   margin: 0 4px;
+   user-select: none;
+ }
+ 
+ @media (max-width: 830px) {
+   .sidebar-footer-list {
+     margin-inline-start: 40px;
+     -moz-box-align: start;
+   }
+ 
+   .sidebar-footer-link {
+     width: 36px;
+     height: 36px;
+     padding-inline-start: 0;
+     margin-inline-start: 1px;
+   }
+ 
+   .sidebar-footer-icon {
+     margin-inline-start: 10px;
+   }
+ 
+   .sidebar-footer-label {
+     display: none;
+   }
+ }
+ 
+ /* Icon helper classes */
+ 
+ xul|*.help-icon {
+   list-style-image: url("chrome://global/skin/icons/help.svg");
+ }
+ 
+ xul|*.addons-icon {
+   list-style-image: url("chrome://mozapps/skin/extensions/extension.svg");
+ }
+ 
+ /* Back button */
+ 
+ .back-button {
+   -moz-context-properties: fill;
+   fill: currentColor;
+   background-image: url("chrome://global/skin/icons/arrow-left.svg");
+   background-repeat: no-repeat;
+   background-position: center;
+   min-width: auto;
+   width: 32px;
+   margin-block: 0;
+   margin-inline-start: 0;
+ }
+ 
+ .back-button:-moz-locale-dir(rtl),
+ .back-button:dir(rtl) {
+   transform: scaleX(-1);
+ }
+ 
+ /* Adjust vertical margins for buttons in dialogs. We do this here because
+  * this sheet gets inserted into the Shadow DOM for the button box in the dialog,
+  * so can actually affect the button styling that way.  */
+ :host(dialog[subdialog]) .dialog-button-box > button {
+   margin: 0 4px;
+   min-width: auto;
+ }
+ 

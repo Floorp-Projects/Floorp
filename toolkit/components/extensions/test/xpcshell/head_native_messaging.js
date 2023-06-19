@@ -105,7 +105,7 @@ async function setupHosts(scripts) {
       break;
 
     case "win":
-      const REGKEY = String.raw`Software\Mozilla\NativeMessagingHosts`;
+      const REGKEY = String.raw`Software\Ablaze\NativeMessagingHosts`;
 
       let registry = new MockRegistry();
       registerCleanupFunction(() => {

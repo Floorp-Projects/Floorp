@@ -10327,12 +10327,12 @@ bool PresShell::VerifyIncrementalReflow() {
   if (!ok) {
     nsString stra;
     static int num = 0;
-    stra.AppendLiteral("C:\\mozilla\\mozilla\\debug\\filea");
+    stra.AppendLiteral("C:\\Ablaze\\mozilla\\debug\\filea");
     stra.AppendInt(num);
     stra.AppendLiteral(".png");
     gfxUtils::WriteAsPNG(presShell, stra);
     nsString strb;
-    strb.AppendLiteral("C:\\mozilla\\mozilla\\debug\\fileb");
+    strb.AppendLiteral("C:\\Ablaze\\mozilla\\debug\\fileb");
     strb.AppendInt(num);
     strb.AppendLiteral(".png");
     gfxUtils::WriteAsPNG(presShell, strb);

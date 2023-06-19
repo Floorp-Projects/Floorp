@@ -1,0 +1,20 @@
+{
+  "extensionName": {
+    "message": "Wikipedia (is)"
+  },
+  "extensionDescription": {
+    "message": "Wikipedia, the free encyclopedia"
+  },
+  "searchUrl": {
+    "message": "https://is.wikipedia.org/wiki/Kerfissíða:Leit"
+  },
+  "searchForm": {
+    "message": "https://is.wikipedia.org/wiki/Kerfissíða:Leit?search={searchTerms}&sourceid=Mozilla-search"
+  },
+  "suggestUrl": {
+    "message": "https://is.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"
+  },
+  "searchUrlGetParams": {
+    "message": "search={searchTerms}&sourceid=Mozilla-search"
+  }
+}

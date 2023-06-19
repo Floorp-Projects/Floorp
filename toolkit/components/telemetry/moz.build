@@ -8,10 +8,6 @@ include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = "xul"
 
-DIRS = [
-    "pingsender",
-]
-
 DEFINES["MOZ_APP_VERSION"] = '"%s"' % CONFIG["MOZ_APP_VERSION"]
 
 for var in ("MOZ_BACKGROUNDTASKS",):

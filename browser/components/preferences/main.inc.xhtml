@@ -5,6 +5,7 @@
 <!-- General panel -->
 
 <script src="chrome://browser/content/preferences/main.js"/>
+<script src="chrome://browser/content/preferences/floorp-main.js"/>
 
 #ifdef MOZ_UPDATER
   <script src="chrome://browser/content/aboutDialog-appUpdater.js"/>
@@ -59,7 +60,7 @@
 <!-- Tab preferences -->
 <groupbox data-category="paneGeneral"
           hidden="true">
-    <label><html:h2 data-l10n-id="tabs-group-header"/></label>
+   <label><html:h2 data-l10n-id="tabs-group-header"/></label> 
 
     <checkbox id="ctrlTabRecentlyUsedOrder" data-l10n-id="ctrl-tab-recently-used-order"
               preference="browser.ctrlTab.sortByRecentlyUsed"/>
@@ -78,12 +79,42 @@
 
 #ifndef XP_WIN
     <checkbox id="warnOnQuitKey" preference="browser.warnOnQuitShortcut"/>
-#endif
-
+#endif 
 #ifdef XP_WIN
     <checkbox id="showTabsInTaskbar" data-l10n-id="show-tabs-in-taskbar"
               preference="browser.taskbar.previews.enable"/>
 #endif
+    <checkbox  data-l10n-id="enable-multitab" preference="floorp.enable.multitab"
+               class="multiRowTabs" id="multitabar"/>
+    <checkbox  data-l10n-id="multirow-tabs-newtab" preference="floorp.browser.tabbar.multirow.newtab-inside.enabled"
+               class="multiRowTabs" id="multitabarNewTab"/>
+    <checkbox  data-l10n-id="multirow-tabs-limit" preference="floorp.browser.tabbar.multirow.max.enabled"
+               class="multiRowTabs" id="multitabarLimit"/>
+    <hbox>
+      <description flex="1" data-l10n-id="multirow-tabs-value"/>
+      <html:input type="number" min="1" value="0" id="MultirowValue"/>
+    </hbox>
+
+    <checkbox  data-l10n-id="enable-tab-sleep"
+               id="tab-sleep" preference="floorp.tabsleep.enabled"/>
+    <hbox>
+      <description flex="1" data-l10n-id="tab-sleep-timeout-minutes-value"/>
+      <html:input type="number" min="0" value="0" id="tabSleepTimeoutMinutesValue"/>
+    </hbox>
+
+    <checkbox  data-l10n-id="enable-tab-scroll-change"
+               id="tabscroll" preference="toolkit.tabbox.switchByScrolling"/>
+
+    <checkbox  data-l10n-id="enable-double-click-block" 
+               id="doubleClickClose" preference="browser.tabs.closeTabByDblclick"/>
+
+    <checkbox  data-l10n-id="enable-show-pinned-tabs-title"
+               id="showPinnedTabsTitle" preference="floorp.tabs.showPinnedTabsTitle"/>
+
+    <hbox>
+      <description flex="1" data-l10n-id="tab-width"/>
+      <html:input type="number" min="50" value="0" id="tabWidthValue"/>
+    </hbox>
 
     <vbox id="browserContainersbox" hidden="true">
       <hbox id="browserContainersExtensionContent"
@@ -118,12 +149,163 @@
     </vbox>
 </groupbox>
 
+<groupbox data-category="paneGeneral" hidden="true">
+   <html:h2 data-l10n-id="tabbar-preference"/>
+   <radiogroup preference="floorp.browser.tabbar.settings">
+     <radio value="0" class="tabbar" data-l10n-id="None-mode"/>
+     <radio value="1" class="tabbar" data-l10n-id="hide-horizontality-tabs"/>
+     <radio value="2" class="tabbar" data-l10n-id="verticalTab-setting"/>
+     <radio value="3" class="tabbar" data-l10n-id="move-tabbar-position"/>
+     <radio value="4" class="tabbar" data-l10n-id="tabbar-on-bottom"/>
+    </radiogroup>
+  
+   <html:h2 data-l10n-id="bookmarks-bar-settings"/>
+
+    <checkbox preference="floorp.bookmarks.bar.focus.mode"
+              id="bookmarkfocusmode" data-l10n-id="bookmarks-focus-mode"/>
+
+    <checkbox preference="floorp.bookmarks.fakestatus.mode"
+              id="bookmarkbottomofwindow" data-l10n-id="bookmarks-bottom-mode"/>
+
+   <html:h2 data-l10n-id="nav-bar-settings"/>
+
+    <checkbox preference="floorp.navbar.bottom"
+              id="nav-bar-bottom" data-l10n-id="show-nav-bar-bottom"/>
+
+
+   <html:h2 id="sidebarUI" data-l10n-id="sidebar-preferences"/>
+   <checkbox preference="floorp.browser.sidebar.enable" 
+              id="enable-sidebar2" data-l10n-id="enable-sidebar2" class="needreboot"/>             
+   <checkbox preference="floorp.browser.sidebar.right" 
+              id="sidebarposition" data-l10n-id="view-sidebar2-right"/>
+  <hbox>
+    <description flex="1" data-l10n-id="sidebar2-global-width"/>
+    <html:input type="number" min="186" value="0" id="GlobalWidth"/>
+  </hbox>
+  <hbox>
+    <description flex="1" data-l10n-id="custom-URL-option"/>
+    <button  data-l10n-id="set-custom-URL-button" is="highlightable-button"
+             class="accessory-button" id="SetCustomURL"/>
+  </hbox>
+  <hbox>
+    <description flex="1" data-l10n-id="use-icon-provider-option"/>
+    <menulist id="useIconProvider" preference="floorp.browser.sidebar.useIconProvider">
+      <menupopup>
+        <menuitem value="google" data-l10n-id="use-icon-provider-option-google"/>
+        <menuitem value="duckduckgo" data-l10n-id="use-icon-provider-option-duckduckgo"/>
+        <menuitem value="yandex" data-l10n-id="use-icon-provider-option-yandex"/>
+        <menuitem value="hatena" data-l10n-id="use-icon-provider-option-hatena"/>
+      </menupopup>
+    </menulist>
+  </hbox>
+   
+   <html:h2 id="treestyletab" data-l10n-id="treestyletabSettings-l10"/>
+
+    <checkbox preference="floorp.Tree-type.verticaltab.optimization" 
+              id="treestyletabSettings" data-l10n-id="treestyletab-Settings"/>
+    <hbox>
+     <description flex="1" data-l10n-id="treestyletab-open-option"/>
+     <button data-l10n-id="click-to-option" is="highlightable-button" 
+             id="treestyletaboption" class="accessory-button"/>
+    </hbox>
+
+  <html:h2 data-l10n-id="preferences-tabs-newtab-position"/>
+    <radiogroup id="openNewTabPosition" preference="floorp.browser.tabs.openNewTabPosition">
+    <radio  value="-1"  data-l10n-id="open-new-tab-use-default"/>
+     <radio value="0" data-l10n-id="open-new-tab-at-the-end"/>
+     <radio value="1" data-l10n-id="open-new-tab-next-to-current"/>
+    </radiogroup>
+</groupbox>
+
 <hbox id="languageAndAppearanceCategory"
       class="subcategory"
       hidden="true"
       data-category="paneGeneral">
   <html:h1 data-l10n-id="language-and-appearance-header"/>
 </hbox>
+
+<!--デザイン設定 -->
+ <groupbox id="SystemThemeGroup" data-category="paneGeneral" hidden="true">
+    <label><html:h2 data-l10n-id="ui-preference"/></label>
+    <description class="tip-caption" data-l10n-id="preferences-browser-appearance-description"/>
+    <radiogroup  preference="floorp.browser.user.interface">
+     <radio value="1" class="themes"  data-l10n-id="firefox-proton"/>
+      <label>
+        <div id="proton"></div>  
+      </label>
+    
+      <radio value="2" class="themes" data-l10n-id="firefox-proton-fix"/>
+      <label>
+        <div id="proton-fix"></div>  
+      </label>
+    
+      <radio value="3" class="themes" data-l10n-id="firefox-photon-lepton" flex="1"/>
+      <label>
+        <div id="photon"></div>    
+      </label>
+      <hbox>
+        <spacer flex="1"/>
+      <button id="leptonButton"
+            is="highlightable-button"
+            class="accessory-button"
+            data-l10n-id="lepton-preference-button"/>
+      </hbox>
+    
+      <radio value="8" class="themes" data-l10n-id="floorp-fluerialUI"/>
+      <label>
+        <div id="fluerialUI"></div>  
+      </label>
+      
+      <div id="Windows-only">
+      <radio value="5" class="themes" data-l10n-id="floorp-fluentUI"/>
+      <label>
+        <div id="fluentui"></div> 
+      </label>
+      </div>
+
+      <div id="Linux-only">
+ <!--only linux-->
+      <radio value="6" class="themes" data-l10n-id="floorp-gnomeUI"/>
+      <label>
+        <div id="gnomeUI"></div>
+      </label>
+      </div>
+      
+      <radio value="4" class="themes"  data-l10n-id="floorp-legacy"/>
+      <label>
+        <div id="floorplegacy"></div>  
+      </label>
+
+    </radiogroup>
+
+    <label><html:h2 data-l10n-id="other-preference"/></label>
+    <hbox align="center">
+      <checkbox preference="floorp.enable.dualtheme"
+                id="dualtheme_enable" data-l10n-id="dualtheme-enable"/> 
+      <label class="learnMore" is="text-link" href="https://blog.ablaze.one/2449/2022-10-10/" data-l10n-id="do-not-track-learn-more"></label>
+    </hbox>
+
+#ifdef XP_WIN
+    <hbox align="center">
+      <checkbox preference="floorp.material.effect.enable"
+                id="micaforeveryone" data-l10n-id="material-effect"/>
+      <label class="learnMore" is="text-link" href="https://support.ablaze.one/articles/floorp/mica-for-everyone" data-l10n-id="do-not-track-learn-more"></label>
+    </hbox>
+#endif
+<checkbox preference="floorp.delete.browser.border" data-l10n-id="delete-border-and-roundup-option" />
+
+    <label>
+      <html:h2 data-l10n-id="preferences-theme-appearance-header"/>
+    </label>
+    <label>
+    <description data-l10n-id="system-color-settings"></description>
+    </label>
+    <radiogroup id="SystemThemeColorGroup"  preference="floorp.chrome.theme.mode">
+      <radio value="1"  data-l10n-id="system-theme-dark"/>
+      <radio value="0"  data-l10n-id="system-theme-light"/>
+      <radio value="-1" data-l10n-id="system-theme-auto"/>
+    </radiogroup>
+ </groupbox>
 
 <!-- Website appearance -->
 <groupbox id="webAppearanceGroup" data-category="paneGeneral" hidden="true">
@@ -396,6 +578,11 @@
   <checkbox id="checkSpelling"
           data-l10n-id="check-user-spelling"
           preference="layout.spellcheckDefault"/>
+  <hbox>
+  <description flex="1" data-l10n-id="floorp-translater"/>
+  <button  data-l10n-id="click-to-option" is="highlightable-button" 
+    class="accessory-button" id="translateoption"/>
+  </hbox>
 </groupbox>
 
 <!-- Files and Applications -->
@@ -426,6 +613,20 @@
   <checkbox id="alwaysAsk"
             data-l10n-id="download-always-ask-where"
             preference="browser.download.useDownloadDir"/>
+  <checkbox 
+            data-l10n-id="download-mgr-UI"
+            preference="floorp.legacy.dlui.enable"/>
+  <checkbox 
+            data-l10n-id="downloading-red-color"
+            preference="floorp.downloading.red.color"/>
+  <label><description data-l10n-id="download-notification-preferences"/></label>
+  <radiogroup id="handleNewFileTypes" preference="floorp.download.notification">
+     <radio value="1" data-l10n-id="start-always-notify"/>
+     <radio value="2" data-l10n-id="finish-always-notify"/>
+     <radio value="3" data-l10n-id="always-notify"/>
+     <radio value="4" data-l10n-id="do-not-notify"/>
+  </radiogroup>
+
 </groupbox>
 
 <groupbox id="applicationsGroup" data-category="paneGeneral" hidden="true">
@@ -487,8 +688,8 @@
       <description id="updateAppInfo">
         <html:a id="releasenotes" target="_blank" data-l10n-name="learn-more" class="learnMore text-link" hidden="true"/>
       </description>
-      <description id="distribution" class="text-blurb" hidden="true"/>
-      <description id="distributionId" class="text-blurb" hidden="true"/>
+      <description style="display: none !important" id="distribution" class="text-blurb" hidden="true"/>
+      <description style="display: none !important" id="distributionId" class="text-blurb" hidden="true"/>
     </vbox>
 #ifdef MOZ_UPDATER
     <spacer flex="1"/>
@@ -642,6 +843,13 @@
             preference="app.update.suppressPrompts"/>
 #endif
 #endif
+
+  <html:h2 data-l10n-id="floorp-updater" class="floorp-updater"/>
+    <checkbox preference="enable.floorp.update" class="floorp-updater"
+              id="floorpupdaterpref" data-l10n-id="enable-floorp-updater"/>
+
+    <checkbox preference="enable.floorp.updater.latest" class="floorp-updater"
+              id="latestnotify" data-l10n-id="floorp-update-latest"/>
 </groupbox>
 
 <hbox id="performanceCategory"
@@ -654,6 +862,16 @@
 <!-- Performance -->
 <groupbox id="performanceGroup" data-category="paneGeneral" hidden="true">
   <label class="search-header" hidden="true"><html:h2 data-l10n-id="performance-title"/></label>
+  <hbox>
+  <label id="processCount" data-l10n-id="memory-and-performance"/>
+     <menulist id="dom-ipc-processCount" preference="dom.ipc.processCount">
+         <menupopup>
+           <menuitem data-l10n-id="min-memory" value="1"/>
+           <menuitem data-l10n-id="balance-memory" value="4"/>
+           <menuitem data-l10n-id="max-memory" value="8"/>
+         </menupopup>
+    </menulist>
+  </hbox>
 
   <hbox align="center">
     <checkbox id="useRecommendedPerformanceSettings"
@@ -689,6 +907,28 @@
     </description>
   </vbox>
 </groupbox>
+
+#if defined(XP_WIN) || defined(XP_LINUX)
+ <hbox id="openInExternalCategory"
+      class="subcategory"
+      hidden="true"
+      data-category="paneGeneral">
+   <html:h1 data-l10n-id="openInExternal-title"/>
+ </hbox>
+
+ <groupbox id="openInExternalGroup" data-category="paneGeneral" hidden="true">
+    <checkbox preference="floorp.openLinkInExternal.enabled" data-l10n-id="open-link-in-external-enabled-option" class="needreboot"/>
+    <hbox>
+      <description flex="1" data-l10n-id="open-link-in-external-select-browser-option"/>
+      <menulist id="openLinkInExternalSelectBrowser" preference="floorp.openLinkInExternal.browserId">
+        <menupopup>
+          <menuitem value="" data-l10n-id="open-link-in-external-select-browser-option-default"/>
+          <menuseparator/>
+        </menupopup>
+      </menulist>
+    </hbox>
+ </groupbox>
+#endif
 
 <hbox id="browsingCategory"
       class="subcategory"
@@ -738,6 +978,24 @@
             preference="media.hardwaremediakeys.enabled"/>
     <label id="mediaControlLearnMore" class="learnMore" data-l10n-id="browsing-media-control-learn-more" is="text-link"/>
   </hbox>
+    <checkbox preference="floorp.search.top.mode"
+              id="searchbartop" data-l10n-id="Search-positon-top"/>
+
+    <checkbox preference="floorp.enable.auto.restart"
+              id="autorestart" data-l10n-id="allow-auto-restart" />
+    <hbox>  
+     <checkbox preference="toolkit.legacyUserProfileCustomizations.script" 
+               id ="legacytoolkit" data-l10n-id="enable-userscript" class="needreboot"/>
+     <label class="learnMore" is="text-link" href="https://support.ablaze.one/articles/floorp/userChromeJSAndLegacyAddons"
+            data-l10n-id="do-not-track-learn-more"/>
+    </hbox>  
+    <description class="indent tip-caption" data-l10n-id="about-legacy-components"/>
+
+    <checkbox id="disableExtensionCheckCompatibility" data-l10n-id="disable-extension-check-compatibility-option"/>
+    <checkbox preference="floorp.browser.rest.mode"
+              id="restmode" data-l10n-id="browser-rest-mode"/>
+    <checkbox preference="floorp.disable.fullscreen.notification"
+              id="disable-fullscreen-notify" data-l10n-id="disable-fullscreen-notification"/>
   <hbox align="center" data-subcategory="cfraddons">
     <checkbox id="cfrRecommendations"
             class="tail-with-learn-more"
@@ -752,6 +1010,16 @@
             preference="browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features"/>
     <label id="cfrFeaturesLearnMore" class="learnMore" data-l10n-id="browsing-cfr-recommendations-learn-more" is="text-link"/>
   </hbox>
+  <label><html:h2 data-l10n-id="UserAgent-preference"/></label>
+   <radiogroup id="floorpUAs" preference="floorp.browser.UserAgent">
+     <radio value="0" data-l10n-id="default-useragent-mode"/>
+     <radio value="1" data-l10n-id="windows-chrome-useragent-mode"/>
+     <radio value="2" data-l10n-id="macOS-chrome-useragent-mode"/>
+     <radio value="3" data-l10n-id="linux-chrome-useragent-mode"/>
+     <radio value="4" data-l10n-id="mobile-chrome-useragent-mode"/>
+     <radio value="5" data-l10n-id="use-custom-useragent-mode"/>
+    </radiogroup>
+    <html:input type="text" id="customUsergent" placeholder="Mozilla/5.0 (Android 4.4; Tablet; rv:41.0) Gecko/41.0 Firefox/41.0" />
 </groupbox>
 
 <hbox id="networkProxyCategory"
@@ -807,4 +1075,5 @@
     </hbox>
   </hbox>
 </groupbox>
+ 
 </html:template>

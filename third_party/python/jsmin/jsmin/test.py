@@ -1,6 +1,33 @@
+# vim: set fileencoding=utf-8 :
+
+# This code is original from jsmin by Douglas Crockford, it was translated to
+# Python by Baruch Even. It was rewritten by Dave St.Germain for speed.
+#
+# The MIT License (MIT)
+#·
+# Copyright (c) 2013 Dave St.Germain
+#·
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#·
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#·
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
 import unittest
 import jsmin
-import sys
+
 
 class JsTests(unittest.TestCase):
     def _minify(self, js):
@@ -14,7 +41,7 @@ class JsTests(unittest.TestCase):
     
     def assertMinified(self, js_input, expected, **kwargs):
         minified = jsmin.jsmin(js_input, **kwargs)
-        assert minified == expected, "%r != %r" % (minified, expected)
+        assert minified == expected, "\ngot: %r\nexp: %r" % (minified, expected)
         
     def testQuoted(self):
         js = r'''
@@ -52,10 +79,8 @@ class JsTests(unittest.TestCase):
         }
         //bye
         '''
-        expected = r""" 
-if(Object.isFunction(Array.prototype.forEach))
-Array.prototype._each=Array.prototype.forEach;if(!Array.prototype.indexOf)Array.prototype.indexOf=function(item,i){ function(){ foo; location='http://foo.com;';}"""
-        # print expected
+        expected = r"""if(Object.isFunction(Array.prototype.forEach))
+Array.prototype._each=Array.prototype.forEach;if(!Array.prototype.indexOf)Array.prototype.indexOf=function(item,i){function(){foo;location='http://foo.com;';}"""
         self.assertMinified(js, expected)
     
     def testEmpty(self):
@@ -116,13 +141,22 @@ another thing;"""
     def testJustAComment(self):
         self.assertMinified('     // a comment', '')
 
-    def test_issue_10(self):
+    def test_issue_bitbucket_10(self):
         js = '''
         files = [{name: value.replace(/^.*\\\\/, '')}];
         // comment
         A
         '''
-        expected = '''files=[{name:value.replace(/^.*\\\\/,'')}]; A'''
+        expected = '''files=[{name:value.replace(/^.*\\\\/,'')}];A'''
+        self.assertMinified(js, expected)
+
+    def test_issue_bitbucket_10_without_semicolon(self):
+        js = '''
+        files = [{name: value.replace(/^.*\\\\/, '')}]
+        // comment
+        A
+        '''
+        expected = '''files=[{name:value.replace(/^.*\\\\/,'')}]\nA'''
         self.assertMinified(js, expected)
 
     def testRe(self):
@@ -154,7 +188,7 @@ another thing;"""
         Element.cleanWhitespace(element); 
         """
         expected = r"""var options_for_droppable={overlap:options.overlap,containment:options.containment,tree:options.tree,hoverclass:options.hoverclass,onHover:Sortable.onHover}
-var options_for_tree={onHover:Sortable.onEmptyHover,overlap:options.overlap,containment:options.containment,hoverclass:options.hoverclass} 
+var options_for_tree={onHover:Sortable.onEmptyHover,overlap:options.overlap,containment:options.containment,hoverclass:options.hoverclass}
 Element.cleanWhitespace(element);"""
         self.assertMinified(js, expected)
 
@@ -206,10 +240,22 @@ Element.cleanWhitespace(element);"""
           onFailure: this.onFailure
         });
         """
-        expected = r"""onSuccess:function(transport){var js=transport.responseText.strip();if(!/^\[.*\]$/.test(js)) 
+        expected = r"""onSuccess:function(transport){var js=transport.responseText.strip();if(!/^\[.*\]$/.test(js))
 throw'Server returned an invalid collection representation.';this._collection=eval(js);this.checkForExternalText();}.bind(this),onFailure:this.onFailure});"""
         self.assertMinified(js, expected)
-    
+        js_without_comment = r"""
+        onSuccess: function(transport) {
+            var js = transport.responseText.strip();
+            if (!/^\[.*\]$/.test(js))
+              throw 'Server returned an invalid collection representation.';
+            this._collection = eval(js);
+            this.checkForExternalText();
+          }.bind(this),
+          onFailure: this.onFailure
+        });
+        """
+        self.assertMinified(js_without_comment, expected)
+
     def testSpaceInRe(self):
         js = r"""
         num = num.replace(/ /g,'');
@@ -274,16 +320,22 @@ var  foo    =  "hey";
             }""", "{a:1,}")
 
     def testCommentInObj2(self):
-        self.assertMinified("{a: 1//comment\r\n}", "{a:1\n}")
+        self.assertMinified("{a: 1//comment\r\n}", "{a:1}")
 
     def testImplicitSemicolon(self):
         # return \n 1  is equivalent with   return; 1
         # so best make sure jsmin retains the newline
+        self.assertMinified("return\na", "return\na")
+
+    def test_explicit_semicolon(self):
         self.assertMinified("return;//comment\r\na", "return;a")
 
     def testImplicitSemicolon2(self):
+        self.assertMinified("return//comment...\r\nar", "return\nar")
+
+    def testImplicitSemicolon3(self):
         self.assertMinified("return//comment...\r\na", "return\na")
-    
+
     def testSingleComment2(self):
         self.assertMinified('x.replace(/\//, "_")// slash to underscore',
                 'x.replace(/\//,"_")')
@@ -300,7 +352,12 @@ var  foo    =  "hey";
         original = '''
         return foo;//comment
         return bar;'''
-        expected = 'return foo; return bar;'
+        expected = 'return foo;return bar;'
+        self.assertMinified(original, expected)
+        original = '''
+        return foo
+        return bar;'''
+        expected = 'return foo\nreturn bar;'
         self.assertMinified(original, expected)
 
     def test_space_plus(self):
@@ -325,12 +382,17 @@ var  foo    =  "hey";
         original = '/a (a)/.test("a")'
         self.assertMinified(original, original)
 
+    def test_brackets_around_slashed_regex(self):
+        original = 'function a() { /\//.test("a") }'
+        expected = 'function a(){/\//.test("a")}'
+        self.assertMinified(original, expected)
+
     def test_angular_1(self):
         original = '''var /** holds major version number for IE or NaN for real browsers */
                       msie,
                       jqLite,           // delay binding since jQuery could be loaded after us.'''
         minified = jsmin.jsmin(original)
-        self.assertTrue('var msie' in minified)
+        self.assertTrue('var\nmsie' in minified)
 
     def test_angular_2(self):
         original = 'var/* comment */msie;'
@@ -389,6 +451,194 @@ b} and not ${2 * a + "b"}.`'''
     def testBackticksTagged(self):
         original = 'tag`Hello ${ a + b } world ${ a * b}`;'
         self.assertMinified(original, original, quote_chars="'\"`")
+
+    def test_issue_bitbucket_16(self):
+        original = """
+            f = function() {
+                return /DataTree\/(.*)\//.exec(this._url)[1];
+            }
+        """
+        self.assertMinified(
+            original,
+            'f=function(){return /DataTree\/(.*)\//.exec(this._url)[1];}')
+
+    def test_issue_bitbucket_17(self):
+        original = "// hi\n/^(get|post|head|put)$/i.test('POST')"
+        self.assertMinified(original,
+                            "/^(get|post|head|put)$/i.test('POST')")
+
+    def test_issue_6(self):
+        original = '''
+            respond.regex = {
+                comments: /\/\*[^*]*\*+([^/][^*]*\*+)*\//gi,
+                urls: 'whatever'
+            };
+        '''
+        expected = original.replace(' ', '').replace('\n', '')
+        self.assertMinified(original, expected)
+
+    def test_issue_9(self):
+        original = '\n'.join([
+            'var a = \'hi\' // this is a comment',
+            'var a = \'hi\' /* this is also a  comment */',
+            'console.log(1) // this is a comment',
+            'console.log(1) /* this is also a comment */',
+            '1 // this is a comment',
+            '1 /* this is also a comment */',
+            '{} // this is a comment',
+            '{} /* this is also a comment */',
+            '"YOLO" /* this is a comment */',
+            '"YOLO" // this is a comment',
+            '(1 + 2) // comment',
+            '(1 + 2) /* yup still comment */',
+            'var b'
+        ])
+        expected = '\n'.join([
+            'var a=\'hi\'',
+            'var a=\'hi\'',
+            'console.log(1)',
+            'console.log(1)',
+            '1',
+            '1',
+            '{}',
+            '{}',
+            '"YOLO"',
+            '"YOLO"',
+            '(1+2)',
+            '(1+2)',
+            'var b'
+        ])
+        self.assertMinified(expected, expected)
+        self.assertMinified(original, expected)
+
+    def test_newline_between_strings(self):
+        self.assertMinified('"yolo"\n"loyo"', '"yolo"\n"loyo"')
+
+    def test_issue_10_comments_between_tokens(self):
+        self.assertMinified('var/* comment */a', 'var a')
+
+    def test_ends_with_string(self):
+        self.assertMinified('var s = "s"', 'var s="s"')
+
+    def test_short_comment(self):
+        self.assertMinified('a;/**/b', 'a;b')
+
+    def test_shorter_comment(self):
+        self.assertMinified('a;/*/*/b', 'a;b')
+
+    def test_block_comment_with_semicolon(self):
+        self.assertMinified('a;/**/\nb', 'a;b')
+
+    def test_block_comment_With_implicit_semicolon(self):
+        self.assertMinified('a/**/\nvar b', 'a\nvar b')
+
+    def test_issue_9_single_comments(self):
+        original = '''
+            var a = "hello" // this is a comment
+                       a += " world"
+        '''
+        self.assertMinified(original, 'var a="hello"\na+=" world"')
+
+    def test_issue_9_multi_comments(self):
+        original = '''
+            var a = "hello" /* this is a comment */
+                       a += " world"
+        '''
+        self.assertMinified(original, 'var a="hello"\na+=" world"')
+
+    def test_issue_12_re_nl_if(self):
+        original = '''
+            var re = /\d{4}/
+            if (1) { console.log(2); }'''
+        self.assertMinified(
+            original, 'var re=/\d{4}/\nif(1){console.log(2);}')
+
+    def test_issue_12_re_nl_other(self):
+        original = '''
+            var re = /\d{4}/
+            g = 10'''
+        self.assertMinified(original , 'var re=/\d{4}/\ng=10')
+
+    def test_preserve_copyright(self):
+        original = '''
+            function this() {
+                /*! Copyright year person */
+                console.log('hello!');
+            }
+
+            /*! Copyright blah blah
+             *
+             *  Some other text
+             */
+
+            var a;
+        '''
+        expected = """function this(){/*! Copyright year person */
+console.log('hello!');}/*! Copyright blah blah
+             *
+             *  Some other text
+             */\n\nvar a;"""
+        self.assertMinified(original, expected)
+
+    def test_issue_14(self):
+        original = 'return x / 1;'
+        self.assertMinified(original, 'return x/1;')
+        
+    def test_issue_14_with_char_from_return(self):
+        original = 'return r / 1;'
+        self.assertMinified(original, 'return r/1;')
+
+
+class RegexTests(unittest.TestCase):
+
+    def regex_recognise(self, js):
+        if not jsmin.is_3:
+            if jsmin.cStringIO and not isinstance(js, unicode):
+                # strings can use cStringIO for a 3x performance
+                # improvement, but unicode (in python2) cannot
+                klass = jsmin.cStringIO.StringIO
+            else:
+                klass = jsmin.StringIO.StringIO
+        else:
+            klass = jsmin.io.StringIO
+        ins = klass(js[2:])
+        outs = klass()
+        jsmin.JavascriptMinify(ins, outs).regex_literal(js[0], js[1])
+        return outs.getvalue()
+
+    def assert_regex(self, js_input, expected):
+        assert js_input[0] == '/'  # otherwise we should not be testing!
+        recognised = self.regex_recognise(js_input)
+        assert recognised == expected, "\n in: %r\ngot: %r\nexp: %r" % (js_input, recognised, expected)
+
+    def test_simple(self):
+        self.assert_regex('/123/g', '/123/')
+
+    def test_character_class(self):
+        self.assert_regex('/a[0-9]b/g', '/a[0-9]b/')
+
+    def test_character_class_with_slash(self):
+        self.assert_regex('/a[/]b/g', '/a[/]b/')
+
+    def test_escaped_forward_slash(self):
+        self.assert_regex(r'/a\/b/g', r'/a\/b/')
+
+    def test_escaped_back_slash(self):
+        self.assert_regex(r'/a\\/g', r'/a\\/')
+
+    def test_empty_character_class(self):
+        # This one is subtle: an empty character class is not allowed, afaics
+        # from http://regexpal.com/ Chrome Version 44.0.2403.155 (64-bit) Mac
+        # so this char class is interpreted as containing ]/ *not* as char
+        # class [] followed by end-of-regex /.
+        self.assert_regex('/a[]/]b/g', '/a[]/]b/')
+
+    def test_precedence_of_parens(self):
+        # judging from
+        # http://regexpal.com/ Chrome Version 44.0.2403.155 (64-bit) Mac
+        # () have lower precedence than []
+        self.assert_regex('/a([)])b/g', '/a([)])b/')
+        self.assert_regex('/a[(]b/g', '/a[(]b/')
 
 if __name__ == '__main__':
     unittest.main()
