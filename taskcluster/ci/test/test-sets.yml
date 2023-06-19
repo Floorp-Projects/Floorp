@@ -179,6 +179,34 @@ linux1804-ccov-tests:
 
 linux2204-wayland-tests:
     - mochitest-plain
+    - cppunit
+    - crashtest
+    - firefox-ui-functional
+    - gtest
+    - jsreftest
+    - marionette
+    - mochitest-a11y
+    - mochitest-browser-a11y
+    - mochitest-browser-chrome
+    - mochitest-browser-media
+    - mochitest-chrome
+    - mochitest-chrome-gpu
+    - mochitest-devtools-chrome
+    - mochitest-media
+    - mochitest-plain
+    - mochitest-plain-gpu
+    - mochitest-remote
+    - mochitest-webgl1-core
+    - mochitest-webgl1-ext
+    - mochitest-webgl2-core
+    - mochitest-webgl2-ext
+    - reftest
+    - reftest-snapshot
+    - telemetry-tests-client
+    - test-verify
+    - test-verify-gpu
+    - test-verify-wpt
+    - xpcshell
 
 # Windows
 
