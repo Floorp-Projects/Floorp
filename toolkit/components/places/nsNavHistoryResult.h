@@ -792,9 +792,7 @@ class nsNavHistoryFolderResultNode final
   nsresult OnItemAdded(int64_t aItemId, int64_t aParentId, int32_t aIndex,
                        uint16_t aItemType, nsIURI* aURI, PRTime aDateAdded,
                        const nsACString& aGUID, const nsACString& aParentGUID,
-                       uint16_t aSource, const nsACString& aTitle,
-                       const nsAString& aTags, int64_t aFrecency, bool aHidden,
-                       uint32_t aVisitCount, PRTime aLastVisitDate);
+                       uint16_t aSource);
   nsresult OnItemRemoved(int64_t aItemId, int64_t aParentFolder, int32_t aIndex,
                          uint16_t aItemType, nsIURI* aURI,
                          const nsACString& aGUID, const nsACString& aParentGUID,
