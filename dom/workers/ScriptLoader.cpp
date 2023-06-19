@@ -1351,6 +1351,9 @@ nsresult ScriptLoaderRunnable::Run() {
       mScriptLoader->IsDebuggerScript()) {
     for (ThreadSafeRequestHandle* handle : mLoadingRequests) {
       handle->mRunnable = this;
+    }
+
+    for (ThreadSafeRequestHandle* handle : mLoadingRequests) {
       nsresult rv = mScriptLoader->LoadScript(handle);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         LoadingFinished(handle, rv);
