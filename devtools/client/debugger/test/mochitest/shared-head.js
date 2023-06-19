@@ -50,6 +50,10 @@ const {
 } = require("devtools/client/debugger/src/utils/prefs");
 
 const {
+  safeDecodeItemName,
+} = require("devtools/client/debugger/src/utils/sources-tree/utils");
+
+const {
   isGeneratedId,
   isOriginalId,
   originalToGeneratedId,
@@ -705,8 +709,9 @@ function findSource(
   const source = sources.find(s => {
     // Sources don't have a file name attribute, we need to compute it here:
     const sourceFileName = s.url
-      ? decodeURI(s.url.substring(s.url.lastIndexOf("/") + 1))
+      ? safeDecodeItemName(s.url.substring(s.url.lastIndexOf("/") + 1))
       : "";
+
     // The input argument may either be only the filename, or the complete URL
     // This helps match sources whose URL doesn't contain a filename, like data: URLs
     return (
