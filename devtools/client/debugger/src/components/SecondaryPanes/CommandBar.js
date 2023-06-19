@@ -41,6 +41,7 @@ const KEYS = {
     stepOver: "F10",
     stepIn: "F11",
     stepOut: "Shift+F11",
+    trace: "Ctrl+Shift+5",
   },
   Darwin: {
     resume: "Cmd+\\",
@@ -48,12 +49,14 @@ const KEYS = {
     stepIn: "Cmd+;",
     stepOut: "Cmd+Shift+:",
     stepOutDisplay: "Cmd+Shift+;",
+    trace: "Ctrl+Shift+5",
   },
   Linux: {
     resume: "F8",
     stepOver: "F10",
     stepIn: "F11",
     stepOut: "Shift+F11",
+    trace: "Ctrl+Shift+5",
   },
 };
 
@@ -73,11 +76,15 @@ function getKeyForOS(os, action) {
 
 function formatKey(action) {
   const key = getKey(`${action}Display`) || getKey(action);
+
+  // On MacOS, we bind both Windows and MacOS/Darwin key shortcuts
+  // Display them both, but only when they are different
   if (isMacOS) {
     const winKey =
       getKeyForOS("WINNT", `${action}Display`) || getKeyForOS("WINNT", action);
-    // display both Windows type and Mac specific keys
-    return formatKeyShortcut([key, winKey].join(" "));
+    if (key != winKey) {
+      return formatKeyShortcut([key, winKey].join(" "));
+    }
   }
   return formatKeyShortcut(key);
 }
@@ -206,8 +213,12 @@ class CommandBar extends Component {
         }`}
         title={
           this.props.isTracingEnabled
-            ? L10N.getStr("stopTraceButtonTooltip")
-            : L10N.getFormatStr("startTraceButtonTooltip", this.props.logMethod)
+            ? L10N.getFormatStr("stopTraceButtonTooltip2", formatKey("trace"))
+            : L10N.getFormatStr(
+                "startTraceButtonTooltip2",
+                formatKey("trace"),
+                this.props.logMethod
+              )
         }
         onClick={event => {
           this.props.toggleTracing(this.props.logMethod);
