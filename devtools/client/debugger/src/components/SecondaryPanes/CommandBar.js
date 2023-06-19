@@ -169,7 +169,6 @@ class CommandBar extends Component {
     const isDisabled = !isPaused;
 
     return [
-      this.renderTraceButton(),
       this.renderPauseButton(),
       debugBtn(
         () => this.props.stepOver(),
@@ -401,6 +400,7 @@ class CommandBar extends Component {
       >
         {this.renderStepButtons()}
         <div className="filler" />
+        {this.renderTraceButton()}
         {this.renderSkipPausingButton()}
         <div className="devtools-separator" />
         {this.renderSettingsButton()}
