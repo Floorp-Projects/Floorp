@@ -95,8 +95,8 @@ function setPhotonUI() {
   Services.prefs.setBoolPref("userChrome.tab.newtab_button_smaller",      true);
   Services.prefs.setBoolPref("userChrome.tab.newtab_button_proton",      false);
   
-  Services.prefs.setBoolPref("userChrome.icon.panel_full",               true);
-  Services.prefs.setBoolPref("userChrome.icon.panel_photon",             false);
+  Services.prefs.setBoolPref("userChrome.icon.panel_full",               false);
+  Services.prefs.setBoolPref("userChrome.icon.panel_photon",             true);
   
   Services.prefs.setBoolPref("userChrome.tab.box_shadow",                false);
   Services.prefs.setBoolPref("userChrome.tab.bottom_rounded_corner",     false);
