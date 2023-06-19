@@ -8,7 +8,7 @@ use std::{
 
 use clap::Parser;
 use lets_find_up::{find_up_with, FindUpKind, FindUpOptions};
-use miette::{ensure, miette, Context, Diagnostic, IntoDiagnostic, Report, SourceSpan};
+use miette::{bail, ensure, miette, Context, Diagnostic, IntoDiagnostic, Report, SourceSpan};
 use regex::Regex;
 
 use crate::{
@@ -72,28 +72,39 @@ fn run(args: CliArgs) -> miette::Result<()> {
     let cts_dir = join_path(["dom", "webgpu", "tests", "cts"]);
     let cts_vendor_dir = join_path([&*cts_dir, "vendor".as_ref()]);
     let gecko_ckt = {
-        let failed_find_hg_err = || {
-            miette!(
-                "failed to find a Mercurial repository (`.hg`) in any of current working \
-                directory and its parent directories"
-            )
+        let find_up_opts = || FindUpOptions {
+            cwd: Path::new("."),
+            kind: FindUpKind::Dir,
         };
-        let hg_root = {
-            let mut dir = find_up_with(
-                ".hg",
-                FindUpOptions {
-                    cwd: Path::new("."),
-                    kind: FindUpKind::Dir,
-                },
-            )
-            .map_err(Report::msg)
-            .wrap_err_with(failed_find_hg_err)?
-            .ok_or_else(failed_find_hg_err)?;
-            dir.pop();
-            dir
+        let find_up = |root_dir_name| {
+            let err = || {
+                miette!(
+                    "failed to find a Mercurial repository ({root_dir_name:?}) in any of current \
+                    working directory and its parent directories"
+                )
+            };
+            find_up_with(root_dir_name, find_up_opts())
+                .map_err(Report::msg)
+                .wrap_err_with(err)
+                .and_then(|loc_opt| loc_opt.ok_or_else(err))
+                .map(|mut dir| {
+                    dir.pop();
+                    dir
+                })
         };
+        let gecko_source_root = find_up(".hg").or_else(|e| match find_up(".git") {
+            Ok(path) => {
+                log::debug!("{e:?}");
+                Ok(path)
+            }
+            Err(e2) => {
+                log::warn!("{e:?}");
+                log::warn!("{e2:?}");
+                bail!("failed to find a Gecko repository root")
+            }
+        })?;
 
-        let root = FileRoot::new("gecko", &hg_root)?;
+        let root = FileRoot::new("gecko", &gecko_source_root)?;
         log::info!("detected Gecko repository root at {root}");
 
         ensure!(
