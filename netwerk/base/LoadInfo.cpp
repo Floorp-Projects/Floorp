@@ -421,15 +421,27 @@ LoadInfo::LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
   }
 #endif
 
-  // Let's take the current cookie behavior and current cookie permission
-  // for the documents' loadInfo. Note that for any other loadInfos,
-  // cookieBehavior will be BEHAVIOR_REJECT for security reasons.
-  bool isPrivate = mOriginAttributes.mPrivateBrowsingId > 0;
+  // If we think we should not resist fingerprinting, defer to the opener's
+  // RFP bit (if there is an opener.)  If the opener is also exempted, it stays
+  // true, otherwise we will put a false into the CJS and that will be respected
+  // on this document.
   bool shouldResistFingerprinting =
       nsContentUtils::ShouldResistFingerprinting_dangerous(
           aURI, mOriginAttributes,
           "We are creating CookieJarSettings, so we can't have one already.",
           RFPTarget::IsAlwaysEnabledForPrecompute);
+  RefPtr<BrowsingContext> opener = aBrowsingContext->GetOpener();
+  if (!shouldResistFingerprinting && opener &&
+      opener->GetCurrentWindowContext()) {
+    shouldResistFingerprinting =
+        opener->GetCurrentWindowContext()->ShouldResistFingerprinting();
+  }
+
+  const bool isPrivate = mOriginAttributes.mPrivateBrowsingId > 0;
+
+  // Let's take the current cookie behavior and current cookie permission
+  // for the documents' loadInfo. Note that for any other loadInfos,
+  // cookieBehavior will be BEHAVIOR_REJECT for security reasons.
   mCookieJarSettings = CookieJarSettings::Create(
       isPrivate ? CookieJarSettings::ePrivate : CookieJarSettings::eRegular,
       shouldResistFingerprinting);

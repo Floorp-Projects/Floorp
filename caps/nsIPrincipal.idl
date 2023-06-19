@@ -395,6 +395,14 @@ interface nsIPrincipal : nsISupports
     boolean isURIInList(in ACString list);
 
     /**
+     * Check if the Principal's URI is a content-accessible about: page
+     *
+     * May be called from any thread.
+     */
+    [infallible]
+    boolean isContentAccessibleAboutURI();
+
+    /**
      * Uses NS_Security Compare to determine if the
      * other URI is same-origin as the uri of the Principal
      *
