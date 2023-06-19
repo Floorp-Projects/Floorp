@@ -3,13 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["ProcessHangMonitor"];
-
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 /**
  * Elides the middle of a string by replacing it with an elipsis if it is
@@ -51,7 +45,7 @@ function elideMiddleOfString(str, threshold) {
  * the platform interface.
  */
 
-var ProcessHangMonitor = {
+export var ProcessHangMonitor = {
   /**
    * This timeout is the wait period applied after a user selects "Wait" in
    * an existing notification.
