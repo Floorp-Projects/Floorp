@@ -420,6 +420,21 @@ html {
           .main-content-inner {
             min-height: 330px;
 
+            .mobile-download-buttons {
+              padding: 0;
+              margin-inline-start: -5px;
+              display: flex;
+
+              button {
+                cursor: pointer;
+              }
+            }
+
+            .qr-code-image {
+              margin: 5px 0 10px;
+              display: flex;
+            }
+
             .language-switcher-container {
               .primary {
                 margin-bottom: 5px;
