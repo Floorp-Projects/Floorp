@@ -101,10 +101,7 @@ exports.FX_OAUTH_CLIENT_ID = "5882386c6d801776";
 exports.SCOPE_PROFILE = "profile";
 exports.SCOPE_PROFILE_WRITE = "profile:write";
 exports.SCOPE_OLD_SYNC = "https://identity.mozilla.com/apps/oldsync";
-// This scope and its associated key material are used by the old Kinto webextension
-// storage backend. We plan to remove that at some point (ref Bug 1637465) and when
-// we do, all uses of this legacy scope can be removed.
-exports.LEGACY_SCOPE_WEBEXT_SYNC = "sync:addon_storage";
+
 // This scope was previously used to calculate a telemetry tracking identifier for
 // the account, but that system has since been decommissioned. It's here entirely
 // so that we can remove the corresponding key from storage if present. We should
@@ -272,7 +269,7 @@ exports.ERROR_MSG_METHOD_NOT_ALLOWED = "METHOD_NOT_ALLOWED";
 // These are the names of pre-scoped-keys key material, maintained for b/w
 // compatibility to code elsewhere in Firefox; once all consuming code is updated
 // to use scoped keys, these fields can be removed from the account userData.
-exports.LEGACY_DERIVED_KEYS_NAMES = ["kSync", "kXCS", "kExtSync", "kExtKbHash"];
+exports.LEGACY_DERIVED_KEYS_NAMES = ["kSync", "kXCS"];
 
 // FxAccounts has the ability to "split" the credentials between a plain-text
 // JSON file in the profile dir and in the login manager.

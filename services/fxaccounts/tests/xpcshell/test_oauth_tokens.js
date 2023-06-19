@@ -149,8 +149,6 @@ async function createMockFxA() {
     sessionToken: "dead",
     kSync: "beef",
     kXCS: "cafe",
-    kExtSync: "bacon",
-    kExtKbHash: "cheese",
     verified: true,
   };
 
