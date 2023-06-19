@@ -3498,6 +3498,11 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
           "CaretPoint::SuggestCaretPointTo() failed, but ignored");
     }
   }
+
+  if (NS_WARN_IF(!aRangesToDelete.FirstRangeRef()->IsPositioned())) {
+    return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+  }
+
   nsresult rv =
       mDeleteRangesHandler->DeleteUnnecessaryNodesAndCollapseSelection(
           aHTMLEditor, aDirectionAndAmount,
