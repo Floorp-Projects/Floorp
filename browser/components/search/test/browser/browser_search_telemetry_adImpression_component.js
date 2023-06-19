@@ -268,9 +268,9 @@ add_task(async function test_ad_impressions_with_hidden_carousels() {
   assertAdImpressionEvents([
     {
       component: SearchSERPTelemetryUtils.COMPONENTS.AD_CAROUSEL,
-      ads_loaded: "3",
+      ads_loaded: "4",
       ads_visible: "0",
-      ads_hidden: "3",
+      ads_hidden: "4",
     },
   ]);
 
