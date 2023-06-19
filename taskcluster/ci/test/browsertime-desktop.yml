@@ -21,8 +21,7 @@ job-defaults:
             safari:
                 - .*macos.*shippable.*
             custom-car:
-                - linux.*shippable.*
-                - windows10-64.*shippable.*
+                - .*64.*shippable.*
             default: []
     test-manifest-loader: null  # don't load tests in the taskgraph
     tier: 3
@@ -54,6 +53,10 @@ job-defaults:
                             - win64-custom-car
                             - win64-minidump-stackwalk
                             - win64-fix-stacks
+                        macos.*:
+                            - macosx64-custom-car
+                            - macosx64-minidump-stackwalk
+                            - macosx64-fix-stacks
                         default: []
                 default:
                     by-test-platform:
@@ -82,7 +85,7 @@ browsertime-tp6:
                 safari:
                     - .*macos.*shippable.*
                 custom-car:
-                    - (windows10-64|linux).*shippable.*
+                    - .*64.*shippable.*
                 default: []
         max-run-time:
             by-subtest:

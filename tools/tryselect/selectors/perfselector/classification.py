@@ -162,7 +162,11 @@ class ClassificationProvider:
                 "query": "'custom-car",
                 "negation": "!custom-car",
                 "restriction": check_for_custom_car,
-                "platforms": [Platforms.LINUX.value, Platforms.WINDOWS.value],
+                "platforms": [
+                    Platforms.LINUX.value,
+                    Platforms.WINDOWS.value,
+                    Platforms.MACOSX.value,
+                ],
             },
         }
 
