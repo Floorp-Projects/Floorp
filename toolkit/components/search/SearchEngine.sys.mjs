@@ -149,6 +149,7 @@ const ParamPreferenceCache = {
   onNimbusUpdate() {
     let extraParams =
       lazy.NimbusFeatures.search.getVariable("extraParams") || [];
+    this.nimbusCache.clear();
     for (const { key, value } of extraParams) {
       this.nimbusCache.set(key, value);
     }

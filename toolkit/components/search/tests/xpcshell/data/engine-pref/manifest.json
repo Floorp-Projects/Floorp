@@ -21,6 +21,11 @@
           "name": "code",
           "condition": "pref",
           "pref": "code"
+        },
+        {
+          "name": "test",
+          "condition": "pref",
+          "pref": "test"
         }
       ]
     }
