@@ -98,7 +98,8 @@ const test = new SearchConfigTest({
     {
       included: [{}],
       domain: "bing.com",
-      telemetryId: AppConstants.IS_ESR ? "bing-esr" : "bing",
+      telemetryId:
+        SearchUtils.MODIFIED_APP_CHANNEL == "esr" ? "bing-esr" : "bing",
       codes: {
         searchbar: "form=MOZSBR",
         keyword: "form=MOZLBR",
@@ -106,7 +107,8 @@ const test = new SearchConfigTest({
         homepage: "form=MOZSPG",
         newtab: "form=MOZTSB",
       },
-      searchUrlCode: AppConstants.IS_ESR ? "pc=MOZR" : "pc=MOZI",
+      searchUrlCode:
+        SearchUtils.MODIFIED_APP_CHANNEL == "esr" ? "pc=MOZR" : "pc=MOZI",
     },
   ],
 });

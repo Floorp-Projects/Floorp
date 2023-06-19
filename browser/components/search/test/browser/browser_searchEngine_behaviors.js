@@ -23,7 +23,7 @@ const SEARCH_ENGINE_DETAILS = [
   {
     alias: "b",
     baseURL: `https://www.bing.com/search?{code}pc=${
-      AppConstants.IS_ESR ? "MOZR" : "MOZI"
+      SearchUtils.MODIFIED_APP_CHANNEL == "esr" ? "MOZR" : "MOZI"
     }&q=foo`,
     codes: {
       context: "form=MOZCON&",
@@ -36,7 +36,7 @@ const SEARCH_ENGINE_DETAILS = [
   {
     alias: "d",
     baseURL: `https://duckduckgo.com/?{code}t=${
-      AppConstants.IS_ESR ? "ftsa" : "ffab"
+      SearchUtils.MODIFIED_APP_CHANNEL == "esr" ? "ftsa" : "ffab"
     }&q=foo`,
     codes: {
       context: "",
