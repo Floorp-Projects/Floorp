@@ -757,7 +757,7 @@ bool DefineLegacyUnforgeableAttributes(
 // We should use JSFunction objects for interface objects, but we need a custom
 // hasInstance hook because we have new interface objects on prototype chains of
 // old (XPConnect-based) bindings. We also need Xrays and arbitrary numbers of
-// reserved slots (e.g. for named constructors).  So we define a custom
+// reserved slots (e.g. for legacy factory functions).  So we define a custom
 // funToString ObjectOps member for interface objects.
 JSString* InterfaceObjectToString(JSContext* aCx, JS::Handle<JSObject*> aObject,
                                   bool /* isToSource */) {
@@ -831,7 +831,7 @@ static bool DefineToStringTag(JSContext* cx, JS::Handle<JSObject*> obj,
 static JSObject* CreateInterfaceObject(
     JSContext* cx, JS::Handle<JSObject*> global,
     JS::Handle<JSObject*> constructorProto, const JSClass* constructorClass,
-    unsigned ctorNargs, const LegacyFactoryFunction* namedConstructors,
+    unsigned ctorNargs, const LegacyFactoryFunction* legacyFactoryFunctions,
     JS::Handle<JSObject*> proto, const NativeProperties* properties,
     const NativeProperties* chromeOnlyProperties, JS::Handle<JSString*> name,
     bool isChrome, bool defineOnGlobal, const char* const* legacyWindowAliases,
@@ -934,24 +934,24 @@ static JSObject* CreateInterfaceObject(
     }
   }
 
-  if (namedConstructors) {
-    int namedConstructorSlot = DOM_INTERFACE_SLOTS_BASE;
-    while (namedConstructors->mName) {
-      JS::Rooted<JSObject*> namedConstructor(
-          cx, CreateConstructor(cx, global, namedConstructors->mName,
-                                &namedConstructors->mHolder,
-                                namedConstructors->mNargs));
-      if (!namedConstructor ||
-          !JS_DefineProperty(cx, namedConstructor, "prototype", proto,
+  if (legacyFactoryFunctions) {
+    int legacyFactoryFunctionSlot = DOM_INTERFACE_SLOTS_BASE;
+    while (legacyFactoryFunctions->mName) {
+      JS::Rooted<JSObject*> legacyFactoryFunction(
+          cx, CreateConstructor(cx, global, legacyFactoryFunctions->mName,
+                                &legacyFactoryFunctions->mHolder,
+                                legacyFactoryFunctions->mNargs));
+      if (!legacyFactoryFunction ||
+          !JS_DefineProperty(cx, legacyFactoryFunction, "prototype", proto,
                              JSPROP_PERMANENT | JSPROP_READONLY) ||
           (defineOnGlobal &&
-           !DefineConstructor(cx, global, namedConstructors->mName,
-                              namedConstructor))) {
+           !DefineConstructor(cx, global, legacyFactoryFunctions->mName,
+                              legacyFactoryFunction))) {
         return nullptr;
       }
-      JS::SetReservedSlot(constructor, namedConstructorSlot++,
-                          JS::ObjectValue(*namedConstructor));
-      ++namedConstructors;
+      JS::SetReservedSlot(constructor, legacyFactoryFunctionSlot++,
+                          JS::ObjectValue(*legacyFactoryFunction));
+      ++legacyFactoryFunctions;
     }
   }
 
@@ -1051,7 +1051,7 @@ void CreateInterfaceObjects(
     JS::Heap<JSObject*>* protoCache, JS::Handle<JSObject*> constructorProto,
     const JSClass* constructorClass, unsigned ctorNargs,
     bool isConstructorChromeOnly,
-    const LegacyFactoryFunction* namedConstructors,
+    const LegacyFactoryFunction* legacyFactoryFunctions,
     JS::Heap<JSObject*>* constructorCache, const NativeProperties* properties,
     const NativeProperties* chromeOnlyProperties, const char* name,
     bool defineOnGlobal, const char* const* unscopableNames, bool isGlobal,
@@ -1108,8 +1108,8 @@ void CreateInterfaceObjects(
     interface = CreateInterfaceObject(
         cx, global, constructorProto, constructorClass,
         (isChrome || !isConstructorChromeOnly) ? ctorNargs : 0,
-        namedConstructors, proto, properties, chromeOnlyProperties, nameStr,
-        isChrome, defineOnGlobal, legacyWindowAliases, isNamespace);
+        legacyFactoryFunctions, proto, properties, chromeOnlyProperties,
+        nameStr, isChrome, defineOnGlobal, legacyWindowAliases, isNamespace);
     if (!interface) {
       if (protoCache) {
         // If we fail we need to make sure to clear the value of protoCache we

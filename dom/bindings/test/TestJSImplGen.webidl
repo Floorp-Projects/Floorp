@@ -17,7 +17,7 @@ enum MyTestEnum {
 
 [Exposed=Window, JSImplementation="@mozilla.org/test-js-impl-interface;1"]
 interface TestJSImplInterface {
-  // We don't support multiple constructors (bug 869268) or named constructors
+  // We don't support multiple constructors or legacy factory functions
   // for JS-implemented WebIDL.
   [Throws]
   constructor(DOMString str, unsigned long num, boolean? boolArg,

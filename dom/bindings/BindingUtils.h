@@ -771,7 +771,7 @@ void CreateInterfaceObjects(
     JS::Heap<JSObject*>* protoCache, JS::Handle<JSObject*> constructorProto,
     const JSClass* constructorClass, unsigned ctorNargs,
     bool isConstructorChromeOnly,
-    const LegacyFactoryFunction* namedConstructors,
+    const LegacyFactoryFunction* legacyFactoryFunctions,
     JS::Heap<JSObject*>* constructorCache, const NativeProperties* properties,
     const NativeProperties* chromeOnlyProperties, const char* name,
     bool defineOnGlobal, const char* const* unscopableNames, bool isGlobal,
