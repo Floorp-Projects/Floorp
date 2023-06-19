@@ -691,13 +691,6 @@ optgroup:before {
   text-overflow: inherit;
 }
 
-@media print {
-  input, textarea, select, button, details {
-    -moz-user-input: none !important;
-    pointer-events: none !important;
-  }
-}
-
 progress {
   appearance: auto;
   -moz-default-appearance: progress-bar;
