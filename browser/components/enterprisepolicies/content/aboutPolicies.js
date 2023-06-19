@@ -25,8 +25,7 @@ function col(text, className) {
 function link(text) {
   let column = document.createElement("td");
   let a = document.createElement("a");
-  a.href =
-    "https://github.com/mozilla/policy-templates/blob/master/README.md#" + text;
+  a.href = "https://mozilla.github.io/policy-templates/#" + text.toLowerCase();
   a.target = "_blank";
   let content = document.createTextNode(text);
   a.appendChild(content);
