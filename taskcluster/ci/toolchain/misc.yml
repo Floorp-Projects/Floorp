@@ -181,6 +181,36 @@ linux64-custom-v8:
         ]
         toolchain-artifact: public/build/d8.tar.zst
 
+macosx64-custom-car:
+    description: "Custom chromium-as-release build for mac"
+    worker-type: b-osx-1015
+    treeherder:
+        symbol: TM(custom-car)
+    worker:
+        max-run-time: 28800
+    run:
+        script: build-custom-car.sh
+        arguments: [
+            car_macosx.tar.zst,
+            blink_symbol_level=0,
+            chrome_pgo_phase=2,
+            dcheck_always_on=false,
+            enable_nacl=false,
+            enable_resource_allowlist_generation=false,
+            is_chrome_branded=false,
+            is_clang=true,
+            is_component_build=false,
+            is_debug=false,
+            is_official_build=true,
+            symbol_level=0,
+            target_cpu="x64",
+            v8_symbol_level=0
+        ]
+        toolchain-artifact: public/build/car_macosx.tar.zst
+    fetches:
+        toolchain:
+            - MacOSX13.3.sdk
+
 linux64-custom-car:
     description: "Custom chromium-as-release build for Linux"
     treeherder:
@@ -189,7 +219,7 @@ linux64-custom-car:
         docker-image: {in-tree: custom-car-linux}
         max-run-time: 16200
     run:
-        script: build-custom-car-linux.sh
+        script: build-custom-car.sh
         arguments: [
             car_linux.tar.zst,
             blink_symbol_level=0,
@@ -218,7 +248,7 @@ win64-custom-car:
         env:
             MSYSTEM: "MINGW64"
     run:
-        script: build-custom-car-win64.sh
+        script: build-custom-car.sh
         arguments: [
             car_win64.tar.zst,
             blink_symbol_level=0,
