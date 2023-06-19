@@ -2072,19 +2072,22 @@ function getCoordsFromPosition(cm, { line, ch }) {
   return cm.charCoords({ line: ~~line, ch: ~~ch });
 }
 
-async function getTokenFromPosition(dbg, { line, ch }) {
-  info(`Get token at ${line}, ${ch}`);
+async function getTokenFromPosition(dbg, { line, column = 0 }) {
+  info(`Get token at ${line}:${column}`);
   const cm = getCM(dbg);
-  cm.scrollIntoView({ line: line - 1, ch }, 0);
+
+  // CodeMirror is 0-based while line and column arguments are 1-based.
+  // Pass "ch=-1" when there is no column argument passed.
+  const cmPosition = { line: line - 1, ch: column - 1 };
+
+  cm.scrollIntoView(cmPosition, 0);
 
   // Ensure the line is visible with margin because the bar at the bottom of
   // the editor overlaps into what the editor thinks is its own space, blocking
   // the click event below.
   await waitForScrolling(cm);
 
-  const coords = getCoordsFromPosition(cm, { line: line - 1, ch });
-
-  const { left, top } = coords;
+  const { left, top } = getCoordsFromPosition(cm, cmPosition);
 
   // Adds a vertical offset due to increased line height
   // https://github.com/firefox-devtools/debugger/pull/7934
@@ -2181,8 +2184,7 @@ async function hoverAtPos(dbg, pos) {
 }
 
 async function closePreviewAtPos(dbg, line, column) {
-  const pos = { line, ch: column - 1 };
-  const tokenEl = await getTokenFromPosition(dbg, pos);
+  const tokenEl = await getTokenFromPosition(dbg, { line, column });
 
   if (!tokenEl) {
     return;
@@ -2220,7 +2222,7 @@ function tryHovering(dbg, line, column, elementName) {
         reject("failed to preview");
       }
 
-      hoverAtPos(dbg, { line, ch: column - 1 });
+      hoverAtPos(dbg, { line, column });
     }, 1000);
   });
 }
