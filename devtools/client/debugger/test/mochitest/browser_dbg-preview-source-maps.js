@@ -34,7 +34,7 @@ add_task(async function () {
 
   info("Test that you can not preview in another original file");
   await selectSource(dbg, "output.js");
-  await hoverAtPos(dbg, { line: 2, ch: 16 });
+  await hoverAtPos(dbg, { line: 2, column: 17 });
   await assertNoTooltip(dbg);
 });
 
