@@ -31,6 +31,26 @@ export const GeckoViewIdentityCredential = {
       }
     );
   },
+  async onShowAccountsPrompt(aBrowser, accounts, resolve, reject) {
+    const prompt = new lazy.GeckoViewPrompter(aBrowser.ownerGlobal);
+    debug`onShowAccountsPrompt`;
+
+    prompt.asyncShowPrompt(
+      {
+        type: "IdentityCredential:Select:Account",
+        accounts,
+      },
+      result => {
+        if (result && result.accountIndex != null) {
+          debug`onShowAccountsPrompt resolve with ${result.accountIndex}`;
+          resolve(result.accountIndex);
+        } else {
+          debug`onShowAccountsPrompt rejected`;
+          reject();
+        }
+      }
+    );
+  },
 };
 
 const { debug } = GeckoViewUtils.initLogging("GeckoViewIdentityCredential");

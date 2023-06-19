@@ -29,6 +29,7 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.ChoicePrompt;
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.ColorPrompt;
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DateTimePrompt;
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.FilePrompt;
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.IdentityCredential.AccountSelectorPrompt;
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.IdentityCredential.ProviderSelectorPrompt;
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.PopupPrompt;
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.PromptInstanceDelegate;
@@ -577,6 +578,38 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.TextPrompt;
     }
   }
 
+  private static final class IdentityCredentialSelectAccountHandler
+      implements PromptHandler<AccountSelectorPrompt> {
+    @Override
+    public AccountSelectorPrompt newPrompt(final GeckoBundle info, final Observer observer) {
+      final GeckoBundle providerBundle = info.getBundle("accounts");
+      if (providerBundle == null) {
+        return null;
+      }
+      final GeckoBundle[] accountBundles = providerBundle.getBundleArray("accounts");
+      if (accountBundles == null) {
+        return null;
+      }
+
+      final AccountSelectorPrompt.Account[] accounts =
+          new AccountSelectorPrompt.Account[accountBundles.length];
+
+      for (int i = 0; i < accountBundles.length; ++i) {
+        accounts[i] = AccountSelectorPrompt.Account.fromBundle(accountBundles[i]);
+      }
+
+      return new AccountSelectorPrompt(info.getString("id"), accounts, observer);
+    }
+
+    @Override
+    public GeckoResult<PromptResponse> callDelegate(
+        final AccountSelectorPrompt prompt,
+        final GeckoSession session,
+        final PromptDelegate delegate) {
+      return delegate.onSelectIdentityCredentialAccount(session, prompt);
+    }
+  }
+
   private static final class CreditCardSelectHandler
       implements PromptHandler<AutocompleteRequest<CreditCardSelectOption>> {
     @Override
@@ -670,6 +703,8 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.TextPrompt;
     sPromptHandlers.register(new LoginSelectHandler(), "Autocomplete:Select:Login");
     sPromptHandlers.register(
         new IdentityCredentialSelectProviderHandler(), "IdentityCredential:Select:Provider");
+    sPromptHandlers.register(
+        new IdentityCredentialSelectAccountHandler(), "IdentityCredential:Select:Account");
     sPromptHandlers.register(new CreditCardSelectHandler(), "Autocomplete:Select:CreditCard");
     sPromptHandlers.register(new AddressSelectHandler(), "Autocomplete:Select:Address");
   }

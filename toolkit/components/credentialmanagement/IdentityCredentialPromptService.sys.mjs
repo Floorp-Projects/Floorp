@@ -525,6 +525,43 @@ export class IdentityCredentialPromptService {
         provider: providerName || displayDomain,
       }
     );
+
+    if (AppConstants.platform === "android") {
+      const accounts = [];
+
+      for (const [accountIndex, account] of accountList.accounts.entries()) {
+        var picture = "";
+        let pictureResult = pictureResults[accountIndex];
+        if (pictureResult.status == "fulfilled") {
+          picture = pictureResult.value;
+        }
+        account.name;
+        account.email;
+        const data = {
+          id: accountIndex,
+          icon: picture,
+          name: account.name,
+          email: account.email,
+        };
+        accounts.push(data);
+        console.log(data);
+      }
+
+      const result = {
+        provider: displayDomain,
+        accounts,
+      };
+
+      return new Promise((resolve, reject) => {
+        lazy.GeckoViewIdentityCredential.onShowAccountsPrompt(
+          browsingContext,
+          result,
+          resolve,
+          reject
+        );
+      });
+    }
+
     let [accept, cancel] = localization.formatMessagesSync([
       { id: "identity-credential-sign-in-button" },
       { id: "identity-credential-cancel-button" },
