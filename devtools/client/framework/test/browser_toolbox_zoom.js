@@ -3,7 +3,6 @@
 
 "use strict";
 
-const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
 const L10N = new LocalizationHelper(
   "devtools/client/locales/toolbox.properties"

@@ -535,7 +535,7 @@ add_task(async function testLoadingHtmlSource() {
 
   const onSelected = selectSource(dbg, "slow-loading-page.html");
   await waitFor(
-    () => getCM(dbg).getValue() == `Loading…`,
+    () => getCM(dbg).getValue() == DEBUGGER_L10N.getStr("loadingText"),
     "Wait for the source to be displayed as loading"
   );
 
@@ -546,7 +546,7 @@ add_task(async function testLoadingHtmlSource() {
   );
   is(
     getCM(dbg).getValue(),
-    `Loading…`,
+    DEBUGGER_L10N.getStr("loadingText"),
     "The source is still loading until we release the network request"
   );
 

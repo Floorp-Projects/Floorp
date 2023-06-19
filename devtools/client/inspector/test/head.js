@@ -22,7 +22,6 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const INSPECTOR_L10N = new LocalizationHelper(
   "devtools/client/locales/inspector.properties"
 );

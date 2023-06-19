@@ -152,8 +152,5 @@ add_task(async function () {
     "The tooltip variable body text is correct"
   );
 
-  info("Close tooltip");
-  dbg.actions.clearPreview(getContext(dbg));
-
   await resume(dbg);
 });

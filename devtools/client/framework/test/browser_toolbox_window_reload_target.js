@@ -22,7 +22,6 @@ const TEST_URL =
   "<body><h1>Testing reload from devtools</h1></body></html>";
 
 const { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
-const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const L10N = new LocalizationHelper(
   "devtools/client/locales/toolbox.properties"
 );
