@@ -38,7 +38,7 @@ The agent needs to be able to read (but not set) values that have their canonica
 
 The list of reflected prefs includes the global telemetry opt-out pref ``datareporting.healthreport.uploadEnabled`` and a pref called ``default-browser-agent.enabled``, which can enable or disable the entire agent. The agent checks these registry-reflected pref values when its scheduled task runs, they do not actually prevent the scheduled task from running.
 
-Enterprise policies also exist to perform the same functions as these prefs. These work the same way as all other Firefox policies and `the documentation for those <https://github.com/mozilla/policy-templates/blob/master/README.md>`_ explains how to use them.
+Enterprise policies also exist to perform the same functions as these prefs. These work the same way as all other Firefox policies and `the documentation for those <https://mozilla.github.io/policy-templates/>`_ explains how to use them.
 
 In addition, the following Firefox Remote Settings pref is reflected: ``services.settings.server``.  It is the service endpoint to consult for remote-disablement.
 

@@ -133,7 +133,7 @@ configuration that was set in place.
 Enterprise Policy Engines are search engines that a company has added as search
 engines on Firefox for their users by setting the Enterprise Policy. In this
 `Enterprise Policy Documentation
-<https://github.com/mozilla/policy-templates/blob/master/README.md#searchengines
+<https://mozilla.github.io/policy-templates/#searchengines
 -this-policy-is-only-available-on-the-esr>`__,
 it outlines the different options that are available for enterprises using
 Firefox ESR (Extended Support Release) and what’s available in terms of adding,
@@ -141,7 +141,7 @@ updating, or removing search engines. The company can use the policy to define
 which search engines are available on their Firefox ESR.
 
 See the `policy-templates
-<https://github.com/mozilla/policy-templates/blob/master/README.md>`__ for more
+<https://mozilla.github.io/policy-templates/>`__ for more
 information on Enterprise Policy templates and the different configuration rules
 available.
 
