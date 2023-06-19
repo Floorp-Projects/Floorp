@@ -1074,6 +1074,7 @@ def target_tasks_chromium_update(full_task_graph, parameters, graph_config):
         "fetch-mac-chromium",
         "toolchain-linux64-custom-car",
         "toolchain-win64-custom-car",
+        "toolchain-macosx64-custom-car",
     ]
 
 
