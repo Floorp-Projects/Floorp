@@ -1,0 +1,32 @@
+# HG changeset patch
+# User Zhao Jiazhong <zhaojiazhong-hf@loongson.cn>
+# Date 1684413793 -28800
+#      Thu May 18 20:43:13 2023 +0800
+# Node ID c1e4ab25fefb3a54ae35ae82b7718bf71f992a36
+# Parent  e974af195c9886356987dd99ba40ab25692c134c
+Bug 1833852 - Add loongarch defines to build/build_config.h. r=bobowen
+
+Fix firefox for loongarch64 building issue.
+
+Differential Revision: https://phabricator.services.mozilla.com/D178435
+
+diff --git a/security/sandbox/chromium/build/build_config.h b/security/sandbox/chromium/build/build_config.h
+--- a/security/sandbox/chromium/build/build_config.h
++++ b/security/sandbox/chromium/build/build_config.h
+@@ -170,6 +170,16 @@
+ #define ARCH_CPU_RISCV64 1
+ #define ARCH_CPU_64_BITS 1
+ #define ARCH_CPU_LITTLE_ENDIAN 1
++#elif defined(__loongarch__)
++#define ARCH_CPU_LOONGARCH_FAMILY 1
++#define ARCH_CPU_LITTLE_ENDIAN 1
++#if __loongarch_grlen == 64
++#define ARCH_CPU_LOONGARCH64 1
++#define ARCH_CPU_64_BITS 1
++#else
++#define ARCH_CPU_LOONGARCH32 1
++#define ARCH_CPU_32_BITS 1
++#endif
+ #else
+ #error Please add support for your architecture in build/build_config.h
+ #endif

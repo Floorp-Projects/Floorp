@@ -170,6 +170,16 @@
 #define ARCH_CPU_RISCV64 1
 #define ARCH_CPU_64_BITS 1
 #define ARCH_CPU_LITTLE_ENDIAN 1
+#elif defined(__loongarch__)
+#define ARCH_CPU_LOONGARCH_FAMILY 1
+#define ARCH_CPU_LITTLE_ENDIAN 1
+#if __loongarch_grlen == 64
+#define ARCH_CPU_LOONGARCH64 1
+#define ARCH_CPU_64_BITS 1
+#else
+#define ARCH_CPU_LOONGARCH32 1
+#define ARCH_CPU_32_BITS 1
+#endif
 #else
 #error Please add support for your architecture in build/build_config.h
 #endif
