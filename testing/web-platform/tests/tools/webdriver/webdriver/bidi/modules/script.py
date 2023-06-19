@@ -18,7 +18,7 @@ class ScriptEvaluateResultException(Exception):
         self.stacktrace = self.process_stacktrace(details.get("stackTrace", {}))
         self.text = details.get("text")
 
-    def process_stacktrace(self, stacktrace):
+    def process_stacktrace(self, stacktrace: Mapping[str, Any]) -> str:
         stack = ""
         for frame in stacktrace.get("callFrames", []):
             data = frame.get("functionName") or "eval code"
@@ -29,13 +29,13 @@ class ScriptEvaluateResultException(Exception):
 
         return stack
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return the object representation in string format."""
         return f"<{self.__class__.__name__}(), {self.text})>"
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return the string representation of the object."""
-        message = self.text
+        message: str = self.text
 
         if self.stacktrace:
             message += f"\n\nStacktrace:\n\n{self.stacktrace}"
