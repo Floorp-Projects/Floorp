@@ -51,6 +51,20 @@ class Popover extends Component {
     this.startTimer();
   }
 
+  componentDidUpdate(prevProps) {
+    // We have to update `coords` when the Popover type changes
+    if (prevProps.type != this.props.type) {
+      const coords =
+        this.props.type == "popover"
+          ? this.getPopoverCoords()
+          : this.getTooltipCoords();
+
+      if (coords) {
+        this.setState({ coords });
+      }
+    }
+  }
+
   componentWillUnmount() {
     if (this.timerId) {
       clearTimeout(this.timerId);
