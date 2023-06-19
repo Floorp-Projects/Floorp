@@ -692,8 +692,9 @@ optgroup:before {
 }
 
 @media print {
-  input, textarea, select, button {
+  input, textarea, select, button, details {
     -moz-user-input: none !important;
+    pointer-events: none !important;
   }
 }
 
