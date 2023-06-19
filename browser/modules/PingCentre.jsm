@@ -2,8 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
-
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
@@ -25,7 +26,7 @@ const FHR_UPLOAD_ENABLED_PREF = "datareporting.healthreport.uploadEnabled";
  * @param {string} options.topic - a unique ID for users of PingCentre to distinguish
  *                  their data on the server side.
  */
-export class PingCentre {
+class PingCentre {
   constructor(options) {
     if (!options.topic) {
       throw new Error("Must specify topic.");
@@ -166,8 +167,9 @@ export class PingCentre {
   }
 }
 
-export const PingCentreConstants = {
+const PingCentreConstants = {
   FHR_UPLOAD_ENABLED_PREF,
   TELEMETRY_PREF,
   LOGGING_PREF,
 };
+const EXPORTED_SYMBOLS = ["PingCentre", "PingCentreConstants"];

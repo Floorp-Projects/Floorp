@@ -1,7 +1,7 @@
 "use strict";
 
-ChromeUtils.defineESModuleGetters(this, {
-  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
+XPCOMUtils.defineLazyModuleGetters(this, {
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
 });
 // Create a uri for an https site
 const testPath = getRootDirectory(gTestPath).replace(

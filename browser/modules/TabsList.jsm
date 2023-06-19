@@ -2,11 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   PanelMultiView: "resource:///modules/PanelMultiView.sys.mjs",
 });
+
+var EXPORTED_SYMBOLS = ["TabsPanel"];
 
 const TAB_DROP_TYPE = "application/x-moz-tabbrowser-tab";
 
@@ -227,7 +231,7 @@ const TABS_PANEL_EVENTS = {
   hide: "PanelMultiViewHidden",
 };
 
-export class TabsPanel extends TabsListBase {
+class TabsPanel extends TabsListBase {
   constructor(opts) {
     super({
       ...opts,

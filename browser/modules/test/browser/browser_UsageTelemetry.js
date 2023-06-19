@@ -18,10 +18,11 @@ const TELEMETRY_SUBSESSION_TOPIC = "internal-telemetry-after-subsession-split";
 
 const RESTORE_ON_DEMAND_PREF = "browser.sessionstore.restore_on-demand";
 
-ChromeUtils.defineESModuleGetters(this, {
-  MINIMUM_TAB_COUNT_INTERVAL_MS:
-    "resource:///modules/BrowserUsageTelemetry.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "MINIMUM_TAB_COUNT_INTERVAL_MS",
+  "resource:///modules/BrowserUsageTelemetry.jsm"
+);
 
 const { ObjectUtils } = ChromeUtils.import(
   "resource://gre/modules/ObjectUtils.jsm"

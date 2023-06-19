@@ -6,9 +6,11 @@
 
 "use strict";
 
-ChromeUtils.defineESModuleGetters(this, {
-  AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "AboutNewTab",
+  "resource:///modules/AboutNewTab.jsm"
+);
 
 var { ExtensionPreferencesManager } = ChromeUtils.importESModule(
   "resource://gre/modules/ExtensionPreferencesManager.sys.mjs"

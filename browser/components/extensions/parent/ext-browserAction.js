@@ -7,7 +7,6 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
-  BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.sys.mjs",
   CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
   ExtensionTelemetry: "resource://gre/modules/ExtensionTelemetry.sys.mjs",
   OriginControls: "resource://gre/modules/ExtensionPermissions.sys.mjs",
@@ -15,6 +14,11 @@ ChromeUtils.defineESModuleGetters(this, {
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
+ChromeUtils.defineModuleGetter(
+  this,
+  "BrowserUsageTelemetry",
+  "resource:///modules/BrowserUsageTelemetry.jsm"
+);
 
 var { DefaultWeakMap, ExtensionError } = ExtensionUtils;
 

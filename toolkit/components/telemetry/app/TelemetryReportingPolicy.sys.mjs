@@ -494,8 +494,8 @@ var TelemetryReportingPolicyImpl = {
     }
     firstRunPolicyURL = Services.urlFormatter.formatURL(firstRunPolicyURL);
 
-    const { BrowserWindowTracker } = ChromeUtils.importESModule(
-      "resource:///modules/BrowserWindowTracker.sys.mjs"
+    const { BrowserWindowTracker } = ChromeUtils.import(
+      "resource:///modules/BrowserWindowTracker.jsm"
     );
     let win = BrowserWindowTracker.getTopWindow();
 

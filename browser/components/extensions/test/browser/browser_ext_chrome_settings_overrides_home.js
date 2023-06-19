@@ -11,7 +11,10 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource:///modules/ExtensionControlledPopup.sys.mjs",
   ExtensionSettingsStore:
     "resource://gre/modules/ExtensionSettingsStore.sys.mjs",
-  HomePage: "resource:///modules/HomePage.sys.mjs",
+});
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  HomePage: "resource:///modules/HomePage.jsm",
 });
 
 // Named this way so they correspond to the extensions

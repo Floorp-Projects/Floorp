@@ -4,9 +4,11 @@
 
 "use strict";
 
-ChromeUtils.defineESModuleGetters(this, {
-  HomePage: "resource:///modules/HomePage.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "HomePage",
+  "resource:///modules/HomePage.jsm"
+);
 
 const kPrefProtonToolbarVersion = "browser.proton.toolbar.version";
 const kPrefHomeButtonUsed = "browser.engagement.home-button.has-used";

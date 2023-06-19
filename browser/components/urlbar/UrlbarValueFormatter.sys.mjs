@@ -5,11 +5,16 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  BrowserUIUtils: "resource:///modules/BrowserUIUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
 });
+
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "BrowserUIUtils",
+  "resource:///modules/BrowserUIUtils.jsm"
+);
 
 /**
  * Applies URL highlighting and other styling to the text in the urlbar input,

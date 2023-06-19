@@ -5,10 +5,14 @@
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "PingCentre",
+  "resource:///modules/PingCentre.jsm"
+);
 ChromeUtils.defineESModuleGetters(lazy, {
-  PingCentre: "resource:///modules/PingCentre.sys.mjs",
-  TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
   pktApi: "chrome://pocket/content/pktApi.sys.mjs",
+  TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
 });
 
 // List of namespaces for the structured ingestion system.

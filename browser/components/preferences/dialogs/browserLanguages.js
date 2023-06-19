@@ -11,9 +11,12 @@ ChromeUtils.defineESModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   AddonRepository: "resource://gre/modules/addons/AddonRepository.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
-  SelectionChangedMenulist:
-    "resource:///modules/SelectionChangedMenulist.sys.mjs",
 });
+ChromeUtils.defineModuleGetter(
+  this,
+  "SelectionChangedMenulist",
+  "resource:///modules/SelectionChangedMenulist.jsm"
+);
 
 document
   .getElementById("BrowserLanguagesDialog")

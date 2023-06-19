@@ -3,8 +3,8 @@
  */
 "use strict";
 
-const { TabUnloader } = ChromeUtils.importESModule(
-  "resource:///modules/TabUnloader.sys.mjs"
+const { TabUnloader } = ChromeUtils.import(
+  "resource:///modules/TabUnloader.jsm"
 );
 
 let TestTabUnloaderMethods = {

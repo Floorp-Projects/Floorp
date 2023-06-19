@@ -2,6 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
+var EXPORTED_SYMBOLS = ["HomePage"];
+
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -55,7 +59,7 @@ function getHomepagePref(useDefault) {
  * urls are ignored. As a result, all set/get requests for the homepage
  * preferences should be routed through here.
  */
-export let HomePage = {
+let HomePage = {
   // This is an array of strings that should be matched against URLs to see
   // if they should be ignored or not.
   _ignoreList: [],

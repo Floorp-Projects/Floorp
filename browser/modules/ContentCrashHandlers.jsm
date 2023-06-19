@@ -2,17 +2,29 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+"use strict";
+
+var EXPORTED_SYMBOLS = ["TabCrashHandler", "UnsubmittedCrashHandler"];
+
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   CrashSubmit: "resource://gre/modules/CrashSubmit.sys.mjs",
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
+});
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
 });
 
 // We don't process crash reports older than 28 days, so don't bother
@@ -65,7 +77,7 @@ class BrowserWeakMap extends WeakMap {
   }
 }
 
-export var TabCrashHandler = {
+var TabCrashHandler = {
   _crashedTabCount: 0,
   childMap: new Map(),
   browserMap: new BrowserWeakMap(),
@@ -761,7 +773,7 @@ export var TabCrashHandler = {
  * submit those reports automatically without prompting if
  * the user has opted in.
  */
-export var UnsubmittedCrashHandler = {
+var UnsubmittedCrashHandler = {
   get prefs() {
     delete this.prefs;
     return (this.prefs = Services.prefs.getBranch(

@@ -6,11 +6,8 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
-});
-
 XPCOMUtils.defineLazyModuleGetters(lazy, {
+  AboutNewTab: "resource:///modules/AboutNewTab.jsm",
   ASRouter: "resource://activity-stream/lib/ASRouter.jsm",
 });
 

@@ -3,8 +3,8 @@
 const SCALAR_BUILDID_MISMATCH = "dom.contentprocess.buildID_mismatch";
 
 add_task(async function test_aboutRestartRequired() {
-  const { TabCrashHandler } = ChromeUtils.importESModule(
-    "resource:///modules/ContentCrashHandlers.sys.mjs"
+  const { TabCrashHandler } = ChromeUtils.import(
+    "resource:///modules/ContentCrashHandlers.jsm"
   );
 
   // Let's reset the counts.

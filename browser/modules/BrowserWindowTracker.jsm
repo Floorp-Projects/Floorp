@@ -7,7 +7,11 @@
  * the current selected tab's content outer window ID.
  */
 
-import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+var EXPORTED_SYMBOLS = ["BrowserWindowTracker"];
+
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
 
 const lazy = {};
 
@@ -143,7 +147,7 @@ var WindowHelper = {
   },
 };
 
-export const BrowserWindowTracker = {
+const BrowserWindowTracker = {
   pendingWindows: new Map(),
 
   /**

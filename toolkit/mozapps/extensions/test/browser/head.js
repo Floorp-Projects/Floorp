@@ -1640,8 +1640,8 @@ function loadTestSubscript(filePath) {
 }
 
 function cleanupPendingNotifications() {
-  const { ExtensionsUI } = ChromeUtils.importESModule(
-    "resource:///modules/ExtensionsUI.sys.mjs"
+  const { ExtensionsUI } = ChromeUtils.import(
+    "resource:///modules/ExtensionsUI.jsm"
   );
   info("Cleanup any pending notification before exiting the test");
   const keys = ChromeUtils.nondeterministicGetWeakSetKeys(

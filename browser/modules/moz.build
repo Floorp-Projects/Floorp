@@ -37,37 +37,40 @@ with Files("test/unit/test_LaterRun.js"):
 with Files("test/unit/test_SitePermissions.js"):
     BUG_COMPONENT = ("Firefox", "Site Permissions")
 
-with Files("AboutNewTab.sys.mjs"):
+with Files("AboutNewTab.jsm"):
     BUG_COMPONENT = ("Firefox", "New Tab Page")
 
-with Files("AsyncTabSwitcher.sys.mjs"):
+with Files("AsyncTabSwitcher.jsm"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browser")
 
-with Files("NewTabPagePreloading.sys.mjs"):
+with Files("NewTabPagePreloading.jsm"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browser")
 
-with Files("BrowserWindowTracker.sys.mjs"):
+with Files("BrowserWindowTracker.jsm"):
     BUG_COMPONENT = ("Firefox", "General")
 
-with Files("BrowserUsageTelemetry.sys.mjs"):
-    BUG_COMPONENT = ("Firefox", "General")
+with Files("*Telemetry.jsm"):
+    BUG_COMPONENT = ("Toolkit", "Telemetry")
 
-with Files("ContentCrashHandlers.sys.mjs"):
+with Files("ContentCrashHandlers.jsm"):
     BUG_COMPONENT = ("Toolkit", "Crash Reporting")
 
-with Files("EveryWindow.sys.mjs"):
+with Files("EveryWindow.jsm"):
     BUG_COMPONENT = ("Firefox", "General")
 
-with Files("ExtensionsUI.sys.mjs"):
+with Files("ExtensionsUI.jsm"):
     BUG_COMPONENT = ("WebExtensions", "General")
 
 with Files("FeatureCallout.sys.mjs"):
     BUG_COMPONENT = ("Firefox", "Messaging System")
 
-with Files("LaterRun.sys.mjs"):
+with Files("LaterRun.jsm"):
     BUG_COMPONENT = ("Firefox", "Tours")
 
-with Files("OpenInTabsUtils.sys.mjs"):
+with Files("LiveBookmarkMigrator.jsm"):
+    BUG_COMPONENT = ("Firefox", "General")
+
+with Files("OpenInTabsUtils.jsm"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browser")
 
 with Files("PartnerLinkAttribution.sys.mjs"):
@@ -76,42 +79,42 @@ with Files("PartnerLinkAttribution.sys.mjs"):
 with Files("PermissionUI.sys.mjs"):
     BUG_COMPONENT = ("Firefox", "Site Permissions")
 
-with Files("ProcessHangMonitor.sys.mjs"):
+with Files("ProcessHangMonitor.jsm"):
     BUG_COMPONENT = ("Core", "DOM: Content Processes")
 
 with Files("Sanitizer.sys.mjs"):
     BUG_COMPONENT = ("Toolkit", "Data Sanitization")
 
-with Files("SelectionChangedMenulist.sys.mjs"):
+with Files("SelectionChangedMenulist.jsm"):
     BUG_COMPONENT = ("Firefox", "Settings UI")
 
-with Files("SiteDataManager.sys.mjs"):
+with Files("SiteDataManager.jsm"):
     BUG_COMPONENT = ("Firefox", "Settings UI")
 
 with Files("SitePermissions.sys.mjs"):
     BUG_COMPONENT = ("Firefox", "Site Permissions")
 
-with Files("TabsList.sys.mjs"):
+with Files("TabsList.jsm"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browser")
 
-with Files("TabUnloader.sys.mjs"):
+with Files("TabUnloader.jsm"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browser")
 
-with Files("TransientPrefs.sys.mjs"):
+with Files("TransientPrefs.jsm"):
     BUG_COMPONENT = ("Firefox", "Settings UI")
 
-with Files("WindowsJumpLists.sys.mjs"):
+with Files("WindowsJumpLists.jsm"):
     BUG_COMPONENT = ("Firefox", "Shell Integration")
     SCHEDULES.exclusive = ["windows"]
 
-with Files("WindowsPreviewPerTab.sys.mjs"):
+with Files("WindowsPreviewPerTab.jsm"):
     BUG_COMPONENT = ("Core", "Widget: Win32")
     SCHEDULES.exclusive = ["windows"]
 
-with Files("webrtcUI.sys.mjs"):
+with Files("webrtcUI.jsm"):
     BUG_COMPONENT = ("Firefox", "Site Permissions")
 
-with Files("ZoomUI.sys.mjs"):
+with Files("ZoomUI.jsm"):
     BUG_COMPONENT = ("Firefox", "Toolbars and Customization")
 
 BROWSER_CHROME_MANIFESTS += [
@@ -121,42 +124,42 @@ BROWSER_CHROME_MANIFESTS += [
 XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
 
 EXTRA_JS_MODULES += [
-    "AboutNewTab.sys.mjs",
-    "AsyncTabSwitcher.sys.mjs",
-    "BrowserUIUtils.sys.mjs",
-    "BrowserUsageTelemetry.sys.mjs",
-    "BrowserWindowTracker.sys.mjs",
-    "ContentCrashHandlers.sys.mjs",
-    "Discovery.sys.mjs",
-    "EveryWindow.sys.mjs",
-    "ExtensionsUI.sys.mjs",
-    "FaviconLoader.sys.mjs",
+    "AboutNewTab.jsm",
+    "AsyncTabSwitcher.jsm",
+    "BrowserUIUtils.jsm",
+    "BrowserUsageTelemetry.jsm",
+    "BrowserWindowTracker.jsm",
+    "ContentCrashHandlers.jsm",
+    "Discovery.jsm",
+    "EveryWindow.jsm",
+    "ExtensionsUI.jsm",
+    "FaviconLoader.jsm",
     "FeatureCallout.sys.mjs",
-    "HomePage.sys.mjs",
-    "LaterRun.sys.mjs",
-    "NewTabPagePreloading.sys.mjs",
-    "OpenInTabsUtils.sys.mjs",
-    "PageActions.sys.mjs",
+    "HomePage.jsm",
+    "LaterRun.jsm",
+    "NewTabPagePreloading.jsm",
+    "OpenInTabsUtils.jsm",
+    "PageActions.jsm",
     "PartnerLinkAttribution.sys.mjs",
     "PermissionUI.sys.mjs",
-    "PingCentre.sys.mjs",
-    "ProcessHangMonitor.sys.mjs",
+    "PingCentre.jsm",
+    "ProcessHangMonitor.jsm",
     "Sanitizer.sys.mjs",
-    "SelectionChangedMenulist.sys.mjs",
-    "SiteDataManager.sys.mjs",
+    "SelectionChangedMenulist.jsm",
+    "SiteDataManager.jsm",
     "SitePermissions.sys.mjs",
-    "TabsList.sys.mjs",
-    "TabUnloader.sys.mjs",
-    "TransientPrefs.sys.mjs",
+    "TabsList.jsm",
+    "TabUnloader.jsm",
+    "TransientPrefs.jsm",
     "URILoadingHelper.sys.mjs",
-    "webrtcUI.sys.mjs",
-    "ZoomUI.sys.mjs",
+    "webrtcUI.jsm",
+    "ZoomUI.jsm",
 ]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
     EXTRA_JS_MODULES += [
-        "WindowsJumpLists.sys.mjs",
-        "WindowsPreviewPerTab.sys.mjs",
+        "WindowsJumpLists.jsm",
+        "WindowsPreviewPerTab.jsm",
     ]
 
     EXTRA_JS_MODULES.backgroundtasks += [
