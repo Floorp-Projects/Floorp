@@ -23,7 +23,7 @@ window.onload = function() {
     document.body.appendChild(el);
     els.push(el);
   }
-  flush_style(els[0]);
+  flush_layout(els[0]);
   perf_start();
   for (let el of els) {
     el.className = "";

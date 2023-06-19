@@ -11,7 +11,7 @@ window.onload = function() {
     roots.push(root);
     document.body.appendChild(root);
   }
-  flush_style(roots[0]);
+  flush_layout(roots[0]);
   perf_start();
   for (x in ["x", "", "x"]) {
     for (let root of roots) {
