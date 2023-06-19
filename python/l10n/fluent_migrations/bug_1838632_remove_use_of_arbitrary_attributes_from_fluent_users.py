@@ -24,3 +24,25 @@ connection-proxy-autologin-checkbox =
             from_path=connection_ftl,
         ),
     )
+
+    edit_bookmarks_ftl = "browser/browser/editBookmarkOverlay.ftl"
+    ctx.add_transforms(
+        edit_bookmarks_ftl,
+        edit_bookmarks_ftl,
+        transforms_from(
+            """
+bookmark-overlay-folders-expander2 =
+  .tooltiptext = {COPY_PATTERN(from_path, "bookmark-overlay-folders-expander.tooltiptext")}
+
+bookmark-overlay-folders-expander-hide =
+  .tooltiptext = {COPY_PATTERN(from_path, "bookmark-overlay-folders-expander.tooltiptextup")}
+
+bookmark-overlay-tags-expander2 =
+  .tooltiptext = {COPY_PATTERN(from_path, "bookmark-overlay-tags-expander.tooltiptext")}
+
+bookmark-overlay-tags-expander-hide =
+  .tooltiptext = {COPY_PATTERN(from_path, "bookmark-overlay-tags-expander.tooltiptextup")}
+""",
+            from_path=edit_bookmarks_ftl,
+        ),
+    )
