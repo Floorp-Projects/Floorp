@@ -807,13 +807,13 @@ items from that key's value."
         self.preflight_build()
         self._run_mach_command_in_build_env(["configure"])
         self._run_mach_command_in_build_env(
-            ["static-analysis", "autotest", "--intree-tool"], use_subprocess=True
+            ["static-analysis", "autotest", "--intree-tool"]
         )
 
     def _query_mach(self):
         return [sys.executable, "mach"]
 
-    def _run_mach_command_in_build_env(self, args, use_subprocess=False):
+    def _run_mach_command_in_build_env(self, args):
         """Run a mach command in a build context."""
         env = self.query_build_env()
         env.update(self.query_mach_build_env())
@@ -822,23 +822,13 @@ items from that key's value."
 
         mach = self._query_mach()
 
-        # XXX See bug 1483883
-        # Work around an interaction between Gradle and mozharness
-        # Not using `subprocess` causes gradle to hang
-        if use_subprocess:
-            import subprocess
-
-            return_code = subprocess.call(
-                mach + ["--log-no-times"] + args, env=env, cwd=dirs["abs_src_dir"]
-            )
-        else:
-            return_code = self.run_command(
-                command=mach + ["--log-no-times"] + args,
-                cwd=dirs["abs_src_dir"],
-                env=env,
-                error_list=MakefileErrorList,
-                output_timeout=self.config.get("max_build_output_timeout", 60 * 40),
-            )
+        return_code = self.run_command(
+            command=mach + ["--log-no-times"] + args,
+            cwd=dirs["abs_src_dir"],
+            env=env,
+            error_list=MakefileErrorList,
+            output_timeout=self.config.get("max_build_output_timeout", 60 * 40),
+        )
 
         if return_code:
             self.return_code = self.worst_level(

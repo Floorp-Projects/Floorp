@@ -29,6 +29,7 @@ import stat
 import subprocess
 import sys
 import tarfile
+import threading
 import time
 import traceback
 import zipfile
@@ -38,7 +39,6 @@ from io import BytesIO
 
 import mozinfo
 import six
-from mozprocess import ProcessHandler
 from six import binary_type
 
 from mozharness.base.config import BaseConfig
@@ -1593,59 +1593,53 @@ class ScriptMixin(PlatformMixin):
         else:
             parser = output_parser
 
-        try:
-            if output_timeout:
-
-                def processOutput(line):
-                    parser.add_lines(line)
-
-                def onTimeout():
-                    self.info(
-                        "Automation Error: mozprocess timed out after "
-                        "%s seconds running %s" % (str(output_timeout), str(command))
-                    )
-
-                p = ProcessHandler(
-                    command,
-                    shell=shell,
-                    env=env,
-                    cwd=cwd,
-                    storeOutput=False,
-                    onTimeout=(onTimeout,),
-                    processOutputLine=[processOutput],
+        def timer():
+            nonlocal t
+            seconds_since_last_output = time.time() - output_time
+            next_possible_timeout = output_timeout - seconds_since_last_output
+            if next_possible_timeout <= 0:
+                self.info(
+                    "Automation Error: mozharness timed out after "
+                    "%s seconds running %s" % (str(output_timeout), str(command))
                 )
+                p.kill()
+                t = None
+            else:
+                t = threading.Timer(next_possible_timeout, timer)
+                t.start()
+
+        try:
+            p = subprocess.Popen(
+                command,
+                shell=shell,
+                stdout=subprocess.PIPE,
+                cwd=cwd,
+                stderr=subprocess.STDOUT,
+                env=env,
+                bufsize=0,
+            )
+            loop = True
+            output_time = time.time()
+            t = None
+            if output_timeout:
                 self.info(
                     "Calling %s with output_timeout %d" % (command, output_timeout)
                 )
-                p.run(outputTimeout=output_timeout)
-                p.wait()
-                if p.timedOut:
-                    self.log(
-                        "timed out after %s seconds of no output" % output_timeout,
-                        level=error_level,
-                    )
-                returncode = int(p.proc.returncode)
-            else:
-                p = subprocess.Popen(
-                    command,
-                    shell=shell,
-                    stdout=subprocess.PIPE,
-                    cwd=cwd,
-                    stderr=subprocess.STDOUT,
-                    env=env,
-                    bufsize=0,
-                )
-                loop = True
-                while loop:
-                    if p.poll() is not None:
-                        """Avoid losing the final lines of the log?"""
-                        loop = False
-                    while True:
-                        line = p.stdout.readline()
-                        if not line:
-                            break
-                        parser.add_lines(line)
-                returncode = p.returncode
+                t = threading.Timer(output_timeout, timer)
+                t.start()
+            while loop:
+                if p.poll() is not None:
+                    """Avoid losing the final lines of the log?"""
+                    loop = False
+                while True:
+                    line = p.stdout.readline()
+                    if not line:
+                        break
+                    output_time = time.time()
+                    parser.add_lines(line)
+            returncode = p.returncode
+            if t:
+                t.cancel()
         except KeyboardInterrupt:
             level = error_level
             if halt_on_failure:
