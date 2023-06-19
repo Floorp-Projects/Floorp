@@ -18,13 +18,19 @@ add_task(async function () {
   info("Preview a variable in the second frame");
   clickElement(dbg, "frame", 2);
   await waitForSelectedFrame(dbg, "firstCall");
-  await assertFunctionPreview(dbg, 8, 4, "secondCall()");
+  await assertPreviewTooltip(dbg, 8, 4, {
+    result: "secondCall()",
+    expression: "secondCall",
+  });
 
   info("Preview should still work after selecting different locations");
   const frame = dbg.selectors.getVisibleSelectedFrame();
   const inScopeLines = dbg.selectors.getInScopeLines(frame.location);
   await selectSource(dbg, "script-switching-01.js");
-  await assertFunctionPreview(dbg, 8, 4, "secondCall()");
+  await assertPreviewTooltip(dbg, 8, 4, {
+    result: "secondCall()",
+    expression: "secondCall",
+  });
   is(
     dbg.selectors.getInScopeLines(frame.location),
     inScopeLines,
@@ -39,9 +45,4 @@ function waitForSelectedFrame(dbg, displayName) {
 
     return frame?.displayName == displayName && getInScopeLines(frame.location);
   });
-}
-
-async function assertFunctionPreview(dbg, line, column, displayName) {
-  const previewEl = await tryHovering(dbg, line, column, "tooltip");
-  is(previewEl.innerText, displayName);
 }

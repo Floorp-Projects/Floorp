@@ -21,7 +21,7 @@ add_task(async function () {
 
   await assertPreviewTextValue(dbg, 10, 22, {
     text: "size: 1",
-    expression: "_this.fields;",
+    expression: "fields",
   });
 
   info("Verify that the file is flagged as a React module");

@@ -86,13 +86,13 @@ function testShadowing(dbg) {
       {
         line: 3,
         column: 9,
-        expression: "_aLet2;",
+        expression: "aLet",
         result: '"let3"',
       },
       {
         line: 4,
         column: 11,
-        expression: "_aConst2;",
+        expression: "aConst",
         result: '"const3"',
       },
       {
@@ -104,13 +104,13 @@ function testShadowing(dbg) {
       {
         line: 11,
         column: 11,
-        expression: "_aLet2;",
+        expression: "aLet",
         result: '"let3"',
       },
       {
         line: 12,
         column: 13,
-        expression: "_aConst2;",
+        expression: "aConst",
         result: '"const3"',
       },
 
@@ -124,13 +124,13 @@ function testShadowing(dbg) {
       {
         line: 15,
         column: 13,
-        expression: "_aLet2;",
+        expression: "aLet",
         result: '"let3"',
       },
       {
         line: 16,
         column: 13,
-        expression: "_aConst2;",
+        expression: "aConst",
         result: '"const3"',
       },
     ]
@@ -147,25 +147,25 @@ function testImportedBindings(dbg) {
       {
         line: 20,
         column: 16,
-        expression: "_mod2.default;",
+        expression: "aDefault",
         result: '"a-default"',
       },
       {
         line: 21,
         column: 16,
-        expression: "_mod4.original;",
+        expression: "anAliased",
         result: '"an-original"',
       },
       {
         line: 22,
         column: 16,
-        expression: "_mod3.aNamed;",
+        expression: "aNamed",
         result: '"a-named"',
       },
       {
         line: 23,
         column: 16,
-        expression: "_mod3.aNamed;",
+        expression: "anotherNamed",
         result: '"a-named"',
       },
       {
@@ -180,25 +180,25 @@ function testImportedBindings(dbg) {
       {
         line: 29,
         column: 20,
-        expression: "_mod7.default;",
+        expression: "aDefault2",
         result: '"a-default2"',
       },
       {
         line: 30,
         column: 20,
-        expression: "_mod9.original;",
+        expression: "anAliased2",
         result: '"an-original2"',
       },
       {
         line: 31,
         column: 20,
-        expression: "_mod8.aNamed2;",
+        expression: "aNamed2",
         result: '"a-named2"',
       },
       {
         line: 32,
         column: 20,
-        expression: "_mod8.aNamed2;",
+        expression: "anotherNamed2",
         result: '"a-named2"',
       },
     ]
