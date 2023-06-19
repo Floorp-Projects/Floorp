@@ -25,6 +25,8 @@ videocontrols-exitfullscreen-button =
     .aria-label = Exit Full Screen
 videocontrols-casting-button-label =
     .aria-label = Cast to Screen
+# .offlabel is processed by the video control custom element to be used
+# as a text-track label
 videocontrols-closed-caption-off =
     .offlabel = Off
 

@@ -152,5 +152,13 @@ def test_comment_variables(lint, paths):
     assert "$term-message" in results[0].message
 
 
+def test_valid_attributes(lint, paths):
+    results = lint(paths("valid-attributes.ftl"))
+    print(results)
+    assert len(results) == 1
+    assert results[0].rule == "VA01"
+    assert ".extralabel" in results[0].message
+
+
 if __name__ == "__main__":
     mozunit.main()
