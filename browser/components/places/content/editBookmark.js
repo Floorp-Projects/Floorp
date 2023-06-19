@@ -808,9 +808,9 @@ var gEditItemOverlay = {
     expander.classList.toggle("expander-up", wasHidden);
     expander.classList.toggle("expander-down", !wasHidden);
     if (!wasHidden) {
-      expander.setAttribute(
-        "tooltiptext",
-        expander.getAttribute("tooltiptextdown")
+      document.l10n.setAttributes(
+        expander,
+        "bookmark-overlay-folders-expander2"
       );
       folderTreeRow.hidden = true;
       this._element("chooseFolderSeparator").hidden = this._element(
@@ -823,9 +823,9 @@ var gEditItemOverlay = {
       // want to pay for live updates while the view is not visible.
       this._folderTree.view = null;
     } else {
-      expander.setAttribute(
-        "tooltiptext",
-        expander.getAttribute("tooltiptextup")
+      document.l10n.setAttributes(
+        expander,
+        "bookmark-overlay-folders-expander-hide"
       );
       folderTreeRow.hidden = false;
 
@@ -1032,9 +1032,9 @@ var gEditItemOverlay = {
     expander.classList.toggle("expander-up", tagsSelectorRow.hidden);
     expander.classList.toggle("expander-down", !tagsSelectorRow.hidden);
     if (tagsSelectorRow.hidden) {
-      expander.setAttribute(
-        "tooltiptext",
-        expander.getAttribute("tooltiptextup")
+      document.l10n.setAttributes(
+        expander,
+        "bookmark-overlay-tags-expander-hide"
       );
       tagsSelectorRow.hidden = false;
       await this._rebuildTagsSelectorList();
@@ -1043,10 +1043,7 @@ var gEditItemOverlay = {
       tagsSelector.addEventListener("mousedown", this);
       tagsSelector.addEventListener("keypress", this);
     } else {
-      expander.setAttribute(
-        "tooltiptext",
-        expander.getAttribute("tooltiptextdown")
-      );
+      document.l10n.setAttributes(expander, "bookmark-overlay-tags-expander2");
       tagsSelectorRow.hidden = true;
 
       // This is a no-op if we've removed the listener.
