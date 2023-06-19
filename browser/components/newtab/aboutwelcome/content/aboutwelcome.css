@@ -600,6 +600,18 @@ html {
 .onboardingContainer .screen[pos=split] .section-main .main-content .main-content-inner {
   min-height: 330px;
 }
+.onboardingContainer .screen[pos=split] .section-main .main-content .main-content-inner .mobile-download-buttons {
+  padding: 0;
+  margin-inline-start: -5px;
+  display: flex;
+}
+.onboardingContainer .screen[pos=split] .section-main .main-content .main-content-inner .mobile-download-buttons button {
+  cursor: pointer;
+}
+.onboardingContainer .screen[pos=split] .section-main .main-content .main-content-inner .qr-code-image {
+  margin: 5px 0 10px;
+  display: flex;
+}
 .onboardingContainer .screen[pos=split] .section-main .main-content .main-content-inner .language-switcher-container .primary {
   margin-bottom: 5px;
 }
