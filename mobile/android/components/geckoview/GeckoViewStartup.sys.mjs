@@ -10,7 +10,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ActorManagerParent: "resource://gre/modules/ActorManagerParent.sys.mjs",
   EventDispatcher: "resource://gre/modules/Messaging.sys.mjs",
   PdfJs: "resource://pdf.js/PdfJs.sys.mjs",
-  Preferences: "resource://gre/modules/Preferences.sys.mjs",
 });
 
 const { debug, warn } = GeckoViewUtils.initLogging("Startup");
@@ -285,15 +284,30 @@ export class GeckoViewStartup {
 
     switch (aEvent) {
       case "GeckoView:ResetUserPrefs": {
-        const prefs = new lazy.Preferences();
-        prefs.reset(aData.names);
+        for (const name of aData.names) {
+          Services.prefs.clearUserPref(name);
+        }
         break;
       }
       case "GeckoView:SetDefaultPrefs": {
-        const prefs = new lazy.Preferences({ defaultBranch: true });
-        for (const name of Object.keys(aData)) {
+        const prefs = Services.prefs.getDefaultBranch("");
+        for (const [name, value] of Object.entries(aData)) {
           try {
-            prefs.set(name, aData[name]);
+            switch (typeof value) {
+              case "string":
+                prefs.setStringPref(name, value);
+                break;
+              case "number":
+                prefs.setIntPref(name, value);
+                break;
+              case "boolean":
+                prefs.setBoolPref(name, value);
+                break;
+              default:
+                throw new Error(
+                  `Can't set ${name} to ${value}. Type ${typeof value} is not supported.`
+                );
+            }
           } catch (e) {
             warn`Failed to set preference ${name}: ${e}`;
           }
