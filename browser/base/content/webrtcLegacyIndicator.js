@@ -2,7 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { webrtcUI } = ChromeUtils.import("resource:///modules/webrtcUI.jsm");
+const { webrtcUI } = ChromeUtils.importESModule(
+  "resource:///modules/webrtcUI.sys.mjs"
+);
 
 function init(event) {
   for (let id of ["audioVideoButton", "screenSharePopup"]) {

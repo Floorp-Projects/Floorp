@@ -1394,9 +1394,11 @@ var BookmarkingUI = {
   },
 
   isOnNewTabPage({ currentURI }) {
-    // Prevent loading AboutNewTab.jsm during startup path if it
+    // Prevent loading AboutNewTab.sys.mjs during startup path if it
     // is only the newTabURL getter we are interested in.
-    let newTabURL = Cu.isModuleLoaded("resource:///modules/AboutNewTab.jsm")
+    let newTabURL = Cu.isESModuleLoaded(
+      "resource:///modules/AboutNewTab.sys.mjs"
+    )
       ? AboutNewTab.newTabURL
       : "about:newtab";
     // Don't treat a custom "about:blank" new tab URL as the "New Tab Page"

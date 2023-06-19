@@ -4,8 +4,8 @@
 
 "use strict";
 
-const { PingCentre, PingCentreConstants } = ChromeUtils.import(
-  "resource:///modules/PingCentre.jsm"
+const { PingCentre, PingCentreConstants } = ChromeUtils.importESModule(
+  "resource:///modules/PingCentre.sys.mjs"
 );
 const { TelemetryEnvironment } = ChromeUtils.importESModule(
   "resource://gre/modules/TelemetryEnvironment.sys.mjs"

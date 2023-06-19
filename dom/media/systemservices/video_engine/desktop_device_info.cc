@@ -26,7 +26,7 @@ static inline void SetStringMember(char** aMember, const char* aValue) {
   }
 
   if (*aMember) {
-    delete[] * aMember;
+    delete[] *aMember;
     *aMember = nullptr;
   }
 
@@ -347,8 +347,8 @@ void webrtc::DesktopDeviceInfoImpl::InitializeTabList() {
   nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction(__func__, [&] {
     nsresult rv;
     nsCOMPtr<nsIBrowserWindowTracker> bwt =
-        do_ImportModule("resource:///modules/BrowserWindowTracker.jsm",
-                        "BrowserWindowTracker", &rv);
+        do_ImportESModule("resource:///modules/BrowserWindowTracker.sys.mjs",
+                          "BrowserWindowTracker", &rv);
     if (NS_FAILED(rv)) {
       return;
     }
