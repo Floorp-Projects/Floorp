@@ -49,8 +49,8 @@ class TestSwitchToWindowContent(WindowManagerMixin, MarionetteTestCase):
                 if (AppConstants.MOZ_APP_NAME == "fennec") {
                   win = Services.wm.getMostRecentWindow("navigator:browser");
                 } else {
-                  const { BrowserWindowTracker } = ChromeUtils.importESModule(
-                    "resource:///modules/BrowserWindowTracker.sys.mjs"
+                  const { BrowserWindowTracker } = ChromeUtils.import(
+                    "resource:///modules/BrowserWindowTracker.jsm"
                   );
                   win = BrowserWindowTracker.getTopWindow();
                 }

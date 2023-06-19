@@ -3,6 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
+var EXPORTED_SYMBOLS = ["ZoomUI"];
 const gLoadContext = Cu.createLoadContext();
 const gContentPrefs = Cc["@mozilla.org/content-pref/service;1"].getService(
   Ci.nsIContentPrefService2
@@ -15,7 +18,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PanelMultiView: "resource:///modules/PanelMultiView.sys.mjs",
 });
 
-export var ZoomUI = {
+var ZoomUI = {
   init(aWindow) {
     aWindow.addEventListener("EndSwapDocShells", onEndSwapDocShells, true);
     aWindow.addEventListener("FullZoomChange", onZoomChange);
@@ -187,8 +190,9 @@ async function updateZoomUI(aBrowser, aAnimate = false) {
   win.FullZoom.updateCommands();
 }
 
-import { CustomizableUI } from "resource:///modules/CustomizableUI.sys.mjs";
-
+const { CustomizableUI } = ChromeUtils.importESModule(
+  "resource:///modules/CustomizableUI.sys.mjs"
+);
 let customizationListener = {};
 customizationListener.onWidgetAdded =
   customizationListener.onWidgetRemoved =

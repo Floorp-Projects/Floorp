@@ -7,8 +7,8 @@
 // This test makes sure that adding certificate exceptions behaves correctly
 // when done from the prefs window
 
-ChromeUtils.defineESModuleGetters(this, {
-  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
+XPCOMUtils.defineLazyModuleGetters(this, {
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
 });
 
 function test() {

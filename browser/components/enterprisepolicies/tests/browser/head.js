@@ -9,9 +9,11 @@ const { EnterprisePolicyTesting, PoliciesPrefTracker } =
     "resource://testing-common/EnterprisePolicyTesting.sys.mjs"
   );
 
-ChromeUtils.defineESModuleGetters(this, {
-  HomePage: "resource:///modules/HomePage.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "HomePage",
+  "resource:///modules/HomePage.jsm"
+);
 
 PoliciesPrefTracker.start();
 

@@ -3,9 +3,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+"use strict";
 
+var EXPORTED_SYMBOLS = ["AsyncTabSwitcher"];
+
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
+
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -71,7 +79,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
  * actually takes place. Therefore, we don't unload the old tab
  * until the next MozAfterPaint event.
  */
-export class AsyncTabSwitcher {
+class AsyncTabSwitcher {
   constructor(tabbrowser) {
     this.log("START");
 

@@ -28,8 +28,8 @@ AddonTestUtils.createAppInfo(
   "42"
 );
 
-const { AboutNewTab } = ChromeUtils.importESModule(
-  "resource:///modules/AboutNewTab.sys.mjs"
+const { AboutNewTab } = ChromeUtils.import(
+  "resource:///modules/AboutNewTab.jsm"
 );
 const { PREFS_CONFIG } = ChromeUtils.import(
   "resource://activity-stream/lib/ActivityStream.jsm"

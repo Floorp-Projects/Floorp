@@ -2,13 +2,31 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { EventEmitter } from "resource:///modules/syncedtabs/EventEmitter.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+"use strict";
 
+var EXPORTED_SYMBOLS = [
+  "webrtcUI",
+  "showStreamSharingMenu",
+  "MacOSWebRTCStatusbarIndicator",
+];
+
+const { EventEmitter } = ChromeUtils.importESModule(
+  "resource:///modules/syncedtabs/EventEmitter.sys.mjs"
+);
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
+
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
 const lazy = {};
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "BrowserWindowTracker",
+  "resource:///modules/BrowserWindowTracker.jsm"
+);
 ChromeUtils.defineESModuleGetters(lazy, {
-  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   SitePermissions: "resource:///modules/SitePermissions.sys.mjs",
 });
 XPCOMUtils.defineLazyGetter(
@@ -78,7 +96,7 @@ const MEDIA_SOURCE_L10NID_BY_TYPE = new Map([
   ["audioCapture", "webrtc-item-audio-capture"],
 ]);
 
-export var webrtcUI = {
+var webrtcUI = {
   initialized: false,
 
   peerConnectionBlockers: new Set(),
@@ -1017,7 +1035,7 @@ function getGlobalIndicator() {
  * @param {Event} event - The popupshowing event for the <menu>.
  * @param {boolean} inclWindow - Should the window stream be included in the active streams.
  */
-export function showStreamSharingMenu(win, event, inclWindow = false) {
+function showStreamSharingMenu(win, event, inclWindow = false) {
   win.MozXULElement.insertFTLIfNeeded("browser/webrtcIndicator.ftl");
   const doc = win.document;
   const menu = event.target;
@@ -1090,7 +1108,7 @@ export function showStreamSharingMenu(win, event, inclWindow = false) {
  * WebRTC global sharing indicator, because the MacOSWebRTCStatusbarIndicator
  * acts as the indicator when in the legacy indicator configuration.
  */
-export class MacOSWebRTCStatusbarIndicator {
+class MacOSWebRTCStatusbarIndicator {
   constructor() {
     this._camera = null;
     this._microphone = null;

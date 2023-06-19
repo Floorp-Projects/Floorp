@@ -4,9 +4,11 @@
 
 const lazy = {};
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  FaviconLoader: "resource:///modules/FaviconLoader.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "FaviconLoader",
+  "resource:///modules/FaviconLoader.jsm"
+);
 
 export class LinkHandlerChild extends JSWindowActorChild {
   constructor() {

@@ -8,9 +8,11 @@
 
 const lazy = {};
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "BrowserWindowTracker",
+  "resource:///modules/BrowserWindowTracker.jsm"
+);
 
 class PopupShownObserver {
   _weakContext = null;

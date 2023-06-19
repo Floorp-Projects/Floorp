@@ -3,8 +3,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+"use strict";
+
+var EXPORTED_SYMBOLS = [
+  "BrowserUsageTelemetry",
+  "getUniqueDomainsVisitedInPast24Hours",
+  "URICountListener",
+  "MINIMUM_TAB_COUNT_INTERVAL_MS",
+];
+
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
 
 const lazy = {};
 
@@ -12,7 +25,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ClientID: "resource://gre/modules/ClientID.sys.mjs",
   CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
-  PageActions: "resource:///modules/PageActions.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   ProvenanceData: "resource:///modules/ProvenanceData.sys.mjs",
   SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.sys.mjs",
@@ -23,6 +35,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
+});
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  PageActions: "resource:///modules/PageActions.jsm",
 });
 
 // This pref is in seconds!
@@ -61,7 +77,7 @@ const UNFILTERED_URI_COUNT_SCALAR_NAME =
 const TOTAL_URI_COUNT_NORMAL_AND_PRIVATE_MODE_SCALAR_NAME =
   "browser.engagement.total_uri_count_normal_and_private_mode";
 
-export const MINIMUM_TAB_COUNT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes, in ms
+const MINIMUM_TAB_COUNT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes, in ms
 
 // The elements we consider to be interactive.
 const UI_TARGET_ELEMENTS = [
@@ -239,7 +255,7 @@ function getPinnedTabsCount() {
   return pinnedTabs;
 }
 
-export let URICountListener = {
+let URICountListener = {
   // A set containing the visited domains, see bug 1271310.
   _domainSet: new Set(),
   // A set containing the visited origins during the last 24 hours (similar to domains, but not quite the same)
@@ -428,7 +444,7 @@ export let URICountListener = {
   ]),
 };
 
-export let BrowserUsageTelemetry = {
+let BrowserUsageTelemetry = {
   /**
    * This is a policy object used to override behavior for testing.
    */
@@ -1433,6 +1449,6 @@ export let BrowserUsageTelemetry = {
 };
 
 // Used by nsIBrowserUsage
-export function getUniqueDomainsVisitedInPast24Hours() {
+function getUniqueDomainsVisitedInPast24Hours() {
   return URICountListener.uniqueDomainsVisitedInPast24Hours;
 }

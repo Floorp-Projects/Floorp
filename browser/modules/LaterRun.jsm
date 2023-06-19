@@ -2,6 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
+var EXPORTED_SYMBOLS = ["LaterRun"];
+
 const kEnabledPref = "browser.laterrun.enabled";
 const kPagePrefRoot = "browser.laterrun.pages.";
 // Number of sessions we've been active in
@@ -50,7 +54,7 @@ class Page {
   }
 }
 
-export let LaterRun = {
+let LaterRun = {
   init() {
     if (!this.enabled) {
       return;

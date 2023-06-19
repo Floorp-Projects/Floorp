@@ -13,9 +13,7 @@ const { TestUtils } = ChromeUtils.importESModule(
 const { ClientID } = ChromeUtils.importESModule(
   "resource://gre/modules/ClientID.sys.mjs"
 );
-const { Discovery } = ChromeUtils.importESModule(
-  "resource:///modules/Discovery.sys.mjs"
-);
+const { Discovery } = ChromeUtils.import("resource:///modules/Discovery.jsm");
 const { ContextualIdentityService } = ChromeUtils.importESModule(
   "resource://gre/modules/ContextualIdentityService.sys.mjs"
 );
