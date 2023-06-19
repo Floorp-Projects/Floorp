@@ -18,7 +18,7 @@ window.onload = function() {
   root.appendChild(build_dom(50000, "div"));
   let leftmost = find_leftmost(root);
   document.body.appendChild(root);
-  flush_style(root);
+  flush_layout(root);
   perf_start();
   document.body.className = "x";
   leftmost.className = "y";

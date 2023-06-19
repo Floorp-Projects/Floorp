@@ -8,7 +8,7 @@ window.onload = function() {
   document.head.appendChild(build_rule("caption div, caption span", 1, "{ color: blue; } ", 20000));
   let dom = build_dom(5000, "div");
 
-  flush_style();
+  flush_layout();
   perf_start();
   document.body.appendChild(dom);
   flush_style(dom);

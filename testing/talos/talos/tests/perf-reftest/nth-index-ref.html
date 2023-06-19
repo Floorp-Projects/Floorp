@@ -14,7 +14,7 @@ window.onload = function() {
   let last = root.lastChild;
   last.appendChild(build_dom(5000, "div"));
   document.body.appendChild(root);
-  flush_style(root);
+  flush_layout(root);
   perf_start();
   last.className = "x";
   flush_style(root);

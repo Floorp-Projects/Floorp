@@ -10,7 +10,7 @@ window.onload = function() {
   root.className = "root";
   root.appendChild(build_dom(100000, "div"));
   document.body.appendChild(root);
-  flush_style(root);
+  flush_layout(root);
   perf_start();
   document.body.className = "x";
   flush_style(root);

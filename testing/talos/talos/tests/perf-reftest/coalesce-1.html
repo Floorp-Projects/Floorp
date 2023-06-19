@@ -15,7 +15,7 @@ function set_class(n) {
 window.onload = function() {
   let root = build_dom(50000, "div");
   document.body.appendChild(root);
-  flush_style(root);
+  flush_layout(root);
   perf_start();
   set_class(root);
   flush_style(root);

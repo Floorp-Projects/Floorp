@@ -8,7 +8,7 @@ window.onload = function() {
   let root = document.createElement("div");
   root.appendChild(build_dom(100000, "div"));
   document.body.appendChild(root);
-  flush_style(root);
+  flush_layout(root);
   perf_start();
   root.className = "x";
   flush_style(root);

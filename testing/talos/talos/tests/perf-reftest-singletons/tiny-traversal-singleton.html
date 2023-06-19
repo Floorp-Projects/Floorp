@@ -13,14 +13,14 @@ window.onload = function() {
   let elem = document.createElement("caption");
   p.appendChild(elem);
   document.body.appendChild(dom);
-  flush_style();
+  flush_layout();
 
   perf_start();
   var state = true;
   for (i = 0; i < 100000; ++i) {
     elem.setAttribute("id", state ? "" : "foo");
     state = !state;
-    window.getComputedStyle(elem).color;
+    flush_style(elem);
   }
   perf_finish();
 };
