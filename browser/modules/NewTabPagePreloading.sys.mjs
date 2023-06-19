@@ -7,11 +7,7 @@
  * the user opens a new tab.
  */
 
-var EXPORTED_SYMBOLS = ["NewTabPagePreloading"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -25,7 +21,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
 });
 
-let NewTabPagePreloading = {
+export let NewTabPagePreloading = {
   // Maximum number of instances of a given page we'll preload at any time.
   // Because we preload about:newtab for normal windows, and about:privatebrowsing
   // for private ones, we could have 3 of each.

@@ -3,16 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 /*
  * TabUnloader is used to discard tabs when memory or resource constraints
  * are reached. The discarded tabs are determined using a heuristic that
  * accounts for when the tab was last used, how many resources the tab uses,
  * and whether the tab is likely to affect the user if it is closed.
  */
-var EXPORTED_SYMBOLS = ["TabUnloader"];
-
 const lazy = {};
 
 ChromeUtils.defineModuleGetter(
@@ -166,7 +162,7 @@ let DefaultTabUnloaderMethods = {
  * tabs in response to them.
  */
 
-var TabUnloader = {
+export var TabUnloader = {
   /**
    * Initialize low-memory detection and tab auto-unloading.
    */

@@ -3,21 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = [
-  "BrowserUsageTelemetry",
-  "getUniqueDomainsVisitedInPast24Hours",
-  "URICountListener",
-  "MINIMUM_TAB_COUNT_INTERVAL_MS",
-];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 
@@ -77,7 +64,7 @@ const UNFILTERED_URI_COUNT_SCALAR_NAME =
 const TOTAL_URI_COUNT_NORMAL_AND_PRIVATE_MODE_SCALAR_NAME =
   "browser.engagement.total_uri_count_normal_and_private_mode";
 
-const MINIMUM_TAB_COUNT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes, in ms
+export const MINIMUM_TAB_COUNT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes, in ms
 
 // The elements we consider to be interactive.
 const UI_TARGET_ELEMENTS = [
@@ -255,7 +242,7 @@ function getPinnedTabsCount() {
   return pinnedTabs;
 }
 
-let URICountListener = {
+export let URICountListener = {
   // A set containing the visited domains, see bug 1271310.
   _domainSet: new Set(),
   // A set containing the visited origins during the last 24 hours (similar to domains, but not quite the same)
@@ -444,7 +431,7 @@ let URICountListener = {
   ]),
 };
 
-let BrowserUsageTelemetry = {
+export let BrowserUsageTelemetry = {
   /**
    * This is a policy object used to override behavior for testing.
    */
@@ -1449,6 +1436,6 @@ let BrowserUsageTelemetry = {
 };
 
 // Used by nsIBrowserUsage
-function getUniqueDomainsVisitedInPast24Hours() {
+export function getUniqueDomainsVisitedInPast24Hours() {
   return URICountListener.uniqueDomainsVisitedInPast24Hours;
 }

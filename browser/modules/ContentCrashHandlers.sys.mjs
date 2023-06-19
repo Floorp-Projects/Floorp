@@ -2,16 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["TabCrashHandler", "UnsubmittedCrashHandler"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 
@@ -77,7 +69,7 @@ class BrowserWeakMap extends WeakMap {
   }
 }
 
-var TabCrashHandler = {
+export var TabCrashHandler = {
   _crashedTabCount: 0,
   childMap: new Map(),
   browserMap: new BrowserWeakMap(),
@@ -773,7 +765,7 @@ var TabCrashHandler = {
  * submit those reports automatically without prompting if
  * the user has opted in.
  */
-var UnsubmittedCrashHandler = {
+export var UnsubmittedCrashHandler = {
   get prefs() {
     delete this.prefs;
     return (this.prefs = Services.prefs.getBranch(
