@@ -1163,12 +1163,23 @@ class _ASRouter {
         }
 
         const target = {};
-        const promises = Object.entries(object).map(async ([key, value]) => [
-          key,
-          await resolve(await value),
-        ]);
-        for (const [key, value] of await Promise.all(promises)) {
-          target[key] = value;
+        const promises = Object.entries(object).map(async ([key, value]) => {
+          try {
+            let resolvedValue = await resolve(await value);
+            return [key, resolvedValue];
+          } catch (error) {
+            lazy.ASRouterPreferences.console.debug(
+              `getTargetingParameters: Error resolving ${key}: `,
+              error
+            );
+            throw error;
+          }
+        });
+        for (const { status, value } of await Promise.allSettled(promises)) {
+          if (status === "fulfilled") {
+            const [key, resolvedValue] = value;
+            target[key] = resolvedValue;
+          }
         }
         return target;
       }

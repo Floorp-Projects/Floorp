@@ -254,7 +254,11 @@ function CheckBrowserNeedsUpdate(
       );
       let result = await check.result;
       if (!result.succeeded) {
-        throw result.request;
+        lazy.ASRouterPreferences.console.error(
+          "CheckBrowserNeedsUpdate failed :>> ",
+          result.request
+        );
+        return false;
       }
       checker._value = !!result.updates.length;
       return checker._value;
