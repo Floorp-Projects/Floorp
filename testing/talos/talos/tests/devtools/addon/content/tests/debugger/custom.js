@@ -38,6 +38,7 @@ const EXPECTED = {
   file: "App.js",
   sourceURL: `${IFRAME_BASE_URL}custom/debugger/static/js/App.js`,
   text: "import React, { Component } from 'react';",
+  threadsCount: 2,
 };
 
 const EXPECTED_FUNCTION = "window.hitBreakpoint()";
