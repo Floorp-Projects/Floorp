@@ -1,14 +1,13 @@
 /**
- * This test tests values in a popup that is opened with noopener, it does not test them on the page that made the popup
+ * This test only tests values in a data document that is opened in a popup with noopener
+ * Because there is no interaction with a third party domain, there's a lot fewer tests
  *
  * Covers the following cases:
  *  - RFP is disabled entirely
  *  - RFP is enabled entirely
  *
- *  - (A) RFP is exempted on the maker and popup
- *  - (C) RFP is exempted on the maker but not the popup
- *  - (E) RFP is not exempted on the maker nor the popup
- *  - (G) RFP is not exempted on the maker but is on the popup
+ *  - (A) RFP is exempted on the popup maker
+ *  - (E) RFP is not exempted on the popup maker
  *
  */
 
@@ -42,8 +41,8 @@ const allSpoofed = {
   hardwareConcurrency: SPOOFED_HW_CONCURRENCY,
 };
 
-const uri = `https://${FRAMER_DOMAIN}/browser/browser/components/resistfingerprinting/test/browser/file_hwconcurrency_iframer.html?mode=popup&submode=noopener`;
-const await_uri = `https://${IFRAME_DOMAIN}/browser/browser/components/resistfingerprinting/test/browser/file_hwconcurrency_iframee.html?mode=popup`;
+const uri = `https://${FRAMER_DOMAIN}/browser/browser/components/resistfingerprinting/test/browser/file_hwconcurrency_data_popupmaker.html?submode=noopener`;
+const await_uri = loadedURL => loadedURL.startsWith("data:");
 
 requestLongerTimeout(2);
 
@@ -64,20 +63,12 @@ add_task(
   simpleRFPTest.bind(null, uri, testHWConcurrency, expectedResults, extraData)
 );
 
-// (A) RFP is exempted on the maker and popup
-expectedResults = structuredClone(allNotSpoofed);
+// (A) RFP is exempted on the popup maker
+//     Ordinarily, RFP would be exempted, however because the opener relationship is severed
+//     there is nothing to grant it an exemption, so it is not exempted.
+expectedResults = structuredClone(allSpoofed);
 add_task(testA.bind(null, uri, testHWConcurrency, expectedResults, extraData));
 
-// (C) RFP is exempted on the maker but not the popup
-expectedResults = structuredClone(allSpoofed);
-add_task(testC.bind(null, uri, testHWConcurrency, expectedResults, extraData));
-
-// (E) RFP is not exempted on the maker nor the popup
+// (E) RFP is not exempted on the popup maker
 expectedResults = structuredClone(allSpoofed);
 add_task(testE.bind(null, uri, testHWConcurrency, expectedResults, extraData));
-
-// (G) RFP is not exempted on the maker but is on the popup
-//     Ordinarily, RFP would not be exempted, however because the opener relationship is severed
-//     it is safe to exempt the popup
-expectedResults = structuredClone(allNotSpoofed);
-add_task(testG.bind(null, uri, testHWConcurrency, expectedResults, extraData));
