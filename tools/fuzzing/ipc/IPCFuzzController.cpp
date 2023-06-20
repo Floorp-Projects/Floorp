@@ -802,6 +802,14 @@ NS_IMETHODIMP IPCFuzzController::IPCFuzzLoop::Run() {
   IPCFuzzController::instance().SynchronizeOnMessageExecution(
       expected_messages);
 
+  SyncRunnable::DispatchToThread(
+      GetMainThreadSerialEventTarget(),
+      NS_NewRunnableFunction("IPCFuzzController::StartFuzzing", [&]() -> void {
+        MOZ_FUZZING_NYX_DEBUG("DEBUG: Main thread runnable start.\n");
+        NS_ProcessPendingEvents(NS_GetCurrentThread());
+        MOZ_FUZZING_NYX_DEBUG("DEBUG: Main thread runnable done.\n");
+      }));
+
   MOZ_FUZZING_NYX_DEBUG(
       "DEBUG: ======== END OF ITERATION (RELEASE) ========\n");
 
