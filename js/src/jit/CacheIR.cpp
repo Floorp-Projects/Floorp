@@ -11284,7 +11284,7 @@ AttachDecision CallIRGenerator::tryAttachBoundFunction(
 
   // Load the callee and ensure it's a bound function.
   ValOperandId calleeValId =
-      writer.loadArgumentFixedSlot(ArgumentKind::Callee, argc_, flags);
+      writer.loadArgumentDynamicSlot(ArgumentKind::Callee, argcId, flags);
   ObjOperandId calleeObjId = writer.guardToObject(calleeValId);
   writer.guardClass(calleeObjId, GuardClassKind::BoundFunction);
 
@@ -11296,7 +11296,7 @@ AttachDecision CallIRGenerator::tryAttachBoundFunction(
     // Guard newTarget == callee. We depend on this in CallBoundScriptedFunction
     // and in emitCallScriptedGuards by using boundTarget as newTarget.
     ValOperandId newTargetValId =
-        writer.loadArgumentFixedSlot(ArgumentKind::NewTarget, argc_, flags);
+        writer.loadArgumentDynamicSlot(ArgumentKind::NewTarget, argcId, flags);
     ObjOperandId newTargetObjId = writer.guardToObject(newTargetValId);
     writer.guardObjectIdentity(newTargetObjId, calleeObjId);
   }
