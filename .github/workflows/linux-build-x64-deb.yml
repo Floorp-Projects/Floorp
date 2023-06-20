@@ -11,7 +11,7 @@ on: workflow_dispatch
 
 jobs:
   build:
-    runs-on: buildjet-16vcpu-ubuntu-2204
+    runs-on: ${{ github.repository_owner == 'Floorp-Projects' && 'buildjet-16vcpu-ubuntu-2204' || 'ubuntu-20.04' }}
 
     steps:
     - uses: actions/checkout@v3
