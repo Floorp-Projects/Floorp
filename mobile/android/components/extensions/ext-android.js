@@ -391,6 +391,12 @@ class Tab extends TabBase {
     return false;
   }
 
+  get autoDiscardable() {
+    // This property reflects whether the browser is allowed to auto-discard.
+    // Since extensions cannot do so on Android, we return true here.
+    return true;
+  }
+
   get sharingState() {
     return {
       screen: undefined,

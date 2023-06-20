@@ -139,6 +139,11 @@
             "optional": true,
             "description": "Whether the tab has produced sound over the past couple of seconds (but it might not be heard if also muted). Equivalent to whether the speaker audio indicator is showing."
           },
+          "autoDiscardable": {
+            "type": "boolean",
+            "optional": true,
+            "description": "Whether the tab can be discarded automatically by the browser when resources are low."
+          },
           "mutedInfo": {
             "$ref": "MutedInfo",
             "optional": true,
@@ -425,6 +430,7 @@
         "enum": [
           "attention",
           "audible",
+          "autoDiscardable",
           "discarded",
           "favIconUrl",
           "hidden",
@@ -741,6 +747,11 @@
                 "optional": true,
                 "description": "Whether the tabs are audible."
               },
+              "autoDiscardable": {
+                "type": "boolean",
+                "optional": true,
+                "description": "Whether the tab can be discarded automatically by the browser when resources are low."
+              },
               "muted": {
                 "type": "boolean",
                 "optional": true,
@@ -937,6 +948,11 @@
                 "type": "boolean",
                 "optional": true,
                 "description": "Whether the tab should be active. Does not affect whether the window is focused (see $(ref:windows.update))."
+              },
+              "autoDiscardable": {
+                "type": "boolean",
+                "optional": true,
+                "description": "Whether the tab can be discarded automatically by the browser when resources are low."
               },
               "highlighted": {
                 "type": "boolean",
@@ -1614,6 +1630,11 @@
                 "type": "boolean",
                 "optional": true,
                 "description": "The tab's new audible state."
+              },
+              "autoDiscardable": {
+                "type": "boolean",
+                "optional": true,
+                "description": "The tab's new autoDiscardable state."
               },
               "discarded": {
                 "type": "boolean",
