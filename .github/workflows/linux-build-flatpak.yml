@@ -52,7 +52,7 @@ jobs:
           sudo flatpak install -y flathub org.freedesktop.Sdk/aarch64/22.08
           sudo flatpak install -y flathub org.freedesktop.Platform/aarch64/22.08
 
-          git clone https://github.com/flathub/org.mozilla.firefox.BaseApp --depth 1 --branch branch/22.08
+          git clone https://github.com/flathub/org.mozilla.firefox.BaseApp --depth 1 --branch branch/22.08 --recursive
           cd org.mozilla.firefox.BaseApp
           flatpak-builder --repo=$HOME/repo --arch=aarch64 build-dir org.mozilla.firefox.BaseApp.json
           flatpak --user remote-add --no-gpg-verify localrepo $HOME/repo
