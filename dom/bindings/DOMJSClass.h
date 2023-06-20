@@ -572,19 +572,10 @@ struct DOMIfaceAndProtoJSClass {
   // eGlobalInterfacePrototype or eNamedPropertiesObject.
   DOMObjectType mType;  // uint8_t
 
-  // Boolean indicating whether this object wants a @@hasInstance property
-  // pointing to InterfaceHasInstance defined on it.  Only ever true for the
-  // eInterface case.
-  bool wantsInterfaceHasInstance;
-
   const prototypes::ID mPrototypeID;  // uint16_t
   const uint32_t mDepth;
 
   const NativePropertyHooks* mNativeHooks;
-
-  // The value to return for Function.prototype.toString on this interface
-  // object.
-  const char* mFunToString;
 
   ProtoGetter mGetParentProto;
 
@@ -594,6 +585,25 @@ struct DOMIfaceAndProtoJSClass {
   }
 
   const JSClass* ToJSClass() const { return &mBase; }
+};
+
+// Special JSClass for DOM interface objects.
+struct DOMIfaceJSClass : public DOMIfaceAndProtoJSClass {
+  // Boolean indicating whether this object wants a @@hasInstance property
+  // pointing to InterfaceHasInstance defined on it.  Only ever true for the
+  // eInterface case.
+  bool wantsInterfaceHasInstance;
+
+  // The value to return for Function.prototype.toString on this interface
+  // object.
+  const char* mFunToString;
+
+  static const DOMIfaceJSClass* FromJSClass(const JSClass* base) {
+    const DOMIfaceAndProtoJSClass* clazz =
+        DOMIfaceAndProtoJSClass::FromJSClass(base);
+    MOZ_ASSERT(clazz->mType == eInterface || clazz->mType == eNamespace);
+    return static_cast<const DOMIfaceJSClass*>(clazz);
+  }
 };
 
 class ProtoAndIfaceCache;

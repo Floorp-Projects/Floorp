@@ -767,9 +767,9 @@ struct LegacyFactoryFunction {
 // clang-format on
 void CreateInterfaceObjects(
     JSContext* cx, JS::Handle<JSObject*> global,
-    JS::Handle<JSObject*> protoProto, const JSClass* protoClass,
+    JS::Handle<JSObject*> protoProto, const DOMIfaceAndProtoJSClass* protoClass,
     JS::Heap<JSObject*>* protoCache, JS::Handle<JSObject*> constructorProto,
-    const JSClass* constructorClass, unsigned ctorNargs,
+    const DOMIfaceJSClass* constructorClass, unsigned ctorNargs,
     bool isConstructorChromeOnly,
     const LegacyFactoryFunction* legacyFactoryFunctions,
     JS::Heap<JSObject*>* constructorCache, const NativeProperties* properties,

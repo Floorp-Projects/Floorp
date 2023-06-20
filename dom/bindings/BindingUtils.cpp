@@ -764,9 +764,8 @@ JSString* InterfaceObjectToString(JSContext* aCx, JS::Handle<JSObject*> aObject,
   const JSClass* clasp = JS::GetClass(aObject);
   MOZ_ASSERT(IsDOMIfaceAndProtoClass(clasp));
 
-  const DOMIfaceAndProtoJSClass* ifaceAndProtoJSClass =
-      DOMIfaceAndProtoJSClass::FromJSClass(clasp);
-  return JS_NewStringCopyZ(aCx, ifaceAndProtoJSClass->mFunToString);
+  const DOMIfaceJSClass* ifaceJSClass = DOMIfaceJSClass::FromJSClass(clasp);
+  return JS_NewStringCopyZ(aCx, ifaceJSClass->mFunToString);
 }
 
 bool Constructor(JSContext* cx, unsigned argc, JS::Value* vp) {
@@ -830,8 +829,9 @@ static bool DefineToStringTag(JSContext* cx, JS::Handle<JSObject*> obj,
 // name must be an atom (or JS::PropertyKey::NonIntAtom will assert).
 static JSObject* CreateInterfaceObject(
     JSContext* cx, JS::Handle<JSObject*> global,
-    JS::Handle<JSObject*> constructorProto, const JSClass* constructorClass,
-    unsigned ctorNargs, const LegacyFactoryFunction* legacyFactoryFunctions,
+    JS::Handle<JSObject*> constructorProto,
+    const DOMIfaceJSClass* constructorClass, unsigned ctorNargs,
+    const LegacyFactoryFunction* legacyFactoryFunctions,
     JS::Handle<JSObject*> proto, const NativeProperties* properties,
     const NativeProperties* chromeOnlyProperties, JS::Handle<JSString*> name,
     bool isChrome, bool defineOnGlobal, const char* const* legacyWindowAliases,
@@ -839,8 +839,8 @@ static JSObject* CreateInterfaceObject(
   JS::Rooted<JSObject*> constructor(cx);
   MOZ_ASSERT(constructorProto);
   MOZ_ASSERT(constructorClass);
-  constructor =
-      JS_NewObjectWithGivenProto(cx, constructorClass, constructorProto);
+  constructor = JS_NewObjectWithGivenProto(cx, constructorClass->ToJSClass(),
+                                           constructorProto);
   if (!constructor) {
     return nullptr;
   }
@@ -856,8 +856,7 @@ static JSObject* CreateInterfaceObject(
     }
   }
 
-  if (DOMIfaceAndProtoJSClass::FromJSClass(constructorClass)
-          ->wantsInterfaceHasInstance) {
+  if (constructorClass->wantsInterfaceHasInstance) {
     if (StaticPrefs::dom_webidl_crosscontext_hasinstance_enabled()) {
       JS::Rooted<jsid> hasInstanceId(
           cx, JS::GetWellKnownSymbolKey(cx, JS::SymbolCode::hasInstance));
@@ -1047,9 +1046,9 @@ bool DefineProperties(JSContext* cx, JS::Handle<JSObject*> obj,
 
 void CreateInterfaceObjects(
     JSContext* cx, JS::Handle<JSObject*> global,
-    JS::Handle<JSObject*> protoProto, const JSClass* protoClass,
+    JS::Handle<JSObject*> protoProto, const DOMIfaceAndProtoJSClass* protoClass,
     JS::Heap<JSObject*>* protoCache, JS::Handle<JSObject*> constructorProto,
-    const JSClass* constructorClass, unsigned ctorNargs,
+    const DOMIfaceJSClass* constructorClass, unsigned ctorNargs,
     bool isConstructorChromeOnly,
     const LegacyFactoryFunction* legacyFactoryFunctions,
     JS::Heap<JSObject*>* constructorCache, const NativeProperties* properties,
@@ -1091,7 +1090,7 @@ void CreateInterfaceObjects(
   JS::Rooted<JSObject*> proto(cx);
   if (protoClass) {
     proto = CreateInterfacePrototypeObject(
-        cx, global, protoProto, protoClass, properties,
+        cx, global, protoProto, protoClass->ToJSClass(), properties,
         isChrome ? chromeOnlyProperties : nullptr, unscopableNames, nameStr,
         isGlobal);
     if (!proto) {
@@ -1800,45 +1799,37 @@ static bool ResolvePrototypeOrConstructor(
                  JSPROP_PERMANENT | JSPROP_READONLY, desc, cacheOnHolder);
     }
 
-    if (id.get() == GetJSIDByIndex(cx, XPCJSContext::IDX_ISINSTANCE)) {
+    bool resolvingIsInstance =
+        id.get() == GetJSIDByIndex(cx, XPCJSContext::IDX_ISINSTANCE);
+    if (resolvingIsInstance ||
+        (StaticPrefs::dom_webidl_crosscontext_hasinstance_enabled() &&
+         id.isWellKnownSymbol(JS::SymbolCode::hasInstance))) {
       const JSClass* objClass = JS::GetClass(obj);
-      if (IsDOMIfaceAndProtoClass(objClass) &&
-          DOMIfaceAndProtoJSClass::FromJSClass(objClass)
-              ->wantsInterfaceHasInstance) {
-        cacheOnHolder = true;
-        JSNativeWrapper interfaceIsInstanceWrapper = {InterfaceIsInstance,
-                                                      nullptr};
-        JSObject* funObj =
-            XrayCreateFunction(cx, wrapper, interfaceIsInstanceWrapper, 1, id);
-        if (!funObj) {
-          return false;
+      if (IsDOMIfaceAndProtoClass(objClass)) {
+        const DOMIfaceJSClass* clazz = DOMIfaceJSClass::FromJSClass(objClass);
+        if (clazz->wantsInterfaceHasInstance) {
+          cacheOnHolder = true;
+
+          JSNative native;
+          JS::PropertyAttributes atts;
+          if (resolvingIsInstance) {
+            native = InterfaceIsInstance;
+            atts = {JS::PropertyAttribute::Configurable,
+                    JS::PropertyAttribute::Writable};
+          } else {
+            native = InterfaceHasInstance;
+          }
+          JSNativeWrapper nativeWrapper = {native, nullptr};
+          JSObject* funObj =
+              XrayCreateFunction(cx, wrapper, nativeWrapper, 1, id);
+          if (!funObj) {
+            return false;
+          }
+
+          desc.set(Some(
+              JS::PropertyDescriptor::Data(JS::ObjectValue(*funObj), atts)));
+          return true;
         }
-
-        desc.set(Some(JS::PropertyDescriptor::Data(
-            JS::ObjectValue(*funObj), {JS::PropertyAttribute::Configurable,
-                                       JS::PropertyAttribute::Writable})));
-        return true;
-      }
-    }
-
-    if (StaticPrefs::dom_webidl_crosscontext_hasinstance_enabled() &&
-        id.isWellKnownSymbol(JS::SymbolCode::hasInstance)) {
-      const JSClass* objClass = JS::GetClass(obj);
-      if (IsDOMIfaceAndProtoClass(objClass) &&
-          DOMIfaceAndProtoJSClass::FromJSClass(objClass)
-              ->wantsInterfaceHasInstance) {
-        cacheOnHolder = true;
-        JSNativeWrapper interfaceHasInstanceWrapper = {InterfaceHasInstance,
-                                                       nullptr};
-        JSObject* funObj =
-            XrayCreateFunction(cx, wrapper, interfaceHasInstanceWrapper, 1, id);
-        if (!funObj) {
-          return false;
-        }
-
-        desc.set(
-            Some(JS::PropertyDescriptor::Data(JS::ObjectValue(*funObj), {})));
-        return true;
       }
     }
   } else if (type == eNamespace) {
