@@ -12,6 +12,9 @@ Services.scriptloader.loadSubScript(
 
 add_setup(async function testNoTelemetry() {
   await Telemetry.clearScalars();
+  await SpecialPowers.pushPrefEnv({
+    set: [["media.allow-audio-non-utility", true]],
+  });
 });
 
 add_task(async function testAudioDecodingInRDD() {
@@ -19,7 +22,11 @@ add_task(async function testAudioDecodingInRDD() {
 });
 
 add_task(async function testRDDTelemetry() {
-  const extraKey = ",utility-disabled";
+  const extraKey = getExtraKey({
+    rddPref: true,
+    utilityPref: false,
+    allowNonUtility: true,
+  });
   const platform = Services.appinfo.OS;
   for (let exp of utilityPerCodecs[platform]) {
     await verifyNoTelemetryForProcess(exp.process, exp.codecs, extraKey);
