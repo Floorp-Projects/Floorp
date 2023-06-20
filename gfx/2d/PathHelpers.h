@@ -258,6 +258,15 @@ inline already_AddRefed<Path> MakePathForEllipse(const DrawTarget& aDrawTarget,
   return builder->Finish();
 }
 
+inline already_AddRefed<Path> MakePathForCircle(const DrawTarget& aDrawTarget,
+                                                const Point& aCenter,
+                                                float aRadius) {
+  RefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder();
+  builder->Arc(aCenter, aRadius, 0.0f, Float(2.0 * M_PI));
+  builder->Close();
+  return builder->Finish();
+}
+
 /**
  * If aDrawTarget's transform only contains a translation, and if this line is
  * a horizontal or vertical line, this function will snap the line's vertices

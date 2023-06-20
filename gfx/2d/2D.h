@@ -1545,6 +1545,18 @@ class DrawTarget : public external::AtomicRefCounted<DrawTarget> {
                           const DrawOptions& aOptions = DrawOptions()) = 0;
 
   /**
+   * Stroke a circle on the DrawTarget with a certain source pattern.
+   *
+   * @param aCircle the parameters of the circle
+   * @param aPattern Pattern that forms the source of this stroking operation
+   * @param aOptions Options that are applied to this operation
+   */
+  virtual void StrokeCircle(
+      const Point& aOrigin, float radius, const Pattern& aPattern,
+      const StrokeOptions& aStrokeOptions = StrokeOptions(),
+      const DrawOptions& aOptions = DrawOptions());
+
+  /**
    * Stroke a path on the draw target with a certain source pattern.
    *
    * @param aPath Path that is to be stroked
