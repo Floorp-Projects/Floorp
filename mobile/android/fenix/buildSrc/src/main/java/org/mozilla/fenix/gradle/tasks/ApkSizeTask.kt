@@ -102,7 +102,8 @@ open class ApkSizeTask : DefaultTask() {
             suite.put("name", "apk-size-$variantName")
             suite.put("value", getSummarySize(apkSize))
             suite.put("lowerIsBetter", true)
-            suite.put("shouldAlert", false)
+            suite.put("alertChangeType", "absolute")
+            suite.put("alertThreshold", 100 * 1024)
 
             val subtests = JSONArray()
             apkSize.forEach { (apk, size) ->
