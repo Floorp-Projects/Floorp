@@ -63,6 +63,16 @@
   padding-inline-start: 0;
 }
 
+#updateInfo {
+  display: grid;
+  grid-row-start: 1;
+  grid-row-end: 4;
+  grid-column-start: 2;
+  grid-column-end: 3;
+  grid-template-rows: subgrid;
+  grid-template-columns: subgrid;
+}
+
 #updateDeck {
   align-items: center;
 }
@@ -114,11 +124,21 @@ description > .text-link {
 
 #updateBox {
   line-height: normal;
+  display: grid;
+}
+
+#icons {
+  align-self: center;
+  grid-row-start: 1;
+  grid-row-end: 2;
+  grid-column-start: 1;
+  grid-column-end: 2;
 }
 
 #icons > .icon {
+  vertical-align: middle;
   -moz-context-properties: fill;
-  margin: 10px 5px;
+  margin: 0px 5px;
   width: 16px;
   height: 16px;
 }
