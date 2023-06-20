@@ -15,13 +15,17 @@ const LABELS = [
   "(max-width: 550px)",
   "(min-height: 300px) and (max-height: 320px)",
   "(max-width: 750px)",
+  "",
   "print",
 ];
-const LINE_NOS = [1, 7, 19, 25, 31, 36];
+const LINE_NOS = [1, 7, 19, 25, 31, 34, 39];
 const NEW_RULE = `
   @media (max-width: 750px) {
     div {
       color: blue;
+      @layer {
+        border-color: tomato;
+      }
     }
 
     @media print {
@@ -35,6 +39,7 @@ waitForExplicitFinish();
 
 add_task(async function () {
   await pushPref("layout.css.container-queries.enabled", true);
+  await pushPref("layout.css.nesting.enabled", true);
 
   const { ui } = await openStyleEditorForURL(TESTCASE_URI);
 
@@ -84,7 +89,7 @@ async function testInlineMediaEditor(ui, editor) {
   is(sidebar.hidden, false, "sidebar is showing on editor with @media");
 
   const entries = sidebar.querySelectorAll(".at-rule-label");
-  is(entries.length, 5, "5 @media rules displayed in sidebar");
+  is(entries.length, 6, "6 @media rules displayed in sidebar");
 
   await testRule({
     ui,
@@ -132,6 +137,15 @@ async function testInlineMediaEditor(ui, editor) {
     conditionText: "(min-width: 1px)",
     line: 17,
     type: "container",
+  });
+
+  await testRule({
+    ui,
+    editor,
+    rule: entries[5],
+    conditionText: "selector(&)",
+    line: 21,
+    type: "support",
   });
 }
 
@@ -208,6 +222,13 @@ async function testShowHide(ui, editor) {
 
 async function testMediaRuleAdded(ui, editor) {
   await editor.getSourceEditor();
+  const sidebar = editor.details.querySelector(".stylesheet-sidebar");
+  is(
+    sidebar.querySelectorAll(".at-rule-label").length,
+    4,
+    "4 @media rules after changing text"
+  );
+
   let text = editor.sourceEditor.getText();
   text += NEW_RULE;
 
@@ -215,9 +236,8 @@ async function testMediaRuleAdded(ui, editor) {
   editor.sourceEditor.setText(text);
   await listChange;
 
-  const sidebar = editor.details.querySelector(".stylesheet-sidebar");
   const entries = [...sidebar.querySelectorAll(".at-rule-label")];
-  is(entries.length, 6, "six @media rules after changing text");
+  is(entries.length, 7, "7 @media rules after changing text");
 
   await testRule({
     ui,
@@ -232,9 +252,18 @@ async function testMediaRuleAdded(ui, editor) {
     ui,
     editor,
     rule: entries[5],
+    type: "layer",
     conditionText: LABELS[5],
-    matches: false,
     line: LINE_NOS[5],
+  });
+
+  await testRule({
+    ui,
+    editor,
+    rule: entries[6],
+    conditionText: LABELS[6],
+    matches: false,
+    line: LINE_NOS[6],
   });
 }
 

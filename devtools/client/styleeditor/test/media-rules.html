@@ -26,7 +26,18 @@
     }
 
     @layer myLayer {}
-    @container (min-width: 1px) {}
+    @container (min-width: 1px) {
+      body {
+        div {
+          color: gold;
+          @supports selector(&) {
+            &:hover {
+              color: yellowgreen;
+            }
+          }
+        }
+      }
+    }
   </style>
 </head>
 <body>
