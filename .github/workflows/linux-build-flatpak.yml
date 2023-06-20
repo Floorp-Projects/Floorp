@@ -32,6 +32,7 @@ jobs:
     steps:
     - name: Package 📦
       run: |
+        sudo apt update
         sudo apt install flatpak aria2 fakeroot
 
         mkdir ./flatpak_build
