@@ -185,6 +185,17 @@ class HyperTextAccessibleBase {
   }
 
   /**
+   * Transform the given a11y point into an offset relative to this hypertext.
+   * Returns {success, offset}, where success is true if successful.
+   * If unsuccessful, the returned offset will be CharacterCount() if
+   * aIsEndOffset is true, 0 otherwise. This means most callers can ignore the
+   * success return value.
+   */
+  std::pair<bool, int32_t> TransformOffset(Accessible* aDescendant,
+                                           int32_t aOffset,
+                                           bool aIsEndOffset) const;
+
+  /**
    * Return text attributes for the given text range.
    */
   already_AddRefed<AccAttributes> TextAttributes(bool aIncludeDefAttrs,
@@ -276,17 +287,6 @@ class HyperTextAccessibleBase {
   virtual nsTArray<int32_t>& GetCachedHyperTextOffsets() = 0;
 
  private:
-  /**
-   * Transform the given a11y point into an offset relative to this hypertext.
-   * Returns {success, offset}, where success is true if successful.
-   * If unsuccessful, the returned offset will be CharacterCount() if
-   * aIsEndOffset is true, 0 otherwise. This means most callers can ignore the
-   * success return value.
-   */
-  std::pair<bool, int32_t> TransformOffset(Accessible* aDescendant,
-                                           int32_t aOffset,
-                                           bool aIsEndOffset) const;
-
   /**
    * Helper method for TextBefore/At/AfterOffset.
    * If BOUNDARY_LINE_END was requested and the origin is itself a line end

@@ -225,19 +225,85 @@ void SessionAccessibility::ExploreByTouch(int32_t aID, float aX, float aY) {
   }
 }
 
-void SessionAccessibility::NavigateText(int32_t aID, int32_t aGranularity,
-                                        int32_t aStartOffset,
-                                        int32_t aEndOffset, bool aForward,
-                                        bool aSelect) {
-  FORWARD_EXT_ACTION_TO_ACCESSIBLE(NavigateText, aGranularity, aStartOffset,
-                                   aEndOffset, aForward, aSelect);
-}
-
 static void GetSelectionOrCaret(HyperTextAccessibleBase* aHyperTextAcc,
                                 int32_t* aStartOffset, int32_t* aEndOffset) {
   if (!aHyperTextAcc->SelectionBoundsAt(0, aStartOffset, aEndOffset)) {
     *aStartOffset = *aEndOffset = aHyperTextAcc->CaretOffset();
   }
+}
+
+static void AdjustCaretToTextNavigation(Accessible* aAccessible,
+                                        int32_t aStartOffset,
+                                        int32_t aEndOffset, bool aForward,
+                                        bool aSelect) {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!(aAccessible->State() & states::EDITABLE)) {
+    return;
+  }
+
+  HyperTextAccessibleBase* editable = aAccessible->AsHyperTextBase();
+  MOZ_ASSERT(editable);
+  if (!editable) {
+    return;
+  }
+
+  int32_t newOffset = aForward ? aEndOffset : aStartOffset;
+  if (aSelect) {
+    int32_t anchor = editable->CaretOffset();
+    if (editable->SelectionCount()) {
+      int32_t startSel, endSel;
+      GetSelectionOrCaret(editable, &startSel, &endSel);
+      anchor = startSel == anchor ? endSel : startSel;
+    }
+    editable->SetSelectionBoundsAt(0, anchor, newOffset);
+  } else {
+    editable->SetCaretOffset(newOffset);
+  }
+}
+
+bool SessionAccessibility::NavigateText(int32_t aID, int32_t aGranularity,
+                                        int32_t aStartOffset,
+                                        int32_t aEndOffset, bool aForward,
+                                        bool aSelect) {
+  MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
+  MonitorAutoLock mal(nsAccessibilityService::GetAndroidMonitor());
+  RefPtr<SessionAccessibility> self(this);
+  if (Accessible* acc = GetAccessibleByID(aID)) {
+    if (acc->IsLocal()) {
+      nsAppShell::PostEvent([this, self, aID, aGranularity, aStartOffset,
+                             aEndOffset, aForward, aSelect] {
+        MonitorAutoLock mal(nsAccessibilityService::GetAndroidMonitor());
+        if (Accessible* _acc = GetAccessibleByID(aID)) {
+          auto result = AccessibleWrap::NavigateText(
+              _acc, aGranularity, aStartOffset, aEndOffset, aForward, aSelect);
+
+          if (result) {
+            SendTextTraversedEvent(_acc, result->first, result->second);
+            AdjustCaretToTextNavigation(_acc, result->first, result->second,
+                                        aForward, aSelect);
+          }
+        }
+      });
+      return true;
+    } else {
+      auto result = AccessibleWrap::NavigateText(
+          acc, aGranularity, aStartOffset, aEndOffset, aForward, aSelect);
+      if (result) {
+        nsAppShell::PostEvent([this, self, aID, result, aForward, aSelect] {
+          MonitorAutoLock mal(nsAccessibilityService::GetAndroidMonitor());
+          if (Accessible* _acc = GetAccessibleByID(aID)) {
+            SendTextTraversedEvent(_acc, result->first, result->second);
+            AdjustCaretToTextNavigation(_acc, result->first, result->second,
+                                        aForward, aSelect);
+          }
+        });
+      }
+
+      return !!result;
+    }
+  }
+
+  return false;
 }
 
 void SessionAccessibility::SetSelection(int32_t aID, int32_t aStart,
