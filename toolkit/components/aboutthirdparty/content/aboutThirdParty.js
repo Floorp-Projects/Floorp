@@ -52,6 +52,21 @@ function moduleCompareForDisplay(a, b) {
 async function fetchData() {
   let data = null;
   try {
+    // Wait until the module load events are ready (bug 1833152)
+    const sleep = delayInMs =>
+      new Promise(resolve => setTimeout(resolve, delayInMs));
+    let loadEventsReady = Services.telemetry.areUntrustedModuleLoadEventsReady;
+    let numberOfAttempts = 0;
+    // Just to make sure we don't infinite loop here. (this is normally quite
+    // quick) If we do hit this limit, the page will return an empty list of
+    // modules.
+    const MAX_ATTEMPTS = 30;
+    while (!loadEventsReady && numberOfAttempts < MAX_ATTEMPTS) {
+      await sleep(1000);
+      numberOfAttempts++;
+      loadEventsReady = Services.telemetry.areUntrustedModuleLoadEventsReady;
+    }
+
     data = await Services.telemetry.getUntrustedModuleLoadEvents(
       Services.telemetry.INCLUDE_OLD_LOADEVENTS |
         Services.telemetry.KEEP_LOADEVENTS_NEW |

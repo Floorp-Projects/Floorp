@@ -663,6 +663,16 @@ TelemetryImpl::GetUntrustedModuleLoadEvents(uint32_t aFlags, JSContext* cx,
 #endif
 }
 
+NS_IMETHODIMP
+TelemetryImpl::GetAreUntrustedModuleLoadEventsReady(bool* ret) {
+#if defined(XP_WIN)
+  *ret = DllServices::Get()->IsReadyForBackgroundProcessing();
+  return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
 #if defined(MOZ_GECKO_PROFILER)
 class GetLoadedModulesResultRunnable final : public Runnable {
   nsMainThreadPtrHandle<Promise> mPromise;
