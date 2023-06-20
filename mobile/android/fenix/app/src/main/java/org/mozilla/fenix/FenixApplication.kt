@@ -725,6 +725,11 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                 tabsOpenCount.add(openTabsCount)
             }
 
+            val openPrivateTabsCount = settings.openPrivateTabsCount
+            if (openPrivateTabsCount > 0) {
+                privateTabsOpenCount.add(openPrivateTabsCount)
+            }
+
             val topSitesSize = settings.topSitesSize
             hasTopSites.set(topSitesSize > 0)
             if (topSitesSize > 0) {

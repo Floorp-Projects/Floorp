@@ -13,6 +13,7 @@ import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.selector.normalTabs
+import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.base.crash.CrashReporting
@@ -94,6 +95,7 @@ class TelemetryMiddleware(
             -> {
                 // Update/Persist tabs count whenever it changes
                 settings.openTabsCount = context.state.normalTabs.count()
+                settings.openPrivateTabsCount = context.state.privateTabs.count()
                 if (context.state.normalTabs.isNotEmpty()) {
                     Metrics.hasOpenTabs.set(true)
                 } else {

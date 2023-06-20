@@ -1324,6 +1324,11 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         0,
     )
 
+    var openPrivateTabsCount by intPreference(
+        appContext.getPreferenceKey(R.string.pref_key_open_private_tabs_count),
+        0,
+    )
+
     var mobileBookmarksSize by intPreference(
         appContext.getPreferenceKey(R.string.pref_key_mobile_bookmarks_size),
         0,

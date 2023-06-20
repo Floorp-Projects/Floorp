@@ -276,6 +276,7 @@
     <string name="pref_key_debug_settings" translatable="false">pref_key_debug_settings</string>
 
     <string name="pref_key_open_tabs_count" translatable="false">pref_key_open_tabs_count</string>
+    <string name="pref_key_open_private_tabs_count" translatable="false">pref_key_open_private_tabs_count</string>
 
     <!-- Add-on Metrics Values -->
     <string name="pref_key_installed_addons_count" translatable="false">pref_key_installed_addons_count</string>
