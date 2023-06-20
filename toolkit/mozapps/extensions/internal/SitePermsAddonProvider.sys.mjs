@@ -13,8 +13,6 @@ import {
 } from "resource://gre/modules/addons/siteperms-addon-utils.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
