@@ -515,7 +515,9 @@ nsNavHistoryContainerResultNode::~nsNavHistoryContainerResultNode() {
  */
 void nsNavHistoryContainerResultNode::OnRemoving() {
   nsNavHistoryResultNode::OnRemoving();
-  for (int32_t i = 0; i < mChildren.Count(); ++i) mChildren[i]->OnRemoving();
+  for (nsNavHistoryResultNode* child : mChildren) {
+    child->OnRemoving();
+  }
   mChildren.Clear();
   mResult = nullptr;
 }
@@ -734,8 +736,7 @@ void nsNavHistoryContainerResultNode::FillStats() {
   uint32_t accessCount = 0;
   PRTime newTime = 0;
 
-  for (int32_t i = 0; i < mChildren.Count(); ++i) {
-    nsNavHistoryResultNode* node = mChildren[i];
+  for (nsNavHistoryResultNode* node : mChildren) {
     SetAsParentOfNode(node);
     accessCount += node->mAccessCount;
     // this is how container nodes get sorted by date
@@ -912,9 +913,10 @@ nsNavHistoryContainerResultNode::GetSortingComparator(uint16_t aSortType) {
 void nsNavHistoryContainerResultNode::RecursiveSort(
     SortComparator aComparator) {
   mChildren.Sort(aComparator, nullptr);
-  for (int32_t i = 0; i < mChildren.Count(); ++i) {
-    if (mChildren[i]->IsContainer())
-      mChildren[i]->GetAsContainer()->RecursiveSort(aComparator);
+  for (nsNavHistoryResultNode* child : mChildren) {
+    if (child->IsContainer()) {
+      child->GetAsContainer()->RecursiveSort(aComparator);
+    }
   }
 }
 
