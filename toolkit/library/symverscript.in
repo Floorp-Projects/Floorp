@@ -1,4 +1,1 @@
-#filter substitution
-@VERSION@ {
-    global: *;
-};
+XRE_GetBootstrap

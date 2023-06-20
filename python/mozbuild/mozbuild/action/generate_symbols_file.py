@@ -93,3 +93,6 @@ def generate_symbols_file(output, *args):
         output.write("".join("_%s\n" % s for s in symbols))
 
     return set(pp.includes)
+
+
+main = generate_symbols_file
