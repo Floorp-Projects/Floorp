@@ -22,7 +22,7 @@ const DETECT_INDENT_MAX_LINES = 500;
  */
 function getTabPrefs() {
   const indentWithTabs = !Services.prefs.getBoolPref(EXPAND_TAB);
-  const indentUnit = Services.prefs.getIntPref(TAB_SIZE);
+  const indentUnit = Services.prefs.getIntPref(TAB_SIZE, 2);
   return { indentUnit, indentWithTabs };
 }
 
