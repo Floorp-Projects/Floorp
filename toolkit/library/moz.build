@@ -106,14 +106,8 @@ def Libxul(name, output_category=None):
     if CONFIG["RUSTC_NATVIS_LDFLAGS"]:
         LDFLAGS += CONFIG["RUSTC_NATVIS_LDFLAGS"]
 
-    if CONFIG["OS_ARCH"] == "Linux" and CONFIG["OS_TARGET"] != "Android":
-        GeneratedFile(
-            "symverscript",
-            script="/build/gen_symverscript.py",
-            inputs=["../symverscript.in"],
-            flags=["xul%s" % CONFIG["MOZILLA_SYMBOLVERSION"]],
-        )
-        SYMBOLS_FILE = "!symverscript"
+    if CONFIG["OS_TARGET"] != "Android" and name == "xul-real":
+        SYMBOLS_FILE = "../libxul.symbols"
 
 
 # The real libxul definition is in ./build/moz.build, but we define a
