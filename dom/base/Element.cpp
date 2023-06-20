@@ -2617,25 +2617,24 @@ nsresult Element::SetAttrAndNotify(
     MOZ_ASSERT(definition, "Should have a valid CustomElementDefinition");
 
     if (definition->IsInObservedAttributeList(aName)) {
-      RefPtr<nsAtom> oldValueAtom;
-      if (oldValue) {
-        oldValueAtom = oldValue->GetAsAtom();
-      } else {
-        // If there is no old value, get the value of the uninitialized
-        // attribute that was swapped with aParsedValue.
-        oldValueAtom = aParsedValue.GetAsAtom();
-      }
-      RefPtr<nsAtom> newValueAtom = valueForAfterSetAttr.GetAsAtom();
       nsAutoString ns;
       nsNameSpaceManager::GetInstance()->GetNameSpaceURI(aNamespaceID, ns);
 
       LifecycleCallbackArgs args;
-      args.mName = nsDependentAtomString(aName);
-      args.mOldValue = (aModType == MutationEvent_Binding::ADDITION
-                            ? VoidString()
-                            : nsDependentAtomString(oldValueAtom));
-      args.mNewValue = nsDependentAtomString(newValueAtom);
-      args.mNamespaceURI = (ns.IsEmpty() ? VoidString() : ns);
+      aName->ToString(args.mName);
+      if (aModType == MutationEvent_Binding::ADDITION) {
+        args.mOldValue = VoidString();
+      } else {
+        if (oldValue) {
+          oldValue->ToString(args.mOldValue);
+        } else {
+          // If there is no old value, get the value of the uninitialized
+          // attribute that was swapped with aParsedValue.
+          aParsedValue.ToString(args.mOldValue);
+        }
+      }
+      valueForAfterSetAttr.ToString(args.mNewValue);
+      args.mNamespaceURI = ns.IsEmpty() ? VoidString() : ns;
 
       nsContentUtils::EnqueueLifecycleCallback(
           ElementCallbackType::eAttributeChanged, this, args, definition);
@@ -2812,10 +2811,10 @@ void Element::OnAttrSetButNotChanged(int32_t aNamespaceID, nsAtom* aName,
 
       nsAutoString value(aValue.String());
       LifecycleCallbackArgs args;
-      args.mName = nsDependentAtomString(aName);
+      aName->ToString(args.mName);
       args.mOldValue = value;
       args.mNewValue = value;
-      args.mNamespaceURI = (ns.IsEmpty() ? VoidString() : ns);
+      args.mNamespaceURI = ns.IsEmpty() ? VoidString() : ns;
 
       nsContentUtils::EnqueueLifecycleCallback(
           ElementCallbackType::eAttributeChanged, this, args, definition);
@@ -2903,18 +2902,14 @@ nsresult Element::UnsetAttr(int32_t aNameSpaceID, nsAtom* aName, bool aNotify) {
   if (data && data->mState == CustomElementData::State::eCustom) {
     CustomElementDefinition* definition = data->GetCustomElementDefinition();
     MOZ_ASSERT(definition, "Should have a valid CustomElementDefinition");
-
     if (definition->IsInObservedAttributeList(aName)) {
       nsAutoString ns;
       nsNameSpaceManager::GetInstance()->GetNameSpaceURI(aNameSpaceID, ns);
-
-      RefPtr<nsAtom> oldValueAtom = oldValue.GetAsAtom();
       LifecycleCallbackArgs args;
-      args.mName = nsDependentAtomString(aName);
-      args.mOldValue = nsDependentAtomString(oldValueAtom);
+      aName->ToString(args.mName);
+      oldValue.ToString(args.mOldValue);
       args.mNewValue = VoidString();
-      args.mNamespaceURI = (ns.IsEmpty() ? VoidString() : ns);
-
+      args.mNamespaceURI = ns.IsEmpty() ? VoidString() : ns;
       nsContentUtils::EnqueueLifecycleCallback(
           ElementCallbackType::eAttributeChanged, this, args, definition);
     }
