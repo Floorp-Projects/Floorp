@@ -106,9 +106,7 @@ web-platform-tests:
             # Because we have a separate job for them, don't run the (core)
             # webgpu/* tests in the main WPT runs. (but still run tests in dirs
             # other than webgpu/* that are tagged webgpu, e.g. canvas tests)
-            - --exclude=webgpu
-            # Remove after webgpu tests move back to upstream WPT repo:
-            - --exclude=_mozilla/webgpu
+            - --exclude-tag=webgpu
 
 web-platform-tests-backlog:
     description: "Web platform test (backlog) run"
