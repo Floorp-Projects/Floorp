@@ -425,15 +425,10 @@ struct NativePropertiesHolder {
   bool* inited;
 };
 
-// Helper structure for Xrays for DOM binding objects. The same instance is used
-// for instances, interface objects and interface prototype objects of a
-// specific interface.
-struct NativePropertyHooks {
-  // The hook to call for resolving indexed or named properties. May be null if
-  // there can't be any.
+struct NativeNamedOrIndexedPropertyHooks {
+  // The hook to call for resolving indexed or named properties.
   ResolveOwnProperty mResolveOwnProperty;
-  // The hook to call for enumerating indexed or named properties. May be null
-  // if there can't be any.
+  // The hook to call for enumerating indexed or named properties.
   EnumerateOwnProperties mEnumerateOwnProperties;
   // The hook to call to delete a named property.  May be null if there are no
   // named properties or no named property deleter.  On success (true return)
@@ -444,6 +439,13 @@ struct NativePropertyHooks {
   // to true, it will indicate via opresult whether the delete actually
   // succeeded.
   DeleteNamedProperty mDeleteNamedProperty;
+};
+
+// Helper structure for Xrays for DOM binding objects. The same instance is used
+// for instances, interface objects and interface prototype objects of a
+// specific interface.
+struct NativePropertyHooks {
+  const NativeNamedOrIndexedPropertyHooks* mIndexedOrNamedNativeProperties;
 
   // The property arrays for this interface.
   NativePropertiesHolder mNativeProperties;
