@@ -166,16 +166,6 @@ perftest_politico_link.js
 
 **Measures time to load Politico homepage**
 
-perftest_android_view.js
-========================
-
-:owner: Performance Team
-:name: VIEW
-
-**Measures cold process view time**
-
-This test launches the appropriate android app, simulating a opening a link through VIEW intent workflow. The application is launched with the intent action android.intent.action.VIEW loading a trivially simple website. The reported metric is the time from process start to navigationStart, reported as processLaunchToNavStart
-
 perftest_youtube_link.js
 ========================
 
@@ -193,16 +183,6 @@ perftest_android_startup.js
 **Measures android startup times**
 
 This test consists of 2 main tests, cold main first frame(cmff) and cold view nav start(cvns). cold main first frame is the measurement from when you click the app icon & get duration to first frame from 'am start -W'. cold view nav start is the measurement from when you send a VIEW intent & get duration from logcat: START proc to PageStart.
-
-perftest_android_main.js
-========================
-
-:owner: Performance Team
-:name: main
-
-**Measures the time from process start until the Fenix main activity (HomeActivity) reports Fully Drawn**
-
-This test launches Fenix to its main activity (HomeActivity). The application logs "Fully Drawn" when the activity is drawn. Using the android log transformer we measure the time from process start to this event.
 
 perftest_pageload.js
 ====================

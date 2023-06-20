@@ -725,7 +725,6 @@ For the sample commands found below, note that the capitalization used is import
       5;preferences#home;141;111;130;131;138;128;133;122;138;138;131;139;139;132;133;141;143;139;138;135;136;128;134;140;135
 
    * fnbpaint: True
-   * gecko_profile_entries: 2000000
    * gecko_profile_interval: 1
    * lower_is_better: True
    * pine: False
@@ -939,7 +938,6 @@ For the sample commands found below, note that the capitalization used is import
       ;22;1080p.60fps.mp4_scale_2_startup;6.963;6.947;6.914;6.929;6.979;7.010;7.010245327102808;6.914;6.961;7.028;7.012;6.914
       ;23;1080p.60fps.mp4_scale_2_inclip;6.757;6.694;6.672;6.669;6.737;6.831;6.716;6.715;6.832;6.670;6.672;6.759
 
-   * gecko_profile_entries: 2000000
    * gecko_profile_interval: 1
    * lower_is_better: True
    * preferences: {'full-screen-api.allow-trusted-requests-only': False, 'layers.acceleration.force-enabled': False, 'layers.acceleration.disabled': True, 'gfx.webrender.software': True, 'layout.frame_rate': 0, 'docshell.event_starvation_delay_hint': 1, 'full-screen-api.warning.timeout': 500, 'media.ruin-av-sync.enabled': True}
@@ -1132,7 +1130,6 @@ For the sample commands found below, note that the capitalization used is import
       0;content-process-startup;877;737;687;688;802;697;794;685;694;688;794;669;699;684;690;849;687;873;694;689
 
    * extensions: ['${talos}/pageloader', '${talos}/tests/cpstartup/extension']
-   * gecko_profile_entries: 1000000
    * preferences: {'browser.link.open_newwindow': 3, 'browser.link.open_newwindow.restriction': 2}
    * timeout: 600
    * tploadnocache: True
@@ -1554,7 +1551,6 @@ For the sample commands found below, note that the capitalization used is import
 
    * cycles: 5
    * extensions: ['${talos}/pageloader', '${talos}/tests/devtools/addon']
-   * gecko_profile_entries: 10000000
    * gecko_profile_interval: 10
    * linux_counters: None
    * mac_counters: None
@@ -1883,7 +1879,6 @@ For the sample commands found below, note that the capitalization used is import
         construction will be visible. The test runs in ASAP mode to maximize
         framerate, and the result is how quickly the test was able to mutate and
         re-paint 600 items, one during each frame.
-   * gecko_profile_entries: 2000000
    * gecko_profile_interval: 2
    * linux_counters: None
    * mac_counters: None
@@ -2123,7 +2118,6 @@ For the sample commands found below, note that the capitalization used is import
       4;prototype.html;237.05;251.94;256.61;259.65;263.52;4488.53;4676.88;4745.24;4745.50;4748.81;4648.47;4660.21;4666.58;4671.88;4677.32;3602.84;3611.40;3613.69;3615.69;3619.15;3604.41;3619.44;3623.24;3627.66;3628.11;3526.59;3589.35;3615.93;3616.35;3622.80;3624.69;3626.84;3628.47;3631.22;3632.15;3184.76;3186.11;3187.16;3187.78;3189.35;4353.43;4466.46;4482.57;4616.72;4617.88;4012.18;4034.84;4047.07;4047.82;4055.29;4815.11;4815.21;4816.11;4817.08;4820.40;3300.31;3345.18;3369.55;3420.98;3447.97;5026.99;5033.82;5034.50;5034.95;5038.97;3516.72;3520.79;3520.95;3521.81;3523.47;3565.29;3574.23;3574.37;3575.82;3578.37;4045.19;4053.51;4056.76;4058.76;4059.00;4714.67;4868.66;4869.66;4873.54;4878.29;1278.20;1300.92;1301.13;1301.17;1302.47;868.94;871.16;878.50;883.40;884.85;3874.71;3878.44;3881.61;3882.67;3886.92;4959.83;4968.45;4969.50;4971.38;4972.30;3862.69;3870.15;3871.79;3873.83;3878.07;2690.15;2711.66;2714.42;2715.39;2715.89;4349.04;4349.63;4351.33;4353.59;4355.46;4950.95;5101.08;5107.69;5120.21;5120.39;4336.63;4360.76;4361.96;4362.28;4365.43;4928.75;4939.41;4939.56;4943.95;4966.78;4869.03;4886.24;4888.85;4889.14;4895.76;4362.39;4362.78;4363.96;4365.00;4365.08;3408.00;3470.03;3476.37;3546.65;3547.34;4905.73;4926.21;4926.70;4926.93;4929.43;4682.88;4694.91;4696.30;4697.06;4699.69;4688.86;4691.25;4691.46;4698.37;4699.41;4628.07;4631.31;4633.42;4634.00;4636.00;4699.44;4796.02;4808.83;4809.95;4813.52;4719.10;4720.41;4722.95;4723.03;4723.53
       5;yui.html;569.72;602.22;627.02;647.49;692.84;9978.30;10117.54;10121.70;10129.75;10137.24;9278.68;9291.44;9349.00;9370.53;9375.86;475.79;481.92;606.51;607.42;618.73;617.68;618.89;623.30;626.58;631.85;501.81;649.76;653.22;655.69;656.71;510.62;645.56;657.42;657.88;658.39;475.53;476.77;476.80;476.92;476.96;9895.16;9976.15;9988.25;9989.85;9996.40;9483.15;9545.75;9676.37;9808.51;10360.22;8331.29;8397.87;8538.06;8714.69;8803.78;2748.93;2800.93;2802.59;2857.33;2864.46;33757.16;33804.83;33859.32;33931.00;33991.32;7818.65;7846.92;7892.09;8170.55;8217.75;13691.38;13692.86;13693.25;13698.73;13706.66;5378.70;5517.83;5615.86;5616.16;5624.00;2985.63;3002.97;3003.07;3037.73;3038.87;2459.10;2502.52;2504.91;2507.07;2507.26;396.62;405.78;411.43;412.03;412.56;543.45;550.75;568.50;578.59;592.25;6762.21;6901.72;6984.27;7064.22;7122.29;454.78;519.40;539.29;543.96;566.16;3235.39;3266.13;3453.26;3498.79;3518.54;39079.22;39722.80;41350.59;41422.38;41540.17;34435.14;34606.31;34623.31;34661.00;34672.48;29449.12;29530.11;30507.24;31938.52;31961.52;7449.33;7524.62;7629.73;7712.96;7796.42;22917.43;23319.00;23441.41;23582.88;23583.53;29780.40;30272.55;31761.00;31765.84;31839.36;6112.45;6218.35;6476.68;6603.54;6793.66;10385.79;10471.69;10518.53;10552.74;10644.95;9563.52;9571.33;9617.09;9946.35;9976.80;9406.11;9518.48;9806.46;10102.44;10173.19;9482.43;9550.28;9878.21;9902.90;9951.45;8343.17;8511.00;8606.00;8750.21;8869.29;8234.96;8462.70;8473.49;8499.58;8808.91
 
-   * gecko_profile_entries: 10000000
    * gecko_profile_interval: 2
    * tpmanifest: ${talos}/tests/dromaeo/css.manifest
    * unit: score
@@ -2289,7 +2283,6 @@ For the sample commands found below, note that the capitalization used is import
        tree.
 
      Please see `dromaeo_css <#dromaeo_css>`_ for examples of data.
-   * gecko_profile_entries: 10000000
    * gecko_profile_interval: 2
    * tpmanifest: ${talos}/tests/dromaeo/dom.manifest
    * unit: score
@@ -2392,7 +2385,6 @@ For the sample commands found below, note that the capitalization used is import
       2;2.WebGL-terrain-alpha-yes-AA-no;24.01795;23.889449;24.2683;24.34649;23.0562;24.02275;23.54819;24.1874;23.93545;23.53629;23.305149;23.62459;24.01589;24.06405;24.143449;23.998549;24.08205;24.26989;24.0736;24.2346;24.01145;23.7817;23.90785;24.7118;24.2834
       3;3.WebGL-terrain-alpha-yes-AA-yes;25.91375;25.87005;25.64875;25.15615;25.5475;24.497449;24.56385;25.57529;25.54889;26.31559;24.143949;25.09895;24.75049;25.2087;25.52385;25.9017;25.4439;24.3495;25.9269;25.734449;26.4126;25.547449;25.667249;25.679349;25.9565
 
-   * gecko_profile_entries: 2000000
    * gecko_profile_interval: 10
    * linux_counters: None
    * mac_counters: None
@@ -2668,7 +2660,6 @@ For the sample commands found below, note that the capitalization used is import
         ticks to measure how much time it will spend for a video texture upload
         to be a WebGL texture (gl.texImage2D). We run it for 5 times and ignore
         the first found. Lower results are better.
-   * gecko_profile_entries: 2000000
    * gecko_profile_interval: 2
    * linux_counters: None
    * mac_counters: None
@@ -2956,7 +2947,6 @@ For the sample commands found below, note that the capitalization used is import
       12;stanford-crypto-pbkdf2;176;187;183;183;176;174;181;187;175;173
       13;stanford-crypto-sha256-iterative;86;85;83;84;86;85;85;86;83;83
 
-   * gecko_profile_entries: 5000000
    * gecko_profile_interval: 1
    * preferences: {'dom.send_after_paint_to_content': False}
    * tpchrome: False
@@ -3455,7 +3445,6 @@ For the sample commands found below, note that the capitalization used is import
    * type: `Page load`_
    * reporting: time from *performance.timing.navigationStart* to *pagerendered* event in ms (lower is better)
    * data: load a PDF 20 times
-   * gecko_profile_entries: 1000000
    * pdfpaint: True
    * preferences: {'pdfjs.eventBusDispatchToDOM': True}
    * timeout: 600
@@ -3683,7 +3672,6 @@ For the sample commands found below, note that the capitalization used is import
 
    * alert_threshold: 5.0
    * base_vs_ref: True
-   * gecko_profile_entries: 2000000
    * gecko_profile_interval: 1
    * lower_is_better: True
    * subtest_alerts: True
@@ -3888,7 +3876,6 @@ For the sample commands found below, note that the capitalization used is import
       86.72500000000001;95.665;100.67;101.095;94.32;91.87
 
    * alert_threshold: 5.0
-   * gecko_profile_entries: 2000000
    * gecko_profile_interval: 1
    * lower_is_better: True
    * subtest_alerts: True
@@ -4052,7 +4039,6 @@ For the sample commands found below, note that the capitalization used is import
       we were able to render during that time. Higher is better. Improvements
       (or regressions) to general painting performance or gradient rendering
       will affect this benchmark.
-   * gecko_profile_entries: 2000000
    * gecko_profile_interval: 2
    * linux_counters: None
    * lower_is_better: False
@@ -4256,7 +4242,6 @@ For the sample commands found below, note that the capitalization used is import
 
       Improvements (or regressions) to general painting performance or SVG are
       likely to affect this benchmark.
-   * gecko_profile_entries: 2000000
    * gecko_profile_interval: 2
    * linux_counters: None
    * mac_counters: None
@@ -4475,7 +4460,6 @@ For the sample commands found below, note that the capitalization used is import
 
    * cycles: 10
    * extensions: ['${talos}/startup_test/sessionrestore/addon']
-   * gecko_profile_entries: 10000000
    * gecko_profile_startup: True
    * pine: False
    * preferences: {'browser.startup.page': 3}
@@ -5559,7 +5543,6 @@ For the sample commands found below, note that the capitalization used is import
       * subtest: `ignore first`_ data point, then take the `median`_ of the remaining 19 data points
       * suite: geometric_mean(subtests)
    * extensions: ['${talos}/tests/tabpaint', '${talos}/pageloader']
-   * gecko_profile_entries: 1000000
    * preferences: {'browser.link.open_newwindow': 3, 'browser.link.open_newwindow.restriction': 2, 'browser.newtab.preload': False}
    * timeout: 600
    * tploadnocache: True
@@ -5804,7 +5787,6 @@ For the sample commands found below, note that the capitalization used is import
       49;people.com.cn/people.com.cn/index.html;96.49;103.64;115.12;66.05;117.84
 
    * extensions: ['${talos}/tests/tabswitch', '${talos}/pageloader']
-   * gecko_profile_entries: 5000000
    * preferences: {'addon.test.tabswitch.urlfile': '${talos}/tests/tp5o.html', 'addon.test.tabswitch.webserver': '${webserver}', 'addon.test.tabswitch.maxurls': -1, 'browser.toolbars.bookmarks.visibility': 'never'}
    * timeout: 900
    * tploadnocache: True
@@ -6033,7 +6015,6 @@ For the sample commands found below, note that the capitalization used is import
       29;newtab-open-preload-yes.error.TART;35.90;37.24;38.57;40.60;36.04;38.12;38.78;36.73;36.91;36.69;38.12;36.69;37.79;35.80;36.11;38.01;36.59;38.85;37.14;37.30;38.02;38.95;37.64;37.86;36.43
 
    * extensions: ['${talos}/pageloader', '${talos}/tests/tart/addon']
-   * gecko_profile_entries: 1000000
    * gecko_profile_interval: 10
    * linux_counters: None
    * mac_counters: None
@@ -6400,7 +6381,6 @@ For the sample commands found below, note that the capitalization used is import
       50;youtube.com/www.youtube.com/music.html;443;338;253;289;238;296;254;290;242;302;237;290;253;305;253;293;251;311;244;293;255;291;246;316;249
 
    * cycles: 1
-   * gecko_profile_entries: 4000000
    * gecko_profile_interval: 2
    * linux_counters: ['XRes']
    * mac_counters: []
@@ -6667,7 +6647,6 @@ For the sample commands found below, note that the capitalization used is import
       * Slowdown in the building of display list
       * Slowdown in rasterization of content
       * Slowdown in composite times
-   * gecko_profile_entries: 2000000
    * gecko_profile_interval: 2
    * preferences: {'layout.frame_rate': 0, 'docshell.event_starvation_delay_hint': 1, 'dom.send_after_paint_to_content': True, 'apz.paint_skipping.enabled': False, 'layout.css.scroll-behavior.spring-constant': "'10'", 'toolkit.framesRecording.bufferSize': 10000}
    * tpcycles: 1
@@ -7049,7 +7028,6 @@ For the sample commands found below, note that the capitalization used is import
       * introduction of more spurious MozAfterPaint events
    * see `bug 1471961 <https://bugzilla.mozilla.org/show_bug.cgi?id=1471961>`__
    * extensions: ['${talos}/pageloader', '${talos}/tests/tresize/addon']
-   * gecko_profile_entries: 1000000
    * gecko_profile_interval: 2
    * timeout: 900
    * tpmanifest: ${talos}/tests/tresize/tresize.manifest
@@ -7250,7 +7228,6 @@ For the sample commands found below, note that the capitalization used is import
         browser window (e.g. browser.xul) and it's frame gets created. Fix
         this by ensuring it's display:none by default.
    * cycles: 20
-   * gecko_profile_entries: 10000000
    * gecko_profile_startup: True
    * mainthread: False
    * responsiveness: False
@@ -7645,7 +7622,6 @@ For the sample commands found below, note that the capitalization used is import
       4;iframe.svg;13.82;14.87;14.78;14.35;14.73;14.50;14.15;14.46;14.80;14.48;15.10;14.93;14.77;14.52;14.08;15.01;14.58;14.52;15.23;14.35;14.72;14.28;14.30;14.27;14.96
       5;reader.htm;10.72;10.62;10.23;10.48;10.42;10.64;10.40;10.40;10.14;10.60;10.51;10.36;10.57;10.41;10.52;10.75;10.19;10.72;10.44;9.75;10.49;10.07;10.54;10.46;10.44
 
-   * gecko_profile_entries: 1000000
    * gecko_profile_interval: 1
    * pine: False
    * preferences: {'layout.frame_rate': 0, 'docshell.event_starvation_delay_hint': 1, 'dom.send_after_paint_to_content': True, 'apz.paint_skipping.enabled': False, 'layout.css.scroll-behavior.spring-constant': "'10'", 'toolkit.framesRecording.bufferSize': 10000}
@@ -7843,7 +7819,6 @@ For the sample commands found below, note that the capitalization used is import
       3;composite-scale-rotate.svg;70;76;89;62;62;78;57;77;79;82;74;56;61;79;73;64;75;74;81;82;76;58;77;61;62
       4;composite-scale-rotate-opacity.svg;91;60;67;84;62;66;78;69;65;68;62;73;68;63;64;71;79;77;63;80;85;65;82;76;81
 
-   * gecko_profile_entries: 10000000
    * gecko_profile_interval: 1
    * timeout: 600
    * tpchrome: False
@@ -8024,7 +7999,6 @@ For the sample commands found below, note that the capitalization used is import
    * An svg-only number that measures SVG rendering performance for dynamic content only.
    * contact: :jwatt, :dholbert
    * add test details
-   * gecko_profile_entries: 1000000
    * gecko_profile_interval: 10
    * preferences: {'layout.frame_rate': 0, 'docshell.event_starvation_delay_hint': 1, 'dom.send_after_paint_to_content': False}
    * tpchrome: False
@@ -8071,7 +8045,6 @@ For the sample commands found below, note that the capitalization used is import
       0;big-optimizable-group-opacity-2500.svg;170;171;205;249;249;244;192;252;192;431;182;250;189;249;151;168;209;194;247;250;193;250;255;247;247
       1;small-group-opacity-2500.svg;585;436;387;441;512;438;440;380;443;391;450;386;459;383;445;388;450;436;485;443;383;438;528;444;441
 
-   * gecko_profile_entries: 10000000
    * gecko_profile_interval: 1
    * timeout: 600
    * tpchrome: False
@@ -8286,7 +8259,6 @@ For the sample commands found below, note that the capitalization used is import
         regressions
    * they just mean that we need to re-baseline our
         expectations from the test.
-   * gecko_profile_entries: 1000000
    * gecko_profile_interval: 10
    * preferences: {'layout.frame_rate': 0, 'docshell.event_starvation_delay_hint': 1, 'dom.send_after_paint_to_content': False}
    * timeout: 600
@@ -8486,7 +8458,6 @@ For the sample commands found below, note that the capitalization used is import
       [209.219, 222.180, 225.299, 225.970, 228.090, 229.450, 230.625, 236.315, 239.804, 242.795, 244.5, 244.770, 250.524, 251.785, 253.074, 255.349, 264.729, 266.014, 269.399, 326.190]
 
    * extensions: ['${talos}/pageloader', '${talos}/tests/twinopen']
-   * gecko_profile_entries: 2000000
    * gecko_profile_interval: 1
    * preferences: {'browser.startup.homepage': 'about:blank'}
    * timeout: 300
@@ -8668,7 +8639,6 @@ For the sample commands found below, note that the capitalization used is import
         to fit into our pageloader extension and talos harness. The previous version of this
         test is V8 version 5 which was run on selective branches and operating systems.
    * contact: No longer being maintained by any team/individual
-   * gecko_profile_entries: 1000000
    * gecko_profile_interval: 1
    * lower_is_better: False
    * preferences: {'dom.send_after_paint_to_content': False}
