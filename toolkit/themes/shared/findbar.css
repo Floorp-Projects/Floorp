@@ -24,11 +24,19 @@ findbar[hidden] {
   transition-delay: 0s, 150ms;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  findbar,
+  findbar[hidden] {
+    transition-duration: 0s;
+    transition-delay: 0s;
+  }
+}
+
 findbar[noanim],
 findbar[noanim] > .findbar-container,
 findbar[noanim] > .findbar-closebutton {
-  transition-duration: 0s !important;
-  transition-delay: 0s !important;
+  transition-duration: 0s;
+  transition-delay: 0s;
 }
 
 .findbar-container {

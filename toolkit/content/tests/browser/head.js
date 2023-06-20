@@ -62,13 +62,21 @@ function closeFindbarAndWait(findbar) {
       resolve();
       return;
     }
-    findbar.addEventListener("transitionend", function cont(aEvent) {
-      if (aEvent.propertyName != "visibility") {
-        return;
-      }
-      findbar.removeEventListener("transitionend", cont);
-      resolve();
-    });
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      BrowserTestUtils.waitForMutationCondition(
+        findbar,
+        { attributes: true, attributeFilter: ["hidden"] },
+        () => findbar.hidden
+      ).then(resolve);
+    } else {
+      findbar.addEventListener("transitionend", function cont(aEvent) {
+        if (aEvent.propertyName != "visibility") {
+          return;
+        }
+        findbar.removeEventListener("transitionend", cont);
+        resolve();
+      });
+    }
     let close = findbar.getElement("find-closebutton");
     close.doCommand();
   });
