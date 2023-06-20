@@ -45,6 +45,7 @@ jobs:
         if [[ "$FLATPAK_ARCH" == "x86_64" ]]; then
           aria2c '${{ inputs.tarball-url-x86-64 }}' -o floorp.tar.bz2
           flatpak install --user -y flathub org.mozilla.firefox.BaseApp//22.08 --no-deps
+          cp -r ~/.local/share/flatpak/app/org.mozilla.firefox.BaseApp/current/active/files/* ./flatpak_build/tmp/
         elif [[ "$FLATPAK_ARCH" == "aarch64" ]]; then
           sudo apt install qemu-system-arm qemu-user-static flatpak-builder
 
@@ -54,12 +55,10 @@ jobs:
 
           git clone https://github.com/flathub/org.mozilla.firefox.BaseApp --depth 1 --branch branch/22.08 --recursive
           cd org.mozilla.firefox.BaseApp
-          flatpak-builder --repo=$HOME/repo --arch=aarch64 build-dir org.mozilla.firefox.BaseApp.json
-          flatpak --user remote-add --no-gpg-verify localrepo $HOME/repo
-          flatpak --user install -y localrepo org.mozilla.firefox.BaseApp --no-deps
+          flatpak-builder --arch=aarch64 build-dir org.mozilla.firefox.BaseApp.json
+          cp -r ./build-dir/files/* ./flatpak_build/tmp/
         fi
 
-        cp -r ~/.local/share/flatpak/app/org.mozilla.firefox.BaseApp/current/active/files/* ./flatpak_build/tmp/
         rm ./flatpak_build/tmp/manifest.json
         mkdir -p ./flatpak_build/tmp/lib/ffmpeg
         ls ./flatpak_build/tmp
