@@ -443,6 +443,7 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> RTCRtpSender::GetStatsInternal(
                 videoStats->total_encoded_bytes_target);
             local.mFrameWidth.Construct(streamStats->width);
             local.mFrameHeight.Construct(streamStats->height);
+            local.mFramesPerSecond.Construct(streamStats->encode_frame_rate);
             local.mFramesSent.Construct(streamStats->frames_encoded);
             local.mHugeFramesSent.Construct(streamStats->huge_frames_sent);
             local.mTotalEncodeTime.Construct(

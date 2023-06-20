@@ -127,6 +127,7 @@ dictionary RTCOutboundRtpStreamStats : RTCSentRtpStreamStats {
   unsigned long long totalEncodedBytesTarget;
   unsigned long frameWidth;
   unsigned long frameHeight;
+  double framesPerSecond;
   unsigned long framesSent;
   unsigned long hugeFramesSent;
   double totalEncodeTime;
