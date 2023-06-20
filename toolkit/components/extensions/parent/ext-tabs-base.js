@@ -286,16 +286,6 @@ class TabBase {
   }
 
   /**
-   * @property {boolean} autoDiscardable
-   *        Returns true if the tab can be discarded on memory pressure, false otherwise.
-   *        @readonly
-   *        @abstract
-   */
-  get autoDiscardable() {
-    throw new Error("Not implemented");
-  }
-
-  /**
    * @property {XULElement} browser
    *        Returns the XUL browser for the given tab.
    *        @readonly
@@ -525,8 +515,6 @@ class TabBase {
    *        Matches against the exact value of the tab's `active` attribute.
    * @param {boolean} [queryInfo.audible]
    *        Matches against the exact value of the tab's `audible` attribute.
-   * @param {boolean} [queryInfo.autoDiscardable]
-   *        Matches against the exact value of the tab's `autoDiscardable` attribute.
    * @param {string} [queryInfo.cookieStoreId]
    *        Matches against the exact value of the tab's `cookieStoreId` attribute.
    * @param {boolean} [queryInfo.discarded]
@@ -564,7 +552,6 @@ class TabBase {
     const PROPS = [
       "active",
       "audible",
-      "autoDiscardable",
       "discarded",
       "hidden",
       "highlighted",
@@ -650,7 +637,6 @@ class TabBase {
       height: this.height,
       lastAccessed: this.lastAccessed,
       audible: this.audible,
-      autoDiscardable: this.autoDiscardable,
       mutedInfo: this.mutedInfo,
       isArticle: this.isArticle,
       isInReaderMode: this.isInReaderMode,
