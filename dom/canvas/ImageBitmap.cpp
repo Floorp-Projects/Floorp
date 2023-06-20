@@ -51,56 +51,58 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ImageBitmap)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-class ImageBitmapShutdownObserver;
-
-static StaticMutex sShutdownMutex;
-static ImageBitmapShutdownObserver* sShutdownObserver = nullptr;
-
 /* This class observes shutdown notifications and sends that notification
  * to the worker thread if the image bitmap is on a worker thread.
  */
 class ImageBitmapShutdownObserver final : public nsIObserver {
  public:
-  explicit ImageBitmapShutdownObserver() {
-    sShutdownMutex.AssertCurrentThreadOwns();
+  explicit ImageBitmapShutdownObserver(ImageBitmap* aImageBitmap)
+      : mImageBitmap(nullptr) {
     if (NS_IsMainThread()) {
-      RegisterObserver();
+      mImageBitmap = aImageBitmap;
+    } else {
+      WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+      MOZ_ASSERT(workerPrivate);
+      mMainThreadEventTarget = workerPrivate->MainThreadEventTarget();
+      mSendToWorkerTask = new SendShutdownToWorkerThread(aImageBitmap);
+    }
+  }
+
+  void RegisterObserver() {
+    if (NS_IsMainThread()) {
+      nsContentUtils::RegisterShutdownObserver(this);
       return;
     }
 
-    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-    MOZ_ASSERT(workerPrivate);
-    auto* mainThreadEventTarget = workerPrivate->MainThreadEventTarget();
-    MOZ_ASSERT(mainThreadEventTarget);
+    MOZ_ASSERT(mMainThreadEventTarget);
     RefPtr<ImageBitmapShutdownObserver> self = this;
     nsCOMPtr<nsIRunnable> r =
         NS_NewRunnableFunction("ImageBitmapShutdownObserver::RegisterObserver",
                                [self]() { self->RegisterObserver(); });
-    mainThreadEventTarget->Dispatch(r.forget());
+
+    mMainThreadEventTarget->Dispatch(r.forget());
   }
 
-  void RegisterObserver() {
-    MOZ_ASSERT(NS_IsMainThread());
-    nsContentUtils::RegisterShutdownObserver(this);
-  }
-
-  void Track(ImageBitmap* aImageBitmap) {
-    sShutdownMutex.AssertCurrentThreadOwns();
-    MOZ_ASSERT(mBitmaps.MaybeGet(aImageBitmap).isNothing());
-
-    RefPtr<SendShutdownToWorkerThread> runnable = nullptr;
-    if (!NS_IsMainThread()) {
-      runnable = new SendShutdownToWorkerThread(aImageBitmap);
+  void UnregisterObserver() {
+    if (NS_IsMainThread()) {
+      nsContentUtils::UnregisterShutdownObserver(this);
+      return;
     }
 
-    mBitmaps.InsertOrUpdate(aImageBitmap, std::move(runnable));
+    MOZ_ASSERT(mMainThreadEventTarget);
+    RefPtr<ImageBitmapShutdownObserver> self = this;
+    nsCOMPtr<nsIRunnable> r =
+        NS_NewRunnableFunction("ImageBitmapShutdownObserver::RegisterObserver",
+                               [self]() { self->UnregisterObserver(); });
+
+    mMainThreadEventTarget->Dispatch(r.forget());
   }
 
-  void Untrack(ImageBitmap* aImageBitmap) {
-    sShutdownMutex.AssertCurrentThreadOwns();
-    MOZ_ASSERT(mBitmaps.MaybeGet(aImageBitmap).isSome());
-
-    mBitmaps.Remove(aImageBitmap);
+  void Clear() {
+    mImageBitmap = nullptr;
+    if (mSendToWorkerTask) {
+      mSendToWorkerTask->mImageBitmap = nullptr;
+    }
   }
 
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -112,9 +114,7 @@ class ImageBitmapShutdownObserver final : public nsIObserver {
    public:
     explicit SendShutdownToWorkerThread(ImageBitmap* aImageBitmap)
         : MainThreadWorkerControlRunnable(GetCurrentThreadWorkerPrivate()),
-          mImageBitmap(aImageBitmap) {
-      MOZ_ASSERT(GetCurrentThreadWorkerPrivate());
-    }
+          mImageBitmap(aImageBitmap) {}
 
     bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
       if (mImageBitmap) {
@@ -124,16 +124,12 @@ class ImageBitmapShutdownObserver final : public nsIObserver {
       return true;
     }
 
-    // When we dispatch we need to hold a ref to the bitmap otherwise it could
-    // go away.
-    void HoldBitmapStrong() { mStrongBitmap = mImageBitmap; }
-
     ImageBitmap* mImageBitmap;
-    RefPtr<ImageBitmap> mStrongBitmap;
   };
 
-  nsTHashMap<nsPtrHashKey<ImageBitmap>, RefPtr<SendShutdownToWorkerThread>>
-      mBitmaps;
+  ImageBitmap* mImageBitmap;
+  nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
+  RefPtr<SendShutdownToWorkerThread> mSendToWorkerTask;
 };
 
 NS_IMPL_ISUPPORTS(ImageBitmapShutdownObserver, nsIObserver)
@@ -142,23 +138,15 @@ NS_IMETHODIMP
 ImageBitmapShutdownObserver::Observe(nsISupports* aSubject, const char* aTopic,
                                      const char16_t* aData) {
   if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
-    StaticMutexAutoLock lock(sShutdownMutex);
-
-    for (const auto& entry : mBitmaps) {
-      auto* bitmap = entry.GetKey();
-      const auto& runnable = entry.GetData();
-      if (runnable) {
-        runnable->HoldBitmapStrong();
-        runnable->Dispatch();
-      } else {
-        bitmap->OnShutdown();
+    if (mSendToWorkerTask) {
+      mSendToWorkerTask->Dispatch();
+    } else {
+      if (mImageBitmap) {
+        mImageBitmap->OnShutdown();
+        mImageBitmap = nullptr;
       }
-
-      nsContentUtils::UnregisterShutdownObserver(this);
-
-      delete sShutdownObserver;
-      sShutdownObserver = nullptr;
     }
+    nsContentUtils::UnregisterShutdownObserver(this);
   }
 
   return NS_OK;
@@ -649,17 +637,15 @@ ImageBitmap::ImageBitmap(nsIGlobalObject* aGlobal, layers::Image* aData,
       mWriteOnly(aWriteOnly) {
   MOZ_ASSERT(aData, "aData is null in ImageBitmap constructor.");
 
-  StaticMutexAutoLock lock(sShutdownMutex);
-  if (!sShutdownObserver) {
-    sShutdownObserver = new ImageBitmapShutdownObserver();
-  }
-  sShutdownObserver->Track(this);
+  mShutdownObserver = new ImageBitmapShutdownObserver(this);
+  mShutdownObserver->RegisterObserver();
 }
 
 ImageBitmap::~ImageBitmap() {
-  StaticMutexAutoLock lock(sShutdownMutex);
-  if (sShutdownObserver) {
-    sShutdownObserver->Untrack(this);
+  if (mShutdownObserver) {
+    mShutdownObserver->Clear();
+    mShutdownObserver->UnregisterObserver();
+    mShutdownObserver = nullptr;
   }
 }
 
@@ -674,7 +660,11 @@ void ImageBitmap::Close() {
   mPictureRect.SetEmpty();
 }
 
-void ImageBitmap::OnShutdown() { Close(); }
+void ImageBitmap::OnShutdown() {
+  mShutdownObserver = nullptr;
+
+  Close();
+}
 
 void ImageBitmap::SetPictureRect(const IntRect& aRect, ErrorResult& aRv) {
   mPictureRect = FixUpNegativeDimension(aRect, aRv);
