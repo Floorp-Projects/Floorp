@@ -537,9 +537,7 @@ perfdocs-verify:
             - 'taskcluster/**'
             - '**/perftest.ini'
             - 'python/mozperftest/**'
-            - 'testing/**/*.ini'
-            - 'testing/**/*.yml'
-            - 'testing/**/*.rst'
+            - 'testing/{,!(web-platform)/{,**/}}*.{ini,rst,yml}'
             - 'tools/lint/perfdocs.yml'
 
 
