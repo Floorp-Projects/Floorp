@@ -186,6 +186,15 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
                     "help": "Add test tag (which includes URL prefix) to include.",
                 },
             ],
+            [
+                ["--exclude-tag"],
+                {
+                    "action": "append",
+                    "dest": "exclude_tag",
+                    "default": [],
+                    "help": "Add test tag (which includes URL prefix) to exclude.",
+                },
+            ],
         ]
         + copy.deepcopy(testing_config_options)
         + copy.deepcopy(code_coverage_config_options)
@@ -472,6 +481,8 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
             cmd.append(f"--exclude={url_prefix}")
         for tag in c["tag"]:
             cmd.append(f"--tag={tag}")
+        for tag in c["exclude_tag"]:
+            cmd.append(f"--exclude-tag={tag}")
 
         cmd.extend(test_paths)
 
