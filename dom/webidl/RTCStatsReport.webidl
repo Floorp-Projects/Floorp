@@ -142,6 +142,13 @@ dictionary RTCMediaSourceStats : RTCStats {
   required DOMString kind;
 };
 
+dictionary RTCVideoSourceStats : RTCMediaSourceStats {
+  unsigned long   width;
+  unsigned long   height;
+  unsigned long   frames;
+  double          framesPerSecond;
+};
+
 dictionary RTCPeerConnectionStats : RTCStats {
   unsigned long dataChannelsOpened;
   unsigned long dataChannelsClosed;
@@ -266,6 +273,7 @@ dictionary RTCStatsCollection {
   sequence<RTCRemoteInboundRtpStreamStats>  remoteInboundRtpStreamStats = [];
   sequence<RTCRemoteOutboundRtpStreamStats> remoteOutboundRtpStreamStats = [];
   sequence<RTCMediaSourceStats>             mediaSourceStats = [];
+  sequence<RTCVideoSourceStats>             videoSourceStats = [];
   sequence<RTCPeerConnectionStats>          peerConnectionStats = [];
   sequence<RTCRTPContributingSourceStats>   rtpContributingSourceStats = [];
   sequence<RTCIceCandidatePairStats>        iceCandidatePairStats = [];

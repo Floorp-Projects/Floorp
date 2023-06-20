@@ -407,6 +407,12 @@ class VideoSessionConduit : public MediaSessionConduit {
 
   virtual Maybe<Ssrc> GetAssociatedLocalRtxSSRC(Ssrc aSsrc) const = 0;
 
+  struct Resolution {
+    size_t width;
+    size_t height;
+  };
+  virtual Maybe<Resolution> GetLastResolution() const = 0;
+
  protected:
   /* RTCP feedback settings, for unit testing purposes */
   FrameRequestType mFrameRequestMethod;
