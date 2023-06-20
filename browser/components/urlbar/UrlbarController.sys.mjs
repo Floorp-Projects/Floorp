@@ -302,6 +302,17 @@ export class UrlbarController {
     }
 
     if (this.view.isOpen && executeAction && this._lastQueryContextWrapper) {
+      // In native inputs on most platforms, Shift+Up/Down moves the caret to the
+      // start/end of the input and changes its selection, so in that case defer
+      // handling to the input instead of changing the view's selection.
+      if (
+        event.shiftKey &&
+        (event.keyCode === KeyEvent.DOM_VK_UP ||
+          event.keyCode === KeyEvent.DOM_VK_DOWN)
+      ) {
+        return;
+      }
+
       let { queryContext } = this._lastQueryContextWrapper;
       let handled = this.view.oneOffSearchButtons.handleKeyDown(
         event,
