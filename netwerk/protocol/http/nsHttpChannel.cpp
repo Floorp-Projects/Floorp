@@ -4014,12 +4014,12 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, uint32_t* aResult) {
     // the request method MUST be either GET or HEAD (see bug 175641) and
     // the cached response code must be < 400
     //
-    // the cached content must not be weakly framed or marked immutable
+    // the cached content must not be weakly framed
     //
     // do not override conditional headers when consumer has defined its own
     if (!mCachedResponseHead->NoStore() &&
         (mRequestHead.IsGet() || mRequestHead.IsHead()) &&
-        !LoadCustomConditionalRequest() && !weaklyFramed && !isImmutable &&
+        !LoadCustomConditionalRequest() && !weaklyFramed &&
         (mCachedResponseHead->Status() < 400)) {
       if (LoadConcurrentCacheAccess()) {
         // In case of concurrent read and also validation request we
