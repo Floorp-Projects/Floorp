@@ -223,8 +223,12 @@
       return this.getAttribute("place");
     }
 
+    get selectedCount() {
+      return this.view?.selection?.count || 0;
+    }
+
     get hasSelection() {
-      return this.view && this.view.selection.count >= 1;
+      return this.selectedCount >= 1;
     }
 
     get selectedNodes() {
@@ -308,12 +312,11 @@
     }
 
     get selectedNode() {
-      var view = this.view;
-      if (!view || view.selection.count != 1) {
+      if (this.selectedCount != 1) {
         return null;
       }
 
-      var selection = view.selection;
+      var selection = this.view.selection;
       var min = {},
         max = {};
       selection.getRangeAt(0, min, max);
