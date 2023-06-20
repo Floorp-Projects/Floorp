@@ -650,11 +650,13 @@ static void get_xrandr_info(Display* dpy) {
   Window root = RootWindow(dpy, DefaultScreen(dpy));
   XRRProviderResources* pr = XRRGetProviderResources(dpy, root);
   if (!pr) {
+    log("GLX_TEST: XRRGetProviderResources failed.\n");
     return;
   }
   XRRScreenResources* res = XRRGetScreenResourcesCurrent(dpy, root);
   if (!res) {
     XRRFreeProviderResources(pr);
+    log("GLX_TEST: XRRGetScreenResourcesCurrent failed.\n");
     return;
   }
   if (pr->nproviders != 0) {
@@ -869,6 +871,7 @@ bool x11_egltest() {
 
   Display* dpy = XOpenDisplay(nullptr);
   if (!dpy) {
+    log("GLX_TEST: XOpenDisplay failed.\n");
     return false;
   }
 #  ifdef MOZ_ASAN
@@ -889,7 +892,11 @@ bool x11_egltest() {
   // Disable all non-standard depths for the initial EGL roleout.
   int screenCount = ScreenCount(dpy);
   for (int idx = 0; idx < screenCount; idx++) {
-    if (DefaultDepth(dpy, idx) != 24) {
+    int depth = DefaultDepth(dpy, idx);
+    if (depth != 24) {
+      log("GLX_TEST: DefaultDepth() is %d, expected to be 24. See Bug "
+          "1667621.\n",
+          depth);
       return false;
     }
   }
