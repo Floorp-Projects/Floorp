@@ -24,6 +24,7 @@ object FenixVersions {
     const val androidx_legacy = "1.0.0"
     const val androidx_lifecycle = "2.6.1"
     const val androidx_navigation = "2.5.3"
+    const val androidx_splash_screen = "1.0.1"
     const val androidx_paging = "3.1.1"
     const val androidx_transition = "1.4.1"
     const val androidx_datastore = "1.0.0"
@@ -54,6 +55,7 @@ object FenixDependencies {
 
     const val androidx_benchmark_junit4 = "androidx.benchmark:benchmark-junit4:${FenixVersions.androidx_benchmark}"
     const val androidx_benchmark_macro_junit4 = "androidx.benchmark:benchmark-macro-junit4:${FenixVersions.androidx_benchmark}"
+    const val androidx_core_splashscreen = "androidx.core:core-splashscreen:${FenixVersions.androidx_splash_screen}"
     const val androidx_profileinstaller = "androidx.profileinstaller:profileinstaller:${FenixVersions.androidx_profileinstaller}"
     const val androidx_activity_ktx = "androidx.activity:activity-ktx:${FenixVersions.androidx_activity}"
     const val androidx_legacy = "androidx.legacy:legacy-support-v4:${FenixVersions.androidx_legacy}"

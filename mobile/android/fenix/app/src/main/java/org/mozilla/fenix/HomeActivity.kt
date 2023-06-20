@@ -33,6 +33,7 @@ import androidx.annotation.VisibleForTesting.Companion.PROTECTED
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.widget.Toolbar
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDirections
@@ -43,6 +44,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mozilla.appservices.places.BookmarkRoot
@@ -229,6 +231,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         components.strictMode.attachListenerToDisablePenaltyDeath(supportFragmentManager)
         MarkersFragmentLifecycleCallbacks.register(supportFragmentManager, components.core.engine)
 
+        maybeShowSplashScreen()
+
         // There is disk read violations on some devices such as samsung and pixel for android 9/10
         components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
             // Theme setup should always be called before super.onCreate
@@ -407,6 +411,29 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             } else {
                 // This will trigger the notification permission system dialog as app targets sdk 32.
                 ensureMarketingChannelExists(applicationContext)
+            }
+        }
+    }
+
+    private fun maybeShowSplashScreen() {
+        if (components.settings.isFirstSplashScreenShown) {
+            return
+        } else {
+            components.settings.isFirstSplashScreenShown = true
+            // Splash screen compat fails to draw icons on earlier versions.
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
+                return
+            }
+        }
+
+        if (FxNimbus.features.splashScreen.value().enabled) {
+            val splashScreen = installSplashScreen()
+            var keepSplashOnScreen = true
+            val delay = FxNimbus.features.splashScreen.value().maximumDurationMs.toLong()
+            splashScreen.setKeepOnScreenCondition { keepSplashOnScreen }
+            MainScope().launch {
+                delay(timeMillis = delay)
+                keepSplashOnScreen = false
             }
         }
     }

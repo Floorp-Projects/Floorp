@@ -607,6 +607,7 @@ dependencies {
     implementation ComponentsDependencies.androidx_lifecycle_viewmodel
     implementation ComponentsDependencies.androidx_core
     implementation ComponentsDependencies.androidx_core_ktx
+    implementation FenixDependencies.androidx_core_splashscreen
     implementation FenixDependencies.androidx_transition
     implementation ComponentsDependencies.androidx_work_runtime
     implementation FenixDependencies.androidx_datastore

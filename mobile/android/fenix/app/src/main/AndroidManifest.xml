@@ -99,6 +99,7 @@
 
         <activity
             android:name=".HomeActivity"
+            android:theme="@style/SplashScreen"
             android:exported="true"
             android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|layoutDirection|smallestScreenSize|screenLayout"
             android:launchMode="singleTask"

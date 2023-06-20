@@ -3,6 +3,12 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
+    <style name="SplashScreen" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/fx_mobile_layer_color_1</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_screen</item>
+        <item name="postSplashScreenTheme">@style/NormalTheme</item>
+    </style>
+
     <style name="DialogStyleNormal" parent="DialogStyleDark"/>
 
     <style name="NormalTheme" parent="NormalThemeBase" >
