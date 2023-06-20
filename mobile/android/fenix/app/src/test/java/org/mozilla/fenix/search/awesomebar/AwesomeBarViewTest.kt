@@ -640,19 +640,20 @@ class AwesomeBarViewTest {
 
         val localSessionsProviders = result.filterIsInstance<SessionSuggestionProvider>()
         assertEquals(1, localSessionsProviders.size)
-        assertNull(localSessionsProviders[0].resultsHostFilter)
+        assertNull(localSessionsProviders[0].resultsUriFilter)
     }
 
     @Test
     fun `GIVEN normal browsing mode and needing to show filtered local tabs suggestions WHEN configuring providers THEN add the tabs provider with an engine filter`() {
         val settings: Settings = mockk(relaxed = true)
+        val url = Uri.parse("https://www.test.com")
         every { activity.settings() } returns settings
         every { activity.browsingModeManager.mode } returns BrowsingMode.Normal
         val state = getSearchProviderState(
             showAllSessionSuggestions = false,
             searchEngineSource = SearchEngineSource.Shortcut(
                 mockk(relaxed = true) {
-                    every { resultsUrl.host } returns "test"
+                    every { resultsUrl } returns url
                 },
             ),
         )
@@ -661,7 +662,7 @@ class AwesomeBarViewTest {
 
         val localSessionsProviders = result.filterIsInstance<SessionSuggestionProvider>()
         assertEquals(1, localSessionsProviders.size)
-        assertEquals("test", localSessionsProviders[0].resultsHostFilter)
+        assertEquals(url, localSessionsProviders[0].resultsUriFilter)
     }
 
     @Test
@@ -827,8 +828,8 @@ class AwesomeBarViewTest {
         assertEquals("www.test.com", syncedTabsProviders[1].resultsHostFilter) // the filtered synced tabs provider
         val localTabsProviders: List<SessionSuggestionProvider> = result.filterIsInstance<SessionSuggestionProvider>()
         assertEquals(2, localTabsProviders.size)
-        assertNull(localTabsProviders[0].resultsHostFilter) // the general tabs provider
-        assertEquals("www.test.com", localTabsProviders[1].resultsHostFilter) // the filtered tabs provider
+        assertNull(localTabsProviders[0].resultsUriFilter) // the general tabs provider
+        assertEquals(url, localTabsProviders[1].resultsUriFilter) // the filtered tabs provider
         assertEquals(1, result.filterIsInstance<SearchEngineSuggestionProvider>().size)
     }
 

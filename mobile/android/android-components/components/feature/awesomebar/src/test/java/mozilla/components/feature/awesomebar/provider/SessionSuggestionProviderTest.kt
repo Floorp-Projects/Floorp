@@ -5,6 +5,9 @@
 package mozilla.components.feature.awesomebar.provider
 
 import android.content.res.Resources
+import android.net.Uri
+import androidx.core.net.toUri
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.action.TabListAction
@@ -12,17 +15,18 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.tabs.TabsUseCases
-import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 
 @ExperimentalCoroutinesApi // for runTest
+@RunWith(AndroidJUnit4::class)
 class SessionSuggestionProviderTest {
     @Test
     fun `Provider returns empty list when text is empty`() = runTest {
@@ -249,7 +253,7 @@ class SessionSuggestionProviderTest {
     }
 
     @Test
-    fun `GIVEN a results host filter WHEN querying tabs THEN return only the results that pass through the filter`() = runTest {
+    fun `GIVEN a results uri filter WHEN querying tabs THEN return only the results that pass through the filter`() = runTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
@@ -267,13 +271,49 @@ class SessionSuggestionProviderTest {
             resources = resources,
             store = store,
             selectTabUseCase = mock(),
-            resultsHostFilter = "https://mozilla.org".tryGetHostFromUrl(),
+            resultsUriFilter = "https://mozilla.org".toUri(),
         )
 
         val suggestions = provider.onInputChanged("moz")
 
-        assertEquals(2, suggestions.size)
+        assertEquals(3, suggestions.size)
+        assertTrue(suggestions.map { it.title }.contains("https://mozilla.org/firefox"))
+        assertTrue(suggestions.map { it.title }.contains("https://mozilla.org/firefox"))
+        assertTrue(suggestions.map { it.title }.contains("https://www.mozilla.org/vpn"))
+    }
+
+    @Test
+    fun `GIVEN a results uri filter WHEN querying tabs THEN return results containing mobile subdomains`() = runTest {
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(
+                    createTab(id = "a", url = "https://wikipedia.org"),
+                    createTab(id = "b", url = "https://mozilla.org/firefox"),
+                    createTab(id = "c", url = "https://mozilla.org/focus"),
+                    createTab(id = "d", url = "https://www.mozilla.org/vpn"),
+                    createTab(id = "e", url = "https://www.m.mozilla.org"),
+                    createTab(id = "f", url = "http://www.mobile.mozilla.org"),
+                ),
+                selectedTabId = "d",
+            ),
+        )
+        val resources: Resources = mock()
+        `when`(resources.getString(anyInt())).thenReturn("Switch to tab")
+        val uriFilter = Uri.parse("https://mozilla.org")
+        val provider = SessionSuggestionProvider(
+            resources = resources,
+            store = store,
+            selectTabUseCase = mock(),
+            resultsUriFilter = uriFilter,
+        )
+
+        val suggestions = provider.onInputChanged("moz")
+
+        assertEquals(5, suggestions.size)
         assertTrue(suggestions.map { it.title }.contains("https://mozilla.org/firefox"))
         assertTrue(suggestions.map { it.title }.contains("https://mozilla.org/focus"))
+        assertTrue(suggestions.map { it.title }.contains("https://www.m.mozilla.org"))
+        assertTrue(suggestions.map { it.title }.contains("http://www.mobile.mozilla.org"))
+        assertTrue(suggestions.map { it.title }.contains("https://www.mozilla.org/vpn"))
     }
 }
