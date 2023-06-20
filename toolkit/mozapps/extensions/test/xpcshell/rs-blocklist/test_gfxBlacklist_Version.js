@@ -154,9 +154,13 @@ async function run_test() {
       failureId
     );
     if (OS == "Linux" && status != Ci.nsIGfxInfo.FEATURE_STATUS_OK) {
-      // Disabled on testsuite due to old Mesa version there.
-      Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
-      Assert.equal(failureId.value, "FEATURE_HARDWARE_VIDEO_DECODING_MESA");
+      // Linux test suite is running on SW OpenGL backend and we disable
+      // HW video decoding there.
+      Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_PLATFORM_TEST);
+      Assert.equal(
+        failureId.value,
+        "FEATURE_FAILURE_VIDEO_DECODING_TEST_FAILED"
+      );
     } else {
       Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
     }
