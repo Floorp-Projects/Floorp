@@ -429,6 +429,71 @@ nsNavBookmarks::InsertBookmark(int64_t aFolder, nsIURI* aURI, int32_t aIndex,
   bookmark->mParentGuid.Assign(folderGuid);
   bookmark->mSource = aSource;
   bookmark->mIsTagging = grandParentId == tagsRootId;
+
+  nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
+      "SELECT "
+      "  h.frecency, "
+      "  h.hidden, "
+      "  h.visit_count, "
+      "  h.last_visit_date, "
+      "  ( "
+      "    SELECT GROUP_CONCAT(t.title, ',') "
+      "    FROM moz_bookmarks t "
+      "    LEFT JOIN moz_bookmarks ref ON ref.fk = h.id "
+      "    WHERE t.id = +ref.parent "
+      "      AND t.parent = ( "
+      "        SELECT id FROM moz_bookmarks "
+      "        WHERE guid = '" TAGS_ROOT_GUID
+      "'"
+      "  ) "
+      ") "
+      "FROM moz_places h "
+      "WHERE h.id = :id");
+  NS_ENSURE_STATE(stmt);
+  mozStorageStatementScoper scoper(stmt);
+  rv = stmt->BindInt64ByName("id"_ns, placeId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool exists;
+  if (NS_SUCCEEDED(stmt->ExecuteStep(&exists)) && exists) {
+    int32_t frecency;
+    rv = stmt->GetInt32(0, &frecency);
+    NS_ENSURE_SUCCESS(rv, rv);
+    bookmark->mFrecency = frecency;
+    int32_t hidden;
+    rv = stmt->GetInt32(1, &hidden);
+    NS_ENSURE_SUCCESS(rv, rv);
+    bookmark->mHidden = !!hidden;
+    int32_t visitCount;
+    rv = stmt->GetInt32(2, &visitCount);
+    NS_ENSURE_SUCCESS(rv, rv);
+    bookmark->mVisitCount = visitCount;
+
+    bool isLastVisitDateNull;
+    rv = stmt->GetIsNull(3, &isLastVisitDateNull);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (isLastVisitDateNull) {
+      bookmark->mLastVisitDate.SetNull();
+    } else {
+      int64_t lastVisitDate;
+      rv = stmt->GetInt64(3, &lastVisitDate);
+      NS_ENSURE_SUCCESS(rv, rv);
+      bookmark->mLastVisitDate = lastVisitDate;
+    }
+
+    nsString tags;
+    rv = stmt->GetString(4, tags);
+    NS_ENSURE_SUCCESS(rv, rv);
+    bookmark->mTags.Assign(tags);
+  } else {
+    MOZ_ASSERT(false);
+    bookmark->mTags.SetIsVoid(true);
+    bookmark->mFrecency = 0;
+    bookmark->mHidden = false;
+    bookmark->mVisitCount = 0;
+    bookmark->mLastVisitDate.SetNull();
+  }
+
   bool success = !!notifications.AppendElement(bookmark.forget(), fallible);
   MOZ_RELEASE_ASSERT(success);
 
@@ -661,6 +726,11 @@ nsNavBookmarks::CreateFolder(int64_t aParent, const nsACString& aTitle,
     folder->mParentGuid.Assign(folderGuid);
     folder->mSource = aSource;
     folder->mIsTagging = aParent == tagsRootId;
+    folder->mTags.SetIsVoid(true);
+    folder->mFrecency = 0;
+    folder->mHidden = false;
+    folder->mVisitCount = 0;
+    folder->mLastVisitDate.SetNull();
     bool success = !!events.AppendElement(folder.forget(), fallible);
     MOZ_RELEASE_ASSERT(success);
 

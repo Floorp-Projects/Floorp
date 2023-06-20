@@ -2778,49 +2778,6 @@ nsresult nsNavHistory::VisitIdToResultNode(int64_t visitId,
   return RowToResult(row, aOptions, aResult);
 }
 
-nsresult nsNavHistory::BookmarkIdToResultNode(
-    int64_t aBookmarkId, nsNavHistoryQueryOptions* aOptions,
-    nsNavHistoryResultNode** aResult) {
-  MOZ_ASSERT(aBookmarkId > 0, "The passed-in bookmark id must be valid");
-  nsAutoCString tagsFragment;
-  GetTagsSqlFragment(GetTagsFolder(), "h.id"_ns, true, tagsFragment);
-  // Should match kGetInfoIndex_*
-  nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-      nsLiteralCString(
-          "SELECT b.fk, h.url, b.title, "
-          "h.rev_host, h.visit_count, h.last_visit_date, null, b.id, "
-          "b.dateAdded, b.lastModified, b.parent, ") +
-      tagsFragment +
-      nsLiteralCString(", h.frecency, h.hidden, h.guid, "
-                       "null, null, null, b.guid, b.position, b.type, b.fk "
-                       "FROM moz_bookmarks b "
-                       "JOIN moz_places h ON b.fk = h.id "
-                       "WHERE b.id = :item_id "));
-  NS_ENSURE_STATE(stmt);
-  mozStorageStatementScoper scoper(stmt);
-
-  nsresult rv = stmt->BindInt64ByName("item_id"_ns, aBookmarkId);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool hasMore = false;
-  rv = stmt->ExecuteStep(&hasMore);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!hasMore) {
-    // Oops, we were passed an id that doesn't exist! It is indeed possible
-    // that between the insertion and the notification time, another enqueued
-    // task removed it. Since this can happen, we'll just issue a warning.
-    NS_WARNING(
-        "Cannot build a result node for a non existing bookmark id, was it "
-        "removed?");
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  nsCOMPtr<mozIStorageValueArray> row = do_QueryInterface(stmt, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return RowToResult(row, aOptions, aResult);
-}
-
 nsresult nsNavHistory::URIToResultNode(nsIURI* aURI,
                                        nsNavHistoryQueryOptions* aOptions,
                                        nsNavHistoryResultNode** aResult) {
