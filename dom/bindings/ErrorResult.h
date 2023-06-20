@@ -464,6 +464,11 @@ class TErrorResult {
   // hopefully it's all temporary until we sort out the EME bits.
   friend class dom::Promise;
 
+  // Implementation of MaybeSetPendingException for the case when we're a
+  // failure result.  See documentation of MaybeSetPendingException for the
+  // "context" argument.
+  void SetPendingException(JSContext* cx, const char* context);
+
  private:
 #ifdef DEBUG
   enum UnionState {
@@ -566,11 +571,6 @@ class TErrorResult {
   // reinitialize it or change mResult to something that will not involve us
   // touching the union anymore.
   void ClearUnionData();
-
-  // Implementation of MaybeSetPendingException for the case when we're a
-  // failure result.  See documentation of MaybeSetPendingException for the
-  // "context" argument.
-  void SetPendingException(JSContext* cx, const char* context);
 
   // Methods for setting various specific kinds of pending exceptions.  See
   // documentation of MaybeSetPendingException for the "context" argument.
@@ -828,13 +828,47 @@ class CopyableErrorResult
 inline ErrorResult::ErrorResult(CopyableErrorResult&& aRHS)
     : ErrorResult(reinterpret_cast<ErrorResult&&>(aRHS)) {}
 
-namespace dom {
-namespace binding_detail {
+namespace dom::binding_detail {
+
+enum class ErrorFor {
+  getter,
+  setter,
+};
+
+template <ErrorFor ErrorType>
+struct ErrorDescriptionFor {
+  const char* mInterface;
+  const char* mMember;
+};
+
 class FastErrorResult : public mozilla::binding_danger::TErrorResult<
                             mozilla::binding_danger::JustAssertCleanupPolicy> {
+ public:
+  using TErrorResult::MaybeSetPendingException;
+
+  template <ErrorFor ErrorType>
+  [[nodiscard]] bool MaybeSetPendingException(
+      JSContext* aCx, const ErrorDescriptionFor<ErrorType>& aDescription) {
+    WouldReportJSException();
+    if (!Failed()) {
+      return false;
+    }
+
+    nsAutoCString description(aDescription.mInterface);
+    description.Append('.');
+    description.Append(aDescription.mMember);
+    if constexpr (ErrorType == ErrorFor::getter) {
+      description.AppendLiteral(" getter");
+    } else {
+      static_assert(ErrorType == ErrorFor::setter);
+      description.AppendLiteral(" setter");
+    }
+    SetPendingException(aCx, description.get());
+    return true;
+  }
 };
-}  // namespace binding_detail
-}  // namespace dom
+
+}  // namespace dom::binding_detail
 
 // We want an OOMReporter class that has the following properties:
 //
