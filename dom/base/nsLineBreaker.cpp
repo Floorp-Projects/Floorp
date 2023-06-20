@@ -87,8 +87,9 @@ static void SetupCapitalization(const char16_t* aWord, uint32_t aLength,
         }
         break;
       case GeneralCategory::Other_Punctuation:
-        /* Special-case: exclude ASCII apostrophe, for "Lowe's" etc. */
-        if (ch != '\'') {
+        /* Special-case: exclude ASCII apostrophe, for "Lowe's" etc.,
+           and MIDDLE DOT, for Catalan "l·l". */
+        if (ch != '\'' && ch != 0x00B7) {
           capitalizeNextChar = true;
         }
         break;
