@@ -15,10 +15,10 @@
 #include "mozilla/dom/MediaSource.h"
 
 #include "mozilla/dom/BlobURLProtocolHandler.h"
+#include "mozilla/AttributeStyles.h"
 #include "mozilla/Preferences.h"
 
 #include "nsGkAtoms.h"
-#include "nsHTMLStyleSheet.h"
 #include "nsMappedAttributes.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Source)
@@ -188,9 +188,11 @@ void HTMLSourceElement::BuildMappedAttributesForImage() {
   mMappedAttributesForImage = nullptr;
 
   Document* document = GetComposedDoc();
-  nsHTMLStyleSheet* sheet =
-      document ? document->GetAttributeStyleSheet() : nullptr;
-  if (!sheet) {
+  if (!document) {
+    return;
+  }
+  AttributeStyles* attrStyles = document->GetAttributeStyles();
+  if (!attrStyles) {
     return;
   }
 
@@ -202,7 +204,7 @@ void HTMLSourceElement::BuildMappedAttributesForImage() {
 
   const size_t count = (width ? 1 : 0) + (height ? 1 : 0);
   RefPtr<nsMappedAttributes> modifiableMapped(new (count) nsMappedAttributes(
-      sheet, nsGenericHTMLElement::MapPictureSourceSizeAttributesInto));
+      attrStyles, nsGenericHTMLElement::MapPictureSourceSizeAttributesInto));
   MOZ_ASSERT(modifiableMapped);
 
   auto maybeSetAttr = [&](nsAtom* aName, const nsAttrValue* aValue) {
@@ -217,16 +219,16 @@ void HTMLSourceElement::BuildMappedAttributesForImage() {
   maybeSetAttr(nsGkAtoms::height, height);
 
   RefPtr<nsMappedAttributes> newAttrs =
-      sheet->UniqueMappedAttributes(modifiableMapped);
+      attrStyles->UniqueMappedAttributes(modifiableMapped);
   NS_ENSURE_TRUE_VOID(newAttrs);
 
   if (newAttrs != modifiableMapped) {
-    // Reset the stylesheet of modifiableMapped so that it doesn't
-    // spend time trying to remove itself from the hash.  There is no
-    // risk that modifiableMapped is in the hash since we created
-    // it ourselves and it didn't come from the stylesheet (in which
-    // case it would not have been modifiable).
-    modifiableMapped->DropStyleSheetReference();
+    // Reset the stylesheet of modifiableMapped so that it doesn't spend time
+    // trying to remove itself from the hash.  There is no risk that
+    // modifiableMapped is in the hash since we created it ourselves and it
+    // didn't come from the stylesheet (in which case it would not have been
+    // modifiable).
+    modifiableMapped->DropAttributeStylesReference();
   }
 
   mMappedAttributesForImage = std::move(newAttrs);

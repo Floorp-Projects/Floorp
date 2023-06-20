@@ -332,7 +332,9 @@ class SVGElement : public SVGElementBase  // nsIContent
   already_AddRefed<mozilla::dom::DOMSVGAnimatedString> ClassName();
 
   void UpdateContentDeclarationBlock();
-  const mozilla::DeclarationBlock* GetContentDeclarationBlock() const;
+  const mozilla::DeclarationBlock* GetContentDeclarationBlock() const {
+    return mContentDeclarationBlock.get();
+  }
 
   bool Autofocus() const { return GetBoolAttr(nsGkAtoms::autofocus); }
   void SetAutofocus(bool aAutofocus, ErrorResult& aRv) {

@@ -21,7 +21,6 @@
 #include "nsIProtocolHandler.h"
 #include "nsIXMLContentSink.h"
 #include "nsHTMLParts.h"
-#include "nsHTMLStyleSheet.h"
 #include "nsGkAtoms.h"
 #include "nsPresContext.h"
 #include "nsPIDOMWindow.h"

@@ -10,6 +10,7 @@
 #include "gfxPlatformFontList.h"
 #include "mozilla/AutoRestyleTimelineMarker.h"
 #include "mozilla/DocumentStyleRootIterator.h"
+#include "mozilla/AttributeStyles.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/Keyframe.h"
@@ -48,7 +49,6 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsCSSPseudoElements.h"
 #include "nsDeviceContext.h"
-#include "nsHTMLStyleSheet.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsLayoutUtils.h"
 #include "mozilla/dom/DocumentInlines.h"
@@ -322,8 +322,8 @@ const ServoElementSnapshotTable& ServoStyleSet::Snapshots() {
 }
 
 void ServoStyleSet::ResolveMappedAttrDeclarationBlocks() {
-  if (nsHTMLStyleSheet* sheet = mDocument->GetAttributeStyleSheet()) {
-    sheet->CalculateMappedServoDeclarations();
+  if (AttributeStyles* attrStyles = mDocument->GetAttributeStyles()) {
+    attrStyles->CalculateMappedServoDeclarations();
   }
 
   mDocument->ResolveScheduledSVGPresAttrs();

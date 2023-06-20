@@ -17,7 +17,6 @@
 #include "jsfriendapi.h"
 
 #include "nsCOMPtr.h"
-#include "nsHTMLStyleSheet.h"
 #include "nsIContentSink.h"
 #include "mozilla/dom/Document.h"
 #include "nsIFormControl.h"

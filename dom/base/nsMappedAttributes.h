@@ -19,14 +19,16 @@
 #include "mozilla/MemoryReporting.h"
 
 class nsAtom;
-class nsHTMLStyleSheet;
+
+namespace mozilla {
+class AttributeStyles;
+}
 
 class nsMappedAttributes final {
   using InternalAttr = AttrArray::InternalAttr;
 
  public:
-  nsMappedAttributes(nsHTMLStyleSheet* aSheet,
-                     nsMapRuleToAttributesFunc aMapRuleFunc);
+  nsMappedAttributes(mozilla::AttributeStyles*, nsMapRuleToAttributesFunc);
 
   // Do not return null.
   void* operator new(size_t size, uint32_t aAttrCount = 1) noexcept(true);
@@ -44,9 +46,9 @@ class nsMappedAttributes final {
   bool Equals(const nsMappedAttributes* aAttributes) const;
   PLDHashNumber HashValue() const;
 
-  void DropStyleSheetReference() { mSheet = nullptr; }
-  void SetStyleSheet(nsHTMLStyleSheet* aSheet);
-  nsHTMLStyleSheet* GetStyleSheet() { return mSheet; }
+  void DropAttributeStylesReference() { mAttrStyles = nullptr; }
+  void SetAttributeStyles(mozilla::AttributeStyles*);
+  mozilla::AttributeStyles* GetAttributeStyles() { return mAttrStyles; }
 
   void SetRuleMapper(nsMapRuleToAttributesFunc aRuleMapper) {
     mRuleMapper = aRuleMapper;
@@ -100,7 +102,7 @@ class nsMappedAttributes final {
 #ifdef DEBUG
   uint16_t mBufferSize;
 #endif
-  nsHTMLStyleSheet* mSheet;  // weak
+  mozilla::AttributeStyles* mAttrStyles;  // weak
   nsMapRuleToAttributesFunc mRuleMapper;
   RefPtr<mozilla::StyleLockedDeclarationBlock> mServoStyle;
   InternalAttr mBuffer[0];

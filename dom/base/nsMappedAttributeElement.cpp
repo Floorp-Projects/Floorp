@@ -5,15 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsMappedAttributeElement.h"
+#include "nsMappedAttributes.h"
 #include "mozilla/dom/Document.h"
 
 bool nsMappedAttributeElement::SetAndSwapMappedAttribute(nsAtom* aName,
                                                          nsAttrValue& aValue,
                                                          bool* aValueWasSet,
                                                          nsresult* aRetval) {
-  nsHTMLStyleSheet* sheet = OwnerDoc()->GetAttributeStyleSheet();
-  *aRetval =
-      mAttrs.SetAndSwapMappedAttr(aName, aValue, this, sheet, aValueWasSet);
+  *aRetval = mAttrs.SetAndSwapMappedAttr(aName, aValue, this, aValueWasSet);
   return true;
 }
 
@@ -26,7 +25,8 @@ void nsMappedAttributeElement::MapNoAttributesInto(
     const nsMappedAttributes*, mozilla::MappedDeclarations&) {}
 
 void nsMappedAttributeElement::NodeInfoChanged(Document* aOldDoc) {
-  nsHTMLStyleSheet* sheet = OwnerDoc()->GetAttributeStyleSheet();
-  mAttrs.SetMappedAttrStyleSheet(sheet);
+  if (mAttrs.HasMappedAttrs()) {
+    mAttrs.SetMappedAttributeStyles(OwnerDoc()->GetAttributeStyles());
+  }
   nsMappedAttributeElementBase::NodeInfoChanged(aOldDoc);
 }

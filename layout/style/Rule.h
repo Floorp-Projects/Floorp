@@ -16,10 +16,8 @@
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
 
-struct nsRuleData;
 template <class T>
 struct already_AddRefed;
-class nsHTMLCSSStyleSheet;
 
 namespace mozilla {
 

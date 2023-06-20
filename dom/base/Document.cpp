@@ -55,6 +55,7 @@
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/DocLoadingTimelineMarker.h"
+#include "mozilla/AttributeStyles.h"
 #include "mozilla/DocumentStyleRootIterator.h"
 #include "mozilla/EditorBase.h"
 #include "mozilla/EditorCommands.h"
@@ -295,9 +296,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsGlobalWindowInner.h"
 #include "nsGlobalWindowOuter.h"
-#include "nsHTMLCSSStyleSheet.h"
 #include "nsHTMLDocument.h"
-#include "nsHTMLStyleSheet.h"
 #include "nsHtml5Module.h"
 #include "nsHtml5Parser.h"
 #include "nsHtml5TreeOpExecutor.h"
@@ -2379,8 +2378,8 @@ Document::~Document() {
     UnlinkStyleSheets(sheets);
   }
 
-  if (mAttrStyleSheet) {
-    mAttrStyleSheet->SetOwningDocument(nullptr);
+  if (mAttributeStyles) {
+    mAttributeStyles->SetOwningDocument(nullptr);
   }
 
   if (mListenerManager) {
@@ -3122,15 +3121,11 @@ void Document::ResetStylesheetsToURI(nsIURI* aURI) {
   }
 
   // Now reset our inline style and attribute sheets.
-  if (mAttrStyleSheet) {
-    mAttrStyleSheet->Reset();
-    mAttrStyleSheet->SetOwningDocument(this);
+  if (mAttributeStyles) {
+    mAttributeStyles->Reset();
+    mAttributeStyles->SetOwningDocument(this);
   } else {
-    mAttrStyleSheet = new nsHTMLStyleSheet(this);
-  }
-
-  if (!mStyleAttrStyleSheet) {
-    mStyleAttrStyleSheet = new nsHTMLCSSStyleSheet();
+    mAttributeStyles = new AttributeStyles(this);
   }
 
   if (mStyleSetFilled) {
@@ -15716,10 +15711,11 @@ void Document::DocAddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const {
     mResizeObserverController->AddSizeOfIncludingThis(aWindowSizes);
   }
 
-  aWindowSizes.mDOMSizes.mDOMOtherSize +=
-      mAttrStyleSheet ? mAttrStyleSheet->DOMSizeOfIncludingThis(
-                            aWindowSizes.mState.mMallocSizeOf)
-                      : 0;
+  if (mAttributeStyles) {
+    aWindowSizes.mDOMSizes.mDOMOtherSize +=
+        mAttributeStyles->DOMSizeOfIncludingThis(
+            aWindowSizes.mState.mMallocSizeOf);
+  }
 
   aWindowSizes.mDOMSizes.mDOMOtherSize +=
       mStyledLinks.ShallowSizeOfExcludingThis(

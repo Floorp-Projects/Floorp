@@ -4,30 +4,30 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*
- * style sheet and style rule processor representing data from presentational
- * HTML attributes
- */
+/* Data from presentational HTML attributes and style attributes */
 
-#include "nsHTMLStyleSheet.h"
+#include "mozilla/AttributeStyles.h"
+
 #include "nsMappedAttributes.h"
 #include "nsGkAtoms.h"
 #include "nsPresContext.h"
-#include "mozilla/PresShell.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
+#include "mozilla/dom/Element.h"
 #include "nsStyleConsts.h"
 #include "nsError.h"
-#include "mozilla/MemoryReporting.h"
-#include "mozilla/dom/Element.h"
 #include "nsHashKeys.h"
+#include "mozilla/DeclarationBlock.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/OperatorNewExtensions.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleSet.h"
 
-using namespace mozilla;
 using namespace mozilla::dom;
+
+namespace mozilla {
 
 // -----------------------------------------------------------
 
@@ -45,8 +45,7 @@ static PLDHashNumber MappedAttrTable_HashKey(const void* key) {
 static void MappedAttrTable_ClearEntry(PLDHashTable* table,
                                        PLDHashEntryHdr* hdr) {
   MappedAttrTableEntry* entry = static_cast<MappedAttrTableEntry*>(hdr);
-
-  entry->mAttributes->DropStyleSheetReference();
+  entry->mAttributes->DropAttributeStylesReference();
   memset(entry, 0, sizeof(MappedAttrTableEntry));
 }
 
@@ -68,18 +67,17 @@ static const PLDHashTableOps MappedAttrTable_Ops = {
 
 // -----------------------------------------------------------
 
-nsHTMLStyleSheet::nsHTMLStyleSheet(Document* aDocument)
+AttributeStyles::AttributeStyles(Document* aDocument)
     : mDocument(aDocument),
-      mMappedAttrTable(&MappedAttrTable_Ops, sizeof(MappedAttrTableEntry)),
-      mMappedAttrsDirty(false) {
+      mMappedAttrTable(&MappedAttrTable_Ops, sizeof(MappedAttrTableEntry)) {
   MOZ_ASSERT(aDocument);
 }
 
-void nsHTMLStyleSheet::SetOwningDocument(Document* aDocument) {
+void AttributeStyles::SetOwningDocument(Document* aDocument) {
   mDocument = aDocument;  // not refcounted
 }
 
-void nsHTMLStyleSheet::Reset() {
+void AttributeStyles::Reset() {
   mServoUnvisitedLinkDecl = nullptr;
   mServoVisitedLinkDecl = nullptr;
   mServoActiveLinkDecl = nullptr;
@@ -88,7 +86,7 @@ void nsHTMLStyleSheet::Reset() {
   mMappedAttrsDirty = false;
 }
 
-nsresult nsHTMLStyleSheet::ImplLinkColorSetter(
+nsresult AttributeStyles::ImplLinkColorSetter(
     RefPtr<StyleLockedDeclarationBlock>& aDecl, nscolor aColor) {
   if (!mDocument || !mDocument->GetPresShell()) {
     return NS_OK;
@@ -107,24 +105,26 @@ nsresult nsHTMLStyleSheet::ImplLinkColorSetter(
   return NS_OK;
 }
 
-nsresult nsHTMLStyleSheet::SetLinkColor(nscolor aColor) {
+nsresult AttributeStyles::SetLinkColor(nscolor aColor) {
   return ImplLinkColorSetter(mServoUnvisitedLinkDecl, aColor);
 }
 
-nsresult nsHTMLStyleSheet::SetActiveLinkColor(nscolor aColor) {
+nsresult AttributeStyles::SetActiveLinkColor(nscolor aColor) {
   return ImplLinkColorSetter(mServoActiveLinkDecl, aColor);
 }
 
-nsresult nsHTMLStyleSheet::SetVisitedLinkColor(nscolor aColor) {
+nsresult AttributeStyles::SetVisitedLinkColor(nscolor aColor) {
   return ImplLinkColorSetter(mServoVisitedLinkDecl, aColor);
 }
 
-already_AddRefed<nsMappedAttributes> nsHTMLStyleSheet::UniqueMappedAttributes(
+already_AddRefed<nsMappedAttributes> AttributeStyles::UniqueMappedAttributes(
     nsMappedAttributes* aMapped) {
   mMappedAttrsDirty = true;
   auto entry = static_cast<MappedAttrTableEntry*>(
       mMappedAttrTable.Add(aMapped, fallible));
-  if (!entry) return nullptr;
+  if (!entry) {
+    return nullptr;
+  }
   if (!entry->mAttributes) {
     // We added a new entry to the hashtable, so we have a new unique set.
     entry->mAttributes = aMapped;
@@ -133,7 +133,7 @@ already_AddRefed<nsMappedAttributes> nsHTMLStyleSheet::UniqueMappedAttributes(
   return ret.forget();
 }
 
-void nsHTMLStyleSheet::DropMappedAttributes(nsMappedAttributes* aMapped) {
+void AttributeStyles::DropMappedAttributes(nsMappedAttributes* aMapped) {
   NS_ENSURE_TRUE_VOID(aMapped);
 #ifdef DEBUG
   uint32_t entryCount = mMappedAttrTable.EntryCount() - 1;
@@ -144,7 +144,7 @@ void nsHTMLStyleSheet::DropMappedAttributes(nsMappedAttributes* aMapped) {
   NS_ASSERTION(entryCount == mMappedAttrTable.EntryCount(), "not removed");
 }
 
-void nsHTMLStyleSheet::CalculateMappedServoDeclarations() {
+void AttributeStyles::CalculateMappedServoDeclarations() {
   for (auto iter = mMappedAttrTable.ConstIter(); !iter.Done(); iter.Next()) {
     MappedAttrTableEntry* attr = static_cast<MappedAttrTableEntry*>(iter.Get());
     if (attr->mAttributes->GetServoStyle()) {
@@ -155,7 +155,7 @@ void nsHTMLStyleSheet::CalculateMappedServoDeclarations() {
   }
 }
 
-size_t nsHTMLStyleSheet::DOMSizeOfIncludingThis(
+size_t AttributeStyles::DOMSizeOfIncludingThis(
     MallocSizeOf aMallocSizeOf) const {
   size_t n = aMallocSizeOf(this);
 
@@ -167,16 +167,34 @@ size_t nsHTMLStyleSheet::DOMSizeOfIncludingThis(
 
   // Measurement of the following members may be added later if DMD finds it is
   // worthwhile:
-  // - mURL
-  // - mLinkRule
-  // - mVisitedRule
-  // - mActiveRule
-  // - mTableQuirkColorRule
-  // - mTableTHRule
-  // - mLangRuleTable
+  // - mServoUnvisitedLinkDecl;
+  // - mServoVisitedLinkDecl;
+  // - mServoActiveLinkDecl;
   //
   // The following members are not measured:
   // - mDocument, because it's non-owning
 
   return n;
 }
+
+AttributeStyles::~AttributeStyles() {
+  // We may go away before all of our cached style attributes do, so clean up
+  // any that are left.
+  for (auto iter = mCachedStyleAttrs.Iter(); !iter.Done(); iter.Next()) {
+    MiscContainer*& value = iter.Data();
+
+    // Ideally we'd just call MiscContainer::Evict, but we can't do that since
+    // we're iterating the hashtable.
+    if (value->mType == nsAttrValue::eCSSDeclaration) {
+      DeclarationBlock* declaration = value->mValue.mCSSDeclaration;
+      declaration->SetAttributeStyles(nullptr);
+    } else {
+      MOZ_ASSERT_UNREACHABLE("unexpected cached nsAttrValue type");
+    }
+
+    value->mValue.mCached = 0;
+    iter.Remove();
+  }
+}
+
+}  // namespace mozilla
