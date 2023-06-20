@@ -37,7 +37,7 @@ add_task(async function test_toggle_always_translate_language_menuitem() {
     "Simulate clicking always-translate-language in the settings menu, " +
       "adding the document language to the alwaysTranslateLanguages pref"
   );
-  await openSettingsMenu();
+  await openTranslationsSettingsMenuViaTranslationsButton();
 
   await assertIsAlwaysTranslateLanguage("es", false);
   await toggleAlwaysTranslateLanguage();
@@ -104,7 +104,7 @@ add_task(async function test_toggle_always_translate_language_menuitem() {
     "Simulate clicking always-translate-language in the settings menu " +
       "removing the document language from the alwaysTranslateLanguages pref"
   );
-  await openSettingsMenu();
+  await openTranslationsSettingsMenuViaTranslationsButton();
 
   await assertIsAlwaysTranslateLanguage("es", true);
   await toggleAlwaysTranslateLanguage();
@@ -200,7 +200,7 @@ add_task(
       "Simulate clicking always-translate-language in the settings menu, " +
         "adding the document language to the alwaysTranslateLanguages pref"
     );
-    await openSettingsMenu();
+    await openTranslationsSettingsMenuViaTranslationsButton();
 
     await assertIsAlwaysTranslateLanguage("es", false);
     await toggleAlwaysTranslateLanguage();
@@ -287,7 +287,7 @@ add_task(
       "Simulate clicking always-translate-language in the settings menu, " +
         "adding the document language to the alwaysTranslateLanguages pref"
     );
-    await openSettingsMenu();
+    await openTranslationsSettingsMenuViaTranslationsButton();
 
     await assertIsAlwaysTranslateLanguage("es", false);
     await toggleAlwaysTranslateLanguage();
@@ -381,7 +381,7 @@ add_task(
       "Simulate clicking always-translate-language in the settings menu, " +
         "removing the document language to the alwaysTranslateLanguages pref"
     );
-    await openSettingsMenu();
+    await openTranslationsSettingsMenuViaTranslationsButton();
 
     await assertIsAlwaysTranslateLanguage("es", true);
     await toggleAlwaysTranslateLanguage();

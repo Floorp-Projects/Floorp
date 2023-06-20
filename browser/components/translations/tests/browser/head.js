@@ -52,10 +52,14 @@ async function assertTranslationsButton(visibleAssertions, message) {
 }
 
 /**
- * A convenience function to open the settings menu of the
- * translations panel. Fails the test if the menu cannot be opened.
+ * A convenience function to open the translations panel settings
+ * menu by clicking on the translations button.
+ *
+ * Fails the test if the menu cannot be opened.
  */
-async function openSettingsMenu() {
+async function openTranslationsSettingsMenuViaTranslationsButton() {
+  await closeTranslationsPanelIfOpen();
+
   const { button } = await assertTranslationsButton(
     { button: true },
     "The button is available."
@@ -67,6 +71,43 @@ async function openSettingsMenu() {
 
   const gearIcon = getByL10nId("translations-panel-settings-button");
   click(gearIcon, "Open the settings menu");
+}
+
+/**
+ * A convenience function to open the translations panel settings
+ * menu through the app menu.
+ *
+ * Fails the test if the menu cannot be opened.
+ */
+async function openTranslationsSettingsMenuViaAppMenu() {
+  await openTranslationsPanelViaAppMenu();
+  const gearIcon = getByL10nId("translations-panel-settings-button");
+  click(gearIcon, "Open the settings menu");
+}
+
+/**
+ * A convenience function to open the translations panel
+ * through the app menu.
+ *
+ * Fails the test if the menu cannot be opened.
+ */
+async function openTranslationsPanelViaAppMenu() {
+  await closeTranslationsPanelIfOpen();
+  const appMenuButton = getById("PanelUI-menu-button");
+  click(appMenuButton, "Opening the app-menu button");
+  await BrowserTestUtils.waitForEvent(window.PanelUI.mainView, "ViewShown");
+
+  const translateSiteButton = getById("appMenu-translate-button");
+
+  is(
+    translateSiteButton.disabled,
+    false,
+    "The app-menu translate button should be enabled"
+  );
+
+  await waitForTranslationsPopupEvent("popupshown", () => {
+    click(translateSiteButton);
+  });
 }
 
 /**
@@ -174,6 +215,12 @@ async function assertCheckboxState(dataL10nId, expectChecked) {
  * Navigate to a URL and indicate a message as to why.
  */
 async function navigate(url, message) {
+  // When the translations panel is open from the app menu,
+  // it doesn't close on navigate the way that it does when it's
+  // open from the translations button, so ensure that we always
+  // close it when we navigate to a new page.
+  await closeTranslationsPanelIfOpen();
+
   info(message);
 
   // Load a blank page first to ensure that tests don't hang.

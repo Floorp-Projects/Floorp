@@ -285,6 +285,23 @@ function getTranslationsParent() {
 }
 
 /**
+ * Closes the translations panel if it is open.
+ */
+function closeTranslationsPanelIfOpen() {
+  return TestUtils.waitForCondition(() => {
+    const panel = document.getElementById("translations-panel");
+    if (!panel) {
+      return true;
+    }
+    if (panel.state === "closed") {
+      return true;
+    }
+    PanelMultiView.hidePopup(panel);
+    return false;
+  });
+}
+
+/**
  * This is for tests that don't need a browser page to run.
  */
 async function setupActorTest({
@@ -321,6 +338,7 @@ async function setupActorTest({
     actor: getTranslationsParent(),
     remoteClients,
     async cleanup() {
+      await closeTranslationsPanelIfOpen();
       BrowserTestUtils.removeTab(tab);
       await removeMocks();
       return SpecialPowers.popPrefEnv();
@@ -458,6 +476,7 @@ async function loadTestPage({
      * @returns {Promise<void>}
      */
     async cleanup() {
+      await closeTranslationsPanelIfOpen();
       await removeMocks();
       Services.fog.testResetFOG();
       BrowserTestUtils.removeTab(tab);
@@ -907,6 +926,7 @@ async function setupAboutPreferences(languagePairs) {
   const elements = await selectAboutPreferencesElements();
 
   async function cleanup() {
+    await closeTranslationsPanelIfOpen();
     gBrowser.removeCurrentTab();
     await removeMocks();
     await SpecialPowers.popPrefEnv();
