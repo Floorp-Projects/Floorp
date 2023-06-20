@@ -63,6 +63,7 @@ import org.mozilla.fenix.perf.ProfilerViewModel
 import org.mozilla.fenix.settings.account.AccountUiView
 import org.mozilla.fenix.utils.Settings
 import kotlin.system.exitProcess
+import org.mozilla.fenix.GleanMetrics.Settings as SettingsMetrics
 
 @Suppress("LargeClass", "TooManyFunctions")
 class SettingsFragment : PreferenceFragmentCompat() {
@@ -255,6 +256,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         val directions: NavDirections? = when (preference.key) {
             resources.getString(R.string.pref_key_sign_in) -> {
+                SettingsMetrics.signIntoSync.add()
                 SettingsFragmentDirections.actionSettingsFragmentToTurnOnSyncFragment(
                     entrypoint = FenixFxAEntryPoint.SettingsMenu,
                 )

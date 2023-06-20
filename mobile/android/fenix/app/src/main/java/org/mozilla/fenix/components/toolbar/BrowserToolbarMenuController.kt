@@ -29,6 +29,7 @@ import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.ui.widgets.withCenterAlignedButtons
+import org.mozilla.fenix.GleanMetrics.AppMenu
 import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.ReaderMode
@@ -444,8 +445,10 @@ class DefaultBrowserToolbarMenuController(
                 Events.browserMenuAction.record(Events.BrowserMenuActionExtra("add_to_top_sites"))
             is ToolbarMenu.Item.AddToHomeScreen ->
                 Events.browserMenuAction.record(Events.BrowserMenuActionExtra("add_to_homescreen"))
-            is ToolbarMenu.Item.SyncAccount ->
+            is ToolbarMenu.Item.SyncAccount -> {
                 Events.browserMenuAction.record(Events.BrowserMenuActionExtra("sync_account"))
+                AppMenu.signIntoSync.add()
+            }
             is ToolbarMenu.Item.Bookmark ->
                 Events.browserMenuAction.record(Events.BrowserMenuActionExtra("bookmark"))
             is ToolbarMenu.Item.AddonsManager ->
