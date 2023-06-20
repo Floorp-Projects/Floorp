@@ -24,6 +24,7 @@
 #include "mozilla/XREAppData.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/GUniquePtr.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "nsCRTGlue.h"
 #include "nsExceptionHandler.h"
 #include "nsPrintfCString.h"
@@ -1155,9 +1156,19 @@ nsresult GfxInfo::GetFeatureStatusImpl(
       aFeature, aStatus, aSuggestedDriverVersion, aDriverInfo, aFailureId, &os);
 
   // Probe VA-API on supported devices only
-  if (aFeature == nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING &&
-      *aStatus == nsIGfxInfo::FEATURE_STATUS_OK) {
-    if (mIsAccelerated) {
+  if (aFeature == nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING) {
+    if (!StaticPrefs::media_hardware_video_decoding_enabled_AtStartup()) {
+      return ret;
+    }
+    bool probeHWDecode = false;
+#ifdef MOZ_WAYLAND
+    probeHWDecode =
+        mIsAccelerated &&
+        (*aStatus == nsIGfxInfo::FEATURE_STATUS_OK ||
+         StaticPrefs::media_hardware_video_decoding_force_enabled_AtStartup() ||
+         StaticPrefs::media_ffmpeg_vaapi_enabled_AtStartup());
+#endif
+    if (probeHWDecode) {
       GetDataVAAPI();
     } else {
       mIsVAAPISupported = Some(false);
