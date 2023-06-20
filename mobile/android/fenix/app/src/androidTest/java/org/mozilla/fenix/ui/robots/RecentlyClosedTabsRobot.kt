@@ -8,6 +8,7 @@ import android.net.Uri
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
+import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withParent
@@ -16,7 +17,8 @@ import androidx.test.uiautomator.UiSelector
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.allOf
 import org.mozilla.fenix.R
-import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.HomeActivityComposeTestRule
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
@@ -29,19 +31,44 @@ class RecentlyClosedTabsRobot {
 
     fun waitForListToExist() =
         mDevice.findObject(UiSelector().resourceId("$packageName:id/recently_closed_list"))
-            .waitForExists(
-                TestAssetHelper.waitingTime,
-            )
+            .waitForExists(waitingTime)
 
-    fun verifyRecentlyClosedTabsMenuView() = assertRecentlyClosedTabsMenuView()
+    fun verifyRecentlyClosedTabsMenuView() {
+        onView(
+            allOf(
+                withText("Recently closed tabs"),
+                withParent(withId(R.id.navigationToolbar)),
+            ),
+        ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    }
 
-    fun verifyEmptyRecentlyClosedTabsList() = assertEmptyRecentlyClosedTabsList()
+    fun verifyEmptyRecentlyClosedTabsList() {
+        mDevice.waitForIdle()
 
-    fun verifyRecentlyClosedTabsPageTitle(title: String) = assertRecentlyClosedTabsPageTitle(title)
+        onView(
+            allOf(
+                withId(R.id.recently_closed_empty_view),
+                withText(R.string.recently_closed_empty_message),
+            ),
+        ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    }
 
-    fun verifyRecentlyClosedTabsUrl(expectedUrl: Uri) = assertPageUrl(expectedUrl)
+    fun verifyRecentlyClosedTabsPageTitle(title: String) =
+        recentlyClosedTabsPageTitle(title)
+            .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-    fun clickDeleteRecentlyClosedTabs() = recentlyClosedTabsDeleteButton().click()
+    fun verifyRecentlyClosedTabsUrl(expectedUrl: Uri) {
+        onView(
+            allOf(
+                withId(R.id.url),
+                withEffectiveVisibility(
+                    Visibility.VISIBLE,
+                ),
+            ),
+        ).check(matches(withText(Matchers.containsString(expectedUrl.toString()))))
+    }
+
+    fun clickDeleteRecentlyClosedTabs() = recentlyClosedTabDeleteButton().click()
 
     class Transition {
         fun clickRecentlyClosedItem(title: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
@@ -51,43 +78,36 @@ class RecentlyClosedTabsRobot {
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
+
+        fun clickOpenInNewTab(testRule: HomeActivityComposeTestRule, interact: ComposeTabDrawerRobot.() -> Unit): ComposeTabDrawerRobot.Transition {
+            openInNewTabOption.click()
+
+            ComposeTabDrawerRobot(testRule).interact()
+            return ComposeTabDrawerRobot.Transition(testRule)
+        }
+
+        fun clickOpenInPrivateTab(testRule: HomeActivityComposeTestRule, interact: ComposeTabDrawerRobot.() -> Unit): ComposeTabDrawerRobot.Transition {
+            openInPrivateTabOption.click()
+
+            ComposeTabDrawerRobot(testRule).interact()
+            return ComposeTabDrawerRobot.Transition(testRule)
+        }
+
+        fun clickShare(interact: ShareOverlayRobot.() -> Unit): ShareOverlayRobot.Transition {
+            multipleSelectionShareButton.click()
+
+            ShareOverlayRobot().interact()
+            return ShareOverlayRobot.Transition()
+        }
+
+        fun goBackToHistoryMenu(interact: HistoryRobot.() -> Unit): HistoryRobot.Transition {
+            onView(withContentDescription("Navigate up")).click()
+
+            HistoryRobot().interact()
+            return HistoryRobot.Transition()
+        }
     }
 }
-
-private fun assertRecentlyClosedTabsMenuView() {
-    onView(
-        allOf(
-            withText("Recently closed tabs"),
-            withParent(withId(R.id.navigationToolbar)),
-        ),
-    )
-        .check(
-            matches(withEffectiveVisibility(Visibility.VISIBLE)),
-        )
-}
-
-private fun assertEmptyRecentlyClosedTabsList() {
-    mDevice.waitForIdle()
-
-    onView(
-        allOf(
-            withId(R.id.recently_closed_empty_view),
-            withText(R.string.recently_closed_empty_message),
-        ),
-    ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-}
-
-private fun assertPageUrl(expectedUrl: Uri) = onView(
-    allOf(
-        withId(R.id.url),
-        withEffectiveVisibility(
-            Visibility.VISIBLE,
-        ),
-    ),
-)
-    .check(
-        matches(withText(Matchers.containsString(expectedUrl.toString()))),
-    )
 
 private fun recentlyClosedTabsPageTitle(title: String) = onView(
     allOf(
@@ -96,12 +116,7 @@ private fun recentlyClosedTabsPageTitle(title: String) = onView(
     ),
 )
 
-private fun assertRecentlyClosedTabsPageTitle(title: String) {
-    recentlyClosedTabsPageTitle(title)
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-}
-
-private fun recentlyClosedTabsDeleteButton() =
+private fun recentlyClosedTabDeleteButton() =
     onView(
         allOf(
             withId(R.id.overflow_menu),
@@ -110,3 +125,9 @@ private fun recentlyClosedTabsDeleteButton() =
             ),
         ),
     )
+
+private val openInNewTabOption = onView(withText("Open in new tab"))
+
+private val openInPrivateTabOption = onView(withText("Open in private tab"))
+
+private val multipleSelectionShareButton = onView(withId(R.id.share_history_multi_select))

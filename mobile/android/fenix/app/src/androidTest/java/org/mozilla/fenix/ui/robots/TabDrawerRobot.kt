@@ -6,10 +6,7 @@
 
 package org.mozilla.fenix.ui.robots
 
-import android.content.Context
 import android.view.View
-import androidx.test.core.app.ApplicationProvider
-import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
@@ -276,15 +273,7 @@ class TabDrawerRobot {
         )
 
     class Transition {
-        fun openThreeDotMenu(interact: ThreeDotMenuMainRobot.() -> Unit): ThreeDotMenuMainRobot.Transition {
-            mDevice.waitForIdle()
-
-            Espresso.openActionBarOverflowOrOptionsMenu(ApplicationProvider.getApplicationContext<Context>())
-            ThreeDotMenuMainRobot().interact()
-            return ThreeDotMenuMainRobot.Transition()
-        }
-
-        fun openTabDrawer(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
+        fun openTabDrawer(interact: TabDrawerRobot.() -> Unit): Transition {
             mDevice.waitForIdle(waitingTime)
             tabsCounter().click()
             mDevice.waitNotNull(
@@ -293,7 +282,7 @@ class TabDrawerRobot {
             )
 
             TabDrawerRobot().interact()
-            return TabDrawerRobot.Transition()
+            return Transition()
         }
 
         fun closeTabDrawer(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {

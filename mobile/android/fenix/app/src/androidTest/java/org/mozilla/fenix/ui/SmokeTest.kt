@@ -26,7 +26,6 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
-import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper.assertYoutubeAppOpens
@@ -146,54 +145,6 @@ class SmokeTest {
             }.submitQuery("mozilla ") {
                 verifyUrl(searchEngine)
             }.goToHomescreen { }
-        }
-    }
-
-    // Verifies that a recently closed item is properly opened
-    @Test
-    fun openRecentlyClosedItemTest() {
-        val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-
-        homeScreen {
-        }.openNavigationToolbar {
-        }.enterURLAndEnterToBrowser(website.url) {
-            mDevice.waitForIdle()
-        }.openTabDrawer {
-            closeTab()
-        }.openTabDrawer {
-        }.openRecentlyClosedTabs {
-            waitForListToExist()
-            registerAndCleanupIdlingResources(
-                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.recently_closed_list), 1),
-            ) {
-                verifyRecentlyClosedTabsMenuView()
-            }
-        }.clickRecentlyClosedItem("Test_Page_1") {
-            verifyUrl(website.url.toString())
-        }
-    }
-
-    // Verifies that tapping the "x" button removes a recently closed item from the list
-    @Test
-    fun deleteRecentlyClosedTabsItemTest() {
-        val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-
-        homeScreen {
-        }.openNavigationToolbar {
-        }.enterURLAndEnterToBrowser(website.url) {
-            mDevice.waitForIdle()
-        }.openTabDrawer {
-            closeTab()
-        }.openTabDrawer {
-        }.openRecentlyClosedTabs {
-            waitForListToExist()
-            registerAndCleanupIdlingResources(
-                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.recently_closed_list), 1),
-            ) {
-                verifyRecentlyClosedTabsMenuView()
-            }
-            clickDeleteRecentlyClosedTabs()
-            verifyEmptyRecentlyClosedTabsList()
         }
     }
 

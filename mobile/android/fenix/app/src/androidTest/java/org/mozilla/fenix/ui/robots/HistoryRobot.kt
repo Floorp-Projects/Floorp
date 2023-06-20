@@ -208,6 +208,14 @@ class HistoryRobot {
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
+
+        fun openRecentlyClosedTabs(interact: RecentlyClosedTabsRobot.() -> Unit): RecentlyClosedTabsRobot.Transition {
+            recentlyClosedTabsListButton.waitForExists(waitingTime)
+            recentlyClosedTabsListButton.click()
+
+            RecentlyClosedTabsRobot().interact()
+            return RecentlyClosedTabsRobot.Transition()
+        }
     }
 }
 
@@ -299,3 +307,6 @@ private fun deleteHistoryEverythingOption() =
                 .textContains(getStringResource(R.string.delete_history_prompt_button_everything))
                 .resourceId("$packageName:id/everything_button"),
         )
+
+private val recentlyClosedTabsListButton =
+    mDevice.findObject(UiSelector().resourceId("$packageName:id/recently_closed_tabs_header"))

@@ -190,10 +190,10 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
             return Transition(composeTestRule)
         }
 
-        fun closeAllTabs(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+        fun closeAllTabs(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
             composeTestRule.dropdownMenuItemCloseAllTabs().performClick()
-            BrowserRobot().interact()
-            return BrowserRobot.Transition()
+            HomeScreenRobot().interact()
+            return HomeScreenRobot.Transition()
         }
 
         fun openTab(title: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {

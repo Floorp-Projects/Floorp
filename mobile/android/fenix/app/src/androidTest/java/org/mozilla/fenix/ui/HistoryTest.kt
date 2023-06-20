@@ -335,30 +335,6 @@ class HistoryTest {
         }
     }
 
-    // This test verifies the Recently Closed Tabs List and items
-    @Test
-    fun verifyRecentlyClosedTabsListTest() {
-        val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-
-        homeScreen {
-        }.openNavigationToolbar {
-        }.enterURLAndEnterToBrowser(website.url) {
-            mDevice.waitForIdle()
-        }.openTabDrawer {
-            closeTab()
-        }.openTabDrawer {
-        }.openRecentlyClosedTabs {
-            waitForListToExist()
-            registerAndCleanupIdlingResources(
-                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.recently_closed_list), 1),
-            ) {
-                verifyRecentlyClosedTabsMenuView()
-            }
-            verifyRecentlyClosedTabsPageTitle("Test_Page_1")
-            verifyRecentlyClosedTabsUrl(website.url)
-        }
-    }
-
     @Test
     fun verifySearchHistoryViewTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
