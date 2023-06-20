@@ -78,11 +78,6 @@ void HTMLDialogElement::Show(ErrorResult& aError) {
         "Cannot call show() on an open modal dialog.");
   }
 
-  if (IsPopoverOpen()) {
-    return aError.ThrowInvalidStateError(
-        "Dialog element is already an open popover.");
-  }
-
   SetOpen(true, IgnoreErrors());
 
   StorePreviouslyFocusedElement();
