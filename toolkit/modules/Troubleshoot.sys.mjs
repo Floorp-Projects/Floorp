@@ -310,6 +310,7 @@ var dataProviders = {
       "locale",
       "dictionary",
       "sitepermission",
+      "theme",
     ]);
     addons = addons.filter(e => !e.isSystem);
     addons.sort(function (a, b) {
