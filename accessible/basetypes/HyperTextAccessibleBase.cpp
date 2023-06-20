@@ -298,10 +298,12 @@ int32_t HyperTextAccessibleBase::OffsetAtPoint(int32_t aX, int32_t aY,
     if (aCoordType != nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE) {
       p = nsAccUtils::ConvertToScreenCoords(aX, aY, aCoordType, thisAcc);
     }
-    Accessible* hittestMatch = nsAccUtils::DocumentFor(thisAcc)->ChildAtPoint(
-        p.x, p.y, Accessible::EWhichChildAtPoint::DeepestChild);
-    if (thisAcc == hittestMatch->Parent()) {
-      return 0;
+    if (Accessible* doc = nsAccUtils::DocumentFor(thisAcc)) {
+      Accessible* hittestMatch = doc->ChildAtPoint(
+          p.x, p.y, Accessible::EWhichChildAtPoint::DeepestChild);
+      if (hittestMatch && thisAcc == hittestMatch->Parent()) {
+        return 0;
+      }
     }
     return -1;
   }
