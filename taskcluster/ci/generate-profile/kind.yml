@@ -22,6 +22,7 @@ job-defaults:
         kind: build
         tier: 1
     run-on-projects: ['release']
+    use-system-python: false
 
 jobs:
     linux-shippable/opt:
