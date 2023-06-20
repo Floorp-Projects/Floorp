@@ -754,8 +754,7 @@ class CallbackHandler:
             self.logger.debug("Action %s failed with an expected exception" % action)
             self._send_message(cmd_id, "complete", "error")
         except Exception:
-            self.logger.error("Action %s failed" % action)
-            self.logger.warning(traceback.format_exc())
+            self.logger.warning("Action %s failed" % action)
             self._send_message(cmd_id, "complete", "error")
             raise
         else:
