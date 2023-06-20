@@ -478,22 +478,40 @@ class CGNativePropertyHooks(CGThing):
         return ""
 
     def define(self):
-        deleteNamedProperty = "nullptr"
         if (
             self.descriptor.concrete
             and self.descriptor.proxy
             and not self.descriptor.isMaybeCrossOriginObject()
         ):
-            resolveOwnProperty = "binding_detail::ResolveOwnProperty"
-            enumerateOwnProperties = "binding_detail::EnumerateOwnProperties"
             if self.descriptor.needsXrayNamedDeleterHook():
                 deleteNamedProperty = "DeleteNamedProperty"
+            else:
+                deleteNamedProperty = "nullptr"
+            namedOrIndexed = fill(
+                """
+                const NativeNamedOrIndexedPropertyHooks sNativeNamedOrIndexedPropertyHooks = {
+                  binding_detail::ResolveOwnProperty,
+                  binding_detail::EnumerateOwnProperties,
+                  ${deleteNamedProperty}
+                };
+                """,
+                deleteNamedProperty=deleteNamedProperty,
+            )
+            namedOrIndexedPointer = "&sNativeNamedOrIndexedPropertyHooks"
         elif self.descriptor.needsXrayResolveHooks():
-            resolveOwnProperty = "ResolveOwnPropertyViaResolve"
-            enumerateOwnProperties = "EnumerateOwnPropertiesViaGetOwnPropertyNames"
+            namedOrIndexed = dedent(
+                """
+                const NativeNamedOrIndexedPropertyHooks sNativeNamedOrIndexedPropertyHooks = {
+                  ResolveOwnPropertyViaResolve,
+                  EnumerateOwnPropertiesViaGetOwnPropertyNames,
+                  nullptr
+                };
+                """
+            )
+            namedOrIndexedPointer = "&sNativeNamedOrIndexedPropertyHooks"
         else:
-            resolveOwnProperty = "nullptr"
-            enumerateOwnProperties = "nullptr"
+            namedOrIndexed = ""
+            namedOrIndexedPointer = "nullptr"
         if self.properties.hasNonChromeOnly():
             regular = "sNativeProperties.Upcast()"
         else:
@@ -518,22 +536,18 @@ class CGNativePropertyHooks(CGThing):
         else:
             expandoClass = "&DefaultXrayExpandoObjectClass"
 
-        return fill(
+        return namedOrIndexed + fill(
             """
             bool sNativePropertiesInited = false;
             const NativePropertyHooks sNativePropertyHooks = {
-              ${resolveOwnProperty},
-              ${enumerateOwnProperties},
-              ${deleteNamedProperty},
+              ${namedOrIndexedPointer},
               { ${regular}, ${chrome}, &sNativePropertiesInited },
               ${prototypeID},
               ${constructorID},
               ${expandoClass}
             };
             """,
-            resolveOwnProperty=resolveOwnProperty,
-            enumerateOwnProperties=enumerateOwnProperties,
-            deleteNamedProperty=deleteNamedProperty,
+            namedOrIndexedPointer=namedOrIndexedPointer,
             regular=regular,
             chrome=chrome,
             prototypeID=prototypeID,
@@ -2302,8 +2316,6 @@ class CGLegacyFactoryFunctions(CGThing):
             bool sLegacyFactoryFunctionNativePropertiesInited = true;
             const NativePropertyHooks sLegacyFactoryFunctionNativePropertyHooks = {
                 nullptr,
-                nullptr,
-                nullptr,
                 { nullptr, nullptr, &sLegacyFactoryFunctionNativePropertiesInited },
                 prototypes::id::${name},
                 ${constructorID},
@@ -4042,9 +4054,11 @@ class CGGetNamedPropertiesObjectMethod(CGAbstractStaticMethod):
                          "Expected ${nativeType}::CreateNamedPropertiesObject to return a named properties object");
               MOZ_ASSERT(clasp->mNativeHooks,
                          "The named properties object for ${nativeType} should have NativePropertyHooks.");
-              MOZ_ASSERT(!clasp->mNativeHooks->mResolveOwnProperty,
+              MOZ_ASSERT(!clasp->mNativeHooks->mIndexedOrNamedNativeProperties ||
+                         !clasp->mNativeHooks->mIndexedOrNamedNativeProperties->mResolveOwnProperty,
                          "Shouldn't resolve the properties of the named properties object for ${nativeType} for Xrays.");
-              MOZ_ASSERT(!clasp->mNativeHooks->mEnumerateOwnProperties,
+              MOZ_ASSERT(!clasp->mNativeHooks->mIndexedOrNamedNativeProperties ||
+                         !clasp->mNativeHooks->mIndexedOrNamedNativeProperties->mEnumerateOwnProperties,
                          "Shouldn't enumerate the properties of the named properties object for ${nativeType} for Xrays.");
             }
             return namedPropertiesObject.get();

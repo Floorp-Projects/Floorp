@@ -1734,7 +1734,10 @@ static bool ResolvePrototypeOrConstructor(
   const NativePropertyHooks* nativePropertyHooks =
       GetNativePropertyHooks(cx, obj, type);
   ResolveOwnProperty resolveOwnProperty =
-      nativePropertyHooks->mResolveOwnProperty;
+      nativePropertyHooks->mIndexedOrNamedNativeProperties
+          ? nativePropertyHooks->mIndexedOrNamedNativeProperties
+                ->mResolveOwnProperty
+          : nullptr;
 
   if (type == eNamedPropertiesObject) {
     MOZ_ASSERT(!resolveOwnProperty,
@@ -2050,7 +2053,10 @@ bool XrayOwnPropertyKeys(JSContext* cx, JS::Handle<JSObject*> wrapper,
   const NativePropertyHooks* nativePropertyHooks =
       GetNativePropertyHooks(cx, obj, type);
   EnumerateOwnProperties enumerateOwnProperties =
-      nativePropertyHooks->mEnumerateOwnProperties;
+      nativePropertyHooks->mIndexedOrNamedNativeProperties
+          ? nativePropertyHooks->mIndexedOrNamedNativeProperties
+                ->mEnumerateOwnProperties
+          : nullptr;
 
   if (type == eNamedPropertiesObject) {
     MOZ_ASSERT(!enumerateOwnProperties,
@@ -2090,11 +2096,14 @@ bool XrayDeleteNamedProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
   DOMObjectType type;
   const NativePropertyHooks* nativePropertyHooks =
       GetNativePropertyHooks(cx, obj, type);
-  if (!IsInstance(type) || !nativePropertyHooks->mDeleteNamedProperty) {
+  if (!IsInstance(type) ||
+      !nativePropertyHooks->mIndexedOrNamedNativeProperties ||
+      !nativePropertyHooks->mIndexedOrNamedNativeProperties
+           ->mDeleteNamedProperty) {
     return opresult.succeed();
   }
-  return nativePropertyHooks->mDeleteNamedProperty(cx, wrapper, obj, id,
-                                                   opresult);
+  return nativePropertyHooks->mIndexedOrNamedNativeProperties
+      ->mDeleteNamedProperty(cx, wrapper, obj, id, opresult);
 }
 
 namespace binding_detail {
@@ -2133,8 +2142,6 @@ DEFINE_XRAY_EXPANDO_CLASS(, DefaultXrayExpandoObjectClass, 0);
 
 bool sEmptyNativePropertiesInited = true;
 NativePropertyHooks sEmptyNativePropertyHooks = {
-    nullptr,
-    nullptr,
     nullptr,
     {nullptr, nullptr, &sEmptyNativePropertiesInited},
     prototypes::id::_ID_Count,
