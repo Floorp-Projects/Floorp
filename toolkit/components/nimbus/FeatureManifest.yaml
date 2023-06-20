@@ -104,6 +104,11 @@ search:
       description: >-
         NOTE: Please use `extraParams` rather than this field.
         A string pref set by Nimbus tests for Rest of World (ROW) search cohort
+    richSuggestionsFeatureGate:
+      type: boolean
+      setPref: browser.urlbar.richSuggestions.featureGate
+      description: >-
+        Feature gate that controls whether Rich Suggestions are enabled.
     serpEventTelemetryEnabled:
       type: boolean
       setPref: browser.search.serpEventTelemetry.enabled
