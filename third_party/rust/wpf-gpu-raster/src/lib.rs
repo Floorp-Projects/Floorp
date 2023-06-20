@@ -177,21 +177,18 @@ impl PathBuilder {
         self.curve_to(c1x, c1y, c2x, c2y, x, y);
     }
     pub fn close(&mut self) {
-        if !self.in_shape {
-            match self.initial_point {
-                Some(initial_point) => {
-                    self.types.push(PathPointTypeStart);
-                    self.add_point(initial_point.X, initial_point.Y);
-                    self.in_shape = true;
-                }
-                None => return,
-            }
+        if self.in_shape {
+          // Only close the path if we are inside a shape. Otherwise, the point
+          // should be safe to elide.
+          if let Some(last) = self.types.last_mut() {
+              *last |= PathPointTypeCloseSubpath;
+          }
+          self.in_shape = false;
         }
-        if let Some(last) = self.types.last_mut() {
-            *last |= PathPointTypeCloseSubpath;
-        }
-        self.in_shape = false;
-        self.initial_point = None;
+        // Close must install a new initial point that is the same as the
+        // initial point of the just-closed sub-path. Thus, just leave the
+        // initial point unchanged.
+        self.current_point = self.initial_point;
     }
     pub fn set_fill_mode(&mut self, fill_mode: FillMode) {
         self.fill_mode = fill_mode;
@@ -680,6 +677,8 @@ mod tests {
     #[test]
     fn close_after_move_to() {
         let mut p = PathBuilder::new();
+        p.move_to(10., 0.);
+        p.close();
         p.move_to(0., 0.);
         p.line_to(0., 10.);
         p.line_to(10., 10.);
