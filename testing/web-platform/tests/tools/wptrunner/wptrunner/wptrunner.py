@@ -76,8 +76,8 @@ def get_loader(test_paths, product, debug=None, run_info_extras=None, chunker_kw
     if test_groups:
         include = testloader.update_include_for_groups(test_groups, include)
 
-    if kwargs["tags"]:
-        test_filters.append(testloader.TagFilter(kwargs["tags"]))
+    if kwargs["tags"] or kwargs["exclude_tags"]:
+        test_filters.append(testloader.TagFilter(kwargs["tags"], kwargs["exclude_tags"]))
 
     if include or kwargs["exclude"] or kwargs["include_manifest"] or kwargs["default_exclude"]:
         manifest_filters.append(testloader.TestFilter(include=include,
