@@ -241,6 +241,12 @@ interface nsITelemetry : nsISupports
   Promise getUntrustedModuleLoadEvents([optional] in unsigned long aFlags);
 
   /*
+   * Whether the untrusted module load events are ready for processing.
+   * Calling getUntrustedModuleLoadEvents() before this attribute is true
+   * will result in an empty array. */
+  readonly attribute boolean areUntrustedModuleLoadEventsReady;
+
+  /*
    * Asynchronously get an array of the modules loaded in the process.
    *
    * The data has the following structure:
