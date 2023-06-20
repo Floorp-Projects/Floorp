@@ -52,6 +52,7 @@ const char* const sExecutableExts[] = {
   ".cpl",
   ".crt",
   ".der",
+  ".diagcab",     // Windows archive
   ".exe",
   ".fileloc",     // Apple finder internet location data file
   ".ftploc",      // Apple FTP Location
