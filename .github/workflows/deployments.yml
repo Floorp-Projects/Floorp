@@ -7,11 +7,29 @@
 
 name: Deployments
 
+permissions:
+  contents: write
+  discussions: write
+
 on: workflow_dispatch
 
 jobs:
-  build-with-enable-profile-generate:
-    name: Build with --enable-profile-generate
+  get-display-version:
+    runs-on: ubuntu-latest
+
+    outputs:
+      display-version: ${{ steps.get.outputs.display-version }}
+
+    steps:
+    - uses: actions/checkout@v2 
+    - name: Get Display Version
+      id: get
+      run: |
+        echo "::set-output name=display-version::$(cat browser/config/version_display.txt)"
+      
+  Windows-x86_64-build-with-enable-profile-generate:
+    name: Windows x86_64 Build with --enable-profile-generate
+    needs: get-display-version
 
     runs-on: ${{ matrix.runs-on }}
     strategy:
@@ -129,10 +147,10 @@ jobs:
         name: floorp-windows-x86_64-build-with-enable-profile-generate
         path: ${{ env.RUNNER_USERDIR }}/output
 
-  generate-profdata-and-jarlog:
-    name: Generate profdata and jarlog
+  Windows-x86_64-generate-profdata-and-jarlog:
+    name: Windows x86_64 Generate profdata and jarlog
 
-    needs: build-with-enable-profile-generate
+    needs: Windows-x86_64-build-with-enable-profile-generate
     runs-on: windows-2022
 
     steps:
@@ -168,10 +186,10 @@ jobs:
           merged.profdata
           en-US.log
 
-  build-with-profdata-and-jarlog:
+  Windows-x86_64-build-with-profdata-and-jarlog:
     name: Build with profdata and jarlog
 
-    needs: generate-profdata-and-jarlog
+    needs: Windows-x86_64-generate-profdata-and-jarlog
     runs-on: ${{ matrix.runs-on }}
     strategy:
       matrix:
@@ -297,6 +315,7 @@ jobs:
 
   build-linux-x86_64-with-PGO:
     runs-on: ubuntu-latest
+    needs: get-display-version
     steps:
       - uses: actions/checkout@v3
 
@@ -388,7 +407,13 @@ jobs:
           ./mach package
           ./mach package-multi-locale --locales ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW
           mkdir -p output
-          cp obj-x86_64-pc-linux-gnu/dist/*.tar.bz2 ./output
+          cp obj-x86_64-pc-linux-gnu/dist/*.tar.bz2 ./output/floorp-${{ needs.get-display-version.outputs.display-version }}.en-US.linux-x86_64.tar.bz2
+
+      - name: Create MAR artifact 📦
+        run: |
+          touch "obj-x86_64-pc-linux-gnu/dist/floorp/precomplete"
+          MAR="obj-x86_64-pc-linux-gnu/dist/host/bin/mar" MOZ_PRODUCT_VERSION=${{ needs.get-display-version.outputs.display-version }} MAR_CHANNEL_ID=release ./tools/update-packaging/make_full_update.sh ./output "obj-x86_64-pc-linux-gnu/dist/floorp"
+          mv ./output/*.mar ./output/LINUX-x86_64-${{ needs.get-display-version.outputs.display-version }}.mar
 
       - name: Publish 🎁
         uses: actions/upload-artifact@v1
@@ -401,6 +426,7 @@ jobs:
 
   build-linux-aarch64:
     runs-on: ubuntu-latest
+    needs: get-display-version
 
     steps:
       - uses: actions/checkout@v3
@@ -498,7 +524,13 @@ jobs:
           ./mach package
           ./mach package-multi-locale --locales ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW
           mkdir -p output
-          cp obj-aarch64-unknown-linux-gnu/dist/*.tar.bz2 ./output
+          cp obj-aarch64-unknown-linux-gnu/dist/*.tar.bz2 ./output/floorp-${{ needs.get-display-version.outputs.display-version }}.en-US.linux-aarch64.tar.bz2
+
+      - name: Create MAR artifact 📦
+        run: |
+          touch "obj-aarch64-unknown-linux-gnu/dist/floorp/precomplete"
+          MAR="obj-aarch64-unknown-linux-gnu/dist/host/bin/mar" MOZ_PRODUCT_VERSION=${{ needs.get-display-version.outputs.display-version }} MAR_CHANNEL_ID=release ./tools/update-packaging/make_full_update.sh ./output "obj-aarch64-unknown-linux-gnu/dist/floorp"
+          mv ./output/*.mar ./output/LINUX-aarch64-${{ needs.get-display-version.outputs.display-version }}.mar
 
       - name: Publish 🎁
         uses: actions/upload-artifact@v1
@@ -521,10 +553,10 @@ jobs:
         bdat=`date +"%Y%m%d%I%M%S"`
         echo "bid=${bdat}" >> $GITHUB_OUTPUT
 
-  build-m1:
+  build-macOS-AArch64-with-profile-generate:
     runs-on: 'ubuntu-latest'
 
-    needs: get-buildid
+    needs: [get-buildid]
 
     steps:
     - name: Init
@@ -591,12 +623,6 @@ jobs:
 
         cp ./.github/mozconfig_darwin_pgo_base mozconfig
 
-        echo 'export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-        echo 'MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-
-        echo 'export MOZ_BUILDID=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-        echo 'MOZ_BUILDID=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-
         echo 'ac_add_options --target=aarch64-apple-darwin' >> mozconfig
         echo 'ac_add_options --enable-optimize="-O3 -mcpu=apple-m1 -w"' >> mozconfig
         echo 'export RUSTFLAGS="-Ctarget-cpu=apple-m1"' >> mozconfig
@@ -639,9 +665,9 @@ jobs:
         name: aarch64-apple-darwin
         path: aarch64-apple-darwin-output.tar.xz
 
-  generate-profdata-and-jarlog-M1:
-    name: Generate profdata and jarlog for M1
-    needs: [build-m1, get-buildid]
+  generate-profdata-and-jarlog-AArch64:
+    name: Generate profdata and jarlog for AArch64
+    needs: [build-macOS-AArch64-with-profile-generate, get-buildid]
 
     runs-on: self-hosted
     # GitHub doesn't support M1 macs yet, so we need to use a self-hosted runner.
@@ -675,12 +701,6 @@ jobs:
         run: |
           export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
 
-          echo 'export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-          echo 'MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-
-          echo 'export MOZ_BUILDID=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-          echo 'MOZ_BUILDID=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-
           echo -e "ac_add_options --enable-bootstrap" >> mozconfig
 
           echo 'mozconfig: **********************'
@@ -710,10 +730,10 @@ jobs:
            merged.profdata
            en-US.log
 
-  M1-build-with-PGO:
+  macOS-AArch64-build-with-profdata-and-jarlog:
     runs-on: 'ubuntu-latest'
 
-    needs: [generate-profdata-and-jarlog-M1, get-buildid]
+    needs: [generate-profdata-and-jarlog-AArch64, get-buildid]
 
     steps:
     - name: Init
@@ -787,12 +807,6 @@ jobs:
 
         cp ./.github/mozconfig_darwin_pgo_base mozconfig
 
-        echo 'export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-        echo 'MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-
-        echo 'export MOZ_BUILDID=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-        echo 'MOZ_BUILDID=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-
         echo 'ac_add_options --target=aarch64-apple-darwin' >> mozconfig
         echo 'ac_add_options --enable-optimize="-O3 -mcpu=apple-m1 -w"' >> mozconfig
         echo 'export RUSTFLAGS="-Ctarget-cpu=apple-m1"' >> mozconfig
@@ -852,7 +866,7 @@ jobs:
 
 ##################################################################### Intel Build #######################################################################################################
 
-  build-intel:
+  build-macOS-x86_64-with-profile-generate:
     runs-on: 'ubuntu-latest'
 
     needs: get-buildid
@@ -920,12 +934,6 @@ jobs:
 
         cp ./.github/mozconfig_darwin_pgo_base mozconfig
 
-        echo 'export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-        echo 'MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-
-        echo 'export MOZ_BUILDID=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-        echo 'MOZ_BUILDID=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-
         echo 'ac_add_options --target=x86_64-apple-darwin' >> mozconfig
         echo 'ac_add_options --enable-optimize="-O3 -march=nehalem -mtune=haswell -w"' >> mozconfig
         echo 'export RUSTFLAGS="-Ctarget-cpu=nehalem"' >> mozconfig
@@ -968,9 +976,9 @@ jobs:
         name: x86_64-apple-darwin
         path: x86_64-apple-darwin.tar.xz
 
-  generate-profdata-and-jarlog-intel:
+  generate-profdata-and-jarlog-x86_64:
     name: Generate profdata and jarlog for intel
-    needs: [build-intel, get-buildid]
+    needs: [build-macOS-x86_64-with-profile-generate, get-buildid]
 
     runs-on: macos-latest
 
@@ -994,12 +1002,6 @@ jobs:
       - name: setup environment 🌲
         run: |
           export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
-
-          echo 'export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-          echo 'MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-
-          echo 'export MOZ_BUILDID=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-          echo 'MOZ_BUILDID=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
 
           echo -e "ac_add_options --enable-bootstrap" >> mozconfig
 
@@ -1030,10 +1032,10 @@ jobs:
            merged.profdata
            en-US.log
 
-  Intel-build-with-PGO:
+  macOS-x86_64-build-with-profdata-and-jarlog:
     runs-on: 'ubuntu-latest'
 
-    needs: [generate-profdata-and-jarlog-intel, get-buildid]
+    needs: [generate-profdata-and-jarlog-x86_64, get-buildid]
 
     steps:
     - name: Init
@@ -1107,12 +1109,6 @@ jobs:
 
         cp ./.github/mozconfig_darwin_pgo_base mozconfig
 
-        echo 'export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-        echo 'MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-
-        echo 'export MOZ_BUILDID=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-        echo 'MOZ_BUILDID=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-
         echo 'ac_add_options --target=x86_64-apple-darwin' >> mozconfig
         echo 'ac_add_options --enable-optimize="-O3 -march=nehalem -mtune=haswell -w"' >> mozconfig
         echo 'export RUSTFLAGS="-Ctarget-cpu=nehalem"' >> mozconfig
@@ -1172,7 +1168,7 @@ jobs:
 ######################################################## Integration #######################################################
 
   integration:
-    needs: [Intel-build-with-PGO, M1-build-with-PGO, get-buildid]
+    needs: [macOS-x86_64-build-with-profdata-and-jarlog, macOS-AArch64-build-with-profdata-and-jarlog, get-buildid]
     runs-on: macos-latest
 
     steps:
@@ -1248,8 +1244,8 @@ jobs:
 
 ######################################################## Cleanup #######################################################
 
-  cleanup-macOS-build:
-    needs: integration
+  cleanup-uselss-artifacts:
+    needs: [integration]
     runs-on: ubuntu-latest
     steps:
     - uses: geekyeggo/delete-artifact@v2
@@ -1259,10 +1255,97 @@ jobs:
          aarch64-apple-darwin
          floorp-aarch64-apple-darwin-with-pgo
          floorp-x86_64-apple-darwin-with-pgo
-
+         floorp-x86_64-apple-darwin-profdata-and-jarlog
+         floorp-aarch64-apple-darwin-profdata-and-jarlog
 
   Deployments:
-    needs: [build-linux-x86_64-with-PGO, build-linux-aarch64, cleanup-macOS-build, build-with-profdata-and-jarlog]
+    needs: [build-linux-x86_64-with-PGO, build-linux-aarch64, cleanup-uselss-artifacts, Windows-x86_64-build-with-profdata-and-jarlog, get-display-version]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+
+    - name: Release version 📦
+      run: |
+        echo "Release version: ${{ needs.get-display-version.outputs.display-version }}"
+
+    - name: make directory 📁
+      run: |
+        mkdir -p ~/downloads/artifacts
+        mkdir -p ~/downloads/artifacts/linux-x64
+        mkdir -p ~/downloads/artifacts/linux-aarch64
+        mkdir -p ~/downloads/artifacts/macOS-universal
+        mkdir -p ~/downloads/artifacts/windows-x64
+
+    - name: download Linux x86_64 build artifact 📥
+      uses: actions/download-artifact@v3
+      with:
+        name: floorp-linux-x64
+        path: ~/downloads/artifacts/linux-x64
+
+    - name: download Linux aarch64 build artifact 📥
+      uses: actions/download-artifact@v3
+      with:
+        name: floorp-linux-aarch64
+        path: ~/downloads/artifacts/linux-aarch64
+
+    - name: download macOS Universal build artifact📥
+      uses: actions/download-artifact@v3
+      with:
+        name: Universal-Artifact
+        path: ~/downloads/artifacts/macOS-universal
+
+    - name: check file structure 🗃
+      run: |
+        cd ~/downloads/artifacts
+        echo "current directory: $PWD"
+        echo "****************************************************************************************************"
+        find . -print | sed -e "s;[^/]*/;|____;g;s;____|; |;g"
+        echo "****************************************************************************************************"
+
+    - name: Deploy to GitHub Releases 🚀
+      id: create_release
+      uses: "softprops/action-gh-release@v1"
+      with:
+        files: |
+          /home/runner/downloads/artifacts/linux-x64/LINUX-x86_64-${{ needs.get-display-version.outputs.display-version }}.mar
+          /home/runner/downloads/artifacts/linux-aarch64/LINUX-aarch64-${{ needs.get-display-version.outputs.display-version }}.mar
+          /home/runner/downloads/artifacts/linux-x64/floorp-${{ needs.get-display-version.outputs.display-version }}.en-US.linux-x86_64.tar.bz2
+          /home/runner/downloads/artifacts/linux-aarch64/floorp-${{ needs.get-display-version.outputs.display-version }}.en-US.linux-aarch64.tar.bz2
+          /home/runner/downloads/artifacts/macOS-universal/floorp-macOS-universal.dmg
+        tag_name: "v${{ needs.get-display-version.outputs.display-version }}"
+        name: "v${{ needs.get-display-version.outputs.display-version }}"
+        draft: false
+        prerelease: true
+        token: ${{ secrets.GITHUB_TOKEN }}
+      env:
+        GITHUB_REPOSITORY: ${{ github.repository }}
+
+    - name: Run GitHub Actions for Release x86_64 Linux MAR "Floorp-Projects/Floorp-Update" 🚀
+      run: |
+         curl -X POST \
+           -H "Authorization: token ${{ secrets.PAT }}" \
+           -H "Accept: application/vnd.github.v3+json" \
+           "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/deliver-updates-to-floorp-browser.yml/dispatches" \
+           -d '{
+             "ref": "main",
+             "inputs": {
+               "mar-url": ${{ fromJSON(steps.create_release.outputs.assets)[0].browser_download_url }},
+               "os": "Linux",
+               "arch": "x86_64"
+             }
+           }'
+
+    - name: Run GitHub Actions for Release aarch64 Linux MAR "Floorp-Projects/Floorp-Update" 🚀
+      run: |
+         curl -X POST \
+           -H "Authorization: token ${{ secrets.PAT }}" \
+           -H "Accept: application/vnd.github.v3+json" \
+           "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/deliver-updates-to-floorp-browser.yml/dispatches" \
+           -d '{
+             "ref": "main",
+             "inputs": {
+               "mar-url": ${{ fromJSON(steps.create_release.outputs.assets)[1].browser_download_url }},
+               "os": "Linux",
+               "arch": "aarch64"
+             }
+           }'
