@@ -8,7 +8,6 @@
 /* eslint-env mozilla/simpletest */
 /* global ContentTaskUtils, content */
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 import { NetUtil } from "resource://gre/modules/NetUtil.sys.mjs";
 
 const info = console.log;

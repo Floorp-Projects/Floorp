@@ -4,7 +4,6 @@
 
 const lazy = {};
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 ChromeUtils.defineESModuleGetters(lazy, {
