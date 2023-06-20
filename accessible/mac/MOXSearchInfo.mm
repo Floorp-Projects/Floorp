@@ -12,7 +12,6 @@
 #include "nsCocoaUtils.h"
 #include "DocAccessibleParent.h"
 #include "nsAccessibilityService.h"
-#include "mozilla/a11y/DocAccessiblePlatformExtParent.h"
 
 using namespace mozilla::a11y;
 

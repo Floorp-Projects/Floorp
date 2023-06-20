@@ -17,7 +17,6 @@
 #include "SessionAccessibility.h"
 #include "TraversalRule.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/a11y/DocAccessiblePlatformExtChild.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;

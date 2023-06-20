@@ -24,8 +24,6 @@
 #if defined(XP_WIN)
 #  include "Compatibility.h"
 #  include "nsWinUtils.h"
-#else
-#  include "mozilla/a11y/DocAccessiblePlatformExtParent.h"
 #endif
 
 #if defined(ANDROID)
@@ -1107,25 +1105,6 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvFocusEvent(
 }
 
 #endif  // defined(XP_WIN)
-
-#if !defined(XP_WIN)
-bool DocAccessibleParent::DeallocPDocAccessiblePlatformExtParent(
-    PDocAccessiblePlatformExtParent* aActor) {
-  delete aActor;
-  return true;
-}
-
-PDocAccessiblePlatformExtParent*
-DocAccessibleParent::AllocPDocAccessiblePlatformExtParent() {
-  return new DocAccessiblePlatformExtParent();
-}
-
-DocAccessiblePlatformExtParent* DocAccessibleParent::GetPlatformExtension() {
-  return static_cast<DocAccessiblePlatformExtParent*>(
-      SingleManagedOrNull(ManagedPDocAccessiblePlatformExtParent()));
-}
-
-#endif  // !defined(XP_WIN)
 
 void DocAccessibleParent::SelectionRanges(nsTArray<TextRange>* aRanges) const {
   for (const auto& data : mTextSelections) {

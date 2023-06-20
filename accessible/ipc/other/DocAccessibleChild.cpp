@@ -9,7 +9,6 @@
 #include "LocalAccessible-inl.h"
 #include "RemoteAccessible.h"
 #include "HyperTextAccessible-inl.h"
-#include "mozilla/a11y/DocAccessiblePlatformExtChild.h"
 
 namespace mozilla {
 namespace a11y {
@@ -65,22 +64,6 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvRestoreFocus() {
     focusMgr->ForceFocusEvent();
   }
   return IPC_OK();
-}
-
-bool DocAccessibleChild::DeallocPDocAccessiblePlatformExtChild(
-    PDocAccessiblePlatformExtChild* aActor) {
-  delete aActor;
-  return true;
-}
-
-PDocAccessiblePlatformExtChild*
-DocAccessibleChild::AllocPDocAccessiblePlatformExtChild() {
-  return new DocAccessiblePlatformExtChild();
-}
-
-DocAccessiblePlatformExtChild* DocAccessibleChild::GetPlatformExtension() {
-  return static_cast<DocAccessiblePlatformExtChild*>(
-      SingleManagedOrNull(ManagedPDocAccessiblePlatformExtChild()));
 }
 
 }  // namespace a11y

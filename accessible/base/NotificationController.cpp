@@ -991,9 +991,6 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
             ->SendPDocAccessibleConstructor(
                 ipcDoc, parentIPCDoc, id,
                 childDoc->DocumentNode()->GetBrowsingContext());
-#ifndef XP_WIN
-        ipcDoc->SendPDocAccessiblePlatformExtConstructor();
-#endif
       }
     }
   }
