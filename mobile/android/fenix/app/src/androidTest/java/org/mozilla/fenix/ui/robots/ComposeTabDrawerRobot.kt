@@ -17,6 +17,9 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeLeft
+import androidx.compose.ui.test.swipeRight
 import androidx.test.espresso.Espresso
 import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
@@ -160,6 +163,20 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
      */
     fun closeTab() {
         composeTestRule.closeTabButton().performClick()
+    }
+
+    /**
+     * Swipes a tab with [title] left.
+     */
+    fun swipeTabLeft(title: String) {
+        composeTestRule.tabItem(title).performTouchInput { swipeLeft() }
+    }
+
+    /**
+     * Swipes a tab with [title] right.
+     */
+    fun swipeTabRight(title: String) {
+        composeTestRule.tabItem(title).performTouchInput { swipeRight() }
     }
 
     class Transition(private val composeTestRule: HomeActivityComposeTestRule) {

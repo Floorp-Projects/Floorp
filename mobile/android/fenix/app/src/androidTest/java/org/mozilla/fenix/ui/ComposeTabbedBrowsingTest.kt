@@ -149,36 +149,35 @@ class ComposeTabbedBrowsingTest {
         }
     }
 
-    @Ignore("Being converted in: https://bugzilla.mozilla.org/show_bug.cgi?id=1832617")
     @Test
     fun closeTabTest() {
-//        val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-//
-//        navigationToolbar {
-//        }.enterURLAndEnterToBrowser(genericURL.url) {
-//        }.openTabDrawer {
-//            verifyExistingOpenTabs("Test_Page_1")
-//            closeTab()
-//        }
-//        homeScreen {
-//            verifyTabCounter("0")
-//        }.openNavigationToolbar {
-//        }.enterURLAndEnterToBrowser(genericURL.url) {
-//        }.openTabDrawer {
-//            verifyExistingOpenTabs("Test_Page_1")
-//            swipeTabRight("Test_Page_1")
-//        }
-//        homeScreen {
-//            verifyTabCounter("0")
-//        }.openNavigationToolbar {
-//        }.enterURLAndEnterToBrowser(genericURL.url) {
-//        }.openTabDrawer {
-//            verifyExistingOpenTabs("Test_Page_1")
-//            swipeTabLeft("Test_Page_1")
-//        }
-//        homeScreen {
-//            verifyTabCounter("0")
-//        }
+        val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(genericURL.url) {
+        }.openComposeTabDrawer(composeTestRule) {
+            verifyExistingOpenTabs("Test_Page_1")
+            closeTab()
+        }
+        homeScreen {
+            verifyTabCounter("0")
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(genericURL.url) {
+        }.openComposeTabDrawer(composeTestRule) {
+            verifyExistingOpenTabs("Test_Page_1")
+            swipeTabRight("Test_Page_1")
+        }
+        homeScreen {
+            verifyTabCounter("0")
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(genericURL.url) {
+        }.openComposeTabDrawer(composeTestRule) {
+            verifyExistingOpenTabs("Test_Page_1")
+            swipeTabLeft("Test_Page_1")
+        }
+        homeScreen {
+            verifyTabCounter("0")
+        }
     }
 
     @Test
