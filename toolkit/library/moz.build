@@ -106,12 +106,12 @@ def Libxul(name, output_category=None):
     if CONFIG["RUSTC_NATVIS_LDFLAGS"]:
         LDFLAGS += CONFIG["RUSTC_NATVIS_LDFLAGS"]
 
-    if CONFIG["OS_ARCH"] == "Linux" and CONFIG["OS_TARGET"] != "Android":
+    if CONFIG["OS_TARGET"] != "Android":
         GeneratedFile(
             "symverscript",
-            script="/build/gen_symverscript.py",
+            script="/python/mozbuild/mozbuild/action/generate_symbols_file.py",
             inputs=["../symverscript.in"],
-            flags=["xul%s" % CONFIG["MOZILLA_SYMBOLVERSION"]],
+            flags=[],
         )
         SYMBOLS_FILE = "!symverscript"
 
