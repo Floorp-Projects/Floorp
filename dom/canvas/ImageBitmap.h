@@ -50,6 +50,7 @@ class File;
 class HTMLCanvasElement;
 class HTMLImageElement;
 class HTMLVideoElement;
+class ImageBitmapShutdownObserver;
 class ImageData;
 class ImageUtils;
 class Promise;
@@ -251,6 +252,8 @@ class ImageBitmap final : public nsISupports, public nsWrapperCache {
   gfx::IntRect mPictureRect;
 
   gfxAlphaType mAlphaType;
+
+  RefPtr<ImageBitmapShutdownObserver> mShutdownObserver;
 
   /*
    * Whether this object allocated allocated and owns the image data.
