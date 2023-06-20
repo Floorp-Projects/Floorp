@@ -5,20 +5,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "HTMLBodyElement.h"
-#include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/HTMLBodyElementBinding.h"
+
+#include "mozilla/AttributeStyles.h"
 #include "mozilla/EditorBase.h"
-#include "mozilla/MappedDeclarations.h"
 #include "mozilla/HTMLEditor.h"
+#include "mozilla/MappedDeclarations.h"
 #include "mozilla/TextEditor.h"
+#include "mozilla/dom/BindContext.h"
+#include "mozilla/dom/Document.h"
 #include "nsAttrValueInlines.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
-#include "mozilla/dom/Document.h"
 #include "DocumentInlines.h"
 #include "nsDocShell.h"
-#include "nsHTMLStyleSheet.h"
 #include "nsMappedAttributes.h"
 #include "nsIDocShell.h"
 #include "nsGlobalWindow.h"
@@ -191,22 +192,21 @@ void HTMLBodyElement::MapAttributesIntoRule(
   }
 
   // When display if first asked for, go ahead and get our colors set up.
-  if (nsHTMLStyleSheet* styleSheet =
-          aDecls.Document()->GetAttributeStyleSheet()) {
+  if (AttributeStyles* attrStyles = aDecls.Document()->GetAttributeStyles()) {
     nscolor color;
     value = aAttributes->GetAttr(nsGkAtoms::link);
     if (value && value->GetColorValue(color)) {
-      styleSheet->SetLinkColor(color);
+      attrStyles->SetLinkColor(color);
     }
 
     value = aAttributes->GetAttr(nsGkAtoms::alink);
     if (value && value->GetColorValue(color)) {
-      styleSheet->SetActiveLinkColor(color);
+      attrStyles->SetActiveLinkColor(color);
     }
 
     value = aAttributes->GetAttr(nsGkAtoms::vlink);
     if (value && value->GetColorValue(color)) {
-      styleSheet->SetVisitedLinkColor(color);
+      attrStyles->SetVisitedLinkColor(color);
     }
   }
 
@@ -283,7 +283,7 @@ bool HTMLBodyElement::IsEventAttributeNameInternal(nsAtom* aName) {
 nsresult HTMLBodyElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   nsresult rv = nsGenericHTMLElement::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
-  return mAttrs.ForceMapped(this, &aContext.OwnerDoc());
+  return mAttrs.ForceMapped(this);
 }
 
 void HTMLBodyElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
@@ -296,8 +296,11 @@ void HTMLBodyElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
   // If the last mapped attribute was removed, don't clear the
   // nsMappedAttributes, our style can still depend on the containing frame
   // element.
+  //
+  // FIXME(emilio, bug 1839333): Is this true? We don't store containing frame
+  // stuff in nsMappedAttributes / AttributeStyles, maybe we can remove this?
   if (!aValue && IsAttributeMapped(aName)) {
-    Unused << mAttrs.ForceMapped(this, OwnerDoc());
+    Unused << mAttrs.ForceMapped(this);
   }
 }
 

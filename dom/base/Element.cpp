@@ -2151,16 +2151,10 @@ DeclarationBlock* Element::GetInlineStyleDeclaration() const {
     return nullptr;
   }
   const nsAttrValue* attrVal = mAttrs.GetAttr(nsGkAtoms::style);
-
-  if (attrVal && attrVal->Type() == nsAttrValue::eCSSDeclaration) {
-    return attrVal->GetCSSDeclarationValue();
+  if (!attrVal || attrVal->Type() != nsAttrValue::eCSSDeclaration) {
+    return nullptr;
   }
-
-  return nullptr;
-}
-
-const nsMappedAttributes* Element::GetMappedAttributes() const {
-  return mAttrs.GetMapped();
+  return attrVal->GetCSSDeclarationValue();
 }
 
 void Element::InlineStyleDeclarationWillChange(MutationClosureData& aData) {

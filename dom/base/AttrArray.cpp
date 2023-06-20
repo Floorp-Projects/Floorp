@@ -11,6 +11,7 @@
 
 #include "AttrArray.h"
 
+#include "mozilla/AttributeStyles.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
@@ -18,7 +19,6 @@
 
 #include "nsMappedAttributeElement.h"
 #include "nsString.h"
-#include "nsHTMLStyleSheet.h"
 #include "nsMappedAttributes.h"
 #include "nsUnicharUtils.h"
 #include "nsContentUtils.h"  // nsAutoScriptBlocker
@@ -186,11 +186,8 @@ nsresult AttrArray::RemoveAttrAt(uint32_t aPos, nsAttrValue& aValue) {
     return NS_OK;
   }
 
-  RefPtr<nsMappedAttributes> mapped =
-      GetModifiableMapped(nullptr, nullptr, false);
-
+  RefPtr<nsMappedAttributes> mapped = ModifiableMapped(nullptr, false);
   mapped->RemoveAttrAt(aPos - nonmapped, aValue);
-
   return MakeMappedUnique(mapped);
 }
 
@@ -289,33 +286,29 @@ int32_t AttrArray::IndexOfAttr(const nsAtom* aLocalName,
 nsresult AttrArray::SetAndSwapMappedAttr(nsAtom* aLocalName,
                                          nsAttrValue& aValue,
                                          nsMappedAttributeElement* aContent,
-                                         nsHTMLStyleSheet* aSheet,
                                          bool* aHadValue) {
   bool willAdd = true;
   if (mImpl && mImpl->mMappedAttrs) {
     willAdd = !mImpl->mMappedAttrs->GetAttr(aLocalName);
   }
 
-  RefPtr<nsMappedAttributes> mapped =
-      GetModifiableMapped(aContent, aSheet, willAdd);
+  RefPtr<nsMappedAttributes> mapped = ModifiableMapped(aContent, willAdd);
 
   mapped->SetAndSwapAttr(aLocalName, aValue, aHadValue);
 
   return MakeMappedUnique(mapped);
 }
 
-nsresult AttrArray::DoSetMappedAttrStyleSheet(nsHTMLStyleSheet* aSheet) {
+nsresult AttrArray::SetMappedAttributeStyles(
+    mozilla::AttributeStyles* aNewStyles) {
   MOZ_ASSERT(mImpl && mImpl->mMappedAttrs, "Should have mapped attrs here!");
-  if (aSheet == mImpl->mMappedAttrs->GetStyleSheet()) {
+  if (aNewStyles == mImpl->mMappedAttrs->GetAttributeStyles()) {
     return NS_OK;
   }
 
-  RefPtr<nsMappedAttributes> mapped =
-      GetModifiableMapped(nullptr, nullptr, false);
-
-  mapped->DropStyleSheetReference();
-  mapped->SetStyleSheet(aSheet);
-
+  RefPtr<nsMappedAttributes> mapped = ModifiableMapped(nullptr, false);
+  mapped->DropAttributeStylesReference();
+  mapped->SetAttributeStyles(aNewStyles);
   return MakeMappedUnique(mapped);
 }
 
@@ -324,8 +317,7 @@ nsresult AttrArray::DoUpdateMappedAttrRuleMapper(
   MOZ_ASSERT(mImpl && mImpl->mMappedAttrs, "Should have mapped attrs here!");
 
   // First two args don't matter if the assert holds.
-  RefPtr<nsMappedAttributes> mapped =
-      GetModifiableMapped(nullptr, nullptr, false);
+  RefPtr<nsMappedAttributes> mapped = ModifiableMapped(nullptr, false);
 
   mapped->SetRuleMapper(aElement.GetAttributeMappingFunction());
 
@@ -360,11 +352,8 @@ uint32_t AttrArray::DoGetMappedAttrCount() const {
   return static_cast<uint32_t>(mImpl->mMappedAttrs->Count());
 }
 
-nsresult AttrArray::ForceMapped(nsMappedAttributeElement* aContent,
-                                Document* aDocument) {
-  nsHTMLStyleSheet* sheet = aDocument->GetAttributeStyleSheet();
-  RefPtr<nsMappedAttributes> mapped =
-      GetModifiableMapped(aContent, sheet, false, 0);
+nsresult AttrArray::ForceMapped(nsMappedAttributeElement* aContent) {
+  RefPtr<nsMappedAttributes> mapped = ModifiableMapped(aContent, false, 0);
   return MakeMappedUnique(mapped);
 }
 
@@ -374,9 +363,8 @@ void AttrArray::ClearMappedServoStyle() {
   }
 }
 
-nsMappedAttributes* AttrArray::GetModifiableMapped(
-    nsMappedAttributeElement* aContent, nsHTMLStyleSheet* aSheet,
-    bool aWillAddAttr, int32_t aAttrCount) {
+nsMappedAttributes* AttrArray::ModifiableMapped(
+    nsMappedAttributeElement* aContent, bool aWillAddAttr, int32_t aAttrCount) {
   if (mImpl && mImpl->mMappedAttrs) {
     return mImpl->mMappedAttrs->Clone(aWillAddAttr);
   }
@@ -385,7 +373,8 @@ nsMappedAttributes* AttrArray::GetModifiableMapped(
 
   nsMapRuleToAttributesFunc mapRuleFunc =
       aContent->GetAttributeMappingFunction();
-  return new (aAttrCount) nsMappedAttributes(aSheet, mapRuleFunc);
+  return new (aAttrCount) nsMappedAttributes(
+      aContent->OwnerDoc()->GetAttributeStyles(), mapRuleFunc);
 }
 
 nsresult AttrArray::MakeMappedUnique(nsMappedAttributes* aAttributes) {
@@ -395,34 +384,28 @@ nsresult AttrArray::MakeMappedUnique(nsMappedAttributes* aAttributes) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (!aAttributes->GetStyleSheet()) {
+  if (!aAttributes->GetAttributeStyles()) {
     // This doesn't currently happen, but it could if we do loading right
-
     RefPtr<nsMappedAttributes> mapped(aAttributes);
     mapped.swap(mImpl->mMappedAttrs);
-
     return NS_OK;
   }
 
   RefPtr<nsMappedAttributes> mapped =
-      aAttributes->GetStyleSheet()->UniqueMappedAttributes(aAttributes);
+      aAttributes->GetAttributeStyles()->UniqueMappedAttributes(aAttributes);
   NS_ENSURE_TRUE(mapped, NS_ERROR_OUT_OF_MEMORY);
 
   if (mapped != aAttributes) {
     // Reset the stylesheet of aAttributes so that it doesn't spend time
     // trying to remove itself from the hash. There is no risk that aAttributes
-    // is in the hash since it will always have come from GetModifiableMapped,
+    // is in the hash since it will always have come from ModifiableMapped,
     // which never returns maps that are in the hash (such hashes are by
     // nature not modifiable).
-    aAttributes->DropStyleSheetReference();
+    aAttributes->DropAttributeStylesReference();
   }
   mapped.swap(mImpl->mMappedAttrs);
 
   return NS_OK;
-}
-
-const nsMappedAttributes* AttrArray::GetMapped() const {
-  return mImpl ? mImpl->mMappedAttrs : nullptr;
 }
 
 nsresult AttrArray::EnsureCapacityToClone(const AttrArray& aOther) {

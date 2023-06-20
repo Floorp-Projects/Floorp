@@ -18,10 +18,9 @@
 #include "nsCSSPropertyID.h"
 #include "nsString.h"
 
-class nsHTMLCSSStyleSheet;
-
 namespace mozilla {
 
+class AttributeStyles;
 namespace css {
 class Declaration;
 class Rule;
@@ -124,22 +123,22 @@ class DeclarationBlock final {
     return mContainer.mOwningRule;
   }
 
-  void SetHTMLCSSStyleSheet(nsHTMLCSSStyleSheet* aHTMLCSSStyleSheet) {
-    MOZ_ASSERT(!mContainer.mHTMLCSSStyleSheet || !aHTMLCSSStyleSheet,
+  void SetAttributeStyles(AttributeStyles* aAttributeStyles) {
+    MOZ_ASSERT(!mContainer.mAttributeStyles || !aAttributeStyles,
                "should never overwrite one sheet with another");
-    mContainer.mHTMLCSSStyleSheet = aHTMLCSSStyleSheet;
-    if (aHTMLCSSStyleSheet) {
+    mContainer.mAttributeStyles = aAttributeStyles;
+    if (aAttributeStyles) {
       mContainer.mRaw |= uintptr_t(1);
     }
   }
 
-  nsHTMLCSSStyleSheet* GetHTMLCSSStyleSheet() const {
+  AttributeStyles* GetAttributeStyles() const {
     if (!(mContainer.mRaw & 0x1)) {
       return nullptr;
     }
     auto c = mContainer;
     c.mRaw &= ~uintptr_t(1);
-    return c.mHTMLCSSStyleSheet;
+    return c.mAttributeStyles;
   }
 
   bool IsReadOnly() const;
@@ -208,20 +207,18 @@ class DeclarationBlock final {
   bool OwnerIsReadOnly() const;
 
   union {
-    // We only ever have one of these since we have an
-    // nsHTMLCSSStyleSheet only for style attributes, and style
-    // attributes never have an owning rule.
-
-    // It's an nsHTMLCSSStyleSheet if the low bit is set.
+    // We only ever have one of these since we have a AttributeStyles only for
+    // style attributes, and style attributes never have an owning rule. It's a
+    // AttributeStyles if the low bit is set.
 
     uintptr_t mRaw;
 
     // The style rule that owns this declaration.  May be null.
     css::Rule* mOwningRule;
 
-    // The nsHTMLCSSStyleSheet that is responsible for this declaration.
-    // Only non-null for style attributes.
-    nsHTMLCSSStyleSheet* mHTMLCSSStyleSheet;
+    // The AttributeStyles that is responsible for this declaration. Only
+    // non-null for style attributes.
+    AttributeStyles* mAttributeStyles;
   } mContainer;
 
   RefPtr<StyleLockedDeclarationBlock> mRaw;

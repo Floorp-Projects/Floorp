@@ -9,8 +9,8 @@
  * HTML attributes
  */
 
-#ifndef nsHTMLStyleSheet_h_
-#define nsHTMLStyleSheet_h_
+#ifndef mozilla_AttributeStyles_h_
+#define mozilla_AttributeStyles_h_
 
 #include "nsColor.h"
 #include "nsCOMPtr.h"
@@ -18,27 +18,25 @@
 #include "PLDHashTable.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
+#include "nsTHashMap.h"
 #include "nsString.h"
 
+struct MiscContainer;
 class nsMappedAttributes;
 namespace mozilla {
 struct StyleLockedDeclarationBlock;
 namespace dom {
 class Document;
 }  // namespace dom
-}  // namespace mozilla
 
-class nsHTMLStyleSheet final {
-  using StyleLockedDeclarationBlock = mozilla::StyleLockedDeclarationBlock;
-
+class AttributeStyles final {
  public:
-  explicit nsHTMLStyleSheet(mozilla::dom::Document* aDocument);
+  explicit AttributeStyles(dom::Document* aDocument);
+  void SetOwningDocument(dom::Document* aDocument);
 
-  void SetOwningDocument(mozilla::dom::Document* aDocument);
+  NS_INLINE_DECL_REFCOUNTING(AttributeStyles)
 
-  NS_INLINE_DECL_REFCOUNTING(nsHTMLStyleSheet)
-
-  size_t DOMSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  size_t DOMSizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
   void Reset();
   nsresult SetLinkColor(nscolor aColor);
@@ -51,7 +49,7 @@ class nsHTMLStyleSheet final {
   const StyleLockedDeclarationBlock* GetServoVisitedLinkDecl() const {
     return mServoVisitedLinkDecl;
   }
-  const mozilla::StyleLockedDeclarationBlock* GetServoActiveLinkDecl() const {
+  const StyleLockedDeclarationBlock* GetServoActiveLinkDecl() const {
     return mServoActiveLinkDecl;
   }
 
@@ -59,33 +57,45 @@ class nsHTMLStyleSheet final {
   already_AddRefed<nsMappedAttributes> UniqueMappedAttributes(
       nsMappedAttributes* aMapped);
   void DropMappedAttributes(nsMappedAttributes* aMapped);
-  // For each mapped presentation attribute in the cache, resolve
-  // the attached DeclarationBlock by running the mapping
-  // and converting the ruledata to Servo specified values.
+  // For each mapped presentation attribute in the cache, resolve the attached
+  // DeclarationBlock by running the mapping to Servo specified values.
   void CalculateMappedServoDeclarations();
 
- private:
-  nsHTMLStyleSheet(const nsHTMLStyleSheet& aCopy) = delete;
-  nsHTMLStyleSheet& operator=(const nsHTMLStyleSheet& aCopy) = delete;
+  void CacheStyleAttr(const nsAString& aSerialized, MiscContainer* aValue) {
+    mCachedStyleAttrs.InsertOrUpdate(aSerialized, aValue);
+  }
+  void EvictStyleAttr(const nsAString& aSerialized, MiscContainer* aValue) {
+    NS_ASSERTION(LookupStyleAttr(aSerialized) == aValue,
+                 "Cached value doesn't match?");
+    mCachedStyleAttrs.Remove(aSerialized);
+  }
+  MiscContainer* LookupStyleAttr(const nsAString& aSerialized) {
+    return mCachedStyleAttrs.Get(aSerialized);
+  }
 
-  ~nsHTMLStyleSheet() = default;
+  AttributeStyles(const AttributeStyles& aCopy) = delete;
+  AttributeStyles& operator=(const AttributeStyles& aCopy) = delete;
+
+ private:
+  ~AttributeStyles();
 
   // Implementation of SetLink/VisitedLink/ActiveLinkColor
-  nsresult ImplLinkColorSetter(
-      RefPtr<mozilla::StyleLockedDeclarationBlock>& aDecl, nscolor aColor);
+  nsresult ImplLinkColorSetter(RefPtr<StyleLockedDeclarationBlock>& aDecl,
+                               nscolor aColor);
 
- public:  // for mLangRuleTable structures only
- private:
-  mozilla::dom::Document* mDocument;
+  dom::Document* mDocument;
   RefPtr<StyleLockedDeclarationBlock> mServoUnvisitedLinkDecl;
   RefPtr<StyleLockedDeclarationBlock> mServoVisitedLinkDecl;
   RefPtr<StyleLockedDeclarationBlock> mServoActiveLinkDecl;
 
   PLDHashTable mMappedAttrTable;
+  nsTHashMap<nsStringHashKey, MiscContainer*> mCachedStyleAttrs;
   // Whether or not the mapped attributes table
   // has been changed since the last call to
   // CalculateMappedServoDeclarations()
-  bool mMappedAttrsDirty;
+  bool mMappedAttrsDirty = false;
 };
 
-#endif /* !defined(nsHTMLStyleSheet_h_) */
+}  // namespace mozilla
+
+#endif

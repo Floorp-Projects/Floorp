@@ -12,24 +12,24 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/HashFunctions.h"
 
-#include "mozilla/URLExtraData.h"
 #include "nsAttrValue.h"
 #include "nsAttrValueInlines.h"
 #include "nsAtom.h"
 #include "nsUnicharUtils.h"
+#include "mozilla/AttributeStyles.h"
 #include "mozilla/BloomFilter.h"
 #include "mozilla/CORSMode.h"
+#include "mozilla/DeclarationBlock.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ServoBindingTypes.h"
 #include "mozilla/ServoUtils.h"
 #include "mozilla/ShadowParts.h"
 #include "mozilla/SVGAttrValueWrapper.h"
-#include "mozilla/DeclarationBlock.h"
+#include "mozilla/URLExtraData.h"
 #include "mozilla/dom/CSSRuleBinding.h"
 #include "mozilla/dom/Document.h"
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
-#include "nsHTMLCSSStyleSheet.h"
 #include "nsStyledElement.h"
 #include "nsIURI.h"
 #include "ReferrerInfo.h"
@@ -103,8 +103,8 @@ void MiscContainer::Cache() {
   MOZ_ASSERT(mValue.mRefCount > 0);
   MOZ_ASSERT(!mValue.mCached);
 
-  nsHTMLCSSStyleSheet* sheet = mValue.mCSSDeclaration->GetHTMLCSSStyleSheet();
-  if (!sheet) {
+  AttributeStyles* attrStyles = mValue.mCSSDeclaration->GetAttributeStyles();
+  if (!attrStyles) {
     return;
   }
 
@@ -114,7 +114,7 @@ void MiscContainer::Cache() {
     return;
   }
 
-  sheet->CacheStyleAttr(str, this);
+  attrStyles->CacheStyleAttr(str, this);
   mValue.mCached = 1;
 
   // This has to be immutable once it goes into the cache.
@@ -134,14 +134,14 @@ void MiscContainer::Evict() {
     return;
   }
 
-  nsHTMLCSSStyleSheet* sheet = mValue.mCSSDeclaration->GetHTMLCSSStyleSheet();
-  MOZ_ASSERT(sheet);
+  AttributeStyles* attrStyles = mValue.mCSSDeclaration->GetAttributeStyles();
+  MOZ_ASSERT(attrStyles);
 
   nsString str;
   DebugOnly<bool> gotString = GetString(str);
   MOZ_ASSERT(gotString);
 
-  sheet->EvictStyleAttr(str, this);
+  attrStyles->EvictStyleAttr(str, this);
   mValue.mCached = 0;
 }
 
@@ -1704,7 +1704,7 @@ bool nsAttrValue::ParseStyleAttribute(const nsAString& aString,
                                       nsIPrincipal* aMaybeScriptedPrincipal,
                                       nsStyledElement* aElement) {
   dom::Document* doc = aElement->OwnerDoc();
-  nsHTMLCSSStyleSheet* sheet = doc->GetInlineStyleSheet();
+  AttributeStyles* attrStyles = doc->GetAttributeStyles();
   NS_ASSERTION(aElement->NodePrincipal() == doc->NodePrincipal(),
                "This is unexpected");
 
@@ -1719,12 +1719,11 @@ bool nsAttrValue::ParseStyleAttribute(const nsAString& aString,
   // Similarly, if the triggering principal does not match the node principal,
   // do not cache the rule, since the principal will be encoded in any parsed
   // URLs in the rule.
-  const bool cachingAllowed = sheet &&
+  const bool cachingAllowed = attrStyles &&
                               doc->GetDocumentURI() == data->BaseURI() &&
                               principal == aElement->NodePrincipal();
   if (cachingAllowed) {
-    MiscContainer* cont = sheet->LookupStyleAttr(aString);
-    if (cont) {
+    if (MiscContainer* cont = attrStyles->LookupStyleAttr(aString)) {
       // Set our MiscContainer to the cached one.
       NS_ADDREF(cont);
       SetPtrValueAndType(cont, eOtherBase);
@@ -1738,7 +1737,7 @@ bool nsAttrValue::ParseStyleAttribute(const nsAString& aString,
   if (!decl) {
     return false;
   }
-  decl->SetHTMLCSSStyleSheet(sheet);
+  decl->SetAttributeStyles(attrStyles);
   SetTo(decl.forget(), &aString);
 
   if (cachingAllowed) {

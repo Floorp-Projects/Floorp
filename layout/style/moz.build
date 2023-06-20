@@ -68,6 +68,7 @@ EXPORTS += [
 EXPORTS.mozilla += [
     "!ServoCSSPropList.h",
     "AnimationCollection.h",
+    "AttributeStyles.h",
     "CachedInheritingStyles.h",
     "ComputedStyle.h",
     "ComputedStyleInlines.h",
@@ -166,6 +167,7 @@ EXPORTS.mozilla.css += [
 
 UNIFIED_SOURCES += [
     "AnimationCollection.cpp",
+    "AttributeStyles.cpp",
     "CachedInheritingStyles.cpp",
     "ComputedStyle.cpp",
     "CounterStyleManager.cpp",
@@ -220,8 +222,6 @@ UNIFIED_SOURCES += [
     "nsDOMCSSValueList.cpp",
     "nsFontFaceLoader.cpp",
     "nsFontFaceUtils.cpp",
-    "nsHTMLCSSStyleSheet.cpp",
-    "nsHTMLStyleSheet.cpp",
     "nsICSSDeclaration.cpp",
     "nsMediaFeatures.cpp",
     "nsROCSSPrimitiveValue.cpp",

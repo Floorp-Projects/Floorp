@@ -31,7 +31,6 @@
 #include "nsINode.h"
 #include "nsIURI.h"
 #include "nsFontMetrics.h"
-#include "nsHTMLStyleSheet.h"
 #include "nsMappedAttributes.h"
 #include "nsNameSpaceManager.h"
 #include "nsNetUtil.h"
@@ -45,6 +44,7 @@
 
 #include "mozilla/css/ImageLoader.h"
 #include "mozilla/DeclarationBlock.h"
+#include "mozilla/AttributeStyles.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/FontPropertyTypes.h"
@@ -391,17 +391,16 @@ void Gecko_UnsetDirtyStyleAttr(const Element* aElement) {
 
 const StyleLockedDeclarationBlock*
 Gecko_GetHTMLPresentationAttrDeclarationBlock(const Element* aElement) {
-  const nsMappedAttributes* attrs = aElement->GetMappedAttributes();
-  if (!attrs) {
-    if (auto* svg = SVGElement::FromNodeOrNull(aElement)) {
-      if (const auto* decl = svg->GetContentDeclarationBlock()) {
-        return decl->Raw();
-      }
-    }
-    return nullptr;
+  if (const nsMappedAttributes* attrs = aElement->GetMappedAttributes()) {
+    MOZ_ASSERT(!aElement->IsSVGElement(), "SVG doesn't use nsMappedAttributes");
+    return attrs->GetServoStyle();
   }
-
-  return attrs->GetServoStyle();
+  if (const auto* svg = SVGElement::FromNode(aElement)) {
+    if (const auto* decl = svg->GetContentDeclarationBlock()) {
+      return decl->Raw();
+    }
+  }
+  return nullptr;
 }
 
 const StyleLockedDeclarationBlock* Gecko_GetExtraContentStyleDeclarations(
@@ -421,12 +420,12 @@ const StyleLockedDeclarationBlock* Gecko_GetExtraContentStyleDeclarations(
 
 const StyleLockedDeclarationBlock* Gecko_GetUnvisitedLinkAttrDeclarationBlock(
     const Element* aElement) {
-  nsHTMLStyleSheet* sheet = aElement->OwnerDoc()->GetAttributeStyleSheet();
-  if (!sheet) {
+  AttributeStyles* attrStyles = aElement->OwnerDoc()->GetAttributeStyles();
+  if (!attrStyles) {
     return nullptr;
   }
 
-  return sheet->GetServoUnvisitedLinkDecl();
+  return attrStyles->GetServoUnvisitedLinkDecl();
 }
 
 StyleSheet* Gecko_StyleSheet_Clone(const StyleSheet* aSheet,
@@ -458,22 +457,20 @@ void Gecko_StyleSheet_Release(const StyleSheet* aSheet) {
 
 const StyleLockedDeclarationBlock* Gecko_GetVisitedLinkAttrDeclarationBlock(
     const Element* aElement) {
-  nsHTMLStyleSheet* sheet = aElement->OwnerDoc()->GetAttributeStyleSheet();
-  if (!sheet) {
+  AttributeStyles* attrStyles = aElement->OwnerDoc()->GetAttributeStyles();
+  if (!attrStyles) {
     return nullptr;
   }
-
-  return sheet->GetServoVisitedLinkDecl();
+  return attrStyles->GetServoVisitedLinkDecl();
 }
 
 const StyleLockedDeclarationBlock* Gecko_GetActiveLinkAttrDeclarationBlock(
     const Element* aElement) {
-  nsHTMLStyleSheet* sheet = aElement->OwnerDoc()->GetAttributeStyleSheet();
-  if (!sheet) {
+  AttributeStyles* attrStyles = aElement->OwnerDoc()->GetAttributeStyles();
+  if (!attrStyles) {
     return nullptr;
   }
-
-  return sheet->GetServoActiveLinkDecl();
+  return attrStyles->GetServoActiveLinkDecl();
 }
 
 bool Gecko_GetAnimationRule(const Element* aElement,
