@@ -209,7 +209,7 @@ web-platform-tests-webgpu:
     description: "Web platform WebGPU test run"
     suite: web-platform-tests
     treeherder-symbol: W(webgpu)
-    virtualization: virtual
+    virtualization: virtual-with-gpu
     tier: default
     # Choice of `chunks`:
     # Time-to-TEST-START on Windows is ~7m (~9m for debug).
@@ -224,10 +224,11 @@ web-platform-tests-webgpu:
     variants: []  # We don't need sw or nofis testing.
     run-on-projects:
         by-test-platform:
-            android.*: []
-            macos.*: []
+            android.*: []  # Out of scope
+            macos.*: []  # Disabled
+            linux.*: []  # Broken on CI
             .*wayland.*: []
-            default: built-projects
+            default: ['trunk']
     mozharness:
         chunked: true
         extra-options:
