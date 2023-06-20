@@ -747,6 +747,10 @@ class Tab extends TabBase {
     return this.nativeTab.soundPlaying;
   }
 
+  get autoDiscardable() {
+    return !this.nativeTab.undiscardable;
+  }
+
   get browser() {
     return this.nativeTab.linkedBrowser;
   }
