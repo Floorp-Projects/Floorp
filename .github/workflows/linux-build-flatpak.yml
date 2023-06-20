@@ -56,7 +56,7 @@ jobs:
           git clone https://github.com/flathub/org.mozilla.firefox.BaseApp --depth 1 --branch branch/22.08 --recursive
           cd org.mozilla.firefox.BaseApp
           flatpak-builder --arch=aarch64 build-dir org.mozilla.firefox.BaseApp.json
-          cp -r ./build-dir/files/* ./flatpak_build/tmp/
+          cp -r ./build-dir/files/* ../flatpak_build/tmp/
         fi
 
         rm ./flatpak_build/tmp/manifest.json
