@@ -9,6 +9,7 @@ import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.BookmarksManagement
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.components.metrics.MetricsUtils
 
 /**
  * Interactor for the Bookmarks screen.
@@ -33,6 +34,10 @@ class BookmarkFragmentInteractor(
 
     override fun onEditPressed(node: BookmarkNode) {
         bookmarksController.handleBookmarkEdit(node)
+        MetricsUtils.recordBookmarkMetrics(
+            MetricsUtils.BookmarkAction.EDIT,
+            METRIC_SOURCE,
+        )
     }
 
     override fun onAllBookmarksDeselected() {
@@ -69,6 +74,10 @@ class BookmarkFragmentInteractor(
             bookmarksController.handleOpeningBookmark(item, BrowsingMode.Normal)
             BookmarksManagement.openInNewTab.record(NoExtras())
         }
+        MetricsUtils.recordBookmarkMetrics(
+            MetricsUtils.BookmarkAction.OPEN,
+            METRIC_SOURCE,
+        )
     }
 
     override fun onOpenInPrivateTab(item: BookmarkNode) {
@@ -77,16 +86,28 @@ class BookmarkFragmentInteractor(
             bookmarksController.handleOpeningBookmark(item, BrowsingMode.Private)
             BookmarksManagement.openInPrivateTab.record(NoExtras())
         }
+        MetricsUtils.recordBookmarkMetrics(
+            MetricsUtils.BookmarkAction.OPEN,
+            METRIC_SOURCE,
+        )
     }
 
     override fun onOpenAllInNewTabs(folder: BookmarkNode) {
         require(folder.type == BookmarkNodeType.FOLDER)
         bookmarksController.handleOpeningFolderBookmarks(folder, BrowsingMode.Normal)
+        MetricsUtils.recordBookmarkMetrics(
+            MetricsUtils.BookmarkAction.OPEN,
+            METRIC_SOURCE,
+        )
     }
 
     override fun onOpenAllInPrivateTabs(folder: BookmarkNode) {
         require(folder.type == BookmarkNodeType.FOLDER)
         bookmarksController.handleOpeningFolderBookmarks(folder, BrowsingMode.Private)
+        MetricsUtils.recordBookmarkMetrics(
+            MetricsUtils.BookmarkAction.OPEN,
+            METRIC_SOURCE,
+        )
     }
 
     override fun onDelete(nodes: Set<BookmarkNode>) {
@@ -100,6 +121,10 @@ class BookmarkFragmentInteractor(
             BookmarkNodeType.FOLDER -> BookmarkRemoveType.FOLDER
             null -> BookmarkRemoveType.MULTIPLE
         }
+        MetricsUtils.recordBookmarkMetrics(
+            MetricsUtils.BookmarkAction.DELETE,
+            METRIC_SOURCE,
+        )
         if (eventType == BookmarkRemoveType.FOLDER) {
             bookmarksController.handleBookmarkFolderDeletion(nodes)
         } else {
@@ -132,5 +157,9 @@ class BookmarkFragmentInteractor(
 
     override fun onRequestSync() {
         bookmarksController.handleRequestSync()
+    }
+
+    companion object {
+        const val METRIC_SOURCE = "bookmark_panel"
     }
 }

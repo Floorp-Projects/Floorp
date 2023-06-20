@@ -118,6 +118,7 @@ import org.mozilla.fenix.browser.readermode.DefaultReaderModeController
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.FindInPageIntegration
 import org.mozilla.fenix.components.StoreProvider
+import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.components.toolbar.BrowserFragmentState
 import org.mozilla.fenix.components.toolbar.BrowserFragmentStore
 import org.mozilla.fenix.components.toolbar.BrowserToolbarView
@@ -1403,6 +1404,7 @@ abstract class BaseBrowserFragment :
                     position = null,
                 )
 
+                MetricsUtils.recordBookmarkMetrics(MetricsUtils.BookmarkAction.ADD, METRIC_SOURCE)
                 withContext(Main) {
                     view?.let {
                         FenixSnackbar.make(
@@ -1412,6 +1414,10 @@ abstract class BaseBrowserFragment :
                         )
                             .setText(getString(R.string.bookmark_saved_snackbar))
                             .setAction(getString(R.string.edit_bookmark_snackbar_action)) {
+                                MetricsUtils.recordBookmarkMetrics(
+                                    MetricsUtils.BookmarkAction.EDIT,
+                                    TOAST_METRIC_SOURCE,
+                                )
                                 nav(
                                     R.id.browserFragment,
                                     BrowserFragmentDirections.actionGlobalBookmarkEditFragment(
@@ -1566,6 +1572,8 @@ abstract class BaseBrowserFragment :
         private const val REQUEST_CODE_DOWNLOAD_PERMISSIONS = 1
         private const val REQUEST_CODE_PROMPT_PERMISSIONS = 2
         private const val REQUEST_CODE_APP_PERMISSIONS = 3
+        private const val METRIC_SOURCE = "page_action_menu"
+        private const val TOAST_METRIC_SOURCE = "add_bookmark_toast"
 
         val onboardingLinksList: List<String> = listOf(
             SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVATE_NOTICE),

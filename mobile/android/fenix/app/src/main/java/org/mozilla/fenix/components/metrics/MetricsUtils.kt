@@ -61,6 +61,30 @@ object MetricsUtils {
     }
 
     /**
+     * Records the appropriate metric for performed Bookmark action.
+     * @param action The [BookmarkAction] being counted.
+     * @param source Describes where the action was called from.
+     */
+    fun recordBookmarkMetrics(
+        action: BookmarkAction,
+        source: String,
+    ) {
+        when (action) {
+            BookmarkAction.ADD -> Metrics.bookmarksAdd[source].add()
+            BookmarkAction.EDIT -> Metrics.bookmarksEdit[source].add()
+            BookmarkAction.DELETE -> Metrics.bookmarksDelete[source].add()
+            BookmarkAction.OPEN -> Metrics.bookmarksOpen[source].add()
+        }
+    }
+
+    /**
+     * Describes which bookmark action is being recorded.
+     */
+    enum class BookmarkAction {
+        ADD, EDIT, DELETE, OPEN
+    }
+
+    /**
      * Get the default salt to use for hashing. This is a convenience
      * function to help with unit tests.
      */
