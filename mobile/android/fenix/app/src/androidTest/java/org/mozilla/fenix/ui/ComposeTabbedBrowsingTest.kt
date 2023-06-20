@@ -11,7 +11,6 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
@@ -207,39 +206,36 @@ class ComposeTabbedBrowsingTest {
         }
     }
 
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1829838")
-    // Try converting in: https://bugzilla.mozilla.org/show_bug.cgi?id=1832609
     @Test
     fun closePrivateTabTest() {
-//        val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-//
-//        homeScreen { }.togglePrivateBrowsingMode()
-//        navigationToolbar {
-//        }.enterURLAndEnterToBrowser(genericURL.url) {
-//        }.openTabDrawer {
-//            verifyExistingOpenTabs("Test_Page_1")
-//            verifyCloseTabsButton("Test_Page_1")
-//            closeTab()
-//        }
-//        homeScreen {
-//            verifyTabCounter("0")
-//        }.openNavigationToolbar {
-//        }.enterURLAndEnterToBrowser(genericURL.url) {
-//        }.openTabDrawer {
-//            verifyExistingOpenTabs("Test_Page_1")
-//            swipeTabRight("Test_Page_1")
-//        }
-//        homeScreen {
-//            verifyTabCounter("0")
-//        }.openNavigationToolbar {
-//        }.enterURLAndEnterToBrowser(genericURL.url) {
-//        }.openTabDrawer {
-//            verifyExistingOpenTabs("Test_Page_1")
-//            swipeTabLeft("Test_Page_1")
-//        }
-//        homeScreen {
-//            verifyTabCounter("0")
-//        }
+        val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        homeScreen { }.togglePrivateBrowsingMode()
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(genericURL.url) {
+        }.openComposeTabDrawer(composeTestRule) {
+            verifyExistingOpenTabs("Test_Page_1")
+            closeTab()
+        }
+        homeScreen {
+            verifyTabCounter("0")
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(genericURL.url) {
+        }.openComposeTabDrawer(composeTestRule) {
+            verifyExistingOpenTabs("Test_Page_1")
+            swipeTabRight("Test_Page_1")
+        }
+        homeScreen {
+            verifyTabCounter("0")
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(genericURL.url) {
+        }.openComposeTabDrawer(composeTestRule) {
+            verifyExistingOpenTabs("Test_Page_1")
+            swipeTabLeft("Test_Page_1")
+        }
+        homeScreen {
+            verifyTabCounter("0")
+        }
     }
 
     @Test
