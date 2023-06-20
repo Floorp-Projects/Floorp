@@ -12,10 +12,6 @@ AntiTracking.runTest(
       let chromeScript = SpecialPowers.loadChromeScript(_ => {
         /* eslint-env mozilla/chrome-script */
         addMessageListener("go", _ => {
-          const { Services } = ChromeUtils.import(
-            "resource://gre/modules/Services.jsm"
-          );
-
           function ok(what, msg) {
             sendAsyncMessage("ok", { what: !!what, msg });
           }
