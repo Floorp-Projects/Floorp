@@ -7,10 +7,10 @@
 with Files("**"):
     BUG_COMPONENT = ("Toolkit", "General")
 
-with Files("AutoScroll*.jsm"):
+with Files("AutoScroll*.sys.mjs"):
     BUG_COMPONENT = ("Core", "Panning and Zooming")
 
-with Files("Finder*.jsm"):
+with Files("Finder*.sys.mjs"):
     BUG_COMPONENT = ("Toolkit", "Find Toolbar")
 
 with Files("KeyPressEventModelCheckerChild.sys.mjs"):

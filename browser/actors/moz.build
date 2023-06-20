@@ -10,7 +10,7 @@ with Files("**"):
 with Files("ContentSearch*.sys.mjs"):
     BUG_COMPONENT = ("Firefox", "Search")
 
-with Files("AboutReaderParent.jsm"):
+with Files("AboutReaderParent.sys.mjs"):
     BUG_COMPONENT = ("Toolkit", "Reader Mode")
 
 with Files("LightweightThemeChild.sys.mjs"):
