@@ -39,6 +39,7 @@ jobs:
         mkdir ./flatpak_build/tmp
         mkdir ./flatpak_build/public
 
+        sudo flatpak remote-add --if-not-exists --from flathub https://dl.flathub.org/repo/flathub.flatpakrepo
         flatpak remote-add --user --if-not-exists --from flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 
         if [[ "$FLATPAK_ARCH" == "x86_64" ]]; then
