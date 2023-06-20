@@ -838,6 +838,16 @@ Maybe<Ssrc> WebrtcVideoConduit::GetAssociatedLocalRtxSSRC(Ssrc aSsrc) const {
   return Nothing();
 }
 
+Maybe<VideoSessionConduit::Resolution> WebrtcVideoConduit::GetLastResolution()
+    const {
+  MutexAutoLock lock(mMutex);
+  if (mLastWidth || mLastHeight) {
+    return Some(VideoSessionConduit::Resolution{.width = mLastWidth,
+                                                .height = mLastHeight});
+  }
+  return Nothing();
+}
+
 void WebrtcVideoConduit::DeleteSendStream() {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   mMutex.AssertCurrentThreadOwns();

@@ -153,6 +153,8 @@ class WebrtcVideoConduit
   Maybe<Ssrc> GetAssociatedLocalRtxSSRC(Ssrc aSsrc) const override;
   Maybe<Ssrc> GetRemoteSSRC() const override;
 
+  Maybe<VideoSessionConduit::Resolution> GetLastResolution() const override;
+
   // Call thread.
   void UnsetRemoteSSRC(uint32_t aSsrc) override;
 

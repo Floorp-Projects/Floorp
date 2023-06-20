@@ -251,6 +251,17 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> RTCRtpSender::GetStatsInternal(
                 }
               };
 
+          auto constructCommonMediaSourceStats =
+              [&](RTCMediaSourceStats& aStats) {
+                nsString id = u"mediasource_"_ns + idstr + trackName;
+                aStats.mTimestamp.Construct(
+                    pipeline->GetTimestampMaker().GetNow().ToDom());
+                aStats.mId.Construct(id);
+                aStats.mType.Construct(RTCStatsType::Media_source);
+                aStats.mTrackIdentifier = trackName;
+                aStats.mKind = kind;
+              };
+
           asAudio.apply([&](auto& aConduit) {
             Maybe<webrtc::AudioSendStream::Stats> audioStats =
                 aConduit->GetSenderStats();
@@ -328,6 +339,14 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> RTCRtpSender::GetStatsInternal(
              */
             if (!report->mOutboundRtpStreamStats.AppendElement(std::move(local),
                                                                fallible)) {
+              mozalloc_handle_oom(0);
+            }
+
+            // TODO(bug 1804678): Use RTCAudioSourceStats
+            RTCMediaSourceStats mediaSourceStats;
+            constructCommonMediaSourceStats(mediaSourceStats);
+            if (!report->mMediaSourceStats.AppendElement(
+                    std::move(mediaSourceStats), fallible)) {
               mozalloc_handle_oom(0);
             }
           });
@@ -436,26 +455,28 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> RTCRtpSender::GetStatsInternal(
                                                                fallible)) {
               mozalloc_handle_oom(0);
             }
+
+            RTCVideoSourceStats videoSourceStats;
+            constructCommonMediaSourceStats(videoSourceStats);
+            // webrtc::VideoSendStream::Stats does not have width/height. We
+            // might be able to get this somewhere else?
+            // videoStats->frames is not documented, but looking at the
+            // implementation it appears to be the number of frames inputted to
+            // the encoder, which ought to work.
+            videoSourceStats.mFrames.Construct(videoStats->frames);
+            videoSourceStats.mFramesPerSecond.Construct(
+                videoStats->input_frame_rate);
+            auto resolution = aConduit->GetLastResolution();
+            resolution.apply(
+                [&](const VideoSessionConduit::Resolution& aResolution) {
+                  videoSourceStats.mWidth.Construct(aResolution.width);
+                  videoSourceStats.mHeight.Construct(aResolution.height);
+                });
+            if (!report->mVideoSourceStats.AppendElement(
+                    std::move(videoSourceStats), fallible)) {
+              mozalloc_handle_oom(0);
+            }
           });
-        }
-
-        auto constructCommonMediaSourceStats =
-            [&](RTCMediaSourceStats& aStats) {
-              nsString id = u"mediasource_"_ns + idstr + trackName;
-              aStats.mTimestamp.Construct(
-                  pipeline->GetTimestampMaker().GetNow().ToDom());
-              aStats.mId.Construct(id);
-              aStats.mType.Construct(RTCStatsType::Media_source);
-              aStats.mTrackIdentifier = trackName;
-              aStats.mKind = kind;
-            };
-
-        // TODO(bug 1804678): Use RTCAudioSourceStats/RTCVideoSourceStats
-        RTCMediaSourceStats mediaSourceStats;
-        constructCommonMediaSourceStats(mediaSourceStats);
-        if (!report->mMediaSourceStats.AppendElement(
-                std::move(mediaSourceStats), fallible)) {
-          mozalloc_handle_oom(0);
         }
 
         return RTCStatsPromise::CreateAndResolve(std::move(report), __func__);
