@@ -25,7 +25,6 @@
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/a11y/Accessible.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
-#include "mozilla/a11y/DocAccessiblePlatformExtParent.h"
 #include "mozilla/a11y/DocManager.h"
 #include "mozilla/a11y/HyperTextAccessibleBase.h"
 #include "mozilla/jni/GeckoBundleUtils.h"
@@ -53,18 +52,6 @@
     } else {                                                               \
       static_cast<AccessibleWrap*>(acc->AsLocal())->funcname(__VA_ARGS__); \
     }                                                                      \
-  }
-
-#define FORWARD_EXT_ACTION_TO_ACCESSIBLE(funcname, ...)                     \
-  MOZ_ASSERT(NS_IsMainThread());                                            \
-  MonitorAutoLock mal(nsAccessibilityService::GetAndroidMonitor());         \
-  if (Accessible* acc = GetAccessibleByID(aID)) {                           \
-    if (RemoteAccessible* remote = acc->AsRemote()) {                       \
-      Unused << remote->Document()->GetPlatformExtension()->Send##funcname( \
-          remote->ID(), ##__VA_ARGS__);                                     \
-    } else {                                                                \
-      static_cast<AccessibleWrap*>(acc->AsLocal())->funcname(__VA_ARGS__);  \
-    }                                                                       \
   }
 
 using namespace mozilla::a11y;
@@ -354,7 +341,6 @@ void SessionAccessibility::Paste(int32_t aID) {
 }
 
 #undef FORWARD_ACTION_TO_ACCESSIBLE
-#undef FORWARD_EXT_ACTION_TO_ACCESSIBLE
 
 RefPtr<SessionAccessibility> SessionAccessibility::GetInstanceFor(
     Accessible* aAccessible) {

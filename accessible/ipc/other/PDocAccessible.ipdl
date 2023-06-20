@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBrowser;
-include protocol PDocAccessiblePlatformExt;
 
 include DocAccessibleTypes;
 
@@ -66,10 +65,8 @@ struct TextRangeData
 sync protocol PDocAccessible
 {
   manager PBrowser;
-  manages PDocAccessiblePlatformExt;
 
 parent:
-  async PDocAccessiblePlatformExt();
   async Shutdown();
 
   /*
