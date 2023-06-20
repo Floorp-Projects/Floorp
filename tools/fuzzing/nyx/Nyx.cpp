@@ -31,6 +31,8 @@ extern "C" {
 MOZ_EXPORT __attribute__((weak)) void nyx_start(void);
 MOZ_EXPORT __attribute__((weak)) uint32_t nyx_get_next_fuzz_data(void*,
                                                                  uint32_t);
+MOZ_EXPORT __attribute__((weak)) uint32_t nyx_get_raw_fuzz_data(void*,
+                                                                uint32_t);
 MOZ_EXPORT __attribute__((weak)) void nyx_release(uint32_t);
 MOZ_EXPORT __attribute__((weak)) void nyx_handle_event(const char*, const char*,
                                                        int, const char*);
@@ -73,6 +75,16 @@ void Nyx::start(void) {
     // store them away to simulate how we originally received the data
     // via Nyx.
 
+    if (is.good()) {
+      mRawReplayBuffer = new Vector<uint8_t>();
+      is.seekg(0, is.end);
+      int rawLength = is.tellg();
+      mozilla::Unused << mRawReplayBuffer->initLengthUninitialized(rawLength);
+      is.seekg(0, is.beg);
+      is.read(reinterpret_cast<char*>(mRawReplayBuffer->begin()), rawLength);
+      is.seekg(0, is.beg);
+    }
+
     while (is.good()) {
       uint16_t pktsize;
       is.read(reinterpret_cast<char*>(&pktsize), sizeof(uint16_t));
@@ -111,6 +123,7 @@ void Nyx::start(void) {
 
   NYX_CHECK_API(nyx_start);
   NYX_CHECK_API(nyx_get_next_fuzz_data);
+  NYX_CHECK_API(nyx_get_raw_fuzz_data);
   NYX_CHECK_API(nyx_release);
   NYX_CHECK_API(nyx_handle_event);
   NYX_CHECK_API(nyx_puts);
@@ -150,6 +163,18 @@ uint32_t Nyx::get_data(uint8_t* data, uint32_t size) {
   }
 
   return nyx_get_next_fuzz_data(data, size);
+}
+
+uint32_t Nyx::get_raw_data(uint8_t* data, uint32_t size) {
+  MOZ_RELEASE_ASSERT(mInited);
+
+  if (mReplayMode) {
+    size = std::min(size, (uint32_t)mRawReplayBuffer->length());
+    memcpy(data, mRawReplayBuffer->begin(), size);
+    return size;
+  }
+
+  return nyx_get_raw_fuzz_data(data, size);
 }
 
 void Nyx::release(uint32_t iterations) {
