@@ -49,14 +49,14 @@ jobs:
           sudo apt install qemu-system-arm qemu-user-static
 
           aria2c '${{ inputs.tarball-url-aarch64 }}' -o floorp.tar.bz2
-          sudo flatpak install flathub org.freedesktop.Sdk/aarch64/22.08
-          sudo flatpak install flathub org.freedesktop.Platform/aarch64/22.08
+          sudo flatpak install -y flathub org.freedesktop.Sdk/aarch64/22.08
+          sudo flatpak install -y flathub org.freedesktop.Platform/aarch64/22.08
 
           git clone https://github.com/flathub/org.mozilla.firefox.BaseApp --depth 1 --branch branch/22.08
           cd org.mozilla.firefox.BaseApp
           flatpak-builder --repo=$HOME/repo --arch=aarch64 build-dir org.mozilla.firefox.BaseApp.json
           flatpak --user remote-add --no-gpg-verify localrepo $HOME/repo
-          flatpak --user install localrepo org.mozilla.firefox.BaseApp --no-deps
+          flatpak --user install -y localrepo org.mozilla.firefox.BaseApp --no-deps
         fi
 
         cp -r ~/.local/share/flatpak/app/org.mozilla.firefox.BaseApp/current/active/files/* ./flatpak_build/tmp/
