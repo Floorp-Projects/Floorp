@@ -519,63 +519,63 @@ class StyleSheetsManager extends EventEmitter {
     const rules = [];
     const traverseRules = ruleList => {
       for (const rule of ruleList) {
-        // Don't go further if the rule can't hold other rules (e.g. not a @media, @supports, …)
-        if (!CSSGroupingRule || !CSSGroupingRule.isInstance(rule)) {
-          continue;
-        }
+        // We only want to gather rules that can hold other rules (e.g. @media, @supports, …)
+        if (CSSGroupingRule && CSSGroupingRule.isInstance(rule)) {
+          const line = InspectorUtils.getRelativeRuleLine(rule);
+          const column = InspectorUtils.getRuleColumn(rule);
 
-        const line = InspectorUtils.getRelativeRuleLine(rule);
-        const column = InspectorUtils.getRuleColumn(rule);
+          const className = ChromeUtils.getClassName(rule);
+          if (className === "CSSMediaRule") {
+            let matches = false;
 
-        const className = ChromeUtils.getClassName(rule);
-        if (className === "CSSMediaRule") {
-          let matches = false;
+            try {
+              const mql = win.matchMedia(rule.media.mediaText);
+              matches = mql.matches;
+              mql.onchange = this._onMatchesChange.bind(
+                this,
+                resourceId,
+                rules.length
+              );
+              this._mqlList.push(mql);
+            } catch (e) {
+              // Ignored
+            }
 
-          try {
-            const mql = win.matchMedia(rule.media.mediaText);
-            matches = mql.matches;
-            mql.onchange = this._onMatchesChange.bind(
-              this,
-              resourceId,
-              rules.length
-            );
-            this._mqlList.push(mql);
-          } catch (e) {
-            // Ignored
+            rules.push({
+              type: "media",
+              mediaText: rule.media.mediaText,
+              conditionText: rule.conditionText,
+              matches,
+              line,
+              column,
+            });
+          } else if (className === "CSSContainerRule") {
+            rules.push({
+              type: "container",
+              conditionText: rule.conditionText,
+              line,
+              column,
+            });
+          } else if (className === "CSSSupportsRule") {
+            rules.push({
+              type: "support",
+              conditionText: rule.conditionText,
+              line,
+              column,
+            });
+          } else if (className === "CSSLayerBlockRule") {
+            rules.push({
+              type: "layer",
+              layerName: rule.name,
+              line,
+              column,
+            });
           }
-
-          rules.push({
-            type: "media",
-            mediaText: rule.media.mediaText,
-            conditionText: rule.conditionText,
-            matches,
-            line,
-            column,
-          });
-        } else if (className === "CSSContainerRule") {
-          rules.push({
-            type: "container",
-            conditionText: rule.conditionText,
-            line,
-            column,
-          });
-        } else if (className === "CSSSupportsRule") {
-          rules.push({
-            type: "support",
-            conditionText: rule.conditionText,
-            line,
-            column,
-          });
-        } else if (className === "CSSLayerBlockRule") {
-          rules.push({
-            type: "layer",
-            layerName: rule.name,
-            line,
-            column,
-          });
         }
 
-        if (rule.cssRules) {
+        // With css nesting, at-rules can be inside regular rules, so go through the
+        // rule's cssRules whenever there are some.
+        if (rule.cssRules?.length) {
           traverseRules(rule.cssRules);
         }
       }
