@@ -99,6 +99,7 @@ impl AsRef<[u8]> for HexString {
         &self.0
     }
 }
+#[allow(dead_code)]
 #[derive(Debug, Deserialize)]
 struct CiphersuiteTest {
     mode: i64,
