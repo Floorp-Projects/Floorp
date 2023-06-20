@@ -16,7 +16,7 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
     strategy:
       matrix:
-        runs-on: ${{ github.repository_owner == 'typeling1578' && fromJSON('["buildjet-16vcpu-ubuntu-2204"]') || fromJSON('["ubuntu-22.04"]') }}
+        runs-on: ${{ github.repository_owner == 'Floorp-Projects' && fromJSON('["buildjet-16vcpu-ubuntu-2204"]') || fromJSON('["ubuntu-22.04"]') }}
 
     steps:
     - name: Init
