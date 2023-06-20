@@ -7,53 +7,36 @@
 
 const TESTCASE_URI = TEST_BASE_HTTP + "minified.html";
 
-/*
-  body {
-    background:white;
+const PRETTIFIED_CSS_TEXT = `
+body {
+  background:white;
+}
+div {
+  font-size:4em;
+  color:red
+}
+span {
+  color:green;
+  @media screen {
+    background: blue;
+    &>.myClass {
+      padding: 1em
+    }
   }
-  div {
-    font-size:4em;
-    color:red
-  }
-  span {
-    color:green;
-  }
-*/
-const PRETTIFIED_SOURCE =
-  "" +
-  "body {\r?\n" +
-  "\tbackground:white;\r?\n" +
-  "}\r?\n" +
-  "div {\r?\n" +
-  "\tfont-size:4em;\r?\n" +
-  "\tcolor:red\r?\n" +
-  "}\r?\n" +
-  "span {\r?\n" +
-  "\tcolor:green;\r?\n" +
-  "}\r?\n";
+}
+`.trimStart();
 
-/*
-  body { background: red; }
-  div {
-    font-size: 5em;
-    color: red
-  }
-*/
-const ORIGINAL_SOURCE =
-  "" +
-  "body { background: red; }\r?\n" +
-  "div {\r?\n" +
-  "font-size: 5em;\r?\n" +
-  "color: red\r?\n" +
-  "}";
-
-const EXPAND_TAB = "devtools.editor.expandtab";
+const NON_MINIFIED_CSS_TEXT = `
+body { background: red; }
+div {
+font-size: 5em;
+color: red
+}`.trimStart();
 
 add_task(async function () {
-  const oldExpandTabPref = SpecialPowers.getBoolPref(EXPAND_TAB);
-  // The 'EXPAND_TAB' preference has to be set to false because
-  // the constant 'PRETTIFIED_SOURCE' uses tabs for indentation.
-  SpecialPowers.setBoolPref(EXPAND_TAB, false);
+  // Use 2 spaces for indent
+  await pushPref("devtools.editor.expandtab", true);
+  await pushPref("devtools.editor.tabsize", 2);
 
   const { ui } = await openStyleEditorForURL(TESTCASE_URI);
   is(ui.editors.length, 2, "Two sheets present.");
@@ -61,9 +44,9 @@ add_task(async function () {
   info("Testing minified style sheet.");
   let editor = await ui.editors[0].getSourceEditor();
 
-  const prettifiedSourceRE = new RegExp(PRETTIFIED_SOURCE);
-  ok(
-    prettifiedSourceRE.test(editor.sourceEditor.getText()),
+  is(
+    editor.sourceEditor.getText(),
+    PRETTIFIED_CSS_TEXT,
     "minified source has been prettified automatically"
   );
 
@@ -72,11 +55,9 @@ add_task(async function () {
 
   editor = ui.editors[1];
 
-  const originalSourceRE = new RegExp(ORIGINAL_SOURCE);
-  ok(
-    originalSourceRE.test(editor.sourceEditor.getText()),
+  is(
+    editor.sourceEditor.getText(),
+    NON_MINIFIED_CSS_TEXT,
     "non-minified source has been left untouched"
   );
-
-  SpecialPowers.setBoolPref(EXPAND_TAB, oldExpandTabPref);
 });

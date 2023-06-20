@@ -1,2 +1,2 @@
 
-body{background:white;}div{font-size:4em;color:red}span{color:green;}
+body{background:white;}div{font-size:4em;color:red}span{color:green;@media screen { background: blue; &>.myClass {padding: 1em} }}
