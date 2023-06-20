@@ -277,10 +277,16 @@ class TextLeafRange final {
     return mEnd != aOther.mEnd || mStart != aOther.mStart;
   }
 
+  bool operator==(const TextLeafRange& aOther) const {
+    return mEnd == aOther.mEnd && mStart == aOther.mStart;
+  }
+
   TextLeafPoint Start() const { return mStart; }
   void SetStart(const TextLeafPoint& aStart) { mStart = aStart; }
   TextLeafPoint End() const { return mEnd; }
   void SetEnd(const TextLeafPoint& aEnd) { mEnd = aEnd; }
+
+  bool Crop(Accessible* aContainer);
 
   /**
    * Returns a union rect (in dev pixels) of all character bounds in this range.

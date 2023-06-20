@@ -127,7 +127,7 @@ class GeckoTextMarkerRange final {
    * Return true if successfully cropped. false if the range does not intersect
    * with the container.
    */
-  bool Crop(Accessible* aContainer);
+  bool Crop(Accessible* aContainer) { return mRange.Crop(aContainer); }
 
   TextLeafRange mRange;
 };

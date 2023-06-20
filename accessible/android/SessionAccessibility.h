@@ -57,7 +57,7 @@ class SessionAccessibility final
   void Click(int32_t aID);
   bool Pivot(int32_t aID, int32_t aGranularity, bool aForward, bool aInclusive);
   void ExploreByTouch(int32_t aID, float aX, float aY);
-  void NavigateText(int32_t aID, int32_t aGranularity, int32_t aStartOffset,
+  bool NavigateText(int32_t aID, int32_t aGranularity, int32_t aStartOffset,
                     int32_t aEndOffset, bool aForward, bool aSelect);
   void SetSelection(int32_t aID, int32_t aStart, int32_t aEnd);
   void Cut(int32_t aID);
@@ -106,6 +106,10 @@ class SessionAccessibility final
                         mozilla::jni::Object::Param aNodeInfo);
 
   void SetAttached(bool aAttached, already_AddRefed<Runnable> aRunnable);
+
+  bool DoNavigateText(Accessible* aAccessible, int32_t aGranularity,
+                      int32_t aStartOffset, int32_t aEndOffset, bool aForward,
+                      bool aSelect);
 
   jni::NativeWeakPtr<widget::GeckoViewSupport> mWindow;  // Parent only
   java::SessionAccessibility::NativeProvider::GlobalRef mSessionAccessibility;
