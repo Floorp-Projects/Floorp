@@ -724,14 +724,18 @@ void ProfilerParent::Init() {
 
   Unused << SendStop();
 }
+#endif  // MOZ_GECKO_PROFILER
 
 ProfilerParent::~ProfilerParent() {
   MOZ_COUNT_DTOR(ProfilerParent);
 
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
+#ifdef MOZ_GECKO_PROFILER
   ProfilerParentTracker::StopTracking(this);
+#endif
 }
 
+#ifdef MOZ_GECKO_PROFILER
 /* static */
 nsTArray<ProfilerParent::SingleProcessProfilePromiseAndChildPid>
 ProfilerParent::GatherProfiles() {
