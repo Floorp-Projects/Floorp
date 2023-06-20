@@ -166,11 +166,9 @@ const statsExpectedByType = {
       "droppedSamplesEvents",
       "totalCaptureDelay",
       "totalSamplesCaptured",
-      "width",
-      "height",
-      "frames",
-      "framesPerSecond",
     ],
+    localAudioOnly: [],
+    localVideoOnly: ["frames", "framesPerSecond", "width", "height"],
     optional: [],
     deprecated: [],
   },
@@ -275,8 +273,8 @@ const statsExpectedByType = {
   certificate: { skip: true },
 };
 
-["in", "out"].forEach(pre => {
-  let s = statsExpectedByType[pre + "bound-rtp"];
+["inbound-rtp", "outbound-rtp", "media-source"].forEach(type => {
+  let s = statsExpectedByType[type];
   s.optional = [...s.optional, ...s.localVideoOnly, ...s.localAudioOnly];
 });
 
@@ -1052,6 +1050,51 @@ function pedanticChecks(report) {
       // kind
       is(typeof stat.kind, "string");
       ok(stat.kind == "audio" || stat.kind == "video");
+      if (stat.inner.kind == "video") {
+        expectations.localVideoOnly.forEach(field => {
+          ok(
+            stat.inner[field] !== undefined,
+            `${stat.type} has field ` +
+              `${field} when kind is video and isRemote is false`
+          );
+        });
+
+        // frames
+        ok(
+          stat.frames >= 0 && stat.frames < 100000,
+          `${stat.type}.frames is a sane number for a short ` +
+            `${stat.kind} test. value=${stat.frames}`
+        );
+
+        // framesPerSecond
+        ok(
+          stat.framesPerSecond >= 0 && stat.framesPerSecond < 100,
+          `${stat.type}.framesPerSecond is a sane number for a short ` +
+            `${stat.kind} test. value=${stat.framesPerSecond}`
+        );
+
+        // width
+        ok(
+          stat.width >= 0 && stat.width < 1000000,
+          `${stat.type}.width is a sane number for a ` +
+            `${stat.kind} test. value=${stat.width}`
+        );
+
+        // height
+        ok(
+          stat.height >= 0 && stat.height < 1000000,
+          `${stat.type}.height is a sane number for a ` +
+            `${stat.kind} test. value=${stat.height}`
+        );
+      } else {
+        expectations.localVideoOnly.forEach(field => {
+          ok(
+            stat[field] === undefined,
+            `${stat.type} does not have field ` +
+              `${field} when kind is not 'video'`
+          );
+        });
+      }
     } else if (stat.type == "codec") {
       //
       // Required fields
