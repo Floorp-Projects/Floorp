@@ -96,6 +96,7 @@ const statsExpectedByType = {
       "pliCount",
       "frameWidth",
       "frameHeight",
+      "framesPerSecond",
       "framesSent",
       "hugeFramesSent",
       "totalEncodeTime",
@@ -743,7 +744,7 @@ function pedanticChecks(report) {
         ok(
           stat.frameWidth > 0 && stat.frameWidth < 100000,
           `${stat.type}.frameWidth is a sane number for a short ` +
-            `${stat.kind} test. value=${stat.framesSent}`
+            `${stat.kind} test. value=${stat.frameWidth}`
         );
 
         // frameHeight
@@ -970,6 +971,13 @@ function pedanticChecks(report) {
           stat.frameHeight >= 0 && stat.frameHeight < 100000,
           `${stat.type}.frameHeight is a sane number for a short ` +
             `${stat.kind} test. value=${stat.frameHeight}`
+        );
+
+        // framesPerSecond
+        ok(
+          stat.framesPerSecond >= 0 && stat.framesPerSecond < 60,
+          `${stat.type}.framesPerSecond is a sane number for a short ` +
+            `${stat.kind} test. value=${stat.framesPerSecond}`
         );
 
         // framesSent
