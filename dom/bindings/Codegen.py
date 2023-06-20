@@ -866,11 +866,9 @@ class CGPrototypeJSClass(CGThing):
                 JS_NULL_OBJECT_OPS
               },
               ${type},
-              false,
               ${prototypeID},
               ${depth},
               ${hooks},
-              nullptr,
               ${protoGetter}
             };
             """,
@@ -990,22 +988,24 @@ class CGInterfaceObjectJSClass(CGThing):
 
         ret = ret + fill(
             """
-            static const DOMIfaceAndProtoJSClass sInterfaceObjectClass = {
+            static const DOMIfaceJSClass sInterfaceObjectClass = {
               {
-                "${classString}",
-                JSCLASS_IS_DOMIFACEANDPROTOJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(${slotCount}),
-                ${classOpsPtr},
-                JS_NULL_CLASS_SPEC,
-                JS_NULL_CLASS_EXT,
-                ${objectOps}
+                {
+                  "${classString}",
+                  JSCLASS_IS_DOMIFACEANDPROTOJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(${slotCount}),
+                  ${classOpsPtr},
+                  JS_NULL_CLASS_SPEC,
+                  JS_NULL_CLASS_EXT,
+                  ${objectOps}
+                },
+                ${type},
+                ${prototypeID},
+                ${depth},
+                ${hooks},
+                ${protoGetter}
               },
-              ${type},
               ${needsHasInstance},
-              ${prototypeID},
-              ${depth},
-              ${hooks},
-              ${funToString},
-              ${protoGetter}
+              ${funToString}
             };
             """,
             classString=classString,
@@ -1016,11 +1016,11 @@ class CGInterfaceObjectJSClass(CGThing):
             type="eNamespace"
             if self.descriptor.interface.isNamespace()
             else "eInterface",
-            needsHasInstance=toStringBool(needsHasInstance),
             prototypeID=prototypeID,
             depth=depth,
-            funToString=funToString,
             protoGetter=protoGetter,
+            needsHasInstance=toStringBool(needsHasInstance),
+            funToString=funToString,
         )
         return ret
 
@@ -3589,7 +3589,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             legacyFactoryFunctions = "nullptr"
 
         if needInterfacePrototypeObject:
-            protoClass = "&sPrototypeClass.mBase"
+            protoClass = "&sPrototypeClass"
             protoCache = (
                 "&aProtoAndIfaceCache.EntrySlotOrCreate(prototypes::id::%s)"
                 % self.descriptor.name
@@ -3603,7 +3603,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             getParentProto = None
 
         if needInterfaceObject:
-            interfaceClass = "&sInterfaceObjectClass.mBase"
+            interfaceClass = "&sInterfaceObjectClass"
             interfaceCache = (
                 "&aProtoAndIfaceCache.EntrySlotOrCreate(constructors::id::%s)"
                 % self.descriptor.name
