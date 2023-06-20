@@ -1033,15 +1033,13 @@ fn ValidatePathTypes(typesArray: &[BYTE], mut count: INT) -> bool {
         // Advance to the first point after the 'start' point:
         count -= 1;
         if (count == 0) {
-            //TraceTag!((tagMILWarning, "Path ended after start-path"));
-            //return (false);
-            return (true);
+            TraceTag!((tagMILWarning, "Path ended after start-path"));
+            return (false);
         }
 
         if ((types[1] & PathPointTypePathTypeMask) == PathPointTypeStart) {
-            //TraceTag!((tagMILWarning, "Can't have a start followed by a start!"));
-            //return (false);
-            return (true);
+            TraceTag!((tagMILWarning, "Can't have a start followed by a start!"));
+            return (false);
         }
 
         // Process runs of lines and Bezier curves:
