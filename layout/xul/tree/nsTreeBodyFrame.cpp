@@ -452,6 +452,10 @@ nsresult nsTreeBodyFrame::GetView(nsITreeView** aView) {
 }
 
 nsresult nsTreeBodyFrame::SetView(nsITreeView* aView) {
+  if (aView == mView) {
+    return NS_OK;
+  }
+
   // First clear out the old view.
   nsCOMPtr<nsITreeView> oldView = std::move(mView);
   if (oldView) {
