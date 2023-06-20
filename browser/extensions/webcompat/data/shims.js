@@ -737,7 +737,7 @@ const AVAILABLE_SHIMS = [
     contentScripts: [
       {
         js: "crave-ca.js",
-        matches: ["*://account.bellmedia.ca/login*"],
+        matches: ["*://account.bellmedia.ca/login*service=crave*"],
         runAt: "document_start",
       },
     ],
@@ -865,6 +865,20 @@ const AVAILABLE_SHIMS = [
         matches: ["*://open.spotify.com/embed/*"],
         runAt: "document_start",
         allFrames: true,
+      },
+    ],
+    onlyIfDFPIActive: true,
+  },
+  {
+    id: "tsn.ca",
+    platform: "all",
+    name: "tsn.ca login",
+    bug: "1802340",
+    contentScripts: [
+      {
+        js: "tsn-ca.js",
+        matches: ["*://account.bellmedia.ca/login*service=tsn*"],
+        runAt: "document_start",
       },
     ],
     onlyIfDFPIActive: true,
