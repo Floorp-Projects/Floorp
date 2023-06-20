@@ -412,6 +412,13 @@ function prettifyCSS(text, ruleCount) {
     return token;
   };
 
+  // Get preference of the user regarding what to use for indentation,
+  // spaces or tabs.
+  const tabPrefs = getTabPrefs();
+  const baseIndentString = tabPrefs.indentWithTabs
+    ? TAB_CHARS
+    : SPACE_CHARS.repeat(tabPrefs.indentUnit);
+
   while (true) {
     // Set the initial state.
     startIndex = undefined;
@@ -437,20 +444,16 @@ function prettifyCSS(text, ruleCount) {
       }
     }
 
-    // Get preference of the user regarding what to use for indentation,
-    // spaces or tabs.
-    const tabPrefs = getTabPrefs();
-
     if (isCloseBrace) {
       // Even if the stylesheet contains extra closing braces, the indent level should
       // remain > 0.
       indentLevel = Math.max(0, indentLevel - 1);
+      indent = baseIndentString.repeat(indentLevel);
 
+      // FIXME: This is incorrect and should be fixed in Bug 1839297
       if (tabPrefs.indentWithTabs) {
-        indent = TAB_CHARS.repeat(indentLevel);
         indentOffset = 4 * indentLevel;
       } else {
-        indent = SPACE_CHARS.repeat(indentLevel);
         indentOffset = 1 * indentLevel;
       }
       result = result + indent + "}";
@@ -466,11 +469,14 @@ function prettifyCSS(text, ruleCount) {
         columnOffset++;
       }
       result += "{";
+      indentLevel++;
+      indent = baseIndentString.repeat(indentLevel);
+      indentOffset = indent.length;
+
+      // FIXME: This is incorrect and should be fixed in Bug 1839297
       if (tabPrefs.indentWithTabs) {
-        indent = TAB_CHARS.repeat(++indentLevel);
         indentOffset = 4 * indentLevel;
       } else {
-        indent = SPACE_CHARS.repeat(++indentLevel);
         indentOffset = 1 * indentLevel;
       }
     }

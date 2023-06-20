@@ -10,6 +10,7 @@ const {
 } = require("resource://devtools/shared/inspector/css-logic.js");
 
 const EXPAND_TAB = "devtools.editor.expandtab";
+const TAB_SIZE = "devtools.editor.tabsize";
 
 const TESTS_TAB_INDENT = [
   {
@@ -59,7 +60,11 @@ const TESTS_SPACE_INDENT = [
   {
     name: "simple test. indent using spaces",
     input: "div { font-family:'Arial Black', Arial, sans-serif; }",
-    expected: ["div {", " font-family:'Arial Black', Arial, sans-serif;", "}"],
+    expected: [
+      "div {",
+      "    font-family:'Arial Black', Arial, sans-serif;",
+      "}",
+    ],
   },
 
   {
@@ -74,14 +79,14 @@ const TESTS_SPACE_INDENT = [
       "\nbody{background:white;}div{font-size:4em;color:red}span{color:green;}\n",
     expected: [
       "body {",
-      " background:white;",
+      "    background:white;",
       "}",
       "div {",
-      " font-size:4em;",
-      " color:red",
+      "    font-size:4em;",
+      "    color:red",
       "}",
       "span {",
-      " color:green;",
+      "    color:green;",
       "}",
     ],
   },
@@ -89,25 +94,33 @@ const TESTS_SPACE_INDENT = [
   {
     name: "leading whitespace. indent using spaces",
     input: "\n    div{color: red;}",
-    expected: ["div {", " color: red;", "}"],
+    expected: ["div {", "    color: red;", "}"],
   },
 
   {
     name: "CSS with extra closing brace. indent using spaces",
     input: "body{margin:0}} div{color:red}",
-    expected: ["body {", " margin:0", "}", "}", "div {", " color:red", "}"],
+    expected: [
+      "body {",
+      "    margin:0",
+      "}",
+      "}",
+      "div {",
+      "    color:red",
+      "}",
+    ],
   },
 
   {
     name: "HTML comments with some whitespace padding",
     input: "  \n\n\t  <!--\n\n\t body {color:red}  \n\n-->   \t\n",
-    expected: ["body {", " color:red", "}"],
+    expected: ["body {", "    color:red", "}"],
   },
 
   {
     name: "HTML comments without whitespace padding",
     input: "<!--body {color:red}-->",
-    expected: ["body {", " color:red", "}"],
+    expected: ["body {", "    color:red", "}"],
   },
 
   {
@@ -117,18 +130,18 @@ const TESTS_SPACE_INDENT = [
       "div, div, input, pre, table {color: blue;}",
     expected: [
       "@media screen, print {",
-      " div,",
-      " span,",
-      " input {",
-      "  color: red;",
-      " }",
+      "    div,",
+      "    span,",
+      "    input {",
+      "        color: red;",
+      "    }",
       "}",
       "div,",
       "div,",
       "input,",
       "pre,",
       "table {",
-      " color: blue;",
+      "    color: blue;",
       "}",
     ],
   },
@@ -136,7 +149,14 @@ const TESTS_SPACE_INDENT = [
   {
     name: "Multiline comment in CSS",
     input: "/*\n * comment\n */\n#example{display:grid;}",
-    expected: ["/*", " * comment", " */", "#example {", " display:grid;", "}"],
+    expected: [
+      "/*",
+      " * comment",
+      " */",
+      "#example {",
+      "    display:grid;",
+      "}",
+    ],
   },
 ];
 
@@ -146,6 +166,8 @@ function run_test() {
   prettifyCSS("");
 
   Services.prefs.setBoolPref(EXPAND_TAB, true);
+  Services.prefs.setIntPref(TAB_SIZE, 4);
+
   for (const test of TESTS_SPACE_INDENT) {
     info(test.name);
 
@@ -169,4 +191,5 @@ function run_test() {
     equal(output, expected, test.name);
   }
   Services.prefs.clearUserPref(EXPAND_TAB);
+  Services.prefs.clearUserPref(TAB_SIZE);
 }
