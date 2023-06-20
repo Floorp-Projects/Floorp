@@ -128,7 +128,7 @@ function doTest3() {
 }
 
 function doTest4() {
-  dump("execute doTest1 - resource with immutable. initial request\n");
+  dump("execute doTest4 - resource with immutable. initial request\n");
   do_test_pending();
   expectConditional = false;
   var chan = makeChan(origin, "/immutable-test-with-attribute");
@@ -149,12 +149,64 @@ function doTest5() {
 }
 
 function doTest6() {
-  dump("execute doTest3 - resource with immutable. shift reload\n");
+  dump("execute doTest6 - resource with immutable. shift reload\n");
   do_test_pending();
   expectConditional = false;
   var chan = makeChan(origin, "/immutable-test-with-attribute");
   var listener = new Listener();
-  nextTest = testsDone;
+  nextTest = doTest7;
   chan.loadFlags = Ci.nsIRequest.LOAD_BYPASS_CACHE;
+  chan.asyncOpen(listener);
+}
+
+function doTest7() {
+  dump("execute doTest7 - expired resource with immutable. initial request\n");
+  do_test_pending();
+  expectConditional = false;
+  var chan = makeChan(origin, "/immutable-test-expired-with-Expires-header");
+  var listener = new Listener();
+  nextTest = doTest8;
+  chan.asyncOpen(listener);
+}
+
+function doTest8() {
+  dump("execute doTest8 - expired resource with immutable. reload\n");
+  do_test_pending();
+  expectConditional = true;
+  var chan = makeChan(origin, "/immutable-test-expired-with-Expires-header");
+  var listener = new Listener();
+  nextTest = doTest9;
+  chan.loadFlags = Ci.nsIRequest.VALIDATE_ALWAYS;
+  chan.asyncOpen(listener);
+}
+
+function doTest9() {
+  dump(
+    "execute doTest9 - expired resource with immutable cache extension and Last modified header. initial request\n"
+  );
+  do_test_pending();
+  expectConditional = false;
+  var chan = makeChan(
+    origin,
+    "/immutable-test-expired-with-last-modified-header"
+  );
+  var listener = new Listener();
+  nextTest = doTest10;
+  chan.asyncOpen(listener);
+}
+
+function doTest10() {
+  dump(
+    "execute doTest10 - expired resource with immutable cache extension and Last modified heder. reload\n"
+  );
+  do_test_pending();
+  expectConditional = true;
+  var chan = makeChan(
+    origin,
+    "/immutable-test-expired-with-last-modified-header"
+  );
+  var listener = new Listener();
+  nextTest = testsDone;
+  chan.loadFlags = Ci.nsIRequest.VALIDATE_ALWAYS;
   chan.asyncOpen(listener);
 }

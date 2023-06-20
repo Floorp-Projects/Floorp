@@ -1521,6 +1521,25 @@ function handleRequest(req, res) {
       res.setHeader("x-conditional", "true");
     }
     // default response from here
+  } else if (u.pathname === "/immutable-test-expired-with-Expires-header") {
+    res.setHeader("Cache-Control", "immutable");
+    res.setHeader("Expires", "Mon, 01 Jan 1990 00:00:00 GMT");
+    res.setHeader("Etag", "3");
+
+    if (req.headers["if-none-match"]) {
+      res.setHeader("x-conditional", "true");
+    }
+  } else if (
+    u.pathname === "/immutable-test-expired-with-last-modified-header"
+  ) {
+    res.setHeader("Cache-Control", "public, max-age=3600, immutable");
+    res.setHeader("Date", "Mon, 01 Jan 1990 00:00:00 GMT");
+    res.setHeader("Last-modified", "Mon, 01 Jan 1990 00:00:00 GMT");
+    res.setHeader("Etag", "4");
+
+    if (req.headers["if-none-match"]) {
+      res.setHeader("x-conditional", "true");
+    }
   } else if (u.pathname === "/origin-4") {
     let originList = [];
     req.stream.connection.originFrame(originList);
