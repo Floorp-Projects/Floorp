@@ -37,6 +37,8 @@ MOZ_EXPORT __attribute__((weak)) void nyx_release(uint32_t);
 MOZ_EXPORT __attribute__((weak)) void nyx_handle_event(const char*, const char*,
                                                        int, const char*);
 MOZ_EXPORT __attribute__((weak)) void nyx_puts(const char*);
+MOZ_EXPORT __attribute__((weak)) void nyx_dump_file(void* buffer, size_t len,
+                                                    char* filename);
 }
 
 /*
@@ -127,6 +129,7 @@ void Nyx::start(void) {
   NYX_CHECK_API(nyx_release);
   NYX_CHECK_API(nyx_handle_event);
   NYX_CHECK_API(nyx_puts);
+  NYX_CHECK_API(nyx_dump_file);
 
   nyx_start();
 }
@@ -211,6 +214,14 @@ void Nyx::handle_event(const char* type, const char* file, int line,
     MOZ_FUZZING_NYX_PRINTF(
         "[ERROR] PRE SNAPSHOT Nyx::handle_event() called: %s at %s:%d : %s\n",
         type, file, line, reason);
+  }
+}
+
+void Nyx::dump_file(void* buffer, size_t len, char* filename) {
+  MOZ_RELEASE_ASSERT(mInited);
+
+  if (!mReplayMode) {
+    nyx_dump_file(buffer, len, filename);
   }
 }
 
