@@ -206,12 +206,13 @@ async function play(
   expectUtility,
   expectDecoder,
   expectContent = false,
-  expectJava = false
+  expectJava = false,
+  expectError = false
 ) {
   let browser = tab.linkedBrowser;
   return SpecialPowers.spawn(
     browser,
-    [expectUtility, expectDecoder, expectContent, expectJava],
+    [expectUtility, expectDecoder, expectContent, expectJava, expectError],
     checkAudioDecoder
   );
 }
@@ -238,7 +239,8 @@ async function checkAudioDecoder(
   expectedProcess,
   expectedDecoder,
   expectContent = false,
-  expectJava = false
+  expectJava = false,
+  expectError = false
 ) {
   const doc = typeof content !== "undefined" ? content.document : document;
   let audio = doc.querySelector("audio");
@@ -258,7 +260,7 @@ async function checkAudioDecoder(
         audioDecoderName.indexOf(`(${expectedProcess} remote)`) > 0;
       const isJavaRemote = audioDecoderName.indexOf("(remote)") > 0;
       const isOk =
-        (isExpectedProcess && !isJavaRemote && !expectContent && !expectJava) || // Running in Utility/RDD
+        (isExpectedProcess && !isJavaRemote && !expectContent && !expectJava) || // Running in Utility
         (expectJava && !isExpectedProcess && isJavaRemote) || // Running in Java remote
         (expectContent && !isExpectedProcess && !isJavaRemote); // Running in Content
 
@@ -286,6 +288,24 @@ async function checkAudioDecoder(
       audio.addEventListener("timeupdate", timeUpdateHandler, { once: true });
     };
 
+    audio.addEventListener("error", async err => {
+      info(
+        `Received HTML media error: ${audio.error.code}: ${audio.error.message}`
+      );
+      if (expectError) {
+        const w = typeof content !== "undefined" ? content.window : window;
+        ok(
+          audio.error.code === w.MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED ||
+            w.MediaError.MEDIA_ERR_DECODE,
+          "Media supported but decoding failed"
+        );
+        resolve();
+      } else {
+        info(`Unexpected error`);
+        reject();
+      }
+    });
+
     audio.addEventListener("canplaythrough", startPlaybackHandler, {
       once: true,
     });
@@ -304,6 +324,7 @@ async function runMochitestUtilityAudio(
     expectDecoder,
     expectContent = false,
     expectJava = false,
+    expectError = false,
   } = {}
 ) {
   info(`Add media: ${src}`);
@@ -316,7 +337,8 @@ async function runMochitestUtilityAudio(
     expectUtility,
     expectDecoder,
     expectContent,
-    expectJava
+    expectJava,
+    expectError
   );
 
   info(`Pause media: ${src}`);
@@ -421,4 +443,12 @@ async function crashSomeUtilityActor(
   );
   const utilityPid = procInfos[0].pid;
   return crashSomeUtility(utilityPid, actorsCheck);
+}
+
+function versionContains(e) {
+  return Services.appinfo.platformVersion.indexOf(e) > -1;
+}
+
+function isNightly() {
+  return versionContains("a");
 }

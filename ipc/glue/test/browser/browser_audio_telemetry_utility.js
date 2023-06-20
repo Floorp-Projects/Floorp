@@ -20,8 +20,13 @@ add_task(async function testAudioDecodingInUtility() {
 
 add_task(async function testUtilityTelemetry() {
   const platform = Services.appinfo.OS;
+  const extraKey = getExtraKey({ rddPref: true, utilityPref: true });
   for (let exp of utilityPerCodecs[platform]) {
-    await verifyTelemetryForProcess(exp.process, exp.codecs);
+    await verifyTelemetryForProcess(exp.process, exp.codecs, extraKey);
   }
-  await verifyNoTelemetryForProcess("rdd", ["vorbis", "mp3", "aac", "flac"]);
+  await verifyNoTelemetryForProcess(
+    "rdd",
+    ["vorbis", "mp3", "aac", "flac"],
+    extraKey
+  );
 });

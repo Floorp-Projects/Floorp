@@ -3,71 +3,56 @@
 
 "use strict";
 
-async function runTest(expectUtility) {
-  info(
-    `Running tests with decoding from Utility or RDD: expectUtility=${expectUtility}`
-  );
+/* import-globals-from head-multiple.js */
 
-  // Utility should now be the default, so dont toggle the pref unless we test
-  // RDD
-  if (!expectUtility) {
-    await SpecialPowers.pushPrefEnv({
-      set: [["media.utility-process.enabled", expectUtility]],
-    });
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/ipc/glue/test/browser/head-multiple.js",
+  this
+);
+
+add_setup(async function checkAudioDecodingNonUtility() {
+  const isAudioDecodingNonUtilityAllowed = await SpecialPowers.getBoolPref(
+    "media.allow-audio-non-utility"
+  );
+  if (isNightly()) {
+    ok(
+      !isAudioDecodingNonUtilityAllowed,
+      "Audio decoding should not be allowed on non utility processes by default on Nightly"
+    );
+  } else {
+    ok(
+      isAudioDecodingNonUtilityAllowed,
+      "Audio decoding is allowed on non utility processes by default on Beta or Release"
+    );
+  }
+});
+
+add_task(async function testAudioDecodingInUtility() {
+  await runTest({ expectUtility: true });
+});
+
+add_task(async function testFailureAudioDecodingInRDD() {
+  await runTest({ expectUtility: false, expectError: true });
+});
+
+add_task(async function testFailureAudioDecodingInContent() {
+  // TODO: When getting rid of audio decoding on non utility at all, this
+  // should be removed
+  if (!isNightly()) {
+    return;
   }
 
   const platform = Services.appinfo.OS;
-
-  for (let { src, expectations } of audioTestData()) {
-    if (!(platform in expectations)) {
-      info(`Skipping ${src} for ${platform}`);
-      continue;
-    }
-
-    const expectation = expectations[platform];
-
-    info(`Add media tabs: ${src}`);
-    let tabs = [await addMediaTab(src), await addMediaTab(src)];
-    let playback = [];
-
-    info("Play tabs");
-    for (let tab of tabs) {
-      playback.push(
-        play(
-          tab,
-          expectUtility ? expectation.process : "RDD",
-          expectation.decoder
-        )
-      );
-    }
-
-    info("Wait all playback");
-    await Promise.all(playback);
-
-    let allstop = [];
-    info("Stop tabs");
-    for (let tab of tabs) {
-      allstop.push(stop(tab));
-    }
-
-    info("Wait all stop");
-    await Promise.all(allstop);
-
-    let remove = [];
-    info("Remove tabs");
-    for (let tab of tabs) {
-      remove.push(BrowserTestUtils.removeTab(tab));
-    }
-
-    info("Wait all tabs to be removed");
-    await Promise.all(remove);
+  if (platform === "WINNT") {
+    ok(
+      true,
+      "Manually skippig on Windows because of gfx killing us, cf browser.ini"
+    );
+    return;
   }
-}
 
-add_task(async function testAudioDecodingInUtility() {
-  await runTest(true);
-});
-
-add_task(async function testAudioDecodingInRDD() {
-  await runTest(false);
+  await SpecialPowers.pushPrefEnv({
+    set: [["media.rdd-process.enabled", false]],
+  });
+  await runTest({ expectUtility: false, expectRDD: false, expectError: true });
 });

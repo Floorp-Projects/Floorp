@@ -10091,6 +10091,18 @@
     mirror: always
 #endif  # ANDROID
 
+# Now we will completely disable the ability to perform audio decoding outside
+# of Utility.
+# We do that only on nightly builds for now.
+-   name: media.allow-audio-non-utility
+    type: RelaxedAtomicBool
+#if defined(NIGHTLY_BUILD)
+    value: false
+#else
+    value: true
+#endif // defined(NIGHTLY_BUILD)
+    mirror: always
+
 #ifdef MOZ_OMX
 -   name: media.omx.enabled
     type: bool
