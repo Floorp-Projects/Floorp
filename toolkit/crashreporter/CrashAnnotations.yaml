@@ -472,6 +472,13 @@ IPCTransportFailureReason:
     Reason why creating an IPC channel failed.
   type: string
 
+Hang:
+  description: >
+    Set if the crash was the result of a hang, with a value which describes the
+    type of hang (e.g. "ui" or "shutdown").
+  type: string
+  ping: true
+
 IsGarbageCollecting:
   description: >
     If true then the JavaScript garbage collector was running when the crash

@@ -6,6 +6,7 @@ OS_LIBS += [
     "ntdll",
     "ole32",
     "shell32",
+    "user32",
     "userenv",
     "ws2_32",
 ]
