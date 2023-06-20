@@ -20,11 +20,11 @@ Upstream commit: https://webrtc.googlesource.com/src/+/7e5d9edfdfe82e06182b790af
 Differential Revision: https://phabricator.services.mozilla.com/D177228
 Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2bc179dfe25391e4b621ce407239beaebbe09be8
 ---
- common_video/libyuv/webrtc_libyuv.cc | 23 +++++++++--------------
- 1 file changed, 9 insertions(+), 14 deletions(-)
+ common_video/libyuv/webrtc_libyuv.cc | 22 +++++++++-------------
+ 1 file changed, 9 insertions(+), 13 deletions(-)
 
 diff --git a/common_video/libyuv/webrtc_libyuv.cc b/common_video/libyuv/webrtc_libyuv.cc
-index 8998af191d..d07d739119 100644
+index 8998af191d..4c6911b4a3 100644
 --- a/common_video/libyuv/webrtc_libyuv.cc
 +++ b/common_video/libyuv/webrtc_libyuv.cc
 @@ -22,7 +22,6 @@ namespace webrtc {
@@ -35,7 +35,7 @@ index 8998af191d..d07d739119 100644
    switch (type) {
      case VideoType::kI420:
      case VideoType::kNV21:
-@@ -31,28 +30,24 @@ size_t CalcBufferSize(VideoType type, int width, int height) {
+@@ -31,28 +30,25 @@ size_t CalcBufferSize(VideoType type, int width, int height) {
      case VideoType::kNV12: {
        int half_width = (width + 1) >> 1;
        int half_height = (height + 1) >> 1;
@@ -61,10 +61,10 @@ index 8998af191d..d07d739119 100644
 -      break;
 -    default:
 -      RTC_DCHECK_NOTREACHED();
--      break;
 +      return width * height * 4;
 +    case VideoType::kMJPEG:
 +    case VideoType::kUnknown:
+       break;
    }
 -  return buffer_size;
 +  RTC_DCHECK_NOTREACHED() << "Unexpected pixel format " << type;
@@ -72,7 +72,7 @@ index 8998af191d..d07d739119 100644
  }
  
  int ExtractBuffer(const rtc::scoped_refptr<I420BufferInterface>& input_frame,
-@@ -120,7 +115,7 @@ int ConvertVideoType(VideoType video_type) {
+@@ -120,7 +116,7 @@ int ConvertVideoType(VideoType video_type) {
      case VideoType::kNV12:
        return libyuv::FOURCC_NV12;
    }
