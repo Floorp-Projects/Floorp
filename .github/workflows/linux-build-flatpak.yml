@@ -57,6 +57,7 @@ jobs:
           cd org.mozilla.firefox.BaseApp
           flatpak-builder --arch=aarch64 build-dir org.mozilla.firefox.BaseApp.json
           cp -r ./build-dir/files/* ../flatpak_build/tmp/
+          cd ..
         fi
 
         rm ./flatpak_build/tmp/manifest.json
