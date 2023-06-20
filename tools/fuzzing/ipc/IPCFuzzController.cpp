@@ -656,12 +656,10 @@ NS_IMETHODIMP IPCFuzzController::IPCFuzzLoop::Run() {
       continue;
     }
 
-    buffer.shrinkTo(bufsize);
-
     const uint8_t* controlData = (uint8_t*)buffer.begin();
 
     char* ipcMsgData = buffer.begin() + controlLen;
-    size_t ipcMsgLen = buffer.length() - controlLen;
+    size_t ipcMsgLen = bufsize - controlLen;
 
     // Copy the header of the original message
     memcpy(ipcMsgData, IPCFuzzController::instance().sampleHeader.begin(),
