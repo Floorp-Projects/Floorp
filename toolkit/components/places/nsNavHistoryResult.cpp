@@ -3042,7 +3042,9 @@ nsresult nsNavHistoryFolderResultNode::OnEndUpdateBatch() { return NS_OK; }
 nsresult nsNavHistoryFolderResultNode::OnItemAdded(
     int64_t aItemId, int64_t aParentFolder, int32_t aIndex, uint16_t aItemType,
     nsIURI* aURI, PRTime aDateAdded, const nsACString& aGUID,
-    const nsACString& aParentGUID, uint16_t aSource) {
+    const nsACString& aParentGUID, uint16_t aSource, const nsACString& aTitle,
+    const nsAString& aTags, int64_t aFrecency, bool aHidden,
+    uint32_t aVisitCount, PRTime aLastVisitDate) {
   MOZ_ASSERT(aParentFolder == mTargetFolderItemId, "Got wrong bookmark update");
 
   RESTART_AND_RETURN_IF_ASYNC_PENDING();
@@ -3080,9 +3082,9 @@ nsresult nsNavHistoryFolderResultNode::OnItemAdded(
   // Check for query URIs, which are bookmarks, but treated as containers
   // in results and views.
   bool isQuery = false;
+  nsAutoCString itemURISpec;
   if (aItemType == nsINavBookmarksService::TYPE_BOOKMARK) {
     NS_ASSERTION(aURI, "Got a null URI when we are a bookmark?!");
-    nsAutoCString itemURISpec;
     rv = aURI->GetSpec(itemURISpec);
     NS_ENSURE_SUCCESS(rv, rv);
     isQuery = IsQueryURI(itemURISpec);
@@ -3104,11 +3106,30 @@ nsresult nsNavHistoryFolderResultNode::OnItemAdded(
 
   RefPtr<nsNavHistoryResultNode> node;
   if (aItemType == nsINavBookmarksService::TYPE_BOOKMARK) {
-    nsNavHistory* history = nsNavHistory::GetHistoryService();
-    NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-    rv = history->BookmarkIdToResultNode(aItemId, mOptions,
-                                         getter_AddRefs(node));
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (isQuery) {
+      nsNavHistory* history = nsNavHistory::GetHistoryService();
+      NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
+      rv = history->QueryRowToResult(aItemId, aGUID, itemURISpec, aTitle,
+                                     aVisitCount, aLastVisitDate,
+                                     getter_AddRefs(node));
+      NS_ENSURE_SUCCESS(rv, rv);
+    } else {
+      node = new nsNavHistoryResultNode(itemURISpec, aTitle, aVisitCount,
+                                        aLastVisitDate);
+      node->mItemId = aItemId;
+      node->mBookmarkGuid = aGUID;
+    }
+
+    if (aTags.IsVoid()) {
+      node->mTags.SetIsVoid(true);
+    } else {
+      node->mTags.Assign(aTags);
+    }
+
+    node->mDateAdded = aDateAdded;
+    node->mLastModified = aDateAdded;
+    node->mFrecency = aFrecency;
+    node->mHidden = aHidden;
   } else if (aItemType == nsINavBookmarksService::TYPE_FOLDER) {
     nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
     NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
@@ -3485,10 +3506,26 @@ nsresult nsNavHistoryFolderResultNode::OnItemMoved(
                   aGUID, aOldParentGUID, aSource);
   }
   if (aNewParentGUID.Equals(mTargetFolderGuid)) {
+    nsAutoCString title;
+    nsAutoString tags;
+    int64_t frecency = 0;
+    bool hidden = false;
+    uint32_t visitCount = 0;
+    PRTime lastVisitDate = 0;
+    if (node) {
+      title.Assign(node->mTitle);
+      tags.Assign(node->mTags);
+      frecency = node->mFrecency;
+      hidden = node->mHidden;
+      visitCount = node->mAccessCount;
+      lastVisitDate = node->mTime;
+    }
+
     OnItemAdded(
         aItemId, mTargetFolderItemId, aNewIndex, aItemType, itemURI,
         RoundedPRNow(),  // This is a dummy dateAdded, not the real value.
-        aGUID, aNewParentGUID, aSource);
+        aGUID, aNewParentGUID, aSource, title, tags, frecency, hidden,
+        visitCount, lastVisitDate);
   }
 
   return NS_OK;
@@ -4209,7 +4246,12 @@ void nsNavHistoryResult::HandlePlacesEvent(const PlacesEventSequence& aEvents) {
             item->mParentGuid,
             OnItemAdded(item->mId, item->mParentId, item->mIndex,
                         item->mItemType, uri, item->mDateAdded * 1000,
-                        item->mGuid, item->mParentGuid, item->mSource));
+                        item->mGuid, item->mParentGuid, item->mSource,
+                        NS_ConvertUTF16toUTF8(item->mTitle), item->mTags,
+                        item->mFrecency, item->mHidden, item->mVisitCount,
+                        item->mLastVisitDate.IsNull()
+                            ? 0
+                            : item->mLastVisitDate.Value() * 1000));
         ENUMERATE_HISTORY_OBSERVERS(
             OnItemAdded(item->mId, item->mParentId, item->mIndex,
                         item->mItemType, uri, item->mDateAdded * 1000,

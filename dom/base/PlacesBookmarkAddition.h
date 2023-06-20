@@ -27,11 +27,22 @@ class PlacesBookmarkAddition final : public PlacesBookmark {
     event->mIndex = aInitDict.mIndex;
     event->mUrl = aInitDict.mUrl;
     event->mTitle = aInitDict.mTitle;
+    event->mTags = aInitDict.mTags;
     event->mDateAdded = aInitDict.mDateAdded;
     event->mGuid = aInitDict.mGuid;
     event->mParentGuid = aInitDict.mParentGuid;
     event->mSource = aInitDict.mSource;
     event->mIsTagging = aInitDict.mIsTagging;
+    event->mFrecency = aInitDict.mFrecency;
+    event->mHidden = aInitDict.mHidden;
+    event->mVisitCount = aInitDict.mVisitCount;
+
+    if (!aInitDict.mLastVisitDate.IsNull()) {
+      event->mLastVisitDate.SetValue(aInitDict.mLastVisitDate.Value());
+    } else {
+      event->mLastVisitDate.SetNull();
+    }
+
     return event.forget();
   }
 
@@ -46,11 +57,21 @@ class PlacesBookmarkAddition final : public PlacesBookmark {
 
   int32_t Index() { return mIndex; }
   void GetTitle(nsString& aTitle) { aTitle = mTitle; }
+  void GetTags(nsString& aTags) { aTags = mTags; }
   uint64_t DateAdded() { return mDateAdded; }
+  uint64_t Frecency() { return mFrecency; }
+  bool Hidden() { return mHidden; }
+  uint32_t VisitCount() { return mVisitCount; }
+  Nullable<uint64_t> GetLastVisitDate() { return mLastVisitDate; }
 
   int32_t mIndex;
   nsString mTitle;
+  nsString mTags;
   uint64_t mDateAdded;
+  int64_t mFrecency;
+  bool mHidden;
+  uint32_t mVisitCount;
+  Nullable<uint64_t> mLastVisitDate;
 
  private:
   ~PlacesBookmarkAddition() = default;
