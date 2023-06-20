@@ -10,30 +10,56 @@ name: Flatpak Build
 on:
   workflow_dispatch:
     inputs:
-      tarball-url:
+      tarball-url-x86-64:
         type: string
         required: true
-        description: URL of tarball
+        description: URL of tarball (x86_64)
+      tarball-url-aarch64:
+        type: string
+        required: true
+        description: URL of tarball (aarch64)
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        arch: ["x86_64", "aarch64"]
+
+    env:
+      FLATPAK_ARCH: ${{ matrix.arch }}
 
     steps:
     - name: Package 📦
       run: |
+        sudo apt update
         sudo apt install flatpak aria2 fakeroot
 
-        aria2c '${{ inputs.tarball-url }}' -o floorp.tar.bz2
-
-        flatpak remote-add --user --if-not-exists --from flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-        flatpak install --user -y flathub org.mozilla.firefox.BaseApp//22.08 --no-deps
-        
         mkdir ./flatpak_build
         mkdir ./flatpak_build/tmp
         mkdir ./flatpak_build/public
 
-        cp -r ~/.local/share/flatpak/app/org.mozilla.firefox.BaseApp/current/active/files/* ./flatpak_build/tmp/
+        sudo flatpak remote-add --if-not-exists --from flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+        flatpak remote-add --user --if-not-exists --from flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+
+        if [[ "$FLATPAK_ARCH" == "x86_64" ]]; then
+          aria2c '${{ inputs.tarball-url-x86-64 }}' -o floorp.tar.bz2
+          flatpak install --user -y flathub org.mozilla.firefox.BaseApp//22.08 --no-deps
+          cp -r ~/.local/share/flatpak/app/org.mozilla.firefox.BaseApp/current/active/files/* ./flatpak_build/tmp/
+        elif [[ "$FLATPAK_ARCH" == "aarch64" ]]; then
+          sudo apt install qemu-system-arm qemu-user-static flatpak-builder
+
+          aria2c '${{ inputs.tarball-url-aarch64 }}' -o floorp.tar.bz2
+          sudo flatpak install -y flathub org.freedesktop.Sdk/aarch64/22.08
+          sudo flatpak install -y flathub org.freedesktop.Platform/aarch64/22.08
+
+          git clone https://github.com/flathub/org.mozilla.firefox.BaseApp --depth 1 --branch branch/22.08 --recursive
+          cd org.mozilla.firefox.BaseApp
+          flatpak-builder --arch=aarch64 build-dir org.mozilla.firefox.BaseApp.json
+          cp -r ./build-dir/files/* ../flatpak_build/tmp/
+          cd ..
+        fi
+
         rm ./flatpak_build/tmp/manifest.json
         mkdir -p ./flatpak_build/tmp/lib/ffmpeg
         ls ./flatpak_build/tmp
@@ -76,9 +102,14 @@ jobs:
     - name: Publish 🎁
       uses: actions/upload-artifact@v3
       with:
-        name: floorp-linux-flatpak-x64
+        name: floorp-linux-flatpak-${{ matrix.arch }}
         path: flatpak_build/public
 
+  screenshot:
+    runs-on: ubuntu-22.04
+    needs: build
+
+    steps:
     - name: Take a screenshot 📸
       run: |
         curl -L \
