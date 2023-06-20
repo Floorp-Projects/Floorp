@@ -399,9 +399,10 @@ class CrashInfo(object):
                     signature = self._generate_signature(json_output)
 
                     # Strip parameters from signature
-                    pmatch = re.search(r"(.*)\(.*\)", signature)
-                    if pmatch:
-                        signature = pmatch.group(1)
+                    if signature:
+                        pmatch = re.search(r"(.*)\(.*\)", signature)
+                        if pmatch:
+                            signature = pmatch.group(1)
 
         else:
             if not self.stackwalk_binary:
