@@ -43,6 +43,8 @@
     <string name="mozac_feature_prompts_content_description_input_label">Ознака за попуњавање поља за унос текста</string>
     <!-- Title of a color picker dialog, this text is shown above a color picker. -->
     <string name="mozac_feature_prompts_choose_a_color">Изаберите боју</string>
+    <!-- Title of the Identity Credential provider dialog choose. -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_provider">Изаберите добављача за пријаву</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_allow">Дозволи</string>
     <!-- Text of a negative button in dialog requesting to open a new window. -->
@@ -117,8 +119,6 @@
     <string name="mozac_feature_prompts_save_credit_card_prompt_body">Број картице биће шифрован. Безбедносни код неће бити сачуван.</string>
 
     <!-- Address Autofill -->
-    <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
-    <string moz:removedIn="104" name="mozac_feature_prompts_select_address" tools:ignore="UnusedResources">Изабери адресе</string>
     <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
     <string name="mozac_feature_prompts_select_address_2">Изабери адресу</string>
     <!-- Content description for expanding the select addresses options in the select address prompt. -->

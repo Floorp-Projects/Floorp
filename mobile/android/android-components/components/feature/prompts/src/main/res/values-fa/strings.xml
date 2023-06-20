@@ -43,6 +43,8 @@
     <string name="mozac_feature_prompts_content_description_input_label">برچسب برای وارد کردن یک خانهٔ ورودی متنی</string>
     <!-- Title of a color picker dialog, this text is shown above a color picker. -->
     <string name="mozac_feature_prompts_choose_a_color">یک رنگ انتخاب کنید</string>
+    <!-- Title of the Identity Credential provider dialog choose. -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_provider">انتخاب یک فراهم‌کنندهٔ ورود</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_allow">اجازه دادن</string>
     <!-- Text of a negative button in dialog requesting to open a new window. -->

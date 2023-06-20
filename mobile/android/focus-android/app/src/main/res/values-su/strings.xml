@@ -352,6 +352,15 @@
     <!-- In-app link (in settings) to Focus privacy notice. -->
     <string name="preference_privacy_notice">Iber Privasi</string>
 
+    <!-- In-app link (in settings) to Focus licensing information. -->
+    <string name="preference_licensing_info">Émbaran lisénsi</string>
+
+    <!-- Link to Focus licensing information from other libraries that we use. -->
+    <string name="preference_libraries_we_use">Pabukon anu dipaké</string>
+
+    <!-- Open Source Licenses page title. The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s | Pabukon OSS</string>
+
     <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
     <string name="preference_about">Ngeunaan %1$s</string>
 
@@ -481,7 +490,10 @@
 
 
 
-  <string name="error_hostLookup_title">Server teu kapanggih</string>
+  <!-- Snackbar that will be displayed after a website has been added to shortcuts. -->
+    <string name="snackbar_added_to_shortcuts">Ditambahkeun ka takulan!</string>
+
+    <string name="error_hostLookup_title">Server teu kapanggih</string>
 
 
 
