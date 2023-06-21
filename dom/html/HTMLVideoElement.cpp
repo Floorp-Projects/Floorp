@@ -258,7 +258,8 @@ uint32_t HTMLVideoElement::MozParsedFrames() const {
     return 0;
   }
 
-  if (OwnerDoc()->ShouldResistFingerprinting(RFPTarget::Unknown)) {
+  if (OwnerDoc()->ShouldResistFingerprinting(
+          RFPTarget::VideoElementMozFrames)) {
     return nsRFPService::GetSpoofedTotalFrames(TotalPlayTime());
   }
 
@@ -271,7 +272,8 @@ uint32_t HTMLVideoElement::MozDecodedFrames() const {
     return 0;
   }
 
-  if (OwnerDoc()->ShouldResistFingerprinting(RFPTarget::Unknown)) {
+  if (OwnerDoc()->ShouldResistFingerprinting(
+          RFPTarget::VideoElementMozFrames)) {
     return nsRFPService::GetSpoofedTotalFrames(TotalPlayTime());
   }
 
@@ -284,7 +286,8 @@ uint32_t HTMLVideoElement::MozPresentedFrames() {
     return 0;
   }
 
-  if (OwnerDoc()->ShouldResistFingerprinting(RFPTarget::Unknown)) {
+  if (OwnerDoc()->ShouldResistFingerprinting(
+          RFPTarget::VideoElementMozFrames)) {
     return nsRFPService::GetSpoofedPresentedFrames(TotalPlayTime(),
                                                    VideoWidth(), VideoHeight());
   }
@@ -298,7 +301,8 @@ uint32_t HTMLVideoElement::MozPaintedFrames() {
     return 0;
   }
 
-  if (OwnerDoc()->ShouldResistFingerprinting(RFPTarget::Unknown)) {
+  if (OwnerDoc()->ShouldResistFingerprinting(
+          RFPTarget::VideoElementMozFrames)) {
     return nsRFPService::GetSpoofedPresentedFrames(TotalPlayTime(),
                                                    VideoWidth(), VideoHeight());
   }
@@ -310,8 +314,8 @@ uint32_t HTMLVideoElement::MozPaintedFrames() {
 double HTMLVideoElement::MozFrameDelay() {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
 
-  if (!IsVideoStatsEnabled() ||
-      OwnerDoc()->ShouldResistFingerprinting(RFPTarget::Unknown)) {
+  if (!IsVideoStatsEnabled() || OwnerDoc()->ShouldResistFingerprinting(
+                                    RFPTarget::VideoElementMozFrameDelay)) {
     return 0.0;
   }
 
@@ -348,7 +352,8 @@ HTMLVideoElement::GetVideoPlaybackQuality() {
     }
 
     if (mDecoder) {
-      if (OwnerDoc()->ShouldResistFingerprinting(RFPTarget::Unknown)) {
+      if (OwnerDoc()->ShouldResistFingerprinting(
+              RFPTarget::VideoElementPlaybackQuality)) {
         totalFrames = nsRFPService::GetSpoofedTotalFrames(TotalPlayTime());
         droppedFrames = nsRFPService::GetSpoofedDroppedFrames(
             TotalPlayTime(), VideoWidth(), VideoHeight());

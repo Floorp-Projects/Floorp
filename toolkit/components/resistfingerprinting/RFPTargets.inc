@@ -45,6 +45,13 @@ ITEM_VALUE(WindowInnerScreenXY,         1llu << 27)
 ITEM_VALUE(ScreenPixelDepth,            1llu << 28)
 ITEM_VALUE(ScreenRect,                  1llu << 29)
 ITEM_VALUE(ScreenAvailRect,             1llu << 30)
+// HTMLVideoElement
+// mozParsedFrames, mozDecodedFrames, mozPresentedFrames, mozPaintedFrames
+ITEM_VALUE(VideoElementMozFrames,       1llu << 31)
+// mozFrameDelay
+ITEM_VALUE(VideoElementMozFrameDelay,   1llu << 32)
+// getVideoPlaybackQuality()
+ITEM_VALUE(VideoElementPlaybackQuality, 1llu << 33)
 
 // !!! Don't forget to update kDefaultFingerintingProtections in nsRFPService.cpp
 // if necessary.
