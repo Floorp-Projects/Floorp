@@ -8,6 +8,10 @@ LOCAL_INCLUDES += [
     "/third_party/highway/",
 ]
 
+if CONFIG["CPU_ARCH"] == "ppc64" and CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["TOOLCHAIN_MISS_ASM_HWCAP_H"] = True
+
 SOURCES += [
     "/third_party/highway/hwy/aligned_allocator.cc",
     "/third_party/highway/hwy/contrib/image/image.cc",
