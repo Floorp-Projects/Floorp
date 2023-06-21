@@ -384,6 +384,13 @@ bool FormatCalendarAnnotation(JSContext* cx, JSStringBuilder& result,
  */
 JSString* CalendarToString(JSContext* cx, JS::Handle<JSObject*> calendar);
 
+/**
+ * Return true when accessing the calendar fields |fieldNames| can be optimized.
+ * Otherwise returns false.
+ */
+bool IsBuiltinAccess(JSContext* cx, JS::Handle<CalendarObject*> calendar,
+                     std::initializer_list<CalendarField> fieldNames);
+
 } /* namespace js::temporal */
 
 #endif /* builtin_temporal_Calendar_h */

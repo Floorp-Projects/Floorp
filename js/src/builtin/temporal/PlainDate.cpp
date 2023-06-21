@@ -1753,6 +1753,40 @@ static bool PlainDate_toPlainMonthDay(JSContext* cx, const CallArgs& args) {
   // Step 3.
   Rooted<JSObject*> calendar(cx, temporalDate->calendar());
 
+  // Example for the optimisation described in TemporalFields.cpp
+
+  // Optimization for built-in objects.
+  do {
+    if (!calendar->is<CalendarObject>()) {
+      break;
+    }
+    auto builtinCalendar = calendar.as<CalendarObject>();
+
+    // Step 4.
+    static constexpr std::initializer_list<CalendarField> fieldNames = {
+        CalendarField::Day, CalendarField::MonthCode};
+
+    // Step 5.
+    if (!IsBuiltinAccess(cx, builtinCalendar, fieldNames)) {
+      break;
+    }
+    if (!IsBuiltinAccess(cx, temporalDate, fieldNames)) {
+      break;
+    }
+
+    // Step 6.
+    auto date = ToPlainDate(temporalDate);
+    auto result = PlainDate{1972 /* referenceISOYear */, date.month, date.day};
+
+    auto* obj = CreateTemporalMonthDay(cx, result, calendar);
+    if (!obj) {
+      return false;
+    }
+
+    args.rval().setObject(*obj);
+    return true;
+  } while (false);
+
   // Step 4.
   JS::RootedVector<PropertyKey> fieldNames(cx);
   if (!CalendarFields(cx, calendar,
@@ -2455,3 +2489,71 @@ const ClassSpec PlainDateObject::classSpec_ = {
     nullptr,
     ClassSpec::DontDefineConstructor,
 };
+
+struct PlainDateNameAndNative final {
+  PropertyName* name;
+  JSNative native;
+};
+
+static PlainDateNameAndNative GetPlainDateNameAndNative(
+    JSContext* cx, CalendarField fieldName) {
+  switch (fieldName) {
+    case CalendarField::Year:
+      return {cx->names().year, PlainDate_year};
+    case CalendarField::Month:
+      return {cx->names().month, PlainDate_month};
+    case CalendarField::MonthCode:
+      return {cx->names().monthCode, PlainDate_monthCode};
+    case CalendarField::Day:
+      return {cx->names().day, PlainDate_day};
+    case CalendarField::Hour:
+    case CalendarField::Minute:
+    case CalendarField::Second:
+    case CalendarField::Millisecond:
+    case CalendarField::Microsecond:
+    case CalendarField::Nanosecond:
+      break;
+  }
+  MOZ_CRASH("invalid temporal field name");
+}
+
+bool js::temporal::IsBuiltinAccess(
+    JSContext* cx, JS::Handle<PlainDateObject*> date,
+    std::initializer_list<CalendarField> fieldNames) {
+  // Don't optimize when the object has any own properties which may shadow the
+  // built-in methods.
+  if (date->shape()->propMapLength() > 0) {
+    return false;
+  }
+
+  JSObject* proto = cx->global()->maybeGetPrototype(JSProto_PlainDate);
+
+  // Don't attempt to optimize when the class isn't yet initialized.
+  if (!proto) {
+    return false;
+  }
+
+  // Don't optimize when the prototype isn't the built-in prototype.
+  if (date->staticPrototype() != proto) {
+    return false;
+  }
+
+  auto* nproto = &proto->as<NativeObject>();
+  for (auto fieldName : fieldNames) {
+    auto [name, native] = GetPlainDateNameAndNative(cx, fieldName);
+    auto prop = nproto->lookupPure(name);
+
+    // Return if the property isn't a data property.
+    if (!prop || !prop->isDataProperty()) {
+      return false;
+    }
+
+    // Return if the property isn't the initial method.
+    if (!IsNativeFunction(nproto->getSlot(prop->slot()), native)) {
+      return false;
+    }
+  }
+
+  // Success! The access can be optimized.
+  return true;
+}
