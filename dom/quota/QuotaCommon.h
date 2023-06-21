@@ -432,11 +432,26 @@ class NotNull;
 
 #define QM_PROPAGATE Err(tryTempError)
 
-#define QM_IPC_FAIL(actor)                                                  \
-  [&_actor = *actor](const char* aFunc, const char* aExpr) {                \
-    return Err(                                                             \
-        mozilla::ipc::IPCResult::Fail(WrapNotNull(&_actor), aFunc, aExpr)); \
+namespace mozilla::dom::quota::detail {
+
+struct IpcFailCustomRetVal {
+  explicit IpcFailCustomRetVal(
+      mozilla::NotNull<mozilla::ipc::IProtocol*> aActor)
+      : mActor(aActor) {}
+
+  template <size_t NFunc, size_t NExpr>
+  auto operator()(const char (&aFunc)[NFunc],
+                  const char (&aExpr)[NExpr]) const {
+    return mozilla::Err(mozilla::ipc::IPCResult::Fail(mActor, aFunc, aExpr));
   }
+
+  mozilla::NotNull<mozilla::ipc::IProtocol*> mActor;
+};
+
+}  // namespace mozilla::dom::quota::detail
+
+#define QM_IPC_FAIL(actor) \
+  mozilla::dom::quota::detail::IpcFailCustomRetVal(mozilla::WrapNotNull(actor))
 
 #ifdef DEBUG
 #  define QM_ASSERT_UNREACHABLE                                               \
@@ -1478,13 +1493,13 @@ Nothing HandleErrorWithCleanupReturnNothing(const char* aExpr, const T& aRv,
   return Nothing();
 }
 
-template <typename T, typename CustomRetVal>
-auto HandleCustomRetVal(const char* aFunc, const char* aExpr, const T& aRv,
-                        CustomRetVal&& aCustomRetVal) {
-  if constexpr (std::is_invocable<CustomRetVal, const char*,
-                                  const char*>::value) {
-    return aCustomRetVal(aFunc, aExpr);
-  } else if constexpr (std::is_invocable<CustomRetVal, const char*,
+template <size_t NFunc, size_t NExpr, typename T, typename CustomRetVal>
+auto HandleCustomRetVal(const char (&aFunc)[NFunc], const char (&aExpr)[NExpr],
+                        const T& aRv, CustomRetVal&& aCustomRetVal) {
+  if constexpr (std::is_invocable<CustomRetVal, const char[NFunc],
+                                  const char[NExpr]>::value) {
+    return std::forward<CustomRetVal>(aCustomRetVal)(aFunc, aExpr);
+  } else if constexpr (std::is_invocable<CustomRetVal, const char[NFunc],
                                          const T&>::value) {
     return aCustomRetVal(aFunc, aRv);
   } else if constexpr (std::is_invocable<CustomRetVal, const T&>::value) {
