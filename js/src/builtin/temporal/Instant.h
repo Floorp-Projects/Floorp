@@ -54,6 +54,49 @@ inline Instant ToInstant(const InstantObject* instant) {
   return {instant->seconds(), instant->nanoseconds()};
 }
 
+/**
+ * IsValidEpochNanoseconds ( epochNanoseconds )
+ */
+bool IsValidEpochNanoseconds(const JS::BigInt* epochNanoseconds);
+
+/**
+ * IsValidEpochNanoseconds ( epochNanoseconds )
+ */
+bool IsValidEpochInstant(const Instant& instant);
+
+/**
+ * Return true if the input is within the valid instant difference limits.
+ */
+bool IsValidInstantDifference(const Instant& ns);
+
+/**
+ * Return true if the input is within the valid instant difference limits.
+ */
+bool IsValidInstantDifference(const JS::BigInt* ns);
+
+/**
+ * Convert a BigInt to an instant. The input must be a valid epoch nanoseconds
+ * value.
+ */
+Instant ToInstant(const JS::BigInt* epochNanoseconds);
+
+/**
+ * Convert a BigInt to an instant difference. The input must be a valid epoch
+ * nanoseconds difference value.
+ */
+Instant ToInstantDifference(const JS::BigInt* epochNanoseconds);
+
+/**
+ * Convert an instant to a BigInt. The input must be a valid epoch instant.
+ */
+JS::BigInt* ToEpochNanoseconds(JSContext* cx, const Instant& instant);
+
+/**
+ * Convert an instant difference to a BigInt. The input must be a valid epoch
+ * instant difference.
+ */
+JS::BigInt* ToEpochDifferenceNanoseconds(JSContext* cx, const Instant& instant);
+
 } /* namespace js::temporal */
 
 #endif /* builtin_temporal_Instant_h */
