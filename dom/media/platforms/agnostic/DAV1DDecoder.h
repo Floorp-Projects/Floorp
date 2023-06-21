@@ -56,6 +56,7 @@ class DAV1DDecoder final : public MediaDataDecoder,
   const RefPtr<layers::ImageContainer> mImageContainer;
   const RefPtr<layers::KnowsCompositor> mImageAllocator;
   const Maybe<TrackingId> mTrackingId;
+  const bool mLowLatency;
   PerformanceRecorderMulti<DecodeStage> mPerformanceRecorder;
 
   // Keep the buffers alive until dav1d

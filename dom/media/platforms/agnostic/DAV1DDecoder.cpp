@@ -65,13 +65,18 @@ DAV1DDecoder::DAV1DDecoder(const CreateDecoderParams& aParams)
           "Dav1dDecoder")),
       mImageContainer(aParams.mImageContainer),
       mImageAllocator(aParams.mKnowsCompositor),
-      mTrackingId(aParams.mTrackingId) {}
+      mTrackingId(aParams.mTrackingId),
+      mLowLatency(
+          aParams.mOptions.contains(CreateDecoderParams::Option::LowLatency)) {}
 
 DAV1DDecoder::~DAV1DDecoder() = default;
 
 RefPtr<MediaDataDecoder::InitPromise> DAV1DDecoder::Init() {
   Dav1dSettings settings;
   dav1d_default_settings(&settings);
+  if (mLowLatency) {
+    settings.max_frame_delay = 1;
+  }
   size_t decoder_threads = 2;
   if (mInfo.mDisplay.width >= 2048) {
     decoder_threads = 8;
