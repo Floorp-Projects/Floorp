@@ -124,6 +124,29 @@ struct TimeZoneOffset final {
 };
 
 /**
+ * ParseTimeZoneOffsetString ( offsetString )
+ */
+static int64_t ParseTimeZoneOffsetString(const TimeZoneOffset& offset) {
+  constexpr int64_t nanoPerSec = 1'000'000'000;
+
+  MOZ_ASSERT(offset.sign == -1 || offset.sign == +1);
+  MOZ_ASSERT(0 <= offset.hour && offset.hour < 24);
+  MOZ_ASSERT(0 <= offset.minute && offset.minute < 60);
+  MOZ_ASSERT(0 <= offset.second && offset.second < 60);
+  MOZ_ASSERT(0 <= offset.fractionalPart && offset.fractionalPart < nanoPerSec);
+
+  // sign × (((hours × 60 + minutes) × 60 + seconds) × 10^9 + nanoseconds).
+  int64_t seconds = (offset.hour * 60 + offset.minute) * 60 + offset.second;
+  int64_t nanos = (seconds * nanoPerSec) + offset.fractionalPart;
+  int64_t result = offset.sign * nanos;
+
+  MOZ_ASSERT(std::abs(result) < ToNanoseconds(TemporalUnit::Day),
+             "time zone offset is less than 24:00 hours");
+
+  return result;
+}
+
+/**
  * Struct to hold time zone annotations.
  */
 struct TimeZoneAnnotation final {
@@ -748,6 +771,8 @@ class TemporalParser final {
   mozilla::Result<ZonedDateTimeString, ParserError>
   parseTemporalInstantString();
 
+  mozilla::Result<TimeZoneOffset, ParserError> parseTimeZoneOffsetString();
+
   mozilla::Result<ZonedDateTimeString, ParserError>
   parseTemporalCalendarString();
 
@@ -1232,6 +1257,65 @@ TemporalParser<CharT>::parseTemporalInstantString() {
   }
 
   return result;
+}
+
+template <typename CharT>
+mozilla::Result<TimeZoneOffset, ParserError>
+TemporalParser<CharT>::parseTimeZoneOffsetString() {
+  auto offset = utcOffset();
+  if (offset.isErr()) {
+    return offset.propagateErr();
+  }
+  if (!reader_.atEnd()) {
+    return mozilla::Err(JSMSG_TEMPORAL_PARSER_GARBAGE_AFTER_INPUT);
+  }
+  return offset.unwrap();
+}
+
+/**
+ * ParseTimeZoneOffsetString ( isoString )
+ */
+template <typename CharT>
+static auto ParseTimeZoneOffsetString(mozilla::Span<const CharT> str) {
+  TemporalParser<CharT> parser(str);
+  return parser.parseTimeZoneOffsetString();
+}
+
+/**
+ * ParseTimeZoneOffsetString ( isoString )
+ */
+static auto ParseTimeZoneOffsetString(Handle<JSLinearString*> str) {
+  JS::AutoCheckCannotGC nogc;
+  if (str->hasLatin1Chars()) {
+    return ParseTimeZoneOffsetString<Latin1Char>(str->latin1Range(nogc));
+  }
+  return ParseTimeZoneOffsetString<char16_t>(str->twoByteRange(nogc));
+}
+
+/**
+ * ParseTimeZoneOffsetString ( isoString )
+ */
+bool js::temporal::ParseTimeZoneOffsetString(JSContext* cx,
+                                             Handle<JSString*> str,
+                                             int64_t* result) {
+  // Step 1. (Not applicable in our implementation.)
+
+  Rooted<JSLinearString*> linear(cx, str->ensureLinear(cx));
+  if (!linear) {
+    return false;
+  }
+
+  // Step 2.
+  auto parseResult = ::ParseTimeZoneOffsetString(linear);
+  if (parseResult.isErr()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              parseResult.unwrapErr());
+    return false;
+  }
+
+  // Steps 3-13.
+  *result = ParseTimeZoneOffsetString(parseResult.unwrap());
+  return true;
 }
 
 template <typename CharT>

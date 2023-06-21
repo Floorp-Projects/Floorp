@@ -16,6 +16,12 @@ class JSLinearString;
 namespace js::temporal {
 
 /**
+ * ParseTimeZoneOffsetString ( isoString )
+ */
+bool ParseTimeZoneOffsetString(JSContext* cx, JS::Handle<JSString*> str,
+                               int64_t* result);
+
+/**
  * ParseTemporalCalendarString ( isoString )
  */
 JSLinearString* ParseTemporalCalendarString(JSContext* cx,

@@ -15,10 +15,15 @@
 #include "js/Value.h"
 #include "vm/NativeObject.h"
 
+class JSLinearString;
 struct JSClassOps;
 
 namespace js {
 struct ClassSpec;
+}
+
+namespace mozilla::intl {
+class TimeZone;
 }
 
 namespace js::temporal {
@@ -28,7 +33,33 @@ class TimeZoneObject : public NativeObject {
   static const JSClass class_;
   static const JSClass& protoClass_;
 
-  static constexpr uint32_t SLOT_COUNT = 0;
+  static constexpr uint32_t IDENTIFIER_SLOT = 0;
+  static constexpr uint32_t OFFSET_NANOSECONDS_SLOT = 1;
+  static constexpr uint32_t INTL_TIMEZONE_SLOT = 2;
+  static constexpr uint32_t SLOT_COUNT = 3;
+
+  // Estimated memory use for intl::TimeZone (see IcuMemoryUsage).
+  static constexpr size_t EstimatedMemoryUse = 6840;
+
+  JSString* identifier() const {
+    return getFixedSlot(IDENTIFIER_SLOT).toString();
+  }
+
+  const auto& offsetNanoseconds() const {
+    return getFixedSlot(OFFSET_NANOSECONDS_SLOT);
+  }
+
+  mozilla::intl::TimeZone* getTimeZone() const {
+    const auto& slot = getFixedSlot(INTL_TIMEZONE_SLOT);
+    if (slot.isUndefined()) {
+      return nullptr;
+    }
+    return static_cast<mozilla::intl::TimeZone*>(slot.toPrivate());
+  }
+
+  void setTimeZone(mozilla::intl::TimeZone* timeZone) {
+    setFixedSlot(INTL_TIMEZONE_SLOT, JS::PrivateValue(timeZone));
+  }
 
  private:
   static const JSClassOps classOps_;
@@ -57,6 +88,23 @@ JSString* CanonicalizeTimeZoneName(JSContext* cx,
  */
 JSString* ValidateAndCanonicalizeTimeZoneName(JSContext* cx,
                                               JS::Handle<JSString*> timeZone);
+
+/**
+ * CreateTemporalTimeZone ( identifier [ , newTarget ] )
+ */
+TimeZoneObject* CreateTemporalTimeZone(JSContext* cx,
+                                       JS::Handle<JSString*> identifier);
+
+/**
+ * CreateTemporalTimeZone ( identifier [ , newTarget ] )
+ */
+TimeZoneObject* CreateTemporalTimeZoneUTC(JSContext* cx);
+
+/**
+ * FormatTimeZoneOffsetString ( offsetNanoseconds )
+ */
+JSString* FormatTimeZoneOffsetString(JSContext* cx, int64_t offsetNanoseconds);
+
 
 } /* namespace js::temporal */
 
