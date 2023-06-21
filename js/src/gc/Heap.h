@@ -771,7 +771,8 @@ struct alignas(gc::CellAlignBytes) NurseryCellHeader {
     return uintptr_t(site) | uintptr_t(kind);
   }
 
-  inline NurseryCellHeader(AllocSite* site, JS::TraceKind kind);
+  inline NurseryCellHeader(AllocSite* site, JS::TraceKind kind)
+      : allocSiteAndTraceKind(MakeValue(site, kind)) {}
 
   AllocSite* allocSite() const {
     return reinterpret_cast<AllocSite*>(allocSiteAndTraceKind & ~TraceKindMask);
