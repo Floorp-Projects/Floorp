@@ -59,6 +59,81 @@ using namespace js;
 using namespace js::temporal;
 
 /**
+ * GetOption ( options, property, type, values, default )
+ *
+ * GetOption specialization when `type=string`. Default value handling must
+ * happen in the caller, so we don't provide the `default` parameter here.
+ */
+static bool GetStringOption(JSContext* cx, Handle<JSObject*> options,
+                            Handle<PropertyName*> property,
+                            MutableHandle<JSString*> string) {
+  // Step 1.
+  Rooted<Value> value(cx);
+  if (!GetProperty(cx, options, options, property, &value)) {
+    return false;
+  }
+
+  // Step 2. (Caller should fill in the fallback.)
+  if (value.isUndefined()) {
+    return true;
+  }
+
+  // Steps 3-4. (Not applicable when type=string)
+
+  // Step 5.
+  string.set(JS::ToString(cx, value));
+  if (!string) {
+    return false;
+  }
+
+  // Step 6. (Not applicable in our implementation)
+
+  // Step 7.
+  return true;
+}
+
+/**
+ * ToCalendarNameOption ( normalizedOptions )
+ */
+bool js::temporal::ToCalendarNameOption(JSContext* cx,
+                                        Handle<JSObject*> options,
+                                        CalendarOption* result) {
+  // Step 1.
+  Rooted<JSString*> calendarName(cx);
+  if (!GetStringOption(cx, options, cx->names().calendarName, &calendarName)) {
+    return false;
+  }
+
+  // Caller should fill in the fallback.
+  if (!calendarName) {
+    return true;
+  }
+
+  JSLinearString* linear = calendarName->ensureLinear(cx);
+  if (!linear) {
+    return false;
+  }
+
+  if (StringEqualsLiteral(linear, "auto")) {
+    *result = CalendarOption::Auto;
+  } else if (StringEqualsLiteral(linear, "always")) {
+    *result = CalendarOption::Always;
+  } else if (StringEqualsLiteral(linear, "never")) {
+    *result = CalendarOption::Never;
+  } else if (StringEqualsLiteral(linear, "critical")) {
+    *result = CalendarOption::Critical;
+  } else {
+    if (auto chars = QuoteString(cx, linear, '"')) {
+      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                               JSMSG_INVALID_OPTION_VALUE, "calendarName",
+                               chars.get());
+    }
+    return false;
+  }
+  return true;
+}
+
+/**
  * ToPositiveIntegerWithTruncation ( argument )
  */
 bool js::temporal::ToPositiveIntegerWithTruncation(JSContext* cx,
