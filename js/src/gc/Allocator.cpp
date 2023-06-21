@@ -115,7 +115,8 @@ MOZ_NEVER_INLINE void* CellAllocator::RetryNurseryAlloc(JSContext* cx,
   MOZ_ASSERT(cx->zone()->allocKindInNursery(traceKind));
 
   Nursery& nursery = cx->nursery();
-  if (nursery.handleAllocationFailure()) {
+  JS::GCReason reason = nursery.handleAllocationFailure();
+  if (reason == JS::GCReason::NO_REASON) {
     void* ptr = nursery.tryAllocateCell(site, thingSize, traceKind);
     MOZ_ASSERT(ptr);
     return ptr;
@@ -131,10 +132,6 @@ MOZ_NEVER_INLINE void* CellAllocator::RetryNurseryAlloc(JSContext* cx,
   }
 
   if (!cx->suppressGC) {
-    JS::GCReason reason = JS::GCReason::OUT_OF_NURSERY;
-    if (nursery.minorGCRequested()) {
-      reason = nursery.minorGCTriggerReason();
-    }
     cx->runtime()->gc.minorGC(reason);
 
     // Exceeding gcMaxBytes while tenuring can disable the Nursery.

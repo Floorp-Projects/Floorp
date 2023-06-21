@@ -532,7 +532,7 @@ void* js::Nursery::allocateCell(gc::AllocSite* site, size_t size,
     return ptr;
   }
 
-  if (!handleAllocationFailure()) {
+  if (handleAllocationFailure() != JS::GCReason::NO_REASON) {
     return nullptr;
   }
 
@@ -579,7 +579,7 @@ inline void* js::Nursery::allocate(size_t size) {
     return ptr;
   }
 
-  if (!handleAllocationFailure()) {
+  if (handleAllocationFailure() != JS::GCReason::NO_REASON) {
     return nullptr;
   }
 
@@ -610,14 +610,18 @@ inline void* js::Nursery::tryAllocate(size_t size) {
   return ptr;
 }
 
-MOZ_NEVER_INLINE bool Nursery::handleAllocationFailure() {
+MOZ_NEVER_INLINE JS::GCReason Nursery::handleAllocationFailure() {
   if (minorGCRequested()) {
     // If a minor GC was requested then fail the allocation. The collection is
     // then run in GCRuntime::tryNewNurseryCell.
-    return false;
+    return minorGCTriggerReason_;
   }
 
-  return moveToNextChunk();
+  if (!moveToNextChunk()) {
+    return JS::GCReason::OUT_OF_NURSERY;
+  }
+
+  return JS::GCReason::NO_REASON;
 }
 
 bool Nursery::moveToNextChunk() {
