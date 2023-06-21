@@ -7,10 +7,14 @@
 #ifndef builtin_temporal_Temporal_h
 #define builtin_temporal_Temporal_h
 
+#include "mozilla/Assertions.h"
+
 #include <stdint.h>
 
 #include "jstypes.h"
 
+#include "builtin/temporal/TemporalRoundingMode.h"
+#include "builtin/temporal/TemporalUnit.h"
 #include "js/TypeDecls.h"
 #include "vm/NativeObject.h"
 
@@ -18,6 +22,7 @@ namespace js {
 struct ClassSpec;
 class PlainObject;
 class PropertyName;
+class JSStringBuilder;
 }  // namespace js
 
 namespace js::temporal {
@@ -30,6 +35,116 @@ class TemporalObject : public NativeObject {
   static const ClassSpec classSpec_;
 };
 
+struct Instant;
+struct PlainTime;
+
+/**
+ * Rounding increment, which is an integer in the range [1, 1'000'000'000].
+ *
+ * Temporal units are rounded to a multiple of the specified increment value.
+ */
+class Increment final {
+  uint32_t value_;
+
+ public:
+  constexpr explicit Increment(uint32_t value) : value_(value) {
+    MOZ_ASSERT(1 <= value && value <= 1'000'000'000);
+  }
+
+  /**
+   * Minimum allowed rounding increment.
+   */
+  static constexpr auto min() { return Increment{1}; }
+
+  /**
+   * Maximum allowed rounding increment.
+   */
+  static constexpr auto max() { return Increment{1'000'000'000}; }
+
+  /**
+   * The rounding increment's value.
+   */
+  uint32_t value() const { return value_; }
+
+  bool operator==(const Increment& other) const {
+    return value_ == other.value_;
+  }
+
+  bool operator<(const Increment& other) const { return value_ < other.value_; }
+
+  // Other operators are implemented in terms of operator== and operator<.
+  bool operator!=(const Increment& other) const { return !(*this == other); }
+  bool operator>(const Increment& other) const { return other < *this; }
+  bool operator<=(const Increment& other) const { return !(other < *this); }
+  bool operator>=(const Increment& other) const { return !(*this < other); }
+};
+
+/**
+ * MaximumTemporalDurationRoundingIncrement ( unit )
+ */
+constexpr Increment MaximumTemporalDurationRoundingIncrement(
+    TemporalUnit unit) {
+  // Step 1. (Not applicable in our implementation.)
+  MOZ_ASSERT(unit > TemporalUnit::Day);
+
+  // Step 2.
+  if (unit == TemporalUnit::Hour) {
+    return Increment{24};
+  }
+
+  // Step 3.
+  if (unit <= TemporalUnit::Second) {
+    return Increment{60};
+  }
+
+  // Steps 4-5.
+  return Increment{1000};
+}
+
+PropertyName* TemporalUnitToString(JSContext* cx, TemporalUnit unit);
+
+enum class TemporalUnitGroup {
+  // Allow date units: "year", "month", "week", "day".
+  Date,
+
+  // Allow time units: "hour", "minute", "second", "milli-/micro-/nanoseconds".
+  Time,
+
+  // Allow date and time units.
+  DateTime,
+
+  // Allow "day" and time units.
+  DayTime,
+};
+
+enum class TemporalUnitKey {
+  SmallestUnit,
+  LargestUnit,
+  Unit,
+};
+
+/**
+ * GetTemporalUnit ( normalizedOptions, key, unitGroup, default [ , extraValues
+ * ] )
+ */
+bool GetTemporalUnit(JSContext* cx, JS::Handle<JSObject*> options,
+                     TemporalUnitKey key, TemporalUnitGroup unitGroup,
+                     TemporalUnit* unit);
+
+/**
+ * GetTemporalUnit ( normalizedOptions, key, unitGroup, default [ , extraValues
+ * ] )
+ */
+bool GetTemporalUnit(JSContext* cx, JS::Handle<JSString*> value,
+                     TemporalUnitKey key, TemporalUnitGroup unitGroup,
+                     TemporalUnit* unit);
+
+/**
+ * ToTemporalRoundingMode ( normalizedOptions, fallback )
+ */
+bool ToTemporalRoundingMode(JSContext* cx, JS::Handle<JSObject*> options,
+                            TemporalRoundingMode* mode);
+
 enum class CalendarOption { Auto, Always, Never, Critical };
 
 /**
@@ -37,6 +152,76 @@ enum class CalendarOption { Auto, Always, Never, Critical };
  */
 bool ToCalendarNameOption(JSContext* cx, JS::Handle<JSObject*> options,
                           CalendarOption* result);
+
+/**
+ * Precision when displaying fractional seconds.
+ *
+ *
+ */
+class Precision final {
+  int8_t value_;
+
+  enum class Tag {};
+  constexpr Precision(int8_t value, Tag) : value_(value) {}
+
+ public:
+  constexpr explicit Precision(uint8_t value) : value_(value) {
+    MOZ_ASSERT(value < 10);
+  }
+
+  /**
+   * Return the number of fractional second digits.
+   */
+  uint8_t value() const {
+    MOZ_ASSERT(value_ >= 0, "auto and minute precision don't have a value");
+    return uint8_t(value_);
+  }
+
+  /**
+   * Limit the precision to trim off any trailing zeros.
+   */
+  bool isAuto() const { return value_ == -1; }
+
+  /**
+   * Limit the precision to minutes, i.e. don't display seconds and sub-seconds.
+   */
+  bool isMinute() const { return value_ == -2; }
+
+  /**
+   * Limit the precision to trim off any trailing zeros.
+   */
+  static constexpr Precision Auto() { return {-1, Tag{}}; }
+
+  /**
+   * Limit the precision to minutes, i.e. don't display seconds and sub-seconds.
+   */
+  static constexpr Precision Minute() { return {-2, Tag{}}; }
+};
+
+/**
+ * ToFractionalSecondDigits ( normalizedOptions )
+ */
+bool ToFractionalSecondDigits(JSContext* cx, JS::Handle<JSObject*> options,
+                              Precision* precision);
+
+struct SecondsStringPrecision final {
+  Precision precision = Precision{0};
+  TemporalUnit unit = TemporalUnit::Auto;
+  Increment increment = Increment{1};
+};
+
+/**
+ * ToSecondsStringPrecisionRecord ( smallestUnit, fractionalDigitCount )
+ */
+SecondsStringPrecision ToSecondsStringPrecision(TemporalUnit smallestUnit,
+                                                Precision fractionalDigitCount);
+
+/**
+ * FormatSecondsStringPart ( second, millisecond, microsecond, nanosecond,
+ * precision )
+ */
+void FormatSecondsStringPart(JSStringBuilder& result, const PlainTime& time,
+                             Precision precision);
 
 enum class TemporalOverflow { Constrain, Reject };
 

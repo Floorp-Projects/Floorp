@@ -332,6 +332,7 @@
   IF_DECORATORS(MACRO_(kind, kind, "kind"))                                    \
   MACRO_(label, label, "label")                                                \
   MACRO_(language, language, "language")                                       \
+  MACRO_(largestUnit, largestUnit, "largestUnit")                              \
   MACRO_(lastIndex, lastIndex, "lastIndex")                                    \
   MACRO_(length, length, "length")                                             \
   MACRO_(let, let, "let")                                                      \
@@ -500,6 +501,7 @@
   MACRO_(signDisplay, signDisplay, "signDisplay")                              \
   MACRO_(size, size, "size")                                                   \
   MACRO_(skeleton, skeleton, "skeleton")                                       \
+  MACRO_(smallestUnit, smallestUnit, "smallestUnit")                           \
   MACRO_(source, source, "source")                                             \
   MACRO_(SpeciesConstructor, SpeciesConstructor, "SpeciesConstructor")         \
   MACRO_(stack, stack, "stack")                                                \
