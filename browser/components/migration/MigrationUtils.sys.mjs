@@ -818,6 +818,7 @@ class MigrationUtils {
     logins: 0,
     history: 0,
     cards: 0,
+    extensions: 0,
   };
 
   getImportedCount(type) {
@@ -983,6 +984,9 @@ class MigrationUtils {
     // let importedExtensions = extensions;
     // ! creates the partial match/info case
     let importedExtensions = ["extensionID1", "extensionID2"];
+
+    this._importQuantities.extensions += importedExtensions.length;
+
     if (!importedExtensions.length) {
       return [
         lazy.MigrationWizardConstants.PROGRESS_VALUE.ERROR,
