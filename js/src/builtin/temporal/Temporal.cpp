@@ -30,6 +30,9 @@
 #include "builtin/temporal/PlainMonthDay.h"
 #include "builtin/temporal/PlainTime.h"
 #include "builtin/temporal/PlainYearMonth.h"
+#include "builtin/temporal/TemporalRoundingMode.h"
+#include "builtin/temporal/TemporalTypes.h"
+#include "builtin/temporal/TemporalUnit.h"
 #include "builtin/temporal/ZonedDateTime.h"
 #include "gc/Barrier.h"
 #include "js/Class.h"
@@ -98,6 +101,255 @@ static bool GetStringOption(JSContext* cx, Handle<JSObject*> options,
   return true;
 }
 
+PropertyName* js::temporal::TemporalUnitToString(JSContext* cx,
+                                                 TemporalUnit unit) {
+  switch (unit) {
+    case TemporalUnit::Auto:
+      break;
+    case TemporalUnit::Year:
+      return cx->names().year;
+    case TemporalUnit::Month:
+      return cx->names().month;
+    case TemporalUnit::Week:
+      return cx->names().week;
+    case TemporalUnit::Day:
+      return cx->names().day;
+    case TemporalUnit::Hour:
+      return cx->names().hour;
+    case TemporalUnit::Minute:
+      return cx->names().minute;
+    case TemporalUnit::Second:
+      return cx->names().second;
+    case TemporalUnit::Millisecond:
+      return cx->names().millisecond;
+    case TemporalUnit::Microsecond:
+      return cx->names().microsecond;
+    case TemporalUnit::Nanosecond:
+      return cx->names().nanosecond;
+  }
+  MOZ_CRASH("invalid temporal unit");
+}
+
+static Handle<PropertyName*> ToPropertyName(JSContext* cx,
+                                            TemporalUnitKey key) {
+  switch (key) {
+    case TemporalUnitKey::SmallestUnit:
+      return cx->names().smallestUnit;
+    case TemporalUnitKey::LargestUnit:
+      return cx->names().largestUnit;
+    case TemporalUnitKey::Unit:
+      return cx->names().unit;
+  }
+  MOZ_CRASH("invalid temporal unit group");
+}
+
+static const char* ToCString(TemporalUnitKey key) {
+  switch (key) {
+    case TemporalUnitKey::SmallestUnit:
+      return "smallestUnit";
+    case TemporalUnitKey::LargestUnit:
+      return "largestUnit";
+    case TemporalUnitKey::Unit:
+      return "unit";
+  }
+  MOZ_CRASH("invalid temporal unit group");
+}
+
+static bool ToTemporalUnit(JSContext* cx, JSLinearString* str,
+                           TemporalUnitKey key, TemporalUnit* unit) {
+  struct UnitMap {
+    std::string_view name;
+    TemporalUnit unit;
+  };
+
+  static constexpr UnitMap mapping[] = {
+      {"year", TemporalUnit::Year},
+      {"years", TemporalUnit::Year},
+      {"month", TemporalUnit::Month},
+      {"months", TemporalUnit::Month},
+      {"week", TemporalUnit::Week},
+      {"weeks", TemporalUnit::Week},
+      {"day", TemporalUnit::Day},
+      {"days", TemporalUnit::Day},
+      {"hour", TemporalUnit::Hour},
+      {"hours", TemporalUnit::Hour},
+      {"minute", TemporalUnit::Minute},
+      {"minutes", TemporalUnit::Minute},
+      {"second", TemporalUnit::Second},
+      {"seconds", TemporalUnit::Second},
+      {"millisecond", TemporalUnit::Millisecond},
+      {"milliseconds", TemporalUnit::Millisecond},
+      {"microsecond", TemporalUnit::Microsecond},
+      {"microseconds", TemporalUnit::Microsecond},
+      {"nanosecond", TemporalUnit::Nanosecond},
+      {"nanoseconds", TemporalUnit::Nanosecond},
+  };
+
+  // Compute the length of the longest name.
+  constexpr size_t maxNameLength =
+      std::max_element(std::begin(mapping), std::end(mapping),
+                       [](const auto& x, const auto& y) {
+                         return x.name.length() < y.name.length();
+                       })
+          ->name.length();
+
+  // Twenty StringEqualsLiteral calls for each possible combination seems a bit
+  // expensive, so let's instead copy the input name into a char array and rely
+  // on the compiler to generate optimized code for the comparisons.
+
+  size_t length = str->length();
+  if (length <= maxNameLength && StringIsAscii(str)) {
+    char chars[maxNameLength] = {};
+    JS::LossyCopyLinearStringChars(chars, str, length);
+
+    for (const auto& m : mapping) {
+      if (m.name == std::string_view(chars, length)) {
+        *unit = m.unit;
+        return true;
+      }
+    }
+  }
+
+  if (auto chars = QuoteString(cx, str, '"')) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             JSMSG_INVALID_OPTION_VALUE, ToCString(key),
+                             chars.get());
+  }
+  return false;
+}
+
+static std::pair<TemporalUnit, TemporalUnit> AllowedValues(
+    TemporalUnitGroup unitGroup) {
+  switch (unitGroup) {
+    case TemporalUnitGroup::Date:
+      return {TemporalUnit::Year, TemporalUnit::Day};
+    case TemporalUnitGroup::Time:
+      return {TemporalUnit::Hour, TemporalUnit::Nanosecond};
+    case TemporalUnitGroup::DateTime:
+      return {TemporalUnit::Year, TemporalUnit::Nanosecond};
+    case TemporalUnitGroup::DayTime:
+      return {TemporalUnit::Day, TemporalUnit::Nanosecond};
+  }
+  MOZ_CRASH("invalid temporal unit group");
+}
+
+/**
+ * GetTemporalUnit ( normalizedOptions, key, unitGroup, default [ , extraValues
+ * ] )
+ */
+bool js::temporal::GetTemporalUnit(JSContext* cx, Handle<JSObject*> options,
+                                   TemporalUnitKey key,
+                                   TemporalUnitGroup unitGroup,
+                                   TemporalUnit* unit) {
+  // Steps 1-8. (Not applicable in our implementation.)
+
+  // Step 9.
+  Rooted<JSString*> value(cx);
+  if (!GetStringOption(cx, options, ToPropertyName(cx, key), &value)) {
+    return false;
+  }
+
+  // Caller should fill in the fallback.
+  if (!value) {
+    return true;
+  }
+
+  return GetTemporalUnit(cx, value, key, unitGroup, unit);
+}
+
+/**
+ * GetTemporalUnit ( normalizedOptions, key, unitGroup, default [ , extraValues
+ * ] )
+ */
+bool js::temporal::GetTemporalUnit(JSContext* cx, Handle<JSString*> value,
+                                   TemporalUnitKey key,
+                                   TemporalUnitGroup unitGroup,
+                                   TemporalUnit* unit) {
+  // Steps 1-9. (Not applicable in our implementation.)
+
+  // Step 10. (Handled in caller.)
+
+  Rooted<JSLinearString*> linear(cx, value->ensureLinear(cx));
+  if (!linear) {
+    return false;
+  }
+
+  // Caller should fill in the fallback.
+  if (key == TemporalUnitKey::LargestUnit) {
+    if (StringEqualsLiteral(linear, "auto")) {
+      return true;
+    }
+  }
+
+  // Step 11.
+  if (!ToTemporalUnit(cx, linear, key, unit)) {
+    return false;
+  }
+
+  auto allowedValues = AllowedValues(unitGroup);
+  if (*unit < allowedValues.first || *unit > allowedValues.second) {
+    if (auto chars = QuoteString(cx, linear, '"')) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_INVALID_OPTION_VALUE, ToCString(key),
+                                chars.get());
+    }
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * ToTemporalRoundingMode ( normalizedOptions, fallback )
+ */
+bool js::temporal::ToTemporalRoundingMode(JSContext* cx,
+                                          Handle<JSObject*> options,
+                                          TemporalRoundingMode* mode) {
+  // Step 1.
+  Rooted<JSString*> string(cx);
+  if (!GetStringOption(cx, options, cx->names().roundingMode, &string)) {
+    return false;
+  }
+
+  // Caller should fill in the fallback.
+  if (!string) {
+    return true;
+  }
+
+  JSLinearString* linear = string->ensureLinear(cx);
+  if (!linear) {
+    return false;
+  }
+
+  if (StringEqualsLiteral(linear, "ceil")) {
+    *mode = TemporalRoundingMode::Ceil;
+  } else if (StringEqualsLiteral(linear, "floor")) {
+    *mode = TemporalRoundingMode::Floor;
+  } else if (StringEqualsLiteral(linear, "expand")) {
+    *mode = TemporalRoundingMode::Expand;
+  } else if (StringEqualsLiteral(linear, "trunc")) {
+    *mode = TemporalRoundingMode::Trunc;
+  } else if (StringEqualsLiteral(linear, "halfCeil")) {
+    *mode = TemporalRoundingMode::HalfCeil;
+  } else if (StringEqualsLiteral(linear, "halfFloor")) {
+    *mode = TemporalRoundingMode::HalfFloor;
+  } else if (StringEqualsLiteral(linear, "halfExpand")) {
+    *mode = TemporalRoundingMode::HalfExpand;
+  } else if (StringEqualsLiteral(linear, "halfTrunc")) {
+    *mode = TemporalRoundingMode::HalfTrunc;
+  } else if (StringEqualsLiteral(linear, "halfEven")) {
+    *mode = TemporalRoundingMode::HalfEven;
+  } else {
+    if (auto chars = QuoteString(cx, linear, '"')) {
+      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                               JSMSG_INVALID_OPTION_VALUE, "roundingMode",
+                               chars.get());
+    }
+    return false;
+  }
+  return true;
+}
+
 /**
  * ToCalendarNameOption ( normalizedOptions )
  */
@@ -137,6 +389,230 @@ bool js::temporal::ToCalendarNameOption(JSContext* cx,
     return false;
   }
   return true;
+}
+
+/**
+ * ToFractionalSecondDigits ( normalizedOptions )
+ */
+bool js::temporal::ToFractionalSecondDigits(JSContext* cx,
+                                            JS::Handle<JSObject*> options,
+                                            Precision* precision) {
+  // Step 1.
+  Rooted<Value> digitsValue(cx);
+  if (!GetProperty(cx, options, options, cx->names().fractionalSecondDigits,
+                   &digitsValue)) {
+    return false;
+  }
+
+  // Step 2.
+  if (digitsValue.isUndefined()) {
+    *precision = Precision::Auto();
+    return true;
+  }
+
+  // Step 3.
+  if (!digitsValue.isNumber()) {
+    // Step 3.a.
+    JSString* string = JS::ToString(cx, digitsValue);
+    if (!string) {
+      return false;
+    }
+
+    JSLinearString* linear = string->ensureLinear(cx);
+    if (!linear) {
+      return false;
+    }
+
+    if (!StringEqualsLiteral(linear, "auto")) {
+      if (auto chars = QuoteString(cx, linear, '"')) {
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                                 JSMSG_INVALID_OPTION_VALUE,
+                                 "fractionalSecondDigits", chars.get());
+      }
+      return false;
+    }
+
+    // Step 3.b.
+    *precision = Precision::Auto();
+    return true;
+  }
+
+  // Step 4.
+  double digitCount = digitsValue.toNumber();
+  if (!std::isfinite(digitCount)) {
+    ToCStringBuf cbuf;
+    const char* numStr = NumberToCString(&cbuf, digitCount);
+
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_INVALID_OPTION_VALUE,
+                              "fractionalSecondDigits", numStr);
+    return false;
+  }
+
+  // Step 5.
+  digitCount = std::floor(digitCount);
+
+  // Step 6.
+  if (digitCount < 0 || digitCount > 9) {
+    ToCStringBuf cbuf;
+    const char* numStr = NumberToCString(&cbuf, digitCount);
+
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_INVALID_OPTION_VALUE,
+                              "fractionalSecondDigits", numStr);
+    return false;
+  }
+
+  // Step 7.
+  *precision = Precision{uint8_t(digitCount)};
+  return true;
+}
+
+/**
+ * ToSecondsStringPrecisionRecord ( smallestUnit, fractionalDigitCount )
+ */
+SecondsStringPrecision js::temporal::ToSecondsStringPrecision(
+    TemporalUnit smallestUnit, Precision fractionalDigitCount) {
+  MOZ_ASSERT(smallestUnit == TemporalUnit::Auto ||
+             smallestUnit >= TemporalUnit::Minute);
+  MOZ_ASSERT(fractionalDigitCount.isAuto() ||
+             fractionalDigitCount.value() <= 9);
+
+  // Steps 1-5.
+  switch (smallestUnit) {
+    // Step 1.
+    case TemporalUnit::Minute:
+      return {Precision::Minute(), TemporalUnit::Minute, Increment{1}};
+
+    // Step 2.
+    case TemporalUnit::Second:
+      return {Precision{0}, TemporalUnit::Second, Increment{1}};
+
+    // Step 3.
+    case TemporalUnit::Millisecond:
+      return {Precision{3}, TemporalUnit::Millisecond, Increment{1}};
+
+    // Step 4.
+    case TemporalUnit::Microsecond:
+      return {Precision{6}, TemporalUnit::Microsecond, Increment{1}};
+
+    // Step 5.
+    case TemporalUnit::Nanosecond:
+      return {Precision{9}, TemporalUnit::Nanosecond, Increment{1}};
+
+    case TemporalUnit::Auto:
+      break;
+
+    case TemporalUnit::Year:
+    case TemporalUnit::Month:
+    case TemporalUnit::Week:
+    case TemporalUnit::Day:
+    case TemporalUnit::Hour:
+      MOZ_CRASH("Unexpected temporal unit");
+  }
+
+  // Step 6. (Not applicable in our implementation.)
+
+  // Step 7.
+  if (fractionalDigitCount.isAuto()) {
+    return {Precision::Auto(), TemporalUnit::Nanosecond, Increment{1}};
+  }
+
+  static constexpr Increment increments[] = {
+      Increment{1},
+      Increment{10},
+      Increment{100},
+  };
+
+  uint8_t digitCount = fractionalDigitCount.value();
+
+  // Step 8.
+  if (digitCount == 0) {
+    return {Precision{0}, TemporalUnit::Second, Increment{1}};
+  }
+
+  // Step 9.
+  if (digitCount <= 3) {
+    return {fractionalDigitCount, TemporalUnit::Millisecond,
+            increments[3 - digitCount]};
+  }
+
+  // Step 10.
+  if (digitCount <= 6) {
+    return {fractionalDigitCount, TemporalUnit::Microsecond,
+            increments[6 - digitCount]};
+  }
+
+  // Step 11.
+  MOZ_ASSERT(digitCount <= 9);
+
+  // Step 12.
+  return {fractionalDigitCount, TemporalUnit::Nanosecond,
+          increments[9 - digitCount]};
+}
+
+/**
+ * FormatSecondsStringPart ( second, millisecond, microsecond, nanosecond,
+ * precision )
+ */
+void js::temporal::FormatSecondsStringPart(JSStringBuilder& result,
+                                           const PlainTime& time,
+                                           Precision precision) {
+  // Note: The caller is responsible for allocating enough space.
+
+  // Step 1. (Not applicable in our implementation.)
+
+  // Step 2.
+  if (precision.isMinute()) {
+    return;
+  }
+
+  // Step 3.
+  int32_t second = time.second;
+  result.infallibleAppend(':');
+  result.infallibleAppend(char('0' + (second / 10)));
+  result.infallibleAppend(char('0' + (second % 10)));
+
+  // Step 4.
+  int32_t fraction =
+      time.millisecond * 1'000'000 + time.microsecond * 1'000 + time.nanosecond;
+  MOZ_ASSERT(0 <= fraction && fraction < 1'000'000'000);
+
+  // Steps 5-6.
+  if (precision.isAuto()) {
+    // Step 5.a.
+    if (fraction == 0) {
+      return;
+    }
+
+    // Step 7. (Reordered)
+    result.infallibleAppend('.');
+
+    // Steps 5.b-c.
+    uint32_t k = 100'000'000;
+    do {
+      result.infallibleAppend(char('0' + (fraction / k)));
+      fraction %= k;
+      k /= 10;
+    } while (fraction);
+  } else {
+    // Step 6.a.
+    uint8_t p = precision.value();
+    if (p == 0) {
+      return;
+    }
+
+    // Step 7. (Reordered)
+    result.infallibleAppend('.');
+
+    // Steps 6.b-c.
+    uint32_t k = 100'000'000;
+    for (uint8_t i = 0; i < p; i++) {
+      result.infallibleAppend(char('0' + (fraction / k)));
+      fraction %= k;
+      k /= 10;
+    }
+  }
 }
 
 /**
