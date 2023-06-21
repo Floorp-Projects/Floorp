@@ -210,7 +210,8 @@ summary {
   display: grid;
   grid-template-columns: min-content auto;
   grid-template-areas: "icon type"
-                       "icon status";
+                       "icon status"
+                       "icon support";
   align-items: center;
   justify-items: start;
 }
@@ -219,8 +220,13 @@ summary {
   display: none;
 }
 
-.success-text {
+.success-text,
+.error-text {
   grid-area: status;
+}
+
+.support-text {
+  grid-area: support;
 }
 
 .progress-icon {

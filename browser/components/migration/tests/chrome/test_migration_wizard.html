@@ -28,7 +28,7 @@
           key: "some-browser-0",
           type: MigrationWizardConstants.MIGRATOR_TYPES.BROWSER,
           displayName: "Some Browser 0",
-          resourceTypes: ["HISTORY", "FORMDATA", "PASSWORDS", "BOOKMARKS"],
+          resourceTypes: ["HISTORY", "FORMDATA", "PASSWORDS", "BOOKMARKS", "EXTENSIONS"],
           profile: { id: "person-2", name: "Person 2" },
         },
         {
@@ -458,15 +458,18 @@
           key: "chrome",
           progress: {
             [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS]: {
-              inProgress: false,
+              value: MigrationWizardConstants.PROGRESS_VALUE.SUCCESS,
               message: BOOKMARKS_SUCCESS_STRING,
             },
             // Don't include PASSWORDS to check that it's hidden.
             [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.HISTORY]: {
-              inProgress: true,
+              value: MigrationWizardConstants.PROGRESS_VALUE.LOADING,
+            },
+            [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.EXTENSIONS]: {
+              value: MigrationWizardConstants.PROGRESS_VALUE.LOADING,
             },
             [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.FORMDATA]: {
-              inProgress: true,
+              value: MigrationWizardConstants.PROGRESS_VALUE.LOADING,
             },
           },
         });
@@ -509,6 +512,17 @@
         );
         is(historyGroup.querySelector(".success-text").textContent.trim(), "");
 
+        // Extensions
+        let extensionsGroup = getResourceGroup(MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.EXTENSIONS);
+        ok(!isHidden(extensionsGroup), "Extensions group should be visible");
+        progressIcon = extensionsGroup.querySelector(".progress-icon");
+        ok(
+          !progressIcon.classList.contains("completed"),
+          "Progress should still be underway"
+        );
+        is(extensionsGroup.querySelector("a.success-text").textContent.trim(), "");
+        is(extensionsGroup.querySelector("span.success-text").textContent.trim(), "");
+
         // Form Data
         let formDataGroup = getResourceGroup(
           MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.FORMDATA
@@ -545,21 +559,27 @@
         const BOOKMARKS_SUCCESS_STRING = "Some bookmarks success string";
         const PASSWORDS_SUCCESS_STRING = "Some passwords success string";
         const FORMDATA_SUCCESS_STRING = "Some formdata string";
+        const EXTENSIONS_SUCCESS_STRING = "Some extensions string";
+        const EXTENSIONS_SUCCESS_HREF = "about:addons";
         gWiz.setState({
           page: MigrationWizardConstants.PAGES.PROGRESS,
           key: "chrome",
           progress: {
             [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS]: {
-              inProgress: false,
+              value: MigrationWizardConstants.PROGRESS_VALUE.SUCCESS,
               message: BOOKMARKS_SUCCESS_STRING,
             },
             [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PASSWORDS]: {
-              inProgress: false,
+              value: MigrationWizardConstants.PROGRESS_VALUE.SUCCESS,
               message: PASSWORDS_SUCCESS_STRING,
             },
             // Don't include HISTORY to check that it's hidden.
+            [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.EXTENSIONS]: {
+              value: MigrationWizardConstants.PROGRESS_VALUE.SUCCESS,
+              message: EXTENSIONS_SUCCESS_STRING,
+            },
             [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.FORMDATA]: {
-              inProgress: false,
+              value: MigrationWizardConstants.PROGRESS_VALUE.SUCCESS,
               message: FORMDATA_SUCCESS_STRING,
             },
           },
@@ -606,6 +626,22 @@
         );
         ok(isHidden(historyGroup), "History group should be hidden");
 
+        // Extensions
+        let extensionsDataGroup = getResourceGroup(MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.EXTENSIONS);
+        ok(!isHidden(extensionsDataGroup), "Extensions data group should be visible");
+        progressIcon = extensionsDataGroup.querySelector(".progress-icon");
+        ok(
+          progressIcon.classList.contains("completed"),
+          "Progress should be completed"
+        );
+        is(
+          extensionsDataGroup.querySelector("a.success-text").textContent,
+          EXTENSIONS_SUCCESS_STRING
+        );
+        is(
+          extensionsDataGroup.querySelector("a.success-text").href,
+          EXTENSIONS_SUCCESS_HREF
+        )
         // Form Data
         let formDataGroup = getResourceGroup(
           MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.FORMDATA
@@ -637,6 +673,137 @@
         ok(isHidden(cancelButton), "Cancel button should be hidden");
       });
 
+      add_task(async function test_extension_partial_success() {
+        const EXTENSIONS_INFO_STRING = "Extensions info string";
+        const EXTENSIONS_INFO_HREF = "about:addons";
+        const EXTENSIONS_SUPPORT_STRING = "extensions support string";
+        const EXTENSIONS_SUPPORT_HREF = "about:blank";
+
+        gWiz.setState({
+          page: MigrationWizardConstants.PAGES.PROGRESS,
+          key: "chrome",
+          progress: {
+            [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.EXTENSIONS]: {
+              value: MigrationWizardConstants.PROGRESS_VALUE.INFO,
+              message: EXTENSIONS_INFO_STRING,
+              linkText: EXTENSIONS_SUPPORT_STRING,
+              linkURL: EXTENSIONS_SUPPORT_HREF,
+            }
+          }
+        });
+        is(
+          gDeck.selectedViewName,
+          "page-progress",
+          "Should have the progress page selected"
+        );
+
+        let extensionsGroup = getResourceGroup(MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.EXTENSIONS);
+        ok(!isHidden(extensionsGroup), "Extensions group should be visible");
+        let progressIcon = extensionsGroup.querySelector(".progress-icon");
+        ok(
+          progressIcon.classList.contains("completed"),
+          "Progress should be completed"
+        );
+        is(
+          extensionsGroup.querySelector("a.success-text").textContent,
+          EXTENSIONS_INFO_STRING
+        );
+        is(
+          extensionsGroup.querySelector("a.success-text").href,
+          EXTENSIONS_INFO_HREF
+        );
+        is(
+          extensionsGroup.querySelector(".support-text").textContent,
+          EXTENSIONS_SUPPORT_STRING
+        );
+        is(
+          extensionsGroup.querySelector(".support-text").href,
+          EXTENSIONS_SUPPORT_HREF
+        );
+
+        // With progress being complete, the header should be using the completed
+        // migration string.
+        let header = gShadowRoot.querySelector("#progress-header");
+        is(
+          header.getAttribute("data-l10n-id"),
+          "migration-wizard-progress-done-header",
+          "Should be showing completed migration header string"
+        );
+
+        let progressPage = gShadowRoot.querySelector("div[name='page-progress']");
+        let doneButton = progressPage.querySelector(".done-button");
+        ok(!isHidden(doneButton), "Done button should be visible and enabled");
+        let cancelButton = progressPage.querySelector(".cancel-close");
+        ok(isHidden(cancelButton), "Cancel button should be hidden");
+      });
+
+      add_task(async function test_extension_error() {
+        const EXTENSIONS_ERROR_STRING = "Extensions error string";
+        const EXTENSIONS_SUPPORT_STRING = "extensions support string";
+        const EXTENSIONS_SUPPORT_HREF = "about:blank";
+
+        gWiz.setState({
+          page: MigrationWizardConstants.PAGES.PROGRESS,
+          key: "chrome",
+          progress: {
+            [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.EXTENSIONS]: {
+              value: MigrationWizardConstants.PROGRESS_VALUE.ERROR,
+              message: EXTENSIONS_ERROR_STRING,
+              linkText: EXTENSIONS_SUPPORT_STRING,
+              linkURL: EXTENSIONS_SUPPORT_HREF,
+            }
+          }
+        });
+        is(
+          gDeck.selectedViewName,
+          "page-progress",
+          "Should have the progress page selected"
+        );
+
+        let extensionsGroup = getResourceGroup(MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.EXTENSIONS);
+        ok(!isHidden(extensionsGroup), "Extensions group should be visible");
+        let progressIcon = extensionsGroup.querySelector(".progress-icon");
+        ok(
+          progressIcon.classList.contains("completed"),
+          "Progress should be completed"
+        );
+        ok(
+          progressIcon.classList.contains("error-icon"),
+          "Error icon should be showing"
+        )
+        is(
+          extensionsGroup.querySelector("a.success-text").textContent,
+          ""
+        );
+        is(
+          extensionsGroup.querySelector("span.success-text").textContent,
+          EXTENSIONS_ERROR_STRING
+        );
+        is(
+          extensionsGroup.querySelector(".support-text").textContent,
+          EXTENSIONS_SUPPORT_STRING
+        );
+        is(
+          extensionsGroup.querySelector(".support-text").href,
+          EXTENSIONS_SUPPORT_HREF
+        );
+
+        // With progress being complete, the header should be using the completed
+        // migration string.
+        let header = gShadowRoot.querySelector("#progress-header");
+        is(
+          header.getAttribute("data-l10n-id"),
+          "migration-wizard-progress-done-header",
+          "Should be showing completed migration header string"
+        );
+
+        let progressPage = gShadowRoot.querySelector("div[name='page-progress']");
+        let doneButton = progressPage.querySelector(".done-button");
+        ok(!isHidden(doneButton), "Done button should be visible and enabled");
+        let cancelButton = progressPage.querySelector(".cancel-close");
+        ok(isHidden(cancelButton), "Cancel button should be hidden");
+      });
+
       /**
        * Tests that the wizard can show partial progress during file migration.
        */
@@ -649,11 +816,11 @@
           title: "Partial progress",
           progress: {
             [MigrationWizardConstants.DISPLAYED_FILE_RESOURCE_TYPES.PASSWORDS_FROM_FILE]: {
-              inProgress: false,
+              value: MigrationWizardConstants.PROGRESS_VALUE.SUCCESS,
               message: PASSWORDS_SUCCESS_STRING,
             },
             [MigrationWizardConstants.DISPLAYED_FILE_RESOURCE_TYPES.PASSWORDS_NEW]: {
-              inProgress: true,
+              value: MigrationWizardConstants.PROGRESS_VALUE.LOADING,
             },
           },
         });
@@ -718,11 +885,11 @@
           title: TITLE,
           progress: {
             [MigrationWizardConstants.DISPLAYED_FILE_RESOURCE_TYPES.PASSWORDS_NEW]: {
-              inProgress: false,
+              value: MigrationWizardConstants.PROGRESS_VALUE.SUCCESS,
               message: PASSWORDS_NEW_SUCCESS_STRING,
             },
             [MigrationWizardConstants.DISPLAYED_FILE_RESOURCE_TYPES.PASSWORDS_UPDATED]: {
-              inProgress: false,
+              value: MigrationWizardConstants.PROGRESS_VALUE.SUCCESS,
               message: PASSWORDS_UPDATED_SUCCESS_STRING,
             },
           },
@@ -961,7 +1128,7 @@
           key: "chrome",
           progress: {
             [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS]: {
-              inProgress: false,
+              value: MigrationWizardConstants.PROGRESS_VALUE.SUCCESS,
               message: "A string from the parent",
             },
           },
@@ -1029,8 +1196,7 @@
 
       /**
        * Tests that if a progress update comes down which puts a resource from
-       * being done to being back "inProgress", that the status message is
-       * cleared.
+       * being done to loading, that the status message is cleared.
        */
       add_task(async function test_clear_status_message_when_in_progress() {
         const STRING_TO_CLEAR = "This string should get cleared";
@@ -1040,7 +1206,7 @@
           key: "chrome",
           progress: {
             [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS]: {
-              inProgress: false,
+              value: MigrationWizardConstants.PROGRESS_VALUE.SUCCESS,
               message: STRING_TO_CLEAR,
             },
           },
@@ -1065,7 +1231,7 @@
           key: "chrome",
           progress: {
             [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS]: {
-              inProgress: true,
+              value: MigrationWizardConstants.PROGRESS_VALUE.LOADING,
               message: "",
             },
           },
@@ -1084,8 +1250,7 @@
 
       /**
        * Tests that if a file progress update comes down which puts a resource
-       * from being done to being back "inProgress", that the status message is
-       * cleared.
+       * from being done to loading, that the status message is cleared.
        *
        * This is extremely similar to the above test, except that it's for progress
        * updates for file resources.
@@ -1098,7 +1263,7 @@
           key: "chrome",
           progress: {
             [MigrationWizardConstants.DISPLAYED_FILE_RESOURCE_TYPES.PASSWORDS_NEW]: {
-              inProgress: false,
+              value: MigrationWizardConstants.PROGRESS_VALUE.SUCCESS,
               message: STRING_TO_CLEAR,
             },
           },
@@ -1123,7 +1288,7 @@
           key: "chrome",
           progress: {
             [MigrationWizardConstants.DISPLAYED_FILE_RESOURCE_TYPES.PASSWORDS_NEW]: {
-              inProgress: true,
+              value: MigrationWizardConstants.PROGRESS_VALUE.LOADING,
               message: "",
             },
           },

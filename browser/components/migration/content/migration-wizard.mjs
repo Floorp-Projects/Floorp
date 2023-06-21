@@ -82,6 +82,9 @@ export class MigrationWizard extends HTMLElement {
                 <label id="history" data-resource-type="HISTORY">
                   <input type="checkbox"/><span data-l10n-id="migration-history-option-label"></span>
                 </label>
+                <label id="extensions" data-resource-type="EXTENSIONS">
+                  <input type="checkbox"/><span data-l10n-id="migration-extensions-option-label"></span>
+                </label>
                 <label id="form-autofill" data-resource-type="FORMDATA">
                   <input type="checkbox"/><span data-l10n-id="migration-form-autofill-option-label"></span>
                 </label>
@@ -110,48 +113,64 @@ export class MigrationWizard extends HTMLElement {
                 <span class="progress-icon-parent"><span class="progress-icon" role="img"></span></span>
                 <span default-data-l10n-id="migration-bookmarks-option-label" ie-edge-data-l10n-id="migration-favorites-option-label"></span>
                 <span class="success-text deemphasized-text">&nbsp;</span>
+                <a class="support-text deemphasized-text"></a>
               </div>
 
               <div data-resource-type="PASSWORDS" class="resource-progress-group">
                 <span class="progress-icon-parent"><span class="progress-icon" role="img"></span></span>
                 <span data-l10n-id="migration-logins-and-passwords-option-label"></span>
                 <span class="success-text deemphasized-text">&nbsp;</span>
+                <a class="support-text deemphasized-text"></a>
               </div>
 
               <div data-resource-type="HISTORY" class="resource-progress-group">
                 <span class="progress-icon-parent"><span class="progress-icon" role="img"></span></span>
                 <span data-l10n-id="migration-history-option-label"></span>
                 <span class="success-text deemphasized-text">&nbsp;</span>
+                <a class="support-text deemphasized-text"></a>
+              </div>
+
+              <div data-resource-type="EXTENSIONS" class="resource-progress-group">
+                <span class="progress-icon-parent"><span class="progress-icon" role="img"></span></span>
+                <span data-l10n-id="migration-extensions-option-label"></span>
+                <a class="success-text deemphasized-text"></a>
+                <span class="success-text deemphasized-text"></span>
+                <a class="support-text deemphasized-text"></a>
               </div>
 
               <div data-resource-type="FORMDATA" class="resource-progress-group">
                 <span class="progress-icon-parent"><span class="progress-icon" role="img"></span></span>
                 <span data-l10n-id="migration-form-autofill-option-label"></span>
                 <span class="success-text deemphasized-text">&nbsp;</span>
+                <a class="support-text deemphasized-text"></a>
               </div>
 
               <div data-resource-type="PAYMENT_METHODS" class="resource-progress-group">
                 <span class="progress-icon-parent"><span class="progress-icon" role="img"></span></span>
                 <span data-l10n-id="migration-payment-methods-option-label"></span>
                 <span class="success-text deemphasized-text">&nbsp;</span>
+                <a class="support-text deemphasized-text"></a>
               </div>
 
               <div data-resource-type="COOKIES" class="resource-progress-group">
                 <span class="progress-icon-parent"><span class="progress-icon" role="img"></span></span>
                 <span data-l10n-id="migration-cookies-option-label"></span>
                 <span class="success-text deemphasized-text">&nbsp;</span>
+                <a class="support-text deemphasized-text"></a>
               </div>
 
               <div data-resource-type="SESSION" class="resource-progress-group">
                 <span class="progress-icon-parent"><span class="progress-icon" role="img"></span></span>
                 <span data-l10n-id="migration-session-option-label"></span>
                 <span class="success-text deemphasized-text">&nbsp;</span>
+                <a class="support-text deemphasized-text"></a>
               </div>
 
               <div data-resource-type="OTHERDATA" class="resource-progress-group">
                 <span class="progress-icon-parent"><span class="progress-icon" role="img"></span></span>
                 <span data-l10n-id="migration-otherdata-option-label"></span>
                 <span class="success-text deemphasized-text">&nbsp;</span>
+                <a class="support-text deemphasized-text"></a>
               </div>
             </div>
             <moz-button-group class="buttons" part="buttons">
@@ -619,13 +638,19 @@ export class MigrationWizard extends HTMLElement {
 
   /**
    * @typedef {object} ProgressState
-   *   The migration progress state for a resource.
-   * @property {boolean} inProgress
-   *   True if progress is still underway.
+   *  The migration progress state for a resource.
+   * @property {number} value
+   *  One of the values from MigrationWizardConstants.PROGRESS_VALUE.
    * @property {string} [message=undefined]
-   *   An optional message to display underneath the resource in
-   *   the progress dialog. This message is only shown when inProgress
-   *   is `false`.
+   *  An optional message to display underneath the resource in
+   *  the progress dialog. This message is only shown when value
+   *  is not LOADING.
+   * @property {string} [linkURL=undefined]
+   *  The URL for an optional link to appear after the status message.
+   *  This will only be shown if linkText is also not-empty.
+   * @property {string} [linkText=undefined]
+   *  The text for an optional link to appear after the status message.
+   *  This will only be shown if linkURL is also not-empty.
    */
 
   /**
@@ -661,7 +686,9 @@ export class MigrationWizard extends HTMLElement {
       group.hidden = false;
 
       let progressIcon = group.querySelector(".progress-icon");
-      let successText = group.querySelector(".success-text");
+      let successText = group.querySelector("span.success-text");
+      let extensionsSuccessLink = group.querySelector("a.success-text");
+      let supportLink = group.querySelector(".support-text");
 
       let labelSpan = group.querySelector("span[default-data-l10n-id]");
       if (labelSpan) {
@@ -677,25 +704,89 @@ export class MigrationWizard extends HTMLElement {
           );
         }
       }
-
-      if (state.progress[resourceType].inProgress) {
-        document.l10n.setAttributes(
-          progressIcon,
-          "migration-wizard-progress-icon-in-progress"
-        );
-        progressIcon.classList.remove("completed");
-        successText.textContent = "";
-        // With no status text, we re-insert the &nbsp; so that the status
-        // text area does not fully collapse.
-        successText.appendChild(document.createTextNode("\u00A0"));
-      } else {
-        document.l10n.setAttributes(
-          progressIcon,
-          "migration-wizard-progress-icon-completed"
-        );
-        progressIcon.classList.add("completed");
-        successText.textContent = state.progress[resourceType].message;
-        remainingProgressGroups--;
+      progressIcon.classList.remove("completed", "error");
+      successText.textContent = "";
+      if (extensionsSuccessLink) {
+        extensionsSuccessLink.textContent = "";
+        extensionsSuccessLink.removeAttribute("href");
+      }
+      if (supportLink) {
+        supportLink.textContent = "";
+        supportLink.removeAttribute("href");
+      }
+      let progressValue = state.progress[resourceType].value;
+      switch (progressValue) {
+        case MigrationWizardConstants.PROGRESS_VALUE.LOADING: {
+          document.l10n.setAttributes(
+            progressIcon,
+            "migration-wizard-progress-icon-in-progress"
+          );
+          progressIcon.classList.remove("completed");
+          successText.textContent = "";
+          if (extensionsSuccessLink) {
+            extensionsSuccessLink.textContent = "";
+            extensionsSuccessLink.removeAttribute("href");
+          }
+          supportLink.textContent = "";
+          supportLink.removeAttribute("href");
+          // With no status text, we re-insert the &nbsp; so that the status
+          // text area does not fully collapse.
+          successText.appendChild(document.createTextNode("\u00A0"));
+          break;
+        }
+        case MigrationWizardConstants.PROGRESS_VALUE.SUCCESS: {
+          document.l10n.setAttributes(
+            progressIcon,
+            "migration-wizard-progress-icon-completed"
+          );
+          progressIcon.classList.add("completed");
+          successText.textContent = state.progress[resourceType].message;
+          if (
+            resourceType ==
+            MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.EXTENSIONS
+          ) {
+            successText.textContent = "";
+            extensionsSuccessLink.href = "about:addons";
+            extensionsSuccessLink.textContent =
+              state.progress[resourceType].message;
+          }
+          remainingProgressGroups--;
+          break;
+        }
+        case MigrationWizardConstants.PROGRESS_VALUE.ERROR: {
+          document.l10n.setAttributes(
+            progressIcon,
+            "migration-wizard-progress-icon-completed"
+          );
+          progressIcon.classList.add("completed");
+          progressIcon.classList.add("error-icon");
+          successText.textContent = state.progress[resourceType].message;
+          supportLink.textContent = state.progress[resourceType].linkText;
+          supportLink.href = state.progress[resourceType].linkURL;
+          remainingProgressGroups--;
+          break;
+        }
+        case MigrationWizardConstants.PROGRESS_VALUE.INFO: {
+          document.l10n.setAttributes(
+            progressIcon,
+            "migration-wizard-progress-icon-completed"
+          );
+          progressIcon.classList.add("completed");
+          successText.textContent = state.progress[resourceType].message;
+          supportLink.textContent = state.progress[resourceType].linkText;
+          supportLink.href = state.progress[resourceType].linkURL;
+          if (
+            resourceType ==
+            MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.EXTENSIONS
+          ) {
+            successText.textContent = "";
+            extensionsSuccessLink.href = "about:addons";
+            extensionsSuccessLink.textContent =
+              state.progress[resourceType].message;
+          }
+          remainingProgressGroups--;
+          break;
+        }
       }
     }
 
@@ -765,24 +856,41 @@ export class MigrationWizard extends HTMLElement {
       let progressIcon = group.querySelector(".progress-icon");
       let successText = group.querySelector(".success-text");
 
-      if (state.progress[resourceType].inProgress) {
-        document.l10n.setAttributes(
-          progressIcon,
-          "migration-wizard-progress-icon-in-progress"
-        );
-        progressIcon.classList.remove("completed");
-        successText.textContent = "";
-        // With no status text, we re-insert the &nbsp; so that the status
-        // text area does not fully collapse.
-        successText.appendChild(document.createTextNode("\u00A0"));
-      } else {
-        document.l10n.setAttributes(
-          progressIcon,
-          "migration-wizard-progress-icon-completed"
-        );
-        progressIcon.classList.add("completed");
-        successText.textContent = state.progress[resourceType].message;
-        remainingProgressGroups--;
+      let progressValue = state.progress[resourceType].value;
+      switch (progressValue) {
+        case MigrationWizardConstants.PROGRESS_VALUE.LOADING: {
+          document.l10n.setAttributes(
+            progressIcon,
+            "migration-wizard-progress-icon-in-progress"
+          );
+          progressIcon.classList.remove("completed");
+          successText.textContent = "";
+          // With no status text, we re-insert the &nbsp; so that the status
+          // text area does not fully collapse.
+          successText.appendChild(document.createTextNode("\u00A0"));
+          break;
+        }
+        case MigrationWizardConstants.PROGRESS_VALUE.SUCCESS: {
+          document.l10n.setAttributes(
+            progressIcon,
+            "migration-wizard-progress-icon-completed"
+          );
+          progressIcon.classList.add("completed");
+          successText.textContent = state.progress[resourceType].message;
+          remainingProgressGroups--;
+          break;
+        }
+        case MigrationWizardConstants.PROGRESS_VALUE.ERROR: {
+          document.l10n.setAttributes(
+            progressIcon,
+            "migration-wizard-progress-icon-completed"
+          );
+          progressIcon.classList.add("completed");
+          progressIcon.classList.add("error-icon");
+          successText.textContent = state.progress[resourceType].message;
+          remainingProgressGroups--;
+          break;
+        }
       }
     }
 
@@ -1015,6 +1123,8 @@ export class MigrationWizard extends HTMLElement {
         "migration-list-password-label",
       [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.HISTORY]:
         "migration-list-history-label",
+      [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.EXTENSIONS]:
+        "migration-list-extensions-label",
       [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.FORMDATA]:
         "migration-list-autofill-label",
       [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PAYMENT_METHODS]:

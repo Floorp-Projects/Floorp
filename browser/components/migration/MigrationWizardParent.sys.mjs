@@ -349,7 +349,7 @@ export class MigrationWizardParent extends JSWindowActorParent {
       if (availableResourceTypes & resourceType) {
         resourceTypesToMigrate |= resourceType;
         progress[resourceTypeName] = {
-          inProgress: true,
+          value: lazy.MigrationWizardConstants.PROGRESS_VALUE.LOADING,
           message: "",
         };
 
@@ -369,7 +369,7 @@ export class MigrationWizardParent extends JSWindowActorParent {
       progress[
         lazy.MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PASSWORDS
       ] = {
-        inProgress: true,
+        value: lazy.MigrationWizardConstants.PROGRESS_VALUE.LOADING,
         message: "",
       };
 
@@ -383,7 +383,7 @@ export class MigrationWizardParent extends JSWindowActorParent {
       progress[
         lazy.MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PASSWORDS
       ] = {
-        inProgress: false,
+        value: lazy.MigrationWizardConstants.PROGRESS_VALUE.SUCCESS,
         message: await lazy.gFluentStrings.formatValue(
           "migration-wizard-progress-success-passwords",
           {
@@ -406,7 +406,7 @@ export class MigrationWizardParent extends JSWindowActorParent {
         resourceTypesToMigrate,
         false,
         profileObj,
-        async (resourceTypeNum, success) => {
+        async (resourceTypeNum, success, details) => {
           // Unfortunately, MigratorBase hands us the the numeric value of the
           // MigrationUtils.resourceType for this callback. For now, we'll just
           // do a look-up to map it to the right constant.
@@ -431,15 +431,72 @@ export class MigrationWizardParent extends JSWindowActorParent {
                 .getKeyedHistogramById("FX_MIGRATION_ERRORS")
                 .add(migratorKey, Math.log2(resourceTypeNum));
             }
-            // For now, we ignore errors in migration, and simply display
-            // the success state.
-            progress[foundResourceTypeName] = {
-              inProgress: false,
-              message: await this.#getStringForImportQuantity(
-                migratorKey,
-                foundResourceTypeName
-              ),
-            };
+            if (
+              foundResourceTypeName ==
+              lazy.MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.EXTENSIONS
+            ) {
+              if (!success) {
+                // did not match any extensions
+                progress[foundResourceTypeName] = {
+                  value: lazy.MigrationWizardConstants.PROGRESS_VALUE.ERROR,
+                  message: await lazy.gFluentStrings.formatValue(
+                    "migration-wizard-progress-no-matched-extensions"
+                  ),
+                  linkURL: Services.urlFormatter.formatURLPref(
+                    "extensions.getAddons.link.url"
+                  ),
+                  linkText: await lazy.gFluentStrings.formatValue(
+                    "migration-wizard-progress-extensions-addons-link"
+                  ),
+                };
+              } else if (
+                details?.progressValue ==
+                lazy.MigrationWizardConstants.PROGRESS_VALUE.SUCCESS
+              ) {
+                // did match all extensions
+                progress[foundResourceTypeName] = {
+                  value: lazy.MigrationWizardConstants.PROGRESS_VALUE.SUCCESS,
+                  message: await lazy.gFluentStrings.formatValue(
+                    "migration-wizard-progress-success-extensions",
+                    {
+                      quantity: details.totalExtensions.length,
+                    }
+                  ),
+                };
+              } else if (
+                details?.progressValue ==
+                lazy.MigrationWizardConstants.PROGRESS_VALUE.INFO
+              ) {
+                // did match some extensions
+                progress[foundResourceTypeName] = {
+                  value: lazy.MigrationWizardConstants.PROGRESS_VALUE.INFO,
+                  message: await lazy.gFluentStrings.formatValue(
+                    "migration-wizard-progress-partial-success-extensions",
+                    {
+                      matched: details.importedExtensions.length,
+                      quantity: details.totalExtensions.length,
+                    }
+                  ),
+                  // TODO: replace base SUMO URL with specific SUMO slug on how Firefox matches extensions
+                  linkURL: Services.urlFormatter.formatURLPref(
+                    "app.support.baseURL"
+                  ),
+                  linkText: await lazy.gFluentStrings.formatValue(
+                    "migration-wizard-progress-extensions-support-link"
+                  ),
+                };
+              }
+            } else {
+              progress[foundResourceTypeName] = {
+                value: success
+                  ? lazy.MigrationWizardConstants.PROGRESS_VALUE.SUCCESS
+                  : lazy.MigrationWizardConstants.PROGRESS_VALUE.ERROR,
+                message: await this.#getStringForImportQuantity(
+                  migratorKey,
+                  foundResourceTypeName
+                ),
+              };
+            }
             this.sendAsyncMessage("UpdateProgress", {
               key: migratorKey,
               progress,

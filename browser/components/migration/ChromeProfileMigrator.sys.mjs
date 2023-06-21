@@ -22,6 +22,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   Qihoo360seMigrationUtils: "resource:///modules/360seMigrationUtils.sys.mjs",
+  MigrationWizardConstants:
+    "chrome://browser/content/migration/migration-wizard-constants.mjs",
 });
 
 /**
@@ -772,9 +774,22 @@ async function GetExtensionsResource(aProfileId, aBrowserKey = "chrome") {
   return {
     type: MigrationUtils.resourceTypes.EXTENSIONS,
     async migrate(callback) {
-      // I think this is where we need to call the Addons API
-      // with the list
-      callback(true);
+      let ids = extensions.map(extension => extension.id);
+      let [progressValue, importedExtensions] =
+        await MigrationUtils.installExtensionsWrapper(ids);
+      let details = {
+        progressValue,
+        totalExtensions: extensions,
+        importedExtensions,
+      };
+      if (
+        progressValue == lazy.MigrationWizardConstants.PROGRESS_VALUE.INFO ||
+        progressValue == lazy.MigrationWizardConstants.PROGRESS_VALUE.SUCCESS
+      ) {
+        callback(true, details);
+      } else {
+        callback(false);
+      }
     },
   };
 }
