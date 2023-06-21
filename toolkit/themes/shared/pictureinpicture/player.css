@@ -635,8 +635,7 @@ input:checked + .slider::before {
 }
 
 @media (height <= 325px), (width <= 475px) {
-  #closed-caption,
-  #audio-scrubber {
+  #closed-caption {
     display: none;
   }
 
