@@ -120,6 +120,11 @@ class alignas(TypicalCacheLineSize) Nursery {
   // Nursery is full.
   void* allocateCell(gc::AllocSite* site, size_t size, JS::TraceKind kind);
 
+  // Allocate and return a pointer to a new GC thing. Returns nullptr if the
+  // handleAllocationFailure() needs to be called before retrying.
+  void* tryAllocateCell(gc::AllocSite* site, size_t size, JS::TraceKind kind);
+  [[nodiscard]] bool handleAllocationFailure();
+
   static size_t nurseryCellHeaderSize() {
     return sizeof(gc::NurseryCellHeader);
   }
@@ -564,15 +569,12 @@ class alignas(TypicalCacheLineSize) Nursery {
 
   void* allocate(size_t size);
 
-  void* tryAllocateCell(gc::AllocSite* site, size_t size, JS::TraceKind kind);
-
   // Common internal allocator function. If this fails, call
   // handleAllocationFailure to see whether it's possible to retry.
   void* tryAllocate(size_t size);
 
   // Attempt to handle failure of tryAllocate. If it returns true, allocation
   // will now succeed.
-  [[nodiscard]] bool handleAllocationFailure();
 
   [[nodiscard]] bool moveToNextChunk();
 
