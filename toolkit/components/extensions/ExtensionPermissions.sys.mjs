@@ -10,6 +10,8 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+  AddonManagerPrivate: "resource://gre/modules/AddonManager.sys.mjs",
   ExtensionParent: "resource://gre/modules/ExtensionParent.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
@@ -677,6 +679,53 @@ export var OriginControls = {
     return null;
   },
 };
+
+export var QuarantinedDomains = {
+  getUserAllowedAddonIdPrefName(addonId) {
+    return `${this.PREF_ADDONS_BRANCH_NAME}${addonId}`;
+  },
+  isUserAllowedAddonId(addonId) {
+    return Services.prefs.getBoolPref(
+      this.getUserAllowedAddonIdPrefName(addonId),
+      false
+    );
+  },
+  setUserAllowedAddonIdPref(addonId, userAllowed) {
+    Services.prefs.setBoolPref(
+      this.getUserAllowedAddonIdPrefName(addonId),
+      userAllowed
+    );
+  },
+
+  // Implementation internals.
+
+  PREF_ADDONS_BRANCH_NAME: `extensions.quarantineIgnoredByUser.`,
+  _init() {
+    const onUserAllowedPrefChanged = this._onUserAllowedPrefChanged.bind(this);
+    Services.prefs.addObserver(
+      this.PREF_ADDONS_BRANCH_NAME,
+      onUserAllowedPrefChanged
+    );
+  },
+  async _onUserAllowedPrefChanged(_subject, _topic, prefName) {
+    // Compute the addon id from prefName, so that the listener
+    // will not need to determine which addon the `.userAllowed` pref
+    // change is related to.
+    let addonId = prefName.slice(this.PREF_ADDONS_BRANCH_NAME.length);
+    // Sanity check.
+    if (!addonId || prefName !== this.getUserAllowedAddonIdPrefName(addonId)) {
+      return;
+    }
+    // Notify onPropertyChanged addon listeners about quarantineUserAllowed property
+    // value change (e.g. to make sure the property is updated also in the details
+    // included in the TelemetryEnvironment).
+    const addon = await lazy.AddonManager.getAddonByID(addonId);
+    lazy.AddonManagerPrivate.callAddonListeners("onPropertyChanged", addon, [
+      "quarantineIgnoredByUser",
+    ]);
+  },
+};
+QuarantinedDomains._init();
 
 // Constants exported for testing purpose.
 export {
