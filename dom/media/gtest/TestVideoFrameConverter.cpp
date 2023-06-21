@@ -7,9 +7,9 @@
 
 #include "gtest/gtest.h"
 #include "libwebrtcglue/SystemTime.h"
+#include "mozilla/gtest/WaitFor.h"
 #include "MediaEventSource.h"
 #include "VideoFrameConverter.h"
-#include "WaitFor.h"
 #include "YUVBufferGenerator.h"
 
 using namespace mozilla;
