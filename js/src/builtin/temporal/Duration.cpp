@@ -1314,6 +1314,37 @@ bool js::temporal::BalanceDuration(JSContext* cx, const Instant& nanoseconds,
   return ::BalanceDurationSlow(cx, nanos, largestUnit, result);
 }
 
+static bool BigIntToStringBuilder(JSContext* cx, Handle<BigInt*> num,
+                                  JSStringBuilder& sb) {
+  MOZ_ASSERT(!num->isNegative());
+
+  JSLinearString* str = BigInt::toString<CanGC>(cx, num, 10);
+  if (!str) {
+    return false;
+  }
+  return sb.append(str);
+}
+
+static bool NumberToStringBuilder(JSContext* cx, double num,
+                                  JSStringBuilder& sb) {
+  MOZ_ASSERT(IsInteger(num));
+  MOZ_ASSERT(num >= 0);
+
+  if (num < DOUBLE_INTEGRAL_PRECISION_LIMIT) {
+    ToCStringBuf cbuf;
+    size_t length;
+    const char* numStr = NumberToCString(&cbuf, num, &length);
+
+    return sb.append(numStr, length);
+  }
+
+  Rooted<BigInt*> bi(cx, BigInt::createFromDouble(cx, num));
+  if (!bi) {
+    return false;
+  }
+  return BigIntToStringBuilder(cx, bi, sb);
+}
+
 static Duration AbsoluteDuration(const Duration& duration) {
   return {
       std::abs(duration.years),        std::abs(duration.months),
@@ -1322,6 +1353,328 @@ static Duration AbsoluteDuration(const Duration& duration) {
       std::abs(duration.seconds),      std::abs(duration.milliseconds),
       std::abs(duration.microseconds), std::abs(duration.nanoseconds),
   };
+}
+
+/**
+ * TemporalDurationToString ( years, months, weeks, days, hours, minutes,
+ * seconds, milliseconds, microseconds, nanoseconds, precision )
+ */
+static JSString* TemporalDurationToString(JSContext* cx,
+                                          const Duration& duration,
+                                          Precision precision) {
+  MOZ_ASSERT(IsValidDuration(duration));
+  MOZ_ASSERT(!precision.isMinute());
+
+  // Convert to absolute values up front. This is okay to do, because when the
+  // duration is valid, all components have the same sign.
+  const auto& [years, months, weeks, days, hours, minutes, seconds,
+               milliseconds, microseconds, nanoseconds] =
+      AbsoluteDuration(duration);
+
+  // Fast path for zero durations.
+  if (years == 0 && months == 0 && weeks == 0 && days == 0 && hours == 0 &&
+      minutes == 0 && seconds == 0 && milliseconds == 0 && microseconds == 0 &&
+      nanoseconds == 0 && (precision.isAuto() || precision.value() == 0)) {
+    return NewStringCopyZ<CanGC>(cx, "PT0S");
+  }
+
+  Rooted<BigInt*> totalSecondsBigInt(cx);
+  double totalSeconds = seconds;
+  int32_t fraction = 0;
+  if (milliseconds != 0 || microseconds != 0 || nanoseconds != 0) {
+    bool imprecise = false;
+    do {
+      int64_t sec;
+      int64_t milli;
+      int64_t micro;
+      int64_t nano;
+      if (!mozilla::NumberEqualsInt64(seconds, &sec) ||
+          !mozilla::NumberEqualsInt64(milliseconds, &milli) ||
+          !mozilla::NumberEqualsInt64(microseconds, &micro) ||
+          !mozilla::NumberEqualsInt64(nanoseconds, &nano)) {
+        imprecise = true;
+        break;
+      }
+
+      mozilla::CheckedInt64 intermediate;
+
+      // Step 2.
+      intermediate = micro;
+      intermediate += (nano / 1000);
+      if (!intermediate.isValid()) {
+        imprecise = true;
+        break;
+      }
+      micro = intermediate.value();
+
+      // Step 3.
+      nano %= 1000;
+
+      // Step 4.
+      intermediate = milli;
+      intermediate += (micro / 1000);
+      if (!intermediate.isValid()) {
+        imprecise = true;
+        break;
+      }
+      milli = intermediate.value();
+
+      // Step 5.
+      micro %= 1000;
+
+      // Step 6.
+      intermediate = sec;
+      intermediate += (milli / 1000);
+      if (!intermediate.isValid()) {
+        imprecise = true;
+        break;
+      }
+      sec = intermediate.value();
+
+      // Step 7.
+      milli %= 1000;
+
+      if (sec < int64_t(DOUBLE_INTEGRAL_PRECISION_LIMIT)) {
+        totalSeconds = double(sec);
+      } else {
+        totalSecondsBigInt = BigInt::createFromInt64(cx, sec);
+        if (!totalSecondsBigInt) {
+          return nullptr;
+        }
+      }
+
+      // These are now all in the range [0, 999].
+      MOZ_ASSERT(0 <= milli && milli <= 999);
+      MOZ_ASSERT(0 <= micro && micro <= 999);
+      MOZ_ASSERT(0 <= nano && nano <= 999);
+
+      // Step 16.a. (Reordered)
+      fraction = milli * 1'000'000 + micro * 1'000 + nano;
+      MOZ_ASSERT(0 <= fraction && fraction < 1'000'000'000);
+    } while (false);
+
+    // If a result was imprecise, recompute with BigInt to get full precision.
+    if (imprecise) {
+      Rooted<BigInt*> secs(cx, BigInt::createFromDouble(cx, seconds));
+      if (!secs) {
+        return nullptr;
+      }
+
+      Rooted<BigInt*> millis(cx, BigInt::createFromDouble(cx, milliseconds));
+      if (!millis) {
+        return nullptr;
+      }
+
+      Rooted<BigInt*> micros(cx, BigInt::createFromDouble(cx, microseconds));
+      if (!micros) {
+        return nullptr;
+      }
+
+      Rooted<BigInt*> nanos(cx, BigInt::createFromDouble(cx, nanoseconds));
+      if (!nanos) {
+        return nullptr;
+      }
+
+      Rooted<BigInt*> thousand(cx, BigInt::createFromInt64(cx, 1000));
+      if (!thousand) {
+        return nullptr;
+      }
+
+      // Steps 2-3.
+      Rooted<BigInt*> quotient(cx);
+      if (!BigInt::divmod(cx, nanos, thousand, &quotient, &nanos)) {
+        return nullptr;
+      }
+
+      micros = BigInt::add(cx, micros, quotient);
+      if (!micros) {
+        return nullptr;
+      }
+
+      // Steps 4-5.
+      if (!BigInt::divmod(cx, micros, thousand, &quotient, &micros)) {
+        return nullptr;
+      }
+
+      millis = BigInt::add(cx, millis, quotient);
+      if (!millis) {
+        return nullptr;
+      }
+
+      // Steps 6-7.
+      if (!BigInt::divmod(cx, millis, thousand, &quotient, &millis)) {
+        return nullptr;
+      }
+
+      totalSecondsBigInt = BigInt::add(cx, secs, quotient);
+      if (!totalSecondsBigInt) {
+        return nullptr;
+      }
+
+      // These are now all in the range [0, 999].
+      int64_t milli = BigInt::toInt64(millis);
+      int64_t micro = BigInt::toInt64(micros);
+      int64_t nano = BigInt::toInt64(nanos);
+
+      MOZ_ASSERT(0 <= milli && milli <= 999);
+      MOZ_ASSERT(0 <= micro && micro <= 999);
+      MOZ_ASSERT(0 <= nano && nano <= 999);
+
+      // Step 16.a. (Reordered)
+      fraction = milli * 1'000'000 + micro * 1'000 + nano;
+      MOZ_ASSERT(0 <= fraction && fraction < 1'000'000'000);
+    }
+  }
+
+  // Steps 8 and 13.
+  JSStringBuilder result(cx);
+
+  // Step 1. (Reordered)
+  int32_t sign = DurationSign(duration);
+
+  // Steps 17-18. (Reordered)
+  if (sign < 0) {
+    if (!result.append('-')) {
+      return nullptr;
+    }
+  }
+
+  // Step 18. (Reordered)
+  if (!result.append('P')) {
+    return nullptr;
+  }
+
+  // Step 9.
+  if (years != 0) {
+    if (!NumberToStringBuilder(cx, years, result)) {
+      return nullptr;
+    }
+    if (!result.append('Y')) {
+      return nullptr;
+    }
+  }
+
+  // Step 10.
+  if (months != 0) {
+    if (!NumberToStringBuilder(cx, months, result)) {
+      return nullptr;
+    }
+    if (!result.append('M')) {
+      return nullptr;
+    }
+  }
+
+  // Step 11.
+  if (weeks != 0) {
+    if (!NumberToStringBuilder(cx, weeks, result)) {
+      return nullptr;
+    }
+    if (!result.append('W')) {
+      return nullptr;
+    }
+  }
+
+  // Step 12.
+  if (days != 0) {
+    if (!NumberToStringBuilder(cx, days, result)) {
+      return nullptr;
+    }
+    if (!result.append('D')) {
+      return nullptr;
+    }
+  }
+
+  // Step 16. (if-condition)
+  bool hasSecondsPart = totalSeconds != 0 ||
+                        (totalSecondsBigInt && !totalSecondsBigInt->isZero()) ||
+                        fraction != 0 ||
+                        (years == 0 && months == 0 && weeks == 0 && days == 0 &&
+                         hours == 0 && minutes == 0) ||
+                        !precision.isAuto();
+
+  if (hours != 0 || minutes != 0 || hasSecondsPart) {
+    // Step 19. (Reordered)
+    if (!result.append('T')) {
+      return nullptr;
+    }
+
+    // Step 14.
+    if (hours != 0) {
+      if (!NumberToStringBuilder(cx, hours, result)) {
+        return nullptr;
+      }
+      if (!result.append('H')) {
+        return nullptr;
+      }
+    }
+
+    // Step 15.
+    if (minutes != 0) {
+      if (!NumberToStringBuilder(cx, minutes, result)) {
+        return nullptr;
+      }
+      if (!result.append('M')) {
+        return nullptr;
+      }
+    }
+
+    // Step 16.
+    if (hasSecondsPart) {
+      // Step 16.a. (Moved above)
+
+      // Step 16.f.
+      if (totalSecondsBigInt) {
+        if (!BigIntToStringBuilder(cx, totalSecondsBigInt, result)) {
+          return nullptr;
+        }
+      } else {
+        if (!NumberToStringBuilder(cx, totalSeconds, result)) {
+          return nullptr;
+        }
+      }
+
+      // Steps 16.b-e and 16.g.
+      if (precision.isAuto()) {
+        if (fraction != 0) {
+          // Steps 16.g.
+          if (!result.append('.')) {
+            return nullptr;
+          }
+
+          uint32_t k = 100'000'000;
+          do {
+            if (!result.append(char('0' + (fraction / k)))) {
+              return nullptr;
+            }
+            fraction %= k;
+            k /= 10;
+          } while (fraction);
+        }
+      } else if (precision.value() != 0) {
+        // Steps 16.g.
+        if (!result.append('.')) {
+          return nullptr;
+        }
+
+        uint32_t k = 100'000'000;
+        for (uint8_t i = 0; i < precision.value(); i++) {
+          if (!result.append(char('0' + (fraction / k)))) {
+            return nullptr;
+          }
+          fraction %= k;
+          k /= 10;
+        }
+      }
+
+      // Step 16.h.
+      if (!result.append('S')) {
+        return nullptr;
+      }
+    }
+  }
+
+  // Step 20.
+  return result.finishString();
 }
 
 static constexpr bool IsSafeInteger(int64_t x) {
@@ -2273,6 +2626,134 @@ static bool Duration_abs(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
+ * Temporal.Duration.prototype.toString ( [ options ] )
+ */
+static bool Duration_toString(JSContext* cx, const CallArgs& args) {
+  SecondsStringPrecision precision = {Precision::Auto(),
+                                      TemporalUnit::Nanosecond, Increment{1}};
+  auto roundingMode = TemporalRoundingMode::Trunc;
+
+  if (args.hasDefined(0)) {
+    // Step 3.
+    Rooted<JSObject*> options(
+        cx, RequireObjectArg(cx, "options", "toString", args[0]));
+    if (!options) {
+      return false;
+    }
+
+    // Steps 4-5.
+    auto digits = Precision::Auto();
+    if (!ToFractionalSecondDigits(cx, options, &digits)) {
+      return false;
+    }
+
+    // Step 6.
+    if (!ToTemporalRoundingMode(cx, options, &roundingMode)) {
+      return false;
+    }
+
+    // Step 7.
+    auto smallestUnit = TemporalUnit::Auto;
+    if (!GetTemporalUnit(cx, options, TemporalUnitKey::SmallestUnit,
+                         TemporalUnitGroup::Time, &smallestUnit)) {
+      return false;
+    }
+
+    // Step 8.
+    if (smallestUnit == TemporalUnit::Hour ||
+        smallestUnit == TemporalUnit::Minute) {
+      const char* smallestUnitStr =
+          smallestUnit == TemporalUnit::Hour ? "hour" : "minute";
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_TEMPORAL_INVALID_UNIT_OPTION,
+                                smallestUnitStr, "smallestUnit");
+      return false;
+    }
+
+    // Step 9.
+    precision = ToSecondsStringPrecision(smallestUnit, digits);
+  }
+
+  // Step 10.
+  auto* duration = &args.thisv().toObject().as<DurationObject>();
+  Duration rounded;
+  if (!temporal::RoundDuration(cx, ToDuration(duration), precision.increment,
+                               precision.unit, roundingMode, &rounded)) {
+    return false;
+  }
+
+  // Step 11.
+  JSString* str = TemporalDurationToString(cx, rounded, precision.precision);
+  if (!str) {
+    return false;
+  }
+
+  args.rval().setString(str);
+  return true;
+}
+
+/**
+ * Temporal.Duration.prototype.toString ( [ options ] )
+ */
+static bool Duration_toString(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsDuration, Duration_toString>(cx, args);
+}
+
+/**
+ *  Temporal.Duration.prototype.toJSON ( )
+ */
+static bool Duration_toJSON(JSContext* cx, const CallArgs& args) {
+  auto* duration = &args.thisv().toObject().as<DurationObject>();
+
+  // Step 3.
+  JSString* str =
+      TemporalDurationToString(cx, ToDuration(duration), Precision::Auto());
+  if (!str) {
+    return false;
+  }
+
+  args.rval().setString(str);
+  return true;
+}
+
+/**
+ *  Temporal.Duration.prototype.toJSON ( )
+ */
+static bool Duration_toJSON(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsDuration, Duration_toJSON>(cx, args);
+}
+
+/**
+ * Temporal.Duration.prototype.toLocaleString ( [ locales [ , options ] ] )
+ */
+static bool Duration_toLocaleString(JSContext* cx, const CallArgs& args) {
+  auto* duration = &args.thisv().toObject().as<DurationObject>();
+
+  // Step 3.
+  JSString* str =
+      TemporalDurationToString(cx, ToDuration(duration), Precision::Auto());
+  if (!str) {
+    return false;
+  }
+
+  args.rval().setString(str);
+  return true;
+}
+
+/**
+ * Temporal.Duration.prototype.toLocaleString ( [ locales [ , options ] ] )
+ */
+static bool Duration_toLocaleString(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsDuration, Duration_toLocaleString>(cx, args);
+}
+
+/**
  * Temporal.Duration.prototype.valueOf ( )
  */
 static bool Duration_valueOf(JSContext* cx, unsigned argc, Value* vp) {
@@ -2300,6 +2781,9 @@ static const JSFunctionSpec Duration_prototype_methods[] = {
     JS_FN("with", Duration_with, 1, 0),
     JS_FN("negated", Duration_negated, 0, 0),
     JS_FN("abs", Duration_abs, 0, 0),
+    JS_FN("toString", Duration_toString, 0, 0),
+    JS_FN("toJSON", Duration_toJSON, 0, 0),
+    JS_FN("toLocaleString", Duration_toLocaleString, 0, 0),
     JS_FN("valueOf", Duration_valueOf, 0, 0),
     JS_FS_END,
 };
