@@ -23,6 +23,22 @@ deb11-mercurial:
                          -e "s/__DATE__/$(date --rfc-2822)/" \
                          -e "s/__CODENAME__/bullseye/" debian/changelog
 
+deb12-mercurial:
+    description: "Modern Mercurial for Debian bookworm"
+    treeherder:
+        symbol: Deb12(hg)
+    run:
+        using: debian-package
+        dist: bookworm
+        tarball:
+            url: https://www.mercurial-scm.org/release/mercurial-6.4.3.tar.gz
+            sha256: a77fb62d325934a83a00b2fc6db109f44c67b86768fc40490366f513640c7f64
+        pre-build-command: >-
+            cp -r contrib/packaging/debian debian &&
+            sed -i -e "s/__VERSION__/$(awk -F\" '$2 {print $2}' mercurial/__version__.py)-1.deb12moz1/" \
+                         -e "s/__DATE__/$(date --rfc-2822)/" \
+                         -e "s/__CODENAME__/bookworm/" debian/changelog
+
 deb11-cmake:
     description: "cmake"
     treeherder:
@@ -43,6 +59,16 @@ deb11-valgrind:
             url: http://snapshot.debian.org/archive/debian/20230111T213757Z/pool/main/v/valgrind/valgrind_3.20.0-1.dsc
             sha256: e32d373bf2d4f0bd0e9673c711d0e4a8eed43c22ca81714ae3e2d85b2f315493
 
+deb12-valgrind:
+    description: "Valgrind for Debian bookworm"
+    treeherder:
+        symbol: Deb12(valgrind)
+    run:
+        dist: bookworm
+        dsc:
+            url: http://snapshot.debian.org/archive/debian/20230111T213757Z/pool/main/v/valgrind/valgrind_3.20.0-1.dsc
+            sha256: e32d373bf2d4f0bd0e9673c711d0e4a8eed43c22ca81714ae3e2d85b2f315493
+
 deb11-python-zstandard:
     description: "python-zstandard for Debian bullseye"
     treeherder:
@@ -54,6 +80,19 @@ deb11-python-zstandard:
             url: https://github.com/indygreg/python-zstandard/releases/download/0.19.0/zstandard-0.19.0.tar.gz
             sha256: 31d12fcd942dd8dbf52ca5f6b1bbe287f44e5d551a081a983ff3ea2082867863
         pre-build-command: debchange -v 0.19.0-1.deb11moz --distribution bullseye "Mozilla backport for buster"
+        name: python-zstandard
+
+deb12-python-zstandard:
+    description: "python-zstandard for Debian bookworm"
+    treeherder:
+        symbol: Deb12(python-zstandard)
+    run:
+        using: debian-package
+        dist: bookworm
+        tarball:
+            url: https://github.com/indygreg/python-zstandard/releases/download/0.19.0/zstandard-0.19.0.tar.gz
+            sha256: 31d12fcd942dd8dbf52ca5f6b1bbe287f44e5d551a081a983ff3ea2082867863
+        pre-build-command: debchange -v 0.19.0-1.deb12moz --distribution testing "Mozilla backport for bookworm"
         name: python-zstandard
 
 deb8-gcc-8:

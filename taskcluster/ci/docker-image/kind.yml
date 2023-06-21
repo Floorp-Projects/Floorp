@@ -150,6 +150,40 @@ jobs:
         definition: toolchain-build
         packages:
             - deb11-cmake
+    # Neither the debian12-raw nor the debian12-packages images can have
+    # packages dependencies.
+    debian12-raw:
+        symbol: I(deb12-raw)
+        definition: debian-raw
+        args:
+            BASE_IMAGE: debian:bookworm-20230612
+            DIST: bookworm
+            SNAPSHOT: '20230611T210420Z'
+    debian12-packages:
+        symbol: I(deb12-pkg)
+        definition: debian-packages
+        parent: debian12-raw
+    debian12-base:
+        symbol: I(deb12-base)
+        definition: debian-base
+        parent: debian12-raw
+        packages:
+            - deb12-mercurial
+            - deb12-python-zstandard
+    debian12-amd64-build:
+        symbol: I(deb12)
+        parent: debian12-base
+        definition: debian-build
+    debian12-repackage:
+        symbol: I(deb12-rpk)
+        parent: debian12-base
+        definition: debian-repackage
+        packages:
+            - deb12-mercurial
+    deb12-toolchain-build:
+        symbol: I(deb12-toolchain)
+        parent: debian12-base
+        definition: toolchain-build
     android-build:
         symbol: I(agb)
         parent: debian11-base
