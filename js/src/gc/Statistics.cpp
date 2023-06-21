@@ -1602,6 +1602,9 @@ void Statistics::maybePrintProfileHeaders() {
   _("States", 6, "%6s", formatGCStates(slice))        \
   _("FSNR", 4, "%4s", formatGCFlags(slice))           \
   _("SizeKB", 8, "%8zu", sizeKB)                      \
+  _("Zs", 3, "%3zu", zoneCount)                       \
+  _("Cs", 3, "%3zu", compartmentCount)                \
+  _("Rs", 3, "%3zu", realmCount)                      \
   _("Budget", 6, "%6s", formatBudget(slice))
 
 #define FOR_EACH_GC_PROFILE_METADATA(_)  \
@@ -1664,6 +1667,9 @@ void Statistics::printSliceProfile() {
   TimeDuration timestamp = slice.end - creationTime();
   const char* reason = ExplainGCReason(slice.reason);
   size_t sizeKB = gc->heapSize.bytes() / 1024;
+  size_t zoneCount = zoneStats.zoneCount;
+  size_t compartmentCount = zoneStats.compartmentCount;
+  size_t realmCount = zoneStats.realmCount;
 
 #define PRINT_FIELD_VALUE(_1, _2, format, value) \
   if (!sprinter.jsprintf(" " format, value)) {   \
@@ -1735,7 +1741,7 @@ const char* Statistics::formatBudget(const SliceData& slice) {
   }
 
   DebugOnly<int> r =
-      SprintfLiteral(formatBuffer_, " %6" PRIi64, slice.budget.timeBudget());
+      SprintfLiteral(formatBuffer_, "%6" PRIi64, slice.budget.timeBudget());
   MOZ_ASSERT(r > 0 && r < FormatBufferLength);
   return formatBuffer_;
 }
