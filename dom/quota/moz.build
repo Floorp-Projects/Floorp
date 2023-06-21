@@ -75,6 +75,7 @@ XPCOM_MANIFESTS += [
 UNIFIED_SOURCES += [
     "ActorsChild.cpp",
     "ActorsParent.cpp",
+    "Assertions.cpp",
     "CachingDatabaseConnection.cpp",
     "CanonicalQuotaObject.cpp",
     "Client.cpp",
