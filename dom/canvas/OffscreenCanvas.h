@@ -22,7 +22,7 @@ struct JSContext;
 namespace mozilla {
 class CancelableRunnable;
 class ErrorResult;
-enum class RFPTarget : unsigned;
+enum class RFPTarget : uint64_t;
 
 namespace gfx {
 class SourceSurface;

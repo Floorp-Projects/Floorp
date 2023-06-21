@@ -18,7 +18,7 @@ class GMPCrashHelper;
 class VideoFrameContainer;
 class MediaInfo;
 class MediaResult;
-enum class RFPTarget : uint32_t;
+enum class RFPTarget : uint64_t;
 
 namespace dom {
 class Document;
