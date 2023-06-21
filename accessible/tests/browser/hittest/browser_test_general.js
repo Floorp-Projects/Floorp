@@ -305,3 +305,27 @@ addAccessibleTask(
   },
   { chrome: false, iframe: true, remoteIframe: true }
 );
+
+/**
+ * Verify that hit testing is appropriately fuzzy when working with generics with siblings.
+ * We should return the deepest text leaf as the deepest match instead of the generic itself.
+ */
+addAccessibleTask(
+  `
+<div id="generic"><span aria-hidden="true" id="visible">Mozilla</span><span id="invisible" style="display: block !important;border: 0 !important;clip: rect(0 0 0 0) !important;height: 1px !important;margin: -1px !important;overflow: hidden !important;padding: 0 !important;position: absolute !important;white-space: nowrap !important;width: 1px !important;">Mozilla</span><br>I am some other text</div>`,
+  async function (browser, docAcc) {
+    const generic = findAccessibleChildByID(docAcc, "generic");
+    const invisible = findAccessibleChildByID(docAcc, "invisible");
+    const dpr = await getContentDPR(browser);
+
+    await testChildAtPoint(
+      dpr,
+      1,
+      1,
+      generic,
+      invisible, // Direct Child
+      invisible.firstChild // Deepest Child
+    );
+  },
+  { chrome: false, iframe: true, remoteIframe: true }
+);
