@@ -796,6 +796,45 @@ static bool TimeZoneEquals(JSContext* cx, Handle<JSObject*> one,
   return EqualStrings(cx, timeZoneOne, timeZoneTwo, equals);
 }
 
+/**
+ * RoundISODateTime ( year, month, day, hour, minute, second, millisecond,
+ * microsecond, nanosecond, increment, unit, roundingMode [ , dayLength ] )
+ */
+static bool RoundISODateTime(JSContext* cx, const PlainDateTime& dateTime,
+                             Increment increment, TemporalUnit unit,
+                             TemporalRoundingMode roundingMode,
+                             const Instant& dayLength, PlainDateTime* result) {
+  MOZ_ASSERT(IsValidInstantDifference(dayLength));
+  MOZ_ASSERT(dayLength > (Instant{}));
+
+  const auto& [date, time] = dateTime;
+
+  // Steps 1-2.
+  MOZ_ASSERT(IsValidISODateTime(dateTime));
+  MOZ_ASSERT(ISODateTimeWithinLimits(dateTime));
+
+  // Step 3. (Not applicable in our implementation.)
+
+  // Step 4.
+  auto roundedTime = RoundTime(time, increment, unit, roundingMode, dayLength);
+
+  // |dayLength| can be as small as 1, so the number of rounded days can be as
+  // large as the number of nanoseconds in |time|.
+  MOZ_ASSERT(0 <= roundedTime.days &&
+             roundedTime.days < ToNanoseconds(TemporalUnit::Day));
+
+  // Step 5.
+  PlainDate balanceResult;
+  if (!BalanceISODate(cx, date.year, date.month,
+                      int64_t(date.day) + roundedTime.days, &balanceResult)) {
+    return false;
+  }
+
+  // Step 6.
+  *result = {balanceResult, roundedTime.time};
+  return true;
+}
+
 enum class ZonedDateTimeDuration { Add, Subtract };
 
 /**
@@ -2257,6 +2296,183 @@ static bool ZonedDateTime_subtract(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
+ * Temporal.ZonedDateTime.prototype.round ( roundTo )
+ */
+static bool ZonedDateTime_round(JSContext* cx, const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  auto epochInstant = ToInstant(zonedDateTime);
+
+  // Step 13. (Reorderd)
+  Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
+
+  // Step 15. (Reordered)
+  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+
+  // Steps 3-12.
+  auto smallestUnit = TemporalUnit::Auto;
+  auto roundingMode = TemporalRoundingMode::HalfExpand;
+  auto roundingIncrement = Increment{1};
+  if (args.get(0).isString()) {
+    // Step 4. (Not applicable in our implementation.)
+
+    // Step 9.
+    Rooted<JSString*> paramString(cx, args[0].toString());
+    if (!GetTemporalUnit(cx, paramString, TemporalUnitKey::SmallestUnit,
+                         TemporalUnitGroup::DayTime, &smallestUnit)) {
+      return false;
+    }
+
+    // Steps 6-8 and 10-12. (Implicit)
+  } else {
+    // Steps 3 and 5.a
+    Rooted<JSObject*> roundTo(
+        cx, RequireObjectArg(cx, "roundTo", "round", args.get(0)));
+    if (!roundTo) {
+      return false;
+    }
+
+    // Steps 6-7.
+    if (!ToTemporalRoundingIncrement(cx, roundTo, &roundingIncrement)) {
+      return false;
+    }
+
+    // Step 8.
+    if (!ToTemporalRoundingMode(cx, roundTo, &roundingMode)) {
+      return false;
+    }
+
+    // Step 9.
+    if (!GetTemporalUnit(cx, roundTo, TemporalUnitKey::SmallestUnit,
+                         TemporalUnitGroup::DayTime, &smallestUnit)) {
+      return false;
+    }
+
+    if (smallestUnit == TemporalUnit::Auto) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_TEMPORAL_MISSING_OPTION, "smallestUnit");
+      return false;
+    }
+
+    MOZ_ASSERT(TemporalUnit::Day <= smallestUnit &&
+               smallestUnit <= TemporalUnit::Nanosecond);
+
+    // Steps 10-11.
+    auto maximum = Increment{1};
+    bool inclusive = true;
+    if (smallestUnit > TemporalUnit::Day) {
+      maximum = MaximumTemporalDurationRoundingIncrement(smallestUnit);
+      inclusive = false;
+    }
+
+    // Step 12.
+    if (!ValidateTemporalRoundingIncrement(cx, roundingIncrement, maximum,
+                                           inclusive)) {
+      return false;
+    }
+  }
+
+  // Step 14.
+  Rooted<InstantObject*> instant(cx, CreateTemporalInstant(cx, epochInstant));
+  if (!instant) {
+    return false;
+  }
+
+  // Step 16.
+  PlainDateTime temporalDateTime;
+  if (!temporal::GetPlainDateTimeFor(cx, timeZone, instant,
+                                     &temporalDateTime)) {
+    return false;
+  }
+
+  // Step 17.
+  Rooted<CalendarObject*> isoCalendar(cx, GetISO8601Calendar(cx));
+  if (!isoCalendar) {
+    return false;
+  }
+
+  // Step 18.
+  Rooted<PlainDateTimeObject*> dtStart(
+      cx, CreateTemporalDateTime(cx, {temporalDateTime.date}, isoCalendar));
+  if (!dtStart) {
+    return false;
+  }
+
+  // Steps 19-20.
+  Instant startNs;
+  if (!GetInstantFor(cx, timeZone, dtStart, TemporalDisambiguation::Compatible,
+                     &startNs)) {
+    return false;
+  }
+
+  // Step 21.
+  Instant endNs;
+  if (!AddZonedDateTime(cx, startNs, timeZone, calendar, {0, 0, 0, 1},
+                        &endNs)) {
+    return false;
+  }
+  MOZ_ASSERT(IsValidEpochInstant(endNs));
+
+  // Step 22.
+  auto dayLengthNs = endNs - startNs;
+  MOZ_ASSERT(IsValidInstantDifference(dayLengthNs));
+
+  // Step 23.
+  if (dayLengthNs <= Instant{}) {
+    JS_ReportErrorNumberASCII(
+        cx, GetErrorMessage, nullptr,
+        JSMSG_TEMPORAL_ZONED_DATE_TIME_NON_POSITIVE_DAY_LENGTH);
+    return false;
+  }
+
+  // Step 25.
+  int64_t offsetNanoseconds;
+  if (!GetOffsetNanosecondsFor(cx, timeZone, instant, &offsetNanoseconds)) {
+    return false;
+  }
+  MOZ_ASSERT(std::abs(offsetNanoseconds) < ToNanoseconds(TemporalUnit::Day));
+
+  // Step 24. (Reordered to throw exceptions in correct order.)
+  //
+  // Per spec, out-of-range date values throw a RangeError when
+  // CreateTemporalDateTime in InterpretISODateTimeOffset is called. This
+  // implementation throws the RangeError in RoundISODateTime, therefore steps
+  // 24 and 25 have to be switched.
+  PlainDateTime roundResult;
+  if (!RoundISODateTime(cx, temporalDateTime, roundingIncrement, smallestUnit,
+                        roundingMode, dayLengthNs, &roundResult)) {
+    return false;
+  }
+
+  // Step 26.
+  Instant epochNanoseconds;
+  if (!InterpretISODateTimeOffset(
+          cx, roundResult, OffsetBehaviour::Option, offsetNanoseconds, timeZone,
+          TemporalDisambiguation::Compatible, TemporalOffset::Prefer,
+          MatchBehaviour::MatchExactly, &epochNanoseconds)) {
+    return false;
+  }
+
+  // Step 27.
+  auto* result =
+      CreateTemporalZonedDateTime(cx, epochNanoseconds, timeZone, calendar);
+  if (!result) {
+    return false;
+  }
+
+  args.rval().setObject(*result);
+  return true;
+}
+
+/**
+ * Temporal.ZonedDateTime.prototype.round ( roundTo )
+ */
+static bool ZonedDateTime_round(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_round>(cx, args);
+}
+
+/**
  * Temporal.ZonedDateTime.prototype.equals ( other )
  */
 static bool ZonedDateTime_equals(JSContext* cx, const CallArgs& args) {
@@ -2899,6 +3115,7 @@ static const JSFunctionSpec ZonedDateTime_prototype_methods[] = {
     JS_FN("withCalendar", ZonedDateTime_withCalendar, 1, 0),
     JS_FN("add", ZonedDateTime_add, 1, 0),
     JS_FN("subtract", ZonedDateTime_subtract, 1, 0),
+    JS_FN("round", ZonedDateTime_round, 1, 0),
     JS_FN("equals", ZonedDateTime_equals, 1, 0),
     JS_FN("toString", ZonedDateTime_toString, 0, 0),
     JS_FN("toLocaleString", ZonedDateTime_toLocaleString, 0, 0),
