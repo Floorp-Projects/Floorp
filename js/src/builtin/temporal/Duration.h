@@ -71,6 +71,30 @@ inline Duration ToDuration(const DurationObject* duration) {
   };
 }
 
+/**
+ * DurationSign ( years, months, weeks, days, hours, minutes, seconds,
+ * milliseconds, microseconds, nanoseconds )
+ */
+int32_t DurationSign(const Duration& duration);
+
+/**
+ * IsValidDuration ( years, months, weeks, days, hours, minutes, seconds,
+ * milliseconds, microseconds, nanoseconds )
+ */
+bool IsValidDuration(const Duration& duration);
+
+/**
+ * IsValidDuration ( years, months, weeks, days, hours, minutes, seconds,
+ * milliseconds, microseconds, nanoseconds )
+ */
+bool ThrowIfInvalidDuration(JSContext* cx, const Duration& duration);
+
+/**
+ * CreateTemporalDuration ( years, months, weeks, days, hours, minutes, seconds,
+ * milliseconds, microseconds, nanoseconds [ , newTarget ] )
+ */
+DurationObject* CreateTemporalDuration(JSContext* cx, const Duration& duration);
+
 } /* namespace js::temporal */
 
 #endif /* builtin_temporal_Duration_h */
