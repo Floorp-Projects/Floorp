@@ -431,11 +431,7 @@ void SheetLoadData::ScheduleLoadEventIfNeeded() {
   auto* dispatcher = new LoadBlockingAsyncEventDispatcher(
       node, mLoadFailed ? u"error"_ns : u"load"_ns, CanBubble::eNo,
       ChromeOnlyDispatch::eNo);
-  if (mMustNotify) {
-    dispatcher->RunDOMEventWhenSafe();
-  } else {
-    dispatcher->PostDOMEvent();
-  }
+  dispatcher->PostDOMEvent();
 }
 
 nsINode* SheetLoadData::GetRequestingNode() const {
@@ -1569,10 +1565,6 @@ void Loader::NotifyObservers(SheetLoadData& aData, nsresult aStatus) {
     // StyleSheetLoaded callback.
     if (aData.BlocksLoadEvent()) {
       DecrementOngoingLoadCount();
-      if (mPendingLoadCount && mPendingLoadCount == mOngoingLoadCount) {
-        LOG(("  No more loading sheets; starting deferred loads"));
-        StartDeferredLoads();
-      }
     }
   }
   if (!aData.mTitle.IsEmpty() && NS_SUCCEEDED(aStatus)) {
@@ -1602,7 +1594,10 @@ void Loader::NotifyObservers(SheetLoadData& aData, nsresult aStatus) {
     }
   }
 
-  aData.ScheduleLoadEventIfNeeded();
+  if (mPendingLoadCount && mPendingLoadCount == mOngoingLoadCount) {
+    LOG(("  No more loading sheets; starting deferred loads"));
+    StartDeferredLoads();
+  }
 }
 
 /**
