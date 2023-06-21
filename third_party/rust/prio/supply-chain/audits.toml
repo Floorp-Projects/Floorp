@@ -1,0 +1,252 @@
+
+# cargo-vet audits file
+
+[[audits.assert_matches]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-run"
+version = "1.5.0"
+
+[[audits.base64]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+delta = "0.20.0 -> 0.21.0"
+
+[[audits.block-buffer]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+version = "0.9.0"
+
+[[audits.ciborium-io]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-run"
+version = "0.2.0"
+
+[[audits.cmac]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+version = "0.7.1"
+
+[[audits.crunchy]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+version = "0.2.2"
+
+[[audits.dbl]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+version = "0.3.2"
+
+[[audits.either]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+version = "1.6.1"
+
+[[audits.fiat-crypto]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+version = "0.1.17"
+notes = """
+This crate does not contain any unsafe code, and does not use any items from
+the standard library or other crates, aside from operations backed by
+`std::ops`. All paths with array indexing use integer literals for indexes, so
+there are no panics due to indexes out of bounds (as rustc would catch an
+out-of-bounds literal index). I did not check whether arithmetic overflows
+could cause a panic, and I am relying on the Coq code having satisfied the
+necessary preconditions to ensure panics due to overflows are unreachable.
+"""
+
+[[audits.fiat-crypto]]
+who = "Brandon Pitman <bran@bran.land>"
+criteria = "safe-to-deploy"
+delta = "0.1.17 -> 0.1.18"
+
+[[audits.fiat-crypto]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+delta = "0.1.18 -> 0.1.19"
+notes = """
+This release renames many items and adds a new module. The code in the new
+module is entirely composed of arithmetic and array accesses.
+"""
+
+[[audits.fixed]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+delta = "1.20.0 -> 1.21.0"
+
+[[audits.fixed]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+delta = "1.21.0 -> 1.22.1"
+
+[[audits.fixed]]
+who = "Brandon Pitman <bran@bran.land>"
+criteria = "safe-to-deploy"
+delta = "1.22.1 -> 1.23.0"
+
+[[audits.fixed-macro]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-run"
+version = "1.2.0"
+
+[[audits.fixed-macro-impl]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-run"
+version = "1.2.0"
+
+[[audits.ghash]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+version = "0.5.0"
+
+[[audits.hex-literal]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-run"
+version = "0.3.4"
+
+[[audits.keccak]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+version = "0.1.2"
+
+[[audits.modinverse]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-run"
+version = "0.1.1"
+
+[[audits.once_cell]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+delta = "1.14.0 -> 1.15.0"
+
+[[audits.once_cell]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+delta = "1.15.0 -> 1.16.0"
+notes = """
+Changes to unsafe code in src/lib.rs, src/impl_std.rs, and src/imp_pl.rs are
+functionally equivalent, and call unwrap_unchecked() on already-initialized
+Options. The new implementation based on critical_section appears to be sound.
+"""
+
+[[audits.once_cell]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+delta = "1.16.0 -> 1.17.0"
+
+[[audits.opaque-debug]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+version = "0.3.0"
+
+[[audits.proc-macro-error-attr]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-run"
+version = "1.0.4"
+
+[[audits.proc-macro2]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.49 -> 1.0.47"
+
+[[audits.rayon]]
+who = "Brandon Pitman <bran@bran.land>"
+criteria = "safe-to-deploy"
+delta = "1.6.1 -> 1.7.0"
+
+[[audits.rayon-core]]
+who = "Brandon Pitman <bran@bran.land>"
+criteria = "safe-to-deploy"
+delta = "1.10.2 -> 1.11.0"
+
+[[audits.rayon-core]]
+who = "Brandon Pitman <bran@bran.land>"
+criteria = "safe-to-deploy"
+delta = "1.10.2 -> 1.11.0"
+
+[[audits.serde]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.152 -> 1.0.153"
+
+[[audits.serde]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.153 -> 1.0.154"
+
+[[audits.serde]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.154 -> 1.0.155"
+
+[[audits.serde_derive]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.152 -> 1.0.153"
+
+[[audits.serde_derive]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.153 -> 1.0.154"
+
+[[audits.serde_derive]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.154 -> 1.0.155"
+
+[[audits.serde_json]]
+who = "Tim Geoghegan <timg@letsencrypt.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.91 -> 1.0.92"
+notes = "The only changes are to doccomments, a dev-dependency and the project's CI workflow, so there should be no risk to dependents."
+
+[[audits.serde_json]]
+who = "Brandon Pitman <bran@bran.land>"
+criteria = "safe-to-deploy"
+delta = "1.0.92 -> 1.0.93"
+
+[[audits.serde_json]]
+who = "Brandon Pitman <bran@bran.land>"
+criteria = "safe-to-deploy"
+delta = "1.0.93 -> 1.0.94"
+
+[[audits.sha3]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+version = "0.10.6"
+
+[[audits.thiserror]]
+who = "Brandon Pitman <bran@bran.land>"
+criteria = "safe-to-deploy"
+delta = "1.0.38 -> 1.0.39"
+
+[[audits.thiserror-impl]]
+who = "Brandon Pitman <bran@bran.land>"
+criteria = "safe-to-deploy"
+delta = "1.0.38 -> 1.0.39"
+
+[[audits.unicode-ident]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.2 -> 1.0.3"
+
+[[audits.universal-hash]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+version = "0.4.1"
+
+[[audits.untrusted]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+version = "0.7.1"
+
+[[audits.wasm-bindgen-shared]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+version = "0.2.83"
+
+[[audits.zipf]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-run"
+version = "7.0.0"
+

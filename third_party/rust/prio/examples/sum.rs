@@ -26,24 +26,24 @@ fn main() {
     let mut client2 = Client::new(dim, pub_key1, pub_key2).unwrap();
 
     let data1_u32 = [0, 0, 1, 0, 0, 0, 0, 0];
-    println!("Client 1 Input: {:?}", data1_u32);
+    println!("Client 1 Input: {data1_u32:?}");
 
     let data1 = data1_u32
         .iter()
-        .map(|x| Field32::from(*x))
-        .collect::<Vec<Field32>>();
+        .map(|x| FieldPrio2::from(*x))
+        .collect::<Vec<FieldPrio2>>();
 
     let data2_u32 = [0, 0, 1, 0, 0, 0, 0, 0];
-    println!("Client 2 Input: {:?}", data2_u32);
+    println!("Client 2 Input: {data2_u32:?}");
 
     let data2 = data2_u32
         .iter()
-        .map(|x| Field32::from(*x))
-        .collect::<Vec<Field32>>();
+        .map(|x| FieldPrio2::from(*x))
+        .collect::<Vec<FieldPrio2>>();
 
     let (share1_1, share1_2) = client1.encode_simple(&data1).unwrap();
     let (share2_1, share2_2) = client2.encode_simple(&data2).unwrap();
-    let eval_at = Field32::from(12313);
+    let eval_at = FieldPrio2::from(12313);
 
     let mut server1 = Server::new(dim, true, priv_key1).unwrap();
     let mut server2 = Server::new(dim, false, priv_key2).unwrap();

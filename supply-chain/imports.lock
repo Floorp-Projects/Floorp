@@ -337,6 +337,12 @@ user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
 
+[[publisher.prio]]
+version = "0.12.0"
+when = "2023-03-22"
+user-id = 101233
+user-login = "le-automaton"
+
 [[publisher.proc-macro-hack]]
 version = "0.5.20+deprecated"
 when = "2022-12-19"
@@ -989,6 +995,13 @@ who = "ChromeOS"
 criteria = "safe-to-run"
 version = "0.3.0"
 aggregated-from = "https://chromium.googlesource.com/chromiumos/third_party/rust_crates/+/refs/heads/main/cargo-vet/audits.toml?format=TEXT"
+
+[[audits.isrg.wildcard-audits.prio]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+user-id = 101233 # le-automaton
+start = "2020-09-28"
+end = "2024-03-23"
 
 [[audits.isrg.audits.block-buffer]]
 who = "David Cook <dcook@divviup.org>"
