@@ -32,6 +32,9 @@
 #include "builtin/intl/SharedIntlData.h"
 #include "builtin/temporal/Calendar.h"
 #include "builtin/temporal/Instant.h"
+#include "builtin/temporal/PlainDate.h"
+#include "builtin/temporal/PlainDateTime.h"
+#include "builtin/temporal/PlainTime.h"
 #include "builtin/temporal/Temporal.h"
 #include "builtin/temporal/TemporalParser.h"
 #include "builtin/temporal/TemporalTypes.h"
@@ -850,6 +853,208 @@ JSString* js::temporal::GetOffsetStringFor(
   return FormatTimeZoneOffsetString(cx, offsetNanoseconds);
 }
 
+// ES2019 draft rev 0ceb728a1adbffe42b26972a6541fd7f398b1557
+// 5.2.5 Mathematical Operations
+static inline double PositiveModulo(double dividend, double divisor) {
+  MOZ_ASSERT(divisor > 0);
+  MOZ_ASSERT(std::isfinite(divisor));
+
+  double result = std::fmod(dividend, divisor);
+  if (result < 0) {
+    result += divisor;
+  }
+  return result + (+0.0);
+}
+
+/* ES5 15.9.1.10. */
+static double HourFromTime(double t) {
+  return PositiveModulo(std::floor(t / msPerHour), HoursPerDay);
+}
+
+static double MinFromTime(double t) {
+  return PositiveModulo(std::floor(t / msPerMinute), MinutesPerHour);
+}
+
+static double SecFromTime(double t) {
+  return PositiveModulo(std::floor(t / msPerSecond), SecondsPerMinute);
+}
+
+static double msFromTime(double t) { return PositiveModulo(t, msPerSecond); }
+
+/**
+ * GetISOPartsFromEpoch ( epochNanoseconds )
+ */
+static PlainDateTime GetISOPartsFromEpoch(const Instant& instant) {
+  // TODO: YearFromTime/MonthFromTime/DayFromTime recompute the same values
+  // multiple times. Consider adding a new function avoids this.
+
+  // Step 1.
+  MOZ_ASSERT(IsValidEpochInstant(instant));
+
+  // Step 2.
+  int32_t remainderNs = instant.nanoseconds % 1'000'000;
+
+  // Step 3.
+  int64_t epochMilliseconds = instant.floorToMilliseconds();
+
+  // Step 4.
+  int32_t year = JS::YearFromTime(epochMilliseconds);
+
+  // Step 5.
+  int32_t month = JS::MonthFromTime(epochMilliseconds) + 1;
+
+  // Step 6.
+  int32_t day = JS::DayFromTime(epochMilliseconds);
+
+  // Step 7.
+  int32_t hour = HourFromTime(epochMilliseconds);
+
+  // Step 8.
+  int32_t minute = MinFromTime(epochMilliseconds);
+
+  // Step 9.
+  int32_t second = SecFromTime(epochMilliseconds);
+
+  // Step 10.
+  int32_t millisecond = msFromTime(epochMilliseconds);
+
+  // Step 11.
+  int32_t microsecond = remainderNs / 1000;
+
+  // Step 12.
+  int32_t nanosecond = remainderNs % 1000;
+
+  // Step 13.
+  PlainDateTime result = {
+      {year, month, day},
+      {hour, minute, second, millisecond, microsecond, nanosecond}};
+
+  // Always valid when the epoch nanoseconds are within the representable limit.
+  MOZ_ASSERT(IsValidISODateTime(result));
+  MOZ_ASSERT(ISODateTimeWithinLimits(result));
+
+  return result;
+}
+
+/**
+ * BalanceISODateTime ( year, month, day, hour, minute, second, millisecond,
+ * microsecond, nanosecond )
+ */
+static PlainDateTime BalanceISODateTime(const PlainDateTime& dateTime,
+                                        int64_t nanoseconds) {
+  MOZ_ASSERT(IsValidISODateTime(dateTime));
+  MOZ_ASSERT(ISODateTimeWithinLimits(dateTime));
+  MOZ_ASSERT(std::abs(nanoseconds) < ToNanoseconds(TemporalUnit::Day));
+
+  auto& [date, time] = dateTime;
+
+  // Step 1. (Not applicable in our implementation.)
+
+  // Step 2.
+  auto balancedTime = BalanceTime(time, nanoseconds);
+  MOZ_ASSERT(-1 <= balancedTime.days && balancedTime.days <= 1);
+
+  // Step 3.
+  auto balancedDate =
+      BalanceISODate(date.year, date.month, date.day + balancedTime.days);
+
+  // Step 4.
+  return {balancedDate, balancedTime.time};
+}
+
+/**
+ * GetPlainDateTimeFor ( timeZone, instant, calendar )
+ */
+static bool GetPlainDateTimeFor(JSContext* cx, Handle<JSObject*> timeZone,
+                                Handle<Wrapped<InstantObject*>> instant,
+                                PlainDateTime* result) {
+  // Step 1.
+  int64_t offsetNanoseconds;
+  if (!GetOffsetNanosecondsFor(cx, timeZone, instant, &offsetNanoseconds)) {
+    return false;
+  }
+  MOZ_ASSERT(std::abs(offsetNanoseconds) < ToNanoseconds(TemporalUnit::Day));
+
+  // TODO: Steps 2-3 can be combined into a single operation to improve perf.
+
+  // Step 2.
+  auto* unwrappedInstant = instant.unwrap(cx);
+  if (!unwrappedInstant) {
+    return false;
+  }
+  PlainDateTime dateTime = GetISOPartsFromEpoch(ToInstant(unwrappedInstant));
+
+  // Step 3.
+  auto balanced = BalanceISODateTime(dateTime, offsetNanoseconds);
+
+  // FIXME: spec issue - CreateTemporalDateTime is infallible
+  // https://github.com/tc39/proposal-temporal/issues/2523
+  MOZ_ASSERT(ISODateTimeWithinLimits(balanced));
+
+  // Step 4.
+  *result = balanced;
+  return true;
+}
+
+/**
+ * GetPlainDateTimeFor ( timeZone, instant, calendar )
+ */
+static PlainDateTimeObject* GetPlainDateTimeFor(
+    JSContext* cx, Handle<JSObject*> timeZone,
+    Handle<Wrapped<InstantObject*>> instant, Handle<JSObject*> calendar) {
+  PlainDateTime dateTime;
+  if (!GetPlainDateTimeFor(cx, timeZone, instant, &dateTime)) {
+    return nullptr;
+  }
+
+  // FIXME: spec issue - CreateTemporalDateTime is infallible
+  // https://github.com/tc39/proposal-temporal/issues/2523
+  MOZ_ASSERT(ISODateTimeWithinLimits(dateTime));
+
+  return CreateTemporalDateTime(cx, dateTime, calendar);
+}
+
+/**
+ * GetPlainDateTimeFor ( timeZone, instant, calendar )
+ */
+PlainDateTimeObject* js::temporal::GetPlainDateTimeFor(
+    JSContext* cx, Handle<JSObject*> timeZone, const Instant& instant,
+    Handle<JSObject*> calendar) {
+  MOZ_ASSERT(IsValidEpochInstant(instant));
+
+  Rooted<InstantObject*> obj(cx, CreateTemporalInstant(cx, instant));
+  if (!obj) {
+    return nullptr;
+  }
+  return ::GetPlainDateTimeFor(cx, timeZone, obj, calendar);
+}
+
+/**
+ * GetPlainDateTimeFor ( timeZone, instant, calendar )
+ */
+bool js::temporal::GetPlainDateTimeFor(JSContext* cx,
+                                       Handle<JSObject*> timeZone,
+                                       Handle<InstantObject*> instant,
+                                       PlainDateTime* result) {
+  return ::GetPlainDateTimeFor(cx, timeZone, instant, result);
+}
+
+/**
+ * GetPlainDateTimeFor ( timeZone, instant, calendar )
+ */
+bool js::temporal::GetPlainDateTimeFor(JSContext* cx,
+                                       Handle<JSObject*> timeZone,
+                                       const Instant& instant,
+                                       PlainDateTime* result) {
+  MOZ_ASSERT(IsValidEpochInstant(instant));
+
+  Rooted<InstantObject*> obj(cx, CreateTemporalInstant(cx, instant));
+  if (!obj) {
+    return false;
+  }
+  return ::GetPlainDateTimeFor(cx, timeZone, obj, result);
+}
+
 /**
  * IsTimeZoneOffsetString ( offsetString )
  *
@@ -1023,6 +1228,48 @@ static bool TimeZone_getOffsetStringFor(JSContext* cx, unsigned argc,
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<IsTimeZone, TimeZone_getOffsetStringFor>(cx,
                                                                        args);
+}
+
+/**
+ * Temporal.TimeZone.prototype.getPlainDateTimeFor ( instant [, calendarLike ] )
+ */
+static bool TimeZone_getPlainDateTimeFor(JSContext* cx, const CallArgs& args) {
+  Rooted<TimeZoneObject*> timeZone(
+      cx, &args.thisv().toObject().as<TimeZoneObject>());
+
+  // Step 3.
+  Rooted<Wrapped<InstantObject*>> instant(cx,
+                                          ToTemporalInstant(cx, args.get(0)));
+  if (!instant) {
+    return false;
+  }
+
+  // Step 4.
+  Rooted<JSObject*> calendar(cx,
+                             ToTemporalCalendarWithISODefault(cx, args.get(1)));
+  if (!calendar) {
+    return false;
+  }
+
+  // Step 5.
+  auto* result = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
+  if (!result) {
+    return false;
+  }
+
+  args.rval().setObject(*result);
+  return true;
+}
+
+/**
+ * Temporal.TimeZone.prototype.getPlainDateTimeFor ( instant [, calendarLike ] )
+ */
+static bool TimeZone_getPlainDateTimeFor(JSContext* cx, unsigned argc,
+                                         Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsTimeZone, TimeZone_getPlainDateTimeFor>(cx,
+                                                                        args);
 }
 
 /**
@@ -1237,6 +1484,7 @@ static const JSFunctionSpec TimeZone_methods[] = {
 static const JSFunctionSpec TimeZone_prototype_methods[] = {
     JS_FN("getOffsetNanosecondsFor", TimeZone_getOffsetNanosecondsFor, 1, 0),
     JS_FN("getOffsetStringFor", TimeZone_getOffsetStringFor, 1, 0),
+    JS_FN("getPlainDateTimeFor", TimeZone_getPlainDateTimeFor, 1, 0),
     JS_FN("getNextTransition", TimeZone_getNextTransition, 1, 0),
     JS_FN("getPreviousTransition", TimeZone_getPreviousTransition, 1, 0),
     JS_FN("toString", TimeZone_toString, 0, 0),

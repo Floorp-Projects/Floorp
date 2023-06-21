@@ -430,6 +430,169 @@ static JSString* TemporalDateToString(JSContext* cx,
   return result.finishString();
 }
 
+static bool CanBalanceISOYear(double year) {
+  // TODO: Export these values somewhere.
+  constexpr int32_t minYear = -271821;
+  constexpr int32_t maxYear = 275760;
+
+  // If the year is below resp. above the min-/max-year, no value of |day| will
+  // make the resulting date valid.
+  return minYear <= year && year <= maxYear;
+}
+
+static bool CanBalanceISODay(double day) {
+  // The maximum number of seconds from the epoch is 8.64 * 10^12.
+  constexpr int64_t maxInstantSeconds = 8'640'000'000'000;
+
+  // In days that makes 10^8.
+  constexpr int64_t maxInstantDays = maxInstantSeconds / 60 / 60 / 24;
+
+  // Multiply by two to take both directions into account and add twenty to
+  // account for the day number of the minimum date "-271821-02-20".
+  constexpr int64_t maximumDayDifference = 2 * maxInstantDays + 20;
+
+  // When |day| is below |maximumDayDifference|, it can be represented as int32.
+  static_assert(maximumDayDifference <= INT32_MAX);
+
+  // When the day difference exceeds the maximum valid day difference, the
+  // overall result won't be a valid date. Detect this early so we don't have to
+  // struggle with floating point precision issues in BalanceISODate.
+  //
+  // This also means BalanceISODate, step 1 doesn't apply to our implementation.
+  return std::abs(day) <= maximumDayDifference;
+}
+
+/**
+ * BalanceISODate ( year, month, day )
+ */
+PlainDate js::temporal::BalanceISODateNew(int32_t year, int32_t month,
+                                          int32_t day) {
+  MOZ_ASSERT(1 <= month && month <= 12);
+
+  // Steps 1-3.
+  int64_t ms = MakeDate(year, month, day);
+
+  // FIXME: spec issue - |ms| can be non-finite
+  // https://github.com/tc39/proposal-temporal/issues/2315
+
+  // TODO: This approach isn't efficient, because MonthFromTime and DayFromTime
+  // both recompute YearFromTime.
+
+  // Step 4.
+  return {int32_t(JS::YearFromTime(ms)), int32_t(JS::MonthFromTime(ms) + 1),
+          int32_t(JS::DayFromTime(ms))};
+}
+
+/**
+ * BalanceISODate ( year, month, day )
+ */
+bool js::temporal::BalanceISODate(JSContext* cx, int32_t year, int32_t month,
+                                  int64_t day, PlainDate* result) {
+  if (!CanBalanceISODay(day)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_PLAIN_DATE_INVALID);
+    return false;
+  }
+
+  *result = BalanceISODate(year, month, int32_t(day));
+  return true;
+}
+
+/**
+ * BalanceISODate ( year, month, day )
+ */
+PlainDate js::temporal::BalanceISODate(int32_t year, int32_t month,
+                                       int32_t day) {
+  // Check no inputs can lead to floating point precision issues below. This
+  // also ensures all loops can finish in reasonable time, so we don't need to
+  // worry about interrupts here. And it ensures there won't be overflows when
+  // using int32_t values.
+  MOZ_ASSERT(CanBalanceISOYear(year));
+  MOZ_ASSERT(1 <= month && month <= 12);
+  MOZ_ASSERT(CanBalanceISODay(day));
+
+  // TODO: BalanceISODate now works using MakeDate
+  // TODO: Can't use JS::MakeDate, because it expects valid month/day values.
+  // https://github.com/tc39/proposal-temporal/issues/2315
+
+  // Step 1. (Not applicable in our implementation.)
+
+  // Steps 3-4. (Not applicable in our implementation.)
+
+  constexpr int32_t daysInNonLeapYear = 365;
+
+  // Skip steps 5-11 for the common case when abs(day) doesn't exceed 365.
+  if (std::abs(day) > daysInNonLeapYear) {
+    // Step 5. (Note)
+
+    // Steps 6-7.
+    int32_t testYear = month > 2 ? year : year - 1;
+
+    // Step 8.
+    while (day < -ISODaysInYear(testYear)) {
+      // Step 8.a.
+      day += ISODaysInYear(testYear);
+
+      // Step 8.b.
+      year -= 1;
+
+      // Step 8.c.
+      testYear -= 1;
+    }
+
+    // Step 9. (Note)
+
+    // Step 10.
+    testYear += 1;
+
+    // Step 11.
+    while (day > ISODaysInYear(testYear)) {
+      // Step 11.a.
+      day -= ISODaysInYear(testYear);
+
+      // Step 11.b.
+      year += 1;
+
+      // Step 11.c.
+      testYear += 1;
+    }
+  }
+
+  // Step 12. (Note)
+
+  // Step 13.
+  while (day < 1) {
+    // Steps 13.a-b. (Inlined call to BalanceISOYearMonth.)
+    if (--month == 0) {
+      month = 12;
+      year -= 1;
+    }
+
+    // Step 13.d
+    day += ISODaysInMonth(year, month);
+  }
+
+  // Step 14. (Note)
+
+  // Step 15.
+  while (day > ISODaysInMonth(year, month)) {
+    // Step 15.a.
+    day -= ISODaysInMonth(year, month);
+
+    // Steps 15.b-d. (Inlined call to BalanceISOYearMonth.)
+    if (++month == 13) {
+      month = 1;
+      year += 1;
+    }
+  }
+
+  MOZ_ASSERT(1 <= month && month <= 12);
+  MOZ_ASSERT(1 <= day && day <= 31);
+
+  // Step 16.
+  return {year, month, day};
+}
+
 /**
  * Temporal.PlainDate ( isoYear, isoMonth, isoDay [ , calendarLike ] )
  */
