@@ -766,6 +766,14 @@ async function GetFormdataResource(aProfileFolder) {
 }
 
 async function GetExtensionsResource(aProfileId, aBrowserKey = "chrome") {
+  if (
+    !Services.prefs.getBoolPref(
+      "browser.migrate.chrome.extensions.enabled",
+      false
+    )
+  ) {
+    return null;
+  }
   let extensions = await lazy.ChromeMigrationUtils.getExtensionList(aProfileId);
   if (!extensions.length || aBrowserKey !== "chrome") {
     return null;
