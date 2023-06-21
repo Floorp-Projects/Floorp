@@ -106,7 +106,7 @@ use style::properties::{PropertyDeclarationId, ShorthandId};
 use style::properties::{SourcePropertyDeclaration, StyleBuilder};
 use style::properties_and_values::rule::Inherits as PropertyInherits;
 use style::rule_cache::RuleCacheConditions;
-use style::rule_tree::{CascadeLevel, StrongRuleNode};
+use style::rule_tree::{CascadeLevel, StrongRuleNode, StyleSource};
 use style::selector_parser::PseudoElementCascadeType;
 use style::shared_lock::{
     Locked, SharedRwLock, SharedRwLockReadGuard, StylesheetGuards, ToCssWithGuard,
@@ -122,8 +122,9 @@ use style::stylesheets::{
     AllowImportRules, ContainerRule, CounterStyleRule, CssRule, CssRuleType, CssRules,
     CssRulesHelpers, DocumentRule, FontFaceRule, FontFeatureValuesRule, FontPaletteValuesRule,
     ImportRule, KeyframesRule, LayerBlockRule, LayerStatementRule, MediaRule, NamespaceRule,
-    Origin, OriginSet, PageRule, PropertyRule, SanitizationData, SanitizationKind, StyleRule,
-    StylesheetContents, StylesheetLoader as StyleStylesheetLoader, SupportsRule, UrlExtraData,
+    Origin, OriginSet, PageRule, PagePseudoClassFlags, PropertyRule, SanitizationData,
+    SanitizationKind, StyleRule, StylesheetContents, StylesheetLoader as StyleStylesheetLoader,
+    SupportsRule, UrlExtraData,
 };
 use style::stylist::{add_size_of_ua_cache, AuthorStylesEnabled, RuleInclusion, Stylist};
 use style::thread_state;
@@ -3867,6 +3868,7 @@ counter_style_descriptors! {
 pub unsafe extern "C" fn Servo_ComputedValues_GetForPageContent(
     raw_data: &PerDocumentStyleData,
     page_name: *const nsAtom,
+    flags: PagePseudoClassFlags,
 ) -> Strong<ComputedValues> {
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
@@ -3876,30 +3878,39 @@ pub unsafe extern "C" fn Servo_ComputedValues_GetForPageContent(
     let mut extra_declarations = vec![];
     let iter = data.stylist.iter_extra_data_origins_rev();
     for (data, origin) in iter {
+        let start = extra_declarations.len();
         let level = match origin {
             Origin::UserAgent => CascadeLevel::UANormal,
             Origin::User => CascadeLevel::UserNormal,
             Origin::Author => CascadeLevel::same_tree_author_normal(),
         };
-        extra_declarations.reserve(data.pages.global.len());
-        let mut add_rule = |rule: &Arc<Locked<PageRule>>| {
-            extra_declarations.push(ApplicableDeclarationBlock::from_declarations(
-                rule.read_with(level.guard(&guards)).block.clone(),
-                level,
-                LayerOrder::root(),
-            ));
-        };
-        for &(ref rule, _layer_id) in data.pages.global.iter() {
-            add_rule(&rule.0);
-        }
-        if !page_name.is_null() {
-            Atom::with(page_name, |name| {
-                if let Some(rules) = data.pages.named.get(name) {
-                    // Rules are already sorted by source order.
-                    rules.iter().for_each(|d| add_rule(&d.rule));
+        let mut add_rule_with_name = |name: &Atom| {
+            if let Some(rules) = data.pages.rules.get(name) {
+                for rule_data in rules.iter() {
+                    let rule = rule_data.rule.read_with(level.guard(&guards));
+                    if let Some(s) = rule.match_specificity(&flags) {
+                        let block = rule.block.clone();
+                        extra_declarations.push(ApplicableDeclarationBlock::new(
+                            StyleSource::from_declarations(block),
+                            0,
+                            level,
+                            s,
+                            LayerOrder::root(),
+                        ));
+                    }
                 }
-            });
+            }
+        };
+        // Add any nameless rules that match pseudo classes.
+        let empty_ = atom!("");
+        add_rule_with_name(&empty_);
+        // Add any rules that match the name.
+        if !page_name.is_null() {
+            Atom::with(page_name, add_rule_with_name);
         }
+        extra_declarations[start..].sort_unstable_by_key(|block| {
+            (block.layer_order(), block.specificity, block.source_order())
+        });
     }
 
     let rule_node = data.stylist.rule_node_for_precomputed_pseudo(
