@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 //! Implementation of the generic Fully Linear Proof (FLP) system specified in
-//! [[draft-irtf-cfrg-vdaf-05]]. This is the main building block of [`Prio3`](crate::vdaf::prio3).
+//! [[draft-irtf-cfrg-vdaf-03]]. This is the main building block of [`Prio3`](crate::vdaf::prio3).
 //!
 //! The FLP is derived for any implementation of the [`Type`] trait. Such an implementation
 //! specifies a validity circuit that defines the set of valid measurements, as well as the finite
@@ -44,10 +44,10 @@
 //! assert!(count.decide(&verifier).unwrap());
 //! ```
 //!
-//! [draft-irtf-cfrg-vdaf-05]: https://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/05/
+//! [draft-irtf-cfrg-vdaf-03]: https://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/03/
 
 use crate::fft::{discrete_fourier_transform, discrete_fourier_transform_inv_finish, FftError};
-use crate::field::{FftFriendlyFieldElement, FieldElement, FieldElementWithInteger, FieldError};
+use crate::field::{FieldElement, FieldError};
 use crate::fp::log2;
 use crate::polynomial::poly_eval;
 use std::any::Any;
@@ -92,10 +92,6 @@ pub enum FlpError {
     #[error("truncate error: {0}")]
     Truncate(String),
 
-    /// Generic invalid parameter. This may be returned when an FLP type cannot be constructed.
-    #[error("invalid paramter: {0}")]
-    InvalidParameter(String),
-
     /// Returned if an FFT operation propagates an error.
     #[error("FFT error: {0}")]
     Fft(#[from] FftError),
@@ -124,7 +120,7 @@ pub trait Type: Sized + Eq + Clone + Debug {
     type AggregateResult: Clone + Debug;
 
     /// The finite field used for this type.
-    type Field: FftFriendlyFieldElement;
+    type Field: FieldElement;
 
     /// Encodes a measurement as a vector of [`Self::input_len`] field elements.
     fn encode_measurement(
@@ -259,9 +255,9 @@ pub trait Type: Sized + Eq + Clone + Debug {
                 let inner_arity = inner.arity();
                 if prove_rand_len + inner_arity > prove_rand.len() {
                     return Err(FlpError::Prove(format!(
-                        "short prove randomness: got {}; want at least {}",
+                        "short prove randomness: got {}; want {}",
                         prove_rand.len(),
-                        prove_rand_len + inner_arity
+                        self.prove_rand_len()
                     )));
                 }
 
@@ -310,10 +306,9 @@ pub trait Type: Sized + Eq + Clone + Debug {
             // Interpolate the wire polynomials `f[0], ..., f[g_arity-1]` from the input wires of each
             // evaluation of the gadget.
             let m = wire_poly_len(gadget.calls());
-            let m_inv = Self::Field::from(
-                <Self::Field as FieldElementWithInteger>::Integer::try_from(m).unwrap(),
-            )
-            .inv();
+            let m_inv =
+                Self::Field::from(<Self::Field as FieldElement>::Integer::try_from(m).unwrap())
+                    .inv();
             let mut f = vec![vec![Self::Field::zero(); m]; gadget.arity()];
             for wire in 0..gadget.arity() {
                 discrete_fourier_transform(&mut f[wire], &gadget.f_vals[wire], m)?;
@@ -403,11 +398,12 @@ pub trait Type: Sized + Eq + Clone + Debug {
                 // Make sure the query randomness isn't a root of unity. Evaluating the gadget
                 // polynomial at any of these points would be a privacy violation, since these points
                 // were used by the prover to construct the wire polynomials.
-                if r.pow(<Self::Field as FieldElementWithInteger>::Integer::try_from(m).unwrap())
+                if r.pow(<Self::Field as FieldElement>::Integer::try_from(m).unwrap())
                     == Self::Field::one()
                 {
                     return Err(FlpError::Query(format!(
-                        "invalid query randomness: encountered 2^{m}-th root of unity"
+                        "invalid query randomness: encountered 2^{}-th root of unity",
+                        m
                     )));
                 }
 
@@ -452,10 +448,9 @@ pub trait Type: Sized + Eq + Clone + Debug {
             // Reconstruct the wire polynomials `f[0], ..., f[g_arity-1]` and evaluate each wire
             // polynomial at query randomness `r`.
             let m = (1 + gadget.calls()).next_power_of_two();
-            let m_inv = Self::Field::from(
-                <Self::Field as FieldElementWithInteger>::Integer::try_from(m).unwrap(),
-            )
-            .inv();
+            let m_inv =
+                Self::Field::from(<Self::Field as FieldElement>::Integer::try_from(m).unwrap())
+                    .inv();
             let mut f = vec![Self::Field::zero(); m];
             for wire in 0..gadget.arity() {
                 discrete_fourier_transform(&mut f, &gadget.f_vals[wire], m)?;
@@ -546,7 +541,7 @@ pub trait Type: Sized + Eq + Clone + Debug {
 }
 
 /// A gadget, a non-affine arithmetic circuit that is called when evaluating a validity circuit.
-pub trait Gadget<F: FftFriendlyFieldElement>: Debug {
+pub trait Gadget<F: FieldElement>: Debug {
     /// Evaluates the gadget on input `inp` and returns the output.
     fn call(&mut self, inp: &[F]) -> Result<F, FlpError>;
 
@@ -571,7 +566,7 @@ pub trait Gadget<F: FftFriendlyFieldElement>: Debug {
 // A "shim" gadget used during proof generation to record the input wires each time a gadget is
 // evaluated.
 #[derive(Debug)]
-struct ProveShimGadget<F: FftFriendlyFieldElement> {
+struct ProveShimGadget<F: FieldElement> {
     inner: Box<dyn Gadget<F>>,
 
     /// Points at which the wire polynomials are interpolated.
@@ -581,7 +576,7 @@ struct ProveShimGadget<F: FftFriendlyFieldElement> {
     ct: usize,
 }
 
-impl<F: FftFriendlyFieldElement> ProveShimGadget<F> {
+impl<F: FieldElement> ProveShimGadget<F> {
     fn new(inner: Box<dyn Gadget<F>>, prove_rand: &[F]) -> Result<Self, FlpError> {
         let mut f_vals = vec![vec![F::zero(); 1 + inner.calls()]; inner.arity()];
 
@@ -599,7 +594,7 @@ impl<F: FftFriendlyFieldElement> ProveShimGadget<F> {
     }
 }
 
-impl<F: FftFriendlyFieldElement> Gadget<F> for ProveShimGadget<F> {
+impl<F: FieldElement> Gadget<F> for ProveShimGadget<F> {
     fn call(&mut self, inp: &[F]) -> Result<F, FlpError> {
         #[allow(clippy::needless_range_loop)]
         for wire in 0..inp.len() {
@@ -633,7 +628,7 @@ impl<F: FftFriendlyFieldElement> Gadget<F> for ProveShimGadget<F> {
 // A "shim" gadget used during proof verification to record the points at which the intermediate
 // proof polynomials are evaluated.
 #[derive(Debug)]
-struct QueryShimGadget<F: FftFriendlyFieldElement> {
+struct QueryShimGadget<F: FieldElement> {
     inner: Box<dyn Gadget<F>>,
 
     /// Points at which intermediate proof polynomials are interpolated.
@@ -652,7 +647,7 @@ struct QueryShimGadget<F: FftFriendlyFieldElement> {
     ct: usize,
 }
 
-impl<F: FftFriendlyFieldElement> QueryShimGadget<F> {
+impl<F: FieldElement> QueryShimGadget<F> {
     fn new(inner: Box<dyn Gadget<F>>, r: F, proof_data: &[F]) -> Result<Self, FlpError> {
         let gadget_degree = inner.degree();
         let gadget_arity = inner.arity();
@@ -690,7 +685,7 @@ impl<F: FftFriendlyFieldElement> QueryShimGadget<F> {
     }
 }
 
-impl<F: FftFriendlyFieldElement> Gadget<F> for QueryShimGadget<F> {
+impl<F: FieldElement> Gadget<F> for QueryShimGadget<F> {
     fn call(&mut self, inp: &[F]) -> Result<F, FlpError> {
         #[allow(clippy::needless_range_loop)]
         for wire in 0..inp.len() {
@@ -805,7 +800,7 @@ mod tests {
         }
     }
 
-    impl<F: FftFriendlyFieldElement> Type for TestType<F> {
+    impl<F: FieldElement> Type for TestType<F> {
         const ID: u32 = 0xFFFF0000;
         type Measurement = F::Integer;
         type AggregateResult = F::Integer;
@@ -940,7 +935,7 @@ mod tests {
         }
     }
 
-    impl<F: FftFriendlyFieldElement> Type for Issue254Type<F> {
+    impl<F: FieldElement> Type for Issue254Type<F> {
         const ID: u32 = 0xFFFF0000;
         type Measurement = F::Integer;
         type AggregateResult = F::Integer;
