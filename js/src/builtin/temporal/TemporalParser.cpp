@@ -738,6 +738,8 @@ class TemporalParser final {
   mozilla::Result<ZonedDateTimeString, ParserError>
   annotatedDateTimeTimeRequired();
 
+  mozilla::Result<ZonedDateTimeString, ParserError> annotatedYearMonth();
+
   mozilla::Result<ZonedDateTimeString, ParserError> annotatedMonthDay();
 
  public:
@@ -753,6 +755,9 @@ class TemporalParser final {
 
   mozilla::Result<ZonedDateTimeString, ParserError>
   parseTemporalMonthDayString();
+
+  mozilla::Result<ZonedDateTimeString, ParserError>
+  parseTemporalYearMonthString();
 
   mozilla::Result<ZonedDateTimeString, ParserError>
   parseTemporalDateTimeString();
@@ -1552,6 +1557,39 @@ TemporalParser<CharT>::annotatedDateTimeTimeRequired() {
 
 template <typename CharT>
 mozilla::Result<ZonedDateTimeString, ParserError>
+TemporalParser<CharT>::annotatedYearMonth() {
+  // AnnotatedYearMonth :
+  //   DateSpecYearMonth TimeZoneAnnotation? Annotations?
+
+  ZonedDateTimeString result = {};
+
+  auto yearMonth = dateSpecYearMonth();
+  if (yearMonth.isErr()) {
+    return yearMonth.propagateErr();
+  }
+  result.date = yearMonth.unwrap();
+
+  if (hasTimeZoneAnnotationStart()) {
+    auto annotation = timeZoneAnnotation();
+    if (annotation.isErr()) {
+      return annotation.propagateErr();
+    }
+    result.timeZone.annotation = annotation.unwrap();
+  }
+
+  if (hasAnnotationStart()) {
+    auto cal = annotations();
+    if (cal.isErr()) {
+      return cal.propagateErr();
+    }
+    result.calendar = cal.unwrap();
+  }
+
+  return result;
+}
+
+template <typename CharT>
+mozilla::Result<ZonedDateTimeString, ParserError>
 TemporalParser<CharT>::annotatedMonthDay() {
   // AnnotatedMonthDay :
   //   DateSpecMonthDay TimeZoneAnnotation? Annotations?
@@ -1808,7 +1846,14 @@ TemporalParser<CharT>::parseTemporalCalendarString() {
     return dt.unwrap();
   }
 
-  MOZ_CRASH("NYI");
+  // Restart parsing from the start of the string.
+  reader_.reset();
+
+  if (auto dt = parseTemporalYearMonthString(); dt.isOk()) {
+    return dt.unwrap();
+  } else {
+    return dt.propagateErr();
+  }
 }
 
 /**
@@ -1905,6 +1950,42 @@ TemporalParser<CharT>::parseTemporalMonthDayString() {
     if (result.calendar.present() &&
         !IsISO8601Calendar(reader_.substring(result.calendar))) {
       return mozilla::Err(JSMSG_TEMPORAL_PARSER_MONTH_DAY_CALENDAR_NOT_ISO8601);
+    }
+    return result;
+  }
+
+  // Reset and try the next option.
+  reader_.reset();
+
+  auto dt = annotatedDateTime();
+  if (dt.isErr()) {
+    return dt.propagateErr();
+  }
+  if (!reader_.atEnd()) {
+    return mozilla::Err(JSMSG_TEMPORAL_PARSER_GARBAGE_AFTER_INPUT);
+  }
+  return dt.unwrap();
+}
+
+template <typename CharT>
+mozilla::Result<ZonedDateTimeString, ParserError>
+TemporalParser<CharT>::parseTemporalYearMonthString() {
+  // TemporalYearMonthString :
+  //   AnnotatedYearMonth
+  //   AnnotatedDateTime
+
+  if (auto yearMonth = annotatedYearMonth();
+      yearMonth.isOk() && reader_.atEnd()) {
+    auto result = yearMonth.unwrap();
+
+    // FIXME: spec bug - actually needs to check all calendar annotations
+    // https://github.com/tc39/proposal-temporal/issues/2538
+
+    // ParseISODateTime, step 3.
+    if (result.calendar.present() &&
+        !IsISO8601Calendar(reader_.substring(result.calendar))) {
+      return mozilla::Err(
+          JSMSG_TEMPORAL_PARSER_YEAR_MONTH_CALENDAR_NOT_ISO8601);
     }
     return result;
   }
