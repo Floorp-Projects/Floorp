@@ -689,6 +689,9 @@ class TemporalParser final {
 
   mozilla::Result<ZonedDateTimeString, ParserError>
   parseTemporalDateTimeString();
+
+  mozilla::Result<ZonedDateTimeString, ParserError>
+  parseTemporalZonedDateTimeString();
 };
 
 template <typename CharT>
@@ -1643,6 +1646,13 @@ TemporalParser<CharT>::parseTemporalCalendarString() {
     return dt.unwrap();
   }
 
+  // Restart parsing from the start of the string.
+  reader_.reset();
+
+  if (auto dt = parseTemporalZonedDateTimeString(); dt.isOk()) {
+    return dt.unwrap();
+  }
+
   MOZ_CRASH("NYI");
 }
 
@@ -1737,4 +1747,37 @@ TemporalParser<CharT>::parseTemporalDateTimeString() {
     return mozilla::Err(JSMSG_TEMPORAL_PARSER_GARBAGE_AFTER_INPUT);
   }
   return dateTime.unwrap();
+}
+
+template <typename CharT>
+mozilla::Result<ZonedDateTimeString, ParserError>
+TemporalParser<CharT>::parseTemporalZonedDateTimeString() {
+  // TemporalZonedDateTimeString :
+  //   DateTime TimeZoneAnnotation Annotations?
+
+  auto dt = dateTime();
+  if (dt.isErr()) {
+    return dt.propagateErr();
+  }
+  auto result = dt.unwrap();
+
+  auto annotation = timeZoneAnnotation();
+  if (annotation.isErr()) {
+    return annotation.propagateErr();
+  }
+  result.timeZone.annotation = annotation.unwrap();
+
+  if (hasAnnotationStart()) {
+    auto cal = annotations();
+    if (cal.isErr()) {
+      return cal.propagateErr();
+    }
+    result.calendar = cal.unwrap();
+  }
+
+  if (!reader_.atEnd()) {
+    return mozilla::Err(JSMSG_TEMPORAL_PARSER_GARBAGE_AFTER_INPUT);
+  }
+
+  return result;
 }
