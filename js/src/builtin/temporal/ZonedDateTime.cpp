@@ -302,6 +302,787 @@ static bool ZonedDateTimeConstructor(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
+ * get Temporal.ZonedDateTime.prototype.calendar
+ */
+static bool ZonedDateTime_calendar(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  args.rval().setObject(*zonedDateTime->calendar());
+  return true;
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.calendar
+ */
+static bool ZonedDateTime_calendar(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_calendar>(cx,
+                                                                       args);
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.timeZone
+ */
+static bool ZonedDateTime_timeZone(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  args.rval().setObject(*zonedDateTime->timeZone());
+  return true;
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.timeZone
+ */
+static bool ZonedDateTime_timeZone(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_timeZone>(cx,
+                                                                       args);
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.year
+ */
+static bool ZonedDateTime_year(JSContext* cx, const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  auto instant = ToInstant(zonedDateTime);
+  Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
+  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+
+  // Steps 3-6.
+  auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
+  if (!dateTime) {
+    return false;
+  }
+  Rooted<Value> temporalDateTime(cx, ObjectValue(*dateTime));
+
+  // Step 7.
+  return CalendarYear(cx, calendar, temporalDateTime, args.rval());
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.year
+ */
+static bool ZonedDateTime_year(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_year>(cx, args);
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.month
+ */
+static bool ZonedDateTime_month(JSContext* cx, const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  auto instant = ToInstant(zonedDateTime);
+  Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
+  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+
+  // Steps 3-6.
+  auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
+  if (!dateTime) {
+    return false;
+  }
+  Rooted<Value> temporalDateTime(cx, ObjectValue(*dateTime));
+
+  // Step 7.
+  return CalendarMonth(cx, calendar, temporalDateTime, args.rval());
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.month
+ */
+static bool ZonedDateTime_month(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_month>(cx, args);
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.monthCode
+ */
+static bool ZonedDateTime_monthCode(JSContext* cx, const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  auto instant = ToInstant(zonedDateTime);
+  Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
+  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+
+  // Steps 3-6.
+  auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
+  if (!dateTime) {
+    return false;
+  }
+  Rooted<Value> temporalDateTime(cx, ObjectValue(*dateTime));
+
+  // Step 7.
+  return CalendarMonthCode(cx, calendar, temporalDateTime, args.rval());
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.monthCode
+ */
+static bool ZonedDateTime_monthCode(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_monthCode>(cx,
+                                                                        args);
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.day
+ */
+static bool ZonedDateTime_day(JSContext* cx, const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  auto instant = ToInstant(zonedDateTime);
+  Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
+  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+
+  // Steps 3-6.
+  auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
+  if (!dateTime) {
+    return false;
+  }
+  Rooted<Value> temporalDateTime(cx, ObjectValue(*dateTime));
+
+  // Step 7.
+  return CalendarDay(cx, calendar, temporalDateTime, args.rval());
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.day
+ */
+static bool ZonedDateTime_day(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_day>(cx, args);
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.hour
+ */
+static bool ZonedDateTime_hour(JSContext* cx, const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  auto instant = ToInstant(zonedDateTime);
+  Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
+
+  // Steps 3-6.
+  PlainDateTime dateTime;
+  if (!GetPlainDateTimeFor(cx, timeZone, instant, &dateTime)) {
+    return false;
+  }
+
+  // Step 7.
+  args.rval().setInt32(dateTime.time.hour);
+  return true;
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.hour
+ */
+static bool ZonedDateTime_hour(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_hour>(cx, args);
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.minute
+ */
+static bool ZonedDateTime_minute(JSContext* cx, const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  auto instant = ToInstant(zonedDateTime);
+  Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
+
+  // Steps 3-6.
+  PlainDateTime dateTime;
+  if (!GetPlainDateTimeFor(cx, timeZone, instant, &dateTime)) {
+    return false;
+  }
+
+  // Step 7.
+  args.rval().setInt32(dateTime.time.minute);
+  return true;
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.minute
+ */
+static bool ZonedDateTime_minute(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_minute>(cx, args);
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.second
+ */
+static bool ZonedDateTime_second(JSContext* cx, const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  auto instant = ToInstant(zonedDateTime);
+  Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
+
+  // Steps 3-6.
+  PlainDateTime dateTime;
+  if (!GetPlainDateTimeFor(cx, timeZone, instant, &dateTime)) {
+    return false;
+  }
+
+  // Step 7.
+  args.rval().setInt32(dateTime.time.second);
+  return true;
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.second
+ */
+static bool ZonedDateTime_second(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_second>(cx, args);
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.millisecond
+ */
+static bool ZonedDateTime_millisecond(JSContext* cx, const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  auto instant = ToInstant(zonedDateTime);
+  Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
+
+  // Steps 3-6.
+  PlainDateTime dateTime;
+  if (!GetPlainDateTimeFor(cx, timeZone, instant, &dateTime)) {
+    return false;
+  }
+
+  // Step 7.
+  args.rval().setInt32(dateTime.time.millisecond);
+  return true;
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.millisecond
+ */
+static bool ZonedDateTime_millisecond(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_millisecond>(cx,
+                                                                          args);
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.microsecond
+ */
+static bool ZonedDateTime_microsecond(JSContext* cx, const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  auto instant = ToInstant(zonedDateTime);
+  Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
+
+  // Steps 3-6.
+  PlainDateTime dateTime;
+  if (!GetPlainDateTimeFor(cx, timeZone, instant, &dateTime)) {
+    return false;
+  }
+
+  // Step 7.
+  args.rval().setInt32(dateTime.time.microsecond);
+  return true;
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.microsecond
+ */
+static bool ZonedDateTime_microsecond(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_microsecond>(cx,
+                                                                          args);
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.nanosecond
+ */
+static bool ZonedDateTime_nanosecond(JSContext* cx, const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  auto instant = ToInstant(zonedDateTime);
+  Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
+
+  // Steps 3-6.
+  PlainDateTime dateTime;
+  if (!GetPlainDateTimeFor(cx, timeZone, instant, &dateTime)) {
+    return false;
+  }
+
+  // Step 7.
+  args.rval().setInt32(dateTime.time.nanosecond);
+  return true;
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.nanosecond
+ */
+static bool ZonedDateTime_nanosecond(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_nanosecond>(cx,
+                                                                         args);
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.epochSeconds
+ */
+static bool ZonedDateTime_epochSeconds(JSContext* cx, const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+
+  // Step 3.
+  auto instant = ToInstant(zonedDateTime);
+
+  // Steps 4-5.
+  args.rval().setNumber(instant.seconds);
+  return true;
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.epochSeconds
+ */
+static bool ZonedDateTime_epochSeconds(JSContext* cx, unsigned argc,
+                                       Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_epochSeconds>(
+      cx, args);
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.epochMilliseconds
+ */
+static bool ZonedDateTime_epochMilliseconds(JSContext* cx,
+                                            const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+
+  // Step 3.
+  auto instant = ToInstant(zonedDateTime);
+
+  // Steps 4-5.
+  args.rval().setNumber(instant.floorToMilliseconds());
+  return true;
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.epochMilliseconds
+ */
+static bool ZonedDateTime_epochMilliseconds(JSContext* cx, unsigned argc,
+                                            Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_epochMilliseconds>(
+      cx, args);
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.epochMicroseconds
+ */
+static bool ZonedDateTime_epochMicroseconds(JSContext* cx,
+                                            const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+
+  // Step 3.
+  auto instant = ToInstant(zonedDateTime);
+
+  // Step 4.
+  auto* microseconds =
+      BigInt::createFromInt64(cx, instant.floorToMicroseconds());
+  if (!microseconds) {
+    return false;
+  }
+
+  // Step 5.
+  args.rval().setBigInt(microseconds);
+  return true;
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.epochMicroseconds
+ */
+static bool ZonedDateTime_epochMicroseconds(JSContext* cx, unsigned argc,
+                                            Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_epochMicroseconds>(
+      cx, args);
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.epochNanoseconds
+ */
+static bool ZonedDateTime_epochNanoseconds(JSContext* cx,
+                                           const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+
+  // Step 3.
+  auto* nanoseconds = ToEpochNanoseconds(cx, ToInstant(zonedDateTime));
+  if (!nanoseconds) {
+    return false;
+  }
+
+  args.rval().setBigInt(nanoseconds);
+  return true;
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.epochNanoseconds
+ */
+static bool ZonedDateTime_epochNanoseconds(JSContext* cx, unsigned argc,
+                                           Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_epochNanoseconds>(
+      cx, args);
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.dayOfWeek
+ */
+static bool ZonedDateTime_dayOfWeek(JSContext* cx, const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  auto instant = ToInstant(zonedDateTime);
+  Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
+  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+
+  // Steps 3-6.
+  auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
+  if (!dateTime) {
+    return false;
+  }
+  Rooted<Value> temporalDateTime(cx, ObjectValue(*dateTime));
+
+  // Step 7.
+  return CalendarDayOfWeek(cx, calendar, temporalDateTime, args.rval());
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.dayOfWeek
+ */
+static bool ZonedDateTime_dayOfWeek(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_dayOfWeek>(cx,
+                                                                        args);
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.dayOfYear
+ */
+static bool ZonedDateTime_dayOfYear(JSContext* cx, const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  auto instant = ToInstant(zonedDateTime);
+  Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
+  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+
+  // Steps 3-6.
+  auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
+  if (!dateTime) {
+    return false;
+  }
+  Rooted<Value> temporalDateTime(cx, ObjectValue(*dateTime));
+
+  // Step 7.
+  return CalendarDayOfYear(cx, calendar, temporalDateTime, args.rval());
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.dayOfYear
+ */
+static bool ZonedDateTime_dayOfYear(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_dayOfYear>(cx,
+                                                                        args);
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.weekOfYear
+ */
+static bool ZonedDateTime_weekOfYear(JSContext* cx, const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  auto instant = ToInstant(zonedDateTime);
+  Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
+  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+
+  // Steps 3-6.
+  auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
+  if (!dateTime) {
+    return false;
+  }
+  Rooted<Value> temporalDateTime(cx, ObjectValue(*dateTime));
+
+  // Step 7.
+  return CalendarWeekOfYear(cx, calendar, temporalDateTime, args.rval());
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.weekOfYear
+ */
+static bool ZonedDateTime_weekOfYear(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_weekOfYear>(cx,
+                                                                         args);
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.yearOfWeek
+ */
+static bool ZonedDateTime_yearOfWeek(JSContext* cx, const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  auto instant = ToInstant(zonedDateTime);
+  Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
+  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+
+  // Steps 3-6.
+  auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
+  if (!dateTime) {
+    return false;
+  }
+  Rooted<Value> temporalDateTime(cx, ObjectValue(*dateTime));
+
+  // Step 7.
+  return CalendarYearOfWeek(cx, calendar, temporalDateTime, args.rval());
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.yearOfWeek
+ */
+static bool ZonedDateTime_yearOfWeek(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_yearOfWeek>(cx,
+                                                                         args);
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.daysInWeek
+ */
+static bool ZonedDateTime_daysInWeek(JSContext* cx, const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  auto instant = ToInstant(zonedDateTime);
+  Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
+  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+
+  // Steps 3-6.
+  auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
+  if (!dateTime) {
+    return false;
+  }
+  Rooted<Value> temporalDateTime(cx, ObjectValue(*dateTime));
+
+  // Step 7.
+  return CalendarDaysInWeek(cx, calendar, temporalDateTime, args.rval());
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.daysInWeek
+ */
+static bool ZonedDateTime_daysInWeek(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_daysInWeek>(cx,
+                                                                         args);
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.daysInMonth
+ */
+static bool ZonedDateTime_daysInMonth(JSContext* cx, const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  auto instant = ToInstant(zonedDateTime);
+  Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
+  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+
+  // Steps 3-6.
+  auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
+  if (!dateTime) {
+    return false;
+  }
+  Rooted<Value> temporalDateTime(cx, ObjectValue(*dateTime));
+
+  // Step 7.
+  return CalendarDaysInMonth(cx, calendar, temporalDateTime, args.rval());
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.daysInMonth
+ */
+static bool ZonedDateTime_daysInMonth(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_daysInMonth>(cx,
+                                                                          args);
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.daysInYear
+ */
+static bool ZonedDateTime_daysInYear(JSContext* cx, const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  auto instant = ToInstant(zonedDateTime);
+  Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
+  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+
+  // Steps 3-6.
+  auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
+  if (!dateTime) {
+    return false;
+  }
+  Rooted<Value> temporalDateTime(cx, ObjectValue(*dateTime));
+
+  // Step 7.
+  return CalendarDaysInYear(cx, calendar, temporalDateTime, args.rval());
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.daysInYear
+ */
+static bool ZonedDateTime_daysInYear(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_daysInYear>(cx,
+                                                                         args);
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.monthsInYear
+ */
+static bool ZonedDateTime_monthsInYear(JSContext* cx, const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  auto instant = ToInstant(zonedDateTime);
+  Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
+  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+
+  // Steps 3-6.
+  auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
+  if (!dateTime) {
+    return false;
+  }
+  Rooted<Value> temporalDateTime(cx, ObjectValue(*dateTime));
+
+  // Step 7.
+  return CalendarMonthsInYear(cx, calendar, temporalDateTime, args.rval());
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.monthsInYear
+ */
+static bool ZonedDateTime_monthsInYear(JSContext* cx, unsigned argc,
+                                       Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_monthsInYear>(
+      cx, args);
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.inLeapYear
+ */
+static bool ZonedDateTime_inLeapYear(JSContext* cx, const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  auto instant = ToInstant(zonedDateTime);
+  Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
+  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+
+  // Steps 3-6.
+  auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
+  if (!dateTime) {
+    return false;
+  }
+  Rooted<Value> temporalDateTime(cx, ObjectValue(*dateTime));
+
+  // Step 7.
+  return CalendarInLeapYear(cx, calendar, temporalDateTime, args.rval());
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.inLeapYear
+ */
+static bool ZonedDateTime_inLeapYear(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_inLeapYear>(cx,
+                                                                         args);
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.offsetNanoseconds
+ */
+static bool ZonedDateTime_offsetNanoseconds(JSContext* cx,
+                                            const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+
+  // Step 3.
+  Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
+
+  // Step 4.
+  auto instant = ToInstant(zonedDateTime);
+
+  // Step 5.
+  int64_t offsetNanoseconds;
+  if (!GetOffsetNanosecondsFor(cx, timeZone, instant, &offsetNanoseconds)) {
+    return false;
+  }
+  MOZ_ASSERT(std::abs(offsetNanoseconds) < ToNanoseconds(TemporalUnit::Day));
+
+  args.rval().setNumber(offsetNanoseconds);
+  return true;
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.offsetNanoseconds
+ */
+static bool ZonedDateTime_offsetNanoseconds(JSContext* cx, unsigned argc,
+                                            Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_offsetNanoseconds>(
+      cx, args);
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.offset
+ */
+static bool ZonedDateTime_offset(JSContext* cx, const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  auto epochInstant = ToInstant(zonedDateTime);
+
+  // Step 3.
+  Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
+
+  // Step 4.
+  Rooted<InstantObject*> instant(cx, CreateTemporalInstant(cx, epochInstant));
+  if (!instant) {
+    return false;
+  }
+
+  // Step 5.
+  JSString* str = GetOffsetStringFor(cx, timeZone, instant);
+  if (!str) {
+    return false;
+  }
+
+  args.rval().setString(str);
+  return true;
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.offset
+ */
+static bool ZonedDateTime_offset(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_offset>(cx, args);
+}
+
+/**
  * Temporal.ZonedDateTime.prototype.withTimeZone ( timeZoneLike )
  */
 static bool ZonedDateTime_withTimeZone(JSContext* cx, const CallArgs& args) {
@@ -926,6 +1707,34 @@ static const JSFunctionSpec ZonedDateTime_prototype_methods[] = {
 };
 
 static const JSPropertySpec ZonedDateTime_prototype_properties[] = {
+    JS_PSG("calendar", ZonedDateTime_calendar, 0),
+    JS_PSG("timeZone", ZonedDateTime_timeZone, 0),
+    JS_PSG("year", ZonedDateTime_year, 0),
+    JS_PSG("month", ZonedDateTime_month, 0),
+    JS_PSG("monthCode", ZonedDateTime_monthCode, 0),
+    JS_PSG("day", ZonedDateTime_day, 0),
+    JS_PSG("hour", ZonedDateTime_hour, 0),
+    JS_PSG("minute", ZonedDateTime_minute, 0),
+    JS_PSG("second", ZonedDateTime_second, 0),
+    JS_PSG("millisecond", ZonedDateTime_millisecond, 0),
+    JS_PSG("microsecond", ZonedDateTime_microsecond, 0),
+    JS_PSG("nanosecond", ZonedDateTime_nanosecond, 0),
+    JS_PSG("epochSeconds", ZonedDateTime_epochSeconds, 0),
+    JS_PSG("epochMilliseconds", ZonedDateTime_epochMilliseconds, 0),
+    JS_PSG("epochMicroseconds", ZonedDateTime_epochMicroseconds, 0),
+    JS_PSG("epochNanoseconds", ZonedDateTime_epochNanoseconds, 0),
+    JS_PSG("dayOfWeek", ZonedDateTime_dayOfWeek, 0),
+    JS_PSG("dayOfYear", ZonedDateTime_dayOfYear, 0),
+    JS_PSG("weekOfYear", ZonedDateTime_weekOfYear, 0),
+    JS_PSG("yearOfWeek", ZonedDateTime_yearOfWeek, 0),
+    JS_PSG("daysInWeek", ZonedDateTime_daysInWeek, 0),
+    JS_PSG("daysInMonth", ZonedDateTime_daysInMonth, 0),
+    JS_PSG("daysInYear", ZonedDateTime_daysInYear, 0),
+    JS_PSG("monthsInYear", ZonedDateTime_monthsInYear, 0),
+    JS_PSG("inLeapYear", ZonedDateTime_inLeapYear, 0),
+    JS_PSG("offsetNanoseconds", ZonedDateTime_offsetNanoseconds, 0),
+    JS_PSG("offset", ZonedDateTime_offset, 0),
+    JS_STRING_SYM_PS(toStringTag, "Temporal.ZonedDateTime", JSPROP_READONLY),
     JS_PS_END,
 };
 
