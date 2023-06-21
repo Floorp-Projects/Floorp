@@ -133,6 +133,13 @@ bool ToTemporalTime(JSContext* cx, JS::Handle<JS::Value> item,
                     PlainTime* result);
 
 /**
+ * AddTime ( hour, minute, second, millisecond, microsecond, nanosecond, hours,
+ * minutes, seconds, milliseconds, microseconds, nanoseconds )
+ */
+bool AddTime(JSContext* cx, const PlainTime& time, const Duration& duration,
+             PlainTime* result, double* daysResult);
+
+/**
  * DifferenceTime ( h1, min1, s1, ms1, mus1, ns1, h2, min2, s2, ms2, mus2, ns2 )
  */
 TimeDuration DifferenceTime(const PlainTime& time1, const PlainTime& time2);
