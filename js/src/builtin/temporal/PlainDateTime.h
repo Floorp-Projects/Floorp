@@ -10,13 +10,15 @@
 #include <stdint.h>
 
 #include "builtin/temporal/TemporalTypes.h"
+#include "builtin/temporal/Wrapped.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
 #include "vm/NativeObject.h"
 
 namespace js {
 struct ClassSpec;
-}
+class PlainObject;
+}  // namespace js
 
 namespace js::temporal {
 
@@ -127,6 +129,35 @@ bool ISODateTimeWithinLimits(double year, double month, double day);
 PlainDateTimeObject* CreateTemporalDateTime(JSContext* cx,
                                             const PlainDateTime& dateTime,
                                             JS::Handle<JSObject*> calendar);
+
+/**
+ * ToTemporalDateTime ( item [ , options ] )
+ */
+Wrapped<PlainDateTimeObject*> ToTemporalDateTime(JSContext* cx,
+                                                 JS::Handle<JS::Value> item);
+
+/**
+ * ToTemporalDateTime ( item [ , options ] )
+ */
+bool ToTemporalDateTime(JSContext* cx, JS::Handle<JS::Value> item,
+                        PlainDateTime* result);
+
+/**
+ * InterpretTemporalDateTimeFields ( calendar, fields, options )
+ */
+bool InterpretTemporalDateTimeFields(JSContext* cx,
+                                     JS::Handle<JSObject*> calendar,
+                                     JS::Handle<PlainObject*> fields,
+                                     JS::Handle<JSObject*> options,
+                                     PlainDateTime* result);
+
+/**
+ * InterpretTemporalDateTimeFields ( calendar, fields, options )
+ */
+bool InterpretTemporalDateTimeFields(JSContext* cx,
+                                     JS::Handle<JSObject*> calendar,
+                                     JS::Handle<PlainObject*> fields,
+                                     PlainDateTime* result);
 
 } /* namespace js::temporal */
 
