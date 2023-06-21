@@ -57,6 +57,7 @@ inline PlainDate ToPlainDate(const PlainDateObject* date) {
 }
 
 enum class TemporalOverflow;
+enum class TemporalUnit;
 
 #ifdef DEBUG
 /**
@@ -122,6 +123,19 @@ struct RegulatedISODate final {
  */
 bool RegulateISODate(JSContext* cx, double year, double month, double day,
                      TemporalOverflow overflow, RegulatedISODate* result);
+
+/**
+ * AddISODate ( year, month, day, years, months, weeks, days, overflow )
+ */
+bool AddISODate(JSContext* cx, const PlainDate& date, const Duration& duration,
+                TemporalOverflow overflow, PlainDate* result);
+
+/**
+ * DifferenceISODate ( y1, m1, d1, y2, m2, d2, largestUnit )
+ */
+bool DifferenceISODate(JSContext* cx, const PlainDate& start,
+                       const PlainDate& end, TemporalUnit largestUnit,
+                       DateDuration* result);
 
 /**
  * CompareISODate ( y1, m1, d1, y2, m2, d2 )

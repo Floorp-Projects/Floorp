@@ -23,6 +23,7 @@
 #include "NamespaceImports.h"
 
 #include "builtin/temporal/Calendar.h"
+#include "builtin/temporal/Duration.h"
 #include "builtin/temporal/PlainDateTime.h"
 #include "builtin/temporal/PlainMonthDay.h"
 #include "builtin/temporal/PlainTime.h"
@@ -31,6 +32,7 @@
 #include "builtin/temporal/TemporalFields.h"
 #include "builtin/temporal/TemporalParser.h"
 #include "builtin/temporal/TemporalTypes.h"
+#include "builtin/temporal/TemporalUnit.h"
 #include "builtin/temporal/TimeZone.h"
 #include "builtin/temporal/Wrapped.h"
 #include "builtin/temporal/ZonedDateTime.h"
@@ -591,6 +593,51 @@ static JSString* TemporalDateToString(JSContext* cx,
   return result.finishString();
 }
 
+/**
+ * Mathematical Operations, "modulo" notation.
+ */
+static int32_t NonNegativeModulo(double x, int32_t y) {
+  MOZ_ASSERT(IsInteger(x));
+  MOZ_ASSERT(y > 0);
+
+  double r = std::fmod(x, y);
+
+  int32_t result;
+  MOZ_ALWAYS_TRUE(mozilla::NumberEqualsInt32(r, &result));
+
+  return (result < 0) ? (result + y) : result;
+}
+
+struct BalancedYearMonth final {
+  double year = 0;
+  int32_t month = 0;
+};
+
+/**
+ * BalanceISOYearMonth ( year, month )
+ */
+static BalancedYearMonth BalanceISOYearMonth(double year, double month) {
+  // Step 1.
+  MOZ_ASSERT(IsInteger(year));
+  MOZ_ASSERT(IsInteger(month));
+
+  // Note: If either abs(year) or abs(month) is greater than 2^53 (the double
+  // integral precision limit), the additions resp. subtractions below are
+  // imprecise. This doesn't matter for us, because the single caller to this
+  // function (AddISODate) will throw an error for large values anyway.
+
+  // Step 2.
+  year = year + std::floor((month - 1) / 12);
+  MOZ_ASSERT(IsInteger(year) || std::isinf(year));
+
+  // Step 3.
+  int32_t mon = NonNegativeModulo(month - 1, 12) + 1;
+  MOZ_ASSERT(1 <= mon && mon <= 12);
+
+  // Step 4.
+  return {year, mon};
+}
+
 static bool CanBalanceISOYear(double year) {
   // TODO: Export these values somewhere.
   constexpr int32_t minYear = -271821;
@@ -755,6 +802,98 @@ PlainDate js::temporal::BalanceISODate(int32_t year, int32_t month,
 }
 
 /**
+ * AddISODate ( year, month, day, years, months, weeks, days, overflow )
+ */
+bool js::temporal::AddISODate(JSContext* cx, const PlainDate& date,
+                              const Duration& duration,
+                              TemporalOverflow overflow, PlainDate* result) {
+  MOZ_ASSERT(IsValidISODate(date));
+  MOZ_ASSERT(ISODateTimeWithinLimits(date));
+
+  // TODO: Not quite sure if this holds for all callers. But if it does hold,
+  // then we can directly reject any numbers which can't be represented with
+  // int32_t. That in turn avoids the precision loss issue noted in
+  // BalanceISODate.
+  MOZ_ASSERT(IsValidDuration(duration));
+
+  // Step 1.
+  MOZ_ASSERT(IsInteger(duration.years));
+  MOZ_ASSERT(IsInteger(duration.months));
+  MOZ_ASSERT(IsInteger(duration.weeks));
+  MOZ_ASSERT(IsInteger(duration.days));
+
+  // Step 2. (Not applicable in our implementation.)
+
+  // Step 3.
+  auto yearMonth = BalanceISOYearMonth(date.year + duration.years,
+                                       date.month + duration.months);
+  MOZ_ASSERT(IsInteger(yearMonth.year) || std::isinf(yearMonth.year));
+  MOZ_ASSERT(1 <= yearMonth.month && yearMonth.month <= 12);
+
+  // FIXME: spec issue?
+  // new Temporal.PlainDate(2021, 5, 31).subtract({months:1, days:1}).toString()
+  // returns "2021-04-29", but "2021-04-30" seems more likely expected.
+  // Note: "2021-04-29" agrees with java.time, though.
+  //
+  // Example where this creates inconsistent results:
+  //
+  // clang-format off
+  //
+  // js> Temporal.PlainDate.from("2021-05-31").since("2021-04-30", {largestUnit:"months"}).toString()
+  // "P1M1D"
+  // js> Temporal.PlainDate.from("2021-05-31").subtract("P1M1D").toString()
+  // "2021-04-29"
+  //
+  // clang-format on
+  //
+  // Later: This now returns "P1M" instead "P1M1D", so the results are at least
+  // consistent. Let's add a test case for this behaviour.
+  //
+  // Revisit when <https://github.com/tc39/proposal-temporal/issues/2535> has
+  // been addressed.
+
+  // |yearMonth.year| can only exceed the valid years range when called from
+  // `Temporal.Calendar.prototype.dateAdd`. And because `dateAdd` uses the
+  // result of AddISODate to create a new Temporal.PlainDate, we can directly
+  // throw an error if the result isn't within the valid date-time limits. This
+  // in turn allows to work on integer values and we don't have to worry about
+  // imprecise double value computations.
+  if (!CanBalanceISOYear(yearMonth.year)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_PLAIN_DATE_INVALID);
+    return false;
+  }
+
+  // Step 4.
+  PlainDate regulated;
+  if (!RegulateISODate(cx, {int32_t(yearMonth.year), yearMonth.month, date.day},
+                       overflow, &regulated)) {
+    return false;
+  }
+
+  // NB: BalanceISODate will reject too large days, so we don't have to worry
+  // about imprecise number arithmetic here.
+
+  // Steps 5-6.
+  double d = regulated.day + (duration.days + duration.weeks * 7);
+
+  // Just as with |yearMonth.year|, also directly throw an error if the |days|
+  // value is too large.
+  if (!CanBalanceISODay(d)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_PLAIN_DATE_INVALID);
+    return false;
+  }
+
+  // Step 7.
+  auto balanced = BalanceISODate(regulated.year, regulated.month, int32_t(d));
+  MOZ_ASSERT(IsValidISODate(balanced));
+
+  *result = balanced;
+  return true;
+}
+
+/**
  * CompareISODate ( y1, m1, d1, y2, m2, d2 )
  */
 int32_t js::temporal::CompareISODate(const PlainDate& one,
@@ -776,6 +915,243 @@ int32_t js::temporal::CompareISODate(const PlainDate& one,
 
   // Step 7.
   return 0;
+}
+
+/**
+ * CreateDateDurationRecord ( years, months, weeks, days )
+ */
+static DateDuration CreateDateDurationRecord(int32_t years, int32_t months,
+                                             int32_t weeks, int32_t days) {
+  MOZ_ASSERT(IsValidDuration(
+      {double(years), double(months), double(weeks), double(days)}));
+  return {double(years), double(months), double(weeks), double(days)};
+}
+
+/**
+ * DifferenceISODate ( y1, m1, d1, y2, m2, d2, largestUnit )
+ */
+bool js::temporal::DifferenceISODate(JSContext* cx, const PlainDate& start,
+                                     const PlainDate& end,
+                                     TemporalUnit largestUnit,
+                                     DateDuration* result) {
+  // Both inputs are valid dates.
+  MOZ_ASSERT(IsValidISODate(start));
+  MOZ_ASSERT(IsValidISODate(end));
+
+  // And both inputs are also within the date-time limits.
+  MOZ_ASSERT(ISODateTimeWithinLimits(start));
+  MOZ_ASSERT(ISODateTimeWithinLimits(end));
+
+  // Because both inputs are valid dates, we don't need to worry about integer
+  // overflow in any of the computations below.
+
+  MOZ_ASSERT(TemporalUnit::Year <= largestUnit &&
+             largestUnit <= TemporalUnit::Day);
+
+  // Step 1.
+  if (largestUnit == TemporalUnit::Year || largestUnit == TemporalUnit::Month) {
+    // Step 1.a.
+    int32_t sign = -CompareISODate(start, end);
+
+    // Step 1.b.
+    if (sign == 0) {
+      *result = CreateDateDurationRecord(0, 0, 0, 0);
+      return true;
+    }
+
+    // FIXME: spec issue - results can be ambiguous, is this intentional?
+    // https://github.com/tc39/proposal-temporal/issues/2535
+    //
+    // clang-format off
+    // js> var end = new Temporal.PlainDate(1970, 2, 28)
+    // js> var start = new Temporal.PlainDate(1970, 1, 28)
+    // js> start.calendar.dateUntil(start, end, {largestUnit:"months"}).toString()
+    // "P1M"
+    // js> var start = new Temporal.PlainDate(1970, 1, 29)
+    // js> start.calendar.dateUntil(start, end, {largestUnit:"months"}).toString()
+    // "P1M"
+    // js> var start = new Temporal.PlainDate(1970, 1, 30)
+    // js> start.calendar.dateUntil(start, end, {largestUnit:"months"}).toString()
+    // "P1M"
+    // js> var start = new Temporal.PlainDate(1970, 1, 31)
+    // js> start.calendar.dateUntil(start, end, {largestUnit:"months"}).toString()
+    // "P1M"
+    //
+    // Compare to java.time.temporal
+    //
+    // jshell> import java.time.LocalDate
+    // jshell> var end = LocalDate.of(1970, 2, 28)
+    // end ==> 1970-02-28
+    // jshell> var start = LocalDate.of(1970, 1, 28)
+    // start ==> 1970-01-28
+    // jshell> start.until(end)
+    // $27 ==> P1M
+    // jshell> var start = LocalDate.of(1970, 1, 29)
+    // start ==> 1970-01-29
+    // jshell> start.until(end)
+    // $29 ==> P30D
+    // jshell> var start = LocalDate.of(1970, 1, 30)
+    // start ==> 1970-01-30
+    // jshell> start.until(end)
+    // $31 ==> P29D
+    // jshell> var start = LocalDate.of(1970, 1, 31)
+    // start ==> 1970-01-31
+    // jshell> start.until(end)
+    // $33 ==> P28D
+    //
+    // Also compare to:
+    //
+    // js> var end = new Temporal.PlainDate(1970, 2, 27)
+    // js> var start = new Temporal.PlainDate(1970, 1, 27)
+    // js> start.calendar.dateUntil(start, end, {largestUnit:"months"}).toString()
+    // "P1M"
+    // js> var start = new Temporal.PlainDate(1970, 1, 28)
+    // js> start.calendar.dateUntil(start, end, {largestUnit:"months"}).toString()
+    // "P30D"
+    // js> var start = new Temporal.PlainDate(1970, 1, 29)
+    // js> start.calendar.dateUntil(start, end, {largestUnit:"months"}).toString()
+    // "P29D"
+    //
+    // clang-format on
+
+    // Steps 1.c-d. (Not applicable in our implementation.)
+
+    // FIXME: spec issue - consistently use either |end.[[Year]]| or |y2|.
+
+    // Step 1.e.
+    int32_t years = end.year - start.year;
+
+    // TODO: We could inline this, because the AddISODate call is just a more
+    // complicated way to perform:
+    // mid = ConstrainISODate(end.year, start.month, start.day)
+    //
+    // The remaining computations can probably simplified similarily.
+
+    // Step 1.f.
+    PlainDate mid;
+    if (!AddISODate(cx, start, {double(years), 0, 0, 0},
+                    TemporalOverflow::Constrain, &mid)) {
+      return false;
+    }
+
+    // Step 1.g.
+    int32_t midSign = -CompareISODate(mid, end);
+
+    // Step 1.h.
+    if (midSign == 0) {
+      // Steps 1.h.i-ii.
+      if (largestUnit == TemporalUnit::Year) {
+        *result = CreateDateDurationRecord(years, 0, 0, 0);
+      } else {
+        *result = CreateDateDurationRecord(0, years * 12, 0, 0);
+      }
+      return true;
+    }
+
+    // Step 1.i.
+    int32_t months = end.month - start.month;
+
+    // Step 1.j.
+    if (midSign != sign) {
+      // Step 1.j.i.
+      years -= sign;
+
+      // Step 1.j.ii.
+      months += sign * 12;
+    }
+
+    // Step 1.k.
+    if (!AddISODate(cx, start, {double(years), double(months), 0},
+                    TemporalOverflow::Constrain, &mid)) {
+      return false;
+    }
+
+    // Step 1.l.
+    midSign = -CompareISODate(mid, end);
+
+    // Step 1.m.
+    if (midSign == 0) {
+      // Steps 1.m.i-ii.
+      if (largestUnit == TemporalUnit::Year) {
+        *result = CreateDateDurationRecord(years, months, 0, 0);
+      } else {
+        *result = CreateDateDurationRecord(0, months + years * 12, 0, 0);
+      }
+      return true;
+    }
+
+    // Step 1.n.
+    if (midSign != sign) {
+      // Step 1.n.i.
+      months -= sign;
+
+      // Step 1.n.ii.
+      if (months == -sign) {
+        years -= sign;
+        months = 11 * sign;
+      }
+
+      // Step 1.n.iii.
+      if (!AddISODate(cx, start, {double(years), double(months), 0},
+                      TemporalOverflow::Constrain, &mid)) {
+        return false;
+      }
+    }
+
+    // Steps 1.o-q.
+    int32_t days;
+    if (mid.month == end.month) {
+      MOZ_ASSERT(mid.year == end.year);
+
+      days = end.day - mid.day;
+    } else if (sign < 0) {
+      days = -mid.day - (ISODaysInMonth(end.year, end.month) - end.day);
+    } else {
+      days = end.day + (ISODaysInMonth(mid.year, mid.month) - mid.day);
+    }
+
+    // Step 1.r.
+    if (largestUnit == TemporalUnit::Month) {
+      // Step 1.r.i.
+      months += years * 12;
+
+      // Step 1.r.ii.
+      years = 0;
+    }
+
+    // Step 1.s.
+    *result = CreateDateDurationRecord(years, months, 0, days);
+    return true;
+  }
+
+  // Step 2.
+  MOZ_ASSERT(largestUnit == TemporalUnit::Week ||
+             largestUnit == TemporalUnit::Day);
+
+  // Steps 2.a-b.
+  int32_t epochDaysStart = MakeDay(start);
+
+  // Steps 2.c-d.
+  int32_t epochDaysEnd = MakeDay(end);
+
+  // Step 2.e.
+  int32_t days = epochDaysEnd - epochDaysStart;
+
+  // Step 2.f.
+  int32_t weeks = 0;
+
+  // Step 2.g.
+  if (largestUnit == TemporalUnit::Week) {
+    // Step 2.g.i
+    weeks = days / 7;
+
+    // Step 2.g.ii.
+    days = days % 7;
+  }
+
+  // Step 2.h.
+  *result = CreateDateDurationRecord(0, 0, weeks, days);
+  return true;
 }
 
 /**

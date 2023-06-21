@@ -32,6 +32,7 @@
 
 #include "builtin/Array.h"
 #include "builtin/String.h"
+#include "builtin/temporal/Duration.h"
 #include "builtin/temporal/PlainDate.h"
 #include "builtin/temporal/PlainDateTime.h"
 #include "builtin/temporal/PlainMonthDay.h"
@@ -2580,6 +2581,223 @@ JSObject* js::temporal::CalendarMergeFields(
 }
 
 /**
+ * Temporal.Calendar.prototype.dateUntil ( one, two [ , options ] )
+ */
+static bool BuiltinCalendarDateUntil(JSContext* cx,
+                                     Handle<CalendarObject*> calendar,
+                                     const PlainDate& one, const PlainDate& two,
+                                     TemporalUnit largestUnit,
+                                     Duration* result) {
+  // Steps 1-2. (Not applicable)
+
+#ifdef DEBUG
+  // Step 3.
+  bool isoCalendar;
+  if (!IsISOCalendar(cx, calendar->identifier(), &isoCalendar)) {
+    return false;
+  }
+  MOZ_ASSERT(isoCalendar);
+#endif
+
+  // Steps 4-8. (Not applicable)
+
+  // Step 9.
+  DateDuration difference;
+  if (!DifferenceISODate(cx, one, two, largestUnit, &difference)) {
+    return false;
+  }
+
+  // Step 10.
+  *result = difference.toDuration();
+  return true;
+}
+
+/**
+ * Temporal.Calendar.prototype.dateUntil ( one, two [ , options ] )
+ */
+static bool BuiltinCalendarDateUntil(JSContext* cx,
+                                     Handle<CalendarObject*> calendar,
+                                     Handle<Wrapped<PlainDateObject*>> one,
+                                     Handle<Wrapped<PlainDateObject*>> two,
+                                     TemporalUnit largestUnit,
+                                     Duration* result) {
+  MOZ_ASSERT(largestUnit <= TemporalUnit::Day);
+
+  auto* unwrappedOne = one.unwrap(cx);
+  if (!unwrappedOne) {
+    return false;
+  }
+  auto dateOne = ToPlainDate(unwrappedOne);
+
+  auto* unwrappedTwo = two.unwrap(cx);
+  if (!unwrappedTwo) {
+    return false;
+  }
+  auto dateTwo = ToPlainDate(unwrappedTwo);
+
+  // Steps 1-10.
+  return BuiltinCalendarDateUntil(cx, calendar, dateOne, dateTwo, largestUnit,
+                                  result);
+}
+
+/**
+ * Temporal.Calendar.prototype.dateUntil ( one, two [ , options ] )
+ */
+static bool BuiltinCalendarDateUntil(JSContext* cx,
+                                     Handle<CalendarObject*> calendar,
+                                     Handle<Wrapped<PlainDateObject*>> one,
+                                     Handle<Wrapped<PlainDateObject*>> two,
+                                     Handle<JSObject*> options,
+                                     Duration* result) {
+  // Steps 1-6. (Not applicable)
+
+  // Steps 7-8.
+  auto largestUnit = TemporalUnit::Day;
+  if (!GetTemporalUnit(cx, options, TemporalUnitKey::LargestUnit,
+                       TemporalUnitGroup::Date, &largestUnit)) {
+    return false;
+  }
+
+  // Steps 9-10.
+  return BuiltinCalendarDateUntil(cx, calendar, one, two, largestUnit, result);
+}
+
+static bool CalendarDateUntilSlow(JSContext* cx, Handle<JSObject*> calendar,
+                                  Handle<Wrapped<PlainDateObject*>> one,
+                                  Handle<Wrapped<PlainDateObject*>> two,
+                                  Handle<JSObject*> options,
+                                  Handle<Value> dateUntil, Duration* result) {
+  // FIXME: spec bug - structured header wrong, |dateUntil| can be undefined.
+  // https://github.com/tc39/proposal-temporal/issues/2527
+
+  // Step 1. (Not applicable)
+
+  if (!IsCallable(dateUntil)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_PROPERTY_NOT_CALLABLE, "dateUntil");
+    return false;
+  }
+
+  // Step 2.
+  Rooted<Value> thisv(cx, ObjectValue(*calendar));
+  Rooted<Value> rval(cx);
+
+  FixedInvokeArgs<3> args(cx);
+  args[0].setObject(*one);
+  args[1].setObject(*two);
+  args[2].setObject(*options);
+
+  if (!Call(cx, dateUntil, thisv, args, &rval)) {
+    return false;
+  }
+
+  // Step 3.
+  if (!rval.isObject() || !rval.toObject().canUnwrapAs<DurationObject>()) {
+    ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_IGNORE_STACK, rval,
+                     nullptr, "not a Duration object");
+    return false;
+  }
+
+  // Step 4.
+  *result = ToDuration(&rval.toObject().unwrapAs<DurationObject>());
+  return true;
+}
+
+static bool Calendar_dateUntil(JSContext* cx, unsigned argc, Value* vp);
+
+/**
+ * CalendarDateUntil ( calendar, one, two, options [ , dateUntil ] )
+ */
+bool js::temporal::CalendarDateUntil(JSContext* cx, Handle<JSObject*> calendar,
+                                     Handle<Wrapped<PlainDateObject*>> one,
+                                     Handle<Wrapped<PlainDateObject*>> two,
+                                     Handle<JSObject*> options,
+                                     Handle<Value> dateUntil,
+                                     Duration* result) {
+  // Fast-path for the default implementation.
+  if (calendar->is<CalendarObject>() &&
+      IsNativeFunction(dateUntil, Calendar_dateUntil)) {
+    return BuiltinCalendarDateUntil(cx, calendar.as<CalendarObject>(), one, two,
+                                    options, result);
+  }
+
+  // Steps 1-4.
+  return CalendarDateUntilSlow(cx, calendar, one, two, options, dateUntil,
+                               result);
+}
+
+/**
+ * CalendarDateUntil ( calendar, one, two, options [ , dateUntil ] )
+ */
+bool js::temporal::CalendarDateUntil(JSContext* cx, Handle<JSObject*> calendar,
+                                     Handle<Wrapped<PlainDateObject*>> one,
+                                     Handle<Wrapped<PlainDateObject*>> two,
+                                     TemporalUnit largestUnit,
+                                     Handle<Value> dateUntil,
+                                     Duration* result) {
+  MOZ_ASSERT(largestUnit <= TemporalUnit::Day);
+
+  // Fast-path for the default implementation.
+  if (calendar->is<CalendarObject>() &&
+      IsNativeFunction(dateUntil, Calendar_dateUntil)) {
+    return BuiltinCalendarDateUntil(cx, calendar.as<CalendarObject>(), one, two,
+                                    largestUnit, result);
+  }
+
+  Rooted<JSObject*> untilOptions(cx, NewPlainObjectWithProto(cx, nullptr));
+  if (!untilOptions) {
+    return false;
+  }
+
+  Rooted<Value> value(cx, StringValue(TemporalUnitToString(cx, largestUnit)));
+  if (!DefineDataProperty(cx, untilOptions, cx->names().largestUnit, value)) {
+    return false;
+  }
+
+  return CalendarDateUntilSlow(cx, calendar, one, two, untilOptions, dateUntil,
+                               result);
+}
+
+/**
+ * CalendarDateUntil ( calendar, one, two, options [ , dateUntil ] )
+ */
+bool js::temporal::CalendarDateUntil(JSContext* cx, Handle<JSObject*> calendar,
+                                     Handle<Wrapped<PlainDateObject*>> one,
+                                     Handle<Wrapped<PlainDateObject*>> two,
+                                     Handle<JSObject*> options,
+                                     Duration* result) {
+  // Step 1.
+  Rooted<Value> dateUntil(cx);
+  if (!GetMethodForCall(cx, calendar, cx->names().dateUntil, &dateUntil)) {
+    return false;
+  }
+
+  // Steps 2-4.
+  return CalendarDateUntil(cx, calendar, one, two, options, dateUntil, result);
+}
+
+/**
+ * CalendarDateUntil ( calendar, one, two, options [ , dateUntil ] )
+ */
+bool js::temporal::CalendarDateUntil(JSContext* cx, Handle<JSObject*> calendar,
+                                     Handle<Wrapped<PlainDateObject*>> one,
+                                     Handle<Wrapped<PlainDateObject*>> two,
+                                     TemporalUnit largestUnit,
+                                     Duration* result) {
+  MOZ_ASSERT(largestUnit <= TemporalUnit::Day);
+
+  // Step 1.
+  Rooted<Value> dateUntil(cx);
+  if (!GetMethodForCall(cx, calendar, cx->names().dateUntil, &dateUntil)) {
+    return false;
+  }
+
+  // Steps 2-4.
+  return CalendarDateUntil(cx, calendar, one, two, largestUnit, dateUntil,
+                           result);
+}
+
+/**
  * CalendarEquals ( one, two )
  */
 bool js::temporal::CalendarEquals(JSContext* cx, Handle<JSObject*> one,
@@ -2982,6 +3200,66 @@ static bool Calendar_monthDayFromFields(JSContext* cx, unsigned argc,
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<IsCalendar, Calendar_monthDayFromFields>(cx,
                                                                        args);
+}
+
+/**
+ * Temporal.Calendar.prototype.dateUntil ( one, two [ , options ] )
+ */
+static bool Calendar_dateUntil(JSContext* cx, const CallArgs& args) {
+  Rooted<CalendarObject*> calendar(
+      cx, &args.thisv().toObject().as<CalendarObject>());
+
+  // Step 4.
+  PlainDate one;
+  if (!ToTemporalDate(cx, args.get(0), &one)) {
+    return false;
+  }
+
+  // Step 5.
+  PlainDate two;
+  if (!ToTemporalDate(cx, args.get(1), &two)) {
+    return false;
+  }
+
+  // Steps 6-8.
+  auto largestUnit = TemporalUnit::Day;
+  if (args.hasDefined(2)) {
+    Rooted<JSObject*> options(
+        cx, RequireObjectArg(cx, "options", "dateUntil", args[2]));
+    if (!options) {
+      return false;
+    }
+
+    // Steps 7-8.
+    if (!GetTemporalUnit(cx, options, TemporalUnitKey::LargestUnit,
+                         TemporalUnitGroup::Date, &largestUnit)) {
+      return false;
+    }
+  }
+
+  // Steps 9-10.
+  Duration duration;
+  if (!BuiltinCalendarDateUntil(cx, calendar, one, two, largestUnit,
+                                &duration)) {
+    return false;
+  }
+
+  auto* obj = CreateTemporalDuration(cx, duration);
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
+/**
+ * Temporal.Calendar.prototype.dateUntil ( one, two [ , options ] )
+ */
+static bool Calendar_dateUntil(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsCalendar, Calendar_dateUntil>(cx, args);
 }
 
 /**
@@ -3634,6 +3912,7 @@ static const JSFunctionSpec Calendar_prototype_methods[] = {
     JS_FN("dateFromFields", Calendar_dateFromFields, 1, 0),
     JS_FN("yearMonthFromFields", Calendar_yearMonthFromFields, 1, 0),
     JS_FN("monthDayFromFields", Calendar_monthDayFromFields, 1, 0),
+    JS_FN("dateUntil", Calendar_dateUntil, 2, 0),
     JS_FN("year", Calendar_year, 1, 0),
     JS_FN("month", Calendar_month, 1, 0),
     JS_FN("monthCode", Calendar_monthCode, 1, 0),
