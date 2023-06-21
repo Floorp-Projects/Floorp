@@ -27,6 +27,7 @@
 #include "builtin/temporal/Instant.h"
 #include "builtin/temporal/Temporal.h"
 #include "builtin/temporal/TemporalParser.h"
+#include "builtin/temporal/TemporalRoundingMode.h"
 #include "builtin/temporal/TemporalTypes.h"
 #include "builtin/temporal/TemporalUnit.h"
 #include "builtin/temporal/Wrapped.h"
@@ -1321,6 +1322,504 @@ static Duration AbsoluteDuration(const Duration& duration) {
       std::abs(duration.seconds),      std::abs(duration.milliseconds),
       std::abs(duration.microseconds), std::abs(duration.nanoseconds),
   };
+}
+
+static constexpr bool IsSafeInteger(int64_t x) {
+  constexpr int64_t MaxSafeInteger = int64_t(1) << 53;
+  constexpr int64_t MinSafeInteger = -MaxSafeInteger;
+  return MinSafeInteger < x && x < MaxSafeInteger;
+}
+
+/**
+ * RoundNumberToIncrement ( x, increment, roundingMode )
+ */
+static void TruncateNumber(int64_t numerator, int64_t denominator,
+                           double* quotient, double* rounded) {
+  // Computes the quotient and rounded value of the rational number
+  // |numerator / denominator|.
+  //
+  // The numerator can be represented as |numerator = a * denominator + b|.
+  //
+  // So we have:
+  //
+  //   numerator / denominator
+  // = (a * denominator + b) / denominator
+  // = ((a * denominator) / denominator) + (b / denominator)
+  // = a + (b / denominator)
+  //
+  // where |quotient = a| and |remainder = b / denominator|. |a| and |b| can be
+  // computed through normal int64 division.
+
+  // Int64 division truncates.
+  int64_t q = numerator / denominator;
+  int64_t r = numerator % denominator;
+
+  // The remainder is stored as a mathematical number in the draft proposal, so
+  // we can't convert it to a double without loss of precision. The remainder is
+  // eventually added to the quotient and if we directly perform this addition,
+  // we can reduce the possible loss of precision. We still need to choose which
+  // approach to take based on the input range.
+  //
+  // For example:
+  //
+  // When |numerator = 1000001| and |denominator = 60 * 1000|, then
+  // |quotient = 16| and |remainder = 40001 / (60 * 1000)|. The exact result is
+  // |16.66668333...|.
+  //
+  // When storing the remainder as a double and later adding it to the quotient,
+  // we get |𝔽(16) + 𝔽(40001 / (60 * 1000)) = 16.666683333333331518...𝔽|. This
+  // is wrong by 1 ULP, a better approximation is |16.666683333333335070...𝔽|.
+  //
+  // We can get the better approximation when casting the numerator and
+  // denominator to doubles and then performing a double division.
+  //
+  // When |numerator = 14400000000000001| and |denominator = 3600000000000|, we
+  // can't use double division, because |14400000000000001| can't be represented
+  // as an exact double value. The exact result is |4000.0000000000002777...|.
+  //
+  // The best possible approximation is |4000.0000000000004547...𝔽|, which can
+  // be computed through |q + r / denominator|.
+  if (::IsSafeInteger(numerator) && ::IsSafeInteger(denominator)) {
+    *quotient = double(q);
+    *rounded = double(numerator) / double(denominator);
+  } else {
+    *quotient = double(q);
+    *rounded = double(q) + double(r) / double(denominator);
+  }
+}
+
+/**
+ * RoundNumberToIncrement ( x, increment, roundingMode )
+ */
+static bool TruncateNumber(JSContext* cx, const Duration& toRound,
+                           TemporalUnit unit, double* quotient,
+                           double* rounded) {
+  MOZ_ASSERT(unit >= TemporalUnit::Day);
+
+  int64_t denominator = ToNanoseconds(unit);
+  MOZ_ASSERT(denominator > 0);
+  MOZ_ASSERT(denominator <= 86'400'000'000'000);
+
+  // Fast-path when we can perform the whole computation with int64 values.
+  if (auto numerator = TotalDurationNanoseconds(toRound, 0)) {
+    TruncateNumber(*numerator, denominator, quotient, rounded);
+    return true;
+  }
+
+  Rooted<BigInt*> numerator(cx, TotalDurationNanosecondsSlow(cx, toRound, 0));
+  if (!numerator) {
+    return false;
+  }
+
+  // Division by one has no remainder.
+  if (denominator == 1) {
+    double q = BigInt::numberValue(numerator);
+    *quotient = q;
+    *rounded = q;
+    return true;
+  }
+
+  Rooted<BigInt*> denom(cx, BigInt::createFromInt64(cx, denominator));
+  if (!denom) {
+    return false;
+  }
+
+  // BigInt division truncates.
+  Rooted<BigInt*> quot(cx);
+  Rooted<BigInt*> rem(cx);
+  if (!BigInt::divmod(cx, numerator, denom, &quot, &rem)) {
+    return false;
+  }
+
+  double q = BigInt::numberValue(quot);
+  *quotient = q;
+  *rounded = q + BigInt::numberValue(rem) / double(denominator);
+  return true;
+}
+
+/**
+ * RoundNumberToIncrement ( x, increment, roundingMode )
+ */
+static bool RoundNumberToIncrement(JSContext* cx, const Duration& toRound,
+                                   TemporalUnit unit, Increment increment,
+                                   TemporalRoundingMode roundingMode,
+                                   double* result) {
+  MOZ_ASSERT(unit >= TemporalUnit::Day);
+
+  // Fast-path when we can perform the whole computation with int64 values.
+  if (auto total = TotalDurationNanoseconds(toRound, 0)) {
+    return RoundNumberToIncrement(cx, *total, unit, increment, roundingMode,
+                                  result);
+  }
+
+  Rooted<BigInt*> totalNs(cx, TotalDurationNanosecondsSlow(cx, toRound, 0));
+  if (!totalNs) {
+    return false;
+  }
+
+  return RoundNumberToIncrement(cx, totalNs, unit, increment, roundingMode,
+                                result);
+}
+
+struct RoundedDuration final {
+  Duration duration;
+  double rounded = 0;
+};
+
+enum class ComputeRemainder : bool { No, Yes };
+
+/**
+ * RoundDuration ( years, months, weeks, days, hours, minutes, seconds,
+ * milliseconds, microseconds, nanoseconds, increment, unit, roundingMode [ ,
+ * relativeTo ] )
+ */
+static bool RoundDuration(JSContext* cx, const Duration& duration,
+                          Increment increment, TemporalUnit unit,
+                          TemporalRoundingMode roundingMode,
+                          ComputeRemainder computeRemainder,
+                          RoundedDuration* result) {
+  // The remainder is only needed when called from |Duration_total|. And `total`
+  // always passes |increment=1| and |roundingMode=trunc|.
+  MOZ_ASSERT_IF(computeRemainder == ComputeRemainder::Yes,
+                increment == Increment{1});
+  MOZ_ASSERT_IF(computeRemainder == ComputeRemainder::Yes,
+                roundingMode == TemporalRoundingMode::Trunc);
+
+  auto [years, months, weeks, days, hours, minutes, seconds, milliseconds,
+        microseconds, nanoseconds] = duration;
+
+  // Step 1. (Not applicable.)
+
+  // Step 2.
+  if (unit <= TemporalUnit::Week) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_DURATION_UNCOMPARABLE,
+                              "relativeTo");
+    return false;
+  }
+
+  // TODO: We could directly return here if unit=nanoseconds and increment=1,
+  // because in that case this operation is a no-op. This case happens for
+  // example when calling Temporal.PlainTime.prototype.{since,until} without an
+  // options object.
+  //
+  // But maybe this can be even more efficiently handled in the callers. For
+  // example when Temporal.PlainTime.prototype.{since,until} is called without
+  // an options object, we can not only skip the RoundDuration call, but also
+  // the following BalanceDuration call.
+
+  // Steps 3-5. (Not applicable.)
+
+  // Steps 6-7 (Moved below).
+
+  // Step 8. (Not applicable.)
+
+  // Steps 9-18.
+  Duration toRound;
+  double* roundedTime;
+  switch (unit) {
+    case TemporalUnit::Auto:
+    case TemporalUnit::Year:
+    case TemporalUnit::Week:
+    case TemporalUnit::Month:
+      // Steps 9-11. (Not applicable.)
+      MOZ_CRASH("Unexpected temporal unit");
+
+    case TemporalUnit::Day: {
+      // clang-format off
+      //
+      // Relevant steps from the spec algorithm:
+      //
+      // 6.a Let nanoseconds be ! TotalDurationNanoseconds(0, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, 0).
+      // 6.d Let result be ? NanosecondsToDays(nanoseconds, intermediate).
+      // 6.e Set days to days + result.[[Days]] + result.[[Nanoseconds]] / abs(result.[[DayLength]]).
+      // ...
+      // 12.a Let fractionalDays be days.
+      // 12.b Set days to ? RoundNumberToIncrement(days, increment, roundingMode).
+      // 12.c Set remainder to fractionalDays - days.
+      //
+      // Where `result.[[Days]]` is `the integral part of nanoseconds / dayLengthNs`
+      // and `result.[[Nanoseconds]]` is `nanoseconds modulo dayLengthNs`.
+      // With `dayLengthNs = 8.64 × 10^13`.
+      //
+      // So we have:
+      //   d + r.days + (r.nanoseconds / len)
+      // = d + [ns / len] + ((ns % len) / len)
+      // = d + [ns / len] + ((ns - ([ns / len] × len)) / len)
+      // = d + [ns / len] + (ns / len) - (([ns / len] × len) / len)
+      // = d + [ns / len] + (ns / len) - [ns / len]
+      // = d + (ns / len)
+      // = ((d × len) / len) + (ns / len)
+      // = ((d × len) + ns) / len
+      //
+      // `((d × len) + ns)` is the result of calling TotalDurationNanoseconds(),
+      // which means we can use the same code for all time computations in this
+      // function.
+      //
+      // clang-format on
+
+      MOZ_ASSERT(increment <= Increment{1'000'000'000},
+                 "limited by ToTemporalRoundingIncrement");
+
+      // Steps 6.a, 6.d-e, and 12.a-c.
+      toRound = duration;
+      roundedTime = &days;
+
+      // Steps 6.b-c. (Not applicable)
+
+      // Step 6.f.
+      hours = 0;
+      minutes = 0;
+      seconds = 0;
+      milliseconds = 0;
+      microseconds = 0;
+      nanoseconds = 0;
+      break;
+    }
+
+    case TemporalUnit::Hour: {
+      MOZ_ASSERT(increment <= Increment{24},
+                 "limited by MaximumTemporalDurationRoundingIncrement");
+
+      // Steps 7 and 13.a-c.
+      toRound = {
+          0,
+          0,
+          0,
+          0,
+          hours,
+          minutes,
+          seconds,
+          milliseconds,
+          microseconds,
+          nanoseconds,
+      };
+      roundedTime = &hours;
+
+      // Step 13.d.
+      minutes = 0;
+      seconds = 0;
+      milliseconds = 0;
+      microseconds = 0;
+      nanoseconds = 0;
+      break;
+    }
+
+    case TemporalUnit::Minute: {
+      MOZ_ASSERT(increment <= Increment{60},
+                 "limited by MaximumTemporalDurationRoundingIncrement");
+
+      // Steps 7 and 14.a-c.
+      toRound = {
+          0,           0, 0, 0, 0, minutes, seconds, milliseconds, microseconds,
+          nanoseconds,
+      };
+      roundedTime = &minutes;
+
+      // Step 14.d.
+      seconds = 0;
+      milliseconds = 0;
+      microseconds = 0;
+      nanoseconds = 0;
+      break;
+    }
+
+    case TemporalUnit::Second: {
+      MOZ_ASSERT(increment <= Increment{60},
+                 "limited by MaximumTemporalDurationRoundingIncrement");
+
+      // Steps 7 and 15.a-b.
+      toRound = {
+          0, 0, 0, 0, 0, 0, seconds, milliseconds, microseconds, nanoseconds,
+      };
+      roundedTime = &seconds;
+
+      // Step 15.c.
+      milliseconds = 0;
+      microseconds = 0;
+      nanoseconds = 0;
+      break;
+    }
+
+    case TemporalUnit::Millisecond: {
+      MOZ_ASSERT(increment <= Increment{1000},
+                 "limited by MaximumTemporalDurationRoundingIncrement");
+
+      // Steps 16.a-c.
+      toRound = {0, 0, 0, 0, 0, 0, 0, milliseconds, microseconds, nanoseconds};
+      roundedTime = &milliseconds;
+
+      // Step 16.d.
+      microseconds = 0;
+      nanoseconds = 0;
+      break;
+    }
+
+    case TemporalUnit::Microsecond: {
+      MOZ_ASSERT(increment <= Increment{1000},
+                 "limited by MaximumTemporalDurationRoundingIncrement");
+
+      // Steps 17.a-c.
+      toRound = {0, 0, 0, 0, 0, 0, 0, 0, microseconds, nanoseconds};
+      roundedTime = &microseconds;
+
+      // Step 17.d.
+      nanoseconds = 0;
+      break;
+    }
+
+    case TemporalUnit::Nanosecond: {
+      MOZ_ASSERT(increment <= Increment{1000},
+                 "limited by MaximumTemporalDurationRoundingIncrement");
+
+      // Step 18.a. (Implicit)
+
+      // Steps 18.b-d.
+      toRound = {0, 0, 0, 0, 0, 0, 0, 0, 0, nanoseconds};
+      roundedTime = &nanoseconds;
+      break;
+    }
+  }
+
+  // clang-format off
+  //
+  // The specification uses mathematical values in its computations, which
+  // requires to be able to represent decimals with arbitrary precision. To
+  // avoid having to struggle with decimals, we can transform the steps to work
+  // on integer values, which we can conveniently represent with BigInts.
+  //
+  // As an example here are the transformation steps for "hours", but all other
+  // units can be handled similarly.
+  //
+  // Relevant spec steps:
+  //
+  // 7.a Let fractionalSeconds be nanoseconds × 10^9 + microseconds × 10^6 + milliseconds × 10^3 + seconds.
+  // ...
+  // 13.a Let fractionalHours be (fractionalSeconds / 60 + minutes) / 60 + hours.
+  // 13.b Set hours to ? RoundNumberToIncrement(fractionalHours, increment, roundingMode).
+  //
+  // And from RoundNumberToIncrement:
+  //
+  // 1. Let quotient be x / increment.
+  // 2-7. Let rounded be op(quotient).
+  // 8. Return rounded × increment.
+  //
+  // With `fractionalHours = (totalNs / nsPerHour)`, the rounding operation
+  // computes:
+  //
+  //   op(fractionalHours / increment) × increment
+  // = op((totalNs / nsPerHour) / increment) × increment
+  // = op(totalNs / (nsPerHour × increment)) × increment
+  //
+  // So when we pass `totalNs` and `nsPerHour` as separate arguments to
+  // RoundNumberToIncrement, we can avoid any precision losses and instead
+  // compute with exact values.
+  //
+  // clang-format on
+
+  double rounded = 0;
+  if (computeRemainder == ComputeRemainder::No) {
+    if (!RoundNumberToIncrement(cx, toRound, unit, increment, roundingMode,
+                                roundedTime)) {
+      return false;
+    }
+  } else {
+    // clang-format off
+    //
+    // The remainder is only used for Duration.prototype.total(), which calls
+    // this operation with increment=1 and roundingMode=trunc.
+    //
+    // That means the remainder computation is actually just
+    // `(totalNs % toNanos) / toNanos`, where `totalNs % toNanos` is already
+    // computed in RoundNumberToIncrement():
+    //
+    // rounded = trunc(totalNs / toNanos)
+    //         = [totalNs / toNanos]
+    //
+    // roundedTime = ℝ(𝔽(rounded))
+    //
+    // remainder = (totalNs - (rounded * toNanos)) / toNanos
+    //           = (totalNs - ([totalNs / toNanos] * toNanos)) / toNanos
+    //           = (totalNs % toNanos) / toNanos
+    //
+    // When used in Duration.prototype.total(), the overall computed value is
+    // `[totalNs / toNanos] + (totalNs % toNanos) / toNanos`.
+    //
+    // Applying normal math rules would allow to simplify this to:
+    //
+    //   [totalNs / toNanos] + (totalNs % toNanos) / toNanos
+    // = [totalNs / toNanos] + (totalNs - [totalNs / toNanos] * toNanos) / toNanos
+    // = total / toNanos
+    //
+    // We can't apply this simplification because it'd introduce double
+    // precision issues. Instead of that, we use a specialized version of
+    // RoundNumberToIncrement which directly returns the remainder. The
+    // remainder `(totalNs % toNanos) / toNanos` is a value near zero, so this
+    // approach is as exact as possible. (Double numbers near zero can be
+    // computed more precisely than large numbers with fractional parts.)
+    //
+    // clang-format on
+
+    MOZ_ASSERT(increment == Increment{1});
+    MOZ_ASSERT(roundingMode == TemporalRoundingMode::Trunc);
+
+    if (!TruncateNumber(cx, toRound, unit, roundedTime, &rounded)) {
+      return false;
+    }
+  }
+
+  MOZ_ASSERT(years == duration.years);
+  MOZ_ASSERT(months == duration.months);
+  MOZ_ASSERT(weeks == duration.weeks);
+
+  // Step 19.
+  MOZ_ASSERT(IsIntegerOrInfinity(days));
+
+  // Step 20.
+  Duration resultDuration = {years,        months,     weeks,   days,
+                             hours,        minutes,    seconds, milliseconds,
+                             microseconds, nanoseconds};
+  if (!ThrowIfInvalidDuration(cx, resultDuration)) {
+    return false;
+  }
+
+  // Step 21.
+  *result = {resultDuration, rounded};
+  return true;
+}
+
+/**
+ * RoundDuration ( years, months, weeks, days, hours, minutes, seconds,
+ * milliseconds, microseconds, nanoseconds, increment, unit, roundingMode [ ,
+ * relativeTo ] )
+ */
+static bool RoundDuration(JSContext* cx, const Duration& duration,
+                          Increment increment, TemporalUnit unit,
+                          TemporalRoundingMode roundingMode, Duration* result) {
+  MOZ_ASSERT(IsValidDuration(duration));
+
+  RoundedDuration rounded;
+  if (!::RoundDuration(cx, duration, increment, unit, roundingMode,
+                       ComputeRemainder::No, &rounded)) {
+    return false;
+  }
+
+  *result = rounded.duration;
+  return true;
+}
+
+/**
+ * RoundDuration ( years, months, weeks, days, hours, minutes, seconds,
+ * milliseconds, microseconds, nanoseconds, increment, unit, roundingMode [ ,
+ * relativeTo ] )
+ */
+bool js::temporal::RoundDuration(JSContext* cx, const Duration& duration,
+                                 Increment increment, TemporalUnit unit,
+                                 TemporalRoundingMode roundingMode,
+                                 Duration* result) {
+  MOZ_ASSERT(IsValidDuration(duration));
+
+  return ::RoundDuration(cx, duration, increment, unit, roundingMode, result);
 }
 
 /**
