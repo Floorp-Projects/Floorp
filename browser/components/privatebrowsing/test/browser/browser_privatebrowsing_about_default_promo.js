@@ -9,11 +9,14 @@ const PromoInfo = {
   COOKIE_BANNERS: { enabledPref: "browser.promo.cookiebanners.enabled" },
 };
 
+const sandbox = sinon.createSandbox();
+
 async function resetState() {
   await Promise.all([
     ASRouter.resetMessageState(),
     ASRouter.resetGroupsState(),
     ASRouter.unblockAll(),
+    sandbox.restore(),
   ]);
 }
 
@@ -143,6 +146,79 @@ add_task(async function test_remove_promo_from_prerendered_tab_if_blocked() {
       );
     }
   );
+
+  await BrowserTestUtils.closeWindow(win);
+});
+
+// Test that some default content is rendered while waiting for ASRouter to
+// return a message.
+add_task(async function test_default_content_deferred_message_load() {
+  await resetState();
+
+  let messageRequestedPromiseResolver;
+  const messageRequestedPromise = new Promise(resolve => {
+    messageRequestedPromiseResolver = resolve;
+  });
+  let messageReadyPromiseResolver;
+  const messageReadyPromise = new Promise(resolve => {
+    messageReadyPromiseResolver = resolve;
+  });
+  // Force ASRouter to "hang" until we resolve the promise so we can test what
+  // happens when there is a delay in loading the message.
+  const sendMessageStub = sandbox
+    .stub(ASRouter, "sendPBNewTabMessage")
+    .callsFake(async (...args) => {
+      messageRequestedPromiseResolver();
+      await messageReadyPromise;
+      return sendMessageStub.wrappedMethod.apply(ASRouter, args);
+    });
+
+  const { win, tab } = await openAboutPrivateBrowsing();
+  await messageRequestedPromise;
+
+  await SpecialPowers.spawn(tab, [], async function () {
+    const promoContainer = content.document.querySelector(".promo");
+    ok(
+      promoContainer && !promoContainer.classList.contains("promo-visible"),
+      "Focus promo is hidden but not removed"
+    );
+    const infoContainer = content.document.querySelector(".info");
+    ok(infoContainer && !infoContainer.hidden, "Info container is shown");
+    const infoTitle = content.document.getElementById("info-title");
+    ok(infoTitle && infoTitle.hidden, "Info title is hidden");
+    const infoBody = content.document.getElementById("info-body");
+    ok(infoBody, "Info body is shown");
+    is(
+      infoBody.getAttribute("data-l10n-id"),
+      "about-private-browsing-info-description-private-window",
+      "Info body has the correct Fluent id"
+    );
+    await ContentTaskUtils.waitForCondition(
+      () => infoBody.textContent,
+      "Info body has been translated"
+    );
+    const infoLink = content.document.getElementById("private-browsing-myths");
+    ok(infoLink, "Info link is shown");
+    is(
+      infoLink.getAttribute("data-l10n-id"),
+      "about-private-browsing-learn-more-link",
+      "Info link has the correct Fluent id"
+    );
+    await ContentTaskUtils.waitForCondition(
+      () => infoLink.textContent && infoLink.href,
+      "Info body has been translated"
+    );
+  });
+
+  messageReadyPromiseResolver();
+  await messageReadyPromise;
+
+  await SpecialPowers.spawn(tab, [], async function () {
+    await ContentTaskUtils.waitForCondition(() => {
+      const promoContainer = content.document.querySelector(".promo");
+      return promoContainer?.classList.contains("promo-visible");
+    }, "The promo container is shown.");
+  });
 
   await BrowserTestUtils.closeWindow(win);
 });

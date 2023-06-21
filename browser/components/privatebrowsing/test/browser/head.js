@@ -8,6 +8,7 @@ ChromeUtils.defineESModuleGetters(this, {
   PanelTestProvider: "resource://activity-stream/lib/PanelTestProvider.sys.mjs",
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  sinon: "resource://testing-common/Sinon.sys.mjs",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
 });
 

@@ -823,20 +823,6 @@ const BASE_MESSAGES = () => [
     targeting: "localeLanguageCode == 'de'",
   },
   {
-    id: "PB_NEWTAB_INFO_SECTION",
-    template: "pb_newtab",
-    content: {
-      promoEnabled: false,
-      infoEnabled: true,
-      infoIcon: "",
-      infoTitle: "",
-      infoBody: "fluent:about-private-browsing-info-description-private-window",
-      infoLinkText: "fluent:about-private-browsing-learn-more-link",
-      infoTitleEnabled: false,
-    },
-    targeting: "true",
-  },
-  {
     id: "PB_NEWTAB_PIN_PROMO",
     template: "pb_newtab",
     type: "default",
