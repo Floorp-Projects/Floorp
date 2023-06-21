@@ -46,15 +46,15 @@ function do_test() {
   var elementRules = InspectorUtils.getCSSStyleRules(element);
   var elementRule = elementRules[elementRules.length - 1];
 
-  is (InspectorUtils.selectorMatchesElement(element, elementRule, 0), true,
+  is (elementRule.selectorMatchesElement(0, element), true,
     "Matches #foo");
-  is (InspectorUtils.selectorMatchesElement(element, elementRule, 1), false,
+  is (elementRule.selectorMatchesElement(1, element), false,
     "Doesn't match #bar");
-  is (InspectorUtils.selectorMatchesElement(element, elementRule, 0, ":bogus"), false,
+  is (elementRule.selectorMatchesElement(0, element, ":bogus"), false,
     "Doesn't match #foo with a bogus pseudo");
-  is (InspectorUtils.selectorMatchesElement(element, elementRule, 2, ":bogus"), false,
+  is (elementRule.selectorMatchesElement(2, element, ":bogus"), false,
     "Doesn't match #foo::before with bogus pseudo");
-  is (InspectorUtils.selectorMatchesElement(element, elementRule, 0, ":after"), false,
+  is (elementRule.selectorMatchesElement(0, element, ":after"), false,
     "Does match #foo::before with the :after pseudo");
 
   checkPseudo(":before");
@@ -68,14 +68,14 @@ function do_test() {
     var rules = InspectorUtils.getCSSStyleRules(element, pseudo);
     var rule = rules[rules.length - 1];
 
-    is (InspectorUtils.selectorMatchesElement(element, rule, 0), false,
+    is (rule.selectorMatchesElement(0, element), false,
       "Doesn't match without " + pseudo);
-    is (InspectorUtils.selectorMatchesElement(element, rule, 1), false,
+    is (rule.selectorMatchesElement(1, element), false,
       "Doesn't match without " + pseudo);
 
-    is (InspectorUtils.selectorMatchesElement(element, rule, 0, pseudo), true,
+    is (rule.selectorMatchesElement(0, element, pseudo), true,
       "Matches on #foo" + pseudo);
-    is (InspectorUtils.selectorMatchesElement(element, rule, 1, pseudo), false,
+    is (rule.selectorMatchesElement(1, element, pseudo), false,
       "Doesn't match on #bar" + pseudo);
   }
 }

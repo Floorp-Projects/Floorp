@@ -962,13 +962,7 @@ class InactivePropertyHelper {
     for (let i = 0; i < selectors.length; i++) {
       if (
         !selectors[i].endsWith(":visited") &&
-        InspectorUtils.selectorMatchesElement(
-          bindingElement,
-          this.cssRule,
-          i,
-          pseudo,
-          true
-        )
+        this.cssRule.selectorMatchesElement(i, bindingElement, pseudo, true)
       ) {
         // Match non :visited selector.
         return false;

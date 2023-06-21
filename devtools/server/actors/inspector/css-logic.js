@@ -471,7 +471,7 @@ class CssLogic {
   selectorMatchesElement(domRule, idx) {
     let element = this.viewedElement;
     do {
-      if (InspectorUtils.selectorMatchesElement(element, domRule, idx)) {
+      if (domRule.selectorMatchesElement(idx, element)) {
         return true;
       }
     } while (
@@ -662,10 +662,9 @@ CssLogic.getSelectors = function (domRule) {
 
   const selectors = [];
 
-  const len = InspectorUtils.getSelectorCount(domRule);
+  const len = domRule.selectorCount;
   for (let i = 0; i < len; i++) {
-    const text = InspectorUtils.getSelectorText(domRule, i);
-    selectors.push(text);
+    selectors.push(domRule.selectorTextAt(i));
   }
   return selectors;
 };
@@ -938,7 +937,7 @@ class CssRule {
   /**
    * Information about a single CSSStyleRule.
    *
-   * @param {CSSSheet|null} cssSheet the CssSheet object of the stylesheet that
+   * @param {CSSStyleSheet|null} cssSheet the CssSheet object of the stylesheet that
    * holds the CSSStyleRule. If the rule comes from element.style, set this
    * argument to null.
    * @param {CSSStyleRule|object} domRule the DOM CSSStyleRule for which you want
@@ -1201,8 +1200,7 @@ class CssSelector {
     }
 
     if (typeof this._specificity !== "number") {
-      this._specificity = InspectorUtils.getSpecificity(
-        this.cssRule.domRule,
+      this._specificity = this.cssRule.domRule.selectorSpecificityAt(
         this.selectorIndex
       );
     }

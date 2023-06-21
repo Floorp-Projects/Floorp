@@ -2422,43 +2422,39 @@ pub extern "C" fn Servo_StyleRule_SetStyle(
 
 #[no_mangle]
 pub extern "C" fn Servo_StyleRule_GetSelectorText(rule: &LockedStyleRule, result: &mut nsACString) {
-    read_locked_arc(rule, |rule: &StyleRule| {
-        rule.selectors.to_css(result).unwrap();
-    })
+    read_locked_arc(rule, |rule| rule.selectors.to_css(result).unwrap());
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_StyleRule_GetSelectorTextAtIndex(
-    rule: &LockedStyleRule,
+pub extern "C" fn Servo_StyleRule_GetSelectorDataAtIndex(
+    rules: &ThinVec<&LockedStyleRule>,
     index: u32,
-    result: &mut nsACString,
+    text: Option<&mut nsACString>,
+    specificity: Option<&mut u64>,
 ) {
-    read_locked_arc(rule, |rule: &StyleRule| {
-        let index = index as usize;
-        if index >= rule.selectors.0.len() {
-            return;
-        }
-        rule.selectors.0[index].to_css(result).unwrap();
-    })
+    let mut selectors: Option<SelectorList> = None;
+    for rule in rules.iter().rev() {
+        selectors = Some(read_locked_arc(rule, |rule| {
+            match selectors {
+                Some(s) => rule.selectors.replace_parent_selector(&s.0),
+                None => rule.selectors.clone(),
+            }
+        }));
+    }
+    debug_assert!(selectors.is_some(), "Empty rule chain?");
+    let Some(selectors) = selectors else { return };
+    let Some(selector) = selectors.0.get(index as usize) else { return };
+    if let Some(text) = text {
+        selector.to_css(text).unwrap();
+    }
+    if let Some(specificity) = specificity {
+        *specificity = selector.specificity() as u64;
+    }
 }
 
 #[no_mangle]
 pub extern "C" fn Servo_StyleRule_GetSelectorCount(rule: &LockedStyleRule) -> u32 {
-    read_locked_arc(rule, |rule: &StyleRule| rule.selectors.0.len() as u32)
-}
-
-#[no_mangle]
-pub extern "C" fn Servo_StyleRule_GetSpecificityAtIndex(
-    rule: &LockedStyleRule,
-    index: u32,
-) -> u64 {
-    read_locked_arc(rule, |rule: &StyleRule| {
-        let index = index as usize;
-        if index >= rule.selectors.0.len() {
-            return 0;
-        }
-        rule.selectors.0[index].specificity() as u64
-    })
+    read_locked_arc(rule, |rule| rule.selectors.0.len() as u32)
 }
 
 #[no_mangle]

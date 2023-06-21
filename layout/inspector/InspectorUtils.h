@@ -75,29 +75,6 @@ class InspectorUtils {
   static bool HasRulesModifiedByCSSOM(GlobalObject& aGlobal,
                                       StyleSheet& aSheet);
 
-  // Utilities for working with selectors.  We don't have a JS OM representation
-  // of a single selector or a selector list yet, but given a rule we can index
-  // into the selector list.
-  //
-  // These methods would probably make more sense being [ChromeOnly] APIs on
-  // CSSStyleRule itself (bug 1428245).
-  static uint32_t GetSelectorCount(GlobalObject& aGlobal, CSSStyleRule& aRule);
-
-  // For all three functions below, aSelectorIndex is 0-based
-  static void GetSelectorText(GlobalObject& aGlobal, CSSStyleRule& aRule,
-                              uint32_t aSelectorIndex, nsACString& aText,
-                              ErrorResult& aRv);
-  static uint64_t GetSpecificity(GlobalObject& aGlobal, CSSStyleRule& aRule,
-                                 uint32_t aSelectorIndex, ErrorResult& aRv);
-  // Note: This does not handle scoped selectors correctly, because it has no
-  // idea what the right scope is.
-  static bool SelectorMatchesElement(GlobalObject& aGlobal, Element& aElement,
-                                     CSSStyleRule& aRule,
-                                     uint32_t aSelectorIndex,
-                                     const nsAString& aPseudo,
-                                     bool aRelevantLinkVisited,
-                                     ErrorResult& aRv);
-
   // Utilities for working with CSS properties
   //
   // Returns true if the string names a property that is inherited by default.

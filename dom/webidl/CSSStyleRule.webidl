@@ -19,4 +19,13 @@ interface CSSStyleRule : CSSRule {
   [Pref="layout.css.nesting.enabled", SameObject] readonly attribute CSSRuleList cssRules;
   [Pref="layout.css.nesting.enabled", Throws] unsigned long insertRule(UTF8String rule, optional unsigned long index = 0);
   [Pref="layout.css.nesting.enabled", Throws] undefined deleteRule(unsigned long index);
+
+  [ChromeOnly] readonly attribute unsigned long selectorCount;
+  [ChromeOnly] UTF8String selectorTextAt(unsigned long index, optional boolean desugared = false);
+  [ChromeOnly] unsigned long long selectorSpecificityAt(unsigned long index, optional boolean desugared = false);
+  [ChromeOnly] boolean selectorMatchesElement(
+    unsigned long selectorIndex,
+    Element element,
+    optional [LegacyNullToEmptyString] DOMString pseudo = "",
+    optional boolean includeVisitedStyle = false);
 };
