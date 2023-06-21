@@ -5,7 +5,7 @@
 
 use crate::{
     encrypt::{encrypt_share, EncryptError, PublicKey},
-    field::FieldElement,
+    field::FftFriendlyFieldElement,
     polynomial::{poly_fft, PolyAuxMemory},
     prng::{Prng, PrngError},
     util::{proof_length, unpack_proof_mut},
@@ -18,7 +18,7 @@ use std::convert::TryFrom;
 ///
 /// Client is used to create Prio shares.
 #[derive(Debug)]
-pub struct Client<F: FieldElement> {
+pub struct Client<F: FftFriendlyFieldElement> {
     dimension: usize,
     mem: ClientMemory<F>,
     public_key1: PublicKey,
@@ -39,7 +39,7 @@ pub enum ClientError {
     Vdaf(#[from] VdafError),
 }
 
-impl<F: FieldElement> Client<F> {
+impl<F: FftFriendlyFieldElement> Client<F> {
     /// Construct a new Prio client
     pub fn new(
         dimension: usize,
@@ -106,7 +106,7 @@ pub(crate) struct ClientMemory<F> {
     poly_mem: PolyAuxMemory<F>,
 }
 
-impl<F: FieldElement> ClientMemory<F> {
+impl<F: FftFriendlyFieldElement> ClientMemory<F> {
     pub(crate) fn new(dimension: usize) -> Result<Self, VdafError> {
         let n = (dimension + 1).next_power_of_two();
         if let Ok(size) = F::Integer::try_from(2 * n) {
@@ -132,7 +132,7 @@ impl<F: FieldElement> ClientMemory<F> {
     }
 }
 
-impl<F: FieldElement> ClientMemory<F> {
+impl<F: FftFriendlyFieldElement> ClientMemory<F> {
     pub(crate) fn prove_with<G>(&mut self, dimension: usize, init_function: G) -> Vec<F>
     where
         G: FnOnce(&mut [F]),
@@ -159,7 +159,7 @@ impl<F: FieldElement> ClientMemory<F> {
 
 /// Convenience function if one does not want to reuse
 /// [`Client`](struct.Client.html).
-pub fn encode_simple<F: FieldElement>(
+pub fn encode_simple<F: FftFriendlyFieldElement>(
     data: &[F],
     public_key1: PublicKey,
     public_key2: PublicKey,
@@ -169,7 +169,7 @@ pub fn encode_simple<F: FieldElement>(
     client_memory.encode_simple(data)
 }
 
-fn interpolate_and_evaluate_at_2n<F: FieldElement>(
+fn interpolate_and_evaluate_at_2n<F: FftFriendlyFieldElement>(
     n: usize,
     points_in: &[F],
     evals_out: &mut [F],
@@ -199,7 +199,7 @@ fn interpolate_and_evaluate_at_2n<F: FieldElement>(
 ///
 /// Based on Theorem 2.3.3 from Henry Corrigan-Gibbs' dissertation
 /// This constructs the output \pi by doing the necessesary calculations
-fn construct_proof<F: FieldElement>(
+fn construct_proof<F: FftFriendlyFieldElement>(
     data: &[F],
     dimension: usize,
     f0: &mut F,
@@ -244,7 +244,7 @@ fn construct_proof<F: FieldElement>(
 
 #[test]
 fn test_encode() {
-    use crate::field::Field32;
+    use crate::field::FieldPrio2;
     let pub_key1 = PublicKey::from_base64(
         "BIl6j+J6dYttxALdjISDv6ZI4/VWVEhUzaS05LgrsfswmbLOgNt9HUC2E0w+9RqZx3XMkdEHBHfNuCSMpOwofVQ=",
     )
@@ -257,8 +257,8 @@ fn test_encode() {
     let data_u32 = [0u32, 1, 0, 1, 1, 0, 0, 0, 1];
     let data = data_u32
         .iter()
-        .map(|x| Field32::from(*x))
-        .collect::<Vec<Field32>>();
+        .map(|x| FieldPrio2::from(*x))
+        .collect::<Vec<FieldPrio2>>();
     let encoded_shares = encode_simple(&data, pub_key1, pub_key2);
     assert!(encoded_shares.is_ok());
 }

@@ -4,10 +4,19 @@
 #![warn(missing_docs)]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
-//! Libprio-rs
+//! # libprio-rs
 //!
 //! Implementation of the [Prio](https://crypto.stanford.edu/prio/) private data aggregation
-//! protocol. For now we only support 0 / 1 vectors.
+//! protocol.
+//!
+//! Prio v2, used in the [Exposure Notifications Private Analytics][enpa] system, is available in
+//! the `client` and `server` modules.
+//!
+//! Prio3 is available in the `vdaf` module as part of an implementation of [Verifiable Distributed
+//! Aggregation Functions][vdaf], along with an experimental implementation of Poplar1.
+//!
+//! [enpa]: https://www.abetterinternet.org/post/prio-services-for-covid-en/
+//! [vdaf]: https://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/05/
 
 pub mod benchmarked;
 #[cfg(feature = "prio2")]
@@ -22,6 +31,8 @@ mod fft;
 pub mod field;
 pub mod flp;
 mod fp;
+#[cfg(feature = "experimental")]
+pub mod idpf;
 mod polynomial;
 mod prng;
 // Module test_vector depends on crate `rand` so we make it an optional feature

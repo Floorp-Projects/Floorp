@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: MPL-2.0
 
-//! Module `codec` provides support for encoding and decoding messages to or from the TLS wire
-//! encoding, as specified in [RFC 8446, Section 3][1]. It provides traits that can be implemented
-//! on values that need to be encoded or decoded, as well as utility functions for encoding
-//! sequences of values.
+//! Support for encoding and decoding messages to or from the TLS wire encoding, as specified in
+//! [RFC 8446, Section 3][1].
+//!
+//! The [`Encode`], [`Decode`], [`ParameterizedEncode`] and [`ParameterizedDecode`] traits can be
+//! implemented on values that need to be encoded or decoded. Utility functions are provided to
+//! encode or decode sequences of values.
 //!
 //! [1]: https://datatracker.ietf.org/doc/html/rfc8446#section-3
 
@@ -16,17 +18,26 @@ use std::{
     num::TryFromIntError,
 };
 
-#[allow(missing_docs)]
+/// An error that occurred during decoding.
 #[derive(Debug, thiserror::Error)]
 pub enum CodecError {
+    /// An I/O error.
     #[error("I/O error")]
     Io(#[from] std::io::Error),
+
+    /// Extra data remained in the input after decoding a value.
     #[error("{0} bytes left in buffer after decoding value")]
     BytesLeftOver(usize),
+
+    /// The length prefix of an encoded vector exceeds the amount of remaining input.
     #[error("length prefix of encoded vector overflows buffer: {0}")]
     LengthPrefixTooBig(usize),
+
+    /// Custom errors from [`Decode`] implementations.
     #[error("other error: {0}")]
     Other(#[source] Box<dyn Error + 'static + Send + Sync>),
+
+    /// An invalid value was decoded.
     #[error("unexpected value")]
     UnexpectedValue,
 }
@@ -38,15 +49,15 @@ pub trait Decode: Sized {
     /// and no further attempt to read from `bytes` should be made.
     fn decode(bytes: &mut Cursor<&[u8]>) -> Result<Self, CodecError>;
 
-    /// Convenience method to get decoded value. Returns an error if [`Self::decode`] fails, or if
+    /// Convenience method to get a decoded value. Returns an error if [`Self::decode`] fails, or if
     /// there are any bytes left in `bytes` after decoding a value.
     fn get_decoded(bytes: &[u8]) -> Result<Self, CodecError> {
         Self::get_decoded_with_param(&(), bytes)
     }
 }
 
-/// Describes how to decode an object from a byte sequence, with a decoding parameter provided to
-/// provide additional data used in decoding.
+/// Describes how to decode an object from a byte sequence and a decoding parameter that provides
+/// additional context.
 pub trait ParameterizedDecode<P>: Sized {
     /// Read and decode an encoded object from `bytes`. `decoding_parameter` provides details of the
     /// wire encoding such as lengths of different portions of the message. On success, the decoded
@@ -57,7 +68,7 @@ pub trait ParameterizedDecode<P>: Sized {
         bytes: &mut Cursor<&[u8]>,
     ) -> Result<Self, CodecError>;
 
-    /// Convenience method to get decoded value. Returns an error if [`Self::decode_with_param`]
+    /// Convenience method to get a decoded value. Returns an error if [`Self::decode_with_param`]
     /// fails, or if there are any bytes left in `bytes` after decoding a value.
     fn get_decoded_with_param(decoding_parameter: &P, bytes: &[u8]) -> Result<Self, CodecError> {
         let mut cursor = Cursor::new(bytes);
@@ -72,8 +83,8 @@ pub trait ParameterizedDecode<P>: Sized {
     }
 }
 
-// Provide a blanket implementation so that any Decode can be used as a ParameterizedDecode<T> for
-// any T.
+/// Provide a blanket implementation so that any [`Decode`] can be used as a
+/// `ParameterizedDecode<T>` for any `T`.
 impl<D: Decode + ?Sized, T> ParameterizedDecode<T> for D {
     fn decode_with_param(
         _decoding_parameter: &T,
@@ -88,9 +99,15 @@ pub trait Encode {
     /// Append the encoded form of this object to the end of `bytes`, growing the vector as needed.
     fn encode(&self, bytes: &mut Vec<u8>);
 
-    /// Convenience method to get encoded value.
+    /// Convenience method to encode a value into a new `Vec<u8>`.
     fn get_encoded(&self) -> Vec<u8> {
         self.get_encoded_with_param(&())
+    }
+
+    /// Returns an optional hint indicating how many bytes will be required to encode this value, or
+    /// `None` by default.
+    fn encoded_len(&self) -> Option<usize> {
+        None
     }
 }
 
@@ -101,19 +118,33 @@ pub trait ParameterizedEncode<P> {
     /// is encoded.
     fn encode_with_param(&self, encoding_parameter: &P, bytes: &mut Vec<u8>);
 
-    /// Convenience method to get encoded value.
+    /// Convenience method to encode a value into a new `Vec<u8>`.
     fn get_encoded_with_param(&self, encoding_parameter: &P) -> Vec<u8> {
-        let mut ret = Vec::new();
+        let mut ret = if let Some(length) = self.encoded_len_with_param(encoding_parameter) {
+            Vec::with_capacity(length)
+        } else {
+            Vec::new()
+        };
         self.encode_with_param(encoding_parameter, &mut ret);
         ret
     }
+
+    /// Returns an optional hint indicating how many bytes will be required to encode this value, or
+    /// `None` by default.
+    fn encoded_len_with_param(&self, _encoding_parameter: &P) -> Option<usize> {
+        None
+    }
 }
 
-// Provide a blanket implementation so that any Encode can be used as a ParameterizedEncode<T> for
-// any T.
+/// Provide a blanket implementation so that any [`Encode`] can be used as a
+/// `ParameterizedEncode<T>` for any `T`.
 impl<E: Encode + ?Sized, T> ParameterizedEncode<T> for E {
     fn encode_with_param(&self, _encoding_parameter: &T, bytes: &mut Vec<u8>) {
         self.encode(bytes)
+    }
+
+    fn encoded_len_with_param(&self, _encoding_parameter: &T) -> Option<usize> {
+        <Self as Encode>::encoded_len(self)
     }
 }
 
@@ -125,6 +156,10 @@ impl Decode for () {
 
 impl Encode for () {
     fn encode(&self, _bytes: &mut Vec<u8>) {}
+
+    fn encoded_len(&self) -> Option<usize> {
+        Some(0)
+    }
 }
 
 impl Decode for u8 {
@@ -139,6 +174,10 @@ impl Encode for u8 {
     fn encode(&self, bytes: &mut Vec<u8>) {
         bytes.push(*self);
     }
+
+    fn encoded_len(&self) -> Option<usize> {
+        Some(1)
+    }
 }
 
 impl Decode for u16 {
@@ -150,6 +189,10 @@ impl Decode for u16 {
 impl Encode for u16 {
     fn encode(&self, bytes: &mut Vec<u8>) {
         bytes.extend_from_slice(&u16::to_be_bytes(*self));
+    }
+
+    fn encoded_len(&self) -> Option<usize> {
+        Some(2)
     }
 }
 
@@ -169,6 +212,10 @@ impl Encode for U24 {
         // Encode lower three bytes of the u32 as u24
         bytes.extend_from_slice(&u32::to_be_bytes(self.0)[1..]);
     }
+
+    fn encoded_len(&self) -> Option<usize> {
+        Some(3)
+    }
 }
 
 impl Decode for u32 {
@@ -181,6 +228,10 @@ impl Encode for u32 {
     fn encode(&self, bytes: &mut Vec<u8>) {
         bytes.extend_from_slice(&u32::to_be_bytes(*self));
     }
+
+    fn encoded_len(&self) -> Option<usize> {
+        Some(4)
+    }
 }
 
 impl Decode for u64 {
@@ -192,6 +243,10 @@ impl Decode for u64 {
 impl Encode for u64 {
     fn encode(&self, bytes: &mut Vec<u8>) {
         bytes.extend_from_slice(&u64::to_be_bytes(*self));
+    }
+
+    fn encoded_len(&self) -> Option<usize> {
+        Some(8)
     }
 }
 
@@ -212,7 +267,7 @@ pub fn encode_u8_items<P, E: ParameterizedEncode<P>>(
     }
 
     let len = bytes.len() - len_offset - 1;
-    assert!(len <= u8::MAX.into());
+    assert!(len <= usize::from(u8::MAX));
     bytes[len_offset] = len as u8;
 }
 
@@ -247,7 +302,7 @@ pub fn encode_u16_items<P, E: ParameterizedEncode<P>>(
     }
 
     let len = bytes.len() - len_offset - 2;
-    assert!(len <= u16::MAX.into());
+    assert!(len <= usize::from(u16::MAX));
     for (offset, byte) in u16::to_be_bytes(len as u16).iter().enumerate() {
         bytes[len_offset + offset] = *byte;
     }
@@ -473,6 +528,16 @@ mod tests {
             self.field_u32.encode(bytes);
             self.field_u64.encode(bytes);
         }
+
+        fn encoded_len(&self) -> Option<usize> {
+            Some(
+                self.field_u8.encoded_len()?
+                    + self.field_u16.encoded_len()?
+                    + self.field_u24.encoded_len()?
+                    + self.field_u32.encoded_len()?
+                    + self.field_u64.encoded_len()?,
+            )
+        }
     }
 
     impl Decode for TestMessage {
@@ -521,6 +586,7 @@ mod tests {
         let mut bytes = vec![];
         value.encode(&mut bytes);
         assert_eq!(bytes.len(), TestMessage::encoded_length());
+        assert_eq!(value.encoded_len().unwrap(), TestMessage::encoded_length());
 
         let decoded = TestMessage::decode(&mut Cursor::new(&bytes)).unwrap();
         assert_eq!(value, decoded);
@@ -654,5 +720,15 @@ mod tests {
             decode_items::<(), u8>(2, &(), &mut cursor).unwrap_err(),
             CodecError::LengthPrefixTooBig(2)
         );
+    }
+
+    #[test]
+    fn length_hint_correctness() {
+        assert_eq!(().encoded_len().unwrap(), ().get_encoded().len());
+        assert_eq!(0u8.encoded_len().unwrap(), 0u8.get_encoded().len());
+        assert_eq!(0u16.encoded_len().unwrap(), 0u16.get_encoded().len());
+        assert_eq!(U24(0).encoded_len().unwrap(), U24(0).get_encoded().len());
+        assert_eq!(0u32.encoded_len().unwrap(), 0u32.get_encoded().len());
+        assert_eq!(0u64.encoded_len().unwrap(), 0u64.get_encoded().len());
     }
 }

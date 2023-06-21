@@ -9,11 +9,9 @@ use std::io::Cursor;
 
 use thin_vec::ThinVec;
 
-use dap_ffi::prg::PrgAes128Alt;
 use dap_ffi::types::Report;
 
 use prio::codec::{Decode, Encode};
-use prio::vdaf::prg::{Prg, SeedStream};
 
 #[no_mangle]
 pub extern "C" fn dap_test_encoding() {
@@ -29,31 +27,6 @@ pub extern "C" fn dap_test_encoding() {
         println!("Decoded Report:");
         println!("{:?}", decoded);
         panic!("Report changed after encoding & decoding.");
-    }
-}
-
-#[derive(Deserialize, Debug)]
-struct PrgTestCase {
-    seed: [u8; 16],
-    info_string: Vec<u8>,
-    buffer1_out: Vec<u8>,
-    buffer2_out: Vec<u8>,
-}
-
-#[no_mangle]
-pub extern "C" fn dap_test_prg() {
-    let file = File::open("PrgAes128_tests.json").unwrap();
-    let testcases: Vec<PrgTestCase> = serde_json::from_reader(file).unwrap();
-    for testcase in testcases {
-        let mut p = PrgAes128Alt::init(&testcase.seed);
-        p.update(&testcase.info_string);
-        let mut s = p.into_seed_stream();
-        let mut b1 = vec![0u8; testcase.buffer1_out.len()];
-        s.fill(&mut b1);
-        assert_eq!(b1, testcase.buffer1_out);
-        let mut b2 = vec![0u8; testcase.buffer2_out.len()];
-        s.fill(&mut b2);
-        assert_eq!(b2, testcase.buffer2_out);
     }
 }
 

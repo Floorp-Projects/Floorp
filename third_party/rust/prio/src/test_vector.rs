@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-//! Module `test_vector` generates test vectors of serialized Prio inputs and
-//! support for working with test vectors, enabling backward compatibility
-//! testing.
+//! Generates test vectors of serialized Prio inputs, enabling backward compatibility testing.
 
 use crate::{
     client::{Client, ClientError},
@@ -171,26 +169,35 @@ mod base64 {
     //
     // Thank you, Alice! https://users.rust-lang.org/t/serialize-a-vec-u8-to-json-as-base64/57781/2
     use crate::field::{FieldElement, FieldPrio2};
+    use base64::{engine::Engine, prelude::BASE64_STANDARD};
     use serde::{de::Error, Deserialize, Deserializer, Serialize, Serializer};
 
     pub fn serialize_bytes<S: Serializer>(v: &[Vec<u8>], s: S) -> Result<S::Ok, S::Error> {
-        let base64_vec = v.iter().map(base64::encode).collect();
+        let base64_vec = v
+            .iter()
+            .map(|bytes| BASE64_STANDARD.encode(bytes))
+            .collect();
         <Vec<String>>::serialize(&base64_vec, s)
     }
 
     pub fn deserialize_bytes<'de, D: Deserializer<'de>>(d: D) -> Result<Vec<Vec<u8>>, D::Error> {
         <Vec<String>>::deserialize(d)?
             .iter()
-            .map(|s| base64::decode(s.as_bytes()).map_err(Error::custom))
+            .map(|s| BASE64_STANDARD.decode(s.as_bytes()).map_err(Error::custom))
             .collect()
     }
 
     pub fn serialize_field<S: Serializer>(v: &[FieldPrio2], s: S) -> Result<S::Ok, S::Error> {
-        String::serialize(&base64::encode(FieldPrio2::slice_into_byte_vec(v)), s)
+        String::serialize(
+            &BASE64_STANDARD.encode(FieldPrio2::slice_into_byte_vec(v)),
+            s,
+        )
     }
 
     pub fn deserialize_field<'de, D: Deserializer<'de>>(d: D) -> Result<Vec<FieldPrio2>, D::Error> {
-        let bytes = base64::decode(String::deserialize(d)?.as_bytes()).map_err(Error::custom)?;
+        let bytes = BASE64_STANDARD
+            .decode(String::deserialize(d)?.as_bytes())
+            .map_err(Error::custom)?;
         FieldPrio2::byte_slice_into_vec(&bytes).map_err(Error::custom)
     }
 }
