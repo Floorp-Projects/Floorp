@@ -3342,8 +3342,7 @@ void CanvasRenderingContext2D::Arc(double aX, double aY, double aR,
 
   EnsureWritablePath();
 
-  ArcToBezier(this, Point(aX, aY), Size(aR, aR), aStartAngle, aEndAngle,
-              aAnticlockwise);
+  mPathBuilder->Arc(Point(aX, aY), aR, aStartAngle, aEndAngle, aAnticlockwise);
   mPathPruned = false;
 }
 
@@ -6462,8 +6461,8 @@ void CanvasPath::Arc(double aX, double aY, double aRadius, double aStartAngle,
 
   EnsurePathBuilder();
 
-  ArcToBezier(this, Point(aX, aY), Size(aRadius, aRadius), aStartAngle,
-              aEndAngle, aAnticlockwise);
+  mPathBuilder->Arc(Point(aX, aY), aRadius, aStartAngle, aEndAngle,
+                    aAnticlockwise);
   mPruned = false;
 }
 
