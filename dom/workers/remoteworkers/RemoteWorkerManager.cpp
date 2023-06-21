@@ -550,7 +550,7 @@ void RemoteWorkerManager::ForEachActor(
  * remove worker actor unregistering
  * (see `ContentParent::UnregisterRemoveWorkerActor`).
  *
- * In `ContentParent::MaybeAsyncSendShutDownMessage` we only dispatch a runnable
+ * In `ContentParent::MaybeBeginShutdown` we only dispatch a runnable
  * to call `ContentParent::ShutDownProcess` if there are no registered remote
  * worker actors, and we ensure that the check for the number of registered
  * actors and the dispatching of the runnable are atomic. That happens on the
