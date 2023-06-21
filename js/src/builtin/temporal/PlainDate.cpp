@@ -1464,6 +1464,38 @@ static bool PlainDate_with(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
+ * Temporal.PlainDate.prototype.withCalendar ( calendar )
+ */
+static bool PlainDate_withCalendar(JSContext* cx, const CallArgs& args) {
+  auto* temporalDate = &args.thisv().toObject().as<PlainDateObject>();
+  auto date = ToPlainDate(temporalDate);
+
+  // Step 3.
+  Rooted<JSObject*> calendar(cx, ToTemporalCalendar(cx, args.get(0)));
+  if (!calendar) {
+    return false;
+  }
+
+  // Step 4.
+  auto* result = CreateTemporalDate(cx, date, calendar);
+  if (!result) {
+    return false;
+  }
+
+  args.rval().setObject(*result);
+  return true;
+}
+
+/**
+ * Temporal.PlainDate.prototype.withCalendar ( calendar )
+ */
+static bool PlainDate_withCalendar(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDate, PlainDate_withCalendar>(cx, args);
+}
+
+/**
  * Temporal.PlainDate.prototype.equals ( other )
  */
 static bool PlainDate_equals(JSContext* cx, const CallArgs& args) {
@@ -1624,6 +1656,7 @@ static const JSFunctionSpec PlainDate_prototype_methods[] = {
     JS_FN("toPlainDateTime", PlainDate_toPlainDateTime, 0, 0),
     JS_FN("getISOFields", PlainDate_getISOFields, 0, 0),
     JS_FN("with", PlainDate_with, 1, 0),
+    JS_FN("withCalendar", PlainDate_withCalendar, 1, 0),
     JS_FN("equals", PlainDate_equals, 1, 0),
     JS_FN("toString", PlainDate_toString, 0, 0),
     JS_FN("toLocaleString", PlainDate_toLocaleString, 0, 0),
