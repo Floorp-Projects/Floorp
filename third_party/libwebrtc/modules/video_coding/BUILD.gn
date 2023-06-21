@@ -199,12 +199,6 @@ rtc_library("video_coding") {
     "video_receiver2.cc",
     "video_receiver2.h",
   ]
-  if (build_with_mozilla) {
-    sources += [
-      "event_wrapper.cc",
-      "event_wrapper.h",
-    ]
-  }
 
   deps = [
     ":codec_globals_headers",
