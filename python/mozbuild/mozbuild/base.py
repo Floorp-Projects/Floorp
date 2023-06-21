@@ -254,7 +254,7 @@ class MozbuildObject(ProcessExecutionMixin):
     @property
     def virtualenv_manager(self):
         from mach.site import CommandSiteManager
-        from mach.util import get_state_dir, get_virtualenv_base_dir
+        from mozboot.util import get_state_dir
 
         if self._virtualenv_manager is None:
             self._virtualenv_manager = CommandSiteManager.from_environment(
@@ -263,7 +263,7 @@ class MozbuildObject(ProcessExecutionMixin):
                     specific_to_topsrcdir=True, topsrcdir=self.topsrcdir
                 ),
                 self._virtualenv_name,
-                get_virtualenv_base_dir(self.topsrcdir),
+                os.path.join(self.topobjdir, "_virtualenvs"),
             )
 
         return self._virtualenv_manager
