@@ -76,19 +76,13 @@ void* gc::CellAllocator::AllocNurseryOrTenuredCell(JSContext* cx,
       site = cx->zone()->unknownAllocSite(traceKind);
     }
 
-    void* obj = TryNewNurseryCell<traceKind, allowGC>(cx, thingSize, site);
-    if (obj) {
-      return obj;
+    void* ptr = cx->nursery().tryAllocateCell(site, thingSize, traceKind);
+    if (MOZ_LIKELY(ptr)) {
+      return ptr;
     }
 
-    // Our most common non-jit allocation path is NoGC; thus, if we fail the
-    // alloc and cannot GC, we *must* return nullptr here so that the caller
-    // will do a CanGC allocation to clear the nursery. Failing to do so will
-    // cause all allocations on this path to land in Tenured, and we will not
-    // get the benefit of the nursery.
-    if (!allowGC) {
-      return nullptr;
-    }
+    return RetryNurseryAlloc<allowGC>(cx, traceKind, allocKind, thingSize,
+                                      site);
   }
 
   return TryNewTenuredCell<allowGC>(cx, allocKind, thingSize);
@@ -108,36 +102,52 @@ INSTANTIATE_ALLOC_NURSERY_CELL(JS::TraceKind::BigInt, CanGC)
 
 // Attempt to allocate a new cell in the nursery. If there is not enough room in
 // the nursery or there is an OOM, this method will return nullptr.
-template <JS::TraceKind kind, AllowGC allowGC>
+template <AllowGC allowGC>
 /* static */
-void* CellAllocator::TryNewNurseryCell(JSContext* cx, size_t thingSize,
-                                       AllocSite* site) {
+MOZ_NEVER_INLINE void* CellAllocator::RetryNurseryAlloc(JSContext* cx,
+                                                        JS::TraceKind traceKind,
+                                                        AllocKind allocKind,
+                                                        size_t thingSize,
+                                                        AllocSite* site) {
   MOZ_ASSERT(cx->isNurseryAllocAllowed());
   MOZ_ASSERT(cx->zone() == site->zone());
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
-  MOZ_ASSERT(cx->zone()->allocKindInNursery(kind));
+  MOZ_ASSERT(cx->zone()->allocKindInNursery(traceKind));
 
   Nursery& nursery = cx->nursery();
-  void* ptr = nursery.allocateCell(site, thingSize, kind);
-  if (ptr) {
+  if (nursery.handleAllocationFailure()) {
+    void* ptr = nursery.tryAllocateCell(site, thingSize, traceKind);
+    MOZ_ASSERT(ptr);
     return ptr;
   }
 
-  if constexpr (allowGC) {
-    if (!cx->suppressGC) {
-      JS::GCReason reason = nursery.minorGCRequested()
-                                ? nursery.minorGCTriggerReason()
-                                : JS::GCReason::OUT_OF_NURSERY;
-      cx->runtime()->gc.minorGC(reason);
+  // Our most common non-jit allocation path is NoGC; thus, if we fail the
+  // alloc and cannot GC, we *must* return nullptr here so that the caller
+  // will do a CanGC allocation to clear the nursery. Failing to do so will
+  // cause all allocations on this path to land in Tenured, and we will not
+  // get the benefit of the nursery.
+  if constexpr (!allowGC) {
+    return nullptr;
+  }
 
-      // Exceeding gcMaxBytes while tenuring can disable the Nursery.
-      if (cx->zone()->allocKindInNursery(kind)) {
-        return cx->nursery().allocateCell(site, thingSize, kind);
+  if (!cx->suppressGC) {
+    JS::GCReason reason = JS::GCReason::OUT_OF_NURSERY;
+    if (nursery.minorGCRequested()) {
+      reason = nursery.minorGCTriggerReason();
+    }
+    cx->runtime()->gc.minorGC(reason);
+
+    // Exceeding gcMaxBytes while tenuring can disable the Nursery.
+    if (cx->zone()->allocKindInNursery(traceKind)) {
+      void* ptr = cx->nursery().allocateCell(site, thingSize, traceKind);
+      if (ptr) {
+        return ptr;
       }
     }
   }
 
-  return nullptr;
+  // As a final fallback, allocate the cell in the tenured heap.
+  return TryNewTenuredCell<allowGC>(cx, allocKind, thingSize);
 }
 
 template <AllowGC allowGC /* = CanGC */>

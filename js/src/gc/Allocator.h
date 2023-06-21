@@ -63,8 +63,9 @@ class CellAllocator {
   static T* NewCell(JSContext* cx, Args&&... args);
 
  private:
-  template <JS::TraceKind kind, AllowGC allowGC>
-  static void* TryNewNurseryCell(JSContext* cx, size_t thingSize,
+  template <AllowGC allowGC>
+  static void* RetryNurseryAlloc(JSContext* cx, JS::TraceKind traceKind,
+                                 AllocKind allocKind, size_t thingSize,
                                  AllocSite* site);
   template <AllowGC allowGC>
   static void* TryNewTenuredCell(JSContext* cx, AllocKind kind,
