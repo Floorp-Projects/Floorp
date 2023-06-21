@@ -7,6 +7,11 @@
 #include "builtin/temporal/Instant.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Casting.h"
+#include "mozilla/CheckedInt.h"
+#include "mozilla/FloatingPoint.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/Span.h"
 
 #include <algorithm>
 #include <array>
@@ -20,8 +25,13 @@
 #include "jspubtd.h"
 #include "NamespaceImports.h"
 
+#include "builtin/temporal/Calendar.h"
+#include "builtin/temporal/PlainDateTime.h"
+#include "builtin/temporal/TemporalParser.h"
 #include "builtin/temporal/TemporalTypes.h"
 #include "builtin/temporal/TemporalUnit.h"
+#include "builtin/temporal/Wrapped.h"
+#include "builtin/temporal/ZonedDateTime.h"
 #include "gc/Allocator.h"
 #include "gc/AllocKind.h"
 #include "gc/Barrier.h"
@@ -403,6 +413,75 @@ BigInt* js::temporal::ToEpochDifferenceNanoseconds(JSContext* cx,
 }
 
 /**
+ * GetUTCEpochNanoseconds ( year, month, day, hour, minute, second, millisecond,
+ * microsecond, nanosecond )
+ */
+Instant js::temporal::GetUTCEpochNanoseconds(const PlainDateTime& dateTime) {
+  auto& [date, time] = dateTime;
+
+  // Step 1.
+  MOZ_ASSERT(IsValidISODateTime(dateTime));
+
+  // Additionally ensure the date-time value can be represented as an Instant.
+  MOZ_ASSERT(ISODateTimeWithinLimits(dateTime));
+
+  // Steps 2-5.
+  int64_t ms = MakeDate(dateTime);
+
+  // Propagate the input range to the compiler.
+  int32_t nanos =
+      std::clamp(time.microsecond * 1'000 + time.nanosecond, 0, 999'999);
+
+  // Step 6.
+  return Instant::fromMilliseconds(ms) + Instant{0, nanos};
+}
+
+/**
+ * ParseTemporalInstant ( isoString )
+ */
+static bool ParseTemporalInstant(JSContext* cx, Handle<JSString*> isoString,
+                                 Instant* result) {
+  // Step 1. (Not applicable in our implementation)
+
+  // Steps 2-3.
+  PlainDateTime dateTime;
+  int64_t offset;
+  if (!ParseTemporalInstantString(cx, isoString, &dateTime, &offset)) {
+    return false;
+  }
+  MOZ_ASSERT(std::abs(offset) < ToNanoseconds(TemporalUnit::Day));
+
+  // Step 4. (Not applicable in our implementation.)
+
+  // Step 6. (Reordered)
+  if (!ISODateTimeWithinLimits(dateTime)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_INSTANT_INVALID);
+    return false;
+  }
+
+  // Step 5.
+  auto utc = GetUTCEpochNanoseconds(dateTime);
+
+  // Step 6.
+  auto offsetNanoseconds = Instant::fromNanoseconds(offset);
+
+  // Step 7.
+  auto epochNanoseconds = utc - offsetNanoseconds;
+
+  // Step 8.
+  if (!IsValidEpochInstant(epochNanoseconds)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_INSTANT_INVALID);
+    return false;
+  }
+
+  // Step 9.
+  *result = epochNanoseconds;
+  return true;
+}
+
+/**
  * CreateTemporalInstant ( epochNanoseconds [ , newTarget ] )
  */
 InstantObject* js::temporal::CreateTemporalInstant(JSContext* cx,
@@ -454,6 +533,104 @@ static InstantObject* CreateTemporalInstant(JSContext* cx, const CallArgs& args,
 
   // Step 5.
   return object;
+}
+
+/**
+ * ToTemporalInstant ( item )
+ */
+Wrapped<InstantObject*> js::temporal::ToTemporalInstant(JSContext* cx,
+                                                        Handle<Value> item) {
+  // Step 1.
+  if (item.isObject()) {
+    JSObject* itemObj = &item.toObject();
+
+    // Step 1.a.
+    if (itemObj->canUnwrapAs<InstantObject>()) {
+      return itemObj;
+    }
+
+    // Step 1.b.
+    if (auto* zonedDateTime = itemObj->maybeUnwrapIf<ZonedDateTimeObject>()) {
+      auto epochInstant = ToInstant(zonedDateTime);
+      return CreateTemporalInstant(cx, epochInstant);
+    }
+  }
+
+  // Step 2.
+  Rooted<JSString*> string(cx, JS::ToString(cx, item));
+  if (!string) {
+    return nullptr;
+  }
+
+  // The string representation of other types can never be parsed as an instant,
+  // so directly throw an error here. But still perform ToString first for
+  // possible side-effects.
+  if (!item.isString() && !item.isObject()) {
+    ReportValueError(cx, JSMSG_TEMPORAL_INSTANT_PARSE_BAD_TYPE,
+                     JSDVG_IGNORE_STACK, item, nullptr);
+    return nullptr;
+  }
+
+  // Step 3.
+  Instant epochNanoseconds;
+  if (!ParseTemporalInstant(cx, string, &epochNanoseconds)) {
+    return nullptr;
+  }
+
+  // Step 4.
+  return CreateTemporalInstant(cx, epochNanoseconds);
+}
+
+/**
+ * ToTemporalInstant ( item )
+ */
+bool js::temporal::ToTemporalInstantEpochInstant(JSContext* cx,
+                                                 Handle<Value> item,
+                                                 Instant* result) {
+  // Step 1.
+  if (item.isObject()) {
+    JSObject* itemObj = &item.toObject();
+
+    // Step 1.a.
+    if (auto* instant = itemObj->maybeUnwrapIf<InstantObject>()) {
+      *result = ToInstant(instant);
+      return true;
+    }
+
+    // Step 1.b.
+    if (auto* zonedDateTime = itemObj->maybeUnwrapIf<ZonedDateTimeObject>()) {
+      *result = ToInstant(zonedDateTime);
+      return true;
+    }
+  }
+
+  // Step 2.
+  Rooted<JSString*> string(cx, JS::ToString(cx, item));
+  if (!string) {
+    return false;
+  }
+
+  // The string representation of other types can never be parsed as an instant,
+  // so directly throw an error here. The value is always on the stack, so
+  // JSDVG_SEARCH_STACK can be used for even better error reporting. But still
+  // perform ToString first for possible side-effects.
+  if (!item.isString() && !item.isObject()) {
+    ReportValueError(cx, JSMSG_TEMPORAL_INSTANT_PARSE_BAD_TYPE,
+                     JSDVG_SEARCH_STACK, item, nullptr);
+    return false;
+  }
+
+  // Steps 3-4.
+  Instant epochNanoseconds;
+  if (!ParseTemporalInstant(cx, string, &epochNanoseconds)) {
+    return false;
+  }
+
+  // CreateTemporalInstant, step 2.
+  MOZ_ASSERT(IsValidEpochInstant(epochNanoseconds));
+
+  *result = epochNanoseconds;
+  return true;
 }
 
 /**
