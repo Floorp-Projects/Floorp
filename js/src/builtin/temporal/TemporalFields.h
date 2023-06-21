@@ -155,6 +155,14 @@ PlainObject* PrepareTemporalFields(
     JSContext* cx, JS::Handle<JSObject*> fields,
     JS::Handle<JS::StackGCVector<JS::PropertyKey>> fieldNames);
 
+/**
+ * MergeLists ( a, b )
+ */
+[[nodiscard]] bool MergeTemporalFieldNames(
+    const JS::StackGCVector<JS::PropertyKey>& receiverFieldNames,
+    const JS::StackGCVector<JS::PropertyKey>& inputFieldNames,
+    JS::StackGCVector<JS::PropertyKey>& mergedFieldNames);
+
 [[nodiscard]] bool SortTemporalFieldNames(
     JSContext* cx, JS::StackGCVector<JS::PropertyKey>& fieldNames);
 
