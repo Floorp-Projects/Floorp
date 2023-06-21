@@ -246,14 +246,14 @@ body:fullscreen #controls[showing]:hover .control-item:not(:hover),
 
 #controls[keying] .control-item,
 #controls[showing] .control-item,
-#controls:hover .control-item:hover {
+.control-item:hover {
   opacity: 1;
 }
 
 /* Background gradient is the only control item with a fixed opacity value. */
-#controls[keying] .control-item#controls-bottom-gradient,
-#controls[showing] .control-item#controls-bottom-gradient,
-#controls:hover .control-item#controls-bottom-gradient:hover #controls[donthide] .control-item#controls-bottom-gradient {
+#controls[keying] #controls-bottom-gradient,
+#controls[showing] #controls-bottom-gradient,
+#controls-bottom-gradient:hover {
   opacity: 0.8;
 }
 
