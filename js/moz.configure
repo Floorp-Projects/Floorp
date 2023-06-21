@@ -1171,6 +1171,21 @@ set_define("U_USING_ICU_NAMESPACE", "0", when="--with-intl-api")
 set_define("U_STATIC_IMPLEMENTATION", True, when=depends(system_icu)(lambda x: not x))
 
 
+# ECMAScript Temporal API Support (uses ICU)
+# ======================================================
+
+option("--with-temporal-api", default=False, help="Enable ECMAScript Temporal API")
+
+set_config("JS_HAS_TEMPORAL_API", True, when="--with-temporal-api")
+set_define("JS_HAS_TEMPORAL_API", True, when="--with-temporal-api")
+
+
+@depends("--with-temporal-api", "--with-intl-api")
+def check_temporal_api(temporal_enabled, intl_enabled):
+    if temporal_enabled and not intl_enabled:
+        die("Can't use both --with-temporal-api and --without-intl-api")
+
+
 # Initial support for WebAssembly JS-API Type Reflections
 # =======================================================
 
