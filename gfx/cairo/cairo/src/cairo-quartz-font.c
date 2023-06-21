@@ -102,8 +102,10 @@ static int (*CGFontGetAscentPtr) (CGFontRef fontRef) = NULL;
 static int (*CGFontGetDescentPtr) (CGFontRef fontRef) = NULL;
 static int (*CGFontGetLeadingPtr) (CGFontRef fontRef) = NULL;
 
+#ifdef CAIRO_HAS_QUARTZ_ATSUFONTID
 /* Not public anymore in 64-bits nor in 10.7 */
-static ATSFontRef (*FMGetATSFontRefFromFontPtr) (FMFont iFont) = NULL;
+static ATSFontRef (*FMGetATSFontRefFromFontPtr) (ATSUFontID iFont) = NULL;
+#endif /* CAIRO_HAS_QUARTZ_ATSUFONTID */
 
 static cairo_bool_t _cairo_quartz_font_symbol_lookup_done = FALSE;
 static cairo_bool_t _cairo_quartz_font_symbols_present = FALSE;
@@ -164,7 +166,9 @@ quartz_font_ensure_symbols(void)
     CGContextGetAllowsFontSmoothingPtr = dlsym(RTLD_DEFAULT, "CGContextGetAllowsFontSmoothing");
     CGContextSetAllowsFontSmoothingPtr = dlsym(RTLD_DEFAULT, "CGContextSetAllowsFontSmoothing");
 
+#ifdef CAIRO_HAS_QUARTZ_ATSUFONTID
     FMGetATSFontRefFromFontPtr = dlsym(RTLD_DEFAULT, "FMGetATSFontRefFromFont");
+#endif /* CAIRO_HAS_QUARTZ_ATSUFONTID */
 
     if ((CGFontCreateWithFontNamePtr || CGFontCreateWithNamePtr) &&
 	CGFontGetGlyphBBoxesPtr &&
@@ -870,6 +874,7 @@ _cairo_quartz_scaled_font_get_ct_font_ref (cairo_scaled_font_t *abstract_font)
 /*
  * compat with old ATSUI backend
  */
+#ifdef CAIRO_HAS_QUARTZ_ATSUFONTID
 
 /**
  * cairo_quartz_font_face_create_for_atsu_font_id:
@@ -913,3 +918,5 @@ cairo_atsui_font_face_create_for_atsu_font_id (ATSUFontID font_id)
 {
     return cairo_quartz_font_face_create_for_atsu_font_id (font_id);
 }
+
+#endif /* CAIRO_HAS_QUARTZ_ATSUFONTID */

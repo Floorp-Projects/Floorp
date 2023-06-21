@@ -40,8 +40,6 @@
 
 #if CAIRO_HAS_QUARTZ_IMAGE_SURFACE
 
-#include <Carbon/Carbon.h>
-
 CAIRO_BEGIN_DECLS
 
 cairo_public cairo_surface_t *
