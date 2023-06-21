@@ -224,6 +224,7 @@ def docker_worker_debian_package(config, job, taskdesc):
         "stretch": 9,
         "buster": 10,
         "bullseye": 11,
+        "bookworm": 12,
     }[run["dist"]]
     common_package(config, job, taskdesc, "debian", version)
 
