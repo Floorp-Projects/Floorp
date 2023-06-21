@@ -11,12 +11,14 @@ import android.widget.RelativeLayout
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom
 import androidx.test.espresso.matcher.ViewMatchers.isCompletelyDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isDescendantOfA
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -49,7 +51,20 @@ import org.mozilla.fenix.helpers.ext.waitNotNull
  */
 
 class SettingsSubMenuAddonsManagerRobot {
-    fun verifyAddonPermissionPrompt(addonName: String) = assertAddonPermissionPrompt(addonName)
+    fun verifyAddonPermissionPrompt(addonName: String) {
+        mDevice.waitNotNull(Until.findObject(By.text("Add $addonName?")), waitingTime)
+
+        onView(
+            allOf(
+                withText("Add $addonName?"),
+                hasSibling(withText(containsString("It requires your permission to:"))),
+                hasSibling(withText("Add")),
+                hasSibling(withText("Cancel")),
+            ),
+        )
+            .inRoot(isDialog())
+            .check(matches(isDisplayed()))
+    }
 
     fun clickInstallAddon(addonName: String) {
         mDevice.waitNotNull(
@@ -183,27 +198,6 @@ class SettingsSubMenuAddonsManagerRobot {
     private fun assertAddonIsEnabled(addonName: String) {
         installButtonForAddon(addonName)
             .check(matches(not(isCompletelyDisplayed())))
-    }
-
-    private fun assertAddonPermissionPrompt(addonName: String) {
-        mDevice.waitNotNull(Until.findObject(By.text("Add $addonName?")), waitingTime)
-
-        onView(allOf(withId(R.id.title), withText("Add $addonName?")))
-            .check(matches(isCompletelyDisplayed()))
-
-        onView(
-            allOf(
-                withId(R.id.permissions),
-                withText(containsString("It requires your permission to:")),
-            ),
-        )
-            .check(matches(isCompletelyDisplayed()))
-
-        onView(allOf(withId(R.id.allow_button), withText("Add")))
-            .check(matches(isCompletelyDisplayed()))
-
-        onView(allOf(withId(R.id.deny_button), withText("Cancel")))
-            .check(matches(isCompletelyDisplayed()))
     }
 
     private fun assertAddonIsInstalled(addonName: String) {
