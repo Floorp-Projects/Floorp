@@ -6413,7 +6413,7 @@ void nsGlobalWindowInner::DisableDeviceSensor(uint32_t aType) {
 
 #if defined(MOZ_WIDGET_ANDROID)
 void nsGlobalWindowInner::EnableOrientationChangeListener() {
-  if (!ShouldResistFingerprinting(RFPTarget::Unknown)) {
+  if (!ShouldResistFingerprinting(RFPTarget::ScreenOrientation)) {
     mHasOrientationChangeListeners = true;
     mOrientationAngle = Orientation(CallerType::System);
   }
