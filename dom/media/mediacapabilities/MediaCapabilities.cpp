@@ -275,7 +275,7 @@ already_AddRefed<Promise> MediaCapabilities::DecodingInfo(
     float frameRate =
         static_cast<float>(videoContainer->ExtendedType().GetFramerate().ref());
     const bool shouldResistFingerprinting =
-        mParent->ShouldResistFingerprinting(RFPTarget::Unknown);
+        mParent->ShouldResistFingerprinting(RFPTarget::MediaCapabilities);
 
     // clang-format off
     promises.AppendElement(InvokeAsync(
