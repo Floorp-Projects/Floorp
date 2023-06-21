@@ -101,6 +101,8 @@ class BigInt final : public js::gc::CellWithLengthAndFlags {
   bool isZero() const { return digitLength() == 0; }
   bool isNegative() const { return headerFlagsField() & SignBit; }
 
+  int32_t sign() const { return isZero() ? 0 : isNegative() ? -1 : 1; }
+
   void initializeDigitsToZero();
 
   void traceChildren(JSTracer* trc);

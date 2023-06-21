@@ -1203,6 +1203,49 @@ static bool TimeZoneEquals(JSContext* cx, Handle<JSObject*> one,
 }
 
 /**
+ * TimeZoneEquals ( one, two )
+ */
+static bool TimeZoneEqualsOrThrow(JSContext* cx, Handle<JSObject*> one,
+                                  Handle<JSObject*> two) {
+  // Step 1.
+  if (one == two) {
+    return true;
+  }
+
+  // Step 2.
+  Rooted<JSString*> timeZoneOne(cx, TimeZoneToString(cx, one));
+  if (!timeZoneOne) {
+    return false;
+  }
+
+  // Step 3.
+  JSString* timeZoneTwo = TimeZoneToString(cx, two);
+  if (!timeZoneTwo) {
+    return false;
+  }
+
+  // Steps 4-5.
+  bool equals;
+  if (!EqualStrings(cx, timeZoneOne, timeZoneTwo, &equals)) {
+    return false;
+  }
+  if (equals) {
+    return true;
+  }
+
+  // Throw an error when the time zone identifiers don't match. Used when
+  // unequal time zones throw a RangeError.
+  if (auto charsOne = QuoteString(cx, timeZoneOne)) {
+    if (auto charsTwo = QuoteString(cx, timeZoneTwo)) {
+      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                               JSMSG_TEMPORAL_TIMEZONE_INCOMPATIBLE,
+                               charsOne.get(), charsTwo.get());
+    }
+  }
+  return false;
+}
+
+/**
  * RoundISODateTime ( year, month, day, hour, minute, second, millisecond,
  * microsecond, nanosecond, increment, unit, roundingMode [ , dayLength ] )
  */
@@ -1238,6 +1281,163 @@ static bool RoundISODateTime(JSContext* cx, const PlainDateTime& dateTime,
 
   // Step 6.
   *result = {balanceResult, roundedTime.time};
+  return true;
+}
+
+/**
+ * DifferenceTemporalZonedDateTime ( operation, zonedDateTime, other, options )
+ */
+static bool DifferenceTemporalZonedDateTime(JSContext* cx,
+                                            TemporalDifference operation,
+                                            const CallArgs& args) {
+  Rooted<ZonedDateTimeObject*> zonedDateTime(
+      cx, &args.thisv().toObject().as<ZonedDateTimeObject>());
+  auto epochInstant = ToInstant(zonedDateTime);
+  Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
+  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+
+  // Step 1. (Not applicable in our implementation.)
+
+  // Step 2.
+  Instant otherInstant;
+  Rooted<JSObject*> otherTimeZone(cx);
+  Rooted<JSObject*> otherCalendar(cx);
+  if (!ToTemporalZonedDateTime(cx, args.get(0), &otherInstant, &otherTimeZone,
+                               &otherCalendar)) {
+    return false;
+  }
+
+  // Step 3.
+  if (!CalendarEqualsOrThrow(cx, calendar, otherCalendar)) {
+    return false;
+  }
+
+  // Steps 4-7.
+  Rooted<PlainObject*> resolvedOptions(cx);
+  DifferenceSettings settings;
+  if (args.hasDefined(1)) {
+    Rooted<JSObject*> options(
+        cx, RequireObjectArg(cx, "options", ToName(operation), args[1]));
+    if (!options) {
+      return false;
+    }
+
+    // Step 4.
+    resolvedOptions = NewPlainObjectWithProto(cx, nullptr);
+    if (!resolvedOptions) {
+      return false;
+    }
+
+    // Step 5.
+    if (!CopyDataProperties(cx, resolvedOptions, options)) {
+      return false;
+    }
+
+    // Step 6.
+    if (!GetDifferenceSettings(
+            cx, operation, resolvedOptions, TemporalUnitGroup::DateTime,
+            TemporalUnit::Nanosecond, TemporalUnit::Hour, &settings)) {
+      return false;
+    }
+
+    // Step 7.
+    Rooted<Value> largestUnitValue(
+        cx, StringValue(TemporalUnitToString(cx, settings.largestUnit)));
+    if (!DefineDataProperty(cx, resolvedOptions, cx->names().largestUnit,
+                            largestUnitValue)) {
+      return false;
+    }
+  } else {
+    // Steps 4-6.
+    settings = {
+        TemporalUnit::Nanosecond,
+        TemporalUnit::Hour,
+        TemporalRoundingMode::Trunc,
+        Increment{1},
+    };
+
+    // Step 7. (Not applicable in our implementation.)
+  }
+
+  // Step 8.
+  if (settings.largestUnit > TemporalUnit::Day) {
+    MOZ_ASSERT(settings.smallestUnit >= settings.largestUnit);
+
+    // Step 8.a.
+    Duration difference;
+    if (!DifferenceInstant(cx, epochInstant, otherInstant,
+                           settings.roundingIncrement, settings.smallestUnit,
+                           settings.largestUnit, settings.roundingMode,
+                           &difference)) {
+      return false;
+    }
+
+    // Step 8.b.
+    if (operation == TemporalDifference::Since) {
+      difference = difference.negate();
+    }
+
+    auto* result = CreateTemporalDuration(cx, difference);
+    if (!result) {
+      return false;
+    }
+
+    args.rval().setObject(*result);
+    return true;
+  }
+
+  // FIXME: spec issue - move this step next to the calendar validation?
+  // https://github.com/tc39/proposal-temporal/issues/2533
+
+  // Step 9.
+  if (!TimeZoneEqualsOrThrow(cx, timeZone, otherTimeZone)) {
+    return false;
+  }
+
+  // Step 10.
+  Duration difference;
+  if (resolvedOptions) {
+    if (!::DifferenceZonedDateTime(cx, epochInstant, otherInstant, timeZone,
+                                   calendar, settings.largestUnit,
+                                   resolvedOptions, &difference)) {
+      return false;
+    }
+  } else {
+    if (!::DifferenceZonedDateTime(cx, epochInstant, otherInstant, timeZone,
+                                   calendar, settings.largestUnit, nullptr,
+                                   &difference)) {
+      return false;
+    }
+  }
+
+  // Step 11.
+  Duration roundResult;
+  if (!RoundDuration(cx, difference, settings.roundingIncrement,
+                     settings.smallestUnit, settings.roundingMode,
+                     Handle<ZonedDateTimeObject*>(zonedDateTime),
+                     &roundResult)) {
+    return false;
+  }
+
+  // Step 12.
+  Duration result;
+  if (!AdjustRoundedDurationDays(cx, roundResult, settings.roundingIncrement,
+                                 settings.smallestUnit, settings.roundingMode,
+                                 zonedDateTime, &result)) {
+    return false;
+  }
+
+  // Step 13.
+  if (operation == TemporalDifference::Since) {
+    result = result.negate();
+  }
+
+  auto* obj = CreateTemporalDuration(cx, result);
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
   return true;
 }
 
@@ -2702,6 +2902,40 @@ static bool ZonedDateTime_subtract(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
+ * Temporal.ZonedDateTime.prototype.until ( other [ , options ] )
+ */
+static bool ZonedDateTime_until(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  return DifferenceTemporalZonedDateTime(cx, TemporalDifference::Until, args);
+}
+
+/**
+ * Temporal.ZonedDateTime.prototype.until ( other [ , options ] )
+ */
+static bool ZonedDateTime_until(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_until>(cx, args);
+}
+
+/**
+ * Temporal.ZonedDateTime.prototype.since ( other [ , options ] )
+ */
+static bool ZonedDateTime_since(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  return DifferenceTemporalZonedDateTime(cx, TemporalDifference::Since, args);
+}
+
+/**
+ * Temporal.ZonedDateTime.prototype.since ( other [ , options ] )
+ */
+static bool ZonedDateTime_since(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_since>(cx, args);
+}
+
+/**
  * Temporal.ZonedDateTime.prototype.round ( roundTo )
  */
 static bool ZonedDateTime_round(JSContext* cx, const CallArgs& args) {
@@ -3521,6 +3755,8 @@ static const JSFunctionSpec ZonedDateTime_prototype_methods[] = {
     JS_FN("withCalendar", ZonedDateTime_withCalendar, 1, 0),
     JS_FN("add", ZonedDateTime_add, 1, 0),
     JS_FN("subtract", ZonedDateTime_subtract, 1, 0),
+    JS_FN("until", ZonedDateTime_until, 1, 0),
+    JS_FN("since", ZonedDateTime_since, 1, 0),
     JS_FN("round", ZonedDateTime_round, 1, 0),
     JS_FN("equals", ZonedDateTime_equals, 1, 0),
     JS_FN("toString", ZonedDateTime_toString, 0, 0),

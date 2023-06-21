@@ -2750,6 +2750,331 @@ static bool AddDuration(JSContext* cx, const Duration& one, const Duration& two,
                                  largestUnit, result);
 }
 
+/**
+ * RoundNumberToIncrement ( x, increment, roundingMode )
+ */
+static mozilla::CheckedInt64 RoundNumberToIncrement(
+    int64_t x, int64_t increment, TemporalRoundingMode roundingMode) {
+  MOZ_ASSERT(increment > 0);
+  MOZ_ASSERT(increment <= ToNanoseconds(TemporalUnit::Day));
+
+  // Fast path for the default case.
+  if (increment == 1) {
+    return x;
+  }
+
+  // Steps 1-8.
+  int64_t rounded = Divide(x, increment, roundingMode);
+
+  // Step 9.
+  return mozilla::CheckedInt64(rounded) * increment;
+}
+
+/**
+ * RoundNumberToIncrementAsIfPositive ( x, increment, roundingMode )
+ */
+static auto RoundNumberToIncrementAsIfPositive(
+    int64_t x, int64_t increment, TemporalRoundingMode roundingMode) {
+  // This operation is equivalent to adjusting the rounding mode through
+  // |ToPositiveRoundingMode| and then calling |RoundNumberToIncrement|.
+  return RoundNumberToIncrement(x, increment,
+                                ToPositiveRoundingMode(roundingMode));
+}
+
+/**
+ * RoundTemporalInstant ( ns, increment, unit, roundingMode )
+ */
+static auto RoundTemporalInstant(int64_t ns, Increment increment,
+                                 TemporalUnit unit,
+                                 TemporalRoundingMode roundingMode) {
+  MOZ_ASSERT(increment >= Increment::min());
+  MOZ_ASSERT(increment < MaximumTemporalDurationRoundingIncrement(unit),
+             "upper limit restricted by AdjustRoundedDurationDays");
+  MOZ_ASSERT(unit > TemporalUnit::Day);
+
+  // Steps 1-6.
+  int64_t toNanoseconds = ToNanoseconds(unit);
+  MOZ_ASSERT(
+      (increment.value() * toNanoseconds) <= ToNanoseconds(TemporalUnit::Day),
+      "increment * toNanoseconds shouldn't overflow instant resolution");
+
+  // Step 7.
+  return RoundNumberToIncrementAsIfPositive(
+      ns, increment.value() * toNanoseconds, roundingMode);
+}
+
+/**
+ * RoundNumberToIncrementAsIfPositive ( x, increment, roundingMode )
+ */
+static auto* RoundNumberToIncrementAsIfPositive(
+    JSContext* cx, Handle<BigInt*> x, int64_t increment,
+    TemporalRoundingMode roundingMode) {
+  // This operation is equivalent to adjusting the rounding mode through
+  // |ToPositiveRoundingMode| and then calling |RoundNumberToIncrement|.
+  return RoundNumberToIncrement(cx, x, increment,
+                                ToPositiveRoundingMode(roundingMode));
+}
+
+/**
+ * RoundTemporalInstant ( ns, increment, unit, roundingMode )
+ */
+static BigInt* RoundTemporalInstant(JSContext* cx, Handle<BigInt*> ns,
+                                    Increment increment, TemporalUnit unit,
+                                    TemporalRoundingMode roundingMode) {
+  MOZ_ASSERT(increment >= Increment::min());
+  MOZ_ASSERT(uint64_t(increment.value()) <= ToNanoseconds(TemporalUnit::Day));
+  MOZ_ASSERT(unit > TemporalUnit::Day);
+
+  // Steps 1-6.
+  int64_t toNanoseconds = ToNanoseconds(unit);
+  MOZ_ASSERT(
+      (increment.value() * toNanoseconds) <= ToNanoseconds(TemporalUnit::Day),
+      "increment * toNanoseconds shouldn't overflow instant resolution");
+
+  // Step 7.
+  return RoundNumberToIncrementAsIfPositive(
+      cx, ns, increment.value() * toNanoseconds, roundingMode);
+}
+
+/**
+ * AdjustRoundedDurationDays ( years, months, weeks, days, hours, minutes,
+ * seconds, milliseconds, microseconds, nanoseconds, increment, unit,
+ * roundingMode [ , relativeTo ] )
+ */
+static bool AdjustRoundedDurationDaysSlow(
+    JSContext* cx, const Duration& duration, Increment increment,
+    TemporalUnit unit, TemporalRoundingMode roundingMode,
+    Handle<Wrapped<ZonedDateTimeObject*>> relativeTo, Instant dayLength,
+    Duration* result) {
+  MOZ_ASSERT(IsValidDuration(duration));
+  MOZ_ASSERT(IsValidInstantDifference(dayLength));
+
+  // Step 2.
+  Rooted<BigInt*> timeRemainderNs(
+      cx, TotalDurationNanosecondsSlow(cx, duration.time(), 0));
+  if (!timeRemainderNs) {
+    return false;
+  }
+
+  // Steps 3-5.
+  int32_t direction = timeRemainderNs->sign();
+
+  // Steps 6-7. (Computed in caller)
+
+  // Step 8.
+  Rooted<BigInt*> dayLengthNs(cx, ToEpochDifferenceNanoseconds(cx, dayLength));
+  if (!dayLengthNs) {
+    return false;
+  }
+  MOZ_ASSERT(IsValidInstantDifference(dayLengthNs));
+
+  // Step 9.
+  Rooted<BigInt*> diff(cx, BigInt::sub(cx, timeRemainderNs, dayLengthNs));
+  if (!diff) {
+    return false;
+  }
+
+  if ((direction > 0 && diff->sign() < 0) ||
+      (direction < 0 && diff->sign() > 0)) {
+    *result = duration;
+    return true;
+  }
+
+  // Step 10.
+  timeRemainderNs =
+      RoundTemporalInstant(cx, diff, increment, unit, roundingMode);
+  if (!timeRemainderNs) {
+    return false;
+  }
+
+  // Step 11.
+  Duration adjustedDateDuration;
+  if (!AddDuration(cx,
+                   {
+                       duration.years,
+                       duration.months,
+                       duration.weeks,
+                       duration.days,
+                   },
+                   {0, 0, 0, double(direction)}, relativeTo,
+                   &adjustedDateDuration)) {
+    return false;
+  }
+
+  // Step 12.
+  TimeDuration adjustedTimeDuration;
+  if (!::BalanceDurationSlow(cx, timeRemainderNs, TemporalUnit::Hour,
+                             &adjustedTimeDuration)) {
+    return false;
+  }
+
+  // Step 13.
+  *result = {
+      adjustedDateDuration.years,        adjustedDateDuration.months,
+      adjustedDateDuration.weeks,        adjustedDateDuration.days,
+      adjustedTimeDuration.hours,        adjustedTimeDuration.minutes,
+      adjustedTimeDuration.seconds,      adjustedTimeDuration.milliseconds,
+      adjustedTimeDuration.microseconds, adjustedTimeDuration.nanoseconds,
+  };
+  MOZ_ASSERT(IsValidDuration(*result));
+  return true;
+}
+
+/**
+ * AdjustRoundedDurationDays ( years, months, weeks, days, hours, minutes,
+ * seconds, milliseconds, microseconds, nanoseconds, increment, unit,
+ * roundingMode [ , relativeTo ] )
+ */
+bool js::temporal::AdjustRoundedDurationDays(
+    JSContext* cx, const Duration& duration, Increment increment,
+    TemporalUnit unit, TemporalRoundingMode roundingMode,
+    Handle<Wrapped<ZonedDateTimeObject*>> relativeTo, Duration* result) {
+  MOZ_ASSERT(IsValidDuration(duration));
+
+  // Step 1.
+  if ((TemporalUnit::Year <= unit && unit <= TemporalUnit::Day) ||
+      (unit == TemporalUnit::Nanosecond && increment == Increment{1})) {
+    *result = duration;
+    return true;
+  }
+
+  // The increment is limited for all smaller temporal units.
+  MOZ_ASSERT(increment < MaximumTemporalDurationRoundingIncrement(unit));
+
+  // Steps 3-5.
+  //
+  // Step 2 is moved below, so compute |direction| through DurationSign.
+  int32_t direction = DurationSign(duration.time());
+
+  auto* unwrappedRelativeTo = relativeTo.unwrap(cx);
+  if (!unwrappedRelativeTo) {
+    return false;
+  }
+  auto nanoseconds = ToInstant(unwrappedRelativeTo);
+  Rooted<JSObject*> timeZone(cx, unwrappedRelativeTo->timeZone());
+  Rooted<JSObject*> calendar(cx, unwrappedRelativeTo->calendar());
+
+  if (!cx->compartment()->wrap(cx, &timeZone)) {
+    return false;
+  }
+  if (!cx->compartment()->wrap(cx, &calendar)) {
+    return false;
+  }
+
+  // Step 6.
+  Instant dayStart;
+  if (!AddZonedDateTime(cx, nanoseconds, timeZone, calendar, duration.date(),
+                        &dayStart)) {
+    return false;
+  }
+  MOZ_ASSERT(IsValidEpochInstant(dayStart));
+
+  // Step 7.
+  Instant dayEnd;
+  if (!AddZonedDateTime(cx, dayStart, timeZone, calendar,
+                        {0, 0, 0, double(direction)}, &dayEnd)) {
+    return false;
+  }
+  MOZ_ASSERT(IsValidEpochInstant(dayEnd));
+
+  // Step 8.
+  auto dayLength = dayEnd - dayStart;
+  MOZ_ASSERT(IsValidInstantDifference(dayLength));
+
+  // Step 2. (Reordered)
+  auto timeRemainderNs = TotalDurationNanoseconds(duration.time(), 0);
+  if (!timeRemainderNs) {
+    return AdjustRoundedDurationDaysSlow(cx, duration, increment, unit,
+                                         roundingMode, relativeTo, dayLength,
+                                         result);
+  }
+
+  // Step 9.
+  auto checkedDiff = *timeRemainderNs - dayLength.toNanoseconds();
+  if (!checkedDiff.isValid()) {
+    return AdjustRoundedDurationDaysSlow(cx, duration, increment, unit,
+                                         roundingMode, relativeTo, dayLength,
+                                         result);
+  }
+  auto diff = checkedDiff.value();
+
+  if ((direction > 0 && diff < 0) || (direction < 0 && diff > 0)) {
+    *result = duration;
+    return true;
+  }
+
+  // Step 10.
+  auto roundedTimeRemainderNs =
+      ::RoundTemporalInstant(diff, increment, unit, roundingMode);
+  if (!roundedTimeRemainderNs.isValid()) {
+    return AdjustRoundedDurationDaysSlow(cx, duration, increment, unit,
+                                         roundingMode, relativeTo, dayLength,
+                                         result);
+  }
+
+  // Step 11.
+  Duration adjustedDateDuration;
+  if (!AddDuration(cx,
+                   {
+                       duration.years,
+                       duration.months,
+                       duration.weeks,
+                       duration.days,
+                   },
+                   {0, 0, 0, double(direction)}, relativeTo,
+                   &adjustedDateDuration)) {
+    return false;
+  }
+
+  // Step 12.
+  auto adjustedTimeDuration =
+      ::BalanceDuration(roundedTimeRemainderNs.value(), TemporalUnit::Hour);
+
+  // FIXME: spec bug - CreateDurationRecord is fallible because the adjusted
+  // date and time durations can be have different signs.
+  // https://github.com/tc39/proposal-temporal/issues/2536
+  //
+  // clang-format off
+  //
+  // {
+  // let calendar = new class extends Temporal.Calendar {
+  //   dateAdd(date, duration, options) {
+  //     console.log(`dateAdd(${date}, ${duration})`);
+  //     if (duration.days === 10) {
+  //       return super.dateAdd(date, duration.negated(), options);
+  //     }
+  //     return super.dateAdd(date, duration, options);
+  //   }
+  // }("iso8601");
+  //
+  // let zdt = new Temporal.ZonedDateTime(0n, "UTC", calendar);
+  //
+  // let d = Temporal.Duration.from({
+  //   days: 10,
+  //   hours: 25,
+  // });
+  //
+  // let r = d.round({
+  //   smallestUnit: "nanoseconds",
+  //   roundingIncrement: 5,
+  //   relativeTo: zdt,
+  // });
+  // console.log(r.toString());
+  // }
+  //
+  // clang-format on
+
+  // Step 13.
+  *result = {
+      adjustedDateDuration.years,        adjustedDateDuration.months,
+      adjustedDateDuration.weeks,        adjustedDateDuration.days,
+      adjustedTimeDuration.hours,        adjustedTimeDuration.minutes,
+      adjustedTimeDuration.seconds,      adjustedTimeDuration.milliseconds,
+      adjustedTimeDuration.microseconds, adjustedTimeDuration.nanoseconds,
+  };
+  return ThrowIfInvalidDuration(cx, *result);
+}
+
 static bool BigIntToStringBuilder(JSContext* cx, Handle<BigInt*> num,
                                   JSStringBuilder& sb) {
   MOZ_ASSERT(!num->isNegative());
