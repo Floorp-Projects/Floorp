@@ -19,8 +19,15 @@
 
 #include "builtin/temporal/Calendar.h"
 #include "builtin/temporal/PlainDate.h"
+#include "builtin/temporal/PlainDateTime.h"
+#include "builtin/temporal/PlainTime.h"
+#include "builtin/temporal/PlainYearMonth.h"
 #include "builtin/temporal/Temporal.h"
+#include "builtin/temporal/TemporalFields.h"
+#include "builtin/temporal/TemporalParser.h"
 #include "builtin/temporal/TemporalTypes.h"
+#include "builtin/temporal/Wrapped.h"
+#include "builtin/temporal/ZonedDateTime.h"
 #include "ds/IdValuePair.h"
 #include "gc/AllocKind.h"
 #include "gc/Barrier.h"
@@ -152,6 +159,190 @@ PlainMonthDayObject* js::temporal::CreateTemporalMonthDay(
   return obj;
 }
 
+template <typename T, typename... Ts>
+static bool ToTemporalCalendarForMonthDay(JSContext* cx,
+                                          Handle<JSObject*> object,
+                                          MutableHandle<JSObject*> result) {
+  if (auto* unwrapped = object->maybeUnwrapIf<T>()) {
+    if constexpr (std::is_same_v<T, PlainTimeObject>) {
+      AutoRealm ar(cx, unwrapped);
+      Rooted<PlainTimeObject*> plainTime(cx, unwrapped);
+
+      auto* calendar = PlainTimeObject::getOrCreateCalendar(cx, plainTime);
+      if (!calendar) {
+        return false;
+      }
+
+      result.set(calendar);
+    } else {
+      result.set(unwrapped->calendar());
+    }
+    return cx->compartment()->wrap(cx, result);
+  }
+
+  if constexpr (sizeof...(Ts) > 0) {
+    return ToTemporalCalendarForMonthDay<Ts...>(cx, object, result);
+  }
+
+  result.set(nullptr);
+  return true;
+}
+
+/**
+ * ToTemporalMonthDay ( item [ , options ] )
+ */
+static Wrapped<PlainMonthDayObject*> ToTemporalMonthDay(
+    JSContext* cx, Handle<Value> item,
+    Handle<JSObject*> maybeOptions = nullptr) {
+  // Steps 1-2. (Not applicable in our implementation.)
+
+  // Step 3.
+  constexpr int32_t referenceISOYear = 1972;
+
+  // Step 4.
+  if (item.isObject()) {
+    Rooted<JSObject*> itemObj(cx, &item.toObject());
+
+    // Step 4.a.
+    if (itemObj->canUnwrapAs<PlainMonthDayObject>()) {
+      return itemObj;
+    }
+
+    // Steps 4.b-c.
+    Rooted<JSObject*> calendar(cx);
+    bool calendarAbsent = false;
+    if (!::ToTemporalCalendarForMonthDay<PlainDateObject, PlainDateTimeObject,
+                                         PlainTimeObject, PlainYearMonthObject,
+                                         ZonedDateTimeObject>(cx, itemObj,
+                                                              &calendar)) {
+      return nullptr;
+    }
+    if (!calendar) {
+      // Step 4.c.i.
+      Rooted<Value> calendarLike(cx);
+      if (!GetProperty(cx, itemObj, itemObj, cx->names().calendar,
+                       &calendarLike)) {
+        return nullptr;
+      }
+
+      // Steps 4.c.ii-iii.
+      calendarAbsent = calendarLike.isUndefined();
+
+      // Step 4.c.iv.
+      calendar = ToTemporalCalendarWithISODefault(cx, calendarLike);
+      if (!calendar) {
+        return nullptr;
+      }
+    }
+
+    // Step 4.d.
+    JS::RootedVector<PropertyKey> fieldNames(cx);
+    if (!CalendarFields(cx, calendar,
+                        {CalendarField::Day, CalendarField::Month,
+                         CalendarField::MonthCode, CalendarField::Year},
+                        &fieldNames)) {
+      return nullptr;
+    }
+
+    // Step 4.e.
+    Rooted<PlainObject*> fields(cx,
+                                PrepareTemporalFields(cx, itemObj, fieldNames));
+    if (!fields) {
+      return nullptr;
+    }
+
+    // Step 4.f.
+    Rooted<Value> month(cx);
+    if (!GetProperty(cx, fields, fields, cx->names().month, &month)) {
+      return nullptr;
+    }
+
+    // Step 4.g.
+    Rooted<Value> monthCode(cx);
+    if (!GetProperty(cx, fields, fields, cx->names().monthCode, &monthCode)) {
+      return nullptr;
+    }
+
+    // Step 4.h.
+    Rooted<Value> year(cx);
+    if (!GetProperty(cx, fields, fields, cx->names().year, &year)) {
+      return nullptr;
+    }
+
+    // Step 4.i.
+    if (calendarAbsent && !month.isUndefined() && monthCode.isUndefined() &&
+        year.isUndefined()) {
+      year.setInt32(referenceISOYear);
+      if (!DefineDataProperty(cx, fields, cx->names().year, year)) {
+        return nullptr;
+      }
+    }
+
+    // Step 4.j.
+    if (maybeOptions) {
+      return js::temporal::CalendarMonthDayFromFields(cx, calendar, fields,
+                                                      maybeOptions);
+    }
+    return js::temporal::CalendarMonthDayFromFields(cx, calendar, fields);
+  }
+
+  // Step 5.
+  if (maybeOptions) {
+    TemporalOverflow ignored;
+    if (!ToTemporalOverflow(cx, maybeOptions, &ignored)) {
+      return nullptr;
+    }
+  }
+
+  // Step 6.
+  Rooted<JSString*> string(cx, JS::ToString(cx, item));
+  if (!string) {
+    return nullptr;
+  }
+
+  // Step 7.
+  PlainDate result;
+  bool hasYear;
+  Rooted<JSString*> calendarString(cx);
+  if (!ParseTemporalMonthDayString(cx, string, &result, &hasYear,
+                                   &calendarString)) {
+    return nullptr;
+  }
+
+  // Step 8.
+  Rooted<Value> calendarLike(cx);
+  if (calendarString) {
+    calendarLike.setString(calendarString);
+  }
+
+  Rooted<JSObject*> calendar(
+      cx, ToTemporalCalendarWithISODefault(cx, calendarLike));
+  if (!calendar) {
+    return nullptr;
+  }
+
+  // Step 9.
+  if (!hasYear) {
+    // Step 9.a.
+    return CreateTemporalMonthDay(
+        cx, {referenceISOYear, result.month, result.day}, calendar);
+  }
+
+  // FIXME: spec bug - CreateTemporalMonthDay called with referenceISOYear
+  // instead of `result.[[year]]`.
+  // https://github.com/tc39/proposal-temporal/issues/2457
+
+  // Step 10.
+  Rooted<PlainMonthDayObject*> obj(
+      cx, CreateTemporalMonthDay(cx, result, calendar));
+  if (!obj) {
+    return nullptr;
+  }
+
+  // Steps 11-12.
+  return CalendarMonthDayFromFields(cx, calendar, obj);
+}
+
 /**
  * TemporalMonthDayToString ( monthDay, showCalendar )
  */
@@ -274,6 +465,62 @@ static bool PlainMonthDayConstructor(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   args.rval().setObject(*monthDay);
+  return true;
+}
+
+/**
+ * Temporal.PlainMonthDay.from ( item [ , options ] )
+ */
+static bool PlainMonthDay_from(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Step 1.
+  Rooted<JSObject*> options(cx);
+  if (args.hasDefined(1)) {
+    options = RequireObjectArg(cx, "options", "from", args[1]);
+    if (!options) {
+      return false;
+    }
+  }
+
+  // Step 2.
+  if (args.get(0).isObject()) {
+    JSObject* item = &args[0].toObject();
+
+    if (auto* monthDay = item->maybeUnwrapIf<PlainMonthDayObject>()) {
+      auto date = ToPlainDate(monthDay);
+
+      Rooted<JSObject*> calendar(cx, monthDay->calendar());
+      if (!cx->compartment()->wrap(cx, &calendar)) {
+        return false;
+      }
+
+      if (options) {
+        // Step 2.a.
+        TemporalOverflow ignored;
+        if (!ToTemporalOverflow(cx, options, &ignored)) {
+          return false;
+        }
+      }
+
+      // Step 2.b.
+      auto* obj = CreateTemporalMonthDay(cx, date, calendar);
+      if (!obj) {
+        return false;
+      }
+
+      args.rval().setObject(*obj);
+      return true;
+    }
+  }
+
+  // Step 3.
+  auto obj = ToTemporalMonthDay(cx, args.get(0), options);
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
   return true;
 }
 
@@ -449,6 +696,7 @@ const JSClass PlainMonthDayObject::class_ = {
 const JSClass& PlainMonthDayObject::protoClass_ = PlainObject::class_;
 
 static const JSFunctionSpec PlainMonthDay_methods[] = {
+    JS_FN("from", PlainMonthDay_from, 1, 0),
     JS_FS_END,
 };
 

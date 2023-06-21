@@ -51,6 +51,13 @@ bool ParseTemporalDateString(JSContext* cx, JS::Handle<JSString*> str,
                              JS::MutableHandle<JSString*> calendar);
 
 /**
+ * ParseTemporalMonthDayString ( isoString )
+ */
+bool ParseTemporalMonthDayString(JSContext* cx, JS::Handle<JSString*> str,
+                                 PlainDate* result, bool* hasYear,
+                                 JS::MutableHandle<JSString*> calendar);
+
+/**
  * ParseTemporalDateTimeString ( isoString )
  */
 bool ParseTemporalDateTimeString(JSContext* cx, JS::Handle<JSString*> str,

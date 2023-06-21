@@ -2289,6 +2289,74 @@ TemporalParser<CharT>::parseTemporalMonthDayString() {
   return dt.unwrap();
 }
 
+/**
+ * ParseTemporalMonthDayString ( isoString )
+ */
+template <typename CharT>
+static auto ParseTemporalMonthDayString(mozilla::Span<const CharT> str) {
+  TemporalParser<CharT> parser(str);
+  return parser.parseTemporalMonthDayString();
+}
+
+/**
+ * ParseTemporalMonthDayString ( isoString )
+ */
+static auto ParseTemporalMonthDayString(Handle<JSLinearString*> str) {
+  JS::AutoCheckCannotGC nogc;
+  if (str->hasLatin1Chars()) {
+    return ParseTemporalMonthDayString<Latin1Char>(str->latin1Range(nogc));
+  }
+  return ParseTemporalMonthDayString<char16_t>(str->twoByteRange(nogc));
+}
+
+/**
+ * ParseTemporalMonthDayString ( isoString )
+ */
+bool js::temporal::ParseTemporalMonthDayString(
+    JSContext* cx, Handle<JSString*> str, PlainDate* result, bool* hasYear,
+    MutableHandle<JSString*> calendar) {
+  Rooted<JSLinearString*> linear(cx, str->ensureLinear(cx));
+  if (!linear) {
+    return false;
+  }
+
+  // Steps 1-2  .
+  auto parseResult = ::ParseTemporalMonthDayString(linear);
+  if (parseResult.isErr()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              parseResult.unwrapErr());
+    return false;
+  }
+  ZonedDateTimeString parsed = parseResult.unwrap();
+
+  // Step 3.
+  if (parsed.timeZone.isUTC()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_PARSER_INVALID_UTC_DESIGNATOR);
+    return false;
+  }
+
+  // Step 4.
+  PlainDateTime dateTime;
+  if (!ParseISODateTime(cx, parsed, &dateTime)) {
+    return false;
+  }
+  *result = dateTime.date;
+
+  // Steps 5-6.
+  *hasYear = parsed.date.year != AbsentYear;
+
+  if (parsed.calendar.present()) {
+    calendar.set(ToString(cx, linear, parsed.calendar));
+    if (!calendar) {
+      return false;
+    }
+  }
+
+  // Step 7.
+  return true;
+}
+
 template <typename CharT>
 mozilla::Result<ZonedDateTimeString, ParserError>
 TemporalParser<CharT>::parseTemporalYearMonthString() {
