@@ -14,10 +14,10 @@
 import sys
 
 major, minor = sys.version_info[:2]
-if (major < 3) or (major == 3 and minor < 7):
+if (major < 3) or (major == 3 and minor < 6):
     print(
-        "Bootstrap currently only runs on Python 3.7+."
-        "Please try re-running with python3.7+."
+        "Bootstrap currently only runs on Python 3.6+."
+        "Please try re-running with python3.6+."
     )
     sys.exit(1)
 
