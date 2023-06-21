@@ -22,7 +22,6 @@
 #include "gc/GCInternals.h"
 #include "gc/GCLock.h"
 #include "gc/GCParallelTask.h"
-#include "gc/GCProbes.h"
 #include "gc/Memory.h"
 #include "gc/PublicIterators.h"
 #include "gc/Tenuring.h"
@@ -527,6 +526,8 @@ void js::Nursery::leaveZealMode() {
 
 void* js::Nursery::allocateCell(gc::AllocSite* site, size_t size,
                                 JS::TraceKind kind) {
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime()));
+
   void* ptr = tryAllocateCell(site, size, kind);
   if (MOZ_LIKELY(ptr)) {
     return ptr;
@@ -541,39 +542,9 @@ void* js::Nursery::allocateCell(gc::AllocSite* site, size_t size,
   return ptr;
 }
 
-inline void* js::Nursery::tryAllocateCell(gc::AllocSite* site, size_t size,
-                                          JS::TraceKind kind) {
-  // Ensure there's enough space to replace the contents with a
-  // RelocationOverlay.
-  MOZ_ASSERT(size >= sizeof(RelocationOverlay));
-  MOZ_ASSERT(size % CellAlignBytes == 0);
-  MOZ_ASSERT(size_t(kind) < NurseryTraceKinds);
-  MOZ_ASSERT_IF(kind == JS::TraceKind::String, canAllocateStrings());
-  MOZ_ASSERT_IF(kind == JS::TraceKind::BigInt, canAllocateBigInts());
-
-  void* ptr = tryAllocate(sizeof(NurseryCellHeader) + size);
-  if (MOZ_UNLIKELY(!ptr)) {
-    return nullptr;
-  }
-
-  new (ptr) NurseryCellHeader(site, kind);
-
-  void* cell =
-      reinterpret_cast<void*>(uintptr_t(ptr) + sizeof(NurseryCellHeader));
-
-  // Update the allocation site. This code is also inlined in
-  // MacroAssembler::updateAllocSite.
-  uint32_t allocCount = site->incAllocCount();
-  if (allocCount == 1) {
-    pretenuringNursery.insertIntoAllocatedList(site);
-  }
-  MOZ_ASSERT_IF(site->isNormal(), site->isInAllocatedList());
-
-  gcprobes::NurseryAlloc(cell, kind);
-  return cell;
-}
-
 inline void* js::Nursery::allocate(size_t size) {
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime()));
+
   void* ptr = tryAllocate(size);
   if (MOZ_LIKELY(ptr)) {
     return ptr;
@@ -585,28 +556,6 @@ inline void* js::Nursery::allocate(size_t size) {
 
   ptr = tryAllocate(size);
   MOZ_ASSERT(ptr);
-  return ptr;
-}
-
-inline void* js::Nursery::tryAllocate(size_t size) {
-  MOZ_ASSERT(isEnabled());
-  MOZ_ASSERT(!JS::RuntimeHeapIsBusy());
-  MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime()));
-  MOZ_ASSERT_IF(currentChunk_ == currentStartChunk_,
-                position() >= currentStartPosition_);
-  MOZ_ASSERT(size % CellAlignBytes == 0);
-  MOZ_ASSERT(position() % CellAlignBytes == 0);
-
-  if (MOZ_UNLIKELY(currentEnd() < position() + size)) {
-    return nullptr;
-  }
-
-  void* ptr = reinterpret_cast<void*>(position());
-  position_ = position() + size;
-
-  DebugOnlyPoison(ptr, JS_ALLOCATED_NURSERY_PATTERN, size,
-                  MemCheckKind::MakeUndefined);
-
   return ptr;
 }
 
@@ -1810,6 +1759,9 @@ MOZ_ALWAYS_INLINE void js::Nursery::setCurrentEnd() {
                 currentChunk_ == 0 && currentEnd_ <= chunk(0).end());
   currentEnd_ =
       uintptr_t(&chunk(currentChunk_)) + std::min(capacity_, ChunkSize);
+
+  MOZ_ASSERT_IF(!isSubChunkMode(), currentEnd_ == chunk(currentChunk_).end());
+  MOZ_ASSERT(currentEnd_ != chunk(currentChunk_).start());
 }
 
 bool js::Nursery::allocateNextChunk(const unsigned chunkno,
@@ -2089,16 +2041,6 @@ void js::Nursery::shrinkAllocableSpace(size_t newCapacity) {
     AutoLockHelperThreadState lock;
     decommitTask->queueRange(capacity_, chunk(0), lock);
   }
-}
-
-uintptr_t js::Nursery::currentEnd() const {
-  // These are separate asserts because it can be useful to see which one
-  // failed.
-  MOZ_ASSERT_IF(isSubChunkMode(), currentChunk_ == 0);
-  MOZ_ASSERT_IF(isSubChunkMode(), currentEnd_ <= chunk(currentChunk_).end());
-  MOZ_ASSERT_IF(!isSubChunkMode(), currentEnd_ == chunk(currentChunk_).end());
-  MOZ_ASSERT(currentEnd_ != chunk(currentChunk_).start());
-  return currentEnd_;
 }
 
 gcstats::Statistics& js::Nursery::stats() const { return gc->stats(); }

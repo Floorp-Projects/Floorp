@@ -245,6 +245,7 @@ bool CellAllocator::PreAllocChecks(JS::RootingContext* rcx, AllocKind kind) {
   auto* cx = JSContext::from(rcx);
 
   MOZ_ASSERT(!cx->isHelperThreadContext());
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
 
   CheckAllocZone(cx->zone(), kind);
 

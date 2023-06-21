@@ -63,8 +63,4 @@ inline size_t& js::gc::Arena::atomBitmapStart() {
   return atomBitmapStart_;
 }
 
-inline js::gc::NurseryCellHeader::NurseryCellHeader(AllocSite* site,
-                                                    JS::TraceKind kind)
-    : allocSiteAndTraceKind(MakeValue(site, kind)) {}
-
 #endif
