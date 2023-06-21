@@ -57,6 +57,10 @@
 using namespace js;
 using namespace js::temporal;
 
+static inline bool IsPlainDateTime(Handle<Value> v) {
+  return v.isObject() && v.toObject().is<PlainDateTimeObject>();
+}
+
 #ifdef DEBUG
 /**
  * IsValidISODateTime ( year, month, day, hour, minute, second, millisecond,
@@ -492,6 +496,108 @@ static bool PlainDateTimeConstructor(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+/**
+ * Temporal.PlainDateTime.prototype.valueOf ( )
+ */
+static bool PlainDateTime_valueOf(JSContext* cx, unsigned argc, Value* vp) {
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_CONVERT_TO,
+                            "PlainDateTime", "primitive type");
+  return false;
+}
+
+/**
+ * Temporal.PlainDateTime.prototype.getISOFields ( )
+ */
+static bool PlainDateTime_getISOFields(JSContext* cx, const CallArgs& args) {
+  auto* temporalDateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  auto dateTime = ToPlainDateTime(temporalDateTime);
+  JSObject* calendar = temporalDateTime->calendar();
+
+  // Step 3.
+  Rooted<IdValueVector> fields(cx, IdValueVector(cx));
+
+  // Step 4.
+  if (!fields.emplaceBack(NameToId(cx->names().calendar),
+                          ObjectValue(*calendar))) {
+    return false;
+  }
+
+  // Step 5.
+  if (!fields.emplaceBack(NameToId(cx->names().isoDay),
+                          Int32Value(dateTime.date.day))) {
+    return false;
+  }
+
+  // Step 6.
+  if (!fields.emplaceBack(NameToId(cx->names().isoHour),
+                          Int32Value(dateTime.time.hour))) {
+    return false;
+  }
+
+  // Step 7.
+  if (!fields.emplaceBack(NameToId(cx->names().isoMicrosecond),
+                          Int32Value(dateTime.time.microsecond))) {
+    return false;
+  }
+
+  // Step 8.
+  if (!fields.emplaceBack(NameToId(cx->names().isoMillisecond),
+                          Int32Value(dateTime.time.millisecond))) {
+    return false;
+  }
+
+  // Step 9.
+  if (!fields.emplaceBack(NameToId(cx->names().isoMinute),
+                          Int32Value(dateTime.time.minute))) {
+    return false;
+  }
+
+  // Step 10.
+  if (!fields.emplaceBack(NameToId(cx->names().isoMonth),
+                          Int32Value(dateTime.date.month))) {
+    return false;
+  }
+
+  // Step 11.
+  if (!fields.emplaceBack(NameToId(cx->names().isoNanosecond),
+                          Int32Value(dateTime.time.nanosecond))) {
+    return false;
+  }
+
+  // Step 12.
+  if (!fields.emplaceBack(NameToId(cx->names().isoSecond),
+                          Int32Value(dateTime.time.second))) {
+    return false;
+  }
+
+  // Step 13.
+  if (!fields.emplaceBack(NameToId(cx->names().isoYear),
+                          Int32Value(dateTime.date.year))) {
+    return false;
+  }
+
+  // Step 14.
+  auto* obj =
+      NewPlainObjectWithUniqueNames(cx, fields.begin(), fields.length());
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
+/**
+ * Temporal.PlainDateTime.prototype.getISOFields ( )
+ */
+static bool PlainDateTime_getISOFields(JSContext* cx, unsigned argc,
+                                       Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_getISOFields>(
+      cx, args);
+}
+
 const JSClass PlainDateTimeObject::class_ = {
     "Temporal.PlainDateTime",
     JSCLASS_HAS_RESERVED_SLOTS(PlainDateTimeObject::SLOT_COUNT) |
@@ -507,6 +613,8 @@ static const JSFunctionSpec PlainDateTime_methods[] = {
 };
 
 static const JSFunctionSpec PlainDateTime_prototype_methods[] = {
+    JS_FN("valueOf", PlainDateTime_valueOf, 0, 0),
+    JS_FN("getISOFields", PlainDateTime_getISOFields, 0, 0),
     JS_FS_END,
 };
 

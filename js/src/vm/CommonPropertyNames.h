@@ -307,6 +307,15 @@
   MACRO_(IsNullOrUndefined, IsNullOrUndefined, "IsNullOrUndefined")            \
   MACRO_(isPrototypeOf, isPrototypeOf, "isPrototypeOf")                        \
   MACRO_(iso8601, iso8601, "iso8601")                                          \
+  MACRO_(isoDay, isoDay, "isoDay")                                             \
+  MACRO_(isoHour, isoHour, "isoHour")                                          \
+  MACRO_(isoMicrosecond, isoMicrosecond, "isoMicrosecond")                     \
+  MACRO_(isoMillisecond, isoMillisecond, "isoMillisecond")                     \
+  MACRO_(isoMinute, isoMinute, "isoMinute")                                    \
+  MACRO_(isoMonth, isoMonth, "isoMonth")                                       \
+  MACRO_(isoNanosecond, isoNanosecond, "isoNanosecond")                        \
+  MACRO_(isoSecond, isoSecond, "isoSecond")                                    \
+  MACRO_(isoYear, isoYear, "isoYear")                                          \
   MACRO_(isStepStart, isStepStart, "isStepStart")                              \
   MACRO_(isSubsetOf, isSubsetOf, "isSubsetOf")                                 \
   MACRO_(isSupersetOf, isSupersetOf, "isSupersetOf")                           \

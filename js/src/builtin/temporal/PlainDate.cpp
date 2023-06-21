@@ -61,6 +61,10 @@
 using namespace js;
 using namespace js::temporal;
 
+static inline bool IsPlainDate(Handle<Value> v) {
+  return v.isObject() && v.toObject().is<PlainDateObject>();
+}
+
 #ifdef DEBUG
 /**
  * IsValidISODate ( year, month, day )
@@ -343,6 +347,69 @@ static bool PlainDateConstructor(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+/**
+ * Temporal.PlainDate.prototype.getISOFields ( )
+ */
+static bool PlainDate_getISOFields(JSContext* cx, const CallArgs& args) {
+  auto* temporalDate = &args.thisv().toObject().as<PlainDateObject>();
+  auto date = ToPlainDate(temporalDate);
+  JSObject* calendar = temporalDate->calendar();
+
+  // Step 3.
+  Rooted<IdValueVector> fields(cx, IdValueVector(cx));
+
+  // Step 4.
+  if (!fields.emplaceBack(NameToId(cx->names().calendar),
+                          ObjectValue(*calendar))) {
+    return false;
+  }
+
+  // Step 5.
+  if (!fields.emplaceBack(NameToId(cx->names().isoDay), Int32Value(date.day))) {
+    return false;
+  }
+
+  // Step 6.
+  if (!fields.emplaceBack(NameToId(cx->names().isoMonth),
+                          Int32Value(date.month))) {
+    return false;
+  }
+
+  // Step 7.
+  if (!fields.emplaceBack(NameToId(cx->names().isoYear),
+                          Int32Value(date.year))) {
+    return false;
+  }
+
+  // Step 8.
+  auto* obj =
+      NewPlainObjectWithUniqueNames(cx, fields.begin(), fields.length());
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
+/**
+ * Temporal.PlainDate.prototype.getISOFields ( )
+ */
+static bool PlainDate_getISOFields(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDate, PlainDate_getISOFields>(cx, args);
+}
+
+/**
+ *  Temporal.PlainDate.prototype.valueOf ( )
+ */
+static bool PlainDate_valueOf(JSContext* cx, unsigned argc, Value* vp) {
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_CONVERT_TO,
+                            "PlainDate", "primitive type");
+  return false;
+}
+
 const JSClass PlainDateObject::class_ = {
     "Temporal.PlainDate",
     JSCLASS_HAS_RESERVED_SLOTS(PlainDateObject::SLOT_COUNT) |
@@ -358,6 +425,8 @@ static const JSFunctionSpec PlainDate_methods[] = {
 };
 
 static const JSFunctionSpec PlainDate_prototype_methods[] = {
+    JS_FN("getISOFields", PlainDate_getISOFields, 0, 0),
+    JS_FN("valueOf", PlainDate_valueOf, 0, 0),
     JS_FS_END,
 };
 

@@ -55,6 +55,10 @@
 using namespace js;
 using namespace js::temporal;
 
+static inline bool IsPlainYearMonth(Handle<Value> v) {
+  return v.isObject() && v.toObject().is<PlainYearMonthObject>();
+}
+
 /**
  * ISOYearMonthWithinLimits ( year, month )
  */
@@ -236,6 +240,71 @@ static bool PlainYearMonthConstructor(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+/**
+ *  Temporal.PlainYearMonth.prototype.valueOf ( )
+ */
+static bool PlainYearMonth_valueOf(JSContext* cx, unsigned argc, Value* vp) {
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_CONVERT_TO,
+                            "PlainYearMonth", "primitive type");
+  return false;
+}
+
+/**
+ * Temporal.PlainYearMonth.prototype.getISOFields ( )
+ */
+static bool PlainYearMonth_getISOFields(JSContext* cx, const CallArgs& args) {
+  Rooted<PlainYearMonthObject*> yearMonth(
+      cx, &args.thisv().toObject().as<PlainYearMonthObject>());
+
+  // Step 3.
+  Rooted<IdValueVector> fields(cx, IdValueVector(cx));
+
+  // Step 4.
+  if (!fields.emplaceBack(NameToId(cx->names().calendar),
+                          ObjectValue(*yearMonth->calendar()))) {
+    return false;
+  }
+
+  // Step 5.
+  if (!fields.emplaceBack(NameToId(cx->names().isoDay),
+                          Int32Value(yearMonth->isoDay()))) {
+    return false;
+  }
+
+  // Step 6.
+  if (!fields.emplaceBack(NameToId(cx->names().isoMonth),
+                          Int32Value(yearMonth->isoMonth()))) {
+    return false;
+  }
+
+  // Step 7.
+  if (!fields.emplaceBack(NameToId(cx->names().isoYear),
+                          Int32Value(yearMonth->isoYear()))) {
+    return false;
+  }
+
+  // Step 8.
+  auto* obj =
+      NewPlainObjectWithUniqueNames(cx, fields.begin(), fields.length());
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
+/**
+ * Temporal.PlainYearMonth.prototype.getISOFields ( )
+ */
+static bool PlainYearMonth_getISOFields(JSContext* cx, unsigned argc,
+                                        Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainYearMonth, PlainYearMonth_getISOFields>(
+      cx, args);
+}
+
 const JSClass PlainYearMonthObject::class_ = {
     "Temporal.PlainYearMonth",
     JSCLASS_HAS_RESERVED_SLOTS(PlainYearMonthObject::SLOT_COUNT) |
@@ -251,6 +320,8 @@ static const JSFunctionSpec PlainYearMonth_methods[] = {
 };
 
 static const JSFunctionSpec PlainYearMonth_prototype_methods[] = {
+    JS_FN("valueOf", PlainYearMonth_valueOf, 0, 0),
+    JS_FN("getISOFields", PlainYearMonth_getISOFields, 0, 0),
     JS_FS_END,
 };
 

@@ -59,6 +59,10 @@
 using namespace js;
 using namespace js::temporal;
 
+static inline bool IsPlainTime(Handle<Value> v) {
+  return v.isObject() && v.toObject().is<PlainTimeObject>();
+}
+
 #ifdef DEBUG
 /**
  * IsValidTime ( hour, minute, second, millisecond, microsecond, nanosecond )
@@ -416,6 +420,93 @@ static bool PlainTimeConstructor(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+/**
+ * Temporal.PlainTime.prototype.getISOFields ( )
+ */
+static bool PlainTime_getISOFields(JSContext* cx, const CallArgs& args) {
+  Rooted<PlainTimeObject*> temporalTime(
+      cx, &args.thisv().toObject().as<PlainTimeObject>());
+  auto time = ToPlainTime(temporalTime);
+
+  auto* calendar = PlainTimeObject::getOrCreateCalendar(cx, temporalTime);
+  if (!calendar) {
+    return false;
+  }
+
+  // Step 3.
+  Rooted<IdValueVector> fields(cx, IdValueVector(cx));
+
+  // Step 4.
+  if (!fields.emplaceBack(NameToId(cx->names().calendar),
+                          ObjectValue(*calendar))) {
+    return false;
+  }
+
+  // Step 5.
+  if (!fields.emplaceBack(NameToId(cx->names().isoHour),
+                          Int32Value(time.hour))) {
+    return false;
+  }
+
+  // Step 6.
+  if (!fields.emplaceBack(NameToId(cx->names().isoMicrosecond),
+                          Int32Value(time.microsecond))) {
+    return false;
+  }
+
+  // Step 7.
+  if (!fields.emplaceBack(NameToId(cx->names().isoMillisecond),
+                          Int32Value(time.millisecond))) {
+    return false;
+  }
+
+  // Step 8.
+  if (!fields.emplaceBack(NameToId(cx->names().isoMinute),
+                          Int32Value(time.minute))) {
+    return false;
+  }
+
+  // Step 9.
+  if (!fields.emplaceBack(NameToId(cx->names().isoNanosecond),
+                          Int32Value(time.nanosecond))) {
+    return false;
+  }
+
+  // Step 10.
+  if (!fields.emplaceBack(NameToId(cx->names().isoSecond),
+                          Int32Value(time.second))) {
+    return false;
+  }
+
+  // Step 11.
+  auto* obj =
+      NewPlainObjectWithUniqueNames(cx, fields.begin(), fields.length());
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
+/**
+ * Temporal.PlainTime.prototype.getISOFields ( )
+ */
+static bool PlainTime_getISOFields(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainTime, PlainTime_getISOFields>(cx, args);
+}
+
+/**
+ * Temporal.PlainTime.prototype.valueOf ( )
+ */
+static bool PlainTime_valueOf(JSContext* cx, unsigned argc, Value* vp) {
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_CONVERT_TO,
+                            "PlainTime", "primitive type");
+  return false;
+}
+
 const JSClass PlainTimeObject::class_ = {
     "Temporal.PlainTime",
     JSCLASS_HAS_RESERVED_SLOTS(PlainTimeObject::SLOT_COUNT) |
@@ -431,6 +522,8 @@ static const JSFunctionSpec PlainTime_methods[] = {
 };
 
 static const JSFunctionSpec PlainTime_prototype_methods[] = {
+    JS_FN("getISOFields", PlainTime_getISOFields, 0, 0),
+    JS_FN("valueOf", PlainTime_valueOf, 0, 0),
     JS_FS_END,
 };
 
