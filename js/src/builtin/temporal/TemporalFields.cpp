@@ -559,6 +559,66 @@ PlainObject* js::temporal::PrepareTemporalFields(
   return result;
 }
 
+/**
+ * MergeLists ( a, b )
+ */
+bool js::temporal::MergeTemporalFieldNames(
+    const JS::StackGCVector<PropertyKey>& receiverFieldNames,
+    const JS::StackGCVector<PropertyKey>& inputFieldNames,
+    JS::StackGCVector<PropertyKey>& mergedFieldNames) {
+  MOZ_ASSERT(IsSorted(receiverFieldNames));
+  MOZ_ASSERT(IsSorted(inputFieldNames));
+  MOZ_ASSERT(mergedFieldNames.empty());
+
+  // FIXME: spec issue - why do we care about removing duplicates here. In other
+  // operations we're okay with duplicates, cf. ToTemporalZonedDateTime.
+  // https://github.com/tc39/proposal-temporal/issues/2532
+
+  auto appendUnique = [&](auto key) {
+    if (mergedFieldNames.empty() || mergedFieldNames.back() != key) {
+      return mergedFieldNames.append(key);
+    }
+    return true;
+  };
+
+  size_t i = 0;
+  size_t j = 0;
+
+  // Append the names from |receiverFieldNames| and |inputFieldNames|.
+  while (i < receiverFieldNames.length() && j < inputFieldNames.length()) {
+    auto x = receiverFieldNames[i];
+    auto y = inputFieldNames[j];
+
+    PropertyKey z;
+    if (ComparePropertyKey(x, y) <= 0) {
+      z = x;
+      i++;
+    } else {
+      z = y;
+      j++;
+    }
+    if (!appendUnique(z)) {
+      return false;
+    }
+  }
+
+  // Append the remaining names from |receiverFieldNames|.
+  while (i < receiverFieldNames.length()) {
+    if (!appendUnique(receiverFieldNames[i++])) {
+      return false;
+    }
+  }
+
+  // Append the remaining names from |inputFieldNames|.
+  while (j < inputFieldNames.length()) {
+    if (!appendUnique(inputFieldNames[j++])) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 bool js::temporal::SortTemporalFieldNames(
     JSContext* cx, JS::StackGCVector<PropertyKey>& fieldNames) {
   // Create scratch space for MergeSort().
