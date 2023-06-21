@@ -6,17 +6,105 @@
 
 #include "builtin/temporal/Temporal.h"
 
+#include "mozilla/CheckedInt.h"
+#include "mozilla/FloatingPoint.h"
+#include "mozilla/Likely.h"
+#include "mozilla/Maybe.h"
+
+#include <algorithm>
+#include <cmath>
+#include <cstdlib>
+#include <initializer_list>
+#include <iterator>
+#include <stdint.h>
+#include <string>
+#include <string_view>
+#include <utility>
+
+#include "jsfriendapi.h"
+#include "jsnum.h"
 #include "jspubtd.h"
 
+#include "gc/Barrier.h"
 #include "js/Class.h"
+#include "js/Conversions.h"
+#include "js/ErrorReport.h"
+#include "js/friend/ErrorMessages.h"
+#include "js/GCVector.h"
+#include "js/Id.h"
+#include "js/Printer.h"
+#include "js/PropertyDescriptor.h"
 #include "js/PropertySpec.h"
+#include "js/RootingAPI.h"
+#include "js/String.h"
+#include "js/Utility.h"
+#include "js/Value.h"
+#include "util/StringBuffer.h"
+#include "vm/BigIntType.h"
+#include "vm/BytecodeUtil.h"
 #include "vm/GlobalObject.h"
+#include "vm/JSAtom.h"
+#include "vm/JSAtomState.h"
+#include "vm/JSContext.h"
+#include "vm/JSObject.h"
 #include "vm/ObjectOperations.h"
+#include "vm/PlainObject.h"
+#include "vm/Realm.h"
+#include "vm/StringType.h"
 
 #include "vm/JSObject-inl.h"
+#include "vm/ObjectOperations-inl.h"
 
 using namespace js;
 using namespace js::temporal;
+
+/**
+ * ToPositiveIntegerWithTruncation ( argument )
+ */
+bool js::temporal::ToPositiveIntegerWithTruncation(JSContext* cx,
+                                                   Handle<Value> value,
+                                                   const char* name,
+                                                   double* result) {
+  // Step 1.
+  double number;
+  if (!ToIntegerWithTruncation(cx, value, name, &number)) {
+    return false;
+  }
+
+  // Step 2.
+  if (number <= 0) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_INVALID_NUMBER, name);
+    return false;
+  }
+
+  // Step 3.
+  *result = number;
+  return true;
+}
+
+/**
+ * ToIntegerWithTruncation ( argument )
+ */
+bool js::temporal::ToIntegerWithTruncation(JSContext* cx, Handle<Value> value,
+                                           const char* name, double* result) {
+  // Step 1.
+  double number;
+  if (!JS::ToNumber(cx, value, &number)) {
+    return false;
+  }
+
+  // Step 2.
+  if (!std::isfinite(number)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_INVALID_INTEGER, name);
+    return false;
+  }
+
+  // Step 3.
+  *result = std::trunc(number) + (+0.0);  // Add zero to convert -0 to +0.
+  return true;
+}
 
 static JSObject* CreateTemporalObject(JSContext* cx, JSProtoKey key) {
   RootedObject proto(cx, &cx->global()->getObjectPrototype());

@@ -22,6 +22,8 @@
 #include "builtin/temporal/Calendar.h"
 #include "builtin/temporal/PlainDate.h"
 #include "builtin/temporal/PlainTime.h"
+#include "builtin/temporal/Temporal.h"
+#include "builtin/temporal/TemporalTypes.h"
 #include "ds/IdValuePair.h"
 #include "gc/AllocKind.h"
 #include "gc/Barrier.h"
@@ -64,6 +66,16 @@ bool js::temporal::IsValidISODateTime(const PlainDateTime& dateTime) {
   return IsValidISODate(dateTime.date) && IsValidTime(dateTime.time);
 }
 #endif
+
+/**
+ * IsValidISODateTime ( year, month, day, hour, minute, second, millisecond,
+ * microsecond, nanosecond )
+ */
+static bool ThrowIfInvalidISODateTime(JSContext* cx,
+                                      const PlainDateTime& dateTime) {
+  return ThrowIfInvalidISODate(cx, dateTime.date) &&
+         ThrowIfInvalidTime(cx, dateTime.time);
+}
 
 /**
  * ISODateTimeWithinLimits ( year, month, day, hour, minute, second,
@@ -221,8 +233,263 @@ bool js::temporal::ISODateTimeWithinLimits(const PlainDate& date) {
   return ::ISODateTimeWithinLimits(date.year, date.month, date.day);
 }
 
+/**
+ * CreateTemporalDateTime ( isoYear, isoMonth, isoDay, hour, minute, second,
+ * millisecond, microsecond, nanosecond, calendar [ , newTarget ] )
+ */
+static PlainDateTimeObject* CreateTemporalDateTime(
+    JSContext* cx, const CallArgs& args, double isoYear, double isoMonth,
+    double isoDay, double hour, double minute, double second,
+    double millisecond, double microsecond, double nanosecond,
+    Handle<JSObject*> calendar) {
+  MOZ_ASSERT(IsInteger(isoYear));
+  MOZ_ASSERT(IsInteger(isoMonth));
+  MOZ_ASSERT(IsInteger(isoDay));
+  MOZ_ASSERT(IsInteger(hour));
+  MOZ_ASSERT(IsInteger(minute));
+  MOZ_ASSERT(IsInteger(second));
+  MOZ_ASSERT(IsInteger(millisecond));
+  MOZ_ASSERT(IsInteger(microsecond));
+  MOZ_ASSERT(IsInteger(nanosecond));
+
+  // Step 1.
+  if (!ThrowIfInvalidISODate(cx, isoYear, isoMonth, isoDay)) {
+    return nullptr;
+  }
+
+  // Step 2.
+  if (!ThrowIfInvalidTime(cx, hour, minute, second, millisecond, microsecond,
+                          nanosecond)) {
+    return nullptr;
+  }
+
+  // Step 3.
+  if (!ISODateTimeWithinLimits(isoYear, isoMonth, isoDay, hour, minute, second,
+                               millisecond, microsecond, nanosecond)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_PLAIN_DATE_TIME_INVALID);
+    return nullptr;
+  }
+
+  // Steps 4-5.
+  Rooted<JSObject*> proto(cx);
+  if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_PlainDateTime,
+                                          &proto)) {
+    return nullptr;
+  }
+
+  auto* dateTime = NewObjectWithClassProto<PlainDateTimeObject>(cx, proto);
+  if (!dateTime) {
+    return nullptr;
+  }
+
+  // Step 6.
+  dateTime->setFixedSlot(PlainDateTimeObject::ISO_YEAR_SLOT,
+                         Int32Value(isoYear));
+
+  // Step 7.
+  dateTime->setFixedSlot(PlainDateTimeObject::ISO_MONTH_SLOT,
+                         Int32Value(isoMonth));
+
+  // Step 8.
+  dateTime->setFixedSlot(PlainDateTimeObject::ISO_DAY_SLOT, Int32Value(isoDay));
+
+  // Step 9.
+  dateTime->setFixedSlot(PlainDateTimeObject::ISO_HOUR_SLOT, Int32Value(hour));
+
+  // Step 10.
+  dateTime->setFixedSlot(PlainDateTimeObject::ISO_MINUTE_SLOT,
+                         Int32Value(minute));
+
+  // Step 11.
+  dateTime->setFixedSlot(PlainDateTimeObject::ISO_SECOND_SLOT,
+                         Int32Value(second));
+
+  // Step 12.
+  dateTime->setFixedSlot(PlainDateTimeObject::ISO_MILLISECOND_SLOT,
+                         Int32Value(millisecond));
+
+  // Step 13.
+  dateTime->setFixedSlot(PlainDateTimeObject::ISO_MICROSECOND_SLOT,
+                         Int32Value(microsecond));
+
+  // Step 14.
+  dateTime->setFixedSlot(PlainDateTimeObject::ISO_NANOSECOND_SLOT,
+                         Int32Value(nanosecond));
+
+  // Step 15.
+  dateTime->setFixedSlot(PlainDateTimeObject::CALENDAR_SLOT,
+                         ObjectValue(*calendar));
+
+  // Step 16.
+  return dateTime;
+}
+
+/**
+ * CreateTemporalDateTime ( isoYear, isoMonth, isoDay, hour, minute, second,
+ * millisecond, microsecond, nanosecond, calendar [ , newTarget ] )
+ */
+PlainDateTimeObject* js::temporal::CreateTemporalDateTime(
+    JSContext* cx, const PlainDateTime& dateTime, Handle<JSObject*> calendar) {
+  auto& [date, time] = dateTime;
+  auto& [isoYear, isoMonth, isoDay] = date;
+  auto& [hour, minute, second, millisecond, microsecond, nanosecond] = time;
+
+  // Steps 1-2.
+  if (!ThrowIfInvalidISODateTime(cx, dateTime)) {
+    return nullptr;
+  }
+
+  // Step 3.
+  if (!ISODateTimeWithinLimits(dateTime)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_PLAIN_DATE_TIME_INVALID);
+    return nullptr;
+  }
+
+  // Steps 4-5.
+  auto* object = NewBuiltinClassInstance<PlainDateTimeObject>(cx);
+  if (!object) {
+    return nullptr;
+  }
+
+  // Step 6.
+  object->setFixedSlot(PlainDateTimeObject::ISO_YEAR_SLOT, Int32Value(isoYear));
+
+  // Step 7.
+  object->setFixedSlot(PlainDateTimeObject::ISO_MONTH_SLOT,
+                       Int32Value(isoMonth));
+
+  // Step 8.
+  object->setFixedSlot(PlainDateTimeObject::ISO_DAY_SLOT, Int32Value(isoDay));
+
+  // Step 9.
+  object->setFixedSlot(PlainDateTimeObject::ISO_HOUR_SLOT, Int32Value(hour));
+
+  // Step 10.
+  object->setFixedSlot(PlainDateTimeObject::ISO_MINUTE_SLOT,
+                       Int32Value(minute));
+
+  // Step 11.
+  object->setFixedSlot(PlainDateTimeObject::ISO_SECOND_SLOT,
+                       Int32Value(second));
+
+  // Step 12.
+  object->setFixedSlot(PlainDateTimeObject::ISO_MILLISECOND_SLOT,
+                       Int32Value(millisecond));
+
+  // Step 13.
+  object->setFixedSlot(PlainDateTimeObject::ISO_MICROSECOND_SLOT,
+                       Int32Value(microsecond));
+
+  // Step 14.
+  object->setFixedSlot(PlainDateTimeObject::ISO_NANOSECOND_SLOT,
+                       Int32Value(nanosecond));
+
+  // Step 15.
+  object->setFixedSlot(PlainDateTimeObject::CALENDAR_SLOT,
+                       ObjectValue(*calendar));
+
+  // Step 16.
+  return object;
+}
+
+/**
+ * Temporal.PlainDateTime ( isoYear, isoMonth, isoDay [ , hour [ , minute [ ,
+ * second [ , millisecond [ , microsecond [ , nanosecond [ , calendarLike ] ] ]
+ * ] ] ] ] )
+ */
 static bool PlainDateTimeConstructor(JSContext* cx, unsigned argc, Value* vp) {
-  MOZ_CRASH("NYI");
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Step 1.
+  if (!ThrowIfNotConstructing(cx, args, "Temporal.PlainDateTime")) {
+    return false;
+  }
+
+  // Step 2.
+  double isoYear;
+  if (!ToIntegerWithTruncation(cx, args.get(0), "year", &isoYear)) {
+    return false;
+  }
+
+  // Step 3.
+  double isoMonth;
+  if (!ToIntegerWithTruncation(cx, args.get(1), "month", &isoMonth)) {
+    return false;
+  }
+
+  // Step 4.
+  double isoDay;
+  if (!ToIntegerWithTruncation(cx, args.get(2), "day", &isoDay)) {
+    return false;
+  }
+
+  // Step 5.
+  double hour = 0;
+  if (args.hasDefined(3)) {
+    if (!ToIntegerWithTruncation(cx, args[3], "hour", &hour)) {
+      return false;
+    }
+  }
+
+  // Step 6.
+  double minute = 0;
+  if (args.hasDefined(4)) {
+    if (!ToIntegerWithTruncation(cx, args[4], "minute", &minute)) {
+      return false;
+    }
+  }
+
+  // Step 7.
+  double second = 0;
+  if (args.hasDefined(5)) {
+    if (!ToIntegerWithTruncation(cx, args[5], "second", &second)) {
+      return false;
+    }
+  }
+
+  // Step 8.
+  double millisecond = 0;
+  if (args.hasDefined(6)) {
+    if (!ToIntegerWithTruncation(cx, args[6], "millisecond", &millisecond)) {
+      return false;
+    }
+  }
+
+  // Step 9.
+  double microsecond = 0;
+  if (args.hasDefined(7)) {
+    if (!ToIntegerWithTruncation(cx, args[7], "microsecond", &microsecond)) {
+      return false;
+    }
+  }
+
+  // Step 10.
+  double nanosecond = 0;
+  if (args.hasDefined(8)) {
+    if (!ToIntegerWithTruncation(cx, args[8], "nanosecond", &nanosecond)) {
+      return false;
+    }
+  }
+
+  // Step 11.
+  Rooted<JSObject*> calendar(cx,
+                             ToTemporalCalendarWithISODefault(cx, args.get(9)));
+  if (!calendar) {
+    return false;
+  }
+
+  // Step 12.
+  auto* temporalDateTime = CreateTemporalDateTime(
+      cx, args, isoYear, isoMonth, isoDay, hour, minute, second, millisecond,
+      microsecond, nanosecond, calendar);
+  if (!temporalDateTime) {
+    return false;
+  }
+
+  args.rval().setObject(*temporalDateTime);
+  return true;
 }
 
 const JSClass PlainDateTimeObject::class_ = {

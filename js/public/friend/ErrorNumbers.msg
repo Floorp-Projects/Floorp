@@ -821,6 +821,8 @@ MSG_DEF(JSMSG_SHADOW_REALM_VALUE_NOT_EXPORTED,    0, JSEXN_TYPEERR, "value not e
 MSG_DEF(JSMSG_DECORATOR_INVALID_RETURN_TYPE, 0, JSEXN_TYPEERR, "Invalid value returned from decorator: decorators can only return undefined or a callable")
 
 // Temporal
+MSG_DEF(JSMSG_TEMPORAL_INVALID_NUMBER,              1, JSEXN_RANGEERR, "{0} must be larger than zero")
+MSG_DEF(JSMSG_TEMPORAL_INVALID_INTEGER,             1, JSEXN_RANGEERR, "{0} must be an integer")
 MSG_DEF(JSMSG_TEMPORAL_INVALID_OBJECT,              2, JSEXN_RANGEERR, "{0} mustn't be a {1} object")
 MSG_DEF(JSMSG_TEMPORAL_INSTANT_INVALID,             0, JSEXN_RANGEERR, "epoch nanoseconds too large")
 MSG_DEF(JSMSG_TEMPORAL_INSTANT_NONINTEGER,          1, JSEXN_RANGEERR, "Instant must be an integer, but received {0}")
@@ -828,8 +830,12 @@ MSG_DEF(JSMSG_TEMPORAL_DURATION_INVALID_SIGN,       2, JSEXN_RANGEERR, "duration
 MSG_DEF(JSMSG_TEMPORAL_DURATION_INVALID_NON_FINITE, 2, JSEXN_RANGEERR, "duration value \"{0}\" is {1}")
 MSG_DEF(JSMSG_TEMPORAL_DURATION_NOT_INTEGER,        2, JSEXN_RANGEERR, "{0} isn't a valid {1} duration because it isn't an integer")
 MSG_DEF(JSMSG_TEMPORAL_CALENDAR_INVALID_ID,         1, JSEXN_RANGEERR, "invalid calendar: {0}")
+MSG_DEF(JSMSG_TEMPORAL_PLAIN_DATE_INVALID,          0, JSEXN_RANGEERR, "year-month-day must be valid iso dates")
 MSG_DEF(JSMSG_TEMPORAL_PLAIN_DATE_INVALID_VALUE,    4, JSEXN_RANGEERR, "date value \"{0}\" not in {1}..{2}: {3}")
+MSG_DEF(JSMSG_TEMPORAL_PLAIN_DATE_TIME_INVALID,     0, JSEXN_RANGEERR, "arguments must be valid ISO date-time values")
 MSG_DEF(JSMSG_TEMPORAL_PLAIN_TIME_INVALID_VALUE,    4, JSEXN_RANGEERR, "time value \"{0}\" not in {1}..{2}: {3}")
+MSG_DEF(JSMSG_TEMPORAL_PLAIN_MONTH_DAY_INVALID,     0, JSEXN_RANGEERR, "year-month-day must be valid iso dates")
+MSG_DEF(JSMSG_TEMPORAL_PLAIN_YEAR_MONTH_INVALID,    0, JSEXN_RANGEERR, "year-month-day must be valid iso dates")
 MSG_DEF(JSMSG_TEMPORAL_PARSER_NEGATIVE_ZERO_YEAR,       0, JSEXN_RANGEERR, "year 0 must not start with \"-\"")
 MSG_DEF(JSMSG_TEMPORAL_PARSER_MISSING_EXTENDED_YEAR,    0, JSEXN_RANGEERR, "signed year must be followed by six digits")
 MSG_DEF(JSMSG_TEMPORAL_PARSER_MISSING_YEAR,             0, JSEXN_RANGEERR, "missing four digit year")
