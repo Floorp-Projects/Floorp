@@ -123,6 +123,22 @@ struct RegulatedISODate final {
 bool RegulateISODate(JSContext* cx, double year, double month, double day,
                      TemporalOverflow overflow, RegulatedISODate* result);
 
+/**
+ * BalanceISODate ( year, month, day )
+ */
+bool BalanceISODate(JSContext* cx, int32_t year, int32_t month, int64_t day,
+                    PlainDate* result);
+
+/**
+ * BalanceISODate ( year, month, day )
+ */
+PlainDate BalanceISODate(int32_t year, int32_t month, int32_t day);
+
+/**
+ * BalanceISODate ( year, month, day )
+ */
+PlainDate BalanceISODateNew(int32_t year, int32_t month, int32_t day);
+
 } /* namespace js::temporal */
 
 #endif /* builtin_temporal_PlainDate_h */

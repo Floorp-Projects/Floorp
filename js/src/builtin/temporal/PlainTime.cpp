@@ -26,6 +26,7 @@
 #include "builtin/temporal/PlainDateTime.h"
 #include "builtin/temporal/Temporal.h"
 #include "builtin/temporal/TemporalTypes.h"
+#include "builtin/temporal/TemporalUnit.h"
 #include "ds/IdValuePair.h"
 #include "gc/AllocKind.h"
 #include "gc/Barrier.h"
@@ -336,6 +337,70 @@ PlainTimeObject* js::temporal::CreateTemporalTime(JSContext* cx,
 
   // Step 11.
   return object;
+}
+
+/**
+ * BalanceTime ( hour, minute, second, millisecond, microsecond, nanosecond )
+ */
+template <typename IntT>
+static BalancedTime BalanceTime(IntT hour, IntT minute, IntT second,
+                                IntT millisecond, IntT microsecond,
+                                IntT nanosecond) {
+  // Step 1. (Not applicable in our implementation.)
+
+  // Combined floor'ed division and modulo operation.
+  auto divmod = [](IntT dividend, int32_t divisor, int32_t* remainder) {
+    MOZ_ASSERT(divisor > 0);
+
+    IntT quotient = dividend / divisor;
+    *remainder = dividend % divisor;
+
+    // The remainder is negative, add the divisor and simulate a floor instead
+    // of trunc division.
+    if (*remainder < 0) {
+      *remainder += divisor;
+      quotient -= 1;
+    }
+
+    return quotient;
+  };
+
+  PlainTime time = {};
+
+  // Steps 2-3.
+  microsecond += divmod(nanosecond, 1000, &time.nanosecond);
+
+  // Steps 4-5.
+  millisecond += divmod(microsecond, 1000, &time.microsecond);
+
+  // Steps 6-7.
+  second += divmod(millisecond, 1000, &time.millisecond);
+
+  // Steps 8-9.
+  minute += divmod(second, 60, &time.second);
+
+  // Steps 10-11.
+  hour += divmod(minute, 60, &time.minute);
+
+  // Steps 12-13.
+  int32_t days = divmod(hour, 24, &time.hour);
+
+  // Step 14.
+  MOZ_ASSERT(IsValidTime(time));
+  return {days, time};
+}
+
+/**
+ * BalanceTime ( hour, minute, second, millisecond, microsecond, nanosecond )
+ */
+BalancedTime js::temporal::BalanceTime(const PlainTime& time,
+                                       int64_t nanoseconds) {
+  MOZ_ASSERT(IsValidTime(time));
+  MOZ_ASSERT(std::abs(nanoseconds) <= 2 * ToNanoseconds(TemporalUnit::Day));
+
+  return ::BalanceTime<int64_t>(time.hour, time.minute, time.second,
+                                time.millisecond, time.microsecond,
+                                time.nanosecond + nanoseconds);
 }
 
 JSObject* js::temporal::PlainTimeObject::createCalendar(
