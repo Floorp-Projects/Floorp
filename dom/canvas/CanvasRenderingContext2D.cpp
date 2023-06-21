@@ -1061,7 +1061,6 @@ CanvasRenderingContext2D::CanvasRenderingContext2D(
       mPredictManyRedrawCalls(false),
       mFrameCaptureState(FrameCaptureState::CLEAN,
                          "CanvasRenderingContext2D::mFrameCaptureState"),
-      mPathTransformWillUpdate(false),
       mInvalidateCount(0),
       mWriteOnly(false) {
   sNumLivingContexts.infallibleInit();
@@ -1518,8 +1517,6 @@ void CanvasRenderingContext2D::SetInitialState() {
   // Set up the initial canvas defaults
   mPathBuilder = nullptr;
   mPath = nullptr;
-  mDSPathBuilder = nullptr;
-  mPathTransformWillUpdate = false;
 
   mStyleStack.Clear();
   ContextState* state = mStyleStack.AppendElement();
@@ -1961,7 +1958,7 @@ void CanvasRenderingContext2D::Restore() {
     return;
   }
 
-  TransformWillUpdate();
+  EnsureTarget();
   if (!IsTargetValid()) {
     return;
   }
@@ -1974,7 +1971,16 @@ void CanvasRenderingContext2D::Restore() {
 
   mStyleStack.RemoveLastElement();
 
-  mTarget->SetTransform(CurrentState().transform);
+  Matrix newMatrix = CurrentState().transform;
+  Matrix adjustMatrix = mTarget->GetTransform();
+
+  Matrix inverse = newMatrix;
+  if (inverse.Invert()) {
+    adjustMatrix = adjustMatrix * inverse;
+  }
+  TransformCurrentPath(adjustMatrix);
+
+  mTarget->SetTransform(newMatrix);
 }
 
 //
@@ -1983,12 +1989,13 @@ void CanvasRenderingContext2D::Restore() {
 
 void CanvasRenderingContext2D::Scale(double aX, double aY,
                                      ErrorResult& aError) {
-  TransformWillUpdate();
+  EnsureTarget();
   if (!IsTargetValid()) {
     aError.Throw(NS_ERROR_FAILURE);
     return;
   }
 
+  TransformCurrentPath(Matrix::Scaling(1 / aX, 1 / aY));
   Matrix newMatrix = mTarget->GetTransform();
   newMatrix.PreScale(aX, aY);
 
@@ -1996,12 +2003,13 @@ void CanvasRenderingContext2D::Scale(double aX, double aY,
 }
 
 void CanvasRenderingContext2D::Rotate(double aAngle, ErrorResult& aError) {
-  TransformWillUpdate();
+  EnsureTarget();
   if (!IsTargetValid()) {
     aError.Throw(NS_ERROR_FAILURE);
     return;
   }
 
+  TransformCurrentPath(Matrix::Rotation(-aAngle));
   Matrix newMatrix = Matrix::Rotation(aAngle) * mTarget->GetTransform();
 
   SetTransformInternal(newMatrix);
@@ -2009,12 +2017,13 @@ void CanvasRenderingContext2D::Rotate(double aAngle, ErrorResult& aError) {
 
 void CanvasRenderingContext2D::Translate(double aX, double aY,
                                          ErrorResult& aError) {
-  TransformWillUpdate();
+  EnsureTarget();
   if (!IsTargetValid()) {
     aError.Throw(NS_ERROR_FAILURE);
     return;
   }
 
+  TransformCurrentPath(Matrix::Translation(-aX, -aY));
   Matrix newMatrix = mTarget->GetTransform();
   newMatrix.PreTranslate(aX, aY);
 
@@ -2024,15 +2033,20 @@ void CanvasRenderingContext2D::Translate(double aX, double aY,
 void CanvasRenderingContext2D::Transform(double aM11, double aM12, double aM21,
                                          double aM22, double aDx, double aDy,
                                          ErrorResult& aError) {
-  TransformWillUpdate();
+  EnsureTarget();
   if (!IsTargetValid()) {
     aError.Throw(NS_ERROR_FAILURE);
     return;
   }
 
   Matrix newMatrix(aM11, aM12, aM21, aM22, aDx, aDy);
-  newMatrix *= mTarget->GetTransform();
 
+  Matrix inverse = newMatrix;
+  if (inverse.Invert()) {
+    TransformCurrentPath(inverse);
+  }
+
+  newMatrix *= mTarget->GetTransform();
   SetTransformInternal(newMatrix);
 }
 
@@ -2052,18 +2066,29 @@ void CanvasRenderingContext2D::SetTransform(double aM11, double aM12,
                                             double aM21, double aM22,
                                             double aDx, double aDy,
                                             ErrorResult& aError) {
-  TransformWillUpdate();
+  EnsureTarget();
   if (!IsTargetValid()) {
     aError.Throw(NS_ERROR_FAILURE);
     return;
   }
 
-  SetTransformInternal(Matrix(aM11, aM12, aM21, aM22, aDx, aDy));
+  Matrix newMatrix(aM11, aM12, aM21, aM22, aDx, aDy);
+
+  Matrix adjustMatrix = mTarget->GetTransform();
+  Matrix inverse = newMatrix;
+  // Uses the inverted transform to undo the actual transform that
+  // will be stored on the DrawTarget
+  if (inverse.Invert()) {
+    adjustMatrix = adjustMatrix * inverse;
+  }
+  TransformCurrentPath(adjustMatrix);
+
+  SetTransformInternal(newMatrix);
 }
 
 void CanvasRenderingContext2D::SetTransform(const DOMMatrix2DInit& aInit,
                                             ErrorResult& aError) {
-  TransformWillUpdate();
+  EnsureTarget();
   if (!IsTargetValid()) {
     aError.Throw(NS_ERROR_FAILURE);
     return;
@@ -2072,7 +2097,18 @@ void CanvasRenderingContext2D::SetTransform(const DOMMatrix2DInit& aInit,
   RefPtr<DOMMatrixReadOnly> matrix =
       DOMMatrixReadOnly::FromMatrix(GetParentObject(), aInit, aError);
   if (!aError.Failed()) {
-    SetTransformInternal(Matrix(*(matrix->GetInternal2D())));
+    Matrix newMatrix = Matrix(*(matrix->GetInternal2D()));
+
+    Matrix adjustMatrix = mTarget->GetTransform();
+    Matrix inverse = newMatrix;
+    // Uses the inverted transform to undo the actual transform that
+    // will be stored on the DrawTarget
+    if (inverse.Invert()) {
+      adjustMatrix = adjustMatrix * inverse;
+    }
+    TransformCurrentPath(adjustMatrix);
+
+    SetTransformInternal(newMatrix);
   }
 }
 
@@ -2980,8 +3016,6 @@ void CanvasRenderingContext2D::StrokeRect(double aX, double aY, double aW,
 void CanvasRenderingContext2D::BeginPath() {
   mPath = nullptr;
   mPathBuilder = nullptr;
-  mDSPathBuilder = nullptr;
-  mPathTransformWillUpdate = false;
   mPathPruned = false;
 }
 
@@ -3237,17 +3271,7 @@ void CanvasRenderingContext2D::ArcTo(double aX1, double aY1, double aX2,
   EnsureWritablePath();
 
   // Current point in user space!
-  Point p0;
-  if (mPathBuilder) {
-    p0 = mPathBuilder->CurrentPoint();
-  } else {
-    Matrix invTransform = mTarget->GetTransform();
-    if (!invTransform.Invert()) {
-      return;
-    }
-
-    p0 = invTransform.TransformPoint(mDSPathBuilder->CurrentPoint());
-  }
+  Point p0 = mPathBuilder->CurrentPoint();
 
   Point p1(aX1, aY1);
   Point p2(aX2, aY2);
@@ -3333,29 +3357,14 @@ void CanvasRenderingContext2D::Rect(double aX, double aY, double aW,
   }
 
   EnsureCapped();
-  if (mPathBuilder) {
-    mPathBuilder->MoveTo(Point(aX, aY));
-    if (aW == 0 && aH == 0) {
-      return;
-    }
-    mPathBuilder->LineTo(Point(aX + aW, aY));
-    mPathBuilder->LineTo(Point(aX + aW, aY + aH));
-    mPathBuilder->LineTo(Point(aX, aY + aH));
-    mPathBuilder->Close();
-  } else {
-    mDSPathBuilder->MoveTo(
-        mTarget->GetTransform().TransformPoint(Point(aX, aY)));
-    if (aW == 0 && aH == 0) {
-      return;
-    }
-    mDSPathBuilder->LineTo(
-        mTarget->GetTransform().TransformPoint(Point(aX + aW, aY)));
-    mDSPathBuilder->LineTo(
-        mTarget->GetTransform().TransformPoint(Point(aX + aW, aY + aH)));
-    mDSPathBuilder->LineTo(
-        mTarget->GetTransform().TransformPoint(Point(aX, aY + aH)));
-    mDSPathBuilder->Close();
+  mPathBuilder->MoveTo(Point(aX, aY));
+  if (aW == 0 && aH == 0) {
+    return;
   }
+  mPathBuilder->LineTo(Point(aX + aW, aY));
+  mPathBuilder->LineTo(Point(aX + aW, aY + aH));
+  mPathBuilder->LineTo(Point(aX, aY + aH));
+  mPathBuilder->Close();
 }
 
 // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-roundrect
@@ -3540,10 +3549,6 @@ void CanvasRenderingContext2D::RoundRect(
 
   PathBuilder* builder = mPathBuilder;
   Maybe<Matrix> transform = Nothing();
-  if (!builder) {
-    builder = mDSPathBuilder;
-    transform = Some(mTarget->GetTransform());
-  }
 
   EnsureCapped();
   RoundRectImpl(builder, transform, aX, aY, aW, aH, aRadii, aError);
@@ -3574,34 +3579,16 @@ void CanvasRenderingContext2D::EnsureWritablePath() {
   // NOTE: IsTargetValid() may be false here (mTarget == sErrorTarget) but we
   // go ahead and create a path anyway since callers depend on that.
 
-  if (mDSPathBuilder) {
-    return;
-  }
-
   FillRule fillRule = CurrentState().fillRule;
 
   if (mPathBuilder) {
-    if (mPathTransformWillUpdate) {
-      mPath = mPathBuilder->Finish();
-      mDSPathBuilder = mPath->TransformedCopyToBuilder(mPathToDS, fillRule);
-      mPath = nullptr;
-      mPathBuilder = nullptr;
-      mPathTransformWillUpdate = false;
-    }
     return;
   }
 
   if (!mPath) {
-    NS_ASSERTION(
-        !mPathTransformWillUpdate,
-        "mPathTransformWillUpdate should be false, if all paths are null");
     mPathBuilder = mTarget->CreatePathBuilder(fillRule);
-  } else if (!mPathTransformWillUpdate) {
-    mPathBuilder = mPath->CopyToBuilder(fillRule);
   } else {
-    mDSPathBuilder = mPath->TransformedCopyToBuilder(mPathToDS, fillRule);
-    mPathTransformWillUpdate = false;
-    mPath = nullptr;
+    mPathBuilder = mPath->CopyToBuilder(fillRule);
   }
 }
 
@@ -3616,35 +3603,12 @@ void CanvasRenderingContext2D::EnsureUserSpacePath(
     return;
   }
 
-  if (!mPath && !mPathBuilder && !mDSPathBuilder) {
+  if (!mPath && !mPathBuilder) {
     mPathBuilder = mTarget->CreatePathBuilder(fillRule);
   }
 
   if (mPathBuilder) {
     EnsureCapped();
-    mPath = mPathBuilder->Finish();
-    mPathBuilder = nullptr;
-  }
-
-  if (mPath && mPathTransformWillUpdate) {
-    mDSPathBuilder = mPath->TransformedCopyToBuilder(mPathToDS, fillRule);
-    mPath = nullptr;
-    mPathTransformWillUpdate = false;
-  }
-
-  if (mDSPathBuilder) {
-    RefPtr<Path> dsPath;
-    EnsureCapped();
-    dsPath = mDSPathBuilder->Finish();
-    mDSPathBuilder = nullptr;
-
-    Matrix inverse = mTarget->GetTransform();
-    if (!inverse.Invert()) {
-      NS_WARNING("Could not invert transform");
-      return;
-    }
-
-    mPathBuilder = dsPath->TransformedCopyToBuilder(inverse, fillRule);
     mPath = mPathBuilder->Finish();
     mPathBuilder = nullptr;
   }
@@ -3658,23 +3622,18 @@ void CanvasRenderingContext2D::EnsureUserSpacePath(
   NS_ASSERTION(mPath, "mPath should exist");
 }
 
-void CanvasRenderingContext2D::TransformWillUpdate() {
+void CanvasRenderingContext2D::TransformCurrentPath(const Matrix& aTransform) {
   EnsureTarget();
   if (!IsTargetValid()) {
     return;
   }
 
-  // Store the matrix that would transform the current path to device
-  // space.
-  if (mPath || mPathBuilder) {
-    if (!mPathTransformWillUpdate) {
-      // If the transform has already been updated, but a device space builder
-      // has not been created yet mPathToDS contains the right transform to
-      // transform the current mPath into device space.
-      // We should leave it alone.
-      mPathToDS = mTarget->GetTransform();
-    }
-    mPathTransformWillUpdate = true;
+  if (mPathBuilder) {
+    RefPtr<Path> path = mPathBuilder->Finish();
+    mPathBuilder = path->TransformedCopyToBuilder(aTransform);
+  } else if (mPath) {
+    mPathBuilder = mPath->TransformedCopyToBuilder(aTransform);
+    mPath = nullptr;
   }
 }
 
@@ -4941,10 +4900,6 @@ bool CanvasRenderingContext2D::IsPointInPath(JSContext* aCx, double aX,
     return false;
   }
 
-  if (mPathTransformWillUpdate) {
-    return mPath->ContainsPoint(Point(aX, aY), mPathToDS);
-  }
-
   return mPath->ContainsPoint(Point(aX, aY), mTarget->GetTransform());
 }
 
@@ -4995,10 +4950,6 @@ bool CanvasRenderingContext2D::IsPointInStroke(
   StrokeOptions strokeOptions(state.lineWidth, state.lineJoin, state.lineCap,
                               state.miterLimit, state.dash.Length(),
                               state.dash.Elements(), state.dashOffset);
-
-  if (mPathTransformWillUpdate) {
-    return mPath->StrokeContainsPoint(strokeOptions, Point(aX, aY), mPathToDS);
-  }
 
   return mPath->StrokeContainsPoint(strokeOptions, Point(aX, aY),
                                     mTarget->GetTransform());
