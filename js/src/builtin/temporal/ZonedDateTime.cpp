@@ -1330,6 +1330,133 @@ static bool ZonedDateTime_offset(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
+ * Temporal.ZonedDateTime.prototype.withPlainTime ( [ plainTimeLike ] )
+ */
+static bool ZonedDateTime_withPlainTime(JSContext* cx, const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  auto epochInstant = ToInstant(zonedDateTime);
+
+  // Step 5. (Reordered)
+  Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
+
+  // Step 7. (Reordered)
+  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+
+  // Steps 3-4.
+  PlainTime time = {};
+  if (args.hasDefined(0)) {
+    if (!ToTemporalTime(cx, args[0], &time)) {
+      return false;
+    }
+  }
+
+  // Steps 6 and 8.
+  PlainDateTime plainDateTime;
+  if (!GetPlainDateTimeFor(cx, timeZone, epochInstant, &plainDateTime)) {
+    return false;
+  }
+
+  // Step 9.
+  Rooted<PlainDateTimeObject*> resultPlainDateTime(
+      cx, CreateTemporalDateTime(cx, {plainDateTime.date, time}, calendar));
+  if (!resultPlainDateTime) {
+    return false;
+  }
+
+  // Step 10.
+  Instant instant;
+  if (!GetInstantFor(cx, timeZone, resultPlainDateTime,
+                     TemporalDisambiguation::Compatible, &instant)) {
+    return false;
+  }
+
+  // Step 11.
+  auto* result = CreateTemporalZonedDateTime(cx, instant, timeZone, calendar);
+  if (!result) {
+    return false;
+  }
+
+  args.rval().setObject(*result);
+  return true;
+}
+
+/**
+ * Temporal.ZonedDateTime.prototype.withPlainTime ( [ plainTimeLike ] )
+ */
+static bool ZonedDateTime_withPlainTime(JSContext* cx, unsigned argc,
+                                        Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_withPlainTime>(
+      cx, args);
+}
+
+/**
+ * Temporal.ZonedDateTime.prototype.withPlainDate ( plainDateLike )
+ */
+static bool ZonedDateTime_withPlainDate(JSContext* cx, const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  auto epochInstant = ToInstant(zonedDateTime);
+  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+
+  // Step 4. (Reordered)
+  Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
+
+  // Step 3.
+  PlainDate date;
+  Rooted<JSObject*> plainDateCalendar(cx);
+  if (!ToTemporalDate(cx, args.get(0), &date, &plainDateCalendar)) {
+    return false;
+  }
+
+  // Steps 5-6.
+  PlainDateTime plainDateTime;
+  if (!GetPlainDateTimeFor(cx, timeZone, epochInstant, &plainDateTime)) {
+    return false;
+  }
+
+  // Step 7.
+  calendar = ConsolidateCalendars(cx, calendar, plainDateCalendar);
+  if (!calendar) {
+    return false;
+  }
+
+  // Step 8.
+  Rooted<PlainDateTimeObject*> resultPlainDateTime(
+      cx, CreateTemporalDateTime(cx, {date, plainDateTime.time}, calendar));
+  if (!resultPlainDateTime) {
+    return false;
+  }
+
+  // Step 9.
+  Instant instant;
+  if (!GetInstantFor(cx, timeZone, resultPlainDateTime,
+                     TemporalDisambiguation::Compatible, &instant)) {
+    return false;
+  }
+
+  // Step 10.
+  auto* result = CreateTemporalZonedDateTime(cx, instant, timeZone, calendar);
+  if (!result) {
+    return false;
+  }
+
+  args.rval().setObject(*result);
+  return true;
+}
+
+/**
+ * Temporal.ZonedDateTime.prototype.withPlainDate ( plainDateLike )
+ */
+static bool ZonedDateTime_withPlainDate(JSContext* cx, unsigned argc,
+                                        Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_withPlainDate>(
+      cx, args);
+}
+
+/**
  * Temporal.ZonedDateTime.prototype.withTimeZone ( timeZoneLike )
  */
 static bool ZonedDateTime_withTimeZone(JSContext* cx, const CallArgs& args) {
@@ -2028,6 +2155,8 @@ static const JSFunctionSpec ZonedDateTime_methods[] = {
 };
 
 static const JSFunctionSpec ZonedDateTime_prototype_methods[] = {
+    JS_FN("withPlainTime", ZonedDateTime_withPlainTime, 0, 0),
+    JS_FN("withPlainDate", ZonedDateTime_withPlainDate, 1, 0),
     JS_FN("withTimeZone", ZonedDateTime_withTimeZone, 1, 0),
     JS_FN("withCalendar", ZonedDateTime_withCalendar, 1, 0),
     JS_FN("add", ZonedDateTime_add, 1, 0),
