@@ -47,6 +47,12 @@ bool ToTemporalOverflow(JSContext* cx, JS::Handle<JSObject*> options,
                         TemporalOverflow* result);
 
 /**
+ * RejectObjectWithCalendarOrTimeZone ( object )
+ */
+bool RejectObjectWithCalendarOrTimeZone(JSContext* cx,
+                                        JS::Handle<JSObject*> object);
+
+/**
  * ToPositiveIntegerWithTruncation ( argument )
  */
 bool ToPositiveIntegerWithTruncation(JSContext* cx, JS::Handle<JS::Value> value,

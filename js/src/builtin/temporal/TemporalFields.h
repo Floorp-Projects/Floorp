@@ -156,6 +156,13 @@ PlainObject* PrepareTemporalFields(
     JS::Handle<JS::StackGCVector<JS::PropertyKey>> fieldNames);
 
 /**
+ * PrepareTemporalFields ( fields, fieldNames, requiredFields )
+ */
+PlainObject* PreparePartialTemporalFields(
+    JSContext* cx, JS::Handle<JSObject*> fields,
+    JS::Handle<JS::StackGCVector<JS::PropertyKey>> fieldNames);
+
+/**
  * MergeLists ( a, b )
  */
 [[nodiscard]] bool MergeTemporalFieldNames(

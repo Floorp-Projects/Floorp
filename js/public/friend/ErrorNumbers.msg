@@ -825,6 +825,8 @@ MSG_DEF(JSMSG_TEMPORAL_INVALID_NUMBER,              1, JSEXN_RANGEERR, "{0} must
 MSG_DEF(JSMSG_TEMPORAL_INVALID_INTEGER,             1, JSEXN_RANGEERR, "{0} must be an integer")
 MSG_DEF(JSMSG_TEMPORAL_INVALID_OBJECT,              2, JSEXN_RANGEERR, "{0} mustn't be a {1} object")
 MSG_DEF(JSMSG_TEMPORAL_MISSING_PROPERTY,            1, JSEXN_TYPEERR, "{0} property is undefined")
+MSG_DEF(JSMSG_TEMPORAL_UNEXPECTED_PROPERTY,         1, JSEXN_TYPEERR, "{0} property is not undefined")
+MSG_DEF(JSMSG_TEMPORAL_MISSING_TEMPORAL_FIELDS,     0, JSEXN_TYPEERR, "object must have at least one temporal property")
 MSG_DEF(JSMSG_TEMPORAL_INSTANT_INVALID,             0, JSEXN_RANGEERR, "epoch nanoseconds too large")
 MSG_DEF(JSMSG_TEMPORAL_INSTANT_NONINTEGER,          1, JSEXN_RANGEERR, "Instant must be an integer, but received {0}")
 MSG_DEF(JSMSG_TEMPORAL_INSTANT_PARSE_BAD_TYPE,      1, JSEXN_RANGEERR, "can't parse {0} as a Temporal.Instant")

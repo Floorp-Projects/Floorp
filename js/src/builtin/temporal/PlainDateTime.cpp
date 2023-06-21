@@ -1273,6 +1273,107 @@ static bool PlainDateTime_inLeapYear(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
+ * Temporal.PlainDateTime.prototype.with ( temporalDateTimeLike [ , options ] )
+ */
+static bool PlainDateTime_with(JSContext* cx, const CallArgs& args) {
+  Rooted<PlainDateTimeObject*> dateTime(
+      cx, &args.thisv().toObject().as<PlainDateTimeObject>());
+
+  // Step 3.
+  Rooted<JSObject*> temporalDateTimeLike(
+      cx, RequireObjectArg(cx, "temporalDateTimeLike", "with", args.get(0)));
+  if (!temporalDateTimeLike) {
+    return false;
+  }
+
+  // Step 4.
+  if (!RejectObjectWithCalendarOrTimeZone(cx, temporalDateTimeLike)) {
+    return false;
+  }
+
+  // Step 5.
+  Rooted<JSObject*> options(cx);
+  if (args.hasDefined(1)) {
+    options = RequireObjectArg(cx, "options", "with", args[1]);
+  } else {
+    options = NewPlainObjectWithProto(cx, nullptr);
+  }
+  if (!options) {
+    return false;
+  }
+
+  // Step 6.
+  Rooted<JSObject*> calendar(cx, dateTime->calendar());
+
+  // Step 7.
+  JS::RootedVector<PropertyKey> fieldNames(cx);
+  if (!CalendarFields(cx, calendar,
+                      {CalendarField::Day, CalendarField::Hour,
+                       CalendarField::Microsecond, CalendarField::Millisecond,
+                       CalendarField::Minute, CalendarField::Month,
+                       CalendarField::MonthCode, CalendarField::Nanosecond,
+                       CalendarField::Second, CalendarField::Year},
+                      &fieldNames)) {
+    return false;
+  }
+
+  // Step 8.
+  Rooted<PlainObject*> fields(cx,
+                              PrepareTemporalFields(cx, dateTime, fieldNames));
+  if (!fields) {
+    return false;
+  }
+
+  // Step 9.
+  Rooted<PlainObject*> partialDateTime(
+      cx, PreparePartialTemporalFields(cx, temporalDateTimeLike, fieldNames));
+  if (!partialDateTime) {
+    return false;
+  }
+
+  // Step 10.
+  Rooted<JSObject*> mergedFields(
+      cx, CalendarMergeFields(cx, calendar, fields, partialDateTime));
+  if (!mergedFields) {
+    return false;
+  }
+
+  // Step 11.
+  fields = PrepareTemporalFields(cx, mergedFields, fieldNames);
+  if (!fields) {
+    return false;
+  }
+
+  // Step 12.
+  PlainDateTime result;
+  if (!InterpretTemporalDateTimeFields(cx, calendar, fields, options,
+                                       &result)) {
+    return false;
+  }
+
+  // Steps 13-14.
+  MOZ_ASSERT(IsValidISODateTime(result));
+
+  // Step 15.
+  auto* obj = CreateTemporalDateTime(cx, result, calendar);
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
+/**
+ * Temporal.PlainDateTime.prototype.with ( temporalDateTimeLike [ , options ] )
+ */
+static bool PlainDateTime_with(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_with>(cx, args);
+}
+
+/**
  * Temporal.PlainDateTime.prototype.equals ( other )
  */
 static bool PlainDateTime_equals(JSContext* cx, const CallArgs& args) {
@@ -1573,6 +1674,7 @@ static const JSFunctionSpec PlainDateTime_methods[] = {
 };
 
 static const JSFunctionSpec PlainDateTime_prototype_methods[] = {
+    JS_FN("with", PlainDateTime_with, 1, 0),
     JS_FN("equals", PlainDateTime_equals, 1, 0),
     JS_FN("valueOf", PlainDateTime_valueOf, 0, 0),
     JS_FN("toPlainDate", PlainDateTime_toPlainDate, 0, 0),

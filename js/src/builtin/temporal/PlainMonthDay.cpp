@@ -604,6 +604,95 @@ static bool PlainMonthDay_day(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
+ * Temporal.PlainMonthDay.prototype.with ( temporalMonthDayLike [ , options ] )
+ */
+static bool PlainMonthDay_with(JSContext* cx, const CallArgs& args) {
+  Rooted<PlainMonthDayObject*> monthDay(
+      cx, &args.thisv().toObject().as<PlainMonthDayObject>());
+
+  // Step 3.
+  Rooted<JSObject*> temporalMonthDayLike(
+      cx, RequireObjectArg(cx, "temporalMonthDayLike", "with", args.get(0)));
+  if (!temporalMonthDayLike) {
+    return false;
+  }
+
+  // Step 4.
+  if (!RejectObjectWithCalendarOrTimeZone(cx, temporalMonthDayLike)) {
+    return false;
+  }
+
+  // Step 5.
+  Rooted<JSObject*> options(cx);
+  if (args.hasDefined(1)) {
+    options = RequireObjectArg(cx, "options", "with", args[1]);
+  } else {
+    options = NewPlainObjectWithProto(cx, nullptr);
+  }
+  if (!options) {
+    return false;
+  }
+
+  // Step 6.
+  Rooted<JSObject*> calendar(cx, monthDay->calendar());
+
+  // Step 7.
+  JS::RootedVector<PropertyKey> fieldNames(cx);
+  if (!CalendarFields(cx, calendar,
+                      {CalendarField::Day, CalendarField::Month,
+                       CalendarField::MonthCode, CalendarField::Year},
+                      &fieldNames)) {
+    return false;
+  }
+
+  // Step 8.
+  Rooted<PlainObject*> fields(cx,
+                              PrepareTemporalFields(cx, monthDay, fieldNames));
+  if (!fields) {
+    return false;
+  }
+
+  // Step 9.
+  Rooted<PlainObject*> partialMonthDay(
+      cx, PreparePartialTemporalFields(cx, temporalMonthDayLike, fieldNames));
+  if (!partialMonthDay) {
+    return false;
+  }
+
+  // Step 10.
+  Rooted<JSObject*> mergedFields(
+      cx, CalendarMergeFields(cx, calendar, fields, partialMonthDay));
+  if (!mergedFields) {
+    return false;
+  }
+
+  // Step 11.
+  fields = PrepareTemporalFields(cx, mergedFields, fieldNames);
+  if (!fields) {
+    return false;
+  }
+
+  // Step 12.
+  auto obj =
+      js::temporal::CalendarMonthDayFromFields(cx, calendar, fields, options);
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
+/**
+ * Temporal.PlainMonthDay.prototype.with ( temporalMonthDayLike [ , options ] )
+ */
+static bool PlainMonthDay_with(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainMonthDay, PlainMonthDay_with>(cx, args);
+}
+
+/**
  * Temporal.PlainMonthDay.prototype.equals ( other )
  */
 static bool PlainMonthDay_equals(JSContext* cx, const CallArgs& args) {
@@ -915,6 +1004,7 @@ static const JSFunctionSpec PlainMonthDay_methods[] = {
 };
 
 static const JSFunctionSpec PlainMonthDay_prototype_methods[] = {
+    JS_FN("with", PlainMonthDay_with, 1, 0),
     JS_FN("equals", PlainMonthDay_equals, 1, 0),
     JS_FN("toString", PlainMonthDay_toString, 0, 0),
     JS_FN("toLocaleString", PlainMonthDay_toLocaleString, 0, 0),
