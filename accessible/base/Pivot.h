@@ -53,14 +53,6 @@ class Pivot final {
   // Return the last accessible within the root that matches the pivot rule.
   Accessible* Last(PivotRule& aRule);
 
-  // Return the next range of text according to the boundary type.
-  Accessible* NextText(Accessible* aAnchor, int32_t* aStartOffset,
-                       int32_t* aEndOffset, int32_t aBoundaryType);
-
-  // Return the previous range of text according to the boundary type.
-  Accessible* PrevText(Accessible* aAnchor, int32_t* aStartOffset,
-                       int32_t* aEndOffset, int32_t aBoundaryType);
-
   // Return the accessible at the given screen coordinate if it matches the
   // pivot rule.
   Accessible* AtPoint(int32_t aX, int32_t aY, PivotRule& aRule);
@@ -76,9 +68,6 @@ class Pivot final {
   // Reverse search in preorder for the first accessible to match the rule.
   Accessible* SearchBackward(Accessible* aAnchor, PivotRule& aRule,
                              bool aSearchCurrent);
-
-  // Search in preorder for the first text accessible.
-  Accessible* SearchForText(Accessible* aAnchor, bool aBackward);
 
   Accessible* mRoot;
 };

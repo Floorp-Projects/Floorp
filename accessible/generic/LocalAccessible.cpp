@@ -958,10 +958,8 @@ nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
           LocalAccessible* oldPosition = vcEvent->OldAccessible();
           ipcDoc->SendVirtualCursorChangeEvent(
               id, oldPosition ? oldPosition->ID() : 0,
-              vcEvent->OldStartOffset(), vcEvent->OldEndOffset(),
-              position ? position->ID() : 0, vcEvent->NewStartOffset(),
-              vcEvent->NewEndOffset(), vcEvent->Reason(),
-              vcEvent->BoundaryType(), vcEvent->IsFromUserInput());
+              position ? position->ID() : 0, vcEvent->Reason(),
+              vcEvent->IsFromUserInput());
           break;
         }
 #if defined(XP_WIN)

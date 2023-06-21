@@ -53,13 +53,6 @@
          "An ", "embedded", " document.", "Hide me", "Link 1", "Link 2",
          "Link 3", "Hello", "World"]);
 
-      // Just a random smoke test to see if our setTextRange works.
-      gQueue.push(
-        new setVCRangeInvoker(
-          docAcc,
-          getAccessible(doc.getElementById("paragraph-2"), nsIAccessibleText),
-          [2, 6]));
-
       gQueue.push(new removeVCPositionInvoker(
         docAcc, doc.getElementById("hide-me")));
 

@@ -18,37 +18,12 @@ interface nsIAccessibleVirtualCursorChangeEvent : nsIAccessibleEvent
   readonly attribute nsIAccessible oldAccessible;
 
   /**
-   * Previous start offset of pivot, otherwise -1.
-   */
-  readonly attribute long oldStartOffset;
-
-  /**
-   * Previous end offset of pivot, otherwise -1.
-   */
-  readonly attribute long oldEndOffset;
-
-  /**
    * New object pointed at by virtual cursor, null if none.
    */
   readonly attribute nsIAccessible newAccessible;
 
   /**
-   * New start offset of pivot, otherwise -1.
-   */
-  readonly attribute long newStartOffset;
-
-  /**
-   * New end offset of pivot, otherwise -1.
-   */
-  readonly attribute long newEndOffset;
-
-  /**
    * Reason for virtual cursor move.
    */
   readonly attribute short reason;
-
-  /**
-   * Text boundary type for movement, NO_BOUNDARY if none.
-   */
-  readonly attribute short boundaryType;
 };
