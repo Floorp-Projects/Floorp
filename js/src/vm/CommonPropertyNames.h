@@ -181,6 +181,7 @@
   MACRO_(few, few, "few")                                                      \
   IF_DECORATORS(MACRO_(field, field, "field"))                                 \
   MACRO_(fieldOffsets, fieldOffsets, "fieldOffsets")                           \
+  MACRO_(fields, fields, "fields")                                             \
   MACRO_(fieldTypes, fieldTypes, "fieldTypes")                                 \
   MACRO_(fileName, fileName, "fileName")                                       \
   MACRO_(fill, fill, "fill")                                                   \
@@ -353,6 +354,8 @@
   MACRO_(message, message, "message")                                          \
   IF_DECORATORS(MACRO_(method, method, "method"))                              \
   MACRO_(meta, meta, "meta")                                                   \
+  MACRO_(microsecond, microsecond, "microsecond")                              \
+  MACRO_(millisecond, millisecond, "millisecond")                              \
   MACRO_(minColumn, minColumn, "minColumn")                                    \
   MACRO_(minDays, minDays, "minDays")                                          \
   MACRO_(minimum, minimum, "minimum")                                          \
@@ -379,6 +382,7 @@
   MACRO_(name, name, "name")                                                   \
   MACRO_(nan, nan, "nan")                                                      \
   MACRO_(NaN, NaN, "NaN")                                                      \
+  MACRO_(nanosecond, nanosecond, "nanosecond")                                 \
   MACRO_(NegativeInfinity, NegativeInfinity, "-Infinity")                      \
   MACRO_(new, new_, "new")                                                     \
   MACRO_(next, next, "next")                                                   \

@@ -7,6 +7,7 @@
 #ifndef builtin_temporal_Calendar_h
 #define builtin_temporal_Calendar_h
 
+#include <initializer_list>
 #include <stdint.h>
 
 #include "js/RootingAPI.h"
@@ -111,6 +112,14 @@ enum class CalendarField {
   Microsecond,
   Nanosecond,
 };
+
+/**
+ * CalendarFields ( calendar, fieldNames )
+ */
+bool CalendarFields(
+    JSContext* cx, JS::Handle<JSObject*> calendar,
+    std::initializer_list<CalendarField> fieldNames,
+    JS::MutableHandle<JS::StackGCVector<JS::PropertyKey>> result);
 
 /**
  * CalendarMergeFields ( calendar, fields, additionalFields )
