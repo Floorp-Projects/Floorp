@@ -190,6 +190,11 @@ class LoadBlockingAsyncEventDispatcher final : public AsyncEventDispatcher {
     }
   }
 
+  // The static version of AsyncEventDispatcher::RunDOMEventWhenSafe should be
+  // preferred when possible, but for LoadBlockingAsyncEventDispatcher it makes
+  // sense to expose the helper so that the load event is blocked appropriately.
+  using AsyncEventDispatcher::RunDOMEventWhenSafe;
+
   LoadBlockingAsyncEventDispatcher(nsINode* aEventNode, dom::Event* aEvent)
       : AsyncEventDispatcher(aEventNode, aEvent),
         mBlockedDoc(aEventNode->OwnerDoc()) {
