@@ -481,9 +481,7 @@ void CCGCScheduler::RunNextCollectorTimer(JS::GCReason aReason,
   MOZ_ASSERT_IF(InIncrementalGC(), mGCRunner);
 
   RefPtr<IdleTaskRunner> runner;
-  JSRuntime* rt = CycleCollectedJSRuntime::Get()->Runtime();
-  if (mGCRunner && (InIncrementalGC() ||
-                    JS::WantEagerMajorGC(rt) != JS::GCReason::NO_REASON)) {
+  if (mGCRunner) {
     SetWantMajorGC(aReason);
     runner = mGCRunner;
   } else if (mCCRunner) {
