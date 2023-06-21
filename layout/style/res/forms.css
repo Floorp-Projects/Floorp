@@ -301,6 +301,11 @@ option[label]::before {
   content: attr(label);
 }
 
+select:-moz-select-list-box option,
+select:-moz-select-list-box optgroup {
+  line-height: normal !important;
+}
+
 option {
   display: block;
   float: none !important;
@@ -310,18 +315,15 @@ option {
 
   min-block-size: 1em;
   padding-block: 2px;
+  user-select: none;
   /*
    * Note that the "UA !important" tests in
    * layout/style/test/test_animations.html depend on this rule, because
    * they need some UA !important rule to test.  If this changes, use a
    * different one there.
    */
-  line-height: normal !important;
-  user-select: none;
-  text-indent: 0;
   white-space: nowrap !important;
   word-wrap: normal !important;
-  text-align: match-parent;
 }
 
 select > option {
@@ -342,13 +344,10 @@ optgroup {
   display: block;
   float: none !important;
   position: static !important;
-  font: -moz-list;
-  line-height: normal !important;
   font-style: italic;
   font-weight: bold;
   font-size: unset;
   user-select: none;
-  text-indent: 0;
   white-space: nowrap !important;
   word-wrap: normal !important;
 }
@@ -361,7 +360,7 @@ optgroup > option {
 
 optgroup:before {
   display: block;
-  content: attr(label);
+  content: "\200b" attr(label);
 }
 
 @media (-moz-platform: android) {
@@ -544,7 +543,6 @@ button,
 ::file-selector-button {
   /* Buttons should lay out like "normal" html, mostly */
   white-space: unset;
-  text-indent: 0;
   /* But no text-decoration reaching inside, by default */
   display: inline-block;
 }

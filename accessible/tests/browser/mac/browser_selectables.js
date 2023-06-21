@@ -189,17 +189,38 @@ addAccessibleTask(
         c.isAttributeSettable("AXSelected"),
         c.getAttributeValue("AXEnabled"),
       ]);
+    [
+      ["​", false, 0],
+      ["Fruits", false, 0],
+      ["Banana", true, 1],
+      ["Apple", true, 1],
+      ["Orange", true, 1],
+      ["​", false, 0],
+      ["Vegetables", false, 0],
+      ["Lettuce", true, 1],
+      ["Tomato", true, 1],
+      ["Onion", true, 1],
+      ["​", false, 0],
+      ["Spices", false, 0],
+      ["Cumin", true, 1],
+      ["Coriander", true, 1],
+      ["Allspice", true, 1],
+      ["Everything", true, 1],
+    ];
     Assert.deepEqual(
       childValueSelectablePairs,
       [
+        ["​", false, false],
         ["Fruits", false, false],
         ["Banana", true, true],
         ["Apple", true, true],
         ["Orange", true, true],
+        ["​", false, false],
         ["Vegetables", false, false],
         ["Lettuce", true, true],
         ["Tomato", true, true],
         ["Onion", true, true],
+        ["​", false, false],
         ["Spices", false, false],
         ["Cumin", true, true],
         ["Coriander", true, true],
@@ -237,7 +258,7 @@ addAccessibleTask(
       "Select is direct parent of nested option"
     );
 
-    let groupLabel = select.getAttributeValue("AXChildren")[0];
+    let groupLabel = select.getAttributeValue("AXChildren")[1];
     ok(
       !groupLabel.isAttributeSettable("AXSelected"),
       "Group label should not be selectable"
