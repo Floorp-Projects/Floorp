@@ -397,7 +397,7 @@ mozilla::RTPCallerType nsIGlobalObject::GetRTPCallerType() const {
     return RTPCallerType::SystemPrincipal;
   }
 
-  if (ShouldResistFingerprinting(RFPTarget::Unknown)) {
+  if (ShouldResistFingerprinting(RFPTarget::ReduceTimerPrecision)) {
     return RTPCallerType::ResistFingerprinting;
   }
 
