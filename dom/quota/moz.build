@@ -65,6 +65,7 @@ EXPORTS.mozilla.dom.quota += [
     "ScopedLogExtraInfo.h",
     "SerializationHelpers.h",
     "StorageHelpers.h",
+    "StreamUtils.h",
     "UsageInfo.h",
 ]
 
@@ -104,6 +105,7 @@ UNIFIED_SOURCES += [
     "ScopedLogExtraInfo.cpp",
     "StorageHelpers.cpp",
     "StorageManager.cpp",
+    "StreamUtils.cpp",
 ]
 
 IPDL_SOURCES += [
