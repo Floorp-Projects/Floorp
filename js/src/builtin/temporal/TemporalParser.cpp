@@ -2255,6 +2255,71 @@ TemporalParser<CharT>::parseTemporalTimeString() {
   return dt.unwrap();
 }
 
+/**
+ * ParseTemporalTimeString ( isoString )
+ */
+template <typename CharT>
+static auto ParseTemporalTimeString(mozilla::Span<const CharT> str) {
+  TemporalParser<CharT> parser(str);
+  return parser.parseTemporalTimeString();
+}
+
+/**
+ * ParseTemporalTimeString ( isoString )
+ */
+static auto ParseTemporalTimeString(Handle<JSLinearString*> str) {
+  JS::AutoCheckCannotGC nogc;
+  if (str->hasLatin1Chars()) {
+    return ParseTemporalTimeString<Latin1Char>(str->latin1Range(nogc));
+  }
+  return ParseTemporalTimeString<char16_t>(str->twoByteRange(nogc));
+}
+
+/**
+ * ParseTemporalTimeString ( isoString )
+ */
+bool js::temporal::ParseTemporalTimeString(JSContext* cx, Handle<JSString*> str,
+                                           PlainTime* result,
+                                           MutableHandle<JSString*> calendar) {
+  Rooted<JSLinearString*> linear(cx, str->ensureLinear(cx));
+  if (!linear) {
+    return false;
+  }
+
+  // Steps 1-2.
+  auto parseResult = ::ParseTemporalTimeString(linear);
+  if (parseResult.isErr()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              parseResult.unwrapErr());
+    return false;
+  }
+  ZonedDateTimeString parsed = parseResult.unwrap();
+
+  // Step 3.
+  if (parsed.timeZone.isUTC()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_PARSER_INVALID_UTC_DESIGNATOR);
+    return false;
+  }
+
+  // Step 4.
+  PlainDateTime dateTime;
+  if (!ParseISODateTime(cx, parsed, &dateTime)) {
+    return false;
+  }
+  *result = dateTime.time;
+
+  if (parsed.calendar.present()) {
+    calendar.set(ToString(cx, linear, parsed.calendar));
+    if (!calendar) {
+      return false;
+    }
+  }
+
+  // Step 5.
+  return true;
+}
+
 template <typename CharT>
 mozilla::Result<ZonedDateTimeString, ParserError>
 TemporalParser<CharT>::parseTemporalMonthDayString() {
