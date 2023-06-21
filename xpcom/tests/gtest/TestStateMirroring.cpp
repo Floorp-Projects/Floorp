@@ -98,4 +98,24 @@ TEST_F(StateMirroringTest, MirrorInitiatedEventOrdering) {
       })));
 }
 
+TEST_F(StateMirroringTest, CanonicalInitiatedEventOrdering) {
+  // Note that this requires the tail dispatcher, which is not available until
+  // we are processing events.
+  ASSERT_FALSE(AbstractThread::GetCurrent()->IsTailDispatcherAvailable());
+
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchAndSpinEventLoopUntilComplete(
+      "NeedTailDispatcher"_ns, GetCurrentSerialEventTarget(),
+      NS_NewRunnableFunction(__func__, [&] {
+        ASSERT_TRUE(AbstractThread::GetCurrent()->IsTailDispatcherAvailable());
+
+        mCanonical.ConnectMirror(&mMirror);
+
+        // Event ordering is as expected immediately.
+        mCanonical = 1;
+        EXPECT_EQ(WaitFor(ReadMirrorAsync()).unwrap(), 1);
+
+        mCanonical.DisconnectAll();
+      })));
+}
+
 }  // namespace TestStateMirroring
