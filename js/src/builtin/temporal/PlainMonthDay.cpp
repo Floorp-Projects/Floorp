@@ -630,6 +630,104 @@ static bool PlainMonthDay_valueOf(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
+ * Temporal.PlainMonthDay.prototype.toPlainDate ( item )
+ */
+static bool PlainMonthDay_toPlainDate(JSContext* cx, const CallArgs& args) {
+  Rooted<PlainMonthDayObject*> monthDay(
+      cx, &args.thisv().toObject().as<PlainMonthDayObject>());
+
+  // Step 3.
+  Rooted<JSObject*> item(
+      cx, RequireObjectArg(cx, "item", "toPlainDate", args.get(0)));
+  if (!item) {
+    return false;
+  }
+
+  // Step 4.
+  Rooted<JSObject*> calendar(cx, monthDay->calendar());
+
+  // Step 5.
+  JS::RootedVector<PropertyKey> receiverFieldNames(cx);
+  if (!CalendarFields(cx, calendar,
+                      {CalendarField::Day, CalendarField::MonthCode},
+                      &receiverFieldNames)) {
+    return false;
+  }
+
+  // Step 6.
+  Rooted<PlainObject*> fields(
+      cx, PrepareTemporalFields(cx, monthDay, receiverFieldNames));
+  if (!fields) {
+    return false;
+  }
+
+  // Step 7.
+  JS::RootedVector<PropertyKey> inputFieldNames(cx);
+  if (!CalendarFields(cx, calendar, {CalendarField::Year}, &inputFieldNames)) {
+    return false;
+  }
+
+  // Step 8.
+  Rooted<PlainObject*> inputFields(
+      cx, PrepareTemporalFields(cx, item, inputFieldNames));
+  if (!inputFields) {
+    return false;
+  }
+
+  // Step 9.
+  Rooted<JSObject*> mergedFields(
+      cx, CalendarMergeFields(cx, calendar, fields, inputFields));
+  if (!mergedFields) {
+    return false;
+  }
+
+  // Step 10.
+  JS::RootedVector<PropertyKey> mergedFieldNames(cx);
+  if (!MergeTemporalFieldNames(receiverFieldNames, inputFieldNames,
+                               mergedFieldNames.get())) {
+    return false;
+  }
+
+  // Step 11.
+  mergedFields = PrepareTemporalFields(cx, mergedFields, mergedFieldNames);
+  if (!mergedFields) {
+    return false;
+  }
+
+  // Step 12.
+  Rooted<JSObject*> options(cx, NewPlainObjectWithProto(cx, nullptr));
+  if (!options) {
+    return false;
+  }
+
+  // Step 13.
+  Rooted<Value> overflow(cx, StringValue(cx->names().reject));
+  if (!DefineDataProperty(cx, options, cx->names().overflow, overflow)) {
+    return false;
+  }
+
+  // Step 14.
+  auto obj =
+      js::temporal::CalendarDateFromFields(cx, calendar, mergedFields, options);
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
+/**
+ * Temporal.PlainMonthDay.prototype.toPlainDate ( item )
+ */
+static bool PlainMonthDay_toPlainDate(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainMonthDay, PlainMonthDay_toPlainDate>(cx,
+                                                                          args);
+}
+
+/**
  * Temporal.PlainMonthDay.prototype.getISOFields ( )
  */
 static bool PlainMonthDay_getISOFields(JSContext* cx, const CallArgs& args) {
@@ -705,6 +803,7 @@ static const JSFunctionSpec PlainMonthDay_prototype_methods[] = {
     JS_FN("toLocaleString", PlainMonthDay_toLocaleString, 0, 0),
     JS_FN("toJSON", PlainMonthDay_toJSON, 0, 0),
     JS_FN("valueOf", PlainMonthDay_valueOf, 0, 0),
+    JS_FN("toPlainDate", PlainMonthDay_toPlainDate, 1, 0),
     JS_FN("getISOFields", PlainMonthDay_getISOFields, 0, 0),
     JS_FS_END,
 };
