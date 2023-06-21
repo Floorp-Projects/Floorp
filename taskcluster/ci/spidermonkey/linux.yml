@@ -541,3 +541,24 @@ sm-rt-linux64/debug:
             - linux64-rust
             - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
+
+sm-temporal-linux64/debug:
+    description: "SpiderMonkey Temporal"
+    index:
+        job-name: sm-temporal-linux64-debug
+    treeherder:
+        platform: linux64/debug
+        symbol: SM(temporal)
+    run:
+        spidermonkey-variant: temporaldebug
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-cbindgen
+            - linux64-dump_syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
+            - linux64-rust
+            - linux64-pkgconf
+            - sysroot-x86_64-linux-gnu
