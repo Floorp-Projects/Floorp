@@ -317,7 +317,9 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
             "mach",
             "qlog",
         ],
-        "BSD-3-Clause": [],
+        "BSD-3-Clause": [
+            "subtle",
+        ],
     }
 
     # ICU4X is distributed as individual crates that all share the same LICENSE
@@ -558,7 +560,7 @@ license file's hash.
         for path in Path(self.topsrcdir).glob("build/rust/**/Cargo.toml"):
             with open(path) as fh:
                 cargo_toml = toml.load(fh)
-                path = path.relative_to(self.topsrcdir)
+                relative_path = path.relative_to(self.topsrcdir)
                 package = cargo_toml["package"]
                 key = (package["name"], package["version"])
                 if key in crates:
@@ -567,21 +569,21 @@ license file's hash.
                         "build_rust",
                         {
                             "path": crates[key],
-                            "path2": path,
+                            "path2": relative_path,
                             "crate": key[0],
                             "version": key[1],
                         },
                         "{path} and {path2} both contain {crate} {version}",
                     )
                     ret = False
-                crates[key] = path
+                crates[key] = relative_path
 
         for package in cargo_lock["package"]:
             key = (package["name"], package["version"])
             if key in crates and "source" not in package:
                 crates.pop(key)
 
-        for ((name, version), path) in crates.items():
+        for (name, version), path in crates.items():
             self.log(
                 logging.ERROR,
                 "build_rust",

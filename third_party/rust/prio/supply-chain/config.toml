@@ -1,0 +1,503 @@
+
+# cargo-vet config file
+
+[imports.bytecode-alliance]
+url = "https://raw.githubusercontent.com/bytecodealliance/wasmtime/main/supply-chain/audits.toml"
+
+[imports.embark-studios]
+url = "https://raw.githubusercontent.com/EmbarkStudios/rust-ecosystem/main/audits.toml"
+
+[imports.firefox]
+url = "https://hg.mozilla.org/mozilla-central/raw-file/tip/supply-chain/audits.toml"
+
+[imports.zcash]
+url = "https://raw.githubusercontent.com/zcash/rust-ecosystem/main/supply-chain/audits.toml"
+
+[policy.prio]
+audit-as-crates-io = false
+criteria = "safe-to-deploy"
+
+[policy.prio-binaries]
+criteria = "safe-to-run"
+
+[[exemptions.addr2line]]
+version = "0.17.0"
+criteria = "safe-to-run"
+
+[[exemptions.adler]]
+version = "1.0.2"
+criteria = "safe-to-run"
+
+[[exemptions.aead]]
+version = "0.5.1"
+criteria = "safe-to-deploy"
+notes = "This is only used when the \"prio2\" feature is enabled."
+
+[[exemptions.aes]]
+version = "0.8.2"
+criteria = "safe-to-deploy"
+notes = "This is only used when the \"crypto-dependencies\" feature is enabled."
+
+[[exemptions.aes-gcm]]
+version = "0.10.1"
+criteria = "safe-to-deploy"
+notes = "This is only used when the \"prio2\" feature is enabled."
+
+[[exemptions.ansi_term]]
+version = "0.12.1"
+criteria = "safe-to-run"
+
+[[exemptions.az]]
+version = "1.2.1"
+criteria = "safe-to-deploy"
+
+[[exemptions.bitflags]]
+version = "1.3.2"
+criteria = "safe-to-run"
+
+[[exemptions.bitvec]]
+version = "1.0.1"
+criteria = "safe-to-deploy"
+
+[[exemptions.bytemuck]]
+version = "1.12.1"
+criteria = "safe-to-deploy"
+
+[[exemptions.byteorder]]
+version = "1.4.3"
+criteria = "safe-to-deploy"
+
+[[exemptions.cast]]
+version = "0.3.0"
+criteria = "safe-to-run"
+
+[[exemptions.cipher]]
+version = "0.4.3"
+criteria = "safe-to-deploy"
+notes = "This is only used when the \"crypto-dependencies\" or \"prio2\" features are enabled."
+
+[[exemptions.clap]]
+version = "2.34.0"
+criteria = "safe-to-run"
+
+[[exemptions.clap]]
+version = "3.2.21"
+criteria = "safe-to-run"
+
+[[exemptions.clap_lex]]
+version = "0.2.4"
+criteria = "safe-to-run"
+
+[[exemptions.color-eyre]]
+version = "0.6.2"
+criteria = "safe-to-run"
+
+[[exemptions.color-spantrace]]
+version = "0.2.0"
+criteria = "safe-to-run"
+
+[[exemptions.cpufeatures]]
+version = "0.2.5"
+criteria = "safe-to-deploy"
+notes = "This is only used when the \"crypto-dependencies\" or \"prio2\" features are enabled."
+
+[[exemptions.criterion]]
+version = "0.4.0"
+criteria = "safe-to-run"
+
+[[exemptions.criterion-plot]]
+version = "0.5.0"
+criteria = "safe-to-run"
+
+[[exemptions.crossbeam-channel]]
+version = "0.5.6"
+criteria = "safe-to-deploy"
+notes = "This is only used when the \"multithreaded\" feature is enabled."
+
+[[exemptions.crossbeam-deque]]
+version = "0.8.2"
+criteria = "safe-to-deploy"
+notes = "This is only used when the \"multithreaded\" feature is enabled."
+
+[[exemptions.crossbeam-epoch]]
+version = "0.9.10"
+criteria = "safe-to-deploy"
+notes = "This is only used when the \"multithreaded\" feature is enabled."
+
+[[exemptions.crossbeam-utils]]
+version = "0.8.11"
+criteria = "safe-to-deploy"
+notes = "This is only used when the \"multithreaded\" feature is enabled."
+
+[[exemptions.ctr]]
+version = "0.9.2"
+criteria = "safe-to-deploy"
+notes = "This is only used when the \"crypto-dependencies\" feature is enabled."
+
+[[exemptions.digest]]
+version = "0.10.3"
+criteria = "safe-to-deploy"
+notes = "This is only used when the \"crypto-dependencies\" feature is enabled."
+
+[[exemptions.eyre]]
+version = "0.6.8"
+criteria = "safe-to-run"
+
+[[exemptions.fixed]]
+version = "1.20.0"
+criteria = "safe-to-deploy"
+
+[[exemptions.fixed-macro-types]]
+version = "1.2.0"
+criteria = "safe-to-run"
+
+[[exemptions.funty]]
+version = "2.0.0"
+criteria = "safe-to-deploy"
+
+[[exemptions.generic-array]]
+version = "0.14.6"
+criteria = "safe-to-deploy"
+notes = "This is only used when the \"crypto-dependencies\" or \"prio2\" features are enabled."
+
+[[exemptions.getrandom]]
+version = "0.2.8"
+criteria = "safe-to-deploy"
+
+[[exemptions.gimli]]
+version = "0.26.2"
+criteria = "safe-to-run"
+
+[[exemptions.half]]
+version = "2.1.0"
+criteria = "safe-to-deploy"
+
+[[exemptions.heck]]
+version = "0.3.3"
+criteria = "safe-to-run"
+
+[[exemptions.hermit-abi]]
+version = "0.1.19"
+criteria = "safe-to-deploy"
+
+[[exemptions.iai]]
+version = "0.1.1"
+criteria = "safe-to-run"
+
+[[exemptions.indenter]]
+version = "0.3.3"
+criteria = "safe-to-run"
+
+[[exemptions.indexmap]]
+version = "1.9.1"
+criteria = "safe-to-run"
+
+[[exemptions.itertools]]
+version = "0.10.5"
+criteria = "safe-to-run"
+
+[[exemptions.itoa]]
+version = "1.0.3"
+criteria = "safe-to-deploy"
+notes = "This is only used when the \"test-util\" feature is enabled."
+
+[[exemptions.js-sys]]
+version = "0.3.60"
+criteria = "safe-to-deploy"
+notes = "This is only used when the \"prio2\" feature is enabled, and only on WASM targets."
+
+[[exemptions.lazy_static]]
+version = "1.4.0"
+criteria = "safe-to-run"
+
+[[exemptions.libc]]
+version = "0.2.132"
+criteria = "safe-to-deploy"
+
+[[exemptions.memchr]]
+version = "2.5.0"
+criteria = "safe-to-run"
+
+[[exemptions.memoffset]]
+version = "0.6.5"
+criteria = "safe-to-deploy"
+notes = "This is only used when the \"multithreaded\" feature is enabled."
+
+[[exemptions.miniz_oxide]]
+version = "0.5.4"
+criteria = "safe-to-run"
+
+[[exemptions.num_cpus]]
+version = "1.13.1"
+criteria = "safe-to-deploy"
+notes = "This is only used when the \"multithreaded\" feature is enabled."
+
+[[exemptions.object]]
+version = "0.29.0"
+criteria = "safe-to-run"
+
+[[exemptions.once_cell]]
+version = "1.14.0"
+criteria = "safe-to-deploy"
+
+[[exemptions.oorandom]]
+version = "11.1.3"
+criteria = "safe-to-run"
+
+[[exemptions.os_str_bytes]]
+version = "6.3.0"
+criteria = "safe-to-run"
+
+[[exemptions.owo-colors]]
+version = "3.5.0"
+criteria = "safe-to-run"
+
+[[exemptions.paste]]
+version = "1.0.9"
+criteria = "safe-to-run"
+
+[[exemptions.pin-project-lite]]
+version = "0.2.9"
+criteria = "safe-to-run"
+
+[[exemptions.plotters]]
+version = "0.3.4"
+criteria = "safe-to-run"
+
+[[exemptions.plotters-backend]]
+version = "0.3.4"
+criteria = "safe-to-run"
+
+[[exemptions.plotters-svg]]
+version = "0.3.3"
+criteria = "safe-to-run"
+
+[[exemptions.polyval]]
+version = "0.6.0"
+criteria = "safe-to-deploy"
+notes = "This is only used when the \"prio2\" feature is enabled."
+
+[[exemptions.ppv-lite86]]
+version = "0.2.16"
+criteria = "safe-to-deploy"
+notes = "This is only used when the \"test-util\" feature is enabled."
+
+[[exemptions.proc-macro-error]]
+version = "1.0.4"
+criteria = "safe-to-run"
+
+[[exemptions.radium]]
+version = "0.7.0"
+criteria = "safe-to-deploy"
+
+[[exemptions.rand]]
+version = "0.8.5"
+criteria = "safe-to-deploy"
+notes = "This is only used when the \"test-util\" feature is enabled."
+
+[[exemptions.rand_chacha]]
+version = "0.3.1"
+criteria = "safe-to-deploy"
+notes = "This is only used when the \"test-util\" feature is enabled."
+
+[[exemptions.rand_core]]
+version = "0.6.3"
+criteria = "safe-to-deploy"
+notes = "This is only used when the \"test-util\" feature is enabled."
+
+[[exemptions.regex]]
+version = "1.6.0"
+criteria = "safe-to-run"
+
+[[exemptions.regex-syntax]]
+version = "0.6.27"
+criteria = "safe-to-run"
+
+[[exemptions.ring]]
+version = "0.16.20"
+criteria = "safe-to-deploy"
+notes = "This is only used when the \"prio2\" feature is enabled."
+
+[[exemptions.ryu]]
+version = "1.0.11"
+criteria = "safe-to-deploy"
+notes = "This is only used when the \"test-util\" feature is enabled."
+
+[[exemptions.same-file]]
+version = "1.0.6"
+criteria = "safe-to-run"
+
+[[exemptions.scopeguard]]
+version = "1.1.0"
+criteria = "safe-to-deploy"
+notes = "This is only used when the \"multithreaded\" feature is enabled."
+
+[[exemptions.serde]]
+version = "1.0.151"
+criteria = "safe-to-deploy"
+
+[[exemptions.serde_derive]]
+version = "1.0.151"
+criteria = "safe-to-deploy"
+
+[[exemptions.serde_json]]
+version = "1.0.91"
+criteria = "safe-to-deploy"
+notes = "This is only used when the \"test-util\" feature is enabled."
+
+[[exemptions.sharded-slab]]
+version = "0.1.4"
+criteria = "safe-to-run"
+
+[[exemptions.spin]]
+version = "0.5.2"
+criteria = "safe-to-deploy"
+notes = "This is only used when the \"prio2\" feature is enabled."
+
+[[exemptions.static_assertions]]
+version = "1.1.0"
+criteria = "safe-to-deploy"
+
+[[exemptions.strsim]]
+version = "0.8.0"
+criteria = "safe-to-run"
+
+[[exemptions.structopt]]
+version = "0.3.26"
+criteria = "safe-to-run"
+
+[[exemptions.structopt-derive]]
+version = "0.4.18"
+criteria = "safe-to-run"
+
+[[exemptions.subtle]]
+version = "2.4.1"
+criteria = "safe-to-deploy"
+notes = "This is only used when the \"crypto-dependencies\" or \"prio2\" features are enabled."
+
+[[exemptions.syn]]
+version = "1.0.104"
+criteria = "safe-to-deploy"
+
+[[exemptions.tap]]
+version = "1.0.1"
+criteria = "safe-to-deploy"
+
+[[exemptions.textwrap]]
+version = "0.11.0"
+criteria = "safe-to-run"
+
+[[exemptions.textwrap]]
+version = "0.15.0"
+criteria = "safe-to-run"
+
+[[exemptions.thiserror]]
+version = "1.0.38"
+criteria = "safe-to-deploy"
+
+[[exemptions.thiserror-impl]]
+version = "1.0.38"
+criteria = "safe-to-deploy"
+
+[[exemptions.thread_local]]
+version = "1.1.4"
+criteria = "safe-to-run"
+
+[[exemptions.tinytemplate]]
+version = "1.2.1"
+criteria = "safe-to-run"
+
+[[exemptions.tracing]]
+version = "0.1.36"
+criteria = "safe-to-run"
+
+[[exemptions.tracing-core]]
+version = "0.1.29"
+criteria = "safe-to-run"
+
+[[exemptions.tracing-error]]
+version = "0.2.0"
+criteria = "safe-to-run"
+
+[[exemptions.tracing-subscriber]]
+version = "0.3.15"
+criteria = "safe-to-run"
+
+[[exemptions.typenum]]
+version = "1.15.0"
+criteria = "safe-to-deploy"
+
+[[exemptions.unicode-segmentation]]
+version = "1.9.0"
+criteria = "safe-to-run"
+
+[[exemptions.unicode-width]]
+version = "0.1.9"
+criteria = "safe-to-run"
+
+[[exemptions.valuable]]
+version = "0.1.0"
+criteria = "safe-to-run"
+
+[[exemptions.vec_map]]
+version = "0.8.2"
+criteria = "safe-to-run"
+
+[[exemptions.version_check]]
+version = "0.9.4"
+criteria = "safe-to-deploy"
+
+[[exemptions.walkdir]]
+version = "2.3.2"
+criteria = "safe-to-run"
+
+[[exemptions.wasi]]
+version = "0.11.0+wasi-snapshot-preview1"
+criteria = "safe-to-deploy"
+notes = "This is only used when the target OS is WASI."
+
+[[exemptions.wasm-bindgen]]
+version = "0.2.83"
+criteria = "safe-to-deploy"
+notes = "This is only used when the \"prio2\" feature is enabled, and only on WASM targets."
+
+[[exemptions.wasm-bindgen-backend]]
+version = "0.2.83"
+criteria = "safe-to-deploy"
+notes = "This is only used when the \"prio2\" feature is enabled, and only on WASM targets."
+
+[[exemptions.wasm-bindgen-macro]]
+version = "0.2.83"
+criteria = "safe-to-deploy"
+notes = "This is only used when the \"prio2\" feature is enabled, and only on WASM targets."
+
+[[exemptions.wasm-bindgen-macro-support]]
+version = "0.2.83"
+criteria = "safe-to-deploy"
+notes = "This is only used when the \"prio2\" feature is enabled, and only on WASM targets."
+
+[[exemptions.web-sys]]
+version = "0.3.60"
+criteria = "safe-to-deploy"
+notes = "This is only used when the \"prio2\" feature is enabled, and only on WASM targets."
+
+[[exemptions.winapi]]
+version = "0.3.9"
+criteria = "safe-to-deploy"
+
+[[exemptions.winapi-i686-pc-windows-gnu]]
+version = "0.4.0"
+criteria = "safe-to-deploy"
+
+[[exemptions.winapi-util]]
+version = "0.1.5"
+criteria = "safe-to-run"
+
+[[exemptions.winapi-x86_64-pc-windows-gnu]]
+version = "0.4.0"
+criteria = "safe-to-deploy"
+
+[[exemptions.wyz]]
+version = "0.5.1"
+criteria = "safe-to-deploy"
+

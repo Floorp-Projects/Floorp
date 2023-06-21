@@ -4,12 +4,12 @@
 //! Utilities for ECIES encryption / decryption used by the Prio client and server.
 
 use crate::prng::PrngError;
-
-use aes_gcm::aead::generic_array::typenum::U16;
-use aes_gcm::aead::generic_array::GenericArray;
-use aes_gcm::{AeadInPlace, NewAead};
+use aes::{cipher::typenum::U16, Aes128};
+use aes_gcm::{aead::generic_array::GenericArray, AeadInPlace, AesGcm, KeyInit};
+use base64::{engine::Engine, prelude::BASE64_STANDARD};
 use ring::agreement;
-type Aes128 = aes_gcm::AesGcm<aes_gcm::aes::Aes128, U16>;
+
+type Aes128Gcm = AesGcm<Aes128, U16>;
 
 /// Length of the EC public key (X9.62 format)
 pub const PUBLICKEY_LENGTH: usize = 65;
@@ -57,7 +57,7 @@ pub struct PrivateKey(Vec<u8>);
 impl PublicKey {
     /// Load public key from a base64 encoded X9.62 uncompressed representation.
     pub fn from_base64(key: &str) -> Result<Self, EncryptError> {
-        let keydata = base64::decode(key)?;
+        let keydata = BASE64_STANDARD.decode(key)?;
         Ok(PublicKey(keydata))
     }
 }
@@ -72,7 +72,7 @@ impl std::convert::From<&PrivateKey> for PublicKey {
 impl PrivateKey {
     /// Load private key from a base64 encoded string.
     pub fn from_base64(key: &str) -> Result<Self, EncryptError> {
-        let keydata = base64::decode(key)?;
+        let keydata = BASE64_STANDARD.decode(key)?;
         Ok(PrivateKey(keydata))
     }
 }
@@ -154,13 +154,12 @@ fn x963_kdf(z: &[u8], shared_info: &[u8]) -> [u8; 32] {
     hasher.update(&1u32.to_be_bytes());
     hasher.update(shared_info);
     let digest = hasher.finish();
-    use std::convert::TryInto;
     // unwrap never fails because SHA256 output len is 32
     digest.as_ref().try_into().unwrap()
 }
 
 fn decrypt_aes_gcm(key: &[u8], nonce: &[u8], mut data: Vec<u8>) -> Result<Vec<u8>, EncryptError> {
-    let cipher = Aes128::new(GenericArray::from_slice(key));
+    let cipher = Aes128Gcm::new(GenericArray::from_slice(key));
     cipher
         .decrypt_in_place(GenericArray::from_slice(nonce), &[], &mut data)
         .map_err(|_| EncryptError::Decryption)?;
@@ -168,7 +167,7 @@ fn decrypt_aes_gcm(key: &[u8], nonce: &[u8], mut data: Vec<u8>) -> Result<Vec<u8
 }
 
 fn encrypt_aes_gcm(key: &[u8], nonce: &[u8], mut data: Vec<u8>) -> Result<Vec<u8>, EncryptError> {
-    let cipher = Aes128::new(GenericArray::from_slice(key));
+    let cipher = Aes128Gcm::new(GenericArray::from_slice(key));
     cipher
         .encrypt_in_place(GenericArray::from_slice(nonce), &[], &mut data)
         .map_err(|_| EncryptError::Encryption)?;
@@ -199,14 +198,16 @@ mod tests {
 
     #[test]
     fn test_interop() {
-        let share1 = base64::decode("Kbnd2ZWrsfLfcpuxHffMrJ1b7sCrAsNqlb6Y1eAMfwCVUNXt").unwrap();
-        let share2 = base64::decode("hu+vT3+8/taHP7B/dWXh/g==").unwrap();
-        let encrypted_share1 = base64::decode(
+        let share1 = BASE64_STANDARD
+            .decode("Kbnd2ZWrsfLfcpuxHffMrJ1b7sCrAsNqlb6Y1eAMfwCVUNXt")
+            .unwrap();
+        let share2 = BASE64_STANDARD.decode("hu+vT3+8/taHP7B/dWXh/g==").unwrap();
+        let encrypted_share1 = BASE64_STANDARD.decode(
             "BEWObg41JiMJglSEA6Ebk37xOeflD2a1t2eiLmX0OPccJhAER5NmOI+4r4Cfm7aJn141sGKnTbCuIB9+AeVuw\
              MAQnzjsGPu5aNgkdpp+6VowAcVAV1DlzZvtwlQkCFlX4f3xmafTPFTPOokYi2a+H1n8GKwd",
         )
         .unwrap();
-        let encrypted_share2 = base64::decode(
+        let encrypted_share2 = BASE64_STANDARD.decode(
             "BNRzQ6TbqSc4pk0S8aziVRNjWm4DXQR5yCYTK2w22iSw4XAPW4OB9RxBpWVa1C/3ywVBT/3yLArOMXEsCEMOG\
              1+d2CiEvtuU1zADH2MVaCnXL/dVXkDchYZsvPWPkDcjQA==",
         )

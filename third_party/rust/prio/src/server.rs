@@ -4,7 +4,7 @@
 //! The Prio v2 server. Only 0 / 1 vectors are supported for now.
 use crate::{
     encrypt::{decrypt_share, EncryptError, PrivateKey},
-    field::{merge_vector, FieldElement, FieldError},
+    field::{merge_vector, FftFriendlyFieldElement, FieldError},
     polynomial::{poly_interpret_eval, PolyAuxMemory},
     prng::{Prng, PrngError},
     util::{proof_length, unpack_proof, SerializeError},
@@ -46,7 +46,7 @@ pub struct ValidationMemory<F> {
     poly_mem: PolyAuxMemory<F>,
 }
 
-impl<F: FieldElement> ValidationMemory<F> {
+impl<F: FftFriendlyFieldElement> ValidationMemory<F> {
     /// Construct a new ValidationMemory object for validating proof shares of
     /// length `dimension`.
     pub fn new(dimension: usize) -> Self {
@@ -71,7 +71,7 @@ pub struct Server<F> {
     private_key: PrivateKey,
 }
 
-impl<F: FieldElement> Server<F> {
+impl<F: FftFriendlyFieldElement> Server<F> {
     /// Construct a new server instance
     ///
     /// Params:
@@ -200,7 +200,7 @@ pub struct VerificationMessage<F> {
 
 /// Given a proof and evaluation point, this constructs the verification
 /// message.
-pub fn generate_verification_message<F: FieldElement>(
+pub fn generate_verification_message<F: FftFriendlyFieldElement>(
     dimension: usize,
     eval_at: F,
     proof: &[F],
@@ -263,7 +263,7 @@ pub fn generate_verification_message<F: FieldElement>(
 }
 
 /// Decides if the distributed proof is valid
-pub fn is_valid_share<F: FieldElement>(
+pub fn is_valid_share<F: FftFriendlyFieldElement>(
     v1: &VerificationMessage<F>,
     v2: &VerificationMessage<F>,
 ) -> bool {
@@ -280,7 +280,7 @@ mod tests {
     use super::*;
     use crate::{
         encrypt::{encrypt_share, PublicKey},
-        field::{Field32, FieldPrio2},
+        field::{FieldElement, FieldPrio2},
         test_vector::Priov2TestVector,
         util::{self, unpack_proof_mut},
     };
@@ -295,9 +295,9 @@ mod tests {
             2567182742, 3542857140, 124017604, 4201373647, 431621210, 1618555683, 267689149,
         ];
 
-        let mut proof: Vec<Field32> = proof_u32.iter().map(|x| Field32::from(*x)).collect();
+        let mut proof: Vec<FieldPrio2> = proof_u32.iter().map(|x| FieldPrio2::from(*x)).collect();
         let share2 = util::tests::secret_share(&mut proof);
-        let eval_at = Field32::from(12313);
+        let eval_at = FieldPrio2::from(12313);
 
         let mut validation_mem = ValidationMemory::new(dim);
 
@@ -317,9 +317,9 @@ mod tests {
             2567182742, 3542857140, 124017604, 4201373647, 431621210, 1618555683, 267689149,
         ];
 
-        let mut proof: Vec<Field32> = proof_u32.iter().map(|x| Field32::from(*x)).collect();
+        let mut proof: Vec<FieldPrio2> = proof_u32.iter().map(|x| FieldPrio2::from(*x)).collect();
         let share2 = util::tests::secret_share(&mut proof);
-        let eval_at = Field32::from(12313);
+        let eval_at = FieldPrio2::from(12313);
 
         let mut validation_mem = ValidationMemory::new(dim);
 
@@ -330,7 +330,8 @@ mod tests {
 
         // serialize and deserialize the first verification message
         let serialized = serde_json::to_string(&v1).unwrap();
-        let deserialized: VerificationMessage<Field32> = serde_json::from_str(&serialized).unwrap();
+        let deserialized: VerificationMessage<FieldPrio2> =
+            serde_json::from_str(&serialized).unwrap();
 
         assert!(is_valid_share(&deserialized, &v2));
     }

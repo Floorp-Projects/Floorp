@@ -14,7 +14,7 @@ use getrandom::getrandom;
 
 use std::marker::PhantomData;
 
-const BUFFER_SIZE_IN_ELEMENTS: usize = 128;
+const BUFFER_SIZE_IN_ELEMENTS: usize = 32;
 
 /// Errors propagated by methods in this module.
 #[derive(Debug, thiserror::Error)]
@@ -25,14 +25,13 @@ pub enum PrngError {
 }
 
 /// This type implements an iterator that generates a pseudorandom sequence of field elements. The
-/// sequence is derived from the key stream of AES-128 in CTR mode with a random IV.
+/// sequence is derived from a PRG's key stream.
 #[derive(Debug)]
 pub(crate) struct Prng<F, S> {
     phantom: PhantomData<F>,
     seed_stream: S,
     buffer: Vec<u8>,
     buffer_index: usize,
-    output_written: usize,
 }
 
 #[cfg(feature = "crypto-dependencies")]
@@ -67,7 +66,6 @@ where
             seed_stream,
             buffer,
             buffer_index: 0,
-            output_written: 0,
         }
     }
 
@@ -76,21 +74,48 @@ where
             // Seek to the next chunk of the buffer that encodes an element of F.
             for i in (self.buffer_index..self.buffer.len()).step_by(F::ENCODED_SIZE) {
                 let j = i + F::ENCODED_SIZE;
+
+                if j > self.buffer.len() {
+                    break;
+                }
+
+                self.buffer_index = j;
+
                 if let Some(x) = match F::try_from_random(&self.buffer[i..j]) {
                     Ok(x) => Some(x),
                     Err(FieldError::ModulusOverflow) => None, // reject this sample
-                    Err(err) => panic!("unexpected error: {}", err),
+                    Err(err) => panic!("unexpected error: {err}"),
                 } {
-                    // Set the buffer index to the next chunk.
-                    self.buffer_index = j;
-                    self.output_written += 1;
                     return x;
                 }
             }
 
-            // Refresh buffer with the next chunk of PRG output.
-            self.seed_stream.fill(&mut self.buffer);
+            // Refresh buffer with the next chunk of PRG output, filling the front of the buffer
+            // with the leftovers. This ensures continuity of the seed stream after converting the
+            // `Prng` to a new field type via `into_new_field()`.
+            let left_over = self.buffer.len() - self.buffer_index;
+            self.buffer.copy_within(self.buffer_index.., 0);
+            self.seed_stream.fill(&mut self.buffer[left_over..]);
             self.buffer_index = 0;
+        }
+    }
+
+    /// Convert this object into a field element generator for a different field.
+    //
+    // TODO(cjpatton) spec: Consider using distinct seeds for distinct field types. Buffering the
+    // seed stream seems to be important for performance, at least according to the benchmarks for
+    // `PrgAes128`. But having to support multiple output types is delicate because the buffer size
+    // is computed from the field modulus.
+    //
+    // If we don't end up making this spec change, then add tests to ensure that changing field
+    // types is done correctly.
+    #[cfg(feature = "experimental")]
+    pub(crate) fn into_new_field<F1: FieldElement>(self) -> Prng<F1, S> {
+        Prng {
+            phantom: PhantomData,
+            seed_stream: self.seed_stream,
+            buffer: self.buffer,
+            buffer_index: self.buffer_index,
         }
     }
 }
@@ -112,9 +137,11 @@ mod tests {
     use super::*;
     use crate::{
         codec::Decode,
-        field::{Field96, FieldPrio2},
-        vdaf::prg::{Prg, PrgAes128, Seed},
+        field::{Field64, FieldPrio2},
+        vdaf::prg::{CoinToss, Prg, PrgSha3, Seed, SeedStreamSha3},
     };
+    #[cfg(feature = "prio2")]
+    use base64::{engine::Engine, prelude::BASE64_STANDARD};
     use std::convert::TryInto;
 
     #[test]
@@ -141,13 +168,13 @@ mod tests {
     /// takes a seed and hash as base64 encoded strings
     #[cfg(feature = "prio2")]
     fn random_data_interop(seed_base64: &str, hash_base64: &str, len: usize) {
-        let seed = base64::decode(seed_base64).unwrap();
+        let seed = BASE64_STANDARD.decode(seed_base64).unwrap();
         let random_data = extract_share_from_seed::<FieldPrio2>(len, &seed);
 
         let random_bytes = FieldPrio2::slice_into_byte_vec(&random_data);
 
         let digest = ring::digest::digest(&ring::digest::SHA256, &random_bytes);
-        assert_eq!(base64::encode(digest), hash_base64);
+        assert_eq!(BASE64_STANDARD.encode(digest), hash_base64);
     }
 
     #[test]
@@ -195,14 +222,58 @@ mod tests {
     #[test]
     fn rejection_sampling_test_vector() {
         // These constants were found in a brute-force search, and they test that the PRG performs
-        // rejection sampling correctly when raw AES-CTR output exceeds the prime modulus.
-        let seed_stream = PrgAes128::seed_stream(
-            &Seed::get_decoded(&[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 95]).unwrap(),
-            b"",
-        );
-        let mut prng = Prng::<Field96, _>::from_seed_stream(seed_stream);
-        let expected = Field96::from(39729620190871453347343769187);
-        let actual = prng.nth(145).unwrap();
+        // rejection sampling correctly when raw cSHAKE128 output exceeds the prime modulus.
+        let seed =
+            Seed::get_decoded(b"\x23\x1c\x40\x0d\xcb\xaf\xce\x34\x5e\xfd\x3c\xa7\x79\x65\xee\x06")
+                .unwrap();
+        let expected = Field64::from(13681157193520586550);
+
+        let seed_stream = PrgSha3::seed_stream(&seed, b"", b"");
+        let mut prng = Prng::<Field64, _>::from_seed_stream(seed_stream);
+        let actual = prng.nth(4).unwrap();
         assert_eq!(actual, expected);
+
+        let mut seed_stream = PrgSha3::seed_stream(&seed, b"", b"");
+        let mut actual = Field64::zero();
+        for _ in 0..=4 {
+            actual = <Field64 as CoinToss>::sample(&mut seed_stream);
+        }
+        assert_eq!(actual, expected);
+    }
+
+    // Test that the `Prng`'s internal buffer properly copies the end of the buffer to the front
+    // once it reaches the end.
+    #[test]
+    fn left_over_buffer_back_fill() {
+        let seed = Seed::generate().unwrap();
+
+        let mut prng: Prng<Field64, SeedStreamSha3> =
+            Prng::from_seed_stream(PrgSha3::seed_stream(&seed, b"", b""));
+
+        // Construct a `Prng` with a longer-than-usual buffer.
+        let mut prng_weird_buffer_size: Prng<Field64, SeedStreamSha3> =
+            Prng::from_seed_stream(PrgSha3::seed_stream(&seed, b"", b""));
+        let mut extra = [0; 7];
+        prng_weird_buffer_size.seed_stream.fill(&mut extra);
+        prng_weird_buffer_size.buffer.extend_from_slice(&extra);
+
+        // Check that the next several outputs match. We need to check enough outputs to ensure
+        // that we have to refill the buffer.
+        for _ in 0..BUFFER_SIZE_IN_ELEMENTS * 2 {
+            assert_eq!(prng.next().unwrap(), prng_weird_buffer_size.next().unwrap());
+        }
+    }
+
+    #[cfg(feature = "experimental")]
+    #[test]
+    fn into_new_field() {
+        let seed = Seed::generate().unwrap();
+        let want: Prng<Field64, SeedStreamSha3> =
+            Prng::from_seed_stream(PrgSha3::seed_stream(&seed, b"", b""));
+        let want_buffer = want.buffer.clone();
+
+        let got: Prng<FieldPrio2, _> = want.into_new_field();
+        assert_eq!(got.buffer_index, 0);
+        assert_eq!(got.buffer, want_buffer);
     }
 }
