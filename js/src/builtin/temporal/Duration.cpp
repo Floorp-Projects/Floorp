@@ -24,12 +24,17 @@
 #include "jspubtd.h"
 #include "NamespaceImports.h"
 
+#include "builtin/temporal/Calendar.h"
 #include "builtin/temporal/Instant.h"
+#include "builtin/temporal/PlainDate.h"
+#include "builtin/temporal/PlainDateTime.h"
 #include "builtin/temporal/Temporal.h"
+#include "builtin/temporal/TemporalFields.h"
 #include "builtin/temporal/TemporalParser.h"
 #include "builtin/temporal/TemporalRoundingMode.h"
 #include "builtin/temporal/TemporalTypes.h"
 #include "builtin/temporal/TemporalUnit.h"
+#include "builtin/temporal/TimeZone.h"
 #include "builtin/temporal/Wrapped.h"
 #include "builtin/temporal/ZonedDateTime.h"
 #include "gc/Allocator.h"
@@ -541,6 +546,115 @@ bool js::temporal::ToTemporalDuration(JSContext* cx, Handle<Value> item,
   *result = ToDuration(&obj.unwrap());
   return true;
 }
+
+/**
+ * CalculateOffsetShift ( relativeTo, y, mon, d )
+ */
+static bool CalculateOffsetShift(JSContext* cx, Handle<JSObject*> relativeTo,
+                                 const Duration& duration, int64_t* result) {
+  // Step 1.
+  if (!relativeTo) {
+    *result = 0;
+    return true;
+  }
+
+  auto* zonedRelativeTo = relativeTo->maybeUnwrapIf<ZonedDateTimeObject>();
+  if (!zonedRelativeTo) {
+    *result = 0;
+    return true;
+  }
+
+  auto epochInstant = ToInstant(zonedRelativeTo);
+  Rooted<JSObject*> timeZone(cx, zonedRelativeTo->timeZone());
+  Rooted<JSObject*> calendar(cx, zonedRelativeTo->calendar());
+
+  // Wrap into the current compartment.
+  if (!cx->compartment()->wrap(cx, &timeZone)) {
+    return false;
+  }
+  if (!cx->compartment()->wrap(cx, &calendar)) {
+    return false;
+  }
+
+  // Steps 2-3.
+  int64_t offsetBefore;
+  if (!GetOffsetNanosecondsFor(cx, timeZone, epochInstant, &offsetBefore)) {
+    return false;
+  }
+  MOZ_ASSERT(std::abs(offsetBefore) < ToNanoseconds(TemporalUnit::Day));
+
+  // Step 4.
+  Instant after;
+  if (!AddZonedDateTime(cx, epochInstant, timeZone, calendar, duration,
+                        &after)) {
+    return false;
+  }
+  MOZ_ASSERT(IsValidEpochInstant(after));
+
+  // Steps 5-6.
+  int64_t offsetAfter;
+  if (!GetOffsetNanosecondsFor(cx, timeZone, after, &offsetAfter)) {
+    return false;
+  }
+  MOZ_ASSERT(std::abs(offsetAfter) < ToNanoseconds(TemporalUnit::Day));
+
+  // Step 7.
+  *result = offsetAfter - offsetBefore;
+  return true;
+}
+
+/**
+ * DaysUntil ( earlier, later )
+ */
+static int32_t DaysUntil(const PlainDate& earlier, const PlainDate& later) {
+  MOZ_ASSERT(ISODateTimeWithinLimits(earlier));
+  MOZ_ASSERT(ISODateTimeWithinLimits(later));
+
+  // Steps 1-2.
+  int32_t epochDaysEarlier = MakeDay(earlier);
+  MOZ_ASSERT(std::abs(epochDaysEarlier) <= 100'000'000);
+
+  // Steps 3-4.
+  int32_t epochDaysLater = MakeDay(later);
+  MOZ_ASSERT(std::abs(epochDaysLater) <= 100'000'000);
+
+  // Step 5.
+  return epochDaysLater - epochDaysEarlier;
+}
+
+/**
+ * MoveRelativeDate ( calendar, relativeTo, duration, dateAdd )
+ */
+static bool MoveRelativeDate(
+    JSContext* cx, Handle<JSObject*> calendar,
+    Handle<Wrapped<PlainDateObject*>> relativeTo,
+    Handle<DurationObject*> duration, Handle<Value> dateAdd,
+    MutableHandle<Wrapped<PlainDateObject*>> relativeToResult,
+    int32_t* daysResult) {
+  MOZ_ASSERT(IsCallable(dateAdd) || dateAdd.isUndefined());
+
+  auto* unwrappedRelativeTo = relativeTo.unwrap(cx);
+  if (!unwrappedRelativeTo) {
+    return false;
+  }
+  auto relativeToDate = ToPlainDate(unwrappedRelativeTo);
+
+  // Step 1.
+  auto newDate = CalendarDateAdd(cx, calendar, relativeTo, duration, dateAdd);
+  if (!newDate) {
+    return false;
+  }
+  auto later = ToPlainDate(&newDate.unwrap());
+  relativeToResult.set(newDate);
+
+  // Step 3.
+  *daysResult = DaysUntil(relativeToDate, later);
+  MOZ_ASSERT(std::abs(*daysResult) <= 200'000'000);
+
+  // Step 4.
+  return true;
+}
+
 
 /**
  * TotalDurationNanoseconds ( days, hours, minutes, seconds, milliseconds,
@@ -1314,6 +1428,732 @@ bool js::temporal::BalanceDuration(JSContext* cx, const Instant& nanoseconds,
   return ::BalanceDurationSlow(cx, nanos, largestUnit, result);
 }
 
+/**
+ * CreateDateDurationRecord ( years, months, weeks, days )
+ */
+static DateDuration CreateDateDurationRecord(double years, double months,
+                                             double weeks, double days) {
+  MOZ_ASSERT(IsValidDuration({years, months, weeks, days}));
+  return {years, months, weeks, days};
+}
+
+/**
+ * CreateDateDurationRecord ( years, months, weeks, days )
+ */
+static bool CreateDateDurationRecord(JSContext* cx, double years, double months,
+                                     double weeks, double days,
+                                     DateDuration* result) {
+  if (!ThrowIfInvalidDuration(cx, {years, months, weeks, days})) {
+    return false;
+  }
+
+  *result = {years, months, weeks, days};
+  return true;
+}
+
+static double IsSafeInteger(double num) {
+  MOZ_ASSERT(js::IsInteger(num) || std::isinf(num));
+
+  constexpr double maxSafeInteger = DOUBLE_INTEGRAL_PRECISION_LIMIT - 1;
+  constexpr double minSafeInteger = -maxSafeInteger;
+  return minSafeInteger <= num && num <= maxSafeInteger;
+}
+
+/**
+ * UnbalanceDurationRelative ( years, months, weeks, days, largestUnit,
+ * relativeTo )
+ */
+static bool UnbalanceDurationRelativeSlow(
+    JSContext* cx, const Duration& duration, double amountToAdd,
+    TemporalUnit largestUnit, int32_t sign,
+    MutableHandle<Wrapped<PlainDateObject*>> dateRelativeTo,
+    Handle<JSObject*> calendar, Handle<DurationObject*> oneYear,
+    Handle<DurationObject*> oneMonth, Handle<DurationObject*> oneWeek,
+    Handle<Value> dateAdd, Handle<Value> dateUntil, DateDuration* result) {
+  MOZ_ASSERT(IsValidDuration(duration));
+  MOZ_ASSERT(dateRelativeTo);
+  MOZ_ASSERT(calendar);
+
+  Rooted<BigInt*> years(cx, BigInt::createFromDouble(cx, duration.years));
+  if (!years) {
+    return false;
+  }
+
+  Rooted<BigInt*> months(cx, BigInt::createFromDouble(cx, duration.months));
+  if (!months) {
+    return false;
+  }
+
+  Rooted<BigInt*> weeks(cx, BigInt::createFromDouble(cx, duration.weeks));
+  if (!weeks) {
+    return false;
+  }
+
+  Rooted<BigInt*> days(cx, BigInt::createFromDouble(cx, duration.days));
+  if (!days) {
+    return false;
+  }
+
+  // Step 1.
+  MOZ_ASSERT(largestUnit != TemporalUnit::Year);
+  MOZ_ASSERT(!years->isZero() || !months->isZero() || !weeks->isZero() ||
+             !days->isZero());
+
+  // Step 2. (Not applicable)
+
+  // Step 3.
+  MOZ_ASSERT(sign == -1 || sign == 1);
+
+  // Steps 4-8. (Not applicable)
+
+  // Steps 9-11.
+  if (largestUnit == TemporalUnit::Month) {
+    // Steps 9.a-c. (Not applicable)
+
+    if (amountToAdd) {
+      Rooted<BigInt*> toAdd(cx, BigInt::createFromDouble(cx, amountToAdd));
+      if (!toAdd) {
+        return false;
+      }
+
+      months = BigInt::add(cx, months, toAdd);
+      if (!months) {
+        return false;
+      }
+
+      if (sign < 0) {
+        years = BigInt::inc(cx, years);
+      } else {
+        years = BigInt::dec(cx, years);
+      }
+      if (!years) {
+        return false;
+      }
+    }
+
+    // Step 9.d.
+    Rooted<Wrapped<PlainDateObject*>> newRelativeTo(cx);
+    Rooted<BigInt*> oneYearMonths(cx);
+    while (!years->isZero()) {
+      // Step 9.d.i.
+      newRelativeTo =
+          CalendarDateAdd(cx, calendar, dateRelativeTo, oneYear, dateAdd);
+      if (!newRelativeTo) {
+        return false;
+      }
+
+      // Steps 9.d.ii-iv.
+      Duration untilResult;
+      if (!CalendarDateUntil(cx, calendar, dateRelativeTo, newRelativeTo,
+                             TemporalUnit::Month, dateUntil, &untilResult)) {
+        return false;
+      }
+
+      // Step 9.d.v.
+      oneYearMonths = BigInt::createFromDouble(cx, untilResult.months);
+      if (!oneYearMonths) {
+        return false;
+      }
+
+      // Step 9.d.vi.
+      dateRelativeTo.set(newRelativeTo);
+
+      // Step 9.d.vii.
+      if (sign < 0) {
+        years = BigInt::inc(cx, years);
+      } else {
+        years = BigInt::dec(cx, years);
+      }
+      if (!years) {
+        return false;
+      }
+
+      // Step 9.d.viii.
+      months = BigInt::add(cx, months, oneYearMonths);
+      if (!months) {
+        return false;
+      }
+    }
+  } else if (largestUnit == TemporalUnit::Week) {
+    // Steps 10.a-b. (Not applicable)
+
+    if (amountToAdd) {
+      Rooted<BigInt*> toAdd(cx, BigInt::createFromDouble(cx, amountToAdd));
+      if (!toAdd) {
+        return false;
+      }
+
+      days = BigInt::add(cx, days, toAdd);
+      if (!days) {
+        return false;
+      }
+
+      if (!years->isZero()) {
+        if (sign < 0) {
+          years = BigInt::inc(cx, years);
+        } else {
+          years = BigInt::dec(cx, years);
+        }
+        if (!years) {
+          return false;
+        }
+      } else {
+        MOZ_ASSERT(!months->isZero());
+        if (sign < 0) {
+          months = BigInt::inc(cx, months);
+        } else {
+          months = BigInt::dec(cx, months);
+        }
+        if (!months) {
+          return false;
+        }
+      }
+    }
+
+    // Step 10.c.
+    Rooted<BigInt*> oneYearDays(cx);
+    while (!years->isZero()) {
+      // Steps 10.c.i-ii.
+      int32_t oneYearDaysInt;
+      if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneYear, dateAdd,
+                            dateRelativeTo, &oneYearDaysInt)) {
+        return false;
+      }
+      oneYearDays = BigInt::createFromInt64(cx, oneYearDaysInt);
+      if (!oneYearDays) {
+        return false;
+      }
+
+      // Step 10.c.iii.
+      days = BigInt::add(cx, days, oneYearDays);
+      if (!days) {
+        return false;
+      }
+
+      // Step 10.c.iv.
+      if (sign < 0) {
+        years = BigInt::inc(cx, years);
+      } else {
+        years = BigInt::dec(cx, years);
+      }
+      if (!years) {
+        return false;
+      }
+    }
+
+    // Step 10.d.
+    Rooted<BigInt*> oneMonthDays(cx);
+    while (!months->isZero()) {
+      // Steps 10.d.i-ii.
+      int32_t oneMonthDaysInt;
+      if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneMonth, dateAdd,
+                            dateRelativeTo, &oneMonthDaysInt)) {
+        return false;
+      }
+      oneMonthDays = BigInt::createFromInt64(cx, oneMonthDaysInt);
+      if (!oneMonthDays) {
+        return false;
+      }
+
+      // Step 10.d.iii.
+      days = BigInt::add(cx, days, oneMonthDays);
+      if (!days) {
+        return false;
+      }
+
+      // Step 10.d.iv.
+      if (sign < 0) {
+        months = BigInt::inc(cx, months);
+      } else {
+        months = BigInt::dec(cx, months);
+      }
+      if (!months) {
+        return false;
+      }
+    }
+  } else if (!years->isZero() || !months->isZero() || !weeks->isZero()) {
+    if (amountToAdd) {
+      Rooted<BigInt*> toAdd(cx, BigInt::createFromDouble(cx, amountToAdd));
+      if (!toAdd) {
+        return false;
+      }
+
+      days = BigInt::add(cx, days, toAdd);
+      if (!days) {
+        return false;
+      }
+
+      if (!years->isZero()) {
+        if (sign < 0) {
+          years = BigInt::inc(cx, years);
+        } else {
+          years = BigInt::dec(cx, years);
+        }
+        if (!years) {
+          return false;
+        }
+      } else if (!months->isZero()) {
+        if (sign < 0) {
+          months = BigInt::inc(cx, months);
+        } else {
+          months = BigInt::dec(cx, months);
+        }
+        if (!months) {
+          return false;
+        }
+      } else {
+        MOZ_ASSERT(!weeks->isZero());
+
+        if (sign < 0) {
+          weeks = BigInt::inc(cx, weeks);
+        } else {
+          weeks = BigInt::dec(cx, weeks);
+        }
+        if (!years) {
+          return false;
+        }
+      }
+    }
+
+    // Step 11.a.
+
+    // Steps 11.a.i-ii. (Not applicable)
+
+    // Step 11.a.iii.
+    Rooted<BigInt*> oneYearDays(cx);
+    while (!years->isZero()) {
+      // Steps 11.a.iii.1-2.
+      int32_t oneYearDaysInt;
+      if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneYear, dateAdd,
+                            dateRelativeTo, &oneYearDaysInt)) {
+        return false;
+      }
+      oneYearDays = BigInt::createFromInt64(cx, oneYearDaysInt);
+      if (!oneYearDays) {
+        return false;
+      }
+
+      // Step 11.a.iii.3.
+      days = BigInt::add(cx, days, oneYearDays);
+      if (!days) {
+        return false;
+      }
+
+      // Step 11.a.iii.4.
+      if (sign < 0) {
+        years = BigInt::inc(cx, years);
+      } else {
+        years = BigInt::dec(cx, years);
+      }
+      if (!years) {
+        return false;
+      }
+    }
+
+    // Step 11.a.iv.
+    Rooted<BigInt*> oneMonthDays(cx);
+    while (!months->isZero()) {
+      // Steps 11.a.iv.1-2.
+      int32_t oneMonthDaysInt;
+      if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneMonth, dateAdd,
+                            dateRelativeTo, &oneMonthDaysInt)) {
+        return false;
+      }
+      oneMonthDays = BigInt::createFromInt64(cx, oneMonthDaysInt);
+      if (!oneMonthDays) {
+        return false;
+      }
+
+      // Step 11.a.iv.3.
+      days = BigInt::add(cx, days, oneMonthDays);
+      if (!days) {
+        return false;
+      }
+
+      // Step 11.a.iv.4.
+      if (sign < 0) {
+        months = BigInt::inc(cx, months);
+      } else {
+        months = BigInt::dec(cx, months);
+      }
+      if (!months) {
+        return false;
+      }
+    }
+
+    // Step 11.a.v.
+    Rooted<BigInt*> oneWeekDays(cx);
+    while (!weeks->isZero()) {
+      // Steps 11.a.v.1-2.
+      int32_t oneWeekDaysInt;
+      if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneWeek, dateAdd,
+                            dateRelativeTo, &oneWeekDaysInt)) {
+        return false;
+      }
+      oneWeekDays = BigInt::createFromInt64(cx, oneWeekDaysInt);
+      if (!oneWeekDays) {
+        return false;
+      }
+
+      // Step 11.a.v.3.
+      days = BigInt::add(cx, days, oneWeekDays);
+      if (!days) {
+        return false;
+      }
+
+      // Step 11.a.v.4.
+      if (sign < 0) {
+        weeks = BigInt::inc(cx, weeks);
+      } else {
+        weeks = BigInt::dec(cx, weeks);
+      }
+      if (!years) {
+        return false;
+      }
+    }
+  }
+
+  // Step 12.
+  return CreateDateDurationRecord(
+      cx, BigInt::numberValue(years), BigInt::numberValue(months),
+      BigInt::numberValue(weeks), BigInt::numberValue(days), result);
+}
+
+/**
+ * UnbalanceDurationRelative ( years, months, weeks, days, largestUnit,
+ * relativeTo )
+ */
+static bool UnbalanceDurationRelative(JSContext* cx, const Duration& duration,
+                                      TemporalUnit largestUnit,
+                                      Handle<JSObject*> relativeTo,
+                                      DateDuration* result) {
+  MOZ_ASSERT(IsValidDuration(duration));
+
+  double years = duration.years;
+  double months = duration.months;
+  double weeks = duration.weeks;
+  double days = duration.days;
+
+  // Step 1.
+  if (largestUnit == TemporalUnit::Year ||
+      (years == 0 && months == 0 && weeks == 0 && days == 0)) {
+    // Step 1.a.
+    *result = CreateDateDurationRecord(years, months, weeks, days);
+    return true;
+  }
+
+  // Step 2.
+  int32_t sign = DurationSign({years, months, weeks, days});
+
+  // Step 3.
+  MOZ_ASSERT(sign != 0);
+
+  // Step 4.
+  Rooted<DurationObject*> oneYear(cx,
+                                  CreateTemporalDuration(cx, {double(sign)}));
+  if (!oneYear) {
+    return false;
+  }
+
+  // Step 5.
+  Rooted<DurationObject*> oneMonth(
+      cx, CreateTemporalDuration(cx, {0, double(sign)}));
+  if (!oneMonth) {
+    return false;
+  }
+
+  // Step 6.
+  Rooted<DurationObject*> oneWeek(
+      cx, CreateTemporalDuration(cx, {0, 0, double(sign)}));
+  if (!oneWeek) {
+    return false;
+  }
+
+  // Steps 7-8.
+  auto date = ToTemporalDate(cx, relativeTo);
+  if (!date) {
+    return false;
+  }
+  Rooted<Wrapped<PlainDateObject*>> dateRelativeTo(cx, date);
+
+  Rooted<JSObject*> calendar(cx, date.unwrap().calendar());
+  if (!cx->compartment()->wrap(cx, &calendar)) {
+    return false;
+  }
+
+  // Steps 9-11.
+  if (largestUnit == TemporalUnit::Month) {
+    // Step 9.a. (Not applicable in our implementation.)
+
+    // Step 9.b.
+    Rooted<Value> dateAdd(cx);
+    if (!GetMethod(cx, calendar, cx->names().dateAdd, &dateAdd)) {
+      return false;
+    }
+
+    // Step 9.c.
+    Rooted<Value> dateUntil(cx);
+    if (!GetMethod(cx, calendar, cx->names().dateUntil, &dateUntil)) {
+      return false;
+    }
+
+    // Go to the slow path when the result is inexact.
+    // NB: |years -= sign| is equal to |years| for large number values.
+    if (MOZ_UNLIKELY(!IsSafeInteger(years) || !IsSafeInteger(months))) {
+      return UnbalanceDurationRelativeSlow(cx, {years, months, weeks, days}, 0,
+                                           largestUnit, sign, &dateRelativeTo,
+                                           calendar, oneYear, oneMonth, oneWeek,
+                                           dateAdd, dateUntil, result);
+    }
+
+    // Step 9.d.
+    Rooted<Wrapped<PlainDateObject*>> newRelativeTo(cx);
+    while (years != 0) {
+      // Step 9.d.i.
+      newRelativeTo =
+          CalendarDateAdd(cx, calendar, dateRelativeTo, oneYear, dateAdd);
+      if (!newRelativeTo) {
+        return false;
+      }
+
+      // Steps 9.d.ii-iv.
+      Duration untilResult;
+      if (!CalendarDateUntil(cx, calendar, dateRelativeTo, newRelativeTo,
+                             TemporalUnit::Month, dateUntil, &untilResult)) {
+        return false;
+      }
+
+      // Step 9.d.v.
+      double oneYearMonths = untilResult.months;
+
+      // Step 9.d.vi.
+      dateRelativeTo = newRelativeTo;
+
+      // Go to the slow path when the result is inexact.
+      if (MOZ_UNLIKELY(!IsSafeInteger(months + oneYearMonths))) {
+        return UnbalanceDurationRelativeSlow(
+            cx, {years, months, weeks, days}, oneYearMonths, largestUnit, sign,
+            &dateRelativeTo, calendar, oneYear, oneMonth, oneWeek, dateAdd,
+            UndefinedHandleValue, result);
+      }
+
+      // Step 9.d.vii.
+      years -= sign;
+
+      // Step 9.d.viii.
+      months += oneYearMonths;
+    }
+  } else if (largestUnit == TemporalUnit::Week) {
+    // Step 10.a. (Not applicable in our implementation.)
+
+    // Step 10.b.
+    Rooted<Value> dateAdd(cx);
+    if (!GetMethod(cx, calendar, cx->names().dateAdd, &dateAdd)) {
+      return false;
+    }
+
+    // Go to the slow path when the result is inexact.
+    if (MOZ_UNLIKELY(!IsSafeInteger(years) || !IsSafeInteger(months) ||
+                     !IsSafeInteger(days))) {
+      return UnbalanceDurationRelativeSlow(
+          cx, {years, months, weeks, days}, 0, largestUnit, sign,
+          &dateRelativeTo, calendar, oneYear, oneMonth, oneWeek, dateAdd,
+          UndefinedHandleValue, result);
+    }
+
+    // Step 10.c.
+    while (years != 0) {
+      // Steps 10.c.i-ii.
+      int32_t oneYearDays;
+      if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneYear, dateAdd,
+                            &dateRelativeTo, &oneYearDays)) {
+        return false;
+      }
+
+      // Go to the slow path when the result is inexact.
+      if (MOZ_UNLIKELY(!IsSafeInteger(days + oneYearDays))) {
+        return UnbalanceDurationRelativeSlow(
+            cx, {years, months, weeks, days}, oneYearDays, largestUnit, sign,
+            &dateRelativeTo, calendar, oneYear, oneMonth, oneWeek, dateAdd,
+            UndefinedHandleValue, result);
+      }
+
+      // Step 10.c.iii.
+      days += oneYearDays;
+
+      // Step 10.c.iv.
+      years -= sign;
+    }
+
+    // Step 10.d.
+    while (months != 0) {
+      // Steps 10.d.i-ii.
+      int32_t oneMonthDays;
+      if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneMonth, dateAdd,
+                            &dateRelativeTo, &oneMonthDays)) {
+        return false;
+      }
+
+      // Go to the slow path when the result is inexact.
+      if (MOZ_UNLIKELY(!IsSafeInteger(days + oneMonthDays))) {
+        return UnbalanceDurationRelativeSlow(
+            cx, {years, months, weeks, days}, oneMonthDays, largestUnit, sign,
+            &dateRelativeTo, calendar, oneYear, oneMonth, oneWeek, dateAdd,
+            UndefinedHandleValue, result);
+      }
+
+      // Step 10.d.iii.
+      days += oneMonthDays;
+
+      // Step 10.d.iv.
+      months -= sign;
+    }
+  } else if (years != 0 || months != 0 || weeks != 0) {
+    // Step 11.a.
+
+    // FIXME: why don't we unconditionally throw an error for missing calendars?
+
+    // Step 11.a.i. (Not applicable in our implementation.)
+
+    // Step 11.a.ii.
+    Rooted<Value> dateAdd(cx);
+    if (!GetMethod(cx, calendar, cx->names().dateAdd, &dateAdd)) {
+      return false;
+    }
+
+    // Go to the slow path when the result is inexact.
+    if (MOZ_UNLIKELY(!IsSafeInteger(years) || !IsSafeInteger(months) ||
+                     !IsSafeInteger(weeks) || !IsSafeInteger(days))) {
+      return UnbalanceDurationRelativeSlow(
+          cx, {years, months, weeks, days}, 0, largestUnit, sign,
+          &dateRelativeTo, calendar, oneYear, oneMonth, oneWeek, dateAdd,
+          UndefinedHandleValue, result);
+    }
+
+    // Step 11.a.iii.
+    while (years != 0) {
+      // Steps 11.a.iii.1-2.
+      int32_t oneYearDays;
+      if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneYear, dateAdd,
+                            &dateRelativeTo, &oneYearDays)) {
+        return false;
+      }
+
+      // Go to the slow path when the result is inexact.
+      if (MOZ_UNLIKELY(!IsSafeInteger(days + oneYearDays))) {
+        return UnbalanceDurationRelativeSlow(
+            cx, {years, months, weeks, days}, oneYearDays, largestUnit, sign,
+            &dateRelativeTo, calendar, oneYear, oneMonth, oneWeek, dateAdd,
+            UndefinedHandleValue, result);
+      }
+
+      // Step 11.a.iii.3.
+      days += oneYearDays;
+
+      // Step 11.a.iii.4.
+      years -= sign;
+    }
+
+    // Step 11.a.iv.
+    while (months != 0) {
+      // Steps 11.a.iv.1-2.
+      int32_t oneMonthDays;
+      if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneMonth, dateAdd,
+                            &dateRelativeTo, &oneMonthDays)) {
+        return false;
+      }
+
+      // Go to the slow path when the result is inexact.
+      if (MOZ_UNLIKELY(!IsSafeInteger(days + oneMonthDays))) {
+        return UnbalanceDurationRelativeSlow(
+            cx, {years, months, weeks, days}, oneMonthDays, largestUnit, sign,
+            &dateRelativeTo, calendar, oneYear, oneMonth, oneWeek, dateAdd,
+            UndefinedHandleValue, result);
+      }
+
+      // Step 11.a.iv.3.
+      days += oneMonthDays;
+
+      // Step 11.a.iv.4.
+      months -= sign;
+    }
+
+    // Step 11.a.v.
+    while (weeks != 0) {
+      // Steps 11.a.v.1-2.
+      int32_t oneWeekDays;
+      if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneWeek, dateAdd,
+                            &dateRelativeTo, &oneWeekDays)) {
+        return false;
+      }
+
+      // Go to the slow path when the result is inexact.
+      if (MOZ_UNLIKELY(!IsSafeInteger(days + oneWeekDays))) {
+        return UnbalanceDurationRelativeSlow(
+            cx, {years, months, weeks, days}, oneWeekDays, largestUnit, sign,
+            &dateRelativeTo, calendar, oneYear, oneMonth, oneWeek, dateAdd,
+            UndefinedHandleValue, result);
+      }
+
+      // Step 11.a.v.3.
+      days += oneWeekDays;
+
+      // Step 11.a.v.4.
+      weeks -= sign;
+    }
+  }
+
+  // Step 12.
+  return CreateDateDurationRecord(cx, years, months, weeks, days, result);
+}
+
+/**
+ * UnbalanceDurationRelative ( years, months, weeks, days, largestUnit,
+ * relativeTo )
+ */
+static bool UnbalanceDurationRelative(JSContext* cx, const Duration& duration,
+                                      TemporalUnit largestUnit,
+                                      DateDuration* result) {
+  MOZ_ASSERT(IsValidDuration(duration));
+
+  double years = duration.years;
+  double months = duration.months;
+  double weeks = duration.weeks;
+  double days = duration.days;
+
+  // Step 1.
+  if (largestUnit == TemporalUnit::Year ||
+      (years == 0 && months == 0 && weeks == 0 && days == 0)) {
+    // Step 1.a.
+    *result = CreateDateDurationRecord(years, months, weeks, days);
+    return true;
+  }
+
+  // Steps 2-8. (Not applicable in our implementation.)
+
+  // Steps 9-11.
+  if (largestUnit == TemporalUnit::Month) {
+    // Step 9.a.
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_DURATION_UNCOMPARABLE, "calendar");
+    return false;
+  } else if (largestUnit == TemporalUnit::Week) {
+    // Step 10.a.
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_DURATION_UNCOMPARABLE, "calendar");
+    return false;
+  } else if (years != 0 || months != 0 || weeks != 0) {
+    // Step 11.a.i.
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_DURATION_UNCOMPARABLE, "calendar");
+    return false;
+  }
+
+  // Step 12.
+  *result = CreateDateDurationRecord(years, months, weeks, days);
+  return true;
+}
+
 static bool BigIntToStringBuilder(JSContext* cx, Handle<BigInt*> num,
                                   JSStringBuilder& sb) {
   MOZ_ASSERT(!num->isNegative());
@@ -1675,6 +2515,262 @@ static JSString* TemporalDurationToString(JSContext* cx,
 
   // Step 20.
   return result.finishString();
+}
+
+/**
+ * ToRelativeTemporalObject ( options )
+ */
+static bool ToRelativeTemporalObject(JSContext* cx, Handle<JSObject*> options,
+                                     MutableHandle<JSObject*> result) {
+  // Step 1. (Not applicable in our implementation.)
+
+  // Step 2.
+  Rooted<Value> value(cx);
+  if (!GetProperty(cx, options, options, cx->names().relativeTo, &value)) {
+    return false;
+  }
+
+  // Step 3.
+  if (value.isUndefined()) {
+    result.set(nullptr);
+    return true;
+  }
+
+  // Step 4.
+  auto offsetBehaviour = OffsetBehaviour::Option;
+
+  // Step 5.
+  auto matchBehaviour = MatchBehaviour::MatchExactly;
+
+  // Steps 6-7.
+  PlainDateTime dateTime;
+  Rooted<JSObject*> calendar(cx);
+  Rooted<JSObject*> timeZone(cx);
+  int64_t offsetNs;
+  if (value.isObject()) {
+    Rooted<JSObject*> obj(cx, &value.toObject());
+
+    // Step 6.a.
+    if (obj->canUnwrapAs<PlainDateObject>()) {
+      result.set(obj);
+      return true;
+    }
+    if (obj->canUnwrapAs<ZonedDateTimeObject>()) {
+      result.set(obj);
+      return true;
+    }
+
+    // Step 6.b.
+    if (auto* dateTime = obj->maybeUnwrapIf<PlainDateTimeObject>()) {
+      auto plainDateTime = ToPlainDate(dateTime);
+
+      Rooted<JSObject*> calendar(cx, dateTime->calendar());
+      if (!cx->compartment()->wrap(cx, &calendar)) {
+        return false;
+      }
+
+      auto* date = CreateTemporalDate(cx, plainDateTime, calendar);
+      if (!date) {
+        return false;
+      }
+
+      result.set(date);
+      return true;
+    }
+
+    // Step 6.c.
+    calendar = GetTemporalCalendarWithISODefault(cx, obj);
+    if (!calendar) {
+      return false;
+    }
+
+    // Step 6.d.
+    JS::RootedVector<PropertyKey> fieldNames(cx);
+    if (!CalendarFields(cx, calendar,
+                        {CalendarField::Day, CalendarField::Hour,
+                         CalendarField::Microsecond, CalendarField::Millisecond,
+                         CalendarField::Minute, CalendarField::Month,
+                         CalendarField::MonthCode, CalendarField::Nanosecond,
+                         CalendarField::Second, CalendarField::Year},
+                        &fieldNames)) {
+      return false;
+    }
+
+    // Steps 6.e-f.
+    if (!AppendSorted(cx, fieldNames.get(),
+                      {TemporalField::Offset, TemporalField::TimeZone})) {
+      return false;
+    }
+
+    // Step 6.g.
+    Rooted<PlainObject*> fields(cx, PrepareTemporalFields(cx, obj, fieldNames));
+    if (!fields) {
+      return false;
+    }
+
+    // Step 6.h.
+    Rooted<JSObject*> dateOptions(cx, NewPlainObjectWithProto(cx, nullptr));
+    if (!dateOptions) {
+      return false;
+    }
+
+    // Step 6.i.
+    Rooted<Value> overflow(cx, StringValue(cx->names().constrain));
+    if (!DefineDataProperty(cx, dateOptions, cx->names().overflow, overflow)) {
+      return false;
+    }
+
+    // Step 6.j.
+    if (!InterpretTemporalDateTimeFields(cx, calendar, fields, dateOptions,
+                                         &dateTime)) {
+      return false;
+    }
+
+    // Step 6.k.
+    Rooted<Value> offset(cx);
+    if (!GetProperty(cx, fields, fields, cx->names().offset, &offset)) {
+      return false;
+    }
+
+    // Step 6.l.
+    Rooted<Value> timeZoneValue(cx);
+    if (!GetProperty(cx, fields, fields, cx->names().timeZone,
+                     &timeZoneValue)) {
+      return false;
+    }
+
+    // Step 6.m.
+    if (!timeZoneValue.isUndefined()) {
+      timeZone = ToTemporalTimeZone(cx, timeZoneValue);
+      if (!timeZone) {
+        return false;
+      }
+    }
+
+    // Step 6.n.
+    if (offset.isUndefined()) {
+      offsetBehaviour = OffsetBehaviour::Wall;
+    }
+
+    // Steps 9-10.
+    if (timeZone) {
+      if (offsetBehaviour == OffsetBehaviour::Option) {
+        MOZ_ASSERT(!offset.isUndefined());
+        MOZ_ASSERT(offset.isString());
+
+        // Step 9.a.
+        Rooted<JSString*> offsetString(cx, offset.toString());
+        if (!offsetString) {
+          return false;
+        }
+
+        // Step 9.b.
+        if (!ParseTimeZoneOffsetString(cx, offsetString, &offsetNs)) {
+          return false;
+        }
+      } else {
+        // Step 10.
+        offsetNs = 0;
+      }
+    }
+  } else {
+    // Step 7.a.
+    Rooted<JSString*> string(cx, JS::ToString(cx, value));
+    if (!string) {
+      return false;
+    }
+
+    // Step 7.b.
+    bool isUTC;
+    bool hasOffset;
+    int64_t timeZoneOffset;
+    Rooted<JSString*> timeZoneName(cx);
+    Rooted<JSString*> calendarString(cx);
+    if (!ParseTemporalRelativeToString(cx, string, &dateTime, &isUTC,
+                                       &hasOffset, &timeZoneOffset,
+                                       &timeZoneName, &calendarString)) {
+      return false;
+    }
+
+    // Step 7.c.
+    Rooted<Value> calendarValue(cx);
+    if (calendarString) {
+      calendarValue.setString(calendarString);
+    }
+
+    calendar = ToTemporalCalendarWithISODefault(cx, calendarValue);
+    if (!calendar) {
+      return false;
+    }
+
+    // Step 7.d. (Not applicable in our implementation.)
+
+    // Steps 7.e-g.
+    if (timeZoneName) {
+      timeZone = ToTemporalTimeZone(cx, timeZoneName);
+      if (!timeZone) {
+        return false;
+      }
+    } else {
+      MOZ_ASSERT(!timeZone);
+    }
+
+    // Steps 7.h-i.
+    if (isUTC) {
+      offsetBehaviour = OffsetBehaviour::Exact;
+    } else if (!hasOffset) {
+      offsetBehaviour = OffsetBehaviour::Wall;
+    }
+
+    // Step 7.j.
+    matchBehaviour = MatchBehaviour::MatchMinutes;
+
+    // Steps 9-10.
+    if (timeZone) {
+      if (offsetBehaviour == OffsetBehaviour::Option) {
+        MOZ_ASSERT(hasOffset);
+
+        // Steps 9.a-b.
+        offsetNs = timeZoneOffset;
+      } else {
+        // Step 10.
+        offsetNs = 0;
+      }
+    }
+  }
+
+  // Step 8.
+  if (!timeZone) {
+    auto* obj = CreateTemporalDate(cx, dateTime.date, calendar);
+    if (!obj) {
+      return false;
+    }
+
+    result.set(obj);
+    return true;
+  }
+
+  // Steps 9-10. (Moved above)
+
+  // Step 11.
+  Instant epochNanoseconds;
+  if (!InterpretISODateTimeOffset(cx, dateTime, offsetBehaviour, offsetNs,
+                                  timeZone, TemporalDisambiguation::Compatible,
+                                  TemporalOffset::Reject, matchBehaviour,
+                                  &epochNanoseconds)) {
+    return false;
+  }
+  MOZ_ASSERT(IsValidEpochInstant(epochNanoseconds));
+
+  // Step 12.
+  auto* obj =
+      CreateTemporalZonedDateTime(cx, epochNanoseconds, timeZone, calendar);
+  if (!obj) {
+    return false;
+  }
+
+  result.set(obj);
+  return true;
 }
 
 static constexpr bool IsSafeInteger(int64_t x) {
@@ -2302,6 +3398,163 @@ static bool Duration_from(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
+ * Temporal.Duration.compare ( one, two [ , options ] )
+ */
+static bool Duration_compare(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Step 1.
+  Duration one;
+  if (!ToTemporalDuration(cx, args.get(0), &one)) {
+    return false;
+  }
+
+  // Step 2.
+  Duration two;
+  if (!ToTemporalDuration(cx, args.get(1), &two)) {
+    return false;
+  }
+
+  Rooted<JSObject*> relativeTo(cx);
+  if (args.hasDefined(2)) {
+    // Step 3.
+    Rooted<JSObject*> options(
+        cx, RequireObjectArg(cx, "options", "compare", args[2]));
+    if (!options) {
+      return false;
+    }
+
+    // Step 4.
+    if (!ToRelativeTemporalObject(cx, options, &relativeTo)) {
+      return false;
+    }
+  }
+
+  // Step 5.
+  int64_t shift1;
+  if (!CalculateOffsetShift(cx, relativeTo, one.date(), &shift1)) {
+    return false;
+  }
+
+  // Step 6.
+  int64_t shift2;
+  if (!CalculateOffsetShift(cx, relativeTo, two.date(), &shift2)) {
+    return false;
+  }
+
+  // Steps 7-8.
+  double days1, days2;
+  if (one.years != 0 || one.months != 0 || one.weeks != 0 || two.years != 0 ||
+      two.months != 0 || two.weeks != 0) {
+    // Step 7.a.
+    DateDuration unbalanceResult1;
+    if (relativeTo) {
+      if (!UnbalanceDurationRelative(cx, one, TemporalUnit::Day, relativeTo,
+                                     &unbalanceResult1)) {
+        return false;
+      }
+    } else {
+      if (!UnbalanceDurationRelative(cx, one, TemporalUnit::Day,
+                                     &unbalanceResult1)) {
+        return false;
+      }
+      MOZ_ASSERT(one.date() == unbalanceResult1.toDuration());
+    }
+
+    // Step 7.b.
+    DateDuration unbalanceResult2;
+    if (relativeTo) {
+      if (!UnbalanceDurationRelative(cx, two, TemporalUnit::Day, relativeTo,
+                                     &unbalanceResult2)) {
+        return false;
+      }
+    } else {
+      if (!UnbalanceDurationRelative(cx, two, TemporalUnit::Day,
+                                     &unbalanceResult2)) {
+        return false;
+      }
+      MOZ_ASSERT(two.date() == unbalanceResult2.toDuration());
+    }
+
+    // Step 7.c.
+    days1 = unbalanceResult1.days;
+
+    // Step 7.d.
+    days2 = unbalanceResult2.days;
+  } else {
+    // Step 8.a.
+    days1 = one.days;
+
+    // Step 8.b.
+    days2 = two.days;
+  }
+
+  // Note: duration units can be arbitrary doubles, so we need to use BigInts
+  // Test case:
+  //
+  // Temporal.Duration.compare({
+  //   milliseconds: 10000000000000, microseconds: 4, nanoseconds: 95
+  // }, {
+  //   nanoseconds:10000000000000004000
+  // })
+  //
+  // This must return -1, but would return 0 when |double| is used.
+  //
+  // Note: BigInt(10000000000000004000) is 10000000000000004096n
+
+  Duration oneTotal = {
+      0,
+      0,
+      0,
+      days1,
+      one.hours,
+      one.minutes,
+      one.seconds,
+      one.milliseconds,
+      one.microseconds,
+      one.nanoseconds,
+  };
+  Duration twoTotal = {
+      0,
+      0,
+      0,
+      days2,
+      two.hours,
+      two.minutes,
+      two.seconds,
+      two.milliseconds,
+      two.microseconds,
+      two.nanoseconds,
+  };
+
+  // Steps 9-13.
+  //
+  // Fast path when the total duration amount fits into an int64.
+  if (auto ns1 = TotalDurationNanoseconds(oneTotal, shift1)) {
+    if (auto ns2 = TotalDurationNanoseconds(twoTotal, shift2)) {
+      args.rval().setInt32(*ns1 < *ns2 ? -1 : *ns1 > *ns2 ? 1 : 0);
+      return true;
+    }
+  }
+
+  // Step 9.
+  Rooted<BigInt*> ns1(cx, TotalDurationNanosecondsSlow(cx, oneTotal, shift1));
+  if (!ns1) {
+    return false;
+  }
+
+  // Step 10.
+  auto* ns2 = TotalDurationNanosecondsSlow(cx, twoTotal, shift2);
+  if (!ns2) {
+    return false;
+  }
+
+  // Step 11-13.
+  args.rval().setInt32(BigInt::compare(ns1, ns2));
+  return true;
+}
+
+/**
  * get Temporal.Duration.prototype.years
  */
 static bool Duration_years(JSContext* cx, const CallArgs& args) {
@@ -2774,6 +4027,7 @@ const JSClass& DurationObject::protoClass_ = PlainObject::class_;
 
 static const JSFunctionSpec Duration_methods[] = {
     JS_FN("from", Duration_from, 1, 0),
+    JS_FN("compare", Duration_compare, 2, 0),
     JS_FS_END,
 };
 

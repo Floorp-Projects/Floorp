@@ -100,6 +100,7 @@
   MACRO_(compare, compare, "compare")                                          \
   MACRO_(configurable, configurable, "configurable")                           \
   MACRO_(const, const_, "const")                                               \
+  MACRO_(constrain, constrain, "constrain")                                    \
   MACRO_(construct, construct, "construct")                                    \
   MACRO_(constructContentFunction, constructContentFunction,                   \
          "constructContentFunction")                                           \
@@ -481,6 +482,7 @@
   MACRO_(relatedYear, relatedYear, "relatedYear")                              \
   MACRO_(RelativeTimeFormatFormat, RelativeTimeFormatFormat,                   \
          "Intl_RelativeTimeFormat_Format")                                     \
+  MACRO_(relativeTo, relativeTo, "relativeTo")                                 \
   MACRO_(RequireObjectCoercible, RequireObjectCoercible,                       \
          "RequireObjectCoercible")                                             \
   MACRO_(resolve, resolve, "resolve")                                          \
