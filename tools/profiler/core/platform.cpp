@@ -2704,7 +2704,8 @@ struct PreRecordedMetaInformation {
 // This function should be called out of the profiler lock.
 // It gathers non-trivial data that doesn't require the profiler to stop, or for
 // which the request could theoretically deadlock if the profiler is locked.
-static PreRecordedMetaInformation PreRecordMetaInformation() {
+static PreRecordedMetaInformation PreRecordMetaInformation(
+    bool aShutdown = false) {
   MOZ_ASSERT(!PSAutoLock::IsLockedOnCurrentThread());
 
   PreRecordedMetaInformation info = {};  // Aggregate-init all fields.
@@ -2719,7 +2720,8 @@ static PreRecordedMetaInformation PreRecordMetaInformation() {
     return info;
   }
 
-  info.mAsyncStacks = Preferences::GetBool("javascript.options.asyncstack");
+  info.mAsyncStacks =
+      !aShutdown && Preferences::GetBool("javascript.options.asyncstack");
 
   nsresult res;
 
@@ -5331,7 +5333,8 @@ void profiler_shutdown(IsFastShutdown aIsFastShutdown) {
   }
   invoke_profiler_state_change_callbacks(ProfilingState::ShuttingDown);
 
-  const auto preRecordedMetaInformation = PreRecordMetaInformation();
+  const auto preRecordedMetaInformation =
+      PreRecordMetaInformation(/* aShutdown = */ true);
 
   ProfilerParent::ProfilerWillStopIfStarted();
 
