@@ -12,10 +12,6 @@ const PREFILTER_TRANSPARENT = nsIAccessibleTraversalRule.PREFILTER_TRANSPARENT;
 const FILTER_MATCH = nsIAccessibleTraversalRule.FILTER_MATCH;
 const FILTER_IGNORE = nsIAccessibleTraversalRule.FILTER_IGNORE;
 const FILTER_IGNORE_SUBTREE = nsIAccessibleTraversalRule.FILTER_IGNORE_SUBTREE;
-const NO_BOUNDARY = nsIAccessiblePivot.NO_BOUNDARY;
-const CHAR_BOUNDARY = nsIAccessiblePivot.CHAR_BOUNDARY;
-const WORD_BOUNDARY = nsIAccessiblePivot.WORD_BOUNDARY;
-const LINE_BOUNDARY = nsIAccessiblePivot.LINE_BOUNDARY;
 
 const NS_ERROR_NOT_IN_TREE = 0x80780026;
 const NS_ERROR_INVALID_ARG = 0x80070057;
@@ -84,8 +80,7 @@ function VCChangedChecker(
   aIdOrNameOrAcc,
   aTextOffsets,
   aPivotMoveMethod,
-  aIsFromUserInput,
-  aBoundaryType = NO_BOUNDARY
+  aIsFromUserInput
 ) {
   this.__proto__ = new invokerChecker(EVENT_VIRTUALCURSOR_CHANGED, aDocAcc);
 
@@ -101,9 +96,7 @@ function VCChangedChecker(
       VCChangedChecker.methodReasonMap[aPivotMoveMethod] ||
       nsIAccessiblePivot.REASON_NONE;
 
-    return (
-      event.reason == expectedReason && event.boundaryType == aBoundaryType
-    );
+    return event.reason == expectedReason;
   };
 
   this.check = function VCChangedChecker_check(aEvent) {
@@ -173,16 +166,6 @@ function VCChangedChecker(
         event.oldAccessible,
         prevPosAndOffset.position,
         "previous position does not match"
-      );
-      SimpleTest.is(
-        event.oldStartOffset,
-        prevPosAndOffset.startOffset,
-        "previous start offset does not match"
-      );
-      SimpleTest.is(
-        event.oldEndOffset,
-        prevPosAndOffset.endOffset,
-        "previous end offset does not match"
       );
     }
   };
@@ -324,78 +307,6 @@ function setVCPosInvoker(
         null,
         aPivotMoveMethod,
         aIsFromUserInput === undefined ? !!aPivotMoveMethod : aIsFromUserInput
-      ),
-    ];
-  } else {
-    this.eventSeq = [];
-    this.unexpectedEventSeq = [
-      new invokerChecker(EVENT_VIRTUALCURSOR_CHANGED, aDocAcc),
-    ];
-  }
-}
-
-/**
- * Move the pivot by text and wait for virtual cursor change event.
- *
- * @param aDocAcc          [in] document that manages the virtual cursor
- * @param aPivotMoveMethod [in] method to test (ie. "moveNext", "moveFirst", etc.)
- * @param aBoundary        [in] boundary constant
- * @param aTextOffsets     [in] start and end offsets of text range to set in
- *                         virtual cursor.
- * @param aIdOrNameOrAcc   [in] id, accessible or accessible name to expect
- *                         virtual cursor to land on after performing move method.
- *                         false if no move is expected.
- * @param aIsFromUserInput [in] set user input flag when invoking method, and
- *                         expect it in the event.
- */
-function setVCTextInvoker(
-  aDocAcc,
-  aPivotMoveMethod,
-  aBoundary,
-  aTextOffsets,
-  aIdOrNameOrAcc,
-  aIsFromUserInput
-) {
-  // eslint-disable-next-line mozilla/no-compare-against-boolean-literals
-  var expectMove = aIdOrNameOrAcc != false;
-  this.invoke = function virtualCursorChangedInvoker_invoke() {
-    VCChangedChecker.storePreviousPosAndOffset(aDocAcc.virtualCursor);
-    SimpleTest.info(aDocAcc.virtualCursor.position);
-    var moved = aDocAcc.virtualCursor[aPivotMoveMethod](
-      aBoundary,
-      aIsFromUserInput === undefined
-    );
-    SimpleTest.is(
-      !!moved,
-      !!expectMove,
-      "moved pivot by text with " + aPivotMoveMethod + " to " + aIdOrNameOrAcc
-    );
-  };
-
-  this.getID = function setVCPosInvoker_getID() {
-    return (
-      "Do " +
-      (expectMove ? "" : "no-op ") +
-      aPivotMoveMethod +
-      " in " +
-      prettyName(aIdOrNameOrAcc) +
-      ", " +
-      boundaryToString(aBoundary) +
-      ", [" +
-      aTextOffsets +
-      "]"
-    );
-  };
-
-  if (expectMove) {
-    this.eventSeq = [
-      new VCChangedChecker(
-        aDocAcc,
-        aIdOrNameOrAcc,
-        aTextOffsets,
-        aPivotMoveMethod,
-        aIsFromUserInput === undefined ? true : aIsFromUserInput,
-        aBoundary
       ),
     ];
   } else {

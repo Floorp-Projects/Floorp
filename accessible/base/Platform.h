@@ -117,12 +117,8 @@ void ProxySelectionEvent(RemoteAccessible* aTarget, RemoteAccessible* aWidget,
 #if defined(ANDROID)
 void ProxyVirtualCursorChangeEvent(RemoteAccessible* aTarget,
                                    RemoteAccessible* aOldPosition,
-                                   int32_t aOldStartOffset,
-                                   int32_t aOldEndOffset,
                                    RemoteAccessible* aNewPosition,
-                                   int32_t aNewStartOffset,
-                                   int32_t aNewEndOffset, int16_t aReason,
-                                   int16_t aBoundaryType, bool aFromUser);
+                                   int16_t aReason, bool aFromUser);
 
 void ProxyScrollingEvent(RemoteAccessible* aTarget, uint32_t aEventType,
                          uint32_t aScrollX, uint32_t aScrollY,

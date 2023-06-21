@@ -180,21 +180,14 @@ AccTableChangeEvent::AccTableChangeEvent(LocalAccessible* aAccessible,
 
 AccVCChangeEvent::AccVCChangeEvent(LocalAccessible* aAccessible,
                                    LocalAccessible* aOldAccessible,
-                                   int32_t aOldStart, int32_t aOldEnd,
                                    LocalAccessible* aNewAccessible,
-                                   int32_t aNewStart, int32_t aNewEnd,
-                                   int16_t aReason, int16_t aBoundaryType,
+                                   int16_t aReason,
                                    EIsFromUserInput aIsFromUserInput)
     : AccEvent(::nsIAccessibleEvent::EVENT_VIRTUALCURSOR_CHANGED, aAccessible,
                aIsFromUserInput),
       mOldAccessible(aOldAccessible),
       mNewAccessible(aNewAccessible),
-      mOldStart(aOldStart),
-      mNewStart(aNewStart),
-      mOldEnd(aOldEnd),
-      mNewEnd(aNewEnd),
-      mReason(aReason),
-      mBoundaryType(aBoundaryType) {}
+      mReason(aReason) {}
 
 already_AddRefed<nsIAccessibleEvent> a11y::MakeXPCEvent(AccEvent* aEvent) {
   DocAccessible* doc = aEvent->Document();
@@ -264,9 +257,8 @@ already_AddRefed<nsIAccessibleEvent> a11y::MakeXPCEvent(AccEvent* aEvent) {
     AccVCChangeEvent* vcc = downcast_accEvent(aEvent);
     xpEvent = new xpcAccVirtualCursorChangeEvent(
         type, ToXPC(acc), ToXPCDocument(doc), node, fromUser,
-        ToXPC(vcc->OldAccessible()), vcc->OldStartOffset(), vcc->OldEndOffset(),
-        ToXPC(vcc->NewAccessible()), vcc->NewStartOffset(), vcc->NewEndOffset(),
-        vcc->Reason(), vcc->BoundaryType());
+        ToXPC(vcc->OldAccessible()), ToXPC(vcc->NewAccessible()),
+        vcc->Reason());
     return xpEvent.forget();
   }
 
