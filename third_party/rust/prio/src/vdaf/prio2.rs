@@ -3,16 +3,17 @@
 //! Port of the ENPA Prio system to a VDAF. It is backwards compatible with
 //! [`Client`](crate::client::Client) and [`Server`](crate::server::Server).
 
+use super::{AggregateShare, OutputShare};
 use crate::{
     client as v2_client,
     codec::{CodecError, Decode, Encode, ParameterizedDecode},
-    field::{FieldElement, FieldPrio2},
+    field::{decode_fieldvec, FftFriendlyFieldElement, FieldElement, FieldPrio2},
     prng::Prng,
     server as v2_server,
     util::proof_length,
     vdaf::{
-        prg::Seed, Aggregatable, AggregateShare, Aggregator, Client, Collector, OutputShare,
-        PrepareTransition, Share, ShareDecodingParameter, Vdaf, VdafError,
+        prg::Seed, Aggregatable, Aggregator, Client, Collector, PrepareTransition, Share,
+        ShareDecodingParameter, Vdaf, VdafError,
     },
 };
 use ring::hmac;
@@ -22,8 +23,8 @@ use std::{
 };
 
 /// The Prio2 VDAF. It supports the same measurement type as
-/// [`Prio3Aes128CountVec`](crate::vdaf::prio3::Prio3Aes128CountVec) but uses the proof system
-/// and finite field deployed in ENPA.
+/// [`Prio3SumVec`](crate::vdaf::prio3::Prio3SumVec) with `bits == 1` but uses the proof system and
+/// finite field deployed in ENPA.
 #[derive(Clone, Debug)]
 pub struct Prio2 {
     input_len: usize,
@@ -106,8 +107,12 @@ impl Vdaf for Prio2 {
     }
 }
 
-impl Client for Prio2 {
-    fn shard(&self, measurement: &Vec<u32>) -> Result<((), Vec<Share<FieldPrio2, 32>>), VdafError> {
+impl Client<16> for Prio2 {
+    fn shard(
+        &self,
+        measurement: &Vec<u32>,
+        _nonce: &[u8; 16],
+    ) -> Result<(Self::PublicShare, Vec<Share<FieldPrio2, 32>>), VdafError> {
         if measurement.len() != self.input_len {
             return Err(VdafError::Uncategorized("incorrect input length".into()));
         }
@@ -143,6 +148,10 @@ impl Encode for Prio2PrepareState {
     fn encode(&self, bytes: &mut Vec<u8>) {
         self.0.encode(bytes);
     }
+
+    fn encoded_len(&self) -> Option<usize> {
+        self.0.encoded_len()
+    }
 }
 
 impl<'a> ParameterizedDecode<(&'a Prio2, usize)> for Prio2PrepareState {
@@ -170,6 +179,10 @@ impl Encode for Prio2PrepareShare {
         self.0.g_r.encode(bytes);
         self.0.h_r.encode(bytes);
     }
+
+    fn encoded_len(&self) -> Option<usize> {
+        Some(FieldPrio2::ENCODED_SIZE * 3)
+    }
 }
 
 impl ParameterizedDecode<Prio2PrepareState> for Prio2PrepareShare {
@@ -185,7 +198,7 @@ impl ParameterizedDecode<Prio2PrepareState> for Prio2PrepareShare {
     }
 }
 
-impl Aggregator<32> for Prio2 {
+impl Aggregator<32, 16> for Prio2 {
     type PrepareState = Prio2PrepareState;
     type PrepareShare = Prio2PrepareShare;
     type PrepareMessage = ();
@@ -194,8 +207,8 @@ impl Aggregator<32> for Prio2 {
         &self,
         agg_key: &[u8; 32],
         agg_id: usize,
-        _agg_param: &(),
-        nonce: &[u8],
+        _agg_param: &Self::AggregationParam,
+        nonce: &[u8; 16],
         _public_share: &Self::PublicShare,
         input_share: &Share<FieldPrio2, 32>,
     ) -> Result<(Prio2PrepareState, Prio2PrepareShare), VdafError> {
@@ -239,7 +252,7 @@ impl Aggregator<32> for Prio2 {
         &self,
         state: Prio2PrepareState,
         _input: (),
-    ) -> Result<PrepareTransition<Self, 32>, VdafError> {
+    ) -> Result<PrepareTransition<Self, 32, 16>, VdafError> {
         let data = match state.0 {
             Share::Leader(data) => data,
             Share::Helper(seed) => {
@@ -252,7 +265,7 @@ impl Aggregator<32> for Prio2 {
 
     fn aggregate<M: IntoIterator<Item = OutputShare<FieldPrio2>>>(
         &self,
-        _agg_param: &(),
+        _agg_param: &Self::AggregationParam,
         out_shares: M,
     ) -> Result<AggregateShare<FieldPrio2>, VdafError> {
         let mut agg_share = AggregateShare(vec![FieldPrio2::zero(); self.input_len]);
@@ -267,7 +280,7 @@ impl Aggregator<32> for Prio2 {
 impl Collector for Prio2 {
     fn unshard<M: IntoIterator<Item = AggregateShare<FieldPrio2>>>(
         &self,
-        _agg_param: &(),
+        _agg_param: &Self::AggregationParam,
         agg_shares: M,
         _num_measurements: usize,
     ) -> Result<Vec<u32>, VdafError> {
@@ -296,6 +309,30 @@ impl<'a> ParameterizedDecode<(&'a Prio2, usize)> for Share<FieldPrio2, 32> {
     }
 }
 
+impl<'a, F> ParameterizedDecode<(&'a Prio2, &'a ())> for OutputShare<F>
+where
+    F: FieldElement,
+{
+    fn decode_with_param(
+        (prio2, _): &(&'a Prio2, &'a ()),
+        bytes: &mut Cursor<&[u8]>,
+    ) -> Result<Self, CodecError> {
+        decode_fieldvec(prio2.input_len, bytes).map(Self)
+    }
+}
+
+impl<'a, F> ParameterizedDecode<(&'a Prio2, &'a ())> for AggregateShare<F>
+where
+    F: FieldElement,
+{
+    fn decode_with_param(
+        (prio2, _): &(&'a Prio2, &'a ()),
+        bytes: &mut Cursor<&[u8]>,
+    ) -> Result<Self, CodecError> {
+        decode_fieldvec(prio2.input_len, bytes).map(Self)
+    }
+}
+
 fn role_try_from(agg_id: usize) -> Result<bool, VdafError> {
     match agg_id {
         0 => Ok(true),
@@ -312,7 +349,7 @@ mod tests {
         encrypt::{decrypt_share, encrypt_share, PrivateKey, PublicKey},
         field::random_vector,
         server::Server,
-        vdaf::{run_vdaf, run_vdaf_prepare},
+        vdaf::{fieldvec_roundtrip_test, run_vdaf, run_vdaf_prepare},
     };
     use rand::prelude::*;
 
@@ -364,9 +401,8 @@ mod tests {
             Share::get_decoded_with_param(&(&prio2, 1), &input_share2).unwrap(),
         ];
 
-        let verify_key = rng.gen();
-        let mut nonce = [0; 16];
-        rng.fill(&mut nonce);
+        let verify_key = rng.gen::<[u8; 32]>();
+        let nonce = rng.gen::<[u8; 16]>();
         run_vdaf_prepare(&prio2, &verify_key, &(), &nonce, (), input_shares).unwrap();
     }
 
@@ -379,7 +415,8 @@ mod tests {
 
         let data = vec![0, 0, 1, 1, 0];
         let prio2 = Prio2::new(data.len()).unwrap();
-        let (_public_share, input_shares) = prio2.shard(&data).unwrap();
+        let ignored_nonce = [0; 16];
+        let (_public_share, input_shares) = prio2.shard(&data, &ignored_nonce).unwrap();
 
         let encrypted_input_share1 =
             encrypt_share(&input_shares[0].get_encoded(), &pub_key1).unwrap();
@@ -407,19 +444,59 @@ mod tests {
 
     #[test]
     fn prepare_state_serialization() {
-        let mut verify_key = [0; 32];
-        thread_rng().fill(&mut verify_key[..]);
+        let mut rng = thread_rng();
+        let verify_key = rng.gen::<[u8; 32]>();
+        let nonce = rng.gen::<[u8; 16]>();
         let data = vec![0, 0, 1, 1, 0];
         let prio2 = Prio2::new(data.len()).unwrap();
-        let (public_share, input_shares) = prio2.shard(&data).unwrap();
+        let (public_share, input_shares) = prio2.shard(&data, &nonce).unwrap();
         for (agg_id, input_share) in input_shares.iter().enumerate() {
-            let (want, _msg) = prio2
-                .prepare_init(&verify_key, agg_id, &(), &[], &public_share, input_share)
+            let (prepare_state, prepare_share) = prio2
+                .prepare_init(
+                    &verify_key,
+                    agg_id,
+                    &(),
+                    &[0; 16],
+                    &public_share,
+                    input_share,
+                )
                 .unwrap();
-            let got =
-                Prio2PrepareState::get_decoded_with_param(&(&prio2, agg_id), &want.get_encoded())
-                    .expect("failed to decode prepare step");
-            assert_eq!(got, want);
+
+            let encoded_prepare_state = prepare_state.get_encoded();
+            let decoded_prepare_state = Prio2PrepareState::get_decoded_with_param(
+                &(&prio2, agg_id),
+                &encoded_prepare_state,
+            )
+            .expect("failed to decode prepare state");
+            assert_eq!(decoded_prepare_state, prepare_state);
+            assert_eq!(
+                prepare_state.encoded_len().unwrap(),
+                encoded_prepare_state.len()
+            );
+
+            let encoded_prepare_share = prepare_share.get_encoded();
+            let decoded_prepare_share =
+                Prio2PrepareShare::get_decoded_with_param(&prepare_state, &encoded_prepare_share)
+                    .expect("failed to decode prepare share");
+            assert_eq!(decoded_prepare_share.0.f_r, prepare_share.0.f_r);
+            assert_eq!(decoded_prepare_share.0.g_r, prepare_share.0.g_r);
+            assert_eq!(decoded_prepare_share.0.h_r, prepare_share.0.h_r);
+            assert_eq!(
+                prepare_share.encoded_len().unwrap(),
+                encoded_prepare_share.len()
+            );
         }
+    }
+
+    #[test]
+    fn roundtrip_output_share() {
+        let vdaf = Prio2::new(31).unwrap();
+        fieldvec_roundtrip_test::<FieldPrio2, Prio2, OutputShare<FieldPrio2>>(&vdaf, &(), 31);
+    }
+
+    #[test]
+    fn roundtrip_aggregate_share() {
+        let vdaf = Prio2::new(31).unwrap();
+        fieldvec_roundtrip_test::<FieldPrio2, Prio2, AggregateShare<FieldPrio2>>(&vdaf, &(), 31);
     }
 }

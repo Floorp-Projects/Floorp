@@ -117,7 +117,7 @@ export const DAPTelemetrySender = new (class {
     try {
       let report = await this.generateReport(task, measurement);
       Glean.dap.reportGenerationStatus.success.add(1);
-      await this.sendReport(task.leader_endpoint, report);
+      await this.sendReport(task.leader_endpoint, task.id_base64, report);
     } catch (e) {
       Glean.dap.reportGenerationStatus.failure.add(1);
       lazy.logConsole.error("DAP report generation failed: " + e.message);
@@ -206,11 +206,11 @@ export const DAPTelemetrySender = new (class {
    * @returns Promise
    * @resolves {undefined} Once the attempt to send the report completes, whether or not it was successful.
    */
-  async sendReport(leader_endpoint, report) {
-    const upload_path = leader_endpoint + "/upload";
+  async sendReport(leader_endpoint, task_id, report) {
+    const upload_path = leader_endpoint + "/tasks/" + task_id + "/reports";
     try {
       let response = await fetch(upload_path, {
-        method: "POST",
+        method: "PUT",
         headers: { "Content-Type": "application/dap-report" },
         body: report,
       });

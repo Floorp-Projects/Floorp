@@ -4156,15 +4156,16 @@ version = "0.0.1"
 
 [[package]]
 name = "prio"
-version = "0.9.1"
+version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c574f8eb821cee725c8e662e5881e0e94f40838af25be4035e15b5c4d960df3e"
+checksum = "9c2aa1f9faa3fab6f02b54025f411d6f4fcd31765765600db339280e3678ae20"
 dependencies = [
- "base64 0.13.999",
+ "base64 0.21.0",
  "byteorder",
  "getrandom",
  "serde",
  "static_assertions",
+ "subtle",
  "thiserror",
 ]
 
@@ -5038,6 +5039,12 @@ dependencies = [
  "euclid",
  "style",
 ]
+
+[[package]]
+name = "subtle"
+version = "2.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "81cdd64d312baedb58e21336b31bc043b77e01cc99033ce76ef539f78e965ebc"
 
 [[package]]
 name = "svg_fmt"

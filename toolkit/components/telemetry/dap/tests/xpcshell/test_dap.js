@@ -40,15 +40,15 @@ function hpkeConfigHandler(request, response) {
     let config_bytes;
     if (request.path.startsWith("/leader")) {
       config_bytes = new Uint8Array([
-        47, 0, 32, 0, 1, 0, 1, 0, 32, 11, 33, 206, 33, 131, 56, 220, 82, 153,
-        110, 228, 200, 53, 98, 210, 38, 177, 197, 252, 198, 36, 201, 86, 121,
-        169, 238, 220, 34, 143, 112, 177, 10,
+        0, 41, 47, 0, 32, 0, 1, 0, 1, 0, 32, 11, 33, 206, 33, 131, 56, 220, 82,
+        153, 110, 228, 200, 53, 98, 210, 38, 177, 197, 252, 198, 36, 201, 86,
+        121, 169, 238, 220, 34, 143, 112, 177, 10,
       ]);
     } else {
       config_bytes = new Uint8Array([
-        42, 0, 32, 0, 1, 0, 1, 0, 32, 28, 62, 242, 195, 117, 7, 173, 149, 250,
-        15, 139, 178, 86, 241, 117, 143, 75, 26, 57, 60, 88, 130, 199, 175, 195,
-        9, 241, 130, 61, 47, 215, 101,
+        0, 41, 42, 0, 32, 0, 1, 0, 1, 0, 32, 28, 62, 242, 195, 117, 7, 173, 149,
+        250, 15, 139, 178, 86, 241, 117, 143, 75, 26, 57, 60, 88, 130, 199, 175,
+        195, 9, 241, 130, 61, 47, 215, 101,
       ]);
     }
     response.setHeader("Content-Type", "application/dap-hpke-config");
@@ -69,7 +69,7 @@ function uploadHandler(request, response) {
   let body = new BinaryInputStream(request.bodyInputStream);
   Assert.equal(
     true,
-    body.available() == 432 || body.available() == 20720,
+    body.available() == 366 || body.available() == 20654,
     "Wrong request body size."
   );
   received = true;
@@ -84,7 +84,7 @@ add_setup(async function () {
   server = new HttpServer();
   server.registerPathHandler("/leader_endpoint/hpke_config", hpkeConfigHandler);
   server.registerPathHandler("/helper_endpoint/hpke_config", hpkeConfigHandler);
-  server.registerPathHandler("/leader_endpoint/upload", uploadHandler);
+  server.registerPrefixHandler("/leader_endpoint/tasks/", uploadHandler);
   server.start(-1);
 
   const orig_leader = Services.prefs.getStringPref(PREF_LEADER);
@@ -107,7 +107,8 @@ add_task(async function testVerificationTask() {
   Services.fog.testResetFOG();
   let before = Glean.dap.uploadStatus.success.testGetValue() ?? 0;
   await lazy.DAPTelemetrySender.sendTestReports();
-  let after = Glean.dap.uploadStatus.success.testGetValue();
+  let after = Glean.dap.uploadStatus.success.testGetValue() ?? 0;
+
   Assert.equal(before + 2, after, "Successful submissions should be counted.");
   Assert.ok(received, "Report upload successful.");
 });

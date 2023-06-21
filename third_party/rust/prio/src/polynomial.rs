@@ -3,7 +3,7 @@
 
 //! Functions for polynomial interpolation and evaluation
 
-use crate::field::FieldElement;
+use crate::field::FftFriendlyFieldElement;
 
 use std::convert::TryFrom;
 
@@ -15,7 +15,7 @@ pub struct PolyFFTTempMemory<F> {
     fft_roots_sub: Vec<F>,
 }
 
-impl<F: FieldElement> PolyFFTTempMemory<F> {
+impl<F: FftFriendlyFieldElement> PolyFFTTempMemory<F> {
     fn new(length: usize) -> Self {
         PolyFFTTempMemory {
             fft_tmp: vec![F::zero(); length],
@@ -36,7 +36,7 @@ pub struct PolyAuxMemory<F> {
     pub fft_memory: PolyFFTTempMemory<F>,
 }
 
-impl<F: FieldElement> PolyAuxMemory<F> {
+impl<F: FftFriendlyFieldElement> PolyAuxMemory<F> {
     pub fn new(n: usize) -> Self {
         PolyAuxMemory {
             roots_2n: fft_get_roots(2 * n, false),
@@ -49,7 +49,7 @@ impl<F: FieldElement> PolyAuxMemory<F> {
     }
 }
 
-fn fft_recurse<F: FieldElement>(
+fn fft_recurse<F: FftFriendlyFieldElement>(
     out: &mut [F],
     n: usize,
     roots: &[F],
@@ -107,7 +107,7 @@ fn fft_recurse<F: FieldElement>(
 }
 
 /// Calculate `count` number of roots of unity of order `count`
-fn fft_get_roots<F: FieldElement>(count: usize, invert: bool) -> Vec<F> {
+fn fft_get_roots<F: FftFriendlyFieldElement>(count: usize, invert: bool) -> Vec<F> {
     let mut roots = vec![F::zero(); count];
     let mut gen = F::generator();
     if invert {
@@ -128,7 +128,7 @@ fn fft_get_roots<F: FieldElement>(count: usize, invert: bool) -> Vec<F> {
     roots
 }
 
-fn fft_interpolate_raw<F: FieldElement>(
+fn fft_interpolate_raw<F: FftFriendlyFieldElement>(
     out: &mut [F],
     ys: &[F],
     n_points: usize,
@@ -154,7 +154,7 @@ fn fft_interpolate_raw<F: FieldElement>(
     }
 }
 
-pub fn poly_fft<F: FieldElement>(
+pub fn poly_fft<F: FftFriendlyFieldElement>(
     points_out: &mut [F],
     points_in: &[F],
     scaled_roots: &[F],
@@ -166,7 +166,7 @@ pub fn poly_fft<F: FieldElement>(
 }
 
 // Evaluate a polynomial using Horner's method.
-pub fn poly_eval<F: FieldElement>(poly: &[F], eval_at: F) -> F {
+pub fn poly_eval<F: FftFriendlyFieldElement>(poly: &[F], eval_at: F) -> F {
     if poly.is_empty() {
         return F::zero();
     }
@@ -181,7 +181,7 @@ pub fn poly_eval<F: FieldElement>(poly: &[F], eval_at: F) -> F {
 }
 
 // Returns the degree of polynomial `p`.
-pub fn poly_deg<F: FieldElement>(p: &[F]) -> usize {
+pub fn poly_deg<F: FftFriendlyFieldElement>(p: &[F]) -> usize {
     let mut d = p.len();
     while d > 0 && p[d - 1] == F::zero() {
         d -= 1;
@@ -190,7 +190,7 @@ pub fn poly_deg<F: FieldElement>(p: &[F]) -> usize {
 }
 
 // Multiplies polynomials `p` and `q` and returns the result.
-pub fn poly_mul<F: FieldElement>(p: &[F], q: &[F]) -> Vec<F> {
+pub fn poly_mul<F: FftFriendlyFieldElement>(p: &[F], q: &[F]) -> Vec<F> {
     let p_size = poly_deg(p) + 1;
     let q_size = poly_deg(q) + 1;
     let mut out = vec![F::zero(); p_size + q_size];
@@ -204,7 +204,7 @@ pub fn poly_mul<F: FieldElement>(p: &[F], q: &[F]) -> Vec<F> {
 }
 
 #[cfg(feature = "prio2")]
-pub fn poly_interpret_eval<F: FieldElement>(
+pub fn poly_interpret_eval<F: FftFriendlyFieldElement>(
     points: &[F],
     roots: &[F],
     eval_at: F,
@@ -217,7 +217,7 @@ pub fn poly_interpret_eval<F: FieldElement>(
 
 // Returns a polynomial that evaluates to `0` if the input is in range `[start, end)`. Otherwise,
 // the output is not `0`.
-pub(crate) fn poly_range_check<F: FieldElement>(start: usize, end: usize) -> Vec<F> {
+pub(crate) fn poly_range_check<F: FftFriendlyFieldElement>(start: usize, end: usize) -> Vec<F> {
     let mut p = vec![F::one()];
     let mut q = [F::zero(), F::one()];
     for i in start..end {
@@ -227,158 +227,156 @@ pub(crate) fn poly_range_check<F: FieldElement>(start: usize, end: usize) -> Vec
     p
 }
 
-#[test]
-fn test_roots() {
-    use crate::field::Field32;
-
-    let count = 128;
-    let roots = fft_get_roots::<Field32>(count, false);
-    let roots_inv = fft_get_roots::<Field32>(count, true);
-
-    for i in 0..count {
-        assert_eq!(roots[i] * roots_inv[i], 1);
-        assert_eq!(roots[i].pow(u32::try_from(count).unwrap()), 1);
-        assert_eq!(roots_inv[i].pow(u32::try_from(count).unwrap()), 1);
-    }
-}
-
-#[test]
-fn test_eval() {
-    use crate::field::Field32;
-
-    let mut poly = vec![Field32::from(0); 4];
-    poly[0] = 2.into();
-    poly[1] = 1.into();
-    poly[2] = 5.into();
-    // 5*3^2 + 3 + 2 = 50
-    assert_eq!(poly_eval(&poly[..3], 3.into()), 50);
-    poly[3] = 4.into();
-    // 4*3^3 + 5*3^2 + 3 + 2 = 158
-    assert_eq!(poly_eval(&poly[..4], 3.into()), 158);
-}
-
-#[test]
-fn test_poly_deg() {
-    use crate::field::Field32;
-
-    let zero = Field32::zero();
-    let one = Field32::root(0).unwrap();
-    assert_eq!(poly_deg(&[zero]), 0);
-    assert_eq!(poly_deg(&[one]), 0);
-    assert_eq!(poly_deg(&[zero, one]), 1);
-    assert_eq!(poly_deg(&[zero, zero, one]), 2);
-    assert_eq!(poly_deg(&[zero, one, one]), 2);
-    assert_eq!(poly_deg(&[zero, one, one, one]), 3);
-    assert_eq!(poly_deg(&[zero, one, one, one, zero]), 3);
-    assert_eq!(poly_deg(&[zero, one, one, one, zero, zero]), 3);
-}
-
-#[test]
-fn test_poly_mul() {
-    use crate::field::Field64;
-
-    let p = [
-        Field64::from(u64::try_from(2).unwrap()),
-        Field64::from(u64::try_from(3).unwrap()),
-    ];
-
-    let q = [
-        Field64::one(),
-        Field64::zero(),
-        Field64::from(u64::try_from(5).unwrap()),
-    ];
-
-    let want = [
-        Field64::from(u64::try_from(2).unwrap()),
-        Field64::from(u64::try_from(3).unwrap()),
-        Field64::from(u64::try_from(10).unwrap()),
-        Field64::from(u64::try_from(15).unwrap()),
-    ];
-
-    let got = poly_mul(&p, &q);
-    assert_eq!(&got, &want);
-}
-
-#[test]
-fn test_poly_range_check() {
-    use crate::field::Field64;
-
-    let start = 74;
-    let end = 112;
-    let p = poly_range_check(start, end);
-
-    // Check each number in the range.
-    for i in start..end {
-        let x = Field64::from(i as u64);
-        let y = poly_eval(&p, x);
-        assert_eq!(y, Field64::zero(), "range check failed for {}", i);
-    }
-
-    // Check the number below the range.
-    let x = Field64::from((start - 1) as u64);
-    let y = poly_eval(&p, x);
-    assert_ne!(y, Field64::zero());
-
-    // Check a number above the range.
-    let x = Field64::from(end as u64);
-    let y = poly_eval(&p, x);
-    assert_ne!(y, Field64::zero());
-}
-
-#[test]
-fn test_fft() {
-    use crate::field::Field32;
-
+#[cfg(test)]
+mod tests {
+    use crate::{
+        field::{
+            FftFriendlyFieldElement, Field64, FieldElement, FieldElementWithInteger, FieldPrio2,
+        },
+        polynomial::{
+            fft_get_roots, poly_deg, poly_eval, poly_fft, poly_mul, poly_range_check, PolyAuxMemory,
+        },
+    };
     use rand::prelude::*;
     use std::convert::TryFrom;
 
-    let count = 128;
-    let mut mem = PolyAuxMemory::new(count / 2);
+    #[test]
+    fn test_roots() {
+        let count = 128;
+        let roots = fft_get_roots::<FieldPrio2>(count, false);
+        let roots_inv = fft_get_roots::<FieldPrio2>(count, true);
 
-    let mut poly = vec![Field32::from(0); count];
-    let mut points2 = vec![Field32::from(0); count];
-
-    let points = (0..count)
-        .into_iter()
-        .map(|_| Field32::from(random::<u32>()))
-        .collect::<Vec<Field32>>();
-
-    // From points to coeffs and back
-    poly_fft(
-        &mut poly,
-        &points,
-        &mem.roots_2n,
-        count,
-        false,
-        &mut mem.fft_memory,
-    );
-    poly_fft(
-        &mut points2,
-        &poly,
-        &mem.roots_2n_inverted,
-        count,
-        true,
-        &mut mem.fft_memory,
-    );
-
-    assert_eq!(points, points2);
-
-    // interpolation
-    poly_fft(
-        &mut poly,
-        &points,
-        &mem.roots_2n,
-        count,
-        false,
-        &mut mem.fft_memory,
-    );
-
-    #[allow(clippy::needless_range_loop)]
-    for i in 0..count {
-        let mut should_be = Field32::from(0);
-        for j in 0..count {
-            should_be = mem.roots_2n[i].pow(u32::try_from(j).unwrap()) * points[j] + should_be;
+        for i in 0..count {
+            assert_eq!(roots[i] * roots_inv[i], 1);
+            assert_eq!(roots[i].pow(u32::try_from(count).unwrap()), 1);
+            assert_eq!(roots_inv[i].pow(u32::try_from(count).unwrap()), 1);
         }
-        assert_eq!(should_be, poly[i]);
+    }
+
+    #[test]
+    fn test_eval() {
+        let mut poly = vec![FieldPrio2::from(0); 4];
+        poly[0] = 2.into();
+        poly[1] = 1.into();
+        poly[2] = 5.into();
+        // 5*3^2 + 3 + 2 = 50
+        assert_eq!(poly_eval(&poly[..3], 3.into()), 50);
+        poly[3] = 4.into();
+        // 4*3^3 + 5*3^2 + 3 + 2 = 158
+        assert_eq!(poly_eval(&poly[..4], 3.into()), 158);
+    }
+
+    #[test]
+    fn test_poly_deg() {
+        let zero = FieldPrio2::zero();
+        let one = FieldPrio2::root(0).unwrap();
+        assert_eq!(poly_deg(&[zero]), 0);
+        assert_eq!(poly_deg(&[one]), 0);
+        assert_eq!(poly_deg(&[zero, one]), 1);
+        assert_eq!(poly_deg(&[zero, zero, one]), 2);
+        assert_eq!(poly_deg(&[zero, one, one]), 2);
+        assert_eq!(poly_deg(&[zero, one, one, one]), 3);
+        assert_eq!(poly_deg(&[zero, one, one, one, zero]), 3);
+        assert_eq!(poly_deg(&[zero, one, one, one, zero, zero]), 3);
+    }
+
+    #[test]
+    fn test_poly_mul() {
+        let p = [
+            Field64::from(u64::try_from(2).unwrap()),
+            Field64::from(u64::try_from(3).unwrap()),
+        ];
+
+        let q = [
+            Field64::one(),
+            Field64::zero(),
+            Field64::from(u64::try_from(5).unwrap()),
+        ];
+
+        let want = [
+            Field64::from(u64::try_from(2).unwrap()),
+            Field64::from(u64::try_from(3).unwrap()),
+            Field64::from(u64::try_from(10).unwrap()),
+            Field64::from(u64::try_from(15).unwrap()),
+        ];
+
+        let got = poly_mul(&p, &q);
+        assert_eq!(&got, &want);
+    }
+
+    #[test]
+    fn test_poly_range_check() {
+        let start = 74;
+        let end = 112;
+        let p = poly_range_check(start, end);
+
+        // Check each number in the range.
+        for i in start..end {
+            let x = Field64::from(i as u64);
+            let y = poly_eval(&p, x);
+            assert_eq!(y, Field64::zero(), "range check failed for {i}");
+        }
+
+        // Check the number below the range.
+        let x = Field64::from((start - 1) as u64);
+        let y = poly_eval(&p, x);
+        assert_ne!(y, Field64::zero());
+
+        // Check a number above the range.
+        let x = Field64::from(end as u64);
+        let y = poly_eval(&p, x);
+        assert_ne!(y, Field64::zero());
+    }
+
+    #[test]
+    fn test_fft() {
+        let count = 128;
+        let mut mem = PolyAuxMemory::new(count / 2);
+
+        let mut poly = vec![FieldPrio2::from(0); count];
+        let mut points2 = vec![FieldPrio2::from(0); count];
+
+        let points = (0..count)
+            .map(|_| FieldPrio2::from(random::<u32>()))
+            .collect::<Vec<FieldPrio2>>();
+
+        // From points to coeffs and back
+        poly_fft(
+            &mut poly,
+            &points,
+            &mem.roots_2n,
+            count,
+            false,
+            &mut mem.fft_memory,
+        );
+        poly_fft(
+            &mut points2,
+            &poly,
+            &mem.roots_2n_inverted,
+            count,
+            true,
+            &mut mem.fft_memory,
+        );
+
+        assert_eq!(points, points2);
+
+        // interpolation
+        poly_fft(
+            &mut poly,
+            &points,
+            &mem.roots_2n,
+            count,
+            false,
+            &mut mem.fft_memory,
+        );
+
+        #[allow(clippy::needless_range_loop)]
+        for i in 0..count {
+            let mut should_be = FieldPrio2::from(0);
+            for j in 0..count {
+                should_be = mem.roots_2n[i].pow(u32::try_from(j).unwrap()) * points[j] + should_be;
+            }
+            assert_eq!(should_be, poly[i]);
+        }
     }
 }

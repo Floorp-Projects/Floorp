@@ -10,10 +10,6 @@
 
 using namespace mozilla;
 
-extern "C" void dap_test_prg();
-TEST(DAPTelemetryTests, TestPrg)
-{ dap_test_prg(); }
-
 extern "C" void dap_test_hpke_encrypt();
 TEST(DAPTelemetryTests, TestHpkeEnc)
 { dap_test_hpke_encrypt(); }

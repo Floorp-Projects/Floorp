@@ -3,7 +3,7 @@
 //! This module implements an iterative FFT algorithm for computing the (inverse) Discrete Fourier
 //! Transform (DFT) over a slice of field elements.
 
-use crate::field::FieldElement;
+use crate::field::FftFriendlyFieldElement;
 use crate::fp::{log2, MAX_ROOTS};
 
 use std::convert::TryFrom;
@@ -28,7 +28,7 @@ pub enum FftError {
 /// evaluated at points `p^0, p^1, ... p^(size-1)`, where `p` is the `2^size`-th principal root of
 /// unity.
 #[allow(clippy::many_single_char_names)]
-pub fn discrete_fourier_transform<F: FieldElement>(
+pub fn discrete_fourier_transform<F: FftFriendlyFieldElement>(
     outp: &mut [F],
     inp: &[F],
     size: usize,
@@ -75,7 +75,7 @@ pub fn discrete_fourier_transform<F: FieldElement>(
 
 /// Sets `outp` to the inverse of the DFT of `inp`.
 #[cfg(test)]
-pub(crate) fn discrete_fourier_transform_inv<F: FieldElement>(
+pub(crate) fn discrete_fourier_transform_inv<F: FftFriendlyFieldElement>(
     outp: &mut [F],
     inp: &[F],
     size: usize,
@@ -88,7 +88,7 @@ pub(crate) fn discrete_fourier_transform_inv<F: FieldElement>(
 
 /// An intermediate step in the computation of the inverse DFT. Exposing this function allows us to
 /// amortize the cost the modular inverse across multiple inverse DFT operations.
-pub(crate) fn discrete_fourier_transform_inv_finish<F: FieldElement>(
+pub(crate) fn discrete_fourier_transform_inv_finish<F: FftFriendlyFieldElement>(
     outp: &mut [F],
     size: usize,
     size_inv: F,
@@ -115,12 +115,11 @@ fn bitrev(d: usize, x: usize) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::field::{
-        random_vector, split_vector, Field128, Field32, Field64, Field96, FieldPrio2,
-    };
+    use crate::field::{random_vector, split_vector, Field128, Field64, FieldElement, FieldPrio2};
     use crate::polynomial::{poly_fft, PolyAuxMemory};
 
-    fn discrete_fourier_transform_then_inv_test<F: FieldElement>() -> Result<(), FftError> {
+    fn discrete_fourier_transform_then_inv_test<F: FftFriendlyFieldElement>() -> Result<(), FftError>
+    {
         let test_sizes = [1, 2, 4, 8, 16, 256, 1024, 2048];
 
         for size in test_sizes.iter() {
@@ -137,11 +136,6 @@ mod tests {
     }
 
     #[test]
-    fn test_field32() {
-        discrete_fourier_transform_then_inv_test::<Field32>().expect("unexpected error");
-    }
-
-    #[test]
     fn test_priov2_field32() {
         discrete_fourier_transform_then_inv_test::<FieldPrio2>().expect("unexpected error");
     }
@@ -152,8 +146,10 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_field96() {
-        discrete_fourier_transform_then_inv_test::<Field96>().expect("unexpected error");
+        discrete_fourier_transform_then_inv_test::<crate::field::Field96>()
+            .expect("unexpected error");
     }
 
     #[test]
@@ -167,10 +163,10 @@ mod tests {
         let mut mem = PolyAuxMemory::new(size / 2);
 
         let inp = random_vector(size).unwrap();
-        let mut want = vec![Field32::zero(); size];
-        let mut got = vec![Field32::zero(); size];
+        let mut want = vec![FieldPrio2::zero(); size];
+        let mut got = vec![FieldPrio2::zero(); size];
 
-        discrete_fourier_transform::<Field32>(&mut want, &inp, inp.len()).unwrap();
+        discrete_fourier_transform::<FieldPrio2>(&mut want, &inp, inp.len()).unwrap();
 
         poly_fft(
             &mut got,

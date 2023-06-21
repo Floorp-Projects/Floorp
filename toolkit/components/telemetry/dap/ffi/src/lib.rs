@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+use std::error::Error;
 use std::io::Cursor;
 
 use thin_vec::ThinVec;
@@ -11,17 +12,16 @@ use types::HpkeConfig;
 use types::Report;
 use types::ReportID;
 use types::ReportMetadata;
-use types::TaskID;
 use types::Time;
 
 pub mod prg;
 use prg::PrgAes128Alt;
 
 use prio::codec::Encode;
-use prio::codec::{encode_u32_items, Decode};
+use prio::codec::{decode_u16_items, encode_u32_items};
 use prio::field::Field128;
 use prio::flp::gadgets::{BlindPolyEval, ParallelSum};
-use prio::flp::types::{CountVec, Sum};
+use prio::flp::types::{Sum, SumVec};
 use prio::vdaf::prio3::Prio3;
 use prio::vdaf::Client;
 use prio::vdaf::VdafError;
@@ -29,8 +29,8 @@ use prio::vdaf::VdafError;
 use crate::types::HpkeCiphertext;
 
 type Prio3Aes128SumAlt = Prio3<Sum<Field128>, PrgAes128Alt, 16>;
-type Prio3Aes128CountVecAlt =
-    Prio3<CountVec<Field128, ParallelSum<Field128, BlindPolyEval<Field128>>>, PrgAes128Alt, 16>;
+type Prio3Aes128SumVecAlt =
+    Prio3<SumVec<Field128, ParallelSum<Field128, BlindPolyEval<Field128>>>, PrgAes128Alt, 16>;
 
 extern "C" {
     pub fn dapHpkeEncryptOneshot(
@@ -58,11 +58,8 @@ pub fn new_prio_u8(num_aggregators: u8, bits: u32) -> Result<Prio3Aes128SumAlt, 
     Prio3::new(num_aggregators, Sum::new(bits as usize)?)
 }
 
-pub fn new_prio_vecu16(
-    num_aggregators: u8,
-    len: usize,
-) -> Result<Prio3Aes128CountVecAlt, VdafError> {
-    Prio3::new(num_aggregators, CountVec::new(len))
+pub fn new_prio_vecu16(num_aggregators: u8, len: usize) -> Result<Prio3Aes128SumVecAlt, VdafError> {
+    Prio3::new(num_aggregators, SumVec::new(1, len)?)
 }
 
 enum Role {
@@ -104,31 +101,29 @@ fn hpke_encrypt_wrapper(
 }
 
 trait Shardable {
-    fn shard(&self) -> Result<Vec<Vec<u8>>, Box<dyn std::error::Error>>;
+    fn shard(&self, nonce: &[u8; 16]) -> Result<Vec<Vec<u8>>, Box<dyn std::error::Error>>;
 }
 
 impl Shardable for ThinVec<u16> {
-    fn shard(&self) -> Result<Vec<Vec<u8>>, Box<dyn std::error::Error>> {
+    fn shard(&self, nonce: &[u8; 16]) -> Result<Vec<Vec<u8>>, Box<dyn std::error::Error>> {
         let prio = new_prio_vecu16(2, self.len())?;
 
         let measurement: Vec<u128> = self.iter().map(|e| (*e as u128)).collect();
-        let (public_share, input_shares) = prio.shard(&measurement)?;
+        let (_, input_shares) = prio.shard(&measurement, nonce)?;
 
         debug_assert_eq!(input_shares.len(), 2);
-        debug_assert_eq!(public_share, ());
 
         let encoded_input_shares = input_shares.iter().map(|s| s.get_encoded()).collect();
         Ok(encoded_input_shares)
     }
 }
 impl Shardable for u8 {
-    fn shard(&self) -> Result<Vec<Vec<u8>>, Box<dyn std::error::Error>> {
+    fn shard(&self, nonce: &[u8; 16]) -> Result<Vec<Vec<u8>>, Box<dyn std::error::Error>> {
         let prio = new_prio_u8(2, 2)?;
 
-        let (public_share, input_shares) = prio.shard(&(*self as u128))?;
+        let (_, input_shares) = prio.shard(&(*self as u128), nonce)?;
 
         debug_assert_eq!(input_shares.len(), 2);
-        debug_assert_eq!(public_share, ());
 
         let encoded_input_shares = input_shares.iter().map(|s| s.get_encoded()).collect();
         Ok(encoded_input_shares)
@@ -146,6 +141,20 @@ fn make_base_info() -> Vec<u8> {
     info
 }
 
+fn select_hpke_config(configs: Vec<HpkeConfig>) -> Result<HpkeConfig, Box<dyn Error>> {
+    for config in configs {
+        if config.kem_id == 0x20 /* DHKEM(X25519, HKDF-SHA256) */ &&
+        config.kdf_id == 0x01 /* HKDF-SHA256 */ &&
+        config.aead_id == 0x01
+        /* AES-128-GCM */
+        {
+            return Ok(config);
+        }
+    }
+
+    Err("No suitable HPKE config found.".into())
+}
+
 /// This function creates a full report - ready to send - for a measurement.
 ///
 /// To do that it also needs the HPKE configurations for the endpoints and some
@@ -157,16 +166,20 @@ fn get_dap_report_internal<T: Shardable>(
     task_id: &[u8; 32],
     time_precision: u64,
 ) -> Result<Report, Box<dyn std::error::Error>> {
-    let leader_hpke_config = HpkeConfig::decode(&mut Cursor::new(leader_hpke_config_encoded))?;
-    let helper_hpke_config = HpkeConfig::decode(&mut Cursor::new(helper_hpke_config_encoded))?;
+    let leader_hpke_configs: Vec<HpkeConfig> =
+        decode_u16_items(&(), &mut Cursor::new(leader_hpke_config_encoded))?;
+    let leader_hpke_config = select_hpke_config(leader_hpke_configs)?;
+    let helper_hpke_configs: Vec<HpkeConfig> =
+        decode_u16_items(&(), &mut Cursor::new(helper_hpke_config_encoded))?;
+    let helper_hpke_config = select_hpke_config(helper_hpke_configs)?;
 
-    let encoded_input_shares = measurement.shard()?;
+    let report_id = ReportID::generate();
+    let encoded_input_shares = measurement.shard(report_id.as_ref())?;
     let public_share = Vec::new(); // the encoding wants an empty vector not ()
 
     let metadata = ReportMetadata {
-        report_id: ReportID::generate(),
+        report_id,
         time: Time::generate(time_precision),
-        extensions: vec![],
     };
 
     // This quote from the standard describes which info and aad to use for the encryption:
@@ -191,7 +204,6 @@ fn get_dap_report_internal<T: Shardable>(
         hpke_encrypt_wrapper(&encoded_input_shares[1], &aad, &info, &helper_hpke_config)?;
 
     Ok(Report {
-        task_id: TaskID(*task_id),
         metadata,
         public_share,
         encrypted_input_shares: vec![leader_payload, helper_payload],
