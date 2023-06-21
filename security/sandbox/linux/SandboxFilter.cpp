@@ -1899,6 +1899,11 @@ class RDDSandboxPolicy final : public SandboxPolicyCommon {
         return If(pid == 0, Allow()).Else(Trap(SchedTrap, nullptr));
       }
 
+        // The priority bounds are also used, sometimes (bug 1838675):
+      case __NR_sched_get_priority_min:
+      case __NR_sched_get_priority_max:
+        return Allow();
+
         // Mesa sometimes wants to know the OS version.
       case __NR_uname:
         return Allow();
