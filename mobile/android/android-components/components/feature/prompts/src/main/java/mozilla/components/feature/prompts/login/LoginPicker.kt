@@ -60,6 +60,7 @@ internal class LoginPicker(
                 sessionId?.let {
                     store.dispatch(ContentAction.ConsumePromptRequestAction(it, promptRequest))
                 }
+                loginSelectBar.hidePrompt()
                 return
             }
 

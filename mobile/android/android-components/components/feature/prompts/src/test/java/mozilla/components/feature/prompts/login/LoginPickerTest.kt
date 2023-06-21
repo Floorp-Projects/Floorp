@@ -112,6 +112,7 @@ class LoginPickerTest {
 
         assertTrue(onDismissWasCalled)
         verify(store).dispatch(ContentAction.ConsumePromptRequestAction(selectedSession.id, request))
+        verify(loginSelectBar).hidePrompt()
     }
 
     @Test
@@ -124,6 +125,7 @@ class LoginPickerTest {
 
         assertTrue(onDismissWasCalled)
         verify(store).dispatch(ContentAction.ConsumePromptRequestAction(selectedSession.id, request))
+        verify(loginSelectBar).hidePrompt()
     }
 
     private fun prepareSelectedSession(request: PromptRequest? = null): TabSessionState {
