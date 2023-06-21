@@ -52,7 +52,7 @@ let CRITERIA_WEIGHT = 1;
  */
 let DefaultTabUnloaderMethods = {
   isNonDiscardable(tab, weight) {
-    if (tab.selected) {
+    if (tab.undiscardable || tab.selected) {
       return weight;
     }
 
