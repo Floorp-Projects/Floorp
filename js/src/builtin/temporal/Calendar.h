@@ -99,6 +99,26 @@ JSObject* ToTemporalCalendarWithISODefault(
 JSObject* GetTemporalCalendarWithISODefault(JSContext* cx,
                                             JS::Handle<JSObject*> item);
 
+enum class CalendarField {
+  Year,
+  Month,
+  MonthCode,
+  Day,
+  Hour,
+  Minute,
+  Second,
+  Millisecond,
+  Microsecond,
+  Nanosecond,
+};
+
+/**
+ * CalendarMergeFields ( calendar, fields, additionalFields )
+ */
+JSObject* CalendarMergeFields(JSContext* cx, JS::Handle<JSObject*> calendar,
+                              JS::Handle<PlainObject*> fields,
+                              JS::Handle<PlainObject*> additionalFields);
+
 /**
  * CalendarYear ( calendar, dateLike )
  */

@@ -349,6 +349,7 @@
          "maximumSignificantDigits")                                           \
   MACRO_(maxLine, maxLine, "maxLine")                                          \
   MACRO_(maxOffset, maxOffset, "maxOffset")                                    \
+  MACRO_(mergeFields, mergeFields, "mergeFields")                              \
   MACRO_(message, message, "message")                                          \
   IF_DECORATORS(MACRO_(method, method, "method"))                              \
   MACRO_(meta, meta, "meta")                                                   \
