@@ -821,6 +821,7 @@ MSG_DEF(JSMSG_SHADOW_REALM_VALUE_NOT_EXPORTED,    0, JSEXN_TYPEERR, "value not e
 MSG_DEF(JSMSG_DECORATOR_INVALID_RETURN_TYPE, 0, JSEXN_TYPEERR, "Invalid value returned from decorator: decorators can only return undefined or a callable")
 
 // Temporal
+MSG_DEF(JSMSG_TEMPORAL_INVALID_OBJECT,              2, JSEXN_RANGEERR, "{0} mustn't be a {1} object")
 MSG_DEF(JSMSG_TEMPORAL_INSTANT_INVALID,             0, JSEXN_RANGEERR, "epoch nanoseconds too large")
 MSG_DEF(JSMSG_TEMPORAL_INSTANT_NONINTEGER,          1, JSEXN_RANGEERR, "Instant must be an integer, but received {0}")
 MSG_DEF(JSMSG_TEMPORAL_DURATION_INVALID_SIGN,       2, JSEXN_RANGEERR, "duration value \"{0}\" has a mismatched sign: {1}")

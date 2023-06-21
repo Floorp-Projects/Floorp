@@ -62,7 +62,22 @@ class PlainTimeObject : public NativeObject {
     return getFixedSlot(CALENDAR_SLOT).toObjectOrNull();
   }
 
+  void setCalendar(JSObject* calendar) {
+    setFixedSlot(CALENDAR_SLOT, JS::ObjectValue(*calendar));
+  }
+
+  static JSObject* getOrCreateCalendar(JSContext* cx,
+                                       JS::Handle<PlainTimeObject*> obj) {
+    if (auto* calendar = obj->getCalendar()) {
+      return calendar;
+    }
+    return createCalendar(cx, obj);
+  }
+
  private:
+  static JSObject* createCalendar(JSContext* cx,
+                                  JS::Handle<PlainTimeObject*> obj);
+
   static const ClassSpec classSpec_;
 };
 

@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 
+#include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
 #include "vm/NativeObject.h"
@@ -49,6 +50,29 @@ int32_t ISODaysInMonth(int32_t year, int32_t month);
  * ISODaysInMonth ( year, month )
  */
 int32_t ISODaysInMonth(double year, int32_t month);
+
+/**
+ * GetISO8601Calendar ( )
+ */
+CalendarObject* GetISO8601Calendar(JSContext* cx);
+
+/**
+ * ToTemporalCalendar ( temporalCalendarLike )
+ */
+JSObject* ToTemporalCalendar(JSContext* cx,
+                             JS::Handle<JS::Value> temporalCalendarLike);
+
+/**
+ * ToTemporalCalendarWithISODefault ( temporalCalendarLike )
+ */
+JSObject* ToTemporalCalendarWithISODefault(
+    JSContext* cx, JS::Handle<JS::Value> temporalCalendarLike);
+
+/**
+ * GetTemporalCalendarWithISODefault ( item )
+ */
+JSObject* GetTemporalCalendarWithISODefault(JSContext* cx,
+                                            JS::Handle<JSObject*> item);
 
 /**
  * Perform `ToString(calendar)` with an optimization when the built-in
