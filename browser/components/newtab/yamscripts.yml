@@ -51,6 +51,12 @@ scripts:
   # Utility scripts for use when vendoring in Node packages
   vendor: node ./bin/vendor.js
 
+  # script for the `source-test-node-newtab-unit-tests` task on taskcluster.
+  # this is what appears as `newtab` in treeherder results after pushing to try.
+  # so this npm script allows us to run the same tests locally that patches will
+  # be run against in CI.
+  try: node ./bin/try-runner.js
+
   fix:
     # Note that since we're currently running eslint-plugin-prettier,
     # running fix:eslint will also reformat changed JS files using prettier.
