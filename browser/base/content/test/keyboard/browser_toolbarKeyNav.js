@@ -366,8 +366,7 @@ add_task(async function testArrowsOverflowButton() {
 add_task(async function testArrowsInPanelMultiView() {
   AddOldMenuSideButtons();
   let button = document.getElementById("library-button");
-  forceFocus(button);
-  EventUtils.synthesizeKey(" ");
+  await focusAndActivateElement(button, () => EventUtils.synthesizeKey(" "));
   let view = document.getElementById("appMenu-libraryView");
   let focused = BrowserTestUtils.waitForEvent(view, "focus", true);
   let focusEvt = await focused;
@@ -427,8 +426,9 @@ add_task(async function testArrowsBookmarksOverflowButton() {
     }
     lastVisible = item;
   }
-  forceFocus(lastVisible);
-  await expectFocusAfterKey("ArrowRight", "PlacesChevron");
+  await focusAndActivateElement(lastVisible, () =>
+    expectFocusAfterKey("ArrowRight", "PlacesChevron")
+  );
   setToolbarVisibility(toolbar, false, true, false);
 });
 
@@ -530,10 +530,9 @@ add_task(async function testCharacterNavigation() {
 add_task(async function testCharacterInPanelMultiView() {
   AddOldMenuSideButtons();
   let button = document.getElementById("library-button");
-  forceFocus(button);
   let view = document.getElementById("appMenu-libraryView");
   let focused = BrowserTestUtils.waitForEvent(view, "focus", true);
-  EventUtils.synthesizeKey(" ");
+  await focusAndActivateElement(button, () => EventUtils.synthesizeKey(" "));
   let focusEvt = await focused;
   ok(true, "Focus inside Library menu after toolbar button pressed");
   EventUtils.synthesizeKey("s");

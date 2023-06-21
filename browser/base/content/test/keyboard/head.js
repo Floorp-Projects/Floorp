@@ -9,11 +9,17 @@
  * focus them, which is undesirable. Therefore, they're only made focusable
  * when a user is navigating with the keyboard. This function forces focus as
  * is done during toolbar keyboard navigation.
+ * It then runs the `activateMethod` passed in, and restores usual focus state
+ * afterwards. `activateMethod` can be async.
  */
-function forceFocus(aElem) {
-  aElem.setAttribute("tabindex", "-1");
-  aElem.focus();
-  aElem.removeAttribute("tabindex");
+async function focusAndActivateElement(elem, activateMethod) {
+  elem.setAttribute("tabindex", "-1");
+  elem.focus();
+  try {
+    await activateMethod(elem);
+  } finally {
+    elem.removeAttribute("tabindex");
+  }
 }
 
 async function expectFocusAfterKey(
