@@ -115,16 +115,13 @@ enum class TypeCode {
   BlockVoid = 0x40,  // SLEB128(-0x40)
 
   // Type constructor for recursion groups - gc proposal
-  RecGroup = 0x4f,  // SLEB128(-0x31)
+  RecGroup = 0x4f,
 
   // TODO: update wasm-tools to use the correct prefix
   RecGroupOld = 0x45,
 
   // Type prefix for parent types - gc proposal
-  SubNoFinalType = 0x50,  // SLEB128(-0x30)
-
-  // Type prefix for final types - gc proposal
-  SubFinalType = 0x4e,  // SLEB128(-0x32)
+  SubType = 0x50,
 
   Limit = 0x80
 };

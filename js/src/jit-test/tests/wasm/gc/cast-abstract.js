@@ -1,9 +1,9 @@
 // |jit-test| skip-if: !wasmGcEnabled()
 
 const preamble = `
-  (type $s1 (sub (struct)))
+  (type $s1 (struct))
   (type $s2 (sub $s1 (struct (field i32))))
-  (type $a1 (sub (array (ref null $s1))))
+  (type $a1 (array (ref null $s1)))
   (type $a2 (sub $a1 (array (ref null $s2))))
   (type $f1 (func))
 
