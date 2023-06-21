@@ -63,7 +63,7 @@ module.exports = {
       },
     },
     "@storybook/addon-a11y",
-    path.resolve(__dirname, "addon-pseudo-localization"),
+    path.resolve(__dirname, "addon-fluent"),
     path.resolve(__dirname, "addon-component-status"),
   ],
   framework: "@storybook/web-components",

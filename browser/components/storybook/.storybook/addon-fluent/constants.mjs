@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-export const ADDON_ID = "addon-pseudo-localization";
+export const ADDON_ID = "addon-fluent";
 export const PANEL_ID = `${ADDON_ID}/fluentPanel`;
 export const TOOL_ID = `${ADDON_ID}/toolbarButton`;
 
