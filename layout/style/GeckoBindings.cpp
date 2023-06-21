@@ -1741,14 +1741,11 @@ void StyleSingleFontFamily::AppendToString(nsACString& aName,
                                            bool aQuote) const {
   if (IsFamilyName()) {
     const auto& name = AsFamilyName();
-    bool quote = aQuote && name.syntax == StyleFontFamilyNameSyntax::Quoted;
-    if (quote) {
-      aName.Append('"');
+    if (!aQuote) {
+      aName.Append(nsAutoAtomCString(name.name.AsAtom()));
+      return;
     }
-    aName.Append(nsAtomCString(name.name.AsAtom()));
-    if (quote) {
-      aName.Append('"');
-    }
+    Servo_FamilyName_Serialize(&name, &aName);
     return;
   }
 
