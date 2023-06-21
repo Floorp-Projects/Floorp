@@ -101,6 +101,96 @@ static bool GetStringOption(JSContext* cx, Handle<JSObject*> options,
   return true;
 }
 
+/**
+ * GetOption ( options, property, type, values, default )
+ */
+static bool GetNumberOption(JSContext* cx, Handle<JSObject*> options,
+                            Handle<PropertyName*> property, double* number) {
+  // Step 1.
+  Rooted<Value> value(cx);
+  if (!GetProperty(cx, options, options, property, &value)) {
+    return false;
+  }
+
+  // Step 2. (Caller should fill in the fallback.)
+  if (value.isUndefined()) {
+    return true;
+  }
+
+  // Steps 3 and 5. (Not applicable in our implementation)
+
+  // Step 4.a.
+  if (!JS::ToNumber(cx, value, number)) {
+    return false;
+  }
+
+  // Step 4.b. (Caller must check for NaN values.)
+
+  // Step 7. (Not applicable in our implementation)
+
+  // Step 8.
+  return true;
+}
+
+/**
+ * ToTemporalRoundingIncrement ( normalizedOptions, dividend, inclusive )
+ */
+bool js::temporal::ToTemporalRoundingIncrement(JSContext* cx,
+                                               Handle<JSObject*> options,
+                                               Increment* increment) {
+  // Step 1.
+  double number = 1;
+  if (!GetNumberOption(cx, options, cx->names().roundingIncrement, &number)) {
+    return false;
+  }
+
+  // Step 3. (Reordered)
+  number = std::trunc(number);
+
+  // Steps 2 and 4.
+  if (!std::isfinite(number) || number < 1 || number > 1'000'000'000) {
+    ToCStringBuf cbuf;
+    const char* numStr = NumberToCString(&cbuf, number);
+
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_INVALID_OPTION_VALUE, "roundingIncrement",
+                              numStr);
+    return false;
+  }
+
+  *increment = Increment{uint32_t(number)};
+  return true;
+}
+
+/**
+ * ValidateTemporalRoundingIncrement ( increment, dividend, inclusive )
+ */
+bool js::temporal::ValidateTemporalRoundingIncrement(JSContext* cx,
+                                                     Increment increment,
+                                                     int64_t dividend,
+                                                     bool inclusive) {
+  MOZ_ASSERT(dividend > 0);
+  MOZ_ASSERT_IF(!inclusive, dividend > 1);
+
+  // Steps 1-2.
+  int64_t maximum = inclusive ? dividend : dividend - 1;
+
+  // Steps 3-4.
+  if (increment.value() > maximum || dividend % increment.value() != 0) {
+    Int32ToCStringBuf cbuf;
+    const char* numStr = Int32ToCString(&cbuf, increment.value());
+
+    // TODO: Better error message could be helpful.
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_INVALID_OPTION_VALUE, "roundingIncrement",
+                              numStr);
+    return false;
+  }
+
+  // Step 5.
+  return true;
+}
+
 PropertyName* js::temporal::TemporalUnitToString(JSContext* cx,
                                                  TemporalUnit unit) {
   switch (unit) {

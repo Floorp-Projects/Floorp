@@ -1349,6 +1349,90 @@ static bool PlainTime_with(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
+ * Temporal.PlainTime.prototype.round ( roundTo )
+ */
+static bool PlainTime_round(JSContext* cx, const CallArgs& args) {
+  auto* temporalTime = &args.thisv().toObject().as<PlainTimeObject>();
+  auto time = ToPlainTime(temporalTime);
+
+  // Steps 3-12.
+  auto smallestUnit = TemporalUnit::Auto;
+  auto roundingMode = TemporalRoundingMode::HalfExpand;
+  auto roundingIncrement = Increment{1};
+  if (args.get(0).isString()) {
+    // Step 4. (Not applicable in our implementation.)
+
+    // Step 9.
+    Rooted<JSString*> paramString(cx, args[0].toString());
+    if (!GetTemporalUnit(cx, paramString, TemporalUnitKey::SmallestUnit,
+                         TemporalUnitGroup::Time, &smallestUnit)) {
+      return false;
+    }
+
+    // Steps 6-8 and 10-12. (Implicit)
+  } else {
+    // Steps 3 and 5.
+    Rooted<JSObject*> options(
+        cx, RequireObjectArg(cx, "roundTo", "round", args.get(0)));
+    if (!options) {
+      return false;
+    }
+
+    // Steps 6-7.
+    if (!ToTemporalRoundingIncrement(cx, options, &roundingIncrement)) {
+      return false;
+    }
+
+    // Step 8.
+    if (!ToTemporalRoundingMode(cx, options, &roundingMode)) {
+      return false;
+    }
+
+    // Step 9.
+    if (!GetTemporalUnit(cx, options, TemporalUnitKey::SmallestUnit,
+                         TemporalUnitGroup::Time, &smallestUnit)) {
+      return false;
+    }
+
+    if (smallestUnit == TemporalUnit::Auto) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_TEMPORAL_MISSING_OPTION, "smallestUnit");
+      return false;
+    }
+
+    // Steps 10-11.
+    auto maximum = MaximumTemporalDurationRoundingIncrement(smallestUnit);
+
+    // Step 12.
+    if (!ValidateTemporalRoundingIncrement(cx, roundingIncrement, maximum,
+                                           false)) {
+      return false;
+    }
+  }
+
+  // Step 13.
+  auto result = RoundTime(time, roundingIncrement, smallestUnit, roundingMode);
+
+  // Step 14.
+  auto* obj = CreateTemporalTime(cx, result.time);
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
+/**
+ * Temporal.PlainTime.prototype.round ( roundTo )
+ */
+static bool PlainTime_round(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainTime, PlainTime_round>(cx, args);
+}
+
+/**
  * Temporal.PlainTime.prototype.equals ( other )
  */
 static bool PlainTime_equals(JSContext* cx, const CallArgs& args) {
@@ -1643,6 +1727,7 @@ static const JSFunctionSpec PlainTime_methods[] = {
 
 static const JSFunctionSpec PlainTime_prototype_methods[] = {
     JS_FN("with", PlainTime_with, 1, 0),
+    JS_FN("round", PlainTime_round, 1, 0),
     JS_FN("equals", PlainTime_equals, 1, 0),
     JS_FN("toPlainDateTime", PlainTime_toPlainDateTime, 1, 0),
     JS_FN("getISOFields", PlainTime_getISOFields, 0, 0),

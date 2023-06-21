@@ -80,6 +80,29 @@ class Increment final {
 };
 
 /**
+ * ToTemporalRoundingIncrement ( normalizedOptions, dividend, inclusive )
+ */
+bool ToTemporalRoundingIncrement(JSContext* cx, JS::Handle<JSObject*> options,
+                                 Increment* increment);
+
+/**
+ * ValidateTemporalRoundingIncrement ( increment, dividend, inclusive )
+ */
+bool ValidateTemporalRoundingIncrement(JSContext* cx, Increment increment,
+                                       int64_t dividend, bool inclusive);
+
+/**
+ * ValidateTemporalRoundingIncrement ( increment, dividend, inclusive )
+ */
+inline bool ValidateTemporalRoundingIncrement(JSContext* cx,
+                                              Increment increment,
+                                              Increment dividend,
+                                              bool inclusive) {
+  return ValidateTemporalRoundingIncrement(cx, increment, dividend.value(),
+                                           inclusive);
+}
+
+/**
  * MaximumTemporalDurationRoundingIncrement ( unit )
  */
 constexpr Increment MaximumTemporalDurationRoundingIncrement(
