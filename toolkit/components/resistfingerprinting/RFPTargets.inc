@@ -61,6 +61,7 @@ ITEM_VALUE(MediaCapabilities,           1llu << 37)
 ITEM_VALUE(AudioSampleRate,             1llu << 38)
 ITEM_VALUE(NavigatorConnection,         1llu << 39)
 ITEM_VALUE(WindowDevicePixelRatio,      1llu << 40)
+ITEM_VALUE(MouseEventScreenPoint,       1llu << 41)
 
 // !!! Don't forget to update kDefaultFingerintingProtections in nsRFPService.cpp
 // if necessary.
