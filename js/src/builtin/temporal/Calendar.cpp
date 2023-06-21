@@ -2607,6 +2607,67 @@ bool js::temporal::CalendarEquals(JSContext* cx, Handle<JSObject*> one,
 }
 
 /**
+ * ConsolidateCalendars ( one, two )
+ */
+JSObject* js::temporal::ConsolidateCalendars(JSContext* cx,
+                                             Handle<JSObject*> one,
+                                             Handle<JSObject*> two) {
+  // Step 1.
+  if (one == two) {
+    return two;
+  }
+
+  // Step 2.
+  Rooted<JSString*> calendarOne(cx, CalendarToString(cx, one));
+  if (!calendarOne) {
+    return nullptr;
+  }
+
+  // Step 3.
+  Rooted<JSString*> calendarTwo(cx, CalendarToString(cx, two));
+  if (!calendarTwo) {
+    return nullptr;
+  }
+
+  // Step 4.
+  bool equals;
+  if (!EqualStrings(cx, calendarOne, calendarTwo, &equals)) {
+    return nullptr;
+  }
+  if (equals) {
+    return two;
+  }
+
+  // Step 5.
+  bool isoCalendarOne;
+  if (!IsISOCalendar(cx, calendarOne, &isoCalendarOne)) {
+    return nullptr;
+  }
+  if (isoCalendarOne) {
+    return two;
+  }
+
+  // Step 6.
+  bool isoCalendarTwo;
+  if (!IsISOCalendar(cx, calendarTwo, &isoCalendarTwo)) {
+    return nullptr;
+  }
+  if (isoCalendarTwo) {
+    return one;
+  }
+
+  // Step 7.
+  if (auto charsOne = QuoteString(cx, calendarOne)) {
+    if (auto charsTwo = QuoteString(cx, calendarTwo)) {
+      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                               JSMSG_TEMPORAL_CALENDAR_INCOMPATIBLE,
+                               charsOne.get(), charsTwo.get());
+    }
+  }
+  return nullptr;
+}
+
+/**
  * MaybeFormatCalendarAnnotation ( calendarObject, showCalendar )
  */
 bool js::temporal::MaybeFormatCalendarAnnotation(
