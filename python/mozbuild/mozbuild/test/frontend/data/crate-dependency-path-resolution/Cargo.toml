@@ -10,6 +10,7 @@ crate-type = ["staticlib"]
 
 [dependencies]
 deep-crate = { version = "0.1.0", path = "the/depths" }
+mozilla-central-workspace-hack = { version = "0.1", features = ["random-crate"], optional = true }
 
 [profile.dev]
 panic = "abort"

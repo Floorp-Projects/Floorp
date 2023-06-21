@@ -558,6 +558,7 @@ name = "builtins-static"
 version = "0.1.0"
 dependencies = [
  "bindgen 0.64.0",
+ "mozilla-central-workspace-hack",
  "nom",
  "pkcs11-bindings",
  "smallvec",
@@ -1972,6 +1973,7 @@ dependencies = [
  "log",
  "marionette",
  "mozdevice",
+ "mozilla-central-workspace-hack",
  "mozprofile",
  "mozrunner",
  "mozversion",
@@ -2059,6 +2061,7 @@ dependencies = [
  "lmdb-rkv-sys",
  "moz_task-gtest",
  "mozglue-static",
+ "mozilla-central-workspace-hack",
  "mp4parse-gtest",
  "nsstring-gtest",
  "swgl",
@@ -2481,6 +2484,7 @@ dependencies = [
  "log",
  "mio 0.6.23",
  "mio-extras",
+ "mozilla-central-workspace-hack",
  "neqo-common",
  "neqo-crypto",
  "neqo-http3",
@@ -2639,6 +2643,7 @@ name = "ipcclientcerts-static"
 version = "0.1.0"
 dependencies = [
  "byteorder",
+ "mozilla-central-workspace-hack",
  "pkcs11-bindings",
  "rsclientcerts",
  "sha2",
@@ -2773,6 +2778,7 @@ version = "0.1.0"
 dependencies = [
  "jsrust_shared",
  "mozglue-static",
+ "mozilla-central-workspace-hack",
  "wast",
 ]
 
@@ -2784,7 +2790,6 @@ dependencies = [
  "encoding_c_mem",
  "gluesmith",
  "mozglue-static",
- "mozilla-central-workspace-hack",
  "smoosh",
 ]
 

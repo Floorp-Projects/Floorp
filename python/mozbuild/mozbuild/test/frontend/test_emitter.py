@@ -1803,6 +1803,24 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertIsInstance(host_cflags, ComputedFlags)
         self.assertIsInstance(lib, RustLibrary)
 
+    def test_missing_workspace_hack(self):
+        """Test detection of a missing workspace hack."""
+        reader = self.reader("rust-no-workspace-hack")
+        with six.assertRaisesRegex(
+            self, SandboxValidationError, "doesn't contain the workspace hack"
+        ):
+            self.read_topsrcdir(reader)
+
+    def test_old_workspace_hack(self):
+        """Test detection of an old workspace hack."""
+        reader = self.reader("rust-old-workspace-hack")
+        with six.assertRaisesRegex(
+            self,
+            SandboxValidationError,
+            "needs an update to its mozilla-central-workspace-hack dependency",
+        ):
+            self.read_topsrcdir(reader)
+
     def test_install_shared_lib(self):
         """Test that we can install a shared library with TEST_HARNESS_FILES"""
         reader = self.reader("test-install-shared-lib")

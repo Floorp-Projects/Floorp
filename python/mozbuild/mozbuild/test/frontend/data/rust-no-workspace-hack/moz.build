@@ -1,0 +1,9 @@
+@template
+def RustLibrary(name):
+    """Template for Rust libraries."""
+    LIBRARY_NAME = name
+
+    IS_RUST_LIBRARY = True
+
+
+RustLibrary("random-crate")

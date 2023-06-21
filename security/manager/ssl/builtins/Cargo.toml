@@ -8,6 +8,7 @@ license = "MPL-2.0"
 [dependencies]
 pkcs11-bindings = "0.1.1"
 smallvec = { version = "1.9.0", features = ["const_new"] }
+mozilla-central-workspace-hack = { version = "0.1", features = ["builtins-static"], optional = true }
 
 [build-dependencies]
 bindgen = { default-features = false, features = ["runtime"], version = "0.64" }

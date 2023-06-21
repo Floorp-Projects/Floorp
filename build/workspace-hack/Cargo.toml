@@ -116,3 +116,15 @@ features = [
     "wtypes",
     "wtypesbase",
 ]
+
+[features]
+builtins-static = []
+defaultagent-static = []
+geckodriver = []
+gkrust = []
+gkrust-gtest = []
+http3server = []
+ipcclientcerts-static = []
+jsrust = []
+mozwer_s = []
+osclientcerts-static = []

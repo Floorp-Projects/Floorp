@@ -12,7 +12,8 @@ byteorder = "1.3"
 env_logger = {version = "0.10", default-features = false } # disable `regex` to reduce code size
 lazy_static = "1"
 log = "0.4"
-mozilla-central-workspace-hack = { path = "../../../../build/workspace-hack" }
+mozilla-central-workspace-hack = { version = "0.1", features = ["osclientcerts-static"], optional = true }
+
 pkcs11-bindings = "0.1"
 rsclientcerts = { path = "../rsclientcerts" }
 sha2 = "0.10.2"
