@@ -7,6 +7,8 @@ import { addons } from "@storybook/addons";
 // eslint-disable-next-line no-unused-vars
 import { AddonPanel } from "@storybook/components";
 import { FLUENT_CHANGED, FLUENT_SET_STRINGS } from "./constants.mjs";
+// eslint-disable-next-line import/no-unassigned-import
+import "./fluent-panel.css";
 
 export class FluentPanel extends React.Component {
   constructor(props) {
@@ -59,20 +61,56 @@ export class FluentPanel extends React.Component {
   render() {
     const { api, active } = this.props;
     const { strings } = this.state;
+    if (strings.length === 0) {
+      return (
+        <AddonPanel active={!!active} api={api}>
+          <div className="addon-panel-body">
+            <div className="addon-panel-message">
+              This story is not configured to use Fluent.
+            </div>
+          </div>
+        </AddonPanel>
+      );
+    }
+
     return (
       <AddonPanel active={!!active} api={api}>
-        {strings.map(([identifier, value]) => (
-          <div key={identifier}>
-            <label>
-              {identifier} =
-              <textarea
-                name={identifier}
-                onInput={this.onInput}
-                defaultValue={value}
-              ></textarea>
-            </label>
-          </div>
-        ))}
+        <div className="addon-panel-body">
+          <table aria-hidden="false" className="addon-panel-table">
+            <thead className="addon-panel-table-head">
+              <tr>
+                <th>
+                  <span>Identifier</span>
+                </th>
+                <th>
+                  <span>String</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody className="addon-panel-table-body">
+              {strings.map(([identifier, value]) => (
+                <tr key={identifier}>
+                  <td>
+                    <span>{identifier}</span>
+                  </td>
+                  <td>
+                    <label>
+                      <textarea
+                        name={identifier}
+                        onInput={this.onInput}
+                        defaultValue={value
+                          .trim()
+                          .split("\n")
+                          .map(s => s.trim())
+                          .join("\n")}
+                      ></textarea>
+                    </label>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </AddonPanel>
     );
   }
