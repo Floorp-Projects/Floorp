@@ -21,7 +21,9 @@
 
 #include "builtin/temporal/Calendar.h"
 #include "builtin/temporal/PlainDate.h"
+#include "builtin/temporal/PlainMonthDay.h"
 #include "builtin/temporal/PlainTime.h"
+#include "builtin/temporal/PlainYearMonth.h"
 #include "builtin/temporal/Temporal.h"
 #include "builtin/temporal/TemporalFields.h"
 #include "builtin/temporal/TemporalParser.h"
@@ -895,6 +897,152 @@ static bool PlainDateTime_getISOFields(JSContext* cx, unsigned argc,
       cx, args);
 }
 
+/**
+ * Temporal.PlainDateTime.prototype.toPlainDate ( )
+ */
+static bool PlainDateTime_toPlainDate(JSContext* cx, const CallArgs& args) {
+  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  Rooted<JSObject*> calendar(cx, dateTime->calendar());
+
+  // Step 3.
+  auto* obj = CreateTemporalDate(cx, ToPlainDate(dateTime), calendar);
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
+/**
+ * Temporal.PlainDateTime.prototype.toPlainDate ( )
+ */
+static bool PlainDateTime_toPlainDate(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_toPlainDate>(cx,
+                                                                          args);
+}
+
+/**
+ * Temporal.PlainDateTime.prototype.toPlainYearMonth ( )
+ */
+static bool PlainDateTime_toPlainYearMonth(JSContext* cx,
+                                           const CallArgs& args) {
+  Rooted<PlainDateTimeObject*> dateTime(
+      cx, &args.thisv().toObject().as<PlainDateTimeObject>());
+
+  // Step 3.
+  Rooted<JSObject*> calendar(cx, dateTime->calendar());
+
+  // Step 4.
+  JS::RootedVector<PropertyKey> fieldNames(cx);
+  if (!CalendarFields(cx, calendar,
+                      {CalendarField::MonthCode, CalendarField::Year},
+                      &fieldNames)) {
+    return false;
+  }
+
+  // Step 4.
+  Rooted<PlainObject*> fields(cx,
+                              PrepareTemporalFields(cx, dateTime, fieldNames));
+  if (!fields) {
+    return false;
+  }
+
+  // Step 5.
+  auto obj = CalendarYearMonthFromFields(cx, calendar, fields);
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
+/**
+ * Temporal.PlainDateTime.prototype.toPlainYearMonth ( )
+ */
+static bool PlainDateTime_toPlainYearMonth(JSContext* cx, unsigned argc,
+                                           Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_toPlainYearMonth>(
+      cx, args);
+}
+
+/**
+ * Temporal.PlainDateTime.prototype.toPlainMonthDay ( )
+ */
+static bool PlainDateTime_toPlainMonthDay(JSContext* cx, const CallArgs& args) {
+  Rooted<PlainDateTimeObject*> dateTime(
+      cx, &args.thisv().toObject().as<PlainDateTimeObject>());
+
+  // Step 3.
+  Rooted<JSObject*> calendar(cx, dateTime->calendar());
+
+  // Step 4.
+  JS::RootedVector<PropertyKey> fieldNames(cx);
+  if (!CalendarFields(cx, calendar,
+                      {CalendarField::Day, CalendarField::MonthCode},
+                      &fieldNames)) {
+    return false;
+  }
+
+  // Step 4.
+  Rooted<PlainObject*> fields(cx,
+                              PrepareTemporalFields(cx, dateTime, fieldNames));
+  if (!fields) {
+    return false;
+  }
+
+  // Step 5.
+  auto obj = CalendarMonthDayFromFields(cx, calendar, fields);
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
+/**
+ * Temporal.PlainDateTime.prototype.toPlainMonthDay ( )
+ */
+static bool PlainDateTime_toPlainMonthDay(JSContext* cx, unsigned argc,
+                                          Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_toPlainMonthDay>(
+      cx, args);
+}
+
+/**
+ * Temporal.PlainDateTime.prototype.toPlainTime ( )
+ */
+static bool PlainDateTime_toPlainTime(JSContext* cx, const CallArgs& args) {
+  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+
+  // Step 3.
+  auto* obj = CreateTemporalTime(cx, ToPlainTime(dateTime));
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
+/**
+ * Temporal.PlainDateTime.prototype.toPlainTime ( )
+ */
+static bool PlainDateTime_toPlainTime(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_toPlainTime>(cx,
+                                                                          args);
+}
+
 const JSClass PlainDateTimeObject::class_ = {
     "Temporal.PlainDateTime",
     JSCLASS_HAS_RESERVED_SLOTS(PlainDateTimeObject::SLOT_COUNT) |
@@ -912,6 +1060,10 @@ static const JSFunctionSpec PlainDateTime_methods[] = {
 
 static const JSFunctionSpec PlainDateTime_prototype_methods[] = {
     JS_FN("valueOf", PlainDateTime_valueOf, 0, 0),
+    JS_FN("toPlainDate", PlainDateTime_toPlainDate, 0, 0),
+    JS_FN("toPlainYearMonth", PlainDateTime_toPlainYearMonth, 0, 0),
+    JS_FN("toPlainMonthDay", PlainDateTime_toPlainMonthDay, 0, 0),
+    JS_FN("toPlainTime", PlainDateTime_toPlainTime, 0, 0),
     JS_FN("getISOFields", PlainDateTime_getISOFields, 0, 0),
     JS_FS_END,
 };
