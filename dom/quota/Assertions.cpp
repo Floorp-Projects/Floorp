@@ -6,10 +6,6 @@
 
 #include "Assertions.h"
 
-#include "mozilla/Assertions.h"
-#include "mozilla/dom/quota/QuotaManager.h"
-#include "nsIThread.h"
-
 namespace mozilla::dom::quota {
 
 bool IsOnIOThread() {
