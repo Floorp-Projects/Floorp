@@ -297,6 +297,7 @@
   MACRO_(isNaN, isNaN, "isNaN")                                                \
   MACRO_(IsNullOrUndefined, IsNullOrUndefined, "IsNullOrUndefined")            \
   MACRO_(isPrototypeOf, isPrototypeOf, "isPrototypeOf")                        \
+  MACRO_(iso8601, iso8601, "iso8601")                                          \
   MACRO_(isStepStart, isStepStart, "isStepStart")                              \
   MACRO_(isSubsetOf, isSubsetOf, "isSubsetOf")                                 \
   MACRO_(isSupersetOf, isSupersetOf, "isSupersetOf")                           \
