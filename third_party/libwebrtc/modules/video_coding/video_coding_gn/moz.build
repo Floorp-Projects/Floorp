@@ -32,7 +32,6 @@ LOCAL_INCLUDES += [
 
 UNIFIED_SOURCES += [
     "/third_party/libwebrtc/modules/video_coding/decoder_database.cc",
-    "/third_party/libwebrtc/modules/video_coding/event_wrapper.cc",
     "/third_party/libwebrtc/modules/video_coding/fec_controller_default.cc",
     "/third_party/libwebrtc/modules/video_coding/generic_decoder.cc",
     "/third_party/libwebrtc/modules/video_coding/h264_sprop_parameter_sets.cc",
