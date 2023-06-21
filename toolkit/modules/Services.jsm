@@ -5,3 +5,7 @@
 const Services = globalThis.Services;
 
 var EXPORTED_SYMBOLS = ["Services"];
+
+console.warn(
+  "Services.jsm will be removed by Firefox 117 or 118. Use the Services global variable instead"
+);
