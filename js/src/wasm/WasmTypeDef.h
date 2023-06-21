@@ -608,6 +608,7 @@ class TypeDef {
 
   const TypeDef* superTypeDef_;
   uint16_t subTypingDepth_;
+  bool isFinal_;
   TypeDefKind kind_;
   union {
     FuncType funcType_;
@@ -629,6 +630,7 @@ class TypeDef {
         superTypeVector_(nullptr),
         superTypeDef_(nullptr),
         subTypingDepth_(0),
+        isFinal_(false),
         kind_(TypeDefKind::None) {
     setRecGroup(recGroup);
   }
@@ -683,6 +685,8 @@ class TypeDef {
   }
 
   const TypeDef* superTypeDef() const { return superTypeDef_; }
+
+  bool isFinal() const { return isFinal_; }
 
   uint16_t subTypingDepth() const { return subTypingDepth_; }
 
@@ -740,6 +744,7 @@ class TypeDef {
   HashNumber hash() const {
     HashNumber hn = HashNumber(kind_);
     hn = mozilla::AddToHash(hn, TypeDef::forMatch(superTypeDef_, &recGroup()));
+    hn = mozilla::AddToHash(hn, isFinal_);
     switch (kind_) {
       case TypeDefKind::Func:
         hn = mozilla::AddToHash(hn, funcType_.hash(&recGroup()));
@@ -760,6 +765,9 @@ class TypeDef {
   // "Matching type definitions" in WasmValType.h for more background.
   static bool matches(const TypeDef& lhs, const TypeDef& rhs) {
     if (lhs.kind_ != rhs.kind_) {
+      return false;
+    }
+    if (lhs.isFinal_ != rhs.isFinal_) {
       return false;
     }
     if (TypeDef::forMatch(lhs.superTypeDef_, &lhs.recGroup()) !=
@@ -789,6 +797,11 @@ class TypeDef {
       return false;
     }
 
+    // A subtype can't declare a final super type.
+    if (superType->isFinal()) {
+      return false;
+    }
+
     switch (subType->kind_) {
       case TypeDefKind::Func:
         return FuncType::canBeSubTypeOf(subType->funcType_,
@@ -809,6 +822,8 @@ class TypeDef {
     superTypeDef_ = superTypeDef;
     subTypingDepth_ = superTypeDef_->subTypingDepth_ + 1;
   }
+
+  void setFinal(const bool value) { isFinal_ = value; }
 
   // Checks if `subTypeDef` is a declared sub type of `superTypeDef`.
   static bool isSubTypeOf(const TypeDef* subTypeDef,

@@ -6,10 +6,10 @@
 wasmValidateText(`
 (module
     (rec
-        (type $a (struct (field (ref $notParsedYet))))
+        (type $a (sub (struct (field (ref $notParsedYet)))))
         (type $b (sub $a (struct (field (ref $notParsedYet2)))))
 
-        (type $notParsedYet (struct))
+        (type $notParsedYet (sub (struct)))
         (type $notParsedYet2 (sub $notParsedYet (struct (field i32))))
     )
 )`);

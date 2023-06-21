@@ -100,12 +100,12 @@ assertSubtype(
 assertSubtype(
   '(ref 0)',
   '(ref 1)',
-  `(type (struct))
+  `(type (sub (struct)))
    (type (sub 0 (struct (field i32))))`);
 assertSubtype(
   '(ref 0)',
   '(ref 1)',
-  `(type (struct))
+  `(type (sub (struct)))
    (type (sub 0 (struct (field i32) (field i32))))`);
 
 // Struct supertypes cannot have extra fields
@@ -164,9 +164,9 @@ assertNotSubtype(
 assertSubtype(
   '(ref 2)',
   '(ref 3)',
-  `(type (struct))
+  `(type (sub (struct)))
    (type (sub 0 (struct (field i32))))
-   (type (struct (field (ref 0))))
+   (type (sub (struct (field (ref 0)))))
    (type (sub 2 (struct (field (ref 1)))))`);
 
 // Arrays are subtypes of anyref, eqref, and arrayref
@@ -260,10 +260,11 @@ assertNotSubtype(
 assertSubtype(
   '(ref 2)',
   '(ref 3)',
-  `(type (struct))
-   (type (sub 0 (struct (field i32))))
-   (type (array (ref 0)))
-   (type (sub 2 (array (ref 1))))`);
+  simpleTypeSection([
+  '(sub (struct))',
+  '(sub 0 (struct (field i32)))',
+  '(sub (array (ref 0)))',
+  '(sub 2 (array (ref 1)))']));
 
 // nullref is a subtype of everything in anyref hierarchy
 assertSubtype('anyref', 'nullref');
