@@ -9,7 +9,9 @@
 
 #include <stdint.h>
 
+#include "builtin/temporal/TemporalTypes.h"
 #include "js/TypeDecls.h"
+#include "js/Value.h"
 #include "vm/NativeObject.h"
 
 namespace js {
@@ -23,11 +25,38 @@ class ZonedDateTimeObject : public NativeObject {
   static const JSClass class_;
   static const JSClass& protoClass_;
 
-  static constexpr uint32_t SLOT_COUNT = 0;
+  static constexpr uint32_t SECONDS_SLOT = 0;
+  static constexpr uint32_t NANOSECONDS_SLOT = 1;
+  static constexpr uint32_t TIMEZONE_SLOT = 2;
+  static constexpr uint32_t CALENDAR_SLOT = 3;
+  static constexpr uint32_t SLOT_COUNT = 4;
+
+  int64_t seconds() const {
+    double seconds = getFixedSlot(SECONDS_SLOT).toNumber();
+    MOZ_ASSERT(-8'640'000'000'000 <= seconds && seconds <= 8'640'000'000'000);
+    return int64_t(seconds);
+  }
+
+  int32_t nanoseconds() const {
+    int32_t nanoseconds = getFixedSlot(NANOSECONDS_SLOT).toInt32();
+    MOZ_ASSERT(0 <= nanoseconds && nanoseconds <= 999'999'999);
+    return nanoseconds;
+  }
+
+  JSObject* timeZone() const { return &getFixedSlot(TIMEZONE_SLOT).toObject(); }
+
+  JSObject* calendar() const { return &getFixedSlot(CALENDAR_SLOT).toObject(); }
 
  private:
   static const ClassSpec classSpec_;
 };
+
+/**
+ * Extract the instant fields from the ZonedDateTime object.
+ */
+inline Instant ToInstant(const ZonedDateTimeObject* zonedDateTime) {
+  return {zonedDateTime->seconds(), zonedDateTime->nanoseconds()};
+}
 
 } /* namespace js::temporal */
 
