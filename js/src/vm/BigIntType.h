@@ -147,6 +147,10 @@ class BigInt final : public js::gc::CellWithLengthAndFlags {
   static BigInt* bitOr(JSContext* cx, Handle<BigInt*> x, Handle<BigInt*> y);
   static BigInt* bitNot(JSContext* cx, Handle<BigInt*> x);
 
+  static bool divmod(JSContext* cx, Handle<BigInt*> x, Handle<BigInt*> y,
+                     MutableHandle<BigInt*> quotient,
+                     MutableHandle<BigInt*> remainder);
+
   static int64_t toInt64(const BigInt* x);
   static uint64_t toUint64(const BigInt* x);
 

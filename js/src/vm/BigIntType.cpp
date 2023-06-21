@@ -2002,6 +2002,106 @@ BigInt* BigInt::mod(JSContext* cx, HandleBigInt x, HandleBigInt y) {
   }
 }
 
+bool BigInt::divmod(JSContext* cx, Handle<BigInt*> x, Handle<BigInt*> y,
+                    MutableHandle<BigInt*> quotient,
+                    MutableHandle<BigInt*> remainder) {
+  // 1. If y is 0n, throw a RangeError exception.
+  if (y->isZero()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_BIGINT_DIVISION_BY_ZERO);
+    return false;
+  }
+
+  // 2. If x is 0n, quotient and remainder are zero, too.
+  if (x->isZero()) {
+    quotient.set(x);
+    remainder.set(x);
+    return true;
+  }
+
+  // 3. Let r be the BigInt defined by the mathematical relation r = x - (y ×
+  // q) where q is a BigInt that is negative only if x/y is negative and
+  // positive only if x/y is positive, and whose magnitude is as large as
+  // possible without exceeding the magnitude of the true mathematical
+  // quotient of x and y.
+  if (absoluteCompare(x, y) < 0) {
+    auto* zero = BigInt::zero(cx);
+    if (!zero) {
+      return false;
+    }
+
+    quotient.set(zero);
+    remainder.set(x);
+    return true;
+  }
+
+  bool resultNegative = x->isNegative() != y->isNegative();
+
+  if (y->digitLength() == 1) {
+    Digit divisor = y->digit(0);
+    if (divisor == 1) {
+      quotient.set(resultNegative == x->isNegative() ? x : neg(cx, x));
+      if (!quotient) {
+        return false;
+      }
+
+      remainder.set(BigInt::zero(cx));
+      if (!remainder) {
+        return false;
+      }
+    } else {
+      Rooted<BigInt*> quot(cx);
+      Digit remainderDigit;
+      if (!absoluteDivWithDigitDivisor(cx, x, divisor, Some(&quot),
+                                       &remainderDigit, resultNegative)) {
+        return false;
+      }
+
+      quotient.set(destructivelyTrimHighZeroDigits(cx, quot));
+      if (!quotient) {
+        return false;
+      }
+
+      if (!remainderDigit) {
+        remainder.set(zero(cx));
+      } else {
+        remainder.set(createFromDigit(cx, remainderDigit, x->isNegative()));
+      }
+      if (!remainder) {
+        return false;
+      }
+    }
+  } else {
+    RootedBigInt quot(cx);
+    RootedBigInt rem(cx);
+    if (!absoluteDivWithBigIntDivisor(cx, x, y, Some(&quot), Some(&rem),
+                                      resultNegative)) {
+      return false;
+    }
+
+    quotient.set(destructivelyTrimHighZeroDigits(cx, quot));
+    if (!quotient) {
+      return false;
+    }
+
+    remainder.set(destructivelyTrimHighZeroDigits(cx, rem));
+    if (!remainder) {
+      return false;
+    }
+  }
+
+  MOZ_ASSERT(quotient && remainder,
+             "quotient and remainder are computed on return");
+  MOZ_ASSERT(!quotient->isZero(), "zero quotient is handled earlier");
+  MOZ_ASSERT(quotient->isNegative() == resultNegative,
+             "quotient has the correct sign");
+  MOZ_ASSERT(
+      remainder->isZero() || (x->isNegative() == remainder->isNegative()),
+      "remainder has the correct sign");
+
+  return true;
+}
+
 // BigInt proposal section 1.1.3
 BigInt* BigInt::pow(JSContext* cx, HandleBigInt x, HandleBigInt y) {
   // 1. If exponent is < 0, throw a RangeError exception.
