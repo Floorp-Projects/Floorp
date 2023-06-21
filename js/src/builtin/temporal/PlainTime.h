@@ -90,7 +90,10 @@ inline PlainTime ToPlainTime(const PlainTimeObject* time) {
           time->isoMicrosecond(), time->isoNanosecond()};
 }
 
+class Increment;
 enum class TemporalOverflow;
+enum class TemporalRoundingMode;
+enum class TemporalUnit;
 
 #ifdef DEBUG
 /**
@@ -166,6 +169,26 @@ struct BalancedTime final {
  * BalanceTime ( hour, minute, second, millisecond, microsecond, nanosecond )
  */
 BalancedTime BalanceTime(const PlainTime& time, int64_t nanoseconds);
+
+struct RoundedTime final {
+  int64_t days = 0;
+  PlainTime time;
+};
+
+/**
+ * RoundTime ( hour, minute, second, millisecond, microsecond, nanosecond,
+ * increment, unit, roundingMode [ , dayLengthNs ] )
+ */
+RoundedTime RoundTime(const PlainTime& time, Increment increment,
+                      TemporalUnit unit, TemporalRoundingMode roundingMode);
+
+/**
+ * RoundTime ( hour, minute, second, millisecond, microsecond, nanosecond,
+ * increment, unit, roundingMode [ , dayLengthNs ] )
+ */
+RoundedTime RoundTime(const PlainTime& time, Increment increment,
+                      TemporalUnit unit, TemporalRoundingMode roundingMode,
+                      const Instant& dayLengthNs);
 
 } /* namespace js::temporal */
 
