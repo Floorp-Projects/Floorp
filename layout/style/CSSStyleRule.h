@@ -66,13 +66,13 @@ class CSSStyleRule final : public css::GroupRule, public SupportsWeakPtr {
                                                          css::GroupRule)
   bool IsCCLeaf() const final MOZ_MUST_OVERRIDE;
 
-  uint32_t GetSelectorCount() const;
-  nsresult GetSelectorText(uint32_t aSelectorIndex, nsACString& aText);
-  nsresult GetSpecificity(uint32_t aSelectorIndex, uint64_t* aSpecificity);
-  nsresult SelectorMatchesElement(dom::Element* aElement,
-                                  uint32_t aSelectorIndex,
-                                  const nsAString& aPseudo,
-                                  bool aRelevantLinkVisited, bool* aMatches);
+  uint32_t SelectorCount() const;
+  void SelectorTextAt(uint32_t aSelectorIndex, bool aDesugared,
+                      nsACString& aText);
+  uint64_t SelectorSpecificityAt(uint32_t aSelectorIndex, bool aDesugared);
+  bool SelectorMatchesElement(uint32_t aSelectorIndex, dom::Element&,
+                              const nsAString& aPseudo,
+                              bool aRelevantLinkVisited);
   NotNull<DeclarationBlock*> GetDeclarationBlock() const;
 
   // WebIDL interface
@@ -96,6 +96,9 @@ class CSSStyleRule final : public css::GroupRule, public SupportsWeakPtr {
 
  private:
   ~CSSStyleRule() = default;
+
+  void GetSelectorDataAtIndex(uint32_t aSelectorIndex, bool aDesugared,
+                              nsACString* aText, uint64_t* aSpecificity);
 
   // For computing the offset of mDecls.
   friend class CSSStyleRuleDeclaration;

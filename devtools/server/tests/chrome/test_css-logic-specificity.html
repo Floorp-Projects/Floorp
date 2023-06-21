@@ -15,7 +15,6 @@ Test that css-logic calculates CSS specificity properly
   window.onload = function() {
     const {require} = ChromeUtils.importESModule("resource://devtools/shared/loader/Loader.sys.mjs");
     const {CssLogic, CssSelector} = require("devtools/server/actors/inspector/css-logic");
-    const InspectorUtils = SpecialPowers.InspectorUtils;
 
     const TEST_DATA = [
       {text: "*", expected: 0},
@@ -64,8 +63,7 @@ Test that css-logic calculates CSS specificity properly
 
       const selector = new CssSelector(cssRule, selectorText, i);
       const expected = getExpectedSpecificity(selectorText);
-      const specificity = InspectorUtils.getSpecificity(selector.cssRule,
-                                                      selector.selectorIndex);
+      const specificity = selector.cssRule.selectorSpecificityAt(selector.selectorIndex);
       is(specificity, expected,
         'Selector "' + selectorText + '" has a specificity of ' + expected);
     }

@@ -853,10 +853,9 @@ class PageStyleActor extends Actor {
 
         for (let i = 0; i < selectors.length; i++) {
           if (
-            InspectorUtils.selectorMatchesElement(
-              bindingElement,
-              domRule,
+            domRule.selectorMatchesElement(
               i,
+              bindingElement,
               pseudo,
               relevantLinkVisited
             )
