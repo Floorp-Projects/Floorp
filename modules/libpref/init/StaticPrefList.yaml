@@ -10400,7 +10400,7 @@
 # True if we allow use of any decoders found in GMP plugins.
 - name: media.gmp.decoder.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # True if we want to request the multithreaded GMP decoder.
