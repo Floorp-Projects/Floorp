@@ -24,6 +24,7 @@
 #include "builtin/temporal/Temporal.h"
 #include "builtin/temporal/TemporalFields.h"
 #include "builtin/temporal/TemporalParser.h"
+#include "builtin/temporal/TemporalRoundingMode.h"
 #include "builtin/temporal/TemporalTypes.h"
 #include "builtin/temporal/TemporalUnit.h"
 #include "builtin/temporal/Wrapped.h"
@@ -389,6 +390,177 @@ static JSString* TemporalYearMonthToString(
 
   // Step 10.
   return result.finishString();
+}
+
+/**
+ * DifferenceTemporalPlainYearMonth ( operation, yearMonth, other, options )
+ */
+static bool DifferenceTemporalPlainYearMonth(JSContext* cx,
+                                             TemporalDifference operation,
+                                             const CallArgs& args) {
+  Rooted<PlainYearMonthObject*> yearMonth(
+      cx, &args.thisv().toObject().as<PlainYearMonthObject>());
+
+  // Step 1. (Not applicable in our implementation.)
+
+  // Step 2.
+  auto otherYearMonth = ToTemporalYearMonth(cx, args.get(0));
+  if (!otherYearMonth) {
+    return false;
+  }
+
+  Rooted<Wrapped<PlainYearMonthObject*>> other(cx, otherYearMonth);
+  Rooted<JSObject*> otherCalendar(cx, otherYearMonth.unwrap().calendar());
+  if (!cx->compartment()->wrap(cx, &otherCalendar)) {
+    return false;
+  }
+
+  // Step 3.
+  Rooted<JSObject*> calendar(cx, yearMonth->calendar());
+
+  // Step 4.
+  if (!CalendarEqualsOrThrow(cx, calendar, otherCalendar)) {
+    return false;
+  }
+
+  // Steps 5-7.
+  Rooted<PlainObject*> resolvedOptions(cx);
+  DifferenceSettings settings;
+  if (args.hasDefined(1)) {
+    Rooted<JSObject*> options(
+        cx, RequireObjectArg(cx, "options", ToName(operation), args[1]));
+    if (!options) {
+      return false;
+    }
+
+    // Step 5.
+    resolvedOptions = NewPlainObjectWithProto(cx, nullptr);
+    if (!resolvedOptions) {
+      return false;
+    }
+
+    // Step 6.
+    if (!CopyDataProperties(cx, resolvedOptions, options)) {
+      return false;
+    }
+
+    // Step 7.
+    if (!GetDifferenceSettings(cx, operation, resolvedOptions,
+                               TemporalUnitGroup::Date, TemporalUnit::Month,
+                               TemporalUnit::Month, TemporalUnit::Year,
+                               &settings)) {
+      return false;
+    }
+
+    // Step 8.
+    Rooted<Value> largestUnitValue(
+        cx, StringValue(TemporalUnitToString(cx, settings.largestUnit)));
+    if (!DefineDataProperty(cx, resolvedOptions, cx->names().largestUnit,
+                            largestUnitValue)) {
+      return false;
+    }
+  } else {
+    // Steps 5-7.
+    settings = {
+        TemporalUnit::Month,
+        TemporalUnit::Year,
+        TemporalRoundingMode::Trunc,
+        Increment{1},
+    };
+
+    // Step 8. (Not applicable in our implementation.)
+  }
+
+  // Step 9.
+  JS::RootedVector<PropertyKey> fieldNames(cx);
+  if (!CalendarFields(cx, calendar,
+                      {CalendarField::MonthCode, CalendarField::Year},
+                      &fieldNames)) {
+    return false;
+  }
+
+  // Step 10.
+  Rooted<PlainObject*> thisFields(
+      cx, PrepareTemporalFields(cx, yearMonth, fieldNames));
+  if (!thisFields) {
+    return false;
+  }
+
+  // Step 11.
+  Value one = Int32Value(1);
+  auto handleOne = Handle<Value>::fromMarkedLocation(&one);
+  if (!DefineDataProperty(cx, thisFields, cx->names().day, handleOne)) {
+    return false;
+  }
+
+  // Step 12.
+  Rooted<Wrapped<PlainDateObject*>> thisDate(
+      cx, CalendarDateFromFields(cx, calendar, thisFields));
+  if (!thisDate) {
+    return false;
+  }
+
+  // Step 13.
+  Rooted<PlainObject*> otherFields(
+      cx, PrepareTemporalFields(cx, other, fieldNames));
+  if (!otherFields) {
+    return false;
+  }
+
+  // Step 14.
+  if (!DefineDataProperty(cx, otherFields, cx->names().day, handleOne)) {
+    return false;
+  }
+
+  // Step 15.
+  Rooted<Wrapped<PlainDateObject*>> otherDate(
+      cx, CalendarDateFromFields(cx, calendar, otherFields));
+  if (!otherDate) {
+    return false;
+  }
+
+  // Step 16.
+  Duration result;
+  if (resolvedOptions) {
+    if (!CalendarDateUntil(cx, calendar, thisDate, otherDate, resolvedOptions,
+                           &result)) {
+      return false;
+    }
+  } else {
+    if (!CalendarDateUntil(cx, calendar, thisDate, otherDate,
+                           settings.largestUnit, &result)) {
+      return false;
+    }
+  }
+
+  // We only care about years and months here, all other fields are set to zero.
+  Duration duration = {result.years, result.months};
+
+  // Step 17.
+  if (settings.smallestUnit != TemporalUnit::Month ||
+      settings.roundingIncrement != Increment{1}) {
+    Duration rounded;
+    if (!RoundDuration(cx, duration, settings.roundingIncrement,
+                       settings.smallestUnit, settings.roundingMode, thisDate,
+                       &rounded)) {
+      return false;
+    }
+
+    duration = {rounded.years, rounded.months};
+  }
+
+  // Step 18.
+  if (operation == TemporalDifference::Since) {
+    duration = duration.negate();
+  }
+
+  auto* obj = CreateTemporalDuration(cx, {duration.years, duration.months});
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
 }
 
 enum class PlainYearMonthDuration { Add, Subtract };
@@ -956,6 +1128,40 @@ static bool PlainYearMonth_subtract(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
+ * Temporal.PlainYearMonth.prototype.until ( other [ , options ] )
+ */
+static bool PlainYearMonth_until(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  return DifferenceTemporalPlainYearMonth(cx, TemporalDifference::Until, args);
+}
+
+/**
+ * Temporal.PlainYearMonth.prototype.until ( other [ , options ] )
+ */
+static bool PlainYearMonth_until(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainYearMonth, PlainYearMonth_until>(cx, args);
+}
+
+/**
+ * Temporal.PlainYearMonth.prototype.since ( other [ , options ] )
+ */
+static bool PlainYearMonth_since(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  return DifferenceTemporalPlainYearMonth(cx, TemporalDifference::Since, args);
+}
+
+/**
+ * Temporal.PlainYearMonth.prototype.since ( other [ , options ] )
+ */
+static bool PlainYearMonth_since(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainYearMonth, PlainYearMonth_since>(cx, args);
+}
+
+/**
  * Temporal.PlainYearMonth.prototype.equals ( other )
  */
 static bool PlainYearMonth_equals(JSContext* cx, const CallArgs& args) {
@@ -1277,6 +1483,8 @@ static const JSFunctionSpec PlainYearMonth_prototype_methods[] = {
     JS_FN("with", PlainYearMonth_with, 1, 0),
     JS_FN("add", PlainYearMonth_add, 1, 0),
     JS_FN("subtract", PlainYearMonth_subtract, 1, 0),
+    JS_FN("until", PlainYearMonth_until, 1, 0),
+    JS_FN("since", PlainYearMonth_since, 1, 0),
     JS_FN("equals", PlainYearMonth_equals, 1, 0),
     JS_FN("toString", PlainYearMonth_toString, 0, 0),
     JS_FN("toLocaleString", PlainYearMonth_toLocaleString, 0, 0),
