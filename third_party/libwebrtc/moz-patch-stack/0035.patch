@@ -1,4 +1,4 @@
-From: stransky <stransky@redhat.com>
+From: Dan Minor <dminor@mozilla.com>
 Date: Thu, 5 Nov 2020 07:47:00 +0000
 Subject: Bug 1654112 - Tweak upstream gn files for Firefox build. r=ng
 
@@ -22,12 +22,11 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/127ace4d8887f11ab
  modules/desktop_capture/BUILD.gn              | 29 +---------------
  modules/portal/BUILD.gn                       | 24 +++++++++++++
  modules/video_capture/BUILD.gn                | 11 +-----
- modules/video_coding/BUILD.gn                 |  6 ++++
  rtc_base/BUILD.gn                             |  4 ++-
  rtc_base/system/BUILD.gn                      |  2 +-
  test/BUILD.gn                                 | 14 ++++++++
  webrtc.gni                                    | 34 ++++++++++++-------
- 22 files changed, 162 insertions(+), 74 deletions(-)
+ 21 files changed, 156 insertions(+), 74 deletions(-)
  create mode 100644 common_audio/intrin.h
 
 diff --git a/.gn b/.gn
@@ -531,23 +530,6 @@ index b42536db85..aff496cc01 100644
        include_dirs = [
          "/config/external/nspr",
          "/nsprpub/lib/ds",
-diff --git a/modules/video_coding/BUILD.gn b/modules/video_coding/BUILD.gn
-index 8e35299741..166df525c5 100644
---- a/modules/video_coding/BUILD.gn
-+++ b/modules/video_coding/BUILD.gn
-@@ -199,6 +199,12 @@ rtc_library("video_coding") {
-     "video_receiver2.cc",
-     "video_receiver2.h",
-   ]
-+  if (build_with_mozilla) {
-+    sources += [
-+      "event_wrapper.cc",
-+      "event_wrapper.h",
-+    ]
-+  }
- 
-   deps = [
-     ":codec_globals_headers",
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
 index 0d8bd4f759..7e162cecbb 100644
 --- a/rtc_base/BUILD.gn
