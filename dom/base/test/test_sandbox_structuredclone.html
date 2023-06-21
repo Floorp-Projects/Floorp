@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for structured clone deserialization in a sandbox</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+</head>
+<body>
+
+  <script type="application/javascript">
+    "use strict";
+
+    let sandbox = new Cu.Sandbox(window, { sandboxPrototype: window });
+    let holder = new StructuredCloneHolder("", "", new Blob([]), sandbox);
+    let result = holder.deserialize(sandbox);
+    ok(sandbox.Blob.isInstance(result),
+       "Deserializing into a sandbox with a DOM global as its prototype should work");
+
+  </script>
+</body>
+</html>

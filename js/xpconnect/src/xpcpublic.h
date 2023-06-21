@@ -554,11 +554,22 @@ nsGlobalWindowInner* WindowOrNull(JSObject* aObj);
 nsGlobalWindowInner* WindowGlobalOrNull(JSObject* aObj);
 
 /**
+ * If |aObj| is a Sandbox object and it has a sandboxPrototype, then return
+ * that prototype.
+ * |aCx| is used for checked unwrapping of the prototype.
+ */
+JSObject* SandboxPrototypeOrNull(JSContext* aCx, JSObject* aObj);
+
+/**
  * If |aObj| is a Sandbox object associated with a DOMWindow via a
  * sandboxPrototype, then return that DOMWindow.
  * |aCx| is used for checked unwrapping of the Window.
  */
-nsGlobalWindowInner* SandboxWindowOrNull(JSObject* aObj, JSContext* aCx);
+inline nsGlobalWindowInner* SandboxWindowOrNull(JSObject* aObj,
+                                                JSContext* aCx) {
+  JSObject* proto = SandboxPrototypeOrNull(aCx, aObj);
+  return proto ? WindowOrNull(proto) : nullptr;
+}
 
 /**
  * If |cx| is in a realm whose global is a window, returns the associated
