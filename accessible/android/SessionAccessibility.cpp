@@ -43,17 +43,6 @@
     } while (0)
 #endif
 
-#define FORWARD_ACTION_TO_ACCESSIBLE(funcname, ...)                        \
-  MOZ_ASSERT(NS_IsMainThread());                                           \
-  MonitorAutoLock mal(nsAccessibilityService::GetAndroidMonitor());        \
-  if (Accessible* acc = GetAccessibleByID(aID)) {                          \
-    if (acc->IsRemote()) {                                                 \
-      acc->AsRemote()->funcname(__VA_ARGS__);                              \
-    } else {                                                               \
-      static_cast<AccessibleWrap*>(acc->AsLocal())->funcname(__VA_ARGS__); \
-    }                                                                      \
-  }
-
 using namespace mozilla::a11y;
 
 // IDs should be a positive 32bit integer.
@@ -158,7 +147,11 @@ void SessionAccessibility::SetText(int32_t aID, jni::String::Param aText) {
 }
 
 void SessionAccessibility::Click(int32_t aID) {
-  FORWARD_ACTION_TO_ACCESSIBLE(DoAction, 0);
+  MOZ_ASSERT(NS_IsMainThread());
+  MonitorAutoLock mal(nsAccessibilityService::GetAndroidMonitor());
+  if (Accessible* acc = GetAccessibleByID(aID)) {
+    acc->DoAction(0);
+  }
 }
 
 bool SessionAccessibility::Pivot(int32_t aID, int32_t aGranularity,
@@ -339,8 +332,6 @@ void SessionAccessibility::Paste(int32_t aID) {
     }
   }
 }
-
-#undef FORWARD_ACTION_TO_ACCESSIBLE
 
 RefPtr<SessionAccessibility> SessionAccessibility::GetInstanceFor(
     Accessible* aAccessible) {
