@@ -4547,10 +4547,6 @@
         }
         modifiedAttrs.push("muted");
       }
-      if (aOtherTab.hasAttribute("undiscardable")) {
-        aOurTab.setAttribute("undiscardable", "true");
-        modifiedAttrs.push("undiscardable");
-      }
       if (aOtherTab.hasAttribute("soundplaying")) {
         aOurTab.setAttribute("soundplaying", "true");
         modifiedAttrs.push("soundplaying");
