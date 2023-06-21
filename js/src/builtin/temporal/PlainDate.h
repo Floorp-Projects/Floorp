@@ -56,6 +56,8 @@ inline PlainDate ToPlainDate(const PlainDateObject* date) {
   return {date->isoYear(), date->isoMonth(), date->isoDay()};
 }
 
+enum class TemporalOverflow;
+
 #ifdef DEBUG
 /**
  * IsValidISODate ( year, month, day )
@@ -102,6 +104,24 @@ bool ToTemporalDate(JSContext* cx, JS::Handle<JS::Value> item,
  */
 PlainDateObject* CreateTemporalDate(JSContext* cx, const PlainDate& date,
                                     JS::Handle<JSObject*> calendar);
+
+/**
+ * RegulateISODate ( year, month, day, overflow )
+ */
+bool RegulateISODate(JSContext* cx, const PlainDate& date,
+                     TemporalOverflow overflow, PlainDate* result);
+
+struct RegulatedISODate final {
+  double year;
+  int32_t month;
+  int32_t day;
+};
+
+/**
+ * RegulateISODate ( year, month, day, overflow )
+ */
+bool RegulateISODate(JSContext* cx, double year, double month, double day,
+                     TemporalOverflow overflow, RegulatedISODate* result);
 
 } /* namespace js::temporal */
 

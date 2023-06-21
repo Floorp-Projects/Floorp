@@ -183,6 +183,82 @@ bool js::temporal::ThrowIfInvalidISODate(JSContext* cx, double year,
 }
 
 /**
+ * RegulateISODate ( year, month, day, overflow )
+ */
+bool js::temporal::RegulateISODate(JSContext* cx, const PlainDate& date,
+                                   TemporalOverflow overflow,
+                                   PlainDate* result) {
+  auto& [year, month, day] = date;
+
+  // Step 1.
+  if (overflow == TemporalOverflow::Constrain) {
+    // Step 1.a.
+    int32_t m = std::clamp(month, 1, 12);
+
+    // Step 1.b.
+    int32_t daysInMonth = ISODaysInMonth(year, m);
+
+    // Step 1.c.
+    int32_t d = std::clamp(day, 1, daysInMonth);
+
+    // Step 1.d.
+    *result = {year, m, d};
+    return true;
+  }
+
+  // Step 2.a.
+  MOZ_ASSERT(overflow == TemporalOverflow::Reject);
+
+  // Step 2.b.
+  if (!ThrowIfInvalidISODate(cx, year, month, day)) {
+    return false;
+  }
+
+  // Step 2.b. (Inlined call to CreateISODateRecord.)
+  *result = {year, month, day};
+  return true;
+}
+
+/**
+ * RegulateISODate ( year, month, day, overflow )
+ */
+bool js::temporal::RegulateISODate(JSContext* cx, double year, double month,
+                                   double day, TemporalOverflow overflow,
+                                   RegulatedISODate* result) {
+  MOZ_ASSERT(IsInteger(year));
+  MOZ_ASSERT(IsInteger(month));
+  MOZ_ASSERT(IsInteger(day));
+
+  // Step 1.
+  if (overflow == TemporalOverflow::Constrain) {
+    // Step 1.a.
+    int32_t m = int32_t(std::clamp(month, 1.0, 12.0));
+
+    // Step 1.b.
+    double daysInMonth = double(ISODaysInMonth(year, m));
+
+    // Step 1.c.
+    int32_t d = int32_t(std::clamp(day, 1.0, daysInMonth));
+
+    // Step 1.d.
+    *result = {year, m, d};
+    return true;
+  }
+
+  // Step 2.a.
+  MOZ_ASSERT(overflow == TemporalOverflow::Reject);
+
+  // Step 2.b.
+  if (!ThrowIfInvalidISODate(cx, year, month, day)) {
+    return false;
+  }
+
+  // Step 2.b. (Inlined call to CreateISODateRecord.)
+  *result = {year, int32_t(month), int32_t(day)};
+  return true;
+}
+
+/**
  * CreateTemporalDate ( isoYear, isoMonth, isoDay, calendar [ , newTarget ] )
  */
 static PlainDateObject* CreateTemporalDate(JSContext* cx, const CallArgs& args,

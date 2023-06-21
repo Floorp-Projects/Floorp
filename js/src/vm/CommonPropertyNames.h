@@ -115,6 +115,7 @@
   MACRO_(currency, currency, "currency")                                       \
   MACRO_(currencyDisplay, currencyDisplay, "currencyDisplay")                  \
   MACRO_(currencySign, currencySign, "currencySign")                           \
+  MACRO_(dateFromFields, dateFromFields, "dateFromFields")                     \
   MACRO_(dateStyle, dateStyle, "dateStyle")                                    \
   MACRO_(day, day, "day")                                                      \
   MACRO_(dayOfWeek, dayOfWeek, "dayOfWeek")                                    \
@@ -424,6 +425,7 @@
   MACRO_(optimizedOut, optimizedOut, "optimizedOut")                           \
   MACRO_(other, other, "other")                                                \
   MACRO_(outOfMemory, outOfMemory, "out of memory")                            \
+  MACRO_(overflow, overflow, "overflow")                                       \
   MACRO_(ownKeys, ownKeys, "ownKeys")                                          \
   MACRO_(package, package, "package")                                          \
   MACRO_(parameters, parameters, "parameters")                                 \

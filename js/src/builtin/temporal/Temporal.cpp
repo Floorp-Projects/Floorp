@@ -134,6 +134,42 @@ bool js::temporal::ToCalendarNameOption(JSContext* cx,
 }
 
 /**
+ * ToTemporalOverflow ( normalizedOptions )
+ */
+bool js::temporal::ToTemporalOverflow(JSContext* cx, Handle<JSObject*> options,
+                                      TemporalOverflow* result) {
+  // Step 1.
+  Rooted<JSString*> overflow(cx);
+  if (!GetStringOption(cx, options, cx->names().overflow, &overflow)) {
+    return false;
+  }
+
+  // Caller should fill in the fallback.
+  if (!overflow) {
+    return true;
+  }
+
+  JSLinearString* linear = overflow->ensureLinear(cx);
+  if (!linear) {
+    return false;
+  }
+
+  if (StringEqualsLiteral(linear, "constrain")) {
+    *result = TemporalOverflow::Constrain;
+  } else if (StringEqualsLiteral(linear, "reject")) {
+    *result = TemporalOverflow::Reject;
+  } else {
+    if (auto chars = QuoteString(cx, linear, '"')) {
+      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                               JSMSG_INVALID_OPTION_VALUE, "overflow",
+                               chars.get());
+    }
+    return false;
+  }
+  return true;
+}
+
+/**
  * ToPositiveIntegerWithTruncation ( argument )
  */
 bool js::temporal::ToPositiveIntegerWithTruncation(JSContext* cx,

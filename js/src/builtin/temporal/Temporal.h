@@ -38,6 +38,14 @@ enum class CalendarOption { Auto, Always, Never, Critical };
 bool ToCalendarNameOption(JSContext* cx, JS::Handle<JSObject*> options,
                           CalendarOption* result);
 
+enum class TemporalOverflow { Constrain, Reject };
+
+/**
+ * ToTemporalOverflow ( normalizedOptions )
+ */
+bool ToTemporalOverflow(JSContext* cx, JS::Handle<JSObject*> options,
+                        TemporalOverflow* result);
+
 /**
  * ToPositiveIntegerWithTruncation ( argument )
  */
