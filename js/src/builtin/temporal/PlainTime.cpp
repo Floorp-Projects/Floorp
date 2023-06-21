@@ -22,10 +22,12 @@
 #include "NamespaceImports.h"
 
 #include "builtin/temporal/Calendar.h"
+#include "builtin/temporal/Instant.h"
 #include "builtin/temporal/PlainDate.h"
 #include "builtin/temporal/PlainDateTime.h"
 #include "builtin/temporal/Temporal.h"
 #include "builtin/temporal/TemporalParser.h"
+#include "builtin/temporal/TemporalRoundingMode.h"
 #include "builtin/temporal/TemporalTypes.h"
 #include "builtin/temporal/TemporalUnit.h"
 #include "builtin/temporal/TimeZone.h"
@@ -613,6 +615,40 @@ bool js::temporal::ToTemporalTime(JSContext* cx, Handle<Value> item,
 }
 
 /**
+ * TemporalTimeToString ( hour, minute, second, millisecond, microsecond,
+ * nanosecond, precision )
+ */
+static JSString* TemporalTimeToString(JSContext* cx, const PlainTime& time,
+                                      Precision precision) {
+  JSStringBuilder result(cx);
+
+  // Note: This doesn't reserve too much space, because the string builder
+  // already internally reserves space for 64 characters.
+  constexpr size_t timePart = 2 + 1 + 2 + 1 + 2 + 1 + 9;  // 18
+
+  if (!result.reserve(timePart)) {
+    return nullptr;
+  }
+
+  // Step 1.
+  int32_t hour = time.hour;
+  result.infallibleAppend(char('0' + (hour / 10)));
+  result.infallibleAppend(char('0' + (hour % 10)));
+
+  // Step 2.
+  int32_t minute = time.minute;
+  result.infallibleAppend(':');
+  result.infallibleAppend(char('0' + (minute / 10)));
+  result.infallibleAppend(char('0' + (minute % 10)));
+
+  // Step 3.
+  FormatSecondsStringPart(result, time, precision);
+
+  // Step 4.
+  return result.finishString();
+}
+
+/**
  * CompareTemporalTime ( h1, min1, s1, ms1, mus1, ns1, h2, min2, s2, ms2, mus2,
  * ns2 )
  */
@@ -735,6 +771,220 @@ bool js::temporal::ToTemporalTimeRecord(JSContext* cx,
 
   // Steps 1-2 and 4-17.
   return ::ToTemporalTimeRecord(cx, temporalTimeLike, result);
+}
+
+/**
+ * RoundNumberToIncrement ( x, increment, roundingMode )
+ */
+static int64_t RoundNumberToIncrement(int64_t x, TemporalUnit unit,
+                                      Increment increment,
+                                      TemporalRoundingMode roundingMode) {
+  MOZ_ASSERT(x >= 0);
+  MOZ_ASSERT(x < ToNanoseconds(TemporalUnit::Day));
+
+  MOZ_ASSERT(unit >= TemporalUnit::Day);
+  MOZ_ASSERT_IF(unit == TemporalUnit::Day, increment == Increment{1});
+  MOZ_ASSERT_IF(unit > TemporalUnit::Day,
+                increment <= MaximumTemporalDurationRoundingIncrement(unit));
+
+  int64_t divisor = ToNanoseconds(unit) * increment.value();
+  MOZ_ASSERT(divisor > 0);
+  MOZ_ASSERT(divisor <= ToNanoseconds(TemporalUnit::Day));
+
+  // Division by one has no remainder.
+  if (divisor == 1) {
+    MOZ_ASSERT(increment == Increment{1});
+    return x;
+  }
+
+  // Steps 1-8.
+  int64_t rounded = Divide(x, divisor, roundingMode);
+
+  // Step 9.
+  mozilla::CheckedInt64 result = rounded;
+  result *= increment.value();
+
+  MOZ_ASSERT(result.isValid(), "can't overflow when inputs are all in range");
+
+  return result.value();
+}
+
+/**
+ * RoundNumberToIncrement ( x, increment, roundingMode )
+ */
+static int64_t RoundNumberToIncrement(int64_t x, int64_t divisor,
+                                      Increment increment,
+                                      TemporalRoundingMode roundingMode) {
+  MOZ_ASSERT(x >= 0);
+  MOZ_ASSERT(x < ToNanoseconds(TemporalUnit::Day));
+  MOZ_ASSERT(divisor > 0);
+  MOZ_ASSERT(increment == Increment{1}, "Rounding increment for 'day' is 1");
+
+  // Steps 1-2. (Not applicable in our implementation)
+
+  // Steps 3-8.
+  return Divide(x, divisor, roundingMode);
+}
+
+static int64_t TimeToNanos(const PlainTime& time) {
+  // No overflow possible because the input is a valid time.
+  MOZ_ASSERT(IsValidTime(time));
+
+  int64_t hour = time.hour;
+  int64_t minute = time.minute;
+  int64_t second = time.second;
+  int64_t millisecond = time.millisecond;
+  int64_t microsecond = time.microsecond;
+  int64_t nanosecond = time.nanosecond;
+
+  int64_t millis = ((hour * 60 + minute) * 60 + second) * 1000 + millisecond;
+  return (millis * 1000 + microsecond) * 1000 + nanosecond;
+}
+
+/**
+ * RoundTime ( hour, minute, second, millisecond, microsecond, nanosecond,
+ * increment, unit, roundingMode [ , dayLengthNs ] )
+ */
+RoundedTime js::temporal::RoundTime(const PlainTime& time, Increment increment,
+                                    TemporalUnit unit,
+                                    TemporalRoundingMode roundingMode) {
+  MOZ_ASSERT(IsValidTime(time));
+  MOZ_ASSERT(unit >= TemporalUnit::Day);
+  MOZ_ASSERT_IF(unit > TemporalUnit::Day,
+                increment <= MaximumTemporalDurationRoundingIncrement(unit));
+  MOZ_ASSERT_IF(unit == TemporalUnit::Day, increment == Increment{1});
+
+  int32_t days = 0;
+  auto [hour, minute, second, millisecond, microsecond, nanosecond] = time;
+
+  // Step 1. (Not applicable in our implementation.)
+
+  // Step 2.
+  MOZ_ASSERT(IsValidTime(time));
+
+  // Take the same approach as used in RoundDuration() to perform exact
+  // mathematical operations without possible loss of precision.
+
+  // Steps 3-10.
+  PlainTime quantity;
+  int32_t* result;
+  switch (unit) {
+    case TemporalUnit::Day:
+      quantity = time;
+      result = &days;
+      break;
+    case TemporalUnit::Hour:
+      quantity = time;
+      result = &hour;
+      minute = 0;
+      second = 0;
+      millisecond = 0;
+      microsecond = 0;
+      nanosecond = 0;
+      break;
+    case TemporalUnit::Minute:
+      quantity = {0, minute, second, millisecond, microsecond, nanosecond};
+      result = &minute;
+      second = 0;
+      millisecond = 0;
+      microsecond = 0;
+      nanosecond = 0;
+      break;
+    case TemporalUnit::Second:
+      quantity = {0, 0, second, millisecond, microsecond, nanosecond};
+      result = &second;
+      millisecond = 0;
+      microsecond = 0;
+      nanosecond = 0;
+      break;
+    case TemporalUnit::Millisecond:
+      quantity = {0, 0, 0, millisecond, microsecond, nanosecond};
+      result = &millisecond;
+      microsecond = 0;
+      nanosecond = 0;
+      break;
+    case TemporalUnit::Microsecond:
+      quantity = {0, 0, 0, 0, microsecond, nanosecond};
+      result = &microsecond;
+      nanosecond = 0;
+      break;
+    case TemporalUnit::Nanosecond:
+      quantity = {0, 0, 0, 0, 0, nanosecond};
+      result = &nanosecond;
+      break;
+
+    case TemporalUnit::Auto:
+    case TemporalUnit::Year:
+    case TemporalUnit::Month:
+    case TemporalUnit::Week:
+      MOZ_CRASH("unexpected temporal unit");
+  }
+
+  // Step 11.
+  int64_t r = ::RoundNumberToIncrement(TimeToNanos(quantity), unit, increment,
+                                       roundingMode);
+  MOZ_ASSERT(r == int64_t(int32_t(r)),
+             "no overflow possible due to limited range of arguments");
+  *result = r;
+
+  // Step 12.
+  if (unit == TemporalUnit::Day) {
+    return {int64_t(days), {0, 0, 0, 0, 0, 0}};
+  }
+
+  // Steps 13-19.
+  auto balanced =
+      ::BalanceTime(hour, minute, second, millisecond, microsecond, nanosecond);
+  return {int64_t(balanced.days), balanced.time};
+}
+
+/**
+ * RoundTime ( hour, minute, second, millisecond, microsecond, nanosecond,
+ * increment, unit, roundingMode [ , dayLengthNs ] )
+ */
+RoundedTime js::temporal::RoundTime(const PlainTime& time, Increment increment,
+                                    TemporalUnit unit,
+                                    TemporalRoundingMode roundingMode,
+                                    const Instant& dayLengthNs) {
+  MOZ_ASSERT(IsValidTime(time));
+  MOZ_ASSERT(IsValidInstantDifference(dayLengthNs));
+  MOZ_ASSERT(dayLengthNs > (Instant{}));
+
+  if (unit != TemporalUnit::Day) {
+    return RoundTime(time, increment, unit, roundingMode);
+  }
+
+  // Step 1. (Not applicable in our implementation.)
+
+  // Step 2.
+  MOZ_ASSERT(IsValidTime(time));
+
+  // Step 3. (Not applicable)
+
+  // Step 4.
+  int64_t quantity = TimeToNanos(time);
+  MOZ_ASSERT(quantity < ToNanoseconds(TemporalUnit::Day));
+
+  // Steps 5-10. (Not applicable)
+
+  // Step 11.
+  int64_t divisor;
+  if (auto checkedDiv = dayLengthNs.toNanoseconds(); checkedDiv.isValid()) {
+    divisor = checkedDiv.value();
+  } else {
+    // When the divisor is too large, the expression `quantity / divisor` is a
+    // value near zero. Substitute |divisor| with an equivalent expression.
+    // Choose |86'400'000'000'000| which will give a similar result because
+    // |quantity| is guaranteed to be lower than |86'400'000'000'000|.
+    divisor = ToNanoseconds(TemporalUnit::Day);
+  }
+  MOZ_ASSERT(divisor > 0);
+
+  int64_t result =
+      ::RoundNumberToIncrement(quantity, divisor, increment, roundingMode);
+
+  // Step 12.
+  return {result, {0, 0, 0, 0, 0, 0}};
 }
 
 JSObject* js::temporal::PlainTimeObject::createCalendar(
@@ -1243,6 +1493,130 @@ static bool PlainTime_getISOFields(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
+ * Temporal.PlainTime.prototype.toString ( [ options ] )
+ */
+static bool PlainTime_toString(JSContext* cx, const CallArgs& args) {
+  auto* temporalTime = &args.thisv().toObject().as<PlainTimeObject>();
+  auto time = ToPlainTime(temporalTime);
+
+  SecondsStringPrecision precision = {Precision::Auto(),
+                                      TemporalUnit::Nanosecond, Increment{1}};
+  auto roundingMode = TemporalRoundingMode::Trunc;
+  if (args.hasDefined(0)) {
+    // Step 3.
+    Rooted<JSObject*> options(
+        cx, RequireObjectArg(cx, "options", "toString", args[0]));
+    if (!options) {
+      return false;
+    }
+
+    // Steps 4-5.
+    auto digits = Precision::Auto();
+    if (!ToFractionalSecondDigits(cx, options, &digits)) {
+      return false;
+    }
+
+    // Step 6.
+    if (!ToTemporalRoundingMode(cx, options, &roundingMode)) {
+      return false;
+    }
+
+    // Step 7.
+    auto smallestUnit = TemporalUnit::Auto;
+    if (!GetTemporalUnit(cx, options, TemporalUnitKey::SmallestUnit,
+                         TemporalUnitGroup::Time, &smallestUnit)) {
+      return false;
+    }
+
+    // Step 8.
+    if (smallestUnit == TemporalUnit::Hour) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_TEMPORAL_INVALID_UNIT_OPTION, "hour",
+                                "smallestUnit");
+      return false;
+    }
+
+    // Step 9.
+    precision = ToSecondsStringPrecision(smallestUnit, digits);
+  }
+
+  // Step 10.
+  auto roundedTime =
+      RoundTime(time, precision.increment, precision.unit, roundingMode);
+
+  // Step 11.
+  JSString* str =
+      TemporalTimeToString(cx, roundedTime.time, precision.precision);
+  if (!str) {
+    return false;
+  }
+
+  args.rval().setString(str);
+  return true;
+}
+
+/**
+ * Temporal.PlainTime.prototype.toString ( [ options ] )
+ */
+static bool PlainTime_toString(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainTime, PlainTime_toString>(cx, args);
+}
+
+/**
+ * Temporal.PlainTime.prototype.toLocaleString ( [ locales [ , options ] ] )
+ */
+static bool PlainTime_toLocaleString(JSContext* cx, const CallArgs& args) {
+  auto* temporalTime = &args.thisv().toObject().as<PlainTimeObject>();
+  auto time = ToPlainTime(temporalTime);
+
+  // Step 3.
+  JSString* str = TemporalTimeToString(cx, time, Precision::Auto());
+  if (!str) {
+    return false;
+  }
+
+  args.rval().setString(str);
+  return true;
+}
+
+/**
+ * Temporal.PlainTime.prototype.toLocaleString ( [ locales [ , options ] ] )
+ */
+static bool PlainTime_toLocaleString(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainTime, PlainTime_toLocaleString>(cx, args);
+}
+
+/**
+ * Temporal.PlainTime.prototype.toJSON ( )
+ */
+static bool PlainTime_toJSON(JSContext* cx, const CallArgs& args) {
+  auto* temporalTime = &args.thisv().toObject().as<PlainTimeObject>();
+  auto time = ToPlainTime(temporalTime);
+
+  // Step 3.
+  JSString* str = TemporalTimeToString(cx, time, Precision::Auto());
+  if (!str) {
+    return false;
+  }
+
+  args.rval().setString(str);
+  return true;
+}
+
+/**
+ * Temporal.PlainTime.prototype.toJSON ( )
+ */
+static bool PlainTime_toJSON(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainTime, PlainTime_toJSON>(cx, args);
+}
+
+/**
  * Temporal.PlainTime.prototype.valueOf ( )
  */
 static bool PlainTime_valueOf(JSContext* cx, unsigned argc, Value* vp) {
@@ -1272,6 +1646,9 @@ static const JSFunctionSpec PlainTime_prototype_methods[] = {
     JS_FN("equals", PlainTime_equals, 1, 0),
     JS_FN("toPlainDateTime", PlainTime_toPlainDateTime, 1, 0),
     JS_FN("getISOFields", PlainTime_getISOFields, 0, 0),
+    JS_FN("toString", PlainTime_toString, 0, 0),
+    JS_FN("toLocaleString", PlainTime_toLocaleString, 0, 0),
+    JS_FN("toJSON", PlainTime_toJSON, 0, 0),
     JS_FN("valueOf", PlainTime_valueOf, 0, 0),
     JS_FS_END,
 };
