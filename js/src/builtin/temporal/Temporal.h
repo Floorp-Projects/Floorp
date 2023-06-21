@@ -168,6 +168,12 @@ bool GetTemporalUnit(JSContext* cx, JS::Handle<JSString*> value,
 bool ToTemporalRoundingMode(JSContext* cx, JS::Handle<JSObject*> options,
                             TemporalRoundingMode* mode);
 
+/**
+ * RoundNumberToIncrement ( x, increment, roundingMode )
+ */
+bool RoundNumberToIncrement(JSContext* cx, const Instant& x, int64_t increment,
+                            TemporalRoundingMode roundingMode, Instant* result);
+
 enum class CalendarOption { Auto, Always, Never, Critical };
 
 /**

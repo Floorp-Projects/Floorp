@@ -55,6 +55,10 @@ inline Instant ToInstant(const InstantObject* instant) {
   return {instant->seconds(), instant->nanoseconds()};
 }
 
+class Increment;
+enum class TemporalUnit;
+enum class TemporalRoundingMode;
+
 /**
  * IsValidEpochNanoseconds ( epochNanoseconds )
  */
@@ -120,6 +124,13 @@ InstantObject* CreateTemporalInstant(JSContext* cx, const Instant& instant);
  * microsecond, nanosecond )
  */
 Instant GetUTCEpochNanoseconds(const PlainDateTime& dateTime);
+
+/**
+ * RoundTemporalInstant ( ns, increment, unit, roundingMode )
+ */
+bool RoundTemporalInstant(JSContext* cx, const Instant& ns, Increment increment,
+                          TemporalUnit unit, TemporalRoundingMode roundingMode,
+                          Instant* result);
 
 } /* namespace js::temporal */
 

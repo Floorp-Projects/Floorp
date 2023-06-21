@@ -27,7 +27,9 @@
 
 #include "builtin/temporal/Calendar.h"
 #include "builtin/temporal/PlainDateTime.h"
+#include "builtin/temporal/Temporal.h"
 #include "builtin/temporal/TemporalParser.h"
+#include "builtin/temporal/TemporalRoundingMode.h"
 #include "builtin/temporal/TemporalTypes.h"
 #include "builtin/temporal/TemporalUnit.h"
 #include "builtin/temporal/TimeZone.h"
@@ -654,6 +656,98 @@ bool js::temporal::ToTemporalInstantEpochInstant(JSContext* cx,
 }
 
 /**
+ * RoundNumberToIncrementAsIfPositive ( x, increment, roundingMode )
+ */
+static bool RoundNumberToIncrementAsIfPositive(
+    JSContext* cx, const Instant& x, int64_t increment,
+    TemporalRoundingMode roundingMode, Instant* result) {
+  // This operation is equivalent to adjusting the rounding mode through
+  // |ToPositiveRoundingMode| and then calling |RoundNumberToIncrement|.
+  return RoundNumberToIncrement(cx, x, increment,
+                                ToPositiveRoundingMode(roundingMode), result);
+}
+
+/**
+ * RoundTemporalInstant ( ns, increment, unit, roundingMode )
+ */
+bool js::temporal::RoundTemporalInstant(JSContext* cx, const Instant& ns,
+                                        Increment increment, TemporalUnit unit,
+                                        TemporalRoundingMode roundingMode,
+                                        Instant* result) {
+  MOZ_ASSERT(IsValidEpochInstant(ns));
+  MOZ_ASSERT(increment >= Increment::min());
+  MOZ_ASSERT(uint64_t(increment.value()) <= ToNanoseconds(TemporalUnit::Day));
+  MOZ_ASSERT(unit > TemporalUnit::Day);
+
+  // Steps 1-6.
+  int64_t toNanoseconds = ToNanoseconds(unit);
+  MOZ_ASSERT(
+      (increment.value() * toNanoseconds) <= ToNanoseconds(TemporalUnit::Day),
+      "increment * toNanoseconds shouldn't overflow instant resolution");
+
+  // Step 7.
+  return RoundNumberToIncrementAsIfPositive(
+      cx, ns, increment.value() * toNanoseconds, roundingMode, result);
+}
+
+/**
+ * TemporalInstantToString ( instant, timeZone, precision )
+ */
+static JSString* TemporalInstantToString(JSContext* cx,
+                                         Handle<InstantObject*> instant,
+                                         Handle<JSObject*> timeZone,
+                                         Precision precision) {
+  // Steps 1-2. (Not applicable in our implementation.)
+
+  // Steps 3-4.
+  Rooted<JSObject*> outputTimeZone(cx, timeZone);
+  if (!timeZone) {
+    outputTimeZone = CreateTemporalTimeZoneUTC(cx);
+    if (!outputTimeZone) {
+      return nullptr;
+    }
+  }
+
+  // Step 5. (Not applicable in our implementation.)
+
+  // Step 6.
+  PlainDateTime dateTime;
+  if (!GetPlainDateTimeFor(cx, outputTimeZone, instant, &dateTime)) {
+    return nullptr;
+  }
+
+  // Step 7.
+  Rooted<JSString*> dateTimeString(
+      cx, TemporalDateTimeToString(cx, dateTime, precision));
+  if (!dateTimeString) {
+    return nullptr;
+  }
+
+  // Steps 8-9.
+  Rooted<JSString*> timeZoneString(cx);
+  if (!timeZone) {
+    // Step 8.a.
+    timeZoneString = cx->staticStrings().lookup("Z", 1);
+    MOZ_ASSERT(timeZoneString);
+  } else {
+    // Step 9.a.
+    int64_t offsetNs;
+    if (!GetOffsetNanosecondsFor(cx, timeZone, instant, &offsetNs)) {
+      return nullptr;
+    }
+
+    // Step 9.b.
+    timeZoneString = FormatISOTimeZoneOffsetString(cx, offsetNs);
+    if (!timeZoneString) {
+      return nullptr;
+    }
+  }
+
+  // Step 9.
+  return ConcatStrings<CanGC>(cx, dateTimeString, timeZoneString);
+}
+
+/**
  * Temporal.Instant ( epochNanoseconds )
  */
 static bool InstantConstructor(JSContext* cx, unsigned argc, Value* vp) {
@@ -977,6 +1071,91 @@ static bool Instant_epochNanoseconds(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
+ * Temporal.Instant.prototype.round ( roundTo )
+ */
+static bool Instant_round(JSContext* cx, const CallArgs& args) {
+  auto instant = ToInstant(&args.thisv().toObject().as<InstantObject>());
+
+  // Steps 3-16.
+  auto smallestUnit = TemporalUnit::Auto;
+  auto roundingMode = TemporalRoundingMode::HalfExpand;
+  auto roundingIncrement = Increment{1};
+  if (args.get(0).isString()) {
+    // Steps 4 and 6-8. (Not applicable in our implementation.)
+
+    // Step 9.
+    Rooted<JSString*> paramString(cx, args[0].toString());
+    if (!GetTemporalUnit(cx, paramString, TemporalUnitKey::SmallestUnit,
+                         TemporalUnitGroup::Time, &smallestUnit)) {
+      return false;
+    }
+
+    // Steps 10-16. (Not applicable in our implementation.)
+  } else {
+    // Steps 3 and 5.
+    Rooted<JSObject*> options(
+        cx, RequireObjectArg(cx, "roundTo", "round", args.get(0)));
+    if (!options) {
+      return false;
+    }
+
+    // Steps 6-7.
+    if (!ToTemporalRoundingIncrement(cx, options, &roundingIncrement)) {
+      return false;
+    }
+
+    // Step 8.
+    if (!ToTemporalRoundingMode(cx, options, &roundingMode)) {
+      return false;
+    }
+
+    // Step 9.
+    if (!GetTemporalUnit(cx, options, TemporalUnitKey::SmallestUnit,
+                         TemporalUnitGroup::Time, &smallestUnit)) {
+      return false;
+    }
+    if (smallestUnit == TemporalUnit::Auto) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_TEMPORAL_MISSING_OPTION, "smallestUnit");
+      return false;
+    }
+
+    // Steps 10-15.
+    uint64_t maximum = UnitsPerDay(smallestUnit);
+
+    // Step 16.
+    if (!ValidateTemporalRoundingIncrement(cx, roundingIncrement, maximum,
+                                           true)) {
+      return false;
+    }
+  }
+
+  // Step 17.
+  Instant roundedNs;
+  if (!RoundTemporalInstant(cx, instant, roundingIncrement, smallestUnit,
+                            roundingMode, &roundedNs)) {
+    return false;
+  }
+
+  // Step 18.
+  auto* result = CreateTemporalInstant(cx, roundedNs);
+  if (!result) {
+    return false;
+  }
+  args.rval().setObject(*result);
+  return true;
+}
+
+/**
+ * Temporal.Instant.prototype.round ( options )
+ */
+static bool Instant_round(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsInstant, Instant_round>(cx, args);
+}
+
+/**
  * Temporal.Instant.prototype.equals ( other )
  */
 static bool Instant_equals(JSContext* cx, const CallArgs& args) {
@@ -1000,6 +1179,157 @@ static bool Instant_equals(JSContext* cx, unsigned argc, Value* vp) {
   // Steps 1-2.
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<IsInstant, Instant_equals>(cx, args);
+}
+
+/**
+ * Temporal.Instant.prototype.toString ( [ options ] )
+ */
+static bool Instant_toString(JSContext* cx, const CallArgs& args) {
+  auto instant = ToInstant(&args.thisv().toObject().as<InstantObject>());
+
+  Rooted<JSObject*> timeZone(cx);
+  auto roundingMode = TemporalRoundingMode::Trunc;
+  SecondsStringPrecision precision = {Precision::Auto(),
+                                      TemporalUnit::Nanosecond, Increment{1}};
+  if (args.hasDefined(0)) {
+    // Step 3.
+    Rooted<JSObject*> options(
+        cx, RequireObjectArg(cx, "options", "toString", args[0]));
+    if (!options) {
+      return false;
+    }
+
+    // Steps 4-5.
+    auto digits = Precision::Auto();
+    if (!ToFractionalSecondDigits(cx, options, &digits)) {
+      return false;
+    }
+
+    // Step 6.
+    if (!ToTemporalRoundingMode(cx, options, &roundingMode)) {
+      return false;
+    }
+
+    // Step 7.
+    auto smallestUnit = TemporalUnit::Auto;
+    if (!GetTemporalUnit(cx, options, TemporalUnitKey::SmallestUnit,
+                         TemporalUnitGroup::Time, &smallestUnit)) {
+      return false;
+    }
+
+    // Step 8.
+    if (smallestUnit == TemporalUnit::Hour) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_TEMPORAL_INVALID_UNIT_OPTION, "hour",
+                                "smallestUnit");
+      return false;
+    }
+
+    // Step 9.
+    Rooted<Value> value(cx);
+    if (!GetProperty(cx, options, options, cx->names().timeZone, &value)) {
+      return false;
+    }
+
+    // Step 10.
+    if (!value.isUndefined()) {
+      timeZone = ToTemporalTimeZone(cx, value);
+      if (!timeZone) {
+        return false;
+      }
+    }
+
+    // Step 11.
+    precision = ToSecondsStringPrecision(smallestUnit, digits);
+  }
+
+  // Step 12.
+  Instant ns;
+  if (!RoundTemporalInstant(cx, instant, precision.increment, precision.unit,
+                            roundingMode, &ns)) {
+    return false;
+  }
+
+  // Step 13.
+  Rooted<InstantObject*> roundedInstant(cx, CreateTemporalInstant(cx, ns));
+  if (!roundedInstant) {
+    return false;
+  }
+
+  // Step 14.
+  JSString* str = TemporalInstantToString(cx, roundedInstant, timeZone,
+                                          precision.precision);
+  if (!str) {
+    return false;
+  }
+
+  args.rval().setString(str);
+  return true;
+}
+
+/**
+ * Temporal.Instant.prototype.toString ( [ options ] )
+ */
+static bool Instant_toString(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsInstant, Instant_toString>(cx, args);
+}
+
+/**
+ * Temporal.Instant.prototype.toLocaleString ( [ locales [ , options ] ] )
+ */
+static bool Instant_toLocaleString(JSContext* cx, const CallArgs& args) {
+  Rooted<InstantObject*> instant(cx,
+                                 &args.thisv().toObject().as<InstantObject>());
+
+  // Step 3.
+  Rooted<JSObject*> timeZone(cx);
+  JSString* str =
+      TemporalInstantToString(cx, instant, timeZone, Precision::Auto());
+  if (!str) {
+    return false;
+  }
+
+  args.rval().setString(str);
+  return true;
+}
+
+/**
+ * Temporal.Instant.prototype.toLocaleString ( [ locales [ , options ] ] )
+ */
+static bool Instant_toLocaleString(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsInstant, Instant_toLocaleString>(cx, args);
+}
+
+/**
+ * Temporal.Instant.prototype.toJSON ( )
+ */
+static bool Instant_toJSON(JSContext* cx, const CallArgs& args) {
+  Rooted<InstantObject*> instant(cx,
+                                 &args.thisv().toObject().as<InstantObject>());
+
+  // Step 3.
+  Rooted<JSObject*> timeZone(cx);
+  JSString* str =
+      TemporalInstantToString(cx, instant, timeZone, Precision::Auto());
+  if (!str) {
+    return false;
+  }
+
+  args.rval().setString(str);
+  return true;
+}
+
+/**
+ * Temporal.Instant.prototype.toJSON ( )
+ */
+static bool Instant_toJSON(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsInstant, Instant_toJSON>(cx, args);
 }
 
 /**
@@ -1140,7 +1470,11 @@ static const JSFunctionSpec Instant_methods[] = {
 };
 
 static const JSFunctionSpec Instant_prototype_methods[] = {
+    JS_FN("round", Instant_round, 1, 0),
     JS_FN("equals", Instant_equals, 1, 0),
+    JS_FN("toString", Instant_toString, 0, 0),
+    JS_FN("toLocaleString", Instant_toLocaleString, 0, 0),
+    JS_FN("toJSON", Instant_toJSON, 0, 0),
     JS_FN("valueOf", Instant_valueOf, 0, 0),
     JS_FN("toZonedDateTime", Instant_toZonedDateTime, 1, 0),
     JS_FN("toZonedDateTimeISO", Instant_toZonedDateTimeISO, 1, 0),

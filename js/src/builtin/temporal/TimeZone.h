@@ -171,6 +171,11 @@ bool GetPossibleInstantsFor(JSContext* cx, JS::Handle<JSObject*> timeZone,
 JSString* FormatTimeZoneOffsetString(JSContext* cx, int64_t offsetNanoseconds);
 
 /**
+ * FormatISOTimeZoneOffsetString ( offsetNanoseconds )
+ */
+JSString* FormatISOTimeZoneOffsetString(JSContext* cx,
+                                        int64_t offsetNanoseconds);
+/**
  * Perform `ToString(timeZone)` with an optimization when the built-in
  * Temporal.TimeZone.prototype.toString method is called.
  */

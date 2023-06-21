@@ -558,6 +558,61 @@ JSString* js::temporal::FormatTimeZoneOffsetString(JSContext* cx,
   return NewStringCopyN<CanGC>(cx, result, n);
 }
 
+// Returns |RoundNumberToIncrement(offsetNanoseconds, 60 × 10^9, "halfExpand")|
+// divided by |60 × 10^9|.
+static int32_t RoundNanosecondsToMinutes(int64_t offsetNanoseconds) {
+  MOZ_ASSERT(std::abs(offsetNanoseconds) < ToNanoseconds(TemporalUnit::Day));
+
+  constexpr int64_t increment = ToNanoseconds(TemporalUnit::Minute);
+
+  int64_t quotient = offsetNanoseconds / increment;
+  int64_t remainder = offsetNanoseconds % increment;
+  if (std::abs(remainder * 2) >= increment) {
+    quotient += (offsetNanoseconds > 0 ? 1 : -1);
+  }
+  return quotient;
+}
+
+/**
+ * FormatISOTimeZoneOffsetString ( offsetNanoseconds )
+ */
+JSString* js::temporal::FormatISOTimeZoneOffsetString(
+    JSContext* cx, int64_t offsetNanoseconds) {
+  MOZ_ASSERT(std::abs(offsetNanoseconds) < ToNanoseconds(TemporalUnit::Day));
+
+  // Step 1. (Not applicable in our implementation.)
+
+  // Step 2.
+  int32_t offsetMinutes = RoundNanosecondsToMinutes(offsetNanoseconds);
+
+  // Step 3.
+  int32_t sign = offsetMinutes < 0 ? -1 : 1;
+
+  // Steps 4-6.
+  auto hm = std::div(std::abs(offsetMinutes), 60);
+  int32_t hours = hm.quot;
+  int32_t minutes = hm.rem;
+
+  MOZ_ASSERT(hours < 24, "time zone offset mustn't exceed 24-hours");
+
+  // Format: "sign hour{2} : minute{2}"
+  constexpr size_t maxLength = 1 + 2 + 1 + 2;
+  char result[maxLength];
+
+  // Steps 7-9.
+  size_t n = 0;
+  result[n++] = sign < 0 ? '-' : '+';
+  result[n++] = '0' + (hours / 10);
+  result[n++] = '0' + (hours % 10);
+  result[n++] = ':';
+  result[n++] = '0' + (minutes / 10);
+  result[n++] = '0' + (minutes % 10);
+
+  MOZ_ASSERT(n == maxLength);
+
+  return NewStringCopyN<CanGC>(cx, result, n);
+}
+
 /**
  * CreateTemporalTimeZone ( identifier [ , newTarget ] )
  */
