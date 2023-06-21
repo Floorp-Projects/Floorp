@@ -28,6 +28,14 @@
 
 #include "builtin/Array.h"
 #include "builtin/String.h"
+#include "builtin/temporal/PlainDate.h"
+#include "builtin/temporal/PlainDateTime.h"
+#include "builtin/temporal/PlainMonthDay.h"
+#include "builtin/temporal/PlainTime.h"
+#include "builtin/temporal/PlainYearMonth.h"
+#include "builtin/temporal/TemporalParser.h"
+#include "builtin/temporal/TimeZone.h"
+#include "builtin/temporal/ZonedDateTime.h"
 #include "gc/Allocator.h"
 #include "gc/AllocKind.h"
 #include "gc/Barrier.h"
@@ -227,6 +235,204 @@ static CalendarObject* CreateTemporalCalendar(
 
   // Step 5.
   return obj;
+}
+
+/**
+ * CreateTemporalCalendar ( identifier [ , newTarget ] )
+ */
+static CalendarObject* CreateTemporalCalendar(
+    JSContext* cx, Handle<JSLinearString*> identifier) {
+  // Step 1.
+  MOZ_ASSERT(IsBuiltinCalendar(identifier));
+
+  // Steps 2-3.
+  auto* obj = NewBuiltinClassInstance<CalendarObject>(cx);
+  if (!obj) {
+    return nullptr;
+  }
+
+  // Step 4.
+  obj->setFixedSlot(CalendarObject::IDENTIFIER_SLOT, StringValue(identifier));
+
+  // Step 5.
+  return obj;
+}
+
+/**
+ * GetISO8601Calendar ( )
+ */
+CalendarObject* js::temporal::GetISO8601Calendar(JSContext* cx) {
+  // Step 1. (Inlined call to GetBuiltinCalendar.)
+  Handle<JSLinearString*> id = cx->names().iso8601.toHandle();
+  return CreateTemporalCalendar(cx, id);
+}
+
+template <typename T, typename... Ts>
+static bool ToTemporalCalendar(JSContext* cx, Handle<JSObject*> object,
+                               MutableHandle<JSObject*> result) {
+  if (auto* unwrapped = object->maybeUnwrapIf<T>()) {
+    if constexpr (std::is_same_v<T, PlainTimeObject>) {
+      AutoRealm ar(cx, unwrapped);
+      Rooted<PlainTimeObject*> plainTime(cx, unwrapped);
+
+      auto* calendar = PlainTimeObject::getOrCreateCalendar(cx, plainTime);
+      if (!calendar) {
+        return false;
+      }
+
+      result.set(calendar);
+    } else {
+      result.set(unwrapped->calendar());
+    }
+    return cx->compartment()->wrap(cx, result);
+  }
+
+  if constexpr (sizeof...(Ts) > 0) {
+    return ToTemporalCalendar<Ts...>(cx, object, result);
+  }
+
+  result.set(nullptr);
+  return true;
+}
+
+/**
+ * ToTemporalCalendar ( temporalCalendarLike )
+ */
+JSObject* js::temporal::ToTemporalCalendar(JSContext* cx,
+                                           Handle<Value> temporalCalendarLike) {
+  // Step 1.
+  Rooted<Value> calendarLike(cx, temporalCalendarLike);
+  if (calendarLike.isObject()) {
+    Rooted<JSObject*> obj(cx, &calendarLike.toObject());
+
+    // Step 1.a.
+    if (obj->canUnwrapAs<CalendarObject>()) {
+      return obj;
+    }
+
+    // Step 1.b.
+    Rooted<JSObject*> calendar(cx);
+    if (!::ToTemporalCalendar<PlainDateObject, PlainDateTimeObject,
+                              PlainMonthDayObject, PlainTimeObject,
+                              PlainYearMonthObject, ZonedDateTimeObject>(
+            cx, obj, &calendar)) {
+      return nullptr;
+    }
+    if (calendar) {
+      return calendar;
+    }
+
+    // Step 1.c.
+    if (obj->canUnwrapAs<TimeZoneObject>()) {
+      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                               JSMSG_TEMPORAL_INVALID_OBJECT,
+                               "Temporal.Calendar", "Temporal.TimeZone");
+      return nullptr;
+    }
+
+    // Step 1.d.
+    bool hasCalendar;
+    if (!HasProperty(cx, obj, cx->names().calendar, &hasCalendar)) {
+      return nullptr;
+    }
+    if (!hasCalendar) {
+      return obj;
+    }
+
+    // Step 1.e.
+    if (!GetProperty(cx, obj, obj, cx->names().calendar, &calendarLike)) {
+      return nullptr;
+    }
+
+    // Step 1.f.
+    if (calendarLike.isObject()) {
+      obj = &calendarLike.toObject();
+
+      // FIXME: spec issue - does this check is actually useful? In which case
+      // will have a "calendar" property be a TimeZoneObject?
+
+      // Step 1.f.i.
+      if (obj->canUnwrapAs<TimeZoneObject>()) {
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                                 JSMSG_TEMPORAL_INVALID_OBJECT,
+                                 "Temporal.Calendar", "Temporal.TimeZone");
+        return nullptr;
+      }
+
+      // FIXME: spec issue - does this check is actually useful? In which case
+      // will have a "calendar" property have another "calendar" property?
+
+      // Step 1.f.ii.
+      if (!HasProperty(cx, obj, cx->names().calendar, &hasCalendar)) {
+        return nullptr;
+      }
+      if (!hasCalendar) {
+        return obj;
+      }
+    }
+  }
+
+  // Step 2.
+  Rooted<JSString*> str(cx, JS::ToString(cx, calendarLike));
+  if (!str) {
+    return nullptr;
+  }
+
+  // Step 3.
+  Rooted<JSLinearString*> identifier(cx, ParseTemporalCalendarString(cx, str));
+  if (!identifier) {
+    return nullptr;
+  }
+
+  // Step 4.
+  identifier = ThrowIfNotBuiltinCalendar(cx, identifier);
+  if (!identifier) {
+    return nullptr;
+  }
+
+  // Step 5.
+  return CreateTemporalCalendar(cx, identifier);
+}
+
+/**
+ * ToTemporalCalendarWithISODefault ( temporalCalendarLike )
+ */
+JSObject* js::temporal::ToTemporalCalendarWithISODefault(
+    JSContext* cx, Handle<Value> temporalCalendarLike) {
+  // Step 1.
+  if (temporalCalendarLike.isUndefined()) {
+    return GetISO8601Calendar(cx);
+  }
+
+  // Step 2.
+  return ToTemporalCalendar(cx, temporalCalendarLike);
+}
+
+/**
+ * GetTemporalCalendarWithISODefault ( item )
+ */
+JSObject* js::temporal::GetTemporalCalendarWithISODefault(
+    JSContext* cx, Handle<JSObject*> item) {
+  // Step 1.
+  Rooted<JSObject*> calendar(cx);
+  if (!::ToTemporalCalendar<PlainDateObject, PlainDateTimeObject,
+                            PlainMonthDayObject, PlainTimeObject,
+                            PlainYearMonthObject, ZonedDateTimeObject>(
+          cx, item, &calendar)) {
+    return nullptr;
+  }
+  if (calendar) {
+    return calendar;
+  }
+
+  // Step 2.
+  Rooted<Value> calendarValue(cx);
+  if (!GetProperty(cx, item, item, cx->names().calendar, &calendarValue)) {
+    return nullptr;
+  }
+
+  // Step 3.
+  return ToTemporalCalendarWithISODefault(cx, calendarValue);
 }
 
 static bool Calendar_toString(JSContext* cx, unsigned argc, Value* vp);

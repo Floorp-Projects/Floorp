@@ -223,6 +223,17 @@ bool js::temporal::ThrowIfInvalidTime(JSContext* cx, double hour, double minute,
                               microsecond, nanosecond);
 }
 
+JSObject* js::temporal::PlainTimeObject::createCalendar(
+    JSContext* cx, Handle<PlainTimeObject*> obj) {
+  auto* calendar = GetISO8601Calendar(cx);
+  if (!calendar) {
+    return nullptr;
+  }
+
+  obj->setCalendar(calendar);
+  return calendar;
+}
+
 static bool PlainTimeConstructor(JSContext* cx, unsigned argc, Value* vp) {
   MOZ_CRASH("NYI");
 }
