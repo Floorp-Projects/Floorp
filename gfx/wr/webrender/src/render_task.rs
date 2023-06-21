@@ -180,6 +180,7 @@ pub struct PrimTask {
     pub content_origin: DevicePoint,
     pub prim_address: GpuBufferAddress,
     pub prim_spatial_node_index: SpatialNodeIndex,
+    pub raster_spatial_node_index: SpatialNodeIndex,
     pub transform_id: TransformPaletteId,
     pub edge_flags: EdgeAaSegmentMask,
     pub quad_flags: QuadFlags,
@@ -505,6 +506,7 @@ impl RenderTaskKind {
 
     pub fn new_prim(
         prim_spatial_node_index: SpatialNodeIndex,
+        raster_spatial_node_index: SpatialNodeIndex,
         device_pixel_scale: DevicePixelScale,
         content_origin: DevicePoint,
         prim_address: GpuBufferAddress,
@@ -516,6 +518,7 @@ impl RenderTaskKind {
     ) -> Self {
         RenderTaskKind::Prim(PrimTask {
             prim_spatial_node_index,
+            raster_spatial_node_index,
             device_pixel_scale,
             content_origin,
             prim_address,

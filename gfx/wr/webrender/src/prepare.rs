@@ -107,7 +107,6 @@ pub fn prepare_primitives(
 
 fn can_use_clip_chain_for_quad_path(
     clip_chain: &ClipChainInstance,
-    prim_spatial_node_index: SpatialNodeIndex,
     clip_store: &ClipStore,
     data_stores: &DataStores,
 ) -> bool {
@@ -118,11 +117,6 @@ fn can_use_clip_chain_for_quad_path(
     for i in 0 .. clip_chain.clips_range.count {
         let clip_instance = clip_store.get_instance_from_range(&clip_chain.clips_range, i);
         let clip_node = &data_stores.clip[clip_instance.handle];
-
-        // Temporary hack only for landing next stage...
-        if prim_spatial_node_index != clip_node.item.spatial_node_index {
-            return false;
-        }
 
         match clip_node.item.kind {
             ClipItemKind::RoundedRectangle { .. } | ClipItemKind::Rectangle { .. } => {}
@@ -292,7 +286,6 @@ fn prepare_prim_for_render(
             PrimitiveInstanceKind::Rectangle { ref mut use_legacy_path, .. } => {
                 *use_legacy_path = !can_use_clip_chain_for_quad_path(
                     &prim_instance.vis.clip_chain,
-                    cluster.spatial_node_index,
                     frame_state.clip_store,
                     data_stores,
                 );
@@ -776,6 +769,7 @@ fn prepare_interned_prim_for_render(
                             true,
                             prim_instance,
                             prim_spatial_node_index,
+                            pic_context.raster_spatial_node_index,
                             main_prim_address,
                             transform_id,
                             aa_flags,
@@ -859,6 +853,7 @@ fn prepare_interned_prim_for_render(
                                     create_task,
                                     prim_instance,
                                     prim_spatial_node_index,
+                                    pic_context.raster_spatial_node_index,
                                     main_prim_address,
                                     transform_id,
                                     aa_flags,
@@ -973,6 +968,7 @@ fn prepare_interned_prim_for_render(
                                     create_task,
                                     prim_instance,
                                     prim_spatial_node_index,
+                                    pic_context.raster_spatial_node_index,
                                     main_prim_address,
                                     transform_id,
                                     aa_flags,
@@ -1959,7 +1955,7 @@ fn adjust_mask_scale_for_max_size(device_rect: DeviceRect, device_pixel_scale: D
     }
 }
 
-fn write_prim_blocks(
+pub fn write_prim_blocks(
     builder: &mut GpuBufferBuilder,
     prim_rect: LayoutRect,
     clip_rect: LayoutRect,
@@ -1995,6 +1991,7 @@ fn add_segment(
     create_task: bool,
     prim_instance: &PrimitiveInstance,
     prim_spatial_node_index: SpatialNodeIndex,
+    raster_spatial_node_index: SpatialNodeIndex,
     main_prim_address: GpuBufferAddress,
     transform_id: TransformPaletteId,
     aa_flags: EdgeAaSegmentMask,
@@ -2016,6 +2013,7 @@ fn add_segment(
             task_size,
             RenderTaskKind::new_prim(
                 prim_spatial_node_index,
+                raster_spatial_node_index,
                 device_pixel_scale,
                 content_origin,
                 main_prim_address,
@@ -2065,7 +2063,7 @@ fn add_composite_prim(
         targets,
     );
 
-    let mut composite_quad_flags = QuadFlags::IGNORE_DEVICE_PIXEL_SCALE;
+    let mut composite_quad_flags = QuadFlags::IGNORE_DEVICE_PIXEL_SCALE | QuadFlags::APPLY_DEVICE_CLIP;
     if quad_flags.contains(QuadFlags::IS_OPAQUE) {
         composite_quad_flags |= QuadFlags::IS_OPAQUE;
     }
