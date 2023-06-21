@@ -139,6 +139,15 @@ bool RoundTemporalInstant(JSContext* cx, const Instant& ns, Increment increment,
 bool AddInstant(JSContext* cx, const Instant& instant, const Duration& duration,
                 Instant* result);
 
+/**
+ * DifferenceInstant ( ns1, ns2, roundingIncrement, smallestUnit, largestUnit,
+ * roundingMode )
+ */
+bool DifferenceInstant(JSContext* cx, const Instant& ns1, const Instant& ns2,
+                       Increment roundingIncrement, TemporalUnit smallestUnit,
+                       TemporalUnit largestUnit,
+                       TemporalRoundingMode roundingMode, Duration* result);
+
 } /* namespace js::temporal */
 
 #endif /* builtin_temporal_Instant_h */
