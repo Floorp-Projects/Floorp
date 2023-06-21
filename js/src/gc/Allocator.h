@@ -63,6 +63,16 @@ class CellAllocator {
   static T* NewCell(JSContext* cx, Args&&... args);
 
  private:
+#if defined(DEBUG) || defined(JS_GC_ZEAL) || defined(JS_OOM_BREAKPOINT)
+  template <AllowGC allowGC>
+  static bool PreAllocChecks(JSContext* cx, AllocKind kind);
+#else
+  template <AllowGC allowGC>
+  static bool PreAllocChecks(JSContext* cx, AllocKind kind) {
+    return true;
+  }
+#endif
+
   // Allocate a cell in the nursery, unless |heap| is Heap::Tenured or nursery
   // allocation is disabled for |traceKind| in the current zone.
   template <JS::TraceKind traceKind, AllowGC allowGC = CanGC>

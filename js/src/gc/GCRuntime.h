@@ -600,10 +600,9 @@ class GCRuntime {
   void releaseArena(Arena* arena, const AutoLockGC& lock);
 
   // Allocator
-  template <AllowGC allowGC>
-  [[nodiscard]] bool checkAllocatorState(JSContext* cx, AllocKind kind);
   template <JS::TraceKind kind, AllowGC allowGC>
-  void* tryNewNurseryCell(JSContext* cx, size_t thingSize, AllocSite* site);
+  static void* tryNewNurseryCell(JSContext* cx, size_t thingSize,
+                                 AllocSite* site);
   template <AllowGC allowGC>
   static void* tryNewTenuredThing(JSContext* cx, AllocKind kind,
                                   size_t thingSize);
