@@ -85,7 +85,8 @@ class ReaderProxy {
 
   void SetVideoBlankDecode(bool aIsBlankDecode);
 
-  void SetCanonicalDuration(Canonical<media::NullableTimeUnit>& aCanonical);
+  void SetCanonicalDuration(
+      AbstractCanonical<media::NullableTimeUnit>* aCanonical);
 
   void UpdateMediaEngineId(uint64_t aMediaEngineId);
 

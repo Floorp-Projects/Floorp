@@ -183,14 +183,18 @@ void ReaderProxy::UpdateDuration() {
 }
 
 void ReaderProxy::SetCanonicalDuration(
-    Canonical<media::NullableTimeUnit>& aCanonical) {
-  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+    AbstractCanonical<media::NullableTimeUnit>* aCanonical) {
+  using DurationT = AbstractCanonical<media::NullableTimeUnit>;
+  RefPtr<ReaderProxy> self = this;
+  RefPtr<DurationT> canonical = aCanonical;
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-      "ReaderProxy::SetCanonicalDuration", [this, self = RefPtr(this)]() {
+      "ReaderProxy::SetCanonicalDuration", [this, self, canonical]() {
+        mDuration.Connect(canonical);
         mWatchManager.Watch(mDuration, &ReaderProxy::UpdateDuration);
       });
-  mReader->OwnerThread()->DispatchStateChange(r.forget());
-  aCanonical.ConnectMirror(&mDuration);
+  nsresult rv = mReader->OwnerThread()->Dispatch(r.forget());
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  Unused << rv;
 }
 
 void ReaderProxy::UpdateMediaEngineId(uint64_t aMediaEngineId) {

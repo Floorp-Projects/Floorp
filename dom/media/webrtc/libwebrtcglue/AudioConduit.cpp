@@ -77,8 +77,6 @@ WebrtcAudioConduit::Control::Control(const RefPtr<AbstractThread>& aCallThread)
 RefPtr<GenericPromise> WebrtcAudioConduit::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  mControl.mOnDtmfEventListener.DisconnectIfExists();
-
   return InvokeAsync(mCallThread, "WebrtcAudioConduit::Shutdown (main thread)",
                      [this, self = RefPtr<WebrtcAudioConduit>(this)] {
                        mControl.mReceiving.DisconnectIfConnected();
@@ -92,6 +90,7 @@ RefPtr<GenericPromise> WebrtcAudioConduit::Shutdown() {
                        mControl.mLocalSendRtpExtensions.DisconnectIfConnected();
                        mControl.mSendCodec.DisconnectIfConnected();
                        mControl.mRecvCodecs.DisconnectIfConnected();
+                       mControl.mOnDtmfEventListener.DisconnectIfExists();
                        mWatchManager.Shutdown();
 
                        {
@@ -118,7 +117,7 @@ WebrtcAudioConduit::WebrtcAudioConduit(
       mRecvStreamRunning(false),
       mDtmfEnabled(false),
       mLock("WebrtcAudioConduit::mLock"),
-      mCallThread(mCall->mCallThread),
+      mCallThread(std::move(mCall->mCallThread)),
       mStsThread(std::move(aStsThread)),
       mControl(mCall->mCallThread),
       mWatchManager(this, mCall->mCallThread) {
@@ -135,20 +134,14 @@ WebrtcAudioConduit::~WebrtcAudioConduit() {
              "Call DeleteStreams prior to ~WebrtcAudioConduit.");
 }
 
-#define CONNECT(aCanonical, aMirror)                                       \
-  do {                                                                     \
-    /* Ensure the watchmanager is wired up before the mirror receives its  \
-     * initial mirrored value. */                                          \
-    mCall->mCallThread->DispatchStateChange(                               \
-        NS_NewRunnableFunction(__func__, [this, self = RefPtr(this)] {     \
-          mWatchManager.Watch(aMirror,                                     \
-                              &WebrtcAudioConduit::OnControlConfigChange); \
-        }));                                                               \
-    (aCanonical).ConnectMirror(&(aMirror));                                \
+#define CONNECT(aCanonical, aMirror)                                          \
+  do {                                                                        \
+    (aMirror).Connect(aCanonical);                                            \
+    mWatchManager.Watch(aMirror, &WebrtcAudioConduit::OnControlConfigChange); \
   } while (0)
 
 void WebrtcAudioConduit::InitControl(AudioConduitControlInterface* aControl) {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
 
   CONNECT(aControl->CanonicalReceiving(), mControl.mReceiving);
   CONNECT(aControl->CanonicalTransmitting(), mControl.mTransmitting);

@@ -29,6 +29,7 @@
 #include "MediaTransportHandler.h"
 #include "WebrtcCallWrapper.h"
 #include "PeerConnectionCtx.h"
+#include "WaitFor.h"
 
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"

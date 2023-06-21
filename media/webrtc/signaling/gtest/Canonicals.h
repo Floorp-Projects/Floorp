@@ -7,9 +7,9 @@
 #ifndef MEDIA_WEBRTC_SIGNALING_GTEST_CANONICALS_H_
 #define MEDIA_WEBRTC_SIGNALING_GTEST_CANONICALS_H_
 
-#include "mozilla/gtest/WaitFor.h"
 #include "MediaConduitControl.h"
 #include "MediaPipeline.h"
+#include "WaitFor.h"
 
 namespace mozilla {
 
@@ -83,53 +83,68 @@ class ConcreteControl : public AudioConduitControlInterface,
 
   // MediaConduitControlInterface
   // -- MediaPipelineReceiveControlInterface
-  Canonical<bool>& CanonicalReceiving() override { return mReceiving; }
+  AbstractCanonical<bool>* CanonicalReceiving() override { return &mReceiving; }
   // -- MediaPipelineTransmitControlInterface
-  Canonical<bool>& CanonicalTransmitting() override { return mTransmitting; }
-  Canonical<Ssrcs>& CanonicalLocalSsrcs() override { return mLocalSsrcs; }
-  Canonical<Ssrcs>& CanonicalLocalVideoRtxSsrcs() override {
-    return mLocalVideoRtxSsrcs;
+  AbstractCanonical<bool>* CanonicalTransmitting() override {
+    return &mTransmitting;
   }
-  Canonical<std::string>& CanonicalLocalCname() override { return mLocalCname; }
-  Canonical<std::string>& CanonicalMid() override { return mMid; }
-  Canonical<Ssrc>& CanonicalRemoteSsrc() override { return mRemoteSsrc; }
-  Canonical<Ssrc>& CanonicalRemoteVideoRtxSsrc() override {
-    return mRemoteVideoRtxSsrc;
+  AbstractCanonical<Ssrcs>* CanonicalLocalSsrcs() override {
+    return &mLocalSsrcs;
   }
-  Canonical<std::string>& CanonicalSyncGroup() override { return mSyncGroup; }
-  Canonical<RtpExtList>& CanonicalLocalRecvRtpExtensions() override {
-    return mLocalRecvRtpExtensions;
+  AbstractCanonical<Ssrcs>* CanonicalLocalVideoRtxSsrcs() override {
+    return &mLocalVideoRtxSsrcs;
   }
-  Canonical<RtpExtList>& CanonicalLocalSendRtpExtensions() override {
-    return mLocalSendRtpExtensions;
+  AbstractCanonical<std::string>* CanonicalLocalCname() override {
+    return &mLocalCname;
+  }
+  AbstractCanonical<std::string>* CanonicalMid() override { return &mMid; }
+  AbstractCanonical<Ssrc>* CanonicalRemoteSsrc() override {
+    return &mRemoteSsrc;
+  }
+  AbstractCanonical<Ssrc>* CanonicalRemoteVideoRtxSsrc() override {
+    return &mRemoteVideoRtxSsrc;
+  }
+  AbstractCanonical<std::string>* CanonicalSyncGroup() override {
+    return &mSyncGroup;
+  }
+  AbstractCanonical<RtpExtList>* CanonicalLocalRecvRtpExtensions() override {
+    return &mLocalRecvRtpExtensions;
+  }
+  AbstractCanonical<RtpExtList>* CanonicalLocalSendRtpExtensions() override {
+    return &mLocalSendRtpExtensions;
   }
 
   // AudioConduitControlInterface
-  Canonical<Maybe<AudioCodecConfig>>& CanonicalAudioSendCodec() override {
-    return mAudioSendCodec;
-  }
-  Canonical<std::vector<AudioCodecConfig>>& CanonicalAudioRecvCodecs()
+  AbstractCanonical<Maybe<AudioCodecConfig>>* CanonicalAudioSendCodec()
       override {
-    return mAudioRecvCodecs;
+    return &mAudioSendCodec;
+  }
+  AbstractCanonical<std::vector<AudioCodecConfig>>* CanonicalAudioRecvCodecs()
+      override {
+    return &mAudioRecvCodecs;
   }
   MediaEventSource<DtmfEvent>& OnDtmfEvent() override { return mDtmfEvent; }
 
   // VideoConduitControlInterface
-  Canonical<Maybe<VideoCodecConfig>>& CanonicalVideoSendCodec() override {
-    return mVideoSendCodec;
-  }
-  Canonical<Maybe<RtpRtcpConfig>>& CanonicalVideoSendRtpRtcpConfig() override {
-    return mVideoSendRtpRtcpConfig;
-  }
-  Canonical<std::vector<VideoCodecConfig>>& CanonicalVideoRecvCodecs()
+  AbstractCanonical<Maybe<VideoCodecConfig>>* CanonicalVideoSendCodec()
       override {
-    return mVideoRecvCodecs;
+    return &mVideoSendCodec;
   }
-  Canonical<Maybe<RtpRtcpConfig>>& CanonicalVideoRecvRtpRtcpConfig() override {
-    return mVideoRecvRtpRtcpConfig;
+  AbstractCanonical<Maybe<RtpRtcpConfig>>* CanonicalVideoSendRtpRtcpConfig()
+      override {
+    return &mVideoSendRtpRtcpConfig;
   }
-  Canonical<webrtc::VideoCodecMode>& CanonicalVideoCodecMode() override {
-    return mVideoCodecMode;
+  AbstractCanonical<std::vector<VideoCodecConfig>>* CanonicalVideoRecvCodecs()
+      override {
+    return &mVideoRecvCodecs;
+  }
+  AbstractCanonical<Maybe<RtpRtcpConfig>>* CanonicalVideoRecvRtpRtcpConfig()
+      override {
+    return &mVideoRecvRtpRtcpConfig;
+  }
+  AbstractCanonical<webrtc::VideoCodecMode>* CanonicalVideoCodecMode()
+      override {
+    return &mVideoCodecMode;
   }
 };
 
