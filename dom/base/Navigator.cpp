@@ -863,7 +863,7 @@ uint32_t Navigator::MaxTouchPoints(CallerType aCallerType) {
   // we will spoof it into 0 if fingerprinting resistance is on.
   if (aCallerType != CallerType::System &&
       nsContentUtils::ShouldResistFingerprinting(GetDocShell(),
-                                                 RFPTarget::Unknown)) {
+                                                 RFPTarget::PointerEvents)) {
     return 0;
   }
 
