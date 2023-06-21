@@ -140,6 +140,7 @@
   MACRO_(delete, delete_, "delete")                                            \
   MACRO_(deleteProperty, deleteProperty, "deleteProperty")                     \
   MACRO_(difference, difference, "difference")                                 \
+  MACRO_(disambiguation, disambiguation, "disambiguation")                     \
   MACRO_(displayURL, displayURL, "displayURL")                                 \
   MACRO2(do, do_, "do")                                                        \
   MACRO_(domNode, domNode, "domNode")                                          \

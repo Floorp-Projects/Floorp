@@ -74,6 +74,7 @@ struct Instant;
 struct PlainDateTime;
 class InstantObject;
 class PlainDateTimeObject;
+enum class TemporalDisambiguation;
 
 /**
  * IsValidTimeZoneName ( timeZone )
@@ -137,6 +138,13 @@ bool GetPlainDateTimeFor(JSContext* cx, JS::Handle<JSObject*> timeZone,
                          const Instant& instant, PlainDateTime* result);
 
 /**
+ * GetInstantFor ( timeZone, dateTime, disambiguation )
+ */
+bool GetInstantFor(JSContext* cx, JS::Handle<JSObject*> timeZone,
+                   JS::Handle<Wrapped<PlainDateTimeObject*>> dateTime,
+                   TemporalDisambiguation disambiguation, Instant* result);
+
+/**
  * GetOffsetStringFor ( timeZone, instant )
  */
 JSString* GetOffsetStringFor(JSContext* cx, JS::Handle<JSObject*> timeZone,
@@ -164,6 +172,16 @@ using InstantVector = JS::StackGCVector<Wrapped<InstantObject*>>;
 bool GetPossibleInstantsFor(JSContext* cx, JS::Handle<JSObject*> timeZone,
                             JS::Handle<Wrapped<PlainDateTimeObject*>> dateTime,
                             JS::MutableHandle<InstantVector> list);
+
+/**
+ * DisambiguatePossibleInstants ( possibleInstants, timeZone, dateTime,
+ * disambiguation )
+ */
+Wrapped<InstantObject*> DisambiguatePossibleInstants(
+    JSContext* cx, JS::Handle<InstantVector> possibleInstants,
+    JS::Handle<JSObject*> timeZone,
+    JS::Handle<Wrapped<PlainDateTimeObject*>> dateTimeObj,
+    TemporalDisambiguation disambiguation);
 
 /**
  * FormatTimeZoneOffsetString ( offsetNanoseconds )
