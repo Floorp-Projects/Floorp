@@ -230,7 +230,7 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
       mForcedHidden(false),
       mHasSuspendTaint(aInit.mHasSuspendTaint),
       mShouldResistFingerprinting(
-          aInit.mOwner->ShouldResistFingerprinting(RFPTarget::Unknown)),
+          aInit.mOwner->ShouldResistFingerprinting(RFPTarget::AudioSampleRate)),
       mPlaybackRate(aInit.mPlaybackRate),
       mLogicallySeeking(false, "MediaDecoder::mLogicallySeeking"),
       INIT_MIRROR(mBuffered, TimeIntervals()),
