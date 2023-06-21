@@ -2243,12 +2243,6 @@ void nsSocketTransport::OnSocketDetached(PRFileDesc* fd) {
     //
     mInput.OnSocketReady(mCondition);
     mOutput.OnSocketReady(mCondition);
-    if (mInputCopyContext) {
-      NS_CancelAsyncCopy(mInputCopyContext, mCondition);
-    }
-    if (mOutputCopyContext) {
-      NS_CancelAsyncCopy(mOutputCopyContext, mCondition);
-    }
   }
 
   if (mCondition == NS_ERROR_NET_RESET && mDNSRecord &&
@@ -2340,8 +2334,7 @@ nsSocketTransport::OpenInputStream(uint32_t flags, uint32_t segsize,
 
     // async copy from socket to pipe
     rv = NS_AsyncCopy(&mInput, pipeOut, mSocketTransportService,
-                      NS_ASYNCCOPY_VIA_WRITESEGMENTS, segsize, nullptr, nullptr,
-                      true, true, getter_AddRefs(mInputCopyContext));
+                      NS_ASYNCCOPY_VIA_WRITESEGMENTS, segsize);
     if (NS_FAILED(rv)) return rv;
 
     result = pipeIn;
@@ -2387,8 +2380,7 @@ nsSocketTransport::OpenOutputStream(uint32_t flags, uint32_t segsize,
 
     // async copy from socket to pipe
     rv = NS_AsyncCopy(pipeIn, &mOutput, mSocketTransportService,
-                      NS_ASYNCCOPY_VIA_READSEGMENTS, segsize, nullptr, nullptr,
-                      true, true, getter_AddRefs(mOutputCopyContext));
+                      NS_ASYNCCOPY_VIA_READSEGMENTS, segsize);
     if (NS_FAILED(rv)) return rv;
 
     result = pipeOut;
