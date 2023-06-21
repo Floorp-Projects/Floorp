@@ -74,6 +74,10 @@
 using namespace js;
 using namespace js::temporal;
 
+static inline bool IsTimeZone(Handle<Value> v) {
+  return v.isObject() && v.toObject().is<TimeZoneObject>();
+}
+
 /**
  * IsValidTimeZoneName ( timeZone )
  * IsAvailableTimeZoneName ( timeZone )
@@ -200,6 +204,23 @@ JSString* js::temporal::ValidateAndCanonicalizeTimeZoneName(
   }
 
   return CanonicalizeTimeZoneName(cx, validatedTimeZone);
+}
+
+static bool TimeZone_toString(JSContext* cx, unsigned argc, Value* vp);
+
+JSString* js::temporal::TimeZoneToString(JSContext* cx,
+                                         Handle<JSObject*> timeZone) {
+  if (timeZone->is<TimeZoneObject>() &&
+      HasNoToPrimitiveMethodPure(timeZone, cx) &&
+      HasNativeMethodPure(timeZone, cx->names().toString, TimeZone_toString,
+                          cx)) {
+    JSString* id = timeZone->as<TimeZoneObject>().identifier();
+    MOZ_ASSERT(id);
+    return id;
+  }
+
+  Rooted<Value> timeZoneValue(cx, ObjectValue(*timeZone));
+  return JS::ToString(cx, timeZoneValue);
 }
 
 /**
@@ -609,6 +630,87 @@ static bool TimeZoneConstructor(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+/**
+ * Temporal.TimeZone.from ( item )
+ */
+static bool TimeZone_from(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Step 1.
+  JSObject* timeZone = ToTemporalTimeZone(cx, args.get(0));
+  if (!timeZone) {
+    return false;
+  }
+
+  args.rval().setObject(*timeZone);
+  return true;
+}
+
+/**
+ * Temporal.TimeZone.prototype.toString ( )
+ */
+static bool TimeZone_toString(JSContext* cx, const CallArgs& args) {
+  auto* timeZone = &args.thisv().toObject().as<TimeZoneObject>();
+
+  // Step 3.
+  args.rval().setString(timeZone->identifier());
+  return true;
+}
+
+/**
+ * Temporal.TimeZone.prototype.toString ( )
+ */
+static bool TimeZone_toString(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsTimeZone, TimeZone_toString>(cx, args);
+}
+
+/**
+ * Temporal.TimeZone.prototype.toJSON ( )
+ */
+static bool TimeZone_toJSON(JSContext* cx, const CallArgs& args) {
+  Rooted<JSObject*> timeZone(cx, &args.thisv().toObject());
+
+  // Step 3.
+  JSString* str = TimeZoneToString(cx, timeZone);
+  if (!str) {
+    return false;
+  }
+
+  args.rval().setString(str);
+  return true;
+}
+
+/**
+ * Temporal.TimeZone.prototype.toJSON ( )
+ */
+static bool TimeZone_toJSON(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsTimeZone, TimeZone_toJSON>(cx, args);
+}
+
+/**
+ * get Temporal.TimeZone.prototype.id
+ */
+static bool TimeZone_id(JSContext* cx, const CallArgs& args) {
+  auto* timeZone = &args.thisv().toObject().as<TimeZoneObject>();
+
+  // Step 3.
+  args.rval().setString(timeZone->identifier());
+  return true;
+}
+
+/**
+ * get Temporal.TimeZone.prototype.id
+ */
+static bool TimeZone_id(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsTimeZone, TimeZone_id>(cx, args);
+}
+
 void js::temporal::TimeZoneObject::finalize(JS::GCContext* gcx, JSObject* obj) {
   MOZ_ASSERT(gcx->onMainThread());
 }
@@ -638,14 +740,19 @@ const JSClass TimeZoneObject::class_ = {
 const JSClass& TimeZoneObject::protoClass_ = PlainObject::class_;
 
 static const JSFunctionSpec TimeZone_methods[] = {
+    JS_FN("from", TimeZone_from, 1, 0),
     JS_FS_END,
 };
 
 static const JSFunctionSpec TimeZone_prototype_methods[] = {
+    JS_FN("toString", TimeZone_toString, 0, 0),
+    JS_FN("toJSON", TimeZone_toJSON, 0, 0),
     JS_FS_END,
 };
 
 static const JSPropertySpec TimeZone_prototype_properties[] = {
+    JS_PSG("id", TimeZone_id, 0),
+    JS_STRING_SYM_PS(toStringTag, "Temporal.TimeZone", JSPROP_READONLY),
     JS_PS_END,
 };
 
