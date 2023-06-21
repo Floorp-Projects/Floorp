@@ -138,6 +138,97 @@ static JS::UniqueChars QuoteString(JSContext* cx, const char* str) {
   return sprinter.release();
 }
 
+static mozilla::Maybe<TemporalField> ToTemporalField(JSContext* cx,
+                                                     PropertyKey property) {
+  static constexpr TemporalField fieldNames[] = {
+      TemporalField::Year,        TemporalField::Month,
+      TemporalField::MonthCode,   TemporalField::Day,
+      TemporalField::Hour,        TemporalField::Minute,
+      TemporalField::Second,      TemporalField::Millisecond,
+      TemporalField::Microsecond, TemporalField::Nanosecond,
+      TemporalField::Offset,      TemporalField::Era,
+      TemporalField::EraYear,     TemporalField::TimeZone,
+  };
+
+  for (const auto& fieldName : fieldNames) {
+    auto* name = ToPropertyName(cx, fieldName);
+    if (property.isAtom(name)) {
+      return mozilla::Some(fieldName);
+    }
+  }
+  return mozilla::Nothing();
+}
+
+static Value TemporalFieldDefaultValue(TemporalField field) {
+  switch (field) {
+    case TemporalField::Year:
+    case TemporalField::Month:
+    case TemporalField::MonthCode:
+    case TemporalField::Day:
+    case TemporalField::Offset:
+    case TemporalField::Era:
+    case TemporalField::EraYear:
+    case TemporalField::TimeZone:
+      return UndefinedValue();
+    case TemporalField::Hour:
+    case TemporalField::Minute:
+    case TemporalField::Second:
+    case TemporalField::Millisecond:
+    case TemporalField::Microsecond:
+    case TemporalField::Nanosecond:
+      return Int32Value(0);
+  }
+  MOZ_CRASH("invalid temporal field name");
+}
+
+static bool TemporalFieldConvertValue(JSContext* cx, TemporalField field,
+                                      MutableHandle<Value> value) {
+  auto* name = ToCString(field);
+  switch (field) {
+    case TemporalField::Year:
+    case TemporalField::Hour:
+    case TemporalField::Minute:
+    case TemporalField::Second:
+    case TemporalField::Millisecond:
+    case TemporalField::Microsecond:
+    case TemporalField::Nanosecond:
+    case TemporalField::EraYear: {
+      double num;
+      if (!ToIntegerWithTruncation(cx, value, name, &num)) {
+        return false;
+      }
+      value.setNumber(num);
+      return true;
+    }
+
+    case TemporalField::Month:
+    case TemporalField::Day: {
+      double num;
+      if (!ToPositiveIntegerWithTruncation(cx, value, name, &num)) {
+        return false;
+      }
+      value.setNumber(num);
+      return true;
+    }
+
+    case TemporalField::MonthCode:
+    case TemporalField::Offset:
+    case TemporalField::Era: {
+      JSString* str = JS::ToString(cx, value);
+      if (!str) {
+        return false;
+      }
+      value.setString(str);
+      return true;
+    }
+
+    case TemporalField::TimeZone:
+      // NB: timeZone has no conversion function.
+      return true;
+  }
+  MOZ_CRASH("invalid temporal field name");
+}
+
 static int32_t ComparePropertyKey(PropertyKey x, PropertyKey y) {
   MOZ_ASSERT(x.isAtom() || x.isInt());
   MOZ_ASSERT(y.isAtom() || y.isInt());
@@ -169,6 +260,12 @@ static bool IsSorted(std::initializer_list<TemporalField> fieldNames) {
                           auto* b = ToCString(y);
                           return std::strcmp(a, b) < 0;
                         });
+}
+
+static bool IsSorted(const JS::StackGCVector<PropertyKey>& fieldNames) {
+  return std::is_sorted(
+      fieldNames.begin(), fieldNames.end(),
+      [](auto x, auto y) { return ComparePropertyKey(x, y) < 0; });
 }
 #endif
 
@@ -402,6 +499,64 @@ bool js::temporal::PrepareTemporalFields(
 
   // Step 6.
   return true;
+}
+
+/**
+ * PrepareTemporalFields ( fields, fieldNames, requiredFields )
+ */
+PlainObject* js::temporal::PrepareTemporalFields(
+    JSContext* cx, Handle<JSObject*> fields,
+    Handle<JS::StackGCVector<PropertyKey>> fieldNames) {
+  // Step 1.
+  Rooted<PlainObject*> result(cx, NewPlainObjectWithProto(cx, nullptr));
+  if (!result) {
+    return nullptr;
+  }
+
+  // Step 2. (Not applicable in our implementation.)
+
+  // Step 3. (The list is already sorted in our implementation.)
+  MOZ_ASSERT(IsSorted(fieldNames));
+
+  // Step 4.
+  Rooted<Value> value(cx);
+  for (size_t i = 0; i < fieldNames.length(); i++) {
+    Handle<PropertyKey> property = fieldNames[i];
+
+    // Step 4.a.
+    if (!GetProperty(cx, fields, fields, property, &value)) {
+      return nullptr;
+    }
+
+    // Steps 4.b-c.
+    if (auto fieldName = ToTemporalField(cx, property)) {
+      if (!value.isUndefined()) {
+        // Step 4.b.i. (Not applicable in our implementation.)
+
+        // Step 4.b.ii.
+        if (!TemporalFieldConvertValue(cx, *fieldName, &value)) {
+          return nullptr;
+        }
+      } else {
+        // Step 4.c.i. (Not applicable in our implementation.)
+
+        // Step 4.c.ii.
+        value = TemporalFieldDefaultValue(*fieldName);
+      }
+    } else {
+      // Steps 4.b.i-ii and 4.c.i-ii. (Not applicable in our implementation.)
+    }
+
+    // Steps 4.b.iii and 4.c.iii.
+    if (!DefineDataProperty(cx, result, property, value)) {
+      return nullptr;
+    }
+  }
+
+  // Step 5. (Not applicable in our implementation.)
+
+  // Step 6.
+  return result;
 }
 
 bool js::temporal::SortTemporalFieldNames(

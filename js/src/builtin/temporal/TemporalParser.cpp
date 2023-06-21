@@ -2341,6 +2341,85 @@ TemporalParser<CharT>::parseTemporalDateTimeString() {
   return dateTime.unwrap();
 }
 
+/**
+ * ParseTemporalDateTimeString ( isoString )
+ */
+template <typename CharT>
+static auto ParseTemporalDateTimeString(mozilla::Span<const CharT> str) {
+  TemporalParser<CharT> parser(str);
+  return parser.parseTemporalDateTimeString();
+}
+
+/**
+ * ParseTemporalDateTimeString ( isoString )
+ */
+static auto ParseTemporalDateTimeString(Handle<JSLinearString*> str) {
+  JS::AutoCheckCannotGC nogc;
+  if (str->hasLatin1Chars()) {
+    return ParseTemporalDateTimeString<Latin1Char>(str->latin1Range(nogc));
+  }
+  return ParseTemporalDateTimeString<char16_t>(str->twoByteRange(nogc));
+}
+
+/**
+ * ParseTemporalDateTimeString ( isoString )
+ */
+bool js::temporal::ParseTemporalDateTimeString(
+    JSContext* cx, Handle<JSString*> str, PlainDateTime* result,
+    MutableHandle<JSString*> calendar) {
+  Rooted<JSLinearString*> linear(cx, str->ensureLinear(cx));
+  if (!linear) {
+    return false;
+  }
+
+  // Steps 1-2.
+  auto parseResult = ::ParseTemporalDateTimeString(linear);
+  if (parseResult.isErr()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              parseResult.unwrapErr());
+    return false;
+  }
+  ZonedDateTimeString parsed = parseResult.unwrap();
+
+  // Step 3.
+  if (parsed.timeZone.isUTC()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_PARSER_INVALID_UTC_DESIGNATOR);
+    return false;
+  }
+
+  // Step 4.
+  if (!ParseISODateTime(cx, parsed, result)) {
+    return false;
+  }
+
+  if (parsed.calendar.present()) {
+    calendar.set(ToString(cx, linear, parsed.calendar));
+    if (!calendar) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
+ * ParseTemporalDateString ( isoString )
+ */
+bool js::temporal::ParseTemporalDateString(JSContext* cx, Handle<JSString*> str,
+                                           PlainDate* result,
+                                           MutableHandle<JSString*> calendar) {
+  // Step 1.
+  PlainDateTime dateTime;
+  if (!ParseTemporalDateTimeString(cx, str, &dateTime, calendar)) {
+    return false;
+  }
+
+  // Step 2.
+  *result = dateTime.date;
+  return true;
+}
+
 template <typename CharT>
 mozilla::Result<ZonedDateTimeString, ParserError>
 TemporalParser<CharT>::parseTemporalZonedDateTimeString() {
