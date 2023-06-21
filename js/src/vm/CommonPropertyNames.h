@@ -115,6 +115,7 @@
   MACRO_(currency, currency, "currency")                                       \
   MACRO_(currencyDisplay, currencyDisplay, "currencyDisplay")                  \
   MACRO_(currencySign, currencySign, "currencySign")                           \
+  MACRO_(dateAdd, dateAdd, "dateAdd")                                          \
   MACRO_(dateFromFields, dateFromFields, "dateFromFields")                     \
   MACRO_(dateStyle, dateStyle, "dateStyle")                                    \
   MACRO_(dateUntil, dateUntil, "dateUntil")                                    \
