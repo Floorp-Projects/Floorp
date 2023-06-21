@@ -302,6 +302,78 @@ static bool ZonedDateTimeConstructor(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
+ * Temporal.ZonedDateTime.prototype.withTimeZone ( timeZoneLike )
+ */
+static bool ZonedDateTime_withTimeZone(JSContext* cx, const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  auto epochNanoseconds = ToInstant(zonedDateTime);
+  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+
+  // Step 3.
+  Rooted<JSObject*> timeZone(cx, ToTemporalTimeZone(cx, args.get(0)));
+  if (!timeZone) {
+    return false;
+  }
+
+  // Step 4.
+  auto* result =
+      CreateTemporalZonedDateTime(cx, epochNanoseconds, timeZone, calendar);
+  if (!result) {
+    return false;
+  }
+
+  args.rval().setObject(*result);
+  return true;
+}
+
+/**
+ * Temporal.ZonedDateTime.prototype.withTimeZone ( timeZoneLike )
+ */
+static bool ZonedDateTime_withTimeZone(JSContext* cx, unsigned argc,
+                                       Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_withTimeZone>(
+      cx, args);
+}
+
+/**
+ * Temporal.ZonedDateTime.prototype.withCalendar ( calendarLike )
+ */
+static bool ZonedDateTime_withCalendar(JSContext* cx, const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  auto epochNanoseconds = ToInstant(zonedDateTime);
+  Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
+
+  // Step 3.
+  Rooted<JSObject*> calendar(cx, ToTemporalCalendar(cx, args.get(0)));
+  if (!calendar) {
+    return false;
+  }
+
+  // Step 4.
+  auto* result =
+      CreateTemporalZonedDateTime(cx, epochNanoseconds, timeZone, calendar);
+  if (!result) {
+    return false;
+  }
+
+  args.rval().setObject(*result);
+  return true;
+}
+
+/**
+ * Temporal.ZonedDateTime.prototype.withCalendar ( calendarLike )
+ */
+static bool ZonedDateTime_withCalendar(JSContext* cx, unsigned argc,
+                                       Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_withCalendar>(
+      cx, args);
+}
+
+/**
  * Temporal.ZonedDateTime.prototype.toString ( [ options ] )
  */
 static bool ZonedDateTime_toString(JSContext* cx, const CallArgs& args) {
@@ -837,6 +909,8 @@ static const JSFunctionSpec ZonedDateTime_methods[] = {
 };
 
 static const JSFunctionSpec ZonedDateTime_prototype_methods[] = {
+    JS_FN("withTimeZone", ZonedDateTime_withTimeZone, 1, 0),
+    JS_FN("withCalendar", ZonedDateTime_withCalendar, 1, 0),
     JS_FN("toString", ZonedDateTime_toString, 0, 0),
     JS_FN("toLocaleString", ZonedDateTime_toLocaleString, 0, 0),
     JS_FN("toJSON", ZonedDateTime_toJSON, 0, 0),
