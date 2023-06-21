@@ -454,6 +454,23 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
   bool IsFixedPos() const;
   bool IsOverflowHidden() const;
 
+  /**
+   * Returns true if an accessible's frame has no scrollable overflow, and
+   * false otherwise.
+   * Does not return true for partially clipped accessibles.
+   */
+  bool IsClipped() const;
+
+  /**
+   * Checks if our hittesting match has any clipped children and, if so
+   * descends it and subsequent TEXT_CONTAINERs in search of a text leaf.
+   * We do this because some sites use clipping to hide text that is only
+   * visible to a11y, while displaying a visual version of the same text on
+   * the web page. We want a hittest of the visible text to resolve to the
+   * hidden, a11y-only text node.
+   */
+  RemoteAccessible* DoFuzzyHittesting();
+
   // This function is used exclusively for hit testing.
   bool ContainsPoint(int32_t aX, int32_t aY);
 
