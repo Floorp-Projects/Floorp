@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef ipc_glue_MessageLink_h
-#define ipc_glue_MessageLink_h 1
+#define ipc_glue_MessageLink_h
 
 #include <cstdint>
 #include "base/message_loop.h"

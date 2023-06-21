@@ -1780,7 +1780,11 @@ mozilla::ipc::IPCResult ContentChild::RecvConstructBrowser(
       NS_WARNING(reason.get());
       return IPC_OK();
     }
-    return IPC_FAIL(this, reason.get());
+
+    // (these are the only possible values of `reason` at this point)
+    return browsingContext
+               ? IPC_FAIL(this, "discarded initial top BrowsingContext")
+               : IPC_FAIL(this, "missing initial top BrowsingContext");
   }
 
   if (xpc::IsInAutomation() &&

@@ -59,8 +59,9 @@ MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(
 
 namespace ipc {
 
-IPCResult IPCResult::Fail(NotNull<IProtocol*> actor, const char* where,
-                          const char* why) {
+/* static */
+IPCResult IPCResult::FailImpl(NotNull<IProtocol*> actor, const char* where,
+                              const char* why) {
   // Calls top-level protocol to handle the error.
   nsPrintfCString errorMsg("%s %s\n", where, why);
   actor->GetIPCChannel()->Listener()->ProcessingError(

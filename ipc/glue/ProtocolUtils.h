@@ -5,7 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #ifndef mozilla_ipc_ProtocolUtils_h
-#define mozilla_ipc_ProtocolUtils_h 1
+#define mozilla_ipc_ProtocolUtils_h
 
 #include <cstddef>
 #include <cstdint>
@@ -28,6 +28,7 @@
 #include "mozilla/ipc/MessageLink.h"
 #include "mozilla/ipc/SharedMemory.h"
 #include "mozilla/ipc/Shmem.h"
+#include "nsPrintfCString.h"
 #include "nsTHashMap.h"
 #include "nsDebug.h"
 #include "nsISupports.h"
@@ -343,20 +344,61 @@ class IProtocol : public HasResultCodes {
 #define IPC_FAIL_NO_REASON(actor) \
   mozilla::ipc::IPCResult::Fail(WrapNotNull(actor), __func__)
 
+/*
+ * IPC_FAIL_UNSAFE_PRINTF(actor, format, ...)
+ *
+ * Create a failure IPCResult with a dynamic reason-string.
+ *
+ * @note This macro causes data collection because IPC failure reasons may be
+ * sent to crash-stats, where they are publicly visible. Firefox data stewards
+ * must do data review on usages of this macro.
+ */
+#define IPC_FAIL_UNSAFE_PRINTF(actor, format, ...) \
+  mozilla::ipc::IPCResult::FailUnsafePrintfImpl(   \
+      WrapNotNull(actor), __func__, nsPrintfCString(format, ##__VA_ARGS__))
+
 /**
- * All message deserializer and message handler should return this
- * type via above macros. We use a less generic name here to avoid
- * conflict with mozilla::Result because we have quite a few using
- * namespace mozilla::ipc; in the code base.
+ * All message deserializers and message handlers should return this type via
+ * the above macros. We use a less generic name here to avoid conflict with
+ * `mozilla::Result` because we have quite a few `using namespace mozilla::ipc;`
+ * in the code base.
+ *
+ * Note that merely constructing a failure-result, whether directly or via the
+ * IPC_FAIL macros, causes the associated error message to be processed
+ * immediately.
  */
 class IPCResult {
  public:
   static IPCResult Ok() { return IPCResult(true); }
-  static IPCResult Fail(NotNull<IProtocol*> aActor, const char* aWhere,
-                        const char* aWhy = "");
+
+  // IPC failure messages can sometimes end up in telemetry. As such, to avoid
+  // accidentally exfiltrating sensitive information without a data review, we
+  // require that they be constant strings.
+  template <size_t N, size_t M>
+  static IPCResult Fail(NotNull<IProtocol*> aActor, const char (&aWhere)[N],
+                        const char (&aWhy)[M]) {
+    return FailImpl(aActor, aWhere, aWhy);
+  }
+  template <size_t N>
+  static IPCResult Fail(NotNull<IProtocol*> aActor, const char (&aWhere)[N]) {
+    return FailImpl(aActor, aWhere, "");
+  }
+
   MOZ_IMPLICIT operator bool() const { return mSuccess; }
 
+  // Only used by IPC_FAIL_UNSAFE_PRINTF (q.v.). Do not call this directly. (Or
+  // at least get data-review's approval if you do.)
+  template <size_t N>
+  static IPCResult FailUnsafePrintfImpl(NotNull<IProtocol*> aActor,
+                                        const char (&aWhere)[N],
+                                        nsPrintfCString const& aWhy) {
+    return FailImpl(aActor, aWhere, aWhy.get());
+  }
+
  private:
+  static IPCResult FailImpl(NotNull<IProtocol*> aActor, const char* aWhere,
+                            const char* aWhy);
+
   explicit IPCResult(bool aResult) : mSuccess(aResult) {}
   bool mSuccess;
 };
