@@ -591,7 +591,8 @@ already_AddRefed<ComputedStyle> ServoStyleSet::ResolvePageContentStyle(
   UpdateStylistIfNeeded();
 
   RefPtr<ComputedStyle> computedValues =
-      Servo_ComputedValues_GetForPageContent(mRawData.get(), aPageName)
+      Servo_ComputedValues_GetForPageContent(mRawData.get(), aPageName,
+                                             StylePagePseudoClassFlags::NONE)
           .Consume();
   MOZ_ASSERT(computedValues);
 
