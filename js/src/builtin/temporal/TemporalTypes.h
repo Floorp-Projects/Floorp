@@ -389,6 +389,19 @@ struct Duration final {
   }
 };
 
+/**
+ * Date duration represents the difference between dates. Each duration
+ * component is an integer and all components must have the same sign.
+ */
+struct DateDuration final {
+  double years = 0;
+  double months = 0;
+  double weeks = 0;
+  double days = 0;
+
+  Duration toDuration() { return {years, months, weeks, days}; }
+};
+
 } /* namespace js::temporal */
 
 #endif /* builtin_temporal_TemporalTypes_h */

@@ -117,6 +117,7 @@
   MACRO_(currencySign, currencySign, "currencySign")                           \
   MACRO_(dateFromFields, dateFromFields, "dateFromFields")                     \
   MACRO_(dateStyle, dateStyle, "dateStyle")                                    \
+  MACRO_(dateUntil, dateUntil, "dateUntil")                                    \
   MACRO_(day, day, "day")                                                      \
   MACRO_(dayOfWeek, dayOfWeek, "dayOfWeek")                                    \
   MACRO_(dayOfYear, dayOfYear, "dayOfYear")                                    \
