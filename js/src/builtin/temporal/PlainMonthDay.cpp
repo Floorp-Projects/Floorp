@@ -153,6 +153,81 @@ PlainMonthDayObject* js::temporal::CreateTemporalMonthDay(
 }
 
 /**
+ * TemporalMonthDayToString ( monthDay, showCalendar )
+ */
+static JSString* TemporalMonthDayToString(JSContext* cx,
+                                          Handle<PlainMonthDayObject*> monthDay,
+                                          CalendarOption showCalendar) {
+  // Steps 1-2. (Not applicable in our implementation.)
+
+  // Note: This doesn't reserve too much space, because the string builder
+  // already internally reserves space for 64 characters.
+  constexpr size_t datePart = 1 + 6 + 1 + 2 + 1 + 2;  // 13
+  constexpr size_t calendarPart = 30;
+
+  JSStringBuilder result(cx);
+
+  if (!result.reserve(datePart + calendarPart)) {
+    return nullptr;
+  }
+
+  // Step 6. (Reordered)
+  Rooted<JSObject*> calendar(cx, monthDay->calendar());
+  JSString* str = CalendarToString(cx, calendar);
+  if (!str) {
+    return nullptr;
+  }
+
+  Rooted<JSLinearString*> calendarID(cx, str->ensureLinear(cx));
+  if (!calendarID) {
+    return nullptr;
+  }
+
+  // Step 7. (Reordered)
+  if (showCalendar == CalendarOption::Always ||
+      showCalendar == CalendarOption::Critical ||
+      !StringEqualsLiteral(calendarID, "iso8601")) {
+    int32_t year = monthDay->isoYear();
+    if (0 <= year && year <= 9999) {
+      result.infallibleAppend(char('0' + (year / 1000)));
+      result.infallibleAppend(char('0' + (year % 1000) / 100));
+      result.infallibleAppend(char('0' + (year % 100) / 10));
+      result.infallibleAppend(char('0' + (year % 10)));
+    } else {
+      result.infallibleAppend(year < 0 ? '-' : '+');
+
+      year = std::abs(year);
+      result.infallibleAppend(char('0' + (year / 100000)));
+      result.infallibleAppend(char('0' + (year % 100000) / 10000));
+      result.infallibleAppend(char('0' + (year % 10000) / 1000));
+      result.infallibleAppend(char('0' + (year % 1000) / 100));
+      result.infallibleAppend(char('0' + (year % 100) / 10));
+      result.infallibleAppend(char('0' + (year % 10)));
+    }
+    result.infallibleAppend('-');
+  }
+
+  // Step 3.
+  int32_t month = monthDay->isoMonth();
+  result.infallibleAppend(char('0' + (month / 10)));
+  result.infallibleAppend(char('0' + (month % 10)));
+
+  // Steps 4-5.
+  int32_t day = monthDay->isoDay();
+  result.infallibleAppend('-');
+  result.infallibleAppend(char('0' + (day / 10)));
+  result.infallibleAppend(char('0' + (day % 10)));
+
+  // Steps 8-9.
+  if (!FormatCalendarAnnotation(cx, result, calendarID, showCalendar)) {
+    return nullptr;
+  }
+
+  // Step 10.
+  return result.finishString();
+}
+
+/**
  * Temporal.PlainMonthDay ( isoMonth, isoDay [ , calendarLike [ ,
  * referenceISOYear ] ] )
  */
@@ -200,6 +275,102 @@ static bool PlainMonthDayConstructor(JSContext* cx, unsigned argc, Value* vp) {
 
   args.rval().setObject(*monthDay);
   return true;
+}
+
+/**
+ * Temporal.PlainMonthDay.prototype.toString ( [ options ] )
+ */
+static bool PlainMonthDay_toString(JSContext* cx, const CallArgs& args) {
+  Rooted<PlainMonthDayObject*> monthDay(
+      cx, &args.thisv().toObject().as<PlainMonthDayObject>());
+
+  auto showCalendar = CalendarOption::Auto;
+  if (args.hasDefined(0)) {
+    // Step 3.
+    Rooted<JSObject*> options(
+        cx, RequireObjectArg(cx, "options", "toString", args[0]));
+    if (!options) {
+      return false;
+    }
+
+    // Step 4.
+    if (!ToCalendarNameOption(cx, options, &showCalendar)) {
+      return false;
+    }
+  }
+
+  // Step 5.
+  JSString* str = TemporalMonthDayToString(cx, monthDay, showCalendar);
+  if (!str) {
+    return false;
+  }
+
+  args.rval().setString(str);
+  return true;
+}
+
+/**
+ * Temporal.PlainMonthDay.prototype.toString ( [ options ] )
+ */
+static bool PlainMonthDay_toString(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainMonthDay, PlainMonthDay_toString>(cx,
+                                                                       args);
+}
+
+/**
+ * Temporal.PlainMonthDay.prototype.toLocaleString ( [ locales [ , options ] ] )
+ */
+static bool PlainMonthDay_toLocaleString(JSContext* cx, const CallArgs& args) {
+  Rooted<PlainMonthDayObject*> monthDay(
+      cx, &args.thisv().toObject().as<PlainMonthDayObject>());
+
+  // Step 3.
+  JSString* str = TemporalMonthDayToString(cx, monthDay, CalendarOption::Auto);
+  if (!str) {
+    return false;
+  }
+
+  args.rval().setString(str);
+  return true;
+}
+
+/**
+ * Temporal.PlainMonthDay.prototype.toLocaleString ( [ locales [ , options ] ] )
+ */
+static bool PlainMonthDay_toLocaleString(JSContext* cx, unsigned argc,
+                                         Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainMonthDay, PlainMonthDay_toLocaleString>(
+      cx, args);
+}
+
+/**
+ * Temporal.PlainMonthDay.prototype.toJSON ( )
+ */
+static bool PlainMonthDay_toJSON(JSContext* cx, const CallArgs& args) {
+  Rooted<PlainMonthDayObject*> monthDay(
+      cx, &args.thisv().toObject().as<PlainMonthDayObject>());
+
+  // Step 3.
+  JSString* str = TemporalMonthDayToString(cx, monthDay, CalendarOption::Auto);
+  if (!str) {
+    return false;
+  }
+
+  args.rval().setString(str);
+  return true;
+}
+
+/**
+ * Temporal.PlainMonthDay.prototype.toJSON ( )
+ */
+static bool PlainMonthDay_toJSON(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainMonthDay, PlainMonthDay_toJSON>(cx, args);
 }
 
 /**
@@ -282,6 +453,9 @@ static const JSFunctionSpec PlainMonthDay_methods[] = {
 };
 
 static const JSFunctionSpec PlainMonthDay_prototype_methods[] = {
+    JS_FN("toString", PlainMonthDay_toString, 0, 0),
+    JS_FN("toLocaleString", PlainMonthDay_toLocaleString, 0, 0),
+    JS_FN("toJSON", PlainMonthDay_toJSON, 0, 0),
     JS_FN("valueOf", PlainMonthDay_valueOf, 0, 0),
     JS_FN("getISOFields", PlainMonthDay_getISOFields, 0, 0),
     JS_FS_END,

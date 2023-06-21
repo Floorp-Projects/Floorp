@@ -77,6 +77,7 @@
   MACRO_(bytes, bytes, "bytes")                                                \
   MACRO_(BYTES_PER_ELEMENT, BYTES_PER_ELEMENT, "BYTES_PER_ELEMENT")            \
   MACRO_(calendar, calendar, "calendar")                                       \
+  MACRO_(calendarName, calendarName, "calendarName")                           \
   MACRO_(call, call, "call")                                                   \
   MACRO_(callContentFunction, callContentFunction, "callContentFunction")      \
   MACRO_(callee, callee, "callee")                                             \

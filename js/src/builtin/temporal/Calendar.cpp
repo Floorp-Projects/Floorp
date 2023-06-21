@@ -1467,6 +1467,75 @@ bool js::temporal::CalendarInLeapYear(JSContext* cx, Handle<JSObject*> calendar,
   return true;
 }
 
+/**
+ * MaybeFormatCalendarAnnotation ( calendarObject, showCalendar )
+ */
+bool js::temporal::MaybeFormatCalendarAnnotation(
+    JSContext* cx, JSStringBuilder& result, Handle<JSObject*> calendarObject,
+    CalendarOption showCalendar) {
+  // Step 1.
+  if (showCalendar == CalendarOption::Never) {
+    return true;
+  }
+
+  // Step 2. (Not applicable in our implementation.)
+
+  // Step 3.
+  Rooted<JSString*> calendarID(cx, CalendarToString(cx, calendarObject));
+  if (!calendarID) {
+    return false;
+  }
+
+  // Step 4.
+  return FormatCalendarAnnotation(cx, result, calendarID, showCalendar);
+}
+
+/**
+ * FormatCalendarAnnotation ( id, showCalendar )
+ */
+bool js::temporal::FormatCalendarAnnotation(JSContext* cx,
+                                            JSStringBuilder& result,
+                                            Handle<JSString*> id,
+                                            CalendarOption showCalendar) {
+  switch (showCalendar) {
+    case CalendarOption::Never:
+      return true;
+
+    case CalendarOption::Auto: {
+      JSLinearString* linear = id->ensureLinear(cx);
+      if (!linear) {
+        return false;
+      }
+      if (StringEqualsLiteral(linear, "iso8601")) {
+        return true;
+      }
+      [[fallthrough]];
+    }
+
+    case CalendarOption::Always: {
+      if (!result.append("[u-ca=")) {
+        return false;
+      }
+      break;
+    }
+
+    case CalendarOption::Critical: {
+      if (!result.append("[!u-ca=")) {
+        return false;
+      }
+      break;
+    }
+  }
+
+  if (!result.append(id)) {
+    return false;
+  }
+  if (!result.append(']')) {
+    return false;
+  }
+  return true;
+}
+
 static bool Calendar_toString(JSContext* cx, unsigned argc, Value* vp);
 
 JSString* js::temporal::CalendarToString(JSContext* cx,

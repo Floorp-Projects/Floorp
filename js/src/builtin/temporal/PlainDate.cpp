@@ -301,6 +301,60 @@ bool js::temporal::ToTemporalDate(JSContext* cx, Handle<Value> item,
 }
 
 /**
+ * TemporalDateToString ( temporalDate, showCalendar )
+ */
+static JSString* TemporalDateToString(JSContext* cx,
+                                      Handle<PlainDateObject*> temporalDate,
+                                      CalendarOption showCalendar) {
+  auto [year, month, day] = ToPlainDate(temporalDate);
+
+  // Steps 1-2. (Not applicable in our implementation.)
+
+  JSStringBuilder result(cx);
+
+  if (!result.reserve(1 + 6 + 1 + 2 + 1 + 2)) {
+    return nullptr;
+  }
+
+  // Step 3.
+  if (0 <= year && year <= 9999) {
+    result.infallibleAppend(char('0' + (year / 1000)));
+    result.infallibleAppend(char('0' + (year % 1000) / 100));
+    result.infallibleAppend(char('0' + (year % 100) / 10));
+    result.infallibleAppend(char('0' + (year % 10)));
+  } else {
+    result.infallibleAppend(year < 0 ? '-' : '+');
+
+    year = std::abs(year);
+    result.infallibleAppend(char('0' + (year / 100000)));
+    result.infallibleAppend(char('0' + (year % 100000) / 10000));
+    result.infallibleAppend(char('0' + (year % 10000) / 1000));
+    result.infallibleAppend(char('0' + (year % 1000) / 100));
+    result.infallibleAppend(char('0' + (year % 100) / 10));
+    result.infallibleAppend(char('0' + (year % 10)));
+  }
+
+  // Step 4.
+  result.infallibleAppend('-');
+  result.infallibleAppend(char('0' + (month / 10)));
+  result.infallibleAppend(char('0' + (month % 10)));
+
+  // Step 5.
+  result.infallibleAppend('-');
+  result.infallibleAppend(char('0' + (day / 10)));
+  result.infallibleAppend(char('0' + (day % 10)));
+
+  // Step 6.
+  Rooted<JSObject*> calendar(cx, temporalDate->calendar());
+  if (!MaybeFormatCalendarAnnotation(cx, result, calendar, showCalendar)) {
+    return nullptr;
+  }
+
+  // Step 7.
+  return result.finishString();
+}
+
+/**
  * Temporal.PlainDate ( isoYear, isoMonth, isoDay [ , calendarLike ] )
  */
 static bool PlainDateConstructor(JSContext* cx, unsigned argc, Value* vp) {
@@ -402,6 +456,99 @@ static bool PlainDate_getISOFields(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
+ * Temporal.PlainDate.prototype.toString ( [ options ] )
+ */
+static bool PlainDate_toString(JSContext* cx, const CallArgs& args) {
+  Rooted<PlainDateObject*> temporalDate(
+      cx, &args.thisv().toObject().as<PlainDateObject>());
+
+  auto showCalendar = CalendarOption::Auto;
+  if (args.hasDefined(0)) {
+    // Step 3.
+    Rooted<JSObject*> options(
+        cx, RequireObjectArg(cx, "options", "toString", args[0]));
+    if (!options) {
+      return false;
+    }
+
+    // Step 4.
+    if (!ToCalendarNameOption(cx, options, &showCalendar)) {
+      return false;
+    }
+  }
+
+  // Step 5.
+  JSString* str = TemporalDateToString(cx, temporalDate, showCalendar);
+  if (!str) {
+    return false;
+  }
+
+  args.rval().setString(str);
+  return true;
+}
+
+/**
+ * Temporal.PlainDate.prototype.toString ( [ options ] )
+ */
+static bool PlainDate_toString(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDate, PlainDate_toString>(cx, args);
+}
+
+/**
+ * Temporal.PlainDate.prototype.toLocaleString ( [ locales [ , options ] ] )
+ */
+static bool PlainDate_toLocaleString(JSContext* cx, const CallArgs& args) {
+  Rooted<PlainDateObject*> temporalDate(
+      cx, &args.thisv().toObject().as<PlainDateObject>());
+
+  // Step 3.
+  JSString* str = TemporalDateToString(cx, temporalDate, CalendarOption::Auto);
+  if (!str) {
+    return false;
+  }
+
+  args.rval().setString(str);
+  return true;
+}
+
+/**
+ * Temporal.PlainDate.prototype.toLocaleString ( [ locales [ , options ] ] )
+ */
+static bool PlainDate_toLocaleString(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDate, PlainDate_toLocaleString>(cx, args);
+}
+
+/**
+ * Temporal.PlainDate.prototype.toJSON ( )
+ */
+static bool PlainDate_toJSON(JSContext* cx, const CallArgs& args) {
+  Rooted<PlainDateObject*> temporalDate(
+      cx, &args.thisv().toObject().as<PlainDateObject>());
+
+  // Step 3.
+  JSString* str = TemporalDateToString(cx, temporalDate, CalendarOption::Auto);
+  if (!str) {
+    return false;
+  }
+
+  args.rval().setString(str);
+  return true;
+}
+
+/**
+ * Temporal.PlainDate.prototype.toJSON ( )
+ */
+static bool PlainDate_toJSON(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDate, PlainDate_toJSON>(cx, args);
+}
+
+/**
  *  Temporal.PlainDate.prototype.valueOf ( )
  */
 static bool PlainDate_valueOf(JSContext* cx, unsigned argc, Value* vp) {
@@ -426,6 +573,9 @@ static const JSFunctionSpec PlainDate_methods[] = {
 
 static const JSFunctionSpec PlainDate_prototype_methods[] = {
     JS_FN("getISOFields", PlainDate_getISOFields, 0, 0),
+    JS_FN("toString", PlainDate_toString, 0, 0),
+    JS_FN("toLocaleString", PlainDate_toLocaleString, 0, 0),
+    JS_FN("toJSON", PlainDate_toJSON, 0, 0),
     JS_FN("valueOf", PlainDate_valueOf, 0, 0),
     JS_FS_END,
 };
