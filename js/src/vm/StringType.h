@@ -17,7 +17,6 @@
 
 #include "jstypes.h"  // js::Bit
 
-#include "gc/Allocator.h"
 #include "gc/Cell.h"
 #include "gc/MaybeRooted.h"
 #include "gc/Nursery.h"

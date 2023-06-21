@@ -55,43 +55,10 @@ void Zone::setNurseryAllocFlags(bool allocObjects, bool allocStrings,
   minBigintHeapToTenure_ = MinHeapToTenure(allocNurseryBigInts());
 }
 
-template <JS::TraceKind traceKind, AllowGC allowGC /* = CanGC */>
-void* gc::CellAllocator::AllocNurseryOrTenuredCell(JSContext* cx,
-                                                   AllocKind allocKind,
-                                                   gc::Heap heap,
-                                                   AllocSite* site) {
-  MOZ_ASSERT(IsNurseryAllocable(allocKind));
-  MOZ_ASSERT(MapAllocToTraceKind(allocKind) == traceKind);
-  MOZ_ASSERT_IF(site && site->initialHeap() == Heap::Tenured,
-                heap == Heap::Tenured);
-
-  if (!PreAllocChecks<allowGC>(cx, allocKind)) {
-    return nullptr;
-  }
-
-  size_t thingSize = Arena::thingSize(allocKind);
-
-  if (heap < cx->zone()->minHeapToTenure(traceKind)) {
-    if (!site) {
-      site = cx->zone()->unknownAllocSite(traceKind);
-    }
-
-    void* ptr = cx->nursery().tryAllocateCell(site, thingSize, traceKind);
-    if (MOZ_LIKELY(ptr)) {
-      return ptr;
-    }
-
-    return RetryNurseryAlloc<allowGC>(cx, traceKind, allocKind, thingSize,
-                                      site);
-  }
-
-  return TryNewTenuredCell<allowGC>(cx, allocKind, thingSize);
-}
-
 #define INSTANTIATE_ALLOC_NURSERY_CELL(traceKind, allowGc)          \
   template void*                                                    \
   gc::CellAllocator::AllocNurseryOrTenuredCell<traceKind, allowGc>( \
-      JSContext*, AllocKind, gc::Heap, AllocSite*);
+      JS::RootingContext*, AllocKind, gc::Heap, AllocSite*);
 INSTANTIATE_ALLOC_NURSERY_CELL(JS::TraceKind::Object, NoGC)
 INSTANTIATE_ALLOC_NURSERY_CELL(JS::TraceKind::Object, CanGC)
 INSTANTIATE_ALLOC_NURSERY_CELL(JS::TraceKind::String, NoGC)
@@ -104,11 +71,12 @@ INSTANTIATE_ALLOC_NURSERY_CELL(JS::TraceKind::BigInt, CanGC)
 // the nursery or there is an OOM, this method will return nullptr.
 template <AllowGC allowGC>
 /* static */
-MOZ_NEVER_INLINE void* CellAllocator::RetryNurseryAlloc(JSContext* cx,
+MOZ_NEVER_INLINE void* CellAllocator::RetryNurseryAlloc(JS::RootingContext* rcx,
                                                         JS::TraceKind traceKind,
                                                         AllocKind allocKind,
                                                         size_t thingSize,
                                                         AllocSite* site) {
+  auto* cx = JSContext::from(rcx);
   MOZ_ASSERT(cx->isNurseryAllocAllowed());
   MOZ_ASSERT(cx->zone() == site->zone());
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
@@ -147,27 +115,40 @@ MOZ_NEVER_INLINE void* CellAllocator::RetryNurseryAlloc(JSContext* cx,
   return TryNewTenuredCell<allowGC>(cx, allocKind, thingSize);
 }
 
+template void* CellAllocator::RetryNurseryAlloc<NoGC>(JS::RootingContext* rcx,
+                                                      JS::TraceKind traceKind,
+                                                      AllocKind allocKind,
+                                                      size_t thingSize,
+                                                      AllocSite* site);
+template void* CellAllocator::RetryNurseryAlloc<CanGC>(JS::RootingContext* rcx,
+                                                       JS::TraceKind traceKind,
+                                                       AllocKind allocKind,
+                                                       size_t thingSize,
+                                                       AllocSite* site);
+
 template <AllowGC allowGC /* = CanGC */>
-void* gc::CellAllocator::AllocTenuredCell(JSContext* cx, gc::AllocKind kind,
-                                          size_t size) {
+void* gc::CellAllocator::AllocTenuredCell(JS::RootingContext* rcx,
+                                          gc::AllocKind kind, size_t size) {
   MOZ_ASSERT(!IsNurseryAllocable(kind));
   MOZ_ASSERT(size == Arena::thingSize(kind));
 
-  if (!PreAllocChecks<allowGC>(cx, kind)) {
+  if (!PreAllocChecks<allowGC>(rcx, kind)) {
     return nullptr;
   }
 
-  return TryNewTenuredCell<allowGC>(cx, kind, size);
+  return TryNewTenuredCell<allowGC>(rcx, kind, size);
 }
-template void* gc::CellAllocator::AllocTenuredCell<NoGC>(JSContext*, AllocKind,
-                                                         size_t);
-template void* gc::CellAllocator::AllocTenuredCell<CanGC>(JSContext*, AllocKind,
-                                                          size_t);
+template void* gc::CellAllocator::AllocTenuredCell<NoGC>(JS::RootingContext*,
+                                                         AllocKind, size_t);
+template void* gc::CellAllocator::AllocTenuredCell<CanGC>(JS::RootingContext*,
+                                                          AllocKind, size_t);
 
 template <AllowGC allowGC>
 /* static */
-void* CellAllocator::TryNewTenuredCell(JSContext* cx, AllocKind kind,
+void* CellAllocator::TryNewTenuredCell(JS::RootingContext* rcx, AllocKind kind,
                                        size_t thingSize) {
+  auto* cx = JSContext::from(rcx);
+
   if constexpr (allowGC) {
     // Invoking the interrupt callback can fail and we can't usefully
     // handle that here. Just check in case we need to collect instead.
@@ -212,6 +193,12 @@ void* CellAllocator::TryNewTenuredCell(JSContext* cx, AllocKind kind,
 
   return ptr;
 }
+template void* CellAllocator::TryNewTenuredCell<NoGC>(JS::RootingContext* rcx,
+                                                      AllocKind kind,
+                                                      size_t thingSize);
+template void* CellAllocator::TryNewTenuredCell<CanGC>(JS::RootingContext* rcx,
+                                                       AllocKind kind,
+                                                       size_t thingSize);
 
 void GCRuntime::attemptLastDitchGC(JSContext* cx) {
   // Either there was no memory available for a new chunk or the heap hit its
@@ -254,7 +241,9 @@ static inline void CheckAllocZone(Zone* zone, AllocKind kind) {
 // This is a no-op in release builds.
 #if defined(DEBUG) || defined(JS_GC_ZEAL) || defined(JS_OOM_BREAKPOINT)
 template <AllowGC allowGC>
-bool CellAllocator::PreAllocChecks(JSContext* cx, AllocKind kind) {
+bool CellAllocator::PreAllocChecks(JS::RootingContext* rcx, AllocKind kind) {
+  auto* cx = JSContext::from(rcx);
+
   MOZ_ASSERT(!cx->isHelperThreadContext());
 
   CheckAllocZone(cx->zone(), kind);
@@ -285,9 +274,9 @@ bool CellAllocator::PreAllocChecks(JSContext* cx, AllocKind kind) {
 
   return true;
 }
-template bool CellAllocator::PreAllocChecks<NoGC>(JSContext* cx,
+template bool CellAllocator::PreAllocChecks<NoGC>(JS::RootingContext* cx,
                                                   AllocKind kind);
-template bool CellAllocator::PreAllocChecks<CanGC>(JSContext* cx,
+template bool CellAllocator::PreAllocChecks<CanGC>(JS::RootingContext* cx,
                                                    AllocKind kind);
 #endif  // DEBUG || JS_GC_ZEAL || JS_OOM_BREAKPOINT
 
