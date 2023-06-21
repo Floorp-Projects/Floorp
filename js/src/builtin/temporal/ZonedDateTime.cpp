@@ -22,11 +22,16 @@
 #include "builtin/temporal/Instant.h"
 #include "builtin/temporal/PlainDate.h"
 #include "builtin/temporal/PlainDateTime.h"
+#include "builtin/temporal/PlainMonthDay.h"
+#include "builtin/temporal/PlainTime.h"
+#include "builtin/temporal/PlainYearMonth.h"
 #include "builtin/temporal/Temporal.h"
+#include "builtin/temporal/TemporalFields.h"
 #include "builtin/temporal/TemporalRoundingMode.h"
 #include "builtin/temporal/TemporalTypes.h"
 #include "builtin/temporal/TemporalUnit.h"
 #include "builtin/temporal/TimeZone.h"
+#include "builtin/temporal/Wrapped.h"
 #include "ds/IdValuePair.h"
 #include "gc/AllocKind.h"
 #include "gc/Barrier.h"
@@ -451,6 +456,372 @@ static bool ZonedDateTime_valueOf(JSContext* cx, unsigned argc, Value* vp) {
   return false;
 }
 
+/**
+ * Temporal.ZonedDateTime.prototype.toInstant ( )
+ */
+static bool ZonedDateTime_toInstant(JSContext* cx, const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  auto instant = ToInstant(zonedDateTime);
+
+  // Step 3.
+  auto* result = CreateTemporalInstant(cx, instant);
+  if (!result) {
+    return false;
+  }
+
+  args.rval().setObject(*result);
+  return true;
+}
+
+/**
+ * Temporal.ZonedDateTime.prototype.toInstant ( )
+ */
+static bool ZonedDateTime_toInstant(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_toInstant>(cx,
+                                                                        args);
+}
+
+/**
+ * Temporal.ZonedDateTime.prototype.toPlainDate ( )
+ */
+static bool ZonedDateTime_toPlainDate(JSContext* cx, const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  auto instant = ToInstant(zonedDateTime);
+  Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
+
+  // Step 5.
+  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+
+  // Steps 3-4 and 6.
+  PlainDateTime temporalDateTime;
+  if (!GetPlainDateTimeFor(cx, timeZone, instant, &temporalDateTime)) {
+    return false;
+  }
+
+  // Step 7.
+  auto* result = CreateTemporalDate(cx, temporalDateTime.date, calendar);
+  if (!result) {
+    return false;
+  }
+
+  args.rval().setObject(*result);
+  return true;
+}
+
+/**
+ * Temporal.ZonedDateTime.prototype.toPlainDate ( )
+ */
+static bool ZonedDateTime_toPlainDate(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_toPlainDate>(cx,
+                                                                          args);
+}
+
+/**
+ * Temporal.ZonedDateTime.prototype.toPlainTime ( )
+ */
+static bool ZonedDateTime_toPlainTime(JSContext* cx, const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  auto instant = ToInstant(zonedDateTime);
+  Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
+  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+
+  // Steps 3-5.
+  PlainDateTime temporalDateTime;
+  if (!GetPlainDateTimeFor(cx, timeZone, instant, &temporalDateTime)) {
+    return false;
+  }
+
+  // Step 6.
+  auto* result = CreateTemporalTime(cx, temporalDateTime.time);
+  if (!result) {
+    return false;
+  }
+
+  args.rval().setObject(*result);
+  return true;
+}
+
+/**
+ * Temporal.ZonedDateTime.prototype.toPlainTime ( )
+ */
+static bool ZonedDateTime_toPlainTime(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_toPlainTime>(cx,
+                                                                          args);
+}
+
+/**
+ * Temporal.ZonedDateTime.prototype.toPlainDateTime ( )
+ */
+static bool ZonedDateTime_toPlainDateTime(JSContext* cx, const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  auto instant = ToInstant(zonedDateTime);
+  Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
+  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+
+  // Steps 3-5.
+  auto* result = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
+  if (!result) {
+    return false;
+  }
+
+  args.rval().setObject(*result);
+  return true;
+}
+
+/**
+ * Temporal.ZonedDateTime.prototype.toPlainDateTime ( )
+ */
+static bool ZonedDateTime_toPlainDateTime(JSContext* cx, unsigned argc,
+                                          Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_toPlainDateTime>(
+      cx, args);
+}
+
+/**
+ * Temporal.ZonedDateTime.prototype.toPlainYearMonth ( )
+ */
+static bool ZonedDateTime_toPlainYearMonth(JSContext* cx,
+                                           const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  auto instant = ToInstant(zonedDateTime);
+  Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
+
+  // Step 5.
+  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+
+  // Steps 3-4 and 6.
+  Rooted<PlainDateTimeObject*> temporalDateTime(
+      cx, GetPlainDateTimeFor(cx, timeZone, instant, calendar));
+  if (!temporalDateTime) {
+    return false;
+  }
+
+  // Step 7.
+  JS::RootedVector<PropertyKey> fieldNames(cx);
+  if (!CalendarFields(cx, calendar,
+                      {CalendarField::MonthCode, CalendarField::Year},
+                      &fieldNames)) {
+    return false;
+  }
+
+  // Step 8.
+  Rooted<PlainObject*> fields(
+      cx, PrepareTemporalFields(cx, temporalDateTime, fieldNames));
+  if (!fields) {
+    return false;
+  }
+
+  // Steps 9-10.
+  auto result = CalendarYearMonthFromFields(cx, calendar, fields);
+  if (!result) {
+    return false;
+  }
+
+  args.rval().setObject(*result);
+  return true;
+}
+
+/**
+ * Temporal.ZonedDateTime.prototype.toPlainYearMonth ( )
+ */
+static bool ZonedDateTime_toPlainYearMonth(JSContext* cx, unsigned argc,
+                                           Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_toPlainYearMonth>(
+      cx, args);
+}
+
+/**
+ * Temporal.ZonedDateTime.prototype.toPlainMonthDay ( )
+ */
+static bool ZonedDateTime_toPlainMonthDay(JSContext* cx, const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  auto instant = ToInstant(zonedDateTime);
+  Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
+
+  // Step 5.
+  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+
+  // Steps 3-4 and 6.
+  Rooted<PlainDateTimeObject*> temporalDateTime(
+      cx, GetPlainDateTimeFor(cx, timeZone, instant, calendar));
+  if (!temporalDateTime) {
+    return false;
+  }
+
+  // Step 7.
+  JS::RootedVector<PropertyKey> fieldNames(cx);
+  if (!CalendarFields(cx, calendar,
+                      {CalendarField::Day, CalendarField::MonthCode},
+                      &fieldNames)) {
+    return false;
+  }
+
+  // Step 8.
+  Rooted<PlainObject*> fields(
+      cx, PrepareTemporalFields(cx, temporalDateTime, fieldNames));
+  if (!fields) {
+    return false;
+  }
+
+  // Steps 9-10.
+  auto result = CalendarMonthDayFromFields(cx, calendar, fields);
+  if (!result) {
+    return false;
+  }
+
+  args.rval().setObject(*result);
+  return true;
+}
+
+/**
+ * Temporal.ZonedDateTime.prototype.toPlainMonthDay ( )
+ */
+static bool ZonedDateTime_toPlainMonthDay(JSContext* cx, unsigned argc,
+                                          Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_toPlainMonthDay>(
+      cx, args);
+}
+
+/**
+ * Temporal.ZonedDateTime.prototype.getISOFields ( )
+ */
+static bool ZonedDateTime_getISOFields(JSContext* cx, const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  auto epochInstant = ToInstant(zonedDateTime);
+
+  // Step 3.
+  Rooted<IdValueVector> fields(cx, IdValueVector(cx));
+
+  // Step 4.
+  Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
+
+  // Step 6. (Reordered)
+  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+
+  // Step 5.
+  Rooted<InstantObject*> instant(cx, CreateTemporalInstant(cx, epochInstant));
+  if (!instant) {
+    return false;
+  }
+
+  // Step 7.
+  PlainDateTime temporalDateTime;
+  if (!js::temporal::GetPlainDateTimeFor(cx, timeZone, instant,
+                                         &temporalDateTime)) {
+    return false;
+  }
+
+  // Step 8.
+  Rooted<JSString*> offset(cx, GetOffsetStringFor(cx, timeZone, instant));
+  if (!offset) {
+    return false;
+  }
+
+  // Step 9.
+  if (!fields.emplaceBack(NameToId(cx->names().calendar),
+                          ObjectValue(*calendar))) {
+    return false;
+  }
+
+  // Step 10.
+  if (!fields.emplaceBack(NameToId(cx->names().isoDay),
+                          Int32Value(temporalDateTime.date.day))) {
+    return false;
+  }
+
+  // Step 11.
+  if (!fields.emplaceBack(NameToId(cx->names().isoHour),
+                          Int32Value(temporalDateTime.time.hour))) {
+    return false;
+  }
+
+  // Step 12.
+  if (!fields.emplaceBack(NameToId(cx->names().isoMicrosecond),
+                          Int32Value(temporalDateTime.time.microsecond))) {
+    return false;
+  }
+
+  // Step 13.
+  if (!fields.emplaceBack(NameToId(cx->names().isoMillisecond),
+                          Int32Value(temporalDateTime.time.millisecond))) {
+    return false;
+  }
+
+  // Step 14.
+  if (!fields.emplaceBack(NameToId(cx->names().isoMinute),
+                          Int32Value(temporalDateTime.time.minute))) {
+    return false;
+  }
+
+  // Step 15.
+  if (!fields.emplaceBack(NameToId(cx->names().isoMonth),
+                          Int32Value(temporalDateTime.date.month))) {
+    return false;
+  }
+
+  // Step 16.
+  if (!fields.emplaceBack(NameToId(cx->names().isoNanosecond),
+                          Int32Value(temporalDateTime.time.nanosecond))) {
+    return false;
+  }
+
+  // Step 17.
+  if (!fields.emplaceBack(NameToId(cx->names().isoSecond),
+                          Int32Value(temporalDateTime.time.second))) {
+    return false;
+  }
+
+  // Step 18.
+  if (!fields.emplaceBack(NameToId(cx->names().isoYear),
+                          Int32Value(temporalDateTime.date.year))) {
+    return false;
+  }
+
+  // Step 19.
+  if (!fields.emplaceBack(NameToId(cx->names().offset), StringValue(offset))) {
+    return false;
+  }
+
+  // Step 20.
+  if (!fields.emplaceBack(NameToId(cx->names().timeZone),
+                          ObjectValue(*timeZone))) {
+    return false;
+  }
+
+  // Step 21.
+  auto* obj =
+      NewPlainObjectWithUniqueNames(cx, fields.begin(), fields.length());
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
+/**
+ * Temporal.ZonedDateTime.prototype.getISOFields ( )
+ */
+static bool ZonedDateTime_getISOFields(JSContext* cx, unsigned argc,
+                                       Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_getISOFields>(
+      cx, args);
+}
+
 const JSClass ZonedDateTimeObject::class_ = {
     "Temporal.ZonedDateTime",
     JSCLASS_HAS_RESERVED_SLOTS(ZonedDateTimeObject::SLOT_COUNT) |
@@ -470,6 +841,13 @@ static const JSFunctionSpec ZonedDateTime_prototype_methods[] = {
     JS_FN("toLocaleString", ZonedDateTime_toLocaleString, 0, 0),
     JS_FN("toJSON", ZonedDateTime_toJSON, 0, 0),
     JS_FN("valueOf", ZonedDateTime_valueOf, 0, 0),
+    JS_FN("toInstant", ZonedDateTime_toInstant, 0, 0),
+    JS_FN("toPlainDate", ZonedDateTime_toPlainDate, 0, 0),
+    JS_FN("toPlainTime", ZonedDateTime_toPlainTime, 0, 0),
+    JS_FN("toPlainDateTime", ZonedDateTime_toPlainDateTime, 0, 0),
+    JS_FN("toPlainYearMonth", ZonedDateTime_toPlainYearMonth, 0, 0),
+    JS_FN("toPlainMonthDay", ZonedDateTime_toPlainMonthDay, 0, 0),
+    JS_FN("getISOFields", ZonedDateTime_getISOFields, 0, 0),
     JS_FS_END,
 };
 
