@@ -5,7 +5,6 @@
 "use strict";
 
 async function runTests(browser, accDoc) {
-  await waitForImageMap(browser, accDoc);
   const dpr = await getContentDPR(browser);
 
   await testChildAtPoint(
@@ -60,7 +59,9 @@ async function runTests(browser, accDoc) {
   await testChildAtPoint(dpr, 1, 1, area, area, area);
 
   info("Test image maps. Their children are not in the layout tree.");
+  await waitForImageMap(browser, accDoc);
   const imgmap = findAccessibleChildByID(accDoc, "imgmap");
+  ok(imgmap, "Image map exists");
   const theLetterA = imgmap.firstChild;
   await hitTest(browser, imgmap, theLetterA, theLetterA);
   await hitTest(
