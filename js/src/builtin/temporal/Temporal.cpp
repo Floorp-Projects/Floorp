@@ -248,6 +248,126 @@ bool js::temporal::GetMethodForCall(JSContext* cx, Handle<JSObject*> object,
   return true;
 }
 
+/**
+ * CopyDataProperties ( target, source, excludedKeys [ , excludedValues ] )
+ *
+ * Implementation when |excludedKeys| and |excludedValues| are both empty lists.
+ */
+bool js::temporal::CopyDataProperties(JSContext* cx,
+                                      JS::Handle<PlainObject*> target,
+                                      JS::Handle<JSObject*> source) {
+  // Optimization for the common case when |source| is a native object.
+  if (source->is<NativeObject>()) {
+    bool optimized = false;
+    if (!CopyDataPropertiesNative(cx, target, source.as<NativeObject>(),
+                                  nullptr, &optimized)) {
+      return false;
+    }
+    if (optimized) {
+      return true;
+    }
+  }
+
+  // Step 1-2. (Not applicable)
+
+  // Step 3.
+  JS::RootedVector<PropertyKey> keys(cx);
+  if (!GetPropertyKeys(
+          cx, source, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, &keys)) {
+    return false;
+  }
+
+  // Step 4.
+  Rooted<mozilla::Maybe<PropertyDescriptor>> desc(cx);
+  Rooted<Value> propValue(cx);
+  for (size_t i = 0; i < keys.length(); i++) {
+    Handle<PropertyKey> key = keys[i];
+
+    // Steps 4.a-b. (Not applicable)
+
+    // Step 4.c.i.
+    if (!GetOwnPropertyDescriptor(cx, source, key, &desc)) {
+      return false;
+    }
+
+    // Step 4.c.ii.
+    if (desc.isNothing() || !desc->enumerable()) {
+      continue;
+    }
+
+    // Step 4.c.ii.1.
+    if (!GetProperty(cx, source, source, key, &propValue)) {
+      return false;
+    }
+
+    // Step 4.c.ii.2. (Not applicable)
+
+    // Step 4.c.ii.3.
+    if (!DefineDataProperty(cx, target, key, propValue)) {
+      return false;
+    }
+  }
+
+  // Step 5.
+  return true;
+}
+
+/**
+ * CopyDataProperties ( target, source, excludedKeys [ , excludedValues ] )
+ *
+ * Implementation when |excludedKeys| is an empty list and |excludedValues| is
+ * the list «undefined».
+ */
+bool js::temporal::CopyDataPropertiesIgnoreUndefined(
+    JSContext* cx, JS::Handle<PlainObject*> target,
+    JS::Handle<JSObject*> source) {
+  // Step 1-2. (Not applicable)
+
+  // Step 3.
+  JS::RootedVector<PropertyKey> keys(cx);
+  if (!GetPropertyKeys(
+          cx, source, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, &keys)) {
+    return false;
+  }
+
+  // Step 4.
+  Rooted<mozilla::Maybe<PropertyDescriptor>> desc(cx);
+  Rooted<Value> propValue(cx);
+  for (size_t i = 0; i < keys.length(); i++) {
+    Handle<PropertyKey> key = keys[i];
+
+    // Steps 4.a-b. (Not applicable)
+
+    // Step 4.c.i.
+    if (!GetOwnPropertyDescriptor(cx, source, key, &desc)) {
+      return false;
+    }
+
+    // Step 4.c.ii.
+    if (desc.isNothing() || !desc->enumerable()) {
+      continue;
+    }
+
+    // Step 4.c.ii.1.
+    if (!GetProperty(cx, source, source, key, &propValue)) {
+      return false;
+    }
+
+    // Step 4.c.ii.2.
+    if (propValue.isUndefined()) {
+      continue;
+    }
+
+    // Step 4.c.ii.3.
+    if (!DefineDataProperty(cx, target, key, propValue)) {
+      return false;
+    }
+  }
+
+  // Step 5.
+  return true;
+}
+
 static JSObject* CreateTemporalObject(JSContext* cx, JSProtoKey key) {
   RootedObject proto(cx, &cx->global()->getObjectPrototype());
 

@@ -835,6 +835,8 @@ MSG_DEF(JSMSG_TEMPORAL_DURATION_INVALID_SIGN,       2, JSEXN_RANGEERR, "duration
 MSG_DEF(JSMSG_TEMPORAL_DURATION_INVALID_NON_FINITE, 2, JSEXN_RANGEERR, "duration value \"{0}\" is {1}")
 MSG_DEF(JSMSG_TEMPORAL_DURATION_NOT_INTEGER,        2, JSEXN_RANGEERR, "{0} isn't a valid {1} duration because it isn't an integer")
 MSG_DEF(JSMSG_TEMPORAL_CALENDAR_INVALID_ID,         1, JSEXN_RANGEERR, "invalid calendar: {0}")
+MSG_DEF(JSMSG_TEMPORAL_CALENDAR_INVALID_FIELD,      1, JSEXN_RANGEERR, "invalid calendar field name \"{0}\"")
+MSG_DEF(JSMSG_TEMPORAL_CALENDAR_DUPLICATE_FIELD,    1, JSEXN_RANGEERR, "duplicate calendar field \"{0}\"")
 MSG_DEF(JSMSG_TEMPORAL_PLAIN_DATE_INVALID,          0, JSEXN_RANGEERR, "year-month-day must be valid iso dates")
 MSG_DEF(JSMSG_TEMPORAL_PLAIN_DATE_INVALID_VALUE,    4, JSEXN_RANGEERR, "date value \"{0}\" not in {1}..{2}: {3}")
 MSG_DEF(JSMSG_TEMPORAL_PLAIN_DATE_TIME_INVALID,     0, JSEXN_RANGEERR, "arguments must be valid ISO date-time values")
