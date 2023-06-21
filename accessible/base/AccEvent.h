@@ -472,10 +472,8 @@ class AccTableChangeEvent : public AccEvent {
 class AccVCChangeEvent : public AccEvent {
  public:
   AccVCChangeEvent(LocalAccessible* aAccessible,
-                   LocalAccessible* aOldAccessible, int32_t aOldStart,
-                   int32_t aOldEnd, LocalAccessible* aNewAccessible,
-                   int32_t aNewStart, int32_t aNewEnd, int16_t aReason,
-                   int16_t aBoundaryType,
+                   LocalAccessible* aOldAccessible,
+                   LocalAccessible* aNewAccessible, int16_t aReason,
                    EIsFromUserInput aIsFromUserInput = eFromUserInput);
 
   virtual ~AccVCChangeEvent() {}
@@ -488,23 +486,13 @@ class AccVCChangeEvent : public AccEvent {
 
   // AccVCChangeEvent
   LocalAccessible* OldAccessible() const { return mOldAccessible; }
-  int32_t OldStartOffset() const { return mOldStart; }
-  int32_t OldEndOffset() const { return mOldEnd; }
   LocalAccessible* NewAccessible() const { return mNewAccessible; }
-  int32_t NewStartOffset() const { return mNewStart; }
-  int32_t NewEndOffset() const { return mNewEnd; }
   int32_t Reason() const { return mReason; }
-  int32_t BoundaryType() const { return mBoundaryType; }
 
  private:
   RefPtr<LocalAccessible> mOldAccessible;
   RefPtr<LocalAccessible> mNewAccessible;
-  int32_t mOldStart;
-  int32_t mNewStart;
-  int32_t mOldEnd;
-  int32_t mNewEnd;
   int16_t mReason;
-  int16_t mBoundaryType;
 };
 
 /**

@@ -135,10 +135,8 @@ class DocAccessibleParent : public RemoteAccessible,
 
   virtual mozilla::ipc::IPCResult RecvVirtualCursorChangeEvent(
       const uint64_t& aID, const uint64_t& aOldPositionID,
-      const int32_t& aOldStartOffset, const int32_t& aOldEndOffset,
-      const uint64_t& aNewPositionID, const int32_t& aNewStartOffset,
-      const int32_t& aNewEndOffset, const int16_t& aReason,
-      const int16_t& aBoundaryType, const bool& aFromUser) override;
+      const uint64_t& aNewPositionID, const int16_t& aReason,
+      const bool& aFromUser) override;
 
   virtual mozilla::ipc::IPCResult RecvScrollingEvent(
       const uint64_t& aID, const uint64_t& aType, const uint32_t& aScrollX,

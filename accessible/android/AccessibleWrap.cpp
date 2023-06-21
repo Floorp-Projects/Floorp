@@ -135,13 +135,8 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
       if (sessionAcc && newPosition) {
         if (vcEvent->Reason() == nsIAccessiblePivot::REASON_POINT) {
           sessionAcc->SendHoverEnterEvent(newPosition);
-        } else if (vcEvent->BoundaryType() == nsIAccessiblePivot::NO_BOUNDARY) {
+        } else {
           sessionAcc->SendAccessibilityFocusedEvent(newPosition);
-        }
-
-        if (vcEvent->BoundaryType() != nsIAccessiblePivot::NO_BOUNDARY) {
-          sessionAcc->SendTextTraversedEvent(
-              newPosition, vcEvent->NewStartOffset(), vcEvent->NewEndOffset());
         }
       }
       break;
@@ -275,8 +270,7 @@ bool AccessibleWrap::PivotTo(int32_t aGranularity, bool aForward,
                                       : nsIAccessiblePivot::REASON_PREV;
     LocalAccessible* localResult = result->AsLocal();
     RefPtr<AccEvent> event = new AccVCChangeEvent(
-        localResult->Document(), this, -1, -1, localResult, -1, -1, reason,
-        nsIAccessiblePivot::NO_BOUNDARY, eFromUserInput);
+        localResult->Document(), this, localResult, reason, eFromUserInput);
     nsEventShell::FireEvent(event);
 
     return true;
@@ -294,9 +288,8 @@ void AccessibleWrap::ExploreByTouch(float aX, float aY) {
 
   if (result && result != this) {
     RefPtr<AccEvent> event =
-        new AccVCChangeEvent(result->Document(), this, -1, -1, result, -1, -1,
-                             nsIAccessiblePivot::REASON_POINT,
-                             nsIAccessiblePivot::NO_BOUNDARY, eFromUserInput);
+        new AccVCChangeEvent(result->Document(), this, result,
+                             nsIAccessiblePivot::REASON_POINT, eFromUserInput);
     nsEventShell::FireEvent(event);
   }
 }
