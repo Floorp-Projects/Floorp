@@ -449,6 +449,8 @@
   MACRO_(pending, pending, "pending")                                          \
   MACRO_(percentSign, percentSign, "percentSign")                              \
   MACRO_(pipeTo, pipeTo, "pipeTo")                                             \
+  MACRO_(plainDate, plainDate, "plainDate")                                    \
+  MACRO_(plainTime, plainTime, "plainTime")                                    \
   MACRO_(plusSign, plusSign, "plusSign")                                       \
   MACRO_(preventAbort, preventAbort, "preventAbort")                           \
   MACRO_(preventCancel, preventCancel, "preventCancel")                        \
