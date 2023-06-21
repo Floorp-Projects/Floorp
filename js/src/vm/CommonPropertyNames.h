@@ -230,6 +230,8 @@
   MACRO_(GetInternalError, GetInternalError, "GetInternalError")               \
   MACRO_(getInternals, getInternals, "getInternals")                           \
   MACRO_(GetModuleNamespace, GetModuleNamespace, "GetModuleNamespace")         \
+  MACRO_(getOffsetNanosecondsFor, getOffsetNanosecondsFor,                     \
+         "getOffsetNanosecondsFor")                                            \
   MACRO_(getOwnPropertyDescriptor, getOwnPropertyDescriptor,                   \
          "getOwnPropertyDescriptor")                                           \
   MACRO_(getOwnPropertyNames, getOwnPropertyNames, "getOwnPropertyNames")      \
