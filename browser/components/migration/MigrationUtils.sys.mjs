@@ -168,6 +168,7 @@ class MigrationUtils {
     OTHERDATA: 0x0040,
     SESSION: 0x0080,
     PAYMENT_METHODS: 0x0100,
+    EXTENSIONS: 0x0200,
   });
 
   /**

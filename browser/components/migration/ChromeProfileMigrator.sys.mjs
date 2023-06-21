@@ -124,6 +124,7 @@ export class ChromeProfileMigrator extends MigratorBase {
           GetBookmarksResource(profileFolder, this.constructor.key),
           GetHistoryResource(profileFolder),
           GetFormdataResource(profileFolder),
+          GetExtensionsResource(aProfile.id),
         ];
         if (lazy.ChromeMigrationUtils.supportsLoginsForPlatform) {
           possibleResourcePromises.push(
@@ -758,6 +759,22 @@ async function GetFormdataResource(aProfileFolder) {
       }
 
       aCallback(true);
+    },
+  };
+}
+
+async function GetExtensionsResource(aProfileId, aBrowserKey = "chrome") {
+  let extensions = await lazy.ChromeMigrationUtils.getExtensionList(aProfileId);
+  if (!extensions.length || aBrowserKey !== "chrome") {
+    return null;
+  }
+
+  return {
+    type: MigrationUtils.resourceTypes.EXTENSIONS,
+    async migrate(callback) {
+      // I think this is where we need to call the Addons API
+      // with the list
+      callback(true);
     },
   };
 }

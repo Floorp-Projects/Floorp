@@ -47,6 +47,10 @@ export const MigrationWizardConstants = Object.freeze({
     PASSWORDS: "PASSWORDS",
     BOOKMARKS: "BOOKMARKS",
     PAYMENT_METHODS: "PAYMENT_METHODS",
+    /* TODO: Enable in bug 1836773, otherwise tests will fail due to
+       missing UI elements
+    */
+    // EXTENSIONS: "EXTENSIONS",
 
     COOKIES: "COOKIES",
     SESSION: "SESSION",
