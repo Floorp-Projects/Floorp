@@ -49,12 +49,15 @@
 using namespace mozilla::ipc;
 
 namespace mozilla {
-
-#define GMP_CHILD_LOG_DEBUG(x, ...)                                   \
-  GMP_LOG_DEBUG("GMPChild[pid=%d] " x, (int)base::GetCurrentProcId(), \
-                ##__VA_ARGS__)
-
 namespace gmp {
+
+#define GMP_CHILD_LOG(loglevel, x, ...) \
+  MOZ_LOG(                              \
+      GetGMPLog(), (loglevel),          \
+      ("GMPChild[pid=%d] " x, (int)base::GetCurrentProcId(), ##__VA_ARGS__))
+
+#define GMP_CHILD_LOG_DEBUG(x, ...) \
+  GMP_CHILD_LOG(LogLevel::Debug, x, ##__VA_ARGS__)
 
 GMPChild::GMPChild()
     : mGMPMessageLoop(MessageLoop::current()), mGMPLoader(nullptr) {
@@ -451,14 +454,12 @@ mozilla::ipc::IPCResult GMPChild::RecvStartPlugin(const nsString& aAdapter) {
     CrashReporter::AnnotateCrashReport(
         CrashReporter::Annotation::GMPLibraryPath,
         NS_ConvertUTF16toUTF8(mPluginPath));
+
 #ifdef XP_WIN
-    return IPC_FAIL(this,
-                    nsPrintfCString("Failed to get lib path with error(%lu).",
-                                    GetLastError())
-                        .get());
-#else
-    return IPC_FAIL(this, "Failed to get lib path.");
+    GMP_CHILD_LOG(LogLevel::Error, "Failed to get lib path with error(%lu).",
+                  GetLastError());
 #endif
+    return IPC_FAIL(this, "Failed to get lib path.");
   }
 
   auto platformAPI = new GMPPlatformAPI();
@@ -483,19 +484,20 @@ mozilla::ipc::IPCResult GMPChild::RecvStartPlugin(const nsString& aAdapter) {
 
   if (!mGMPLoader->Load(libPath.get(), libPath.Length(), platformAPI,
                         adapter)) {
+#ifdef XP_WIN
+
+    NS_WARNING(
+        nsPrintfCString("Failed to load GMP with error(%lu).", GetLastError())
+            .get());
+#else
     NS_WARNING("Failed to load GMP");
+#endif
     delete platformAPI;
     CrashReporter::AnnotateCrashReport(
         CrashReporter::Annotation::GMPLibraryPath,
         NS_ConvertUTF16toUTF8(mPluginPath));
 
-#ifdef XP_WIN
-    return IPC_FAIL(this, nsPrintfCString("Failed to load GMP with error(%lu).",
-                                          GetLastError())
-                              .get());
-#else
     return IPC_FAIL(this, "Failed to load GMP.");
-#endif
   }
 
   return IPC_OK();
