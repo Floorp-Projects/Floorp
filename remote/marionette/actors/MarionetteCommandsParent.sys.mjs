@@ -239,10 +239,9 @@ export class MarionetteCommandsParent extends JSWindowActorParent {
     });
   }
 
-  async performActions(actions, capabilities) {
+  async performActions(actions) {
     return this.sendQuery("MarionetteCommandsParent:performActions", {
       actions,
-      capabilities: capabilities.toJSON(),
     });
   }
 

@@ -466,7 +466,6 @@ export class Capabilities extends Map {
         "moz:shutdownTimeout",
         Services.prefs.getIntPref("toolkit.asyncshutdown.crash_timeout"),
       ],
-      ["moz:useNonSpecCompliantPointerOrigin", false],
       ["moz:webdriverClick", true],
       ["moz:windowless", false],
     ]);
@@ -618,10 +617,11 @@ export class Capabilities extends Map {
           continue;
 
         case "moz:useNonSpecCompliantPointerOrigin":
-          lazy.assert.boolean(
-            v,
-            lazy.pprint`Expected ${k} to be boolean, got ${v}`
-          );
+          if (v !== undefined) {
+            throw new lazy.error.InvalidArgumentError(
+              `Since Firefox 116 the capability ${k} is no longer supported`
+            );
+          }
           break;
 
         case "moz:webdriverClick":
@@ -739,12 +739,6 @@ export class Capabilities extends Map {
         );
 
       case "moz:accessibilityChecks":
-        return lazy.assert.boolean(
-          value,
-          lazy.pprint`Expected ${name} to be a boolean, got ${value}`
-        );
-
-      case "moz:useNonSpecCompliantPointerOrigin":
         return lazy.assert.boolean(
           value,
           lazy.pprint`Expected ${name} to be a boolean, got ${value}`

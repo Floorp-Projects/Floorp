@@ -26,9 +26,7 @@ class InputModule extends WindowGlobalBiDiModule {
   async performActions(options) {
     const { actions } = options;
     if (this.#actionState === null) {
-      this.#actionState = new lazy.action.State({
-        specCompatPointerOrigin: true,
-      });
+      this.#actionState = new lazy.action.State();
     }
 
     await this.#deserializeActionOrigins(actions);

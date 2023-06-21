@@ -81,10 +81,6 @@ export class WebDriverSession {
    *  <dt><code>moz:debuggerAddress</code> (boolean)
    *  <dd>Indicate that the Chrome DevTools Protocol (CDP) has to be enabled.
    *
-   *  <dt><code>moz:useNonSpecCompliantPointerOrigin</code> (boolean)
-   *  <dd>Use the not WebDriver conforming calculation of the pointer origin
-   *   when the origin is an element, and the element center point is used.
-   *
    *  <dt><code>moz:webdriverClick</code> (boolean)
    *  <dd>Use a WebDriver conforming <i>WebDriver::ElementClick</i>.
    * </dl>

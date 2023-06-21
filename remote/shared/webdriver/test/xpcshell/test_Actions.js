@@ -176,7 +176,7 @@ add_task(function test_processPointerMoveActionDefaultOrigin() {
   ];
   const chain = action.Chain.fromJSON(state, chainForTick(inputTickActions));
   // The default is viewport coordinates which have an origin at [0,0] and don't depend on inputSource
-  deepEqual(chain[0][0].origin.getOriginCoordinates(state, null, null), {
+  deepEqual(chain[0][0].origin.getOriginCoordinates(null, null), {
     x: 0,
     y: 0,
   });
@@ -251,7 +251,6 @@ add_task(function test_computePointerDestinationViewport() {
   inputSource.x = "99";
   inputSource.y = "10";
   const target = actionItem.origin.getTargetCoordinates(
-    state,
     inputSource,
     [actionItem.x, actionItem.y],
     null
@@ -277,7 +276,6 @@ add_task(function test_computePointerDestinationPointer() {
   inputSource.x = 10;
   inputSource.y = 99;
   const target = actionItem.origin.getTargetCoordinates(
-    state,
     inputSource,
     [actionItem.x, actionItem.y],
     null

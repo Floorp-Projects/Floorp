@@ -1448,11 +1448,7 @@ GeckoDriver.prototype.performActions = async function (cmd) {
   await this._handleUserPrompts();
 
   const actions = cmd.parameters.actions;
-
-  await this.getActor().performActions(
-    actions,
-    this.currentSession.capabilities
-  );
+  await this.getActor().performActions(actions);
 };
 
 /**
