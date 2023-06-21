@@ -11,13 +11,13 @@ use crate::callbacks::{ItemInfo, ItemKind, MacroParsingBehavior};
 use crate::clang;
 use crate::clang::ClangToken;
 use crate::parse::{ClangSubItemParser, ParseError, ParseResult};
-use cexpr;
+
 use std::io;
 use std::num::Wrapping;
 
 /// The type for a constant variable.
 #[derive(Debug)]
-pub enum VarType {
+pub(crate) enum VarType {
     /// A boolean.
     Bool(bool),
     /// An integer.
@@ -32,11 +32,13 @@ pub enum VarType {
 
 /// A `Var` is our intermediate representation of a variable.
 #[derive(Debug)]
-pub struct Var {
+pub(crate) struct Var {
     /// The name of the variable.
     name: String,
     /// The mangled name of the variable.
     mangled_name: Option<String>,
+    /// The link name of the variable.
+    link_name: Option<String>,
     /// The type of the variable.
     ty: TypeId,
     /// The value of the variable, that needs to be suitable for `ty`.
@@ -47,9 +49,10 @@ pub struct Var {
 
 impl Var {
     /// Construct a new `Var`.
-    pub fn new(
+    pub(crate) fn new(
         name: String,
         mangled_name: Option<String>,
+        link_name: Option<String>,
         ty: TypeId,
         val: Option<VarType>,
         is_const: bool,
@@ -58,6 +61,7 @@ impl Var {
         Var {
             name,
             mangled_name,
+            link_name,
             ty,
             val,
             is_const,
@@ -65,28 +69,33 @@ impl Var {
     }
 
     /// Is this variable `const` qualified?
-    pub fn is_const(&self) -> bool {
+    pub(crate) fn is_const(&self) -> bool {
         self.is_const
     }
 
     /// The value of this constant variable, if any.
-    pub fn val(&self) -> Option<&VarType> {
+    pub(crate) fn val(&self) -> Option<&VarType> {
         self.val.as_ref()
     }
 
     /// Get this variable's type.
-    pub fn ty(&self) -> TypeId {
+    pub(crate) fn ty(&self) -> TypeId {
         self.ty
     }
 
     /// Get this variable's name.
-    pub fn name(&self) -> &str {
+    pub(crate) fn name(&self) -> &str {
         &self.name
     }
 
     /// Get this variable's mangled name.
-    pub fn mangled_name(&self) -> Option<&str> {
+    pub(crate) fn mangled_name(&self) -> Option<&str> {
         self.mangled_name.as_deref()
+    }
+
+    /// Get this variable's link name.
+    pub fn link_name(&self) -> Option<&str> {
+        self.link_name.as_deref()
     }
 }
 
@@ -213,7 +222,7 @@ impl ClangSubItemParser for Var {
 
                 if previously_defined {
                     let name = String::from_utf8(id).unwrap();
-                    warn!("Duplicated macro definition: {}", name);
+                    duplicated_macro_diagnostic(&name, cursor.location(), ctx);
                     return Err(ParseError::Continue);
                 }
 
@@ -267,7 +276,7 @@ impl ClangSubItemParser for Var {
                 let ty = Item::builtin_type(type_kind, true, ctx);
 
                 Ok(ParseResult::New(
-                    Var::new(name, None, ty, Some(val), true),
+                    Var::new(name, None, None, ty, Some(val), true),
                     Some(cursor),
                 ))
             }
@@ -290,6 +299,13 @@ impl ClangSubItemParser for Var {
                     warn!("Empty constant name?");
                     return Err(ParseError::Continue);
                 }
+
+                let link_name = ctx.options().last_callback(|callbacks| {
+                    callbacks.generated_link_name_override(ItemInfo {
+                        name: name.as_str(),
+                        kind: ItemKind::Var,
+                    })
+                });
 
                 let ty = cursor.cur_type();
 
@@ -360,7 +376,8 @@ impl ClangSubItemParser for Var {
                 };
 
                 let mangling = cursor_mangling(ctx, &cursor);
-                let var = Var::new(name, mangling, ty, value, is_const);
+                let var =
+                    Var::new(name, mangling, link_name, ty, value, is_const);
 
                 Ok(ParseResult::New(var, Some(cursor)))
             }
@@ -422,4 +439,50 @@ fn get_integer_literal_from_cursor(cursor: &clang::Cursor) -> Option<i64> {
         }
     });
     value
+}
+
+fn duplicated_macro_diagnostic(
+    macro_name: &str,
+    _location: crate::clang::SourceLocation,
+    _ctx: &BindgenContext,
+) {
+    warn!("Duplicated macro definition: {}", macro_name);
+
+    #[cfg(feature = "experimental")]
+    // FIXME (pvdrz & amanjeev): This diagnostic message shows way too often to be actually
+    // useful. We have to change the logic where this function is called to be able to emit this
+    // message only when the duplication is an actuall issue.
+    //
+    // If I understood correctly, `bindgen` ignores all `#undef` directives. Meaning that this:
+    // ```c
+    // #define FOO 1
+    // #undef FOO
+    // #define FOO 2
+    // ```
+    //
+    // Will trigger this message even though there's nothing wrong with it.
+    #[allow(clippy::overly_complex_bool_expr)]
+    if false && _ctx.options().emit_diagnostics {
+        use crate::diagnostics::{get_line, Diagnostic, Level, Slice};
+        use std::borrow::Cow;
+
+        let mut slice = Slice::default();
+        let mut source = Cow::from(macro_name);
+
+        let (file, line, col, _) = _location.location();
+        if let Some(filename) = file.name() {
+            if let Ok(Some(code)) = get_line(&filename, line) {
+                source = code.into();
+            }
+            slice.with_location(filename, line, col);
+        }
+
+        slice.with_source(source);
+
+        Diagnostic::default()
+            .with_title("Duplicated macro definition.", Level::Warn)
+            .add_slice(slice)
+            .add_annotation("This macro had a duplicate.", Level::Note)
+            .display();
+    }
 }

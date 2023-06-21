@@ -12,14 +12,14 @@ use std::collections::{BTreeMap, VecDeque};
 /// The `from` is left implicit: it is the concrete `Trace` implementer which
 /// yielded this outgoing edge.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Edge {
+pub(crate) struct Edge {
     to: ItemId,
     kind: EdgeKind,
 }
 
 impl Edge {
     /// Construct a new edge whose referent is `to` and is of the given `kind`.
-    pub fn new(to: ItemId, kind: EdgeKind) -> Edge {
+    pub(crate) fn new(to: ItemId, kind: EdgeKind) -> Edge {
         Edge { to, kind }
     }
 }
@@ -33,7 +33,7 @@ impl From<Edge> for ItemId {
 /// The kind of edge reference. This is useful when we wish to only consider
 /// certain kinds of edges for a particular traversal or analysis.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum EdgeKind {
+pub(crate) enum EdgeKind {
     /// A generic, catch-all edge.
     Generic,
 
@@ -182,12 +182,13 @@ pub enum EdgeKind {
 ///
 /// The predicate must return true if the traversal should follow this edge
 /// and visit everything that is reachable through it.
-pub type TraversalPredicate = for<'a> fn(&'a BindgenContext, Edge) -> bool;
+pub(crate) type TraversalPredicate =
+    for<'a> fn(&'a BindgenContext, Edge) -> bool;
 
 /// A `TraversalPredicate` implementation that follows all edges, and therefore
 /// traversals using this predicate will see the whole IR graph reachable from
 /// the traversal's roots.
-pub fn all_edges(_: &BindgenContext, _: Edge) -> bool {
+pub(crate) fn all_edges(_: &BindgenContext, _: Edge) -> bool {
     true
 }
 
@@ -196,14 +197,14 @@ pub fn all_edges(_: &BindgenContext, _: Edge) -> bool {
 /// will only visit the traversal's roots and their inner types. This is used
 /// in no-recursive-allowlist mode, where inner types such as anonymous
 /// structs/unions still need to be processed.
-pub fn only_inner_type_edges(_: &BindgenContext, edge: Edge) -> bool {
+pub(crate) fn only_inner_type_edges(_: &BindgenContext, edge: Edge) -> bool {
     edge.kind == EdgeKind::InnerType
 }
 
 /// A `TraversalPredicate` implementation that only follows edges to items that
 /// are enabled for code generation. This lets us skip considering items for
 /// which are not reachable from code generation.
-pub fn codegen_edges(ctx: &BindgenContext, edge: Edge) -> bool {
+pub(crate) fn codegen_edges(ctx: &BindgenContext, edge: Edge) -> bool {
     let cc = &ctx.options().codegen_config;
     match edge.kind {
         EdgeKind::Generic => {
@@ -233,7 +234,7 @@ pub fn codegen_edges(ctx: &BindgenContext, edge: Edge) -> bool {
 /// The storage for the set of items that have been seen (although their
 /// outgoing edges might not have been fully traversed yet) in an active
 /// traversal.
-pub trait TraversalStorage<'ctx> {
+pub(crate) trait TraversalStorage<'ctx> {
     /// Construct a new instance of this TraversalStorage, for a new traversal.
     fn new(ctx: &'ctx BindgenContext) -> Self;
 
@@ -259,7 +260,7 @@ impl<'ctx> TraversalStorage<'ctx> for ItemSet {
 /// each item. This is useful for providing debug assertions with meaningful
 /// diagnostic messages about dangling items.
 #[derive(Debug)]
-pub struct Paths<'ctx>(BTreeMap<ItemId, ItemId>, &'ctx BindgenContext);
+pub(crate) struct Paths<'ctx>(BTreeMap<ItemId, ItemId>, &'ctx BindgenContext);
 
 impl<'ctx> TraversalStorage<'ctx> for Paths<'ctx> {
     fn new(ctx: &'ctx BindgenContext) -> Self {
@@ -300,7 +301,7 @@ impl<'ctx> TraversalStorage<'ctx> for Paths<'ctx> {
 /// Using a FIFO queue with a traversal will yield a breadth-first traversal,
 /// while using a LIFO queue will result in a depth-first traversal of the IR
 /// graph.
-pub trait TraversalQueue: Default {
+pub(crate) trait TraversalQueue: Default {
     /// Add a newly discovered item to the queue.
     fn push(&mut self, item: ItemId);
 
@@ -329,7 +330,7 @@ impl TraversalQueue for VecDeque<ItemId> {
 }
 
 /// Something that can receive edges from a `Trace` implementation.
-pub trait Tracer {
+pub(crate) trait Tracer {
     /// Note an edge between items. Called from within a `Trace` implementation.
     fn visit_kind(&mut self, item: ItemId, kind: EdgeKind);
 
@@ -351,7 +352,7 @@ where
 /// Trace all of the outgoing edges to other items. Implementations should call
 /// one of `tracer.visit(edge)` or `tracer.visit_kind(edge, EdgeKind::Whatever)`
 /// for each of their outgoing edges.
-pub trait Trace {
+pub(crate) trait Trace {
     /// If a particular type needs extra information beyond what it has in
     /// `self` and `context` to find its referenced items, its implementation
     /// can define this associated type, forcing callers to pass the needed
@@ -371,7 +372,7 @@ pub trait Trace {
 /// An graph traversal of the transitive closure of references between items.
 ///
 /// See `BindgenContext::allowlisted_items` for more information.
-pub struct ItemTraversal<'ctx, Storage, Queue>
+pub(crate) struct ItemTraversal<'ctx, Storage, Queue>
 where
     Storage: TraversalStorage<'ctx>,
     Queue: TraversalQueue,
@@ -397,7 +398,7 @@ where
     Queue: TraversalQueue,
 {
     /// Begin a new traversal, starting from the given roots.
-    pub fn new<R>(
+    pub(crate) fn new<R>(
         ctx: &'ctx BindgenContext,
         roots: R,
         predicate: TraversalPredicate,
@@ -474,5 +475,5 @@ where
 ///
 /// See `BindgenContext::assert_no_dangling_item_traversal` for more
 /// information.
-pub type AssertNoDanglingItemsTraversal<'ctx> =
+pub(crate) type AssertNoDanglingItemsTraversal<'ctx> =
     ItemTraversal<'ctx, Paths<'ctx>, VecDeque<ItemId>>;

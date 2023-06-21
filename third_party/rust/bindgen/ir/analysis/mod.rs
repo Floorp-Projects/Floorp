@@ -39,19 +39,24 @@
 
 // Re-export individual analyses.
 mod template_params;
-pub use self::template_params::UsedTemplateParameters;
+pub(crate) use self::template_params::UsedTemplateParameters;
 mod derive;
-pub use self::derive::{as_cannot_derive_set, CannotDerive, DeriveTrait};
+pub use self::derive::DeriveTrait;
+pub(crate) use self::derive::{as_cannot_derive_set, CannotDerive};
 mod has_vtable;
-pub use self::has_vtable::{HasVtable, HasVtableAnalysis, HasVtableResult};
+pub(crate) use self::has_vtable::{
+    HasVtable, HasVtableAnalysis, HasVtableResult,
+};
 mod has_destructor;
-pub use self::has_destructor::HasDestructorAnalysis;
+pub(crate) use self::has_destructor::HasDestructorAnalysis;
 mod has_type_param_in_array;
-pub use self::has_type_param_in_array::HasTypeParameterInArray;
+pub(crate) use self::has_type_param_in_array::HasTypeParameterInArray;
 mod has_float;
-pub use self::has_float::HasFloat;
+pub(crate) use self::has_float::HasFloat;
 mod sizedness;
-pub use self::sizedness::{Sizedness, SizednessAnalysis, SizednessResult};
+pub(crate) use self::sizedness::{
+    Sizedness, SizednessAnalysis, SizednessResult,
+};
 
 use crate::ir::context::{BindgenContext, ItemId};
 
@@ -73,7 +78,7 @@ use std::ops;
 ///
 /// For a simple example analysis, see the `ReachableFrom` type in the `tests`
 /// module below.
-pub trait MonotoneFramework: Sized + fmt::Debug {
+pub(crate) trait MonotoneFramework: Sized + fmt::Debug {
     /// The type of node in our dependency graph.
     ///
     /// This is just generic (and not `ItemId`) so that we can easily unit test
@@ -121,7 +126,7 @@ pub trait MonotoneFramework: Sized + fmt::Debug {
 /// Whether an analysis's `constrain` function modified the incremental results
 /// or not.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum ConstrainResult {
+pub(crate) enum ConstrainResult {
     /// The incremental results were updated, and the fix-point computation
     /// should continue.
     Changed,
@@ -155,7 +160,7 @@ impl ops::BitOrAssign for ConstrainResult {
 }
 
 /// Run an analysis in the monotone framework.
-pub fn analyze<Analysis>(extra: Analysis::Extra) -> Analysis::Output
+pub(crate) fn analyze<Analysis>(extra: Analysis::Extra) -> Analysis::Output
 where
     Analysis: MonotoneFramework,
 {
@@ -174,7 +179,7 @@ where
 }
 
 /// Generate the dependency map for analysis
-pub fn generate_dependencies<F>(
+pub(crate) fn generate_dependencies<F>(
     ctx: &BindgenContext,
     consider_edge: F,
 ) -> HashMap<ItemId, Vec<ItemId>>

@@ -77,28 +77,28 @@ use crate::clang;
 /// The following table depicts the results of each trait method when invoked on
 /// each of the declarations above:
 ///
-/// +------+----------------------+--------------------------+------------------------+----
-/// |Decl. | self_template_params | num_self_template_params | all_template_parameters| ...
-/// +------+----------------------+--------------------------+------------------------+----
-/// |Foo   | [T, U]               | 2                        | [T, U]                 | ...
-/// |Bar   | [V]                  | 1                        | [T, U, V]              | ...
-/// |Inner | []                   | 0                        | [T, U]                 | ...
-/// |Lol   | [W]                  | 1                        | [T, U, W]              | ...
-/// |Wtf   | [X]                  | 1                        | [T, U, X]              | ...
-/// |Qux   | []                   | 0                        | []                     | ...
+/// +------+----------------------+--------------------------+-------------------------+----
+/// |Decl. | self_template_params | num_self_template_params | all_template_parameters | ...
+/// +------+----------------------+--------------------------+-------------------------+----
+/// |Foo   | T, U                 | 2                        | T, U                    | ...
+/// |Bar   | V                    | 1                        | T, U, V                 | ...
+/// |Inner |                      | 0                        | T, U                    | ...
+/// |Lol   | W                    | 1                        | T, U, W                 | ...
+/// |Wtf   | X                    | 1                        | T, U, X                 | ...
+/// |Qux   |                      | 0                        |                         | ...
 /// +------+----------------------+--------------------------+------------------------+----
 ///
 /// ----+------+-----+----------------------+
 /// ... |Decl. | ... | used_template_params |
 /// ----+------+-----+----------------------+
-/// ... |Foo   | ... | [T, U]               |
-/// ... |Bar   | ... | [V]                  |
-/// ... |Inner | ... | []                   |
-/// ... |Lol   | ... | [T]                  |
-/// ... |Wtf   | ... | [T]                  |
-/// ... |Qux   | ... | []                   |
+/// ... |Foo   | ... | T, U                 |
+/// ... |Bar   | ... | V                    |
+/// ... |Inner | ... |                      |
+/// ... |Lol   | ... | T                    |
+/// ... |Wtf   | ... | T                    |
+/// ... |Qux   | ... |                      |
 /// ----+------+-----+----------------------+
-pub trait TemplateParameters: Sized {
+pub(crate) trait TemplateParameters: Sized {
     /// Get the set of `ItemId`s that make up this template declaration's free
     /// template parameters.
     ///
@@ -163,11 +163,11 @@ pub trait TemplateParameters: Sized {
 }
 
 /// A trait for things which may or may not be a named template type parameter.
-pub trait AsTemplateParam {
+pub(crate) trait AsTemplateParam {
     /// Any extra information the implementor might need to make this decision.
     type Extra;
 
-    /// Convert this thing to the item id of a named template type parameter.
+    /// Convert this thing to the item ID of a named template type parameter.
     fn as_template_param(
         &self,
         ctx: &BindgenContext,
@@ -186,7 +186,7 @@ pub trait AsTemplateParam {
 
 /// A concrete instantiation of a generic template.
 #[derive(Clone, Debug)]
-pub struct TemplateInstantiation {
+pub(crate) struct TemplateInstantiation {
     /// The template definition which this is instantiating.
     definition: TypeId,
     /// The concrete template arguments, which will be substituted in the
@@ -196,7 +196,7 @@ pub struct TemplateInstantiation {
 
 impl TemplateInstantiation {
     /// Construct a new template instantiation from the given parts.
-    pub fn new<I>(definition: TypeId, args: I) -> TemplateInstantiation
+    pub(crate) fn new<I>(definition: TypeId, args: I) -> TemplateInstantiation
     where
         I: IntoIterator<Item = TypeId>,
     {
@@ -207,17 +207,17 @@ impl TemplateInstantiation {
     }
 
     /// Get the template definition for this instantiation.
-    pub fn template_definition(&self) -> TypeId {
+    pub(crate) fn template_definition(&self) -> TypeId {
         self.definition
     }
 
     /// Get the concrete template arguments used in this instantiation.
-    pub fn template_arguments(&self) -> &[TypeId] {
+    pub(crate) fn template_arguments(&self) -> &[TypeId] {
         &self.args[..]
     }
 
     /// Parse a `TemplateInstantiation` from a clang `Type`.
-    pub fn from_ty(
+    pub(crate) fn from_ty(
         ty: &clang::Type,
         ctx: &mut BindgenContext,
     ) -> Option<TemplateInstantiation> {

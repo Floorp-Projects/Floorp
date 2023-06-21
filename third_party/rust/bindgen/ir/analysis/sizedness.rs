@@ -25,7 +25,7 @@ use std::{cmp, ops};
 /// We initially assume that all types are `ZeroSized` and then update our
 /// understanding as we learn more about each type.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub enum SizednessResult {
+pub(crate) enum SizednessResult {
     /// The type is zero-sized.
     ///
     /// This means that if it is a C++ type, and is not being used as a base
@@ -52,7 +52,7 @@ pub enum SizednessResult {
     /// have an `_address` byte inserted.
     ///
     /// We don't properly handle this situation correctly right now:
-    /// https://github.com/rust-lang/rust-bindgen/issues/586
+    /// <https://github.com/rust-lang/rust-bindgen/issues/586>
     DependsOnTypeParam,
 
     /// Has some size that is known to be greater than zero. That doesn't mean
@@ -70,7 +70,7 @@ impl Default for SizednessResult {
 
 impl SizednessResult {
     /// Take the least upper bound of `self` and `rhs`.
-    pub fn join(self, rhs: Self) -> Self {
+    pub(crate) fn join(self, rhs: Self) -> Self {
         cmp::max(self, rhs)
     }
 }
@@ -102,7 +102,7 @@ impl ops::BitOrAssign for SizednessResult {
 ///
 /// * For type parameters, `DependsOnTypeParam` is assigned.
 #[derive(Debug)]
-pub struct SizednessAnalysis<'ctx> {
+pub(crate) struct SizednessAnalysis<'ctx> {
     ctx: &'ctx BindgenContext,
     dependencies: HashMap<TypeId, Vec<TypeId>>,
     // Incremental results of the analysis. Missing entries are implicitly
@@ -346,11 +346,11 @@ impl<'ctx> From<SizednessAnalysis<'ctx>> for HashMap<TypeId, SizednessResult> {
     }
 }
 
-/// A convenience trait for querying whether some type or id is sized.
+/// A convenience trait for querying whether some type or ID is sized.
 ///
 /// This is not for _computing_ whether the thing is sized, it is for looking up
 /// the results of the `Sizedness` analysis's computations for a specific thing.
-pub trait Sizedness {
+pub(crate) trait Sizedness {
     /// Get the sizedness of this type.
     fn sizedness(&self, ctx: &BindgenContext) -> SizednessResult;
 

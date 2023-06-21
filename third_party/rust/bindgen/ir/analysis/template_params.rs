@@ -14,7 +14,7 @@
 //! If we generate the naive Rust code for this alias, we get:
 //!
 //! ```ignore
-//! pub type Fml<T> = ::std::os::raw::int;
+//! pub(crate) type Fml<T> = ::std::os::raw::int;
 //! ```
 //!
 //! And this is rejected by `rustc` due to the unused type parameter.
@@ -146,7 +146,7 @@ use crate::{HashMap, HashSet};
 /// specially; see `constrain_instantiation_of_blocklisted_template` and its
 /// documentation for details.
 #[derive(Debug, Clone)]
-pub struct UsedTemplateParameters<'ctx> {
+pub(crate) struct UsedTemplateParameters<'ctx> {
     ctx: &'ctx BindgenContext,
 
     // The Option is only there for temporary moves out of the hash map. See the
@@ -329,7 +329,7 @@ impl<'ctx> UsedTemplateParameters<'ctx> {
         }
     }
 
-    /// The join operation on our lattice: the set union of all of this id's
+    /// The join operation on our lattice: the set union of all of this ID's
     /// successors.
     fn constrain_join(&self, used_by_this_id: &mut ItemSet, item: &Item) {
         trace!("    other item: join with successors' usage");
@@ -459,7 +459,7 @@ impl<'ctx> MonotoneFramework for UsedTemplateParameters<'ctx> {
             }
         }
 
-        if cfg!(feature = "testing_only_extra_assertions") {
+        if cfg!(feature = "__testing_only_extra_assertions") {
             // Invariant: The `used` map has an entry for every allowlisted
             // item, as well as all explicitly blocklisted items that are
             // reachable from allowlisted items.
@@ -518,7 +518,7 @@ impl<'ctx> MonotoneFramework for UsedTemplateParameters<'ctx> {
         // exiting this method.
         extra_assert!(self.used.values().all(|v| v.is_some()));
 
-        // Take the set for this id out of the hash map while we mutate it based
+        // Take the set for this ID out of the hash map while we mutate it based
         // on other hash map entries. We *must* put it back into the hash map at
         // the end of this method. This allows us to side-step HashMap's lack of
         // an analog to slice::split_at_mut.

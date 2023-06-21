@@ -1,7 +1,7 @@
 //! Contains code for selecting features
 
-#![deny(missing_docs)]
 #![deny(unused_extern_crates)]
+#![deny(clippy::missing_docs_in_private_items)]
 #![allow(deprecated)]
 
 use std::io;
@@ -128,9 +128,15 @@ macro_rules! rust_target_base {
             /// Rust stable 1.47
             /// * `larger_arrays` ([Tracking issue](https://github.com/rust-lang/rust/pull/74060))
             => Stable_1_47 => 1.47;
+            /// Rust stable 1.59
+            /// * `CStr::from_bytes_with_nul_unchecked` in `const` contexts ([PR](https://github.com/rust-lang/rust/pull/54745))
+            => Stable_1_59 => 1.59;
             /// Rust stable 1.64
             ///  * `core_ffi_c` ([Tracking issue](https://github.com/rust-lang/rust/issues/94501))
             => Stable_1_64 => 1.64;
+            /// Rust stable 1.68
+            ///  * `abi_efiapi` calling convention ([Tracking issue](https://github.com/rust-lang/rust/issues/65815))
+            => Stable_1_68 => 1.68;
             /// Nightly rust
             ///  * `thiscall` calling convention ([Tracking issue](https://github.com/rust-lang/rust/issues/42202))
             ///  * `vectorcall` calling convention (no tracking issue)
@@ -144,7 +150,7 @@ rust_target_base!(rust_target_def);
 rust_target_base!(rust_target_values_def);
 
 /// Latest stable release of Rust
-pub const LATEST_STABLE_RUST: RustTarget = RustTarget::Stable_1_64;
+pub const LATEST_STABLE_RUST: RustTarget = RustTarget::Stable_1_68;
 
 /// Create RustFeatures struct definition, new(), and a getter for each field
 macro_rules! rust_feature_def {
@@ -238,8 +244,14 @@ rust_feature_def!(
     Stable_1_47 {
         => larger_arrays;
     }
+    Stable_1_59 {
+        => const_cstr;
+    }
     Stable_1_64 {
         => core_ffi_c;
+    }
+    Stable_1_68 {
+        => abi_efiapi;
     }
     Nightly {
         => thiscall_abi;

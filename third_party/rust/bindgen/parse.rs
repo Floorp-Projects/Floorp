@@ -1,4 +1,5 @@
 //! Common traits and types related to parsing our IR from Clang cursors.
+#![deny(clippy::missing_docs_in_private_items)]
 
 use crate::clang;
 use crate::ir::context::{BindgenContext, ItemId};
@@ -6,7 +7,7 @@ use crate::ir::context::{BindgenContext, ItemId};
 /// Not so much an error in the traditional sense, but a control flow message
 /// when walking over Clang's AST with a cursor.
 #[derive(Debug)]
-pub enum ParseError {
+pub(crate) enum ParseError {
     /// Recurse down the current AST node's children.
     Recurse,
     /// Continue on to the next sibling AST node, or back up to the parent's
@@ -16,7 +17,7 @@ pub enum ParseError {
 
 /// The result of parsing a Clang AST node.
 #[derive(Debug)]
-pub enum ParseResult<T> {
+pub(crate) enum ParseResult<T> {
     /// We've already resolved this item before, here is the extant `ItemId` for
     /// it.
     AlreadyResolved(ItemId),
@@ -28,7 +29,7 @@ pub enum ParseResult<T> {
 
 /// An intermediate representation "sub-item" (i.e. one of the types contained
 /// inside an `ItemKind` variant) that can be parsed from a Clang cursor.
-pub trait ClangSubItemParser: Sized {
+pub(crate) trait ClangSubItemParser: Sized {
     /// Attempt to parse this type from the given cursor.
     ///
     /// The fact that is a reference guarantees it's held by the context, and

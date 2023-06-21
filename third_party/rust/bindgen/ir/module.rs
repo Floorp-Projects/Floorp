@@ -6,11 +6,12 @@ use super::item::ItemSet;
 use crate::clang;
 use crate::parse::{ClangSubItemParser, ParseError, ParseResult};
 use crate::parse_one;
+
 use std::io;
 
 /// Whether this module is inline or not.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum ModuleKind {
+pub(crate) enum ModuleKind {
     /// This module is not inline.
     Normal,
     /// This module is inline, as in `inline namespace foo {}`.
@@ -19,7 +20,7 @@ pub enum ModuleKind {
 
 /// A module, as in, a C++ namespace.
 #[derive(Clone, Debug)]
-pub struct Module {
+pub(crate) struct Module {
     /// The name of the module, or none if it's anonymous.
     name: Option<String>,
     /// The kind of module this is.
@@ -30,7 +31,7 @@ pub struct Module {
 
 impl Module {
     /// Construct a new `Module`.
-    pub fn new(name: Option<String>, kind: ModuleKind) -> Self {
+    pub(crate) fn new(name: Option<String>, kind: ModuleKind) -> Self {
         Module {
             name,
             kind,
@@ -39,22 +40,22 @@ impl Module {
     }
 
     /// Get this module's name.
-    pub fn name(&self) -> Option<&str> {
+    pub(crate) fn name(&self) -> Option<&str> {
         self.name.as_deref()
     }
 
     /// Get a mutable reference to this module's children.
-    pub fn children_mut(&mut self) -> &mut ItemSet {
+    pub(crate) fn children_mut(&mut self) -> &mut ItemSet {
         &mut self.children
     }
 
     /// Get this module's children.
-    pub fn children(&self) -> &ItemSet {
+    pub(crate) fn children(&self) -> &ItemSet {
         &self.children
     }
 
     /// Whether this namespace is inline.
-    pub fn is_inline(&self) -> bool {
+    pub(crate) fn is_inline(&self) -> bool {
         self.kind == ModuleKind::Inline
     }
 }
@@ -82,8 +83,8 @@ impl ClangSubItemParser for Module {
             CXCursor_Namespace => {
                 let module_id = ctx.module(cursor);
                 ctx.with_module(module_id, |ctx| {
-                    cursor.visit(|cursor| {
-                        parse_one(ctx, cursor, Some(module_id.into()))
+                    cursor.visit_sorted(ctx, |ctx, child| {
+                        parse_one(ctx, child, Some(module_id.into()))
                     })
                 });
 

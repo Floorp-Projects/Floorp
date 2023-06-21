@@ -12,7 +12,7 @@ pub enum IntKind {
     /// An `unsigned char`.
     UChar,
 
-    /// An `wchar_t`.
+    /// A `wchar_t`.
     WChar,
 
     /// A platform-dependent `char` type, with the signedness support.
@@ -87,7 +87,7 @@ pub enum IntKind {
 
 impl IntKind {
     /// Is this integral type signed?
-    pub fn is_signed(&self) -> bool {
+    pub(crate) fn is_signed(&self) -> bool {
         use self::IntKind::*;
         match *self {
             // TODO(emilio): wchar_t can in theory be signed, but we have no way
@@ -108,7 +108,7 @@ impl IntKind {
     /// If this type has a known size, return it (in bytes). This is to
     /// alleviate libclang sometimes not giving us a layout (like in the case
     /// when an enum is defined inside a class with template parameters).
-    pub fn known_size(&self) -> Option<usize> {
+    pub(crate) fn known_size(&self) -> Option<usize> {
         use self::IntKind::*;
         Some(match *self {
             Bool | UChar | SChar | U8 | I8 | Char { .. } => 1,
@@ -121,7 +121,7 @@ impl IntKind {
     }
 
     /// Whether this type's signedness matches the value.
-    pub fn signedness_matches(&self, val: i64) -> bool {
+    pub(crate) fn signedness_matches(&self, val: i64) -> bool {
         val >= 0 || self.is_signed()
     }
 }

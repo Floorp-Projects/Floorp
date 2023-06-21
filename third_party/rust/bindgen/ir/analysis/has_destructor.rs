@@ -22,7 +22,7 @@ use crate::{HashMap, HashSet};
 /// * If T is the type of a field, that field has a destructor if it's not a bitfield,
 ///   and if T has a destructor.
 #[derive(Debug, Clone)]
-pub struct HasDestructorAnalysis<'ctx> {
+pub(crate) struct HasDestructorAnalysis<'ctx> {
     ctx: &'ctx BindgenContext,
 
     // The incremental result of this analysis's computation. Everything in this
