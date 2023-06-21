@@ -19,6 +19,7 @@
 namespace js {
 struct ClassSpec;
 class JSStringBuilder;
+class PlainObject;
 }  // namespace js
 
 namespace js::temporal {
@@ -271,6 +272,12 @@ Wrapped<PlainMonthDayObject*> CalendarMonthDayFromFields(
  */
 bool CalendarEquals(JSContext* cx, JS::Handle<JSObject*> one,
                     JS::Handle<JSObject*> two, bool* equals);
+
+/**
+ * ConsolidateCalendars ( one, two )
+ */
+JSObject* ConsolidateCalendars(JSContext* cx, JS::Handle<JSObject*> one,
+                               JS::Handle<JSObject*> two);
 
 /**
  * MaybeFormatCalendarAnnotation ( calendarObject, showCalendar )
