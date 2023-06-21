@@ -843,6 +843,7 @@ MSG_DEF(JSMSG_TEMPORAL_DURATION_INVALID_SIGN,       2, JSEXN_RANGEERR, "duration
 MSG_DEF(JSMSG_TEMPORAL_DURATION_INVALID_NON_FINITE, 2, JSEXN_RANGEERR, "duration value \"{0}\" is {1}")
 MSG_DEF(JSMSG_TEMPORAL_DURATION_MISSING_UNIT,       0, JSEXN_TYPEERR, "Duration-like objects must have at least one duration unit")
 MSG_DEF(JSMSG_TEMPORAL_DURATION_NOT_INTEGER,        2, JSEXN_RANGEERR, "{0} isn't a valid {1} duration because it isn't an integer")
+MSG_DEF(JSMSG_TEMPORAL_DURATION_MISSING_UNIT_SPECIFIER, 0, JSEXN_RANGEERR, "at least one of \"smallestUnit\" and \"largestUnit\" must be present")
 MSG_DEF(JSMSG_TEMPORAL_DURATION_UNCOMPARABLE,       1, JSEXN_RANGEERR, "can't compare durations when \"{0}\" is undefined")
 MSG_DEF(JSMSG_TEMPORAL_CALENDAR_INVALID_ID,         1, JSEXN_RANGEERR, "invalid calendar: {0}")
 MSG_DEF(JSMSG_TEMPORAL_CALENDAR_MISSING_FIELD,      1, JSEXN_TYPEERR, "missing \"{0}\" calendar field")
