@@ -1030,6 +1030,75 @@ static bool PlainTime_nanosecond(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
+ * Temporal.PlainTime.prototype.with ( temporalTimeLike [ , options ] )
+ */
+static bool PlainTime_with(JSContext* cx, const CallArgs& args) {
+  auto* temporalTime = &args.thisv().toObject().as<PlainTimeObject>();
+  auto time = ToPlainTime(temporalTime);
+
+  // Step 3.
+  Rooted<JSObject*> temporalTimeLike(
+      cx, RequireObjectArg(cx, "temporalTimeLike", "with", args.get(0)));
+  if (!temporalTimeLike) {
+    return false;
+  }
+
+  // Step 4.
+  if (!RejectObjectWithCalendarOrTimeZone(cx, temporalTimeLike)) {
+    return false;
+  }
+
+  auto overflow = TemporalOverflow::Constrain;
+  if (args.hasDefined(1)) {
+    // Step 5.
+    Rooted<JSObject*> options(cx,
+                              RequireObjectArg(cx, "options", "with", args[1]));
+    if (!options) {
+      return false;
+    }
+
+    // Step 6.
+    if (!ToTemporalOverflow(cx, options, &overflow)) {
+      return false;
+    }
+  }
+
+  // Steps 7-19.
+  TimeRecord partialTime = {
+      double(time.hour),        double(time.minute),
+      double(time.second),      double(time.millisecond),
+      double(time.microsecond), double(time.nanosecond),
+  };
+  if (!::ToTemporalTimeRecord(cx, temporalTimeLike, &partialTime)) {
+    return false;
+  }
+
+  // Step 20.
+  PlainTime result;
+  if (!RegulateTime(cx, partialTime, overflow, &result)) {
+    return false;
+  }
+
+  // Step 21.
+  auto* obj = CreateTemporalTime(cx, result);
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
+/**
+ * Temporal.PlainTime.prototype.with ( temporalTimeLike [ , options ] )
+ */
+static bool PlainTime_with(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainTime, PlainTime_with>(cx, args);
+}
+
+/**
  * Temporal.PlainTime.prototype.equals ( other )
  */
 static bool PlainTime_equals(JSContext* cx, const CallArgs& args) {
@@ -1199,6 +1268,7 @@ static const JSFunctionSpec PlainTime_methods[] = {
 };
 
 static const JSFunctionSpec PlainTime_prototype_methods[] = {
+    JS_FN("with", PlainTime_with, 1, 0),
     JS_FN("equals", PlainTime_equals, 1, 0),
     JS_FN("toPlainDateTime", PlainTime_toPlainDateTime, 1, 0),
     JS_FN("getISOFields", PlainTime_getISOFields, 0, 0),

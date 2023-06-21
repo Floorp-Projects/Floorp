@@ -560,6 +560,66 @@ PlainObject* js::temporal::PrepareTemporalFields(
 }
 
 /**
+ * PrepareTemporalFields ( fields, fieldNames, requiredFields )
+ */
+PlainObject* js::temporal::PreparePartialTemporalFields(
+    JSContext* cx, Handle<JSObject*> fields,
+    Handle<JS::StackGCVector<PropertyKey>> fieldNames) {
+  // Step 1.
+  Rooted<PlainObject*> result(cx, NewPlainObjectWithProto(cx, nullptr));
+  if (!result) {
+    return nullptr;
+  }
+
+  // Step 2.
+  bool any = false;
+
+  // Step 3. (The list is already sorted in our implementation.)
+  MOZ_ASSERT(IsSorted(fieldNames));
+
+  // Step 4.
+  Rooted<Value> value(cx);
+  for (size_t i = 0; i < fieldNames.length(); i++) {
+    Handle<PropertyKey> property = fieldNames[i];
+
+    // Step 4.a.
+    if (!GetProperty(cx, fields, fields, property, &value)) {
+      return nullptr;
+    }
+
+    // Steps 4.b-c.
+    if (!value.isUndefined()) {
+      // Step 4.b.i.
+      any = true;
+
+      // Step 4.b.ii.
+      if (auto fieldName = ToTemporalField(cx, property)) {
+        if (!TemporalFieldConvertValue(cx, *fieldName, &value)) {
+          return nullptr;
+        }
+      }
+
+      // Steps 4.b.iii.
+      if (!DefineDataProperty(cx, result, property, value)) {
+        return nullptr;
+      }
+    } else {
+      // Step 4.c. (Not applicable in our implementation.)
+    }
+  }
+
+  // Step 5.
+  if (!any) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_MISSING_TEMPORAL_FIELDS);
+    return nullptr;
+  }
+
+  // Step 6.
+  return result;
+}
+
+/**
  * MergeLists ( a, b )
  */
 bool js::temporal::MergeTemporalFieldNames(

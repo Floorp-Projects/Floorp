@@ -25,6 +25,12 @@
 #include "jsnum.h"
 #include "jspubtd.h"
 
+#include "builtin/temporal/PlainDate.h"
+#include "builtin/temporal/PlainDateTime.h"
+#include "builtin/temporal/PlainMonthDay.h"
+#include "builtin/temporal/PlainTime.h"
+#include "builtin/temporal/PlainYearMonth.h"
+#include "builtin/temporal/ZonedDateTime.h"
 #include "gc/Barrier.h"
 #include "js/Class.h"
 #include "js/Conversions.h"
@@ -166,6 +172,69 @@ bool js::temporal::ToTemporalOverflow(JSContext* cx, Handle<JSObject*> options,
     }
     return false;
   }
+  return true;
+}
+
+template <typename T, typename... Ts>
+static JSObject* MaybeUnwrapIf(JSObject* object) {
+  if (auto* unwrapped = object->maybeUnwrapIf<T>()) {
+    return unwrapped;
+  }
+  if constexpr (sizeof...(Ts) > 0) {
+    return MaybeUnwrapIf<Ts...>(object);
+  }
+  return nullptr;
+}
+
+// FIXME: spec issue - "Reject" is exclusively used for Promise rejection. The
+// existing `RejectPromise` abstract operation unconditionally rejects, whereas
+// this operation conditionally rejects.
+// https://github.com/tc39/proposal-temporal/issues/2534
+
+/**
+ * RejectObjectWithCalendarOrTimeZone ( object )
+ */
+bool js::temporal::RejectObjectWithCalendarOrTimeZone(
+    JSContext* cx, Handle<JSObject*> object) {
+  // Step 1. (Not applicable in our implementation.)
+
+  // Step 2.
+  if (auto* unwrapped =
+          MaybeUnwrapIf<PlainDateObject, PlainDateTimeObject,
+                        PlainMonthDayObject, PlainTimeObject,
+                        PlainYearMonthObject, ZonedDateTimeObject>(object)) {
+    Rooted<Value> value(cx, ObjectValue(*object));
+    ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_IGNORE_STACK, value,
+                     nullptr, unwrapped->getClass()->name);
+    return false;
+  }
+
+  Rooted<Value> property(cx);
+
+  // Step 3.
+  if (!GetProperty(cx, object, object, cx->names().calendar, &property)) {
+    return false;
+  }
+
+  // Step 4.
+  if (!property.isUndefined()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_UNEXPECTED_PROPERTY, "calendar");
+    return false;
+  }
+
+  // Step 5.
+  if (!GetProperty(cx, object, object, cx->names().timeZone, &property)) {
+    return false;
+  }
+
+  // Step 6.
+  if (!property.isUndefined()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_UNEXPECTED_PROPERTY, "timeZone");
+    return false;
+  }
+
   return true;
 }
 

@@ -1376,6 +1376,94 @@ static bool PlainDate_getISOFields(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
+ * Temporal.PlainDate.prototype.with ( temporalDateLike [ , options ] )
+ */
+static bool PlainDate_with(JSContext* cx, const CallArgs& args) {
+  Rooted<PlainDateObject*> temporalDate(
+      cx, &args.thisv().toObject().as<PlainDateObject>());
+
+  // Step 3.
+  Rooted<JSObject*> temporalDateLike(
+      cx, RequireObjectArg(cx, "temporalDateLike", "with", args.get(0)));
+  if (!temporalDateLike) {
+    return false;
+  }
+
+  // Step 4.
+  if (!RejectObjectWithCalendarOrTimeZone(cx, temporalDateLike)) {
+    return false;
+  }
+
+  // Step 5.
+  Rooted<JSObject*> options(cx);
+  if (args.hasDefined(1)) {
+    options = RequireObjectArg(cx, "options", "with", args[1]);
+  } else {
+    options = NewPlainObjectWithProto(cx, nullptr);
+  }
+  if (!options) {
+    return false;
+  }
+
+  // Step 6.
+  Rooted<JSObject*> calendar(cx, temporalDate->calendar());
+
+  // Step 7.
+  JS::RootedVector<PropertyKey> fieldNames(cx);
+  if (!CalendarFields(cx, calendar,
+                      {CalendarField::Day, CalendarField::Month,
+                       CalendarField::MonthCode, CalendarField::Year},
+                      &fieldNames)) {
+    return false;
+  }
+
+  // Step 8.
+  Rooted<PlainObject*> fields(
+      cx, PrepareTemporalFields(cx, temporalDate, fieldNames));
+  if (!fields) {
+    return false;
+  }
+
+  // Step 9.
+  Rooted<PlainObject*> partialDate(
+      cx, PreparePartialTemporalFields(cx, temporalDateLike, fieldNames));
+  if (!partialDate) {
+    return false;
+  }
+
+  // Step 10.
+  Rooted<JSObject*> mergedFields(
+      cx, CalendarMergeFields(cx, calendar, fields, partialDate));
+  if (!mergedFields) {
+    return false;
+  }
+
+  // Step 11.
+  fields = PrepareTemporalFields(cx, mergedFields, fieldNames);
+  if (!fields) {
+    return false;
+  }
+
+  // Step 12.
+  auto result = ::CalendarDateFromFields(cx, calendar, fields, options);
+  if (!result) {
+    return false;
+  }
+
+  args.rval().setObject(*result);
+  return true;
+}
+
+/**
+ * Temporal.PlainDate.prototype.with ( temporalDateLike [ , options ] )
+ */
+static bool PlainDate_with(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDate, PlainDate_with>(cx, args);
+}
+
+/**
  * Temporal.PlainDate.prototype.equals ( other )
  */
 static bool PlainDate_equals(JSContext* cx, const CallArgs& args) {
@@ -1535,6 +1623,7 @@ static const JSFunctionSpec PlainDate_prototype_methods[] = {
     JS_FN("toPlainYearMonth", PlainDate_toPlainYearMonth, 0, 0),
     JS_FN("toPlainDateTime", PlainDate_toPlainDateTime, 0, 0),
     JS_FN("getISOFields", PlainDate_getISOFields, 0, 0),
+    JS_FN("with", PlainDate_with, 1, 0),
     JS_FN("equals", PlainDate_equals, 1, 0),
     JS_FN("toString", PlainDate_toString, 0, 0),
     JS_FN("toLocaleString", PlainDate_toLocaleString, 0, 0),
