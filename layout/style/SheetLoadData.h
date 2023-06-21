@@ -18,8 +18,9 @@
 #include "nsProxyRelease.h"
 
 namespace mozilla {
+class LoadBlockingAsyncEventDispatcher;
 class StyleSheet;
-}
+}  // namespace mozilla
 class nsICSSLoaderObserver;
 class nsINode;
 class nsIPrincipal;
@@ -79,7 +80,7 @@ class SheetLoadData final
 
   nsIReferrerInfo* ReferrerInfo() const { return mReferrerInfo; }
 
-  void ScheduleLoadEventIfNeeded();
+  already_AddRefed<LoadBlockingAsyncEventDispatcher> PrepareLoadEventIfNeeded();
 
   NotNull<const Encoding*> DetermineNonBOMEncoding(const nsACString& aSegment,
                                                    nsIChannel*) const;
@@ -159,7 +160,8 @@ class SheetLoadData final
   // the original function call that started the load has returned.
   // This applies only to observer notifications; load/error events
   // are fired for any SheetLoadData that has a non-null
-  // mOwningNodeBeforeLoadEvent.
+  // mOwningNodeBeforeLoadEvent (though mMustNotify is used to avoid an event
+  // loop round-trip in that case).
   bool mMustNotify : 1;
 
   // mWasAlternate is true if the sheet was an alternate when the load data was

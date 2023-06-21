@@ -421,17 +421,16 @@ void SheetLoadData::StartPendingLoad() {
                      Loader::PendingLoad::Yes);
 }
 
-void SheetLoadData::ScheduleLoadEventIfNeeded() {
+already_AddRefed<LoadBlockingAsyncEventDispatcher>
+SheetLoadData::PrepareLoadEventIfNeeded() {
   if (!mOwningNodeBeforeLoadEvent) {
-    return;
+    return nullptr;
   }
-
   MOZ_ASSERT(BlocksLoadEvent(), "The rel=preload load event happens elsewhere");
   nsCOMPtr<nsINode> node = std::move(mOwningNodeBeforeLoadEvent);
-  auto* dispatcher = new LoadBlockingAsyncEventDispatcher(
+  return do_AddRef(new LoadBlockingAsyncEventDispatcher(
       node, mLoadFailed ? u"error"_ns : u"load"_ns, CanBubble::eNo,
-      ChromeOnlyDispatch::eNo);
-  dispatcher->PostDOMEvent();
+      ChromeOnlyDispatch::eNo));
 }
 
 nsINode* SheetLoadData::GetRequestingNode() const {
@@ -1557,6 +1556,7 @@ Loader::Completed Loader::ParseSheet(const nsACString& aBytes,
 
 void Loader::NotifyObservers(SheetLoadData& aData, nsresult aStatus) {
   RecordUseCountersIfNeeded(mDocument, aData.mSheet->GetStyleUseCounters());
+  RefPtr loadDispatcher = aData.PrepareLoadEventIfNeeded();
   if (aData.mURI) {
     mLoadsPerformed.PutEntry(SheetLoadDataHashKey(aData));
     aData.NotifyStop(aStatus);
@@ -1565,6 +1565,10 @@ void Loader::NotifyObservers(SheetLoadData& aData, nsresult aStatus) {
     // StyleSheetLoaded callback.
     if (aData.BlocksLoadEvent()) {
       DecrementOngoingLoadCount();
+      if (mPendingLoadCount && mPendingLoadCount == mOngoingLoadCount) {
+        LOG(("  No more loading sheets; starting deferred loads"));
+        StartDeferredLoads();
+      }
     }
   }
   if (!aData.mTitle.IsEmpty() && NS_SUCCEEDED(aStatus)) {
@@ -1579,7 +1583,6 @@ void Loader::NotifyObservers(SheetLoadData& aData, nsresult aStatus) {
           Unused << pageStyleActor;
         }));
   }
-
   if (aData.mMustNotify) {
     if (nsCOMPtr<nsICSSLoaderObserver> observer = std::move(aData.mObserver)) {
       LOG(("  Notifying observer %p for data %p.  deferred: %d", observer.get(),
@@ -1592,11 +1595,12 @@ void Loader::NotifyObservers(SheetLoadData& aData, nsresult aStatus) {
            obs.get(), &aData, aData.ShouldDefer()));
       obs->StyleSheetLoaded(aData.mSheet, aData.ShouldDefer(), aStatus);
     }
-  }
 
-  if (mPendingLoadCount && mPendingLoadCount == mOngoingLoadCount) {
-    LOG(("  No more loading sheets; starting deferred loads"));
-    StartDeferredLoads();
+    if (loadDispatcher) {
+      loadDispatcher->RunDOMEventWhenSafe();
+    }
+  } else if (loadDispatcher) {
+    loadDispatcher->PostDOMEvent();
   }
 }
 
