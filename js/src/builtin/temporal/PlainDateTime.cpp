@@ -834,6 +834,169 @@ static bool AddDateTime(JSContext* cx, const PlainDateTime& dateTime,
 }
 
 /**
+ * DifferenceISODateTime ( y1, mon1, d1, h1, min1, s1, ms1, mus1, ns1, y2, mon2,
+ * d2, h2, min2, s2, ms2, mus2, ns2, calendar, largestUnit, options )
+ */
+static bool DifferenceISODateTime(JSContext* cx, const PlainDateTime& one,
+                                  const PlainDateTime& two,
+                                  Handle<JSObject*> calendar,
+                                  TemporalUnit largestUnit,
+                                  Handle<PlainObject*> maybeOptions,
+                                  Duration* result) {
+  // Steps 1-2.
+  MOZ_ASSERT(IsValidISODateTime(one));
+  MOZ_ASSERT(IsValidISODateTime(two));
+  MOZ_ASSERT(ISODateTimeWithinLimits(one));
+  MOZ_ASSERT(ISODateTimeWithinLimits(two));
+
+  // Step 3.
+  auto timeDifference = DifferenceTime(one.time, two.time);
+
+  // Step 4.
+  int32_t timeSign = DurationSign(timeDifference.toDuration());
+
+  // Step 5.
+  int32_t dateSign = CompareISODate(two.date, one.date);
+
+  // Step 6.
+  auto adjustedDate = one.date;
+
+  // Step 7.
+  if (timeSign == -dateSign) {
+    // Step 7.a.
+    adjustedDate = BalanceISODate(adjustedDate.year, adjustedDate.month,
+                                  adjustedDate.day - timeSign);
+
+    // Step 7.b.
+    if (!BalanceDuration(cx,
+                         {
+                             0,
+                             0,
+                             0,
+                             double(-timeSign),
+                             timeDifference.hours,
+                             timeDifference.minutes,
+                             timeDifference.seconds,
+                             timeDifference.milliseconds,
+                             timeDifference.microseconds,
+                             timeDifference.nanoseconds,
+                         },
+                         largestUnit, &timeDifference)) {
+      return false;
+    }
+  }
+
+  MOZ_ASSERT(IsValidISODate(adjustedDate));
+  MOZ_ASSERT(ISODateTimeWithinLimits(adjustedDate));
+
+  // Step 8.
+  Rooted<PlainDateObject*> date1(
+      cx, CreateTemporalDate(cx, adjustedDate, calendar));
+  if (!date1) {
+    return false;
+  }
+
+  // Step 9.
+  Rooted<PlainDateObject*> date2(cx,
+                                 CreateTemporalDate(cx, two.date, calendar));
+  if (!date2) {
+    return false;
+  }
+
+  // Step 10.
+  auto dateLargestUnit = std::min(TemporalUnit::Day, largestUnit);
+
+  Duration dateDifference;
+  if (maybeOptions) {
+    // FIXME: spec issue - this copy is no longer needed, all callers have
+    // already copied the user input object.
+    // https://github.com/tc39/proposal-temporal/issues/2525
+
+    // Step 11.
+    Rooted<PlainObject*> untilOptions(cx, NewPlainObjectWithProto(cx, nullptr));
+    if (!untilOptions) {
+      return false;
+    }
+
+    // Step 12.
+    if (!CopyDataProperties(cx, untilOptions, maybeOptions)) {
+      return false;
+    }
+
+    // Step 13.
+    Rooted<Value> largestUnitValue(
+        cx, StringValue(TemporalUnitToString(cx, dateLargestUnit)));
+    if (!DefineDataProperty(cx, untilOptions, cx->names().largestUnit,
+                            largestUnitValue)) {
+      return false;
+    }
+
+    // Step 14.
+    if (!CalendarDateUntil(cx, calendar, date1, date2, untilOptions,
+                           &dateDifference)) {
+      return false;
+    }
+  } else {
+    // Steps 11-14.
+    if (!CalendarDateUntil(cx, calendar, date1, date2, dateLargestUnit,
+                           &dateDifference)) {
+      return false;
+    }
+  }
+
+  // Step 15.
+  TimeDuration balanceResult;
+  if (!BalanceDuration(cx,
+                       {
+                           0,
+                           0,
+                           0,
+                           dateDifference.days,
+                           timeDifference.hours,
+                           timeDifference.minutes,
+                           timeDifference.seconds,
+                           timeDifference.milliseconds,
+                           timeDifference.microseconds,
+                           timeDifference.nanoseconds,
+                       },
+                       largestUnit, &balanceResult)) {
+    return false;
+  }
+
+  // Step 16.
+  *result = {dateDifference.years,       dateDifference.months,
+             dateDifference.weeks,       balanceResult.days,
+             balanceResult.hours,        balanceResult.minutes,
+             balanceResult.seconds,      balanceResult.milliseconds,
+             balanceResult.microseconds, balanceResult.nanoseconds};
+  MOZ_ASSERT(IsValidDuration(*result));
+  return true;
+}
+
+/**
+ * DifferenceISODateTime ( y1, mon1, d1, h1, min1, s1, ms1, mus1, ns1, y2, mon2,
+ * d2, h2, min2, s2, ms2, mus2, ns2, calendar, largestUnit, options )
+ */
+bool js::temporal::DifferenceISODateTime(
+    JSContext* cx, const PlainDateTime& one, const PlainDateTime& two,
+    Handle<JSObject*> calendar, TemporalUnit largestUnit, Duration* result) {
+  return ::DifferenceISODateTime(cx, one, two, calendar, largestUnit, nullptr,
+                                 result);
+}
+
+/**
+ * DifferenceISODateTime ( y1, mon1, d1, h1, min1, s1, ms1, mus1, ns1, y2, mon2,
+ * d2, h2, min2, s2, ms2, mus2, ns2, calendar, largestUnit, options )
+ */
+bool js::temporal::DifferenceISODateTime(
+    JSContext* cx, const PlainDateTime& one, const PlainDateTime& two,
+    Handle<JSObject*> calendar, TemporalUnit largestUnit,
+    Handle<PlainObject*> options, Duration* result) {
+  return ::DifferenceISODateTime(cx, one, two, calendar, largestUnit, options,
+                                 result);
+}
+
+/**
  * RoundISODateTime ( year, month, day, hour, minute, second, millisecond,
  * microsecond, nanosecond, increment, unit, roundingMode [ , dayLength ] )
  */

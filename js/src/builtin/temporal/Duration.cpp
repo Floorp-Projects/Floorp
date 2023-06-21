@@ -96,6 +96,16 @@ static bool IsIntegerOrInfinityDuration(const Duration& duration) {
          IsIntegerOrInfinity(seconds) && IsIntegerOrInfinity(milliseconds) &&
          IsIntegerOrInfinity(microseconds) && IsIntegerOrInfinity(nanoseconds);
 }
+
+static bool IsIntegerDuration(const Duration& duration) {
+  auto& [years, months, weeks, days, hours, minutes, seconds, milliseconds,
+         microseconds, nanoseconds] = duration;
+
+  return IsInteger(years) && IsInteger(months) && IsInteger(weeks) &&
+         IsInteger(days) && IsInteger(hours) && IsInteger(minutes) &&
+         IsInteger(seconds) && IsInteger(milliseconds) &&
+         IsInteger(microseconds) && IsInteger(nanoseconds);
+}
 #endif
 
 /**
@@ -236,6 +246,62 @@ bool js::temporal::ThrowIfInvalidDuration(JSContext* cx,
 
   // Step 3.
   return true;
+}
+
+/**
+ * DefaultTemporalLargestUnit ( years, months, weeks, days, hours, minutes,
+ * seconds, milliseconds, microseconds )
+ */
+static TemporalUnit DefaultTemporalLargestUnit(const Duration& duration) {
+  MOZ_ASSERT(IsIntegerDuration(duration));
+
+  // Step 1.
+  if (duration.years != 0) {
+    return TemporalUnit::Year;
+  }
+
+  // Step 2.
+  if (duration.months != 0) {
+    return TemporalUnit::Month;
+  }
+
+  // Step 3.
+  if (duration.weeks != 0) {
+    return TemporalUnit::Week;
+  }
+
+  // Step 4.
+  if (duration.days != 0) {
+    return TemporalUnit::Day;
+  }
+
+  // Step 5.
+  if (duration.hours != 0) {
+    return TemporalUnit::Hour;
+  }
+
+  // Step 6.
+  if (duration.minutes != 0) {
+    return TemporalUnit::Minute;
+  }
+
+  // Step 7.
+  if (duration.seconds != 0) {
+    return TemporalUnit::Second;
+  }
+
+  // Step 8.
+  if (duration.milliseconds != 0) {
+    return TemporalUnit::Millisecond;
+  }
+
+  // Step 9.
+  if (duration.microseconds != 0) {
+    return TemporalUnit::Microsecond;
+  }
+
+  // Step 10.
+  return TemporalUnit::Nanosecond;
 }
 
 /**
@@ -1359,6 +1425,119 @@ static bool BalanceDurationSlow(JSContext* cx, Handle<BigInt*> nanoseconds,
 }
 
 /**
+ * BalanceDuration ( days, hours, minutes, seconds, milliseconds, microseconds,
+ * nanoseconds, largestUnit [ , relativeTo ] )
+ */
+static bool BalanceDuration(JSContext* cx, const Duration& one,
+                            const Duration& two, TemporalUnit largestUnit,
+                            TimeDuration* result) {
+  MOZ_ASSERT(IsValidDuration(one));
+  MOZ_ASSERT(IsValidDuration(two));
+  MOZ_ASSERT(largestUnit >= TemporalUnit::Day);
+
+  // Steps 1-2. (Not applicable)
+
+  // Fast-path when we can perform the whole computation with int64 values.
+  if (auto oneNanoseconds = TotalDurationNanoseconds(one, 0)) {
+    if (auto twoNanoseconds = TotalDurationNanoseconds(two, 0)) {
+      mozilla::CheckedInt64 nanoseconds = *oneNanoseconds;
+      nanoseconds += *twoNanoseconds;
+      if (nanoseconds.isValid()) {
+        *result = ::BalanceDuration(nanoseconds.value(), largestUnit);
+        return true;
+      }
+    }
+  }
+
+  // Step 3.
+  Rooted<BigInt*> oneNanoseconds(cx, TotalDurationNanosecondsSlow(cx, one, 0));
+  if (!oneNanoseconds) {
+    return false;
+  }
+
+  Rooted<BigInt*> twoNanoseconds(cx, TotalDurationNanosecondsSlow(cx, two, 0));
+  if (!twoNanoseconds) {
+    return false;
+  }
+
+  Rooted<BigInt*> nanoseconds(cx,
+                              BigInt::add(cx, oneNanoseconds, twoNanoseconds));
+  if (!nanoseconds) {
+    return false;
+  }
+
+  // Steps 4-15.
+  return BalanceDurationSlow(cx, nanoseconds, largestUnit, result);
+}
+
+/**
+ * BalanceDuration ( days, hours, minutes, seconds, milliseconds, microseconds,
+ * nanoseconds, largestUnit [ , relativeTo ] )
+ */
+static bool BalanceDuration(JSContext* cx, double days, const Duration& one,
+                            const Duration& two, TemporalUnit largestUnit,
+                            TimeDuration* result) {
+  MOZ_ASSERT(IsInteger(days));
+  MOZ_ASSERT(IsValidDuration(one));
+  MOZ_ASSERT(IsValidDuration(two));
+
+  // Steps 1-2. (Not applicable)
+
+  // Fast-path when we can perform the whole computation with int64 values.
+  if (auto oneNanoseconds = TotalDurationNanoseconds(one, 0)) {
+    if (auto twoNanoseconds = TotalDurationNanoseconds(two, 0)) {
+      int64_t intDays;
+      if (mozilla::NumberEqualsInt64(days, &intDays)) {
+        mozilla::CheckedInt64 daysNanoseconds = intDays;
+        daysNanoseconds *= ToNanoseconds(TemporalUnit::Day);
+
+        mozilla::CheckedInt64 nanoseconds = *oneNanoseconds;
+        nanoseconds += *twoNanoseconds;
+        nanoseconds += daysNanoseconds;
+
+        if (nanoseconds.isValid()) {
+          *result = ::BalanceDuration(nanoseconds.value(), largestUnit);
+          return true;
+        }
+      }
+    }
+  }
+
+  // Step 3.
+  Rooted<BigInt*> oneNanoseconds(cx, TotalDurationNanosecondsSlow(cx, one, 0));
+  if (!oneNanoseconds) {
+    return false;
+  }
+
+  Rooted<BigInt*> twoNanoseconds(cx, TotalDurationNanosecondsSlow(cx, two, 0));
+  if (!twoNanoseconds) {
+    return false;
+  }
+
+  Rooted<BigInt*> nanoseconds(cx,
+                              BigInt::add(cx, oneNanoseconds, twoNanoseconds));
+  if (!nanoseconds) {
+    return false;
+  }
+
+  if (days) {
+    Rooted<BigInt*> daysNanoseconds(
+        cx, TotalDurationNanosecondsSlow(cx, {0, 0, 0, days}, 0));
+    if (!daysNanoseconds) {
+      return false;
+    }
+
+    nanoseconds = BigInt::add(cx, nanoseconds, daysNanoseconds);
+    if (!nanoseconds) {
+      return false;
+    }
+  }
+
+  // Steps 4-15.
+  return BalanceDurationSlow(cx, nanoseconds, largestUnit, result);
+}
+
+/**
  * BalancePossiblyInfiniteDuration ( days, hours, minutes, seconds,
  * milliseconds, microseconds, nanoseconds, largestUnit [ , relativeTo ] )
  */
@@ -2152,6 +2331,200 @@ static bool UnbalanceDurationRelative(JSContext* cx, const Duration& duration,
   // Step 12.
   *result = CreateDateDurationRecord(years, months, weeks, days);
   return true;
+}
+
+/**
+ * AddDuration ( y1, mon1, w1, d1, h1, min1, s1, ms1, mus1, ns1, y2, mon2, w2,
+ * d2, h2, min2, s2, ms2, mus2, ns2, relativeTo )
+ */
+static bool AddDuration(JSContext* cx, const Duration& one, const Duration& two,
+                        Duration* duration) {
+  MOZ_ASSERT(IsValidDuration(one));
+  MOZ_ASSERT(IsValidDuration(two));
+
+  // Step 1.
+  auto largestUnit1 = DefaultTemporalLargestUnit(one);
+
+  // Step 2.
+  auto largestUnit2 = DefaultTemporalLargestUnit(two);
+
+  // Step 3.
+  auto largestUnit = std::min(largestUnit1, largestUnit2);
+
+  // Step 4.a.
+  if (largestUnit <= TemporalUnit::Week) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_DURATION_UNCOMPARABLE,
+                              "relativeTo");
+    return false;
+  }
+
+  // Step 4.b.
+  TimeDuration result;
+  if (!BalanceDuration(cx, one, two, largestUnit, &result)) {
+    return false;
+  }
+
+  // Steps 4.c.
+  *duration = result.toDuration();
+  return true;
+}
+
+/**
+ * AddDuration ( y1, mon1, w1, d1, h1, min1, s1, ms1, mus1, ns1, y2, mon2, w2,
+ * d2, h2, min2, s2, ms2, mus2, ns2, relativeTo )
+ */
+static bool AddDuration(JSContext* cx, const Duration& one, const Duration& two,
+                        Handle<Wrapped<PlainDateObject*>> relativeTo,
+                        Duration* duration) {
+  MOZ_ASSERT(IsValidDuration(one));
+  MOZ_ASSERT(IsValidDuration(two));
+
+  // Step 1.
+  auto largestUnit1 = DefaultTemporalLargestUnit(one);
+
+  // Step 2.
+  auto largestUnit2 = DefaultTemporalLargestUnit(two);
+
+  // Step 3.
+  auto largestUnit = std::min(largestUnit1, largestUnit2);
+
+  // Step 4. (Not applicable)
+
+  // Step 5.a.
+  auto* unwrappedRelativeTo = relativeTo.unwrap(cx);
+  if (!unwrappedRelativeTo) {
+    return false;
+  }
+  Rooted<JSObject*> calendar(cx, unwrappedRelativeTo->calendar());
+
+  if (!cx->compartment()->wrap(cx, &calendar)) {
+    return false;
+  }
+
+  // Step 5.b.
+  Rooted<DurationObject*> dateDuration1(cx,
+                                        CreateTemporalDuration(cx, one.date()));
+  if (!dateDuration1) {
+    return false;
+  }
+
+  // Step 5.c.
+  Rooted<DurationObject*> dateDuration2(cx,
+                                        CreateTemporalDuration(cx, two.date()));
+  if (!dateDuration2) {
+    return false;
+  }
+
+  // Step 5.d.
+  Rooted<Value> dateAdd(cx);
+  if (!GetMethodForCall(cx, calendar, cx->names().dateAdd, &dateAdd)) {
+    return false;
+  }
+
+  // Step 5.e.
+  Rooted<Wrapped<PlainDateObject*>> intermediate(
+      cx, CalendarDateAdd(cx, calendar, relativeTo, dateDuration1, dateAdd));
+  if (!intermediate) {
+    return false;
+  }
+
+  // Step 5.f.
+  Rooted<Wrapped<PlainDateObject*>> end(
+      cx, CalendarDateAdd(cx, calendar, intermediate, dateDuration2, dateAdd));
+  if (!end) {
+    return false;
+  }
+
+  // Step 5.g.
+  auto dateLargestUnit = std::min(TemporalUnit::Day, largestUnit);
+
+  // Steps 5.h-j.
+  Duration dateDifference;
+  if (!CalendarDateUntil(cx, calendar, relativeTo, end, dateLargestUnit,
+                         &dateDifference)) {
+    return false;
+  }
+
+  // Step 5.k.
+  TimeDuration result;
+  if (!BalanceDuration(cx, dateDifference.days, one.time(), two.time(),
+                       largestUnit, &result)) {
+    return false;
+  }
+
+  // Steps 5.l.
+  *duration = {
+      dateDifference.years, dateDifference.months, dateDifference.weeks,
+      result.days,          result.hours,          result.minutes,
+      result.seconds,       result.milliseconds,   result.microseconds,
+      result.nanoseconds,
+  };
+  return true;
+}
+
+/**
+ * AddDuration ( y1, mon1, w1, d1, h1, min1, s1, ms1, mus1, ns1, y2, mon2, w2,
+ * d2, h2, min2, s2, ms2, mus2, ns2, relativeTo )
+ */
+static bool AddDuration(JSContext* cx, const Duration& one, const Duration& two,
+                        Handle<Wrapped<ZonedDateTimeObject*>> relativeTo,
+                        Duration* result) {
+  // Step 1.
+  auto largestUnit1 = DefaultTemporalLargestUnit(one);
+
+  // Step 2.
+  auto largestUnit2 = DefaultTemporalLargestUnit(two);
+
+  // Step 3.
+  auto largestUnit = std::min(largestUnit1, largestUnit2);
+
+  // Steps 4-5. (Not applicable)
+
+  // Step 6. (Not applicable in our implementation.)
+
+  // Steps 7-8.
+  auto* unwrappedRelativeTo = relativeTo.unwrap(cx);
+  if (!unwrappedRelativeTo) {
+    return false;
+  }
+  auto epochInstant = ToInstant(unwrappedRelativeTo);
+  Rooted<JSObject*> timeZone(cx, unwrappedRelativeTo->timeZone());
+  Rooted<JSObject*> calendar(cx, unwrappedRelativeTo->calendar());
+
+  if (!cx->compartment()->wrap(cx, &timeZone)) {
+    return false;
+  }
+  if (!cx->compartment()->wrap(cx, &calendar)) {
+    return false;
+  }
+
+  // Step 9.
+  Instant intermediateNs;
+  if (!AddZonedDateTime(cx, epochInstant, timeZone, calendar, one,
+                        &intermediateNs)) {
+    return false;
+  }
+  MOZ_ASSERT(IsValidEpochInstant(intermediateNs));
+
+  // Step 10.
+  Instant endNs;
+  if (!AddZonedDateTime(cx, intermediateNs, timeZone, calendar, two, &endNs)) {
+    return false;
+  }
+  MOZ_ASSERT(IsValidEpochInstant(endNs));
+
+  // Step 11.
+  if (largestUnit > TemporalUnit::Day) {
+    // Steps 11.a-b.
+    return DifferenceInstant(cx, epochInstant, endNs, Increment{1},
+                             TemporalUnit::Nanosecond, largestUnit,
+                             TemporalRoundingMode::HalfExpand, result);
+  }
+
+  // Step 12.
+  return DifferenceZonedDateTime(cx, epochInstant, endNs, timeZone, calendar,
+                                 largestUnit, result);
 }
 
 static bool BigIntToStringBuilder(JSContext* cx, Handle<BigInt*> num,
@@ -3271,6 +3644,80 @@ bool js::temporal::RoundDuration(JSContext* cx, const Duration& duration,
   return ::RoundDuration(cx, duration, increment, unit, roundingMode, result);
 }
 
+enum class DurationOperation { Add, Subtract };
+
+/**
+ * AddDurationToOrSubtractDurationFromDuration ( operation, duration, other,
+ * options )
+ */
+static bool AddDurationToOrSubtractDurationFromDuration(
+    JSContext* cx, DurationOperation operation, const CallArgs& args) {
+  auto* durationObj = &args.thisv().toObject().as<DurationObject>();
+  auto duration = ToDuration(durationObj);
+
+  // Step 1. (Not applicable in our implementation.)
+
+  // Step 3.
+  Duration other;
+  if (!ToTemporalDurationRecord(cx, args.get(0), &other)) {
+    return false;
+  }
+
+  Rooted<JSObject*> relativeTo(cx);
+  if (args.hasDefined(1)) {
+    const char* name = operation == DurationOperation::Add ? "add" : "subtract";
+
+    // Step 3.
+    Rooted<JSObject*> options(cx,
+                              RequireObjectArg(cx, "options", name, args[1]));
+    if (!options) {
+      return false;
+    }
+
+    // Step 4.
+    if (!ToRelativeTemporalObject(cx, options, &relativeTo)) {
+      return false;
+    }
+  }
+
+  // Step 5.
+  if (operation == DurationOperation::Subtract) {
+    other = other.negate();
+  }
+
+  Duration result;
+  if (relativeTo) {
+    if (relativeTo->canUnwrapAs<PlainDateObject>()) {
+      Rooted<Wrapped<PlainDateObject*>> relativeToObj(cx, relativeTo);
+      if (!AddDuration(cx, duration, other, relativeToObj, &result)) {
+        return false;
+      }
+    } else if (relativeTo->canUnwrapAs<ZonedDateTimeObject>()) {
+      Rooted<Wrapped<ZonedDateTimeObject*>> relativeToObj(cx, relativeTo);
+      if (!AddDuration(cx, duration, other, relativeToObj, &result)) {
+        return false;
+      }
+    } else {
+      MOZ_ASSERT(!IsDeadProxyObject(relativeTo),
+                 "ToRelativeTemporalObject doesn't return dead wrappers");
+      MOZ_CRASH("expected either PlainDateObject or ZonedDateTimeObject");
+    }
+  } else {
+    if (!AddDuration(cx, duration, other, &result)) {
+      return false;
+    }
+  }
+
+  // Step 6.
+  auto* obj = CreateTemporalDuration(cx, result);
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
 /**
  * Temporal.Duration ( [ years [ , months [ , weeks [ , days [ , hours [ ,
  * minutes [ , seconds [ , milliseconds [ , microseconds [ , nanoseconds ] ] ] ]
@@ -3879,6 +4326,40 @@ static bool Duration_abs(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
+ * Temporal.Duration.prototype.add ( other [ , options ] )
+ */
+static bool Duration_add(JSContext* cx, const CallArgs& args) {
+  return AddDurationToOrSubtractDurationFromDuration(cx, DurationOperation::Add,
+                                                     args);
+}
+
+/**
+ * Temporal.Duration.prototype.add ( other [ , options ] )
+ */
+static bool Duration_add(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsDuration, Duration_add>(cx, args);
+}
+
+/**
+ * Temporal.Duration.prototype.subtract ( other [ , options ] )
+ */
+static bool Duration_subtract(JSContext* cx, const CallArgs& args) {
+  return AddDurationToOrSubtractDurationFromDuration(
+      cx, DurationOperation::Subtract, args);
+}
+
+/**
+ * Temporal.Duration.prototype.subtract ( other [ , options ] )
+ */
+static bool Duration_subtract(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsDuration, Duration_subtract>(cx, args);
+}
+
+/**
  * Temporal.Duration.prototype.toString ( [ options ] )
  */
 static bool Duration_toString(JSContext* cx, const CallArgs& args) {
@@ -4035,6 +4516,8 @@ static const JSFunctionSpec Duration_prototype_methods[] = {
     JS_FN("with", Duration_with, 1, 0),
     JS_FN("negated", Duration_negated, 0, 0),
     JS_FN("abs", Duration_abs, 0, 0),
+    JS_FN("add", Duration_add, 1, 0),
+    JS_FN("subtract", Duration_subtract, 1, 0),
     JS_FN("toString", Duration_toString, 0, 0),
     JS_FN("toJSON", Duration_toJSON, 0, 0),
     JS_FN("toLocaleString", Duration_toLocaleString, 0, 0),

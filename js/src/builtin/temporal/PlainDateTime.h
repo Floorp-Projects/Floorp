@@ -179,6 +179,25 @@ bool InterpretTemporalDateTimeFields(JSContext* cx,
                                      JS::Handle<PlainObject*> fields,
                                      PlainDateTime* result);
 
+/**
+ * DifferenceISODateTime ( y1, mon1, d1, h1, min1, s1, ms1, mus1, ns1, y2, mon2,
+ * d2, h2, min2, s2, ms2, mus2, ns2, calendar, largestUnit, options )
+ */
+bool DifferenceISODateTime(JSContext* cx, const PlainDateTime& one,
+                           const PlainDateTime& two,
+                           JS::Handle<JSObject*> calendar,
+                           TemporalUnit largestUnit, Duration* result);
+
+/**
+ * DifferenceISODateTime ( y1, mon1, d1, h1, min1, s1, ms1, mus1, ns1, y2, mon2,
+ * d2, h2, min2, s2, ms2, mus2, ns2, calendar, largestUnit, options )
+ */
+bool DifferenceISODateTime(JSContext* cx, const PlainDateTime& one,
+                           const PlainDateTime& two,
+                           JS::Handle<JSObject*> calendar,
+                           TemporalUnit largestUnit,
+                           JS::Handle<PlainObject*> options, Duration* result);
+
 } /* namespace js::temporal */
 
 #endif /* builtin_temporal_PlainDateTime_h */

@@ -10,6 +10,7 @@
 #include <stdint.h>
 
 #include "builtin/temporal/TemporalTypes.h"
+#include "builtin/temporal/Wrapped.h"
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
@@ -61,6 +62,7 @@ inline Instant ToInstant(const ZonedDateTimeObject* zonedDateTime) {
 
 enum class TemporalDisambiguation;
 enum class TemporalOffset;
+enum class TemporalUnit;
 
 /**
  * CreateTemporalZonedDateTime ( epochNanoseconds, timeZone, calendar [ ,
@@ -80,6 +82,15 @@ bool AddZonedDateTime(JSContext* cx, const Instant& epochInstant,
                       JS::Handle<JSObject*> calendar, const Duration& duration,
                       Instant* result);
 
+/**
+ * DifferenceZonedDateTime ( ns1, ns2, timeZone, calendar, largestUnit, options
+ * )
+ */
+bool DifferenceZonedDateTime(JSContext* cx, const Instant& ns1,
+                             const Instant& ns2, JS::Handle<JSObject*> timeZone,
+                             JS::Handle<JSObject*> calendar,
+                             TemporalUnit largestUnit, Duration* result);
+
 struct NanosecondsAndDays final {
   JS::BigInt* days = nullptr;
   int64_t daysInt = 0;
@@ -90,6 +101,13 @@ struct NanosecondsAndDays final {
 
   void trace(JSTracer* trc);
 };
+
+/**
+ * NanosecondsToDays ( nanoseconds, relativeTo )
+ */
+bool NanosecondsToDays(JSContext* cx, const Instant& nanoseconds,
+                       JS::Handle<Wrapped<ZonedDateTimeObject*>> relativeTo,
+                       JS::MutableHandle<NanosecondsAndDays> result);
 
 enum class OffsetBehaviour { Option, Exact, Wall };
 
