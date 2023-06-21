@@ -1748,11 +1748,19 @@ static bool DecodeTypeSection(Decoder& d, ModuleEnvironment* env) {
       uint8_t form;
       const TypeDef* superTypeDef = nullptr;
 
+      // By default, all types are final unless the sub keyword is specified.
+      bool finalTypeFlag = true;
+
       // Decode an optional declared super type index, if the GC proposal is
       // enabled.
       if (env->gcEnabled() && d.peekByte(&form) &&
-          form == (uint8_t)TypeCode::SubType) {
-        // Skip over the `sub` prefix byte we peeked.
+          (form == (uint8_t)TypeCode::SubNoFinalType ||
+           form == (uint8_t)TypeCode::SubFinalType)) {
+        if (form == (uint8_t)TypeCode::SubNoFinalType) {
+          finalTypeFlag = false;
+        }
+
+        // Skip over the `sub` or `final` prefix byte we peeked.
         d.uncheckedReadFixedU8();
 
         // Decode the number of super types, which is currently limited to at
@@ -1817,6 +1825,7 @@ static bool DecodeTypeSection(Decoder& d, ModuleEnvironment* env) {
           return d.fail("expected type form");
       }
 
+      typeDef->setFinal(finalTypeFlag);
       if (superTypeDef) {
         // Check that we aren't creating too deep of a subtyping chain
         if (superTypeDef->subTypingDepth() >= MaxSubTypingDepth) {

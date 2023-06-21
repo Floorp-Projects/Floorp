@@ -537,7 +537,9 @@ CoderResult CodeArrayType(Coder<mode>& coder, CoderArg<mode, ArrayType> item) {
 template <CoderMode mode>
 CoderResult CodeTypeDef(Coder<mode>& coder, CoderArg<mode, TypeDef> item) {
   WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::TypeDef, 376);
-  // TypeDef is a tagged union that begins with kind = None. This implies that
+  MOZ_TRY(CodePod(coder, &item->subTypingDepth_));
+  MOZ_TRY(CodePod(coder, &item->isFinal_));
+  // TypeDef is a tagged union containing kind = None. This implies that
   // we must manually initialize the variant that we decode.
   if constexpr (mode == MODE_DECODE) {
     MOZ_RELEASE_ASSERT(item->kind_ == TypeDefKind::None);
