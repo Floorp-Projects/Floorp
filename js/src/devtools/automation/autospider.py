@@ -675,11 +675,10 @@ if args.variant == "wasi":
 
 # Generate stacks from minidumps.
 if use_minidump:
+    venv_python = os.path.join(OBJDIR, "_virtualenvs", "build", "bin", "python3")
     run_command(
         [
-            mach,
-            "python",
-            "virtualenv=build",
+            venv_python,
             os.path.join(DIR.source, "testing/mozbase/mozcrash/mozcrash/mozcrash.py"),
             os.getenv("TMPDIR", "/tmp"),
             os.path.join(OBJDIR, "dist/crashreporter-symbols"),
