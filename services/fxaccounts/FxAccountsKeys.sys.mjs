@@ -95,18 +95,6 @@ export class FxAccountsKeys {
         return true;
       }
 
-      // For sync-related scopes, we might have stored the keys in a legacy format.
-      if (scope == SCOPE_OLD_SYNC) {
-        if (userData.kSync && userData.kXCS) {
-          return true;
-        }
-      }
-
-      // `kB` is deprecated, but if we have it, we can use it to derive any scoped key.
-      if (userData.kB) {
-        return true;
-      }
-
       // If we have a `keyFetchToken` we can fetch `kB`.
       if (userData.keyFetchToken) {
         return true;
@@ -252,7 +240,7 @@ export class FxAccountsKeys {
    */
   async _migrateOrFetchKeys(currentState, userData) {
     // If the required scopes are present in `scopedKeys`, then we know that we've
-    // previously applied all the other migrations below
+    // previously applied all earlier migrations
     // so we are safe to delete deprecated fields that older migrations
     // might have depended on.
     if (
@@ -264,42 +252,6 @@ export class FxAccountsKeys {
       return this._removeDeprecatedKeys(currentState, userData);
     }
 
-    // Bug 1661407 - migrate from legacy storage of keys as top-level account
-    // data fields, to storing them as scoped keys in the `scopedKeys` object.
-    if (
-      LEGACY_DERIVED_KEYS_NAMES.every(name => userData.hasOwnProperty(name))
-    ) {
-      log.info("Migrating from legacy key fields to scopedKeys.");
-      const scopedKeys = userData.scopedKeys || {};
-      await currentState.updateUserAccountData({
-        scopedKeys: {
-          ...scopedKeys,
-          ...(await this._deriveScopedKeysFromAccountData(userData)),
-        },
-      });
-      userData = await currentState.getUserAccountData();
-      return userData;
-    }
-    // Bug 1426306 - Migrate from kB to derived keys.
-    if (userData.kB) {
-      log.info("Migrating kB to derived keys.");
-      const { uid, kB, sessionToken } = userData;
-      const scopedKeysMetadata = await this._fetchScopedKeysMetadata(
-        sessionToken
-      );
-      await currentState.updateUserAccountData({
-        uid,
-        ...(await this._deriveKeys(
-          uid,
-          CommonUtils.hexToBytes(kB),
-          scopedKeysMetadata
-        )),
-        kA: null, // Remove kA and kB from storage.
-        kB: null,
-      });
-      userData = await currentState.getUserAccountData();
-      return userData;
-    }
     // Otherwise, we need to fetch from the network and unwrap.
     if (!userData.sessionToken) {
       throw new Error("No sessionToken");
@@ -533,44 +485,6 @@ export class FxAccountsKeys {
         scopedKeys[scope] = await this._deriveScopedKey(
           uid,
           kBbytes,
-          scope,
-          scopedKeysMetadata[scope]
-        );
-      }
-    }
-    return scopedKeys;
-  }
-
-  /**
-   * Derive the `scopedKeys` data field based on current account data.
-   *
-   * This is a backwards-compatibility convenience for users who are already signed in to Firefox
-   * and have legacy fields like `kSync` and `kXCS` in their top-level account data, but do not have
-   * the newer `scopedKeys` field. We populate it with the scoped keys for sync.
-   *
-   */
-  async _deriveScopedKeysFromAccountData(userData) {
-    const scopedKeysMetadata = await this._fetchScopedKeysMetadata(
-      userData.sessionToken
-    );
-    const scopedKeys = userData.scopedKeys || {};
-    for (const scope of LEGACY_DERIVED_KEY_SCOPES) {
-      if (scopedKeysMetadata.hasOwnProperty(scope)) {
-        let kid, key;
-        if (scope == SCOPE_OLD_SYNC) {
-          ({ kXCS: kid, kSync: key } = userData);
-        } else {
-          // Should never happen, but a nice internal consistency check.
-          throw new Error(`Unexpected legacy key-bearing scope: ${scope}`);
-        }
-        if (!kid || !key) {
-          throw new Error(
-            `Account is missing legacy key fields for scope: ${scope}`
-          );
-        }
-        scopedKeys[scope] = await this._formatLegacyScopedKey(
-          CommonUtils.hexToArrayBuffer(kid),
-          CommonUtils.hexToArrayBuffer(key),
           scope,
           scopedKeysMetadata[scope]
         );
