@@ -2006,6 +2006,129 @@ static bool PlainDate_equals(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
+ * Temporal.PlainDate.prototype.toZonedDateTime ( item )
+ *
+ * The |item| argument represents either a time zone or an options object. The
+ * following cases are supported:
+ * - |item| is a `Temporal.TimeZone` object.
+ * - |item| is a user-defined time zone object.
+ * - |item| is an options object with `timeZone` and `plainTime` properties.
+ * - |item| is a time zone identifier string.
+ *
+ * User-defined time zone objects are distinguished from options objects by the
+ * `timeZone` property, i.e. if a `timeZone` property is present, the object is
+ * treated as an options object, otherwise an object is treated as a
+ * user-defined time zone.
+ */
+static bool PlainDate_toZonedDateTime(JSContext* cx, const CallArgs& args) {
+  auto* temporalDate = &args.thisv().toObject().as<PlainDateObject>();
+  auto date = ToPlainDate(temporalDate);
+  Rooted<JSObject*> calendar(cx, temporalDate->calendar());
+
+  // Steps 3-4
+  Rooted<JSObject*> timeZone(cx);
+  Rooted<Value> temporalTime(cx);
+  if (args.get(0).isObject()) {
+    Rooted<JSObject*> item(cx, &args[0].toObject());
+
+    // Steps 3.a-b.
+    if (item->canUnwrapAs<TimeZoneObject>()) {
+      // Step 3.a.i.
+      timeZone = item;
+
+      // Step 3.a.ii.
+      temporalTime.setUndefined();
+    } else {
+      // Step 3.b.i.
+      Rooted<Value> timeZoneLike(cx);
+      if (!GetProperty(cx, item, item, cx->names().timeZone, &timeZoneLike)) {
+        return false;
+      }
+
+      // Steps 3.b.ii-iii.
+      if (timeZoneLike.isUndefined()) {
+        // Step 3.b.ii.1.
+        timeZone = ToTemporalTimeZone(cx, args[0]);
+        if (!timeZone) {
+          return false;
+        }
+
+        // Step 3.b.ii.2.
+        temporalTime.setUndefined();
+      } else {
+        // Step 3.b.iii.1.
+        timeZone = ToTemporalTimeZone(cx, timeZoneLike);
+        if (!timeZone) {
+          return false;
+        }
+
+        // Step 3.b.iii.2.
+        if (!GetProperty(cx, item, item, cx->names().plainTime,
+                         &temporalTime)) {
+          return false;
+        }
+      }
+    }
+  } else {
+    // Step 4.a.
+    timeZone = ToTemporalTimeZone(cx, args.get(0));
+    if (!timeZone) {
+      return false;
+    }
+
+    // Step 4.b.
+    temporalTime.setUndefined();
+  }
+
+  // Steps 5-6.
+  Rooted<PlainDateTimeObject*> temporalDateTime(cx);
+  if (temporalTime.isUndefined()) {
+    // Step 5.a.
+    temporalDateTime = CreateTemporalDateTime(cx, {date, {}}, calendar);
+    if (!temporalDateTime) {
+      return false;
+    }
+  } else {
+    // Step 6.a.
+    PlainTime time;
+    if (!ToTemporalTime(cx, temporalTime, &time)) {
+      return false;
+    }
+
+    // Step 6.b.
+    temporalDateTime = CreateTemporalDateTime(cx, {date, time}, calendar);
+    if (!temporalDateTime) {
+      return false;
+    }
+  }
+
+  // Step 7.
+  Instant instant;
+  if (!GetInstantFor(cx, timeZone, temporalDateTime,
+                     TemporalDisambiguation::Compatible, &instant)) {
+    return false;
+  }
+
+  // Step 8.
+  auto* result = CreateTemporalZonedDateTime(cx, instant, timeZone, calendar);
+  if (!result) {
+    return false;
+  }
+
+  args.rval().setObject(*result);
+  return true;
+}
+
+/**
+ * Temporal.PlainDate.prototype.toZonedDateTime ( item )
+ */
+static bool PlainDate_toZonedDateTime(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDate, PlainDate_toZonedDateTime>(cx, args);
+}
+
+/**
  * Temporal.PlainDate.prototype.toString ( [ options ] )
  */
 static bool PlainDate_toString(JSContext* cx, const CallArgs& args) {
@@ -2133,6 +2256,7 @@ static const JSFunctionSpec PlainDate_prototype_methods[] = {
     JS_FN("with", PlainDate_with, 1, 0),
     JS_FN("withCalendar", PlainDate_withCalendar, 1, 0),
     JS_FN("equals", PlainDate_equals, 1, 0),
+    JS_FN("toZonedDateTime", PlainDate_toZonedDateTime, 1, 0),
     JS_FN("toString", PlainDate_toString, 0, 0),
     JS_FN("toLocaleString", PlainDate_toLocaleString, 0, 0),
     JS_FN("toJSON", PlainDate_toJSON, 0, 0),
