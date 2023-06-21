@@ -62,6 +62,7 @@ migration-favorites-option-label = Favorites
 
 migration-logins-and-passwords-option-label = Saved logins and passwords
 migration-history-option-label = Browsing history
+migration-extensions-option-label = Extensions
 migration-form-autofill-option-label = Form autofill data
 migration-payment-methods-option-label = Payment methods
 migration-cookies-option-label = Cookies
@@ -164,6 +165,7 @@ migration-list-bookmark-label = bookmarks
 migration-list-favorites-label = favorites
 migration-list-password-label = passwords
 migration-list-history-label = history
+migration-list-extensions-label = extensions
 migration-list-autofill-label = autofill data
 migration-list-payment-methods-label = payment methods
 
@@ -209,6 +211,38 @@ migration-wizard-progress-success-favorites =
         [one] { $quantity } favorite
        *[other] { $quantity } favorites
     }
+
+## The import process identifies extensions installed in other supported
+## browsers and installs the corresponding (matching) extensions compatible
+## with Firefox, if available.
+
+# Shown in the migration wizard after importing all matched extensions
+# from supported browsers.
+#
+# Variables:
+#   $quantity (Number): the number of successfully imported extensions
+migration-wizard-progress-success-extensions =
+    { $quantity ->
+        [one] { $quantity } extension
+       *[other] { $quantity } extensions
+    }
+
+# Shown in the migration wizard after importing a partial amount of
+# matched extensions from supported browsers.
+#
+# Variables:
+#   $matched (Number): the number of matched imported extensions
+#   $quantity (Number): the number of total extensions found during import
+migration-wizard-progress-partial-success-extensions = { $matched } of { $quantity } extensions
+
+migration-wizard-progress-extensions-support-link = Learn how { -brand-product-name } matches extensions
+# Shown in the migration wizard if there are no matched extensions
+# on import from supported browsers.
+migration-wizard-progress-no-matched-extensions = No matching extensions
+
+migration-wizard-progress-extensions-addons-link = Browse extensions for { -brand-short-name }
+
+##
 
 # Shown in the migration wizard after importing passwords from another
 # browser has completed.

@@ -26,6 +26,19 @@ export const MigrationWizardConstants = Object.freeze({
   }),
 
   /**
+   * A mapping of a progress value string. These are used by
+   * MigrationWizard.#onShowingProgress to update the UI accordingly.
+   *
+   * @type {Object<string, number>}
+   */
+  PROGRESS_VALUE: Object.freeze({
+    LOADING: 1,
+    SUCCESS: 2,
+    ERROR: 3,
+    INFO: 4,
+  }),
+
+  /**
    * Returns a mapping of a resource type to a string used to identify
    * the associated resource group in the wizard via a data-resource-type
    * attribute. The keys are used to set which items should be shown and
@@ -47,10 +60,7 @@ export const MigrationWizardConstants = Object.freeze({
     PASSWORDS: "PASSWORDS",
     BOOKMARKS: "BOOKMARKS",
     PAYMENT_METHODS: "PAYMENT_METHODS",
-    /* TODO: Enable in bug 1836773, otherwise tests will fail due to
-       missing UI elements
-    */
-    // EXTENSIONS: "EXTENSIONS",
+    EXTENSIONS: "EXTENSIONS",
 
     COOKIES: "COOKIES",
     SESSION: "SESSION",

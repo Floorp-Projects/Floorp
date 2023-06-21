@@ -111,11 +111,15 @@ export class MigratorBase {
    * - a |type| getter, returning any of the migration resource types (see
    *   MigrationUtils.resourceTypes).
    *
-   * - a |migrate| method, taking a single argument, aCallback(bool success),
-   *   for migrating the data for this resource.  It may do its job
-   *   synchronously or asynchronously.  Either way, it must call
-   *   aCallback(bool aSuccess) when it's done.  In the case of an exception
-   *   thrown from |migrate|, it's taken as if aCallback(false) is called.
+   * - a |migrate| method, taking two arguments,
+   *   aCallback(bool success, object details), for migrating the data for
+   *   this resource.  It may do its job synchronously or asynchronously.
+   *   Either way, it must call aCallback(bool aSuccess, object details)
+   *   when it's done.  In the case of an exception thrown from |migrate|,
+   *   it's taken as if aCallback(false, {}) is called. The details
+   *   argument is sometimes optional, but conditional on how the
+   *   migration wizard wants to display the migration state for the
+   *   resource.
    *
    *   Note: In the case of a simple asynchronous implementation, you may find
    *   MigrationUtils.wrapMigrateFunction handy for handling aCallback easily.
@@ -128,7 +132,7 @@ export class MigratorBase {
    *
    * Note that the importation of a particular migration type is reported as
    * successful if _any_ of its resources succeeded to import (that is, called,
-   * |aCallback(true)|).  However, completion-status for a particular migration
+   * |aCallback(true, {})|).  However, completion-status for a particular migration
    * type is reported to the UI only once all of its migrators have called
    * aCallback.
    *
@@ -267,7 +271,8 @@ export class MigratorBase {
    *   An optional callback that will be fired once a resourceType has finished
    *   migrating. The callback will be passed the numeric representation of the
    *   resource type followed by a boolean indicating whether or not the resource
-   *   was migrated successfully.
+   *   was migrated successfully and optionally an object containing additional
+   *   details.
    */
   async migrate(aItems, aStartup, aProfile, aProgressCallback = () => {}) {
     let resources = await this.#getMaybeCachedResources(aProfile);
@@ -427,7 +432,7 @@ export class MigratorBase {
         let itemSuccess = false;
         for (let res of itemResources) {
           let completeDeferred = lazy.PromiseUtils.defer();
-          let resourceDone = function (aSuccess) {
+          let resourceDone = function (aSuccess, details) {
             itemResources.delete(res);
             itemSuccess |= aSuccess;
             if (itemResources.size == 0) {
@@ -439,7 +444,7 @@ export class MigratorBase {
               );
               collectMigrationTelemetry(migrationType);
 
-              aProgressCallback(migrationType, itemSuccess);
+              aProgressCallback(migrationType, itemSuccess, details);
 
               resourcesGroupedByItems.delete(migrationType);
 
