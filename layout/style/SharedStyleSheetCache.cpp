@@ -164,7 +164,6 @@ void SharedStyleSheetCache::LoadCompletedInternal(
         doc->PostStyleSheetApplicableStateChangeEvent(*data->mSheet);
       }
     }
-    data->ScheduleLoadEventIfNeeded();
     aDatasToNotify.AppendElement(data);
 
     NS_ASSERTION(!data->mParentData || data->mParentData->mPendingChildren != 0,
