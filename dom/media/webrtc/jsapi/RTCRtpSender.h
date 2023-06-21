@@ -104,29 +104,27 @@ class RTCRtpSender : public nsISupports,
   void SyncFromJsep(const JsepTransceiver& aJsepTransceiver);
   void MaybeUpdateConduit();
 
-  AbstractCanonical<Ssrcs>* CanonicalSsrcs() { return &mSsrcs; }
-  AbstractCanonical<Ssrcs>* CanonicalVideoRtxSsrcs() { return &mVideoRtxSsrcs; }
-  AbstractCanonical<RtpExtList>* CanonicalLocalRtpExtensions() {
-    return &mLocalRtpExtensions;
+  Canonical<Ssrcs>& CanonicalSsrcs() { return mSsrcs; }
+  Canonical<Ssrcs>& CanonicalVideoRtxSsrcs() { return mVideoRtxSsrcs; }
+  Canonical<RtpExtList>& CanonicalLocalRtpExtensions() {
+    return mLocalRtpExtensions;
   }
 
-  AbstractCanonical<Maybe<AudioCodecConfig>>* CanonicalAudioCodec() {
-    return &mAudioCodec;
+  Canonical<Maybe<AudioCodecConfig>>& CanonicalAudioCodec() {
+    return mAudioCodec;
   }
 
-  AbstractCanonical<Maybe<VideoCodecConfig>>* CanonicalVideoCodec() {
-    return &mVideoCodec;
+  Canonical<Maybe<VideoCodecConfig>>& CanonicalVideoCodec() {
+    return mVideoCodec;
   }
-  AbstractCanonical<Maybe<RtpRtcpConfig>>* CanonicalVideoRtpRtcpConfig() {
-    return &mVideoRtpRtcpConfig;
+  Canonical<Maybe<RtpRtcpConfig>>& CanonicalVideoRtpRtcpConfig() {
+    return mVideoRtpRtcpConfig;
   }
-  AbstractCanonical<webrtc::VideoCodecMode>* CanonicalVideoCodecMode() {
-    return &mVideoCodecMode;
+  Canonical<webrtc::VideoCodecMode>& CanonicalVideoCodecMode() {
+    return mVideoCodecMode;
   }
-  AbstractCanonical<std::string>* CanonicalCname() { return &mCname; }
-  AbstractCanonical<bool>* CanonicalTransmitting() override {
-    return &mTransmitting;
-  }
+  Canonical<std::string>& CanonicalCname() { return mCname; }
+  Canonical<bool>& CanonicalTransmitting() override { return mTransmitting; }
 
   bool HasPendingSetParameters() const { return mPendingParameters.isSome(); }
   void InvalidateLastReturnedParameters() {

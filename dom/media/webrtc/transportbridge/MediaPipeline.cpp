@@ -802,7 +802,7 @@ MediaPipelineTransmit::~MediaPipelineTransmit() {
 
 void MediaPipelineTransmit::InitControl(
     MediaPipelineTransmitControlInterface* aControl) {
-  mActive.Connect(aControl->CanonicalTransmitting());
+  aControl->CanonicalTransmitting().ConnectMirror(&mActive);
 }
 
 void MediaPipelineTransmit::Shutdown() {
@@ -1214,7 +1214,7 @@ MediaPipelineReceive::~MediaPipelineReceive() = default;
 
 void MediaPipelineReceive::InitControl(
     MediaPipelineReceiveControlInterface* aControl) {
-  mActive.Connect(aControl->CanonicalReceiving());
+  aControl->CanonicalReceiving().ConnectMirror(&mActive);
 }
 
 void MediaPipelineReceive::Shutdown() {
