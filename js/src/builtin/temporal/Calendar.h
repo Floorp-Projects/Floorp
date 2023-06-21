@@ -10,6 +10,7 @@
 #include <stdint.h>
 
 #include "js/TypeDecls.h"
+#include "js/Value.h"
 #include "vm/NativeObject.h"
 
 namespace js {
@@ -23,11 +24,22 @@ class CalendarObject : public NativeObject {
   static const JSClass class_;
   static const JSClass& protoClass_;
 
-  static constexpr uint32_t SLOT_COUNT = 0;
+  static constexpr uint32_t IDENTIFIER_SLOT = 0;
+  static constexpr uint32_t SLOT_COUNT = 1;
+
+  JSString* identifier() const {
+    return getFixedSlot(IDENTIFIER_SLOT).toString();
+  }
 
  private:
   static const ClassSpec classSpec_;
 };
+
+/**
+ * Perform `ToString(calendar)` with an optimization when the built-in
+ * Temporal.Calendar.prototype.toString method is called.
+ */
+JSString* CalendarToString(JSContext* cx, JS::Handle<JSObject*> calendar);
 
 } /* namespace js::temporal */
 
