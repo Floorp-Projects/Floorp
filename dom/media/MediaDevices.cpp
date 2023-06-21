@@ -246,7 +246,7 @@ RefPtr<MediaDeviceSetRefCnt> MediaDevices::FilterExposedDevices(
       !Preferences::GetBool("media.setsinkid.enabled") ||
       !FeaturePolicyUtils::IsFeatureAllowed(doc, u"speaker-selection"_ns);
 
-  if (doc->ShouldResistFingerprinting(RFPTarget::Unknown)) {
+  if (doc->ShouldResistFingerprinting(RFPTarget::MediaDevices)) {
     RefPtr fakeEngine = new MediaEngineFake();
     fakeEngine->EnumerateDevices(MediaSourceEnum::Microphone,
                                  MediaSinkEnum::Other, exposed);
@@ -731,7 +731,7 @@ void MediaDevices::OnDeviceChange() {
 
   if (nsContentUtils::ShouldResistFingerprinting(
           "Guarding the more expensive RFP check with a simple one",
-          RFPTarget::Unknown)) {
+          RFPTarget::MediaDevices)) {
     nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
     auto* wrapper = GetWrapper();
     if (!window && wrapper) {
@@ -743,7 +743,7 @@ void MediaDevices::OnDeviceChange() {
     }
 
     if (nsGlobalWindowInner::Cast(window)->ShouldResistFingerprinting(
-            RFPTarget::Unknown)) {
+            RFPTarget::MediaDevices)) {
       return;
     }
   }
