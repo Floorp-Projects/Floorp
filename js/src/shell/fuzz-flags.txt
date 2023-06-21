@@ -97,3 +97,6 @@
 
 # Change Array By Copy
 --enable-change-array-by-copy
+
+# Well-Formed Unicode Strings
+--enable-well-formed-unicode-strings
