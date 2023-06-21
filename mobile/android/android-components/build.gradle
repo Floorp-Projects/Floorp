@@ -360,6 +360,7 @@ tasks.register("ktlintFormat", JavaExec) {
     classpath = configurations.ktlint
     main = "com.pinterest.ktlint.Main"
     args "-F", "components/**/*.kt" , "samples/**/*.kt", "!**/build/**/*.kt", "buildSrc/**/*.kt", "--baseline=ktlint-baseline.xml"
+    jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
 }
 
 tasks.register("listRepositories") {
