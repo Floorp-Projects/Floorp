@@ -230,23 +230,6 @@ WorkerThread::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
 
   const bool onWorkerThread = PR_GetCurrentThread() == mThread;
 
-#ifdef DEBUG
-  if (runnable && !onWorkerThread) {
-    nsCOMPtr<nsIDiscardableRunnable> discardable = do_QueryInterface(runnable);
-
-    {
-      MutexAutoLock lock(mLock);
-
-      // Only enforce discardable runnables after we've started the worker loop.
-      if (!mAcceptingNonWorkerRunnables) {
-        MOZ_ASSERT(
-            discardable,
-            "Only nsIDiscardableRunnable may be dispatched to a worker!");
-      }
-    }
-  }
-#endif
-
   WorkerPrivate* workerPrivate = nullptr;
   if (onWorkerThread) {
     // No need to lock here because it is only modified on this thread.
