@@ -22,7 +22,7 @@ use std::mem;
 
 /// The kind of compound type.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum CompKind {
+pub(crate) enum CompKind {
     /// A struct.
     Struct,
     /// A union.
@@ -31,7 +31,7 @@ pub enum CompKind {
 
 /// The kind of C++ method.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum MethodKind {
+pub(crate) enum MethodKind {
     /// A constructor. We represent it as method for convenience, to avoid code
     /// duplication.
     Constructor,
@@ -55,7 +55,7 @@ pub enum MethodKind {
 
 impl MethodKind {
     /// Is this a destructor method?
-    pub fn is_destructor(&self) -> bool {
+    pub(crate) fn is_destructor(&self) -> bool {
         matches!(
             *self,
             MethodKind::Destructor | MethodKind::VirtualDestructor { .. }
@@ -63,7 +63,7 @@ impl MethodKind {
     }
 
     /// Is this a pure virtual method?
-    pub fn is_pure_virtual(&self) -> bool {
+    pub(crate) fn is_pure_virtual(&self) -> bool {
         match *self {
             MethodKind::Virtual { pure_virtual } |
             MethodKind::VirtualDestructor { pure_virtual } => pure_virtual,
@@ -74,7 +74,7 @@ impl MethodKind {
 
 /// A struct representing a C++ method, either static, normal, or virtual.
 #[derive(Debug)]
-pub struct Method {
+pub(crate) struct Method {
     kind: MethodKind,
     /// The signature of the method. Take into account this is not a `Type`
     /// item, but a `Function` one.
@@ -86,7 +86,7 @@ pub struct Method {
 
 impl Method {
     /// Construct a new `Method`.
-    pub fn new(
+    pub(crate) fn new(
         kind: MethodKind,
         signature: FunctionId,
         is_const: bool,
@@ -99,17 +99,17 @@ impl Method {
     }
 
     /// What kind of method is this?
-    pub fn kind(&self) -> MethodKind {
+    pub(crate) fn kind(&self) -> MethodKind {
         self.kind
     }
 
     /// Is this a constructor?
-    pub fn is_constructor(&self) -> bool {
+    pub(crate) fn is_constructor(&self) -> bool {
         self.kind == MethodKind::Constructor
     }
 
     /// Is this a virtual method?
-    pub fn is_virtual(&self) -> bool {
+    pub(crate) fn is_virtual(&self) -> bool {
         matches!(
             self.kind,
             MethodKind::Virtual { .. } | MethodKind::VirtualDestructor { .. }
@@ -117,23 +117,23 @@ impl Method {
     }
 
     /// Is this a static method?
-    pub fn is_static(&self) -> bool {
+    pub(crate) fn is_static(&self) -> bool {
         self.kind == MethodKind::Static
     }
 
-    /// Get the id for the `Function` signature for this method.
-    pub fn signature(&self) -> FunctionId {
+    /// Get the ID for the `Function` signature for this method.
+    pub(crate) fn signature(&self) -> FunctionId {
         self.signature
     }
 
     /// Is this a const qualified method?
-    pub fn is_const(&self) -> bool {
+    pub(crate) fn is_const(&self) -> bool {
         self.is_const
     }
 }
 
 /// Methods common to the various field types.
-pub trait FieldMethods {
+pub(crate) trait FieldMethods {
     /// Get the name of this field.
     fn name(&self) -> Option<&str>;
 
@@ -161,7 +161,7 @@ pub trait FieldMethods {
 /// 2.4.II.1 in the Itanium C++
 /// ABI](http://itanium-cxx-abi.github.io/cxx-abi/abi.html#class-types).
 #[derive(Debug)]
-pub struct BitfieldUnit {
+pub(crate) struct BitfieldUnit {
     nth: usize,
     layout: Layout,
     bitfields: Vec<Bitfield>,
@@ -171,24 +171,24 @@ impl BitfieldUnit {
     /// Get the 1-based index of this bitfield unit within its containing
     /// struct. Useful for generating a Rust struct's field name for this unit
     /// of bitfields.
-    pub fn nth(&self) -> usize {
+    pub(crate) fn nth(&self) -> usize {
         self.nth
     }
 
     /// Get the layout within which these bitfields reside.
-    pub fn layout(&self) -> Layout {
+    pub(crate) fn layout(&self) -> Layout {
         self.layout
     }
 
     /// Get the bitfields within this unit.
-    pub fn bitfields(&self) -> &[Bitfield] {
+    pub(crate) fn bitfields(&self) -> &[Bitfield] {
         &self.bitfields
     }
 }
 
 /// A struct representing a C++ field.
 #[derive(Debug)]
-pub enum Field {
+pub(crate) enum Field {
     /// A normal data member.
     DataMember(FieldData),
 
@@ -198,7 +198,7 @@ pub enum Field {
 
 impl Field {
     /// Get this field's layout.
-    pub fn layout(&self, ctx: &BindgenContext) -> Option<Layout> {
+    pub(crate) fn layout(&self, ctx: &BindgenContext) -> Option<Layout> {
         match *self {
             Field::Bitfields(BitfieldUnit { layout, .. }) => Some(layout),
             Field::DataMember(ref data) => {
@@ -307,7 +307,7 @@ impl DotAttributes for Bitfield {
 
 /// A logical bitfield within some physical bitfield allocation unit.
 #[derive(Debug)]
-pub struct Bitfield {
+pub(crate) struct Bitfield {
     /// Index of the bit within this bitfield's allocation unit where this
     /// bitfield's bits begin.
     offset_into_unit: usize,
@@ -341,27 +341,12 @@ impl Bitfield {
 
     /// Get the index of the bit within this bitfield's allocation unit where
     /// this bitfield begins.
-    pub fn offset_into_unit(&self) -> usize {
+    pub(crate) fn offset_into_unit(&self) -> usize {
         self.offset_into_unit
     }
 
-    /// Get the mask value that when &'ed with this bitfield's allocation unit
-    /// produces this bitfield's value.
-    pub fn mask(&self) -> u64 {
-        use std::u64;
-
-        let unoffseted_mask =
-            if self.width() as u64 == mem::size_of::<u64>() as u64 * 8 {
-                u64::MAX
-            } else {
-                (1u64 << self.width()) - 1u64
-            };
-
-        unoffseted_mask << self.offset_into_unit()
-    }
-
     /// Get the bit width of this bitfield.
-    pub fn width(&self) -> u32 {
+    pub(crate) fn width(&self) -> u32 {
         self.data.bitfield_width().unwrap()
     }
 
@@ -369,7 +354,7 @@ impl Bitfield {
     ///
     /// Panics if called before assigning bitfield accessor names or if
     /// this bitfield have no name.
-    pub fn getter_name(&self) -> &str {
+    pub(crate) fn getter_name(&self) -> &str {
         assert!(
             self.name().is_some(),
             "`Bitfield::getter_name` called on anonymous field"
@@ -384,7 +369,7 @@ impl Bitfield {
     ///
     /// Panics if called before assigning bitfield accessor names or if
     /// this bitfield have no name.
-    pub fn setter_name(&self) -> &str {
+    pub(crate) fn setter_name(&self) -> &str {
         assert!(
             self.name().is_some(),
             "`Bitfield::setter_name` called on anonymous field"
@@ -866,7 +851,7 @@ impl Trace for CompFields {
 
 /// Common data shared across different field types.
 #[derive(Clone, Debug)]
-pub struct FieldData {
+pub(crate) struct FieldData {
     /// The name of the field, empty if it's an unnamed bitfield width.
     name: Option<String>,
 
@@ -921,7 +906,7 @@ impl FieldMethods for FieldData {
 
 /// The kind of inheritance a base class is using.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum BaseKind {
+pub(crate) enum BaseKind {
     /// Normal inheritance, like:
     ///
     /// ```cpp
@@ -938,25 +923,25 @@ pub enum BaseKind {
 
 /// A base class.
 #[derive(Clone, Debug)]
-pub struct Base {
+pub(crate) struct Base {
     /// The type of this base class.
-    pub ty: TypeId,
+    pub(crate) ty: TypeId,
     /// The kind of inheritance we're doing.
-    pub kind: BaseKind,
+    pub(crate) kind: BaseKind,
     /// Name of the field in which this base should be stored.
-    pub field_name: String,
+    pub(crate) field_name: String,
     /// Whether this base is inherited from publically.
-    pub is_pub: bool,
+    pub(crate) is_pub: bool,
 }
 
 impl Base {
     /// Whether this base class is inheriting virtually.
-    pub fn is_virtual(&self) -> bool {
+    pub(crate) fn is_virtual(&self) -> bool {
         self.kind == BaseKind::Virtual
     }
 
     /// Whether this base class should have it's own field for storage.
-    pub fn requires_storage(&self, ctx: &BindgenContext) -> bool {
+    pub(crate) fn requires_storage(&self, ctx: &BindgenContext) -> bool {
         // Virtual bases are already taken into account by the vtable
         // pointer.
         //
@@ -976,7 +961,7 @@ impl Base {
     }
 
     /// Whether this base is inherited from publically.
-    pub fn is_public(&self) -> bool {
+    pub(crate) fn is_public(&self) -> bool {
         self.is_pub
     }
 }
@@ -987,7 +972,7 @@ impl Base {
 /// of fields which also are associated with their own (potentially compound)
 /// type.
 #[derive(Debug)]
-pub struct CompInfo {
+pub(crate) struct CompInfo {
     /// Whether this is a struct or a union.
     kind: CompKind,
 
@@ -1067,7 +1052,7 @@ pub struct CompInfo {
 
 impl CompInfo {
     /// Construct a new compound type.
-    pub fn new(kind: CompKind) -> Self {
+    pub(crate) fn new(kind: CompKind) -> Self {
         CompInfo {
             kind,
             fields: CompFields::default(),
@@ -1097,7 +1082,7 @@ impl CompInfo {
     /// If we're a union without known layout, we try to compute it from our
     /// members. This is not ideal, but clang fails to report the size for these
     /// kind of unions, see test/headers/template_union.hpp
-    pub fn layout(&self, ctx: &BindgenContext) -> Option<Layout> {
+    pub(crate) fn layout(&self, ctx: &BindgenContext) -> Option<Layout> {
         // We can't do better than clang here, sorry.
         if self.kind == CompKind::Struct {
             return None;
@@ -1126,7 +1111,7 @@ impl CompInfo {
     }
 
     /// Get this type's set of fields.
-    pub fn fields(&self) -> &[Field] {
+    pub(crate) fn fields(&self) -> &[Field] {
         match self.fields {
             CompFields::Error => &[],
             CompFields::After { ref fields, .. } => fields,
@@ -1184,7 +1169,7 @@ impl CompInfo {
     /// Returns whether we have a too large bitfield unit, in which case we may
     /// not be able to derive some of the things we should be able to normally
     /// derive.
-    pub fn has_too_large_bitfield_unit(&self) -> bool {
+    pub(crate) fn has_too_large_bitfield_unit(&self) -> bool {
         if !self.has_bitfields() {
             return false;
         }
@@ -1198,53 +1183,53 @@ impl CompInfo {
 
     /// Does this type have any template parameters that aren't types
     /// (e.g. int)?
-    pub fn has_non_type_template_params(&self) -> bool {
+    pub(crate) fn has_non_type_template_params(&self) -> bool {
         self.has_non_type_template_params
     }
 
     /// Do we see a virtual function during parsing?
     /// Get the has_own_virtual_method boolean.
-    pub fn has_own_virtual_method(&self) -> bool {
+    pub(crate) fn has_own_virtual_method(&self) -> bool {
         self.has_own_virtual_method
     }
 
     /// Did we see a destructor when parsing this type?
-    pub fn has_own_destructor(&self) -> bool {
+    pub(crate) fn has_own_destructor(&self) -> bool {
         self.has_destructor
     }
 
     /// Get this type's set of methods.
-    pub fn methods(&self) -> &[Method] {
+    pub(crate) fn methods(&self) -> &[Method] {
         &self.methods
     }
 
     /// Get this type's set of constructors.
-    pub fn constructors(&self) -> &[FunctionId] {
+    pub(crate) fn constructors(&self) -> &[FunctionId] {
         &self.constructors
     }
 
     /// Get this type's destructor.
-    pub fn destructor(&self) -> Option<(MethodKind, FunctionId)> {
+    pub(crate) fn destructor(&self) -> Option<(MethodKind, FunctionId)> {
         self.destructor
     }
 
     /// What kind of compound type is this?
-    pub fn kind(&self) -> CompKind {
+    pub(crate) fn kind(&self) -> CompKind {
         self.kind
     }
 
     /// Is this a union?
-    pub fn is_union(&self) -> bool {
+    pub(crate) fn is_union(&self) -> bool {
         self.kind() == CompKind::Union
     }
 
     /// The set of types that this one inherits from.
-    pub fn base_members(&self) -> &[Base] {
+    pub(crate) fn base_members(&self) -> &[Base] {
         &self.base_members
     }
 
     /// Construct a new compound type from a Clang type.
-    pub fn from_ty(
+    pub(crate) fn from_ty(
         potential_id: ItemId,
         ty: &clang::Type,
         location: Option<clang::Cursor>,
@@ -1611,23 +1596,23 @@ impl CompInfo {
 
     /// Get the set of types that were declared within this compound type
     /// (e.g. nested class definitions).
-    pub fn inner_types(&self) -> &[TypeId] {
+    pub(crate) fn inner_types(&self) -> &[TypeId] {
         &self.inner_types
     }
 
     /// Get the set of static variables declared within this compound type.
-    pub fn inner_vars(&self) -> &[VarId] {
+    pub(crate) fn inner_vars(&self) -> &[VarId] {
         &self.inner_vars
     }
 
     /// Have we found a field with an opaque type that could potentially mess up
     /// the layout of this compound type?
-    pub fn found_unknown_attr(&self) -> bool {
+    pub(crate) fn found_unknown_attr(&self) -> bool {
         self.found_unknown_attr
     }
 
     /// Is this compound type packed?
-    pub fn is_packed(
+    pub(crate) fn is_packed(
         &self,
         ctx: &BindgenContext,
         layout: Option<&Layout>,
@@ -1657,12 +1642,12 @@ impl CompInfo {
     }
 
     /// Returns true if compound type has been forward declared
-    pub fn is_forward_declaration(&self) -> bool {
+    pub(crate) fn is_forward_declaration(&self) -> bool {
         self.is_forward_declaration
     }
 
     /// Compute this compound structure's bitfield allocation units.
-    pub fn compute_bitfield_units(
+    pub(crate) fn compute_bitfield_units(
         &mut self,
         ctx: &BindgenContext,
         layout: Option<&Layout>,
@@ -1672,7 +1657,7 @@ impl CompInfo {
     }
 
     /// Assign for each anonymous field a generated name.
-    pub fn deanonymize_fields(&mut self, ctx: &BindgenContext) {
+    pub(crate) fn deanonymize_fields(&mut self, ctx: &BindgenContext) {
         self.fields.deanonymize_fields(ctx, &self.methods);
     }
 
@@ -1685,7 +1670,7 @@ impl CompInfo {
     ///
     /// Second boolean returns whether all fields can be copied (and thus
     /// ManuallyDrop is not needed).
-    pub fn is_rust_union(
+    pub(crate) fn is_rust_union(
         &self,
         ctx: &BindgenContext,
         layout: Option<&Layout>,
@@ -1695,7 +1680,7 @@ impl CompInfo {
             return (false, false);
         }
 
-        if !ctx.options().rust_features().untagged_union {
+        if !ctx.options().untagged_union {
             return (false, false);
         }
 

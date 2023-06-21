@@ -22,7 +22,7 @@ use crate::{HashMap, HashSet};
 ///   type parameter in array if any of the template arguments or template definition
 ///   has.
 #[derive(Debug, Clone)]
-pub struct HasTypeParameterInArray<'ctx> {
+pub(crate) struct HasTypeParameterInArray<'ctx> {
     ctx: &'ctx BindgenContext,
 
     // The incremental result of this analysis's computation. Everything in this

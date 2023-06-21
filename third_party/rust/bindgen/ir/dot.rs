@@ -8,7 +8,7 @@ use std::path::Path;
 
 /// A trait for anything that can write attributes as `<table>` rows to a dot
 /// file.
-pub trait DotAttributes {
+pub(crate) trait DotAttributes {
     /// Write this thing's attributes to the given output. Each attribute must
     /// be its own `<tr>...</tr>`.
     fn dot_attributes<W>(
@@ -21,7 +21,7 @@ pub trait DotAttributes {
 }
 
 /// Write a graphviz dot file containing our IR.
-pub fn write_dot_file<P>(ctx: &BindgenContext, path: P) -> io::Result<()>
+pub(crate) fn write_dot_file<P>(ctx: &BindgenContext, path: P) -> io::Result<()>
 where
     P: AsRef<Path>,
 {

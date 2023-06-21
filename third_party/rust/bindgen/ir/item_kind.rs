@@ -10,7 +10,7 @@ use std::io;
 
 /// A item we parse and translate.
 #[derive(Debug)]
-pub enum ItemKind {
+pub(crate) enum ItemKind {
     /// A module, created implicitly once (the root module), or via C++
     /// namespaces.
     Module(Module),
@@ -28,7 +28,7 @@ pub enum ItemKind {
 impl ItemKind {
     /// Get a reference to this `ItemKind`'s underying `Module`, or `None` if it
     /// is some other kind.
-    pub fn as_module(&self) -> Option<&Module> {
+    pub(crate) fn as_module(&self) -> Option<&Module> {
         match *self {
             ItemKind::Module(ref module) => Some(module),
             _ => None,
@@ -36,7 +36,7 @@ impl ItemKind {
     }
 
     /// Transform our `ItemKind` into a string.
-    pub fn kind_name(&self) -> &'static str {
+    pub(crate) fn kind_name(&self) -> &'static str {
         match *self {
             ItemKind::Module(..) => "Module",
             ItemKind::Type(..) => "Type",
@@ -46,19 +46,13 @@ impl ItemKind {
     }
 
     /// Is this a module?
-    pub fn is_module(&self) -> bool {
+    pub(crate) fn is_module(&self) -> bool {
         self.as_module().is_some()
-    }
-
-    /// Get a reference to this `ItemKind`'s underying `Module`, or panic if it
-    /// is some other kind.
-    pub fn expect_module(&self) -> &Module {
-        self.as_module().expect("Not a module")
     }
 
     /// Get a reference to this `ItemKind`'s underying `Function`, or `None` if
     /// it is some other kind.
-    pub fn as_function(&self) -> Option<&Function> {
+    pub(crate) fn as_function(&self) -> Option<&Function> {
         match *self {
             ItemKind::Function(ref func) => Some(func),
             _ => None,
@@ -66,19 +60,19 @@ impl ItemKind {
     }
 
     /// Is this a function?
-    pub fn is_function(&self) -> bool {
+    pub(crate) fn is_function(&self) -> bool {
         self.as_function().is_some()
     }
 
     /// Get a reference to this `ItemKind`'s underying `Function`, or panic if
     /// it is some other kind.
-    pub fn expect_function(&self) -> &Function {
+    pub(crate) fn expect_function(&self) -> &Function {
         self.as_function().expect("Not a function")
     }
 
     /// Get a reference to this `ItemKind`'s underying `Type`, or `None` if
     /// it is some other kind.
-    pub fn as_type(&self) -> Option<&Type> {
+    pub(crate) fn as_type(&self) -> Option<&Type> {
         match *self {
             ItemKind::Type(ref ty) => Some(ty),
             _ => None,
@@ -87,7 +81,7 @@ impl ItemKind {
 
     /// Get a mutable reference to this `ItemKind`'s underying `Type`, or `None`
     /// if it is some other kind.
-    pub fn as_type_mut(&mut self) -> Option<&mut Type> {
+    pub(crate) fn as_type_mut(&mut self) -> Option<&mut Type> {
         match *self {
             ItemKind::Type(ref mut ty) => Some(ty),
             _ => None,
@@ -95,19 +89,19 @@ impl ItemKind {
     }
 
     /// Is this a type?
-    pub fn is_type(&self) -> bool {
+    pub(crate) fn is_type(&self) -> bool {
         self.as_type().is_some()
     }
 
     /// Get a reference to this `ItemKind`'s underying `Type`, or panic if it is
     /// some other kind.
-    pub fn expect_type(&self) -> &Type {
+    pub(crate) fn expect_type(&self) -> &Type {
         self.as_type().expect("Not a type")
     }
 
     /// Get a reference to this `ItemKind`'s underying `Var`, or `None` if it is
     /// some other kind.
-    pub fn as_var(&self) -> Option<&Var> {
+    pub(crate) fn as_var(&self) -> Option<&Var> {
         match *self {
             ItemKind::Var(ref v) => Some(v),
             _ => None,
@@ -115,14 +109,8 @@ impl ItemKind {
     }
 
     /// Is this a variable?
-    pub fn is_var(&self) -> bool {
+    pub(crate) fn is_var(&self) -> bool {
         self.as_var().is_some()
-    }
-
-    /// Get a reference to this `ItemKind`'s underying `Var`, or panic if it is
-    /// some other kind.
-    pub fn expect_var(&self) -> &Var {
-        self.as_var().expect("Not a var")
     }
 }
 

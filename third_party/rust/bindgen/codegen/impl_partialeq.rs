@@ -5,7 +5,7 @@ use crate::ir::ty::{TypeKind, RUST_DERIVE_IN_ARRAY_LIMIT};
 
 /// Generate a manual implementation of `PartialEq` trait for the
 /// specified compound type.
-pub fn gen_partialeq_impl(
+pub(crate) fn gen_partialeq_impl(
     ctx: &BindgenContext,
     comp_info: &CompInfo,
     item: &Item,
@@ -18,7 +18,7 @@ pub fn gen_partialeq_impl(
             &self._bindgen_opaque_blob[..] == &other._bindgen_opaque_blob[..]
         });
     } else if comp_info.kind() == CompKind::Union {
-        assert!(!ctx.options().rust_features().untagged_union);
+        assert!(!ctx.options().untagged_union);
         tokens.push(quote! {
             &self.bindgen_union_field[..] == &other.bindgen_union_field[..]
         });

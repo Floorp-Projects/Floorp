@@ -25,7 +25,7 @@ impl Default for MacroParsingBehavior {
 /// A trait to allow configuring different kinds of types in different
 /// situations.
 pub trait ParseCallbacks: fmt::Debug {
-    #[cfg(feature = "cli")]
+    #[cfg(feature = "__cli")]
     #[doc(hidden)]
     fn cli_args(&self) -> Vec<String> {
         vec![]
@@ -39,6 +39,15 @@ pub trait ParseCallbacks: fmt::Debug {
     /// This function will run for every extern variable and function. The returned value determines
     /// the name visible in the bindings.
     fn generated_name_override(
+        &self,
+        _item_info: ItemInfo<'_>,
+    ) -> Option<String> {
+        None
+    }
+
+    /// This function will run for every extern variable and function. The returned value determines
+    /// the link name in the bindings.
+    fn generated_link_name_override(
         &self,
         _item_info: ItemInfo<'_>,
     ) -> Option<String> {
@@ -93,6 +102,10 @@ pub trait ParseCallbacks: fmt::Debug {
     /// This will be called on every file inclusion, with the full path of the included file.
     fn include_file(&self, _filename: &str) {}
 
+    /// This will be called every time `bindgen` reads an environment variable whether it has any
+    /// content or not.
+    fn read_env_var(&self, _key: &str) {}
+
     /// This will be called to determine whether a particular blocklisted type
     /// implements a trait or not. This will be used to implement traits on
     /// other types containing the blocklisted type.
@@ -122,6 +135,27 @@ pub trait ParseCallbacks: fmt::Debug {
     fn process_comment(&self, _comment: &str) -> Option<String> {
         None
     }
+
+    /// Potentially override the visibility of a composite type field.
+    ///
+    /// Caution: This allows overriding standard C++ visibility inferred by
+    /// `respect_cxx_access_specs`.
+    fn field_visibility(
+        &self,
+        _info: FieldInfo<'_>,
+    ) -> Option<crate::FieldVisibilityKind> {
+        None
+    }
+
+    /// Process a function name that as exactly one `va_list` argument
+    /// to be wrapped as a variadic function with the wrapped static function
+    /// feature.
+    ///
+    /// The returned string is new function name.
+    #[cfg(feature = "experimental")]
+    fn wrap_as_variadic_fn(&self, _name: &str) -> Option<String> {
+        None
+    }
 }
 
 /// Relevant information about a type to which new derive attributes will be added using
@@ -146,7 +180,7 @@ pub enum TypeKind {
     Union,
 }
 
-/// An struct providing information about the item being passed to `ParseCallbacks::generated_name_override`.
+/// A struct providing information about the item being passed to [`ParseCallbacks::generated_name_override`].
 #[non_exhaustive]
 pub struct ItemInfo<'a> {
     /// The name of the item
@@ -162,4 +196,15 @@ pub enum ItemKind {
     Function,
     /// A Variable
     Var,
+}
+
+/// Relevant information about a field for which visibility can be determined using
+/// [`ParseCallbacks::field_visibility`].
+#[derive(Debug)]
+#[non_exhaustive]
+pub struct FieldInfo<'a> {
+    /// The name of the type.
+    pub type_name: &'a str,
+    /// The name of the field.
+    pub field_name: &'a str,
 }

@@ -21,7 +21,7 @@ use proc_macro2::{Ident, Span, TokenStream};
 ///
 /// Also protocols and categories are parsed as this type
 #[derive(Debug)]
-pub struct ObjCInterface {
+pub(crate) struct ObjCInterface {
     /// The name
     /// like, NSObject
     name: String,
@@ -31,13 +31,13 @@ pub struct ObjCInterface {
     is_protocol: bool,
 
     /// The list of template names almost always, ObjectType or KeyType
-    pub template_names: Vec<String>,
+    pub(crate) template_names: Vec<String>,
 
     /// The list of protocols that this interface conforms to.
-    pub conforms_to: Vec<ItemId>,
+    pub(crate) conforms_to: Vec<ItemId>,
 
     /// The direct parent for this interface.
-    pub parent_class: Option<ItemId>,
+    pub(crate) parent_class: Option<ItemId>,
 
     /// List of the methods defined in this interfae
     methods: Vec<ObjCMethod>,
@@ -47,7 +47,7 @@ pub struct ObjCInterface {
 
 /// The objective c methods
 #[derive(Debug)]
-pub struct ObjCMethod {
+pub(crate) struct ObjCMethod {
     /// The original method selector name
     /// like, dataWithBytes:length:
     name: String,
@@ -78,14 +78,14 @@ impl ObjCInterface {
 
     /// The name
     /// like, NSObject
-    pub fn name(&self) -> &str {
+    pub(crate) fn name(&self) -> &str {
         self.name.as_ref()
     }
 
     /// Formats the name for rust
     /// Can be like NSObject, but with categories might be like NSObject_NSCoderMethods
     /// and protocols are like PNSObject
-    pub fn rust_name(&self) -> String {
+    pub(crate) fn rust_name(&self) -> String {
         if let Some(ref cat) = self.category {
             format!("{}_{}", self.name(), cat)
         } else if self.is_protocol {
@@ -96,32 +96,32 @@ impl ObjCInterface {
     }
 
     /// Is this a template interface?
-    pub fn is_template(&self) -> bool {
+    pub(crate) fn is_template(&self) -> bool {
         !self.template_names.is_empty()
     }
 
     /// List of the methods defined in this interface
-    pub fn methods(&self) -> &Vec<ObjCMethod> {
+    pub(crate) fn methods(&self) -> &Vec<ObjCMethod> {
         &self.methods
     }
 
     /// Is this a protocol?
-    pub fn is_protocol(&self) -> bool {
+    pub(crate) fn is_protocol(&self) -> bool {
         self.is_protocol
     }
 
     /// Is this a category?
-    pub fn is_category(&self) -> bool {
+    pub(crate) fn is_category(&self) -> bool {
         self.category.is_some()
     }
 
     /// List of the class methods defined in this interface
-    pub fn class_methods(&self) -> &Vec<ObjCMethod> {
+    pub(crate) fn class_methods(&self) -> &Vec<ObjCMethod> {
         &self.class_methods
     }
 
     /// Parses the Objective C interface from the cursor
-    pub fn from_ty(
+    pub(crate) fn from_ty(
         cursor: &clang::Cursor,
         ctx: &mut BindgenContext,
     ) -> Option<Self> {
@@ -229,30 +229,27 @@ impl ObjCMethod {
         }
     }
 
-    /// The original method selector name
-    /// like, dataWithBytes:length:
-    pub fn name(&self) -> &str {
-        self.name.as_ref()
-    }
-
     /// Method name as converted to rust
     /// like, dataWithBytes_length_
-    pub fn rust_name(&self) -> &str {
+    pub(crate) fn rust_name(&self) -> &str {
         self.rust_name.as_ref()
     }
 
     /// Returns the methods signature as FunctionSig
-    pub fn signature(&self) -> &FunctionSig {
+    pub(crate) fn signature(&self) -> &FunctionSig {
         &self.signature
     }
 
     /// Is this a class method?
-    pub fn is_class_method(&self) -> bool {
+    pub(crate) fn is_class_method(&self) -> bool {
         self.is_class_method
     }
 
     /// Formats the method call
-    pub fn format_method_call(&self, args: &[TokenStream]) -> TokenStream {
+    pub(crate) fn format_method_call(
+        &self,
+        args: &[TokenStream],
+    ) -> TokenStream {
         let split_name: Vec<Option<Ident>> = self
             .name
             .split(':')

@@ -18,7 +18,7 @@ use std::ops;
 
 /// A trait that encapsulates the logic for whether or not we can derive `Debug`
 /// for a given thing.
-pub trait CanDeriveDebug {
+pub(crate) trait CanDeriveDebug {
     /// Return `true` if `Debug` can be derived for this thing, `false`
     /// otherwise.
     fn can_derive_debug(&self, ctx: &BindgenContext) -> bool;
@@ -26,7 +26,7 @@ pub trait CanDeriveDebug {
 
 /// A trait that encapsulates the logic for whether or not we can derive `Copy`
 /// for a given thing.
-pub trait CanDeriveCopy {
+pub(crate) trait CanDeriveCopy {
     /// Return `true` if `Copy` can be derived for this thing, `false`
     /// otherwise.
     fn can_derive_copy(&self, ctx: &BindgenContext) -> bool;
@@ -34,7 +34,7 @@ pub trait CanDeriveCopy {
 
 /// A trait that encapsulates the logic for whether or not we can derive
 /// `Default` for a given thing.
-pub trait CanDeriveDefault {
+pub(crate) trait CanDeriveDefault {
     /// Return `true` if `Default` can be derived for this thing, `false`
     /// otherwise.
     fn can_derive_default(&self, ctx: &BindgenContext) -> bool;
@@ -42,7 +42,7 @@ pub trait CanDeriveDefault {
 
 /// A trait that encapsulates the logic for whether or not we can derive `Hash`
 /// for a given thing.
-pub trait CanDeriveHash {
+pub(crate) trait CanDeriveHash {
     /// Return `true` if `Hash` can be derived for this thing, `false`
     /// otherwise.
     fn can_derive_hash(&self, ctx: &BindgenContext) -> bool;
@@ -50,7 +50,7 @@ pub trait CanDeriveHash {
 
 /// A trait that encapsulates the logic for whether or not we can derive
 /// `PartialEq` for a given thing.
-pub trait CanDerivePartialEq {
+pub(crate) trait CanDerivePartialEq {
     /// Return `true` if `PartialEq` can be derived for this thing, `false`
     /// otherwise.
     fn can_derive_partialeq(&self, ctx: &BindgenContext) -> bool;
@@ -58,7 +58,7 @@ pub trait CanDerivePartialEq {
 
 /// A trait that encapsulates the logic for whether or not we can derive
 /// `PartialOrd` for a given thing.
-pub trait CanDerivePartialOrd {
+pub(crate) trait CanDerivePartialOrd {
     /// Return `true` if `PartialOrd` can be derived for this thing, `false`
     /// otherwise.
     fn can_derive_partialord(&self, ctx: &BindgenContext) -> bool;
@@ -66,14 +66,14 @@ pub trait CanDerivePartialOrd {
 
 /// A trait that encapsulates the logic for whether or not we can derive `Eq`
 /// for a given thing.
-pub trait CanDeriveEq {
+pub(crate) trait CanDeriveEq {
     /// Return `true` if `Eq` can be derived for this thing, `false` otherwise.
     fn can_derive_eq(&self, ctx: &BindgenContext) -> bool;
 }
 
 /// A trait that encapsulates the logic for whether or not we can derive `Ord`
 /// for a given thing.
-pub trait CanDeriveOrd {
+pub(crate) trait CanDeriveOrd {
     /// Return `true` if `Ord` can be derived for this thing, `false` otherwise.
     fn can_derive_ord(&self, ctx: &BindgenContext) -> bool;
 }
@@ -115,7 +115,7 @@ impl Default for CanDerive {
 
 impl CanDerive {
     /// Take the least upper bound of `self` and `rhs`.
-    pub fn join(self, rhs: Self) -> Self {
+    pub(crate) fn join(self, rhs: Self) -> Self {
         cmp::max(self, rhs)
     }
 }
