@@ -190,6 +190,9 @@ struct ForOfPIC {
     // Initialize the canonical iterator function.
     bool initialize(JSContext* cx);
 
+    // Try to optimize this chain for a newly allocated array.
+    bool tryOptimizeArray(JSContext* cx, bool* optimized);
+
     // Try to optimize this chain for an object.
     bool tryOptimizeArray(JSContext* cx, Handle<ArrayObject*> array,
                           bool* optimized);

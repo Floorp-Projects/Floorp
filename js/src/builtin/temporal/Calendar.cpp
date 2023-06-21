@@ -38,6 +38,7 @@
 #include "builtin/temporal/PlainTime.h"
 #include "builtin/temporal/PlainYearMonth.h"
 #include "builtin/temporal/Temporal.h"
+#include "builtin/temporal/TemporalFields.h"
 #include "builtin/temporal/TemporalParser.h"
 #include "builtin/temporal/TemporalTypes.h"
 #include "builtin/temporal/TemporalUnit.h"
@@ -77,6 +78,7 @@
 #include "vm/JSAtomState.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
+#include "vm/PIC.h"
 #include "vm/PlainObject.h"
 #include "vm/PropertyInfo.h"
 #include "vm/PropertyKey.h"
@@ -95,6 +97,51 @@ using namespace js::temporal;
 
 static inline bool IsCalendar(Handle<Value> v) {
   return v.isObject() && v.toObject().is<CalendarObject>();
+}
+
+// IterableToListOfType which only accepts strings
+static bool IterableToListOfStrings(
+    JSContext* cx, Handle<Value> items,
+    MutableHandle<JS::StackGCVector<PropertyKey>> list) {
+  // Step 1.
+  JS::ForOfIterator iterator(cx);
+  if (!iterator.init(items)) {
+    return false;
+  }
+
+  // Step 2. (Not applicable in our implementation.)
+
+  // Steps 3-4.
+  Rooted<Value> nextValue(cx);
+  Rooted<PropertyKey> value(cx);
+  while (true) {
+    bool done;
+    if (!iterator.next(&nextValue, &done)) {
+      return false;
+    }
+    if (done) {
+      break;
+    }
+
+    if (nextValue.isString()) {
+      if (!PrimitiveValueToId<CanGC>(cx, nextValue, &value)) {
+        return false;
+      }
+      if (!list.append(value)) {
+        return false;
+      }
+      continue;
+    }
+
+    ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_IGNORE_STACK, nextValue,
+                     nullptr, "not a string");
+
+    iterator.closeThrow();
+    return false;
+  }
+
+  // Step 5.
+  return true;
 }
 
 /**
@@ -758,6 +805,187 @@ static bool ToCalendarField(JSContext* cx, JSLinearString* linear,
                              chars.get());
   }
   return false;
+}
+
+static PropertyName* ToPropertyName(JSContext* cx, CalendarField field) {
+  switch (field) {
+    case CalendarField::Year:
+      return cx->names().year;
+    case CalendarField::Month:
+      return cx->names().month;
+    case CalendarField::MonthCode:
+      return cx->names().monthCode;
+    case CalendarField::Day:
+      return cx->names().day;
+    case CalendarField::Hour:
+      return cx->names().hour;
+    case CalendarField::Minute:
+      return cx->names().minute;
+    case CalendarField::Second:
+      return cx->names().second;
+    case CalendarField::Millisecond:
+      return cx->names().millisecond;
+    case CalendarField::Microsecond:
+      return cx->names().microsecond;
+    case CalendarField::Nanosecond:
+      return cx->names().nanosecond;
+  }
+  MOZ_CRASH("invalid calendar field name");
+}
+
+#ifdef DEBUG
+static const char* ToCString(CalendarField field) {
+  switch (field) {
+    case CalendarField::Year:
+      return "year";
+    case CalendarField::Month:
+      return "month";
+    case CalendarField::MonthCode:
+      return "monthCode";
+    case CalendarField::Day:
+      return "day";
+    case CalendarField::Hour:
+      return "hour";
+    case CalendarField::Minute:
+      return "minute";
+    case CalendarField::Second:
+      return "second";
+    case CalendarField::Millisecond:
+      return "millisecond";
+    case CalendarField::Microsecond:
+      return "microsecond";
+    case CalendarField::Nanosecond:
+      return "nanosecond";
+  }
+  MOZ_CRASH("invalid calendar field name");
+}
+#endif
+
+/**
+ * Temporal.Calendar.prototype.fields ( fields )
+ */
+static bool BuiltinCalendarFields(
+    JSContext* cx, std::initializer_list<CalendarField> fieldNames,
+    JS::StackGCVector<PropertyKey>& result) {
+  MOZ_ASSERT(result.empty());
+
+  // Steps 1-5. (Not applicable.)
+
+  // Reserve space for the append operation.
+  if (!result.reserve(fieldNames.size())) {
+    return false;
+  }
+
+  // Steps 6-7.
+  for (auto fieldName : fieldNames) {
+    auto* name = ToPropertyName(cx, fieldName);
+
+    // Steps 7.a and 7.b.i-iv. (Not applicable)
+
+    // Step 7.b.v.
+    result.infallibleAppend(NameToId(name));
+  }
+
+  // Step 8. (Not applicable)
+  return true;
+}
+
+#ifdef DEBUG
+static bool IsSorted(std::initializer_list<CalendarField> fieldNames) {
+  return std::is_sorted(fieldNames.begin(), fieldNames.end(),
+                        [](auto x, auto y) {
+                          auto* a = ToCString(x);
+                          auto* b = ToCString(y);
+                          return std::strcmp(a, b) < 0;
+                        });
+}
+#endif
+
+static bool Calendar_fields(JSContext* cx, unsigned argc, Value* vp);
+
+/**
+ * CalendarFields ( calendar, fieldNames )
+ */
+bool js::temporal::CalendarFields(
+    JSContext* cx, Handle<JSObject*> calendar,
+    std::initializer_list<CalendarField> fieldNames,
+    MutableHandle<JS::StackGCVector<PropertyKey>> result) {
+  // FIXME: spec issue - the input is already sorted, let's assert this, too.
+  MOZ_ASSERT(IsSorted(fieldNames));
+
+  // FIXME: spec issue - the input shouldn't have duplicate elements. Let's
+  // assert this, too.
+  MOZ_ASSERT(std::adjacent_find(fieldNames.begin(), fieldNames.end()) ==
+             fieldNames.end());
+
+  // Step 1.
+  Rooted<Value> fields(cx);
+  if (!GetMethodForCall(cx, calendar, cx->names().fields, &fields)) {
+    return false;
+  }
+
+  // Fast-path for the default implementation.
+  if (calendar->is<CalendarObject>() &&
+      IsNativeFunction(fields, Calendar_fields)) {
+    ForOfPIC::Chain* stubChain = ForOfPIC::getOrCreate(cx);
+    if (!stubChain) {
+      return false;
+    }
+
+    bool arrayIterationSane;
+    if (!stubChain->tryOptimizeArray(cx, &arrayIterationSane)) {
+      return false;
+    }
+
+    if (arrayIterationSane) {
+      // Step 2. (Not applicable.)
+
+      // Step 3.
+      if (!BuiltinCalendarFields(cx, fieldNames, result.get())) {
+        return false;
+      }
+
+      // Step 4. (Not applicable.)
+      return true;
+    }
+  }
+
+  // FIXME: spec issue - provide default implementation similar to
+  // DefaultMergeFields? Otherwise the input field names are returned as-is,
+  // including any duplicate field names. (Duplicate names are still possible
+  // through user-defined calendars, though.)
+  // https://github.com/tc39/proposal-temporal/issues/2532
+
+  auto* array = NewDenseFullyAllocatedArray(cx, fieldNames.size());
+  if (!array) {
+    return false;
+  }
+  array->setDenseInitializedLength(fieldNames.size());
+
+  for (size_t i = 0; i < fieldNames.size(); i++) {
+    auto* name = ToPropertyName(cx, fieldNames.begin()[i]);
+    array->initDenseElement(i, StringValue(name));
+  }
+
+  Rooted<Value> fieldsArray(cx, ObjectValue(*array));
+  if (!Call(cx, fields, calendar, fieldsArray, &fieldsArray)) {
+    return false;
+  }
+
+  // FIXME: spec issue - sort the result array here instead of in
+  // PrepareTemporalFields.
+  // FIXME: spec issue - maybe also check for duplicates here?
+  // https://github.com/tc39/proposal-temporal/issues/2532
+
+  // Step 2.
+  if (!IterableToListOfStrings(cx, fieldsArray, result)) {
+    return false;
+  }
+
+  // The spec sorts the field names in PrepareTemporalFields. Sorting is only
+  // needed for user-defined calendars, so our implementation performs this step
+  // here instead of in PrepareTemporalFields.
+  return SortTemporalFieldNames(cx, result.get());
 }
 
 #ifdef DEBUG
