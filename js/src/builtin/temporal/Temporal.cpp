@@ -943,6 +943,86 @@ bool js::temporal::ToTemporalOverflow(JSContext* cx, Handle<JSObject*> options,
   return true;
 }
 
+/**
+ * ToTimeZoneNameOption ( normalizedOptions )
+ */
+bool js::temporal::ToTimeZoneNameOption(JSContext* cx,
+                                        Handle<JSObject*> options,
+                                        TimeZoneNameOption* result) {
+  // Step 1.
+  Rooted<JSString*> timeZoneName(cx);
+  if (!GetStringOption(cx, options, cx->names().timeZoneName, &timeZoneName)) {
+    return false;
+  }
+
+  // Caller should fill in the fallback.
+  if (!timeZoneName) {
+    return true;
+  }
+
+  JSLinearString* linear = timeZoneName->ensureLinear(cx);
+  if (!linear) {
+    return false;
+  }
+
+  if (StringEqualsLiteral(linear, "auto")) {
+    *result = TimeZoneNameOption::Auto;
+  } else if (StringEqualsLiteral(linear, "never")) {
+    *result = TimeZoneNameOption::Never;
+  } else if (StringEqualsLiteral(linear, "critical")) {
+    *result = TimeZoneNameOption::Critical;
+  } else {
+    if (auto chars = QuoteString(cx, linear, '"')) {
+      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                               JSMSG_INVALID_OPTION_VALUE, "timeZoneName",
+                               chars.get());
+    }
+    return false;
+  }
+  return true;
+}
+
+/**
+ * ToShowOffsetOption ( normalizedOptions )
+ */
+bool js::temporal::ToShowOffsetOption(JSContext* cx, Handle<JSObject*> options,
+                                      ShowOffsetOption* result) {
+  // FIXME: spec issue - should be renamed to ToOffsetOption to match the other
+  // operations ToCalendarNameOption and ToTimeZoneNameOption.
+  //
+  // https://github.com/tc39/proposal-temporal/issues/2441
+
+  // Step 1.
+  Rooted<JSString*> offset(cx);
+  if (!GetStringOption(cx, options, cx->names().offset, &offset)) {
+    return false;
+  }
+
+  // Caller should fill in the fallback.
+  if (!offset) {
+    return true;
+  }
+
+  JSLinearString* linear = offset->ensureLinear(cx);
+  if (!linear) {
+    return false;
+  }
+
+  if (StringEqualsLiteral(linear, "auto")) {
+    *result = ShowOffsetOption::Auto;
+  } else if (StringEqualsLiteral(linear, "never")) {
+    *result = ShowOffsetOption::Never;
+  } else {
+    if (auto chars = QuoteString(cx, linear, '"')) {
+      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                               JSMSG_INVALID_OPTION_VALUE, "offset",
+                               chars.get());
+    }
+    return false;
+  }
+  return true;
+}
+
 template <typename T, typename... Ts>
 static JSObject* MaybeUnwrapIf(JSObject* object) {
   if (auto* unwrapped = object->maybeUnwrapIf<T>()) {
