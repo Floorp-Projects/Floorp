@@ -43,6 +43,8 @@
     <string name="mozac_feature_prompts_content_description_input_label">Gāchrūn \'ngō etikêta si ruhuât gātūy hiūj dan</string>
     <!-- Title of a color picker dialog, this text is shown above a color picker. -->
     <string name="mozac_feature_prompts_choose_a_color">Nāguī \'ngō kōlô</string>
+    <!-- Title of the Identity Credential provider dialog choose. -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_provider">Nāna’huì’ ‘ngō sa rūgûñu’ūnj gāyi’ì’ sēsiûn</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_allow">Gā\'nïn</string>
     <!-- Text of a negative button in dialog requesting to open a new window. -->

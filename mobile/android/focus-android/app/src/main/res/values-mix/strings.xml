@@ -493,7 +493,10 @@
 
 
 
-  <string name="error_hostLookup_title">Kòo servidor ni ntanèe</string>
+  <!-- Snackbar that will be displayed after a website has been added to shortcuts. -->
+    <string name="snackbar_added_to_shortcuts">Tyika xina</string>
+
+    <string name="error_hostLookup_title">Kòo servidor ni ntanèe</string>
 
 
 

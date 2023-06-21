@@ -254,7 +254,7 @@
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s dūyingaj daran\' sa gāchrūnt riña barra direksiûn ngà sa nana\'ui\' nīkājt.</string>
 
-    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <!-- Search engine suggestion title text. The first parameter is the name of the suggested engine-->
     <string name="search_engine_suggestions_title">Nanà\'huì\' %s</string>
 
     <!-- Search engine suggestion description text -->
@@ -263,6 +263,9 @@
     <string name="search_settings_menu_item">Nādunā dàj gā riña sa nānà’huì’t</string>
     <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">Hìaj nī nānà’huì’ riña:</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Search engine icon. The first parameter is the search engine name (for example: DuckDuckGo). -->
+    <string name="search_engine_icon_content_description" tools:ignore="UnusedResources">%s sa nana\'ui\'i</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->

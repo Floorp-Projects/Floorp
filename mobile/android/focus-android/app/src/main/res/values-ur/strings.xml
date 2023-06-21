@@ -312,6 +312,12 @@
     <!-- In-app link (in settings) to Focus privacy notice. -->
     <string name="preference_privacy_notice">رازداری کا نوٹس</string>
 
+    <!-- In-app link (in settings) to Focus licensing information. -->
+    <string name="preference_licensing_info">لائسنس کی معلومات</string>
+
+    <!-- Link to Focus licensing information from other libraries that we use. -->
+    <string name="preference_libraries_we_use">لائبریریاں جو ہم استعمال کرتے ہیں</string>
+
     <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
     <string name="preference_about">کے بارے میں%1$s</string>
 
@@ -457,7 +463,13 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">بند کریں</string>
+
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">شروع کریں</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">آپ کی نجی نوعیت کو پاور اپ کرے</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">نجی برائوزنگ کو اگلی سطح پر لے کر جائیں۔ اشتہارات اور دیگر مواد جو آپ کی مختلف سائٹ پر سراغ راہ کاری کر کے صفحہ کہ لوڈ ہوبے کے وقت کو سست کر سکتا ہے۔</string>
@@ -575,6 +587,12 @@
 
     <!-- Preference for site permissions -->
     <string name="preference_site_permissions">سائٹ کی اجازتں</string>
+
+    <!--  Preference summary for the cookie banner. If the cookie banner option is not disabled. -->
+    <string name="preferences_cookie_banner_summary_on">چالو</string>
+
+    <!--  Preference summary for the cookie banner. If the cookie banner option is disabled. -->
+    <string name="preferences_cookie_banner_summary_off">بند</string>
 
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">آٹو پلے</string>
@@ -777,7 +795,10 @@
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">آلہ کے تھیم پر عمل کریں</string>
 
-    <!-- Sessions List -->
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">ناقابل بھروسا کنکشن</string>
+
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">ٹیب بند کریں</string>
 
@@ -791,5 +812,9 @@
     <string name="tool_tip_dismiss_button_content_description">برخاست کریں</string>
 
     <!-- Promote SearchWidget Dialog -->
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. -->
+    <string name="promote_search_widget_dialog_content_description">بند کریں</string>
 
     </resources>

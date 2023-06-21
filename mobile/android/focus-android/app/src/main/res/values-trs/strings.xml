@@ -490,7 +490,10 @@
 
 
 
-  <string name="error_hostLookup_title">Nu narì\'ij serbidor</string>
+  <!-- Snackbar that will be displayed after a website has been added to shortcuts. -->
+    <string name="snackbar_added_to_shortcuts">Ngà nanunj riña nej aksêso dirêkto!</string>
+
+    <string name="error_hostLookup_title">Nu narì\'ij serbidor</string>
 
 
 
