@@ -5,6 +5,8 @@
 package org.mozilla.fenix
 
 import android.annotation.SuppressLint
+import android.app.ActivityManager
+import android.content.Context
 import android.net.Uri
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
@@ -108,6 +110,19 @@ import org.mozilla.fenix.utils.Settings.Companion.TOP_SITES_PROVIDER_MAX_THRESHO
 import org.mozilla.fenix.wallpapers.Wallpaper
 import java.util.UUID
 import java.util.concurrent.TimeUnit
+
+/**
+ * The actual RAM threshold is 2GB.
+ *
+ * To enable simpler reporting, we want to use the device's 'advertised' RAM.
+ * As [ActivityManager.MemoryInfo.totalMem] is not the device's 'advertised' RAM spec & we cannot
+ * access [ActivityManager.MemoryInfo.advertisedMem] across all Android versions, we will use a
+ * proxy value of 1.6GB. This is based on 1.5GB with a small 'excess' buffer. We assert that all
+ * values above this proxy value are 2GB or more.
+ */
+private const val RAM_THRESHOLD_PROXY_GB = 1.6F
+
+private const val RAM_THRESHOLD_BYTES = RAM_THRESHOLD_PROXY_GB * (1e+9).toLong()
 
 /**
  *The main application class for Fenix. Records data to measure initialization performance.
@@ -689,6 +704,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         settings: Settings,
         browsersCache: BrowsersCache = BrowsersCache,
         mozillaProductDetector: MozillaProductDetector = MozillaProductDetector,
+        isDeviceRamAboveThreshold: Boolean = isDeviceRamAboveThreshold(),
     ) {
         setPreferenceMetrics(settings)
         with(Metrics) {
@@ -786,6 +802,8 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             marketingNotificationAllowed.set(
                 notificationManagerCompat.isNotificationChannelEnabled(MARKETING_CHANNEL_ID),
             )
+
+            ramMoreThanThreshold.set(isDeviceRamAboveThreshold)
         }
 
         with(AndroidAutofill) {
@@ -825,6 +843,16 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             Logins.savedAll.set(lazyPasswordStorage.value.list().size.toLong())
         }
     }
+
+    private fun deviceRamBytes(): Long {
+        val memoryInfo = ActivityManager.MemoryInfo()
+        val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        activityManager.getMemoryInfo(memoryInfo)
+
+        return memoryInfo.totalMem
+    }
+
+    private fun isDeviceRamAboveThreshold() = deviceRamBytes() > RAM_THRESHOLD_BYTES
 
     @Suppress("ComplexMethod")
     private fun setPreferenceMetrics(

@@ -2434,6 +2434,24 @@ metrics:
     metadata:
       tags:
         - Notifications
+  ram_more_than_threshold:
+    type: boolean
+    lifetime: application
+    description: True if the device's asserted 'advertised' RAM is more than the given threshold.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1840341
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/2620
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 128
+    metadata:
+      tags:
+        - Experiments
 
 customize_home:
   most_visited_sites:

@@ -148,7 +148,13 @@ class FenixApplicationTest {
         assertTrue(settings.contileContextId.isEmpty())
         assertNull(TopSites.contextId.testGetValue())
 
-        application.setStartupMetrics(browserStore, settings, browsersCache, mozillaProductDetector)
+        application.setStartupMetrics(
+            browserStore = browserStore,
+            settings = settings,
+            browsersCache = browsersCache,
+            mozillaProductDetector = mozillaProductDetector,
+            isDeviceRamAboveThreshold = true,
+        )
 
         // Verify that browser defaults metrics are set.
         assertEquals("Mozilla", Metrics.distributionId.testGetValue())
@@ -186,6 +192,7 @@ class FenixApplicationTest {
         assertEquals(true, Preferences.inactiveTabsEnabled.testGetValue())
         assertEquals(expectedAppInstallSource, Metrics.installSource.testGetValue())
         assertEquals(true, Metrics.defaultWallpaper.testGetValue())
+        assertEquals(true, Metrics.ramMoreThanThreshold.testGetValue())
 
         val contextId = TopSites.contextId.testGetValue()!!.toString()
 
