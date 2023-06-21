@@ -50,6 +50,94 @@
 using namespace js;
 using namespace js::temporal;
 
+void TemporalFields::trace(JSTracer* trc) {
+  TraceNullableRoot(trc, &monthCode, "TemporalFields::monthCode");
+  TraceNullableRoot(trc, &offset, "TemporalFields::offset");
+  TraceNullableRoot(trc, &era, "TemporalFields::era");
+  TraceRoot(trc, &timeZone, "TemporalFields::timeZone");
+}
+
+static PropertyName* ToPropertyName(JSContext* cx, TemporalField field) {
+  switch (field) {
+    case TemporalField::Year:
+      return cx->names().year;
+    case TemporalField::Month:
+      return cx->names().month;
+    case TemporalField::MonthCode:
+      return cx->names().monthCode;
+    case TemporalField::Day:
+      return cx->names().day;
+    case TemporalField::Hour:
+      return cx->names().hour;
+    case TemporalField::Minute:
+      return cx->names().minute;
+    case TemporalField::Second:
+      return cx->names().second;
+    case TemporalField::Millisecond:
+      return cx->names().millisecond;
+    case TemporalField::Microsecond:
+      return cx->names().microsecond;
+    case TemporalField::Nanosecond:
+      return cx->names().nanosecond;
+    case TemporalField::Offset:
+      return cx->names().offset;
+    case TemporalField::Era:
+      return cx->names().era;
+    case TemporalField::EraYear:
+      return cx->names().eraYear;
+    case TemporalField::TimeZone:
+      return cx->names().timeZone;
+  }
+  MOZ_CRASH("invalid temporal field name");
+}
+
+static const char* ToCString(TemporalField field) {
+  switch (field) {
+    case TemporalField::Year:
+      return "year";
+    case TemporalField::Month:
+      return "month";
+    case TemporalField::MonthCode:
+      return "monthCode";
+    case TemporalField::Day:
+      return "day";
+    case TemporalField::Hour:
+      return "hour";
+    case TemporalField::Minute:
+      return "minute";
+    case TemporalField::Second:
+      return "second";
+    case TemporalField::Millisecond:
+      return "millisecond";
+    case TemporalField::Microsecond:
+      return "microsecond";
+    case TemporalField::Nanosecond:
+      return "nanosecond";
+    case TemporalField::Offset:
+      return "offset";
+    case TemporalField::Era:
+      return "era";
+    case TemporalField::EraYear:
+      return "eraYear";
+    case TemporalField::TimeZone:
+      return "timeZone";
+  }
+  MOZ_CRASH("invalid temporal field name");
+}
+
+static JS::UniqueChars QuoteString(JSContext* cx, const char* str) {
+  Sprinter sprinter(cx);
+  if (!sprinter.init()) {
+    return nullptr;
+  }
+  mozilla::Range range(reinterpret_cast<const Latin1Char*>(str),
+                       std::strlen(str));
+  if (!QuoteString<QuoteTarget::String>(&sprinter, range)) {
+    return nullptr;
+  }
+  return sprinter.release();
+}
+
 static int32_t ComparePropertyKey(PropertyKey x, PropertyKey y) {
   MOZ_ASSERT(x.isAtom() || x.isInt());
   MOZ_ASSERT(y.isAtom() || y.isInt());
@@ -71,6 +159,249 @@ static int32_t ComparePropertyKey(PropertyKey x, PropertyKey y) {
 
   int32_t result = CompareChars(start.get(), end - start, str);
   return x.isInt() ? result : -result;
+}
+
+#ifdef DEBUG
+static bool IsSorted(std::initializer_list<TemporalField> fieldNames) {
+  return std::is_sorted(fieldNames.begin(), fieldNames.end(),
+                        [](auto x, auto y) {
+                          auto* a = ToCString(x);
+                          auto* b = ToCString(y);
+                          return std::strcmp(a, b) < 0;
+                        });
+}
+#endif
+
+// FIXME: spec issue - Require the |fieldNames| list is already sorted instead
+// of repeatedly sorting them in PrepareTemporalFields.
+// https://github.com/tc39/proposal-temporal/issues/2532
+
+// clang-format off
+//
+// TODO: |fields| is often a built-in Temporal type, so we likely want to
+// optimise for this case.
+//
+// Consider the case when PlainDate.prototype.toPlainMonthDay is called. The
+// following steps are applied:
+//
+// 1. CalendarFields(calendar, «"day", "monthCode"») is called to retrieve the
+//    relevant calendar fields. For (most?) built-in calendars this will just
+//    return the input list «"day", "monthCode"».
+// 2. PrepareTemporalFields(plainDate, «"day", "monthCode"») is called. This
+//    will access the properties `plainDate.day` and `plainDate.monthCode`.
+//   a. `plainDate.day` will call CalendarDay(calendar, plainDate).
+//   b. For built-in calendars, this will simply access `plainDate.[[IsoDay]]`.
+//   c. `plainDate.monthCode` will call CalendarMonthCode(calendar, plainDate).
+//   d. For built-in calendars, ISOMonthCode(plainDate.[[IsoMonth]]) is called.
+// 3. CalendarMonthDayFromFields(calendar, {day, monthCode}) is called.
+// 4. For built-in calendars, this calls PrepareTemporalFields({day, monthCode},
+//    «"day", "month", "monthCode", "year"», «"day"»).
+// 5. The previous PrepareTemporalFields call is a no-op and returns {day, monthCode}.
+// 6. Then ISOMonthDayFromFields({day, monthCode}, "constrain") gets called.
+// 7. ResolveISOMonth(monthCode) is called to parse the just created `monthCode`.
+// 8. RegulateISODate(referenceISOYear, month, day, "constrain") is called.
+// 9. Finally CreateTemporalMonthDay is called to create the PlainMonthDay instance.
+//
+// All these steps could be simplified to just:
+// 1. CreateTemporalMonthDay(referenceISOYear, plainDate.[[IsoMonth]], plainDate.[[IsoDay]]).
+//
+// When the following conditions are true:
+// 1. The `plainDate` is a Temporal.PlainDate instance and has no overridden methods.
+// 2. The `calendar` is a Temporal.Calendar instance and has no overridden methods.
+// 3. Temporal.PlainDate.prototype and Temporal.Calendar.prototype are in their initial state.
+// 4. Array iteration is still in its initial state. (Required by CalendarFields)
+//
+// PlainDate_toPlainMonthDay has an example implementation for this optimisation.
+//
+// clang-format on
+
+/**
+ * PrepareTemporalFields ( fields, fieldNames, requiredFields )
+ */
+bool js::temporal::PrepareTemporalFields(
+    JSContext* cx, Handle<JSObject*> fields,
+    std::initializer_list<TemporalField> fieldNames,
+    std::initializer_list<TemporalField> requiredFields,
+    MutableHandle<TemporalFields> result) {
+  // Steps 1-2. (Not applicable in our implementation.)
+
+  // Step 3. (|fieldNames| is sorted in our implementation.)
+  MOZ_ASSERT(IsSorted(fieldNames));
+
+  // |requiredFields| is sorted, too. Neither list has any duplicate elements.
+  MOZ_ASSERT(IsSorted(requiredFields));
+  MOZ_ASSERT(std::adjacent_find(fieldNames.begin(), fieldNames.end()) ==
+             fieldNames.end());
+  MOZ_ASSERT(std::adjacent_find(requiredFields.begin(), requiredFields.end()) ==
+             requiredFields.end());
+
+  // Step 4.
+  Rooted<Value> value(cx);
+  for (auto fieldName : fieldNames) {
+    auto* property = ToPropertyName(cx, fieldName);
+    auto* cstr = ToCString(fieldName);
+
+    // Step 4.a.
+    if (!GetProperty(cx, fields, fields, property, &value)) {
+      return false;
+    }
+
+    // Steps 4.b-c.
+    if (!value.isUndefined()) {
+      // Step 4.b.i. (Not applicable in our implementation.)
+
+      // Steps 4.b.ii-iii.
+      switch (fieldName) {
+        case TemporalField::Year:
+          if (!ToIntegerWithTruncation(cx, value, cstr, &result.year())) {
+            return false;
+          }
+          break;
+        case TemporalField::Month:
+          if (!ToPositiveIntegerWithTruncation(cx, value, cstr,
+                                               &result.month())) {
+            return false;
+          }
+          break;
+        case TemporalField::MonthCode: {
+          JSString* str = JS::ToString(cx, value);
+          if (!str) {
+            return false;
+          }
+          result.monthCode().set(str);
+          break;
+        }
+        case TemporalField::Day:
+          if (!ToPositiveIntegerWithTruncation(cx, value, cstr,
+                                               &result.day())) {
+            return false;
+          }
+          break;
+        case TemporalField::Hour:
+          if (!ToIntegerWithTruncation(cx, value, cstr, &result.hour())) {
+            return false;
+          }
+          break;
+        case TemporalField::Minute:
+          if (!ToIntegerWithTruncation(cx, value, cstr, &result.minute())) {
+            return false;
+          }
+          break;
+        case TemporalField::Second:
+          if (!ToIntegerWithTruncation(cx, value, cstr, &result.second())) {
+            return false;
+          }
+          break;
+        case TemporalField::Millisecond:
+          if (!ToIntegerWithTruncation(cx, value, cstr,
+                                       &result.millisecond())) {
+            return false;
+          }
+          break;
+        case TemporalField::Microsecond:
+          if (!ToIntegerWithTruncation(cx, value, cstr,
+                                       &result.microsecond())) {
+            return false;
+          }
+          break;
+        case TemporalField::Nanosecond:
+          if (!ToIntegerWithTruncation(cx, value, cstr, &result.nanosecond())) {
+            return false;
+          }
+          break;
+        case TemporalField::Offset: {
+          JSString* str = JS::ToString(cx, value);
+          if (!str) {
+            return false;
+          }
+          result.offset().set(str);
+          break;
+        }
+        case TemporalField::Era: {
+          JSString* str = JS::ToString(cx, value);
+          if (!str) {
+            return false;
+          }
+          result.era().set(str);
+          break;
+        }
+        case TemporalField::EraYear:
+          if (!ToIntegerWithTruncation(cx, value, cstr, &result.eraYear())) {
+            return false;
+          }
+          break;
+        case TemporalField::TimeZone:
+          // NB: TemporalField::TimeZone has no conversion function.
+          result.timeZone().set(value);
+          break;
+      }
+    } else {
+      // Step 4.c.i.
+      if (std::find(requiredFields.begin(), requiredFields.end(), fieldName) !=
+          requiredFields.end()) {
+        if (auto chars = QuoteString(cx, cstr)) {
+          JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                    JSMSG_TEMPORAL_MISSING_PROPERTY,
+                                    chars.get());
+        }
+        return false;
+      }
+
+      // `const` can be changed to `constexpr` when we switch to C++20.
+      const TemporalFields FallbackValues{};
+
+      // Steps 4.c.ii-iii.
+      switch (fieldName) {
+        case TemporalField::Year:
+          result.year() = FallbackValues.year;
+          break;
+        case TemporalField::Month:
+          result.month() = FallbackValues.month;
+          break;
+        case TemporalField::MonthCode:
+          result.monthCode().set(FallbackValues.monthCode);
+          break;
+        case TemporalField::Day:
+          result.day() = FallbackValues.day;
+          break;
+        case TemporalField::Hour:
+          result.hour() = FallbackValues.hour;
+          break;
+        case TemporalField::Minute:
+          result.minute() = FallbackValues.minute;
+          break;
+        case TemporalField::Second:
+          result.second() = FallbackValues.second;
+          break;
+        case TemporalField::Millisecond:
+          result.millisecond() = FallbackValues.millisecond;
+          break;
+        case TemporalField::Microsecond:
+          result.microsecond() = FallbackValues.microsecond;
+          break;
+        case TemporalField::Nanosecond:
+          result.nanosecond() = FallbackValues.nanosecond;
+          break;
+        case TemporalField::Offset:
+          result.offset().set(FallbackValues.offset);
+          break;
+        case TemporalField::Era:
+          result.era().set(FallbackValues.era);
+          break;
+        case TemporalField::EraYear:
+          result.eraYear() = FallbackValues.eraYear;
+          break;
+        case TemporalField::TimeZone:
+          result.timeZone().set(FallbackValues.timeZone);
+          break;
+      }
+    }
+  }
+
+  // Step 5. (Not applicable in our implementation.)
+
+  // Step 6.
+  return true;
 }
 
 bool js::temporal::SortTemporalFieldNames(
