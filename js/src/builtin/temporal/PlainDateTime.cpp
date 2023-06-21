@@ -796,6 +796,427 @@ static bool PlainDateTime_from(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
+ * get Temporal.PlainDateTime.prototype.calendar
+ */
+static bool PlainDateTime_calendar(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  args.rval().setObject(*dateTime->calendar());
+  return true;
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.calendar
+ */
+static bool PlainDateTime_calendar(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_calendar>(cx,
+                                                                       args);
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.year
+ */
+static bool PlainDateTime_year(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  Rooted<JSObject*> calendar(cx, dateTime->calendar());
+
+  // Step 4.
+  return CalendarYear(cx, calendar, args.thisv(), args.rval());
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.year
+ */
+static bool PlainDateTime_year(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_year>(cx, args);
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.month
+ */
+static bool PlainDateTime_month(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  Rooted<JSObject*> calendar(cx, dateTime->calendar());
+
+  // Step 4.
+  return CalendarMonth(cx, calendar, args.thisv(), args.rval());
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.month
+ */
+static bool PlainDateTime_month(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_month>(cx, args);
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.monthCode
+ */
+static bool PlainDateTime_monthCode(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  Rooted<JSObject*> calendar(cx, dateTime->calendar());
+
+  // Step 4.
+  return CalendarMonthCode(cx, calendar, args.thisv(), args.rval());
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.monthCode
+ */
+static bool PlainDateTime_monthCode(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_monthCode>(cx,
+                                                                        args);
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.day
+ */
+static bool PlainDateTime_day(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  Rooted<JSObject*> calendar(cx, dateTime->calendar());
+
+  // Step 4.
+  return CalendarDay(cx, calendar, args.thisv(), args.rval());
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.day
+ */
+static bool PlainDateTime_day(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_day>(cx, args);
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.hour
+ */
+static bool PlainDateTime_hour(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  args.rval().setInt32(dateTime->isoHour());
+  return true;
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.hour
+ */
+static bool PlainDateTime_hour(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_hour>(cx, args);
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.minute
+ */
+static bool PlainDateTime_minute(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  args.rval().setInt32(dateTime->isoMinute());
+  return true;
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.minute
+ */
+static bool PlainDateTime_minute(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_minute>(cx, args);
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.second
+ */
+static bool PlainDateTime_second(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  args.rval().setInt32(dateTime->isoSecond());
+  return true;
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.second
+ */
+static bool PlainDateTime_second(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_second>(cx, args);
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.millisecond
+ */
+static bool PlainDateTime_millisecond(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  args.rval().setInt32(dateTime->isoMillisecond());
+  return true;
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.millisecond
+ */
+static bool PlainDateTime_millisecond(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_millisecond>(cx,
+                                                                          args);
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.microsecond
+ */
+static bool PlainDateTime_microsecond(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  args.rval().setInt32(dateTime->isoMicrosecond());
+  return true;
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.microsecond
+ */
+static bool PlainDateTime_microsecond(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_microsecond>(cx,
+                                                                          args);
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.nanosecond
+ */
+static bool PlainDateTime_nanosecond(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  args.rval().setInt32(dateTime->isoNanosecond());
+  return true;
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.nanosecond
+ */
+static bool PlainDateTime_nanosecond(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_nanosecond>(cx,
+                                                                         args);
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.dayOfWeek
+ */
+static bool PlainDateTime_dayOfWeek(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  Rooted<JSObject*> calendar(cx, dateTime->calendar());
+
+  // Step 4.
+  return CalendarDayOfWeek(cx, calendar, args.thisv(), args.rval());
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.dayOfWeek
+ */
+static bool PlainDateTime_dayOfWeek(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_dayOfWeek>(cx,
+                                                                        args);
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.dayOfYear
+ */
+static bool PlainDateTime_dayOfYear(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  Rooted<JSObject*> calendar(cx, dateTime->calendar());
+
+  // Step 4.
+  return CalendarDayOfYear(cx, calendar, args.thisv(), args.rval());
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.dayOfYear
+ */
+static bool PlainDateTime_dayOfYear(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_dayOfYear>(cx,
+                                                                        args);
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.weekOfYear
+ */
+static bool PlainDateTime_weekOfYear(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  Rooted<JSObject*> calendar(cx, dateTime->calendar());
+
+  // Step 4.
+  return CalendarWeekOfYear(cx, calendar, args.thisv(), args.rval());
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.weekOfYear
+ */
+static bool PlainDateTime_weekOfYear(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_weekOfYear>(cx,
+                                                                         args);
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.yearOfWeek
+ */
+static bool PlainDateTime_yearOfWeek(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  Rooted<JSObject*> calendar(cx, dateTime->calendar());
+
+  // Step 4.
+  return CalendarYearOfWeek(cx, calendar, args.thisv(), args.rval());
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.yearOfWeek
+ */
+static bool PlainDateTime_yearOfWeek(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_yearOfWeek>(cx,
+                                                                         args);
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.daysInWeek
+ */
+static bool PlainDateTime_daysInWeek(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  Rooted<JSObject*> calendar(cx, dateTime->calendar());
+
+  // Step 4.
+  return CalendarDaysInWeek(cx, calendar, args.thisv(), args.rval());
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.daysInWeek
+ */
+static bool PlainDateTime_daysInWeek(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_daysInWeek>(cx,
+                                                                         args);
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.daysInMonth
+ */
+static bool PlainDateTime_daysInMonth(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  Rooted<JSObject*> calendar(cx, dateTime->calendar());
+
+  // Step 4.
+  return CalendarDaysInMonth(cx, calendar, args.thisv(), args.rval());
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.daysInMonth
+ */
+static bool PlainDateTime_daysInMonth(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_daysInMonth>(cx,
+                                                                          args);
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.daysInYear
+ */
+static bool PlainDateTime_daysInYear(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  Rooted<JSObject*> calendar(cx, dateTime->calendar());
+
+  // Step 4.
+  return CalendarDaysInYear(cx, calendar, args.thisv(), args.rval());
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.daysInYear
+ */
+static bool PlainDateTime_daysInYear(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_daysInYear>(cx,
+                                                                         args);
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.monthsInYear
+ */
+static bool PlainDateTime_monthsInYear(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  Rooted<JSObject*> calendar(cx, dateTime->calendar());
+
+  // Step 4.
+  return CalendarMonthsInYear(cx, calendar, args.thisv(), args.rval());
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.monthsInYear
+ */
+static bool PlainDateTime_monthsInYear(JSContext* cx, unsigned argc,
+                                       Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_monthsInYear>(
+      cx, args);
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.inLeapYear
+ */
+static bool PlainDateTime_inLeapYear(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  Rooted<JSObject*> calendar(cx, dateTime->calendar());
+
+  // Step 4.
+  return CalendarInLeapYear(cx, calendar, args.thisv(), args.rval());
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.inLeapYear
+ */
+static bool PlainDateTime_inLeapYear(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_inLeapYear>(cx,
+                                                                         args);
+}
+
+/**
  * Temporal.PlainDateTime.prototype.valueOf ( )
  */
 static bool PlainDateTime_valueOf(JSContext* cx, unsigned argc, Value* vp) {
@@ -1069,6 +1490,27 @@ static const JSFunctionSpec PlainDateTime_prototype_methods[] = {
 };
 
 static const JSPropertySpec PlainDateTime_prototype_properties[] = {
+    JS_PSG("calendar", PlainDateTime_calendar, 0),
+    JS_PSG("year", PlainDateTime_year, 0),
+    JS_PSG("month", PlainDateTime_month, 0),
+    JS_PSG("monthCode", PlainDateTime_monthCode, 0),
+    JS_PSG("day", PlainDateTime_day, 0),
+    JS_PSG("hour", PlainDateTime_hour, 0),
+    JS_PSG("minute", PlainDateTime_minute, 0),
+    JS_PSG("second", PlainDateTime_second, 0),
+    JS_PSG("millisecond", PlainDateTime_millisecond, 0),
+    JS_PSG("microsecond", PlainDateTime_microsecond, 0),
+    JS_PSG("nanosecond", PlainDateTime_nanosecond, 0),
+    JS_PSG("dayOfWeek", PlainDateTime_dayOfWeek, 0),
+    JS_PSG("dayOfYear", PlainDateTime_dayOfYear, 0),
+    JS_PSG("weekOfYear", PlainDateTime_weekOfYear, 0),
+    JS_PSG("yearOfWeek", PlainDateTime_yearOfWeek, 0),
+    JS_PSG("daysInWeek", PlainDateTime_daysInWeek, 0),
+    JS_PSG("daysInMonth", PlainDateTime_daysInMonth, 0),
+    JS_PSG("daysInYear", PlainDateTime_daysInYear, 0),
+    JS_PSG("monthsInYear", PlainDateTime_monthsInYear, 0),
+    JS_PSG("inLeapYear", PlainDateTime_inLeapYear, 0),
+    JS_STRING_SYM_PS(toStringTag, "Temporal.PlainDateTime", JSPROP_READONLY),
     JS_PS_END,
 };
 

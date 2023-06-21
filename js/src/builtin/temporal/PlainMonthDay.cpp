@@ -525,6 +525,69 @@ static bool PlainMonthDay_from(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
+ * get Temporal.PlainMonthDay.prototype.calendar
+ */
+static bool PlainMonthDay_calendar(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* monthDay = &args.thisv().toObject().as<PlainMonthDayObject>();
+  args.rval().setObject(*monthDay->calendar());
+  return true;
+}
+
+/**
+ * get Temporal.PlainMonthDay.prototype.calendar
+ */
+static bool PlainMonthDay_calendar(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainMonthDay, PlainMonthDay_calendar>(cx,
+                                                                       args);
+}
+
+/**
+ * get Temporal.PlainMonthDay.prototype.monthCode
+ */
+static bool PlainMonthDay_monthCode(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* monthDay = &args.thisv().toObject().as<PlainMonthDayObject>();
+  Rooted<JSObject*> calendar(cx, monthDay->calendar());
+
+  // Step 4.
+  return CalendarMonthCode(cx, calendar, args.thisv(), args.rval());
+}
+
+/**
+ * get Temporal.PlainMonthDay.prototype.monthCode
+ */
+static bool PlainMonthDay_monthCode(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainMonthDay, PlainMonthDay_monthCode>(cx,
+                                                                        args);
+}
+
+/**
+ * get Temporal.PlainMonthDay.prototype.day
+ */
+static bool PlainMonthDay_day(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* monthDay = &args.thisv().toObject().as<PlainMonthDayObject>();
+  Rooted<JSObject*> calendar(cx, monthDay->calendar());
+
+  // Step 4.
+  return CalendarDay(cx, calendar, args.thisv(), args.rval());
+}
+
+/**
+ * get Temporal.PlainMonthDay.prototype.day
+ */
+static bool PlainMonthDay_day(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainMonthDay, PlainMonthDay_day>(cx, args);
+}
+
+/**
  * Temporal.PlainMonthDay.prototype.toString ( [ options ] )
  */
 static bool PlainMonthDay_toString(JSContext* cx, const CallArgs& args) {
@@ -809,6 +872,10 @@ static const JSFunctionSpec PlainMonthDay_prototype_methods[] = {
 };
 
 static const JSPropertySpec PlainMonthDay_prototype_properties[] = {
+    JS_PSG("calendar", PlainMonthDay_calendar, 0),
+    JS_PSG("monthCode", PlainMonthDay_monthCode, 0),
+    JS_PSG("day", PlainMonthDay_day, 0),
+    JS_STRING_SYM_PS(toStringTag, "Temporal.PlainMonthDay", JSPROP_READONLY),
     JS_PS_END,
 };
 
