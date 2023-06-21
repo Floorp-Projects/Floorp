@@ -52,6 +52,8 @@ ITEM_VALUE(VideoElementMozFrames,       1llu << 31)
 ITEM_VALUE(VideoElementMozFrameDelay,   1llu << 32)
 // getVideoPlaybackQuality()
 ITEM_VALUE(VideoElementPlaybackQuality, 1llu << 33)
+// See also Reduce Timer Precision (RTP) Caller Type
+ITEM_VALUE(ReduceTimerPrecision,        1llu << 34)
 
 // !!! Don't forget to update kDefaultFingerintingProtections in nsRFPService.cpp
 // if necessary.

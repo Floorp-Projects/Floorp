@@ -658,15 +658,7 @@ double nsRFPService::ReduceTimePrecisionAsUSecsWrapper(double aTime,
 
   nsCOMPtr<nsIGlobalObject> global = xpc::CurrentNativeGlobal(aCx);
   MOZ_ASSERT(global);
-
-  RTPCallerType callerType;
-  if (global->ShouldResistFingerprinting(RFPTarget::Unknown)) {
-    callerType = RTPCallerType::ResistFingerprinting;
-  } else if (global->CrossOriginIsolated()) {
-    callerType = RTPCallerType::CrossOriginIsolated;
-  } else {
-    callerType = RTPCallerType::Normal;
-  }
+  RTPCallerType callerType = global->GetRTPCallerType();
   return nsRFPService::ReduceTimePrecisionImpl(
       aTime, MicroSeconds, TimerResolution(callerType),
       0, /* For absolute timestamps (all the JS engine does), supply zero
