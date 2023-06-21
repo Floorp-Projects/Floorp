@@ -20,6 +20,7 @@ if CONFIG["ENABLE_TESTS"]:
     EXPORTS.mozilla.gtest += [
         "MozAssertions.h",
         "MozHelpers.h",
+        "WaitFor.h",
     ]
 
     SOURCES += [
@@ -28,6 +29,7 @@ if CONFIG["ENABLE_TESTS"]:
         "MozGTestBench.cpp",
         "MozHelpers.cpp",
         "SanityTest.cpp",
+        "WaitFor.cpp",
     ]
 
     if CONFIG["OS_ARCH"] == "WINNT":

@@ -69,7 +69,6 @@ UNIFIED_SOURCES += [
     "TestVPXDecoding.cpp",
     "TestWebMBuffered.cpp",
     "TestWebMWriter.cpp",
-    "WaitFor.cpp",
     "YUVBufferGenerator.cpp",
 ]
 

@@ -11,12 +11,12 @@
 #include "gtest/gtest.h"
 
 #include "MediaTrackGraphImpl.h"
+#include "mozilla/gtest/WaitFor.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
 #include "nsTArray.h"
 
 #include "MockCubeb.h"
-#include "WaitFor.h"
 
 using namespace mozilla;
 using IterationResult = GraphInterface::IterationResult;

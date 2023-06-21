@@ -15,10 +15,10 @@
 #  include "MediaEngineWebRTCAudio.h"
 #endif  // MOZ_WEBRTC
 #include "MockCubeb.h"
+#include "mozilla/gtest/WaitFor.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticPrefs_media.h"
-#include "WaitFor.h"
 #include "WavDumper.h"
 
 #define DRIFT_BUFFERING_PREF "media.clockdrift.buffering"

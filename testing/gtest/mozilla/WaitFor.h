@@ -1,12 +1,14 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-*/
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef WAITFOR_H_
-#define WAITFOR_H_
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
+#ifndef TESTING_GTEST_MOZILLA_WAITFOR_H_
+#define TESTING_GTEST_MOZILLA_WAITFOR_H_
 
 #include "MediaEventSource.h"
-#include "MediaUtils.h"
+#include "mozilla/media/MediaUtils.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/ResultVariant.h"
@@ -131,4 +133,4 @@ inline void WaitForMirrors() { WaitForMirrors(GetCurrentSerialEventTarget()); }
 
 }  // namespace mozilla
 
-#endif  // WAITFOR_H_
+#endif  // TESTING_GTEST_MOZILLA_WAITFOR_H_

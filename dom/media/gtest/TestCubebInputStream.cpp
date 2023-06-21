@@ -8,9 +8,8 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-
+#include "mozilla/gtest/WaitFor.h"
 #include "MockCubeb.h"
-#include "WaitFor.h"
 
 using namespace mozilla;
 

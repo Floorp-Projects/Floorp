@@ -6,9 +6,9 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "mozilla/gtest/WaitFor.h"
 #include "Pacer.h"
 #include "VideoUtils.h"
-#include "WaitFor.h"
 
 using namespace mozilla;
 
