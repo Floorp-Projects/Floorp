@@ -1279,6 +1279,64 @@ TemporalParser<CharT>::parseTemporalInstantString() {
   return result;
 }
 
+/**
+ * ParseTemporalInstantString ( isoString )
+ */
+template <typename CharT>
+static auto ParseTemporalInstantString(mozilla::Span<const CharT> str) {
+  TemporalParser<CharT> parser(str);
+  return parser.parseTemporalInstantString();
+}
+
+/**
+ * ParseTemporalInstantString ( isoString )
+ */
+static auto ParseTemporalInstantString(Handle<JSLinearString*> str) {
+  JS::AutoCheckCannotGC nogc;
+  if (str->hasLatin1Chars()) {
+    return ParseTemporalInstantString<Latin1Char>(str->latin1Range(nogc));
+  }
+  return ParseTemporalInstantString<char16_t>(str->twoByteRange(nogc));
+}
+
+/**
+ * ParseTemporalInstantString ( isoString )
+ */
+bool js::temporal::ParseTemporalInstantString(JSContext* cx,
+                                              Handle<JSString*> str,
+                                              PlainDateTime* result,
+                                              int64_t* offset) {
+  Rooted<JSLinearString*> linear(cx, str->ensureLinear(cx));
+  if (!linear) {
+    return false;
+  }
+
+  // Step 1.
+  auto parseResult = ::ParseTemporalInstantString(linear);
+  if (parseResult.isErr()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              parseResult.unwrapErr());
+    return false;
+  }
+  ZonedDateTimeString parsed = parseResult.unwrap();
+
+  // Step 2.
+  if (!ParseISODateTime(cx, parsed, result)) {
+    return false;
+  }
+
+  // Steps 3-5.
+  if (parsed.timeZone.hasOffset()) {
+    *offset = ParseTimeZoneOffsetString(parsed.timeZone.offset);
+  } else {
+    MOZ_ASSERT(parsed.timeZone.isUTC());
+    *offset = 0;
+  }
+
+  // Step 6.
+  return true;
+}
+
 template <typename CharT>
 mozilla::Result<ZonedDateTimeString, ParserError>
 TemporalParser<CharT>::parseTemporalTimeZoneString() {
