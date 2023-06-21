@@ -108,3 +108,30 @@ BrowserOpenTab = function ({ event, url = BROWSER_NEW_TAB_URL } = {}) {
     "browser-open-newtab-start"
   );
 }
+
+
+/******************************************** StyleSheetService (userContent.css) ******************************/
+
+let sss = Components.classes["@mozilla.org/content/style-sheet-service;1"]
+          .getService(Components.interfaces.nsIStyleSheetService);
+let ios = Components.classes["@mozilla.org/network/io-service;1"]
+          .getService(Components.interfaces.nsIIOService);
+
+function loadStyleSheetWithNsStyleSheetService(styleSheetURL){
+  let uri = ios.newURI(styleSheetURL, null, null);
+
+  sss.loadAndRegisterSheet(uri, sss.USER_SHEET);
+}
+
+function checkProvidedStyleSheetLoaded(styleSheetURL){
+  let uri = ios.newURI(styleSheetURL, null, null);
+  if(!sss.sheetRegistered(uri, sss.USER_SHEET)) {
+    sss.loadAndRegisterSheet(uri, sss.USER_SHEET);
+  }
+}
+
+function unloadStyleSheetWithNsStyleSheetService(styleSheetURL){
+  let uri = ios.newURI(styleSheetURL, null, null);
+  sss.unregisterSheet(uri, sss.USER_SHEET);
+}
+

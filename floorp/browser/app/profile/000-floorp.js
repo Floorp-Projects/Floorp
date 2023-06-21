@@ -278,6 +278,9 @@ pref("dom.webshare.enabled", true);
 
 // カラーテーマクローゼットを無効化
 pref("browser.theme.colorway-closet", false);
+
+// 開発者ツールの位置を「右」に変更
+pref("devtools.toolbox.host", "right");
 /*-----------------------------------------------------------------------------------all.js の設定-----------------------------------------------------------------------------------*/
 
 pref("extensions.htmlaboutaddons.recommendations.enabled", false, locked);
