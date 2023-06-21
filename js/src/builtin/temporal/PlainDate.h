@@ -7,6 +7,7 @@
 #ifndef builtin_temporal_PlainDate_h
 #define builtin_temporal_PlainDate_h
 
+#include <initializer_list>
 #include <stdint.h>
 
 #include "builtin/temporal/TemporalTypes.h"
@@ -56,6 +57,7 @@ inline PlainDate ToPlainDate(const PlainDateObject* date) {
   return {date->isoYear(), date->isoMonth(), date->isoDay()};
 }
 
+enum class CalendarField;
 enum class TemporalOverflow;
 enum class TemporalUnit;
 
@@ -157,6 +159,13 @@ PlainDate BalanceISODate(int32_t year, int32_t month, int32_t day);
  * BalanceISODate ( year, month, day )
  */
 PlainDate BalanceISODateNew(int32_t year, int32_t month, int32_t day);
+
+/**
+ * Return true when accessing the calendar fields |fieldNames| can be optimized.
+ * Otherwise returns false.
+ */
+bool IsBuiltinAccess(JSContext* cx, JS::Handle<PlainDateObject*> date,
+                     std::initializer_list<CalendarField> fieldNames);
 
 } /* namespace js::temporal */
 

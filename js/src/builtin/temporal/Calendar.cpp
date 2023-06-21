@@ -4241,3 +4241,110 @@ const ClassSpec CalendarObject::classSpec_ = {
     nullptr,
     ClassSpec::DontDefineConstructor,
 };
+
+struct MOZ_STACK_CLASS CalendarNameAndNative final {
+  PropertyName* name;
+  JSNative native;
+};
+
+static CalendarNameAndNative GetCalendarNameAndNative(JSContext* cx,
+                                                      CalendarField fieldName) {
+  switch (fieldName) {
+    case CalendarField::Year:
+      return {cx->names().year, Calendar_year};
+    case CalendarField::Month:
+      return {cx->names().month, Calendar_month};
+    case CalendarField::MonthCode:
+      return {cx->names().monthCode, Calendar_monthCode};
+    case CalendarField::Day:
+      return {cx->names().day, Calendar_day};
+    case CalendarField::Hour:
+    case CalendarField::Minute:
+    case CalendarField::Second:
+    case CalendarField::Millisecond:
+    case CalendarField::Microsecond:
+    case CalendarField::Nanosecond:
+      break;
+  }
+  MOZ_CRASH("invalid temporal field name");
+}
+
+bool js::temporal::IsBuiltinAccess(
+    JSContext* cx, Handle<CalendarObject*> calendar,
+    std::initializer_list<CalendarField> fieldNames) {
+  // Don't optimize when the object has any own properties which may shadow the
+  // built-in methods.
+  if (!calendar->empty()) {
+    return false;
+  }
+
+  JSObject* proto = cx->global()->maybeGetPrototype(JSProto_Calendar);
+
+  // Don't attempt to optimize when the class isn't yet initialized.
+  if (!proto) {
+    return false;
+  }
+
+  // Don't optimize when the prototype isn't the built-in prototype.
+  if (calendar->staticPrototype() != proto) {
+    return false;
+  }
+
+  auto* nproto = &proto->as<NativeObject>();
+  for (auto fieldName : fieldNames) {
+    auto [name, native] = GetCalendarNameAndNative(cx, fieldName);
+    auto prop = nproto->lookupPure(name);
+
+    // Return if the property isn't a data property.
+    if (!prop || !prop->isDataProperty()) {
+      return false;
+    }
+
+    // Return if the property isn't the initial method.
+    if (!IsNativeFunction(nproto->getSlot(prop->slot()), native)) {
+      return false;
+    }
+  }
+
+  // TODO: Pass accessor list from caller to avoid excessive checks.
+
+  // Additionally check the various calendar fields operations.
+  for (const auto& [name, native] : (CalendarNameAndNative[]){
+           {cx->names().fields, Calendar_fields},
+           {cx->names().mergeFields, Calendar_mergeFields},
+           {cx->names().dateFromFields, Calendar_dateFromFields},
+           {cx->names().monthDayFromFields, Calendar_monthDayFromFields},
+           {cx->names().yearMonthFromFields, Calendar_yearMonthFromFields},
+       }) {
+    auto prop = nproto->lookupPure(name);
+
+    // Return if the property isn't a data property.
+    if (!prop || !prop->isDataProperty()) {
+      return false;
+    }
+
+    // Return if the property isn't the initial method.
+    if (!IsNativeFunction(nproto->getSlot(prop->slot()), native)) {
+      return false;
+    }
+  }
+
+  // CalendarFields observably uses array iteration.
+  ForOfPIC::Chain* stubChain = ForOfPIC::getOrCreate(cx);
+  if (!stubChain) {
+    cx->recoverFromOutOfMemory();
+    return false;
+  }
+
+  bool arrayIterationSane;
+  if (!stubChain->tryOptimizeArray(cx, &arrayIterationSane)) {
+    cx->recoverFromOutOfMemory();
+    return false;
+  }
+  if (!arrayIterationSane) {
+    return false;
+  }
+
+  // Success! The access can be optimized.
+  return true;
+}
