@@ -10,6 +10,7 @@
 #include <initializer_list>
 #include <stdint.h>
 
+#include "builtin/temporal/Wrapped.h"
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
@@ -40,6 +41,7 @@ class CalendarObject : public NativeObject {
 
 struct PlainDate;
 struct PlainDateTime;
+class PlainDateObject;
 enum class CalendarOption;
 
 /**
@@ -218,6 +220,21 @@ bool CalendarMonthsInYear(JSContext* cx, JS::Handle<JSObject*> calendar,
 bool CalendarInLeapYear(JSContext* cx, JS::Handle<JSObject*> calendar,
                         JS::Handle<JS::Value> dateLike,
                         JS::MutableHandle<JS::Value> result);
+
+/**
+ * CalendarDateFromFields ( calendar, fields [ , options ] )
+ */
+Wrapped<PlainDateObject*> CalendarDateFromFields(JSContext* cx,
+                                                 JS::Handle<JSObject*> calendar,
+                                                 JS::Handle<JSObject*> fields);
+
+/**
+ * CalendarDateFromFields ( calendar, fields [ , options ] )
+ */
+Wrapped<PlainDateObject*> CalendarDateFromFields(JSContext* cx,
+                                                 JS::Handle<JSObject*> calendar,
+                                                 JS::Handle<JSObject*> fields,
+                                                 JS::Handle<JSObject*> options);
 
 /**
  * MaybeFormatCalendarAnnotation ( calendarObject, showCalendar )
