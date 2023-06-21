@@ -3073,6 +3073,9 @@ gfxPlatformFontList::FontPrefs::FontPrefs() {
 }
 
 void gfxPlatformFontList::FontPrefs::Init() {
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownFinal)) {
+    return;
+  }
   nsIPrefBranch* prefRootBranch = Preferences::GetRootBranch();
   if (!prefRootBranch) {
     return;
