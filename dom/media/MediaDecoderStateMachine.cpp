@@ -3396,8 +3396,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
       INIT_MIRROR(mOutputDummyTrack, nullptr),
       INIT_MIRROR(mOutputTracks, nsTArray<RefPtr<ProcessedMediaTrack>>()),
       INIT_MIRROR(mOutputPrincipal, PRINCIPAL_HANDLE_NONE),
-      INIT_CANONICAL(mCanonicalOutputTracks,
-                     nsTArray<RefPtr<ProcessedMediaTrack>>()),
       INIT_CANONICAL(mCanonicalOutputPrincipal, PRINCIPAL_HANDLE_NONE) {
   MOZ_COUNT_CTOR(MediaDecoderStateMachine);
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
@@ -3440,8 +3438,6 @@ void MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder) {
                       &MediaDecoderStateMachine::UpdateOutputCaptured);
   mWatchManager.Watch(mOutputTracks,
                       &MediaDecoderStateMachine::UpdateOutputCaptured);
-  mWatchManager.Watch(mOutputTracks,
-                      &MediaDecoderStateMachine::OutputTracksChanged);
   mWatchManager.Watch(mOutputPrincipal,
                       &MediaDecoderStateMachine::OutputPrincipalChanged);
 
@@ -4417,12 +4413,6 @@ void MediaDecoderStateMachine::UpdateOutputCaptured() {
           : detail::AMPLE_AUDIO_THRESHOLD;
 
   mStateObj->HandleAudioCaptured();
-}
-
-void MediaDecoderStateMachine::OutputTracksChanged() {
-  MOZ_ASSERT(OnTaskQueue());
-  LOG("OutputTracksChanged, tracks=%zu", mOutputTracks.Ref().Length());
-  mCanonicalOutputTracks = mOutputTracks;
 }
 
 void MediaDecoderStateMachine::OutputPrincipalChanged() {
