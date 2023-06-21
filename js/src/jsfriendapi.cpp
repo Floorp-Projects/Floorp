@@ -61,7 +61,8 @@ using namespace js;
 
 using mozilla::PodArrayZero;
 
-JS::RootingContext::RootingContext() : realm_(nullptr), zone_(nullptr) {
+JS::RootingContext::RootingContext(js::Nursery* nursery)
+    : nursery_(nursery), zone_(nullptr), realm_(nullptr) {
   for (auto& listHead : stackRoots_) {
     listHead = nullptr;
   }

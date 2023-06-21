@@ -263,8 +263,6 @@ MOZ_ALWAYS_INLINE bool CheckForInterrupt(JSContext* cx) {
 
 } /* namespace js */
 
-inline js::Nursery& JSContext::nursery() { return runtime()->gc.nursery(); }
-
 inline void JSContext::minorGC(JS::GCReason reason) {
   runtime()->gc.minorGC(reason);
 }
