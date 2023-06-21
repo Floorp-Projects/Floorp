@@ -68,6 +68,29 @@ static JSLinearString* ToString(JSContext* cx, JSString* string,
   return NewDependentString(cx, string, name.start, name.length);
 }
 
+template <typename CharT>
+bool EqualCharIgnoreCaseAscii(CharT c1, char c2) {
+  if constexpr (sizeof(CharT) > sizeof(char)) {
+    if (!mozilla::IsAscii(c1)) {
+      return false;
+    }
+  }
+
+  static constexpr auto toLower = 0x20;
+  static_assert('a' - 'A' == toLower);
+
+  // Convert both characters to lower case before the comparison.
+  char c = c1;
+  if (mozilla::IsAsciiUppercaseAlpha(c1)) {
+    c = c + toLower;
+  }
+  char d = c2;
+  if (mozilla::IsAsciiUppercaseAlpha(c2)) {
+    d = d + toLower;
+  }
+  return c == d;
+}
+
 using CalendarName = StringName;
 using AnnotationKey = StringName;
 using AnnotationValue = StringName;
@@ -169,6 +192,22 @@ struct ZonedDateTimeString final {
   TimeZoneString timeZone;
   CalendarName calendar;
 };
+
+template <typename CharT>
+static bool IsISO8601Calendar(mozilla::Span<const CharT> calendar) {
+  static constexpr std::string_view iso8601 = "iso8601";
+
+  if (calendar.size() != iso8601.length()) {
+    return false;
+  }
+
+  for (size_t i = 0; i < iso8601.length(); i++) {
+    if (!EqualCharIgnoreCaseAscii(calendar[i], iso8601[i])) {
+      return false;
+    }
+  }
+  return true;
+}
 
 static constexpr int32_t AbsentYear = INT32_MAX;
 
@@ -431,6 +470,27 @@ class TemporalParser final {
   }
 
   /**
+   * Consumes the next characters if they're equal to `str` and then returns
+   * `true`. Otherwise returns `false`.
+   */
+  template <size_t N>
+  bool string(const char (&str)[N]) {
+    static_assert(N > 2, "use character() for one element strings");
+
+    if (!reader_.hasMore(N - 1)) {
+      return false;
+    }
+    size_t index = reader_.index();
+    for (size_t i = 0; i < N - 1; i++) {
+      if (reader_.at(index + i) != str[i]) {
+        return false;
+      }
+    }
+    reader_.advance(N - 1);
+    return true;
+  }
+
+  /**
    * Returns true if the next two characters are ASCII alphabetic characters.
    */
   bool hasTwoAsciiAlpha() {
@@ -617,6 +677,8 @@ class TemporalParser final {
 
   mozilla::Result<PlainDate, ParserError> dateSpecYearMonth();
 
+  mozilla::Result<PlainDate, ParserError> dateSpecMonthDay();
+
   mozilla::Result<PlainDate, ParserError> validMonthDay();
 
   mozilla::Result<PlainTime, ParserError> timeSpec();
@@ -676,6 +738,8 @@ class TemporalParser final {
   mozilla::Result<ZonedDateTimeString, ParserError>
   annotatedDateTimeTimeRequired();
 
+  mozilla::Result<ZonedDateTimeString, ParserError> annotatedMonthDay();
+
  public:
   explicit TemporalParser(mozilla::Span<const CharT> str) : reader_(str) {}
 
@@ -686,6 +750,9 @@ class TemporalParser final {
   parseTemporalCalendarString();
 
   mozilla::Result<ZonedDateTimeString, ParserError> parseTemporalTimeString();
+
+  mozilla::Result<ZonedDateTimeString, ParserError>
+  parseTemporalMonthDayString();
 
   mozilla::Result<ZonedDateTimeString, ParserError>
   parseTemporalDateTimeString();
@@ -1484,6 +1551,39 @@ TemporalParser<CharT>::annotatedDateTimeTimeRequired() {
 }
 
 template <typename CharT>
+mozilla::Result<ZonedDateTimeString, ParserError>
+TemporalParser<CharT>::annotatedMonthDay() {
+  // AnnotatedMonthDay :
+  //   DateSpecMonthDay TimeZoneAnnotation? Annotations?
+
+  ZonedDateTimeString result = {};
+
+  auto monthDay = dateSpecMonthDay();
+  if (monthDay.isErr()) {
+    return monthDay.propagateErr();
+  }
+  result.date = monthDay.unwrap();
+
+  if (hasTimeZoneAnnotationStart()) {
+    auto annotation = timeZoneAnnotation();
+    if (annotation.isErr()) {
+      return annotation.propagateErr();
+    }
+    result.timeZone.annotation = annotation.unwrap();
+  }
+
+  if (hasAnnotationStart()) {
+    auto cal = annotations();
+    if (cal.isErr()) {
+      return cal.propagateErr();
+    }
+    result.calendar = cal.unwrap();
+  }
+
+  return result;
+}
+
+template <typename CharT>
 mozilla::Result<PlainDate, ParserError>
 TemporalParser<CharT>::dateSpecYearMonth() {
   // DateSpecYearMonth :
@@ -1532,6 +1632,54 @@ TemporalParser<CharT>::dateSpecYearMonth() {
 
   // Absent days default to 1, cf. ParseISODateTime.
   result.day = 1;
+
+  return result;
+}
+
+template <typename CharT>
+mozilla::Result<PlainDate, ParserError>
+TemporalParser<CharT>::dateSpecMonthDay() {
+  // DateSpecMonthDay :
+  //   TwoDashes? DateMonth -? DateDay
+  //
+  // TwoDashes :
+  //   --
+  PlainDate result = {};
+
+  string("--");
+
+  result.year = AbsentYear;
+
+  // DateMonth :
+  //   0 NonzeroDigit
+  //   10
+  //   11
+  //   12
+  if (auto month = digits(2)) {
+    result.month = month.value();
+    if (!inBounds(result.month, 1, 12)) {
+      return mozilla::Err(JSMSG_TEMPORAL_PARSER_INVALID_MONTH);
+    }
+  } else {
+    return mozilla::Err(JSMSG_TEMPORAL_PARSER_MISSING_MONTH);
+  }
+
+  character('-');
+
+  // DateDay :
+  //   0 NonzeroDigit
+  //   1 DecimalDigit
+  //   2 DecimalDigit
+  //   30
+  //   31
+  if (auto day = digits(2)) {
+    result.day = day.value();
+    if (!inBounds(result.day, 1, 31)) {
+      return mozilla::Err(JSMSG_TEMPORAL_PARSER_INVALID_DAY);
+    }
+  } else {
+    return mozilla::Err(JSMSG_TEMPORAL_PARSER_MISSING_DAY);
+  }
 
   return result;
 }
@@ -1653,6 +1801,13 @@ TemporalParser<CharT>::parseTemporalCalendarString() {
     return dt.unwrap();
   }
 
+  // Restart parsing from the start of the string.
+  reader_.reset();
+
+  if (auto dt = parseTemporalMonthDayString(); dt.isOk()) {
+    return dt.unwrap();
+  }
+
   MOZ_CRASH("NYI");
 }
 
@@ -1724,6 +1879,40 @@ TemporalParser<CharT>::parseTemporalTimeString() {
   reader_.reset();
 
   auto dt = annotatedDateTimeTimeRequired();
+  if (dt.isErr()) {
+    return dt.propagateErr();
+  }
+  if (!reader_.atEnd()) {
+    return mozilla::Err(JSMSG_TEMPORAL_PARSER_GARBAGE_AFTER_INPUT);
+  }
+  return dt.unwrap();
+}
+
+template <typename CharT>
+mozilla::Result<ZonedDateTimeString, ParserError>
+TemporalParser<CharT>::parseTemporalMonthDayString() {
+  // TemporalMonthDayString :
+  //   AnnotatedMonthDay
+  //   AnnotatedDateTime
+
+  if (auto monthDay = annotatedMonthDay(); monthDay.isOk() && reader_.atEnd()) {
+    auto result = monthDay.unwrap();
+
+    // FIXME: spec bug - actually needs to check all calendar annotations
+    // https://github.com/tc39/proposal-temporal/issues/2538
+
+    // ParseISODateTime, step 3.
+    if (result.calendar.present() &&
+        !IsISO8601Calendar(reader_.substring(result.calendar))) {
+      return mozilla::Err(JSMSG_TEMPORAL_PARSER_MONTH_DAY_CALENDAR_NOT_ISO8601);
+    }
+    return result;
+  }
+
+  // Reset and try the next option.
+  reader_.reset();
+
+  auto dt = annotatedDateTime();
   if (dt.isErr()) {
     return dt.propagateErr();
   }
