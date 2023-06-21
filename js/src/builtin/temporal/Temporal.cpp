@@ -723,6 +723,45 @@ static BigInt* RoundNumberToIncrementSlow(JSContext* cx, Handle<BigInt*> x,
 /**
  * RoundNumberToIncrement ( x, increment, roundingMode )
  */
+BigInt* js::temporal::RoundNumberToIncrement(
+    JSContext* cx, Handle<BigInt*> x, int64_t increment,
+    TemporalRoundingMode roundingMode) {
+  MOZ_ASSERT(increment > 0);
+  MOZ_ASSERT(increment <= ToNanoseconds(TemporalUnit::Day));
+
+  // Fast path for the default case.
+  if (increment == 1) {
+    return x;
+  }
+
+  // Dividing zero is always zero.
+  if (x->isZero()) {
+    return x;
+  }
+
+  // Fast-path when we can perform the whole computation with int64 values.
+  int64_t num;
+  if (BigInt::isInt64(x, &num)) {
+    // Steps 1-8.
+    int64_t rounded = Divide(num, increment, roundingMode);
+
+    // Step 9.
+    mozilla::CheckedInt64 result = rounded;
+    result *= increment;
+    if (result.isValid()) {
+      if (result.value() == num) {
+        return x;
+      }
+      return BigInt::createFromInt64(cx, result.value());
+    }
+  }
+
+  return RoundNumberToIncrementSlow(cx, x, increment, roundingMode);
+}
+
+/**
+ * RoundNumberToIncrement ( x, increment, roundingMode )
+ */
 bool js::temporal::RoundNumberToIncrement(JSContext* cx, const Instant& x,
                                           int64_t increment,
                                           TemporalRoundingMode roundingMode,
@@ -878,6 +917,62 @@ bool js::temporal::RoundNumberToIncrement(
 
   *result = BigInt::numberValue(rounded);
   return true;
+}
+
+/**
+ * RoundNumberToIncrement ( x, increment, roundingMode )
+ */
+bool js::temporal::RoundNumberToIncrement(JSContext* cx, int64_t numerator,
+                                          int64_t denominator,
+                                          Increment increment,
+                                          TemporalRoundingMode roundingMode,
+                                          double* result) {
+  MOZ_ASSERT(denominator > 0);
+  MOZ_ASSERT(Increment::min() <= increment && increment <= Increment::max());
+
+  // Dividing zero is always zero.
+  if (numerator == 0) {
+    *result = 0;
+    return true;
+  }
+
+  // We don't have to adjust the divisor when |increment=1|.
+  if (increment == Increment{1}) {
+    int64_t divisor = denominator;
+    int64_t rounded = Divide(numerator, divisor, roundingMode);
+
+    *result = double(rounded);
+    return true;
+  }
+
+  auto divisor = mozilla::CheckedInt64(denominator) * increment.value();
+  if (MOZ_LIKELY(divisor.isValid())) {
+    MOZ_ASSERT(divisor.value() > 0);
+
+    // Steps 1-8.
+    int64_t rounded = Divide(numerator, divisor.value(), roundingMode);
+
+    // Step 9.
+    auto adjusted = mozilla::CheckedInt64(rounded) * increment.value();
+    if (MOZ_LIKELY(adjusted.isValid())) {
+      *result = double(adjusted.value());
+      return true;
+    }
+  }
+
+  // Slow path on overflow.
+
+  Rooted<BigInt*> bi(cx, BigInt::createFromInt64(cx, numerator));
+  if (!bi) {
+    return false;
+  }
+
+  Rooted<BigInt*> denom(cx, BigInt::createFromInt64(cx, denominator));
+  if (!denom) {
+    return false;
+  }
+
+  return RoundNumberToIncrement(cx, bi, denom, increment, roundingMode, result);
 }
 
 /**
