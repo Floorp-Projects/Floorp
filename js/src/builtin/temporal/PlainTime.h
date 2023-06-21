@@ -90,6 +90,8 @@ inline PlainTime ToPlainTime(const PlainTimeObject* time) {
           time->isoMicrosecond(), time->isoNanosecond()};
 }
 
+enum class TemporalOverflow;
+
 #ifdef DEBUG
 /**
  * IsValidTime ( hour, minute, second, millisecond, microsecond, nanosecond )
@@ -120,6 +122,34 @@ bool ThrowIfInvalidTime(JSContext* cx, double hour, double minute,
  * nanosecond [ , newTarget ] )
  */
 PlainTimeObject* CreateTemporalTime(JSContext* cx, const PlainTime& time);
+
+/**
+ * ToTemporalTime ( item [ , overflow ] )
+ */
+bool ToTemporalTime(JSContext* cx, JS::Handle<JS::Value> item,
+                    PlainTime* result);
+
+struct TimeRecord final {
+  double hour = 0;
+  double minute = 0;
+  double second = 0;
+  double millisecond = 0;
+  double microsecond = 0;
+  double nanosecond = 0;
+};
+
+/**
+ * ToTemporalTimeRecord ( temporalTimeLike )
+ */
+bool ToTemporalTimeRecord(JSContext* cx, JS::Handle<JSObject*> temporalTimeLike,
+                          TimeRecord* result);
+
+/**
+ * RegulateTime ( hour, minute, second, millisecond, microsecond, nanosecond,
+ * overflow )
+ */
+bool RegulateTime(JSContext* cx, const TimeRecord& time,
+                  TemporalOverflow overflow, PlainTime* result);
 
 struct BalancedTime final {
   int32_t days = 0;
