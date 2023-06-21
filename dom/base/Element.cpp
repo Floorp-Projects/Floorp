@@ -280,7 +280,7 @@ nsDOMAttributeMap* Element::Attributes() {
 }
 
 void Element::SetPointerCapture(int32_t aPointerId, ErrorResult& aError) {
-  if (OwnerDoc()->ShouldResistFingerprinting(RFPTarget::Unknown) &&
+  if (OwnerDoc()->ShouldResistFingerprinting(RFPTarget::PointerEvents) &&
       aPointerId != PointerEventHandler::GetSpoofedPointerIdForRFP()) {
     aError.ThrowNotFoundError("Invalid pointer id");
     return;
@@ -309,7 +309,7 @@ void Element::SetPointerCapture(int32_t aPointerId, ErrorResult& aError) {
 }
 
 void Element::ReleasePointerCapture(int32_t aPointerId, ErrorResult& aError) {
-  if (OwnerDoc()->ShouldResistFingerprinting(RFPTarget::Unknown) &&
+  if (OwnerDoc()->ShouldResistFingerprinting(RFPTarget::PointerEvents) &&
       aPointerId != PointerEventHandler::GetSpoofedPointerIdForRFP()) {
     aError.ThrowNotFoundError("Invalid pointer id");
     return;
