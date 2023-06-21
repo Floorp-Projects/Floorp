@@ -26,7 +26,6 @@ UNSUPPORTED_FEATURES = set(
         "legacy-regexp",  # Bug 1306461
         "json-modules",  # Bug 1670176
         "resizable-arraybuffer",  # Bug 1670026
-        "Temporal",  # Bug 1519167
         "decorators",  # Bug 1435869
         "regexp-duplicate-named-groups",  # Bug 1773135
         "symbols-as-weakmap-keys",  # Bug 1710433
@@ -38,6 +37,7 @@ FEATURE_CHECK_NEEDED = {
     "Atomics": "!this.hasOwnProperty('Atomics')",
     "FinalizationRegistry": "!this.hasOwnProperty('FinalizationRegistry')",
     "SharedArrayBuffer": "!this.hasOwnProperty('SharedArrayBuffer')",
+    "Temporal": "!this.hasOwnProperty('Temporal')",
     "WeakRef": "!this.hasOwnProperty('WeakRef')",
     "array-grouping": "!Array.prototype.group",  # Bug 1792650
     "change-array-by-copy": "!Array.prototype.with",  # Bug 1811054
@@ -509,6 +509,7 @@ def process_test262(test262Dir, test262OutDir, strictTests, externManifests):
     explicitIncludes[os.path.join("built-ins", "TypedArrays")] = [
         "detachArrayBuffer.js"
     ]
+    explicitIncludes[os.path.join("built-ins", "Temporal")] = ["temporalHelpers.js"]
 
     # Process all test directories recursively.
     for (dirPath, dirNames, fileNames) in os.walk(testDir):
