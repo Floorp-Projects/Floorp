@@ -770,6 +770,412 @@ void NanosecondsAndDays::trace(JSTracer* trc) {
 }
 
 /**
+ * NanosecondsToDays ( nanoseconds, relativeTo )
+ */
+bool js::temporal::NanosecondsToDays(
+    JSContext* cx, const Instant& nanoseconds,
+    Handle<Wrapped<ZonedDateTimeObject*>> relativeTo,
+    MutableHandle<NanosecondsAndDays> result) {
+  MOZ_ASSERT(IsValidInstantDifference(nanoseconds));
+
+  // Step 1.
+  auto dayLengthNs = Instant::fromNanoseconds(ToNanoseconds(TemporalUnit::Day));
+
+  // Step 2.
+  if (nanoseconds == Instant{}) {
+    result.initialize(int64_t(0), Instant{}, dayLengthNs);
+    return true;
+  }
+
+  // Step 3.
+  int32_t sign = nanoseconds < Instant{} ? -1 : 1;
+
+  // Step 4. (Not applicable)
+
+  // Step 5.
+  auto* unwrappedRelativeTo = relativeTo.unwrap(cx);
+  if (!unwrappedRelativeTo) {
+    return false;
+  }
+  auto startNs = ToInstant(unwrappedRelativeTo);
+  Rooted<JSObject*> timeZone(cx, unwrappedRelativeTo->timeZone());
+  Rooted<JSObject*> calendar(cx, unwrappedRelativeTo->calendar());
+
+  if (!cx->compartment()->wrap(cx, &timeZone)) {
+    return false;
+  }
+  if (!cx->compartment()->wrap(cx, &calendar)) {
+    return false;
+  }
+
+  // Steps 6-7.
+  PlainDateTime startDateTime;
+  if (!GetPlainDateTimeFor(cx, timeZone, startNs, &startDateTime)) {
+    return false;
+  }
+
+  // Step 8.
+  //
+  // NB: This addition can't overflow, because we've checked that |nanoseconds|
+  // can be represented as an Instant difference value.
+  auto endNs = startNs + nanoseconds;
+
+  // Step 9.
+  if (!IsValidEpochInstant(endNs)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_INSTANT_INVALID);
+    return false;
+  }
+
+  // Steps 10-11.
+  PlainDateTime endDateTime;
+  if (!GetPlainDateTimeFor(cx, timeZone, endNs, &endDateTime)) {
+    return false;
+  }
+
+  // Step 12.
+  Duration dateDifference;
+  if (!DifferenceISODateTime(cx, startDateTime, endDateTime, calendar,
+                             TemporalUnit::Day, &dateDifference)) {
+    return false;
+  }
+
+  // Step 13.
+  double days = dateDifference.days;
+
+  // Step 14.
+  Instant intermediateNs;
+  if (!AddZonedDateTime(cx, startNs, timeZone, calendar, {0, 0, 0, days},
+                        &intermediateNs)) {
+    return false;
+  }
+  MOZ_ASSERT(IsValidEpochInstant(intermediateNs));
+
+  // Sum up all days to subtract to avoid imprecise floating-point arithmetic.
+  // Overflows can be safely ignored, because they take too long to happen.
+  int64_t daysToSubtract = 0;
+
+  // Step 15.
+  if (sign > 0) {
+    // Step 15.a.
+    while (days > double(daysToSubtract) && intermediateNs > endNs) {
+      // This loop can iterate indefinitely when given a specially crafted
+      // time zone object, so we need to check for interrupts.
+      if (!CheckForInterrupt(cx)) {
+        return false;
+      }
+
+      // Step 15.a.i.
+      daysToSubtract += 1;
+
+      // Step 15.a.ii.
+      double durationDays = days - double(daysToSubtract);
+      if (!AddZonedDateTime(cx, startNs, timeZone, calendar,
+                            {0, 0, 0, durationDays}, &intermediateNs)) {
+        return false;
+      }
+      MOZ_ASSERT(IsValidEpochInstant(intermediateNs));
+    }
+
+    MOZ_ASSERT_IF(days > double(daysToSubtract), intermediateNs <= endNs);
+  }
+
+  MOZ_ASSERT_IF(days == double(daysToSubtract), intermediateNs == startNs);
+
+  // Step 16.
+  auto ns = endNs - intermediateNs;
+  MOZ_ASSERT(IsValidInstantDifference(ns));
+
+  // Sum up all days to add to avoid imprecise floating-point arithmetic.
+  // Overflows can be safely ignored, because they take too long to happen.
+  int64_t daysToAdd = -daysToSubtract;
+
+  // Steps 17-18.
+  while (true) {
+    // This loop can iterate indefinitely when given a specially crafted time
+    // zone object, so we need to check for interrupts.
+    if (!CheckForInterrupt(cx)) {
+      return false;
+    }
+
+    // Step 18.a.
+    Instant oneDayFartherNs;
+    if (!AddZonedDateTime(cx, intermediateNs, timeZone, calendar,
+                          {0, 0, 0, double(sign)}, &oneDayFartherNs)) {
+      return false;
+    }
+    MOZ_ASSERT(IsValidEpochInstant(oneDayFartherNs));
+
+    // Step 18.b.
+    dayLengthNs = oneDayFartherNs - intermediateNs;
+    MOZ_ASSERT(IsValidInstantDifference(dayLengthNs));
+
+    // First iteration:
+    //
+    // ns = endNs - intermediateNs
+    // dayLengthNs = oneDayFartherNs - intermediateNs
+    // diff = ns - dayLengthNs
+    //      = (endNs - intermediateNs) - (oneDayFartherNs - intermediateNs)
+    //      = endNs - intermediateNs - oneDayFartherNs + intermediateNs
+    //      = endNs - oneDayFartherNs
+    //
+    // Second iteration:
+    //
+    // ns = diff'
+    //    = endNs - oneDayFartherNs'
+    // intermediateNs = oneDayFartherNs'
+    // dayLengthNs = oneDayFartherNs - intermediateNs
+    //             = oneDayFartherNs - oneDayFartherNs'
+    // diff = ns - dayLengthNs
+    //      = (endNs - oneDayFartherNs') - (oneDayFartherNs - oneDayFartherNs')
+    //      = endNs - oneDayFartherNs' - oneDayFartherNs + oneDayFartherNs'
+    //      = endNs - oneDayFartherNs
+    //
+    // Where |diff'| and |oneDayFartherNs'| denote the variables from the
+    // previous iteration.
+    //
+    // This repeats for all following iterations.
+    //
+    // |endNs| and |oneDayFartherNs| are both valid epoch instant values, so the
+    // difference is a valid epoch instant difference value, too.
+
+    // Step 18.c.
+    auto diff = ns - dayLengthNs;
+    MOZ_ASSERT(IsValidInstantDifference(diff));
+    MOZ_ASSERT(diff == (endNs - oneDayFartherNs));
+
+    if (diff == Instant{} || ((diff < Instant{}) == (sign < 0))) {
+      // Step 18.c.i.
+      ns = diff;
+
+      // Step 18.c.ii.
+      intermediateNs = oneDayFartherNs;
+
+      // Step 18.c.iii.
+      daysToAdd += sign;
+    } else {
+      // Step 18.d.
+      break;
+    }
+  }
+
+  // Step 19.
+  if (sign > 0) {
+    bool totalDaysIsNegative;
+    if (int64_t daysInt; mozilla::NumberEqualsInt64(days, &daysInt)) {
+      // |daysInt + daysToAdd < 0| could overflow when |daysInt| is near the
+      // int64 boundaries, so handle each case separately.
+      totalDaysIsNegative = daysInt < 0
+                                ? (daysToAdd < 0 || daysInt + daysToAdd < 0)
+                                : (daysToAdd < 0 && daysInt + daysToAdd < 0);
+    } else {
+      // When |days| exceeds the int64 range any |daysToAdd| value can't
+      // meaningfully affect the result, so only test for negative |days|.
+      totalDaysIsNegative = days < 0;
+    }
+
+    if (totalDaysIsNegative) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_TEMPORAL_ZONED_DATE_TIME_INCORRECT_SIGN,
+                                "days");
+      return false;
+    }
+  }
+
+  // Step 20.
+  if (sign < 0) {
+    // |daysToAdd| can't be positive for |sign = -1|.
+    MOZ_ASSERT(daysToAdd <= 0);
+
+    bool totalDaysIsPositive;
+    if (int64_t daysInt; mozilla::NumberEqualsInt64(days, &daysInt)) {
+      // |daysInt + daysToAdd > 0| could overflow when |daysInt| is near the
+      // int64 boundaries, so handle each case separately.
+      totalDaysIsPositive = daysInt > 0 && daysInt + daysToAdd > 0;
+    } else {
+      // When |days| exceeds the int64 range any |daysToAdd| value can't
+      // meaningfully affect the result, so only test for positive |days|.
+      totalDaysIsPositive = days > 0;
+    }
+
+    if (totalDaysIsPositive) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_TEMPORAL_ZONED_DATE_TIME_INCORRECT_SIGN,
+                                "days");
+      return false;
+    }
+  }
+
+  MOZ_ASSERT(IsValidInstantDifference(dayLengthNs));
+  MOZ_ASSERT(IsValidInstantDifference(ns));
+
+  // FIXME: spec issue - rewrite steps 21-22 as:
+  //
+  // If sign = -1, then
+  //   If nanoseconds > 0, throw a RangeError.
+  // Else,
+  //   Assert: nanoseconds ≥ 0.
+  //
+  // https://github.com/tc39/proposal-temporal/issues/2530
+
+  // Steps 21-22.
+  if (sign < 0) {
+    if (ns > Instant{}) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_TEMPORAL_ZONED_DATE_TIME_INCORRECT_SIGN,
+                                "nanoseconds");
+      return false;
+    }
+  } else {
+    MOZ_ASSERT(ns >= Instant{});
+  }
+
+  // Step 23.
+  MOZ_ASSERT(ns.abs() < dayLengthNs.abs());
+
+  // Step 24.
+  int64_t daysInt;
+  if (mozilla::NumberEqualsInt64(days, &daysInt)) {
+    auto daysChecked = mozilla::CheckedInt64(daysInt) + daysToAdd;
+    if (daysChecked.isValid()) {
+      result.initialize(daysChecked.value(), ns, dayLengthNs.abs());
+      return true;
+    }
+  }
+
+  // Total number of days is too large for int64_t, store it as BigInt.
+
+  Rooted<BigInt*> daysBigInt(cx, BigInt::createFromDouble(cx, days));
+  if (!daysBigInt) {
+    return false;
+  }
+
+  Rooted<BigInt*> daysToAddBigInt(cx, BigInt::createFromInt64(cx, daysToAdd));
+  if (!daysToAddBigInt) {
+    return false;
+  }
+
+  daysBigInt = BigInt::add(cx, daysBigInt, daysToAddBigInt);
+  if (!daysBigInt) {
+    return false;
+  }
+
+  result.initialize(daysBigInt, ns, dayLengthNs.abs());
+  return true;
+}
+
+/**
+ * DifferenceZonedDateTime ( ns1, ns2, timeZone, calendar, largestUnit, options
+ * )
+ */
+static bool DifferenceZonedDateTime(JSContext* cx, const Instant& ns1,
+                                    const Instant& ns2,
+                                    Handle<JSObject*> timeZone,
+                                    Handle<JSObject*> calendar,
+                                    TemporalUnit largestUnit,
+                                    Handle<PlainObject*> maybeOptions,
+                                    Duration* result) {
+  MOZ_ASSERT(IsValidEpochInstant(ns1));
+  MOZ_ASSERT(IsValidEpochInstant(ns2));
+
+  // Steps 1-2. (Not applicable in our implementation.)
+
+  // Steps 3.
+  if (ns1 == ns2) {
+    *result = {};
+    return true;
+  }
+
+  // Steps 4-5.
+  PlainDateTime startDateTime;
+  if (!GetPlainDateTimeFor(cx, timeZone, ns1, &startDateTime)) {
+    return false;
+  }
+
+  // Steps 6-7.
+  PlainDateTime endDateTime;
+  if (!GetPlainDateTimeFor(cx, timeZone, ns2, &endDateTime)) {
+    return false;
+  }
+
+  // Step 8.
+  Duration dateDifference;
+  if (maybeOptions) {
+    if (!DifferenceISODateTime(cx, startDateTime, endDateTime, calendar,
+                               largestUnit, maybeOptions, &dateDifference)) {
+      return false;
+    }
+  } else {
+    if (!DifferenceISODateTime(cx, startDateTime, endDateTime, calendar,
+                               largestUnit, &dateDifference)) {
+      return false;
+    }
+  }
+
+  // Step 9.
+  Instant intermediateNs;
+  if (!AddZonedDateTime(cx, ns1, timeZone, calendar,
+                        {
+                            dateDifference.years,
+                            dateDifference.months,
+                            dateDifference.weeks,
+                        },
+                        &intermediateNs)) {
+    return false;
+  }
+  MOZ_ASSERT(IsValidEpochInstant(intermediateNs));
+
+  // Step 10.
+  auto timeRemainder = ns2 - intermediateNs;
+  MOZ_ASSERT(IsValidInstantDifference(timeRemainder));
+
+  // Step 11.
+  Rooted<ZonedDateTimeObject*> intermediate(
+      cx, CreateTemporalZonedDateTime(cx, intermediateNs, timeZone, calendar));
+  if (!intermediate) {
+    return false;
+  }
+
+  // Step 12.
+  Rooted<NanosecondsAndDays> nanosAndDays(cx);
+  if (!NanosecondsToDays(cx, timeRemainder, intermediate, &nanosAndDays)) {
+    return false;
+  }
+
+  // Step 13.
+  TimeDuration timeDifference;
+  if (!BalanceDuration(cx, nanosAndDays.nanoseconds(), TemporalUnit::Hour,
+                       &timeDifference)) {
+    return false;
+  }
+
+  // Step 14.
+  *result = {
+      dateDifference.years,        dateDifference.months,
+      dateDifference.weeks,        nanosAndDays.daysNumber(),
+      timeDifference.hours,        timeDifference.minutes,
+      timeDifference.seconds,      timeDifference.milliseconds,
+      timeDifference.microseconds, timeDifference.nanoseconds,
+  };
+  MOZ_ASSERT(IsValidDuration(*result));
+  return true;
+}
+
+/**
+ * DifferenceZonedDateTime ( ns1, ns2, timeZone, calendar, largestUnit, options
+ * )
+ */
+bool js::temporal::DifferenceZonedDateTime(JSContext* cx, const Instant& ns1,
+                                           const Instant& ns2,
+                                           Handle<JSObject*> timeZone,
+                                           Handle<JSObject*> calendar,
+                                           TemporalUnit largestUnit,
+                                           Duration* result) {
+  return ::DifferenceZonedDateTime(cx, ns1, ns2, timeZone, calendar,
+                                   largestUnit, nullptr, result);
+}
+
+/**
  * TimeZoneEquals ( one, two )
  */
 static bool TimeZoneEquals(JSContext* cx, Handle<JSObject*> one,
