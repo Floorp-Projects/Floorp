@@ -106,6 +106,73 @@ bool js::temporal::ToIntegerWithTruncation(JSContext* cx, Handle<Value> value,
   return true;
 }
 
+/**
+ * GetMethod ( V, P )
+ */
+bool js::temporal::GetMethod(JSContext* cx, Handle<JSObject*> object,
+                             Handle<PropertyName*> name,
+                             MutableHandle<Value> result) {
+  // We don't directly invoke |Call|, because |Call| tries to find the function
+  // on the stack (JSDVG_SEARCH_STACK). This leads to confusing error messages
+  // like:
+  //
+  // js> print(new Temporal.ZonedDateTime(0n, {}, {}))
+  // typein:1:6 TypeError: print is not a function
+
+  // Step 1.
+  if (!GetProperty(cx, object, object, name, result)) {
+    return false;
+  }
+
+  // Step 2.
+  if (result.isNullOrUndefined()) {
+    return true;
+  }
+
+  // Step 3.
+  if (!IsCallable(result)) {
+    if (auto chars = StringToNewUTF8CharsZ(cx, *name)) {
+      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                               JSMSG_PROPERTY_NOT_CALLABLE, chars.get());
+    }
+    return false;
+  }
+
+  // Step 4.
+  return true;
+}
+
+/**
+ * GetMethod ( V, P )
+ */
+bool js::temporal::GetMethodForCall(JSContext* cx, Handle<JSObject*> object,
+                                    Handle<PropertyName*> name,
+                                    MutableHandle<Value> result) {
+  // We don't directly invoke |Call|, because |Call| tries to find the function
+  // on the stack (JSDVG_SEARCH_STACK). This leads to confusing error messages
+  // like:
+  //
+  // js> print(new Temporal.ZonedDateTime(0n, {}, {}))
+  // typein:1:6 TypeError: print is not a function
+
+  // Step 1.
+  if (!GetProperty(cx, object, object, name, result)) {
+    return false;
+  }
+
+  // Steps 2-3.
+  if (!IsCallable(result)) {
+    if (auto chars = StringToNewUTF8CharsZ(cx, *name)) {
+      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                               JSMSG_PROPERTY_NOT_CALLABLE, chars.get());
+    }
+    return false;
+  }
+
+  // Step 4.
+  return true;
+}
+
 static JSObject* CreateTemporalObject(JSContext* cx, JSProtoKey key) {
   RootedObject proto(cx, &cx->global()->getObjectPrototype());
 

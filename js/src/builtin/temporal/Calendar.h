@@ -36,6 +36,9 @@ class CalendarObject : public NativeObject {
   static const ClassSpec classSpec_;
 };
 
+struct PlainDate;
+struct PlainDateTime;
+
 /**
  * ISODaysInYear ( year )
  */
@@ -50,6 +53,26 @@ int32_t ISODaysInMonth(int32_t year, int32_t month);
  * ISODaysInMonth ( year, month )
  */
 int32_t ISODaysInMonth(double year, int32_t month);
+
+/**
+ * ToISODayOfYear ( year, month, day )
+ */
+int32_t ToISODayOfYear(const PlainDate& date);
+
+/**
+ * 21.4.1.12 MakeDay ( year, month, date )
+ */
+int32_t MakeDay(const PlainDate& date);
+
+/**
+ * 21.4.1.13 MakeDate ( day, time )
+ */
+int64_t MakeDate(const PlainDateTime& dateTime);
+
+/**
+ * 21.4.1.13 MakeDate ( day, time )
+ */
+int64_t MakeDate(int32_t year, int32_t month, int32_t day);
 
 /**
  * GetISO8601Calendar ( )
@@ -73,6 +96,97 @@ JSObject* ToTemporalCalendarWithISODefault(
  */
 JSObject* GetTemporalCalendarWithISODefault(JSContext* cx,
                                             JS::Handle<JSObject*> item);
+
+/**
+ * CalendarYear ( calendar, dateLike )
+ */
+bool CalendarYear(JSContext* cx, JS::Handle<JSObject*> calendar,
+                  JS::Handle<JS::Value> dateLike,
+                  JS::MutableHandle<JS::Value> result);
+
+/**
+ * CalendarMonth ( calendar, dateLike )
+ */
+bool CalendarMonth(JSContext* cx, JS::Handle<JSObject*> calendar,
+                   JS::Handle<JS::Value> dateLike,
+                   JS::MutableHandle<JS::Value> result);
+
+/**
+ * CalendarMonthCode ( calendar, dateLike )
+ */
+bool CalendarMonthCode(JSContext* cx, JS::Handle<JSObject*> calendar,
+                       JS::Handle<JS::Value> dateLike,
+                       JS::MutableHandle<JS::Value> result);
+
+/**
+ * CalendarDay ( calendar, dateLike )
+ */
+bool CalendarDay(JSContext* cx, JS::Handle<JSObject*> calendar,
+                 JS::Handle<JS::Value> dateLike,
+                 JS::MutableHandle<JS::Value> result);
+
+/**
+ * CalendarDayOfWeek ( calendar, dateLike )
+ */
+bool CalendarDayOfWeek(JSContext* cx, JS::Handle<JSObject*> calendar,
+                       JS::Handle<JS::Value> dateLike,
+                       JS::MutableHandle<JS::Value> result);
+
+/**
+ * CalendarDayOfYear ( calendar, dateLike )
+ */
+bool CalendarDayOfYear(JSContext* cx, JS::Handle<JSObject*> calendar,
+                       JS::Handle<JS::Value> dateLike,
+                       JS::MutableHandle<JS::Value> result);
+
+/**
+ * CalendarWeekOfYear ( calendar, dateLike )
+ */
+bool CalendarWeekOfYear(JSContext* cx, JS::Handle<JSObject*> calendar,
+                        JS::Handle<JS::Value> dateLike,
+                        JS::MutableHandle<JS::Value> result);
+
+/**
+ * CalendarYearOfWeek ( calendar, dateLike )
+ */
+bool CalendarYearOfWeek(JSContext* cx, JS::Handle<JSObject*> calendar,
+                        JS::Handle<JS::Value> dateLike,
+                        JS::MutableHandle<JS::Value> result);
+
+/**
+ * CalendarDaysInWeek ( calendar, dateLike )
+ */
+bool CalendarDaysInWeek(JSContext* cx, JS::Handle<JSObject*> calendar,
+                        JS::Handle<JS::Value> dateLike,
+                        JS::MutableHandle<JS::Value> result);
+
+/**
+ * CalendarDaysInMonth ( calendar, dateLike )
+ */
+bool CalendarDaysInMonth(JSContext* cx, JS::Handle<JSObject*> calendar,
+                         JS::Handle<JS::Value> dateLike,
+                         JS::MutableHandle<JS::Value> result);
+
+/**
+ * CalendarDaysInYear ( calendar, dateLike )
+ */
+bool CalendarDaysInYear(JSContext* cx, JS::Handle<JSObject*> calendar,
+                        JS::Handle<JS::Value> dateLike,
+                        JS::MutableHandle<JS::Value> result);
+
+/**
+ * CalendarMonthsInYear ( calendar, dateLike )
+ */
+bool CalendarMonthsInYear(JSContext* cx, JS::Handle<JSObject*> calendar,
+                          JS::Handle<JS::Value> dateLike,
+                          JS::MutableHandle<JS::Value> result);
+
+/**
+ * CalendarInLeapYear ( calendar, dateLike )
+ */
+bool CalendarInLeapYear(JSContext* cx, JS::Handle<JSObject*> calendar,
+                        JS::Handle<JS::Value> dateLike,
+                        JS::MutableHandle<JS::Value> result);
 
 /**
  * Perform `ToString(calendar)` with an optimization when the built-in

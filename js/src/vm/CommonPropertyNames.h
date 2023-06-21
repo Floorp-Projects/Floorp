@@ -116,7 +116,12 @@
   MACRO_(currencySign, currencySign, "currencySign")                           \
   MACRO_(dateStyle, dateStyle, "dateStyle")                                    \
   MACRO_(day, day, "day")                                                      \
+  MACRO_(dayOfWeek, dayOfWeek, "dayOfWeek")                                    \
+  MACRO_(dayOfYear, dayOfYear, "dayOfYear")                                    \
   MACRO_(dayPeriod, dayPeriod, "dayPeriod")                                    \
+  MACRO_(daysInMonth, daysInMonth, "daysInMonth")                              \
+  MACRO_(daysInWeek, daysInWeek, "daysInWeek")                                 \
+  MACRO_(daysInYear, daysInYear, "daysInYear")                                 \
   MACRO_(debugger, debugger, "debugger")                                       \
   MACRO_(decimal, decimal, "decimal")                                          \
   MACRO_(decodeURI, decodeURI, "decodeURI")                                    \
@@ -159,6 +164,7 @@
   MACRO_(enumerable, enumerable, "enumerable")                                 \
   MACRO_(enumerate, enumerate, "enumerate")                                    \
   MACRO_(era, era, "era")                                                      \
+  MACRO_(eraYear, eraYear, "eraYear")                                          \
   MACRO_(errors, errors, "errors")                                             \
   MACRO_(ErrorToStringWithTrailingNewline, ErrorToStringWithTrailingNewline,   \
          "ErrorToStringWithTrailingNewline")                                   \
@@ -276,6 +282,7 @@
          "InitializePluralRules")                                              \
   MACRO_(InitializeRelativeTimeFormat, InitializeRelativeTimeFormat,           \
          "InitializeRelativeTimeFormat")                                       \
+  MACRO_(inLeapYear, inLeapYear, "inLeapYear")                                 \
   MACRO_(innermost, innermost, "innermost")                                    \
   MACRO_(inNursery, inNursery, "inNursery")                                    \
   MACRO_(input, input, "input")                                                \
@@ -352,6 +359,8 @@
   MACRO_(ModuleEvaluate, ModuleEvaluate, "ModuleEvaluate")                     \
   MACRO_(ModuleInstantiate, ModuleInstantiate, "ModuleInstantiate")            \
   MACRO_(month, month, "month")                                                \
+  MACRO_(monthCode, monthCode, "monthCode")                                    \
+  MACRO_(monthsInYear, monthsInYear, "monthsInYear")                           \
   MACRO_(multiline, multiline, "multiline")                                    \
   MACRO_(mutable, mutable_, "mutable")                                         \
   MACRO_(name, name, "name")                                                   \
@@ -572,6 +581,7 @@
   MACRO_(week, week, "week")                                                   \
   MACRO_(weekday, weekday, "weekday")                                          \
   MACRO_(weekend, weekend, "weekend")                                          \
+  MACRO_(weekOfYear, weekOfYear, "weekOfYear")                                 \
   MACRO_(while, while_, "while")                                               \
   MACRO_(with, with, "with")                                                   \
   MACRO_(toReversed, toReversed, "toReversed")                                 \
@@ -581,6 +591,7 @@
   MACRO_(write, write, "write")                                                \
   MACRO_(year, year, "year")                                                   \
   MACRO_(yearName, yearName, "yearName")                                       \
+  MACRO_(yearOfWeek, yearOfWeek, "yearOfWeek")                                 \
   MACRO_(yield, yield, "yield")                                                \
   MACRO_(zero, zero, "zero")                                                   \
   /* Type names must be contiguous and ordered; see js::TypeName. */           \
