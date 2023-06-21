@@ -761,7 +761,7 @@ already_AddRefed<MediaByteBuffer> AOMDecoder::CreateSequenceHeader(
     // if ( initial_display_delay_present_flag ) {...}
   }
 
-  if (!aInfo.mImage.IsEmpty() <= 0) {
+  if (aInfo.mImage.IsEmpty()) {
     NS_WARNING("Sequence header requires a valid image size");
     return nullptr;
   }
