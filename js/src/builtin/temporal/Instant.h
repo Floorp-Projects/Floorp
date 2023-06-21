@@ -132,6 +132,13 @@ bool RoundTemporalInstant(JSContext* cx, const Instant& ns, Increment increment,
                           TemporalUnit unit, TemporalRoundingMode roundingMode,
                           Instant* result);
 
+/**
+ * AddInstant ( epochNanoseconds, hours, minutes, seconds, milliseconds,
+ * microseconds, nanoseconds )
+ */
+bool AddInstant(JSContext* cx, const Instant& instant, const Duration& duration,
+                Instant* result);
+
 } /* namespace js::temporal */
 
 #endif /* builtin_temporal_Instant_h */

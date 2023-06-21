@@ -831,6 +831,7 @@ MSG_DEF(JSMSG_TEMPORAL_UNEXPECTED_PROPERTY,         1, JSEXN_TYPEERR, "{0} prope
 MSG_DEF(JSMSG_TEMPORAL_MISSING_TEMPORAL_FIELDS,     0, JSEXN_TYPEERR, "object must have at least one temporal property")
 MSG_DEF(JSMSG_TEMPORAL_INSTANT_INVALID,             0, JSEXN_RANGEERR, "epoch nanoseconds too large")
 MSG_DEF(JSMSG_TEMPORAL_INSTANT_NONINTEGER,          1, JSEXN_RANGEERR, "Instant must be an integer, but received {0}")
+MSG_DEF(JSMSG_TEMPORAL_INSTANT_BAD_DURATION,        1, JSEXN_RANGEERR, "duration \"{0}\" property must be zero")
 MSG_DEF(JSMSG_TEMPORAL_INSTANT_PARSE_BAD_TYPE,      1, JSEXN_RANGEERR, "can't parse {0} as a Temporal.Instant")
 MSG_DEF(JSMSG_TEMPORAL_TIMEZONE_INVALID_IDENTIFIER, 1, JSEXN_RANGEERR, "invalid time zone: {0}")
 MSG_DEF(JSMSG_TEMPORAL_TIMEZONE_NANOS_RANGE,        1, JSEXN_RANGEERR, "nanoseconds out of range: {0}")
