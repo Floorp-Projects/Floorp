@@ -94,6 +94,32 @@ inline PlainDateTime ToPlainDateTime(const PlainDateTimeObject* dateTime) {
   return {ToPlainDate(dateTime), ToPlainTime(dateTime)};
 }
 
+#ifdef DEBUG
+/**
+ * IsValidISODateTime ( year, month, day, hour, minute, second, millisecond,
+ * microsecond, nanosecond )
+ */
+bool IsValidISODateTime(const PlainDateTime& dateTime);
+#endif
+
+/**
+ * ISODateTimeWithinLimits ( year, month, day, hour, minute, second,
+ * millisecond, microsecond, nanosecond )
+ */
+bool ISODateTimeWithinLimits(const PlainDateTime& dateTime);
+
+/**
+ * ISODateTimeWithinLimits ( year, month, day, hour, minute, second,
+ * millisecond, microsecond, nanosecond )
+ */
+bool ISODateTimeWithinLimits(const PlainDate& date);
+
+/**
+ * ISODateTimeWithinLimits ( year, month, day, hour, minute, second,
+ * millisecond, microsecond, nanosecond )
+ */
+bool ISODateTimeWithinLimits(double year, double month, double day);
+
 } /* namespace js::temporal */
 
 #endif /* builtin_temporal_PlainDateTime_h */

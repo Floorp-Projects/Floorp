@@ -12,8 +12,13 @@
 #include "mozilla/TextUtils.h"
 
 #include <algorithm>
+#include <array>
+#include <cmath>
+#include <cstring>
+#include <iterator>
 #include <stddef.h>
 #include <stdint.h>
+#include <utility>
 
 #include "jsfriendapi.h"
 #include "jsnum.h"
@@ -75,6 +80,69 @@ using namespace js::temporal;
 
 static inline bool IsCalendar(Handle<Value> v) {
   return v.isObject() && v.toObject().is<CalendarObject>();
+}
+
+/**
+ * IsISOLeapYear ( year )
+ */
+static constexpr bool IsISOLeapYear(int32_t year) {
+  // Steps 1-5.
+  return (year % 4 == 0) && ((year % 100 != 0) || (year % 400 == 0));
+}
+
+/**
+ * IsISOLeapYear ( year )
+ */
+static bool IsISOLeapYear(double year) {
+  // Step 1.
+  MOZ_ASSERT(IsInteger(year));
+
+  // Steps 2-5.
+  return std::fmod(year, 4) == 0 &&
+         (std::fmod(year, 100) != 0 || std::fmod(year, 400) == 0);
+}
+
+/**
+ * ISODaysInYear ( year )
+ */
+int32_t js::temporal::ISODaysInYear(int32_t year) {
+  // Steps 1-3.
+  return IsISOLeapYear(year) ? 366 : 365;
+}
+
+/**
+ * ISODaysInMonth ( year, month )
+ */
+static constexpr int32_t ISODaysInMonth(int32_t year, int32_t month) {
+  MOZ_ASSERT(1 <= month && month <= 12);
+
+  constexpr uint8_t daysInMonth[2][13] = {
+      {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31},
+      {0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}};
+
+  // Steps 1-4.
+  return daysInMonth[IsISOLeapYear(year)][month];
+}
+
+/**
+ * ISODaysInMonth ( year, month )
+ */
+int32_t js::temporal::ISODaysInMonth(int32_t year, int32_t month) {
+  return ::ISODaysInMonth(year, month);
+}
+
+/**
+ * ISODaysInMonth ( year, month )
+ */
+int32_t js::temporal::ISODaysInMonth(double year, int32_t month) {
+  MOZ_ASSERT(1 <= month && month <= 12);
+
+  static constexpr uint8_t daysInMonth[2][13] = {
+      {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31},
+      {0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}};
+
+  // Steps 1-4.
+  return daysInMonth[IsISOLeapYear(year)][month];
 }
 
 #ifdef DEBUG

@@ -827,5 +827,7 @@ MSG_DEF(JSMSG_TEMPORAL_DURATION_INVALID_SIGN,       2, JSEXN_RANGEERR, "duration
 MSG_DEF(JSMSG_TEMPORAL_DURATION_INVALID_NON_FINITE, 2, JSEXN_RANGEERR, "duration value \"{0}\" is {1}")
 MSG_DEF(JSMSG_TEMPORAL_DURATION_NOT_INTEGER,        2, JSEXN_RANGEERR, "{0} isn't a valid {1} duration because it isn't an integer")
 MSG_DEF(JSMSG_TEMPORAL_CALENDAR_INVALID_ID,         1, JSEXN_RANGEERR, "invalid calendar: {0}")
+MSG_DEF(JSMSG_TEMPORAL_PLAIN_DATE_INVALID_VALUE,    4, JSEXN_RANGEERR, "date value \"{0}\" not in {1}..{2}: {3}")
+MSG_DEF(JSMSG_TEMPORAL_PLAIN_TIME_INVALID_VALUE,    4, JSEXN_RANGEERR, "time value \"{0}\" not in {1}..{2}: {3}")
 
 //clang-format on
