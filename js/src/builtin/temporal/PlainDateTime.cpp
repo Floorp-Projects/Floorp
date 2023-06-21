@@ -1023,6 +1023,122 @@ static PlainDateTime RoundISODateTime(const PlainDateTime& dateTime,
   return {balanceResult, roundedTime.time};
 }
 
+/**
+ * DifferenceTemporalPlainDateTime ( operation, dateTime, other, options )
+ */
+static bool DifferenceTemporalPlainDateTime(JSContext* cx,
+                                            TemporalDifference operation,
+                                            const CallArgs& args) {
+  Rooted<PlainDateTimeObject*> dateTime(
+      cx, &args.thisv().toObject().as<PlainDateTimeObject>());
+  Rooted<JSObject*> calendar(cx, dateTime->calendar());
+
+  // Step 1. (Not applicable in our implementation.)
+
+  // Step 2.
+  PlainDateTime other;
+  Rooted<JSObject*> otherCalendar(cx);
+  if (!::ToTemporalDateTime(cx, args.get(0), &other, &otherCalendar)) {
+    return false;
+  }
+
+  // Step 3.
+  if (!CalendarEqualsOrThrow(cx, calendar, otherCalendar)) {
+    return false;
+  }
+
+  // Steps 4-7.
+  DifferenceSettings settings;
+  Duration diff;
+  if (args.hasDefined(1)) {
+    Rooted<JSObject*> options(
+        cx, RequireObjectArg(cx, "options", ToName(operation), args[1]));
+    if (!options) {
+      return false;
+    }
+
+    // Step 4.
+    Rooted<PlainObject*> resolvedOptions(cx,
+                                         NewPlainObjectWithProto(cx, nullptr));
+    if (!resolvedOptions) {
+      return false;
+    }
+
+    // Step 5.
+    if (!CopyDataProperties(cx, resolvedOptions, options)) {
+      return false;
+    }
+
+    // Step 6.
+    if (!GetDifferenceSettings(
+            cx, operation, resolvedOptions, TemporalUnitGroup::DateTime,
+            TemporalUnit::Nanosecond, TemporalUnit::Day, &settings)) {
+      return false;
+    }
+
+    // Step 7.
+    if (!::DifferenceISODateTime(cx, ToPlainDateTime(dateTime), other, calendar,
+                                 settings.largestUnit, resolvedOptions,
+                                 &diff)) {
+      return false;
+    }
+  } else {
+    // Steps 4-6.
+    settings = {
+        TemporalUnit::Nanosecond,
+        TemporalUnit::Day,
+        TemporalRoundingMode::Trunc,
+        Increment{1},
+    };
+
+    // Step 7.
+    if (!::DifferenceISODateTime(cx, ToPlainDateTime(dateTime), other, calendar,
+                                 settings.largestUnit, nullptr, &diff)) {
+      return false;
+    }
+  }
+
+  // Step 8.
+  Rooted<PlainDateObject*> relativeTo(
+      cx, CreateTemporalDate(cx, ToPlainDate(dateTime), calendar));
+  if (!relativeTo) {
+    return false;
+  }
+
+  // Step 9.
+  Duration roundResult;
+  if (!temporal::RoundDuration(cx, diff, settings.roundingIncrement,
+                               settings.smallestUnit, settings.roundingMode,
+                               relativeTo, &roundResult)) {
+    return false;
+  }
+
+  // Step 10.
+  TimeDuration result;
+  if (!BalanceDuration(cx, roundResult, settings.largestUnit, &result)) {
+    return false;
+  }
+
+  // Step 11.
+  Duration duration = {
+      roundResult.years,  roundResult.months,  roundResult.weeks,
+      result.days,        result.hours,        result.minutes,
+      result.seconds,     result.milliseconds, result.microseconds,
+      result.nanoseconds,
+  };
+  if (operation == TemporalDifference::Since) {
+    duration = duration.negate();
+  }
+
+  auto* obj = CreateTemporalDuration(cx, duration);
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
 enum class PlainDateTimeDuration { Add, Subtract };
 
 /**
@@ -1930,6 +2046,40 @@ static bool PlainDateTime_subtract(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
+ * Temporal.PlainDateTime.prototype.until ( other [ , options ] )
+ */
+static bool PlainDateTime_until(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  return DifferenceTemporalPlainDateTime(cx, TemporalDifference::Until, args);
+}
+
+/**
+ * Temporal.PlainDateTime.prototype.until ( other [ , options ] )
+ */
+static bool PlainDateTime_until(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_until>(cx, args);
+}
+
+/**
+ * Temporal.PlainDateTime.prototype.since ( other [ , options ] )
+ */
+static bool PlainDateTime_since(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  return DifferenceTemporalPlainDateTime(cx, TemporalDifference::Since, args);
+}
+
+/**
+ * Temporal.PlainDateTime.prototype.since ( other [ , options ] )
+ */
+static bool PlainDateTime_since(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_since>(cx, args);
+}
+
+/**
  * Temporal.PlainDateTime.prototype.round ( roundTo )
  */
 static bool PlainDateTime_round(JSContext* cx, const CallArgs& args) {
@@ -2529,6 +2679,8 @@ static const JSFunctionSpec PlainDateTime_prototype_methods[] = {
     JS_FN("withCalendar", PlainDateTime_withCalendar, 1, 0),
     JS_FN("add", PlainDateTime_add, 1, 0),
     JS_FN("subtract", PlainDateTime_subtract, 1, 0),
+    JS_FN("until", PlainDateTime_until, 1, 0),
+    JS_FN("since", PlainDateTime_since, 1, 0),
     JS_FN("round", PlainDateTime_round, 1, 0),
     JS_FN("equals", PlainDateTime_equals, 1, 0),
     JS_FN("toString", PlainDateTime_toString, 0, 0),

@@ -3046,6 +3046,49 @@ bool js::temporal::CalendarEquals(JSContext* cx, Handle<JSObject*> one,
 }
 
 /**
+ * CalendarEquals ( one, two )
+ */
+bool js::temporal::CalendarEqualsOrThrow(JSContext* cx, Handle<JSObject*> one,
+                                         Handle<JSObject*> two) {
+  // Step 1.
+  if (one == two) {
+    return true;
+  }
+
+  // Step 2.
+  Rooted<JSString*> calendarOne(cx, CalendarToString(cx, one));
+  if (!calendarOne) {
+    return false;
+  }
+
+  // Step 3.
+  JSString* calendarTwo = CalendarToString(cx, two);
+  if (!calendarTwo) {
+    return false;
+  }
+
+  // Steps 4-5.
+  bool equals;
+  if (!EqualStrings(cx, calendarOne, calendarTwo, &equals)) {
+    return false;
+  }
+  if (equals) {
+    return true;
+  }
+
+  // Throw an error when the calendar identifiers don't match. Used when unequal
+  // calendars throw a RangeError.
+  if (auto charsOne = QuoteString(cx, calendarOne)) {
+    if (auto charsTwo = QuoteString(cx, calendarTwo)) {
+      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                               JSMSG_TEMPORAL_CALENDAR_INCOMPATIBLE,
+                               charsOne.get(), charsTwo.get());
+    }
+  }
+  return false;
+}
+
+/**
  * ConsolidateCalendars ( one, two )
  */
 JSObject* js::temporal::ConsolidateCalendars(JSContext* cx,
