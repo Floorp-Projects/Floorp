@@ -36,6 +36,21 @@ class CalendarObject : public NativeObject {
 };
 
 /**
+ * ISODaysInYear ( year )
+ */
+int32_t ISODaysInYear(int32_t year);
+
+/**
+ * ISODaysInMonth ( year, month )
+ */
+int32_t ISODaysInMonth(int32_t year, int32_t month);
+
+/**
+ * ISODaysInMonth ( year, month )
+ */
+int32_t ISODaysInMonth(double year, int32_t month);
+
+/**
  * Perform `ToString(calendar)` with an optimization when the built-in
  * Temporal.Calendar.prototype.toString method is called.
  */

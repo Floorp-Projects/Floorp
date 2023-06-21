@@ -75,6 +75,31 @@ inline PlainTime ToPlainTime(const PlainTimeObject* time) {
           time->isoMicrosecond(), time->isoNanosecond()};
 }
 
+#ifdef DEBUG
+/**
+ * IsValidTime ( hour, minute, second, millisecond, microsecond, nanosecond )
+ */
+bool IsValidTime(const PlainTime& time);
+
+/**
+ * IsValidTime ( hour, minute, second, millisecond, microsecond, nanosecond )
+ */
+bool IsValidTime(double hour, double minute, double second, double millisecond,
+                 double microsecond, double nanosecond);
+#endif
+
+/**
+ * IsValidTime ( hour, minute, second, millisecond, microsecond, nanosecond )
+ */
+bool ThrowIfInvalidTime(JSContext* cx, const PlainTime& time);
+
+/**
+ * IsValidTime ( hour, minute, second, millisecond, microsecond, nanosecond )
+ */
+bool ThrowIfInvalidTime(JSContext* cx, double hour, double minute,
+                        double second, double millisecond, double microsecond,
+                        double nanosecond);
+
 } /* namespace js::temporal */
 
 #endif /* builtin_temporal_PlainTime_h */

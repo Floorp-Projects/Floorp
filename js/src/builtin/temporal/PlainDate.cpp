@@ -7,20 +7,174 @@
 #include "builtin/temporal/PlainDate.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/FloatingPoint.h"
 
+#include <algorithm>
+#include <cmath>
+#include <cstdlib>
+#include <initializer_list>
+#include <stdint.h>
+#include <type_traits>
+#include <utility>
+
+#include "jsnum.h"
 #include "jspubtd.h"
 #include "jstypes.h"
 #include "NamespaceImports.h"
 
+#include "builtin/temporal/Calendar.h"
+#include "builtin/temporal/PlainDateTime.h"
+#include "builtin/temporal/PlainTime.h"
+#include "ds/IdValuePair.h"
 #include "gc/AllocKind.h"
+#include "gc/Barrier.h"
+#include "js/AllocPolicy.h"
+#include "js/CallArgs.h"
+#include "js/CallNonGenericMethod.h"
 #include "js/Class.h"
+#include "js/Conversions.h"
+#include "js/Date.h"
+#include "js/ErrorReport.h"
+#include "js/friend/ErrorMessages.h"
+#include "js/GCVector.h"
+#include "js/Id.h"
+#include "js/PropertyDescriptor.h"
 #include "js/PropertySpec.h"
+#include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
+#include "js/Value.h"
+#include "util/StringBuffer.h"
+#include "vm/Compartment.h"
 #include "vm/GlobalObject.h"
+#include "vm/JSAtomState.h"
+#include "vm/JSContext.h"
+#include "vm/JSObject.h"
 #include "vm/PlainObject.h"
+#include "vm/StringType.h"
+
+#include "vm/JSObject-inl.h"
+#include "vm/NativeObject-inl.h"
+#include "vm/ObjectOperations-inl.h"
 
 using namespace js;
 using namespace js::temporal;
+
+#ifdef DEBUG
+/**
+ * IsValidISODate ( year, month, day )
+ */
+template <typename T>
+static bool IsValidISODate(T year, T month, T day) {
+  static_assert(std::is_same_v<T, int32_t> || std::is_same_v<T, double>);
+
+  // Step 1.
+  MOZ_ASSERT(IsInteger(year));
+  MOZ_ASSERT(IsInteger(month));
+  MOZ_ASSERT(IsInteger(day));
+
+  // Step 2.
+  if (month < 1 || month > 12) {
+    return false;
+  }
+
+  // Step 3.
+  int32_t daysInMonth = js::temporal::ISODaysInMonth(year, int32_t(month));
+
+  // Step 4.
+  if (day < 1 || day > daysInMonth) {
+    return false;
+  }
+
+  // Step 5.
+  return true;
+}
+
+/**
+ * IsValidISODate ( year, month, day )
+ */
+bool js::temporal::IsValidISODate(const PlainDate& date) {
+  auto& [year, month, day] = date;
+  return ::IsValidISODate(year, month, day);
+}
+
+/**
+ * IsValidISODate ( year, month, day )
+ */
+bool js::temporal::IsValidISODate(double year, double month, double day) {
+  return ::IsValidISODate(year, month, day);
+}
+#endif
+
+static void ReportInvalidDateValue(JSContext* cx, const char* name, int32_t min,
+                                   int32_t max, double num) {
+  Int32ToCStringBuf minCbuf;
+  const char* minStr = Int32ToCString(&minCbuf, min);
+
+  Int32ToCStringBuf maxCbuf;
+  const char* maxStr = Int32ToCString(&maxCbuf, max);
+
+  ToCStringBuf numCbuf;
+  const char* numStr = NumberToCString(&numCbuf, num);
+
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                            JSMSG_TEMPORAL_PLAIN_DATE_INVALID_VALUE, name,
+                            minStr, maxStr, numStr);
+}
+
+template <typename T>
+static inline bool ThrowIfInvalidDateValue(JSContext* cx, const char* name,
+                                           int32_t min, int32_t max, T num) {
+  if (min <= num && num <= max) {
+    return true;
+  }
+  ReportInvalidDateValue(cx, name, min, max, num);
+  return false;
+}
+
+/**
+ * IsValidISODate ( year, month, day )
+ */
+template <typename T>
+static bool ThrowIfInvalidISODate(JSContext* cx, T year, T month, T day) {
+  static_assert(std::is_same_v<T, int32_t> || std::is_same_v<T, double>);
+
+  // Step 1.
+  MOZ_ASSERT(IsInteger(year));
+  MOZ_ASSERT(IsInteger(month));
+  MOZ_ASSERT(IsInteger(day));
+
+  // Step 2.
+  if (!ThrowIfInvalidDateValue(cx, "month", 1, 12, month)) {
+    return false;
+  }
+
+  // Step 3.
+  int32_t daysInMonth = js::temporal::ISODaysInMonth(year, int32_t(month));
+
+  // Step 4.
+  if (!ThrowIfInvalidDateValue(cx, "day", 1, daysInMonth, day)) {
+    return false;
+  }
+
+  // Step 5.
+  return true;
+}
+
+/**
+ * IsValidISODate ( year, month, day )
+ */
+bool js::temporal::ThrowIfInvalidISODate(JSContext* cx, const PlainDate& date) {
+  auto& [year, month, day] = date;
+  return ::ThrowIfInvalidISODate(cx, year, month, day);
+}
+
+/**
+ * IsValidISODate ( year, month, day )
+ */
+bool js::temporal::ThrowIfInvalidISODate(JSContext* cx, double year,
+                                         double month, double day) {
+  return ::ThrowIfInvalidISODate(cx, year, month, day);
+}
 
 static bool PlainDateConstructor(JSContext* cx, unsigned argc, Value* vp) {
   MOZ_CRASH("NYI");
