@@ -63,6 +63,13 @@ class CellAllocator {
   static T* NewCell(JSContext* cx, Args&&... args);
 
  private:
+  template <JS::TraceKind kind, AllowGC allowGC>
+  static void* TryNewNurseryCell(JSContext* cx, size_t thingSize,
+                                 AllocSite* site);
+  template <AllowGC allowGC>
+  static void* TryNewTenuredCell(JSContext* cx, AllocKind kind,
+                                 size_t thingSize);
+
 #if defined(DEBUG) || defined(JS_GC_ZEAL) || defined(JS_OOM_BREAKPOINT)
   template <AllowGC allowGC>
   static bool PreAllocChecks(JSContext* cx, AllocKind kind);
@@ -71,6 +78,10 @@ class CellAllocator {
   static bool PreAllocChecks(JSContext* cx, AllocKind kind) {
     return true;
   }
+#endif
+
+#ifdef DEBUG
+  static void CheckIncrementalZoneState(JSContext* cx, void* ptr);
 #endif
 
   // Allocate a cell in the nursery, unless |heap| is Heap::Tenured or nursery

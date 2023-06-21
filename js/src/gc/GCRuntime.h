@@ -599,13 +599,7 @@ class GCRuntime {
   // Public here for ReleaseArenaLists and FinalizeTypedArenas.
   void releaseArena(Arena* arena, const AutoLockGC& lock);
 
-  // Allocator
-  template <JS::TraceKind kind, AllowGC allowGC>
-  static void* tryNewNurseryCell(JSContext* cx, size_t thingSize,
-                                 AllocSite* site);
-  template <AllowGC allowGC>
-  static void* tryNewTenuredThing(JSContext* cx, AllocKind kind,
-                                  size_t thingSize);
+  // Allocator internals.
   static void* refillFreeListInGC(Zone* zone, AllocKind thingKind);
 
   // Delayed marking.
@@ -631,6 +625,11 @@ class GCRuntime {
 
   void updateAllocationRates();
 
+  // Allocator internals
+  static void* refillFreeList(JSContext* cx, AllocKind thingKind);
+  void attemptLastDitchGC(JSContext* cx);
+
+  // Test mark queue.
 #ifdef DEBUG
   const GCVector<HeapPtr<JS::Value>, 0, SystemAllocPolicy>& getTestMarkQueue()
       const;
@@ -665,14 +664,6 @@ class GCRuntime {
   Arena* allocateArena(TenuredChunk* chunk, Zone* zone, AllocKind kind,
                        ShouldCheckThresholds checkThresholds,
                        const AutoLockGC& lock);
-
-  // Allocator internals
-  static void gcIfNeededAtAllocation(JSContext* cx);
-  static void* refillFreeList(JSContext* cx, AllocKind thingKind);
-  void attemptLastDitchGC(JSContext* cx);
-#ifdef DEBUG
-  static void checkIncrementalZoneState(JSContext* cx, void* ptr);
-#endif
 
   /*
    * Return the list of chunks that can be released outside the GC lock.
