@@ -150,12 +150,10 @@ const allAttrs = new Set([
   "mutedInfo",
   "sharingState",
   "title",
-  "autoDiscardable",
 ]);
 const allProperties = new Set([
   "attention",
   "audible",
-  "autoDiscardable",
   "discarded",
   "favIconUrl",
   "hidden",
@@ -420,12 +418,6 @@ this.tabs = class extends ExtensionAPIPersistent {
             filter.properties.has("audible")
           ) {
             needed.push("audible");
-          }
-          if (
-            changed.includes("undiscardable") &&
-            filter.properties.has("autoDiscardable")
-          ) {
-            needed.push("autoDiscardable");
           }
           if (changed.includes("label") && filter.properties.has("title")) {
             needed.push("title");
@@ -905,9 +897,6 @@ this.tabs = class extends ExtensionAPIPersistent {
 
           if (updateProperties.active) {
             tabbrowser.selectedTab = nativeTab;
-          }
-          if (updateProperties.autoDiscardable !== null) {
-            nativeTab.undiscardable = !updateProperties.autoDiscardable;
           }
           if (updateProperties.highlighted !== null) {
             if (updateProperties.highlighted) {
