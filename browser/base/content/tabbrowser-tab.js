@@ -154,6 +154,15 @@
       gBrowser._tabAttrModified(this, ["attention"]);
     }
 
+    set undiscardable(val) {
+      if (val == this.hasAttribute("undiscardable")) {
+        return;
+      }
+
+      this.toggleAttribute("undiscardable", val);
+      gBrowser._tabAttrModified(this, ["undiscardable"]);
+    }
+
     set _visuallySelected(val) {
       if (val == (this.getAttribute("visuallyselected") == "true")) {
         return;
@@ -222,6 +231,10 @@
 
     get activeMediaBlocked() {
       return this.getAttribute("activemedia-blocked") == "true";
+    }
+
+    get undiscardable() {
+      return this.hasAttribute("undiscardable");
     }
 
     get isEmpty() {

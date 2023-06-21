@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>autoDiscardable test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(async function() {
+  const extension = ExtensionTestUtils.loadExtension({
+    async background() {
+      const tab = await browser.tabs.create({});
+      browser.test.assertTrue(tab.autoDiscardable, "autoDiscardable should be true on Android");
+      browser.test.assertThrows(() => browser.tabs.query({ autoDiscardable: true }),
+      /Unexpected property "autoDiscardable"/,
+      `tabs.query with autoDiscardable should error out on Android`);
+      browser.test.assertThrows(() => browser.tabs.update(tab.id, { autoDiscardable: true }),
+      /Unexpected property "autoDiscardable"/,
+      `tabs.update with autoDiscardable should error out on Android`);
+      await browser.tabs.remove(tab.id); // Cleanup
+      browser.test.notifyPass("tabs.autoDiscardable");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("tabs.autoDiscardable");
+  await extension.unload();
+});
+</script>
+
+</body>
+</html>

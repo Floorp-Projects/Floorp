@@ -140,6 +140,11 @@
             "optional": true,
             "description": "Whether the tab has produced sound over the past couple of seconds (but it might not be heard if also muted). Equivalent to whether the speaker audio indicator is showing."
           },
+          "autoDiscardable": {
+            "type": "boolean",
+            "optional": true,
+            "description": "Whether the tab can be discarded automatically by the browser when resources are low."
+          },
           "mutedInfo": {
             "$ref": "MutedInfo",
             "optional": true,
