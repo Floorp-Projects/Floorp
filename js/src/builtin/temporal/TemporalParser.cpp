@@ -3130,3 +3130,111 @@ TemporalParser<CharT>::parseTemporalZonedDateTimeString() {
 
   return result;
 }
+
+/**
+ * ParseTemporalZonedDateTimeString ( isoString )
+ */
+template <typename CharT>
+static auto ParseTemporalZonedDateTimeString(mozilla::Span<const CharT> str) {
+  TemporalParser<CharT> parser(str);
+  return parser.parseTemporalZonedDateTimeString();
+}
+
+/**
+ * ParseTemporalZonedDateTimeString ( isoString )
+ */
+static auto ParseTemporalZonedDateTimeString(Handle<JSLinearString*> str) {
+  JS::AutoCheckCannotGC nogc;
+  if (str->hasLatin1Chars()) {
+    return ParseTemporalZonedDateTimeString<Latin1Char>(str->latin1Range(nogc));
+  }
+  return ParseTemporalZonedDateTimeString<char16_t>(str->twoByteRange(nogc));
+}
+
+/**
+ * ParseTemporalZonedDateTimeString ( isoString )
+ */
+bool js::temporal::ParseTemporalZonedDateTimeString(
+    JSContext* cx, Handle<JSString*> str, PlainDateTime* dateTime, bool* isUTC,
+    bool* hasOffset, int64_t* timeZoneOffset,
+    MutableHandle<JSString*> timeZoneName, MutableHandle<JSString*> calendar) {
+  Rooted<JSLinearString*> linear(cx, str->ensureLinear(cx));
+  if (!linear) {
+    return false;
+  }
+
+  // Step 1.
+  auto parseResult = ::ParseTemporalZonedDateTimeString(linear);
+  if (parseResult.isErr()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              parseResult.unwrapErr());
+    return false;
+  }
+  ZonedDateTimeString parsed = parseResult.unwrap();
+
+  // Step 2. (ParseISODateTime, steps 1-18.)
+  if (!ParseISODateTime(cx, parsed, dateTime)) {
+    return false;
+  }
+
+  // Step 2. (ParseISODateTime, steps 19-21.)
+  {
+    MOZ_ASSERT(parsed.timeZone.hasAnnotation());
+    MOZ_ASSERT(!parsed.timeZone.hasName());
+
+    const auto& annotation = parsed.timeZone.annotation;
+
+    // Case 1: 19700101Z[+02:00]
+    // { [[Z]]: true, [[OffsetString]]: undefined, [[Name]]: "+02:00" }
+    //
+    // Case 2: 19700101+00:00[+02:00]
+    // { [[Z]]: false, [[OffsetString]]: "+00:00", [[Name]]: "+02:00" }
+    //
+    // Case 3: 19700101[+02:00]
+    // { [[Z]]: false, [[OffsetString]]: undefined, [[Name]]: "+02:00" }
+    //
+    // Case 4: 19700101Z[Europe/Berlin]
+    // { [[Z]]: true, [[OffsetString]]: undefined, [[Name]]: "Europe/Berlin" }
+    //
+    // Case 5: 19700101+00:00[Europe/Berlin]
+    // { [[Z]]: false, [[OffsetString]]: "+00:00", [[Name]]: "Europe/Berlin" }
+    //
+    // Case 6: 19700101[Europe/Berlin]
+    // { [[Z]]: false, [[OffsetString]]: undefined, [[Name]]: "Europe/Berlin" }
+
+    if (annotation.hasOffset()) {
+      int64_t offset = ParseTimeZoneOffsetString(annotation.offset);
+      timeZoneName.set(FormatTimeZoneOffsetString(cx, offset));
+    } else {
+      timeZoneName.set(ToString(cx, linear, annotation.name));
+    }
+    if (!timeZoneName) {
+      return false;
+    }
+
+    if (parsed.timeZone.isUTC()) {
+      *isUTC = true;
+      *hasOffset = false;
+      *timeZoneOffset = 0;
+    } else if (parsed.timeZone.hasOffset()) {
+      *isUTC = false;
+      *hasOffset = true;
+      *timeZoneOffset = ParseTimeZoneOffsetString(parsed.timeZone.offset);
+    } else {
+      *isUTC = false;
+      *hasOffset = false;
+      *timeZoneOffset = 0;
+    }
+  }
+
+  // Step 2. (ParseISODateTime, steps 23-24.)
+  if (parsed.calendar.present()) {
+    calendar.set(ToString(cx, linear, parsed.calendar));
+    if (!calendar) {
+      return false;
+    }
+  }
+
+  // Step 2. (ParseISODateTime, step 25.)
+  return true;
+}

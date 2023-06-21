@@ -858,6 +858,7 @@ MSG_DEF(JSMSG_TEMPORAL_PLAIN_TIME_MISSING_UNIT,     0, JSEXN_TYPEERR, "Time-like
 MSG_DEF(JSMSG_TEMPORAL_PLAIN_TIME_CALENDAR_NOT_ISO8601, 1, JSEXN_RANGEERR, "PlainTime only supports the \"iso8601\" calendar: {0}")
 MSG_DEF(JSMSG_TEMPORAL_PLAIN_MONTH_DAY_INVALID,     0, JSEXN_RANGEERR, "year-month-day must be valid iso dates")
 MSG_DEF(JSMSG_TEMPORAL_PLAIN_YEAR_MONTH_INVALID,    0, JSEXN_RANGEERR, "year-month-day must be valid iso dates")
+MSG_DEF(JSMSG_TEMPORAL_ZONED_DATE_TIME_NO_TIME_FOUND, 0, JSEXN_RANGEERR, "date-time can't be represented in the given time zone")
 MSG_DEF(JSMSG_TEMPORAL_PARSER_NEGATIVE_ZERO_YEAR,       0, JSEXN_RANGEERR, "year 0 must not start with \"-\"")
 MSG_DEF(JSMSG_TEMPORAL_PARSER_MISSING_EXTENDED_YEAR,    0, JSEXN_RANGEERR, "signed year must be followed by six digits")
 MSG_DEF(JSMSG_TEMPORAL_PARSER_MISSING_YEAR,             0, JSEXN_RANGEERR, "missing four digit year")

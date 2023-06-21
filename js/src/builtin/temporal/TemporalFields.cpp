@@ -562,6 +562,79 @@ PlainObject* js::temporal::PrepareTemporalFields(
 /**
  * PrepareTemporalFields ( fields, fieldNames, requiredFields )
  */
+PlainObject* js::temporal::PrepareTemporalFields(
+    JSContext* cx, Handle<JSObject*> fields,
+    Handle<JS::StackGCVector<PropertyKey>> fieldNames,
+    std::initializer_list<TemporalField> requiredFields) {
+  // Step 1.
+  Rooted<PlainObject*> result(cx, NewPlainObjectWithProto(cx, nullptr));
+  if (!result) {
+    return nullptr;
+  }
+
+  // Step 2. (Not applicable in our implementation.)
+
+  // Step 3. (The list is already sorted in our implementation.)
+  MOZ_ASSERT(IsSorted(fieldNames));
+
+  // |requiredFields| is sorted and doesn't include any duplicate elements.
+  MOZ_ASSERT(IsSorted(requiredFields));
+  MOZ_ASSERT(std::adjacent_find(requiredFields.begin(), requiredFields.end()) ==
+             requiredFields.end());
+
+  // Step 4.
+  Rooted<Value> value(cx);
+  for (size_t i = 0; i < fieldNames.length(); i++) {
+    Handle<PropertyKey> property = fieldNames[i];
+
+    // Step 4.a.
+    if (!GetProperty(cx, fields, fields, property, &value)) {
+      return nullptr;
+    }
+
+    // Steps 4.b-c.
+    if (auto fieldName = ToTemporalField(cx, property)) {
+      if (!value.isUndefined()) {
+        // Step 4.b.i. (Not applicable in our implementation.)
+
+        // Step 4.b.ii.
+        if (!TemporalFieldConvertValue(cx, *fieldName, &value)) {
+          return nullptr;
+        }
+      } else {
+        // Step 4.c.i.
+        if (std::find(requiredFields.begin(), requiredFields.end(),
+                      *fieldName) != requiredFields.end()) {
+          if (auto chars = QuoteString(cx, property.toString())) {
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                      JSMSG_TEMPORAL_MISSING_PROPERTY,
+                                      chars.get());
+          }
+          return nullptr;
+        }
+
+        // Step 4.c.ii.
+        value = TemporalFieldDefaultValue(*fieldName);
+      }
+    } else {
+      // Steps 4.b.i-ii and 4.c.i-ii. (Not applicable in our implementation.)
+    }
+
+    // Steps 4.b.iii and 4.c.iii.
+    if (!DefineDataProperty(cx, result, property, value)) {
+      return nullptr;
+    }
+  }
+
+  // Step 5. (Not applicable in our implementation.)
+
+  // Step 6.
+  return result;
+}
+
+/**
+ * PrepareTemporalFields ( fields, fieldNames, requiredFields )
+ */
 PlainObject* js::temporal::PreparePartialTemporalFields(
     JSContext* cx, Handle<JSObject*> fields,
     Handle<JS::StackGCVector<PropertyKey>> fieldNames) {
@@ -675,6 +748,156 @@ bool js::temporal::MergeTemporalFieldNames(
       return false;
     }
   }
+
+  return true;
+}
+
+static inline bool ComparePropertyKeyLessThan(PropertyKey x, PropertyKey y) {
+  return ComparePropertyKey(x, y) < 0;
+}
+
+[[nodiscard]] static bool AppendSorted(
+    JS::StackGCVector<PropertyKey>& fieldNames, PropertyKey additionalName) {
+  // Tell the analysis the |std::upper_bound| function can't GC.
+  JS::AutoSuppressGCAnalysis nogc;
+
+  // Find the position where to add |additionalName|.
+  auto* p = std::upper_bound(fieldNames.begin(), fieldNames.end(),
+                             additionalName, ComparePropertyKeyLessThan);
+
+  // Store the index, because growBy() may reallocate, which invalidates |p|.
+  size_t index = std::distance(fieldNames.begin(), p);
+
+  // Allocate space for |additionalName|.
+  if (!fieldNames.growBy(1)) {
+    return false;
+  }
+
+  // Shift all entries starting at |index| to the right.
+  std::copy_backward(fieldNames.begin() + index, fieldNames.end() - 1,
+                     fieldNames.end());
+
+  // Insert |additionalName|.
+  fieldNames[index] = additionalName;
+  return true;
+}
+
+[[nodiscard]] static bool AppendSorted(
+    JS::StackGCVector<PropertyKey>& fieldNames, PropertyKey additionalNameOne,
+    PropertyKey additionalNameTwo) {
+  MOZ_ASSERT(ComparePropertyKeyLessThan(additionalNameOne, additionalNameTwo));
+
+  // Tell the analysis the |std::upper_bound| function can't GC.
+  JS::AutoSuppressGCAnalysis nogc;
+
+  // Find the position where to add |additionalNameOne|.
+  auto* p = std::upper_bound(fieldNames.begin(), fieldNames.end(),
+                             additionalNameOne, ComparePropertyKeyLessThan);
+
+  // |additionalNameTwo| can't occur before |p|.
+  auto* q = std::upper_bound(p, fieldNames.end(), additionalNameTwo,
+                             ComparePropertyKeyLessThan);
+
+  // Store the indices, because growBy() may reallocate.
+  size_t indexOne = std::distance(fieldNames.begin(), p);
+  size_t indexTwo = std::distance(fieldNames.begin(), q);
+
+  // Allocate space for both names.
+  if (!fieldNames.growBy(2)) {
+    return false;
+  }
+
+  // Shift all entries starting at |indexTwo| to the right.
+  std::copy_backward(fieldNames.begin() + indexTwo, fieldNames.end() - 2,
+                     fieldNames.end());
+
+  // Shift all entries starting at |indexOne| to the right.
+  std::copy_backward(fieldNames.begin() + indexOne,
+                     fieldNames.begin() + indexTwo,
+                     fieldNames.begin() + indexTwo + 1);
+
+  // Insert both names.
+  fieldNames[indexOne] = additionalNameOne;
+  fieldNames[indexTwo + 1] = additionalNameTwo;
+  return true;
+}
+
+bool js::temporal::AppendSorted(
+    JSContext* cx, JS::StackGCVector<PropertyKey>& fieldNames,
+    std::initializer_list<TemporalField> additionalNames) {
+  // |fieldNames| is sorted.
+  MOZ_ASSERT(IsSorted(fieldNames));
+
+  // |additionalNames| is non-empty, sorted, and doesn't include any duplicates.
+  MOZ_ASSERT(additionalNames.size() > 0);
+  MOZ_ASSERT(IsSorted(additionalNames));
+  MOZ_ASSERT(
+      std::adjacent_find(additionalNames.begin(), additionalNames.end()) ==
+      additionalNames.end());
+
+  if (additionalNames.size() == 1) {
+    auto* it = additionalNames.begin();
+    auto name = NameToId(ToPropertyName(cx, *it));
+    return ::AppendSorted(fieldNames, name);
+  }
+
+  if (additionalNames.size() == 2) {
+    auto* it = additionalNames.begin();
+    auto one = NameToId(ToPropertyName(cx, *it));
+    auto two = NameToId(ToPropertyName(cx, *std::next(it)));
+    return ::AppendSorted(fieldNames, one, two);
+  }
+
+  // TODO: We can probably remove this general approach at a later time, because
+  // only exactly one or two items are ever appended.
+
+  // Allocate space for entries from |additionalNames|.
+  if (!fieldNames.growBy(additionalNames.size())) {
+    return false;
+  }
+
+  auto* left = std::prev(fieldNames.end(), additionalNames.size());
+  auto* right = additionalNames.end();
+  auto* out = fieldNames.end();
+
+  // Write backwards into the newly allocated space.
+  while (left != fieldNames.begin() && right != additionalNames.begin()) {
+    MOZ_ASSERT(out != fieldNames.begin());
+    auto x = *std::prev(left);
+    auto y = NameToId(ToPropertyName(cx, *std::prev(right)));
+
+    // Insert the lexicographically greater key.
+    PropertyKey z;
+    if (ComparePropertyKey(x, y) > 0) {
+      z = x;
+      left--;
+    } else {
+      z = y;
+      right--;
+    }
+    *--out = z;
+  }
+
+  // Avoid unnecessary copying if possible.
+  if (left == out) {
+    MOZ_ASSERT(right == additionalNames.begin());
+    return true;
+  }
+
+  // Prepend the remaining names from |fieldNames|.
+  while (left != fieldNames.begin()) {
+    MOZ_ASSERT(out != fieldNames.begin());
+    *--out = *--left;
+  }
+
+  // Prepend the remaining names from |additionalNames|.
+  while (right != additionalNames.begin()) {
+    MOZ_ASSERT(out != fieldNames.begin());
+    *--out = NameToId(ToPropertyName(cx, *--right));
+  }
+
+  // All field names were written into the result list.
+  MOZ_ASSERT(out == fieldNames.begin());
 
   return true;
 }

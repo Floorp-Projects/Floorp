@@ -290,6 +290,14 @@ enum class TemporalDisambiguation { Compatible, Earlier, Later, Reject };
 bool ToTemporalDisambiguation(JSContext* cx, JS::Handle<JSObject*> options,
                               TemporalDisambiguation* disambiguation);
 
+enum class TemporalOffset { Prefer, Use, Ignore, Reject };
+
+/**
+ * ToTemporalOffset ( options, fallback )
+ */
+bool ToTemporalOffset(JSContext* cx, JS::Handle<JSObject*> options,
+                      TemporalOffset* offset);
+
 enum class TimeZoneNameOption { Auto, Never, Critical };
 
 bool ToTimeZoneNameOption(JSContext* cx, JS::Handle<JSObject*> options,
