@@ -148,8 +148,20 @@ export class TranslationsParent extends JSWindowActorParent {
    */
   #isDestroyed = false;
 
+  /**
+   * Remember the detected languages on a page reload. This will keep the translations
+   * button from disappearing and reappearing, which causes the button to lose focus.
+   *
+   * @type {LangTags | null} previousDetectedLanguages
+   */
+  static #previousDetectedLanguages = null;
+
   actorCreated() {
-    this.languageState = new TranslationsLanguageState(this);
+    this.languageState = new TranslationsLanguageState(
+      this,
+      TranslationsParent.#previousDetectedLanguages
+    );
+    TranslationsParent.#previousDetectedLanguages = null;
 
     if (TranslationsParent.#translateOnPageReload) {
       // The actor was recreated after a page reload, start the translation.
@@ -1639,6 +1651,8 @@ export class TranslationsParent extends JSWindowActorParent {
       TranslationsParent.#isPageRestoredForAutoTranslate = true;
     }
     this.languageState.requestedTranslationPair = null;
+    TranslationsParent.#previousDetectedLanguages =
+      this.languageState.detectedLanguages;
 
     const browser = this.browsingContext.embedderElement;
     browser.reload();
@@ -2022,9 +2036,11 @@ function detectSimdSupport() {
 class TranslationsLanguageState {
   /**
    * @param {TranslationsParent} actor
+   * @param {LangTags | null} previousDetectedLanguages
    */
-  constructor(actor) {
+  constructor(actor, previousDetectedLanguages = null) {
     this.#actor = actor;
+    this.#detectedLanguages = previousDetectedLanguages;
     this.dispatch();
   }
 
