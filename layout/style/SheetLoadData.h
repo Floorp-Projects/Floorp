@@ -159,7 +159,8 @@ class SheetLoadData final
   // the original function call that started the load has returned.
   // This applies only to observer notifications; load/error events
   // are fired for any SheetLoadData that has a non-null
-  // mOwningNodeBeforeLoadEvent.
+  // mOwningNodeBeforeLoadEvent (though mMustNotify is used to avoid an event
+  // loop round-trip in that case).
   bool mMustNotify : 1;
 
   // mWasAlternate is true if the sheet was an alternate when the load data was
