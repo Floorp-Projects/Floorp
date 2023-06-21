@@ -147,6 +147,17 @@ search-term-groups:
     enabled:
       type: boolean
       description: "If true, the feature shows up on the homescreen and on the new tab screen."
+splash-screen:
+  description: "A feature that extends splash screen duration, allowing additional data fetching time for the app's initial run."
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    enabled:
+      type: boolean
+      description: "If true, the feature is active."
+    maximum_duration_ms:
+      type: int
+      description: The maximum amount of time in milliseconds the splashscreen will be visible while waiting for initialization calls to complete.
 toolbar:
   description: The searchbar/awesomebar that user uses to search.
   hasExposure: true
