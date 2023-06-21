@@ -10,6 +10,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "builtin/temporal/Wrapped.h"
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
@@ -68,6 +69,9 @@ class TimeZoneObject : public NativeObject {
   static void finalize(JS::GCContext* gcx, JSObject* obj);
 };
 
+struct Instant;
+class InstantObject;
+
 /**
  * IsValidTimeZoneName ( timeZone )
  * IsAvailableTimeZoneName ( timeZone )
@@ -107,6 +111,26 @@ JSObject* ToTemporalTimeZone(JSContext* cx,
  * ToTemporalTimeZone ( temporalTimeZoneLike )
  */
 TimeZoneObject* ToTemporalTimeZone(JSContext* cx, JS::Handle<JSString*> string);
+
+/**
+ * GetOffsetStringFor ( timeZone, instant )
+ */
+JSString* GetOffsetStringFor(JSContext* cx, JS::Handle<JSObject*> timeZone,
+                             JS::Handle<Wrapped<InstantObject*>> instant);
+
+/**
+ * GetOffsetNanosecondsFor ( timeZone, instant )
+ */
+bool GetOffsetNanosecondsFor(JSContext* cx, JS::Handle<JSObject*> timeZone,
+                             JS::Handle<Wrapped<InstantObject*>> instant,
+                             int64_t* offsetNanoseconds);
+
+/**
+ * GetOffsetNanosecondsFor ( timeZone, instant )
+ */
+bool GetOffsetNanosecondsFor(JSContext* cx, JS::Handle<JSObject*> timeZone,
+                             const Instant& instant,
+                             int64_t* offsetNanoseconds);
 
 /**
  * FormatTimeZoneOffsetString ( offsetNanoseconds )
