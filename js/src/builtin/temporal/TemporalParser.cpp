@@ -183,6 +183,24 @@ struct TimeZoneString final {
   // UTC time zone.
   bool utc = false;
 
+  static auto from(TimeZoneOffset offset) {
+    TimeZoneString timeZone{};
+    timeZone.offset = offset;
+    return timeZone;
+  }
+
+  static auto from(TimeZoneName name) {
+    TimeZoneString timeZone{};
+    timeZone.name = name;
+    return timeZone;
+  }
+
+  static auto UTC() {
+    TimeZoneString timeZone{};
+    timeZone.utc = true;
+    return timeZone;
+  }
+
   /**
    * Returns true iff the time zone has an offset part, e.g. "+01:00".
    */
@@ -771,6 +789,9 @@ class TemporalParser final {
   mozilla::Result<ZonedDateTimeString, ParserError>
   parseTemporalInstantString();
 
+  mozilla::Result<ZonedDateTimeString, ParserError>
+  parseTemporalTimeZoneString();
+
   mozilla::Result<TimeZoneOffset, ParserError> parseTimeZoneOffsetString();
 
   mozilla::Result<ZonedDateTimeString, ParserError>
@@ -978,20 +999,19 @@ TemporalParser<CharT>::timeZoneUTCOffset() {
   //   UTCOffset
   //   UTCDesignator
 
-  TimeZoneString result = {};
   if (utcDesignator()) {
-    result.utc = true;
-  } else if (hasSign()) {
+    return TimeZoneString::UTC();
+  }
+
+  if (hasSign()) {
     auto offset = utcOffset();
     if (offset.isErr()) {
       return offset.propagateErr();
     }
-    result.offset = offset.unwrap();
-  } else {
-    return mozilla::Err(JSMSG_TEMPORAL_PARSER_MISSING_TIMEZONE);
+    return TimeZoneString::from(offset.unwrap());
   }
 
-  return result;
+  return mozilla::Err(JSMSG_TEMPORAL_PARSER_MISSING_TIMEZONE);
 }
 
 template <typename CharT>
@@ -1257,6 +1277,166 @@ TemporalParser<CharT>::parseTemporalInstantString() {
   }
 
   return result;
+}
+
+template <typename CharT>
+mozilla::Result<ZonedDateTimeString, ParserError>
+TemporalParser<CharT>::parseTemporalTimeZoneString() {
+  // TimeZoneIdentifier :
+  //   TimeZoneIANAName
+  //   TimeZoneUTCOffsetName
+
+  if (hasTzLeadingChar()) {
+    if (auto name = timeZoneIANAName(); name.isOk() && reader_.atEnd()) {
+      ZonedDateTimeString result = {};
+      result.timeZone = TimeZoneString::from(name.unwrap());
+      return result;
+    }
+  } else {
+    if (auto offset = timeZoneUTCOffsetName();
+        offset.isOk() && reader_.atEnd()) {
+      ZonedDateTimeString result = {};
+      result.timeZone = TimeZoneString::from(offset.unwrap());
+      return result;
+    }
+  }
+
+  // Try all six parse goals from ParseISODateTime in order.
+  //
+  // TemporalDateTimeString
+  // TemporalInstantString
+  // TemporalTimeString
+  // TemporalZonedDateTimeString
+  // TemporalMonthDayString
+  // TemporalYearMonthString
+
+  // Restart parsing from the start of the string.
+  reader_.reset();
+
+  if (auto dt = parseTemporalDateTimeString(); dt.isOk()) {
+    return dt.unwrap();
+  }
+
+  // Restart parsing from the start of the string.
+  reader_.reset();
+
+  if (auto dt = parseTemporalInstantString(); dt.isOk()) {
+    return dt.unwrap();
+  }
+
+  // Restart parsing from the start of the string.
+  reader_.reset();
+
+  if (auto dt = parseTemporalTimeString(); dt.isOk()) {
+    return dt.unwrap();
+  }
+
+  // Restart parsing from the start of the string.
+  reader_.reset();
+
+  if (auto dt = parseTemporalZonedDateTimeString(); dt.isOk()) {
+    return dt.unwrap();
+  }
+
+  // Restart parsing from the start of the string.
+  reader_.reset();
+
+  if (auto dt = parseTemporalMonthDayString(); dt.isOk()) {
+    return dt.unwrap();
+  }
+
+  // Restart parsing from the start of the string.
+  reader_.reset();
+
+  if (auto dt = parseTemporalYearMonthString(); dt.isOk()) {
+    return dt.unwrap();
+  } else {
+    return dt.propagateErr();
+  }
+}
+
+/**
+ * ParseTemporalTimeZoneString ( isoString )
+ */
+template <typename CharT>
+static auto ParseTemporalTimeZoneString(mozilla::Span<const CharT> str) {
+  TemporalParser<CharT> parser(str);
+  return parser.parseTemporalTimeZoneString();
+}
+
+/**
+ * ParseTemporalTimeZoneString ( isoString )
+ */
+static auto ParseTemporalTimeZoneString(Handle<JSLinearString*> str) {
+  JS::AutoCheckCannotGC nogc;
+  if (str->hasLatin1Chars()) {
+    return ParseTemporalTimeZoneString<Latin1Char>(str->latin1Range(nogc));
+  }
+  return ParseTemporalTimeZoneString<char16_t>(str->twoByteRange(nogc));
+}
+
+/**
+ * ParseTemporalTimeZoneString ( isoString )
+ */
+bool js::temporal::ParseTemporalTimeZoneString(
+    JSContext* cx, Handle<JSString*> str, MutableHandle<JSString*> timeZoneName,
+    int64_t* offsetNanoseconds) {
+  Rooted<JSLinearString*> linear(cx, str->ensureLinear(cx));
+  if (!linear) {
+    return false;
+  }
+
+  // Steps 1-4.
+  auto parseResult = ::ParseTemporalTimeZoneString(linear);
+  if (parseResult.isErr()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              parseResult.unwrapErr());
+    return false;
+  }
+  ZonedDateTimeString parsed = parseResult.unwrap();
+  const auto& timeZone = parsed.timeZone;
+
+  // Step 3.
+  PlainDateTime unused;
+  if (!ParseISODateTime(cx, parsed, &unused)) {
+    return false;
+  }
+
+  if (timeZone.annotation.hasOffset()) {
+    // Case 1: 19700101Z[+02:00]
+    // Case 2: 19700101+00:00[+02:00]
+    // Case 3: 19700101[+02:00]
+
+    *offsetNanoseconds = ParseTimeZoneOffsetString(timeZone.annotation.offset);
+  } else if (timeZone.annotation.hasName()) {
+    MOZ_ASSERT(!timeZone.hasName());
+
+    // Case 1: 19700101Z[Europe/Berlin]
+    // Case 2: 19700101+00:00[Europe/Berlin]
+    // Case 3: 19700101[Europe/Berlin]
+
+    timeZoneName.set(ToString(cx, linear, timeZone.annotation.name));
+    if (!timeZoneName) {
+      return false;
+    }
+  } else if (timeZone.isUTC()) {
+    timeZoneName.set(cx->names().UTC);
+  } else if (timeZone.hasOffset()) {
+    *offsetNanoseconds = ParseTimeZoneOffsetString(timeZone.offset);
+  } else if (timeZone.hasName()) {
+    timeZoneName.set(ToString(cx, linear, timeZone.name));
+    if (!timeZoneName) {
+      return false;
+    }
+  } else {
+    // Step 5.
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_PARSER_MISSING_TIMEZONE);
+    return false;
+  }
+
+  // Step 6.
+  return true;
 }
 
 template <typename CharT>
