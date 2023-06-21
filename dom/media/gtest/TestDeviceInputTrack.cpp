@@ -12,7 +12,7 @@
 #include "AudioGenerator.h"
 #include "MediaTrackGraphImpl.h"
 #include "MockCubeb.h"
-#include "mozilla/gtest/WaitFor.h"
+#include "WaitFor.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "nsContentUtils.h"
 

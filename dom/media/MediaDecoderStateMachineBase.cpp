@@ -96,19 +96,12 @@ nsresult MediaDecoderStateMachineBase::Init(MediaDecoder* aDecoder) {
       "MediaDecoderStateMachineBase::InitializationTask", this,
       &MediaDecoderStateMachineBase::InitializationTask, aDecoder);
   mTaskQueue->DispatchStateChange(r.forget());
-
-  // Connect mirrors.
-  aDecoder->CanonicalPlayState().ConnectMirror(&mPlayState);
-  aDecoder->CanonicalVolume().ConnectMirror(&mVolume);
-  aDecoder->CanonicalPreservesPitch().ConnectMirror(&mPreservesPitch);
-  aDecoder->CanonicalLooping().ConnectMirror(&mLooping);
-  aDecoder->CanonicalSecondaryVideoContainer().ConnectMirror(
-      &mSecondaryVideoContainer);
-
+  ;
   nsresult rv = mReader->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
   mMetadataManager.Connect(mReader->TimedMetadataEvent(), OwnerThread());
+  mReader->SetCanonicalDuration(&mDuration);
 
   return NS_OK;
 }
@@ -118,7 +111,12 @@ void MediaDecoderStateMachineBase::InitializationTask(MediaDecoder* aDecoder) {
 
   // Connect mirrors.
   mBuffered.Connect(mReader->CanonicalBuffered());
-  mReader->SetCanonicalDuration(mDuration);
+  mPlayState.Connect(aDecoder->CanonicalPlayState());
+  mVolume.Connect(aDecoder->CanonicalVolume());
+  mPreservesPitch.Connect(aDecoder->CanonicalPreservesPitch());
+  mLooping.Connect(aDecoder->CanonicalLooping());
+  mSecondaryVideoContainer.Connect(
+      aDecoder->CanonicalSecondaryVideoContainer());
 
   // Initialize watchers.
   mWatchManager.Watch(mBuffered,

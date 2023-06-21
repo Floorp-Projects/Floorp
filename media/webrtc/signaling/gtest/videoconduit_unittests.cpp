@@ -56,8 +56,8 @@ class VideoConduitTest : public Test {
     NSS_NoDB_Init(nullptr);
 
     EXPECT_EQ(mVideoConduit->Init(), kMediaConduitNoError);
-    mControl.Update([&](auto& aControl) {
-      mVideoConduit->InitControl(&mControl);
+    mVideoConduit->InitControl(&mControl);
+    mControl.Update([](auto& aControl) {
       aControl.mLocalSsrcs = {42};
       aControl.mLocalVideoRtxSsrcs = {43};
     });

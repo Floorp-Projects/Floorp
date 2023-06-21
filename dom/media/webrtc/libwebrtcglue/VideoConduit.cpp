@@ -373,20 +373,14 @@ WebrtcVideoConduit::~WebrtcVideoConduit() {
              "Call DeleteStreams prior to ~WebrtcVideoConduit.");
 }
 
-#define CONNECT(aCanonical, aMirror)                                       \
-  do {                                                                     \
-    /* Ensure the watchmanager is wired up before the mirror receives its  \
-     * initial mirrored value. */                                          \
-    mCall->mCallThread->DispatchStateChange(                               \
-        NS_NewRunnableFunction(__func__, [this, self = RefPtr(this)] {     \
-          mWatchManager.Watch(aMirror,                                     \
-                              &WebrtcVideoConduit::OnControlConfigChange); \
-        }));                                                               \
-    (aCanonical).ConnectMirror(&(aMirror));                                \
+#define CONNECT(aCanonical, aMirror)                                          \
+  do {                                                                        \
+    (aMirror).Connect(aCanonical);                                            \
+    mWatchManager.Watch(aMirror, &WebrtcVideoConduit::OnControlConfigChange); \
   } while (0)
 
 void WebrtcVideoConduit::InitControl(VideoConduitControlInterface* aControl) {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
 
   CONNECT(aControl->CanonicalReceiving(), mControl.mReceiving);
   CONNECT(aControl->CanonicalTransmitting(), mControl.mTransmitting);

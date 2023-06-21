@@ -56,39 +56,40 @@ struct ConduitControlState : public AudioConduitControlInterface,
   const nsMainThreadPtrHandle<RTCRtpReceiver> mReceiver;
 
   // MediaConduitControlInterface
-  Canonical<bool>& CanonicalReceiving() override {
+  AbstractCanonical<bool>* CanonicalReceiving() override {
     return mReceiver->CanonicalReceiving();
   }
-  Canonical<bool>& CanonicalTransmitting() override {
+  AbstractCanonical<bool>* CanonicalTransmitting() override {
     return mSender->CanonicalTransmitting();
   }
-  Canonical<Ssrcs>& CanonicalLocalSsrcs() override {
+  AbstractCanonical<Ssrcs>* CanonicalLocalSsrcs() override {
     return mSender->CanonicalSsrcs();
   }
-  Canonical<std::string>& CanonicalLocalCname() override {
+  AbstractCanonical<std::string>* CanonicalLocalCname() override {
     return mSender->CanonicalCname();
   }
-  Canonical<std::string>& CanonicalMid() override {
+  AbstractCanonical<std::string>* CanonicalMid() override {
     return mTransceiver->CanonicalMid();
   }
-  Canonical<Ssrc>& CanonicalRemoteSsrc() override {
+  AbstractCanonical<Ssrc>* CanonicalRemoteSsrc() override {
     return mReceiver->CanonicalSsrc();
   }
-  Canonical<std::string>& CanonicalSyncGroup() override {
+  AbstractCanonical<std::string>* CanonicalSyncGroup() override {
     return mTransceiver->CanonicalSyncGroup();
   }
-  Canonical<RtpExtList>& CanonicalLocalRecvRtpExtensions() override {
+  AbstractCanonical<RtpExtList>* CanonicalLocalRecvRtpExtensions() override {
     return mReceiver->CanonicalLocalRtpExtensions();
   }
-  Canonical<RtpExtList>& CanonicalLocalSendRtpExtensions() override {
+  AbstractCanonical<RtpExtList>* CanonicalLocalSendRtpExtensions() override {
     return mSender->CanonicalLocalRtpExtensions();
   }
 
   // AudioConduitControlInterface
-  Canonical<Maybe<AudioCodecConfig>>& CanonicalAudioSendCodec() override {
+  AbstractCanonical<Maybe<AudioCodecConfig>>* CanonicalAudioSendCodec()
+      override {
     return mSender->CanonicalAudioCodec();
   }
-  Canonical<std::vector<AudioCodecConfig>>& CanonicalAudioRecvCodecs()
+  AbstractCanonical<std::vector<AudioCodecConfig>>* CanonicalAudioRecvCodecs()
       override {
     return mReceiver->CanonicalAudioCodecs();
   }
@@ -97,26 +98,30 @@ struct ConduitControlState : public AudioConduitControlInterface,
   }
 
   // VideoConduitControlInterface
-  Canonical<Ssrcs>& CanonicalLocalVideoRtxSsrcs() override {
+  AbstractCanonical<Ssrcs>* CanonicalLocalVideoRtxSsrcs() override {
     return mSender->CanonicalVideoRtxSsrcs();
   }
-  Canonical<Ssrc>& CanonicalRemoteVideoRtxSsrc() override {
+  AbstractCanonical<Ssrc>* CanonicalRemoteVideoRtxSsrc() override {
     return mReceiver->CanonicalVideoRtxSsrc();
   }
-  Canonical<Maybe<VideoCodecConfig>>& CanonicalVideoSendCodec() override {
+  AbstractCanonical<Maybe<VideoCodecConfig>>* CanonicalVideoSendCodec()
+      override {
     return mSender->CanonicalVideoCodec();
   }
-  Canonical<Maybe<RtpRtcpConfig>>& CanonicalVideoSendRtpRtcpConfig() override {
+  AbstractCanonical<Maybe<RtpRtcpConfig>>* CanonicalVideoSendRtpRtcpConfig()
+      override {
     return mSender->CanonicalVideoRtpRtcpConfig();
   }
-  Canonical<std::vector<VideoCodecConfig>>& CanonicalVideoRecvCodecs()
+  AbstractCanonical<std::vector<VideoCodecConfig>>* CanonicalVideoRecvCodecs()
       override {
     return mReceiver->CanonicalVideoCodecs();
   }
-  Canonical<Maybe<RtpRtcpConfig>>& CanonicalVideoRecvRtpRtcpConfig() override {
+  AbstractCanonical<Maybe<RtpRtcpConfig>>* CanonicalVideoRecvRtpRtcpConfig()
+      override {
     return mReceiver->CanonicalVideoRtpRtcpConfig();
   }
-  Canonical<webrtc::VideoCodecMode>& CanonicalVideoCodecMode() override {
+  AbstractCanonical<webrtc::VideoCodecMode>* CanonicalVideoCodecMode()
+      override {
     return mSender->CanonicalVideoCodecMode();
   }
 };
@@ -305,10 +310,17 @@ void RTCRtpTransceiver::InitConduitControl() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mConduit);
   ConduitControlState control(this, mSender, mReceiver);
-  mConduit->AsVideoSessionConduit().apply(
-      [&](auto aConduit) { aConduit->InitControl(&control); });
-  mConduit->AsAudioSessionConduit().apply(
-      [&](auto aConduit) { aConduit->InitControl(&control); });
+  mCallWrapper->mCallThread->Dispatch(NS_NewRunnableFunction(
+      __func__, [conduit = mConduit, control = std::move(control)]() mutable {
+        conduit->AsVideoSessionConduit().apply(
+            [&](VideoSessionConduit* aConduit) {
+              aConduit->InitControl(&control);
+            });
+        conduit->AsAudioSessionConduit().apply(
+            [&](AudioSessionConduit* aConduit) {
+              aConduit->InitControl(&control);
+            });
+      }));
 }
 
 void RTCRtpTransceiver::Close() {
