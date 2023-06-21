@@ -24,6 +24,8 @@
 #include "builtin/temporal/Calendar.h"
 #include "builtin/temporal/PlainDate.h"
 #include "builtin/temporal/PlainDateTime.h"
+#include "builtin/temporal/Temporal.h"
+#include "builtin/temporal/TemporalTypes.h"
 #include "ds/IdValuePair.h"
 #include "gc/AllocKind.h"
 #include "gc/Barrier.h"
@@ -223,6 +225,115 @@ bool js::temporal::ThrowIfInvalidTime(JSContext* cx, double hour, double minute,
                               microsecond, nanosecond);
 }
 
+/**
+ * CreateTemporalTime ( hour, minute, second, millisecond, microsecond,
+ * nanosecond [ , newTarget ] )
+ */
+static PlainTimeObject* CreateTemporalTime(JSContext* cx, const CallArgs& args,
+                                           double hour, double minute,
+                                           double second, double millisecond,
+                                           double microsecond,
+                                           double nanosecond) {
+  MOZ_ASSERT(IsInteger(hour));
+  MOZ_ASSERT(IsInteger(minute));
+  MOZ_ASSERT(IsInteger(second));
+  MOZ_ASSERT(IsInteger(millisecond));
+  MOZ_ASSERT(IsInteger(microsecond));
+  MOZ_ASSERT(IsInteger(nanosecond));
+
+  // Step 1.
+  if (!ThrowIfInvalidTime(cx, hour, minute, second, millisecond, microsecond,
+                          nanosecond)) {
+    return nullptr;
+  }
+
+  // Steps 2-3.
+  Rooted<JSObject*> proto(cx);
+  if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_PlainTime,
+                                          &proto)) {
+    return nullptr;
+  }
+
+  auto* object = NewObjectWithClassProto<PlainTimeObject>(cx, proto);
+  if (!object) {
+    return nullptr;
+  }
+
+  // Step 4.
+  object->setFixedSlot(PlainTimeObject::ISO_HOUR_SLOT, Int32Value(hour));
+
+  // Step 5.
+  object->setFixedSlot(PlainTimeObject::ISO_MINUTE_SLOT, Int32Value(minute));
+
+  // Step 6.
+  object->setFixedSlot(PlainTimeObject::ISO_SECOND_SLOT, Int32Value(second));
+
+  // Step 7.
+  object->setFixedSlot(PlainTimeObject::ISO_MILLISECOND_SLOT,
+                       Int32Value(millisecond));
+
+  // Step 8.
+  object->setFixedSlot(PlainTimeObject::ISO_MICROSECOND_SLOT,
+                       Int32Value(microsecond));
+
+  // Step 9.
+  object->setFixedSlot(PlainTimeObject::ISO_NANOSECOND_SLOT,
+                       Int32Value(nanosecond));
+
+  // Step 10.
+  object->setFixedSlot(PlainTimeObject::CALENDAR_SLOT, NullValue());
+
+  // Step 11.
+  return object;
+}
+
+/**
+ * CreateTemporalTime ( hour, minute, second, millisecond, microsecond,
+ * nanosecond [ , newTarget ] )
+ */
+PlainTimeObject* js::temporal::CreateTemporalTime(JSContext* cx,
+                                                  const PlainTime& time) {
+  auto& [hour, minute, second, millisecond, microsecond, nanosecond] = time;
+
+  // Step 1.
+  if (!ThrowIfInvalidTime(cx, time)) {
+    return nullptr;
+  }
+
+  // Steps 2-3.
+  auto* object = NewBuiltinClassInstance<PlainTimeObject>(cx);
+  if (!object) {
+    return nullptr;
+  }
+
+  // Step 4.
+  object->setFixedSlot(PlainTimeObject::ISO_HOUR_SLOT, Int32Value(hour));
+
+  // Step 5.
+  object->setFixedSlot(PlainTimeObject::ISO_MINUTE_SLOT, Int32Value(minute));
+
+  // Step 6.
+  object->setFixedSlot(PlainTimeObject::ISO_SECOND_SLOT, Int32Value(second));
+
+  // Step 7.
+  object->setFixedSlot(PlainTimeObject::ISO_MILLISECOND_SLOT,
+                       Int32Value(millisecond));
+
+  // Step 8.
+  object->setFixedSlot(PlainTimeObject::ISO_MICROSECOND_SLOT,
+                       Int32Value(microsecond));
+
+  // Step 9.
+  object->setFixedSlot(PlainTimeObject::ISO_NANOSECOND_SLOT,
+                       Int32Value(nanosecond));
+
+  // Step 10.
+  object->setFixedSlot(PlainTimeObject::CALENDAR_SLOT, NullValue());
+
+  // Step 11.
+  return object;
+}
+
 JSObject* js::temporal::PlainTimeObject::createCalendar(
     JSContext* cx, Handle<PlainTimeObject*> obj) {
   auto* calendar = GetISO8601Calendar(cx);
@@ -234,8 +345,75 @@ JSObject* js::temporal::PlainTimeObject::createCalendar(
   return calendar;
 }
 
+/**
+ * Temporal.PlainTime ( [ hour [ , minute [ , second [ , millisecond [ ,
+ * microsecond [ , nanosecond ] ] ] ] ] ] )
+ */
 static bool PlainTimeConstructor(JSContext* cx, unsigned argc, Value* vp) {
-  MOZ_CRASH("NYI");
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Step 1.
+  if (!ThrowIfNotConstructing(cx, args, "Temporal.PlainTime")) {
+    return false;
+  }
+
+  // Step 2.
+  double hour = 0;
+  if (args.hasDefined(0)) {
+    if (!ToIntegerWithTruncation(cx, args[0], "hour", &hour)) {
+      return false;
+    }
+  }
+
+  // Step 3.
+  double minute = 0;
+  if (args.hasDefined(1)) {
+    if (!ToIntegerWithTruncation(cx, args[1], "minute", &minute)) {
+      return false;
+    }
+  }
+
+  // Step 4.
+  double second = 0;
+  if (args.hasDefined(2)) {
+    if (!ToIntegerWithTruncation(cx, args[2], "second", &second)) {
+      return false;
+    }
+  }
+
+  // Step 5.
+  double millisecond = 0;
+  if (args.hasDefined(3)) {
+    if (!ToIntegerWithTruncation(cx, args[3], "millisecond", &millisecond)) {
+      return false;
+    }
+  }
+
+  // Step 6.
+  double microsecond = 0;
+  if (args.hasDefined(4)) {
+    if (!ToIntegerWithTruncation(cx, args[4], "microsecond", &microsecond)) {
+      return false;
+    }
+  }
+
+  // Step 7.
+  double nanosecond = 0;
+  if (args.hasDefined(5)) {
+    if (!ToIntegerWithTruncation(cx, args[5], "nanosecond", &nanosecond)) {
+      return false;
+    }
+  }
+
+  // Step 8.
+  auto* temporalTime = CreateTemporalTime(cx, args, hour, minute, second,
+                                          millisecond, microsecond, nanosecond);
+  if (!temporalTime) {
+    return false;
+  }
+
+  args.rval().setObject(*temporalTime);
+  return true;
 }
 
 const JSClass PlainTimeObject::class_ = {

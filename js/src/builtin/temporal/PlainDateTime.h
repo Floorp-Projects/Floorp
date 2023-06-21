@@ -120,6 +120,14 @@ bool ISODateTimeWithinLimits(const PlainDate& date);
  */
 bool ISODateTimeWithinLimits(double year, double month, double day);
 
+/**
+ * CreateTemporalDateTime ( isoYear, isoMonth, isoDay, hour, minute, second,
+ * millisecond, microsecond, nanosecond, calendar [ , newTarget ] )
+ */
+PlainDateTimeObject* CreateTemporalDateTime(JSContext* cx,
+                                            const PlainDateTime& dateTime,
+                                            JS::Handle<JSObject*> calendar);
+
 } /* namespace js::temporal */
 
 #endif /* builtin_temporal_PlainDateTime_h */
