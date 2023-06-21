@@ -1994,6 +1994,359 @@ Wrapped<PlainDateObject*> js::temporal::CalendarDateFromFields(
   return ::CalendarDateFromFields(cx, calendar, fields, options);
 }
 
+struct RegulatedISOYearMonth final {
+  double year;
+  int32_t month;
+};
+
+/**
+ * RegulateISOYearMonth ( year, month, overflow )
+ */
+static bool RegulateISOYearMonth(JSContext* cx, double year, double month,
+                                 TemporalOverflow overflow,
+                                 RegulatedISOYearMonth* result) {
+  // Step 1.
+  MOZ_ASSERT(IsInteger(year));
+  MOZ_ASSERT(IsInteger(month));
+
+  // Step 2. (Not applicable in our implementation.)
+
+  // Step 3.
+  if (overflow == TemporalOverflow::Constrain) {
+    // Step 3.a.
+    month = std::clamp(month, 1.0, 12.0);
+
+    // Step 3.b.
+    *result = {year, int32_t(month)};
+    return true;
+  }
+
+  // Step 4.a.
+  MOZ_ASSERT(overflow == TemporalOverflow::Reject);
+
+  // Step 4.b.
+  if (month < 1 || month > 12) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_PLAIN_YEAR_MONTH_INVALID);
+    return false;
+  }
+
+  // Step 4.c.
+  *result = {year, int32_t(month)};
+  return true;
+}
+
+/**
+ * ISOYearMonthFromFields ( fields, overflow )
+ */
+static bool ISOYearMonthFromFields(JSContext* cx, Handle<TemporalFields> fields,
+                                   TemporalOverflow overflow,
+                                   PlainDate* result) {
+  // Steps 1-2. (Not applicable in our implementation.)
+
+  // Step 3.
+  double year = fields.year();
+
+  // Step 4.
+  MOZ_ASSERT(!std::isnan(year));
+
+  // Step 5.
+  double month;
+  if (!ResolveISOMonth(cx, fields, &month)) {
+    return false;
+  }
+
+  // Step 6.
+  RegulatedISOYearMonth regulated;
+  if (!RegulateISOYearMonth(cx, year, month, overflow, &regulated)) {
+    return false;
+  }
+
+  // Step 7.
+
+  // The result is used to create a new PlainYearMonthObject, so it's okay to
+  // directly throw an error for invalid years. That way we don't have to worry
+  // about representing doubles in PlainDate structs.
+  int32_t intYear;
+  if (!mozilla::NumberEqualsInt32(regulated.year, &intYear)) {
+    // CreateTemporalYearMonth, steps 1-2.
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_PLAIN_YEAR_MONTH_INVALID);
+    return false;
+  }
+
+  *result = {intYear, regulated.month, 1};
+  return true;
+}
+
+/**
+ * Temporal.Calendar.prototype.yearMonthFromFields ( fields [ , options ] )
+ */
+static PlainYearMonthObject* BuiltinCalendarYearMonthFromFields(
+    JSContext* cx, Handle<CalendarObject*> calendar, Handle<JSObject*> fields,
+    Handle<JSObject*> maybeOptions) {
+  // Steps 1-5. (Not applicable)
+
+  // Step 6.
+  Rooted<TemporalFields> dateFields(cx);
+  if (!PrepareTemporalFields(
+          cx, fields,
+          {TemporalField::Month, TemporalField::MonthCode, TemporalField::Year},
+          {TemporalField::Year}, &dateFields)) {
+    return nullptr;
+  }
+
+  // Step 7.
+  auto overflow = TemporalOverflow::Constrain;
+  if (maybeOptions) {
+    if (!ToTemporalOverflow(cx, maybeOptions, &overflow)) {
+      return nullptr;
+    }
+  }
+
+  // Step 8.
+  PlainDate result;
+  if (!ISOYearMonthFromFields(cx, dateFields, overflow, &result)) {
+    return nullptr;
+  }
+
+  // Step 9.
+  return CreateTemporalYearMonth(cx, result, calendar);
+}
+
+static bool Calendar_yearMonthFromFields(JSContext* cx, unsigned argc,
+                                         Value* vp);
+
+/**
+ * CalendarYearMonthFromFields ( calendar, fields [ , options ] )
+ */
+static Wrapped<PlainYearMonthObject*> CalendarYearMonthFromFields(
+    JSContext* cx, Handle<JSObject*> calendar, Handle<JSObject*> fields,
+    Handle<JSObject*> maybeOptions) {
+  // Step 1. (Not applicable in our implementation.)
+
+  // Step 2.
+  Rooted<Value> yearMonthFromFields(cx);
+  if (!GetMethodForCall(cx, calendar, cx->names().yearMonthFromFields,
+                        &yearMonthFromFields)) {
+    return nullptr;
+  }
+
+  // Fast-path for the default implementation.
+  if (calendar->is<CalendarObject>() &&
+      IsNativeFunction(yearMonthFromFields, Calendar_yearMonthFromFields)) {
+    return BuiltinCalendarYearMonthFromFields(cx, calendar.as<CalendarObject>(),
+                                              fields, maybeOptions);
+  }
+
+  Rooted<Value> thisv(cx, ObjectValue(*calendar));
+  Rooted<Value> rval(cx);
+
+  FixedInvokeArgs<2> args(cx);
+  args[0].setObject(*fields);
+  if (maybeOptions) {
+    args[1].setObject(*maybeOptions);
+  } else {
+    args[1].setUndefined();
+  }
+
+  if (!Call(cx, yearMonthFromFields, thisv, args, &rval)) {
+    return nullptr;
+  }
+
+  // Step 3.
+  if (!rval.isObject() ||
+      !rval.toObject().canUnwrapAs<PlainYearMonthObject>()) {
+    ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_IGNORE_STACK, rval,
+                     nullptr, "not a PlainYearMonth object");
+    return nullptr;
+  }
+
+  // Step 4.
+  return &rval.toObject();
+}
+
+/**
+ * CalendarYearMonthFromFields ( calendar, fields [ , options ] )
+ */
+Wrapped<PlainYearMonthObject*> js::temporal::CalendarYearMonthFromFields(
+    JSContext* cx, Handle<JSObject*> calendar, Handle<JSObject*> fields) {
+  // Steps 1-4.
+  return ::CalendarYearMonthFromFields(cx, calendar, fields, nullptr);
+}
+
+/**
+ * CalendarYearMonthFromFields ( calendar, fields [ , options ] )
+ */
+Wrapped<PlainYearMonthObject*> js::temporal::CalendarYearMonthFromFields(
+    JSContext* cx, Handle<JSObject*> calendar, Handle<JSObject*> fields,
+    Handle<JSObject*> options) {
+  // Steps 1-4.
+  return ::CalendarYearMonthFromFields(cx, calendar, fields, options);
+}
+
+/**
+ * ISOMonthDayFromFields ( fields, overflow )
+ */
+static bool ISOMonthDayFromFields(JSContext* cx, Handle<TemporalFields> fields,
+                                  TemporalOverflow overflow,
+                                  PlainDate* result) {
+  // Steps 1-2. (Not applicable in our implementation.)
+
+  // Step 3.
+  double month = fields.month();
+
+  // Step 4.
+  Handle<JSString*> monthCode = fields.monthCode();
+
+  // Step 5.
+  double year = fields.year();
+
+  // Step 6.
+  if (!std::isnan(month) && !monthCode && std::isnan(year)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_CALENDAR_MISSING_FIELD, "year");
+    return false;
+  }
+
+  // Step 7.
+  if (!ResolveISOMonth(cx, fields, &month)) {
+    return false;
+  }
+
+  // Step 8.
+  double day = fields.day();
+
+  // Step 9.
+  MOZ_ASSERT(!std::isnan(day));
+
+  // Step 10.
+  int32_t referenceISOYear = 1972;
+
+  // Step 11.
+
+  // FIXME: spec bug - test for |year| is not undefined instead of |monthCode|
+  // being undefined in step 13 to always validate the input year?
+  // https://github.com/tc39/proposal-temporal/issues/2497
+
+  MOZ_ASSERT_IF(!monthCode, !std::isnan(year));
+
+  // Steps 12-13.
+  double y = !monthCode ? year : referenceISOYear;
+  RegulatedISODate regulated;
+  if (!RegulateISODate(cx, y, month, day, overflow, &regulated)) {
+    return false;
+  }
+
+  *result = {referenceISOYear, regulated.month, regulated.day};
+  return true;
+}
+
+/**
+ * Temporal.Calendar.prototype.monthDayFromFields ( fields [ , options ] )
+ */
+static PlainMonthDayObject* BuiltinCalendarMonthDayFromFields(
+    JSContext* cx, Handle<CalendarObject*> calendar, Handle<JSObject*> fields,
+    Handle<JSObject*> maybeOptions) {
+  // Steps 1-5. (Not applicable)
+
+  // Step 6.
+  Rooted<TemporalFields> dateFields(cx);
+  if (!PrepareTemporalFields(cx, fields,
+                             {TemporalField::Day, TemporalField::Month,
+                              TemporalField::MonthCode, TemporalField::Year},
+                             {TemporalField::Day}, &dateFields)) {
+    return nullptr;
+  }
+
+  // Step 7.
+  auto overflow = TemporalOverflow::Constrain;
+  if (maybeOptions) {
+    if (!ToTemporalOverflow(cx, maybeOptions, &overflow)) {
+      return nullptr;
+    }
+  }
+
+  // Step 8.
+  PlainDate result;
+  if (!ISOMonthDayFromFields(cx, dateFields, overflow, &result)) {
+    return nullptr;
+  }
+
+  // Step 9.
+  return CreateTemporalMonthDay(cx, result, calendar);
+}
+
+static bool Calendar_monthDayFromFields(JSContext* cx, unsigned argc,
+                                        Value* vp);
+
+/**
+ * CalendarMonthDayFromFields ( calendar, fields [ , options ] )
+ */
+static Wrapped<PlainMonthDayObject*> CalendarMonthDayFromFields(
+    JSContext* cx, Handle<JSObject*> calendar, Handle<JSObject*> fields,
+    Handle<JSObject*> maybeOptions) {
+  // Step 1. (Not applicable in our implementation.)
+
+  // Step 2.
+  Rooted<Value> monthDayFromFields(cx);
+  if (!GetMethodForCall(cx, calendar, cx->names().monthDayFromFields,
+                        &monthDayFromFields)) {
+    return nullptr;
+  }
+
+  // Fast-path for the default implementation.
+  if (calendar->is<CalendarObject>() &&
+      IsNativeFunction(monthDayFromFields, Calendar_monthDayFromFields)) {
+    return BuiltinCalendarMonthDayFromFields(cx, calendar.as<CalendarObject>(),
+                                             fields, maybeOptions);
+  }
+
+  Rooted<Value> thisv(cx, ObjectValue(*calendar));
+  Rooted<Value> rval(cx);
+
+  FixedInvokeArgs<2> args(cx);
+  args[0].setObject(*fields);
+  if (maybeOptions) {
+    args[1].setObject(*maybeOptions);
+  } else {
+    args[1].setUndefined();
+  }
+
+  if (!Call(cx, monthDayFromFields, thisv, args, &rval)) {
+    return nullptr;
+  }
+
+  // Step 3.
+  if (!rval.isObject() || !rval.toObject().canUnwrapAs<PlainMonthDayObject>()) {
+    ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_IGNORE_STACK, rval,
+                     nullptr, "not a PlainMonthDay object");
+    return nullptr;
+  }
+
+  // Step 4.
+  return &rval.toObject();
+}
+
+/**
+ * CalendarMonthDayFromFields ( calendar, fields [ , options ] )
+ */
+Wrapped<PlainMonthDayObject*> js::temporal::CalendarMonthDayFromFields(
+    JSContext* cx, Handle<JSObject*> calendar, Handle<JSObject*> fields) {
+  // Steps 1-4.
+  return ::CalendarMonthDayFromFields(cx, calendar, fields, nullptr);
+}
+
+/**
+ * CalendarMonthDayFromFields ( calendar, fields [ , options ] )
+ */
+Wrapped<PlainMonthDayObject*> js::temporal::CalendarMonthDayFromFields(
+    JSContext* cx, Handle<JSObject*> calendar, Handle<JSObject*> fields,
+    Handle<JSObject*> options) {
+  // Steps 1-4.
+  return ::CalendarMonthDayFromFields(cx, calendar, fields, options);
+}
+
 using PropertyHashSet = JS::GCHashSet<JS::PropertyKey>;
 using PropertyVector = JS::StackGCVector<JS::PropertyKey>;
 
@@ -2435,6 +2788,112 @@ static bool Calendar_dateFromFields(JSContext* cx, unsigned argc, Value* vp) {
   // Steps 1-2.
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<IsCalendar, Calendar_dateFromFields>(cx, args);
+}
+
+/**
+ * Temporal.Calendar.prototype.yearMonthFromFields ( fields [ , options ] )
+ */
+static bool Calendar_yearMonthFromFields(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  Rooted<CalendarObject*> calendar(
+      cx, &args.thisv().toObject().as<CalendarObject>());
+
+#ifdef DEBUG
+  bool isoCalendar;
+  if (!IsISOCalendar(cx, calendar->identifier(), &isoCalendar)) {
+    return false;
+  }
+  MOZ_ASSERT(isoCalendar);
+#endif
+
+  // Step 4.
+  Rooted<JSObject*> fields(
+      cx, RequireObjectArg(cx, "fields", "yearMonthFromFields", args.get(0)));
+  if (!fields) {
+    return false;
+  }
+
+  // Step 5.
+  Rooted<JSObject*> options(cx);
+  if (args.hasDefined(1)) {
+    options = RequireObjectArg(cx, "options", "yearMonthFromFields", args[1]);
+    if (!options) {
+      return false;
+    }
+  }
+
+  // Steps 6-7.
+  auto* obj = BuiltinCalendarYearMonthFromFields(cx, calendar, fields, options);
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
+/**
+ * Temporal.Calendar.prototype.yearMonthFromFields ( fields [ , options ] )
+ */
+static bool Calendar_yearMonthFromFields(JSContext* cx, unsigned argc,
+                                         Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsCalendar, Calendar_yearMonthFromFields>(cx,
+                                                                        args);
+}
+
+/**
+ * Temporal.Calendar.prototype.monthDayFromFields ( fields [ , options ] )
+ */
+static bool Calendar_monthDayFromFields(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  Rooted<CalendarObject*> calendar(
+      cx, &args.thisv().toObject().as<CalendarObject>());
+
+#ifdef DEBUG
+  bool isoCalendar;
+  if (!IsISOCalendar(cx, calendar->identifier(), &isoCalendar)) {
+    return false;
+  }
+  MOZ_ASSERT(isoCalendar);
+#endif
+
+  // Step 4.
+  Rooted<JSObject*> fields(
+      cx, RequireObjectArg(cx, "fields", "monthDayFromFields", args.get(0)));
+  if (!fields) {
+    return false;
+  }
+
+  // Step 5.
+  Rooted<JSObject*> options(cx);
+  if (args.hasDefined(1)) {
+    options = RequireObjectArg(cx, "options", "monthDayFromFields", args[1]);
+    if (!options) {
+      return false;
+    }
+  }
+
+  // Steps 6-7.
+  auto* obj = BuiltinCalendarMonthDayFromFields(cx, calendar, fields, options);
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
+/**
+ * Temporal.Calendar.prototype.monthDayFromFields ( fields [ , options ] )
+ */
+static bool Calendar_monthDayFromFields(JSContext* cx, unsigned argc,
+                                        Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsCalendar, Calendar_monthDayFromFields>(cx,
+                                                                       args);
 }
 
 /**
@@ -3085,6 +3544,8 @@ static const JSFunctionSpec Calendar_methods[] = {
 
 static const JSFunctionSpec Calendar_prototype_methods[] = {
     JS_FN("dateFromFields", Calendar_dateFromFields, 1, 0),
+    JS_FN("yearMonthFromFields", Calendar_yearMonthFromFields, 1, 0),
+    JS_FN("monthDayFromFields", Calendar_monthDayFromFields, 1, 0),
     JS_FN("year", Calendar_year, 1, 0),
     JS_FN("month", Calendar_month, 1, 0),
     JS_FN("monthCode", Calendar_monthCode, 1, 0),

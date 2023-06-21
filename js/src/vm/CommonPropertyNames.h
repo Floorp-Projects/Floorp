@@ -377,6 +377,7 @@
   MACRO_(ModuleInstantiate, ModuleInstantiate, "ModuleInstantiate")            \
   MACRO_(month, month, "month")                                                \
   MACRO_(monthCode, monthCode, "monthCode")                                    \
+  MACRO_(monthDayFromFields, monthDayFromFields, "monthDayFromFields")         \
   MACRO_(monthsInYear, monthsInYear, "monthsInYear")                           \
   MACRO_(multiline, multiline, "multiline")                                    \
   MACRO_(mutable, mutable_, "mutable")                                         \
@@ -609,6 +610,7 @@
   MACRO_(writable, writable, "writable")                                       \
   MACRO_(write, write, "write")                                                \
   MACRO_(year, year, "year")                                                   \
+  MACRO_(yearMonthFromFields, yearMonthFromFields, "yearMonthFromFields")      \
   MACRO_(yearName, yearName, "yearName")                                       \
   MACRO_(yearOfWeek, yearOfWeek, "yearOfWeek")                                 \
   MACRO_(yield, yield, "yield")                                                \
