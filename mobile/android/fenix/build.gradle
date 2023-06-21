@@ -70,8 +70,8 @@ buildscript {
     }
 
     dependencies {
-        classpath FenixDependencies.tools_androidgradle
-        classpath FenixDependencies.tools_kotlingradle
+        classpath ComponentsDependencies.tools_androidgradle
+        classpath ComponentsDependencies.tools_kotlingradle
         classpath FenixDependencies.tools_benchmarkgradle
         classpath FenixDependencies.androidx_safeargs
         classpath FenixDependencies.osslicenses_plugin
@@ -85,9 +85,9 @@ buildscript {
     // Variables in plugins {} aren't directly supported. Hack around it by setting an
     // intermediate variable which can pull from FenixDependenciesPlugin.kt and be used later.
     ext {
-        detekt_plugin = FenixVersions.detekt
+        detekt_plugin = Versions.detekt
         protobuf_plugin = FenixVersions.protobuf_plugin
-        python_envs_plugin = FenixVersions.python_envs_plugin
+        python_envs_plugin = Versions.python_envs_plugin
     }
 }
 
@@ -217,14 +217,14 @@ configurations {
 }
 
 dependencies {
-    ktlint("com.pinterest:ktlint:${FenixVersions.ktlint}") {
+    ktlint("com.pinterest:ktlint:${Versions.ktlint}") {
         attributes {
             attribute(Bundling.BUNDLING_ATTRIBUTE, getObjects().named(Bundling, Bundling.EXTERNAL))
         }
     }
 
     detekt project(":mozilla-detekt-rules")
-    detekt "io.gitlab.arturbosch.detekt:detekt-cli:${FenixVersions.detekt}"
+    detekt "io.gitlab.arturbosch.detekt:detekt-cli:${Versions.detekt}"
 }
 
 tasks.register('ktlint', JavaExec) {

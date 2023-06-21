@@ -57,9 +57,9 @@ configurations.all {
 }
 
 dependencies {
-    implementation FenixDependencies.androidx_junit
-    implementation FenixDependencies.espresso_core
-    implementation FenixDependencies.uiautomator
+    implementation ComponentsDependencies.androidx_test_junit
+    implementation ComponentsDependencies.androidx_espresso_core
+    implementation ComponentsDependencies.androidx_test_uiautomator
     implementation FenixDependencies.androidx_benchmark_macro_junit4
 }
 

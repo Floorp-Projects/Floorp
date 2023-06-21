@@ -21,12 +21,12 @@ repositories {
 }
 
 dependencies {
-    compileOnly "com.android.tools.lint:lint-api:${FenixVersions.android_lint_api}"
-    compileOnly "com.android.tools.lint:lint-checks:${FenixVersions.android_lint_api}"
+    compileOnly "com.android.tools.lint:lint-api:${Versions.lint}"
+    compileOnly "com.android.tools.lint:lint-checks:${Versions.lint}"
 
     testImplementation "junit:junit:4.13.2"
-    testImplementation "com.android.tools.lint:lint:${FenixVersions.android_lint_api}"
-    testImplementation "com.android.tools.lint:lint-tests:${FenixVersions.android_lint_api}"
+    testImplementation "com.android.tools.lint:lint:${Versions.lint}"
+    testImplementation "com.android.tools.lint:lint-tests:${Versions.lint}"
 }
 
 jar {

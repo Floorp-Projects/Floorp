@@ -248,7 +248,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = FenixVersions.androidx_compose_compiler
+        kotlinCompilerExtensionVersion = Versions.compose_compiler
     }
 
     namespace 'org.mozilla.fenix'
@@ -483,15 +483,14 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
 dependencies {
     implementation project(':browser-engine-gecko')
 
-    implementation FenixDependencies.kotlin_coroutines
-    implementation FenixDependencies.kotlin_coroutines_android
-    testImplementation FenixDependencies.kotlin_coroutines_test
-    implementation FenixDependencies.androidx_appcompat
-    implementation FenixDependencies.androidx_constraintlayout
-    implementation FenixDependencies.androidx_coordinatorlayout
+    implementation ComponentsDependencies.kotlin_coroutines
+    testImplementation ComponentsDependencies.testing_coroutines
+    implementation ComponentsDependencies.androidx_appcompat
+    implementation ComponentsDependencies.androidx_constraintlayout
+    implementation ComponentsDependencies.androidx_coordinatorlayout
     implementation FenixDependencies.google_accompanist_drawablepainter
 
-    implementation FenixDependencies.sentry
+    implementation ComponentsDependencies.thirdparty_sentry_latest
 
     implementation project(':compose-awesomebar')
     implementation project(':compose-cfr')
@@ -582,38 +581,38 @@ dependencies {
     implementation project(':lib-state')
     implementation project(':lib-dataprotect')
 
-    debugImplementation FenixDependencies.leakcanary
-    debugImplementation FenixDependencies.androidx_compose_ui_tooling
+    debugImplementation ComponentsDependencies.leakcanary
+    debugImplementation ComponentsDependencies.androidx_compose_ui_tooling
 
-    implementation FenixDependencies.androidx_activity_compose
+    implementation ComponentsDependencies.androidx_activity_compose
     implementation FenixDependencies.androidx_activity_ktx
-    implementation FenixDependencies.androidx_annotation
-    implementation FenixDependencies.androidx_compose_ui
-    implementation FenixDependencies.androidx_compose_ui_tooling_preview
-    implementation FenixDependencies.androidx_compose_foundation
-    implementation FenixDependencies.androidx_compose_material
+    implementation ComponentsDependencies.androidx_annotation
+    implementation ComponentsDependencies.androidx_compose_ui
+    implementation ComponentsDependencies.androidx_compose_ui_tooling_preview
+    implementation ComponentsDependencies.androidx_compose_foundation
+    implementation ComponentsDependencies.androidx_compose_material
     implementation FenixDependencies.androidx_legacy
-    implementation FenixDependencies.androidx_biometric
+    implementation ComponentsDependencies.androidx_biometric
     implementation FenixDependencies.androidx_paging
-    implementation FenixDependencies.androidx_preference
-    implementation FenixDependencies.androidx_fragment
+    implementation ComponentsDependencies.androidx_preferences
+    implementation ComponentsDependencies.androidx_fragment
     implementation FenixDependencies.androidx_navigation_fragment
     implementation FenixDependencies.androidx_navigation_ui
-    implementation FenixDependencies.androidx_recyclerview
+    implementation ComponentsDependencies.androidx_recyclerview
     implementation FenixDependencies.androidx_lifecycle_common
-    implementation FenixDependencies.androidx_lifecycle_livedata
-    implementation FenixDependencies.androidx_lifecycle_process
-    implementation FenixDependencies.androidx_lifecycle_runtime
+    implementation ComponentsDependencies.androidx_lifecycle_livedata
+    implementation ComponentsDependencies.androidx_lifecycle_process
+    implementation ComponentsDependencies.androidx_lifecycle_runtime
 
-    implementation FenixDependencies.androidx_lifecycle_viewmodel
-    implementation FenixDependencies.androidx_core
-    implementation FenixDependencies.androidx_core_ktx
+    implementation ComponentsDependencies.androidx_lifecycle_viewmodel
+    implementation ComponentsDependencies.androidx_core
+    implementation ComponentsDependencies.androidx_core_ktx
     implementation FenixDependencies.androidx_transition
-    implementation FenixDependencies.androidx_work_ktx
+    implementation ComponentsDependencies.androidx_work_runtime
     implementation FenixDependencies.androidx_datastore
-    implementation FenixDependencies.androidx_data_store_preferences
+    implementation ComponentsDependencies.androidx_data_store_preferences
     implementation FenixDependencies.protobuf_javalite
-    implementation FenixDependencies.google_material
+    implementation ComponentsDependencies.google_material
 
     implementation FenixDependencies.adjust
     implementation FenixDependencies.installreferrer // Required by Adjust
@@ -626,14 +625,14 @@ dependencies {
 
     implementation FenixDependencies.androidx_profileinstaller
 
-    androidTestImplementation FenixDependencies.uiautomator
+    androidTestImplementation ComponentsDependencies.androidx_test_uiautomator
     androidTestImplementation FenixDependencies.fastlane
     // This Falcon version is added to maven central now required for Screengrab
     androidTestImplementation FenixDependencies.falcon
 
-    androidTestImplementation FenixDependencies.androidx_compose_ui_test
+    androidTestImplementation ComponentsDependencies.androidx_compose_ui_test
 
-    androidTestImplementation FenixDependencies.espresso_core, {
+    androidTestImplementation ComponentsDependencies.androidx_espresso_core, {
         exclude group: 'com.android.support', module: 'support-annotations'
     }
 
@@ -647,32 +646,30 @@ dependencies {
         exclude module: 'protobuf-lite'
     }
 
-    androidTestImplementation FenixDependencies.androidx_test_core
+    androidTestImplementation ComponentsDependencies.androidx_test_core
     androidTestImplementation FenixDependencies.espresso_idling_resources
     androidTestImplementation FenixDependencies.espresso_intents
 
-    androidTestImplementation FenixDependencies.tools_test_runner
-    androidTestImplementation FenixDependencies.tools_test_rules
+    androidTestImplementation ComponentsDependencies.androidx_test_runner
+    androidTestImplementation ComponentsDependencies.androidx_test_rules
     androidTestUtil FenixDependencies.orchestrator
-    androidTestImplementation FenixDependencies.espresso_core, {
+    androidTestImplementation ComponentsDependencies.androidx_espresso_core, {
         exclude group: 'com.android.support', module: 'support-annotations'
     }
 
-    androidTestImplementation FenixDependencies.androidx_junit
-    androidTestImplementation FenixDependencies.androidx_test_extensions
-    androidTestImplementation FenixDependencies.androidx_work_testing
+    androidTestImplementation ComponentsDependencies.androidx_test_junit
+    androidTestImplementation ComponentsDependencies.androidx_work_testing
     androidTestImplementation FenixDependencies.androidx_benchmark_junit4
     androidTestImplementation FenixDependencies.mockwebserver
     testImplementation project(':support-test')
     testImplementation project(':support-test-libstate')
-    testImplementation FenixDependencies.androidx_junit
-    testImplementation FenixDependencies.androidx_test_extensions
-    testImplementation FenixDependencies.androidx_work_testing
-    testImplementation (FenixDependencies.robolectric) {
+    testImplementation ComponentsDependencies.androidx_test_junit
+    testImplementation ComponentsDependencies.androidx_work_testing
+    testImplementation (ComponentsDependencies.testing_robolectric) {
         exclude group: 'org.apache.maven'
     }
 
-    testImplementation FenixDependencies.maven_ant_tasks
+    testImplementation ComponentsDependencies.testing_maven_ant_tasks
     implementation project(':support-rusthttp')
 
     androidTestImplementation FenixDependencies.mockk_android
@@ -711,7 +708,7 @@ if (project.hasProperty("coverage")) {
     }
 
     jacoco {
-        toolVersion = FenixVersions.jacoco
+        toolVersion = Versions.jacoco
     }
 
     android.applicationVariants.all { variant ->
