@@ -44,6 +44,8 @@ class GroupRule : public Rule {
   GroupRule(const GroupRule&) = delete;
   bool IsCCLeaf() const override;
 
+  bool IsGroupRule() const final { return true; }
+
 #ifdef DEBUG
   void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif

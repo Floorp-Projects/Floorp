@@ -364,6 +364,23 @@ bool InspectorUtils::HasRulesModifiedByCSSOM(GlobalObject& aGlobal,
   return aSheet.HasModifiedRulesForDevtools();
 }
 
+static void CollectRules(ServoCSSRuleList& aRuleList,
+                         nsTArray<RefPtr<css::Rule>>& aResult) {
+  for (uint32_t i = 0, len = aRuleList.Length(); i < len; ++i) {
+    css::Rule* rule = aRuleList.GetRule(i);
+    aResult.AppendElement(rule);
+    if (rule->IsGroupRule()) {
+      CollectRules(*static_cast<css::GroupRule*>(rule)->CssRules(), aResult);
+    }
+  }
+}
+
+void InspectorUtils::GetAllStyleSheetCSSStyleRules(
+    GlobalObject& aGlobal, StyleSheet& aSheet,
+    nsTArray<RefPtr<css::Rule>>& aResult) {
+  CollectRules(*aSheet.GetCssRulesInternal(), aResult);
+}
+
 /* static */
 bool InspectorUtils::IsInheritedProperty(GlobalObject& aGlobalObject,
                                          const nsACString& aPropertyName) {

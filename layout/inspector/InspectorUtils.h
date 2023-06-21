@@ -75,6 +75,10 @@ class InspectorUtils {
   static bool HasRulesModifiedByCSSOM(GlobalObject& aGlobal,
                                       StyleSheet& aSheet);
 
+  static void GetAllStyleSheetCSSStyleRules(
+      GlobalObject& aGlobal, StyleSheet& aSheet,
+      nsTArray<RefPtr<css::Rule>>& aResult);
+
   // Utilities for working with CSS properties
   //
   // Returns true if the string names a property that is inherited by default.

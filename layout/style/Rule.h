@@ -58,6 +58,8 @@ class Rule : public nsISupports, public nsWrapperCache {
   // sense that it doesn't have any outgoing owning edges.
   virtual bool IsCCLeaf() const MOZ_MUST_OVERRIDE;
 
+  virtual bool IsGroupRule() const { return false; }
+
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const = 0;
 #endif
