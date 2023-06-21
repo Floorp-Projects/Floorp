@@ -151,7 +151,7 @@ nsresult NS_NewDOMDocument(Document** aInstancePtrResult,
   if (!aQualifiedName.IsEmpty()) {
     ErrorResult result;
     ElementCreationOptionsOrString options;
-    options.SetAsString();
+    Unused << options.SetAsString();
 
     nsCOMPtr<Element> root =
         d->CreateElementNS(aNamespaceURI, aQualifiedName, options, result);
