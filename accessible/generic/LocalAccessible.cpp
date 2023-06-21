@@ -3287,6 +3287,7 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
   }
 
   bool boundsChanged = false;
+  nsIFrame* frame = GetFrame();
   if (aCacheDomain & CacheDomain::Bounds) {
     nsRect newBoundsRect = ParentRelativeBounds();
 
@@ -3336,6 +3337,12 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
 
       fields->SetAttribute(nsGkAtoms::relativeBounds, std::move(boundsArray));
     }
+
+    if (frame && frame->ScrollableOverflowRect().IsEmpty()) {
+      fields->SetAttribute(nsGkAtoms::clip_rule, true);
+    } else if (aUpdateType != CacheUpdateType::Initial) {
+      fields->SetAttribute(nsGkAtoms::clip_rule, DeleteEntry());
+    }
   }
 
   if (aCacheDomain & CacheDomain::Text) {
@@ -3369,7 +3376,6 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     }
   }
 
-  nsIFrame* frame = GetFrame();
   if (aCacheDomain & (CacheDomain::Text | CacheDomain::Bounds) &&
       !HasChildren()) {
     // We cache line start offsets for both text and non-text leaf Accessibles

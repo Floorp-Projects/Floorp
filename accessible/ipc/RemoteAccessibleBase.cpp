@@ -7,6 +7,7 @@
 #include "ARIAMap.h"
 #include "CachedTableAccessible.h"
 #include "DocAccessible.h"
+#include "RemoteAccessibleBase.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/a11y/DocManager.h"
 #include "mozilla/a11y/Platform.h"
@@ -414,6 +415,59 @@ bool RemoteAccessibleBase<Derived>::ContainsPoint(int32_t aX, int32_t aY) {
 }
 
 template <class Derived>
+RemoteAccessible* RemoteAccessibleBase<Derived>::DoFuzzyHittesting() {
+  uint32_t childCount = ChildCount();
+  if (!childCount) {
+    return nullptr;
+  }
+  // Check if this match has a clipped child.
+  // This usually indicates invisible text, and we're
+  // interested in returning the inner text content
+  // even if it doesn't contain the point we're hittesting.
+  RemoteAccessible* clippedContainer = nullptr;
+  for (uint32_t i = 0; i < childCount; i++) {
+    RemoteAccessible* child = RemoteChildAt(i);
+    if (child->Role() == roles::TEXT_CONTAINER) {
+      if (child->IsClipped()) {
+        clippedContainer = child;
+        break;
+      }
+    }
+  }
+  // If we found a clipped container, descend it in search of
+  // meaningful text leaves. Ignore non-text-leaf/text-container
+  // siblings.
+  RemoteAccessible* maybeTextLeaf = clippedContainer;
+  while (maybeTextLeaf) {
+    bool continueSearch = false;
+    childCount = maybeTextLeaf->ChildCount();
+    for (uint32_t i = 0; i < childCount; i++) {
+      RemoteAccessible* child = maybeTextLeaf->RemoteChildAt(i);
+      if (child->Role() == roles::TEXT_CONTAINER) {
+        maybeTextLeaf = child;
+        continueSearch = true;
+        break;
+      }
+      if (child->IsTextLeaf()) {
+        maybeTextLeaf = child;
+        // Don't break here -- it's possible a text container
+        // exists as another sibling, and we should descend as
+        // deep as possible.
+      }
+    }
+    if (maybeTextLeaf && maybeTextLeaf->IsTextLeaf()) {
+      return maybeTextLeaf;
+    }
+    if (!continueSearch) {
+      // We didn't find anything useful in this set of siblings.
+      // Don't keep searching
+      break;
+    }
+  }
+  return nullptr;
+}
+
+template <class Derived>
 Accessible* RemoteAccessibleBase<Derived>::ChildAtPoint(
     int32_t aX, int32_t aY, LocalAccessible::EWhichChildAtPoint aWhichChild) {
   // Elements that are partially on-screen should have their bounds masked by
@@ -486,6 +540,13 @@ Accessible* RemoteAccessibleBase<Derived>::ChildAtPoint(
           // this call shouldn't pass the boundary defined by
           // the acc this call originated on. If we hit `this`,
           // return our most recent match.
+          if (!lastMatch &&
+              BoundsWithOffset(Nothing(), hitTesting).Contains(aX, aY)) {
+            // If we haven't found a match, but `this` contains the point we're
+            // looking for, set it as our temp last match so we can
+            // (potentially) do fuzzy hittesting on it below.
+            lastMatch = acc;
+          }
           break;
         }
 
@@ -494,24 +555,12 @@ Accessible* RemoteAccessibleBase<Derived>::ChildAtPoint(
           // first match we encounter is guaranteed to be the
           // deepest match.
           lastMatch = acc;
-          if (lastMatch->Role() == roles::TEXT_CONTAINER) {
-            // We've matched on a generic, we probably want its
-            // inner text leaf (if one exists). Drill down through
-            // subsequent generics, regardless of whether the point
-            // we want is actually contained therein."
-            while (lastMatch->ChildCount() == 1) {
-              if (lastMatch->Role() == roles::TEXT_CONTAINER) {
-                lastMatch = lastMatch->RemoteChildAt(0);
-              } else {
-                break;
-              }
-            }
-            // If we failed to find a text leaf, fall back to the
-            // original generic match.
-            lastMatch = lastMatch->IsTextLeaf() ? lastMatch : acc;
-          }
           break;
         }
+      }
+      if (lastMatch) {
+        RemoteAccessible* fuzzyMatch = lastMatch->DoFuzzyHittesting();
+        lastMatch = fuzzyMatch ? fuzzyMatch : lastMatch;
       }
     }
   }
@@ -676,6 +725,16 @@ bool RemoteAccessibleBase<Derived>::IsOverflowHidden() const {
   if (auto maybeOverflow =
           mCachedFields->GetAttribute<RefPtr<nsAtom>>(nsGkAtoms::overflow)) {
     return *maybeOverflow == nsGkAtoms::hidden;
+  }
+
+  return false;
+}
+
+template <class Derived>
+bool RemoteAccessibleBase<Derived>::IsClipped() const {
+  MOZ_ASSERT(mCachedFields);
+  if (mCachedFields->GetAttribute<bool>(nsGkAtoms::clip_rule)) {
+    return true;
   }
 
   return false;
