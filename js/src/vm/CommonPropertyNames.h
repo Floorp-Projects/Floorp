@@ -369,6 +369,7 @@
   MACRO_(noStack, noStack, "noStack")                                          \
   MACRO_(notation, notation, "notation")                                       \
   MACRO_(notes, notes, "notes")                                                \
+  MACRO_(Now, Now, "Now")                                                      \
   MACRO_(null, null, "null")                                                   \
   MACRO_(numberingSystem, numberingSystem, "numberingSystem")                  \
   MACRO_(numeric, numeric, "numeric")                                          \
