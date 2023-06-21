@@ -72,6 +72,15 @@ class CellAllocator {
   static void CheckIncrementalZoneState(JSContext* cx, void* ptr);
 #endif
 
+  static MOZ_ALWAYS_INLINE gc::Heap CheckedHeap(gc::Heap heap) {
+    if (heap > Heap::Tenured) {
+      // This helps the compiler to see that nursery allocation is never
+      // possible if Heap::Tenured is specified.
+      MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Bad gc::Heap value");
+    }
+    return heap;
+  }
+
   // Allocate a cell in the nursery, unless |heap| is Heap::Tenured or nursery
   // allocation is disabled for |traceKind| in the current zone.
   template <JS::TraceKind traceKind, AllowGC allowGC = CanGC>
@@ -90,7 +99,8 @@ class CellAllocator {
     size_t thingSize = Arena::thingSize(allocKind);
 
     JS::Zone* zone = rcx->zoneUnchecked();
-    if (heap < zone->minHeapToTenure(traceKind)) {
+    gc::Heap minHeapToTenure = CheckedHeap(zone->minHeapToTenure(traceKind));
+    if (CheckedHeap(heap) < minHeapToTenure) {
       if (!site) {
         site = zone->unknownAllocSite(traceKind);
       }
