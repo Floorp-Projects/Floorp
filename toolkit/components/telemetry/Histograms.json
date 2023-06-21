@@ -8884,6 +8884,19 @@
     "keyed": true,
     "description": "How many credit card entries we imported from another browser, keyed by the name of the browser."
   },
+  "FX_MIGRATION_EXTENSIONS_QUANTITY": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "bug_numbers": [1834545],
+    "alert_emails": ["mconley@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "n_buckets": 20,
+    "high": 1000,
+    "releaseChannelCollection": "opt-out",
+    "keyed": true,
+    "description": "How many extensions were matched to be imported from another browser, keyed by the name of the browser."
+  },
   "PWMGR_IMPORT_LOGINS_FROM_FILE_CATEGORICAL": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
