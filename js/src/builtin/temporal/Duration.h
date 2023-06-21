@@ -74,6 +74,8 @@ inline Duration ToDuration(const DurationObject* duration) {
 }
 
 class Increment;
+class PlainDateObject;
+class ZonedDateTimeObject;
 enum class TemporalRoundingMode;
 enum class TemporalUnit;
 
@@ -141,6 +143,26 @@ bool BalanceDuration(JSContext* cx, const Instant& nanoseconds,
  */
 bool RoundDuration(JSContext* cx, const Duration& duration, Increment increment,
                    TemporalUnit unit, TemporalRoundingMode roundingMode,
+                   Duration* result);
+
+/**
+ * RoundDuration ( years, months, weeks, days, hours, minutes, seconds,
+ * milliseconds, microseconds, nanoseconds, increment, unit, roundingMode [ ,
+ * relativeTo ] )
+ */
+bool RoundDuration(JSContext* cx, const Duration& duration, Increment increment,
+                   TemporalUnit unit, TemporalRoundingMode roundingMode,
+                   JS::Handle<Wrapped<PlainDateObject*>> relativeTo,
+                   Duration* result);
+
+/**
+ * RoundDuration ( years, months, weeks, days, hours, minutes, seconds,
+ * milliseconds, microseconds, nanoseconds, increment, unit, roundingMode [ ,
+ * relativeTo ] )
+ */
+bool RoundDuration(JSContext* cx, const Duration& duration, Increment increment,
+                   TemporalUnit unit, TemporalRoundingMode roundingMode,
+                   JS::Handle<ZonedDateTimeObject*> relativeTo,
                    Duration* result);
 
 } /* namespace js::temporal */
