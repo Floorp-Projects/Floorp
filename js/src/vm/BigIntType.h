@@ -388,9 +388,11 @@ class BigInt final : public js::gc::CellWithLengthAndFlags {
   static BigInt* absoluteSub(JSContext* cx, Handle<BigInt*> x,
                              Handle<BigInt*> y, bool resultNegative);
 
+ public:
   // If `|x| < |y|` return -1; if `|x| == |y|` return 0; otherwise return 1.
   static int8_t absoluteCompare(BigInt* lhs, BigInt* rhs);
 
+ private:
   static int8_t compare(BigInt* lhs, double rhs);
 
   template <js::AllowGC allowGC>

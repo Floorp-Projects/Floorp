@@ -174,6 +174,28 @@ bool ToTemporalRoundingMode(JSContext* cx, JS::Handle<JSObject*> options,
 bool RoundNumberToIncrement(JSContext* cx, const Instant& x, int64_t increment,
                             TemporalRoundingMode roundingMode, Instant* result);
 
+/**
+ * RoundNumberToIncrement ( x, increment, roundingMode )
+ */
+bool RoundNumberToIncrement(JSContext* cx, int64_t numerator, TemporalUnit unit,
+                            Increment increment,
+                            TemporalRoundingMode roundingMode, double* result);
+
+/**
+ * RoundNumberToIncrement ( x, increment, roundingMode )
+ */
+bool RoundNumberToIncrement(JSContext* cx, JS::Handle<JS::BigInt*> numerator,
+                            TemporalUnit unit, Increment increment,
+                            TemporalRoundingMode roundingMode, double* result);
+
+/**
+ * RoundNumberToIncrement ( x, increment, roundingMode )
+ */
+bool RoundNumberToIncrement(JSContext* cx, JS::Handle<JS::BigInt*> numerator,
+                            JS::Handle<JS::BigInt*> denominator,
+                            Increment increment,
+                            TemporalRoundingMode roundingMode, double* result);
+
 enum class CalendarOption { Auto, Always, Never, Critical };
 
 /**

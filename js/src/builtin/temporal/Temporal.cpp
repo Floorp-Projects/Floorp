@@ -563,6 +563,135 @@ static BigInt* Divide(JSContext* cx, Handle<BigInt*> dividend, int64_t divisor,
   MOZ_CRASH("invalid rounding mode");
 }
 
+static BigInt* Divide(JSContext* cx, Handle<BigInt*> dividend,
+                      Handle<BigInt*> divisor,
+                      TemporalRoundingMode roundingMode) {
+  MOZ_ASSERT(!divisor->isNegative());
+  MOZ_ASSERT(!divisor->isZero());
+
+  Rooted<BigInt*> quotient(cx);
+  Rooted<BigInt*> remainder(cx);
+  if (!BigInt::divmod(cx, dividend, divisor, &quotient, &remainder)) {
+    return nullptr;
+  }
+
+  // No rounding needed when the remainder is zero.
+  if (remainder->isZero()) {
+    return quotient;
+  }
+
+  switch (roundingMode) {
+    case TemporalRoundingMode::Ceil: {
+      if (!remainder->isNegative()) {
+        return BigInt::inc(cx, quotient);
+      }
+      return quotient;
+    }
+    case TemporalRoundingMode::Floor: {
+      if (remainder->isNegative()) {
+        return BigInt::dec(cx, quotient);
+      }
+      return quotient;
+    }
+    case TemporalRoundingMode::Trunc:
+      // BigInt division truncates.
+      return quotient;
+    case TemporalRoundingMode::Expand: {
+      if (!remainder->isNegative()) {
+        return BigInt::inc(cx, quotient);
+      }
+      return BigInt::dec(cx, quotient);
+    }
+    case TemporalRoundingMode::HalfCeil: {
+      BigInt* rem = BigInt::add(cx, remainder, remainder);
+      if (!rem) {
+        return nullptr;
+      }
+
+      if (!remainder->isNegative()) {
+        if (BigInt::absoluteCompare(rem, divisor) >= 0) {
+          return BigInt::inc(cx, quotient);
+        }
+      } else {
+        if (BigInt::absoluteCompare(rem, divisor) > 0) {
+          return BigInt::dec(cx, quotient);
+        }
+      }
+      return quotient;
+    }
+    case TemporalRoundingMode::HalfFloor: {
+      BigInt* rem = BigInt::add(cx, remainder, remainder);
+      if (!rem) {
+        return nullptr;
+      }
+
+      if (remainder->isNegative()) {
+        if (BigInt::absoluteCompare(rem, divisor) >= 0) {
+          return BigInt::dec(cx, quotient);
+        }
+      } else {
+        if (BigInt::absoluteCompare(rem, divisor) > 0) {
+          return BigInt::inc(cx, quotient);
+        }
+      }
+      return quotient;
+    }
+    case TemporalRoundingMode::HalfExpand: {
+      BigInt* rem = BigInt::add(cx, remainder, remainder);
+      if (!rem) {
+        return nullptr;
+      }
+
+      if (BigInt::absoluteCompare(rem, divisor) >= 0) {
+        if (!dividend->isNegative()) {
+          return BigInt::inc(cx, quotient);
+        }
+        return BigInt::dec(cx, quotient);
+      }
+      return quotient;
+    }
+    case TemporalRoundingMode::HalfTrunc: {
+      BigInt* rem = BigInt::add(cx, remainder, remainder);
+      if (!rem) {
+        return nullptr;
+      }
+
+      if (BigInt::absoluteCompare(rem, divisor) > 0) {
+        if (!dividend->isNegative()) {
+          return BigInt::inc(cx, quotient);
+        }
+        return BigInt::dec(cx, quotient);
+      }
+      return quotient;
+    }
+    case TemporalRoundingMode::HalfEven: {
+      BigInt* rem = BigInt::add(cx, remainder, remainder);
+      if (!rem) {
+        return nullptr;
+      }
+
+      if (BigInt::absoluteCompare(rem, divisor) == 0) {
+        bool isOdd = !quotient->isZero() && (quotient->digit(0) & 1) == 1;
+        if (isOdd) {
+          if (!dividend->isNegative()) {
+            return BigInt::inc(cx, quotient);
+          }
+          return BigInt::dec(cx, quotient);
+        }
+      }
+      if (BigInt::absoluteCompare(rem, divisor) > 0) {
+        if (!dividend->isNegative()) {
+          return BigInt::inc(cx, quotient);
+        }
+        return BigInt::dec(cx, quotient);
+      }
+      return quotient;
+    }
+  }
+
+  MOZ_CRASH("invalid rounding mode");
+}
+
 static BigInt* RoundNumberToIncrementSlow(JSContext* cx, Handle<BigInt*> x,
                                           int64_t divisor, int64_t increment,
                                           TemporalRoundingMode roundingMode) {
@@ -639,6 +768,172 @@ bool js::temporal::RoundNumberToIncrement(JSContext* cx, const Instant& x,
   }
 
   *result = ToInstant(rounded);
+  return true;
+}
+
+/**
+ * RoundNumberToIncrement ( x, increment, roundingMode )
+ */
+bool js::temporal::RoundNumberToIncrement(JSContext* cx, int64_t numerator,
+                                          TemporalUnit unit,
+                                          Increment increment,
+                                          TemporalRoundingMode roundingMode,
+                                          double* result) {
+  MOZ_ASSERT(unit >= TemporalUnit::Day);
+  MOZ_ASSERT(Increment::min() <= increment && increment <= Increment::max());
+
+  // Take the slow path when the increment is too large.
+  if (MOZ_UNLIKELY(increment > Increment{100'000})) {
+    Rooted<BigInt*> bi(cx, BigInt::createFromInt64(cx, numerator));
+    if (!bi) {
+      return false;
+    }
+
+    Rooted<BigInt*> denominator(
+        cx, BigInt::createFromInt64(cx, ToNanoseconds(unit)));
+    if (!denominator) {
+      return false;
+    }
+
+    return RoundNumberToIncrement(cx, bi, denominator, increment, roundingMode,
+                                  result);
+  }
+
+  int64_t divisor = ToNanoseconds(unit) * increment.value();
+  MOZ_ASSERT(divisor > 0);
+  MOZ_ASSERT(divisor <= 8'640'000'000'000'000'000);
+
+  // Division by one has no remainder.
+  if (divisor == 1) {
+    MOZ_ASSERT(increment == Increment{1});
+    *result = double(numerator);
+    return true;
+  }
+
+  // Steps 1-8.
+  int64_t rounded = Divide(numerator, divisor, roundingMode);
+
+  // Step 9.
+  mozilla::CheckedInt64 checked = rounded;
+  checked *= increment.value();
+  if (checked.isValid()) {
+    *result = double(checked.value());
+    return true;
+  }
+
+  Rooted<BigInt*> bi(cx, BigInt::createFromInt64(cx, numerator));
+  if (!bi) {
+    return false;
+  }
+  return RoundNumberToIncrement(cx, bi, unit, increment, roundingMode, result);
+}
+
+/**
+ * RoundNumberToIncrement ( x, increment, roundingMode )
+ */
+bool js::temporal::RoundNumberToIncrement(
+    JSContext* cx, Handle<BigInt*> numerator, TemporalUnit unit,
+    Increment increment, TemporalRoundingMode roundingMode, double* result) {
+  MOZ_ASSERT(unit >= TemporalUnit::Day);
+  MOZ_ASSERT(Increment::min() <= increment && increment <= Increment::max());
+
+  // Take the slow path when the increment is too large.
+  if (MOZ_UNLIKELY(increment > Increment{100'000})) {
+    Rooted<BigInt*> denominator(
+        cx, BigInt::createFromInt64(cx, ToNanoseconds(unit)));
+    if (!denominator) {
+      return false;
+    }
+
+    return RoundNumberToIncrement(cx, numerator, denominator, increment,
+                                  roundingMode, result);
+  }
+
+  int64_t divisor = ToNanoseconds(unit) * increment.value();
+  MOZ_ASSERT(divisor > 0);
+  MOZ_ASSERT(divisor <= 8'640'000'000'000'000'000);
+
+  // Division by one has no remainder.
+  if (divisor == 1) {
+    MOZ_ASSERT(increment == Increment{1});
+    *result = BigInt::numberValue(numerator);
+    return true;
+  }
+
+  // Dividing zero is always zero.
+  if (numerator->isZero()) {
+    *result = 0;
+    return true;
+  }
+
+  // All callers are already in the slow path, so we don't need to fast-path the
+  // case when |x| can be represented by an int64 value.
+
+  // Steps 1-9.
+  auto* rounded = RoundNumberToIncrementSlow(cx, numerator, divisor,
+                                             increment.value(), roundingMode);
+  if (!rounded) {
+    return false;
+  }
+
+  *result = BigInt::numberValue(rounded);
+  return true;
+}
+
+/**
+ * RoundNumberToIncrement ( x, increment, roundingMode )
+ */
+bool js::temporal::RoundNumberToIncrement(
+    JSContext* cx, Handle<BigInt*> numerator, Handle<BigInt*> denominator,
+    Increment increment, TemporalRoundingMode roundingMode, double* result) {
+  MOZ_ASSERT(!denominator->isNegative());
+  MOZ_ASSERT(!denominator->isZero());
+  MOZ_ASSERT(Increment::min() <= increment && increment <= Increment::max());
+
+  // Dividing zero is always zero.
+  if (numerator->isZero()) {
+    *result = 0;
+    return true;
+  }
+
+  // We don't have to adjust the divisor when |increment=1|.
+  if (increment == Increment{1}) {
+    auto divisor = denominator;
+
+    auto* rounded = Divide(cx, numerator, divisor, roundingMode);
+    if (!rounded) {
+      return false;
+    }
+
+    *result = BigInt::numberValue(rounded);
+    return true;
+  }
+
+  Rooted<BigInt*> inc(cx, BigInt::createFromUint64(cx, increment.value()));
+  if (!inc) {
+    return false;
+  }
+
+  Rooted<BigInt*> divisor(cx, BigInt::mul(cx, denominator, inc));
+  if (!divisor) {
+    return false;
+  }
+  MOZ_ASSERT(!divisor->isNegative());
+  MOZ_ASSERT(!divisor->isZero());
+
+  // Steps 1-8.
+  Rooted<BigInt*> rounded(cx, Divide(cx, numerator, divisor, roundingMode));
+  if (!rounded) {
+    return false;
+  }
+
+  // Step 9.
+  auto* adjusted = BigInt::mul(cx, rounded, inc);
+  if (!adjusted) {
+    return false;
+  }
+
+  *result = BigInt::numberValue(adjusted);
   return true;
 }
 
