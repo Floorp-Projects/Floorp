@@ -864,20 +864,19 @@ spotlight:
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
   variables: {}
 
-# More info about the fx-message-* feature id prototype is available at:
-# https://docs.google.com/document/d/1KdtaNycZL5j240nXofbibm9yKh7qVvu1-uZFLdmYM7Y/
+# fxms-message-* placeholder feature ids
 #
-# Before each Nightly leaves the station for Beta, we're currently
-# experimenting with ensuring that we have enough fx-messages-* messages to
-# accomodate all the rollout possibilities for Release that we're aware of,
-# plus one for a buffer just-in-case.
+# https://docs.google.com/spreadsheets/d/119YbeKStLL0Fg2QkK-yN93mrtD1rlneGZGTl_jAwtyw/edit#gid=1903378504
+# has info on using these placeholder feature ids, as well as (very short) instructions on
+# checking to see if we need more (which we do once per Nightly) and how to add them.
 #
-# When adding an fxms-message-* feature id, be sure to also add it to the
-# MESSAGING_EXPERIMENTS_DEFAULT_FEATURES list in ASRouter.
+# Instructions for adding a new fxms-message-* placeholder feature id
+# 1) clone an existing one here
+# 2) update the YAML feature id to the next unused number
+# 3) update the YAML description
+# 4) add the new feature id to MESSAGING_EXPERIMENTS_DEFAULT_FEATURES list in ASRouter.jsm
+# 5) add the new feature id and the version it landed to the spreadsheet tab linked to above
 
-# currently in use by 107+ exp/rollout pair of Import Bookmarks Infrequent
-# Existing Users with 5 bookmarks:
-# https://experimenter.services.mozilla.com/nimbus/import-infrequent-rollout-make-yourself-at-home/summary
 fxms-message-1:
   description: "A Firefox Messaging System message"
   owner: omc@mozilla.com
@@ -890,10 +889,6 @@ fxms-message-1:
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
   variables: {}
 
-# next planned use: 110+ exp/rollout pair of Fox Doodle: Pin experiment winner
-# (Existing Users)
-# More info about the fx-message-* feature id prototype is available at:
-# https://docs.google.com/document/d/1KdtaNycZL5j240nXofbibm9yKh7qVvu1-uZFLdmYM7Y/
 fxms-message-2:
   description: "Firefox Messaging System message 2"
   owner: omc@mozilla.com
@@ -906,10 +901,6 @@ fxms-message-2:
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
   variables: {}
 
-# next planned use: 110+ exp/rollout pair of Fox Doodle: Set Default (Existing
-# Users)
-# More info about the fx-message-* feature id prototype is available at:
-# https://docs.google.com/document/d/1KdtaNycZL5j240nXofbibm9yKh7qVvu1-uZFLdmYM7Y/
 fxms-message-3:
   description: "Firefox Messaging System message 3"
   owner: omc@mozilla.com
@@ -922,11 +913,6 @@ fxms-message-3:
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
   variables: {}
 
-# next potential planned use: 111+ exp/rollout pair for PDF annotations callout
-# (https://mozilla-hub.atlassian.net/browse/FXE-83) experiment.
-#
-# More info about the fx-message-* feature id prototype is available at:
-# https://docs.google.com/document/d/1KdtaNycZL5j240nXofbibm9yKh7qVvu1-uZFLdmYM7Y/
 fxms-message-4:
   description: "Firefox Messaging System message 4"
   owner: omc@mozilla.com
@@ -939,11 +925,6 @@ fxms-message-4:
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
   variables: {}
 
-# next potential planned use: 112+ holdback/rollout pair for default PDF handler
-# (https://mozilla-hub.atlassian.net/browse/FXE-91) experiment.
-#
-# More info about the fx-message-* feature id prototype is available at:
-# https://docs.google.com/document/d/1KdtaNycZL5j240nXofbibm9yKh7qVvu1-uZFLdmYM7Y/
 fxms-message-5:
   description: "Firefox Messaging System message 5"
   owner: omc@mozilla.com
@@ -956,11 +937,6 @@ fxms-message-5:
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
   variables: {}
 
-# next potential planned use: 114+ possible holdback/rollout pair (Device Migration):
-# https://mozilla-hub.atlassian.net/browse/FXE-271
-#
-# More info about the fx-message-* feature id prototype is available at:
-# https://docs.google.com/document/d/1KdtaNycZL5j240nXofbibm9yKh7qVvu1-uZFLdmYM7Y/
 fxms-message-6:
   description: "Firefox Messaging System message 6"
   owner: omc@mozilla.com
@@ -973,10 +949,6 @@ fxms-message-6:
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
   variables: {}
 
-# next planned use: buffer, for the unexpected
-#
-# More info about the fx-message-* feature id prototype is available at:
-# https://docs.google.com/document/d/1KdtaNycZL5j240nXofbibm9yKh7qVvu1-uZFLdmYM7Y/
 fxms-message-7:
   description: "Firefox Messaging System message 7"
   owner: omc@mozilla.com
@@ -989,11 +961,6 @@ fxms-message-7:
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
   variables: {}
 
-
-# next planned use: buffer, for the unexpected
-#
-# More info about the fx-message-* feature id prototype is available at:
-# https://docs.google.com/document/d/1KdtaNycZL5j240nXofbibm9yKh7qVvu1-uZFLdmYM7Y/
 fxms-message-8:
   description: "Firefox Messaging System message 8"
   owner: omc@mozilla.com
@@ -1006,10 +973,6 @@ fxms-message-8:
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
   variables: {}
 
-# next planned use: buffer, for the unexpected
-#
-# More info about the fx-message-* feature id prototype is available at:
-# https://docs.google.com/document/d/1KdtaNycZL5j240nXofbibm9yKh7qVvu1-uZFLdmYM7Y/
 fxms-message-9:
   description: "Firefox Messaging System message 9"
   owner: omc@mozilla.com
@@ -1022,10 +985,6 @@ fxms-message-9:
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
   variables: {}
 
-# next planned use: buffer, for the unexpected
-#
-# More info about the fx-message-* feature id prototype is available at:
-# https://docs.google.com/document/d/1KdtaNycZL5j240nXofbibm9yKh7qVvu1-uZFLdmYM7Y/
 fxms-message-10:
   description: "Firefox Messaging System message 10"
   owner: omc@mozilla.com
@@ -1038,10 +997,6 @@ fxms-message-10:
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
   variables: {}
 
-# next planned use: buffer, for the unexpected
-#
-# More info about the fx-message-* feature id prototype is available at:
-# https://docs.google.com/document/d/1KdtaNycZL5j240nXofbibm9yKh7qVvu1-uZFLdmYM7Y/
 fxms-message-11:
   description: "Firefox Messaging System message 11"
   owner: omc@mozilla.com
