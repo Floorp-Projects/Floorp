@@ -419,8 +419,7 @@ void nsPageContentFrame::EnsurePageName() {
     return;
   }
   RefPtr<ComputedStyle> pageContentPseudoStyle =
-      PresShell()->StyleSet()->ResolvePageContentStyle(
-          mPageName, StylePagePseudoClassFlags::FIRST);
+      PresShell()->StyleSet()->ResolvePageContentStyle(mPageName);
   SetComputedStyleWithoutNotification(pageContentPseudoStyle);
 }
 
