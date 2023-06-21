@@ -17,7 +17,6 @@
 #include "OriginInfo.h"
 #include "QuotaCommon.h"
 #include "QuotaManager.h"
-#include "SanitizationUtils.h"
 #include "ScopedLogExtraInfo.h"
 #include "UsageInfo.h"
 
@@ -100,7 +99,6 @@
 #include "mozilla/dom/quota/QuotaManagerImpl.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozilla/dom/quota/ScopedLogExtraInfo.h"
-#include "mozilla/dom/quota/StreamUtils.h"
 #include "mozilla/dom/simpledb/ActorsParent.h"
 #include "mozilla/fallible.h"
 #include "mozilla/ipc/BackgroundChild.h"
@@ -921,8 +919,6 @@ class FinalizeOriginEvictionOp : public OriginOperationBase {
   virtual void UnblockOpen() override;
 };
 
-}  // namespace
-
 class NormalOriginOperationBase
     : public OriginOperationBase,
       public OpenDirectoryListener,
@@ -977,8 +973,6 @@ class NormalOriginOperationBase
   // Used to send results before unblocking open.
   virtual void SendResults() = 0;
 };
-
-namespace {
 
 class SaveOriginAccessTimeOp : public NormalOriginOperationBase {
   const OriginMetadata mOriginMetadata;
@@ -1752,6 +1746,31 @@ nsISerialEventTarget* BackgroundThreadObject::OwningThread() const {
   return mOwningThread;
 }
 
+bool IsOnIOThread() {
+  QuotaManager* quotaManager = QuotaManager::Get();
+  NS_ASSERTION(quotaManager, "Must have a manager here!");
+
+  bool currentThread;
+  return NS_SUCCEEDED(
+             quotaManager->IOThread()->IsOnCurrentThread(&currentThread)) &&
+         currentThread;
+}
+
+void AssertIsOnIOThread() {
+  NS_ASSERTION(IsOnIOThread(), "Running on the wrong thread!");
+}
+
+void DiagnosticAssertIsOnIOThread() { MOZ_DIAGNOSTIC_ASSERT(IsOnIOThread()); }
+
+void AssertCurrentThreadOwnsQuotaMutex() {
+#ifdef DEBUG
+  QuotaManager* quotaManager = QuotaManager::Get();
+  NS_ASSERTION(quotaManager, "Must have a manager here!");
+
+  quotaManager->AssertCurrentThreadOwnsQuotaMutex();
+#endif
+}
+
 void ReportInternalError(const char* aFile, uint32_t aLine, const char* aStr) {
   // Get leaf of file path
   for (const char* p = aFile; *p; ++p) {
@@ -1785,11 +1804,30 @@ mozilla::Atomic<bool> gShutdown(false);
 // A time stamp that can only be accessed on the main thread.
 TimeStamp gLastOSWake;
 
-// XXX Move to QuotaManager once NormalOriginOperationBase is declared in a
-// separate and includable file.
 using NormalOriginOpArray =
     nsTArray<CheckedUnsafePtr<NormalOriginOperationBase>>;
 StaticAutoPtr<NormalOriginOpArray> gNormalOriginOps;
+
+void RegisterNormalOriginOp(NormalOriginOperationBase& aNormalOriginOp) {
+  AssertIsOnBackgroundThread();
+
+  if (!gNormalOriginOps) {
+    gNormalOriginOps = new NormalOriginOpArray();
+  }
+
+  gNormalOriginOps->AppendElement(&aNormalOriginOp);
+}
+
+void UnregisterNormalOriginOp(NormalOriginOperationBase& aNormalOriginOp) {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(gNormalOriginOps);
+
+  gNormalOriginOps->RemoveElement(&aNormalOriginOp);
+
+  if (gNormalOriginOps->IsEmpty()) {
+    gNormalOriginOps = nullptr;
+  }
+}
 
 class StorageOperationBase {
  protected:
@@ -2111,6 +2149,26 @@ class RestoreDirectoryMetadata2Helper final : public StorageOperationBase {
   nsresult ProcessOriginDirectory(const OriginProps& aOriginProps) override;
 };
 
+auto MakeSanitizedOriginCString(const nsACString& aOrigin) {
+#ifdef XP_WIN
+  NS_ASSERTION(!strcmp(QuotaManager::kReplaceChars,
+                       FILE_ILLEGAL_CHARACTERS FILE_PATH_SEPARATOR),
+               "Illegal file characters have changed!");
+#endif
+
+  nsAutoCString res{aOrigin};
+
+  res.ReplaceChar(QuotaManager::kReplaceChars, '+');
+
+  return res;
+}
+
+auto MakeSanitizedOriginString(const nsACString& aOrigin) {
+  // An origin string is ASCII-only, since it is obtained via
+  // nsIPrincipal::GetOrigin, which returns an ACString.
+  return NS_ConvertASCIItoUTF16(MakeSanitizedOriginCString(aOrigin));
+}
+
 Result<nsAutoString, nsresult> GetPathForStorage(
     nsIFile& aBaseDir, const nsAString& aStorageName) {
   QM_TRY_INSPECT(const auto& storageDir,
@@ -2222,6 +2280,52 @@ Result<bool, nsresult> EnsureDirectory(nsIFile& aDirectory) {
   }
 
   return !exists;
+}
+
+enum FileFlag { Truncate, Update, Append };
+
+Result<nsCOMPtr<nsIOutputStream>, nsresult> GetOutputStream(
+    nsIFile& aFile, FileFlag aFileFlag) {
+  AssertIsOnIOThread();
+
+  switch (aFileFlag) {
+    case FileFlag::Truncate:
+      QM_TRY_RETURN(NS_NewLocalFileOutputStream(&aFile));
+
+    case FileFlag::Update: {
+      QM_TRY_INSPECT(const bool& exists,
+                     MOZ_TO_RESULT_INVOKE_MEMBER(&aFile, Exists));
+
+      if (!exists) {
+        return nsCOMPtr<nsIOutputStream>();
+      }
+
+      QM_TRY_INSPECT(const auto& stream,
+                     NS_NewLocalFileRandomAccessStream(&aFile));
+
+      nsCOMPtr<nsIOutputStream> outputStream = do_QueryInterface(stream);
+      QM_TRY(OkIf(outputStream), Err(NS_ERROR_FAILURE));
+
+      return outputStream;
+    }
+
+    case FileFlag::Append:
+      QM_TRY_RETURN(NS_NewLocalFileOutputStream(
+          &aFile, PR_WRONLY | PR_CREATE_FILE | PR_APPEND));
+
+    default:
+      MOZ_CRASH("Should never get here!");
+  }
+}
+
+Result<nsCOMPtr<nsIBinaryOutputStream>, nsresult> GetBinaryOutputStream(
+    nsIFile& aFile, FileFlag aFileFlag) {
+  QM_TRY_UNWRAP(auto outputStream, GetOutputStream(aFile, aFileFlag));
+
+  QM_TRY(OkIf(outputStream), Err(NS_ERROR_UNEXPECTED));
+
+  return nsCOMPtr<nsIBinaryOutputStream>(
+      NS_NewObjectOutputStream(outputStream));
 }
 
 void GetJarPrefix(bool aInIsolatedMozBrowser, nsACString& aJarPrefix) {
@@ -2344,6 +2448,26 @@ nsresult CreateDirectoryMetadata2(nsIFile& aDirectory, int64_t aTimestamp,
       file->RenameTo(nullptr, nsLiteralString(METADATA_V2_FILE_NAME))));
 
   return NS_OK;
+}
+
+Result<nsCOMPtr<nsIBinaryInputStream>, nsresult> GetBinaryInputStream(
+    nsIFile& aDirectory, const nsAString& aFilename) {
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  QM_TRY_INSPECT(const auto& file, MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
+                                       nsCOMPtr<nsIFile>, aDirectory, Clone));
+
+  QM_TRY(MOZ_TO_RESULT(file->Append(aFilename)));
+
+  QM_TRY_UNWRAP(auto stream, NS_NewLocalFileInputStream(file));
+
+  QM_TRY_INSPECT(const auto& bufferedStream,
+                 NS_NewBufferedInputStream(stream.forget(), 512));
+
+  QM_TRY(OkIf(bufferedStream), Err(NS_ERROR_FAILURE));
+
+  return nsCOMPtr<nsIBinaryInputStream>(
+      NS_NewObjectInputStream(bufferedStream));
 }
 
 // This method computes and returns our best guess for the temporary storage
@@ -2837,29 +2961,6 @@ bool QuotaManager::IsDotFile(const nsAString& aFileName) {
   return aFileName.First() == char16_t('.');
 }
 
-void QuotaManager::RegisterNormalOriginOp(
-    NormalOriginOperationBase& aNormalOriginOp) {
-  AssertIsOnBackgroundThread();
-
-  if (!gNormalOriginOps) {
-    gNormalOriginOps = new NormalOriginOpArray();
-  }
-
-  gNormalOriginOps->AppendElement(&aNormalOriginOp);
-}
-
-void QuotaManager::UnregisterNormalOriginOp(
-    NormalOriginOperationBase& aNormalOriginOp) {
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(gNormalOriginOps);
-
-  gNormalOriginOps->RemoveElement(&aNormalOriginOp);
-
-  if (gNormalOriginOps->IsEmpty()) {
-    gNormalOriginOps = nullptr;
-  }
-}
-
 void QuotaManager::RegisterDirectoryLock(DirectoryLockImpl& aLock) {
   AssertIsOnOwningThread();
 
@@ -3110,6 +3211,28 @@ uint64_t QuotaManager::CollectOriginsForEviction(
   }
 
   return 0;
+}
+
+template <typename P>
+void QuotaManager::CollectPendingOriginsForListing(P aPredicate) {
+  MutexAutoLock lock(mQuotaMutex);
+
+  for (const auto& entry : mGroupInfoPairs) {
+    const auto& pair = entry.GetData();
+
+    MOZ_ASSERT(!entry.GetKey().IsEmpty());
+    MOZ_ASSERT(pair);
+
+    RefPtr<GroupInfo> groupInfo =
+        pair->LockedGetGroupInfo(PERSISTENCE_TYPE_DEFAULT);
+    if (groupInfo) {
+      for (const auto& originInfo : groupInfo->mOriginInfos) {
+        if (!originInfo->mDirectoryExists) {
+          aPredicate(originInfo);
+        }
+      }
+    }
+  }
 }
 
 nsresult QuotaManager::Init() {
@@ -7432,7 +7555,6 @@ void NormalOriginOperationBase::Open() {
 
 void NormalOriginOperationBase::UnblockOpen() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(QuotaManager::Get());
   MOZ_ASSERT(GetState() == State_UnblockingOpen);
 
   SendResults();
@@ -7441,7 +7563,7 @@ void NormalOriginOperationBase::UnblockOpen() {
     mDirectoryLock = nullptr;
   }
 
-  QuotaManager::Get()->UnregisterNormalOriginOp(*this);
+  UnregisterNormalOriginOp(*this);
 
   AdvanceState();
 }
@@ -7900,8 +8022,6 @@ PQuotaUsageRequestParent* Quota::AllocPQuotaUsageRequestParent(
 
   QM_TRY(QuotaManager::EnsureCreated(), nullptr);
 
-  MOZ_ASSERT(QuotaManager::Get());
-
   auto actor = [&]() -> RefPtr<QuotaUsageRequestBase> {
     switch (aParams.type()) {
       case UsageRequestParams::TAllUsageParams:
@@ -7917,7 +8037,7 @@ PQuotaUsageRequestParent* Quota::AllocPQuotaUsageRequestParent(
 
   MOZ_ASSERT(actor);
 
-  QuotaManager::Get()->RegisterNormalOriginOp(*actor);
+  RegisterNormalOriginOp(*actor);
 
   // Transfer ownership to IPDL.
   return actor.forget().take();
@@ -7970,8 +8090,6 @@ PQuotaRequestParent* Quota::AllocPQuotaRequestParent(
   }
 
   QM_TRY(QuotaManager::EnsureCreated(), nullptr);
-
-  MOZ_ASSERT(QuotaManager::Get());
 
   auto actor = [&]() -> RefPtr<QuotaRequestBase> {
     switch (aParams.type()) {
@@ -8037,7 +8155,7 @@ PQuotaRequestParent* Quota::AllocPQuotaRequestParent(
 
   MOZ_ASSERT(actor);
 
-  QuotaManager::Get()->RegisterNormalOriginOp(*actor);
+  RegisterNormalOriginOp(*actor);
 
   // Transfer ownership to IPDL.
   return actor.forget().take();
