@@ -23,4 +23,4 @@
 # don't change CLOBBER for WebIDL changes any more.
 
 
-Modified build files in third_party/libwebrtc - Bug 1833237 - Vendor libwebrtc from 86163248f4
+Modified build files in third_party/libwebrtc - Bug 1839512 - remove unused event_wrapper.cc from libwebrtc build. r?dbaker!
