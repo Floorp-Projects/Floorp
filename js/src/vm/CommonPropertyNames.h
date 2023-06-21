@@ -238,6 +238,8 @@
   MACRO_(getOwnPropertyDescriptor, getOwnPropertyDescriptor,                   \
          "getOwnPropertyDescriptor")                                           \
   MACRO_(getOwnPropertyNames, getOwnPropertyNames, "getOwnPropertyNames")      \
+  MACRO_(getPossibleInstantsFor, getPossibleInstantsFor,                       \
+         "getPossibleInstantsFor")                                             \
   MACRO_(getPropertySuper, getPropertySuper, "getPropertySuper")               \
   MACRO_(getPrototypeOf, getPrototypeOf, "getPrototypeOf")                     \
   MACRO_(GetTypeError, GetTypeError, "GetTypeError")                           \

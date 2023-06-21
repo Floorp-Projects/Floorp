@@ -11,6 +11,7 @@
 #include <stdint.h>
 
 #include "builtin/temporal/Wrapped.h"
+#include "js/GCVector.h"
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
@@ -154,6 +155,15 @@ bool GetOffsetNanosecondsFor(JSContext* cx, JS::Handle<JSObject*> timeZone,
 bool GetOffsetNanosecondsFor(JSContext* cx, JS::Handle<JSObject*> timeZone,
                              const Instant& instant,
                              int64_t* offsetNanoseconds);
+
+using InstantVector = JS::StackGCVector<Wrapped<InstantObject*>>;
+
+/**
+ * GetPossibleInstantsFor ( timeZone, dateTime )
+ */
+bool GetPossibleInstantsFor(JSContext* cx, JS::Handle<JSObject*> timeZone,
+                            JS::Handle<Wrapped<PlainDateTimeObject*>> dateTime,
+                            JS::MutableHandle<InstantVector> list);
 
 /**
  * FormatTimeZoneOffsetString ( offsetNanoseconds )
