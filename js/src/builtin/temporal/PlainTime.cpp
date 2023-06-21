@@ -22,6 +22,7 @@
 #include "NamespaceImports.h"
 
 #include "builtin/temporal/Calendar.h"
+#include "builtin/temporal/Duration.h"
 #include "builtin/temporal/Instant.h"
 #include "builtin/temporal/PlainDate.h"
 #include "builtin/temporal/PlainDateTime.h"
@@ -987,6 +988,149 @@ RoundedTime js::temporal::RoundTime(const PlainTime& time, Increment increment,
   return {result, {0, 0, 0, 0, 0, 0}};
 }
 
+/**
+ * AddTime ( hour, minute, second, millisecond, microsecond, nanosecond, hours,
+ * minutes, seconds, milliseconds, microseconds, nanoseconds )
+ */
+static PlainTime AddTime(const PlainTime& time, const Duration& duration) {
+  // Step 1.
+  MOZ_ASSERT(IsValidDuration(duration));
+
+  // Step 2.
+  MOZ_ASSERT(IsValidTime(time));
+
+  // Balance the duration so we don't have to worry about imprecise Number
+  // computations below.
+
+  // Use either int64_t or int32_t below. Assert the total combined amount of
+  // the units can be expressed in either int64_t or int32_t.
+  static_assert(1 * UnitsPerDay(TemporalUnit::Nanosecond) > INT32_MAX,
+                "total combined nanoseconds per day");
+  static_assert(2 * UnitsPerDay(TemporalUnit::Microsecond) > INT32_MAX,
+                "total combined microseconds per day");
+  static_assert(3 * UnitsPerDay(TemporalUnit::Millisecond) <= INT32_MAX,
+                "total combined milliseconds per day");
+  static_assert(4 * UnitsPerDay(TemporalUnit::Second) <= INT32_MAX,
+                "total combined seconds per day");
+  static_assert(5 * UnitsPerDay(TemporalUnit::Minute) <= INT32_MAX,
+                "total combined minutes per day");
+  static_assert(6 * UnitsPerDay(TemporalUnit::Hour) <= INT32_MAX,
+                "total combined hours per day");
+
+  // We ignore the days overflow in this function, therefore it's possible
+  // to restrict each unit to units-per-day.
+  int64_t nanoseconds = int64_t(
+      std::fmod(duration.nanoseconds, UnitsPerDay(TemporalUnit::Nanosecond)));
+  int64_t microseconds = int64_t(
+      std::fmod(duration.microseconds, UnitsPerDay(TemporalUnit::Microsecond)));
+  int32_t milliseconds = int32_t(
+      std::fmod(duration.milliseconds, UnitsPerDay(TemporalUnit::Millisecond)));
+  int32_t seconds =
+      int32_t(std::fmod(duration.seconds, UnitsPerDay(TemporalUnit::Second)));
+  int32_t minutes =
+      int32_t(std::fmod(duration.minutes, UnitsPerDay(TemporalUnit::Minute)));
+  int32_t hours =
+      int32_t(std::fmod(duration.hours, UnitsPerDay(TemporalUnit::Hour)));
+
+  // Each unit is now less than the units-per-day.
+  MOZ_ASSERT(std::abs(nanoseconds) < UnitsPerDay(TemporalUnit::Nanosecond));
+  MOZ_ASSERT(std::abs(microseconds) < UnitsPerDay(TemporalUnit::Microsecond));
+  MOZ_ASSERT(std::abs(milliseconds) < UnitsPerDay(TemporalUnit::Millisecond));
+  MOZ_ASSERT(std::abs(seconds) < UnitsPerDay(TemporalUnit::Second));
+  MOZ_ASSERT(std::abs(minutes) < UnitsPerDay(TemporalUnit::Minute));
+  MOZ_ASSERT(std::abs(hours) < UnitsPerDay(TemporalUnit::Hour));
+
+  microseconds += nanoseconds / 1000;
+  nanoseconds %= 1000;
+  MOZ_ASSERT(microseconds < 2 * UnitsPerDay(TemporalUnit::Microsecond));
+
+  milliseconds += microseconds / 1000;
+  microseconds %= 1000;
+  MOZ_ASSERT(milliseconds < 3 * UnitsPerDay(TemporalUnit::Millisecond));
+
+  seconds += milliseconds / 1000;
+  milliseconds %= 1000;
+  MOZ_ASSERT(seconds < 4 * UnitsPerDay(TemporalUnit::Second));
+
+  minutes += seconds / 60;
+  seconds %= 60;
+  MOZ_ASSERT(minutes < 5 * UnitsPerDay(TemporalUnit::Minute));
+
+  hours += minutes / 60;
+  minutes %= 60;
+  MOZ_ASSERT(hours < 6 * UnitsPerDay(TemporalUnit::Hour));
+
+  hours %= 24;
+
+  MOZ_ASSERT(std::abs(hours) <= 23);
+  MOZ_ASSERT(std::abs(minutes) <= 59);
+  MOZ_ASSERT(std::abs(seconds) <= 59);
+  MOZ_ASSERT(std::abs(milliseconds) <= 999);
+  MOZ_ASSERT(std::abs(microseconds) <= 999);
+  MOZ_ASSERT(std::abs(nanoseconds) <= 999);
+
+  // Step 3.
+  int32_t hour = time.hour + hours;
+
+  // Step 4.
+  int32_t minute = time.minute + minutes;
+
+  // Step 5.
+  int32_t second = time.second + seconds;
+
+  // Step 6.
+  int32_t millisecond = time.millisecond + milliseconds;
+
+  // Step 7.
+  int32_t microsecond = time.microsecond + int32_t(microseconds);
+
+  // Step 8.
+  int32_t nanosecond = time.nanosecond + int32_t(nanoseconds);
+
+  // Step 9.
+  auto balanced =
+      ::BalanceTime(hour, minute, second, millisecond, microsecond, nanosecond);
+  return balanced.time;
+}
+
+enum class PlainTimeDuration { Add, Subtract };
+
+/**
+ * AddDurationToOrSubtractDurationFromPlainTime ( operation, temporalTime,
+ * temporalDurationLike )
+ */
+static bool AddDurationToOrSubtractDurationFromPlainTime(
+    JSContext* cx, PlainTimeDuration operation, const CallArgs& args) {
+  auto* temporalTime = &args.thisv().toObject().as<PlainTimeObject>();
+  auto time = ToPlainTime(temporalTime);
+
+  // Step 1. (Not applicable in our implementation.)
+
+  // Step 2.
+  Duration duration;
+  if (!ToTemporalDurationRecord(cx, args.get(0), &duration)) {
+    return false;
+  }
+
+  // Step 3.
+  if (operation == PlainTimeDuration::Subtract) {
+    duration = duration.negate();
+  }
+  auto result = AddTime(time, duration);
+
+  // Step 4.
+  MOZ_ASSERT(IsValidTime(result));
+
+  // Step 5.
+  auto* obj = CreateTemporalTime(cx, result);
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
 JSObject* js::temporal::PlainTimeObject::createCalendar(
     JSContext* cx, Handle<PlainTimeObject*> obj) {
   auto* calendar = GetISO8601Calendar(cx);
@@ -1277,6 +1421,42 @@ static bool PlainTime_nanosecond(JSContext* cx, unsigned argc, Value* vp) {
   // Steps 1-2.
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<IsPlainTime, PlainTime_nanosecond>(cx, args);
+}
+
+/**
+ * Temporal.PlainTime.prototype.add ( temporalDurationLike )
+ */
+static bool PlainTime_add(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  return AddDurationToOrSubtractDurationFromPlainTime(
+      cx, PlainTimeDuration::Add, args);
+}
+
+/**
+ * Temporal.PlainTime.prototype.add ( temporalDurationLike )
+ */
+static bool PlainTime_add(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainTime, PlainTime_add>(cx, args);
+}
+
+/**
+ * Temporal.PlainTime.prototype.subtract ( temporalDurationLike )
+ */
+static bool PlainTime_subtract(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  return AddDurationToOrSubtractDurationFromPlainTime(
+      cx, PlainTimeDuration::Subtract, args);
+}
+
+/**
+ * Temporal.PlainTime.prototype.subtract ( temporalDurationLike )
+ */
+static bool PlainTime_subtract(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainTime, PlainTime_subtract>(cx, args);
 }
 
 /**
@@ -1726,6 +1906,8 @@ static const JSFunctionSpec PlainTime_methods[] = {
 };
 
 static const JSFunctionSpec PlainTime_prototype_methods[] = {
+    JS_FN("add", PlainTime_add, 1, 0),
+    JS_FN("subtract", PlainTime_subtract, 1, 0),
     JS_FN("with", PlainTime_with, 1, 0),
     JS_FN("round", PlainTime_round, 1, 0),
     JS_FN("equals", PlainTime_equals, 1, 0),
