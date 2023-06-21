@@ -56,6 +56,7 @@ ITEM_VALUE(VideoElementPlaybackQuality, 1llu << 33)
 ITEM_VALUE(ReduceTimerPrecision,        1llu << 34)
 // Hide keyboard and pointer WidgetEvents
 ITEM_VALUE(WidgetEvents,                1llu << 35)
+ITEM_VALUE(MediaDevices,                1llu << 36)
 
 // !!! Don't forget to update kDefaultFingerintingProtections in nsRFPService.cpp
 // if necessary.
