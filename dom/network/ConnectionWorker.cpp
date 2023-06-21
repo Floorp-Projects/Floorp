@@ -141,9 +141,8 @@ class NotifyRunnable : public WorkerRunnable {
 /* static */
 already_AddRefed<ConnectionWorker> ConnectionWorker::Create(
     WorkerPrivate* aWorkerPrivate, ErrorResult& aRv) {
-  bool shouldResistFingerprinting =
-      aWorkerPrivate->GlobalScope()->ShouldResistFingerprinting(
-          RFPTarget::Unknown);
+  bool shouldResistFingerprinting = aWorkerPrivate->ShouldResistFingerprinting(
+      RFPTarget::NavigatorConnection);
   RefPtr<ConnectionWorker> c = new ConnectionWorker(shouldResistFingerprinting);
   c->mProxy = ConnectionProxy::Create(aWorkerPrivate, c);
   if (!c->mProxy) {
