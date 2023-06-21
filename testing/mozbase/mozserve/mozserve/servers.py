@@ -143,14 +143,15 @@ class Http3Server(object):
         self._http3ServerProc = {}
 
 
-class DoHServer(object):
+class NodeHttp2Server(object):
     """
-    Class which encapsulates the DoH server
+    Class which encapsulates a Node Http/2 server
     """
 
-    def __init__(self, options, env, logger):
+    def __init__(self, name, options, env, logger):
         if isinstance(options, Namespace):
             options = vars(options)
+        self._name = name
         self._log = logger
         self._port = options["port"]
         self._env = copy.deepcopy(env)
@@ -159,15 +160,21 @@ class DoHServer(object):
         self._dstServerPort = options["dstServerPort"]
         self._isWin = options["isWin"]
         self._nodeProc = None
+        self._searchStr = options["searchStr"]
+        self._alpn = options["alpn"]
 
     def port(self):
         return self._port
 
     def start(self):
         if not os.path.exists(self._serverPath):
-            raise Exception("DoH server not found at %s" % self._serverPath)
+            raise Exception(
+                "%s server not found at %s" % (self._name, self._serverPath)
+            )
 
-        self._log.info("mozserve | Found DoH server path: %s" % self._serverPath)
+        self._log.info(
+            "mozserve | Found %s server path: %s" % (self._name, self._serverPath)
+        )
 
         if not os.path.exists(self._nodeBin) or not os.path.isfile(self._nodeBin):
             raise Exception("node not found at path %s" % (self._nodeBin))
@@ -184,6 +191,7 @@ class DoHServer(object):
                         self._serverPath,
                         "serverPort={}".format(self._dstServerPort),
                         "listeningPort={}".format(self._port),
+                        "alpn={}".format(self._alpn),
                     ],
                     stdin=PIPE,
                     stdout=PIPE,
@@ -195,15 +203,17 @@ class DoHServer(object):
             self._nodeProc = process
 
             msg = process.stdout.readline()
-            self._log.info("runtests.py | DoH server msg: %s" % msg)
+            self._log.info("runtests.py | %s server msg: %s" % (self._name, msg))
             if "server listening" in msg:
-                searchObj = re.search(r"DoH server listening on ports ([0-9]+)", msg, 0)
+                searchObj = re.search(self._searchStr, msg, 0)
                 if searchObj:
                     self._port = int(searchObj.group(1))
-                    self._log.info("DoH server started at port: %d" % (self._port))
+                    self._log.info(
+                        "%s server started at port: %d" % (self._name, self._port)
+                    )
         except OSError as e:
             # This occurs if the subprocess couldn't be started
-            self._log.error("Could not run DoH server: %s" % (str(e)))
+            self._log.error("Could not run %s server: %s" % (self._name, str(e)))
 
     def stop(self):
         """
@@ -227,3 +237,43 @@ class DoHServer(object):
             dumpOutput(self._nodeProc.stderr, "stderr")
 
             self._nodeProc = None
+
+
+class DoHServer(object):
+    """
+    Class which encapsulates the DoH server
+    """
+
+    def __init__(self, options, env, logger):
+        options["searchStr"] = r"DoH server listening on ports ([0-9]+)"
+        self._server = NodeHttp2Server("DoH", options, env, logger)
+
+    def port(self):
+        return self._server.port()
+
+    def start(self):
+        self._server.start()
+
+    def stop(self):
+        self._server.stop()
+
+
+class Http2Server(object):
+    """
+    Class which encapsulates the Http2 server
+    """
+
+    def __init__(self, options, env, logger):
+        options["searchStr"] = r"Http2 server listening on ports ([0-9]+)"
+        options["dstServerPort"] = -1
+        options["alpn"] = ""
+        self._server = NodeHttp2Server("Http/2", options, env, logger)
+
+    def port(self):
+        return self._server.port()
+
+    def start(self):
+        self._server.start()
+
+    def stop(self):
+        self._server.stop()

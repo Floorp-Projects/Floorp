@@ -98,6 +98,7 @@ TEST_HARNESS_FILES.testing.mochitest += [
     "DoHServer/doh_server.js",
     "favicon.ico",
     "harness.xhtml",
+    "Http2Server/http2_server.js",
     "ignorePrefs.json",
     "leaks.py",
     "mach_test_package_commands.py",
@@ -117,6 +118,12 @@ TEST_HARNESS_FILES.testing.mochitest.DoHServer += [
     "DoHServer/doh_server.js",
     "DoHServer/http2-cert.key.pem",
     "DoHServer/http2-cert.pem",
+]
+
+TEST_HARNESS_FILES.testing.mochitest.Http2Server += [
+    "Http2Server/http2_server.js",
+    "Http2Server/mochitest-cert.key.pem",
+    "Http2Server/mochitest-cert.pem",
 ]
 
 TEST_HARNESS_FILES.testing.mochitest.embed += [

@@ -514,6 +514,15 @@ class MochitestArguments(ArgumentContainer):
             },
         ],
         [
+            ["--use-http2-server"],
+            {
+                "dest": "useHttp2Server",
+                "default": False,
+                "help": "Whether to use the Http2 server",
+                "action": "store_true",
+            },
+        ],
+        [
             ["--setpref"],
             {
                 "action": "append",

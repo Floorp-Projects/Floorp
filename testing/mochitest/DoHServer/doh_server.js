@@ -29,6 +29,7 @@ if (fs.existsSync(libPath)) {
 
 let serverPort = parseInt(process.argv[2].split("=")[1]);
 let listeningPort = parseInt(process.argv[3].split("=")[1]);
+let alpn = process.argv[4].split("=")[1];
 
 let server = http2.createSecureServer(
   options,
@@ -58,7 +59,7 @@ let server = http2.createSecureServer(
               priority: 1,
               name: packet.questions[0].name,
               values: [
-                { key: "alpn", value: ["h3"] },
+                { key: "alpn", value: [alpn] },
                 { key: "port", value: serverPort },
               ],
             },

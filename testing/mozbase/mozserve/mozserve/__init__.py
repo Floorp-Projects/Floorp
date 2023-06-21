@@ -7,6 +7,6 @@ mozserve is a simple script that is used to launch test servers, and
 is designed for use in mochitest and xpcshelltest.
 """
 
-from .servers import DoHServer, Http3Server
+from .servers import DoHServer, Http2Server, Http3Server
 
-__all__ = ["Http3Server", "DoHServer"]
+__all__ = ["Http3Server", "Http2Server", "DoHServer"]
