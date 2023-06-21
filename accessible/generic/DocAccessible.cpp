@@ -728,13 +728,18 @@ std::pair<nsPoint, nsRect> DocAccessible::ComputeScrollData(
 
 NS_IMETHODIMP
 DocAccessible::OnPivotChanged(nsIAccessiblePivot* aPivot,
-                              nsIAccessible* aOldAccessible,
-                              nsIAccessible* aNewAccessible,
-                              PivotMoveReason aReason, bool aIsFromUserInput) {
+                              nsIAccessible* aOldAccessible, int32_t aOldStart,
+                              int32_t aOldEnd, nsIAccessible* aNewAccessible,
+                              int32_t aNewStart, int32_t aNewEnd,
+                              PivotMoveReason aReason,
+                              TextBoundaryType aBoundaryType,
+                              bool aIsFromUserInput) {
   RefPtr<AccEvent> event = new AccVCChangeEvent(
       this, (aOldAccessible ? aOldAccessible->ToInternalAccessible() : nullptr),
+      aOldStart, aOldEnd,
       (aNewAccessible ? aNewAccessible->ToInternalAccessible() : nullptr),
-      aReason, aIsFromUserInput ? eFromUserInput : eNoUserInput);
+      aNewStart, aNewEnd, aReason, aBoundaryType,
+      aIsFromUserInput ? eFromUserInput : eNoUserInput);
   nsEventShell::FireEvent(event);
 
   return NS_OK;
