@@ -124,6 +124,11 @@ bool RegulateISODate(JSContext* cx, double year, double month, double day,
                      TemporalOverflow overflow, RegulatedISODate* result);
 
 /**
+ * CompareISODate ( y1, m1, d1, y2, m2, d2 )
+ */
+int32_t CompareISODate(const PlainDate& one, const PlainDate& two);
+
+/**
  * BalanceISODate ( year, month, day )
  */
 bool BalanceISODate(JSContext* cx, int32_t year, int32_t month, int64_t day,

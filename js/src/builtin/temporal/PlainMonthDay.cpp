@@ -344,6 +344,22 @@ static Wrapped<PlainMonthDayObject*> ToTemporalMonthDay(
 }
 
 /**
+ * ToTemporalMonthDay ( item [ , options ] )
+ */
+static bool ToTemporalMonthDay(JSContext* cx, Handle<Value> item,
+                               PlainDate* result,
+                               MutableHandle<JSObject*> calendar) {
+  auto* obj = ToTemporalMonthDay(cx, item).unwrapOrNull();
+  if (!obj) {
+    return false;
+  }
+
+  *result = ToPlainDate(obj);
+  calendar.set(obj->calendar());
+  return cx->compartment()->wrap(cx, calendar);
+}
+
+/**
  * TemporalMonthDayToString ( monthDay, showCalendar )
  */
 static JSString* TemporalMonthDayToString(JSContext* cx,
@@ -585,6 +601,43 @@ static bool PlainMonthDay_day(JSContext* cx, unsigned argc, Value* vp) {
   // Steps 1-2.
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<IsPlainMonthDay, PlainMonthDay_day>(cx, args);
+}
+
+/**
+ * Temporal.PlainMonthDay.prototype.equals ( other )
+ */
+static bool PlainMonthDay_equals(JSContext* cx, const CallArgs& args) {
+  auto* monthDay = &args.thisv().toObject().as<PlainMonthDayObject>();
+  auto date = ToPlainDate(monthDay);
+  Rooted<JSObject*> calendar(cx, monthDay->calendar());
+
+  // Step 3.
+  PlainDate other;
+  Rooted<JSObject*> otherCalendar(cx);
+  if (!ToTemporalMonthDay(cx, args.get(0), &other, &otherCalendar)) {
+    return false;
+  }
+
+  // Steps 4-7.
+  bool equals = false;
+  if (date.year == other.year && date.month == other.month &&
+      date.day == other.day) {
+    if (!CalendarEquals(cx, calendar, otherCalendar, &equals)) {
+      return false;
+    }
+  }
+
+  args.rval().setBoolean(equals);
+  return true;
+}
+
+/**
+ * Temporal.PlainMonthDay.prototype.equals ( other )
+ */
+static bool PlainMonthDay_equals(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainMonthDay, PlainMonthDay_equals>(cx, args);
 }
 
 /**
@@ -862,6 +915,7 @@ static const JSFunctionSpec PlainMonthDay_methods[] = {
 };
 
 static const JSFunctionSpec PlainMonthDay_prototype_methods[] = {
+    JS_FN("equals", PlainMonthDay_equals, 1, 0),
     JS_FN("toString", PlainMonthDay_toString, 0, 0),
     JS_FN("toLocaleString", PlainMonthDay_toLocaleString, 0, 0),
     JS_FN("toJSON", PlainMonthDay_toJSON, 0, 0),
