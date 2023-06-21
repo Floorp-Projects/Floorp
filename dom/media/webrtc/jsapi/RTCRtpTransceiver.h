@@ -175,8 +175,8 @@ class RTCRtpTransceiver : public nsISupports, public nsWrapperCache {
                           RefPtr<RTCStatsPromise::AllPromiseType>>>
           aTransceiverStatsPromises);
 
-  AbstractCanonical<std::string>* CanonicalMid() { return &mMid; }
-  AbstractCanonical<std::string>* CanonicalSyncGroup() { return &mSyncGroup; }
+  Canonical<std::string>& CanonicalMid() { return mMid; }
+  Canonical<std::string>& CanonicalSyncGroup() { return mSyncGroup; }
 
  private:
   virtual ~RTCRtpTransceiver();

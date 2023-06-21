@@ -83,68 +83,53 @@ class ConcreteControl : public AudioConduitControlInterface,
 
   // MediaConduitControlInterface
   // -- MediaPipelineReceiveControlInterface
-  AbstractCanonical<bool>* CanonicalReceiving() override { return &mReceiving; }
+  Canonical<bool>& CanonicalReceiving() override { return mReceiving; }
   // -- MediaPipelineTransmitControlInterface
-  AbstractCanonical<bool>* CanonicalTransmitting() override {
-    return &mTransmitting;
+  Canonical<bool>& CanonicalTransmitting() override { return mTransmitting; }
+  Canonical<Ssrcs>& CanonicalLocalSsrcs() override { return mLocalSsrcs; }
+  Canonical<Ssrcs>& CanonicalLocalVideoRtxSsrcs() override {
+    return mLocalVideoRtxSsrcs;
   }
-  AbstractCanonical<Ssrcs>* CanonicalLocalSsrcs() override {
-    return &mLocalSsrcs;
+  Canonical<std::string>& CanonicalLocalCname() override { return mLocalCname; }
+  Canonical<std::string>& CanonicalMid() override { return mMid; }
+  Canonical<Ssrc>& CanonicalRemoteSsrc() override { return mRemoteSsrc; }
+  Canonical<Ssrc>& CanonicalRemoteVideoRtxSsrc() override {
+    return mRemoteVideoRtxSsrc;
   }
-  AbstractCanonical<Ssrcs>* CanonicalLocalVideoRtxSsrcs() override {
-    return &mLocalVideoRtxSsrcs;
+  Canonical<std::string>& CanonicalSyncGroup() override { return mSyncGroup; }
+  Canonical<RtpExtList>& CanonicalLocalRecvRtpExtensions() override {
+    return mLocalRecvRtpExtensions;
   }
-  AbstractCanonical<std::string>* CanonicalLocalCname() override {
-    return &mLocalCname;
-  }
-  AbstractCanonical<std::string>* CanonicalMid() override { return &mMid; }
-  AbstractCanonical<Ssrc>* CanonicalRemoteSsrc() override {
-    return &mRemoteSsrc;
-  }
-  AbstractCanonical<Ssrc>* CanonicalRemoteVideoRtxSsrc() override {
-    return &mRemoteVideoRtxSsrc;
-  }
-  AbstractCanonical<std::string>* CanonicalSyncGroup() override {
-    return &mSyncGroup;
-  }
-  AbstractCanonical<RtpExtList>* CanonicalLocalRecvRtpExtensions() override {
-    return &mLocalRecvRtpExtensions;
-  }
-  AbstractCanonical<RtpExtList>* CanonicalLocalSendRtpExtensions() override {
-    return &mLocalSendRtpExtensions;
+  Canonical<RtpExtList>& CanonicalLocalSendRtpExtensions() override {
+    return mLocalSendRtpExtensions;
   }
 
   // AudioConduitControlInterface
-  AbstractCanonical<Maybe<AudioCodecConfig>>* CanonicalAudioSendCodec()
-      override {
-    return &mAudioSendCodec;
+  Canonical<Maybe<AudioCodecConfig>>& CanonicalAudioSendCodec() override {
+    return mAudioSendCodec;
   }
-  AbstractCanonical<std::vector<AudioCodecConfig>>* CanonicalAudioRecvCodecs()
+  Canonical<std::vector<AudioCodecConfig>>& CanonicalAudioRecvCodecs()
       override {
-    return &mAudioRecvCodecs;
+    return mAudioRecvCodecs;
   }
   MediaEventSource<DtmfEvent>& OnDtmfEvent() override { return mDtmfEvent; }
 
   // VideoConduitControlInterface
-  AbstractCanonical<Maybe<VideoCodecConfig>>* CanonicalVideoSendCodec()
-      override {
-    return &mVideoSendCodec;
+  Canonical<Maybe<VideoCodecConfig>>& CanonicalVideoSendCodec() override {
+    return mVideoSendCodec;
   }
-  AbstractCanonical<Maybe<RtpRtcpConfig>>* CanonicalVideoSendRtpRtcpConfig()
-      override {
-    return &mVideoSendRtpRtcpConfig;
+  Canonical<Maybe<RtpRtcpConfig>>& CanonicalVideoSendRtpRtcpConfig() override {
+    return mVideoSendRtpRtcpConfig;
   }
-  AbstractCanonical<std::vector<VideoCodecConfig>>* CanonicalVideoRecvCodecs()
+  Canonical<std::vector<VideoCodecConfig>>& CanonicalVideoRecvCodecs()
       override {
-    return &mVideoRecvCodecs;
+    return mVideoRecvCodecs;
   }
-  AbstractCanonical<Maybe<RtpRtcpConfig>>* CanonicalVideoRecvRtpRtcpConfig()
-      override {
-    return &mVideoRecvRtpRtcpConfig;
+  Canonical<Maybe<RtpRtcpConfig>>& CanonicalVideoRecvRtpRtcpConfig() override {
+    return mVideoRecvRtpRtcpConfig;
   }
-  AbstractCanonical<webrtc::VideoCodecMode>* CanonicalVideoCodecMode()
-      override {
-    return &mVideoCodecMode;
+  Canonical<webrtc::VideoCodecMode>& CanonicalVideoCodecMode() override {
+    return mVideoCodecMode;
   }
 };
 

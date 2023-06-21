@@ -128,23 +128,23 @@ class RTCRtpReceiver : public nsISupports,
   void UpdateUnmuteBlockingState();
   void UpdateReceiveTrackMute();
 
-  AbstractCanonical<Ssrc>* CanonicalSsrc() { return &mSsrc; }
-  AbstractCanonical<Ssrc>* CanonicalVideoRtxSsrc() { return &mVideoRtxSsrc; }
-  AbstractCanonical<RtpExtList>* CanonicalLocalRtpExtensions() {
-    return &mLocalRtpExtensions;
+  Canonical<Ssrc>& CanonicalSsrc() { return mSsrc; }
+  Canonical<Ssrc>& CanonicalVideoRtxSsrc() { return mVideoRtxSsrc; }
+  Canonical<RtpExtList>& CanonicalLocalRtpExtensions() {
+    return mLocalRtpExtensions;
   }
 
-  AbstractCanonical<std::vector<AudioCodecConfig>>* CanonicalAudioCodecs() {
-    return &mAudioCodecs;
+  Canonical<std::vector<AudioCodecConfig>>& CanonicalAudioCodecs() {
+    return mAudioCodecs;
   }
 
-  AbstractCanonical<std::vector<VideoCodecConfig>>* CanonicalVideoCodecs() {
-    return &mVideoCodecs;
+  Canonical<std::vector<VideoCodecConfig>>& CanonicalVideoCodecs() {
+    return mVideoCodecs;
   }
-  AbstractCanonical<Maybe<RtpRtcpConfig>>* CanonicalVideoRtpRtcpConfig() {
-    return &mVideoRtpRtcpConfig;
+  Canonical<Maybe<RtpRtcpConfig>>& CanonicalVideoRtpRtcpConfig() {
+    return mVideoRtpRtcpConfig;
   }
-  AbstractCanonical<bool>* CanonicalReceiving() override { return &mReceiving; }
+  Canonical<bool>& CanonicalReceiving() override { return mReceiving; }
 
  private:
   virtual ~RTCRtpReceiver();

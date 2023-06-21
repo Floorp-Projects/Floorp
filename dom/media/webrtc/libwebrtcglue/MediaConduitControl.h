@@ -36,40 +36,37 @@ using Ssrcs = std::vector<uint32_t>;
 
 class MediaConduitControlInterface {
  public:
-  virtual AbstractCanonical<bool>* CanonicalReceiving() = 0;
-  virtual AbstractCanonical<bool>* CanonicalTransmitting() = 0;
-  virtual AbstractCanonical<Ssrcs>* CanonicalLocalSsrcs() = 0;
-  virtual AbstractCanonical<std::string>* CanonicalLocalCname() = 0;
-  virtual AbstractCanonical<std::string>* CanonicalMid() = 0;
-  virtual AbstractCanonical<Ssrc>* CanonicalRemoteSsrc() = 0;
-  virtual AbstractCanonical<std::string>* CanonicalSyncGroup() = 0;
-  virtual AbstractCanonical<RtpExtList>* CanonicalLocalRecvRtpExtensions() = 0;
-  virtual AbstractCanonical<RtpExtList>* CanonicalLocalSendRtpExtensions() = 0;
+  virtual Canonical<bool>& CanonicalReceiving() = 0;
+  virtual Canonical<bool>& CanonicalTransmitting() = 0;
+  virtual Canonical<Ssrcs>& CanonicalLocalSsrcs() = 0;
+  virtual Canonical<std::string>& CanonicalLocalCname() = 0;
+  virtual Canonical<std::string>& CanonicalMid() = 0;
+  virtual Canonical<Ssrc>& CanonicalRemoteSsrc() = 0;
+  virtual Canonical<std::string>& CanonicalSyncGroup() = 0;
+  virtual Canonical<RtpExtList>& CanonicalLocalRecvRtpExtensions() = 0;
+  virtual Canonical<RtpExtList>& CanonicalLocalSendRtpExtensions() = 0;
 };
 
 class AudioConduitControlInterface : public MediaConduitControlInterface {
  public:
-  virtual AbstractCanonical<Maybe<AudioCodecConfig>>*
-  CanonicalAudioSendCodec() = 0;
-  virtual AbstractCanonical<std::vector<AudioCodecConfig>>*
+  virtual Canonical<Maybe<AudioCodecConfig>>& CanonicalAudioSendCodec() = 0;
+  virtual Canonical<std::vector<AudioCodecConfig>>&
   CanonicalAudioRecvCodecs() = 0;
   virtual MediaEventSource<DtmfEvent>& OnDtmfEvent() = 0;
 };
 
 class VideoConduitControlInterface : public MediaConduitControlInterface {
  public:
-  virtual AbstractCanonical<Ssrcs>* CanonicalLocalVideoRtxSsrcs() = 0;
-  virtual AbstractCanonical<Ssrc>* CanonicalRemoteVideoRtxSsrc() = 0;
-  virtual AbstractCanonical<Maybe<VideoCodecConfig>>*
-  CanonicalVideoSendCodec() = 0;
-  virtual AbstractCanonical<Maybe<RtpRtcpConfig>>*
+  virtual Canonical<Ssrcs>& CanonicalLocalVideoRtxSsrcs() = 0;
+  virtual Canonical<Ssrc>& CanonicalRemoteVideoRtxSsrc() = 0;
+  virtual Canonical<Maybe<VideoCodecConfig>>& CanonicalVideoSendCodec() = 0;
+  virtual Canonical<Maybe<RtpRtcpConfig>>&
   CanonicalVideoSendRtpRtcpConfig() = 0;
-  virtual AbstractCanonical<std::vector<VideoCodecConfig>>*
+  virtual Canonical<std::vector<VideoCodecConfig>>&
   CanonicalVideoRecvCodecs() = 0;
-  virtual AbstractCanonical<Maybe<RtpRtcpConfig>>*
+  virtual Canonical<Maybe<RtpRtcpConfig>>&
   CanonicalVideoRecvRtpRtcpConfig() = 0;
-  virtual AbstractCanonical<webrtc::VideoCodecMode>*
-  CanonicalVideoCodecMode() = 0;
+  virtual Canonical<webrtc::VideoCodecMode>& CanonicalVideoCodecMode() = 0;
 };
 
 }  // namespace mozilla

@@ -25,7 +25,8 @@ class AudioConduitTest : public ::testing::Test {
         mAudioConduit(MakeRefPtr<WebrtcAudioConduit>(
             mCallWrapper, GetCurrentSerialEventTarget())),
         mControl(GetCurrentSerialEventTarget()) {
-    mAudioConduit->InitControl(&mControl);
+    mControl.Update(
+        [&](auto& aControl) { mAudioConduit->InitControl(&mControl); });
   }
 
   ~AudioConduitTest() override {
