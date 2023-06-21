@@ -36,10 +36,6 @@ class nsAccessiblePivot final : public nsIAccessiblePivot {
    */
   LocalAccessible* Position() { return mPosition; }
 
-  int32_t StartOffset() { return mStartOffset; }
-
-  int32_t EndOffset() { return mEndOffset; }
-
  private:
   ~nsAccessiblePivot();
   nsAccessiblePivot() = delete;
@@ -50,10 +46,8 @@ class nsAccessiblePivot final : public nsIAccessiblePivot {
    * Notify all observers on a pivot change. Return true if it has changed and
    * observers have been notified.
    */
-  bool NotifyOfPivotChange(LocalAccessible* aOldAccessible, int32_t aOldStart,
-                           int32_t aOldEnd, PivotMoveReason aReason,
-                           TextBoundaryType aBoundaryType,
-                           bool aIsFromUserInput);
+  bool NotifyOfPivotChange(LocalAccessible* aOldPosition,
+                           PivotMoveReason aReason, bool aIsFromUserInput);
 
   /*
    * Check to see that the given accessible is a descendant of given ancestor
@@ -120,16 +114,6 @@ class nsAccessiblePivot final : public nsIAccessiblePivot {
    * The current pivot position.
    */
   RefPtr<LocalAccessible> mPosition;
-
-  /*
-   * The text start offset ofthe pivot.
-   */
-  int32_t mStartOffset;
-
-  /*
-   * The text end offset ofthe pivot.
-   */
-  int32_t mEndOffset;
 
   /*
    * The list of pivot-changed observers.

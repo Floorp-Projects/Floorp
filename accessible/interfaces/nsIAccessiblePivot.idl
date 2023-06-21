@@ -6,11 +6,9 @@
 
 #include "nsISupports.idl"
 
-typedef short TextBoundaryType;
 typedef short PivotMoveReason;
 
 interface nsIAccessible;
-interface nsIAccessibleText;
 interface nsIAccessibleTraversalRule;
 interface nsIAccessiblePivotObserver;
 
@@ -23,12 +21,6 @@ interface nsIAccessiblePivotObserver;
 [scriptable, uuid(81fe5144-059b-42db-bd3a-f6ce3158d5e9)]
 interface nsIAccessiblePivot : nsISupports
 {
-  const TextBoundaryType NO_BOUNDARY = -1;
-  const TextBoundaryType CHAR_BOUNDARY = 0;
-  const TextBoundaryType WORD_BOUNDARY = 1;
-  const TextBoundaryType LINE_BOUNDARY = 2;
-  const TextBoundaryType ATTRIBUTE_RANGE_BOUNDARY = 3;
-
   const PivotMoveReason REASON_NONE = 0;
   const PivotMoveReason REASON_NEXT = 1;
   const PivotMoveReason REASON_PREV = 2;
@@ -50,32 +42,6 @@ interface nsIAccessiblePivot : nsISupports
    * The temporary modal root to which traversal is limited to.
    */
   attribute nsIAccessible modalRoot;
-
-  /**
-   * The start offset of the text range the pivot points at, otherwise -1.
-   */
-  readonly attribute long startOffset;
-
-  /**
-   * The end offset of the text range the pivot points at, otherwise -1.
-   */
-  readonly attribute long endOffset;
-
-  /**
-   * Set the pivot's text range in a text accessible.
-   *
-   * @param aTextAccessible  [in] the text accessible that contains the desired
-   *                           range.
-   * @param aStartOffset     [in] the start offset to set.
-   * @param aEndOffset       [in] the end offset to set.
-   * @param aIsFromUserInput [in] the pivot changed because of direct user input
-   *                           (default is true).
-   * @throws NS_ERROR_INVALID_ARG when the offset exceeds the accessible's
-   *   character count.
-   */
-  [optional_argc] void setTextRange(in nsIAccessibleText aTextAccessible,
-                                    in long aStartOffset, in long aEndOffset,
-                                    [optional] in boolean aIsFromUserInput);
 
   /**
    * Move pivot to next object, from current position or given anchor,
@@ -133,30 +99,6 @@ interface nsIAccessiblePivot : nsISupports
                                    [optional] in boolean aIsFromUserInput);
 
   /**
-   * Move pivot to next text range.
-   *
-   * @param aBoundary        [in] type of boundary for next text range,
-   *                           character, word, etc.
-   * @param aIsFromUserInput [in] the pivot changed because of direct user input
-   *                           (default is true).
-   * @return true on success, false if there are is no more text.
-   */
-  [optional_argc] boolean moveNextByText(in TextBoundaryType aBoundary,
-                                         [optional] in boolean aIsFromUserInput);
-
-  /**
-   * Move pivot to previous text range.
-   *
-   * @param aBoundary        [in] type of boundary for next text range,
-   *                           character, word, etc.
-   * @param aIsFromUserInput [in] the pivot changed because of direct user input
-   *                           (default is true).
-   * @return true on success, false if there are is no more text.
-   */
-  [optional_argc] boolean movePreviousByText(in TextBoundaryType aBoundary,
-                                             [optional] in boolean aIsFromUserInput);
-
-  /**
    * Move pivot to given coordinate in screen pixels.
    *
    * @param aRule            [in]  raversal rule to use.
@@ -200,19 +142,14 @@ interface nsIAccessiblePivotObserver : nsISupports
    * @param aPivot           [in] the pivot that has changed.
    * @param aOldAccessible   [in] the old pivot position before the change,
    *                           or null.
-   * @param aOldStart        [in] the old start offset, or -1.
-   * @param aOldEnd          [in] the old end offset, or -1.
    * @param aReason          [in] the reason for the pivot change.
    * @param aIsFromUserInput [in] the pivot changed because of direct user input
    *                           (default is true).
    */
   void onPivotChanged(in nsIAccessiblePivot aPivot,
                       in nsIAccessible aOldAccessible,
-                      in long aOldStart, in long aOldEnd,
                       in nsIAccessible aNewAccessible,
-                      in long aNewStart, in long aNewEnd,
                       in PivotMoveReason aReason,
-                      in TextBoundaryType aBoundaryType,
                       in boolean aIsFromUserInput);
 };
 
