@@ -21,6 +21,8 @@
 #include "builtin/temporal/Calendar.h"
 #include "builtin/temporal/PlainDate.h"
 #include "builtin/temporal/Temporal.h"
+#include "builtin/temporal/TemporalFields.h"
+#include "builtin/temporal/TemporalParser.h"
 #include "builtin/temporal/TemporalTypes.h"
 #include "ds/IdValuePair.h"
 #include "gc/AllocKind.h"
@@ -191,6 +193,97 @@ PlainYearMonthObject* js::temporal::CreateTemporalYearMonth(
 }
 
 /**
+ * ToTemporalYearMonth ( item [ , options ] )
+ */
+static Wrapped<PlainYearMonthObject*> ToTemporalYearMonth(
+    JSContext* cx, Handle<Value> item,
+    Handle<JSObject*> maybeOptions = nullptr) {
+  // Steps 1-2. (Not applicable in our implementation.)
+
+  // Step 3.
+  if (item.isObject()) {
+    Rooted<JSObject*> itemObj(cx, &item.toObject());
+
+    // Step 3.a.
+    if (itemObj->canUnwrapAs<PlainYearMonthObject>()) {
+      return itemObj;
+    }
+
+    // Step 3.b.
+    Rooted<JSObject*> calendar(cx,
+                               GetTemporalCalendarWithISODefault(cx, itemObj));
+    if (!calendar) {
+      return nullptr;
+    }
+
+    // Step 3.c.
+    JS::RootedVector<PropertyKey> fieldNames(cx);
+    if (!CalendarFields(cx, calendar,
+                        {CalendarField::Month, CalendarField::MonthCode,
+                         CalendarField::Year},
+                        &fieldNames)) {
+      return nullptr;
+    }
+
+    // Step 3.d.
+    Rooted<PlainObject*> fields(cx,
+                                PrepareTemporalFields(cx, itemObj, fieldNames));
+    if (!fields) {
+      return nullptr;
+    }
+
+    // Step 3.e.
+    if (maybeOptions) {
+      return CalendarYearMonthFromFields(cx, calendar, fields, maybeOptions);
+    }
+    return CalendarYearMonthFromFields(cx, calendar, fields);
+  }
+
+  // Step 4.
+  if (maybeOptions) {
+    TemporalOverflow ignored;
+    if (!ToTemporalOverflow(cx, maybeOptions, &ignored)) {
+      return nullptr;
+    }
+  }
+
+  // Step 5.
+  Rooted<JSString*> string(cx, JS::ToString(cx, item));
+  if (!string) {
+    return nullptr;
+  }
+
+  // Step 6.
+  PlainDate result;
+  Rooted<JSString*> calendarString(cx);
+  if (!ParseTemporalYearMonthString(cx, string, &result, &calendarString)) {
+    return nullptr;
+  }
+
+  // Step 7.
+  Rooted<Value> calendarLike(cx);
+  if (calendarString) {
+    calendarLike.setString(calendarString);
+  }
+
+  Rooted<JSObject*> calendar(
+      cx, ToTemporalCalendarWithISODefault(cx, calendarLike));
+  if (!calendar) {
+    return nullptr;
+  }
+
+  // Step 8.
+  Rooted<PlainYearMonthObject*> obj(
+      cx, CreateTemporalYearMonth(cx, result, calendar));
+  if (!obj) {
+    return nullptr;
+  }
+
+  // Steps 9-10.
+  return CalendarYearMonthFromFields(cx, calendar, obj);
+}
+
+/**
  * TemporalYearMonthToString ( yearMonth, showCalendar )
  */
 static JSString* TemporalYearMonthToString(
@@ -312,6 +405,62 @@ static bool PlainYearMonthConstructor(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   args.rval().setObject(*yearMonth);
+  return true;
+}
+
+/**
+ * Temporal.PlainYearMonth.from ( item [ , options ] )
+ */
+static bool PlainYearMonth_from(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Step 1.
+  Rooted<JSObject*> options(cx);
+  if (args.hasDefined(1)) {
+    options = RequireObjectArg(cx, "options", "from", args[1]);
+    if (!options) {
+      return false;
+    }
+  }
+
+  // Step 2.
+  if (args.get(0).isObject()) {
+    JSObject* item = &args[0].toObject();
+
+    if (auto* yearMonth = item->maybeUnwrapIf<PlainYearMonthObject>()) {
+      auto date = ToPlainDate(yearMonth);
+
+      Rooted<JSObject*> calendar(cx, yearMonth->calendar());
+      if (!cx->compartment()->wrap(cx, &calendar)) {
+        return false;
+      }
+
+      if (options) {
+        // Step 2.a.
+        TemporalOverflow ignored;
+        if (!ToTemporalOverflow(cx, options, &ignored)) {
+          return false;
+        }
+      }
+
+      // Step 2.b.
+      auto* obj = CreateTemporalYearMonth(cx, date, calendar);
+      if (!obj) {
+        return false;
+      }
+
+      args.rval().setObject(*obj);
+      return true;
+    }
+  }
+
+  // Step 3.
+  auto obj = ToTemporalYearMonth(cx, args.get(0), options);
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
   return true;
 }
 
@@ -492,6 +641,7 @@ const JSClass PlainYearMonthObject::class_ = {
 const JSClass& PlainYearMonthObject::protoClass_ = PlainObject::class_;
 
 static const JSFunctionSpec PlainYearMonth_methods[] = {
+    JS_FN("from", PlainYearMonth_from, 1, 0),
     JS_FS_END,
 };
 
