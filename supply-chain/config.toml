@@ -104,6 +104,10 @@ notes = "This is a first-party crate which is also published to crates.io. We ce
 dependency-criteria = { rustc_version = "safe-to-run" }
 notes = "The rustc_version dependency is only used in the build script, and does not generate any runtime code"
 
+[policy.mozilla-central-workspace-hack]
+criteria = "safe-to-run"
+notes = "The dependencies from this crate are dependencies of other crates that will get the right criteria through them, but using safe-to-deploy for this one would be too broad."
+
 [policy.mozprofile]
 audit-as-crates-io = false
 notes = "This is a first-party crate which is also published to crates.io. We certify audits for this crate as part of the documented release process, but that step happens after the version bump lands on central so we don't enforce it here."
