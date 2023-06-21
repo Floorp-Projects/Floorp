@@ -73,6 +73,8 @@ inline Duration ToDuration(const DurationObject* duration) {
   };
 }
 
+enum class TemporalUnit;
+
 /**
  * DurationSign ( years, months, weeks, days, hours, minutes, seconds,
  * milliseconds, microseconds, nanoseconds )
@@ -115,6 +117,20 @@ bool ToTemporalDuration(JSContext* cx, JS::Handle<JS::Value> item,
 bool ToTemporalDurationRecord(JSContext* cx,
                               JS::Handle<JS::Value> temporalDurationLike,
                               Duration* result);
+
+/**
+ * BalanceDuration ( days, hours, minutes, seconds, milliseconds, microseconds,
+ * nanoseconds, largestUnit [ , relativeTo ] )
+ */
+bool BalanceDuration(JSContext* cx, const Duration& duration,
+                     TemporalUnit largestUnit, TimeDuration* result);
+
+/**
+ * BalanceDuration ( days, hours, minutes, seconds, milliseconds, microseconds,
+ * nanoseconds, largestUnit [ , relativeTo ] )
+ */
+bool BalanceDuration(JSContext* cx, const Instant& nanoseconds,
+                     TemporalUnit largestUnit, TimeDuration* result);
 
 } /* namespace js::temporal */
 
