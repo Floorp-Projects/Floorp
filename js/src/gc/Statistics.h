@@ -92,6 +92,8 @@ struct ZoneGCStats {
   /* Total number of compartments swept by this GC. */
   int sweptCompartmentCount = 0;
 
+  int realmCount = 0;
+
   ZoneGCStats() = default;
 };
 
@@ -103,16 +105,13 @@ struct Trigger {
 #define FOR_EACH_GC_PROFILE_TIME(_)                                 \
   _(Total, "total", PhaseKind::NONE)                                \
   _(Background, "bgwrk", PhaseKind::NONE)                           \
-  _(BeginCallback, "bgnCB", PhaseKind::GC_BEGIN)                    \
   _(MinorForMajor, "evct4m", PhaseKind::EVICT_NURSERY_FOR_MAJOR_GC) \
   _(WaitBgThread, "waitBG", PhaseKind::WAIT_BACKGROUND_THREAD)      \
   _(Prepare, "prep", PhaseKind::PREPARE)                            \
   _(Mark, "mark", PhaseKind::MARK)                                  \
   _(Sweep, "sweep", PhaseKind::SWEEP)                               \
   _(Compact, "cmpct", PhaseKind::COMPACT)                           \
-  _(EndCallback, "endCB", PhaseKind::GC_END)                        \
-  _(MinorGC, "minor", PhaseKind::MINOR_GC)                          \
-  _(EvictNursery, "evict", PhaseKind::EVICT_NURSERY)
+  _(Decommit, "dcmmt", PhaseKind::DECOMMIT)
 
 static const char* const MajorGCProfilePrefix = "MajorGC:";
 static const char* const MinorGCProfilePrefix = "MinorGC:";

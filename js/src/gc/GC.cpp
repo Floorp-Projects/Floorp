@@ -4203,6 +4203,9 @@ gcstats::ZoneGCStats GCRuntime::scanZonesBeforeGC() {
   for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
     zoneStats.zoneCount++;
     zoneStats.compartmentCount += zone->compartments().length();
+    for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
+      zoneStats.realmCount += comp->realms().length();
+    }
     if (zone->isGCScheduled()) {
       zoneStats.collectedZoneCount++;
       zoneStats.collectedCompartmentCount += zone->compartments().length();
