@@ -231,7 +231,6 @@ class Canonical {
     already_AddRefed<nsIRunnable> MakeNotifier(AbstractMirror<T>* aMirror) {
       return NewRunnableMethod<T>("AbstractMirror::UpdateValue", aMirror,
                                   &AbstractMirror<T>::UpdateValue, mValue);
-      ;
     }
 
     T mValue;
@@ -312,7 +311,7 @@ class Mirror {
       return mValue;
     }
 
-    virtual void UpdateValue(const T& aNewValue) override {
+    void UpdateValue(const T& aNewValue) override {
       MOZ_ASSERT(OwnerThread()->IsCurrentThreadIn());
       if (mValue != aNewValue) {
         mValue = aNewValue;
@@ -320,7 +319,7 @@ class Mirror {
       }
     }
 
-    virtual void NotifyDisconnected() override {
+    void NotifyDisconnected() override {
       MIRROR_LOG("%s [%p] Notifed of disconnection from %p", mName, this,
                  mCanonical.get());
       MOZ_ASSERT(OwnerThread()->IsCurrentThreadIn());
@@ -344,7 +343,6 @@ class Mirror {
       mCanonical = aCanonical;
     }
 
-   public:
     void DisconnectIfConnected() {
       MOZ_ASSERT(OwnerThread()->IsCurrentThreadIn());
       if (!IsConnected()) {
