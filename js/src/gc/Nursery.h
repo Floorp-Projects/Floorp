@@ -562,10 +562,19 @@ class alignas(TypicalCacheLineSize) Nursery {
   void updateAllocFlagsForZone(JS::Zone* zone);
   void discardCodeAndSetJitFlagsForZone(JS::Zone* zone);
 
-  // Common internal allocator function.
   void* allocate(size_t size);
 
-  void* moveToNextChunkAndAllocate(size_t size);
+  void* tryAllocateCell(gc::AllocSite* site, size_t size, JS::TraceKind kind);
+
+  // Common internal allocator function. If this fails, call
+  // handleAllocationFailure to see whether it's possible to retry.
+  void* tryAllocate(size_t size);
+
+  // Attempt to handle failure of tryAllocate. If it returns true, allocation
+  // will now succeed.
+  [[nodiscard]] bool handleAllocationFailure();
+
+  [[nodiscard]] bool moveToNextChunk();
 
   struct CollectionResult {
     size_t tenuredBytes;

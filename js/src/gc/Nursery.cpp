@@ -527,6 +527,22 @@ void js::Nursery::leaveZealMode() {
 
 void* js::Nursery::allocateCell(gc::AllocSite* site, size_t size,
                                 JS::TraceKind kind) {
+  void* ptr = tryAllocateCell(site, size, kind);
+  if (MOZ_LIKELY(ptr)) {
+    return ptr;
+  }
+
+  if (!handleAllocationFailure()) {
+    return nullptr;
+  }
+
+  ptr = tryAllocateCell(site, size, kind);
+  MOZ_ASSERT(ptr);
+  return ptr;
+}
+
+inline void* js::Nursery::tryAllocateCell(gc::AllocSite* site, size_t size,
+                                          JS::TraceKind kind) {
   // Ensure there's enough space to replace the contents with a
   // RelocationOverlay.
   MOZ_ASSERT(size >= sizeof(RelocationOverlay));
@@ -535,8 +551,8 @@ void* js::Nursery::allocateCell(gc::AllocSite* site, size_t size,
   MOZ_ASSERT_IF(kind == JS::TraceKind::String, canAllocateStrings());
   MOZ_ASSERT_IF(kind == JS::TraceKind::BigInt, canAllocateBigInts());
 
-  void* ptr = allocate(sizeof(NurseryCellHeader) + size);
-  if (!ptr) {
+  void* ptr = tryAllocate(sizeof(NurseryCellHeader) + size);
+  if (MOZ_UNLIKELY(!ptr)) {
     return nullptr;
   }
 
@@ -550,15 +566,29 @@ void* js::Nursery::allocateCell(gc::AllocSite* site, size_t size,
   uint32_t allocCount = site->incAllocCount();
   if (allocCount == 1) {
     pretenuringNursery.insertIntoAllocatedList(site);
-  } else {
-    MOZ_ASSERT_IF(site->isNormal(), site->isInAllocatedList());
   }
+  MOZ_ASSERT_IF(site->isNormal(), site->isInAllocatedList());
 
   gcprobes::NurseryAlloc(cell, kind);
   return cell;
 }
 
 inline void* js::Nursery::allocate(size_t size) {
+  void* ptr = tryAllocate(size);
+  if (MOZ_LIKELY(ptr)) {
+    return ptr;
+  }
+
+  if (!handleAllocationFailure()) {
+    return nullptr;
+  }
+
+  ptr = tryAllocate(size);
+  MOZ_ASSERT(ptr);
+  return ptr;
+}
+
+inline void* js::Nursery::tryAllocate(size_t size) {
   MOZ_ASSERT(isEnabled());
   MOZ_ASSERT(!JS::RuntimeHeapIsBusy());
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime()));
@@ -568,52 +598,53 @@ inline void* js::Nursery::allocate(size_t size) {
   MOZ_ASSERT(position() % CellAlignBytes == 0);
 
   if (MOZ_UNLIKELY(currentEnd() < position() + size)) {
-    return moveToNextChunkAndAllocate(size);
-  }
-
-  void* thing = (void*)position();
-  position_ = position() + size;
-
-  DebugOnlyPoison(thing, JS_ALLOCATED_NURSERY_PATTERN, size,
-                  MemCheckKind::MakeUndefined);
-
-  return thing;
-}
-
-void* Nursery::moveToNextChunkAndAllocate(size_t size) {
-  if (minorGCRequested()) {
-    // If a minor GC was requested then fail the allocation. The collection is
-    // then run in GCRuntime::tryNewNurseryCell.
     return nullptr;
   }
 
-  MOZ_ASSERT(currentEnd() < position() + size);
+  void* ptr = reinterpret_cast<void*>(position());
+  position_ = position() + size;
 
+  DebugOnlyPoison(ptr, JS_ALLOCATED_NURSERY_PATTERN, size,
+                  MemCheckKind::MakeUndefined);
+
+  return ptr;
+}
+
+MOZ_NEVER_INLINE bool Nursery::handleAllocationFailure() {
+  if (minorGCRequested()) {
+    // If a minor GC was requested then fail the allocation. The collection is
+    // then run in GCRuntime::tryNewNurseryCell.
+    return false;
+  }
+
+  return moveToNextChunk();
+}
+
+bool Nursery::moveToNextChunk() {
   unsigned chunkno = currentChunk_ + 1;
   MOZ_ASSERT(chunkno <= maxChunkCount());
   MOZ_ASSERT(chunkno <= allocatedChunkCount());
   if (chunkno == maxChunkCount()) {
-    return nullptr;
+    return false;
   }
+
   if (chunkno == allocatedChunkCount()) {
     TimeStamp start = TimeStamp::Now();
     {
       AutoLockGCBgAlloc lock(gc);
       if (!allocateNextChunk(chunkno, lock)) {
-        return nullptr;
+        return false;
       }
     }
     timeInChunkAlloc_ += TimeStamp::Now() - start;
     MOZ_ASSERT(chunkno < allocatedChunkCount());
   }
+
   setCurrentChunk(chunkno);
   poisonAndInitCurrentChunk();
-
-  // We know there's enough space to allocate now so we can call allocate()
-  // recursively.
-  MOZ_ASSERT(currentEnd() >= position() + size);
-  return allocate(size);
+  return true;
 }
+
 void* js::Nursery::allocateBuffer(Zone* zone, size_t nbytes) {
   MOZ_ASSERT(nbytes > 0);
 
