@@ -10,6 +10,7 @@
 #include <stdint.h>
 
 #include "builtin/temporal/TemporalTypes.h"
+#include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
 #include "vm/NativeObject.h"
@@ -57,6 +58,14 @@ class ZonedDateTimeObject : public NativeObject {
 inline Instant ToInstant(const ZonedDateTimeObject* zonedDateTime) {
   return {zonedDateTime->seconds(), zonedDateTime->nanoseconds()};
 }
+
+/**
+ * CreateTemporalZonedDateTime ( epochNanoseconds, timeZone, calendar [ ,
+ * newTarget ] )
+ */
+ZonedDateTimeObject* CreateTemporalZonedDateTime(
+    JSContext* cx, const Instant& instant, JS::Handle<JSObject*> timeZone,
+    JS::Handle<JSObject*> calendar);
 
 } /* namespace js::temporal */
 
