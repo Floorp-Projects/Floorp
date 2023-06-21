@@ -112,6 +112,33 @@ PathOps PathOps::TransformedCopy(const Matrix& aTransform) const {
   return newPathOps;
 }
 
+Maybe<Circle> PathOps::AsCircle() const {
+  if (mPathData.empty()) {
+    return Nothing();
+  }
+
+  const uint8_t* nextByte = mPathData.data();
+  const uint8_t* end = nextByte + mPathData.size();
+  const OpType opType = *reinterpret_cast<const OpType*>(nextByte);
+  nextByte += sizeof(OpType);
+  if (opType == OpType::OP_ARC) {
+    NEXT_PARAMS(ArcParams)
+    if (fabs(fabs(params.startAngle - params.endAngle) - 2 * M_PI) < 1e-6) {
+      if (nextByte < end) {
+        const OpType nextOpType = *reinterpret_cast<const OpType*>(nextByte);
+        nextByte += sizeof(OpType);
+        if (nextOpType == OpType::OP_CLOSE) {
+          if (nextByte == end) {
+            return Some(Circle{params.origin, params.radius});
+          }
+        }
+      }
+    }
+  }
+
+  return Nothing();
+}
+
 #undef NEXT_PARAMS
 
 size_t PathOps::NumberOfOps() const {
