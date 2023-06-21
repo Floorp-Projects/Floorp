@@ -52,6 +52,7 @@ const PREF_GETADDONS_BROWSESEARCHRESULTS =
   "extensions.getAddons.search.browseURL";
 const PREF_GETADDONS_DB_SCHEMA = "extensions.getAddons.databaseSchema";
 const PREF_GET_LANGPACKS = "extensions.getAddons.langpacks.url";
+const PREF_GET_BROWSER_MAPPINGS = "extensions.getAddons.browserMappings.url";
 
 const PREF_METADATA_LASTUPDATE = "extensions.getAddons.cache.lastUpdate";
 const PREF_METADATA_UPDATETHRESHOLD_SEC =
@@ -413,8 +414,11 @@ export var AddonRepository = {
    * single return value.  The handling here is specific to the way AMO
    * implements paging (ie a JSON result with a "next" property).
    *
-   * @param {string} startURL
-   *                 URL for the first page of results
+   * @param {string} pref
+   *                 The pref name that contains the API URL to call.
+   * @param {object} params
+   *                 A key-value object that contains the parameters to replace
+   *                 in the API URL.
    * @param {function} handler
    *                   This function will be called once per page of results,
    *                   it should return an array of objects (the type depends
@@ -423,16 +427,10 @@ export var AddonRepository = {
    * @returns Promise{array} An array of all the individual results from
    *                         the API call(s).
    */
-  _fetchPaged(ids, pref, handler) {
-    let startURL = this._formatURLPref(pref, { IDS: ids.join(",") });
-    let results = [];
-    let idCheck = ids.map(id => {
-      if (id.startsWith("rta:")) {
-        return atob(id.split(":")[1]);
-      }
-      return id;
-    });
+  _fetchPaged(pref, params, handler) {
+    const startURL = this._formatURLPref(pref, params);
 
+    let results = [];
     const fetchNextPage = url => {
       return new Promise((resolve, reject) => {
         let request = new lazy.ServiceRequest({ mozAnon: true });
@@ -454,10 +452,7 @@ export var AddonRepository = {
           }
 
           try {
-            let newResults = handler(response.results).filter(e =>
-              idCheck.includes(e.id)
-            );
-            results.push(...newResults);
+            results.push(...handler(response.results));
           } catch (err) {
             reject(err);
           }
@@ -484,9 +479,58 @@ export var AddonRepository = {
    * @returns {array<AddonSearchResult>}
    */
   async getAddonsByIDs(aIDs) {
-    return this._fetchPaged(aIDs, PREF_GETADDONS_BYIDS, results =>
-      results.map(entry => this._parseAddon(entry))
+    const idCheck = aIDs.map(id => {
+      if (id.startsWith("rta:")) {
+        return atob(id.split(":")[1]);
+      }
+      return id;
+    });
+
+    const addons = await this._fetchPaged(
+      PREF_GETADDONS_BYIDS,
+      { IDS: aIDs.join(",") },
+      results =>
+        results
+          .map(entry => this._parseAddon(entry))
+          // Only return the add-ons corresponding the IDs passed to this method.
+          .filter(addon => idCheck.includes(addon.id))
     );
+
+    return addons;
+  },
+
+  /**
+   * Fetch the Firefox add-ons mapped to the list of extension IDs for the
+   * browser ID passed to this method.
+   *
+   * See: https://addons-server.readthedocs.io/en/latest/topics/api/addons.html#browser-mappings
+   *
+   * @param browserID
+   *        The browser ID used to retrieve the mapping of IDs.
+   * @param extensionIDs
+   *        The array of browser (non-Firefox) extension IDs to retrieve
+   *        metadata for.
+   * @returns {array<AddonSearchResult>}
+   */
+  async getMappedAddons(browserID, extensionIDs) {
+    const addonIds = await this._fetchPaged(
+      PREF_GET_BROWSER_MAPPINGS,
+      { BROWSER: browserID },
+      results =>
+        results
+          // Filter out all the entries with an extension ID not in the list
+          // passed to the method.
+          .filter(entry => extensionIDs.includes(entry.extension_id))
+          // Return the add-on ID (stored as `guid` on AMO).
+          .map(entry => entry.addon_guid)
+    );
+
+    if (!addonIds.length) {
+      logger.warn("getMappedAddons: no mapped add-ons found");
+      return [];
+    }
+
+    return this.getAddonsByIDs(addonIds);
   },
 
   /**

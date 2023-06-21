@@ -1,0 +1,25 @@
+{
+  "count": 4,
+  "next": null,
+  "page_count": 1,
+  "page_size": 100,
+  "previous": null,
+  "results": [
+    {
+      "addon_guid": "test1@tests.mozilla.org",
+      "extension_id": "browser-extension-test-1"
+    },
+    {
+      "addon_guid": "test2@tests.mozilla.org",
+      "extension_id": "browser-extension-test-2"
+    },
+    {
+      "addon_guid": "{00000000-1111-2222-3333-444444444444}",
+      "extension_id": "browser-extension-test-3"
+    },
+    {
+      "addon_guid": "test_AddonRepository_1@tests.mozilla.org",
+      "extension_id": "browser-extension-test-4"
+    }
+  ]
+}
