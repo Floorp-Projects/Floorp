@@ -59,6 +59,9 @@ inline Instant ToInstant(const ZonedDateTimeObject* zonedDateTime) {
   return {zonedDateTime->seconds(), zonedDateTime->nanoseconds()};
 }
 
+enum class TemporalDisambiguation;
+enum class TemporalOffset;
+
 /**
  * CreateTemporalZonedDateTime ( epochNanoseconds, timeZone, calendar [ ,
  * newTarget ] )
@@ -87,6 +90,23 @@ struct NanosecondsAndDays final {
 
   void trace(JSTracer* trc);
 };
+
+enum class OffsetBehaviour { Option, Exact, Wall };
+
+enum class MatchBehaviour { MatchExactly, MatchMinutes };
+
+/**
+ * InterpretISODateTimeOffset ( year, month, day, hour, minute, second,
+ * millisecond, microsecond, nanosecond, offsetBehaviour, offsetNanoseconds,
+ * timeZone, disambiguation, offsetOption, matchBehaviour )
+ */
+bool InterpretISODateTimeOffset(JSContext* cx, const PlainDateTime& dateTime,
+                                OffsetBehaviour offsetBehaviour,
+                                int64_t offsetNanoseconds,
+                                JS::Handle<JSObject*> timeZone,
+                                TemporalDisambiguation disambiguation,
+                                TemporalOffset offsetOption,
+                                MatchBehaviour matchBehaviour, Instant* result);
 
 } /* namespace js::temporal */
 

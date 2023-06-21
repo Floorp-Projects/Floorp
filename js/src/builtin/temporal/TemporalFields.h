@@ -158,6 +158,14 @@ PlainObject* PrepareTemporalFields(
 /**
  * PrepareTemporalFields ( fields, fieldNames, requiredFields )
  */
+PlainObject* PrepareTemporalFields(
+    JSContext* cx, JS::Handle<JSObject*> fields,
+    JS::Handle<JS::StackGCVector<JS::PropertyKey>> fieldNames,
+    std::initializer_list<TemporalField> requiredFields);
+
+/**
+ * PrepareTemporalFields ( fields, fieldNames, requiredFields )
+ */
 PlainObject* PreparePartialTemporalFields(
     JSContext* cx, JS::Handle<JSObject*> fields,
     JS::Handle<JS::StackGCVector<JS::PropertyKey>> fieldNames);
@@ -169,6 +177,10 @@ PlainObject* PreparePartialTemporalFields(
     const JS::StackGCVector<JS::PropertyKey>& receiverFieldNames,
     const JS::StackGCVector<JS::PropertyKey>& inputFieldNames,
     JS::StackGCVector<JS::PropertyKey>& mergedFieldNames);
+
+[[nodiscard]] bool AppendSorted(
+    JSContext* cx, JS::StackGCVector<JS::PropertyKey>& fieldNames,
+    std::initializer_list<TemporalField> additionalNames);
 
 [[nodiscard]] bool SortTemporalFieldNames(
     JSContext* cx, JS::StackGCVector<JS::PropertyKey>& fieldNames);
