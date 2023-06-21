@@ -96,6 +96,10 @@ inline PlainDateTime ToPlainDateTime(const PlainDateTimeObject* dateTime) {
   return {ToPlainDate(dateTime), ToPlainTime(dateTime)};
 }
 
+class Precision;
+enum class CalendarOption;
+enum class TemporalUnit;
+
 #ifdef DEBUG
 /**
  * IsValidISODateTime ( year, month, day, hour, minute, second, millisecond,
@@ -141,6 +145,22 @@ Wrapped<PlainDateTimeObject*> ToTemporalDateTime(JSContext* cx,
  */
 bool ToTemporalDateTime(JSContext* cx, JS::Handle<JS::Value> item,
                         PlainDateTime* result);
+
+/**
+ * TemporalDateTimeToString ( isoYear, isoMonth, isoDay, hour, minute, second,
+ * millisecond, microsecond, nanosecond, calendar, precision, showCalendar )
+ */
+JSString* TemporalDateTimeToString(JSContext* cx, const PlainDateTime& dateTime,
+                                   JS::Handle<JSObject*> calendar,
+                                   Precision precision,
+                                   CalendarOption showCalendar);
+
+/**
+ * TemporalDateTimeToString ( isoYear, isoMonth, isoDay, hour, minute, second,
+ * millisecond, microsecond, nanosecond, calendar, precision, showCalendar )
+ */
+JSString* TemporalDateTimeToString(JSContext* cx, const PlainDateTime& dateTime,
+                                   Precision precision);
 
 /**
  * InterpretTemporalDateTimeFields ( calendar, fields, options )

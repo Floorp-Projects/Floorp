@@ -27,7 +27,9 @@
 #include "builtin/temporal/Temporal.h"
 #include "builtin/temporal/TemporalFields.h"
 #include "builtin/temporal/TemporalParser.h"
+#include "builtin/temporal/TemporalRoundingMode.h"
 #include "builtin/temporal/TemporalTypes.h"
+#include "builtin/temporal/TemporalUnit.h"
 #include "builtin/temporal/TimeZone.h"
 #include "builtin/temporal/Wrapped.h"
 #include "builtin/temporal/ZonedDateTime.h"
@@ -659,6 +661,113 @@ static bool ToTemporalDateTime(JSContext* cx, Handle<Value> item,
 }
 
 /**
+ * TemporalDateTimeToString ( isoYear, isoMonth, isoDay, hour, minute, second,
+ * millisecond, microsecond, nanosecond, calendar, precision, showCalendar )
+ */
+static JSString* TemporalDateTimeToString(JSContext* cx,
+                                          const PlainDateTime& dateTime,
+                                          Handle<JSObject*> maybeCalendar,
+                                          Precision precision,
+                                          CalendarOption showCalendar) {
+  MOZ_ASSERT_IF(!maybeCalendar, showCalendar == CalendarOption::Never);
+
+  JSStringBuilder result(cx);
+
+  // Note: This doesn't reserve too much space, because the string builder
+  // already internally reserves space for 64 characters.
+  constexpr size_t datePart = 1 + 6 + 1 + 2 + 1 + 2;          // 13
+  constexpr size_t timePart = 1 + 2 + 1 + 2 + 1 + 2 + 1 + 9;  // 19
+  constexpr size_t calendarPart = 30;
+
+  if (!result.reserve(datePart + timePart + calendarPart)) {
+    return nullptr;
+  }
+
+  // Step 1. (Not applicable in our implementation.)
+
+  // Step 2.
+  int32_t year = dateTime.date.year;
+  if (0 <= year && year <= 9999) {
+    result.infallibleAppend(char('0' + (year / 1000)));
+    result.infallibleAppend(char('0' + (year % 1000) / 100));
+    result.infallibleAppend(char('0' + (year % 100) / 10));
+    result.infallibleAppend(char('0' + (year % 10)));
+  } else {
+    result.infallibleAppend(year < 0 ? '-' : '+');
+
+    year = std::abs(year);
+    result.infallibleAppend(char('0' + (year / 100000)));
+    result.infallibleAppend(char('0' + (year % 100000) / 10000));
+    result.infallibleAppend(char('0' + (year % 10000) / 1000));
+    result.infallibleAppend(char('0' + (year % 1000) / 100));
+    result.infallibleAppend(char('0' + (year % 100) / 10));
+    result.infallibleAppend(char('0' + (year % 10)));
+  }
+
+  // Step 3.
+  int32_t month = dateTime.date.month;
+  result.infallibleAppend('-');
+  result.infallibleAppend(char('0' + (month / 10)));
+  result.infallibleAppend(char('0' + (month % 10)));
+
+  // Step 4.
+  int32_t day = dateTime.date.day;
+  result.infallibleAppend('-');
+  result.infallibleAppend(char('0' + (day / 10)));
+  result.infallibleAppend(char('0' + (day % 10)));
+
+  // Step 5.
+  int32_t hour = dateTime.time.hour;
+  result.infallibleAppend('T');
+  result.infallibleAppend(char('0' + (hour / 10)));
+  result.infallibleAppend(char('0' + (hour % 10)));
+
+  // Step 6.
+  int32_t minute = dateTime.time.minute;
+  result.infallibleAppend(':');
+  result.infallibleAppend(char('0' + (minute / 10)));
+  result.infallibleAppend(char('0' + (minute % 10)));
+
+  // Step 7.
+  FormatSecondsStringPart(result, dateTime.time, precision);
+
+  if (maybeCalendar) {
+    // Step 8.
+    if (!MaybeFormatCalendarAnnotation(cx, result, maybeCalendar,
+                                       showCalendar)) {
+      return nullptr;
+    }
+  }
+
+  // Step 9.
+  return result.finishString();
+}
+
+/**
+ * TemporalDateTimeToString ( isoYear, isoMonth, isoDay, hour, minute, second,
+ * millisecond, microsecond, nanosecond, calendar, precision, showCalendar )
+ */
+JSString* js::temporal::TemporalDateTimeToString(JSContext* cx,
+                                                 const PlainDateTime& dateTime,
+                                                 Handle<JSObject*> calendar,
+                                                 Precision precision,
+                                                 CalendarOption showCalendar) {
+  return ::TemporalDateTimeToString(cx, dateTime, calendar, precision,
+                                    showCalendar);
+}
+
+/**
+ * TemporalDateTimeToString ( isoYear, isoMonth, isoDay, hour, minute, second,
+ * millisecond, microsecond, nanosecond, calendar, precision, showCalendar )
+ */
+JSString* js::temporal::TemporalDateTimeToString(JSContext* cx,
+                                                 const PlainDateTime& dateTime,
+                                                 Precision precision) {
+  return ::TemporalDateTimeToString(cx, dateTime, nullptr, precision,
+                                    CalendarOption::Never);
+}
+
+/**
  * CompareISODateTime ( y1, mon1, d1, h1, min1, s1, ms1, mus1, ns1, y2, mon2,
  * d2, h2, min2, s2, ms2, mus2, ns2 )
  */
@@ -673,6 +782,33 @@ static int32_t CompareISODateTime(const PlainDateTime& one,
 
   // Steps 4.
   return CompareTemporalTime(one.time, two.time);
+}
+
+/**
+ * RoundISODateTime ( year, month, day, hour, minute, second, millisecond,
+ * microsecond, nanosecond, increment, unit, roundingMode [ , dayLength ] )
+ */
+static PlainDateTime RoundISODateTime(const PlainDateTime& dateTime,
+                                      Increment increment, TemporalUnit unit,
+                                      TemporalRoundingMode roundingMode) {
+  const auto& [date, time] = dateTime;
+
+  // Steps 1-2.
+  MOZ_ASSERT(IsValidISODateTime(dateTime));
+  MOZ_ASSERT(ISODateTimeWithinLimits(dateTime));
+
+  // Step 3. (Not applicable in our implementation.)
+
+  // Step 4.
+  auto roundedTime = RoundTime(time, increment, unit, roundingMode);
+  MOZ_ASSERT(0 <= roundedTime.days && roundedTime.days <= 1);
+
+  // Step 5.
+  auto balanceResult =
+      BalanceISODate(date.year, date.month, date.day + roundedTime.days);
+
+  // Step 6.
+  return {balanceResult, roundedTime.time};
 }
 
 /**
@@ -1487,6 +1623,103 @@ static bool PlainDateTime_withCalendar(JSContext* cx, unsigned argc,
 }
 
 /**
+ * Temporal.PlainDateTime.prototype.round ( roundTo )
+ */
+static bool PlainDateTime_round(JSContext* cx, const CallArgs& args) {
+  auto* temporalDateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  auto dateTime = ToPlainDateTime(temporalDateTime);
+  Rooted<JSObject*> calendar(cx, temporalDateTime->calendar());
+
+  // Steps 3-12.
+  auto smallestUnit = TemporalUnit::Auto;
+  auto roundingMode = TemporalRoundingMode::HalfExpand;
+  auto roundingIncrement = Increment{1};
+  if (args.get(0).isString()) {
+    // Step 4. (Not applicable in our implementation.)
+
+    // Step 9.
+    Rooted<JSString*> paramString(cx, args[0].toString());
+    if (!GetTemporalUnit(cx, paramString, TemporalUnitKey::SmallestUnit,
+                         TemporalUnitGroup::DayTime, &smallestUnit)) {
+      return false;
+    }
+
+    MOZ_ASSERT(TemporalUnit::Day <= smallestUnit &&
+               smallestUnit <= TemporalUnit::Nanosecond);
+
+    // Steps 6-8 and 10-12. (Implicit)
+  } else {
+    // Steps 3 and 5.
+    Rooted<JSObject*> roundTo(
+        cx, RequireObjectArg(cx, "roundTo", "round", args.get(0)));
+    if (!roundTo) {
+      return false;
+    }
+
+    // Steps 6-7.
+    if (!ToTemporalRoundingIncrement(cx, roundTo, &roundingIncrement)) {
+      return false;
+    }
+
+    // Step 8.
+    if (!ToTemporalRoundingMode(cx, roundTo, &roundingMode)) {
+      return false;
+    }
+
+    // Step 9.
+    if (!GetTemporalUnit(cx, roundTo, TemporalUnitKey::SmallestUnit,
+                         TemporalUnitGroup::DayTime, &smallestUnit)) {
+      return false;
+    }
+
+    if (smallestUnit == TemporalUnit::Auto) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_TEMPORAL_MISSING_OPTION, "smallestUnit");
+      return false;
+    }
+
+    MOZ_ASSERT(TemporalUnit::Day <= smallestUnit &&
+               smallestUnit <= TemporalUnit::Nanosecond);
+
+    // Steps 10-11.
+    auto maximum = Increment{1};
+    bool inclusive = true;
+    if (smallestUnit > TemporalUnit::Day) {
+      maximum = MaximumTemporalDurationRoundingIncrement(smallestUnit);
+      inclusive = false;
+    }
+
+    // Step 12.
+    if (!ValidateTemporalRoundingIncrement(cx, roundingIncrement, maximum,
+                                           inclusive)) {
+      return false;
+    }
+  }
+
+  // Step 13.
+  auto result =
+      RoundISODateTime(dateTime, roundingIncrement, smallestUnit, roundingMode);
+
+  // Step 14.
+  auto* obj = CreateTemporalDateTime(cx, result, calendar);
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
+/**
+ * Temporal.PlainDateTime.prototype.round ( roundTo )
+ */
+static bool PlainDateTime_round(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_round>(cx, args);
+}
+
+/**
  * Temporal.PlainDateTime.prototype.equals ( other )
  */
 static bool PlainDateTime_equals(JSContext* cx, const CallArgs& args) {
@@ -1520,6 +1753,144 @@ static bool PlainDateTime_equals(JSContext* cx, unsigned argc, Value* vp) {
   // Steps 1-2.
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_equals>(cx, args);
+}
+
+/**
+ * Temporal.PlainDateTime.prototype.toString ( [ options ] )
+ */
+static bool PlainDateTime_toString(JSContext* cx, const CallArgs& args) {
+  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  auto dt = ToPlainDateTime(dateTime);
+  Rooted<JSObject*> calendar(cx, dateTime->calendar());
+
+  SecondsStringPrecision precision = {Precision::Auto(),
+                                      TemporalUnit::Nanosecond, Increment{1}};
+  auto roundingMode = TemporalRoundingMode::Trunc;
+  auto showCalendar = CalendarOption::Auto;
+  if (args.hasDefined(0)) {
+    // Step 3.
+    Rooted<JSObject*> options(
+        cx, RequireObjectArg(cx, "options", "toString", args[0]));
+    if (!options) {
+      return false;
+    }
+
+    // Steps 4-5.
+    if (!ToCalendarNameOption(cx, options, &showCalendar)) {
+      return false;
+    }
+
+    // Step 6.
+    auto digits = Precision::Auto();
+    if (!ToFractionalSecondDigits(cx, options, &digits)) {
+      return false;
+    }
+
+    // Step 7.
+    if (!ToTemporalRoundingMode(cx, options, &roundingMode)) {
+      return false;
+    }
+
+    // Step 8.
+    auto smallestUnit = TemporalUnit::Auto;
+    if (!GetTemporalUnit(cx, options, TemporalUnitKey::SmallestUnit,
+                         TemporalUnitGroup::Time, &smallestUnit)) {
+      return false;
+    }
+
+    // Step 9.
+    if (smallestUnit == TemporalUnit::Hour) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_TEMPORAL_INVALID_UNIT_OPTION, "hour",
+                                "smallestUnit");
+      return false;
+    }
+
+    // Step 10.
+    precision = ToSecondsStringPrecision(smallestUnit, digits);
+  }
+
+  // Step 11.
+  auto result =
+      RoundISODateTime(dt, precision.increment, precision.unit, roundingMode);
+
+  // Step 12.
+  JSString* str = ::TemporalDateTimeToString(cx, result, calendar,
+                                             precision.precision, showCalendar);
+  if (!str) {
+    return false;
+  }
+
+  args.rval().setString(str);
+  return true;
+}
+
+/**
+ * Temporal.PlainDateTime.prototype.toString ( [ options ] )
+ */
+static bool PlainDateTime_toString(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_toString>(cx,
+                                                                       args);
+}
+
+/**
+ * Temporal.PlainDateTime.prototype.toLocaleString ( [ locales [ , options ] ] )
+ */
+static bool PlainDateTime_toLocaleString(JSContext* cx, const CallArgs& args) {
+  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  auto dt = ToPlainDateTime(dateTime);
+  Rooted<JSObject*> calendar(cx, dateTime->calendar());
+
+  // Step 3.
+  JSString* str = ::TemporalDateTimeToString(
+      cx, dt, calendar, Precision::Auto(), CalendarOption::Auto);
+  if (!str) {
+    return false;
+  }
+
+  args.rval().setString(str);
+  return true;
+}
+
+/**
+ * Temporal.PlainDateTime.prototype.toLocaleString ( [ locales [ , options ] ] )
+ */
+static bool PlainDateTime_toLocaleString(JSContext* cx, unsigned argc,
+                                         Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_toLocaleString>(
+      cx, args);
+}
+
+/**
+ * Temporal.PlainDateTime.prototype.toJSON ( )
+ */
+static bool PlainDateTime_toJSON(JSContext* cx, const CallArgs& args) {
+  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  auto dt = ToPlainDateTime(dateTime);
+  Rooted<JSObject*> calendar(cx, dateTime->calendar());
+
+  // Step 3.
+  JSString* str = ::TemporalDateTimeToString(
+      cx, dt, calendar, Precision::Auto(), CalendarOption::Auto);
+  if (!str) {
+    return false;
+  }
+
+  args.rval().setString(str);
+  return true;
+}
+
+/**
+ * Temporal.PlainDateTime.prototype.toJSON ( )
+ */
+static bool PlainDateTime_toJSON(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_toJSON>(cx, args);
 }
 
 /**
@@ -1791,7 +2162,11 @@ static const JSFunctionSpec PlainDateTime_prototype_methods[] = {
     JS_FN("withPlainTime", PlainDateTime_withPlainTime, 0, 0),
     JS_FN("withPlainDate", PlainDateTime_withPlainDate, 1, 0),
     JS_FN("withCalendar", PlainDateTime_withCalendar, 1, 0),
+    JS_FN("round", PlainDateTime_round, 1, 0),
     JS_FN("equals", PlainDateTime_equals, 1, 0),
+    JS_FN("toString", PlainDateTime_toString, 0, 0),
+    JS_FN("toLocaleString", PlainDateTime_toLocaleString, 0, 0),
+    JS_FN("toJSON", PlainDateTime_toJSON, 0, 0),
     JS_FN("valueOf", PlainDateTime_valueOf, 0, 0),
     JS_FN("toPlainDate", PlainDateTime_toPlainDate, 0, 0),
     JS_FN("toPlainYearMonth", PlainDateTime_toPlainYearMonth, 0, 0),
