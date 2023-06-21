@@ -169,10 +169,29 @@ Result<int32_t, ICUError> TimeZone::GetUTCOffsetMs(int64_t aLocalMilliseconds) {
   // time starts or the time zone offset is increased due to a time zone rule
   // change), t_local must be interpreted using the time zone offset before the
   // transition.
-  constexpr UTimeZoneLocalOption skippedTime = UCAL_TZ_LOCAL_FORMER;
-  constexpr UTimeZoneLocalOption repeatedTime = UCAL_TZ_LOCAL_FORMER;
+  constexpr LocalOption skippedTime = LocalOption::Former;
+  constexpr LocalOption repeatedTime = LocalOption::Former;
 
+  return GetUTCOffsetMs(aLocalMilliseconds, skippedTime, repeatedTime);
+}
+
+static UTimeZoneLocalOption ToUTimeZoneLocalOption(
+    TimeZone::LocalOption aOption) {
+  switch (aOption) {
+    case TimeZone::LocalOption::Former:
+      return UTimeZoneLocalOption::UCAL_TZ_LOCAL_FORMER;
+    case TimeZone::LocalOption::Latter:
+      return UTimeZoneLocalOption::UCAL_TZ_LOCAL_LATTER;
+  }
+  MOZ_CRASH("Unexpected TimeZone::LocalOption");
+}
+
+Result<int32_t, ICUError> TimeZone::GetUTCOffsetMs(int64_t aLocalMilliseconds,
+                                                   LocalOption aSkippedTime,
+                                                   LocalOption aRepeatedTime) {
   UDate date = UDate(aLocalMilliseconds);
+  UTimeZoneLocalOption skippedTime = ToUTimeZoneLocalOption(aSkippedTime);
+  UTimeZoneLocalOption repeatedTime = ToUTimeZoneLocalOption(aRepeatedTime);
 
 #if MOZ_INTL_USE_ICU_CPP_TIMEZONE
   int32_t rawOffset, dstOffset;
@@ -205,6 +224,66 @@ Result<int32_t, ICUError> TimeZone::GetUTCOffsetMs(int64_t aLocalMilliseconds) {
   }
 
   return rawOffset + dstOffset;
+#endif
+}
+
+Result<Maybe<int64_t>, ICUError> TimeZone::GetPreviousTransition(
+    int64_t aUTCMilliseconds) {
+  UDate date = UDate(aUTCMilliseconds);
+
+#if MOZ_INTL_USE_ICU_CPP_TIMEZONE
+  // All ICU TimeZone classes derive from BasicTimeZone, so we can safely
+  // perform the static_cast.
+  auto* basicTz = static_cast<icu::BasicTimeZone*>(mTimeZone.get());
+
+  constexpr bool inclusive = false;
+  icu::TimeZoneTransition transition;
+  if (!basicTz->getPreviousTransition(date, inclusive, transition)) {
+    return Maybe<int64_t>();
+  }
+  return Some(int64_t(transition.getTime()));
+#else
+  UDate transition = 0;
+  UErrorCode status = U_ZERO_ERROR;
+  bool found = ucal_getTimeZoneTransitionDate(
+      mCalendar, UCAL_TZ_TRANSITION_PREVIOUS, &transition, &status);
+  if (U_FAILURE(status)) {
+    return Err(ToICUError(status));
+  }
+  if (!found) {
+    return Maybe<int64_t>();
+  }
+  return Some(int64_t(transition));
+#endif
+}
+
+Result<Maybe<int64_t>, ICUError> TimeZone::GetNextTransition(
+    int64_t aUTCMilliseconds) {
+  UDate date = UDate(aUTCMilliseconds);
+
+#if MOZ_INTL_USE_ICU_CPP_TIMEZONE
+  // All ICU TimeZone classes derive from BasicTimeZone, so we can safely
+  // perform the static_cast.
+  auto* basicTz = static_cast<icu::BasicTimeZone*>(mTimeZone.get());
+
+  constexpr bool inclusive = false;
+  icu::TimeZoneTransition transition;
+  if (!basicTz->getNextTransition(date, inclusive, transition)) {
+    return Maybe<int64_t>();
+  }
+  return Some(int64_t(transition.getTime()));
+#else
+  UDate transition = 0;
+  UErrorCode status = U_ZERO_ERROR;
+  bool found = ucal_getTimeZoneTransitionDate(
+      mCalendar, UCAL_TZ_TRANSITION_NEXT, &transition, &status);
+  if (U_FAILURE(status)) {
+    return Err(ToICUError(status));
+  }
+  if (!found) {
+    return Maybe<int64_t>();
+  }
+  return Some(int64_t(transition));
 #endif
 }
 

@@ -93,6 +93,41 @@ class TimeZone final {
    */
   Result<int32_t, ICUError> GetUTCOffsetMs(int64_t aLocalMilliseconds);
 
+  enum class LocalOption {
+    /**
+     * The input is interpreted as local time before a time zone transition.
+     */
+    Former,
+
+    /**
+     * The input is interpreted as local time after a time zone transition.
+     */
+    Latter,
+  };
+
+  /**
+   * Return the UTC offset in milliseconds at the given local time.
+   *
+   * `aSkippedTime` and `aRepeatedTime` select how to interpret skipped and
+   * repeated local times.
+   */
+  Result<int32_t, ICUError> GetUTCOffsetMs(int64_t aLocalMilliseconds,
+                                           LocalOption aSkippedTime,
+                                           LocalOption aRepeatedTime);
+
+  /**
+   * Return the previous time zone transition before the given UTC time. If no
+   * transition was found, return Nothing.
+   */
+  Result<Maybe<int64_t>, ICUError> GetPreviousTransition(
+      int64_t aUTCMilliseconds);
+
+  /**
+   * Return the next time zone transition after the given UTC time. If no
+   * transition was found, return Nothing.
+   */
+  Result<Maybe<int64_t>, ICUError> GetNextTransition(int64_t aUTCMilliseconds);
+
   enum class DaylightSavings : bool { No, Yes };
 
   /**
