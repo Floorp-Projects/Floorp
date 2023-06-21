@@ -20,6 +20,9 @@
 #include "jspubtd.h"
 #include "NamespaceImports.h"
 
+#include "builtin/temporal/TemporalParser.h"
+#include "builtin/temporal/TemporalTypes.h"
+#include "builtin/temporal/Wrapped.h"
 #include "gc/Allocator.h"
 #include "gc/AllocKind.h"
 #include "gc/Barrier.h"
@@ -351,6 +354,185 @@ static bool ToIntegerIfIntegral(JSContext* cx, const char* name,
   return true;
 }
 
+/**
+ * ToIntegerIfIntegral ( argument )
+ */
+static bool ToIntegerIfIntegral(JSContext* cx, Handle<PropertyName*> name,
+                                Handle<Value> argument, double* result) {
+  // Step 1.
+  double d;
+  if (!JS::ToNumber(cx, argument, &d)) {
+    return false;
+  }
+
+  // Step 2.
+  if (!js::IsInteger(d)) {
+    if (auto nameStr = js::QuoteString(cx, name)) {
+      ToCStringBuf cbuf;
+      const char* numStr = NumberToCString(&cbuf, d);
+
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_TEMPORAL_DURATION_NOT_INTEGER, numStr,
+                                nameStr.get());
+    }
+    return false;
+  }
+
+  // Step 3.
+  *result = d;
+  return true;
+}
+
+/**
+ * ToTemporalPartialDurationRecord ( temporalDurationLike )
+ */
+static bool ToTemporalPartialDurationRecord(
+    JSContext* cx, Handle<JSObject*> temporalDurationLike, Duration* result) {
+  // Steps 1-3. (Not applicable in our implementation.)
+
+  Rooted<Value> value(cx);
+  bool any = false;
+
+  auto getDurationProperty = [&](Handle<PropertyName*> name, double* num) {
+    if (!GetProperty(cx, temporalDurationLike, temporalDurationLike, name,
+                     &value)) {
+      return false;
+    }
+
+    if (!value.isUndefined()) {
+      any = true;
+
+      if (!ToIntegerIfIntegral(cx, name, value, num)) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  // Steps 4-23.
+  if (!getDurationProperty(cx->names().days, &result->days)) {
+    return false;
+  }
+  if (!getDurationProperty(cx->names().hours, &result->hours)) {
+    return false;
+  }
+  if (!getDurationProperty(cx->names().microseconds, &result->microseconds)) {
+    return false;
+  }
+  if (!getDurationProperty(cx->names().milliseconds, &result->milliseconds)) {
+    return false;
+  }
+  if (!getDurationProperty(cx->names().minutes, &result->minutes)) {
+    return false;
+  }
+  if (!getDurationProperty(cx->names().months, &result->months)) {
+    return false;
+  }
+  if (!getDurationProperty(cx->names().nanoseconds, &result->nanoseconds)) {
+    return false;
+  }
+  if (!getDurationProperty(cx->names().seconds, &result->seconds)) {
+    return false;
+  }
+  if (!getDurationProperty(cx->names().weeks, &result->weeks)) {
+    return false;
+  }
+  if (!getDurationProperty(cx->names().years, &result->years)) {
+    return false;
+  }
+
+  // Step 24.
+  if (!any) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_DURATION_MISSING_UNIT);
+    return false;
+  }
+
+  // Step 25.
+  return true;
+}
+
+/**
+ * ToTemporalDurationRecord ( temporalDurationLike )
+ */
+bool js::temporal::ToTemporalDurationRecord(JSContext* cx,
+                                            Handle<Value> temporalDurationLike,
+                                            Duration* result) {
+  // Step 1.
+  if (!temporalDurationLike.isObject()) {
+    // Step 1.a.
+    Rooted<JSString*> string(cx, JS::ToString(cx, temporalDurationLike));
+    if (!string) {
+      return false;
+    }
+
+    // Step 1.b.
+    return ParseTemporalDurationString(cx, string, result);
+  }
+
+  Rooted<JSObject*> durationLike(cx, &temporalDurationLike.toObject());
+
+  // Step 2.
+  if (auto* duration = durationLike->maybeUnwrapIf<DurationObject>()) {
+    *result = ToDuration(duration);
+    return true;
+  }
+
+  // Step 3.
+  Duration duration = {};
+
+  // Steps 4-14.
+  if (!ToTemporalPartialDurationRecord(cx, durationLike, &duration)) {
+    return false;
+  }
+
+  // Step 15.
+  if (!ThrowIfInvalidDuration(cx, duration)) {
+    return false;
+  }
+
+  // Step 16.
+  *result = duration;
+  return true;
+}
+
+/**
+ * ToTemporalDuration ( item )
+ */
+Wrapped<DurationObject*> js::temporal::ToTemporalDuration(JSContext* cx,
+                                                          Handle<Value> item) {
+  // Step 1.
+  if (item.isObject()) {
+    JSObject* itemObj = &item.toObject();
+    if (itemObj->canUnwrapAs<DurationObject>()) {
+      return itemObj;
+    }
+  }
+
+  // Step 2.
+  Duration result;
+  if (!ToTemporalDurationRecord(cx, item, &result)) {
+    return nullptr;
+  }
+
+  // Step 3.
+  return CreateTemporalDuration(cx, result);
+}
+
+/**
+ * ToTemporalDuration ( item )
+ */
+bool js::temporal::ToTemporalDuration(JSContext* cx, Handle<Value> item,
+                                      Duration* result) {
+  auto obj = ToTemporalDuration(cx, item);
+  if (!obj) {
+    return false;
+  }
+
+  *result = ToDuration(&obj.unwrap());
+  return true;
+}
+
 static Duration AbsoluteDuration(const Duration& duration) {
   return {
       std::abs(duration.years),        std::abs(duration.months),
@@ -453,6 +635,37 @@ static bool DurationConstructor(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   args.rval().setObject(*duration);
+  return true;
+}
+
+/**
+ * Temporal.Duration.from ( item )
+ */
+static bool Duration_from(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  Handle<Value> item = args.get(0);
+
+  // Step 1.
+  if (item.isObject()) {
+    if (auto* duration = item.toObject().maybeUnwrapIf<DurationObject>()) {
+      auto* result = CreateTemporalDuration(cx, ToDuration(duration));
+      if (!result) {
+        return false;
+      }
+
+      args.rval().setObject(*result);
+      return true;
+    }
+  }
+
+  // Step 2.
+  auto result = ToTemporalDuration(cx, item);
+  if (!result) {
+    return false;
+  }
+
+  args.rval().setObject(*result);
   return true;
 }
 
@@ -689,6 +902,46 @@ static bool Duration_blank(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
+ * Temporal.Duration.prototype.with ( temporalDurationLike )
+ *
+ * ToPartialDuration ( temporalDurationLike )
+ */
+static bool Duration_with(JSContext* cx, const CallArgs& args) {
+  auto* durationObj = &args.thisv().toObject().as<DurationObject>();
+
+  // Absent values default to the corresponding values of |this| object.
+  auto duration = ToDuration(durationObj);
+
+  // Steps 3-23.
+  Rooted<JSObject*> temporalDurationLike(
+      cx, RequireObjectArg(cx, "temporalDurationLike", "with", args.get(0)));
+  if (!temporalDurationLike) {
+    return false;
+  }
+  if (!ToTemporalPartialDurationRecord(cx, temporalDurationLike, &duration)) {
+    return false;
+  }
+
+  // Step 24.
+  auto* result = CreateTemporalDuration(cx, duration);
+  if (!result) {
+    return false;
+  }
+
+  args.rval().setObject(*result);
+  return true;
+}
+
+/**
+ * Temporal.Duration.prototype.with ( temporalDurationLike )
+ */
+static bool Duration_with(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsDuration, Duration_with>(cx, args);
+}
+
+/**
  * Temporal.Duration.prototype.negated ( )
  */
 static bool Duration_negated(JSContext* cx, const CallArgs& args) {
@@ -760,10 +1013,12 @@ const JSClass DurationObject::class_ = {
 const JSClass& DurationObject::protoClass_ = PlainObject::class_;
 
 static const JSFunctionSpec Duration_methods[] = {
+    JS_FN("from", Duration_from, 1, 0),
     JS_FS_END,
 };
 
 static const JSFunctionSpec Duration_prototype_methods[] = {
+    JS_FN("with", Duration_with, 1, 0),
     JS_FN("negated", Duration_negated, 0, 0),
     JS_FN("abs", Duration_abs, 0, 0),
     JS_FN("valueOf", Duration_valueOf, 0, 0),

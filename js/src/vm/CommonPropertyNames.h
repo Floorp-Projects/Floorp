@@ -121,6 +121,7 @@
   MACRO_(dayOfWeek, dayOfWeek, "dayOfWeek")                                    \
   MACRO_(dayOfYear, dayOfYear, "dayOfYear")                                    \
   MACRO_(dayPeriod, dayPeriod, "dayPeriod")                                    \
+  MACRO_(days, days, "days")                                                   \
   MACRO_(daysInMonth, daysInMonth, "daysInMonth")                              \
   MACRO_(daysInWeek, daysInWeek, "daysInWeek")                                 \
   MACRO_(daysInYear, daysInYear, "daysInYear")                                 \
@@ -262,6 +263,7 @@
   MACRO_(hour, hour, "hour")                                                   \
   MACRO_(hour12, hour12, "hour12")                                             \
   MACRO_(hourCycle, hourCycle, "hourCycle")                                    \
+  MACRO_(hours, hours, "hours")                                                \
   MACRO2(if, if_, "if")                                                        \
   MACRO_(ignoreCase, ignoreCase, "ignoreCase")                                 \
   MACRO_(ignorePunctuation, ignorePunctuation, "ignorePunctuation")            \
@@ -359,7 +361,9 @@
   IF_DECORATORS(MACRO_(method, method, "method"))                              \
   MACRO_(meta, meta, "meta")                                                   \
   MACRO_(microsecond, microsecond, "microsecond")                              \
+  MACRO_(microseconds, microseconds, "microseconds")                           \
   MACRO_(millisecond, millisecond, "millisecond")                              \
+  MACRO_(milliseconds, milliseconds, "milliseconds")                           \
   MACRO_(minColumn, minColumn, "minColumn")                                    \
   MACRO_(minDays, minDays, "minDays")                                          \
   MACRO_(minimum, minimum, "minimum")                                          \
@@ -372,6 +376,7 @@
   MACRO_(minOffset, minOffset, "minOffset")                                    \
   MACRO_(minusSign, minusSign, "minusSign")                                    \
   MACRO_(minute, minute, "minute")                                             \
+  MACRO_(minutes, minutes, "minutes")                                          \
   MACRO_(missingArguments, missingArguments, "missingArguments")               \
   MACRO_(mode, mode, "mode")                                                   \
   MACRO_(module, module, "module")                                             \
@@ -381,6 +386,7 @@
   MACRO_(month, month, "month")                                                \
   MACRO_(monthCode, monthCode, "monthCode")                                    \
   MACRO_(monthDayFromFields, monthDayFromFields, "monthDayFromFields")         \
+  MACRO_(months, months, "months")                                             \
   MACRO_(monthsInYear, monthsInYear, "monthsInYear")                           \
   MACRO_(multiline, multiline, "multiline")                                    \
   MACRO_(mutable, mutable_, "mutable")                                         \
@@ -388,6 +394,7 @@
   MACRO_(nan, nan, "nan")                                                      \
   MACRO_(NaN, NaN, "NaN")                                                      \
   MACRO_(nanosecond, nanosecond, "nanosecond")                                 \
+  MACRO_(nanoseconds, nanoseconds, "nanoseconds")                              \
   MACRO_(NegativeInfinity, NegativeInfinity, "-Infinity")                      \
   MACRO_(new, new_, "new")                                                     \
   MACRO_(next, next, "next")                                                   \
@@ -483,6 +490,7 @@
   MACRO_(script, script, "script")                                             \
   MACRO_(scripts, scripts, "scripts")                                          \
   MACRO_(second, second, "second")                                             \
+  MACRO_(seconds, seconds, "seconds")                                          \
   MACRO_(selfHosted, selfHosted, "self-hosted")                                \
   MACRO_(sensitivity, sensitivity, "sensitivity")                              \
   MACRO_(set, set, "set")                                                      \
@@ -606,6 +614,7 @@
   MACRO_(weekday, weekday, "weekday")                                          \
   MACRO_(weekend, weekend, "weekend")                                          \
   MACRO_(weekOfYear, weekOfYear, "weekOfYear")                                 \
+  MACRO_(weeks, weeks, "weeks")                                                \
   MACRO_(while, while_, "while")                                               \
   MACRO_(with, with, "with")                                                   \
   MACRO_(toReversed, toReversed, "toReversed")                                 \
@@ -617,6 +626,7 @@
   MACRO_(yearMonthFromFields, yearMonthFromFields, "yearMonthFromFields")      \
   MACRO_(yearName, yearName, "yearName")                                       \
   MACRO_(yearOfWeek, yearOfWeek, "yearOfWeek")                                 \
+  MACRO_(years, years, "years")                                                \
   MACRO_(yield, yield, "yield")                                                \
   MACRO_(zero, zero, "zero")                                                   \
   /* Type names must be contiguous and ordered; see js::TypeName. */           \

@@ -10,6 +10,8 @@
 #include <stdint.h>
 
 #include "builtin/temporal/TemporalTypes.h"
+#include "builtin/temporal/Wrapped.h"
+#include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
 #include "vm/NativeObject.h"
@@ -94,6 +96,25 @@ bool ThrowIfInvalidDuration(JSContext* cx, const Duration& duration);
  * milliseconds, microseconds, nanoseconds [ , newTarget ] )
  */
 DurationObject* CreateTemporalDuration(JSContext* cx, const Duration& duration);
+
+/**
+ * ToTemporalDuration ( item )
+ */
+Wrapped<DurationObject*> ToTemporalDuration(JSContext* cx,
+                                            JS::Handle<JS::Value> item);
+
+/**
+ * ToTemporalDuration ( item )
+ */
+bool ToTemporalDuration(JSContext* cx, JS::Handle<JS::Value> item,
+                        Duration* result);
+
+/**
+ * ToTemporalDurationRecord ( temporalDurationLike )
+ */
+bool ToTemporalDurationRecord(JSContext* cx,
+                              JS::Handle<JS::Value> temporalDurationLike,
+                              Duration* result);
 
 } /* namespace js::temporal */
 

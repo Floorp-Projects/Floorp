@@ -303,6 +303,44 @@ static bool ParseISODateTime(JSContext* cx, const ZonedDateTimeString& parsed,
   return true;
 }
 
+/**
+ * Struct for the parsed duration components.
+ */
+struct TemporalDurationString final {
+  // A non-negative integer or +Infinity.
+  double years = 0;
+
+  // A non-negative integer or +Infinity.
+  double months = 0;
+
+  // A non-negative integer or +Infinity.
+  double weeks = 0;
+
+  // A non-negative integer or +Infinity.
+  double days = 0;
+
+  // A non-negative integer or +Infinity.
+  double hours = 0;
+
+  // A non-negative integer or +Infinity.
+  double minutes = 0;
+
+  // A non-negative integer or +Infinity.
+  double seconds = 0;
+
+  // An integer in the range [0, 999'999].
+  int32_t hoursFraction = 0;
+
+  // An integer in the range [0, 999'999].
+  int32_t minutesFraction = 0;
+
+  // An integer in the range [0, 999'999].
+  int32_t secondsFraction = 0;
+
+  // ±1 when an offset is present, otherwise 0.
+  int32_t sign = 0;
+};
+
 class ParserError final {
   JSErrNum error_ = JSMSG_NOT_AN_ERROR;
 
@@ -425,6 +463,12 @@ class StringReader final {
 template <typename CharT>
 class TemporalParser final {
   StringReader<CharT> reader_;
+
+  /**
+   * Read an unlimited amount of decimal digits, returning `Nothing` if no
+   * digits were read.
+   */
+  mozilla::Maybe<double> digits(JSContext* cx);
 
   /**
    * Read exactly `length` digits, returning `Nothing` on failure.
@@ -591,6 +635,30 @@ class TemporalParser final {
 
   bool decimalSeparator() { return oneOf({'.', ','}); }
 
+  // DaysDesignator : one of
+  //   D d
+  bool daysDesignator() { return oneOf({'D', 'd'}); }
+
+  // HoursDesignator : one of
+  //   H h
+  bool hoursDesignator() { return oneOf({'H', 'h'}); }
+
+  // MinutesDesignator : one of
+  //   M m
+  bool minutesDesignator() { return oneOf({'M', 'm'}); }
+
+  // MonthsDesignator : one of
+  //   M m
+  bool monthsDesignator() { return oneOf({'M', 'm'}); }
+
+  // DurationDesignator : one of
+  //   P p
+  bool durationDesignator() { return oneOf({'P', 'p'}); }
+
+  // SecondsDesignator : one of
+  //   S s
+  bool secondsDesignator() { return oneOf({'S', 's'}); }
+
   // DateTimeSeparator :
   //   <SP>
   //   T
@@ -602,6 +670,14 @@ class TemporalParser final {
   bool hasTimeDesignator() const { return hasOneOf({'T', 't'}); }
 
   bool timeDesignator() { return oneOf({'T', 't'}); }
+
+  // WeeksDesignator : one of
+  //   W w
+  bool weeksDesignator() { return oneOf({'W', 'w'}); }
+
+  // YearsDesignator : one of
+  //   Y y
+  bool yearsDesignator() { return oneOf({'Y', 'y'}); }
 
   // UTCDesignator : one of
   //   Z z
@@ -793,6 +869,9 @@ class TemporalParser final {
   parseTemporalTimeZoneString();
 
   mozilla::Result<TimeZoneOffset, ParserError> parseTimeZoneOffsetString();
+
+  mozilla::Result<TemporalDurationString, ParserError>
+  parseTemporalDurationString(JSContext* cx);
 
   mozilla::Result<ZonedDateTimeString, ParserError>
   parseTemporalCalendarString();
@@ -1224,6 +1303,25 @@ bool TemporalParser<CharT>::timeZoneIANANameComponent() {
 }
 
 template <typename CharT>
+mozilla::Maybe<double> TemporalParser<CharT>::digits(JSContext* cx) {
+  auto span = reader_.string().Subspan(reader_.index());
+
+  // GetPrefixInteger can't fail when integer separator handling is disabled.
+  const CharT* endp = nullptr;
+  double num;
+  MOZ_ALWAYS_TRUE(GetPrefixInteger(span.data(), span.data() + span.size(), 10,
+                                   IntegerSeparatorHandling::None, &endp,
+                                   &num));
+
+  size_t len = endp - span.data();
+  if (len == 0) {
+    return mozilla::Nothing();
+  }
+  reader_.advance(len);
+  return mozilla::Some(num);
+}
+
+template <typename CharT>
 mozilla::Result<ZonedDateTimeString, ParserError>
 TemporalParser<CharT>::parseTemporalInstantString() {
   // Initialize all fields to zero.
@@ -1553,6 +1651,388 @@ bool js::temporal::ParseTimeZoneOffsetString(JSContext* cx,
 
   // Steps 3-13.
   *result = ParseTimeZoneOffsetString(parseResult.unwrap());
+  return true;
+}
+
+template <typename CharT>
+mozilla::Result<TemporalDurationString, ParserError>
+TemporalParser<CharT>::parseTemporalDurationString(JSContext* cx) {
+  // Initialize all fields to zero.
+  TemporalDurationString result = {};
+
+  // TemporalDurationString :
+  //   Duration
+  //
+  // Duration :
+  //   Sign? DurationDesignator DurationDate
+  //   Sign? DurationDesignator DurationTime
+
+  if (hasSign()) {
+    result.sign = sign();
+  }
+
+  if (!durationDesignator()) {
+    return mozilla::Err(JSMSG_TEMPORAL_PARSER_MISSING_DURATION_DESIGNATOR);
+  }
+
+  // DurationDate :
+  //   DurationYearsPart DurationTime?
+  //   DurationMonthsPart DurationTime?
+  //   DurationWeeksPart DurationTime?
+  //   DurationDaysPart DurationTime?
+
+  do {
+    double num;
+    if (hasTimeDesignator()) {
+      break;
+    }
+    if (auto d = digits(cx); !d) {
+      return mozilla::Err(JSMSG_TEMPORAL_PARSER_MISSING_DURATION_DIGITS);
+    } else {
+      num = *d;
+    }
+
+    // DurationYearsPart :
+    //   DurationYears YearsDesignator DurationMonthsPart
+    //   DurationYears YearsDesignator DurationWeeksPart
+    //   DurationYears YearsDesignator DurationDaysPart?
+    //
+    // DurationYears :
+    //   DecimalDigits[~Sep]
+    if (yearsDesignator()) {
+      result.years = num;
+      if (reader_.atEnd()) {
+        return result;
+      }
+      if (hasTimeDesignator()) {
+        break;
+      }
+      if (auto d = digits(cx); !d) {
+        return mozilla::Err(JSMSG_TEMPORAL_PARSER_MISSING_DURATION_DIGITS);
+      } else {
+        num = *d;
+      }
+    }
+
+    // DurationMonthsPart :
+    //   DurationMonths MonthsDesignator DurationWeeksPart
+    //   DurationMonths MonthsDesignator DurationDaysPart?
+    //
+    // DurationMonths :
+    //   DecimalDigits[~Sep]
+    if (monthsDesignator()) {
+      result.months = num;
+      if (reader_.atEnd()) {
+        return result;
+      }
+      if (hasTimeDesignator()) {
+        break;
+      }
+      if (auto d = digits(cx); !d) {
+        return mozilla::Err(JSMSG_TEMPORAL_PARSER_MISSING_DURATION_DIGITS);
+      } else {
+        num = *d;
+      }
+    }
+
+    // DurationWeeksPart :
+    //   DurationWeeks WeeksDesignator DurationDaysPart?
+    //
+    // DurationWeeks :
+    //   DecimalDigits[~Sep]
+    if (weeksDesignator()) {
+      result.weeks = num;
+      if (reader_.atEnd()) {
+        return result;
+      }
+      if (hasTimeDesignator()) {
+        break;
+      }
+      if (auto d = digits(cx); !d) {
+        return mozilla::Err(JSMSG_TEMPORAL_PARSER_MISSING_DURATION_DIGITS);
+      } else {
+        num = *d;
+      }
+    }
+
+    // DurationDaysPart :
+    //   DurationDays DaysDesignator
+    //
+    // DurationDays :
+    //   DecimalDigits[~Sep]
+    if (daysDesignator()) {
+      result.days = num;
+      if (reader_.atEnd()) {
+        return result;
+      }
+      if (hasTimeDesignator()) {
+        break;
+      }
+    }
+
+    return mozilla::Err(JSMSG_TEMPORAL_PARSER_GARBAGE_AFTER_INPUT);
+  } while (false);
+
+  // DurationTime :
+  //   DurationTimeDesignator DurationHoursPart
+  //   DurationTimeDesignator DurationMinutesPart
+  //   DurationTimeDesignator DurationSecondsPart
+  if (!timeDesignator()) {
+    return mozilla::Err(JSMSG_TEMPORAL_PARSER_MISSING_TIME_DESIGNATOR);
+  }
+
+  // FIXME: spec issue - can the grammar be rewritten this way?
+  // https://github.com/tc39/proposal-temporal/issues/2282
+  //
+  // clang-format off
+  //
+  // DurationHoursPart :
+  //   DurationWholeHours HoursDesignator DurationMinutesPart
+  //   DurationWholeHours HoursDesignator DurationSecondsPart?
+  //   DurationWholeHours DurationHoursFraction HoursDesignator
+  //
+  // DurationMinutesPart :
+  //   DurationWholeMinutes MinutesDesignator DurationSecondsPart?
+  //   DurationWholeMinutes DurationMinutesFraction MinutesDesignator
+  //
+  // DurationSecondsPart :
+  //   DurationWholeSeconds DurationSecondsFraction? SecondsDesignator
+  //
+  // clang-format on
+  //
+  // This avoids having to disallow minutes/seconds after fractional hours.
+
+  double num;
+  mozilla::Maybe<int32_t> frac;
+  auto digitsAndFraction = [&]() {
+    auto d = digits(cx);
+    if (!d) {
+      return false;
+    }
+    num = *d;
+    frac = fraction();
+    return true;
+  };
+
+  if (!digitsAndFraction()) {
+    return mozilla::Err(JSMSG_TEMPORAL_PARSER_MISSING_DURATION_DIGITS);
+  }
+
+  // clang-format off
+  //
+  // DurationHoursPart :
+  //  DurationWholeHours DurationHoursFraction? HoursDesignator DurationMinutesPart
+  //  DurationWholeHours DurationHoursFraction? HoursDesignator DurationSecondsPart?
+  //
+  // DurationWholeHours :
+  //   DecimalDigits[~Sep]
+  //
+  // DurationHoursFraction :
+  //   TimeFraction
+  //
+  // TimeFraction :
+  //   Fraction
+  //
+  // clang-format on
+  bool hasHoursFraction = false;
+  if (hoursDesignator()) {
+    hasHoursFraction = bool(frac);
+    result.hours = num;
+    result.hoursFraction = frac.valueOr(0);
+    if (reader_.atEnd()) {
+      return result;
+    }
+    if (!digitsAndFraction()) {
+      return mozilla::Err(JSMSG_TEMPORAL_PARSER_MISSING_DURATION_DIGITS);
+    }
+  }
+
+  // clang-format off
+  //
+  // DurationMinutesPart :
+  //   DurationWholeMinutes DurationMinutesFraction? MinutesDesignator DurationSecondsPart?
+  //
+  // DurationWholeMinutes :
+  //   DecimalDigits[~Sep]
+  //
+  // DurationMinutesFraction :
+  //   TimeFraction
+  //
+  // TimeFraction :
+  //   Fraction
+  //
+  // clang-format on
+  bool hasMinutesFraction = false;
+  if (minutesDesignator()) {
+    if (hasHoursFraction) {
+      return mozilla::Err(JSMSG_TEMPORAL_PARSER_INVALID_DURATION_MINUTES);
+    }
+    hasMinutesFraction = bool(frac);
+    result.minutes = num;
+    result.minutesFraction = frac.valueOr(0);
+    if (reader_.atEnd()) {
+      return result;
+    }
+    if (!digitsAndFraction()) {
+      return mozilla::Err(JSMSG_TEMPORAL_PARSER_MISSING_DURATION_DIGITS);
+    }
+  }
+
+  // DurationSecondsPart :
+  //   DurationWholeSeconds DurationSecondsFraction? SecondsDesignator
+  //
+  // DurationWholeSeconds :
+  //   DecimalDigits[~Sep]
+  //
+  // DurationSecondsFraction :
+  //   TimeFraction
+  //
+  // TimeFraction :
+  //   Fraction
+  if (secondsDesignator()) {
+    if (hasHoursFraction || hasMinutesFraction) {
+      return mozilla::Err(JSMSG_TEMPORAL_PARSER_INVALID_DURATION_SECONDS);
+    }
+    result.seconds = num;
+    result.secondsFraction = frac.valueOr(0);
+    if (reader_.atEnd()) {
+      return result;
+    }
+  }
+
+  return mozilla::Err(JSMSG_TEMPORAL_PARSER_GARBAGE_AFTER_INPUT);
+}
+
+/**
+ * ParseTemporalDurationString ( isoString )
+ */
+template <typename CharT>
+static auto ParseTemporalDurationString(JSContext* cx,
+                                        mozilla::Span<const CharT> str) {
+  TemporalParser<CharT> parser(str);
+  return parser.parseTemporalDurationString(cx);
+}
+
+/**
+ * ParseTemporalDurationString ( isoString )
+ */
+static auto ParseTemporalDurationString(JSContext* cx,
+                                        Handle<JSLinearString*> str) {
+  JS::AutoCheckCannotGC nogc;
+  if (str->hasLatin1Chars()) {
+    return ParseTemporalDurationString<Latin1Char>(cx, str->latin1Range(nogc));
+  }
+  return ParseTemporalDurationString<char16_t>(cx, str->twoByteRange(nogc));
+}
+
+/**
+ * ParseTemporalDurationString ( isoString )
+ */
+bool js::temporal::ParseTemporalDurationString(JSContext* cx,
+                                               Handle<JSString*> str,
+                                               Duration* result) {
+  Rooted<JSLinearString*> linear(cx, str->ensureLinear(cx));
+  if (!linear) {
+    return false;
+  }
+
+  // Steps 1-3.
+  auto parseResult = ::ParseTemporalDurationString(cx, linear);
+  if (parseResult.isErr()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              parseResult.unwrapErr());
+    return false;
+  }
+  TemporalDurationString parsed = parseResult.unwrap();
+
+  // Steps 4-8.
+  double years = parsed.years;
+  double months = parsed.months;
+  double weeks = parsed.weeks;
+  double days = parsed.days;
+  double hours = parsed.hours;
+
+  // Steps 9-17.
+  double minutes, seconds, milliseconds, microseconds, nanoseconds;
+  if (parsed.hoursFraction) {
+    MOZ_ASSERT(parsed.hoursFraction > 0);
+    MOZ_ASSERT(parsed.hoursFraction < 1'000'000'000);
+
+    // Step 9.a. (Not applicable in our implementation.)
+
+    // Steps 9.b-d.
+    int64_t h = int64_t(parsed.hoursFraction) * 60;
+    minutes = h / 1'000'000'000;
+
+    // Steps 13 and 15-17.
+    int64_t min = (h % 1'000'000'000) * 60;
+    seconds = min / 1'000'000'000;
+    milliseconds = (min % 1'000'000'000) / 1'000'000;
+    microseconds = (min % 1'000'000) / 1'000;
+    nanoseconds = (min % 1'000);
+  }
+
+  // Step 11.
+  else if (parsed.minutesFraction) {
+    MOZ_ASSERT(parsed.minutesFraction > 0);
+    MOZ_ASSERT(parsed.minutesFraction < 1'000'000'000);
+
+    // Step 11.a. (Not applicable in our implementation.)
+
+    // Step 10.
+    minutes = parsed.minutes;
+
+    // Steps 11.b-d and 15-17.
+    int64_t min = int64_t(parsed.minutesFraction) * 60;
+    seconds = min / 1'000'000'000;
+    milliseconds = (min % 1'000'000'000) / 1'000'000;
+    microseconds = (min % 1'000'000) / 1'000;
+    nanoseconds = (min % 1'000);
+  }
+
+  // Step 14.
+  else if (parsed.secondsFraction) {
+    MOZ_ASSERT(parsed.secondsFraction > 0);
+    MOZ_ASSERT(parsed.secondsFraction < 1'000'000'000);
+
+    // Step 10.
+    minutes = parsed.minutes;
+
+    // Step 12.
+    seconds = parsed.seconds;
+
+    // Steps 14, 16-17
+    milliseconds = (parsed.secondsFraction / 1'000'000);
+    microseconds = ((parsed.secondsFraction % 1'000'000) / 1'000);
+    nanoseconds = (parsed.secondsFraction % 1'000);
+  } else {
+    // Step 10.
+    minutes = parsed.minutes;
+
+    // Step 12.
+    seconds = parsed.seconds;
+
+    // Steps 15-17
+    milliseconds = 0;
+    microseconds = 0;
+    nanoseconds = 0;
+  }
+
+  // Steps 18-19.
+  int32_t factor = parsed.sign ? parsed.sign : 1;
+  MOZ_ASSERT(factor == -1 || factor == 1);
+
+  // Step 20.
+  *result = {
+      (years * factor) + (+0.0),        (months * factor) + (+0.0),
+      (weeks * factor) + (+0.0),        (days * factor) + (+0.0),
+      (hours * factor) + (+0.0),        (minutes * factor) + (+0.0),
+      (seconds * factor) + (+0.0),      (milliseconds * factor) + (+0.0),
+      (microseconds * factor) + (+0.0), (nanoseconds * factor) + (+0.0),
+  };
+  if (!ThrowIfInvalidDuration(cx, *result)) {
+    return false;
+  }
   return true;
 }
 
