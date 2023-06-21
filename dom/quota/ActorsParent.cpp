@@ -781,6 +781,8 @@ class CollectOriginsHelper final : public Runnable {
   Run() override;
 };
 
+}  // namespace
+
 class OriginOperationBase : public BackgroundThreadObject, public Runnable {
  protected:
   nsresult mResultCode;
@@ -893,6 +895,8 @@ class OriginOperationBase : public BackgroundThreadObject, public Runnable {
   nsresult DirectoryWork();
 };
 
+namespace {
+
 class FinalizeOriginEvictionOp : public OriginOperationBase {
   nsTArray<RefPtr<OriginDirectoryLock>> mLocks;
 
@@ -918,6 +922,8 @@ class FinalizeOriginEvictionOp : public OriginOperationBase {
 
   virtual void UnblockOpen() override;
 };
+
+}  // namespace
 
 class NormalOriginOperationBase
     : public OriginOperationBase,
@@ -973,6 +979,8 @@ class NormalOriginOperationBase
   // Used to send results before unblocking open.
   virtual void SendResults() = 0;
 };
+
+namespace {
 
 class SaveOriginAccessTimeOp : public NormalOriginOperationBase {
   const OriginMetadata mOriginMetadata;
@@ -1779,30 +1787,11 @@ mozilla::Atomic<bool> gShutdown(false);
 // A time stamp that can only be accessed on the main thread.
 TimeStamp gLastOSWake;
 
+// XXX Move to QuotaManager once NormalOriginOperationBase is declared in a
+// separate and includable file.
 using NormalOriginOpArray =
     nsTArray<CheckedUnsafePtr<NormalOriginOperationBase>>;
 StaticAutoPtr<NormalOriginOpArray> gNormalOriginOps;
-
-void RegisterNormalOriginOp(NormalOriginOperationBase& aNormalOriginOp) {
-  AssertIsOnBackgroundThread();
-
-  if (!gNormalOriginOps) {
-    gNormalOriginOps = new NormalOriginOpArray();
-  }
-
-  gNormalOriginOps->AppendElement(&aNormalOriginOp);
-}
-
-void UnregisterNormalOriginOp(NormalOriginOperationBase& aNormalOriginOp) {
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(gNormalOriginOps);
-
-  gNormalOriginOps->RemoveElement(&aNormalOriginOp);
-
-  if (gNormalOriginOps->IsEmpty()) {
-    gNormalOriginOps = nullptr;
-  }
-}
 
 class StorageOperationBase {
  protected:
@@ -2934,6 +2923,29 @@ bool QuotaManager::IsOSMetadata(const nsAString& aFileName) {
 // static
 bool QuotaManager::IsDotFile(const nsAString& aFileName) {
   return aFileName.First() == char16_t('.');
+}
+
+void QuotaManager::RegisterNormalOriginOp(
+    NormalOriginOperationBase& aNormalOriginOp) {
+  AssertIsOnBackgroundThread();
+
+  if (!gNormalOriginOps) {
+    gNormalOriginOps = new NormalOriginOpArray();
+  }
+
+  gNormalOriginOps->AppendElement(&aNormalOriginOp);
+}
+
+void QuotaManager::UnregisterNormalOriginOp(
+    NormalOriginOperationBase& aNormalOriginOp) {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(gNormalOriginOps);
+
+  gNormalOriginOps->RemoveElement(&aNormalOriginOp);
+
+  if (gNormalOriginOps->IsEmpty()) {
+    gNormalOriginOps = nullptr;
+  }
 }
 
 void QuotaManager::RegisterDirectoryLock(DirectoryLockImpl& aLock) {
@@ -7530,6 +7542,7 @@ void NormalOriginOperationBase::Open() {
 
 void NormalOriginOperationBase::UnblockOpen() {
   AssertIsOnOwningThread();
+  MOZ_ASSERT(QuotaManager::Get());
   MOZ_ASSERT(GetState() == State_UnblockingOpen);
 
   SendResults();
@@ -7538,7 +7551,7 @@ void NormalOriginOperationBase::UnblockOpen() {
     mDirectoryLock = nullptr;
   }
 
-  UnregisterNormalOriginOp(*this);
+  QuotaManager::Get()->UnregisterNormalOriginOp(*this);
 
   AdvanceState();
 }
@@ -7997,6 +8010,8 @@ PQuotaUsageRequestParent* Quota::AllocPQuotaUsageRequestParent(
 
   QM_TRY(QuotaManager::EnsureCreated(), nullptr);
 
+  MOZ_ASSERT(QuotaManager::Get());
+
   auto actor = [&]() -> RefPtr<QuotaUsageRequestBase> {
     switch (aParams.type()) {
       case UsageRequestParams::TAllUsageParams:
@@ -8012,7 +8027,7 @@ PQuotaUsageRequestParent* Quota::AllocPQuotaUsageRequestParent(
 
   MOZ_ASSERT(actor);
 
-  RegisterNormalOriginOp(*actor);
+  QuotaManager::Get()->RegisterNormalOriginOp(*actor);
 
   // Transfer ownership to IPDL.
   return actor.forget().take();
@@ -8065,6 +8080,8 @@ PQuotaRequestParent* Quota::AllocPQuotaRequestParent(
   }
 
   QM_TRY(QuotaManager::EnsureCreated(), nullptr);
+
+  MOZ_ASSERT(QuotaManager::Get());
 
   auto actor = [&]() -> RefPtr<QuotaRequestBase> {
     switch (aParams.type()) {
@@ -8130,7 +8147,7 @@ PQuotaRequestParent* Quota::AllocPQuotaRequestParent(
 
   MOZ_ASSERT(actor);
 
-  RegisterNormalOriginOp(*actor);
+  QuotaManager::Get()->RegisterNormalOriginOp(*actor);
 
   // Transfer ownership to IPDL.
   return actor.forget().take();
