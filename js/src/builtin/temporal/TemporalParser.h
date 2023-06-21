@@ -15,6 +15,7 @@ class JSLinearString;
 
 namespace js::temporal {
 
+struct PlainDate;
 struct PlainDateTime;
 
 /**
@@ -41,6 +42,20 @@ bool ParseTimeZoneOffsetString(JSContext* cx, JS::Handle<JSString*> str,
  */
 JSLinearString* ParseTemporalCalendarString(JSContext* cx,
                                             JS::Handle<JSString*> str);
+
+/**
+ * ParseTemporalDateString ( isoString )
+ */
+bool ParseTemporalDateString(JSContext* cx, JS::Handle<JSString*> str,
+                             PlainDate* result,
+                             JS::MutableHandle<JSString*> calendar);
+
+/**
+ * ParseTemporalDateTimeString ( isoString )
+ */
+bool ParseTemporalDateTimeString(JSContext* cx, JS::Handle<JSString*> str,
+                                 PlainDateTime* result,
+                                 JS::MutableHandle<JSString*> calendar);
 
 } /* namespace js::temporal */
 

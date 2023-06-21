@@ -19,6 +19,10 @@
 
 class JS_PUBLIC_API JSTracer;
 
+namespace js {
+class PlainObject;
+}
+
 namespace js::temporal {
 enum class TemporalField {
   Year,
@@ -143,6 +147,13 @@ bool PrepareTemporalFields(JSContext* cx, JS::Handle<JSObject*> fields,
                            std::initializer_list<TemporalField> fieldNames,
                            std::initializer_list<TemporalField> requiredFields,
                            JS::MutableHandle<TemporalFields> result);
+
+/**
+ * PrepareTemporalFields ( fields, fieldNames, requiredFields )
+ */
+PlainObject* PrepareTemporalFields(
+    JSContext* cx, JS::Handle<JSObject*> fields,
+    JS::Handle<JS::StackGCVector<JS::PropertyKey>> fieldNames);
 
 [[nodiscard]] bool SortTemporalFieldNames(
     JSContext* cx, JS::StackGCVector<JS::PropertyKey>& fieldNames);
