@@ -297,7 +297,10 @@ export class MigrationWizardChild extends JSWindowActorChild {
       return;
     }
 
-    await this.sendQuery("Migrate", migrationDetails);
+    extraArgs = await this.sendQuery("Migrate", {
+      migrationDetails,
+      extraArgs,
+    });
     this.#sendTelemetryEvent("migration_finished", extraArgs);
 
     this.#wizardEl.dispatchEvent(

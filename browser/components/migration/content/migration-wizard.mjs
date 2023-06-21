@@ -1008,6 +1008,14 @@ export class MigrationWizard extends HTMLElement {
    * @property {boolean} expandedDetails
    *   True if the user clicked on the <summary> element to expand the resource
    *   type list.
+   * @property {boolean} autoMigration
+   *   True if the migration is occurring automatically, without the user
+   *   having selected any items explicitly from the wizard.
+   * @property {string} [safariPasswordFilePath=null]
+   *   An optional string argument that points to the path of a passwords
+   *   export file from Safari. This file will have password imported from if
+   *   supplied. This argument is ignored if the key is not for the
+   *   Safari browser.
    */
 
   /**
