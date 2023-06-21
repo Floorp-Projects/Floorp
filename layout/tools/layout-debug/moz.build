@@ -10,4 +10,4 @@ XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.ini"]
 
 BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
 
-FINAL_TARGET_FILES.actors += ["LayoutDebugChild.jsm"]
+FINAL_TARGET_FILES.actors += ["LayoutDebugChild.sys.mjs"]

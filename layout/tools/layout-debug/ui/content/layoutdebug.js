@@ -316,7 +316,7 @@ function OnLDBLoad() {
   try {
     ChromeUtils.registerWindowActor("LayoutDebug", {
       child: {
-        moduleURI: "resource://gre/actors/LayoutDebugChild.jsm",
+        esModuleURI: "resource://gre/actors/LayoutDebugChild.sys.mjs",
       },
       allFrames: true,
     });
