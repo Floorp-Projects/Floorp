@@ -55,8 +55,12 @@ jobs:
     opensuse-leap:
         image: opensuse/leap
         pre-commands:
-            - zypper install -y mercurial python39-pip python39-curses gzip
-            - ln -s /usr/bin/pip3.9 /usr/bin/pip3
+            - zypper install -y curl mercurial python311-pip python311-curses gzip
+            # We can't replace /usr/bin/python3 because mercurial uses that, so
+            # we override it via /usr/local/bin.
+            - ln -s /usr/bin/python3.11 /usr/local/bin/python3
+            # Make the shell forget about where it found python3 in the past.
+            - hash -r python3
     opensuse-tumbleweed:
         image: opensuse/tumbleweed
         pre-commands:
