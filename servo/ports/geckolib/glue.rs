@@ -135,7 +135,7 @@ use style::values::animated::{Animate, Procedure, ToAnimatedZero};
 use style::values::computed::easing::ComputedTimingFunction;
 use style::values::computed::effects::Filter;
 use style::values::computed::font::{
-    FontFamily, FontFamilyList, FontStretch, FontStyle, FontWeight, GenericFontFamily,
+    FamilyName, FontFamily, FontFamilyList, FontStretch, FontStyle, FontWeight, GenericFontFamily,
 };
 use style::values::computed::{self, Context, ToComputedValue};
 use style::values::distance::ComputeSquaredDistance;
@@ -7678,6 +7678,11 @@ pub extern "C" fn Servo_FontFamilyList_WithNames(
     *out = FontFamilyList {
         list: style_traits::arc_slice::ArcSlice::from_iter(names.iter().cloned()),
     };
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_FamilyName_Serialize(name: &FamilyName, result: &mut nsACString) {
+    name.to_css(&mut CssWriter::new(result)).unwrap()
 }
 
 #[no_mangle]
