@@ -18,6 +18,7 @@ cfg-if = "1.0"
 http = "0.2.8"
 hyper = { version = "0.14", features = ["full"] }
 tokio = { version = "1", features = ["rt-multi-thread"] }
+mozilla-central-workspace-hack = { version = "0.1", features = ["http3server"], optional = true }
 
 [dependencies.neqo-crypto]
 tag = "v0.6.4"

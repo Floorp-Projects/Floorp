@@ -43,6 +43,7 @@ url = "2.0"
 uuid = { version = "1.0", features = ["v4"] }
 webdriver = { path = "../webdriver", version="0.48.0" }
 zip = { version = "0.6", default-features = false, features = ["deflate"] }
+mozilla-central-workspace-hack = { version = "0.1", features = ["geckodriver"], optional = true }
 
 [dev-dependencies]
 tempfile = "3"

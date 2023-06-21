@@ -10,6 +10,7 @@ byteorder = "1.3"
 pkcs11-bindings = "0.1"
 rsclientcerts = { path = "../rsclientcerts" }
 sha2 = "0.10.2"
+mozilla-central-workspace-hack = { version = "0.1", features = ["ipcclientcerts-static"], optional = true }
 
 [lib]
 crate-type = ["staticlib"]

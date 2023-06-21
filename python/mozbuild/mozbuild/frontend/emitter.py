@@ -507,7 +507,7 @@ class TreeMetadataEmitter(LoggingMixin):
         else:
             return ExternalSharedLibrary(context, name)
 
-    def _parse_cargo_file(self, context):
+    def _parse_and_check_cargo_file(self, context):
         """Parse the Cargo.toml file in context and return a Python object
         representation of it.  Raise a SandboxValidationError if the Cargo.toml
         file does not exist.  Return a tuple of (config, cargo_file)."""
@@ -517,7 +517,38 @@ class TreeMetadataEmitter(LoggingMixin):
                 "No Cargo.toml file found in %s" % cargo_file, context
             )
         with open(cargo_file, "r") as f:
-            return toml.load(f), cargo_file
+            content = toml.load(f)
+
+        crate_name = content.get("package", {}).get("name")
+        if not crate_name:
+            raise SandboxValidationError(
+                f"{cargo_file} doesn't contain a crate name?!?", context
+            )
+
+        hack_name = "mozilla-central-workspace-hack"
+        dep = f'{hack_name} = {{ version = "0.1", features = ["{crate_name}"], optional = true }}'
+        dep_dict = toml.loads(dep)[hack_name]
+        hint = (
+            "\n\nYou may also need to adjust the build/workspace-hack/Cargo.toml"
+            f" file to add the {crate_name} feature."
+        )
+
+        workspace_hack = content.get("dependencies", {}).get(hack_name)
+        if not workspace_hack:
+            raise SandboxValidationError(
+                f"{cargo_file} doesn't contain the workspace hack.\n\n"
+                f"Add the following to dependencies:\n{dep}{hint}",
+                context,
+            )
+
+        if workspace_hack != dep_dict:
+            raise SandboxValidationError(
+                f"{cargo_file} needs an update to its {hack_name} dependency.\n\n"
+                f"Adjust the dependency to:\n{dep}{hint}",
+                context,
+            )
+
+        return content, cargo_file
 
     def _verify_deps(
         self, context, crate_dir, crate_name, dependencies, description="Dependency"
@@ -562,7 +593,7 @@ class TreeMetadataEmitter(LoggingMixin):
         self, context, libname, static_args, is_gkrust=False, cls=RustLibrary
     ):
         # We need to note any Rust library for linking purposes.
-        config, cargo_file = self._parse_cargo_file(context)
+        config, cargo_file = self._parse_and_check_cargo_file(context)
         crate_name = config["package"]["name"]
 
         if crate_name != libname:
@@ -660,7 +691,7 @@ class TreeMetadataEmitter(LoggingMixin):
 
         # Verify Rust program definitions.
         if all_rust_programs:
-            config, cargo_file = self._parse_cargo_file(context)
+            config, cargo_file = self._parse_and_check_cargo_file(context)
             bin_section = config.get("bin", None)
             if not bin_section:
                 raise SandboxValidationError(

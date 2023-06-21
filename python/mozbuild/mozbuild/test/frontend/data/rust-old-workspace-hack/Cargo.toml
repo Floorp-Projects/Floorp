@@ -1,5 +1,5 @@
 [package]
-name = "feature-library"
+name = "random-crate"
 version = "0.1.0"
 authors = [
   "The Mozilla Project Developers",
@@ -15,4 +15,4 @@ panic = "abort"
 panic = "abort"
 
 [dependencies]
-mozilla-central-workspace-hack = { version = "0.1", features = ["feature-library"], optional = true }
+mozilla-central-workspace-hack = { path = "../../../../../../../build/workspace-hack" }

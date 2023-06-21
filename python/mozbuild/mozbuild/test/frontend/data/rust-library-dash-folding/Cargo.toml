@@ -13,3 +13,6 @@ panic = "abort"
 
 [profile.release]
 panic = "abort"
+
+[dependencies]
+mozilla-central-workspace-hack = { version = "0.1", features = ["random-crate"], optional = true }

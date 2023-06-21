@@ -6,6 +6,7 @@ license = "MPL-2.0"
 description = "Testing code for libgkrust"
 
 [dependencies]
+mozilla-central-workspace-hack = { version = "0.1", features = ["gkrust-gtest"], optional = true }
 bench-collections-gtest = { path = "../../../../xpcom/rust/gtest/bench-collections" }
 l10nregistry-ffi-gtest = { path = "../../../../intl/l10n/rust/gtest" }
 moz_task-gtest = { path = "../../../../xpcom/rust/gtest/moz_task" }
