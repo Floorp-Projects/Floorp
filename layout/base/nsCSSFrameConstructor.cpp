@@ -2910,8 +2910,7 @@ nsContainerFrame* nsCSSFrameConstructor::ConstructPageFrame(
                "Page name from prev-in-flow should not have been null");
   }
   RefPtr<ComputedStyle> pageContentPseudoStyle =
-      styleSet->ResolvePageContentStyle(pageName,
-                                        StylePagePseudoClassFlags::NONE);
+      styleSet->ResolvePageContentStyle(pageName);
 
   nsContainerFrame* pageContentFrame = NS_NewPageContentFrame(
       aPresShell, pageContentPseudoStyle, pageName.forget());

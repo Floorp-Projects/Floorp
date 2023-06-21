@@ -35,7 +35,6 @@ enum class StyleRuleChangeKind : uint32_t;
 
 template <typename Integer, typename Number, typename LinearStops>
 struct StyleTimingFunction;
-struct StylePagePseudoClassFlags;
 struct StylePiecewiseLinearFunction;
 using StyleComputedTimingFunction =
     StyleTimingFunction<int32_t, float, StylePiecewiseLinearFunction>;
@@ -255,10 +254,9 @@ class ServoStyleSet {
       PseudoStyleType aType);
 
   // Get a ComputedStyle for a pageContent box with the specified page-name.
-  // A page name that is null or the empty atom and has no pseudo classes gets
-  // the global page style.
+  // A page name that is null or the empty atom gets the global page style.
   already_AddRefed<ComputedStyle> ResolvePageContentStyle(
-      const nsAtom* aPageName, const StylePagePseudoClassFlags& aPseudo);
+      const nsAtom* aPageName);
 
   already_AddRefed<ComputedStyle> ResolveXULTreePseudoStyle(
       dom::Element* aParentElement, nsCSSAnonBoxPseudoStaticAtom* aPseudoTag,
