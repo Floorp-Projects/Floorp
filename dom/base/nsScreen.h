@@ -21,7 +21,7 @@
 class nsDeviceContext;
 
 namespace mozilla {
-enum class RFPTarget : uint32_t;
+enum class RFPTarget : uint64_t;
 }
 
 // Script "screen" object
