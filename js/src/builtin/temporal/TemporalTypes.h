@@ -402,6 +402,33 @@ struct DateDuration final {
   Duration toDuration() { return {years, months, weeks, days}; }
 };
 
+/**
+ * Time duration represents the difference between times. Each duration
+ * component is an integer and all components must have the same sign.
+ */
+struct TimeDuration final {
+  double days = 0;
+  double hours = 0;
+  double minutes = 0;
+  double seconds = 0;
+  double milliseconds = 0;
+  double microseconds = 0;
+  double nanoseconds = 0;
+
+  Duration toDuration() {
+    return {0,
+            0,
+            0,
+            days,
+            hours,
+            minutes,
+            seconds,
+            milliseconds,
+            microseconds,
+            nanoseconds};
+  }
+};
+
 } /* namespace js::temporal */
 
 #endif /* builtin_temporal_TemporalTypes_h */

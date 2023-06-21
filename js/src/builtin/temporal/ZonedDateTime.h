@@ -67,6 +67,62 @@ ZonedDateTimeObject* CreateTemporalZonedDateTime(
     JSContext* cx, const Instant& instant, JS::Handle<JSObject*> timeZone,
     JS::Handle<JSObject*> calendar);
 
+struct NanosecondsAndDays final {
+  JS::BigInt* days = nullptr;
+  int64_t daysInt = 0;
+  Instant nanoseconds;
+  Instant dayLength;
+
+  double daysNumber() const;
+
+  void trace(JSTracer* trc);
+};
+
 } /* namespace js::temporal */
+
+namespace js {
+
+template <typename Wrapper>
+class WrappedPtrOperations<temporal::NanosecondsAndDays, Wrapper> {
+  const auto& object() const {
+    return static_cast<const Wrapper*>(this)->get();
+  }
+
+ public:
+  double daysNumber() const { return object().daysNumber(); }
+
+  JS::Handle<JS::BigInt*> days() const {
+    return JS::Handle<JS::BigInt*>::fromMarkedLocation(&object().days);
+  }
+
+  int64_t daysInt() const { return object().daysInt; }
+
+  temporal::Instant nanoseconds() const { return object().nanoseconds; }
+
+  temporal::Instant dayLength() const { return object().dayLength; }
+};
+
+template <typename Wrapper>
+class MutableWrappedPtrOperations<temporal::NanosecondsAndDays, Wrapper>
+    : public WrappedPtrOperations<temporal::NanosecondsAndDays, Wrapper> {
+  auto& object() { return static_cast<Wrapper*>(this)->get(); }
+
+ public:
+  void initialize(int64_t days, const temporal::Instant& nanoseconds,
+                  const temporal::Instant& dayLength) {
+    object().daysInt = days;
+    object().nanoseconds = nanoseconds;
+    object().dayLength = dayLength;
+  }
+
+  void initialize(JS::BigInt* days, const temporal::Instant& nanoseconds,
+                  const temporal::Instant& dayLength) {
+    object().days = days;
+    object().nanoseconds = nanoseconds;
+    object().dayLength = dayLength;
+  }
+};
+
+} /* namespace js */
 
 #endif /* builtin_temporal_ZonedDateTime_h */

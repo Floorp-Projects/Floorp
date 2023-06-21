@@ -253,6 +253,19 @@ static JSString* TemporalZonedDateTimeToString(
   return result.finishString();
 }
 
+double NanosecondsAndDays::daysNumber() const {
+  if (days) {
+    return BigInt::numberValue(days);
+  }
+  return double(daysInt);
+}
+
+void NanosecondsAndDays::trace(JSTracer* trc) {
+  if (days) {
+    TraceRoot(trc, &days, "NanosecondsAndDays::days");
+  }
+}
+
 /**
  * Temporal.ZonedDateTime ( epochNanoseconds, timeZoneLike [ , calendarLike ] )
  */
