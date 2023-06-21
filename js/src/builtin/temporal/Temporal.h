@@ -260,6 +260,19 @@ enum class TemporalOverflow { Constrain, Reject };
 bool ToTemporalOverflow(JSContext* cx, JS::Handle<JSObject*> options,
                         TemporalOverflow* result);
 
+enum class TimeZoneNameOption { Auto, Never, Critical };
+
+bool ToTimeZoneNameOption(JSContext* cx, JS::Handle<JSObject*> options,
+                          TimeZoneNameOption* result);
+
+enum class ShowOffsetOption { Auto, Never };
+
+/**
+ * ToShowOffsetOption ( normalizedOptions )
+ */
+bool ToShowOffsetOption(JSContext* cx, JS::Handle<JSObject*> options,
+                        ShowOffsetOption* result);
+
 /**
  * RejectObjectWithCalendarOrTimeZone ( object )
  */
