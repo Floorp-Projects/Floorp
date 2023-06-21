@@ -7,6 +7,10 @@
 #include "builtin/temporal/Calendar.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/EnumSet.h"
+#include "mozilla/FloatingPoint.h"
+#include "mozilla/Likely.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Range.h"
 #include "mozilla/RangedPtr.h"
 #include "mozilla/TextUtils.h"
@@ -33,7 +37,10 @@
 #include "builtin/temporal/PlainMonthDay.h"
 #include "builtin/temporal/PlainTime.h"
 #include "builtin/temporal/PlainYearMonth.h"
+#include "builtin/temporal/Temporal.h"
 #include "builtin/temporal/TemporalParser.h"
+#include "builtin/temporal/TemporalTypes.h"
+#include "builtin/temporal/TemporalUnit.h"
 #include "builtin/temporal/TimeZone.h"
 #include "builtin/temporal/ZonedDateTime.h"
 #include "gc/Allocator.h"
@@ -153,6 +160,265 @@ int32_t js::temporal::ISODaysInMonth(double year, int32_t month) {
   return daysInMonth[IsISOLeapYear(year)][month];
 }
 
+/**
+ * 21.4.1.6 Week Day
+ *
+ * Compute the week day from |day| without first expanding |day| into a full
+ * date through |MakeDate(day, 0)|:
+ *
+ *   WeekDay(MakeDate(day, 0))
+ * = WeekDay(day × msPerDay + 0)
+ * = WeekDay(day × msPerDay)
+ * = 𝔽(ℝ(Day(day × msPerDay) + 4𝔽) modulo 7)
+ * = 𝔽(ℝ(𝔽(floor(ℝ((day × msPerDay) / msPerDay))) + 4𝔽) modulo 7)
+ * = 𝔽(ℝ(𝔽(floor(ℝ(day))) + 4𝔽) modulo 7)
+ * = 𝔽(ℝ(𝔽(day) + 4𝔽) modulo 7)
+ */
+static int32_t WeekDay(int32_t day) {
+  int32_t result = (day + 4) % 7;
+  if (result < 0) {
+    result += 7;
+  }
+  return result;
+}
+
+/**
+ * ToISODayOfWeek ( year, month, day )
+ */
+static int32_t ToISODayOfWeek(const PlainDate& date) {
+  MOZ_ASSERT(ISODateTimeWithinLimits(date));
+
+  // Steps 1-3. (Not applicable in our implementation.)
+
+  // TODO: Check if ES MakeDate + WeekDay is efficient enough.
+  //
+  // https://en.wikipedia.org/wiki/Determination_of_the_day_of_the_week#Methods_in_computer_code
+
+  // Step 4.
+  int32_t day = MakeDay(date);
+
+  // Step 5.
+  int32_t weekday = WeekDay(day);
+  return weekday != 0 ? weekday : 7;
+}
+
+static constexpr auto FirstDayOfMonth(int32_t year) {
+  // The following array contains the day of year for the first day of each
+  // month, where index 0 is January, and day 0 is January 1.
+  std::array<int32_t, 13> days = {};
+  for (int32_t month = 1; month <= 12; ++month) {
+    days[month] = days[month - 1] + ::ISODaysInMonth(year, month);
+  }
+  return days;
+}
+
+/**
+ * ToISODayOfYear ( year, month, day )
+ */
+static int32_t ToISODayOfYear(int32_t year, int32_t month, int32_t day) {
+  MOZ_ASSERT(1 <= month && month <= 12);
+
+  // First day of month arrays for non-leap and leap years.
+  constexpr decltype(FirstDayOfMonth(0)) firstDayOfMonth[2] = {
+      FirstDayOfMonth(1), FirstDayOfMonth(0)};
+
+  // Steps 1-3. (Not applicable in our implementation.)
+
+  // Steps 4-5.
+  //
+  // Instead of first computing the date and then using DayWithinYear to map the
+  // date to the day within the year, directly lookup the first day of the month
+  // and then add the additional days.
+  return firstDayOfMonth[IsISOLeapYear(year)][month - 1] + day;
+}
+
+/**
+ * ToISODayOfYear ( year, month, day )
+ */
+int32_t js::temporal::ToISODayOfYear(const PlainDate& date) {
+  MOZ_ASSERT(ISODateTimeWithinLimits(date));
+
+  // Steps 1-5.
+  auto& [year, month, day] = date;
+  return ::ToISODayOfYear(year, month, day);
+}
+
+static int32_t FloorDiv(int32_t dividend, int32_t divisor) {
+  MOZ_ASSERT(divisor > 0);
+
+  int32_t quotient = dividend / divisor;
+  int32_t remainder = dividend % divisor;
+  if (remainder < 0) {
+    quotient -= 1;
+  }
+  return quotient;
+}
+
+/**
+ * 21.4.1.3 Year Number, DayFromYear
+ */
+static int32_t DayFromYear(int32_t year) {
+  return 365 * (year - 1970) + FloorDiv(year - 1969, 4) -
+         FloorDiv(year - 1901, 100) + FloorDiv(year - 1601, 400);
+}
+
+/**
+ * 21.4.1.11 MakeTime ( hour, min, sec, ms )
+ */
+static int64_t MakeTime(const PlainTime& time) {
+  MOZ_ASSERT(IsValidTime(time));
+
+  // Step 1 (Not applicable).
+
+  // Step 2.
+  int64_t h = time.hour;
+
+  // Step 3.
+  int64_t m = time.minute;
+
+  // Step 4.
+  int64_t s = time.second;
+
+  // Step 5.
+  int64_t milli = time.millisecond;
+
+  // Steps 6-7.
+  return h * ToMilliseconds(TemporalUnit::Hour) +
+         m * ToMilliseconds(TemporalUnit::Minute) +
+         s * ToMilliseconds(TemporalUnit::Second) + milli;
+}
+
+/**
+ * 21.4.1.12 MakeDay ( year, month, date )
+ */
+int32_t js::temporal::MakeDay(const PlainDate& date) {
+  MOZ_ASSERT(ISODateTimeWithinLimits(date));
+
+  return DayFromYear(date.year) + ToISODayOfYear(date) - 1;
+}
+
+/**
+ * 21.4.1.13 MakeDate ( day, time )
+ */
+int64_t js::temporal::MakeDate(const PlainDateTime& dateTime) {
+  MOZ_ASSERT(ISODateTimeWithinLimits(dateTime));
+
+  // Step 1 (Not applicable).
+
+  // Steps 2-3.
+  int64_t tv = MakeDay(dateTime.date) * ToMilliseconds(TemporalUnit::Day) +
+               MakeTime(dateTime.time);
+
+  // Step 4.
+  return tv;
+}
+
+/**
+ * 21.4.1.12 MakeDay ( year, month, date )
+ */
+static int32_t MakeDay(int32_t year, int32_t month, int32_t day) {
+  MOZ_ASSERT(1 <= month && month <= 12);
+
+  // FIXME: spec issue - what should happen for invalid years/days?
+  return DayFromYear(year) + ::ToISODayOfYear(year, month, day) - 1;
+}
+
+/**
+ * 21.4.1.13 MakeDate ( day, time )
+ */
+int64_t js::temporal::MakeDate(int32_t year, int32_t month, int32_t day) {
+  // NOTE: This version accepts values outside the valid date-time limits.
+  MOZ_ASSERT(1 <= month && month <= 12);
+
+  // Step 1 (Not applicable).
+
+  // Steps 2-3.
+  int64_t tv = ::MakeDay(year, month, day) * ToMilliseconds(TemporalUnit::Day);
+
+  // Step 4.
+  return tv;
+}
+
+struct YearWeek final {
+  int32_t year = 0;
+  int32_t week = 0;
+};
+
+/**
+ * ToISOWeekOfYear ( year, month, day )
+ */
+static YearWeek ToISOWeekOfYear(const PlainDate& date) {
+  MOZ_ASSERT(ISODateTimeWithinLimits(date));
+
+  auto& [year, month, day] = date;
+
+  // TODO: https://en.wikipedia.org/wiki/Week#The_ISO_week_date_system
+  // TODO: https://en.wikipedia.org/wiki/ISO_week_date#Algorithms
+
+  // Steps 1-3. (Not applicable in our implementation.)
+
+  // Steps 4-5.
+  int32_t doy = ToISODayOfYear(date);
+  int32_t dow = ToISODayOfWeek(date);
+
+  int32_t woy = (10 + doy - dow) / 7;
+  MOZ_ASSERT(0 <= woy && woy <= 53);
+
+  // An ISO year has 53 weeks if the year starts on a Thursday or if it's a
+  // leap year which starts on a Wednesday.
+  auto isLongYear = [](int32_t year) {
+    int32_t startOfYear = ToISODayOfWeek({year, 1, 1});
+    return startOfYear == 4 || (startOfYear == 3 && IsISOLeapYear(year));
+  };
+
+  // Part of last year's last week, which is either week 52 or week 53.
+  if (woy == 0) {
+    return {year - 1, 52 + int32_t(isLongYear(year - 1))};
+  }
+
+  // Part of next year's first week if the current year isn't a long year.
+  if (woy == 53 && !isLongYear(year)) {
+    return {year + 1, 1};
+  }
+
+  return {year, woy};
+}
+
+/**
+ * ISOMonthCode ( month )
+ */
+static JSString* ISOMonthCode(JSContext* cx, int32_t month) {
+  MOZ_ASSERT(1 <= month && month <= 12);
+
+  // Steps 1-2.
+  char monthCode[3] = {'M', char('0' + (month / 10)), char('0' + (month % 10))};
+  return NewStringCopyN<CanGC>(cx, monthCode, std::size(monthCode));
+}
+
+template <typename T, typename... Ts>
+static bool ToPlainDate(JSObject* temporalDateLike, PlainDate* result) {
+  if (auto* obj = temporalDateLike->maybeUnwrapIf<T>()) {
+    *result = ToPlainDate(obj);
+    return true;
+  }
+  if constexpr (sizeof...(Ts) > 0) {
+    return ToPlainDate<Ts...>(temporalDateLike, result);
+  }
+  return false;
+}
+
+template <typename... Ts>
+static bool ToPlainDate(JSContext* cx, Handle<Value> temporalDateLike,
+                        PlainDate* result) {
+  if (temporalDateLike.isObject()) {
+    if (ToPlainDate<Ts...>(&temporalDateLike.toObject(), result)) {
+      return true;
+    }
+  }
+
+  return ToTemporalDate(cx, temporalDateLike, result);
+}
+
 #ifdef DEBUG
 template <typename CharT>
 static bool StringIsAsciiLowerCase(mozilla::Range<CharT> str) {
@@ -168,6 +434,15 @@ static bool StringIsAsciiLowerCase(JSLinearString* str) {
              : StringIsAsciiLowerCase(str->twoByteRange(nogc));
 }
 #endif
+
+static bool IsISOCalendar(JSContext* cx, JSString* id, bool* result) {
+  JSLinearString* linear = id->ensureLinear(cx);
+  if (!linear) {
+    return false;
+  }
+  *result = StringEqualsLiteral(linear, "iso8601");
+  return true;
+}
 
 /**
  * IsBuiltinCalendar ( id )
@@ -435,6 +710,763 @@ JSObject* js::temporal::GetTemporalCalendarWithISODefault(
   return ToTemporalCalendarWithISODefault(cx, calendarValue);
 }
 
+#ifdef DEBUG
+static bool IsDateLike(const Value& value) {
+  if (!value.isObject()) {
+    return false;
+  }
+
+  JSObject* obj = &value.toObject();
+  return obj->canUnwrapAs<PlainDateTimeObject>() ||
+         obj->canUnwrapAs<PlainDateObject>();
+}
+
+static bool IsDateLikeWithYear(const Value& value) {
+  if (!value.isObject()) {
+    return false;
+  }
+
+  JSObject* obj = &value.toObject();
+  return obj->canUnwrapAs<PlainDateTimeObject>() ||
+         obj->canUnwrapAs<PlainDateObject>() ||
+         obj->canUnwrapAs<PlainYearMonthObject>();
+}
+
+static bool IsDateLikeWithMonth(const Value& value) {
+  if (!value.isObject()) {
+    return false;
+  }
+
+  JSObject* obj = &value.toObject();
+  return obj->canUnwrapAs<PlainDateTimeObject>() ||
+         obj->canUnwrapAs<PlainDateObject>() ||
+         obj->canUnwrapAs<PlainYearMonthObject>() ||
+         obj->canUnwrapAs<PlainMonthDayObject>();
+}
+
+static bool IsDateLikeWithDay(const Value& value) {
+  if (!value.isObject()) {
+    return false;
+  }
+
+  JSObject* obj = &value.toObject();
+  return obj->canUnwrapAs<PlainDateTimeObject>() ||
+         obj->canUnwrapAs<PlainDateObject>() ||
+         obj->canUnwrapAs<PlainMonthDayObject>();
+}
+#endif
+
+static bool ToIntegerIfIntegralNumber(JSContext* cx, Handle<Value> value,
+                                      const char* name,
+                                      MutableHandle<Value> result) {
+  if (MOZ_LIKELY(value.isInt32())) {
+    result.set(value);
+    return true;
+  }
+
+  if (value.isDouble()) {
+    double d = value.toDouble();
+    if (js::IsInteger(d)) {
+      result.setNumber(d);
+      return true;
+    }
+
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_INVALID_INTEGER, name);
+    return false;
+  }
+
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
+                            name, "not a number");
+  return false;
+}
+
+static bool ToPositiveIntegerIfIntegralNumber(JSContext* cx,
+                                              Handle<Value> value,
+                                              const char* name,
+                                              MutableHandle<Value> result) {
+  if (!ToIntegerIfIntegralNumber(cx, value, name, result)) {
+    return false;
+  }
+
+  if (result.toNumber() <= 0) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_INVALID_NUMBER, name);
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Temporal.Calendar.prototype.year ( temporalDateLike )
+ */
+static bool BuiltinCalendarYear(JSContext* cx, Handle<Value> temporalDateLike,
+                                MutableHandle<Value> result) {
+  // Steps 1-3. (Not applicable.)
+
+  // Step 4.
+  PlainDate date;
+  if (!ToPlainDate<PlainDateObject, PlainDateTimeObject, PlainYearMonthObject>(
+          cx, temporalDateLike, &date)) {
+    return false;
+  }
+
+  // Steps 5-6.
+  result.setInt32(date.year);
+  return true;
+}
+
+static bool Calendar_year(JSContext* cx, unsigned argc, Value* vp);
+
+/**
+ * CalendarYear ( calendar, dateLike )
+ */
+bool js::temporal::CalendarYear(JSContext* cx, Handle<JSObject*> calendar,
+                                Handle<Value> dateLike,
+                                MutableHandle<Value> result) {
+  MOZ_ASSERT(IsDateLikeWithYear(dateLike));
+
+  // Step 1.
+  Rooted<Value> fn(cx);
+  if (!GetMethodForCall(cx, calendar, cx->names().year, &fn)) {
+    return false;
+  }
+
+  // Fast-path for the default implementation.
+  if (calendar->is<CalendarObject>() && IsNativeFunction(fn, Calendar_year)) {
+    return BuiltinCalendarYear(cx, dateLike, result);
+  }
+
+  if (!Call(cx, fn, calendar, dateLike, result)) {
+    return false;
+  }
+
+  // Steps 2-4.
+  return ToIntegerIfIntegralNumber(cx, result, "year", result);
+}
+
+/**
+ * Temporal.Calendar.prototype.month ( temporalDateLike )
+ */
+static bool BuiltinCalendarMonth(JSContext* cx, Handle<Value> temporalDateLike,
+                                 MutableHandle<Value> result) {
+  // Steps 1-3. (Not applicable.)
+
+  // Step 4.
+  if (temporalDateLike.isObject() &&
+      temporalDateLike.toObject().canUnwrapAs<PlainMonthDayObject>()) {
+    ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_IGNORE_STACK,
+                     temporalDateLike, nullptr, "a PlainMonthDay object");
+    return false;
+  }
+
+  // Step 5.
+  PlainDate date;
+  if (!ToPlainDate<PlainDateObject, PlainDateTimeObject, PlainYearMonthObject>(
+          cx, temporalDateLike, &date)) {
+    return false;
+  }
+
+  // Steps 6-7.
+  result.setInt32(date.month);
+  return true;
+}
+
+static bool Calendar_month(JSContext* cx, unsigned argc, Value* vp);
+
+/**
+ * CalendarMonth ( calendar, dateLike )
+ */
+bool js::temporal::CalendarMonth(JSContext* cx, Handle<JSObject*> calendar,
+                                 Handle<Value> dateLike,
+                                 MutableHandle<Value> result) {
+  MOZ_ASSERT(IsDateLikeWithYear(dateLike));
+
+  // Step 1.
+  Rooted<Value> fn(cx);
+  if (!GetMethodForCall(cx, calendar, cx->names().month, &fn)) {
+    return false;
+  }
+
+  // Fast-path for the default implementation.
+  if (calendar->is<CalendarObject>() && IsNativeFunction(fn, Calendar_month)) {
+    return BuiltinCalendarMonth(cx, dateLike, result);
+  }
+
+  if (!Call(cx, fn, calendar, dateLike, result)) {
+    return false;
+  }
+
+  // Steps 2-5.
+  return ToPositiveIntegerIfIntegralNumber(cx, result, "month", result);
+}
+
+/**
+ * Temporal.Calendar.prototype.monthCode ( temporalDateLike )
+ */
+static bool BuiltinCalendarMonthCode(JSContext* cx,
+                                     Handle<Value> temporalDateLike,
+                                     MutableHandle<Value> result) {
+  // Steps 1-3. (Not applicable.)
+
+  // Step 4.
+  PlainDate date;
+  if (!ToPlainDate<PlainDateObject, PlainDateTimeObject, PlainMonthDayObject,
+                   PlainYearMonthObject>(cx, temporalDateLike, &date)) {
+    return false;
+  }
+
+  // Steps 5-6.
+  JSString* str = ISOMonthCode(cx, date.month);
+  if (!str) {
+    return false;
+  }
+
+  result.setString(str);
+  return true;
+}
+
+static bool Calendar_monthCode(JSContext* cx, unsigned argc, Value* vp);
+
+/**
+ * CalendarMonthCode ( calendar, dateLike )
+ */
+bool js::temporal::CalendarMonthCode(JSContext* cx, Handle<JSObject*> calendar,
+                                     Handle<Value> dateLike,
+                                     MutableHandle<Value> result) {
+  MOZ_ASSERT(IsDateLikeWithMonth(dateLike));
+
+  // Step 1.
+  Rooted<Value> fn(cx);
+  if (!GetMethodForCall(cx, calendar, cx->names().monthCode, &fn)) {
+    return false;
+  }
+
+  // Fast-path for the default implementation.
+  if (calendar->is<CalendarObject>() &&
+      IsNativeFunction(fn, Calendar_monthCode)) {
+    return BuiltinCalendarMonthCode(cx, dateLike, result);
+  }
+
+  if (!Call(cx, fn, calendar, dateLike, result)) {
+    return false;
+  }
+
+  // Step 2.
+  if (!result.isString()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_UNEXPECTED_TYPE, "monthCode",
+                              "not a string");
+    return false;
+  }
+
+  // Step 3.
+  return true;
+}
+
+/**
+ * Temporal.Calendar.prototype.day ( temporalDateLike )
+ */
+static bool BuiltinCalendarDay(JSContext* cx, Handle<Value> temporalDateLike,
+                               MutableHandle<Value> result) {
+  // Steps 1-3. (Not applicable.)
+
+  // Step 4.
+  PlainDate date;
+  if (!ToPlainDate<PlainDateObject, PlainDateTimeObject, PlainMonthDayObject>(
+          cx, temporalDateLike, &date)) {
+    return false;
+  }
+
+  // Steps 5-6.
+  result.setInt32(date.day);
+  return true;
+}
+
+static bool Calendar_day(JSContext* cx, unsigned argc, Value* vp);
+
+/**
+ * CalendarDay ( calendar, dateLike )
+ */
+bool js::temporal::CalendarDay(JSContext* cx, Handle<JSObject*> calendar,
+                               Handle<Value> dateLike,
+                               MutableHandle<Value> result) {
+  MOZ_ASSERT(IsDateLikeWithDay(dateLike));
+
+  // Step 1.
+  Rooted<Value> fn(cx);
+  if (!GetMethodForCall(cx, calendar, cx->names().day, &fn)) {
+    return false;
+  }
+
+  // Fast-path for the default implementation.
+  if (calendar->is<CalendarObject>() && IsNativeFunction(fn, Calendar_day)) {
+    return BuiltinCalendarDay(cx, dateLike, result);
+  }
+
+  if (!Call(cx, fn, calendar, dateLike, result)) {
+    return false;
+  }
+
+  // Steps 2-5.
+  return ToPositiveIntegerIfIntegralNumber(cx, result, "day", result);
+}
+
+/**
+ * Temporal.Calendar.prototype.dayOfWeek ( temporalDateLike )
+ */
+static bool BuiltinCalendarDayOfWeek(JSContext* cx,
+                                     Handle<Value> temporalDateLike,
+                                     MutableHandle<Value> result) {
+  // Steps 1-3. (Not applicable.)
+
+  // Step 4.
+  PlainDate date;
+  if (!ToTemporalDate(cx, temporalDateLike, &date)) {
+    return false;
+  }
+
+  // Steps 5-9.
+  result.setInt32(ToISODayOfWeek(date));
+  return true;
+}
+
+static bool Calendar_dayOfWeek(JSContext* cx, unsigned argc, Value* vp);
+
+/**
+ * CalendarDayOfWeek ( calendar, dateLike )
+ */
+bool js::temporal::CalendarDayOfWeek(JSContext* cx, Handle<JSObject*> calendar,
+                                     Handle<Value> dateLike,
+                                     MutableHandle<Value> result) {
+  MOZ_ASSERT(IsDateLike(dateLike));
+
+  // Step 1.
+  Rooted<Value> fn(cx);
+  if (!GetMethodForCall(cx, calendar, cx->names().dayOfWeek, &fn)) {
+    return false;
+  }
+
+  // Fast-path for the default implementation.
+  if (calendar->is<CalendarObject>() &&
+      IsNativeFunction(fn, Calendar_dayOfWeek)) {
+    return BuiltinCalendarDayOfWeek(cx, dateLike, result);
+  }
+
+  if (!Call(cx, fn, calendar, dateLike, result)) {
+    return false;
+  }
+
+  // Steps 2-5.
+  return ToPositiveIntegerIfIntegralNumber(cx, result, "dayOfWeek", result);
+}
+
+/**
+ * Temporal.Calendar.prototype.dayOfYear ( temporalDateLike )
+ */
+static bool BuiltinCalendarDayOfYear(JSContext* cx,
+                                     Handle<Value> temporalDateLike,
+                                     MutableHandle<Value> result) {
+  // Steps 1-3. (Not applicable.)
+
+  // Step 4.
+  PlainDate date;
+  if (!ToTemporalDate(cx, temporalDateLike, &date)) {
+    return false;
+  }
+
+  // Steps 5-7.
+  result.setInt32(ToISODayOfYear(date));
+  return true;
+}
+
+static bool Calendar_dayOfYear(JSContext* cx, unsigned argc, Value* vp);
+
+/**
+ * CalendarDayOfYear ( calendar, dateLike )
+ */
+bool js::temporal::CalendarDayOfYear(JSContext* cx, Handle<JSObject*> calendar,
+                                     Handle<Value> dateLike,
+                                     MutableHandle<Value> result) {
+  MOZ_ASSERT(IsDateLike(dateLike));
+
+  // Step 1.
+  Rooted<Value> fn(cx);
+  if (!GetMethodForCall(cx, calendar, cx->names().dayOfYear, &fn)) {
+    return false;
+  }
+
+  // Fast-path for the default implementation.
+  if (calendar->is<CalendarObject>() &&
+      IsNativeFunction(fn, Calendar_dayOfYear)) {
+    return BuiltinCalendarDayOfYear(cx, dateLike, result);
+  }
+
+  if (!Call(cx, fn, calendar, dateLike, result)) {
+    return false;
+  }
+
+  // Steps 2-5.
+  return ToPositiveIntegerIfIntegralNumber(cx, result, "dayOfYear", result);
+}
+
+/**
+ * Temporal.Calendar.prototype.weekOfYear ( temporalDateLike )
+ */
+static bool BuiltinCalendarWeekOfYear(JSContext* cx,
+                                      Handle<Value> temporalDateLike,
+                                      MutableHandle<Value> result) {
+  // Steps 1-3. (Not applicable.)
+
+  // Step 4.
+  PlainDate date;
+  if (!ToTemporalDate(cx, temporalDateLike, &date)) {
+    return false;
+  }
+
+  // Steps 5-6.
+  result.setInt32(ToISOWeekOfYear(date).week);
+  return true;
+}
+
+static bool Calendar_weekOfYear(JSContext* cx, unsigned argc, Value* vp);
+
+/**
+ * CalendarWeekOfYear ( calendar, dateLike )
+ */
+bool js::temporal::CalendarWeekOfYear(JSContext* cx, Handle<JSObject*> calendar,
+                                      Handle<Value> dateLike,
+                                      MutableHandle<Value> result) {
+  MOZ_ASSERT(IsDateLike(dateLike));
+
+  // Step 1.
+  Rooted<Value> fn(cx);
+  if (!GetMethodForCall(cx, calendar, cx->names().weekOfYear, &fn)) {
+    return false;
+  }
+
+  // Fast-path for the default implementation.
+  if (calendar->is<CalendarObject>() &&
+      IsNativeFunction(fn, Calendar_weekOfYear)) {
+    return BuiltinCalendarWeekOfYear(cx, dateLike, result);
+  }
+
+  if (!Call(cx, fn, calendar, dateLike, result)) {
+    return false;
+  }
+
+  // Steps 2-5.
+  return ToPositiveIntegerIfIntegralNumber(cx, result, "weekOfYear", result);
+}
+
+/**
+ * Temporal.Calendar.prototype.yearOfWeek ( temporalDateLike )
+ */
+static bool BuiltinCalendarYearOfWeek(JSContext* cx,
+                                      Handle<Value> temporalDateLike,
+                                      MutableHandle<Value> result) {
+  // Steps 1-3. (Not applicable.)
+
+  // Step 4.
+  PlainDate date;
+  if (!ToTemporalDate(cx, temporalDateLike, &date)) {
+    return false;
+  }
+
+  // Steps 5-6.
+  result.setInt32(ToISOWeekOfYear(date).year);
+  return true;
+}
+
+static bool Calendar_yearOfWeek(JSContext* cx, unsigned argc, Value* vp);
+
+/**
+ * CalendarYearOfWeek ( calendar, dateLike )
+ */
+bool js::temporal::CalendarYearOfWeek(JSContext* cx, Handle<JSObject*> calendar,
+                                      Handle<Value> dateLike,
+                                      MutableHandle<Value> result) {
+  MOZ_ASSERT(IsDateLike(dateLike));
+
+  // Step 1.
+  Rooted<Value> fn(cx);
+  if (!GetMethodForCall(cx, calendar, cx->names().yearOfWeek, &fn)) {
+    return false;
+  }
+
+  // Fast-path for the default implementation.
+  if (calendar->is<CalendarObject>() &&
+      IsNativeFunction(fn, Calendar_yearOfWeek)) {
+    return BuiltinCalendarYearOfWeek(cx, dateLike, result);
+  }
+
+  if (!Call(cx, fn, calendar, dateLike, result)) {
+    return false;
+  }
+
+  // Steps 2-4.
+  return ToIntegerIfIntegralNumber(cx, result, "yearOfWeek", result);
+}
+
+/**
+ * Temporal.Calendar.prototype.daysInWeek ( temporalDateLike )
+ */
+static bool BuiltinCalendarDaysInWeek(JSContext* cx,
+                                      Handle<Value> temporalDateLike,
+                                      MutableHandle<Value> result) {
+  // Steps 1-3. (Not applicable.)
+
+  // Step 4.
+  PlainDate date;
+  if (!ToTemporalDate(cx, temporalDateLike, &date)) {
+    return false;
+  }
+
+  // Step 5.
+  result.setInt32(7);
+  return true;
+}
+
+static bool Calendar_daysInWeek(JSContext* cx, unsigned argc, Value* vp);
+
+/**
+ * CalendarDaysInWeek ( calendar, dateLike )
+ */
+bool js::temporal::CalendarDaysInWeek(JSContext* cx, Handle<JSObject*> calendar,
+                                      Handle<Value> dateLike,
+                                      MutableHandle<Value> result) {
+  MOZ_ASSERT(IsDateLike(dateLike));
+
+  // Step 1.
+  Rooted<Value> fn(cx);
+  if (!GetMethodForCall(cx, calendar, cx->names().daysInWeek, &fn)) {
+    return false;
+  }
+
+  // Fast-path for the default implementation.
+  if (calendar->is<CalendarObject>() &&
+      IsNativeFunction(fn, Calendar_daysInWeek)) {
+    return BuiltinCalendarDaysInWeek(cx, dateLike, result);
+  }
+
+  if (!Call(cx, fn, calendar, dateLike, result)) {
+    return false;
+  }
+
+  // Steps 2-5.
+  return ToPositiveIntegerIfIntegralNumber(cx, result, "daysInWeek", result);
+}
+
+/**
+ * Temporal.Calendar.prototype.daysInMonth ( temporalDateLike )
+ */
+static bool BuiltinCalendarDaysInMonth(JSContext* cx,
+                                       Handle<Value> temporalDateLike,
+                                       MutableHandle<Value> result) {
+  // Steps 1-3. (Not applicable.)
+
+  // Step 4.
+  PlainDate date;
+  if (!ToPlainDate<PlainDateObject, PlainDateTimeObject, PlainYearMonthObject>(
+          cx, temporalDateLike, &date)) {
+    return false;
+  }
+
+  // Step 5.
+  result.setInt32(::ISODaysInMonth(date.year, date.month));
+  return true;
+}
+
+static bool Calendar_daysInMonth(JSContext* cx, unsigned argc, Value* vp);
+
+/**
+ * CalendarDaysInMonth ( calendar, dateLike )
+ */
+bool js::temporal::CalendarDaysInMonth(JSContext* cx,
+                                       Handle<JSObject*> calendar,
+                                       Handle<Value> dateLike,
+                                       MutableHandle<Value> result) {
+  MOZ_ASSERT(IsDateLikeWithYear(dateLike));
+
+  // Step 1.
+  Rooted<Value> fn(cx);
+  if (!GetMethodForCall(cx, calendar, cx->names().daysInMonth, &fn)) {
+    return false;
+  }
+
+  // Fast-path for the default implementation.
+  if (calendar->is<CalendarObject>() &&
+      IsNativeFunction(fn, Calendar_daysInMonth)) {
+    return BuiltinCalendarDaysInMonth(cx, dateLike, result);
+  }
+
+  if (!Call(cx, fn, calendar, dateLike, result)) {
+    return false;
+  }
+
+  // Steps 2-5.
+  return ToPositiveIntegerIfIntegralNumber(cx, result, "daysInMonth", result);
+}
+
+/**
+ * Temporal.Calendar.prototype.daysInYear ( temporalDateLike )
+ */
+static bool BuiltinCalendarDaysInYear(JSContext* cx,
+                                      Handle<Value> temporalDateLike,
+                                      MutableHandle<Value> result) {
+  // Steps 1-3. (Not applicable.)
+
+  // Step 4.
+  PlainDate date;
+  if (!ToPlainDate<PlainDateObject, PlainDateTimeObject, PlainYearMonthObject>(
+          cx, temporalDateLike, &date)) {
+    return false;
+  }
+
+  // Step 5.
+  result.setInt32(ISODaysInYear(date.year));
+  return true;
+}
+
+static bool Calendar_daysInYear(JSContext* cx, unsigned argc, Value* vp);
+
+/**
+ * CalendarDaysInYear ( calendar, dateLike )
+ */
+bool js::temporal::CalendarDaysInYear(JSContext* cx, Handle<JSObject*> calendar,
+                                      Handle<Value> dateLike,
+                                      MutableHandle<Value> result) {
+  MOZ_ASSERT(IsDateLikeWithYear(dateLike));
+
+  // Step 1.
+  Rooted<Value> fn(cx);
+  if (!GetMethodForCall(cx, calendar, cx->names().daysInYear, &fn)) {
+    return false;
+  }
+
+  // Fast-path for the default implementation.
+  if (calendar->is<CalendarObject>() &&
+      IsNativeFunction(fn, Calendar_daysInYear)) {
+    return BuiltinCalendarDaysInYear(cx, dateLike, result);
+  }
+
+  if (!Call(cx, fn, calendar, dateLike, result)) {
+    return false;
+  }
+
+  // Steps 2-5.
+  return ToPositiveIntegerIfIntegralNumber(cx, result, "daysInYear", result);
+}
+
+/**
+ * Temporal.Calendar.prototype.monthsInYear ( temporalDateLike )
+ */
+static bool BuiltinCalendarMonthsInYear(JSContext* cx,
+                                        Handle<Value> temporalDateLike,
+                                        MutableHandle<Value> result) {
+  // Steps 1-3. (Not applicable.)
+
+  // Step 4.
+  PlainDate date;
+  if (!ToPlainDate<PlainDateObject, PlainDateTimeObject, PlainYearMonthObject>(
+          cx, temporalDateLike, &date)) {
+    return false;
+  }
+
+  // Step 5.
+  result.setInt32(12);
+  return true;
+}
+
+static bool Calendar_monthsInYear(JSContext* cx, unsigned argc, Value* vp);
+
+/**
+ * CalendarMonthsInYear ( calendar, dateLike )
+ */
+bool js::temporal::CalendarMonthsInYear(JSContext* cx,
+                                        Handle<JSObject*> calendar,
+                                        Handle<Value> dateLike,
+                                        MutableHandle<Value> result) {
+  MOZ_ASSERT(IsDateLikeWithYear(dateLike));
+
+  // Step 1.
+  Rooted<Value> fn(cx);
+  if (!GetMethodForCall(cx, calendar, cx->names().monthsInYear, &fn)) {
+    return false;
+  }
+
+  // Fast-path for the default implementation.
+  if (calendar->is<CalendarObject>() &&
+      IsNativeFunction(fn, Calendar_monthsInYear)) {
+    return BuiltinCalendarMonthsInYear(cx, dateLike, result);
+  }
+
+  if (!Call(cx, fn, calendar, dateLike, result)) {
+    return false;
+  }
+
+  // Steps 2-5.
+  return ToPositiveIntegerIfIntegralNumber(cx, result, "monthsInYear", result);
+}
+
+/**
+ * Temporal.Calendar.prototype.inLeapYear ( temporalDateLike )
+ */
+static bool BuiltinCalendarInLeapYear(JSContext* cx,
+                                      Handle<Value> temporalDateLike,
+                                      MutableHandle<Value> result) {
+  // Steps 1-3. (Not applicable.)
+
+  // Step 4.
+  PlainDate date;
+  if (!ToPlainDate<PlainDateObject, PlainDateTimeObject, PlainYearMonthObject>(
+          cx, temporalDateLike, &date)) {
+    return false;
+  }
+
+  // Steps 5-6.
+  result.setBoolean(IsISOLeapYear(date.year));
+  return true;
+}
+
+static bool Calendar_inLeapYear(JSContext* cx, unsigned argc, Value* vp);
+
+/**
+ * CalendarInLeapYear ( calendar, dateLike )
+ */
+bool js::temporal::CalendarInLeapYear(JSContext* cx, Handle<JSObject*> calendar,
+                                      Handle<Value> dateLike,
+                                      MutableHandle<Value> result) {
+  MOZ_ASSERT(IsDateLikeWithYear(dateLike));
+
+  // Step 1.
+  Rooted<Value> fn(cx);
+  if (!GetMethodForCall(cx, calendar, cx->names().inLeapYear, &fn)) {
+    return false;
+  }
+
+  // Fast-path for the default implementation.
+  if (calendar->is<CalendarObject>() &&
+      IsNativeFunction(fn, Calendar_inLeapYear)) {
+    return BuiltinCalendarInLeapYear(cx, dateLike, result);
+  }
+
+  if (!Call(cx, fn, calendar, dateLike, result)) {
+    return false;
+  }
+
+  // Step 2.
+  if (!result.isBoolean()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_UNEXPECTED_TYPE, "inLeapYear",
+                              "not a boolean");
+    return false;
+  }
+
+  // Step 3.
+  return true;
+}
+
 static bool Calendar_toString(JSContext* cx, unsigned argc, Value* vp);
 
 JSString* js::temporal::CalendarToString(JSContext* cx,
@@ -511,6 +1543,357 @@ static bool Calendar_id(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
+ * Temporal.Calendar.prototype.year ( temporalDateLike )
+ */
+static bool Calendar_year(JSContext* cx, const CallArgs& args) {
+#ifdef DEBUG
+  // Step 3.
+  auto* calendar = &args.thisv().toObject().as<CalendarObject>();
+  bool isoCalendar;
+  if (!IsISOCalendar(cx, calendar->identifier(), &isoCalendar)) {
+    return false;
+  }
+  MOZ_ASSERT(isoCalendar);
+#endif
+
+  // Steps 4-6.
+  return BuiltinCalendarYear(cx, args.get(0), args.rval());
+}
+
+/**
+ * Temporal.Calendar.prototype.year ( temporalDateLike )
+ */
+static bool Calendar_year(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsCalendar, Calendar_year>(cx, args);
+}
+
+/**
+ * Temporal.Calendar.prototype.month ( temporalDateLike )
+ */
+static bool Calendar_month(JSContext* cx, const CallArgs& args) {
+#ifdef DEBUG
+  // Step 3.
+  auto* calendar = &args.thisv().toObject().as<CalendarObject>();
+  bool isoCalendar;
+  if (!IsISOCalendar(cx, calendar->identifier(), &isoCalendar)) {
+    return false;
+  }
+  MOZ_ASSERT(isoCalendar);
+#endif
+
+  // Steps 4-6.
+  return BuiltinCalendarMonth(cx, args.get(0), args.rval());
+}
+
+/**
+ * Temporal.Calendar.prototype.month ( temporalDateLike )
+ */
+static bool Calendar_month(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsCalendar, Calendar_month>(cx, args);
+}
+
+/**
+ * Temporal.Calendar.prototype.monthCode ( temporalDateLike )
+ */
+static bool Calendar_monthCode(JSContext* cx, const CallArgs& args) {
+#ifdef DEBUG
+  // Step 3.
+  auto* calendar = &args.thisv().toObject().as<CalendarObject>();
+  bool isoCalendar;
+  if (!IsISOCalendar(cx, calendar->identifier(), &isoCalendar)) {
+    return false;
+  }
+  MOZ_ASSERT(isoCalendar);
+#endif
+
+  // Steps 4-6.
+  return BuiltinCalendarMonthCode(cx, args.get(0), args.rval());
+}
+
+/**
+ * Temporal.Calendar.prototype.monthCode ( temporalDateLike )
+ */
+static bool Calendar_monthCode(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsCalendar, Calendar_monthCode>(cx, args);
+}
+
+/**
+ * Temporal.Calendar.prototype.day ( temporalDateLike )
+ */
+static bool Calendar_day(JSContext* cx, const CallArgs& args) {
+#ifdef DEBUG
+  // Step 3.
+  auto* calendar = &args.thisv().toObject().as<CalendarObject>();
+  bool isoCalendar;
+  if (!IsISOCalendar(cx, calendar->identifier(), &isoCalendar)) {
+    return false;
+  }
+  MOZ_ASSERT(isoCalendar);
+#endif
+
+  // Steps 4-6.
+  return BuiltinCalendarDay(cx, args.get(0), args.rval());
+}
+
+/**
+ * Temporal.Calendar.prototype.day ( temporalDateLike )
+ */
+static bool Calendar_day(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsCalendar, Calendar_day>(cx, args);
+}
+
+/**
+ * Temporal.Calendar.prototype.dayOfWeek ( temporalDateLike )
+ */
+static bool Calendar_dayOfWeek(JSContext* cx, const CallArgs& args) {
+#ifdef DEBUG
+  // Step 3.
+  auto* calendar = &args.thisv().toObject().as<CalendarObject>();
+  bool isoCalendar;
+  if (!IsISOCalendar(cx, calendar->identifier(), &isoCalendar)) {
+    return false;
+  }
+  MOZ_ASSERT(isoCalendar);
+#endif
+
+  // Steps 4-9.
+  return BuiltinCalendarDayOfWeek(cx, args.get(0), args.rval());
+}
+
+/**
+ * Temporal.Calendar.prototype.dayOfWeek ( temporalDateLike )
+ */
+static bool Calendar_dayOfWeek(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsCalendar, Calendar_dayOfWeek>(cx, args);
+}
+
+/**
+ * Temporal.Calendar.prototype.dayOfYear ( temporalDateLike )
+ */
+static bool Calendar_dayOfYear(JSContext* cx, const CallArgs& args) {
+#ifdef DEBUG
+  // Step 3.
+  auto* calendar = &args.thisv().toObject().as<CalendarObject>();
+  bool isoCalendar;
+  if (!IsISOCalendar(cx, calendar->identifier(), &isoCalendar)) {
+    return false;
+  }
+  MOZ_ASSERT(isoCalendar);
+#endif
+
+  // Steps 4-7.
+  return BuiltinCalendarDayOfYear(cx, args.get(0), args.rval());
+}
+
+/**
+ * Temporal.Calendar.prototype.dayOfYear ( temporalDateLike )
+ */
+static bool Calendar_dayOfYear(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsCalendar, Calendar_dayOfYear>(cx, args);
+}
+
+/**
+ * Temporal.Calendar.prototype.weekOfYear ( temporalDateLike )
+ */
+static bool Calendar_weekOfYear(JSContext* cx, const CallArgs& args) {
+#ifdef DEBUG
+  // Step 3.
+  auto* calendar = &args.thisv().toObject().as<CalendarObject>();
+  bool isoCalendar;
+  if (!IsISOCalendar(cx, calendar->identifier(), &isoCalendar)) {
+    return false;
+  }
+  MOZ_ASSERT(isoCalendar);
+#endif
+
+  // Steps 4-6.
+  return BuiltinCalendarWeekOfYear(cx, args.get(0), args.rval());
+}
+
+/**
+ * Temporal.Calendar.prototype.weekOfYear ( temporalDateLike )
+ */
+static bool Calendar_weekOfYear(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsCalendar, Calendar_weekOfYear>(cx, args);
+}
+
+/**
+ * Temporal.Calendar.prototype.yearOfWeek ( temporalDateLike )
+ */
+static bool Calendar_yearOfWeek(JSContext* cx, const CallArgs& args) {
+#ifdef DEBUG
+  // Step 3.
+  auto* calendar = &args.thisv().toObject().as<CalendarObject>();
+  bool isoCalendar;
+  if (!IsISOCalendar(cx, calendar->identifier(), &isoCalendar)) {
+    return false;
+  }
+  MOZ_ASSERT(isoCalendar);
+#endif
+
+  // Steps 4-6.
+  return BuiltinCalendarYearOfWeek(cx, args.get(0), args.rval());
+}
+
+/**
+ * Temporal.Calendar.prototype.yearOfWeek ( temporalDateLike )
+ */
+static bool Calendar_yearOfWeek(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsCalendar, Calendar_yearOfWeek>(cx, args);
+}
+
+/**
+ * Temporal.Calendar.prototype.daysInWeek ( temporalDateLike )
+ */
+static bool Calendar_daysInWeek(JSContext* cx, const CallArgs& args) {
+#ifdef DEBUG
+  // Step 3.
+  auto* calendar = &args.thisv().toObject().as<CalendarObject>();
+  bool isoCalendar;
+  if (!IsISOCalendar(cx, calendar->identifier(), &isoCalendar)) {
+    return false;
+  }
+  MOZ_ASSERT(isoCalendar);
+#endif
+
+  // Steps 4-5.
+  return BuiltinCalendarDaysInWeek(cx, args.get(0), args.rval());
+}
+
+/**
+ * Temporal.Calendar.prototype.daysInWeek ( temporalDateLike )
+ */
+static bool Calendar_daysInWeek(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsCalendar, Calendar_daysInWeek>(cx, args);
+}
+
+/**
+ * Temporal.Calendar.prototype.daysInMonth ( temporalDateLike )
+ */
+static bool Calendar_daysInMonth(JSContext* cx, const CallArgs& args) {
+#ifdef DEBUG
+  // Step 3.
+  auto* calendar = &args.thisv().toObject().as<CalendarObject>();
+  bool isoCalendar;
+  if (!IsISOCalendar(cx, calendar->identifier(), &isoCalendar)) {
+    return false;
+  }
+  MOZ_ASSERT(isoCalendar);
+#endif
+
+  // Steps 4-5.
+  return BuiltinCalendarDaysInMonth(cx, args.get(0), args.rval());
+}
+
+/**
+ * Temporal.Calendar.prototype.daysInMonth ( temporalDateLike )
+ */
+static bool Calendar_daysInMonth(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsCalendar, Calendar_daysInMonth>(cx, args);
+}
+
+/**
+ * Temporal.Calendar.prototype.daysInYear ( temporalDateLike )
+ */
+static bool Calendar_daysInYear(JSContext* cx, const CallArgs& args) {
+#ifdef DEBUG
+  // Step 3.
+  auto* calendar = &args.thisv().toObject().as<CalendarObject>();
+  bool isoCalendar;
+  if (!IsISOCalendar(cx, calendar->identifier(), &isoCalendar)) {
+    return false;
+  }
+  MOZ_ASSERT(isoCalendar);
+#endif
+
+  // Steps 4-5.
+  return BuiltinCalendarDaysInYear(cx, args.get(0), args.rval());
+}
+
+/**
+ * Temporal.Calendar.prototype.daysInYear ( temporalDateLike )
+ */
+static bool Calendar_daysInYear(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsCalendar, Calendar_daysInYear>(cx, args);
+}
+
+/**
+ * Temporal.Calendar.prototype.monthsInYear ( temporalDateLike )
+ */
+static bool Calendar_monthsInYear(JSContext* cx, const CallArgs& args) {
+#ifdef DEBUG
+  // Step 3.
+  auto* calendar = &args.thisv().toObject().as<CalendarObject>();
+  bool isoCalendar;
+  if (!IsISOCalendar(cx, calendar->identifier(), &isoCalendar)) {
+    return false;
+  }
+  MOZ_ASSERT(isoCalendar);
+#endif
+
+  // Steps 4-5.
+  return BuiltinCalendarMonthsInYear(cx, args.get(0), args.rval());
+}
+
+/**
+ * Temporal.Calendar.prototype.monthsInYear ( temporalDateLike )
+ */
+static bool Calendar_monthsInYear(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsCalendar, Calendar_monthsInYear>(cx, args);
+}
+
+/**
+ * Temporal.Calendar.prototype.inLeapYear ( temporalDateLike )
+ */
+static bool Calendar_inLeapYear(JSContext* cx, const CallArgs& args) {
+#ifdef DEBUG
+  // Step 3.
+  auto* calendar = &args.thisv().toObject().as<CalendarObject>();
+  bool isoCalendar;
+  if (!IsISOCalendar(cx, calendar->identifier(), &isoCalendar)) {
+    return false;
+  }
+  MOZ_ASSERT(isoCalendar);
+#endif
+
+  // Steps 4-6.
+  return BuiltinCalendarInLeapYear(cx, args.get(0), args.rval());
+}
+
+/**
+ * Temporal.Calendar.prototype.inLeapYear ( temporalDateLike )
+ */
+static bool Calendar_inLeapYear(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsCalendar, Calendar_inLeapYear>(cx, args);
+}
+
+/**
  * Temporal.Calendar.prototype.toString ( )
  */
 static bool Calendar_toString(JSContext* cx, const CallArgs& args) {
@@ -570,6 +1953,19 @@ static const JSFunctionSpec Calendar_methods[] = {
 };
 
 static const JSFunctionSpec Calendar_prototype_methods[] = {
+    JS_FN("year", Calendar_year, 1, 0),
+    JS_FN("month", Calendar_month, 1, 0),
+    JS_FN("monthCode", Calendar_monthCode, 1, 0),
+    JS_FN("day", Calendar_day, 1, 0),
+    JS_FN("dayOfWeek", Calendar_dayOfWeek, 1, 0),
+    JS_FN("dayOfYear", Calendar_dayOfYear, 1, 0),
+    JS_FN("weekOfYear", Calendar_weekOfYear, 1, 0),
+    JS_FN("yearOfWeek", Calendar_yearOfWeek, 1, 0),
+    JS_FN("daysInWeek", Calendar_daysInWeek, 1, 0),
+    JS_FN("daysInMonth", Calendar_daysInMonth, 1, 0),
+    JS_FN("daysInYear", Calendar_daysInYear, 1, 0),
+    JS_FN("monthsInYear", Calendar_monthsInYear, 1, 0),
+    JS_FN("inLeapYear", Calendar_inLeapYear, 1, 0),
     JS_FN("toString", Calendar_toString, 0, 0),
     JS_FN("toJSON", Calendar_toJSON, 0, 0),
     JS_FS_END,

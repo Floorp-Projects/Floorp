@@ -10,6 +10,7 @@
 #include <stdint.h>
 
 #include "builtin/temporal/TemporalTypes.h"
+#include "builtin/temporal/Wrapped.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
 #include "vm/NativeObject.h"
@@ -77,6 +78,24 @@ bool ThrowIfInvalidISODate(JSContext* cx, const PlainDate& date);
  */
 bool ThrowIfInvalidISODate(JSContext* cx, double year, double month,
                            double day);
+
+/**
+ * ToTemporalDate ( item [ , options ] )
+ */
+Wrapped<PlainDateObject*> ToTemporalDate(JSContext* cx,
+                                         JS::Handle<JSObject*> item);
+
+/**
+ * ToTemporalDate ( item [ , options ] )
+ */
+bool ToTemporalDate(JSContext* cx, JS::Handle<JS::Value> item,
+                    PlainDate* result);
+
+/**
+ * ToTemporalDate ( item [ , options ] )
+ */
+bool ToTemporalDate(JSContext* cx, JS::Handle<JS::Value> item,
+                    PlainDate* result, JS::MutableHandle<JSObject*> calendar);
 
 /**
  * CreateTemporalDate ( isoYear, isoMonth, isoDay, calendar [ , newTarget ] )
