@@ -465,6 +465,180 @@ static bool PlainYearMonth_from(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
+ * get Temporal.PlainYearMonth.prototype.calendar
+ */
+static bool PlainYearMonth_calendar(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* yearMonth = &args.thisv().toObject().as<PlainYearMonthObject>();
+  args.rval().setObject(*yearMonth->calendar());
+  return true;
+}
+
+/**
+ * get Temporal.PlainYearMonth.prototype.calendar
+ */
+static bool PlainYearMonth_calendar(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainYearMonth, PlainYearMonth_calendar>(cx,
+                                                                         args);
+}
+
+/**
+ * get Temporal.PlainYearMonth.prototype.year
+ */
+static bool PlainYearMonth_year(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* yearMonth = &args.thisv().toObject().as<PlainYearMonthObject>();
+  Rooted<JSObject*> calendar(cx, yearMonth->calendar());
+
+  // Step 4.
+  return CalendarYear(cx, calendar, args.thisv(), args.rval());
+}
+
+/**
+ * get Temporal.PlainYearMonth.prototype.year
+ */
+static bool PlainYearMonth_year(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainYearMonth, PlainYearMonth_year>(cx, args);
+}
+
+/**
+ * get Temporal.PlainYearMonth.prototype.month
+ */
+static bool PlainYearMonth_month(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* yearMonth = &args.thisv().toObject().as<PlainYearMonthObject>();
+  Rooted<JSObject*> calendar(cx, yearMonth->calendar());
+
+  // Step 4.
+  return CalendarMonth(cx, calendar, args.thisv(), args.rval());
+}
+
+/**
+ * get Temporal.PlainYearMonth.prototype.month
+ */
+static bool PlainYearMonth_month(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainYearMonth, PlainYearMonth_month>(cx, args);
+}
+
+/**
+ * get Temporal.PlainYearMonth.prototype.monthCode
+ */
+static bool PlainYearMonth_monthCode(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* yearMonth = &args.thisv().toObject().as<PlainYearMonthObject>();
+  Rooted<JSObject*> calendar(cx, yearMonth->calendar());
+
+  // Step 4.
+  return CalendarMonthCode(cx, calendar, args.thisv(), args.rval());
+}
+
+/**
+ * get Temporal.PlainYearMonth.prototype.monthCode
+ */
+static bool PlainYearMonth_monthCode(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainYearMonth, PlainYearMonth_monthCode>(cx,
+                                                                          args);
+}
+
+/**
+ * get Temporal.PlainYearMonth.prototype.daysInYear
+ */
+static bool PlainYearMonth_daysInYear(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* yearMonth = &args.thisv().toObject().as<PlainYearMonthObject>();
+  Rooted<JSObject*> calendar(cx, yearMonth->calendar());
+
+  // Step 4.
+  return CalendarDaysInYear(cx, calendar, args.thisv(), args.rval());
+}
+
+/**
+ * get Temporal.PlainYearMonth.prototype.daysInYear
+ */
+static bool PlainYearMonth_daysInYear(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainYearMonth, PlainYearMonth_daysInYear>(
+      cx, args);
+}
+
+/**
+ * get Temporal.PlainYearMonth.prototype.daysInMonth
+ */
+static bool PlainYearMonth_daysInMonth(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* yearMonth = &args.thisv().toObject().as<PlainYearMonthObject>();
+  Rooted<JSObject*> calendar(cx, yearMonth->calendar());
+
+  // Step 4.
+  return CalendarDaysInMonth(cx, calendar, args.thisv(), args.rval());
+}
+
+/**
+ * get Temporal.PlainYearMonth.prototype.daysInMonth
+ */
+static bool PlainYearMonth_daysInMonth(JSContext* cx, unsigned argc,
+                                       Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainYearMonth, PlainYearMonth_daysInMonth>(
+      cx, args);
+}
+
+/**
+ * get Temporal.PlainYearMonth.prototype.monthsInYear
+ */
+static bool PlainYearMonth_monthsInYear(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* yearMonth = &args.thisv().toObject().as<PlainYearMonthObject>();
+  Rooted<JSObject*> calendar(cx, yearMonth->calendar());
+
+  // Step 4.
+  return CalendarMonthsInYear(cx, calendar, args.thisv(), args.rval());
+}
+
+/**
+ * get Temporal.PlainYearMonth.prototype.monthsInYear
+ */
+static bool PlainYearMonth_monthsInYear(JSContext* cx, unsigned argc,
+                                        Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainYearMonth, PlainYearMonth_monthsInYear>(
+      cx, args);
+}
+
+/**
+ * get Temporal.PlainYearMonth.prototype.inLeapYear
+ */
+static bool PlainYearMonth_inLeapYear(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* yearMonth = &args.thisv().toObject().as<PlainYearMonthObject>();
+  Rooted<JSObject*> calendar(cx, yearMonth->calendar());
+
+  // Step 4.
+  return CalendarInLeapYear(cx, calendar, args.thisv(), args.rval());
+}
+
+/**
+ * get Temporal.PlainYearMonth.prototype.inLeapYear
+ */
+static bool PlainYearMonth_inLeapYear(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainYearMonth, PlainYearMonth_inLeapYear>(
+      cx, args);
+}
+
+/**
  * Temporal.PlainYearMonth.prototype.toString ( [ options ] )
  */
 static bool PlainYearMonth_toString(JSContext* cx, const CallArgs& args) {
@@ -754,6 +928,15 @@ static const JSFunctionSpec PlainYearMonth_prototype_methods[] = {
 };
 
 static const JSPropertySpec PlainYearMonth_prototype_properties[] = {
+    JS_PSG("calendar", PlainYearMonth_calendar, 0),
+    JS_PSG("year", PlainYearMonth_year, 0),
+    JS_PSG("month", PlainYearMonth_month, 0),
+    JS_PSG("monthCode", PlainYearMonth_monthCode, 0),
+    JS_PSG("daysInYear", PlainYearMonth_daysInYear, 0),
+    JS_PSG("daysInMonth", PlainYearMonth_daysInMonth, 0),
+    JS_PSG("monthsInYear", PlainYearMonth_monthsInYear, 0),
+    JS_PSG("inLeapYear", PlainYearMonth_inLeapYear, 0),
+    JS_STRING_SYM_PS(toStringTag, "Temporal.PlainYearMonth", JSPROP_READONLY),
     JS_PS_END,
 };
 

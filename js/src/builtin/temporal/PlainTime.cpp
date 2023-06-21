@@ -827,6 +827,146 @@ static bool PlainTime_from(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
+ * get Temporal.PlainTime.prototype.calendar
+ */
+static bool PlainTime_calendar(JSContext* cx, const CallArgs& args) {
+  Rooted<PlainTimeObject*> temporalTime(
+      cx, &args.thisv().toObject().as<PlainTimeObject>());
+
+  // Step 3.
+  auto* calendar = PlainTimeObject::getOrCreateCalendar(cx, temporalTime);
+  if (!calendar) {
+    return false;
+  }
+
+  args.rval().setObject(*calendar);
+  return true;
+}
+
+/**
+ * get Temporal.PlainTime.prototype.calendar
+ */
+static bool PlainTime_calendar(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainTime, PlainTime_calendar>(cx, args);
+}
+
+/**
+ * get Temporal.PlainTime.prototype.hour
+ */
+static bool PlainTime_hour(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* temporalTime = &args.thisv().toObject().as<PlainTimeObject>();
+  args.rval().setInt32(temporalTime->isoHour());
+  return true;
+}
+
+/**
+ * get Temporal.PlainTime.prototype.hour
+ */
+static bool PlainTime_hour(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainTime, PlainTime_hour>(cx, args);
+}
+
+/**
+ * get Temporal.PlainTime.prototype.minute
+ */
+static bool PlainTime_minute(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* temporalTime = &args.thisv().toObject().as<PlainTimeObject>();
+  args.rval().setInt32(temporalTime->isoMinute());
+  return true;
+}
+
+/**
+ * get Temporal.PlainTime.prototype.minute
+ */
+static bool PlainTime_minute(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainTime, PlainTime_minute>(cx, args);
+}
+
+/**
+ * get Temporal.PlainTime.prototype.second
+ */
+static bool PlainTime_second(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* temporalTime = &args.thisv().toObject().as<PlainTimeObject>();
+  args.rval().setInt32(temporalTime->isoSecond());
+  return true;
+}
+
+/**
+ * get Temporal.PlainTime.prototype.second
+ */
+static bool PlainTime_second(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainTime, PlainTime_second>(cx, args);
+}
+
+/**
+ * get Temporal.PlainTime.prototype.millisecond
+ */
+static bool PlainTime_millisecond(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* temporalTime = &args.thisv().toObject().as<PlainTimeObject>();
+  args.rval().setInt32(temporalTime->isoMillisecond());
+  return true;
+}
+
+/**
+ * get Temporal.PlainTime.prototype.millisecond
+ */
+static bool PlainTime_millisecond(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainTime, PlainTime_millisecond>(cx, args);
+}
+
+/**
+ * get Temporal.PlainTime.prototype.microsecond
+ */
+static bool PlainTime_microsecond(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* temporalTime = &args.thisv().toObject().as<PlainTimeObject>();
+  args.rval().setInt32(temporalTime->isoMicrosecond());
+  return true;
+}
+
+/**
+ * get Temporal.PlainTime.prototype.microsecond
+ */
+static bool PlainTime_microsecond(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainTime, PlainTime_microsecond>(cx, args);
+}
+
+/**
+ * get Temporal.PlainTime.prototype.nanosecond
+ */
+static bool PlainTime_nanosecond(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  auto* temporalTime = &args.thisv().toObject().as<PlainTimeObject>();
+  args.rval().setInt32(temporalTime->isoNanosecond());
+  return true;
+}
+
+/**
+ * get Temporal.PlainTime.prototype.nanosecond
+ */
+static bool PlainTime_nanosecond(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainTime, PlainTime_nanosecond>(cx, args);
+}
+
+/**
  * Temporal.PlainTime.prototype.toPlainDateTime ( temporalDate )
  */
 static bool PlainTime_toPlainDateTime(JSContext* cx, const CallArgs& args) {
@@ -969,6 +1109,14 @@ static const JSFunctionSpec PlainTime_prototype_methods[] = {
 };
 
 static const JSPropertySpec PlainTime_prototype_properties[] = {
+    JS_PSG("calendar", PlainTime_calendar, 0),
+    JS_PSG("hour", PlainTime_hour, 0),
+    JS_PSG("minute", PlainTime_minute, 0),
+    JS_PSG("second", PlainTime_second, 0),
+    JS_PSG("millisecond", PlainTime_millisecond, 0),
+    JS_PSG("microsecond", PlainTime_microsecond, 0),
+    JS_PSG("nanosecond", PlainTime_nanosecond, 0),
+    JS_STRING_SYM_PS(toStringTag, "Temporal.PlainTime", JSPROP_READONLY),
     JS_PS_END,
 };
 
