@@ -54,12 +54,7 @@ const MODIFIER_NAME_LOOKUP = {
  * Typically each top-level browsing context in a session should have a single State object
  */
 action.State = class {
-  constructor(options = {}) {
-    const { specCompatPointerOrigin = true } = options;
-
-    /** Flag for WebDriver spec conforming pointer origin calculation. */
-    this.specCompatPointerOrigin = specCompatPointerOrigin;
-
+  constructor() {
     /**
      * A map between input ID and the device state for that input
      * source, with one entry for each active input source.
@@ -420,11 +415,10 @@ class Origin {
    *
    * This is overridden in subclasses to provide a class-specific origin.
    *
-   * @param {State} state - Actions state.
    * @param {InputSource} inputSource - State of current input device.
    * @param {WindowProxy} win - Current window global
    */
-  getOriginCoordinates(state, inputSource, win) {
+  getOriginCoordinates(inputSource, win) {
     throw new Error(
       `originCoordinates not defined for ${this.constructor.name}`
     );
@@ -433,14 +427,13 @@ class Origin {
   /**
    * Convert [x, y] coordinates to viewport coordinates
    *
-   * @param {State} state - Actions state
    * @param {InputSource} inputSource - State of the current input device
    * @param {Array<number>} coords - [x, y] coordinate of target relative to origin
    * @param {WindowProxy} win - Current window global
    */
-  getTargetCoordinates(state, inputSource, coords, win) {
+  getTargetCoordinates(inputSource, coords, win) {
     const [x, y] = coords;
-    const origin = this.getOriginCoordinates(state, inputSource, win);
+    const origin = this.getOriginCoordinates(inputSource, win);
     return [origin.x + x, origin.y + y];
   }
 
@@ -471,13 +464,13 @@ class Origin {
 }
 
 class ViewportOrigin extends Origin {
-  getOriginCoordinates(state, inputSource, win) {
+  getOriginCoordinates(inputSource, win) {
     return { x: 0, y: 0 };
   }
 }
 
 class PointerOrigin extends Origin {
-  getOriginCoordinates(state, inputSource, win) {
+  getOriginCoordinates(inputSource, win) {
     return { x: inputSource.x, y: inputSource.y };
   }
 }
@@ -491,18 +484,16 @@ class ElementOrigin extends Origin {
     this.element = element;
   }
 
-  getOriginCoordinates(state, inputSource, win) {
-    if (state.specCompatPointerOrigin) {
-      const clientRects = this.element.getClientRects();
-      // The spec doesn't handle this case; https://github.com/w3c/webdriver/issues/1642
-      if (!clientRects.length) {
-        throw new lazy.error.MoveTargetOutOfBoundsError(
-          `Origin element is not displayed`
-        );
-      }
-      return lazy.dom.getInViewCentrePoint(clientRects[0], win);
+  getOriginCoordinates(inputSource, win) {
+    const clientRects = this.element.getClientRects();
+    // The spec doesn't handle this case; https://github.com/w3c/webdriver/issues/1642
+    if (!clientRects.length) {
+      throw new lazy.error.MoveTargetOutOfBoundsError(
+        `Origin element is not displayed`
+      );
     }
-    return lazy.dom.coordinates(this.element);
+
+    return lazy.dom.getInViewCentrePoint(clientRects[0], win);
   }
 }
 
@@ -1017,7 +1008,6 @@ class PointerMoveAction extends PointerAction {
       `Dispatch ${this.constructor.name} ${inputSource.pointer.type} with id: ${this.id} x: ${this.x} y: ${this.y}`
     );
     const target = this.origin.getTargetCoordinates(
-      state,
       inputSource,
       [this.x, this.y],
       win
@@ -1156,7 +1146,6 @@ class WheelScrollAction extends WheelAction {
       `Dispatch ${this.constructor.name} with id: ${this.id} deltaX: ${this.deltaX} deltaY: ${this.deltaY}`
     );
     const scrollCoordinates = this.origin.getTargetCoordinates(
-      state,
       inputSource,
       [this.x, this.y],
       win
@@ -1392,7 +1381,6 @@ class PointerMoveTouchActionGroup extends TouchActionGroup {
     let targetCoords = [];
     for (const [actionInputSource, action] of this.actions.values()) {
       const target = action.origin.getTargetCoordinates(
-        state,
         actionInputSource,
         [action.x, action.y],
         win

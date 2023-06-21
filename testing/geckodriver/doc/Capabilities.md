@@ -56,6 +56,8 @@ websocket and interact with the browser by using the CDP protocol.
 
 ## `moz:useNonSpecCompliantPointerOrigin`
 
+Note: This capability is no longer supported in Firefox 116 and later.
+
 A boolean value to indicate how the pointer origin for an action
 command will be calculated.
 
@@ -66,10 +68,6 @@ referenced element, but on the in-view center point.
 
 To temporarily disable the WebDriver conformant behavior use `false`
 as value for this capability.
-
-Please note that this capability exists only temporarily, and that
-it will be removed once all Selenium bindings can handle the new
-behavior.
 
 ## `moz:webdriverClick`
 

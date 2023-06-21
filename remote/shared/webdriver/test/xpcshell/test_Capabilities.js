@@ -399,8 +399,10 @@ add_task(function test_Capabilities_ctor() {
   ok(caps.has("moz:platformVersion"));
   ok(caps.has("moz:processID"));
   ok(caps.has("moz:profile"));
-  equal(false, caps.get("moz:useNonSpecCompliantPointerOrigin"));
   equal(true, caps.get("moz:webdriverClick"));
+
+  // No longer supported capabilities
+  ok(!caps.has("moz:useNonSpecCompliantPointerOrigin"));
 });
 
 add_task(function test_Capabilities_toString() {
@@ -428,10 +430,6 @@ add_task(function test_Capabilities_toJSON() {
   equal(caps.get("moz:platformVersion"), json["moz:platformVersion"]);
   equal(caps.get("moz:processID"), json["moz:processID"]);
   equal(caps.get("moz:profile"), json["moz:profile"]);
-  equal(
-    caps.get("moz:useNonSpecCompliantPointerOrigin"),
-    json["moz:useNonSpecCompliantPointerOrigin"]
-  );
   equal(caps.get("moz:webdriverClick"), json["moz:webdriverClick"]);
 });
 
@@ -485,14 +483,20 @@ add_task(function test_Capabilities_fromJSON() {
   caps = fromJSON({ "moz:debuggerAddress": true });
   equal(null, caps.get("moz:debuggerAddress"));
 
-  caps = fromJSON({ "moz:useNonSpecCompliantPointerOrigin": false });
-  equal(false, caps.get("moz:useNonSpecCompliantPointerOrigin"));
-  caps = fromJSON({ "moz:useNonSpecCompliantPointerOrigin": true });
-  equal(true, caps.get("moz:useNonSpecCompliantPointerOrigin"));
   caps = fromJSON({ "moz:webdriverClick": true });
   equal(true, caps.get("moz:webdriverClick"));
   caps = fromJSON({ "moz:webdriverClick": false });
   equal(false, caps.get("moz:webdriverClick"));
+
+  // No longer supported capabilities
+  Assert.throws(
+    () => fromJSON({ "moz:useNonSpecCompliantPointerOrigin": false }),
+    /InvalidArgumentError/
+  );
+  Assert.throws(
+    () => fromJSON({ "moz:useNonSpecCompliantPointerOrigin": true }),
+    /InvalidArgumentError/
+  );
 });
 
 add_task(function test_mergeCapabilities() {
@@ -535,10 +539,9 @@ add_task(function test_validateCapabilities_invalid() {
     { webSocketUrl: "foo" },
     { "moz:firefoxOptions": "foo" },
     { "moz:accessibilityChecks": "foo" },
-    { "moz:useNonSpecCompliantPointerOrigin": "foo" },
-    { "moz:useNonSpecCompliantPointerOrigin": 1 },
     { "moz:webdriverClick": "foo" },
     { "moz:webdriverClick": 1 },
+    { "moz:useNonSpecCompliantPointerOrigin": false },
     { "moz:debuggerAddress": "foo" },
     { "moz:someRandomString": {} },
   ];
@@ -567,7 +570,6 @@ add_task(function test_validateCapabilities_valid() {
     { webSocketUrl: true },
     { "moz:firefoxOptions": {} },
     { "moz:accessibilityChecks": true },
-    { "moz:useNonSpecCompliantPointerOrigin": true },
     { "moz:webdriverClick": true },
     { "moz:debuggerAddress": true },
     { "test:extension": "foo" },

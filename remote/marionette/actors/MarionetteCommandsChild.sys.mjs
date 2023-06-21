@@ -510,12 +510,9 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
    *     Object with a list of WebDriver session capabilities.
    */
   async performActions(options = {}) {
-    const { actions, capabilities } = options;
+    const { actions } = options;
     if (this.actionState === null) {
-      this.actionState = new lazy.action.State({
-        specCompatPointerOrigin:
-          !capabilities["moz:useNonSpecCompliantPointerOrigin"],
-      });
+      this.actionState = new lazy.action.State();
     }
     let actionChain = lazy.action.Chain.fromJSON(this.actionState, actions);
 
