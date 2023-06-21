@@ -167,10 +167,12 @@ void a11y::ProxyShowHideEvent(RemoteAccessible* aTarget,
 void a11y::ProxySelectionEvent(RemoteAccessible*, RemoteAccessible*, uint32_t) {
 }
 
-void a11y::ProxyVirtualCursorChangeEvent(RemoteAccessible* aTarget,
-                                         RemoteAccessible* aOldPosition,
-                                         RemoteAccessible* aNewPosition,
-                                         int16_t aReason, bool aFromUser) {
+void a11y::ProxyVirtualCursorChangeEvent(
+    RemoteAccessible* aTarget, RemoteAccessible* aOldPosition,
+    int32_t aOldStartOffset, int32_t aOldEndOffset,
+    RemoteAccessible* aNewPosition, int32_t aNewStartOffset,
+    int32_t aNewEndOffset, int16_t aReason, int16_t aBoundaryType,
+    bool aFromUser) {
   if (!aNewPosition || !aFromUser) {
     return;
   }
@@ -184,8 +186,13 @@ void a11y::ProxyVirtualCursorChangeEvent(RemoteAccessible* aTarget,
 
   if (aReason == nsIAccessiblePivot::REASON_POINT) {
     sessionAcc->SendHoverEnterEvent(aNewPosition);
-  } else {
+  } else if (aBoundaryType == nsIAccessiblePivot::NO_BOUNDARY) {
     sessionAcc->SendAccessibilityFocusedEvent(aNewPosition);
+  }
+
+  if (aBoundaryType != nsIAccessiblePivot::NO_BOUNDARY) {
+    sessionAcc->SendTextTraversedEvent(aNewPosition, aNewStartOffset,
+                                       aNewEndOffset);
   }
 }
 

@@ -39,7 +39,11 @@ class RuleCache : public PivotRule {
 // nsAccessiblePivot
 
 nsAccessiblePivot::nsAccessiblePivot(LocalAccessible* aRoot)
-    : mRoot(aRoot), mModalRoot(nullptr), mPosition(nullptr) {
+    : mRoot(aRoot),
+      mModalRoot(nullptr),
+      mPosition(nullptr),
+      mStartOffset(-1),
+      mEndOffset(-1) {
   NS_ASSERTION(aRoot, "A root accessible is required");
 }
 
@@ -92,7 +96,11 @@ nsAccessiblePivot::SetPosition(nsIAccessible* aPosition) {
 
   // Swap old position with new position, saves us an AddRef/Release.
   mPosition.swap(position);
-  NotifyOfPivotChange(position, nsIAccessiblePivot::REASON_NONE, false);
+  int32_t oldStart = mStartOffset, oldEnd = mEndOffset;
+  mStartOffset = mEndOffset = -1;
+  NotifyOfPivotChange(position, oldStart, oldEnd,
+                      nsIAccessiblePivot::REASON_NONE,
+                      nsIAccessiblePivot::NO_BOUNDARY, false);
 
   return NS_OK;
 }
@@ -118,6 +126,65 @@ nsAccessiblePivot::SetModalRoot(nsIAccessible* aModalRoot) {
   }
 
   mModalRoot = modalRoot;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccessiblePivot::GetStartOffset(int32_t* aStartOffset) {
+  NS_ENSURE_ARG_POINTER(aStartOffset);
+
+  *aStartOffset = mStartOffset;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccessiblePivot::GetEndOffset(int32_t* aEndOffset) {
+  NS_ENSURE_ARG_POINTER(aEndOffset);
+
+  *aEndOffset = mEndOffset;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccessiblePivot::SetTextRange(nsIAccessibleText* aTextAccessible,
+                                int32_t aStartOffset, int32_t aEndOffset,
+                                bool aIsFromUserInput, uint8_t aArgc) {
+  NS_ENSURE_ARG(aTextAccessible);
+
+  // Check that start offset is smaller than end offset, and that if a value is
+  // smaller than 0, both should be -1.
+  NS_ENSURE_TRUE(
+      aStartOffset <= aEndOffset &&
+          (aStartOffset >= 0 || (aStartOffset != -1 && aEndOffset != -1)),
+      NS_ERROR_INVALID_ARG);
+
+  nsCOMPtr<nsIAccessible> xpcAcc = do_QueryInterface(aTextAccessible);
+  NS_ENSURE_ARG(xpcAcc);
+
+  RefPtr<LocalAccessible> acc = xpcAcc->ToInternalAccessible();
+  NS_ENSURE_ARG(acc);
+
+  HyperTextAccessible* position = acc->AsHyperText();
+  if (!position || !IsDescendantOf(position, GetActiveRoot())) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  // Make sure the given offsets don't exceed the character count.
+  if (aEndOffset > static_cast<int32_t>(position->CharacterCount())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  int32_t oldStart = mStartOffset, oldEnd = mEndOffset;
+  mStartOffset = aStartOffset;
+  mEndOffset = aEndOffset;
+
+  mPosition.swap(acc);
+  NotifyOfPivotChange(acc, oldStart, oldEnd, nsIAccessiblePivot::REASON_NONE,
+                      nsIAccessiblePivot::NO_BOUNDARY,
+                      (aArgc > 0) ? aIsFromUserInput : true);
+
   return NS_OK;
 }
 
@@ -244,6 +311,60 @@ nsAccessiblePivot::MoveLast(nsIAccessibleTraversalRule* aRule,
 }
 
 NS_IMETHODIMP
+nsAccessiblePivot::MoveNextByText(TextBoundaryType aBoundary,
+                                  bool aIsFromUserInput, uint8_t aArgc,
+                                  bool* aResult) {
+  NS_ENSURE_ARG(aResult);
+
+  *aResult = false;
+
+  Pivot pivot(GetActiveRoot());
+
+  int32_t newStart = mStartOffset, newEnd = mEndOffset;
+  Accessible* newPos = pivot.NextText(mPosition, &newStart, &newEnd, aBoundary);
+  if (LocalAccessible* localNewPos = newPos ? newPos->AsLocal() : nullptr) {
+    *aResult = true;
+    int32_t oldStart = mStartOffset, oldEnd = mEndOffset;
+    LocalAccessible* oldPos = mPosition;
+    mStartOffset = newStart;
+    mEndOffset = newEnd;
+    mPosition = localNewPos;
+    NotifyOfPivotChange(oldPos, oldStart, oldEnd,
+                        nsIAccessiblePivot::REASON_NEXT, aBoundary,
+                        (aArgc > 0) ? aIsFromUserInput : true);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccessiblePivot::MovePreviousByText(TextBoundaryType aBoundary,
+                                      bool aIsFromUserInput, uint8_t aArgc,
+                                      bool* aResult) {
+  NS_ENSURE_ARG(aResult);
+
+  *aResult = false;
+
+  Pivot pivot(GetActiveRoot());
+
+  int32_t newStart = mStartOffset, newEnd = mEndOffset;
+  Accessible* newPos = pivot.PrevText(mPosition, &newStart, &newEnd, aBoundary);
+  if (LocalAccessible* localNewPos = newPos ? newPos->AsLocal() : nullptr) {
+    *aResult = true;
+    int32_t oldStart = mStartOffset, oldEnd = mEndOffset;
+    LocalAccessible* oldPos = mPosition;
+    mStartOffset = newStart;
+    mEndOffset = newEnd;
+    mPosition = localNewPos;
+    NotifyOfPivotChange(oldPos, oldStart, oldEnd,
+                        nsIAccessiblePivot::REASON_PREV, aBoundary,
+                        (aArgc > 0) ? aIsFromUserInput : true);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsAccessiblePivot::MoveToPoint(nsIAccessibleTraversalRule* aRule, int32_t aX,
                                int32_t aY, bool aIgnoreNoMatch,
                                bool aIsFromUserInput, uint8_t aArgc,
@@ -312,20 +433,27 @@ bool nsAccessiblePivot::MovePivotInternal(LocalAccessible* aPosition,
                                           bool aIsFromUserInput) {
   RefPtr<LocalAccessible> oldPosition = std::move(mPosition);
   mPosition = aPosition;
+  int32_t oldStart = mStartOffset, oldEnd = mEndOffset;
+  mStartOffset = mEndOffset = -1;
 
-  return NotifyOfPivotChange(oldPosition, aReason, aIsFromUserInput);
+  return NotifyOfPivotChange(oldPosition, oldStart, oldEnd, aReason,
+                             nsIAccessiblePivot::NO_BOUNDARY, aIsFromUserInput);
 }
 
 bool nsAccessiblePivot::NotifyOfPivotChange(LocalAccessible* aOldPosition,
+                                            int32_t aOldStart, int32_t aOldEnd,
                                             int16_t aReason,
+                                            int16_t aBoundaryType,
                                             bool aIsFromUserInput) {
-  if (aOldPosition == mPosition) {
+  if (aOldPosition == mPosition && aOldStart == mStartOffset &&
+      aOldEnd == mEndOffset) {
     return false;
   }
 
   nsCOMPtr<nsIAccessible> xpcOldPos = ToXPC(aOldPosition);  // death grip
   for (nsIAccessiblePivotObserver* obs : mObservers.ForwardRange()) {
-    obs->OnPivotChanged(this, xpcOldPos, ToXPC(mPosition), aReason,
+    obs->OnPivotChanged(this, xpcOldPos, aOldStart, aOldEnd, ToXPC(mPosition),
+                        mStartOffset, mEndOffset, aReason, aBoundaryType,
                         aIsFromUserInput);
   }
 
