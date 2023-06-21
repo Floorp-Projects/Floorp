@@ -100,6 +100,14 @@ TimeZoneObject* CreateTemporalTimeZone(JSContext* cx,
  */
 TimeZoneObject* CreateTemporalTimeZoneUTC(JSContext* cx);
 
+JSObject* ToTemporalTimeZone(JSContext* cx,
+                             JS::Handle<JS::Value> temporalTimeZoneLike);
+
+/**
+ * ToTemporalTimeZone ( temporalTimeZoneLike )
+ */
+TimeZoneObject* ToTemporalTimeZone(JSContext* cx, JS::Handle<JSString*> string);
+
 /**
  * FormatTimeZoneOffsetString ( offsetNanoseconds )
  */
