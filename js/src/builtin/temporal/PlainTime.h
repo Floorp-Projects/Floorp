@@ -151,6 +151,12 @@ bool ToTemporalTimeRecord(JSContext* cx, JS::Handle<JSObject*> temporalTimeLike,
 bool RegulateTime(JSContext* cx, const TimeRecord& time,
                   TemporalOverflow overflow, PlainTime* result);
 
+/**
+ * CompareTemporalTime ( h1, min1, s1, ms1, mus1, ns1, h2, min2, s2, ms2, mus2,
+ * ns2 )
+ */
+int32_t CompareTemporalTime(const PlainTime& one, const PlainTime& two);
+
 struct BalancedTime final {
   int32_t days = 0;
   PlainTime time;

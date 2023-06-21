@@ -267,6 +267,12 @@ Wrapped<PlainMonthDayObject*> CalendarMonthDayFromFields(
     JS::Handle<JSObject*> options);
 
 /**
+ * CalendarEquals ( one, two )
+ */
+bool CalendarEquals(JSContext* cx, JS::Handle<JSObject*> one,
+                    JS::Handle<JSObject*> two, bool* equals);
+
+/**
  * MaybeFormatCalendarAnnotation ( calendarObject, showCalendar )
  */
 bool MaybeFormatCalendarAnnotation(JSContext* cx, JSStringBuilder& result,

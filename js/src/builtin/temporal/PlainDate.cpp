@@ -755,6 +755,30 @@ PlainDate js::temporal::BalanceISODate(int32_t year, int32_t month,
 }
 
 /**
+ * CompareISODate ( y1, m1, d1, y2, m2, d2 )
+ */
+int32_t js::temporal::CompareISODate(const PlainDate& one,
+                                     const PlainDate& two) {
+  // Steps 1-2.
+  if (one.year != two.year) {
+    return one.year < two.year ? -1 : 1;
+  }
+
+  // Steps 3-4.
+  if (one.month != two.month) {
+    return one.month < two.month ? -1 : 1;
+  }
+
+  // Steps 5-6.
+  if (one.day != two.day) {
+    return one.day < two.day ? -1 : 1;
+  }
+
+  // Step 7.
+  return 0;
+}
+
+/**
  * Temporal.PlainDate ( isoYear, isoMonth, isoDay [ , calendarLike ] )
  */
 static bool PlainDateConstructor(JSContext* cx, unsigned argc, Value* vp) {
@@ -853,6 +877,29 @@ static bool PlainDate_from(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   args.rval().setObject(*result);
+  return true;
+}
+
+/**
+ * Temporal.PlainDate.compare ( one, two )
+ */
+static bool PlainDate_compare(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Step 1.
+  PlainDate one;
+  if (!ToTemporalDate(cx, args.get(0), &one)) {
+    return false;
+  }
+
+  // Step 2.
+  PlainDate two;
+  if (!ToTemporalDate(cx, args.get(1), &two)) {
+    return false;
+  }
+
+  // Step 3.
+  args.rval().setInt32(CompareISODate(one, two));
   return true;
 }
 
@@ -1329,6 +1376,43 @@ static bool PlainDate_getISOFields(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
+ * Temporal.PlainDate.prototype.equals ( other )
+ */
+static bool PlainDate_equals(JSContext* cx, const CallArgs& args) {
+  auto* temporalDate = &args.thisv().toObject().as<PlainDateObject>();
+  auto date = ToPlainDate(temporalDate);
+  Rooted<JSObject*> calendar(cx, temporalDate->calendar());
+
+  // Step 3.
+  PlainDate other;
+  Rooted<JSObject*> otherCalendar(cx);
+  if (!ToTemporalDate(cx, args.get(0), &other, &otherCalendar)) {
+    return false;
+  }
+
+  // Steps 4-7.
+  bool equals = false;
+  if (date.year == other.year && date.month == other.month &&
+      date.day == other.day) {
+    if (!CalendarEquals(cx, calendar, otherCalendar, &equals)) {
+      return false;
+    }
+  }
+
+  args.rval().setBoolean(equals);
+  return true;
+}
+
+/**
+ * Temporal.PlainDate.prototype.equals ( other )
+ */
+static bool PlainDate_equals(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDate, PlainDate_equals>(cx, args);
+}
+
+/**
  * Temporal.PlainDate.prototype.toString ( [ options ] )
  */
 static bool PlainDate_toString(JSContext* cx, const CallArgs& args) {
@@ -1442,6 +1526,7 @@ const JSClass& PlainDateObject::protoClass_ = PlainObject::class_;
 
 static const JSFunctionSpec PlainDate_methods[] = {
     JS_FN("from", PlainDate_from, 1, 0),
+    JS_FN("compare", PlainDate_compare, 2, 0),
     JS_FS_END,
 };
 
@@ -1450,6 +1535,7 @@ static const JSFunctionSpec PlainDate_prototype_methods[] = {
     JS_FN("toPlainYearMonth", PlainDate_toPlainYearMonth, 0, 0),
     JS_FN("toPlainDateTime", PlainDate_toPlainDateTime, 0, 0),
     JS_FN("getISOFields", PlainDate_getISOFields, 0, 0),
+    JS_FN("equals", PlainDate_equals, 1, 0),
     JS_FN("toString", PlainDate_toString, 0, 0),
     JS_FN("toLocaleString", PlainDate_toLocaleString, 0, 0),
     JS_FN("toJSON", PlainDate_toJSON, 0, 0),

@@ -24,6 +24,7 @@
 #include "builtin/temporal/TemporalFields.h"
 #include "builtin/temporal/TemporalParser.h"
 #include "builtin/temporal/TemporalTypes.h"
+#include "builtin/temporal/Wrapped.h"
 #include "ds/IdValuePair.h"
 #include "gc/AllocKind.h"
 #include "gc/Barrier.h"
@@ -284,6 +285,36 @@ static Wrapped<PlainYearMonthObject*> ToTemporalYearMonth(
 }
 
 /**
+ * ToTemporalYearMonth ( item [ , options ] )
+ */
+static bool ToTemporalYearMonth(JSContext* cx, Handle<Value> item,
+                                PlainDate* result) {
+  auto obj = ToTemporalYearMonth(cx, item);
+  if (!obj) {
+    return false;
+  }
+
+  *result = ToPlainDate(&obj.unwrap());
+  return true;
+}
+
+/**
+ * ToTemporalYearMonth ( item [ , options ] )
+ */
+static bool ToTemporalYearMonth(JSContext* cx, Handle<Value> item,
+                                PlainDate* result,
+                                MutableHandle<JSObject*> calendar) {
+  auto* obj = ToTemporalYearMonth(cx, item).unwrapOrNull();
+  if (!obj) {
+    return false;
+  }
+
+  *result = ToPlainDate(obj);
+  calendar.set(obj->calendar());
+  return cx->compartment()->wrap(cx, calendar);
+}
+
+/**
  * TemporalYearMonthToString ( yearMonth, showCalendar )
  */
 static JSString* TemporalYearMonthToString(
@@ -465,6 +496,29 @@ static bool PlainYearMonth_from(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
+ * Temporal.PlainYearMonth.compare ( one, two )
+ */
+static bool PlainYearMonth_compare(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Step 1.
+  PlainDate one;
+  if (!ToTemporalYearMonth(cx, args.get(0), &one)) {
+    return false;
+  }
+
+  // Step 2.
+  PlainDate two;
+  if (!ToTemporalYearMonth(cx, args.get(1), &two)) {
+    return false;
+  }
+
+  // Step 3.
+  args.rval().setInt32(CompareISODate(one, two));
+  return true;
+}
+
+/**
  * get Temporal.PlainYearMonth.prototype.calendar
  */
 static bool PlainYearMonth_calendar(JSContext* cx, const CallArgs& args) {
@@ -636,6 +690,44 @@ static bool PlainYearMonth_inLeapYear(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<IsPlainYearMonth, PlainYearMonth_inLeapYear>(
       cx, args);
+}
+
+/**
+ * Temporal.PlainYearMonth.prototype.equals ( other )
+ */
+static bool PlainYearMonth_equals(JSContext* cx, const CallArgs& args) {
+  auto* yearMonth = &args.thisv().toObject().as<PlainYearMonthObject>();
+  auto date = ToPlainDate(yearMonth);
+  Rooted<JSObject*> calendar(cx, yearMonth->calendar());
+
+  // Step 3.
+  PlainDate other;
+  Rooted<JSObject*> otherCalendar(cx);
+  if (!ToTemporalYearMonth(cx, args.get(0), &other, &otherCalendar)) {
+    return false;
+  }
+
+  // Steps 4-7.
+  bool equals = false;
+  if (date.year == other.year && date.month == other.month &&
+      date.day == other.day) {
+    if (!CalendarEquals(cx, calendar, otherCalendar, &equals)) {
+      return false;
+    }
+  }
+
+  args.rval().setBoolean(equals);
+  return true;
+}
+
+/**
+ * Temporal.PlainYearMonth.prototype.equals ( other )
+ */
+static bool PlainYearMonth_equals(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainYearMonth, PlainYearMonth_equals>(cx,
+                                                                       args);
 }
 
 /**
@@ -914,10 +1006,12 @@ const JSClass& PlainYearMonthObject::protoClass_ = PlainObject::class_;
 
 static const JSFunctionSpec PlainYearMonth_methods[] = {
     JS_FN("from", PlainYearMonth_from, 1, 0),
+    JS_FN("compare", PlainYearMonth_compare, 2, 0),
     JS_FS_END,
 };
 
 static const JSFunctionSpec PlainYearMonth_prototype_methods[] = {
+    JS_FN("equals", PlainYearMonth_equals, 1, 0),
     JS_FN("toString", PlainYearMonth_toString, 0, 0),
     JS_FN("toLocaleString", PlainYearMonth_toLocaleString, 0, 0),
     JS_FN("toJSON", PlainYearMonth_toJSON, 0, 0),

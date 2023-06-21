@@ -643,6 +643,39 @@ bool js::temporal::ToTemporalDateTime(JSContext* cx, Handle<Value> item,
 }
 
 /**
+ * ToTemporalDateTime ( item [ , options ] )
+ */
+static bool ToTemporalDateTime(JSContext* cx, Handle<Value> item,
+                               PlainDateTime* result,
+                               MutableHandle<JSObject*> calendar) {
+  auto* obj = ::ToTemporalDateTime(cx, item, nullptr).unwrapOrNull();
+  if (!obj) {
+    return false;
+  }
+
+  *result = ToPlainDateTime(obj);
+  calendar.set(obj->calendar());
+  return cx->compartment()->wrap(cx, calendar);
+}
+
+/**
+ * CompareISODateTime ( y1, mon1, d1, h1, min1, s1, ms1, mus1, ns1, y2, mon2,
+ * d2, h2, min2, s2, ms2, mus2, ns2 )
+ */
+static int32_t CompareISODateTime(const PlainDateTime& one,
+                                  const PlainDateTime& two) {
+  // Step 1. (Not applicable in our implementation.)
+
+  // Steps 2-3.
+  if (int32_t dateResult = CompareISODate(one.date, two.date)) {
+    return dateResult;
+  }
+
+  // Steps 4.
+  return CompareTemporalTime(one.time, two.time);
+}
+
+/**
  * Temporal.PlainDateTime ( isoYear, isoMonth, isoDay [ , hour [ , minute [ ,
  * second [ , millisecond [ , microsecond [ , nanosecond [ , calendarLike ] ] ]
  * ] ] ] ] )
@@ -792,6 +825,29 @@ static bool PlainDateTime_from(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   args.rval().setObject(*result);
+  return true;
+}
+
+/**
+ * Temporal.PlainDateTime.compare ( one, two )
+ */
+static bool PlainDateTime_compare(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Step 1.
+  PlainDateTime one;
+  if (!ToTemporalDateTime(cx, args.get(0), &one)) {
+    return false;
+  }
+
+  // Step 2.
+  PlainDateTime two;
+  if (!ToTemporalDateTime(cx, args.get(1), &two)) {
+    return false;
+  }
+
+  // Step 3.
+  args.rval().setInt32(CompareISODateTime(one, two));
   return true;
 }
 
@@ -1217,6 +1273,42 @@ static bool PlainDateTime_inLeapYear(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
+ * Temporal.PlainDateTime.prototype.equals ( other )
+ */
+static bool PlainDateTime_equals(JSContext* cx, const CallArgs& args) {
+  auto* temporalDateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  auto dateTime = ToPlainDateTime(temporalDateTime);
+  Rooted<JSObject*> calendar(cx, temporalDateTime->calendar());
+
+  // Step 3.
+  PlainDateTime other;
+  Rooted<JSObject*> otherCalendar(cx);
+  if (!::ToTemporalDateTime(cx, args.get(0), &other, &otherCalendar)) {
+    return false;
+  }
+
+  // Steps 4-13.
+  bool equals = false;
+  if (CompareISODateTime(dateTime, other) == 0) {
+    if (!CalendarEquals(cx, calendar, otherCalendar, &equals)) {
+      return false;
+    }
+  }
+
+  args.rval().setBoolean(equals);
+  return true;
+}
+
+/**
+ * Temporal.PlainDateTime.prototype.equals ( other )
+ */
+static bool PlainDateTime_equals(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_equals>(cx, args);
+}
+
+/**
  * Temporal.PlainDateTime.prototype.valueOf ( )
  */
 static bool PlainDateTime_valueOf(JSContext* cx, unsigned argc, Value* vp) {
@@ -1476,10 +1568,12 @@ const JSClass& PlainDateTimeObject::protoClass_ = PlainObject::class_;
 
 static const JSFunctionSpec PlainDateTime_methods[] = {
     JS_FN("from", PlainDateTime_from, 1, 0),
+    JS_FN("compare", PlainDateTime_compare, 2, 0),
     JS_FS_END,
 };
 
 static const JSFunctionSpec PlainDateTime_prototype_methods[] = {
+    JS_FN("equals", PlainDateTime_equals, 1, 0),
     JS_FN("valueOf", PlainDateTime_valueOf, 0, 0),
     JS_FN("toPlainDate", PlainDateTime_toPlainDate, 0, 0),
     JS_FN("toPlainYearMonth", PlainDateTime_toPlainYearMonth, 0, 0),
