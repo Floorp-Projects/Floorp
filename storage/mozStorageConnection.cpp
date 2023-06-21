@@ -10,6 +10,7 @@
 #include "nsIFileURL.h"
 #include "nsIXPConnect.h"
 #include "mozilla/AppShutdown.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/CondVar.h"
@@ -138,15 +139,22 @@ int sqlite3_T_double(sqlite3_context* aCtx, double aValue) {
 }
 
 int sqlite3_T_text(sqlite3_context* aCtx, const nsCString& aValue) {
-  ::sqlite3_result_text(aCtx, aValue.get(), aValue.Length(), SQLITE_TRANSIENT);
+  CheckedInt<int32_t> length(aValue.Length());
+  if (!length.isValid()) {
+    return SQLITE_MISUSE;
+  }
+  ::sqlite3_result_text(aCtx, aValue.get(), length.value(), SQLITE_TRANSIENT);
   return SQLITE_OK;
 }
 
 int sqlite3_T_text16(sqlite3_context* aCtx, const nsString& aValue) {
-  ::sqlite3_result_text16(
-      aCtx, aValue.get(),
-      aValue.Length() * sizeof(char16_t),  // Number of bytes.
-      SQLITE_TRANSIENT);
+  CheckedInt<int32_t> n_bytes =
+      CheckedInt<int32_t>(aValue.Length()) * sizeof(char16_t);
+  if (!n_bytes.isValid()) {
+    return SQLITE_MISUSE;
+  }
+  ::sqlite3_result_text16(aCtx, aValue.get(), n_bytes.value(),
+                          SQLITE_TRANSIENT);
   return SQLITE_OK;
 }
 
@@ -1395,8 +1403,9 @@ int Connection::stepStatement(sqlite3* aNativeConnection,
                                  : Telemetry::kSlowSQLThresholdForHelperThreads;
   if (duration.ToMilliseconds() >= threshold) {
     nsDependentCString statementString(::sqlite3_sql(aStatement));
-    Telemetry::RecordSlowSQLStatement(statementString, mTelemetryFilename,
-                                      duration.ToMilliseconds());
+    Telemetry::RecordSlowSQLStatement(
+        statementString, mTelemetryFilename,
+        static_cast<uint32_t>(duration.ToMilliseconds()));
   }
 
   (void)::sqlite3_extended_result_codes(aNativeConnection, 0);
@@ -1474,8 +1483,9 @@ int Connection::executeSql(sqlite3* aNativeConnection, const char* aSqlString) {
                                  : Telemetry::kSlowSQLThresholdForHelperThreads;
   if (duration.ToMilliseconds() >= threshold) {
     nsDependentCString statementString(aSqlString);
-    Telemetry::RecordSlowSQLStatement(statementString, mTelemetryFilename,
-                                      duration.ToMilliseconds());
+    Telemetry::RecordSlowSQLStatement(
+        statementString, mTelemetryFilename,
+        static_cast<uint32_t>(duration.ToMilliseconds()));
   }
 
   return srv;

@@ -147,7 +147,7 @@ Service::CollectReports(nsIHandleReportCallback* aHandleReport,
 #endif
   }
 
-  int64_t other = ::sqlite3_memory_used() - totalConnSize;
+  int64_t other = static_cast<int64_t>(::sqlite3_memory_used() - totalConnSize);
 
   MOZ_COLLECT_REPORT("explicit/storage/sqlite/other", KIND_HEAP, UNITS_BYTES,
                      other, "All unclassified sqlite memory.");
@@ -202,7 +202,8 @@ Service::AutoVFSRegistration::~AutoVFSRegistration() {
 Service::Service()
     : mMutex("Service::mMutex"),
       mRegistrationMutex("Service::mRegistrationMutex"),
-      mConnections() {}
+      mConnections(),
+      mLastSensitivity(mozilla::intl::Collator::Sensitivity::Base) {}
 
 Service::~Service() {
   mozilla::UnregisterWeakMemoryReporter(this);
@@ -375,8 +376,8 @@ nsresult Service::initialize() {
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   NS_ENSURE_TRUE(os, NS_ERROR_FAILURE);
 
-  for (size_t i = 0; i < ArrayLength(sObserverTopics); ++i) {
-    nsresult rv = os->AddObserver(this, sObserverTopics[i], false);
+  for (auto& sObserverTopic : sObserverTopics) {
+    nsresult rv = os->AddObserver(this, sObserverTopic, false);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -740,8 +741,8 @@ Service::Observe(nsISupports*, const char* aTopic, const char16_t*) {
 
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
 
-    for (size_t i = 0; i < ArrayLength(sObserverTopics); ++i) {
-      (void)os->RemoveObserver(this, sObserverTopics[i]);
+    for (auto& sObserverTopic : sObserverTopics) {
+      (void)os->RemoveObserver(this, sObserverTopic);
     }
 
     SpinEventLoopUntil("storage::Service::Observe(xpcom-shutdown-threads)"_ns,
