@@ -67,6 +67,16 @@ ZonedDateTimeObject* CreateTemporalZonedDateTime(
     JSContext* cx, const Instant& instant, JS::Handle<JSObject*> timeZone,
     JS::Handle<JSObject*> calendar);
 
+/**
+ * AddZonedDateTime ( epochNanoseconds, timeZone, calendar, years, months,
+ * weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds
+ * [ , options ] )
+ */
+bool AddZonedDateTime(JSContext* cx, const Instant& epochInstant,
+                      JS::Handle<JSObject*> timeZone,
+                      JS::Handle<JSObject*> calendar, const Duration& duration,
+                      Instant* result);
+
 struct NanosecondsAndDays final {
   JS::BigInt* days = nullptr;
   int64_t daysInt = 0;

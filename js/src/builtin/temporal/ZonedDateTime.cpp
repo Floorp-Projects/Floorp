@@ -253,6 +253,94 @@ static JSString* TemporalZonedDateTimeToString(
   return result.finishString();
 }
 
+/**
+ * AddZonedDateTime ( epochNanoseconds, timeZone, calendar, years, months,
+ * weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds
+ * [ , options ] )
+ */
+static bool AddZonedDateTime(JSContext* cx, const Instant& epochNanoseconds,
+                             Handle<JSObject*> timeZone,
+                             Handle<JSObject*> calendar,
+                             const Duration& duration,
+                             Handle<JSObject*> maybeOptions, Instant* result) {
+  MOZ_ASSERT(IsValidEpochInstant(epochNanoseconds));
+  MOZ_ASSERT(IsValidDuration(duration.date()));
+  MOZ_ASSERT(IsValidDuration(duration.time()));
+
+  // Steps 1-2. (Not applicable)
+
+  // Step 3.
+  if (duration.years == 0 && duration.months == 0 && duration.weeks == 0 &&
+      duration.days == 0) {
+    // Step 3.a.
+    return AddInstant(cx, epochNanoseconds, duration, result);
+  }
+
+  // Steps 4-5.
+  PlainDateTime temporalDateTime;
+  if (!GetPlainDateTimeFor(cx, timeZone, epochNanoseconds, &temporalDateTime)) {
+    return false;
+  }
+  auto& [date, time] = temporalDateTime;
+
+  // Step 6.
+  Rooted<PlainDateObject*> datePart(cx, CreateTemporalDate(cx, date, calendar));
+  if (!datePart) {
+    return false;
+  }
+
+  // Step 7.
+  Rooted<DurationObject*> dateDuration(
+      cx, CreateTemporalDuration(cx, duration.date()));
+  if (!dateDuration) {
+    return false;
+  }
+
+  // Step 8.
+  PlainDate addedDate;
+  if (maybeOptions) {
+    if (!CalendarDateAdd(cx, calendar, datePart, dateDuration, maybeOptions,
+                         &addedDate)) {
+      return false;
+    }
+  } else {
+    if (!CalendarDateAdd(cx, calendar, datePart, dateDuration, &addedDate)) {
+      return false;
+    }
+  }
+
+  // Step 9.
+  Rooted<PlainDateTimeObject*> intermediateDateTime(
+      cx, CreateTemporalDateTime(cx, {addedDate, time}, calendar));
+  if (!intermediateDateTime) {
+    return false;
+  }
+
+  // Step 10.
+  Instant intermediateInstant;
+  if (!GetInstantFor(cx, timeZone, intermediateDateTime,
+                     TemporalDisambiguation::Compatible,
+                     &intermediateInstant)) {
+    return false;
+  }
+
+  // Step 11.
+  return AddInstant(cx, intermediateInstant, duration.time(), result);
+}
+
+/**
+ * AddZonedDateTime ( epochNanoseconds, timeZone, calendar, years, months,
+ * weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds
+ * [ , options ] )
+ */
+bool js::temporal::AddZonedDateTime(JSContext* cx, const Instant& epochInstant,
+                                    Handle<JSObject*> timeZone,
+                                    Handle<JSObject*> calendar,
+                                    const Duration& duration, Instant* result) {
+  return ::AddZonedDateTime(cx, epochInstant, timeZone, calendar, duration,
+                            nullptr, result);
+}
+
 double NanosecondsAndDays::daysNumber() const {
   if (days) {
     return BigInt::numberValue(days);
@@ -264,6 +352,67 @@ void NanosecondsAndDays::trace(JSTracer* trc) {
   if (days) {
     TraceRoot(trc, &days, "NanosecondsAndDays::days");
   }
+}
+
+enum class ZonedDateTimeDuration { Add, Subtract };
+
+/**
+ * AddDurationToOrSubtractDurationFromZonedDateTime ( operation, zonedDateTime,
+ * temporalDurationLike, options )
+ */
+static bool AddDurationToOrSubtractDurationFromZonedDateTime(
+    JSContext* cx, ZonedDateTimeDuration operation, const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  auto instant = ToInstant(zonedDateTime);
+
+  // Step 1. (Not applicable in our implementation.)
+
+  // Step 4. (Reorderd)
+  Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
+
+  // Step 5. (Reordered)
+  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+
+  // Step 2.
+  Duration duration;
+  if (!ToTemporalDurationRecord(cx, args.get(0), &duration)) {
+    return false;
+  }
+
+  // Step 3.
+  Rooted<JSObject*> options(cx);
+  if (args.hasDefined(1)) {
+    const char* name =
+        operation == ZonedDateTimeDuration::Add ? "add" : "subtract";
+    options = RequireObjectArg(cx, "options", name, args[1]);
+  } else {
+    options = NewPlainObjectWithProto(cx, nullptr);
+  }
+  if (!options) {
+    return false;
+  }
+
+  // Step 6.
+  if (operation == ZonedDateTimeDuration::Subtract) {
+    duration = duration.negate();
+  }
+
+  Instant resultInstant;
+  if (!::AddZonedDateTime(cx, instant, timeZone, calendar, duration, options,
+                          &resultInstant)) {
+    return false;
+  }
+  MOZ_ASSERT(IsValidEpochInstant(resultInstant));
+
+  // Step 7.
+  auto* result =
+      CreateTemporalZonedDateTime(cx, resultInstant, timeZone, calendar);
+  if (!result) {
+    return false;
+  }
+
+  args.rval().setObject(*result);
+  return true;
 }
 
 /**
@@ -1253,6 +1402,43 @@ static bool ZonedDateTime_withCalendar(JSContext* cx, unsigned argc,
 }
 
 /**
+ * Temporal.ZonedDateTime.prototype.add ( temporalDurationLike [ , options ] )
+ */
+static bool ZonedDateTime_add(JSContext* cx, const CallArgs& args) {
+  return AddDurationToOrSubtractDurationFromZonedDateTime(
+      cx, ZonedDateTimeDuration::Add, args);
+}
+
+/**
+ * Temporal.ZonedDateTime.prototype.add ( temporalDurationLike [ , options ] )
+ */
+static bool ZonedDateTime_add(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_add>(cx, args);
+}
+
+/**
+ * Temporal.ZonedDateTime.prototype.subtract ( temporalDurationLike [ , options
+ * ] )
+ */
+static bool ZonedDateTime_subtract(JSContext* cx, const CallArgs& args) {
+  return AddDurationToOrSubtractDurationFromZonedDateTime(
+      cx, ZonedDateTimeDuration::Subtract, args);
+}
+
+/**
+ * Temporal.ZonedDateTime.prototype.subtract ( temporalDurationLike [ , options
+ * ] )
+ */
+static bool ZonedDateTime_subtract(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_subtract>(cx,
+                                                                       args);
+}
+
+/**
  * Temporal.ZonedDateTime.prototype.toString ( [ options ] )
  */
 static bool ZonedDateTime_toString(JSContext* cx, const CallArgs& args) {
@@ -1844,6 +2030,8 @@ static const JSFunctionSpec ZonedDateTime_methods[] = {
 static const JSFunctionSpec ZonedDateTime_prototype_methods[] = {
     JS_FN("withTimeZone", ZonedDateTime_withTimeZone, 1, 0),
     JS_FN("withCalendar", ZonedDateTime_withCalendar, 1, 0),
+    JS_FN("add", ZonedDateTime_add, 1, 0),
+    JS_FN("subtract", ZonedDateTime_subtract, 1, 0),
     JS_FN("toString", ZonedDateTime_toString, 0, 0),
     JS_FN("toLocaleString", ZonedDateTime_toLocaleString, 0, 0),
     JS_FN("toJSON", ZonedDateTime_toJSON, 0, 0),
