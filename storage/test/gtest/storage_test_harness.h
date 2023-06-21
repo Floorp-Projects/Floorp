@@ -66,7 +66,24 @@ class AsyncStatementSpinner : public mozIStorageStatementCallback,
   uint16_t completionReason;
 
  protected:
-  virtual ~AsyncStatementSpinner() {}
+  virtual ~AsyncStatementSpinner() = default;
+  volatile bool mCompleted;
+};
+
+class AsyncCompletionSpinner : public mozIStorageCompletionCallback {
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_MOZISTORAGECOMPLETIONCALLBACK
+
+  AsyncCompletionSpinner();
+
+  void SpinUntilCompleted();
+
+  nsresult mCompletionReason;
+  nsCOMPtr<nsISupports> mCompletionValue;
+
+ protected:
+  virtual ~AsyncCompletionSpinner() = default;
   volatile bool mCompleted;
 };
 
