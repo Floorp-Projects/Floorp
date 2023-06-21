@@ -6,6 +6,9 @@ package mozilla.components.browser.menu.item
 
 import android.content.Context
 import android.view.View
+import android.view.View.AccessibilityDelegate
+import android.view.accessibility.AccessibilityNodeInfo
+import android.widget.Button
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import mozilla.components.browser.menu.BrowserMenu
@@ -18,6 +21,7 @@ import mozilla.components.concept.menu.candidate.TextMenuCandidate
  * @param backPressListener Callback to be invoked when the back press menu item is clicked.
  */
 class BackPressMenuItem(
+    val contentDescription: String,
     label: String,
     @DrawableRes
     imageResource: Int,
@@ -38,6 +42,13 @@ class BackPressMenuItem(
             backPressListener.invoke()
             menu.dismiss()
         }
+        view.accessibilityDelegate = object : AccessibilityDelegate() {
+            override fun onInitializeAccessibilityNodeInfo(host: View, info: AccessibilityNodeInfo) {
+                super.onInitializeAccessibilityNodeInfo(host, info)
+                info.className = Button::class.java.name
+            }
+        }
+        view.contentDescription = contentDescription
     }
 
     /**
