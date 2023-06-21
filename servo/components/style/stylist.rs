@@ -1600,23 +1600,36 @@ pub struct PageRuleData {
     pub rule: Arc<Locked<PageRule>>,
 }
 
+/// Wrapper to allow better tracking of memory usage by page rule lists.
+///
+/// This is meant to be used by the global page rule list which are already
+/// sorted by layer ID, since all global page rules are less specific than all
+/// named page rules that match a certain page.
+#[derive(Clone, Debug, Deref, MallocSizeOf)]
+pub struct PageRuleDataNoLayer(
+    #[ignore_malloc_size_of = "Arc, stylesheet measures as primary ref"] pub Arc<Locked<PageRule>>,
+);
+
 /// Stores page rules indexed by page names.
 #[derive(Clone, Debug, Default, MallocSizeOf)]
 pub struct PageRuleMap {
-    /// Page rules, indexed by page name. An empty atom indicates no page name.
-    pub rules: PrecomputedHashMap<Atom, SmallVec<[PageRuleData; 1]>>,
+    /// Global, unnamed page rules.
+    pub global: LayerOrderedVec<PageRuleDataNoLayer>,
+    /// Named page rules
+    pub named: PrecomputedHashMap<Atom, SmallVec<[PageRuleData; 1]>>,
 }
 
 impl PageRuleMap {
     #[inline]
     fn clear(&mut self) {
-        self.rules.clear();
+        self.global.clear();
+        self.named.clear();
     }
 }
 
 impl MallocShallowSizeOf for PageRuleMap {
     fn shallow_size_of(&self, ops: &mut MallocSizeOfOps) -> usize {
-        self.rules.shallow_size_of(ops)
+        self.global.size_of(ops) + self.named.shallow_size_of(ops)
     }
 }
 
@@ -1682,15 +1695,20 @@ impl ExtraStyleData {
         layer: LayerId,
     ) -> Result<(), AllocErr> {
         let page_rule = rule.read_with(guard);
-        let mut add_rule = |name| {
-            let vec = self.pages.rules.entry(name).or_default();
-            vec.push(PageRuleData{layer, rule: rule.clone()});
-        };
         if page_rule.selectors.0.is_empty() {
-            add_rule(atom!(""));
+            self.pages
+                .global
+                .push(PageRuleDataNoLayer(rule.clone()), layer);
         } else {
-            for selector in page_rule.selectors.as_slice() {
-                add_rule(selector.name.0.clone());
+            // TODO: Handle pseudo-classes
+            self.pages.named.try_reserve(page_rule.selectors.0.len())?;
+            for name in page_rule.selectors.as_slice() {
+                let vec = self.pages.named.entry(name.0 .0.clone()).or_default();
+                vec.try_reserve(1)?;
+                vec.push(PageRuleData {
+                    layer,
+                    rule: rule.clone(),
+                });
             }
         }
         Ok(())
@@ -1701,6 +1719,7 @@ impl ExtraStyleData {
         self.font_feature_values.sort(layers);
         self.font_palette_values.sort(layers);
         self.counter_styles.sort(layers);
+        self.pages.global.sort(layers);
     }
 
     fn clear(&mut self) {
