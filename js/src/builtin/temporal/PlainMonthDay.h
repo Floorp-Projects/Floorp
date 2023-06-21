@@ -9,7 +9,9 @@
 
 #include <stdint.h>
 
+#include "builtin/temporal/TemporalTypes.h"
 #include "js/TypeDecls.h"
+#include "js/Value.h"
 #include "vm/NativeObject.h"
 
 namespace js {
@@ -23,11 +25,30 @@ class PlainMonthDayObject : public NativeObject {
   static const JSClass class_;
   static const JSClass& protoClass_;
 
-  static constexpr uint32_t SLOT_COUNT = 0;
+  static constexpr uint32_t ISO_YEAR_SLOT = 0;
+  static constexpr uint32_t ISO_MONTH_SLOT = 1;
+  static constexpr uint32_t ISO_DAY_SLOT = 2;
+  static constexpr uint32_t CALENDAR_SLOT = 3;
+  static constexpr uint32_t SLOT_COUNT = 4;
+
+  int32_t isoYear() const { return getFixedSlot(ISO_YEAR_SLOT).toInt32(); }
+
+  int32_t isoMonth() const { return getFixedSlot(ISO_MONTH_SLOT).toInt32(); }
+
+  int32_t isoDay() const { return getFixedSlot(ISO_DAY_SLOT).toInt32(); }
+
+  JSObject* calendar() const { return &getFixedSlot(CALENDAR_SLOT).toObject(); }
 
  private:
   static const ClassSpec classSpec_;
 };
+
+/**
+ * Extract the date fields from the PlainMonthDay object.
+ */
+inline PlainDate ToPlainDate(const PlainMonthDayObject* monthDay) {
+  return {monthDay->isoYear(), monthDay->isoMonth(), monthDay->isoDay()};
+}
 
 } /* namespace js::temporal */
 

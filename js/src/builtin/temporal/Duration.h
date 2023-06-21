@@ -9,7 +9,9 @@
 
 #include <stdint.h>
 
+#include "builtin/temporal/TemporalTypes.h"
 #include "js/TypeDecls.h"
+#include "js/Value.h"
 #include "vm/NativeObject.h"
 
 namespace js {
@@ -23,12 +25,50 @@ class DurationObject : public NativeObject {
   static const JSClass class_;
   static const JSClass& protoClass_;
 
-  static constexpr uint32_t SLOT_COUNT = 0;
+  static constexpr uint32_t YEARS_SLOT = 0;
+  static constexpr uint32_t MONTHS_SLOT = 1;
+  static constexpr uint32_t WEEKS_SLOT = 2;
+  static constexpr uint32_t DAYS_SLOT = 3;
+  static constexpr uint32_t HOURS_SLOT = 4;
+  static constexpr uint32_t MINUTES_SLOT = 5;
+  static constexpr uint32_t SECONDS_SLOT = 6;
+  static constexpr uint32_t MILLISECONDS_SLOT = 7;
+  static constexpr uint32_t MICROSECONDS_SLOT = 8;
+  static constexpr uint32_t NANOSECONDS_SLOT = 9;
+  static constexpr uint32_t SLOT_COUNT = 10;
+
+  double years() const { return getFixedSlot(YEARS_SLOT).toNumber(); }
+  double months() const { return getFixedSlot(MONTHS_SLOT).toNumber(); }
+  double weeks() const { return getFixedSlot(WEEKS_SLOT).toNumber(); }
+  double days() const { return getFixedSlot(DAYS_SLOT).toNumber(); }
+  double hours() const { return getFixedSlot(HOURS_SLOT).toNumber(); }
+  double minutes() const { return getFixedSlot(MINUTES_SLOT).toNumber(); }
+  double seconds() const { return getFixedSlot(SECONDS_SLOT).toNumber(); }
+  double milliseconds() const {
+    return getFixedSlot(MILLISECONDS_SLOT).toNumber();
+  }
+  double microseconds() const {
+    return getFixedSlot(MICROSECONDS_SLOT).toNumber();
+  }
+  double nanoseconds() const {
+    return getFixedSlot(NANOSECONDS_SLOT).toNumber();
+  }
 
  private:
   static const ClassSpec classSpec_;
 };
 
+/**
+ * Extract the duration fields from the Duration object.
+ */
+inline Duration ToDuration(const DurationObject* duration) {
+  return {
+      duration->years(),        duration->months(),
+      duration->weeks(),        duration->days(),
+      duration->hours(),        duration->minutes(),
+      duration->seconds(),      duration->milliseconds(),
+      duration->microseconds(), duration->nanoseconds(),
+  };
 }
 
 } /* namespace js::temporal */
