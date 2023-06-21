@@ -1427,6 +1427,10 @@ migrationWizard:
           user closes the wizard.
       type: string
       setPref: browser.migrate.content-modal.about-welcome-behavior
+    migrateExtensions:
+      description: True if importing extensions is enabled.
+      type: boolean
+      setPref: browser.migrate.chrome.extensions.enabled
 
 mixedContentUpgrading:
   description: Prefs to control whether we upgrade mixed passive content (images, audio, video) from http to https
