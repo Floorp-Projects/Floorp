@@ -99,7 +99,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=435442
   }
 
   @keyframes uaoverride {
-    0%, 100% { line-height: 3; margin-top: 20px }
+    0%, 100% { white-space: pre; margin-top: 20px }
     50% { margin-top: 120px }
   }
 
@@ -1379,20 +1379,22 @@ done_div();
 
 // Test that UA !important rules override animations.
 // This test depends on forms.css having a rule
-//   option { line-height: !important }
+//   option { white-space: !important }
 // If that rule changes, we should rewrite it to depend on a different rule.
 var option;
 [ option, cs ] = new_element("option", "");
-var default_line_height = cs.lineHeight;
+var default_white_space = cs.whiteSpace;
+isnot(default_white_space, "pre",
+   "default style should not be the same as animation style");
 done_element();
 [ option, cs ] = new_element("option",
                              "animation: uaoverride 2s linear infinite");
-is(cs.lineHeight, default_line_height,
+is(cs.whiteSpace, default_white_space,
    "animations should not override UA !important at 0ms");
 is(cs.marginTop, "20px",
    "rest of animation should still work when UA !important present at 0ms");
 advance_clock(200);
-is(cs.lineHeight, default_line_height,
+is(cs.whiteSpace, default_white_space,
    "animations should not override UA !important at 200ms");
 is(cs.marginTop, "40px",
    "rest of animation should still work when UA !important present at 200ms");
