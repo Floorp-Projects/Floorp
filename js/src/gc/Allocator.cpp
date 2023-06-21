@@ -60,18 +60,16 @@ void* gc::CellAllocator::AllocNurseryOrTenuredCell(JSContext* cx,
                                                    AllocKind allocKind,
                                                    gc::Heap heap,
                                                    AllocSite* site) {
-  MOZ_ASSERT(!cx->isHelperThreadContext());
-  MOZ_ASSERT_IF(heap != gc::Heap::Tenured, IsNurseryAllocable(allocKind));
+  MOZ_ASSERT(IsNurseryAllocable(allocKind));
   MOZ_ASSERT(MapAllocToTraceKind(allocKind) == traceKind);
   MOZ_ASSERT_IF(site && site->initialHeap() == Heap::Tenured,
                 heap == Heap::Tenured);
 
-  size_t thingSize = Arena::thingSize(allocKind);
-
-  JSRuntime* rt = cx->runtime();
-  if (!rt->gc.checkAllocatorState<allowGC>(cx, allocKind)) {
+  if (!PreAllocChecks<allowGC>(cx, allocKind)) {
     return nullptr;
   }
+
+  size_t thingSize = Arena::thingSize(allocKind);
 
   if (heap < cx->zone()->minHeapToTenure(traceKind)) {
     if (!site) {
@@ -79,7 +77,7 @@ void* gc::CellAllocator::AllocNurseryOrTenuredCell(JSContext* cx,
     }
 
     void* obj =
-        rt->gc.tryNewNurseryCell<traceKind, allowGC>(cx, thingSize, site);
+        GCRuntime::tryNewNurseryCell<traceKind, allowGC>(cx, thingSize, site);
     if (obj) {
       return obj;
     }
@@ -111,6 +109,7 @@ INSTANTIATE_ALLOC_NURSERY_CELL(JS::TraceKind::BigInt, CanGC)
 
 // Attempt to allocate a new cell in the nursery. If there is not enough room in
 // the nursery or there is an OOM, this method will return nullptr.
+/* static */
 template <JS::TraceKind kind, AllowGC allowGC>
 void* GCRuntime::tryNewNurseryCell(JSContext* cx, size_t thingSize,
                                    AllocSite* site) {
@@ -145,14 +144,10 @@ void* GCRuntime::tryNewNurseryCell(JSContext* cx, size_t thingSize,
 template <AllowGC allowGC /* = CanGC */>
 void* gc::CellAllocator::AllocTenuredCell(JSContext* cx, gc::AllocKind kind,
                                           size_t size) {
-  MOZ_ASSERT(!cx->isHelperThreadContext());
   MOZ_ASSERT(!IsNurseryAllocable(kind));
   MOZ_ASSERT(size == Arena::thingSize(kind));
-  MOZ_ASSERT(
-      size >= gc::MinCellSize,
-      "All allocations must be at least the allocator-imposed minimum size.");
 
-  if (!cx->runtime()->gc.checkAllocatorState<allowGC>(cx, kind)) {
+  if (!PreAllocChecks<allowGC>(cx, kind)) {
     return nullptr;
   }
 
@@ -233,24 +228,40 @@ static bool IsAtomsZoneKind(AllocKind kind) {
 }
 #endif
 
-template <AllowGC allowGC>
-bool GCRuntime::checkAllocatorState(JSContext* cx, AllocKind kind) {
-  MOZ_ASSERT_IF(cx->zone()->isAtomsZone(),
+static inline void CheckAllocZone(Zone* zone, AllocKind kind) {
+  MOZ_ASSERT_IF(zone->isAtomsZone(),
                 IsAtomsZoneKind(kind) || kind == AllocKind::JITCODE);
-  MOZ_ASSERT_IF(!cx->zone()->isAtomsZone(), !IsAtomsZoneKind(kind));
+  MOZ_ASSERT_IF(!zone->isAtomsZone(), !IsAtomsZoneKind(kind));
+}
 
+// This serves as a single point to perform a bunch of unrelated work that
+// happens before every allocation. Performs the following testing functions:
+//
+//  - checks we can't GC inside a JS::AutoAssertNoGC region
+//  - runs a zeal GC if needed
+//  - possibly fails the allocation for OOM testing
+//
+// This is a no-op in release builds.
+#if defined(DEBUG) || defined(JS_GC_ZEAL) || defined(JS_OOM_BREAKPOINT)
+template <AllowGC allowGC>
+bool CellAllocator::PreAllocChecks(JSContext* cx, AllocKind kind) {
+  MOZ_ASSERT(!cx->isHelperThreadContext());
+
+  CheckAllocZone(cx->zone(), kind);
+
+  // Crash if we could perform a GC action when it is not safe.
+  if (allowGC && !cx->suppressGC) {
+    cx->verifyIsSafeToGC();
+  }
+
+#  ifdef JS_GC_ZEAL
   if constexpr (allowGC) {
-    // Crash if we could perform a GC action when it is not safe.
-    if (!cx->suppressGC) {
-      cx->verifyIsSafeToGC();
-
-#ifdef JS_GC_ZEAL
-      if (needZealousGC()) {
-        runDebugGC();
-      }
-#endif
+    GCRuntime* gc = &cx->runtime()->gc;
+    if (gc->needZealousGC()) {
+      gc->runDebugGC();
     }
   }
+#  endif
 
   // For testing out of memory conditions.
   if (js::oom::ShouldFailWithOOM()) {
@@ -264,6 +275,11 @@ bool GCRuntime::checkAllocatorState(JSContext* cx, AllocKind kind) {
 
   return true;
 }
+template bool CellAllocator::PreAllocChecks<NoGC>(JSContext* cx,
+                                                  AllocKind kind);
+template bool CellAllocator::PreAllocChecks<CanGC>(JSContext* cx,
+                                                   AllocKind kind);
+#endif  // DEBUG || JS_GC_ZEAL || JS_OOM_BREAKPOINT
 
 /* static */
 inline void GCRuntime::gcIfNeededAtAllocation(JSContext* cx) {
