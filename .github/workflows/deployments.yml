@@ -23,6 +23,8 @@ jobs:
       id: get
       run: |
         echo "::set-output name=display-version::$(cat browser/config/version_display.txt)"
+
+################################################################ Get Display Version ####################################################
       
   build-with-enable-profile-generate:
     name: Build with --enable-profile-generate
@@ -516,6 +518,12 @@ jobs:
           sudo apt update
           sudo apt -y install gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
           rustup target add aarch64-unknown-linux-gnu
+
+      - name: Change Rust version
+        run: |
+         rustup install 1.69.0
+         rustup default 1.69.0
+         rustc --version
   
       - name: Create environment 🌲
         run: |
@@ -813,3 +821,33 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
       env:
         GITHUB_REPOSITORY: ${{ github.repository }}
+
+    - name: Run GitHub Actions for Release x86_64 Linux MAR "Floorp-Projects/Floorp-Update" 🚀
+      run: |
+         curl -X POST \
+           -H "Authorization: token ${{ secrets.PAT }}" \
+           -H "Accept: application/vnd.github.v3+json" \
+           "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/deliver-updates-to-floorp-browser.yml/dispatches" \
+           -d '{
+             "ref": "main",
+             "inputs": {
+               "mar-url": ${{ fromJSON(steps.create_release.outputs.assets)[0].browser_download_url }},
+               "os": "Linux",
+               "arch": "x86_64"
+             }
+           }'
+
+    - name: Run GitHub Actions for Release aarch64 Linux MAR "Floorp-Projects/Floorp-Update" 🚀
+      run: |
+         curl -X POST \
+           -H "Authorization: token ${{ secrets.PAT }}" \
+           -H "Accept: application/vnd.github.v3+json" \
+           "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/deliver-updates-to-floorp-browser.yml/dispatches" \
+           -d '{
+             "ref": "main",
+             "inputs": {
+               "mar-url": ${{ fromJSON(steps.create_release.outputs.assets)[1].browser_download_url }},
+               "os": "Linux",
+               "arch": "aarch64"
+             }
+           }'
